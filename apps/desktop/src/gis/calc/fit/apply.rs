@@ -13,7 +13,7 @@ use crate::app::App;
 impl App {
     /// Vektör oturtma's own controls.
     pub(crate) fn fit_event(&mut self, e: Event) {
-        let form = &mut self.calc.fit;
+        let form = &mut self.gis.calc.fit;
         match e {
             Event::Method(method) => form.method = method,
             Event::Param(p, text) => form.params.set(p, text),
@@ -35,7 +35,7 @@ impl App {
                         Side::Target => "hedefi",
                     }
                 );
-                self.calc.fit.picking = Some((row, side));
+                self.gis.calc.fit.picking = Some((row, side));
                 self.calc_pick(TITLE, label);
             }
         }
@@ -46,7 +46,7 @@ impl App {
         let Some(doc) = &self.document else {
             return;
         };
-        let (n, twice) = self.calc.fit.match_by_name(&doc.model);
+        let (n, twice) = self.gis.calc.fit.match_by_name(&doc.model);
         if n == 0 {
             let tail = if twice > 0 {
                 format!("; {twice} ad bir katmanda birden çok noktada")
@@ -74,7 +74,7 @@ impl App {
         let Some(doc) = &mut self.document else {
             return;
         };
-        let form = &self.calc.fit;
+        let form = &self.gis.calc.fit;
         // The Hesap windows are in metres, as typed (docs/adr/0165 §2).
         let format = Format::of(doc.settings()).metric();
         let (Some(plan), true) = (
@@ -98,11 +98,11 @@ impl App {
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => {
-                self.calc.fit.status = Some(error.message);
+                self.gis.calc.fit.status = Some(error.message);
                 return;
             }
             CommandResult::Queued { .. } | CommandResult::Cancelled => {
-                self.calc.fit.status = Some("Yazılamadı.".to_owned());
+                self.gis.calc.fit.status = Some("Yazılamadı.".to_owned());
                 return;
             }
         };
@@ -131,7 +131,7 @@ impl App {
         if copy {
             self.selection.set(created);
         }
-        self.calc.open = None;
+        self.gis.calc.open = None;
         self.dialog = None;
     }
 }

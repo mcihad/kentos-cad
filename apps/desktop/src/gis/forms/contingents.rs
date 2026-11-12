@@ -15,6 +15,7 @@
 //!
 //! The window edits a copy; Kaydet writes it through `cad.layers.contingents` in one step and closes.
 
+use crate::gis;
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -72,7 +73,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Contingents(event)
+    Message::Gis(gis::Event::Contingents(event))
 }
 
 /// Whether `f` can be in a group: a single-valued field with a value list.
@@ -89,6 +90,7 @@ impl App {
         };
         let layers = self.contingent_layers();
         let wanted = self
+            .gis
             .features
             .layer
             .clone()
@@ -102,8 +104,8 @@ impl App {
             );
             return Task::none();
         };
-        self.contingents = Some(self.contingents_window_of(layer));
-        self.dialog = Some(Dialog::Contingents);
+        self.gis.contingents = Some(self.contingents_window_of(layer));
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Contingents));
         Task::none()
     }
 
@@ -124,10 +126,10 @@ impl App {
 
     pub(crate) fn contingents_event(&mut self, event: Event) -> Task<Message> {
         if let Event::Layer(id) = &event {
-            self.contingents = Some(self.contingents_window_of(id.clone()));
+            self.gis.contingents = Some(self.contingents_window_of(id.clone()));
             return Task::none();
         }
-        let Some(w) = self.contingents.as_mut() else {
+        let Some(w) = self.gis.contingents.as_mut() else {
             return Task::none();
         };
         let at = w.chosen.filter(|i| *i < w.groups.len());
@@ -211,7 +213,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.contingents = None;
+                self.gis.contingents = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_contingents(),
@@ -221,11 +223,11 @@ impl App {
 
     /// Kaydet: the groups through `cad.layers.contingents` in one step; the window closes when they go in.
     fn save_contingents(&mut self) -> Task<Message> {
-        let Some(w) = self.contingents.clone() else {
+        let Some(w) = self.gis.contingents.clone() else {
             return Task::none();
         };
         if w.groups == w.kept {
-            self.contingents = None;
+            self.gis.contingents = None;
             self.dialog = None;
             return Task::none();
         }
@@ -243,7 +245,7 @@ impl App {
         if self.answered(result).is_none() {
             return Task::none();
         }
-        self.contingents = None;
+        self.gis.contingents = None;
         self.dialog = None;
         let name = self.form_layer_name(&w.layer);
         let said = if w.groups.is_empty() {
@@ -285,7 +287,7 @@ impl App {
     }
 
     pub(crate) fn contingents_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.contingents else {
+        let Some(w) = &self.gis.contingents else {
             return iced::widget::text("").into();
         };
         let layers = self.contingent_layers();
@@ -401,7 +403,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.contingents.is_none() {
+        if self.gis.contingents.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

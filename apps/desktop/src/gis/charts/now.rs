@@ -71,7 +71,7 @@ impl App {
     /// The layer's data as the drawing is now, read again when it changed.
     pub(crate) fn layer_data_now(&self, doc: &Document, layer: &str) -> LayerKey {
         let key = layer_key(doc, layer);
-        let mut held = self.charts.layer_data.borrow_mut();
+        let mut held = self.gis.charts.layer_data.borrow_mut();
         if held.as_ref().is_none_or(|(k, _)| *k != key) {
             *held = Some((key.clone(), LayerData::of(self, doc, layer)));
         }
@@ -80,9 +80,9 @@ impl App {
 
     /// The İşlemler table's data, read once a table.
     fn table_data_now(&self) -> Option<u64> {
-        let table = self.charts.table.as_ref()?;
-        let version = self.charts.table_version;
-        let mut held = self.charts.table_data.borrow_mut();
+        let table = self.gis.charts.table.as_ref()?;
+        let version = self.gis.charts.table_version;
+        let mut held = self.gis.charts.table_data.borrow_mut();
         if held.as_ref().is_none_or(|(v, _)| *v != version) {
             let columns = table_columns(&table.columns, &table.rows);
             let work = Work::new(DataSet {
@@ -96,7 +96,7 @@ impl App {
 
     /// The data of the source shown, read once for the drawing as it is.
     fn chart_data_now(&self) -> Option<DataKey> {
-        let p = &self.charts;
+        let p = &self.gis.charts;
         if p.source == Source::Table && p.table.is_some() {
             return self.table_data_now().map(DataKey::Table);
         }
@@ -107,19 +107,21 @@ impl App {
 
     /// Whether the tab reads the table now (else a layer).
     pub(crate) fn charting_table(&self) -> bool {
-        self.charts.source == Source::Table && self.charts.table.is_some()
+        self.gis.charts.source == Source::Table && self.gis.charts.table.is_some()
     }
 
     /// Something read from the data of the source shown.
     pub(crate) fn with_chart_data<R>(&self, read: impl FnOnce(&DataSet) -> R) -> Option<R> {
         match self.chart_data_now()? {
             DataKey::Table(_) => self
+                .gis
                 .charts
                 .table_data
                 .borrow()
                 .as_ref()
                 .map(|(_, w)| read(&w.data)),
             DataKey::Layer(_) => self
+                .gis
                 .charts
                 .layer_data
                 .borrow()
@@ -131,7 +133,7 @@ impl App {
     /// The spec kept for the source shown, made whole for its data (a
     /// table's first: its tool's suggestion).
     pub(crate) fn whole_spec(&self) -> Option<Spec> {
-        let p = &self.charts;
+        let p = &self.gis.charts;
         let table = self.charting_table();
         self.with_chart_data(|data| {
             let kept = if table {
@@ -147,7 +149,7 @@ impl App {
 
     /// Göster's rows of the layer and what they depend on.
     fn rows_key(&self) -> RowsKey {
-        let show = self.charts.show;
+        let show = self.gis.charts.show;
         let (table_stamp, table_view) = self.table_rows_stamp();
         let selection = match show {
             Show::Selected => self.selection.version(),
@@ -174,7 +176,7 @@ impl App {
     /// now: worked out again when its data, its rows or its spec changed,
     /// marked again when the selection did.
     pub(crate) fn chart_refresh(&self) {
-        let p = &self.charts;
+        let p = &self.gis.charts;
         let (Some(data), Some(spec)) = (self.chart_data_now(), self.whole_spec()) else {
             let stamp = p.chart.borrow().stamp + 1;
             *p.chart.borrow_mut() = ChartNow {
@@ -231,7 +233,7 @@ impl App {
 
     /// Whether the Grafik tab shows its numbers (else the chart).
     pub(crate) fn chart_table_view(&self) -> bool {
-        self.charts.view == View::Table
+        self.gis.charts.view == View::Table
     }
 }
 

@@ -15,6 +15,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{HaulObjective, HaulPlanned, HaulSiteKind, HaulsPlan};
@@ -138,7 +139,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::HaulPlan(event)
+    Message::Road(road::Event::HaulPlan(event))
 }
 
 /// Thousands parted by a thin space, for the large volumes and moments.
@@ -177,8 +178,11 @@ impl App {
             self.warn("Taşıma planı bir Brüknerde kurulur: önce Brükner oluştur ile bir Brükner yazın.".to_owned());
             return;
         };
-        self.haul_plan_window = Some(Box::new(Window { haul: Some(first), ..Window::default() }));
-        self.dialog = Some(Dialog::HaulPlan);
+        self.road.haul_plan_window = Some(Box::new(Window {
+            haul: Some(first),
+            ..Window::default()
+        }));
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::HaulPlan));
         let _ = self.haul_plan_event(Event::Preview);
     }
 
@@ -194,7 +198,9 @@ impl App {
             }
             _ => {}
         }
-        let Some(w) = self.haul_plan_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.haul_plan_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             // Answered before the window is borrowed.
             Event::OpenFleet | Event::Fleet(_) => return Task::none(),
@@ -251,13 +257,15 @@ impl App {
                 return Task::none();
             }
             Event::Format(f) => {
-                if let Some(w) = self.haul_plan_window.as_mut() {
+                if let Some(w) = self.road.haul_plan_window.as_mut() {
                     w.format = Some(f);
                 }
                 return Task::none();
             }
             Event::Write => {
-                let Some(w) = &self.haul_plan_window else { return Task::none() };
+                let Some(w) = &self.road.haul_plan_window else {
+                    return Task::none();
+                };
                 let (Some(doc), Some(Ok(planned))) = (&self.document, &w.preview) else {
                     self.warn("Plan yazılamaz: önce bir Brükner seçin; plan kurulmadı.".to_owned());
                     return Task::none();
@@ -272,7 +280,7 @@ impl App {
                 return crate::table_write::save(sheets, w.format.unwrap_or(kentos_commands::WorkbookFormat::Xlsx), name);
             }
             Event::Close => {
-                self.haul_plan_window = None;
+                self.road.haul_plan_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -284,9 +292,15 @@ impl App {
     /// The plan approved today as planned now with the window's objective, or its approval taken off (docs/adr/0954);
     /// then the window reads it again.
     fn approve_haul(&mut self, on: bool) -> Task<Message> {
-        let Some(w) = &self.haul_plan_window else { return Task::none() };
-        let Some(haul) = w.haul.clone() else { return Task::none() };
-        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+        let Some(w) = &self.road.haul_plan_window else {
+            return Task::none();
+        };
+        let Some(haul) = w.haul.clone() else {
+            return Task::none();
+        };
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs());
         let zone = crate::cloud::local_time::Zone::system();
         let day: String = crate::cloud::local_time::iso_local(i64::try_from(now).unwrap_or(0), zone).chars().take(10).collect();
         let input = kentos_commands::HaulsApprove {
@@ -300,7 +314,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else { return Task::none() };
         let result = road_hauls_approve::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
-            if let Some(w) = self.haul_plan_window.as_mut() {
+            if let Some(w) = self.road.haul_plan_window.as_mut() {
                 w.approval_note.clear();
             }
             self.say(
@@ -312,7 +326,7 @@ impl App {
     }
 
     pub(crate) fn haul_plan_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.haul_plan_window else {
+        let Some(w) = &self.road.haul_plan_window else {
             return iced::widget::text("").into();
         };
         if let Some(x) = &w.fleet {
@@ -609,7 +623,7 @@ impl App {
     }
 
     pub(crate) fn haul_plan_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.haul_plan_window else {
+        let Some(w) = &self.road.haul_plan_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         if w.fleet.is_some() {

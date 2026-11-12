@@ -17,6 +17,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Theme, mouse};
 use kentos_commands::{SuperelevationsTransitioned, SuperelevationsTransitions};
@@ -61,7 +62,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Superelevations(Dever::Transition(e))
+    Message::Road(road::Event::Superelevations(Dever::Transition(e)))
 }
 
 impl Transition {
@@ -90,8 +91,13 @@ impl App {
     /// Geçiş öner… from Dever: the window on the chosen schedule, the template, the speed and the relative gradient
     /// from Dever's Denetim.
     pub(crate) fn open_transition(&mut self) {
-        let Some(w) = self.superelevation_window.as_mut() else { return };
-        let mut x = Transition { template: w.check_template.clone(), ..Transition::default() };
+        let Some(w) = self.road.superelevation_window.as_mut() else {
+            return;
+        };
+        let mut x = Transition {
+            template: w.check_template.clone(),
+            ..Transition::default()
+        };
         x.fields[0] = w.check[2].clone();
         x.fields[1] = w.check[0].clone();
         w.transition = Some(Box::new(x));
@@ -101,7 +107,9 @@ impl App {
     /// The proposal read again on the chosen schedule as typed.
     pub(crate) fn refresh_transition(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.superelevation_window.as_mut() else { return };
+        let Some(w) = self.road.superelevation_window.as_mut() else {
+            return;
+        };
         let def = w.chosen.and_then(|i| w.rows.get(i)).map(|r| r.def());
         let Some(x) = w.transition.as_mut() else { return };
         x.warnings.clear();
@@ -119,8 +127,12 @@ impl App {
 
     /// An event of the window.
     pub(crate) fn transition_event(&mut self, event: Event) {
-        let Some(w) = self.superelevation_window.as_mut() else { return };
-        let Some(x) = w.transition.as_mut() else { return };
+        let Some(w) = self.road.superelevation_window.as_mut() else {
+            return;
+        };
+        let Some(x) = w.transition.as_mut() else {
+            return;
+        };
         match event {
             Event::Field(k, t) => {
                 if let Some(f) = x.fields.get_mut(k) {
@@ -183,6 +195,7 @@ impl App {
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Back)).form_width(420.0).width(1200.0).close_caption(BACK);
         let ok = x.result.as_ref().and_then(|r| r.as_ref().ok());
         let normal = self
+            .road
             .superelevation_window
             .as_ref()
             .and_then(|w| w.chosen.and_then(|i| w.rows.get(i)))

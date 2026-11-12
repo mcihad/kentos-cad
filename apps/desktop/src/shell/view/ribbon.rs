@@ -363,7 +363,7 @@ impl App {
     /// commands are the tools of two İşlemler categories or more, each
     /// category's name before its first tool there.
     pub(crate) fn overflow_heads(&self, ids: &[&'static str]) -> Vec<Option<&'static str>> {
-        let tools = self.processing.registry.tools();
+        let tools = self.gis.processing.registry.tools();
         let category = |id: &str| {
             let tool = id.strip_prefix("processing.run.")?;
             tools
@@ -396,7 +396,7 @@ impl App {
     /// them (İşlem araç kutusu's programs, docs/adr/0802). The ribbon's model buttons, the command line's
     /// names and a model's typed name read them.
     pub(crate) fn user_models(&self) -> impl Iterator<Item = &kentos_processing::Model> {
-        let registry = &self.processing.registry;
+        let registry = &self.gis.processing.registry;
         registry
             .models()
             .iter()

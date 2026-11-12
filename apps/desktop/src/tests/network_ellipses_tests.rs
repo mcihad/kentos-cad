@@ -3,6 +3,7 @@
 //! points' error ellipses on the layer chosen in Katmanlar, magnified as typed, in the same undo step as the points;
 //! the archive records them as a use; unticked, none. And the picture.
 
+use crate::map;
 use kentos_commands::Entity;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -44,9 +45,9 @@ fn accepted(draw: bool, times: f64) -> App {
     let mut app = opened();
     app.selected_layer = Some("gnss".into());
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::SurveyNetwork(N::Ellipses(draw)));
-    let _ = app.update(Message::SurveyNetwork(N::Magnify(times)));
-    let _ = app.update(Message::SurveyNetwork(N::Accept));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Ellipses(draw))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Magnify(times))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
     app
 }
 
@@ -91,17 +92,22 @@ fn screens() {
         let _ = app.update(Message::WindowResized(size));
         app.selected_layer = Some("gnss".into());
         let _ = app.update(Message::Run("map.survey.adjustment"));
-        let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
-        let _ = app.update(Message::SurveyNetwork(N::Magnify(50_000.0)));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Ellipses(true))));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Magnify(
+            50_000.0,
+        ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::SurveyNetwork(N::Accept));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
         app.dialog = None;
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
@@ -119,10 +125,10 @@ fn kot_cubugu_draws_the_height_bars_with_the_ellipses() {
     let mut app = opened();
     app.selected_layer = Some("gnss".into());
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
-    let _ = app.update(Message::SurveyNetwork(N::Magnify(2000.0)));
-    let _ = app.update(Message::SurveyNetwork(N::Bars(true)));
-    let _ = app.update(Message::SurveyNetwork(N::Accept));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Ellipses(true))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Magnify(2000.0))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Bars(true))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
     let doc = app.document.as_ref().expect("a drawing");
     let bars: Vec<&kentos_commands::PathEntity> = doc
         .model
@@ -165,18 +171,23 @@ fn bar_screens() {
         let _ = app.update(Message::WindowResized(size));
         app.selected_layer = Some("gnss".into());
         let _ = app.update(Message::Run("map.survey.adjustment"));
-        let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
-        let _ = app.update(Message::SurveyNetwork(N::Magnify(50_000.0)));
-        let _ = app.update(Message::SurveyNetwork(N::Bars(true)));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Ellipses(true))));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Magnify(
+            50_000.0,
+        ))));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Bars(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::SurveyNetwork(N::Accept));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
         app.dialog = None;
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
@@ -193,10 +204,10 @@ fn etiket_writes_each_ellipse_s_semi_axes_beside_it() {
     let mut app = opened();
     app.selected_layer = Some("gnss".into());
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
-    let _ = app.update(Message::SurveyNetwork(N::Magnify(2000.0)));
-    let _ = app.update(Message::SurveyNetwork(N::Labels(true)));
-    let _ = app.update(Message::SurveyNetwork(N::Accept));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Ellipses(true))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Magnify(2000.0))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Labels(true))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
     let doc = app.document.as_ref().expect("a drawing");
     let plot = doc.model.settings().plot_scale;
     let drawn = ellipses(&app);
@@ -245,19 +256,22 @@ fn label_screens() {
         let _ = app.update(Message::WindowResized(size));
         app.selected_layer = Some("gnss".into());
         let _ = app.update(Message::Run("map.survey.adjustment"));
-        let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
-        let _ = app.update(Message::SurveyNetwork(N::Magnify(2000.0)));
-        let _ = app.update(Message::SurveyNetwork(N::Bars(true)));
-        let _ = app.update(Message::SurveyNetwork(N::Labels(true)));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Ellipses(true))));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Magnify(2000.0))));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Bars(true))));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Labels(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::SurveyNetwork(N::Accept));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
         app.dialog = None;
         snapshot.settle(&mut app, App::view, &mut update);
         // Close to N1: its ellipse 6 m across the 3 mm major, its bar and the label 2.5 m high east of them.
@@ -297,10 +311,10 @@ fn a_label_that_would_cover_a_neighbour_goes_to_a_free_place() {
     let mut app = opened_near();
     app.selected_layer = Some("gnss".into());
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
-    let _ = app.update(Message::SurveyNetwork(N::Magnify(1000.0)));
-    let _ = app.update(Message::SurveyNetwork(N::Labels(true)));
-    let _ = app.update(Message::SurveyNetwork(N::Accept));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Ellipses(true))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Magnify(1000.0))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Labels(true))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
     let doc = app.document.as_ref().expect("a drawing");
     let drawn = ellipses(&app);
     let label_of = |mark: &str| {
@@ -343,14 +357,14 @@ fn label_place_screens() {
         let _ = app.update(Message::WindowResized(size));
         app.selected_layer = Some("gnss".into());
         let _ = app.update(Message::Run("map.survey.adjustment"));
-        let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
-        let _ = app.update(Message::SurveyNetwork(N::Magnify(1000.0)));
-        let _ = app.update(Message::SurveyNetwork(N::Labels(true)));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Ellipses(true))));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Magnify(1000.0))));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Labels(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
-        let _ = app.update(Message::SurveyNetwork(N::Accept));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
         app.dialog = None;
         snapshot.settle(&mut app, App::view, &mut update);
         // N1 and N6 15 m apart: N1's label above, to the right; N6's east.

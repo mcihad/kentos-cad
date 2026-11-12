@@ -6,6 +6,7 @@
 //! state chosen in Öznitelikler marks it with Gerekçe's words (İstisna, Hata, Değerlendirilmedi again), the tab's chosen
 //! rows staying; several objects selected, their findings counted by state. And the pictures.
 
+use crate::gis;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::{Value, json};
@@ -40,11 +41,15 @@ fn oznitelikler_says_the_selected_parcel_s_findings() {
     let mut app = opened(Module::Map);
     app.selection.set([Slot(1)]);
     let (title, rows) = section(&app).expect("a section: rules name the layer");
-    assert_eq!((title.as_str(), rows[0].1.as_str()), ("Topoloji", "Denetlenmedi: Topoloji sekmesinde Denetle."));
-    let _ = app.update(Message::Topology(T::Check));
+    assert_eq!(
+        (title.as_str(), rows[0].1.as_str()),
+        ("Topoloji", "Denetlenmedi: Topoloji sekmesinde Denetle.")
+    );
+    let _ = app.update(Message::Gis(gis::Event::Topology(T::Check)));
     let (title, rows) = section(&app).expect("a section");
     assert_eq!(title, "Topoloji (1)");
-    let ObjectFindings::Checked { findings, old } = app.object_findings(Slot(1)).expect("findings") else {
+    let ObjectFindings::Checked { findings, old } = app.object_findings(Slot(1)).expect("findings")
+    else {
         panic!("checked")
     };
     assert!(!old);
@@ -56,13 +61,24 @@ fn oznitelikler_says_the_selected_parcel_s_findings() {
     assert_eq!(f.state, "Değerlendirilmedi");
     // The check's own key: Göster opens the tab on that finding, its objects chosen.
     let c = app.topology_checked().expect("a check");
-    let at = c.findings.iter().position(|x| c.key(x) == f.key).expect("the finding");
-    let _ = app.update(Message::Topology(T::Show(f.key.clone())));
-    assert_eq!((app.bottom_tab, app.command_expanded), (BottomTab::Topology, true));
-    assert_eq!(app.topology.selected, vec![at]);
+    let at = c
+        .findings
+        .iter()
+        .position(|x| c.key(x) == f.key)
+        .expect("the finding");
+    let _ = app.update(Message::Gis(gis::Event::Topology(T::Show(f.key.clone()))));
+    assert_eq!(
+        (app.bottom_tab, app.command_expanded),
+        (BottomTab::Topology, true)
+    );
+    assert_eq!(app.gis.topology.selected, vec![at]);
     let mut chosen = app.selection.ids().to_vec();
     chosen.sort_by_key(|s| s.0);
-    assert_eq!(chosen, vec![Slot(1), Slot(2)], "A1 and A2, the overlap's objects");
+    assert_eq!(
+        chosen,
+        vec![Slot(1), Slot(2)],
+        "A1 and A2, the overlap's objects"
+    );
     // A5: its short edge.
     app.selection.set([Slot(5)]);
     let ObjectFindings::Checked { findings, .. } = app.object_findings(Slot(5)).expect("findings") else { panic!() };
@@ -89,10 +105,14 @@ fn oznitelikler_says_the_selected_parcel_s_findings() {
 fn a_finding_is_marked_from_oznitelikler() {
     use kentos_commands::{TopologyExceptionOperation as Op, TopologyFindingState as State};
     let mut app = opened(Module::Map);
-    let _ = app.update(Message::Topology(T::Check));
+    let _ = app.update(Message::Gis(gis::Event::Topology(T::Check)));
     app.selection.set([Slot(1)]);
     let first = |app: &App| {
-        let ObjectFindings::Checked { findings, .. } = app.object_findings(Slot(1)).expect("findings") else { panic!("checked") };
+        let ObjectFindings::Checked { findings, .. } =
+            app.object_findings(Slot(1)).expect("findings")
+        else {
+            panic!("checked")
+        };
         findings[0].clone()
     };
     let key = first(&app).key;
@@ -114,18 +134,36 @@ fn a_finding_is_marked_from_oznitelikler() {
         crate::properties::Field::TopologyReason,
         " Sınır bilerek ortak ".into(),
     )));
-    assert_eq!(app.topology.reason, "Sınır bilerek ortak");
-    let chosen = app.topology.selected.clone();
-    let _ = app.update(Message::Topology(T::Review(key.clone(), Op::Mark)));
+    assert_eq!(app.gis.topology.reason, "Sınır bilerek ortak");
+    let chosen = app.gis.topology.selected.clone();
+    let _ = app.update(Message::Gis(gis::Event::Topology(T::Review(
+        key.clone(),
+        Op::Mark,
+    ))));
     let f = first(&app);
-    assert_eq!((f.status, f.reason.as_deref()), (State::Exception, Some("Sınır bilerek ortak")));
+    assert_eq!(
+        (f.status, f.reason.as_deref()),
+        (State::Exception, Some("Sınır bilerek ortak"))
+    );
     let (_, rows) = section(&app).expect("a section");
     assert_eq!(rows[2].1, "İstisna");
-    assert_eq!(rows[3], (String::new(), "Gerekçe: Sınır bilerek ortak".into(), true));
-    assert_eq!(app.topology.selected, chosen, "the tab's chosen rows stay");
-    let _ = app.update(Message::Topology(T::Review(key.clone(), Op::Error)));
+    assert_eq!(
+        rows[3],
+        (String::new(), "Gerekçe: Sınır bilerek ortak".into(), true)
+    );
+    assert_eq!(
+        app.gis.topology.selected, chosen,
+        "the tab's chosen rows stay"
+    );
+    let _ = app.update(Message::Gis(gis::Event::Topology(T::Review(
+        key.clone(),
+        Op::Error,
+    ))));
     assert_eq!(first(&app).status, State::Error);
-    let _ = app.update(Message::Topology(T::Review(key, Op::Unmark)));
+    let _ = app.update(Message::Gis(gis::Event::Topology(T::Review(
+        key,
+        Op::Unmark,
+    ))));
     assert_eq!(first(&app).status, State::Open);
     // Several objects: their findings counted by state.
     app.selection.set([Slot(1), Slot(2), Slot(5)]);
@@ -155,15 +193,33 @@ fn gis_shows_the_section_yol_does_not() {
 #[test]
 fn formla_duzenle_says_the_record_s_findings() {
     let mut app = form_on_short_edges();
-    let uid = app.document.as_ref().and_then(|d| d.model.uid(Slot(1))).expect("a building").to_string();
+    let uid = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.uid(Slot(1)))
+        .expect("a building")
+        .to_string();
     assert!(app.entry_topology_lines(&uid).is_empty(), "not checked yet");
-    let _ = app.update(Message::Topology(T::Check));
-    let lines: Vec<String> = app.entry_topology_lines(&uid).into_iter().map(|(_, t)| t).collect();
-    let ObjectFindings::Checked { findings, .. } = app.object_findings(Slot(1)).expect("findings") else { panic!() };
-    assert_eq!(lines[0], format!("Topoloji: son denetimde {} bulgu.", findings.len()));
+    let _ = app.update(Message::Gis(gis::Event::Topology(T::Check)));
+    let lines: Vec<String> = app
+        .entry_topology_lines(&uid)
+        .into_iter()
+        .map(|(_, t)| t)
+        .collect();
+    let ObjectFindings::Checked { findings, .. } = app.object_findings(Slot(1)).expect("findings")
+    else {
+        panic!()
+    };
+    assert_eq!(
+        lines[0],
+        format!("Topoloji: son denetimde {} bulgu.", findings.len())
+    );
     assert_eq!(lines.len(), findings.len() + 1);
-    assert!(lines[1].starts_with(&findings[0].problem) && lines[1].contains(&findings[0].rule), "{lines:?}");
-    assert!(app.form_entry.is_some(), "the form is open");
+    assert!(
+        lines[1].starts_with(&findings[0].problem) && lines[1].contains(&findings[0].rule),
+        "{lines:?}"
+    );
+    assert!(app.gis.form_entry.is_some(), "the form is open");
 }
 
 /// The four buildings and their layer's form (form_scenes.rs) in KentOS CBS, a short-edge rule of 15 m on their layer,
@@ -207,7 +263,7 @@ fn screens() {
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
-        let _ = app.update(Message::Topology(T::Check));
+        let _ = app.update(Message::Gis(gis::Event::Topology(T::Check)));
         app.selection.set([Slot(1)]);
         let _ = app.update(Message::Run("view.zoomExtents"));
         // Genel and Geometri closed on their headers: Topoloji in sight under them.
@@ -221,7 +277,7 @@ fn screens() {
     let mut app = form_on_short_edges();
     let size = Size::new(1440.0, 900.0);
     let _ = app.update(Message::WindowResized(size));
-    let _ = app.update(Message::Topology(T::Check));
+    let _ = app.update(Message::Gis(gis::Event::Topology(T::Check)));
     let mut snapshot = Snapshot::new(size).expect("a renderer");
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("formla-duzenle-acik-genis.png");
@@ -253,7 +309,7 @@ fn review_screens() {
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
-        let _ = app.update(Message::Topology(T::Check));
+        let _ = app.update(Message::Gis(gis::Event::Topology(T::Check)));
         app.selection.set([Slot(1)]);
         let _ = app.update(Message::Run("view.zoomExtents"));
         app.props_closed.insert("general");
@@ -262,11 +318,21 @@ fn review_screens() {
             crate::properties::Field::TopologyReason,
             "Sınır bilerek ortak".into(),
         )));
-        let ObjectFindings::Checked { findings, .. } = app.object_findings(Slot(1)).expect("findings") else { panic!() };
-        let _ = app.update(Message::Topology(T::Review(findings[0].key.clone(), Op::Mark)));
+        let ObjectFindings::Checked { findings, .. } =
+            app.object_findings(Slot(1)).expect("findings")
+        else {
+            panic!()
+        };
+        let _ = app.update(Message::Gis(gis::Event::Topology(T::Review(
+            findings[0].key.clone(),
+            Op::Mark,
+        ))));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-istisna-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         app.selection.set([Slot(1), Slot(2), Slot(5)]);
         snapshot.settle(&mut app, App::view, &mut update);

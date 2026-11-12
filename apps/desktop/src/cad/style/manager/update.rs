@@ -4,6 +4,7 @@
 //! tree's categories, imports and exports. Every change to the library is
 //! kept at once: Kitaplığım in its file, the project's part in the drawing.
 
+use crate::arch;
 use std::time::Instant;
 
 use iced::Task;
@@ -44,8 +45,8 @@ impl App {
                 Some(Dialog::LayerStyle)
             }
             // Şablon düzenleyici comes back as it was (template_editor.rs).
-            Some(PickTarget::Template) if self.template_editor.is_some() => {
-                Some(Dialog::TemplateEditor)
+            Some(PickTarget::Template) if self.arch.template_editor.is_some() => {
+                Some(Dialog::Arch(arch::ArchDialogKind::TemplateEditor))
             }
             _ => None,
         };

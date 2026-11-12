@@ -9,6 +9,7 @@
 //! new outlines dashed, those they remove in the danger colour, from a reading copy (nothing written). The writes are
 //! write.rs's, the preview preview.rs's, the tab's drawing view.rs's.
 
+use crate::arch;
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 
@@ -218,7 +219,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::ArchAudit(e)
+    Message::Arch(arch::Event::ArchAudit(e))
 }
 
 /// A group's icon.
@@ -338,18 +339,22 @@ impl App {
         ArchAudit {
             // Every group, Kapılar too (docs/adr/0772 §6): it is asked only by name.
             checks: ArchAuditCheck::ALL.to_vec(),
-            min_clear_width: (self.arch_audit.min_clear > 0.0).then_some(self.arch_audit.min_clear),
-            max_gap: Some(self.arch_audit.max_gap),
-            min_area: Some(self.arch_audit.min_area),
-            min_width: Some(self.arch_audit.min_width),
+            min_clear_width: (self.arch.arch_audit.min_clear > 0.0)
+                .then_some(self.arch.arch_audit.min_clear),
+            max_gap: Some(self.arch.arch_audit.max_gap),
+            min_area: Some(self.arch.arch_audit.min_area),
+            min_width: Some(self.arch.arch_audit.min_width),
             // A level finding's Düzelt gives Etkin kat (docs/adr/0717 §3).
             level: self.active_level(),
-            profiles: [self.arch_audit.ramp_profile, self.arch_audit.stair_profile]
-                .into_iter()
-                .flatten()
-                .map(str::to_owned)
-                .collect(),
-            min_length: Some(self.arch_audit.min_length),
+            profiles: [
+                self.arch.arch_audit.ramp_profile,
+                self.arch.arch_audit.stair_profile,
+            ]
+            .into_iter()
+            .flatten()
+            .map(str::to_owned)
+            .collect(),
+            min_length: Some(self.arch.arch_audit.min_length),
             within: None,
             exceptions: None,
         }
@@ -358,7 +363,7 @@ impl App {
     /// The bar's choices as the command's input: its thresholds, its profiles, its scope (docs/adr/0732 §2) and its
     /// exceptions (§3). A selection's objects since gone are left out of the scope.
     fn arch_audit_input(&self) -> ArchAudit {
-        let within = match &self.arch_audit.scope {
+        let within = match &self.arch.arch_audit.scope {
             AuditScope::All => None,
             AuditScope::ActiveLevel => Some(ArchAuditWithin {
                 levels: Some(vec![self.active_level()]),
@@ -384,7 +389,7 @@ impl App {
         };
         ArchAudit {
             within,
-            exceptions: Some(self.arch_audit.view),
+            exceptions: Some(self.arch.arch_audit.view),
             ..self.arch_audit_finding_input()
         }
     }
@@ -396,14 +401,16 @@ impl App {
         };
         let input = self.arch_audit_input();
         let key_of = |i: usize| {
-            self.arch_audit
+            self.arch
+                .arch_audit
                 .audited
                 .as_ref()
                 .and_then(|a| a.findings.get(i))
                 .map(|f| f.key.clone())
         };
-        let kept = self.arch_audit.selected.and_then(key_of);
+        let kept = self.arch.arch_audit.selected.and_then(key_of);
         let chosen: Vec<String> = self
+            .arch
             .arch_audit
             .chosen
             .iter()
@@ -412,9 +419,9 @@ impl App {
         match arch_audit::plan_in(&doc.model, &input) {
             CommandResult::Completed { output, warnings } => {
                 let place = |key: &str| output.findings.iter().position(|f| f.key == key);
-                self.arch_audit.selected = kept.as_deref().and_then(place);
-                self.arch_audit.chosen = chosen.iter().filter_map(|k| place(k)).collect();
-                self.arch_audit.audited = Some(Audited {
+                self.arch.arch_audit.selected = kept.as_deref().and_then(place);
+                self.arch.arch_audit.chosen = chosen.iter().filter_map(|k| place(k)).collect();
+                self.arch.arch_audit.audited = Some(Audited {
                     findings: output.findings,
                     generation: doc.model.generation(),
                     revision: doc.model.revision(),
@@ -435,11 +442,11 @@ impl App {
 
     /// The chosen findings, in the findings' order: those chosen with Ctrl/⌘ and Shift, else the one pressed.
     fn arch_audit_chosen(&self) -> Vec<&ArchAuditFinding> {
-        let Some(a) = self.arch_audit.audited.as_ref() else {
+        let Some(a) = self.arch.arch_audit.audited.as_ref() else {
             return Vec::new();
         };
-        let mut places: BTreeSet<usize> = self.arch_audit.chosen.clone();
-        if let Some(i) = self.arch_audit.selected {
+        let mut places: BTreeSet<usize> = self.arch.arch_audit.chosen.clone();
+        if let Some(i) = self.arch.arch_audit.selected {
             places.insert(i);
         }
         places
@@ -453,15 +460,15 @@ impl App {
         let Some(i) = row.and_then(|at| self.arch_audit_shown().get(at).copied()) else {
             return;
         };
-        if self.arch_audit.selected != Some(i) && !self.arch_audit.chosen.contains(&i) {
-            self.arch_audit.chosen.clear();
-            self.arch_audit.selected = Some(i);
+        if self.arch.arch_audit.selected != Some(i) && !self.arch.arch_audit.chosen.contains(&i) {
+            self.arch.arch_audit.chosen.clear();
+            self.arch.arch_audit.selected = Some(i);
         }
     }
 
     /// Whether the drawing changed since the check.
     pub(crate) fn arch_audit_stale(&self) -> bool {
-        match (&self.arch_audit.audited, &self.document) {
+        match (&self.arch.arch_audit.audited, &self.document) {
             (Some(a), Some(d)) => {
                 a.generation != d.model.generation() || a.revision != d.model.revision()
             }
@@ -471,22 +478,26 @@ impl App {
 
     /// The rows shown, as places in the findings.
     pub(crate) fn arch_audit_shown(&self) -> Vec<usize> {
-        self.arch_audit.audited.as_ref().map_or_else(Vec::new, |a| {
-            a.findings
-                .iter()
-                .enumerate()
-                .filter(|(_, f)| self.arch_audit.group.is_none_or(|g| f.check == g))
-                .map(|(i, _)| i)
-                .collect()
-        })
+        self.arch
+            .arch_audit
+            .audited
+            .as_ref()
+            .map_or_else(Vec::new, |a| {
+                a.findings
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, f)| self.arch.arch_audit.group.is_none_or(|g| f.check == g))
+                    .map(|(i, _)| i)
+                    .collect()
+            })
     }
 
     pub(crate) fn arch_audit_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Check => self.arch_audit_check(),
             Event::Group(g) => {
-                self.arch_audit.group = g;
-                self.arch_audit.selected = None;
+                self.arch.arch_audit.group = g;
+                self.arch.arch_audit.selected = None;
             }
             Event::Press(at) => {
                 let shown = self.arch_audit_shown();
@@ -495,46 +506,48 @@ impl App {
                     if m.command() {
                         // Ctrl/⌘: one more row, or one less (docs/adr/0732 §5).
                         if let Some(was) = self
+                            .arch
                             .arch_audit
                             .selected
-                            .filter(|_| self.arch_audit.chosen.is_empty())
+                            .filter(|_| self.arch.arch_audit.chosen.is_empty())
                         {
-                            self.arch_audit.chosen.insert(was);
+                            self.arch.arch_audit.chosen.insert(was);
                         }
-                        if !self.arch_audit.chosen.insert(i) {
-                            self.arch_audit.chosen.remove(&i);
+                        if !self.arch.arch_audit.chosen.insert(i) {
+                            self.arch.arch_audit.chosen.remove(&i);
                         }
-                        self.arch_audit.selected = Some(i);
+                        self.arch.arch_audit.selected = Some(i);
                         self.arch_audit_show_chosen();
                     } else if m.shift() {
                         // Shift: the rows shown from the one pressed last to this one.
                         let from = self
+                            .arch
                             .arch_audit
                             .selected
                             .and_then(|s| shown.iter().position(|x| *x == s))
                             .unwrap_or(at);
                         let (a, b) = (from.min(at), from.max(at));
-                        self.arch_audit.chosen = shown[a..=b].iter().copied().collect();
-                        self.arch_audit.selected = Some(i);
+                        self.arch.arch_audit.chosen = shown[a..=b].iter().copied().collect();
+                        self.arch.arch_audit.selected = Some(i);
                         self.arch_audit_show_chosen();
                     } else {
-                        self.arch_audit.chosen.clear();
-                        self.arch_audit.selected = Some(i);
+                        self.arch.arch_audit.chosen.clear();
+                        self.arch.arch_audit.selected = Some(i);
                         self.arch_audit_show(i);
                     }
                 }
             }
             Event::Fix => self.arch_audit_fix(),
             Event::Length(i) => {
-                self.arch_audit.min_length = LENGTHS[i.min(LENGTHS.len() - 1)];
+                self.arch.arch_audit.min_length = LENGTHS[i.min(LENGTHS.len() - 1)];
                 self.arch_audit_check();
             }
             Event::Clear(i) => {
-                self.arch_audit.min_clear = CLEARS[i.min(CLEARS.len() - 1)];
+                self.arch.arch_audit.min_clear = CLEARS[i.min(CLEARS.len() - 1)];
                 self.arch_audit_check();
             }
             Event::Scope(i) => {
-                self.arch_audit.scope = match i {
+                self.arch.arch_audit.scope = match i {
                     1 => AuditScope::ActiveLevel,
                     2 => {
                         let uids: Vec<String> = self
@@ -562,22 +575,22 @@ impl App {
                 self.arch_audit_check();
             }
             Event::View(i) => {
-                self.arch_audit.view = VIEWS[i.min(VIEWS.len() - 1)].0;
+                self.arch.arch_audit.view = VIEWS[i.min(VIEWS.len() - 1)].0;
                 self.arch_audit_check();
             }
             Event::Except(row) => {
                 self.arch_audit_take_row(row);
                 if self.arch_audit_chosen().iter().any(|f| !f.exception) {
-                    self.arch_audit.note = Some(String::new());
+                    self.arch.arch_audit.note = Some(String::new());
                     return iced::widget::operation::focus(iced::widget::Id::new(NOTE_FIELD));
                 }
             }
             Event::Note(t) => {
-                if self.arch_audit.note.is_some() {
-                    self.arch_audit.note = Some(t);
+                if self.arch.arch_audit.note.is_some() {
+                    self.arch.arch_audit.note = Some(t);
                 }
             }
-            Event::ExceptCancel => self.arch_audit.note = None,
+            Event::ExceptCancel => self.arch.arch_audit.note = None,
             Event::ExceptConfirm => self.arch_audit_except(),
             Event::Unexcept(row) => {
                 self.arch_audit_take_row(row);
@@ -591,28 +604,29 @@ impl App {
             Event::ShowLevelless => self.arch_audit_show_levelless(),
             Event::AssignLevel(level) => self.arch_audit_assign_level(&level),
             Event::Gap(i) => {
-                self.arch_audit.max_gap = GAPS[i.min(GAPS.len() - 1)];
+                self.arch.arch_audit.max_gap = GAPS[i.min(GAPS.len() - 1)];
                 self.arch_audit_check();
             }
             Event::Area(i) => {
-                self.arch_audit.min_area = AREAS[i.min(AREAS.len() - 1)];
+                self.arch.arch_audit.min_area = AREAS[i.min(AREAS.len() - 1)];
                 self.arch_audit_check();
             }
             Event::Width(i) => {
-                self.arch_audit.min_width = WIDTHS[i.min(WIDTHS.len() - 1)];
+                self.arch.arch_audit.min_width = WIDTHS[i.min(WIDTHS.len() - 1)];
                 self.arch_audit_check();
             }
             Event::Column(i, width) => {
-                if let Some(c) = self.arch_audit.columns.get_mut(i) {
+                if let Some(c) = self.arch.arch_audit.columns.get_mut(i) {
                     *c = Some(width);
                 }
             }
             Event::RampProfile(i) => {
-                self.arch_audit.ramp_profile = RAMP_PROFILES[i.min(RAMP_PROFILES.len() - 1)].0;
+                self.arch.arch_audit.ramp_profile = RAMP_PROFILES[i.min(RAMP_PROFILES.len() - 1)].0;
                 self.arch_audit_check();
             }
             Event::StairProfile(i) => {
-                self.arch_audit.stair_profile = STAIR_PROFILES[i.min(STAIR_PROFILES.len() - 1)].0;
+                self.arch.arch_audit.stair_profile =
+                    STAIR_PROFILES[i.min(STAIR_PROFILES.len() - 1)].0;
                 self.arch_audit_check();
             }
         }
@@ -647,6 +661,7 @@ impl App {
     /// A finding's objects selected and the view fitted on them.
     fn arch_audit_show(&mut self, finding: usize) {
         let Some(f) = self
+            .arch
             .arch_audit
             .audited
             .as_ref()
@@ -674,12 +689,16 @@ impl App {
 
     /// The level findings' objects of the last check.
     fn arch_audit_levelless(&self) -> Vec<String> {
-        self.arch_audit.audited.as_ref().map_or_else(Vec::new, |a| {
-            a.findings
-                .iter()
-                .filter(|f| f.check == ArchAuditCheck::Levels)
-                .flat_map(|f| f.uids.iter().cloned())
-                .collect()
-        })
+        self.arch
+            .arch_audit
+            .audited
+            .as_ref()
+            .map_or_else(Vec::new, |a| {
+                a.findings
+                    .iter()
+                    .filter(|f| f.check == ArchAuditCheck::Levels)
+                    .flat_map(|f| f.uids.iter().cloned())
+                    .collect()
+            })
     }
 }

@@ -26,6 +26,7 @@
 //! dragged in the tree before, after or into a tab or group (§2); a drop the form's shape does not
 //! take is said and does nothing.
 
+use crate::gis;
 use iced::Task;
 use kentos_commands::{
     FormBody, FormCheck, FormField, FormIssue, FormItem, FormWidget, FormsEdit, FormsEdited,
@@ -400,7 +401,7 @@ pub enum Event {
 }
 
 pub(super) fn msg(event: Event) -> Message {
-    Message::Forms(event)
+    Message::Gis(gis::Event::Forms(event))
 }
 
 // ── The body's edits: pure, on the window's copy ─────────────────────────
@@ -797,7 +798,7 @@ impl App {
                 tool: Some(tool),
                 ..
             } = item
-                && self.processing.registry.get(tool).is_none()
+                && self.gis.processing.registry.get(tool).is_none()
             {
                 issues.push(FormIssue {
                     code: kentos_forms::codes::ACTION_UNKNOWN.into(),
@@ -825,8 +826,8 @@ impl App {
         if let Some(id) = chosen {
             self.choose_into(&mut w, &id);
         }
-        self.forms_window = Some(w);
-        self.dialog = Some(Dialog::Forms);
+        self.gis.forms_window = Some(w);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Forms));
     }
 
     /// Formlar… on a layer: its first form, or a new one for it.
@@ -838,7 +839,7 @@ impl App {
             .map(|f| f.id.clone());
         let new = form.is_none();
         self.open_forms(form);
-        if new && let Some(w) = self.forms_window.as_mut() {
+        if new && let Some(w) = self.gis.forms_window.as_mut() {
             w.new_form = Some(NewForm {
                 name: String::new(),
                 layer: Some(layer.to_owned()),
@@ -859,6 +860,7 @@ impl App {
             w.typing = None;
             // A draft kept on this device that is not the form's: offered back (docs/adr/0441 §5).
             w.kept = self
+                .gis
                 .form_files
                 .kept_draft(&self.form_project_key(), &f.id)
                 .filter(|k| k.body.items != f.draft.items || k.name != f.name);
@@ -892,7 +894,7 @@ impl App {
     }
 
     pub(crate) fn chosen_form(&self) -> Option<&ProjectForm> {
-        let id = self.forms_window.as_ref()?.chosen.as_deref()?;
+        let id = self.gis.forms_window.as_ref()?.chosen.as_deref()?;
         self.project_forms().iter().find(|f| f.id == id)
     }
 
@@ -960,7 +962,7 @@ impl App {
 
     /// Writes the window's copy and its name; whether everything went in.
     fn save_form(&mut self) -> bool {
-        let Some(w) = self.forms_window.clone() else {
+        let Some(w) = self.gis.forms_window.clone() else {
             return false;
         };
         let (Some(id), Some(body)) = (w.chosen.clone(), w.body.clone()) else {
@@ -993,18 +995,20 @@ impl App {
             return false;
         }
         // The copy follows the draft as it was kept; the device's copy is no longer needed.
-        self.form_files.drop_draft(&self.form_project_key(), &id);
+        self.gis
+            .form_files
+            .drop_draft(&self.form_project_key(), &id);
         let mut fresh = w;
         self.choose_into(&mut fresh, &id);
-        fresh.item = self.forms_window.as_ref().and_then(|w| w.item.clone());
-        self.forms_window = Some(fresh);
+        fresh.item = self.gis.forms_window.as_ref().and_then(|w| w.item.clone());
+        self.gis.forms_window = Some(fresh);
         true
     }
 
     /// An event of the window, its copy's change kept in the history (docs/adr/0403 §1).
     pub(crate) fn forms_event(&mut self, event: Event) -> Task<Message> {
         if let Event::DropPublish = event {
-            if let Some(w) = self.forms_window.as_mut() {
+            if let Some(w) = self.gis.forms_window.as_mut() {
                 w.breaking = None;
             }
             return Task::none();
@@ -1027,23 +1031,27 @@ impl App {
         let typing = match &event {
             Event::Text(which, _) => Some(format!(
                 "{:?}:{which:?}",
-                self.forms_window.as_ref().and_then(|w| w.item.clone())
+                self.gis.forms_window.as_ref().and_then(|w| w.item.clone())
             )),
             Event::RuleText(rule, _) => Some(format!("{rule:?}")),
             // A word of a translation typed runs as one step (docs/adr/0443 §5).
             Event::Translate(item, said, _) => Some(format!(
                 "translate:{:?}:{item:?}:{said:?}",
-                self.forms_window.as_ref().and_then(|w| w.language.clone())
+                self.gis
+                    .forms_window
+                    .as_ref()
+                    .and_then(|w| w.language.clone())
             )),
             _ => None,
         };
         let before = self
+            .gis
             .forms_window
             .as_ref()
             .and_then(|w| Some((w.chosen.clone(), w.body.clone()?)));
         let task = self.forms_step(event);
         self.refresh_preview();
-        if let Some(w) = self.forms_window.as_mut() {
+        if let Some(w) = self.gis.forms_window.as_mut() {
             match before {
                 Some((chosen, old))
                     if w.dirty
@@ -1072,7 +1080,7 @@ impl App {
     /// Geri al (`back`) or Yinele on the copy.
     fn forms_history(&mut self, back: bool) -> Task<Message> {
         let saved = self.chosen_form().map(|f| f.draft.clone());
-        let Some(w) = self.forms_window.as_mut() else {
+        let Some(w) = self.gis.forms_window.as_mut() else {
             return Task::none();
         };
         let Some(now) = w.body.clone() else {
@@ -1102,27 +1110,27 @@ impl App {
 
     /// The preview follows the copy (docs/adr/0403 §3).
     fn refresh_preview(&mut self) {
-        let Some(w) = self.forms_window.as_ref() else {
-            self.form_preview = None;
+        let Some(w) = self.gis.forms_window.as_ref() else {
+            self.gis.form_preview = None;
             return;
         };
         let (true, Some(body), Some(form)) = (w.previewing, w.body.clone(), w.chosen.clone())
         else {
-            self.form_preview = None;
+            self.gis.form_preview = None;
             return;
         };
         let error = self.rebuild_preview(&body, &form).err();
         if error.is_some() {
-            self.form_preview = None;
+            self.gis.form_preview = None;
         }
-        if let Some(w) = self.forms_window.as_mut() {
+        if let Some(w) = self.gis.forms_window.as_mut() {
             w.preview_error = error;
         }
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn forms_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.forms_window else {
+        let Some(w) = &self.gis.forms_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {
@@ -1176,10 +1184,22 @@ impl App {
             Some("Ctrl+Y" | "Ctrl+Shift+Z") => Some(self.forms_event(Event::Redo)),
             Some("Ctrl+S") => Some(self.forms_event(Event::Save)),
             // The chosen item moved with the keyboard (docs/adr/0437), as Yukarı and Aşağı move it.
-            Some("Alt+Up") if self.forms_window.as_ref().is_some_and(|w| w.item.is_some()) => {
+            Some("Alt+Up")
+                if self
+                    .gis
+                    .forms_window
+                    .as_ref()
+                    .is_some_and(|w| w.item.is_some()) =>
+            {
                 Some(self.forms_event(Event::Move(-1)))
             }
-            Some("Alt+Down") if self.forms_window.as_ref().is_some_and(|w| w.item.is_some()) => {
+            Some("Alt+Down")
+                if self
+                    .gis
+                    .forms_window
+                    .as_ref()
+                    .is_some_and(|w| w.item.is_some()) =>
+            {
                 Some(self.forms_event(Event::Move(1)))
             }
             _ => None,

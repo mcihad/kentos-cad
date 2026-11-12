@@ -3,6 +3,7 @@
 //! case's (P4 and P8 said); Kural › Atıksu takes the limits not written from the 2017 sewer regulation's EK-1, the
 //! table shows each pipe's class and limits; Hat profili draws the run's own outer walls. And its pictures.
 
+use crate::map;
 use kentos_commands::Entity;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -28,49 +29,102 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("pipes.check"));
-    let _ = app.update(Message::PipesCheck(P::Catalog("200 300 400 500".into())));
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Catalog(
+        "200 300 400 500".into(),
+    ))));
     app
 }
 
 fn answer(app: &App) -> Value {
-    serde_json::to_value(app.pipes_check.answer.clone().expect("an answer").expect("checked")).expect("json")
+    serde_json::to_value(
+        app.map
+            .pipes_check
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("checked"),
+    )
+    .expect("json")
 }
 
 #[test]
 fn the_outer_diameter_is_found_and_the_answer_is_the_cases() {
     let mut app = opened();
-    assert_eq!((app.pipes_check.wall.as_str(), app.pipes_check.outer.as_str()), ("Et", "Dış çap"), "both guessed");
-    for e in [P::MinCover("0,8".into()), P::MaxCover("3".into()), P::MinSlope("9".into()), P::MaxSlope("50".into())] {
-        let _ = app.update(Message::PipesCheck(e));
+    assert_eq!(
+        (
+            app.map.pipes_check.wall.as_str(),
+            app.map.pipes_check.outer.as_str()
+        ),
+        ("Et", "Dış çap"),
+        "both guessed"
+    );
+    for e in [
+        P::MinCover("0,8".into()),
+        P::MaxCover("3".into()),
+        P::MinSlope("9".into()),
+        P::MaxSlope("50".into()),
+    ] {
+        let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
     }
-    let want = &case("dış çap ve et birlikte: uyuşmayan söylenir, etsiz ölçülür")["steps"][0]["result"]["output"];
+    let want = &case("dış çap ve et birlikte: uyuşmayan söylenir, etsiz ölçülür")["steps"][0]["result"]
+        ["output"];
     assert_eq!(&answer(&app), want);
     // Without Et, the wall is the outer's alone: P4's is half its outer less its inner.
-    let _ = app.update(Message::PipesCheck(P::Wall(String::new())));
-    let want = &case("dış çap: et dış çaptan, iç çapın altındaki dış çap söylenir")["steps"][0]["result"]["output"];
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Wall(String::new()))));
+    let want = &case("dış çap: et dış çaptan, iç çapın altındaki dış çap söylenir")["steps"][0]["result"]
+        ["output"];
     assert_eq!(&answer(&app), want);
 }
 
 #[test]
 fn the_rules_take_the_limits_not_written() {
     let mut app = opened();
-    let _ = app.update(Message::PipesCheck(P::Wall(String::new())));
-    let _ = app.update(Message::PipesCheck(P::Outer(String::new())));
-    let _ = app.update(Message::PipesCheck(P::Rules("atiksu".into())));
-    let want = &case("kural: atıksu yönetmeliğinin EK-1'i; eğim çap sınıfından, en az örtü 2,70 m")["steps"][0]["result"]["output"];
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Wall(String::new()))));
+    let _ = app.update(Message::Map(map::Event::PipesCheck(
+        P::Outer(String::new()),
+    )));
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Rules(
+        "atiksu".into(),
+    ))));
+    let want = &case("kural: atıksu yönetmeliğinin EK-1'i; eğim çap sınıfından, en az örtü 2,70 m")
+        ["steps"][0]["result"]["output"];
     assert_eq!(&answer(&app), want);
     // The table's limits and the summary's words are the package's.
     assert_eq!(crate::pipes_check_rules::limits("atiksu", "Tali kanal").as_deref(), Some("2,00–40,00"));
     assert_eq!(crate::pipes_check_rules::limits("yagmursuyu", "φ400").as_deref(), Some("1,67–40,00 (istisnai 1,11)"));
     let f = app.format();
     let line = crate::pipes_check_rules::line("atiksu", &f).expect("a line");
-    assert!(line.starts_with("Kural: Atıksu — Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında Yönetmelik"), "{line}");
-    assert!(line.contains("(4 sınıf)") && line.contains(&format!("en az örtü {}", f.length(2.7))), "{line}");
-    assert!(line.contains(&format!("en çok {} (φ < 1200)", f.length(70.0))) && line.contains("uygunluk kararı idarenindir"), "{line}");
+    assert!(
+        line.starts_with(
+            "Kural: Atıksu — Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında Yönetmelik"
+        ),
+        "{line}"
+    );
+    assert!(
+        line.contains("(4 sınıf)") && line.contains(&format!("en az örtü {}", f.length(2.7))),
+        "{line}"
+    );
+    assert!(
+        line.contains(&format!("en çok {} (φ < 1200)", f.length(70.0)))
+            && line.contains("uygunluk kararı idarenindir"),
+        "{line}"
+    );
     // A limit written goes first: the least slope 9 ‰ finds P3 (8 ‰), the package's 1:300 did not.
-    let _ = app.update(Message::PipesCheck(P::MinSlope("9".into())));
-    let r = app.pipes_check.answer.clone().expect("an answer").expect("checked");
-    assert!(r.pipes[2].findings.contains(&"lowSlope".to_owned()), "{:?}", r.pipes[2].findings);
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::MinSlope(
+        "9".into(),
+    ))));
+    let r = app
+        .map
+        .pipes_check
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    assert!(
+        r.pipes[2].findings.contains(&"lowSlope".to_owned()),
+        "{:?}",
+        r.pipes[2].findings
+    );
 }
 
 /// The thin red lines drawn after `before`: the run's outer walls.
@@ -85,20 +139,36 @@ fn outer_walls(app: &App, before: usize) -> usize {
 #[test]
 fn the_profile_draws_the_runs_own_outer_walls() {
     let mut app = opened();
-    let _ = app.update(Message::PipesCheck(P::Outer(String::new())));
-    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app.update(Message::PipesCheck(P::DrawProfile));
+    let _ = app.update(Message::Map(map::Event::PipesCheck(
+        P::Outer(String::new()),
+    )));
+    let before = app
+        .document
+        .as_ref()
+        .map(|d| d.model.entities().count())
+        .unwrap_or(0);
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
     let said = crate::files_testing::last_said(&app);
     assert!(said.contains("6 borunun dış duvarı"), "{said}");
-    assert_eq!(outer_walls(&app, before), 2, "the bottom outside and the top outside");
+    assert_eq!(
+        outer_walls(&app, before),
+        2,
+        "the bottom outside and the top outside"
+    );
     // Without Et, no outer wall.
     let undone = app.document.as_mut().and_then(|d| d.model.undo());
     assert_eq!(undone.as_deref(), Some("Hat profili"));
     let mut app2 = opened();
-    let _ = app2.update(Message::PipesCheck(P::Wall(String::new())));
-    let _ = app2.update(Message::PipesCheck(P::Outer(String::new())));
-    let before = app2.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app2.update(Message::PipesCheck(P::DrawProfile));
+    let _ = app2.update(Message::Map(map::Event::PipesCheck(P::Wall(String::new()))));
+    let _ = app2.update(Message::Map(map::Event::PipesCheck(
+        P::Outer(String::new()),
+    )));
+    let before = app2
+        .document
+        .as_ref()
+        .map(|d| d.model.entities().count())
+        .unwrap_or(0);
+    let _ = app2.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
     assert_eq!(outer_walls(&app2, before), 0);
     assert!(!crate::files_testing::last_said(&app2).contains("borunun dış duvarı"));
 }
@@ -122,7 +192,9 @@ fn screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
-        let _ = app.update(Message::PipesCheck(P::Rules("atiksu".into())));
+        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Rules(
+            "atiksu".into(),
+        ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -132,11 +204,22 @@ fn screens() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
         // The profile with Et alone (P4 and P8 agree with no outer then), its own outer walls drawn.
-        let _ = app.update(Message::PipesCheck(P::Outer(String::new())));
-        let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-        let _ = app.update(Message::PipesCheck(P::DrawProfile));
+        let _ = app.update(Message::Map(map::Event::PipesCheck(
+            P::Outer(String::new()),
+        )));
+        let before = app
+            .document
+            .as_ref()
+            .map(|d| d.model.entities().count())
+            .unwrap_or(0);
+        let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
         let doc = &app.document.as_ref().expect("a drawing").model;
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         let mut invert = None;
         for e in doc.entities().skip(before) {
             if let Entity::Polyline(p) = e {

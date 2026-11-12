@@ -151,7 +151,7 @@ impl App {
         };
         // Another template's run gives way, its colour and weight kept as the
         // ones to give back; its tool's own options come back now.
-        let previous = self.template.take();
+        let previous = self.arch.template.take();
         let before = previous
             .as_ref()
             .map_or((self.draft.color, self.draft.line_weight), |run| run.before);
@@ -187,11 +187,11 @@ impl App {
             return Task::none();
         }
         run.runs = self.session.runs();
-        self.template = Some(run);
+        self.arch.template = Some(run);
         self.last_template = Some(id.to_owned());
         // The Şablonlar panel's first groups are personal to this device.
         if let Some(key) = self.personal_template_key(id) {
-            if let Err(error) = self.templates_panel.used(&key) {
+            if let Err(error) = self.arch.templates_panel.used(&key) {
                 self.warn(format!("Şablon geçmişi kaydedilemedi: {error}"));
             }
         }
@@ -402,6 +402,7 @@ impl App {
     /// command, the tool done) and gives back what it set.
     pub(crate) fn follow_template(&mut self) {
         if self
+            .arch
             .template
             .as_ref()
             .is_some_and(|run| run.runs != self.session.runs() || !self.session.is_running())
@@ -413,7 +414,7 @@ impl App {
     /// Ends a template's run, if one is: the colour, the weight and the
     /// tool's own options it found come back.
     pub(crate) fn release_template(&mut self) {
-        if let Some(run) = self.template.take() {
+        if let Some(run) = self.arch.template.take() {
             (self.draft.color, self.draft.line_weight) = run.before;
             self.give_tool_back(&run);
         }
@@ -497,7 +498,7 @@ impl App {
     pub(crate) fn prompt(&self) -> Prompt {
         let mut prompt = self.session.prompt();
         if !self.session.nested() {
-            prompt.template = self.template.as_ref().map(|run| run.name.clone());
+            prompt.template = self.arch.template.as_ref().map(|run| run.name.clone());
         }
         prompt
     }
@@ -644,6 +645,6 @@ mod tests {
             last_said(&app),
             "“Bina” katmanı kilitli; “Kilitli bina” şablonu bu katmana çizer. Kilidi Katmanlar panelinden açın."
         );
-        assert!(app.template.is_none());
+        assert!(app.arch.template.is_none());
     }
 }

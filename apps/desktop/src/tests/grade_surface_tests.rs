@@ -4,6 +4,7 @@
 //! step; without break points only the heights change; a drawing with no surface says so and Uygula stays off. And the
 //! pictures.
 
+use crate::road;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -29,7 +30,9 @@ fn on_surface(slot: u32) -> App {
     let mut app = opened(&cases()["setup"]);
     app.selection.set([Slot(slot)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Grade(G::Target(Target::Surface)));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+        Target::Surface,
+    ))));
     app
 }
 
@@ -42,17 +45,25 @@ fn case_step(name: &str) -> Value {
 #[test]
 fn yuzeyden_previews_and_writes_the_shared_case() {
     let mut app = on_surface(9);
-    assert_eq!(app.dialog, Some(Dialog::Grade));
-    assert_eq!(app.grade.surface, "t-1", "the project's first surface");
-    let _ = app.update(Message::Grade(G::Breaks(true)));
-    let plan = app.grade.draped.clone().expect("a plan").expect("planned");
+    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Grade)));
+    assert_eq!(app.road.grade.surface, "t-1", "the project's first surface");
+    let _ = app.update(Message::Road(road::Event::Grade(G::Breaks(true))));
+    let plan = app
+        .road
+        .grade
+        .draped
+        .clone()
+        .expect("a plan")
+        .expect("planned");
     assert_eq!((plan.set, plan.outside, plan.inserted), (8, 0, 4));
     let step = case_step("Ara kırık noktalarıyla");
     let want = &step["expect"]["fields"]["9"];
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     assert_eq!(app.dialog, None);
     let doc = app.document.as_ref().expect("a drawing");
-    let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(Slot(9)) else { panic!("an area") };
+    let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(Slot(9)) else {
+        panic!("an area")
+    };
     let got = serde_json::to_value(p).expect("json");
     for key in ["pts", "zs", "holes"] {
         let (a, b) = (&got[key], &want[key]);
@@ -80,11 +91,19 @@ fn yuzeyden_previews_and_writes_the_shared_case() {
 #[test]
 fn without_break_points_only_the_heights_change() {
     let mut app = on_surface(8);
-    let plan = app.grade.draped.clone().expect("a plan").expect("planned");
+    let plan = app
+        .road
+        .grade
+        .draped
+        .clone()
+        .expect("a plan")
+        .expect("planned");
     assert_eq!((plan.set, plan.inserted), (3, 0));
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     let doc = app.document.as_ref().expect("a drawing");
-    let Some(kentos_commands::Entity::Polyline(p)) = doc.model.get(Slot(8)) else { panic!("a polyline") };
+    let Some(kentos_commands::Entity::Polyline(p)) = doc.model.get(Slot(8)) else {
+        panic!("a polyline")
+    };
     assert_eq!(p.pts.len(), 3);
     let zs: Vec<f64> = p.zs.clone().expect("heights").into_iter().flatten().collect();
     // ACD at (10, 50), ABC at (60, 30) and (90, 10).
@@ -101,9 +120,11 @@ fn no_surface_is_said() {
     let mut app = opened(&setup);
     app.selection.set([Slot(8)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Grade(G::Target(Target::Surface)));
-    assert!(app.grade.surface.is_empty());
-    assert!(app.grade.draped.is_none());
+    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+        Target::Surface,
+    ))));
+    assert!(app.road.grade.surface.is_empty());
+    assert!(app.road.grade.draped.is_none());
 }
 
 /// The window on Yüzeyden with break points, light wide and dark narrow, `.run/gui-evidence/yuzeyden-kot-4180/`:
@@ -126,8 +147,10 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         app.selection.set([Slot(9)]);
         let _ = app.update(Message::Run("tool.grade"));
-        let _ = app.update(Message::Grade(G::Target(Target::Surface)));
-        let _ = app.update(Message::Grade(G::Breaks(true)));
+        let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+            Target::Surface,
+        ))));
+        let _ = app.update(Message::Road(road::Event::Grade(G::Breaks(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

@@ -843,12 +843,18 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                     Choice::Action {
                         label: "Çizelge ayarları…",
                         icon: "settings",
-                        message: (!locked).then(|| Message::Schedule(crate::schedule_window::Event::Open(uid.clone()))),
+                        message: (!locked).then(|| {
+                            Message::Arch(crate::arch::Event::Schedule(
+                                crate::schedule_window::Event::Open(uid.clone()),
+                            ))
+                        }),
                     },
                     Choice::Action {
                         label: "Dosyaya yaz…",
                         icon: "tableFile",
-                        message: Some(Message::Schedule(crate::schedule_window::Event::Export(uid.clone()))),
+                        message: Some(Message::Arch(crate::arch::Event::Schedule(
+                            crate::schedule_window::Event::Export(uid.clone()),
+                        ))),
                     },
                 ];
                 geo.push(Row::text("Çizelge", of.label()).editor(edit(Editor::Select {

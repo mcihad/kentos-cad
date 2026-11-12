@@ -6,6 +6,7 @@
 //! çizimden yaz (`cogo.update`), which writes the selected objects' measured
 //! values in one undo step “Kayıtlı ölçüleri yaz”.
 
+use crate::map;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -221,7 +222,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Cogo(event)
+    Message::Map(map::Event::Cogo(event))
 }
 
 impl App {
@@ -232,7 +233,7 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        self.cogo = Some(Window {
+        self.map.cogo = Some(Window {
             scope: if self.selection.is_empty() {
                 Scope::All
             } else {
@@ -243,13 +244,13 @@ impl App {
             only_diffs: true,
             rows: Vec::new(),
         });
-        self.dialog = Some(Dialog::Cogo);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::Cogo));
         self.run_cogo_check();
     }
 
     /// Checks as the window sets it and says the summary.
     fn run_cogo_check(&mut self) {
-        let (Some(w), Some(doc)) = (&self.cogo, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.map.cogo, &self.document) else {
             return;
         };
         let number = |t: &str| t.trim().replace(',', ".").parse::<f64>().ok();
@@ -264,7 +265,7 @@ impl App {
         let only = (w.scope == Scope::Selection).then(|| self.selection.ids());
         let rows = rows_of(&doc.model, only, length, cc);
         let said = summary(&rows);
-        if let Some(w) = self.cogo.as_mut() {
+        if let Some(w) = self.map.cogo.as_mut() {
             w.rows = rows;
         }
         self.say(Level::Info, said);
@@ -363,28 +364,28 @@ impl App {
     pub(crate) fn cogo_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Scope(s) => {
-                if let Some(w) = self.cogo.as_mut() {
+                if let Some(w) = self.map.cogo.as_mut() {
                     w.scope = s;
                 }
             }
             Event::Length(t) => {
-                if let Some(w) = self.cogo.as_mut() {
+                if let Some(w) = self.map.cogo.as_mut() {
                     w.length = t;
                 }
             }
             Event::Cc(t) => {
-                if let Some(w) = self.cogo.as_mut() {
+                if let Some(w) = self.map.cogo.as_mut() {
                     w.cc = t;
                 }
             }
             Event::Check => self.run_cogo_check(),
             Event::OnlyDiffs(on) => {
-                if let Some(w) = self.cogo.as_mut() {
+                if let Some(w) = self.map.cogo.as_mut() {
                     w.only_diffs = on;
                 }
             }
             Event::Show(index) => {
-                let slot = self.cogo.as_ref().and_then(|w| {
+                let slot = self.map.cogo.as_ref().and_then(|w| {
                     shown(&w.rows, w.only_diffs)
                         .get(index)
                         .map(|&(r, _)| w.rows[r].slot)
@@ -395,7 +396,7 @@ impl App {
                 }
             }
             Event::Copy => {
-                if let Some(w) = &self.cogo
+                if let Some(w) = &self.map.cogo
                     && !w.rows.is_empty()
                 {
                     let lines = report_rows(&w.rows);
@@ -428,7 +429,7 @@ impl App {
             }
             Event::Saved(None) => {}
             Event::Saved(Some(path)) => {
-                if let Some(w) = &self.cogo {
+                if let Some(w) = &self.map.cogo {
                     let lines = report_rows(&w.rows);
                     match std::fs::write(&path, crate::layer_list::csv(&lines)) {
                         Ok(()) => {
@@ -455,7 +456,7 @@ impl App {
                 }
             }
             Event::Close => {
-                self.cogo = None;
+                self.map.cogo = None;
                 self.dialog = None;
             }
         }
@@ -463,7 +464,7 @@ impl App {
     }
 
     pub(crate) fn cogo_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.cogo else {
+        let Some(w) = &self.map.cogo else {
             return text("").into();
         };
         let number = |value: &str, on: fn(String) -> Event| {
@@ -565,7 +566,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn cogo_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.cogo else {
+        let Some(w) = &self.map.cogo else {
             return Err(format!("{COGO_TITLE} penceresi açık değil"));
         };
         let any = !w.rows.is_empty();

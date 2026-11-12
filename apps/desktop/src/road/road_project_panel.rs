@@ -8,6 +8,7 @@
 //! read again only when the drawing's revision or the depth changes. A rebuild runs as a job (docs/adr/2440): the panel
 //! shows its progress a drawing at a time and Durdur, heard between the drawings; a stopped one writes nothing.
 
+use crate::road;
 use std::cell::RefCell;
 use std::collections::HashSet;
 
@@ -77,7 +78,7 @@ pub fn ticks() -> impl Stream<Item = Message> {
 }
 
 fn msg(e: Event) -> Message {
-    Message::RoadProject(e)
+    Message::Road(road::Event::RoadProject(e))
 }
 
 /// The last tree read: the revision and the depth it was read at, and what it answered.
@@ -207,8 +208,8 @@ impl App {
     pub(crate) fn road_project_read(&self) -> Option<Result<RoadProjectTree, String>> {
         let doc = self.document.as_ref()?;
         let revision = doc.model.revision().to_string();
-        let deep = self.road_project.deep;
-        let mut kept = self.road_project.read.borrow_mut();
+        let deep = self.road.road_project.deep;
+        let mut kept = self.road.road_project.read.borrow_mut();
         if let Some((r, d, answer)) = kept.as_ref()
             && *r == revision
             && *d == deep
@@ -232,7 +233,7 @@ impl App {
                 }
             }
             Event::Rebuild(id, edited) => {
-                if self.road_project.running.is_some() {
+                if self.road.road_project.running.is_some() {
                     return Task::none();
                 }
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
@@ -248,7 +249,7 @@ impl App {
                     expected: None,
                     relax_constraints: false,
                 };
-                self.road_project.running = Some(Running {
+                self.road.road_project.running = Some(Running {
                     job: Job::start(format!("yeniden-uret-{}", doc.model.revision()), &doc.model, envelope),
                     session: doc.session,
                     share: Some(0.0),
@@ -257,7 +258,7 @@ impl App {
             }
             Event::Tick => self.road_project_tick(),
             Event::Stop => {
-                if let Some(r) = self.road_project.running.as_mut() {
+                if let Some(r) = self.road.road_project.running.as_mut() {
                     r.job.cancel();
                     r.stopping = true;
                 }
@@ -289,26 +290,29 @@ impl App {
                     self.say(Level::Info, words.to_owned());
                 }
             }
-            Event::Deep(on) => self.road_project.deep = on,
+            Event::Deep(on) => self.road.road_project.deep = on,
             Event::Fold(key) => {
-                if !self.road_project.toggled.remove(&key) {
-                    self.road_project.toggled.insert(key);
+                if !self.road.road_project.toggled.remove(&key) {
+                    self.road.road_project.toggled.insert(key);
                 }
             }
-            Event::Filter(f) => self.road_project.filter = f,
+            Event::Filter(f) => self.road.road_project.filter = f,
         }
         Task::none()
     }
 
     /// The running rebuild looked at: its progress, and when it is over its answer (written to the drawing by the job).
     pub(crate) fn road_project_tick(&mut self) {
-        let (Some(doc), Some(r)) = (self.document.as_mut(), self.road_project.running.as_mut()) else {
+        let (Some(doc), Some(r)) = (
+            self.document.as_mut(),
+            self.road.road_project.running.as_mut(),
+        ) else {
             return;
         };
         if doc.session != r.session {
             // The drawing it was started on is gone: nothing to write to.
             r.job.cancel();
-            self.road_project.running = None;
+            self.road.road_project.running = None;
             return;
         }
         let status = r.job.status(&mut doc.model);
@@ -316,7 +320,7 @@ impl App {
             r.share = status.progress;
             return;
         }
-        self.road_project.running = None;
+        self.road.road_project.running = None;
         if status.phase == JobPhase::Cancelled {
             self.say(Level::Info, "Yeniden üretim durduruldu; hiçbir şey yazılmadı.".to_owned());
             return;
@@ -407,9 +411,9 @@ impl App {
         let on = |b: bool| if b { Check::Checked } else { Check::Unchecked };
         let options = column![
             crate::style::fields::check(
-                on(self.road_project.deep),
+                on(self.road.road_project.deep),
                 "Kurarak denetle".to_owned(),
-                Some(msg(Event::Deep(!self.road_project.deep))),
+                Some(msg(Event::Deep(!self.road.road_project.deep))),
             ),
             crate::style::fields::check(
                 on(tree.auto_rebuild),
@@ -426,16 +430,18 @@ impl App {
             // İş grafiği (docs/adr/1940): the chain from the sources to the sheets, the drawings' recipes.
             crate::exchange::words::secondary(
                 crate::project_graph_window::OPEN,
-                Some(Message::ProjectGraph(crate::project_graph_window::Event::Open)),
+                Some(Message::Road(road::Event::ProjectGraph(
+                    crate::project_graph_window::Event::Open
+                ))),
             ),
         ]
         .spacing(4)
         .padding([2, 12]);
-        let running = self.road_project.running.as_ref();
+        let running = self.road.road_project.running.as_ref();
         let rebuild = (tree.rebuildable > 0 && running.is_none()).then(|| msg(Event::Rebuild(None, false)));
         let body = StatusTree::new(items)
-            .toggled(&self.road_project.toggled, |key| msg(Event::Fold(key)))
-            .filter(self.road_project.filter, |f| msg(Event::Filter(f)))
+            .toggled(&self.road.road_project.toggled, |key| msg(Event::Fold(key)))
+            .filter(self.road.road_project.filter, |f| msg(Event::Filter(f)))
             .bulk(icon(Icon::Redo).size(13.0), "Hepsini yeniden üret", tree.rebuildable as usize, rebuild)
             .counted("Güncel değil", "Sorun")
             .empty(if self.program == Some(kentos_launch::Module::Map) {

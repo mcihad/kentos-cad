@@ -15,6 +15,7 @@
 //!
 //! Test code only.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::DocumentSnapshotV1;
@@ -72,7 +73,10 @@ pub(crate) fn layer(id: &str) -> Value {
 pub(crate) fn window(app: &mut App, tool: &'static str, values: &[(&str, Value)]) {
     let _ = app.update(Message::Run(tool));
     for (name, v) in values {
-        let _ = app.update(Message::Processing(Event::Value((*name).into(), v.clone())));
+        let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+            (*name).into(),
+            v.clone(),
+        ))));
     }
 }
 
@@ -85,7 +89,7 @@ pub(crate) fn ran(app: &mut App, tool: &'static str, values: &[(&str, Value)], c
         "{tool}: {status:?}"
     );
     if close {
-        let _ = app.update(Message::Processing(Event::Close));
+        let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     }
 }
 
@@ -252,7 +256,7 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 v.push(("minFirst", json!(4)));
                 v.push(("minLast", json!(4)));
                 ran(app, "processing.run.stats.dbscanSweep", &v, false);
-                let _ = app.update(Message::Processing(Event::ChartTable));
+                let _ = app.update(Message::Gis(gis::Event::Processing(Event::ChartTable)));
             },
             view,
         ),

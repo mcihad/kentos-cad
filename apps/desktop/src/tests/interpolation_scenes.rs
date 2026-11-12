@@ -13,6 +13,7 @@
 //!
 //! Each result is written into a scratch folder. Test code only.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::DocumentSnapshotV1;
@@ -75,7 +76,10 @@ fn on_roads(s: &mut Snapshot, app: &mut App) {
 }
 
 fn value(app: &mut App, name: &str, v: serde_json::Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 /// `tool`'s window on `layer` with `values`, its result to go to a scratch folder.
@@ -109,7 +113,7 @@ fn ran(
         "{tool}: {status:?}"
     );
     if !keep {
-        let _ = app.update(Message::Processing(Event::Close));
+        let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     }
 }
 

@@ -3,21 +3,22 @@
 //! preview, relations, audits, photos, dates and records added in the table.
 
 use super::*;
+use crate::gis;
 
 #[test]
 fn a_searched_list_and_chips_write_codes() {
     let mut app = crate::files_testing::app_with_drawing();
     searched_list(&mut app);
     // A pick writes the code; the chips' add keeps the list's order.
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "İl".into(),
         "07".into(),
-    )));
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Hizmetler".into(),
         "su; elektrik; internet".into(),
-    )));
-    let _ = app.update(Message::FormEntry(entry::Event::Save));
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
     let doc = &app.document.as_ref().unwrap().model;
     let attrs = &doc.get(Slot(1)).unwrap().base().attrs;
     assert_eq!(attrs.get("İl").map(String::as_str), Some("07"));
@@ -38,7 +39,7 @@ fn a_searched_list_and_chips_write_codes() {
 fn the_designer_says_what_changed_since_the_release() {
     let mut app = crate::files_testing::app_with_drawing();
     form_changes(&mut app);
-    let w = app.forms_window.as_ref().unwrap();
+    let w = app.gis.forms_window.as_ref().unwrap();
     assert!(w.changes);
     let form = app.chosen_form().unwrap();
     let changes = kentos_forms::compare::compare(
@@ -57,7 +58,7 @@ fn the_designer_says_what_changed_since_the_release() {
 fn a_tab_is_shown_in_the_kinds_chosen() {
     let mut app = crate::files_testing::app_with_drawing();
     kind_tabs(&mut app);
-    let w = app.forms_window.as_ref().unwrap();
+    let w = app.gis.forms_window.as_ref().unwrap();
     let body = w.body.as_ref().unwrap();
     let rule = match &body.items[1] {
         kentos_commands::FormItem::Tab { visible_when, .. } => visible_when.clone(),
@@ -67,7 +68,14 @@ fn a_tab_is_shown_in_the_kinds_chosen() {
     // Taking both away leaves no rule: the tab is shown for every kind.
     designer(&mut app, designer::Event::ShowInKind("sanayi".into()));
     designer(&mut app, designer::Event::ShowInKind("depo".into()));
-    let body = app.forms_window.as_ref().unwrap().body.as_ref().unwrap();
+    let body = app
+        .gis
+        .forms_window
+        .as_ref()
+        .unwrap()
+        .body
+        .as_ref()
+        .unwrap();
     assert!(matches!(
         &body.items[1],
         kentos_commands::FormItem::Tab {
@@ -81,7 +89,7 @@ fn a_tab_is_shown_in_the_kinds_chosen() {
 fn a_related_table_lists_the_units() {
     let mut app = crate::files_testing::app_with_drawing();
     units_table(&mut app);
-    let e = app.form_entry.as_ref().expect("the building's form");
+    let e = app.gis.form_entry.as_ref().expect("the building's form");
     assert_eq!(e.related_of("bolumler").len(), 4);
 }
 
@@ -89,7 +97,7 @@ fn a_related_table_lists_the_units() {
 fn a_value_group_narrows_the_choices_and_refuses_a_combination() {
     let mut app = crate::files_testing::app_with_drawing();
     combination_refused(&mut app);
-    let e = app.form_entry.as_ref().expect("the editor stays open");
+    let e = app.gis.form_entry.as_ref().expect("the editor stays open");
     assert!(
         e.issues
             .iter()
@@ -116,21 +124,21 @@ fn the_contingents_window_writes_through_its_command_and_closes() {
     use crate::forms::contingents::Event;
     let mut app = crate::files_testing::app_with_drawing();
     contingents_window(&mut app);
-    let _ = app.update(Message::Contingents(Event::AddRow));
-    let _ = app.update(Message::Contingents(Event::Cell(
+    let _ = app.update(Message::Gis(gis::Event::Contingents(Event::AddRow)));
+    let _ = app.update(Message::Gis(gis::Event::Contingents(Event::Cell(
         5,
         0,
         kentos_commands::Cell::Code {
             code: "ahsap".into(),
         },
-    )));
-    let _ = app.update(Message::Contingents(Event::Cell(
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Contingents(Event::Cell(
         5,
         1,
         kentos_commands::Cell::Code { code: "duz".into() },
-    )));
-    let _ = app.update(Message::Contingents(Event::Save));
-    assert!(app.contingents.is_none(), "Kaydet closes the window");
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Contingents(Event::Save)));
+    assert!(app.gis.contingents.is_none(), "Kaydet closes the window");
     let doc = &app.document.as_ref().unwrap().model;
     assert_eq!(
         doc.layers().get("bina").unwrap().contingents[0].rows.len(),
@@ -142,7 +150,7 @@ fn the_contingents_window_writes_through_its_command_and_closes() {
 fn a_changed_kind_keeps_its_values_until_they_are_emptied() {
     let mut app = crate::files_testing::app_with_drawing();
     subtype_changed(&mut app);
-    let e = app.form_entry.as_ref().expect("the editor");
+    let e = app.gis.form_entry.as_ref().expect("the editor");
     assert_eq!(e.misfits(), ["Malzeme"]);
     assert_eq!(
         e.value_of("Malzeme").as_deref(),
@@ -156,8 +164,10 @@ fn a_changed_kind_keeps_its_values_until_they_are_emptied() {
     // Industrial offers concrete and steel, the value group steel only with a flat roof (the
     // house's is hipped); the held timber stays offered.
     assert_eq!(choices, ["ahsap", "beton"], "the held value stays offered");
-    let _ = app.update(Message::FormEntry(entry::Event::ClearMisfits));
-    let e = app.form_entry.as_ref().unwrap();
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(
+        entry::Event::ClearMisfits,
+    )));
+    let e = app.gis.form_entry.as_ref().unwrap();
     assert!(e.misfits().is_empty());
     assert_eq!(e.value_of("Malzeme"), None);
 }
@@ -191,7 +201,7 @@ fn recomputing_writes_the_calculation_on_every_record_as_one_step() {
 fn a_scenario_is_kept_and_fails_when_the_form_changes() {
     let mut app = crate::files_testing::app_with_drawing();
     scenarios(&mut app);
-    let w = app.forms_window.as_ref().unwrap();
+    let w = app.gis.forms_window.as_ref().unwrap();
     let body = w.body.as_ref().unwrap();
     assert_eq!(body.tests.len(), 2);
     assert_eq!(
@@ -243,14 +253,14 @@ fn the_form_view_writes_a_record_and_stays_on_it() {
     use crate::features::{Event, Pane};
     let mut app = crate::files_testing::app_with_drawing();
     form_view(&mut app);
-    let docked = |app: &App| app.form_entry.as_ref().is_some_and(|e| e.docked);
+    let docked = |app: &App| app.gis.form_entry.as_ref().is_some_and(|e| e.docked);
     assert!(docked(&app), "the form is in the table, not a window");
     assert!(app.dialog.is_none());
     let slot = app.selection.ids()[0];
     // Another record while the value is not saved: refused, the record stays.
-    let _ = app.update(Message::Features(Event::FormRow(0)));
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::FormRow(0))));
     assert_eq!(app.selection.ids()[0], slot);
-    let _ = app.update(Message::FormEntry(entry::Event::Save));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
     assert!(docked(&app), "Kaydet keeps the form on its record");
     let kat = app
         .document
@@ -264,14 +274,14 @@ fn the_form_view_writes_a_record_and_stays_on_it() {
         .get("Kat")
         .cloned();
     assert_eq!(kat.as_deref(), Some("8"));
-    let _ = app.update(Message::Features(Event::FormRow(0)));
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::FormRow(0))));
     assert_ne!(
         app.selection.ids()[0],
         slot,
         "a saved record lets another one be chosen"
     );
-    let _ = app.update(Message::Features(Event::Pane(Pane::Table)));
-    assert!(app.form_entry.is_none());
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Pane(Pane::Table))));
+    assert!(app.gis.form_entry.is_none());
 }
 
 #[test]
@@ -279,7 +289,9 @@ fn a_building_is_duplicated_with_its_floors_in_one_step() {
     let mut app = crate::files_testing::app_with_drawing();
     floors(&mut app);
     let before = app.document.as_ref().unwrap().model.by_layer("kat").count();
-    let _ = app.update(Message::Features(crate::features::Event::Duplicate));
+    let _ = app.update(Message::Gis(gis::Event::Features(
+        crate::features::Event::Duplicate,
+    )));
     let doc = app.document.as_ref().unwrap();
     assert_eq!(
         doc.model.by_layer("kat").count(),
@@ -316,8 +328,8 @@ fn a_renamed_field_is_followed_by_the_rules_that_name_it() {
         uses.iter().any(|u| u.kept),
         "the published release is listed"
     );
-    let _ = app.update(Message::LayerFields(Event::Save));
-    assert!(app.layer_fields.is_none(), "Kaydet closes the window");
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(Event::Save)));
+    assert!(app.gis.layer_fields.is_none(), "Kaydet closes the window");
     let doc = app.document.as_ref().unwrap();
     let bina = doc.model.layers().get("bina").unwrap();
     let kat = bina.fields.iter().find(|f| f.name == "Kat sayısı").unwrap();
@@ -363,11 +375,11 @@ pub(super) fn attrs(app: &App, slot: u32) -> std::collections::BTreeMap<String, 
 fn a_record_is_written_through_the_form_only_when_it_keeps_the_rules() {
     let mut app = crate::files_testing::app_with_drawing();
     editing(&mut app);
-    assert!(app.form_entry.is_some());
+    assert!(app.gis.form_entry.is_some());
     let before = attrs(&app, 1);
     entry(&mut app, entry::Event::Save);
     assert!(
-        app.form_entry.is_some(),
+        app.gis.form_entry.is_some(),
         "the note is required: the window stays"
     );
     assert_eq!(attrs(&app, 1), before);
@@ -380,7 +392,7 @@ fn a_record_is_written_through_the_form_only_when_it_keeps_the_rules() {
         entry::Event::Value("kat-sayisi".into(), " 04 ".into()),
     );
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none(), "written: the window closes");
+    assert!(app.gis.form_entry.is_none(), "written: the window closes");
     let after = attrs(&app, 1);
     assert_eq!(after.get("Kat").map(String::as_str), Some("4"));
     assert_eq!(
@@ -420,7 +432,7 @@ fn a_new_record_is_completed_and_its_storeys_are_kept_for_the_next() {
     );
     entry(&mut app, entry::Event::Save);
     assert!(
-        app.form_entry.is_some(),
+        app.gis.form_entry.is_some(),
         "a calculated field typed: the window stays"
     );
     entry(
@@ -428,7 +440,10 @@ fn a_new_record_is_completed_and_its_storeys_are_kept_for_the_next() {
         entry::Event::Value("Yükseklik".into(), "12".into()),
     );
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none(), "a warning does not stop Kaydet");
+    assert!(
+        app.gis.form_entry.is_none(),
+        "a warning does not stop Kaydet"
+    );
     let after = attrs(&app, 2);
     let want: std::collections::BTreeMap<String, String> = [
         ("Açıklama", "Çatı akıyor"),
@@ -449,16 +464,16 @@ fn a_new_record_is_completed_and_its_storeys_are_kept_for_the_next() {
 
     app.selection.set([Slot(3)]);
     run(&mut app, "data.formEdit");
-    let e = app.form_entry.as_ref().expect("the window");
+    let e = app.gis.form_entry.as_ref().expect("the window");
     assert_eq!(e.value_of("Kat").as_deref(), Some("4"), "reuse last");
     assert_eq!(e.value_of("Kod").as_deref(), Some("B-4"));
     // The other building's code: not unique.
     entry(&mut app, entry::Event::Value("Durum".into(), "iyi".into()));
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_some(), "B-4 is the second building's");
+    assert!(app.gis.form_entry.is_some(), "B-4 is the second building's");
     entry(&mut app, entry::Event::Value("Kod".into(), "B-4a".into()));
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none());
+    assert!(app.gis.form_entry.is_none());
     assert_eq!(attrs(&app, 3).get("Kod").map(String::as_str), Some("B-4a"));
 }
 
@@ -471,7 +486,10 @@ fn the_choices_follow_the_filter_and_a_closed_group_opens() {
     app.selection.set([Slot(2)]);
     run(&mut app, "data.formEdit");
     assert_eq!(
-        app.form_entry.as_ref().and_then(|e| e.offered("malzeme")),
+        app.gis
+            .form_entry
+            .as_ref()
+            .and_then(|e| e.offered("malzeme")),
         Some(vec![
             "ahsap".to_owned(),
             "beton".to_owned(),
@@ -481,17 +499,22 @@ fn the_choices_follow_the_filter_and_a_closed_group_opens() {
     );
     entry(&mut app, entry::Event::Value("Tür".into(), "sanayi".into()));
     assert_eq!(
-        app.form_entry.as_ref().and_then(|e| e.offered("malzeme")),
+        app.gis
+            .form_entry
+            .as_ref()
+            .and_then(|e| e.offered("malzeme")),
         Some(vec!["beton".to_owned(), "celik".to_owned()])
     );
     assert!(
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .is_some_and(|e| e.is_closed("hesap"))
     );
     entry(&mut app, entry::Event::Group("hesap".into()));
     assert!(
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .is_some_and(|e| !e.is_closed("hesap"))
     );
@@ -513,6 +536,7 @@ fn the_designer_takes_steps_back_and_items_are_dragged() {
         );
     }
     let label = |app: &App| match app
+        .gis
         .forms_window
         .as_ref()
         .and_then(|w| w.body.as_ref())
@@ -522,11 +546,11 @@ fn the_designer_takes_steps_back_and_items_are_dragged() {
         _ => None,
     };
     assert_eq!(label(&app).as_deref(), Some("Kat adedi"));
-    assert_eq!(app.forms_window.as_ref().map(|w| w.undo.len()), Some(1));
+    assert_eq!(app.gis.forms_window.as_ref().map(|w| w.undo.len()), Some(1));
     designer(&mut app, designer::Event::Undo);
     assert_eq!(label(&app).as_deref(), Some("Kat sayısı"));
     assert!(
-        !app.forms_window.as_ref().is_some_and(|w| w.dirty),
+        !app.gis.forms_window.as_ref().is_some_and(|w| w.dirty),
         "back to the saved draft"
     );
     designer(&mut app, designer::Event::Redo);
@@ -535,6 +559,7 @@ fn the_designer_takes_steps_back_and_items_are_dragged() {
     // genel[durum, kat, aciklama], ayrinti[denetim[tarih, onay], bilgi]: the note into Ayrıntı.
     let order = |app: &App| {
         let b = app
+            .gis
             .forms_window
             .as_ref()
             .and_then(|w| w.body.clone())
@@ -568,11 +593,11 @@ fn the_preview_follows_the_copy_and_writes_nothing() {
     run(&mut app, "data.forms");
     designer(&mut app, designer::Event::Preview(true));
     let before = attrs(&app, 2);
-    let _ = app.update(Message::FormPreview(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormPreview(entry::Event::Value(
         "kat-sayisi".into(),
         "7".into(),
-    )));
-    let p = app.form_preview.as_ref().expect("the preview");
+    ))));
+    let p = app.gis.form_preview.as_ref().expect("the preview");
     assert_eq!(p.value_of("Yükseklik").as_deref(), Some("21"));
     assert_eq!(p.value_of("Kod").as_deref(), Some("B-7"));
     designer(&mut app, designer::Event::SelectItem("yukseklik".into()));
@@ -583,13 +608,13 @@ fn the_preview_follows_the_copy_and_writes_nothing() {
             "Kat * 3.5".into(),
         ),
     );
-    let p = app.form_preview.as_ref().expect("the preview");
+    let p = app.gis.form_preview.as_ref().expect("the preview");
     assert_eq!(
         p.value_of("Yükseklik").as_deref(),
         Some("24.5"),
         "the typed storeys stay"
     );
-    let _ = app.update(Message::FormPreview(entry::Event::Save));
+    let _ = app.update(Message::Gis(gis::Event::FormPreview(entry::Event::Save)));
     assert_eq!(attrs(&app, 2), before);
     // A rule that does not read: the preview says why instead.
     designer(
@@ -599,9 +624,10 @@ fn the_preview_follows_the_copy_and_writes_nothing() {
             "Kat *".into(),
         ),
     );
-    assert!(app.form_preview.is_none());
+    assert!(app.gis.form_preview.is_none());
     assert!(
-        app.forms_window
+        app.gis
+            .forms_window
             .as_ref()
             .is_some_and(|w| w.preview_error.is_some())
     );
@@ -622,7 +648,7 @@ fn a_drawn_object_opens_its_form() {
     // The command line's Enter is an update of its own: its tasks run after it.
     crate::tools_scenes::forget(&mut app);
     assert_eq!(count(&app), before + 1);
-    let e = app.form_entry.as_ref().expect("the form opens");
+    let e = app.gis.form_entry.as_ref().expect("the form opens");
     assert_eq!(e.value_of("Taban").as_deref(), Some("80"));
     entry(&mut app, entry::Event::Cancel);
     assert_eq!(count(&app), before + 1, "Vazgeç keeps the object");
@@ -635,7 +661,7 @@ fn a_drawn_object_opens_its_form() {
     crate::tools_scenes::typed(&mut app, &format!("{},{}", E + 54.0, N + 28.0));
     crate::tools_scenes::forget(&mut app);
     assert_eq!(count(&app), before + 2);
-    assert!(app.form_entry.is_none());
+    assert!(app.gis.form_entry.is_none());
 }
 
 /// docs/adr/0403 §6: three buildings through one window: the values they differ in are mixed, the
@@ -647,13 +673,13 @@ fn many_records_are_written_through_the_form_at_once() {
     calc_buildings(&mut app);
     app.selection.set([Slot(1), Slot(2), Slot(3)]);
     run(&mut app, "data.formEdit");
-    let e = app.form_entry.as_ref().expect("the window");
+    let e = app.gis.form_entry.as_ref().expect("the window");
     assert!(e.is_mixed("Durum"));
     entry(&mut app, entry::Event::Value("Kod".into(), "X-1".into()));
     entry(&mut app, entry::Event::Value("Durum".into(), "iyi".into()));
     entry(&mut app, entry::Event::Save);
     assert!(
-        app.form_entry.is_some(),
+        app.gis.form_entry.is_some(),
         "one code for three buildings: refused"
     );
     assert_eq!(attrs(&app, 2), std::collections::BTreeMap::new());
@@ -663,7 +689,7 @@ fn many_records_are_written_through_the_form_at_once() {
         entry::Event::Value("kat-sayisi".into(), "5".into()),
     );
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none());
+    assert!(app.gis.form_entry.is_none());
     for slot in [1, 2, 3] {
         let a = attrs(&app, slot);
         assert_eq!(a.get("Kat").map(String::as_str), Some("5"), "{slot}");
@@ -688,7 +714,7 @@ fn lists_from_other_layers_chain_and_related_records_are_listed() {
     address_buildings(&mut app);
     app.selection.set([Slot(1)]);
     run(&mut app, "data.formEdit");
-    let e = app.form_entry.as_ref().expect("the window");
+    let e = app.gis.form_entry.as_ref().expect("the window");
     assert_eq!(e.offered("ilce"), Some(vec![]), "no province: no district");
     assert_eq!(e.related_of("sayaclar").len(), 2);
     entry(&mut app, entry::Event::Value("İl".into(), "Ankara".into()));
@@ -696,7 +722,7 @@ fn lists_from_other_layers_chain_and_related_records_are_listed() {
         &mut app,
         entry::Event::Value("İlçe".into(), "Çankaya".into()),
     );
-    let e = app.form_entry.as_ref().expect("the window");
+    let e = app.gis.form_entry.as_ref().expect("the window");
     assert_eq!(
         e.offered("mahalle"),
         Some(vec!["M2".to_owned(), "M10".to_owned()])
@@ -710,7 +736,7 @@ fn lists_from_other_layers_chain_and_related_records_are_listed() {
         entry::Event::Value("Parsel".into(), "101/12".into()),
     );
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none());
+    assert!(app.gis.form_entry.is_none());
     let a = attrs(&app, 1);
     assert_eq!(a.get("İl").map(String::as_str), Some("06"));
     assert_eq!(a.get("İlçe").map(String::as_str), Some("0601"));
@@ -724,11 +750,12 @@ fn lists_from_other_layers_chain_and_related_records_are_listed() {
     run(&mut app, "data.formEdit");
     entry(&mut app, entry::Event::Value("İl".into(), "34".into()));
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_some(), "Çankaya is not İstanbul's");
+    assert!(app.gis.form_entry.is_some(), "Çankaya is not İstanbul's");
 
     // A meter opens its own layer's form only when it has one: said, the window stays.
     entry(&mut app, entry::Event::Value("İl".into(), "06".into()));
     let meter = app
+        .gis
         .form_entry
         .as_ref()
         .expect("the window")
@@ -740,7 +767,10 @@ fn lists_from_other_layers_chain_and_related_records_are_listed() {
         &mut app,
         entry::Event::OpenRelated("sayaclar".into(), meter),
     );
-    assert!(app.form_entry.is_some(), "the meters' layer has no form");
+    assert!(
+        app.gis.form_entry.is_some(),
+        "the meters' layer has no form"
+    );
 }
 
 /// docs/adr/0405: a relation made in İlişkiler and saved; a building deleted takes its meters
@@ -749,8 +779,11 @@ fn lists_from_other_layers_chain_and_related_records_are_listed() {
 fn a_relation_keeps_its_children_and_the_form_links_them() {
     let mut app = crate::files_testing::app_with_drawing();
     relations_window(&mut app);
-    let _ = app.update(Message::Relations(relations::Event::Save));
-    assert!(app.relations_window.is_none(), "Kaydet closes the window");
+    let _ = app.update(Message::Gis(gis::Event::Relations(relations::Event::Save)));
+    assert!(
+        app.gis.relations_window.is_none(),
+        "Kaydet closes the window"
+    );
     let kept = app
         .document
         .as_ref()
@@ -762,6 +795,7 @@ fn a_relation_keeps_its_children_and_the_form_links_them() {
     app.selection.set([Slot(1)]);
     run(&mut app, "data.formEdit");
     let meters = app
+        .gis
         .form_entry
         .as_ref()
         .expect("the window")
@@ -772,7 +806,8 @@ fn a_relation_keeps_its_children_and_the_form_links_them() {
         entry::Event::Unlink("sayaclar".into(), meters[0].clone()),
     );
     assert_eq!(
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .expect("the window")
             .related_of("sayaclar")
@@ -784,7 +819,8 @@ fn a_relation_keeps_its_children_and_the_form_links_them() {
         entry::Event::Link("sayaclar".into(), meters[0].clone()),
     );
     assert_eq!(
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .expect("the window")
             .related_of("sayaclar")
@@ -818,12 +854,12 @@ fn a_relation_keeps_its_children_and_the_form_links_them() {
 fn records_are_audited_and_a_slider_writes_within_the_range() {
     let mut app = crate::files_testing::app_with_drawing();
     records_audit(&mut app);
-    assert!(app.form_audit.is_some());
-    let _ = app.update(Message::FormAudit(audit::Event::SelectAll));
+    assert!(app.gis.form_audit.is_some());
+    let _ = app.update(Message::Gis(gis::Event::FormAudit(audit::Event::SelectAll)));
     // The first two share code B-3; the other two have no status.
     assert_eq!(app.selection.len(), 4);
-    let _ = app.update(Message::FormAudit(audit::Event::Close));
-    assert!(app.form_audit.is_none());
+    let _ = app.update(Message::Gis(gis::Event::FormAudit(audit::Event::Close)));
+    assert!(app.gis.form_audit.is_none());
 
     let mut app = crate::files_testing::app_with_drawing();
     slider_editing(&mut app);
@@ -849,7 +885,7 @@ fn photos_are_counted_and_colours_checked() {
     run(&mut app, "data.formEdit");
     entry(&mut app, entry::Event::Save);
     assert!(
-        app.form_entry.is_some(),
+        app.gis.form_entry.is_some(),
         "a tree without a photo is not saved"
     );
     assert!(!attrs(&app, 2).contains_key("Renk"));
@@ -860,13 +896,16 @@ fn photos_are_counted_and_colours_checked() {
     )));
     entry(&mut app, entry::Event::Value("Renk".into(), "yeşil".into()));
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_some(), "yeşil is not a colour");
+    assert!(app.gis.form_entry.is_some(), "yeşil is not a colour");
     entry(
         &mut app,
         entry::Event::Value("Renk".into(), "#2e7d32cc".into()),
     );
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none(), "saved with a photo and a colour");
+    assert!(
+        app.gis.form_entry.is_none(),
+        "saved with a photo and a colour"
+    );
     assert_eq!(
         attrs(&app, 2).get("Renk").map(String::as_str),
         Some("#2e7d32cc")
@@ -893,7 +932,7 @@ fn several_values_and_stepping_through_the_records() {
     );
     entry(&mut app, entry::Event::Step(1));
     assert_eq!(
-        app.form_entry.as_ref().map(|e| e.uid_text()),
+        app.gis.form_entry.as_ref().map(|e| e.uid_text()),
         uid(&app, 1),
         "an unsaved change keeps the record"
     );
@@ -905,7 +944,10 @@ fn several_values_and_stepping_through_the_records() {
     app.selection.set([Slot(1)]);
     run(&mut app, "data.formEdit");
     entry(&mut app, entry::Event::Step(1));
-    assert_eq!(app.form_entry.as_ref().map(|e| e.uid_text()), uid(&app, 2));
+    assert_eq!(
+        app.gis.form_entry.as_ref().map(|e| e.uid_text()),
+        uid(&app, 2)
+    );
 }
 
 /// docs/adr/0409: an owner holds several buildings; a building lists its owners, links one more
@@ -926,7 +968,8 @@ fn many_to_many_owners_are_linked_and_made() {
     app.selection.set([Slot(2)]);
     run(&mut app, "data.formEdit");
     let listed = |app: &App| {
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .map(|e| e.related_of("malikler"))
             .unwrap_or_default()
@@ -968,7 +1011,7 @@ fn many_to_many_owners_are_linked_and_made() {
     };
     assert_eq!(kind(&app, 6), Some("record"));
     assert_eq!(
-        app.form_entry.as_ref().map(|e| e.uid_text()),
+        app.gis.form_entry.as_ref().map(|e| e.uid_text()),
         Some(uid(&app, 6))
     );
 }
@@ -979,7 +1022,7 @@ fn many_to_many_owners_are_linked_and_made() {
 fn a_date_and_time_and_a_time_are_written_through_the_form() {
     let mut app = crate::files_testing::app_with_drawing();
     timed(&mut app);
-    assert!(app.form_entry.is_some());
+    assert!(app.gis.form_entry.is_some());
     entry(
         &mut app,
         entry::Event::Value("Tespit".into(), "17.10.2026 9:05".into()),
@@ -1002,7 +1045,7 @@ fn a_date_and_time_and_a_time_are_written_through_the_form() {
     );
     entry(&mut app, entry::Event::Save);
     assert!(
-        app.form_entry.is_some(),
+        app.gis.form_entry.is_some(),
         "the refused time keeps the window"
     );
     assert_eq!(
@@ -1028,7 +1071,9 @@ fn a_record_is_added_in_the_table_and_opened_by_its_form() {
             "Kayıt | Mehmet Kaya | B-2"
         ]
     );
-    let _ = app.update(Message::Features(crate::features::Event::AddRecord));
+    let _ = app.update(Message::Gis(gis::Event::Features(
+        crate::features::Event::AddRecord,
+    )));
     let made = app
         .document
         .as_ref()
@@ -1036,7 +1081,7 @@ fn a_record_is_added_in_the_table_and_opened_by_its_form() {
         .map(|e| (e.kind(), e.base().layer_id.clone()));
     assert_eq!(made, Some(("record", "malik".to_owned())));
     assert_eq!(
-        app.form_entry.as_ref().map(|e| e.uid_text()),
+        app.gis.form_entry.as_ref().map(|e| e.uid_text()),
         app.document
             .as_ref()
             .and_then(|d| d.model.uid(Slot(6)))
@@ -1084,7 +1129,7 @@ fn a_form_is_made_saved_and_published_in_the_window() {
     assert_eq!(made.draft.items.len(), 5);
     designer(&mut app, designer::Event::AddNote);
     designer(&mut app, designer::Event::Publish);
-    assert!(app.forms_window.is_some(), "Yayınla keeps the window");
+    assert!(app.gis.forms_window.is_some(), "Yayınla keeps the window");
     let kept = app
         .project_forms()
         .iter()
@@ -1095,7 +1140,7 @@ fn a_form_is_made_saved_and_published_in_the_window() {
     assert_eq!(kept.releases.len(), 1);
     designer(&mut app, designer::Event::Name("Hasar tespiti 2026".into()));
     designer(&mut app, designer::Event::Save);
-    assert!(app.forms_window.is_none(), "Kaydet closes the window");
+    assert!(app.gis.forms_window.is_none(), "Kaydet closes the window");
     assert!(
         app.project_forms()
             .iter()

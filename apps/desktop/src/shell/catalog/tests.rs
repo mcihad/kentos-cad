@@ -386,6 +386,7 @@ fn the_ribbon_keeps_every_command_the_old_one_placed() {
     // And every İşlemler tool the old ribbon placed is a tool the toolbox lists.
     let app = crate::files_testing::app_with_drawing();
     let tools: BTreeSet<String> = app
+        .gis
         .processing
         .registry
         .tools()

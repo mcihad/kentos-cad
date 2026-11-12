@@ -2,6 +2,7 @@
 //! Nokta adları and Nokta kodları in Görünüm (settings, the label engine's texts), Ad and Kod of the one selected row
 //! edited by a click, and Çift noktaları ayıkla setting the points left over aside on a layer.
 
+use crate::gis;
 use kentos_commands::Entity;
 use kentos_domain::Slot;
 
@@ -23,7 +24,7 @@ fn app_with_points() -> App {
 }
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::Points(e));
+    let _ = app.update(Message::Gis(gis::Event::Points(e)));
 }
 
 /// The first point with both a name and a code, and the two.
@@ -155,7 +156,7 @@ fn a_click_on_ad_or_kod_of_the_one_selected_row_edits_it() {
             .center();
         snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
         assert_eq!(
-            app.points.editing.map(|(_, c)| c),
+            app.gis.points.editing.map(|(_, c)| c),
             Some(column),
             "a click on {text}"
         );
@@ -201,7 +202,7 @@ fn the_points_left_over_go_to_their_own_layer_instead_of_being_deleted() {
     assert!(kentos_native_application::import_apply::layer_named(&doc.model, ASIDE_LAYER).is_none());
     // The choice is kept for the next window.
     ev(&mut app, Event::Batch(Kind::Dedupe));
-    assert!(app.points.batch.as_ref().is_some_and(|w| w.aside_on()));
+    assert!(app.gis.points.batch.as_ref().is_some_and(|w| w.aside_on()));
 }
 
 /// The point editor's drawing as a KentOS Harita project whose layers label their objects beside them.

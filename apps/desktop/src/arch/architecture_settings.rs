@@ -4,6 +4,7 @@
 mod scroll_tests;
 
 use crate::app::{App, Message};
+use crate::arch;
 use iced::widget::{column, container, scrollable};
 use iced::{Element, Fill, Task};
 use kentos_ui::label;
@@ -87,16 +88,16 @@ impl App {
                     .iter()
                     .any(|choice| choice.typed == "yes" && choice.checked);
                 Cell::padded(Switch::new(on, move |on| {
-                    Message::ToolSetting(Commit {
+                    Message::Arch(arch::Event::ToolSetting(Commit {
                         tool,
                         key,
                         value: if on { "yes" } else { "no" }.into(),
-                    })
+                    }))
                 }))
                 .into()
             } else if setting.choices.is_empty() {
                 EditCell::new(setting.value, move |value| {
-                    Message::ToolSetting(Commit { tool, key, value })
+                    Message::Arch(arch::Event::ToolSetting(Commit { tool, key, value }))
                 })
                 .into()
             } else {
@@ -109,11 +110,11 @@ impl App {
                         } else {
                             menu.item(
                                 c.label.clone(),
-                                Message::ToolSetting(Commit {
+                                Message::Arch(arch::Event::ToolSetting(Commit {
                                     tool,
                                     key,
                                     value: c.typed.clone(),
-                                }),
+                                })),
                             )
                         };
                     }
@@ -171,11 +172,11 @@ mod tests {
         let _ = app.update(Message::DialogClosed);
         app.selection.set([Slot(1)]);
         let _ = app.update(Message::Run("tool.curveEdit"));
-        let _ = app.update(Message::ToolSetting(Commit {
+        let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
             tool: "curveEdit",
             key: "curve-action",
             value: "E".into(),
-        }));
+        })));
         assert!(
             matches!(
                 app.document.as_ref().unwrap().model.get(Slot(1)),
@@ -186,11 +187,11 @@ mod tests {
         );
         let original = Vec2::new(crate::tools_scenes::E + 10., crate::tools_scenes::N + 10.);
         let moved = Vec2::new(original.x + 3., original.y + 2.);
-        let _ = app.update(Message::ToolSetting(Commit {
+        let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
             tool: "curveEdit",
             key: "fit-edit",
             value: "T".into(),
-        }));
+        })));
         // Selecting a point still needs the actual pick, not a computed
         // location. Send it through the viewport like the user's click.
         crate::tools_scenes::click(&mut app, [10., 10.]);

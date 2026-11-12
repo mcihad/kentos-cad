@@ -1,6 +1,7 @@
 //! Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b): the window reads the profile as the view is
 //! typed, makes it as one undo step; and its pictures.
 
+use crate::road;
 use kentos_domain::Slot;
 
 use crate::app::{App, Dialog, Message};
@@ -23,7 +24,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::RoadProfileFit(e));
+    let _ = app.update(Message::Road(road::Event::RoadProfileFit(e)));
 }
 
 /// The view of the drawing: its datum 90 m at (0; −500), a metre of elevation 10 units.
@@ -37,29 +38,74 @@ fn view(app: &mut App) {
 fn the_window_makes_the_profile_as_one_step() {
     let mut app = app();
     let _ = app.update(Message::Run("profile.fromLine"));
-    assert!(app.road_profile_fit_window.is_none(), "nothing selected");
+    assert!(
+        app.road.road_profile_fit_window.is_none(),
+        "nothing selected"
+    );
     app.selection.set([GRADES]);
     let _ = app.update(Message::Run("profile.fromLine"));
-    assert_eq!(app.dialog, Some(Dialog::RoadProfileFit));
-    let why = app.road_profile_fit_window.as_ref().and_then(|w| w.preview.why.clone()).expect("no datum yet");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::RoadProfileFit))
+    );
+    let why = app
+        .road
+        .road_profile_fit_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("no datum yet");
     assert!(why.contains("kıyas kotu"), "{why}");
     view(&mut app);
     send(&mut app, W::Field(4, "60".into()));
-    let w = app.road_profile_fit_window.as_ref().expect("open");
-    let fitted = w.preview.fitted.as_ref().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    let w = app.road.road_profile_fit_window.as_ref().expect("open");
+    let fitted = w
+        .preview
+        .fitted
+        .as_ref()
+        .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
     assert_eq!(fitted.pvis.len(), 4);
-    assert!((fitted.pvis[1].station - 150.0).abs() < 1e-9 && (fitted.pvis[1].elevation - 104.0).abs() < 1e-9);
+    assert!(
+        (fitted.pvis[1].station - 150.0).abs() < 1e-9
+            && (fitted.pvis[1].elevation - 104.0).abs() < 1e-9
+    );
     assert_eq!(fitted.curves, 2);
     send(&mut app, W::Field(4, "400".into()));
-    let why = app.road_profile_fit_window.as_ref().and_then(|w| w.preview.why.clone()).expect("refused");
+    let why = app
+        .road
+        .road_profile_fit_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("refused");
     assert!(why.contains("sığmıyor"), "{why}");
     send(&mut app, W::Field(4, String::new()));
-    let before = app.document.as_ref().expect("a drawing").model.road_profiles().len();
+    let before = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .road_profiles()
+        .len();
     send(&mut app, W::Make);
-    assert!(app.road_profile_fit_window.is_none());
-    assert_eq!(app.document.as_ref().expect("a drawing").model.road_profiles().len(), before + 1);
+    assert!(app.road.road_profile_fit_window.is_none());
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .road_profiles()
+            .len(),
+        before + 1
+    );
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(app.document.as_ref().expect("a drawing").model.road_profiles().len(), before);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .road_profiles()
+            .len(),
+        before
+    );
 }
 
 /// The window on drawn grades and on a crest and a sag arc, wide and narrow, light and dark;

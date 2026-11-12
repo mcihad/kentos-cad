@@ -4,6 +4,7 @@
 //! with its direction as a semt in the project's angle unit; on the base case the round ellipses have no direction.
 //! And the pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -26,12 +27,20 @@ fn opened(setup: &Value) -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    assert_eq!(app.dialog, Some(Dialog::SurveyNetwork));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+    );
     app
 }
 
 fn answer(app: &App) -> kentos_commands::MapSurveyNetworked {
-    app.survey_network.answer.clone().expect("an answer").expect("adjusted")
+    app.map
+        .survey_network
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("adjusted")
 }
 
 #[test]
@@ -55,10 +64,20 @@ fn every_new_mark_has_the_case_s_confidence_region() {
         }
     }
     let line = crate::survey_network_window::region_line(&a).expect("a region line");
-    assert!(line.starts_with("Güven bölgesi (%95): en büyük hata elipsi N5 noktasında"), "{line}");
+    assert!(
+        line.starts_with("Güven bölgesi (%95): en büyük hata elipsi N5 noktasında"),
+        "{line}"
+    );
     // Noktalar's column: the semi-axes, the direction as a semt in grads (the case's project), the height's interval.
-    let _ = app.update(Message::SurveyNetwork(N::View(View::Marks)));
-    let n5 = a.stations.iter().find(|s| s.mark == "N5").and_then(|s| s.ellipse.clone()).expect("N5's ellipse");
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+        View::Marks,
+    ))));
+    let n5 = a
+        .stations
+        .iter()
+        .find(|s| s.mark == "N5")
+        .and_then(|s| s.ellipse.clone())
+        .expect("N5's ellipse");
     let mm = |v: f64| format!("{:.1}", v * 1000.0);
     let cell = format!(
         "{}/{} · {} · ±{}",
@@ -96,7 +115,9 @@ fn screens() {
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        let _ = app.update(Message::SurveyNetwork(N::View(View::Marks)));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+            View::Marks,
+        ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

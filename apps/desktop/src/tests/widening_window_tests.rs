@@ -3,6 +3,7 @@
 //! writes; and its pictures.
 
 use crate::app::{App, Message};
+use crate::road;
 use crate::superelevation_window::Event as D;
 use crate::widening_window::{Event as W, Method};
 
@@ -19,14 +20,14 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Superelevations(D::Widen(e)));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Widen(e))));
 }
 
 /// A tractor and semitrailer of WB-19's sizes, 0,9 m clearance, 80 km/h, rounded up to 0,1 m.
 fn typed(app: &mut App) {
     let _ = app.update(Message::Run("superelevation.editor"));
-    let _ = app.update(Message::Superelevations(D::Choose(0)));
-    let _ = app.update(Message::Superelevations(D::OpenWiden));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(0))));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::OpenWiden)));
     for (k, v) in [(0, "6,6"), (1, "1,2"), (2, "2,59"), (6, "0,9"), (7, "80"), (8, "0,1")] {
         send(app, W::Field(k, v.into()));
     }
@@ -36,7 +37,11 @@ fn typed(app: &mut App) {
 }
 
 fn widen(app: &App) -> &crate::widening_window::Widen {
-    app.superelevation_window.as_ref().and_then(|w| w.widen.as_deref()).expect("open")
+    app.road
+        .superelevation_window
+        .as_ref()
+        .and_then(|w| w.widen.as_deref())
+        .expect("open")
 }
 
 #[test]
@@ -60,8 +65,16 @@ fn the_suggestion_is_read_and_written_into_the_schedule() {
     assert!(driven <= p1.offtracking + 0.01 && driven > 0.9 * p1.offtracking, "{driven}");
     // Çizelgeye yaz: back to Dever with 2,1 in p1's cell; Kaydet writes it.
     send(&mut app, W::Apply);
-    assert!(app.superelevation_window.as_ref().unwrap().widen.is_none(), "back to Dever");
-    let _ = app.update(Message::Superelevations(D::Save));
+    assert!(
+        app.road
+            .superelevation_window
+            .as_ref()
+            .unwrap()
+            .widen
+            .is_none(),
+        "back to Dever"
+    );
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Save)));
     let doc = &app.document.as_ref().unwrap().model;
     match &doc.road_superelevations()[0].method {
         kentos_commands::SuperelevationMethod::Curves { curves } => assert!((curves[0].widening - 2.1).abs() < 1e-9),
@@ -73,15 +86,15 @@ fn the_suggestion_is_read_and_written_into_the_schedule() {
 fn a_missing_size_says_what_to_type_and_rows_are_not_written() {
     let mut app = app();
     let _ = app.update(Message::Run("superelevation.editor"));
-    let _ = app.update(Message::Superelevations(D::Choose(0)));
-    let _ = app.update(Message::Superelevations(D::OpenWiden));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(0))));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::OpenWiden)));
     let why = widen(&app).result.clone().expect("read").expect_err("not yet");
     assert!(why.contains("Dingil aralığı"), "{why}");
     send(&mut app, W::Back);
     // d-2 is from rows: the suggestion reads, Çizelgeye yaz is not offered.
-    let _ = app.update(Message::Superelevations(D::Choose(1)));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(1))));
     typed(&mut app);
-    let _ = app.update(Message::Superelevations(D::Choose(1)));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(1))));
     send(&mut app, W::Field(7, "60".into()));
     let out = widen(&app).result.clone().expect("read").expect("reads");
     assert!(out.curves.is_empty(), "the side alignment has no curve");
@@ -119,8 +132,8 @@ fn screens() {
         };
         let _ = app.update(Message::RibbonTab("alignment"));
         let _ = app.update(Message::Run("superelevation.editor"));
-        let _ = app.update(Message::Superelevations(D::Choose(0)));
-        let _ = app.update(Message::Superelevations(D::OpenWiden));
+        let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(0))));
+        let _ = app.update(Message::Road(road::Event::Superelevations(D::OpenWiden)));
         shot(&mut app, "bos");
         typed(&mut app);
         send(&mut app, W::Field(9, "0,6".into()));
@@ -157,16 +170,20 @@ fn screens_full_screen() {
         sizes::set(key, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
     }
     let _ = app.update(Message::Run("superelevation.editor"));
-    let _ = app.update(Message::Superelevations(D::Choose(1)));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(1))));
     shot(&mut app, "dever");
-    let _ = app.update(Message::Superelevations(D::Choose(0)));
-    let _ = app.update(Message::Superelevations(D::OpenWiden));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(0))));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::OpenWiden)));
     shot(&mut app, "genisletme");
-    let _ = app.update(Message::Superelevations(D::Widen(W::Back)));
-    let _ = app.update(Message::Superelevations(D::Cancel));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Widen(
+        W::Back,
+    ))));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Cancel)));
     let _ = app.update(Message::Run("section.editor"));
     shot(&mut app, "enkesit");
-    let _ = app.update(Message::Sections(crate::section_window::Event::Cancel));
+    let _ = app.update(Message::Road(road::Event::Sections(
+        crate::section_window::Event::Cancel,
+    )));
     // The other road windows whose buttons moved to the footer.
     for (key, run, file) in [("Boykesit", "profile.new", "boykesit"), ("Güzergâh", "alignment.new", "guzergah"), ("Otokorkuluk", "guardrail.editor", "otokorkuluk")] {
         sizes::set(key, sizes::Kept { width: 800.0, height: 600.0, maximized: true });

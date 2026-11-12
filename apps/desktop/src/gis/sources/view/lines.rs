@@ -7,7 +7,7 @@ impl App {
     /// The rows as listed now: those the search keeps when it has words (docs/adr/0599 §5).
     pub(crate) fn source_lines(&self) -> Vec<Line> {
         let lines = self.all_source_lines();
-        let words = search_words(&self.sources.search);
+        let words = search_words(&self.gis.sources.search);
         if words.is_empty() {
             return lines;
         }
@@ -45,7 +45,7 @@ impl App {
     }
 
     pub(super) fn all_source_lines(&self) -> Vec<Line> {
-        let s = &self.sources;
+        let s = &self.gis.sources;
         let mut lines = Vec::new();
         self.kept_lines(
             RECENT,
@@ -125,7 +125,7 @@ impl App {
         lines: &mut Vec<Line>,
     ) {
         let key = folder_key(path);
-        let open = self.sources.open.contains(&key);
+        let open = self.gis.sources.open.contains(&key);
         lines.push(Line::Folder {
             key: key.clone(),
             path: path.to_path_buf(),
@@ -137,7 +137,7 @@ impl App {
         if !open {
             return;
         }
-        match self.sources.listings.get(path) {
+        match self.gis.sources.listings.get(path) {
             None | Some(Read::Reading) => {
                 lines.push(note(
                     format!("{key}\0okunuyor"),
@@ -157,7 +157,7 @@ impl App {
                     if file.kind == SourceKind::GeoPackage {
                         let origin = Origin::File(path.join(&file.name));
                         let key = tables_key(&origin);
-                        let open = self.sources.open.contains(&key);
+                        let open = self.gis.sources.open.contains(&key);
                         lines.push(Line::File {
                             key,
                             folder: path.to_path_buf(),
@@ -202,7 +202,7 @@ impl App {
         if kept.is_empty() {
             return;
         }
-        let open = self.sources.open.contains(key);
+        let open = self.gis.sources.open.contains(key);
         lines.push(Line::Section {
             key,
             label,
@@ -216,7 +216,7 @@ impl App {
             lines.push(Line::Kept {
                 key: format!("{key}:{i}"),
                 kept: k.clone(),
-                favourite: self.sources.folders.is_favourite(k),
+                favourite: self.gis.sources.folders.is_favourite(k),
                 depth: 1,
             });
         }
@@ -225,7 +225,7 @@ impl App {
     /// A GeoPackage's tables under it, a table's preview under the table (docs/adr/0599 §2).
     pub(super) fn table_lines(&self, origin: &Origin, depth: usize, lines: &mut Vec<Line>) {
         let key = tables_key(origin);
-        match self.sources.tables.get(origin) {
+        match self.gis.sources.tables.get(origin) {
             None | Some(Read::Reading) => {
                 lines.push(note(format!("{key}\0okunuyor"), "Okunuyor…", false, depth));
             }
@@ -245,7 +245,7 @@ impl App {
                 for t in tables {
                     let at = depth;
                     let tkey = table_key(origin, &t.name);
-                    let open = self.sources.open.contains(&tkey);
+                    let open = self.gis.sources.open.contains(&tkey);
                     lines.push(Line::FileTable {
                         key: tkey.clone(),
                         origin: origin.clone(),
@@ -300,7 +300,7 @@ impl App {
                 depth,
             });
         }
-        match self.sources.samples.get(key) {
+        match self.gis.sources.samples.get(key) {
             None | Some(Read::Reading) => {
                 lines.push(note(
                     format!("{key}\0okunuyor"),
@@ -335,7 +335,7 @@ impl App {
 
     /// Veritabanları: the device's connections, each open into its schemas and tables.
     pub(super) fn database_lines(&self, lines: &mut Vec<Line>) {
-        let open = self.sources.open.contains(DATABASES);
+        let open = self.gis.sources.open.contains(DATABASES);
         lines.push(Line::Section {
             key: DATABASES,
             label: "Veritabanları",
@@ -367,8 +367,8 @@ impl App {
         }
         for c in list {
             let key = connection_key(&c.name);
-            let open = self.sources.open.contains(&key);
-            let browse = self.sources.catalogs.get(&c.name);
+            let open = self.gis.sources.open.contains(&key);
+            let browse = self.gis.sources.catalogs.get(&c.name);
             let facts = match browse {
                 Some(Browse::Ready(catalog)) => Some(catalog.facts.line()),
                 _ => None,
@@ -427,7 +427,7 @@ impl App {
                     for (schema, relations) in schemas {
                         let skey = format!("sc:{}\0{schema}", c.name);
                         // A schema stays open unless closed by hand.
-                        let open = !self.sources.open.contains(&format!("{skey}\0kapalı"));
+                        let open = !self.gis.sources.open.contains(&format!("{skey}\0kapalı"));
                         lines.push(Line::Schema {
                             key: skey.clone(),
                             label: schema.to_owned(),
@@ -465,7 +465,7 @@ impl App {
 
     /// Servisler (docs/adr/0599 §4): the ready basemaps, then the services added before.
     pub(super) fn service_lines(&self, lines: &mut Vec<Line>) {
-        let s = &self.sources;
+        let s = &self.gis.sources;
         let open = s.open.contains(SERVICES);
         lines.push(Line::Section {
             key: SERVICES,
@@ -581,7 +581,7 @@ impl App {
         lines: &mut Vec<Line>,
     ) {
         let key = list_key(view);
-        let open = self.sources.open.contains(&key);
+        let open = self.gis.sources.open.contains(&key);
         lines.push(Line::List {
             key: key.clone(),
             label,
@@ -592,7 +592,7 @@ impl App {
         if !open {
             return;
         }
-        match self.sources.lists.get(view) {
+        match self.gis.sources.lists.get(view) {
             None | Some(Read::Reading) => {
                 lines.push(note(format!("{key}\0okunuyor"), "Okunuyor…", false, 2));
             }
@@ -620,7 +620,7 @@ impl App {
 
     pub(super) fn project_lines(&self, p: &ProjectSummary, lines: &mut Vec<Line>) {
         let key = project_key(&p.id);
-        let open = self.sources.open.contains(&key);
+        let open = self.gis.sources.open.contains(&key);
         lines.push(Line::Project {
             key: key.clone(),
             project: Box::new(p.clone()),
@@ -630,7 +630,7 @@ impl App {
         if !open {
             return;
         }
-        match self.sources.drawings.get(&p.id) {
+        match self.gis.sources.drawings.get(&p.id) {
             None | Some(Read::Reading) => {
                 lines.push(note(
                     format!("{key}\0iniyor"),
@@ -678,7 +678,7 @@ impl App {
                 continue;
             }
             // A group of the project's tree: open unless closed by hand.
-            let open = !self.sources.open.contains(&format!("{key}\0kapalı"));
+            let open = !self.gis.sources.open.contains(&format!("{key}\0kapalı"));
             lines.push(Line::Group {
                 key: key.clone(),
                 label: n.name.clone(),

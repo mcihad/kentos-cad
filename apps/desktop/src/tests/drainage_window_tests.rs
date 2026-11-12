@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::drainage_window::Event as W;
+use crate::road;
 
 /// A road project with `road.drainage.query`'s drawing: the culverts' corridors and three lattice terrains.
 fn app() -> App {
@@ -16,7 +17,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Drainage(e));
+    let _ = app.update(Message::Road(road::Event::Drainage(e)));
 }
 
 /// The valley's outlet with its grid, a culvert and the Rational method's values.
@@ -32,10 +33,13 @@ fn valley(app: &mut App) {
 fn the_window_previews_the_catchment_against_the_culvert_and_draws_it() {
     let mut app = app();
     let _ = app.update(Message::Run("drainage.editor"));
-    assert_eq!(app.dialog, Some(Dialog::Drainage));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Drainage))
+    );
     valley(&mut app);
     send(&mut app, W::Preview);
-    let w = app.drainage_window.as_ref().expect("open");
+    let w = app.road.drainage_window.as_ref().expect("open");
     let q = match &w.preview {
         Some(Ok(q)) => q.clone(),
         other => panic!("previewed: {other:?}"),
@@ -46,16 +50,45 @@ fn the_window_previews_the_catchment_against_the_culvert_and_draws_it() {
     assert!(w.warnings.iter().any(|m| m.contains("kapasitesi")), "{:?}", w.warnings);
     // A change says the preview is old; a culvert's inlet is a discharge point too.
     send(&mut app, W::Field(0, String::new()));
-    assert!(app.drainage_window.as_ref().expect("open").preview.is_none());
+    assert!(
+        app.road
+            .drainage_window
+            .as_ref()
+            .expect("open")
+            .preview
+            .is_none()
+    );
     send(&mut app, W::Field(0, "2000,500".into()));
     send(&mut app, W::Preview);
-    let before = app.document.as_ref().expect("a drawing").model.entities().count();
+    let before = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .entities()
+        .count();
     send(&mut app, W::Layer("drenaj".into()));
     send(&mut app, W::Draw);
-    assert!(app.drainage_window.is_none());
-    assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before + 3);
+    assert!(app.road.drainage_window.is_none());
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .count(),
+        before + 3
+    );
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .count(),
+        before
+    );
 }
 
 #[test]
@@ -65,7 +98,7 @@ fn the_ponds_of_the_pit() {
     send(&mut app, W::Surface("t-4".into()));
     send(&mut app, W::Field(5, "0".into()));
     send(&mut app, W::Preview);
-    let q = match &app.drainage_window.as_ref().expect("open").preview {
+    let q = match &app.road.drainage_window.as_ref().expect("open").preview {
         Some(Ok(q)) => q.clone(),
         other => panic!("previewed: {other:?}"),
     };
@@ -74,7 +107,7 @@ fn the_ponds_of_the_pit() {
     send(&mut app, W::Field(1, "x".into()));
     send(&mut app, W::Field(0, "4004,1".into()));
     send(&mut app, W::Preview);
-    let why = match &app.drainage_window.as_ref().expect("open").preview {
+    let why = match &app.road.drainage_window.as_ref().expect("open").preview {
         Some(Err(why)) => why.clone(),
         other => panic!("refused: {other:?}"),
     };

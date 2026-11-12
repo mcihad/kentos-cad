@@ -4,6 +4,7 @@
 //! way (`kentos_processing::raster_env::resolve`): the visible box or the chosen objects' box, the snap raster by its
 //! persistent id, the cell size typed in the drawing's unit.
 
+use crate::gis;
 use iced::widget::{Column, button, column, container, row};
 use iced::{Center, Element, Fill};
 use kentos_commands::{Entity, RasterEnvironment};
@@ -62,7 +63,7 @@ pub enum EnvironmentEvent {
 }
 
 fn ev(e: EnvironmentEvent) -> Message {
-    Message::Processing(Event::Environment(e))
+    Message::Gis(gis::Event::Processing(Event::Environment(e)))
 }
 
 /// A number as typed: a comma is a decimal point; empty is none.
@@ -276,10 +277,11 @@ impl crate::app::App {
         match tool
             .id
             .strip_prefix(kentos_processing::model_runner::MODEL_PREFIX)
-            .and_then(|id| self.processing.registry.model(id))
+            .and_then(|id| self.gis.processing.registry.model(id))
         {
             Some(m) => m.steps.iter().any(|s| {
-                self.processing
+                self.gis
+                    .processing
                     .registry
                     .tool(&s.tool)
                     .is_some_and(|t| kentos_processing::raster_env::takes(&t))
@@ -290,7 +292,8 @@ impl crate::app::App {
 
     /// The command's environment for the open window's run: none when its tool does not take one or nothing is set.
     pub(crate) fn processing_environment(&self) -> Result<Option<RasterEnvironment>, String> {
-        let (Some(doc), Some(window)) = (self.document.as_ref(), self.processing.dialog.as_ref())
+        let (Some(doc), Some(window)) =
+            (self.document.as_ref(), self.gis.processing.dialog.as_ref())
         else {
             return Ok(None);
         };

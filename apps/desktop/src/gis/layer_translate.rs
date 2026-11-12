@@ -5,6 +5,7 @@
 //! and the layers to add or restyle, read again after every change. Çevir
 //! writes it as one undo step “Katmanları çevir” and closes.
 
+use crate::gis;
 use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, LayersTranslate, LayersTranslated, TranslateRule};
@@ -57,7 +58,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::LayerTranslate(event)
+    Message::Gis(gis::Event::LayerTranslate(event))
 }
 
 /// The rules as the command takes them; a row without a pattern or a name is
@@ -103,25 +104,25 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        self.layer_translate = Some(Window {
+        self.gis.layer_translate = Some(Window {
             rules: vec![RuleRow::default()],
             preview: Err(String::new()),
         });
-        self.dialog = Some(Dialog::LayerTranslate);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerTranslate));
         self.refresh_translate();
     }
 
     /// The window's preview read again from the command's plan.
     fn refresh_translate(&mut self) {
         let preview = self.translate_plan();
-        if let Some(w) = self.layer_translate.as_mut() {
+        if let Some(w) = self.gis.layer_translate.as_mut() {
             w.preview = preview;
         }
     }
 
     /// The preview: the command's plan, or why it would not write.
     fn translate_plan(&self) -> Result<LayersTranslated, String> {
-        let (Some(w), Some(doc)) = (&self.layer_translate, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.layer_translate, &self.document) else {
             return Err("Açık çizim yok.".to_owned());
         };
         if let Some(locked) = self.tree_locked() {
@@ -145,7 +146,7 @@ impl App {
     }
 
     pub(crate) fn layer_translate_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.layer_translate.as_mut() else {
+        let Some(w) = self.gis.layer_translate.as_mut() else {
             return Task::none();
         };
         fn row(w: &mut Window, i: usize) -> Option<&mut RuleRow> {
@@ -186,13 +187,13 @@ impl App {
             }
             Event::Translate => {
                 if self.translate_layers() {
-                    self.layer_translate = None;
+                    self.gis.layer_translate = None;
                     self.dialog = None;
                 }
                 return Task::none();
             }
             Event::Cancel => {
-                self.layer_translate = None;
+                self.gis.layer_translate = None;
                 self.dialog = None;
             }
         }
@@ -202,7 +203,7 @@ impl App {
 
     /// Writes the window's rules; whether it wrote (what it did said).
     pub(crate) fn translate_layers(&mut self) -> bool {
-        let input = match self.layer_translate.as_ref().map(input_of) {
+        let input = match self.gis.layer_translate.as_ref().map(input_of) {
             Some(Ok(input)) => input,
             Some(Err(why)) => {
                 self.warn(why);
@@ -244,7 +245,7 @@ impl App {
     }
 
     pub(crate) fn layer_translate_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.layer_translate else {
+        let Some(w) = &self.gis.layer_translate else {
             return text("").into();
         };
         let field =
@@ -411,7 +412,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.layer_translate.is_none() {
+        if self.gis.layer_translate.is_none() {
             return Err(format!("{TRANSLATE_TITLE} penceresi açık değil"));
         }
         Ok(match control {

@@ -15,6 +15,7 @@
 //! Önceki kararlar (docs/adr/4540): with the switch on, a candidate of a model run again takes the decision recorded on
 //! an earlier candidate near it (a resolved review note of Detay eşleştirme); the summary says which notes were taken.
 
+use crate::gis;
 use iced::widget::{container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CandidateDecision, CandidateSource, CommandResult, FeaturesReconcile, FeaturesReconciled};
@@ -80,7 +81,7 @@ pub enum Event {
 }
 
 pub(crate) fn msg(e: Event) -> Message {
-    Message::FeaturesReconcile(e)
+    Message::Gis(gis::Event::FeaturesReconcile(e))
 }
 
 /// A status in words.
@@ -96,7 +97,7 @@ fn status_word(s: &str) -> &'static str {
 
 impl App {
     fn reconcile_input(&self) -> FeaturesReconcile {
-        let s = &self.features_reconcile;
+        let s = &self.gis.features_reconcile;
         let some = |t: &str| Some(t.trim().to_owned()).filter(|t| !t.is_empty());
         FeaturesReconcile {
             name: PROFILE.into(),
@@ -121,14 +122,18 @@ impl App {
 
     pub(crate) fn reconcile_run(&mut self) {
         let input = self.reconcile_input();
-        let Some(doc) = self.document.as_mut() else { return };
-        self.features_reconcile.answer = Some(match map_features_reconcile::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Adaylar eşleştirilemedi.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.gis.features_reconcile.answer = Some(
+            match map_features_reconcile::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Adaylar eşleştirilemedi.".to_owned()),
+            },
+        );
     }
 
     /// Detay eşleştirme (`map.featuresReconcile`): the window, its sources guessed by their layers' names.
@@ -151,7 +156,7 @@ impl App {
         };
         let first = guess(&["lidar", "bulut"]);
         let second = guess(&["ortofoto", "orto"]);
-        self.features_reconcile = State {
+        self.gis.features_reconcile = State {
             layers,
             sources: [(first, "LiDAR".into()), (second, "Ortofoto".into())],
             field: kentos_commands::DEFAULT_CODE_FIELD.into(),
@@ -161,13 +166,21 @@ impl App {
             ..State::default()
         };
         self.reconcile_run();
-        self.dialog = Some(Dialog::FeaturesReconcile);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FeaturesReconcile));
         Task::none()
     }
 
-    fn reconcile_decide(&mut self, group: usize, f: impl Fn(&str, Option<&str>) -> Option<CandidateDecision>) {
-        let Some(Ok(answer)) = &self.features_reconcile.answer else { return };
-        let Some(g) = answer.groups.get(group) else { return };
+    fn reconcile_decide(
+        &mut self,
+        group: usize,
+        f: impl Fn(&str, Option<&str>) -> Option<CandidateDecision>,
+    ) {
+        let Some(Ok(answer)) = &self.gis.features_reconcile.answer else {
+            return;
+        };
+        let Some(g) = answer.groups.get(group) else {
+            return;
+        };
         let mut made = Vec::new();
         for uid in &g.candidates {
             let class = answer.candidates.iter().find(|c| c.uid == *uid).and_then(|c| c.class.as_deref());
@@ -175,7 +188,7 @@ impl App {
                 made.push(d);
             }
         }
-        let s = &mut self.features_reconcile;
+        let s = &mut self.gis.features_reconcile;
         for d in made {
             s.decisions.retain(|x| x.candidate != d.candidate);
             s.decisions.push(d);
@@ -186,37 +199,37 @@ impl App {
     pub(crate) fn features_reconcile_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Layer(i, id) => {
-                self.features_reconcile.sources[i].0 = id;
-                self.features_reconcile.decisions.clear();
+                self.gis.features_reconcile.sources[i].0 = id;
+                self.gis.features_reconcile.decisions.clear();
                 self.reconcile_run();
             }
             Event::Name(i, name) => {
-                self.features_reconcile.sources[i].1 = name;
+                self.gis.features_reconcile.sources[i].1 = name;
                 self.reconcile_run();
             }
             Event::Field(t) => {
-                self.features_reconcile.field = t;
+                self.gis.features_reconcile.field = t;
                 self.reconcile_run();
             }
             Event::Confidence(t) => {
-                self.features_reconcile.confidence = t;
+                self.gis.features_reconcile.confidence = t;
                 self.reconcile_run();
             }
             Event::Radius(v) => {
                 if v > 0.0 {
-                    self.features_reconcile.radius = v;
+                    self.gis.features_reconcile.radius = v;
                     self.reconcile_run();
                 }
             }
             Event::Overlap(v) => {
                 if v > 0.0 && v < 1.0 {
-                    self.features_reconcile.overlap = v;
+                    self.gis.features_reconcile.overlap = v;
                     self.reconcile_run();
                 }
             }
-            Event::Reviewer(t) => self.features_reconcile.reviewer = t,
+            Event::Reviewer(t) => self.gis.features_reconcile.reviewer = t,
             Event::Reapply(on) => {
-                self.features_reconcile.reapply = on;
+                self.gis.features_reconcile.reapply = on;
                 self.reconcile_run();
             }
             Event::Accept(g) => self.reconcile_decide(g, |uid, _| {
@@ -234,16 +247,16 @@ impl App {
                 })
             }),
             Event::Fill(g) => {
-                self.features_reconcile.fill = Some(g);
-                self.features_reconcile.typed.clear();
+                self.gis.features_reconcile.fill = Some(g);
+                self.gis.features_reconcile.typed.clear();
             }
             Event::Typed(field, text) => {
-                self.features_reconcile.typed.insert(field, text);
+                self.gis.features_reconcile.typed.insert(field, text);
             }
             Event::FillApply => self.reconcile_fill_apply(),
             Event::FillCancel => {
-                self.features_reconcile.fill = None;
-                self.features_reconcile.typed.clear();
+                self.gis.features_reconcile.fill = None;
+                self.gis.features_reconcile.typed.clear();
             }
             Event::Run => {
                 // Docs/adr/4140: the decisions are recorded as review notes at this time.
@@ -264,11 +277,11 @@ impl App {
                         );
                     }
                 }
-                self.features_reconcile.decisions.clear();
+                self.gis.features_reconcile.decisions.clear();
                 self.reconcile_run();
             }
             Event::Close => {
-                self.features_reconcile = State::default();
+                self.gis.features_reconcile = State::default();
                 self.dialog = None;
             }
         }
@@ -276,7 +289,7 @@ impl App {
     }
 
     pub(crate) fn features_reconcile_view(&self) -> Element<'_, Message> {
-        let s = &self.features_reconcile;
+        let s = &self.gis.features_reconcile;
         let source = |i: usize| {
             row![
                 container(fields::select_owned(s.layers.clone(), &s.sources[i].0, move |v| msg(Event::Layer(i, v)))).width(240),

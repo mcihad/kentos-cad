@@ -2,6 +2,7 @@
 //! openings without a type or off their wall, tags whose object is gone, openings and spaces without a tag — each with
 //! its words and objects. Göster brings them into view; the drawing is not changed.
 
+use crate::arch;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, TagFinding, TagsCheck};
@@ -35,7 +36,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::TagsCheck(e)
+    Message::Arch(arch::Event::TagsCheck(e))
 }
 
 /// A finding's icon by its code.
@@ -69,14 +70,15 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        self.tags_check = self.tags_check_read(true);
-        self.dialog = Some(Dialog::TagsCheck);
+        self.arch.tags_check = self.tags_check_read(true);
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::TagsCheck));
     }
 
     pub(crate) fn tags_check_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Show(i) => {
                 let Some(f) = self
+                    .arch
                     .tags_check
                     .as_ref()
                     .and_then(|w| w.findings.get(i))
@@ -97,17 +99,17 @@ impl App {
                 self.zoom_to_objects(&ids);
             }
             Event::Refresh => {
-                if let Some(w) = &self.tags_check {
-                    self.tags_check = self.tags_check_read(w.missing_space_numbers);
+                if let Some(w) = &self.arch.tags_check {
+                    self.arch.tags_check = self.tags_check_read(w.missing_space_numbers);
                 }
             }
             Event::Missing(on) => {
-                if self.tags_check.is_some() {
-                    self.tags_check = self.tags_check_read(on);
+                if self.arch.tags_check.is_some() {
+                    self.arch.tags_check = self.tags_check_read(on);
                 }
             }
             Event::Close => {
-                self.tags_check = None;
+                self.arch.tags_check = None;
                 self.dialog = None;
             }
         }
@@ -115,7 +117,7 @@ impl App {
     }
 
     pub(crate) fn tags_check_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.tags_check else {
+        let Some(w) = &self.arch.tags_check else {
             return iced::widget::text("").into();
         };
         let summary = if w.findings.is_empty() {
@@ -203,14 +205,14 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.tags_check.is_none() {
+        if self.arch.tags_check.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(REFRESH) => Some(msg(Event::Refresh)),
             Control::Press(MISSING) => Some(msg(Event::Missing(
-                !self.tags_check.as_ref().unwrap().missing_space_numbers,
+                !self.arch.tags_check.as_ref().unwrap().missing_space_numbers,
             ))),
             Control::Press(SHOW) => Some(msg(Event::Show(0))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
@@ -246,7 +248,8 @@ mod tests {
         app
     }
     fn missing(app: &App) -> usize {
-        app.tags_check
+        app.arch
+            .tags_check
             .as_ref()
             .unwrap()
             .findings
@@ -261,17 +264,20 @@ mod tests {
         let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
         app.open_tags_check();
         assert_eq!(missing(&app), 3);
-        assert_eq!(app.dialog, Some(Dialog::TagsCheck));
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Arch(arch::ArchDialogKind::TagsCheck))
+        );
         let _ = app.tags_check_event(Event::Missing(false));
         assert_eq!(missing(&app), 0);
         let _ = app.tags_check_event(Event::Refresh);
-        assert!(!app.tags_check.as_ref().unwrap().missing_space_numbers);
+        assert!(!app.arch.tags_check.as_ref().unwrap().missing_space_numbers);
         let _ = app.tags_check_event(Event::Missing(true));
         assert_eq!(missing(&app), 3);
         let _ = app.tags_check_event(Event::Close);
         let _ = app.tags_check_event(Event::Missing(true));
         let _ = app.tags_check_event(Event::Refresh);
-        assert!(app.tags_check.is_none() && app.dialog.is_none());
+        assert!(app.arch.tags_check.is_none() && app.dialog.is_none());
         assert_eq!(
             app.document.as_ref().unwrap().model.to_snapshot_v2(),
             before

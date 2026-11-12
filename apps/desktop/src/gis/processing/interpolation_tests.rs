@@ -7,6 +7,7 @@
 //! cross-validation's table; Kriging's error on a second layer from the same
 //! file; a density's zeros clear.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::{DocumentSnapshotV1, Entity, RasterSample};
@@ -29,7 +30,10 @@ fn app() -> App {
 }
 
 fn value(app: &mut App, name: &str, v: Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 /// Opens `tool`'s window on `layer`, its result to be written at `out`.

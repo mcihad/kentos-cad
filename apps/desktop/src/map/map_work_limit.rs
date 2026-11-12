@@ -4,6 +4,7 @@
 //! position accuracy rules (`kentos_commands::position_accuracy`); a choice that does not hold (a scale the table has no
 //! value for) is said under the row and the query runs without a limit. Within a limit is a measure, not a ruling.
 
+use crate::map;
 use iced::widget::{column, container, row};
 use iced::{Center, Element, Fill};
 use kentos_commands::{LimitBasis, ShiftLimit, ShiftLimitUsed};
@@ -92,7 +93,7 @@ impl LimitPick {
 }
 
 fn msg(e: LimitEvent) -> Message {
-    Message::MapWork(Event::Limit(e))
+    Message::Map(map::Event::MapWork(Event::Limit(e)))
 }
 
 /// A metre value as Turkish writes it.

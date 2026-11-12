@@ -113,6 +113,9 @@ pub(crate) mod tests;
 #[cfg(test)]
 mod live_run;
 
+use crate::arch;
+use crate::gis;
+use crate::map;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -942,7 +945,9 @@ impl App {
             Some(Dialog::BlockReplace) => self.block_replace_close(),
             Some(Dialog::BlockFind) => self.block_find_close_options(),
             Some(Dialog::ArrayFind) => self.array_find_close_dialog(),
-            Some(Dialog::ArchTemplate) => self.arch_template = None,
+            Some(Dialog::Arch(arch::ArchDialogKind::ArchTemplate)) => {
+                self.arch.arch_template = None
+            }
             Some(Dialog::SignIn) => self.cloud.sign_in = None,
             Some(Dialog::Catalog) if self.cloud.share.is_some() => {
                 // The share window over the catalog goes first, its question before it.
@@ -1015,9 +1020,9 @@ impl App {
             Some(Dialog::Revision) => self.cloud.question = None,
             Some(Dialog::Exchange) => self.exchange = None,
             Some(Dialog::Project) => self.project_dismissed(),
-            Some(Dialog::Processing) => {
-                self.processing.dialog = None;
-                self.processing.batch = None;
+            Some(Dialog::Gis(gis::GisDialogKind::Processing)) => {
+                self.gis.processing.dialog = None;
+                self.gis.processing.batch = None;
             }
             // With changes not applied, Katman stili asks first (style/layer_style/).
             Some(Dialog::LayerStyle) if !self.layer_style_may_close() => {
@@ -1029,8 +1034,8 @@ impl App {
             // Changes are asked about first; the window under it comes back (style/designer/).
             Some(Dialog::SymbolDesigner) => self.designer_close_request(),
             // A menu, a carried tool and a question go first; changes are asked about (processing/designer/).
-            Some(Dialog::ModelDesigner) => {
-                self.dialog = Some(Dialog::ModelDesigner);
+            Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner)) => {
+                self.dialog = Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner));
                 self.designer_close();
             }
             // A window over it, a question, then unsaved changes are asked about (style/svgedit/).
@@ -1038,31 +1043,34 @@ impl App {
             Some(Dialog::BlockDefine) => self.block_define_closed(),
             Some(Dialog::BlockAttributes) => self.block_attributes = None,
             // Blok ekle's point is dropped; the tool waits for the next.
-            Some(Dialog::AttributeValues) => self.attribute_values_closed(),
+            Some(Dialog::Gis(gis::GisDialogKind::AttributeValues)) => {
+                self.attribute_values_closed()
+            }
             Some(Dialog::FindReplace) => self.find_replace = None,
-            Some(Dialog::LayerMerge) => self.layer_merge = None,
-            Some(Dialog::TimeLayer) => self.time.layer = None,
-            Some(Dialog::Sensors) => self.time.sensors = None,
-            Some(Dialog::LayerFilter) => self.layer_filter = None,
-            Some(Dialog::FieldsWrite) => self.features.write = None,
-            Some(Dialog::LayerInfo) => self.layer_info = None,
-            Some(Dialog::DatasetInfo) => self.dataset_info = None,
+            Some(Dialog::Gis(gis::GisDialogKind::LayerMerge)) => self.gis.layer_merge = None,
+            Some(Dialog::Gis(gis::GisDialogKind::TimeLayer)) => self.gis.time.layer = None,
+            Some(Dialog::Gis(gis::GisDialogKind::Sensors)) => self.gis.time.sensors = None,
+            Some(Dialog::Gis(gis::GisDialogKind::LayerFilter)) => self.gis.layer_filter = None,
+            Some(Dialog::Gis(gis::GisDialogKind::FieldsWrite)) => self.gis.features.write = None,
+            Some(Dialog::Gis(gis::GisDialogKind::LayerInfo)) => self.gis.layer_info = None,
+            Some(Dialog::Gis(gis::GisDialogKind::DatasetInfo)) => self.gis.dataset_info = None,
             Some(Dialog::Attachment) => self.attachment_form = None,
             Some(Dialog::PhotoViewer) => self.photo_viewer = None,
-            Some(Dialog::Labelling) => self.labelling = None,
-            Some(Dialog::Scenario) => self.time.scenario = None,
+            Some(Dialog::Gis(gis::GisDialogKind::Labelling)) => self.gis.labelling = None,
+            Some(Dialog::Gis(gis::GisDialogKind::Scenario)) => self.gis.time.scenario = None,
             // The value list's window first, then Alanlar.
-            Some(Dialog::LayerFields)
+            Some(Dialog::Gis(gis::GisDialogKind::LayerFields))
                 if self
+                    .gis
                     .layer_fields
                     .as_ref()
                     .is_some_and(crate::layer_fields::Window::listing) =>
             {
                 let _ = self.layer_fields_event(crate::layer_fields::Event::ListCancel);
-                self.dialog = Some(Dialog::LayerFields);
+                self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerFields));
             }
-            Some(Dialog::LayerFields) => self.layer_fields = None,
-            Some(Dialog::TopologyRules) => self.topology_rules = None,
+            Some(Dialog::Gis(gis::GisDialogKind::LayerFields)) => self.gis.layer_fields = None,
+            Some(Dialog::Gis(gis::GisDialogKind::TopologyRules)) => self.gis.topology_rules = None,
             Some(Dialog::LayerStates) => self.layer_states_window = None,
             // Sil's question first, then the window.
             Some(Dialog::AnnotationStyles)
@@ -1073,26 +1081,32 @@ impl App {
                 self.dialog = Some(Dialog::AnnotationStyles);
             }
             Some(Dialog::AnnotationStyles) => self.annotation_styles = None,
-            Some(Dialog::WallStyles) if self.wall_styles.as_ref().is_some_and(|w| w.asking()) => {
+            Some(Dialog::Arch(arch::ArchDialogKind::WallStyles))
+                if self.arch.wall_styles.as_ref().is_some_and(|w| w.asking()) =>
+            {
                 let _ = self.wall_styles_event(crate::wall_styles::Event::RemoveDropped);
-                self.dialog = Some(Dialog::WallStyles);
+                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::WallStyles));
             }
             // An editor with its own save: Esc is its Kapat, which asks when changes would go; over the question, Esc
             // is Vazgeç (docs/adr/8006). It threw the changes away.
-            Some(Dialog::WallStyles) => {
+            Some(Dialog::Arch(arch::ArchDialogKind::WallStyles)) => {
                 use crate::wall_styles::Event;
-                self.dialog = Some(Dialog::WallStyles);
-                let closing = self.wall_styles.as_ref().is_some_and(|w| w.closing());
+                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::WallStyles));
+                let closing = self.arch.wall_styles.as_ref().is_some_and(|w| w.closing());
                 let _ = self.wall_styles_event(if closing {
                     Event::Answer(crate::unsaved_close::Answer::Stay)
                 } else {
                     Event::Close
                 });
             }
-            Some(Dialog::Program) => {
+            Some(Dialog::Arch(arch::ArchDialogKind::Program)) => {
                 use crate::program_window::Event;
-                self.dialog = Some(Dialog::Program);
-                let closing = self.program_window.as_ref().is_some_and(|w| w.closing());
+                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Program));
+                let closing = self
+                    .arch
+                    .program_window
+                    .as_ref()
+                    .is_some_and(|w| w.closing());
                 let _ = self.program_event(if closing {
                     Event::Answer(crate::unsaved_close::Answer::Stay)
                 } else {
@@ -1100,45 +1114,49 @@ impl App {
                 });
             }
             Some(Dialog::TableStyleDefs) => self.table_style_window = None,
-            Some(Dialog::WallJoins) => self.wall_joins = None,
-            Some(Dialog::OpeningTypes) => {
+            Some(Dialog::Arch(arch::ArchDialogKind::WallJoins)) => self.arch.wall_joins = None,
+            Some(Dialog::Arch(arch::ArchDialogKind::OpeningTypes)) => {
                 use crate::opening_types_window::Event;
-                self.dialog = Some(Dialog::OpeningTypes);
-                let closing = self.opening_types.as_ref().is_some_and(|w| w.closing);
+                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::OpeningTypes));
+                let closing = self.arch.opening_types.as_ref().is_some_and(|w| w.closing);
                 let _ = self.opening_types_event(if closing {
                     Event::Answer(crate::unsaved_close::Answer::Stay)
                 } else {
                     Event::Close
                 });
             }
-            Some(Dialog::Materials) => {
+            Some(Dialog::Arch(arch::ArchDialogKind::Materials)) => {
                 use crate::materials_window::Event;
-                self.dialog = Some(Dialog::Materials);
-                let closing = self.materials.as_ref().is_some_and(|w| w.closing);
+                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Materials));
+                let closing = self.arch.materials.as_ref().is_some_and(|w| w.closing);
                 let _ = self.materials_event(if closing {
                     Event::Answer(crate::unsaved_close::Answer::Stay)
                 } else {
                     Event::Close
                 });
             }
-            Some(Dialog::RoomModules) => self.room_modules = None,
-            Some(Dialog::DesignOptions) => self.design_options = None,
-            Some(Dialog::TagsCheck) => self.tags_check = None,
-            Some(Dialog::ViewRefs) => self.view_refs = None,
+            Some(Dialog::Arch(arch::ArchDialogKind::RoomModules)) => self.arch.room_modules = None,
+            Some(Dialog::Arch(arch::ArchDialogKind::DesignOptions)) => {
+                self.arch.design_options = None
+            }
+            Some(Dialog::Arch(arch::ArchDialogKind::TagsCheck)) => self.arch.tags_check = None,
+            Some(Dialog::Arch(arch::ArchDialogKind::ViewRefs)) => self.arch.view_refs = None,
             Some(Dialog::SheetSet) => self.sheet_set = None,
             Some(Dialog::Xrefs | Dialog::XrefAttach) => self.xrefs = Default::default(),
-            Some(Dialog::Quantities) => self.quantities = None,
+            Some(Dialog::Arch(arch::ArchDialogKind::Quantities)) => self.arch.quantities = None,
             Some(Dialog::LayerPurge) => self.layer_purge = None,
             Some(Dialog::TakeFrom) => self.take_from = None,
             Some(Dialog::LayerList) => self.layer_list = None,
-            Some(Dialog::DataCompare) => self.data_compare = None,
-            Some(Dialog::Cogo) => self.cogo = None,
+            Some(Dialog::Gis(gis::GisDialogKind::DataCompare)) => self.gis.data_compare = None,
+            Some(Dialog::Map(map::MapDialogKind::Cogo)) => self.map.cogo = None,
             // Şablon düzenleyici closes; its typing is not kept (template_editor.rs).
-            Some(Dialog::TemplateEditor) => self.template_editor = None,
-            Some(Dialog::PointBatch) => self.points.close_batch(),
+            Some(Dialog::Arch(arch::ArchDialogKind::TemplateEditor)) => {
+                self.arch.template_editor = None
+            }
+            Some(Dialog::Gis(gis::GisDialogKind::PointBatch)) => self.gis.points.close_batch(),
             // Formla düzenle: its Vazgeç, which asks first when something was typed (docs/adr/0443 §6).
-            Some(Dialog::FormEntry) => {
-                self.dialog = Some(Dialog::FormEntry);
+            Some(Dialog::Gis(gis::GisDialogKind::FormEntry)) => {
+                self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FormEntry));
                 let _ = self.form_entry_event(crate::forms::entry::Event::Cancel);
             }
             _ => {}

@@ -7,6 +7,7 @@
 //! libraries outside the drawing: KentOS's and the office's folders; Seçilenleri al takes a library's materials in,
 //! Kitaplığa yaz… writes the project's to a `.kmalzeme` file.
 
+use crate::arch;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -138,7 +139,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Materials(e)
+    Message::Arch(arch::Event::Materials(e))
 }
 
 /// What a report line says about `r`.
@@ -314,6 +315,7 @@ impl App {
             .and_then(|id| list.iter().position(|(m, _)| m.id == id))
             .unwrap_or(0);
         let (tab, entry, conflict) = self
+            .arch
             .materials
             .as_ref()
             .map_or((Tab::Project, 0, Conflict::Keep), |w| (w.tab, w.entry, w.conflict));
@@ -329,7 +331,7 @@ impl App {
         if let Some((m, _)) = w.list.get(chosen).cloned() {
             fill(&mut w, &m);
         }
-        self.materials = Some(w);
+        self.arch.materials = Some(w);
         self.material_library_read();
     }
 
@@ -340,17 +342,17 @@ impl App {
             return;
         }
         self.materials_read(None);
-        self.dialog = Some(Dialog::Materials);
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Materials));
     }
 
     pub(crate) fn materials_chosen(&self) -> Option<ArchMaterial> {
-        let w = self.materials.as_ref()?;
+        let w = self.arch.materials.as_ref()?;
         w.list.get(w.chosen).map(|(m, _)| m.clone())
     }
 
     /// The plan of the change typed: what it would do, nothing written.
     fn materials_preview(&mut self) {
-        let (Some(w), Some(m)) = (self.materials.as_ref(), self.materials_chosen()) else {
+        let (Some(w), Some(m)) = (self.arch.materials.as_ref(), self.materials_chosen()) else {
             return;
         };
         let preview = match change_of(w, &m) {
@@ -370,7 +372,7 @@ impl App {
                 }
             }),
         };
-        if let Some(w) = self.materials.as_mut() {
+        if let Some(w) = self.arch.materials.as_mut() {
             w.preview = preview;
         }
     }
@@ -401,19 +403,23 @@ impl App {
 
     /// Whether the chosen material has a change Uygula has not written (docs/adr/8006).
     fn materials_unapplied(&self) -> bool {
-        self.materials.as_ref().is_some_and(|w| w.list.get(w.chosen).is_some_and(|(m, _)| change_of(w, m).is_some()))
+        self.arch.materials.as_ref().is_some_and(|w| {
+            w.list
+                .get(w.chosen)
+                .is_some_and(|(m, _)| change_of(w, m).is_some())
+        })
     }
 
     pub(crate) fn materials_event(&mut self, event: Event) -> Task<Message> {
         let edit = |app: &mut App, f: &dyn Fn(&mut Window)| {
-            if let Some(w) = app.materials.as_mut() {
+            if let Some(w) = app.arch.materials.as_mut() {
                 f(w);
             }
             app.materials_preview();
         };
         match event {
             Event::Choose(i) => {
-                if let Some(w) = self.materials.as_mut()
+                if let Some(w) = self.arch.materials.as_mut()
                     && let Some((m, _)) = w.list.get(i).cloned()
                 {
                     w.chosen = i;
@@ -430,14 +436,17 @@ impl App {
             Event::Pen(t) => edit(self, &|w| w.pen = t.clone()),
             Event::PenColor(t) => edit(self, &|w| w.pen_color = t.clone()),
             Event::Target(i) => {
-                if let Some(w) = self.materials.as_mut() {
+                if let Some(w) = self.arch.materials.as_mut() {
                     w.target = Some(i);
                 }
             }
             Event::Bind => {
                 let (Some(m), Some((style, component, words))) = (
                     self.materials_chosen(),
-                    self.materials.as_ref().and_then(|w| w.target.and_then(|i| w.targets.get(i).cloned())),
+                    self.arch
+                        .materials
+                        .as_ref()
+                        .and_then(|w| w.target.and_then(|i| w.targets.get(i).cloned())),
                 ) else {
                     return Task::none();
                 };
@@ -454,7 +463,7 @@ impl App {
                 let Some(m) = self.materials_chosen() else {
                     return Task::none();
                 };
-                let change = self.materials.as_ref().and_then(|w| change_of(w, &m));
+                let change = self.arch.materials.as_ref().and_then(|w| change_of(w, &m));
                 match change {
                     Some(Ok(change)) => {
                         if let Some(done) =
@@ -473,6 +482,7 @@ impl App {
             }
             Event::New => {
                 let names: Vec<String> = self
+                    .arch
                     .materials
                     .as_ref()
                     .map(|w| w.list.iter().map(|(m, _)| m.name.to_lowercase()).collect())
@@ -514,11 +524,11 @@ impl App {
             // Kapat, a click beside the window or Esc: asks when the chosen material has a change not applied.
             Event::Close => {
                 if self.materials_unapplied() {
-                    if let Some(w) = self.materials.as_mut() {
+                    if let Some(w) = self.arch.materials.as_mut() {
                         w.closing = true;
                     }
                 } else {
-                    self.materials = None;
+                    self.arch.materials = None;
                     self.dialog = None;
                 }
             }
@@ -526,21 +536,21 @@ impl App {
                 let task = self.materials_event(Event::Apply);
                 if self.materials_unapplied() {
                     // Uygula said why it could not write; the window stays to show it.
-                    if let Some(w) = self.materials.as_mut() {
+                    if let Some(w) = self.arch.materials.as_mut() {
                         w.closing = false;
                     }
                 } else {
-                    self.materials = None;
+                    self.arch.materials = None;
                     self.dialog = None;
                 }
                 return task;
             }
             Event::Answer(crate::unsaved_close::Answer::Discard) => {
-                self.materials = None;
+                self.arch.materials = None;
                 self.dialog = None;
             }
             Event::Answer(crate::unsaved_close::Answer::Stay) => {
-                if let Some(w) = self.materials.as_mut() {
+                if let Some(w) = self.arch.materials.as_mut() {
                     w.closing = false;
                 }
             }
@@ -560,7 +570,7 @@ impl App {
     }
 
     pub(crate) fn materials_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.materials else {
+        let Some(w) = &self.arch.materials else {
             return iced::widget::text("").into();
         };
         let mut list = Column::new().spacing(4);
@@ -709,7 +719,7 @@ impl App {
 
     /// The window's buttons by their words (a trace's `dialog` step).
     pub(crate) fn materials_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.materials.is_none() {
+        if self.arch.materials.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

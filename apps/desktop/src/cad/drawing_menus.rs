@@ -33,6 +33,7 @@
 //! door, Mahali böl and Mahal numarala for a room — what an architect reaches
 //! for there, before the edits every object has.
 
+use crate::map;
 use iced::{Point, Task};
 use kentos_interaction::SnapKind;
 use kentos_interaction::grip_menu::{self, GripAction, GripMenu};
@@ -182,7 +183,7 @@ impl App {
         // The drawing takes the keyboard from the layer tree (web: its blur).
         self.layers_keyboard = false;
         self.blocks_panel.keyboard = false;
-        self.templates_panel.keyboard = false;
+        self.arch.templates_panel.keyboard = false;
         self.drawing_menu = self.modifiers.shift().then_some(Open {
             kind: Kind::Snap,
             at,
@@ -691,7 +692,9 @@ impl App {
         }
         menu.item(
             "İki nokta ortası",
-            Message::PointCalc(kentos_interaction::point_calc::CalcKind::Mid),
+            Message::Map(map::Event::PointCalc(
+                kentos_interaction::point_calc::CalcKind::Mid,
+            )),
         )
         .icon(crate::icons::from_web(Some("calcMid")))
         .separator()

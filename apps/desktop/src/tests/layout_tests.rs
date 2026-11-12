@@ -74,8 +74,8 @@ fn a_kept_layout_is_shown_at_start() {
     assert!(app.command_expanded);
     assert_eq!(app.bottom_tab, BottomTab::Messages);
     assert_eq!(app.bottom_log(), 260.0 - kentos_ui::widget::tabs::height());
-    assert_eq!(app.processing.panel.tab, ProcessingTab::History);
-    assert!(app.processing.panel.folded.contains("points"));
+    assert_eq!(app.gis.processing.panel.tab, ProcessingTab::History);
+    assert!(app.gis.processing.panel.folded.contains("points"));
     assert_eq!(app.tab, "modify");
     assert!(app.ribbon_collapsed);
     assert!(app.right_panel_shown());

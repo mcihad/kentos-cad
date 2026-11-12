@@ -344,7 +344,7 @@ impl App {
         );
         let search = kentos_ui::widget::text_field(
             "Kaynaklarda ara: ad, tür, EPSG, şema",
-            &self.sources.search,
+            &self.gis.sources.search,
         )
         .on_input(|t| msg(Event::Search(t)))
         .width(Fill);
@@ -365,7 +365,7 @@ impl App {
         .padding([4, 6])
         .width(Fill);
         let lines = self.source_lines();
-        let focused = self.sources.focused.clone();
+        let focused = self.gis.sources.focused.clone();
         let list = VirtualList::new(lines.len(), typography::scaled(ROW), move |i| {
             let line = &lines[i];
             let chosen = focused.as_deref() == Some(line.key());
@@ -380,7 +380,7 @@ impl App {
 impl App {
     /// The question of a table in another system (Katman olarak ekle).
     pub(crate) fn sources_reproject_view(&self) -> Option<Element<'_, Message>> {
-        let ask = self.sources.reproject.as_ref()?;
+        let ask = self.gis.sources.reproject.as_ref()?;
         let project = self.document.as_ref().map_or(0, |d| d.settings().srid);
         let detail = if project == 0 {
             "Proje yerel (koordinat sistemi yok): tablonun koordinatları çevrilemez. Tabloyu bağlamak için projeyi bir koordinat sisteminde açın.".to_owned()

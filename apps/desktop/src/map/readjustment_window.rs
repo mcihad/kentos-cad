@@ -14,6 +14,7 @@
 //! the regulation): by value the records carry a fifth column, the parcel's value before the readjustment, and
 //! Değerlerin kaynağı says who determined them; the answer says it is no rule.
 
+use crate::map;
 use std::path::PathBuf;
 
 use iced::widget::{container, row, text_input};
@@ -159,7 +160,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Readjustment(e)
+    Message::Map(map::Event::Readjustment(e))
 }
 
 /// The records of a CSV: `parsel;hak sahibi;tapu alanı;pay` a line, and by value (docs/adr/5080) a fifth column, the
@@ -333,7 +334,7 @@ fn chosen_boundary(app: &App) -> Option<String> {
 impl App {
     /// The scope's input: the boundary with the rule package's places and rounding and the piece tolerance.
     pub(crate) fn readjustment_scope_input(&self) -> Option<ReadjustmentScope> {
-        let s = &self.readjustment;
+        let s = &self.map.readjustment;
         Some(ReadjustmentScope {
             boundary: s.boundary.clone()?,
             uids: None,
@@ -347,31 +348,38 @@ impl App {
     /// The scope of the boundary with the rule package's places and rounding.
     pub(crate) fn readjustment_scope_run(&mut self) {
         let Some(input) = self.readjustment_scope_input() else {
-            self.readjustment.scope = None;
+            self.map.readjustment.scope = None;
             return;
         };
         let Some(doc) = self.document.as_ref() else { return };
-        self.readjustment.scope = Some(readjustment_scope::preview(&doc.model, &input));
+        self.map.readjustment.scope = Some(readjustment_scope::preview(&doc.model, &input));
     }
 
     pub(crate) fn readjustment_run(&mut self) {
-        let s = &self.readjustment;
+        let s = &self.map.readjustment;
         if s.entries.is_empty() {
-            self.readjustment.answer = None;
+            self.map.readjustment.answer = None;
             return;
         }
-        let input = ReadjustmentDistribute { rules: s.rules.clone(), entries: s.entries.clone() };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.readjustment.answer = Some(match readjustment::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(match error.path {
+        let input = ReadjustmentDistribute {
+            rules: s.rules.clone(),
+            entries: s.entries.clone(),
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.map.readjustment.answer = Some(
+            match readjustment::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(match error.path {
                     Some(p) => format!("{} ({p})", error.message),
                     None => error.message,
-                })
-            }
-            _ => Err("Hesaplanamadı.".to_owned()),
-        });
+                }),
+                _ => Err("Hesaplanamadı.".to_owned()),
+            },
+        );
     }
 
     /// Düzenleme dağıtım taslağı (`readjustment.distribute`).
@@ -380,9 +388,12 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.readjustment = State { boundary: chosen_boundary(self), ..State::default() };
+        self.map.readjustment = State {
+            boundary: chosen_boundary(self),
+            ..State::default()
+        };
         self.readjustment_scope_run();
-        self.dialog = Some(Dialog::Readjustment);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::Readjustment));
         Task::none()
     }
 
@@ -390,16 +401,20 @@ impl App {
     pub(crate) fn readjustment_file(&mut self, path: PathBuf) {
         match std::fs::read_to_string(&path).map_err(|e| e.to_string()).and_then(|t| records(&t)) {
             Ok(entries) => {
-                self.readjustment.entries = entries;
-                self.readjustment.file = path.file_name().map(|n| n.to_string_lossy().into_owned());
+                self.map.readjustment.entries = entries;
+                self.map.readjustment.file =
+                    path.file_name().map(|n| n.to_string_lossy().into_owned());
                 self.readjustment_run();
             }
-            Err(why) => self.readjustment.answer = Some(Err(format!("{} okunamadı: {why}", path.display()))),
+            Err(why) => {
+                self.map.readjustment.answer =
+                    Some(Err(format!("{} okunamadı: {why}", path.display())))
+            }
         }
     }
 
     pub(crate) fn readjustment_event(&mut self, event: Event) -> Task<Message> {
-        let r = &mut self.readjustment.rules;
+        let r = &mut self.map.readjustment.rules;
         match event {
             Event::Id(v) => r.id = v,
             Event::Release(v) => r.release = v.max(1.0) as u32,
@@ -416,26 +431,27 @@ impl App {
                 self.readjustment_scope_run();
             }
             Event::Tolerance(v) => {
-                self.readjustment.tolerance = v;
+                self.map.readjustment.tolerance = v;
                 self.readjustment_scope_run();
                 return Task::none();
             }
             Event::WriteSheet => self.readjustment_sheet_write(),
             Event::MakeSheets => return self.readjustment_sheets_make(),
-            Event::Numbers(t) => self.readjustment.numbers = t,
-            Event::NumberHeight(t) => self.readjustment.number_height = t,
-            Event::NumberLeader(on) => self.readjustment.number_leader = on,
+            Event::Numbers(t) => self.map.readjustment.numbers = t,
+            Event::NumberHeight(t) => self.map.readjustment.number_height = t,
+            Event::NumberLeader(on) => self.map.readjustment.number_leader = on,
             Event::Apply => {
-                if let Some(Ok(scope)) = &self.readjustment.scope {
+                if let Some(Ok(scope)) = &self.map.readjustment.scope {
                     let scope = scope.clone();
-                    self.readjustment.applied = apply(&mut self.readjustment.entries, &scope);
+                    self.map.readjustment.applied =
+                        apply(&mut self.map.readjustment.entries, &scope);
                 }
             }
             Event::Remainder(v) => r.remainder = v,
             Event::Basis(v) => r.basis = (v != "area").then_some(v),
             Event::ValueSource(v) => r.value_source = (!v.trim().is_empty()).then_some(v),
             Event::View(v) => {
-                self.readjustment.view = v;
+                self.map.readjustment.view = v;
                 return Task::none();
             }
             Event::Pick => {
@@ -471,7 +487,7 @@ impl App {
                 );
             }
             Event::Saved(Some(path)) => {
-                if let Some(Ok(r)) = &self.readjustment.answer {
+                if let Some(Ok(r)) = &self.map.readjustment.answer {
                     match std::fs::write(&path, csv(r)) {
                         Ok(()) => self.say(Level::Success, format!("{TITLE}: sonuç {} dosyasına yazıldı.", path.display())),
                         Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
@@ -480,7 +496,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.readjustment = State::default();
+                self.map.readjustment = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -490,7 +506,7 @@ impl App {
     }
 
     pub(crate) fn readjustment_view(&self) -> Element<'_, Message> {
-        let s = &self.readjustment;
+        let s = &self.map.readjustment;
         let r = &s.rules;
         let text = |placeholder: &str, value: &str, on: fn(String) -> Event| -> text_input::TextInput<'_, Message> {
             fields::input(None, placeholder, value, false, false).on_input(move |v| msg(on(v)))

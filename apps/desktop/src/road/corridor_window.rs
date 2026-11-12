@@ -25,6 +25,7 @@
 //! The sampling check (docs/adr/0939) is asked by writing its least step: the plan draws each section across, the
 //! ones the check added in purple, and a sentence says what was measured and the largest strays before and after.
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -281,7 +282,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Corridors(event)
+    Message::Road(road::Event::Corridors(event))
 }
 
 /// The chosen corridor's row.
@@ -306,7 +307,7 @@ impl App {
         }
         let kept = doc.model.road_corridors().to_vec();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
-        self.corridor_window = Some(Box::new(Window {
+        self.road.corridor_window = Some(Box::new(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
@@ -314,14 +315,14 @@ impl App {
             tick: "5".into(),
             ..Window::default()
         }));
-        self.dialog = Some(Dialog::Corridors);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Corridors));
         self.refresh_corridor();
     }
 
     /// Koridor oluştur from the ribbon: the window with a new corridor on the first alignment.
     pub(crate) fn new_corridor(&mut self) {
         self.open_corridors();
-        if self.corridor_window.is_some() {
+        if self.road.corridor_window.is_some() {
             let _ = self.corridor_event(Event::New);
         }
     }
@@ -333,7 +334,9 @@ impl App {
 
     fn refresh_corridor(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.corridor_window.as_mut() else { return };
+        let Some(w) = self.road.corridor_window.as_mut() else {
+            return;
+        };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
             w.preview = Preview::default();
             return;
@@ -390,7 +393,9 @@ impl App {
 
     pub(crate) fn corridor_event(&mut self, event: Event) -> Task<Message> {
         let (alignments, profiles, surfaces, _, templates) = self.corridor_names();
-        let Some(w) = self.corridor_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.corridor_window.as_mut() else {
+            return Task::none();
+        };
         let mut warning = None;
         match event {
             Event::Choose(i) => {
@@ -533,7 +538,7 @@ impl App {
             Event::ProtectedLayer(l) => w.protected_layer = Some(l),
             Event::Sensitive(t) => w.sensitive = t,
             Event::Cancel => {
-                self.corridor_window = None;
+                self.road.corridor_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -578,7 +583,7 @@ impl App {
 
     /// The chosen corridor, saved as it is typed; else a warning and none.
     fn chosen_saved_corridor(&mut self, what: &str) -> Option<CorridorDef> {
-        let w = self.corridor_window.as_ref()?;
+        let w = self.road.corridor_window.as_ref()?;
         let r = w.chosen.and_then(|i| w.rows.get(i))?;
         let def = r.def().ok();
         match def.filter(|d| w.kept.contains(d)) {
@@ -593,7 +598,7 @@ impl App {
     fn reload_corridors(&mut self) {
         let Some(doc) = &self.document else { return };
         let kept = doc.model.road_corridors().to_vec();
-        if let Some(w) = self.corridor_window.as_mut() {
+        if let Some(w) = self.road.corridor_window.as_mut() {
             w.rows = kept.iter().map(Row::of).collect();
             w.kept = kept;
         }
@@ -610,8 +615,12 @@ impl App {
     }
 
     fn draw_corridor(&mut self) -> Task<Message> {
-        let Some(d) = self.chosen_saved_corridor("çizilir") else { return Task::none() };
-        let Some(w) = &self.corridor_window else { return Task::none() };
+        let Some(d) = self.chosen_saved_corridor("çizilir") else {
+            return Task::none();
+        };
+        let Some(w) = &self.road.corridor_window else {
+            return Task::none();
+        };
         let Some(layer) = w.layer.clone() else {
             self.warn("Şevli planın çizileceği katmanı seçin.".to_owned());
             return Task::none();
@@ -636,7 +645,9 @@ impl App {
     }
 
     fn save_corridors(&mut self) -> Task<Message> {
-        let Some(w) = self.corridor_window.clone() else { return Task::none() };
+        let Some(w) = self.road.corridor_window.clone() else {
+            return Task::none();
+        };
         let mut defs = Vec::new();
         for r in &w.rows {
             match r.def() {
@@ -680,14 +691,14 @@ impl App {
                 return Task::none();
             }
         }
-        self.corridor_window = None;
+        self.road.corridor_window = None;
         self.dialog = None;
         self.say(Level::Success, "Koridorlar kaydedildi.");
         Task::none()
     }
 
     pub(crate) fn road_corridor_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.corridor_window else {
+        let Some(w) = &self.road.corridor_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -1006,7 +1017,7 @@ impl App {
     }
 
     pub(crate) fn corridor_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.corridor_window else {
+        let Some(w) = &self.road.corridor_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

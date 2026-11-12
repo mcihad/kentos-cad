@@ -5,6 +5,7 @@
 //! undo step and selects them, and Ortofoto karşılaştırması's Seçili mozaik elemanlarını al then measures along their
 //! shared boundary, which is the line. And its pictures.
 
+use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -49,22 +50,34 @@ fn near(got: &Value, want: &Value, at: &str) {
 }
 
 fn planned(app: &App) -> Value {
-    serde_json::to_value(app.ortho_seamlines.answer.clone().expect("an answer").expect("planned")).expect("json")
+    serde_json::to_value(
+        app.map
+            .ortho_seamlines
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("planned"),
+    )
+    .expect("json")
 }
 
 fn opened(name: &str) -> (App, Value) {
     let c = case(name);
     let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
     let _ = app.update(Message::Run("raster.seamlines"));
-    assert_eq!(app.dialog, Some(Dialog::OrthoSeamlines), "{name}");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::OrthoSeamlines)),
+        "{name}"
+    );
     (app, c)
 }
 
 /// The two footprint areas (the cases' entities 3 and 4) selected and taken.
 fn take_areas(app: &mut App) {
     app.selection.set(vec![Slot(3), Slot(4)]);
-    let _ = app.update(Message::OrthoSeamlines(E::TakeAreas));
-    assert_eq!(app.ortho_seamlines.prints, Prints::Areas);
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::TakeAreas)));
+    assert_eq!(app.map.ortho_seamlines.prints, Prints::Areas);
 }
 
 #[test]
@@ -82,25 +95,40 @@ fn two_selected_areas_are_the_footprints() {
     near(&planned(&app), &c["steps"][0]["result"]["output"], "AEFC");
     // One area selected: said, nothing taken.
     app.selection.set(vec![Slot(3)]);
-    let _ = app.update(Message::OrthoSeamlines(E::TakeAreas));
-    assert!(app.ortho_seamlines.areas.is_some(), "the earlier two stay");
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::TakeAreas)));
+    assert!(
+        app.map.ortho_seamlines.areas.is_some(),
+        "the earlier two stay"
+    );
 }
 
 #[test]
 fn radiometry_keeping_out_of_the_buildings_is_the_cases() {
     let (mut app, c) = opened("radyometrik fark, binalardan geçmeden");
     take_areas(&mut app);
-    let _ = app.update(Message::OrthoSeamlines(E::Method(Method::Radiometry)));
-    let _ = app.update(Message::OrthoSeamlines(E::Avoid("bina".into())));
-    near(&planned(&app), &c["steps"][0]["result"]["output"], "radiometry");
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Method(
+        Method::Radiometry,
+    ))));
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Avoid(
+        "bina".into(),
+    ))));
+    near(
+        &planned(&app),
+        &c["steps"][0]["result"]["output"],
+        "radiometry",
+    );
 }
 
 #[test]
 fn written_polygons_are_selected_and_measured_along_by_the_comparison() {
     let (mut app, _) = opened("iki şerit yan yana");
-    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    let before = app
+        .document
+        .as_ref()
+        .map(|d| d.model.entities().count())
+        .unwrap_or(0);
     let seam = planned(&app)["seam"].clone();
-    let _ = app.update(Message::OrthoSeamlines(E::Write));
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Write)));
     assert_eq!(app.dialog, None, "closed after writing");
     let doc = app.document.as_ref().expect("a drawing");
     assert_eq!(doc.model.entities().count(), before + 2);
@@ -109,12 +137,30 @@ fn written_polygons_are_selected_and_measured_along_by_the_comparison() {
     assert_eq!(chosen.len(), 2, "the two polygons selected");
     // Ortofoto karşılaştırması takes them: its shared boundary is the seam.
     let _ = app.update(Message::Run("raster.compare"));
-    for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
-        let _ = app.update(Message::OrthoCompare(e));
+    for e in [
+        C::Seam(true),
+        C::Step(1.0),
+        C::Window(21.0),
+        C::Search(5.0),
+        C::Correlation("0,8".into()),
+    ] {
+        let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
     }
-    let _ = app.update(Message::OrthoCompare(C::TakePolygons));
-    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
-    near(&got["seam"]["shared"]["parts"], &Value::Array(vec![seam]), "shared boundary");
+    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakePolygons)));
+    let got = serde_json::to_value(
+        app.map
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared"),
+    )
+    .expect("json");
+    near(
+        &got["seam"]["shared"]["parts"],
+        &Value::Array(vec![seam]),
+        "shared boundary",
+    );
     // One undo step takes both away, with the layer.
     let _ = app.update(Message::Run("edit.undo"));
     let doc = app.document.as_ref().expect("a drawing");
@@ -160,17 +206,23 @@ fn screens() {
     let (mut app, _) = opened("radyometrik fark, binalardan geçmeden");
     theme(&mut app, "light", wide);
     take_areas(&mut app);
-    let _ = app.update(Message::OrthoSeamlines(E::Method(Method::Radiometry)));
-    let _ = app.update(Message::OrthoSeamlines(E::Avoid("bina".into())));
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Method(
+        Method::Radiometry,
+    ))));
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Avoid(
+        "bina".into(),
+    ))));
     shoot(&mut app, wide, "2-radyometri-bina-acik-genis.png");
     // 3: its seam's points.
-    let _ = app.update(Message::OrthoSeamlines(E::Show(Show::Points)));
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Show(
+        Show::Points,
+    ))));
     shoot(&mut app, wide, "3-noktalar-acik-genis.png");
     // 4: written on the drawing, selected, the comparison measuring along them.
     let (mut app, _) = opened("eğri kesim: köşe ile kenar arasında parabol");
     theme(&mut app, "light", wide);
     take_areas(&mut app);
-    let _ = app.update(Message::OrthoSeamlines(E::Write));
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Write)));
     let _ = app.update(Message::Run("view.zoomExtents"));
     shoot(&mut app, wide, "4-yazildi-cizimde-acik-genis.png");
     // 5: its place in the ribbon: a raster selected, the raster tab beside Karşılaştır.

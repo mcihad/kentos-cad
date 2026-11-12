@@ -74,10 +74,15 @@ fn degisenler_lists_the_shift_and_draws_the_removed_shape() {
     let shift = c.objects.iter().find(|o| o.uid == moved).and_then(|o| o.shift.clone()).expect("a shift");
     assert!(shift.paired);
     send(&mut app, P::Changes("is-4".into()));
-    let shown = app.map_work.approved.clone().expect("the approved shapes");
+    let shown = app
+        .map
+        .map_work
+        .approved
+        .clone()
+        .expect("the approved shapes");
     assert_eq!(shown.objects, 2, "the moved line's and the removed line's");
-    assert_eq!(app.map_work.shifts.len(), 1);
-    let row = &app.map_work.shifts[0];
+    assert_eq!(app.map.map_work.shifts.len(), 1);
+    let row = &app.map.map_work.shifts[0];
     let d = shift.largest.as_ref().expect("paired").d;
     assert_eq!(row[1], "2");
     assert_eq!(row[2], format!("{d:.3}"));

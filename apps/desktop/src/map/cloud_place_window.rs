@@ -20,6 +20,7 @@
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::map;
 use iced::widget::{container, row, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CloudPlaceBy, CommandResult, Entity, PointCloudsPlace, PointCloudsPlaced};
@@ -95,7 +96,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::CloudPlace(e)
+    Message::Map(map::Event::CloudPlace(e))
 }
 
 /// Numbers from text, apart by spaces, commas or semicolons; a point for the decimal.
@@ -150,7 +151,7 @@ impl App {
 
     /// The command's input for the map as the window has it.
     fn cloud_place_input(&self, remove: bool) -> Result<PointCloudsPlace, String> {
-        let s = &self.cloud_place;
+        let s = &self.map.cloud_place;
         let place = if remove {
             CloudPlaceBy::Remove
         } else {
@@ -170,8 +171,11 @@ impl App {
 
     fn cloud_place_run(&mut self) {
         let input = self.cloud_place_input(false);
-        let Some(doc) = self.document.as_ref() else { return };
-        self.cloud_place.preview = Some(input.and_then(|i| pointcloud_place::answer_in(&doc.model, &i)));
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        self.map.cloud_place.preview =
+            Some(input.and_then(|i| pointcloud_place::answer_in(&doc.model, &i)));
     }
 
     /// Bulutu konumla (`pointcloud.place`): the selection's first cloud, else the drawing's first.
@@ -187,7 +191,7 @@ impl App {
             .and_then(|d| self.selection.ids().iter().find_map(|s| d.model.uid(*s).map(|u| u.to_string())))
             .filter(|u| clouds.iter().any(|(c, _)| c == u))
             .unwrap_or_else(|| clouds[0].0.clone());
-        self.cloud_place = State {
+        self.map.cloud_place = State {
             clouds,
             cloud: chosen,
             matrix: "1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1".to_owned(),
@@ -195,7 +199,7 @@ impl App {
             ..Default::default()
         };
         self.cloud_place_run();
-        self.dialog = Some(Dialog::CloudPlace);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::CloudPlace));
         Task::none()
     }
 
@@ -208,8 +212,17 @@ impl App {
                 return;
             }
         };
-        let name = self.cloud_place.clouds.iter().find(|(u, _)| *u == input.uid).map(|(_, n)| n.clone()).unwrap_or_default();
-        let Some(doc) = self.document.as_mut() else { return };
+        let name = self
+            .map
+            .cloud_place
+            .clouds
+            .iter()
+            .find(|(u, _)| *u == input.uid)
+            .map(|(_, n)| n.clone())
+            .unwrap_or_default();
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         match pointcloud_place::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } if !output.changed => {
                 self.say(Level::Info, format!("{TITLE}: “{name}” bulutunun nesnede konumu yok; hiçbir şey yazılmadı."));
@@ -235,7 +248,7 @@ impl App {
     }
 
     pub(crate) fn cloud_place_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.cloud_place;
+        let s = &mut self.map.cloud_place;
         match event {
             Event::Cloud(v) => s.cloud = v,
             Event::By(v) => s.by = v,
@@ -266,7 +279,7 @@ impl App {
 
     /// The summary's lines and the files' rows: where the cloud is now, and each file's place after the map.
     pub(crate) fn cloud_place_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
-        let s = &self.cloud_place;
+        let s = &self.map.cloud_place;
         let mut lines: Vec<Element<'_, Message>> = Vec::new();
         let mut rows = Vec::new();
         let cloud = self.document.as_ref().and_then(|d| {
@@ -312,7 +325,7 @@ impl App {
     }
 
     pub(crate) fn cloud_place_view(&self) -> Element<'_, Message> {
-        let s = &self.cloud_place;
+        let s = &self.map.cloud_place;
         let by = Segmented::new([By::Matrix, By::AxisAngle, By::Euler], s.by, |v| msg(Event::By(v)));
         let mut form = Form::new()
             .label_width(130.0)

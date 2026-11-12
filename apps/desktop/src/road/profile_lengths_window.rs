@@ -15,6 +15,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Theme, mouse};
 use kentos_commands::{RoadProfileLengths, RoadProfilesLengths};
@@ -64,7 +65,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Profiles(Profile::Lengths(e))
+    Message::Road(road::Event::Profiles(Profile::Lengths(e)))
 }
 
 /// A number the user typed, with a comma or a point; empty: none.
@@ -107,7 +108,9 @@ impl Lengths {
 impl App {
     /// Kurp boyu öner… from Boykesit: the window on the chosen profile, the values typed before kept.
     pub(crate) fn open_profile_lengths(&mut self) {
-        let Some(w) = self.profile_window.as_mut() else { return };
+        let Some(w) = self.road.profile_window.as_mut() else {
+            return;
+        };
         let kept = w.lengths_kept.clone().unwrap_or_default();
         w.lengths = Some(Box::new(Lengths { fields: kept.0, grades: kept.1, ..Lengths::default() }));
         self.refresh_profile_lengths();
@@ -116,7 +119,9 @@ impl App {
     /// The suggestion read again on the chosen profile as typed.
     pub(crate) fn refresh_profile_lengths(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.profile_window.as_mut() else { return };
+        let Some(w) = self.road.profile_window.as_mut() else {
+            return;
+        };
         let def = w.chosen_def();
         // Kısaları uzat tried on a copy, to say before it is pressed which suggestions do not fit.
         let mut trial = w.clone();
@@ -143,7 +148,9 @@ impl App {
 
     /// An event of the window.
     pub(crate) fn profile_lengths_event(&mut self, event: Event) {
-        let Some(w) = self.profile_window.as_mut() else { return };
+        let Some(w) = self.road.profile_window.as_mut() else {
+            return;
+        };
         let Some(x) = w.lengths.as_mut() else { return };
         match event {
             Event::Field(k, t) => {

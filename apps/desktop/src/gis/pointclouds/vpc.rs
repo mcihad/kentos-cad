@@ -5,6 +5,7 @@
 //! 84 when the system has an EPSG code. An embedded file has no path to
 //! write: such a cloud is refused, said why.
 
+use crate::gis;
 use std::path::{Path, PathBuf};
 
 use iced::Task;
@@ -64,7 +65,9 @@ impl App {
                 .unwrap_or_else(|| "bulut".to_owned())
         );
         if let Picker::File(path) = &self.picker {
-            return Task::done(Message::PointClouds(Clouds::VpcSave(Some(path.clone()))));
+            return Task::done(Message::Gis(gis::Event::PointClouds(Clouds::VpcSave(
+                Some(path.clone()),
+            ))));
         }
         Task::perform(
             async move {
@@ -76,7 +79,7 @@ impl App {
                     .await
                     .map(|f| f.path().to_path_buf())
             },
-            |path| Message::PointClouds(Clouds::VpcSave(path)),
+            |path| Message::Gis(gis::Event::PointClouds(Clouds::VpcSave(path))),
         )
     }
 
@@ -103,7 +106,7 @@ impl App {
                     .map(|()| path.clone())
                     .map_err(|e| format!("“{}” yazılamadı: {e}.", path.display()))
             });
-            Message::PointClouds(Clouds::VpcSaved(result))
+            Message::Gis(gis::Event::PointClouds(Clouds::VpcSaved(result)))
         })
     }
 }

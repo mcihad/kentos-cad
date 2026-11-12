@@ -5,6 +5,7 @@
 //! Uygula stays off; on the drawing the reference and the vertex are ringed. And the pictures. Docs/adr/4980: on the
 //! two-part area Sahneden seç's vertex click by the first part's hole chooses that ring; Uygula writes the shared case's.
 
+use crate::road;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -41,14 +42,22 @@ fn on_reference() -> App {
     let mut app = opened();
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Grade(G::Target(Target::Reference)));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+        Target::Reference,
+    ))));
     app
 }
 
 /// The threshold typed, the fourth vertex, 2 %.
 fn typed(app: &mut App) {
-    for e in [G::East(X0 - 20.0), G::North(Y0 + 10.0), G::Height(849.75), G::At(4.0), G::Percent(2.0)] {
-        let _ = app.update(Message::Grade(e));
+    for e in [
+        G::East(X0 - 20.0),
+        G::North(Y0 + 10.0),
+        G::Height(849.75),
+        G::At(4.0),
+        G::Percent(2.0),
+    ] {
+        let _ = app.update(Message::Road(road::Event::Grade(e)));
     }
 }
 
@@ -59,21 +68,48 @@ fn case(name: &str) -> Value {
 #[test]
 fn referanstan_previews_the_case_and_writes_one_step() {
     let mut app = on_reference();
-    assert_eq!((app.dialog, app.grade.target), (Some(Dialog::Grade), Target::Reference));
-    assert!(app.grade.raised.is_none() && !app.grade.referenced, "nothing until a reference is given");
+    assert_eq!(
+        (app.dialog, app.road.grade.target),
+        (
+            Some(Dialog::Road(road::RoadDialogKind::Grade)),
+            Target::Reference
+        )
+    );
+    assert!(
+        app.road.grade.raised.is_none() && !app.road.grade.referenced,
+        "nothing until a reference is given"
+    );
     typed(&mut app);
     let step = &case("Eğimle: köşe eşikten %2 yukarıda")["steps"][0];
     let want = &step["result"]["output"];
-    let got = serde_json::to_value(app.grade.raised.clone().expect("a plan").expect("previewed")).expect("json");
+    let got = serde_json::to_value(
+        app.road
+            .grade
+            .raised
+            .clone()
+            .expect("a plan")
+            .expect("previewed"),
+    )
+    .expect("json");
     for key in ["distance", "before", "after", "by", "grade"] {
-        let (a, b) = (got[key].as_f64().expect("a number"), want[key].as_f64().expect("a number"));
+        let (a, b) = (
+            got[key].as_f64().expect("a number"),
+            want[key].as_f64().expect("a number"),
+        );
         assert!((a - b).abs() < 1e-9, "{key}: {a} ≠ {b}");
     }
-    assert_eq!((&got["moved"], &got["unset"]), (&want["moved"], &want["unset"]));
-    let _ = app.update(Message::Grade(G::Apply));
-    let after: Vec<Option<f64>> = serde_json::from_value(step["expect"]["fields"]["1"]["zs"].clone()).expect("zs");
+    assert_eq!(
+        (&got["moved"], &got["unset"]),
+        (&want["moved"], &want["unset"])
+    );
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
+    let after: Vec<Option<f64>> =
+        serde_json::from_value(step["expect"]["fields"]["1"]["zs"].clone()).expect("zs");
     for (a, b) in zs(&app, 1).iter().zip(&after) {
-        assert!(a.zip(*b).is_none_or(|(a, b)| (a - b).abs() < 1e-9) && a.is_some() == b.is_some(), "{a:?} ≠ {b:?}");
+        assert!(
+            a.zip(*b).is_none_or(|(a, b)| (a - b).abs() < 1e-9) && a.is_some() == b.is_some(),
+            "{a:?} ≠ {b:?}"
+        );
     }
     let said = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
     assert!(said.contains("Referanstan kot verildi: 4. köşe"), "{said}");
@@ -87,54 +123,123 @@ fn referanstan_previews_the_case_and_writes_one_step() {
 #[test]
 fn two_clicks_take_the_reference_and_the_vertex() {
     let mut app = on_reference();
-    let _ = app.update(Message::Grade(G::Pick));
-    assert_eq!((app.dialog, app.grade.picking), (None, Some(Pick::Reference)));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
+    assert_eq!(
+        (app.dialog, app.road.grade.picking),
+        (None, Some(Pick::Reference))
+    );
     // The line's second end (60, 180), 901.5 m.
-    assert!(app.grade_picked(Some(kentos_interaction::Vec2 { x: X0 + 60.01, y: Y0 + 179.99 })));
-    assert_eq!(app.grade.picking, Some(Pick::Vertex), "the vertex awaited");
-    assert_eq!((app.grade.east, app.grade.north, app.grade.height), (X0 + 60.0, Y0 + 180.0, 901.5));
+    assert!(app.grade_picked(Some(kentos_interaction::Vec2 {
+        x: X0 + 60.01,
+        y: Y0 + 179.99
+    })));
+    assert_eq!(
+        app.road.grade.picking,
+        Some(Pick::Vertex),
+        "the vertex awaited"
+    );
+    assert_eq!(
+        (
+            app.road.grade.east,
+            app.road.grade.north,
+            app.road.grade.height
+        ),
+        (X0 + 60.0, Y0 + 180.0, 901.5)
+    );
     // The kerb's third vertex (30, 40).
-    assert!(app.grade_picked(Some(kentos_interaction::Vec2 { x: X0 + 30.01, y: Y0 + 40.0 })));
-    assert_eq!((app.grade.at, app.dialog), (3.0, Some(Dialog::Grade)));
-    let r = app.grade.raised.clone().expect("a plan").expect("previewed");
+    assert!(app.grade_picked(Some(kentos_interaction::Vec2 {
+        x: X0 + 30.01,
+        y: Y0 + 40.0
+    })));
+    assert_eq!(
+        (app.road.grade.at, app.dialog),
+        (3.0, Some(Dialog::Road(road::RoadDialogKind::Grade)))
+    );
+    let r = app
+        .road
+        .grade
+        .raised
+        .clone()
+        .expect("a plan")
+        .expect("previewed");
     assert!((r.distance - (30.0f64).hypot(140.0)).abs() < 1e-9);
     // By no elevation: the place, the elevation kept to type.
-    let _ = app.update(Message::Grade(G::Pick));
-    assert!(app.grade_picked(Some(kentos_interaction::Vec2 { x: X0 + 150.0, y: Y0 + 250.0 })));
-    assert_eq!((app.grade.east, app.grade.north, app.grade.height), (X0 + 150.0, Y0 + 250.0, 901.5));
-    let said = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
-    assert!(said.contains("tıklanan yerde kotlu nokta ya da köşe yok"), "{said}");
+    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
+    assert!(app.grade_picked(Some(kentos_interaction::Vec2 {
+        x: X0 + 150.0,
+        y: Y0 + 250.0
+    })));
+    assert_eq!(
+        (
+            app.road.grade.east,
+            app.road.grade.north,
+            app.road.grade.height
+        ),
+        (X0 + 150.0, Y0 + 250.0, 901.5)
+    );
+    let said = app
+        .log
+        .lines()
+        .map(|l| l.text.clone())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        said.contains("tıklanan yerde kotlu nokta ya da köşe yok"),
+        "{said}"
+    );
 }
 
 #[test]
 fn the_reference_stays_for_the_next_object() {
     let mut app = on_reference();
     typed(&mut app);
-    let _ = app.update(Message::Grade(G::By(By::Difference)));
-    let _ = app.update(Message::Grade(G::Difference(-0.4)));
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::By(By::Difference))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Difference(-0.4))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     app.selection.set([Slot(2)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let s = &app.grade;
-    assert_eq!((s.target, s.referenced, s.east, s.north, s.height, s.by), (Target::Reference, true, X0 - 20.0, Y0 + 10.0, 849.75, By::Difference));
+    let s = &app.road.grade;
+    assert_eq!(
+        (s.target, s.referenced, s.east, s.north, s.height, s.by),
+        (
+            Target::Reference,
+            true,
+            X0 - 20.0,
+            Y0 + 10.0,
+            849.75,
+            By::Difference
+        )
+    );
     assert_eq!(s.at, 1.0, "the new object's first vertex");
     let r = s.raised.clone().expect("a plan").expect("previewed");
     assert!((r.after - (849.75 - 0.4)).abs() < 1e-9);
     // Vazgeç lets it go.
-    let _ = app.update(Message::Grade(G::Close));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Close)));
     let _ = app.update(Message::Run("tool.grade"));
-    assert_eq!((app.grade.target, app.grade.referenced), (Target::Grade, false));
+    assert_eq!(
+        (app.road.grade.target, app.road.grade.referenced),
+        (Target::Grade, false)
+    );
 }
 
 #[test]
 fn a_vertex_without_an_elevation_is_said_and_uygula_stays_off() {
     let mut app = on_reference();
     typed(&mut app);
-    let _ = app.update(Message::Grade(G::At(2.0)));
-    let why = app.grade.raised.clone().expect("a plan").expect_err("refused");
-    assert_eq!(why, "1. köşenin kotu yok; fark bulunamıyor. Kotlu bir köşe seçin ya da önce Kot ver ile kot verin.");
+    let _ = app.update(Message::Road(road::Event::Grade(G::At(2.0))));
+    let why = app
+        .road
+        .grade
+        .raised
+        .clone()
+        .expect("a plan")
+        .expect_err("refused");
+    assert_eq!(
+        why,
+        "1. köşenin kotu yok; fark bulunamıyor. Kotlu bir köşe seçin ya da önce Kot ver ile kot verin."
+    );
     let before = zs(&app, 1);
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     assert_eq!(zs(&app, 1), before, "nothing written");
 }
 
@@ -143,10 +248,16 @@ fn the_reference_and_the_vertex_are_marked() {
     let mut app = on_reference();
     assert_eq!(app.grade_marks(), (Vec::new(), Vec::new()), "no reference yet");
     typed(&mut app);
-    let r = kentos_commands::Vec2 { x: X0 - 20.0, y: Y0 + 10.0 };
-    let v = kentos_commands::Vec2 { x: X0 + 80.0, y: Y0 + 40.0 };
+    let r = kentos_commands::Vec2 {
+        x: X0 - 20.0,
+        y: Y0 + 10.0,
+    };
+    let v = kentos_commands::Vec2 {
+        x: X0 + 80.0,
+        y: Y0 + 40.0,
+    };
     assert_eq!(app.grade_marks(), (vec![r, v], vec![r, v]));
-    let _ = app.update(Message::Grade(G::Close));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Close)));
     assert_eq!(app.grade_marks(), (Vec::new(), Vec::new()), "closed");
 }
 
@@ -181,7 +292,9 @@ fn screens() {
         );
         app.selection.set([Slot(1)]);
         let _ = app.update(Message::Run("tool.grade"));
-        let _ = app.update(Message::Grade(G::Target(Target::Reference)));
+        let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+            Target::Reference,
+        ))));
         typed(&mut app);
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
@@ -189,7 +302,7 @@ fn screens() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
         // After Uygula: the kerb's vertices in Koordinat listesi, their elevations moved by the same difference.
-        let _ = app.update(Message::Grade(G::Apply));
+        let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
         app.selection.set([Slot(1)]);
         app.show_bottom(crate::bottom::BottomTab::Coords);
         snapshot.settle(&mut app, App::view, &mut update);
@@ -205,16 +318,36 @@ fn on_a_hole() -> App {
     let mut app = opened();
     app.selection.set([Slot(3)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Grade(G::Target(Target::Reference)));
-    let _ = app.update(Message::Grade(G::Pick));
-    assert!(app.grade_picked(Some(kentos_interaction::Vec2 { x: X0 + 260.0, y: Y0 - 15.0 })));
-    assert_eq!(app.grade.picking, Some(Pick::Vertex), "the vertex awaited");
-    assert!(app.grade_picked(Some(kentos_interaction::Vec2 { x: X0 + 220.01, y: Y0 + 9.99 })));
-    assert_eq!((app.grade.ring, app.grade.at), ((0, 1), 2.0), "the first part's hole, its second vertex");
+    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+        Target::Reference,
+    ))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
+    assert!(app.grade_picked(Some(kentos_interaction::Vec2 {
+        x: X0 + 260.0,
+        y: Y0 - 15.0
+    })));
+    assert_eq!(
+        app.road.grade.picking,
+        Some(Pick::Vertex),
+        "the vertex awaited"
+    );
+    assert!(app.grade_picked(Some(kentos_interaction::Vec2 {
+        x: X0 + 220.01,
+        y: Y0 + 9.99
+    })));
+    assert_eq!(
+        (app.road.grade.ring, app.road.grade.at),
+        ((0, 1), 2.0),
+        "the first part's hole, its second vertex"
+    );
     // A real click ends its pick step before the point arrives; called directly here, the step is ended as it would be.
     let _ = app.with_tool(|s, cx| s.cancel(cx));
-    for e in [G::Height(120.75), G::By(By::Difference), G::Difference(-0.5)] {
-        let _ = app.update(Message::Grade(e));
+    for e in [
+        G::Height(120.75),
+        G::By(By::Difference),
+        G::Difference(-0.5),
+    ] {
+        let _ = app.update(Message::Road(road::Event::Grade(e)));
     }
     app
 }
@@ -223,11 +356,19 @@ fn on_a_hole() -> App {
 fn the_vertex_click_chooses_the_hole_and_uygula_writes_the_case() {
     let mut app = on_a_hole();
     let want = case("Alan: ilk parçanın deliğinin");
-    let raised = app.grade.raised.clone().expect("a plan").expect("planned");
+    let raised = app
+        .road
+        .grade
+        .raised
+        .clone()
+        .expect("a plan")
+        .expect("planned");
     assert!((raised.after - 120.25).abs() < 1e-9, "{raised:?}");
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     let doc = app.document.as_ref().expect("a drawing");
-    let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(Slot(3)) else { panic!("the area") };
+    let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(Slot(3)) else {
+        panic!("the area")
+    };
     let got = serde_json::json!({"zs": p.zs, "holes": p.holes, "parts": p.parts});
     let fields = &want["steps"][0]["expect"]["fields"]["3"];
     for k in ["zs", "holes", "parts"] {

@@ -4,6 +4,7 @@
 //! so and Bilinen noktalar's Taşınma names it; with the grid for one of them the summary says both ways. The known point
 //! form takes a velocity (all three components or none). And the pictures.
 
+use crate::map;
 use kentos_commands::{KnownMovedBy, MapSurveyNetworked};
 use kentos_launch::Module;
 use serde_json::Value;
@@ -31,12 +32,20 @@ fn opened(name: &str) -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    assert_eq!(app.dialog, Some(Dialog::SurveyNetwork));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+    );
     app
 }
 
 fn answer(app: &App) -> MapSurveyNetworked {
-    app.survey_network.answer.clone().expect("an answer").expect("adjusted")
+    app.map
+        .survey_network
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("adjusted")
 }
 
 /// Whether the window draws `text` (Bilinen noktalar's table cell).
@@ -65,12 +74,22 @@ fn own_velocities_carry_the_known_points_without_a_grid() {
     }
     assert!(a.acceptable, "{:?}", a.why);
     let line = crate::survey_network_window::epoch_line(&a);
-    assert!(line.contains("2 bilinen nokta kendi hızıyla oraya taşındı"), "{line}");
+    assert!(
+        line.contains("2 bilinen nokta kendi hızıyla oraya taşındı"),
+        "{line}"
+    );
     // Bilinen noktalar's Taşınma names the way.
-    let _ = app.update(Message::SurveyNetwork(N::View(View::Known)));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+        View::Known,
+    ))));
     let mm = |v: f64| format!("{:.1}", v * 1000.0);
     let m = &a.moved[0];
-    let cell = format!("hız {}/{}/{}", mm(m.shift[0]), mm(m.shift[1]), mm(m.shift[2]));
+    let cell = format!(
+        "hız {}/{}/{}",
+        mm(m.shift[0]),
+        mm(m.shift[1]),
+        mm(m.shift[2])
+    );
     assert!(drawn(&mut app, &cell), "{cell}");
     // One by its velocity, one along the grid: the summary says both.
     let app = opened(BOTH);
@@ -83,9 +102,14 @@ fn own_velocities_carry_the_known_points_without_a_grid() {
 #[test]
 fn the_known_point_form_takes_a_velocity() {
     let mut app = opened(OWN);
-    let _ = app.update(Message::SurveyNetwork(N::View(View::Known)));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+        View::Known,
+    ))));
     let type_ = |app: &mut App, field: Field, text: &str| {
-        let _ = app.update(Message::SurveyNetwork(N::Known(field, text.into())));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Known(
+            field,
+            text.into(),
+        ))));
     };
     // A third known point on N4 with two velocity components only: refused, nothing added.
     for (field, text) in [
@@ -99,15 +123,34 @@ fn the_known_point_form_takes_a_velocity() {
     ] {
         type_(&mut app, field, text);
     }
-    let before = app.document.as_ref().and_then(|d| d.model.map_survey()).map(|s| s.known.len());
-    let _ = app.update(Message::SurveyNetwork(N::AddKnown));
-    assert_eq!(app.document.as_ref().and_then(|d| d.model.map_survey()).map(|s| s.known.len()), before);
+    let before = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.map_survey())
+        .map(|s| s.known.len());
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::AddKnown)));
+    assert_eq!(
+        app.document
+            .as_ref()
+            .and_then(|d| d.model.map_survey())
+            .map(|s| s.known.len()),
+        before
+    );
     assert!(crate::files_testing::last_said(&app).contains("Hızın üç bileşenini birden yazın"));
     // The third component: added with its velocity.
     type_(&mut app, Field::Velocity(2), "0.0089");
-    let _ = app.update(Message::SurveyNetwork(N::AddKnown));
-    let survey = app.document.as_ref().and_then(|d| d.model.map_survey()).cloned().expect("the archive");
-    let k = survey.known.iter().find(|k| k.mark == "N4").expect("the new known point");
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::AddKnown)));
+    let survey = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.map_survey())
+        .cloned()
+        .expect("the archive");
+    let k = survey
+        .known
+        .iter()
+        .find(|k| k.mark == "N4")
+        .expect("the new known point");
     assert_eq!(k.velocity, Some([-0.0123, 0.0101, 0.0089]));
     assert_eq!(k.epoch, Some(2005.0));
 }
@@ -133,8 +176,13 @@ fn screens() {
             let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
-            let _ = app.update(Message::SurveyNetwork(N::View(View::Known)));
-            let _ = app.update(Message::SurveyNetwork(N::Known(Field::Velocity(0), "-0.0123".into())));
+            let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+                View::Known,
+            ))));
+            let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Known(
+                Field::Velocity(0),
+                "-0.0123".into(),
+            ))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);

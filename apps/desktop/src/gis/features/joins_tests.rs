@@ -4,6 +4,7 @@
 
 use super::Event;
 use crate::app::{App, Message};
+use crate::gis;
 use crate::joins_window::Event as W;
 
 fn app_with_views() -> App {
@@ -16,9 +17,11 @@ fn app_with_views() -> App {
         .expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    app.features.reset(None);
+    app.gis.features.reset(None);
     let _ = app.update(Message::Run("data.featureTable"));
-    let _ = app.update(Message::Features(Event::View("parsel-malik".into())));
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::View(
+        "parsel-malik".into(),
+    ))));
     app
 }
 
@@ -29,7 +32,7 @@ fn read(app: &App) -> std::rc::Rc<kentos_native_application::joins_query::JoinRe
 }
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::Features(e));
+    let _ = app.update(Message::Gis(gis::Event::Features(e)));
 }
 
 #[test]
@@ -53,7 +56,7 @@ fn a_join_view_shows_its_rows_and_writes_a_cell_to_its_record() {
     assert_eq!(r.rows[1].cells[pay].as_deref(), Some("0.5"));
     // The key's cell is not edited: the row would join another record.
     ev(&mut app, Event::JoinEdit(0, key));
-    assert!(app.features.join.editing_cell().is_none());
+    assert!(app.gis.features.join.editing_cell().is_none());
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(
         read(&app).rows[0].cells[pay].as_deref(),
@@ -66,14 +69,19 @@ fn a_join_view_shows_its_rows_and_writes_a_cell_to_its_record() {
 fn the_window_saves_a_new_view_through_the_command() {
     let mut app = app_with_views();
     let _ = app.update(Message::Run("data.joinViews"));
-    assert_eq!(app.dialog, Some(crate::app::Dialog::Joins));
-    let _ = app.update(Message::Joins(W::New));
-    let _ = app.update(Message::Joins(W::Name("Hisseler".into())));
-    let _ = app.update(Message::Joins(W::With("hisse".into())));
-    let _ = app.update(Message::Joins(W::Key("no".into())));
-    let _ = app.update(Message::Joins(W::WithKey("parseller".into())));
-    let _ = app.update(Message::Joins(W::Save));
-    assert!(app.joins_window.is_none(), "Kaydet closes the window");
+    assert_eq!(
+        app.dialog,
+        Some(crate::app::Dialog::Gis(gis::GisDialogKind::Joins))
+    );
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::New)));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::Name("Hisseler".into()))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::With("hisse".into()))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::Key("no".into()))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::WithKey(
+        "parseller".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::Save)));
+    assert!(app.gis.joins_window.is_none(), "Kaydet closes the window");
     let views = app
         .document
         .as_ref()
@@ -102,31 +110,49 @@ fn tapu() -> String {
 /// Birleşik görünümler with a new view on the source's table and its summing columns, as a person makes it.
 fn source_view_in_window(app: &mut App) {
     let _ = app.update(Message::Run("data.joinViews"));
-    let _ = app.update(Message::Joins(W::New));
-    let _ = app.update(Message::Joins(W::Name("Tapu özeti".into())));
-    let _ = app.update(Message::Joins(W::Key("no".into())));
-    let _ = app.update(Message::Joins(W::Joined(
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::New)));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::Name(
+        "Tapu özeti".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::Key("no".into()))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::Joined(
         crate::joins_window::Joined::Source,
-    )));
-    let _ = app.update(Message::Joins(W::SourcePath(tapu())));
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::SourcePath(tapu()))));
     // Tabloları oku runs off the UI thread; its answer is handed in as the thread would.
     let tables = crate::exchange::list_tables(tapu());
-    let _ = app.update(Message::Joins(W::SourceTables(tapu(), tables)));
-    let _ = app.update(Message::Joins(W::SourceTable("tapu".into())));
-    let _ = app.update(Message::Joins(W::WithKey("parsel_no".into())));
-    let _ = app.update(Message::Joins(W::SumAdd));
-    let _ = app.update(Message::Joins(W::SumAdd));
-    let _ = app.update(Message::Joins(W::SumName(1, "Pay toplamı".into())));
-    let _ = app.update(Message::Joins(W::SumHow(1, kentos_commands::JoinHow::Sum)));
-    let _ = app.update(Message::Joins(W::SumField(1, "pay".into())));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::SourceTables(
+        tapu(),
+        tables,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::SourceTable(
+        "tapu".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::WithKey(
+        "parsel_no".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::SumAdd)));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::SumAdd)));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::SumName(
+        1,
+        "Pay toplamı".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::SumHow(
+        1,
+        kentos_commands::JoinHow::Sum,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::SumField(
+        1,
+        "pay".into(),
+    ))));
 }
 
 #[test]
 fn a_view_on_a_source_table_sums_its_records() {
     let mut app = app_with_views();
     source_view_in_window(&mut app);
-    let _ = app.update(Message::Joins(W::Save));
-    assert!(app.joins_window.is_none(), "Kaydet closes the window");
+    let _ = app.update(Message::Gis(gis::Event::Joins(W::Save)));
+    assert!(app.gis.joins_window.is_none(), "Kaydet closes the window");
     let views = app
         .document
         .as_ref()
@@ -168,7 +194,7 @@ fn a_view_on_a_source_table_sums_its_records() {
         .expect("malik");
     assert!(!r.columns[malik].editable);
     ev(&mut app, Event::JoinEdit(0, malik));
-    assert!(app.features.join.editing_cell().is_none());
+    assert!(app.gis.features.join.editing_cell().is_none());
     // Dışa aktar: the rows as a sheet, the summing columns numbers.
     let sheet = kentos_native_application::joins_query::sheet(&r, &v.name);
     assert_eq!(sheet.rows.len(), 7);
@@ -211,7 +237,7 @@ fn screens() {
                     "kaynak-pencere" => source_view_in_window(&mut app),
                     "kaynak-tablo" => {
                         source_view_in_window(&mut app);
-                        let _ = app.update(Message::Joins(W::Save));
+                        let _ = app.update(Message::Gis(gis::Event::Joins(W::Save)));
                         let id = app
                             .document
                             .as_ref()
@@ -231,7 +257,7 @@ fn screens() {
                         let mut s = doc.model.settings().clone();
                         s.join_views[0].with = "eski".into();
                         doc.model.set_settings(s);
-                        app.features.changed();
+                        app.gis.features.changed();
                     }
                     _ => {}
                 }

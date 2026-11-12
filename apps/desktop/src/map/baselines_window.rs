@@ -4,6 +4,7 @@
 //! factor adjust it again; robust estimation (docs/adr/4960, Huber or Danish) reweights the baselines and shows each
 //! one's factor. Nothing is written: taking the coordinates is a later, separate step.
 
+use crate::map;
 use std::path::PathBuf;
 
 use iced::widget::{Column, row};
@@ -94,7 +95,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Baselines(e)
+    Message::Map(map::Event::Baselines(e))
 }
 
 fn mm(v: f64) -> String {
@@ -103,25 +104,40 @@ fn mm(v: f64) -> String {
 
 impl App {
     fn baselines_run(&mut self) {
-        let Some(text) = self.baselines.text.clone() else { return };
+        let Some(text) = self.map.baselines.text.clone() else {
+            return;
+        };
         let input = SurveyBaselines {
             text: Some(text),
-            scale: (self.baselines.scale != 1.0).then_some(self.baselines.scale),
-            datum: if self.baselines.minimal { BaselineDatum::Minimal } else { BaselineDatum::Given },
-            robust: self.baselines.robust.method().map(|method| BaselineRobust {
-                method,
-                c: (self.baselines.c > 0.0).then_some(self.baselines.c),
-            }),
+            scale: (self.map.baselines.scale != 1.0).then_some(self.map.baselines.scale),
+            datum: if self.map.baselines.minimal {
+                BaselineDatum::Minimal
+            } else {
+                BaselineDatum::Given
+            },
+            robust: self
+                .map
+                .baselines
+                .robust
+                .method()
+                .map(|method| BaselineRobust {
+                    method,
+                    c: (self.map.baselines.c > 0.0).then_some(self.map.baselines.c),
+                }),
             ..SurveyBaselines::default()
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.baselines.answer = Some(match survey_baselines::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Dengeleme yapılamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.map.baselines.answer = Some(
+            match survey_baselines::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Dengeleme yapılamadı.".to_owned()),
+            },
+        );
     }
 
     /// GNSS baz ağı (`survey.baselines`): the window, then the file.
@@ -130,8 +146,11 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.baselines = State { scale: 1.0, ..State::default() };
-        self.dialog = Some(Dialog::Baselines);
+        self.map.baselines = State {
+            scale: 1.0,
+            ..State::default()
+        };
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::Baselines));
         Task::none()
     }
 
@@ -139,17 +158,19 @@ impl App {
     pub(crate) fn baselines_file(&mut self, path: PathBuf) {
         match std::fs::read_to_string(&path) {
             Ok(text) => {
-                self.baselines.text = Some(text);
-                self.baselines.file = Some(path);
+                self.map.baselines.text = Some(text);
+                self.map.baselines.file = Some(path);
                 self.baselines_run();
             }
-            Err(e) => self.baselines.answer = Some(Err(format!("{} okunamadı: {e}", path.display()))),
+            Err(e) => {
+                self.map.baselines.answer = Some(Err(format!("{} okunamadı: {e}", path.display())))
+            }
         }
     }
 
     pub(crate) fn baselines_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::View(v) => self.baselines.view = v,
+            Event::View(v) => self.map.baselines.view = v,
             Event::Pick => {
                 return Task::perform(
                     async {
@@ -166,29 +187,29 @@ impl App {
             Event::Picked(Some(path)) => self.baselines_file(path),
             Event::Picked(None) => {}
             Event::Minimal(on) => {
-                self.baselines.minimal = on;
+                self.map.baselines.minimal = on;
                 self.baselines_run();
             }
             Event::Scale(v) => {
                 if v > 0.0 {
-                    self.baselines.scale = v;
+                    self.map.baselines.scale = v;
                     self.baselines_run();
                 }
             }
             Event::Robust(r) => {
-                self.baselines.robust = r;
+                self.map.baselines.robust = r;
                 // The method's own constant, until the user gives one.
-                self.baselines.c = 0.0;
+                self.map.baselines.c = 0.0;
                 self.baselines_run();
             }
             Event::C(v) => {
                 if v > 0.0 {
-                    self.baselines.c = v;
+                    self.map.baselines.c = v;
                     self.baselines_run();
                 }
             }
             Event::Close => {
-                self.baselines = State::default();
+                self.map.baselines = State::default();
                 self.dialog = None;
             }
         }
@@ -196,7 +217,7 @@ impl App {
     }
 
     pub(crate) fn baselines_view(&self) -> Element<'_, Message> {
-        let s = &self.baselines;
+        let s = &self.map.baselines;
         let file = s.file.as_ref().and_then(|p| p.file_name()).map_or("Dosya seçilmedi".to_owned(), |n| n.to_string_lossy().into_owned());
         // One label column, the boxes the same width (the owner: a form's fields line up).
         let head = Form::new()

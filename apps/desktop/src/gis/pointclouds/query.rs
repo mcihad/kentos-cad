@@ -5,6 +5,7 @@
 //! kept (`ops::query`), its record's facts said on the command line and the
 //! point marked on the drawing.
 
+use crate::gis;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -186,7 +187,7 @@ impl App {
                 }
                 None => {}
             }
-            Message::PointClouds(Clouds::Queried(lines, found))
+            Message::Gis(gis::Event::PointClouds(Clouds::Queried(lines, found)))
         });
         self.tool_reply(task)
     }

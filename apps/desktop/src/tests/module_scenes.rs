@@ -10,6 +10,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_domain::Slot;
 use kentos_ui::widget::docking;
 use serde_json::{Value, json};
@@ -56,7 +57,7 @@ fn edit(app: &mut App, op: Value) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::RoomModules(e));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(e)));
 }
 
 /// The bathroom's objects selected, Oda modülleri open with the name typed: Seçimden tanımla is the next press.

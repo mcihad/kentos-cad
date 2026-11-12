@@ -2,6 +2,7 @@
 //! surface, a threshold, the breaks “5; 15; 30” and Bakıya göre alanlar the window's comparison carries the case's class
 //! and aspect measures; breaks that do not read are said, not guessed. And its pictures.
 
+use crate::gis;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -23,8 +24,13 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("scenario.impact"));
-    for e in [I::SlopeSurface("t-1".into()), I::SlopeThreshold("10".into()), I::SlopeClasses("5; 15; 30".into()), I::SlopeAspect(true)] {
-        let _ = app.update(Message::Impact(e));
+    for e in [
+        I::SlopeSurface("t-1".into()),
+        I::SlopeThreshold("10".into()),
+        I::SlopeClasses("5; 15; 30".into()),
+        I::SlopeAspect(true),
+    ] {
+        let _ = app.update(Message::Gis(gis::Event::Impact(e)));
     }
     app
 }
@@ -32,7 +38,13 @@ fn opened() -> App {
 #[test]
 fn the_classes_and_aspects_are_the_case_s() {
     let mut app = opened();
-    let r = app.impact.answer.clone().expect("an answer").expect("compares");
+    let r = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("compares");
     let want = &case()["steps"][0]["result"]["output"];
     let ids: Vec<String> = want["measures"]
         .as_array()
@@ -50,9 +62,20 @@ fn the_classes_and_aspects_are_the_case_s() {
         }
     }
     // A break that does not read is said, not guessed.
-    let _ = app.update(Message::Impact(I::SlopeClasses("5; on".into())));
-    let why = app.impact.answer.clone().expect("an answer").expect_err("refused");
-    assert!(why.contains("Eğim sınıfı sınırı “on” bir sayı değil"), "{why}");
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::SlopeClasses(
+        "5; on".into(),
+    ))));
+    let why = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect_err("refused");
+    assert!(
+        why.contains("Eğim sınıfı sınırı “on” bir sayı değil"),
+        "{why}"
+    );
 }
 
 /// `.run/gui-evidence/egim-sinif-baki-4660/`:
@@ -73,7 +96,7 @@ fn screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
-        let _ = app.update(Message::Impact(I::View(View::Measures)));
+        let _ = app.update(Message::Gis(gis::Event::Impact(I::View(View::Measures))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

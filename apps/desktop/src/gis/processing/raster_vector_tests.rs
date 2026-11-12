@@ -6,6 +6,7 @@
 //! given; Eğrilere kot ver gives the captured curves their elevations, its
 //! step undone whole.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::{DocumentSnapshotV1, Entity, RasterSample};
@@ -18,7 +19,10 @@ use crate::document::Document;
 const SCANNED: &str = include_str!("../../../../../fixtures/interaction/v1/scanned.kcad");
 
 fn value(app: &mut App, name: &str, v: Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 fn run(app: &mut App) -> RunStatus {
@@ -142,7 +146,7 @@ fn the_curves_take_their_elevations_in_one_step() {
     value(&mut app, "spur", json!(5));
     let s = run(&mut app);
     assert!(matches!(s, RunStatus::Ok { .. }), "{s:?}");
-    let _ = app.update(Message::Processing(Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     let _ = app.update(Message::Run("processing.run.scan.contourElevations"));
     value(
         &mut app,

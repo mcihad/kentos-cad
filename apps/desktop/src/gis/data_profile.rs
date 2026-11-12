@@ -12,6 +12,7 @@
 //! steps would do, and after it the values that did not fit. Kurum adları ([`crate::data_profile_names`]) shows the
 //! fields' names in the institution by the mapping and a form of names, and writes the form into the mapping.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
@@ -220,7 +221,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::DataProfile(event)
+    Message::Gis(gis::Event::DataProfile(event))
 }
 
 /// A finding's kind in a few words.
@@ -270,7 +271,7 @@ impl App {
             .first()
             .map(|(n, _)| (*n).to_owned())
             .unwrap_or_default();
-        self.data_profile = Some(Window {
+        self.gis.data_profile = Some(Window {
             profile,
             mapping: None,
             listed: Vec::new(),
@@ -285,7 +286,7 @@ impl App {
             chosen: None,
             names: Names::default(),
         });
-        self.dialog = Some(Dialog::DataProfile);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::DataProfile));
         self.refresh_profile();
     }
 
@@ -301,7 +302,7 @@ impl App {
     fn refresh_profile(&mut self) {
         let drawing = self.profile_drawing();
         let locked = self.tree_locked().map(str::to_owned);
-        let (Some(w), Some(doc)) = (self.data_profile.as_mut(), self.document.as_ref()) else {
+        let (Some(w), Some(doc)) = (self.gis.data_profile.as_mut(), self.document.as_ref()) else {
             return;
         };
         w.listed = profile_files::list::run(
@@ -376,7 +377,7 @@ impl App {
         w.preview = preview;
         w.migration = migration;
         let read = self.data_profile_names_read();
-        if let Some(w) = self.data_profile.as_mut() {
+        if let Some(w) = self.gis.data_profile.as_mut() {
             let rows = read.as_ref().map_or(0, |a| a.rows.len());
             w.names.chosen = w.names.chosen.filter(|i| *i < rows);
             w.names.answer = read;
@@ -384,7 +385,7 @@ impl App {
     }
 
     pub(crate) fn data_profile_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.data_profile.as_mut() else {
+        let Some(w) = self.gis.data_profile.as_mut() else {
             return Task::none();
         };
         match event {
@@ -405,7 +406,7 @@ impl App {
                 self.apply_profile();
             }
             Event::Close => {
-                self.data_profile = None;
+                self.gis.data_profile = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -520,8 +521,12 @@ impl App {
     /// `cad.profiles.import` of a file, kept where Nereye says: what it brought said, and chosen in the window.
     pub(crate) fn import_profile(&mut self, path: &std::path::Path) {
         let drawing = self.profile_drawing();
-        let overwrite = self.data_profile.as_ref().is_some_and(|w| w.overwrite);
-        let keep = self.data_profile.as_ref().map_or(Keep::Drawing, |w| w.keep);
+        let overwrite = self.gis.data_profile.as_ref().is_some_and(|w| w.overwrite);
+        let keep = self
+            .gis
+            .data_profile
+            .as_ref()
+            .map_or(Keep::Drawing, |w| w.keep);
         let Some(doc) = self.document.as_mut() else {
             return;
         };
@@ -541,7 +546,7 @@ impl App {
         self.say(Level::Success, imported_words(&done));
         // The list is read again, then what came in is chosen.
         self.refresh_profile();
-        let Some(w) = self.data_profile.as_mut() else {
+        let Some(w) = self.gis.data_profile.as_mut() else {
             return;
         };
         match done.kind {
@@ -617,7 +622,7 @@ impl App {
             ),
         };
         self.say(Level::Success, words);
-        if let Some(w) = self.data_profile.as_mut() {
+        if let Some(w) = self.gis.data_profile.as_mut() {
             match removal.kind {
                 ProfileFileKind::Profile => {
                     w.mapping = None;
@@ -631,7 +636,7 @@ impl App {
 
     /// `cad.profiles.migrate`: the data moved from the chosen release; what it did said, its losses kept in the window.
     pub(crate) fn migrate_data(&mut self) -> bool {
-        let Some(w) = self.data_profile.as_ref() else {
+        let Some(w) = self.gis.data_profile.as_ref() else {
             return false;
         };
         let input = migrate_input(
@@ -653,7 +658,7 @@ impl App {
             return false;
         };
         self.say(Level::Success, migrated_words(&done));
-        if let Some(w) = self.data_profile.as_mut() {
+        if let Some(w) = self.gis.data_profile.as_mut() {
             w.last = Some(done);
         }
         true
@@ -683,6 +688,7 @@ impl App {
     pub(crate) fn apply_profile(&mut self) -> bool {
         let drawing = self.profile_drawing();
         let Some(input) = self
+            .gis
             .data_profile
             .as_ref()
             .map(|w| apply_input(&w.profile, w.mapping.clone(), drawing))
@@ -712,7 +718,7 @@ impl App {
     }
 
     pub(crate) fn data_profile_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.data_profile else {
+        let Some(w) = &self.gis.data_profile else {
             return iced::widget::text("").into();
         };
         let drawing = self.profile_drawing();
@@ -1043,7 +1049,7 @@ impl App {
     /// The first finding of a kind, by its place in the window's table (the pictures press it).
     #[cfg(test)]
     pub(crate) fn data_profile_finding(&self, kind: &str) -> Option<usize> {
-        let r = self.data_profile.as_ref()?.report.as_ref().ok()?;
+        let r = self.gis.data_profile.as_ref()?.report.as_ref().ok()?;
         r.findings.iter().position(|f| {
             serde_json::to_value(f.kind)
                 .ok()
@@ -1058,7 +1064,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.data_profile else {
+        let Some(w) = &self.gis.data_profile else {
             return Err(format!("{PROFILE_TITLE} penceresi açık değil"));
         };
         Ok(match control {

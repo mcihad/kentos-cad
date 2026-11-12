@@ -226,6 +226,17 @@ mod wall_styles;
 mod table_style_window;
 #[path = "shell/app.rs"]
 mod app;
+
+// Each discipline's part of the shell: its windows' state, messages and windows (docs/adr/8054 §6).
+#[path = "arch/state.rs"]
+mod arch;
+#[path = "gis/state.rs"]
+mod gis;
+#[path = "map/state.rs"]
+mod map;
+#[path = "road/state.rs"]
+mod road;
+
 #[path = "shell/app_menu/mod.rs"]
 mod app_menu;
 #[path = "shell/appearance.rs"]
@@ -1687,6 +1698,9 @@ mod underlay_scenes;
 #[cfg(test)]
 #[path = "tests/source_size_tests.rs"]
 mod source_size_tests;
+#[cfg(test)]
+#[path = "tests/shell_boundary_tests.rs"]
+mod shell_boundary_tests;
 
 use std::ffi::OsString;
 use std::path::PathBuf;
@@ -1800,25 +1814,25 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             // The sheets' books, by the project's key, beside them (docs/sheet/design.md §10).
             app.sheet_store = sheets::default_store();
             // The device's NTv2 grids for the projects' datum choices (docs/adr/0168 §4).
-            app.grids.library = grids::Library::device();
+            app.arch.grids.library = grids::Library::device();
             // The forms designer's section library and kept drafts (docs/adr/0441 §1, §5).
-            app.form_files = forms::library::FormFiles::device();
+            app.gis.form_files = forms::library::FormFiles::device();
             // The recent files, kept beside the program's other history.
             if let Some(folder) = recent::RecentFiles::default_folder() {
                 app.recent = recent::RecentFiles::open(&folder);
                 // Kaynaklar's folders, beside them (docs/adr/0199 §7).
-                app.sources.folders = sources::SourceFolders::open(&folder);
+                app.gis.sources.folders = sources::SourceFolders::open(&folder);
                 // Bloklar's libraries, beside them (docs/adr/0726 §1).
                 app.blocks_panel.library = blocks_library::Library::open(&folder);
                 // Malzemeler's library folders, beside them (docs/adr/0791).
-                app.material_libraries = material_library::Libraries::open(&folder);
+                app.arch.material_libraries = material_library::Libraries::open(&folder);
                 // The Python tab's unsaved script, kept beside them (docs/adr/0136).
                 app.python.script = python::script::Script::load(&folder);
                 // Each processing tool's last values (islemler.json), beside them.
-                app.processing.memory = processing::memory::Memory::open(&folder);
+                app.gis.processing.memory = processing::memory::Memory::open(&folder);
                 // The user's models (the designer's Kaydet) beside the built-in ones.
-                let models = app.processing.memory.models().to_vec();
-                app.processing.registry.set_user_models(models);
+                let models = app.gis.processing.memory.models().to_vec();
+                app.gis.processing.registry.set_user_models(models);
             }
             // Kitaplığım, the user's own symbols (kitaplik.kstil, docs/adr/0092).
             if let Some(folder) = style::user_library::default_folder()
@@ -1829,7 +1843,7 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             // The layout kept last time (yerlesim.json beside the settings, docs/adr/0115), each program's
             // own (docs/adr/0802).
             if let Some(dir) = settings::Settings::config_dir() {
-                if let Some(problem) = app.templates_panel.open_personal(&dir) {
+                if let Some(problem) = app.arch.templates_panel.open_personal(&dir) {
                     app.warn(problem);
                 }
                 // The user's tool palette (arac-paleti.json, docs/adr/1016).

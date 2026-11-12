@@ -13,6 +13,7 @@
 //! Hepsini seç selects the records listed; a row's Git shows it in the drawing, Aç opens it in
 //! Formla düzenle (the window closes).
 
+use crate::gis;
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{FormSeverity, FormsAudit, FormsAudited};
@@ -54,7 +55,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::FormAudit(event)
+    Message::Gis(gis::Event::FormAudit(event))
 }
 
 impl App {
@@ -80,20 +81,20 @@ impl App {
             .iter()
             .find(|f| f.id == form)
             .map_or_else(|| form.clone(), |f| f.name.clone());
-        self.form_audit = Some(Window {
+        self.gis.form_audit = Some(Window {
             form,
             name,
             warnings: false,
             answer: None,
         });
-        self.dialog = Some(Dialog::FormAudit);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FormAudit));
         self.run_form_audit();
         Task::none()
     }
 
     /// Asks `cad.forms.audit` again (the form's latest release, else its draft).
     fn run_form_audit(&mut self) {
-        let Some(w) = self.form_audit.as_ref() else {
+        let Some(w) = self.gis.form_audit.as_ref() else {
             return;
         };
         let draft = self
@@ -115,7 +116,7 @@ impl App {
         };
         let result = forms_audit::plan(&ExecutionContext::new(&mut doc.model), &input);
         let answer = self.answered(result);
-        if let Some(w) = self.form_audit.as_mut() {
+        if let Some(w) = self.gis.form_audit.as_mut() {
             w.answer = answer;
         }
     }
@@ -123,7 +124,7 @@ impl App {
     pub(crate) fn form_audit_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Warnings(on) => {
-                if let Some(w) = self.form_audit.as_mut() {
+                if let Some(w) = self.gis.form_audit.as_mut() {
                     w.warnings = on;
                 }
                 self.run_form_audit();
@@ -142,16 +143,16 @@ impl App {
                 }
             }
             Event::Open(uid) => {
-                let form = self.form_audit.as_ref().map(|w| w.form.clone());
+                let form = self.gis.form_audit.as_ref().map(|w| w.form.clone());
                 if let (Some(slot), Some(form)) = (self.slot_of_text(&uid), form) {
-                    self.form_audit = None;
+                    self.gis.form_audit = None;
                     self.dialog = None;
                     self.selection.set([slot]);
                     return self.open_entry(slot, &form);
                 }
             }
             Event::Close => {
-                self.form_audit = None;
+                self.gis.form_audit = None;
                 self.dialog = None;
             }
         }
@@ -165,7 +166,8 @@ impl App {
 
     /// The records listed, as slots.
     fn audit_slots(&self) -> Vec<Slot> {
-        self.form_audit
+        self.gis
+            .form_audit
             .as_ref()
             .and_then(|w| w.answer.as_ref())
             .map(|a| {
@@ -196,7 +198,7 @@ impl App {
     }
 
     pub(crate) fn form_audit_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.form_audit else {
+        let Some(w) = &self.gis.form_audit else {
             return iced::widget::text("").into();
         };
         let mut body = Column::new().spacing(12);
@@ -291,7 +293,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.form_audit else {
+        let Some(w) = &self.gis.form_audit else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

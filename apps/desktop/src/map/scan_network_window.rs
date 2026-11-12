@@ -22,6 +22,7 @@
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::map;
 use iced::widget::{container, row, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, Entity, PointCloudsNetwork, PointCloudsNetworked, RegisterReject, RegisterRobust};
@@ -120,7 +121,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::ScanNetwork(e)
+    Message::Map(map::Event::ScanNetwork(e))
 }
 
 /// A cloud's name: its first file's, else its number.
@@ -153,7 +154,7 @@ impl App {
     }
 
     fn scan_network_run(&mut self) {
-        let s = &self.scan_network;
+        let s = &self.map.scan_network;
         let input = PointCloudsNetwork {
             uids: s.scans.iter().map(|(u, _)| u.clone()).collect(),
             fixed: vec![s.fixed.clone()],
@@ -167,14 +168,18 @@ impl App {
             rounds: (s.rounds > 1.0).then(|| s.rounds.min(10.0) as u32),
             ..Default::default()
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.scan_network.answer = Some(match pointcloud_network::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Tarama ağı dengelenemedi.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.map.scan_network.answer = Some(
+            match pointcloud_network::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Tarama ağı dengelenemedi.".to_owned()),
+            },
+        );
     }
 
     /// Tarama ağı dengelemesi (`pointcloud.network`): the selected clouds (else every cloud), the first held.
@@ -190,7 +195,7 @@ impl App {
         }
         let fixed = scans[0].0.clone();
         let chosen = scans[1].0.clone();
-        self.scan_network = State {
+        self.map.scan_network = State {
             scans,
             fixed,
             spacing: 0.5,
@@ -202,15 +207,23 @@ impl App {
             ..Default::default()
         };
         self.scan_network_run();
-        self.dialog = Some(Dialog::ScanNetwork);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::ScanNetwork));
         Task::none()
     }
 
     /// Dönüşüm uygula… (docs/adr/3100): the chosen scan selected (the tool's input), the window closed and Dönüşüm
     /// uygula opened with its matrix and a layer of its own. Nothing is written until that tool runs.
     fn scan_network_apply(&mut self) {
-        let Some(Ok(r)) = &self.scan_network.answer else { return };
-        let Some(scan) = r.scans.iter().find(|s| s.uid == self.scan_network.chosen) else { return };
+        let Some(Ok(r)) = &self.map.scan_network.answer else {
+            return;
+        };
+        let Some(scan) = r
+            .scans
+            .iter()
+            .find(|s| s.uid == self.map.scan_network.chosen)
+        else {
+            return;
+        };
         if scan.fixed {
             self.warn(format!("{TITLE}: sabit tarama yerinde kalır; başka bir tarama seçin."));
             return;
@@ -236,13 +249,28 @@ impl App {
     /// undo step; its file is not written. The network is adjusted again from there: the scan's correction is then
     /// what is left.
     fn scan_network_keep(&mut self) {
-        let Some(Ok(r)) = &self.scan_network.answer else { return };
-        let Some(scan) = r.scans.iter().find(|s| s.uid == self.scan_network.chosen) else { return };
+        let Some(Ok(r)) = &self.map.scan_network.answer else {
+            return;
+        };
+        let Some(scan) = r
+            .scans
+            .iter()
+            .find(|s| s.uid == self.map.scan_network.chosen)
+        else {
+            return;
+        };
         if scan.fixed {
             self.warn(format!("{TITLE}: sabit tarama yerinde kalır; başka bir tarama seçin."));
             return;
         }
-        let name = self.scan_network.scans.iter().find(|(u, _)| *u == scan.uid).map(|(_, n)| n.clone()).unwrap_or_default();
+        let name = self
+            .map
+            .scan_network
+            .scans
+            .iter()
+            .find(|(u, _)| *u == scan.uid)
+            .map(|(_, n)| n.clone())
+            .unwrap_or_default();
         let input = kentos_commands::PointCloudsPlace {
             uid: scan.uid.clone(),
             place: kentos_commands::CloudPlaceBy::Matrix { matrix: scan.matrix.to_vec() },
@@ -265,7 +293,7 @@ impl App {
     }
 
     pub(crate) fn scan_network_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.scan_network;
+        let s = &mut self.map.scan_network;
         match event {
             Event::Take => {
                 let scans = self.scan_network_clouds();
@@ -273,7 +301,7 @@ impl App {
                     self.warn(format!("{TITLE}: en az üç nokta bulutu seçin; seçimde {} var.", scans.len()));
                     return Task::none();
                 }
-                let s = &mut self.scan_network;
+                let s = &mut self.map.scan_network;
                 if !scans.iter().any(|(u, _)| *u == s.fixed) {
                     s.fixed = scans[0].0.clone();
                 }
@@ -316,7 +344,7 @@ impl App {
 
     /// The summary's lines and the chosen table's rows.
     pub(crate) fn scan_network_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
-        let s = &self.scan_network;
+        let s = &self.map.scan_network;
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         let r = match &s.answer {
@@ -382,7 +410,7 @@ impl App {
     }
 
     pub(crate) fn scan_network_view(&self) -> Element<'_, Message> {
-        let s = &self.scan_network;
+        let s = &self.map.scan_network;
         let names: Vec<String> = s.scans.iter().map(|(_, n)| n.clone()).collect();
         let free: Vec<(String, String)> = s.scans.iter().filter(|(u, _)| *u != s.fixed).cloned().collect();
         let form = Form::new()

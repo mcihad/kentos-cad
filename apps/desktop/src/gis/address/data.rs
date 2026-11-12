@@ -10,6 +10,7 @@
 //! definition through `cad.addresses.define` (a project setting, not an
 //! undo step). The form's rules are `kentos_interaction::address_form`'s.
 
+use crate::gis;
 use iced::widget::{Column, Space, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
@@ -145,7 +146,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Address(Address::Data(e))
+    Message::Gis(gis::Event::Address(Address::Data(e)))
 }
 
 /// A field list's choices: none, then the layer's names; a name it does not have kept, marked.
@@ -208,7 +209,7 @@ impl App {
             .iter()
             .map(|l| form_of(l, |m| format.from_metres(m)))
             .collect();
-        self.address.data = Some(Window {
+        self.gis.address.data = Some(Window {
             chosen: (!forms.is_empty()).then_some(0),
             forms,
             saved,
@@ -216,7 +217,7 @@ impl App {
             tickets: TICKETS,
             said: None,
         });
-        self.dialog = Some(Dialog::AddressData);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::AddressData));
         Task::none()
     }
 
@@ -246,7 +247,7 @@ impl App {
         let format = self.format();
         let names_of = |app: &App, layer: &str| app.address_fields(layer);
         let names = {
-            let Some(w) = self.address.data.as_ref() else {
+            let Some(w) = self.gis.address.data.as_ref() else {
                 return Task::none();
             };
             let f = w.chosen.and_then(|i| w.forms.get(i));
@@ -281,7 +282,7 @@ impl App {
         } else {
             Default::default()
         };
-        let Some(w) = self.address.data.as_mut() else {
+        let Some(w) = self.gis.address.data.as_mut() else {
             return Task::none();
         };
         w.said = None;
@@ -331,7 +332,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.address.data = None;
+                self.gis.address.data = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_address_data(),
@@ -405,13 +406,13 @@ impl App {
     }
 
     fn save_address_data(&mut self) -> Task<Message> {
-        let Some(w) = self.address.data.clone() else {
+        let Some(w) = self.gis.address.data.clone() else {
             return Task::none();
         };
         let now = match self.data_defs(&w) {
             Ok(now) => now,
             Err(p) => {
-                if let Some(w) = self.address.data.as_mut() {
+                if let Some(w) = self.gis.address.data.as_mut() {
                     w.said = Some((Say::Error, p));
                 }
                 return Task::none();
@@ -471,7 +472,7 @@ impl App {
         for s in said {
             self.say(Level::Warn, s);
         }
-        self.address.data = None;
+        self.gis.address.data = None;
         self.dialog = None;
         self.announce(
             Level::Info,
@@ -483,7 +484,7 @@ impl App {
     /// Denetle: the chosen definition built as the window says it, checked on the address thread.
     fn check_address_data(&mut self) -> Task<Message> {
         let format = self.format();
-        let Some(w) = self.address.data.as_mut() else {
+        let Some(w) = self.gis.address.data.as_mut() else {
             return Task::none();
         };
         let Some(f) = w.chosen.and_then(|i| w.forms.get(i)) else {
@@ -552,7 +553,7 @@ impl App {
     /// each given its most written spelling (`cad.addresses.normalize`, docs/adr/0647 §2), as one undo step; Denetle runs
     /// again.
     fn normalize_address_data(&mut self) -> Task<Message> {
-        let Some(w) = &self.address.data else {
+        let Some(w) = &self.gis.address.data else {
             return Task::none();
         };
         let Some(s) = w.check.as_ref().and_then(|c| c.value.as_deref()) else {
@@ -606,7 +607,7 @@ impl App {
         }
         if let Some(why) = failed {
             doc.model.cancel_group(group);
-            if let Some(w) = self.address.data.as_mut() {
+            if let Some(w) = self.gis.address.data.as_mut() {
                 w.said = Some((Say::Error, why));
             }
             return Task::none();
@@ -620,7 +621,7 @@ impl App {
     }
 
     pub(crate) fn address_data_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.address.data else {
+        let Some(w) = &self.gis.address.data else {
             return iced::widget::text("").into();
         };
         let mut list = Column::new().spacing(2);
@@ -1067,6 +1068,7 @@ impl App {
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
         let w = self
+            .gis
             .address
             .data
             .as_ref()

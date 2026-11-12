@@ -5,6 +5,7 @@
 use crate::app::{App, Message};
 use crate::profile_lengths_window::Event as L;
 use crate::profile_window::Event as W;
+use crate::road;
 
 /// A road project with `road.profiles.query`'s drawing and no profile.
 fn app() -> App {
@@ -20,7 +21,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Profiles(e));
+    let _ = app.update(Message::Road(road::Event::Profiles(e)));
 }
 
 fn lengths(app: &mut App, e: L) {
@@ -53,7 +54,11 @@ fn typed(app: &mut App) {
 }
 
 fn window(app: &App) -> &crate::profile_lengths_window::Lengths {
-    app.profile_window.as_ref().and_then(|w| w.lengths.as_deref()).expect("open")
+    app.road
+        .profile_window
+        .as_ref()
+        .and_then(|w| w.lengths.as_deref())
+        .expect("open")
 }
 
 #[test]
@@ -81,8 +86,14 @@ fn short_curves_are_lengthened_in_their_kind_and_saved() {
     // Kısaları uzat: back to Boykesit; v1 takes its suggestion, the kink a parabola, the circle stays a circle, the
     // two cut to share the gap; the profile still builds.
     lengths(&mut app, L::Apply);
-    assert!(app.profile_window.as_ref().unwrap().lengths.is_none(), "back to Boykesit");
-    assert!(app.log.lines().any(|l| l.text.contains("v2, v3")), "says which were cut");
+    assert!(
+        app.road.profile_window.as_ref().unwrap().lengths.is_none(),
+        "back to Boykesit"
+    );
+    assert!(
+        app.log.lines().any(|l| l.text.contains("v2, v3")),
+        "says which were cut"
+    );
     send(&mut app, W::OpenLengths);
     let again = window(&app).result.clone().expect("read").expect("builds");
     assert!(!again.curves[0].short && again.curves[0].length == Some(p1.suggested), "{again:?}");

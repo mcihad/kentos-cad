@@ -48,7 +48,7 @@ impl App {
     /// The road overlaps for the drawing as it is: none when nothing is shown, for another drawing, when the check no
     /// longer reads or finds none. Kept until the drawing changes.
     pub(crate) fn zoning_marks(&self) -> Option<Arc<ZoningMarks>> {
-        let shown = self.zoning_shown_marks.as_ref()?;
+        let shown = self.map.zoning_shown_marks.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {
             return None;

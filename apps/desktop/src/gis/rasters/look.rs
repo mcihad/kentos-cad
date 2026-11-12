@@ -10,6 +10,7 @@
 //! dataset's raster has its Veri seti section (docs/adr/0243 §11): each
 //! slice dimension's value, Zaman sürgüsünü izle, a mesh's lines and colour.
 
+use crate::gis;
 use iced::widget::{Column, Row, button, column, container, row, space};
 use iced::{Center, Color, Element, Fill, Length, Task};
 use kentos_commands::{
@@ -90,7 +91,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Rasters(Rasters::Look(e))
+    Message::Gis(gis::Event::Rasters(Rasters::Look(e)))
 }
 
 const RENDERS: [RasterRender; 6] = [
@@ -230,7 +231,7 @@ impl App {
             number(s.nodata),
             kentos_interaction::fixed((1.0 - fields.opacity.unwrap_or(1.0)) * 100.0, 0),
         ];
-        self.rasters.look = Some(State {
+        self.gis.rasters.look = Some(State {
             slot,
             style: fields.style.clone(),
             dataset: fields.dataset.clone(),
@@ -245,7 +246,7 @@ impl App {
             has_palette,
             preview: None,
         });
-        self.dialog = Some(Asking::RasterStyle);
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::RasterStyle));
         let Some(origin) = origin else {
             return Task::none();
         };
@@ -253,7 +254,7 @@ impl App {
     }
 
     pub(crate) fn raster_look_event(&mut self, e: Event) -> Task<Message> {
-        let Some(s) = &mut self.rasters.look else {
+        let Some(s) = &mut self.gis.rasters.look else {
             return Task::none();
         };
         match e {
@@ -343,7 +344,7 @@ impl App {
 
     /// The raster as the window says, when that is a raster: its look and opacity.
     fn raster_look_fields(&self) -> Option<RasterFields> {
-        let s = self.rasters.look.as_ref()?;
+        let s = self.gis.rasters.look.as_ref()?;
         let clear = read(&s.texts[Typed::Clear as usize]).unwrap_or(0.0);
         let opacity =
             (clear.is_finite() && (0.0..=90.0).contains(&clear)).then_some(1.0 - clear / 100.0)?;
@@ -356,7 +357,7 @@ impl App {
 
     /// Why Uygula cannot run, when it cannot.
     fn raster_look_problem(&self) -> Option<String> {
-        let s = self.rasters.look.as_ref()?;
+        let s = self.gis.rasters.look.as_ref()?;
         let clear = read(&s.texts[Typed::Clear as usize]).unwrap_or(0.0);
         if !(clear.is_finite() && (0.0..=90.0).contains(&clear)) {
             return Some("Saydamlık %0 ile %90 arasında olmalı.".to_owned());
@@ -384,7 +385,7 @@ impl App {
     /// The drawing shows the window's look: the last preview let go, the new one written in its group.
     fn raster_look_preview(&mut self) {
         let fields = self.raster_look_fields();
-        let (Some(doc), Some(s)) = (&mut self.document, &mut self.rasters.look) else {
+        let (Some(doc), Some(s)) = (&mut self.document, &mut self.gis.rasters.look) else {
             return;
         };
         if let Some(g) = s.preview.take() {
@@ -418,7 +419,7 @@ impl App {
         let Some(fields) = self.raster_look_fields() else {
             return;
         };
-        let (Some(doc), Some(s)) = (&mut self.document, &mut self.rasters.look) else {
+        let (Some(doc), Some(s)) = (&mut self.document, &mut self.gis.rasters.look) else {
             return;
         };
         if let Some(g) = s.preview.take() {
@@ -426,7 +427,7 @@ impl App {
         }
         let slot = s.slot;
         let unchanged = fields == s.original;
-        self.rasters.look = None;
+        self.gis.rasters.look = None;
         self.dialog = None;
         if unchanged {
             return;
@@ -464,19 +465,19 @@ impl App {
 
     /// Vazgeç: the raster as it was.
     pub(crate) fn raster_look_close(&mut self) {
-        if let (Some(doc), Some(s)) = (&mut self.document, &mut self.rasters.look)
+        if let (Some(doc), Some(s)) = (&mut self.document, &mut self.gis.rasters.look)
             && let Some(g) = s.preview.take()
         {
             doc.model.cancel_group(g);
         }
-        self.rasters.look = None;
-        if self.dialog == Some(Asking::RasterStyle) {
+        self.gis.rasters.look = None;
+        if self.dialog == Some(Asking::Gis(gis::GisDialogKind::RasterStyle)) {
             self.dialog = None;
         }
     }
 
     pub(crate) fn raster_look_view(&self) -> Element<'_, Message> {
-        let Some(s) = &self.rasters.look else {
+        let Some(s) = &self.gis.rasters.look else {
             return iced::widget::text("").into();
         };
         let bands = s.original.bands;

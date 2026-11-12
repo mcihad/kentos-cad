@@ -188,7 +188,7 @@ impl App {
     /// The access marks for the drawing as it is: none when nothing is shown, for another drawing, or when the
     /// comparison no longer reads (its scenario was removed). Kept until the drawing changes.
     pub(crate) fn impact_reach_marks(&self) -> Option<Arc<ReachMarks>> {
-        let shown = self.impact_reach.as_ref()?;
+        let shown = self.gis.impact_reach.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {
             return None;

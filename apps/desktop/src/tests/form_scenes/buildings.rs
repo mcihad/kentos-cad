@@ -2,6 +2,7 @@
 //! left panel, units and related sums, the related records' actions and workflows.
 
 use super::*;
+use crate::gis;
 
 /// The buildings' fields: a status from a list (required), the storeys by a stable id, a note, a date
 /// and a yes/no.
@@ -475,7 +476,7 @@ pub(super) fn styled_buildings(app: &mut App) {
         d["layers"] = Value::Array(layers);
         d["activeLayer"] = json!("bina");
     });
-    app.features.layer = Some("bina".into());
+    app.gis.features.layer = Some("bina".into());
     let _ = app.update(Message::Run("data.featureTable"));
 }
 
@@ -528,7 +529,7 @@ pub(crate) fn left_checks(app: &mut App) {
 /// Formlar on the survey form, its storeys chosen: the checks with Ne zaman, one asked on leaving.
 pub(super) fn left_designer(app: &mut App) {
     left_checks(app);
-    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Cancel)));
     run(app, "data.forms");
     designer(app, designer::Event::SelectItem("kat".into()));
 }
@@ -552,12 +553,12 @@ pub(super) fn field_usage(app: &mut App) {
     use crate::layer_fields::{Cell, Event};
     buildings_with_a_form(app);
     let _ = app.open_layer_fields("bina");
-    let _ = app.update(Message::LayerFields(Event::Choose(2)));
-    let _ = app.update(Message::LayerFields(Event::Type(
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(Event::Choose(2))));
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(Event::Type(
         2,
         Cell::Name,
         "Kat sayısı".into(),
-    )));
+    ))));
 }
 
 /// The attribute table's Form view (docs/adr/0416): the buildings listed, the second one's form
@@ -565,12 +566,12 @@ pub(super) fn field_usage(app: &mut App) {
 pub(super) fn form_view(app: &mut App) {
     use crate::features::{Event, Pane};
     buildings_with_a_form(app);
-    let _ = app.update(Message::Features(Event::Pane(Pane::Form)));
-    let _ = app.update(Message::Features(Event::FormRow(1)));
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Pane(Pane::Form))));
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::FormRow(1))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Kat".into(),
         "8".into(),
-    )));
+    ))));
 }
 
 /// The buildings with “Orta hasarlı” retired from the state's list (docs/adr/0418): B-3 and B-6 keep it.
@@ -588,8 +589,8 @@ pub(super) fn retired_state(app: &mut App) {
 pub(super) fn retired_list(app: &mut App) {
     retired_state(app);
     let _ = app.open_layer_fields("bina");
-    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::OpenList(
-        1,
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(
+        crate::layer_fields::Event::OpenList(1),
     )));
 }
 
@@ -673,7 +674,7 @@ pub(super) fn typed_buildings(app: &mut App) {
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
     doc.model.set_settings(settings);
-    app.features.layer = Some("bina".into());
+    app.gis.features.layer = Some("bina".into());
 }
 
 /// A building's units as a table (docs/adr/0425): number, floor and area of each, the areas totalled;
@@ -1050,14 +1051,14 @@ pub(super) fn actions_delete_asked(app: &mut App) {
         false,
     );
     let first = app
+        .gis
         .form_entry
         .as_ref()
         .expect("the window")
         .related_of("malikler")[0]
         .clone();
-    let _ = app.update(Message::FormEntry(entry::Event::DeleteRelated(
-        "malikler".into(),
-        first,
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(
+        entry::Event::DeleteRelated("malikler".into(), first),
     )));
 }
 
@@ -1065,21 +1066,21 @@ pub(super) fn actions_delete_asked(app: &mut App) {
 pub(super) fn actions_view_only(app: &mut App) {
     owner_actions(app, json!(["view", "show"]), false);
     let first = app
+        .gis
         .form_entry
         .as_ref()
         .expect("the window")
         .related_of("malikler")[0]
         .clone();
-    let _ = app.update(Message::FormEntry(entry::Event::OpenRelated(
-        "malikler".into(),
-        first,
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(
+        entry::Event::OpenRelated("malikler".into(), first),
     )));
 }
 
 /// Formlar on the building form, its owners item chosen: the Eylemler row.
 pub(super) fn actions_designer(app: &mut App) {
     owner_actions(app, json!(["link", "view", "show", "delete"]), false);
-    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Cancel)));
     run(app, "data.forms");
     designer(app, designer::Event::SelectItem("malikler".into()));
 }
@@ -1128,7 +1129,7 @@ pub(super) fn related_sums_linked(app: &mut App) {
 /// Formlar on the building form, the units' count chosen: its calculation reading the relation.
 pub(super) fn related_sums_designer(app: &mut App) {
     related_sums(app);
-    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Cancel)));
     run(app, "data.forms");
     designer(app, designer::Event::SelectItem("sayi".into()));
 }
@@ -1136,7 +1137,7 @@ pub(super) fn related_sums_designer(app: &mut App) {
 /// Formlar on the building form, its units item chosen: Görünüm Tablo and its columns (docs/adr/0425).
 pub(super) fn units_designer(app: &mut App) {
     units_table(app);
-    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Cancel)));
     run(app, "data.forms");
     designer(app, designer::Event::SelectItem("bolumler".into()));
 }
@@ -1245,7 +1246,7 @@ pub(super) fn workflow_buildings(app: &mut App) {
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
     doc.model.set_settings(settings);
-    app.features.layer = Some("bina".into());
+    app.gis.features.layer = Some("bina".into());
 }
 
 /// Formlar's İş akışı on the inspection form (docs/adr/0428 §4).

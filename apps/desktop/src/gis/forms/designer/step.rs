@@ -5,7 +5,7 @@ use super::*;
 
 impl App {
     pub(super) fn forms_step(&mut self, event: Event) -> Task<Message> {
-        let Some(mut w) = self.forms_window.clone() else {
+        let Some(mut w) = self.gis.forms_window.clone() else {
             return Task::none();
         };
         let fields = w
@@ -227,7 +227,7 @@ impl App {
             Event::Palette(p) => w.palette = p,
             Event::DropPublish => {}
             Event::OpenDomains => {
-                self.forms_window = Some(w);
+                self.gis.forms_window = Some(w);
                 return self.open_domains();
             }
             Event::AddRelationItem(relation) => {
@@ -288,7 +288,7 @@ impl App {
                     .cloned();
                 let Some(item) = item else {
                     self.warn("Bölüm kitaplığına koymak için bir öğe seçin.");
-                    self.forms_window = Some(w);
+                    self.gis.forms_window = Some(w);
                     return Task::none();
                 };
                 let name = if w.section_name.trim().is_empty() {
@@ -297,7 +297,11 @@ impl App {
                     w.section_name.trim().to_owned()
                 };
                 let saved = self.form_moment().0.unwrap_or_default();
-                match self.form_files.save_section(&name, &item, &fields, saved) {
+                match self
+                    .gis
+                    .form_files
+                    .save_section(&name, &item, &fields, saved)
+                {
                     Ok(v) => {
                         self.say(
                             Level::Success,
@@ -310,7 +314,7 @@ impl App {
                 }
             }
             Event::InsertSection(i) => {
-                let section = self.form_files.sections().into_iter().nth(i);
+                let section = self.gis.form_files.sections().into_iter().nth(i);
                 if let (Some(s), Some(body)) = (section, w.body.as_ref()) {
                     let missing: Vec<String> = crate::forms::library::bindings(&s, &fields)
                         .into_iter()
@@ -359,7 +363,7 @@ impl App {
                     return Task::none();
                 };
                 if w.comment_text.trim().is_empty() {
-                    self.forms_window = Some(w);
+                    self.gis.forms_window = Some(w);
                     return Task::none();
                 }
                 let (at, author) = self.form_moment();
@@ -368,7 +372,7 @@ impl App {
                         .is_some_and(|f| find(&f.draft.items, id).is_some())
                 });
                 let text = std::mem::take(&mut w.comment_text);
-                self.forms_window = Some(w);
+                self.gis.forms_window = Some(w);
                 if self
                     .edit_forms(FormsOp::Comment {
                         id: form,
@@ -387,7 +391,7 @@ impl App {
                 let Some(form) = w.chosen.clone() else {
                     return Task::none();
                 };
-                self.forms_window = Some(w);
+                self.gis.forms_window = Some(w);
                 self.edit_forms(FormsOp::Resolve {
                     id: form,
                     comment,
@@ -409,7 +413,9 @@ impl App {
             }
             Event::DropKept => {
                 if let (Some(_), Some(form)) = (w.kept.take(), w.chosen.as_deref()) {
-                    self.form_files.drop_draft(&self.form_project_key(), form);
+                    self.gis
+                        .form_files
+                        .drop_draft(&self.form_project_key(), form);
                 }
             }
             Event::AddDivider => {
@@ -826,11 +832,11 @@ impl App {
                         Level::Warn,
                         "Kayıtlar formun kaydedilmiş hâliyle denetlenir: önce Kaydet’e basın.",
                     );
-                    self.forms_window = Some(w);
+                    self.gis.forms_window = Some(w);
                     return Task::none();
                 }
-                self.forms_window = None;
-                self.form_preview = None;
+                self.gis.forms_window = None;
+                self.gis.form_preview = None;
                 self.dialog = None;
                 return self.open_form_audit(form);
             }
@@ -841,7 +847,7 @@ impl App {
                         "Hesaplar formun kaydedilmiş hâliyle yenilenir: önce Kaydet’e basın.",
                     );
                 } else if let Some(form) = self.chosen_form().cloned() {
-                    self.forms_window = Some(w);
+                    self.gis.forms_window = Some(w);
                     self.recompute_form(&form);
                     return Task::none();
                 }
@@ -850,13 +856,13 @@ impl App {
                 w.changes = true;
                 w.flow = false;
                 w.previewing = false;
-                self.form_preview = None;
+                self.gis.form_preview = None;
             }
             Event::Flow => {
                 w.flow = true;
                 w.changes = false;
                 w.previewing = false;
-                self.form_preview = None;
+                self.gis.form_preview = None;
             }
             Event::WorkflowAdd => {
                 let layer = self
@@ -987,7 +993,7 @@ impl App {
                 w.flow = false;
                 w.previewing = on;
                 if !on {
-                    self.form_preview = None;
+                    self.gis.form_preview = None;
                 }
             }
             Event::RemoveItem => {
@@ -1046,7 +1052,7 @@ impl App {
                 });
             }
             Event::SaveScenario => {
-                let typed = self.form_preview.as_ref().map(|e| e.typed());
+                let typed = self.gis.form_preview.as_ref().map(|e| e.typed());
                 let form = self.chosen_form().cloned();
                 if let (Some((values, new)), Some(form), Some(body), Some(doc)) =
                     (typed, form, w.body.clone(), self.document.as_ref())
@@ -1224,7 +1230,7 @@ impl App {
                     .and_then(|b| rule_text(b, &rule))
                     .unwrap_or_default();
                 let layer = self.chosen_form().map(|f| f.layer.clone());
-                self.forms_window = Some(w);
+                self.gis.forms_window = Some(w);
                 return match layer {
                     Some(layer) => self.open_builder_for_form(rule, &layer, &value),
                     None => Task::none(),
@@ -1259,10 +1265,14 @@ impl App {
                 w.name = text;
             }
             Event::Save => {
-                self.forms_window = Some(w);
-                let name = self.forms_window.as_ref().map(|w| w.name.trim().to_owned());
+                self.gis.forms_window = Some(w);
+                let name = self
+                    .gis
+                    .forms_window
+                    .as_ref()
+                    .map(|w| w.name.trim().to_owned());
                 if self.save_form() {
-                    self.forms_window = None;
+                    self.gis.forms_window = None;
                     self.dialog = None;
                     self.say(
                         Level::Success,
@@ -1275,11 +1285,12 @@ impl App {
             ev @ (Event::Publish | Event::PublishAnyway) => {
                 let anyway = matches!(ev, Event::PublishAnyway);
                 w.breaking = None;
-                self.forms_window = Some(w);
+                self.gis.forms_window = Some(w);
                 if !self.save_form() {
                     return Task::none();
                 }
                 let id = self
+                    .gis
                     .forms_window
                     .as_ref()
                     .and_then(|w| w.chosen.clone())
@@ -1300,7 +1311,7 @@ impl App {
                     match planned {
                         kentos_commands::CommandResult::Completed { output, .. } => {
                             if let Some(b) = output.breaking {
-                                if let Some(w) = self.forms_window.as_mut() {
+                                if let Some(w) = self.gis.forms_window.as_mut() {
                                     w.breaking = Some(b);
                                 }
                                 return Task::none();
@@ -1369,10 +1380,12 @@ impl App {
             Event::Cancel => {
                 // Vazgeç lets the window's changes go, the draft kept on this device with them.
                 if let Some(form) = w.chosen.as_deref() {
-                    self.form_files.drop_draft(&self.form_project_key(), form);
+                    self.gis
+                        .form_files
+                        .drop_draft(&self.form_project_key(), form);
                 }
-                self.forms_window = None;
-                self.form_preview = None;
+                self.gis.forms_window = None;
+                self.gis.form_preview = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -1381,7 +1394,7 @@ impl App {
         if w.dirty
             && let (Some(form), Some(body)) = (w.chosen.clone(), w.body.clone())
         {
-            self.form_files.keep_draft(
+            self.gis.form_files.keep_draft(
                 &self.form_project_key(),
                 &crate::forms::library::KeptDraft {
                     form,
@@ -1390,7 +1403,7 @@ impl App {
                 },
             );
         }
-        self.forms_window = Some(w);
+        self.gis.forms_window = Some(w);
         Task::none()
     }
 }

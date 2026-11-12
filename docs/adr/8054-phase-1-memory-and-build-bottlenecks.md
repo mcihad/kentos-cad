@@ -133,6 +133,46 @@ yalnız iyileştiricinin (LLVM) yükünü indirdi.
 **Doğrulama:** `cargo check -p kentos-desktop --tests`, `cargo test -p kentos-desktop --lib` (2 312) değişmeden geçti;
 1 157 dosya git'te yeniden adlandırma olarak görünür (`git log --follow`).
 
+## §6. Disiplinlerin kabuk durumu kendi modüllerinde (`ADIM 06`)
+
+**İddianın denetimi.** Doğru: `App` 346 alan, `Message` 293, `Dialog` 195 kol taşıyordu; yol, harita, CBS ve mimari
+pencerelerinin hepsi bu üç merkezden geçiyordu. Yeni bir yol penceresi `app.rs`'e üç yerden (alan, ileti, pencere),
+iki merkezi dağıtıcıya da (`handle`, `dialog_view`) birer koldan dokunmayı gerektiriyordu.
+
+**Karar.**
+- Her disiplinin kabuk durumu kendi `state.rs`'inde; modül adı disiplinin kendisi (`crate::road`, `crate::map`,
+  `crate::gis`, `crate::arch`; dosyalar `road/state.rs` …): `RoadUiState` (pencere ve panel durumları), `road::Event`
+  (iletileri), `RoadDialogKind` (pencereleri), `App::road_event` ve `App::road_dialog_view` (dağıtıcıları). Adlar notun
+  önerdikleri.
+- `App`'te dört alan (`app.road` …), `Message`'da dört kol (`Message::Road(road::Event)` …), `Dialog`'da dört kol
+  (`Dialog::Road(RoadDialogKind)` …); `handle` ve `dialog_view` disiplin başına tek kol taşır. Yeni bir pencere yalnız
+  disiplinin `state.rs`'ine ve kendi dosyasına eklenir.
+- Neyin hangi disipline ait olduğu elle seçilmedi, koddan okundu: alanın ve iletinin tipi ADIM 05'in hangi
+  klasöründeki modülde, pencerenin görünümü hangi klasördeki dosyada tanımlıysa. Ortak kabuğunkiler (belge, seçim,
+  şerit, bulut, pafta, CAD araçları) `App`'te kaldı.
+
+| | Önce | Sonra | Disiplinlere giden (yol · harita · CBS · mimari) |
+|---|---|---|---|
+| `App` alanı | 346 | 220 | 130 (33 · 25 · 52 · 20) |
+| `Message` kolu | 293 | 174 | 123 (33 · 23 · 49 · 18) |
+| `Dialog` kolu | 195 | 82 | 117 (32 · 19 · 49 · 17) |
+| `shell/app.rs` | 5 061 | 1 289 | (ADIM 07'den sonra 1 935) |
+
+- **Yeniden yazım derleyiciyle.** Taşınan kolların 4 630 kullanımı (makro gövdeleri dahil) sözcük düzeyinde sarıldı
+  (`Message::Volumes(e)` → `Message::Road(road::Event::Volumes(e))`), 427 dosyaya `use crate::road;` gibi içe alma
+  eklendi; alan erişimleri derleyicinin gösterdiği yerden düzeltildi (`self.volume_window` → `self.road.volume_window`,
+  4 557 yer). `active_level` hem alan hem yöntem olduğu için ayrı bir hatayla (E0615) gösterildi, o da aynı yoldan.
+  Kendi içe almalarını tek tek yazan iç test modüllerinde yol `crate::gis::…` oldu.
+- **Biçim:** yalnız değişen satırlar rustfmt'ten geçti; taşınan kodun sözcükleri değişmedi (109 dosyada sözcük
+  karşılaştırmasıyla denetlendi). Rustfmt'nin bir kısmi değişikliği bir dosyada ayraçları bozdu, derleyici yakaladı,
+  elle düzeltildi.
+- **Bekçi (plan dışı, benim kararım):** `tests/shell_boundary_tests.rs` `shell/app.rs` dört disiplinin klasöründeki bir
+  modülü (pencere, panel) adlandırırsa düşer; denemede `crate::volume_window::` eklenince düştü.
+
+**Doğrulama:** `cargo check -p kentos-desktop` ve `--tests` uyarısız; `cargo test -p kentos-desktop --lib` 2 314 geçti
+(2 313 + bekçi), 564 yok sayıldı. Clippy'de yeni uyarı yok (`gis::Event::EventLinks` bir pencerenin adı olduğundan
+`enum_variant_names` o enumda susturuldu).
+
 ## §7. Masaüstünün büyük dosyaları konularına bölündü (`ADIM 07`)
 
 **İddianın denetimi.** Doğru ama eksik: not dört dosyayı sayıyor; `apps/desktop/src`'de 2 000 satırı aşan **20** dosya

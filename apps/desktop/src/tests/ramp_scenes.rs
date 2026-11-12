@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_commands::Entity;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
@@ -123,7 +124,9 @@ fn quantities(app: &mut App) {
     more(app);
     app.selection.clear();
     run(app, "arch.quantities");
-    let _ = app.update(Message::Quantities(crate::quantities::Event::Tab(crate::quantities::Tab::Ramps)));
+    let _ = app.update(Message::Arch(arch::Event::Quantities(
+        crate::quantities::Event::Tab(crate::quantities::Tab::Ramps),
+    )));
 }
 
 /// Mimari denetim with the profile: the ramps' findings; the narrow L's landing chosen (its Düzelt says its fix).
@@ -136,16 +139,27 @@ fn audit(app: &mut App) {
         .arch_audit_shown()
         .iter()
         .position(|&i| {
-            app.arch_audit.audited.as_ref().expect("audited").findings[i].code == "ramp_landing_short"
+            app.arch
+                .arch_audit
+                .audited
+                .as_ref()
+                .expect("audited")
+                .findings[i]
+                .code
+                == "ramp_landing_short"
         })
         .expect("the landing's finding");
-    let _ = app.update(Message::ArchAudit(crate::arch_audit::Event::Press(row)));
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+        crate::arch_audit::Event::Press(row),
+    )));
 }
 
 /// Düzelt: the landing made 1.50 m in one step; checked again, the narrow turn and the steep ramp are left.
 fn fixed(app: &mut App) {
     audit(app);
-    let _ = app.update(Message::ArchAudit(crate::arch_audit::Event::Fix));
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+        crate::arch_audit::Event::Fix,
+    )));
 }
 
 /// The ramp selected, Öznitelikler scrolled to its rows: Başlangıç kotu, Kata göre, Sahanlık, Korkuluk, Kat.
@@ -214,14 +228,41 @@ mod tests {
         assert_eq!(output.ramps[0].landings, 2);
         assert!((output.ramps[0].run - 24.0).abs() < 1e-9, "{}", output.ramps[0].run);
         audit(&mut app);
-        let codes: Vec<String> =
-            app.arch_audit.audited.as_ref().unwrap().findings.iter().map(|f| f.code.clone()).collect();
-        assert!(codes.contains(&"ramp_landing_short".to_owned()), "{codes:?}");
-        assert!(codes.contains(&"ramp_slope_over_profile".to_owned()), "{codes:?}");
-        let _ = app.update(Message::ArchAudit(crate::arch_audit::Event::Fix));
-        let codes: Vec<String> =
-            app.arch_audit.audited.as_ref().unwrap().findings.iter().map(|f| f.code.clone()).collect();
-        assert!(!codes.contains(&"ramp_landing_short".to_owned()), "{codes:?}");
+        let codes: Vec<String> = app
+            .arch
+            .arch_audit
+            .audited
+            .as_ref()
+            .unwrap()
+            .findings
+            .iter()
+            .map(|f| f.code.clone())
+            .collect();
+        assert!(
+            codes.contains(&"ramp_landing_short".to_owned()),
+            "{codes:?}"
+        );
+        assert!(
+            codes.contains(&"ramp_slope_over_profile".to_owned()),
+            "{codes:?}"
+        );
+        let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+            crate::arch_audit::Event::Fix,
+        )));
+        let codes: Vec<String> = app
+            .arch
+            .arch_audit
+            .audited
+            .as_ref()
+            .unwrap()
+            .findings
+            .iter()
+            .map(|f| f.code.clone())
+            .collect();
+        assert!(
+            !codes.contains(&"ramp_landing_short".to_owned()),
+            "{codes:?}"
+        );
         assert!(codes.contains(&"ramp_turn_narrow".to_owned()), "{codes:?}");
     }
 }

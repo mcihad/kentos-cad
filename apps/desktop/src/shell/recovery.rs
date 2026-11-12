@@ -520,7 +520,7 @@ impl App {
         r.writing = true;
         let (session, drawing) = (doc.session, r.drawing);
         let model = doc.model.clone();
-        let level = (self.active_level.clone(), self.level_view);
+        let level = (self.arch.active_level.clone(), self.level_view);
         let facts = Facts {
             version: 1,
             name: doc.name().to_owned(),

@@ -4,6 +4,7 @@
 //! up of its accepted point). The panel reads the places judged against the limits typed: 5 mm horizontally, N1 is
 //! beyond and its row says so; 1 cm, it is within; a text that is no length above 0 is not a limit. And the pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -28,7 +29,7 @@ fn opened() -> App {
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::MapSurvey(e));
+    let _ = app.update(Message::Map(map::Event::MapSurvey(e)));
 }
 
 /// N1's place as the panel reads it: beyond or not (none: nothing judged).

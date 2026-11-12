@@ -106,7 +106,7 @@ fn speed_words(v: f64) -> String {
 impl App {
     /// The bar, while the slider is open; `width` the drawing area's (the bar's own), for what gives way.
     pub(crate) fn time_bar(&self, width: f32) -> Option<Element<'_, Message>> {
-        let s = &self.time.slider;
+        let s = &self.gis.time.slider;
         if !s.open {
             return None;
         }

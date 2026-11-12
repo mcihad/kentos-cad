@@ -5,6 +5,7 @@
 //! horizontal and height show the thresholds typed as lines with their bands, the warning's and the alarm's, height's
 //! either way. A measurement beyond a threshold is drawn in its level's colour. Nothing is checked again.
 
+use crate::map;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{column, container, row};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Theme, mouse};
@@ -256,7 +257,7 @@ impl crate::app::App {
     pub(crate) fn asbuilt_chart<'a>(&'a self, r: &'a AsbuiltChecked) -> Element<'a, Message> {
         use crate::asbuilt_trend::Change;
         use crate::asbuilt_window::Event;
-        let s = &self.asbuilt;
+        let s = &self.map.asbuilt;
         let Some(track) = chosen(r, &s.trend.mark) else {
             return label::caption("İzlenen nokta yok.").into();
         };
@@ -264,13 +265,17 @@ impl crate::app::App {
         let thresholds = crate::asbuilt_trend::ask(&s.trend).ok().and_then(|(_, t)| t);
         let head = row![
             label::caption("Nokta"),
-            container(crate::style::fields::select_owned(names, &track.name, |v| {
-                Message::Asbuilt(Event::Trend(Change::Mark(v)))
-            }))
+            container(crate::style::fields::select_owned(
+                names,
+                &track.name,
+                |v| { Message::Map(map::Event::Asbuilt(Event::Trend(Change::Mark(v)))) }
+            ))
             .width(120),
-            Segmented::new([Part::Horizontal, Part::East, Part::North, Part::Up], s.trend.part, |v| {
-                Message::Asbuilt(Event::Trend(Change::Part(v)))
-            })
+            Segmented::new(
+                [Part::Horizontal, Part::East, Part::North, Part::Up],
+                s.trend.part,
+                |v| { Message::Map(map::Event::Asbuilt(Event::Trend(Change::Part(v)))) }
+            )
         ]
         .spacing(8)
         .align_y(Center);

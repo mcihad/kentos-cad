@@ -15,6 +15,7 @@
 //! from a system of KentOS's rule package (the 2017 sewer and storm water regulations), each pipe's slope class and
 //! its limits in the table; the profile draws the run's own outer walls.
 
+use crate::map;
 use std::path::PathBuf;
 
 use iced::widget::{container, row};
@@ -223,7 +224,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::PipesCheck(e)
+    Message::Map(map::Event::PipesCheck(e))
 }
 
 /// A finding's kind in words.
@@ -336,7 +337,7 @@ pub fn csv(r: &PipesChecked, names: &[String]) -> String {
 
 impl App {
     fn pipes_check_input(&self) -> Result<PipesCheck, String> {
-        let s = &self.pipes_check;
+        let s = &self.map.pipes_check;
         let unit = unit_of(&s.unit);
         let slope = |t: &str, w: &str| limit(t, w).map(|v| v.map(|v| v / 1000.0));
         let clearance = if s.other.is_empty() {
@@ -398,7 +399,7 @@ impl App {
     pub(crate) fn pipes_check_run(&mut self) {
         let input = self.pipes_check_input();
         let Some(doc) = self.document.as_mut() else { return };
-        self.pipes_check.answer = Some(input.and_then(|input| {
+        self.map.pipes_check.answer = Some(input.and_then(|input| {
             match pipes_check::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
@@ -455,7 +456,7 @@ impl App {
             .iter()
             .find(|(_, n)| ["profil", "boykesit"].iter().any(|w| n.to_lowercase().contains(w)))
             .map_or_else(|| doc.model.layers().active().to_owned(), |l| l.0.clone());
-        self.pipes_check = State {
+        self.map.pipes_check = State {
             network: first.0.clone(),
             profile_layer,
             layers,
@@ -479,10 +480,11 @@ impl App {
         };
         self.pipes_check_run();
         // The profile's first pipe: the first one checked.
-        if let Some(Ok(r)) = &self.pipes_check.answer {
-            self.pipes_check.profile_start = r.pipes.first().map(|p| p.uid.clone()).unwrap_or_default();
+        if let Some(Ok(r)) = &self.map.pipes_check.answer {
+            self.map.pipes_check.profile_start =
+                r.pipes.first().map(|p| p.uid.clone()).unwrap_or_default();
         }
-        self.dialog = Some(Dialog::PipesCheck);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::PipesCheck));
         Task::none()
     }
 
@@ -492,7 +494,7 @@ impl App {
             Ok(c) => c,
             Err(why) => return self.warn(why),
         };
-        let s = &self.pipes_check;
+        let s = &self.map.pipes_check;
         let mut input = PipesProfile {
             network: check.network,
             start: s.profile_start.clone(),
@@ -550,7 +552,7 @@ impl App {
                     out.uids.len()
                 ),
             );
-            self.pipes_check = State::default();
+            self.map.pipes_check = State::default();
             self.dialog = None;
         }
     }
@@ -568,7 +570,7 @@ impl App {
             let outer = if has("Dış çap") { "Dış çap".to_owned() } else { String::new() };
             Some((if has("Akar baş") { From::Fields } else { From::Heights }, has("Çap"), wall, outer))
         });
-        let s = &mut self.pipes_check;
+        let s = &mut self.map.pipes_check;
         if let Some((from, diameter, wall, outer)) = guess {
             s.other_from = from;
             s.other_diameter = if diameter { "Çap".into() } else { String::new() };
@@ -582,7 +584,7 @@ impl App {
     }
 
     fn pipes_check_names(&self) -> Vec<String> {
-        match &self.pipes_check.answer {
+        match &self.map.pipes_check.answer {
             Some(Ok(r)) => r.pipes.iter().map(|p| name_of(self, &p.uid)).collect(),
             _ => Vec::new(),
         }
@@ -591,7 +593,9 @@ impl App {
     /// The table written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn pipes_check_save(&mut self, path: PathBuf) {
         let names = self.pipes_check_names();
-        let Some(Ok(r)) = &self.pipes_check.answer else { return };
+        let Some(Ok(r)) = &self.map.pipes_check.answer else {
+            return;
+        };
         match std::fs::write(&path, csv(r, &names)) {
             Ok(()) => self.say(Level::Success, format!("{TITLE}: {} boru {} dosyasına yazıldı.", r.pipes.len(), path.display())),
             Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.", path.display())),
@@ -599,7 +603,7 @@ impl App {
     }
 
     pub(crate) fn pipes_check_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.pipes_check;
+        let s = &mut self.map.pipes_check;
         match event {
             Event::Network(v) => s.network = v,
             Event::From(v) => s.from = v,
@@ -658,25 +662,46 @@ impl App {
             Event::Horizontal(v) => s.horizontal = v,
             Event::Above(v) => s.above = v,
             Event::Mark => {
-                let (Ok(input), Some(Ok(r))) = (self.pipes_check_input(), &self.pipes_check.answer) else { return Task::none() };
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
-                let Some(m) = crate::pipes_marks::of(r) else { return Task::none() };
-                let fails = m.crossings.iter().filter(|c| c.verdict == crate::pipes_marks::Verdict::Fails).count();
-                let unknown = m.crossings.iter().filter(|c| c.verdict == crate::pipes_marks::Verdict::Unknown).count();
+                let (Ok(input), Some(Ok(r))) =
+                    (self.pipes_check_input(), &self.map.pipes_check.answer)
+                else {
+                    return Task::none();
+                };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
+                let Some(m) = crate::pipes_marks::of(r) else {
+                    return Task::none();
+                };
+                let fails = m
+                    .crossings
+                    .iter()
+                    .filter(|c| c.verdict == crate::pipes_marks::Verdict::Fails)
+                    .count();
+                let unknown = m
+                    .crossings
+                    .iter()
+                    .filter(|c| c.verdict == crate::pipes_marks::Verdict::Unknown)
+                    .count();
                 let text = format!(
                     "{TITLE}: {} kesişim ({fails} sorunlu, {unknown} açıklığı bilinmeyen) ve {} yakın geçiş çizimde işaretlendi; İşareti kaldır'a dek kalır.",
                     m.crossings.len(),
                     m.near.len()
                 );
-                self.pipes_shown_marks = Some(crate::pipes_marks::Shown::new(doc.session, input));
-                self.pipes_check = State::default();
+                self.map.pipes_shown_marks =
+                    Some(crate::pipes_marks::Shown::new(doc.session, input));
+                self.map.pipes_check = State::default();
                 self.dialog = None;
                 self.say(Level::Info, text);
                 return Task::none();
             }
             Event::Select => {
-                let Some(Ok(r)) = &self.pipes_check.answer else { return Task::none() };
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let Some(Ok(r)) = &self.map.pipes_check.answer else {
+                    return Task::none();
+                };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
                 let slots: Vec<Slot> = r
                     .pipes
                     .iter()
@@ -685,7 +710,7 @@ impl App {
                     .collect();
                 let n = slots.len();
                 self.selection.set(slots);
-                self.pipes_check = State::default();
+                self.map.pipes_check = State::default();
                 self.dialog = None;
                 self.say(Level::Info, format!("{TITLE}: bulgusu olan {n} boru seçildi."));
                 return Task::none();
@@ -710,7 +735,7 @@ impl App {
             }
             Event::Saved(None) => return Task::none(),
             Event::Close => {
-                self.pipes_check = State::default();
+                self.map.pipes_check = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -720,7 +745,7 @@ impl App {
     }
 
     pub(crate) fn pipes_check_view(&self) -> Element<'_, Message> {
-        let s = &self.pipes_check;
+        let s = &self.map.pipes_check;
         let f = self.format();
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
             container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(width)

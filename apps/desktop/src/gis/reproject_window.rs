@@ -5,9 +5,12 @@
 //! (those with a note first). Uygula writes the move as one undo step; Vazgeç writes nothing. A layer some of whose
 //! objects do not move says why, each reason counted, and Nesneleri seç selects them.
 
+use crate::gis;
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_commands::{ChainStatus, CommandResult, CommandWarning, LayersReproject, LayersReprojected};
+use kentos_commands::{
+    ChainStatus, CommandResult, CommandWarning, LayersReproject, LayersReprojected,
+};
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
@@ -48,7 +51,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Reproject(e)
+    Message::Gis(gis::Event::Reproject(e))
 }
 
 /// A note as the table's Kullanım alanı dışı column says it: whose area of use the object's points leave.
@@ -63,8 +66,8 @@ fn note_word(note: &str) -> &'static str {
 impl App {
     fn reproject_input(&self) -> LayersReproject {
         LayersReproject {
-            layer: self.reproject.layer.clone(),
-            from: self.reproject.from,
+            layer: self.gis.reproject.layer.clone(),
+            from: self.gis.reproject.from,
             expected_revision: None,
         }
     }
@@ -80,7 +83,7 @@ impl App {
             .layers()
             .get(&layer)
             .map_or_else(|| layer.clone(), |n| n.name.clone());
-        self.reproject = State {
+        self.gis.reproject = State {
             layer,
             name,
             from,
@@ -90,7 +93,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
-        self.reproject.plan = Some(
+        self.gis.reproject.plan = Some(
             match reproject::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, warnings } => Ok((output, warnings)),
                 CommandResult::Failed { error }
@@ -105,7 +108,7 @@ impl App {
                 }),
             },
         );
-        self.dialog = Some(Dialog::Reproject);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Reproject));
         Task::none()
     }
 
@@ -113,7 +116,7 @@ impl App {
         match event {
             Event::Apply => {
                 let input = self.reproject_input();
-                let name = self.reproject.name.clone();
+                let name = self.gis.reproject.name.clone();
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
@@ -130,7 +133,7 @@ impl App {
                                 if out.via.is_empty() { String::new() } else { format!(": {}", out.via) }
                             ),
                         );
-                        self.reproject = State::default();
+                        self.gis.reproject = State::default();
                         self.dialog = None;
                     }
                     CommandResult::Failed { error }
@@ -142,7 +145,7 @@ impl App {
                 }
             }
             Event::Select => {
-                let uids = match &self.reproject.plan {
+                let uids = match &self.gis.reproject.plan {
                     Some(Err(r)) => r.uids.clone(),
                     _ => Vec::new(),
                 };
@@ -156,14 +159,14 @@ impl App {
                     .collect();
                 let ids: Vec<f64> = slots.iter().map(|s| f64::from(s.0)).collect();
                 self.selection.set(slots);
-                self.reproject = State::default();
+                self.gis.reproject = State::default();
                 self.dialog = None;
                 if !ids.is_empty() {
                     self.navigating(|app| app.zoom_to_objects(&ids));
                 }
             }
             Event::Close => {
-                self.reproject = State::default();
+                self.gis.reproject = State::default();
                 self.dialog = None;
             }
         }
@@ -172,7 +175,7 @@ impl App {
 
     /// The lines over the table and its rows.
     fn reproject_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
-        let s = &self.reproject;
+        let s = &self.gis.reproject;
         let f = self.format();
         let mut lines = Vec::new();
         let mut rows = Vec::new();
@@ -262,7 +265,7 @@ impl App {
     }
 
     pub(crate) fn reproject_view(&self) -> Element<'_, Message> {
-        let s = &self.reproject;
+        let s = &self.gis.reproject;
         let f = self.format();
         let (lines, rows) = self.reproject_lines();
         let (east, north) = (f.east_label(), f.north_label());

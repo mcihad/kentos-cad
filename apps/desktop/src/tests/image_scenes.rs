@@ -12,6 +12,7 @@
 //!
 //! Test code only.
 
+use crate::map;
 use kentos_domain::Slot;
 use kentos_ui::widget::docking;
 
@@ -121,7 +122,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         // The clipped picture on a map in WGS 84 degrees (docs/adr/0630 §2): its mesh moved onto it, its clip kept.
         ("resim-harita", |app| {
             clipped(app);
-            let _ = app.update(Message::MapCrs(crate::map_crs::Choose(Some(4326))));
+            let _ = app.update(Message::Map(map::Event::MapCrs(crate::map_crs::Choose(
+                Some(4326),
+            ))));
         }),
     ]
 }

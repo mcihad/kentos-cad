@@ -17,6 +17,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Theme, mouse};
 use kentos_commands::{SuperelevationsWiden, SuperelevationsWidened, SweptTrailerDef, SweptVehicleDef, WideningMethod};
@@ -104,7 +105,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Superelevations(Dever::Widen(e))
+    Message::Road(road::Event::Superelevations(Dever::Widen(e)))
 }
 
 impl Widen {
@@ -141,11 +142,16 @@ impl App {
     /// Genişletme öner… from Dever: the window on the chosen schedule, the vehicle from Araç izi if it holds one, the
     /// template and speed from Dever's Denetim.
     pub(crate) fn open_widening(&mut self) {
-        let swept: Option<([String; 5], bool)> = self.swept_window.as_ref().map(|s| {
+        let swept: Option<([String; 5], bool)> = self.road.swept_window.as_ref().map(|s| {
             ([s.fields[0].clone(), s.fields[1].clone(), s.fields[3].clone(), s.fields[4].clone(), s.fields[5].clone()], s.trailer)
         });
-        let Some(w) = self.superelevation_window.as_mut() else { return };
-        let mut x = Widen { template: w.check_template.clone(), ..Widen::default() };
+        let Some(w) = self.road.superelevation_window.as_mut() else {
+            return;
+        };
+        let mut x = Widen {
+            template: w.check_template.clone(),
+            ..Widen::default()
+        };
         x.fields[7] = w.check[0].clone();
         if let Some((f, trailer)) = swept {
             [x.fields[0], x.fields[1], x.fields[2], x.fields[4], x.fields[5]] = f;
@@ -158,7 +164,9 @@ impl App {
     /// The suggestion read again on the chosen schedule as typed.
     pub(crate) fn refresh_widening(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.superelevation_window.as_mut() else { return };
+        let Some(w) = self.road.superelevation_window.as_mut() else {
+            return;
+        };
         let def = w.chosen.and_then(|i| w.rows.get(i)).map(|r| r.def());
         let Some(x) = w.widen.as_mut() else { return };
         x.result = Some(match def {
@@ -178,7 +186,9 @@ impl App {
 
     /// An event of the window.
     pub(crate) fn widening_event(&mut self, event: Event) {
-        let Some(w) = self.superelevation_window.as_mut() else { return };
+        let Some(w) = self.road.superelevation_window.as_mut() else {
+            return;
+        };
         let Some(x) = w.widen.as_mut() else { return };
         match event {
             Event::Field(k, t) => {

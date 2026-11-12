@@ -3,6 +3,7 @@
 //! candidates' table and the status line; with no source to ask, the two
 //! windows that make one.
 
+use crate::gis;
 use iced::widget::{Column, button, container, row};
 use iced::{Background, Center, Element, Fill, Length};
 use kentos_processing::address::{LOCATOR, PROVIDER};
@@ -21,7 +22,7 @@ use crate::exchange::words;
 use crate::icons::from_web;
 
 fn msg(e: Event) -> Message {
-    Message::Address(e)
+    Message::Gis(gis::Event::Address(e))
 }
 
 /// A bar button: its icon and words, its hint above it.
@@ -70,7 +71,7 @@ impl App {
                 .into();
         };
         let format = kentos_interaction::Format::of(doc.settings());
-        let a = &self.address;
+        let a = &self.gis.address;
         let sources = self.address_sources();
         let chosen = self.address_source();
 

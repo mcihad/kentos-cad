@@ -2,6 +2,7 @@
 //! one undo step and shows them; and its pictures.
 
 use crate::app::{App, Dialog, Message};
+use crate::road;
 use crate::road_sheets_window::Event as W;
 
 /// A road project with `road.sheets.plan`'s drawing: two alignments, three profiles, a terrain.
@@ -16,30 +17,53 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::RoadSheets(e));
+    let _ = app.update(Message::Road(road::Event::RoadSheets(e)));
 }
 
 #[test]
 fn the_window_lays_the_sheets_as_one_step() {
     let mut app = app();
     let _ = app.update(Message::Run("road.sheets"));
-    assert_eq!(app.dialog, Some(Dialog::RoadSheets));
-    let w = app.road_sheets_window.as_ref().expect("open");
-    let laid = w.preview.laid.as_ref().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::RoadSheets))
+    );
+    let w = app.road.road_sheets_window.as_ref().expect("open");
+    let laid = w
+        .preview
+        .laid
+        .as_ref()
+        .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
     assert_eq!(laid.scale, 1000);
     assert!(laid.sheets.iter().all(|s| s.view.is_some()), "{laid:?}");
     let count = laid.sheets.len();
     send(&mut app, W::Profile(None));
-    let plan_only = app.road_sheets_window.as_ref().and_then(|w| w.preview.laid.clone()).expect("reads");
+    let plan_only = app
+        .road
+        .road_sheets_window
+        .as_ref()
+        .and_then(|w| w.preview.laid.clone())
+        .expect("reads");
     assert!(plan_only.sheets.iter().all(|s| s.view.is_none()));
     send(&mut app, W::Field(1, "bir".into()));
-    let why = app.road_sheets_window.as_ref().and_then(|w| w.preview.why.clone()).expect("refused");
+    let why = app
+        .road
+        .road_sheets_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("refused");
     assert!(why.contains("bir"), "{why}");
     send(&mut app, W::Field(1, "1000".into()));
     send(&mut app, W::Profile(Some("b-1".into())));
-    let before = app.document.as_ref().expect("a drawing").model.entities().count();
+    let before = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .entities()
+        .count();
     send(&mut app, W::Make);
-    assert!(app.road_sheets_window.is_none());
+    assert!(app.road.road_sheets_window.is_none());
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert_eq!(doc.road_sheet_sets().len(), 1);
     assert_eq!(doc.road_sheet_sets()[0].sheets.len(), count);
@@ -129,12 +153,30 @@ fn the_sheets_take_kgm_s_bands() {
     let _ = app.update(Message::Run("road.sheets"));
     send(&mut app, W::Field(1, "1000".into()));
     send(&mut app, W::Profile(Some("b-1".into())));
-    let plain = app.road_sheets_window.as_ref().and_then(|w| w.preview.laid.clone()).expect("reads");
+    let plain = app
+        .road
+        .road_sheets_window
+        .as_ref()
+        .and_then(|w| w.preview.laid.clone())
+        .expect("reads");
     send(&mut app, W::Kgm(true));
     send(&mut app, W::Dever(Some("d-1".into())));
-    let kgm = app.road_sheets_window.as_ref().and_then(|w| w.preview.laid.clone()).expect("reads");
-    assert_eq!((plain.length, plain.sheets.len()), (370.0, 2), "KentOS's A3 sheet at 1:1000");
-    assert_eq!((kgm.length, kgm.height, kgm.sheets.len()), (791.0, 230.0, 1), "KGM's A1 sheet at 1:1000");
+    let kgm = app
+        .road
+        .road_sheets_window
+        .as_ref()
+        .and_then(|w| w.preview.laid.clone())
+        .expect("reads");
+    assert_eq!(
+        (plain.length, plain.sheets.len()),
+        (370.0, 2),
+        "KentOS's A3 sheet at 1:1000"
+    );
+    assert_eq!(
+        (kgm.length, kgm.height, kgm.sheets.len()),
+        (791.0, 230.0, 1),
+        "KGM's A1 sheet at 1:1000"
+    );
     let view = kgm.sheets[0].view.expect("a profile view");
     assert!(view[1][1] - view[0][1] + 107.5 <= 318.0, "the profile and KGM's bands fit the A1 profile map: {view:?}");
     send(&mut app, W::Make);
@@ -450,7 +492,7 @@ fn screens_profile_splits() {
 fn an_empty_place_puts_the_views_under_the_drawing() {
     let mut app = kgm_app();
     let _ = app.update(Message::Run("road.sheets"));
-    let w = app.road_sheets_window.as_ref().expect("open");
+    let w = app.road.road_sheets_window.as_ref().expect("open");
     assert!(w.fields[0].is_empty(), "Yer starts empty");
     send(&mut app, W::Field(1, "1000".into()));
     send(&mut app, W::Profile(Some("b-1".into())));
@@ -459,9 +501,23 @@ fn an_empty_place_puts_the_views_under_the_drawing() {
     let doc = &app.document.as_ref().expect("doc").model;
     app.spatial.sync(doc);
     let before = app.spatial.extent().expect("a drawing");
-    let laid = app.road_sheets_window.as_ref().and_then(|w| w.preview.laid.clone()).expect("the preview lays them");
-    let top = laid.sheets.iter().filter_map(|s| s.view).map(|v| v[1][1]).fold(f64::NEG_INFINITY, f64::max);
-    assert!((top - (before.min_y - 20.0)).abs() < 1e-6, "the highest view's top {top} is 20 m under {}", before.min_y);
+    let laid = app
+        .road
+        .road_sheets_window
+        .as_ref()
+        .and_then(|w| w.preview.laid.clone())
+        .expect("the preview lays them");
+    let top = laid
+        .sheets
+        .iter()
+        .filter_map(|s| s.view)
+        .map(|v| v[1][1])
+        .fold(f64::NEG_INFINITY, f64::max);
+    assert!(
+        (top - (before.min_y - 20.0)).abs() < 1e-6,
+        "the highest view's top {top} is 20 m under {}",
+        before.min_y
+    );
     send(&mut app, W::Make);
     let doc = &app.document.as_ref().expect("doc").model;
     let new: Vec<f64> = doc.entities().filter(|e| !before_ids.contains(&e.base().id)).map(|e| f64::from(e.base().id)).collect();
@@ -674,14 +730,23 @@ fn screens_place_arrows() {
             let _ = app.update(message);
         };
         let _ = app.update(Message::Run("alignment.editor"));
-        let _ = app.update(Message::Alignments(A::Choose(0)));
-        let _ = app.update(Message::Alignments(A::Place(0, "KAMAN".into())));
-        let _ = app.update(Message::Alignments(A::Place(1, "ANKARA-NİĞDE OTOYOLU".into())));
+        let _ = app.update(Message::Road(road::Event::Alignments(A::Choose(0))));
+        let _ = app.update(Message::Road(road::Event::Alignments(A::Place(
+            0,
+            "KAMAN".into(),
+        ))));
+        let _ = app.update(Message::Road(road::Event::Alignments(A::Place(
+            1,
+            "ANKARA-NİĞDE OTOYOLU".into(),
+        ))));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y94-guzergah-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::Alignments(A::Save));
+        let _ = app.update(Message::Road(road::Event::Alignments(A::Save)));
         if name == "genis" {
             let _ = app.update(Message::Run("road.sheets"));
             send(&mut app, W::Field(1, "1000".into()));

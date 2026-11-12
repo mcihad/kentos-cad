@@ -5,6 +5,7 @@
 //! drawing is not enough; the CSV; nothing written; Harita and GIS offer it. Kayıklık ölçümü gives the shared seam case's
 //! places (docs/adr/2460). And its pictures.
 
+use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -60,7 +61,15 @@ pub(crate) fn close(got: &Value, want: &Value, at: &str) {
 }
 
 fn answer(app: &App) -> Value {
-    serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json")
+    serde_json::to_value(
+        app.map
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared"),
+    )
+    .expect("json")
 }
 
 fn output(name: &str) -> Value {
@@ -72,18 +81,41 @@ fn the_two_orthophotos_are_compared_as_the_shared_cases() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("raster.compare"));
-    assert_eq!(app.dialog, Some(Dialog::OrthoCompare));
-    let s = &app.ortho_compare;
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::OrthoCompare))
+    );
+    let s = &app.map.ortho_compare;
     let uid = |n: u64| format!("0192f5c0-1780-7000-8000-{n:012x}");
     assert_eq!((s.first.clone(), s.second.clone()), (uid(1), uid(2)));
-    assert_eq!((s.first_points.as_str(), s.second_points.as_str(), s.known.as_str()), ("okuma-2024", "okuma-2026", "gnss"));
-    close(&answer(&app), &output("iki zaman, arazi noktalarıyla"), "with the ground");
-    let _ = app.update(Message::OrthoCompare(C::Known("— yok —".into())));
-    assert_eq!(app.ortho_compare.known, "");
-    close(&answer(&app), &output("arazi noktaları olmadan"), "images only");
-    let _ = app.update(Message::OrthoCompare(C::Swap));
+    assert_eq!(
+        (
+            s.first_points.as_str(),
+            s.second_points.as_str(),
+            s.known.as_str()
+        ),
+        ("okuma-2024", "okuma-2026", "gnss")
+    );
+    close(
+        &answer(&app),
+        &output("iki zaman, arazi noktalarıyla"),
+        "with the ground",
+    );
+    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::Known(
+        "— yok —".into(),
+    ))));
+    assert_eq!(app.map.ortho_compare.known, "");
+    close(
+        &answer(&app),
+        &output("arazi noktaları olmadan"),
+        "images only",
+    );
+    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::Swap)));
     close(&answer(&app), &output("sıra değişince"), "swapped");
-    let dir = std::env::temp_dir().join(format!("kentos-ortofoto-karsilastirma-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-ortofoto-karsilastirma-{}",
+        std::process::id()
+    ));
     std::fs::create_dir_all(&dir).expect("a folder");
     let file = dir.join("karsilastirma.csv");
     app.ortho_compare_save(file.clone());
@@ -98,20 +130,35 @@ fn a_selected_raster_comes_first_and_one_raster_is_not_enough() {
     let mut app = opened(Some(Module::Map));
     app.selection.set([Slot(2)]);
     let _ = app.update(Message::Run("raster.compare"));
-    let s = &app.ortho_compare;
-    assert_eq!((s.first_points.as_str(), s.second_points.as_str()), ("okuma-2026", "okuma-2024"), "the selected 2026 first");
+    let s = &app.map.ortho_compare;
+    assert_eq!(
+        (s.first_points.as_str(), s.second_points.as_str()),
+        ("okuma-2026", "okuma-2024"),
+        "the selected 2026 first"
+    );
     // A point over the limit is the shared case's.
     let blunder = case("kaba okunmuş nokta");
     let mut app = open(&blunder["setup"], Some(Module::Map));
     let _ = app.update(Message::Run("raster.compare"));
-    let _ = app.update(Message::OrthoCompare(C::Known("— yok —".into())));
-    close(&answer(&app), &blunder["steps"][0]["result"]["output"], "over");
+    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::Known(
+        "— yok —".into(),
+    ))));
+    close(
+        &answer(&app),
+        &blunder["steps"][0]["result"]["output"],
+        "over",
+    );
     // The check's drawing has one raster.
-    let check: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.orthophoto.check.json")).expect("cases");
+    let check: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.orthophoto.check.json"
+    ))
+    .expect("cases");
     let mut app = open(&check["setup"], Some(Module::Map));
     let _ = app.update(Message::Run("raster.compare"));
-    assert_ne!(app.dialog, Some(Dialog::OrthoCompare));
+    assert_ne!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::OrthoCompare))
+    );
 }
 
 #[test]
@@ -190,14 +237,39 @@ fn dikis_olcumu_gives_the_shared_case_s_places() {
     let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("raster.compare"));
-    assert_eq!(app.dialog, Some(Dialog::OrthoCompare));
-    for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
-        let _ = app.update(Message::OrthoCompare(e));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::OrthoCompare))
+    );
+    for e in [
+        C::Seam(true),
+        C::Step(1.0),
+        C::Window(21.0),
+        C::Search(5.0),
+        C::Correlation("0,8".into()),
+    ] {
+        let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
     }
-    assert_eq!(app.ortho_compare.show, Show::Seam);
-    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
-    close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(app.map.ortho_compare.show, Show::Seam);
+    let got = serde_json::to_value(
+        app.map
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared"),
+    )
+    .expect("json");
+    close(
+        &got["seam"],
+        &c["steps"][0]["result"]["output"]["seam"],
+        "seam",
+    );
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
 }
 
 /// `.run/gui-evidence/dikis-olcumu-2460/`:
@@ -223,8 +295,14 @@ fn seam_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("raster.compare"));
-        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
-            let _ = app.update(Message::OrthoCompare(e));
+        for e in [
+            C::Seam(true),
+            C::Step(1.0),
+            C::Window(21.0),
+            C::Search(5.0),
+            C::Correlation("0,8".into()),
+        ] {
+            let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -245,21 +323,53 @@ fn the_seam_is_measured_along_the_chosen_line() {
     let c = case("dikiş hattı boyunca");
     let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
     let _ = app.update(Message::Run("raster.compare"));
-    for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
-        let _ = app.update(Message::OrthoCompare(e));
+    for e in [
+        C::Seam(true),
+        C::Step(1.0),
+        C::Window(21.0),
+        C::Search(5.0),
+        C::Correlation("0,8".into()),
+    ] {
+        let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
     }
-    let _ = app.update(Message::OrthoCompare(C::TakeLine));
-    assert!(app.ortho_compare.seam_line.is_empty(), "nothing chosen: no line");
+    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakeLine)));
+    assert!(
+        app.map.ortho_compare.seam_line.is_empty(),
+        "nothing chosen: no line"
+    );
     app.selection.set(vec![Slot(3)]);
-    let _ = app.update(Message::OrthoCompare(C::TakeLine));
-    assert_eq!(app.ortho_compare.seam_line_name, "Çoklu çizgi");
-    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
-    close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
+    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakeLine)));
+    assert_eq!(app.map.ortho_compare.seam_line_name, "Çoklu çizgi");
+    let got = serde_json::to_value(
+        app.map
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared"),
+    )
+    .expect("json");
+    close(
+        &got["seam"],
+        &c["steps"][0]["result"]["output"]["seam"],
+        "seam",
+    );
     let (_, rows) = app.ortho_compare_lines();
     assert_eq!(rows[0][0], "4.000", "the first place 4 m along the line");
-    let _ = app.update(Message::OrthoCompare(C::DropLine));
-    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
-    assert!(got["seam"].get("line").is_none(), "the overlap's grid again");
+    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::DropLine)));
+    let got = serde_json::to_value(
+        app.map
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared"),
+    )
+    .expect("json");
+    assert!(
+        got["seam"].get("line").is_none(),
+        "the overlap's grid again"
+    );
 }
 
 /// `.run/gui-evidence/dikis-hatti-2860/`:
@@ -282,11 +392,17 @@ fn line_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("raster.compare"));
-        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
-            let _ = app.update(Message::OrthoCompare(e));
+        for e in [
+            C::Seam(true),
+            C::Step(1.0),
+            C::Window(21.0),
+            C::Search(5.0),
+            C::Correlation("0,8".into()),
+        ] {
+            let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
         }
         app.selection.set(vec![Slot(3)]);
-        let _ = app.update(Message::OrthoCompare(C::TakeLine));
+        let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakeLine)));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -306,16 +422,58 @@ fn piksel_alti_cift_kubik_gives_the_shared_case_s_places() {
     let c = case("dikiş: görüntünün çift kübik ara değeriyle");
     let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
     let _ = app.update(Message::Run("raster.compare"));
-    for e in [C::Seam(true), C::Step(2.0), C::Window(11.0), C::Search(3.0), C::Correlation("0,8".into()), C::Refine(Refine::Bicubic)] {
-        let _ = app.update(Message::OrthoCompare(e));
+    for e in [
+        C::Seam(true),
+        C::Step(2.0),
+        C::Window(11.0),
+        C::Search(3.0),
+        C::Correlation("0,8".into()),
+        C::Refine(Refine::Bicubic),
+    ] {
+        let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
     }
-    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
-    close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
-    let note = got["notes"].as_array().expect("notes").iter().filter_map(Value::as_str).find(|n| n.starts_with("Kayıklık ölçümü")).unwrap_or("");
-    assert!(note.contains("görüntünün çift kübik ara değeriyle"), "{note}");
-    let _ = app.update(Message::OrthoCompare(C::Refine(Refine::Parabola)));
-    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
-    close(&got["seam"], &case("dikiş: parabolle piksel altı")["steps"][0]["result"]["output"]["seam"], "seam");
+    let got = serde_json::to_value(
+        app.map
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared"),
+    )
+    .expect("json");
+    close(
+        &got["seam"],
+        &c["steps"][0]["result"]["output"]["seam"],
+        "seam",
+    );
+    let note = got["notes"]
+        .as_array()
+        .expect("notes")
+        .iter()
+        .filter_map(Value::as_str)
+        .find(|n| n.starts_with("Kayıklık ölçümü"))
+        .unwrap_or("");
+    assert!(
+        note.contains("görüntünün çift kübik ara değeriyle"),
+        "{note}"
+    );
+    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::Refine(
+        Refine::Parabola,
+    ))));
+    let got = serde_json::to_value(
+        app.map
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared"),
+    )
+    .expect("json");
+    close(
+        &got["seam"],
+        &case("dikiş: parabolle piksel altı")["steps"][0]["result"]["output"]["seam"],
+        "seam",
+    );
 }
 
 /// docs/adr/3260: a seam line with an arc, chosen in the drawing, gives the shared case's places along the arc.
@@ -324,13 +482,31 @@ fn the_seam_is_measured_along_an_arc() {
     let c = case("dikiş hattı yaylı");
     let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
     let _ = app.update(Message::Run("raster.compare"));
-    for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
-        let _ = app.update(Message::OrthoCompare(e));
+    for e in [
+        C::Seam(true),
+        C::Step(1.0),
+        C::Window(21.0),
+        C::Search(5.0),
+        C::Correlation("0,8".into()),
+    ] {
+        let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
     }
     app.selection.set(vec![Slot(3)]);
-    let _ = app.update(Message::OrthoCompare(C::TakeLine));
-    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
-    close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
+    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakeLine)));
+    let got = serde_json::to_value(
+        app.map
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared"),
+    )
+    .expect("json");
+    close(
+        &got["seam"],
+        &c["steps"][0]["result"]["output"]["seam"],
+        "seam",
+    );
 }
 
 /// `.run/gui-evidence/dikis-cift-kubik-3260/`: Çift kübik on the grid, and the seam line with an arc.
@@ -363,11 +539,11 @@ fn subpixel_screens() {
             [C::Seam(true), C::Step(2.0), C::Window(11.0), C::Search(3.0), C::Correlation("0,8".into()), C::Refine(Refine::Bicubic)]
         };
         for e in asked {
-            let _ = app.update(Message::OrthoCompare(e));
+            let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
         }
         if arc {
             app.selection.set(vec![Slot(3)]);
-            let _ = app.update(Message::OrthoCompare(C::TakeLine));
+            let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakeLine)));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -388,16 +564,42 @@ fn yeniden_ornekleme_gives_the_shared_cases_places() {
         let c = case(name);
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
         let _ = app.update(Message::Run("raster.compare"));
-        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
-            let _ = app.update(Message::OrthoCompare(e));
+        for e in [
+            C::Seam(true),
+            C::Step(1.0),
+            C::Window(21.0),
+            C::Search(5.0),
+            C::Correlation("0,8".into()),
+        ] {
+            let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
         }
-        let refused = app.ortho_compare.answer.clone().expect("an answer");
-        assert!(refused.as_ref().is_err_and(|why| why.contains("resample")), "{name}: {refused:?}");
-        let _ = app.update(Message::OrthoCompare(C::Resample(true)));
-        let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
-        close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], name);
+        let refused = app.map.ortho_compare.answer.clone().expect("an answer");
+        assert!(
+            refused.as_ref().is_err_and(|why| why.contains("resample")),
+            "{name}: {refused:?}"
+        );
+        let _ = app.update(Message::Map(map::Event::OrthoCompare(C::Resample(true))));
+        let got = serde_json::to_value(
+            app.map
+                .ortho_compare
+                .answer
+                .clone()
+                .expect("an answer")
+                .expect("compared"),
+        )
+        .expect("json");
+        close(
+            &got["seam"],
+            &c["steps"][0]["result"]["output"]["seam"],
+            name,
+        );
         assert_eq!(got["seam"]["resampled"], true);
-        let said = got["notes"].as_array().expect("notes").iter().filter_map(Value::as_str).any(|n| n.starts_with("İkinci görüntü birincinin ızgarasına"));
+        let said = got["notes"]
+            .as_array()
+            .expect("notes")
+            .iter()
+            .filter_map(Value::as_str)
+            .any(|n| n.starts_with("İkinci görüntü birincinin ızgarasına"));
         assert!(said, "{name}");
     }
 }
@@ -414,21 +616,60 @@ fn a_turned_first_image_is_the_grid_as_the_shared_cases_say() {
         let c = case(name);
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
         let _ = app.update(Message::Run("raster.compare"));
-        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
-            let _ = app.update(Message::OrthoCompare(e));
+        for e in [
+            C::Seam(true),
+            C::Step(1.0),
+            C::Window(21.0),
+            C::Search(5.0),
+            C::Correlation("0,8".into()),
+        ] {
+            let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
         }
         if bicubic {
-            let _ = app.update(Message::OrthoCompare(C::Refine(crate::ortho_compare_window::Refine::Bicubic)));
+            let _ = app.update(Message::Map(map::Event::OrthoCompare(C::Refine(
+                crate::ortho_compare_window::Refine::Bicubic,
+            ))));
         }
-        let refused = app.ortho_compare.answer.clone().expect("an answer");
-        assert!(refused.as_ref().is_err_and(|why| why.contains("resample")), "{name}: {refused:?}");
-        let _ = app.update(Message::OrthoCompare(C::Resample(true)));
-        let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
-        close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], name);
-        assert_eq!((got["seam"]["resampled"].clone(), got["seam"]["turned"].clone()), (Value::Bool(true), Value::Bool(true)));
-        let answer = app.ortho_compare.answer.clone().expect("an answer").expect("compared");
-        let said = crate::ortho_compare_window::resample_words(answer.seam.as_ref().expect("a seam"));
-        assert!(said.is_some_and(|s| s.starts_with("Birinci görüntü dönük: ikincisi onun ızgarasına")), "{said:?}");
+        let refused = app.map.ortho_compare.answer.clone().expect("an answer");
+        assert!(
+            refused.as_ref().is_err_and(|why| why.contains("resample")),
+            "{name}: {refused:?}"
+        );
+        let _ = app.update(Message::Map(map::Event::OrthoCompare(C::Resample(true))));
+        let got = serde_json::to_value(
+            app.map
+                .ortho_compare
+                .answer
+                .clone()
+                .expect("an answer")
+                .expect("compared"),
+        )
+        .expect("json");
+        close(
+            &got["seam"],
+            &c["steps"][0]["result"]["output"]["seam"],
+            name,
+        );
+        assert_eq!(
+            (
+                got["seam"]["resampled"].clone(),
+                got["seam"]["turned"].clone()
+            ),
+            (Value::Bool(true), Value::Bool(true))
+        );
+        let answer = app
+            .map
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared");
+        let said =
+            crate::ortho_compare_window::resample_words(answer.seam.as_ref().expect("a seam"));
+        assert!(
+            said.is_some_and(|s| s.starts_with("Birinci görüntü dönük: ikincisi onun ızgarasına")),
+            "{said:?}"
+        );
     }
 }
 
@@ -462,7 +703,7 @@ fn turned_first_screens() {
             C::Refine(crate::ortho_compare_window::Refine::Bicubic),
             C::Resample(true),
         ] {
-            let _ = app.update(Message::OrthoCompare(e));
+            let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -498,8 +739,15 @@ fn resample_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("raster.compare"));
-        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into()), C::Resample(true)] {
-            let _ = app.update(Message::OrthoCompare(e));
+        for e in [
+            C::Seam(true),
+            C::Step(1.0),
+            C::Window(21.0),
+            C::Search(5.0),
+            C::Correlation("0,8".into()),
+            C::Resample(true),
+        ] {
+            let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {

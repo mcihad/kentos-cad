@@ -52,9 +52,13 @@ fn typed(app: &mut App) {
 fn a_leg_sighted_back_takes_the_mean_and_says_its_pair_s_k() {
     let mut app = app_with_drawing();
     typed(&mut app);
-    assert_eq!(super::grid::Table::columns(&app.calc.traverse), 9, "the back sight's columns shown");
+    assert_eq!(
+        super::grid::Table::columns(&app.gis.calc.traverse),
+        9,
+        "the back sight's columns shown"
+    );
     let doc = app.document.as_ref().expect("open");
-    let c = app.calc.traverse.compute(&doc.model);
+    let c = app.gis.calc.traverse.compute(&doc.model);
     assert!(c.errors.is_empty(), "{:?}", c.errors);
     let r = c.result.expect("a result");
     let k = doc.settings().refraction();
@@ -66,8 +70,18 @@ fn a_leg_sighted_back_takes_the_mean_and_says_its_pair_s_k() {
     assert!((pair - pair_k(99.4, 100.6009)).abs() < 1e-9, "{pair}");
     assert!(r.legs[1].refraction.is_none(), "one way");
     let format = Format::of(doc.settings());
-    let report = app.calc.traverse.report(&doc.model, &format).expect("a report");
-    assert!(report.iter().any(|row| row.last().is_some_and(|c| c == "k")), "{report:?}");
+    let report = app
+        .gis
+        .calc
+        .traverse
+        .report(&doc.model, &format)
+        .expect("a report");
+    assert!(
+        report
+            .iter()
+            .any(|row| row.last().is_some_and(|c| c == "k")),
+        "{report:?}"
+    );
     calc(&mut app, Event::AddPoints);
     let (_, work) = last_work(&app);
     assert_eq!(work["heights"]["back"][0]["zenith"], serde_json::json!(100.6009));
@@ -82,9 +96,15 @@ fn a_back_sight_without_its_heights_is_one_chord_with_the_forward_sight() {
     calc(&mut app, Event::Cell(0, BACK_INSTRUMENT, String::new()));
     calc(&mut app, Event::Cell(0, BACK_TARGET, String::new()));
     let doc = app.document.as_ref().expect("open");
-    let c = app.calc.traverse.compute(&doc.model);
-    let b = c.back.expect("sighted back")[0].clone().expect("the first leg");
-    assert_eq!((b.instrument, b.target), (1.6, 1.5), "the forward target's and instrument's heights");
+    let c = app.gis.calc.traverse.compute(&doc.model);
+    let b = c.back.expect("sighted back")[0]
+        .clone()
+        .expect("the first leg");
+    assert_eq!(
+        (b.instrument, b.target),
+        (1.6, 1.5),
+        "the forward target's and instrument's heights"
+    );
     assert!(c.result.expect("a result").legs[0].refraction.is_some());
 }
 
@@ -124,16 +144,29 @@ fn projeye_yaz_makes_the_measured_k_the_project_s() {
     let mut app = app_with_drawing();
     typed(&mut app);
     let doc = app.document.as_ref().expect("open");
-    let m = app.calc.traverse.measured(&doc.model).expect("a pair");
+    let m = app.gis.calc.traverse.measured(&doc.model).expect("a pair");
     let pair = pair_k(99.4, 100.6009);
     assert_eq!(m.pairs, 1);
     assert!((m.mean - pair).abs() < 1e-9 && m.sd.is_none(), "{m:?}");
     calc(&mut app, Event::TraverseRefraction);
     let doc = app.document.as_ref().expect("open");
-    assert!((doc.settings().refraction() - pair).abs() < 1e-12, "the project's k now");
-    let r = app.calc.traverse.compute(&doc.model).result.expect("a result");
+    assert!(
+        (doc.settings().refraction() - pair).abs() < 1e-12,
+        "the project's k now"
+    );
+    let r = app
+        .gis
+        .calc
+        .traverse
+        .compute(&doc.model)
+        .result
+        .expect("a result");
     let second = one_way(100.2, 1.5, 1.6) + (1.0 - pair) * 100.0 * 100.0 / (2.0 * 6_371_000.0);
-    assert!((r.legs[1].dh.expect("a difference") - second).abs() < 1e-9, "{:?}", r.legs[1]);
+    assert!(
+        (r.legs[1].dh.expect("a difference") - second).abs() < 1e-9,
+        "{:?}",
+        r.legs[1]
+    );
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(said.iter().any(|l| l.starts_with("Projenin kırılma katsayısı k =")), "{said:?}");
 }

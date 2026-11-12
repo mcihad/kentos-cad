@@ -5,6 +5,7 @@
 //! preview, where it runs and its command-line names; at the bottom
 //! Varsayılanlar, what the last run did, Kapat and Çalıştır.
 
+use crate::gis;
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Alignment, Center, Element, Fill, Length};
 use kentos_interaction::Format;
@@ -27,7 +28,7 @@ use super::{Event, Processing};
 use crate::app::{App, Message};
 
 fn ev(e: Event) -> Message {
-    Message::Processing(e)
+    Message::Gis(gis::Event::Processing(e))
 }
 
 /// The form's scrollable: scrolled to its end after a run that gave a table.
@@ -44,10 +45,10 @@ impl App {
     /// The open processing window, over the drawing.
     pub(crate) fn processing_view(&self) -> Element<'_, Message> {
         // Toplu çalıştır: the same window with the table in the form's place (batch.rs).
-        if self.processing.batch.is_some() {
+        if self.gis.processing.batch.is_some() {
             return self.batch_view();
         }
-        let (Some(window), Some(doc)) = (&self.processing.dialog, &self.document) else {
+        let (Some(window), Some(doc)) = (&self.gis.processing.dialog, &self.document) else {
             return space().into();
         };
         let format = Format::of(doc.settings());
@@ -59,7 +60,7 @@ impl App {
         };
         let env = Env {
             window,
-            send: Message::Processing,
+            send: |e| Message::Gis(gis::Event::Processing(e)),
             pick_objects: true,
             builder: true,
             doc: &doc.model,
@@ -80,7 +81,7 @@ impl App {
             .width(Fill)
             .height(Fill),
             container(
-                scrollable(side(window, &self.processing, &server))
+                scrollable(side(window, &self.gis.processing, &server))
                     .direction(style::field::body_scrollbar())
                     .height(Fill)
             )

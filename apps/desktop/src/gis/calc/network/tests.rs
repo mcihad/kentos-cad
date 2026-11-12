@@ -4,6 +4,7 @@
 //! said, Çizime yaz writes in one step, Karne editörü fills both windows;
 //! and pictures for the owner.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::Entity;
@@ -68,7 +69,7 @@ fn sigma_mm(k: &Value) -> String {
 /// and σ.
 fn network_with(app: &mut App, c: &Value, by_name: bool) {
     let _ = app.update(Message::Run("calc.network"));
-    assert_eq!(app.calc.open, Some(Window::Network));
+    assert_eq!(app.gis.calc.open, Some(Window::Network));
     let known = c["known"]
         .as_array()
         .expect("known")
@@ -86,7 +87,7 @@ fn network_with(app: &mut App, c: &Value, by_name: bool) {
             }
         })
         .collect();
-    app.calc.network.known = Cells::of(KNOWN_COLS, known);
+    app.gis.calc.network.known = Cells::of(KNOWN_COLS, known);
     let rows = c["rows"]
         .as_array()
         .expect("rows")
@@ -100,15 +101,15 @@ fn network_with(app: &mut App, c: &Value, by_name: bool) {
             ]
         })
         .collect();
-    app.calc.network.rows = Cells::of(ROW_COLS, rows);
+    app.gis.calc.network.rows = Cells::of(ROW_COLS, rows);
     app.network_solve();
 }
 
 /// Kot ağı dengelemesi open with the case typed in, its known heights by their names alone when `by_name`.
 fn level_with(app: &mut App, c: &Value, by_name: bool) {
     let _ = app.update(Message::Run("calc.levelNetwork"));
-    assert_eq!(app.calc.open, Some(Window::Level));
-    app.calc.level.kind = match c["levelKind"].as_str() {
+    assert_eq!(app.gis.calc.open, Some(Window::Level));
+    app.gis.calc.level.kind = match c["levelKind"].as_str() {
         Some("trigonometric") => LevelKind::Trigonometric,
         _ => LevelKind::Geometric,
     };
@@ -124,7 +125,7 @@ fn level_with(app: &mut App, c: &Value, by_name: bool) {
             }
         })
         .collect();
-    app.calc.level.known = Cells::of(HEIGHT_COLS, known);
+    app.gis.calc.level.known = Cells::of(HEIGHT_COLS, known);
     let rows = c["rows"]
         .as_array()
         .expect("rows")
@@ -138,7 +139,7 @@ fn level_with(app: &mut App, c: &Value, by_name: bool) {
             ]
         })
         .collect();
-    app.calc.level.rows = Cells::of(LEVEL_COLS, rows);
+    app.gis.calc.level.rows = Cells::of(LEVEL_COLS, rows);
     app.network_solve();
 }
 
@@ -161,7 +162,7 @@ fn the_braced_quadrilateral_adjusts_as_the_reference() {
     let mut app = app_with_scene();
     let c = case("Çaprazlı dörtgen");
     network_with(&mut app, &c, true);
-    let form = &app.calc.network;
+    let form = &app.gis.calc.network;
     assert!(
         form.solved.problems.is_empty(),
         "{:?}",
@@ -224,7 +225,7 @@ fn the_braced_quadrilateral_adjusts_as_the_reference() {
 fn a_blunder_is_named_and_marked() {
     let mut app = app_with_scene();
     network_with(&mut app, &case("Uyuşumsuz ölçü"), false);
-    let form = &app.calc.network;
+    let form = &app.gis.calc.network;
     let Some(Ok(r)) = &form.solved.result else {
         panic!("adjusted: {:?}", form.solved.result);
     };
@@ -264,7 +265,7 @@ fn what_does_not_hold_is_said() {
             .map(|r| r.iter().map(|t| (*t).to_owned()).collect())
             .collect()
     };
-    app.calc.network.known = Cells::of(
+    app.gis.calc.network.known = Cells::of(
         KNOWN_COLS,
         cells(&[
             &["K9"],
@@ -273,7 +274,7 @@ fn what_does_not_hold_is_said() {
             &["", "1", "2"],
         ]),
     );
-    app.calc.network.rows = Cells::of(
+    app.gis.calc.network.rows = Cells::of(
         ROW_COLS,
         cells(&[
             &["K1", "", "10"],
@@ -283,7 +284,7 @@ fn what_does_not_hold_is_said() {
         ]),
     );
     app.network_solve();
-    let form = &app.calc.network;
+    let form = &app.gis.calc.network;
     assert!(form.solved.result.is_none());
     assert_eq!(
         form.solved.problems,
@@ -300,21 +301,21 @@ fn what_does_not_hold_is_said() {
     );
     // The core's own refusal: trilateration with points the drawing has not.
     network_with(&mut app, &case("Trilaterasyon çizimsiz"), false);
-    let form = &app.calc.network;
+    let form = &app.gis.calc.network;
     assert_eq!(
         form.solved.result,
         Some(Err(text(&case("Trilaterasyon çizimsiz")["error"])))
     );
     // Kot ağı: a known height the drawing has not, a row without its length.
     let _ = app.update(Message::Run("calc.levelNetwork"));
-    app.calc.level.known = Cells::of(HEIGHT_COLS, cells(&[&["N3"], &["R1", "x"]]));
-    app.calc.level.rows = Cells::of(
+    app.gis.calc.level.known = Cells::of(HEIGHT_COLS, cells(&[&["N3"], &["R1", "x"]]));
+    app.gis.calc.level.rows = Cells::of(
         LEVEL_COLS,
         cells(&[&["R1", "N1", "1.2"], &["R1", "", "1", "2"]]),
     );
     app.network_solve();
     assert_eq!(
-        app.calc.level.solved.problems,
+        app.gis.calc.level.solved.problems,
         [
             "N3: çizimde bu adla kotlu nokta yok; kotu yazın.",
             "R1: kot bir sayı değil.",
@@ -331,13 +332,13 @@ fn what_does_not_hold_is_said() {
 fn cizime_yaz_moves_and_adds_in_one_step() {
     let mut app = app_with_scene();
     network_with(&mut app, &case("Çaprazlı dörtgen"), true);
-    assert_eq!(app.calc.network.layer.as_deref(), Some("poligon"));
-    let Some(Ok(r)) = app.calc.network.solved.result.clone() else {
+    assert_eq!(app.gis.calc.network.layer.as_deref(), Some("poligon"));
+    let Some(Ok(r)) = app.gis.calc.network.solved.result.clone() else {
         panic!("adjusted");
     };
     let k1 = point(&app, "K1").cloned().expect("K1");
-    let _ = app.update(Message::Calc(CalcEvent::AddPoints));
-    assert_eq!(app.calc.open, None, "the window closes");
+    let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::AddPoints)));
+    assert_eq!(app.gis.calc.open, None, "the window closes");
     assert_eq!(
         last_said(&app),
         format!(
@@ -378,7 +379,7 @@ fn kot_agi_writes_the_heights_in_one_step() {
     let mut app = app_with_scene();
     let c = case("Nivelman halkaları");
     level_with(&mut app, &c, true);
-    let form = &app.calc.level;
+    let form = &app.gis.calc.level;
     let Some(Ok(r)) = form.solved.result.clone() else {
         panic!("adjusted: {:?}", form.solved);
     };
@@ -400,7 +401,7 @@ fn kot_agi_writes_the_heights_in_one_step() {
             got.name
         );
     }
-    let _ = app.update(Message::Calc(CalcEvent::AddPoints));
+    let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::AddPoints)));
     assert_eq!(
         last_said(&app),
         format!("{LEVEL_TITLE}: N3 çizimde yok; yazılmadı.")
@@ -428,23 +429,23 @@ fn a_cell_typed_solves_again() {
     let mut app = app_with_scene();
     level_with(&mut app, &case("Nivelman halkaları"), true);
     let send = |app: &mut App, e: Event| {
-        let _ = app.update(Message::Calc(CalcEvent::Network(e)));
+        let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::Network(e))));
     };
     send(
         &mut app,
         Event::Cell(Sheet::LevelRows, 2, 2, "-3.62482".to_owned()),
     );
-    let Some(Ok(r)) = &app.calc.level.solved.result else {
+    let Some(Ok(r)) = &app.gis.calc.level.solved.result else {
         panic!("adjusted");
     };
     assert_eq!((r.worst, r.passed), (Some(2), Some(false)));
     assert_eq!(
-        app.calc.level.observation_name(&r.observations[2]),
+        app.gis.calc.level.observation_name(&r.observations[2]),
         "N2 → R2 kot farkı"
     );
     send(&mut app, Event::Kind(LevelKind::Trigonometric));
-    assert_eq!(app.calc.level.kind, LevelKind::Trigonometric);
-    assert!(matches!(app.calc.level.solved.result, Some(Ok(_))));
+    assert_eq!(app.gis.calc.level.kind, LevelKind::Trigonometric);
+    assert!(matches!(app.gis.calc.level.solved.result, Some(Ok(_))));
 }
 
 /// Karne editörü's Ağ dengelemesine aktar and Kot ağına aktar (docs/adr/0203
@@ -453,10 +454,10 @@ fn a_cell_typed_solves_again() {
 #[test]
 fn karne_editoru_fills_both_windows() {
     let mut app = crate::files_testing::app_with_drawing();
-    app.calc.network.known = Cells::of(KNOWN_COLS, vec![vec!["ST1".to_owned()]]);
+    app.gis.calc.network.known = Cells::of(KNOWN_COLS, vec![vec!["ST1".to_owned()]]);
     let _ = app.update(Message::Run("calc.fieldbook"));
     let fb = |app: &mut App, e: crate::calc::fieldbook::Event| {
-        let _ = app.update(Message::Calc(CalcEvent::FieldBook(e)));
+        let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::FieldBook(e))));
     };
     let sample =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/field/v1/sample.gsi");
@@ -465,8 +466,8 @@ fn karne_editoru_fills_both_windows() {
         crate::calc::fieldbook::Event::Picked(Some(sample)),
     );
     fb(&mut app, crate::calc::fieldbook::Event::TransferNetwork);
-    assert_eq!(app.calc.open, Some(Window::Network));
-    let rows: Vec<&Vec<String>> = app.calc.network.rows.filled().map(|(_, r)| r).collect();
+    assert_eq!(app.gis.calc.open, Some(Window::Network));
+    let rows: Vec<&Vec<String>> = app.gis.calc.network.rows.filled().map(|(_, r)| r).collect();
     assert!(rows.len() >= 10, "{} rows", rows.len());
     assert_eq!((rows[0][0].as_str(), rows[0][1].as_str()), ("ST1", "P2"));
     assert!(rows.iter().any(|r| r[0] == "ST2"));
@@ -478,14 +479,14 @@ fn karne_editoru_fills_both_windows() {
         )
     );
     assert_eq!(
-        app.calc.network.known.rows[0][0], "ST1",
+        app.gis.calc.network.known.rows[0][0], "ST1",
         "the known points stay"
     );
     let _ = app.update(Message::Run("calc.fieldbook"));
     fb(&mut app, crate::calc::fieldbook::Event::TransferLevels);
-    assert_eq!(app.calc.open, Some(Window::Level));
-    assert_eq!(app.calc.level.kind, LevelKind::Trigonometric);
-    let n = app.calc.level.rows.filled().count();
+    assert_eq!(app.gis.calc.open, Some(Window::Level));
+    assert_eq!(app.gis.calc.level.kind, LevelKind::Trigonometric);
+    let n = app.gis.calc.level.rows.filled().count();
     assert!(n >= 5, "{n} rows");
     assert_eq!(
         last_said(&app),
@@ -539,9 +540,9 @@ fn screens() {
                 "uyusumsuz" => network_with(&mut app, &case("Uyuşumsuz ölçü"), false),
                 "sorunlar" => {
                     network_with(&mut app, &case("Çaprazlı dörtgen"), true);
-                    app.calc.network.known.rows[1] =
+                    app.gis.calc.network.known.rows[1] =
                         vec!["K9".to_owned(), String::new(), String::new(), String::new()];
-                    app.calc.network.rows.rows[3][2] = "abc".to_owned();
+                    app.gis.calc.network.rows.rows[3][2] = "abc".to_owned();
                     app.network_solve();
                 }
                 "kot" | "kot-yazildi" => level_with(&mut app, &case("Nivelman halkaları"), true),
@@ -549,7 +550,7 @@ fn screens() {
             }
             // Çizime yaz through cad.survey.adjust: the window closes, the points written are selected (docs/adr/0622 §9).
             if name.ends_with("-yazildi") {
-                let _ = app.update(Message::Calc(CalcEvent::AddPoints));
+                let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::AddPoints)));
                 let _ = app.run("view.zoomExtents");
             }
             app.follow.flash = None;
@@ -579,12 +580,18 @@ fn screens() {
 fn projede_sakla_keeps_the_adjustment_with_the_write() {
     let mut app = app_with_scene();
     network_with(&mut app, &case("Çaprazlı dörtgen"), true);
-    let Some(Ok(r)) = app.calc.network.solved.result.clone() else {
+    let Some(Ok(r)) = app.gis.calc.network.solved.result.clone() else {
         panic!("adjusted");
     };
-    let _ = app.update(Message::Calc(CalcEvent::Keep(" Poligon 2026/1 ".into())));
-    let _ = app.update(Message::Calc(CalcEvent::AddPoints));
-    assert!(last_said(&app).contains("; sonuç “Poligon 2026/1” adıyla projede saklandı"), "{}", last_said(&app));
+    let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::Keep(
+        " Poligon 2026/1 ".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::AddPoints)));
+    assert!(
+        last_said(&app).contains("; sonuç “Poligon 2026/1” adıyla projede saklandı"),
+        "{}",
+        last_said(&app)
+    );
     let doc = app.document.as_mut().expect("a drawing");
     let kept = doc.model.survey_adjustments().to_vec();
     assert_eq!(kept.len(), 1);

@@ -20,6 +20,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use std::sync::Arc;
 
 use kentos_commands::{Entity, ProgramCheck};
@@ -197,12 +198,19 @@ fn plan(app: &mut App) {
 /// Bina programı open on `tab` after Denetle.
 fn window(app: &mut App, tab: Tab) {
     let _ = app.update(Message::Run("arch.program"));
-    let _ = app.update(Message::Program(Event::Check));
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::Check)));
     let doc = app.document.as_ref().expect("a drawing");
-    let result = kentos_native_application::program_check::check_watched(&doc.model, &ProgramCheck::default(), &|_, _| false);
+    let result = kentos_native_application::program_check::check_watched(
+        &doc.model,
+        &ProgramCheck::default(),
+        &|_, _| false,
+    );
     let id = 1;
-    let _ = app.update(Message::Program(Event::Checked(id, Arc::new(result))));
-    let _ = app.update(Message::Program(Event::Tab(tab)));
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::Checked(
+        id,
+        Arc::new(result),
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::Tab(tab))));
 }
 
 fn units(app: &mut App) {
@@ -228,9 +236,11 @@ fn running(app: &mut App) {
     house(app);
     fit(app, -0.5, -0.5, UP + 5.5, 10.0);
     let _ = app.update(Message::Run("arch.program"));
-    let _ = app.update(Message::Program(Event::Tab(Tab::Status)));
-    let _ = app.update(Message::Program(Event::Check));
-    let _ = app.update(Message::Program(Event::Progress(1, 9, 22)));
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::Tab(Tab::Status))));
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::Check)));
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::Progress(
+        1, 9, 22,
+    ))));
 }
 
 /// The corridor's partition 10 cm west: its passage 1.10 m, below the brief; flat 2's bedroom and living room grow.
@@ -353,7 +363,9 @@ fn share_refused(app: &mut App) {
     share_house(app, "net");
     fit(app, -0.5, -0.5, UP + 5.5, 10.0);
     window(app, Tab::Buildings);
-    let _ = app.update(Message::Program(Event::RemoveBuilding(0)));
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::RemoveBuilding(
+        0,
+    ))));
 }
 
 /// A units schedule (docs/adr/0795) right of the plan: its uid and slot.
@@ -479,17 +491,31 @@ mod tests {
         assert!(c.findings.iter().all(|f| f.code != "program_level_outside"), "{:?}", c.findings);
 
         window(&mut app, Tab::Buildings);
-        let _ = app.update(Message::Program(Event::RemoveBuilding(0)));
-        let w = app.program_window.as_ref().expect("the window");
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::RemoveBuilding(
+            0,
+        ))));
+        let w = app.arch.program_window.as_ref().expect("the window");
         assert_eq!(w.buildings_len(), 2, "A Blok stays: its flats name it");
         let said = crate::files_testing::last_said(&app);
-        assert!(said.contains("“1”, “2”, “O” bölümü"), "each flat once: {said}");
-        let _ = app.update(Message::Program(Event::RemoveBuilding(1)));
-        let _ = app.update(Message::Program(Event::AddBuilding));
-        let _ = app.update(Message::Program(Event::AddWing(1)));
-        let _ = app.update(Message::Program(Event::BuildingLevel(1, "zemin".into())));
-        let _ = app.update(Message::Program(Event::WingLevel(1, 0, "zemin".into())));
-        let _ = app.update(Message::Program(Event::Save));
+        assert!(
+            said.contains("“1”, “2”, “O” bölümü"),
+            "each flat once: {said}"
+        );
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::RemoveBuilding(
+            1,
+        ))));
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::AddBuilding)));
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::AddWing(1))));
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::BuildingLevel(
+            1,
+            "zemin".into(),
+        ))));
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::WingLevel(
+            1,
+            0,
+            "zemin".into(),
+        ))));
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::Save)));
         let program = app.document.as_ref().expect("a drawing").model.program();
         assert_eq!(program.buildings.len(), 2, "{program:?}");
         assert_eq!(program.buildings[1].name, "2. bina");
@@ -613,16 +639,26 @@ mod tests {
 
         // Bina programı's numbers are the command's.
         window(&mut app, Tab::Status);
-        let w = app.program_window.as_ref().expect("the window");
+        let w = app.arch.program_window.as_ref().expect("the window");
         let _ = w;
 
         // Mahalleri birleştir: asked with its decision, written on Birleştir.
         let (a, b) = (slot(&app, plan.space("102")), slot(&app, plan.space("103")));
         app.selection.set([a, b]);
         let _ = app.update(Message::Run("arch.spaceMerge"));
-        assert_eq!(app.dialog, Some(crate::app::Dialog::SpaceMerge));
-        let said = app.space_merging.as_ref().map(|(_, w)| w.clone()).expect("the decision");
-        assert!(said.contains("Kimliği sürecek mahal: “102 Salon”"), "{said}");
+        assert_eq!(
+            app.dialog,
+            Some(crate::app::Dialog::Arch(arch::ArchDialogKind::SpaceMerge))
+        );
+        let said = app
+            .space_merging
+            .as_ref()
+            .map(|(_, w)| w.clone())
+            .expect("the decision");
+        assert!(
+            said.contains("Kimliği sürecek mahal: “102 Salon”"),
+            "{said}"
+        );
         assert!(said.contains("Gidecek: “103 Mutfak”"), "{said}");
         let model = &app.document.as_ref().expect("a drawing").model;
         assert!(model.get(b).is_some(), "nothing written before Birleştir");

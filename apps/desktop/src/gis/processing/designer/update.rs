@@ -2,6 +2,7 @@
 //! ModelCanvas, modelPalette and modelInspector): every edit goes through
 //! one path that keeps the undo step, changes the draft and checks it.
 
+use crate::gis;
 use iced::Task;
 use kentos_interaction::Level;
 use kentos_interaction::pick::PickPoint;
@@ -137,25 +138,32 @@ impl App {
         let designer = match model {
             None => Designer::new(edit::new_model(new_model_id()), false, false),
             Some(id) => {
-                let Some(source) = self.processing.registry.model(id).cloned() else {
+                let Some(source) = self.gis.processing.registry.model(id).cloned() else {
                     self.error(texts::not_found(id));
                     return;
                 };
-                if self.processing.registry.is_builtin_model(id) {
+                if self.gis.processing.registry.is_builtin_model(id) {
                     Designer::new(edit::copy_model(&source, new_model_id()), false, true)
                 } else {
                     Designer::new(source, true, false)
                 }
             }
         };
-        self.processing.designer = Some(Box::new(designer));
-        self.dialog = Some(Dialog::ModelDesigner);
+        self.gis.processing.designer = Some(Box::new(designer));
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner));
         self.designer_checked();
     }
 
     pub(crate) fn selection_recipe_from_dialog(&mut self) {
-        let Some(window) = &self.processing.dialog else { return; };
-        if !matches!(window.tool.id.as_str(), "selection.byExpression" | "selection.byLocation") { return; }
+        let Some(window) = &self.gis.processing.dialog else {
+            return;
+        };
+        if !matches!(
+            window.tool.id.as_str(),
+            "selection.byExpression" | "selection.byLocation"
+        ) {
+            return;
+        }
         if !window.issues.is_empty() {
             self.warn("Seçim tarifini oluşturmadan önce işaretli girişleri düzeltin.");
             return;
@@ -165,21 +173,27 @@ impl App {
         model.category = "selection".into();
         model.description = "Seçimi değiştirir; çizime nesne veya katman eklemez. Girdi kapsamı ve seçim biçimi adım ayarlarından değiştirilebilir.".into();
         model.steps.push(kentos_processing::model::ModelStep {
-            id:"selection".into(), tool:window.tool.id.clone(),
-            values:window.values.iter().map(|(name,value)| (name.clone(),ValueSource::Value(value.clone()))).collect(),
-            position:None, caption:Some("Seçim koşulları".into()),
+            id: "selection".into(),
+            tool: window.tool.id.clone(),
+            values: window
+                .values
+                .iter()
+                .map(|(name, value)| (name.clone(), ValueSource::Value(value.clone())))
+                .collect(),
+            position: None,
+            caption: Some("Seçim koşulları".into()),
         });
-        self.processing.designer = Some(Box::new(Designer::new(model, false, false)));
-        self.processing.dialog = None;
-        self.dialog = Some(Dialog::ModelDesigner);
+        self.gis.processing.designer = Some(Box::new(Designer::new(model, false, false)));
+        self.gis.processing.dialog = None;
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner));
         self.designer_checked();
     }
 
     /// The draft's problems again, and the selected step's controls.
     fn designer_checked(&mut self) {
-        let registry = self.processing.registry.clone();
+        let registry = self.gis.processing.registry.clone();
         let lookup = |id: &str| registry.tool(id);
-        let Some(d) = self.processing.designer.as_deref_mut() else {
+        let Some(d) = self.gis.processing.designer.as_deref_mut() else {
             return;
         };
         d.after_change(&lookup);
@@ -191,14 +205,14 @@ impl App {
     fn designer_fields(&mut self, keep: bool) {
         let variables = self.expression_variables();
         let Some(doc) = &self.document else {
-            if let Some(d) = self.processing.designer.as_deref_mut() {
+            if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                 d.fields = None;
             }
             return;
         };
         let defaults = Defaults::of(&doc.model);
-        let registry = &self.processing.registry;
-        let Some(d) = self.processing.designer.as_deref_mut() else {
+        let registry = &self.gis.processing.registry;
+        let Some(d) = self.gis.processing.designer.as_deref_mut() else {
             return;
         };
         let Some(NodeRef::Step(id)) = &d.selected else {
@@ -240,7 +254,7 @@ impl App {
             variables,
         };
         if let Some(fields) = d.fields.as_mut() {
-            fields.refresh(&self.processing.runner, &look);
+            fields.refresh(&self.gis.processing.runner, &look);
         }
     }
 
@@ -250,9 +264,9 @@ impl App {
         key: Option<&str>,
         change: impl FnOnce(&mut Designer, &dyn Fn(&str) -> Option<Tool>),
     ) {
-        let registry = self.processing.registry.clone();
+        let registry = self.gis.processing.registry.clone();
         let lookup = |id: &str| registry.tool(id);
-        let Some(d) = self.processing.designer.as_deref_mut() else {
+        let Some(d) = self.gis.processing.designer.as_deref_mut() else {
             return;
         };
         d.before_change(key, now_ms());
@@ -262,12 +276,12 @@ impl App {
     }
 
     pub(crate) fn model_designer_event(&mut self, e: Event) -> Task<Message> {
-        if self.processing.designer.is_none() {
+        if self.gis.processing.designer.is_none() {
             return Task::none();
         }
         match e {
             Event::Select(node) => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     if d.selected != node {
                         d.advanced_open = false;
                         d.typed.clear();
@@ -278,7 +292,7 @@ impl App {
                 self.designer_fields(false);
             }
             Event::Open(node) => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     if d.selected.as_ref() != Some(&node) {
                         d.advanced_open = false;
                         d.typed.clear();
@@ -288,17 +302,17 @@ impl App {
                 self.designer_fields(false);
             }
             Event::Move { node, at, done } => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.move_box(&node, at, done);
                 }
             }
             Event::Wire { from, to, at } => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.wire_menu = Some(WireMenu { from, to, at });
                 }
             }
             Event::MenuClose => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.wire_menu = None;
                 }
             }
@@ -310,12 +324,12 @@ impl App {
                 });
             }
             Event::View(view) => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.view = view;
                 }
             }
             Event::Resized(size) => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.canvas = Some(size);
                     if d.fit_pending {
                         d.fit();
@@ -323,12 +337,12 @@ impl App {
                 }
             }
             Event::Fit => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.fit();
                 }
             }
             Event::Zoom(f) => {
-                if let Some(d) = self.processing.designer.as_deref_mut()
+                if let Some(d) = self.gis.processing.designer.as_deref_mut()
                     && let Some(size) = d.canvas
                 {
                     let middle =
@@ -367,26 +381,27 @@ impl App {
                 });
             }
             Event::Search(text) => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.search = text;
                 }
             }
             Event::Carry(place) => {
                 let tool = super::palette::tool_at(
-                    &self.processing.registry,
-                    self.processing
+                    &self.gis.processing.registry,
+                    self.gis
+                        .processing
                         .designer
                         .as_deref()
                         .map_or("", |d| d.search.as_str()),
                     &|t| self.offers_tool(t),
                     place,
                 );
-                if let (Some(d), Some(tool)) = (self.processing.designer.as_deref_mut(), tool) {
+                if let (Some(d), Some(tool)) = (self.gis.processing.designer.as_deref_mut(), tool) {
                     d.carrying = Some(tool);
                 }
             }
             Event::Uncarry => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.carrying = None;
                 }
             }
@@ -474,7 +489,7 @@ impl App {
             }
             Event::Field(field) => return self.designer_field(field),
             Event::Advanced => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.advanced_open = !d.advanced_open;
                 }
             }
@@ -488,13 +503,13 @@ impl App {
                 });
             }
             Event::Delete => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.asking = Some(Asking::Remove);
                 }
             }
             Event::Layout => {
                 self.designer_change(None, |d, _| edit::auto_layout(&mut d.draft));
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.fit();
                 }
             }
@@ -507,11 +522,12 @@ impl App {
                     return Task::none();
                 }
                 let id = self
+                    .gis
                     .processing
                     .designer
                     .as_deref()
                     .map(|d| d.draft.id.clone());
-                self.processing.designer = None;
+                self.gis.processing.designer = None;
                 self.dialog = None;
                 if let Some(id) = id {
                     return self.processing_command(&format!("processing.model.{id}"));
@@ -521,6 +537,7 @@ impl App {
             Event::Undo | Event::Redo => {
                 let redo = matches!(e, Event::Redo);
                 let undone = self
+                    .gis
                     .processing
                     .designer
                     .as_deref_mut()
@@ -534,7 +551,8 @@ impl App {
     }
 
     fn designer_selected(&self) -> Option<NodeRef> {
-        self.processing
+        self.gis
+            .processing
             .designer
             .as_deref()
             .and_then(|d| d.selected.clone())
@@ -552,7 +570,7 @@ impl App {
                 return Task::none();
             }
             F::PickChoice(name) => {
-                let picks = self.processing.designer.as_deref().and_then(|d| {
+                let picks = self.gis.processing.designer.as_deref().and_then(|d| {
                     d.fields.as_ref().and_then(|f| {
                         f.tool
                             .parameters
@@ -590,7 +608,7 @@ impl App {
                 return Task::none();
             }
             F::Advanced => {
-                if let Some(d) = self.processing.designer.as_deref_mut() {
+                if let Some(d) = self.gis.processing.designer.as_deref_mut() {
                     d.advanced_open = !d.advanced_open;
                 }
                 return Task::none();
@@ -605,6 +623,7 @@ impl App {
         // The control's window takes the edit as the tool window does, then
         // the values it changed go to the step, fixed.
         let Some(before) = self
+            .gis
             .processing
             .designer
             .as_deref()
@@ -615,6 +634,7 @@ impl App {
         };
         let name = field_name(&field);
         if let Some(fields) = self
+            .gis
             .processing
             .designer
             .as_deref_mut()
@@ -623,6 +643,7 @@ impl App {
             fields.edit(field, &active);
         }
         let after = self
+            .gis
             .processing
             .designer
             .as_deref()
@@ -653,7 +674,7 @@ impl App {
     /// is shown on the drawing and the designer opens again on the same draft
     /// (docs/adr/0088; the web's `pickPoint`).
     fn designer_pick(&mut self, step: String, name: String, then: Option<(String, String)>) {
-        let Some(mut designer) = self.processing.designer.take() else {
+        let Some(mut designer) = self.gis.processing.designer.take() else {
             return;
         };
         let label = designer
@@ -666,7 +687,7 @@ impl App {
             Level::Command,
             texts::pick::command(label.as_deref().unwrap_or(texts::pick::UNNAMED)),
         );
-        self.processing.picking = Some(crate::processing::Picking::Designer {
+        self.gis.processing.picking = Some(crate::processing::Picking::Designer {
             designer,
             step,
             name,
@@ -709,26 +730,26 @@ impl App {
                 );
             }
         }
-        self.processing.designer = Some(designer);
-        self.dialog = Some(Dialog::ModelDesigner);
+        self.gis.processing.designer = Some(designer);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner));
         self.designer_checked();
     }
 
     /// Kaydet (Ctrl+S): a blank name is “Adsız model”; the model goes to the
     /// user's library, problems or not, and becomes what “unsaved” compares with.
     fn designer_save(&mut self) -> bool {
-        let Some(d) = self.processing.designer.as_deref_mut() else {
+        let Some(d) = self.gis.processing.designer.as_deref_mut() else {
             return false;
         };
         d.draft.label = plan::saved_label(&d.draft.label);
         let model = d.draft.clone();
         let problems = d.problems.len();
-        if let Err(why) = self.processing.registry.save_model(model.clone()) {
+        if let Err(why) = self.gis.processing.registry.save_model(model.clone()) {
             self.error(why);
             return false;
         }
-        self.processing.memory.save_model(&model);
-        if let Some(d) = self.processing.designer.as_deref_mut() {
+        self.gis.processing.memory.save_model(&model);
+        if let Some(d) = self.gis.processing.designer.as_deref_mut() {
             let json = d.draft.to_json();
             d.saved = Some(json.clone());
             d.baseline = json;
@@ -741,7 +762,7 @@ impl App {
 
     /// Kapat, ×, Esc: unsaved changes are asked about first.
     pub(crate) fn designer_close(&mut self) {
-        let Some(d) = self.processing.designer.as_deref_mut() else {
+        let Some(d) = self.gis.processing.designer.as_deref_mut() else {
             return;
         };
         if d.wire_menu.take().is_some() {
@@ -758,31 +779,36 @@ impl App {
             d.asking = Some(Asking::Unsaved);
             return;
         }
-        self.processing.designer = None;
+        self.gis.processing.designer = None;
         self.dialog = None;
     }
 
     fn designer_answer(&mut self, answer: Option<bool>) -> Task<Message> {
-        let asking = self.processing.designer.as_deref().and_then(|d| d.asking);
-        if let Some(d) = self.processing.designer.as_deref_mut() {
+        let asking = self
+            .gis
+            .processing
+            .designer
+            .as_deref()
+            .and_then(|d| d.asking);
+        if let Some(d) = self.gis.processing.designer.as_deref_mut() {
             d.asking = None;
         }
         match (asking, answer) {
             (Some(Asking::Unsaved), Some(true)) => {
                 if self.designer_save() {
-                    self.processing.designer = None;
+                    self.gis.processing.designer = None;
                     self.dialog = None;
                 }
             }
             (Some(Asking::Unsaved), Some(false)) => {
-                self.processing.designer = None;
+                self.gis.processing.designer = None;
                 self.dialog = None;
             }
             (Some(Asking::Remove), Some(_)) => {
-                if let Some(d) = self.processing.designer.take() {
+                if let Some(d) = self.gis.processing.designer.take() {
                     let label = d.draft.label.clone();
-                    self.processing.registry.remove_model(&d.draft.id);
-                    self.processing.memory.remove_model(&d.draft.id);
+                    self.gis.processing.registry.remove_model(&d.draft.id);
+                    self.gis.processing.memory.remove_model(&d.draft.id);
                     self.say(Level::Info, texts::remove::done(&label));
                 }
                 self.dialog = None;
@@ -798,7 +824,7 @@ impl App {
         press: &crate::keys::KeyPress,
     ) -> Option<Task<Message>> {
         use iced::keyboard::key::Named;
-        let d = self.processing.designer.as_deref()?;
+        let d = self.gis.processing.designer.as_deref()?;
         if d.asking.is_some() {
             return None;
         }

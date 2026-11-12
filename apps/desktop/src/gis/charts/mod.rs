@@ -326,10 +326,10 @@ impl App {
             return;
         }
         if let Some(layer) = layer {
-            if self.charts.layer.as_ref() != Some(&layer) {
-                self.charts.field = None;
+            if self.gis.charts.layer.as_ref() != Some(&layer) {
+                self.gis.charts.field = None;
             }
-            self.charts.layer = Some(layer);
+            self.gis.charts.layer = Some(layer);
         }
         self.open_chart_tab(BottomTab::Statistics);
     }
@@ -346,7 +346,7 @@ impl App {
             return;
         }
         let at_hand = self.chart_layer();
-        let p = &mut self.charts;
+        let p = &mut self.gis.charts;
         // Another layer has other columns: the kind stays, its columns are chosen again.
         if let Some(l) = &layer
             && at_hand.as_ref() != Some(l)
@@ -373,7 +373,7 @@ impl App {
         if !self.open_bottom_tab(BottomTab::Chart) {
             return;
         }
-        let p = &mut self.charts;
+        let p = &mut self.gis.charts;
         p.table = Some(table);
         p.table_version += 1;
         p.source = Source::Table;
@@ -388,7 +388,7 @@ impl App {
             return None;
         }
         self.chart_refresh();
-        let now = self.charts.chart.borrow();
+        let now = self.gis.charts.chart.borrow();
         let (kind, table) = (now.kind?, now.table.as_ref()?);
         let marked = self
             .charts_work(|w| {
@@ -411,7 +411,7 @@ impl App {
     /// The layer the tabs read: the one kept while it is a layer, else the one at hand.
     pub(crate) fn chart_layer(&self) -> Option<String> {
         let doc = self.document.as_ref()?;
-        layer_at_hand(self, doc, self.charts.layer.as_deref())
+        layer_at_hand(self, doc, self.gis.charts.layer.as_deref())
     }
 
     /// After every message: while a tab of the two is on screen, the layer it
@@ -424,15 +424,15 @@ impl App {
             return;
         }
         let at_hand = self.chart_layer();
-        if at_hand != self.charts.layer {
-            self.charts.layer = at_hand;
+        if at_hand != self.gis.charts.layer {
+            self.gis.charts.layer = at_hand;
         }
     }
 
     fn put_spec(&mut self, spec: Spec) {
-        match self.charts.source {
-            Source::Layer => self.charts.layer_spec = Some(spec),
-            Source::Table => self.charts.table_spec = Some(spec),
+        match self.gis.charts.source {
+            Source::Layer => self.gis.charts.layer_spec = Some(spec),
+            Source::Table => self.gis.charts.table_spec = Some(spec),
         }
     }
 
@@ -441,15 +441,15 @@ impl App {
             Event::Layer(id) => {
                 // Another layer has other columns: the kind stays, its columns are chosen again.
                 if self.chart_layer().as_ref() != Some(&id)
-                    && let Some(s) = &self.charts.layer_spec
+                    && let Some(s) = &self.gis.charts.layer_spec
                 {
-                    self.charts.layer_spec = Some(Spec::new(s.kind));
+                    self.gis.charts.layer_spec = Some(Spec::new(s.kind));
                 }
-                if self.charts.layer.as_ref() != Some(&id) {
-                    self.charts.field = None;
+                if self.gis.charts.layer.as_ref() != Some(&id) {
+                    self.gis.charts.field = None;
                 }
                 // The table's rows are of the table's layer: another layer takes all of its own.
-                if self.charts.show == Show::Table
+                if self.gis.charts.show == Show::Table
                     && self
                         .document
                         .as_ref()
@@ -457,36 +457,34 @@ impl App {
                         .as_ref()
                         != Some(&id)
                 {
-                    self.charts.show = Show::All;
+                    self.gis.charts.show = Show::All;
                 }
-                self.charts.layer = Some(id);
-                self.charts.source = Source::Layer;
+                self.gis.charts.layer = Some(id);
+                self.gis.charts.source = Source::Layer;
             }
             Event::TableSource => {
-                if self.charts.table.is_some() {
-                    self.charts.source = Source::Table;
+                if self.gis.charts.table.is_some() {
+                    self.gis.charts.source = Source::Table;
                 }
             }
             Event::Show(show) => {
                 // Tablonun süzgeciyle reads the table's layer.
                 if show == Show::Table
-                    && let Some(layer) = self
-                        .document
-                        .as_ref()
-                        .and_then(|d| self.feature_layer(d))
+                    && let Some(layer) = self.document.as_ref().and_then(|d| self.feature_layer(d))
                 {
-                    if self.charts.layer.as_ref() != Some(&layer) {
-                        self.charts.field = None;
-                        self.charts.layer_spec = self
+                    if self.gis.charts.layer.as_ref() != Some(&layer) {
+                        self.gis.charts.field = None;
+                        self.gis.charts.layer_spec = self
+                            .gis
                             .charts
                             .layer_spec
                             .as_ref()
                             .map(|s| Spec::new(s.kind));
                     }
-                    self.charts.layer = Some(layer);
-                    self.charts.source = Source::Layer;
+                    self.gis.charts.layer = Some(layer);
+                    self.gis.charts.source = Source::Layer;
                 }
-                self.charts.show = show;
+                self.gis.charts.show = show;
             }
             Event::Kind(kind) => {
                 if let Some(spec) = self.whole_spec()
@@ -496,7 +494,7 @@ impl App {
                 }
             }
             Event::View(view) => {
-                self.charts.view = view;
+                self.gis.charts.view = view;
             }
             Event::Set(setting) => {
                 if let Some(mut spec) = self.whole_spec() {
@@ -505,7 +503,7 @@ impl App {
                 }
             }
             Event::Copy => {
-                let table = self.charts.chart.borrow().table.clone();
+                let table = self.gis.charts.chart.borrow().table.clone();
                 let Some(t) = table else {
                     return Task::none();
                 };
@@ -534,7 +532,7 @@ impl App {
     /// takes away); the background clears the selection. A table's rows are
     /// no objects: a press there selects nothing.
     fn chart_press(&mut self, element: Option<u32>) {
-        if self.charts.source != Source::Layer {
+        if self.gis.charts.source != Source::Layer {
             return;
         }
         match element {
@@ -556,6 +554,7 @@ impl App {
     /// The layer's rows picked as the drawing's selection.
     pub(crate) fn pick_rows(&mut self, rows: &[u32]) {
         let slots = self
+            .gis
             .charts
             .layer_data
             .borrow()
@@ -568,14 +567,16 @@ impl App {
 
     /// Something read from the chart's work as it is now (the layer's or the table's).
     pub(crate) fn charts_work<R>(&self, read: impl FnOnce(&Work) -> R) -> Option<R> {
-        match self.charts.source {
+        match self.gis.charts.source {
             Source::Layer => self
+                .gis
                 .charts
                 .layer_data
                 .borrow()
                 .as_ref()
                 .map(|(_, d)| read(&d.work)),
             Source::Table => self
+                .gis
                 .charts
                 .table_data
                 .borrow()

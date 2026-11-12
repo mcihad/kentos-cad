@@ -4,6 +4,7 @@
 //! fed by the tool's default, a fixed value (the tool window's own
 //! control), a model input or an earlier step's output.
 
+use crate::gis;
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Alignment, Center, Element, Fill, Length};
 use kentos_interaction::Format;
@@ -28,7 +29,7 @@ use crate::app::Message;
 use crate::processing::fields::{Env, control};
 
 fn ev(e: Event) -> Message {
-    Message::ModelDesigner(e)
+    Message::Gis(gis::Event::ModelDesigner(e))
 }
 
 /// The settings' width (the web's 340 px, with the type size).
@@ -671,7 +672,7 @@ fn step_settings<'a>(d: &'a Designer, id: &'a str, cx: &Context<'a, '_>) -> Elem
     let fields = d.fields.as_ref().filter(|f| f.tool.id == tool.id);
     let env = fields.zip(cx.doc).map(|(window, doc)| Env {
         window,
-        send: |e| Message::ModelDesigner(Event::Field(e)),
+        send: |e| Message::Gis(gis::Event::ModelDesigner(Event::Field(e))),
         pick_objects: false,
         builder: false,
         doc,

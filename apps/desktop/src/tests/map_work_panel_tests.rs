@@ -4,6 +4,7 @@
 //! panel and approved; saved and opened again (and read by someone who only reads) the relation is the same; KentOS
 //! Mimari and KentOS GIS show neither the panel nor the rows. And its pictures.
 
+use crate::map;
 use kentos_commands::{WorkObjectRole, WorkState as S, WorkStatus as W};
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -40,7 +41,7 @@ fn opened(snapshot: kentos_commands::DocumentSnapshotV2, program: Option<Module>
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::MapWork(e));
+    let _ = app.update(Message::Map(map::Event::MapWork(e)));
 }
 
 fn tree(app: &App) -> kentos_commands::MapWorkTree {

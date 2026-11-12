@@ -7,6 +7,7 @@
 //! heights (m. 63(2)) and the chosen points' check against m. 93(1)(c)'s limit the shared case's, the drawing kept and
 //! stale once its surface changes (docs/adr/4740). And its pictures.
 
+use crate::road;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -30,8 +31,11 @@ fn opened(program: Option<Module>) -> App {
 fn the_plan_is_the_shared_case_s_and_draw_writes_in_one_step() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("terrain.sheetContours"));
-    assert_eq!(app.dialog, Some(Dialog::SheetContours));
-    let s = &app.sheet_contours;
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::SheetContours))
+    );
+    let s = &app.road.sheet_contours;
     assert_eq!(s.layer, "esyukselti");
     assert_eq!(s.details, vec!["bina".to_owned(), "yol".to_owned(), "sev".to_owned()]);
     let r = s.answer.clone().expect("an answer").expect("planned");
@@ -40,12 +44,26 @@ fn the_plan_is_the_shared_case_s_and_draw_writes_in_one_step() {
     assert_eq!(Some(r.labels.len()), want["labels"].as_array().map(Vec::len));
     assert!((r.cut - want["cut"].as_f64().expect("cut")).abs() < 1e-9);
     // The auxiliary lines unticked: none of them in the plan.
-    let _ = app.update(Message::SheetContours(E::Auxiliary(false)));
-    let off = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Auxiliary(
+        false,
+    ))));
+    let off = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("planned");
     assert!(off.lines.iter().all(|l| l.kind != "auxiliary") && off.lines.len() < r.lines.len());
-    let _ = app.update(Message::SheetContours(E::Auxiliary(true)));
-    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app.update(Message::SheetContours(E::Draw));
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Auxiliary(
+        true,
+    ))));
+    let before = app
+        .document
+        .as_ref()
+        .map(|d| d.model.entities().count())
+        .unwrap_or(0);
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
     let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
     assert_eq!(after, before + r.lines.len() + r.labels.len());
     assert_eq!(app.dialog, None);
@@ -59,10 +77,16 @@ fn the_plan_is_the_shared_case_s_and_draw_writes_in_one_step() {
 fn the_auxiliary_lines_take_the_package_s_pattern() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("terrain.sheetContours"));
-    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let r = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("planned");
     let name = r.pattern.clone().expect("a pattern");
     assert_eq!(name, "Yardımcı eğri (bohhbuy-2018-m78)");
-    let _ = app.update(Message::SheetContours(E::Draw));
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
     let doc = &app.document.as_ref().expect("open").model;
     let t = doc.settings().line_types.iter().find(|t| t.name == name).expect("the type");
     let lengths: Vec<f64> = t.elements.iter().map(|e| e.length).collect();
@@ -97,8 +121,14 @@ fn pattern_screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("terrain.sheetContours"));
-        let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
-        let _ = app.update(Message::SheetContours(E::Draw));
+        let r = app
+            .road
+            .sheet_contours
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("planned");
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
         // Around the longest auxiliary line, 60 m wide: at 1:1000 its 5 mm dashes are 5 m.
         let aux = r.lines.iter().filter(|l| l.kind == "auxiliary").max_by_key(|l| l.points.len()).expect("an auxiliary line");
         let mid = aux.points[aux.points.len() / 2];
@@ -125,15 +155,25 @@ fn pattern_screens() {
 fn the_summit_height_is_the_shared_case_s() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("terrain.sheetContours"));
-    let _ = app.update(Message::SheetContours(E::Spots(true)));
-    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
-    let case = cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Tepe kotu detaylarla: binanın içindeki köşe sayılmaz")
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Spots(true))));
+    let r = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("planned");
+    let case = cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "Tepe kotu detaylarla: binanın içindeki köşe sayılmaz")
         .expect("the case")["steps"][0]["result"]["output"]["spots"]
         .clone();
     assert_eq!(r.spots.len(), 1);
     assert_eq!(serde_json::to_value(&r.spots).expect("json"), case);
     let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app.update(Message::SheetContours(E::Draw));
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
     let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
     assert_eq!(after, before + r.lines.len() + r.labels.len() + 2);
 }
@@ -145,13 +185,27 @@ fn the_summit_height_is_the_shared_case_s() {
 fn the_slope_heights_are_the_shared_case_s() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("terrain.sheetContours"));
-    let s = &app.sheet_contours;
+    let s = &app.road.sheet_contours;
     assert_eq!((s.slope_top.as_str(), s.slope_bottom.as_str()), ("sev-ust", "sev-dip"));
     assert_eq!(s.details, vec!["bina".to_owned(), "yol".to_owned(), "sev".to_owned()]);
     assert!(s.answer.clone().expect("an answer").expect("planned").spots.is_empty(), "not ticked: none");
-    let _ = app.update(Message::SheetContours(E::Slopes(true)));
-    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
-    let case = cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Şev kotları: üst ve dip")))
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Slopes(true))));
+    let r = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("planned");
+    let case = cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("Şev kotları: üst ve dip"))
+        })
         .expect("the case")["steps"][0]["result"]["output"]["spots"]
         .clone();
     // The places, kinds and texts the case's; the heights within the cases' 10⁻⁹ m (Triangle's plane and KentOS's).
@@ -161,13 +215,37 @@ fn the_slope_heights_are_the_shared_case_s() {
         assert_eq!((got.kind.as_str(), got.x, got.y, got.text.as_str()), (w["kind"].as_str().expect("kind"), w["x"].as_f64().expect("x"), w["y"].as_f64().expect("y"), w["text"].as_str().expect("text")));
         assert!((got.z - w["z"].as_f64().expect("z")).abs() < 1e-9, "{} vs {}", got.z, w["z"]);
     }
-    assert!(r.notes.iter().any(|n| n.contains("Yüzeyin dışındaki 1 köşe yazılmadı")), "{:?}", r.notes);
-    let _ = app.update(Message::SheetContours(E::SlopeBottom(String::new())));
-    let top = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
-    assert!(top.spots.len() == 4 && top.spots.iter().all(|s| s.kind == "slopeTop"), "{:?}", top.spots);
-    let _ = app.update(Message::SheetContours(E::SlopeBottom("sev-dip".into())));
-    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app.update(Message::SheetContours(E::Draw));
+    assert!(
+        r.notes
+            .iter()
+            .any(|n| n.contains("Yüzeyin dışındaki 1 köşe yazılmadı")),
+        "{:?}",
+        r.notes
+    );
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::SlopeBottom(
+        String::new(),
+    ))));
+    let top = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("planned");
+    assert!(
+        top.spots.len() == 4 && top.spots.iter().all(|s| s.kind == "slopeTop"),
+        "{:?}",
+        top.spots
+    );
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::SlopeBottom(
+        "sev-dip".into(),
+    ))));
+    let before = app
+        .document
+        .as_ref()
+        .map(|d| d.model.entities().count())
+        .unwrap_or(0);
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
     let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
     assert_eq!(after, before + r.lines.len() + r.labels.len() + 2 * r.spots.len());
 }
@@ -179,10 +257,24 @@ fn the_slope_heights_are_the_shared_case_s() {
 fn the_chosen_points_heights_are_the_shared_case_s() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("terrain.sheetContours"));
-    assert_eq!(app.sheet_contours.chosen_layer, "secilen");
-    let _ = app.update(Message::SheetContours(E::Chosen(true)));
-    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
-    let case = cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Seçilen noktalar: kendi")))
+    assert_eq!(app.road.sheet_contours.chosen_layer, "secilen");
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Chosen(true))));
+    let r = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("planned");
+    let case = cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("Seçilen noktalar: kendi"))
+        })
         .expect("the case")["steps"][0]["result"]["output"]["spots"]
         .clone();
     let want = case.as_array().expect("spots");
@@ -194,7 +286,7 @@ fn the_chosen_points_heights_are_the_shared_case_s() {
     }
     assert!(r.notes.iter().any(|n| n.contains("en çok 0.145 m ayrılıyor") && n.contains("1 nokta yazılmadı")), "{:?}", r.notes);
     let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app.update(Message::SheetContours(E::Draw));
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
     let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
     assert_eq!(after, before + r.lines.len() + r.labels.len() + r.spots.len(), "one height each");
 }
@@ -213,14 +305,23 @@ fn case_output(start: &str) -> Value {
 fn the_built_up_heights_are_the_shared_case_s() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("terrain.sheetContours"));
-    let s = &app.sheet_contours;
+    let s = &app.road.sheet_contours;
     assert_eq!((s.built_area.as_str(), s.built_road.as_str()), ("yerlesik", "yol-ekseni"));
     assert!(!s.details.contains(&"yol-ekseni".to_owned()));
     for d in ["yol", "sev"] {
-        let _ = app.update(Message::SheetContours(E::Detail(d.into(), false)));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Detail(
+            d.into(),
+            false,
+        ))));
     }
-    let _ = app.update(Message::SheetContours(E::Built(true)));
-    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Built(true))));
+    let r = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("planned");
     let want = case_output("m. 63(2): yolda");
     let spots = want["spots"].as_array().expect("spots");
     assert_eq!(r.spots.len(), spots.len());
@@ -229,7 +330,7 @@ fn the_built_up_heights_are_the_shared_case_s() {
         assert!((got.x - w["x"].as_f64().expect("x")).abs() < 1e-9 && (got.y - w["y"].as_f64().expect("y")).abs() < 1e-9);
         assert!((got.z - w["z"].as_f64().expect("z")).abs() < 1e-9);
     }
-    let _ = app.update(Message::SheetContours(E::Draw));
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
     let model = &app.document.as_ref().expect("a drawing").model;
     let d = model.road_drawings().last().expect("the drawing kept");
     assert_eq!(d.command, "road.terrains.sheetcontours");
@@ -244,9 +345,17 @@ fn the_built_up_heights_are_the_shared_case_s() {
 fn the_section_check_is_the_shared_case_s() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("terrain.sheetContours"));
-    let _ = app.update(Message::SheetContours(E::ChosenLayer("kontrol-asan".into())));
-    let _ = app.update(Message::SheetContours(E::Chosen(true)));
-    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::ChosenLayer(
+        "kontrol-asan".into(),
+    ))));
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Chosen(true))));
+    let r = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("planned");
     let c = r.check.expect("compared");
     let want = &case_output("m. 93(1)(c): farkların")["check"];
     assert_eq!((c.compared, c.corners, c.within), (4, 1, false));
@@ -286,18 +395,23 @@ fn built_screens() {
         };
         // 1: m. 93(1)(c) over the limit.
         let _ = app.update(Message::Run("terrain.sheetContours"));
-        let _ = app.update(Message::SheetContours(E::ChosenLayer("kontrol-asan".into())));
-        let _ = app.update(Message::SheetContours(E::Chosen(true)));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::ChosenLayer(
+            "kontrol-asan".into(),
+        ))));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Chosen(true))));
         shot(&mut app, "1-kesit-siniri");
         // 2: Yerleşik alan ticked, the building alone cut.
-        let _ = app.update(Message::SheetContours(E::Chosen(false)));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Chosen(false))));
         for d in ["yol", "sev"] {
-            let _ = app.update(Message::SheetContours(E::Detail(d.into(), false)));
+            let _ = app.update(Message::Road(road::Event::SheetContours(E::Detail(
+                d.into(),
+                false,
+            ))));
         }
-        let _ = app.update(Message::SheetContours(E::Built(true)));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Built(true))));
         shot(&mut app, "2-pencere");
         // 3: drawn, the built-up area close.
-        let _ = app.update(Message::SheetContours(E::Draw));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
         let b = kentos_commands::Bounds { min_x: 175.0, min_y: 95.0, max_x: 345.0, max_y: 225.0 };
         app.navigating(|a| a.zoom_to_bounds(&b));
         shot(&mut app, "3-yerlesik-alan");
@@ -349,7 +463,7 @@ fn chosen_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("terrain.sheetContours"));
-        let _ = app.update(Message::SheetContours(E::Chosen(true)));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Chosen(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -358,7 +472,7 @@ fn chosen_screens() {
         let file = out.join(format!("1-pencere-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::SheetContours(E::Draw));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
         let b = kentos_commands::Bounds { min_x: 50.0, min_y: 45.0, max_x: 115.0, max_y: 150.0 };
         app.navigating(|a| a.zoom_to_bounds(&b));
         snapshot.settle(&mut app, App::view, &mut update);
@@ -394,7 +508,7 @@ fn slope_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("terrain.sheetContours"));
-        let _ = app.update(Message::SheetContours(E::Slopes(true)));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Slopes(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -403,7 +517,7 @@ fn slope_screens() {
         let file = out.join(format!("1-pencere-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::SheetContours(E::Draw));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
         let b = kentos_commands::Bounds { min_x: 70.0, min_y: 22.0, max_x: 130.0, max_y: 84.0 };
         app.navigating(|a| a.zoom_to_bounds(&b));
         snapshot.settle(&mut app, App::view, &mut update);
@@ -432,7 +546,7 @@ fn spot_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("terrain.sheetContours"));
-        let _ = app.update(Message::SheetContours(E::Spots(true)));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Spots(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -441,8 +555,14 @@ fn spot_screens() {
         let file = out.join(format!("1-pencere-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
-        let spot = app.sheet_contours.answer.clone().and_then(Result::ok).and_then(|r| r.spots.first().cloned());
-        let _ = app.update(Message::SheetContours(E::Draw));
+        let spot = app
+            .road
+            .sheet_contours
+            .answer
+            .clone()
+            .and_then(Result::ok)
+            .and_then(|r| r.spots.first().cloned());
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
         if let Some(s) = spot {
             let b = kentos_commands::Bounds { min_x: s.x - 70.0, min_y: s.y - 45.0, max_x: s.x + 70.0, max_y: s.y + 45.0 };
             app.navigating(|a| a.zoom_to_bounds(&b));
@@ -486,7 +606,7 @@ fn screens() {
         let file = out.join(format!("1-pencere-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::SheetContours(E::Draw));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-cizildi-{name}.png"));

@@ -4,6 +4,7 @@
 //! how far (Bilinen noktalar's Taşınma); a typed epoch wins; a box that is no number says so; Kabul et keeps the
 //! measurement epoch in the adjustment's record. And the pictures.
 
+use crate::map;
 use kentos_commands::NetworkEpochFrom;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -37,12 +38,20 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    assert_eq!(app.dialog, Some(Dialog::SurveyNetwork));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+    );
     app
 }
 
 fn answer(app: &App) -> kentos_commands::MapSurveyNetworked {
-    app.survey_network.answer.clone().expect("an answer").expect("adjusted")
+    app.map
+        .survey_network
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("adjusted")
 }
 
 #[test]
@@ -59,18 +68,38 @@ fn the_known_points_go_to_the_measurement_epoch_and_the_record_keeps_it() {
     assert!((m.years - 21.837).abs() < 1e-3 && m.shift[0] < -0.5 && m.shift[1] > 0.15 && m.shift[2] < 0.0, "{m:?}");
     assert!(a.acceptable, "{:?}", a.why);
     // A typed epoch wins over the baselines' times.
-    let _ = app.update(Message::SurveyNetwork(N::Epoch("2026.5".into())));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Epoch(
+        "2026.5".into(),
+    ))));
     let a = answer(&app);
-    assert_eq!((a.epoch_from, a.epoch), (NetworkEpochFrom::Given, Some(2026.5)));
+    assert_eq!(
+        (a.epoch_from, a.epoch),
+        (NetworkEpochFrom::Given, Some(2026.5))
+    );
     assert!((a.moved[0].years - 21.5).abs() < 1e-9);
     // A box that is no number is said, nothing adjusted.
-    let _ = app.update(Message::SurveyNetwork(N::Epoch("abc".into())));
-    let why = app.survey_network.answer.clone().expect("an answer").expect_err("refused");
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Epoch(
+        "abc".into(),
+    ))));
+    let why = app
+        .map
+        .survey_network
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect_err("refused");
     assert!(why.contains("Ölçme epoku “abc” bir sayı değil"), "{why}");
     // Back to the baselines' times; Kabul et keeps the measurement epoch in the record.
-    let _ = app.update(Message::SurveyNetwork(N::Epoch(String::new())));
-    let _ = app.update(Message::SurveyNetwork(N::Accept));
-    let survey = app.document.as_ref().and_then(|d| d.model.map_survey()).cloned().expect("the archive");
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Epoch(
+        String::new(),
+    ))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
+    let survey = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.map_survey())
+        .cloned()
+        .expect("the archive");
     assert_eq!(survey.adjustments.len(), 1);
     assert_eq!(survey.adjustments[0].epoch, Some(t));
     let new = survey.points.iter().filter(|p| p.result.adjustment.as_deref() == Some("da-1")).count();
@@ -100,11 +129,17 @@ fn screens() {
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
-        for (view, file) in [(View::Known, "1-bilinen-noktalar"), (View::Marks, "2-noktalar")] {
-            let _ = app.update(Message::SurveyNetwork(N::View(view)));
+        for (view, file) in [
+            (View::Known, "1-bilinen-noktalar"),
+            (View::Marks, "2-noktalar"),
+        ] {
+            let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(view))));
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -124,7 +159,9 @@ fn opened_case(name: &str) -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::SurveyNetwork(N::Class(crate::survey_network_window::Class::C1)));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Class(
+        crate::survey_network_window::Class::C1,
+    ))));
     app
 }
 
@@ -163,7 +200,9 @@ fn similarity_screens() {
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from("light"))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        let _ = app.update(Message::SurveyNetwork(N::View(View::Known)));
+        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+            View::Known,
+        ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

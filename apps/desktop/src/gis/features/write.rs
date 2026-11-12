@@ -5,6 +5,7 @@
 //! command's plan: how many values change, stay, are left empty and do not fit, the first changes and problems by the
 //! row's place. Yaz writes all or nothing; Uyanları yaz writes the fitting ones.
 
+use crate::gis;
 use std::collections::BTreeMap;
 
 use iced::widget::{Column, row};
@@ -75,7 +76,7 @@ pub enum WriteEvent {
 }
 
 fn msg(e: WriteEvent) -> Message {
-    Message::Features(Event::Write(e))
+    Message::Gis(gis::Event::Features(Event::Write(e)))
 }
 
 /// The clipboard's text as rows of cells: tab between them, a line each (an empty last line dropped).
@@ -238,7 +239,7 @@ impl App {
     }
 
     fn write_preview(&mut self) {
-        let Some(w) = self.features.write.clone() else {
+        let Some(w) = self.gis.features.write.clone() else {
             return;
         };
         let input = self.write_input(&w, WritePolicy::All);
@@ -252,7 +253,7 @@ impl App {
             | CommandResult::NeedsInput { error } => Err(error.message),
             _ => Err("Önizlenemedi.".into()),
         };
-        if let Some(w) = self.features.write.as_mut() {
+        if let Some(w) = self.gis.features.write.as_mut() {
             w.plan = Some(plan);
         }
     }
@@ -278,7 +279,7 @@ impl App {
                 } else {
                     Scope::Selected
                 };
-                self.features.write = Some(WriteWindow {
+                self.gis.features.write = Some(WriteWindow {
                     layer,
                     mode: Mode::Calculate,
                     field,
@@ -287,7 +288,7 @@ impl App {
                     clear: false,
                     plan: None,
                 });
-                self.dialog = Some(Asking::FieldsWrite);
+                self.dialog = Some(Asking::Gis(gis::GisDialogKind::FieldsWrite));
             }
             WriteEvent::Paste => {
                 return iced::clipboard::read().map(|t| msg(WriteEvent::Pasted(t)));
@@ -309,7 +310,7 @@ impl App {
                     self.warn("Panodaki metinden tabloya yazılacak hücre çıkmadı: hücreler sekmeyle ayrılmış olmalı.");
                     return Task::none();
                 }
-                self.features.write = Some(WriteWindow {
+                self.gis.features.write = Some(WriteWindow {
                     layer,
                     mode: Mode::Paste {
                         rows: pasted,
@@ -321,43 +322,43 @@ impl App {
                     clear: false,
                     plan: None,
                 });
-                self.dialog = Some(Asking::FieldsWrite);
+                self.dialog = Some(Asking::Gis(gis::GisDialogKind::FieldsWrite));
                 self.write_preview();
             }
             WriteEvent::Field(f) => {
-                if let Some(w) = self.features.write.as_mut() {
+                if let Some(w) = self.gis.features.write.as_mut() {
                     w.field = f;
                     w.plan = None;
                 }
             }
             WriteEvent::Expression(t) => {
-                if let Some(w) = self.features.write.as_mut() {
+                if let Some(w) = self.gis.features.write.as_mut() {
                     w.expression = t;
                     w.plan = None;
                 }
             }
             WriteEvent::Scope(s) => {
-                if let Some(w) = self.features.write.as_mut() {
+                if let Some(w) = self.gis.features.write.as_mut() {
                     w.scope = s;
                     w.plan = None;
                 }
             }
             WriteEvent::Clear(c) => {
-                if let Some(w) = self.features.write.as_mut() {
+                if let Some(w) = self.gis.features.write.as_mut() {
                     w.clear = c;
                     w.plan = None;
                 }
             }
             WriteEvent::Preview => self.write_preview(),
             WriteEvent::Builder => {
-                let Some(w) = &self.features.write else {
+                let Some(w) = &self.gis.features.write else {
                     return Task::none();
                 };
                 let (layer, value) = (w.layer.clone(), w.expression.clone());
                 return self.open_builder_for_fields_write(&layer, &value);
             }
             WriteEvent::Run(policy) => {
-                let Some(w) = self.features.write.clone() else {
+                let Some(w) = self.gis.features.write.clone() else {
                     return Task::none();
                 };
                 let input = self.write_input(&w, policy);
@@ -367,9 +368,9 @@ impl App {
                 };
                 match fields_write::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, warnings } => {
-                        self.features.write = None;
+                        self.gis.features.write = None;
                         self.dialog = None;
-                        self.features.changed();
+                        self.gis.features.changed();
                         let skipped = if output.invalid > 0 {
                             format!(
                                 "; {} nesnenin değeri kurallara uymadığı için yazılmadı",
@@ -386,7 +387,7 @@ impl App {
                     CommandResult::Failed { error }
                     | CommandResult::Conflict { error }
                     | CommandResult::NeedsInput { error } => {
-                        if let Some(w) = self.features.write.as_mut() {
+                        if let Some(w) = self.gis.features.write.as_mut() {
                             w.plan = Some(Err(error.message));
                         }
                     }
@@ -394,7 +395,7 @@ impl App {
                 }
             }
             WriteEvent::Close => {
-                self.features.write = None;
+                self.gis.features.write = None;
                 self.dialog = None;
             }
         }
@@ -413,7 +414,7 @@ impl App {
     }
 
     pub(crate) fn features_write_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.features.write else {
+        let Some(w) = &self.gis.features.write else {
             return iced::widget::text("").into();
         };
         let mut body = Column::new().spacing(12);

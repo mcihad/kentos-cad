@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::corridor_window::Event as W;
+use crate::road;
 
 /// A road project with `road.corridors.draw`'s drawing: a surface, the main and side alignments, their profiles, two
 /// templates, the superelevation schedules and two corridors.
@@ -18,7 +19,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Corridors(e));
+    let _ = app.update(Message::Road(road::Event::Corridors(e)));
 }
 
 fn model(app: &mut App) -> &mut kentos_domain::Document {
@@ -56,18 +57,33 @@ fn the_slope_plan_is_drawn_in_one_step() {
 fn the_window_makes_a_corridor_and_shows_it_built() {
     let mut app = app();
     let _ = app.update(Message::Run("corridor.new"));
-    assert_eq!(app.dialog, Some(Dialog::Corridors));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Corridors))
+    );
     send(&mut app, W::Name("Kuzey koridoru".into()));
     for (k, v) in [(0, "25"), (1, "25"), (2, "20"), (3, "10")] {
         send(&mut app, W::Field(k, v.into()));
     }
     send(&mut app, W::Add);
     send(&mut app, W::Region(0, 1, "280".into()));
-    let w = app.corridor_window.as_ref().expect("open");
-    let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("builds: {:?}", w.preview.why));
-    assert!(rep.stations.len() > 15 && rep.triangles > 100, "{} km, {} triangles", rep.stations.len(), rep.triangles);
+    let w = app.road.corridor_window.as_ref().expect("open");
+    let rep = w
+        .preview
+        .report
+        .as_ref()
+        .unwrap_or_else(|| panic!("builds: {:?}", w.preview.why));
+    assert!(
+        rep.stations.len() > 15 && rep.triangles > 100,
+        "{} km, {} triangles",
+        rep.stations.len(),
+        rep.triangles
+    );
     send(&mut app, W::Save);
-    assert!(app.corridor_window.is_none(), "Kaydet closes the window");
+    assert!(
+        app.road.corridor_window.is_none(),
+        "Kaydet closes the window"
+    );
     let doc = model(&mut app);
     assert_eq!(doc.road_corridors().len(), 3);
     assert_eq!(doc.road_corridors()[2].regions[0].to, 280.0);
@@ -90,7 +106,7 @@ fn a_saved_corridor_is_drawn_and_a_stale_one_rebound() {
     // A region left without its end is refused and the window stays.
     send(&mut app, W::Add);
     send(&mut app, W::Save);
-    assert!(app.corridor_window.is_some());
+    assert!(app.road.corridor_window.is_some());
 }
 
 /// The window and the slope plan over the drawing, wide and narrow, light and dark; `.run/gui-evidence/yol-y7-*`:
@@ -180,14 +196,21 @@ fn the_window_checks_the_sampling_as_the_shared_case_does() {
     let want = &case["steps"][0]["result"]["output"]["corridors"][0]["sampling"];
     let mut app = app();
     checked(&mut app);
-    let w = app.corridor_window.as_ref().expect("open");
-    let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("builds: {:?}", w.preview.why));
+    let w = app.road.corridor_window.as_ref().expect("open");
+    let rep = w
+        .preview
+        .report
+        .as_ref()
+        .unwrap_or_else(|| panic!("builds: {:?}", w.preview.why));
     let got = rep.sampling.as_ref().expect("checked");
-    assert_eq!((got.measured, got.added, got.changes), (
-        want["measured"].as_u64().unwrap() as u32,
-        want["added"].as_u64().unwrap() as u32,
-        want["changes"].as_u64().unwrap() as u32,
-    ));
+    assert_eq!(
+        (got.measured, got.added, got.changes),
+        (
+            want["measured"].as_u64().unwrap() as u32,
+            want["added"].as_u64().unwrap() as u32,
+            want["changes"].as_u64().unwrap() as u32,
+        )
+    );
     let close = |a: f64, b: &serde_json::Value| (a - b.as_f64().unwrap()).abs() < 1e-6;
     assert!(close(got.before.plan, &want["before"]["plan"]) && close(got.after.height, &want["after"]["height"]), "{got:?}");
     assert!(rep.stations.iter().any(|s| s.why == "refine"));
@@ -202,8 +225,11 @@ fn a_tolerance_without_the_least_step_says_what_to_type() {
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::Field(7, "0,05".into()));
-    let w = app.corridor_window.as_ref().expect("open");
-    assert_eq!(w.preview.why.as_deref(), Some("Kesitleri denetlemek için en kısa adımı da yazın."));
+    let w = app.road.corridor_window.as_ref().expect("open");
+    assert_eq!(
+        w.preview.why.as_deref(),
+        Some("Kesitleri denetlemek için en kısa adımı da yazın.")
+    );
 }
 
 /// Y33.3 (docs/adr/0939): the check typed in the window, its stations added in purple on the plan, wide and narrow,
@@ -284,22 +310,53 @@ fn the_daylights_read_the_shared_case() {
     gentle(&mut app, 12.0);
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
-    assert!(app.corridor_window.as_ref().unwrap().daylights.is_none(), "not read until shown");
+    assert!(
+        app.road
+            .corridor_window
+            .as_ref()
+            .unwrap()
+            .daylights
+            .is_none(),
+        "not read until shown"
+    );
     send(&mut app, W::Field(0, "60".into()));
     send(&mut app, W::Field(1, "60".into()));
     send(&mut app, W::Daylight(true));
     send(&mut app, W::Sensitive("10".into()));
-    let (d, warnings) = app.corridor_window.as_ref().unwrap().daylights.clone().expect("shown").expect("reads");
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.corridors.daylights.json")).expect("cases");
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Yatık şevler 12/1: uzakta, yatık açıyla").expect("the case");
+    let (d, warnings) = app
+        .road
+        .corridor_window
+        .as_ref()
+        .unwrap()
+        .daylights
+        .clone()
+        .expect("shown")
+        .expect("reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.corridors.daylights.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "Yatık şevler 12/1: uzakta, yatık açıyla")
+        .expect("the case");
     let want = &case["steps"][0]["result"]["output"];
     let counts = serde_json::to_value(&d.counts).expect("serialises");
     assert_eq!(counts, want["counts"], "the counts are the command's");
-    assert!((d.worst.as_ref().unwrap().sensitivity - want["worst"]["sensitivity"].as_f64().unwrap()).abs() < 1e-6);
-    assert!(warnings.iter().any(|w| w.code == "corridor_daylight_crossings"));
+    assert!(
+        (d.worst.as_ref().unwrap().sensitivity - want["worst"]["sensitivity"].as_f64().unwrap())
+            .abs()
+            < 1e-6
+    );
+    assert!(
+        warnings
+            .iter()
+            .any(|w| w.code == "corridor_daylight_crossings")
+    );
     send(&mut app, W::Sensitive("sıfır".into()));
-    let why = match app.corridor_window.as_ref().unwrap().daylights.clone() {
+    let why = match app.road.corridor_window.as_ref().unwrap().daylights.clone() {
         Some(Err(why)) => why,
         other => panic!("a threshold that is no number: {other:?}"),
     };
@@ -369,17 +426,35 @@ fn the_protected_areas_read_the_shared_case() {
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::Protected(true));
-    let why = match app.corridor_window.as_ref().unwrap().protected.clone() {
+    let why = match app.road.corridor_window.as_ref().unwrap().protected.clone() {
         Some(Err(why)) => why,
         other => panic!("no layer yet: {other:?}"),
     };
     assert!(why.contains("katman"), "{why}");
     send(&mut app, W::ProtectedLayer("korunan".into()));
-    let (z, warnings) = app.corridor_window.as_ref().unwrap().protected.clone().expect("shown").expect("reads");
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.corridors.protected.json")).expect("cases");
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Ana koridor ve korunan alanlar").expect("the case");
-    let want = case["steps"][0]["result"]["output"]["areas"].as_array().unwrap().clone();
+    let (z, warnings) = app
+        .road
+        .corridor_window
+        .as_ref()
+        .unwrap()
+        .protected
+        .clone()
+        .expect("shown")
+        .expect("reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.corridors.protected.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "Ana koridor ve korunan alanlar")
+        .expect("the case");
+    let want = case["steps"][0]["result"]["output"]["areas"]
+        .as_array()
+        .unwrap()
+        .clone();
     assert_eq!(z.areas.len(), want.len());
     for (a, w) in z.areas.iter().zip(&want) {
         assert!((a.covered - w["covered"].as_f64().unwrap()).abs() < 1e-6, "#{} covered", a.entity);
@@ -388,7 +463,14 @@ fn the_protected_areas_read_the_shared_case() {
     assert!(warnings.iter().any(|w| w.code == "corridor_protected"));
     // Back to the plan: nothing read.
     send(&mut app, W::Daylight(false));
-    assert!(app.corridor_window.as_ref().unwrap().protected.is_none());
+    assert!(
+        app.road
+            .corridor_window
+            .as_ref()
+            .unwrap()
+            .protected
+            .is_none()
+    );
 }
 
 /// The protected areas in Koridor, light and dark: the main corridor's footprint over five areas, the covered ones red;
@@ -447,11 +529,21 @@ fn preflight_app(name: &str) -> App {
 fn the_preflight_reads_the_shared_cases() {
     let mut app = preflight_app("Dar kurp: katlanma ve üst üste binme");
     let _ = app.update(Message::Run("corridor.editor"));
-    let at = app.corridor_window.as_ref().expect("open").rows.iter().position(|r| r.id == "c-3").expect("c-3");
+    let at = app
+        .road
+        .corridor_window
+        .as_ref()
+        .expect("open")
+        .rows
+        .iter()
+        .position(|r| r.id == "c-3")
+        .expect("c-3");
     send(&mut app, W::Choose(at));
     send(&mut app, W::Check(true));
-    let w = app.corridor_window.as_ref().expect("open");
-    let Some(Ok((c, warnings))) = &w.preflight else { panic!("the check reads: {:?}", w.preflight) };
+    let w = app.road.corridor_window.as_ref().expect("open");
+    let Some(Ok((c, warnings))) = &w.preflight else {
+        panic!("the check reads: {:?}", w.preflight)
+    };
     assert!(!c.clear && !c.folds.is_empty() && !c.overlaps.is_empty());
     assert!(c.least.is_some_and(|m| m < 0.0));
     assert!(warnings.iter().any(|x| x.code == "corridor_overlap"));
@@ -460,10 +552,15 @@ fn the_preflight_reads_the_shared_cases() {
     send(&mut app, W::Choose(0));
     send(&mut app, W::Check(true));
     send(&mut app, W::Margin("0,95".into()));
-    let w = app.corridor_window.as_ref().expect("open");
-    let Some(Ok((c, _))) = &w.preflight else { panic!("the check reads") };
+    let w = app.road.corridor_window.as_ref().expect("open");
+    let Some(Ok((c, _))) = &w.preflight else {
+        panic!("the check reads")
+    };
     assert!(c.seams.len() == 1 && !c.seams[0].meets && c.seams[0].step > 0.05);
-    assert!(!c.tight.is_empty(), "a margin of 0.95 finds the curve tight");
+    assert!(
+        !c.tight.is_empty(),
+        "a margin of 0.95 finds the curve tight"
+    );
 }
 
 /// The preflight over the plan: the tight curve light and wide, the main corridor's seam and tight curve dark and
@@ -491,7 +588,15 @@ fn screens_preflight() {
         app.apply_settings();
         let _ = app.update(Message::RibbonTab("corridor"));
         let _ = app.update(Message::Run("corridor.editor"));
-        let at = app.corridor_window.as_ref().expect("open").rows.iter().position(|r| r.id == corridor).expect("the corridor");
+        let at = app
+            .road
+            .corridor_window
+            .as_ref()
+            .expect("open")
+            .rows
+            .iter()
+            .position(|r| r.id == corridor)
+            .expect("the corridor");
         send(&mut app, W::Choose(at));
         send(&mut app, W::Check(true));
         if !margin.is_empty() {
@@ -518,8 +623,10 @@ fn a_slope_transition_closes_the_seam_and_is_written() {
     send(&mut app, W::Choose(0));
     send(&mut app, W::Check(true));
     let seam = |app: &App| {
-        let w = app.corridor_window.as_ref().expect("open");
-        let Some(Ok((c, _))) = &w.preflight else { panic!("the check reads: {:?}", w.preflight) };
+        let w = app.road.corridor_window.as_ref().expect("open");
+        let Some(Ok((c, _))) = &w.preflight else {
+            panic!("the check reads: {:?}", w.preflight)
+        };
         c.seams[0].clone()
     };
     let before = seam(&app);
@@ -597,8 +704,12 @@ const WIDENING_CASE: &str = "Tek eğimli devere bağlı: genişlemenin başı km
 #[test]
 fn the_window_says_the_superelevation_s_stations() {
     let said = |app: &App| {
-        let w = app.corridor_window.as_ref().expect("open");
-        let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("builds: {:?}", w.preview.why));
+        let w = app.road.corridor_window.as_ref().expect("open");
+        let rep = w
+            .preview
+            .report
+            .as_ref()
+            .unwrap_or_else(|| panic!("builds: {:?}", w.preview.why));
         crate::corridor_window::superelevation_words(&rep.stations).unwrap_or_default()
     };
     let mut app = app_of_case(PIVOT_CASE);

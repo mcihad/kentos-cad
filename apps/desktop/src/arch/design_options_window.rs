@@ -9,6 +9,7 @@
 //! set (docs/adr/0809). Each write is one undo step (“Tasarım
 //! seçeneği”); Kapat writes nothing.
 
+use crate::arch;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -86,7 +87,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::DesignOptions(e)
+    Message::Arch(arch::Event::DesignOptions(e))
 }
 
 /// A number with two decimals and a decimal comma, a sign when asked.
@@ -189,6 +190,7 @@ impl App {
     fn design_options_read(&mut self, keep: Option<String>) {
         let (rows, combos) = self.design_options_rows();
         let (combo, combo_name, versus) = self
+            .arch
             .design_options
             .as_ref()
             .map(|w| {
@@ -201,6 +203,7 @@ impl App {
             .and_then(|id| rows.iter().position(|r| r.id == id))
             .unwrap_or(0);
         let name = self
+            .arch
             .design_options
             .as_ref()
             .map(|w| w.name.clone())
@@ -210,7 +213,7 @@ impl App {
             .and_then(|s| s.options.iter().position(|o| o.primary))
             .unwrap_or(0);
         let n = rows.get(chosen).map_or(0, |s| s.options.len());
-        self.design_options = Some(Window {
+        self.arch.design_options = Some(Window {
             rows,
             chosen,
             option,
@@ -235,13 +238,18 @@ impl App {
         }
         let keep = self.selected_option().map(|(s, _)| s);
         self.design_options_read(keep);
-        if let (Some((_, option)), Some(w)) = (self.selected_option(), self.design_options.as_mut())
+        if let (Some((_, option)), Some(w)) =
+            (self.selected_option(), self.arch.design_options.as_mut())
             && let Some(set) = w.rows.get(w.chosen)
         {
-            w.option = set.options.iter().position(|o| o.id == option).unwrap_or(w.option);
+            w.option = set
+                .options
+                .iter()
+                .position(|o| o.id == option)
+                .unwrap_or(w.option);
         }
         self.design_options_preview();
-        self.dialog = Some(Dialog::DesignOptions);
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::DesignOptions));
     }
 
     /// The set and option the first selected object is in.
@@ -255,9 +263,12 @@ impl App {
     }
 
     fn design_options_chosen(&self) -> Option<(String, Option<String>)> {
-        let w = self.design_options.as_ref()?;
+        let w = self.arch.design_options.as_ref()?;
         let set = w.rows.get(w.chosen)?;
-        Some((set.id.clone(), set.options.get(w.option).map(|o| o.id.clone())))
+        Some((
+            set.id.clone(),
+            set.options.get(w.option).map(|o| o.id.clone()),
+        ))
     }
 
     /// The comparison of the two options picked, and the plan of Kabul et with the chosen one.
@@ -265,7 +276,7 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return;
         };
-        let Some(w) = self.design_options.as_ref() else {
+        let Some(w) = self.arch.design_options.as_ref() else {
             return;
         };
         let Some(set) = w.rows.get(w.chosen) else {
@@ -331,7 +342,7 @@ impl App {
             ),
             _ => None,
         };
-        if let Some(w) = self.design_options.as_mut() {
+        if let Some(w) = self.arch.design_options.as_mut() {
             w.compared = compared;
             w.accept = accept;
             w.combos_compared = combos_compared;
@@ -388,7 +399,7 @@ impl App {
         let chosen = self.design_options_chosen();
         match event {
             Event::Choose(i) => {
-                if let Some(w) = self.design_options.as_mut() {
+                if let Some(w) = self.arch.design_options.as_mut() {
                     w.chosen = i;
                     w.option = w
                         .rows
@@ -401,30 +412,31 @@ impl App {
                 self.design_options_preview();
             }
             Event::Option(j) => {
-                if let Some(w) = self.design_options.as_mut() {
+                if let Some(w) = self.arch.design_options.as_mut() {
                     w.option = j;
                 }
                 self.design_options_preview();
             }
             Event::Name(t) => {
-                if let Some(w) = self.design_options.as_mut() {
+                if let Some(w) = self.arch.design_options.as_mut() {
                     w.name = t;
                 }
             }
             Event::CompareA(i) => {
-                if let Some(w) = self.design_options.as_mut() {
+                if let Some(w) = self.arch.design_options.as_mut() {
                     w.compare.0 = i;
                 }
                 self.design_options_preview();
             }
             Event::CompareB(i) => {
-                if let Some(w) = self.design_options.as_mut() {
+                if let Some(w) = self.arch.design_options.as_mut() {
                     w.compare.1 = i;
                 }
                 self.design_options_preview();
             }
             Event::Define => {
                 let name = self
+                    .arch
                     .design_options
                     .as_ref()
                     .map(|w| w.name.trim().to_owned())
@@ -441,8 +453,11 @@ impl App {
                     option: None,
                     uids,
                 }) {
-                    self.say(Level::Success, format!("“{name}” seçenek kümesi tanımlandı; seçim A seçeneği oldu."));
-                    if let Some(w) = self.design_options.as_mut() {
+                    self.say(
+                        Level::Success,
+                        format!("“{name}” seçenek kümesi tanımlandı; seçim A seçeneği oldu."),
+                    );
+                    if let Some(w) = self.arch.design_options.as_mut() {
                         w.name.clear();
                     }
                     self.design_options_read(done.set.map(|s| s.id));
@@ -559,7 +574,7 @@ impl App {
                 self.design_options_read(Some(set));
             }
             Event::Combo(i) => {
-                if let Some(w) = self.design_options.as_mut() {
+                if let Some(w) = self.arch.design_options.as_mut() {
                     if w.versus == i {
                         w.versus = w.combo;
                     }
@@ -568,24 +583,34 @@ impl App {
                 self.design_options_preview();
             }
             Event::Versus(i) => {
-                if let Some(w) = self.design_options.as_mut() {
+                if let Some(w) = self.arch.design_options.as_mut() {
                     w.versus = i;
                 }
                 self.design_options_preview();
             }
             Event::ComboName(t) => {
-                if let Some(w) = self.design_options.as_mut() {
+                if let Some(w) = self.arch.design_options.as_mut() {
                     w.combo_name = t;
                 }
             }
             Event::ComboSave => {
                 let keep = chosen.map(|(s, _)| s);
                 let name = self
+                    .arch
                     .design_options
                     .as_ref()
                     .map(|w| w.combo_name.trim().to_owned())
                     .filter(|n| !n.is_empty())
-                    .unwrap_or_else(|| format!("Teklif {}", self.design_options.as_ref().map_or(0, |w| w.combos.len()) + 1));
+                    .unwrap_or_else(|| {
+                        format!(
+                            "Teklif {}",
+                            self.arch
+                                .design_options
+                                .as_ref()
+                                .map_or(0, |w| w.combos.len())
+                                + 1
+                        )
+                    });
                 if let Some(done) = self.design_options_command(OptionsOperation::SaveCombo {
                     name: name.clone(),
                     id: None,
@@ -594,9 +619,11 @@ impl App {
                     self.say(Level::Success, format!("“{name}” bileşimi kümelerin şimdiki birincilleriyle kaydedildi."));
                     let id = done.combo.map(|c| c.id);
                     self.design_options_read(keep);
-                    if let Some(w) = self.design_options.as_mut() {
+                    if let Some(w) = self.arch.design_options.as_mut() {
                         w.combo_name.clear();
-                        w.combo = id.and_then(|id| w.combos.iter().position(|c| c.id == id)).unwrap_or(w.combo);
+                        w.combo = id
+                            .and_then(|id| w.combos.iter().position(|c| c.id == id))
+                            .unwrap_or(w.combo);
                     }
                     self.design_options_preview();
                 }
@@ -604,6 +631,7 @@ impl App {
             Event::ComboApply | Event::ComboDelete => {
                 let keep = chosen.map(|(s, _)| s);
                 let Some(c) = self
+                    .arch
                     .design_options
                     .as_ref()
                     .and_then(|w| w.combos.get(w.combo).cloned())
@@ -629,18 +657,19 @@ impl App {
                 self.design_options_read(keep);
             }
             Event::Close => {
-                self.design_options = None;
+                self.arch.design_options = None;
                 self.dialog = None;
             }
-            Event::PickFromDrawing => {
-                self.pick_for_window(crate::app::Dialog::DesignOptions, "Tasarım seçeneğinin nesneleri")
-            }
+            Event::PickFromDrawing => self.pick_for_window(
+                crate::app::Dialog::Arch(arch::ArchDialogKind::DesignOptions),
+                "Tasarım seçeneğinin nesneleri",
+            ),
         }
         Task::none()
     }
 
     pub(crate) fn design_options_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.design_options else {
+        let Some(w) = &self.arch.design_options else {
             return iced::widget::text("").into();
         };
         let mut list = Column::new().spacing(4);
@@ -874,8 +903,11 @@ impl App {
             .into()
     }
 
-    pub(crate) fn design_options_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.design_options.is_none() {
+    pub(crate) fn design_options_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
+        if self.arch.design_options.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

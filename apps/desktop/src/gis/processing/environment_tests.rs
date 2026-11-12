@@ -4,6 +4,7 @@
 //! new lattice; a number that does not read keeps the run from starting; a tool that does not take the environment
 //! does not show it and runs as ever.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::{DocumentSnapshotV1, Entity};
@@ -27,11 +28,14 @@ fn app() -> App {
 }
 
 fn value(app: &mut App, name: &str, v: Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 fn env(app: &mut App, e: EnvironmentEvent) {
-    let _ = app.update(Message::Processing(Event::Environment(e)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Environment(e))));
 }
 
 fn uid_on(app: &App, layer: &str) -> String {
@@ -57,7 +61,8 @@ fn a_cell_size_and_a_snap_raster_give_the_result_a_new_lattice() {
     let mut app = app();
     calculator(&mut app, &out);
     assert!(
-        app.processing
+        app.gis
+            .processing
             .dialog
             .as_ref()
             .expect("open")
@@ -95,10 +100,10 @@ fn the_session_keeps_its_environment_and_a_bad_number_stops_the_run() {
     calculator(&mut app, &dir.join("a.tif"));
     env(&mut app, EnvironmentEvent::Area(AreaFrom::View));
     env(&mut app, EnvironmentEvent::Cell("on".into()));
-    let _ = app.update(Message::Processing(Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     // Another raster tool's window takes the session's environment.
     let _ = app.update(Message::Run("processing.run.raster.focalStatistics"));
-    let w = app.processing.dialog.as_ref().expect("open");
+    let w = app.gis.processing.dialog.as_ref().expect("open");
     assert_eq!(
         (w.environment.area, w.environment.cell.as_str()),
         (AreaFrom::View, "on")
@@ -109,7 +114,7 @@ fn the_session_keeps_its_environment_and_a_bad_number_stops_the_run() {
         "{status:?}"
     );
     env(&mut app, EnvironmentEvent::Clear);
-    assert_eq!(app.processing.environment.count(), 0);
+    assert_eq!(app.gis.processing.environment.count(), 0);
 }
 
 #[test]
@@ -118,7 +123,8 @@ fn a_tool_that_does_not_take_it_neither_shows_nor_reads_it() {
     env(&mut app, EnvironmentEvent::Cell("5".into()));
     let _ = app.update(Message::Run("processing.run.attributes.calculate"));
     assert!(
-        !app.processing
+        !app.gis
+            .processing
             .dialog
             .as_ref()
             .expect("open")

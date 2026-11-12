@@ -9,6 +9,7 @@
 //! and how the file is kept; Ekle writes a new layer and the raster on it as
 //! one undo step.
 
+use crate::gis;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -120,7 +121,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Rasters(Rasters::Multidim(e))
+    Message::Gis(gis::Event::Rasters(Rasters::Multidim(e)))
 }
 
 /// A NetCDF file's contents (a NetCDF-4, GRIB file or Zarr store read as one; a file or an address).
@@ -264,13 +265,13 @@ impl App {
 
     /// Raster ekle's NetCDF: this window instead.
     pub(crate) fn multidim_from_raster_add(&mut self, path: PathBuf) -> Task<Message> {
-        self.rasters.add = None;
+        self.gis.rasters.add = None;
         self.multidim_event(Event::Picked(Mode::Grid, Some(vec![path])))
     }
 
     /// Raster ekle's NetCDF or Zarr store at an address: this window, reading it from there (docs/adr/0645 §5).
     pub(crate) fn multidim_from_address(&mut self, url: String) -> Task<Message> {
-        self.rasters.add = None;
+        self.gis.rasters.add = None;
         let name = url
             .trim_end_matches('/')
             .rsplit('/')
@@ -282,7 +283,7 @@ impl App {
             .to_owned();
         let name = if name.is_empty() { url.clone() } else { name };
         let id = self.multidim_open(Mode::Grid, PathBuf::from(&name), Vec::new());
-        let Some(s) = self.rasters.multidim.as_mut() else {
+        let Some(s) = self.gis.rasters.multidim.as_mut() else {
             return Task::none();
         };
         s.address = Some(url);
@@ -310,7 +311,7 @@ impl App {
         } else {
             String::new()
         };
-        self.rasters.multidim = Some(State {
+        self.gis.rasters.multidim = Some(State {
             mode,
             path,
             address: None,
@@ -330,7 +331,7 @@ impl App {
             layer,
             status: None,
         });
-        self.dialog = Some(Asking::Multidim);
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::Multidim));
         id
     }
 
@@ -416,14 +417,14 @@ impl App {
                     Vec::new()
                 };
                 let id = self.multidim_open(mode, main, dats);
-                let Some(s) = self.rasters.multidim.clone() else {
+                let Some(s) = self.gis.rasters.multidim.clone() else {
                     return Task::none();
                 };
                 return self.multidim_read(id, &s);
             }
             Event::Read(id, read) => {
                 let read = *read;
-                if let Some(s) = &mut self.rasters.multidim
+                if let Some(s) = &mut self.gis.rasters.multidim
                     && s.reading == id
                 {
                     if let Ok(r) = &read {
@@ -456,40 +457,40 @@ impl App {
                 }
             }
             Event::Choice(k) => {
-                if let Some(s) = &mut self.rasters.multidim {
+                if let Some(s) = &mut self.gis.rasters.multidim {
                     s.choice = k;
                     s.reset_slice();
                 }
             }
             Event::Slice(k, i) => {
-                if let Some(s) = &mut self.rasters.multidim
+                if let Some(s) = &mut self.gis.rasters.multidim
                     && let Some(v) = s.slice.get_mut(k)
                 {
                     *v = i;
                 }
             }
             Event::Follow => {
-                if let Some(s) = &mut self.rasters.multidim {
+                if let Some(s) = &mut self.gis.rasters.multidim {
                     s.follow = !s.follow;
                 }
             }
             Event::Cell(t) => {
-                if let Some(s) = &mut self.rasters.multidim {
+                if let Some(s) = &mut self.gis.rasters.multidim {
                     s.cell = t;
                 }
             }
             Event::Edges => {
-                if let Some(s) = &mut self.rasters.multidim {
+                if let Some(s) = &mut self.gis.rasters.multidim {
                     s.edges = !s.edges;
                 }
             }
             Event::Start(t) => {
-                if let Some(s) = &mut self.rasters.multidim {
+                if let Some(s) = &mut self.gis.rasters.multidim {
                     s.start = t;
                 }
             }
             Event::ApplyStart => {
-                let Some(s) = self.rasters.multidim.clone() else {
+                let Some(s) = self.gis.rasters.multidim.clone() else {
                     return Task::none();
                 };
                 if !s.start.trim().is_empty()
@@ -503,7 +504,7 @@ impl App {
                     return Task::none();
                 }
                 let id = READS.fetch_add(1, Ordering::Relaxed) + 1;
-                if let Some(m) = &mut self.rasters.multidim {
+                if let Some(m) = &mut self.gis.rasters.multidim {
                     m.reading = id;
                     m.read = None;
                     m.status = None;
@@ -511,27 +512,28 @@ impl App {
                 return self.multidim_read(id, &s);
             }
             Event::Out(t) => {
-                if let Some(s) = &mut self.rasters.multidim {
+                if let Some(s) = &mut self.gis.rasters.multidim {
                     s.out = t;
                 }
             }
             Event::Confirm => {
-                if let Some(s) = &mut self.rasters.multidim {
+                if let Some(s) = &mut self.gis.rasters.multidim {
                     s.confirmed = !s.confirmed;
                 }
             }
             Event::Keep(k) => {
-                if let Some(s) = &mut self.rasters.multidim {
+                if let Some(s) = &mut self.gis.rasters.multidim {
                     s.keep = k;
                 }
             }
             Event::Layer(t) => {
-                if let Some(s) = &mut self.rasters.multidim {
+                if let Some(s) = &mut self.gis.rasters.multidim {
                     s.layer = t;
                 }
             }
             Event::Another => {
                 let mode = self
+                    .gis
                     .rasters
                     .multidim
                     .as_ref()
@@ -540,8 +542,8 @@ impl App {
             }
             Event::Run => self.multidim_run(),
             Event::Close => {
-                self.rasters.multidim = None;
-                if self.dialog == Some(Asking::Multidim) {
+                self.gis.rasters.multidim = None;
+                if self.dialog == Some(Asking::Gis(gis::GisDialogKind::Multidim)) {
                     self.dialog = None;
                 }
             }
@@ -613,7 +615,7 @@ impl App {
 
     /// Ekle: the new layer and the raster on it, one undo step (a 2DM's file written, or embedded, first).
     fn multidim_run(&mut self) {
-        let Some(s) = self.rasters.multidim.clone() else {
+        let Some(s) = self.gis.rasters.multidim.clone() else {
             return;
         };
         let (Some((affine, srid)), Some(info), Some(Ok(read)), Some(item)) = (
@@ -765,7 +767,7 @@ impl App {
                 model.end_group(group);
                 let slots: Vec<kentos_domain::Slot> =
                     output.ids.iter().map(|&i| kentos_domain::Slot(i)).collect();
-                self.rasters.multidim = None;
+                self.gis.rasters.multidim = None;
                 self.dialog = None;
                 self.zoom_to(&slots);
                 let how = if s.keep == Keep::Embedded {
@@ -798,13 +800,13 @@ impl App {
     }
 
     fn multidim_status(&mut self, why: String) {
-        if let Some(s) = &mut self.rasters.multidim {
+        if let Some(s) = &mut self.gis.rasters.multidim {
             s.status = Some(why);
         }
     }
 
     pub(crate) fn multidim_view(&self) -> Element<'_, Message> {
-        let Some(s) = &self.rasters.multidim else {
+        let Some(s) = &self.gis.rasters.multidim else {
             return iced::widget::text("").into();
         };
         let mut body = Column::new().spacing(12);

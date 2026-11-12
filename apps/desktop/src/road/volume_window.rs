@@ -21,6 +21,7 @@
 //! sets), each one undo step, and closes. Cetveli yaz writes the chosen volume's sheet as typed (an Excel workbook, an
 //! OpenDocument spreadsheet or a CSV file, docs/adr/0223's writer). The factors are the user's: nothing is filled in.
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -432,7 +433,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Volumes(event)
+    Message::Road(road::Event::Volumes(event))
 }
 
 fn chosen_row(w: &mut Window) -> Option<&mut Row> {
@@ -451,7 +452,7 @@ impl App {
             return;
         }
         let kept = doc.model.road_volumes().to_vec();
-        self.volume_window = Some(Box::new(Window {
+        self.road.volume_window = Some(Box::new(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
@@ -479,14 +480,14 @@ impl App {
             history: None,
             states: None,
         }));
-        self.dialog = Some(Dialog::Volumes);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Volumes));
         self.refresh_volume();
     }
 
     /// Kübaj hesabı oluştur from the ribbon: the window with a new volume of the first corridor.
     pub(crate) fn new_volume(&mut self) {
         self.open_volumes();
-        if self.volume_window.is_some() {
+        if self.road.volume_window.is_some() {
             let _ = self.volume_event(Event::New);
         }
     }
@@ -498,7 +499,9 @@ impl App {
 
     fn refresh_volume(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.volume_window.as_mut() else { return };
+        let Some(w) = self.road.volume_window.as_mut() else {
+            return;
+        };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
             w.preview = Preview::default();
             return;
@@ -628,7 +631,9 @@ impl App {
 
     pub(crate) fn volume_event(&mut self, event: Event) -> Task<Message> {
         let corridors = self.volume_corridors();
-        let Some(w) = self.volume_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.volume_window.as_mut() else {
+            return Task::none();
+        };
         let mut warning = None;
         match event {
             Event::Choose(i) => {
@@ -806,7 +811,7 @@ impl App {
             }
             Event::Write => return self.write_volume_sheet(),
             Event::Cancel => {
-                self.volume_window = None;
+                self.road.volume_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -845,8 +850,12 @@ impl App {
     /// The chosen volume approved today as it computes, or its approval taken off; then the window reads the saved
     /// volumes again.
     fn approve_volume(&mut self, on: bool) -> Task<Message> {
-        let Some(w) = &self.volume_window else { return Task::none() };
-        let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else { return Task::none() };
+        let Some(w) = &self.road.volume_window else {
+            return Task::none();
+        };
+        let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
+            return Task::none();
+        };
         if !r.def().is_ok_and(|d| w.kept.contains(&d)) {
             self.warn("Önce kübajı kaydedin; kaydedilmiş kübaj onaylanır.".to_owned());
             return Task::none();
@@ -866,12 +875,12 @@ impl App {
         let result = road_volumes_approve::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
             let kept = doc_volumes(self);
-            if let Some(w) = self.volume_window.as_mut() {
+            if let Some(w) = self.road.volume_window.as_mut() {
                 w.rows = kept.iter().map(Row::of).collect();
                 w.kept = kept;
             }
             self.refresh_volume();
-            if let Some(w) = self.volume_window.as_mut() {
+            if let Some(w) = self.road.volume_window.as_mut() {
                 w.approval_note.clear();
             }
             self.say(Level::Success, if on { "Kübaj onaylandı; önceki onayı varsa geçmişte." } else { "Kübajın onayı kaldırıldı; onay geçmişte." });
@@ -881,7 +890,9 @@ impl App {
 
     /// The chosen volume's sheet, as typed, written where the user says.
     fn write_volume_sheet(&mut self) -> Task<Message> {
-        let Some(w) = &self.volume_window else { return Task::none() };
+        let Some(w) = &self.road.volume_window else {
+            return Task::none();
+        };
         let Some(report) = &w.preview.report else {
             let why = w.preview.why.clone().unwrap_or_else(|| "Bir kübaj seçin.".into());
             self.warn(format!("Cetvel yazılamaz: {why}"));
@@ -891,7 +902,9 @@ impl App {
     }
 
     fn save_volumes(&mut self) -> Task<Message> {
-        let Some(w) = self.volume_window.clone() else { return Task::none() };
+        let Some(w) = self.road.volume_window.clone() else {
+            return Task::none();
+        };
         let mut defs = Vec::new();
         for r in &w.rows {
             match r.def() {
@@ -928,7 +941,7 @@ impl App {
                 return Task::none();
             }
         }
-        self.volume_window = None;
+        self.road.volume_window = None;
         self.dialog = None;
         self.say(Level::Success, "Kübaj hesapları kaydedildi.");
         Task::none()
@@ -936,7 +949,7 @@ impl App {
 
     pub(crate) fn road_volume_view(&self) -> Element<'_, Message> {
         use kentos_ui::widget::{Banner, Form};
-        let Some(w) = &self.volume_window else {
+        let Some(w) = &self.road.volume_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -1359,7 +1372,7 @@ impl App {
     }
 
     pub(crate) fn volume_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.volume_window else {
+        let Some(w) = &self.road.volume_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

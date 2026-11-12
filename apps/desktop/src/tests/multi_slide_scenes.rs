@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use iced::Point;
 use kentos_domain::Slot;
 use kentos_render_wgpu::Vec2;
@@ -46,11 +47,11 @@ fn open(app: &mut App, b: [f64; 4]) {
 }
 
 fn set(app: &mut App, key: &'static str, value: &str) {
-    let _ = app.update(Message::ToolSetting(Commit {
+    let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
         tool: "door",
         key,
         value: value.into(),
-    }));
+    })));
 }
 
 /// S3, S4 and P3 along the wall.
@@ -93,11 +94,14 @@ fn types(app: &mut App) {
     plan(app);
     run(app, "arch.openingTypes");
     if let Some(i) = app
+        .arch
         .opening_types
         .as_ref()
         .and_then(|w| w.uses.iter().position(|u| u.kind.id == "s3"))
     {
-        let _ = app.update(Message::OpeningTypes(crate::opening_types_window::Event::Choose(i)));
+        let _ = app.update(Message::Arch(arch::Event::OpeningTypes(
+            crate::opening_types_window::Event::Choose(i),
+        )));
     }
 }
 

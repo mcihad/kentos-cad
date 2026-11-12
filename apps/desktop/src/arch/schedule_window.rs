@@ -4,6 +4,7 @@
 //! headings and subtotals, its numbers as shown or exact). Opened from Öznitelikler's Çizelge row. A units schedule's
 //! filter is its groups' level, building, wing and kind (docs/adr/0795); its own fields are written to the program.
 
+use crate::arch;
 use std::path::PathBuf;
 
 use iced::widget::{Column, button, container, row};
@@ -87,7 +88,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Schedule(e)
+    Message::Arch(arch::Event::Schedule(e))
 }
 
 /// A filter list with `v` flipped: added, or taken away (none when it empties).
@@ -185,18 +186,18 @@ impl App {
             Event::Open(ref uid) | Event::Export(ref uid) => {
                 let export = matches!(event, Event::Export(_));
                 let uid = uid.clone();
-                self.schedule = self.schedule_window_of(&uid, export);
-                if self.schedule.is_some() {
+                self.arch.schedule = self.schedule_window_of(&uid, export);
+                if self.arch.schedule.is_some() {
                     self.dialog = Some(if export {
-                        Dialog::ScheduleExport
+                        Dialog::Arch(arch::ArchDialogKind::ScheduleExport)
                     } else {
-                        Dialog::Schedule
+                        Dialog::Arch(arch::ArchDialogKind::Schedule)
                     });
                 }
                 return Task::none();
             }
             Event::Cancel => {
-                self.schedule = None;
+                self.arch.schedule = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -208,7 +209,7 @@ impl App {
             }
             _ => {}
         }
-        let Some(w) = self.schedule.as_mut() else {
+        let Some(w) = self.arch.schedule.as_mut() else {
             return Task::none();
         };
         match event {
@@ -301,9 +302,9 @@ impl App {
             }
             _ => {}
         }
-        if let Some(w) = self.schedule.clone() {
+        if let Some(w) = self.arch.schedule.clone() {
             let preview = self.schedule_preview(&w);
-            if let Some(s) = self.schedule.as_mut() {
+            if let Some(s) = self.arch.schedule.as_mut() {
                 s.preview = preview;
             }
         }
@@ -312,7 +313,7 @@ impl App {
 
     /// Tamam: the change as one `cad.schedules.edit` step.
     fn schedule_apply(&mut self) -> Task<Message> {
-        let Some(w) = self.schedule.clone() else {
+        let Some(w) = self.arch.schedule.clone() else {
             return Task::none();
         };
         let Some(doc) = self.document.as_mut() else {
@@ -336,13 +337,13 @@ impl App {
                     Level::Success,
                     format!("Çizelge değişti: {rows} satır. Geri al ile dönülür."),
                 );
-                self.schedule = None;
+                self.arch.schedule = None;
                 self.dialog = None;
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => {
-                if let Some(s) = self.schedule.as_mut() {
+                if let Some(s) = self.arch.schedule.as_mut() {
                     s.preview = Err(error.message);
                 }
             }
@@ -353,7 +354,7 @@ impl App {
 
     /// Yaz…: the path asked (a trace gives it through `Picker::File`).
     fn schedule_write_ask(&mut self) -> Task<Message> {
-        let Some(w) = &self.schedule else {
+        let Some(w) = &self.arch.schedule else {
             return Task::none();
         };
         if let Picker::File(path) = &self.picker {
@@ -382,7 +383,8 @@ impl App {
     }
 
     fn schedule_written(&mut self, path: Option<PathBuf>) {
-        let (Some(path), Some(w), Some(doc)) = (path, self.schedule.clone(), &self.document) else {
+        let (Some(path), Some(w), Some(doc)) = (path, self.arch.schedule.clone(), &self.document)
+        else {
             return;
         };
         let input = ExportTable {
@@ -404,7 +406,7 @@ impl App {
                 for note in out.notes {
                     self.say(Level::Info, note);
                 }
-                self.schedule = None;
+                self.arch.schedule = None;
                 self.dialog = None;
             }
             Err(e) => self.announce(Level::Error, format!("Çizelge yazılamadı. {}", e.message)),
@@ -468,7 +470,7 @@ impl App {
     }
 
     pub(crate) fn schedule_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.schedule else {
+        let Some(w) = &self.arch.schedule else {
             return label::body("").into();
         };
         if w.export {

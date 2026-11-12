@@ -35,6 +35,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_domain::Slot;
 use serde_json::json;
 
@@ -687,13 +688,15 @@ fn dimensions_around_undone(app: &mut App) {
 fn style_renamed(app: &mut App) {
     room(app, 50.0);
     run(app, "arch.wallStyles");
-    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Choose(
-        Some("kentos-dis-duvar-25".into()),
+    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+        crate::wall_styles::Event::Choose(Some("kentos-dis-duvar-25".into())),
     )));
-    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Name(
-        "Dış duvar 25 QA".into(),
+    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+        crate::wall_styles::Event::Name("Dış duvar 25 QA".into()),
     )));
-    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Save));
+    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+        crate::wall_styles::Event::Save,
+    )));
     app.selection.set([Slot(1)]);
 }
 

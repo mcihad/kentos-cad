@@ -6,6 +6,7 @@
 //! The connections themselves, their file and how they are tried are `kentos_postgis`'s (`connections`, `probe`):
 //! nothing here but the windows. Nobody types a connection string.
 
+use crate::gis;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -223,7 +224,7 @@ pub enum Event {
 }
 
 pub(crate) fn msg(e: Event) -> Message {
-    Message::Db(e)
+    Message::Gis(gis::Event::Db(e))
 }
 
 /// Runs `work` on a thread of its own and brings its answer back as a message.
@@ -240,9 +241,9 @@ pub(crate) fn off_thread<T: Send + 'static>(
 impl App {
     pub(crate) fn db_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::New(then) => self.db_editor = Some(Editor::new(then)),
+            Event::New(then) => self.gis.db_editor = Some(Editor::new(then)),
             Event::Edit(name, then) => match self.db_store.get(&name) {
-                Some(c) => self.db_editor = Some(Editor::of(&c, then)),
+                Some(c) => self.gis.db_editor = Some(Editor::of(&c, then)),
                 None => self.output(format!("“{name}” bağlantısı artık yok.")),
             },
             Event::Duplicate(name) => {
@@ -253,7 +254,7 @@ impl App {
                     // The copy is a new connection: its saved password comes with it when kept.
                     e.password = c.password.clone().unwrap_or_default();
                     e.kept = false;
-                    self.db_editor = Some(e);
+                    self.gis.db_editor = Some(e);
                 }
             }
             Event::AskRemove(name) => self.db_removing = Some(name),
@@ -266,7 +267,7 @@ impl App {
                             if let Some(c) = gone {
                                 connections::forget(&c);
                             }
-                            self.sources.forget_connection(&name);
+                            self.gis.sources.forget_connection(&name);
                             self.output(format!("“{name}” bağlantısı silindi; bu bağlantıyla bağlanmış katmanlar çizimde kalır."));
                         }
                         Err(why) => self.error(why),
@@ -288,7 +289,7 @@ impl App {
             Event::PublicOnly => self.with_editor(|e| e.public_only = !e.public_only),
             Event::Geometryless => self.with_editor(|e| e.geometryless = !e.geometryless),
             Event::PasteToggle => {
-                if let Some(e) = &mut self.db_editor {
+                if let Some(e) = &mut self.gis.db_editor {
                     e.paste = match e.paste.take() {
                         Some(_) => None,
                         None => Some(String::new()),
@@ -297,14 +298,14 @@ impl App {
                 }
             }
             Event::Paste(t) => {
-                if let Some(e) = &mut self.db_editor {
+                if let Some(e) = &mut self.gis.db_editor {
                     e.paste = Some(t);
                     e.paste_problem = None;
                 }
             }
             Event::PasteApply => self.paste_into_editor(),
             Event::Test => {
-                let Some(e) = &mut self.db_editor else {
+                let Some(e) = &mut self.gis.db_editor else {
                     return Task::none();
                 };
                 let (c, port) = e.connection();
@@ -330,7 +331,7 @@ impl App {
                 );
             }
             Event::Tested(generation, result) => {
-                let Some(e) = &mut self.db_editor else {
+                let Some(e) = &mut self.gis.db_editor else {
                     return Task::none();
                 };
                 if e.generation != generation {
@@ -346,23 +347,23 @@ impl App {
                 e.tested = Some(result);
             }
             Event::Save => return self.save_connection(),
-            Event::Close => self.db_editor = None,
+            Event::Close => self.gis.db_editor = None,
             Event::Asked(t) => {
-                if let Some(a) = &mut self.db_password {
+                if let Some(a) = &mut self.gis.db_password {
                     a.password = t;
                 }
             }
             Event::AskKeep => {
-                if let Some(a) = &mut self.db_password {
+                if let Some(a) = &mut self.gis.db_password {
                     a.keep = !a.keep;
                 }
             }
             Event::AskSubmit => {
-                let Some(a) = &mut self.db_password else {
+                let Some(a) = &mut self.gis.db_password else {
                     return Task::none();
                 };
                 let Some(c) = self.db_store.get(&a.connection) else {
-                    self.db_password = None;
+                    self.gis.db_password = None;
                     return Task::none();
                 };
                 if a.password.is_empty() {
@@ -379,7 +380,7 @@ impl App {
             }
             Event::AskTried(generation, result) => return self.password_tried(generation, result),
             Event::AskClose => {
-                if let Some(a) = self.db_password.take() {
+                if let Some(a) = self.gis.db_password.take() {
                     // The list that waited for it says why it stays empty.
                     let why = Diagnosis {
                         problem: Problem::PasswordNeeded,
@@ -453,7 +454,7 @@ impl App {
     }
 
     fn with_editor(&mut self, change: impl FnOnce(&mut Editor)) {
-        if let Some(e) = &mut self.db_editor {
+        if let Some(e) = &mut self.gis.db_editor {
             change(e);
             e.changed();
         }
@@ -462,7 +463,9 @@ impl App {
     /// Adresten doldur: the pasted address's or connection string's fields into the window, its password into the
     /// password field (never into the address).
     fn paste_into_editor(&mut self) {
-        let Some(e) = &mut self.db_editor else { return };
+        let Some(e) = &mut self.gis.db_editor else {
+            return;
+        };
         let Some(text) = e.paste.clone() else { return };
         match connections::parse(&text) {
             Ok(parsed) => {
@@ -493,7 +496,7 @@ impl App {
     }
 
     fn save_connection(&mut self) -> Task<Message> {
-        let Some(e) = &mut self.db_editor else {
+        let Some(e) = &mut self.gis.db_editor else {
             return Task::none();
         };
         e.tried = true;
@@ -514,9 +517,9 @@ impl App {
         let renamed = e.previous.as_ref().filter(|p| **p != c.name).cloned();
         let then = e.then;
         let new = e.previous.is_none();
-        self.db_editor = None;
+        self.gis.db_editor = None;
         if let Some(old) = renamed {
-            self.sources.forget_connection(&old);
+            self.gis.sources.forget_connection(&old);
         }
         self.output(format!(
             "“{}” bağlantısı {}: {}.",
@@ -571,19 +574,20 @@ impl App {
         for why in left {
             self.say(Level::Warn, why);
         }
-        self.sources.open_databases();
+        self.gis.sources.open_databases();
     }
 
     /// The password `connection` needs, asked for `retry`, with why.
     pub(crate) fn ask_db_password(&mut self, connection: &str, reason: String, retry: Retry) {
         if self
+            .gis
             .db_password
             .as_ref()
             .is_some_and(|a| a.connection == connection)
         {
             return;
         }
-        self.db_password = Some(PasswordAsk {
+        self.gis.db_password = Some(PasswordAsk {
             connection: connection.to_owned(),
             password: String::new(),
             keep: false,
@@ -599,7 +603,7 @@ impl App {
         generation: u64,
         result: Result<Arc<Catalog>, Diagnosis>,
     ) -> Task<Message> {
-        let Some(a) = &mut self.db_password else {
+        let Some(a) = &mut self.gis.db_password else {
             return Task::none();
         };
         if a.generation != generation {
@@ -613,7 +617,7 @@ impl App {
                 Task::none()
             }
             other => {
-                let Some(a) = self.db_password.take() else {
+                let Some(a) = self.gis.db_password.take() else {
                     return Task::none();
                 };
                 if other.is_ok()
@@ -660,10 +664,10 @@ impl App {
                 msg(Event::KeepIt),
             ));
         }
-        if let Some(a) = &self.db_password {
+        if let Some(a) = &self.gis.db_password {
             return Some(self.password_view(a));
         }
-        self.db_editor.as_ref().map(|e| self.editor_view(e))
+        self.gis.db_editor.as_ref().map(|e| self.editor_view(e))
     }
 
     fn password_view<'a>(&'a self, a: &'a PasswordAsk) -> Element<'a, Message> {

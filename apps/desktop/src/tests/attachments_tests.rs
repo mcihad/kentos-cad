@@ -4,6 +4,7 @@
 //! Konumlu fotoğraflar over the EXIF fixtures. Bilgi's clicks are the shared
 //! trace's (fixtures/interaction/v1/identify.json). Test code only.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::{AttachmentKind, Entity};
@@ -278,7 +279,7 @@ fn the_layer_card_window_writes_through_its_command() {
     let mut app = scene();
     app.selection.set([Slot(10)]);
     let _ = app.open_layer_info(Some("foto".to_owned()));
-    assert_eq!(app.dialog, Some(Dialog::LayerInfo));
+    assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::LayerInfo)));
     assert_eq!(
         app.dialog_title().as_deref(),
         Some(crate::layer_info::TITLE)

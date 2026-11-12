@@ -17,6 +17,7 @@
 //!
 //! A filter is the layer's view, as its eye: a locked layer takes one.
 
+use crate::gis;
 use std::time::Duration;
 
 use iced::widget::{Column, button, container, row, text};
@@ -91,7 +92,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::LayerFilter(event)
+    Message::Gis(gis::Event::LayerFilter(event))
 }
 
 impl Window {
@@ -181,8 +182,8 @@ impl App {
             turn: 0,
         };
         self.layer_filter_check(&mut w, true);
-        self.layer_filter = Some(w);
-        self.dialog = Some(Dialog::LayerFilter);
+        self.gis.layer_filter = Some(w);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerFilter));
         iced::widget::operation::focus(expression_id())
     }
 
@@ -250,14 +251,14 @@ impl App {
     }
 
     pub(crate) fn layer_filter_event(&mut self, event: Event) -> Task<Message> {
-        let Some(mut w) = self.layer_filter.take() else {
+        let Some(mut w) = self.gis.layer_filter.take() else {
             return Task::none();
         };
         let mut later = Task::none();
         match event {
             Event::Layer(i) => {
                 let Some(id) = self.filter_layers().get(i).cloned() else {
-                    self.layer_filter = Some(w);
+                    self.gis.layer_filter = Some(w);
                     return Task::none();
                 };
                 let own = self
@@ -289,7 +290,7 @@ impl App {
                 }
             }
             Event::Builder => {
-                self.layer_filter = Some(w);
+                self.gis.layer_filter = Some(w);
                 return self.open_builder_for_layer_filter();
             }
             Event::Take => {
@@ -319,7 +320,7 @@ impl App {
                 return Task::none();
             }
         }
-        self.layer_filter = Some(w);
+        self.gis.layer_filter = Some(w);
         later
     }
 
@@ -511,13 +512,14 @@ impl App {
 
     /// The expression field's text, which the builder edits.
     pub(crate) fn layer_filter_expression(&self) -> Option<(String, String)> {
-        self.layer_filter
+        self.gis
+            .layer_filter
             .as_ref()
             .map(|w| (w.layer.clone(), w.expression.clone()))
     }
 
     pub(crate) fn layer_filter_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(doc)) = (&self.layer_filter, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.layer_filter, &self.document) else {
             return text("").into();
         };
         let layers = self.filter_layers();
@@ -618,7 +620,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.layer_filter else {
+        let Some(w) = &self.gis.layer_filter else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

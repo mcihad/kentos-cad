@@ -3,6 +3,7 @@
 //! number, as the case says; Alan gir chooses Kanalizasyon from the list and types the door's number, both are written
 //! with the values the rules give; a number too long stays refused with the rule's sentence. And its pictures.
 
+use crate::gis;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -24,12 +25,20 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("map.featuresReconcile"));
-    assert_eq!(app.dialog, Some(Dialog::FeaturesReconcile));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::FeaturesReconcile))
+    );
     app
 }
 
 fn answer(app: &App) -> kentos_commands::FeaturesReconciled {
-    app.features_reconcile.answer.clone().expect("an answer").expect("reconciled")
+    app.gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled")
 }
 
 fn group(app: &App, class: &str) -> usize {
@@ -37,7 +46,7 @@ fn group(app: &App, class: &str) -> usize {
 }
 
 fn send(app: &mut App, e: R) {
-    let _ = app.update(Message::FeaturesReconcile(e));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(e)));
 }
 
 #[test]
@@ -79,9 +88,12 @@ fn a_value_the_rules_refuse_stays_with_its_reason() {
     send(&mut app, R::Fill(door));
     // Nothing typed: said, nothing decided.
     send(&mut app, R::FillApply);
-    assert!(app.features_reconcile.decisions.is_empty());
+    assert!(app.gis.features_reconcile.decisions.is_empty());
     assert!(crate::files_testing::last_said(&app).contains("bir değer yazın"));
-    send(&mut app, R::Typed("KapiNo".into(), "1234567890123456789012345".into()));
+    send(
+        &mut app,
+        R::Typed("KapiNo".into(), "1234567890123456789012345".into()),
+    );
     send(&mut app, R::FillApply);
     let g = &answer(&app).groups[door];
     assert!(!g.writes);

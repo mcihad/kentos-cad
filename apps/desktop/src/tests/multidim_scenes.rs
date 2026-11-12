@@ -16,6 +16,7 @@
 //!
 //! Mesh hesaplayıcı's file is written into a scratch folder. Test code only.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::DocumentSnapshotV1;
@@ -78,7 +79,10 @@ fn view_end(s: &mut Snapshot, app: &mut App) {
 fn window(app: &mut App, tool: &'static str, values: &[(&str, Value)]) {
     let _ = app.update(Message::Run(tool));
     for (name, v) in values {
-        let _ = app.update(Message::Processing(Event::Value((*name).into(), v.clone())));
+        let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+            (*name).into(),
+            v.clone(),
+        ))));
     }
 }
 
@@ -91,7 +95,7 @@ fn ran(app: &mut App, tool: &'static str, values: &[(&str, Value)], close: bool)
         "{tool}: {status:?}"
     );
     if close {
-        let _ = app.update(Message::Processing(Event::Close));
+        let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     }
 }
 
@@ -170,7 +174,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                     crate::rasters::multidim::Event::Choice(1),
                     crate::rasters::multidim::Event::Edges,
                 ] {
-                    let task = app.update(Message::Rasters(crate::rasters::Event::Multidim(e)));
+                    let task = app.update(Message::Gis(gis::Event::Rasters(
+                        crate::rasters::Event::Multidim(e),
+                    )));
                     crate::files_testing::drive(app, task);
                 }
             },
@@ -182,7 +188,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             |app| {
                 opened(app);
                 command(app, "time.slider");
-                let _ = app.update(Message::Time(crate::temporal::Event::Go(8)));
+                let _ = app.update(Message::Gis(gis::Event::Time(crate::temporal::Event::Go(
+                    8,
+                ))));
             },
             view,
         ),

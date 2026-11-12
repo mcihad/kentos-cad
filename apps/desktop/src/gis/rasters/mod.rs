@@ -5,6 +5,7 @@
 //! raster pass's tiles from `tiles`, read and coloured off the interface's
 //! thread.
 
+use crate::gis;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -340,7 +341,7 @@ impl crate::app::App {
                     tiles::values_at(&key, origin, i, j).map(|v| (layer, v))
                 })
                 .collect();
-            crate::app::Message::Rasters(Event::Values(found))
+            crate::app::Message::Gis(gis::Event::Rasters(Event::Values(found)))
         })
     }
 }

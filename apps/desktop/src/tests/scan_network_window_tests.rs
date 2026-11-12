@@ -3,6 +3,8 @@
 //! answer; Eşit weights — the unweighted case's; the links and loops tables; Dönüşüm uygula on the chosen scan with its
 //! matrix; two scans are said and nothing opens. And its pictures.
 
+use crate::gis;
+use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -63,19 +65,34 @@ fn three() -> App {
     let mut app = opened();
     app.selection.set(vec![Slot(1), Slot(2), Slot(3)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    assert_eq!(app.dialog, Some(Dialog::ScanNetwork));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::ScanNetwork))
+    );
     app
 }
 
 fn answer(app: &App) -> Value {
-    serde_json::to_value(app.scan_network.answer.clone().expect("an answer").expect("adjusted")).expect("json")
+    serde_json::to_value(
+        app.map
+            .scan_network
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("adjusted"),
+    )
+    .expect("json")
 }
 
 #[test]
 fn three_scans_with_hubers_weights_are_the_shared_case() {
     let app = three();
-    assert_eq!(app.scan_network.weights, Weights::Huber);
-    near(&answer(&app), &case_output("üç tarama, A sabit, Huber"), "Huber");
+    assert_eq!(app.map.scan_network.weights, Weights::Huber);
+    near(
+        &answer(&app),
+        &case_output("üç tarama, A sabit, Huber"),
+        "Huber",
+    );
     let (_, rows) = app.scan_network_lines();
     assert_eq!(rows.len(), 3, "a row a scan");
     assert_eq!(rows[0][1], "Sabit");
@@ -84,11 +101,13 @@ fn three_scans_with_hubers_weights_are_the_shared_case() {
 #[test]
 fn equal_weights_and_the_tables() {
     let mut app = three();
-    let _ = app.update(Message::ScanNetwork(N::Weights(Weights::Plain)));
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Weights(
+        Weights::Plain,
+    ))));
     near(&answer(&app), &case_output("ağırlıksız"), "plain");
-    let _ = app.update(Message::ScanNetwork(N::Show(Show::Links)));
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Show(Show::Links))));
     assert_eq!(app.scan_network_lines().1.len(), 3, "three links");
-    let _ = app.update(Message::ScanNetwork(N::Show(Show::Loops)));
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Show(Show::Loops))));
     let (_, rows) = app.scan_network_lines();
     assert_eq!(rows.len(), 1, "one loop");
     assert!(rows[0][0].contains(" → "), "{:?}", rows[0]);
@@ -97,15 +116,42 @@ fn equal_weights_and_the_tables() {
 #[test]
 fn donusum_uygula_takes_the_chosen_scan_with_its_matrix() {
     let mut app = three();
-    let r = app.scan_network.answer.clone().expect("an answer").expect("adjusted");
-    let chosen = app.scan_network.chosen.clone();
-    let scan = r.scans.iter().find(|s| s.uid == chosen).expect("the chosen scan");
-    let _ = app.update(Message::ScanNetwork(N::Apply));
-    assert_eq!(app.dialog, Some(Dialog::Processing));
-    let window = app.processing.dialog.as_ref().expect("the tool's window");
+    let r = app
+        .map
+        .scan_network
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("adjusted");
+    let chosen = app.map.scan_network.chosen.clone();
+    let scan = r
+        .scans
+        .iter()
+        .find(|s| s.uid == chosen)
+        .expect("the chosen scan");
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Apply)));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Processing))
+    );
+    let window = app
+        .gis
+        .processing
+        .dialog
+        .as_ref()
+        .expect("the tool's window");
     assert_eq!(window.tool.id, "pointcloud.transform");
-    assert_eq!(window.values.get("matrix"), Some(&Value::from(crate::register_window::matrix_text(&scan.matrix))));
-    assert_eq!(app.selection.ids(), [Slot(2)], "B, the chosen scan, is the tool's input");
+    assert_eq!(
+        window.values.get("matrix"),
+        Some(&Value::from(crate::register_window::matrix_text(
+            &scan.matrix
+        )))
+    );
+    assert_eq!(
+        app.selection.ids(),
+        [Slot(2)],
+        "B, the chosen scan, is the tool's input"
+    );
 }
 
 /// docs/adr/5100: Nesnede tut keeps the chosen scan's matrix on its object (its file not written) and adjusts the
@@ -113,17 +159,42 @@ fn donusum_uygula_takes_the_chosen_scan_with_its_matrix() {
 #[test]
 fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
     let mut app = three();
-    let r = app.scan_network.answer.clone().expect("an answer").expect("adjusted");
-    let chosen = app.scan_network.chosen.clone();
-    let scan = r.scans.iter().find(|s| s.uid == chosen).expect("the chosen scan").clone();
-    let _ = app.update(Message::ScanNetwork(N::Keep));
+    let r = app
+        .map
+        .scan_network
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("adjusted");
+    let chosen = app.map.scan_network.chosen.clone();
+    let scan = r
+        .scans
+        .iter()
+        .find(|s| s.uid == chosen)
+        .expect("the chosen scan")
+        .clone();
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Keep)));
     let placed = match app.document.as_ref().expect("a drawing").model.get(Slot(2)) {
         Some(kentos_commands::Entity::PointCloud(c)) => c.cloud.sources[0].pose.expect("its place"),
         other => panic!("not a cloud: {other:?}"),
     };
-    near(&serde_json::to_value(placed).expect("json"), &serde_json::to_value(scan.matrix).expect("json"), "pose");
-    let again = app.scan_network.answer.clone().expect("an answer").expect("adjusted");
-    let left = again.scans.iter().find(|s| s.uid == chosen).expect("the chosen scan");
+    near(
+        &serde_json::to_value(placed).expect("json"),
+        &serde_json::to_value(scan.matrix).expect("json"),
+        "pose",
+    );
+    let again = app
+        .map
+        .scan_network
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("adjusted");
+    let left = again
+        .scans
+        .iter()
+        .find(|s| s.uid == chosen)
+        .expect("the chosen scan");
     let t = left.translation.iter().map(|v| v * v).sum::<f64>().sqrt();
     let w = left.rotation.iter().map(|v| v * v).sum::<f64>().sqrt();
     println!("left: {:.3} mm, {:.2e} rad (was {:.1} mm)", t * 1000.0, w, scan.translation.iter().map(|v| v * v).sum::<f64>().sqrt() * 1000.0);
@@ -135,7 +206,7 @@ fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
 #[test]
 fn five_rounds_are_the_shared_case() {
     let mut app = three();
-    let _ = app.update(Message::ScanNetwork(N::Rounds(5.0)));
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Rounds(5.0))));
     let got = answer(&app);
     let want = case_output("dış döngü: üç tarama");
     near(&got["rounds"], &want["rounds"], "rounds");
@@ -196,14 +267,14 @@ fn screens() {
     let _ = app.update(Message::Run("pointcloud.network"));
     shoot(&mut app, wide, "1-taramalar-acik-genis.png");
     // 2: its links.
-    let _ = app.update(Message::ScanNetwork(N::Show(Show::Links)));
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Show(Show::Links))));
     shoot(&mut app, wide, "2-baglar-acik-genis.png");
     // 3: three scans' loop, dark and narrow.
     let mut app = opened();
     set(&mut app, "dark", narrow);
     app.selection.set(vec![Slot(1), Slot(2), Slot(3)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let _ = app.update(Message::ScanNetwork(N::Show(Show::Loops)));
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Show(Show::Loops))));
     shoot(&mut app, narrow, "3-donguler-koyu-dar.png");
     // 4: its place in the ribbon: a cloud selected, the point cloud tab beside Tarama kaydı.
     let mut app = opened();

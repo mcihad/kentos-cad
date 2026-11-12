@@ -4,6 +4,7 @@
 //! recorded as made from the design (Seçimi türet offers it, never for the design's own lines) and goes out of date
 //! when the design changes. And the pictures.
 
+use crate::map;
 use kentos_commands::{WorkState as S, WorkStatus as W};
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -36,7 +37,7 @@ pub(crate) fn opened() -> App {
 }
 
 pub(crate) fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::MapWork(e));
+    let _ = app.update(Message::Map(map::Event::MapWork(e)));
 }
 
 pub(crate) fn tree(app: &App) -> kentos_commands::MapWorkTree {

@@ -3,6 +3,7 @@
 //! and İstisna yap), a note when the results may be stale or rules were
 //! not checked, and the table of findings.
 
+use crate::gis;
 use iced::widget::{Column, button, container, row, space};
 use iced::{Background, Center, Element, Fill, Length};
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -30,7 +31,7 @@ const BAR_WIDTH: f32 = 1560.0;
 const END_WIDTH: f32 = 960.0;
 
 fn msg(e: Event) -> Message {
-    Message::Topology(e)
+    Message::Gis(gis::Event::Topology(e))
 }
 
 /// The icon of each fix in Düzelt ▾ (the operations they are; the web's `FIX_ICONS`).
@@ -107,7 +108,7 @@ impl App {
         let checked = self.topology_checked();
         let stale = self.topology_stale();
         let shown = self.topology_shown();
-        let chosen = &self.topology.selected;
+        let chosen = &self.gis.topology.selected;
         // The bar on one line where it fits, else its end on a second (the web's wrapping bar).
         let bar = iced::widget::responsive(move |room| self.topology_bar(room.width))
             .height(Length::Shrink);
@@ -134,7 +135,11 @@ impl App {
                     "topologyCheck",
                     texts::RECHECK,
                     texts::RECHECK_HINT,
-                    self.topology.running.is_none().then(|| msg(Event::Recheck)),
+                    self.gis
+                        .topology
+                        .running
+                        .is_none()
+                        .then(|| msg(Event::Recheck)),
                 )
             });
             container(
@@ -185,7 +190,7 @@ impl App {
             texts::NO_RULES.to_owned()
         } else {
             match checked {
-                None if self.topology.running.is_some() => plan::checking(rules),
+                None if self.gis.topology.running.is_some() => plan::checking(rules),
                 None => plan::not_checked(rules),
                 Some(c) if c.findings.is_empty() && c.g.incomplete.is_empty() => {
                     plan::no_findings(c.g.rules.len(), c.g.drawn)
@@ -256,7 +261,7 @@ impl App {
             .reveal(first)
             .empty(empty);
         // A check going on (docs/adr/0756): what it does, how far it has come, Durdur.
-        let running = self.topology.running.as_ref().map(|r| {
+        let running = self.gis.topology.running.as_ref().map(|r| {
             let share = r.shown.clamp(0.0, 1.0);
             container(
                 row![
@@ -337,7 +342,7 @@ impl App {
         let checked = self.topology_checked();
         let stale = self.topology_stale();
         let shown = self.topology_shown();
-        let chosen = &self.topology.selected;
+        let chosen = &self.gis.topology.selected;
 
         // The bar's start: the check, the rules, one rule, the filter.
         let names = self.topology_rule_names();
@@ -350,6 +355,7 @@ impl App {
             }
         }));
         let picked = self
+            .gis
             .topology
             .rule
             .filter(|&r| r < names.len())
@@ -359,7 +365,7 @@ impl App {
         });
         let filter = Segmented::new(
             [Filter::Open, Filter::Exception, Filter::All],
-            self.topology.filter,
+            self.gis.topology.filter,
             |f| msg(Event::Filter(f)),
         )
         .compact();
@@ -388,7 +394,7 @@ impl App {
                     .iter()
                     .map(|k| {
                         let label = self.topology_fix_label(f, k);
-                        match self.topology.previews.iter().find(|(p, _)| p == k) {
+                        match self.gis.topology.previews.iter().find(|(p, _)| p == k) {
                             Some((_, Ok(words))) => {
                                 (*k, label, (!words.is_empty()).then(|| words.clone()), true)
                             }
@@ -453,7 +459,7 @@ impl App {
                 "topologyCheck",
                 texts::CHECK,
                 texts::CHECK_HINT,
-                (rules > 0 && self.topology.running.is_none()).then(|| msg(Event::Check))
+                (rules > 0 && self.gis.topology.running.is_none()).then(|| msg(Event::Check))
             ),
             bar_button(
                 "topologyRules",
@@ -481,7 +487,7 @@ impl App {
         );
         let reason = tip(
             container(
-                kentos_ui::widget::text_field(texts::REASON, &self.topology.reason)
+                kentos_ui::widget::text_field(texts::REASON, &self.gis.topology.reason)
                     .on_input(|t| msg(Event::Reason(t))),
             )
             .width(Length::Fixed(typography::scaled(200.0))),

@@ -6,6 +6,7 @@
 //! edge, a parcel. The steps of the web's `edgematch` scenes (shots.mjs),
 //! and their pictures.
 
+use crate::gis;
 use kentos_commands::Entity;
 use kentos_geometry_core::ops::edgematch::{Meet, Method};
 
@@ -30,7 +31,7 @@ fn app_with_edge_drawing() -> App {
 }
 
 fn calc(app: &mut App, e: Calc) {
-    let _ = app.update(Message::Calc(e));
+    let _ = app.update(Message::Gis(gis::Event::Calc(e)));
 }
 
 fn edge(app: &mut App, e: Event) {
@@ -48,8 +49,8 @@ fn opened() -> App {
     app.viewport.camera.center = kentos_interaction::Vec2::new(EDGE_X, 4420075.0);
     app.viewport.camera.scale = 2.0;
     let _ = app.run("transform.edgematch");
-    assert_eq!(app.dialog, Some(Asking::Calc));
-    assert_eq!(app.calc.open, Some(Window::Edgematch));
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
+    assert_eq!(app.gis.calc.open, Some(Window::Edgematch));
     app
 }
 
@@ -81,7 +82,8 @@ fn pick_border(app: &mut App) {
 }
 
 fn said(app: &App) -> Vec<String> {
-    app.calc
+    app.gis
+        .calc
         .edgematch
         .summary_lines()
         .into_iter()
@@ -119,7 +121,7 @@ fn ends_on_edge(app: &App) -> usize {
 #[test]
 fn the_window_finds_the_scenes_links() {
     let app = opened();
-    let form = &app.calc.edgematch;
+    let form = &app.gis.calc.edgematch;
     assert_eq!(form.source.as_deref(), Some("pafta1"));
     assert_eq!(form.adjacent.as_deref(), Some("pafta2"));
     assert_eq!(form.scope, Scope::Layer, "nothing is selected");
@@ -151,14 +153,14 @@ fn the_window_finds_the_scenes_links() {
 fn kullan_leaves_a_link_out() {
     let mut app = opened();
     calc(&mut app, Calc::Cell(3, USE, "0".into()));
-    let form = &app.calc.edgematch;
+    let form = &app.gis.calc.edgematch;
     assert_eq!(form.mark(3), Some(Mark::Off));
     assert_eq!(said(&app)[0], "4 bağ bulundu; 3 bağ kullanılacak.");
     assert_eq!(form.changes.len(), 3);
     // Another distance finds the links again; the one left out stays out.
     edge(&mut app, Event::Distance("0.6".into()));
-    assert_eq!(app.calc.edgematch.get(3, USE), "0");
-    assert_eq!(app.calc.edgematch.changes.len(), 3);
+    assert_eq!(app.gis.calc.edgematch.get(3, USE), "0");
+    assert_eq!(app.gis.calc.edgematch.changes.len(), 3);
 }
 
 /// Sınır shown on the drawing: the window steps aside, the edge picked
@@ -176,10 +178,18 @@ fn the_ends_meet_on_the_border_in_one_step() {
         app.session.prompt().text()
     );
     app.cancel();
-    assert_eq!(app.dialog, Some(Asking::Calc), "Esc: the window comes back");
-    assert!(app.calc.edgematch.border.is_none(), "nothing picked");
+    assert_eq!(
+        app.dialog,
+        Some(Asking::Gis(gis::GisDialogKind::Calc)),
+        "Esc: the window comes back"
+    );
+    assert!(app.gis.calc.edgematch.border.is_none(), "nothing picked");
     pick_border(&mut app);
-    assert_eq!(app.dialog, Some(Asking::Calc), "the window comes back");
+    assert_eq!(
+        app.dialog,
+        Some(Asking::Gis(gis::GisDialogKind::Calc)),
+        "the window comes back"
+    );
     assert!(app.selection.is_empty(), "the selection as it was");
     let border = slot_named(&app, "Ad", "Pafta kenarı");
     let uid = app
@@ -188,7 +198,7 @@ fn the_ends_meet_on_the_border_in_one_step() {
         .and_then(|d| d.model.uid(border))
         .expect("an id");
     assert_eq!(
-        app.calc.edgematch.border,
+        app.gis.calc.edgematch.border,
         Some(uid.to_string()),
         "the sheets' edge"
     );
@@ -218,13 +228,13 @@ fn the_ends_meet_on_the_border_in_one_step() {
 fn sinirda_needs_a_border() {
     let mut app = opened();
     edge(&mut app, Event::Meet(Meet::Border));
-    assert_eq!(app.calc.edgematch.meet, Meet::Adjacent);
+    assert_eq!(app.gis.calc.edgematch.meet, Meet::Adjacent);
     pick_border(&mut app);
     edge(&mut app, Event::Meet(Meet::Border));
-    assert_eq!(app.calc.edgematch.meet, Meet::Border);
+    assert_eq!(app.gis.calc.edgematch.meet, Meet::Border);
     edge(&mut app, Event::ClearBorder);
-    assert_eq!(app.calc.edgematch.meet, Meet::Adjacent);
-    assert!(app.calc.edgematch.border.is_none());
+    assert_eq!(app.gis.calc.edgematch.meet, Meet::Adjacent);
+    assert!(app.gis.calc.edgematch.border.is_none());
 }
 
 /// Göster: the window steps aside, the link's two lines are selected, the
@@ -240,8 +250,8 @@ fn goster_looks_at_a_link_and_comes_back() {
         "Kenar eşleme: 2. bağ, aralık 104.4 mm [Pencereye dön (tıklama, Enter ya da Esc)]"
     );
     app.cancel();
-    assert_eq!(app.dialog, Some(Asking::Calc));
-    assert_eq!(app.calc.open, Some(Window::Edgematch));
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
+    assert_eq!(app.gis.calc.open, Some(Window::Edgematch));
     assert!(app.selection.is_empty(), "the selection as it was");
 }
 
@@ -275,13 +285,13 @@ fn a_search_distance_of_nothing_is_said() {
     let mut app = opened();
     edge(&mut app, Event::Distance("0".into()));
     assert_eq!(
-        app.calc.edgematch.summary_lines(),
+        app.gis.calc.edgematch.summary_lines(),
         [(
             Line::Warn,
             "Arama uzaklığı sıfırdan büyük bir uzunluk olmalı (metre).".to_owned()
         )]
     );
-    assert!(app.calc.edgematch.changes.is_empty());
+    assert!(app.gis.calc.edgematch.changes.is_empty());
     edge(&mut app, Event::Distance("0.5".into()));
     edge(&mut app, Event::Adjacent("pafta1".into()));
     assert_eq!(
@@ -295,7 +305,12 @@ fn a_search_distance_of_nothing_is_said() {
 fn the_report_lists_the_settings_and_the_links() {
     let app = opened();
     let doc = app.document.as_ref().expect("open");
-    let lines = app.calc.edgematch.report(&doc.model, 0).expect("a report");
+    let lines = app
+        .gis
+        .calc
+        .edgematch
+        .report(&doc.model, 0)
+        .expect("a report");
     assert_eq!(lines[0], ["Kenar eşleme"]);
     assert_eq!(lines[1], ["Kaynak", "Pafta 1"]);
     assert_eq!(lines[2], ["Komşu", "Pafta 2"]);

@@ -2,6 +2,7 @@
 //! `road.profiles.check` as the shared cases do.
 
 use crate::app::{App, Dialog, Message};
+use crate::arch;
 use crate::design_check_window::{Event as W, Read};
 
 const ALIGNMENTS: &str = include_str!("../../../../fixtures/commands/v1/road.alignments.check.json");
@@ -22,11 +23,11 @@ fn case(text: &str, name: &str) -> serde_json::Value {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::DesignCheck(e));
+    let _ = app.update(Message::Arch(arch::Event::DesignCheck(e)));
 }
 
 fn read(app: &App) -> Read {
-    match &app.design_check_window.as_ref().expect("open").preview {
+    match &app.arch.design_check_window.as_ref().expect("open").preview {
         Some(Ok(r)) => r.clone(),
         other => panic!("read: {other:?}"),
     }
@@ -42,11 +43,22 @@ fn alignment_rules(app: &mut App, values: [&str; 7]) {
 #[test]
 fn the_window_checks_an_alignment_and_a_profile() {
     let mut app = check_app();
-    let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
+    let before = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .revision()
+        .to_string();
     let _ = app.update(Message::Run("alignment.check"));
-    assert!(matches!(app.dialog, Some(Dialog::DesignCheck)));
+    assert!(matches!(
+        app.dialog,
+        Some(Dialog::Arch(arch::ArchDialogKind::DesignCheck))
+    ));
     send(&mut app, W::Preview);
-    assert!(matches!(&app.design_check_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("kural")));
+    assert!(
+        matches!(&app.arch.design_check_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("kural"))
+    );
     // Every rule of the shared case at once.
     alignment_rules(&mut app, ["180", "120", "50", "100", "60", "60", "1.2"]);
     send(&mut app, W::Kinks(true));
@@ -64,10 +76,29 @@ fn the_window_checks_an_alignment_and_a_profile() {
     send(&mut app, W::Preview);
     let Read::Profile(p) = read(&app) else { panic!("a profile") };
     let want = &case(PROFILES, "Hepsi birden")["result"]["output"];
-    assert_eq!(p.findings.len(), want["findings"].as_array().expect("findings").len());
-    assert!(app.design_check_window.as_ref().expect("open").warnings.iter().any(|w| w.contains("tasarım kurallarına uymuyor")));
+    assert_eq!(
+        p.findings.len(),
+        want["findings"].as_array().expect("findings").len()
+    );
+    assert!(
+        app.arch
+            .design_check_window
+            .as_ref()
+            .expect("open")
+            .warnings
+            .iter()
+            .any(|w| w.contains("tasarım kurallarına uymuyor"))
+    );
     send(&mut app, W::Close);
-    assert_eq!(app.document.as_ref().expect("a drawing").model.revision().to_string(), before);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .revision()
+            .to_string(),
+        before
+    );
 }
 
 /// Tasarım denetimi on the reverse pair and on the profile, wide and narrow, light and dark;

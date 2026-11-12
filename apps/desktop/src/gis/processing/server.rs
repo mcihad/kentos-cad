@@ -54,12 +54,12 @@ impl App {
 
     /// Whether the window's run goes to the server: the place chosen and in reach.
     pub(crate) fn processing_at_server(&self) -> bool {
-        let Some(window) = &self.processing.dialog else {
+        let Some(window) = &self.gis.processing.dialog else {
             return false;
         };
-        let targets = window.targets(&self.processing.registry, &self.server_place());
+        let targets = window.targets(&self.gis.processing.registry, &self.server_place());
         let choice = effective_choice(
-            Choice::read(self.processing.memory.target(&window.tool.id)),
+            Choice::read(self.gis.processing.memory.target(&window.tool.id)),
             &targets.available,
         );
         choice == Some(Choice::At(kentos_processing::Target::Server))
@@ -68,7 +68,10 @@ impl App {
     /// The job the window's values ask for, as `cad.processing.run` takes them: the tool and its values, the objects
     /// chosen (persistent ids), the box on screen, and where the result goes. None for a model (it runs here).
     pub(crate) fn processing_server_input(&self) -> Option<ProcessingJobInput> {
-        let (doc, window) = (self.document.as_ref()?, self.processing.dialog.as_ref()?);
+        let (doc, window) = (
+            self.document.as_ref()?,
+            self.gis.processing.dialog.as_ref()?,
+        );
         if window.tool.id.starts_with(MODEL_PREFIX) {
             return None;
         }
@@ -99,7 +102,7 @@ impl App {
     pub(super) fn processing_server_run(&mut self) -> Task<Message> {
         // The server job does not take the analysis environment yet (docs/adr/0643): said, not dropped.
         if matches!(self.processing_environment(), Ok(Some(_)) | Err(_)) {
-            if let Some(window) = &mut self.processing.dialog {
+            if let Some(window) = &mut self.gis.processing.dialog {
                 window.status = RunStatus::Invalid(
                     "Analiz ortamı sunucu işine gitmiyor; aracı bu bilgisayarda çalıştırın ya da ortamı temizleyin."
                         .to_owned(),
@@ -108,7 +111,7 @@ impl App {
             return Task::none();
         }
         let Some(input) = self.processing_server_input() else {
-            if let Some(window) = &mut self.processing.dialog {
+            if let Some(window) = &mut self.gis.processing.dialog {
                 window.status = RunStatus::Error(
                     "Modeller sunucuda çalışmaz; adımlarını tek tek çalıştırın ya da modeli bu bilgisayarda çalıştırın."
                         .to_owned(),
@@ -116,7 +119,7 @@ impl App {
             }
             return Task::none();
         };
-        if let Some(window) = &mut self.processing.dialog {
+        if let Some(window) = &mut self.gis.processing.dialog {
             window.status = RunStatus::Asked("Sunucu işi isteniyor…".to_owned());
         }
         if self.cloud.live.is_some() {
@@ -141,11 +144,12 @@ impl App {
         let id = self.cloud.next_id();
         // A failed ask is sent again with the same request id, so it makes one job whatever the retries.
         let request = self
+            .gis
             .processing
             .server_request
             .get_or_insert_with(server_jobs::request_id)
             .clone();
-        self.processing.server_asked = Some(id);
+        self.gis.processing.server_asked = Some(id);
         Task::perform(
             client.create_server_job(
                 tenant,
@@ -162,15 +166,15 @@ impl App {
         id: u64,
         result: Result<ServerJob, ApiFailure>,
     ) -> Task<Message> {
-        if self.processing.server_asked != Some(id) {
+        if self.gis.processing.server_asked != Some(id) {
             return Task::none();
         }
-        self.processing.server_asked = None;
+        self.gis.processing.server_asked = None;
         match result {
             Ok(job) => {
-                self.processing.server_request = None;
+                self.gis.processing.server_request = None;
                 let what = server_jobs::kind_label(&job);
-                if let Some(window) = &mut self.processing.dialog {
+                if let Some(window) = &mut self.gis.processing.dialog {
                     window.status = RunStatus::Asked(format!(
                         "Sunucu işi istendi: {what}. Sunucuda çalışır; pencereyi kapatsanız da sürer."
                     ));
@@ -180,7 +184,7 @@ impl App {
             Err(failure) => {
                 // The request id stays: asking again gives the same job if the server did make it.
                 let why = format!("Sunucu işi istenemedi: {}", reason(&failure));
-                if let Some(window) = &mut self.processing.dialog {
+                if let Some(window) = &mut self.gis.processing.dialog {
                     window.status = RunStatus::Error(why);
                 }
             }
@@ -198,8 +202,8 @@ impl App {
         else {
             return Task::none();
         };
-        self.processing.dialog = None;
-        self.processing.batch = None;
+        self.gis.processing.dialog = None;
+        self.gis.processing.batch = None;
         self.dialog = None;
         self.open_catalog_at(Some((project, Tab::Jobs)))
     }

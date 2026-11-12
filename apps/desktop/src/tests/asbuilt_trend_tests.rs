@@ -4,6 +4,7 @@
 //! summary the count of each state; a warning not below its alarm and a confidence that is no number are said. And its
 //! pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 
@@ -75,7 +76,7 @@ fn typed(app: &mut App) {
         events.push(A::Trend(C::Alarm(k, alarm.into())));
     }
     for e in events {
-        let _ = app.update(Message::Asbuilt(e));
+        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
     }
 }
 
@@ -84,7 +85,13 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
     let mut app = opened();
     let _ = app.update(Message::Run("asbuilt.check"));
     typed(&mut app);
-    let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .map
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     let all = cases();
     let step = &case(&all, "doğru ve eşikler birlikte")["steps"][0];
     let within = step["within"].as_f64().expect("the case's tolerance");
@@ -104,29 +111,81 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
     assert!(crate::asbuilt_trend::cells(m3)[2].starts_with("0,0000 ±"), "{:?}", crate::asbuilt_trend::cells(m3));
     assert_eq!((cells[6].as_str(), cells[7].as_str()), ("doğu, kuzey", "Alarm (yatay, yatay hız)"));
     let m4 = r.tracks.iter().find(|t| t.name == "M4").expect("M4");
-    assert_eq!(crate::asbuilt_trend::cells(m4)[6..], ["yok".to_owned(), "Olağan".to_owned()]);
+    assert_eq!(
+        crate::asbuilt_trend::cells(m4)[6..],
+        ["yok".to_owned(), "Olağan".to_owned()]
+    );
     // The movements' table is a choice away, and choosing it checks nothing again.
-    assert_eq!(app.asbuilt.trend.view, crate::asbuilt_trend::View::Line);
-    let _ = app.update(Message::Asbuilt(A::Trend(C::View(crate::asbuilt_trend::View::Series))));
-    assert_eq!(app.asbuilt.trend.view, crate::asbuilt_trend::View::Series);
-    let _ = app.update(Message::Asbuilt(A::Trend(C::View(crate::asbuilt_trend::View::Line))));
+    assert_eq!(app.map.asbuilt.trend.view, crate::asbuilt_trend::View::Line);
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::View(
+        crate::asbuilt_trend::View::Series,
+    )))));
+    assert_eq!(
+        app.map.asbuilt.trend.view,
+        crate::asbuilt_trend::View::Series
+    );
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::View(
+        crate::asbuilt_trend::View::Line,
+    )))));
     // A warning not below its alarm is the command's refusal, said in the window.
-    let _ = app.update(Message::Asbuilt(A::Trend(C::Warning(2, "0,06".into()))));
-    let said = app.asbuilt.answer.clone().expect("an answer").expect_err("refused");
-    assert!(said.contains("Yatay hızın uyarı eşiği alarm eşiğinden küçük olmalı."), "{said}");
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Warning(
+        2,
+        "0,06".into(),
+    )))));
+    let said = app
+        .map
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect_err("refused");
+    assert!(
+        said.contains("Yatay hızın uyarı eşiği alarm eşiğinden küçük olmalı."),
+        "{said}"
+    );
     // A confidence that is no number is the window's.
-    let _ = app.update(Message::Asbuilt(A::Trend(C::Warning(2, "0,015".into()))));
-    let _ = app.update(Message::Asbuilt(A::Trend(C::Confidence("yüzde".into()))));
-    let said = app.asbuilt.answer.clone().expect("an answer").expect_err("refused");
-    assert!(said.contains("Güven düzeyi “yüzde” bir sayı değil."), "{said}");
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Warning(
+        2,
+        "0,015".into(),
+    )))));
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Confidence(
+        "yüzde".into(),
+    )))));
+    let said = app
+        .map
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect_err("refused");
+    assert!(
+        said.contains("Güven düzeyi “yüzde” bir sayı değil."),
+        "{said}"
+    );
     // The line off and the boxes empty: the series as before, no line, no state.
-    let _ = app.update(Message::Asbuilt(A::Trend(C::On(false))));
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::On(false)))));
     for k in 0..4 {
-        let _ = app.update(Message::Asbuilt(A::Trend(C::Warning(k, String::new()))));
-        let _ = app.update(Message::Asbuilt(A::Trend(C::Alarm(k, String::new()))));
+        let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Warning(
+            k,
+            String::new(),
+        )))));
+        let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Alarm(
+            k,
+            String::new(),
+        )))));
     }
-    let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
-    assert!(r.tracks.iter().all(|t| t.fit.is_none() && t.state.is_none() && t.exceeded.is_empty()));
+    let r = app
+        .map
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    assert!(
+        r.tracks
+            .iter()
+            .all(|t| t.fit.is_none() && t.state.is_none() && t.exceeded.is_empty())
+    );
     assert!(crate::asbuilt_trend::line(&r.tracks).is_none());
 }
 

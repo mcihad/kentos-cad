@@ -1,5 +1,6 @@
 //! Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4): the window writes through `road.terrains`, and its pictures.
 
+use crate::road;
 use kentos_domain::Slot;
 
 use crate::app::{App, Dialog, Message};
@@ -20,7 +21,7 @@ fn app(work: &str) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Terrains(e));
+    let _ = app.update(Message::Road(road::Event::Terrains(e)));
 }
 
 /// The boundary of the shared drawing: its tenth object.
@@ -29,7 +30,10 @@ const VOID: Slot = Slot(11);
 
 fn made(app: &mut App) {
     let _ = app.update(Message::Run("terrain.new"));
-    assert_eq!(app.dialog, Some(Dialog::Terrains));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Terrains))
+    );
     send(app, W::PointLayer("zemin".into()));
     send(app, W::BreaklineLayer("kirik".into()));
     app.selection.set([BOUNDARY]);
@@ -44,7 +48,10 @@ fn made(app: &mut App) {
 fn the_window_makes_a_surface_and_accepts_it_again() {
     let mut app = app("road");
     made(&mut app);
-    assert!(app.terrain_window.is_none(), "Kaydet closes the window");
+    assert!(
+        app.road.terrain_window.is_none(),
+        "Kaydet closes the window"
+    );
     let doc = &app.document.as_ref().expect("a drawing").model;
     let road = doc.settings().road.clone().expect("road settings");
     assert_eq!(road.surfaces.len(), 1);
@@ -101,8 +108,11 @@ fn landxml_comes_in_as_a_surface() {
 fn an_architecture_project_has_no_surfaces() {
     let mut app = app("architecture");
     let _ = app.update(Message::Run("terrain.surfaces"));
-    assert!(app.terrain_window.is_none());
-    assert_ne!(app.dialog, Some(Dialog::Terrains));
+    assert!(app.road.terrain_window.is_none());
+    assert_ne!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Terrains))
+    );
 }
 
 /// docs/adr/1520: a Harita project makes, accepts and draws a surface as a Yol project does; the Arazi tab offers the
@@ -261,7 +271,11 @@ fn the_surface_is_edited_by_picks_and_kaydet_writes_the_edits() {
     send(&mut app, W::EditTool(EditTool::AddPoint));
     assert!(app.dialog.is_none(), "the window steps aside for the pick");
     assert!(app.terrain_picked(at(25.0, 25.0)));
-    assert_eq!(app.dialog, Some(Dialog::Terrains), "and comes back");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Terrains)),
+        "and comes back"
+    );
     send(&mut app, W::EditZ("103,5".into()));
     send(&mut app, W::EditTool(EditTool::SetHeight));
     assert!(app.terrain_picked(at(21.2, 23.9)));
@@ -273,19 +287,43 @@ fn the_surface_is_edited_by_picks_and_kaydet_writes_the_edits() {
     // Esc: none.
     send(&mut app, W::EditTool(EditTool::FlipEdge));
     assert!(app.terrain_picked(None));
-    assert!(!app.terrain_picked(at(1.0, 1.0)), "no pick is awaited any more");
-    let w = app.terrain_window.as_ref().expect("the window");
+    assert!(
+        !app.terrain_picked(at(1.0, 1.0)),
+        "no pick is awaited any more"
+    );
+    let w = app.road.terrain_window.as_ref().expect("the window");
     let edits = w.chosen_def().expect("a surface").edits.clone();
     assert_eq!(edits.len(), 3, "{edits:?}");
-    assert_eq!(edits[0], SurfaceEdit::AddPoint { x: 25.0, y: 25.0, z: 104.5 });
-    assert_eq!(edits[1], SurfaceEdit::SetHeight { x: 21.0, y: 24.0, z: 103.5 });
+    assert_eq!(
+        edits[0],
+        SurfaceEdit::AddPoint {
+            x: 25.0,
+            y: 25.0,
+            z: 104.5
+        }
+    );
+    assert_eq!(
+        edits[1],
+        SurfaceEdit::SetHeight {
+            x: 21.0,
+            y: 24.0,
+            z: 103.5
+        }
+    );
     assert!(matches!(edits[2], SurfaceEdit::RemoveTriangle { .. }));
     let report = w.edit_report.as_ref().expect("made with its edits");
     assert_eq!(report.figures.as_ref().map(|f| f.removed), Some(1));
     assert!(report.left.iter().all(|l| l.role != "edits"), "{:?}", report.left);
     // Sonuncuyu kaldır, then the triangle again.
     send(&mut app, W::EditUndo);
-    assert_eq!(app.terrain_window.as_ref().and_then(|w| w.chosen_def()).map(|d| d.edits.len()), Some(2));
+    assert_eq!(
+        app.road
+            .terrain_window
+            .as_ref()
+            .and_then(|w| w.chosen_def())
+            .map(|d| d.edits.len()),
+        Some(2)
+    );
     send(&mut app, W::EditTool(EditTool::RemoveTriangle));
     assert!(app.terrain_picked(at(6.0, 10.0)));
     send(&mut app, W::Save);
@@ -343,7 +381,11 @@ fn screens_edits() {
         send(&mut app, W::EditZ("104,5".into()));
         send(&mut app, W::EditTool(EditTool::AddPoint));
         pick(&mut app, 25.0, 25.0);
-        assert_eq!(app.dialog, Some(Dialog::Terrains), "the pick came back through the tool");
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Road(road::RoadDialogKind::Terrains)),
+            "the pick came back through the tool"
+        );
         send(&mut app, W::EditZ("103,5".into()));
         send(&mut app, W::EditTool(EditTool::SetHeight));
         pick(&mut app, 21.2, 23.9);
@@ -352,8 +394,13 @@ fn screens_edits() {
         send(&mut app, W::EditTool(EditTool::RemoveTriangle));
         pick(&mut app, 30.0, 26.0);
         // An edge put in that a later source would cross is said, not dropped: here one crossing the breakline.
-        if let Some(w) = app.terrain_window.as_mut() {
-            w.push_edit(kentos_commands::SurfaceEdit::AddEdge { ax: 21.0, ay: 24.0, bx: 10.0, by: 5.0 });
+        if let Some(w) = app.road.terrain_window.as_mut() {
+            w.push_edit(kentos_commands::SurfaceEdit::AddEdge {
+                ax: 21.0,
+                ay: 24.0,
+                bx: 10.0,
+                by: 5.0,
+            });
         }
         app.refresh_edit_report();
         send(&mut app, W::EditZ(String::new()));
@@ -401,7 +448,14 @@ fn pad_app_keeping(work: &str, keep: &[&str]) -> App {
 
 /// The window's row of the surface named so.
 fn row_of(app: &App, name: &str) -> usize {
-    app.terrain_window.as_ref().expect("the window").kept().iter().position(|k| k.name == name).expect("a surface")
+    app.road
+        .terrain_window
+        .as_ref()
+        .expect("the window")
+        .kept()
+        .iter()
+        .position(|k| k.name == name)
+        .expect("a surface")
 }
 
 #[test]
@@ -416,16 +470,37 @@ fn a_saved_surface_is_pasted_into_another_and_kaydet_writes_the_paste() {
     send(&mut app, W::Pane(true));
     // Nothing chosen yet: Yüzey yapıştır says so.
     send(&mut app, W::Paste);
-    assert!(app.terrain_window.as_ref().and_then(|w| w.chosen_def()).is_some_and(|d| d.edits.is_empty()));
+    assert!(
+        app.road
+            .terrain_window
+            .as_ref()
+            .and_then(|w| w.chosen_def())
+            .is_some_and(|d| d.edits.is_empty())
+    );
     // Dolgu by its name, as a trace does.
-    let pick = app.terrain_control(Control::Pick(PASTE_FROM, "Dolgu")).expect("the box").expect("a message");
+    let pick = app
+        .terrain_control(Control::Pick(PASTE_FROM, "Dolgu"))
+        .expect("the box")
+        .expect("a message");
     let _ = app.update(pick);
-    let press = app.terrain_control(Control::Press(PASTE)).expect("the button").expect("a message");
+    let press = app
+        .terrain_control(Control::Press(PASTE))
+        .expect("the button")
+        .expect("a message");
     let _ = app.update(press);
-    let w = app.terrain_window.as_ref().expect("the window");
-    assert_eq!(w.chosen_def().expect("a surface").edits, vec![SurfaceEdit::Paste { terrain: "t-8".into() }]);
+    let w = app.road.terrain_window.as_ref().expect("the window");
+    assert_eq!(
+        w.chosen_def().expect("a surface").edits,
+        vec![SurfaceEdit::Paste {
+            terrain: "t-8".into()
+        }]
+    );
     let report = w.edit_report.as_ref().expect("made with its edits");
-    assert!(report.left.iter().all(|l| l.role != "edits"), "{:?}", report.left);
+    assert!(
+        report.left.iter().all(|l| l.role != "edits"),
+        "{:?}",
+        report.left
+    );
     send(&mut app, W::Save);
     let doc = &app.document.as_ref().expect("a drawing").model;
     let made = kentos_native_application::road_terrains::made_surfaces(doc);
@@ -457,16 +532,26 @@ fn a_paste_back_is_a_cycle_and_a_surface_does_not_paste_itself() {
     send(&mut app, W::Choose(pad));
     send(&mut app, W::PasteFrom("t-3".into()));
     send(&mut app, W::Paste);
-    let w = app.terrain_window.as_ref().expect("the window");
+    let w = app.road.terrain_window.as_ref().expect("the window");
     let report = w.edit_report.as_ref().expect("made with its edits");
-    let left: Vec<(&str, &str)> = report.left.iter().map(|l| (l.id.as_str(), l.why.as_str())).collect();
+    let left: Vec<(&str, &str)> = report
+        .left
+        .iter()
+        .map(|l| (l.id.as_str(), l.why.as_str()))
+        .collect();
     assert_eq!(left, [("edits[0]", "cycle")]);
     assert_eq!(report.figures.as_ref().map(|f| f.triangles), Some(10), "the pad's own triangles");
     // Itself: no edit, a warning.
     send(&mut app, W::EditClear);
     send(&mut app, W::PasteFrom("t-8".into()));
     send(&mut app, W::Paste);
-    assert!(app.terrain_window.as_ref().and_then(|w| w.chosen_def()).is_some_and(|d| d.edits.is_empty()));
+    assert!(
+        app.road
+            .terrain_window
+            .as_ref()
+            .and_then(|w| w.chosen_def())
+            .is_some_and(|d| d.edits.is_empty())
+    );
 }
 
 /// Yüzey yapıştır's row, the table with the paste and a refused paste back, and the ground drawn with the pad in it,

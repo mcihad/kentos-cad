@@ -5,6 +5,7 @@
 //!   the registry's systems by datum);
 //! - the status bar's cell beside the coordinates: the map system's short name and the cursor in it.
 
+use crate::map;
 use iced::Element;
 use iced::widget::row;
 use kentos_commands::SettingsSet;
@@ -21,7 +22,7 @@ use crate::crs;
 pub struct Choose(pub Option<u32>);
 
 fn message(srid: Option<u32>) -> Message {
-    Message::MapCrs(Choose(srid))
+    Message::Map(map::Event::MapCrs(Choose(srid)))
 }
 
 /// The systems a web map and a GPS speak first.

@@ -8,6 +8,7 @@
 //! data before the device's providers. The traces address-search.json and
 //! address-reverse.json play the same with the mouse and the keyboard.
 
+use crate::gis;
 use kentos_domain::Slot;
 use kentos_interaction::Vec2;
 use kentos_processing::address::AddressHost;
@@ -42,7 +43,7 @@ fn send(app: &mut App, message: Message) {
 }
 
 fn ev(app: &mut App, e: Event) {
-    send(app, Message::Address(e));
+    send(app, Message::Gis(gis::Event::Address(e)));
 }
 
 fn find(app: &mut App, text: &str) {
@@ -61,7 +62,7 @@ fn an_address_is_found_on_the_address_thread_and_a_row_marks_it() {
     assert_eq!(app.bottom_tab, BottomTab::Address);
     assert_eq!(app.address_seen(), Some((String::new(), Vec::new())));
     find(&mut app, "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara");
-    let a = &app.address;
+    let a = &app.gis.address;
     assert_eq!(
         a.question,
         Some(Question::Address(
@@ -137,7 +138,7 @@ fn a_place_is_answered_and_is_not_written() {
     let task = app.address_at(Vec2::new(E + 150.0, N + 250.0));
     drive(&mut app, task);
     assert_eq!(app.bottom_tab, BottomTab::Address);
-    let row = app.address.rows.first().expect("an address");
+    let row = app.gis.address.rows.first().expect("an address");
     assert_eq!(row.kind, "Yol");
     assert_eq!(row.fields[1], "Gazi Mustafa Kemal Bulvarı");
     assert!((row.distance.expect("a distance") - 50.0).abs() < 1e-9);
@@ -147,7 +148,7 @@ fn a_place_is_answered_and_is_not_written() {
     );
     ev(&mut app, Event::AddPoint);
     assert_eq!(
-        app.address.said.as_ref().map(|s| s.1.as_str()),
+        app.gis.address.said.as_ref().map(|s| s.1.as_str()),
         Some(texts::NOT_FOR_PLACE)
     );
 }
@@ -158,11 +159,11 @@ fn the_locator_is_built_again_only_when_its_layers_change() {
     find(&mut app, "Atatürk Bulvarı No:2");
     let doc = &app.document.as_ref().expect("a drawing").model;
     let def = doc.settings().address_locators[0].clone();
-    assert!(app.address.fresh("adres-1", &def, doc));
+    assert!(app.gis.address.fresh("adres-1", &def, doc));
     // A point on another layer: still fresh.
     ev(&mut app, Event::AddPoint);
     let doc = &app.document.as_ref().expect("a drawing").model;
-    assert!(app.address.fresh("adres-1", &def, doc));
+    assert!(app.gis.address.fresh("adres-1", &def, doc));
     // A door's change: built again.
     let door = doc
         .by_layer("kapi")
@@ -173,7 +174,7 @@ fn the_locator_is_built_again_only_when_its_layers_change() {
     let mut e = doc.get(door).cloned().expect("the door");
     e.base_mut().attrs.insert("KAPI_NO".into(), "2/B".into());
     assert!(doc.update(door, e), "the door changes");
-    assert!(!app.address.fresh(
+    assert!(!app.gis.address.fresh(
         "adres-1",
         &def,
         &app.document.as_ref().expect("a drawing").model
@@ -184,10 +185,11 @@ fn the_locator_is_built_again_only_when_its_layers_change() {
 fn adres_verisi_checks_the_definition_and_saves_it_as_a_project_setting() {
     let mut app = app();
     send(&mut app, Message::Run("address.data"));
-    let w = app.address.data.as_ref().expect("the window is open");
+    let w = app.gis.address.data.as_ref().expect("the window is open");
     assert_eq!(w.names(), ["Numarataj"]);
     ev(&mut app, Event::Data(Data::Check));
     let checked = app
+        .gis
         .address
         .data
         .as_ref()
@@ -217,7 +219,7 @@ fn adres_verisi_checks_the_definition_and_saves_it_as_a_project_setting() {
     assert_eq!(checked.repeated, 1);
     ev(&mut app, Event::Data(Data::Name("Numarataj 2026".into())));
     ev(&mut app, Event::Data(Data::Save));
-    assert!(app.address.data.is_none());
+    assert!(app.gis.address.data.is_none());
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert_eq!(doc.settings().address_locators[0].name, "Numarataj 2026");
     assert!(!doc.can_undo(), "a project setting, not an undo step");
@@ -247,7 +249,8 @@ fn yazilislari_duzelt_sets_the_names_right_in_one_step() {
     send(&mut app, Message::Run("address.data"));
     ev(&mut app, Event::Data(Data::Check));
     let checked = |app: &App| {
-        app.address
+        app.gis
+            .address
             .data
             .as_ref()
             .and_then(|w| w.checked())
@@ -316,7 +319,7 @@ fn the_providers_card_is_accepted_before_a_provider_is_used() {
     ev(&mut app, Event::Providers(Providers::Accept(true)));
     ev(&mut app, Event::Providers(Providers::Use(true)));
     ev(&mut app, Event::Providers(Providers::Save));
-    assert!(app.address.providers.is_none());
+    assert!(app.gis.address.providers.is_none());
     let photon = super::online::online()
         .providers()
         .into_iter()

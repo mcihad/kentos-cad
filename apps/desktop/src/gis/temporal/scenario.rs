@@ -10,6 +10,7 @@
 //!   (one step “Senaryoyu uygula”) and shows Mevcut durum, the group it
 //!   leaves shown.
 
+use crate::gis;
 use std::collections::BTreeSet;
 
 use iced::widget::{Column, button, container, row, text};
@@ -106,13 +107,13 @@ impl App {
         while taken.contains(&format!("Senaryo {n}")) {
             n += 1;
         }
-        self.time.scenario = Some(Window::Create {
+        self.gis.time.scenario = Some(Window::Create {
             name: format!("Senaryo {n}"),
             note: String::new(),
             checked: bases.iter().filter(|id| **id == active).cloned().collect(),
             copy: true,
         });
-        self.dialog = Some(Dialog::Scenario);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Scenario));
     }
 
     /// Senaryoyu uygula (`scenario.apply`): asks about `id`, else the scenario at hand.
@@ -121,12 +122,12 @@ impl App {
             self.warn("Projede senaryo yok; önce Senaryo oluştur ile bir senaryo yapın.");
             return;
         };
-        self.time.scenario = Some(Window::Apply(id));
-        self.dialog = Some(Dialog::Scenario);
+        self.gis.time.scenario = Some(Window::Apply(id));
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Scenario));
     }
 
     pub(crate) fn scenario_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.time.scenario.as_mut() else {
+        let Some(w) = self.gis.time.scenario.as_mut() else {
             return Task::none();
         };
         match (w, event) {
@@ -148,18 +149,18 @@ impl App {
             }
             (Window::Create { .. }, Event::Create) => {
                 if self.create_scenario().is_some() {
-                    self.time.scenario = None;
+                    self.gis.time.scenario = None;
                     self.dialog = None;
                 }
             }
             (Window::Apply(id), Event::Apply) => {
                 let id = id.clone();
-                self.time.scenario = None;
+                self.gis.time.scenario = None;
                 self.dialog = None;
                 self.apply_scenario(&id);
             }
             (_, Event::Cancel) => {
-                self.time.scenario = None;
+                self.gis.time.scenario = None;
                 self.dialog = None;
             }
             _ => {}
@@ -175,7 +176,7 @@ impl App {
             note,
             checked,
             copy,
-        }) = self.time.scenario.clone()
+        }) = self.gis.time.scenario.clone()
         else {
             return None;
         };
@@ -273,7 +274,7 @@ impl App {
     }
 
     pub(crate) fn scenario_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(doc)) = (&self.time.scenario, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.time.scenario, &self.document) else {
             return text("").into();
         };
         let layers = doc.model.layers();
@@ -447,7 +448,7 @@ impl App {
 
     /// The window's title (a trace's `dialog` step): Senaryo oluştur, or the question's.
     pub(crate) fn scenario_title(&self) -> String {
-        match &self.time.scenario {
+        match &self.gis.time.scenario {
             Some(Window::Apply(_)) => APPLY_TITLE.to_owned(),
             _ => TITLE.to_owned(),
         }
@@ -456,7 +457,7 @@ impl App {
     /// The window's controls by their words: Ad and Not (`fill`), a layer's box by its path, Nesneleri kopyala,
     /// Oluştur, Vazgeç; the question's Uygula and Vazgeç.
     pub(crate) fn scenario_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.time.scenario else {
+        let Some(w) = &self.gis.time.scenario else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match (w, control) {

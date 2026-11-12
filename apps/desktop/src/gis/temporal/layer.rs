@@ -9,6 +9,7 @@
 //! and Kayıt bitişi (Yok) are the versions' system time (docs/adr/0537): when
 //! each was recorded and superseded, what Bilinen gün asks.
 
+use crate::gis;
 use iced::widget::{Column, container, row, text};
 use iced::{Element, Fill, Task};
 use kentos_commands::{CommandResult, LayerTime, LayersTime};
@@ -171,12 +172,12 @@ impl App {
         } else {
             layers[0].clone()
         };
-        self.time.layer = Some(self.time_layer_load(layer));
-        self.dialog = Some(Dialog::TimeLayer);
+        self.gis.time.layer = Some(self.time_layer_load(layer));
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::TimeLayer));
     }
 
     pub(crate) fn time_layer_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.time.layer.clone() else {
+        let Some(w) = self.gis.time.layer.clone() else {
             return Task::none();
         };
         let names = self.attribute_names(&w.layer);
@@ -213,12 +214,12 @@ impl App {
                 return Task::none();
             }
             Event::Cancel => {
-                self.time.layer = None;
+                self.gis.time.layer = None;
                 self.dialog = None;
                 return Task::none();
             }
         }
-        self.time.layer = Some(next);
+        self.gis.time.layer = Some(next);
         Task::none()
     }
 
@@ -260,7 +261,7 @@ impl App {
                     },
                     said,
                 );
-                self.time.layer = None;
+                self.gis.time.layer = None;
                 self.dialog = None;
                 if let Some(doc) = &self.document {
                     self.spatial.sync(&doc.model);
@@ -340,7 +341,7 @@ impl App {
     }
 
     pub(crate) fn time_layer_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(doc)) = (&self.time.layer, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.time.layer, &self.document) else {
             return text("").into();
         };
         let layers = self.time_layers();
@@ -461,7 +462,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.time.layer else {
+        let Some(w) = &self.gis.time.layer else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         let names = self.attribute_names(&w.layer);

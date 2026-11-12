@@ -4,6 +4,7 @@
 //! a SensorThings Observations file in through `cad.sensors.ingest` (one step “Sensör gözlemleri”), by the duplicate
 //! and late policies chosen, and says what it wrote and why a row was not.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row, scrollable, text};
@@ -185,8 +186,8 @@ impl App {
         };
         let mut w = self.sensor_window(layer);
         w.answer = Some(self.sensors_ask(&w));
-        self.time.sensors = Some(w);
-        self.dialog = Some(Dialog::Sensors);
+        self.gis.time.sensors = Some(w);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Sensors));
     }
 
     /// The latest of each asset as the window asks it: the slider's moment and day known while it is open.
@@ -194,7 +195,7 @@ impl App {
         let Some(doc) = &self.document else {
             return Err("Açık çizim yok.".into());
         };
-        let s = &self.time.slider;
+        let s = &self.gis.time.slider;
         let utc = |t: f64| {
             let w = time::write(t, false);
             if w.contains('T') { format!("{w}Z") } else { w }
@@ -248,14 +249,14 @@ impl App {
 
     /// The window asked again (the drawing or the slider changed).
     pub(crate) fn sensors_refresh(&mut self) {
-        if let Some(mut w) = self.time.sensors.clone() {
+        if let Some(mut w) = self.gis.time.sensors.clone() {
             w.answer = Some(self.sensors_ask(&w));
-            self.time.sensors = Some(w);
+            self.gis.time.sensors = Some(w);
         }
     }
 
     pub(crate) fn sensors_event(&mut self, event: Event) -> Task<Message> {
-        let Some(mut w) = self.time.sensors.clone() else {
+        let Some(mut w) = self.gis.time.sensors.clone() else {
             return Task::none();
         };
         match event {
@@ -305,13 +306,13 @@ impl App {
                 w.status = Some(self.sensors_take(&w, path));
             }
             Event::Close => {
-                self.time.sensors = None;
+                self.gis.time.sensors = None;
                 self.dialog = None;
                 return Task::none();
             }
         }
         w.answer = Some(self.sensors_ask(&w));
-        self.time.sensors = Some(w);
+        self.gis.time.sensors = Some(w);
         Task::none()
     }
 
@@ -350,7 +351,7 @@ impl App {
     }
 
     pub(crate) fn sensors_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.time.sensors else {
+        let Some(w) = &self.gis.time.sensors else {
             return text("").into();
         };
         let layers = self.sensor_layers();
@@ -386,7 +387,7 @@ impl App {
         let stale =
             kentos_ui::widget::text_field("60", &w.stale).on_input(|t| msg(Event::Stale(t)));
         let at = kentos_ui::widget::text_field(
-            if self.time.slider.open {
+            if self.gis.time.slider.open {
                 "Zaman sürgüsünün anı"
             } else {
                 "Şimdi"

@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::platform_water_window::Event as W;
+use crate::road;
 
 const CASES: &str = include_str!("../../../../fixtures/commands/v1/road.corridors.water.json");
 
@@ -21,25 +22,44 @@ fn case(name: &str) -> serde_json::Value {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::PlatformWater(e));
+    let _ = app.update(Message::Road(road::Event::PlatformWater(e)));
 }
 
 #[test]
 fn the_window_reads_water_on_the_platform() {
     let mut app = water_app();
-    let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
+    let before = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .revision()
+        .to_string();
     let _ = app.update(Message::Run("corridor.water"));
-    assert!(matches!(app.dialog, Some(Dialog::PlatformWater)));
+    assert!(matches!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::PlatformWater))
+    ));
     send(&mut app, W::Preview);
-    assert!(matches!(&app.platform_water_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("eğimi yazın")));
+    assert!(
+        matches!(&app.road.platform_water_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("eğimi yazın"))
+    );
     send(&mut app, W::Corridor("c-2".into()));
     send(&mut app, W::Least("3".into()));
     send(&mut app, W::Preview);
-    let w = app.platform_water_window.as_ref().expect("open");
-    let Some(Ok((r, tris))) = &w.preview else { panic!("a read") };
+    let w = app.road.platform_water_window.as_ref().expect("open");
+    let Some(Ok((r, tris))) = &w.preview else {
+        panic!("a read")
+    };
     let want = &case("Dever geçişli koridor, %3")["result"]["output"];
-    assert_eq!(r.flat_triangles as u64, want["flatTriangles"].as_u64().expect("a count"));
-    assert_eq!(tris.iter().filter(|t| t.2).count(), r.flat_triangles as usize);
+    assert_eq!(
+        r.flat_triangles as u64,
+        want["flatTriangles"].as_u64().expect("a count")
+    );
+    assert_eq!(
+        tris.iter().filter(|t| t.2).count(),
+        r.flat_triangles as usize
+    );
     assert!(w.warnings.iter().any(|x| x.contains("su orada durur")));
     send(&mut app, W::Close);
     assert_eq!(app.document.as_ref().expect("a drawing").model.revision().to_string(), before);

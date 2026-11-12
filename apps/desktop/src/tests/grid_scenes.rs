@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 
@@ -42,7 +43,11 @@ fn view_on(app: &mut App, a: [f64; 2], b: [f64; 2]) {
 
 /// A setting of the running tool, as its row in Etkin aracın ayarları commits it.
 fn set(app: &mut App, tool: &'static str, key: &'static str, value: &str) {
-    let _ = app.update(Message::ToolSetting(Commit { tool, key, value: value.into() }));
+    let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
+        tool,
+        key,
+        value: value.into(),
+    })));
 }
 
 /// An empty plan on Zemin kat, the command line open.
@@ -166,17 +171,27 @@ fn duplicates(app: &mut App) {
         .arch_audit_shown()
         .iter()
         .position(|&i| {
-            let f = &app.arch_audit.audited.as_ref().expect("audited").findings[i];
+            let f = &app
+                .arch
+                .arch_audit
+                .audited
+                .as_ref()
+                .expect("audited")
+                .findings[i];
             f.code == "arch_grid_label_duplicate"
         })
         .expect("the grid's finding");
-    let _ = app.update(Message::ArchAudit(crate::arch_audit::Event::Press(row)));
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+        crate::arch_audit::Event::Press(row),
+    )));
 }
 
 /// Düzelt: the grid lying on B deleted in one step; checked again, the other B is left.
 fn duplicates_fixed(app: &mut App) {
     duplicates(app);
-    let _ = app.update(Message::ArchAudit(crate::arch_audit::Event::Fix));
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+        crate::arch_audit::Event::Fix,
+    )));
 }
 
 /// An L column selected, Öznitelikler scrolled to its rows: Biçim L, Boy, Alt kol and Sol kol, Dönüş, Hiza.
@@ -261,9 +276,23 @@ mod tests {
         let mut app = app_with_drawing();
         duplicates(&mut app);
         let codes = |app: &App| -> Vec<String> {
-            app.arch_audit.audited.as_ref().unwrap().findings.iter().map(|f| f.code.clone()).collect()
+            app.arch
+                .arch_audit
+                .audited
+                .as_ref()
+                .unwrap()
+                .findings
+                .iter()
+                .map(|f| f.code.clone())
+                .collect()
         };
-        assert_eq!(codes(&app).iter().filter(|c| *c == "arch_grid_label_duplicate").count(), 2);
+        assert_eq!(
+            codes(&app)
+                .iter()
+                .filter(|c| *c == "arch_grid_label_duplicate")
+                .count(),
+            2
+        );
         let before = objects(&app).len();
         duplicates_fixed(&mut app);
         assert_eq!(objects(&app).len(), before - 1, "the grid lying on B deleted");

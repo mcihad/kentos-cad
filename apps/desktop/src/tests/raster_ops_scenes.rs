@@ -15,6 +15,7 @@
 //!
 //! Each result is written into a scratch folder. Test code only.
 
+use crate::gis;
 use kentos_ui::snapshot::Snapshot;
 use serde_json::json;
 
@@ -87,7 +88,10 @@ fn table_shown(s: &mut Snapshot, app: &mut App) {
 }
 
 fn value(app: &mut App, name: &str, v: serde_json::Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 /// `tool`'s window with `values` (the input first), its result to go to a scratch folder.
@@ -121,7 +125,7 @@ fn ran(
         "{tool}: {status:?}"
     );
     if !keep {
-        let _ = app.update(Message::Processing(Event::Close));
+        let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     }
     if let Some(doc) = app.document.as_mut() {
         for id in hide {

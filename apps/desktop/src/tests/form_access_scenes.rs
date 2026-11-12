@@ -4,6 +4,7 @@
 //! typing into the focused field, a tab left and come back to, Kaydet sending the focus to the issue,
 //! Esc asking before what was typed is dropped.
 
+use crate::gis;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 
@@ -240,17 +241,31 @@ mod tests {
             },
             Input::Type("5".into()),
         );
-        let typed = app.form_entry.as_ref().expect("the form").value_of("Kat");
+        let typed = app
+            .gis
+            .form_entry
+            .as_ref()
+            .expect("the form")
+            .value_of("Kat");
         assert_eq!(typed.as_deref(), Some("35"), "typed after what it held");
         // Another tab and back: what was typed is kept.
         entry(&mut app, fe::Event::Tab(1));
         entry(&mut app, fe::Event::Tab(0));
-        let kept = app.form_entry.as_ref().expect("the form").value_of("Kat");
+        let kept = app
+            .gis
+            .form_entry
+            .as_ref()
+            .expect("the form")
+            .value_of("Kat");
         assert_eq!(kept.as_deref(), Some("35"));
         // Kaydet with the note missing: the window stays and the focus goes to the note.
-        drive(&mut s, &mut app, Message::FormEntry(fe::Event::Save));
+        drive(
+            &mut s,
+            &mut app,
+            Message::Gis(gis::Event::FormEntry(fe::Event::Save)),
+        );
         settle(&mut s, &mut app);
-        assert!(app.form_entry.is_some(), "refused: the window stays");
+        assert!(app.gis.form_entry.is_some(), "refused: the window stays");
         assert_eq!(
             focused_key(&mut s, &app, &keys).as_deref(),
             Some("Açıklama"),
@@ -259,35 +274,43 @@ mod tests {
         // Esc asks first; Esc on the question goes back to the form, nothing dropped.
         // Esc as the window's keys take it (input.rs: a dialog's Esc).
         app.close_dialog();
-        let e = app.form_entry.as_ref().expect("asked, not closed");
+        let e = app.gis.form_entry.as_ref().expect("asked, not closed");
         assert!(e.asking_close(), "the window asks");
         app.close_dialog();
         assert_eq!(
             app.dialog,
-            Some(crate::app::Dialog::FormEntry),
+            Some(crate::app::Dialog::Gis(gis::GisDialogKind::FormEntry)),
             "still shown"
         );
-        let e = app.form_entry.as_ref().expect("back to the form");
+        let e = app.gis.form_entry.as_ref().expect("back to the form");
         assert!(!e.asking_close());
         assert_eq!(e.value_of("Kat").as_deref(), Some("35"));
         // Kaydetmeden kapat: closed, the record as it was.
         entry(&mut app, fe::Event::Cancel);
         entry(&mut app, fe::Event::Discard);
-        assert!(app.form_entry.is_none());
+        assert!(app.gis.form_entry.is_none());
         assert_eq!(attrs(&app, 1).get("Kat").map(String::as_str), Some("3"));
         // A form opened and left untouched closes without a word.
         run(&mut app, "data.formEdit");
         entry(&mut app, fe::Event::Cancel);
-        assert!(app.form_entry.is_none(), "nothing typed: closed at once");
+        assert!(
+            app.gis.form_entry.is_none(),
+            "nothing typed: closed at once"
+        );
     }
 
     #[test]
     fn kaydet_ve_kapat_writes_and_closes_or_goes_back_to_the_issue() {
         let mut app = crate::files_testing::app_with_drawing();
         closing_asked(&mut app);
-        assert!(app.form_entry.as_ref().is_some_and(|e| e.asking_close()));
+        assert!(
+            app.gis
+                .form_entry
+                .as_ref()
+                .is_some_and(|e| e.asking_close())
+        );
         entry(&mut app, fe::Event::Save);
-        assert!(app.form_entry.is_none(), "written and closed");
+        assert!(app.gis.form_entry.is_none(), "written and closed");
         assert_eq!(attrs(&app, 2).get("Kat").map(String::as_str), Some("5"));
         // The first building needs its note: Kaydet ve kapat goes back to the form, its issue shown.
         app.selection.set([Slot(1)]);
@@ -295,7 +318,11 @@ mod tests {
         entry(&mut app, fe::Event::Value("kat-sayisi".into(), "4".into()));
         entry(&mut app, fe::Event::Cancel);
         entry(&mut app, fe::Event::Save);
-        let e = app.form_entry.as_ref().expect("refused: the window stays");
+        let e = app
+            .gis
+            .form_entry
+            .as_ref()
+            .expect("refused: the window stays");
         assert!(!e.asking_close(), "back to the form");
         assert_eq!(attrs(&app, 1).get("Kat").map(String::as_str), Some("3"));
     }
@@ -304,14 +331,14 @@ mod tests {
     fn the_next_issue_goes_round_the_errors_in_the_form_s_order() {
         let mut app = crate::files_testing::app_with_drawing();
         issues_walked(&mut app);
-        let e = app.form_entry.as_ref().expect("the form");
+        let e = app.gis.form_entry.as_ref().expect("the form");
         assert_eq!(e.issue_fields(), ["kat-sayisi", "Açıklama"]);
         assert_eq!(e.issue_at(), 1, "the first went to");
         entry(&mut app, fe::Event::FirstIssue);
-        assert_eq!(app.form_entry.as_ref().unwrap().issue_at(), 2);
+        assert_eq!(app.gis.form_entry.as_ref().unwrap().issue_at(), 2);
         entry(&mut app, fe::Event::FirstIssue);
         assert_eq!(
-            app.form_entry.as_ref().unwrap().issue_at(),
+            app.gis.form_entry.as_ref().unwrap().issue_at(),
             1,
             "round again after the last"
         );
@@ -321,7 +348,7 @@ mod tests {
     fn a_translation_shows_the_form_in_its_language_and_writes_the_same_values() {
         let mut app = crate::files_testing::app_with_drawing();
         translated_entry(&mut app);
-        let e = app.form_entry.as_ref().expect("the form");
+        let e = app.gis.form_entry.as_ref().expect("the form");
         assert_eq!(e.name_in(), "Building survey");
         assert_eq!(e.words_of("durum", None).as_deref(), Some("Condition"));
         assert_eq!(e.words_of("kat", None).as_deref(), Some("Storeys"));
@@ -336,14 +363,14 @@ mod tests {
             fe::Event::Value("Açıklama".into(), "Çatı arası bakılmalı.".into()),
         );
         entry(&mut app, fe::Event::Save);
-        assert!(app.form_entry.is_none(), "written");
+        assert!(app.gis.form_entry.is_none(), "written");
         let a = attrs(&app, 1);
         assert_eq!(a.get("Kat").map(String::as_str), Some("6"));
         assert_eq!(a.get("Durum").map(String::as_str), Some("inceleme"));
         // A language the form has not is not chosen.
         run(&mut app, "data.formEdit");
         entry(&mut app, fe::Event::Language(Some("de".into())));
-        assert_eq!(app.form_entry.as_ref().unwrap().language, None);
+        assert_eq!(app.gis.form_entry.as_ref().unwrap().language, None);
         assert_eq!(
             crate::forms::entry::language_name(Some("pt-BR")),
             "Português (pt-BR)"
@@ -365,7 +392,7 @@ mod tests {
         designer(&mut app, fd::Event::LanguageText("de".into()));
         designer(&mut app, fd::Event::LanguageAdd);
         assert!(app_body(&app).translations.contains_key("de"));
-        let before = app.forms_window.as_ref().unwrap().undo.len();
+        let before = app.gis.forms_window.as_ref().unwrap().undo.len();
         for typed in ["Z", "Zu", "Zustand"] {
             designer(
                 &mut app,
@@ -373,7 +400,7 @@ mod tests {
             );
         }
         assert_eq!(
-            app.forms_window.as_ref().unwrap().undo.len(),
+            app.gis.forms_window.as_ref().unwrap().undo.len(),
             before + 1,
             "typing is one step"
         );
@@ -441,7 +468,7 @@ mod tests {
             for (k, v) in values {
                 entry(&mut app, fe::Event::Value((*k).into(), (*v).into()));
             }
-            let e = app.form_entry.as_ref().expect("the form");
+            let e = app.gis.form_entry.as_ref().expect("the form");
             let doc = app.document.as_mut().expect("a drawing");
             let uid = doc.model.uid(Slot(slot)).expect("a uid").to_string();
             let given: std::collections::BTreeMap<String, String> = values
@@ -507,21 +534,21 @@ mod tests {
     fn a_related_item_bounded_one_to_one_refuses_a_record_holding_more() {
         let mut app = crate::files_testing::app_with_drawing();
         related_bounded(&mut app);
-        let e = app.form_entry.as_ref().expect("the form");
+        let e = app.gis.form_entry.as_ref().expect("the form");
         assert!(
             e.issues.iter().any(|i| i.code == "form_related_many"),
             "{:?}",
             e.issues
         );
         entry(&mut app, fe::Event::Save);
-        assert!(app.form_entry.is_some(), "refused: the window stays");
+        assert!(app.gis.form_entry.is_some(), "refused: the window stays");
     }
 
     #[test]
     fn a_link_taken_off_in_the_window_counts_before_it_is_written() {
         let mut app = crate::files_testing::app_with_drawing();
         related_bounded(&mut app);
-        let held = app.form_entry.as_ref().unwrap().related_now("sayaclar");
+        let held = app.gis.form_entry.as_ref().unwrap().related_now("sayaclar");
         let n = held.len();
         assert!(n >= 2, "{n}");
         // One fewer allowed than the building holds: one taken off in the window clears it.
@@ -532,7 +559,8 @@ mod tests {
         app.selection.set([Slot(1)]);
         run(&mut app, "data.formEdit");
         let many = |app: &App| {
-            app.form_entry
+            app.gis
+                .form_entry
                 .as_ref()
                 .unwrap()
                 .issues
@@ -547,7 +575,7 @@ mod tests {
         assert!(!many(&app), "the window counts the link taken off");
         entry(&mut app, fe::Event::Save);
         assert!(
-            app.form_entry.is_none(),
+            app.gis.form_entry.is_none(),
             "the command counts it alike and writes"
         );
     }
@@ -563,7 +591,7 @@ mod tests {
             Some(kentos_commands::bound_fields_digest(&r.body, &fields).as_str()),
             "the storeys' bound changed since"
         );
-        assert!(app.form_entry.is_some());
+        assert!(app.gis.form_entry.is_some());
     }
 
     #[test]
@@ -574,31 +602,32 @@ mod tests {
         app.selection.set([Slot(2)]);
         run(&mut app, "data.formEdit");
         entry(&mut app, fe::Event::Value("kat-sayisi".into(), "6".into()));
-        let open = app.form_entry.take();
+        let open = app.gis.form_entry.take();
         let dialog = app.dialog.take();
         run(&mut app, "data.forms");
         designer(&mut app, fd::Event::Withdraw(true));
         assert!(app.project_forms()[0].withdrawn);
-        let _ = app.update(Message::Forms(fd::Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::Forms(fd::Event::Cancel)));
         // Opening it again is refused and said.
         run(&mut app, "data.formEdit");
-        assert!(app.form_entry.is_none(), "not opened");
+        assert!(app.gis.form_entry.is_none(), "not opened");
         // The window that was open: Kaydet refused, what was typed kept.
-        app.form_entry = open;
+        app.gis.form_entry = open;
         app.dialog = dialog;
         entry(&mut app, fe::Event::Save);
-        let e = app.form_entry.as_ref().expect("the window stays");
+        let e = app.gis.form_entry.as_ref().expect("the window stays");
         assert_eq!(e.value_of("Kat").as_deref(), Some("6"));
         assert_eq!(attrs(&app, 2).get("Kat").map(String::as_str), Some("2"));
         // Put back: it writes again.
-        let _ = app.update(Message::FormEntry(fe::Event::Discard));
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(fe::Event::Discard)));
         run(&mut app, "data.forms");
         designer(&mut app, fd::Event::Withdraw(false));
         assert!(!app.project_forms()[0].withdrawn);
     }
 
     fn app_body(app: &App) -> kentos_commands::FormBody {
-        app.forms_window
+        app.gis
+            .forms_window
             .as_ref()
             .and_then(|w| w.body.clone())
             .expect("the copy")

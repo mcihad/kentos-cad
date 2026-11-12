@@ -24,6 +24,7 @@
 //! and `road.profiles.create` (the new ones), each one undo step, and closes. Aksa yeniden bağla rebinds a saved,
 //! stale profile (`road.profiles.edit rebind`).
 
+use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Size, Task, Theme, mouse};
@@ -500,7 +501,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Profiles(event)
+    Message::Road(road::Event::Profiles(event))
 }
 
 /// The impact in words (docs/adr/0962): the stretches that change and by how much at most, and what stands on them.
@@ -580,7 +581,7 @@ impl App {
         // Docs/adr/0991: Yer empty, the drawing goes under everything drawn when it is drawn.
         let place = String::new();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
-        self.profile_window = Some(Window {
+        self.road.profile_window = Some(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
@@ -589,14 +590,14 @@ impl App {
             place,
             ..Window::default()
         });
-        self.dialog = Some(Dialog::Profiles);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Profiles));
         self.refresh_ground();
     }
 
     /// Boykesit oluştur from the ribbon: the window with a new profile on the first alignment.
     pub(crate) fn new_profile(&mut self) {
         self.open_profiles();
-        if self.profile_window.is_some() {
+        if self.road.profile_window.is_some() {
             let _ = self.profile_event(Event::New);
         }
     }
@@ -604,7 +605,9 @@ impl App {
     /// The terrain of the chosen profile's alignment and surface, made again when either changed.
     fn refresh_ground(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.profile_window.as_mut() else { return };
+        let Some(w) = self.road.profile_window.as_mut() else {
+            return;
+        };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
             w.ground = Ground::default();
             return;
@@ -654,7 +657,7 @@ impl App {
         let revisions: Vec<(String, u32)> = self.document.as_ref().map_or_else(Vec::new, |d| {
             d.model.road_alignments().iter().map(|a| (a.id.clone(), a.revision)).collect()
         });
-        let Some(w) = self.profile_window.as_mut() else {
+        let Some(w) = self.road.profile_window.as_mut() else {
             return Task::none();
         };
         let mut warning = None;
@@ -845,7 +848,7 @@ impl App {
             Event::Dever(id) => w.dever = id,
             Event::Draw => return self.draw_profile(),
             Event::Cancel => {
-                self.profile_window = None;
+                self.road.profile_window = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_profiles(),
@@ -866,20 +869,30 @@ impl App {
     /// none for a new profile, for PVIs that do not read or are the saved ones.
     fn refresh_profile_impact(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.profile_window.as_mut() else { return };
-        w.impact = w.chosen.and_then(|i| w.rows.get(i)).and_then(|r| r.def().ok()).and_then(|d| {
-            let kept = w.kept.iter().find(|k| k.id == d.id)?;
-            (kept.pvis != d.pvis).then(|| {
-                let input = kentos_commands::ProfilesImpact { profile: d.id.clone(), pvis: d.pvis.clone(), tolerance: None };
-                kentos_native_application::road_profiles_impact::preview(&doc.model, &input)
-            })
-        });
+        let Some(w) = self.road.profile_window.as_mut() else {
+            return;
+        };
+        w.impact = w
+            .chosen
+            .and_then(|i| w.rows.get(i))
+            .and_then(|r| r.def().ok())
+            .and_then(|d| {
+                let kept = w.kept.iter().find(|k| k.id == d.id)?;
+                (kept.pvis != d.pvis).then(|| {
+                    let input = kentos_commands::ProfilesImpact {
+                        profile: d.id.clone(),
+                        pvis: d.pvis.clone(),
+                        tolerance: None,
+                    };
+                    kentos_native_application::road_profiles_impact::preview(&doc.model, &input)
+                })
+            });
     }
 
     /// Aksa yeniden bağla: the chosen saved profile takes its alignment's present revision (`road.profiles.edit
     /// rebind`), one undo step.
     fn rebind_profile(&mut self) -> Task<Message> {
-        let Some(w) = &self.profile_window else {
+        let Some(w) = &self.road.profile_window else {
             return Task::none();
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -901,7 +914,7 @@ impl App {
         if self.profile_write(|cx| road_profiles_edit::execute(cx, edit)) {
             let Some(doc) = &self.document else { return Task::none() };
             let kept = doc.model.road_profiles().to_vec();
-            if let Some(w) = self.profile_window.as_mut() {
+            if let Some(w) = self.road.profile_window.as_mut() {
                 w.rows = kept.iter().map(Row::of).collect();
                 w.kept = kept;
                 w.chosen = w.chosen.filter(|i| *i < w.rows.len());
@@ -914,7 +927,7 @@ impl App {
     /// Çizime yaz: the chosen saved profile drawn on the chosen layer at the typed place (`road.profiles.draw`), one
     /// undo step.
     fn draw_profile(&mut self) -> Task<Message> {
-        let Some(w) = &self.profile_window else {
+        let Some(w) = &self.road.profile_window else {
             return Task::none();
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -988,7 +1001,7 @@ impl App {
 
     /// Kaydet: what changed, the removed first, then the changed, then the new.
     fn save_profiles(&mut self) -> Task<Message> {
-        let Some(w) = self.profile_window.clone() else {
+        let Some(w) = self.road.profile_window.clone() else {
             return Task::none();
         };
         let mut defs = Vec::new();
@@ -1047,7 +1060,7 @@ impl App {
                 }
             }
         }
-        self.profile_window = None;
+        self.road.profile_window = None;
         self.dialog = None;
         self.say(Level::Success, "Boykesitler kaydedildi.");
         self.refresh_profile_impact();
@@ -1067,7 +1080,7 @@ impl App {
     }
 
     pub(crate) fn road_profile_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.profile_window else {
+        let Some(w) = &self.road.profile_window else {
             return iced::widget::text("").into();
         };
         if let Some(x) = &w.lengths {
@@ -1406,7 +1419,7 @@ impl App {
     }
 
     pub(crate) fn profile_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.profile_window else {
+        let Some(w) = &self.road.profile_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         if w.lengths.is_some() {

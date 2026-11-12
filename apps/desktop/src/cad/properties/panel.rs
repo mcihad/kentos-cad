@@ -2,6 +2,7 @@
 //! sections, the view with its thumbnails and cells, and its events.
 
 use super::*;
+use crate::gis;
 
 impl App {
     pub(super) fn properties_key(&self, doc: &Document) -> PanelKey {
@@ -208,7 +209,7 @@ impl App {
                 if n > 0 {
                     rows.push(Row {
                         editor: Some(Editor::Text(Field::TopologyReason)),
-                        ..Row::text("Gerekçe", self.topology.reason.clone())
+                        ..Row::text("Gerekçe", self.gis.topology.reason.clone())
                     });
                     rows.push(Row::note("Hata ve istisna bu gerekçeyle yazılır."));
                 }
@@ -226,7 +227,9 @@ impl App {
                         wide: false,
                         chosen: f.status == state,
                         enabled: true,
-                        message: Message::Topology(crate::topology::Event::Review(f.key.clone(), op)),
+                        message: Message::Gis(gis::Event::Topology(
+                            crate::topology::Event::Review(f.key.clone(), op),
+                        )),
                     };
                     let items = vec![
                         pick("Değerlendirilmedi", State::Open, Op::Unmark),
@@ -241,7 +244,9 @@ impl App {
                             key: None,
                             icon: "zoomSelection",
                             title: "Topoloji sekmesinde göster".into(),
-                            open: Message::Topology(crate::topology::Event::Show(f.key.clone())),
+                            open: Message::Gis(gis::Event::Topology(crate::topology::Event::Show(
+                                f.key.clone(),
+                            ))),
                         }),
                         ..Row::text(f.problem.clone(), word)
                     });
@@ -526,7 +531,7 @@ impl App {
         };
         // Docs/adr/4600: Gerekçe typed in Öznitelikler › Topoloji is the tab's own words; the drawing does not change.
         if let Event::Commit(Field::TopologyReason, text) = &event {
-            self.topology.reason = text.trim().to_owned();
+            self.gis.topology.reason = text.trim().to_owned();
             return;
         }
         if matches!(event, Event::Query) {

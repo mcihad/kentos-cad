@@ -6,6 +6,7 @@
 //! KentOS Harita docks the panel, KentOS GIS reads the accepted point in Öznitelikler, Mimari and Yol show neither.
 //! And its pictures.
 
+use crate::map;
 use kentos_commands::{MapSurveyOperation as Op, SurveyAntenna, SurveyState as S};
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -40,7 +41,7 @@ fn opened(snapshot: kentos_commands::DocumentSnapshotV2, program: Option<Module>
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::MapSurvey(e));
+    let _ = app.update(Message::Map(map::Event::MapSurvey(e)));
 }
 
 fn tree(app: &App) -> kentos_commands::MapSurveyTree {

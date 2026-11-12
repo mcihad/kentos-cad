@@ -34,6 +34,7 @@ mod view;
 #[cfg(test)]
 mod tests;
 
+use crate::gis;
 use std::collections::{BTreeSet, HashMap};
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
@@ -373,7 +374,7 @@ pub enum Event {
 }
 
 pub(crate) fn msg(event: Event) -> Message {
-    Message::Sources(event)
+    Message::Gis(gis::Event::Sources(event))
 }
 
 /// Runs `work` on a thread of its own and brings its answer back as a message.
@@ -463,20 +464,20 @@ impl App {
             }
             Event::FolderPicked(None) => {}
             Event::FolderPicked(Some(path)) => {
-                if self.sources.folders.add(&path) {
+                if self.gis.sources.folders.add(&path) {
                     self.output(format!(
                         "Kaynaklar: “{}” klasörü eklendi.",
                         folder_name(&path)
                     ));
                 }
                 let key = folder_key(&path);
-                self.sources.open.insert(key);
+                self.gis.sources.open.insert(key);
                 return self.list_folder(path);
             }
             Event::Remove(path) => {
-                self.sources.open.remove(&folder_key(&path));
-                self.sources.listings.remove(&path);
-                if self.sources.folders.remove(&path) {
+                self.gis.sources.open.remove(&folder_key(&path));
+                self.gis.sources.listings.remove(&path);
+                if self.gis.sources.folders.remove(&path) {
                     self.output(format!(
                         "Kaynaklar: “{}” listeden kaldırıldı.",
                         folder_name(&path)
@@ -484,13 +485,13 @@ impl App {
                 }
             }
             Event::Toggle(key) => return self.toggle_source(key),
-            Event::Focus(key) => self.sources.focused = Some(key),
+            Event::Focus(key) => self.gis.sources.focused = Some(key),
             Event::Listed(path, result) => {
-                if !self.sources.open.contains(&folder_key(&path)) {
+                if !self.gis.sources.open.contains(&folder_key(&path)) {
                     return Task::none();
                 }
-                self.sources.requests.remove(&folder_key(&path));
-                self.sources.listings.insert(
+                self.gis.sources.requests.remove(&folder_key(&path));
+                self.gis.sources.listings.insert(
                     path,
                     match result {
                         Ok(l) => Read::Ready(l),
@@ -500,11 +501,11 @@ impl App {
             }
             Event::Projects(view, result) => {
                 let key = list_key(view);
-                if !self.sources.open.contains(&key) {
+                if !self.gis.sources.open.contains(&key) {
                     return Task::none();
                 }
-                self.sources.requests.remove(&key);
-                self.sources.lists.insert(
+                self.gis.sources.requests.remove(&key);
+                self.gis.sources.lists.insert(
                     view,
                     match result {
                         Ok(p) => Read::Ready(p),
@@ -514,11 +515,11 @@ impl App {
             }
             Event::Downloaded(id, result) => {
                 let key = project_key(&id);
-                if !self.sources.open.contains(&key) {
+                if !self.gis.sources.open.contains(&key) {
                     return Task::none();
                 }
-                self.sources.requests.remove(&key);
-                self.sources.drawings.insert(
+                self.gis.sources.requests.remove(&key);
+                self.gis.sources.drawings.insert(
                     id,
                     match result {
                         Ok(d) => Read::Ready(d),
@@ -532,7 +533,8 @@ impl App {
                     return Task::none();
                 }
                 let path = folder.join(&file.name);
-                self.sources
+                self.gis
+                    .sources
                     .folders
                     .used(&Kept::File { path: path.clone() });
                 if let Some(open) = opener(file.kind, &path) {
@@ -571,7 +573,7 @@ impl App {
                 return self.exchange_event(ExchangeEvent::Picked(kind, first.map(Ok)));
             }
             Event::Browsed(name, result, ask) => {
-                if !self.sources.open.contains(&connection_key(&name)) {
+                if !self.gis.sources.open.contains(&connection_key(&name)) {
                     return Task::none();
                 }
                 let browse = match result {
@@ -587,14 +589,14 @@ impl App {
                         Browse::Failed(d)
                     }
                 };
-                self.sources.catalogs.insert(name, browse);
+                self.gis.sources.catalogs.insert(name, browse);
             }
             Event::Refresh(name) => {
-                self.sources.open.insert(connection_key(&name));
+                self.gis.sources.open.insert(connection_key(&name));
                 return self.browse_connection(&name);
             }
             Event::AskPassword(name) => {
-                let reason = match self.sources.catalogs.get(&name) {
+                let reason = match self.gis.sources.catalogs.get(&name) {
                     Some(Browse::Failed(d)) => d.message.clone(),
                     _ => "Sunucu parola istiyor.".to_owned(),
                 };
@@ -602,30 +604,31 @@ impl App {
             }
             Event::AddTable(name, table, area) => return self.add_database_table(name, table, area),
             Event::Reproject(yes) => {
-                if let Some(ask) = self.sources.reproject.take()
+                if let Some(ask) = self.gis.sources.reproject.take()
                     && yes
                 {
                     return self.bind_from_sources(&ask.connection, &ask.table, true, ask.area);
                 }
             }
             Event::AddLayer(id, path) => {
-                let Some(Read::Ready(drawing)) = self.sources.drawings.get(&id).cloned() else {
+                let Some(Read::Ready(drawing)) = self.gis.sources.drawings.get(&id).cloned() else {
                     return Task::none();
                 };
                 let from = self
+                    .gis
                     .sources
                     .project(&id)
                     .map_or_else(String::new, |p| p.name.clone());
                 self.take_layer_into(&drawing.drawing, &path, &from);
             }
-            Event::Search(words) => self.sources.search = words,
+            Event::Search(words) => self.gis.sources.search = words,
             Event::Tables(origin, result) => {
                 let key = tables_key(&origin);
-                if !self.sources.open.contains(&key) {
+                if !self.gis.sources.open.contains(&key) {
                     return Task::none();
                 }
-                self.sources.requests.remove(&key);
-                self.sources.tables.insert(
+                self.gis.sources.requests.remove(&key);
+                self.gis.sources.tables.insert(
                     origin,
                     match result {
                         Ok(t) => Read::Ready(t),
@@ -634,11 +637,11 @@ impl App {
                 );
             }
             Event::Sample(key, result) => {
-                if !self.sources.open.contains(&key) {
+                if !self.gis.sources.open.contains(&key) {
                     return Task::none();
                 }
-                self.sources.requests.remove(&key);
-                self.sources.samples.insert(
+                self.gis.sources.requests.remove(&key);
+                self.gis.sources.samples.insert(
                     key,
                     match result {
                         Ok(rows) => Read::Ready(rows),
@@ -647,11 +650,11 @@ impl App {
                 );
             }
             Event::ServiceRead(key, result) => {
-                if !self.sources.open.contains(&key) {
+                if !self.gis.sources.open.contains(&key) {
                     return Task::none();
                 }
-                self.sources.requests.remove(&key);
-                self.sources.services.insert(
+                self.gis.sources.requests.remove(&key);
+                self.gis.sources.services.insert(
                     key,
                     match result {
                         Ok(c) => Read::Ready(c),
@@ -660,10 +663,10 @@ impl App {
                 );
             }
             Event::ServiceRemove(at) => {
-                if let Some(gone) = self.sources.folders.remove_service(at) {
+                if let Some(gone) = self.gis.sources.folders.remove_service(at) {
                     let key = service_key(&gone);
-                    self.sources.open.remove(&key);
-                    self.sources.services.remove(&key);
+                    self.gis.sources.open.remove(&key);
+                    self.gis.sources.services.remove(&key);
                     self.output(format!("Kaynaklar: “{}” listeden kaldırıldı.", gone.name));
                 }
             }
@@ -673,7 +676,7 @@ impl App {
                     self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
                     return Task::none();
                 }
-                self.sources.folders.used(&origin.kept(&table));
+                self.gis.sources.folders.used(&origin.kept(&table));
                 return self.open_table(origin, table, bind);
             }
             Event::GoToLayer(id) => {
@@ -688,12 +691,12 @@ impl App {
             Event::ShowExtent(srid, extent, name) => self.show_extent(srid, extent, name),
             Event::Star(kept) => {
                 let name = kept.label();
-                if self.sources.folders.is_favourite(&kept) {
-                    self.sources.folders.star(&kept);
+                if self.gis.sources.folders.is_favourite(&kept) {
+                    self.gis.sources.folders.star(&kept);
                     self.output(format!(
                         "Kaynaklar: “{name}” sık kullanılanlardan çıkarıldı."
                     ));
-                } else if self.sources.folders.star(&kept) {
+                } else if self.gis.sources.folders.star(&kept) {
                     self.output(format!("Kaynaklar: “{name}” sık kullanılanlara eklendi."));
                 } else {
                     self.warn(format!(
@@ -703,8 +706,8 @@ impl App {
                 }
             }
             Event::Press(key, click, add) => {
-                self.sources.focused = Some(key.clone());
-                self.sources.drag = Some(Drag {
+                self.gis.sources.focused = Some(key.clone());
+                self.gis.sources.drag = Some(Drag {
                     key,
                     click: click.map(|c| *c),
                     add: *add,
@@ -712,12 +715,12 @@ impl App {
                 });
             }
             Event::DragAt(at) => {
-                if let Some(d) = &mut self.sources.drag {
+                if let Some(d) = &mut self.gis.sources.drag {
                     d.at = Some(at);
                 }
             }
             Event::DragEnd => {
-                let Some(d) = self.sources.drag.take() else {
+                let Some(d) = self.gis.sources.drag.take() else {
                     return Task::none();
                 };
                 // Let go over the drawing: added there; else a click on the row.
@@ -768,7 +771,7 @@ impl App {
                     ));
                     return Task::none();
                 };
-                self.sources.folders.used(&kept);
+                self.gis.sources.folders.used(&kept);
                 if let Some(open) = opener(kind, path) {
                     return self.update(open);
                 }
@@ -787,7 +790,7 @@ impl App {
                 )
             }
             Kept::Table { path, table } => {
-                self.sources.folders.used(&kept);
+                self.gis.sources.folders.used(&kept);
                 self.update(crate::exchange::open_gpkg(
                     path.clone(),
                     Some(table.clone()),
@@ -795,7 +798,7 @@ impl App {
                 ))
             }
             Kept::Database { connection, table } => {
-                self.sources.folders.used(&kept);
+                self.gis.sources.folders.used(&kept);
                 let (connection, table) = (connection.clone(), table.clone());
                 if self.db_store.get(&connection).is_none() {
                     self.warn(format!(
@@ -804,7 +807,10 @@ impl App {
                     return Task::none();
                 }
                 // The connection's catalogue is read first when it was not; the table is then added from its row.
-                if matches!(self.sources.catalogs.get(&connection), Some(Browse::Ready(_))) {
+                if matches!(
+                    self.gis.sources.catalogs.get(&connection),
+                    Some(Browse::Ready(_))
+                ) {
                     return self.add_database_table(connection, table, false);
                 }
                 self.output(format!(
@@ -813,19 +819,19 @@ impl App {
                 self.browse_connection_in_sources(&connection)
             }
             Kept::Service { service } => {
-                self.sources.folders.used(&kept);
+                self.gis.sources.folders.used(&kept);
                 let read = self.read_service(service);
                 let s = service.clone();
                 self.open_saved_service(s.kind, s.url, s.connection, None, read)
             }
             Kept::ServiceLayer { service, item, .. } => {
-                self.sources.folders.used(&kept);
+                self.gis.sources.folders.used(&kept);
                 let read = self.read_service(service);
                 let s = service.clone();
                 self.open_saved_service(s.kind, s.url, s.connection, Some(item.clone()), read)
             }
             Kept::Basemap { command, .. } => {
-                self.sources.folders.used(&kept);
+                self.gis.sources.folders.used(&kept);
                 let command = command.clone();
                 self.basemap_command(&command)
             }
@@ -834,7 +840,7 @@ impl App {
 
     /// A saved service's offer as the panel read it, for its window.
     fn read_service(&self, service: &SavedService) -> Option<Connecting> {
-        match self.sources.services.get(&service_key(service)) {
+        match self.gis.sources.services.get(&service_key(service)) {
             Some(Read::Ready(c)) => Some((**c).clone()),
             _ => None,
         }
@@ -864,7 +870,7 @@ impl App {
                         max_y: b[3],
                     })
                 });
-                self.sources.extent_mark = Some((session, b, name.clone()));
+                self.gis.sources.extent_mark = Some((session, b, name.clone()));
                 self.say(
                     Level::Info,
                     format!(
@@ -891,7 +897,8 @@ impl App {
     /// Kapsamı göster's frame for the drawing as it is.
     pub(crate) fn extent_mark(&self) -> Option<([f64; 4], String)> {
         let doc = self.document.as_ref()?;
-        self.sources
+        self.gis
+            .sources
             .extent_mark
             .as_ref()
             .filter(|(session, ..)| *session == doc.session)
@@ -899,7 +906,10 @@ impl App {
     }
 
     fn read_tables(&mut self, origin: Origin) -> Task<Message> {
-        self.sources.tables.insert(origin.clone(), Read::Reading);
+        self.gis
+            .sources
+            .tables
+            .insert(origin.clone(), Read::Reading);
         let key = tables_key(&origin);
         let back = origin.clone();
         let (task, handle) = off_thread(
@@ -907,7 +917,10 @@ impl App {
             move |r| Event::Tables(back, r),
         )
         .abortable();
-        self.sources.requests.insert(key, handle.abort_on_drop());
+        self.gis
+            .sources
+            .requests
+            .insert(key, handle.abort_on_drop());
         task
     }
 
@@ -915,7 +928,7 @@ impl App {
         let Some((origin, table)) = table_of_key(&key) else {
             return Task::none();
         };
-        let columns: Vec<String> = match self.sources.tables.get(&origin) {
+        let columns: Vec<String> = match self.gis.sources.tables.get(&origin) {
             Some(Read::Ready(tables)) => tables
                 .iter()
                 .find(|t| t.name == table)
@@ -930,19 +943,23 @@ impl App {
             _ => Vec::new(),
         };
         let settings = self.document.as_ref().map(|d| d.settings().clone());
-        self.sources.samples.insert(key.clone(), Read::Reading);
+        self.gis.sources.samples.insert(key.clone(), Read::Reading);
         let back = key.clone();
         let (task, handle) = off_thread(
             move || sample_rows(&origin, &table, columns, settings),
             move |r| Event::Sample(back, r),
         )
         .abortable();
-        self.sources.requests.insert(key, handle.abort_on_drop());
+        self.gis
+            .sources
+            .requests
+            .insert(key, handle.abort_on_drop());
         task
     }
 
     fn read_saved_service(&mut self, key: String) -> Task<Message> {
         let Some(service) = self
+            .gis
             .sources
             .folders
             .services()
@@ -965,7 +982,7 @@ impl App {
             let secret = crate::services::secrets::secrets().get(&c.origin, &c.id);
             Some((c, secret))
         });
-        self.sources.services.insert(key.clone(), Read::Reading);
+        self.gis.sources.services.insert(key.clone(), Read::Reading);
         let back = key.clone();
         let (task, handle) = off_thread(
             move || {
@@ -978,13 +995,16 @@ impl App {
             move |r| Event::ServiceRead(back, r),
         )
         .abortable();
-        self.sources.requests.insert(key, handle.abort_on_drop());
+        self.gis
+            .sources
+            .requests
+            .insert(key, handle.abort_on_drop());
         task
     }
 
     /// A row opened (its things read) or closed (what was read forgotten).
     fn toggle_source(&mut self, key: String) -> Task<Message> {
-        let s = &mut self.sources;
+        let s = &mut self.gis.sources;
         if s.open.remove(&key) {
             s.requests.remove(&key);
             if let Some(path) = key.strip_prefix("d:") {
@@ -1034,7 +1054,10 @@ impl App {
         let Some(c) = self.db_store.get(name) else {
             return Task::none();
         };
-        self.sources.catalogs.insert(name.to_owned(), Browse::Reading);
+        self.gis
+            .sources
+            .catalogs
+            .insert(name.to_owned(), Browse::Reading);
         let back = name.to_owned();
         off_thread(
             move || probe::browse(&c, None).map(Arc::new),
@@ -1045,9 +1068,9 @@ impl App {
     /// Kaynaklar shown with the connection named `name` open (a connection just saved).
     pub(crate) fn browse_connection_in_sources(&mut self, name: &str) -> Task<Message> {
         self.show_sources();
-        self.sources.open_databases();
-        self.sources.open.insert(connection_key(name));
-        self.sources.focused = Some(connection_key(name));
+        self.gis.sources.open_databases();
+        self.gis.sources.open.insert(connection_key(name));
+        self.gis.sources.focused = Some(connection_key(name));
         self.browse_connection(name)
     }
 
@@ -1059,7 +1082,7 @@ impl App {
             return Task::none();
         };
         let project = doc.settings().srid;
-        let Some(Browse::Ready(catalog)) = self.sources.catalogs.get(&name) else {
+        let Some(Browse::Ready(catalog)) = self.gis.sources.catalogs.get(&name) else {
             return Task::none();
         };
         let Some(r) = catalog.relations.iter().find(|r| r.table() == table) else {
@@ -1070,7 +1093,7 @@ impl App {
             return Task::none();
         }
         if let Some(srid) = r.srid.filter(|&s| s != project) {
-            self.sources.reproject = Some(ReprojectAsk {
+            self.gis.sources.reproject = Some(ReprojectAsk {
                 connection: name,
                 table,
                 area,
@@ -1086,7 +1109,7 @@ impl App {
         let Some(c) = self.db_store.get(name) else {
             return Task::none();
         };
-        let relation = match self.sources.catalogs.get(name) {
+        let relation = match self.gis.sources.catalogs.get(name) {
             Some(Browse::Ready(catalog)) => catalog.relations.iter().find(|r| r.table() == table),
             _ => None,
         };
@@ -1115,7 +1138,10 @@ impl App {
     }
 
     fn list_folder(&mut self, path: PathBuf) -> Task<Message> {
-        self.sources.listings.insert(path.clone(), Read::Reading);
+        self.gis
+            .sources
+            .listings
+            .insert(path.clone(), Read::Reading);
         let back = path.clone();
         off_thread(move || read_folder(&path), move |r| Event::Listed(back, r))
     }
@@ -1127,7 +1153,7 @@ impl App {
         let Some(client) = self.cloud.signed_in().cloned() else {
             return Task::none();
         };
-        self.sources.lists.insert(key, Read::Reading);
+        self.gis.sources.lists.insert(key, Read::Reading);
         let mut query = CatalogQuery::new(catalog_view);
         query.sort = Some(CatalogSort::Name);
         query.limit = Some(LIMIT);
@@ -1140,7 +1166,8 @@ impl App {
             ))
         })
         .abortable();
-        self.sources
+        self.gis
+            .sources
             .requests
             .insert(list_key(key), handle.abort_on_drop());
         task
@@ -1149,7 +1176,7 @@ impl App {
     fn download(&mut self, id: String) -> Task<Message> {
         let (Some(client), Some(p)) = (
             self.cloud.signed_in().cloned(),
-            self.sources.project(&id).cloned(),
+            self.gis.sources.project(&id).cloned(),
         ) else {
             return Task::none();
         };
@@ -1158,7 +1185,7 @@ impl App {
         else {
             return Task::none();
         };
-        self.sources.drawings.insert(id.clone(), Read::Reading);
+        self.gis.sources.drawings.insert(id.clone(), Read::Reading);
         let storage = p.storage;
         let fetch = async move {
             let got = if storage == ProjectStorage::File {
@@ -1197,7 +1224,10 @@ impl App {
             (back.clone(), result)
         })
         .abortable();
-        self.sources.requests.insert(key, handle.abort_on_drop());
+        self.gis
+            .sources
+            .requests
+            .insert(key, handle.abort_on_drop());
         // The bytes become a drawing off the UI thread.
         task.then(|(id, result)| match result {
             Err(why) => Task::done(msg(Event::Downloaded(id, Err(why)))),

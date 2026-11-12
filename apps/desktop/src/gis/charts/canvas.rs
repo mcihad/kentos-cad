@@ -10,6 +10,7 @@
 //!   dragged box; a press publishes the element under it, a dragged box its
 //!   corners.
 
+use crate::gis;
 use std::cell::Cell;
 
 use iced::advanced::image::{FilterMethod, Handle};
@@ -32,7 +33,7 @@ use crate::app::Message;
 const DRAG: f32 = 3.0;
 
 fn publish(e: Event) -> canvas::Action<Message> {
-    canvas::Action::publish(Message::Charts(e)).and_capture()
+    canvas::Action::publish(Message::Gis(gis::Event::Charts(e))).and_capture()
 }
 
 /// The chart's picture as last painted, and what it was painted for.

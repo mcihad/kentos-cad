@@ -36,6 +36,7 @@ pub mod read;
 pub mod stakeout;
 pub mod traverse;
 
+use crate::gis;
 use iced::widget::column;
 use iced::{Element, Task};
 use kentos_commands::{Entity, SurveyPoints, SurveyWork};
@@ -223,7 +224,7 @@ impl Calc {
 }
 
 fn event(e: Event) -> Message {
-    Message::Calc(e)
+    Message::Gis(gis::Event::Calc(e))
 }
 
 /// ↑ (`up`) or ↓ with a Hesap window open: the focused field is found,
@@ -254,7 +255,7 @@ impl App {
             "calc.traverse" => self.calc_show(Window::Traverse),
             "calc.polar" => self.calc_show(Window::Polar),
             "calc.forward" | "calc.resection" => {
-                self.calc.intersection.kind = if id == "calc.forward" {
+                self.gis.calc.intersection.kind = if id == "calc.forward" {
                     intersection::Kind::Forward
                 } else {
                     intersection::Kind::Resection
@@ -287,7 +288,7 @@ impl App {
             Window::Polar => None,
             _ => Some("poligon"),
         };
-        if let Some(layer) = self.calc.layer(window)
+        if let Some(layer) = self.gis.calc.layer(window)
             && layer.as_deref().is_none_or(|id| layers.get(id).is_none())
         {
             *layer = Some(
@@ -298,24 +299,33 @@ impl App {
             );
         }
         if window == Window::Traverse {
-            self.calc.traverse.sync(&doc.model);
+            self.gis.calc.traverse.sync(&doc.model);
         }
         if window == Window::Fit {
-            self.calc.fit.sync(&doc.model, self.selection.len());
+            self.gis.calc.fit.sync(&doc.model, self.selection.len());
         }
         if window == Window::RasterFit {
-            self.calc.raster_fit.sync(&doc.model, self.selection.ids());
+            self.gis
+                .calc
+                .raster_fit
+                .sync(&doc.model, self.selection.ids());
         }
         if window == Window::Edgematch {
-            self.calc.edgematch.sync(&doc.model, self.selection.len());
-            self.calc.edgematch.solve(&doc.model, self.selection.ids());
+            self.gis
+                .calc
+                .edgematch
+                .sync(&doc.model, self.selection.len());
+            self.gis
+                .calc
+                .edgematch
+                .solve(&doc.model, self.selection.ids());
         }
         // The project's k and tolerances may have changed since it was last shown.
         if window == Window::FieldBook {
-            self.calc.fieldbook.sync(doc.settings());
+            self.gis.calc.fieldbook.sync(doc.settings());
         }
-        self.calc.open = Some(window);
-        self.dialog = Some(Asking::Calc);
+        self.gis.calc.open = Some(window);
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::Calc));
         // The adjustments are solved again on the drawing as it is now.
         self.network_solve();
     }
@@ -325,18 +335,18 @@ impl App {
         if let Event::RasterFit(e @ raster_fit::Event::Warped(_)) = e {
             return self.raster_fit_event(e);
         }
-        let Some(window) = self.calc.open else {
+        let Some(window) = self.gis.calc.open else {
             return Task::none();
         };
         let task = match e {
             Event::Close => {
-                self.calc.open = None;
+                self.gis.calc.open = None;
                 self.dialog = None;
                 Task::none()
             }
             Event::Pick(field) => {
                 let title = self.calc_title(window);
-                self.calc.picking = Some((window, field));
+                self.gis.calc.picking = Some((window, field));
                 self.calc_pick(title, field_label(window, field).to_owned());
                 Task::none()
             }
@@ -362,8 +372,8 @@ impl App {
             Event::SendToDevice => self.calc_send_stakeout(),
             Event::Keep(name) => {
                 match window {
-                    Window::Network => self.calc.network.keep = name,
-                    Window::Level => self.calc.level.keep = name,
+                    Window::Network => self.gis.calc.network.keep = name,
+                    Window::Level => self.gis.calc.level.keep = name,
                     _ => {}
                 }
                 Task::none()
@@ -379,42 +389,42 @@ impl App {
             Event::Layer(i) => {
                 if let Some(doc) = &self.document
                     && let Some((id, _, false)) = leaves(&doc.model).get(i)
-                    && let Some(layer) = self.calc.layer(window)
+                    && let Some(layer) = self.gis.calc.layer(window)
                 {
                     *layer = Some(id.clone());
                 }
                 Task::none()
             }
             Event::Kind(kind) => {
-                self.calc.intersection.kind = kind;
+                self.gis.calc.intersection.kind = kind;
                 Task::none()
             }
             Event::Alpha(t) => {
-                self.calc.intersection.alpha = t;
+                self.gis.calc.intersection.alpha = t;
                 Task::none()
             }
             Event::Beta(t) => {
-                self.calc.intersection.beta = t;
+                self.gis.calc.intersection.beta = t;
                 Task::none()
             }
             Event::Name(t) => {
-                self.calc.intersection.name = t;
+                self.gis.calc.intersection.name = t;
                 Task::none()
             }
             Event::TraverseKind(kind) => {
-                self.calc.traverse.kind = kind;
+                self.gis.calc.traverse.kind = kind;
                 Task::none()
             }
             Event::EndOriented(on) => {
-                self.calc.traverse.end_oriented = on;
+                self.gis.calc.traverse.end_oriented = on;
                 Task::none()
             }
             Event::TraverseHeights(on) => {
-                self.calc.traverse.heights = on;
+                self.gis.calc.traverse.heights = on;
                 Task::none()
             }
             Event::TraverseReciprocal(on) => {
-                self.calc.traverse.reciprocal = on;
+                self.gis.calc.traverse.reciprocal = on;
                 Task::none()
             }
             Event::TraverseRefraction => {
@@ -422,62 +432,62 @@ impl App {
                 Task::none()
             }
             Event::TraverseStartZ(t) => {
-                self.calc.traverse.start_z = t;
+                self.gis.calc.traverse.start_z = t;
                 Task::none()
             }
             Event::TraverseEndZ(t) => {
-                self.calc.traverse.end_z = t;
+                self.gis.calc.traverse.end_z = t;
                 Task::none()
             }
             Event::BackReading(t) => {
-                self.calc.polar.back_reading = t;
+                self.gis.calc.polar.back_reading = t;
                 Task::none()
             }
             Event::StationZ(t) => {
-                self.calc.polar.station_z = t;
+                self.gis.calc.polar.station_z = t;
                 Task::none()
             }
             Event::InstrumentHeight(t) => {
-                self.calc.polar.instrument_height = t;
+                self.gis.calc.polar.instrument_height = t;
                 Task::none()
             }
             Event::Cell(row, col, text) => {
-                if let Some(table) = self.calc.table(window) {
+                if let Some(table) = self.gis.calc.table(window) {
                     table.set(row, col, text);
                 }
                 Task::none()
             }
             Event::Paste(row, col, contents) => {
                 // The field's own paste stands until the clipboard says it held a table.
-                if let Some(table) = self.calc.table(window) {
+                if let Some(table) = self.gis.calc.table(window) {
                     table.set(row, col, contents);
                 }
                 iced::clipboard::read().map(move |t| event(Event::Pasted(row, col, t)))
             }
-            Event::Pasted(row, col, raw) => match (raw, self.calc.table(window)) {
+            Event::Pasted(row, col, raw) => match (raw, self.gis.calc.table(window)) {
                 (Some(raw), Some(table)) => match grid::paste(table, row, col, &raw) {
                     Some(at) => iced::widget::operation::focus(grid::cell_id(window, at, col)),
                     None => Task::none(),
                 },
                 _ => Task::none(),
             },
-            Event::Submit(row, col) => match self.calc.table(window) {
+            Event::Submit(row, col) => match self.gis.calc.table(window) {
                 Some(table) => grid::submit(table, window, row, col),
                 None => Task::none(),
             },
-            Event::Arrow(up, from) => match self.calc.table(window) {
+            Event::Arrow(up, from) => match self.gis.calc.table(window) {
                 Some(table) => grid::arrow(table, window, &from, up),
                 None if matches!(window, Window::Network | Window::Level) => {
                     self.network_arrow(up, &from)
                 }
                 None => Task::none(),
             },
-            Event::AddRow => match self.calc.table(window) {
+            Event::AddRow => match self.gis.calc.table(window) {
                 Some(table) => grid::add(table, window),
                 None => Task::none(),
             },
             Event::RemoveRow(row) => {
-                if let Some(table) = self.calc.table(window)
+                if let Some(table) = self.gis.calc.table(window)
                     && table.can_remove(row)
                 {
                     table.remove(row);
@@ -494,28 +504,31 @@ impl App {
         if window == Window::Traverse
             && let Some(doc) = &self.document
         {
-            self.calc.traverse.sync(&doc.model);
+            self.gis.calc.traverse.sync(&doc.model);
         }
         if window == Window::Fit {
-            self.calc.fit.solve();
+            self.gis.calc.fit.solve();
         }
         if window == Window::RasterFit
             && let Some(doc) = &self.document
         {
-            self.calc.raster_fit.solve(&doc.model);
+            self.gis.calc.raster_fit.solve(&doc.model);
         }
         // Karne editörü reduces the station again (Kullan, a name).
         if window == Window::FieldBook
             && let Some(doc) = &self.document
         {
-            self.calc.fieldbook.sync(doc.settings());
+            self.gis.calc.fieldbook.sync(doc.settings());
         }
         // Kenar eşleme finds its links again (the window may have closed: Göster, Sınır's pick).
         if window == Window::Edgematch
-            && self.calc.open == Some(Window::Edgematch)
+            && self.gis.calc.open == Some(Window::Edgematch)
             && let Some(doc) = &self.document
         {
-            self.calc.edgematch.solve(&doc.model, self.selection.ids());
+            self.gis
+                .calc
+                .edgematch
+                .solve(&doc.model, self.selection.ids());
         }
         task
     }
@@ -535,7 +548,7 @@ impl App {
         match window {
             Window::Traverse => traverse::TITLE,
             Window::Polar => polar::TITLE,
-            Window::Intersection => self.calc.intersection.kind.title(),
+            Window::Intersection => self.gis.calc.intersection.kind.title(),
             Window::Stakeout => stakeout::TITLE,
             Window::Fit => fit::TITLE,
             Window::Edgematch => edgematch::TITLE,
@@ -549,7 +562,7 @@ impl App {
 
     /// A known point field's text; Vektör oturtma has none.
     fn calc_known_text(&mut self, window: Window, field: Field) -> Option<&mut String> {
-        let calc = &mut self.calc;
+        let calc = &mut self.gis.calc;
         Some(match (window, field) {
             (Window::Traverse, Field::Back) => &mut calc.traverse.back,
             (Window::Traverse, Field::End) => &mut calc.traverse.end,
@@ -580,7 +593,7 @@ impl App {
             return;
         }
         // Koordinat dönüştür's point: its coordinates in the two fields.
-        if self.calc.convert.picking {
+        if self.gis.calc.convert.picking {
             self.convert_picked(p);
             self.calc_show(Window::Convert);
             return;
@@ -591,15 +604,15 @@ impl App {
             return;
         }
         // Vektör oturtma's row: its source or target, and the name it snapped to.
-        if let Some((row, side)) = self.calc.fit.picking.take() {
+        if let Some((row, side)) = self.gis.calc.fit.picking.take() {
             if let (Some(p), Some(doc)) = (p, &self.document) {
                 let name = read::name_at(&doc.model, p);
-                self.calc.fit.picked(row, side, p, name);
+                self.gis.calc.fit.picked(row, side, p, name);
             }
             self.calc_show(Window::Fit);
             return;
         }
-        let Some((window, field)) = self.calc.picking.take() else {
+        let Some((window, field)) = self.gis.calc.picking.take() else {
             return;
         };
         if let (Some(p), Some(doc)) = (p, &self.document) {
@@ -620,7 +633,7 @@ impl App {
             return Task::none();
         };
         let mut points = Vec::new();
-        for text in &self.calc.stakeout.rows {
+        for text in &self.gis.calc.stakeout.rows {
             if let read::Known::Point { p, name } = read::resolve_point(&doc.model, text) {
                 let of_drawing = (!name.is_empty())
                     .then(|| read::point_named(&doc.model, text))
@@ -654,17 +667,17 @@ impl App {
         let title = self.calc_title(window);
         let model = &doc.model;
         let lines = match window {
-            Window::Traverse => self.calc.traverse.report(model, &format),
-            Window::Polar => self.calc.polar.report(model, &format),
-            Window::Intersection => self.calc.intersection.report(model, &format),
-            Window::Stakeout => self.calc.stakeout.report(model, &format),
-            Window::Fit => self.calc.fit.report(model, &format),
-            Window::Edgematch => self.calc.edgematch.report(model, self.selection.len()),
+            Window::Traverse => self.gis.calc.traverse.report(model, &format),
+            Window::Polar => self.gis.calc.polar.report(model, &format),
+            Window::Intersection => self.gis.calc.intersection.report(model, &format),
+            Window::Stakeout => self.gis.calc.stakeout.report(model, &format),
+            Window::Fit => self.gis.calc.fit.report(model, &format),
+            Window::Edgematch => self.gis.calc.edgematch.report(model, self.selection.len()),
             // Koordinat dönüştür copies its values itself (Panoya kopyala).
             Window::Convert => None,
-            Window::FieldBook => self.calc.fieldbook.report(),
-            Window::Network => self.calc.network.report(model, &format),
-            Window::Level => self.calc.level.report(model, &format),
+            Window::FieldBook => self.gis.calc.fieldbook.report(),
+            Window::Network => self.gis.calc.network.report(model, &format),
+            Window::Level => self.gis.calc.level.report(model, &format),
             Window::RasterFit => None,
         };
         let Some(lines) = lines else {
@@ -687,8 +700,12 @@ impl App {
 
     /// Projeye yaz (docs/adr/4900): the traverse's measured k written as the project's, by `cad.settings.set`.
     fn calc_write_refraction(&mut self) {
-        let Some(doc) = self.document.as_mut() else { return };
-        let Some(k) = self.calc.traverse.measured(&doc.model).map(|m| m.mean) else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let Some(k) = self.gis.calc.traverse.measured(&doc.model).map(|m| m.mean) else {
+            return;
+        };
         let answer = kentos_native_application::registry::run(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
             kentos_commands::CAD_SETTINGS_SET,
@@ -713,7 +730,7 @@ impl App {
             return;
         };
         let model = &doc.model;
-        let calc = &self.calc;
+        let calc = &self.gis.calc;
         let (work, layer) = match window {
             Window::Traverse => (calc.traverse.work(model), &calc.traverse.layer),
             Window::Polar => (calc.polar.work(model), &calc.polar.layer),
@@ -750,7 +767,7 @@ impl App {
             _ => format!("{step}: {n} nokta çizime eklendi (Ctrl+Z geri alır)."),
         };
         self.say(Level::Success, said);
-        self.calc.open = None;
+        self.gis.calc.open = None;
         self.dialog = None;
     }
 
@@ -778,7 +795,7 @@ impl App {
             self.warn("Seçili nokta yok: aplike edilecek noktaları seçip pencereyi yeniden açın.");
             return;
         }
-        self.calc.stakeout.append(picked);
+        self.gis.calc.stakeout.append(picked);
     }
 
     /// Writes a survey window's points onto `layer` through `cad.survey.points`, one undo step named after the
@@ -825,28 +842,28 @@ impl App {
 
     /// The open window.
     pub(crate) fn calc_view(&self) -> Element<'_, Message> {
-        let (Some(window), Some(doc)) = (self.calc.open, &self.document) else {
+        let (Some(window), Some(doc)) = (self.gis.calc.open, &self.document) else {
             return column![].into();
         };
         // The Hesap windows are in metres, as typed (docs/adr/0165 §2).
         let format = Format::of(doc.settings()).metric();
         let model = &doc.model;
         let dialog = match window {
-            Window::Traverse => self.calc.traverse.view(model, &format),
-            Window::Polar => self.calc.polar.view(model, &format),
-            Window::Intersection => self.calc.intersection.view(model, &format),
-            Window::Stakeout => self.calc.stakeout.view(model, &format),
-            Window::Fit => self.calc.fit.view(model, &format, self.selection.len()),
-            Window::Edgematch => self.calc.edgematch.view(model, self.selection.len()),
+            Window::Traverse => self.gis.calc.traverse.view(model, &format),
+            Window::Polar => self.gis.calc.polar.view(model, &format),
+            Window::Intersection => self.gis.calc.intersection.view(model, &format),
+            Window::Stakeout => self.gis.calc.stakeout.view(model, &format),
+            Window::Fit => self.gis.calc.fit.view(model, &format, self.selection.len()),
+            Window::Edgematch => self.gis.calc.edgematch.view(model, self.selection.len()),
             // Coordinates as the project writes them: its axes and digits, the user's notation.
-            Window::Convert => self.calc.convert.view(
+            Window::Convert => self.gis.calc.convert.view(
                 doc.settings(),
                 &convert::ConvertFormat::of(doc.settings(), self.draft.geographic),
             ),
-            Window::FieldBook => self.calc.fieldbook.view(model, &format),
-            Window::Network => self.calc.network.view(model, &format),
-            Window::Level => self.calc.level.view(model, &format),
-            Window::RasterFit => self.calc.raster_fit.view(model),
+            Window::FieldBook => self.gis.calc.fieldbook.view(model, &format),
+            Window::Network => self.gis.calc.network.view(model, &format),
+            Window::Level => self.gis.calc.level.view(model, &format),
+            Window::RasterFit => self.gis.calc.raster_fit.view(model),
         };
         kentos_ui::widget::overlay::modal(dialog, event(Event::Close))
     }

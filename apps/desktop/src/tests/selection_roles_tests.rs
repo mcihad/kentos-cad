@@ -4,6 +4,7 @@
 //! decision area opens Alan with İmar; a selection whose objects do not all share the role has no such panel; a CBS
 //! project none. And their pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -51,13 +52,21 @@ fn a_pipe_opens_altyapi_on_its_own_network() {
     assert!(panels.contains(&"Altyapı"), "{panels:?}");
     assert_eq!(app.selection_roles().network.as_deref(), Some("su"));
     let _ = app.update(Message::Run("pipes.check"));
-    assert_eq!(app.pipes_check.network, "su", "the selection's network, not the first");
-    let _ = app.update(Message::PipesCheck(crate::pipes_check_window::Event::Close));
+    assert_eq!(
+        app.map.pipes_check.network, "su",
+        "the selection's network, not the first"
+    );
+    let _ = app.update(Message::Map(map::Event::PipesCheck(
+        crate::pipes_check_window::Event::Close,
+    )));
     // A sewer pipe and a water pipe: no one network holds both.
     select(&mut app, &[("su", 1), ("atiksu", 1)]);
     assert!(!shown(&app).1.contains(&"Altyapı"));
     let _ = app.update(Message::Run("pipes.check"));
-    assert_eq!(app.pipes_check.network, "atiksu", "the first network again");
+    assert_eq!(
+        app.map.pipes_check.network, "atiksu",
+        "the first network again"
+    );
 }
 
 #[test]
@@ -69,18 +78,28 @@ fn a_surface_s_points_open_yuzey_on_that_surface() {
     assert!(panels.contains(&"Yüzey") && !panels.contains(&"Altyapı"), "{panels:?}");
     assert_eq!(app.selection_roles().surface.as_deref(), Some("t-3"));
     let _ = app.update(Message::Run("terrain.sheetContours"));
-    assert_eq!(app.sheet_contours.surface, "t-3", "Çukur, not the first surface");
+    assert_eq!(
+        app.road.sheet_contours.surface, "t-3",
+        "Çukur, not the first surface"
+    );
     app.dialog = None;
     let _ = app.update(Message::Run("terrain.analysis"));
-    let w = app.surface_analysis_window.as_ref().expect("the window");
-    assert_eq!((w.surface.as_deref(), w.comparison.as_deref()), (Some("t-3"), Some("t-1")));
+    let w = app
+        .road
+        .surface_analysis_window
+        .as_ref()
+        .expect("the window");
+    assert_eq!(
+        (w.surface.as_deref(), w.comparison.as_deref()),
+        (Some("t-3"), Some("t-1"))
+    );
     app.dialog = None;
-    app.surface_analysis_window = None;
+    app.road.surface_analysis_window = None;
     let _ = app.update(Message::Run("terrain.surfaces"));
-    let w = app.terrain_window.as_ref().expect("the window");
+    let w = app.road.terrain_window.as_ref().expect("the window");
     assert_eq!(w.chosen_def().map(|d| d.id.as_str()), Some("t-3"));
     // A building with the points: not a surface's source.
-    app.terrain_window = None;
+    app.road.terrain_window = None;
     app.dialog = None;
     select(&mut app, &[("cukur", 1), ("bina", 1)]);
     assert!(app.selection_roles().surface.is_none());

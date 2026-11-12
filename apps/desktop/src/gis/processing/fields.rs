@@ -5,6 +5,7 @@
 //! an attribute name, typed or picked; an expression with its fields,
 //! variables, functions and a live line; a field map's rows.
 
+use crate::gis;
 use std::fmt;
 
 use iced::widget::{Column, Row, button, column, container, row};
@@ -1044,8 +1045,8 @@ fn expression<'a>(
             button(icon(crate::icons::from_web(Some("expression"))).size(16.0))
                 .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
-                .on_press(Message::Builder(crate::expression::Event::OpenProcessing(
-                    def.name.clone(),
+                .on_press(Message::Gis(gis::Event::Builder(
+                    crate::expression::Event::OpenProcessing(def.name.clone()),
                 ))),
             Tip::new("İfade oluşturucu…"),
             iced::widget::tooltip::Position::Top,

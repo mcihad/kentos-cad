@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::platform_window::{Event as W, corners_of, corners_text};
+use crate::road;
 
 /// A road project with `road.platforms.edit`'s drawing: a sloping plane terrain and two pads.
 fn app() -> App {
@@ -16,7 +17,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Platforms(e));
+    let _ = app.update(Message::Road(road::Event::Platforms(e)));
 }
 
 #[test]
@@ -31,29 +32,53 @@ fn corners_read_as_typed() {
 fn the_window_grades_balances_saves_and_draws_the_pad() {
     let mut app = app();
     let _ = app.update(Message::Run("platform.editor"));
-    assert_eq!(app.dialog, Some(Dialog::Platforms));
-    let w = app.platform_window.as_ref().expect("open");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Platforms))
+    );
+    let w = app.road.platform_window.as_ref().expect("open");
     assert_eq!(w.chosen.as_deref(), Some("p-1"));
-    let r = w.preview.report.clone().unwrap_or_else(|| panic!("grades: {:?}", w.preview.why));
+    let r = w
+        .preview
+        .report
+        .clone()
+        .unwrap_or_else(|| panic!("grades: {:?}", w.preview.why));
     let fill = r.fill.expect("closed");
     // A flatter fill slope runs further out and fills more.
     send(&mut app, W::Field(8, "3".into()));
-    let more = app.platform_window.as_ref().and_then(|w| w.preview.report.clone()).expect("grades");
-    assert!(more.fill.expect("closed") > fill, "{fill} → {:?}", more.fill);
+    let more = app
+        .road
+        .platform_window
+        .as_ref()
+        .and_then(|w| w.preview.report.clone())
+        .expect("grades");
+    assert!(
+        more.fill.expect("closed") > fill,
+        "{fill} → {:?}",
+        more.fill
+    );
     // A balance in the bracket typed, put in the base's height.
     for (k, v) in [(12, "-6"), (13, "2"), (14, "0.5")] {
         send(&mut app, W::Field(k, v.into()));
     }
     send(&mut app, W::Balance);
-    let b = match app.platform_window.as_ref().and_then(|w| w.preview.balance.clone()) {
+    let b = match app
+        .road
+        .platform_window
+        .as_ref()
+        .and_then(|w| w.preview.balance.clone())
+    {
         Some(Ok(b)) => b,
         other => panic!("balanced: {other:?}"),
     };
     assert!(b.converged && b.net.abs() <= 0.5, "{b:?}");
     send(&mut app, W::Apply);
-    let w = app.platform_window.as_ref().expect("open");
+    let w = app.road.platform_window.as_ref().expect("open");
     let balanced = w.preview.report.clone().expect("grades");
-    let (c, f) = (balanced.cut.expect("closed"), balanced.fill.expect("closed"));
+    let (c, f) = (
+        balanced.cut.expect("closed"),
+        balanced.fill.expect("closed"),
+    );
     assert!((c - f).abs() <= 1.0, "{c} {f}");
     // Nothing written until Kaydet.
     assert_eq!(app.document.as_ref().expect("a drawing").model.road_platforms()[0].base[2], 104.0);
@@ -65,8 +90,14 @@ fn the_window_grades_balances_saves_and_draws_the_pad() {
     let before = app.document.as_ref().expect("a drawing").model.entities().count();
     send(&mut app, W::Layer("platform".into()));
     send(&mut app, W::Draw);
-    assert!(app.platform_window.is_none());
-    let after = app.document.as_ref().expect("a drawing").model.entities().count();
+    assert!(app.road.platform_window.is_none());
+    let after = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .entities()
+        .count();
     assert!(after > before, "{before} → {after}");
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before);
@@ -77,18 +108,45 @@ fn a_new_pad_needs_its_slopes_and_takes_its_corners_from_a_closed_area() {
     let mut app = app();
     let _ = app.update(Message::Run("platform.editor"));
     send(&mut app, W::Choose(None));
-    let why = app.platform_window.as_ref().and_then(|w| w.preview.why.clone()).expect("no corners yet");
+    let why = app
+        .road
+        .platform_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("no corners yet");
     assert!(why.contains("Köşeler"), "{why}");
     send(&mut app, W::Field(1, "200,0; 230,0; 230,20; 200,20".into()));
-    let why = app.platform_window.as_ref().and_then(|w| w.preview.why.clone()).expect("no base yet");
+    let why = app
+        .road
+        .platform_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("no base yet");
     assert!(why.contains("yazılmalı"), "{why}");
-    for (k, v) in [(2, "200"), (3, "0"), (4, "110"), (7, "1.5"), (8, "2"), (9, "5"), (10, "20"), (11, "100")] {
+    for (k, v) in [
+        (2, "200"),
+        (3, "0"),
+        (4, "110"),
+        (7, "1.5"),
+        (8, "2"),
+        (9, "5"),
+        (10, "20"),
+        (11, "100"),
+    ] {
         send(&mut app, W::Field(k, v.into()));
     }
-    let w = app.platform_window.as_ref().expect("open");
+    let w = app.road.platform_window.as_ref().expect("open");
     assert!(w.preview.report.is_some(), "{:?}", w.preview.why);
     send(&mut app, W::Save);
-    assert_eq!(app.document.as_ref().expect("a drawing").model.road_platforms().len(), 3);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .road_platforms()
+            .len(),
+        3
+    );
     // A closed area selected gives the corners, and the base's place while none is typed.
     send(&mut app, W::Choose(None));
     let input: kentos_commands::PolygonCreate = serde_json::from_value(serde_json::json!({
@@ -107,7 +165,7 @@ fn a_new_pad_needs_its_slopes_and_takes_its_corners_from_a_closed_area() {
     };
     app.selection.set([slot]);
     send(&mut app, W::FromSelection);
-    let w = app.platform_window.as_ref().expect("open");
+    let w = app.road.platform_window.as_ref().expect("open");
     assert_eq!(w.fields[1], "300,0; 320,0; 320,15; 300,15");
     assert_eq!((w.fields[2].as_str(), w.fields[3].as_str()), ("300", "0"));
 }
@@ -195,9 +253,16 @@ fn a_map_project_grades_its_pads() {
     let mut app = map_app();
     assert!(app.offers("platform.editor") && app.offers("drainage.editor"));
     let _ = app.update(Message::Run("platform.editor"));
-    assert_eq!(app.dialog, Some(Dialog::Platforms));
-    let w = app.platform_window.as_ref().expect("open");
-    let r = w.preview.report.clone().unwrap_or_else(|| panic!("grades: {:?}", w.preview.why));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Platforms))
+    );
+    let w = app.road.platform_window.as_ref().expect("open");
+    let r = w
+        .preview
+        .report
+        .clone()
+        .unwrap_or_else(|| panic!("grades: {:?}", w.preview.why));
     assert!(r.fill.is_some() || r.cut.is_some(), "{r:?}");
     send(&mut app, W::Field(8, "3".into()));
     send(&mut app, W::Save);
@@ -208,7 +273,10 @@ fn a_map_project_grades_its_pads() {
     assert_eq!(back.settings.road.expect("road settings").platforms[0].fill, 3.0);
     // Drenaj reads its surface too.
     let _ = app.update(Message::Run("drainage.editor"));
-    assert_eq!(app.dialog, Some(Dialog::Drainage));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Drainage))
+    );
 }
 
 /// Tesviye and Drenaj in KentOS Harita: the Arazi tab and the pad window; `.run/gui-evidence/harita-tesviye-1580/`:

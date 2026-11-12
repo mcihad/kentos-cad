@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::pay_window::Event as W;
+use crate::road;
 use kentos_commands::PayMeasure;
 
 /// A road project with `road.pay.query`'s drawing: guardrails, culverts, walls, volumes and a book.
@@ -21,25 +22,39 @@ fn app(with_book: bool) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Pay(e));
+    let _ = app.update(Message::Road(road::Event::Pay(e)));
 }
 
 #[test]
 fn the_window_reads_and_saves_the_book() {
     let mut app = app(true);
     let _ = app.update(Message::Run("payItems.editor"));
-    assert_eq!(app.dialog, Some(Dialog::Pay));
-    let w = app.pay_window.as_ref().expect("open");
-    let a = w.preview.answer.clone().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Pay)));
+    let w = app.road.pay_window.as_ref().expect("open");
+    let a = w
+        .preview
+        .answer
+        .clone()
+        .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
     assert_eq!(a.rows.len(), 6);
     assert_eq!(a.unpriced, 2);
     // A price for the guardrail makes it count.
     send(&mut app, W::Item(2, 3, "40".into()));
-    let priced = app.pay_window.as_ref().and_then(|w| w.preview.answer.clone()).expect("reads");
+    let priced = app
+        .road
+        .pay_window
+        .as_ref()
+        .and_then(|w| w.preview.answer.clone())
+        .expect("reads");
     assert_eq!(priced.unpriced, 1);
     assert!((priced.total - a.total - 40.0 * a.rows[2].quantity).abs() < 1e-6);
     send(&mut app, W::Field(0, " ".into()));
-    let why = app.pay_window.as_ref().and_then(|w| w.preview.why.clone()).expect("refused");
+    let why = app
+        .road
+        .pay_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("refused");
     assert!(why.contains("kaynağı"), "{why}");
     send(&mut app, W::Field(0, "Yeni liste".into()));
     send(&mut app, W::Save);
@@ -55,7 +70,12 @@ fn the_window_reads_and_saves_the_book() {
 fn a_new_book_gets_its_items_and_rules() {
     let mut app = app(false);
     let _ = app.update(Message::Run("payItems.editor"));
-    let why = app.pay_window.as_ref().and_then(|w| w.preview.why.clone()).expect("no source yet");
+    let why = app
+        .road
+        .pay_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("no source yet");
     assert!(why.contains("kaynağı"), "{why}");
     for (k, v) in [(0, "İdarenin listesi"), (1, "2026")] {
         send(&mut app, W::Field(k, v.into()));
@@ -65,7 +85,12 @@ fn a_new_book_gets_its_items_and_rules() {
     }
     send(&mut app, W::AddRule);
     send(&mut app, W::Measure(0, PayMeasure::WallConcrete));
-    let a = app.pay_window.as_ref().and_then(|w| w.preview.answer.clone()).expect("reads");
+    let a = app
+        .road
+        .pay_window
+        .as_ref()
+        .and_then(|w| w.preview.answer.clone())
+        .expect("reads");
     assert_eq!(a.rows[0].lines.len(), 2);
     assert!(a.total > 0.0);
     send(&mut app, W::Save);

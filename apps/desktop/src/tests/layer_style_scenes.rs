@@ -10,6 +10,7 @@
 //!
 //! Test code only.
 
+use crate::gis;
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
@@ -116,7 +117,7 @@ fn translate(app: &mut App) {
     run(app, "layer.translate");
     use crate::layer_translate::Event;
     let send = |app: &mut App, e: Event| {
-        let _ = app.update(Message::LayerTranslate(e));
+        let _ = app.update(Message::Gis(gis::Event::LayerTranslate(e)));
     };
     send(app, Event::From(0, "duvar*,wall*".into()));
     send(app, Event::To(0, "A-DUVAR".into()));

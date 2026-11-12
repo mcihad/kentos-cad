@@ -117,7 +117,10 @@ impl App {
             camera: self.viewport.camera,
             selection,
             views: std::mem::replace(&mut self.view_history, ViewHistory::new()),
-            level: (std::mem::take(&mut self.active_level), std::mem::take(&mut self.level_view)),
+            level: (
+                std::mem::take(&mut self.arch.active_level),
+                std::mem::take(&mut self.level_view),
+            ),
         };
         let at = self.doc_tabs.at.min(self.doc_tabs.parked.len());
         self.doc_tabs.parked.insert(at, parked);
@@ -378,18 +381,29 @@ mod tests {
         app.show_document(crate::document::Document::new(snapshot, None).unwrap());
         let block = app.document.as_ref().unwrap().model.blocks()[0].id;
         app.open_attribute_values(block);
-        assert!(app.attribute_values.is_some());
+        assert!(app.gis.attribute_values.is_some());
         let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
         let _ = app.update(Message::CapturedEscape);
-        assert!(app.attribute_values.is_none(), "one Esc cancels even when a text field consumed it");
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+        assert!(
+            app.gis.attribute_values.is_none(),
+            "one Esc cancels even when a text field consumed it"
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
         app.open_attribute_values(block);
         app.show_document(drawing(1));
-        assert!(app.attribute_values.is_none());
+        assert!(app.gis.attribute_values.is_none());
         assert!(app.dialog.is_none());
         let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
-        let _ = app.update(Message::AttributeValues(crate::attribute_values::Event::Place));
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+        let _ = app.update(Message::Gis(crate::gis::Event::AttributeValues(
+            crate::attribute_values::Event::Place,
+        )));
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
     }
 
     #[test]

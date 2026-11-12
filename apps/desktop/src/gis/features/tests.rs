@@ -4,6 +4,7 @@
 use super::{Event, Show, next_sort};
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
+use crate::gis;
 
 fn app_with_table() -> App {
     let (mut app, _) = App::boot(None);
@@ -13,12 +14,12 @@ fn app_with_table() -> App {
     .expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    app.features.reset(None);
+    app.gis.features.reset(None);
     app
 }
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::Features(e));
+    let _ = app.update(Message::Gis(gis::Event::Features(e)));
 }
 
 fn rows(app: &App) -> Vec<String> {
@@ -70,12 +71,12 @@ fn the_tab_shows_the_active_layers_objects_by_its_fields() {
     for m in app.features_edit(2, "Parsel", "x").expect("the cell") {
         let _ = app.update(m);
     }
-    assert!(app.features.editing());
+    assert!(app.gis.features.editing());
     ev(&mut app, Event::Cancel);
     for m in app.features_edit(2, "Parsel", "015").expect("the cell") {
         let _ = app.update(m);
     }
-    assert!(!app.features.editing());
+    assert!(!app.gis.features.editing());
     assert!(rows(&app)[1].contains("| 15 |"), "{:?}", rows(&app));
 }
 
@@ -185,12 +186,16 @@ fn alan_hesapla_previews_then_writes_in_one_step_and_a_paste_reports_what_does_n
     let mut app = app_with_table();
     let _ = app.update(Message::Run("data.featureTable"));
     write(&mut app, W::Open);
-    assert_eq!(app.dialog, Some(crate::app::Dialog::FieldsWrite));
+    assert_eq!(
+        app.dialog,
+        Some(crate::app::Dialog::Gis(gis::GisDialogKind::FieldsWrite))
+    );
     write(&mut app, W::Field("Alan".into()));
     write(&mut app, W::Expression("Alan * 2".into()));
     write(&mut app, W::Scope(Scope::All));
     write(&mut app, W::Preview);
     let plan = app
+        .gis
         .features
         .write
         .as_ref()
@@ -200,7 +205,7 @@ fn alan_hesapla_previews_then_writes_in_one_step_and_a_paste_reports_what_does_n
     // “12,5” is no number to the language: its result is empty and the old value stays.
     assert_eq!((plan.changed, plan.kept), (4, 1), "{plan:?}");
     write(&mut app, W::Run(kentos_commands::WritePolicy::All));
-    assert!(app.features.write.is_none());
+    assert!(app.gis.features.write.is_none());
     assert!(rows(&app)[0].contains("| 801 |"), "{:?}", rows(&app));
     let _ = app.update(Message::Run("edit.undo"));
     assert!(rows(&app)[0].contains("| 400.50 |"), "{:?}", rows(&app));
@@ -211,6 +216,7 @@ fn alan_hesapla_previews_then_writes_in_one_step_and_a_paste_reports_what_does_n
         W::Pasted(Some("Parsel\tKullanım\n8\tTicaret\nx\tKonut\n".into())),
     );
     let plan = app
+        .gis
         .features
         .write
         .as_ref()
@@ -291,7 +297,7 @@ fn app_with_secret() -> App {
     let (mut app, _) = App::boot(None);
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    app.features.reset(None);
+    app.gis.features.reset(None);
     let _ = app.update(Message::Run("data.featureTable"));
     app
 }
@@ -342,7 +348,7 @@ fn statistics_and_charts_over_the_tables_rows_follow_its_filter_and_leave_redact
     let mut app = app_with_secret();
     ev(&mut app, Event::Search("102".into()));
     ev(&mut app, Event::Analyse(Analyse::Statistics));
-    assert_eq!(app.charts.show, Show::Table);
+    assert_eq!(app.gis.charts.show, Show::Table);
     let (objects, summaries) = app.statistics_seen().expect("the tab is open");
     assert_eq!(objects, "2 nesne");
     // No summary of the redacted field, the others are there.
@@ -353,10 +359,14 @@ fn statistics_and_charts_over_the_tables_rows_follow_its_filter_and_leave_redact
     assert_eq!(app.statistics_seen().expect("open").0, "5 nesne");
     ev(&mut app, Event::Search("102".into()));
     assert_eq!(app.statistics_seen().expect("open").0, "2 nesne");
-    let _ = app.update(Message::Statistics(crate::statistics::Event::Show(Show::All)));
+    let _ = app.update(Message::Gis(gis::Event::Statistics(
+        crate::statistics::Event::Show(Show::All),
+    )));
     assert_eq!(app.statistics_seen().expect("open").0, "5 nesne");
     // A chart over the same rows: Çubuk by Kullanım counts only them.
-    let _ = app.update(Message::Statistics(crate::statistics::Event::Show(Show::Table)));
+    let _ = app.update(Message::Gis(gis::Event::Statistics(
+        crate::statistics::Event::Show(Show::Table),
+    )));
     ev(&mut app, Event::Analyse(Analyse::Chart));
     let seen = app.chart_seen().expect("a chart");
     let total: u32 = seen
@@ -410,7 +420,7 @@ fn kinds_app(keep: bool) -> App {
         LayerField::new("İmza", LayerFieldKind::Binary),
     ]);
     assert_eq!(model.set_layer_fields("parsel", fields, &[]), Ok(true));
-    app.features.reset(None);
+    app.gis.features.reset(None);
     app
 }
 

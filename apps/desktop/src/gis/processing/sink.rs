@@ -5,6 +5,7 @@
 //! from its source (“Bütün tablo”) when the result does not go to the drawing: the part the drawing holds is said in
 //! the switch's note. The window's line says what was written where.
 
+use crate::gis;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -94,7 +95,7 @@ pub enum SinkEvent {
 }
 
 fn ev(e: SinkEvent) -> Message {
-    Message::Processing(Event::Sink(e))
+    Message::Gis(gis::Event::Processing(Event::Sink(e)))
 }
 
 const MODES: [(SinkMode, &str); 3] = [
@@ -406,7 +407,7 @@ fn said(ran: &kentos_commands::ProcessingRan) -> String {
 
 impl App {
     pub(crate) fn processing_sink_event(&mut self, e: SinkEvent) -> Task<Message> {
-        let Some(window) = &mut self.processing.dialog else {
+        let Some(window) = &mut self.gis.processing.dialog else {
             return Task::none();
         };
         let s = &mut window.sink;
@@ -437,7 +438,10 @@ impl App {
                     |path| match path {
                         Some(p) => ev(SinkEvent::Path(p)),
                         // Given up: nothing changes.
-                        None => Message::Processing(Event::FileChosen(String::new(), None)),
+                        None => Message::Gis(gis::Event::Processing(Event::FileChosen(
+                            String::new(),
+                            None,
+                        ))),
                     },
                 );
             }
@@ -461,7 +465,10 @@ impl App {
     /// The run Çalıştır asks for with the result to a file or a database: the window's values (the inputs read whole
     /// from their source as chosen), the objects chosen, the box on screen, the sink.
     pub(crate) fn processing_sink_input(&self) -> Option<ProcessingRun> {
-        let (doc, window) = (self.document.as_ref()?, self.processing.dialog.as_ref()?);
+        let (doc, window) = (
+            self.document.as_ref()?,
+            self.gis.processing.dialog.as_ref()?,
+        );
         let parameters =
             window
                 .sink
@@ -489,14 +496,14 @@ impl App {
     /// thread (`run_to_sink`).
     pub(crate) fn processing_sink_run(&mut self) -> Task<Message> {
         if let Err(why) = self.processing_environment() {
-            if let Some(window) = &mut self.processing.dialog {
+            if let Some(window) = &mut self.gis.processing.dialog {
                 window.status = RunStatus::Invalid(why);
             }
             return Task::none();
         }
         let input = self.processing_sink_input();
         let (Some(doc), Some(window), Some(input)) =
-            (&self.document, &mut self.processing.dialog, input)
+            (&self.document, &mut self.gis.processing.dialog, input)
         else {
             return Task::none();
         };
@@ -530,6 +537,7 @@ impl App {
     /// Durdur for a run to a file or a database: asked to stop; the line says it when the thread ends.
     pub(crate) fn processing_sink_stop(&mut self) -> bool {
         match self
+            .gis
             .processing
             .dialog
             .as_ref()

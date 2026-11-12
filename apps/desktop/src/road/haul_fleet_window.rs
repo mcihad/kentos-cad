@@ -15,6 +15,7 @@
 //! └─────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Theme, mouse};
 use kentos_commands::{HaulObjective, HaulTrack, HaulTruckDef, HaulTrucked, HaulsTrucks};
@@ -108,7 +109,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::HaulPlan(Plan::Fleet(e))
+    Message::Road(road::Event::HaulPlan(Plan::Fleet(e)))
 }
 
 /// A number the user typed, with a comma or a point; empty: none.
@@ -196,7 +197,9 @@ impl Fleet {
 impl App {
     /// Kamyon filosu… from Taşıma planı: the window on its diagram and objective, the values typed before kept.
     pub(crate) fn open_haul_fleet(&mut self) {
-        let Some(w) = self.haul_plan_window.as_mut() else { return };
+        let Some(w) = self.road.haul_plan_window.as_mut() else {
+            return;
+        };
         let mut fleet = w.fleet_kept.clone().unwrap_or_default();
         fleet.result = None;
         fleet.warnings.clear();
@@ -207,7 +210,9 @@ impl App {
     /// The fleet read again with the values as typed.
     pub(crate) fn refresh_haul_fleet(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.haul_plan_window.as_mut() else { return };
+        let Some(w) = self.road.haul_plan_window.as_mut() else {
+            return;
+        };
         let haul = w.haul.clone();
         let objective = if w.aim == Aim::Cost { HaulObjective::Cost } else { HaulObjective::Moment };
         let Some(x) = w.fleet.as_mut() else { return };
@@ -235,7 +240,9 @@ impl App {
 
     /// An event of the window.
     pub(crate) fn haul_fleet_event(&mut self, event: Event) {
-        let Some(w) = self.haul_plan_window.as_mut() else { return };
+        let Some(w) = self.road.haul_plan_window.as_mut() else {
+            return;
+        };
         let Some(x) = w.fleet.as_mut() else { return };
         match event {
             Event::Field(k, t) => {

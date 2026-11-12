@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -114,7 +115,11 @@ fn placed(app: &mut App) {
 }
 
 fn set(app: &mut App, key: &'static str, value: &str) {
-    let _ = app.update(Message::ToolSetting(Commit { tool: "blockInsert", key, value: value.into() }));
+    let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
+        tool: "blockInsert",
+        key,
+        value: value.into(),
+    })));
 }
 
 fn kentos_blocks() -> Value {

@@ -2,6 +2,7 @@
 //! does; Kesit kontrolü, opened from the selection (the two farthest points the ends), answers what the shared case of
 //! `road.terrains.sectioncheck` answers, and a corridor puts the far point off the line. And their pictures.
 
+use crate::road;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -42,11 +43,18 @@ const OFF: u32 = 23;
 fn turned(app: &mut App) {
     let _ = app.update(Message::Run("terrain.sheetContours"));
     for d in ["yol", "sev"] {
-        let _ = app.update(Message::SheetContours(E::Detail(d.into(), false)));
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Detail(
+            d.into(),
+            false,
+        ))));
     }
-    let _ = app.update(Message::SheetContours(E::Built(true)));
-    for e in [E::GridY("7".into()), E::GridX("3".into()), E::GridAngle("45".into())] {
-        let _ = app.update(Message::SheetContours(e));
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Built(true))));
+    for e in [
+        E::GridY("7".into()),
+        E::GridX("3".into()),
+        E::GridAngle("45".into()),
+    ] {
+        let _ = app.update(Message::Road(road::Event::SheetContours(e)));
     }
 }
 
@@ -56,7 +64,13 @@ fn turned(app: &mut App) {
 fn the_turned_grid_is_the_shared_case_s() {
     let mut app = opened(file("sheet")["setup"].clone());
     turned(&mut app);
-    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let r = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("planned");
     let want = output("sheet", "m. 63(2) ızgarası 50 g döndürülmüş");
     let spots = want["spots"].as_array().expect("spots");
     assert_eq!(r.spots.len(), spots.len());
@@ -65,14 +79,28 @@ fn the_turned_grid_is_the_shared_case_s() {
         assert!((got.x - w["x"].as_f64().expect("x")).abs() < 1e-9 && (got.y - w["y"].as_f64().expect("y")).abs() < 1e-9);
     }
     // A typed angle that is not a number is said, nothing planned.
-    let _ = app.update(Message::SheetContours(E::GridAngle("elli".into())));
-    let why = app.sheet_contours.answer.clone().expect("an answer").expect_err("refused");
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::GridAngle(
+        "elli".into(),
+    ))));
+    let why = app
+        .road
+        .sheet_contours
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect_err("refused");
     assert!(why.contains("açısı “elli” bir sayı değil"), "{why}");
 }
 
 fn section(app: &mut App, extra: &[u32]) {
-    app.selection.set([A, B].iter().chain(POINTS.iter()).chain(extra).map(|s| Slot(*s)));
-    let _ = app.update(Message::SectionCheck(K::Open));
+    app.selection.set(
+        [A, B]
+            .iter()
+            .chain(POINTS.iter())
+            .chain(extra)
+            .map(|s| Slot(*s)),
+    );
+    let _ = app.update(Message::Road(road::Event::SectionCheck(K::Open)));
 }
 
 /// Kesit kontrolü from the selection: the farthest two are the ends, the contour layer guessed from its name; the answer
@@ -81,10 +109,19 @@ fn section(app: &mut App, extra: &[u32]) {
 fn the_section_from_the_selection_is_the_shared_case_s() {
     let mut app = opened(file("section")["setup"].clone());
     section(&mut app, &[]);
-    assert_eq!(app.dialog, Some(Dialog::SectionCheck));
-    assert_eq!(app.section_check.contours, "esyukselti");
-    assert_eq!(app.section_check.points.len(), 6);
-    let (r, warnings) = app.section_check.answer.clone().expect("an answer").expect("checked");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::SectionCheck))
+    );
+    assert_eq!(app.road.section_check.contours, "esyukselti");
+    assert_eq!(app.road.section_check.points.len(), 6);
+    let (r, warnings) = app
+        .road
+        .section_check
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     let want = output("section", "Kesit: altı nokta");
     assert!(warnings.is_empty());
     assert_eq!((r.compared, r.within), (5, Some(true)));
@@ -101,14 +138,36 @@ fn a_corridor_puts_the_far_point_off_the_line() {
     let mut app = opened(file("section")["setup"].clone());
     section(&mut app, &[OFF]);
     let state = |app: &App| {
-        let (r, _) = app.section_check.answer.clone().expect("an answer").expect("checked");
-        r.points.iter().find(|p| (p.offset - 3.0).abs() < 1e-9).expect("the far point").state.clone()
+        let (r, _) = app
+            .road
+            .section_check
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("checked");
+        r.points
+            .iter()
+            .find(|p| (p.offset - 3.0).abs() < 1e-9)
+            .expect("the far point")
+            .state
+            .clone()
     };
     assert_eq!(state(&app), "compared");
-    let _ = app.update(Message::SectionCheck(K::Corridor("2".into())));
+    let _ = app.update(Message::Road(road::Event::SectionCheck(K::Corridor(
+        "2".into(),
+    ))));
     assert_eq!(state(&app), "offLine");
-    let _ = app.update(Message::SectionCheck(K::Corridor("iki".into())));
-    assert!(app.section_check.answer.clone().expect("an answer").is_err());
+    let _ = app.update(Message::Road(road::Event::SectionCheck(K::Corridor(
+        "iki".into(),
+    ))));
+    assert!(
+        app.road
+            .section_check
+            .answer
+            .clone()
+            .expect("an answer")
+            .is_err()
+    );
 }
 
 /// Too few points selected: said, no window.
@@ -116,7 +175,7 @@ fn a_corridor_puts_the_far_point_off_the_line() {
 fn too_few_points_are_said() {
     let mut app = opened(file("section")["setup"].clone());
     app.selection.set([Slot(A), Slot(B)]);
-    let _ = app.update(Message::SectionCheck(K::Open));
+    let _ = app.update(Message::Road(road::Event::SectionCheck(K::Open)));
     assert_eq!(app.dialog, None);
 }
 
@@ -137,16 +196,25 @@ fn screens() {
     let grid: Step = turned;
     let drawn: Step = |app| {
         turned(app);
-        let _ = app.update(Message::SheetContours(E::Draw));
-        let b = kentos_commands::Bounds { min_x: 175.0, min_y: 95.0, max_x: 345.0, max_y: 225.0 };
+        let _ = app.update(Message::Road(road::Event::SheetContours(E::Draw)));
+        let b = kentos_commands::Bounds {
+            min_x: 175.0,
+            min_y: 95.0,
+            max_x: 345.0,
+            max_y: 225.0,
+        };
         app.navigating(|a| a.zoom_to_bounds(&b));
     };
     let within: Step = |app| section(app, &[OFF]);
     let over: Step = |app| {
-        app.selection.set([A, B, 14, 24, 16, 17, 18, 19].iter().map(|s| Slot(*s)));
-        let _ = app.update(Message::SectionCheck(K::Open));
+        app.selection
+            .set([A, B, 14, 24, 16, 17, 18, 19].iter().map(|s| Slot(*s)));
+        let _ = app.update(Message::Road(road::Event::SectionCheck(K::Open)));
     };
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (setup, step, f) in [
             (file("sheet")["setup"].clone(), grid, "1-izgara"),
             (file("sheet")["setup"].clone(), drawn, "2-donen-izgara"),

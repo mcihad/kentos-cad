@@ -7,6 +7,7 @@
 //! the office's types as a `kentos.opening-types` file. Every write is one undo step. Aynı tiptekileri seç
 //! (`arch.openingSameType`) and the selection's Tipten ayır, Tipe uygula and Tipe döndür live here too.
 
+use crate::arch;
 use std::path::PathBuf;
 
 use iced::widget::{Column, button, container, row};
@@ -142,7 +143,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::OpeningTypes(e)
+    Message::Arch(arch::Event::OpeningTypes(e))
 }
 
 /// A length as the window shows it, in the project's unit; empty for none.
@@ -215,7 +216,7 @@ impl App {
         ) {
             fill(&mut w, &t, &f);
         }
-        self.opening_types = Some(w);
+        self.arch.opening_types = Some(w);
     }
 
     /// Kapı ve pencere tipleri (`arch.openingTypes`): the window.
@@ -230,7 +231,7 @@ impl App {
             .into_iter()
             .find_map(|(_, style)| style);
         self.opening_types_read(keep);
-        self.dialog = Some(Dialog::OpeningTypes);
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::OpeningTypes));
     }
 
     /// The selected openings: their ids and the type each follows or was made with.
@@ -353,7 +354,7 @@ impl App {
 
     /// The change typed against the chosen type: none when nothing changed, else the change or why it cannot be read.
     fn opening_type_change(&self) -> Option<Result<(String, OpeningTypeChange), String>> {
-        let w = self.opening_types.as_ref()?;
+        let w = self.arch.opening_types.as_ref()?;
         let f = self.opening_types_format()?;
         let t = &w.uses.get(w.chosen)?.kind;
         let mut top = Map::new();
@@ -547,7 +548,7 @@ impl App {
                 }
             }),
         };
-        if let Some(w) = self.opening_types.as_mut() {
+        if let Some(w) = self.arch.opening_types.as_mut() {
             w.preview = preview;
         }
     }
@@ -586,7 +587,7 @@ impl App {
     }
 
     fn opening_types_chosen(&self) -> Option<OpeningType> {
-        let w = self.opening_types.as_ref()?;
+        let w = self.arch.opening_types.as_ref()?;
         w.uses.get(w.chosen).map(|u| u.kind.clone())
     }
 
@@ -595,40 +596,41 @@ impl App {
         match event {
             Event::Choose(i) => {
                 let t = self
+                    .arch
                     .opening_types
                     .as_ref()
                     .and_then(|w| w.uses.get(i))
                     .map(|u| u.kind.clone());
-                if let (Some(w), Some(t), Some(f)) = (self.opening_types.as_mut(), t, format) {
+                if let (Some(w), Some(t), Some(f)) = (self.arch.opening_types.as_mut(), t, format) {
                     w.chosen = i;
                     fill(w, &t, &f);
                 }
             }
             Event::Name(t) => {
-                if let Some(w) = self.opening_types.as_mut() {
+                if let Some(w) = self.arch.opening_types.as_mut() {
                     w.name = t;
                 }
             }
             Event::Nominal(t) => {
-                if let Some(w) = self.opening_types.as_mut() {
+                if let Some(w) = self.arch.opening_types.as_mut() {
                     w.nominal = t;
                 }
                 self.opening_types_preview();
             }
             Event::Material(t) => {
-                if let Some(w) = self.opening_types.as_mut() {
+                if let Some(w) = self.arch.opening_types.as_mut() {
                     w.material = t;
                 }
                 self.opening_types_preview();
             }
             Event::UValue(t) => {
-                if let Some(w) = self.opening_types.as_mut() {
+                if let Some(w) = self.arch.opening_types.as_mut() {
                     w.u_value = t;
                 }
                 self.opening_types_preview();
             }
             Event::SizeBy(by) => {
-                if let Some(w) = self.opening_types.as_mut() {
+                if let Some(w) = self.arch.opening_types.as_mut() {
                     w.size_by = by;
                 }
                 self.opening_types_preview();
@@ -636,7 +638,7 @@ impl App {
             Event::Operation(op) => {
                 let t = self.opening_types_chosen();
                 let format = self.opening_types_format();
-                if let Some(w) = self.opening_types.as_mut() {
+                if let Some(w) = self.arch.opening_types.as_mut() {
                     w.operation = op;
                     // The fields of the operation chosen (docs/adr/0777): those typed kept, the others the type's.
                     if let (Some(t), Some(f)) = (t, format) {
@@ -646,7 +648,7 @@ impl App {
                 self.opening_types_preview();
             }
             Event::Field(field, t) => {
-                if let Some(w) = self.opening_types.as_mut()
+                if let Some(w) = self.arch.opening_types.as_mut()
                     && let Some(slot) = w.typed.iter_mut().find(|(f, _)| *f == field)
                 {
                     slot.1 = t;
@@ -658,6 +660,7 @@ impl App {
                     return Task::none();
                 };
                 let name = self
+                    .arch
                     .opening_types
                     .as_ref()
                     .map(|w| w.name.trim().to_owned())
@@ -701,6 +704,7 @@ impl App {
                 let chosen = self.opening_types_chosen().filter(|_| form.is_none());
                 let base = new_name(form, chosen.as_ref());
                 let names: Vec<String> = self
+                    .arch
                     .opening_types
                     .as_ref()
                     .map(|w| w.uses.iter().map(|u| u.kind.name.to_lowercase()).collect())
@@ -792,32 +796,32 @@ impl App {
             // Kapat, a click beside the window or Esc: asks when the chosen type has a change not applied.
             Event::Close => {
                 if self.opening_types_unapplied() {
-                    if let Some(w) = self.opening_types.as_mut() {
+                    if let Some(w) = self.arch.opening_types.as_mut() {
                         w.closing = true;
                     }
                 } else {
-                    self.opening_types = None;
+                    self.arch.opening_types = None;
                     self.dialog = None;
                 }
             }
             Event::Answer(crate::unsaved_close::Answer::Save) => {
                 let task = self.opening_types_event(Event::Apply);
                 if self.opening_types_unapplied() {
-                    if let Some(w) = self.opening_types.as_mut() {
+                    if let Some(w) = self.arch.opening_types.as_mut() {
                         w.closing = false;
                     }
                 } else {
-                    self.opening_types = None;
+                    self.arch.opening_types = None;
                     self.dialog = None;
                 }
                 return task;
             }
             Event::Answer(crate::unsaved_close::Answer::Discard) => {
-                self.opening_types = None;
+                self.arch.opening_types = None;
                 self.dialog = None;
             }
             Event::Answer(crate::unsaved_close::Answer::Stay) => {
-                if let Some(w) = self.opening_types.as_mut() {
+                if let Some(w) = self.arch.opening_types.as_mut() {
                     w.closing = false;
                 }
             }
@@ -827,9 +831,11 @@ impl App {
 
     /// Whether the chosen type has a change or a new name Uygula has not written (docs/adr/8006).
     fn opening_types_unapplied(&self) -> bool {
-        self.opening_types.as_ref().is_some_and(|w| {
+        self.arch.opening_types.as_ref().is_some_and(|w| {
             self.opening_type_change().is_some()
-                || w.uses.get(w.chosen).is_some_and(|u| !w.name.trim().is_empty() && w.name.trim() != u.kind.name)
+                || w.uses
+                    .get(w.chosen)
+                    .is_some_and(|u| !w.name.trim().is_empty() && w.name.trim() != u.kind.name)
         })
     }
 
@@ -890,7 +896,7 @@ impl App {
     }
 
     pub(crate) fn opening_types_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(f)) = (&self.opening_types, self.opening_types_format()) else {
+        let (Some(w), Some(f)) = (&self.arch.opening_types, self.opening_types_format()) else {
             return iced::widget::text("").into();
         };
         let mut list = Column::new().spacing(4);
@@ -1133,7 +1139,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.opening_types.is_none() {
+        if self.arch.opening_types.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {
@@ -1142,6 +1148,7 @@ impl App {
             // Yeni tip ▾'s items by their words: a form, or the chosen type's copy.
             Control::Pick(NEW, COPY)
                 if !self
+                    .arch
                     .opening_types
                     .as_ref()
                     .is_some_and(|w| w.uses.is_empty()) =>

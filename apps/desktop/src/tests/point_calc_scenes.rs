@@ -13,6 +13,7 @@
 //!
 //! Test code only.
 
+use crate::map;
 use kentos_interaction::point_calc::CalcKind;
 
 use crate::app::{App, Message};
@@ -64,7 +65,7 @@ fn shown(app: &mut App) {
 }
 
 fn calc(app: &mut App, kind: CalcKind) {
-    let _ = app.update(Message::PointCalc(kind));
+    let _ = app.update(Message::Map(map::Event::PointCalc(kind)));
 }
 
 /// Obje üzerinde nokta on the route, from its start; the cursor beside the arc.

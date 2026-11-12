@@ -27,6 +27,7 @@ mod view;
 #[cfg(test)]
 mod tests;
 
+use crate::map;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
@@ -738,7 +739,7 @@ impl App {
             | Message::CommandSubmitted
             | Message::CommandRun(_)
             | Message::PromptOption(_)
-            | Message::PointCalc(_)
+            | Message::Map(map::Event::PointCalc(_))
             | Message::LayerVisible(_)
             | Message::LayerLocked(_)
             | Message::Layer(_)

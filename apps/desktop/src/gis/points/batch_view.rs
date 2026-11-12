@@ -6,6 +6,7 @@
 //! noktaları ayıkla's window counts the groups as its values change;
 //! Çiftleri göster shows them in the table.
 
+use crate::gis;
 use std::fmt;
 
 use iced::widget::{Id, column, container, row, space, text};
@@ -106,7 +107,7 @@ pub enum WindowEvent {
 }
 
 fn msg(e: WindowEvent) -> Message {
-    Message::Points(Event::Window(e))
+    Message::Gis(gis::Event::Points(Event::Window(e)))
 }
 
 /// Önek ekle or Önek kaldır, as the segmented control shows them.
@@ -257,7 +258,7 @@ impl App {
             _ => String::new(),
         };
         let layer = doc.model.layers().active().to_owned();
-        self.points.batch = Some(Window {
+        self.gis.points.batch = Some(Window {
             kind,
             slots,
             header,
@@ -266,12 +267,12 @@ impl App {
             by_name: imported,
             keep: Keep::First,
             imported,
-            aside: self.points.aside,
-            aside_name: self.points.aside_name.clone(),
+            aside: self.gis.points.aside,
+            aside_name: self.gis.points.aside_name.clone(),
             layer,
             refused: None,
         });
-        self.dialog = Some(Dialog::PointBatch);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::PointBatch));
         if matches!(kind, Kind::Layer | Kind::Dedupe) {
             return Task::none();
         }
@@ -283,7 +284,7 @@ impl App {
     }
 
     pub(crate) fn point_batch_event(&mut self, event: WindowEvent) -> Task<Message> {
-        let Some(w) = self.points.batch.as_mut() else {
+        let Some(w) = self.gis.points.batch.as_mut() else {
             return Task::none();
         };
         match event {
@@ -295,14 +296,14 @@ impl App {
             // Kept for the next time the window opens, as long as the app lives.
             WindowEvent::Aside(on) => {
                 w.aside = on;
-                self.points.aside = on;
+                self.gis.points.aside = on;
             }
             WindowEvent::AsideName(name) => {
-                self.points.aside_name.clone_from(&name);
+                self.gis.points.aside_name.clone_from(&name);
                 w.aside_name = name;
             }
             WindowEvent::Close => {
-                self.points.batch = None;
+                self.gis.points.batch = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -315,14 +316,14 @@ impl App {
                 if groups.is_empty() {
                     return Task::none();
                 }
-                self.points.show_groups(Some(groups));
-                self.points.batch = None;
+                self.gis.points.show_groups(Some(groups));
+                self.gis.points.batch = None;
                 self.dialog = None;
                 return Task::none();
             }
             WindowEvent::Apply => {
                 let (slots, op) = (w.slots.clone(), w.op());
-                let follow = self.points.follow;
+                let follow = self.gis.points.follow;
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
@@ -345,15 +346,15 @@ impl App {
                     for line in said {
                         self.warn(line);
                     }
-                    self.points.batch = None;
+                    self.gis.points.batch = None;
                     self.dialog = None;
                     // The groups shown are done with.
-                    self.points.show_groups(None);
+                    self.gis.points.show_groups(None);
                 } else {
                     for line in &out.said {
                         self.warn(line.clone());
                     }
-                    if let Some(w) = self.points.batch.as_mut() {
+                    if let Some(w) = self.gis.points.batch.as_mut() {
                         w.refused = out.said.first().cloned();
                     }
                 }
@@ -361,7 +362,7 @@ impl App {
             }
         }
         // A new value: the last refusal was of another one.
-        if let Some(w) = self.points.batch.as_mut() {
+        if let Some(w) = self.gis.points.batch.as_mut() {
             w.refused = None;
         }
         Task::none()
@@ -442,7 +443,7 @@ impl App {
     }
 
     pub(crate) fn point_batch_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(doc)) = (&self.points.batch, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.points.batch, &self.document) else {
             return text("").into();
         };
         let model = &doc.model;
@@ -502,7 +503,7 @@ impl App {
                     .on_input_maybe((!w.by_name).then_some(|t| msg(WindowEvent::Text(t))))
                     .on_submit(msg(WindowEvent::Apply))
                     .font(typography::mono());
-                let kept_hint = kept_hint(w.imported, self.points.follow);
+                let kept_hint = kept_hint(w.imported, self.gis.points.follow);
                 column![
                     row![
                         words::field(

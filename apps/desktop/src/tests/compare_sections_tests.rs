@@ -4,6 +4,7 @@
 //! the sections along a drawn axis (the arc's case: the window's answer is the shared case's, its sections' ends too).
 
 use crate::app::{App, Message};
+use crate::road;
 use crate::surface_analysis_window::{Event as W, Mode, Read, Tab};
 
 fn cases() -> serde_json::Value {
@@ -27,11 +28,17 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::SurfaceAnalysis(e));
+    let _ = app.update(Message::Road(road::Event::SurfaceAnalysis(e)));
 }
 
 fn read(app: &App) -> Read {
-    match &app.surface_analysis_window.as_ref().expect("open").preview {
+    match &app
+        .road
+        .surface_analysis_window
+        .as_ref()
+        .expect("open")
+        .preview
+    {
         Some(Ok(r)) => r.clone(),
         other => panic!("a reading: {other:?}"),
     }
@@ -86,7 +93,9 @@ fn fark_by_sections_is_the_shared_case_s() {
     assert_eq!(d.interval, Some(10.0));
     send(&mut app, W::Field(18, "400".into()));
     send(&mut app, W::Preview);
-    assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("semt")));
+    assert!(
+        matches!(&app.road.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("semt"))
+    );
 }
 
 /// `.run/gui-evidence/kesit-yontemi-4340/`: the sections' chart, the summary with the exact TIN beside and the method's

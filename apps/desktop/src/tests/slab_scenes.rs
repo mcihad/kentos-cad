@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_commands::Entity;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
@@ -155,7 +156,9 @@ fn measured(app: &mut App, tab: crate::quantities::Tab) {
     }
     app.selection.clear();
     run(app, "arch.quantities");
-    let _ = app.update(Message::Quantities(crate::quantities::Event::Tab(tab)));
+    let _ = app.update(Message::Arch(arch::Event::Quantities(
+        crate::quantities::Event::Tab(tab),
+    )));
 }
 
 fn quantities(app: &mut App) {

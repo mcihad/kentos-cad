@@ -2,6 +2,7 @@
 //! shared drawing (fixtures/processing/v1/generalize.kcad): every shared case
 //! run from the window as a user fills it, and the pictures for the owner.
 
+use crate::gis;
 use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::Value;
@@ -23,11 +24,12 @@ fn app_with_drawing() -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn status(app: &App) -> RunStatus {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())

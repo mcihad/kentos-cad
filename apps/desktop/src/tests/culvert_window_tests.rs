@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::culvert_window::Event as W;
+use crate::road;
 
 /// A road project with `road.culverts.edit`'s drawing: corridors and two culverts.
 fn app() -> App {
@@ -16,27 +17,47 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Culverts(e));
+    let _ = app.update(Message::Road(road::Event::Culverts(e)));
 }
 
 #[test]
 fn the_window_saves_and_draws_the_culvert() {
     let mut app = app();
     let _ = app.update(Message::Run("culvert.editor"));
-    assert_eq!(app.dialog, Some(Dialog::Culverts));
-    let w = app.culvert_window.as_ref().expect("open");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Culverts))
+    );
+    let w = app.road.culvert_window.as_ref().expect("open");
     assert_eq!(w.chosen.as_deref(), Some("m-1"));
     assert!(!w.pipe);
-    let r = w.preview.report.clone().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    let r = w
+        .preview
+        .report
+        .clone()
+        .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
     assert_eq!(r.ends.len(), 2);
     // A wider skew makes a longer barrel.
     send(&mut app, W::Field(2, "30".into()));
-    let longer = app.culvert_window.as_ref().and_then(|w| w.preview.report.clone()).expect("reads");
+    let longer = app
+        .road
+        .culvert_window
+        .as_ref()
+        .and_then(|w| w.preview.report.clone())
+        .expect("reads");
     assert!(longer.length > r.length, "{} → {}", r.length, longer.length);
     send(&mut app, W::Field(3, "kot".into()));
-    let why = app.culvert_window.as_ref().and_then(|w| w.preview.why.clone()).expect("refused");
+    let why = app
+        .road
+        .culvert_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("refused");
     assert!(why.contains("Akış kotu"), "{why}");
-    send(&mut app, W::Field(3, r.ends[0].invert.max(r.ends[1].invert).to_string()));
+    send(
+        &mut app,
+        W::Field(3, r.ends[0].invert.max(r.ends[1].invert).to_string()),
+    );
     send(&mut app, W::Save);
     let saved = app.document.as_ref().expect("a drawing").model.road_culverts()[0].clone();
     assert_eq!(saved.skew, 30.0);
@@ -44,8 +65,14 @@ fn the_window_saves_and_draws_the_culvert() {
     let before = app.document.as_ref().expect("a drawing").model.entities().count();
     send(&mut app, W::Layer("korkuluk".into()));
     send(&mut app, W::Draw);
-    assert!(app.culvert_window.is_none());
-    let after = app.document.as_ref().expect("a drawing").model.entities().count();
+    assert!(app.road.culvert_window.is_none());
+    let after = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .entities()
+        .count();
     assert_eq!(after, before + 3);
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before);
@@ -57,19 +84,37 @@ fn a_new_pipe_culvert_needs_its_sizes() {
     let _ = app.update(Message::Run("culvert.editor"));
     send(&mut app, W::Choose(None));
     send(&mut app, W::Pipe(true));
-    let why = app.culvert_window.as_ref().and_then(|w| w.preview.why.clone()).expect("no sizes yet");
+    let why = app
+        .road
+        .culvert_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("no sizes yet");
     assert!(why.contains("yazılmalı"), "{why}");
     let (invert, station) = {
-        let m = &app.document.as_ref().expect("a drawing").model.road_culverts()[0];
+        let m = &app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .road_culverts()[0];
         (m.invert, m.station)
     };
     for (k, v) in [(1, station.to_string()), (3, invert.to_string()), (4, "1".into()), (8, "1".into()), (9, "0.1".into())] {
         send(&mut app, W::Field(k, v));
     }
-    let w = app.culvert_window.as_ref().expect("open");
+    let w = app.road.culvert_window.as_ref().expect("open");
     assert!(w.preview.report.is_some(), "{:?}", w.preview.why);
     send(&mut app, W::Save);
-    assert_eq!(app.document.as_ref().expect("a drawing").model.road_culverts().len(), 3);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .road_culverts()
+            .len(),
+        3
+    );
 }
 
 /// Hidrolik reads the saved culvert as `road.culverts.hydraulics` does: the shared case “Yol aşılıyor” typed in.
@@ -77,27 +122,56 @@ fn a_new_pipe_culvert_needs_its_sizes() {
 fn the_hydraulics_read_the_shared_case() {
     let mut app = app();
     let _ = app.update(Message::Run("culvert.editor"));
-    assert!(app.culvert_window.as_ref().expect("open").hydraulics.is_none(), "nothing before a flow");
+    assert!(
+        app.road
+            .culvert_window
+            .as_ref()
+            .expect("open")
+            .hydraulics
+            .is_none(),
+        "nothing before a flow"
+    );
     send(&mut app, W::Hydraulic(0, "60".into()));
-    let why = match app.culvert_window.as_ref().and_then(|w| w.hydraulics.clone()) {
+    let why = match app
+        .road
+        .culvert_window
+        .as_ref()
+        .and_then(|w| w.hydraulics.clone())
+    {
         Some(Err(why)) => why,
         other => panic!("refused without ke: {other:?}"),
     };
     assert!(why.contains("ke"), "{why}");
     send(&mut app, W::Hydraulic(2, "0,4".into()));
     send(&mut app, W::Hydraulic(4, "1.66".into()));
-    let why = match app.culvert_window.as_ref().and_then(|w| w.hydraulics.clone()) {
+    let why = match app
+        .road
+        .culvert_window
+        .as_ref()
+        .and_then(|w| w.hydraulics.clone())
+    {
         Some(Err(why)) => why,
         other => panic!("a weir needs both: {other:?}"),
     };
     assert!(why.contains("birlikte"), "{why}");
     send(&mut app, W::Hydraulic(5, "60".into()));
-    let w = app.culvert_window.as_ref().expect("open");
-    assert_eq!(w.inlet, kentos_commands::CulvertInlet::BoxWingwall30To75, "a box's first inlet");
+    let w = app.road.culvert_window.as_ref().expect("open");
+    assert_eq!(
+        w.inlet,
+        kentos_commands::CulvertInlet::BoxWingwall30To75,
+        "a box's first inlet"
+    );
     let (read, _) = w.hydraulics.clone().expect("asked").expect("reads");
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.culverts.hydraulics.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Yol aşılıyor").expect("the case");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.culverts.hydraulics.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "Yol aşılıyor")
+        .expect("the case");
     let want = &case["steps"][0]["result"]["output"]["at"];
     assert!((read.at.level - want["level"].as_f64().expect("level")).abs() < 1e-6);
     assert!((read.at.overtopping - want["overtopping"].as_f64().expect("over")).abs() < 1e-6);
@@ -105,7 +179,10 @@ fn the_hydraulics_read_the_shared_case() {
     assert_eq!(read.curve.len(), 13);
     // A pipe offers only the pipes' inlets.
     send(&mut app, W::Choose(Some("m-2".into())));
-    assert_eq!(app.culvert_window.as_ref().expect("open").inlet, kentos_commands::CulvertInlet::PipeSquareHeadwall);
+    assert_eq!(
+        app.road.culvert_window.as_ref().expect("open").inlet,
+        kentos_commands::CulvertInlet::PipeSquareHeadwall
+    );
 }
 
 /// Kapanma reads a flood as `road.culverts.closure` does: the shared cases “Üçgen hidrograf, kutu menfez” and “Debi ve Cd
@@ -116,7 +193,12 @@ fn the_closure_reads_the_shared_cases() {
     let _ = app.update(Message::Run("culvert.editor"));
     send(&mut app, W::Page(2));
     send(&mut app, W::Flood(0, "60".into()));
-    let why = match app.culvert_window.as_ref().and_then(|w| w.closure.clone()) {
+    let why = match app
+        .road
+        .culvert_window
+        .as_ref()
+        .and_then(|w| w.closure.clone())
+    {
         Some(Err(why)) => why,
         other => panic!("refused without its hours: {other:?}"),
     };
@@ -124,7 +206,12 @@ fn the_closure_reads_the_shared_cases() {
     send(&mut app, W::Flood(1, "3".into()));
     send(&mut app, W::Flood(2, "12".into()));
     send(&mut app, W::Hydraulic(2, "0.4".into()));
-    let why = match app.culvert_window.as_ref().and_then(|w| w.closure.clone()) {
+    let why = match app
+        .road
+        .culvert_window
+        .as_ref()
+        .and_then(|w| w.closure.clone())
+    {
         Some(Err(why)) => why,
         other => panic!("refused without a weir: {other:?}"),
     };
@@ -138,9 +225,19 @@ fn the_closure_reads_the_shared_cases() {
         case["steps"][0]["result"]["output"]["floods"].clone()
     };
     let check = |app: &App, name: &str| {
-        let (read, _) = app.culvert_window.as_ref().and_then(|w| w.closure.clone()).expect("asked").expect("reads");
+        let (read, _) = app
+            .road
+            .culvert_window
+            .as_ref()
+            .and_then(|w| w.closure.clone())
+            .expect("asked")
+            .expect("reads");
         let want = expected(name);
-        assert_eq!(read.floods.len(), want.as_array().expect("floods").len(), "{name}");
+        assert_eq!(
+            read.floods.len(),
+            want.as_array().expect("floods").len(),
+            "{name}"
+        );
         for (f, w) in read.floods.iter().zip(want.as_array().expect("floods")) {
             for (c, cw) in f.criteria.iter().zip(w["criteria"].as_array().expect("criteria")) {
                 let h = cw["hours"].as_f64().expect("hours");
@@ -154,7 +251,12 @@ fn the_closure_reads_the_shared_cases() {
     }
     check(&app, "Debi ve Cd aralığıyla");
     send(&mut app, W::Flood(5, String::new()));
-    let why = match app.culvert_window.as_ref().and_then(|w| w.closure.clone()) {
+    let why = match app
+        .road
+        .culvert_window
+        .as_ref()
+        .and_then(|w| w.closure.clone())
+    {
         Some(Err(why)) => why,
         other => panic!("a range needs both factors: {other:?}"),
     };

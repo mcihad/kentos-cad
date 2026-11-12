@@ -16,6 +16,7 @@
 //! The window edits a copy; Kaydet writes it through `cad.layers.indexes` in one step and closes. A unique index says
 //! whether the layer's records already keep it: one they break is refused when written.
 
+use crate::gis;
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -74,7 +75,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::LayerIndexes(event)
+    Message::Gis(gis::Event::LayerIndexes(event))
 }
 
 /// A field an index takes: one holding bytes is not indexed.
@@ -94,6 +95,7 @@ impl App {
         };
         let layers = self.index_layers();
         let wanted = self
+            .gis
             .features
             .layer
             .clone()
@@ -105,8 +107,8 @@ impl App {
             self.warn("Alanı olan katman yok; dizin bir katmanın alanlarını sıralar. Önce Alanlar penceresinden alan ekleyin.");
             return Task::none();
         };
-        self.layer_indexes = Some(self.layer_indexes_window_of(layer));
-        self.dialog = Some(Dialog::LayerIndexes);
+        self.gis.layer_indexes = Some(self.layer_indexes_window_of(layer));
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerIndexes));
         Task::none()
     }
 
@@ -128,10 +130,10 @@ impl App {
 
     pub(crate) fn layer_indexes_event(&mut self, event: Event) -> Task<Message> {
         if let Event::Layer(id) = &event {
-            self.layer_indexes = Some(self.layer_indexes_window_of(id.clone()));
+            self.gis.layer_indexes = Some(self.layer_indexes_window_of(id.clone()));
             return Task::none();
         }
-        let Some(w) = self.layer_indexes.as_mut() else {
+        let Some(w) = self.gis.layer_indexes.as_mut() else {
             return Task::none();
         };
         let at = w.chosen.filter(|i| *i < w.indexes.len());
@@ -199,7 +201,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.layer_indexes = None;
+                self.gis.layer_indexes = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_layer_indexes(),
@@ -209,11 +211,11 @@ impl App {
 
     /// Kaydet: the indexes through `cad.layers.indexes` in one step; the window closes when they go in.
     fn save_layer_indexes(&mut self) -> Task<Message> {
-        let Some(w) = self.layer_indexes.clone() else {
+        let Some(w) = self.gis.layer_indexes.clone() else {
             return Task::none();
         };
         if w.indexes == w.kept {
-            self.layer_indexes = None;
+            self.gis.layer_indexes = None;
             self.dialog = None;
             return Task::none();
         }
@@ -231,7 +233,7 @@ impl App {
         if self.answered(result).is_none() {
             return Task::none();
         }
-        self.layer_indexes = None;
+        self.gis.layer_indexes = None;
         self.dialog = None;
         let name = self.form_layer_name(&w.layer);
         let keys = w.indexes.iter().filter(|x| x.unique).count();
@@ -307,7 +309,7 @@ impl App {
     }
 
     pub(crate) fn layer_indexes_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.layer_indexes else {
+        let Some(w) = &self.gis.layer_indexes else {
             return iced::widget::text("").into();
         };
         let layers = self.index_layers();
@@ -433,7 +435,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.layer_indexes.is_none() {
+        if self.gis.layer_indexes.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

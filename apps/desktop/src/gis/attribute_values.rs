@@ -11,6 +11,7 @@
 //! field); a verified one has a second field, Yerleştir waiting until the two are the same; a multiline one is a
 //! text box of lines.
 
+use crate::gis;
 use std::collections::BTreeMap;
 
 use iced::widget::{Column, Id, text, text_editor};
@@ -72,7 +73,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::AttributeValues(event)
+    Message::Gis(gis::Event::AttributeValues(event))
 }
 
 /// The first field, which takes the keyboard when the window opens (the
@@ -147,16 +148,16 @@ impl App {
                 }
             })
             .collect();
-        self.attribute_values = Some(Window {
+        self.gis.attribute_values = Some(Window {
             name: b.name.clone(),
             fields,
             focus: true,
         });
-        self.dialog = Some(Dialog::AttributeValues);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::AttributeValues));
     }
 
     pub(crate) fn attribute_values_event(&mut self, event: Event) {
-        let Some(w) = self.attribute_values.as_mut() else {
+        let Some(w) = self.gis.attribute_values.as_mut() else {
             return;
         };
         match event {
@@ -180,7 +181,7 @@ impl App {
                     return;
                 }
                 let values = w.values();
-                self.attribute_values = None;
+                self.gis.attribute_values = None;
                 self.dialog = None;
                 self.with_tool(|s, cx| s.values_given(Some(&values), cx));
             }
@@ -190,7 +191,7 @@ impl App {
 
     /// The window went (Vazgeç, Esc, a click beside it): the point is dropped.
     pub(crate) fn attribute_values_closed(&mut self) {
-        if self.attribute_values.take().is_none() {
+        if self.gis.attribute_values.take().is_none() {
             return;
         }
         self.dialog = None;
@@ -199,7 +200,7 @@ impl App {
 
     /// The window opened: the keyboard to its first field, its text chosen.
     pub(crate) fn attribute_values_tasks(&mut self) -> Task<Message> {
-        let Some(w) = self.attribute_values.as_mut() else {
+        let Some(w) = self.gis.attribute_values.as_mut() else {
             return Task::none();
         };
         if !std::mem::take(&mut w.focus) || w.fields.is_empty() {
@@ -213,7 +214,7 @@ impl App {
 
     /// Öznitelik değerleri (the web's `openAttributeValuesDialog`).
     pub(crate) fn attribute_values_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.attribute_values else {
+        let Some(w) = &self.gis.attribute_values else {
             return text("").into();
         };
         let mut body = Column::new()
@@ -271,7 +272,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.attribute_values else {
+        let Some(w) = &self.gis.attribute_values else {
             return Err("Öznitelik değerleri penceresi açık değil".to_owned());
         };
         Ok(match control {

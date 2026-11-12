@@ -17,6 +17,7 @@
 //!
 //! Test code only.
 
+use crate::gis;
 use kentos_commands::FormItem;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
@@ -88,11 +89,11 @@ pub(crate) fn buildings_with(app: &mut App, form: Value) {
 }
 
 pub(crate) fn designer(app: &mut App, event: designer::Event) {
-    let _ = app.update(Message::Forms(event));
+    let _ = app.update(Message::Gis(gis::Event::Forms(event)));
 }
 
 pub(crate) fn entry(app: &mut App, event: entry::Event) {
-    let _ = app.update(Message::FormEntry(event));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(event)));
 }
 
 /// Formlar: the form chosen, its note item selected: the rules that show and ask for it, its check.
@@ -202,11 +203,13 @@ fn calc_preview(app: &mut App) {
     calc_buildings(app);
     run(app, "data.forms");
     designer(app, designer::Event::Preview(true));
-    let _ = app.update(Message::FormPreview(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormPreview(entry::Event::Value(
         "kat-sayisi".into(),
         "7".into(),
-    )));
-    let _ = app.update(Message::FormPreview(entry::Event::Group("hesap".into())));
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormPreview(entry::Event::Group(
+        "hesap".into(),
+    ))));
     designer(app, designer::Event::SelectItem("toplam".into()));
     designer(
         app,
@@ -222,6 +225,7 @@ fn designing_moved(app: &mut App) {
     buildings(app, true);
     run(app, "data.forms");
     let order: Vec<String> = app
+        .gis
         .forms_window
         .as_ref()
         .and_then(|w| w.body.clone())

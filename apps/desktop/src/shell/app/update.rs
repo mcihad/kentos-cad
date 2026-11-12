@@ -2,6 +2,9 @@
 //! of every message.
 
 use super::*;
+use crate::arch;
+use crate::gis;
+use crate::map;
 
 impl App {
     pub fn subscription(&self) -> Subscription<Message> {
@@ -32,13 +35,13 @@ impl App {
                 Subscription::none()
             },
             // Toplu çalıştır: a running batch job is looked at every tick (processing/batch.rs).
-            if self.processing.batch_running() {
+            if self.gis.processing.batch_running() {
                 Subscription::run(crate::processing::batch::ticks)
             } else {
                 Subscription::none()
             },
             // A rebuild running as a job in the project tree (road_project_panel.rs, docs/adr/2440).
-            if self.road_project.running() {
+            if self.road.road_project.running() {
                 Subscription::run(crate::road_project_panel::ticks)
             } else {
                 Subscription::none()
@@ -51,7 +54,7 @@ impl App {
                 event::listen_with(crate::sources::dropped)
             },
             // A Kaynaklar row being dragged: the pointer and the button let go, wherever they are.
-            if self.sources.drag.is_some() {
+            if self.gis.sources.drag.is_some() {
                 event::listen_with(crate::sources::dragging)
             } else {
                 Subscription::none()
@@ -94,7 +97,7 @@ impl App {
             },
             // Zaman sürgüsü's playback (temporal/, docs/adr/0210 §5): a tick is handled after the
             // drawing showed the last step; the step itself waits for the speed.
-            if self.time.slider.playing {
+            if self.gis.time.slider.playing {
                 Subscription::run(crate::temporal::ticks)
             } else {
                 Subscription::none()
@@ -130,14 +133,16 @@ impl App {
                 Subscription::none()
             },
             // A topology check on its own thread: its bar moves each frame (topology/running.rs, docs/adr/0756).
-            if self.topology.running.is_some() {
-                window::frames().map(|_| Message::Topology(crate::topology::Event::Frame))
+            if self.gis.topology.running.is_some() {
+                window::frames()
+                    .map(|_| Message::Gis(gis::Event::Topology(crate::topology::Event::Frame)))
             } else {
                 Subscription::none()
             },
             // İstatistik's summaries, a few fields a frame (statistics/, docs/adr/0227 §11).
             if self.stats_counting() {
-                window::frames().map(|_| Message::Statistics(crate::statistics::Event::Count))
+                window::frames()
+                    .map(|_| Message::Gis(gis::Event::Statistics(crate::statistics::Event::Count)))
             } else {
                 Subscription::none()
             },
@@ -279,7 +284,7 @@ impl App {
         // over a panel. The active tool's cached handles must follow too.
         self.with_tool(|s, cx| s.document_changed(cx));
         // Boru hattı denetimi open: its answer read again from the network as it is now (docs/adr/4360).
-        if self.dialog == Some(crate::app::Dialog::PipesCheck) {
+        if self.dialog == Some(crate::app::Dialog::Map(map::MapDialogKind::PipesCheck)) {
             self.pipes_check_run();
         }
     }
@@ -317,13 +322,13 @@ impl App {
             if matches!(
                 self.dialog,
                 Some(
-                    Dialog::AttributeValues
+                    Dialog::Gis(gis::GisDialogKind::AttributeValues)
                         | Dialog::BlockDefine
                         | Dialog::Shortcuts
-                        | Dialog::WallStyles
-                        | Dialog::Program
-                        | Dialog::OpeningTypes
-                        | Dialog::Materials
+                        | Dialog::Arch(arch::ArchDialogKind::WallStyles)
+                        | Dialog::Arch(arch::ArchDialogKind::Program)
+                        | Dialog::Arch(arch::ArchDialogKind::OpeningTypes)
+                        | Dialog::Arch(arch::ArchDialogKind::Materials)
                 )
             ) {
                 self.close_dialog();
@@ -385,7 +390,7 @@ impl App {
             self.close_paragraph(true);
             self.layers_keyboard = false;
             self.blocks_panel.keyboard = false;
-            self.templates_panel.keyboard = false;
+            self.arch.templates_panel.keyboard = false;
             self.vertices.keyboard = false;
         }
         match message {
@@ -434,10 +439,7 @@ impl App {
             }
             Message::CommandHistoryToggled => self.toggle_bottom(),
             Message::BottomTab(tab) => self.show_bottom(tab),
-            Message::Points(event) => return self.points_event(event),
-            Message::Features(event) => return self.features_event(event),
-            Message::Statistics(event) => return self.statistics_event(event),
-            Message::Charts(event) => return self.charts_event(event),
+            Message::Gis(inner) => return self.gis_event(inner),
             Message::TableWritten(outcome) => match outcome {
                 crate::table_write::Outcome::Written { file, rows, notes } => {
                     self.say(Level::Success, format!("“{file}” yazıldı: {rows} satır."));
@@ -447,21 +449,12 @@ impl App {
                 }
                 crate::table_write::Outcome::Failed(why) => self.warn(why),
             },
-            Message::LayerFields(event) => return self.layer_fields_event(event),
             Message::Search(event) => return self.data_event(event),
             Message::History(event) => return self.calls_event(event),
-            Message::Topology(event) => return self.topology_event(event),
-            Message::ArchAudit(event) => return self.arch_audit_event(event),
+            Message::Arch(inner) => return self.arch_event(inner),
             Message::CadInspection(event) => return self.cad_inspection_event(event),
             Message::Recover(Some(path)) => return self.recover_path(path),
             Message::Recover(None) => {}
-            Message::TopologyRules(event) => return self.topology_rules_event(event),
-            Message::Networks(event) => return self.networks_event(event),
-            Message::Address(event) => return self.address_event(event),
-            Message::Time(event) => {
-                let moved = self.time_event(event);
-                return Task::batch([moved, self.time_sources()]);
-            }
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
@@ -471,7 +464,6 @@ impl App {
             Message::LogFrame => self.log_frame(Instant::now()),
             Message::LogScrolled(viewport) => self.log_scrolled(viewport),
             Message::LayoutSave => self.layout.write(Instant::now(), false),
-            Message::GridsLooked(looked) => self.grids_looked(looked),
             Message::BandRead(read) => self.band_read(read),
             Message::WindowResized(size) => self.window_resized(size),
             Message::DeviceScale(scale) => kentos_ui::widget::brand::set_device_scale(scale),
@@ -482,7 +474,6 @@ impl App {
                     self.say(Level::Info, words);
                 }
             }
-            Message::Rasters(event) => return self.rasters_event(event),
             // The next frame draws them; the panel shows the indexes' progress.
             Message::CloudsReady => {}
             // The next frame draws them; a service that failed is said once.
@@ -491,10 +482,8 @@ impl App {
                     self.warn(text);
                 }
             }
-            Message::PointClouds(event) => return self.pointclouds_event(event),
             Message::Services(event) => return self.services_event(event),
             Message::Bound(event) => return self.bound_event(event),
-            Message::Reconcile(event) => return self.reconcile_event(event),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -506,13 +495,13 @@ impl App {
                     self.field = None;
                     self.layers_keyboard = false;
                     self.blocks_panel.keyboard = false;
-                    self.templates_panel.keyboard = false;
+                    self.arch.templates_panel.keyboard = false;
                     self.vertices.keyboard = false;
                 }
             }
             Message::PromptOption(key) => return self.prompt_option(key),
             Message::PromptChoice(key, typed) => return self.prompt_choice(key, &typed),
-            Message::PointCalc(kind) => return self.start_point_calc(kind),
+            Message::Map(inner) => return self.map_event(inner),
             Message::Key(press) => return self.key(press),
             Message::CursorValueInput { token, text, pasted } => {
                 return self.value_field_input(token, text, pasted);
@@ -565,81 +554,32 @@ impl App {
             Message::TextField(event) => self.text_field_event(event),
             Message::Paragraph(event) => self.paragraph_event(event),
             Message::Properties(event) => self.properties_event(event),
-            Message::ToolSetting(event) => return self.tool_setting(event),
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::Navigator(event) => return self.navigator_event(event),
-            Message::RoadProject(e) => return self.road_project_event(e),
-            Message::MapWork(e) => return self.map_work_event(e),
-            Message::MapSurvey(e) => return self.map_survey_event(e),
-            Message::TemplatesPanel(event) => return self.templates_panel_event(event),
-            Message::Sources(event) => return self.sources_event(event),
-            Message::Db(event) => return self.db_event(event),
-            Message::TemplateEditor(event) => return self.template_editor_event(event),
+            Message::Road(inner) => return self.road_event(inner),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
-            Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::BlockCard(event) => return self.block_card_event(event),
             Message::BlockParameterGroups(event) => return self.block_parameter_groups_event(event),
             Message::BlockTypeValues(event) => return self.block_type_values_event(event),
             Message::BlockSchedule(event) => return self.block_schedule_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
-            Message::LayerMerge(event) => return self.layer_merge_event(event),
-            Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
             Message::ReviewNotes(event) => return self.review_notes_event(event),
             Message::StandardInstall(event) => return self.standard_install_event(event),
-            Message::DataProfile(event) => return self.data_profile_event(event),
-            Message::Subnetworks(event) => return self.subnetworks_event(event),
-            Message::SourceStatus(event) => return self.source_status_event(event),
             Message::LineTypes(event) => return self.line_types_event(event),
             Message::Parameters(event) => return self.parameters_event(event),
             Message::HatchPatterns(event) => return self.hatch_patterns_event(event),
             Message::StyleImpact(event) => return self.style_impact_event(event),
             Message::BlockEditor(event) => return self.block_editor_event(event),
             Message::DocTabs(event) => return self.doc_tabs_event(event),
-            Message::LayerFilter(event) => return self.layer_filter_event(event),
             Message::Attachment(event) => return self.attachment_event(event),
             Message::InfoCard(event) => return self.info_card_event(event),
-            Message::LayerInfo(event) => return self.layer_info_event(event),
-            Message::DatasetInfo(event) => return self.dataset_info_event(event),
-            Message::Labelling(event) => return self.labelling_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::Views(event) => return self.views_event(event),
-            Message::Forms(event) => return self.forms_event(event),
-            Message::Relations(event) => return self.relations_event(event),
-            Message::Joins(event) => return self.joins_event(event),
-            Message::EventLinks(event) => return self.event_links_event(event),
-            Message::Terrains(event) => return self.terrain_event(event),
-            Message::Alignments(event) => return self.alignment_event(event),
-            Message::Profiles(event) => return self.profile_event(event),
-            Message::Sections(event) => return self.section_event(event),
-            Message::Superelevations(event) => return self.superelevation_event(event),
-            Message::Corridors(event) => return self.corridor_event(event),
-            Message::Volumes(event) => return self.volume_event(event),
-            Message::Hauls(event) => return self.haul_event(event),
-            Message::Stakeout(event) => return self.stakeout_event(event),
-            Message::RoadSheets(event) => return self.road_sheets_event(event),
-            Message::RoadViews(event) => return self.road_views_event(event),
-            Message::RoadAlignmentFit(event) => return self.road_alignment_fit_event(event),
-            Message::RoadProfileFit(event) => return self.road_profile_fit_event(event),
-            Message::Guardrails(event) => return self.guardrail_event(event),
-            Message::Culverts(event) => return self.culvert_event(event),
-            Message::RetainingWalls(event) => return self.retaining_wall_event(event),
-            Message::Platforms(event) => return self.platform_event(event),
-            Message::TerrainCloud(event) => return self.terrain_cloud_event(event),
-            Message::Drainage(event) => return self.drainage_event(event),
-            Message::Swept(event) => return self.swept_event(event),
-            Message::SurfaceAnalysis(event) => return self.surface_analysis_event(event),
-            Message::Sight(event) => return self.sight_event(event),
             Message::Propose(event) => return self.propose_event(event),
-            Message::DesignCheck(event) => return self.design_check_event(event),
-            Message::PlatformWater(event) => return self.platform_water_event(event),
-            Message::HaulPlan(event) => return self.haul_plan_event(event),
             Message::SavePicture(saved) => return self.save_picture(saved),
             Message::PictureWritten(written) => self.picture_written(written),
-            Message::Pay(event) => return self.pay_event(event),
-            Message::Route(event) => return self.route_event(event),
-            Message::Junctions(event) => return self.junction_event(event),
             Message::Scene3d(event) => return self.scene3d_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
             Message::LandxmlMachine(path) => return self.landxml_machine_chosen(path),
@@ -647,63 +587,16 @@ impl App {
             Message::IfcExport(path) => return self.ifc_chosen(path),
             Message::IfcBuildingExport(path) => return self.ifc_building_chosen(path),
             Message::GltfExport(path) => return self.gltf_chosen(path),
-            Message::Program(event) => return self.program_event(event),
-            Message::TableStyles(event) => return self.table_styles_event(event),
-            Message::Subtypes(event) => return self.subtypes_event(event),
-            Message::Contingents(event) => return self.contingents_event(event),
-            Message::LayerRules(event) => return self.layer_rules_event(event),
-            Message::LayerIndexes(event) => return self.layer_indexes_event(event),
-            Message::Domains(event) => return self.domains_event(event),
-            Message::FormAudit(event) => return self.form_audit_event(event),
-            Message::FormEntry(event) => return self.form_entry_event(event),
-            Message::FormPreview(event) => return self.form_preview_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
-            Message::WallStyles(event) => return self.wall_styles_event(event),
             Message::TableStyleDefs(event) => return self.table_style_window_event(event),
-            Message::WallJoins(event) => return self.wall_joins_event(event),
-            Message::OpeningTypes(event) => return self.opening_types_event(event),
-            Message::Materials(event) => return self.materials_event(event),
-            Message::RoomModules(event) => return self.room_modules_event(event),
-            Message::DesignOptions(event) => return self.design_options_event(event),
-            Message::TagsCheck(event) => return self.tags_check_event(event),
-            Message::Schedule(event) => return self.schedule_event(event),
-            Message::ViewRefs(event) => return self.view_refs_event(event),
             Message::SheetSet(event) => return self.sheet_set_event(event),
             Message::Xrefs(event) => return self.xrefs_event(event),
             Message::Flatten(event) => return self.flatten_event(event),
-            Message::Reproject(event) => return self.reproject_event(event),
-            Message::FeaturesCode(event) => return self.features_code_event(event),
-            Message::Baselines(event) => return self.baselines_event(event),
-            Message::Grade(event) => return self.grade_event(event),
             Message::CleanReport(event) => return self.clean_report_event(event),
-            Message::ParcelsCheck(event) => return self.parcels_check_event(event),
-            Message::ParcelBoundaries(event) => return self.parcel_boundaries_event(event),
-            Message::ParcelRegister(event) => return self.parcel_register_event(event),
-            Message::PipesCheck(event) => return self.pipes_check_event(event),
             Message::ExchangeCheck(event) => return self.exchange_check_event(event),
-            Message::Asbuilt(event) => return self.asbuilt_event(event),
-            Message::ProjectGraph(event) => return self.project_graph_event(event),
-            Message::SurveyNetwork(event) => return self.survey_network_event(event),
-            Message::FeaturesReconcile(event) => return self.features_reconcile_event(event),
-            Message::Zoning(event) => return self.zoning_event(event),
-            Message::ZoningSymbols(event) => return self.zoning_symbols_event(event),
-            Message::ZoningDraft(event) => return self.zoning_draft_event(event),
-            Message::Impact(event) => return self.impact_event(event),
-            Message::Readjustment(event) => return self.readjustment_event(event),
-            Message::Ortho(event) => return self.ortho_event(event),
-            Message::OrthoCompare(event) => return self.ortho_compare_event(event),
-            Message::OrthoSeamlines(event) => return self.ortho_seamlines_event(event),
-            Message::Overlap(event) => return self.overlap_event(event),
-            Message::Register(event) => return self.register_event(event),
-            Message::ScanNetwork(event) => return self.scan_network_event(event),
-            Message::CloudPlace(event) => return self.cloud_place_event(event),
             Message::CatalogReport(event) => return self.catalog_report_event(event),
-            Message::SheetContours(event) => return self.sheet_contours_event(event),
-            Message::SectionCheck(event) => return self.section_check_event(event),
-            Message::Stockpile(event) => return self.stockpile_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::BondNotice(event) => return self.bond_notice_event(event),
-            Message::Quantities(event) => return self.quantities_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
@@ -711,8 +604,6 @@ impl App {
             Message::TextTools(event) => return self.text_tools_event(event),
             Message::LeaderTools(event) => return self.leader_tools_event(event),
             Message::PlotScale(event) => return self.plot_scale_event(event),
-            Message::DataCompare(event) => return self.data_compare_event(event),
-            Message::Cogo(event) => return self.cogo_event(event),
             Message::TableInsert(event) => return self.table_insert_event(event),
             Message::TableEditor(event) => return self.table_editor_event(event),
             Message::TableUpdate(event) => return self.table_update_event(event),
@@ -729,10 +620,6 @@ impl App {
                 self.tracking
                     .dwell_due(number, |id, at| spatial.extensions_at(id, at));
             }
-            Message::Calc(event) => return self.calc_event(event),
-            Message::Processing(event) => return self.processing_event(event),
-            Message::ModelDesigner(event) => return self.model_designer_event(event),
-            Message::Builder(event) => return self.builder_event(event),
             Message::LayerStyle(event) => return self.layer_style_event(event),
             Message::StyleManager(event) => return self.style_manager_event(*event),
             Message::Legend(event) => return self.legend_event(event),
@@ -893,13 +780,14 @@ impl App {
                         self.remove_layer(&id);
                     }
                 }
-                Some(Dialog::RemoveTemplate) => self.remove_template(),
-                Some(Dialog::SpaceMerge) => self.space_merge_confirmed(),
+                Some(Dialog::Arch(arch::ArchDialogKind::RemoveTemplate)) => self.remove_template(),
+                Some(Dialog::Arch(arch::ArchDialogKind::SpaceMerge)) => {
+                    self.space_merge_confirmed()
+                }
                 Some(Dialog::SourceDiscard) => self.bound_discard(),
                 _ => {}
             },
             Message::DialogClosed => self.close_dialog(),
-            Message::ArchTemplate(event) => self.architecture_template_event(event),
             Message::Cloud(event) => return self.cloud_event(*event),
             Message::Exchange(event) => return self.exchange_event(*event),
             Message::Project(event) => return self.project_event(*event),
@@ -921,9 +809,6 @@ impl App {
             Message::CycleHover(slot) => self.selection.set_hover(slot),
             Message::Snap(event) => self.snap_event(event),
             Message::ScreenScale(event) => return self.screen_scale_event(event),
-            Message::SecondCrs(event) => self.second_crs_event(event),
-            Message::MapCrs(choose) => self.choose_map(choose),
-            Message::LayerCrs(event) => return self.layer_crs_event(event),
             Message::ToastClosed(id) => {
                 self.toasts.dismiss(id);
             }

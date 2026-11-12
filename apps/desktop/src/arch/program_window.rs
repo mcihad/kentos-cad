@@ -29,6 +29,7 @@
 //! independent unit's value factor in the land shares (Değer katsayısı) and the land shares' whole (Arsa payı paydası,
 //! empty: the parcel's area).
 
+use crate::arch;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -196,7 +197,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Program(event)
+    Message::Arch(arch::Event::Program(event))
 }
 
 fn number(t: &str, what: &str) -> Result<Option<f64>, String> {
@@ -339,12 +340,12 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
-        self.program_window = Some(Window::of(&doc.model.program()));
-        self.dialog = Some(Dialog::Program);
+        self.arch.program_window = Some(Window::of(&doc.model.program()));
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Program));
     }
 
     pub(crate) fn program_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.program_window.as_mut() else {
+        let Some(w) = self.arch.program_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -579,7 +580,7 @@ impl App {
                 if let Some(r) = w.running.take() {
                     r.stop.store(true, Ordering::Relaxed);
                 }
-                self.program_window = None;
+                self.arch.program_window = None;
                 self.dialog = None;
             }
             Event::Close => {
@@ -589,7 +590,7 @@ impl App {
                     if let Some(r) = w.running.take() {
                         r.stop.store(true, Ordering::Relaxed);
                     }
-                    self.program_window = None;
+                    self.arch.program_window = None;
                     self.dialog = None;
                 }
             }
@@ -597,10 +598,15 @@ impl App {
             Event::Answer(crate::unsaved_close::Answer::Save) => {
                 let task = self.save_program();
                 // Written: the window is the saved program again and closes; refused, it stays and says why.
-                if self.program_window.as_ref().is_some_and(|w| !w.unsaved()) {
-                    self.program_window = None;
+                if self
+                    .arch
+                    .program_window
+                    .as_ref()
+                    .is_some_and(|w| !w.unsaved())
+                {
+                    self.arch.program_window = None;
                     self.dialog = None;
-                } else if let Some(w) = self.program_window.as_mut() {
+                } else if let Some(w) = self.arch.program_window.as_mut() {
                     w.closing = false;
                 }
                 return task;
@@ -612,7 +618,7 @@ impl App {
 
     /// Kaydet: the program as typed through `cad.program.edit`; the window stays open on what was written.
     fn save_program(&mut self) -> Task<Message> {
-        let Some(w) = &self.program_window else {
+        let Some(w) = &self.arch.program_window else {
             return Task::none();
         };
         let program = match w.program() {
@@ -629,17 +635,22 @@ impl App {
         let result = program_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.output("Bina programı yazıldı.");
-            let tab = self.program_window.as_ref().map(|w| w.tab).unwrap_or_default();
+            let tab = self
+                .arch
+                .program_window
+                .as_ref()
+                .map(|w| w.tab)
+                .unwrap_or_default();
             let mut fresh = Window::of(&out.program);
             fresh.tab = tab;
-            self.program_window = Some(fresh);
+            self.arch.program_window = Some(fresh);
         }
         Task::none()
     }
 
     /// Seçilenleri ver: the selected spaces given to the group of row `i` (the program written first).
     fn give_to_unit(&mut self, i: usize) -> Task<Message> {
-        let Some(w) = &self.program_window else {
+        let Some(w) = &self.arch.program_window else {
             return Task::none();
         };
         let program = match w.program() {
@@ -671,10 +682,15 @@ impl App {
         let result = program_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.output(format!("{n} mahal bölüme verildi."));
-            let tab = self.program_window.as_ref().map(|w| w.tab).unwrap_or_default();
+            let tab = self
+                .arch
+                .program_window
+                .as_ref()
+                .map(|w| w.tab)
+                .unwrap_or_default();
             let mut fresh = Window::of(&out.program);
             fresh.tab = tab;
-            self.program_window = Some(fresh);
+            self.arch.program_window = Some(fresh);
         }
         Task::none()
     }
@@ -685,7 +701,7 @@ impl App {
             return Task::none();
         };
         let copy = doc.model.reading_copy();
-        let Some(w) = self.program_window.as_mut() else {
+        let Some(w) = self.arch.program_window.as_mut() else {
             return Task::none();
         };
         if let Some(r) = w.running.take() {
@@ -724,11 +740,14 @@ impl App {
     }
 
     pub(crate) fn program_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.program_window else {
+        let Some(w) = &self.arch.program_window else {
             return space::horizontal().into();
         };
-        let tabs =
-            Segmented::new([Tab::Buildings, Tab::Units, Tab::Briefs, Tab::Status], w.tab, |t| msg(Event::Tab(t)));
+        let tabs = Segmented::new(
+            [Tab::Buildings, Tab::Units, Tab::Briefs, Tab::Status],
+            w.tab,
+            |t| msg(Event::Tab(t)),
+        );
         let version = kentos_ui::widget::text_field("Hedeflerin sürümü", &w.version)
             .on_input(|t| msg(Event::Version(t)))
             .width(220);
@@ -1054,7 +1073,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn program_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.program_window.is_none() {
+        if self.arch.program_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

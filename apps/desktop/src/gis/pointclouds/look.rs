@@ -10,6 +10,7 @@
 //! `pointcloudStyle` as one undo step (Nokta bulutu stili), Vazgeç leaves the
 //! cloud as it was. A new look only colours the nodes again; their points stay.
 
+use crate::gis;
 use iced::widget::{Column, Row, button, column, container, row, space};
 use iced::{Center, Color, Element, Fill, Task};
 use kentos_commands::{
@@ -85,7 +86,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::PointClouds(Clouds::Look(e))
+    Message::Gis(gis::Event::PointClouds(Clouds::Look(e)))
 }
 
 const RENDERS: [CloudRender; 6] = [
@@ -207,7 +208,7 @@ impl App {
             crate::crs::js_number(s.size),
             kentos_interaction::fixed((1.0 - fields.opacity.unwrap_or(1.0)) * 100.0, 0),
         ];
-        self.clouds.look = Some(State {
+        self.gis.clouds.look = Some(State {
             slot,
             style: fields.style.clone(),
             original: fields,
@@ -215,12 +216,12 @@ impl App {
             sample: None,
             preview: None,
         });
-        self.dialog = Some(Asking::PointCloudStyle);
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::PointCloudStyle));
         crate::rasters::off_thread(move || msg(Event::Sample(sample_of(&key))))
     }
 
     pub(crate) fn cloud_look_event(&mut self, e: Event) -> Task<Message> {
-        let Some(s) = &mut self.clouds.look else {
+        let Some(s) = &mut self.gis.clouds.look else {
             return Task::none();
         };
         match e {
@@ -306,7 +307,7 @@ impl App {
 
     /// The cloud as the window says, when that is a cloud: its look and opacity.
     fn cloud_look_fields(&self) -> Option<PointCloudFields> {
-        let s = self.clouds.look.as_ref()?;
+        let s = self.gis.clouds.look.as_ref()?;
         let clear = read(&s.texts[Typed::Clear as usize]).unwrap_or(0.0);
         let opacity =
             (clear.is_finite() && (0.0..=90.0).contains(&clear)).then_some(1.0 - clear / 100.0)?;
@@ -325,7 +326,7 @@ impl App {
 
     /// Why Uygula cannot run, when it cannot.
     fn cloud_look_problem(&self) -> Option<String> {
-        let s = self.clouds.look.as_ref()?;
+        let s = self.gis.clouds.look.as_ref()?;
         let clear = read(&s.texts[Typed::Clear as usize]).unwrap_or(0.0);
         if !(clear.is_finite() && (0.0..=90.0).contains(&clear)) {
             return Some("Saydamlık %0 ile %90 arasında olmalı.".to_owned());
@@ -354,7 +355,7 @@ impl App {
     /// The drawing shows the window's look: the last preview let go, the new one written in its group.
     fn cloud_look_preview(&mut self) {
         let fields = self.cloud_look_fields();
-        let (Some(doc), Some(s)) = (&mut self.document, &mut self.clouds.look) else {
+        let (Some(doc), Some(s)) = (&mut self.document, &mut self.gis.clouds.look) else {
             return;
         };
         if let Some(g) = s.preview.take() {
@@ -388,7 +389,7 @@ impl App {
         let Some(fields) = self.cloud_look_fields() else {
             return;
         };
-        let (Some(doc), Some(s)) = (&mut self.document, &mut self.clouds.look) else {
+        let (Some(doc), Some(s)) = (&mut self.document, &mut self.gis.clouds.look) else {
             return;
         };
         if let Some(g) = s.preview.take() {
@@ -396,7 +397,7 @@ impl App {
         }
         let slot = s.slot;
         let unchanged = fields == s.original;
-        self.clouds.look = None;
+        self.gis.clouds.look = None;
         self.dialog = None;
         if unchanged {
             return;
@@ -433,19 +434,19 @@ impl App {
 
     /// Vazgeç: the cloud as it was.
     pub(crate) fn cloud_look_close(&mut self) {
-        if let (Some(doc), Some(s)) = (&mut self.document, &mut self.clouds.look)
+        if let (Some(doc), Some(s)) = (&mut self.document, &mut self.gis.clouds.look)
             && let Some(g) = s.preview.take()
         {
             doc.model.cancel_group(g);
         }
-        self.clouds.look = None;
-        if self.dialog == Some(Asking::PointCloudStyle) {
+        self.gis.clouds.look = None;
+        if self.dialog == Some(Asking::Gis(gis::GisDialogKind::PointCloudStyle)) {
             self.dialog = None;
         }
     }
 
     pub(crate) fn cloud_look_view(&self) -> Element<'_, Message> {
-        let Some(s) = &self.clouds.look else {
+        let Some(s) = &self.gis.clouds.look else {
             return iced::widget::text("").into();
         };
         let st = &s.style;

@@ -6,6 +6,7 @@
 //! Modeli sil. The rules and words are `kentos_processing`'s, held to the
 //! web's by fixtures/processing/v1/designer.json.
 
+use crate::gis;
 use iced::keyboard::key::{Code, NativeCode, Physical};
 use iced::keyboard::{Key, Modifiers, key::Named};
 use kentos_processing::ValueSource;
@@ -21,11 +22,12 @@ use crate::processing::Event as Field;
 use crate::processing::tests::app_with_parcels;
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::ModelDesigner(e));
+    let _ = app.update(Message::Gis(gis::Event::ModelDesigner(e)));
 }
 
 fn designer(app: &App) -> &Designer {
-    app.processing
+    app.gis
+        .processing
         .designer
         .as_deref()
         .expect("the designer is open")
@@ -62,20 +64,32 @@ fn selection_recipe_keeps_filters_in_the_existing_shareable_model_without_writin
     app.open_processing("selection.byExpression", Some(serde_json::from_value(json!({
         "input":{"scope":"all"},"condition":"true","mode":"within","cadFilter":true,"textHeightMin":0.3,"assignedColor":"byLayer"
     })).unwrap()));
-    let _ = app.update(Message::Processing(Field::SelectionRecipe));
-    assert_eq!(app.dialog, Some(Dialog::ModelDesigner));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Field::SelectionRecipe)));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner))
+    );
     let draft = &designer(&app).draft;
-    assert_eq!(draft.steps.len(),1);
-    assert_eq!(draft.steps[0].tool,"selection.byExpression");
-    assert_eq!(draft.steps[0].source("textHeightMin"),Some(&ValueSource::Value(json!(0.3))));
-    assert_eq!(draft.steps[0].source("mode"),Some(&ValueSource::Value(json!("within"))));
+    assert_eq!(draft.steps.len(), 1);
+    assert_eq!(draft.steps[0].tool, "selection.byExpression");
+    assert_eq!(
+        draft.steps[0].source("textHeightMin"),
+        Some(&ValueSource::Value(json!(0.3)))
+    );
+    assert_eq!(
+        draft.steps[0].source("mode"),
+        Some(&ValueSource::Value(json!("within")))
+    );
     let text = serde_json::to_string(draft).unwrap();
     assert_eq!(Model::from_text(&text).unwrap().to_json(), draft.to_json());
     assert!(designer(&app).problems.is_empty(),"{:?}",designer(&app).problems);
     event(&mut app, Event::Save);
-    let id=designer(&app).draft.id.clone();
-    assert!(app.processing.registry.model(&id).is_some());
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    let id = designer(&app).draft.id.clone();
+    assert!(app.gis.processing.registry.model(&id).is_some());
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }
 
 /// Yeni model…, an input and a step that reads it: the parts a new model is built from.
@@ -96,7 +110,10 @@ fn new_chain(app: &mut App) -> String {
 fn a_model_is_built_from_the_parts_saved_and_opened_again() {
     let mut app = app_with_parcels();
     let _ = app.update(Message::Run("processing.newModel"));
-    assert_eq!(app.dialog, Some(Dialog::ModelDesigner));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner))
+    );
     assert_eq!(designer(&app).title(), texts::title_of("Yeni model", false));
     event(&mut app, Event::AddInput(0));
     assert_eq!(
@@ -125,11 +142,12 @@ fn a_model_is_built_from_the_parts_saved_and_opened_again() {
     assert!(!designer(&app).dirty(), "saved: nothing left to ask about");
     assert_eq!(last_said(&app), texts::save::saved("Köşe modeli", 0));
     assert!(
-        app.processing.registry.model(&id).is_some(),
+        app.gis.processing.registry.model(&id).is_some(),
         "in the library"
     );
     assert_eq!(
-        app.processing
+        app.gis
+            .processing
             .memory
             .models()
             .iter()
@@ -140,7 +158,8 @@ fn a_model_is_built_from_the_parts_saved_and_opened_again() {
     );
     // The toolbox offers it as a command of its own.
     assert!(
-        app.processing
+        app.gis
+            .processing
             .registry
             .get(&format!("model:{id}"))
             .is_some()
@@ -152,7 +171,7 @@ fn a_model_is_built_from_the_parts_saved_and_opened_again() {
     let d = designer(&app);
     assert_eq!(d.draft.label, "Köşe modeli");
     assert!(
-        d.is_saved(&app.processing.registry),
+        d.is_saved(&app.gis.processing.registry),
         "Modeli sil is offered"
     );
     assert!(!d.dirty());
@@ -189,15 +208,19 @@ fn closing_with_changes_asks_and_vazgec_stays() {
     event(&mut app, Event::Close);
     assert_eq!(designer(&app).asking, Some(Asking::Unsaved));
     event(&mut app, Event::Answer(None));
-    assert_eq!(app.dialog, Some(Dialog::ModelDesigner), "Vazgeç stays");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner)),
+        "Vazgeç stays"
+    );
     assert_eq!(designer(&app).asking, None);
     // Esc asks the same.
     key(&mut app, Named::Escape);
     assert_eq!(designer(&app).asking, Some(Asking::Unsaved));
     event(&mut app, Event::Answer(Some(false)));
     assert_eq!(app.dialog, None, "Kaydetmeden kapat");
-    assert!(app.processing.designer.is_none());
-    assert!(app.processing.registry.user_models().is_empty());
+    assert!(app.gis.processing.designer.is_none());
+    assert!(app.gis.processing.registry.user_models().is_empty());
 }
 
 #[test]
@@ -208,7 +231,7 @@ fn saving_from_the_question_keeps_the_model_and_closes() {
     event(&mut app, Event::Close);
     event(&mut app, Event::Answer(Some(true)));
     assert_eq!(app.dialog, None);
-    let saved = app.processing.registry.user_models();
+    let saved = app.gis.processing.registry.user_models();
     assert_eq!(saved.len(), 1);
     assert_eq!(
         saved[0].label,
@@ -226,15 +249,16 @@ fn a_built_in_model_opens_as_its_copy() {
     assert_eq!(d.draft.label, "Parsel ölçü yazıları (kopya)");
     assert!(d.builtin_copy);
     assert!(
-        !d.is_saved(&app.processing.registry),
+        !d.is_saved(&app.gis.processing.registry),
         "no Modeli sil for a copy"
     );
     assert!(!d.dirty(), "the copy is what it compares with");
     let id = d.draft.id.clone();
     event(&mut app, Event::Save);
-    assert!(app.processing.registry.model(&id).is_some());
+    assert!(app.gis.processing.registry.model(&id).is_some());
     assert!(
-        app.processing
+        app.gis
+            .processing
             .registry
             .model("builtin.parcelSheet")
             .is_some(),
@@ -270,7 +294,7 @@ fn a_wire_let_go_on_a_step_asks_what_it_feeds() {
         designer(&app).wire_menu.is_some(),
         "the menu opens where it was let go"
     );
-    let registry = app.processing.registry.clone();
+    let registry = app.gis.processing.registry.clone();
     let menu = plan::connect_choices(&designer(&app).draft, &from, &second, &|id| {
         registry.tool(id)
     })
@@ -349,13 +373,16 @@ fn a_start_point_is_shown_on_the_drawing_and_the_designer_comes_back() {
     );
     event(&mut app, Event::Field(Field::PickChoice("start".into())));
     assert_eq!(app.dialog, None, "the designer steps aside");
-    assert!(app.processing.designer.is_none());
+    assert!(app.gis.processing.designer.is_none());
     assert_eq!(
         app.session.prompt().text(),
         "Başlangıç noktası: haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]"
     );
     let _ = app.submit_line("487010,4420010");
-    assert_eq!(app.dialog, Some(Dialog::ModelDesigner));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner))
+    );
     assert_eq!(
         source(&app, &step, "startPoint"),
         Some(&ValueSource::Value(
@@ -383,7 +410,10 @@ fn the_keys_save_and_delete_the_selected_box() {
     assert_eq!(designer(&app).selected, None);
     chord(&mut app, "s", Code::KeyS);
     let id = designer(&app).draft.id.clone();
-    assert!(app.processing.registry.model(&id).is_some(), "Ctrl+S saves");
+    assert!(
+        app.gis.processing.registry.model(&id).is_some(),
+        "Ctrl+S saves"
+    );
 }
 
 #[test]
@@ -396,14 +426,14 @@ fn modeli_sil_asks_then_takes_the_model_out_of_the_library() {
     assert_eq!(designer(&app).asking, Some(Asking::Remove));
     event(&mut app, Event::Answer(None));
     assert!(
-        app.processing.registry.model(&id).is_some(),
+        app.gis.processing.registry.model(&id).is_some(),
         "Vazgeç keeps it"
     );
     event(&mut app, Event::Delete);
     event(&mut app, Event::Answer(Some(true)));
     assert_eq!(app.dialog, None);
-    assert!(app.processing.registry.model(&id).is_none());
-    assert!(app.processing.memory.models().is_empty());
+    assert!(app.gis.processing.registry.model(&id).is_none());
+    assert!(app.gis.processing.memory.models().is_empty());
     assert_eq!(last_said(&app), texts::remove::done("Yeni model"));
 }
 
@@ -472,12 +502,15 @@ fn the_parts_list_the_tools_the_program_offers() {
     let mut app = app_with_parcels();
     app.program = Some(kentos_launch::Module::Map);
     let _ = app.update(Message::Run("processing.newModel"));
-    assert_eq!(app.dialog, Some(Dialog::ModelDesigner));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::ModelDesigner))
+    );
     let listed = |app: &App, search: &str| -> Vec<String> {
         let offered = |t: &str| app.offers_tool(t);
         (0..)
             .map_while(|place| {
-                super::palette::tool_at(&app.processing.registry, search, &offered, place)
+                super::palette::tool_at(&app.gis.processing.registry, search, &offered, place)
             })
             .collect()
     };
@@ -583,7 +616,8 @@ fn screens() {
                     }
                     "sorunlar" | "sorunlu-adim" => {
                         let model = problem_model();
-                        app.processing
+                        app.gis
+                            .processing
                             .registry
                             .save_model(model.clone())
                             .expect("a user's model");
@@ -666,7 +700,7 @@ fn screens() {
                         .iter()
                         .find(|s| s.id == "corners")
                         .map(|s| {
-                            let registry = app.processing.registry.clone();
+                            let registry = app.gis.processing.registry.clone();
                             plan::source_text(&designer(&app).draft, s.source("input"), &|id| {
                                 registry.tool(id)
                             })

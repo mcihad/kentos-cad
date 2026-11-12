@@ -16,6 +16,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -72,7 +73,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Drainage(event)
+    Message::Road(road::Event::Drainage(event))
 }
 
 fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
@@ -151,14 +152,26 @@ impl App {
         if let Some(p) = chosen_point(self) {
             fields[0] = format!("{},{}", trimmed(p[0]), trimmed(p[1]));
         }
-        self.drainage_window = Some(Box::new(Window { surface: Some(surface), culvert: None, fields, layer, preview: None, warnings: Vec::new() }));
-        self.dialog = Some(Dialog::Drainage);
+        self.road.drainage_window = Some(Box::new(Window {
+            surface: Some(surface),
+            culvert: None,
+            fields,
+            layer,
+            preview: None,
+            warnings: Vec::new(),
+        }));
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Drainage));
     }
 
     fn preview_drainage(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.drainage_window.as_mut() else { return };
-        let (preview, warnings) = match w.query().and_then(|q| road_drainage::preview(&doc.model, &q)) {
+        let Some(w) = self.road.drainage_window.as_mut() else {
+            return;
+        };
+        let (preview, warnings) = match w
+            .query()
+            .and_then(|q| road_drainage::preview(&doc.model, &q))
+        {
             Err(why) => (Err(why), Vec::new()),
             Ok((q, warnings)) => (Ok(q), warnings.into_iter().map(|x| x.message).collect()),
         };
@@ -168,7 +181,9 @@ impl App {
 
     pub(crate) fn drainage_event(&mut self, event: Event) -> Task<Message> {
         let picked = chosen_point(self);
-        let Some(w) = self.drainage_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.drainage_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Surface(s) => w.surface = Some(s),
             Event::Culvert(c) => w.culvert = c,
@@ -187,12 +202,12 @@ impl App {
             }
             Event::Draw => return self.draw_drainage(),
             Event::Close => {
-                self.drainage_window = None;
+                self.road.drainage_window = None;
                 self.dialog = None;
                 return Task::none();
             }
         }
-        if let Some(w) = self.drainage_window.as_mut() {
+        if let Some(w) = self.road.drainage_window.as_mut() {
             w.preview = None;
             w.warnings.clear();
         }
@@ -200,7 +215,9 @@ impl App {
     }
 
     fn draw_drainage(&mut self) -> Task<Message> {
-        let Some(w) = self.drainage_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.drainage_window.as_ref() else {
+            return Task::none();
+        };
         let (query, Some(layer)) = (w.query(), w.layer.clone()) else {
             self.warn("Çizmek için bir katman seçin.".to_owned());
             return Task::none();
@@ -217,14 +234,14 @@ impl App {
         let result = road_drainage_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.say(Level::Success, format!("Drenaj planda, {} nesne.", out.uids.len()));
-            self.drainage_window = None;
+            self.road.drainage_window = None;
             self.dialog = None;
         }
         Task::none()
     }
 
     pub(crate) fn drainage_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.drainage_window else {
+        let Some(w) = &self.road.drainage_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -355,7 +372,7 @@ impl App {
     }
 
     pub(crate) fn drainage_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.drainage_window.is_none() {
+        if self.road.drainage_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

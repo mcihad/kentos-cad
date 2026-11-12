@@ -6,6 +6,7 @@
 //! change; a broken template is said. Kaydet writes through
 //! `cad.layers.info` (one step “Bilgi kartı”).
 
+use crate::gis;
 use iced::widget::{Column, button, column, container, row, text_editor};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
@@ -67,7 +68,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::LayerInfo(e)
+    Message::Gis(gis::Event::LayerInfo(e))
 }
 
 impl Window {
@@ -181,13 +182,13 @@ impl App {
             .find(|l| **l == wanted)
             .cloned()
             .unwrap_or_else(|| layers[0].clone());
-        self.layer_info = Some(self.info_window(id));
-        self.dialog = Some(Dialog::LayerInfo);
+        self.gis.layer_info = Some(self.info_window(id));
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerInfo));
         iced::widget::operation::focus(title_id())
     }
 
     pub(crate) fn layer_info_event(&mut self, e: Event) -> Task<Message> {
-        let Some(mut w) = self.layer_info.take() else {
+        let Some(mut w) = self.gis.layer_info.take() else {
             return Task::none();
         };
         match e {
@@ -231,7 +232,7 @@ impl App {
                 return Task::none();
             }
         }
-        self.layer_info = Some(w);
+        self.gis.layer_info = Some(w);
         Task::none()
     }
 
@@ -295,7 +296,7 @@ impl App {
     }
 
     pub(crate) fn layer_info_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.layer_info else {
+        let Some(w) = &self.gis.layer_info else {
             return label::caption("").into();
         };
         let layers = self.info_layers();
@@ -463,7 +464,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.layer_info else {
+        let Some(w) = &self.gis.layer_info else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

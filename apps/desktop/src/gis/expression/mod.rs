@@ -26,6 +26,7 @@ mod objects;
 mod tests;
 mod view;
 
+use crate::gis;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -254,7 +255,7 @@ pub(crate) enum Event {
 }
 
 fn ev(e: Event) -> Message {
-    Message::Builder(e)
+    Message::Gis(gis::Event::Builder(e))
 }
 
 /// Today's text attributes as the builder's fields, with how many objects
@@ -721,7 +722,7 @@ impl App {
     /// that field's text, fields and objects.
     pub(crate) fn open_builder_for_processing(&mut self, name: &str) -> Task<Message> {
         let variables = self.expression_variables();
-        let (Some(doc), Some(window)) = (&self.document, &self.processing.dialog) else {
+        let (Some(doc), Some(window)) = (&self.document, &self.gis.processing.dialog) else {
             return Task::none();
         };
         let Some(def) = window.tool.parameters.iter().find(|p| p.name == name) else {
@@ -807,7 +808,7 @@ impl App {
         let mut builder = Builder::new(
             Target::FeatureFilter,
             crate::features::texts::FILTER.to_owned(),
-            &self.features.filter,
+            &self.gis.features.filter,
             attribute_fields(&fields, variables, false, self.reading_unit()),
             Objects {
                 slots: rows.slots.clone(),
@@ -1075,7 +1076,7 @@ impl App {
         if let Event::Mode(mode) = &e {
             self.builder_flow = *mode == ViewMode::Flow;
         }
-        let Some(b) = self.builder.as_mut() else {
+        let Some(b) = self.gis.builder.as_mut() else {
             return Task::none();
         };
         let mut focus = false;
@@ -1324,19 +1325,20 @@ impl App {
             Event::Pick => return self.builder_pick(),
             Event::Ok => return self.builder_ok(),
             Event::Cancel => {
-                self.builder = None;
+                self.gis.builder = None;
                 return Task::none();
             }
         }
         let doc = self.document.as_ref().map(|d| &d.model);
         let store = self.spatial.store();
         let mut tasks = Vec::new();
-        if let Some(b) = self.builder.as_mut() {
+        if let Some(b) = self.gis.builder.as_mut() {
             b.preview_on(doc, store);
             tasks.extend(b.follow());
         }
         if focus
             && self
+                .gis
                 .builder
                 .as_ref()
                 .is_some_and(|b| b.view_mode == ViewMode::Text)
@@ -1353,12 +1355,12 @@ impl App {
             builder.set_mode(ViewMode::Flow);
         }
         builder.recent = self.builder_recent.clone();
-        self.builder = Some(builder);
+        self.gis.builder = Some(builder);
         iced::widget::operation::focus(EDITOR)
     }
 
     fn builder_ok(&mut self) -> Task<Message> {
-        let Some(b) = &self.builder else {
+        let Some(b) = &self.gis.builder else {
             return Task::none();
         };
         if b.check.error.is_some() && !b.source.trim().is_empty() {
@@ -1373,10 +1375,10 @@ impl App {
         self.builder_recent.truncate(RECENT);
         let text = b.source.clone();
         let target = b.target.clone();
-        self.builder = None;
+        self.gis.builder = None;
         match target {
             Target::Processing(name) => {
-                if let Some(window) = &mut self.processing.dialog {
+                if let Some(window) = &mut self.gis.processing.dialog {
                     window.values.insert(name.clone(), json!(text));
                     window.touch(&name);
                 }
@@ -1419,7 +1421,7 @@ impl App {
     /// Sahneden seç: the builder and the window under it step aside, one
     /// object is picked on the drawing, and the preview goes to it.
     fn builder_pick(&mut self) -> Task<Message> {
-        let Some(b) = self.builder.as_mut() else {
+        let Some(b) = self.gis.builder.as_mut() else {
             return Task::none();
         };
         if self.document.is_none() || b.objects.is_empty() {
@@ -1443,7 +1445,7 @@ impl App {
     /// The object picked for the preview (or none, Esc): the builder and its
     /// window come back. Returns false when the builder was not picking.
     pub(crate) fn builder_picked(&mut self, keep: bool) -> bool {
-        let Some(b) = self.builder.as_mut() else {
+        let Some(b) = self.gis.builder.as_mut() else {
             return false;
         };
         let Some(picking) = b.picking.take() else {
@@ -1462,7 +1464,7 @@ impl App {
         self.dialog = picking.dialog;
         let doc = self.document.as_ref().map(|d| &d.model);
         let store = self.spatial.store();
-        if let Some(b) = self.builder.as_mut() {
+        if let Some(b) = self.gis.builder.as_mut() {
             b.preview_on(doc, store);
         }
         true
@@ -1471,7 +1473,7 @@ impl App {
     /// Keys that reach the app while the builder is open (the editor takes
     /// its own): Esc is Vazgeç, Ctrl+Enter Tamam.
     pub(crate) fn builder_key(&mut self, press: &crate::keys::KeyPress) -> Option<Task<Message>> {
-        let b = self.builder.as_ref()?;
+        let b = self.gis.builder.as_ref()?;
         if b.is_picking() {
             return None;
         }

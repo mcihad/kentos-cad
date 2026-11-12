@@ -17,6 +17,7 @@
 //! Soy what a processing tool made the layer from, whether its inputs changed since, the layers it came from and the
 //! layers made from it, Kayıt the layer as an OGC API Records record (to the clipboard or a file).
 
+use crate::gis;
 use iced::widget::{Column, container, row, scrollable, text_editor};
 use iced::{Element, Fill, Length, Task};
 use kentos_commands::{
@@ -103,7 +104,7 @@ pub enum Part {
 }
 
 fn msg(e: Event) -> Message {
-    Message::DatasetInfo(e)
+    Message::Gis(gis::Event::DatasetInfo(e))
 }
 
 fn some(t: &str) -> Option<String> {
@@ -277,13 +278,13 @@ impl App {
             .cloned()
             .unwrap_or_else(|| layers[0].clone());
         let w = self.dataset_window(id, 0);
-        self.dataset_info = Some(w);
-        self.dialog = Some(Dialog::DatasetInfo);
+        self.gis.dataset_info = Some(w);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::DatasetInfo));
         Task::none()
     }
 
     pub(crate) fn dataset_info_event(&mut self, e: Event) -> Task<Message> {
-        let Some(mut w) = self.dataset_info.take() else {
+        let Some(mut w) = self.gis.dataset_info.take() else {
             return Task::none();
         };
         match e {
@@ -302,7 +303,7 @@ impl App {
                     .and_then(|d| d.record.as_ref())
                     .and_then(|r| serde_json::to_string_pretty(r).ok())
                     .unwrap_or_default();
-                self.dataset_info = Some(w);
+                self.gis.dataset_info = Some(w);
                 self.say(Level::Success, "Kayıt panoya kopyalandı.");
                 return iced::clipboard::write(text);
             }
@@ -317,7 +318,7 @@ impl App {
                 return Task::none();
             }
         }
-        self.dataset_info = Some(w);
+        self.gis.dataset_info = Some(w);
         Task::none()
     }
 
@@ -361,7 +362,7 @@ impl App {
     }
 
     pub(crate) fn dataset_info_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.dataset_info else {
+        let Some(w) = &self.gis.dataset_info else {
             return label::caption("").into();
         };
         let layers = self.dataset_layers();
@@ -687,7 +688,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.dataset_info else {
+        let Some(w) = &self.gis.dataset_info else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {
@@ -734,7 +735,7 @@ mod tests {
     }
 
     fn ev(app: &mut App, e: Event) {
-        let _ = app.update(Message::DatasetInfo(e));
+        let _ = app.update(Message::Gis(crate::gis::Event::DatasetInfo(e)));
     }
 
     #[test]
@@ -743,7 +744,10 @@ mod tests {
         let _ = app.update(Message::Layer(crate::layering::Event::Dataset(
             "parsel".into(),
         )));
-        assert_eq!(app.dialog, Some(Dialog::DatasetInfo));
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Gis(crate::gis::GisDialogKind::DatasetInfo))
+        );
         ev(
             &mut app,
             Event::Field(Part::Title, "Kadastro parselleri".into()),
@@ -752,7 +756,7 @@ mod tests {
         ev(&mut app, Event::Save);
         assert_eq!(
             app.dialog,
-            Some(Dialog::DatasetInfo),
+            Some(Dialog::Gis(crate::gis::GisDialogKind::DatasetInfo)),
             "a day that is no day: not written"
         );
         ev(&mut app, Event::Field(Part::Updated, "2026-10-20".into()));
@@ -790,7 +794,7 @@ mod tests {
         let _ = app.update(Message::Layer(crate::layering::Event::Dataset(
             "ikinci".into(),
         )));
-        let w = app.dataset_info.as_ref().expect("open");
+        let w = app.gis.dataset_info.as_ref().expect("open");
         let d = w.described.as_ref().expect("described");
         assert!(d.stale);
         assert_eq!(d.upstream, vec!["tampon".to_owned(), "parsel".to_owned()]);

@@ -2,6 +2,7 @@
 //! the map, meters, reviewers' notes, releases, attachments, searches and located, dated and surveyed parcels.
 
 use super::*;
+use crate::gis;
 
 /// Buildings and depots whose material comes from the project's list “Yapı malzemesi” and whose floor
 /// count from the range “Kat sayısı” (docs/adr/0430); a depot is of masonry (ym).
@@ -57,7 +58,7 @@ pub(super) fn listed_buildings(app: &mut App) {
               "values": [{ "code": "dz", "label": "Düz" }, { "code": "bs", "label": "Beşik" }, { "code": "kr", "label": "Kırma" }] }
         ]);
     });
-    app.features.layer = Some("bina".into());
+    app.gis.features.layer = Some("bina".into());
 }
 
 /// Değer listeleri on the material list (docs/adr/0430 §4): Yığma dropped, its records moved to Betonarme.
@@ -65,19 +66,19 @@ pub(super) fn domains_window(app: &mut App) {
     use crate::forms::domains::Event;
     listed_buildings(app);
     run(app, "data.domains");
-    let _ = app.update(Message::Domains(Event::RemoveCode(2)));
-    let _ = app.update(Message::Domains(Event::Recode(
+    let _ = app.update(Message::Gis(gis::Event::Domains(Event::RemoveCode(2))));
+    let _ = app.update(Message::Gis(gis::Event::Domains(Event::Recode(
         "ym".into(),
         Some("bt".into()),
-    )));
+    ))));
 }
 
 /// Alanlar's value list of the building's material: linked to the project's list, its codes read-only.
 pub(super) fn domains_field(app: &mut App) {
     listed_buildings(app);
     let _ = app.open_layer_fields("bina");
-    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::OpenList(
-        1,
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(
+        crate::layer_fields::Event::OpenList(1),
     )));
 }
 
@@ -154,7 +155,7 @@ pub(super) fn chosen_facilities(app: &mut App) {
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
     doc.model.set_settings(settings);
-    app.features.layer = Some("tesis".into());
+    app.gis.features.layer = Some("tesis".into());
     app.selection.set([Slot(1)]);
     run(app, "data.formEdit");
 }
@@ -334,7 +335,7 @@ pub(crate) fn sources(app: &mut App) {
     .expect("lists");
     settings.variables = serde_json::from_value(json!([])).expect("variables");
     doc.model.set_settings(settings);
-    app.features.layer = Some("bina".into());
+    app.gis.features.layer = Some("bina".into());
 }
 
 /// Formlar on the building form, its parcel item chosen: the list's order, columns, page, duplicates,
@@ -389,7 +390,9 @@ pub(super) fn sources_search(app: &mut App) {
     app.selection.set([Slot(6)]);
     run(app, "data.formEdit");
     searched(app, "Mahalle", "a");
-    let _ = app.update(Message::FormEntry(entry::Event::More("Mahalle".into())));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::More(
+        "Mahalle".into(),
+    ))));
     searched(app, "Mahalle", "ka");
 }
 
@@ -418,7 +421,9 @@ pub(super) fn sources_migrated(app: &mut App) {
         }
     }
     let _ = app.open_layer_fields("parsel");
-    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Migrate));
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(
+        crate::layer_fields::Event::Migrate,
+    )));
 }
 
 /// Buildings and their meters (docs/adr/0440): a project relation, sixty meters of the first building
@@ -503,7 +508,7 @@ pub(super) fn meters(app: &mut App) {
         )
         .expect("an input"),
     );
-    app.features.layer = Some("bina".into());
+    app.gis.features.layer = Some("bina".into());
 }
 
 /// Formla düzenle on the first building: its meters as cards, 1–50 of 60.
@@ -608,8 +613,8 @@ pub(crate) fn meters_rebodied(app: &mut App, items: Value) {
         note: None,
     }];
     doc.model.set_settings(settings);
-    app.form_memory.clock = Some("2026-10-17T10:00:00".into());
-    app.form_memory.person = Some("Ayşe Yılmaz".into());
+    app.gis.form_memory.clock = Some("2026-10-17T10:00:00".into());
+    app.gis.form_memory.person = Some("Ayşe Yılmaz".into());
 }
 
 /// The building items of ADR 0441's pictures: a divider, the meters as a chart by kind, an action.
@@ -649,7 +654,7 @@ pub(super) fn meters_action(app: &mut App) {
 pub(crate) fn scene_library(app: &mut App, name: &str) {
     let dir = std::env::temp_dir().join(format!("kentos-form-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
-    app.form_files = crate::forms::library::FormFiles::at(&dir);
+    app.gis.form_files = crate::forms::library::FormFiles::at(&dir);
 }
 
 /// The chart kept twice in the section library, the meter form's palette showing how it binds there.
@@ -693,7 +698,7 @@ pub(super) fn meters_kept(app: &mut App) {
     run(app, "data.forms");
     designer(app, designer::Event::SelectItem("ad".into()));
     designer(app, designer::Event::AddDivider);
-    app.forms_window = None;
+    app.gis.forms_window = None;
     app.dialog = None;
     run(app, "data.forms");
 }
@@ -722,8 +727,8 @@ pub(super) fn noted_buildings(app: &mut App) {
         note: None,
     }];
     doc.model.set_settings(settings);
-    app.form_memory.clock = Some("2026-10-17T10:00:00".into());
-    app.form_memory.person = Some("Ayşe Yılmaz".into());
+    app.gis.form_memory.clock = Some("2026-10-17T10:00:00".into());
+    app.gis.form_memory.person = Some("Ayşe Yılmaz".into());
 }
 
 /// The sent building under review: Alanlara not on, notes on two fields, the reason typed (docs/adr/0442 §4).
@@ -866,16 +871,20 @@ pub(super) fn searched_list(app: &mut App) {
 /// `text` typed into the searched list of `key` and its turn come (docs/adr/0439 §6): what the pause
 /// after typing delivers.
 pub(super) fn searched(app: &mut App, key: &str, text: &str) {
-    let _ = app.update(Message::FormEntry(entry::Event::Query(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Query(
         key.into(),
         text.into(),
-    )));
+    ))));
     let turn = app
+        .gis
         .form_entry
         .as_ref()
         .and_then(|e| e.search_for_tests(key).0);
     if let Some(turn) = turn {
-        let _ = app.update(Message::FormEntry(entry::Event::Search(key.into(), turn)));
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Search(
+            key.into(),
+            turn,
+        ))));
     }
 }
 
@@ -884,10 +893,10 @@ pub(super) fn workflow_draft(app: &mut App) {
     workflow_buildings(app);
     app.selection.set([Slot(1)]);
     run(app, "data.formEdit");
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Kat".into(),
         String::new(),
-    )));
+    ))));
 }
 
 /// A parcel's form with its place (docs/adr/0433): an L-shaped parcel on the small map, its centre's
@@ -933,7 +942,7 @@ pub(super) fn located_parcel(app: &mut App) {
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
     doc.model.set_settings(settings);
-    app.features.layer = Some("kadastro".into());
+    app.gis.features.layer = Some("kadastro".into());
     app.selection.set([Slot(1)]);
     run(app, "data.formEdit");
 }
@@ -947,7 +956,7 @@ pub(super) fn imported_form(app: &mut App) {
     if let Some(doc) = app.document.as_mut() {
         doc.model.set_active_layer("parsel");
     }
-    if let Some(w) = app.forms_window.as_mut() {
+    if let Some(w) = app.gis.forms_window.as_mut() {
         w.chosen = None;
     }
     app.form_imported(Some(("bina-denetimi.kform".into(), text)));
@@ -989,13 +998,13 @@ pub(super) fn dated_parcel(app: &mut App) {
         }];
     }
     doc.model.set_settings(settings);
-    app.form_entry = None;
+    app.gis.form_entry = None;
     app.dialog = None;
     run(app, "data.formEdit");
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Tescil".into(),
         "1.1.2027".into(),
-    )));
+    ))));
 }
 
 /// A survey form of three steps (docs/adr/0437): Kimlik with the use as a tree, Yapı, and Özet showing the
@@ -1045,7 +1054,7 @@ pub(super) fn stepped_survey(app: &mut App) {
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
     doc.model.set_settings(settings);
-    app.features.layer = Some("yapi".into());
+    app.gis.features.layer = Some("yapi".into());
     app.selection.set([Slot(1)]);
     run(app, "data.formEdit");
 }

@@ -2,6 +2,8 @@
 //! Mercator and in WGS 84 degrees picks and snaps as it does in its own system, its status bar says where the
 //! pointer is on the map, and a layer takes its source system and moves out of it.
 
+use crate::gis;
+use crate::map;
 use kentos_domain::Slot;
 
 use crate::app::{App, Message};
@@ -52,7 +54,7 @@ fn near(app: &mut App) {
 fn a_click_on_the_map_selects_what_it_selects_in_the_project() {
     for map in [None, Some(3857), Some(4326), Some(2320)] {
         let mut app = app();
-        let _ = app.update(Message::MapCrs(Choose(map)));
+        let _ = app.update(Message::Map(map::Event::MapCrs(Choose(map))));
         assert_eq!(app.viewport.camera.map.is_some(), map.is_some(), "{map:?}");
         assert_eq!(
             app.document
@@ -92,7 +94,7 @@ fn the_map_is_a_view_the_drawing_does_not_move() {
         .entities()
         .cloned()
         .collect();
-    let _ = app.update(Message::MapCrs(Choose(Some(3857))));
+    let _ = app.update(Message::Map(map::Event::MapCrs(Choose(Some(3857)))));
     let doc = app.document.as_ref().expect("a drawing");
     let after: Vec<_> = doc.model.entities().cloned().collect();
     assert_eq!(before, after);
@@ -103,7 +105,7 @@ fn the_map_is_a_view_the_drawing_does_not_move() {
             .is_some()
     );
     // Back to the project's own: the camera's map goes.
-    let _ = app.update(Message::MapCrs(Choose(None)));
+    let _ = app.update(Message::Map(map::Event::MapCrs(Choose(None))));
     assert!(app.viewport.camera.map.is_none());
     assert_eq!(
         app.document
@@ -120,7 +122,10 @@ fn the_map_is_a_view_the_drawing_does_not_move() {
 fn a_layer_takes_its_source_system_and_moves_out_of_it_in_one_step() {
     use crate::layer_crs::Event;
     let mut app = app();
-    let _ = app.update(Message::LayerCrs(Event::Assign("yol".into(), Some(2320))));
+    let _ = app.update(Message::Gis(gis::Event::LayerCrs(Event::Assign(
+        "yol".into(),
+        Some(2320),
+    ))));
     let node = |app: &App| {
         app.document
             .as_ref()
@@ -150,9 +155,14 @@ fn a_layer_takes_its_source_system_and_moves_out_of_it_in_one_step() {
     )));
     let _ = app.update(Message::Run("layer.reproject"));
     // The preview opens on the plan, nothing written yet (docs/adr/2500); Uygula moves the road.
-    assert_eq!(app.dialog, Some(crate::app::Dialog::Reproject));
+    assert_eq!(
+        app.dialog,
+        Some(crate::app::Dialog::Gis(gis::GisDialogKind::Reproject))
+    );
     assert_eq!(road(&app), before);
-    let _ = app.update(Message::Reproject(crate::reproject_window::Event::Apply));
+    let _ = app.update(Message::Gis(gis::Event::Reproject(
+        crate::reproject_window::Event::Apply,
+    )));
     let after = road(&app);
     assert_ne!(before, after);
     assert!(crate::files_testing::last_said(&app).contains("1 nesnesi"));
@@ -161,7 +171,10 @@ fn a_layer_takes_its_source_system_and_moves_out_of_it_in_one_step() {
     assert_eq!(road(&app), before);
     assert_eq!(node(&app).source_crs.and_then(|c| c.srid), Some(2320));
     // Taking the record away.
-    let _ = app.update(Message::LayerCrs(Event::Assign("yol".into(), None)));
+    let _ = app.update(Message::Gis(gis::Event::LayerCrs(Event::Assign(
+        "yol".into(),
+        None,
+    ))));
     assert!(node(&app).source_crs.is_none());
 }
 
@@ -212,7 +225,7 @@ fn screens() {
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             open(&mut app, ground());
-            let _ = app.update(Message::MapCrs(Choose(map)));
+            let _ = app.update(Message::Map(map::Event::MapCrs(Choose(map))));
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
             let mut update = |app: &mut App, message| {
                 let _ = app.update(message);
@@ -240,7 +253,7 @@ fn screens() {
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             open(&mut app, ground());
-            let _ = app.update(Message::MapCrs(Choose(Some(3857))));
+            let _ = app.update(Message::Map(map::Event::MapCrs(Choose(Some(3857)))));
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
             let mut update = |app: &mut App, message| {
                 let _ = app.update(message);
@@ -268,9 +281,8 @@ fn screens() {
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             open(&mut app, ground());
-            let _ = app.update(Message::LayerCrs(crate::layer_crs::Event::Assign(
-                "yol".into(),
-                Some(2320),
+            let _ = app.update(Message::Gis(gis::Event::LayerCrs(
+                crate::layer_crs::Event::Assign("yol".into(), Some(2320)),
             )));
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
             let mut update = |app: &mut App, message| {

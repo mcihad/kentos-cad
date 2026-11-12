@@ -3,6 +3,7 @@
 //! Et is known; and the window's answer is read again when the network changes while it is open (an attribute written
 //! by a script). And its pictures.
 
+use crate::map;
 use kentos_commands::Entity;
 use kentos_launch::Module;
 use serde_json::{Value, json};
@@ -50,10 +51,17 @@ fn ellipses(app: &App, before: usize) -> Vec<([f64; 2], f64)> {
 fn the_profile_draws_the_crossing_pipes_outer_walls() {
     let mut app = walled();
     let _ = app.update(Message::Run("pipes.check"));
-    let _ = app.update(Message::PipesCheck(P::Other("su".into())));
-    assert_eq!(app.pipes_check.other_wall, "Et", "the water pipes' wall guessed");
-    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app.update(Message::PipesCheck(P::DrawProfile));
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
+    assert_eq!(
+        app.map.pipes_check.other_wall, "Et",
+        "the water pipes' wall guessed"
+    );
+    let before = app
+        .document
+        .as_ref()
+        .map(|d| d.model.entities().count())
+        .unwrap_or(0);
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
     let said = crate::files_testing::last_said(&app);
     assert!(said.contains("3 kesişen borunun dış duvarı"), "{said}");
     // W3, W1 (5 mm) and W2 (8 mm): each an inner and an outer ellipse about one centre, the outer the wall wider.
@@ -71,10 +79,16 @@ fn the_profile_draws_the_crossing_pipes_outer_walls() {
     let undone = app.document.as_mut().and_then(|d| d.model.undo());
     assert_eq!(undone.as_deref(), Some("Hat profili"));
     let _ = app.update(Message::Run("pipes.check"));
-    let _ = app.update(Message::PipesCheck(P::Other("su".into())));
-    let _ = app.update(Message::PipesCheck(P::OtherWall(String::new())));
-    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app.update(Message::PipesCheck(P::DrawProfile));
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::OtherWall(
+        String::new(),
+    ))));
+    let before = app
+        .document
+        .as_ref()
+        .map(|d| d.model.entities().count())
+        .unwrap_or(0);
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
     assert_eq!(ellipses(&app, before).len(), 3);
     // The run's own pipes keep their Et (docs/adr/4780: their outer walls drawn); the crossing ones have none.
     assert!(!crate::files_testing::last_said(&app).contains("kesişen borunun dış duvarı"));
@@ -85,8 +99,18 @@ fn the_check_is_read_again_when_the_network_changes_while_it_is_open() {
     let mut app = walled();
     let _ = app.update(Message::Run("pipes.check"));
     let slope = |app: &App| {
-        let r = app.pipes_check.answer.clone().expect("an answer").expect("checked");
-        r.pipes.iter().find(|p| p.uid == P1).and_then(|p| p.slope).expect("P1's slope")
+        let r = app
+            .map
+            .pipes_check
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("checked");
+        r.pipes
+            .iter()
+            .find(|p| p.uid == P1)
+            .and_then(|p| p.slope)
+            .expect("P1's slope")
     };
     let before = slope(&app);
     // A script lowers P1's lower invert by 30 cm (97.5 to 97.2); the next message the app takes reads the answer again.
@@ -116,7 +140,7 @@ fn screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("pipes.check"));
-        let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -124,7 +148,7 @@ fn screens() {
         // The window first, so what it queued (the extents' fit) is done before the camera is set below.
         snapshot.settle(&mut app, App::view, &mut update);
         let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-        let _ = app.update(Message::PipesCheck(P::DrawProfile));
+        let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
         let drawn = ellipses(&app, before);
         let (x0, x1) = drawn.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), (c, _)| (a.min(c[0]), b.max(c[0])));
         let (y0, y1) = drawn.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), (c, _)| (a.min(c[1]), b.max(c[1])));

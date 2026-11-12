@@ -16,6 +16,7 @@
 //! step and closes the window. The rules' order is theirs: the first that holds gives each of the
 //! background, the colour and bold.
 
+use crate::gis;
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Task, Theme};
 use kentos_commands::{LayerNodeType, LayersTable, TableStyle, table_styles_problem};
@@ -77,7 +78,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::TableStyles(event)
+    Message::Gis(gis::Event::TableStyles(event))
 }
 
 impl App {
@@ -90,6 +91,7 @@ impl App {
         };
         let layers = self.table_style_layers();
         let wanted = self
+            .gis
             .features
             .layer
             .clone()
@@ -101,8 +103,8 @@ impl App {
             self.warn("Çizimde nesne tutan katman yok; koşullu biçim bir katmanın tablosunundur.");
             return Task::none();
         };
-        self.table_styles = Some(self.table_styles_window_of(layer));
-        self.dialog = Some(Dialog::TableStyles);
+        self.gis.table_styles = Some(self.table_styles_window_of(layer));
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::TableStyles));
         Task::none()
     }
 
@@ -123,13 +125,13 @@ impl App {
 
     pub(crate) fn table_styles_event(&mut self, event: Event) -> Task<Message> {
         if let Event::Layer(id) = &event {
-            self.table_styles = Some(self.table_styles_window_of(id.clone()));
+            self.gis.table_styles = Some(self.table_styles_window_of(id.clone()));
             return Task::none();
         }
         if matches!(event, Event::Builder) {
             return self.open_builder_for_table_style();
         }
-        let Some(w) = self.table_styles.as_mut() else {
+        let Some(w) = self.gis.table_styles.as_mut() else {
             return Task::none();
         };
         let at = w.chosen.filter(|i| *i < w.rows.len());
@@ -191,7 +193,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.table_styles = None;
+                self.gis.table_styles = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_table_styles(),
@@ -201,7 +203,7 @@ impl App {
 
     /// ε: the expression builder on the chosen rule's condition, the layer's fields and objects.
     fn open_builder_for_table_style(&mut self) -> Task<Message> {
-        let Some(w) = &self.table_styles else {
+        let Some(w) = &self.gis.table_styles else {
             return Task::none();
         };
         let Some(i) = w.chosen.filter(|i| *i < w.rows.len()) else {
@@ -213,7 +215,12 @@ impl App {
 
     /// The builder's Tamam: the rule's new condition.
     pub(crate) fn table_rule_written(&mut self, at: usize, text: String) -> Task<Message> {
-        if let Some(r) = self.table_styles.as_mut().and_then(|w| w.rows.get_mut(at)) {
+        if let Some(r) = self
+            .gis
+            .table_styles
+            .as_mut()
+            .and_then(|w| w.rows.get_mut(at))
+        {
             r.condition = text;
         }
         Task::none()
@@ -221,11 +228,11 @@ impl App {
 
     /// Kaydet: the rules through `cad.layers.table`, in one step; the window closes when they go in.
     fn save_table_styles(&mut self) -> Task<Message> {
-        let Some(w) = self.table_styles.clone() else {
+        let Some(w) = self.gis.table_styles.clone() else {
             return Task::none();
         };
         if w.rows == w.kept {
-            self.table_styles = None;
+            self.gis.table_styles = None;
             self.dialog = None;
             return Task::none();
         }
@@ -243,7 +250,7 @@ impl App {
         if self.answered(result).is_none() {
             return Task::none();
         }
-        self.table_styles = None;
+        self.gis.table_styles = None;
         self.dialog = None;
         let name = self.form_layer_name(&w.layer);
         self.say(
@@ -277,7 +284,7 @@ impl App {
     }
 
     pub(crate) fn table_styles_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.table_styles else {
+        let Some(w) = &self.gis.table_styles else {
             return iced::widget::text("").into();
         };
         let layers = self.table_style_layers();
@@ -489,7 +496,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.table_styles.is_none() {
+        if self.gis.table_styles.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {
@@ -501,6 +508,7 @@ impl App {
             Control::Press(DOWN) => Some(msg(Event::Down)),
             Control::Press("Kalın") => {
                 let on = self
+                    .gis
                     .table_styles
                     .as_ref()
                     .and_then(|w| w.chosen.and_then(|i| w.rows.get(i)))

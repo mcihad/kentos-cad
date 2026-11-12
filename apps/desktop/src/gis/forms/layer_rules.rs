@@ -16,6 +16,7 @@
 //! rule says whether it compiles and how many of the layer's records break it now (they are not
 //! judged anew by the rule; their next write is).
 
+use crate::gis;
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{LayerField, LayerNodeType, LayerRule, LayersRules, layer_rules_problem};
@@ -63,7 +64,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::LayerRules(event)
+    Message::Gis(gis::Event::LayerRules(event))
 }
 
 /// What the layer's rules are now: per rule, why it does not compile, else how many records break it.
@@ -81,6 +82,7 @@ impl App {
         };
         let layers = self.record_rule_layers();
         let wanted = self
+            .gis
             .features
             .layer
             .clone()
@@ -92,8 +94,8 @@ impl App {
             self.warn("Alanı olan katman yok; kayıt kuralları bir katmanın alanlarını okur. Önce Alanlar penceresinden alan ekleyin.");
             return Task::none();
         };
-        self.layer_rules = Some(self.layer_rules_window_of(layer));
-        self.dialog = Some(Dialog::LayerRules);
+        self.gis.layer_rules = Some(self.layer_rules_window_of(layer));
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerRules));
         Task::none()
     }
 
@@ -114,10 +116,10 @@ impl App {
 
     pub(crate) fn layer_rules_event(&mut self, event: Event) -> Task<Message> {
         if let Event::Layer(id) = &event {
-            self.layer_rules = Some(self.layer_rules_window_of(id.clone()));
+            self.gis.layer_rules = Some(self.layer_rules_window_of(id.clone()));
             return Task::none();
         }
-        let Some(w) = self.layer_rules.as_mut() else {
+        let Some(w) = self.gis.layer_rules.as_mut() else {
             return Task::none();
         };
         let at = w.chosen.filter(|i| *i < w.rules.len());
@@ -172,7 +174,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.layer_rules = None;
+                self.gis.layer_rules = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_layer_rules(),
@@ -182,11 +184,11 @@ impl App {
 
     /// Kaydet: the rules through `cad.layers.rules` in one step; the window closes when they go in.
     fn save_layer_rules(&mut self) -> Task<Message> {
-        let Some(w) = self.layer_rules.clone() else {
+        let Some(w) = self.gis.layer_rules.clone() else {
             return Task::none();
         };
         if w.rules == w.kept {
-            self.layer_rules = None;
+            self.gis.layer_rules = None;
             self.dialog = None;
             return Task::none();
         }
@@ -204,7 +206,7 @@ impl App {
         if self.answered(result).is_none() {
             return Task::none();
         }
-        self.layer_rules = None;
+        self.gis.layer_rules = None;
         self.dialog = None;
         let name = self.form_layer_name(&w.layer);
         let said = if w.rules.is_empty() {
@@ -294,7 +296,7 @@ impl App {
     }
 
     pub(crate) fn layer_rules_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.layer_rules else {
+        let Some(w) = &self.gis.layer_rules else {
             return iced::widget::text("").into();
         };
         let layers = self.record_rule_layers();
@@ -387,7 +389,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.layer_rules.is_none() {
+        if self.gis.layer_rules.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

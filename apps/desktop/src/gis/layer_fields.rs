@@ -12,6 +12,7 @@
 //! The fields change the layer tree: a cloud project without `project.edit`
 //! refuses them ([`crate::layering::TREE_LOCKED`]).
 
+use crate::gis;
 use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
@@ -431,7 +432,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::LayerFields(event)
+    Message::Gis(gis::Event::LayerFields(event))
 }
 
 impl Window {
@@ -466,7 +467,7 @@ impl App {
             return Task::none();
         };
         let rows: Vec<FieldRow> = node.fields.iter().map(row_of).collect();
-        self.layer_fields = Some(Window {
+        self.gis.layer_fields = Some(Window {
             layer: layer.to_owned(),
             chosen: (!rows.is_empty()).then_some(0),
             saved: rows.clone(),
@@ -474,7 +475,7 @@ impl App {
             said: None,
             choices: None,
         });
-        self.dialog = Some(Dialog::LayerFields);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerFields));
         Task::none()
     }
 
@@ -501,7 +502,7 @@ impl App {
     pub(crate) fn layer_fields_event(&mut self, event: Event) -> Task<Message> {
         // Sil on a field named elsewhere says what it breaks (docs/adr/0414 §4).
         let removed = match &event {
-            Event::Remove => self.layer_fields.as_ref().and_then(|w| {
+            Event::Remove => self.gis.layer_fields.as_ref().and_then(|w| {
                 let r = w.chosen.and_then(|i| w.rows.get(i))?;
                 let from = r.from.as_deref()?;
                 Some((r.name.clone(), self.saved_field_uses(&w.layer, from).len()))
@@ -513,7 +514,7 @@ impl App {
             .as_ref()
             .map(|d| d.model.settings().domains.clone())
             .unwrap_or_default();
-        let Some(w) = self.layer_fields.as_mut() else {
+        let Some(w) = self.gis.layer_fields.as_mut() else {
             return Task::none();
         };
         w.said = None;
@@ -635,7 +636,7 @@ impl App {
             }
             Event::Save => return self.save_layer_fields(),
             Event::Cancel => {
-                self.layer_fields = None;
+                self.gis.layer_fields = None;
                 self.dialog = None;
             }
             Event::OpenList(i) => {
@@ -792,12 +793,12 @@ impl App {
     /// did and how many values do not keep the new rules, or why not.
     fn save_layer_fields(&mut self) -> Task<Message> {
         if let Some(locked) = self.tree_locked() {
-            if let Some(w) = self.layer_fields.as_mut() {
+            if let Some(w) = self.gis.layer_fields.as_mut() {
                 w.said = Some((Kind::Warn, locked.to_owned()));
             }
             return Task::none();
         }
-        let (Some(w), Some(doc)) = (self.layer_fields.as_mut(), self.document.as_mut()) else {
+        let (Some(w), Some(doc)) = (self.gis.layer_fields.as_mut(), self.document.as_mut()) else {
             return Task::none();
         };
         if let Some(p) = problem_of(&w.rows) {
@@ -841,7 +842,7 @@ impl App {
             .layers()
             .get(&w.layer)
             .map_or_else(|| w.layer.clone(), |n| n.name.clone());
-        self.layer_fields = None;
+        self.gis.layer_fields = None;
         self.dialog = None;
         let tail = if bad > 0 {
             format!(
@@ -929,7 +930,7 @@ impl App {
     }
 
     pub(crate) fn layer_fields_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(doc)) = (&self.layer_fields, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.layer_fields, &self.document) else {
             return text("").into();
         };
         let domains = self
@@ -1394,7 +1395,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.layer_fields else {
+        let Some(w) = &self.gis.layer_fields else {
             return Err(format!("{FIELDS_TITLE} penceresi açık değil"));
         };
         let chosen = || w.chosen.ok_or_else(|| "seçili alan yok".to_owned());
@@ -1557,7 +1558,7 @@ impl App {
         if done {
             self.say(kentos_interaction::Level::Success, said.1.clone());
         }
-        if let Some(w) = self.layer_fields.as_mut() {
+        if let Some(w) = self.gis.layer_fields.as_mut() {
             w.said = Some(said);
         }
         Task::none()

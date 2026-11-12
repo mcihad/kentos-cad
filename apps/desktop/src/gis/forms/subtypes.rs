@@ -13,6 +13,7 @@
 //!
 //! The window edits a copy; Kaydet writes it through `cad.layers.subtypes` in one step and closes.
 
+use crate::gis;
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -71,7 +72,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Subtypes(event)
+    Message::Gis(gis::Event::Subtypes(event))
 }
 
 /// The rule of `key` in `t`, made when it has none.
@@ -117,6 +118,7 @@ impl App {
         };
         let layers = self.subtype_layers();
         let wanted = self
+            .gis
             .features
             .layer
             .clone()
@@ -130,8 +132,8 @@ impl App {
             );
             return Task::none();
         };
-        self.subtypes = Some(self.subtypes_window_of(layer));
-        self.dialog = Some(Dialog::Subtypes);
+        self.gis.subtypes = Some(self.subtypes_window_of(layer));
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Subtypes));
         Task::none()
     }
 
@@ -154,15 +156,16 @@ impl App {
 
     pub(crate) fn subtypes_event(&mut self, event: Event) -> Task<Message> {
         if let Event::Layer(id) = &event {
-            self.subtypes = Some(self.subtypes_window_of(id.clone()));
+            self.gis.subtypes = Some(self.subtypes_window_of(id.clone()));
             return Task::none();
         }
         let fields = self
+            .gis
             .subtypes
             .as_ref()
             .map(|w| self.layer_fields_of(&w.layer))
             .unwrap_or_default();
-        let Some(w) = self.subtypes.as_mut() else {
+        let Some(w) = self.gis.subtypes.as_mut() else {
             return Task::none();
         };
         let order: Vec<String> = w
@@ -258,7 +261,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.subtypes = None;
+                self.gis.subtypes = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_subtypes(),
@@ -268,12 +271,12 @@ impl App {
 
     /// Kaydet: the subtypes through `cad.layers.subtypes` in one step; the window closes when they go in.
     fn save_subtypes(&mut self) -> Task<Message> {
-        let Some(w) = self.subtypes.clone() else {
+        let Some(w) = self.gis.subtypes.clone() else {
             return Task::none();
         };
         let next = w.subtypes();
         if next == w.kept {
-            self.subtypes = None;
+            self.gis.subtypes = None;
             self.dialog = None;
             return Task::none();
         }
@@ -291,7 +294,7 @@ impl App {
         if self.answered(result).is_none() {
             return Task::none();
         }
-        self.subtypes = None;
+        self.gis.subtypes = None;
         self.dialog = None;
         let name = self.form_layer_name(&w.layer);
         let said = match next {
@@ -329,7 +332,7 @@ impl App {
     }
 
     pub(crate) fn subtypes_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.subtypes else {
+        let Some(w) = &self.gis.subtypes else {
             return iced::widget::text("").into();
         };
         let layers = self.subtype_layers();
@@ -529,7 +532,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn subtypes_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.subtypes.is_none() {
+        if self.gis.subtypes.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

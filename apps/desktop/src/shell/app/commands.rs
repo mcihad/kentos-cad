@@ -394,12 +394,12 @@ impl App {
             "data.search" => return self.open_data_search(),
             "data.unmark" => {
                 self.address_unmark();
-                self.sources.extent_mark = None;
-                self.parcel_graph = None;
-                self.impact_reach = None;
-                self.zoning_shown_marks = None;
-                self.pipes_shown_marks = None;
-                self.baseline_shown = None;
+                self.gis.sources.extent_mark = None;
+                self.map.parcel_graph = None;
+                self.gis.impact_reach = None;
+                self.map.zoning_shown_marks = None;
+                self.map.pipes_shown_marks = None;
+                self.map.baseline_shown = None;
                 return self.data_event(crate::search::Event::Unmark);
             }
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
@@ -900,7 +900,7 @@ impl App {
             "view.magnifier" => self.magnifier_shown(),
             "view.fullscreen" => self.fullscreen,
             // Zaman sürgüsü and Mevcut durum (docs/adr/0210 §10).
-            "time.slider" => self.time.slider.open,
+            "time.slider" => self.gis.time.slider.open,
             "scenario.base" => {
                 self.has_scenarios()
                     && self.document.as_ref().is_some_and(|d| {

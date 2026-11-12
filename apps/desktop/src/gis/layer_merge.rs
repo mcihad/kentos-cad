@@ -19,6 +19,7 @@
 //! Both change the layer tree: a cloud project without `project.edit`
 //! refuses them ([`crate::layering::TREE_LOCKED`]).
 
+use crate::gis;
 use std::collections::BTreeSet;
 
 use iced::widget::{Column, button, container, row, text};
@@ -63,7 +64,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::LayerMerge(event)
+    Message::Gis(gis::Event::LayerMerge(event))
 }
 
 /// What the window says above the list, each line with its kind, and
@@ -159,15 +160,15 @@ impl App {
                     .is_some_and(|n| n.kind == LayerNodeType::Layer)
             })
             .unwrap_or_else(|| layers.active().to_owned());
-        self.layer_merge = Some(Window {
+        self.gis.layer_merge = Some(Window {
             target,
             checked: BTreeSet::new(),
         });
-        self.dialog = Some(Dialog::LayerMerge);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerMerge));
     }
 
     pub(crate) fn layer_merge_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.layer_merge.as_mut() else {
+        let Some(w) = self.gis.layer_merge.as_mut() else {
             return Task::none();
         };
         match event {
@@ -185,12 +186,12 @@ impl App {
             Event::Merge => {
                 let (sources, target) = self.merge_sources();
                 if self.merge_layers(&sources, &target) {
-                    self.layer_merge = None;
+                    self.gis.layer_merge = None;
                     self.dialog = None;
                 }
             }
             Event::Cancel => {
-                self.layer_merge = None;
+                self.gis.layer_merge = None;
                 self.dialog = None;
             }
         }
@@ -199,7 +200,7 @@ impl App {
 
     /// The window's checked layers in the tree's order, and its target.
     fn merge_sources(&self) -> (Vec<String>, String) {
-        let (Some(w), Some(doc)) = (&self.layer_merge, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.layer_merge, &self.document) else {
             return (Vec::new(), String::new());
         };
         let sources = doc
@@ -302,7 +303,7 @@ impl App {
     }
 
     pub(crate) fn layer_merge_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(doc)) = (&self.layer_merge, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.layer_merge, &self.document) else {
             return text("").into();
         };
         let layers = doc.model.layers();
@@ -431,7 +432,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let (Some(w), Some(doc)) = (&self.layer_merge, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.layer_merge, &self.document) else {
             return Err(format!("{MERGE_TITLE} penceresi açık değil"));
         };
         let layers = doc.model.layers();

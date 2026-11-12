@@ -8,6 +8,7 @@
 //! asks again, Yeniden bağla… links the layer to its file's new place and then
 //! asks again.
 
+use crate::gis;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -73,12 +74,12 @@ impl App {
 
     /// Kaynağın tümü's answer for the chosen layer and field, asked when it is not yet.
     pub(crate) fn stats_whole(&mut self) -> Task<Message> {
-        if !self.charts.whole.on {
+        if !self.gis.charts.whole.on {
             return Task::none();
         }
         let (Some(link), Some(field), Some(doc)) = (
             self.stats_bound(),
-            self.charts.field.clone(),
+            self.gis.charts.field.clone(),
             self.document.as_ref(),
         ) else {
             return Task::none();
@@ -98,18 +99,18 @@ impl App {
                 ),
             },
         );
-        if self.charts.whole.asked.as_ref() == Some(&want) {
+        if self.gis.charts.whole.asked.as_ref() == Some(&want) {
             return Task::none();
         }
-        if let Some(stop) = self.charts.whole.running.take() {
+        if let Some(stop) = self.gis.charts.whole.running.take() {
             stop.store(true, Ordering::Relaxed);
         }
         let settings = doc.model.settings().clone();
         let revision = doc.model.revision().to_string();
         let stop = Arc::new(AtomicBool::new(false));
-        self.charts.whole.running = Some(stop.clone());
-        self.charts.whole.asked = Some(want.clone());
-        self.charts.whole.answer = None;
+        self.gis.charts.whole.running = Some(stop.clone());
+        self.gis.charts.whole.asked = Some(want.clone());
+        self.gis.charts.whole.answer = None;
         let input = SourcesQuery {
             layer: Some(link.layer.clone()),
             scope: Some(QueryScope::Source),
@@ -135,7 +136,7 @@ impl App {
             let _ = done.send(Refused::of(answer, texts::STOPPED));
         });
         Task::perform(wait, move |answer| {
-            Message::Statistics(Event::WholeAnswered(
+            Message::Gis(gis::Event::Statistics(Event::WholeAnswered(
                 want.0.clone(),
                 want.1.clone(),
                 Box::new(answer.unwrap_or_else(|_| {
@@ -144,24 +145,24 @@ impl App {
                         why: texts::STOPPED.to_owned(),
                     })
                 })),
-            ))
+            )))
         })
     }
 
     /// Kaynağın tümü's question asked again (docs/adr/0740 §2): the source refused it, or the layer was relinked.
     pub(crate) fn stats_whole_retry(&mut self) -> Task<Message> {
-        if let Some(stop) = self.charts.whole.running.take() {
+        if let Some(stop) = self.gis.charts.whole.running.take() {
             stop.store(true, Ordering::Relaxed);
         }
-        self.charts.whole.asked = None;
-        self.charts.whole.answer = None;
+        self.gis.charts.whole.asked = None;
+        self.gis.charts.whole.answer = None;
         self.stats_whole()
     }
 
     pub(crate) fn stats_whole_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Scope(on) => {
-                self.charts.whole.on = on;
+                self.gis.charts.whole.on = on;
                 if !on {
                     self.stats_whole_stop();
                 }
@@ -173,12 +174,12 @@ impl App {
             }
             Event::WholeRetry => return self.stats_whole_retry(),
             Event::WholeAnswered(layer, field, answer) => {
-                if self.charts.whole.asked.as_ref() == Some(&(layer, field)) {
-                    self.charts.whole.running = None;
+                if self.gis.charts.whole.asked.as_ref() == Some(&(layer, field)) {
+                    self.gis.charts.whole.running = None;
                     if let Err(r) = answer.as_ref() {
                         self.say(Level::Warn, r.why.clone());
                     }
-                    self.charts.whole.answer = Some(*answer);
+                    self.gis.charts.whole.answer = Some(*answer);
                 }
             }
             _ => {}
@@ -187,10 +188,10 @@ impl App {
     }
 
     fn stats_whole_stop(&mut self) {
-        if let Some(stop) = self.charts.whole.running.take() {
+        if let Some(stop) = self.gis.charts.whole.running.take() {
             stop.store(true, Ordering::Relaxed);
         }
-        self.charts.whole.asked = None;
-        self.charts.whole.answer = None;
+        self.gis.charts.whole.asked = None;
+        self.gis.charts.whole.answer = None;
     }
 }

@@ -6,6 +6,7 @@
 //! cargo test -p kentos-desktop --lib constraint_screens -- --ignored --nocapture --test-threads=1
 //! ```
 
+use crate::gis;
 use std::path::PathBuf;
 
 use iced::Size;
@@ -219,13 +220,19 @@ fn constraint_screens() {
             println!("{}", file.display());
         };
         run(&mut app, "layer.fields");
-        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(3)));
+        let _ = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Choose(3),
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "1-alanlar-liste");
-        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(2)));
+        let _ = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Choose(2),
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "2-alanlar-tekil");
-        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Cancel,
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         run(&mut app, "data.forms");
         designer(&mut app, Event::NewForm);
@@ -234,18 +241,19 @@ fn constraint_screens() {
         designer(&mut app, Event::Create);
         designer(&mut app, Event::Save);
         snapshot.settle(&mut app, App::view, &mut update);
-        let _ = app.update(Message::Forms(Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::Forms(Event::Cancel)));
         app.selection.set([Slot(1)]);
         run(&mut app, "data.formEdit");
         snapshot.settle(&mut app, App::view, &mut update);
         // The sum typed again: the table's constraint is told under its field.
-        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Value(
-            "tutar".into(),
-            "-1".into(),
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(
+            crate::forms::entry::Event::Value("tutar".into(), "-1".into()),
         )));
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "3-formla-duzenle");
-        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(
+            crate::forms::entry::Event::Cancel,
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
     }
     sizes::load(Default::default());

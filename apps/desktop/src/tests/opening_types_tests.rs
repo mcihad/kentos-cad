@@ -1,4 +1,5 @@
 use super::*;
+use crate::arch;
 use crate::files_testing::{app_with_drawing, make_cad};
 
 const TYPES: &str = include_str!("../../../../fixtures/commands/v1/cad.openingtypes.edit.json");
@@ -34,19 +35,22 @@ fn the_window_counts_each_type_and_previews_a_change_before_writing() {
     let mut app = app();
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let _ = app.update(Message::Run("arch.openingTypes"));
-    assert_eq!(app.dialog, Some(Dialog::OpeningTypes));
-    let w = app.opening_types.as_ref().unwrap();
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Arch(arch::ArchDialogKind::OpeningTypes))
+    );
+    let w = app.arch.opening_types.as_ref().unwrap();
     let k = w.uses.iter().find(|u| u.kind.id == "k01").unwrap();
     assert_eq!((k.count, k.exceptions), (20, 1));
     let i = w.uses.iter().position(|u| u.kind.id == "k01").unwrap();
-    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Choose(i))));
     // Nothing typed: nothing to apply.
     assert!(app.opening_type_change().is_none());
-    let _ = app.update(Message::OpeningTypes(Event::Field(
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Field(
         OpeningTypeField::Frame,
         "0.06".into(),
-    )));
-    let w = app.opening_types.as_ref().unwrap();
+    ))));
+    let w = app.arch.opening_types.as_ref().unwrap();
     let Some(Ok(done)) = &w.preview else {
         panic!("{:?}", w.preview);
     };
@@ -67,6 +71,7 @@ fn apply_writes_one_undo_step_and_esc_writes_nothing() {
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let _ = app.update(Message::Run("arch.openingTypes"));
     let i = app
+        .arch
         .opening_types
         .as_ref()
         .unwrap()
@@ -74,24 +79,24 @@ fn apply_writes_one_undo_step_and_esc_writes_nothing() {
         .iter()
         .position(|u| u.kind.id == "k01")
         .unwrap();
-    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
-    let _ = app.update(Message::OpeningTypes(Event::Field(
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Choose(i))));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Field(
         OpeningTypeField::Casing,
         "0.07".into(),
-    )));
-    let _ = app.update(Message::OpeningTypes(Event::Close));
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Close)));
     assert_eq!(
         app.document.as_ref().unwrap().model.to_snapshot_v2(),
         before,
         "closing writes nothing"
     );
     let _ = app.update(Message::Run("arch.openingTypes"));
-    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
-    let _ = app.update(Message::OpeningTypes(Event::Field(
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Choose(i))));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Field(
         OpeningTypeField::Casing,
         "0.07".into(),
-    )));
-    let _ = app.update(Message::OpeningTypes(Event::Apply));
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Apply)));
     let t = k01(&app);
     assert_eq!(t.version, 2);
     assert_eq!(t.build.as_ref().and_then(|b| b.casing), Some(0.07));
@@ -108,12 +113,12 @@ fn apply_writes_one_undo_step_and_esc_writes_nothing() {
 fn a_typed_value_that_reads_as_nothing_is_said() {
     let mut app = app();
     let _ = app.update(Message::Run("arch.openingTypes"));
-    let _ = app.update(Message::OpeningTypes(Event::Field(
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Field(
         OpeningTypeField::Frame,
         "beş".into(),
-    )));
+    ))));
     assert!(matches!(
-        app.opening_types.as_ref().unwrap().preview,
+        app.arch.opening_types.as_ref().unwrap().preview,
         Some(Err(_))
     ));
 }
@@ -173,20 +178,49 @@ fn a_types_operation_shows_its_own_fields_and_a_switch_reads_evet() {
     make_cad(&mut app);
     let _ = app.update(Message::Run("arch.openingTypes"));
     let fields = |app: &App| -> Vec<OpeningTypeField> {
-        app.opening_types.as_ref().unwrap().typed.iter().map(|(f, _)| *f).collect()
+        app.arch
+            .opening_types
+            .as_ref()
+            .unwrap()
+            .typed
+            .iter()
+            .map(|(f, _)| *f)
+            .collect()
     };
-    let i = app.opening_types.as_ref().unwrap().uses.iter().position(|u| u.kind.id == "cg1").unwrap();
-    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
+    let i = app
+        .arch
+        .opening_types
+        .as_ref()
+        .unwrap()
+        .uses
+        .iter()
+        .position(|u| u.kind.id == "cg1")
+        .unwrap();
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Choose(i))));
     let typed = fields(&app);
     assert!(typed.contains(&OpeningTypeField::Lip), "{typed:?}");
-    assert!(!typed.contains(&OpeningTypeField::Drum), "a pocket door's lip, no drum");
+    assert!(
+        !typed.contains(&OpeningTypeField::Drum),
+        "a pocket door's lip, no drum"
+    );
     // Turned to folding: both sides, no lip; the panels folding both ways typed and planned.
-    let _ = app.update(Message::OpeningTypes(Event::Operation(OpeningOperation::Folding)));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Operation(
+        OpeningOperation::Folding,
+    ))));
     let typed = fields(&app);
-    assert!(typed.contains(&OpeningTypeField::BothSides) && !typed.contains(&OpeningTypeField::Lip), "{typed:?}");
-    let _ = app.update(Message::OpeningTypes(Event::Field(OpeningTypeField::Leaves, "4".into())));
-    let _ = app.update(Message::OpeningTypes(Event::Field(OpeningTypeField::BothSides, "Evet".into())));
-    let w = app.opening_types.as_ref().unwrap();
+    assert!(
+        typed.contains(&OpeningTypeField::BothSides) && !typed.contains(&OpeningTypeField::Lip),
+        "{typed:?}"
+    );
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Field(
+        OpeningTypeField::Leaves,
+        "4".into(),
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Field(
+        OpeningTypeField::BothSides,
+        "Evet".into(),
+    ))));
+    let w = app.arch.opening_types.as_ref().unwrap();
     let Some(Ok(done)) = &w.preview else {
         panic!("{:?}", w.preview);
     };
@@ -207,22 +241,26 @@ fn a_window_type_says_its_frame_and_u_value_and_ts_825_judges_it() {
     let mut app = app();
     let _ = app.update(Message::Run("arch.openingTypes"));
     let i = {
-        let w = app.opening_types.as_ref().unwrap();
+        let w = app.arch.opening_types.as_ref().unwrap();
         w.uses.iter().position(|u| u.kind.id == "p01").unwrap()
     };
-    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Choose(i))));
     // An unreadable U value is said, not written.
-    let _ = app.update(Message::OpeningTypes(Event::UValue("iki".into())));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::UValue(
+        "iki".into(),
+    ))));
     assert!(
         matches!(app.opening_type_change(), Some(Err(ref why)) if why.starts_with("U değeri:")),
         "{:?}",
         app.opening_type_change()
     );
-    let _ = app.update(Message::OpeningTypes(Event::Material(
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Material(
         "PVC, 3 odacıklı; çift camlı".into(),
-    )));
-    let _ = app.update(Message::OpeningTypes(Event::UValue("2,4".into())));
-    let _ = app.update(Message::OpeningTypes(Event::Apply));
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::UValue(
+        "2,4".into(),
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Apply)));
     let p01 = |app: &App| {
         app.document
             .as_ref()
@@ -274,12 +312,14 @@ fn a_window_type_says_its_frame_and_u_value_and_ts_825_judges_it() {
         )]
     );
     // At TS 825's value: no finding; the window shows the type's own again.
-    let _ = app.update(Message::OpeningTypes(Event::UValue("1,8".into())));
-    let _ = app.update(Message::OpeningTypes(Event::Apply));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::UValue(
+        "1,8".into(),
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Apply)));
     assert_eq!(p01(&app).u_value, Some(1.8));
     assert!(findings(&mut app).is_empty());
-    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
-    let w = app.opening_types.as_ref().unwrap();
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Choose(i))));
+    let w = app.arch.opening_types.as_ref().unwrap();
     assert_eq!(
         (w.material.as_str(), w.u_value.as_str()),
         ("PVC, 3 odacıklı; çift camlı", "1,8")
@@ -288,7 +328,7 @@ fn a_window_type_says_its_frame_and_u_value_and_ts_825_judges_it() {
 
 /// The chosen type's name and form.
 fn chosen(app: &App) -> (String, OpeningForm) {
-    let w = app.opening_types.as_ref().unwrap();
+    let w = app.arch.opening_types.as_ref().unwrap();
     let u = &w.uses[w.chosen];
     (u.kind.name.clone(), u.kind.form)
 }
@@ -310,6 +350,7 @@ fn a_new_type_is_the_form_picked_or_a_copy_of_the_chosen_one() {
     let mut app = app();
     let _ = app.update(Message::Run("arch.openingTypes"));
     let i = app
+        .arch
         .opening_types
         .as_ref()
         .unwrap()
@@ -317,7 +358,7 @@ fn a_new_type_is_the_form_picked_or_a_copy_of_the_chosen_one() {
         .iter()
         .position(|u| u.kind.id == "k01")
         .unwrap();
-    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
+    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(Event::Choose(i))));
     // A window with a door chosen: KentOS's first window's values, its own name, chosen in the list.
     pick_new(&mut app, "Pencere");
     assert_eq!(

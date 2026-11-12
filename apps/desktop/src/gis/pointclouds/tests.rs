@@ -2,6 +2,7 @@
 //! added, indexed, drawn and queried as the windows do it.
 
 use super::*;
+use crate::gis;
 
 #[test]
 fn a_files_stem_and_its_library_id() {
@@ -47,7 +48,7 @@ fn koy() -> std::path::PathBuf {
 }
 
 fn send(app: &mut App, e: add::Event) {
-    let task = app.update(Message::PointClouds(Event::Add(e)));
+    let task = app.update(Message::Gis(gis::Event::PointClouds(Event::Add(e))));
     drive(app, task);
 }
 
@@ -128,14 +129,14 @@ fn nokta_bulutu_ekle_writes_its_layer_and_the_cloud_as_one_step() {
     app.picker = Picker::File(koy());
     let task = app.run("pointcloud.add");
     drive(&mut app, task);
-    let s = app.clouds.add.as_ref().expect("the window");
+    let s = app.gis.clouds.add.as_ref().expect("the window");
     let read = s.read.as_ref().expect("read").as_ref().expect("a cloud");
     assert_eq!(read.members.len(), 1);
     assert_eq!(read.members[0].count, 71_212);
     assert_eq!(read.members[0].format, kentos_commands::CloudFormat::Laz);
     assert_eq!(s.layer, "koy");
     send(&mut app, add::Event::Run);
-    assert!(app.clouds.add.is_none(), "the window closed");
+    assert!(app.gis.clouds.add.is_none(), "the window closed");
     let added = clouds(&app);
     assert_eq!(added.len(), 1);
     assert_eq!(added[0].cloud.count, 71_212);
@@ -162,14 +163,14 @@ fn a_cloud_is_added_from_an_address() {
     let task = app.run("pointcloud.add");
     drive(&mut app, task);
     send(&mut app, add::Event::From(add::From::Address));
-    let s = app.clouds.add.as_ref().expect("the window");
+    let s = app.gis.clouds.add.as_ref().expect("the window");
     assert!(
         s.read.is_none() && s.address.is_empty(),
         "nothing read for an address yet"
     );
     send(&mut app, add::Event::Address(url.clone()));
     send(&mut app, add::Event::ReadAddress);
-    let s = app.clouds.add.as_ref().expect("the window");
+    let s = app.gis.clouds.add.as_ref().expect("the window");
     let read = s
         .read
         .as_ref()
@@ -208,15 +209,15 @@ fn the_cloud_window_without_a_file_offers_an_address() {
     // The dialog closed without a file: the window stays, nothing read.
     app.cloud_add_open_for_tests();
     send(&mut app, add::Event::Picked(None));
-    let s = app.clouds.add.as_ref().expect("the window stays");
+    let s = app.gis.clouds.add.as_ref().expect("the window stays");
     assert!(s.paths.is_empty() && s.read.is_none());
     send(&mut app, add::Event::From(add::From::Address));
     assert_eq!(
-        app.clouds.add.as_ref().expect("the window").from,
+        app.gis.clouds.add.as_ref().expect("the window").from,
         add::From::Address
     );
     send(&mut app, add::Event::Close);
-    assert!(app.clouds.add.is_none());
+    assert!(app.gis.clouds.add.is_none());
 }
 
 #[test]

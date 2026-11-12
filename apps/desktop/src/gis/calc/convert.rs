@@ -20,6 +20,7 @@
 //! system's and the datum operation's at its place, the target system's where it lands. A point beyond one is said
 //! under the single point and in the list's Alan dışı column; it is converted all the same.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use iced::widget::{button, column, container, row};
@@ -180,7 +181,7 @@ pub enum Event {
 }
 
 fn message(e: Event) -> Message {
-    Message::Calc(CalcEvent::Convert(e))
+    Message::Gis(gis::Event::Calc(CalcEvent::Convert(e)))
 }
 
 /// Why a point was not converted: a field unread, a latitude or longitude
@@ -846,7 +847,7 @@ impl Form {
             ))
             .action(footer_button(
                 "Kapat",
-                Some(Message::Calc(CalcEvent::Close)),
+                Some(Message::Gis(gis::Event::Calc(CalcEvent::Close))),
                 false,
             ))
             .width(820.0)
@@ -866,14 +867,14 @@ impl App {
     }
 
     pub(crate) fn convert_event(&mut self, e: Event) -> Task<Message> {
-        let form = &mut self.calc.convert;
+        let form = &mut self.gis.calc.convert;
         match e {
             Event::From(pick) => form.from = Some(pick),
             Event::To(pick) => form.to = Some(pick),
             Event::Swap => {
                 if let Some((settings, _)) = self.convert_format() {
-                    let (from, to) = self.calc.convert.systems(&settings);
-                    let form = &mut self.calc.convert;
+                    let (from, to) = self.gis.calc.convert.systems(&settings);
+                    let form = &mut self.gis.calc.convert;
                     form.from = Some(to.pick);
                     form.to = Some(from.pick);
                 }
@@ -888,7 +889,7 @@ impl App {
             Event::Copy => return self.convert_copy(),
             Event::SaveCsv => {
                 let name = match self.convert_format() {
-                    Some((settings, _)) => match self.calc.convert.systems(&settings).1.pick {
+                    Some((settings, _)) => match self.gis.calc.convert.systems(&settings).1.pick {
                         Pick::Srid(srid) => format!("koordinatlar-{srid}.csv"),
                         Pick::Own | Pick::Second => "koordinatlar-ozel.csv".to_owned(),
                     },
@@ -915,7 +916,7 @@ impl App {
 
     /// Çizimden's point: its exact coordinates in the two fields.
     pub(crate) fn convert_picked(&mut self, p: Option<Vec2>) {
-        let form = &mut self.calc.convert;
+        let form = &mut self.gis.calc.convert;
         form.picking = false;
         if let Some(p) = p {
             form.a = format!("{}", p.x);
@@ -929,7 +930,7 @@ impl App {
         let Some((settings, f)) = self.convert_format() else {
             return Task::none();
         };
-        let form = &self.calc.convert;
+        let form = &self.gis.calc.convert;
         let (text, said) = match form.mode {
             Mode::Point => match form.point(&settings, &f) {
                 Some(Ok(c)) => (
@@ -962,7 +963,7 @@ impl App {
         let Some((settings, f)) = self.convert_format() else {
             return;
         };
-        let Some((heading, rows)) = self.calc.convert.listed(&settings, &f) else {
+        let Some((heading, rows)) = self.gis.calc.convert.listed(&settings, &f) else {
             return;
         };
         match std::fs::write(path, csv_text(&heading, &rows)) {
@@ -1253,9 +1254,9 @@ mod screens {
                         .settings
                         .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
                     app.apply_settings();
-                    let _ = app.update(Message::SecondCrs(crate::second_crs::Event::Choose(Some(
-                        2322,
-                    ))));
+                    let _ = app.update(Message::Gis(gis::Event::SecondCrs(
+                        crate::second_crs::Event::Choose(Some(2322)),
+                    )));
                     if name.starts_with("ozel") {
                         // The project's own definition, its second system by the project's datum choice.
                         let doc = app.document.as_mut().expect("a drawing");
@@ -1270,8 +1271,8 @@ mod screens {
                         }))
                         .expect("settings");
                         doc.model.set_settings(settings);
-                        app.calc.convert.from = None;
-                        app.calc.convert.to = None;
+                        app.gis.calc.convert.from = None;
+                        app.gis.calc.convert.to = None;
                     }
                     app.follow.flash = None;
                     let _ = app.update(Message::Run("crs.transform"));
@@ -1281,7 +1282,7 @@ mod screens {
                         "wgs84" => send(&mut app, Event::To(Pick::Srid(4326))),
                         "liste" => {
                             send(&mut app, Event::Mode(Mode::List));
-                            app.calc.convert.rows = vec![
+                            app.gis.calc.convert.rows = vec![
                                 ["P1".into(), "486512.34".into(), "4420187.52".into()],
                                 ["P2".into(), "486530.25".into(), "4420150.80".into()],
                                 ["P3".into(), "48650x".into(), "4420120.00".into()],
@@ -1343,8 +1344,16 @@ mod screens {
             send(&mut app, Event::To(Pick::Srid(5255)));
             send(&mut app, Event::Mode(Mode::List));
             let at = |lat, lon| super::tests::tm30(lat, lon);
-            let ([bx, by], [ex, ey], [ax, ay]) = (at(40.1826, 29.0665), at(39.7767, 30.5206), at(39.9334, 32.8597));
-            app.calc.convert.rows = vec![["Bursa".into(), bx, by], ["Eskişehir".into(), ex, ey], ["Ankara".into(), ax, ay]];
+            let ([bx, by], [ex, ey], [ax, ay]) = (
+                at(40.1826, 29.0665),
+                at(39.7767, 30.5206),
+                at(39.9334, 32.8597),
+            );
+            app.gis.calc.convert.rows = vec![
+                ["Bursa".into(), bx, by],
+                ["Eskişehir".into(), ex, ey],
+                ["Ankara".into(), ax, ay],
+            ];
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, message| {
                 let _ = app.update(message);

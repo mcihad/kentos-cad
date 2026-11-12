@@ -12,6 +12,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use iced::Point;
 use kentos_render_wgpu::Vec2;
 use kentos_ui::widget::docking;
@@ -51,27 +52,33 @@ fn open(app: &mut App, cases: &str, bounds: [f64; 4]) {
 fn audited(app: &mut App) {
     open(app, CLASHES, [1.5, -2.6, 13.5, 2.6]);
     run(app, "arch.audit");
-    let _ = app.update(Message::ArchAudit(Event::Group(Some(
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(Event::Group(Some(
         kentos_commands::ArchAuditCheck::Doors,
-    ))));
+    )))));
 }
 
 /// The row of KT1's clash with the column, chosen: its fix is Açılışı öbür yüze çevir.
 fn chosen(app: &mut App) {
     audited(app);
     let row = row_of(app, "KT1 katlanır");
-    let _ = app.update(Message::ArchAudit(Event::Press(row)));
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(Event::Press(row))));
 }
 
 /// Düzelt: KT1 turned to the other face, its findings gone.
 fn fixed(app: &mut App) {
     chosen(app);
-    let _ = app.update(Message::ArchAudit(Event::Fix));
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(Event::Fix)));
 }
 
 fn row_of(app: &App, words: &str) -> usize {
     let shown = app.arch_audit_shown();
-    let findings = &app.arch_audit.audited.as_ref().expect("audited").findings;
+    let findings = &app
+        .arch
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("audited")
+        .findings;
     shown
         .iter()
         .position(|&i| findings[i].message.starts_with(words))
@@ -90,11 +97,11 @@ fn arc_tool(app: &mut App) {
     let upper = docking::Slot::Docked(docking::Side::Right, 0);
     let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
     run(app, "tool.door");
-    let _ = app.update(Message::ToolSetting(Commit {
+    let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
         tool: "door",
         key: "Ç",
         value: "pocket".into(),
-    }));
+    })));
     // A point beside the arc's middle part, inside it.
     let p = [4.85 * (0.7f64).cos(), 4.85 * (0.7f64).sin()];
     let [x, y] = app.viewport.camera.world_to_screen(Vec2::new(p[0], p[1]));
@@ -107,8 +114,8 @@ fn arc_tool(app: &mut App) {
 fn quantities(app: &mut App) {
     open(app, ARC, [-1.0, -11.0, 26.0, 6.0]);
     run(app, "arch.quantities");
-    let _ = app.update(Message::Quantities(crate::quantities::Event::Tab(
-        crate::quantities::Tab::Walls,
+    let _ = app.update(Message::Arch(arch::Event::Quantities(
+        crate::quantities::Event::Tab(crate::quantities::Tab::Walls),
     )));
 }
 

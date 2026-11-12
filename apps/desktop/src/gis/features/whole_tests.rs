@@ -2,6 +2,7 @@
 //! here, a page at a time; Sonraki sayfa goes on where the last page ended; a row the part holds selects its object.
 //! A page the source does not give leaves the pages read and is asked again from its cursor (docs/adr/0740 §2).
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::CallOp;
@@ -17,7 +18,7 @@ use crate::source_trouble::Refused;
 const LAYER: &str = "import-olay";
 
 fn ev(app: &mut App, e: WholeEvent) {
-    let _ = app.update(Message::Features(Event::Whole(e)));
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Whole(e))));
 }
 
 /// A drawing with `sira.gpkg`'s `olay` bound by a part (its first 120 points), the table open on it.
@@ -40,13 +41,15 @@ fn scene(name: &str) -> App {
     .expect("runs");
     assert_eq!(answer["status"], "completed", "{answer}");
     let _ = app.update(Message::Run("data.featureTable"));
-    let _ = app.update(Message::Features(Event::Layer(LAYER.into())));
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Layer(
+        LAYER.into(),
+    ))));
     app
 }
 
 /// What the thread asks, asked here and handed to the tab as the thread hands it.
 pub(crate) fn answer(app: &mut App) {
-    let (ticket, more, input) = app.features.whole.asked.clone().expect("a question");
+    let (ticket, more, input) = app.gis.features.whole.asked.clone().expect("a question");
     let doc = &app.document.as_ref().expect("a drawing").model;
     let link = doc.settings().sources[0].clone();
     let told = Refused::of(
@@ -79,7 +82,8 @@ fn file_of(app: &App) -> PathBuf {
 }
 
 fn keys(app: &App) -> Vec<i64> {
-    app.features
+    app.gis
+        .features
         .whole
         .rows
         .iter()
@@ -99,11 +103,11 @@ fn the_whole_source_is_read_in_pages_in_the_order_asked() {
         .count();
     assert_eq!(held, 120);
     ev(&mut app, WholeEvent::Toggle(true));
-    assert!(app.features.whole.running.is_some());
+    assert!(app.gis.features.whole.running.is_some());
     answer(&mut app);
-    assert_eq!(app.features.whole.rows.len(), PAGE as usize);
+    assert_eq!(app.gis.features.whole.rows.len(), PAGE as usize);
     assert_eq!(keys(&app)[..3], [1, 2, 3]);
-    let last = app.features.whole.last.clone().expect("a page");
+    let last = app.gis.features.whole.last.clone().expect("a page");
     assert_eq!(last.total, Some(2400));
     assert_eq!(last.plan.order, "key");
     // Sonraki sayfa goes on from the key.
@@ -115,11 +119,12 @@ fn the_whole_source_is_read_in_pages_in_the_order_asked() {
     let puan = columns.iter().position(|c| c == "puan").expect("puan") + 1;
     ev(&mut app, WholeEvent::Sort(puan));
     answer(&mut app);
-    let last = app.features.whole.last.clone().expect("a page");
+    let last = app.gis.features.whole.last.clone().expect("a page");
     assert_eq!(last.plan.order, "column");
     assert!(last.next.as_deref().is_some_and(|n| n.starts_with("o:[")));
     let values = |app: &App| -> Vec<f64> {
-        app.features
+        app.gis
+            .features
             .whole
             .rows
             .iter()
@@ -141,16 +146,26 @@ fn the_whole_source_is_read_in_pages_in_the_order_asked() {
     ev(&mut app, WholeEvent::Sort(ad));
     answer(&mut app);
     assert_eq!(
-        app.features.whole.last.as_ref().expect("a page").plan.order,
+        app.gis
+            .features
+            .whole
+            .last
+            .as_ref()
+            .expect("a page")
+            .plan
+            .order,
         "here"
     );
     // The filter goes with the question.
-    let _ = app.update(Message::Features(Event::Filter("sayi < 0".into())));
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Filter(
+        "sayi < 0".into(),
+    ))));
     answer(&mut app);
-    let last = app.features.whole.last.clone().expect("a page");
+    let last = app.gis.features.whole.last.clone().expect("a page");
     assert!(last.plan.pushed.is_some());
     assert!(
-        app.features
+        app.gis
+            .features
             .whole
             .rows
             .iter()
@@ -158,6 +173,7 @@ fn the_whole_source_is_read_in_pages_in_the_order_asked() {
     );
     // A row the part holds selects its object; one it does not hold selects nothing.
     let first_held = app
+        .gis
         .features
         .whole
         .rows
@@ -168,15 +184,17 @@ fn the_whole_source_is_read_in_pages_in_the_order_asked() {
     assert_eq!(app.selection.ids().len(), 1);
     // Çalışma kopyası leaves the source.
     ev(&mut app, WholeEvent::Toggle(false));
-    assert!(app.features.whole.layer.is_none() && app.features.whole.rows.is_empty());
+    assert!(app.gis.features.whole.layer.is_none() && app.gis.features.whole.rows.is_empty());
 }
 
 #[test]
 fn an_older_answer_is_dropped_and_a_bad_filter_is_said() {
     let mut app = scene("tablo-tumu-eski");
     ev(&mut app, WholeEvent::Toggle(true));
-    let (old, ..) = app.features.whole.asked.clone().expect("a question");
-    let _ = app.update(Message::Features(Event::Filter("puan >".into())));
+    let (old, ..) = app.gis.features.whole.asked.clone().expect("a question");
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Filter(
+        "puan >".into(),
+    ))));
     ev(
         &mut app,
         WholeEvent::Answered(
@@ -188,9 +206,9 @@ fn an_older_answer_is_dropped_and_a_bad_filter_is_said() {
             })),
         ),
     );
-    assert!(app.features.whole.missed.is_none(), "eski cevap alındı");
+    assert!(app.gis.features.whole.missed.is_none(), "eski cevap alındı");
     answer(&mut app);
-    let (page, r) = app.features.whole.missed.clone().expect("a problem");
+    let (page, r) = app.gis.features.whole.missed.clone().expect("a problem");
     assert_eq!(page, 1);
     assert!(r.why.starts_with("Süzgeç:"), "{}", r.why);
     // A filter that does not compile is helped by another filter, not by asking again.
@@ -208,21 +226,22 @@ fn a_page_not_read_stays_said_and_is_asked_again() {
     let away = file.with_file_name("uzakta.gpkg");
     ev(&mut app, WholeEvent::Toggle(true));
     answer(&mut app);
-    assert_eq!(app.features.whole.pages, 1);
+    assert_eq!(app.gis.features.whole.pages, 1);
     std::fs::rename(&file, &away).expect("moved away");
     ev(&mut app, WholeEvent::More);
-    let (_, _, asked) = app.features.whole.asked.clone().expect("a question");
+    let (_, _, asked) = app.gis.features.whole.asked.clone().expect("a question");
     answer(&mut app);
-    let (page, r) = app.features.whole.missed.clone().expect("not read");
+    let (page, r) = app.gis.features.whole.missed.clone().expect("not read");
     assert_eq!((page, r.code.as_str()), (2, "file_not_found"));
     assert_eq!(r.way(), Some(Trouble::Relink));
     assert_eq!(
-        app.features.whole.rows.len(),
+        app.gis.features.whole.rows.len(),
         PAGE as usize,
         "the first page stays"
     );
     assert!(
-        app.features
+        app.gis
+            .features
             .whole
             .last
             .as_ref()
@@ -231,21 +250,22 @@ fn a_page_not_read_stays_said_and_is_asked_again() {
     // Back: the same question, the same cursor and stamp.
     std::fs::rename(&away, &file).expect("moved back");
     ev(&mut app, WholeEvent::Retry);
-    let (_, more, again) = app.features.whole.asked.clone().expect("asked again");
+    let (_, more, again) = app.gis.features.whole.asked.clone().expect("asked again");
     assert!(more);
     assert_eq!(again, asked);
-    assert!(app.features.whole.missed.is_none());
+    assert!(app.gis.features.whole.missed.is_none());
     answer(&mut app);
     assert_eq!(keys(&app), (1..=2 * i64::from(PAGE)).collect::<Vec<_>>());
-    assert_eq!(app.features.whole.pages, 2);
+    assert_eq!(app.gis.features.whole.pages, 2);
     // The first page refused: nothing read, said in place of the rows.
     ev(&mut app, WholeEvent::Toggle(false));
     std::fs::rename(&file, &away).expect("moved away");
     ev(&mut app, WholeEvent::Toggle(true));
     answer(&mut app);
-    assert!(app.features.whole.rows.is_empty());
+    assert!(app.gis.features.whole.rows.is_empty());
     assert_eq!(
-        app.features
+        app.gis
+            .features
             .whole
             .missed
             .as_ref()
@@ -255,16 +275,16 @@ fn a_page_not_read_stays_said_and_is_asked_again() {
     std::fs::rename(&away, &file).expect("moved back");
     ev(&mut app, WholeEvent::Retry);
     answer(&mut app);
-    assert_eq!(app.features.whole.rows.len(), PAGE as usize);
+    assert_eq!(app.gis.features.whole.rows.len(), PAGE as usize);
     // Durdur: the page is not read and Sürdür asks it again.
     ev(&mut app, WholeEvent::More);
-    let (_, _, stopped) = app.features.whole.asked.clone().expect("a question");
+    let (_, _, stopped) = app.gis.features.whole.asked.clone().expect("a question");
     ev(&mut app, WholeEvent::Stop);
-    assert!(app.features.whole.stopped && app.features.whole.running.is_none());
+    assert!(app.gis.features.whole.stopped && app.gis.features.whole.running.is_none());
     ev(&mut app, WholeEvent::Retry);
-    let (_, _, again) = app.features.whole.asked.clone().expect("asked again");
+    let (_, _, again) = app.gis.features.whole.asked.clone().expect("asked again");
     assert_eq!(again, stopped);
-    assert!(!app.features.whole.stopped);
+    assert!(!app.gis.features.whole.stopped);
     answer(&mut app);
     assert_eq!(keys(&app), (1..=2 * i64::from(PAGE)).collect::<Vec<_>>());
 }
@@ -281,7 +301,7 @@ fn a_relinked_layer_asks_again_what_its_file_did_not_give() {
     std::fs::rename(&file, &moved).expect("moved");
     ev(&mut app, WholeEvent::More);
     answer(&mut app);
-    assert!(app.features.whole.missed.is_some());
+    assert!(app.gis.features.whole.missed.is_some());
     let id = app
         .document
         .as_ref()
@@ -296,9 +316,9 @@ fn a_relinked_layer_asks_again_what_its_file_did_not_give() {
         Some(moved.clone()),
     )));
     assert_eq!(file_of(&app), moved, "relinked");
-    assert!(app.features.whole.running.is_some(), "asked again");
+    assert!(app.gis.features.whole.running.is_some(), "asked again");
     answer(&mut app);
-    assert!(app.features.whole.missed.is_none());
+    assert!(app.gis.features.whole.missed.is_none());
     assert_eq!(keys(&app), (1..=2 * i64::from(PAGE)).collect::<Vec<_>>());
 }
 
@@ -347,13 +367,17 @@ fn whole_screens() {
         let ad = columns.iter().position(|c| c == "ad").expect("ad") + 1;
         ev(&mut app, WholeEvent::Sort(ad));
         answer(&mut app);
-        let _ = app.update(Message::Features(Event::Filter("sayi < 0".into())));
+        let _ = app.update(Message::Gis(gis::Event::Features(Event::Filter(
+            "sayi < 0".into(),
+        ))));
         answer(&mut app);
         ev(&mut app, WholeEvent::More);
         answer(&mut app);
         picture(&mut app, "4-burada-suzgec");
         // A page the moved file did not give, the first page refused, a page stopped (docs/adr/0740 §2).
-        let _ = app.update(Message::Features(Event::Filter(String::new())));
+        let _ = app.update(Message::Gis(gis::Event::Features(Event::Filter(
+            String::new(),
+        ))));
         ev(&mut app, WholeEvent::Sort(0));
         answer(&mut app);
         let file = file_of(&app);
@@ -373,7 +397,9 @@ fn whole_screens() {
         ev(&mut app, WholeEvent::Stop);
         picture(&mut app, "8-durduruldu");
         // The slider's time on the layer (docs/adr/0595 §4): the rows of its month, asked of the source.
-        let _ = app.update(Message::Features(Event::Filter(String::new())));
+        let _ = app.update(Message::Gis(gis::Event::Features(Event::Filter(
+            String::new(),
+        ))));
         let doc = &mut app.document.as_mut().expect("a drawing").model;
         let _ = registry::run(
             &mut ExecutionContext::new(doc),
@@ -404,23 +430,23 @@ fn the_whole_source_is_read_at_the_sliders_time() {
     .expect("runs");
     assert_eq!(set["status"], "completed", "{set}");
     let _ = app.update(Message::Run("time.slider"));
-    assert!(app.time.slider.open, "the slider opens");
+    assert!(app.gis.time.slider.open, "the slider opens");
     ev(&mut app, WholeEvent::Toggle(true));
-    let (_, _, first) = app.features.whole.asked.clone().expect("a question");
+    let (_, _, first) = app.gis.features.whole.asked.clone().expect("a question");
     let time = first.time.clone().expect("the slider's time");
     assert_eq!(
         time.fields.as_ref().map(|f| f.start.as_str()),
         Some("tarih")
     );
     answer(&mut app);
-    let last = app.features.whole.last.clone().expect("a page");
+    let last = app.gis.features.whole.last.clone().expect("a page");
     assert!(
         last.plan.local.iter().any(|l| l == "time"),
         "{:?}",
         last.plan
     );
-    let window = app.time.slider.window().expect("a window");
-    for r in &app.features.whole.rows {
+    let window = app.gis.time.slider.window().expect("a window");
+    for r in &app.gis.features.whole.rows {
         let at = r
             .attrs
             .get("tarih")
@@ -437,12 +463,12 @@ fn the_whole_source_is_read_at_the_sliders_time() {
         }
     }
     // The slider moves: the question is asked again at its new time.
-    let step = if app.time.slider.position > 0 {
+    let step = if app.gis.time.slider.position > 0 {
         crate::temporal::Event::First
     } else {
         crate::temporal::Event::Next
     };
-    let _ = app.update(Message::Time(step));
-    let (_, _, again) = app.features.whole.asked.clone().expect("a question");
+    let _ = app.update(Message::Gis(gis::Event::Time(step)));
+    let (_, _, again) = app.gis.features.whole.asked.clone().expect("a question");
     assert_ne!(again.time, first.time);
 }

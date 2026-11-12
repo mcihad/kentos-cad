@@ -32,7 +32,7 @@ impl App {
         let bar = iced::widget::responsive(move |room| self.arch_audit_bar(room.width))
             .height(Length::Shrink);
         let stale = self.arch_audit_stale();
-        let audited = self.arch_audit.audited.as_ref();
+        let audited = self.arch.arch_audit.audited.as_ref();
         let shown = self.arch_audit_shown();
         let columns = COLUMNS.iter().enumerate().map(|(i, title)| {
             let share = match i {
@@ -43,7 +43,7 @@ impl App {
                 _ => Length::FillPortion(2),
             };
             // A column dragged wider keeps its width (docs/adr/8034): a regulation finding ends with its article.
-            let width = self.arch_audit.columns[i].map_or(share, Length::Fixed);
+            let width = self.arch.arch_audit.columns[i].map_or(share, Length::Fixed);
             let column = TableColumn::new(*title).width(width);
             if i == 0 {
                 column.align_right()
@@ -89,9 +89,9 @@ impl App {
                             objects,
                         ],
                         ink,
-                        chosen: self.arch_audit.selected == Some(i)
-                            || self.arch_audit.chosen.contains(&i),
-                        current: self.arch_audit.selected == Some(i),
+                        chosen: self.arch.arch_audit.selected == Some(i)
+                            || self.arch.arch_audit.chosen.contains(&i),
+                        current: self.arch.arch_audit.selected == Some(i),
                         fix: f.fix.as_ref().map(|x| x.label.clone()),
                         exception: f.exception || f.lapsed,
                     }
@@ -100,7 +100,7 @@ impl App {
         });
         let first = lines.iter().position(|l| l.current);
         let count = lines.len();
-        let many = self.arch_audit.chosen.len() > 1;
+        let many = self.arch.arch_audit.chosen.len() > 1;
         let table = Table::new(columns)
             .virtualized(count, move |i| {
                 let line = &lines[i];
@@ -187,7 +187,7 @@ impl App {
                 }),
             );
         }
-        if let Some(note) = &self.arch_audit.note {
+        if let Some(note) = &self.arch.arch_audit.note {
             out = out.push(self.arch_audit_note_row(note));
         }
         out.push(horizontal_divider())
@@ -242,7 +242,7 @@ impl App {
     /// The bar at `width`: Denetle, the group, Kapsam, İstisnalar ▾ and Eşikler ▾; the count, Kata ver ▾, İstisna yap…
     /// and Düzelt at its end. Narrow: the count and the buttons on a second line.
     fn arch_audit_bar(&self, width: f32) -> Element<'_, Message> {
-        let audited = self.arch_audit.audited.as_ref();
+        let audited = self.arch.arch_audit.audited.as_ref();
         let count_of = |g: Option<ArchAuditCheck>| {
             audited.map(|a| {
                 a.findings
@@ -263,6 +263,7 @@ impl App {
             }
         }));
         let picked = self
+            .arch
             .arch_audit
             .group
             .and_then(|g| ArchAuditCheck::ALL.iter().position(|x| *x == g))
@@ -274,7 +275,7 @@ impl App {
                 Some(ArchAuditCheck::ALL[i - 1])
             }))
         });
-        let scope_now = match self.arch_audit.scope {
+        let scope_now = match self.arch.arch_audit.scope {
             AuditScope::All => 0,
             AuditScope::ActiveLevel => 1,
             AuditScope::Selection(_) => 2,
@@ -283,7 +284,7 @@ impl App {
             SCOPES
                 .iter()
                 .enumerate()
-                .map(|(i, w)| match (&self.arch_audit.scope, i) {
+                .map(|(i, w)| match (&self.arch.arch_audit.scope, i) {
                     (AuditScope::Selection(uids), 2) => {
                         Choice::new(format!("{w} ({})", uids.len()))
                     }
@@ -419,10 +420,10 @@ impl App {
     /// İstisnalar ▾ (docs/adr/0732 §3): how the exceptions are listed, and Eski istisnaları temizle; how many there are
     /// on its face.
     fn arch_audit_exceptions_button(&self) -> Element<'_, Message> {
-        let audited = self.arch_audit.audited.as_ref();
+        let audited = self.arch.arch_audit.audited.as_ref();
         let excepted = audited.map_or(0, |a| a.excepted);
         let stale = audited.map_or(0, |a| a.stale.len());
-        let now = self.arch_audit.view;
+        let now = self.arch.arch_audit.view;
         let menu = move || {
             let mut menu = kentos_ui::widget::Menu::new().header("Listede");
             for (i, (view, words)) in VIEWS.iter().enumerate() {
@@ -466,7 +467,7 @@ impl App {
     /// it; the values in its tip.
     fn arch_audit_limits(&self) -> Element<'_, Message> {
         let format = self.format();
-        let a = &self.arch_audit;
+        let a = &self.arch.arch_audit;
         let length = |v: f64| format.length(v);
         let area = |v: f64| format!("{v:.2} m²");
         let clear = |v: f64| if v > 0.0 { format.length(v) } else { "Yok".to_owned() };

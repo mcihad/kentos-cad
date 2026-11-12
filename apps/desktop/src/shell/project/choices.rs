@@ -204,6 +204,7 @@ impl App {
     /// ones the project's choices name already that it does not have.
     pub(crate) fn choice_grids(&self) -> Vec<GridRef> {
         let mut out: Vec<GridRef> = self
+            .arch
             .grids
             .entries
             .iter()
@@ -391,9 +392,9 @@ mod tests {
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
-            app.grids.library = Some(crate::grids::Library::at(crate::files_testing::scratch(
-                "datum-resim",
-            )));
+            app.arch.grids.library = Some(crate::grids::Library::at(
+                crate::files_testing::scratch("datum-resim"),
+            ));
             let _ = app.update(Message::Run("crs.set"));
             let task = app.update(settings_message(SettingsEvent::Grid(
                 crate::grids::Event::Picked(Some(tr.clone())),
@@ -416,6 +417,7 @@ mod tests {
             send(&mut app, 0, Edit::Accuracy("0.3".to_owned()));
             send(&mut app, 1, Edit::Method(Method::Grid));
             let id = app
+                .arch
                 .grids
                 .entries
                 .first()

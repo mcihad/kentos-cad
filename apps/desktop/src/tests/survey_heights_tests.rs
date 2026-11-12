@@ -7,6 +7,7 @@
 //! to a target with a height at its own height the same way. docs/adr/4100: Poligon hesabı with its heights by
 //! trigonometric heighting takes each leg at its own. And the pictures.
 
+use crate::gis;
 use kentos_commands::{Entity, GeoidModel, HeightKind, HeightReference, SurveySettings};
 use kentos_geometry_core::survey::polar::PolarPoint;
 use serde_json::json;
@@ -17,7 +18,7 @@ use crate::calc::{Event, Field};
 use crate::files_testing::app_with_drawing;
 
 fn calc(app: &mut App, e: Event) {
-    let _ = app.update(Message::Calc(e));
+    let _ = app.update(Message::Gis(gis::Event::Calc(e)));
 }
 
 /// The shared cases' TG-20 grid in this process's library, under its SHA-256.
@@ -69,7 +70,7 @@ fn shots(app: &mut App) {
 
 fn computed(app: &App) -> (Vec<PolarPoint>, Option<Result<Option<String>, String>>) {
     let doc = app.document.as_ref().expect("open");
-    let read = app.calc.polar.compute(&doc.model);
+    let read = app.gis.calc.polar.compute(&doc.model);
     (read.points.expect("computed"), read.heights)
 }
 
@@ -146,14 +147,30 @@ fn without_the_project_s_heights_the_window_says_why_it_reduces_at_the_mean() {
     assert!(points.iter().all(|p| p.height == Some(1100.0)), "{points:?}");
     let doc = app.document.as_ref().expect("open");
     let format = kentos_interaction::Format::of(doc.settings());
-    let report = app.calc.polar.report(&doc.model, &format).expect("a report");
-    assert!(!report[1].contains(&"Elipsoit yüksekliği".to_owned()), "no height column at the mean");
+    let report = app
+        .gis
+        .calc
+        .polar
+        .report(&doc.model, &format)
+        .expect("a report");
+    assert!(
+        !report[1].contains(&"Elipsoit yüksekliği".to_owned()),
+        "no height column at the mean"
+    );
     // With them, the report has the column.
     let id = tg();
     project(&mut app, Some(orthometric(&id)));
     let doc = app.document.as_ref().expect("open");
-    let report = app.calc.polar.report(&doc.model, &format).expect("a report");
-    assert_eq!(report[1].last().map(String::as_str), Some("Elipsoit yüksekliği"));
+    let report = app
+        .gis
+        .calc
+        .polar
+        .report(&doc.model, &format)
+        .expect("a report");
+    assert_eq!(
+        report[1].last().map(String::as_str),
+        Some("Elipsoit yüksekliği")
+    );
 }
 
 /// Kutupsal alım with its h column and the note, light wide and dark narrow, `.run/gui-evidence/kendi-yuksekligi-2900/`:
@@ -216,7 +233,7 @@ fn each_stakeout_line_is_taken_at_its_own_height() {
         calc(&mut app, Event::Cell(row, 0, target.into()));
     }
     let doc = app.document.as_ref().expect("open");
-    let read = app.calc.stakeout.compute(&doc.model);
+    let read = app.gis.calc.stakeout.compute(&doc.model);
     assert_eq!(read.heights, Some(Ok(Some("TG-20 (sentetik)".to_owned()))));
     let stakes = read.stakes.expect("computed");
     let out = factors(
@@ -232,8 +249,16 @@ fn each_stakeout_line_is_taken_at_its_own_height() {
     assert_eq!((stakes[1].height, stakes[2].height), (Some(1100.0), Some(1100.0)), "no target height: the mean");
     let doc = app.document.as_ref().expect("open");
     let format = kentos_interaction::Format::of(doc.settings());
-    let report = app.calc.stakeout.report(&doc.model, &format).expect("a report");
-    assert_eq!(report[1].last().map(String::as_str), Some("Elipsoit yüksekliği"));
+    let report = app
+        .gis
+        .calc
+        .stakeout
+        .report(&doc.model, &format)
+        .expect("a report");
+    assert_eq!(
+        report[1].last().map(String::as_str),
+        Some("Elipsoit yüksekliği")
+    );
 }
 
 /// Aplikasyon with its h column and the note, `.run/gui-evidence/aplikasyon-yuksekligi-3300/`:
@@ -329,10 +354,20 @@ fn traverse_round(app: &mut App) {
             calc(app, Event::Cell(i, NAME, format!("K{i}")));
         } else {
             // Rows for K2 and K3 before the end station.
-            let _ = app.update(Message::Calc(Event::Submit(1, NAME)));
-            let _ = app.update(Message::Calc(Event::Submit(2, NAME)));
+            let _ = app.update(Message::Gis(gis::Event::Calc(Event::Submit(1, NAME))));
+            let _ = app.update(Message::Gis(gis::Event::Calc(Event::Submit(2, NAME))));
         }
-        calc(app, Event::Cell(i, ANGLE, format!("{:.4}", grad(bearing(path[i], path[i + 1]) - bearing(path[i], prev)))));
+        calc(
+            app,
+            Event::Cell(
+                i,
+                ANGLE,
+                format!(
+                    "{:.4}",
+                    grad(bearing(path[i], path[i + 1]) - bearing(path[i], prev))
+                ),
+            ),
+        );
         calc(app, Event::Cell(i, DISTANCE, format!("{s:.3}")));
         calc(app, Event::Cell(i, ZENITH, format!("{:.4}", grad(FRAC_PI_2 - cot.atan()))));
         calc(app, Event::Cell(i, INSTRUMENT, format!("{inst:.2}")));
@@ -353,7 +388,7 @@ fn each_traverse_leg_is_taken_at_its_own_height() {
     station(&mut app);
     traverse_round(&mut app);
     let doc = app.document.as_ref().expect("open");
-    let c = app.calc.traverse.compute(&doc.model);
+    let c = app.gis.calc.traverse.compute(&doc.model);
     assert!(c.errors.is_empty(), "{:?}", c.errors);
     assert_eq!(c.names, ["K1", "K2", "K3"]);
     assert_eq!(c.own_heights, Some(Ok(Some("TG-20 (sentetik)".to_owned()))));

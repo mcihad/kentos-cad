@@ -2,6 +2,7 @@
 //! from the form and the record, the designer's preview and the moment a form's rules read.
 
 use super::*;
+use crate::gis;
 
 impl App {
     /// Formla düzenle on `slot` through the form `form`.
@@ -45,8 +46,8 @@ impl App {
             false,
             BTreeMap::new(),
         );
-        self.form_entry = Some(entry);
-        self.dialog = Some(Dialog::FormEntry);
+        self.gis.form_entry = Some(entry);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FormEntry));
         self.ask_entry_sources()
     }
 
@@ -54,9 +55,9 @@ impl App {
     /// window.
     pub(crate) fn open_entry_docked(&mut self, slot: Slot, form: &str) -> Task<Message> {
         let task = self.open_entry(slot, form);
-        if let Some(e) = self.form_entry.as_mut() {
+        if let Some(e) = self.gis.form_entry.as_mut() {
             e.docked = true;
-            if self.dialog == Some(Dialog::FormEntry) {
+            if self.dialog == Some(Dialog::Gis(gis::GisDialogKind::FormEntry)) {
                 self.dialog = None;
             }
         }
@@ -72,7 +73,7 @@ impl App {
         match slot {
             Some(slot) => self.open_entry_docked(slot, form),
             None => {
-                self.form_entry = None;
+                self.gis.form_entry = None;
                 Task::none()
             }
         }
@@ -151,8 +152,8 @@ impl App {
                 );
             }
         }
-        self.form_entry = Some(entry);
-        self.dialog = Some(Dialog::FormEntry);
+        self.gis.form_entry = Some(entry);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FormEntry));
         Task::none()
     }
 
@@ -182,7 +183,7 @@ impl App {
         });
         // A new record's "reuse last" fields start with the session's last values, as if typed.
         let mut values = BTreeMap::new();
-        if new_record && let Some(last) = self.form_memory.last.get(&f.id) {
+        if new_record && let Some(last) = self.gis.form_memory.last.get(&f.id) {
             for key in screen.prepared.reuse_keys() {
                 if let Some(v) = last.get(key) {
                     values.insert(key.to_owned(), v.clone());
@@ -348,7 +349,7 @@ impl App {
             user.as_deref(),
         )
         .map_err(|e| e.message)?;
-        let kept = self.form_preview.as_ref().map(|e| {
+        let kept = self.gis.form_preview.as_ref().map(|e| {
             // The collapsed groups the designer opened.
             let opened: BTreeSet<String> = collapsed_groups(&e.body.items)
                 .difference(&e.closed)
@@ -375,14 +376,14 @@ impl App {
         }
         // The designer sees every issue the rules give, touched or not.
         entry.tried = true;
-        self.form_preview = Some(entry);
+        self.gis.form_preview = Some(entry);
         Ok(())
     }
 
     /// The moment and the person a form's rules read (docs/adr/0402 §5): this device's clock in its
     /// zone to the second (a test's fixed moment instead) and the signed-in person, if any.
     pub(crate) fn form_moment(&self) -> (Option<String>, Option<String>) {
-        let moment = self.form_memory.clock.clone().unwrap_or_else(|| {
+        let moment = self.gis.form_memory.clock.clone().unwrap_or_else(|| {
             let utc = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_or(0, |d| d.as_secs() as i64);
@@ -390,6 +391,7 @@ impl App {
             kentos_geometry_core::time::write(((utc + i64::from(offset)) * 1000) as f64, false)
         });
         let user = self
+            .gis
             .form_memory
             .person
             .clone()

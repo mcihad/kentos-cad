@@ -3,6 +3,7 @@
 //! either side) and the one way out the state asks for (`next`): Kaynağa yaz, Kaynaktan oku, Uzlaştır… or Yeniden
 //! bağla…, run by the same events as Katmanlar's Kaynak ▸. The states are read again after each.
 
+use crate::gis;
 use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, SourceKind, SourceNext, SourceState, SourcesDescribe};
@@ -41,7 +42,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::SourceStatus(event)
+    Message::Gis(gis::Event::SourceStatus(event))
 }
 
 /// The way out's button words; none when nothing waits.
@@ -75,17 +76,17 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        self.source_status = Some(Window {
+        self.gis.source_status = Some(Window {
             states: Err(String::new()),
             chosen: None,
         });
-        self.dialog = Some(Dialog::SourceStatus);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::SourceStatus));
         self.refresh_source_status();
     }
 
     /// The states read again (after a write, a read, a relink), while the window is open.
     pub(crate) fn refresh_source_status(&mut self) {
-        if self.source_status.is_none() {
+        if self.gis.source_status.is_none() {
             return;
         }
         let Some(doc) = self.document.as_mut() else {
@@ -101,7 +102,7 @@ impl App {
             | CommandResult::NeedsInput { error } => Err(error.message),
             _ => Err("Kaynakların durumu okunamadı.".to_owned()),
         };
-        if let Some(w) = self.source_status.as_mut() {
+        if let Some(w) = self.gis.source_status.as_mut() {
             let count = states.as_ref().map_or(0, Vec::len);
             w.chosen = w.chosen.filter(|i| *i < count);
             w.states = states;
@@ -109,7 +110,7 @@ impl App {
     }
 
     pub(crate) fn source_status_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.source_status.as_mut() else {
+        let Some(w) = self.gis.source_status.as_mut() else {
             return Task::none();
         };
         match event {
@@ -133,7 +134,7 @@ impl App {
                 };
                 // Its own window takes the place of this one.
                 if matches!(event, Bound::Reconcile(_)) {
-                    self.source_status = None;
+                    self.gis.source_status = None;
                 }
                 let task = self.bound_event(event);
                 self.refresh_source_status();
@@ -144,7 +145,7 @@ impl App {
                 Task::none()
             }
             Event::Close => {
-                self.source_status = None;
+                self.gis.source_status = None;
                 self.dialog = None;
                 Task::none()
             }
@@ -152,7 +153,7 @@ impl App {
     }
 
     pub(crate) fn source_status_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.source_status else {
+        let Some(w) = &self.gis.source_status else {
             return text("").into();
         };
         let srid = self
@@ -294,7 +295,8 @@ impl App {
     /// The states the window shows (the tests read them).
     #[cfg(test)]
     pub(crate) fn source_status_states(&self) -> Vec<SourceState> {
-        self.source_status
+        self.gis
+            .source_status
             .as_ref()
             .and_then(|w| w.states.as_ref().ok().cloned())
             .unwrap_or_default()
@@ -303,14 +305,15 @@ impl App {
     /// The row of a layer, by its place in the window's table (the pictures and the tests press it).
     #[cfg(test)]
     pub(crate) fn source_status_row(&self, layer: &str) -> Option<usize> {
-        let s = self.source_status.as_ref()?.states.as_ref().ok()?;
+        let s = self.gis.source_status.as_ref()?.states.as_ref().ok()?;
         s.iter().position(|x| x.link.layer == layer)
     }
 
     /// A row's way out.
     #[cfg(test)]
     pub(crate) fn source_status_next(&self, i: usize) -> SourceNext {
-        self.source_status
+        self.gis
+            .source_status
             .as_ref()
             .and_then(|w| w.states.as_ref().ok()?.get(i).map(|s| s.next))
             .unwrap_or(SourceNext::None)
@@ -321,7 +324,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.source_status.is_none() {
+        if self.gis.source_status.is_none() {
             return Err(format!("{STATUS_TITLE} penceresi açık değil"));
         }
         Ok(match control {

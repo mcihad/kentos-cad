@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::propose_window::Event as W;
+use crate::road;
 
 const CASES: &str = include_str!("../../../../fixtures/commands/v1/road.profiles.propose.json");
 
@@ -142,9 +143,15 @@ fn screens_crossings() {
         // The same profile in Boykesit: its line as it is, the culvert short.
         let _ = app.update(Message::Propose(W::Close));
         let _ = app.update(Message::Run("profile.editor"));
-        let rows = app.profile_window.as_ref().and_then(|w| w.rows.iter().position(|r| r_id(r) == "b-6"));
+        let rows = app
+            .road
+            .profile_window
+            .as_ref()
+            .and_then(|w| w.rows.iter().position(|r| r_id(r) == "b-6"));
         if let Some(i) = rows {
-            let _ = app.update(Message::Profiles(crate::profile_window::Event::Choose(i)));
+            let _ = app.update(Message::Road(road::Event::Profiles(
+                crate::profile_window::Event::Choose(i),
+            )));
         }
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y40-boykesit-{name}.png"));

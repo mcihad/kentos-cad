@@ -3,6 +3,7 @@
 //! account, and a project's layer taken with its objects as one undo step.
 //! The listing's rules are the shared cases' (crates/native/interaction).
 
+use crate::gis;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -17,7 +18,7 @@ use crate::app::{App, Message};
 use crate::files_testing::{app_with_drawing, last_said};
 
 fn send(app: &mut App, event: Event) {
-    let _ = app.update(Message::Sources(event));
+    let _ = app.update(Message::Gis(gis::Event::Sources(event)));
 }
 
 /// The rows as words: a caret's “▸”/“▾” for what opens, then the name and its meta.
@@ -186,10 +187,12 @@ fn a_folder_shows_its_folders_and_the_files_it_adds_and_reads_again_when_opened_
     );
     // Closing forgets what was read; opening reads again.
     send(&mut app, Event::Toggle(folder_key(&dir)));
-    assert!(!app.sources.listings.contains_key(&dir));
-    let _ = app.update(Message::Sources(Event::Toggle(folder_key(&dir))));
+    assert!(!app.gis.sources.listings.contains_key(&dir));
+    let _ = app.update(Message::Gis(gis::Event::Sources(Event::Toggle(
+        folder_key(&dir),
+    ))));
     assert!(matches!(
-        app.sources.listings.get(&dir),
+        app.gis.sources.listings.get(&dir),
         Some(Read::Reading)
     ));
     // A folder inside opens with its own files.
@@ -205,7 +208,7 @@ fn a_folder_shows_its_folders_and_the_files_it_adds_and_reads_again_when_opened_
     // An answer for a row closed since is dropped.
     send(&mut app, Event::Toggle(folder_key(&inner)));
     send(&mut app, Event::Listed(inner.clone(), read_folder(&inner)));
-    assert!(!app.sources.listings.contains_key(&inner));
+    assert!(!app.gis.sources.listings.contains_key(&inner));
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -221,7 +224,7 @@ fn the_folders_are_kept_and_one_taken_off_the_list_stays_on_the_disk() {
         std::slice::from_ref(&dir)
     );
     let mut app = app_with_drawing();
-    app.sources.folders = SourceFolders::open(&keep);
+    app.gis.sources.folders = SourceFolders::open(&keep);
     send(&mut app, Event::Remove(dir.clone()));
     assert!(last_said(&app).contains("listeden kaldırıldı"));
     assert!(SourceFolders::open(&keep).list().is_empty());
@@ -265,10 +268,14 @@ fn a_projects_layer_comes_with_its_objects_as_one_undo_step() {
         ProjectStorage::Database,
     );
     let id = p.id.clone();
-    app.sources.open.insert(super::list_key("mine"));
-    app.sources.lists.insert("mine", Read::Ready((vec![p], 1)));
-    app.sources.open.insert(project_key(&id));
-    app.sources
+    app.gis.sources.open.insert(super::list_key("mine"));
+    app.gis
+        .sources
+        .lists
+        .insert("mine", Read::Ready((vec![p], 1)));
+    app.gis.sources.open.insert(project_key(&id));
+    app.gis
+        .sources
         .drawings
         .insert(id.clone(), Read::Ready(downloaded()));
     let all = rows(&app);
@@ -341,7 +348,7 @@ fn open_tables(app: &mut App, dir: &Path) -> Origin {
 fn open_preview(app: &mut App, origin: &Origin, table: &str) {
     let key = table_key(origin, table);
     send(app, Event::Toggle(key.clone()));
-    let columns = match app.sources.tables.get(origin) {
+    let columns = match app.gis.sources.tables.get(origin) {
         Some(Read::Ready(t)) => t
             .iter()
             .find(|t| t.name == table)
@@ -397,7 +404,7 @@ fn the_new_kinds_are_listed_and_a_geopackage_opens_into_its_tables_and_a_preview
     assert!(samples[0].contains("parsel_no: "), "{samples:?}");
     // Closed, what was read is forgotten and read again when opened.
     send(&mut app, Event::Toggle(table_key(&origin, "parsel")));
-    assert!(app.sources.samples.is_empty());
+    assert!(app.gis.sources.samples.is_empty());
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -406,7 +413,7 @@ fn a_table_is_bound_from_the_browser_then_gone_to_and_never_bound_twice() {
     let mut app = app_with_drawing();
     let dir = browser_folder("bag");
     let origin = open_tables(&mut app, &dir);
-    let names: Vec<String> = match app.sources.tables.get(&origin) {
+    let names: Vec<String> = match app.gis.sources.tables.get(&origin) {
         Some(Read::Ready(t)) => t.iter().map(|t| t.name.clone()).collect(),
         _ => panic!("the tables"),
     };
@@ -446,7 +453,7 @@ fn a_table_is_bound_from_the_browser_then_gone_to_and_never_bound_twice() {
     assert_eq!(app.selected_layer.as_deref(), Some(id.as_str()));
     // Both opened tables are the newest recent sources, once.
     assert_eq!(
-        app.sources.folders.recent(),
+        app.gis.sources.folders.recent(),
         [Kept::Table {
             path: dir.join("kadastro.gpkg"),
             table: "parsel".into()
@@ -475,8 +482,8 @@ fn the_services_list_the_basemaps_and_the_services_added_before() {
     };
     send(&mut app, Event::Use(kept.clone()));
     assert_eq!(layers(&app), before + 1, "{}", last_said(&app));
-    assert_eq!(app.sources.folders.recent(), [kept]);
-    app.sources.folders.add_service(SavedService {
+    assert_eq!(app.gis.sources.folders.recent(), [kept]);
+    app.gis.sources.folders.add_service(SavedService {
         kind: kentos_commands::ServiceKind::Wms,
         url: "https://cbs.ornek.gov.tr/geoserver/wms".into(),
         name: "Belediye WMS".into(),
@@ -489,7 +496,7 @@ fn the_services_list_the_basemaps_and_the_services_added_before() {
         "{all:?}"
     );
     send(&mut app, Event::ServiceRemove(0));
-    assert!(app.sources.folders.services().is_empty());
+    assert!(app.gis.sources.folders.services().is_empty());
 }
 
 #[test]
@@ -553,7 +560,7 @@ fn the_recent_and_favourite_sources_are_kept_with_the_folders() {
     assert!(text.contains("\"version\": 2"), "{text}");
     // The rows: favourites under their section, a file no longer there said.
     let mut app = app_with_drawing();
-    app.sources.folders = SourceFolders::open(&keep);
+    app.gis.sources.folders = SourceFolders::open(&keep);
     let all = rows(&app);
     assert_eq!(all[0], "▾ Son kullanılanlar");
     assert!(all.contains(&"▾ Sık kullanılanlar".to_owned()), "{all:?}");
@@ -564,7 +571,7 @@ fn the_recent_and_favourite_sources_are_kept_with_the_folders() {
         last_said(&app)
     );
     send(&mut app, Event::Star(b));
-    assert!(app.sources.folders.favourites().is_empty());
+    assert!(app.gis.sources.folders.favourites().is_empty());
     let _ = std::fs::remove_dir_all(&keep);
 }
 
@@ -593,10 +600,10 @@ fn a_row_dragged_onto_the_drawing_is_added_there_and_a_file_dropped_on_the_windo
             Box::new(add_it.clone()),
         ),
     );
-    assert!(app.sources.drag.is_some());
+    assert!(app.gis.sources.drag.is_some());
     send(&mut app, Event::DragAt(iced::Point::new(40.0, 200.0)));
     send(&mut app, Event::DragEnd);
-    assert!(app.sources.drag.is_none() && window_kind(&app).is_none());
+    assert!(app.gis.sources.drag.is_none() && window_kind(&app).is_none());
     // Let go over the drawing: added as Katman olarak ekle adds it.
     send(&mut app, Event::Press(key, None, Box::new(add_it)));
     send(&mut app, Event::DragAt(iced::Point::new(500.0, 300.0)));
@@ -654,8 +661,8 @@ fn browser_scene(app: &mut App, data: &Path, scene: &str) {
             std::fs::write(dir.join(f), b"x").expect("a file");
         }
     }
-    app.sources.folders = SourceFolders::memory();
-    app.sources.open.remove(super::KENTOS);
+    app.gis.sources.folders = SourceFolders::memory();
+    app.gis.sources.open.remove(super::KENTOS);
     let origin = open_tables(app, &dir);
     // One table bound, as Bağlı katman olarak aç binds it.
     send(app, Event::OpenTable(origin.clone(), "parsel".into(), true));
@@ -663,7 +670,7 @@ fn browser_scene(app: &mut App, data: &Path, scene: &str) {
         crate::exchange::gpkg::Event::Run,
     ))));
     app.exchange = None;
-    let tables = match app.sources.tables.get(&origin) {
+    let tables = match app.gis.sources.tables.get(&origin) {
         Some(Read::Ready(t)) => t.clone(),
         _ => Vec::new(),
     };
@@ -676,17 +683,17 @@ fn browser_scene(app: &mut App, data: &Path, scene: &str) {
     } else {
         open_preview(app, &origin, "parsel");
     }
-    app.sources.folders.add_service(SavedService {
+    app.gis.sources.folders.add_service(SavedService {
         kind: kentos_commands::ServiceKind::Wms,
         url: "https://cbs.ornek.gov.tr/geoserver/wms".into(),
         name: "Belediye imar planı (WMS)".into(),
         connection: None,
     });
-    app.sources.folders.star(&Kept::Database {
+    app.gis.sources.folders.star(&Kept::Database {
         connection: "Belediye".into(),
         table: "kadastro.parsel".into(),
     });
-    app.sources.folders.star(&Kept::Basemap {
+    app.gis.sources.folders.star(&Kept::Basemap {
         command: "basemap.osmStandard".into(),
         name: "OpenStreetMap".into(),
     });
@@ -709,7 +716,7 @@ fn browser_extent(app: &mut App) {
         .as_ref()
         .map(|d| d.settings().srid)
         .filter(|s| *s != 0);
-    let found = app.sources.tables.values().find_map(|r| match r {
+    let found = app.gis.sources.tables.values().find_map(|r| match r {
         Read::Ready(t) => t
             .iter()
             .find(|t| t.name == "parsel" && t.extent.is_some())
@@ -804,15 +811,17 @@ fn screens() {
                         ProjectStorage::File,
                     );
                     let id = survey.id.clone();
-                    app.sources.open.insert(super::list_key("mine"));
-                    app.sources
+                    app.gis.sources.open.insert(super::list_key("mine"));
+                    app.gis
+                        .sources
                         .lists
                         .insert("mine", Read::Ready((vec![survey, sheet], 2)));
-                    app.sources.open.insert(project_key(&id));
-                    app.sources
+                    app.gis.sources.open.insert(project_key(&id));
+                    app.gis
+                        .sources
                         .drawings
                         .insert(id.clone(), Read::Ready(downloaded()));
-                    app.sources.focused = Some(format!("y:{id}\0Yol"));
+                    app.gis.sources.focused = Some(format!("y:{id}\0Yol"));
                 }
                 if scene.starts_with("kaynaklar-") && scene != "kaynaklar-bos" {
                     browser_scene(&mut app, &data, scene);

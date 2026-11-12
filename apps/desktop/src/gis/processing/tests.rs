@@ -4,6 +4,7 @@
 //! shared cases' (fixtures/processing/v1/parcels.kcad), whose answers
 //! `kentos-processing` holds to the web's.
 
+use crate::gis;
 use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::json;
@@ -28,11 +29,12 @@ pub(crate) fn app_with_parcels() -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn status(app: &App) -> RunStatus {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())
@@ -43,7 +45,10 @@ fn a_run_writes_one_undo_step_named_after_the_tool_and_the_window_stays() {
     let mut app = app_with_parcels();
     app.selection.set([Slot(1), Slot(2), Slot(7)]);
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
-    assert_eq!(app.dialog, Some(Dialog::Processing));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Processing))
+    );
     let before = app.document.as_ref().map_or(0, |d| d.model.len());
     event(&mut app, Event::Run);
     let summary = "3 nesneye 8 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı.";
@@ -59,7 +64,7 @@ fn a_run_writes_one_undo_step_named_after_the_tool_and_the_window_stays() {
     );
     assert_eq!(
         app.dialog,
-        Some(Dialog::Processing),
+        Some(Dialog::Gis(gis::GisDialogKind::Processing)),
         "the window stays open"
     );
     assert_eq!(
@@ -87,11 +92,11 @@ fn a_run_in_the_background_does_what_it_does_here_in_one_undo_step() {
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
     event(&mut app, Event::Target("worker".into()));
     assert_eq!(
-        app.processing.memory.target("annotation.edgeLengths"),
+        app.gis.processing.memory.target("annotation.edgeLengths"),
         "worker"
     );
     let before = app.document.as_ref().map_or(0, |d| d.model.len());
-    let task = app.update(Message::Processing(Event::Run));
+    let task = app.update(Message::Gis(gis::Event::Processing(Event::Run)));
     assert!(
         matches!(
             status(&app),
@@ -103,7 +108,7 @@ fn a_run_in_the_background_does_what_it_does_here_in_one_undo_step() {
         "{:?}",
         status(&app)
     );
-    let window = app.processing.dialog.as_ref().expect("open");
+    let window = app.gis.processing.dialog.as_ref().expect("open");
     let buttons = footer_of(&window.status);
     assert_eq!((buttons.run, buttons.close), ("Çalışıyor…", "Durdur"));
     assert!(buttons.run_disabled && buttons.reset_disabled);
@@ -115,7 +120,7 @@ fn a_run_in_the_background_does_what_it_does_here_in_one_undo_step() {
     );
     // Çalıştır again waits for it.
     event(&mut app, Event::Run);
-    assert_eq!(app.processing.running.len(), 1);
+    assert_eq!(app.gis.processing.running.len(), 1);
     drive(&mut app, task);
     let summary = "3 nesneye 8 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı.";
     assert_eq!(
@@ -133,10 +138,10 @@ fn a_run_in_the_background_does_what_it_does_here_in_one_undo_step() {
         format!("Kenar uzunluklarını yaz: {summary}")
     );
     assert_eq!(
-        app.processing.runner.history()[0].target,
+        app.gis.processing.runner.history()[0].target,
         Some(Target::Worker)
     );
-    assert!(app.processing.running.is_empty());
+    assert!(app.gis.processing.running.is_empty());
     let doc = &app.document.as_ref().expect("open").model;
     assert_eq!(doc.len(), before + 8);
     assert!(doc.layers().get("islem-kenar-olculeri").is_some());
@@ -155,16 +160,20 @@ fn durdur_ends_a_background_run_at_once_and_its_late_answer_is_dropped() {
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
     event(&mut app, Event::Target("worker".into()));
     let before = app.document.as_ref().map_or(0, |d| d.model.len());
-    let task = app.update(Message::Processing(Event::Run));
+    let task = app.update(Message::Gis(gis::Event::Processing(Event::Run)));
     event(&mut app, Event::Stop);
     let stopped = "İşlem iptal edildi; çizim değişmedi.";
     assert_eq!(status(&app), RunStatus::Error(stopped.into()));
     assert_eq!(last_said(&app), stopped);
-    assert_eq!(app.dialog, Some(Dialog::Processing), "the window stays");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Processing)),
+        "the window stays"
+    );
     drive(&mut app, task);
     assert_eq!(status(&app), RunStatus::Error(stopped.into()));
     assert_eq!(app.document.as_ref().map_or(0, |d| d.model.len()), before);
-    let record = &app.processing.runner.history()[0];
+    let record = &app.gis.processing.runner.history()[0];
     assert_eq!(
         (record.status, record.target),
         (Status::Canceled, Some(Target::Worker))
@@ -191,9 +200,9 @@ fn otomatik_sends_two_thousand_objects_to_the_background_with_the_same_answer() 
         &mut app,
         Event::Text("condition".into(), "$x >= 486500".into()),
     );
-    let window = app.processing.dialog.as_ref().expect("open");
+    let window = app.gis.processing.dialog.as_ref().expect("open");
     let (options, hint, choice) = targets_view(
-        &window.targets(&app.processing.registry, &Default::default()),
+        &window.targets(&app.gis.processing.registry, &Default::default()),
         Choice::Auto,
     );
     assert_eq!(options[0].note.as_deref(), Some("şimdi: arka planda"));
@@ -210,13 +219,13 @@ fn otomatik_sends_two_thousand_objects_to_the_background_with_the_same_answer() 
     assert!(chosen.len() >= 2100, "{}", chosen.len());
     app.selection.clear();
     event(&mut app, Event::Target("auto".into()));
-    let task = app.update(Message::Processing(Event::Run));
+    let task = app.update(Message::Gis(gis::Event::Processing(Event::Run)));
     assert!(matches!(status(&app), RunStatus::Running { .. }));
     drive(&mut app, task);
     assert_eq!(status(&app), here);
     assert_eq!(app.selection.ids(), chosen.as_slice());
     assert_eq!(
-        app.processing.runner.history()[0].target,
+        app.gis.processing.runner.history()[0].target,
         Some(Target::Worker)
     );
 }
@@ -230,7 +239,7 @@ fn parcel_sheet(worker: bool, meanwhile: impl FnOnce(&mut App)) -> App {
     let _ = app.update(Message::Run("processing.model.builtin.parcelSheet"));
     let place = if worker { "worker" } else { "client" };
     event(&mut app, Event::Target(place.into()));
-    let task = app.update(Message::Processing(Event::Run));
+    let task = app.update(Message::Gis(gis::Event::Processing(Event::Run)));
     if worker {
         assert!(
             matches!(status(&app), RunStatus::Running { .. }),
@@ -271,7 +280,7 @@ fn a_model_in_the_background_ends_as_it_does_here_in_one_undo_step() {
     assert_eq!(status(&apart), status(&here));
     assert_eq!(drawn(&apart), drawn(&here));
     assert_eq!(last_said(&apart), last_said(&here));
-    assert!(apart.processing.running.is_empty());
+    assert!(apart.gis.processing.running.is_empty());
     event(&mut apart, Event::Undo);
     assert_eq!(
         drawn(&apart),
@@ -289,7 +298,7 @@ fn durdur_ends_a_model_at_once() {
     assert_eq!(status(&app), RunStatus::Error(stopped.into()));
     assert_eq!(last_said(&app), stopped);
     assert_eq!(drawn(&app), before);
-    let record = &app.processing.runner.history()[0];
+    let record = &app.gis.processing.runner.history()[0];
     assert_eq!(
         (record.tool_id.as_str(), record.status),
         ("model:builtin.parcelSheet", Status::Canceled)
@@ -327,13 +336,13 @@ fn a_model_whose_drawing_changed_meanwhile_runs_again_on_it() {
 fn with_nothing_selected_the_problem_shows_under_the_field() {
     let mut app = app_with_parcels();
     let _ = app.update(Message::Run("processing.run.points.numberVertices"));
-    let window = app.processing.dialog.as_ref().expect("open");
+    let window = app.gis.processing.dialog.as_ref().expect("open");
     assert!(
         window.issue_of("input").is_none(),
         "nothing shows before Çalıştır"
     );
     event(&mut app, Event::Run);
-    let window = app.processing.dialog.as_ref().expect("still open");
+    let window = app.gis.processing.dialog.as_ref().expect("still open");
     assert_eq!(
         window.issue_of("input").map(|i| i.message.as_str()),
         Some(
@@ -347,7 +356,7 @@ fn with_nothing_selected_the_problem_shows_under_the_field() {
     );
     // A change clears the run's problem; a number out of range shows while typing.
     event(&mut app, Event::Number("length".into(), "31".into()));
-    let window = app.processing.dialog.as_ref().expect("open");
+    let window = app.gis.processing.dialog.as_ref().expect("open");
     assert!(window.issue_of("input").is_none());
     assert_eq!(
         window.issue_of("length").map(|i| i.message.as_str()),
@@ -372,8 +381,11 @@ fn a_start_point_is_shown_on_the_drawing_and_the_window_comes_back_with_it() {
         "Başlangıç noktası: haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]"
     );
     let _ = app.submit_line("487010,4420010");
-    assert_eq!(app.dialog, Some(Dialog::Processing));
-    let window = app.processing.dialog.as_ref().expect("back");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Processing))
+    );
+    let window = app.gis.processing.dialog.as_ref().expect("back");
     assert_eq!(
         window.values.get("startPoint"),
         Some(&json!({ "x": 487010.0, "y": 4420010.0 }))
@@ -409,7 +421,7 @@ fn the_start_vertex_is_picked_on_the_drawing_from_beside_its_choice() {
         "Başlangıç noktası: haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]"
     );
     let _ = app.submit_line("487010,4420010");
-    let window = app.processing.dialog.as_ref().expect("back");
+    let window = app.gis.processing.dialog.as_ref().expect("back");
     assert_eq!(window.values.get("start"), Some(&json!("point")));
     assert_eq!(
         window.values.get("startPoint"),
@@ -419,7 +431,7 @@ fn the_start_vertex_is_picked_on_the_drawing_from_beside_its_choice() {
     event(&mut app, Event::Value("start".into(), json!("north")));
     event(&mut app, Event::PickChoice("start".into()));
     key(&mut app, iced::keyboard::key::Named::Escape);
-    let window = app.processing.dialog.as_ref().expect("back");
+    let window = app.gis.processing.dialog.as_ref().expect("back");
     assert_eq!(window.values.get("start"), Some(&json!("north")));
 }
 
@@ -446,7 +458,7 @@ fn input_objects_are_picked_on_the_drawing_of_the_fields_kinds() {
     assert_eq!(app.selection.ids(), &[Slot(4)]);
     assert!(app.session.prompt().text().contains("(1 seçili)"));
     key(&mut app, Named::Enter);
-    let window = app.processing.dialog.as_ref().expect("back");
+    let window = app.gis.processing.dialog.as_ref().expect("back");
     assert_eq!(
         window.values.get("input"),
         Some(&json!({ "scope": "selection" }))
@@ -457,7 +469,7 @@ fn input_objects_are_picked_on_the_drawing_of_the_fields_kinds() {
     click(&mut app, -18.0, 9.0);
     click(&mut app, -18.0, 9.0);
     key(&mut app, Named::Escape);
-    assert!(app.processing.dialog.is_some());
+    assert!(app.gis.processing.dialog.is_some());
     assert_eq!(app.selection.ids(), &[Slot(4)], "back as it was");
 }
 
@@ -465,8 +477,11 @@ fn input_objects_are_picked_on_the_drawing_of_the_fields_kinds() {
 fn an_alias_on_the_command_line_opens_the_tool_and_last_values_come_back() {
     let mut app = app_with_parcels();
     let _ = app.submit_line("kenaryaz");
-    assert_eq!(app.dialog, Some(Dialog::Processing));
-    let window = app.processing.dialog.as_ref().expect("open");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Processing))
+    );
+    let window = app.gis.processing.dialog.as_ref().expect("open");
     assert_eq!(window.tool.id, "annotation.edgeLengths");
     // What ran last is what the window opens with next time.
     app.selection.set([Slot(6)]);
@@ -474,7 +489,7 @@ fn an_alias_on_the_command_line_opens_the_tool_and_last_values_come_back() {
     event(&mut app, Event::Run);
     event(&mut app, Event::Close);
     let _ = app.update(Message::Run("map.edgeLengths"));
-    let window = app.processing.dialog.as_ref().expect("open again");
+    let window = app.gis.processing.dialog.as_ref().expect("open again");
     assert_eq!(window.values.get("suffix"), Some(&json!(" m")));
 }
 
@@ -534,7 +549,7 @@ fn screens() {
                     "arka-plan" | "durduruldu" => {
                         event(&mut app, Event::Target("worker".into()));
                         event(&mut app, Event::Run);
-                        let id = app.processing.runs;
+                        let id = app.gis.processing.runs;
                         let step = super::background::Reply::Progress(0.42, String::new());
                         event(&mut app, Event::Background(id, step));
                         if name == "durduruldu" {
@@ -597,7 +612,7 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     );
     let _ = app.update(Message::Run("processing.toolbox"));
     assert!(app.docks.is_shown(Panel::Processing));
-    assert_eq!(app.processing.panel.tab, Tab::Tools);
+    assert_eq!(app.gis.processing.panel.tab, Tab::Tools);
     // The web's 113 (Ağ analizi's three, docs/adr/0209 §9, Yakınlık's five, docs/adr/0215, Veri aktar,
     // docs/adr/0216, Katman işlemleri's five, docs/adr/0217, Geometri dönüştürme's ten, docs/adr/0218, and its
     // Tablodan nokta, docs/adr/0223 §5, Yüzey
@@ -618,9 +633,10 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
         Event::Panel(PanelEvent::Search("kose numara".into())),
     );
     let hits: Vec<String> = app
+        .gis
         .processing
         .registry
-        .search(&app.processing.panel.search)
+        .search(&app.gis.processing.panel.search)
         .iter()
         .map(|t| t.id.clone())
         .collect();
@@ -632,14 +648,14 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     event(&mut app, Event::Run);
     event(&mut app, Event::Close);
     let _ = app.update(Message::Run("processing.history"));
-    assert_eq!(app.processing.panel.tab, Tab::History);
+    assert_eq!(app.gis.processing.panel.tab, Tab::History);
     assert_eq!(app.processing_meta(), "1 kayıt");
-    let seq = app.processing.runner.history()[0].seq;
+    let seq = app.gis.processing.runner.history()[0].seq;
     app.selection.clear();
     event(&mut app, Event::Panel(PanelEvent::SelectRun(seq)));
     assert_eq!(app.selection.len(), 4, "the four new corner points");
     event(&mut app, Event::Panel(PanelEvent::Reopen(seq)));
-    let window = app.processing.dialog.as_ref().expect("open again");
+    let window = app.gis.processing.dialog.as_ref().expect("open again");
     assert_eq!(window.values.get("prefix"), Some(&json!("K")));
 }
 

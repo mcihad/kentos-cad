@@ -4,6 +4,7 @@
 //! double-clicked holds the editor's field (`cell.rs`), the draft row after
 //! the points, a row's right click its menu.
 
+use crate::gis;
 use iced::widget::{button, container, mouse_area, row, space, text};
 use iced::{Center, Element, Fill, Length};
 use kentos_commands::Entity;
@@ -26,7 +27,7 @@ use crate::exchange::words;
 use crate::icons::from_web;
 
 fn msg(e: Event) -> Message {
-    Message::Points(e)
+    Message::Gis(gis::Event::Points(e))
 }
 
 /// A bar button: its icon and words, its hint above it.
@@ -309,7 +310,7 @@ impl App {
         };
         let rows = self.point_rows(doc);
         let format = Format::of(doc.model.settings());
-        let panel = &self.points;
+        let panel = &self.gis.points;
         // Cihaza gönder where the program offers it (docs/adr/0802).
         let send = self.offers("field.send");
 

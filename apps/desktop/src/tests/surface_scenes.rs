@@ -13,6 +13,7 @@
 //!
 //! Each result is written into a scratch folder. Test code only.
 
+use crate::gis;
 use kentos_ui::snapshot::Snapshot;
 use serde_json::json;
 
@@ -49,7 +50,10 @@ fn framed(s: &mut Snapshot, app: &mut App) {
 }
 
 fn value(app: &mut App, name: &str, v: serde_json::Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 /// `tool` run on the elevation model with `values`, its result in a scratch folder, its window closed.
@@ -65,7 +69,7 @@ fn ran(app: &mut App, tool: &'static str, values: &[(&str, serde_json::Value)]) 
         matches!(status, crate::processing::RunStatus::Ok { .. }),
         "{tool}: {status:?}"
     );
-    let _ = app.update(Message::Processing(Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
 }
 
 /// A parcel over the valley's middle drawn and chosen: Kapsam's Alan nesneleri (docs/adr/0535).
@@ -146,7 +150,7 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                     matches!(status, crate::processing::RunStatus::Ok { .. }),
                     "{status:?}"
                 );
-                let _ = app.update(Message::Processing(Event::Close));
+                let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
             },
             framed,
         ),

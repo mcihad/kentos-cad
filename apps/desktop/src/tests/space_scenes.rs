@@ -18,6 +18,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_domain::Slot;
 
 use kentos_ui::widget::docking;
@@ -146,8 +147,8 @@ fn quantities(app: &mut App) {
 fn quantities_walls(app: &mut App) {
     spaces(app);
     run(app, "arch.quantities");
-    let _ = app.update(Message::Quantities(crate::quantities::Event::Tab(
-        crate::quantities::Tab::Walls,
+    let _ = app.update(Message::Arch(arch::Event::Quantities(
+        crate::quantities::Event::Tab(crate::quantities::Tab::Walls),
     )));
 }
 

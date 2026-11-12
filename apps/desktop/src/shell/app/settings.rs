@@ -243,7 +243,7 @@ impl App {
         self.styles.follow_project(Some(doc.model.styles()));
         self.selection = Selection::new();
         // İstatistik and Grafik start again on another drawing (docs/adr/0227 §8).
-        self.charts = Default::default();
+        self.gis.charts = Default::default();
         self.followed = Some((doc.session, doc.model.generation()));
         self.xrefs = Default::default();
         self.document = Some(doc);

@@ -18,6 +18,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -104,7 +105,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Swept(event)
+    Message::Road(road::Event::Swept(event))
 }
 
 fn number(text: &str, what: &str) -> Result<f64, String> {
@@ -185,7 +186,7 @@ impl App {
         let (_, path) = chosen(self);
         let source = if junction.is_some() && path.is_none() { Source::Junction } else { Source::Object };
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
-        self.swept_window = Some(Box::new(Window {
+        self.road.swept_window = Some(Box::new(Window {
             fields: Default::default(),
             trailer: false,
             source,
@@ -200,13 +201,16 @@ impl App {
             obstacle_lines: Vec::new(),
             warnings: Vec::new(),
         }));
-        self.dialog = Some(Dialog::Swept);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Swept));
     }
 
     fn preview_swept(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.swept_window.as_mut() else { return };
-        let (preview, warnings) = match w.query().and_then(|q| road_swept::preview(&doc.model, &q)) {
+        let Some(w) = self.road.swept_window.as_mut() else {
+            return;
+        };
+        let (preview, warnings) = match w.query().and_then(|q| road_swept::preview(&doc.model, &q))
+        {
             Err(why) => (Err(why), Vec::new()),
             Ok((q, warnings)) => (Ok(q), warnings.into_iter().map(|x| x.message).collect()),
         };
@@ -224,7 +228,9 @@ impl App {
 
     pub(crate) fn swept_event(&mut self, event: Event) -> Task<Message> {
         let (picked, path) = chosen(self);
-        let Some(w) = self.swept_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.swept_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Field(k, t) => w.fields[k.min(12)] = t,
             Event::Trailer(on) => w.trailer = on,
@@ -264,12 +270,12 @@ impl App {
             }
             Event::Draw => return self.draw_swept(),
             Event::Close => {
-                self.swept_window = None;
+                self.road.swept_window = None;
                 self.dialog = None;
                 return Task::none();
             }
         }
-        if let Some(w) = self.swept_window.as_mut() {
+        if let Some(w) = self.road.swept_window.as_mut() {
             w.preview = None;
             w.warnings.clear();
         }
@@ -277,7 +283,9 @@ impl App {
     }
 
     fn draw_swept(&mut self) -> Task<Message> {
-        let Some(w) = self.swept_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.swept_window.as_ref() else {
+            return Task::none();
+        };
         let (query, Some(layer), every) = (w.query(), w.layer.clone(), w.every()) else {
             self.warn("Çizmek için bir katman seçin.".to_owned());
             return Task::none();
@@ -294,14 +302,14 @@ impl App {
         let result = road_swept_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.say(Level::Success, format!("Araç izi planda, {} nesne.", out.uids.len()));
-            self.swept_window = None;
+            self.road.swept_window = None;
             self.dialog = None;
         }
         Task::none()
     }
 
     pub(crate) fn swept_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.swept_window else {
+        let Some(w) = &self.road.swept_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -459,7 +467,7 @@ impl App {
     }
 
     pub(crate) fn swept_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.swept_window.is_none() {
+        if self.road.swept_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

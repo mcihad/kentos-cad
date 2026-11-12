@@ -78,7 +78,7 @@ impl App {
             return None;
         }
         let (generation, revision) = (doc.model.generation(), doc.model.revision());
-        if let Some((g, r, k, made)) = self.arch_audit.preview.borrow().as_ref()
+        if let Some((g, r, k, made)) = self.arch.arch_audit.preview.borrow().as_ref()
             && *g == generation
             && *r == revision
             && *k == keys
@@ -86,7 +86,8 @@ impl App {
             return made.clone();
         }
         let made = self.arch_audit_preview_made();
-        *self.arch_audit.preview.borrow_mut() = Some((generation, revision, keys, made.clone()));
+        *self.arch.arch_audit.preview.borrow_mut() =
+            Some((generation, revision, keys, made.clone()));
         made
     }
 

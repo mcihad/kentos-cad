@@ -1,6 +1,7 @@
 //! Formu dışa aktar and Formu içe aktar (docs/adr/0435): a form as a package file (`.kform`, the
 //! package's JSON) through `cad.forms.export` and `cad.forms.import`.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use iced::Task;
@@ -29,7 +30,7 @@ impl App {
                     .await?;
                 Some(file.path().to_path_buf())
             },
-            |path| Message::Forms(Event::Exported(path)),
+            |path| Message::Gis(gis::Event::Forms(Event::Exported(path))),
         )
     }
 
@@ -83,7 +84,7 @@ impl App {
                     String::from_utf8_lossy(&bytes).into_owned(),
                 ))
             },
-            |read| Message::Forms(Event::Imported(read)),
+            |read| Message::Gis(gis::Event::Forms(Event::Imported(read))),
         )
     }
 

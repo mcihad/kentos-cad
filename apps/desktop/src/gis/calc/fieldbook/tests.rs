@@ -1,5 +1,6 @@
 //! Karne editörü's flow on the sample book and a text book, and its pictures.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::SurveySettings;
@@ -21,7 +22,7 @@ fn sample_named(name: &str) -> PathBuf {
 }
 
 fn send(app: &mut App, e: Event) {
-    let _ = app.update(Message::Calc(CalcEvent::FieldBook(e)));
+    let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::FieldBook(e))));
 }
 
 /// An app with a drawing whose project checks the two faces' slope
@@ -46,8 +47,8 @@ fn opened() -> App {
 #[test]
 fn a_gsi_book_is_read_reduced_and_edited() {
     let mut app = opened();
-    assert_eq!(app.calc.open, Some(Window::FieldBook));
-    let form = &app.calc.fieldbook;
+    assert_eq!(app.gis.calc.open, Some(Window::FieldBook));
+    let form = &app.gis.calc.fieldbook;
     let book = form.book.as_ref().expect("read");
     assert_eq!((book.format.as_str(), book.stations.len()), ("gsi", 2));
     let r = form.reduction.as_ref().expect("reduced");
@@ -75,17 +76,25 @@ fn a_gsi_book_is_read_reduced_and_edited() {
         .collect();
     assert_eq!(over, ["103"]);
     // P2's face I left out: its face II reads alone.
-    let _ = app.update(Message::Calc(CalcEvent::Cell(0, USE, "0".to_owned())));
-    let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
+    let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::Cell(
+        0,
+        USE,
+        "0".to_owned(),
+    ))));
+    let r = app.gis.calc.fieldbook.reduction.as_ref().expect("reduced");
     assert_eq!((r.rows[5].target.as_str(), r.rows[5].faces), ("P2", 1));
     // 104 renamed.
-    let _ = app.update(Message::Calc(CalcEvent::Cell(4, NAME, "105".to_owned())));
-    let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
+    let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::Cell(
+        4,
+        NAME,
+        "105".to_owned(),
+    ))));
+    let r = app.gis.calc.fieldbook.reduction.as_ref().expect("reduced");
     assert!(r.rows.iter().any(|x| x.target == "105"));
-    assert_eq!(Table::get(&app.calc.fieldbook, 4, NAME), "105");
+    assert_eq!(Table::get(&app.gis.calc.fieldbook, 4, NAME), "105");
     // The second station.
     send(&mut app, Event::Station(1));
-    let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
+    let r = app.gis.calc.fieldbook.reduction.as_ref().expect("reduced");
     assert_eq!(r.rows.len(), 5);
 }
 
@@ -97,7 +106,7 @@ fn a_gsi_book_is_read_reduced_and_edited() {
 fn an_sdr_book_reduces_as_the_gsi_book() {
     let mut app = opened();
     let rows = |app: &App| {
-        let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
+        let r = app.gis.calc.fieldbook.reduction.as_ref().expect("reduced");
         r.rows
             .iter()
             .map(|x| {
@@ -115,7 +124,7 @@ fn an_sdr_book_reduces_as_the_gsi_book() {
     // The stations where they stand: names, coordinates and instrument
     // heights (GTS-7's XYZ is northing first, docs/adr/0169 5b).
     let stations = |app: &App| {
-        let book = app.calc.fieldbook.book.as_ref().expect("read");
+        let book = app.gis.calc.fieldbook.book.as_ref().expect("read");
         book.stations
             .iter()
             .map(|s| {
@@ -140,7 +149,7 @@ fn an_sdr_book_reduces_as_the_gsi_book() {
         ("sample-nikon.raw", "nikon", "Nikon RAW"),
     ] {
         send(&mut app, Event::Picked(Some(sample_named(file))));
-        let book = app.calc.fieldbook.book.as_ref().expect("read");
+        let book = app.gis.calc.fieldbook.book.as_ref().expect("read");
         assert_eq!((book.format.as_str(), book.stations.len()), (format, 2));
         assert_eq!(super::format_name(&book.format), name);
         assert_eq!(stations(&app), gsi_stations, "{file}");
@@ -160,7 +169,7 @@ fn a_jobxml_book_reduces_as_the_gsi_book_in_degrees() {
     let mut app = opened();
     type Row = (String, usize, f64, Option<f64>, Option<f64>, Option<f64>);
     let rows = |app: &App| -> Vec<Row> {
-        let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
+        let r = app.gis.calc.fieldbook.reduction.as_ref().expect("reduced");
         r.rows
             .iter()
             .map(|x| {
@@ -180,7 +189,7 @@ fn a_jobxml_book_reduces_as_the_gsi_book_in_degrees() {
         rows(&app)
     }];
     send(&mut app, Event::Picked(Some(sample_named("sample.jxl"))));
-    let book = app.calc.fieldbook.book.as_ref().expect("read");
+    let book = app.gis.calc.fieldbook.book.as_ref().expect("read");
     assert_eq!((book.format.as_str(), book.stations.len()), ("jobxml", 2));
     assert_eq!(super::format_name(&book.format), "Trimble JobXML");
     let near = |a: Option<f64>, b: Option<f64>, tolerance: f64| match (a, b) {
@@ -215,18 +224,23 @@ fn a_text_book_is_mapped_then_read() {
     let mut app = crate::files_testing::app_with_drawing();
     let _ = app.update(Message::Run("calc.fieldbook"));
     send(&mut app, Event::Picked(Some(file.clone())));
-    let book = app.calc.fieldbook.book.as_ref().expect("read");
+    let book = app.gis.calc.fieldbook.book.as_ref().expect("read");
     assert_eq!((book.format.as_str(), book.stations.len()), ("csv", 0));
     assert_eq!(book.first_line, ["İstasyon", "Nokta", "Hz", "V", "SD"]);
     for (field, col) in [(0, 0), (2, 1), (3, 2), (4, 3), (5, 4)] {
         send(&mut app, Event::Map(field, Some(col)));
     }
-    let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
+    let r = app.gis.calc.fieldbook.reduction.as_ref().expect("reduced");
     assert_eq!((r.rows.len(), r.rows[0].faces), (1, 2));
     // Opened again, the same mapping reads it at once.
     send(&mut app, Event::Picked(Some(file)));
     assert_eq!(
-        app.calc.fieldbook.book.as_ref().map(|b| b.stations.len()),
+        app.gis
+            .calc
+            .fieldbook
+            .book
+            .as_ref()
+            .map(|b| b.stations.len()),
         Some(1)
     );
     let _ = std::fs::remove_dir_all(dir);
@@ -289,7 +303,7 @@ fn screens() {
                 send(&mut app, Event::TransferTraverse);
             }
             if name == "csv" {
-                app.calc.fieldbook.mapping = super::Mapping::default();
+                app.gis.calc.fieldbook.mapping = super::Mapping::default();
                 send(&mut app, Event::Picked(Some(csv.clone())));
             }
             if name == "sdr" {
@@ -337,6 +351,7 @@ fn screens() {
 fn a_station_goes_to_kutupsal_alim() {
     let mut app = opened();
     let dh: Vec<(String, f64)> = app
+        .gis
         .calc
         .fieldbook
         .reduction
@@ -348,8 +363,8 @@ fn a_station_goes_to_kutupsal_alim() {
         .map(|r| (r.target.clone(), r.dh.expect("a height difference")))
         .collect();
     send(&mut app, Event::Transfer);
-    assert_eq!(app.calc.open, Some(Window::Polar));
-    let polar = &app.calc.polar;
+    assert_eq!(app.gis.calc.open, Some(Window::Polar));
+    let polar = &app.gis.calc.polar;
     assert_eq!(
         (
             polar.station.as_str(),
@@ -369,9 +384,15 @@ fn a_station_goes_to_kutupsal_alim() {
         ["101", "87.4329", "63.215", "101.2337", "1.7"]
     );
     // Any back point: the heights do not depend on the orientation.
-    app.calc.polar.back = "412350,4522000".to_owned();
+    app.gis.calc.polar.back = "412350,4522000".to_owned();
     let doc = app.document.as_ref().expect("a drawing");
-    let points = app.calc.polar.compute(&doc.model).points.expect("computed");
+    let points = app
+        .gis
+        .calc
+        .polar
+        .compute(&doc.model)
+        .points
+        .expect("computed");
     for ((name, want), p) in dh.iter().zip(&points) {
         let got = p.dz.expect("a height difference");
         assert!((got - want).abs() < 1e-6, "{name}: {got} ≠ {want}");
@@ -383,14 +404,21 @@ fn a_station_goes_to_kutupsal_alim() {
 #[test]
 fn a_legs_two_way_difference_is_checked() {
     let mut app = opened();
-    let diff = app.calc.fieldbook.traverse().expect("two stations").legs[0]
+    let diff = app
+        .gis
+        .calc
+        .fieldbook
+        .traverse()
+        .expect("two stations")
+        .legs[0]
         .diff
         .expect("measured from both ends")
         .abs();
     assert!(diff > 0.0, "the sample's leg differs");
     let says = |app: &App| -> Vec<String> {
         let doc = app.document.as_ref().expect("a drawing");
-        app.calc
+        app.gis
+            .calc
             .fieldbook
             .summary_lines(doc.settings(), doc.settings().angle_unit)
             .into_iter()
@@ -407,7 +435,7 @@ fn a_legs_two_way_difference_is_checked() {
         });
         doc.model.set_settings(settings);
         send(&mut app, Event::Station(0));
-        let t = app.calc.fieldbook.traverse().expect("two stations");
+        let t = app.gis.calc.fieldbook.traverse().expect("two stations");
         assert_eq!(t.legs[0].over, over, "{tolerance}");
         let lines = says(&app);
         assert!(
@@ -432,17 +460,29 @@ fn the_stations_go_to_poligon_hesabi() {
     use crate::calc::traverse::Kind;
 
     let mut app = opened();
-    let t = app.calc.fieldbook.traverse().expect("two stations").clone();
+    let t = app
+        .gis
+        .calc
+        .fieldbook
+        .traverse()
+        .expect("two stations")
+        .clone();
     assert_eq!(t.stations, ["ST1", "ST2"]);
     assert_eq!(t.angles[1], None, "no fore sight chosen yet");
     // P9 is ST2's fifth reduced row.
     send(&mut app, Event::Fore(Some(4)));
-    let t = app.calc.fieldbook.traverse().expect("two stations").clone();
+    let t = app
+        .gis
+        .calc
+        .fieldbook
+        .traverse()
+        .expect("two stations")
+        .clone();
     assert!(t.missing.is_empty());
     let leg = t.legs[0].mean.expect("measured from both ends");
     send(&mut app, Event::TransferTraverse);
-    assert_eq!(app.calc.open, Some(Window::Traverse));
-    let tr = &app.calc.traverse;
+    assert_eq!(app.gis.calc.open, Some(Window::Traverse));
+    let tr = &app.gis.calc.traverse;
     assert_eq!((tr.kind, tr.end_oriented), (Kind::Connected, true));
     assert_eq!(
         (

@@ -29,6 +29,7 @@
 //! The road windows' layout (DESIGN.md §7.19, `road_dialog::RoadDialog`): the form on the left in groups, the result
 //! on the right, read again as the form changes (no Önizle), the chart and the content in their own tabs.
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, container, row, space};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -229,7 +230,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::SurfaceAnalysis(event)
+    Message::Road(road::Event::SurfaceAnalysis(event))
 }
 
 /// A single number: a decimal comma read as a point, as the other road windows read it (lists keep the comma as their
@@ -431,7 +432,7 @@ impl App {
             return;
         };
         let comparison = surfaces.iter().find(|s| **s != first).cloned();
-        self.surface_analysis_window = Some(Box::new(Window {
+        self.road.surface_analysis_window = Some(Box::new(Window {
             mode: Mode::Analysis,
             surface: Some(first),
             comparison,
@@ -466,7 +467,7 @@ impl App {
         }));
         // The result follows the form (DESIGN.md §7.19): read at once.
         self.preview_surface_analysis();
-        self.dialog = Some(Dialog::SurfaceAnalysis);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::SurfaceAnalysis));
     }
 
     /// The sections' axis the selection gives (docs/adr/4760): its one object when it is a line or a single-part open
@@ -485,7 +486,9 @@ impl App {
     fn preview_surface_analysis(&mut self) {
         let layers = self.relation_layers();
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.surface_analysis_window.as_mut() else { return };
+        let Some(w) = self.road.surface_analysis_window.as_mut() else {
+            return;
+        };
         let read = match w.mode {
             Mode::Analysis => w.analysis().and_then(|q| road_terrains_analysis::preview(&doc.model, &q)).map(|(r, x)| (Read::Analysis(r), x)),
             Mode::Compare => w.compare(&doc.model, &layers).and_then(|q| road_terrains_compare::preview(&doc.model, &q)).map(|(r, x)| (Read::Compare(r), x)),
@@ -512,7 +515,9 @@ impl App {
     }
 
     pub(crate) fn surface_analysis_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.surface_analysis_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.surface_analysis_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Mode(m) => w.mode = m,
             Event::Surface(s) => w.surface = Some(s),
@@ -610,8 +615,12 @@ impl App {
                 };
                 let layers = self.relation_layers();
                 let materials = {
-                    let Some(w) = self.surface_analysis_window.as_ref() else { return Task::none() };
-                    let Some(doc) = self.document.as_ref() else { return Task::none() };
+                    let Some(w) = self.road.surface_analysis_window.as_ref() else {
+                        return Task::none();
+                    };
+                    let Some(doc) = self.document.as_ref() else {
+                        return Task::none();
+                    };
                     match w.materials_of(&doc.model, &layers) {
                         Ok(m) if w.zone_materials && !w.volume_grid && !w.volume_sections => m,
                         Ok(_) => Vec::new(),
@@ -621,7 +630,9 @@ impl App {
                         }
                     }
                 };
-                let Some(w) = self.surface_analysis_window.as_ref() else { return Task::none() };
+                let Some(w) = self.road.surface_analysis_window.as_ref() else {
+                    return Task::none();
+                };
                 let input = kentos_commands::TerrainsCutFill {
                     base,
                     comparison,
@@ -704,7 +715,7 @@ impl App {
                 };
                 let Some(doc) = &self.document else { return Task::none() };
                 let read = road_terrains_repair::preview(&doc.model, &input);
-                if let Some(w) = self.surface_analysis_window.as_mut() {
+                if let Some(w) = self.road.surface_analysis_window.as_mut() {
                     w.repair = Some((input, read));
                 }
                 return Task::none();
@@ -715,7 +726,7 @@ impl App {
                 let result = road_terrains_repair::execute(&mut ExecutionContext::new(&mut doc.model), input);
                 if let Some(out) = self.answered(result) {
                     self.say(Level::Success, format!("Yüzey onarıldı; {} nokta kaydı dışarıda.", out.excluded.len()));
-                    if let Some(w) = self.surface_analysis_window.as_mut() {
+                    if let Some(w) = self.road.surface_analysis_window.as_mut() {
                         w.repair = None;
                     }
                     self.preview_surface_analysis();
@@ -723,13 +734,13 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.surface_analysis_window = None;
+                self.road.surface_analysis_window = None;
                 self.dialog = None;
                 return Task::none();
             }
         }
         // The result follows the form (DESIGN.md §7.19): read again, no Önizle.
-        if let Some(w) = self.surface_analysis_window.as_mut() {
+        if let Some(w) = self.road.surface_analysis_window.as_mut() {
             w.repair = None;
         }
         self.preview_surface_analysis();
@@ -739,7 +750,7 @@ impl App {
     pub(crate) fn surface_analysis_view(&self) -> Element<'_, Message> {
         use crate::road_dialog::RoadDialog;
         use kentos_ui::widget::Banner;
-        let Some(w) = &self.surface_analysis_window else {
+        let Some(w) = &self.road.surface_analysis_window else {
             return iced::widget::text("").into();
         };
         let model = self.document.as_ref().map(|d| &d.model);
@@ -1002,7 +1013,7 @@ impl App {
     }
 
     pub(crate) fn surface_analysis_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.surface_analysis_window.is_none() {
+        if self.road.surface_analysis_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

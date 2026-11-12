@@ -18,6 +18,7 @@
 //!
 //! Every change to the drawing is the session's, through the document.
 
+use crate::gis;
 use iced::Task;
 use iced::advanced::widget::operation;
 use iced::keyboard::key::Named;
@@ -233,11 +234,14 @@ impl App {
         self.network_wanted.clear();
         self.command_wanted.clear();
         self.form_on_create = None;
-        self.attribute_values = None;
+        self.gis.attribute_values = None;
         self.block_define_closed();
         if matches!(
             self.dialog,
-            Some(crate::app::Dialog::AttributeValues | crate::app::Dialog::BlockDefine)
+            Some(
+                crate::app::Dialog::Gis(gis::GisDialogKind::AttributeValues)
+                    | crate::app::Dialog::BlockDefine
+            )
         ) {
             self.dialog = None;
         }
@@ -261,6 +265,7 @@ impl App {
         // A group template's members are written with every object the tool
         // writes, in its undo step (docs/adr/0176 §5, template_members.rs).
         let group = self
+            .arch
             .template
             .as_ref()
             .is_some_and(|run| !run.members.is_empty())
@@ -285,7 +290,7 @@ impl App {
                 shift: self.modifiers.shift(),
                 overlap_layers: &self.overlap_layers,
                 locks: &mut self.locks,
-                template: self.template.as_ref().map(|run| &run.stamp),
+                template: self.arch.template.as_ref().map(|run| &run.stamp),
                 level: level.as_deref(),
                 refused: &mut self.bonds_refused,
             },
@@ -345,7 +350,7 @@ impl App {
                 // Bilgi's card moves to the object clicked, or closes (info_card.rs, docs/adr/0225 §5).
                 ViewChange::InfoCard(card) => self.info_card = card,
                 // Konumdan adres's place: its address looked for after the update (address/).
-                ViewChange::AddressAt(p) => self.address.wanted.push(p),
+                ViewChange::AddressAt(p) => self.gis.address.wanted.push(p),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p)
@@ -606,7 +611,7 @@ impl App {
                 self.line_focused = false;
                 self.layers_keyboard = false;
                 self.blocks_panel.keyboard = false;
-                self.templates_panel.keyboard = false;
+                self.arch.templates_panel.keyboard = false;
                 self.vertices.keyboard = false;
                 // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
                 let p = self.pointer_at(at);
@@ -717,7 +722,7 @@ impl App {
             return Task::none();
         }
         // Noktalar's cell editor: Tab and Shift+Tab write the cell and go right or left (points/).
-        if self.points.editing() && press.named() == Some(Named::Tab) {
+        if self.gis.points.editing() && press.named() == Some(Named::Tab) {
             let walk = if press.modifiers.shift() {
                 crate::points::Walk::Left
             } else {
@@ -726,7 +731,7 @@ impl App {
             return self.points_event(crate::points::Event::Finish(Some(walk)));
         }
         // Öznitelik tablosu's cell editor, the same way (features/).
-        if self.features.editing() && press.named() == Some(Named::Tab) {
+        if self.gis.features.editing() && press.named() == Some(Named::Tab) {
             let walk = crate::features::walk(press.modifiers.shift());
             return self.features_event(crate::features::Event::Finish(Some(walk)));
         }
@@ -781,14 +786,14 @@ impl App {
                 return task;
             }
             // Model tasarımcısı: Ctrl+S, its undo and Delete (processing/designer/).
-            if self.dialog == Some(crate::app::Dialog::ModelDesigner)
+            if self.dialog == Some(crate::app::Dialog::Gis(gis::GisDialogKind::ModelDesigner))
                 && press.named() != Some(Named::Escape)
                 && let Some(task) = self.model_designer_key(&press)
             {
                 return task;
             }
             // Formlar: the designer's own undo and Kaydet (forms/designer.rs, docs/adr/0403 §1).
-            if self.dialog == Some(crate::app::Dialog::Forms)
+            if self.dialog == Some(crate::app::Dialog::Gis(gis::GisDialogKind::Forms))
                 && press.named() != Some(Named::Escape)
                 && let Some(task) = self.forms_key(&press)
             {
@@ -841,7 +846,8 @@ impl App {
                 // Ctrl+Enter runs a processing tool from anywhere in its window (the web's).
                 Some(Named::Enter)
                     if press.modifiers.control()
-                        && self.dialog == Some(crate::app::Dialog::Processing) =>
+                        && self.dialog
+                            == Some(crate::app::Dialog::Gis(gis::GisDialogKind::Processing)) =>
                 {
                     return self.processing_event(crate::processing::Event::Run);
                 }
@@ -884,7 +890,7 @@ impl App {
                 }
                 // ↑ ↓ in a Hesap window's table go to the row above or below (calc/grid.rs).
                 Some(key @ (Named::ArrowUp | Named::ArrowDown))
-                    if self.dialog == Some(crate::app::Dialog::Calc) =>
+                    if self.dialog == Some(crate::app::Dialog::Gis(gis::GisDialogKind::Calc)) =>
                 {
                     return crate::calc::arrow(key == Named::ArrowUp);
                 }
@@ -932,7 +938,7 @@ impl App {
             return task;
         }
         // 1. So has the Şablonlar list, after ↓ in its search (templates_panel.rs).
-        if self.templates_panel.keyboard
+        if self.arch.templates_panel.keyboard
             && let Some(task) = self.templates_key(&press)
         {
             return task;

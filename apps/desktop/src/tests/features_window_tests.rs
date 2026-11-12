@@ -3,6 +3,7 @@
 //! and the building in one undo step; a class without its layer offers Profili uygula, which adds it; KentOS Harita
 //! and KentOS GIS offer the command, Mimari and Yol do not. And its pictures.
 
+use crate::gis;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -43,14 +44,32 @@ fn coded_points_go_on_their_classes_and_strings_become_lines_and_areas() {
     let mut app = opened(snapshot(false), Some(Module::Map));
     assert!(app.offers("map.featuresCode"));
     let _ = app.update(Message::Run("map.featuresCode"));
-    assert_eq!(app.dialog, Some(Dialog::FeaturesCode));
-    assert!(app.features_code.profiles.iter().any(|(n, _)| n == "harita-varliklari"));
-    let (plan, warnings) = app.features_code.plan.clone().expect("a plan").expect("previewed");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::FeaturesCode))
+    );
+    assert!(
+        app.gis
+            .features_code
+            .profiles
+            .iter()
+            .any(|(n, _)| n == "harita-varliklari")
+    );
+    let (plan, warnings) = app
+        .gis
+        .features_code
+        .plan
+        .clone()
+        .expect("a plan")
+        .expect("previewed");
     let titles: Vec<&str> = plan.classes.iter().map(|c| c.title.as_str()).collect();
-    assert_eq!(titles, ["Kontrol noktası", "Rögar", "Ağaç", "Bordür", "Bina izi"]);
+    assert_eq!(
+        titles,
+        ["Kontrol noktası", "Rögar", "Ağaç", "Bordür", "Bina izi"]
+    );
     assert!(warnings.iter().any(|w| w.contains("“XYZ”")), "{warnings:?}");
     let before = kinds(&app).len();
-    let _ = app.update(Message::FeaturesCode(F::Apply));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesCode(F::Apply)));
     assert_eq!(app.dialog, None);
     let after = kinds(&app);
     assert_eq!(after.len(), before + 3, "two kerbs and a building");
@@ -66,12 +85,15 @@ fn coded_points_go_on_their_classes_and_strings_become_lines_and_areas() {
 fn a_class_without_its_layer_offers_the_profile_first() {
     let mut app = opened(snapshot(true), Some(Module::Map));
     let _ = app.update(Message::Run("map.featuresCode"));
-    match app.features_code.plan.clone().expect("a plan") {
+    match app.gis.features_code.plan.clone().expect("a plan") {
         Err((code, _)) => assert_eq!(code, "class_layer_missing"),
         Ok(_) => panic!("refused without the class's layer"),
     }
-    let _ = app.update(Message::FeaturesCode(F::ApplyProfile));
-    assert!(matches!(app.features_code.plan, Some(Ok(_))), "the layers added, the preview holds");
+    let _ = app.update(Message::Gis(gis::Event::FeaturesCode(F::ApplyProfile)));
+    assert!(
+        matches!(app.gis.features_code.plan, Some(Ok(_))),
+        "the layers added, the preview holds"
+    );
 }
 
 #[test]
@@ -112,7 +134,7 @@ fn screens() {
         };
         let _ = app.update(Message::Run("map.featuresCode"));
         shot(&mut app, "1-onizleme");
-        let _ = app.update(Message::FeaturesCode(F::Apply));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesCode(F::Apply)));
         shot(&mut app, "2-cizildi");
     }
 }

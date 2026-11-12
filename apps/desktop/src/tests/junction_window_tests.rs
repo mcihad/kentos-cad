@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::junction_window::Event as W;
+use crate::road;
 use kentos_commands::JunctionKind;
 
 /// A road project with `road.junctions.edit`'s drawing: alignments and two junctions.
@@ -17,23 +18,36 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Junctions(e));
+    let _ = app.update(Message::Road(road::Event::Junctions(e)));
 }
 
 #[test]
 fn the_window_saves_and_draws_the_junction() {
     let mut app = app();
     let _ = app.update(Message::Run("junction.editor"));
-    assert_eq!(app.dialog, Some(Dialog::Junctions));
-    let w = app.junction_window.as_ref().expect("open");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Junctions))
+    );
+    let w = app.road.junction_window.as_ref().expect("open");
     assert_eq!(w.chosen.as_deref(), Some("j-1"));
     let r = w.preview.report.clone().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
     assert_eq!(r.returns.len(), 4);
     send(&mut app, W::Field(2, "25".into()));
-    let wider = app.junction_window.as_ref().and_then(|w| w.preview.report.clone()).expect("reads");
+    let wider = app
+        .road
+        .junction_window
+        .as_ref()
+        .and_then(|w| w.preview.report.clone())
+        .expect("reads");
     assert!(wider.returns[0].length > r.returns[0].length);
     send(&mut app, W::Field(7, "10".into()));
-    let why = app.junction_window.as_ref().and_then(|w| w.preview.why.clone()).expect("three quadrants missing");
+    let why = app
+        .road
+        .junction_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("three quadrants missing");
     assert!(why.contains("yazılmalı"), "{why}");
     for k in 8..11 {
         send(&mut app, W::Field(k, "18".into()));
@@ -45,7 +59,7 @@ fn the_window_saves_and_draws_the_junction() {
     let before = app.document.as_ref().expect("a drawing").model.entities().count();
     send(&mut app, W::Layer("korkuluk".into()));
     send(&mut app, W::Draw);
-    assert!(app.junction_window.is_none());
+    assert!(app.road.junction_window.is_none());
     assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before + 5);
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before);
@@ -60,7 +74,12 @@ fn a_separated_junction_joins_nothing() {
     for (k, v) in [(3, "5"), (4, "5"), (5, "3.5"), (6, "3.5")] {
         send(&mut app, W::Field(k, v.into()));
     }
-    let r = app.junction_window.as_ref().and_then(|w| w.preview.report.clone()).expect("reads");
+    let r = app
+        .road
+        .junction_window
+        .as_ref()
+        .and_then(|w| w.preview.report.clone())
+        .expect("reads");
     assert!(!r.connected && r.returns.is_empty());
     send(&mut app, W::Save);
     assert_eq!(app.document.as_ref().expect("a drawing").model.road_junctions().len(), 3);
@@ -122,7 +141,12 @@ fn clearance_app() -> App {
 }
 
 fn cleared(app: &App) -> Result<kentos_commands::JunctionsCleared, String> {
-    match app.junction_window.as_ref().and_then(|w| w.clearance.clone()) {
+    match app
+        .road
+        .junction_window
+        .as_ref()
+        .and_then(|w| w.clearance.clone())
+    {
         Some(Ok((c, _))) => Ok(c),
         Some(Err(why)) => Err(why),
         None => Err("not read".into()),
@@ -134,7 +158,7 @@ fn a_separated_junction_reads_its_vertical_clearance() {
     let mut app = clearance_app();
     let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
     let _ = app.update(Message::Run("junction.editor"));
-    let w = app.junction_window.as_ref().expect("open");
+    let w = app.road.junction_window.as_ref().expect("open");
     assert_eq!(w.chosen.as_deref(), Some("j-1"));
     // The depth is the user's: none typed, none read.
     assert!(cleared(&app).is_err_and(|why| why.contains("yazılmalı")));
@@ -152,7 +176,14 @@ fn a_separated_junction_reads_its_vertical_clearance() {
     assert!(cleared(&app).is_ok());
     // An at-grade junction has none.
     send(&mut app, W::Choose(Some("j-4".into())));
-    assert!(app.junction_window.as_ref().expect("open").clearance.is_none());
+    assert!(
+        app.road
+            .junction_window
+            .as_ref()
+            .expect("open")
+            .clearance
+            .is_none()
+    );
     send(&mut app, W::Close);
     assert_eq!(app.document.as_ref().expect("a drawing").model.revision().to_string(), before);
 }
@@ -214,7 +245,12 @@ fn tie_app() -> App {
 }
 
 fn tied(app: &App) -> Result<kentos_commands::JunctionsTied, String> {
-    match app.junction_window.as_ref().and_then(|w| w.tie.clone()) {
+    match app
+        .road
+        .junction_window
+        .as_ref()
+        .and_then(|w| w.tie.clone())
+    {
         Some(Ok((t, _))) => Ok(t),
         Some(Err(why)) => Err(why),
         None => Err("not read".into()),
@@ -230,7 +266,15 @@ fn pvis(app: &App, id: &str) -> Vec<String> {
 fn an_at_grade_junction_ties_the_secondary_profile_to_the_crown() {
     let mut app = tie_app();
     let _ = app.update(Message::Run("junction.editor"));
-    assert_eq!(app.junction_window.as_ref().expect("open").chosen.as_deref(), Some("j-1"));
+    assert_eq!(
+        app.road
+            .junction_window
+            .as_ref()
+            .expect("open")
+            .chosen
+            .as_deref(),
+        Some("j-1")
+    );
     // The slopes are the user's: none typed, none read; and the secondary alignment has three profiles.
     send(&mut app, W::ClearProfile(0, Some("b-1".into())));
     send(&mut app, W::ClearProfile(1, Some("b-2".into())));
@@ -311,7 +355,13 @@ fn the_window_reads_the_corridors_overlap() {
     let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
     let _ = app.update(Message::Run("junction.editor"));
     send(&mut app, W::OverlapMode(true));
-    let read = |app: &App| app.junction_window.as_ref().and_then(|w| w.overlap.clone()).expect("asked");
+    let read = |app: &App| {
+        app.road
+            .junction_window
+            .as_ref()
+            .and_then(|w| w.overlap.clone())
+            .expect("asked")
+    };
     // The cell is the user's; the main alignment has three corridors.
     assert!(read(&app).is_err_and(|why| why.contains("yazılmalı")));
     send(&mut app, W::OverlapCell("1".into()));
@@ -325,7 +375,14 @@ fn the_window_reads_the_corridors_overlap() {
     let (o, _) = read(&app).expect("reads");
     assert_eq!(o.secondary_corridor, "c-1");
     send(&mut app, W::OverlapMode(false));
-    assert!(app.junction_window.as_ref().expect("open").overlap.is_none());
+    assert!(
+        app.road
+            .junction_window
+            .as_ref()
+            .expect("open")
+            .overlap
+            .is_none()
+    );
     send(&mut app, W::Close);
     assert_eq!(app.document.as_ref().expect("a drawing").model.revision().to_string(), before);
 }

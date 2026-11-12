@@ -6,6 +6,7 @@
 //! the project's kept or the library's put in their place as the user chose; Kitaplığa yaz writes the project's
 //! materials to a file through `export`.
 
+use crate::arch;
 use std::path::{Path, PathBuf};
 
 use iced::widget::{Column, button, container, row};
@@ -204,7 +205,7 @@ impl Libraries {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Materials(e)
+    Message::Arch(arch::Event::Materials(e))
 }
 
 /// The import that takes `entry`'s ticked materials, `conflict` for one the project has; none when none is ticked.
@@ -238,9 +239,9 @@ pub fn import_of(entry: &Entry, picked: &[bool], conflict: Conflict) -> Option<M
 impl App {
     /// The libraries listed again, the chosen one's materials ticked afresh (the new ones) and the take previewed.
     pub(crate) fn material_library_read(&mut self) {
-        let entries = self.material_libraries.entries();
+        let entries = self.arch.material_libraries.entries();
         let project = self.document.as_ref().map(|d| d.model.materials().to_vec()).unwrap_or_default();
-        let Some(w) = self.materials.as_mut() else {
+        let Some(w) = self.arch.materials.as_mut() else {
             return;
         };
         w.entry = w.entry.min(entries.len().saturating_sub(1));
@@ -255,7 +256,7 @@ impl App {
 
     /// What Seçilenleri al would do, nothing written.
     fn material_library_preview(&mut self) {
-        let (Some(w), Some(doc)) = (self.materials.as_ref(), self.document.as_ref()) else {
+        let (Some(w), Some(doc)) = (self.arch.materials.as_ref(), self.document.as_ref()) else {
             return;
         };
         let preview = w.entries.get(w.entry).and_then(|e| import_of(e, &w.picked, w.conflict)).map(|operation| {
@@ -270,7 +271,7 @@ impl App {
                 _ => Err("Önizlenemedi.".into()),
             }
         });
-        if let Some(w) = self.materials.as_mut() {
+        if let Some(w) = self.arch.materials.as_mut() {
             w.take_preview = preview;
         }
     }
@@ -278,7 +279,7 @@ impl App {
     pub(crate) fn material_library_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Tab(t) => {
-                if let Some(w) = self.materials.as_mut() {
+                if let Some(w) = self.arch.materials.as_mut() {
                     w.tab = t;
                 }
                 if t == Tab::Library {
@@ -286,35 +287,40 @@ impl App {
                 }
             }
             Event::Entry(i) => {
-                if let Some(w) = self.materials.as_mut() {
+                if let Some(w) = self.arch.materials.as_mut() {
                     w.entry = i;
                 }
                 self.material_library_read();
             }
             Event::Pick(i) => {
-                if let Some(p) = self.materials.as_mut().and_then(|w| w.picked.get_mut(i)) {
+                if let Some(p) = self
+                    .arch
+                    .materials
+                    .as_mut()
+                    .and_then(|w| w.picked.get_mut(i))
+                {
                     *p = !*p;
                 }
                 self.material_library_preview();
             }
             Event::PickAll(on) => {
-                if let Some(w) = self.materials.as_mut() {
+                if let Some(w) = self.arch.materials.as_mut() {
                     w.picked.iter_mut().for_each(|p| *p = on);
                 }
                 self.material_library_preview();
             }
             Event::Conflict(c) => {
-                if let Some(w) = self.materials.as_mut() {
+                if let Some(w) = self.arch.materials.as_mut() {
                     w.conflict = c;
                 }
                 self.material_library_preview();
             }
             Event::Take => {
-                let Some(op) = self
-                    .materials
-                    .as_ref()
-                    .and_then(|w| w.entries.get(w.entry).and_then(|e| import_of(e, &w.picked, w.conflict)))
-                else {
+                let Some(op) = self.arch.materials.as_ref().and_then(|w| {
+                    w.entries
+                        .get(w.entry)
+                        .and_then(|e| import_of(e, &w.picked, w.conflict))
+                }) else {
                     return Task::none();
                 };
                 let keep = self.materials_chosen().map(|m| m.id);
@@ -336,23 +342,25 @@ impl App {
                 );
             }
             Event::FolderChosen(Some(path)) => {
-                if self.material_libraries.add(&path) {
+                if self.arch.material_libraries.add(&path) {
                     self.say(Level::Success, format!("Malzemeler: “{}” klasörü kitaplıklara eklendi.", path.display()));
                 }
                 self.material_library_read();
             }
             Event::RemoveFolder => {
-                let folder = self.materials.as_ref().and_then(|w| match w.entries.get(w.entry).map(|e| &e.place) {
-                    Some(Place::File(p)) => p.parent().map(Path::to_path_buf),
-                    _ => None,
+                let folder = self.arch.materials.as_ref().and_then(|w| {
+                    match w.entries.get(w.entry).map(|e| &e.place) {
+                        Some(Place::File(p)) => p.parent().map(Path::to_path_buf),
+                        _ => None,
+                    }
                 });
                 if let Some(folder) = folder {
-                    self.material_libraries.remove(&folder);
+                    self.arch.material_libraries.remove(&folder);
                     self.say(
                         Level::Info,
                         format!("Malzemeler: “{}” klasörü listeden çıkarıldı; dosyalarına dokunulmadı.", folder.display()),
                     );
-                    if let Some(w) = self.materials.as_mut() {
+                    if let Some(w) = self.arch.materials.as_mut() {
                         w.entry = 0;
                     }
                     self.material_library_read();

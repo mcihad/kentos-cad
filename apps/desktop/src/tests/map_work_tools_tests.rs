@@ -4,6 +4,7 @@
 //! own line leaves both off; KentOS GIS, Mimari and Yol offer neither. A project saved with its campaign beside it and
 //! moved with its folder finds the file again by its relative path. And the pictures.
 
+use crate::map;
 use kentos_commands::{WorkFileState as F, WorkObjectRole};
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -97,11 +98,20 @@ fn the_contextual_tabs_offer_the_source_and_letting_go_by_the_selections_role() 
     assert_eq!(tree(&app).derivations.len(), 2);
     // Seçimi türet: G3 (a campaign point no record names) recorded as made from the orthophoto.
     select(&mut app, &[3]);
-    let _ = app.update(Message::MapWork(P::DeriveFrom("is-2".into())));
-    let _ = app.update(Message::MapWork(P::Derive));
+    let _ = app.update(Message::Map(map::Event::MapWork(P::DeriveFrom(
+        "is-2".into(),
+    ))));
+    let _ = app.update(Message::Map(map::Event::MapWork(P::Derive)));
     let t = tree(&app);
     let made = t.derivations.last().expect("a new derivation");
-    assert_eq!((made.id.as_str(), made.source.as_str(), made.operation.as_str()), ("tr-3", "is-2", "Elle türetme kaydı"));
+    assert_eq!(
+        (
+            made.id.as_str(),
+            made.source.as_str(),
+            made.operation.as_str()
+        ),
+        ("tr-3", "is-2", "Elle türetme kaydı")
+    );
 }
 
 #[test]
@@ -181,7 +191,7 @@ fn screens() {
             println!("{}", file.display());
         };
         for key in ["kind:campaign", "kind:reference", "item:is-1"] {
-            let _ = app.update(Message::MapWork(P::Fold(key.into())));
+            let _ = app.update(Message::Map(map::Event::MapWork(P::Fold(key.into()))));
         }
         // The GNSS point selected: Nokta's tab in front with Harita işi; Kaynağını göster brings the panel.
         select(&mut app, &[1]);

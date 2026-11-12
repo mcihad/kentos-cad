@@ -16,6 +16,7 @@
 //!   asks it again from the same cursor, Yeniden bağla… links the layer to the file's new place and then asks it again.
 //!   A page stopped with Durdur is asked again with Sürdür.
 
+use crate::gis;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -139,14 +140,14 @@ pub enum WholeEvent {
 }
 
 fn msg(e: WholeEvent) -> Message {
-    Message::Features(Event::Whole(e))
+    Message::Gis(gis::Event::Features(Event::Whole(e)))
 }
 
 impl App {
     /// The bound layer the table shows whole, while it is the layer shown and bound.
     pub(crate) fn whole_link(&self, layer: Option<&str>) -> Option<SourceLink> {
         let layer = layer?;
-        if self.features.whole.layer.as_deref() != Some(layer) {
+        if self.gis.features.whole.layer.as_deref() != Some(layer) {
             return None;
         }
         self.document
@@ -162,7 +163,7 @@ impl App {
     /// The columns shown: the layer's fields (a bound layer has its table's columns), the reader's hidden left out;
     /// a layer without fields shows the keys the rows have, in the order first met.
     pub(crate) fn whole_columns(&self, layer: &str) -> Vec<String> {
-        let hidden = self.features.hidden.get(layer);
+        let hidden = self.gis.features.hidden.get(layer);
         let fields: Vec<String> = self
             .document
             .as_ref()
@@ -171,7 +172,7 @@ impl App {
             .unwrap_or_default();
         let mut out: Vec<String> = if fields.is_empty() {
             let mut seen = Vec::new();
-            for r in &self.features.whole.rows {
+            for r in &self.gis.features.whole.rows {
                 for k in r.attrs.keys() {
                     if !seen.contains(k) {
                         seen.push(k.clone());
@@ -188,14 +189,14 @@ impl App {
 
     /// Asks a page: the first (`more` false) or the one after the rows read.
     pub(crate) fn whole_ask(&mut self, more: bool) -> Task<Message> {
-        let Some(layer) = self.features.whole.layer.clone() else {
+        let Some(layer) = self.gis.features.whole.layer.clone() else {
             return Task::none();
         };
         let Some(link) = self.whole_link(Some(&layer)) else {
             return Task::none();
         };
         let time = self.source_time(&layer);
-        let p = &mut self.features.whole;
+        let p = &mut self.gis.features.whole;
         let cursor = if more {
             match p.last.as_ref().and_then(|l| l.next.clone()) {
                 Some(next) => Some(next),
@@ -209,7 +210,7 @@ impl App {
             p.pages = 0;
             None
         };
-        let filter = js_trim(&self.features.filter).to_owned();
+        let filter = js_trim(&self.gis.features.filter).to_owned();
         let input = SourcesQuery {
             layer: Some(link.layer.clone()),
             scope: Some(QueryScope::Source),
@@ -232,7 +233,7 @@ impl App {
     /// Asks the question last asked again, as it was (docs/adr/0740 §2): a page the source did not give, or one
     /// stopped, from the same cursor and of the same file; the pages read stay.
     pub(crate) fn whole_retry(&mut self) -> Task<Message> {
-        match self.features.whole.asked.clone() {
+        match self.gis.features.whole.asked.clone() {
             Some((_, more, input)) => self.whole_send(more, input),
             None => self.whole_ask(false),
         }
@@ -240,7 +241,7 @@ impl App {
 
     /// Sends a page's question to the source on a thread of its own.
     fn whole_send(&mut self, more: bool, input: SourcesQuery) -> Task<Message> {
-        let Some(layer) = self.features.whole.layer.clone() else {
+        let Some(layer) = self.gis.features.whole.layer.clone() else {
             return Task::none();
         };
         let (Some(link), Some(doc)) = (self.whole_link(Some(&layer)), self.document.as_ref())
@@ -249,7 +250,7 @@ impl App {
         };
         let settings = doc.model.settings().clone();
         let revision = doc.model.revision().to_string();
-        let p = &mut self.features.whole;
+        let p = &mut self.gis.features.whole;
         if let Some(stop) = p.running.take() {
             stop.store(true, Ordering::Relaxed);
         }
@@ -290,7 +291,7 @@ impl App {
 
     /// The filter changed while the table shows the source: the first page is asked again.
     pub(crate) fn whole_filtered(&mut self) -> Task<Message> {
-        if self.features.whole.layer.is_some() {
+        if self.gis.features.whole.layer.is_some() {
             return self.whole_ask(false);
         }
         Task::none()
@@ -300,7 +301,7 @@ impl App {
         match e {
             WholeEvent::Toggle(on) => {
                 self.whole_stop();
-                let p = &mut self.features.whole;
+                let p = &mut self.gis.features.whole;
                 p.rows.clear();
                 p.last = None;
                 p.missed = None;
@@ -314,25 +315,25 @@ impl App {
                     return Task::none();
                 };
                 let layer = self.feature_layer(doc);
-                self.features.whole.layer = layer;
-                self.features.whole.sort = None;
-                self.features.whole.descending = false;
+                self.gis.features.whole.layer = layer;
+                self.gis.features.whole.sort = None;
+                self.gis.features.whole.descending = false;
                 return self.whole_ask(false);
             }
             WholeEvent::Width(j, width) => {
-                let Some(layer) = self.features.whole.layer.clone() else {
+                let Some(layer) = self.gis.features.whole.layer.clone() else {
                     return Task::none();
                 };
                 if let Some(c) = self.whole_columns(&layer).get(j) {
-                    self.features.widths.insert((layer, c.clone()), width);
+                    self.gis.features.widths.insert((layer, c.clone()), width);
                 }
             }
             WholeEvent::Sort(column) => {
-                let Some(layer) = self.features.whole.layer.clone() else {
+                let Some(layer) = self.gis.features.whole.layer.clone() else {
                     return Task::none();
                 };
                 let columns = self.whole_columns(&layer);
-                let p = &mut self.features.whole;
+                let p = &mut self.gis.features.whole;
                 if column == 0 {
                     (p.sort, p.descending) = (None, false);
                 } else if let Some(c) = columns.get(column - 1) {
@@ -343,13 +344,14 @@ impl App {
             WholeEvent::More => return self.whole_ask(true),
             WholeEvent::Retry => return self.whole_retry(),
             WholeEvent::Stop => {
-                let reading = self.features.whole.running.is_some();
+                let reading = self.gis.features.whole.running.is_some();
                 self.whole_stop();
-                self.features.whole.stopped = reading;
+                self.gis.features.whole.stopped = reading;
                 self.say(kentos_interaction::Level::Info, words::STOPPED);
             }
             WholeEvent::Press(i) => {
-                let (Some(doc), Some(r)) = (&self.document, self.features.whole.rows.get(i)) else {
+                let (Some(doc), Some(r)) = (&self.document, self.gis.features.whole.rows.get(i))
+                else {
                     return Task::none();
                 };
                 if let Some(slot) = r
@@ -362,13 +364,13 @@ impl App {
                 }
             }
             WholeEvent::Answered(ticket, more, answer) => {
-                if ticket != self.features.whole.ticket {
+                if ticket != self.gis.features.whole.ticket {
                     return Task::none();
                 }
-                self.features.whole.running = None;
+                self.gis.features.whole.running = None;
                 match *answer {
                     Ok(page) => {
-                        let p = &mut self.features.whole;
+                        let p = &mut self.gis.features.whole;
                         if !more {
                             p.total = page.total;
                             p.stamp = page.stamp.clone();
@@ -386,9 +388,9 @@ impl App {
                     Err(r) if r.code == "cancelled" => {}
                     // The pages read stay; the page and why are said, with what helps (docs/adr/0740 §2).
                     Err(r) => {
-                        let page = self.features.whole.pages + 1;
+                        let page = self.gis.features.whole.pages + 1;
                         self.say(kentos_interaction::Level::Warn, words::missed(page, &r.why));
-                        self.features.whole.missed = Some((page, r));
+                        self.gis.features.whole.missed = Some((page, r));
                     }
                 }
             }
@@ -397,14 +399,14 @@ impl App {
     }
 
     fn whole_stop(&mut self) {
-        if let Some(stop) = self.features.whole.running.take() {
+        if let Some(stop) = self.gis.features.whole.running.take() {
             stop.store(true, Ordering::Relaxed);
         }
     }
 
     /// Çalışma kopyası | Kaynağın tümü on the source line.
     pub(crate) fn whole_switch<'a>(&self, layer: &str) -> Element<'a, Message> {
-        let on = self.features.whole.layer.as_deref() == Some(layer);
+        let on = self.gis.features.whole.layer.as_deref() == Some(layer);
         tip(
             Segmented::new(
                 [Scope::Copy, Scope::Whole],
@@ -419,7 +421,7 @@ impl App {
 
     /// The line over the rows: how many were read, who ordered them, where the filter was checked.
     fn whole_report(&self) -> String {
-        let p = &self.features.whole;
+        let p = &self.gis.features.whole;
         let mut out = vec![words::read(p.rows.len(), p.total)];
         if let Some(plan) = p.last.as_ref().map(|l| &l.plan) {
             out.push(
@@ -449,7 +451,7 @@ impl App {
 
     /// The table on the source: the report, the rows and Sonraki sayfa.
     pub(crate) fn whole_table<'a>(&'a self, layer: &str) -> Element<'a, Message> {
-        let p = &self.features.whole;
+        let p = &self.gis.features.whole;
         let columns_shown = self.whole_columns(layer);
         let mut columns = vec![
             TableColumn::new("Sıra")
@@ -464,6 +466,7 @@ impl App {
                 SortOrder::Ascending
             });
             let width = self
+                .gis
                 .features
                 .widths
                 .get(&(layer.to_owned(), c.clone()))
@@ -532,7 +535,7 @@ impl App {
     /// checked; Sonraki sayfa, or Durdur while a page is read; a page not read says why with its way out, a stopped
     /// one Sürdür (docs/adr/0740 §2).
     pub(crate) fn whole_foot<'a>(&self) -> Element<'a, Message> {
-        let p = &self.features.whole;
+        let p = &self.gis.features.whole;
         let mut words = row![label::caption(self.whole_report()).style(style::text::muted)]
             .spacing(8)
             .align_y(Center);

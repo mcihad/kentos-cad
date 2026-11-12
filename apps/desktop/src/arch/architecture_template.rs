@@ -1,5 +1,6 @@
 //! A template is reviewed before it changes an existing drawing (ADR 0659).
 use crate::app::{App, Dialog, Message};
+use crate::arch;
 use iced::Element;
 use iced::widget::{Column, button};
 use kentos_commands::{TemplateSettingsMode, TemplatesApplied, TemplatesApply};
@@ -46,22 +47,23 @@ impl App {
         let Some(plan) = self.answered(result) else {
             return;
         };
-        self.arch_template = Some(Window {
+        self.arch.arch_template = Some(Window {
             session,
             input,
             plan,
             notice,
         });
-        self.dialog = Some(Dialog::ArchTemplate);
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::ArchTemplate));
     }
     pub(crate) fn architecture_template_event(&mut self, event: Event) {
-        if self.dialog != Some(Dialog::ArchTemplate) {
+        if self.dialog != Some(Dialog::Arch(arch::ArchDialogKind::ArchTemplate)) {
             return;
         }
         match event {
             Event::Mode { session, mode } => {
                 if self.document.as_ref().is_some_and(|d| d.session == session)
                     && self
+                        .arch
                         .arch_template
                         .as_ref()
                         .is_some_and(|w| w.session == session)
@@ -72,6 +74,7 @@ impl App {
             Event::Apply { session, input } => {
                 if self.document.as_ref().is_none_or(|d| d.session != session)
                     || self
+                        .arch
                         .arch_template
                         .as_ref()
                         .is_none_or(|w| w.session != session || w.input != input)
@@ -95,7 +98,7 @@ impl App {
                 let result =
                     templates_apply::execute(&mut ExecutionContext::new(&mut doc.model), input);
                 if let Some(out) = self.answered(result) {
-                    self.arch_template = None;
+                    self.arch.arch_template = None;
                     self.dialog = None;
                     let count = out.layers.len()
                         + out.styles.len()
@@ -118,7 +121,7 @@ impl App {
         }
     }
     pub(crate) fn architecture_template_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch_template else {
+        let Some(w) = &self.arch.arch_template else {
             return label::body("Önizleme yok.").into();
         };
         let Some(r) = &w.plan.review else {
@@ -138,14 +141,14 @@ impl App {
             choices,
             Some(usize::from(r.mode == TemplateSettingsMode::Template)),
             move |i| {
-                Message::ArchTemplate(Event::Mode {
+                Message::Arch(arch::Event::ArchTemplate(Event::Mode {
                     session,
                     mode: if i == 0 {
                         TemplateSettingsMode::Keep
                     } else {
                         TemplateSettingsMode::Template
                     },
-                })
+                }))
             },
         );
         let mut body = Column::new()
@@ -226,7 +229,7 @@ impl App {
 .padding(kentos_ui::theme::metrics::action()).style(style::button::secondary).on_press(Message::DialogClosed))
             .action(button(label::body("Uygula"))
 .padding(kentos_ui::theme::metrics::action()).style(style::button::primary).on_press_maybe(locked.is_none().then(|| {
-                Message::ArchTemplate(Event::Apply { session, input: w.input.clone() })
+                Message::Arch(arch::Event::ArchTemplate(Event::Apply { session, input: w.input.clone() }))
             })))
             .width(650.).max_height(650.)
 .modal(Message::DialogClosed)

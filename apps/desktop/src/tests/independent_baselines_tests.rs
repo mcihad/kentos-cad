@@ -3,6 +3,7 @@
 //! independent and which dependent, Oturumlar lists the session's blocks, Bağımsız bazları seç takes the dependent one
 //! (bz-3, the longest) out of the adjustment in one undo step. And the pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -28,12 +29,15 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    assert_eq!(app.dialog, Some(Dialog::SurveyNetwork));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+    );
     app
 }
 
 fn send(app: &mut App, e: N) {
-    let _ = app.update(Message::SurveyNetwork(e));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(e)));
 }
 
 fn adjust_of(app: &App, id: &str) -> bool {

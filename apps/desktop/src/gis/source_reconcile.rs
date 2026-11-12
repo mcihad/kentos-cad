@@ -11,6 +11,7 @@
 //! with the sides taken: the table's side into the layers and the layers' to the table, one undo step and one
 //! transaction. Kaynağa yaz refused because the file changed opens it.
 
+use crate::gis;
 use std::collections::BTreeMap;
 
 use iced::widget::{Column, button, container, row, scrollable, text};
@@ -98,7 +99,7 @@ impl Window {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Reconcile(event)
+    Message::Gis(gis::Event::Reconcile(event))
 }
 
 /// “2 eklenecek, 1 değişecek”: the counts that are not naught; “yok” when all are.
@@ -239,14 +240,14 @@ impl App {
         };
         match planned {
             CommandResult::Completed { output, .. } => {
-                self.reconcile = Some(Window {
+                self.gis.reconcile = Some(Window {
                     layer: layer.to_owned(),
                     with,
                     plan: output,
                     sides,
                     refused,
                 });
-                self.dialog = Some(Dialog::SourceReconcile);
+                self.dialog = Some(Dialog::Gis(gis::GisDialogKind::SourceReconcile));
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
@@ -258,7 +259,7 @@ impl App {
     pub(crate) fn reconcile_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Side(object, side) => {
-                if let Some(w) = self.reconcile.as_mut() {
+                if let Some(w) = self.gis.reconcile.as_mut() {
                     // A group is taken whole: the side goes to every member.
                     let group = w
                         .plan
@@ -287,7 +288,7 @@ impl App {
                 self.reconcile_replan();
             }
             Event::All(side) => {
-                if let Some(w) = self.reconcile.as_mut() {
+                if let Some(w) = self.gis.reconcile.as_mut() {
                     for c in &w.plan.conflicts {
                         w.sides.insert(c.object.clone(), side);
                     }
@@ -306,7 +307,7 @@ impl App {
             }
             Event::Apply => self.reconcile_apply(),
             Event::Cancel => {
-                self.reconcile = None;
+                self.gis.reconcile = None;
                 self.dialog = None;
             }
         }
@@ -315,12 +316,12 @@ impl App {
 
     /// The plan again with the sides taken, so the counts say what Uzlaştır will do.
     fn reconcile_replan(&mut self) {
-        let Some(w) = self.reconcile.clone() else {
+        let Some(w) = self.gis.reconcile.clone() else {
             return;
         };
         match self.reconcile_plan(&w.layer, &w.with, &w.sides) {
             Some(CommandResult::Completed { output, .. }) => {
-                if let Some(w) = self.reconcile.as_mut() {
+                if let Some(w) = self.gis.reconcile.as_mut() {
                     w.plan = output;
                 }
             }
@@ -378,7 +379,7 @@ impl App {
     }
 
     fn reconcile_apply(&mut self) {
-        let Some(w) = self.reconcile.clone() else {
+        let Some(w) = self.gis.reconcile.clone() else {
             return;
         };
         let Some(doc) = self.document.as_mut() else {
@@ -390,7 +391,7 @@ impl App {
         );
         match answer {
             CommandResult::Completed { output, warnings } => {
-                self.reconcile = None;
+                self.gis.reconcile = None;
                 self.dialog = None;
                 let name = self.bound_name(&w.layer);
                 self.announce(
@@ -417,7 +418,7 @@ impl App {
     }
 
     pub(crate) fn reconcile_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.reconcile else {
+        let Some(w) = &self.gis.reconcile else {
             return text("").into();
         };
         let p = &w.plan;

@@ -5,6 +5,7 @@
 //! cargo test -p kentos-desktop --lib form_fit_screens -- --ignored --nocapture --test-threads=1
 //! ```
 
+use crate::gis;
 use std::path::PathBuf;
 
 use iced::Size;
@@ -401,7 +402,7 @@ fn district_form_screens() {
         }
         designer(&mut app, Event::Save);
         snapshot.settle(&mut app, App::view, &mut update);
-        let _ = app.update(Message::Forms(Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::Forms(Event::Cancel)));
         app.selection.set([Slot(1)]);
         run(&mut app, "data.formEdit");
         snapshot.settle(&mut app, App::view, &mut update);
@@ -418,7 +419,9 @@ fn district_form_screens() {
                 Input::Key(iced::keyboard::key::Named::Escape),
             );
         }
-        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(
+            crate::forms::entry::Event::Cancel,
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         // The same form made full screen (docs/adr/0746): the fields in two columns (docs/adr/0751).
         sizes::set(
@@ -438,17 +441,25 @@ fn district_form_screens() {
             snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
             shot(&mut snapshot, &app, "5-zaman-secici");
         }
-        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(
+            crate::forms::entry::Event::Cancel,
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         // Alanlar on the province field and on a made one: what their columns say (docs/adr/0753).
         run(&mut app, "layer.fields");
-        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(4)));
+        let _ = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Choose(4),
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "6-alanlar-baglanti");
-        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(0)));
+        let _ = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Choose(0),
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "6b-alanlar-veritabani");
-        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Cancel,
+        )));
     }
     sizes::load(Default::default());
 }
@@ -573,7 +584,10 @@ fn a_generated_field_is_shown_and_never_edited() {
     for m in app.features_edit(1, "ana_hesap", "999").expect("the cell") {
         let _ = app.update(m);
     }
-    assert!(!app.features.editing(), "the generated cell does not open");
+    assert!(
+        !app.gis.features.editing(),
+        "the generated cell does not open"
+    );
     assert_eq!(
         attrs(&app).get("ana_hesap").map(String::as_str),
         Some("104")
@@ -679,7 +693,7 @@ fn ledger_form_screens() {
         }
         designer(&mut app, Event::Save);
         snapshot.settle(&mut app, App::view, &mut update);
-        let _ = app.update(Message::Forms(Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::Forms(Event::Cancel)));
         app.selection.set([Slot(1)]);
         run(&mut app, "data.formEdit");
         snapshot.settle(&mut app, App::view, &mut update);
@@ -688,7 +702,9 @@ fn ledger_form_screens() {
             snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -30.0));
         }
         shot(&mut snapshot, &app, "3-formla-duzenle");
-        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(
+            crate::forms::entry::Event::Cancel,
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         // Full screen: the fields in two columns, the generated ones at the end.
         sizes::set(
@@ -706,7 +722,9 @@ fn ledger_form_screens() {
             snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -30.0));
         }
         shot(&mut snapshot, &app, "4-tam-ekran");
-        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(
+            crate::forms::entry::Event::Cancel,
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         // Öznitelikler on the account, down to its generated rows.
         app.props_closed.insert("general");
@@ -719,14 +737,18 @@ fn ledger_form_screens() {
         shot(&mut snapshot, &app, "5-oznitelikler");
         // Alanlar on a generated field.
         run(&mut app, "layer.fields");
-        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(17)));
+        let _ = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Choose(17),
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "6-alanlar-hesaplanan");
-        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Cancel));
+        let _ = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Cancel,
+        )));
         snapshot.settle(&mut app, App::view, &mut update);
         // The attribute table, the account's code, name, note and generated columns shown (Sütunlar ▾): the generated
         // cell pressed to edit stays shut, a plain one opens.
-        app.features.hidden.insert(
+        app.gis.features.hidden.insert(
             "hesap_plani".into(),
             [
                 "genel_id",

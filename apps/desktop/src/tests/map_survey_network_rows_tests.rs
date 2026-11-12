@@ -4,6 +4,7 @@
 //! reason turns the adjustment out of date and Geri al takes it back; a known point leaves and comes back the same way;
 //! the adjustment's button opens Ağ dengelemesi. And the pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use kentos_ui::widget::Status;
 use serde_json::Value;
@@ -28,14 +29,14 @@ fn opened() -> App {
 fn accepted() -> App {
     let mut app = opened();
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::SurveyNetwork(N::Class(Class::C2)));
-    let _ = app.update(Message::SurveyNetwork(N::Accept));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Class(Class::C2))));
+    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
     app.dialog = None;
     app
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::MapSurvey(e));
+    let _ = app.update(Message::Map(map::Event::MapSurvey(e)));
 }
 
 fn tree(app: &App) -> kentos_commands::MapSurveyTree {
@@ -79,7 +80,10 @@ fn the_accepted_adjustment_selects_its_points_and_goes_out_of_date_with_a_baseli
     assert!(tree(&app).known.iter().all(|k| k.excluded.is_none()));
     // The adjustment's button opens Ağ dengelemesi.
     send(&mut app, P::Network);
-    assert_eq!(app.dialog, Some(Dialog::SurveyNetwork));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+    );
 }
 
 /// The archive panel with Bazlar, Bilinen noktalar and Dengelemeler, a baseline left out (the adjustment out of

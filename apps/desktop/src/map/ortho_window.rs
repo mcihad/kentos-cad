@@ -4,6 +4,7 @@
 //! package's), the ground sampling distance against Article 54's, the fit points apart, and a KOH under half a pixel;
 //! the table lists every point's error (centimetres). CSV kaydet writes them.
 
+use crate::map;
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
@@ -48,7 +49,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Ortho(e)
+    Message::Map(map::Event::Ortho(e))
 }
 
 fn cm(v: f64) -> String {
@@ -81,7 +82,7 @@ pub fn csv(r: &OrthophotoChecked) -> String {
 
 impl App {
     fn ortho_run(&mut self) {
-        let s = &self.ortho;
+        let s = &self.map.ortho;
         let input = OrthophotoCheck {
             raster: s.raster.clone(),
             known: s.known.clone(),
@@ -90,14 +91,18 @@ impl App {
             scale: Some(s.scale.max(1.0) as u32),
             rules: None,
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.ortho.answer = Some(match orthophoto_check::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Denetlenemedi.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.map.ortho.answer = Some(
+            match orthophoto_check::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Denetlenemedi.".to_owned()),
+            },
+        );
     }
 
     /// Ortofoto doğruluğu (`raster.accuracy`): the one selected raster; the layers guessed from their names (a GNSS
@@ -135,7 +140,7 @@ impl App {
             .filter(|o| *o != known)
             .or_else(|| with_points.iter().map(|(id, _)| id.clone()).find(|id| *id != known))
             .unwrap_or_default();
-        self.ortho = State {
+        self.map.ortho = State {
             raster,
             layers,
             known,
@@ -145,13 +150,15 @@ impl App {
             answer: None,
         };
         self.ortho_run();
-        self.dialog = Some(Dialog::Ortho);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::Ortho));
         Task::none()
     }
 
     /// The points written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn ortho_save(&mut self, path: PathBuf) {
-        let Some(Ok(r)) = &self.ortho.answer else { return };
+        let Some(Ok(r)) = &self.map.ortho.answer else {
+            return;
+        };
         match std::fs::write(&path, csv(r)) {
             Ok(()) => self.say(Level::Success, format!("{TITLE}: {} nokta {} dosyasına yazıldı.", r.points.len(), path.display())),
             Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
@@ -160,10 +167,10 @@ impl App {
 
     pub(crate) fn ortho_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Known(v) => self.ortho.known = v,
-            Event::Observed(v) => self.ortho.observed = v,
-            Event::Field(v) => self.ortho.field = v,
-            Event::Scale(v) => self.ortho.scale = v,
+            Event::Known(v) => self.map.ortho.known = v,
+            Event::Observed(v) => self.map.ortho.observed = v,
+            Event::Field(v) => self.map.ortho.field = v,
+            Event::Scale(v) => self.map.ortho.scale = v,
             Event::Save => {
                 return Task::perform(
                     async {
@@ -184,7 +191,7 @@ impl App {
             }
             Event::Saved(None) => return Task::none(),
             Event::Close => {
-                self.ortho = State::default();
+                self.map.ortho = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -194,7 +201,7 @@ impl App {
     }
 
     pub(crate) fn ortho_view(&self) -> Element<'_, Message> {
-        let s = &self.ortho;
+        let s = &self.map.ortho;
         let form = Form::new()
             .label_width(130.0)
             .field(

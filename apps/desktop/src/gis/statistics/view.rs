@@ -2,6 +2,7 @@
 //! bar (Katman ▾, Göster ▾, the count; Grafik and Panoya kopyala at the
 //! right) over the summary table and the chosen field's statistics.
 
+use crate::gis;
 use iced::widget::{button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length};
 use kentos_ui::icon::{Tone, icon};
@@ -20,7 +21,7 @@ use crate::features::Show;
 use crate::icons::from_web;
 
 fn msg(e: Event) -> Message {
-    Message::Statistics(e)
+    Message::Gis(gis::Event::Statistics(e))
 }
 
 /// The detail pane's width (the web's 320 px).
@@ -56,7 +57,7 @@ impl App {
     /// The İstatistik tab.
     pub(crate) fn statistics_tab(&self) -> Element<'_, Message> {
         self.stats_refresh();
-        let now = self.charts.stats.borrow();
+        let now = self.gis.charts.stats.borrow();
         let bar = self.statistics_bar(&now);
         let table = self.summary_table(&now);
         let detail = match self.whole_pane() {
@@ -103,7 +104,9 @@ impl App {
         .placeholder(texts::NO_LAYERS);
         let show = Select::new(
             Show::WITH_TABLE.iter().map(|s| Choice::new(s.label())),
-            Show::WITH_TABLE.iter().position(|s| *s == self.charts.show),
+            Show::WITH_TABLE
+                .iter()
+                .position(|s| *s == self.gis.charts.show),
             |i| msg(Event::Show(Show::WITH_TABLE[i])),
         );
         let filters = row![
@@ -115,7 +118,12 @@ impl App {
         ]
         .spacing(8)
         .align_y(Center);
-        let field = self.charts.field.clone().filter(|f| now.keys.contains(f));
+        let field = self
+            .gis
+            .charts
+            .field
+            .clone()
+            .filter(|f| now.keys.contains(f));
         let mut actions = row![].spacing(10).align_y(Center);
         // Grafik only where the program has its tab (KentOS GIS's, docs/adr/0802).
         if self.shows_bottom_tab(crate::bottom::BottomTab::Chart) {
@@ -168,7 +176,7 @@ impl App {
             })
             .collect();
         let keys = now.keys.clone();
-        let chosen = self.charts.field.clone();
+        let chosen = self.gis.charts.field.clone();
         let count = lines.len();
         let empty = if self.chart_layer().is_none() {
             texts::NO_LAYERS
@@ -214,7 +222,7 @@ impl App {
                 Choice::new(whole_texts::LOADED),
                 Choice::new(whole_texts::WHOLE),
             ],
-            Some(usize::from(self.charts.whole.on)),
+            Some(usize::from(self.gis.charts.whole.on)),
             |i| msg(Event::Scope(i == 1)),
         );
         Some(tip(
@@ -233,11 +241,11 @@ impl App {
     /// Kaynağın tümü's pane, while that scope is chosen for a bound layer and a field: the source's answer, or
     /// that it is being read (with Durdur).
     fn whole_pane<'a>(&self) -> Option<Element<'a, Message>> {
-        let w = &self.charts.whole;
+        let w = &self.gis.charts.whole;
         if !w.on || self.stats_bound().is_none() {
             return None;
         }
-        let field = self.charts.field.clone()?;
+        let field = self.gis.charts.field.clone()?;
         let note = |t: String| -> Element<'a, Message> {
             container(label::muted(t).size(typography::caption()))
                 .padding([10, 12])

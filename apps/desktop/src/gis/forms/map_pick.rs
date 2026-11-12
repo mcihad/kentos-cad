@@ -24,7 +24,7 @@ pub struct FormPick {
 impl App {
     /// Haritadan seç pressed on the item `item` of the open form.
     pub(crate) fn pick_on_map(&mut self, item: &str) -> Task<Message> {
-        let (Some(e), Some(doc)) = (self.form_entry.as_ref(), self.document.as_ref()) else {
+        let (Some(e), Some(doc)) = (self.gis.form_entry.as_ref(), self.document.as_ref()) else {
             return Task::none();
         };
         let Some((layer, _, label)) = e.map_pick_of(item) else {
@@ -49,8 +49,12 @@ impl App {
             return Task::none();
         }
         let docked = e.docked;
-        let entry = if docked { None } else { self.form_entry.take() };
-        self.form_pick = Some(FormPick {
+        let entry = if docked {
+            None
+        } else {
+            self.gis.form_entry.take()
+        };
+        self.gis.form_pick = Some(FormPick {
             item: item.to_owned(),
             entry,
             before: self.selection.ids().to_vec(),
@@ -71,7 +75,7 @@ impl App {
     /// The object picked (or none, Esc): the window comes back and the value is written, or why not is
     /// said. Returns false when no form was picking.
     pub(crate) fn form_entry_picked(&mut self, keep: bool) -> bool {
-        let Some(pick) = self.form_pick.take() else {
+        let Some(pick) = self.gis.form_pick.take() else {
             return false;
         };
         let picked = keep
@@ -79,10 +83,10 @@ impl App {
             .flatten();
         self.selection.set(pick.before);
         if let Some(entry) = pick.entry {
-            self.form_entry = Some(entry);
+            self.gis.form_entry = Some(entry);
         }
         let (Some(slot), Some(doc), Some(e)) =
-            (picked, self.document.as_ref(), self.form_entry.as_ref())
+            (picked, self.document.as_ref(), self.gis.form_entry.as_ref())
         else {
             return true;
         };
@@ -116,27 +120,32 @@ mod tests {
         crate::form_scenes::sources(&mut app);
         app.selection.set([Slot(5)]);
         crate::tools_scenes::run(&mut app, "data.formEdit");
-        assert!(app.form_entry.is_some(), "the form is open");
+        assert!(app.gis.form_entry.is_some(), "the form is open");
         app
     }
 
     fn typed(app: &App) -> Option<String> {
-        app.form_entry.as_ref().and_then(|e| e.value_of("Parsel"))
+        app.gis
+            .form_entry
+            .as_ref()
+            .and_then(|e| e.value_of("Parsel"))
     }
 
     /// Haritadan seç on the parcel item and a click on the map at `at` (from the drawing's origin).
     fn picked(app: &mut App, at: [f64; 2]) {
-        let _ = app.update(Message::FormEntry(Event::PickOnMap("parsel".into())));
-        assert!(app.form_entry.is_none(), "the window steps aside");
-        assert!(app.form_pick.is_some());
+        let _ = app.update(Message::Gis(crate::gis::Event::FormEntry(
+            Event::PickOnMap("parsel".into()),
+        )));
+        assert!(app.gis.form_entry.is_none(), "the window steps aside");
+        assert!(app.gis.form_pick.is_some());
         crate::tools_scenes::click(app, at);
-        assert!(app.form_pick.is_none(), "the click ends the pick");
+        assert!(app.gis.form_pick.is_none(), "the click ends the pick");
     }
 
     #[test]
     fn the_list_item_offers_a_pick_and_a_read_only_one_does_not() {
         let app = building();
-        let e = app.form_entry.as_ref().expect("the form");
+        let e = app.gis.form_entry.as_ref().expect("the form");
         assert!(e.map_pick_of("parsel").is_some());
         assert!(e.map_pick_of("kat").is_none(), "no list");
         assert!(
@@ -150,7 +159,7 @@ mod tests {
         let mut app = building();
         // Inside 101/5, away from the building on it.
         picked(&mut app, [3.0, 21.0]);
-        assert!(app.form_entry.is_some(), "the window is back");
+        assert!(app.gis.form_entry.is_some(), "the window is back");
         let uid = app
             .document
             .as_ref()
@@ -176,12 +185,17 @@ mod tests {
     #[test]
     fn esc_brings_the_window_back_untouched() {
         let mut app = building();
-        let _ = app.update(Message::FormEntry(Event::PickOnMap("parsel".into())));
+        let _ = app.update(Message::Gis(crate::gis::Event::FormEntry(
+            Event::PickOnMap("parsel".into()),
+        )));
         crate::tools_scenes::click(&mut app, [100.0, 100.0]);
-        assert!(app.form_pick.is_some(), "a click on nothing takes nothing");
+        assert!(
+            app.gis.form_pick.is_some(),
+            "a click on nothing takes nothing"
+        );
         app.cancel();
-        assert!(app.form_pick.is_none());
-        assert!(app.form_entry.is_some());
+        assert!(app.gis.form_pick.is_none());
+        assert!(app.gis.form_entry.is_some());
         assert_eq!(typed(&app), None);
     }
 
@@ -191,9 +205,11 @@ mod tests {
         if let Some(doc) = app.document.as_mut() {
             doc.model.set_layer_visible("parsel", false);
         }
-        let _ = app.update(Message::FormEntry(Event::PickOnMap("parsel".into())));
-        assert!(app.form_entry.is_some(), "the window stays");
-        assert!(app.form_pick.is_none());
+        let _ = app.update(Message::Gis(crate::gis::Event::FormEntry(
+            Event::PickOnMap("parsel".into()),
+        )));
+        assert!(app.gis.form_entry.is_some(), "the window stays");
+        assert!(app.gis.form_pick.is_none());
         assert!(crate::files_testing::last_said(&app).contains("görünmüyor"));
     }
 }

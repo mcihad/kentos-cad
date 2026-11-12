@@ -62,7 +62,7 @@ impl App {
     /// The keys of the columns the reader hid on `layer`.
     pub(crate) fn hidden_columns(&self, layer: Option<&str>) -> BTreeSet<String> {
         layer
-            .and_then(|l| self.features.hidden.get(l))
+            .and_then(|l| self.gis.features.hidden.get(l))
             .cloned()
             .unwrap_or_default()
     }
@@ -92,7 +92,7 @@ impl App {
         else {
             return;
         };
-        let hidden = self.features.hidden.entry(layer.clone()).or_default();
+        let hidden = self.gis.features.hidden.entry(layer.clone()).or_default();
         match event {
             ColumnsEvent::Toggle(key) => {
                 if !hidden.remove(&key) {
@@ -102,11 +102,11 @@ impl App {
             ColumnsEvent::ShowAll => hidden.clear(),
         }
         if hidden.is_empty() {
-            self.features.hidden.remove(&layer);
+            self.gis.features.hidden.remove(&layer);
         }
         // A cell edited in a column that went is not edited any more.
-        self.features.editing = None;
-        self.features.changed();
+        self.gis.features.editing = None;
+        self.gis.features.changed();
     }
 
     /// What Kopyala writes: the rows shown as tab-separated lines, how many rows, and the headers of the fields a
@@ -182,7 +182,7 @@ impl App {
             return;
         };
         // The tabs read the table's layer over the rows the table shows.
-        self.charts.show = Show::Table;
+        self.gis.charts.show = Show::Table;
         match to {
             Analyse::Statistics => self.open_statistics(Some(layer)),
             Analyse::Chart => self.open_chart(Some(layer), None, None),
@@ -201,7 +201,7 @@ impl App {
     /// What Göster ▾ = Tablonun süzgeciyle depends on: the table's choices, and the selection and the view while
     /// the table's own Göster takes them.
     pub(crate) fn table_rows_stamp(&self) -> (u64, [u64; 4]) {
-        let p = &self.features;
+        let p = &self.gis.features;
         let selection = if p.show == Show::Selected {
             self.selection.version()
         } else {

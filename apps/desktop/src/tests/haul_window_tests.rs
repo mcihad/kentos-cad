@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::haul_window::Event as W;
+use crate::road;
 
 /// A road project with `road.hauls.query`'s drawing: two corridors, two volumes and two diagrams.
 fn app() -> App {
@@ -17,7 +18,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Hauls(e));
+    let _ = app.update(Message::Road(road::Event::Hauls(e)));
 }
 
 fn model(app: &mut App) -> &mut kentos_domain::Document {
@@ -28,18 +29,27 @@ fn model(app: &mut App) -> &mut kentos_domain::Document {
 fn the_window_makes_a_diagram_with_a_site_and_reads_it() {
     let mut app = app();
     let _ = app.update(Message::Run("haul.new"));
-    assert_eq!(app.dialog, Some(Dialog::Hauls));
+    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Hauls)));
     send(&mut app, W::Name("Döküm Brükneri".into()));
     send(&mut app, W::Field(1, "200".into()));
     send(&mut app, W::Add);
     send(&mut app, W::Site(0, 2, "350".into()));
     send(&mut app, W::Site(0, 3, "9000".into()));
-    let w = app.haul_window.as_ref().expect("open");
-    let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
-    assert!(rep.points.windows(2).any(|p| p[0][0] == 350.0 && p[1][0] == 350.0), "the site's step");
+    let w = app.road.haul_window.as_ref().expect("open");
+    let rep = w
+        .preview
+        .report
+        .as_ref()
+        .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    assert!(
+        rep.points
+            .windows(2)
+            .any(|p| p[0][0] == 350.0 && p[1][0] == 350.0),
+        "the site's step"
+    );
     assert!(rep.hauled > 1000.0 && rep.moment > 0.0, "{rep:?}");
     send(&mut app, W::Save);
-    assert!(app.haul_window.is_none(), "Kaydet closes the window");
+    assert!(app.road.haul_window.is_none(), "Kaydet closes the window");
     let doc = model(&mut app);
     assert_eq!(doc.road_hauls().len(), 3);
     assert_eq!(doc.road_hauls()[2].free, Some(200.0));
@@ -53,23 +63,40 @@ fn prices_and_a_payload_give_the_cost_and_are_written() {
     send(&mut app, W::Choose(0));
     send(&mut app, W::Field(1, "100".into()));
     send(&mut app, W::Field(3, "12,5".into()));
-    assert!(app.haul_window.as_ref().is_some_and(|w| w.preview.why.is_some()), "a price wants a number in the dot");
+    assert!(
+        app.road
+            .haul_window
+            .as_ref()
+            .is_some_and(|w| w.preview.why.is_some()),
+        "a price wants a number in the dot"
+    );
     send(&mut app, W::Field(3, "12.5".into()));
     assert!(
-        app.haul_window.as_ref().and_then(|w| w.preview.why.as_deref()).is_some_and(|e| e.contains("para birimi")),
+        app.road
+            .haul_window
+            .as_ref()
+            .and_then(|w| w.preview.why.as_deref())
+            .is_some_and(|e| e.contains("para birimi")),
         "a price wants a currency"
     );
     send(&mut app, W::Field(2, "TL".into()));
     send(&mut app, W::Field(6, "15".into()));
-    let w = app.haul_window.as_ref().expect("open");
-    let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    let w = app.road.haul_window.as_ref().expect("open");
+    let rep = w
+        .preview
+        .report
+        .as_ref()
+        .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
     let cost = rep.cost.as_ref().expect("priced");
     assert_eq!(cost.currency, "TL");
     assert!((cost.total - rep.over_moment / 1000.0 * 12.5).abs() < 1e-6, "{cost:?} {rep:?}");
     assert!(cost.trips.is_some_and(|t| t >= 1.0));
     send(&mut app, W::Save);
-    assert!(app.haul_window.is_none());
-    let saved = model(&mut app).road_hauls()[0].cost.clone().expect("written");
+    assert!(app.road.haul_window.is_none());
+    let saved = model(&mut app).road_hauls()[0]
+        .cost
+        .clone()
+        .expect("written");
     assert_eq!((saved.overhaul, saved.payload), (Some(12.5), Some(15.0)));
 }
 
@@ -81,9 +108,15 @@ fn a_bad_site_is_refused_and_the_window_stays() {
     send(&mut app, W::Add);
     send(&mut app, W::Site(0, 2, "9000".into()));
     send(&mut app, W::Site(0, 3, "10".into()));
-    assert!(app.haul_window.as_ref().is_some_and(|w| w.preview.why.is_some()), "a site off the stations");
+    assert!(
+        app.road
+            .haul_window
+            .as_ref()
+            .is_some_and(|w| w.preview.why.is_some()),
+        "a site off the stations"
+    );
     send(&mut app, W::Save);
-    assert!(app.haul_window.is_some());
+    assert!(app.road.haul_window.is_some());
     assert!(model(&mut app).road_hauls()[0].sites.is_empty());
 }
 

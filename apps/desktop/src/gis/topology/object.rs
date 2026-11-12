@@ -120,8 +120,8 @@ impl App {
             self.warn("Bu bulgu son denetimde yok; Topoloji sekmesinde yeniden denetleyin.");
             return;
         };
-        self.topology.filter = Filter::All;
-        self.topology.rule = None;
+        self.gis.topology.filter = Filter::All;
+        self.gis.topology.rule = None;
         self.show_bottom(BottomTab::Topology);
         if let Some(row) = self.topology_shown().iter().position(|&i| i == at) {
             self.topology_press(row);

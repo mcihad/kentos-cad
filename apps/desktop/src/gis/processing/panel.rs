@@ -5,6 +5,7 @@
 //! selection list); a run opens again with its values, and selects what it
 //! made while those objects are still there.
 
+use crate::gis;
 use std::collections::BTreeSet;
 use std::fmt;
 
@@ -72,7 +73,7 @@ impl fmt::Display for TabButton {
 }
 
 fn ev(e: Event) -> Message {
-    Message::Processing(super::Event::Panel(e))
+    Message::Gis(gis::Event::Processing(super::Event::Panel(e)))
 }
 
 /// The models' branch sits first; it is not a registry category.
@@ -90,6 +91,7 @@ impl App {
     pub(crate) fn offers_model(&self, model: &str) -> bool {
         self.offers(&format!("{}{model}", crate::catalog::PROCESSING_MODEL))
             && self
+                .gis
                 .processing
                 .registry
                 .model(model)
@@ -98,24 +100,25 @@ impl App {
 
     /// The tab's header note: “4 araç” (those this program offers) or “3 kayıt”.
     pub(crate) fn processing_meta(&self) -> String {
-        match self.processing.panel.tab {
+        match self.gis.processing.panel.tab {
             Tab::Tools => format!(
                 "{} araç",
-                self.processing
+                self.gis
+                    .processing
                     .registry
                     .tools()
                     .iter()
                     .filter(|t| self.offers_tool(&t.id))
                     .count()
             ),
-            Tab::History => format!("{} kayıt", self.processing.runner.history().len()),
+            Tab::History => format!("{} kayıt", self.gis.processing.runner.history().len()),
         }
     }
 
     /// The tab's body.
     pub(crate) fn processing_panel(&self) -> Element<'_, Message> {
-        let state = &self.processing.panel;
-        let runs = self.processing.runner.history();
+        let state = &self.gis.processing.panel;
+        let runs = self.gis.processing.runner.history();
         let switch = Segmented::new(
             [
                 TabButton(Tab::Tools, runs.len()),
@@ -135,8 +138,8 @@ impl App {
     }
 
     fn processing_tools(&self) -> Element<'_, Message> {
-        let state = &self.processing.panel;
-        let registry = &self.processing.registry;
+        let state = &self.gis.processing.panel;
+        let registry = &self.gis.processing.registry;
         let query = state.search.trim();
         let search = container(
             row![
@@ -283,7 +286,7 @@ impl App {
             Status::Error => (Icon::Error, Tone::Danger),
         };
         let alive = self.alive(r).len();
-        let known = self.processing.registry.get(&r.tool_id).is_some();
+        let known = self.gis.processing.registry.get(&r.tool_id).is_some();
         // A decimal point, as every number the app writes (the web's `toFixed(1)`).
         let took = if r.ms < 1000 {
             format!("{} ms", r.ms)
@@ -378,16 +381,17 @@ impl App {
 
     pub(crate) fn processing_panel_event(&mut self, e: Event) {
         match e {
-            Event::Tab(tab) => self.processing.panel.tab = tab,
-            Event::Search(text) => self.processing.panel.search = text,
+            Event::Tab(tab) => self.gis.processing.panel.tab = tab,
+            Event::Search(text) => self.gis.processing.panel.search = text,
             Event::Fold(id) => {
-                let folded = &mut self.processing.panel.folded;
+                let folded = &mut self.gis.processing.panel.folded;
                 if !folded.remove(&id) {
                     folded.insert(id);
                 }
             }
             Event::Reopen(seq) => {
                 let run = self
+                    .gis
                     .processing
                     .runner
                     .history()
@@ -400,6 +404,7 @@ impl App {
             }
             Event::SelectRun(seq) => {
                 let ids = self
+                    .gis
                     .processing
                     .runner
                     .history()
@@ -414,8 +419,8 @@ impl App {
             }
             Event::EditModel(id) => {
                 // The model's own window steps aside for the designer (the web's).
-                if self.dialog == Some(crate::app::Dialog::Processing) {
-                    self.processing.dialog = None;
+                if self.dialog == Some(crate::app::Dialog::Gis(gis::GisDialogKind::Processing)) {
+                    self.gis.processing.dialog = None;
                     self.dialog = None;
                 }
                 self.open_model_designer(Some(&id));

@@ -3,6 +3,7 @@
 //! right) over the settings column (Kaynak, Göster, the kind's settings and
 //! the notes under them) and the chart, or its table.
 
+use crate::gis;
 use iced::widget::{button, canvas, column, container, row, scrollable, space, stack};
 use iced::{Center, Element, Fill, Length};
 use kentos_geometry_core::ops::charts::data::Kind;
@@ -26,7 +27,7 @@ use crate::features::Show;
 use crate::icons::from_web;
 
 fn msg(e: Event) -> Message {
-    Message::Charts(e)
+    Message::Gis(gis::Event::Charts(e))
 }
 
 fn set(s: Setting) -> Message {
@@ -107,7 +108,7 @@ impl App {
     /// The Grafik tab.
     pub(crate) fn chart_tab(&self) -> Element<'_, Message> {
         self.chart_refresh();
-        let now = self.charts.chart.borrow();
+        let now = self.gis.charts.chart.borrow();
         let spec = now.spec.clone();
         let bar = self.chart_bar(spec.as_ref().map(|s| s.kind), now.table.is_some());
         let settings = self.chart_settings(
@@ -125,14 +126,14 @@ impl App {
             let selects = !self.charting_table();
             stack![
                 canvas(Chart {
-                    panel: &self.charts,
+                    panel: &self.gis.charts,
                     stamp,
                     scale,
                 })
                 .width(Fill)
                 .height(Fill),
                 canvas(Overlay {
-                    panel: &self.charts,
+                    panel: &self.gis.charts,
                     scatter,
                     selects,
                 })
@@ -170,7 +171,7 @@ impl App {
         .icons(KINDS.iter().map(|k| from_web(Some(k.icon))))
         .hints(KINDS.iter().map(|k| k.description))
         .icon_only();
-        let views = Segmented::new([View::Chart, View::Table], self.charts.view, |v| {
+        let views = Segmented::new([View::Chart, View::Table], self.gis.charts.view, |v| {
             msg(Event::View(v))
         });
         let copy = tip(
@@ -235,7 +236,7 @@ impl App {
             .iter()
             .map(|(_, path, n)| Choice::new(format!("{path} ({n})")).shown(path.clone()))
             .collect();
-        if let Some(t) = &self.charts.table {
+        if let Some(t) = &self.gis.charts.table {
             ids.push(None);
             choices.push(Choice::new(texts::table(&t.title)).icon(from_web(Some("table"))));
         }
@@ -253,7 +254,9 @@ impl App {
         if !table {
             let show = Select::new(
                 Show::WITH_TABLE.iter().map(|s| Choice::new(s.label())),
-                Show::WITH_TABLE.iter().position(|s| *s == self.charts.show),
+                Show::WITH_TABLE
+                    .iter()
+                    .position(|s| *s == self.gis.charts.show),
                 |i| msg(Event::Show(Show::WITH_TABLE[i])),
             );
             rows.push(setting(texts::SHOW, show));

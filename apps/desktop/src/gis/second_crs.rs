@@ -14,6 +14,7 @@
 //! Choosing is a project setting, an edit of the drawing as Proje
 //! ayarları's, never a transformation of its coordinates.
 
+use crate::gis;
 use iced::Element;
 use iced::widget::row;
 use kentos_interaction::second::{Notation, Second, cursor_unreached};
@@ -35,7 +36,7 @@ pub enum Event {
 }
 
 fn message(event: Event) -> Message {
-    Message::SecondCrs(event)
+    Message::Gis(gis::Event::SecondCrs(event))
 }
 
 /// The systems a project in `project` may take as its second, grouped by
@@ -291,7 +292,9 @@ mod tests {
     #[test]
     fn choosing_sets_the_project_and_says_so() {
         let mut app = app_with_drawing();
-        let _ = app.update(Message::SecondCrs(Event::Choose(Some(2322))));
+        let _ = app.update(Message::Gis(gis::Event::SecondCrs(Event::Choose(Some(
+            2322,
+        )))));
         let doc = app.document.as_ref().expect("a drawing");
         assert_eq!(doc.settings().second_srid, Some(2322));
         assert!(crate::files_testing::last_said(&app).contains("ED50 / TM36 (EPSG:2322)"));
@@ -303,9 +306,11 @@ mod tests {
             "{text}"
         );
         assert_eq!(app.second_values(&second, None), "Y —   X —");
-        let _ = app.update(Message::SecondCrs(Event::Notation(Notation::Dd)));
+        let _ = app.update(Message::Gis(gis::Event::SecondCrs(Event::Notation(
+            Notation::Dd,
+        ))));
         assert_eq!(app.draft.geographic, Notation::Dd);
-        let _ = app.update(Message::SecondCrs(Event::Choose(None)));
+        let _ = app.update(Message::Gis(gis::Event::SecondCrs(Event::Choose(None))));
         let doc = app.document.as_ref().expect("a drawing");
         assert_eq!(doc.settings().second_srid, None);
         assert!(crate::files_testing::last_said(&app).contains("kaldırıldı"));
@@ -337,7 +342,9 @@ mod tests {
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
-            let _ = app.update(Message::SecondCrs(Event::Choose(Some(2322))));
+            let _ = app.update(Message::Gis(gis::Event::SecondCrs(Event::Choose(Some(
+                2322,
+            )))));
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
             let mut update = |app: &mut App, message| {
                 let _ = app.update(message);
@@ -399,7 +406,9 @@ mod tests {
             save(&mut snapshot, &app, "koordinat-oku");
             let _ = app.update(Message::Run("tool.cancel"));
             // WGS 84 in degrees, minutes and seconds.
-            let _ = app.update(Message::SecondCrs(Event::Choose(Some(4326))));
+            let _ = app.update(Message::Gis(gis::Event::SecondCrs(Event::Choose(Some(
+                4326,
+            )))));
             app.follow.flash = None;
             snapshot.settle(&mut app, App::view, &mut update);
             snapshot.input(&mut app, App::view, &mut update, Input::Move(over));

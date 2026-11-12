@@ -6,6 +6,7 @@
 //! seç's first click by its second part's hole's vertex chooses that ring, the second its end; the preview and Uygula
 //! are the shared case's, the other rings left. And the pictures.
 
+use crate::road;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -26,25 +27,33 @@ fn ranged() -> App {
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.selection.set([Slot(8)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Grade(G::Target(Target::Surface)));
-    let _ = app.update(Message::Grade(G::Above(0.15)));
-    let _ = app.update(Message::Grade(G::Partial(true)));
-    let _ = app.update(Message::Grade(G::From(1.0)));
-    let _ = app.update(Message::Grade(G::To(2.0)));
-    let _ = app.update(Message::Grade(G::Breaks(true)));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+        Target::Surface,
+    ))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Above(0.15))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Partial(true))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::From(1.0))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::To(2.0))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Breaks(true))));
     app
 }
 
 #[test]
 fn kot_farki_and_aralik_write_the_range_over_the_surface() {
     let mut app = ranged();
-    assert_eq!(app.dialog, Some(Dialog::Grade));
-    let plan = app.grade.draped.clone().expect("a plan").expect("planned");
+    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Grade)));
+    let plan = app
+        .road
+        .grade
+        .draped
+        .clone()
+        .expect("a plan")
+        .expect("planned");
     assert_eq!((plan.set, plan.outside, plan.inserted), (2, 0, 1));
     // The range is marked: the path from the first vertex to the second and its two ends.
     let (path, ends) = app.grade_marks();
     assert!(!path.is_empty() && ends.len() == 2, "{path:?} {ends:?}");
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     assert_eq!(app.dialog, None);
     let doc = app.document.as_ref().expect("a drawing");
     let Some(kentos_commands::Entity::Polyline(p)) = doc.model.get(Slot(8)) else { panic!("a polyline") };
@@ -74,14 +83,20 @@ fn island() -> App {
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.selection.set([Slot(18)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Grade(G::Target(Target::Surface)));
-    let _ = app.update(Message::Grade(G::Above(0.15)));
-    let _ = app.update(Message::Grade(G::Partial(true)));
-    let _ = app.update(Message::Grade(G::Breaks(true)));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+        Target::Surface,
+    ))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Above(0.15))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Partial(true))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Breaks(true))));
     let near = |x: f64, y: f64| Some(kentos_interaction::Vec2 { x: 500_000.0 + x + 0.01, y: 4_400_000.0 + y - 0.01 });
-    let _ = app.update(Message::Grade(G::Pick));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
     assert!(app.grade_picked(near(85.0, 35.0)));
-    assert_eq!((app.grade.ring, app.grade.from), ((1, 1), 2.0), "the hole of the second part, its second vertex");
+    assert_eq!(
+        (app.road.grade.ring, app.road.grade.from),
+        ((1, 1), 2.0),
+        "the hole of the second part, its second vertex"
+    );
     assert!(app.grade_picked(near(65.0, 65.0)));
     // A real click ends its pick step before the point arrives; called directly here, the step is ended as it would be.
     let _ = app.with_tool(|s, cx| s.cancel(cx));
@@ -91,14 +106,23 @@ fn island() -> App {
 #[test]
 fn the_range_lies_on_the_ring_its_first_click_is_nearest() {
     let mut app = island();
-    assert_eq!((app.dialog, app.grade.to), (Some(Dialog::Grade), 4.0));
-    let plan = app.grade.draped.clone().expect("a plan").expect("planned");
+    assert_eq!(
+        (app.dialog, app.road.grade.to),
+        (Some(Dialog::Road(road::RoadDialogKind::Grade)), 4.0)
+    );
+    let plan = app
+        .road
+        .grade
+        .draped
+        .clone()
+        .expect("a plan")
+        .expect("planned");
     assert_eq!((plan.set, plan.outside, plan.inserted), (3, 0, 1));
     // The hole's range is marked: its path and its two ends.
     let (path, ends) = app.grade_marks();
     assert!(!path.is_empty() && ends.len() == 2, "{path:?} {ends:?}");
     assert!((ends[0].x - 500_085.0).abs() < 1e-9 && (ends[1].y - 4_400_065.0).abs() < 1e-9, "{ends:?}");
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     assert_eq!(app.dialog, None);
     let doc = app.document.as_ref().expect("a drawing");
     let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(Slot(18)) else { panic!("an area") };

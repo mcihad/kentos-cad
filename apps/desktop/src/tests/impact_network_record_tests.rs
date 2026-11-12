@@ -4,6 +4,7 @@
 //! parts with a key of the classes; Ölçüleri çizime yaz writes the table on “Senaryo ölçüleri” in one undo step and the
 //! window reads it back as current, as stale once the base changes. And their pictures.
 
+use crate::gis;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -30,7 +31,7 @@ fn opened(setup: &Value) -> App {
 
 fn ask(app: &mut App, events: Vec<I>) {
     for e in events {
-        let _ = app.update(Message::Impact(e));
+        let _ = app.update(Message::Gis(gis::Event::Impact(e)));
     }
 }
 
@@ -59,17 +60,39 @@ fn the_access_along_the_network_is_the_case_s_and_drawn() {
     let c = case(NET);
     let mut app = opened(&c["setup"]);
     network(&mut app);
-    let r = app.impact.answer.clone().expect("an answer").expect("compares");
+    let r = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("compares");
     let want = &c["steps"][0]["result"]["output"]["reach"]["alternativeRoutes"];
     let reach = r.reach.expect("the access");
-    assert_eq!(reach.alternative_routes.len(), want.as_array().expect("routes").len());
-    for (g, w) in reach.alternative_routes.iter().zip(want.as_array().expect("routes")) {
+    assert_eq!(
+        reach.alternative_routes.len(),
+        want.as_array().expect("routes").len()
+    );
+    for (g, w) in reach
+        .alternative_routes
+        .iter()
+        .zip(want.as_array().expect("routes"))
+    {
         assert!((g.distance - w["distance"].as_f64().expect("a number")).abs() < 1e-9);
     }
     // A leg that does not read is said, not guessed.
     ask(&mut app, vec![I::Connect("kırk".into())]);
-    let why = app.impact.answer.clone().expect("an answer").expect_err("refused");
-    assert!(why.contains("Ağa bağlanma uzaklığı “kırk” bir sayı değil"), "{why}");
+    let why = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect_err("refused");
+    assert!(
+        why.contains("Ağa bağlanma uzaklığı “kırk” bir sayı değil"),
+        "{why}"
+    );
     ask(&mut app, vec![I::Connect("40".into()), I::DrawAccess]);
     let m = app.impact_reach_marks().expect("the marks");
     assert_eq!(m.routes.len(), 3);
@@ -100,8 +123,19 @@ fn the_table_is_written_in_one_step_and_read_back() {
     ask(&mut app, vec![I::Record]);
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert_eq!(doc.entities().count(), before + 1);
-    assert!(doc.layers().leaves().iter().any(|l| l.name == crate::impact_window::RECORD_LAYER));
-    let r = app.impact.answer.clone().expect("an answer").expect("compares");
+    assert!(
+        doc.layers()
+            .leaves()
+            .iter()
+            .any(|l| l.name == crate::impact_window::RECORD_LAYER)
+    );
+    let r = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("compares");
     assert_eq!(r.records.len(), 1);
     assert!(!r.records[0].base_changed && !r.records[0].scenario_changed);
     let _ = app.update(Message::Run("edit.undo"));

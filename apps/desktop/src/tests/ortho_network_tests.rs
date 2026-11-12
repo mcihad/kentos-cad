@@ -3,6 +3,7 @@
 //! its junction; unticking one plans the two others; the button writes the elements in one undo step and selects them.
 //! Ayak izi plans the case's outline, then its hull. And their pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -47,7 +48,10 @@ fn near(got: &Value, want: &Value, at: &str) {
 fn opened(c: &Value) -> App {
     let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
     let _ = app.update(Message::Run("raster.seamlines"));
-    assert_eq!(app.dialog, Some(Dialog::OrthoSeamlines));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::OrthoSeamlines))
+    );
     app
 }
 
@@ -55,18 +59,46 @@ fn opened(c: &Value) -> App {
 fn the_network_plans_the_case_s_elements_and_junction_and_writes_them() {
     let c = case("cad.orthophoto.network.json", "üç görüntü");
     let mut app = opened(&c);
-    let _ = app.update(Message::OrthoSeamlines(E::Net(N::Mode(Mode::Network))));
-    let got = serde_json::to_value(app.ortho_seamlines.net.network.clone().expect("an answer").expect("planned")).expect("json");
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Net(N::Mode(
+        Mode::Network,
+    )))));
+    let got = serde_json::to_value(
+        app.map
+            .ortho_seamlines
+            .net
+            .network
+            .clone()
+            .expect("an answer")
+            .expect("planned"),
+    )
+    .expect("json");
     near(&got, &c["steps"][0]["result"]["output"], "network");
     // Unticking the third: two elements, no junction.
-    let third = app.ortho_seamlines.rasters[2].0.clone();
-    let _ = app.update(Message::OrthoSeamlines(E::Net(N::Tick(third))));
-    let two = app.ortho_seamlines.net.network.clone().expect("an answer").expect("planned");
+    let third = app.map.ortho_seamlines.rasters[2].0.clone();
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Net(N::Tick(
+        third,
+    )))));
+    let two = app
+        .map
+        .ortho_seamlines
+        .net
+        .network
+        .clone()
+        .expect("an answer")
+        .expect("planned");
     assert_eq!((two.elements.len(), two.junctions.len()), (2, 0));
-    let back = app.ortho_seamlines.rasters[2].0.clone();
-    let _ = app.update(Message::OrthoSeamlines(E::Net(N::Tick(back))));
-    let before = app.document.as_ref().expect("a drawing").model.entities().count();
-    let _ = app.update(Message::OrthoSeamlines(E::Net(N::Write)));
+    let back = app.map.ortho_seamlines.rasters[2].0.clone();
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Net(N::Tick(
+        back,
+    )))));
+    let before = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .entities()
+        .count();
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Net(N::Write))));
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert_eq!(doc.entities().count(), before + 3);
     assert_eq!(app.selection.ids().len(), 3);
@@ -77,12 +109,36 @@ fn the_network_plans_the_case_s_elements_and_junction_and_writes_them() {
 fn the_footprint_plans_the_case_s_outline_and_hull() {
     let c = case("cad.orthophoto.footprint.json", "NoData'dan ayak izi");
     let mut app = opened(&c);
-    assert_eq!(app.ortho_seamlines.net.mode, Mode::Footprint, "one raster: its footprint");
-    let got = serde_json::to_value(app.ortho_seamlines.net.footprint.clone().expect("an answer").expect("planned")).expect("json");
+    assert_eq!(
+        app.map.ortho_seamlines.net.mode,
+        Mode::Footprint,
+        "one raster: its footprint"
+    );
+    let got = serde_json::to_value(
+        app.map
+            .ortho_seamlines
+            .net
+            .footprint
+            .clone()
+            .expect("an answer")
+            .expect("planned"),
+    )
+    .expect("json");
     near(&got, &c["steps"][0]["result"]["output"], "outline");
-    let _ = app.update(Message::OrthoSeamlines(E::Net(N::Hull(true))));
+    let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Net(N::Hull(
+        true,
+    )))));
     let hull = case("cad.orthophoto.footprint.json", "dışbükey zarf: tek parça");
-    let got = serde_json::to_value(app.ortho_seamlines.net.footprint.clone().expect("an answer").expect("planned")).expect("json");
+    let got = serde_json::to_value(
+        app.map
+            .ortho_seamlines
+            .net
+            .footprint
+            .clone()
+            .expect("an answer")
+            .expect("planned"),
+    )
+    .expect("json");
     near(&got, &hull["steps"][0]["result"]["output"], "hull");
 }
 
@@ -109,7 +165,9 @@ fn screens() {
             let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
-            let _ = app.update(Message::OrthoSeamlines(E::Net(N::Mode(mode))));
+            let _ = app.update(Message::Map(map::Event::OrthoSeamlines(E::Net(N::Mode(
+                mode,
+            )))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);

@@ -2,6 +2,7 @@
 //! (docs/adr/0153 §2): the cases of the web's `ui/bottom/PointTable.test.ts`,
 //! then the tab as the app runs it, and pictures for the owner.
 
+use crate::gis;
 use iced::Task;
 use kentos_domain::Slot;
 
@@ -35,7 +36,7 @@ fn names(app: &App) -> Vec<String> {
 }
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::Points(e));
+    let _ = app.update(Message::Gis(gis::Event::Points(e)));
 }
 
 #[test]
@@ -462,25 +463,25 @@ fn a_cell_is_edited_in_place_and_satir_ekle_writes_rows() {
     // Y of the first row: its whole value.
     ev(&mut app, Event::Edit(0, 2));
     assert_eq!(
-        app.points.editing,
+        app.gis.points.editing,
         Some((Target::Point(shown[0]), EditColumn::East))
     );
-    assert_eq!(app.points.text, "487000");
+    assert_eq!(app.gis.points.text, "487000");
     ev(&mut app, Event::Input("487000.5".into()));
     ev(&mut app, Event::Finish(Some(Walk::Down)));
     assert_eq!(point(&app, shown[0]).p.x, 487000.5);
     assert_eq!(
-        app.points.editing,
+        app.gis.points.editing,
         Some((Target::Point(shown[1]), EditColumn::East))
     );
     // A value refused stays with what was typed.
     ev(&mut app, Event::Input("abc".into()));
     ev(&mut app, Event::Finish(Some(Walk::Right)));
     assert_eq!(
-        app.points.editing,
+        app.gis.points.editing,
         Some((Target::Point(shown[1]), EditColumn::East))
     );
-    assert_eq!(app.points.text, "abc");
+    assert_eq!(app.gis.points.text, "abc");
     assert_eq!(
         crate::files_testing::last_said(&app),
         "Nokta editörü: Y bir sayı olmalı."
@@ -490,17 +491,20 @@ fn a_cell_is_edited_in_place_and_satir_ekle_writes_rows() {
     ev(&mut app, Event::Finish(Some(Walk::Right)));
     assert_eq!(point(&app, shown[1]).p.x, 487024.25);
     assert_eq!(
-        app.points.editing,
+        app.gis.points.editing,
         Some((Target::Point(shown[1]), EditColumn::North))
     );
     // Esc gives up.
     ev(&mut app, Event::Input("1".into()));
     ev(&mut app, Event::Cancel);
-    assert_eq!(app.points.editing, None);
+    assert_eq!(app.gis.points.editing, None);
     assert_eq!(point(&app, shown[1]).p.y, 4420000.0);
     // Satır ekle: Ad first; Enter writes and opens the next, its Y.
     ev(&mut app, Event::AddRow);
-    assert_eq!(app.points.editing, Some((Target::Draft, EditColumn::Name)));
+    assert_eq!(
+        app.gis.points.editing,
+        Some((Target::Draft, EditColumn::Name))
+    );
     ev(&mut app, Event::Input("201".into()));
     ev(&mut app, Event::Finish(Some(Walk::Right)));
     ev(&mut app, Event::Input("487030".into()));
@@ -516,14 +520,17 @@ fn a_cell_is_edited_in_place_and_satir_ekle_writes_rows() {
         app.document.as_ref().map(|d| d.model.len()),
         Some(before + 1)
     );
-    assert_eq!(app.points.editing, Some((Target::Draft, EditColumn::East)));
     assert_eq!(
-        app.points.draft.as_ref().map(|d| d.name.as_str()),
+        app.gis.points.editing,
+        Some((Target::Draft, EditColumn::East))
+    );
+    assert_eq!(
+        app.gis.points.draft.as_ref().map(|d| d.name.as_str()),
         Some("202")
     );
     // Esc drops the draft.
     ev(&mut app, Event::Cancel);
-    assert_eq!(app.points.draft, None);
+    assert_eq!(app.gis.points.draft, None);
 }
 
 /// Sil: the selected rows' points go in one step, as the Sil tool takes a
@@ -642,7 +649,10 @@ fn the_actions_window_numbers_the_selected_rows_in_one_step() {
     let _ = app.update(Message::Run("point.editor"));
     pick_rows(&mut app, 5);
     ev(&mut app, Event::Batch(Kind::Number));
-    assert!(matches!(app.dialog, Some(crate::app::Dialog::PointBatch)));
+    assert!(matches!(
+        app.dialog,
+        Some(crate::app::Dialog::Gis(gis::GisDialogKind::PointBatch))
+    ));
     ev(
         &mut app,
         Event::Window(super::batch_view::WindowEvent::Text("201".into())),
@@ -696,7 +706,10 @@ fn a_rows_menu_takes_that_row_alone_when_it_is_not_selected() {
     let before = app.document.as_ref().map(|d| d.model.generation());
     ev(&mut app, Event::Window(WindowEvent::Apply));
     assert_eq!(app.document.as_ref().map(|d| d.model.generation()), before);
-    assert!(matches!(app.dialog, Some(crate::app::Dialog::PointBatch)));
+    assert!(matches!(
+        app.dialog,
+        Some(crate::app::Dialog::Gis(gis::GisDialogKind::PointBatch))
+    ));
     ev(&mut app, Event::Window(WindowEvent::Close));
     assert!(app.dialog.is_none());
 }
@@ -724,7 +737,7 @@ fn the_export_writes_the_tables_rows_in_its_order() {
     let shown = names(&app);
     let path = crate::files_testing::scratch("points-export").join("noktalar.ncn");
     app.picker = crate::app::Picker::File(path.clone());
-    let task = app.update(Message::Points(Event::Export));
+    let task = app.update(Message::Gis(gis::Event::Points(Event::Export)));
     crate::files_testing::drive(&mut app, task);
     assert!(matches!(
         app.exchange,
@@ -757,7 +770,7 @@ fn the_import_offers_the_names_brought_again_and_the_last_keeps_the_files() {
     let path = crate::files_testing::scratch("points-import").join("olcum.ncn");
     std::fs::write(&path, IMPORTED).expect("the list");
     app.picker = crate::app::Picker::File(path);
-    let task = app.update(Message::Points(Event::Import));
+    let task = app.update(Message::Gis(gis::Event::Points(Event::Import)));
     crate::files_testing::drive(&mut app, task);
     assert!(matches!(
         app.exchange,
@@ -767,7 +780,10 @@ fn the_import_offers_the_names_brought_again_and_the_last_keeps_the_files() {
         &mut app,
         crate::exchange::Event::CoordImport(crate::exchange::coord_import::Event::Run),
     );
-    assert!(matches!(app.dialog, Some(crate::app::Dialog::PointBatch)));
+    assert!(matches!(
+        app.dialog,
+        Some(crate::app::Dialog::Gis(gis::GisDialogKind::PointBatch))
+    ));
     ev(&mut app, Event::Window(WindowEvent::Keep(Keep::Last)));
     ev(&mut app, Event::Window(WindowEvent::Apply));
     assert!(app.dialog.is_none());
@@ -805,7 +821,7 @@ fn an_import_of_new_names_opens_nothing_after_it() {
     let path = crate::files_testing::scratch("points-import-new").join("yeni.ncn");
     std::fs::write(&path, "301 487060 4420010\r\n302 487061 4420011\r\n").expect("the list");
     app.picker = crate::app::Picker::File(path);
-    let task = app.update(Message::Points(Event::Import));
+    let task = app.update(Message::Gis(gis::Event::Points(Event::Import)));
     crate::files_testing::drive(&mut app, task);
     exchange(
         &mut app,
@@ -986,7 +1002,7 @@ fn screens() {
                     "noktalar-disa-aktar" => {
                         app.selection.set(Vec::<Slot>::new());
                         ev(&mut app, Event::Sort(1));
-                        let task = app.update(Message::Points(Event::Export));
+                        let task = app.update(Message::Gis(gis::Event::Points(Event::Export)));
                         crate::files_testing::drive(&mut app, task);
                     }
                     // The first two rows (by Ad, descending) written from a row's menu.
@@ -998,8 +1014,10 @@ fn screens() {
                         let path =
                             crate::files_testing::scratch("points-shot").join("noktalar.ncn");
                         app.picker = crate::app::Picker::File(path);
-                        let task =
-                            app.update(Message::Points(Event::Row(0, super::RowAction::Export)));
+                        let task = app.update(Message::Gis(gis::Event::Points(Event::Row(
+                            0,
+                            super::RowAction::Export,
+                        ))));
                         crate::files_testing::drive(&mut app, task);
                         exchange(
                             &mut app,
@@ -1015,7 +1033,7 @@ fn screens() {
                         let path = crate::files_testing::scratch("points-shot").join("olcum.ncn");
                         std::fs::write(&path, IMPORTED).expect("the list");
                         app.picker = crate::app::Picker::File(path);
-                        let task = app.update(Message::Points(Event::Import));
+                        let task = app.update(Message::Gis(gis::Event::Points(Event::Import)));
                         crate::files_testing::drive(&mut app, task);
                         exchange(
                             &mut app,
@@ -1063,7 +1081,7 @@ fn screens() {
                     }
                     _ => {}
                 }
-                if app.points.editing() {
+                if app.gis.points.editing() {
                     // The field takes the keyboard with its text selected, as the app's task
                     // gives it when the edit opens.
                     operate(&mut snapshot, &app, focus_field());

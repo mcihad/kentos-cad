@@ -174,14 +174,8 @@ pub enum Dialog {
     Exchange,
     /// Yeni proje or Proje ayarları (project/).
     Project,
-    /// Read-only architectural package preview, followed by an explicit semantic apply.
-    ArchTemplate,
     /// Başlangıç (start.rs).
     Start,
-    /// A Hesap window (calc/).
-    Calc,
-    /// A processing tool's or model's window (processing/).
-    Processing,
     /// Katman stili (style/layer_style/); the window is `App::styles.layer_style`.
     LayerStyle,
     /// Stil yöneticisi (style/manager/); the window is `App::styles.manager`.
@@ -190,21 +184,13 @@ pub enum Dialog {
     Legend,
     /// Sembol tasarımcısı (style/designer/); the window is `App::styles.designer`.
     SymbolDesigner,
-    /// Model tasarımcısı (processing/designer/); the window is `App::processing.designer`.
-    ModelDesigner,
     /// SVG çizim düzenleyicisi (style/svgedit/); the window is `App::styles.svg_editor`.
     SvgEditor,
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
-    /// Şablonlar → Sil (templates_panel.rs); the template is the panel's `deleting`.
-    RemoveTemplate,
     /// Kaynaktan oku over the layer's own edits (bound.rs); the layer is `App::bound_pending`.
     SourceDiscard,
-    /// Kaynakla uzlaştır (source_reconcile.rs, docs/adr/0538); the window is `App::reconcile`.
-    SourceReconcile,
-    /// Şablon düzenleyici (template_editor.rs); its form is `App::template_editor`.
-    TemplateEditor,
     /// The open cloud project's actions (cloud/actions.rs): Yeniden adlandır,
     /// Çöp kutusuna taşı.
     CloudRename,
@@ -216,8 +202,6 @@ pub enum Dialog {
     BlockDefine,
     /// Blok öznitelikleri (block_attributes.rs, docs/adr/0144 §7); the window is `App::block_attributes`.
     BlockAttributes,
-    /// Blok ekle's Öznitelik değerleri (attribute_values.rs); the window is `App::attribute_values`.
-    AttributeValues,
     /// Blok kartı (block_card.rs, docs/adr/0317 §4); the window is `App::block_card`.
     BlockCard,
     BlockParameterGroups,
@@ -226,18 +210,8 @@ pub enum Dialog {
     BlockSchedule,
     /// Bul ve değiştir (find_replace.rs, docs/adr/0145 §6); the window is `App::find_replace`.
     FindReplace,
-    /// Katmanları birleştir (layer_merge.rs, docs/adr/0177 §3); the window is `App::layer_merge`.
-    LayerMerge,
-    /// Katmanları çevir (layer_translate.rs, docs/adr/0311 §5); the window is `App::layer_translate`.
-    LayerTranslate,
     /// Çizim standardı (drawing_standard.rs, docs/adr/0312 §7); the window is `App::drawing_standard`.
     DrawingStandard,
-    /// Veri profili (data_profile.rs, docs/adr/0541); the window is `App::data_profile`.
-    DataProfile,
-    /// Alt ağlar (subnetworks_window.rs, docs/adr/0557); the window is `App::subnetworks_window`.
-    Subnetworks,
-    /// Kaynak durumu (source_status.rs, docs/adr/0543); the window is `App::source_status`.
-    SourceStatus,
     /// Çizgi tipleri (line_types_window.rs, docs/adr/0313 §7); the window is `App::line_types_window`.
     LineTypes,
     /// Parametreler (parameters_window.rs, docs/adr/0338 §1); the window is `App::parameters_window`.
@@ -251,223 +225,39 @@ pub enum Dialog {
     BlockReplace,
     BlockFind,
     ArrayFind,
-    /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
-    LayerFields,
-    /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
-    LayerFilter,
-    /// Alan hesapla and Yapıştır (features/write.rs, docs/adr/0507); the window is `App::features.write`.
-    FieldsWrite,
-    /// Etiketler (labelling/, docs/adr/0212 §4); the window is `App::labelling`.
-    Labelling,
     /// Bağlantılar (services/connections.rs).
     Connections,
     /// Harita servisi (services/window.rs).
     ServiceAdd,
     /// Servisten veri al (services/feed_window.rs).
     Feed,
-    /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6); the window is `App::topology_rules`.
-    TopologyRules,
-    /// Ağlar (networks/window.rs, docs/adr/0209 §10); the window is `App::networks.window`.
-    Networks,
-    /// Adres verisi (address/data.rs, docs/adr/0229 §13); the window is `App::address.data`.
-    AddressData,
-    /// Adres sağlayıcıları (address/providers.rs, docs/adr/0229 §13); the window is `App::address.providers`.
-    AddressProviders,
-    /// Adres kaydıyla karşılaştır (address/compare.rs, docs/adr/0736); the window is `App::address.compare`.
-    AddressCompare,
-    /// Zaman ayarları (temporal/layer.rs, docs/adr/0210 §10); the window is `App::time.layer`.
-    TimeLayer,
-    /// Sensör gözlemleri (temporal/sensors.rs, docs/adr/0646 §6); the window is `App::time.sensors`.
-    Sensors,
-    /// Senaryo oluştur and Senaryoyu uygula's question (temporal/scenario.rs); the window is `App::time.scenario`.
-    Scenario,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
     LayerStates,
     /// Görünümler (views.rs, docs/adr/0285 §1); the window is `App::views_window`.
     Views,
-    /// Formlar (forms/designer.rs, docs/adr/0401); the window is `App::forms_window`.
-    Forms,
-    /// Formla düzenle (forms/entry.rs, docs/adr/0401); the window is `App::form_entry`.
-    FormEntry,
-    /// İlişkiler (forms/relations.rs, docs/adr/0405); the window is `App::relations_window`.
-    Relations,
-    /// Birleşik görünümler (joins_window.rs, docs/adr/0527); the window is `App::joins_window`.
-    Joins,
-    /// Olay bağları (event_links_window.rs, docs/adr/0569); the window is `App::event_links_window`.
-    EventLinks,
-    /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4); the window is `App::terrain_window`.
-    Terrains,
-    /// Güzergâh (alignment_window.rs, plan/road.md Y3); the window is `App::alignment_window`.
-    Alignments,
-    /// Boykesit (profile_window.rs, plan/road.md Y4); the window is `App::profile_window`.
-    Profiles,
-    /// Enkesit (section_window.rs, plan/road.md Y5); the window is `App::section_window`.
-    Sections,
-    /// Dever (superelevation_window.rs, plan/road.md Y6); the window is `App::superelevation_window`.
-    Superelevations,
-    /// Koridor (corridor_window.rs, plan/road.md Y7); the window is `App::corridor_window`.
-    Corridors,
-    /// Kübaj (volume_window.rs, plan/road.md Y8); the window is `App::volume_window`.
-    Volumes,
-    /// Brükner (haul_window.rs, plan/road.md Y9); the window is `App::haul_window`.
-    Hauls,
-    /// Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10); the window is `App::stakeout_window`.
-    Stakeout,
-    /// Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5); the window is `App::road_sheets_window`.
-    RoadSheets,
-    /// Görünüşler (road_views_window.rs, plan/road.md Y13.4); the window is `App::road_views_window`.
-    RoadViews,
-    /// Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6); the window is `App::road_alignment_fit_window`.
-    RoadAlignmentFit,
-    /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b); the window is `App::road_profile_fit_window`.
-    RoadProfileFit,
-    /// Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1); the window is `App::guardrail_window`.
-    Guardrails,
-    /// Menfez (culvert_window.rs, plan/road.md Y11.2); the window is `App::culvert_window`.
-    Culverts,
-    /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3); the window is `App::retaining_wall_window`.
-    RetainingWalls,
-    /// Platform (platform_window.rs, plan/road.md Y14.3); the window is `App::platform_window`.
-    Platforms,
-    /// Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3); the window is `App::terrain_cloud_window`.
-    TerrainCloud,
-    /// Drenaj (drainage_window.rs, plan/road.md Y16.3); the window is `App::drainage_window`.
-    Drainage,
-    /// Araç izi (swept_window.rs, plan/road.md Y17.3); the window is `App::swept_window`.
-    Swept,
-    /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5); the window is `App::surface_analysis_window`.
-    SurfaceAnalysis,
-    /// Görüş mesafesi (sight_window.rs, plan/road.md Y20); the window is `App::sight_window`.
-    Sight,
     /// Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25); the window is `App::propose_window`.
     Propose,
-    /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21); the window is `App::design_check_window`.
-    DesignCheck,
-    /// Platform suyu (platform_water_window.rs, plan/road.md Y22); the window is `App::platform_water_window`.
-    PlatformWater,
-    /// Taşıma planı (haul_plan_window.rs, plan/road.md Y23); the window is `App::haul_plan_window`.
-    HaulPlan,
-    /// Poz metrajı (pay_window.rs, plan/road.md Y11.4); the window is `App::pay_window`.
-    Pay,
-    /// Ön güzergâh (route_window.rs, plan/road.md Y12.1); the window is `App::route_window`.
-    Route,
-    /// Kavşak (junction_window.rs, plan/road.md Y12.2); the window is `App::junction_window`.
-    Junctions,
     /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d); the window is `App::scene3d_window`.
     Scene3d,
-    /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
-    Program,
-    /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
-    SpaceMerge,
-    /// Kayıtları denetle (forms/audit.rs, docs/adr/0406); the window is `App::form_audit`.
-    FormAudit,
-    /// Koşullu biçim (forms/table_styles.rs, docs/adr/0413); the window is `App::table_styles`.
-    TableStyles,
-    /// Alt türler (forms/subtypes.rs, docs/adr/0422); the window is `App::subtypes`.
-    Subtypes,
-    /// Değer bileşimleri (forms/contingents.rs, docs/adr/0423); the window is `App::contingents`.
-    Contingents,
-    /// Kayıt kuralları (forms/layer_rules.rs, docs/adr/0438); the window is `App::layer_rules`.
-    LayerRules,
-    /// Dizinler (forms/layer_indexes.rs, docs/adr/0758); the window is `App::layer_indexes`.
-    LayerIndexes,
-    /// Değer listeleri (forms/domains.rs, docs/adr/0430); the window is `App::domains`.
-    Domains,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
     /// `App::annotation_styles`.
     AnnotationStyles,
-    /// Duvar stilleri (wall_styles.rs, docs/adr/0339 §6); the window is `App::wall_styles`.
-    WallStyles,
     /// Tablo stilleri (table_style_window.rs, docs/adr/1127 §4); the window is `App::table_style_window`.
     TableStyleDefs,
-    /// Birleşimleri denetle (wall_joins.rs, docs/adr/0340 §6); the window is `App::wall_joins`.
-    WallJoins,
-    /// Kapı ve pencere tipleri (opening_types_window.rs, docs/adr/0772); the window is `App::opening_types`.
-    OpeningTypes,
-    /// Malzemeler (materials_window.rs, docs/adr/0785); the window is `App::materials`.
-    Materials,
-    /// Oda modülleri (room_modules_window.rs, docs/adr/0775); the window is `App::room_modules`.
-    RoomModules,
-    /// Tasarım seçenekleri (design_options_window.rs, docs/adr/0788); the window is `App::design_options`.
-    DesignOptions,
-    /// Çizelge ayarları and Çizelgeyi dosyaya yaz (schedule_window.rs, docs/adr/0733 §5, §7); the window is
-    /// `App::schedule`.
-    Schedule,
-    ScheduleExport,
-    /// Etiketleri denetle (tags_check.rs, docs/adr/0344 §2); the window is `App::tags_check`.
-    TagsCheck,
-    /// Başvurular (viewmark_refs.rs, docs/adr/0345 §3); the window is `App::view_refs`.
-    ViewRefs,
     /// Pafta seti (sheet_set.rs, docs/adr/0347 §1); the window is `App::sheet_set`.
     SheetSet,
     /// Dış başvurular (xrefs_window.rs, docs/adr/0348 §5); its state is `App::xrefs`.
     Xrefs,
     /// 2B düzleme indir (flatten_window.rs, docs/adr/1061 §4); its state is `App::flatten`.
     Flatten,
-    /// Katmanın koordinatlarını dönüştür's preview (reproject_window.rs, docs/adr/2500); its state is `App::reproject`.
-    Reproject,
-    /// Kodla çiz (features_window.rs, docs/adr/1360); its state is `App::features_code`.
-    FeaturesCode,
-    /// GNSS baz ağı (baselines_window.rs, docs/adr/1380); its state is `App::baselines`.
-    Baselines,
-    /// Eğimle kot ver (grade_window.rs, docs/adr/1290); its state is `App::grade`.
-    Grade,
     /// Taşınma raporu (clean_report_window.rs, docs/adr/1262); its state is `App::clean_report`.
     CleanReport,
-    /// Parsel alan denetimi (parcels_check_window.rs, docs/adr/1400); its state is `App::parcels_check`.
-    ParcelsCheck,
-    /// Sınır grafiği (parcel_boundaries_window.rs, docs/adr/2000); its state is `App::parcel_boundaries`.
-    ParcelBoundaries,
-    /// Parsel kayıtları (parcel_register_window.rs, docs/adr/4220); its state is `App::parcel_register`.
-    ParcelRegister,
-    /// Boru hattı denetimi (pipes_check_window.rs, docs/adr/1640); its state is `App::pipes_check`.
-    PipesCheck,
     /// Dışa aktarma kaybı denetimi (exchange_check_window.rs, docs/adr/1660); its state is `App::exchange_check`.
     ExchangeCheck,
-    /// Uygulama kontrolü (asbuilt_window.rs, docs/adr/1700); its state is `App::asbuilt`.
-    Asbuilt,
-    /// İş grafiği (project_graph_window.rs, docs/adr/1940); its state is `App::project_graph`.
-    ProjectGraph,
-    /// GNSS ağ dengelemesi (survey_network_window.rs, docs/adr/1740); its state is `App::survey_network`.
-    SurveyNetwork,
-    /// Detay eşleştirme (features_reconcile_window.rs, docs/adr/1760); its state is `App::features_reconcile`.
-    FeaturesReconcile,
-    /// İmar planı denetimi (zoning_window.rs, docs/adr/1420); its state is `App::zoning`.
-    Zoning,
-    /// Sembolü karardan ver (zoning_symbols_window.rs, docs/adr/4240); its state is `App::zoning_symbols`.
-    ZoningSymbols,
-    /// Plan değişikliği taslağı (zoning_draft_window.rs, docs/adr/5040); its state is `App::zoning_draft`.
-    ZoningDraft,
-    /// Senaryo ölçüleri (impact_window.rs, docs/adr/1440); its state is `App::impact`.
-    Impact,
-    /// Düzenleme dağıtım taslağı (readjustment_window.rs, docs/adr/1460); its state is `App::readjustment`.
-    Readjustment,
-    /// Ortofoto doğruluğu (ortho_window.rs, docs/adr/1480); its state is `App::ortho`.
-    Ortho,
-    /// Ortofoto karşılaştırması (ortho_compare_window.rs, docs/adr/1780); its state is `App::ortho_compare`.
-    OrthoCompare,
-    /// Dikiş çokgenleri (ortho_seamlines_window.rs, docs/adr/4700); its state is `App::ortho_seamlines`.
-    OrthoSeamlines,
-    /// Tarama uyumu (overlap_window.rs, docs/adr/1500); its state is `App::overlap`.
-    Overlap,
-    /// Tarama kaydı (register_window.rs, docs/adr/1800); its state is `App::register`.
-    Register,
-    /// Tarama ağı dengelemesi (scan_network_window.rs, docs/adr/4720); its state is `App::scan_network`.
-    ScanNetwork,
-    /// Bulutu konumla (cloud_place_window.rs, docs/adr/5100); its state is `App::cloud_place`.
-    CloudPlace,
     /// Katalog geçiş raporu (catalog_report_window.rs, docs/adr/4940); its state is `App::catalog_report`.
     CatalogReport,
-    /// Pafta eğrileri (sheet_contours_window.rs, docs/adr/1820); its state is `App::sheet_contours`.
-    SheetContours,
-    /// Kesit kontrolü (section_check_window.rs, docs/adr/5120); its state is `App::section_check`.
-    SectionCheck,
-    /// Stok hacmi (stockpile_window.rs, docs/adr/3140); its state is `App::stockpile`.
-    Stockpile,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
     XrefAttach,
-    /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
-    Quantities,
     /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
     LayerPurge,
     /// Başka çizimden al (drawing_exchange.rs, docs/adr/0193 §2); the window is `App::take_from`.
@@ -485,25 +275,6 @@ pub enum Dialog {
     LeaderStyles,
     /// Ölçek yaz… (annotation_scale.rs, docs/adr/0205 §4); the field is `App::plot_scale_field`.
     PlotScale,
-    /// Veri karşılaştır (data_compare.rs, docs/adr/0179); the window is `App::data_compare`.
-    DataCompare,
-    /// Raster ekle (rasters/add.rs, docs/adr/0204 §8); the window is `App::rasters.add`.
-    RasterAdd,
-    /// Sanal mozaik (rasters/mosaic.rs, docs/adr/0517 §5); the window is `App::rasters.mosaic`.
-    RasterMosaic,
-    /// STAC'ta ara (rasters/stac.rs, docs/adr/0528 §7); the window is `App::rasters.stac`.
-    RasterStac,
-    /// Raster stili (rasters/look.rs, docs/adr/0204 §8); the window is `App::rasters.look`.
-    RasterStyle,
-    /// Mesh ekle and Raster ekle's NetCDF (rasters/multidim.rs, docs/adr/0243 §11); the window
-    /// is `App::rasters.multidim`.
-    Multidim,
-    /// Nokta bulutu ekle (pointclouds/add.rs, docs/adr/0207 §9); the window is `App::clouds.add`.
-    PointCloudAdd,
-    /// Nokta bulutu stili (pointclouds/look.rs, docs/adr/0207 §9); the window is `App::clouds.look`.
-    PointCloudStyle,
-    /// Kayıtlı ölçüleri denetle (cogo.rs, docs/adr/0180); the window is `App::cogo`.
-    Cogo,
     /// Tablo ekle (tables/insert.rs, docs/adr/0184); the window is `App::table_insert`.
     TableInsert,
     /// Tabloyu düzenle (tables/editor.rs, docs/adr/0184 §5); the window is `App::table_editor`.
@@ -514,17 +285,15 @@ pub enum Dialog {
     SheetDetails,
     /// Baskı stili tablosu (plot_styles_window.rs, docs/adr/1130); the window is `App::plot_styles`.
     PlotStyles,
-    /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
-    /// `App::points.batch`.
-    PointBatch,
     /// Adres ekle and Eki düzenle (attachments.rs, docs/adr/0225 §2); the window is `App::attachment_form`.
     Attachment,
     /// The photo viewer (attachments.rs, docs/adr/0225 §2); the window is `App::photo_viewer`.
     PhotoViewer,
-    /// Bilgi kartı ve eylemler (layer_info.rs, docs/adr/0225 §5); the window is `App::layer_info`.
-    LayerInfo,
-    /// Veri kümesi bilgisi (dataset_window.rs, docs/adr/0633); the window is `App::dataset_info`.
-    DatasetInfo,
+    /// A discipline's own windows (docs/adr/8054 §6), drawn by its `state.rs`.
+    Road(crate::road::RoadDialogKind),
+    Map(crate::map::MapDialogKind),
+    Gis(crate::gis::GisDialogKind),
+    Arch(crate::arch::ArchDialogKind),
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -606,16 +375,12 @@ pub enum Message {
     /// The raster service made tiles, or a pyramid moved on: the drawing
     /// draws again with them (docs/adr/0204 §5).
     RastersReady,
-    /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
-    Rasters(crate::rasters::Event),
     /// The point cloud service made nodes, opened a file or an index moved
     /// on: the drawing draws again with them (docs/adr/0207 §6).
     CloudsReady,
     /// The map services brought tiles or read what they need, or one failed:
     /// the drawing draws again, the failure goes to the log (docs/adr/0208 §6).
     ServicesReady,
-    /// The point cloud windows, XYZ sor's answers and the indexes' panel (pointclouds/).
-    PointClouds(crate::pointclouds::Event),
     /// A mouse press anywhere or the window losing the focus while the key
     /// tips show: they go (ribbon_keys.rs, docs/adr/0118).
     KeyTipsAway,
@@ -637,37 +402,15 @@ pub enum Message {
     CommandHistoryToggled,
     /// A tab of the bottom panel chosen: the panel opens on it.
     BottomTab(crate::bottom::BottomTab),
-    /// The Noktalar tab (points/, docs/adr/0153).
-    Points(crate::points::Event),
-    /// The Tablo tab, Öznitelik tablosu (features/, docs/adr/0199 §4).
-    Features(crate::features::Event),
-    /// The İstatistik tab (statistics/, docs/adr/0227 §3).
-    Statistics(crate::statistics::Event),
-    /// The Grafik tab (charts/, docs/adr/0227 §4).
-    Charts(crate::charts::Event),
     /// A table written as a file (docs/adr/0223 §2): what was written, or why not.
     TableWritten(crate::table_write::Outcome),
-    /// Alanlar, a layer's fields (layer_fields.rs, docs/adr/0199 §3).
-    LayerFields(crate::layer_fields::Event),
     /// The Arama tab (search/, docs/adr/0178).
     Search(crate::search::Event),
     /// A call's buttons in Komut geçmişi (history/, docs/adr/0284).
     History(crate::history::Event),
-    /// The Topoloji tab (topology/, docs/adr/0202 §5).
-    Topology(crate::topology::Event),
-    /// The Denetim tab (arch_audit.rs, docs/adr/0703).
-    ArchAudit(crate::arch_audit::Event),
     CadInspection(crate::cad_inspection::Event),
     /// Kurtar's file, picked (docs/adr/1013).
     Recover(Option<std::path::PathBuf>),
-    /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6).
-    TopologyRules(crate::topology::rules::Event),
-    /// Ağ analizi: the networks' answers and Ağlar (networks/, docs/adr/0209).
-    Networks(crate::networks::Event),
-    /// Adres arama: the Adres tab, Konumdan adres's answers and the address windows (address/, docs/adr/0229).
-    Address(crate::address::Event),
-    /// Zaman sürgüsü, Zaman ayarları and the scenarios (temporal/, docs/adr/0210).
-    Time(crate::temporal::Event),
     /// Köşe tablosu in the Koordinat listesi tab (vertices/, docs/adr/0172).
     Vertices(crate::vertices::Event),
     /// The bottom panel's top edge dragged: the open history's new height.
@@ -687,8 +430,6 @@ pub enum Message {
     LogScrolled(iced::widget::scrollable::Viewport),
     /// The kept layout is due to be written (layout.rs).
     LayoutSave,
-    /// The NTv2 grids the project names, looked for in the device's library (grids.rs).
-    GridsLooked(Vec<crate::grids::Looked>),
     /// The rows round a bound layer's part, read on a thread of their own (band_ghosts.rs, docs/adr/0578 §1).
     BandRead(crate::band_ghosts::Read),
     /// The window's new size: the kept sizes are shown within it.
@@ -707,45 +448,22 @@ pub enum Message {
     Paragraph(crate::paragraph_editor::Event),
     /// Öznitelikler: an edit or a section toggled (properties/).
     Properties(crate::properties::Event),
-    ToolSetting(crate::architecture_settings::Commit),
-    ArchTemplate(crate::architecture_template::Event),
     /// Blok oluştur's window (blocks.rs).
     Blocks(crate::blocks::Event),
     /// Bloklar panel (blocks_panel.rs).
     BlocksPanel(crate::blocks_panel::Event),
     Navigator(crate::navigator::Event),
-    RoadProject(crate::road_project_panel::Event),
-    MapWork(crate::map_work_panel::Event),
-    MapSurvey(crate::map_survey_panel::Event),
-    /// Şablonlar panel (templates_panel.rs).
-    TemplatesPanel(crate::templates_panel::Event),
-    /// Kaynaklar panel (sources/, docs/adr/0199 §7).
-    Sources(crate::sources::Event),
-    /// Veritabanı bağlantıları: the connection window, the password question, a connections file (db_connections.rs).
-    Db(crate::db_connections::Event),
-    /// Şablon düzenleyici (template_editor.rs).
-    TemplateEditor(crate::template_editor::Event),
     /// Blok öznitelikleri's window (block_attributes.rs).
     BlockAttributes(crate::block_attributes::Event),
-    /// Blok ekle's Öznitelik değerleri (attribute_values.rs).
-    AttributeValues(crate::attribute_values::Event),
     BlockCard(crate::block_card::Event),
     BlockParameterGroups(crate::block_parameter_groups::Event),
     BlockTypeValues(crate::block_type_values::Event),
     BlockSchedule(crate::block_schedule::Event),
     FindReplace(crate::find_replace::Event),
-    LayerMerge(crate::layer_merge::Event),
-    LayerTranslate(crate::layer_translate::Event),
     /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
     DrawingStandard(crate::drawing_standard::Event),
     ReviewNotes(crate::review_window::Event),
     StandardInstall(crate::standard_install::Event),
-    /// Veri profili's window (data_profile.rs, docs/adr/0541).
-    DataProfile(crate::data_profile::Event),
-    /// Alt ağlar's window (subnetworks_window.rs, docs/adr/0557).
-    Subnetworks(crate::subnetworks_window::Event),
-    /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
-    SourceStatus(crate::source_status::Event),
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     LineTypes(crate::line_types_window::Event),
     /// Parametreler's window (parameters_window.rs, docs/adr/0338 §1).
@@ -758,91 +476,20 @@ pub enum Message {
     BlockEditor(crate::block_editor::Event),
     /// The open drawings' tabs (doc_tabs.rs, docs/adr/0351 §3).
     DocTabs(crate::doc_tabs::Event),
-    /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
-    LayerFilter(crate::layer_filters::Event),
     /// An object's attachments: their windows, the viewer and the photos decoded (attachments.rs).
     Attachment(crate::attachments::Event),
     /// Bilgi's card over the drawing (info_card.rs, docs/adr/0225 §5).
     InfoCard(crate::info_card::Event),
-    /// Bilgi kartı ve eylemler (layer_info.rs).
-    LayerInfo(crate::layer_info::Event),
-    /// Veri kümesi bilgisi (dataset_window.rs).
-    DatasetInfo(crate::dataset_window::Event),
-    /// Etiketler's window (labelling/, docs/adr/0212 §4).
-    Labelling(crate::labelling::Event),
     /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
     LayerStates(crate::layer_states::Event),
     /// Görünümler's window (views.rs, docs/adr/0285 §1).
     Views(crate::views::Event),
-    /// Formlar's window (forms/designer.rs, docs/adr/0401).
-    Forms(crate::forms::designer::Event),
-    /// An event of İlişkiler (forms/relations.rs, docs/adr/0405).
-    Relations(crate::forms::relations::Event),
-    /// An event of Birleşik görünümler (joins_window.rs, docs/adr/0527).
-    Joins(crate::joins_window::Event),
-    /// An event of Olay bağları (event_links_window.rs, docs/adr/0569).
-    EventLinks(crate::event_links_window::Event),
-    /// An event of Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
-    Terrains(crate::terrain_window::Event),
-    /// An event of Güzergâh (alignment_window.rs, plan/road.md Y3).
-    Alignments(crate::alignment_window::Event),
-    /// An event of Boykesit (profile_window.rs, plan/road.md Y4).
-    Profiles(crate::profile_window::Event),
-    /// An event of Enkesit (section_window.rs, plan/road.md Y5).
-    Sections(crate::section_window::Event),
-    /// An event of Dever (superelevation_window.rs, plan/road.md Y6).
-    Superelevations(crate::superelevation_window::Event),
-    /// An event of Koridor (corridor_window.rs, plan/road.md Y7).
-    Corridors(crate::corridor_window::Event),
-    /// An event of Kübaj (volume_window.rs, plan/road.md Y8).
-    Volumes(crate::volume_window::Event),
-    /// An event of Brükner (haul_window.rs, plan/road.md Y9).
-    Hauls(crate::haul_window::Event),
-    /// An event of Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
-    Stakeout(crate::stakeout_window::Event),
-    /// An event of Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5).
-    RoadSheets(crate::road_sheets_window::Event),
-    RoadViews(crate::road_views_window::Event),
-    /// An event of Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6).
-    RoadAlignmentFit(crate::road_alignment_fit_window::Event),
-    /// An event of Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
-    RoadProfileFit(crate::road_profile_fit_window::Event),
-    /// An event of Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1).
-    Guardrails(crate::guardrail_window::Event),
-    /// An event of Menfez (culvert_window.rs, plan/road.md Y11.2).
-    Culverts(crate::culvert_window::Event),
-    /// An event of İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
-    RetainingWalls(crate::retaining_wall_window::Event),
-    /// An event of Platform (platform_window.rs, plan/road.md Y14.3).
-    Platforms(crate::platform_window::Event),
-    /// An event of Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3).
-    TerrainCloud(crate::terrain_cloud_window::Event),
-    /// An event of Drenaj (drainage_window.rs, plan/road.md Y16.3).
-    Drainage(crate::drainage_window::Event),
-    /// An event of Araç izi (swept_window.rs, plan/road.md Y17.3).
-    Swept(crate::swept_window::Event),
-    /// An event of Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
-    SurfaceAnalysis(crate::surface_analysis_window::Event),
-    /// An event of Görüş mesafesi (sight_window.rs, plan/road.md Y20).
-    Sight(crate::sight_window::Event),
     /// An event of Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25).
     Propose(crate::propose_window::Event),
-    /// An event of Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
-    DesignCheck(crate::design_check_window::Event),
-    /// An event of Platform suyu (platform_water_window.rs, plan/road.md Y22).
-    PlatformWater(crate::platform_water_window::Event),
-    /// An event of Taşıma planı (haul_plan_window.rs, plan/road.md Y23).
-    HaulPlan(crate::haul_plan_window::Event),
     /// Resim olarak kaydet from a window's picture (picture.rs, docs/adr/0937): where it goes is asked.
     SavePicture(kentos_ui::widget::picture::Saved),
     /// The picture written (its path and size), or why not; none when the file was not chosen.
     PictureWritten(Option<Result<(std::path::PathBuf, u32, u32), String>>),
-    /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
-    Pay(crate::pay_window::Event),
-    /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
-    Route(crate::route_window::Event),
-    /// An event of Kavşak (junction_window.rs, plan/road.md Y12.2).
-    Junctions(crate::junction_window::Event),
     /// An event of 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
     Scene3d(crate::scene3d_window::Event),
     /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
@@ -856,68 +503,17 @@ pub enum Message {
     /// IFC dışa aktar (bina): the file chosen (arch_ifc.rs, docs/adr/8047).
     IfcBuildingExport(Option<std::path::PathBuf>),
     GltfExport(Option<std::path::PathBuf>),
-    /// An event of Bina programı (program_window.rs, docs/adr/0773).
-    Program(crate::program_window::Event),
-    TableStyles(crate::forms::table_styles::Event),
-    Subtypes(crate::forms::subtypes::Event),
-    Contingents(crate::forms::contingents::Event),
-    LayerRules(crate::forms::layer_rules::Event),
-    LayerIndexes(crate::forms::layer_indexes::Event),
-    Domains(crate::forms::domains::Event),
-    /// An event of Kayıtları denetle (forms/audit.rs, docs/adr/0406).
-    FormAudit(crate::forms::audit::Event),
-    /// Formla düzenle (forms/entry.rs, docs/adr/0401).
-    FormEntry(crate::forms::entry::Event),
-    /// An event of Formlar's preview (forms/entry.rs, docs/adr/0403 §3).
-    FormPreview(crate::forms::entry::Event),
     AnnotationStyles(crate::annotation_styles::Event),
-    WallStyles(crate::wall_styles::Event),
     TableStyleDefs(crate::table_style_window::Event),
-    WallJoins(crate::wall_joins::Event),
-    OpeningTypes(crate::opening_types_window::Event),
-    Materials(crate::materials_window::Event),
-    RoomModules(crate::room_modules_window::Event),
-    DesignOptions(crate::design_options_window::Event),
-    TagsCheck(crate::tags_check::Event),
-    Schedule(crate::schedule_window::Event),
-    ViewRefs(crate::viewmark_refs::Event),
     SheetSet(crate::sheet_set::Event),
     Xrefs(crate::xrefs_window::Event),
     Flatten(crate::flatten_window::Event),
-    Reproject(crate::reproject_window::Event),
-    FeaturesCode(crate::features_window::Event),
-    Baselines(crate::baselines_window::Event),
-    Grade(crate::grade_window::Event),
     CleanReport(crate::clean_report_window::Event),
-    ParcelsCheck(crate::parcels_check_window::Event),
-    ParcelBoundaries(crate::parcel_boundaries_window::Event),
-    ParcelRegister(crate::parcel_register_window::Event),
-    PipesCheck(crate::pipes_check_window::Event),
     ExchangeCheck(crate::exchange_check_window::Event),
-    Asbuilt(crate::asbuilt_window::Event),
-    ProjectGraph(crate::project_graph_window::Event),
-    SurveyNetwork(crate::survey_network_window::Event),
-    FeaturesReconcile(crate::features_reconcile_window::Event),
-    Zoning(crate::zoning_window::Event),
-    ZoningSymbols(crate::zoning_symbols_window::Event),
-    ZoningDraft(crate::zoning_draft_window::Event),
-    Impact(crate::impact_window::Event),
-    Readjustment(crate::readjustment_window::Event),
-    Ortho(crate::ortho_window::Event),
-    OrthoCompare(crate::ortho_compare_window::Event),
-    OrthoSeamlines(crate::ortho_seamlines_window::Event),
-    Overlap(crate::overlap_window::Event),
-    Register(crate::register_window::Event),
-    ScanNetwork(crate::scan_network_window::Event),
-    CloudPlace(crate::cloud_place_window::Event),
     CatalogReport(crate::catalog_report_window::Event),
-    SheetContours(crate::sheet_contours_window::Event),
-    SectionCheck(crate::section_check_window::Event),
-    Stockpile(crate::stockpile_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
     /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
     BondNotice(crate::bond_notice::Event),
-    Quantities(crate::quantities::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
     FontReport(crate::font_report::Event),
@@ -927,10 +523,6 @@ pub enum Message {
     PlotScale(crate::annotation_scale::Event),
     /// Seçilenleri dosyaya kaydet, Başka çizimden al and Dosyadan blok ekle (drawing_exchange.rs).
     DrawingExchange(crate::drawing_exchange::Event),
-    /// Veri karşılaştır's window (data_compare.rs).
-    DataCompare(crate::data_compare::Event),
-    /// Kayıtlı ölçüleri denetle's window (cogo.rs).
-    Cogo(crate::cogo::Event),
     /// Tablo ekle's window (tables/insert.rs).
     TableInsert(crate::tables::insert::Event),
     /// Tabloyu düzenle's window (tables/editor.rs).
@@ -950,8 +542,6 @@ pub enum Message {
     Services(crate::services::app::Event),
     /// Bağlı katmanlar (bound.rs, docs/adr/0503).
     Bound(crate::bound::Event),
-    /// Kaynakla uzlaştır's window (source_reconcile.rs, docs/adr/0538).
-    Reconcile(crate::source_reconcile::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
     /// Resim ekle's file: its name, path and bytes, or none (cancelled).
@@ -960,16 +550,8 @@ pub enum Message {
     HoverCard(u64),
     /// The pointer rested on a snap past the tracking dwell (tracking.rs).
     TrackDwell(u64),
-    /// The Hesap windows (calc/).
-    Calc(crate::calc::Event),
-    /// A processing tool's window (processing/).
-    Processing(crate::processing::Event),
-    /// Model tasarımcısı (processing/designer/).
-    ModelDesigner(crate::processing::designer::Event),
     /// Katman stili (style/layer_style/).
     LayerStyle(crate::style::layer_style::Event),
-    /// İfade oluşturucu over an expression field's window (expression/).
-    Builder(crate::expression::Event),
     /// Stil yöneticisi (style/manager/).
     StyleManager(Box<crate::style::manager::Event>),
     /// Lejant (style/legend/).
@@ -989,8 +571,6 @@ pub enum Message {
     /// A value an option offers, chosen from its menu: the option's key and
     /// what typing the value gives (Yazı's Hiza, docs/adr/0145 §6).
     PromptChoice(&'static str, String),
-    /// Nokta hesapla: a construction over the running command (docs/adr/0083).
-    PointCalc(kentos_interaction::point_calc::CalcKind),
     /// A key press no text box captured (keys.rs); routed by ADR 0018.
     Key(KeyPress),
     CursorValueInput {
@@ -1080,15 +660,13 @@ pub enum Message {
     Snap(crate::snap_menu::Event),
     /// The status bar's scale selector (screen_scale.rs, docs/adr/0165 §5).
     ScreenScale(crate::screen_scale::Event),
-    /// İkinci sistem: the project's second coordinate system, how geographic
-    /// values are written (second_crs.rs, docs/adr/0167 §1).
-    SecondCrs(crate::second_crs::Event),
-    /// Harita sistemi chosen (docs/adr/0583 §3).
-    MapCrs(crate::map_crs::Choose),
-    /// A layer's source system (docs/adr/0583 §1–§2).
-    LayerCrs(crate::layer_crs::Event),
     /// A notice closed, by its ×, its time or Tümünü kapat (toasts.rs).
     ToastClosed(kentos_ui::widget::toast::Id),
+    /// A discipline's own messages (docs/adr/8054 §6), handled by its `state.rs`.
+    Road(crate::road::Event),
+    Map(crate::map::Event),
+    Gis(crate::gis::Event),
+    Arch(crate::arch::Event),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -1161,20 +739,8 @@ pub struct App {
     /// The Bloklar panel (blocks_panel.rs).
     pub(crate) blocks_panel: crate::blocks_panel::PanelState,
     pub(crate) navigator: crate::navigator::PanelState,
-    pub(crate) road_project: crate::road_project_panel::PanelState,
-    pub(crate) map_work: crate::map_work_panel::PanelState,
-    pub(crate) map_survey: crate::map_survey_panel::PanelState,
-    /// The Şablonlar panel (templates_panel.rs), and the templates drawn with
-    /// in this session, the newest first (templates.rs).
-    pub(crate) templates_panel: crate::templates_panel::PanelState,
     /// The bound standards' tool palettes (docs/adr/1014).
     pub(crate) office_palettes: crate::office_palettes::OfficePalettes,
-    /// Kaynaklar (sources/, docs/adr/0199 §7): its folders, what is open and read.
-    pub(crate) sources: crate::sources::SourcesPanel,
-    /// The connection window while it is open (db_connections.rs, docs/adr/0623).
-    pub(crate) db_editor: Option<crate::db_connections::Editor>,
-    /// The password question while a server waits for one.
-    pub(crate) db_password: Option<crate::db_connections::PasswordAsk>,
     /// Sil's question for a connection, by its name.
     pub(crate) db_removing: Option<String>,
     /// The database connections this window lists: the device's (`kentos_postgis::connections::store`), whose saved
@@ -1182,12 +748,8 @@ pub struct App {
     pub(crate) db_store: &'static kentos_postgis::connections::ConnectionStore,
     /// The connection PostGIS'e bağlan listed last, chosen when it opens again.
     pub(crate) postgis_last: Option<String>,
-    /// Şablon düzenleyici while it is open (template_editor.rs).
-    pub(crate) template_editor: Option<crate::template_editor::Editor>,
     /// Blok öznitelikleri's window, while it is open or away for a point (block_attributes.rs).
     pub(crate) block_attributes: Option<crate::block_attributes::Window>,
-    /// Blok ekle's Öznitelik değerleri, while it asks (attribute_values.rs).
-    pub(crate) attribute_values: Option<crate::attribute_values::Window>,
     pub(crate) block_card: Option<crate::block_card::Window>,
     pub(crate) block_parameter_groups: Option<crate::block_parameter_groups::Window>,
     pub(crate) block_type_values: Option<crate::block_type_values::Window>,
@@ -1202,22 +764,12 @@ pub struct App {
     pub(crate) text_file_wanted: bool,
     /// Koordinat oku's points whose rasters' values are to be read (docs/adr/0204 §8).
     pub(crate) raster_values_wanted: Vec<kentos_interaction::Vec2>,
-    /// Raster ekle and Raster stili (rasters/, docs/adr/0204 §8).
-    pub(crate) rasters: crate::rasters::Windows,
     /// XYZ sor's places and reaches whose clouds are to be read (docs/adr/0207 §7).
     pub(crate) cloud_query_wanted: Vec<(kentos_interaction::Vec2, f64)>,
     /// The network tools' questions, asked after the update (networks/, docs/adr/0209 §12).
     pub(crate) network_wanted: Vec<kentos_interaction::network::NetworkAsk>,
-    /// The project's networks as built on the network thread, and Ağlar's window.
-    pub(crate) networks: crate::networks::State,
-    /// Adres arama: the Adres tab, its locators on the address thread and the address windows (address/).
-    pub(crate) address: crate::address::State,
-    /// Zaman sürgüsü and the windows of Zaman and Senaryo (temporal/, docs/adr/0210).
-    pub(crate) time: crate::temporal::State,
     /// Commands a tool asked the host to run (Ağlar from the network tools).
     pub(crate) command_wanted: Vec<&'static str>,
-    /// Nokta bulutu ekle and Nokta bulutu stili (pointclouds/, docs/adr/0207 §9).
-    pub(crate) clouds: crate::pointclouds::Windows,
     /// Resim ekle asked for a picture file (docs/adr/0192 §5).
     pub(crate) image_file_wanted: bool,
     pub(crate) text_field_select: bool,
@@ -1228,24 +780,9 @@ pub struct App {
     /// Öznitelikler for a selection of several objects, as last worked out (properties/).
     pub(crate) properties_cache: crate::properties::PanelCache,
     pub(crate) properties_scope: crate::properties::InspectScope,
-    /// The bottom panel's Noktalar tab: its query and rows (points/, docs/adr/0153).
-    pub(crate) points: crate::points::PointsPanel,
-    /// The bottom panel's Tablo tab: its choices and rows (features/, docs/adr/0199 §4).
-    pub(crate) features: crate::features::FeaturesPanel,
-    /// The İstatistik and Grafik tabs: their choices and what was worked out (charts/, docs/adr/0227).
-    pub(crate) charts: crate::charts::ChartsPanel,
-    /// Alanlar, while it is open (layer_fields.rs, docs/adr/0199 §3).
-    pub(crate) layer_fields: Option<crate::layer_fields::Window>,
     /// The bottom panel's Arama tab: its choices and rows, and the place it marked (search/, docs/adr/0178).
     pub(crate) search: crate::search::SearchPanel,
-    /// The bottom panel's Topoloji tab: the last check, the chosen rows and the filter (topology/, docs/adr/0202 §5).
-    pub(crate) topology: crate::topology::TopologyPanel,
-    /// The bottom panel's Denetim tab: the last architectural audit, the chosen finding, the group and the
-    /// thresholds (arch_audit.rs, docs/adr/0703).
-    pub(crate) arch_audit: crate::arch_audit::ArchAuditPanel,
     pub(crate) cad_inspection: crate::cad_inspection::Panel,
-    /// Topoloji kuralları, while it is open (topology/rules.rs, docs/adr/0202 §6).
-    pub(crate) topology_rules: Option<crate::topology::rules::Window>,
     /// Köşe tablosu's rows selected and cell edited (vertices/, docs/adr/0172).
     pub(crate) vertices: crate::vertices::VertexPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
@@ -1279,8 +816,6 @@ pub struct App {
     pub(crate) layout: crate::layout::Keeper,
     /// Where the windows' sizes are written (docs/adr/0746).
     pub(crate) dialog_sizes: crate::dialog_sizes::Keeper,
-    /// The device's NTv2 grid library and the grids looked for (grids.rs, docs/adr/0168 §4).
-    pub(crate) grids: crate::grids::Grids,
     /// The rows round the bound layers' parts, asked for and arrived (band_ghosts.rs, docs/adr/0578 §1).
     pub(crate) bands: crate::band_ghosts::Bands,
     pub(crate) window_size: iced::Size,
@@ -1361,8 +896,6 @@ pub struct App {
     pub hover_card: Option<kentos_domain::Slot>,
     /// The hover the card's wait was started for (`Selection::hover_version`).
     pub hover_seen: u64,
-    /// The Hesap windows' fields, kept while the app runs (calc/).
-    pub calc: crate::calc::Calc,
     /// Nesne izleme: the points acquired by resting on a snap and the cursor's lock (tracking.rs, docs/adr/0085).
     pub tracking: kentos_interaction::object_tracking::ObjectTracking,
     /// Seçili katmanlarda önle's layers, by id (docs/adr/0162 §1): the
@@ -1378,14 +911,8 @@ pub struct App {
     pub locks: kentos_interaction::LockState,
     /// The UCSs Önceki gives back (ucs.rs, docs/adr/0261 §1).
     pub(crate) ucs_history: crate::ucs::UcsHistory,
-    /// The object template being drawn with (templates.rs, docs/adr/0176 §3):
-    /// its stamp is in the tools' context while its tool runs.
-    pub(crate) template: Option<crate::templates::TemplateRun>,
-    /// Etkin kat (active_level.rs, docs/adr/0713): the level new architectural objects go on, the session's.
-    pub(crate) active_level: crate::active_level::Chosen,
     /// Kat görünümü (active_level.rs, docs/adr/0715): which levels the plan shows, the session's.
     pub(crate) level_view: kentos_interaction::level_view::LevelView,
-    pub(crate) arch_template: Option<crate::architecture_template::Window>,
     /// The last template started, for Son komutu yinele; none once another
     /// command is.
     pub(crate) last_template: Option<String>,
@@ -1393,20 +920,10 @@ pub struct App {
     /// its id: its series goes on from run to run in the drawing (docs/adr/0176
     /// §3b), and a group's members take theirs from it (§5).
     pub(crate) template_names: std::collections::HashMap<String, String>,
-    /// Katmanları birleştir's window (layer_merge.rs, docs/adr/0177 §3).
-    pub(crate) layer_merge: Option<crate::layer_merge::Window>,
-    /// Katmanları çevir's window (layer_translate.rs, docs/adr/0311 §5).
-    pub(crate) layer_translate: Option<crate::layer_translate::Window>,
     /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
     pub(crate) review_window: Option<crate::review_window::Window>,
     pub(crate) standard_install: Option<crate::standard_install::Window>,
-    /// Veri profili's window (data_profile.rs, docs/adr/0541).
-    pub(crate) data_profile: Option<crate::data_profile::Window>,
-    /// Alt ağlar's window (subnetworks_window.rs, docs/adr/0557).
-    pub(crate) subnetworks_window: Option<crate::subnetworks_window::Window>,
-    /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
-    pub(crate) source_status: Option<crate::source_status::Window>,
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     pub(crate) line_types_window: Option<crate::line_types_window::Window>,
     /// Parametreler's window (parameters_window.rs, docs/adr/0338 §1).
@@ -1423,8 +940,6 @@ pub struct App {
     pub(crate) doc_tabs: crate::doc_tabs::DocTabs,
     /// Kırp's frames shown on the screen (clip_frames.rs, docs/adr/0351 §1).
     pub(crate) clip_frames: crate::clip_frames::ClipFrames,
-    /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
-    pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Bilgi's card: the object it shows and the drawing's point it was clicked at (info_card.rs).
     pub(crate) info_card: Option<(kentos_domain::Slot, kentos_interaction::Vec2)>,
     /// The attachments' photos decoded for the shell, each once (photo_view.rs).
@@ -1433,190 +948,33 @@ pub struct App {
     pub(crate) photo_viewer: Option<crate::attachments::Viewer>,
     /// Adres ekle and Eki düzenle (attachments.rs).
     pub(crate) attachment_form: Option<crate::attachments::Form>,
-    /// Bilgi kartı ve eylemler (layer_info.rs).
-    pub(crate) layer_info: Option<crate::layer_info::Window>,
-    /// Veri kümesi bilgisi (dataset_window.rs).
-    pub(crate) dataset_info: Option<crate::dataset_window::Window>,
-    /// Etiketler's window (labelling/, docs/adr/0212 §4).
-    pub(crate) labelling: Option<crate::labelling::Window>,
     /// Katman durumları's window (layer_states.rs, docs/adr/0177 §4).
     pub(crate) layer_states_window: Option<crate::layer_states::Window>,
     /// Görünümler's window (views.rs, docs/adr/0285 §1).
     pub(crate) views_window: Option<crate::views::Window>,
-    /// Formlar's window (forms/designer.rs, docs/adr/0401).
-    pub(crate) forms_window: Option<crate::forms::designer::Window>,
-    /// The designer's copied item with its layer's fields (docs/adr/0437): pasted into this or another form.
-    /// The designer's section library and kept drafts on this device (forms/library.rs, docs/adr/0441).
-    pub(crate) form_files: crate::forms::library::FormFiles,
     pub(crate) form_clipboard:
         Option<(kentos_commands::FormItem, Vec<kentos_commands::LayerField>)>,
-    /// Formla düzenle (forms/entry.rs, docs/adr/0401).
-    pub(crate) form_entry: Option<crate::forms::entry::Entry>,
-    /// The records whose forms wait under a child's (docs/adr/0440 §7): their drafts kept, the
-    /// nearest last.
-    pub(crate) form_stack: Vec<crate::forms::entry::Entry>,
-    /// İlişkiler (forms/relations.rs, docs/adr/0405).
-    pub(crate) relations_window: Option<crate::forms::relations::Window>,
-    /// Birleşik görünümler (joins_window.rs, docs/adr/0527).
-    pub(crate) joins_window: Option<crate::joins_window::Window>,
-    /// Olay bağları (event_links_window.rs, docs/adr/0569).
-    pub(crate) event_links_window: Option<crate::event_links_window::Window>,
-    /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
-    pub(crate) terrain_window: Option<crate::terrain_window::Window>,
-    /// Güzergâh (alignment_window.rs, plan/road.md Y3).
-    pub(crate) alignment_window: Option<crate::alignment_window::Window>,
-    /// Boykesit (profile_window.rs, plan/road.md Y4).
-    pub(crate) profile_window: Option<crate::profile_window::Window>,
-    /// Enkesit (section_window.rs, plan/road.md Y5).
-    pub(crate) section_window: Option<crate::section_window::Window>,
-    /// Dever (superelevation_window.rs, plan/road.md Y6).
-    pub(crate) superelevation_window: Option<Box<crate::superelevation_window::Window>>,
-    /// Koridor (corridor_window.rs, plan/road.md Y7).
-    pub(crate) corridor_window: Option<Box<crate::corridor_window::Window>>,
-    /// Kübaj (volume_window.rs, plan/road.md Y8).
-    pub(crate) volume_window: Option<Box<crate::volume_window::Window>>,
-    /// Brükner (haul_window.rs, plan/road.md Y9).
-    pub(crate) haul_window: Option<Box<crate::haul_window::Window>>,
-    /// Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
-    pub(crate) stakeout_window: Option<Box<crate::stakeout_window::Window>>,
-    /// Yol paftaları (road_sheets_window.rs, plan/road.md Y10.5).
-    pub(crate) road_sheets_window: Option<Box<crate::road_sheets_window::Window>>,
-    pub(crate) road_views_window: Option<Box<crate::road_views_window::Window>>,
-    /// Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6).
-    pub(crate) road_alignment_fit_window: Option<Box<crate::road_alignment_fit_window::Window>>,
-    /// Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b).
-    pub(crate) road_profile_fit_window: Option<Box<crate::road_profile_fit_window::Window>>,
-    /// Otokorkuluk (guardrail_window.rs, plan/road.md Y11.1).
-    pub(crate) guardrail_window: Option<Box<crate::guardrail_window::Window>>,
-    /// Menfez (culvert_window.rs, plan/road.md Y11.2).
-    pub(crate) culvert_window: Option<Box<crate::culvert_window::Window>>,
-    /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
-    pub(crate) retaining_wall_window: Option<Box<crate::retaining_wall_window::Window>>,
-    /// Platform (platform_window.rs, plan/road.md Y14.3).
-    pub(crate) platform_window: Option<Box<crate::platform_window::Window>>,
-    /// Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3).
-    pub(crate) terrain_cloud_window: Option<Box<crate::terrain_cloud_window::Window>>,
-    /// Drenaj (drainage_window.rs, plan/road.md Y16.3).
-    pub(crate) drainage_window: Option<Box<crate::drainage_window::Window>>,
-    /// Araç izi (swept_window.rs, plan/road.md Y17.3).
-    pub(crate) swept_window: Option<Box<crate::swept_window::Window>>,
-    /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
-    pub(crate) surface_analysis_window: Option<Box<crate::surface_analysis_window::Window>>,
-    /// Görüş mesafesi (sight_window.rs, plan/road.md Y20).
-    pub(crate) sight_window: Option<Box<crate::sight_window::Window>>,
     /// Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25).
     pub(crate) propose_window: Option<Box<crate::propose_window::Window>>,
-    /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
-    pub(crate) design_check_window: Option<Box<crate::design_check_window::Window>>,
-    /// Platform suyu (platform_water_window.rs, plan/road.md Y22).
-    pub(crate) platform_water_window: Option<Box<crate::platform_water_window::Window>>,
-    /// Taşıma planı (haul_plan_window.rs, plan/road.md Y23).
-    pub(crate) haul_plan_window: Option<Box<crate::haul_plan_window::Window>>,
-    /// Poz metrajı (pay_window.rs, plan/road.md Y11.4).
-    pub(crate) pay_window: Option<Box<crate::pay_window::Window>>,
-    /// Ön güzergâh (route_window.rs, plan/road.md Y12.1).
-    pub(crate) route_window: Option<Box<crate::route_window::Window>>,
-    /// Kavşak (junction_window.rs, plan/road.md Y12.2).
-    pub(crate) junction_window: Option<Box<crate::junction_window::Window>>,
     /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
     pub(crate) scene3d_window: Option<Box<crate::scene3d_window::Window>>,
-    /// Bina programı (program_window.rs, docs/adr/0773).
-    pub(crate) program_window: Option<crate::program_window::Window>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
     pub(crate) space_merging: Option<(kentos_commands::SpacesEdit, String)>,
-    pub(crate) table_styles: Option<crate::forms::table_styles::Window>,
-    pub(crate) subtypes: Option<crate::forms::subtypes::Window>,
-    pub(crate) contingents: Option<crate::forms::contingents::Window>,
-    /// Kayıt kuralları (docs/adr/0438).
-    pub(crate) layer_rules: Option<crate::forms::layer_rules::Window>,
-    /// Dizinler (docs/adr/0758).
-    pub(crate) layer_indexes: Option<crate::forms::layer_indexes::Window>,
-    /// Haritadan seç while it runs (docs/adr/0759 §1): the form's item and the window put aside.
-    pub(crate) form_pick: Option<crate::forms::map_pick::FormPick>,
-    pub(crate) domains: Option<crate::forms::domains::Window>,
-    /// Kayıtları denetle (forms/audit.rs, docs/adr/0406).
-    pub(crate) form_audit: Option<crate::forms::audit::Window>,
-    /// What the session remembers of the forms: the "reuse last" values (forms/entry.rs, docs/adr/0402 §7).
-    pub(crate) form_memory: crate::forms::entry::Memory,
-    /// Formlar's preview of its copy (forms/entry.rs, docs/adr/0403 §3).
-    pub(crate) form_preview: Option<crate::forms::entry::Entry>,
     /// The object a drawing tool has just written: its form opens (forms/mod.rs, docs/adr/0403 §4).
     pub(crate) form_on_create: Option<kentos_domain::Slot>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
     pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
-    /// Duvar stilleri (wall_styles.rs, docs/adr/0339 §6).
-    pub(crate) wall_styles: Option<crate::wall_styles::Window>,
     /// Tablo stilleri (table_style_window.rs, docs/adr/1127 §4).
     pub(crate) table_style_window: Option<crate::table_style_window::Window>,
-    /// Birleşimleri denetle's window (wall_joins.rs, docs/adr/0340 §6).
-    pub(crate) wall_joins: Option<crate::wall_joins::Window>,
-    /// Kapı ve pencere tipleri's window (opening_types_window.rs, docs/adr/0772).
-    pub(crate) opening_types: Option<crate::opening_types_window::Window>,
-    /// Malzemeler's window (materials_window.rs, docs/adr/0785).
-    pub(crate) materials: Option<crate::materials_window::Window>,
-    /// The office's material library folders (material_library.rs, docs/adr/0791).
-    pub(crate) material_libraries: crate::material_library::Libraries,
-    /// Oda modülleri's window (room_modules_window.rs, docs/adr/0775).
-    pub(crate) room_modules: Option<crate::room_modules_window::Window>,
-    /// Tasarım seçenekleri's window (design_options_window.rs, docs/adr/0788).
-    pub(crate) design_options: Option<crate::design_options_window::Window>,
-    /// Etiketleri denetle's window (tags_check.rs, docs/adr/0344 §2).
-    pub(crate) tags_check: Option<crate::tags_check::Window>,
-    /// Çizelge ayarları's and Dosyaya yaz's window (schedule_window.rs, docs/adr/0733 §5).
-    pub(crate) schedule: Option<crate::schedule_window::Window>,
-    /// Başvurular' window (viewmark_refs.rs, docs/adr/0345 §3).
-    pub(crate) view_refs: Option<crate::viewmark_refs::Window>,
     pub(crate) sheet_set: Option<crate::sheet_set::Window>,
     /// Dış başvurular and Dış başvuru ekle (xrefs_window.rs, docs/adr/0348 §5).
     pub(crate) xrefs: crate::xrefs_window::State,
     pub(crate) flatten: crate::flatten_window::State,
-    /// Katmanın koordinatlarını dönüştür's preview (reproject_window.rs, docs/adr/2500).
-    pub(crate) reproject: crate::reproject_window::State,
-    pub(crate) features_code: crate::features_window::State,
-    pub(crate) baselines: crate::baselines_window::State,
-    pub(crate) grade: crate::grade_window::State,
     pub(crate) clean_report: crate::clean_report_window::State,
-    pub(crate) parcels_check: crate::parcels_check_window::State,
-    pub(crate) parcel_boundaries: crate::parcel_boundaries_window::State,
-    pub(crate) parcel_register: crate::parcel_register_window::State,
-    /// Sınır grafiği left on the drawing by Çizimde göster (docs/adr/2220), until İşareti kaldır.
-    pub(crate) parcel_graph: Option<crate::parcel_boundaries_marks::Shown>,
-    /// Senaryo ölçüleri's access left on the drawing (docs/adr/2260), until İşareti kaldır.
-    pub(crate) impact_reach: Option<crate::impact_reach_marks::Shown>,
-    /// İmar planı denetimi's road overlaps hatched on the drawing (docs/adr/3040).
-    pub(crate) zoning_shown_marks: Option<crate::zoning_marks::Shown>,
-    /// Boru hattı denetimi's crossings left on the drawing (pipes_marks.rs, docs/adr/3160).
-    pub(crate) pipes_shown_marks: Option<crate::pipes_marks::Shown>,
-    /// GNSS arşivi's baseline drawn on the map (docs/adr/3320).
-    pub(crate) baseline_shown: Option<crate::survey_baseline_marks::Shown>,
-    pub(crate) pipes_check: crate::pipes_check_window::State,
     pub(crate) exchange_check: crate::exchange_check_window::State,
-    pub(crate) asbuilt: crate::asbuilt_window::State,
-    pub(crate) project_graph: crate::project_graph_window::State,
-    pub(crate) survey_network: crate::survey_network_window::State,
-    pub(crate) features_reconcile: crate::features_reconcile_window::State,
-    pub(crate) zoning: crate::zoning_window::State,
-    pub(crate) zoning_symbols: crate::zoning_symbols_window::State,
-    pub(crate) zoning_draft: crate::zoning_draft_window::State,
-    pub(crate) impact: crate::impact_window::State,
-    pub(crate) readjustment: crate::readjustment_window::State,
-    pub(crate) ortho: crate::ortho_window::State,
-    pub(crate) ortho_compare: crate::ortho_compare_window::State,
-    pub(crate) ortho_seamlines: crate::ortho_seamlines_window::State,
-    pub(crate) overlap: crate::overlap_window::State,
-    pub(crate) register: crate::register_window::State,
-    pub(crate) scan_network: crate::scan_network_window::State,
-    pub(crate) cloud_place: crate::cloud_place_window::State,
     pub(crate) catalog_report: crate::catalog_report_window::State,
-    pub(crate) sheet_contours: crate::sheet_contours_window::State,
-    pub(crate) section_check: crate::section_check_window::State,
-    pub(crate) stockpile: crate::stockpile_window::State,
-    /// Senaryo ölçüleri's base stamps saved this session, by scenario (docs/adr/1440 §3).
-    pub(crate) impact_stamps: crate::impact_window::Stamps,
     /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
     pub(crate) xref_watch: crate::xrefs_watch::Watch,
-    /// Metraj's window (quantities.rs, docs/adr/0342 §5).
-    pub(crate) quantities: Option<crate::quantities::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
     pub(crate) layer_purge: Option<crate::layer_purge::Window>,
     /// Başka çizimden al's window (drawing_exchange.rs, docs/adr/0193 §2).
@@ -1625,10 +983,6 @@ pub struct App {
     pub(crate) layer_list: Option<crate::layer_list::Window>,
     /// Ölçek yaz…'s typed scale while its window is open (annotation_scale.rs, docs/adr/0205 §4).
     pub(crate) plot_scale_field: Option<String>,
-    /// Veri karşılaştır's window (data_compare.rs, docs/adr/0179).
-    pub(crate) data_compare: Option<crate::data_compare::Window>,
-    /// Kayıtlı ölçüleri denetle's window (cogo.rs, docs/adr/0180).
-    pub(crate) cogo: Option<crate::cogo::Window>,
     /// Tablo ekle's choices, kept while the app runs (tables/insert.rs, docs/adr/0184).
     pub(crate) table_insert: crate::tables::insert::Insert,
     /// Tabloyu düzenle's window (tables/editor.rs).
@@ -1656,10 +1010,6 @@ pub struct App {
     pub(crate) tracking_waited: u64,
     /// Whether a rest's dwell passes on real time; the trace player passes it by hand (traces/).
     pub(crate) dwell_on_time: bool,
-    /// İşlemler: the processing tools and models, their window and history (processing/).
-    pub processing: crate::processing::Processing,
-    /// İfade oluşturucu, while it is open over the window that asked for it (expression/).
-    pub(crate) builder: Option<crate::expression::Builder>,
     /// Whether İfade oluşturucu was left in Akış (for as long as the program runs).
     pub(crate) builder_flow: bool,
     /// İfade oluşturucu's Son kullanılanlar (for as long as the program runs; docs/adr/0603).
@@ -1674,8 +1024,6 @@ pub struct App {
     pub removing_layer: Option<String>,
     /// The bound layer Kaynaktan oku asks about (bound.rs, `Dialog::SourceDiscard`).
     pub bound_pending: Option<String>,
-    /// Kaynakla uzlaştır's window (source_reconcile.rs, docs/adr/0538).
-    pub(crate) reconcile: Option<crate::source_reconcile::Window>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
     pub settings: Settings,
     /// The settings window's draft while it is open.
@@ -1759,6 +1107,12 @@ pub struct App {
     pub(crate) program: Option<kentos_launch::Module>,
     /// Starts the program a file belongs to (program.rs); a test puts one of its own here.
     pub(crate) hand_over: fn(kentos_launch::Module, &std::path::Path) -> Result<String, String>,
+    /// The disciplines' own windows and panels (docs/adr/8054 §6): each module keeps its state in its
+    /// `state.rs`, so a new window of one leaves this struct as it is.
+    pub(crate) road: crate::road::RoadUiState,
+    pub(crate) map: crate::map::MapUiState,
+    pub(crate) gis: crate::gis::GisUiState,
+    pub(crate) arch: crate::arch::ArchUiState,
 }
 
 impl App {

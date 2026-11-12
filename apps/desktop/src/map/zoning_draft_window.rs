@@ -5,6 +5,7 @@
 //! Yönetmeliği m. 26 asks of the change. Taslağı kaydet keeps the draft in the project in one undo step and Taslağı
 //! sil takes a kept one out; the decision areas in force are never written. A draft is not an approved change.
 
+use crate::map;
 use iced::{Element, Length, Task};
 use kentos_commands::{CommandResult, DRAFT_FIELDS, ZONING_PROFILE, ZoningDraft, ZoningDraftChange, ZoningDrafted, builtin_profile};
 use kentos_interaction::Level;
@@ -92,7 +93,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::ZoningDraft(e)
+    Message::Map(map::Event::ZoningDraft(e))
 }
 
 /// A field's words.
@@ -158,7 +159,7 @@ fn asks(kind: &str) -> (&'static str, &'static str) {
 
 impl App {
     fn zoning_draft_input(&self) -> ZoningDraft {
-        let s = &self.zoning_draft;
+        let s = &self.map.zoning_draft;
         ZoningDraft {
             id: s.id.trim().to_owned(),
             plan: s.plan.clone(),
@@ -171,19 +172,26 @@ impl App {
 
     fn zoning_draft_run(&mut self) {
         let input = self.zoning_draft_input();
-        let Some(doc) = self.document.as_mut() else { return };
-        self.zoning_draft.answer = Some(match zoning_draft::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Önizleme alınamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.map.zoning_draft.answer = Some(
+            match zoning_draft::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Önizleme alınamadı.".to_owned()),
+            },
+        );
     }
 
     /// The areas of the form's plan: id, name and use.
     fn zoning_draft_areas(&self) -> Vec<(String, String, String)> {
-        self.document.as_ref().map(|d| zoning_draft::areas(&d.model, &self.zoning_draft.plan)).unwrap_or_default()
+        self.document
+            .as_ref()
+            .map(|d| zoning_draft::areas(&d.model, &self.map.zoning_draft.plan))
+            .unwrap_or_default()
     }
 
     fn zoning_draft_name(&self, uid: &str) -> String {
@@ -203,15 +211,19 @@ impl App {
         let plans = zoning_draft::plans(&doc.model);
         let taken: Vec<String> = zoning_draft::drafts(&doc.model).into_iter().map(|d| d.id).collect();
         let id = (1..).map(|n| format!("T-{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
-        self.zoning_draft = State {
+        self.map.zoning_draft = State {
             id,
             plan: plans.first().map(|(id, _)| id.clone()).unwrap_or_default(),
             field: "Kullanim".to_owned(),
             ..State::default()
         };
-        self.zoning_draft.area = self.zoning_draft_areas().first().map(|(u, _, _)| u.clone()).unwrap_or_default();
+        self.map.zoning_draft.area = self
+            .zoning_draft_areas()
+            .first()
+            .map(|(u, _, _)| u.clone())
+            .unwrap_or_default();
         self.zoning_draft_run();
-        self.dialog = Some(Dialog::ZoningDraft);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::ZoningDraft));
         Task::none()
     }
 
@@ -224,7 +236,7 @@ impl App {
                 }
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
                 let Some(d) = zoning_draft::drafts(&doc.model).into_iter().find(|d| d.id == id) else { return Task::none() };
-                let s = &mut self.zoning_draft;
+                let s = &mut self.map.zoning_draft;
                 s.id = d.id;
                 s.plan = d.plan;
                 s.reason = d.reason;
@@ -235,24 +247,28 @@ impl App {
                     .collect();
                 s.chosen = None;
             }
-            Event::Id(v) => self.zoning_draft.id = v,
+            Event::Id(v) => self.map.zoning_draft.id = v,
             Event::Plan(v) => {
-                if v != self.zoning_draft.plan {
-                    self.zoning_draft.plan = v;
-                    self.zoning_draft.changes.clear();
-                    self.zoning_draft.chosen = None;
-                    self.zoning_draft.area = self.zoning_draft_areas().first().map(|(u, _, _)| u.clone()).unwrap_or_default();
+                if v != self.map.zoning_draft.plan {
+                    self.map.zoning_draft.plan = v;
+                    self.map.zoning_draft.changes.clear();
+                    self.map.zoning_draft.chosen = None;
+                    self.map.zoning_draft.area = self
+                        .zoning_draft_areas()
+                        .first()
+                        .map(|(u, _, _)| u.clone())
+                        .unwrap_or_default();
                 }
             }
-            Event::Reason(v) => self.zoning_draft.reason = v,
-            Event::Area(v) => self.zoning_draft.area = v,
+            Event::Reason(v) => self.map.zoning_draft.reason = v,
+            Event::Area(v) => self.map.zoning_draft.area = v,
             Event::Field(v) => {
-                self.zoning_draft.field = v;
-                self.zoning_draft.value.clear();
+                self.map.zoning_draft.field = v;
+                self.map.zoning_draft.value.clear();
             }
-            Event::Value(v) => self.zoning_draft.value = v,
+            Event::Value(v) => self.map.zoning_draft.value = v,
             Event::Add => {
-                let s = &mut self.zoning_draft;
+                let s = &mut self.map.zoning_draft;
                 if s.area.is_empty() || s.value.trim().is_empty() {
                     return Task::none();
                 }
@@ -264,15 +280,15 @@ impl App {
                 s.value.clear();
                 s.show = Show::Changes;
             }
-            Event::Choose(i) => self.zoning_draft.chosen = Some(i),
+            Event::Choose(i) => self.map.zoning_draft.chosen = Some(i),
             Event::Drop => {
-                let s = &mut self.zoning_draft;
+                let s = &mut self.map.zoning_draft;
                 if let Some(i) = s.chosen.take().filter(|i| *i < s.changes.len()) {
                     s.changes.remove(i);
                 }
             }
             Event::Show(v) => {
-                self.zoning_draft.show = v;
+                self.map.zoning_draft.show = v;
                 return Task::none();
             }
             Event::Save | Event::Remove => {
@@ -284,7 +300,7 @@ impl App {
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
                 match zoning_draft::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, .. } => {
-                        let id = self.zoning_draft.id.trim().to_owned();
+                        let id = self.map.zoning_draft.id.trim().to_owned();
                         self.say(
                             Level::Success,
                             if remove {
@@ -307,7 +323,7 @@ impl App {
                 }
             }
             Event::Close => {
-                self.zoning_draft = State::default();
+                self.map.zoning_draft = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -317,7 +333,7 @@ impl App {
     }
 
     pub(crate) fn zoning_draft_view(&self) -> Element<'_, Message> {
-        let s = &self.zoning_draft;
+        let s = &self.map.zoning_draft;
         let f = self.format();
         let Some(doc) = self.document.as_ref() else { return iced::widget::Space::new().into() };
         let kept = zoning_draft::drafts(&doc.model);
@@ -472,7 +488,7 @@ impl App {
     }
 
     pub(crate) fn zoning_draft_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let s = &self.zoning_draft;
+        let s = &self.map.zoning_draft;
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => matches!(s.answer, Some(Ok(_))).then(|| msg(Event::Save)),

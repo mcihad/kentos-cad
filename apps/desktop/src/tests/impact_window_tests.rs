@@ -5,6 +5,7 @@
 //! Erişimi çizimde göster leaves the scenario's access on the drawing until İşareti kaldır (docs/adr/2260).
 //! Harita and GIS offer it, Yol and Mimari do not. And its pictures.
 
+use crate::gis;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -27,34 +28,75 @@ fn the_alternative_is_measured_saved_and_found_stale_when_the_base_moves() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("scenario.impact"));
-    assert_eq!(app.dialog, Some(Dialog::Impact));
-    let r = app.impact.answer.clone().expect("an answer").expect("compared");
-    let capacity = r.measures.iter().find(|m| m.id == "capacity").expect("capacity");
+    assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::Impact)));
+    let r = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("compared");
+    let capacity = r
+        .measures
+        .iter()
+        .find(|m| m.id == "capacity")
+        .expect("capacity");
     assert!((capacity.difference + 1375.0).abs() < 1e-6, "{capacity:?}");
     let changes: Vec<&str> = r.changes.iter().map(|c| c.change.as_str()).collect();
     assert_eq!(changes, ["decision", "geometry", "removed", "added"]);
     assert_eq!(r.stale, None);
-    let _ = app.update(Message::Impact(I::View(View::Changes)));
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::View(View::Changes))));
     // Raporu kaydet: the CSV, and the stamp kept.
     let dir = std::env::temp_dir().join(format!("kentos-senaryo-olculeri-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
     let file = dir.join("rapor.csv");
     app.impact_save(file.clone());
     let text = std::fs::read_to_string(&file).expect("written");
-    assert!(text.starts_with(&format!("Senaryo;Alternatif A;Taban damgası;{}", r.stamp)), "{text}");
-    assert!(text.contains("K2;Kararı değişti;ticaret-konut;konut;1500;1500;2625;2250"), "{text}");
+    assert!(
+        text.starts_with(&format!("Senaryo;Alternatif A;Taban damgası;{}", r.stamp)),
+        "{text}"
+    );
+    assert!(
+        text.contains("K2;Kararı değişti;ticaret-konut;konut;1500;1500;2625;2250"),
+        "{text}"
+    );
     let _ = std::fs::remove_dir_all(dir);
-    assert_eq!(app.impact.answer.clone().expect("an answer").expect("compared").stale, Some(false));
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.gis
+            .impact
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared")
+            .stale,
+        Some(false)
+    );
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
     // The field state changes: K1 moves; the alternative is stale.
-    let _ = app.update(Message::Impact(I::Close));
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::Close)));
     let doc = app.document.as_mut().expect("a drawing");
     let slot = kentos_domain::Slot(1);
-    let Some(kentos_commands::Entity::Polygon(mut k1)) = doc.model.get(slot).cloned() else { panic!("K1") };
+    let Some(kentos_commands::Entity::Polygon(mut k1)) = doc.model.get(slot).cloned() else {
+        panic!("K1")
+    };
     k1.pts[1].x += 1.0;
-    doc.model.update_many(vec![(slot, kentos_commands::Entity::Polygon(k1))], "Taşı");
+    doc.model
+        .update_many(vec![(slot, kentos_commands::Entity::Polygon(k1))], "Taşı");
     let _ = app.update(Message::Run("scenario.impact"));
-    assert_eq!(app.impact.answer.clone().expect("an answer").expect("compared").stale, Some(true));
+    assert_eq!(
+        app.gis
+            .impact
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("compared")
+            .stale,
+        Some(true)
+    );
 }
 
 /// docs/adr/2660: the sewer line's layer chosen and 40 m typed give the shared case's infrastructure measures.
@@ -75,11 +117,32 @@ fn the_area_near_the_infrastructure_is_the_case_s() {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("scenario.impact"));
-    assert!(app.impact.layers.iter().any(|(id, name)| id == "altyapi" && name == "Kanalizasyon hattı"), "{:?}", app.impact.layers);
-    let _ = app.update(Message::Impact(I::InfraLayer("altyapi".into())));
-    let _ = app.update(Message::Impact(I::InfraDistance("40".into())));
-    let r = app.impact.answer.clone().expect("an answer").expect("compared");
-    let want = case["steps"][0]["result"]["output"]["measures"].as_array().expect("measures").clone();
+    assert!(
+        app.gis
+            .impact
+            .layers
+            .iter()
+            .any(|(id, name)| id == "altyapi" && name == "Kanalizasyon hattı"),
+        "{:?}",
+        app.gis.impact.layers
+    );
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::InfraLayer(
+        "altyapi".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::InfraDistance(
+        "40".into(),
+    ))));
+    let r = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("compared");
+    let want = case["steps"][0]["result"]["output"]["measures"]
+        .as_array()
+        .expect("measures")
+        .clone();
     for id in ["infrastructure", "infrastructureShare"] {
         let got = r.measures.iter().find(|m| m.id == id).expect(id);
         let w = want.iter().find(|m| m["id"] == id).expect(id);
@@ -110,10 +173,13 @@ fn the_area_near_the_infrastructure_is_the_case_s() {
             assert!((a["distance"].as_f64().expect("d") - b["distance"].as_f64().expect("d")).abs() < 1e-6);
         }
     }
-    let _ = app.update(Message::Impact(I::DrawNear));
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::DrawNear)));
     assert_eq!(app.dialog, None);
     let m = app.impact_reach_marks().expect("the marks");
-    assert_eq!(m.reached.len() + m.unreached.len(), near.alternative_near.len() + near.alternative_far.len());
+    assert_eq!(
+        m.reached.len() + m.unreached.len(),
+        near.alternative_near.len() + near.alternative_far.len()
+    );
     assert_eq!(m.lines.len(), near.alternative_lines.len());
     assert_eq!(m.links.len(), near.alternative_links.len(), "each area to its nearest line");
     assert!(m.links.iter().all(|(_, _, words)| words.ends_with(" m")), "{:?}", m.links);
@@ -122,9 +188,16 @@ fn the_area_near_the_infrastructure_is_the_case_s() {
     assert!(app.impact_reach_marks().is_none());
     // A distance that does not read is said.
     let _ = app.update(Message::Run("scenario.impact"));
-    let _ = app.update(Message::Impact(I::InfraLayer("altyapi".into())));
-    let _ = app.update(Message::Impact(I::InfraDistance("kırk".into())));
-    assert_eq!(app.impact.answer.clone().expect("an answer"), Err("Altyapı uzaklığı “kırk” bir sayı değil.".to_owned()));
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::InfraLayer(
+        "altyapi".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::InfraDistance(
+        "kırk".into(),
+    ))));
+    assert_eq!(
+        app.gis.impact.answer.clone().expect("an answer"),
+        Err("Altyapı uzaklığı “kırk” bir sayı değil.".to_owned())
+    );
 }
 
 /// docs/adr/2040: the user's impervious shares and access typed in the form give the shared case's measures.
@@ -138,29 +211,61 @@ fn the_impervious_shares_and_the_access_typed_give_the_case_s_measures() {
         I::To("park, yesil".into()),
         I::Distance("40".into()),
     ] {
-        let _ = app.update(Message::Impact(e));
+        let _ = app.update(Message::Gis(gis::Event::Impact(e)));
     }
-    let r = app.impact.answer.clone().expect("an answer").expect("compared");
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.scenarios.impact.json")).expect("cases");
-    let want = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "geçirimsizlik ve erişim birlikte")
+    let r = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("compared");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.scenarios.impact.json"
+    ))
+    .expect("cases");
+    let want = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "geçirimsizlik ve erişim birlikte")
         .expect("the case")["steps"][0]["result"]["output"]["measures"]
         .clone();
     for id in ["impervious", "access", "accessShare"] {
         let got = r.measures.iter().find(|m| m.id == id).expect("the measure");
-        let w = want.as_array().expect("measures").iter().find(|m| m["id"] == id).expect("the case's");
-        assert!((got.alternative - w["alternative"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-9, "{id}");
-        assert!((got.base - w["base"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-9, "{id}");
+        let w = want
+            .as_array()
+            .expect("measures")
+            .iter()
+            .find(|m| m["id"] == id)
+            .expect("the case's");
+        assert!(
+            (got.alternative - w["alternative"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-9,
+            "{id}"
+        );
+        assert!(
+            (got.base - w["base"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-9,
+            "{id}"
+        );
     }
-    let _ = app.update(Message::Impact(I::Shares("konut altmış".into())));
-    assert_eq!(app.impact.answer.clone().expect("an answer"), Err("“altmış” bir sayı değil (geçirimsizlik payı).".into()));
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::Shares(
+        "konut altmış".into(),
+    ))));
+    assert_eq!(
+        app.gis.impact.answer.clone().expect("an answer"),
+        Err("“altmış” bir sayı değil (geçirimsizlik payı).".into())
+    );
 }
 
 /// The access typed in the form: housing to park and green area within 40 m (the shared case's question).
 fn access_asked(app: &mut App) {
     let _ = app.update(Message::Run("scenario.impact"));
-    for e in [I::From("konut".into()), I::To("park, yesil".into()), I::Distance("40".into())] {
-        let _ = app.update(Message::Impact(e));
+    for e in [
+        I::From("konut".into()),
+        I::To("park, yesil".into()),
+        I::Distance("40".into()),
+    ] {
+        let _ = app.update(Message::Gis(gis::Event::Impact(e)));
     }
 }
 
@@ -176,7 +281,7 @@ fn the_access_stays_on_the_drawing_until_unmarked() {
         .expect("the case")["steps"][0]["result"]["output"]["reach"]
         .clone();
     let count = |k: &str| want[k].as_array().map_or(0, Vec::len);
-    let _ = app.update(Message::Impact(I::DrawAccess));
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::DrawAccess)));
     assert_eq!(app.dialog, None);
     let m = app.impact_reach_marks().expect("the marks");
     assert_eq!(
@@ -221,7 +326,7 @@ fn access_screens() {
             let _ = app.update(Message::Run("view.zoomExtents"));
             access_asked(&mut app);
             if draw {
-                let _ = app.update(Message::Impact(I::DrawAccess));
+                let _ = app.update(Message::Gis(gis::Event::Impact(I::DrawAccess)));
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
@@ -271,9 +376,9 @@ fn screens() {
                 I::To("park, yesil".into()),
                 I::Distance("40".into()),
             ] {
-                let _ = app.update(Message::Impact(e));
+                let _ = app.update(Message::Gis(gis::Event::Impact(e)));
             }
-            let _ = app.update(Message::Impact(I::View(view)));
+            let _ = app.update(Message::Gis(gis::Event::Impact(I::View(view))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
@@ -318,8 +423,11 @@ fn infra_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("scenario.impact"));
-        for e in [I::InfraLayer("altyapi".into()), I::InfraDistance("40".into())] {
-            let _ = app.update(Message::Impact(e));
+        for e in [
+            I::InfraLayer("altyapi".into()),
+            I::InfraDistance("40".into()),
+        ] {
+            let _ = app.update(Message::Gis(gis::Event::Impact(e)));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -330,9 +438,10 @@ fn infra_screens() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
         // docs/adr/3060: Altyapıyı çizimde göster, `.run/gui-evidence/altyapi-cizimde-3060/`.
-        let _ = app.update(Message::Impact(I::DrawNear));
+        let _ = app.update(Message::Gis(gis::Event::Impact(I::DrawNear)));
         snapshot.settle(&mut app, App::view, &mut update);
-        let near = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/altyapi-cizimde-3060");
+        let near = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.run/gui-evidence/altyapi-cizimde-3060");
         std::fs::create_dir_all(&near).expect("a folder");
         let file = near.join(format!("altyapi-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
@@ -377,9 +486,9 @@ fn link_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("scenario.impact"));
         for e in [I::InfraLayer("yol".into()), I::InfraDistance("30".into())] {
-            let _ = app.update(Message::Impact(e));
+            let _ = app.update(Message::Gis(gis::Event::Impact(e)));
         }
-        let _ = app.update(Message::Impact(I::DrawNear));
+        let _ = app.update(Message::Gis(gis::Event::Impact(I::DrawNear)));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

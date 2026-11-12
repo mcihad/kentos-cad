@@ -21,6 +21,7 @@
 //! each one undo step, and closes. The free haul, the sites, the unit prices and the truck's payload are the user's:
 //! nothing is filled in; the cost is the priced items' sum, the trips the hauled volume over the payload (ADR 0907 §5).
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Length, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -284,7 +285,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Hauls(event)
+    Message::Road(road::Event::Hauls(event))
 }
 
 fn chosen_row(w: &mut Window) -> Option<&mut Row> {
@@ -303,27 +304,29 @@ impl App {
             return;
         }
         let kept = doc.model.road_hauls().to_vec();
-        self.haul_window = Some(Box::new(Window {
+        self.road.haul_window = Some(Box::new(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
             ..Window::default()
         }));
-        self.dialog = Some(Dialog::Hauls);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Hauls));
         self.refresh_haul();
     }
 
     /// Brükner oluştur from the ribbon: the window with a new diagram of the first volume.
     pub(crate) fn new_haul(&mut self) {
         self.open_hauls();
-        if self.haul_window.is_some() {
+        if self.road.haul_window.is_some() {
             let _ = self.haul_event(Event::New);
         }
     }
 
     fn refresh_haul(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.haul_window.as_mut() else { return };
+        let Some(w) = self.road.haul_window.as_mut() else {
+            return;
+        };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
             w.preview = Preview::default();
             return;
@@ -343,7 +346,9 @@ impl App {
 
     pub(crate) fn haul_event(&mut self, event: Event) -> Task<Message> {
         let volumes = self.haul_volumes();
-        let Some(w) = self.haul_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.haul_window.as_mut() else {
+            return Task::none();
+        };
         let mut warning = None;
         match event {
             Event::Choose(i) => {
@@ -502,7 +507,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.haul_window = None;
+                self.road.haul_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -539,7 +544,9 @@ impl App {
     }
 
     fn save_hauls(&mut self) -> Task<Message> {
-        let Some(w) = self.haul_window.clone() else { return Task::none() };
+        let Some(w) = self.road.haul_window.clone() else {
+            return Task::none();
+        };
         let mut defs = Vec::new();
         for r in &w.rows {
             match r.def() {
@@ -576,14 +583,14 @@ impl App {
                 return Task::none();
             }
         }
-        self.haul_window = None;
+        self.road.haul_window = None;
         self.dialog = None;
         self.say(Level::Success, "Brüknerler kaydedildi.");
         Task::none()
     }
 
     pub(crate) fn road_haul_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.haul_window else {
+        let Some(w) = &self.road.haul_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -832,7 +839,7 @@ impl App {
     }
 
     pub(crate) fn haul_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.haul_window else {
+        let Some(w) = &self.road.haul_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

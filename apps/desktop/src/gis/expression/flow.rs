@@ -430,7 +430,7 @@ fn unquote(s: &str) -> String {
 
 impl App {
     pub(crate) fn flow_event(&mut self, e: FlowEvent) -> Task<Message> {
-        let Some(b) = self.builder.as_mut() else {
+        let Some(b) = self.gis.builder.as_mut() else {
             return Task::none();
         };
         if b.view_mode != ViewMode::Flow {
@@ -570,7 +570,7 @@ impl App {
         }
         let doc = self.document.as_ref().map(|d| &d.model);
         let store = self.spatial.store();
-        if let Some(b) = self.builder.as_mut() {
+        if let Some(b) = self.gis.builder.as_mut() {
             b.preview_on(doc, store);
         }
         if focus_value {

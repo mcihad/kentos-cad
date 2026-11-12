@@ -3,6 +3,7 @@
 //! click adds next to the selected box (and connects to it); a tool carried
 //! out of the list is let go on the diagram.
 
+use crate::gis;
 use iced::widget::{Column, Row, button, column, container, row};
 use iced::{Center, Element, Fill, Length};
 use kentos_processing::designer::texts::palette as words;
@@ -20,7 +21,7 @@ use super::{Designer, Event};
 use crate::app::Message;
 
 fn ev(e: Event) -> Message {
-    Message::ModelDesigner(e)
+    Message::Gis(gis::Event::ModelDesigner(e))
 }
 
 /// The parts' width (the web's 248 px, with the type size).

@@ -3,6 +3,7 @@
 //! Uygula and Tamam as one undo step each, a renderer this version cannot
 //! read kept as it was, Esc.
 
+use crate::gis;
 use kentos_native_style::renderer::GeometryClass;
 use kentos_native_style::tally::RuleCount;
 use serde_json::{Value, json};
@@ -354,23 +355,27 @@ fn an_expression_is_written_with_the_builder() {
     ls(&mut app, Event::Open(Some("parsel".into())));
     ls(&mut app, Event::Kind(Kind::Categorized));
     ls(&mut app, Event::OpenBuilder(Field::Categories));
-    let b = app.builder.as_mut().expect("the builder is open");
+    let b = app.gis.builder.as_mut().expect("the builder is open");
     assert_eq!(b.source, "Ada");
     assert_eq!(b.context, "Katman stili · İfade");
     assert!(b.schema.fields.iter().any(|f| f.name == "Ada"));
     assert!(!b.objects.is_empty(), "the layer's objects to preview on");
     b.source = "büyük(Ada)".into();
     b.check.error = None;
-    let _ = app.update(Message::Builder(crate::expression::Event::Ok));
-    assert!(app.builder.is_none());
+    let _ = app.update(Message::Gis(gis::Event::Builder(
+        crate::expression::Event::Ok,
+    )));
+    assert!(app.gis.builder.is_none());
     assert_eq!(window(&app).categorized.expr, "büyük(Ada)");
     assert_eq!(app.dialog, Some(Dialog::LayerStyle));
     // A rule's condition, behind its ƒ.
     ls(&mut app, Event::Kind(Kind::Rules));
     ls(&mut app, Event::OpenBuilder(Field::Rule(vec![0])));
-    let b = app.builder.as_mut().expect("the builder is open");
+    let b = app.gis.builder.as_mut().expect("the builder is open");
     b.source = "$alan > 400".into();
     b.check.error = None;
-    let _ = app.update(Message::Builder(crate::expression::Event::Ok));
+    let _ = app.update(Message::Gis(gis::Event::Builder(
+        crate::expression::Event::Ok,
+    )));
     assert_eq!(window(&app).expr_text(&Field::Rule(vec![0])), "$alan > 400");
 }

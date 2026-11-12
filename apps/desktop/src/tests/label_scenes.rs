@@ -18,6 +18,7 @@
 //!
 //! Test code only.
 
+use crate::gis;
 use iced::Point;
 use kentos_domain::Slot;
 use kentos_ui::snapshot::Snapshot;
@@ -74,8 +75,8 @@ pub(crate) fn close(s: &mut Snapshot, app: &mut App) {
 fn window(app: &mut App, layer: &str, class: usize, tab: Tab) {
     opened(app);
     app.open_labelling(Some(layer.to_owned()));
-    let _ = app.update(Message::Labelling(Window::Class(class)));
-    let _ = app.update(Message::Labelling(Window::Tab(tab)));
+    let _ = app.update(Message::Gis(gis::Event::Labelling(Window::Class(class))));
+    let _ = app.update(Message::Gis(gis::Event::Labelling(Window::Tab(tab))));
 }
 
 /// Parsel's rules: the owner's class chosen, its condition and text.
@@ -108,14 +109,14 @@ fn window_obstacle(app: &mut App) {
 /// Denetle: the parcels' labels counted in the view the drawing is fitted to (docs/adr/0533 §6).
 fn report(s: &mut Snapshot, app: &mut App) {
     whole(s, app);
-    let _ = app.update(Message::Labelling(Window::Report));
+    let _ = app.update(Message::Gis(gis::Event::Labelling(Window::Report)));
     settle(s, app);
 }
 
 /// Denetle at the drawing's scale on paper (docs/adr/0636 §7): its scale chosen, counted again.
 fn report_on_paper(s: &mut Snapshot, app: &mut App) {
     whole(s, app);
-    let _ = app.update(Message::Labelling(Window::ReportAt(1)));
+    let _ = app.update(Message::Gis(gis::Event::Labelling(Window::ReportAt(1))));
     settle(s, app);
 }
 

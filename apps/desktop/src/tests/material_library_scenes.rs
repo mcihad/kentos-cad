@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_domain::Slot;
 use kentos_ui::widget::docking;
 use serde_json::{Value, json};
@@ -37,7 +38,7 @@ pub(crate) fn open(app: &mut App, doc: Value, bounds: [f64; 4]) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Materials(e));
+    let _ = app.update(Message::Arch(arch::Event::Materials(e)));
 }
 
 fn drawing(app: &mut App) {
@@ -75,7 +76,9 @@ fn style_picker(app: &mut App) {
     event(app, Event::Take);
     event(app, Event::Close);
     run(app, "arch.wallStyles");
-    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Material(2, Some("tasyunu".into()))));
+    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+        crate::wall_styles::Event::Material(2, Some("tasyunu".into())),
+    )));
 }
 
 /// Two rooms of one level, their spaces 101 Salon and 102 Mutfak, a slab bound to the kitchen's walls rebound to the

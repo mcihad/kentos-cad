@@ -788,16 +788,16 @@ impl App {
     pub(crate) fn raster_fit_event(&mut self, e: Event) -> Task<Message> {
         match e {
             Event::Raster(slot) => {
-                self.calc.raster_fit.raster = Some(Slot(slot));
+                self.gis.calc.raster_fit.raster = Some(Slot(slot));
                 if let Some(doc) = &self.document {
-                    self.calc.raster_fit.follow(&doc.model);
+                    self.gis.calc.raster_fit.follow(&doc.model);
                 }
             }
             Event::PickRaster => {
-                self.calc.raster_fit.picking_raster = true;
+                self.gis.calc.raster_fit.picking_raster = true;
                 self.calc_pick(TITLE, "rasterin üstüne tıklayın".to_owned());
             }
-            Event::Method(m) => self.calc.raster_fit.method = m,
+            Event::Method(m) => self.gis.calc.raster_fit.method = m,
             Event::Pick(row, side) => {
                 let label = format!(
                     "{}. noktanın {}",
@@ -807,39 +807,39 @@ impl App {
                         Side::Target => "hedefi",
                     }
                 );
-                self.calc.raster_fit.picking = Some((row, side));
+                self.gis.calc.raster_fit.picking = Some((row, side));
                 self.calc_pick(TITLE, label);
             }
             Event::Srid(t) => {
                 // A code typed takes the place of a definition.
                 if !t.trim().is_empty() {
-                    self.calc.raster_fit.crs = None;
+                    self.gis.calc.raster_fit.crs = None;
                 }
-                self.calc.raster_fit.srid = t;
+                self.gis.calc.raster_fit.srid = t;
             }
-            Event::ClearCrs => self.calc.raster_fit.crs = None,
-            Event::Pixel(t) => self.calc.raster_fit.pixel = t,
-            Event::Nearest(on) => self.calc.raster_fit.nearest = on,
-            Event::World(on) => self.calc.raster_fit.world = on,
+            Event::ClearCrs => self.gis.calc.raster_fit.crs = None,
+            Event::Pixel(t) => self.gis.calc.raster_fit.pixel = t,
+            Event::Nearest(on) => self.gis.calc.raster_fit.nearest = on,
+            Event::World(on) => self.gis.calc.raster_fit.world = on,
             Event::Import => return self.raster_fit_import(),
             Event::Imported(path) => self.raster_fit_imported(path),
             Event::Export => return self.raster_fit_export(),
             Event::Exported(path) => self.raster_fit_exported(path),
             Event::Apply => return self.raster_fit_apply(),
             Event::Warped(result) => {
-                self.calc.raster_fit.warping = false;
+                self.gis.calc.raster_fit.warping = false;
                 self.raster_fit_warped(result);
             }
         }
         if let Some(doc) = &self.document {
-            self.calc.raster_fit.solve(&doc.model);
+            self.gis.calc.raster_fit.solve(&doc.model);
         }
         Task::none()
     }
 
     /// A pick's answer for Raster oturt: the raster under the point, or a row's end.
     pub(super) fn raster_fit_picked(&mut self, p: Option<Vec2>) -> bool {
-        let form = &mut self.calc.raster_fit;
+        let form = &mut self.gis.calc.raster_fit;
         if form.picking_raster {
             form.picking_raster = false;
             if let (Some(p), Some(doc)) = (p, &self.document) {
@@ -861,8 +861,8 @@ impl App {
                             _ => false,
                         });
                 if let Some((slot, _)) = under {
-                    self.calc.raster_fit.raster = Some(slot);
-                    self.calc.raster_fit.follow(&doc.model);
+                    self.gis.calc.raster_fit.raster = Some(slot);
+                    self.gis.calc.raster_fit.follow(&doc.model);
                 }
             }
             return true;
@@ -871,7 +871,7 @@ impl App {
             return false;
         };
         if let (Some(p), Some(doc)) = (p, &self.document) {
-            self.calc.raster_fit.picked(&doc.model, row, side, p);
+            self.gis.calc.raster_fit.picked(&doc.model, row, side, p);
         }
         true
     }
@@ -906,7 +906,7 @@ impl App {
             .and_then(|t| gcp::read(&t));
         match read {
             Ok(r) => {
-                let form = &mut self.calc.raster_fit;
+                let form = &mut self.gis.calc.raster_fit;
                 form.rows = r.points.iter().map(row_of).collect();
                 form.status = None;
                 let n = r.points.len();
@@ -938,7 +938,7 @@ impl App {
                     ),
                 );
             }
-            Err(why) => self.calc.raster_fit.status = Some(why),
+            Err(why) => self.gis.calc.raster_fit.status = Some(why),
         }
     }
 
@@ -965,7 +965,7 @@ impl App {
         let Some(path) = path else {
             return;
         };
-        let form = &self.calc.raster_fit;
+        let form = &self.gis.calc.raster_fit;
         let points = form.points();
         let residuals: Vec<Option<[f64; 2]>> = match &form.solution {
             Some(Ok(f)) => f.residuals.iter().map(|v| Some([v.dx?, v.dy?])).collect(),
@@ -997,7 +997,8 @@ impl App {
                 ),
             ),
             Err(e) => {
-                self.calc.raster_fit.status = Some(format!("“{}” yazılamadı: {e}.", path.display()))
+                self.gis.calc.raster_fit.status =
+                    Some(format!("“{}” yazılamadı: {e}.", path.display()))
             }
         }
     }
@@ -1008,14 +1009,14 @@ impl App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let Some(input) = self.calc.raster_fit.input(&doc.model, drawing) else {
+        let Some(input) = self.gis.calc.raster_fit.input(&doc.model, drawing) else {
             return Task::none();
         };
-        let Some(fields) = self.calc.raster_fit.fields(&doc.model) else {
+        let Some(fields) = self.gis.calc.raster_fit.fields(&doc.model) else {
             return Task::none();
         };
         if input.method.places() {
-            let world = self.calc.raster_fit.world;
+            let world = self.gis.calc.raster_fit.world;
             if let Some(after) = self.raster_fit_write(input, "dönüşümü değişti")
                 && world
             {
@@ -1026,7 +1027,7 @@ impl App {
         let p = match rasters_georef::prepare(&doc.model, &input) {
             Ok(p) => p,
             Err(e) => {
-                self.calc.raster_fit.status = Some(e.message);
+                self.gis.calc.raster_fit.status = Some(e.message);
                 return Task::none();
             }
         };
@@ -1048,7 +1049,7 @@ impl App {
             .map(std::path::Path::to_path_buf);
         let key = crate::rasters::key_of(&source);
         let Some(origin) = crate::rasters::origin_of(&key, &doc.model, folder.as_deref()) else {
-            self.calc.raster_fit.status = Some("Rasterin kaynağı bulunamadı.".to_owned());
+            self.gis.calc.raster_fit.status = Some("Rasterin kaynağı bulunamadı.".to_owned());
             return Task::none();
         };
         let (output, name) = match &p.output {
@@ -1067,13 +1068,13 @@ impl App {
         };
         let inverse = p.inverse();
         let (nearest, srid, geographic) = (p.nearest, p.srid, p.geographic);
-        self.calc.raster_fit.pending = Some(RastersGeoref {
+        self.gis.calc.raster_fit.pending = Some(RastersGeoref {
             output: None,
             ..input
         });
-        self.calc.raster_fit.warping = true;
-        self.calc.raster_fit.status = None;
-        self.calc.open = None;
+        self.gis.calc.raster_fit.warping = true;
+        self.gis.calc.raster_fit.status = None;
+        self.gis.calc.open = None;
         self.dialog = None;
         self.say(
             Level::Info,
@@ -1119,7 +1120,7 @@ impl App {
                 return;
             }
         };
-        let Some(mut input) = self.calc.raster_fit.pending.take() else {
+        let Some(mut input) = self.gis.calc.raster_fit.pending.take() else {
             return;
         };
         let Some(doc) = &mut self.document else {
@@ -1133,7 +1134,7 @@ impl App {
             (None, Some(bytes)) => {
                 let layer = match doc
                     .model
-                    .get(self.calc.raster_fit.raster.unwrap_or(Slot(0)))
+                    .get(self.gis.calc.raster_fit.raster.unwrap_or(Slot(0)))
                 {
                     Some(Entity::Raster(r)) => doc
                         .model
@@ -1170,16 +1171,16 @@ impl App {
     /// The command written: one step “Raster oturt”; the raster as written, or none (the window says why).
     fn raster_fit_write(&mut self, input: RastersGeoref, done: &str) -> Option<RasterFields> {
         let doc = self.document.as_mut()?;
-        let slot = self.calc.raster_fit.raster?;
+        let slot = self.gis.calc.raster_fit.raster?;
         match rasters_georef::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
             input,
         ) {
             CommandResult::Completed { output, warnings } => {
                 crate::rasters::tiles::service().forget_tiles();
-                self.calc.open = None;
+                self.gis.calc.open = None;
                 self.dialog = None;
-                self.calc.raster_fit.opened = Some(slot);
+                self.gis.calc.raster_fit.opened = Some(slot);
                 self.say(
                     Level::Success,
                     format!("{TITLE}: rasterin {done}; oturtma kaydına yazıldı. Ctrl+Z geri alır."),
@@ -1193,7 +1194,7 @@ impl App {
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => {
-                self.calc.raster_fit.status = Some(error.message.clone());
+                self.gis.calc.raster_fit.status = Some(error.message.clone());
                 self.warn(format!("{TITLE}: {}", error.message));
                 None
             }

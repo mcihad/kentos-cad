@@ -177,7 +177,7 @@ mod glyphs {
 
 impl App {
     pub(crate) fn forms_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.forms_window else {
+        let Some(w) = &self.gis.forms_window else {
             return iced::widget::text("").into();
         };
         let locked = self.forms_locked();

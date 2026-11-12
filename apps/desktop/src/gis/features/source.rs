@@ -8,6 +8,7 @@
 //! [`LIVE_MOST`] objects, whenever the drawing changed (a layer edit is “Katmanda yazılmamış” at once). A larger
 //! layer keeps the last reading and says so (“Yenile”) instead of hashing a million objects after every edit.
 
+use crate::gis;
 use iced::widget::{button, container, row, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{SourceNext, SourceState};
@@ -70,10 +71,10 @@ impl App {
             layer.to_owned(),
             link.digest.clone(),
             link.revision.clone(),
-            self.features.source_refresh,
+            self.gis.features.source_refresh,
             if live { generation } else { 0 },
         );
-        let mut held = self.features.source.borrow_mut();
+        let mut held = self.gis.features.source.borrow_mut();
         if held.as_ref().is_none_or(|h| h.key != key) {
             *held = Some(SourceLine {
                 key,
@@ -88,7 +89,7 @@ impl App {
     pub(crate) fn features_source_event(&mut self, event: SourceEvent) -> Task<Message> {
         match event {
             SourceEvent::Refresh => {
-                self.features.source_refresh += 1;
+                self.gis.features.source_refresh += 1;
                 Task::none()
             }
             SourceEvent::Act => {
@@ -104,8 +105,8 @@ impl App {
                     return Task::none();
                 };
                 let task = self.bound_event(event);
-                self.features.source_refresh += 1;
-                self.features.changed();
+                self.gis.features.source_refresh += 1;
+                self.gis.features.changed();
                 task
             }
         }
@@ -192,10 +193,9 @@ impl App {
             let blocked = state.next == SourceNext::Write && !state.link.writable;
             line = line.push(
                 button(label::caption(if blocked { READ_ONLY } else { w }))
-                    .on_press_maybe(
-                        (!blocked)
-                            .then(|| Message::Features(super::Event::Source(SourceEvent::Act))),
-                    )
+                    .on_press_maybe((!blocked).then(|| {
+                        Message::Gis(gis::Event::Features(super::Event::Source(SourceEvent::Act)))
+                    }))
                     .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::secondary),
             );
@@ -203,9 +203,9 @@ impl App {
         line = line.push(self.whole_switch(&state.link.layer));
         line = line.push(kentos_ui::widget::tip(
             button(icon(Icon::Retry).size(14.0))
-                .on_press(Message::Features(super::Event::Source(
+                .on_press(Message::Gis(gis::Event::Features(super::Event::Source(
                     SourceEvent::Refresh,
-                )))
+                ))))
                 .padding(kentos_ui::theme::metrics::icon_small(14.0))
                 .style(style::button::ghost),
             kentos_ui::widget::Tip::new(REFRESH).body(REFRESH_HINT),

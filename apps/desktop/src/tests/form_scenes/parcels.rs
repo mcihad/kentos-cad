@@ -2,6 +2,7 @@
 //! owner tables, calculated buildings, addresses, relations, record audits and sliders.
 
 use super::*;
+use crate::gis;
 
 /// Ruhsatlı yapılar (docs/adr/0438): a layer with record rules (dates in order, a note for an
 /// inspection, floors and area), a unique parcel, a floor count whose 0 is left out, an area in m², a
@@ -85,7 +86,7 @@ pub(super) fn permits(app: &mut App) {
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
     doc.model.set_settings(settings);
-    app.features.layer = Some("ruhsat".into());
+    app.gis.features.layer = Some("ruhsat".into());
 }
 
 /// Four parcels on two islands with a key over the island and the parcel, a plain index over the neighbourhood and a
@@ -136,16 +137,16 @@ pub(super) fn keyed_parcels(app: &mut App) {
         d["layers"] = Value::Array(layers);
         d["activeLayer"] = json!("parsel");
     });
-    app.features.layer = Some("parsel".into());
+    app.gis.features.layer = Some("parsel".into());
 }
 
 /// Dizinler on the parcels, the key over the island and the parcel chosen.
 pub(super) fn parcel_indexes(app: &mut App) {
     keyed_parcels(app);
     run(app, "data.layerIndexes");
-    let _ = app.update(Message::LayerIndexes(
+    let _ = app.update(Message::Gis(gis::Event::LayerIndexes(
         crate::forms::layer_indexes::Event::Choose(0),
-    ));
+    )));
 }
 
 /// Dizinler: the neighbourhood made unique, which two parcels already break; Kaydet is off.
@@ -153,8 +154,8 @@ pub(super) fn parcel_indexes_broken(app: &mut App) {
     keyed_parcels(app);
     run(app, "data.layerIndexes");
     use crate::forms::layer_indexes::Event as I;
-    let _ = app.update(Message::LayerIndexes(I::Choose(1)));
-    let _ = app.update(Message::LayerIndexes(I::Unique(true)));
+    let _ = app.update(Message::Gis(gis::Event::LayerIndexes(I::Choose(1))));
+    let _ = app.update(Message::Gis(gis::Event::LayerIndexes(I::Unique(true))));
 }
 
 /// Dizinler: a new index over the neighbourhood and the area, the fields put in by their chips.
@@ -162,19 +163,25 @@ pub(super) fn parcel_index_new(app: &mut App) {
     keyed_parcels(app);
     run(app, "data.layerIndexes");
     use crate::forms::layer_indexes::Event as I;
-    let _ = app.update(Message::LayerIndexes(I::New));
-    let _ = app.update(Message::LayerIndexes(I::Name("Mahalle ve alan".into())));
-    let _ = app.update(Message::LayerIndexes(I::ToggleField("Mahalle".into())));
-    let _ = app.update(Message::LayerIndexes(I::ToggleField("Alan".into())));
+    let _ = app.update(Message::Gis(gis::Event::LayerIndexes(I::New)));
+    let _ = app.update(Message::Gis(gis::Event::LayerIndexes(I::Name(
+        "Mahalle ve alan".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::LayerIndexes(I::ToggleField(
+        "Mahalle".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::LayerIndexes(I::ToggleField(
+        "Alan".into(),
+    ))));
 }
 
 /// Kayıt kuralları on the permits, the dates' rule chosen.
 pub(super) fn permit_rules(app: &mut App) {
     permits(app);
     run(app, "data.layerRules");
-    let _ = app.update(Message::LayerRules(
+    let _ = app.update(Message::Gis(gis::Event::LayerRules(
         crate::forms::layer_rules::Event::Choose(2),
-    ));
+    )));
 }
 
 /// Formla düzenle on the first permit: the end before the start (the rule under Bitiş), the area over
@@ -218,15 +225,17 @@ pub(super) fn permit_conflict(app: &mut App) {
 pub(super) fn permit_fields(app: &mut App) {
     permits(app);
     let _ = app.open_layer_fields("ruhsat");
-    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(4)));
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(
+        crate::layer_fields::Event::Choose(4),
+    )));
 }
 
 /// The status's value list: a description and the days a value holds.
 pub(super) fn permit_values(app: &mut App) {
     permits(app);
     let _ = app.open_layer_fields("ruhsat");
-    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::OpenList(
-        0,
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(
+        crate::layer_fields::Event::OpenList(0),
     )));
 }
 
@@ -240,18 +249,18 @@ pub(super) fn permit_designer(app: &mut App) {
 /// Its last step: the mirrors, Geri and Kaydet.
 pub(super) fn stepped_summary(app: &mut App) {
     stepped_survey(app);
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Kat".into(),
         "6".into(),
-    )));
-    let _ = app.update(Message::FormEntry(entry::Event::Tab(1)));
-    let _ = app.update(Message::FormEntry(entry::Event::Tab(2)));
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Tab(1))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Tab(2))));
 }
 
 /// The step form in Formlar: Adım adım on, the mirror marked in the items, Kopyala and Yapıştır.
 pub(super) fn stepped_designer(app: &mut App) {
     stepped_survey(app);
-    app.form_entry = None;
+    app.gis.form_entry = None;
     app.dialog = None;
     run(app, "data.forms");
     designer(app, designer::Event::SelectItem("ad-ozet".into()));
@@ -278,7 +287,9 @@ pub(super) fn subtypes_window(app: &mut App) {
     use crate::forms::subtypes::Event;
     typed_buildings(app);
     run(app, "data.subtypes");
-    let _ = app.update(Message::Subtypes(Event::Choose("sanayi".into())));
+    let _ = app.update(Message::Gis(gis::Event::Subtypes(Event::Choose(
+        "sanayi".into(),
+    ))));
 }
 
 /// A timber house's form, its kind changed to industrial: timber is not offered, the note is
@@ -319,10 +330,10 @@ pub(super) fn scenarios(app: &mut App) {
     designer_links(app);
     designer(app, designer::Event::Preview(true));
     let typed = |app: &mut App, key: &str, v: &str| {
-        let _ = app.update(Message::FormPreview(entry::Event::Value(
+        let _ = app.update(Message::Gis(gis::Event::FormPreview(entry::Event::Value(
             key.into(),
             v.into(),
-        )));
+        ))));
     };
     typed(app, "Durum", "iyi");
     typed(app, "Kat", "8");
@@ -360,15 +371,15 @@ pub(super) fn field_policies(app: &mut App) {
     use crate::layer_fields::Event;
     styled_buildings(app);
     let _ = app.open_layer_fields("bina");
-    let _ = app.update(Message::LayerFields(Event::Choose(2)));
-    let _ = app.update(Message::LayerFields(Event::Split(
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(Event::Choose(2))));
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(Event::Split(
         2,
         Some(kentos_commands::SplitPolicy::Ratio),
-    )));
-    let _ = app.update(Message::LayerFields(Event::Merge(
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(Event::Merge(
         2,
         Some(kentos_commands::MergePolicy::Sum),
-    )));
+    ))));
 }
 
 /// Alanlar on the buildings, a field chosen and marked Dışarı verilmez (docs/adr/0638 §5).
@@ -376,17 +387,17 @@ pub(super) fn field_withheld(app: &mut App) {
     use crate::layer_fields::Event;
     styled_buildings(app);
     let _ = app.open_layer_fields("bina");
-    let _ = app.update(Message::LayerFields(Event::Choose(1)));
-    let _ = app.update(Message::LayerFields(Event::Withheld(true)));
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(Event::Choose(1))));
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(Event::Withheld(true))));
 }
 
 /// Koşullu biçim's window on the buildings' rules, the floor count's rule chosen.
 pub(super) fn styles_window(app: &mut App) {
     styled_buildings(app);
     run(app, "data.tableStyles");
-    let _ = app.update(Message::TableStyles(
+    let _ = app.update(Message::Gis(gis::Event::TableStyles(
         crate::forms::table_styles::Event::Choose(2),
-    ));
+    )));
 }
 
 /// Two buildings and their floors (docs/adr/0415): the floors are records a composite relation ties
@@ -463,8 +474,10 @@ pub(super) fn floors(app: &mut App) {
 /// Çoğalt on the first building: its copy and the copies of its two floors selected, the floors' table.
 pub(super) fn duplicated(app: &mut App) {
     floors(app);
-    let _ = app.update(Message::Features(crate::features::Event::Duplicate));
-    app.features.layer = Some("kat".into());
+    let _ = app.update(Message::Gis(gis::Event::Features(
+        crate::features::Event::Duplicate,
+    )));
+    app.gis.features.layer = Some("kat".into());
     let _ = app.update(Message::Run("data.featureTable"));
 }
 
@@ -505,16 +518,16 @@ pub(super) fn overridable_height(app: &mut App) {
 /// The height typed over: ↺ beside it gives it back to the calculation.
 pub(super) fn overridden_height(app: &mut App) {
     overridable_height(app);
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Yükseklik".into(),
         "10.5".into(),
-    )));
+    ))));
 }
 
 /// The owners' table (docs/adr/0410 §4): records without a geometry in the Tablo tab.
 pub(super) fn owner_table(app: &mut App) {
     owners(app);
-    app.features.layer = Some("malik".into());
+    app.gis.features.layer = Some("malik".into());
     let _ = app.update(Message::Run("data.featureTable"));
     app.selection.set([Slot(4)]);
 }
@@ -522,15 +535,17 @@ pub(super) fn owner_table(app: &mut App) {
 /// Kayıt ekle in the owners' table: a new record, opened by the owners' form.
 pub(super) fn owner_added(app: &mut App) {
     owner_table(app);
-    let _ = app.update(Message::Features(crate::features::Event::AddRecord));
+    let _ = app.update(Message::Gis(gis::Event::Features(
+        crate::features::Event::AddRecord,
+    )));
 }
 
 /// Alanlar's value list of the care field: several of its values may be chosen (docs/adr/0408 §1).
 pub(super) fn tree_fields(app: &mut App) {
     trees(app);
     let _ = app.open_layer_fields("agac");
-    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::OpenList(
-        4,
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(
+        crate::layer_fields::Event::OpenList(4),
     )));
 }
 
@@ -577,8 +592,8 @@ pub(super) fn calc_buildings(app: &mut App) {
         d["activeLayer"] = json!("bina");
         d["settings"]["forms"] = json!([form]);
     });
-    app.form_memory.clock = Some("2026-10-16T14:30:00".into());
-    app.form_memory.person = Some("Ayşe Yılmaz".into());
+    app.gis.form_memory.clock = Some("2026-10-16T14:30:00".into());
+    app.gis.form_memory.person = Some("Ayşe Yılmaz".into());
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {
             min_x: E - 12.0,
@@ -753,7 +768,7 @@ pub(super) fn address_designing(app: &mut App) {
 pub(super) fn relations_window(app: &mut App) {
     address_buildings(app);
     run(app, "data.relations");
-    let _ = app.update(Message::Relations(relations::Event::New));
+    let _ = app.update(Message::Gis(gis::Event::Relations(relations::Event::New)));
     for event in [
         relations::Event::Name("Binanın sayaçları".into()),
         relations::Event::Parent("bina".into()),
@@ -761,7 +776,7 @@ pub(super) fn relations_window(app: &mut App) {
         relations::Event::Field("bina".into()),
         relations::Event::Policy(kentos_commands::RelationDelete::Cascade),
     ] {
-        let _ = app.update(Message::Relations(event));
+        let _ = app.update(Message::Gis(gis::Event::Relations(event)));
     }
 }
 
@@ -783,7 +798,9 @@ pub(super) fn records_audit(app: &mut App) {
         );
     }
     run(app, "data.formAudit");
-    let _ = app.update(Message::FormAudit(audit::Event::Warnings(true)));
+    let _ = app.update(Message::Gis(gis::Event::FormAudit(audit::Event::Warnings(
+        true,
+    ))));
 }
 
 /// Formla düzenle with the storeys on a slider (docs/adr/0406 §2).

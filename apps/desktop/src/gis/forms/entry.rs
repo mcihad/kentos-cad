@@ -24,6 +24,7 @@
 //! new one: the form's defaults fill it and its "reuse last" fields start with the session's last
 //! value. A collapsed group opens and closes by its title.
 
+use crate::gis;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
@@ -334,7 +335,7 @@ const LONG_LIST: usize = 200;
 const TWO_COLUMNS: f32 = 880.0;
 
 fn msg(event: Event) -> Message {
-    Message::FormEntry(event)
+    Message::Gis(gis::Event::FormEntry(event))
 }
 
 impl Entry {
@@ -381,9 +382,9 @@ impl Entry {
     /// An event of this window: the preview's go to the designer's preview.
     fn msg(&self, event: Event) -> Message {
         if self.preview {
-            Message::FormPreview(event)
+            Message::Gis(gis::Event::FormPreview(event))
         } else {
-            Message::FormEntry(event)
+            Message::Gis(gis::Event::FormEntry(event))
         }
     }
 }
@@ -917,7 +918,8 @@ mod left_tests {
     use crate::app::App;
 
     fn said(app: &App, key: &str) -> Option<String> {
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .and_then(|e| e.issue_of(key))
             .map(|i| i.message.clone())
@@ -932,7 +934,7 @@ mod left_tests {
         let mut app = crate::files_testing::app_with_drawing();
         crate::form_scenes::left_checks(&mut app);
         assert_eq!(
-            app.form_entry.as_ref().and_then(|e| e.value_of("Kat")),
+            app.gis.form_entry.as_ref().and_then(|e| e.value_of("Kat")),
             Some("9".into()),
             "B-4, nine storeys: {:?}",
             crate::files_testing::last_said(&app)
@@ -973,8 +975,11 @@ mod left_tests {
     #[test]
     fn saving_asks_the_checks_of_fields_never_left() {
         let mut app = typed();
-        let _ = app.update(crate::app::Message::FormEntry(Event::Save));
+        let _ = app.update(crate::app::Message::Gis(crate::gis::Event::FormEntry(
+            Event::Save,
+        )));
         let e = app
+            .gis
             .form_entry
             .as_ref()
             .expect("an error keeps the window open");
@@ -991,7 +996,7 @@ mod left_tests {
     fn a_value_chosen_from_a_list_leaves_its_field_at_once() {
         let mut app = typed();
         event(&mut app, Event::Value("Durum".into(), "kotu".into()));
-        let e = app.form_entry.as_ref().expect("the form");
+        let e = app.gis.form_entry.as_ref().expect("the form");
         assert!(e.left.contains("durum"), "a list's choice leaves it");
         assert!(!e.left.contains("kat"), "a typed field waits for the focus");
     }

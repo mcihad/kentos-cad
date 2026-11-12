@@ -12,6 +12,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::level_view::LevelView;
@@ -165,7 +166,9 @@ fn quantities(app: &mut App) {
     more(app);
     app.selection.clear();
     run(app, "arch.quantities");
-    let _ = app.update(Message::Quantities(crate::quantities::Event::Tab(crate::quantities::Tab::Stairs)));
+    let _ = app.update(Message::Arch(arch::Event::Quantities(
+        crate::quantities::Event::Tab(crate::quantities::Tab::Stairs),
+    )));
 }
 
 /// Mimari denetim, Merdiven Konut (asansörlü): the stairs' findings; the straight one's missing railing chosen.
@@ -179,17 +182,27 @@ fn audit(app: &mut App) {
         .arch_audit_shown()
         .iter()
         .position(|&i| {
-            let f = &app.arch_audit.audited.as_ref().expect("audited").findings[i];
+            let f = &app
+                .arch
+                .arch_audit
+                .audited
+                .as_ref()
+                .expect("audited")
+                .findings[i];
             f.code == "stair_railing_missing"
         })
         .expect("the railing's finding");
-    let _ = app.update(Message::ArchAudit(crate::arch_audit::Event::Press(row)));
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+        crate::arch_audit::Event::Press(row),
+    )));
 }
 
 /// Düzelt: both railings in one step; checked again, the narrow stairs are left.
 fn fixed(app: &mut App) {
     audit(app);
-    let _ = app.update(Message::ArchAudit(crate::arch_audit::Event::Fix));
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+        crate::arch_audit::Event::Fix,
+    )));
 }
 
 /// The stair selected, Öznitelikler scrolled to its rows: Rıht, Toplam yükseklik, Yükseklik (Kat yüksekliği).
@@ -284,15 +297,48 @@ mod tests {
         assert!(output.stairs[1].inner_tread.is_some() && output.stairs[1].radius.is_some());
         assert_eq!(output.totals.stair_risers, 18 + 10 + 16);
         audit(&mut app);
-        let codes: Vec<String> =
-            app.arch_audit.audited.as_ref().unwrap().findings.iter().map(|f| f.code.clone()).collect();
-        assert!(codes.contains(&"stair_railing_missing".to_owned()), "{codes:?}");
-        assert!(codes.contains(&"stair_winder_narrow".to_owned()), "{codes:?}");
-        assert!(codes.contains(&"stair_width_narrow".to_owned()), "{codes:?}");
-        let _ = app.update(Message::ArchAudit(crate::arch_audit::Event::Fix));
-        let codes: Vec<String> =
-            app.arch_audit.audited.as_ref().unwrap().findings.iter().map(|f| f.code.clone()).collect();
-        assert!(!codes.contains(&"stair_railing_missing".to_owned()), "{codes:?}");
-        assert!(codes.contains(&"stair_winder_narrow".to_owned()), "{codes:?}");
+        let codes: Vec<String> = app
+            .arch
+            .arch_audit
+            .audited
+            .as_ref()
+            .unwrap()
+            .findings
+            .iter()
+            .map(|f| f.code.clone())
+            .collect();
+        assert!(
+            codes.contains(&"stair_railing_missing".to_owned()),
+            "{codes:?}"
+        );
+        assert!(
+            codes.contains(&"stair_winder_narrow".to_owned()),
+            "{codes:?}"
+        );
+        assert!(
+            codes.contains(&"stair_width_narrow".to_owned()),
+            "{codes:?}"
+        );
+        let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+            crate::arch_audit::Event::Fix,
+        )));
+        let codes: Vec<String> = app
+            .arch
+            .arch_audit
+            .audited
+            .as_ref()
+            .unwrap()
+            .findings
+            .iter()
+            .map(|f| f.code.clone())
+            .collect();
+        assert!(
+            !codes.contains(&"stair_railing_missing".to_owned()),
+            "{codes:?}"
+        );
+        assert!(
+            codes.contains(&"stair_winder_narrow".to_owned()),
+            "{codes:?}"
+        );
     }
 }

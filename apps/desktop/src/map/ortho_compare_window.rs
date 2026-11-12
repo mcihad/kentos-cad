@@ -9,6 +9,7 @@
 //! shift in the images themselves where they overlap: its step, window, search and least correlation on one line, its
 //! places in their own table (Noktalar | Kayıklık).
 
+use crate::map;
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
@@ -143,7 +144,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::OrthoCompare(e)
+    Message::Map(map::Event::OrthoCompare(e))
 }
 
 /// The summary's word on the resampling (docs/adr/3660): the second resampled onto the first's grid; docs/adr/4060: a
@@ -203,7 +204,7 @@ pub fn csv(r: &OrthophotoCompared) -> String {
 
 impl App {
     fn ortho_compare_run(&mut self) {
-        let s = &self.ortho_compare;
+        let s = &self.map.ortho_compare;
         let correlation = s.correlation.trim().replace(',', ".");
         let correlation = match correlation.as_str() {
             "" => None,
@@ -211,7 +212,7 @@ impl App {
                 Ok(v) => Some(v),
                 Err(_) => {
                     let why = format!("En az korelasyon “{}” bir sayı değil.", s.correlation);
-                    self.ortho_compare.answer = Some(Err(why));
+                    self.map.ortho_compare.answer = Some(Err(why));
                     return;
                 }
             },
@@ -239,14 +240,18 @@ impl App {
             rules: None,
             seam,
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.ortho_compare.answer = Some(match orthophoto_compare::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Karşılaştırılamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.map.ortho_compare.answer = Some(
+            match orthophoto_compare::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Karşılaştırılamadı.".to_owned()),
+            },
+        );
     }
 
     /// Ortofoto karşılaştırması (`raster.compare`): the drawing's rasters, the selected two first (in the drawing's
@@ -314,7 +319,7 @@ impl App {
         };
         let first_points = reading_for(&first, "");
         let second_points = reading_for(&second, &first_points);
-        self.ortho_compare = State {
+        self.map.ortho_compare = State {
             rasters,
             first,
             second,
@@ -338,13 +343,15 @@ impl App {
             resample: false,
         };
         self.ortho_compare_run();
-        self.dialog = Some(Dialog::OrthoCompare);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::OrthoCompare));
         Task::none()
     }
 
     /// The shifts written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn ortho_compare_save(&mut self, path: PathBuf) {
-        let Some(Ok(r)) = &self.ortho_compare.answer else { return };
+        let Some(Ok(r)) = &self.map.ortho_compare.answer else {
+            return;
+        };
         match std::fs::write(&path, csv(r)) {
             Ok(()) => self.say(Level::Success, format!("{TITLE}: {} nokta {} dosyasına yazıldı.", r.pairs.len(), path.display())),
             Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
@@ -352,7 +359,7 @@ impl App {
     }
 
     pub(crate) fn ortho_compare_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.ortho_compare;
+        let s = &mut self.map.ortho_compare;
         match event {
             Event::First(v) => s.first = v,
             Event::Second(v) => s.second = v,
@@ -385,7 +392,7 @@ impl App {
                 });
                 match picked {
                     Some((kind, uid)) => {
-                        let s = &mut self.ortho_compare;
+                        let s = &mut self.map.ortho_compare;
                         s.seam_line = uid;
                         s.seam_line_name = kind.to_owned();
                         s.seam_polygons = None;
@@ -412,7 +419,7 @@ impl App {
                 });
                 match picked {
                     Some(pair) => {
-                        let s = &mut self.ortho_compare;
+                        let s = &mut self.map.ortho_compare;
                         s.seam_polygons = Some(pair);
                         s.seam_line.clear();
                         s.seam_line_name = "İki mozaik elemanı".to_owned();
@@ -459,7 +466,7 @@ impl App {
             }
             Event::Saved(None) => return Task::none(),
             Event::Close => {
-                self.ortho_compare = State::default();
+                self.map.ortho_compare = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -471,7 +478,9 @@ impl App {
     pub(crate) fn ortho_compare_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
         let mut lines = Vec::new();
         let mut rows = Vec::new();
-        let Some(answer) = &self.ortho_compare.answer else { return (lines, rows) };
+        let Some(answer) = &self.map.ortho_compare.answer else {
+            return (lines, rows);
+        };
         let r = match answer {
             Ok(r) => r,
             Err(why) => {
@@ -591,7 +600,7 @@ impl App {
             Kind::Info,
             "İki zamanın farkı kendiliğinden deformasyon değildir; görüntülerin kendi doğruluğuyla birlikte okunur.",
         ));
-        if self.ortho_compare.show == Show::Seam {
+        if self.map.ortho_compare.show == Show::Seam {
             let f = self.format();
             // Docs/adr/4460: with more than one part of the shared boundary, each distance after its part's number.
             let parts = r.seam.as_ref().and_then(|m| m.shared.as_ref()).map_or(0, |sh| sh.parts.len());
@@ -637,7 +646,7 @@ impl App {
     }
 
     pub(crate) fn ortho_compare_view(&self) -> Element<'_, Message> {
-        let s = &self.ortho_compare;
+        let s = &self.map.ortho_compare;
         let caption = |text: &'static str| container(label::caption(text)).width(120);
         let mut grounds = vec![(NONE.to_owned(), NONE.to_owned())];
         grounds.extend(s.layers.iter().cloned());

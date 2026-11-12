@@ -10,6 +10,7 @@
 //! They go to `.run/shots/islem-sonuc-*.png`. Toplu çalıştır has the same Sonucun yeri (docs/adr/0593 §5): the rows
 //! read the bound input whole and each row's layer is a table of the file; its pictures are `islem-sonuc-toplu*`.
 
+use crate::gis;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -27,7 +28,7 @@ use crate::files_testing::{app_with_drawing, scratch};
 const LAYER: &str = "import-bina";
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn sink(app: &mut App, e: SinkEvent) {
@@ -68,7 +69,7 @@ fn scene(name: &str) -> (App, PathBuf) {
 }
 
 fn window(app: &App) -> &super::dialog::ToolDialog {
-    app.processing.dialog.as_ref().expect("a window")
+    app.gis.processing.dialog.as_ref().expect("a window")
 }
 
 /// What the thread does, done here and handed to the window as the thread hands it.
@@ -158,7 +159,13 @@ fn open_batch(app: &mut App) {
 /// Looks at the running batch until it is over.
 fn finish_batch(app: &mut App) {
     let until = std::time::Instant::now() + std::time::Duration::from_secs(30);
-    while app.processing.batch.as_ref().is_some_and(|b| b.running()) {
+    while app
+        .gis
+        .processing
+        .batch
+        .as_ref()
+        .is_some_and(|b| b.running())
+    {
         assert!(std::time::Instant::now() < until, "the batch did not end");
         std::thread::sleep(std::time::Duration::from_millis(15));
         batch_event(app, batch::Event::Tick);
@@ -176,7 +183,7 @@ fn a_batch_reads_whole_and_writes_each_row_to_a_table_of_the_file() {
     let before = app.document.as_ref().expect("a drawing").model.revision();
     batch_event(&mut app, batch::Event::Run);
     finish_batch(&mut app);
-    let b = app.processing.batch.as_ref().expect("the table");
+    let b = app.gis.processing.batch.as_ref().expect("the table");
     assert!(
         matches!(&b.line, Line::Done(s) if s == "2 satır çalıştı: 24 nesne toplu.gpkg dosyasına 2 tabloya yazıldı."),
         "{:?}",
@@ -206,7 +213,7 @@ fn a_batch_reads_whole_and_writes_each_row_to_a_table_of_the_file() {
     // An empty path is said before anything runs.
     sink(&mut app, SinkEvent::Path(String::new()));
     batch_event(&mut app, batch::Event::Run);
-    let b = app.processing.batch.as_ref().expect("the table");
+    let b = app.gis.processing.batch.as_ref().expect("the table");
     assert!(
         matches!(&b.line, Line::Failed(m) if m.contains("GeoPackage dosyasını seçin")),
         "{:?}",

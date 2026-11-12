@@ -2,6 +2,7 @@
 //! (`cad.forms.sources`'s own rule, `forms_sources::probe`), each source that is not ready said in its own line with
 //! its way out and Yeniden dene. The lists stay offered from the drawing's working copy meanwhile.
 
+use crate::gis;
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{FormSource, FormSourceRetry, FormsSources};
@@ -21,7 +22,7 @@ impl App {
     /// Asks the sources of the open record's lists again, off the interface's thread; an answer to an older question
     /// is dropped.
     pub(crate) fn ask_entry_sources(&mut self) -> Task<Message> {
-        let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) else {
+        let (Some(e), Some(doc)) = (self.gis.form_entry.as_mut(), self.document.as_ref()) else {
             return Task::none();
         };
         if e.preview {
@@ -61,14 +62,17 @@ impl App {
             })
             .ok();
         Task::perform(answer, move |a| {
-            Message::FormEntry(Event::SourcesAnswered(asked, a.unwrap_or_default()))
+            Message::Gis(gis::Event::FormEntry(Event::SourcesAnswered(
+                asked,
+                a.unwrap_or_default(),
+            )))
         })
     }
 
     /// The sources asked on this thread, waiting `wait` for a database (the pictures: no task runs there).
     #[cfg(test)]
     pub(crate) fn entry_sources_now(&mut self, wait: std::time::Duration) {
-        let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) else {
+        let (Some(e), Some(doc)) = (self.gis.form_entry.as_mut(), self.document.as_ref()) else {
             return;
         };
         let input = FormsSources {
@@ -110,10 +114,10 @@ impl App {
                 });
                 let saved = address.and_then(|a| saved_connection(&a));
                 use crate::db_connections::{Event as Db, Then};
-                Task::done(Message::Db(match saved {
+                Task::done(Message::Gis(gis::Event::Db(match saved {
                     Some(name) => Db::Edit(name, Then::Browse),
                     None => Db::New(Then::Browse),
-                }))
+                })))
             }
         }
     }
@@ -184,7 +188,8 @@ mod tests {
     use crate::forms::entry::Event;
 
     fn states(app: &crate::app::App) -> Vec<(String, S)> {
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .expect("the form")
             .sources
@@ -208,24 +213,24 @@ mod tests {
                 ("ruhsat".into(), S::Timeout),
             ]
         );
-        let e = app.form_entry.as_ref().expect("the form");
+        let e = app.gis.form_entry.as_ref().expect("the form");
         assert_eq!(e.sources[4].items, vec!["ruhsat".to_owned()]);
         assert!(!e.sources_busy);
         // Yeniden dene asks again off the thread; an older question's answer is dropped.
-        let _ = app.update(Message::FormEntry(Event::SourcesAgain));
-        let e = app.form_entry.as_ref().expect("the form");
+        let _ = app.update(Message::Gis(crate::gis::Event::FormEntry(
+            Event::SourcesAgain,
+        )));
+        let e = app.gis.form_entry.as_ref().expect("the form");
         assert!(e.sources_busy);
         let asked = e.sources_asked;
-        let _ = app.update(Message::FormEntry(Event::SourcesAnswered(
-            asked - 1,
-            Vec::new(),
+        let _ = app.update(Message::Gis(crate::gis::Event::FormEntry(
+            Event::SourcesAnswered(asked - 1, Vec::new()),
         )));
         assert_eq!(states(&app).len(), 5, "an old answer is dropped");
-        let _ = app.update(Message::FormEntry(Event::SourcesAnswered(
-            asked,
-            Vec::new(),
+        let _ = app.update(Message::Gis(crate::gis::Event::FormEntry(
+            Event::SourcesAnswered(asked, Vec::new()),
         )));
-        let e = app.form_entry.as_ref().expect("the form");
+        let e = app.gis.form_entry.as_ref().expect("the form");
         assert!(e.sources.is_empty() && !e.sources_busy);
     }
 
@@ -234,7 +239,7 @@ mod tests {
     fn local_lists_ask_nothing_outside() {
         let mut app = crate::files_testing::app_with_drawing();
         crate::form_scenes::owner_actions(&mut app, serde_json::Value::Null, false);
-        let e = app.form_entry.as_ref().expect("the form");
+        let e = app.gis.form_entry.as_ref().expect("the form");
         assert!(!e.sources_busy);
         assert!(e.sources.iter().all(|s| s.state == S::Local));
     }

@@ -4,6 +4,7 @@
 //! leaves nothing; Raster oturt sets an affine as one step; a large raster
 //! without overviews gets its pyramid file once, in the device's cache.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::{Entity, RasterRender};
@@ -44,7 +45,9 @@ fn with_raster() -> App {
     drive(&mut app, task);
     send(
         &mut app,
-        Message::Rasters(super::Event::Add(super::add::Event::Run)),
+        Message::Gis(gis::Event::Rasters(super::Event::Add(
+            super::add::Event::Run,
+        ))),
     );
     let slot = {
         let doc = app.document.as_ref().expect("a drawing");
@@ -72,7 +75,7 @@ fn raster_ekle_writes_its_layer_and_the_raster_as_one_step() {
     app.picker = Picker::File(fixture("dem.tif"));
     let task = app.run("raster.add");
     drive(&mut app, task);
-    let s = app.rasters.add.as_ref().expect("the window");
+    let s = app.gis.rasters.add.as_ref().expect("the window");
     let read = s.read.as_ref().expect("read").as_ref().expect("a raster");
     assert_eq!(
         (read.info.width, read.info.height, read.info.bands),
@@ -81,9 +84,11 @@ fn raster_ekle_writes_its_layer_and_the_raster_as_one_step() {
     assert_eq!(read.style.render, RasterRender::RampShade);
     send(
         &mut app,
-        Message::Rasters(super::Event::Add(super::add::Event::Run)),
+        Message::Gis(gis::Event::Rasters(super::Event::Add(
+            super::add::Event::Run,
+        ))),
     );
-    assert!(app.rasters.add.is_none(), "the window closed");
+    assert!(app.gis.rasters.add.is_none(), "the window closed");
     let all = rasters(&app);
     assert_eq!(all.len(), 1);
     let r = &all[0];
@@ -119,16 +124,22 @@ fn a_file_naming_no_system_waits_for_the_users_yes() {
     drive(&mut app, task);
     send(
         &mut app,
-        Message::Rasters(super::Event::Add(super::add::Event::Run)),
+        Message::Gis(gis::Event::Rasters(super::Event::Add(
+            super::add::Event::Run,
+        ))),
     );
     assert!(rasters(&app).is_empty(), "not without the yes");
     send(
         &mut app,
-        Message::Rasters(super::Event::Add(super::add::Event::Confirm)),
+        Message::Gis(gis::Event::Rasters(super::Event::Add(
+            super::add::Event::Confirm,
+        ))),
     );
     send(
         &mut app,
-        Message::Rasters(super::Event::Add(super::add::Event::Run)),
+        Message::Gis(gis::Event::Rasters(super::Event::Add(
+            super::add::Event::Run,
+        ))),
     );
     let all = rasters(&app);
     assert_eq!(all.len(), 1);
@@ -143,7 +154,7 @@ fn a_file_naming_no_system_waits_for_the_users_yes() {
 #[test]
 fn raster_stili_shows_its_look_then_writes_it_as_one_step() {
     let mut app = with_raster();
-    let look = |e: super::look::Event| Message::Rasters(super::Event::Look(e));
+    let look = |e: super::look::Event| Message::Gis(gis::Event::Rasters(super::Event::Look(e)));
     let task = app.run("raster.style");
     drive(&mut app, task);
     send(
@@ -208,7 +219,7 @@ fn fit_rows(rows: &[[&str; 7]]) -> Vec<crate::calc::raster_fit::Row> {
 
 fn solve(app: &mut App) {
     let doc = app.document.as_ref().expect("a drawing");
-    app.calc.raster_fit.solve(&doc.model);
+    app.gis.calc.raster_fit.solve(&doc.model);
 }
 
 #[test]
@@ -222,7 +233,7 @@ fn raster_oturt_sets_an_affine_as_one_step() {
         ["1", "0", "", "480", "0", "487930", "4420620"],
         ["1", "0", "", "0", "324", "487210", "4420134"],
     ];
-    app.calc.raster_fit.rows = fit_rows(&rows);
+    app.gis.calc.raster_fit.rows = fit_rows(&rows);
     solve(&mut app);
     send(&mut app, raster_fit_event(Fit::Apply));
     let r = rasters(&app).remove(0);
@@ -261,7 +272,7 @@ fn raster_oturt_points_go_to_a_file_and_back() {
         ["1", "0", "K3", "0", "324", "487210", "4420134"],
         ["1", "1", "D1", "240", "162", "487570.02", "4420377.01"],
     ];
-    app.calc.raster_fit.rows = fit_rows(&rows);
+    app.gis.calc.raster_fit.rows = fit_rows(&rows);
     solve(&mut app);
     app.picker = Picker::File(file.clone());
     send(&mut app, raster_fit_event(Fit::Export));
@@ -271,10 +282,10 @@ fn raster_oturt_points_go_to_a_file_and_back() {
     assert!(lines.next().is_some_and(|l| l.starts_with("#CRS: PROJCRS[")), "{written}");
     assert_eq!(lines.next(), Some(kentos_formats::raster::gcp::HEADER), "{written}");
     assert!(written.contains(",check,D1"), "{written}");
-    let before = app.calc.raster_fit.points();
-    app.calc.raster_fit.rows = vec![Default::default(); 4];
+    let before = app.gis.calc.raster_fit.points();
+    app.gis.calc.raster_fit.rows = vec![Default::default(); 4];
     send(&mut app, raster_fit_event(Fit::Import));
-    assert_eq!(app.calc.raster_fit.points(), before);
+    assert_eq!(app.gis.calc.raster_fit.points(), before);
 }
 
 /// A `.points` file's `#CRS:` line is the targets' system (docs/adr/0594 §3): a definition that is no registered system
@@ -301,8 +312,8 @@ fn raster_oturt_takes_a_files_system_and_writes_it_back() {
     drive(&mut app, task);
     app.picker = Picker::File(file.clone());
     send(&mut app, raster_fit_event(Fit::Import));
-    assert_eq!(app.calc.raster_fit.crs.as_deref(), Some(defined));
-    assert!(app.calc.raster_fit.srid.is_empty());
+    assert_eq!(app.gis.calc.raster_fit.crs.as_deref(), Some(defined));
+    assert!(app.gis.calc.raster_fit.srid.is_empty());
     solve(&mut app);
     // Written back: the definition on the first line, as QGIS reads it.
     let out = dir.join("geri.points");
@@ -326,14 +337,20 @@ fn raster_oturt_takes_a_files_system_and_writes_it_back() {
     // The window opens again on the raster: its record's definition first.
     let task = app.run("raster.georef");
     drive(&mut app, task);
-    assert_eq!(app.calc.raster_fit.crs.as_deref(), Some(defined));
+    assert_eq!(app.gis.calc.raster_fit.crs.as_deref(), Some(defined));
     app.picker = Picker::File(registered);
     send(&mut app, raster_fit_event(Fit::Import));
-    assert_eq!((app.calc.raster_fit.srid.as_str(), app.calc.raster_fit.crs.as_deref()), ("5254", None));
-    app.calc.raster_fit.crs = Some(defined.to_owned());
-    app.calc.raster_fit.srid.clear();
+    assert_eq!(
+        (
+            app.gis.calc.raster_fit.srid.as_str(),
+            app.gis.calc.raster_fit.crs.as_deref()
+        ),
+        ("5254", None)
+    );
+    app.gis.calc.raster_fit.crs = Some(defined.to_owned());
+    app.gis.calc.raster_fit.srid.clear();
     send(&mut app, raster_fit_event(Fit::ClearCrs));
-    assert_eq!(app.calc.raster_fit.crs, None);
+    assert_eq!(app.gis.calc.raster_fit.crs, None);
 }
 
 /// Raster oturt with a projective transform: the raster resampled beside its
@@ -350,28 +367,32 @@ fn raster_oturt_resamples_beside_a_linked_file() {
     drive(&mut app, task);
     send(
         &mut app,
-        Message::Rasters(super::Event::Add(super::add::Event::Confirm)),
+        Message::Gis(gis::Event::Rasters(super::Event::Add(
+            super::add::Event::Confirm,
+        ))),
     );
     send(
         &mut app,
-        Message::Rasters(super::Event::Add(super::add::Event::Run)),
+        Message::Gis(gis::Event::Rasters(super::Event::Add(
+            super::add::Event::Run,
+        ))),
     );
     let slot = kentos_domain::Slot(rasters(&app)[0].base.id);
     app.selection.set(vec![slot]);
     let task = app.run("raster.georef");
     drive(&mut app, task);
-    app.calc.raster_fit.method = kentos_commands::GeorefMethod::Projective;
+    app.gis.calc.raster_fit.method = kentos_commands::GeorefMethod::Projective;
     let rows = [
         ["1", "0", "", "12.5", "14.0", "486880.6", "4420547.1"],
         ["1", "0", "", "287.0", "11.5", "487159.2", "4420549.4"],
         ["1", "0", "", "283.5", "248.0", "487158.9", "4420309.0"],
         ["1", "0", "", "9.0", "251.5", "486876.0", "4420310.6"],
     ];
-    app.calc.raster_fit.rows = fit_rows(&rows);
+    app.gis.calc.raster_fit.rows = fit_rows(&rows);
     solve(&mut app);
     send(&mut app, raster_fit_event(Fit::Apply));
     assert_eq!(
-        app.calc.raster_fit.status, None,
+        app.gis.calc.raster_fit.status, None,
         "the window said nothing against it"
     );
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
@@ -496,17 +517,18 @@ fn raster_ekle_reads_a_geotiff_from_an_address() {
     app.picker = Picker::File(fixture("dem.tif"));
     let task = app.run("raster.add");
     drive(&mut app, task);
-    let add =
-        |app: &mut App, e: super::add::Event| send(app, Message::Rasters(super::Event::Add(e)));
+    let add = |app: &mut App, e: super::add::Event| {
+        send(app, Message::Gis(gis::Event::Rasters(super::Event::Add(e))))
+    };
     add(&mut app, super::add::Event::From(super::add::From::Address));
-    let s = app.rasters.add.as_ref().expect("the window");
+    let s = app.gis.rasters.add.as_ref().expect("the window");
     assert!(
         s.read.is_none() && s.name.is_empty(),
         "nothing read for an address yet"
     );
     add(&mut app, super::add::Event::Address(url.clone()));
     add(&mut app, super::add::Event::ReadAddress);
-    let s = app.rasters.add.as_ref().expect("the window");
+    let s = app.gis.rasters.add.as_ref().expect("the window");
     let read = s
         .read
         .as_ref()
@@ -521,7 +543,15 @@ fn raster_ekle_reads_a_geotiff_from_an_address() {
     assert_eq!(s.layer, "dem");
     // Another address typed: what was read is not its until Oku.
     add(&mut app, super::add::Event::Address(format!("{url}?v=2")));
-    assert!(app.rasters.add.as_ref().expect("the window").read.is_none());
+    assert!(
+        app.gis
+            .rasters
+            .add
+            .as_ref()
+            .expect("the window")
+            .read
+            .is_none()
+    );
     add(&mut app, super::add::Event::Address(url.clone()));
     add(&mut app, super::add::Event::ReadAddress);
     add(&mut app, super::add::Event::Run);
@@ -564,15 +594,16 @@ fn an_address_takes_only_a_geotiff() {
     app.picker = Picker::File(fixture("dem.tif"));
     let task = app.run("raster.add");
     drive(&mut app, task);
-    let add =
-        |app: &mut App, e: super::add::Event| send(app, Message::Rasters(super::Event::Add(e)));
+    let add = |app: &mut App, e: super::add::Event| {
+        send(app, Message::Gis(gis::Event::Rasters(super::Event::Add(e))))
+    };
     add(&mut app, super::add::Event::From(super::add::From::Address));
     add(
         &mut app,
         super::add::Event::Address("ftp://ornek.org/dem.tif".into()),
     );
     add(&mut app, super::add::Event::ReadAddress);
-    let s = app.rasters.add.as_ref().expect("the window");
+    let s = app.gis.rasters.add.as_ref().expect("the window");
     assert!(s.read.is_none());
     assert!(
         s.status_for_tests()
@@ -674,16 +705,17 @@ fn an_address_without_ranges_is_downloaded_and_added_as_a_file() {
     app.picker = Picker::File(fixture("dem.tif"));
     let task = app.run("raster.add");
     drive(&mut app, task);
-    let add =
-        |app: &mut App, e: super::add::Event| send(app, Message::Rasters(super::Event::Add(e)));
+    let add = |app: &mut App, e: super::add::Event| {
+        send(app, Message::Gis(gis::Event::Rasters(super::Event::Add(e))))
+    };
     add(&mut app, super::add::Event::From(super::add::From::Address));
     add(&mut app, super::add::Event::Address(format!("{url}?imza=1")));
     add(&mut app, super::add::Event::ReadAddress);
-    let s = app.rasters.add.as_ref().expect("the window");
+    let s = app.gis.rasters.add.as_ref().expect("the window");
     let why = s.read.as_ref().expect("read").as_ref().expect_err("refused");
     assert!(super::add::downloadable(why), "{why}");
     add(&mut app, super::add::Event::Download);
-    let s = app.rasters.add.as_ref().expect("the window");
+    let s = app.gis.rasters.add.as_ref().expect("the window");
     assert_eq!(s.from, super::add::From::File, "read now as a file");
     let want = dir.join("veri").join("dem.tif");
     assert_eq!(s.path, want);

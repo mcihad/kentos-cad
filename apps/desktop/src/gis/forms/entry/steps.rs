@@ -2,13 +2,14 @@
 //! on one record or many.
 
 use super::*;
+use crate::gis;
 
 impl App {
     pub(super) fn entry_event(&mut self, preview: bool, event: Event) -> Task<Message> {
         let slot = if preview {
-            &mut self.form_preview
+            &mut self.gis.form_preview
         } else {
-            &mut self.form_entry
+            &mut self.gis.form_entry
         };
         let (Some(e), Some(doc)) = (slot.as_mut(), self.document.as_ref()) else {
             return Task::none();
@@ -111,6 +112,7 @@ impl App {
             Event::OpenRelated(item, uid) => return self.open_related(&item, &uid),
             Event::SourcesAnswered(asked, found) => {
                 if let Some(e) = self
+                    .gis
                     .form_entry
                     .as_mut()
                     .filter(|e| e.sources_asked == asked)
@@ -122,12 +124,12 @@ impl App {
             Event::SourcesAgain => return self.ask_entry_sources(),
             Event::SourceWay(layer, way) => return self.entry_source_way(layer, way),
             Event::DeleteRelated(item, uid) => {
-                if let Some(e) = self.form_entry.as_mut() {
+                if let Some(e) = self.gis.form_entry.as_mut() {
                     e.removing = Some((item, uid));
                 }
             }
             Event::KeepChild => {
-                if let Some(e) = self.form_entry.as_mut() {
+                if let Some(e) = self.gis.form_entry.as_mut() {
                     e.removing = None;
                 }
             }
@@ -157,7 +159,8 @@ impl App {
                     // The record chosen, the tool's window opened with it (a registered tool only),
                     // where it runs as the action says (docs/adr/0442 §6).
                     K::Tool => {
-                        let Some(tool) = tool.filter(|t| self.processing.registry.get(t).is_some())
+                        let Some(tool) =
+                            tool.filter(|t| self.gis.processing.registry.get(t).is_some())
                         else {
                             return Task::none();
                         };
@@ -171,15 +174,15 @@ impl App {
                             kentos_commands::ActionRuns::Background => Some("worker"),
                         };
                         if let Some(place) = place {
-                            let _ = self.update(Message::Processing(
+                            let _ = self.update(Message::Gis(gis::Event::Processing(
                                 crate::processing::Event::Target(place.into()),
-                            ));
+                            )));
                         }
                     }
                     // The calculations again in this window; Kaydet writes them (docs/adr/0442 §5).
                     K::Recompute => {
                         if let (Some(e), Some(doc)) =
-                            (self.form_entry.as_mut(), self.document.as_ref())
+                            (self.gis.form_entry.as_mut(), self.document.as_ref())
                         {
                             e.follows = e
                                 .body
@@ -218,7 +221,7 @@ impl App {
             }
             Event::InspectAttachments => {
                 if e.facts.is_some() {
-                    if let Some(e) = self.form_entry.as_mut() {
+                    if let Some(e) = self.gis.form_entry.as_mut() {
                         e.facts = None;
                     }
                     return Task::none();
@@ -241,20 +244,20 @@ impl App {
                     input,
                 );
                 if let kentos_commands::CommandResult::Completed { output, .. } = result
-                    && let Some(e) = self.form_entry.as_mut()
+                    && let Some(e) = self.gis.form_entry.as_mut()
                 {
                     e.facts = output.objects.into_iter().next().map(|o| o.attachments);
                 }
                 return Task::none();
             }
             Event::Commit(on) => {
-                if let Some(e) = self.form_entry.as_mut() {
+                if let Some(e) = self.gis.form_entry.as_mut() {
                     e.commit = on;
                 }
                 return Task::none();
             }
             Event::Reviewing(on) => {
-                if let Some(e) = self.form_entry.as_mut() {
+                if let Some(e) = self.gis.form_entry.as_mut() {
                     e.reviewing = on;
                     if !on {
                         e.field_notes.clear();
@@ -263,7 +266,7 @@ impl App {
                 return Task::none();
             }
             Event::FieldNote(key, text) => {
-                if let Some(e) = self.form_entry.as_mut() {
+                if let Some(e) = self.gis.form_entry.as_mut() {
                     if text.is_empty() {
                         e.field_notes.remove(&key);
                     } else {
@@ -371,7 +374,7 @@ impl App {
             Event::Reload => {
                 // A new release: the record's form is its body now; values of fields it no longer
                 // has are dropped and said (docs/adr/0442 §2).
-                let dropped = self.form_entry.as_mut().map_or_else(Vec::new, |e| {
+                let dropped = self.gis.form_entry.as_mut().map_or_else(Vec::new, |e| {
                     if !e.release_changed {
                         return Vec::new();
                     }
@@ -427,11 +430,12 @@ impl App {
                     );
                 }
                 let task = self.refresh_entry();
-                if let Some(e) = self.form_entry.as_mut() {
+                if let Some(e) = self.gis.form_entry.as_mut() {
                     e.before = e.screen.attrs.clone();
                     e.conflict = None;
                 }
-                if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
+                if let (Some(e), Some(doc)) = (self.gis.form_entry.as_mut(), self.document.as_ref())
+                {
                     e.recompute(&doc.model);
                 }
                 self.say(
@@ -441,7 +445,7 @@ impl App {
                 return task;
             }
             Event::Overwrite => {
-                if let Some(e) = self.form_entry.as_mut() {
+                if let Some(e) = self.gis.form_entry.as_mut() {
                     e.overwrite = true;
                     e.conflict = None;
                 }
@@ -455,7 +459,7 @@ impl App {
     /// A workflow step (docs/adr/0428): the record with the values typed, through `cad.forms.transition`;
     /// the window closes when it went in.
     pub(super) fn take_step(&mut self, label: String) -> Task<Message> {
-        let Some(e) = self.form_entry.as_ref() else {
+        let Some(e) = self.gis.form_entry.as_ref() else {
             return Task::none();
         };
         if !e.members.is_empty() || e.preview || e.uid.is_empty() {
@@ -516,7 +520,7 @@ impl App {
         match result {
             kentos_commands::CommandResult::Completed { output, .. } => {
                 let to = words_of(&output);
-                self.form_entry = None;
+                self.gis.form_entry = None;
                 self.dialog = None;
                 if let Some(uid) = &docked {
                     let _ = self.redock(uid, &form);
@@ -535,7 +539,7 @@ impl App {
     }
 
     pub(super) fn go_to_first_issue(&mut self) -> Task<Message> {
-        if let Some(e) = self.form_entry.as_mut() {
+        if let Some(e) = self.gis.form_entry.as_mut() {
             e.issue_at = 0;
         }
         self.go_to_next_issue()
@@ -544,7 +548,7 @@ impl App {
     /// İlk soruna git, then Sonraki sorun (docs/adr/0443 §6): each press the next error in the form's
     /// order, round again after the last; with no error the first issue.
     pub(super) fn go_to_next_issue(&mut self) -> Task<Message> {
-        let Some(e) = self.form_entry.as_mut() else {
+        let Some(e) = self.gis.form_entry.as_mut() else {
             return Task::none();
         };
         e.tried = true;
@@ -586,14 +590,14 @@ impl App {
     /// Kaydet: the record through the form; the window closes when it went in.
     pub(super) fn save_entry(&mut self) -> Task<Message> {
         // The checks kept for saving are asked now (docs/adr/0438 §2).
-        if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref())
+        if let (Some(e), Some(doc)) = (self.gis.form_entry.as_mut(), self.document.as_ref())
             && !e.tried
             && e.members.is_empty()
         {
             e.tried = true;
             e.recompute(&doc.model);
         }
-        let Some(e) = self.form_entry.as_ref() else {
+        let Some(e) = self.gis.form_entry.as_ref() else {
             return Task::none();
         };
         let first = e.errors().next().map(|i| i.message.clone());
@@ -673,7 +677,7 @@ impl App {
         {
             let words = error.message.clone();
             let release = error.code == kentos_commands::codes::FORM_RELEASE_CHANGED;
-            if let Some(e) = self.form_entry.as_mut() {
+            if let Some(e) = self.gis.form_entry.as_mut() {
                 e.conflict = Some(words.clone());
                 e.overwrite = false;
                 e.release_changed = release;
@@ -688,7 +692,8 @@ impl App {
                     let _ = self.redock(uid, &form);
                 }
                 if !reused.is_empty() {
-                    self.form_memory
+                    self.gis
+                        .form_memory
                         .last
                         .entry(form)
                         .or_default()
@@ -730,7 +735,7 @@ impl App {
 
     /// Kaydet on many records: the values typed go to every one through `cad.forms.fill`.
     pub(super) fn save_many(&mut self) -> Task<Message> {
-        let Some(e) = self.form_entry.as_ref() else {
+        let Some(e) = self.gis.form_entry.as_ref() else {
             return Task::none();
         };
         let input = FormsFill {
@@ -753,7 +758,7 @@ impl App {
         let result = forms_fill::execute(&mut ExecutionContext::new(&mut doc.model), input);
         match self.answered(result) {
             Some(done) => {
-                self.form_entry = None;
+                self.gis.form_entry = None;
                 self.dialog = None;
                 let said = if done.changed.is_empty() {
                     "Kayıtlarda değişiklik yok.".to_owned()

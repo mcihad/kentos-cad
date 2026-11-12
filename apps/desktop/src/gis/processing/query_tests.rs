@@ -4,6 +4,7 @@
 //! the fields, its rows not kept in the last values), a value a layer's field
 //! does not take, and the pictures for the owner.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::DocumentSnapshotV1;
@@ -26,7 +27,7 @@ fn app_with_queries() -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn value(app: &mut App, name: &str, v: serde_json::Value) {
@@ -34,7 +35,8 @@ fn value(app: &mut App, name: &str, v: serde_json::Value) {
 }
 
 fn status(app: &App) -> RunStatus {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())
@@ -121,7 +123,7 @@ fn the_summary_shows_its_table_under_the_form_until_a_value_changes() {
 fn a_chosen_file_gives_its_columns_as_fields_and_is_kept_by_its_name_and_path() {
     let mut app = app_with_queries();
     join(&mut app);
-    let window = app.processing.dialog.as_ref().expect("open");
+    let window = app.gis.processing.dialog.as_ref().expect("open");
     let file = window.inputs.get("file").expect("the file's table");
     assert!(file.rows);
     assert_eq!(
@@ -144,6 +146,7 @@ fn a_chosen_file_gives_its_columns_as_fields_and_is_kept_by_its_name_and_path() 
     assert_eq!(owner.as_deref(), Some("Ayşe Yılmaz"));
     // The last values keep the file's name and path, not its rows.
     let kept = app
+        .gis
         .processing
         .memory
         .last_values("attributes.joinByField")
@@ -157,7 +160,7 @@ fn a_chosen_file_gives_its_columns_as_fields_and_is_kept_by_its_name_and_path() 
     event(&mut app, Event::Close);
     let _ = app.update(Message::Run("processing.run.attributes.joinByField"));
     event(&mut app, Event::Run);
-    let window = app.processing.dialog.as_ref().expect("open");
+    let window = app.gis.processing.dialog.as_ref().expect("open");
     let issue = window.issue_of("file").map(|i| i.message.clone());
     assert_eq!(
         issue.as_deref(),

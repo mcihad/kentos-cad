@@ -16,7 +16,7 @@ use crate::calc::Window;
 impl App {
     /// Kenar eşleme's own controls.
     pub(crate) fn edgematch_event(&mut self, e: Event) {
-        let form = &mut self.calc.edgematch;
+        let form = &mut self.gis.calc.edgematch;
         match e {
             Event::Scope(scope) => form.scope = scope,
             Event::Source(id) => form.source = (!id.is_empty()).then_some(id),
@@ -49,7 +49,7 @@ impl App {
         if self.document.is_none() {
             return;
         }
-        self.calc.edgematch.aside = Some(Aside::Border(self.selection.ids().to_vec()));
+        self.gis.calc.edgematch.aside = Some(Aside::Border(self.selection.ids().to_vec()));
         self.selection.clear();
         self.dialog = None;
         self.field = None;
@@ -68,14 +68,14 @@ impl App {
     /// selection comes back and so does the window. False when Kenar
     /// eşleme was not picking.
     pub(crate) fn edgematch_picked_objects(&mut self, keep: bool) -> bool {
-        let Some(Aside::Border(before)) = self.calc.edgematch.aside.take() else {
+        let Some(Aside::Border(before)) = self.gis.calc.edgematch.aside.take() else {
             return false;
         };
         if keep
             && let (Some(&slot), Some(doc)) = (self.selection.ids().first(), &self.document)
             && let Some(uid) = doc.model.uid(slot)
         {
-            self.calc.edgematch.border = Some(uid.to_string());
+            self.gis.calc.edgematch.border = Some(uid.to_string());
         }
         self.selection.set(before);
         self.calc_show(Window::Edgematch);
@@ -85,7 +85,7 @@ impl App {
     /// Göster: the window steps aside, the link's two lines are selected and
     /// the view goes to it; a click, Enter or Esc brings the window back (the web's `show`).
     fn edgematch_show(&mut self, row: usize) {
-        let form = &self.calc.edgematch;
+        let form = &self.gis.calc.edgematch;
         let Some(l) = form.found.as_ref().and_then(|f| f.links.get(row)) else {
             return;
         };
@@ -98,7 +98,7 @@ impl App {
         let half = (l.gap * 60.0).max(3.0);
         let (mx, my) = ((l.from.x + l.to.x) / 2.0, (l.from.y + l.to.y) / 2.0);
         let what = format!("{}. bağ, aralık {} mm", row + 1, fixed(l.gap * 1000.0, 1));
-        self.calc.edgematch.aside = Some(Aside::Look(self.selection.ids().to_vec()));
+        self.gis.calc.edgematch.aside = Some(Aside::Look(self.selection.ids().to_vec()));
         self.selection.set(vec![source, adjacent]);
         self.dialog = None;
         self.field = None;
@@ -123,14 +123,14 @@ impl App {
     /// Göster's look over: the selection and the window come back. False
     /// when Kenar eşleme was not looking.
     pub(crate) fn edgematch_looked(&mut self) -> bool {
-        match self.calc.edgematch.aside.take() {
+        match self.gis.calc.edgematch.aside.take() {
             Some(Aside::Look(before)) => {
                 self.selection.set(before);
                 self.calc_show(Window::Edgematch);
                 true
             }
             other => {
-                self.calc.edgematch.aside = other;
+                self.gis.calc.edgematch.aside = other;
                 false
             }
         }
@@ -143,7 +143,7 @@ impl App {
         let Some(doc) = &mut self.document else {
             return;
         };
-        let form = &self.calc.edgematch;
+        let form = &self.gis.calc.edgematch;
         if form.changes.is_empty() {
             return;
         }
@@ -159,11 +159,11 @@ impl App {
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => {
-                self.calc.edgematch.status = Some(error.message);
+                self.gis.calc.edgematch.status = Some(error.message);
                 return;
             }
             CommandResult::Queued { .. } | CommandResult::Cancelled => {
-                self.calc.edgematch.status = Some("Yazılamadı.".to_owned());
+                self.gis.calc.edgematch.status = Some("Yazılamadı.".to_owned());
                 return;
             }
         };
@@ -184,7 +184,7 @@ impl App {
             self.warn(w.message);
         }
         self.selection.set(changed);
-        self.calc.open = None;
+        self.gis.calc.open = None;
         self.dialog = None;
     }
 }

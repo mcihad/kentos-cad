@@ -6,10 +6,12 @@ use iced::widget::column;
 
 impl App {
     pub(crate) fn road_section_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.section_window else {
+        let Some(w) = &self.road.section_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let (alignments, _, _) = self.section_names();
         let revisions: Vec<(String, u32)> = self.document.as_ref().map_or_else(Vec::new, |d| {
             d.model.road_alignments().iter().map(|a| (a.id.clone(), a.revision)).collect()
@@ -288,7 +290,7 @@ impl App {
     }
 
     pub(crate) fn section_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.section_window else {
+        let Some(w) = &self.road.section_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

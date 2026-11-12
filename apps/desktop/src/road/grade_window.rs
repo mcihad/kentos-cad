@@ -16,6 +16,7 @@
 //! Yüksek/alçak nokta and Yüzeyden's Aralık) may lie on any ring of a multi-part object or one with holes (Halka, or the
 //! ring Sahneden seç's first click is nearest); the window numbers that ring's vertices and marks it.
 
+use crate::road;
 use iced::widget::Column;
 use iced::{Element, Task};
 use kentos_commands::{CommandResult, EntitiesGrade, EntitiesGraded, EntitiesRaised, Entity, GradePointKind, GradedPoint};
@@ -156,12 +157,12 @@ pub enum Event {
 }
 
 pub(crate) fn msg(e: Event) -> Message {
-    Message::Grade(e)
+    Message::Road(road::Event::Grade(e))
 }
 
 impl App {
     fn grade_input(&self) -> EntitiesGrade {
-        let s = &self.grade;
+        let s = &self.road.grade;
         EntitiesGrade {
             uid: s.uid.clone(),
             from: (s.from.max(1.0) as u32) - 1,
@@ -178,23 +179,27 @@ impl App {
     }
 
     fn grade_plan(&mut self) {
-        if self.grade.target == Target::Reference {
+        if self.road.grade.target == Target::Reference {
             self.raise_plan();
             return;
         }
-        if self.grade.target == Target::Surface {
+        if self.road.grade.target == Target::Surface {
             self.drape_plan();
             return;
         }
         let input = self.grade_input();
-        let Some(doc) = self.document.as_mut() else { return };
-        self.grade.plan = Some(match entities_grade::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Önizleme alınamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.road.grade.plan = Some(
+            match entities_grade::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Önizleme alınamadı.".to_owned()),
+            },
+        );
     }
 
     /// Eğimle kot ver (`tool.grade`): the one selected path, from its first vertex to its last.
@@ -220,9 +225,9 @@ impl App {
             }
         };
         // A reference given before stays for the next object, with Referanstan.
-        let kept = std::mem::take(&mut self.grade);
+        let kept = std::mem::take(&mut self.road.grade);
         let kept = kept.referenced.then_some(kept);
-        self.grade = State {
+        self.road.grade = State {
             uid: uid.to_string(),
             from: 1.0,
             to: n as f64,
@@ -250,49 +255,53 @@ impl App {
             draped: None,
         };
         self.grade_plan();
-        self.dialog = Some(Dialog::Grade);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Grade));
         Task::none()
     }
 
     pub(crate) fn grade_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::From(v) => self.grade.from = v.round(),
-            Event::To(v) => self.grade.to = v.round(),
-            Event::Start(v) => self.grade.start = v,
-            Event::Target(t) => self.grade.target = t,
-            Event::End(v) => self.grade.end = v,
-            Event::Percent(v) => self.grade.percent = v,
-            Event::Ahead(v) => self.grade.ahead = v,
-            Event::Back(v) => self.grade.back = v,
-            Event::At(v) => self.grade.at = v.round(),
-            Event::East(v) => (self.grade.east, self.grade.referenced) = (v, true),
-            Event::North(v) => (self.grade.north, self.grade.referenced) = (v, true),
-            Event::Height(v) => (self.grade.height, self.grade.referenced) = (v, true),
-            Event::By(b) => self.grade.by = b,
-            Event::Difference(v) => self.grade.difference = v,
-            Event::Surface(id) => self.grade.surface = id,
-            Event::Breaks(on) => self.grade.breaks = on,
-            Event::Above(v) => self.grade.above = v,
-            Event::Partial(on) => self.grade.partial = on,
+            Event::From(v) => self.road.grade.from = v.round(),
+            Event::To(v) => self.road.grade.to = v.round(),
+            Event::Start(v) => self.road.grade.start = v,
+            Event::Target(t) => self.road.grade.target = t,
+            Event::End(v) => self.road.grade.end = v,
+            Event::Percent(v) => self.road.grade.percent = v,
+            Event::Ahead(v) => self.road.grade.ahead = v,
+            Event::Back(v) => self.road.grade.back = v,
+            Event::At(v) => self.road.grade.at = v.round(),
+            Event::East(v) => (self.road.grade.east, self.road.grade.referenced) = (v, true),
+            Event::North(v) => (self.road.grade.north, self.road.grade.referenced) = (v, true),
+            Event::Height(v) => (self.road.grade.height, self.road.grade.referenced) = (v, true),
+            Event::By(b) => self.road.grade.by = b,
+            Event::Difference(v) => self.road.grade.difference = v,
+            Event::Surface(id) => self.road.grade.surface = id,
+            Event::Breaks(on) => self.road.grade.breaks = on,
+            Event::Above(v) => self.road.grade.above = v,
+            Event::Partial(on) => self.road.grade.partial = on,
             Event::Ring(id) => {
                 if let Some((part, ring)) = id.split_once(':').and_then(|(a, b)| Some((a.parse().ok()?, b.parse().ok()?))) {
-                    self.grade.ring = (part, ring);
+                    self.road.grade.ring = (part, ring);
                     // The new ring's vertices from its first to its last; Referanstan's its first.
-                    self.grade.from = 1.0;
-                    self.grade.at = 1.0;
-                    self.grade.to = self.grade_vertices().len().max(1) as f64;
+                    self.road.grade.from = 1.0;
+                    self.road.grade.at = 1.0;
+                    self.road.grade.to = self.grade_vertices().len().max(1) as f64;
                 }
             }
             Event::Pick => {
-                let first = if self.grade.target == Target::Reference { Pick::Reference } else { Pick::Start };
+                let first = if self.road.grade.target == Target::Reference {
+                    Pick::Reference
+                } else {
+                    Pick::Start
+                };
                 self.start_grade_pick(first);
                 return Task::none();
             }
-            Event::Apply if self.grade.target == Target::Reference => {
+            Event::Apply if self.road.grade.target == Target::Reference => {
                 self.raise_apply();
                 return Task::none();
             }
-            Event::Apply if self.grade.target == Target::Surface => {
+            Event::Apply if self.road.grade.target == Target::Surface => {
                 self.drape_apply();
                 return Task::none();
             }
@@ -321,7 +330,7 @@ impl App {
                             ),
                         };
                         self.say(Level::Success, said);
-                        self.grade = State::default();
+                        self.road.grade = State::default();
                         self.dialog = None;
                     }
                     CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
@@ -332,7 +341,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.grade = State::default();
+                self.road.grade = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -350,34 +359,41 @@ impl App {
     /// The ring the window works on: its vertices and bulges (see `grade_vertices`).
     fn grade_ring(&self) -> (Vec<kentos_commands::Vec2>, Option<Vec<f64>>) {
         let Some(e) = self.grade_object() else { return (Vec::new(), None) };
-        let at = self.grade.ring;
+        let at = self.road.grade.ring;
         crate::grade_surface::rings(e).into_iter().find(|r| r.0 == at).map_or((Vec::new(), None), |r| (r.1, r.2))
     }
 
     /// The object the window was opened on.
     pub(crate) fn grade_object(&self) -> Option<&Entity> {
         let doc = self.document.as_ref()?;
-        kentos_domain::Uuid::parse_str(&self.grade.uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s))
+        kentos_domain::Uuid::parse_str(&self.road.grade.uid)
+            .ok()
+            .and_then(|u| doc.model.slot_of(u))
+            .and_then(|s| doc.model.get(s))
     }
 
     /// The range on the drawing (docs/adr/2980): the path from its start vertex to its end, arcs as points along them,
     /// and the two vertices; while the end is being picked the start alone, while the start is, nothing. Nothing when
     /// Eğimle kot ver is not open or the range does not hold.
     pub(crate) fn grade_marks(&self) -> (Vec<kentos_commands::Vec2>, Vec<kentos_commands::Vec2>) {
-        let open = self.dialog == Some(Dialog::Grade) || self.grade.picking.is_some();
-        if open && self.grade.target == Target::Reference {
+        let open = self.dialog == Some(Dialog::Road(road::RoadDialogKind::Grade))
+            || self.road.grade.picking.is_some();
+        if open && self.road.grade.target == Target::Reference {
             return self.reference_marks();
         }
         // Yüzeyden takes the whole object unless its range is on (docs/adr/4580): then the range is marked too.
-        if self.grade.target == Target::Surface && !self.grade.partial {
+        if self.road.grade.target == Target::Surface && !self.road.grade.partial {
             return (Vec::new(), Vec::new());
         }
         if !open {
             return (Vec::new(), Vec::new());
         }
         let (pts, bulges) = self.grade_ring();
-        let (from, to) = (self.grade.from.max(1.0) as usize - 1, self.grade.to.max(1.0) as usize - 1);
-        match self.grade.picking {
+        let (from, to) = (
+            self.road.grade.from.max(1.0) as usize - 1,
+            self.road.grade.to.max(1.0) as usize - 1,
+        );
+        match self.road.grade.picking {
             Some(Pick::Start | Pick::Reference | Pick::Vertex) => (Vec::new(), Vec::new()),
             Some(Pick::End) => (Vec::new(), pts.get(from).copied().into_iter().collect()),
             None if from < to && to < pts.len() => {
@@ -391,8 +407,10 @@ impl App {
                     .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
                     .collect();
                 // The high or low point the preview found, ringed with the range's ends (docs/adr/3380).
-                let point = match &self.grade.plan {
-                    Some(Ok(EntitiesGraded { point: Some(p), .. })) if self.grade.target == Target::Peak => {
+                let point = match &self.road.grade.plan {
+                    Some(Ok(EntitiesGraded { point: Some(p), .. }))
+                        if self.road.grade.target == Target::Peak =>
+                    {
                         Some(kentos_commands::Vec2 { x: p.x, y: p.y })
                     }
                     _ => None,
@@ -405,7 +423,7 @@ impl App {
 
     /// Sahneden seç (docs/adr/2180): the window steps aside for a click on the drawing.
     pub(crate) fn start_grade_pick(&mut self, end: Pick) {
-        self.grade.picking = Some(end);
+        self.road.grade.picking = Some(end);
         self.dialog = None;
         let asks = match end {
             Pick::Start => "Başlangıç köşesine tıklayın",
@@ -424,10 +442,10 @@ impl App {
     /// pick aperture is the range's start, then its end; the window opens again with the range previewed. Esc goes back
     /// to the window; a click by no vertex is said.
     pub(crate) fn grade_picked(&mut self, p: Option<kentos_interaction::Vec2>) -> bool {
-        let Some(end) = self.grade.picking.take() else {
+        let Some(end) = self.road.grade.picking.take() else {
             return false;
         };
-        self.dialog = Some(Dialog::Grade);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Grade));
         let Some(p) = p else {
             return true;
         };
@@ -446,12 +464,12 @@ impl App {
                 .filter(|(_, _, d)| *d <= reach)
                 .min_by(|a, b| a.2.total_cmp(&b.2));
             if let Some((at, i, _)) = nearest {
-                self.grade.ring = at;
+                self.road.grade.ring = at;
                 if end == Pick::Vertex {
-                    self.grade.at = (i + 1) as f64;
+                    self.road.grade.at = (i + 1) as f64;
                     self.grade_plan();
                 } else {
-                    self.grade.from = (i + 1) as f64;
+                    self.road.grade.from = (i + 1) as f64;
                     self.start_grade_pick(Pick::End);
                 }
                 return true;
@@ -471,15 +489,15 @@ impl App {
         };
         match end {
             Pick::Start => {
-                self.grade.from = (i + 1) as f64;
+                self.road.grade.from = (i + 1) as f64;
                 self.start_grade_pick(Pick::End);
             }
             Pick::End => {
-                self.grade.to = (i + 1) as f64;
+                self.road.grade.to = (i + 1) as f64;
                 self.grade_plan();
             }
             Pick::Vertex | Pick::Reference => {
-                self.grade.at = (i + 1) as f64;
+                self.road.grade.at = (i + 1) as f64;
                 self.grade_plan();
             }
         }
@@ -487,7 +505,7 @@ impl App {
     }
 
     pub(crate) fn grade_view(&self) -> Element<'_, Message> {
-        let s = &self.grade;
+        let s = &self.road.grade;
         // One label column, every box the same width (the owner: a form's fields line up).
         const BOX: f32 = 140.0;
         let end = || NumberInput::new(s.end, |v| msg(Event::End(v))).step(0.1).decimals(3).point().width(BOX);

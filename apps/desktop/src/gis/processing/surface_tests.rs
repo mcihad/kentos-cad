@@ -6,6 +6,7 @@
 //! lines with their levels; Eşyükselti üret and Eğim analizi open the tools;
 //! a raster whose file is gone is said.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::{DocumentSnapshotV1, Entity, RasterRender, RasterSample};
@@ -40,14 +41,18 @@ fn app() -> App {
 }
 
 fn value(app: &mut App, name: &str, v: Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 /// Runs the tool whose window is open, in the background, to its end.
 pub(crate) fn run(app: &mut App) -> RunStatus {
-    let task = app.update(Message::Processing(Event::Run));
+    let task = app.update(Message::Gis(gis::Event::Processing(Event::Run)));
     crate::files_testing::drive(app, task);
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())
@@ -180,9 +185,14 @@ fn the_terrain_commands_open_the_surface_tools() {
         ("analysis.slope", "surface.slope"),
     ] {
         let _ = app.update(Message::Run(command));
-        let open = app.processing.dialog.as_ref().map(|w| w.tool.id.clone());
+        let open = app
+            .gis
+            .processing
+            .dialog
+            .as_ref()
+            .map(|w| w.tool.id.clone());
         assert_eq!(open.as_deref(), Some(tool), "{command}");
-        let _ = app.update(Message::Processing(Event::Close));
+        let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     }
 }
 

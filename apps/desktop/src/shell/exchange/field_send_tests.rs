@@ -2,6 +2,7 @@
 //! drawing's selection, Nokta editörü's rows and Aplikasyon's table; the
 //! file is the shared writer's, byte for byte, written where the user says.
 
+use crate::gis;
 use kentos_commands::{Entity, FieldWriteFormat, FieldWriteOptions};
 use kentos_domain::Slot;
 
@@ -97,7 +98,7 @@ fn nokta_editoru_sends_its_rows() {
     let _ = app.update(Message::Opened(Some(Ok(Box::new(
         crate::files_testing::drawing(3),
     )))));
-    let _ = app.update(Message::Points(crate::points::Event::Send));
+    let _ = app.update(Message::Gis(gis::Event::Points(crate::points::Event::Send)));
     let s = window(&app);
     assert_eq!(s.from(), "Nokta editörünün 4 satırı");
     // The sample's P1 and N0…N2 (named by their Ad), GSI-16 by default.
@@ -113,13 +114,19 @@ fn nokta_editoru_sends_its_rows() {
 fn aplikasyon_sends_its_table_and_comes_back() {
     let mut app = app_with_drawing();
     let _ = app.run("calc.stakeout");
-    let _ = app.update(Message::Calc(crate::calc::Event::Cell(0, 0, "p1".into())));
-    let _ = app.update(Message::Calc(crate::calc::Event::Cell(
+    let _ = app.update(Message::Gis(gis::Event::Calc(crate::calc::Event::Cell(
+        0,
+        0,
+        "p1".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Calc(crate::calc::Event::Cell(
         1,
         0,
         "486000,4420000".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Calc(
+        crate::calc::Event::SendToDevice,
     )));
-    let _ = app.update(Message::Calc(crate::calc::Event::SendToDevice));
     let s = window(&app);
     assert_eq!(s.from(), "Aplikasyon tablosunun 2 noktası");
     // P1 found by its name; the point typed as Y,X has none and is said.
@@ -133,7 +140,11 @@ fn aplikasyon_sends_its_table_and_comes_back() {
         ["2. noktanın adı yok; yazılmadı."]
     );
     send(&mut app, Event::Close);
-    assert_eq!(app.dialog, Some(Dialog::Calc), "back to Aplikasyon");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Calc)),
+        "back to Aplikasyon"
+    );
 }
 
 /// Pictures of the window for the owner, dark and light, at 1440×900 and at
@@ -179,7 +190,7 @@ fn screens() {
                 app
             };
             let mut app = fresh();
-            let _ = app.update(Message::Points(crate::points::Event::Send));
+            let _ = app.update(Message::Gis(gis::Event::Points(crate::points::Event::Send)));
             send(&mut app, Event::FieldSend(Send::Format(0)));
             picture(&mut app, &format!("cihaza-{mode}-1-gsi"));
             send(&mut app, Event::FieldSend(Send::Format(3)));
@@ -187,14 +198,24 @@ fn screens() {
 
             let mut app = fresh();
             let _ = app.run("calc.stakeout");
-            let _ = app.update(Message::Calc(crate::calc::Event::Cell(0, 0, "P1".into())));
-            let _ = app.update(Message::Calc(crate::calc::Event::Cell(1, 0, "N1".into())));
-            let _ = app.update(Message::Calc(crate::calc::Event::Cell(
+            let _ = app.update(Message::Gis(gis::Event::Calc(crate::calc::Event::Cell(
+                0,
+                0,
+                "P1".into(),
+            ))));
+            let _ = app.update(Message::Gis(gis::Event::Calc(crate::calc::Event::Cell(
+                1,
+                0,
+                "N1".into(),
+            ))));
+            let _ = app.update(Message::Gis(gis::Event::Calc(crate::calc::Event::Cell(
                 2,
                 0,
                 "486000,4420000".into(),
+            ))));
+            let _ = app.update(Message::Gis(gis::Event::Calc(
+                crate::calc::Event::SendToDevice,
             )));
-            let _ = app.update(Message::Calc(crate::calc::Event::SendToDevice));
             send(&mut app, Event::FieldSend(Send::Format(1)));
             picture(&mut app, &format!("cihaza-{mode}-3-aplikasyon-gsi8"));
             send(&mut app, Event::FieldSend(Send::Format(0)));

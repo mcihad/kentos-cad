@@ -5,6 +5,7 @@
 //! columns again, a tool's table charted, and another drawing starting the
 //! choices again; then the painted picture and the saved ones.
 
+use crate::gis;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::charts::model::{Aggregate, ChartKind, Spec};
 
@@ -20,13 +21,13 @@ fn opened() -> App {
 }
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::Charts(e));
+    let _ = app.update(Message::Gis(gis::Event::Charts(e)));
 }
 
 /// The chart's table as the Tablo view shows it.
 fn table(app: &App) -> Vec<Vec<String>> {
     app.chart_refresh();
-    let now = app.charts.chart.borrow();
+    let now = app.gis.charts.chart.borrow();
     let t = now.table.as_ref().expect("a chart");
     let mut lines = vec![t.columns.clone()];
     lines.extend(t.rows.iter().cloned());
@@ -39,11 +40,11 @@ fn the_commands_open_their_tabs_on_the_layer_at_hand() {
     let _ = app.update(Message::Run("data.statistics"));
     assert_eq!(app.bottom_tab, BottomTab::Statistics);
     assert!(app.command_expanded);
-    assert_eq!(app.charts.layer.as_deref(), Some("parsel"));
+    assert_eq!(app.gis.charts.layer.as_deref(), Some("parsel"));
     let _ = app.update(Message::Run("chart.pie"));
     assert_eq!(app.bottom_tab, BottomTab::Chart);
     app.chart_refresh();
-    assert_eq!(app.charts.chart.borrow().kind, Some(ChartKind::Pie));
+    assert_eq!(app.gis.charts.chart.borrow().kind, Some(ChartKind::Pie));
     // Pasta by its first column that is no number (Ada is text), counting.
     assert_eq!(table(&app)[0], ["Ada", "Nesne", "Pay (%)"]);
     // A line's points start each a row; another kind starts at the count again.
@@ -100,10 +101,10 @@ fn a_press_selects_its_elements_objects_and_the_selection_marks_the_chart() {
     assert!(app.selection.ids().is_empty());
     // The selection marks the chart: its picture changes.
     app.chart_refresh();
-    let before = app.charts.chart.borrow().stamp;
+    let before = app.gis.charts.chart.borrow().stamp;
     app.selection.set(parcels_of(&app, "S"));
     app.chart_refresh();
-    assert!(app.charts.chart.borrow().stamp > before);
+    assert!(app.gis.charts.chart.borrow().stamp > before);
 }
 
 #[test]
@@ -211,7 +212,7 @@ fn a_tools_table_opens_with_its_tools_chart_and_selects_nothing() {
             ],
         ],
     });
-    assert_eq!(app.charts.source, Source::Table);
+    assert_eq!(app.gis.charts.source, Source::Table);
     let spec = app.whole_spec().expect("a spec");
     assert_eq!(spec.kind, ChartKind::Line);
     assert_eq!(spec.x.as_deref(), Some("Alan oranı (%)"));
@@ -229,11 +230,13 @@ fn statistics_count_their_summaries_and_a_value_selects_its_objects() {
         if !app.stats_counting() {
             break;
         }
-        let _ = app.update(Message::Statistics(crate::statistics::Event::Count));
+        let _ = app.update(Message::Gis(gis::Event::Statistics(
+            crate::statistics::Event::Count,
+        )));
     }
     assert!(!app.stats_counting());
     {
-        let now = app.charts.stats.borrow();
+        let now = app.gis.charts.stats.borrow();
         assert_eq!(now.rows.len(), 63);
         let kat = now
             .summaries
@@ -244,11 +247,12 @@ fn statistics_count_their_summaries_and_a_value_selects_its_objects() {
         // Two empty, one refused (“üç”).
         assert_eq!((kat.filled, kat.empty, kat.invalid), (60, 2, 1));
     }
-    let _ = app.update(Message::Statistics(crate::statistics::Event::Field(
-        "Kullanım".into(),
+    let _ = app.update(Message::Gis(gis::Event::Statistics(
+        crate::statistics::Event::Field("Kullanım".into()),
     )));
     app.stats_refresh();
     let at = app
+        .gis
         .charts
         .stats
         .borrow()
@@ -259,10 +263,14 @@ fn statistics_count_their_summaries_and_a_value_selects_its_objects() {
         .iter()
         .position(|v| v.text == "Sanayi")
         .expect("Sanayi");
-    let _ = app.update(Message::Statistics(crate::statistics::Event::Value(at)));
+    let _ = app.update(Message::Gis(gis::Event::Statistics(
+        crate::statistics::Event::Value(at),
+    )));
     assert_eq!(app.selection.ids().len(), 3);
     // Grafik: the field's bars in the Grafik tab.
-    let _ = app.update(Message::Statistics(crate::statistics::Event::Chart));
+    let _ = app.update(Message::Gis(gis::Event::Statistics(
+        crate::statistics::Event::Chart,
+    )));
     assert_eq!(app.bottom_tab, BottomTab::Chart);
     let spec = app.whole_spec().expect("a spec");
     assert_eq!(
@@ -277,8 +285,8 @@ fn another_drawing_starts_the_choices_again() {
     let _ = app.update(Message::Run("chart.scatter"));
     ev(&mut app, Event::View(View::Table));
     open_charts(&mut app);
-    assert_eq!(app.charts.view, View::Chart);
-    assert!(app.charts.layer_spec.is_none());
+    assert_eq!(app.gis.charts.view, View::Chart);
+    assert!(app.gis.charts.layer_spec.is_none());
 }
 
 #[test]

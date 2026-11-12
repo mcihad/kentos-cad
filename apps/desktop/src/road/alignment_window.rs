@@ -22,6 +22,7 @@
 //! sets) and `road.alignments.create` (the new ones), each one undo step, and closes. Ters çevir reverses a saved
 //! alignment (`road.alignments.edit reverse`).
 
+use crate::road;
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task, Theme};
 use kentos_commands::{
@@ -282,7 +283,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Alignments(event)
+    Message::Road(road::Event::Alignments(event))
 }
 
 /// What the row builds to now: its alignment's line, or why it does not build.
@@ -463,20 +464,20 @@ impl App {
         }
         let kept = doc.model.road_alignments().to_vec();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
-        self.alignment_window = Some(Window {
+        self.road.alignment_window = Some(Window {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
             layer,
             ..Window::default()
         });
-        self.dialog = Some(Dialog::Alignments);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Alignments));
     }
 
     /// Yeni aks from the ribbon: the window with a new alignment, its PIs from a selected line when there is one.
     pub(crate) fn new_alignment(&mut self) {
         self.open_alignments();
-        if self.alignment_window.is_some() {
+        if self.road.alignment_window.is_some() {
             let _ = self.alignment_event(Event::New);
             if !self.selection.ids().is_empty() {
                 let _ = self.alignment_event(Event::FromSelection);
@@ -500,7 +501,7 @@ impl App {
 
     pub(crate) fn alignment_event(&mut self, event: Event) -> Task<Message> {
         let path = matches!(event, Event::FromSelection).then(|| self.selected_path()).flatten();
-        let Some(w) = self.alignment_window.as_mut() else {
+        let Some(w) = self.road.alignment_window.as_mut() else {
             return Task::none();
         };
         let mut warning = None;
@@ -677,7 +678,7 @@ impl App {
             Event::LabelLayer(id) => w.layer = Some(id),
             Event::Label => return self.label_alignment(),
             Event::Cancel => {
-                self.alignment_window = None;
+                self.road.alignment_window = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_alignments(),
@@ -693,19 +694,33 @@ impl App {
     /// none for a new alignment, a parallel axis, PIs that do not read or are the saved ones.
     fn refresh_alignment_impact(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.alignment_window.as_mut() else { return };
-        w.impact = w.chosen.and_then(|i| w.rows.get(i)).and_then(|r| r.def().ok()).and_then(|d| {
-            let kept = w.kept.iter().find(|k| k.id == d.id && k.offset_of.is_none())?;
-            (kept.pis != d.pis && d.offset_of.is_none()).then(|| {
-                let input = kentos_commands::AlignmentsImpact { alignment: d.id.clone(), pis: d.pis.clone(), reverse: false, tolerance: None };
-                kentos_native_application::road_alignments_impact::preview(&doc.model, &input)
-            })
-        });
+        let Some(w) = self.road.alignment_window.as_mut() else {
+            return;
+        };
+        w.impact = w
+            .chosen
+            .and_then(|i| w.rows.get(i))
+            .and_then(|r| r.def().ok())
+            .and_then(|d| {
+                let kept = w
+                    .kept
+                    .iter()
+                    .find(|k| k.id == d.id && k.offset_of.is_none())?;
+                (kept.pis != d.pis && d.offset_of.is_none()).then(|| {
+                    let input = kentos_commands::AlignmentsImpact {
+                        alignment: d.id.clone(),
+                        pis: d.pis.clone(),
+                        reverse: false,
+                        tolerance: None,
+                    };
+                    kentos_native_application::road_alignments_impact::preview(&doc.model, &input)
+                })
+            });
     }
 
     /// Noktanın km'si: the typed place's km and offset on the chosen saved alignment (`road.alignments.query`).
     fn ask_point(&mut self) -> Task<Message> {
-        let Some(w) = self.alignment_window.as_mut() else {
+        let Some(w) = self.road.alignment_window.as_mut() else {
             return Task::none();
         };
         let parts: Vec<Option<f64>> = w.point.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
@@ -748,7 +763,7 @@ impl App {
             },
             _ => "Sorulamadı.".into(),
         };
-        if let Some(w) = self.alignment_window.as_mut() {
+        if let Some(w) = self.road.alignment_window.as_mut() {
             w.answer = answer;
         }
         Task::none()
@@ -756,7 +771,7 @@ impl App {
 
     /// Km'yi çizime yaz: the chosen saved alignment's km on the chosen layer (`road.alignments.label`), one undo step.
     fn label_alignment(&mut self) -> Task<Message> {
-        let Some(w) = &self.alignment_window else {
+        let Some(w) = &self.road.alignment_window else {
             return Task::none();
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -788,7 +803,7 @@ impl App {
 
     /// Ters çevir: the chosen saved alignment reversed (`road.alignments.edit reverse`), one undo step.
     fn reverse_alignment(&mut self) -> Task<Message> {
-        let Some(w) = &self.alignment_window else {
+        let Some(w) = &self.road.alignment_window else {
             return Task::none();
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -848,7 +863,7 @@ impl App {
     fn reload_alignments(&mut self) {
         let Some(doc) = &self.document else { return };
         let kept = doc.model.road_alignments().to_vec();
-        if let Some(w) = self.alignment_window.as_mut() {
+        if let Some(w) = self.road.alignment_window.as_mut() {
             w.rows = kept.iter().map(Row::of).collect();
             w.kept = kept;
             w.chosen = w.chosen.filter(|i| *i < w.rows.len());
@@ -857,7 +872,7 @@ impl App {
 
     /// Kaydet: what changed, the removed first (parallel axes before their sources), then the changed, then the new.
     fn save_alignments(&mut self) -> Task<Message> {
-        let Some(w) = self.alignment_window.clone() else {
+        let Some(w) = self.road.alignment_window.clone() else {
             return Task::none();
         };
         let mut defs = Vec::new();
@@ -932,7 +947,7 @@ impl App {
                 }
             }
         }
-        self.alignment_window = None;
+        self.road.alignment_window = None;
         self.dialog = None;
         self.say(Level::Success, "Akslar kaydedildi.");
         Task::none()
@@ -951,7 +966,7 @@ impl App {
     }
 
     pub(crate) fn alignment_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.alignment_window else {
+        let Some(w) = &self.road.alignment_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -1173,7 +1188,7 @@ impl App {
     }
 
     pub(crate) fn alignment_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.alignment_window else {
+        let Some(w) = &self.road.alignment_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

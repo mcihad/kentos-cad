@@ -6,6 +6,7 @@
 //! sheets (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
 //! `cad.spaces.edit`.
 
+use crate::arch;
 use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
@@ -92,7 +93,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Quantities(e)
+    Message::Arch(arch::Event::Quantities(e))
 }
 
 /// A table: its heading, the columns that hold numbers, its rows as the window shows them and as a sheet's cells.
@@ -179,13 +180,13 @@ impl App {
             return;
         }
         let answer = self.quantities_read(None);
-        self.quantities = Some(Window {
+        self.arch.quantities = Some(Window {
             tab: Tab::Spaces,
             level: None,
             answer,
             exact: false,
         });
-        self.dialog = Some(Dialog::Quantities);
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Quantities));
     }
 
     /// Mahalleri birleştir (`arch.spaceMerge`): the spaces selected made one. Nothing is written before the decision
@@ -220,7 +221,7 @@ impl App {
                     said.push_str(&format!(" {}", w.message));
                 }
                 self.space_merging = Some((input, said));
-                self.dialog = Some(Dialog::SpaceMerge);
+                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::SpaceMerge));
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
@@ -928,7 +929,7 @@ impl App {
         tab: Tab,
         format: WorkbookFormat,
     ) -> Vec<WorkbookSheet> {
-        let exact = self.quantities.as_ref().is_some_and(|w| w.exact);
+        let exact = self.arch.quantities.as_ref().is_some_and(|w| w.exact);
         self.quantities_tables(q)
             .into_iter()
             .enumerate()
@@ -987,12 +988,12 @@ impl App {
     }
 
     pub(crate) fn quantities_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.quantities.as_ref() else {
+        let Some(w) = self.arch.quantities.as_ref() else {
             return Task::none();
         };
         match event {
             Event::Tab(t) => {
-                if let Some(w) = self.quantities.as_mut() {
+                if let Some(w) = self.arch.quantities.as_mut() {
                     w.tab = t;
                 }
             }
@@ -1001,7 +1002,7 @@ impl App {
                     .checked_sub(1)
                     .and_then(|k| self.quantities_levels().get(k).map(|(id, _)| id.clone()));
                 let answer = self.quantities_read(level.as_ref());
-                if let Some(w) = self.quantities.as_mut() {
+                if let Some(w) = self.arch.quantities.as_mut() {
                     w.level = level;
                     w.answer = answer;
                 }
@@ -1022,7 +1023,7 @@ impl App {
                 return iced::clipboard::write(lines.join("\n"));
             }
             Event::Exact(on) => {
-                if let Some(w) = self.quantities.as_mut() {
+                if let Some(w) = self.arch.quantities.as_mut() {
                     w.exact = on;
                 }
                 return Task::none();
@@ -1035,7 +1036,7 @@ impl App {
                 return crate::table_write::save(sheets, format, "metraj".to_owned());
             }
             Event::Close => {
-                self.quantities = None;
+                self.arch.quantities = None;
                 self.dialog = None;
             }
         }
@@ -1043,7 +1044,7 @@ impl App {
     }
 
     pub(crate) fn quantities_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.quantities else {
+        let Some(w) = &self.arch.quantities else {
             return text("").into();
         };
         let levels = self.quantities_levels();
@@ -1262,7 +1263,7 @@ impl App {
         })
         .into();
         // Sayılar (docs/adr/0733 §7): the worked-out numbers as shown, or to 15 significant digits.
-        let exact = self.quantities.as_ref().is_some_and(|w| w.exact);
+        let exact = self.arch.quantities.as_ref().is_some_and(|w| w.exact);
         let export: Element<'_, Message> = row![
             export,
             crate::exchange::words::check(
@@ -1335,7 +1336,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.quantities.is_none() {
+        if self.arch.quantities.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

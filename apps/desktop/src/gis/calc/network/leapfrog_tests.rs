@@ -3,6 +3,7 @@
 //! N1 and N2 the case's heights; with Geometrik the setups are left out. And the area of use map of Proje ayarları ›
 //! Koordinat sistemi (TUREF / TM30 with ED50 / TM30 as the second system). And the pictures.
 
+use crate::gis;
 use serde_json::Value;
 
 use super::{Cells, HEIGHT_COLS, LEAPFROG_COLS, LevelKind};
@@ -33,9 +34,9 @@ fn text(v: &Value) -> String {
 fn leapfrog_with(app: &mut App, kind: LevelKind) -> Value {
     let c = shared();
     let _ = app.update(Message::Run("calc.levelNetwork"));
-    assert_eq!(app.calc.open, Some(Window::Level));
-    app.calc.level.kind = kind;
-    app.calc.level.known = Cells::of(HEIGHT_COLS, vec![vec!["R1".into()], vec!["R2".into()]]);
+    assert_eq!(app.gis.calc.open, Some(Window::Level));
+    app.gis.calc.level.kind = kind;
+    app.gis.calc.level.known = Cells::of(HEIGHT_COLS, vec![vec!["R1".into()], vec!["R2".into()]]);
     let work = &c["steps"][0]["input"]["work"];
     let rows = work["leapfrog"]
         .as_array()
@@ -51,7 +52,7 @@ fn leapfrog_with(app: &mut App, kind: LevelKind) -> Value {
             r
         })
         .collect();
-    app.calc.level.leapfrog = Cells::of(LEAPFROG_COLS, rows);
+    app.gis.calc.level.leapfrog = Cells::of(LEAPFROG_COLS, rows);
     app.network_solve();
     c
 }
@@ -72,14 +73,24 @@ fn the_setups_adjust_as_the_command_and_write_their_heights() {
     let mut app = app();
     let c = leapfrog_with(&mut app, LevelKind::Trigonometric);
     let out = &c["steps"][0]["result"]["output"];
-    let Some(Ok(r)) = app.calc.level.solved.result.clone() else {
-        panic!("adjusted: {:?}", app.calc.level.solved);
+    let Some(Ok(r)) = app.gis.calc.level.solved.result.clone() else {
+        panic!("adjusted: {:?}", app.gis.calc.level.solved);
     };
     assert_eq!(r.f, 1);
-    for (got, want) in app.calc.level.leapfrog_dh.iter().zip(out["leapfrog"].as_array().expect("differences")) {
-        assert!((got - want["dh"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-9, "{got} {want}");
+    for (got, want) in app
+        .gis
+        .calc
+        .level
+        .leapfrog_dh
+        .iter()
+        .zip(out["leapfrog"].as_array().expect("differences"))
+    {
+        assert!(
+            (got - want["dh"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-9,
+            "{got} {want}"
+        );
     }
-    let _ = app.update(Message::Calc(CalcEvent::AddPoints));
+    let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::AddPoints)));
     let doc = app.document.as_ref().expect("a drawing");
     for p in out["points"].as_array().expect("points") {
         let name = text(&p["name"]);
@@ -93,7 +104,7 @@ fn geometric_levelling_leaves_the_setups_out() {
     let mut app = app();
     let _ = leapfrog_with(&mut app, LevelKind::Geometric);
     // Only the setups tie N1 and N2: without them nothing ties a new point.
-    assert!(app.calc.level.leapfrog_dh.iter().all(|d| d.is_nan()));
+    assert!(app.gis.calc.level.leapfrog_dh.iter().all(|d| d.is_nan()));
 }
 
 #[test]

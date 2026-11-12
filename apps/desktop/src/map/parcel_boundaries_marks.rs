@@ -228,7 +228,7 @@ impl App {
     /// The graph's marks for the drawing as it is: none when nothing is shown, for another drawing, or when the
     /// parcels asked no longer read (one was deleted). Kept until the drawing changes.
     pub(crate) fn parcel_graph_marks(&self) -> Option<Arc<GraphMarks>> {
-        let shown = self.parcel_graph.as_ref()?;
+        let shown = self.map.parcel_graph.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {
             return None;

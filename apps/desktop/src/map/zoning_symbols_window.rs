@@ -9,6 +9,7 @@
 //! choices in the project in the same undo step, so the next run and the zoning check read them; Seçimi kaldır takes
 //! the pressed row's choice back to KentOS's table.
 
+use crate::map;
 use iced::{Element, Task};
 use kentos_commands::{
     CommandResult, ZONING_PROFILE, ZoningSymbolPick, ZoningSymbolize, ZoningSymbolized, ZoningSymbols, builtin_profile,
@@ -63,7 +64,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::ZoningSymbols(e)
+    Message::Map(map::Event::ZoningSymbols(e))
 }
 
 /// A level and use the drawing's decision areas have: its symbol and where it comes from, its areas and how many change.
@@ -140,26 +141,30 @@ pub fn rows(r: &ZoningSymbolized, t: &ZoningSymbols, kept: &[ZoningSymbolPick]) 
 
 impl App {
     fn zoning_symbols_input(&self) -> ZoningSymbolize {
-        let s = &self.zoning_symbols;
+        let s = &self.map.zoning_symbols;
         ZoningSymbolize { uids: None, symbols: s.picks.clone(), keep: s.keep, expected_revision: None }
     }
 
     /// Whether Sembolleri ver has something to write: a symbol, or a choice to keep.
     fn zoning_symbols_ready(&self) -> bool {
-        let s = &self.zoning_symbols;
+        let s = &self.map.zoning_symbols;
         matches!(&s.answer, Some(Ok(r)) if r.set > 0) || (s.keep && s.picks != s.kept && matches!(s.answer, Some(Ok(_))))
     }
 
     fn zoning_symbols_run(&mut self) {
         let input = self.zoning_symbols_input();
-        let Some(doc) = self.document.as_mut() else { return };
-        self.zoning_symbols.answer = Some(match zoning_symbolize::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Önizleme alınamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.map.zoning_symbols.answer = Some(
+            match zoning_symbolize::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Önizleme alınamadı.".to_owned()),
+            },
+        );
     }
 
     /// Sembolü karardan ver from İmar planı denetimi.
@@ -168,37 +173,63 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        let kept = self.document.as_ref().map(|d| zoning_symbolize::kept(&d.model)).unwrap_or_default();
-        self.zoning_symbols = State { picks: kept.clone(), kept, keep: true, ..State::default() };
+        let kept = self
+            .document
+            .as_ref()
+            .map(|d| zoning_symbolize::kept(&d.model))
+            .unwrap_or_default();
+        self.map.zoning_symbols = State {
+            picks: kept.clone(),
+            kept,
+            keep: true,
+            ..State::default()
+        };
         self.zoning_symbols_run();
-        self.dialog = Some(Dialog::ZoningSymbols);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::ZoningSymbols));
         Task::none()
     }
 
     pub(crate) fn zoning_symbols_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_zoning_symbols(),
-            Event::Choose(i) => self.zoning_symbols.chosen = Some(i),
+            Event::Choose(i) => self.map.zoning_symbols.chosen = Some(i),
             Event::Pick(id) => {
-                let Some(Ok(r)) = &self.zoning_symbols.answer else { return Task::none() };
-                let Some(p) = self.zoning_symbols.chosen.and_then(|i| pairs(r).into_iter().nth(i)) else {
+                let Some(Ok(r)) = &self.map.zoning_symbols.answer else {
                     return Task::none();
                 };
-                let picks = &mut self.zoning_symbols.picks;
+                let Some(p) = self
+                    .map
+                    .zoning_symbols
+                    .chosen
+                    .and_then(|i| pairs(r).into_iter().nth(i))
+                else {
+                    return Task::none();
+                };
+                let picks = &mut self.map.zoning_symbols.picks;
                 picks.retain(|k| !(k.level == p.level && k.usage == p.usage));
                 picks.push(ZoningSymbolPick { level: p.level, usage: p.usage, symbol: id });
                 self.zoning_symbols_run();
             }
             Event::Unpick => {
-                let Some(Ok(r)) = &self.zoning_symbols.answer else { return Task::none() };
-                let Some(p) = self.zoning_symbols.chosen.and_then(|i| pairs(r).into_iter().nth(i)) else {
+                let Some(Ok(r)) = &self.map.zoning_symbols.answer else {
                     return Task::none();
                 };
-                self.zoning_symbols.picks.retain(|k| !(k.level == p.level && k.usage == p.usage));
+                let Some(p) = self
+                    .map
+                    .zoning_symbols
+                    .chosen
+                    .and_then(|i| pairs(r).into_iter().nth(i))
+                else {
+                    return Task::none();
+                };
+                self.map
+                    .zoning_symbols
+                    .picks
+                    .retain(|k| !(k.level == p.level && k.usage == p.usage));
                 self.zoning_symbols_run();
             }
             Event::Keep(on) => {
-                self.zoning_symbols.keep = on;
+                self.map.zoning_symbols.keep = on;
                 self.zoning_symbols_run();
             }
             Event::Write => {
@@ -216,7 +247,7 @@ impl App {
                                 output.set
                             ),
                         );
-                        self.zoning_symbols = State::default();
+                        self.map.zoning_symbols = State::default();
                         self.dialog = None;
                     }
                     CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
@@ -226,7 +257,7 @@ impl App {
                 }
             }
             Event::Close => {
-                self.zoning_symbols = State::default();
+                self.map.zoning_symbols = State::default();
                 self.dialog = None;
             }
         }
@@ -234,7 +265,7 @@ impl App {
     }
 
     pub(crate) fn zoning_symbols_view(&self) -> Element<'_, Message> {
-        let s = &self.zoning_symbols;
+        let s = &self.map.zoning_symbols;
         let table = builtin_zoning_symbols();
         let mut lines = vec![words::text_line(
             Kind::Info,

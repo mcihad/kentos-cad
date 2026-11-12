@@ -3,6 +3,7 @@
 //! run from the window as a user fills it (a file chosen as the dialog reads
 //! it), Alan eşleme's check under the field, and the pictures for the owner.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::DocumentSnapshotV1;
@@ -27,11 +28,12 @@ fn app_with_transfer() -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn status(app: &App) -> RunStatus {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())
@@ -118,6 +120,7 @@ fn every_shared_case_runs_from_the_window_as_it_says() {
             // The window's check keeps it from starting: the reason under the field.
             (Some("invalid"), RunStatus::Idle | RunStatus::Invalid(_)) => {
                 let issue = app
+                    .gis
                     .processing
                     .dialog
                     .as_ref()
@@ -153,6 +156,7 @@ fn a_map_row_without_a_target_keeps_the_run_from_starting() {
         status(&app)
     );
     let issue = app
+        .gis
         .processing
         .dialog
         .as_ref()

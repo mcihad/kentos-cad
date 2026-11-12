@@ -10,6 +10,7 @@
 //! - the command line's Nokta hesabı chip while the strip over the drawing
 //!   is off, or the strip's button while it is on.
 
+use crate::map;
 use iced::Task;
 use kentos_interaction::point_calc::{
     CALC_KINDS, CalcDef, CalcKind, MENU_HEADER, NOT_NOW, PointCalc,
@@ -31,7 +32,7 @@ pub fn calc_menu_without(hidden: &[CalcKind]) -> Menu<Message> {
         .iter()
         .filter(|def| !hidden.contains(&def.kind))
         .fold(Menu::new().header(MENU_HEADER), |menu, def| {
-            menu.item(def.label, Message::PointCalc(def.kind))
+            menu.item(def.label, Message::Map(map::Event::PointCalc(def.kind)))
                 .icon(crate::icons::from_web(Some(def.icon)))
                 .detail(def.description)
                 .shortcut(def.alias)
@@ -103,13 +104,13 @@ mod tests {
     #[test]
     fn the_calculator_runs_over_a_command_waiting_for_a_point() {
         let mut app = app_with_drawing();
-        let _ = app.update(Message::PointCalc(CalcKind::Mid));
+        let _ = app.update(Message::Map(crate::map::Event::PointCalc(CalcKind::Mid)));
         assert_eq!(
             said(&app).last().map(String::as_str),
             Some("Nokta hesabı, nokta bekleyen bir komut sırasında kullanılır.")
         );
         let _ = app.update(Message::Run("tool.line"));
-        let _ = app.update(Message::PointCalc(CalcKind::Mid));
+        let _ = app.update(Message::Map(crate::map::Event::PointCalc(CalcKind::Mid)));
         assert!(app.session.nested());
         assert_eq!(app.session.tool_id(), "line", "the command stays");
         assert_eq!(
@@ -213,7 +214,8 @@ fn screens() {
                 click(&mut app, at(-260.0, 120.0));
                 match name {
                     "kkes" => {
-                        let _ = app.update(Message::PointCalc(CalcKind::Distances));
+                        let _ =
+                            app.update(Message::Map(map::Event::PointCalc(CalcKind::Distances)));
                         let a = at(-60.0, 40.0);
                         let b = at(60.0, 40.0);
                         click(&mut app, a);
@@ -225,7 +227,7 @@ fn screens() {
                         let _ = app.update(Message::Viewport(Event::Moved(at(40.0, -60.0).0)));
                     }
                     "yan" => {
-                        let _ = app.update(Message::PointCalc(CalcKind::Side));
+                        let _ = app.update(Message::Map(map::Event::PointCalc(CalcKind::Side)));
                         click(&mut app, at(-120.0, 60.0));
                         click(&mut app, at(80.0, 20.0));
                         let _ = app.update(Message::Viewport(Event::Moved(at(40.0, -50.0).0)));

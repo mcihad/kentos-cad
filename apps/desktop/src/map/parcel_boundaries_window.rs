@@ -7,6 +7,7 @@
 //! then goes to it and the marks bring it forward (docs/adr/3020). Nothing is written. docs/adr/3420: an arc another
 //! parcel draws with chords is one problem; the window's distance lets a neighbour's rounded corners count as the arc's.
 
+use crate::map;
 use iced::{Element, Task};
 use kentos_commands::{ParcelsBoundaries, ParcelsBounded};
 use kentos_domain::{Slot, Uuid};
@@ -72,7 +73,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::ParcelBoundaries(e)
+    Message::Map(map::Event::ParcelBoundaries(e))
 }
 
 /// A problem's kind in words.
@@ -166,10 +167,10 @@ pub fn rows(g: &ParcelsBounded, show: Show, f: &kentos_interaction::Format) -> V
 
 impl App {
     fn parcel_boundaries_run(&mut self) {
-        let s = &self.parcel_boundaries;
+        let s = &self.map.parcel_boundaries;
         let input = ParcelsBoundaries { uids: s.uids.clone(), arc_tolerance: (s.tolerance > 0.0).then_some(s.tolerance) };
         let Some(doc) = self.document.as_ref() else { return };
-        self.parcel_boundaries.answer = Some(parcels_boundaries::preview(&doc.model, &input));
+        self.map.parcel_boundaries.answer = Some(parcels_boundaries::preview(&doc.model, &input));
     }
 
     /// Sınır grafiği from Parsel alan denetimi: its parcels.
@@ -178,9 +179,12 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.parcel_boundaries = State { uids: self.parcels_check.uids.clone(), ..State::default() };
+        self.map.parcel_boundaries = State {
+            uids: self.map.parcels_check.uids.clone(),
+            ..State::default()
+        };
         self.parcel_boundaries_run();
-        self.dialog = Some(Dialog::ParcelBoundaries);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::ParcelBoundaries));
         Task::none()
     }
 
@@ -188,18 +192,22 @@ impl App {
         match event {
             Event::Open => return self.open_parcel_boundaries(),
             Event::Show(v) => {
-                self.parcel_boundaries.show = v;
-                self.parcel_boundaries.chosen = None;
+                self.map.parcel_boundaries.show = v;
+                self.map.parcel_boundaries.chosen = None;
             }
-            Event::Choose(i) => self.parcel_boundaries.chosen = Some(i),
+            Event::Choose(i) => self.map.parcel_boundaries.chosen = Some(i),
             Event::Tolerance(v) => {
-                self.parcel_boundaries.tolerance = v.max(0.0);
-                self.parcel_boundaries.chosen = None;
+                self.map.parcel_boundaries.tolerance = v.max(0.0);
+                self.map.parcel_boundaries.chosen = None;
                 self.parcel_boundaries_run();
             }
             Event::Select => {
-                let Some(Ok(g)) = &self.parcel_boundaries.answer else { return Task::none() };
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let Some(Ok(g)) = &self.map.parcel_boundaries.answer else {
+                    return Task::none();
+                };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
                 let mut slots: Vec<Slot> = Vec::new();
                 for u in g.problems.iter().flat_map(|p| p.parcels.iter()) {
                     if let Some(s) = Uuid::parse_str(u).ok().and_then(|u| doc.model.slot_of(u))
@@ -210,27 +218,36 @@ impl App {
                 }
                 let n = slots.len();
                 self.selection.set(slots);
-                self.parcel_boundaries = State::default();
+                self.map.parcel_boundaries = State::default();
                 self.dialog = None;
                 self.say(Level::Info, format!("{TITLE}: sorunlu {n} parsel seçildi."));
             }
             Event::Draw => {
-                let Some(Ok(g)) = &self.parcel_boundaries.answer else { return Task::none() };
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let Some(Ok(g)) = &self.map.parcel_boundaries.answer else {
+                    return Task::none();
+                };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
                 let (corners, problems) = (g.corners.len(), g.problems.len());
                 // The view on the corners, a tenth wider each way; on the chosen row's place when one is (docs/adr/3020).
-                let focus = self.parcel_boundaries.chosen.and_then(|i| crate::parcel_boundaries_marks::Focus::of(g, self.parcel_boundaries.show, i));
+                let focus = self.map.parcel_boundaries.chosen.and_then(|i| {
+                    crate::parcel_boundaries_marks::Focus::of(g, self.map.parcel_boundaries.show, i)
+                });
                 let all = g.corners.iter().fold(None::<[f64; 4]>, |b, c| {
                     let [x, y] = c.at;
                     Some(b.map_or([x, y, x, y], |b| [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]))
                 });
                 let bounds = focus.as_ref().and_then(|f| f.bounds(g, all)).or(all);
-                let mut shown = crate::parcel_boundaries_marks::Shown::new(doc.session, self.parcel_boundaries.uids.clone());
+                let mut shown = crate::parcel_boundaries_marks::Shown::new(
+                    doc.session,
+                    self.map.parcel_boundaries.uids.clone(),
+                );
                 shown.focus = focus;
-                let tolerance = self.parcel_boundaries.tolerance;
+                let tolerance = self.map.parcel_boundaries.tolerance;
                 shown.tolerance = (tolerance > 0.0).then_some(tolerance);
-                self.parcel_graph = Some(shown);
-                self.parcel_boundaries = State::default();
+                self.map.parcel_graph = Some(shown);
+                self.map.parcel_boundaries = State::default();
                 self.dialog = None;
                 if let Some([x0, y0, x1, y1]) = bounds {
                     let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
@@ -243,7 +260,7 @@ impl App {
                 );
             }
             Event::Close => {
-                self.parcel_boundaries = State::default();
+                self.map.parcel_boundaries = State::default();
                 self.dialog = None;
             }
         }
@@ -251,7 +268,7 @@ impl App {
     }
 
     pub(crate) fn parcel_boundaries_view(&self) -> Element<'_, Message> {
-        let s = &self.parcel_boundaries;
+        let s = &self.map.parcel_boundaries;
         let f = self.format();
         let mut lines = Vec::new();
         let mut table_rows = Vec::new();

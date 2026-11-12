@@ -17,6 +17,7 @@
 //! sets) and closes the window. A link keeps the events of its layer on their routes: every later write that touches
 //! a route or an event places the layer's events again in the same undo step (docs/adr/0569 §3).
 
+use crate::gis;
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -88,7 +89,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::EventLinks(event)
+    Message::Gis(gis::Event::EventLinks(event))
 }
 
 /// An id `base`, `base-2`, … none of `taken` has.
@@ -130,18 +131,18 @@ impl App {
             return;
         };
         let links = doc.model.settings().linear_events.clone();
-        self.event_links_window = Some(Window {
+        self.gis.event_links_window = Some(Window {
             chosen: (!links.is_empty()).then_some(0),
             rows: links.iter().cloned().map(Row::of).collect(),
             kept: links,
         });
-        self.dialog = Some(Dialog::EventLinks);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::EventLinks));
     }
 
     pub(crate) fn event_links_event(&mut self, event: Event) -> Task<Message> {
         let layers = self.relation_layers();
         // The offset field is picked by its place among the chosen link's event layer's attributes.
-        let offset_keys = match (&event, &self.event_links_window) {
+        let offset_keys = match (&event, &self.gis.event_links_window) {
             (Event::Offset(_), Some(w)) => w
                 .chosen
                 .and_then(|i| w.rows.get(i))
@@ -149,7 +150,7 @@ impl App {
                 .unwrap_or_default(),
             _ => Vec::new(),
         };
-        let Some(w) = self.event_links_window.as_mut() else {
+        let Some(w) = self.gis.event_links_window.as_mut() else {
             return Task::none();
         };
         let taken: Vec<String> = w.rows.iter().map(|r| r.link.id.clone()).collect();
@@ -265,7 +266,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.event_links_window = None;
+                self.gis.event_links_window = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_event_links(),
@@ -275,7 +276,7 @@ impl App {
 
     /// Kaydet: what changed through `cad.linearref.define`: the removed, then the changed and the new.
     fn save_event_links(&mut self) -> Task<Message> {
-        let Some(w) = self.event_links_window.clone() else {
+        let Some(w) = self.gis.event_links_window.clone() else {
             return Task::none();
         };
         let mut links = Vec::new();
@@ -327,14 +328,14 @@ impl App {
                 linearref_define::execute(&mut ExecutionContext::new(&mut doc.model), edit);
             if self.answered(result).is_none() {
                 if let Some(doc) = &self.document
-                    && let Some(w) = self.event_links_window.as_mut()
+                    && let Some(w) = self.gis.event_links_window.as_mut()
                 {
                     w.kept = doc.model.settings().linear_events.clone();
                 }
                 return Task::none();
             }
         }
-        self.event_links_window = None;
+        self.gis.event_links_window = None;
         self.dialog = None;
         self.say(Level::Success, "Olay bağları kaydedildi.");
         Task::none()
@@ -349,7 +350,7 @@ impl App {
     }
 
     pub(crate) fn event_links_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.event_links_window else {
+        let Some(w) = &self.gis.event_links_window else {
             return iced::widget::text("").into();
         };
         let layers = self.relation_layers();
@@ -558,7 +559,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.event_links_window else {
+        let Some(w) = &self.gis.event_links_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {
@@ -619,14 +620,17 @@ mod tests {
     }
 
     fn send(app: &mut App, e: W) {
-        let _ = app.update(Message::EventLinks(e));
+        let _ = app.update(Message::Gis(crate::gis::Event::EventLinks(e)));
     }
 
     #[test]
     fn the_window_saves_a_link_and_the_next_write_follows_it() {
         let mut app = app();
         let _ = app.update(Message::Run("linearRef.eventLinks"));
-        assert_eq!(app.dialog, Some(Dialog::EventLinks));
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Gis(crate::gis::GisDialogKind::EventLinks))
+        );
         send(&mut app, W::New);
         send(&mut app, W::Name("Kazalar".into()));
         send(&mut app, W::Events("kaza".into()));
@@ -635,7 +639,10 @@ mod tests {
         send(&mut app, W::NamesRoute("Yol".into()));
         send(&mut app, W::Measure("Km".into()));
         send(&mut app, W::Save);
-        assert!(app.event_links_window.is_none(), "Kaydet closes the window");
+        assert!(
+            app.gis.event_links_window.is_none(),
+            "Kaydet closes the window"
+        );
         let links = app
             .document
             .as_ref()

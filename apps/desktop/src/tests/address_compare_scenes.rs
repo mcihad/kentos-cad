@@ -10,6 +10,7 @@
 //!
 //! Test code only.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use crate::address::Event as Address;
@@ -42,7 +43,7 @@ fn opened(app: &mut App) {
 }
 
 fn send(app: &mut App, e: Event) {
-    let _ = app.update(Message::Address(Address::Compare(e)));
+    let _ = app.update(Message::Gis(gis::Event::Address(Address::Compare(e))));
 }
 
 /// The window, the register chosen (its columns guessed) and compared.

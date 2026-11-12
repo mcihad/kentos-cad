@@ -13,6 +13,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -68,7 +69,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::RoadAlignmentFit(event)
+    Message::Road(road::Event::RoadAlignmentFit(event))
 }
 
 fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
@@ -125,7 +126,7 @@ impl App {
             self.warn("Çizgiden aks için önce bir çizgi ya da açık çoklu çizgi seçin.".to_owned());
             return;
         };
-        self.road_alignment_fit_window = Some(Box::new(Window {
+        self.road.road_alignment_fit_window = Some(Box::new(Window {
             uid,
             source,
             method: AlignmentFitMethod::Elements,
@@ -133,28 +134,43 @@ impl App {
             fields: [String::new(), String::new(), String::new(), "0.05".into(), String::new()],
             preview: Preview::default(),
         }));
-        self.dialog = Some(Dialog::RoadAlignmentFit);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::RoadAlignmentFit));
         self.refresh_road_alignment_fit();
     }
 
     fn refresh_road_alignment_fit(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road_alignment_fit_window.as_mut() else { return };
-        w.preview = match w.input().and_then(|q| road_alignments_fit::preview(&doc.model, &q, 400)) {
-            Err(why) => Preview { why: Some(why), ..Preview::default() },
-            Ok((fitted, warnings, line)) => Preview { fitted: Some(fitted), warnings, why: None, line },
+        let Some(w) = self.road.road_alignment_fit_window.as_mut() else {
+            return;
+        };
+        w.preview = match w
+            .input()
+            .and_then(|q| road_alignments_fit::preview(&doc.model, &q, 400))
+        {
+            Err(why) => Preview {
+                why: Some(why),
+                ..Preview::default()
+            },
+            Ok((fitted, warnings, line)) => Preview {
+                fitted: Some(fitted),
+                warnings,
+                why: None,
+                line,
+            },
         };
     }
 
     pub(crate) fn road_alignment_fit_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.road_alignment_fit_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.road_alignment_fit_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Method(m) => w.method = m,
             Event::Reverse(r) => w.reverse = r,
             Event::Field(k, t) => w.fields[k.min(4)] = t,
             Event::Make => return self.make_road_alignment_fit(),
             Event::Close => {
-                self.road_alignment_fit_window = None;
+                self.road.road_alignment_fit_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -165,7 +181,9 @@ impl App {
 
     /// Aksı oluştur: `road.alignments.fit`, one undo step.
     fn make_road_alignment_fit(&mut self) -> Task<Message> {
-        let Some(w) = self.road_alignment_fit_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.road_alignment_fit_window.as_ref() else {
+            return Task::none();
+        };
         let input = match w.input() {
             Ok(i) => i,
             Err(why) => {
@@ -187,13 +205,13 @@ impl App {
                 out.deviation
             ),
         );
-        self.road_alignment_fit_window = None;
+        self.road.road_alignment_fit_window = None;
         self.dialog = None;
         Task::none()
     }
 
     pub(crate) fn road_alignment_fit_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road_alignment_fit_window else {
+        let Some(w) = &self.road.road_alignment_fit_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -268,7 +286,7 @@ impl App {
     }
 
     pub(crate) fn road_alignment_fit_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road_alignment_fit_window.is_none() {
+        if self.road.road_alignment_fit_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

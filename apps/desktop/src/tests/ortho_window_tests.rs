@@ -2,6 +2,7 @@
 //! selected orthophoto, its layers guessed (GNSS, read on the image), KOH within BÖHHBÜY's limit at 1/1000 and out of
 //! it at 1/500, the fit points apart, the CSV, nothing written; Harita and GIS offer it. And its pictures.
 
+use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -25,16 +26,38 @@ fn the_orthophoto_is_checked_against_the_gnss_points() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("raster.accuracy"));
-    assert_ne!(app.dialog, Some(Dialog::Ortho), "no raster selected");
+    assert_ne!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::Ortho)),
+        "no raster selected"
+    );
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("raster.accuracy"));
-    assert_eq!(app.dialog, Some(Dialog::Ortho));
-    assert_eq!((app.ortho.known.as_str(), app.ortho.observed.as_str()), ("gnss", "okuma"));
-    let r = app.ortho.answer.clone().expect("an answer").expect("checked");
+    assert_eq!(app.dialog, Some(Dialog::Map(map::MapDialogKind::Ortho)));
+    assert_eq!(
+        (
+            app.map.ortho.known.as_str(),
+            app.map.ortho.observed.as_str()
+        ),
+        ("gnss", "okuma")
+    );
+    let r = app
+        .map
+        .ortho
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     assert_eq!((r.check.n, r.fit.as_ref().map(|f| f.n)), (8, Some(2)));
     assert_eq!(r.passed_xy, Some(true));
-    let _ = app.update(Message::Ortho(O::Scale(500.0)));
-    let r = app.ortho.answer.clone().expect("an answer").expect("checked");
+    let _ = app.update(Message::Map(map::Event::Ortho(O::Scale(500.0))));
+    let r = app
+        .map
+        .ortho
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     assert_eq!(r.passed_xy, Some(false), "7.14 cm at 1/500");
     let dir = std::env::temp_dir().join(format!("kentos-ortofoto-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
@@ -78,7 +101,7 @@ fn screens() {
             app.selection.set([Slot(1)]);
             app.follow_selection_tab();
             let _ = app.update(Message::Run("raster.accuracy"));
-            let _ = app.update(Message::Ortho(O::Scale(scale)));
+            let _ = app.update(Message::Map(map::Event::Ortho(O::Scale(scale))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);

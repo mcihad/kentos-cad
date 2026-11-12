@@ -12,6 +12,7 @@
 //! - Dışa aktar ▾ (docs/adr/0632 §3): the view's rows as XLSX, ODS or CSV, each column with its heading, the summing
 //!   columns numbers. A source's table is named by the table.
 
+use crate::gis;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -59,7 +60,7 @@ pub(crate) struct JoinPane {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Features(e)
+    Message::Gis(gis::Event::Features(e))
 }
 
 /// A persistent id as text read back.
@@ -78,7 +79,7 @@ impl JoinPane {
 impl App {
     /// The view chosen, while the project has it.
     pub(crate) fn join_view(&self, doc: &Document) -> Option<JoinView> {
-        let id = self.features.join.view.as_deref()?;
+        let id = self.gis.features.join.view.as_deref()?;
         doc.model
             .settings()
             .join_views
@@ -92,16 +93,16 @@ impl App {
         let key = (
             doc.session,
             doc.model.generation(),
-            self.features.version,
+            self.gis.features.version,
             v.id.clone(),
         );
-        if let Some((known, read)) = self.features.join.cache.borrow().as_ref()
+        if let Some((known, read)) = self.gis.features.join.cache.borrow().as_ref()
             && *known == key
         {
             return read.clone();
         }
         let r = Rc::new(read(&doc.model, v));
-        *self.features.join.cache.borrow_mut() = Some((key, r.clone()));
+        *self.gis.features.join.cache.borrow_mut() = Some((key, r.clone()));
         r
     }
 
@@ -242,6 +243,7 @@ impl App {
         ];
         for (j, c) in r.columns.iter().enumerate() {
             let width = self
+                .gis
                 .features
                 .widths
                 .get(&(format!("{}{}", super::JOIN_WIDTHS, v.id), c.name.clone()))
@@ -256,8 +258,8 @@ impl App {
         let column_count = r.columns.len() + 1;
         let min_width = self.viewport.bounds.width;
         let read_rows = r.clone();
-        let editing = self.features.join.editing.clone();
-        let text = self.features.join.text.clone();
+        let editing = self.gis.features.join.editing.clone();
+        let text = self.gis.features.join.text.clone();
         let count = r.rows.len();
         let table = Table::new(columns)
             .horizontal()
@@ -362,25 +364,25 @@ impl App {
                 if !c.editable || (c.side == JoinSide::Right && line.right.is_none()) {
                     return Task::none();
                 }
-                self.features.join.text = line.cells[j].clone().unwrap_or_default();
-                self.features.join.editing = Some((line.id.clone(), j));
+                self.gis.features.join.text = line.cells[j].clone().unwrap_or_default();
+                self.gis.features.join.editing = Some((line.id.clone(), j));
                 return focus_field();
             }
-            Event::JoinInput(t) => self.features.join.text = t,
+            Event::JoinInput(t) => self.gis.features.join.text = t,
             Event::JoinWidth(j, width) => {
                 if let Some(c) = r.columns.get(j) {
-                    self.features.widths.insert(
+                    self.gis.features.widths.insert(
                         (format!("{}{}", super::JOIN_WIDTHS, v.id), c.name.clone()),
                         width,
                     );
                 }
             }
-            Event::JoinCancel => self.features.join.editing = None,
+            Event::JoinCancel => self.gis.features.join.editing = None,
             Event::JoinEnter => {
-                let Some((id, j)) = self.features.join.editing.take() else {
+                let Some((id, j)) = self.gis.features.join.editing.take() else {
                     return Task::none();
                 };
-                let text = std::mem::take(&mut self.features.join.text);
+                let text = std::mem::take(&mut self.gis.features.join.text);
                 let (Some(line), Some(c)) = (r.rows.iter().find(|l| l.id == id), r.columns.get(j))
                 else {
                     return Task::none();
@@ -418,11 +420,11 @@ impl App {
                 };
                 if let Err(message) = super::write_attribute(&mut doc.model, input) {
                     self.warn(message);
-                    self.features.join.editing = Some((id, j));
-                    self.features.join.text = text;
+                    self.gis.features.join.editing = Some((id, j));
+                    self.gis.features.join.text = text;
                     return focus_field();
                 }
-                self.features.changed();
+                self.gis.features.changed();
             }
             _ => {}
         }

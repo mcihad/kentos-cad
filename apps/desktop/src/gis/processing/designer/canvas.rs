@@ -10,6 +10,7 @@
 //!   settings, on the background shows everything;
 //! - a tool carried from the parts is let go here.
 
+use crate::gis;
 use std::time::{Duration, Instant};
 
 use iced::alignment::Vertical;
@@ -30,7 +31,7 @@ use crate::app::Message;
 const DOUBLE: Duration = Duration::from_millis(450);
 
 fn publish(e: Event) -> canvas::Action<Message> {
-    canvas::Action::publish(Message::ModelDesigner(e)).and_capture()
+    canvas::Action::publish(Message::Gis(gis::Event::ModelDesigner(e))).and_capture()
 }
 
 /// The diagram as the canvas sees it.
@@ -200,8 +201,8 @@ impl canvas::Program<Message> for Diagram<'_> {
     ) -> Option<canvas::Action<Message>> {
         let size = bounds.size();
         if self.known != Some(size) {
-            return Some(canvas::Action::publish(Message::ModelDesigner(
-                Event::Resized(size),
+            return Some(canvas::Action::publish(Message::Gis(
+                gis::Event::ModelDesigner(Event::Resized(size)),
             )));
         }
         let canvas::Event::Mouse(event) = event else {
@@ -299,7 +300,9 @@ impl canvas::Program<Message> for Diagram<'_> {
                                 at: Some((w.x, w.y)),
                             })
                         }
-                        None => canvas::Action::publish(Message::ModelDesigner(Event::Uncarry)),
+                        None => canvas::Action::publish(Message::Gis(gis::Event::ModelDesigner(
+                            Event::Uncarry,
+                        ))),
                     });
                 }
                 let gesture = std::mem::take(&mut state.gesture);

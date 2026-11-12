@@ -548,7 +548,7 @@ mod tests {
 
     /// The synthetic geoid of the shared cases (fixtures/geoid/v1/tg.gtx) added to a library of its own.
     fn with_geoid(app: &mut App, folder: &str) -> String {
-        app.grids.library = Some(crate::grids::Library::at(crate::files_testing::scratch(
+        app.arch.grids.library = Some(crate::grids::Library::at(crate::files_testing::scratch(
             folder,
         )));
         let tg = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -558,6 +558,7 @@ mod tests {
         )));
         crate::files_testing::drive(app, task);
         let entry = app
+            .arch
             .grids
             .entries
             .iter()

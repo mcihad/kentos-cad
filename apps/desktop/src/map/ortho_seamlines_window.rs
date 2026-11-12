@@ -24,6 +24,7 @@
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::map;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Center, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -150,7 +151,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::OrthoSeamlines(e)
+    Message::Map(map::Event::OrthoSeamlines(e))
 }
 
 /// A raster's name: its file's, else its asset's or address, with its pixel.
@@ -170,7 +171,7 @@ fn raster_name(r: &RasterFields) -> String {
 impl App {
     /// The window's input as it stands.
     pub(crate) fn ortho_seamlines_input(&self) -> Result<OrthophotoSeamlines, String> {
-        let s = &self.ortho_seamlines;
+        let s = &self.map.ortho_seamlines;
         let footprints = match s.prints {
             Prints::Bounds => None,
             Prints::Areas => Some(s.areas.clone().ok_or("Ayak izi olarak iki alan seçip Seçili alanları al'a basın.")?),
@@ -200,18 +201,22 @@ impl App {
         let input = match self.ortho_seamlines_input() {
             Ok(i) => i,
             Err(why) => {
-                self.ortho_seamlines.answer = Some(Err(why));
+                self.map.ortho_seamlines.answer = Some(Err(why));
                 return;
             }
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.ortho_seamlines.answer = Some(match orthophoto_seamlines::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Birleşme çizgisi kurulamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.map.ortho_seamlines.answer = Some(
+            match orthophoto_seamlines::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Birleşme çizgisi kurulamadı.".to_owned()),
+            },
+        );
     }
 
     /// Mozaik birleşme çizgisi (`raster.seamlines`): the drawing's rasters, the selected two first (in the drawing's order);
@@ -248,7 +253,7 @@ impl App {
         let layer = if layers.iter().any(|(id, _)| id == SEAMLINE_LAYER) { SEAMLINE_LAYER.to_owned() } else { String::new() };
         // Docs/adr/5260: one raster only: its footprint.
         let lone = picked.len() < 2;
-        self.ortho_seamlines = State {
+        self.map.ortho_seamlines = State {
             first: picked[0].clone(),
             second: picked.get(1).cloned().unwrap_or_default(),
             net: crate::ortho_network_section::NetState {
@@ -269,7 +274,7 @@ impl App {
         } else {
             self.ortho_seamlines_run();
         }
-        self.dialog = Some(Dialog::OrthoSeamlines);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::OrthoSeamlines));
         Task::none()
     }
 
@@ -291,9 +296,9 @@ impl App {
             self.warn(format!("{TITLE}: ayak izi olarak iki alan (ya da kapalı çoklu çizgi) seçin; seçimde {} var.", areas.len()));
             return;
         }
-        self.ortho_seamlines.areas = Some([areas[0].0.clone(), areas[1].0.clone()]);
-        self.ortho_seamlines.areas_name = format!("{} ve {}", areas[0].1, areas[1].1);
-        self.ortho_seamlines.prints = Prints::Areas;
+        self.map.ortho_seamlines.areas = Some([areas[0].0.clone(), areas[1].0.clone()]);
+        self.map.ortho_seamlines.areas_name = format!("{} ve {}", areas[0].1, areas[1].1);
+        self.map.ortho_seamlines.prints = Prints::Areas;
     }
 
     fn ortho_seamlines_write(&mut self) -> Task<Message> {
@@ -307,13 +312,26 @@ impl App {
         let Some(doc) = self.document.as_mut() else { return Task::none() };
         let result = orthophoto_seamlines::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            let slots: Vec<kentos_domain::Slot> = self.document.as_ref().map_or_else(Vec::new, |d| {
-                out.polygons
-                    .iter()
-                    .filter_map(|p| p.uid.as_deref().and_then(|u| kentos_domain::Uuid::parse_str(u).ok()).and_then(|u| d.model.slot_of(u)))
-                    .collect()
-            });
-            let layer = self.ortho_seamlines.layers.iter().find(|(id, _)| *id == out.layer).map_or(SEAMLINE_LAYER_NAME, |(_, n)| n.as_str()).to_owned();
+            let slots: Vec<kentos_domain::Slot> =
+                self.document.as_ref().map_or_else(Vec::new, |d| {
+                    out.polygons
+                        .iter()
+                        .filter_map(|p| {
+                            p.uid
+                                .as_deref()
+                                .and_then(|u| kentos_domain::Uuid::parse_str(u).ok())
+                                .and_then(|u| d.model.slot_of(u))
+                        })
+                        .collect()
+                });
+            let layer = self
+                .map
+                .ortho_seamlines
+                .layers
+                .iter()
+                .find(|(id, _)| *id == out.layer)
+                .map_or(SEAMLINE_LAYER_NAME, |(_, n)| n.as_str())
+                .to_owned();
             self.selection.set(slots);
             self.say(Level::Success, format!("{TITLE}: iki mozaik elemanı “{layer}” katmanına yazıldı ve seçildi; Ortofoto karşılaştırması'nın Seçili mozaik elemanlarını al'ı onları ölçer."));
             self.dialog = None;
@@ -322,7 +340,7 @@ impl App {
     }
 
     pub(crate) fn ortho_seamlines_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.ortho_seamlines;
+        let s = &mut self.map.ortho_seamlines;
         match event {
             Event::First(v) => s.first = v,
             Event::Second(v) => s.second = v,
@@ -365,7 +383,7 @@ impl App {
     pub(crate) fn ortho_seamlines_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
         let mut lines = Vec::new();
         let mut rows = Vec::new();
-        match &self.ortho_seamlines.answer {
+        match &self.map.ortho_seamlines.answer {
             None => {}
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             Some(Ok(r)) => {
@@ -388,7 +406,7 @@ impl App {
     }
 
     pub(crate) fn ortho_seamlines_view(&self) -> Element<'_, Message> {
-        let s = &self.ortho_seamlines;
+        let s = &self.map.ortho_seamlines;
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let mut avoids = vec![(NONE.to_owned(), NONE.to_owned())];
         avoids.extend(s.layers.iter().cloned());
@@ -502,7 +520,7 @@ impl App {
 
     /// The rings of the layer the radiometric line keeps out of (geçilmeyecek alanlar), drawn in the plan.
     fn ortho_seamlines_avoided(&self) -> Vec<Vec<[f64; 2]>> {
-        let s = &self.ortho_seamlines;
+        let s = &self.map.ortho_seamlines;
         let Some(doc) = self.document.as_ref().filter(|_| s.method == Method::Radiometry && !s.avoid.is_empty()) else {
             return Vec::new();
         };

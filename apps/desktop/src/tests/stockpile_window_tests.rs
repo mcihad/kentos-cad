@@ -3,6 +3,7 @@
 //! typed height, and for the L; the typed height starts at the corners' lowest; nothing is written; Harita and Yol
 //! offer it. And its pictures.
 
+use crate::road;
 use kentos_commands::TerrainsStockpiled;
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -32,7 +33,13 @@ fn output(name: &str) -> Value {
 }
 
 fn answer(app: &App) -> TerrainsStockpiled {
-    app.stockpile.answer.clone().expect("an answer").expect("measured").0
+    app.road
+        .stockpile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("measured")
+        .0
 }
 
 fn same(got: &TerrainsStockpiled, want: &Value) {
@@ -59,24 +66,59 @@ fn the_volume_is_the_shared_case_s() {
     let revision = app.document.as_ref().map(|d| d.model.revision());
     app.selection.set([PENTAGON]);
     let _ = app.update(Message::Run("terrain.stockpile"));
-    assert_eq!(app.dialog, Some(Dialog::Stockpile));
-    assert_eq!(app.stockpile.boundary, cases()["setup"]["uids"][256].as_str().expect("a uid"));
-    assert_eq!(app.stockpile.base, Base::Fit);
-    same(&answer(&app), &output("Beşgen, köşelere oturan eğimli düzlem (en küçük kareler)"));
-    let _ = app.update(Message::Stockpile(E::Base(Base::Lowest)));
-    same(&answer(&app), &output("Beşgen, en alçak köşe: yatay taban köşelerin en alçağında, yığın kazı"));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Stockpile))
+    );
+    assert_eq!(
+        app.road.stockpile.boundary,
+        cases()["setup"]["uids"][256].as_str().expect("a uid")
+    );
+    assert_eq!(app.road.stockpile.base, Base::Fit);
+    same(
+        &answer(&app),
+        &output("Beşgen, köşelere oturan eğimli düzlem (en küçük kareler)"),
+    );
+    let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(Base::Lowest))));
+    same(
+        &answer(&app),
+        &output("Beşgen, en alçak köşe: yatay taban köşelerin en alçağında, yığın kazı"),
+    );
     // A typed height starts at the corners' lowest, to the centimetre.
-    let low = answer(&app).corners.iter().copied().reduce(f64::min).expect("corners");
-    let _ = app.update(Message::Stockpile(E::Base(Base::Elevation)));
-    assert!((app.stockpile.elevation - (low * 100.0).round() / 100.0).abs() < 1e-12, "{}", app.stockpile.elevation);
-    let _ = app.update(Message::Stockpile(E::Elevation(101.5)));
+    let low = answer(&app)
+        .corners
+        .iter()
+        .copied()
+        .reduce(f64::min)
+        .expect("corners");
+    let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(
+        Base::Elevation,
+    ))));
+    assert!(
+        (app.road.stockpile.elevation - (low * 100.0).round() / 100.0).abs() < 1e-12,
+        "{}",
+        app.road.stockpile.elevation
+    );
+    let _ = app.update(Message::Road(road::Event::Stockpile(E::Elevation(101.5))));
     same(&answer(&app), &output("Beşgen, verilen kot 101,5"));
-    let ell = app.document.as_ref().and_then(|d| d.model.uid(ELL)).expect("the L").to_string();
-    let _ = app.update(Message::Stockpile(E::Boundary(ell)));
-    let _ = app.update(Message::Stockpile(E::Base(Base::Fit)));
-    same(&answer(&app), &output("L (kapalı çoklu çizgi, iç bükey), eğimli düzlem"));
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
-    let _ = app.update(Message::Stockpile(E::Close));
+    let ell = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.uid(ELL))
+        .expect("the L")
+        .to_string();
+    let _ = app.update(Message::Road(road::Event::Stockpile(E::Boundary(ell))));
+    let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(Base::Fit))));
+    same(
+        &answer(&app),
+        &output("L (kapalı çoklu çizgi, iç bükey), eğimli düzlem"),
+    );
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
+    let _ = app.update(Message::Road(road::Event::Stockpile(E::Close)));
     assert_eq!(app.dialog, None);
 }
 
@@ -119,8 +161,10 @@ fn screens() {
             println!("{}", file.display());
         };
         shot(&mut app, "1-egimli-duzlem");
-        let _ = app.update(Message::Stockpile(E::Base(Base::Elevation)));
-        let _ = app.update(Message::Stockpile(E::Elevation(101.5)));
+        let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(
+            Base::Elevation,
+        ))));
+        let _ = app.update(Message::Road(road::Event::Stockpile(E::Elevation(101.5))));
         shot(&mut app, "2-kot");
     }
     let mut app = opened(Some(Module::Map));
@@ -145,7 +189,9 @@ fn the_triangulated_base_is_the_shared_case_s() {
     let mut app = opened(Some(Module::Map));
     app.selection.set([PENTAGON]);
     let _ = app.update(Message::Run("terrain.stockpile"));
-    let _ = app.update(Message::Stockpile(E::Base(Base::Triangulated)));
+    let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(
+        Base::Triangulated,
+    ))));
     let got = answer(&app);
     let want = output("Beşgen, köşelerden üçgenlenmiş taban: üç üçgen, her biri kendi düzlemi");
     same(&got, &want);
@@ -159,10 +205,22 @@ fn the_triangulated_base_is_the_shared_case_s() {
         }
     }
     let said = app.stockpile_lines_text();
-    assert!(said.iter().any(|l| l.starts_with("Taban: köşelerden 3 üçgen, eğimleri %")), "{said:?}");
-    let ell = app.document.as_ref().and_then(|d| d.model.uid(ELL)).expect("the L").to_string();
-    let _ = app.update(Message::Stockpile(E::Boundary(ell)));
-    same(&answer(&app), &output("L (iç bükey), üçgenlenmiş taban: girintide üçgen yok"));
+    assert!(
+        said.iter()
+            .any(|l| l.starts_with("Taban: köşelerden 3 üçgen, eğimleri %")),
+        "{said:?}"
+    );
+    let ell = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.uid(ELL))
+        .expect("the L")
+        .to_string();
+    let _ = app.update(Message::Road(road::Event::Stockpile(E::Boundary(ell))));
+    same(
+        &answer(&app),
+        &output("L (iç bükey), üçgenlenmiş taban: girintide üçgen yok"),
+    );
 }
 
 /// `.run/gui-evidence/stok-ucgenlenmis-3940/`: the window over the pentagon and the L with the triangulated base, light
@@ -186,7 +244,9 @@ fn screens_triangulated() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         app.selection.set([PENTAGON]);
         let _ = app.update(Message::Run("terrain.stockpile"));
-        let _ = app.update(Message::Stockpile(E::Base(Base::Triangulated)));
+        let _ = app.update(Message::Road(road::Event::Stockpile(E::Base(
+            Base::Triangulated,
+        ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -198,8 +258,13 @@ fn screens_triangulated() {
             println!("{}", file.display());
         };
         shot(&mut app, "1-besgen");
-        let ell = app.document.as_ref().and_then(|d| d.model.uid(ELL)).expect("the L").to_string();
-        let _ = app.update(Message::Stockpile(E::Boundary(ell)));
+        let ell = app
+            .document
+            .as_ref()
+            .and_then(|d| d.model.uid(ELL))
+            .expect("the L")
+            .to_string();
+        let _ = app.update(Message::Road(road::Event::Stockpile(E::Boundary(ell))));
         shot(&mut app, "2-l");
     }
 }

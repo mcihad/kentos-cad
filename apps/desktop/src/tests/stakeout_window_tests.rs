@@ -2,6 +2,7 @@
 //! nothing to the drawing; and its pictures.
 
 use crate::app::{App, Dialog, Message};
+use crate::road;
 use crate::stakeout_window::Event as W;
 
 /// A road project with `road.stakeout.query`'s drawing: three corridors; its heights TUDKA99's orthometric (Antalya
@@ -26,7 +27,7 @@ fn app_with(heights: Option<serde_json::Value>) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Stakeout(e));
+    let _ = app.update(Message::Road(road::Event::Stakeout(e)));
 }
 
 #[test]
@@ -34,24 +35,60 @@ fn the_window_reads_the_table_as_it_is_typed() {
     let mut app = app();
     let revision = app.document.as_ref().expect("a drawing").model.revision();
     let _ = app.update(Message::Run("stakeout.table"));
-    assert_eq!(app.dialog, Some(Dialog::Stakeout));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Stakeout))
+    );
     send(&mut app, W::Field(2, "50".into()));
     send(&mut app, W::Field(3, "axis, daylight".into()));
-    let w = app.stakeout_window.as_ref().expect("open");
-    let t = w.preview.table.as_ref().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
-    assert!(t.rows.iter().all(|r| r.code == "axis" || r.code.ends_with(".daylight")), "{t:?}");
+    let w = app.road.stakeout_window.as_ref().expect("open");
+    let t = w
+        .preview
+        .table
+        .as_ref()
+        .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    assert!(
+        t.rows
+            .iter()
+            .all(|r| r.code == "axis" || r.code.ends_with(".daylight")),
+        "{t:?}"
+    );
     assert!(t.rows.iter().all(|r| r.ground_offset.is_none()));
-    send(&mut app, W::Distances(kentos_commands::StakeoutDistances::Ground));
-    let t = app.stakeout_window.as_ref().and_then(|w| w.preview.table.clone()).expect("reads");
-    let r = t.rows.iter().find(|r| r.code != "axis").expect("a side point");
+    send(
+        &mut app,
+        W::Distances(kentos_commands::StakeoutDistances::Ground),
+    );
+    let t = app
+        .road
+        .stakeout_window
+        .as_ref()
+        .and_then(|w| w.preview.table.clone())
+        .expect("reads");
+    let r = t
+        .rows
+        .iter()
+        .find(|r| r.code != "axis")
+        .expect("a side point");
     let g = r.ground_offset.expect("a ground length");
-    assert!(g.abs() > r.offset.abs() * 0.99 && g.abs() < r.offset.abs() * 1.01, "{r:?}");
+    assert!(
+        g.abs() > r.offset.abs() * 0.99 && g.abs() < r.offset.abs() * 1.01,
+        "{r:?}"
+    );
     send(&mut app, W::Field(3, "kerb".into()));
-    let why = app.stakeout_window.as_ref().and_then(|w| w.preview.why.clone()).expect("refused");
+    let why = app
+        .road
+        .stakeout_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("refused");
     assert!(why.contains("kerb"), "{why}");
     send(&mut app, W::Close);
-    assert!(app.stakeout_window.is_none());
-    assert_eq!(app.document.as_ref().expect("a drawing").model.revision(), revision, "nothing written");
+    assert!(app.road.stakeout_window.is_none());
+    assert_eq!(
+        app.document.as_ref().expect("a drawing").model.revision(),
+        revision,
+        "nothing written"
+    );
 }
 
 #[test]
@@ -188,9 +225,21 @@ fn the_table_says_its_sources_and_when_it_was_written() {
     let mut app = app();
     let _ = app.update(Message::Run("stakeout.table"));
     send(&mut app, W::Field(2, "20".into()));
-    let table = app.stakeout_window.as_ref().and_then(|w| w.preview.table.clone()).expect("reads");
-    assert_eq!((table.sources.corridor.id.as_str(), table.sources.alignment.id.as_str()), ("c-1", "g-1"));
-    let sheet = kentos_native_application::road_stakeout::sources_sheet(&table, "2026-11-07 10:00:00");
+    let table = app
+        .road
+        .stakeout_window
+        .as_ref()
+        .and_then(|w| w.preview.table.clone())
+        .expect("reads");
+    assert_eq!(
+        (
+            table.sources.corridor.id.as_str(),
+            table.sources.alignment.id.as_str()
+        ),
+        ("c-1", "g-1")
+    );
+    let sheet =
+        kentos_native_application::road_stakeout::sources_sheet(&table, "2026-11-07 10:00:00");
     assert_eq!(sheet.name, "Kaynaklar");
     assert_eq!(sheet.rows[0], vec!["Üretildi".to_owned(), "2026-11-07 10:00:00".to_owned(), String::new()]);
     assert!(sheet.rows.iter().any(|r| r[0] == "Tip kesit" && r[1] == "tk-2" && r[2] == "2"), "{:?}", sheet.rows);

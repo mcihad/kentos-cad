@@ -14,6 +14,7 @@
 //! The window edits a copy of the relations; Kaydet writes what changed through
 //! `cad.relations.edit` (removes, updates, creates, in that order) and closes the window.
 
+use crate::gis;
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -106,7 +107,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Relations(event)
+    Message::Gis(gis::Event::Relations(event))
 }
 
 impl App {
@@ -117,14 +118,14 @@ impl App {
             return;
         };
         let rows = doc.model.settings().relations.clone();
-        self.relations_window = Some(Window {
+        self.gis.relations_window = Some(Window {
             chosen: (!rows.is_empty()).then_some(0),
             kept: rows.clone(),
             rows,
             filed: std::collections::BTreeMap::new(),
         });
         self.refile_relations();
-        self.dialog = Some(Dialog::Relations);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Relations));
     }
 
     /// Reads how each saved relation is kept in its file (`cad.sources.relate`'s `check`).
@@ -153,14 +154,14 @@ impl App {
                 filed.insert(id, output);
             }
         }
-        if let Some(w) = self.relations_window.as_mut() {
+        if let Some(w) = self.gis.relations_window.as_mut() {
             w.filed = filed;
         }
     }
 
     /// Dosyaya eşle or Eşlemeyi kaldır on the chosen, saved relation.
     fn relation_filing(&mut self, op: RelateOp) {
-        let Some(w) = self.relations_window.as_ref() else {
+        let Some(w) = self.gis.relations_window.as_ref() else {
             return;
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)).cloned() else {
@@ -207,7 +208,7 @@ impl App {
 
     pub(crate) fn relations_event(&mut self, event: Event) -> Task<Message> {
         let layers = self.relation_layers();
-        let Some(w) = self.relations_window.as_mut() else {
+        let Some(w) = self.gis.relations_window.as_mut() else {
             return Task::none();
         };
         let chosen = w.chosen.and_then(|i| w.rows.get_mut(i));
@@ -262,7 +263,7 @@ impl App {
             Event::Map => self.relation_filing(RelateOp::Map),
             Event::Unmap => self.relation_filing(RelateOp::Unmap),
             Event::Cancel => {
-                self.relations_window = None;
+                self.gis.relations_window = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_relations(),
@@ -272,7 +273,7 @@ impl App {
 
     /// Kaydet: what changed through `cad.relations.edit`: the removed, the changed, the new.
     fn save_relations(&mut self) -> Task<Message> {
-        let Some(w) = self.relations_window.clone() else {
+        let Some(w) = self.gis.relations_window.clone() else {
             return Task::none();
         };
         if let Some(locked) = self.forms_locked() {
@@ -310,14 +311,14 @@ impl App {
             if self.answered(result).is_none() {
                 // The window stays on what did not go in; the rest is written.
                 if let Some(doc) = &self.document
-                    && let Some(w) = self.relations_window.as_mut()
+                    && let Some(w) = self.gis.relations_window.as_mut()
                 {
                     w.kept = doc.model.settings().relations.clone();
                 }
                 return Task::none();
             }
         }
-        self.relations_window = None;
+        self.gis.relations_window = None;
         self.dialog = None;
         self.say(Level::Success, "İlişkiler kaydedildi.");
         Task::none()
@@ -347,7 +348,7 @@ impl App {
     }
 
     pub(crate) fn relations_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.relations_window else {
+        let Some(w) = &self.gis.relations_window else {
             return iced::widget::text("").into();
         };
         let layers = self.relation_layers();
@@ -470,6 +471,7 @@ impl App {
             .push(words::field("Üst nesne silinince", policy, None))
             .push(label::caption(explain).style(muted));
         if let Some(filed) = self
+            .gis
             .relations_window
             .as_ref()
             .and_then(|w| w.filed.get(&r.id))
@@ -555,7 +557,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.relations_window else {
+        let Some(w) = &self.gis.relations_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

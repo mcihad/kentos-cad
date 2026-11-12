@@ -23,6 +23,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 
@@ -67,7 +68,7 @@ fn command(app: &mut App, name: &str, input: Value) -> Value {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::DesignOptions(e));
+    let _ = app.update(Message::Arch(arch::Event::DesignOptions(e)));
 }
 
 /// The kitchen's objects selected, Tasarım seçenekleri open with the name typed: Seçimden tanımla is the next press.
@@ -220,7 +221,10 @@ mod tests {
     fn the_window_defines_copies_switches_and_accepts() {
         let mut app = crate::files_testing::app_with_drawing();
         define(&mut app);
-        assert_eq!(app.dialog, Some(Dialog::DesignOptions));
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Arch(arch::ArchDialogKind::DesignOptions))
+        );
         event(&mut app, Event::Define);
         let doc = &app.document.as_ref().expect("a drawing").model;
         assert_eq!(doc.arch_options().len(), 1);
@@ -258,8 +262,11 @@ mod tests {
         run(&mut app, "arch.options");
         event(&mut app, Event::ComboName("Teklif 3".into()));
         event(&mut app, Event::ComboSave);
-        let w = app.design_options.as_ref().expect("the window");
-        assert_eq!(w.combos.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(), ["Teklif 1", "Teklif 2", "Teklif 3"]);
+        let w = app.arch.design_options.as_ref().expect("the window");
+        assert_eq!(
+            w.combos.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(),
+            ["Teklif 1", "Teklif 2", "Teklif 3"]
+        );
         assert_eq!(w.combo, 2);
         assert!(w.combos[2].current);
         event(&mut app, Event::Combo(1));
@@ -293,18 +300,28 @@ mod tests {
         let mut app = crate::files_testing::app_with_drawing();
         proposals(&mut app);
         run(&mut app, "arch.options");
-        let w = app.design_options.as_ref().expect("the window");
+        let w = app.arch.design_options.as_ref().expect("the window");
         assert_eq!((w.combo, w.versus), (0, 1));
-        let c = w.combos_compared.as_ref().expect("compared").as_ref().expect("no refusal");
+        let c = w
+            .combos_compared
+            .as_ref()
+            .expect("compared")
+            .as_ref()
+            .expect("no refusal");
         assert_eq!((c.a.as_str(), c.b.as_str()), ("teklif-1", "teklif-2"));
         assert_eq!(c.sets.iter().map(|s| s.set.as_str()).collect::<Vec<_>>(), ["mutfak", "not"]);
         assert!(c.sets[0].changed.len() >= 2, "{:?}", c.sets[0]);
         let words = crate::design_options_window::combos_words(c, &w.rows);
         assert!(words.contains("Mutfak A → B"), "{words}");
         event(&mut app, Event::Combo(1));
-        let w = app.design_options.as_ref().expect("the window");
+        let w = app.arch.design_options.as_ref().expect("the window");
         assert_eq!((w.combo, w.versus), (1, 0));
-        let c = w.combos_compared.as_ref().expect("compared").as_ref().expect("no refusal");
+        let c = w
+            .combos_compared
+            .as_ref()
+            .expect("compared")
+            .as_ref()
+            .expect("no refusal");
         assert_eq!((c.a.as_str(), c.b.as_str()), ("teklif-2", "teklif-1"));
     }
 

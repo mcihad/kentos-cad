@@ -2,6 +2,7 @@
 //! and a threshold written, the window's comparison carries the case's four slope measures and its gap; without a
 //! threshold the slope is not asked. And its pictures.
 
+use crate::gis;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -29,12 +30,39 @@ fn opened() -> App {
 #[test]
 fn the_slope_is_measured_once_a_surface_and_a_threshold_are_given() {
     let mut app = opened();
-    assert_eq!(app.impact.surfaces.iter().map(|(_, n)| n.as_str()).collect::<Vec<_>>(), ["—", "Zemin"]);
-    let _ = app.update(Message::Impact(I::SlopeSurface("t-1".into())));
-    let r = app.impact.answer.clone().expect("an answer").expect("compares");
-    assert!(r.measures.iter().all(|m| !m.id.starts_with("slope")), "no threshold: not asked");
-    let _ = app.update(Message::Impact(I::SlopeThreshold("10".into())));
-    let r = app.impact.answer.clone().expect("an answer").expect("compares");
+    assert_eq!(
+        app.gis
+            .impact
+            .surfaces
+            .iter()
+            .map(|(_, n)| n.as_str())
+            .collect::<Vec<_>>(),
+        ["—", "Zemin"]
+    );
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::SlopeSurface(
+        "t-1".into(),
+    ))));
+    let r = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("compares");
+    assert!(
+        r.measures.iter().all(|m| !m.id.starts_with("slope")),
+        "no threshold: not asked"
+    );
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::SlopeThreshold(
+        "10".into(),
+    ))));
+    let r = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("compares");
     let want = &case()["steps"][0]["result"]["output"];
     for id in ["slopeMean", "slopeSteep", "slopeSteepShare", "slopeOff"] {
         let got = r.measures.iter().find(|m| m.id == id).expect(id);
@@ -44,10 +72,24 @@ fn the_slope_is_measured_once_a_surface_and_a_threshold_are_given() {
             assert!((g - w.as_f64().expect("a number")).abs() < 1e-6, "{id}: {g} != {w}");
         }
     }
-    assert!(r.gaps.iter().any(|g| g.contains("senaryoda Zemin yüzeyinin dışında")), "{:?}", r.gaps);
+    assert!(
+        r.gaps
+            .iter()
+            .any(|g| g.contains("senaryoda Zemin yüzeyinin dışında")),
+        "{:?}",
+        r.gaps
+    );
     // A threshold that does not read is said, not guessed.
-    let _ = app.update(Message::Impact(I::SlopeThreshold("on".into())));
-    let why = app.impact.answer.clone().expect("an answer").expect_err("refused");
+    let _ = app.update(Message::Gis(gis::Event::Impact(I::SlopeThreshold(
+        "on".into(),
+    ))));
+    let why = app
+        .gis
+        .impact
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect_err("refused");
     assert!(why.contains("Dik eğim eşiği “on” bir sayı değil"), "{why}");
 }
 
@@ -75,8 +117,12 @@ fn screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("scenario.impact"));
-        for e in [I::SlopeSurface("t-1".into()), I::SlopeThreshold("10".into()), I::View(View::Measures)] {
-            let _ = app.update(Message::Impact(e));
+        for e in [
+            I::SlopeSurface("t-1".into()),
+            I::SlopeThreshold("10".into()),
+            I::View(View::Measures),
+        ] {
+            let _ = app.update(Message::Gis(gis::Event::Impact(e)));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {

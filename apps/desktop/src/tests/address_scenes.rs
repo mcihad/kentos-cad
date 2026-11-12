@@ -13,6 +13,7 @@
 //!
 //! Test code only.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::DocumentSnapshotV1;
@@ -68,7 +69,7 @@ fn send(app: &mut App, message: Message) {
 }
 
 fn ev(app: &mut App, e: Event) {
-    send(app, Message::Address(e));
+    send(app, Message::Gis(gis::Event::Address(e)));
 }
 
 /// The Adres tab with `text` looked for.
@@ -82,7 +83,7 @@ fn found(app: &mut App, text: &str) {
 fn nothing(_s: &mut Snapshot, _app: &mut App) {}
 
 fn processing(app: &mut App, e: Processing) {
-    send(app, Message::Processing(e));
+    send(app, Message::Gis(gis::Event::Processing(e)));
 }
 
 /// Adresleri eşle's window with the address list of the processing cases (fixtures/processing/v1/adresler.csv).

@@ -6,6 +6,7 @@
 //! layer, from a raster right above it; Birikimli maliyet with the
 //! elevation model and Maliyet koridoru say what they made.
 
+use crate::gis;
 use kentos_commands::Entity;
 use serde_json::{Value, json};
 
@@ -14,7 +15,10 @@ use crate::app::{App, Message};
 use crate::distance_scenes::{from_road, layer, open_distance, paths};
 
 fn value(app: &mut App, name: &str, v: Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 fn run(app: &mut App) -> RunStatus {
@@ -120,7 +124,7 @@ fn the_distance_from_objects_goes_below_them_and_from_a_raster_above_it() {
     let doc = &app.document.as_ref().expect("open").model;
     assert!(doc.entities().any(|e| matches!(e, Entity::Raster(r)
         if r.base.layer_id == made && r.raster.style.ramp.as_deref() == Some("Viridis"))));
-    let _ = app.update(Message::Processing(Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     // From the elevation model's cells: every valued cell a source, the empty corner the distance to them.
     let mut app = valley();
     let out = crate::files_testing::scratch("uzk-dem").join("dem-uzaklik.tif");
@@ -163,7 +167,7 @@ fn the_cost_with_the_surface_and_the_corridor_say_what_they_made() {
     );
     // The lake, the empty corner and the cells no climb of at most 30 % reaches.
     assert!(text.contains(" Değersiz "), "{text}");
-    let _ = app.update(Message::Processing(Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     window(
         &mut app,
         "processing.run.distance.corridor",
@@ -180,7 +184,7 @@ fn the_cost_with_the_surface_and_the_corridor_say_what_they_made() {
     assert!(text.contains(" En ucuz yolun maliyeti "), "{text}");
     assert!(text.contains("; koridorda "), "{text}");
     // Yükseklik modeliyle on without a model: refused.
-    let _ = app.update(Message::Processing(Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     window(
         &mut app,
         "processing.run.distance.cost",

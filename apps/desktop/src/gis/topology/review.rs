@@ -50,7 +50,14 @@ impl App {
         let Some(c) = self.topology_checked() else {
             return Task::none();
         };
-        let keys: Vec<String> = self.topology.selected.iter().filter_map(|&at| c.findings.get(at)).map(|f| c.key(f)).collect();
+        let keys: Vec<String> = self
+            .gis
+            .topology
+            .selected
+            .iter()
+            .filter_map(|&at| c.findings.get(at))
+            .map(|f| c.key(f))
+            .collect();
         self.topology_review_keys(keys.clone(), op, keys)
     }
 
@@ -78,8 +85,9 @@ impl App {
         if todo.is_empty() {
             return Task::none();
         }
-        let reason = self.topology.reason.trim().to_owned();
-        let reason = (op != TopologyExceptionOperation::Unmark && !reason.is_empty()).then_some(reason);
+        let reason = self.gis.topology.reason.trim().to_owned();
+        let reason =
+            (op != TopologyExceptionOperation::Unmark && !reason.is_empty()).then_some(reason);
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
@@ -106,7 +114,7 @@ impl App {
             TopologyExceptionOperation::Error => format!("{n} bulgu hata diye işaretlendi."),
             TopologyExceptionOperation::Unmark => format!("{n} bulgunun istisnası kaldırıldı."),
         };
-        self.topology.recipe = None;
+        self.gis.topology.recipe = None;
         // Checked again (the marks are part of the rules' stamp); the chosen rows follow their keys.
         self.topology_run(Work::Check, Then::Marked { keys: chosen, said })
     }
@@ -115,7 +123,7 @@ impl App {
     /// and shown; nothing is written. Refused (and said) when the drawing changed since the check or a chosen finding
     /// has no fix.
     pub(super) fn topology_plan_recipe(&mut self) {
-        self.topology.recipe = None;
+        self.gis.topology.recipe = None;
         if self.topology_stale() {
             self.warn("Çizim denetimden sonra değişti; önce Denetle ile yenileyin.");
             return;
@@ -125,7 +133,10 @@ impl App {
             return;
         };
         let mut steps = Vec::new();
-        for &at in shown.iter().filter(|at| self.topology.selected.contains(at)) {
+        for &at in shown
+            .iter()
+            .filter(|at| self.gis.topology.selected.contains(at))
+        {
             let Some(f) = c.findings.get(at) else {
                 continue;
             };
@@ -156,7 +167,7 @@ impl App {
         let cx = ExecutionContext::new(&mut doc.model);
         match topology_repair::plan(&cx, &input) {
             CommandResult::Completed { output, .. } => {
-                self.topology.recipe = Some(Recipe {
+                self.gis.topology.recipe = Some(Recipe {
                     input,
                     planned: output,
                     session,
@@ -174,7 +185,7 @@ impl App {
     /// The recipe shown, while the drawing is as it was planned on.
     pub(crate) fn topology_recipe(&self) -> Option<&Recipe> {
         let doc = self.document.as_ref()?;
-        self.topology.recipe.as_ref().filter(|r| {
+        self.gis.topology.recipe.as_ref().filter(|r| {
             r.session == doc.session
                 && r.generation == doc.model.generation()
                 && r.revision == doc.model.revision()
@@ -184,10 +195,10 @@ impl App {
     /// Uygula: the recipe planned, written as one undo step; checked again over what it changed.
     pub(super) fn topology_apply_recipe(&mut self) -> Task<Message> {
         let Some(recipe) = self.topology_recipe().cloned() else {
-            self.topology.recipe = None;
+            self.gis.topology.recipe = None;
             return Task::none();
         };
-        self.topology.recipe = None;
+        self.gis.topology.recipe = None;
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };

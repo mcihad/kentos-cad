@@ -8,6 +8,7 @@
 //! Bölgesel istatistik fills the zones' field and gives its table; Histogram
 //! gives a table and leaves the drawing.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::{DocumentSnapshotV1, Entity, RasterSample};
@@ -31,7 +32,10 @@ fn app() -> App {
 }
 
 fn value(app: &mut App, name: &str, v: Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 fn run(app: &mut App) -> RunStatus {
@@ -100,7 +104,7 @@ fn the_expression_field_offers_every_raster_s_names_and_no_preview() {
     let _ = app.update(Message::Run("processing.run.raster.calculator"));
     value(&mut app, "input", json!({ "scope": "all" }));
     value(&mut app, "expression", json!("[DEM] * 2"));
-    let window = app.processing.dialog.as_ref().expect("the window");
+    let window = app.gis.processing.dialog.as_ref().expect("the window");
     let names: Vec<&str> = window.inputs["input"]
         .fields
         .iter()

@@ -23,6 +23,7 @@
 //! └───────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -184,7 +185,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Culverts(event)
+    Message::Road(road::Event::Culverts(event))
 }
 
 fn trimmed(v: f64) -> String {
@@ -340,7 +341,7 @@ impl App {
         let corridor = first.id.clone();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         let chosen = doc.model.road_culverts().first().map(|c| c.id.clone());
-        self.culvert_window = Some(Box::new(Window {
+        self.road.culvert_window = Some(Box::new(Window {
             chosen: None,
             corridor: Some(corridor),
             pipe: true,
@@ -356,13 +357,15 @@ impl App {
             flood: Default::default(),
             closure: None,
         }));
-        self.dialog = Some(Dialog::Culverts);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Culverts));
         let _ = self.culvert_event(Event::Choose(chosen));
     }
 
     fn refresh_culvert(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.culvert_window.as_mut() else { return };
+        let Some(w) = self.road.culvert_window.as_mut() else {
+            return;
+        };
         w.preview = match w.input().and_then(|q| {
             let top = match q.shape.as_ref() {
                 Some(CulvertShapeDef::Pipe { diameter, thickness, .. }) => diameter + thickness,
@@ -384,8 +387,14 @@ impl App {
     }
 
     pub(crate) fn culvert_event(&mut self, event: Event) -> Task<Message> {
-        let kept = self.document.as_ref().map(|d| d.model.road_culverts().to_vec()).unwrap_or_default();
-        let Some(w) = self.culvert_window.as_mut() else { return Task::none() };
+        let kept = self
+            .document
+            .as_ref()
+            .map(|d| d.model.road_culverts().to_vec())
+            .unwrap_or_default();
+        let Some(w) = self.road.culvert_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Choose(id) => {
                 w.chosen = id.clone();
@@ -444,7 +453,7 @@ impl App {
             Event::Draw => return self.draw_culvert(),
             Event::Remove => return self.remove_culvert(),
             Event::Close => {
-                self.culvert_window = None;
+                self.road.culvert_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -454,7 +463,9 @@ impl App {
     }
 
     fn save_culvert(&mut self) -> Task<Message> {
-        let Some(w) = self.culvert_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.culvert_window.as_ref() else {
+            return Task::none();
+        };
         let input = match w.input() {
             Ok(i) => i,
             Err(why) => {
@@ -474,7 +485,9 @@ impl App {
     }
 
     fn draw_culvert(&mut self) -> Task<Message> {
-        let Some(w) = self.culvert_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.culvert_window.as_ref() else {
+            return Task::none();
+        };
         let (Some(id), Some(layer)) = (w.chosen.clone(), w.layer.clone()) else {
             self.warn("Çizmek için önce menfezi kaydedin ve bir katman seçin.".to_owned());
             return Task::none();
@@ -484,15 +497,24 @@ impl App {
         let result = road_culverts_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.say(Level::Success, format!("Menfez planda, {:.2} m.", out.length));
-            self.culvert_window = None;
+            self.road.culvert_window = None;
             self.dialog = None;
         }
         Task::none()
     }
 
     fn remove_culvert(&mut self) -> Task<Message> {
-        let Some(id) = self.culvert_window.as_ref().and_then(|w| w.chosen.clone()) else { return Task::none() };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(id) = self
+            .road
+            .culvert_window
+            .as_ref()
+            .and_then(|w| w.chosen.clone())
+        else {
+            return Task::none();
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let input = CulvertsEdit {
             operation: RoadEditOperation::Remove,
             culvert: Some(id),
@@ -519,7 +541,7 @@ impl App {
     }
 
     pub(crate) fn culvert_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.culvert_window else {
+        let Some(w) = &self.road.culvert_window else {
             return iced::widget::text("").into();
         };
         let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
@@ -893,7 +915,7 @@ impl App {
     }
 
     pub(crate) fn culvert_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.culvert_window.is_none() {
+        if self.road.culvert_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

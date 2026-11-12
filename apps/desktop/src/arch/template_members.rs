@@ -96,7 +96,7 @@ impl App {
     /// member on its layer, through `cad.entities.create`; how many were
     /// written is said.
     pub(crate) fn write_members(&mut self, made: &[Slot]) {
-        let Some(run) = self.template.as_ref() else {
+        let Some(run) = self.arch.template.as_ref() else {
             return;
         };
         let (run_name, members) = (run.name.clone(), run.members.clone());

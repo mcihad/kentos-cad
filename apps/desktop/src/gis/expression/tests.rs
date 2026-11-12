@@ -6,6 +6,7 @@
 //! the field, Tamam writes the text back. The drawing is the processing
 //! cases' parcels (fixtures/processing/v1/parcels.kcad).
 
+use crate::gis;
 use iced::widget::text_editor::{Action, Edit, Motion};
 use kentos_domain::Slot;
 use serde_json::Value;
@@ -27,16 +28,19 @@ fn app_with_parcels() -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Builder(e));
+    let _ = app.update(Message::Gis(gis::Event::Builder(e)));
 }
 
 /// İfadeyle seç's window and its condition's builder.
 fn opened() -> App {
     let mut app = app_with_parcels();
     let _ = app.update(Message::Run("processing.run.selection.byExpression"));
-    assert_eq!(app.dialog, Some(Dialog::Processing));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Processing))
+    );
     event(&mut app, Event::OpenProcessing("condition".into()));
-    assert!(app.builder.is_some(), "the builder opens");
+    assert!(app.gis.builder.is_some(), "the builder opens");
     app
 }
 
@@ -54,14 +58,16 @@ fn written(app: &mut App, text: &str) {
 }
 
 fn source(app: &App) -> String {
-    app.builder
+    app.gis
+        .builder
         .as_ref()
         .map(|b| b.source.clone())
         .unwrap_or_default()
 }
 
 fn condition(app: &App) -> String {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .and_then(|w| w.values.get("condition"))
@@ -73,7 +79,7 @@ fn condition(app: &App) -> String {
 #[test]
 fn it_opens_on_the_fields_text_fields_and_objects() {
     let app = opened();
-    let b = app.builder.as_ref().expect("open");
+    let b = app.gis.builder.as_ref().expect("open");
     assert_eq!(b.source, condition(&app));
     assert_eq!(
         b.cursor,
@@ -93,11 +99,11 @@ fn it_opens_on_the_fields_text_fields_and_objects() {
 fn a_typed_name_opens_the_list_and_its_entry_goes_in_with_parentheses() {
     let mut app = opened();
     written(&mut app, "yuv");
-    let b = app.builder.as_ref().expect("open");
+    let b = app.gis.builder.as_ref().expect("open");
     let list = b.completion.as_ref().expect("the list opens");
     assert_eq!(list.items[0].label, "yuvarla");
     event(&mut app, Event::AcceptActive);
-    let b = app.builder.as_ref().expect("open");
+    let b = app.gis.builder.as_ref().expect("open");
     assert_eq!(b.source, "yuvarla()");
     assert_eq!(b.cursor, 8, "between the parentheses");
     assert!(b.completion.is_none());
@@ -105,10 +111,15 @@ fn a_typed_name_opens_the_list_and_its_entry_goes_in_with_parentheses() {
     assert_eq!((s.name, s.active), ("yuvarla", Some(0)));
     // Ctrl+Space where nothing is being written lists everything.
     event(&mut app, Event::Complete);
-    let b = app.builder.as_ref().expect("open");
+    let b = app.gis.builder.as_ref().expect("open");
     assert!(b.completion.as_ref().is_some_and(|c| c.items.len() > 40));
     event(&mut app, Event::CloseList);
-    assert!(app.builder.as_ref().is_some_and(|b| b.completion.is_none()));
+    assert!(
+        app.gis
+            .builder
+            .as_ref()
+            .is_some_and(|b| b.completion.is_none())
+    );
 }
 
 #[test]
@@ -116,17 +127,18 @@ fn the_list_moves_with_the_keys_and_its_help_follows() {
     let mut app = opened();
     written(&mut app, "$m");
     let first = app
+        .gis
         .builder
         .as_ref()
         .and_then(|b| b.help.as_ref())
         .map(|h| h.key.clone());
     event(&mut app, Event::Step(1));
-    let b = app.builder.as_ref().expect("open");
+    let b = app.gis.builder.as_ref().expect("open");
     assert_eq!(b.active, 1);
     let second = b.help.as_ref().map(|h| h.key.clone());
     assert_ne!(first, second, "the help shows the highlighted entry");
     event(&mut app, Event::Step(-1));
-    assert_eq!(app.builder.as_ref().map(|b| b.active), Some(0));
+    assert_eq!(app.gis.builder.as_ref().map(|b| b.active), Some(0));
 }
 
 #[test]
@@ -137,7 +149,8 @@ fn the_tree_inserts_on_a_double_press_a_function_around_the_selection() {
     event(&mut app, Event::Row("func:mutlak".into()));
     assert_eq!(source(&app), "$alan", "one press shows the help");
     assert_eq!(
-        app.builder
+        app.gis
+            .builder
             .as_ref()
             .and_then(|b| b.help.as_ref())
             .map(|h| h.title.clone()),
@@ -161,7 +174,7 @@ fn the_keys_choose_in_the_tree_and_enter_puts_the_entry_in() {
     // Alanlar ve değerler is open: ↓ goes through its fields, Enter puts the chosen one in.
     event(&mut app, Event::TreeStep(1));
     event(&mut app, Event::TreeStep(1));
-    let chosen = app.builder.as_ref().and_then(|b| b.chosen.clone());
+    let chosen = app.gis.builder.as_ref().and_then(|b| b.chosen.clone());
     assert_eq!(
         chosen.as_deref(),
         Some("field:Nitelik"),
@@ -183,6 +196,7 @@ fn a_fields_values_go_in_quoted() {
     event(&mut app, Event::Row("field:Nitelik".into()));
     event(&mut app, Event::Values(true));
     let listed = app
+        .gis
         .builder
         .as_ref()
         .and_then(|b| b.listed.clone())
@@ -198,12 +212,12 @@ fn a_fields_values_go_in_quoted() {
 fn the_preview_steps_through_the_objects_and_follows_a_picked_one() {
     let mut app = opened();
     written(&mut app, "$sıra");
-    let shown = |app: &App| app.builder.as_ref().map(|b| b.preview.clone());
+    let shown = |app: &App| app.gis.builder.as_ref().map(|b| b.preview.clone());
     assert_eq!(shown(&app), Some(Preview::Value("1".into())));
     event(&mut app, Event::Object(1));
     assert_eq!(shown(&app), Some(Preview::Value("2".into())));
     event(&mut app, Event::Object(-2));
-    let n = app.builder.as_ref().map_or(0, |b| b.objects.len());
+    let n = app.gis.builder.as_ref().map_or(0, |b| b.objects.len());
     assert_eq!(
         shown(&app),
         Some(Preview::Value(n.to_string())),
@@ -212,15 +226,25 @@ fn the_preview_steps_through_the_objects_and_follows_a_picked_one() {
     // Sahneden seç: the windows step aside and the pick tool runs; the picked object is previewed.
     event(&mut app, Event::Pick);
     assert_eq!(app.dialog, None, "the windows step aside");
-    assert!(app.builder.as_ref().is_some_and(super::Builder::is_picking));
+    assert!(
+        app.gis
+            .builder
+            .as_ref()
+            .is_some_and(super::Builder::is_picking)
+    );
     let third = app
+        .gis
         .builder
         .as_ref()
         .map(|b| b.objects.slots[2])
         .expect("objects");
     app.selection.set([third]);
     assert!(app.builder_picked(true));
-    assert_eq!(app.dialog, Some(Dialog::Processing), "they come back");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Processing)),
+        "they come back"
+    );
     assert_eq!(shown(&app), Some(Preview::Value("3".into())));
     assert!(app.selection.ids().is_empty(), "the selection as it was");
     // An object the expression does not run on leaves the preview where it was.
@@ -238,7 +262,7 @@ fn the_view_follows_the_cursor_past_the_box() {
         &mut app,
         "eğer(Nitelik = 'Arsa' ve $alan > 500, 'büyük arsa', 'küçük')",
     );
-    let b = app.builder.as_ref().expect("open");
+    let b = app.gis.builder.as_ref().expect("open");
     let follow = b.follow().is_some();
     assert!(follow, "the end of a long line is out of a 300 px box");
     // Scrolled there, the cursor is in view: nothing more to do.
@@ -246,10 +270,20 @@ fn the_view_follows_the_cursor_past_the_box() {
     let (line, column) = super::editor::line_column(&b.source, b.cursor);
     let x = m.cell(line, column).x + 2.0 * m.advance - 300.0;
     event(&mut app, Event::Scrolled(x, 0.0));
-    assert!(app.builder.as_ref().is_some_and(|b| b.follow().is_none()));
+    assert!(
+        app.gis
+            .builder
+            .as_ref()
+            .is_some_and(|b| b.follow().is_none())
+    );
     // Back at the start, the view goes back too.
     event(&mut app, Event::Edit(Action::Move(Motion::DocumentStart)));
-    assert!(app.builder.as_ref().is_some_and(|b| b.follow().is_some()));
+    assert!(
+        app.gis
+            .builder
+            .as_ref()
+            .is_some_and(|b| b.follow().is_some())
+    );
 }
 
 #[test]
@@ -258,19 +292,19 @@ fn vazgec_leaves_the_field_and_tamam_writes_it_back() {
     let before = condition(&app);
     written(&mut app, "Nitelik = 'Arsa'");
     event(&mut app, Event::Cancel);
-    assert!(app.builder.is_none());
+    assert!(app.gis.builder.is_none());
     assert_eq!(condition(&app), before);
     event(&mut app, Event::OpenProcessing("condition".into()));
     written(&mut app, "Nitelik = 'Arsa' ve $alan >");
     event(&mut app, Event::Ok);
-    assert!(app.builder.is_some(), "an error keeps Tamam off");
+    assert!(app.gis.builder.is_some(), "an error keeps Tamam off");
     typed(&mut app, " 100");
     event(&mut app, Event::Ok);
-    assert!(app.builder.is_none());
+    assert!(app.gis.builder.is_none());
     assert_eq!(condition(&app), "Nitelik = 'Arsa' ve $alan > 100");
     assert_eq!(
         app.dialog,
-        Some(Dialog::Processing),
+        Some(Dialog::Gis(gis::GisDialogKind::Processing)),
         "the window it came from stays"
     );
 }
@@ -317,7 +351,7 @@ fn screens() {
                     }
                     // Son kullanılanlar: what an earlier Tamam used, and the help's examples to press.
                     "son" => {
-                        if let Some(b) = app.builder.as_mut() {
+                        if let Some(b) = app.gis.builder.as_mut() {
                             b.recent = vec![
                                 "func:dizi_her".into(),
                                 "field:Nitelik".into(),
@@ -368,7 +402,8 @@ fn akis_changes_the_text_and_tamam_writes_it_back() {
     written(&mut app, "yuvarla($alan, 2)");
     event(&mut app, Event::Mode(ViewMode::Flow));
     let ids = |app: &App| -> Vec<String> {
-        app.builder
+        app.gis
+            .builder
             .as_ref()
             .and_then(|b| b.flow.flow.as_ref())
             .map(|f| f.nodes.iter().map(|n| n.id.clone()).collect())
@@ -380,7 +415,7 @@ fn akis_changes_the_text_and_tamam_writes_it_back() {
     // A value written in the inspector.
     flow(&mut app, F::Select(Some("0.1".into())));
     assert_eq!(
-        app.builder.as_ref().map(|b| b.flow.draft.clone()),
+        app.gis.builder.as_ref().map(|b| b.flow.draft.clone()),
         Some("2".into())
     );
     flow(&mut app, F::Draft("3".into()));
@@ -389,7 +424,8 @@ fn akis_changes_the_text_and_tamam_writes_it_back() {
     flow(&mut app, F::Draft("x".into()));
     flow(&mut app, F::Commit);
     assert!(
-        app.builder
+        app.gis
+            .builder
             .as_ref()
             .is_some_and(|b| b.flow.draft_error.is_some()),
         "not a number"
@@ -419,7 +455,8 @@ fn akis_changes_the_text_and_tamam_writes_it_back() {
     flow(&mut app, F::Remove("0.0".into()));
     assert_eq!(source(&app), "yuvarla(?, 3)");
     assert!(
-        app.builder
+        app.gis
+            .builder
             .as_ref()
             .is_some_and(|b| b.check.error.is_some())
     );
@@ -437,13 +474,17 @@ fn akis_changes_the_text_and_tamam_writes_it_back() {
         },
     );
     let place = app
+        .gis
         .builder
         .as_ref()
         .and_then(|b| b.palette().iter().position(|k| k == "field:Nitelik"))
         .expect("Nitelik is in the palette");
     event(&mut app, Event::Carry(place));
     assert_eq!(
-        app.builder.as_ref().and_then(|b| b.flow.carrying.clone()),
+        app.gis
+            .builder
+            .as_ref()
+            .and_then(|b| b.flow.carrying.clone()),
         Some("field:Nitelik".into())
     );
     flow(
@@ -464,7 +505,10 @@ fn akis_changes_the_text_and_tamam_writes_it_back() {
     );
     assert_eq!(source(&app), "yuvarla(Nitelik, 3 * ?)");
     assert_eq!(
-        app.builder.as_ref().and_then(|b| b.flow.selected.clone()),
+        app.gis
+            .builder
+            .as_ref()
+            .and_then(|b| b.flow.selected.clone()),
         Some("0.1".into())
     );
     // A double press on Sayı in the tree: into the new node's empty input.
@@ -569,7 +613,10 @@ fn calculate_on_parcels(expression: &str) -> App {
     doc.model.set_settings(settings);
     let _ = app.update(Message::Run("processing.run.attributes.calculate"));
     let value = |app: &mut App, name: &str, v: Value| {
-        let _ = app.update(Message::Processing(P::Value(name.into(), v)));
+        let _ = app.update(Message::Gis(gis::Event::Processing(P::Value(
+            name.into(),
+            v,
+        ))));
     };
     value(
         &mut app,
@@ -578,7 +625,7 @@ fn calculate_on_parcels(expression: &str) -> App {
     );
     value(&mut app, "value", Value::from(expression));
     event(&mut app, Event::OpenProcessing("value".into()));
-    assert!(app.builder.is_some(), "the builder opens");
+    assert!(app.gis.builder.is_some(), "the builder opens");
     app
 }
 
@@ -590,7 +637,7 @@ fn the_preview_reads_the_project_s_values_and_other_layers() {
     let app = calculate_on_parcels(
         "@is_no || ' · ' || kesişen_sayısı('Ağaç') || ' ağaç, en yakın yol ' || en_yakın('Yol', Ad)",
     );
-    let b = app.builder.as_ref().expect("open");
+    let b = app.gis.builder.as_ref().expect("open");
     assert_eq!(b.check.error, None);
     let Preview::Value(shown) = &b.preview else {
         panic!("a value: {:?}", b.preview);
@@ -647,7 +694,7 @@ fn an_unreadable_text_goes_back_to_metin_at_its_error() {
     let mut app = opened();
     written(&mut app, "Nitelik = 'Arsa' ve (");
     event(&mut app, Event::Mode(ViewMode::Flow));
-    let b = app.builder.as_ref().expect("open");
+    let b = app.gis.builder.as_ref().expect("open");
     let error = b
         .flow
         .flow
@@ -655,7 +702,7 @@ fn an_unreadable_text_goes_back_to_metin_at_its_error() {
         .and_then(|f| f.error.clone())
         .expect("the flow says the text does not read");
     event(&mut app, Event::Mode(ViewMode::Text));
-    let b = app.builder.as_ref().expect("open");
+    let b = app.gis.builder.as_ref().expect("open");
     assert_eq!(b.view_mode, ViewMode::Text);
     let c = b.content.cursor();
     let units = |p: iced::widget::text_editor::Position| {
@@ -678,10 +725,11 @@ fn the_builder_remembers_formats_and_takes_examples() {
     assert_eq!(app.builder_recent, ["func:yuvarla", "field:Nitelik"]);
     let mut app2 = opened();
     app2.builder_recent = app.builder_recent.clone();
-    if let Some(b) = app2.builder.as_mut() {
+    if let Some(b) = app2.gis.builder.as_mut() {
         b.recent = app2.builder_recent.clone();
     }
     let recent: Vec<String> = app2
+        .gis
         .builder
         .as_ref()
         .map(|b| b.recent_items().into_iter().map(|i| i.key).collect())

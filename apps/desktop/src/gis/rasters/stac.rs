@@ -4,6 +4,7 @@
 //! the system, the scale and offset, the warnings, as the choices change), and Hazırla runs that command: a group
 //! with a layer per asset, one undo step “STAC verisini hazırla”. Nothing is reckoned here.
 
+use crate::gis;
 use std::collections::{BTreeMap, BTreeSet};
 
 use iced::widget::{Column, button, container, row};
@@ -124,7 +125,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Rasters(Rasters::Stac(e))
+    Message::Gis(gis::Event::Rasters(Rasters::Stac(e)))
 }
 
 /// A number typed with a dot or a comma; none when empty, an error when not a number.
@@ -254,8 +255,8 @@ impl App {
             bbox: self.stac_view_box(),
             ..State::default()
         };
-        self.rasters.stac = Some(s);
-        self.dialog = Some(Asking::RasterStac);
+        self.gis.rasters.stac = Some(s);
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::RasterStac));
         Task::none()
     }
 
@@ -291,8 +292,8 @@ impl App {
     /// The window opened with its fields as a test or a picture wants them.
     #[cfg(test)]
     pub(crate) fn raster_stac_with(&mut self, s: State) {
-        self.rasters.stac = Some(s);
-        self.dialog = Some(Asking::RasterStac);
+        self.gis.rasters.stac = Some(s);
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::RasterStac));
     }
 
     /// The prepare command's input from the window's choices; why not when nothing is chosen.
@@ -369,7 +370,7 @@ impl App {
 
     /// The plan again, after a choice changed.
     fn stac_replan(&mut self) {
-        let Some(s) = &self.rasters.stac else {
+        let Some(s) = &self.gis.rasters.stac else {
             return;
         };
         let fetch = self.stac_to_fetch(s);
@@ -391,7 +392,7 @@ impl App {
                 }
             })
         };
-        if let Some(s) = &mut self.rasters.stac {
+        if let Some(s) = &mut self.gis.rasters.stac {
             s.planned = planned;
             s.fetch = fetch;
         }
@@ -401,7 +402,7 @@ impl App {
     /// of its own, then the preparation with them.
     fn stac_download(&mut self) -> Task<Message> {
         let drawing = self.document.as_ref().and_then(|d| d.path.clone());
-        let Some(s) = &mut self.rasters.stac else {
+        let Some(s) = &mut self.gis.rasters.stac else {
             return Task::none();
         };
         s.ticket += 1;
@@ -442,7 +443,7 @@ impl App {
 
     /// Ara and Sonraki sayfa: the search on a thread of its own.
     fn stac_search_task(&mut self, more: bool) -> Task<Message> {
-        let Some(s) = &mut self.rasters.stac else {
+        let Some(s) = &mut self.gis.rasters.stac else {
             return Task::none();
         };
         let mut input = match search_of(s) {
@@ -474,7 +475,7 @@ impl App {
     }
 
     pub(crate) fn raster_stac_event(&mut self, e: Event) -> Task<Message> {
-        let Some(s) = &mut self.rasters.stac else {
+        let Some(s) = &mut self.gis.rasters.stac else {
             return Task::none();
         };
         match e {
@@ -487,7 +488,7 @@ impl App {
             Event::Preset(id) => s.collection = id.to_owned(),
             Event::UseView => {
                 let found = self.stac_view_box();
-                if let Some(s) = &mut self.rasters.stac {
+                if let Some(s) = &mut self.gis.rasters.stac {
                     match found {
                         Some(b) => s.bbox = Some(b),
                         None => s.said = Some((
@@ -583,7 +584,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.rasters.stac = None;
+                self.gis.rasters.stac = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -593,14 +594,14 @@ impl App {
     }
 
     fn stac_status(&mut self, why: String) {
-        if let Some(s) = &mut self.rasters.stac {
+        if let Some(s) = &mut self.gis.rasters.stac {
             s.said = Some((Line::Error, why));
         }
     }
 
     /// Hazırla: the command run, one undo step.
     fn stac_run(&mut self) {
-        let Some(s) = self.rasters.stac.clone() else {
+        let Some(s) = self.gis.rasters.stac.clone() else {
             return;
         };
         let input = match self.stac_input(&s) {
@@ -623,7 +624,7 @@ impl App {
                     .and_then(|b| b.uid.as_deref())
                     .and_then(|u| kentos_domain::Uuid::parse_str(u).ok())
                     .and_then(|u| model.slot_of(u));
-                self.rasters.stac = None;
+                self.gis.rasters.stac = None;
                 self.dialog = None;
                 if let Some(slot) = first {
                     self.zoom_to(&[slot]);
@@ -660,7 +661,7 @@ impl App {
     }
 
     pub(crate) fn raster_stac_view(&self) -> Element<'_, Message> {
-        let Some(s) = &self.rasters.stac else {
+        let Some(s) = &self.gis.rasters.stac else {
             return Column::new().into();
         };
         let mut body = Column::new().spacing(12);
@@ -977,7 +978,7 @@ mod tests {
     }
 
     fn send(app: &mut App, e: Event) {
-        let task = app.update(Message::Rasters(Rasters::Stac(e)));
+        let task = app.update(Message::Gis(gis::Event::Rasters(Rasters::Stac(e))));
         drive(app, task);
     }
 
@@ -1021,20 +1022,20 @@ mod tests {
         let mut app = app();
         app.raster_stac_with(searching());
         send(&mut app, Event::Search);
-        let s = app.rasters.stac.as_ref().expect("the window");
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
         assert!(s.waiting.is_none(), "the answer came");
         assert_eq!(s.items.len(), 2, "{:?}", s.said);
         assert_eq!(s.matched, Some(4));
         assert!(s.next.is_some());
         send(&mut app, Event::Choose(0));
-        let s = app.rasters.stac.as_ref().expect("the window");
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
         assert_eq!(s.data.iter().cloned().collect::<Vec<_>>(), ["nir", "red"]);
         assert_eq!(s.qa.as_deref(), Some("scl"));
         let (p, warnings) = s.planned.clone().expect("a plan").expect("the plan");
         assert_eq!(p.preparation.bands.len(), 2);
         assert!(warnings.iter().any(|w| w.code == "stac_qa_grid_differs"));
         send(&mut app, Event::Prepare);
-        assert!(app.rasters.stac.is_none(), "the window closes");
+        assert!(app.gis.rasters.stac.is_none(), "the window closes");
         let added = rasters(&app);
         assert_eq!(added.len(), 3);
         assert!(added.iter().all(|r| {
@@ -1056,7 +1057,7 @@ mod tests {
         app.raster_stac_with(searching());
         send(&mut app, Event::Search);
         send(&mut app, Event::More);
-        let s = app.rasters.stac.as_ref().expect("the window");
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
         assert_eq!(s.items.len(), 4, "{:?}", s.said);
         // A project in another system: the plan says why, and Hazırla is not offered.
         let doc = app.document.as_mut().expect("a drawing");
@@ -1064,7 +1065,7 @@ mod tests {
         settings.srid = 5254;
         doc.model.set_settings(settings);
         send(&mut app, Event::Choose(0));
-        let s = app.rasters.stac.as_ref().expect("the window");
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
         let why = s.planned.clone().expect("a plan").expect_err("refused");
         assert!(
             why.contains("EPSG:32637") && why.contains("EPSG:5254"),
@@ -1098,22 +1099,22 @@ mod tests {
             ..State::default()
         });
         send(&mut app, Event::Choose(1));
-        let s = app.rasters.stac.as_ref().expect("the window");
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
         assert!(app.stac_foreign(s), "the assets are in UTM 36");
         let why = s.planned.clone().expect("a plan").expect_err("refused");
         assert!(why.contains("reproject"), "{why}");
         send(&mut app, Event::Reproject(true));
-        let s = app.rasters.stac.as_ref().expect("the window");
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
         assert_eq!(s.fetch.len(), 2, "both wait for a download");
         // The copies are there already: Hazırla carries them over.
-        app.rasters.stac.as_mut().unwrap().local = local;
+        app.gis.rasters.stac.as_mut().unwrap().local = local;
         send(&mut app, Event::Group(String::new()));
         send(&mut app, Event::Reproject(true));
-        let s = app.rasters.stac.as_ref().expect("the window");
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
         assert!(s.fetch.is_empty());
         assert!(matches!(&s.planned, Some(Ok(_))), "{:?}", s.planned);
         send(&mut app, Event::Prepare);
-        assert!(app.rasters.stac.is_none(), "the window closes");
+        assert!(app.gis.rasters.stac.is_none(), "the window closes");
         let added = rasters(&app);
         assert_eq!(added.len(), 2);
         for r in &added {
@@ -1136,7 +1137,7 @@ mod tests {
             ..searching()
         });
         send(&mut app, Event::Search);
-        let s = app.rasters.stac.as_ref().expect("the window");
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
         assert!(s.waiting.is_none());
         assert!(
             s.said

@@ -57,8 +57,11 @@ pub(crate) fn fill_fields(g: &ReconciledGroup) -> Vec<String> {
 impl App {
     /// Alanları ekle: the typed values in the decisions of the group's candidates, the plan again.
     pub(crate) fn reconcile_fill_apply(&mut self) {
-        let Some(g) = self.features_reconcile.fill else { return };
+        let Some(g) = self.gis.features_reconcile.fill else {
+            return;
+        };
         let typed: std::collections::BTreeMap<String, String> = self
+            .gis
             .features_reconcile
             .typed
             .iter()
@@ -69,10 +72,14 @@ impl App {
             self.warn("Alan gir: bir değer yazın ya da seçin.");
             return;
         }
-        let Some(Ok(answer)) = &self.features_reconcile.answer else { return };
-        let Some(group) = answer.groups.get(g) else { return };
+        let Some(Ok(answer)) = &self.gis.features_reconcile.answer else {
+            return;
+        };
+        let Some(group) = answer.groups.get(g) else {
+            return;
+        };
         let uids = group.candidates.clone();
-        let s = &mut self.features_reconcile;
+        let s = &mut self.gis.features_reconcile;
         for uid in uids {
             match s.decisions.iter_mut().find(|d| d.candidate == uid) {
                 Some(d) => d.fields.extend(typed.clone()),
@@ -90,7 +97,7 @@ impl App {
 
     /// The form of the group Alan gir opened, with its heading: none while no group is open.
     pub(crate) fn reconcile_fill_view(&self) -> Option<(Element<'_, Message>, Element<'_, Message>)> {
-        let s = &self.features_reconcile;
+        let s = &self.gis.features_reconcile;
         let (Some(g), Some(Ok(a))) = (s.fill, &s.answer) else { return None };
         let group = a.groups.get(g)?;
         let class = group.class.clone().unwrap_or_default();

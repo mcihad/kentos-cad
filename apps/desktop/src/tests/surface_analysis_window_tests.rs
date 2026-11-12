@@ -2,6 +2,7 @@
 //! surfaces' difference and the check points by class without writing; and its pictures.
 
 use crate::app::{App, Dialog, Message};
+use crate::road;
 use crate::surface_analysis_window::{Event as W, Mode, Read};
 
 /// `road.terrains.quality`'s drawing: the lattices (valley, pit, plane, terrace, ridge, cut, pad, sparse, spiky) and
@@ -50,7 +51,13 @@ fn the_spikes_are_left_out_after_their_difference_and_taken_back() {
     let Read::Quality(q) = read(&app) else { panic!("quality") };
     assert_eq!(q.spike_count, Some(2), "{q:?}");
     send(&mut app, W::LeaveSpikes);
-    let r = match &app.surface_analysis_window.as_ref().expect("open").repair {
+    let r = match &app
+        .road
+        .surface_analysis_window
+        .as_ref()
+        .expect("open")
+        .repair
+    {
         Some((_, Ok(r))) => r.clone(),
         other => panic!("a difference: {other:?}"),
     };
@@ -68,11 +75,17 @@ fn the_spikes_are_left_out_after_their_difference_and_taken_back() {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::SurfaceAnalysis(e));
+    let _ = app.update(Message::Road(road::Event::SurfaceAnalysis(e)));
 }
 
 fn read(app: &App) -> Read {
-    match &app.surface_analysis_window.as_ref().expect("open").preview {
+    match &app
+        .road
+        .surface_analysis_window
+        .as_ref()
+        .expect("open")
+        .preview
+    {
         Some(Ok(r)) => r.clone(),
         other => panic!("read: {other:?}"),
     }
@@ -83,10 +96,15 @@ fn the_window_reads_ranges_a_difference_and_check_points() {
     let mut app = app();
     let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
     let _ = app.update(Message::Run("terrain.analysis"));
-    assert_eq!(app.dialog, Some(Dialog::SurfaceAnalysis));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::SurfaceAnalysis))
+    );
     // The breaks are the user's: none asked, none read.
     send(&mut app, W::Preview);
-    assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("Bir şey sorun")));
+    assert!(
+        matches!(&app.road.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("Bir şey sorun"))
+    );
     send(&mut app, W::Surface("t-6".into()));
     send(&mut app, W::Field(0, "0, 1, 12, 35".into()));
     send(&mut app, W::Roughness(true));
@@ -115,7 +133,9 @@ fn the_window_reads_ranges_a_difference_and_check_points() {
     // Spikes need both values.
     send(&mut app, W::Field(4, "1".into()));
     send(&mut app, W::Preview);
-    assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("birlikte")));
+    assert!(
+        matches!(&app.road.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("birlikte"))
+    );
     send(&mut app, W::Close);
     assert_eq!(app.document.as_ref().expect("a drawing").model.revision().to_string(), before);
 }
@@ -218,9 +238,26 @@ fn the_window_reads_a_surface_s_coverage_of_a_boundary() {
     send(&mut app, W::Preview);
     let Read::Coverage(c, pic) = read(&app) else { panic!("coverage") };
     assert_eq!(c.estimated_triangles, 6);
-    assert!((c.no_data.expect("a boundary") - (c.boundary_area.expect("a boundary") - c.covered)).abs() < 1e-9);
-    assert_eq!((pic.rings.len(), pic.triangles.iter().filter(|t| t.1).count()), (1, 6));
-    assert!(app.surface_analysis_window.as_ref().expect("open").warnings.iter().any(|w| w.contains("örtmüyor")));
+    assert!(
+        (c.no_data.expect("a boundary") - (c.boundary_area.expect("a boundary") - c.covered)).abs()
+            < 1e-9
+    );
+    assert_eq!(
+        (
+            pic.rings.len(),
+            pic.triangles.iter().filter(|t| t.1).count()
+        ),
+        (1, 6)
+    );
+    assert!(
+        app.road
+            .surface_analysis_window
+            .as_ref()
+            .expect("open")
+            .warnings
+            .iter()
+            .any(|w| w.contains("örtmüyor"))
+    );
     // The estimated area drawn: its outline, its area's text and the surface's outline, one undo step.
     let count = |app: &App| app.document.as_ref().expect("a drawing").model.entities().count();
     let n = count(&app);
@@ -306,7 +343,9 @@ fn the_window_counts_a_surface_s_points_in_cells_and_draws_the_sparse_ones() {
     send(&mut app, W::Mode(Mode::Density));
     send(&mut app, W::Surface("t-10".into()));
     send(&mut app, W::Preview);
-    assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("hücre boyunu")));
+    assert!(
+        matches!(&app.road.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("hücre boyunu"))
+    );
     let case = density_case("density", "Proje sınırında");
     send(&mut app, W::Boundary(case["input"]["boundary"].as_str().map(str::to_owned)));
     send(&mut app, W::Field(9, "1.5".into()));
@@ -319,7 +358,15 @@ fn the_window_counts_a_surface_s_points_in_cells_and_draws_the_sparse_ones() {
     // A share not met warns.
     send(&mut app, W::Field(11, "0.9".into()));
     send(&mut app, W::Preview);
-    assert!(app.surface_analysis_window.as_ref().expect("open").warnings.iter().any(|w| w.contains("istenen %90.0")));
+    assert!(
+        app.road
+            .surface_analysis_window
+            .as_ref()
+            .expect("open")
+            .warnings
+            .iter()
+            .any(|w| w.contains("istenen %90.0"))
+    );
     // The sparse cells drawn: as many objects as the shared case writes, one undo step.
     let case = density_case("sparse", "Seyrek yüzeyin noktasız hücreleri");
     send(&mut app, W::Boundary(None));
@@ -485,7 +532,9 @@ fn fark_measures_by_a_grid_beside_the_exact_tin_and_adjusts_by_the_factors() {
     assert!(tin.exact.is_none() && tin.cell.is_none() && tin.adjusted.is_none());
     send(&mut app, W::VolumeMethod(1));
     send(&mut app, W::Preview);
-    assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("hücre")));
+    assert!(
+        matches!(&app.road.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("hücre"))
+    );
     send(&mut app, W::Field(13, "0,25".into()));
     send(&mut app, W::Field(14, "1,25".into()));
     send(&mut app, W::Field(15, "1,1".into()));
@@ -638,7 +687,9 @@ fn the_window_compares_no_heights_not_shown_one() {
     send(&mut app, W::Surface("t-5".into()));
     send(&mut app, W::Comparison("t-8".into()));
     send(&mut app, W::Preview);
-    assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("gösterilemiyor")));
+    assert!(
+        matches!(&app.road.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("gösterilemiyor"))
+    );
     let m = app
         .surface_analysis_control(crate::traces::Control::Pick(crate::surface_analysis_window::SAME_HEIGHTS, "Var"))
         .expect("a control")
@@ -647,7 +698,7 @@ fn the_window_compares_no_heights_not_shown_one() {
     send(&mut app, W::Preview);
     let Read::Compare(c) = read(&app) else { panic!("a difference") };
     assert!((c.cut - want["cut"].as_f64().unwrap()).abs() < 1e-6, "{c:?}");
-    let w = app.surface_analysis_window.as_ref().expect("open");
+    let w = app.road.surface_analysis_window.as_ref().expect("open");
     assert!(w.warnings.first().is_some_and(|m| m.contains("varsayıma dayanan bir taslak")), "{:?}", w.warnings);
 }
 

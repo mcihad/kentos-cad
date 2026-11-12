@@ -11,6 +11,7 @@
 //! Buluta uygula (docs/adr/3100) selects the moving scan and opens Dönüşüm uygula (`pointcloud.transform`) with the
 //! answer's matrix: the cloud is moved only when that tool runs, into a new file beside the source.
 
+use crate::map;
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
@@ -125,7 +126,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Register(e)
+    Message::Map(map::Event::Register(e))
 }
 
 fn cm(v: f64) -> String {
@@ -176,9 +177,9 @@ pub fn csv(r: &PointCloudsRegistered) -> String {
 
 impl App {
     fn register_run(&mut self) {
-        let s = &self.register;
+        let s = &self.map.register;
         if s.fixed.is_empty() || s.moving.is_empty() {
-            self.register.answer = Some(Err("İki nokta bulutu seçin.".into()));
+            self.map.register.answer = Some(Err("İki nokta bulutu seçin.".into()));
             return;
         }
         let input = PointCloudsRegister {
@@ -198,14 +199,18 @@ impl App {
             reject: (s.edges || s.by_angle).then(|| RegisterReject { edges: s.edges, angle: s.by_angle.then_some(s.angle) }),
             ..Default::default()
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.register.answer = Some(match pointcloud_register::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Kayıt denetlenemedi.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.map.register.answer = Some(
+            match pointcloud_register::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Kayıt denetlenemedi.".to_owned()),
+            },
+        );
     }
 
     /// Tarama kaydı (`pointcloud.register`): the two selected clouds (the first fixed), else the drawing's first two;
@@ -258,7 +263,7 @@ impl App {
             .find(|(id, n)| !id.is_empty() && ["gnss", "kontrol"].iter().any(|w| n.to_lowercase().contains(w)))
             .map(|(id, _)| id.clone())
             .unwrap_or_default();
-        self.register = State {
+        self.map.register = State {
             clouds,
             layers,
             fixed,
@@ -279,24 +284,28 @@ impl App {
             answer: None,
         };
         self.register_run();
-        self.dialog = Some(Dialog::Register);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::Register));
         Task::none()
     }
 
     /// Buluta uygula (docs/adr/3100): the moving scan selected (the tool's input), Tarama kaydı closed and Dönüşüm
     /// uygula's window opened with the answer's matrix and a layer of its own. Nothing is written until that tool runs.
     pub(crate) fn register_apply(&mut self) {
-        let Some(Ok(r)) = &self.register.answer else { return };
+        let Some(Ok(r)) = &self.map.register.answer else {
+            return;
+        };
         let matrix = matrix_text(&r.matrix);
         let slot = self.document.as_ref().and_then(|d| {
-            kentos_domain::Uuid::parse_str(&self.register.moving).ok().and_then(|u| d.model.slot_of(u))
+            kentos_domain::Uuid::parse_str(&self.map.register.moving)
+                .ok()
+                .and_then(|u| d.model.slot_of(u))
         });
         let Some(slot) = slot else {
             self.warn(format!("{TITLE}: oturtulan bulut çizimde bulunamadı."));
             return;
         };
         self.selection.set([slot]);
-        self.register = State::default();
+        self.map.register = State::default();
         self.dialog = None;
         let values = serde_json::from_value(serde_json::json!({
             "input": { "scope": "selection" },
@@ -309,7 +318,9 @@ impl App {
 
     /// The answer written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn register_save(&mut self, path: PathBuf) {
-        let Some(Ok(r)) = &self.register.answer else { return };
+        let Some(Ok(r)) = &self.map.register.answer else {
+            return;
+        };
         match std::fs::write(&path, csv(r)) {
             Ok(()) => self.say(Level::Success, format!("{TITLE}: sonuç {} dosyasına yazıldı.", path.display())),
             Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
@@ -317,7 +328,7 @@ impl App {
     }
 
     pub(crate) fn register_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.register;
+        let s = &mut self.map.register;
         match event {
             Event::Fixed(v) => s.fixed = v,
             Event::Moving(v) => s.moving = v,
@@ -361,7 +372,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.register = State::default();
+                self.map.register = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -476,7 +487,7 @@ impl App {
     }
 
     pub(crate) fn register_view(&self) -> Element<'_, Message> {
-        let s = &self.register;
+        let s = &self.map.register;
         let pick = |v: &str, on: fn(String) -> Event| container(fields::select_owned(s.clouds.clone(), v, move |x| msg(on(x)))).width(230);
         let form = Form::new()
             .label_width(120.0)

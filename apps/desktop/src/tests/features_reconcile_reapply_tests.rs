@@ -5,6 +5,7 @@
 //! candidates take the recorded decisions (the tree the pole written then), Eşleştir marks them, their notes naming the
 //! earlier ones, in one undo step. And the pictures.
 
+use crate::gis;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -32,8 +33,18 @@ fn opened() -> App {
 
 /// The candidate's class and status in the window's answer, by the end of its uid.
 fn candidate(app: &App, end: &str) -> (Option<String>, String) {
-    let a = app.features_reconcile.answer.clone().expect("an answer").expect("reconciled");
-    let c = a.candidates.iter().find(|c| c.uid.ends_with(end)).expect("the candidate");
+    let a = app
+        .gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled");
+    let c = a
+        .candidates
+        .iter()
+        .find(|c| c.uid.ends_with(end))
+        .expect("the candidate");
     (c.class.clone(), c.status.clone())
 }
 
@@ -41,17 +52,50 @@ fn candidate(app: &App, end: &str) -> (Option<String>, String) {
 fn the_recorded_decisions_are_taken_again_with_the_switch() {
     let mut app = opened();
     let _ = app.update(Message::Run("map.featuresReconcile"));
-    assert_eq!(app.dialog, Some(Dialog::FeaturesReconcile));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::FeaturesReconcile))
+    );
     // Without the switch the new candidates are read afresh.
-    let a = app.features_reconcile.answer.clone().expect("an answer").expect("reconciled");
+    let a = app
+        .gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled");
     assert!(a.reapplied.is_empty());
     assert_eq!(candidate(&app, "12"), (Some("agac".into()), "member".into()));
     assert_eq!(candidate(&app, "13").1, "unknown");
-    let _ = app.update(Message::FeaturesReconcile(R::Reapply(true)));
-    let a = app.features_reconcile.answer.clone().expect("an answer").expect("reconciled");
-    let taken: Vec<(String, u32)> = a.reapplied.iter().map(|r| (r.candidate[r.candidate.len() - 2..].to_owned(), r.note)).collect();
-    assert_eq!(taken, [("12".into(), 2), ("13".into(), 4), ("14".into(), 3), ("15".into(), 1)]);
-    assert_eq!(candidate(&app, "12"), (Some("direk".into()), "member".into()), "corrected to a pole again");
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Reapply(
+        true,
+    ))));
+    let a = app
+        .gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled");
+    let taken: Vec<(String, u32)> = a
+        .reapplied
+        .iter()
+        .map(|r| (r.candidate[r.candidate.len() - 2..].to_owned(), r.note))
+        .collect();
+    assert_eq!(
+        taken,
+        [
+            ("12".into(), 2),
+            ("13".into(), 4),
+            ("14".into(), 3),
+            ("15".into(), 1)
+        ]
+    );
+    assert_eq!(
+        candidate(&app, "12"),
+        (Some("direk".into()), "member".into()),
+        "corrected to a pole again"
+    );
     assert_eq!(candidate(&app, "13").1, "rejected", "rejected again");
     assert_eq!(candidate(&app, "16").1, "unknown", "the far one is read afresh");
     let pole = a.groups.iter().find(|g| g.candidates.iter().any(|c| c.ends_with("12"))).expect("the pole");
@@ -61,7 +105,7 @@ fn the_recorded_decisions_are_taken_again_with_the_switch() {
     // Eşleştir: the notes name the earlier ones; one undo step.
     let notes = |app: &App| app.document.as_ref().map(|d| d.model.settings().review_notes.clone()).unwrap_or_default();
     let before = notes(&app).len();
-    let _ = app.update(Message::FeaturesReconcile(R::Run));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Run)));
     let after = notes(&app);
     let said: Vec<&str> = after[before..].iter().map(|n| n.text.as_str()).collect();
     assert_eq!(
@@ -96,8 +140,12 @@ fn screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("map.featuresReconcile"));
-        let _ = app.update(Message::FeaturesReconcile(R::Reviewer("Ayşe Demir".into())));
-        let _ = app.update(Message::FeaturesReconcile(R::Reapply(true)));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Reviewer(
+            "Ayşe Demir".into(),
+        ))));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Reapply(
+            true,
+        ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

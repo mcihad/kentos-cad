@@ -5,6 +5,8 @@
 //! here, an opener of what a program has not falls back to Komut geçmişi and says where it is; kentos-cad shows
 //! everything. Test code only; no program is started.
 
+use crate::gis;
+use crate::map;
 use std::path::{Path, PathBuf};
 
 use iced::Color;
@@ -368,17 +370,17 @@ fn each_program_has_its_own_status_cells() {
 fn the_cells_with_values_follow_the_program() {
     // A second system: its cell in a map's programs, none in KentOS Mimari, nor its width.
     let mut harita = drawn(HARITA);
-    let _ = harita.update(Message::SecondCrs(crate::second_crs::Event::Choose(Some(
-        2322,
-    ))));
+    let _ = harita.update(Message::Gis(gis::Event::SecondCrs(
+        crate::second_crs::Event::Choose(Some(2322)),
+    )));
     assert!(harita.second_cell(None).is_some());
     assert!(harita.second_width() > 0.0);
     let menu = menu_text(&harita.crs_cell_menu());
     assert!(has(&menu, "İkinci sistem") && has(&menu, "Harita sistemi"));
     let mut mimari = drawn(MIMARI);
-    let _ = mimari.update(Message::SecondCrs(crate::second_crs::Event::Choose(Some(
-        2322,
-    ))));
+    let _ = mimari.update(Message::Gis(gis::Event::SecondCrs(
+        crate::second_crs::Event::Choose(Some(2322)),
+    )));
     assert!(mimari.second_cell(None).is_none());
     assert_eq!(mimari.second_width(), 0.0);
     let menu = menu_text(&mimari.crs_cell_menu());
@@ -926,18 +928,18 @@ fn kentos_mimari_s_point_calculator_has_no_survey_constructions() {
         has(&menu, "İki nokta ortası") && has(&menu, "Açıortay"),
         "{menu}"
     );
-    let _ = app.update(Message::PointCalc(CalcKind::Km));
+    let _ = app.update(Message::Map(map::Event::PointCalc(CalcKind::Km)));
     assert!(!app.session.nested(), "no km is asked for");
     assert_eq!(
         last_said(&app),
         "“Km ve sapma” KentOS Mimari'de yok; KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da var."
     );
-    let _ = app.update(Message::PointCalc(CalcKind::Mid));
+    let _ = app.update(Message::Map(map::Event::PointCalc(CalcKind::Mid)));
     assert!(app.session.nested(), "a construction it has runs");
     for module in [None, HARITA, GIS] {
         let mut other = drawn(module);
         let _ = other.update(Message::Run("tool.line"));
-        let _ = other.update(Message::PointCalc(CalcKind::Km));
+        let _ = other.update(Message::Map(map::Event::PointCalc(CalcKind::Km)));
         assert!(other.session.nested(), "{module:?}");
     }
 }
@@ -1309,7 +1311,7 @@ fn cihaza_gonder_is_where_the_program_offers_it() {
         doc.model.add(point).expect("added");
         let own = app.offers("field.send");
         offered.push(own);
-        let task = app.update(Message::Points(crate::points::Event::Send));
+        let task = app.update(Message::Gis(gis::Event::Points(crate::points::Event::Send)));
         drive(&mut app, task);
         assert_eq!(
             matches!(app.exchange, Some(crate::exchange::Window::FieldSend(_))),

@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_domain::{Slot, Uuid};
 use kentos_ui::widget::docking;
 use serde_json::{Value, json};
@@ -61,7 +62,7 @@ fn edit(app: &mut App, op: Value) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::RoomModules(e));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(e)));
 }
 
 /// The flat defined and a mirrored second flat beside it, in group d2 and numbered 2-.
@@ -167,11 +168,13 @@ fn place(app: &mut App) {
     two(app);
     fit(app, [-1.5, -4.5, 32.0, 6.0]);
     run(app, "tool.modulePlace");
-    let _ = app.update(Message::ToolSetting(crate::architecture_settings::Commit {
-        tool: "modulePlace",
-        key: "B",
-        value: "d3".into(),
-    }));
+    let _ = app.update(Message::Arch(arch::Event::ToolSetting(
+        crate::architecture_settings::Commit {
+            tool: "modulePlace",
+            key: "B",
+            value: "d3".into(),
+        },
+    )));
     hover(app, [24.5 - E, 0.0 - N]);
 }
 

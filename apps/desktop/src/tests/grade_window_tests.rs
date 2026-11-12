@@ -5,6 +5,7 @@
 //! Docs/adr/4980: on the two-part area (slot 6) Halka chooses the second part's hole; the range, the preview and Uygula
 //! are that ring's, the other rings left; and its pictures.
 
+use crate::road;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -35,25 +36,39 @@ fn a_grade_previews_and_writes_one_step() {
     let mut app = opened(Some(Module::Map));
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("tool.grade"));
-    assert_eq!(app.dialog, Some(Dialog::Grade));
-    let p = app.grade.plan.clone().expect("a plan").expect("previewed");
+    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Grade)));
+    let p = app
+        .road
+        .grade
+        .plan
+        .clone()
+        .expect("a plan")
+        .expect("previewed");
     assert!((p.grade - 0.02).abs() < 1e-12 && (p.start - 850.0).abs() < 1e-12);
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     let z = zs(&app);
     assert!((z[4].expect("graded") - (850.0 + 0.02 * p.length)).abs() < 1e-9);
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(zs(&app)[4], None, "one step");
     // By the end's elevation: the grade follows.
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Grade(G::Target(crate::grade_window::Target::End)));
-    let _ = app.update(Message::Grade(G::End(851.0)));
-    let p = app.grade.plan.clone().expect("a plan").expect("previewed");
+    let _ = app.update(Message::Road(road::Event::Grade(G::Target(
+        crate::grade_window::Target::End,
+    ))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::End(851.0))));
+    let p = app
+        .road
+        .grade
+        .plan
+        .clone()
+        .expect("a plan")
+        .expect("previewed");
     assert!((p.grade - 1.0 / p.length).abs() < 1e-12);
     // A text is no path.
-    let _ = app.update(Message::Grade(G::Close));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Close)));
     app.selection.set([Slot(5)]);
     let _ = app.update(Message::Run("tool.grade"));
-    assert_ne!(app.dialog, Some(Dialog::Grade));
+    assert_ne!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Grade)));
 }
 
 #[test]
@@ -107,21 +122,46 @@ fn two_clicks_on_the_drawing_take_the_range() {
         _ => panic!("the polyline"),
     };
     let near = |i: usize| Some(kentos_interaction::Vec2 { x: pts[i].x + 0.01, y: pts[i].y - 0.01 });
-    let _ = app.update(Message::Grade(G::Pick));
-    assert_eq!((app.dialog, app.grade.picking), (None, Some(crate::grade_window::Pick::Start)));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
+    assert_eq!(
+        (app.dialog, app.road.grade.picking),
+        (None, Some(crate::grade_window::Pick::Start))
+    );
     assert!(app.grade_picked(near(1)));
-    assert_eq!((app.grade.from, app.grade.picking), (2.0, Some(crate::grade_window::Pick::End)), "the second click awaited");
+    assert_eq!(
+        (app.road.grade.from, app.road.grade.picking),
+        (2.0, Some(crate::grade_window::Pick::End)),
+        "the second click awaited"
+    );
     assert!(app.grade_picked(near(3)));
-    assert_eq!((app.grade.from, app.grade.to, app.dialog), (2.0, 4.0, Some(Dialog::Grade)));
-    let p = app.grade.plan.clone().expect("a plan").expect("previewed");
+    assert_eq!(
+        (app.road.grade.from, app.road.grade.to, app.dialog),
+        (2.0, 4.0, Some(Dialog::Road(road::RoadDialogKind::Grade)))
+    );
+    let p = app
+        .road
+        .grade
+        .plan
+        .clone()
+        .expect("a plan")
+        .expect("previewed");
     assert_eq!(p.zs.len(), 3, "vertices 2 to 4");
     // A click by no vertex: said, the range kept; Esc: back to the window.
-    let _ = app.update(Message::Grade(G::Pick));
-    assert!(app.grade_picked(Some(kentos_interaction::Vec2 { x: pts[0].x + 500.0, y: pts[0].y + 500.0 })));
-    assert_eq!((app.grade.from, app.dialog), (2.0, Some(Dialog::Grade)));
-    let _ = app.update(Message::Grade(G::Pick));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
+    assert!(app.grade_picked(Some(kentos_interaction::Vec2 {
+        x: pts[0].x + 500.0,
+        y: pts[0].y + 500.0
+    })));
+    assert_eq!(
+        (app.road.grade.from, app.dialog),
+        (2.0, Some(Dialog::Road(road::RoadDialogKind::Grade)))
+    );
+    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
     assert!(app.grade_picked(None));
-    assert_eq!((app.grade.from, app.grade.to, app.dialog), (2.0, 4.0, Some(Dialog::Grade)));
+    assert_eq!(
+        (app.road.grade.from, app.road.grade.to, app.dialog),
+        (2.0, 4.0, Some(Dialog::Road(road::RoadDialogKind::Grade)))
+    );
     // Nothing awaited: another window's point.
     assert!(!app.grade_picked(near(0)));
 }
@@ -156,7 +196,7 @@ fn pick_screens() {
         let _ = app.update(m);
     };
     // The first click awaited: the drawing with the prompt.
-    let _ = app.update(Message::Grade(G::Pick));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("1-baslangic-koseye-tiklayin-acik-genis.png");
     snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
@@ -186,8 +226,8 @@ fn the_range_is_marked_on_the_drawing() {
     let (path, ends) = app.grade_marks();
     assert_eq!(ends, [pts[0], *pts.last().expect("a last vertex")]);
     assert!(path.len() > pts.len(), "the arc's points along it: {}", path.len());
-    let _ = app.update(Message::Grade(G::From(2.0)));
-    let _ = app.update(Message::Grade(G::To(4.0)));
+    let _ = app.update(Message::Road(road::Event::Grade(G::From(2.0))));
+    let _ = app.update(Message::Road(road::Event::Grade(G::To(4.0))));
     let (path, ends) = app.grade_marks();
     assert_eq!(ends, [pts[1], pts[3]]);
     assert_eq!((path.first(), path.last()), (Some(&pts[1]), Some(&pts[3])));
@@ -195,14 +235,14 @@ fn the_range_is_marked_on_the_drawing() {
     let marked = app.marked_points();
     assert!(marked.iter().any(|p| p.x == pts[1].x && p.y == pts[1].y) && marked.iter().any(|p| p.x == pts[3].x && p.y == pts[3].y));
     // Picking: the start awaited, nothing; the end awaited, the start alone.
-    let _ = app.update(Message::Grade(G::Pick));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Pick)));
     assert_eq!(app.grade_marks(), (Vec::new(), Vec::new()));
     let near = |i: usize| Some(kentos_interaction::Vec2 { x: pts[i].x + 0.01, y: pts[i].y - 0.01 });
     assert!(app.grade_picked(near(1)));
     assert_eq!(app.grade_marks(), (Vec::new(), vec![pts[1]]));
     assert!(app.grade_picked(near(2)));
     // Closed: nothing.
-    let _ = app.update(Message::Grade(G::Close));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Close)));
     assert_eq!(app.grade_marks(), (Vec::new(), Vec::new()));
 }
 
@@ -242,8 +282,8 @@ fn range_screens() {
             24.0,
         );
         let _ = app.update(Message::Run("tool.grade"));
-        let _ = app.update(Message::Grade(G::From(2.0)));
-        let _ = app.update(Message::Grade(G::To(4.0)));
+        let _ = app.update(Message::Road(road::Event::Grade(G::From(2.0))));
+        let _ = app.update(Message::Road(road::Event::Grade(G::To(4.0))));
         // The window keeps its path by id: the selection's own colour off, the range stands out.
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
@@ -267,9 +307,15 @@ fn a_high_point_previews_ringed_and_adds_a_vertex() {
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("tool.grade"));
     for e in [G::To(4.0), G::Target(Target::Peak), G::End(851.25), G::Ahead(4.0), G::Back(1.0)] {
-        let _ = app.update(Message::Grade(e));
+        let _ = app.update(Message::Road(road::Event::Grade(e)));
     }
-    let p = app.grade.plan.clone().expect("a plan").expect("previewed");
+    let p = app
+        .road
+        .grade
+        .plan
+        .clone()
+        .expect("a plan")
+        .expect("previewed");
     let at = p.point.clone().expect("a point");
     assert_eq!((at.index, at.inserted, at.kind), (2, true, kentos_commands::GradePointKind::High));
     assert!((at.x - want["point"]["x"].as_f64().expect("x")).abs() < 1e-6 && (at.z - want["point"]["z"].as_f64().expect("z")).abs() < 1e-9);
@@ -277,7 +323,7 @@ fn a_high_point_previews_ringed_and_adds_a_vertex() {
     let (_, ringed) = app.grade_marks();
     assert_eq!(ringed.len(), 3);
     assert!((ringed[2].x - at.x).abs() < 1e-9 && (ringed[2].y - at.y).abs() < 1e-9);
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     let pts = |app: &App| match app.document.as_ref().and_then(|d| d.model.get(Slot(1))) {
         Some(kentos_commands::Entity::Polyline(p)) => p.pts.len(),
         _ => panic!("the polyline"),
@@ -289,9 +335,11 @@ fn a_high_point_previews_ringed_and_adds_a_vertex() {
     // Parallel grades: said, nothing to apply.
     let _ = app.update(Message::Run("tool.grade"));
     for e in [G::To(4.0), G::Target(Target::Peak), G::Ahead(2.0), G::Back(-2.0)] {
-        let _ = app.update(Message::Grade(e));
+        let _ = app.update(Message::Road(road::Event::Grade(e)));
     }
-    let Some(Err(why)) = app.grade.plan.clone() else { panic!("refused") };
+    let Some(Err(why)) = app.road.grade.plan.clone() else {
+        panic!("refused")
+    };
     assert!(why.contains("paralel"), "{why}");
 }
 
@@ -334,7 +382,7 @@ fn peak_screens() {
         );
         let _ = app.update(Message::Run("tool.grade"));
         for e in [G::To(4.0), G::Target(Target::Peak), G::End(851.25), G::Ahead(4.0), G::Back(1.0)] {
-            let _ = app.update(Message::Grade(e));
+            let _ = app.update(Message::Road(road::Event::Grade(e)));
         }
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
@@ -343,7 +391,7 @@ fn peak_screens() {
         println!("{}", file.display());
         if theme == "light" {
             // After Uygula: the vertex on the polyline, its vertices shown by selecting it.
-            let _ = app.update(Message::Grade(G::Apply));
+            let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
             app.selection.set([Slot(1)]);
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("uygulandi-{name}.png"));
@@ -359,10 +407,19 @@ fn on_a_hole() -> App {
     let mut app = opened(Some(Module::Map));
     app.selection.set([Slot(6)]);
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Grade(G::Ring("1:1".into())));
-    assert_eq!((app.grade.ring, app.grade.from, app.grade.to), ((1, 1), 1.0, 4.0), "the ring, its first and last vertex");
-    for e in [G::From(2.0), G::Start(101.0), G::Target(crate::grade_window::Target::End), G::End(101.6)] {
-        let _ = app.update(Message::Grade(e));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Ring("1:1".into()))));
+    assert_eq!(
+        (app.road.grade.ring, app.road.grade.from, app.road.grade.to),
+        ((1, 1), 1.0, 4.0),
+        "the ring, its first and last vertex"
+    );
+    for e in [
+        G::From(2.0),
+        G::Start(101.0),
+        G::Target(crate::grade_window::Target::End),
+        G::End(101.6),
+    ] {
+        let _ = app.update(Message::Road(road::Event::Grade(e)));
     }
     app
 }
@@ -370,12 +427,21 @@ fn on_a_hole() -> App {
 #[test]
 fn halka_puts_the_range_on_a_further_part_s_hole() {
     let mut app = on_a_hole();
-    let plan = app.grade.plan.clone().expect("a plan").expect("planned");
-    assert!((plan.grade - 0.02).abs() < 1e-12 && (plan.length - 30.0).abs() < 1e-9, "{plan:?}");
+    let plan = app
+        .road
+        .grade
+        .plan
+        .clone()
+        .expect("a plan")
+        .expect("planned");
+    assert!(
+        (plan.grade - 0.02).abs() < 1e-12 && (plan.length - 30.0).abs() < 1e-9,
+        "{plan:?}"
+    );
     // The hole's range is marked: (430, 10) to (410, 20) from X0, Y0.
     let (path, ends) = app.grade_marks();
     assert!(!path.is_empty() && ends.len() == 2, "{path:?} {ends:?}");
-    let _ = app.update(Message::Grade(G::Apply));
+    let _ = app.update(Message::Road(road::Event::Grade(G::Apply)));
     assert_eq!(app.dialog, None);
     let area = |app: &App| match app.document.as_ref().and_then(|d| d.model.get(Slot(6))) {
         Some(kentos_commands::Entity::Polygon(p)) => p.clone(),

@@ -2,6 +2,7 @@
 //! step; and its pictures.
 
 use crate::app::{App, Dialog, Message};
+use crate::road;
 use crate::route_window::Event as W;
 
 /// A road project with `road.routes.find`'s drawing: the terrain and an area to avoid.
@@ -16,7 +17,7 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Route(e));
+    let _ = app.update(Message::Road(road::Event::Route(e)));
 }
 
 fn typed(app: &mut App) {
@@ -29,25 +30,72 @@ fn typed(app: &mut App) {
 fn the_window_finds_and_draws_the_route() {
     let mut app = app();
     let _ = app.update(Message::Run("route.finder"));
-    assert_eq!(app.dialog, Some(Dialog::Route));
-    let why = app.route_window.as_ref().and_then(|w| w.preview.why.clone()).expect("nothing typed yet");
+    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Route)));
+    let why = app
+        .road
+        .route_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("nothing typed yet");
     assert!(why.contains("yazılmalı"), "{why}");
     typed(&mut app);
-    let open = app.route_window.as_ref().and_then(|w| w.preview.route.clone()).expect("a route");
+    let open = app
+        .road
+        .route_window
+        .as_ref()
+        .and_then(|w| w.preview.route.clone())
+        .expect("a route");
     send(&mut app, W::Avoid("yasak".into()));
-    let around = app.route_window.as_ref().and_then(|w| w.preview.route.clone()).expect("a route");
-    assert!(around.length > open.length, "{} → {}", open.length, around.length);
+    let around = app
+        .road
+        .route_window
+        .as_ref()
+        .and_then(|w| w.preview.route.clone())
+        .expect("a route");
+    assert!(
+        around.length > open.length,
+        "{} → {}",
+        open.length,
+        around.length
+    );
     send(&mut app, W::Field(6, "0.5".into()));
-    let why = app.route_window.as_ref().and_then(|w| w.preview.why.clone()).expect("refused");
+    let why = app
+        .road
+        .route_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("refused");
     assert!(why.contains("eğimi aşmayan"), "{why}");
     send(&mut app, W::Field(6, "8".into()));
-    let before = app.document.as_ref().expect("a drawing").model.entities().count();
+    let before = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .entities()
+        .count();
     send(&mut app, W::Layer("guzergah".into()));
     send(&mut app, W::Draw);
-    assert!(app.route_window.is_none());
-    assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before + 1);
+    assert!(app.road.route_window.is_none());
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .count(),
+        before + 1
+    );
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .count(),
+        before
+    );
 }
 
 /// The window, wide and narrow, light and dark, and the route drawn in plan; `.run/gui-evidence/yol-y12-guzergah-*`:

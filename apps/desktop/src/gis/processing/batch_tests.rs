@@ -2,6 +2,7 @@
 //! a user fills it, one undo step, a row that stops shown and nothing written, the record shown in the window and in
 //! the history, and the pictures for the owner.
 
+use crate::gis;
 use std::time::{Duration, Instant};
 
 use kentos_commands::DocumentSnapshotV1;
@@ -27,7 +28,7 @@ fn app_with(drawing: &str) -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn batch_event(app: &mut App, e: batch::Event) {
@@ -35,7 +36,11 @@ fn batch_event(app: &mut App, e: batch::Event) {
 }
 
 fn state(app: &App) -> &batch::BatchState {
-    app.processing.batch.as_ref().expect("the table is open")
+    app.gis
+        .processing
+        .batch
+        .as_ref()
+        .expect("the table is open")
 }
 
 /// Öznitelik hesapla opened on the first three parcels, its expression and the first text cell as a user types them.
@@ -74,7 +79,7 @@ fn the_table_opens_with_a_column_and_two_rows() {
     assert!(!b.running());
     // Forma dön closes the table, the window stays.
     batch_event(&mut app, batch::Event::Back);
-    assert!(app.processing.batch.is_none() && app.processing.dialog.is_some());
+    assert!(app.gis.processing.batch.is_none() && app.gis.processing.dialog.is_some());
 }
 
 #[test]
@@ -230,10 +235,10 @@ fn the_history_keeps_a_models_steps_with_their_counts() {
     let _ = app.update(Message::Run("processing.model.builtin.parcelSheet"));
     event(&mut app, Event::Run);
     assert!(matches!(
-        app.processing.dialog.as_ref().map(|w| &w.status),
+        app.gis.processing.dialog.as_ref().map(|w| &w.status),
         Some(RunStatus::Ok { .. })
     ));
-    let last = &app.processing.runner.history()[0];
+    let last = &app.gis.processing.runner.history()[0];
     assert_eq!(last.steps.len(), 3);
     assert_eq!(
         last.steps
@@ -295,7 +300,7 @@ fn screens() {
                         }
                         batch_event(&mut app, batch::Event::AddColumn("dissolve".into()));
                         type_cell(&mut app, 2, 1, "evet");
-                        app.processing.batch.as_mut().expect("table").table.rows[0].label =
+                        app.gis.processing.batch.as_mut().expect("table").table.rows[0].label =
                             "yakın".into();
                     }
                     "sonuc" => {

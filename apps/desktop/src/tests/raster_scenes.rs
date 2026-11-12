@@ -12,6 +12,8 @@
 //!
 //! Test code only.
 
+use crate::gis;
+use crate::map;
 use std::path::PathBuf;
 
 use kentos_ui::snapshot::Snapshot;
@@ -84,10 +86,15 @@ fn mosaic_run(app: &mut App, name: &str) {
     let out = std::env::temp_dir().join(format!("kentos-mozaik-{}", std::process::id()));
     let _ = std::fs::create_dir_all(&out);
     let send = |app: &mut App, e: crate::rasters::mosaic::Event| {
-        let task = app.update(Message::Rasters(crate::rasters::Event::Mosaic(e)));
+        let task = app.update(Message::Gis(gis::Event::Rasters(
+            crate::rasters::Event::Mosaic(e),
+        )));
         crate::files_testing::drive(app, task);
     };
-    send(app, crate::rasters::mosaic::Event::PathPicked(Some(out.join(name))));
+    send(
+        app,
+        crate::rasters::mosaic::Event::PathPicked(Some(out.join(name))),
+    );
     send(app, crate::rasters::mosaic::Event::Run);
 }
 
@@ -126,13 +133,15 @@ fn stac_scene(app: &mut App, choose: bool, utm: bool, prepare: bool) {
         ..State::default()
     });
     let send = |app: &mut App, e: Event| {
-        let task = app.update(Message::Rasters(crate::rasters::Event::Stac(e)));
+        let task = app.update(Message::Gis(gis::Event::Rasters(
+            crate::rasters::Event::Stac(e),
+        )));
         crate::files_testing::drive(app, task);
     };
     send(app, Event::Search);
     // The addresses lead nowhere (a closed port on this computer): a picture never reads the network, and the
     // rasters' pyramids fail at once instead of lingering in the panel of the pictures after it.
-    if let Some(stac) = app.rasters.stac.as_mut() {
+    if let Some(stac) = app.gis.rasters.stac.as_mut() {
         for item in &mut stac.items {
             for asset in &mut item.assets {
                 asset.href = asset.href.replacen("https://", "http://127.0.0.1:9/", 1);
@@ -167,8 +176,8 @@ fn converting(app: &mut App, press: bool) {
     app.picker = crate::app::Picker::File(dir.join("utm36.tif"));
     run(app, "raster.add");
     if press {
-        let task = app.update(Message::Rasters(crate::rasters::Event::Add(
-            crate::rasters::add::Event::Reproject,
+        let task = app.update(Message::Gis(gis::Event::Rasters(
+            crate::rasters::Event::Add(crate::rasters::add::Event::Reproject),
         )));
         crate::files_testing::drive(app, task);
     }
@@ -190,7 +199,9 @@ fn stac_converting(app: &mut App) {
         ..State::default()
     });
     for e in [Event::Choose(1), Event::Reproject(true)] {
-        let task = app.update(Message::Rasters(crate::rasters::Event::Stac(e)));
+        let task = app.update(Message::Gis(gis::Event::Rasters(
+            crate::rasters::Event::Stac(e),
+        )));
         crate::files_testing::drive(app, task);
     }
 }
@@ -228,7 +239,7 @@ fn fit_in_definition(app: &mut App, definition: &str) {
         .and_then(|n| n.system)
         .expect("the project's system");
     let choices = kentos_project::systems::choices(&settings);
-    for row in &mut app.calc.raster_fit.rows {
+    for row in &mut app.gis.calc.raster_fit.rows {
         let (Ok(e), Ok(n)) = (row[5].parse::<f64>(), row[6].parse::<f64>()) else {
             continue;
         };
@@ -243,15 +254,15 @@ fn fit_in_definition(app: &mut App, definition: &str) {
         row[5] = format!("{:.3}", p.x);
         row[6] = format!("{:.3}", p.y);
     }
-    let form = &mut app.calc.raster_fit;
+    let form = &mut app.gis.calc.raster_fit;
     form.crs = Some(definition.to_owned());
     form.srid.clear();
     let doc = app.document.as_ref().expect("a drawing");
-    app.calc.raster_fit.solve(&doc.model);
+    app.gis.calc.raster_fit.solve(&doc.model);
 }
 
 fn fit_rows(app: &mut App, rows: &[[&str; 7]]) {
-    let form = &mut app.calc.raster_fit;
+    let form = &mut app.gis.calc.raster_fit;
     form.rows = rows
         .iter()
         .map(|r| {
@@ -263,7 +274,7 @@ fn fit_rows(app: &mut App, rows: &[[&str; 7]]) {
         })
         .collect();
     let doc = app.document.as_ref().expect("a drawing");
-    app.calc.raster_fit.solve(&doc.model);
+    app.gis.calc.raster_fit.solve(&doc.model);
 }
 
 /// Draws until the raster service has made every tile the view asked for.
@@ -301,7 +312,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             "raster-harita-cografi",
             |app| {
                 opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
-                let _ = app.update(Message::MapCrs(crate::map_crs::Choose(Some(4326))));
+                let _ = app.update(Message::Map(map::Event::MapCrs(crate::map_crs::Choose(
+                    Some(4326),
+                ))));
             },
             tiles_made,
         ),
@@ -309,7 +322,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             "raster-harita-mercator",
             |app| {
                 opened(app, [X0 + 100.0, Y0 - 300.0, X0 + 460.0, Y0 - 80.0]);
-                let _ = app.update(Message::MapCrs(crate::map_crs::Choose(Some(3857))));
+                let _ = app.update(Message::Map(map::Event::MapCrs(crate::map_crs::Choose(
+                    Some(3857),
+                ))));
             },
             tiles_made,
         ),
@@ -329,7 +344,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                     crate::range_server::Mode::Ranges,
                 );
                 let add = |app: &mut App, e: crate::rasters::add::Event| {
-                    let task = app.update(Message::Rasters(crate::rasters::Event::Add(e)));
+                    let task = app.update(Message::Gis(gis::Event::Rasters(
+                        crate::rasters::Event::Add(e),
+                    )));
                     crate::files_testing::drive(app, task);
                 };
                 add(
@@ -361,7 +378,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                     crate::range_server::Mode::Whole,
                 );
                 let add = |app: &mut App, e: crate::rasters::add::Event| {
-                    let task = app.update(Message::Rasters(crate::rasters::Event::Add(e)));
+                    let task = app.update(Message::Gis(gis::Event::Rasters(
+                        crate::rasters::Event::Add(e),
+                    )));
                     crate::files_testing::drive(app, task);
                 };
                 add(
@@ -413,7 +432,7 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
                 select(app, "tarama");
                 run(app, "raster.georef");
-                app.calc.raster_fit.method = kentos_commands::GeorefMethod::ThinPlate;
+                app.gis.calc.raster_fit.method = kentos_commands::GeorefMethod::ThinPlate;
                 fit_rows(app, &FIT_ROWS);
             },
             tiles_made,
@@ -451,7 +470,7 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                     crate::calc::raster_fit::Event::Apply,
                 ));
                 crate::files_testing::drive(app, task);
-                app.calc.raster_fit.rows = vec![Default::default(); 4];
+                app.gis.calc.raster_fit.rows = vec![Default::default(); 4];
                 select(app, "tarama");
                 run(app, "raster.georef");
             },

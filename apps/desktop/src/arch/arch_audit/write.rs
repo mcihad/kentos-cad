@@ -53,8 +53,11 @@ impl App {
         );
         match answer {
             Ok(v) if v["status"] == "completed" => {
-                self.arch_audit.chosen.clear();
-                self.say(Level::Success, format!("Düzeltildi: {label}. Geri al ile dönülür."));
+                self.arch.arch_audit.chosen.clear();
+                self.say(
+                    Level::Success,
+                    format!("Düzeltildi: {label}. Geri al ile dönülür."),
+                );
                 for w in v["warnings"].as_array().into_iter().flatten() {
                     if let Some(m) = w["message"].as_str() {
                         self.warn(m.to_owned());
@@ -77,7 +80,7 @@ impl App {
     /// İstisna yap's note given: the chosen findings that are no exceptions yet marked through `cad.arch.exceptions`,
     /// with the note when one is written; one undo step; the drawing checked again (docs/adr/0732 §3).
     pub(super) fn arch_audit_except(&mut self) {
-        let Some(note) = self.arch_audit.note.take() else {
+        let Some(note) = self.arch.arch_audit.note.take() else {
             return;
         };
         if self.arch_audit_stale() {
@@ -160,7 +163,7 @@ impl App {
                 return;
             }
         }
-        self.arch_audit.chosen.clear();
+        self.arch.arch_audit.chosen.clear();
         self.arch_audit_check();
     }
 

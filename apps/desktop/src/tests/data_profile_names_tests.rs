@@ -7,6 +7,7 @@
 use crate::app::{App, Message};
 use crate::data_profile::Event;
 use crate::data_profile_names::{NameForm, Page};
+use crate::gis;
 use kentos_commands::{MappingNames, NameCase, NameLetters, NameProblem, NameSource};
 
 const PARK: &str = include_str!("../../../../fixtures/profiles/v1/park-r1.json");
@@ -45,7 +46,7 @@ fn clashing_profile() -> String {
 }
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::DataProfile(e));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(e)));
 }
 
 const SNAKE_ASCII: MappingNames = MappingNames {
@@ -59,7 +60,7 @@ fn the_names_page_spells_the_fields_and_writes_the_form_into_the_mapping() {
     ev(&mut app, Event::Page(Page::Names));
     ev(&mut app, Event::NamesForm(NameForm::Snake));
     ev(&mut app, Event::NamesAscii(true));
-    let w = app.data_profile.as_ref().expect("the window");
+    let w = app.gis.data_profile.as_ref().expect("the window");
     let a = w.names.answer.as_ref().expect("the names");
     let kapi = a.rows.iter().find(|r| r.field == "KapiNo").expect("KapiNo");
     assert_eq!((kapi.name.as_str(), kapi.source), ("KAPI_NO", NameSource::Form));
@@ -68,18 +69,35 @@ fn the_names_page_spells_the_fields_and_writes_the_form_into_the_mapping() {
     assert!(!app.data_profile_form_writable());
     // The institution's mapping, inside the drawing: its own names come first, the form spells the rest.
     ev(&mut app, Event::Imported(Some(file("sivas.json", SIVAS))));
-    let w = app.data_profile.as_ref().expect("the window");
+    let w = app.gis.data_profile.as_ref().expect("the window");
     assert_eq!(w.mapping.as_deref(), Some("sivas-bel"));
     ev(&mut app, Event::Page(Page::Names));
     ev(&mut app, Event::NamesForm(NameForm::Snake));
     ev(&mut app, Event::NamesAscii(true));
-    let a = app.data_profile.as_ref().and_then(|w| w.names.answer.as_ref().ok()).expect("the names").clone();
-    let bina = a.rows.iter().find(|r| r.field == "BinaKimlik").expect("BinaKimlik");
-    assert_eq!((bina.name.as_str(), bina.source), ("YAPI_ID", NameSource::Mapping));
-    let mahalle = a.rows.iter().find(|r| r.field == "MahalleKodu").expect("MahalleKodu");
+    let a = app
+        .gis
+        .data_profile
+        .as_ref()
+        .and_then(|w| w.names.answer.as_ref().ok())
+        .expect("the names")
+        .clone();
+    let bina = a
+        .rows
+        .iter()
+        .find(|r| r.field == "BinaKimlik")
+        .expect("BinaKimlik");
+    assert_eq!(
+        (bina.name.as_str(), bina.source),
+        ("YAPI_ID", NameSource::Mapping)
+    );
+    let mahalle = a
+        .rows
+        .iter()
+        .find(|r| r.field == "MahalleKodu")
+        .expect("MahalleKodu");
     assert_eq!(mahalle.name, "MAHALLE_KODU");
     ev(&mut app, Event::NamesWrite);
-    let w = app.data_profile.as_ref().expect("the window");
+    let w = app.gis.data_profile.as_ref().expect("the window");
     assert_eq!(w.names.form, NameForm::Mapping, "the mapping's own form is shown again");
     let a = w.names.answer.as_ref().expect("the names");
     assert_eq!(a.names, Some(SNAKE_ASCII), "the mapping carries the form");
@@ -103,7 +121,7 @@ fn the_names_page_spells_the_fields_and_writes_the_form_into_the_mapping() {
     names(app.document.as_ref().expect("the drawing").model.layers().nodes(), &mut fields);
     assert!(fields.iter().any(|f| f == "MAHALLE_KODU"), "{fields:?}");
     assert!(!fields.iter().any(|f| f == "MahalleKodu"), "{fields:?}");
-    let w = app.data_profile.as_ref().expect("the window");
+    let w = app.gis.data_profile.as_ref().expect("the window");
     let r = w.report_for_test().expect("the findings");
     assert!(
         !r.findings.iter().any(|f| f.kind == kentos_commands::ProfileFindingKind::MissingField),
@@ -119,7 +137,7 @@ fn a_clash_and_a_name_the_form_cannot_spell_are_said_and_nothing_is_written() {
     ev(&mut app, Event::Page(Page::Names));
     ev(&mut app, Event::NamesForm(NameForm::Snake));
     ev(&mut app, Event::NamesAscii(true));
-    let w = app.data_profile.as_ref().expect("the window");
+    let w = app.gis.data_profile.as_ref().expect("the window");
     assert_eq!(w.profile, "cakisan");
     let a = w.names.answer.as_ref().expect("the names");
     assert!(!a.holds);

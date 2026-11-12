@@ -14,6 +14,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{container, row};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -92,7 +93,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Stakeout(event)
+    Message::Road(road::Event::Stakeout(event))
 }
 
 fn number(text: &str) -> Result<Option<f64>, String> {
@@ -172,7 +173,7 @@ impl App {
             self.warn("Aplikasyon cetveli bir koridorun noktalarıdır: önce Koridor'da bir koridor oluşturun.".to_owned());
             return;
         };
-        self.stakeout_window = Some(Box::new(Window {
+        self.road.stakeout_window = Some(Box::new(Window {
             corridor: Some(first.id.clone()),
             fields: Default::default(),
             distances: StakeoutDistances::Grid,
@@ -181,21 +182,35 @@ impl App {
             send: StakeoutSendFormat::Landxml,
             send_fields: Default::default(),
         }));
-        self.dialog = Some(Dialog::Stakeout);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Stakeout));
         self.refresh_stakeout();
     }
 
     fn refresh_stakeout(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.stakeout_window.as_mut() else { return };
-        w.preview = match w.query().and_then(|q| road_stakeout::preview(&doc.model, &q)) {
-            Err(why) => Preview { why: Some(why), ..Preview::default() },
-            Ok((table, warnings)) => Preview { table: Some(table), warnings, why: None },
+        let Some(w) = self.road.stakeout_window.as_mut() else {
+            return;
+        };
+        w.preview = match w
+            .query()
+            .and_then(|q| road_stakeout::preview(&doc.model, &q))
+        {
+            Err(why) => Preview {
+                why: Some(why),
+                ..Preview::default()
+            },
+            Ok((table, warnings)) => Preview {
+                table: Some(table),
+                warnings,
+                why: None,
+            },
         };
     }
 
     pub(crate) fn stakeout_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.stakeout_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.stakeout_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Corridor(id) => w.corridor = Some(id),
             Event::Field(k, t) => w.fields[k.min(3)] = t,
@@ -255,7 +270,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.stakeout_window = None;
+                self.road.stakeout_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -267,7 +282,9 @@ impl App {
     /// The file chosen: the points written by `road.stakeout.send` (the dialog asked before writing over).
     pub(crate) fn stakeout_sent(&mut self, path: Option<PathBuf>) {
         let Some(mut path) = path else { return };
-        let Some(w) = self.stakeout_window.as_ref() else { return };
+        let Some(w) = self.road.stakeout_window.as_ref() else {
+            return;
+        };
         let (ext, name) = road_stakeout_send::extension(w.send);
         if path.extension().is_none() {
             path.set_extension(ext);
@@ -289,7 +306,7 @@ impl App {
     }
 
     pub(crate) fn road_stakeout_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.stakeout_window else {
+        let Some(w) = &self.road.stakeout_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -423,7 +440,7 @@ impl App {
     }
 
     pub(crate) fn stakeout_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.stakeout_window.is_none() {
+        if self.road.stakeout_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

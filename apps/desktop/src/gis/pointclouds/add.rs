@@ -11,6 +11,7 @@
 //! (its path), embedded (its bytes in the project's library, at most 32 MB)
 //! or read from the address, and shows it.
 
+use crate::gis;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -159,7 +160,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::PointClouds(Clouds::Add(e))
+    Message::Gis(gis::Event::PointClouds(Clouds::Add(e)))
 }
 
 /// Nokta bulutu ekle with the file (Kaynaklar, docs/adr/0599 §1).
@@ -498,7 +499,7 @@ impl App {
             return Task::done(msg(Event::Picked(Some(vec![path.clone()]))));
         }
         self.cloud_add_open(From::Files, Vec::new(), String::new());
-        if let Some(s) = &mut self.clouds.add {
+        if let Some(s) = &mut self.gis.clouds.add {
             s.reading = 0;
         }
         self.cloud_add_pick()
@@ -536,6 +537,7 @@ impl App {
             _ => "Nokta bulutu".to_owned(),
         };
         let keep_layer = self
+            .gis
             .clouds
             .add
             .as_ref()
@@ -546,7 +548,7 @@ impl App {
                     && address.trim().is_empty()
             })
             .map(|s| s.layer.clone());
-        self.clouds.add = Some(State {
+        self.gis.clouds.add = Some(State {
             from,
             paths,
             address,
@@ -558,7 +560,7 @@ impl App {
             layer: keep_layer.unwrap_or(layer),
             status: None,
         });
-        self.dialog = Some(Asking::PointCloudAdd);
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::PointCloudAdd));
         id
     }
 
@@ -574,7 +576,7 @@ impl App {
             }
             Event::Read(id, read) => {
                 let read = *read;
-                if let Some(s) = &mut self.clouds.add
+                if let Some(s) = &mut self.gis.clouds.add
                     && s.reading == id
                 {
                     if let Ok(r) = &read
@@ -587,30 +589,30 @@ impl App {
                 }
             }
             Event::From(f) => {
-                if let Some(s) = &self.clouds.add
+                if let Some(s) = &self.gis.clouds.add
                     && s.from != f
                 {
                     if f == From::Files {
                         self.cloud_add_open(From::Files, Vec::new(), String::new());
-                        if let Some(s) = &mut self.clouds.add {
+                        if let Some(s) = &mut self.gis.clouds.add {
                             s.reading = 0;
                         }
                         return self.cloud_add_pick();
                     }
                     self.cloud_add_open(From::Address, Vec::new(), String::new());
-                    if let Some(s) = &mut self.clouds.add {
+                    if let Some(s) = &mut self.gis.clouds.add {
                         s.read = None;
                         s.reading = 0;
                     }
                 }
             }
             Event::Address(t) => {
-                if let Some(s) = &mut self.clouds.add {
+                if let Some(s) = &mut self.gis.clouds.add {
                     s.address = t;
                 }
             }
             Event::ReadAddress => {
-                let Some(address) = self.clouds.add.as_ref().map(|s| s.address.clone()) else {
+                let Some(address) = self.gis.clouds.add.as_ref().map(|s| s.address.clone()) else {
                     return Task::none();
                 };
                 if address.trim().is_empty() {
@@ -622,30 +624,30 @@ impl App {
                 });
             }
             Event::Confirm => {
-                if let Some(s) = &mut self.clouds.add {
+                if let Some(s) = &mut self.gis.clouds.add {
                     s.confirmed = !s.confirmed;
                 }
             }
             Event::Keep(k) => {
-                if let Some(s) = &mut self.clouds.add {
+                if let Some(s) = &mut self.gis.clouds.add {
                     s.keep = k;
                 }
             }
             Event::Together(t) => {
-                if let Some(s) = &mut self.clouds.add {
+                if let Some(s) = &mut self.gis.clouds.add {
                     s.together = t;
                 }
             }
             Event::Layer(t) => {
-                if let Some(s) = &mut self.clouds.add {
+                if let Some(s) = &mut self.gis.clouds.add {
                     s.layer = t;
                 }
             }
             Event::Another => return self.cloud_add_pick(),
             Event::Run => self.cloud_add_run(),
             Event::Close => {
-                self.clouds.add = None;
-                if self.dialog == Some(Asking::PointCloudAdd) {
+                self.gis.clouds.add = None;
+                if self.dialog == Some(Asking::Gis(gis::GisDialogKind::PointCloudAdd)) {
                     self.dialog = None;
                 }
             }
@@ -680,7 +682,7 @@ impl App {
 
     /// Ekle: the new layer and the cloud (or clouds) on it, one undo step; embedded first into the library.
     fn cloud_add_run(&mut self) {
-        let Some(s) = self.clouds.add.clone() else {
+        let Some(s) = self.gis.clouds.add.clone() else {
             return;
         };
         let Some(Ok(read)) = s.read.clone() else {
@@ -788,7 +790,7 @@ impl App {
                 model.end_group(group);
                 let slots: Vec<kentos_domain::Slot> =
                     output.ids.iter().map(|&i| kentos_domain::Slot(i)).collect();
-                self.clouds.add = None;
+                self.gis.clouds.add = None;
                 self.dialog = None;
                 self.zoom_to(&slots);
                 let what = match (&read.vpc, read.members.len(), s.together) {
@@ -828,13 +830,13 @@ impl App {
     }
 
     fn cloud_add_status(&mut self, why: String) {
-        if let Some(s) = &mut self.clouds.add {
+        if let Some(s) = &mut self.gis.clouds.add {
             s.status = Some(why);
         }
     }
 
     pub(crate) fn cloud_add_view(&self) -> Element<'_, Message> {
-        let Some(s) = &self.clouds.add else {
+        let Some(s) = &self.gis.clouds.add else {
             return iced::widget::text("").into();
         };
         let from = Segmented::new([From::Files, From::Address], s.from, |f| {
@@ -1174,7 +1176,7 @@ impl App {
     /// The window as the command opens it while its file dialog is up.
     pub(crate) fn cloud_add_open_for_tests(&mut self) {
         self.cloud_add_open(From::Files, Vec::new(), String::new());
-        if let Some(s) = &mut self.clouds.add {
+        if let Some(s) = &mut self.gis.clouds.add {
             s.reading = 0;
         }
     }

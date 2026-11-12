@@ -10,6 +10,7 @@
 //! answers went. Kaydet writes the device's file and keys; nothing goes
 //! into a drawing.
 
+use crate::gis;
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
@@ -93,7 +94,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Address(Address::Providers(e))
+    Message::Gis(gis::Event::Address(Address::Providers(e)))
 }
 
 /// Now as RFC 3339, UTC (when the card was accepted).
@@ -223,7 +224,7 @@ impl App {
                 )
             })
             .collect();
-        self.address.providers = Some(Window {
+        self.gis.address.providers = Some(Window {
             opened: settings.clone(),
             settings,
             keys: HashMap::new(),
@@ -236,12 +237,12 @@ impl App {
             tickets: 0,
             cache: o.cache_size(),
         });
-        self.dialog = Some(Dialog::AddressProviders);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::AddressProviders));
         Task::none()
     }
 
     pub(crate) fn address_providers_event(&mut self, e: Event) -> Task<Message> {
-        let Some(w) = self.address.providers.as_mut() else {
+        let Some(w) = self.gis.address.providers.as_mut() else {
             return Task::none();
         };
         w.said = None;
@@ -344,7 +345,7 @@ impl App {
                 ));
             }
             Event::Cancel => {
-                self.address.providers = None;
+                self.gis.address.providers = None;
                 self.dialog = None;
             }
             Event::Save => {
@@ -362,12 +363,12 @@ impl App {
                     }
                 }
                 if let Some(e) = failed {
-                    if let Some(w) = self.address.providers.as_mut() {
+                    if let Some(w) = self.gis.address.providers.as_mut() {
                         w.said = Some((Say::Error, e));
                     }
                     return Task::none();
                 }
-                self.address.providers = None;
+                self.gis.address.providers = None;
                 self.dialog = None;
                 let on = o.providers().iter().filter(|p| p.usable()).count();
                 self.say(
@@ -381,7 +382,7 @@ impl App {
 
     /// Dene: one address asked of the chosen provider as the window has it, its time said.
     fn try_provider(&mut self) -> Task<Message> {
-        let Some(w) = self.address.providers.as_mut() else {
+        let Some(w) = self.gis.address.providers.as_mut() else {
             return Task::none();
         };
         let mut s = w.written();
@@ -456,7 +457,7 @@ impl App {
     }
 
     pub(crate) fn address_providers_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.address.providers else {
+        let Some(w) = &self.gis.address.providers else {
             return iced::widget::text("").into();
         };
         let list = w.providers();
@@ -738,6 +739,7 @@ impl App {
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
         let w = self
+            .gis
             .address
             .providers
             .as_ref()

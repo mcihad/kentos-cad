@@ -15,6 +15,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use serde_json::Value;
 
 use crate::app::{App, Message};
@@ -50,13 +51,19 @@ pub(crate) fn open_flat(app: &mut App, edit: impl FnOnce(&mut Value)) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::ArchAudit(e));
+    let _ = app.update(Message::Arch(arch::Event::ArchAudit(e)));
 }
 
 /// The row of the first finding of `code`, by its place in the order shown.
 pub(crate) fn row_of(app: &App, code: &str) -> usize {
     let shown = app.arch_audit_shown();
-    let findings = &app.arch_audit.audited.as_ref().expect("audited").findings;
+    let findings = &app
+        .arch
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("audited")
+        .findings;
     shown
         .iter()
         .position(|&i| findings[i].code == code)
@@ -159,7 +166,8 @@ fn kata_ver_gives_every_object_without_a_level_one() {
     let (mut app, _) = App::boot(None);
     audited(&mut app);
     let lacking = |app: &App| {
-        app.arch_audit
+        app.arch
+            .arch_audit
             .audited
             .as_ref()
             .expect("audited")

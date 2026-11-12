@@ -2,10 +2,11 @@
 //! preview; its controls found by their words.
 
 use super::*;
+use crate::gis;
 
 impl App {
     pub(crate) fn form_entry_view(&self) -> Element<'_, Message> {
-        let Some(e) = &self.form_entry else {
+        let Some(e) = &self.gis.form_entry else {
             return iced::widget::text("").into();
         };
         let name = e.name_in();
@@ -42,7 +43,7 @@ impl App {
     /// The docked editor (docs/adr/0416): the form's title, its pages and its footer, scrolled in the
     /// room the table gives it; none when no record's form is docked.
     pub(crate) fn docked_entry_view(&self) -> Option<Element<'_, Message>> {
-        let e = self.form_entry.as_ref().filter(|e| e.docked)?;
+        let e = self.gis.form_entry.as_ref().filter(|e| e.docked)?;
         let title = if e.dirty() {
             format!("{} ●", e.name)
         } else {
@@ -146,11 +147,11 @@ impl App {
             head.push_str(" · form yayınlanmadı, taslağıyla");
         }
         // The forms waiting under this one (docs/adr/0440 §7), the nearest last.
-        if let Some(under) = self.form_stack.last() {
+        if let Some(under) = self.gis.form_stack.last() {
             head.push_str(&format!(
                 " · altta “{}” formu bekliyor{}",
                 under.name,
-                match self.form_stack.len() {
+                match self.gis.form_stack.len() {
                     1 => String::new(),
                     n => format!(" ({n} form)"),
                 }
@@ -413,7 +414,9 @@ impl App {
                         tags.iter()
                             .map(|t| Choice::new(language_name(t.as_deref()))),
                         chosen,
-                        move |i| Message::FormEntry(Event::Language(picks[i].clone())),
+                        move |i| {
+                            Message::Gis(gis::Event::FormEntry(Event::Language(picks[i].clone())))
+                        },
                     )
                     .placeholder("Dil"),
                 )
@@ -589,7 +592,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(e) = &self.form_entry else {
+        let Some(e) = &self.gis.form_entry else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

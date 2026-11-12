@@ -2,6 +2,7 @@
 //! layers, oldest first; each epoch's day is its layer's Veri kümesi bilgisi (Güncelleme günü); the answer's tracks are
 //! the shared case's, and the window's series table shows them. A name no layer has is said. And its pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 
@@ -35,7 +36,7 @@ fn series(app: &mut App, epochs: &str) {
         A::Control("K1, K2".into()),
         A::Epochs(epochs.into()),
     ] {
-        let _ = app.update(Message::Asbuilt(e));
+        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
     }
 }
 
@@ -44,7 +45,13 @@ fn onceki_donemler_track_each_mark_as_the_shared_case() {
     let mut app = opened();
     let _ = app.update(Message::Run("asbuilt.check"));
     series(&mut app, "Birinci dönem, İkinci dönem");
-    let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .map
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     let all = cases();
     let want = &all["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("dizi: üç dönem"))).expect("the case")["steps"][0]["result"]["output"]["tracks"];
     let got = serde_json::to_value(&r.tracks).expect("json");
@@ -55,10 +62,19 @@ fn onceki_donemler_track_each_mark_as_the_shared_case() {
             assert!((g[key].as_f64().expect("a rate") - w[key].as_f64().expect("a rate")).abs() < 1e-9, "{key} {g}");
         }
     }
-    assert_eq!(app.asbuilt.epoch_titles, ["1. dönem", "2. dönem", "Bu dönem"]);
+    assert_eq!(
+        app.map.asbuilt.epoch_titles,
+        ["1. dönem", "2. dönem", "Bu dönem"]
+    );
     // A name no layer has is said.
     series(&mut app, "Birinci dönem, Yok");
-    let said = app.asbuilt.answer.clone().expect("an answer").expect_err("refused");
+    let said = app
+        .map
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect_err("refused");
     assert!(said.contains("“Yok” adlı katman yok"), "{said}");
 }
 

@@ -176,7 +176,7 @@ fn a_revision_s_view_has_a_time_of_its_own() {
         "101 at 2015"
     );
     assert!(
-        !store.with_window(app.time.slider.window(), || store.view_shown(1.0)),
+        !store.with_window(app.gis.time.slider.window(), || store.view_shown(1.0)),
         "not at 2024"
     );
     assert!(

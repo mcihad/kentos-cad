@@ -4,6 +4,7 @@
 //! limited to the module, and the module kept with a recent file. Test code
 //! only; the hand-over starts no program here (`App::hand_over` is replaced).
 
+use crate::gis;
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -1141,6 +1142,7 @@ fn the_toolbox_its_tools_and_the_users_models_are_where_islem_arac_kutusu_is() {
     // The user's model, as one saved in KentOS Harita's toolbox (islemler.json is every program's).
     let add_model = |app: &mut App| {
         let mut model = app
+            .gis
             .processing
             .registry
             .model("builtin.parcelSheet")
@@ -1148,7 +1150,8 @@ fn the_toolbox_its_tools_and_the_users_models_are_where_islem_arac_kutusu_is() {
             .expect("the built-in model");
         model.id = "user.olculer".into();
         model.label = "Ölçülerim".into();
-        app.processing
+        app.gis
+            .processing
             .registry
             .save_model(model)
             .expect("a user's model");
@@ -1183,7 +1186,7 @@ fn the_toolbox_its_tools_and_the_users_models_are_where_islem_arac_kutusu_is() {
             .parse()
             .expect("a count")
     };
-    assert_eq!(count(&all), all.processing.registry.tools().len());
+    assert_eq!(count(&all), all.gis.processing.registry.tools().len());
     assert!(
         count(&mimari) < count(&harita)
             && count(&harita) < count(&gis)
@@ -1560,6 +1563,7 @@ fn the_semt_dimension_is_kentos_haritas() {
 /// A model of the user's, Parsel ölçü yazıları's copy whose second step runs `tool`, kept in the program's library.
 fn add_model(app: &mut App, id: &str, label: &str, tool: &str) {
     let mut model = app
+        .gis
         .processing
         .registry
         .model("builtin.parcelSheet")
@@ -1568,7 +1572,8 @@ fn add_model(app: &mut App, id: &str, label: &str, tool: &str) {
     model.id = id.into();
     model.label = label.into();
     model.steps[1].tool = tool.into();
-    app.processing
+    app.gis
+        .processing
         .registry
         .save_model(model)
         .expect("a user's model");
@@ -1613,7 +1618,7 @@ fn a_model_is_offered_where_every_tool_of_its_steps_is() {
         |app| {
             add_model(app, "user.havzam", "Havzam", "hydrology.fill");
             let _ = app.run_typed("Havzam");
-            app.dialog == Some(crate::app::Dialog::Processing)
+            app.dialog == Some(crate::app::Dialog::Gis(gis::GisDialogKind::Processing))
         },
     );
     assert!(!opened);

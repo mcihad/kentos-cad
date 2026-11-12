@@ -3,6 +3,7 @@
 //! opens the preview of moving the objects from the system chosen into the project's (`cad.layers.reproject`,
 //! reproject_window.rs, docs/adr/2500); its Uygula moves them.
 
+use crate::gis;
 use iced::Task;
 use kentos_commands::{LayerNode, LayersCrs};
 use kentos_interaction::Level;
@@ -118,7 +119,10 @@ impl App {
                 list.radio(
                     s.name.clone(),
                     current == Some(s.srid),
-                    Message::LayerCrs(Event::Assign(id.clone(), Some(s.srid))),
+                    Message::Gis(gis::Event::LayerCrs(Event::Assign(
+                        id.clone(),
+                        Some(s.srid),
+                    ))),
                 )
                 .hint(format!("EPSG:{}", s.srid))
             });
@@ -126,7 +130,7 @@ impl App {
         }
         assign = assign.separator().item(
             "Kaydı sil",
-            record.map(|_| Message::LayerCrs(Event::Assign(id.clone(), None))),
+            record.map(|_| Message::Gis(gis::Event::LayerCrs(Event::Assign(id.clone(), None)))),
         );
         menu = menu
             .separator()
@@ -139,7 +143,9 @@ impl App {
             moving = moving
                 .item(
                     format!("Kayıttaki sistemden (EPSG:{srid})"),
-                    can_move.then(|| Message::LayerCrs(Event::Reproject(id.clone(), None))),
+                    can_move.then(|| {
+                        Message::Gis(gis::Event::LayerCrs(Event::Reproject(id.clone(), None)))
+                    }),
                 )
                 .separator();
         }
@@ -152,7 +158,10 @@ impl App {
                         list.item(
                             s.name.clone(),
                             can_move.then(|| {
-                                Message::LayerCrs(Event::Reproject(id.clone(), Some(s.srid)))
+                                Message::Gis(gis::Event::LayerCrs(Event::Reproject(
+                                    id.clone(),
+                                    Some(s.srid),
+                                )))
                             }),
                         )
                         .hint(format!("EPSG:{}", s.srid))

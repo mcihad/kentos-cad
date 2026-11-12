@@ -4,6 +4,7 @@
 //! no source reaches. A trace goes through the transformer along its path only; Ağlar writes the devices and the
 //! subnetworks; Alt ağlar says what each source reaches and writes the names in one step.
 
+use crate::gis;
 use kentos_commands::DocumentSnapshotV1;
 use serde_json::{Value, json};
 
@@ -24,7 +25,7 @@ fn send(app: &mut App, message: Message) {
 }
 
 fn window(app: &mut App, e: Event) {
-    send(app, Message::Networks(Networks::Window(e)));
+    send(app, Message::Gis(gis::Event::Networks(Networks::Window(e))));
 }
 
 /// The network's definition: devices and subnetworks as the ADR describes them.
@@ -160,7 +161,10 @@ fn aglar_writes_the_devices_and_the_subnetworks() {
     window(&mut app, Event::SubnetReach(2));
     window(&mut app, Event::SubnetAttribute("AltAg".into()));
     window(&mut app, Event::Save);
-    assert!(app.networks.window.is_none(), "Kaydet closes the window");
+    assert!(
+        app.gis.networks.window.is_none(),
+        "Kaydet closes the window"
+    );
     let doc = &app.document.as_ref().expect("open").model;
     let net = &doc.settings().networks[0];
     let device = &net.terminals.as_ref().expect("terminals").devices[0];
@@ -174,7 +178,7 @@ fn aglar_writes_the_devices_and_the_subnetworks() {
     send(&mut app, Message::Run("network.manage"));
     window(&mut app, Event::DevicePaths(0, "yg, yok".into()));
     window(&mut app, Event::Save);
-    assert!(app.networks.window.is_some(), "Kaydet waits");
+    assert!(app.gis.networks.window.is_some(), "Kaydet waits");
 }
 
 #[test]
@@ -200,9 +204,15 @@ fn alt_aglar_says_what_each_source_reaches_and_guncelle_writes_the_names() {
     assert_eq!(report.shared.count, 1, "the valve");
     assert_eq!(report.stale.missing.count, 8);
     // A row selects its objects.
-    send(&mut app, Message::Subnetworks(Subnets::Pick(Pick::Orphans)));
+    send(
+        &mut app,
+        Message::Gis(gis::Event::Subnetworks(Subnets::Pick(Pick::Orphans))),
+    );
     assert_eq!(selected(&app, "hat"), [7, 8]);
-    send(&mut app, Message::Subnetworks(Subnets::Update));
+    send(
+        &mut app,
+        Message::Gis(gis::Event::Subnetworks(Subnets::Update)),
+    );
     assert_eq!(attr(&app, 3, "Alt ağ").as_deref(), Some("Merkez A"));
     assert_eq!(attr(&app, 6, "Alt ağ").as_deref(), Some("Merkez B"));
     assert_eq!(
@@ -235,7 +245,10 @@ fn aglar_writes_a_devices_configurations_and_shows_them_again() {
     window(&mut app, Event::SubnetReach(1));
     window(&mut app, Event::SubnetKeep(1));
     window(&mut app, Event::Save);
-    assert!(app.networks.window.is_none(), "Kaydet closes the window");
+    assert!(
+        app.gis.networks.window.is_none(),
+        "Kaydet closes the window"
+    );
     let doc = &app.document.as_ref().expect("open").model;
     let net = &doc.settings().networks[0];
     let device = &net.terminals.as_ref().expect("terminals").devices[0];
@@ -248,6 +261,7 @@ fn aglar_writes_a_devices_configurations_and_shows_them_again() {
     // The form shows what was written; Güncel tut stays.
     send(&mut app, Message::Run("network.manage"));
     let shown = app
+        .gis
         .networks
         .window
         .as_ref()
@@ -266,7 +280,7 @@ fn aglar_writes_a_devices_configurations_and_shows_them_again() {
         Event::DeviceConfigs(0, "ters = x; y | x, z".into()),
     );
     window(&mut app, Event::Save);
-    assert!(app.networks.window.is_some(), "Kaydet waits");
+    assert!(app.gis.networks.window.is_some(), "Kaydet waits");
 }
 
 /// Docs/adr/0562 §3: a network that keeps its names current is followed by a pipe drawn at its valve, in the pipe's own
@@ -278,7 +292,7 @@ fn a_pipe_drawn_at_the_valve_gets_its_names_in_its_own_step() {
     window(&mut app, Event::SubnetReach(1));
     window(&mut app, Event::SubnetKeep(1));
     window(&mut app, Event::Save);
-    assert!(app.networks.window.is_none());
+    assert!(app.gis.networks.window.is_none());
     // Not written yet: the names are Güncelle's until a write touches the network.
     assert_eq!(attr(&app, 3, "Alt ağ"), None);
     send(&mut app, Message::Run("tool.line"));

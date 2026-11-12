@@ -152,7 +152,7 @@ impl App {
         editable: bool,
         fields: &[LayerField],
     ) -> Element<'a, Message> {
-        let sections = self.form_files.sections();
+        let sections = self.gis.form_files.sections();
         let mut list = Column::new().spacing(2);
         for (i, s) in sections.iter().enumerate().rev() {
             let binds = crate::forms::library::bindings(s, fields);
@@ -188,6 +188,7 @@ impl App {
     /// The chosen item into the section library under the name typed (its own by default).
     pub(super) fn section_save_row(&self) -> Element<'_, Message> {
         let name = self
+            .gis
             .forms_window
             .as_ref()
             .map_or("", |w| w.section_name.as_str());
@@ -211,7 +212,7 @@ impl App {
     /// Çeviriler (docs/adr/0443 §5): the form's languages as chips, a new one's tag added; the chosen
     /// one's words beside the form's own: its name, each item's label, a field's help.
     pub(super) fn translations_box<'a>(&'a self, body: &FormBody) -> Element<'a, Message> {
-        let Some(w) = &self.forms_window else {
+        let Some(w) = &self.gis.forms_window else {
             return column![].into();
         };
         let editable = self.forms_locked().is_none();
@@ -401,6 +402,7 @@ impl App {
             );
         }
         let typed = self
+            .gis
             .forms_window
             .as_ref()
             .map_or("", |w| w.comment_text.as_str());
@@ -442,7 +444,7 @@ impl App {
                 "workflow" => "İş akışı".into(),
                 tool => {
                     let id = tool.trim_start_matches("tool:");
-                    match self.processing.registry.get(id) {
+                    match self.gis.processing.registry.get(id) {
                         Some(t) => format!("İşlem aracı: {}", t.label),
                         None => format!("İşlem aracı: {id} (kayıtlı değil)"),
                     }

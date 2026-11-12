@@ -1,6 +1,7 @@
 //! Görüş mesafesi (sight_window.rs, plan/road.md Y20): the window reads `road.profiles.sight` as the shared cases do.
 
 use crate::app::{App, Dialog, Message};
+use crate::road;
 use crate::sight_window::Event as W;
 
 const CASES: &str = include_str!("../../../../fixtures/commands/v1/road.profiles.sight.json");
@@ -21,7 +22,7 @@ fn case(name: &str) -> serde_json::Value {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Sight(e));
+    let _ = app.update(Message::Road(road::Event::Sight(e)));
 }
 
 /// Fills the window from a case's input (no range: the window reads the whole profile).
@@ -36,16 +37,29 @@ fn fill(app: &mut App, input: &serde_json::Value) {
 #[test]
 fn the_window_reads_a_profile_s_sight_distance() {
     let mut app = sight_app();
-    let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
+    let before = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .revision()
+        .to_string();
     let _ = app.update(Message::Run("profile.sight"));
-    assert!(matches!(app.dialog, Some(Dialog::Sight)));
+    assert!(matches!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Sight))
+    ));
     send(&mut app, W::Preview);
-    assert!(matches!(&app.sight_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("yazılmadı")));
+    assert!(
+        matches!(&app.road.sight_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("yazılmadı"))
+    );
     // The whole crest profile, as the shared case reads it by its name.
     let step = case("Ad ile, bütün boykesit");
     fill(&mut app, &step["input"]);
     send(&mut app, W::Preview);
-    let Some(Ok(r)) = &app.sight_window.as_ref().expect("open").preview else { panic!("a sight") };
+    let Some(Ok(r)) = &app.road.sight_window.as_ref().expect("open").preview else {
+        panic!("a sight")
+    };
     let want = &step["result"]["output"];
     assert_eq!(r.rows.len(), want["rows"].as_array().expect("rows").len());
     let lf = r.least_forward.as_ref().expect("ahead");
@@ -53,13 +67,23 @@ fn the_window_reads_a_profile_s_sight_distance() {
     // A required distance not met warns and gathers the short stretches.
     send(&mut app, W::Field(4, "150".into()));
     send(&mut app, W::Preview);
-    let w = app.sight_window.as_ref().expect("open");
-    let Some(Ok(r)) = &w.preview else { panic!("a sight") };
+    let w = app.road.sight_window.as_ref().expect("open");
+    let Some(Ok(r)) = &w.preview else {
+        panic!("a sight")
+    };
     assert!(!r.short.is_empty());
     assert!(w.warnings.iter().any(|x| x.contains("150 m'den kısa")));
     send(&mut app, W::Close);
-    assert!(app.sight_window.is_none());
-    assert_eq!(app.document.as_ref().expect("a drawing").model.revision().to_string(), before);
+    assert!(app.road.sight_window.is_none());
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .revision()
+            .to_string(),
+        before
+    );
 }
 
 /// Görüş mesafesi on the circle crest and the parabola, wide and narrow, light and dark;

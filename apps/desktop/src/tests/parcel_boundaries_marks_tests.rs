@@ -3,6 +3,7 @@
 //! area the case's strip; problems whose rings would meet on the screen share one ring and one phrase. And the
 //! pictures.
 
+use crate::map;
 use iced::Point;
 use kentos_commands::ParcelsBounded;
 use kentos_launch::Module;
@@ -101,12 +102,14 @@ fn drawn(name: &str, tolerance: Option<f64>) -> App {
         .unwrap_or_default();
     app.selection.set(slots);
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::ParcelBoundaries(B::Open));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
     if let Some(t) = tolerance {
-        let _ = app.update(Message::ParcelBoundaries(B::Tolerance(t)));
+        let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Tolerance(t))));
     }
-    let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Problems)));
-    let _ = app.update(Message::ParcelBoundaries(B::Draw));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+        Show::Problems,
+    ))));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
     app.selection.clear();
     app
 }

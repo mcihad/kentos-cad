@@ -3,6 +3,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::profile_window::Event as W;
+use crate::road;
 
 /// A road project with `road.profiles.query`'s drawing: 120 points with heights, two surfaces, the main alignment, a
 /// side one and a parallel axis; its profiles kept, or none.
@@ -21,7 +22,7 @@ fn app(profiles: bool) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Profiles(e));
+    let _ = app.update(Message::Road(road::Event::Profiles(e)));
 }
 
 fn profiles(app: &App) -> Vec<kentos_commands::ProfileDef> {
@@ -31,7 +32,10 @@ fn profiles(app: &App) -> Vec<kentos_commands::ProfileDef> {
 /// Boykesit oluştur: on the main alignment, its ends on the terrain, a parabola and a circle between.
 fn made(app: &mut App) {
     let _ = app.update(Message::Run("profile.new"));
-    assert_eq!(app.dialog, Some(Dialog::Profiles));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Profiles))
+    );
     send(app, W::FromGround);
     send(app, W::Add);
     send(app, W::Pvi(1, 1, "200".into()));
@@ -49,11 +53,14 @@ fn made(app: &mut App) {
 fn the_window_makes_a_profile_on_the_terrain_and_rebinds_a_stale_one() {
     let mut app = app(false);
     made(&mut app);
-    let w = app.profile_window.as_ref().expect("open");
+    let w = app.road.profile_window.as_ref().expect("open");
     assert!(w.ground.length > 600.0, "the alignment's terrain is read");
     send(&mut app, W::Save);
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
-    assert!(app.profile_window.is_none(), "Kaydet closes the window: {said:?}");
+    assert!(
+        app.road.profile_window.is_none(),
+        "Kaydet closes the window: {said:?}"
+    );
     let list = profiles(&app);
     assert_eq!(list.len(), 1);
     let p = &list[0];
@@ -109,7 +116,10 @@ fn curves_that_overlap_are_refused_and_the_window_stays() {
     made(&mut app);
     send(&mut app, W::Pvi(1, 3, "400".into()));
     send(&mut app, W::Save);
-    assert!(app.profile_window.is_some(), "a refused write leaves the window open");
+    assert!(
+        app.road.profile_window.is_some(),
+        "a refused write leaves the window open"
+    );
     assert!(profiles(&app).is_empty());
 }
 
@@ -198,28 +208,67 @@ fn impact_app() -> App {
 fn typing_a_pvi_tells_what_saving_it_makes_stale() {
     let mut app = impact_app();
     let _ = app.update(Message::Run("profile.editor"));
-    assert!(app.profile_window.as_ref().expect("open").impact.is_none(), "nothing typed yet");
+    assert!(
+        app.road
+            .profile_window
+            .as_ref()
+            .expect("open")
+            .impact
+            .is_none(),
+        "nothing typed yet"
+    );
     send(&mut app, W::Pvi(1, 2, "102,5".into()));
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.profiles.impact.json")).expect("cases");
-    let want = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "v1 1 m yükselir").expect("the case")["steps"][0]
-        ["result"]["output"]
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.profiles.impact.json"
+    ))
+    .expect("cases");
+    let want = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "v1 1 m yükselir")
+        .expect("the case")["steps"][0]["result"]["output"]
         .clone();
-    let Some(Ok((imp, warnings))) = app.profile_window.as_ref().expect("open").impact.clone() else { panic!("the impact reads") };
+    let Some(Ok((imp, warnings))) = app
+        .road
+        .profile_window
+        .as_ref()
+        .expect("open")
+        .impact
+        .clone()
+    else {
+        panic!("the impact reads")
+    };
     assert_eq!(imp.changes.len(), 1);
-    assert!((imp.changes[0].from - want["changes"][0]["from"].as_f64().expect("from")).abs() < 1e-6);
+    assert!(
+        (imp.changes[0].from - want["changes"][0]["from"].as_f64().expect("from")).abs() < 1e-6
+    );
     assert!((imp.changes[0].to - want["changes"][0]["to"].as_f64().expect("to")).abs() < 1e-6);
     assert_eq!(imp.corridors.len(), 1);
     assert!(imp.volumes.iter().any(|v| v.approved) && imp.hauls.iter().any(|h| h.approved));
     assert!(warnings.iter().any(|w| w.code == "profile_impact_approved"));
     // Typed back to the saved elevation: the line does not change.
     send(&mut app, W::Pvi(1, 2, "101,5".into()));
-    assert!(app.profile_window.as_ref().expect("open").impact.is_none());
+    assert!(
+        app.road
+            .profile_window
+            .as_ref()
+            .expect("open")
+            .impact
+            .is_none()
+    );
     // Saved: the saved line is the typed one.
     send(&mut app, W::Pvi(1, 2, "102,5".into()));
     send(&mut app, W::Save);
     let _ = app.update(Message::Run("profile.editor"));
-    assert!(app.profile_window.as_ref().expect("open").impact.is_none());
+    assert!(
+        app.road
+            .profile_window
+            .as_ref()
+            .expect("open")
+            .impact
+            .is_none()
+    );
 }
 
 /// The impact over the profile and under it, wide and narrow, light and dark; `.run/gui-evidence/yol-y56/`:
@@ -274,10 +323,13 @@ fn the_status_says_the_length_in_space_apart_from_the_km_s() {
         panic!("the query reads")
     };
     let asked = output.profiles[0].length3d;
-    let w = app.profile_window.as_ref().expect("open");
+    let w = app.road.profile_window.as_ref().expect("open");
     let (said, bad) = crate::profile_window::status(&w.rows[0], false, &w.ground);
     assert!(!bad, "{said}");
-    let want = format!("yatay 669,000 m · 3B {} m", format!("{asked:.3}").replace('.', ","));
+    let want = format!(
+        "yatay 669,000 m · 3B {} m",
+        format!("{asked:.3}").replace('.', ",")
+    );
     assert!(said.contains(&want), "{said} / {want}");
     assert!(asked > 669.0, "the red line in space is longer than its horizontal run");
 }
@@ -364,9 +416,17 @@ fn screens_kgm() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         send(&mut app, W::Draw);
-        let _ = app.update(Message::Profiles(W::Cancel));
+        let _ = app.update(Message::Road(road::Event::Profiles(W::Cancel)));
         // The bands under the frame: the frame's lower left is (0, −200); the bands go about 43 text heights down.
-        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -45.0, min_y: -320.0, max_x: 420.0, max_y: -150.0 }, 12.0);
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds {
+                min_x: -45.0,
+                min_y: -320.0,
+                max_x: 420.0,
+                max_y: -150.0,
+            },
+            12.0,
+        );
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y73-bantlar-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
@@ -439,9 +499,17 @@ fn screens_span() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         send(&mut app, W::Draw);
-        let _ = app.update(Message::Profiles(W::Cancel));
+        let _ = app.update(Message::Road(road::Event::Profiles(W::Cancel)));
         // The frame: lower left (0, −200), 669 m long, 12 m × 10 high.
-        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -45.0, min_y: -215.0, max_x: 690.0, max_y: -70.0 }, 12.0);
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds {
+                min_x: -45.0,
+                min_y: -215.0,
+                max_x: 690.0,
+                max_y: -70.0,
+            },
+            12.0,
+        );
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y84-cizim-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
@@ -550,7 +618,7 @@ fn screens_corridor_choice() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         send(&mut app, W::Draw);
-        let _ = app.update(Message::Profiles(W::Cancel));
+        let _ = app.update(Message::Road(road::Event::Profiles(W::Cancel)));
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y88-cizim-{name}.png"));

@@ -323,6 +323,7 @@ impl App {
                     // Only a registered tool is offered (docs/adr/0441 §6): no address, query or script.
                     K::Tool => {
                         let tools: Vec<(String, String)> = self
+                            .gis
                             .processing
                             .registry
                             .tools()
@@ -355,6 +356,7 @@ impl App {
                     }
                     K::Step => {
                         let steps: Vec<String> = self
+                            .gis
                             .forms_window
                             .as_ref()
                             .and_then(|w| w.body.as_ref())
@@ -842,7 +844,7 @@ impl App {
         }
         let mut readers = Vec::new();
         if let (Some(doc), Some(w), Some(form)) =
-            (&self.document, &self.forms_window, self.chosen_form())
+            (&self.document, &self.gis.forms_window, self.chosen_form())
         {
             let mut settings = doc.model.settings().clone();
             if let (Some(body), Some(at)) =
@@ -1249,7 +1251,7 @@ impl App {
             .padding(8)
             .into();
         }
-        let Some(e) = &self.form_preview else {
+        let Some(e) = &self.gis.form_preview else {
             return empty_inspector();
         };
         let shown = column![self.entry_preview(e), self.scenarios_box(w)].spacing(16);

@@ -2,6 +2,7 @@
 //! one undo step through `file.import.gpkg`; a file in another system waits for Projenin sistemine çevir; Dışa aktar
 //! writes through `file.export.gpkg`. Pictures: `gpkg-*` (`screens`, ignored).
 
+use crate::gis;
 use std::path::PathBuf;
 
 use super::gpkg::Event as G;
@@ -240,7 +241,9 @@ fn a_table_bound_to_a_layer_is_written_back_and_read_again() {
         app.source_status_next(row),
         kentos_commands::SourceNext::None
     );
-    let _ = app.update(Message::SourceStatus(crate::source_status::Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::SourceStatus(
+        crate::source_status::Event::Close,
+    )));
     let _ = app.update(Message::Bound(crate::bound::Event::Unlink(Some(
         "import-parsel".into(),
     ))));
@@ -1016,7 +1019,7 @@ fn a_write_over_a_changed_file_opens_the_reconcile_and_puts_both_sides_together(
         "import-parsel".into(),
     ))));
     assert!(
-        app.reconcile.is_some(),
+        app.gis.reconcile.is_some(),
         "the refused write opens the window"
     );
     assert_eq!(
@@ -1025,14 +1028,16 @@ fn a_write_over_a_changed_file_opens_the_reconcile_and_puts_both_sides_together(
         "nothing written over"
     );
     // Uzlaştır waits for every conflict's side.
-    let view = format!("{:?}", app.reconcile);
+    let view = format!("{:?}", app.gis.reconcile);
     assert!(
         view.contains("RemovedInLayer") && view.contains("RemovedInTable"),
         "{view}"
     );
-    let _ = app.update(Message::Reconcile(R::All(ReconcileSide::Layer)));
-    let _ = app.update(Message::Reconcile(R::Apply));
-    assert!(app.reconcile.is_none(), "closed when done");
+    let _ = app.update(Message::Gis(gis::Event::Reconcile(R::All(
+        ReconcileSide::Layer,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Reconcile(R::Apply)));
+    assert!(app.gis.reconcile.is_none(), "closed when done");
     assert!(
         says(&app, "tablosuyla uzlaştırıldı"),
         "{:?}",
@@ -1099,14 +1104,20 @@ fn reconcile_screens() {
         picture(&mut app, "pencere");
         // One conflict to the table's side, the rest to the layer's.
         let first = app
+            .gis
             .reconcile
             .as_ref()
             .and_then(|w| w.first_conflict())
             .expect("a conflict");
-        let _ = app.update(Message::Reconcile(R::All(ReconcileSide::Layer)));
-        let _ = app.update(Message::Reconcile(R::Side(first, ReconcileSide::Table)));
+        let _ = app.update(Message::Gis(gis::Event::Reconcile(R::All(
+            ReconcileSide::Layer,
+        ))));
+        let _ = app.update(Message::Gis(gis::Event::Reconcile(R::Side(
+            first,
+            ReconcileSide::Table,
+        ))));
         picture(&mut app, "secildi");
-        let _ = app.update(Message::Reconcile(R::Apply));
+        let _ = app.update(Message::Gis(gis::Event::Reconcile(R::Apply)));
         app.zoom_to_objects(&slots);
         picture(&mut app, "uzlasti");
     }
@@ -1205,6 +1216,7 @@ fn a_reconcile_takes_the_files_other_layers_and_resolves_a_group_whole() {
         "import-komsu".into(),
     ))));
     let w = app
+        .gis
         .reconcile
         .as_ref()
         .expect("the refused write opens the window");
@@ -1227,15 +1239,22 @@ fn a_reconcile_takes_the_files_other_layers_and_resolves_a_group_whole() {
         .into_iter()
         .find(|(_, group)| group.is_some())
         .expect("a group's member");
-    let _ = app.update(Message::Reconcile(R::Side(
+    let _ = app.update(Message::Gis(gis::Event::Reconcile(R::Side(
         member.0.clone(),
         ReconcileSide::Table,
-    )));
-    let sides = app.reconcile.as_ref().expect("the window").sides_taken();
+    ))));
+    let sides = app
+        .gis
+        .reconcile
+        .as_ref()
+        .expect("the window")
+        .sides_taken();
     assert!(sides >= 2, "the group's members all took the side: {sides}");
-    let _ = app.update(Message::Reconcile(R::All(ReconcileSide::Layer)));
-    let _ = app.update(Message::Reconcile(R::Apply));
-    assert!(app.reconcile.is_none(), "closed when done");
+    let _ = app.update(Message::Gis(gis::Event::Reconcile(R::All(
+        ReconcileSide::Layer,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Reconcile(R::Apply)));
+    assert!(app.gis.reconcile.is_none(), "closed when done");
     assert_ne!(std::fs::read(&file).expect("read"), before, "written");
     // Both tables went in one call: nothing is left to write for either layer.
     for layer in ["import-komsu", "import-bina"] {
@@ -1300,14 +1319,20 @@ fn reconcile_group_screens() {
         picture(&mut app, "pencere");
         // One group to the table's side, the rest to the layer's.
         let member = app
+            .gis
             .reconcile
             .as_ref()
             .and_then(|w| w.plan_conflicts().into_iter().find(|(_, g)| g.is_some()))
             .expect("a group's member");
-        let _ = app.update(Message::Reconcile(R::All(ReconcileSide::Layer)));
-        let _ = app.update(Message::Reconcile(R::Side(member.0, ReconcileSide::Table)));
+        let _ = app.update(Message::Gis(gis::Event::Reconcile(R::All(
+            ReconcileSide::Layer,
+        ))));
+        let _ = app.update(Message::Gis(gis::Event::Reconcile(R::Side(
+            member.0,
+            ReconcileSide::Table,
+        ))));
         picture(&mut app, "secildi");
-        let _ = app.update(Message::Reconcile(R::Apply));
+        let _ = app.update(Message::Gis(gis::Event::Reconcile(R::Apply)));
         app.zoom_to_objects(&slots);
         picture(&mut app, "uzlasti");
     }
@@ -1403,19 +1428,19 @@ fn the_source_status_says_each_layers_way_out_and_takes_it() {
     // Kaynağa yaz on the points: the file written, the row now the same.
     let before = std::fs::read(&points).expect("read");
     let i = app.source_status_row(&layers[1]).expect("a row");
-    let _ = app.update(Message::SourceStatus(S::Act(i)));
+    let _ = app.update(Message::Gis(gis::Event::SourceStatus(S::Act(i))));
     assert_ne!(std::fs::read(&points).expect("read"), before, "written");
     assert_eq!(next(&app, &layers[1]), SourceNext::None);
     // Uzlaştır… opens its own window in this one's place.
     let i = app.source_status_row(&layers[0]).expect("a row");
-    let _ = app.update(Message::SourceStatus(S::Act(i)));
-    assert!(app.reconcile.is_some() && app.source_status.is_none());
+    let _ = app.update(Message::Gis(gis::Event::SourceStatus(S::Act(i))));
+    assert!(app.gis.reconcile.is_some() && app.gis.source_status.is_none());
 }
 
 /// The state of the layer the table shows: its way out and whether the reading is of an earlier drawing.
 fn table_source(app: &mut App, layer: &str) -> Option<(kentos_commands::SourceNext, bool)> {
-    let _ = app.update(Message::Features(crate::features::Event::Layer(
-        layer.to_owned(),
+    let _ = app.update(Message::Gis(gis::Event::Features(
+        crate::features::Event::Layer(layer.to_owned()),
     )));
     let doc = app.document.as_ref().expect("a drawing");
     let rows = app.feature_rows(doc);
@@ -1468,7 +1493,9 @@ fn the_table_of_a_bound_layer_says_its_state_and_takes_the_way_out() {
     // Kaynağa yaz from the table's line: the file written, the line now the same.
     let _ = table_source(&mut app, &layers[1]);
     let before = std::fs::read(&points).expect("read");
-    let _ = app.update(Message::Features(F::Source(SourceEvent::Act)));
+    let _ = app.update(Message::Gis(gis::Event::Features(F::Source(
+        SourceEvent::Act,
+    ))));
     assert_ne!(std::fs::read(&points).expect("read"), before, "written");
     assert_eq!(
         table_source(&mut app, &layers[1]).map(|(n, _)| n),
@@ -1500,8 +1527,10 @@ fn the_table_of_a_bound_layer_says_its_state_and_takes_the_way_out() {
     );
     // Uzlaştır… from the table opens its window.
     let _ = table_source(&mut app, &layers[0]);
-    let _ = app.update(Message::Features(F::Source(SourceEvent::Act)));
-    assert!(app.reconcile.is_some());
+    let _ = app.update(Message::Gis(gis::Event::Features(F::Source(
+        SourceEvent::Act,
+    ))));
+    assert!(app.gis.reconcile.is_some());
 }
 
 /// Öznitelik tablosu's source line (docs/adr/0546 §3): a bound layer with changes on both sides, one with its own
@@ -1554,11 +1583,17 @@ fn table_source_screens() {
         };
         let _ = app.update(Message::WindowResized(Size::new(width, height)));
         for (layer, label) in [(0, "uzlastir"), (1, "yaz"), (2, "wgs84"), (3, "yok")] {
-            let _ = app.update(Message::Features(F::Layer(layers[layer].clone())));
+            let _ = app.update(Message::Gis(gis::Event::Features(F::Layer(
+                layers[layer].clone(),
+            ))));
             picture(&mut app, label);
         }
-        let _ = app.update(Message::Features(F::Layer(layers[1].clone())));
-        let _ = app.update(Message::Features(F::Source(SourceEvent::Act)));
+        let _ = app.update(Message::Gis(gis::Event::Features(F::Layer(
+            layers[1].clone(),
+        ))));
+        let _ = app.update(Message::Gis(gis::Event::Features(F::Source(
+            SourceEvent::Act,
+        ))));
         picture(&mut app, "yazildi");
     }
 }
@@ -1607,8 +1642,8 @@ fn source_status_screens() {
                 .layer
                 .clone(),
         );
-        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Pick(
-            missing.expect("a row"),
+        let _ = app.update(Message::Gis(gis::Event::SourceStatus(
+            crate::source_status::Event::Pick(missing.expect("a row")),
         )));
         picture(&mut app, "pencere");
         let i = app
@@ -1623,15 +1658,23 @@ fn source_status_screens() {
                     .clone(),
             )
             .expect("a row");
-        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Act(i)));
+        let _ = app.update(Message::Gis(gis::Event::SourceStatus(
+            crate::source_status::Event::Act(i),
+        )));
         picture(&mut app, "yazildi");
         // docs/adr/0651 §2: a filtered layer's count; the card of an object waiting to be written.
         let (layer, edited) = filter_points(&mut app);
-        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Refresh));
+        let _ = app.update(Message::Gis(gis::Event::SourceStatus(
+            crate::source_status::Event::Refresh,
+        )));
         let i = app.source_status_row(&layer).expect("a row");
-        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Pick(i)));
+        let _ = app.update(Message::Gis(gis::Event::SourceStatus(
+            crate::source_status::Event::Pick(i),
+        )));
         picture(&mut app, "suzgec");
-        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Close));
+        let _ = app.update(Message::Gis(gis::Event::SourceStatus(
+            crate::source_status::Event::Close,
+        )));
         app.info_card = Some((edited, kentos_interaction::Vec2::new(420.0, 300.0)));
         picture(&mut app, "bilgi-karti");
     }
@@ -1688,7 +1731,9 @@ fn the_status_and_the_card_say_the_source() {
     let (mut app, _) = status_scene("gpkg-kaynak-satiri");
     let _ = app.update(Message::Bound(crate::bound::Event::Status));
     let (layer, edited) = filter_points(&mut app);
-    let _ = app.update(Message::SourceStatus(crate::source_status::Event::Refresh));
+    let _ = app.update(Message::Gis(gis::Event::SourceStatus(
+        crate::source_status::Event::Refresh,
+    )));
     let states = app.source_status_states();
     let points = states
         .iter()

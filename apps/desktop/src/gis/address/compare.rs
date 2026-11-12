@@ -6,6 +6,7 @@
 //! register's street, door number, neighbourhood and district to the doors that write them otherwise: one change set
 //! (`cad.changeset.apply` of `cad.entities.set` calls, “Adres kaydından yaz”), one undo step, compared again after it.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use iced::futures::SinkExt as _;
@@ -163,7 +164,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Address(Address::Compare(e))
+    Message::Gis(gis::Event::Address(Address::Compare(e)))
 }
 
 /// The register's first row, and a workbook's sheets: what a file's columns are chosen from.
@@ -245,7 +246,7 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.address.compare = Some(Window {
+        self.gis.address.compare = Some(Window {
             locator: 0,
             source: Source::File,
             path: None,
@@ -261,7 +262,7 @@ impl App {
             asking: None,
             tickets: 0,
         });
-        self.dialog = Some(Dialog::AddressCompare);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::AddressCompare));
         Task::none()
     }
 
@@ -316,13 +317,13 @@ impl App {
     /// Karşılaştır: the command run on a copy of the drawing as it is (its objects shared), on a thread of its own: a
     /// register of a quarter of a million rows takes most of a second to read.
     fn run_address_compare(&mut self) -> Task<Message> {
-        let Some(w) = self.address.compare.as_ref() else {
+        let Some(w) = self.gis.address.compare.as_ref() else {
             return Task::none();
         };
         let input = match self.compare_input(w) {
             Ok(input) => input,
             Err(why) => {
-                if let Some(w) = self.address.compare.as_mut() {
+                if let Some(w) = self.gis.address.compare.as_mut() {
                     w.answer = Some(Err(why));
                 }
                 return Task::none();
@@ -331,7 +332,7 @@ impl App {
         let Some(model) = self.document.as_ref().map(|d| d.model.clone()) else {
             return Task::none();
         };
-        let Some(w) = self.address.compare.as_mut() else {
+        let Some(w) = self.gis.address.compare.as_mut() else {
             return Task::none();
         };
         w.tickets += 1;
@@ -348,7 +349,7 @@ impl App {
 
     /// The comparison's answer, when it is the one asked last.
     fn address_compare_answered(&mut self, ticket: u64, result: CommandResult<AddressesCompared>) {
-        if self.address.compare.as_ref().and_then(|w| w.asking) != Some(ticket) {
+        if self.gis.address.compare.as_ref().and_then(|w| w.asking) != Some(ticket) {
             return;
         }
         let answer = match result {
@@ -363,7 +364,7 @@ impl App {
             | CommandResult::NeedsInput { error } => Err(error.message),
             _ => Err("Karşılaştırılamadı.".into()),
         };
-        if let Some(w) = self.address.compare.as_mut() {
+        if let Some(w) = self.gis.address.compare.as_mut() {
             w.asking = None;
             // The first list with findings comes forward.
             if let Ok(a) = &answer {
@@ -382,7 +383,7 @@ impl App {
         let fields_of = |app: &App, layer: &str| app.address_fields(layer);
         match e {
             Event::Close => {
-                self.address.compare = None;
+                self.gis.address.compare = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -405,7 +406,7 @@ impl App {
             Event::Chosen(None) => return Task::none(),
             Event::Chosen(Some(path)) => {
                 let read = header(&path, None);
-                let Some(w) = self.address.compare.as_mut() else {
+                let Some(w) = self.gis.address.compare.as_mut() else {
                     return Task::none();
                 };
                 w.path = Some(path);
@@ -427,7 +428,7 @@ impl App {
                 return Task::none();
             }
             Event::Sheet(k) => {
-                let Some(w) = self.address.compare.as_mut() else {
+                let Some(w) = self.gis.address.compare.as_mut() else {
                     return Task::none();
                 };
                 w.sheet = k;
@@ -446,7 +447,7 @@ impl App {
                     .as_deref()
                     .map(|l| fields_of(self, l))
                     .unwrap_or_default();
-                let Some(w) = self.address.compare.as_mut() else {
+                let Some(w) = self.gis.address.compare.as_mut() else {
                     return Task::none();
                 };
                 w.layer = id;
@@ -464,7 +465,7 @@ impl App {
             }
             Event::Write => return self.write_address_register(),
             Event::Pick(i) => {
-                if let Some(w) = self.address.compare.as_mut() {
+                if let Some(w) = self.gis.address.compare.as_mut() {
                     w.chosen = Some(i);
                 }
                 self.show_compared(i);
@@ -472,7 +473,7 @@ impl App {
             }
             _ => {}
         }
-        let Some(w) = self.address.compare.as_mut() else {
+        let Some(w) = self.gis.address.compare.as_mut() else {
             return Task::none();
         };
         match e {
@@ -506,7 +507,7 @@ impl App {
 
     /// A row of the chosen list: its door, or its register objects, selected and brought into view.
     fn show_compared(&mut self, i: usize) {
-        let Some(w) = self.address.compare.as_ref() else {
+        let Some(w) = self.gis.address.compare.as_ref() else {
             return;
         };
         let Some(Ok(a)) = &w.answer else {
@@ -536,7 +537,7 @@ impl App {
     /// Farkları kayıttan yaz: each differing door given the register's texts of the parts it writes otherwise, as one
     /// change set; the comparison run again.
     pub(crate) fn write_address_register(&mut self) -> Task<Message> {
-        let Some(w) = self.address.compare.as_ref() else {
+        let Some(w) = self.gis.address.compare.as_ref() else {
             return Task::none();
         };
         let Some(Ok(a)) = &w.answer else {
@@ -616,7 +617,7 @@ impl App {
     }
 
     pub(crate) fn address_compare_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.address.compare else {
+        let Some(w) = &self.gis.address.compare else {
             return iced::widget::text("").into();
         };
         let locators = self.compare_locators();
@@ -872,7 +873,8 @@ impl App {
     /// The window's answer (tests read it).
     #[cfg(test)]
     pub(crate) fn address_compared(&self) -> Option<&AddressesCompared> {
-        self.address
+        self.gis
+            .address
             .compare
             .as_ref()?
             .answer
@@ -890,18 +892,18 @@ impl App {
     /// The comparison run here, not on its thread (tests and scenes): as Karşılaştır's answer comes.
     #[cfg(test)]
     pub(crate) fn address_compare_now(&mut self) {
-        let Some(w) = self.address.compare.as_ref() else {
+        let Some(w) = self.gis.address.compare.as_ref() else {
             return;
         };
         let (Ok(input), Some(doc)) = (self.compare_input(w), self.document.as_ref()) else {
             return;
         };
         let result = addresses_compare::plan_in(&doc.model, &input);
-        if let Some(w) = self.address.compare.as_mut() {
+        if let Some(w) = self.gis.address.compare.as_mut() {
             w.tickets += 1;
             w.asking = Some(w.tickets);
         }
-        let ticket = self.address.compare.as_ref().map_or(0, |w| w.tickets);
+        let ticket = self.gis.address.compare.as_ref().map_or(0, |w| w.tickets);
         self.address_compare_answered(ticket, result);
     }
 }

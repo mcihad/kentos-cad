@@ -23,6 +23,7 @@
 //! thread only starts it and applies its answer; how long the thread took
 //! is printed.
 
+use crate::gis;
 use std::time::Instant;
 
 use iced::advanced::clipboard;
@@ -559,18 +560,22 @@ fn processing(app: &mut App, h: &mut Harness, out: &mut Vec<(&'static str, Vec<P
     let revision = |app: &App| app.document.as_ref().map(|d| d.model.revision());
     let _ = app.run("edit.selectAll");
     let _ = app.update(Message::Run("processing.model.builtin.parcelSheet"));
-    let _ = app.update(Message::Processing(Event::Target("client".into())));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Target(
+        "client".into(),
+    ))));
     h.settle(app);
     let before = revision(app);
     out.push((
         "Parsel ölçü yazıları, bu bilgisayarda",
         vec![h.frame_with(app, &[], |app| {
-            let _ = app.update(Message::Processing(Event::Run));
+            let _ = app.update(Message::Gis(gis::Event::Processing(Event::Run)));
         })],
     ));
     assert_ne!(revision(app), before, "the model ran here");
     let _ = app.run("edit.undo");
-    let _ = app.update(Message::Processing(Event::Target("worker".into())));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Target(
+        "worker".into(),
+    ))));
     h.settle(app);
     let before = revision(app);
     let mut task = None;
@@ -578,7 +583,7 @@ fn processing(app: &mut App, h: &mut Harness, out: &mut Vec<(&'static str, Vec<P
     out.push((
         "Parsel ölçü yazıları, arka planda: Çalıştır",
         vec![h.frame_with(app, &[], |app| {
-            task = Some(app.update(Message::Processing(Event::Run)));
+            task = Some(app.update(Message::Gis(gis::Event::Processing(Event::Run))));
         })],
     ));
     // What the thread says, heard once it is done.
@@ -612,7 +617,7 @@ fn processing(app: &mut App, h: &mut Harness, out: &mut Vec<(&'static str, Vec<P
     assert_ne!(revision(app), before, "the answer was applied");
     // The drawing with the result, the run's window closed: the pointer
     // moving over it, frame by frame.
-    app.processing.dialog = None;
+    app.gis.processing.dialog = None;
     app.dialog = None;
     h.settle(app);
     let area = app.viewport.bounds;

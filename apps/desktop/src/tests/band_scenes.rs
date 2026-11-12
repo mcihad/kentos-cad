@@ -10,6 +10,7 @@
 //!
 //! The file is a copy in a temporary folder. Test code only.
 
+use crate::gis;
 use kentos_commands::CallOp;
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
@@ -143,7 +144,9 @@ pub(crate) fn sides(app: &App) -> Vec<(i64, i64)> {
 /// Etiketler over the bound layer, Denetle pressed: what the band and the parked pins mean for its labels.
 fn report(app: &mut App) {
     app.open_labelling(Some("import-parsel".to_owned()));
-    let _ = app.update(Message::Labelling(crate::labelling::Event::Report));
+    let _ = app.update(Message::Gis(gis::Event::Labelling(
+        crate::labelling::Event::Report,
+    )));
 }
 
 /// A pin on the part's parcel, then a part that does not hold it any more: its pins are parked in the binding.

@@ -3,6 +3,7 @@
 //! table under the form and its counts written in one step, En yakını bul's
 //! fields, and the pictures for the owner.
 
+use crate::gis;
 use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::json;
@@ -24,7 +25,7 @@ fn app_with_proximity() -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn value(app: &mut App, name: &str, v: serde_json::Value) {
@@ -32,7 +33,8 @@ fn value(app: &mut App, name: &str, v: serde_json::Value) {
 }
 
 fn status(app: &App) -> RunStatus {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())

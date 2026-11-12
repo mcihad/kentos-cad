@@ -23,6 +23,7 @@
 //! removed, each one undo step, and closes. Aksa yeniden bağla rebinds a saved, stale set; Çizime yaz draws a saved
 //! set's sections (`road.sections.draw`).
 
+use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -504,7 +505,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Sections(event)
+    Message::Road(road::Event::Sections(event))
 }
 
 impl Window {
@@ -552,7 +553,7 @@ impl App {
         } else {
             (!kept_templates.is_empty()).then_some(Chosen::Template(0))
         };
-        self.section_window = Some(Window {
+        self.road.section_window = Some(Window {
             sets: kept_sets.iter().map(SetRow::of).collect(),
             templates: kept_templates.iter().map(TemplateRow::of).collect(),
             kept_sets,
@@ -565,14 +566,14 @@ impl App {
             columns: "5".into(),
             ..Window::default()
         });
-        self.dialog = Some(Dialog::Sections);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Sections));
         self.refresh_sections();
     }
 
     /// Kesit takımı oluştur from the ribbon: the window with a new set on the first alignment.
     pub(crate) fn new_section_set(&mut self) {
         self.open_sections();
-        if self.section_window.is_some() {
+        if self.road.section_window.is_some() {
             let _ = self.section_event(Event::NewSet);
         }
     }
@@ -580,7 +581,7 @@ impl App {
     /// Tip kesit oluştur from the ribbon: the window with a new template.
     pub(crate) fn new_template(&mut self) {
         self.open_sections();
-        if self.section_window.is_some() {
+        if self.road.section_window.is_some() {
             let _ = self.section_event(Event::NewTemplate);
         }
     }
@@ -588,7 +589,9 @@ impl App {
     /// The chosen set's sections built again with the templates as typed.
     fn refresh_sections(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.section_window.as_mut() else { return };
+        let Some(w) = self.road.section_window.as_mut() else {
+            return;
+        };
         let Some(Chosen::Set(i)) = w.chosen else {
             w.preview = Preview::default();
             return;
@@ -638,7 +641,7 @@ impl App {
         let revisions: Vec<(String, u32)> = self.document.as_ref().map_or_else(Vec::new, |d| {
             d.model.road_alignments().iter().map(|a| (a.id.clone(), a.revision)).collect()
         });
-        let Some(w) = self.section_window.as_mut() else {
+        let Some(w) = self.road.section_window.as_mut() else {
             return Task::none();
         };
         let mut warning = None;
@@ -928,7 +931,7 @@ impl App {
                 return Task::none();
             }
             Event::Cancel => {
-                self.section_window = None;
+                self.road.section_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -944,7 +947,7 @@ impl App {
     }
 
     fn chosen_saved_set(&mut self, what: &str) -> Option<SectionSetDef> {
-        let w = self.section_window.as_ref()?;
+        let w = self.road.section_window.as_ref()?;
         let Some(Chosen::Set(i)) = w.chosen else { return None };
         let def = w.sets.get(i)?.def().ok();
         if def.as_ref().is_some_and(|d| w.kept_sets.contains(d)) {
@@ -985,7 +988,7 @@ impl App {
         let Some(doc) = &self.document else { return };
         let sets = doc.model.road_sections().to_vec();
         let templates = doc.model.road_templates().to_vec();
-        if let Some(w) = self.section_window.as_mut() {
+        if let Some(w) = self.road.section_window.as_mut() {
             w.sets = sets.iter().map(SetRow::of).collect();
             w.templates = templates.iter().map(TemplateRow::of).collect();
             w.kept_sets = sets;
@@ -997,7 +1000,7 @@ impl App {
     /// The sections' upper left: as typed, or with Yer left empty under the drawing (docs/adr/0997): the views laid at
     /// the origin first (nothing written), then moved down by how far the highest reaches over it, its km row too.
     fn section_place(&mut self, def: &kentos_commands::SectionSetDef) -> Option<[f64; 2]> {
-        let w = self.section_window.as_ref()?;
+        let w = self.road.section_window.as_ref()?;
         if !w.place.trim().is_empty() {
             let parts: Vec<Option<f64>> =
                 w.place.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
@@ -1034,7 +1037,9 @@ impl App {
             self.warn("Yeri “Y; X” olarak yazın ya da boş bırakın (çizimin altı).".to_owned());
             return Task::none();
         };
-        let Some(w) = &self.section_window else { return Task::none() };
+        let Some(w) = &self.road.section_window else {
+            return Task::none();
+        };
         let input = SectionsDraw {
             set: def.id.clone(),
             layer_id: w.layer.clone().unwrap_or_default(),
@@ -1071,7 +1076,9 @@ impl App {
             self.warn("Yeri “Y; X” olarak yazın ya da boş bırakın (çizimin altı).".to_owned());
             return Task::none();
         };
-        let Some(w) = &self.section_window else { return Task::none() };
+        let Some(w) = &self.road.section_window else {
+            return Task::none();
+        };
         let scale = match number(&w.sheet_scale) {
             Ok(None) => None,
             Ok(Some(v)) if v >= 1.0 && v.fract() == 0.0 && v <= 1e6 => Some(v as u32),
@@ -1108,7 +1115,7 @@ impl App {
                 out.sheets.last().map_or("", |s| s.number.as_str())
             ),
         );
-        self.section_window = None;
+        self.road.section_window = None;
         self.dialog = None;
         self.follow_sheet_book();
         self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1)))
@@ -1116,7 +1123,9 @@ impl App {
 
     /// Kaydet: the templates written, then the sets (removed, changed, new), then the templates removed.
     fn save_sections(&mut self) -> Task<Message> {
-        let Some(w) = self.section_window.clone() else { return Task::none() };
+        let Some(w) = self.road.section_window.clone() else {
+            return Task::none();
+        };
         let mut templates = Vec::new();
         for t in &w.templates {
             match t.def() {
@@ -1216,7 +1225,7 @@ impl App {
                 return Task::none();
             }
         }
-        self.section_window = None;
+        self.road.section_window = None;
         self.dialog = None;
         self.say(Level::Success, "Tip kesitler ve kesit takımları kaydedildi.");
         Task::none()

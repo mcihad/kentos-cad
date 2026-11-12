@@ -154,8 +154,11 @@ pub fn lead(list: &[AsbuiltReviewRow]) -> String {
 impl crate::app::App {
     /// The project's reviews with whether their points are today's (docs/adr/5220), read when the form changes.
     pub(crate) fn asbuilt_reviews(&mut self) {
-        self.asbuilt.reviews = match self.document.as_ref() {
-            Some(doc) => kentos_native_application::asbuilt_review::rows(&doc.model, doc.model.monitoring_reviews()),
+        self.map.asbuilt.reviews = match self.document.as_ref() {
+            Some(doc) => kentos_native_application::asbuilt_review::rows(
+                &doc.model,
+                doc.model.monitoring_reviews(),
+            ),
             None => Vec::new(),
         };
     }
@@ -166,21 +169,29 @@ impl crate::app::App {
         use kentos_interaction::Level;
         use kentos_native_application::{ExecutionContext, asbuilt_review};
         const TITLE: &str = "İzleme incelemesi";
-        let name = self.asbuilt.review.name.trim().to_owned();
+        let name = self.map.asbuilt.review.name.trim().to_owned();
         let input = if remove {
-            AsbuiltReview { name, check: None, thresholds_source: None, reviewer: None, remove: true, expected_revision: None }
+            AsbuiltReview {
+                name,
+                check: None,
+                thresholds_source: None,
+                reviewer: None,
+                remove: true,
+                expected_revision: None,
+            }
         } else {
             let check = match self.asbuilt_input() {
                 Ok(c) => c,
                 Err(why) => return self.warn(format!("{TITLE}: {why}")),
             };
-            let source = self.asbuilt.trend.source.trim();
-            let thresholds_source = (check.thresholds.is_some() && !source.is_empty()).then(|| source.to_owned());
+            let source = self.map.asbuilt.trend.source.trim();
+            let thresholds_source =
+                (check.thresholds.is_some() && !source.is_empty()).then(|| source.to_owned());
             AsbuiltReview {
                 name,
                 check: Some(check),
                 thresholds_source,
-                reviewer: Some(self.asbuilt.review.reviewer()),
+                reviewer: Some(self.map.asbuilt.review.reviewer()),
                 remove: false,
                 expected_revision: None,
             }
@@ -202,10 +213,12 @@ impl crate::app::App {
                     }
                     None => format!("“{}” kaldırıldı. Tek adımda geri alınır.", output.name),
                 };
-                self.asbuilt.reviews = output.reviews;
+                self.map.asbuilt.reviews = output.reviews;
                 self.say(Level::Success, format!("{TITLE}: {said}"));
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(format!("{TITLE}: {}", error.message));
             }
             _ => {}

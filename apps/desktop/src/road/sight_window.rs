@@ -17,6 +17,7 @@
 //! └───────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{ProfilesSight, ProfilesSightRead, SightReach, SightSide};
@@ -56,7 +57,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Sight(event)
+    Message::Road(road::Event::Sight(event))
 }
 
 impl Window {
@@ -103,13 +104,18 @@ impl App {
             self.warn("Görüş mesafesi bir boykesitte okunur: önce Boykesit'te bir boykesit oluşturun.".to_owned());
             return;
         };
-        self.sight_window = Some(Box::new(Window { profile: Some(first), ..Window::default() }));
-        self.dialog = Some(Dialog::Sight);
+        self.road.sight_window = Some(Box::new(Window {
+            profile: Some(first),
+            ..Window::default()
+        }));
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Sight));
         let _ = self.sight_event(Event::Preview);
     }
 
     pub(crate) fn sight_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.sight_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.sight_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Profile(p) => w.profile = Some(p),
             Event::Side(i) => w.side = i.min(2),
@@ -129,7 +135,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.sight_window = None;
+                self.road.sight_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -139,7 +145,7 @@ impl App {
     }
 
     pub(crate) fn sight_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.sight_window else {
+        let Some(w) = &self.road.sight_window else {
             return iced::widget::text("").into();
         };
         let profiles: Vec<(String, String)> = self
@@ -212,7 +218,7 @@ impl App {
     }
 
     pub(crate) fn sight_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.sight_window.is_none() {
+        if self.road.sight_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

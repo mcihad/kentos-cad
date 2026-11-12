@@ -12,6 +12,7 @@
 //!
 //! Test code only.
 
+use crate::gis;
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
@@ -101,14 +102,18 @@ fn findings(app: &mut App) {
     opened(app);
     run(app, "profile.window");
     let at = app.data_profile_finding("areaDifference").unwrap_or(0);
-    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Pick(at)));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(
+        crate::data_profile::Event::Pick(at),
+    )));
 }
 
 /// After Uygula: the plan's layers, field, lists, relation and address data added; the data's own findings left.
 fn applied(app: &mut App) {
     opened(app);
     run(app, "profile.window");
-    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Apply));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(
+        crate::data_profile::Event::Apply,
+    )));
 }
 
 /// The Veri tab with its Standart panel.
@@ -125,8 +130,8 @@ fn imported(app: &mut App) {
     run(app, "profile.window");
     let file = dir.join("park-bahce.json");
     std::fs::write(&file, PARK_PROFILE).expect("the file");
-    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Imported(
-        Some(file),
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(
+        crate::data_profile::Event::Imported(Some(file)),
     )));
 }
 
@@ -135,9 +140,13 @@ fn through_mapping(app: &mut App) {
     opened_from(app, SIVAS, SIVAS_LINKS, 210.0, 130.0);
     beside(app, "esleme", &[("sivas-bel.eslem.json", SIVAS_MAPPING)]);
     run(app, "profile.window");
-    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Mapping(1)));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(
+        crate::data_profile::Event::Mapping(1),
+    )));
     let at = app.data_profile_finding("badValue").unwrap_or(0);
-    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Pick(at)));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(
+        crate::data_profile::Event::Pick(at),
+    )));
 }
 
 /// The park project at release 1 with its profile (release 3) beside it: the window's migration part with its plan.
@@ -152,13 +161,17 @@ fn park(app: &mut App) {
         ],
     );
     run(app, "profile.window");
-    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Profile(1)));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(
+        crate::data_profile::Event::Profile(1),
+    )));
 }
 
 /// The data moved: what it did said, the values that did not fit listed.
 fn migrated(app: &mut App) {
     park(app);
-    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Migrate));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(
+        crate::data_profile::Event::Migrate,
+    )));
 }
 
 /// The park project carrying its profile and mapping inside the drawing (brought in with Nereye's default): taking the
@@ -170,20 +183,20 @@ fn removing(app: &mut App) {
     for (name, text) in [("park-bahce.json", PARK_PROFILE), ("park-esleme.json", PARK_MAPPING)] {
         let file = dir.join(name);
         std::fs::write(&file, text).expect("the file");
-        let _ = app.update(Message::DataProfile(crate::data_profile::Event::Imported(
-            Some(file),
+        let _ = app.update(Message::Gis(gis::Event::DataProfile(
+            crate::data_profile::Event::Imported(Some(file)),
         )));
     }
-    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Remove(
-        kentos_commands::ProfileFileKind::Profile,
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(
+        crate::data_profile::Event::Remove(kentos_commands::ProfileFileKind::Profile),
     )));
 }
 
 /// The profile taken out, and the drawing's mapping of it with it: KentOS's profile chosen again.
 fn removed(app: &mut App) {
     removing(app);
-    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Removed(
-        true,
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(
+        crate::data_profile::Event::Removed(true),
     )));
 }
 

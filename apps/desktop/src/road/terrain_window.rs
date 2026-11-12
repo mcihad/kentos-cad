@@ -20,6 +20,7 @@
 //! sources changed (`road.terrains.edit accept`). A definition is a project setting, not an undo step. Eğrileri çiz
 //! writes a saved surface's contour lines on a layer (`road.terrains.contours`, one undo step).
 
+use crate::road;
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -153,7 +154,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Terrains(event)
+    Message::Road(road::Event::Terrains(event))
 }
 
 fn toggle(list: &mut Vec<String>, id: String) {
@@ -219,8 +220,11 @@ impl App {
         let kept: Vec<TerrainSurfaceDef> = made.iter().map(|(d, _, _)| d.clone()).collect();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         // The selection's own surface's row when every selected object is its source (docs/adr/2480), else the first.
-        let picked = self.selection_roles().surface.and_then(|id| kept.iter().position(|d| d.id == id));
-        self.terrain_window = Some(Window {
+        let picked = self
+            .selection_roles()
+            .surface
+            .and_then(|id| kept.iter().position(|d| d.id == id));
+        self.road.terrain_window = Some(Window {
             chosen: picked.or((!kept.is_empty()).then_some(0)),
             rows: kept.iter().cloned().map(Row::of).collect(),
             reports: made.into_iter().map(|(_, r, _)| r).collect(),
@@ -234,14 +238,14 @@ impl App {
             edit_report: None,
             paste_from: None,
         });
-        self.dialog = Some(Dialog::Terrains);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Terrains));
         self.refresh_edit_report();
     }
 
     /// Yeni yüzey from the ribbon: the window with a new surface chosen.
     pub(crate) fn new_terrain(&mut self) {
         self.open_terrains();
-        if self.terrain_window.is_some() {
+        if self.road.terrain_window.is_some() {
             let _ = self.terrain_event(Event::New);
         }
     }
@@ -249,7 +253,7 @@ impl App {
     fn refresh_terrains(&mut self) {
         let Some(doc) = &self.document else { return };
         let made = road_terrains::made_surfaces(&doc.model);
-        if let Some(w) = self.terrain_window.as_mut() {
+        if let Some(w) = self.road.terrain_window.as_mut() {
             w.kept = made.iter().map(|(d, _, _)| d.clone()).collect();
             w.reports = made.into_iter().map(|(_, r, _)| r).collect();
         }
@@ -260,7 +264,7 @@ impl App {
             Event::Boundary | Event::Voids => self.uids_of(self.selection.ids()),
             _ => Vec::new(),
         };
-        let Some(w) = self.terrain_window.as_mut() else {
+        let Some(w) = self.road.terrain_window.as_mut() else {
             return Task::none();
         };
         let chosen = w.chosen.and_then(|i| w.rows.get_mut(i));
@@ -376,7 +380,7 @@ impl App {
             Event::Major(text) => w.major = text,
             Event::ContourLayer(id) => w.layer = Some(id),
             Event::Cancel => {
-                self.terrain_window = None;
+                self.road.terrain_window = None;
                 self.dialog = None;
             }
             Event::Contours => return self.draw_contours(),
@@ -412,7 +416,7 @@ impl App {
 
     /// Kabul et: the chosen saved surface accepted as its sources give it now.
     fn accept_terrain(&mut self) -> Task<Message> {
-        let Some(w) = &self.terrain_window else {
+        let Some(w) = &self.road.terrain_window else {
             return Task::none();
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -437,7 +441,7 @@ impl App {
         );
         if self.answered(result).is_some() {
             self.refresh_terrains();
-            if let Some(w) = self.terrain_window.as_mut() {
+            if let Some(w) = self.road.terrain_window.as_mut() {
                 let kept = w.kept.clone();
                 for row in &mut w.rows {
                     if let Some(k) = kept.iter().find(|k| k.id == row.def.id) {
@@ -453,7 +457,7 @@ impl App {
     /// Eğrileri çiz: the chosen saved surface's contour lines on the chosen layer, one undo step
     /// (`road.terrains.contours`).
     fn draw_contours(&mut self) -> Task<Message> {
-        let Some(w) = &self.terrain_window else {
+        let Some(w) = &self.road.terrain_window else {
             return Task::none();
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -488,7 +492,12 @@ impl App {
     /// LandXML al: the file's first surface on the window's layer, its terrain surface defined and accepted
     /// (`file.import.landxml`); the window then lists it.
     pub(crate) fn import_landxml(&mut self, path: &std::path::Path) {
-        let layer = self.terrain_window.as_ref().and_then(|w| w.layer.clone()).unwrap_or_default();
+        let layer = self
+            .road
+            .terrain_window
+            .as_ref()
+            .and_then(|w| w.layer.clone())
+            .unwrap_or_default();
         let input = kentos_commands::ImportLandxml {
             path: path.to_string_lossy().into_owned(),
             layer_id: layer,
@@ -503,7 +512,7 @@ impl App {
         );
         if let Some(out) = self.answered(result) {
             self.refresh_terrains();
-            if let Some(w) = self.terrain_window.as_mut() {
+            if let Some(w) = self.road.terrain_window.as_mut() {
                 w.rows = w.kept.iter().cloned().map(Row::of).collect();
                 w.chosen = (!w.rows.is_empty()).then(|| w.rows.len() - 1);
             }
@@ -525,7 +534,7 @@ impl App {
 
     /// Kaydet: what changed, the removed first, then the changed, then the new.
     fn save_terrains(&mut self) -> Task<Message> {
-        let Some(w) = self.terrain_window.clone() else {
+        let Some(w) = self.road.terrain_window.clone() else {
             return Task::none();
         };
         let mut defs = Vec::new();
@@ -592,7 +601,7 @@ impl App {
                 }
             }
         }
-        self.terrain_window = None;
+        self.road.terrain_window = None;
         self.dialog = None;
         self.say(Level::Success, "Arazi yüzeyleri kaydedildi.");
         Task::none()
@@ -615,7 +624,7 @@ impl App {
     }
 
     pub(crate) fn terrain_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.terrain_window else {
+        let Some(w) = &self.road.terrain_window else {
             return iced::widget::text("").into();
         };
         let report_of = |id: &str| w.reports.iter().find(|r| r.id == id);
@@ -810,7 +819,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn terrain_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.terrain_window else {
+        let Some(w) = &self.road.terrain_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

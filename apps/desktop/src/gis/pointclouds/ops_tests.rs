@@ -5,6 +5,7 @@
 //! its object on the drawing; the answers are those of the independent
 //! reference (fixtures/pointcloud/v1/ops.json).
 
+use crate::gis;
 use std::path::{Path, PathBuf};
 
 use kentos_commands::{CloudFormat, DocumentSnapshotV1, Entity};
@@ -81,7 +82,10 @@ fn app() -> App {
 }
 
 fn value(app: &mut App, name: &str, v: Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 fn layer(id: &str) -> Value {
@@ -90,9 +94,10 @@ fn layer(id: &str) -> Value {
 
 /// Runs the tool whose window is open, in the background, to its end.
 fn run(app: &mut App) -> RunStatus {
-    let task = app.update(Message::Processing(Event::Run));
+    let task = app.update(Message::Gis(gis::Event::Processing(Event::Run)));
     crate::files_testing::drive(app, task);
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())

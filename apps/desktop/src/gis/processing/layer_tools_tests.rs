@@ -3,6 +3,7 @@
 //! the window as a user fills it, the Katmanlar list's check, and the
 //! pictures for the owner.
 
+use crate::gis;
 use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
@@ -24,11 +25,12 @@ fn app_with_layers() -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn status(app: &App) -> RunStatus {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())
@@ -99,6 +101,7 @@ fn every_shared_case_runs_from_the_window_as_it_says() {
             (Some("invalid"), RunStatus::Idle | RunStatus::Invalid(_)) => {
                 let param = want["issues"][0]["param"].as_str().unwrap_or("");
                 let issue = app
+                    .gis
                     .processing
                     .dialog
                     .as_ref()

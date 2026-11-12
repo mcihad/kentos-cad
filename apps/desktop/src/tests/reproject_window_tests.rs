@@ -4,6 +4,7 @@
 //! written; Uygula writes the case's move as one undo step, Vazgeç nothing; a layer whose text and circle do not move
 //! says each reason counted, as the case does, and Nesneleri seç selects the objects. And its pictures.
 
+use crate::gis;
 use kentos_domain::Slot;
 use serde_json::Value;
 
@@ -78,8 +79,17 @@ fn close(got: &Value, want: &Value, at: &str) {
 }
 
 fn plan(app: &App) -> (Value, Value) {
-    let (out, warnings) = app.reproject.plan.clone().expect("a plan").expect("not refused");
-    (serde_json::to_value(out).expect("json"), serde_json::to_value(warnings).expect("json"))
+    let (out, warnings) = app
+        .gis
+        .reproject
+        .plan
+        .clone()
+        .expect("a plan")
+        .expect("not refused");
+    (
+        serde_json::to_value(out).expect("json"),
+        serde_json::to_value(warnings).expect("json"),
+    )
 }
 
 fn point(app: &App, slot: u32) -> kentos_commands::Entity {
@@ -91,8 +101,11 @@ fn the_preview_is_the_shared_case_s_plan_and_uygula_writes_it() {
     let mut app = opened();
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let before = (point(&app, 15), point(&app, 16));
-    let _ = app.update(Message::LayerCrs(L::Reproject("uzak".into(), Some(2322))));
-    assert_eq!(app.dialog, Some(Dialog::Reproject));
+    let _ = app.update(Message::Gis(gis::Event::LayerCrs(L::Reproject(
+        "uzak".into(),
+        Some(2322),
+    ))));
+    assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::Reproject)));
     let c = case("önizleme: kullanım alanlarının dışındaki nokta");
     let want = resolved(&app, &c["steps"][0]["result"]);
     let (out, warnings) = plan(&app);
@@ -103,7 +116,7 @@ fn the_preview_is_the_shared_case_s_plan_and_uygula_writes_it() {
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision);
     assert_eq!((point(&app, 15), point(&app, 16)), before);
     // Uygula writes the case's move.
-    let _ = app.update(Message::Reproject(R::Apply));
+    let _ = app.update(Message::Gis(gis::Event::Reproject(R::Apply)));
     assert_eq!(app.dialog, None);
     let moved = resolved(&app, &c["steps"][1]["expect"]["entities"]);
     for slot in [15, 16] {
@@ -123,12 +136,15 @@ fn the_preview_is_the_shared_case_s_plan_and_uygula_writes_it() {
 fn vazgec_writes_nothing_and_the_old_sheet_s_preview_is_the_case_s() {
     let mut app = opened();
     let revision = app.document.as_ref().map(|d| d.model.revision());
-    let _ = app.update(Message::LayerCrs(L::Reproject("eski".into(), Some(2322))));
+    let _ = app.update(Message::Gis(gis::Event::LayerCrs(L::Reproject(
+        "eski".into(),
+        Some(2322),
+    ))));
     let want = resolved(&app, &case("plan hiçbir şey yazmaz")["steps"][0]["result"]);
     let (out, warnings) = plan(&app);
     close(&out, &want["output"], "plan");
     close(&warnings, &want["warnings"], "warnings");
-    let _ = app.update(Message::Reproject(R::Close));
+    let _ = app.update(Message::Gis(gis::Event::Reproject(R::Close)));
     assert_eq!(app.dialog, None);
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision);
 }
@@ -136,14 +152,29 @@ fn vazgec_writes_nothing_and_the_old_sheet_s_preview_is_the_case_s() {
 #[test]
 fn a_refused_layer_says_each_reason_and_selects_its_objects() {
     let mut app = opened();
-    let _ = app.update(Message::LayerCrs(L::Reproject("yazilar".into(), Some(4326))));
-    let want = resolved(&app, &case("ret: nedenler karışıkken")["steps"][0]["result"]["error"]);
-    let refused = app.reproject.plan.clone().expect("a plan").expect_err("refused");
+    let _ = app.update(Message::Gis(gis::Event::LayerCrs(L::Reproject(
+        "yazilar".into(),
+        Some(4326),
+    ))));
+    let want = resolved(
+        &app,
+        &case("ret: nedenler karışıkken")["steps"][0]["result"]["error"],
+    );
+    let refused = app
+        .gis
+        .reproject
+        .plan
+        .clone()
+        .expect("a plan")
+        .expect_err("refused");
     assert_eq!(Value::from(refused.message.clone()), want["message"]);
-    assert_eq!(serde_json::to_value(&refused.uids).expect("json"), want["uids"]);
+    assert_eq!(
+        serde_json::to_value(&refused.uids).expect("json"),
+        want["uids"]
+    );
     // Uygula waits; Nesneleri seç selects the three objects and closes the window.
-    let _ = app.update(Message::Reproject(R::Apply));
-    let _ = app.update(Message::Reproject(R::Select));
+    let _ = app.update(Message::Gis(gis::Event::Reproject(R::Apply)));
+    let _ = app.update(Message::Gis(gis::Event::Reproject(R::Select)));
     assert_eq!(app.dialog, None);
     let mut picked: Vec<u32> = app.selection.ids().iter().map(|s| s.0).collect();
     picked.sort_unstable();
@@ -172,7 +203,10 @@ fn screens() {
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
-            let _ = app.update(Message::LayerCrs(L::Reproject(layer.into(), Some(from))));
+            let _ = app.update(Message::Gis(gis::Event::LayerCrs(L::Reproject(
+                layer.into(),
+                Some(from),
+            ))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);

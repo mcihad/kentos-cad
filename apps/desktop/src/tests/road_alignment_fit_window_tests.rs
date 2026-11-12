@@ -1,6 +1,7 @@
 //! Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6): the window reads the alignment as it is typed,
 //! makes it as one undo step; and its pictures.
 
+use crate::road;
 use kentos_domain::Slot;
 
 use crate::app::{App, Dialog, Message};
@@ -19,15 +20,18 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::RoadAlignmentFit(e));
+    let _ = app.update(Message::Road(road::Event::RoadAlignmentFit(e)));
 }
 
 #[test]
 fn nothing_selected_opens_no_window() {
     let mut app = app();
     let _ = app.update(Message::Run("alignment.fromLine"));
-    assert!(app.road_alignment_fit_window.is_none());
-    assert_ne!(app.dialog, Some(Dialog::RoadAlignmentFit));
+    assert!(app.road.road_alignment_fit_window.is_none());
+    assert_ne!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::RoadAlignmentFit))
+    );
 }
 
 #[test]
@@ -35,30 +39,64 @@ fn the_window_makes_the_alignment_as_one_step() {
     let mut app = app();
     app.selection.set([Slot(6)]);
     let _ = app.update(Message::Run("alignment.fromLine"));
-    assert_eq!(app.dialog, Some(Dialog::RoadAlignmentFit));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::RoadAlignmentFit))
+    );
     // Element by element the sampled axis is a long run of short tangents: many PIs.
-    let w = app.road_alignment_fit_window.as_ref().expect("open");
-    let fitted = w.preview.fitted.as_ref().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    let w = app.road.road_alignment_fit_window.as_ref().expect("open");
+    let fitted = w
+        .preview
+        .fitted
+        .as_ref()
+        .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
     assert!(fitted.pis.len() > 10, "{}", fitted.pis.len());
     send(&mut app, W::Method(AlignmentFitMethod::BestFit));
-    let why = app.road_alignment_fit_window.as_ref().and_then(|w| w.preview.why.clone()).expect("refused");
+    let why = app
+        .road
+        .road_alignment_fit_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("refused");
     assert!(why.contains("maxRadius"), "{why}");
     send(&mut app, W::Field(2, "500".into()));
-    let w = app.road_alignment_fit_window.as_ref().expect("open");
-    let fitted = w.preview.fitted.as_ref().unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
+    let w = app.road.road_alignment_fit_window.as_ref().expect("open");
+    let fitted = w
+        .preview
+        .fitted
+        .as_ref()
+        .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
     assert_eq!(fitted.pis.len(), 3);
-    assert!((fitted.pis[1].radius - 60.0).abs() < 1e-6, "{:?}", fitted.pis[1]);
+    assert!(
+        (fitted.pis[1].radius - 60.0).abs() < 1e-6,
+        "{:?}",
+        fitted.pis[1]
+    );
     assert!(w.preview.line.len() > 100);
     send(&mut app, W::Field(0, "Ana aks".into()));
-    let why = app.road_alignment_fit_window.as_ref().and_then(|w| w.preview.why.clone()).expect("refused");
+    let why = app
+        .road
+        .road_alignment_fit_window
+        .as_ref()
+        .and_then(|w| w.preview.why.clone())
+        .expect("refused");
     assert!(why.contains("Ana aks"), "{why}");
     send(&mut app, W::Field(0, "Köy yolu".into()));
-    let before = app.document.as_ref().expect("a drawing").model.road_alignments().len();
+    let before = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .road_alignments()
+        .len();
     send(&mut app, W::Make);
-    assert!(app.road_alignment_fit_window.is_none());
+    assert!(app.road.road_alignment_fit_window.is_none());
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert_eq!(doc.road_alignments().len(), before + 1);
-    assert_eq!(doc.road_alignments().last().map(|a| a.name.as_str()), Some("Köy yolu"));
+    assert_eq!(
+        doc.road_alignments().last().map(|a| a.name.as_str()),
+        Some("Köy yolu")
+    );
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(app.document.as_ref().expect("a drawing").model.road_alignments().len(), before);
 }

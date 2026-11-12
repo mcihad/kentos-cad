@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_domain::Slot;
 use kentos_ui::widget::docking;
 use serde_json::{Value, json};
@@ -46,7 +47,7 @@ fn open(app: &mut App, doc: Value, bounds: [f64; 4]) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Materials(e));
+    let _ = app.update(Message::Arch(arch::Event::Materials(e)));
 }
 
 /// The cases' walls and slabs.
@@ -93,7 +94,9 @@ fn props(app: &mut App) {
 fn quantities(app: &mut App) {
     drawing(app);
     run(app, "arch.quantities");
-    let _ = app.update(Message::Quantities(crate::quantities::Event::Tab(crate::quantities::Tab::Materials)));
+    let _ = app.update(Message::Arch(arch::Event::Quantities(
+        crate::quantities::Event::Tab(crate::quantities::Tab::Materials),
+    )));
 }
 
 /// A wall plastered on both faces, its plasters turning at the jambs: up to the window's frame (7 cm deep, 5 cm from the

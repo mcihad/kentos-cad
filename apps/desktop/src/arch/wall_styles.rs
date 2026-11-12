@@ -13,6 +13,7 @@
 //! step “Duvar stilleri” in which the walls that follow a changed style take it; a style a following wall cannot take
 //! (an arc too tight for its new faces) is said and nothing is written. Vazgeç, Esc and × leave it.
 
+use crate::arch;
 use std::collections::HashMap;
 
 use iced::widget::canvas::{self, Frame, Path, Stroke};
@@ -106,7 +107,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::WallStyles(event)
+    Message::Arch(arch::Event::WallStyles(event))
 }
 
 fn shown(n: Option<f64>) -> String {
@@ -263,19 +264,20 @@ impl App {
             closing: false,
         };
         w.fill();
-        self.wall_styles = Some(w);
-        self.dialog = Some(Dialog::WallStyles);
+        self.arch.wall_styles = Some(w);
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::WallStyles));
     }
 
     fn wall_styles_changed(&self) -> bool {
-        self.wall_styles
+        self.arch
+            .wall_styles
             .as_ref()
             .is_some_and(|w| w.styles != self.saved_wall_styles())
     }
 
     /// Kaydet: each style removed, made or changed through `cad.styles.edit`, in one undo step.
     fn save_wall_styles(&mut self) {
-        let Some(w) = self.wall_styles.clone() else {
+        let Some(w) = self.arch.wall_styles.clone() else {
             return;
         };
         if w.problem().is_some() {
@@ -365,7 +367,7 @@ impl App {
                 "{locked} duvar kilitli katmanda; eski görünüşüyle kaldı. Kilidi açıp stili yeniden kaydedin."
             ));
         }
-        self.wall_styles = None;
+        self.arch.wall_styles = None;
         self.dialog = None;
     }
 
@@ -376,17 +378,17 @@ impl App {
                 return Task::none();
             }
             Event::Cancel | Event::Answer(crate::unsaved_close::Answer::Discard) => {
-                self.wall_styles = None;
+                self.arch.wall_styles = None;
                 self.dialog = None;
                 return Task::none();
             }
             Event::Close => {
                 if self.wall_styles_changed() {
-                    if let Some(w) = self.wall_styles.as_mut() {
+                    if let Some(w) = self.arch.wall_styles.as_mut() {
                         w.closing = true;
                     }
                 } else {
-                    self.wall_styles = None;
+                    self.arch.wall_styles = None;
                     self.dialog = None;
                 }
                 return Task::none();
@@ -396,14 +398,14 @@ impl App {
                 return Task::none();
             }
             Event::Answer(crate::unsaved_close::Answer::Stay) => {
-                if let Some(w) = self.wall_styles.as_mut() {
+                if let Some(w) = self.arch.wall_styles.as_mut() {
                     w.closing = false;
                 }
                 return Task::none();
             }
             _ => {}
         }
-        let Some(w) = self.wall_styles.as_mut() else {
+        let Some(w) = self.arch.wall_styles.as_mut() else {
             return Task::none();
         };
         match event {
@@ -573,7 +575,7 @@ impl App {
     }
 
     pub(crate) fn wall_styles_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.wall_styles else {
+        let Some(w) = &self.arch.wall_styles else {
             return iced::widget::text("").into();
         };
         let Some(doc) = self.document.as_ref() else {

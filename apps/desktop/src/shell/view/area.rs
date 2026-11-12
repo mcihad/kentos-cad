@@ -65,7 +65,7 @@ impl App {
                     range: self.grade_marks().0.into_iter().map(|p| kentos_interaction::Vec2::new(p.x, p.y)).collect(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     extent: self.extent_mark(),
-                    problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
+                    problem: self.topology_problem().or_else(|| self.gis.networks.mark.clone()),
                     graph: self.parcel_graph_marks(),
                     reach: self.impact_reach_marks(),
                     zoning: self.zoning_marks(),
@@ -222,7 +222,7 @@ impl App {
                         // Harita işi's approved shapes of the objects whose geometry changed (approved_layer.rs,
                         // docs/adr/4480), while Değişenler's selection stands.
                         .extend(crate::approved_layer::layer(
-                            self.map_work.approved.as_ref(),
+                            self.map.map_work.approved.as_ref(),
                             self.selection.version(),
                             &self.viewport.camera,
                             Tokens::of(&self.theme()).warning,
@@ -299,7 +299,7 @@ impl App {
             extent: self.extent_mark(),
             problem: self
                 .topology_problem()
-                .or_else(|| self.networks.mark.clone()),
+                .or_else(|| self.gis.networks.mark.clone()),
             graph: self.parcel_graph_marks(),
             reach: self.impact_reach_marks(),
             zoning: self.zoning_marks(),

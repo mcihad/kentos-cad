@@ -251,10 +251,10 @@ mod tests {
         assert_eq!(app.bands.rows("import-parsel"), Some(0));
         assert_eq!(app.spatial.ghost_count("import-parsel"), 0);
         app.open_labelling(Some("import-parsel".to_owned()));
-        let _ = app.update(crate::app::Message::Labelling(
+        let _ = app.update(crate::app::Message::Gis(crate::gis::Event::Labelling(
             crate::labelling::Event::Report,
-        ));
-        let lines = &app.labelling.as_ref().expect("the window").lines;
+        )));
+        let lines = &app.gis.labelling.as_ref().expect("the window").lines;
         assert!(
             lines
                 .iter()

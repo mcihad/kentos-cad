@@ -11,6 +11,7 @@
 //!
 //! They go to `.run/shots/islem-sunucu-*.png`.
 
+use crate::gis;
 use kentos_cloud::ApiFailure;
 use kentos_commands::{
     ProcessingJobMode, ProjectPermission, ProjectState, ProjectStorage, ServerJob, ServerJobState,
@@ -24,11 +25,12 @@ use crate::cloud::catalog::Tab;
 use crate::cloud::tests::{info, open, signed_in};
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn status(app: &App) -> RunStatus {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())
@@ -63,10 +65,10 @@ fn tool(app: &mut App, id: &'static str) {
 
 /// The rows of Nerede çalışır as the window shows them: (label, note, disabled).
 fn rows(app: &App) -> Vec<(String, Option<String>, bool)> {
-    let window = app.processing.dialog.as_ref().expect("a window");
+    let window = app.gis.processing.dialog.as_ref().expect("a window");
     let (options, _, _) = targets_view(
-        &window.targets(&app.processing.registry, &app.server_place()),
-        super::plan::Choice::read(app.processing.memory.target(&window.tool.id)),
+        &window.targets(&app.gis.processing.registry, &app.server_place()),
+        super::plan::Choice::read(app.gis.processing.memory.target(&window.tool.id)),
     );
     options
         .into_iter()
@@ -171,7 +173,7 @@ fn chosen_the_run_asks_the_server_for_a_job_with_the_windows_values() {
     event(&mut app, Event::Target("server".into()));
     assert!(app.processing_at_server());
     // The button says what it will do; the result goes to the project unless the window says a file.
-    let window = app.processing.dialog.as_ref().expect("a window");
+    let window = app.gis.processing.dialog.as_ref().expect("a window");
     assert_eq!(
         super::plan::footer_at(&window.status, true).run,
         "Sunucuda çalıştır"
@@ -195,8 +197,17 @@ fn chosen_the_run_asks_the_server_for_a_job_with_the_windows_values() {
         status(&app),
         RunStatus::Asked("Sunucu işi isteniyor…".into())
     );
-    let asked = app.processing.server_asked.expect("the ask is on its way");
-    let request = app.processing.server_request.clone().expect("a request id");
+    let asked = app
+        .gis
+        .processing
+        .server_asked
+        .expect("the ask is on its way");
+    let request = app
+        .gis
+        .processing
+        .server_request
+        .clone()
+        .expect("a request id");
     assert_eq!(
         app.document.as_ref().expect("open").model.revision(),
         before,
@@ -220,14 +231,14 @@ fn chosen_the_run_asks_the_server_for_a_job_with_the_windows_values() {
     assert!(text.starts_with("Sunucu işi istenemedi: "), "{text}");
     assert!(text.contains("(50)"), "{text}");
     assert_eq!(
-        app.processing.server_request.as_deref(),
+        app.gis.processing.server_request.as_deref(),
         Some(request.as_str())
     );
     // Asking again sends the same request id; the server's answer is said, with the way to the job's row.
     event(&mut app, Event::Run);
-    let asked = app.processing.server_asked.expect("asked again");
+    let asked = app.gis.processing.server_asked.expect("asked again");
     assert_eq!(
-        app.processing.server_request.as_deref(),
+        app.gis.processing.server_request.as_deref(),
         Some(request.as_str())
     );
     crate::cloud::tests::cloud(
@@ -245,10 +256,10 @@ fn chosen_the_run_asks_the_server_for_a_job_with_the_windows_values() {
         "{text}"
     );
     assert!(
-        app.processing.server_request.is_none(),
+        app.gis.processing.server_request.is_none(),
         "the next ask is a new request"
     );
-    let line = app.processing.dialog.as_ref().expect("a window").line();
+    let line = app.gis.processing.dialog.as_ref().expect("a window").line();
     assert_eq!(line.actions, vec![super::plan::Action::Jobs]);
     // An answer to an ask that is no longer the window's is let go.
     crate::cloud::tests::cloud(
@@ -261,7 +272,7 @@ fn chosen_the_run_asks_the_server_for_a_job_with_the_windows_values() {
     assert!(matches!(status(&app), RunStatus::Asked(_)));
     // Sunucu işleri: the catalog on the project's jobs.
     event(&mut app, Event::ServerJobs);
-    assert!(app.processing.dialog.is_none());
+    assert!(app.gis.processing.dialog.is_none());
     assert_eq!(app.dialog, Some(Dialog::Catalog));
     let catalog = app.cloud.catalog.as_ref().expect("the catalog");
     assert_eq!(catalog.tab, Tab::Jobs);
@@ -276,6 +287,7 @@ fn an_edit_of_the_window_takes_the_asked_line_back() {
     assert!(matches!(status(&app), RunStatus::Asked(_)));
     // An edit of a value puts the line back.
     let first = app
+        .gis
         .processing
         .dialog
         .as_ref()
@@ -329,7 +341,7 @@ fn screens() {
                 }
                 if name == "istendi" {
                     event(&mut app, Event::Run);
-                    let asked = app.processing.server_asked.expect("asked");
+                    let asked = app.gis.processing.server_asked.expect("asked");
                     crate::cloud::tests::cloud(
                         &mut app,
                         crate::cloud::Event::ProcessingJobAsked {

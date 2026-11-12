@@ -394,6 +394,7 @@ mod tests {
         use crate::app::Dialog;
         let mut app = app_with_drawing();
         let mut model = app
+            .gis
             .processing
             .registry
             .model("builtin.parcelSheet")
@@ -401,7 +402,8 @@ mod tests {
             .expect("the built-in model");
         model.id = "user.olculer".into();
         model.label = "Ölçülerim".into();
-        app.processing
+        app.gis
+            .processing
             .registry
             .save_model(model)
             .expect("a user's model");
@@ -409,7 +411,10 @@ mod tests {
 
         // Typed on the command line, by its name.
         let _ = app.update(Message::CommandRun("ölçülerim".into()));
-        assert_eq!(app.dialog, Some(Dialog::Processing));
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Gis(crate::gis::GisDialogKind::Processing))
+        );
         let _ = app.update(Message::DialogClosed);
 
         // Found by Komut ara, where it lives said; Enter opens it.
@@ -429,7 +434,10 @@ mod tests {
             .position(|r| r.title == "Ölçülerim…")
             .expect("found");
         let _ = app.update(Message::RibbonSearchRun(at));
-        assert_eq!(app.dialog, Some(Dialog::Processing));
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Gis(crate::gis::GisDialogKind::Processing))
+        );
     }
 
     /// The İşlemler tab with a model of the user's for the owner;
@@ -452,6 +460,7 @@ mod tests {
                 app.apply_settings();
                 let _ = app.update(Message::WindowResized(Size::new(width, height)));
                 let mut model = app
+                    .gis
                     .processing
                     .registry
                     .model("builtin.parcelSheet")
@@ -459,7 +468,8 @@ mod tests {
                     .expect("the built-in model");
                 model.id = "user.olculer".into();
                 model.label = "Ölçülerim".into();
-                app.processing
+                app.gis
+                    .processing
                     .registry
                     .save_model(model)
                     .expect("a user's model");

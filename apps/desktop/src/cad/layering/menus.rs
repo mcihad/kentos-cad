@@ -1,6 +1,7 @@
 //! The layer tree's menus: a layer's own (docs/adr/0213), its look and its data.
 
 use super::*;
+use crate::gis;
 
 impl App {
     /// A row's context menu: what is done most at its top (make active, hide, lock, isolate, select, zoom), the rest
@@ -239,7 +240,7 @@ impl App {
         }
         // Senaryo ▸ on a scenario group (docs/adr/0210 §10): shown, compared, applied; KentOS GIS's (module_surfaces.rs).
         if node.scenario.is_some() && self.shows_layer_entry(LayerEntry::Scenario) {
-            let time = |e: crate::temporal::Event| Message::Time(e);
+            let time = |e: crate::temporal::Event| Message::Gis(gis::Event::Time(e));
             menu = menu
                 .submenu(
                     "Senaryo",
@@ -508,7 +509,9 @@ impl App {
                     } else {
                         "Zaman ayarları…"
                     },
-                    Message::Time(crate::temporal::Event::OpenLayer(id.clone())),
+                    Message::Gis(gis::Event::Time(crate::temporal::Event::OpenLayer(
+                        id.clone(),
+                    ))),
                 )
                 .icon(icon("timeLayer"))
                 .separator();
@@ -518,7 +521,9 @@ impl App {
             menu = menu
                 .item(
                     "İstatistik",
-                    Message::Charts(crate::charts::Event::OpenStatistics(Some(id.clone()))),
+                    Message::Gis(gis::Event::Charts(crate::charts::Event::OpenStatistics(
+                        Some(id.clone()),
+                    ))),
                 )
                 .icon(icon("fieldStatistics"));
         }
@@ -526,11 +531,11 @@ impl App {
             menu = menu
                 .item(
                     "Grafik",
-                    Message::Charts(crate::charts::Event::Open {
+                    Message::Gis(gis::Event::Charts(crate::charts::Event::Open {
                         layer: Some(id),
                         kind: None,
                         spec: None,
-                    }),
+                    })),
                 )
                 .icon(icon("chart"));
         }

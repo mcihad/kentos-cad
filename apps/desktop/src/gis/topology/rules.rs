@@ -10,6 +10,7 @@
 //! Beside the tolerance, the quality profile (docs/adr/1260 §2): its name, the storage precision and the institution's
 //! acceptance threshold, three lengths kept apart. A profile is kept while it has a name.
 
+use crate::gis;
 use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
@@ -222,7 +223,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::TopologyRules(event)
+    Message::Gis(gis::Event::TopologyRules(event))
 }
 
 impl App {
@@ -308,7 +309,7 @@ impl App {
             .map(|t| t.rules.iter().map(|r| row_of(r, &format)).collect())
             .unwrap_or_default();
         let profile = before.as_ref().and_then(|t| t.profile.as_ref());
-        self.topology_rules = Some(Window {
+        self.gis.topology_rules = Some(Window {
             tolerance,
             profile: profile.map(|p| p.name.clone()).unwrap_or_default(),
             precision: profile
@@ -322,7 +323,7 @@ impl App {
             before,
             said: None,
         });
-        self.dialog = Some(Dialog::TopologyRules);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::TopologyRules));
         Task::none()
     }
 
@@ -333,7 +334,7 @@ impl App {
             .as_ref()
             .map(|d| d.model.layers().active().to_owned())
             .unwrap_or_default();
-        let Some(w) = self.topology_rules.as_mut() else {
+        let Some(w) = self.gis.topology_rules.as_mut() else {
             return Task::none();
         };
         w.said = None;
@@ -400,7 +401,7 @@ impl App {
             }
             Event::Save => return self.save_topology_rules(),
             Event::Cancel => {
-                self.topology_rules = None;
+                self.gis.topology_rules = None;
                 self.dialog = None;
             }
         }
@@ -409,16 +410,16 @@ impl App {
 
     /// Kaydet: the project's setting; says how many rules, or why not.
     fn save_topology_rules(&mut self) -> Task<Message> {
-        let Some(w) = self.topology_rules.clone() else {
+        let Some(w) = self.gis.topology_rules.clone() else {
             return Task::none();
         };
         let format = self.format();
         let layers = self.rule_layers();
         let name = |id: &str| layers.iter().find(|(l, _)| l == id).map(|(_, p)| p.clone());
-        if let Some(p) = rules_problem(&w.tolerance, &w.rows, &format, name)
-            .or_else(|| self.profile_problem(&w))
+        if let Some(p) =
+            rules_problem(&w.tolerance, &w.rows, &format, name).or_else(|| self.profile_problem(&w))
         {
-            if let Some(w) = self.topology_rules.as_mut() {
+            if let Some(w) = self.gis.topology_rules.as_mut() {
                 w.said = Some((Say::Error, p));
             }
             return Task::none();
@@ -430,7 +431,7 @@ impl App {
         let mut settings = doc.model.settings().clone();
         settings.topology = next;
         doc.model.set_settings(settings);
-        self.topology_rules = None;
+        self.gis.topology_rules = None;
         self.dialog = None;
         self.announce(
             Level::Info,
@@ -440,7 +441,7 @@ impl App {
     }
 
     pub(crate) fn topology_rules_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(_)) = (&self.topology_rules, &self.document) else {
+        let (Some(w), Some(_)) = (&self.gis.topology_rules, &self.document) else {
             return text("").into();
         };
         let format = self.format();
@@ -618,7 +619,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.topology_rules else {
+        let Some(w) = &self.gis.topology_rules else {
             return Err(format!("{RULES_TITLE} penceresi açık değil"));
         };
         Ok(match control {

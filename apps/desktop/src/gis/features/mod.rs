@@ -21,6 +21,7 @@
 //! The rows are worked out once for the drawing, the selection, the view
 //! (while Göster takes the view's) and the query as they are (docs/adr/0120).
 
+use crate::gis;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -392,7 +393,7 @@ impl App {
                 .get(id)
                 .is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer)
         };
-        if let Some(l) = self.features.layer.as_deref().filter(|l| is_layer(l)) {
+        if let Some(l) = self.gis.features.layer.as_deref().filter(|l| is_layer(l)) {
             return Some(l.to_owned());
         }
         let first = self
@@ -410,7 +411,7 @@ impl App {
     /// The rows for the drawing, the selection, the view and the query as
     /// they are, worked out again only when one of them changed.
     pub(crate) fn feature_rows(&self, doc: &Document) -> Rows {
-        let panel = &self.features;
+        let panel = &self.gis.features;
         let view = self.viewport.camera.visible_bounds();
         let view_key = if panel.show == Show::InView {
             [
@@ -602,31 +603,31 @@ impl App {
     pub(crate) fn features_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Layer(id) => {
-                if self.form_entry.as_ref().is_some_and(|e| e.docked) {
-                    self.form_entry = None;
+                if self.gis.form_entry.as_ref().is_some_and(|e| e.docked) {
+                    self.gis.form_entry = None;
                 }
                 // İstatistik and Grafik over the table's rows follow its layer.
-                if self.charts.show == Show::Table {
-                    self.charts.layer = Some(id.clone());
-                    self.charts.field = None;
+                if self.gis.charts.show == Show::Table {
+                    self.gis.charts.layer = Some(id.clone());
+                    self.gis.charts.field = None;
                 }
-                self.features.layer = Some(id);
-                self.features.join.view = None;
-                self.features.sort = None;
-                self.features.editing = None;
-                self.features.changed();
+                self.gis.features.layer = Some(id);
+                self.gis.features.join.view = None;
+                self.gis.features.sort = None;
+                self.gis.features.editing = None;
+                self.gis.features.changed();
             }
             Event::Search(text) => {
-                self.features.search = text;
-                self.features.changed();
+                self.gis.features.search = text;
+                self.gis.features.changed();
             }
             Event::Show(show) => {
-                self.features.show = show;
-                self.features.changed();
+                self.gis.features.show = show;
+                self.gis.features.changed();
             }
             Event::Filter(text) => {
-                self.features.filter = text;
-                self.features.changed();
+                self.gis.features.filter = text;
+                self.gis.features.changed();
                 return self.whole_filtered();
             }
             Event::Builder => return self.open_builder_for_features(),
@@ -637,9 +638,9 @@ impl App {
             Event::Source(e) => return self.features_source_event(e),
             Event::Whole(e) => return self.whole_event(e),
             Event::View(id) => {
-                self.features.join.view = Some(id);
-                self.features.editing = None;
-                self.features.changed();
+                self.gis.features.join.view = Some(id);
+                self.gis.features.editing = None;
+                self.gis.features.changed();
             }
             Event::JoinPress(_)
             | Event::JoinEdit(..)
@@ -648,13 +649,13 @@ impl App {
             | Event::JoinEnter
             | Event::JoinCancel
             | Event::JoinExport(_) => return self.join_event(event),
-            Event::JoinRetry => self.features.changed(),
+            Event::JoinRetry => self.gis.features.changed(),
             Event::Sort(column) => {
                 let Some(doc) = &self.document else {
                     return Task::none();
                 };
                 let rows = self.feature_rows(doc);
-                let p = &mut self.features;
+                let p = &mut self.gis.features;
                 if column == 0 {
                     (p.sort, p.descending) = (None, false);
                 } else if let Some(c) = rows.table.columns.get(column - 1) {
@@ -667,7 +668,7 @@ impl App {
                 if let Some(doc) = &self.document {
                     let rows = self.feature_rows(doc);
                     if let Some(key) = column_key(&rows, j) {
-                        self.features.widths.insert(key, width);
+                        self.gis.features.widths.insert(key, width);
                     }
                 }
             }
@@ -676,7 +677,7 @@ impl App {
                     let rows = self.feature_rows(doc);
                     if let Some(key) = column_key(&rows, j) {
                         let width = fitted_width(&rows, &Self::feature_header(&rows, j), j);
-                        self.features.widths.insert(key, width);
+                        self.gis.features.widths.insert(key, width);
                     }
                 }
             }
@@ -690,12 +691,12 @@ impl App {
                     self.selection.ids(),
                     &shown,
                     at,
-                    self.features.anchor,
+                    self.gis.features.anchor,
                     ctrl,
                     shift,
                 );
                 if !shift {
-                    self.features.anchor = Some(at);
+                    self.gis.features.anchor = Some(at);
                 }
                 self.selection.set(ids);
             }
@@ -709,18 +710,19 @@ impl App {
             Event::AddRecord => return self.feature_add_record(),
             Event::Duplicate => return self.duplicate_selected(),
             Event::Pane(pane) => {
-                self.features.pane = pane;
+                self.gis.features.pane = pane;
                 if pane == Pane::Form {
                     return self.dock_form_on_selection();
                 }
-                if self.form_entry.as_ref().is_some_and(|e| e.docked) {
-                    self.form_entry = None;
+                if self.gis.form_entry.as_ref().is_some_and(|e| e.docked) {
+                    self.gis.form_entry = None;
                 }
             }
             Event::FormRow(i) => {
                 let slot = self.shown_features().get(i).copied();
                 if let Some(slot) = slot {
                     if self
+                        .gis
                         .form_entry
                         .as_ref()
                         .is_some_and(|e| e.docked && e.dirty_now())
@@ -751,14 +753,14 @@ impl App {
                 };
                 return self.edit_feature(Some((slot, column)));
             }
-            Event::Input(text) => self.features.text = text,
+            Event::Input(text) => self.gis.features.text = text,
             Event::Choose(text) => {
-                self.features.text = text;
+                self.gis.features.text = text;
                 return self.finish_feature(None, true);
             }
             Event::Finish(walk) => return self.finish_feature(walk, walk.is_some()),
             Event::Enter => return self.finish_feature(None, true),
-            Event::Cancel => self.features.editing = None,
+            Event::Cancel => self.gis.features.editing = None,
         }
         Task::none()
     }
@@ -766,7 +768,7 @@ impl App {
     /// The cell edited from now (none: no editor), its text the value as its
     /// field shows it (a refused one as written).
     fn edit_feature(&mut self, to: Option<(Slot, usize)>) -> Task<Message> {
-        self.features.editing = to;
+        self.gis.features.editing = to;
         let Some((slot, column)) = to else {
             return Task::none();
         };
@@ -775,7 +777,7 @@ impl App {
         };
         let rows = self.feature_rows(doc);
         let (Some(c), Some(e)) = (rows.table.columns.get(column), doc.model.get(slot)) else {
-            self.features.editing = None;
+            self.gis.features.editing = None;
             return Task::none();
         };
         // A value the bound table always makes itself is shown, not written (docs/adr/0754 §3).
@@ -784,11 +786,11 @@ impl App {
                 .as_ref()
                 .is_some_and(kentos_commands::LayerField::made_always)
         }) else {
-            self.features.editing = None;
+            self.gis.features.editing = None;
             return Task::none();
         };
         let raw = e.base().attrs.get(key).cloned().unwrap_or_default();
-        self.features.text = match &c.field {
+        self.gis.features.text = match &c.field {
             Some(f) => match kentos_commands::check_value(f, &raw) {
                 Ok(v) if !v.is_empty() => kentos_commands::display_value(f, &v),
                 _ => raw,
@@ -803,10 +805,10 @@ impl App {
     /// A value refused keeps the cell open with what was typed when a key
     /// ended it (`keep`).
     fn finish_feature(&mut self, walk: Option<Walk>, keep: bool) -> Task<Message> {
-        let Some((slot, column)) = self.features.editing else {
+        let Some((slot, column)) = self.gis.features.editing else {
             return Task::none();
         };
-        let text = std::mem::take(&mut self.features.text);
+        let text = std::mem::take(&mut self.gis.features.text);
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -816,7 +818,7 @@ impl App {
             rows.table.columns.get(column).and_then(|c| c.key.clone()),
             doc.model.uid(slot),
         ) else {
-            self.features.editing = None;
+            self.gis.features.editing = None;
             return Task::none();
         };
         let value = (!js_trim(&text).is_empty()).then(|| text.clone());
@@ -845,11 +847,11 @@ impl App {
         if let Err(message) = written {
             self.warn(message);
             if keep {
-                self.features.editing = Some((slot, column));
-                self.features.text = text;
+                self.gis.features.editing = Some((slot, column));
+                self.gis.features.text = text;
                 return focus_field();
             }
-            self.features.editing = None;
+            self.gis.features.editing = None;
             return Task::none();
         }
         // The next column the table shows: a hidden one is passed over, and one whose value the bound table always
@@ -926,7 +928,7 @@ impl App {
         control: crate::traces::Control<'_>,
     ) -> Result<Option<Message>, String> {
         use crate::traces::Control;
-        let msg = |e| Some(Message::Features(e));
+        let msg = |e| Some(Message::Gis(gis::Event::Features(e)));
         let doc = self.document.as_ref().ok_or("açık çizim yok")?;
         let rows = self.feature_rows(doc);
         Ok(match control {
@@ -963,24 +965,23 @@ impl App {
                 }
                 msg(Event::Press(n - 1))
             }
-            Control::Press(texts::ZOOM) => {
-                (!self.selection.is_empty()).then(|| Message::Features(Event::ZoomSelection))
-            }
+            Control::Press(texts::ZOOM) => (!self.selection.is_empty())
+                .then(|| Message::Gis(gis::Event::Features(Event::ZoomSelection))),
             Control::Press(texts::ADD_RECORD) => rows
                 .layer
                 .is_some()
-                .then(|| Message::Features(Event::AddRecord)),
-            Control::Press(texts::DUPLICATE) => {
-                (!self.selection.is_empty()).then(|| Message::Features(Event::Duplicate))
-            }
+                .then(|| Message::Gis(gis::Event::Features(Event::AddRecord))),
+            Control::Press(texts::DUPLICATE) => (!self.selection.is_empty())
+                .then(|| Message::Gis(gis::Event::Features(Event::Duplicate))),
             Control::Press(texts::FIELDS) => rows
                 .layer
                 .is_some()
-                .then(|| Message::Features(Event::Fields)),
+                .then(|| Message::Gis(gis::Event::Features(Event::Fields))),
             Control::Key("Esc") => self
+                .gis
                 .features
                 .editing
-                .map(|_| Message::Features(Event::Cancel)),
+                .map(|_| Message::Gis(gis::Event::Features(Event::Cancel))),
             other => return Err(format!("“Tablo” sekmesinde {other} yok")),
         })
     }
@@ -1023,17 +1024,19 @@ impl App {
             }
             .or_else(|| (text == texts::EMPTY).then(String::new))
             .ok_or_else(|| format!("“{header}” listesinde “{text}” yok"))?;
-            Message::Features(Event::Choose(code))
+            Message::Gis(gis::Event::Features(Event::Choose(code)))
         } else {
-            Message::Features(Event::Enter)
+            Message::Gis(gis::Event::Features(Event::Enter))
         };
         // A press selects the row's object first, as the double click's first press does.
         let mut out = vec![
-            Message::Features(Event::Press(row - 1)),
-            Message::Features(Event::Edit(row - 1, j)),
+            Message::Gis(gis::Event::Features(Event::Press(row - 1))),
+            Message::Gis(gis::Event::Features(Event::Edit(row - 1, j))),
         ];
         if !listed {
-            out.push(Message::Features(Event::Input(text.to_owned())));
+            out.push(Message::Gis(gis::Event::Features(Event::Input(
+                text.to_owned(),
+            ))));
         }
         out.push(write);
         Ok(out)
@@ -1191,7 +1194,7 @@ impl App {
         match slot {
             Some(slot) => self.dock_form_on(slot),
             None => {
-                self.form_entry = None;
+                self.gis.form_entry = None;
                 Task::none()
             }
         }
@@ -1205,7 +1208,7 @@ impl App {
             .and_then(|d| d.model.get(slot))
             .map(|e| e.base().layer_id.clone());
         let Some(form) = layer.and_then(|l| self.form_of_layer(&l)) else {
-            self.form_entry = None;
+            self.gis.form_entry = None;
             return Task::none();
         };
         self.open_entry_docked(slot, &form)

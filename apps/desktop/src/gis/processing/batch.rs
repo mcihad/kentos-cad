@@ -6,6 +6,7 @@
 //! batch back (Hata olursa: Dur) or only itself (Devam et, docs/adr/0551 §1). What the command answers fills the rows'
 //! states, the stopped rows' reasons and the record panel (steps, counts, durations, what running it again would meet).
 
+use crate::gis;
 use std::time::Duration;
 
 use iced::futures::channel::mpsc;
@@ -108,7 +109,7 @@ pub enum Event {
 }
 
 fn ev(e: Event) -> Message {
-    Message::Processing(ProcessingEvent::Batch(e))
+    Message::Gis(gis::Event::Processing(ProcessingEvent::Batch(e)))
 }
 
 /// One row as the last run left it.
@@ -311,20 +312,26 @@ impl App {
     pub(crate) fn processing_batch_event(&mut self, e: Event) -> Task<Message> {
         match e {
             Event::Open => {
-                if let Some(window) = &self.processing.dialog
+                if let Some(window) = &self.gis.processing.dialog
                     && !window.running()
                 {
-                    self.processing.batch = Some(BatchState::new(&window.tool));
+                    self.gis.processing.batch = Some(BatchState::new(&window.tool));
                 }
             }
             Event::Back => {
-                if self.processing.batch.as_ref().is_some_and(|b| !b.running()) {
-                    self.processing.batch = None;
+                if self
+                    .gis
+                    .processing
+                    .batch
+                    .as_ref()
+                    .is_some_and(|b| !b.running())
+                {
+                    self.gis.processing.batch = None;
                 }
             }
             Event::Run => self.batch_run(),
             Event::Stop => {
-                if let Some(b) = &mut self.processing.batch
+                if let Some(b) = &mut self.gis.processing.batch
                     && let Some(job) = &mut b.job
                 {
                     job.cancel();
@@ -336,7 +343,7 @@ impl App {
             }
             Event::Tick => self.batch_tick(),
             edit => {
-                let Some(b) = &mut self.processing.batch else {
+                let Some(b) = &mut self.gis.processing.batch else {
                     return Task::none();
                 };
                 if b.running() {
@@ -368,8 +375,8 @@ impl App {
     fn batch_run(&mut self) {
         let (Some(doc), Some(window), Some(b)) = (
             self.document.as_ref(),
-            self.processing.dialog.as_ref(),
-            self.processing.batch.as_mut(),
+            self.gis.processing.dialog.as_ref(),
+            self.gis.processing.batch.as_mut(),
         ) else {
             return;
         };
@@ -439,7 +446,8 @@ impl App {
 
     /// The running job looked at: its progress, and when it is over its answer (written to the drawing by the job).
     fn batch_tick(&mut self) {
-        let (Some(doc), Some(b)) = (self.document.as_mut(), self.processing.batch.as_mut()) else {
+        let (Some(doc), Some(b)) = (self.document.as_mut(), self.gis.processing.batch.as_mut())
+        else {
             return;
         };
         let Some(job) = &mut b.job else {
@@ -475,7 +483,8 @@ impl App {
 impl App {
     /// The batch window: the tool's own window with the table in the form's place.
     pub(crate) fn batch_view(&self) -> Element<'_, Message> {
-        let (Some(b), Some(window)) = (&self.processing.batch, &self.processing.dialog) else {
+        let (Some(b), Some(window)) = (&self.gis.processing.batch, &self.gis.processing.dialog)
+        else {
             return iced::widget::space().into();
         };
         let tool = &window.tool;
@@ -925,7 +934,7 @@ fn footer<'a>(b: &'a BatchState) -> Element<'a, Message> {
         .on_press(if running {
             ev(Event::Stop)
         } else {
-            Message::Processing(ProcessingEvent::Close)
+            Message::Gis(gis::Event::Processing(ProcessingEvent::Close))
         });
     let run = button(
         row![icon(Icon::Play).size(14.0), label::body("Toplu çalıştır")]

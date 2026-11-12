@@ -6,6 +6,7 @@
 //! writes the differences' copies into a “Karşılaştırma” group in one undo
 //! step “Veri karşılaştır”.
 
+use crate::gis;
 use std::collections::{BTreeSet, HashSet};
 use std::path::PathBuf;
 
@@ -167,7 +168,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::DataCompare(event)
+    Message::Gis(gis::Event::DataCompare(event))
 }
 
 fn walk<'a>(nodes: &'a [LayerNode], above: &[String], out: &mut Vec<(&'a LayerNode, String)>) {
@@ -425,7 +426,7 @@ impl App {
             .map(|(n, _)| n.id.clone())
             .unwrap_or_default();
         let old_here = preset.other.is_none();
-        self.data_compare = Some(Window {
+        self.gis.data_compare = Some(Window {
             other: preset.other,
             old_here,
             old_node: preset.old_node.unwrap_or(first),
@@ -444,12 +445,12 @@ impl App {
             old_date: preset.old_date,
             new_date: preset.new_date,
         });
-        self.dialog = Some(Dialog::DataCompare);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::DataCompare));
     }
 
     /// The two sides as the window sets them.
     fn compare_sides(&self) -> Option<(Side<'_>, Side<'_>)> {
-        let (Some(w), Some(doc)) = (&self.data_compare, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.data_compare, &self.document) else {
             return None;
         };
         let model = &doc.model;
@@ -521,7 +522,7 @@ impl App {
 
     /// Compares the sides as the window sets them; the outcome, or why not.
     fn run_compare(&self) -> Result<Outcome, String> {
-        let Some(w) = &self.data_compare else {
+        let Some(w) = &self.gis.data_compare else {
             return Err("Açık çizim yok.".to_owned());
         };
         date_of(&w.old_date, OLD_DATE)?;
@@ -593,7 +594,12 @@ impl App {
             self.warn(locked);
             return false;
         }
-        let Some(o) = self.data_compare.as_ref().and_then(|w| w.outcome.clone()) else {
+        let Some(o) = self
+            .gis
+            .data_compare
+            .as_ref()
+            .and_then(|w| w.outcome.clone())
+        else {
             return false;
         };
         let Some(doc) = self.document.as_ref() else {
@@ -725,10 +731,15 @@ impl App {
     /// A row's object on the drawing: the new one, else the old one of this
     /// drawing, selected; another drawing's only shown.
     fn show_compare_row(&mut self, index: usize) -> Task<Message> {
-        let Some(o) = self.data_compare.as_ref().and_then(|w| w.outcome.as_ref()) else {
+        let Some(o) = self
+            .gis
+            .data_compare
+            .as_ref()
+            .and_then(|w| w.outcome.as_ref())
+        else {
             return Task::none();
         };
-        let only = self.data_compare.as_ref().is_some_and(|w| w.only_diffs);
+        let only = self.gis.data_compare.as_ref().is_some_and(|w| w.only_diffs);
         let Some(row) = o
             .rows
             .iter()
@@ -788,7 +799,7 @@ impl App {
     pub(crate) fn data_compare_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Source(here) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.old_here = here;
                     w.old_node.clear();
                 }
@@ -820,7 +831,7 @@ impl App {
                         system: system_of(model.settings()),
                     };
                     let count = other.entities.len();
-                    if let Some(w) = self.data_compare.as_mut() {
+                    if let Some(w) = self.gis.data_compare.as_mut() {
                         w.other = Some(other);
                         w.old_here = false;
                         w.old_node.clear();
@@ -833,47 +844,47 @@ impl App {
                 Err(why) => self.warn(why),
             },
             Event::OldNode(id) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.old_node = id;
                 }
             }
             Event::NewNode(id) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.new_node = id;
                 }
             }
             Event::Pairing(p) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.pairing = p;
                 }
             }
             Event::Key(k) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.key = k;
                 }
             }
             Event::Search(t) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.search = t;
                 }
             }
             Event::Tolerance(t) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.tolerance = t;
                 }
             }
             Event::OldDate(t) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.old_date = t;
                 }
             }
             Event::NewDate(t) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.new_date = t;
                 }
             }
             Event::Field(name, on) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     if on {
                         w.ignored.remove(&name);
                     } else {
@@ -882,14 +893,14 @@ impl App {
                 }
             }
             Event::OnlyDiffs(on) => {
-                if let Some(w) = self.data_compare.as_mut() {
+                if let Some(w) = self.gis.data_compare.as_mut() {
                     w.only_diffs = on;
                 }
             }
             Event::Compare => match self.run_compare() {
                 Ok(outcome) => {
                     let said = counts_text(&outcome.rows);
-                    if let Some(w) = self.data_compare.as_mut() {
+                    if let Some(w) = self.gis.data_compare.as_mut() {
                         w.outcome = Some(outcome);
                     }
                     self.say(Level::Success, format!("Karşılaştırıldı: {said}."));
@@ -898,7 +909,7 @@ impl App {
             },
             Event::Show(i) => return self.show_compare_row(i),
             Event::Copy => {
-                if let Some(w) = &self.data_compare
+                if let Some(w) = &self.gis.data_compare
                     && let Some(o) = &w.outcome
                 {
                     let lines = report_rows(o, w.only_diffs);
@@ -931,7 +942,7 @@ impl App {
             }
             Event::Saved(None) => {}
             Event::Saved(Some(path)) => {
-                if let Some(w) = &self.data_compare
+                if let Some(w) = &self.gis.data_compare
                     && let Some(o) = &w.outcome
                 {
                     let lines = report_rows(o, w.only_diffs);
@@ -958,7 +969,7 @@ impl App {
                 self.write_differences();
             }
             Event::Close => {
-                self.data_compare = None;
+                self.gis.data_compare = None;
                 self.dialog = None;
             }
         }
@@ -966,7 +977,7 @@ impl App {
     }
 
     pub(crate) fn data_compare_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(doc)) = (&self.data_compare, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.data_compare, &self.document) else {
             return text("").into();
         };
         let model = &doc.model;
@@ -1219,7 +1230,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.data_compare else {
+        let Some(w) = &self.gis.data_compare else {
             return Err(format!("{COMPARE_TITLE} penceresi açık değil"));
         };
         let any = w.outcome.is_some();

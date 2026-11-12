@@ -131,8 +131,8 @@ impl App {
     pub(crate) fn readjustment_sheets_make(&mut self) -> Task<Message> {
         let Some(scope) = self.readjustment_scope_input() else { return Task::none() };
         // The parts outside's parcel numbers as typed (docs/adr/3080).
-        let numbers = match &self.readjustment.scope {
-            Some(Ok(k)) => match typed_numbers(&self.readjustment.numbers, k) {
+        let numbers = match &self.map.readjustment.scope {
+            Some(Ok(k)) => match typed_numbers(&self.map.readjustment.numbers, k) {
                 Ok(n) => n,
                 Err(why) => {
                     self.warn(why);
@@ -142,7 +142,7 @@ impl App {
             _ => None,
         };
         // docs/adr/4280: the numbers' height on paper as typed; empty: labelled points.
-        let typed = self.readjustment.number_height.trim().replace(',', ".");
+        let typed = self.map.readjustment.number_height.trim().replace(',', ".");
         let number_height = if typed.is_empty() {
             None
         } else {
@@ -160,7 +160,7 @@ impl App {
             options: serde_json::json!({}),
             numbers,
             number_height,
-            number_leader: self.readjustment.number_leader,
+            number_leader: self.map.readjustment.number_leader,
             expected_revision: None,
         };
         let Some(doc) = self.document.as_mut() else { return Task::none() };
@@ -176,7 +176,7 @@ impl App {
                 readjustment_sheets::GROUP
             ),
         );
-        self.readjustment = crate::readjustment_window::State::default();
+        self.map.readjustment = crate::readjustment_window::State::default();
         self.dialog = None;
         self.follow_sheet_book();
         self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1)))
@@ -185,7 +185,9 @@ impl App {
     /// Çapı çizime yaz: the scope's parts as areas on “Ayırma çapı”, one undo step; the layer made when missing.
     pub(crate) fn readjustment_sheet_write(&mut self) {
         let f = self.format();
-        let Some(Ok(scope)) = self.readjustment.scope.clone() else { return };
+        let Some(Ok(scope)) = self.map.readjustment.scope.clone() else {
+            return;
+        };
         let objects: Vec<NewObject> = scope
             .parcels
             .iter()

@@ -3,6 +3,7 @@
 //! Dever's cells, which Kaydet writes; and its pictures.
 
 use crate::app::{App, Message};
+use crate::road;
 use crate::superelevation_window::Event as D;
 use crate::transition_window::Event as T;
 
@@ -19,16 +20,36 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: T) {
-    let _ = app.update(Message::Superelevations(D::Transition(e)));
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Transition(
+        e,
+    ))));
 }
 
 /// The winding alignment's schedule with every limit of the shared case "Kıvrımlı aks: hepsi birlikte".
 fn typed(app: &mut App) {
     let _ = app.update(Message::Run("superelevation.editor"));
-    let at = app.superelevation_window.as_ref().unwrap().rows.iter().position(|r| r.id == "d-5").expect("d-5");
-    let _ = app.update(Message::Superelevations(D::Choose(at)));
-    let _ = app.update(Message::Superelevations(D::OpenTransition));
-    for (k, v) in [(0, "250"), (1, "70"), (2, "0,6"), (3, "0,2"), (4, "1"), (5, "0,67"), (6, "5")] {
+    let at = app
+        .road
+        .superelevation_window
+        .as_ref()
+        .unwrap()
+        .rows
+        .iter()
+        .position(|r| r.id == "d-5")
+        .expect("d-5");
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(at))));
+    let _ = app.update(Message::Road(road::Event::Superelevations(
+        D::OpenTransition,
+    )));
+    for (k, v) in [
+        (0, "250"),
+        (1, "70"),
+        (2, "0,6"),
+        (3, "0,2"),
+        (4, "1"),
+        (5, "0,67"),
+        (6, "5"),
+    ] {
         send(app, T::Field(k, v.into()));
     }
 }
@@ -42,7 +63,12 @@ fn shared(name: &str) -> serde_json::Value {
 fn the_proposal_is_the_shared_cases_and_is_written_into_the_schedule() {
     let mut app = app();
     typed(&mut app);
-    let x = app.superelevation_window.as_ref().and_then(|w| w.transition.as_deref()).expect("open");
+    let x = app
+        .road
+        .superelevation_window
+        .as_ref()
+        .and_then(|w| w.transition.as_deref())
+        .expect("open");
     let out = x.result.clone().expect("read").expect("reads");
     let want = shared("Kıvrımlı aks: hepsi birlikte");
     assert_eq!(out.rows.len(), 3);
@@ -50,12 +76,17 @@ fn the_proposal_is_the_shared_cases_and_is_written_into_the_schedule() {
         assert_eq!(r.pi, w["pi"].as_str().unwrap());
         assert!((r.runoff.unwrap() - w["runoff"].as_f64().unwrap()).abs() < 1e-9, "{r:?}");
     }
-    assert_eq!(out.findings.len(), want["findings"].as_array().unwrap().len());
+    assert_eq!(
+        out.findings.len(),
+        want["findings"].as_array().unwrap().len()
+    );
     send(&mut app, T::Apply);
-    let w = app.superelevation_window.as_ref().unwrap();
+    let w = app.road.superelevation_window.as_ref().unwrap();
     assert!(w.transition.is_none(), "Çizelgeye yaz goes back to Dever");
     let def = w.rows[w.chosen.unwrap()].def().expect("builds");
-    let kentos_commands::SuperelevationMethod::Curves { curves } = def.method else { panic!("by curves") };
+    let kentos_commands::SuperelevationMethod::Curves { curves } = def.method else {
+        panic!("by curves")
+    };
     assert_eq!((curves[0].runoff, curves[0].on_tangent), (55.0, 0.67));
     assert_eq!((curves[1].runoff, curves[1].on_tangent), (95.0, 0.0));
 }
@@ -64,15 +95,37 @@ fn the_proposal_is_the_shared_cases_and_is_written_into_the_schedule() {
 fn a_schedule_by_rows_has_no_proposal_and_n_must_be_above_one() {
     let mut app = app();
     let _ = app.update(Message::Run("superelevation.editor"));
-    let at = app.superelevation_window.as_ref().unwrap().rows.iter().position(|r| r.id == "d-5").unwrap();
-    let _ = app.update(Message::Superelevations(D::Choose(at)));
-    let _ = app.update(Message::Superelevations(D::OpenTransition));
+    let at = app
+        .road
+        .superelevation_window
+        .as_ref()
+        .unwrap()
+        .rows
+        .iter()
+        .position(|r| r.id == "d-5")
+        .unwrap();
+    let _ = app.update(Message::Road(road::Event::Superelevations(D::Choose(at))));
+    let _ = app.update(Message::Road(road::Event::Superelevations(
+        D::OpenTransition,
+    )));
     send(&mut app, T::Field(0, "1".into()));
-    let x = app.superelevation_window.as_ref().and_then(|w| w.transition.as_deref()).unwrap();
+    let x = app
+        .road
+        .superelevation_window
+        .as_ref()
+        .and_then(|w| w.transition.as_deref())
+        .unwrap();
     let why = x.result.clone().unwrap().expect_err("1:1");
     assert!(why.contains("1'den büyük bir n"), "{why}");
     send(&mut app, T::Back);
-    assert!(app.superelevation_window.as_ref().unwrap().transition.is_none());
+    assert!(
+        app.road
+            .superelevation_window
+            .as_ref()
+            .unwrap()
+            .transition
+            .is_none()
+    );
 }
 
 /// The window, wide and narrow, light and dark, and Dever after Çizelgeye yaz; `.run/gui-evidence/yol-y34/`:

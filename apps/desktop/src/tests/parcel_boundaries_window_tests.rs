@@ -4,6 +4,7 @@
 //! parcels; Çizimde göster leaves the graph's marks on the drawing, worked out again as it changes, until İşareti
 //! kaldır (docs/adr/2220); nothing is written to the drawing. And its pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -38,16 +39,41 @@ const APPROX: &str = "santimetreye yuvarlanmış köşeler 1 cm'lik uzaklıkla: 
 #[test]
 fn an_arc_drawn_with_chords_is_one_problem_with_a_distance() {
     let mut app = opened(Some(APPROX));
-    app.selection.set([kentos_domain::Slot(1), kentos_domain::Slot(3)]);
+    app.selection
+        .set([kentos_domain::Slot(1), kentos_domain::Slot(3)]);
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::ParcelBoundaries(B::Open));
-    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
-    assert_eq!(g.problems.iter().map(|p| p.kind.as_str()).collect::<Vec<_>>(), ["missingVertex"]);
-    let _ = app.update(Message::ParcelBoundaries(B::Tolerance(0.01)));
-    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let g = app
+        .map
+        .parcel_boundaries
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("read");
+    assert_eq!(
+        g.problems
+            .iter()
+            .map(|p| p.kind.as_str())
+            .collect::<Vec<_>>(),
+        ["missingVertex"]
+    );
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Tolerance(
+        0.01,
+    ))));
+    let g = app
+        .map
+        .parcel_boundaries
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("read");
     let c = cases();
-    let want = &c["cases"].as_array().expect("cases").iter().find(|x| x["name"] == APPROX).expect("the case")["steps"][0]
-        ["result"]["output"]["problems"][0];
+    let want = &c["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|x| x["name"] == APPROX)
+        .expect("the case")["steps"][0]["result"]["output"]["problems"][0];
     assert_eq!(g.problems.len(), 1);
     let got = &g.problems[0];
     assert_eq!((got.kind.as_str(), serde_json::to_value(&got.boundaries).expect("json")), ("approxArc", want["boundaries"].clone()));
@@ -85,12 +111,16 @@ fn approx_screens() {
             app.selection.set([kentos_domain::Slot(1), kentos_domain::Slot(3)]);
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("parcels.check"));
-            let _ = app.update(Message::ParcelBoundaries(B::Open));
-            let _ = app.update(Message::ParcelBoundaries(B::Tolerance(0.01)));
-            let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Problems)));
+            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Tolerance(
+                0.01,
+            ))));
+            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+                Show::Problems,
+            ))));
             if draw {
-                let _ = app.update(Message::ParcelBoundaries(B::Choose(0)));
-                let _ = app.update(Message::ParcelBoundaries(B::Draw));
+                let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(0))));
+                let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
                 app.selection.clear();
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -112,11 +142,21 @@ const MISMATCH: &str = "uyuşmayan üç sınır bir arada: her biri kendi sorunu
 fn an_arc_against_its_chord_is_listed_with_its_sliver() {
     let mut app = opened(Some(MISMATCH));
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::ParcelBoundaries(B::Open));
-    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let g = app
+        .map
+        .parcel_boundaries
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("read");
     let c = cases();
-    let want = c["cases"].as_array().expect("cases").iter().find(|x| x["name"] == MISMATCH).expect("the case")["steps"][0]
-        ["result"]["output"]["problems"]
+    let want = c["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|x| x["name"] == MISMATCH)
+        .expect("the case")["steps"][0]["result"]["output"]["problems"]
         .clone();
     let want = want.as_array().expect("problems");
     assert_eq!(g.problems.len(), want.len());
@@ -139,13 +179,31 @@ fn the_clean_block_s_graph_from_the_parcel_check() {
     let mut app = opened(None);
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::ParcelBoundaries(B::Open));
-    assert_eq!(app.dialog, Some(Dialog::ParcelBoundaries));
-    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::ParcelBoundaries))
+    );
+    let g = app
+        .map
+        .parcel_boundaries
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("read");
     let want = &cases()["cases"][0]["steps"][0]["result"]["output"];
-    assert_eq!(g.corners.len(), want["corners"].as_array().map_or(0, Vec::len));
-    assert_eq!(g.boundaries.len(), want["boundaries"].as_array().map_or(0, Vec::len));
-    assert_eq!((Value::from(g.shared), Value::from(g.outer)), (want["shared"].clone(), want["outer"].clone()));
+    assert_eq!(
+        g.corners.len(),
+        want["corners"].as_array().map_or(0, Vec::len)
+    );
+    assert_eq!(
+        g.boundaries.len(),
+        want["boundaries"].as_array().map_or(0, Vec::len)
+    );
+    assert_eq!(
+        (Value::from(g.shared), Value::from(g.outer)),
+        (want["shared"].clone(), want["outer"].clone())
+    );
     assert!(g.problems.is_empty());
     let first = &rows(&g, Show::Boundaries, &app.format())[0];
     assert_eq!(first[0], "S1");
@@ -156,16 +214,38 @@ fn the_clean_block_s_graph_from_the_parcel_check() {
 fn the_problems_are_listed_and_their_parcels_selected() {
     let mut app = opened(Some(PROBLEMS));
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::ParcelBoundaries(B::Open));
-    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let g = app
+        .map
+        .parcel_boundaries
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("read");
     let kinds: Vec<&str> = g.problems.iter().map(|p| p.kind.as_str()).collect();
-    assert_eq!(kinds, ["missingVertex", "missingVertex", "missingVertex", "splitCorner", "splitCorner", "overlap"]);
-    let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Problems)));
+    assert_eq!(
+        kinds,
+        [
+            "missingVertex",
+            "missingVertex",
+            "missingVertex",
+            "splitCorner",
+            "splitCorner",
+            "overlap"
+        ]
+    );
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+        Show::Problems,
+    ))));
     let shown = rows(&g, Show::Problems, &app.format());
     assert_eq!(shown[0][0], "Komşuda eksik köşe");
-    let _ = app.update(Message::ParcelBoundaries(B::Select));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Select)));
     assert_eq!(app.dialog, None);
-    assert_eq!(app.selection.ids().len(), 7, "every parcel of the block is in a problem");
+    assert_eq!(
+        app.selection.ids().len(),
+        7,
+        "every parcel of the block is in a problem"
+    );
 }
 
 /// Çizimde göster (docs/adr/2220): the window closes; the problems' words, the corners' and the boundaries' numbers
@@ -176,12 +256,21 @@ fn the_graph_stays_on_the_drawing_until_unmarked() {
     let mut app = opened(Some(PROBLEMS));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::ParcelBoundaries(B::Open));
-    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
-    let _ = app.update(Message::ParcelBoundaries(B::Draw));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let g = app
+        .map
+        .parcel_boundaries
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("read");
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
     assert_eq!(app.dialog, None);
     let m = app.parcel_graph_marks().expect("the marks");
-    assert_eq!((m.corners.len(), m.boundaries.len()), (g.corners.len(), g.boundaries.len()));
+    assert_eq!(
+        (m.corners.len(), m.boundaries.len()),
+        (g.corners.len(), g.boundaries.len())
+    );
     assert_eq!(m.corners[0].1, "K1");
     let words: Vec<&str> = m.problems.iter().map(|(_, w)| w.as_str()).collect();
     assert_eq!(
@@ -205,14 +294,22 @@ fn the_graph_stays_on_the_drawing_until_unmarked() {
 fn the_chosen_row_is_brought_forward_on_the_drawing() {
     let mut app = opened(Some(PROBLEMS));
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::ParcelBoundaries(B::Open));
-    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let g = app
+        .map
+        .parcel_boundaries
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("read");
     // The last problem (the overlap) chosen in the problems' table.
-    let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Problems)));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+        Show::Problems,
+    ))));
     let last = g.problems.len() - 1;
-    let _ = app.update(Message::ParcelBoundaries(B::Choose(last)));
-    assert_eq!(app.parcel_boundaries.chosen, Some(last));
-    let _ = app.update(Message::ParcelBoundaries(B::Draw));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(last))));
+    assert_eq!(app.map.parcel_boundaries.chosen, Some(last));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
     let m = app.parcel_graph_marks().expect("the marks");
     let (pts, name) = m.focus.clone().expect("brought forward");
     let p = g.problems[last].at;
@@ -230,20 +327,27 @@ fn the_chosen_row_is_brought_forward_on_the_drawing() {
     assert!(b[2] - b[0] < a[2] - a[0], "{b:?} within {a:?}");
     // A boundary, chosen in the boundaries' table: along its curve; another table clears the choice.
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::ParcelBoundaries(B::Open));
-    let _ = app.update(Message::ParcelBoundaries(B::Choose(0)));
-    let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Corners)));
-    assert_eq!(app.parcel_boundaries.chosen, None);
-    let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Boundaries)));
-    let _ = app.update(Message::ParcelBoundaries(B::Choose(0)));
-    let _ = app.update(Message::ParcelBoundaries(B::Draw));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(0))));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+        Show::Corners,
+    ))));
+    assert_eq!(app.map.parcel_boundaries.chosen, None);
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+        Show::Boundaries,
+    ))));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(0))));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
     let m = app.parcel_graph_marks().expect("the marks");
     let (pts, name) = m.focus.clone().expect("brought forward");
-    assert_eq!((name.as_str(), pts.len() >= 2), (g.boundaries[0].id.as_str(), true));
+    assert_eq!(
+        (name.as_str(), pts.len() >= 2),
+        (g.boundaries[0].id.as_str(), true)
+    );
     // Without a choice: the whole graph, nothing forward.
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::ParcelBoundaries(B::Open));
-    let _ = app.update(Message::ParcelBoundaries(B::Draw));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
     assert!(app.parcel_graph_marks().expect("the marks").focus.is_none());
 }
 
@@ -273,10 +377,12 @@ fn drawing_screens() {
                 app.selection.set((1..=3).map(kentos_domain::Slot).collect::<Vec<_>>());
             }
             let _ = app.update(Message::Run("parcels.check"));
-            let _ = app.update(Message::ParcelBoundaries(B::Open));
-            let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Problems)));
+            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+                Show::Problems,
+            ))));
             if draw {
-                let _ = app.update(Message::ParcelBoundaries(B::Draw));
+                let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
                 app.selection.clear();
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -311,8 +417,8 @@ fn screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("parcels.check"));
-            let _ = app.update(Message::ParcelBoundaries(B::Open));
-            let _ = app.update(Message::ParcelBoundaries(B::Show(show)));
+            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(show))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
@@ -345,10 +451,12 @@ fn mismatch_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("parcels.check"));
-            let _ = app.update(Message::ParcelBoundaries(B::Open));
-            let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Problems)));
+            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+                Show::Problems,
+            ))));
             if draw {
-                let _ = app.update(Message::ParcelBoundaries(B::Draw));
+                let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
                 app.selection.clear();
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -388,18 +496,34 @@ fn focus_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("parcels.check"));
-        let _ = app.update(Message::ParcelBoundaries(B::Open));
-        let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
-        let arc = g.boundaries.iter().position(|b| b.bulge != 0.0).expect("an arc boundary");
-        let _ = app.update(Message::ParcelBoundaries(B::Choose(arc)));
+        let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+        let g = app
+            .map
+            .parcel_boundaries
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("read");
+        let arc = g
+            .boundaries
+            .iter()
+            .position(|b| b.bulge != 0.0)
+            .expect("an arc boundary");
+        let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(arc))));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::ParcelBoundaries(B::Draw));
+        let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("cizimde-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

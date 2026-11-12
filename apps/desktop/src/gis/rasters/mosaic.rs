@@ -4,6 +4,7 @@
 //! Oluştur runs the command: the VRT written and, with “Katman olarak ekle”, the mosaic added as a raster on a new
 //! layer, one undo step “Sanal mozaik”. Nothing is reckoned here: the plan and the write are the command's.
 
+use crate::gis;
 use std::path::{Path, PathBuf};
 
 use iced::widget::{Column, button, container, row};
@@ -145,7 +146,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Rasters(Rasters::Mosaic(e))
+    Message::Gis(gis::Event::Rasters(Rasters::Mosaic(e)))
 }
 
 fn name_of(p: &Path) -> String {
@@ -193,8 +194,8 @@ impl App {
             self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
             return Task::none();
         }
-        self.rasters.mosaic = Some(State::default());
-        self.dialog = Some(Asking::RasterMosaic);
+        self.gis.rasters.mosaic = Some(State::default());
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::RasterMosaic));
         self.raster_mosaic_pick()
     }
 
@@ -207,8 +208,8 @@ impl App {
             ..State::default()
         };
         s.chosen = None;
-        self.rasters.mosaic = Some(s);
-        self.dialog = Some(Asking::RasterMosaic);
+        self.gis.rasters.mosaic = Some(s);
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::RasterMosaic));
         self.raster_mosaic_replan();
     }
 
@@ -245,7 +246,7 @@ impl App {
     }
 
     fn raster_mosaic_path_pick(&mut self) -> Task<Message> {
-        let start = self.rasters.mosaic.as_ref().and_then(|s| {
+        let start = self.gis.rasters.mosaic.as_ref().and_then(|s| {
             s.path
                 .clone()
                 .or_else(|| s.sources.first().map(|f| default_path(f)))
@@ -304,7 +305,7 @@ impl App {
 
     /// The plan again, after a choice changed.
     fn raster_mosaic_replan(&mut self) {
-        let Some(s) = &self.rasters.mosaic else {
+        let Some(s) = &self.gis.rasters.mosaic else {
             return;
         };
         let planned = if s.sources.is_empty() {
@@ -325,14 +326,14 @@ impl App {
                 },
             })
         };
-        if let Some(s) = &mut self.rasters.mosaic {
+        if let Some(s) = &mut self.gis.rasters.mosaic {
             s.planned = planned;
             s.status = None;
         }
     }
 
     pub(crate) fn raster_mosaic_event(&mut self, e: Event) -> Task<Message> {
-        let Some(s) = &mut self.rasters.mosaic else {
+        let Some(s) = &mut self.gis.rasters.mosaic else {
             return Task::none();
         };
         match e {
@@ -400,7 +401,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.rasters.mosaic = None;
+                self.gis.rasters.mosaic = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -410,14 +411,14 @@ impl App {
     }
 
     fn raster_mosaic_status(&mut self, why: String) {
-        if let Some(s) = &mut self.rasters.mosaic {
+        if let Some(s) = &mut self.gis.rasters.mosaic {
             s.status = Some(why);
         }
     }
 
     /// Oluştur: the command run; with “Katman olarak ekle” a new layer first, both one undo step.
     fn raster_mosaic_run(&mut self) {
-        let Some(s) = self.rasters.mosaic.clone() else {
+        let Some(s) = self.gis.rasters.mosaic.clone() else {
             return;
         };
         let Some(doc) = &mut self.document else {
@@ -462,7 +463,7 @@ impl App {
                     .as_deref()
                     .and_then(|u| kentos_domain::Uuid::parse_str(u).ok())
                     .and_then(|u| model.slot_of(u));
-                self.rasters.mosaic = None;
+                self.gis.rasters.mosaic = None;
                 self.dialog = None;
                 if let Some(slot) = slot {
                     self.zoom_to(&[slot]);
@@ -498,7 +499,7 @@ impl App {
     }
 
     pub(crate) fn raster_mosaic_view(&self) -> Element<'_, Message> {
-        let Some(s) = &self.rasters.mosaic else {
+        let Some(s) = &self.gis.rasters.mosaic else {
             return Column::new().into();
         };
         let format = self
@@ -712,7 +713,7 @@ mod tests {
     }
 
     fn send(app: &mut App, e: Event) {
-        let task = app.update(Message::Rasters(Rasters::Mosaic(e)));
+        let task = app.update(Message::Gis(gis::Event::Rasters(Rasters::Mosaic(e))));
         drive(app, task);
     }
 
@@ -747,7 +748,7 @@ mod tests {
         drive(&mut app, task);
         app.picker = Picker::File(fixture("dem-c.tif"));
         send(&mut app, Event::AddFiles);
-        let s = app.rasters.mosaic.as_ref().expect("the window");
+        let s = app.gis.rasters.mosaic.as_ref().expect("the window");
         assert_eq!(s.sources.len(), 2);
         let (m, warnings) = s.planned.clone().expect("a plan").expect("the plan");
         assert_eq!((m.width, m.height), (80, 60));
@@ -755,14 +756,14 @@ mod tests {
         // Aşağı moves the first file under the second: dem-c (5 m) on top.
         send(&mut app, Event::Choose(0));
         send(&mut app, Event::Down);
-        let s = app.rasters.mosaic.as_ref().expect("the window");
+        let s = app.gis.rasters.mosaic.as_ref().expect("the window");
         let (m, _) = s.planned.clone().expect("a plan").expect("the plan");
         assert!(m.sources[0].read.ends_with("dem-c.tif"));
         let out = std::env::temp_dir().join(format!("kentos-mozaik-test-{}", std::process::id()));
         std::fs::create_dir_all(&out).unwrap();
         send(&mut app, Event::PathPicked(Some(out.join("dem"))));
         send(&mut app, Event::Run);
-        assert!(app.rasters.mosaic.is_none(), "the window closes");
+        assert!(app.gis.rasters.mosaic.is_none(), "the window closes");
         let vrt = out.join("dem.vrt");
         assert!(vrt.is_file(), "the VRT is written, its extension given");
         let added = rasters(&app);
@@ -787,7 +788,7 @@ mod tests {
         drive(&mut app, task);
         app.picker = Picker::File(fixture("baska-sistem.tif"));
         send(&mut app, Event::AddFiles);
-        let s = app.rasters.mosaic.as_ref().expect("the window");
+        let s = app.gis.rasters.mosaic.as_ref().expect("the window");
         let why = s.planned.clone().expect("a plan").expect_err("refused");
         assert!(why.contains("EPSG:5255"), "{why}");
     }

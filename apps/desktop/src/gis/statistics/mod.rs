@@ -116,7 +116,7 @@ pub(crate) struct StatsNow {
 
 impl App {
     fn stats_rows_key(&self) -> RowsKey {
-        let show = self.charts.show;
+        let show = self.gis.charts.show;
         let (table_stamp, table_view) = self.table_rows_stamp();
         let selection = match show {
             Show::Selected => self.selection.version(),
@@ -151,7 +151,7 @@ impl App {
     /// again when the data or the rows changed; the chosen field's
     /// statistics are counted at once.
     pub(crate) fn stats_refresh(&self) {
-        let p = &self.charts;
+        let p = &self.gis.charts;
         let Some(data) = self.stats_data_now() else {
             *p.stats.borrow_mut() = StatsNow::default();
             return;
@@ -199,7 +199,7 @@ impl App {
         if !self.command_expanded || self.bottom_tab != BottomTab::Statistics {
             return false;
         }
-        let stats = self.charts.stats.borrow();
+        let stats = self.gis.charts.stats.borrow();
         let fresh = match (&stats.key, self.document.as_ref(), self.chart_layer()) {
             (Some((k, rows)), Some(doc), Some(layer)) => {
                 *k == crate::charts::now::layer_key(doc, &layer) && *rows == self.stats_rows_key()
@@ -214,8 +214,8 @@ impl App {
     fn count_within(&self, budget: Option<Duration>) {
         self.stats_refresh();
         let start = Instant::now();
-        let mut now = self.charts.stats.borrow_mut();
-        let mut held = self.charts.layer_data.borrow_mut();
+        let mut now = self.gis.charts.stats.borrow_mut();
+        let mut held = self.gis.charts.layer_data.borrow_mut();
         let Some((_, d)) = held.as_mut() else {
             return;
         };
@@ -241,7 +241,7 @@ impl App {
             return None;
         }
         self.count_within(None);
-        let now = self.charts.stats.borrow();
+        let now = self.gis.charts.stats.borrow();
         Some((
             texts::objects(now.rows.len()),
             now.summaries
@@ -264,11 +264,12 @@ impl App {
             }
             Event::Show(show) => return self.charts_event(crate::charts::Event::Show(show)),
             Event::Field(key) => {
-                self.charts.field = Some(key);
+                self.gis.charts.field = Some(key);
                 return self.stats_whole();
             }
             Event::Value(i) => {
                 let rows = self
+                    .gis
                     .charts
                     .stats
                     .borrow()
@@ -281,10 +282,11 @@ impl App {
                 }
             }
             Event::Chart => {
-                let Some(field) = self.charts.field.clone() else {
+                let Some(field) = self.gis.charts.field.clone() else {
                     return Task::none();
                 };
                 let spec = self
+                    .gis
                     .charts
                     .layer_data
                     .borrow()
@@ -297,7 +299,7 @@ impl App {
             }
             Event::Copy => {
                 self.stats_refresh();
-                let text = stats_text(&self.charts.stats.borrow());
+                let text = stats_text(&self.gis.charts.stats.borrow());
                 self.say(Level::Success, texts::COPIED);
                 return iced::clipboard::write(text);
             }

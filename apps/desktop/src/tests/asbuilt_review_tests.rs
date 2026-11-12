@@ -4,6 +4,7 @@
 //! earlier result once a mark is moved, and removed. Grafik draws the chosen mark's measurements against the epochs'
 //! days with the thresholds typed. And their pictures.
 
+use crate::map;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 
@@ -57,7 +58,7 @@ fn typed(app: &mut App, source: &str) {
         A::Review(R::Date("2026-10-20".into())),
     ];
     for e in events.drain(..) {
-        let _ = app.update(Message::Asbuilt(e));
+        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
     }
 }
 
@@ -68,11 +69,22 @@ fn the_review_kept_from_the_window_is_the_case_s() {
     let mut app = opened();
     // A threshold without its source is said; nothing kept.
     typed(&mut app, "");
-    let _ = app.update(Message::Asbuilt(A::Keep));
-    assert!(app.document.as_ref().expect("a drawing").model.monitoring_reviews().is_empty());
-    let source = want["job"]["thresholds"]["source"].as_str().expect("a source");
-    let _ = app.update(Message::Asbuilt(A::Trend(C::Source(source.into()))));
-    let _ = app.update(Message::Asbuilt(A::Keep));
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Keep)));
+    assert!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .monitoring_reviews()
+            .is_empty()
+    );
+    let source = want["job"]["thresholds"]["source"]
+        .as_str()
+        .expect("a source");
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Source(
+        source.into(),
+    )))));
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Keep)));
     let kept = app.document.as_ref().expect("a drawing").model.monitoring_reviews().to_vec();
     assert_eq!(kept.len(), 1);
     let got = serde_json::to_value(&kept[0]).expect("json");
@@ -82,8 +94,8 @@ fn the_review_kept_from_the_window_is_the_case_s() {
     assert_eq!(got["reviewer"], want["reviewer"]);
     let states = |v: &Value| v["marks"].as_array().expect("marks").iter().map(|m| (m["name"].clone(), m["state"].clone())).collect::<Vec<_>>();
     assert_eq!(states(&got), states(&want));
-    assert_eq!(app.asbuilt.reviews.len(), 1);
-    assert!(app.asbuilt.reviews[0].current);
+    assert_eq!(app.map.asbuilt.reviews.len(), 1);
+    assert!(app.map.asbuilt.reviews[0].current);
     // M1 of this epoch moved 4 mm: the review belongs to the earlier result.
     let m1 = {
         let doc = app.document.as_ref().expect("a drawing");
@@ -94,38 +106,84 @@ fn the_review_kept_from_the_window_is_the_case_s() {
             .map(|e| doc.model.uid(kentos_domain::Slot(e.base().id)).expect("a uid").to_string())
             .expect("M1")
     };
-    crate::program_scenes::command(&mut app, "cad.entities.transform", json!({"uids": [m1], "transform": {"kind": "move", "dx": 0.004, "dy": 0.0}}));
-    let _ = app.update(Message::Asbuilt(A::Horizontal("0,008".into())));
-    assert!(!app.asbuilt.reviews[0].current, "{:?}", app.asbuilt.reviews);
-    assert!(crate::asbuilt_review_form::lead(&app.asbuilt.reviews).contains("eski sonuca aittir"));
+    crate::program_scenes::command(
+        &mut app,
+        "cad.entities.transform",
+        json!({"uids": [m1], "transform": {"kind": "move", "dx": 0.004, "dy": 0.0}}),
+    );
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Horizontal(
+        "0,008".into(),
+    ))));
+    assert!(
+        !app.map.asbuilt.reviews[0].current,
+        "{:?}",
+        app.map.asbuilt.reviews
+    );
+    assert!(
+        crate::asbuilt_review_form::lead(&app.map.asbuilt.reviews).contains("eski sonuca aittir")
+    );
     // Removed by its name.
-    let _ = app.update(Message::Asbuilt(A::Remove));
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Remove)));
     assert!(app.document.as_ref().expect("a drawing").model.monitoring_reviews().is_empty());
-    assert!(app.asbuilt.reviews.is_empty());
+    assert!(app.map.asbuilt.reviews.is_empty());
 }
 
 #[test]
 fn the_chart_draws_the_mark_against_the_days_with_the_thresholds() {
     let mut app = opened();
     typed(&mut app, "Şartname");
-    let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .map
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     // M2 is the first in alarm: chosen when no mark is.
     let track = crate::asbuilt_chart::chosen(&r, "").expect("a mark");
     assert_eq!(track.name, "M2");
-    assert_eq!(app.asbuilt.days.len(), 3);
-    let pts = crate::asbuilt_chart::points(track, &app.asbuilt.days, crate::asbuilt_chart::Part::Horizontal);
+    assert_eq!(app.map.asbuilt.days.len(), 3);
+    let pts = crate::asbuilt_chart::points(
+        track,
+        &app.map.asbuilt.days,
+        crate::asbuilt_chart::Part::Horizontal,
+    );
     assert_eq!(pts.len(), 3);
-    assert_eq!(pts.iter().map(|p| p.1.map(|d| d - pts[0].1.expect("a day"))).collect::<Vec<_>>(), vec![Some(0), Some(90), Some(181)]);
-    let t = crate::asbuilt_trend::ask(&app.asbuilt.trend).expect("asks").1;
-    assert_eq!(crate::asbuilt_chart::limits(t.as_ref(), crate::asbuilt_chart::Part::Horizontal), (Some(0.0075), Some(0.03)));
-    assert_eq!(crate::asbuilt_chart::limits(t.as_ref(), crate::asbuilt_chart::Part::East), (None, None));
+    assert_eq!(
+        pts.iter()
+            .map(|p| p.1.map(|d| d - pts[0].1.expect("a day")))
+            .collect::<Vec<_>>(),
+        vec![Some(0), Some(90), Some(181)]
+    );
+    let t = crate::asbuilt_trend::ask(&app.map.asbuilt.trend)
+        .expect("asks")
+        .1;
+    assert_eq!(
+        crate::asbuilt_chart::limits(t.as_ref(), crate::asbuilt_chart::Part::Horizontal),
+        (Some(0.0075), Some(0.03))
+    );
+    assert_eq!(
+        crate::asbuilt_chart::limits(t.as_ref(), crate::asbuilt_chart::Part::East),
+        (None, None)
+    );
     // Choosing a mark and a part checks nothing again.
-    let before = app.asbuilt.answer.clone();
-    let _ = app.update(Message::Asbuilt(A::Trend(C::View(crate::asbuilt_trend::View::Chart))));
-    let _ = app.update(Message::Asbuilt(A::Trend(C::Mark("M3".into()))));
-    let _ = app.update(Message::Asbuilt(A::Trend(C::Part(crate::asbuilt_chart::Part::Up))));
-    assert_eq!(app.asbuilt.answer, before);
-    assert_eq!(crate::asbuilt_chart::chosen(&r, &app.asbuilt.trend.mark).expect("M3").name, "M3");
+    let before = app.map.asbuilt.answer.clone();
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::View(
+        crate::asbuilt_trend::View::Chart,
+    )))));
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Mark(
+        "M3".into(),
+    )))));
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Part(
+        crate::asbuilt_chart::Part::Up,
+    )))));
+    assert_eq!(app.map.asbuilt.answer, before);
+    assert_eq!(
+        crate::asbuilt_chart::chosen(&r, &app.map.asbuilt.trend.mark)
+            .expect("M3")
+            .name,
+        "M3"
+    );
 }
 
 /// `.run/gui-evidence/izleme-inceleme-5220/`: the İnceleme section with the project's reviews (inceleme), and Grafik
@@ -148,13 +206,19 @@ fn screens() {
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             typed(&mut app, "İdarenin izleme şartnamesi (2026/14), madde 7");
-            let _ = app.update(Message::Asbuilt(A::Keep));
+            let _ = app.update(Message::Map(map::Event::Asbuilt(A::Keep)));
             if step != "inceleme" {
-                let _ = app.update(Message::Asbuilt(A::Trend(C::View(crate::asbuilt_trend::View::Chart))));
+                let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::View(
+                    crate::asbuilt_trend::View::Chart,
+                )))));
             }
             if step == "grafik-kot" {
-                let _ = app.update(Message::Asbuilt(A::Trend(C::Mark("M3".into()))));
-                let _ = app.update(Message::Asbuilt(A::Trend(C::Part(crate::asbuilt_chart::Part::Up))));
+                let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Mark(
+                    "M3".into(),
+                )))));
+                let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Part(
+                    crate::asbuilt_chart::Part::Up,
+                )))));
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {

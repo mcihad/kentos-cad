@@ -13,7 +13,7 @@ use crate::app::Message;
 impl crate::app::App {
     /// Karne editörü's own controls; the station is reduced again after each.
     pub(crate) fn fieldbook_event(&mut self, e: Event) -> Task<Message> {
-        let form = &mut self.calc.fieldbook;
+        let form = &mut self.gis.calc.fieldbook;
         match e {
             Event::Open => {
                 return Task::perform(
@@ -87,7 +87,7 @@ impl crate::app::App {
             }
         }
         if let Some(doc) = &self.document {
-            self.calc.fieldbook.sync(doc.settings());
+            self.gis.calc.fieldbook.sync(doc.settings());
         }
         Task::none()
     }
@@ -99,7 +99,7 @@ impl crate::app::App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let form = &self.calc.fieldbook;
+        let form = &self.gis.calc.fieldbook;
         let Some(t) = form
             .transfer(doc.settings().angle_unit)
             .filter(|t| !t.shots.is_empty())
@@ -116,7 +116,7 @@ impl crate::app::App {
         };
         let station_z = st.height.map(|h| exact(h, 6)).unwrap_or_default();
         let height = height.to_owned();
-        let polar = &mut self.calc.polar;
+        let polar = &mut self.gis.calc.polar;
         polar.station = station;
         polar.back = t.back.clone();
         polar.back_reading = exact(t.back_reading, 8);
@@ -161,7 +161,7 @@ impl crate::app::App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let rows = self.calc.fieldbook.network_rows(doc.model.settings());
+        let rows = self.gis.calc.fieldbook.network_rows(doc.model.settings());
         if rows.is_empty() {
             return Task::none();
         }
@@ -177,7 +177,7 @@ impl crate::app::App {
                 ]
             })
             .collect();
-        self.calc.network.rows =
+        self.gis.calc.network.rows =
             super::super::network::Cells::of(super::super::network::ROW_COLS, cells);
         self.say(
             Level::Success,
@@ -194,7 +194,7 @@ impl crate::app::App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let rows = self.calc.fieldbook.level_rows(doc.model.settings());
+        let rows = self.gis.calc.fieldbook.level_rows(doc.model.settings());
         if rows.is_empty() {
             return Task::none();
         }
@@ -203,7 +203,7 @@ impl crate::app::App {
             .into_iter()
             .map(|r| vec![r.from, r.to, exact(r.dh, 6), exact(r.length, 6)])
             .collect();
-        let level = &mut self.calc.level;
+        let level = &mut self.gis.calc.level;
         level.rows = super::super::network::Cells::of(super::super::network::LEVEL_COLS, cells);
         level.kind = super::super::network::LevelKind::Trigonometric;
         self.say(
@@ -223,7 +223,7 @@ impl crate::app::App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let form = &self.calc.fieldbook;
+        let form = &self.gis.calc.fieldbook;
         let (Some(t), Some((back, fore)), Some(book)) =
             (form.traverse(), form.traverse_ends(), form.book.as_ref())
         else {
@@ -272,7 +272,7 @@ impl crate::app::App {
             .iter()
             .map(|m| format!("{} istasyonunda {}", m.station, m.target))
             .collect();
-        let traverse = &mut self.calc.traverse;
+        let traverse = &mut self.gis.calc.traverse;
         traverse.kind = super::super::traverse::Kind::Connected;
         traverse.end_oriented = fore.is_some();
         traverse.start = start;

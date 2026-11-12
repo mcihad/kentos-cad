@@ -4,6 +4,7 @@
 //! eşlemeye yaz writes the form into the chosen mapping (`cad.profiles.import` of it again, where it is kept); from then
 //! on Bulgular and Uygula read the institution's names by it.
 
+use crate::gis;
 use iced::widget::{Column, row};
 use iced::{Center, Element};
 use kentos_commands::{
@@ -134,7 +135,7 @@ fn basis(form: NameForm) -> &'static str {
 impl App {
     /// `cad.profiles.names` for the window's profile, mapping and form.
     pub(crate) fn data_profile_names_read(&self) -> Result<ProfileNames, String> {
-        let (Some(w), Some(doc)) = (self.data_profile.as_ref(), self.document.as_ref()) else {
+        let (Some(w), Some(doc)) = (self.gis.data_profile.as_ref(), self.document.as_ref()) else {
             return Err(String::new());
         };
         match profiles_names::run_in(
@@ -157,7 +158,7 @@ impl App {
 
     /// Whether the chosen form can be written into the chosen mapping: a form other than the mapping's own that holds.
     pub(crate) fn data_profile_form_writable(&self) -> bool {
-        let Some(w) = self.data_profile.as_ref() else {
+        let Some(w) = self.gis.data_profile.as_ref() else {
             return false;
         };
         w.names.names().is_some()
@@ -168,7 +169,7 @@ impl App {
     /// Biçimi eşlemeye yaz: the chosen mapping imported again with the form, where it is kept, over itself.
     pub(crate) fn data_profile_write_form(&mut self) {
         let drawing = self.profile_drawing();
-        let Some(w) = self.data_profile.as_ref() else {
+        let Some(w) = self.gis.data_profile.as_ref() else {
             return;
         };
         let (Some(name), Some(form)) = (w.mapping.clone(), w.names.names()) else {
@@ -212,14 +213,14 @@ impl App {
                 kentos_commands::case_words(form.case)
             ),
         );
-        if let Some(w) = self.data_profile.as_mut() {
+        if let Some(w) = self.gis.data_profile.as_mut() {
             w.names.form = NameForm::Mapping;
         }
     }
 
     /// The Kurum adları page.
     pub(crate) fn data_profile_names_part<'a>(&'a self, names: &'a Names) -> Element<'a, Message> {
-        let msg = |e: Event| Message::DataProfile(e);
+        let msg = |e: Event| Message::Gis(gis::Event::DataProfile(e));
         let (lines, rows, problems): (Vec<Element<'_, Message>>, Vec<Vec<String>>, Vec<Option<String>>) =
             match &names.answer {
                 Err(why) if why.is_empty() => (Vec::new(), Vec::new(), Vec::new()),
@@ -296,9 +297,18 @@ impl App {
             names.chosen,
             move |i| msg(Event::NamesPick(i)),
         );
-        let write_hint = match self.data_profile.as_ref().and_then(|w| w.mapping.as_ref()) {
-            None => "Biçimi yazmak için bir eşleme seçin ya da içe aktarın; eşlemesiz tablo önizlemedir.",
-            Some(_) => "Biçim eşlemenin kendi yazdığı adlara dokunmaz; eşleme dosyası yeniden yazılır.",
+        let write_hint = match self
+            .gis
+            .data_profile
+            .as_ref()
+            .and_then(|w| w.mapping.as_ref())
+        {
+            None => {
+                "Biçimi yazmak için bir eşleme seçin ya da içe aktarın; eşlemesiz tablo önizlemedir."
+            }
+            Some(_) => {
+                "Biçim eşlemenin kendi yazdığı adlara dokunmaz; eşleme dosyası yeniden yazılır."
+            }
         };
         Column::new()
             .spacing(12)

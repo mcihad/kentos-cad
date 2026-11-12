@@ -18,6 +18,7 @@
 
 use crate::app::{App, Message};
 use crate::document::Document;
+use crate::gis;
 use crate::tools_screens::Scene;
 
 pub(crate) const DRAWING: &str = include_str!("../../../../fixtures/interaction/v1/temporal.kcad");
@@ -154,8 +155,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("zaman-surgu-2015", |app| {
             opened(app);
             run(app, "time.slider");
-            let k = app.time.slider.last - 9;
-            let _ = app.update(Message::Time(crate::temporal::Event::Go(k)));
+            let k = app.gis.time.slider.last - 9;
+            let _ = app.update(Message::Gis(gis::Event::Time(crate::temporal::Event::Go(
+                k,
+            ))));
         }),
         // Yeni sürüm oluştur through cad.time.version (docs/adr/0622 §9): parcel 102 ends on 1 January 2020 and its new
         // version, starting that day, is selected; the slider stays on 2024, where the new version shows.
@@ -182,30 +185,39 @@ pub(crate) fn scenes() -> Vec<Scene> {
             opened(app);
             recorded(app);
             run(app, "time.slider");
-            let _ = app.update(Message::Time(crate::temporal::Event::Known(
-                "01.01.2023".into(),
+            let _ = app.update(Message::Gis(gis::Event::Time(
+                crate::temporal::Event::Known("01.01.2023".into()),
             )));
-            let _ = app.update(Message::Time(crate::temporal::Event::KnownDone));
+            let _ = app.update(Message::Gis(gis::Event::Time(
+                crate::temporal::Event::KnownDone,
+            )));
         }),
         // Senaryo oluştur with the road and the parcels checked.
         ("senaryo-olustur", |app| {
             opened(app);
             run(app, "scenario.create");
-            let _ = app.update(Message::Time(crate::temporal::Event::Scenario(
-                crate::temporal::scenario::Event::Check("yol".into(), true),
+            let _ = app.update(Message::Gis(gis::Event::Time(
+                crate::temporal::Event::Scenario(crate::temporal::scenario::Event::Check(
+                    "yol".into(),
+                    true,
+                )),
             )));
         }),
         // Yol genişletme A shown: the wide road and the new park; the status bar says so.
         ("senaryo-gosterilen", |app| {
             opened(app);
-            let _ = app.update(Message::Time(crate::temporal::Event::Show("alt-a".into())));
+            let _ = app.update(Message::Gis(gis::Event::Time(
+                crate::temporal::Event::Show("alt-a".into()),
+            )));
         }),
         // Senaryoyu uygula's question.
         ("senaryo-uygula", |app| {
             opened(app);
-            let _ = app.update(Message::Time(crate::temporal::Event::Show("alt-a".into())));
-            let _ = app.update(Message::Time(crate::temporal::Event::AskApply(
-                "alt-a".into(),
+            let _ = app.update(Message::Gis(gis::Event::Time(
+                crate::temporal::Event::Show("alt-a".into()),
+            )));
+            let _ = app.update(Message::Gis(gis::Event::Time(
+                crate::temporal::Event::AskApply("alt-a".into()),
             )));
         }),
         // Zamanı karşılaştır: the parcels at the slider's position before and its own, paired by parcel number.
@@ -213,10 +225,14 @@ pub(crate) fn scenes() -> Vec<Scene> {
             opened(app);
             run(app, "time.slider");
             // 2019: the step before is 2018, the year 101 was split.
-            let k = app.time.slider.last - 5;
-            let _ = app.update(Message::Time(crate::temporal::Event::Go(k)));
+            let k = app.gis.time.slider.last - 5;
+            let _ = app.update(Message::Gis(gis::Event::Time(crate::temporal::Event::Go(
+                k,
+            ))));
             run(app, "time.compare");
-            let _ = app.update(Message::DataCompare(crate::data_compare::Event::Compare));
+            let _ = app.update(Message::Gis(gis::Event::DataCompare(
+                crate::data_compare::Event::Compare,
+            )));
         }),
         // Sensör gözlemleri now: the moment asked is now, every meter's stream stopped long ago.
         ("sensor-gozlemleri", |app| {
@@ -229,17 +245,23 @@ pub(crate) fn scenes() -> Vec<Scene> {
             opened(app);
             meters(app);
             run(app, "time.sensors");
-            let _ = app.update(Message::Time(crate::temporal::Event::Sensors(
-                crate::temporal::sensors::Event::At("01.06.2024 11:50".into()),
+            let _ = app.update(Message::Gis(gis::Event::Time(
+                crate::temporal::Event::Sensors(crate::temporal::sensors::Event::At(
+                    "01.06.2024 11:50".into(),
+                )),
             )));
         }),
         // FlatGeobuf dışa aktar with the slider open on 2015 and Zaman sürgüsünün zamanıyla ticked.
         ("zaman-disa-aktar", |app| {
             opened(app);
             run(app, "time.slider");
-            let k = app.time.slider.last - 9;
-            let _ = app.update(Message::Time(crate::temporal::Event::Go(k)));
-            let _ = app.update(Message::Time(crate::temporal::Event::ExportTime));
+            let k = app.gis.time.slider.last - 9;
+            let _ = app.update(Message::Gis(gis::Event::Time(crate::temporal::Event::Go(
+                k,
+            ))));
+            let _ = app.update(Message::Gis(gis::Event::Time(
+                crate::temporal::Event::ExportTime,
+            )));
             run(app, "file.export.fgb");
         }),
     ]

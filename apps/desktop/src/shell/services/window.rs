@@ -564,7 +564,8 @@ impl App {
                 );
                 // Kaynaklar keeps the service among its saved ones (docs/adr/0599 §4).
                 if layer.is_none() && !service.url.trim().is_empty() {
-                    self.sources
+                    self.gis
+                        .sources
                         .folders
                         .add_service(crate::sources::SavedService {
                             kind: service.kind,

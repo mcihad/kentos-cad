@@ -12,6 +12,8 @@
 //!
 //! Test code only.
 
+use crate::gis;
+use crate::map;
 use std::path::PathBuf;
 
 use iced::Point;
@@ -144,25 +146,33 @@ fn queried(s: &mut Snapshot, app: &mut App) {
 fn ground_window(app: &mut App) {
     opened(app, [-6.0, -4.0, 126.0, 94.0]);
     let _ = app.update(Message::Run("processing.run.pointcloud.ground"));
-    let _ = app.update(Message::Processing(crate::processing::Event::Value(
-        "input".into(),
-        serde_json::json!({ "scope": "layer", "layerId": "koy" }),
+    let _ = app.update(Message::Gis(gis::Event::Processing(
+        crate::processing::Event::Value(
+            "input".into(),
+            serde_json::json!({ "scope": "layer", "layerId": "koy" }),
+        ),
     )));
 }
 
 /// Zemin süzgeci run: its result by class on its own layer, the source hidden.
 fn ground_run(s: &mut Snapshot, app: &mut App) {
     let dir = crate::files_testing::scratch("bulut-zemin");
-    let _ = app.update(Message::Processing(crate::processing::Event::Value(
-        "output".into(),
-        serde_json::json!(dir.join("koy-zemin.laz").to_string_lossy()),
+    let _ = app.update(Message::Gis(gis::Event::Processing(
+        crate::processing::Event::Value(
+            "output".into(),
+            serde_json::json!(dir.join("koy-zemin.laz").to_string_lossy()),
+        ),
     )));
-    let task = app.update(Message::Processing(crate::processing::Event::Run));
+    let task = app.update(Message::Gis(gis::Event::Processing(
+        crate::processing::Event::Run,
+    )));
     crate::files_testing::drive(app, task);
     if let Some(doc) = app.document.as_mut() {
         doc.model.set_layer_visible("koy", false);
     }
-    let _ = app.update(Message::Processing(crate::processing::Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::Processing(
+        crate::processing::Event::Close,
+    )));
     clouds_made(s, app);
 }
 
@@ -204,7 +214,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             "bulut-harita",
             |app| {
                 opened(app, [-6.0, -4.0, 126.0, 94.0]);
-                let _ = app.update(Message::MapCrs(crate::map_crs::Choose(Some(4326))));
+                let _ = app.update(Message::Map(map::Event::MapCrs(crate::map_crs::Choose(
+                    Some(4326),
+                ))));
             },
             clouds_made,
         ),
@@ -260,7 +272,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 );
                 app.cloud_add_open_for_tests();
                 let add = |app: &mut App, e: crate::pointclouds::add::Event| {
-                    let task = app.update(Message::PointClouds(crate::pointclouds::Event::Add(e)));
+                    let task = app.update(Message::Gis(gis::Event::PointClouds(
+                        crate::pointclouds::Event::Add(e),
+                    )));
                     crate::files_testing::drive(app, task);
                 };
                 add(

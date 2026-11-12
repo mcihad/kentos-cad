@@ -2,6 +2,7 @@
 //! stale when its template changes and comes back by Hepsini yeniden üret, Kendiliğinden yeniden üret turns on, a
 //! source's row opens its editor; a rebuild runs as a job whose Durdur writes nothing (docs/adr/2440); and its pictures.
 
+use crate::road;
 use kentos_commands::RoadNodeState as S;
 use serde_json::{Value, json};
 
@@ -24,15 +25,18 @@ fn app() -> App {
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::RoadProject(e));
+    let _ = app.update(Message::Road(road::Event::RoadProject(e)));
 }
 
 /// A rebuild, run as a job (docs/adr/2440): the panel looked at until it is over.
 fn rebuild(app: &mut App, e: P) {
     send(app, e);
     let start = std::time::Instant::now();
-    while app.road_project.running() {
-        assert!(start.elapsed() < std::time::Duration::from_secs(120), "the rebuild ends");
+    while app.road.road_project.running() {
+        assert!(
+            start.elapsed() < std::time::Duration::from_secs(120),
+            "the rebuild ends"
+        );
         std::thread::sleep(std::time::Duration::from_millis(5));
         send(app, P::Tick);
     }
@@ -64,9 +68,13 @@ fn the_panel_rebuilds_what_went_stale() {
     send(&mut app, P::Deep(true));
     assert!(tree(&app).nodes.iter().any(|n| n.state == S::Unsolved));
     // A corridor's row opens Koridor.
-    let k = tree(&app).nodes.iter().position(|n| n.id == "c-1").expect("the corridor");
+    let k = tree(&app)
+        .nodes
+        .iter()
+        .position(|n| n.id == "c-1")
+        .expect("the corridor");
     send(&mut app, P::Open(k));
-    assert!(app.corridor_window.is_some(), "Koridor opens");
+    assert!(app.road.corridor_window.is_some(), "Koridor opens");
 }
 
 /// The panel in the dock, wide and light, narrow and dark: two stale drawings, then drawn again; deep with its
@@ -222,10 +230,16 @@ fn a_rebuild_runs_as_a_job_and_durdur_writes_nothing() {
     let mut app = app();
     let steps = app.document.as_ref().map(|d| d.model.undo_labels().len());
     send(&mut app, P::Rebuild(None, false));
-    assert!(app.road_project.running(), "a job, not the window's own thread");
+    assert!(
+        app.road.road_project.running(),
+        "a job, not the window's own thread"
+    );
     send(&mut app, P::Stop);
     rebuild(&mut app, P::Tick);
-    assert_eq!(crate::files_testing::last_said(&app), "Yeniden üretim durduruldu; hiçbir şey yazılmadı.");
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Yeniden üretim durduruldu; hiçbir şey yazılmadı."
+    );
     assert_eq!(tree(&app).rebuildable, 2);
     assert_eq!(app.document.as_ref().map(|d| d.model.undo_labels().len()), steps, "nothing written");
     rebuild(&mut app, P::Rebuild(None, false));

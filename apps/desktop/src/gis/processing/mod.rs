@@ -34,7 +34,7 @@ pub(crate) mod sink;
 
 /// The İşlemler panel's event as the app's message (the ribbon's model buttons send it too).
 pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
-    crate::app::Message::Processing(Event::Panel(event))
+    crate::app::Message::Gis(gis::Event::Processing(Event::Panel(event)))
 }
 #[cfg(test)]
 mod batch_tests;
@@ -88,6 +88,7 @@ mod tests;
 mod transfer_tests;
 mod window;
 
+use crate::gis;
 use iced::Task;
 use iced::futures::channel::mpsc;
 use kentos_domain::Slot;
@@ -113,10 +114,10 @@ const CHANGED_MEANWHILE: &str =
 pub(crate) fn is_answer(message: &Message) -> bool {
     matches!(
         message,
-        Message::Processing(Event::Background(
+        Message::Gis(gis::Event::Processing(Event::Background(
             _,
             background::Reply::Done | background::Reply::Failed(_)
-        ))
+        )))
     )
 }
 
@@ -368,7 +369,7 @@ impl App {
             "processing.history" => Some(panel::Tab::History),
             _ => None,
         } {
-            self.processing.panel.tab = tab;
+            self.gis.processing.panel.tab = tab;
             self.docks.show(
                 crate::app::Panel::Processing,
                 kentos_ui::widget::docking::Side::Right,
@@ -399,7 +400,7 @@ impl App {
     /// Opens a tool's or a model's window with these values, else with its
     /// last ones (the web's `openToolDialog`).
     pub(crate) fn open_processing(&mut self, id: &str, values: Option<Values>) {
-        let Some(tool) = self.processing.registry.get(id) else {
+        let Some(tool) = self.gis.processing.registry.get(id) else {
             // The web's words: a model gone is likely deleted (ToolDialog.ts).
             self.error(match id.strip_prefix(MODEL_PREFIX) {
                 Some(model) => format!("Model bulunamadı: {model}. Silinmiş olabilir."),
@@ -411,22 +412,22 @@ impl App {
             return;
         };
         let explicit = values.is_some();
-        self.processing.batch = None;
-        let stored = values.or_else(|| self.processing.memory.last_values(&tool.id).cloned());
+        self.gis.processing.batch = None;
+        let stored = values.or_else(|| self.gis.processing.memory.last_values(&tool.id).cloned());
         let mut window =
             ToolDialog::new(tool, stored.as_ref(), explicit, &Defaults::of(&doc.model));
         window.reread_files();
-        window.environment = self.processing.environment.clone();
+        window.environment = self.gis.processing.environment.clone();
         window.takes_environment = self.processing_takes_environment(&window.tool);
-        self.processing.dialog = Some(window);
+        self.gis.processing.dialog = Some(window);
         self.refresh_processing();
-        self.dialog = Some(Dialog::Processing);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Processing));
     }
 
     /// The window's live parts again: problems, what the inputs resolve to, previews.
     pub(crate) fn refresh_processing(&mut self) {
         let variables = self.expression_variables();
-        let (Some(doc), Some(window)) = (&self.document, &mut self.processing.dialog) else {
+        let (Some(doc), Some(window)) = (&self.document, &mut self.gis.processing.dialog) else {
             return;
         };
         let look = Look {
@@ -436,7 +437,7 @@ impl App {
             view: Some(self.viewport.camera.visible_bounds()),
             variables,
         };
-        window.refresh(&self.processing.runner, &look);
+        window.refresh(&self.gis.processing.runner, &look);
         window
             .sink
             .refresh(&doc.model, &window.tool, &window.values);
@@ -449,14 +450,14 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.processing.dialog = None;
-                self.processing.batch = None;
+                self.gis.processing.dialog = None;
+                self.gis.processing.batch = None;
                 self.dialog = None;
                 return Task::none();
             }
             Event::Batch(e) => return self.processing_batch_event(e),
             Event::ServerSink(sink) => {
-                if let Some(window) = &mut self.processing.dialog {
+                if let Some(window) = &mut self.gis.processing.dialog {
                     window.server_sink = sink;
                 }
                 return Task::none();
@@ -464,9 +465,9 @@ impl App {
             Event::ServerJobs => return self.processing_open_jobs(),
             Event::Sink(e) => return self.processing_sink_event(e),
             Event::Environment(e) => {
-                self.processing.environment.apply(e);
-                if let Some(window) = &mut self.processing.dialog {
-                    window.environment = self.processing.environment.clone();
+                self.gis.processing.environment.apply(e);
+                if let Some(window) = &mut self.gis.processing.dialog {
+                    window.environment = self.gis.processing.environment.clone();
                 }
                 return Task::none();
             }
@@ -493,6 +494,7 @@ impl App {
             Event::FileRead(name, read) => self.processing_file_read(name, read),
             Event::Sheet(name, sheet) => {
                 let value = self
+                    .gis
                     .processing
                     .dialog
                     .as_ref()
@@ -510,7 +512,7 @@ impl App {
                 return iced::clipboard::write(crate::layer_list::tsv(&table.lines()));
             }
             Event::ChartTable => {
-                let Some(window) = &self.processing.dialog else {
+                let Some(window) = &self.gis.processing.dialog else {
                     return Task::none();
                 };
                 let Some(table) = window.chart.clone().or_else(|| self.processing_table()) else {
@@ -523,13 +525,13 @@ impl App {
                     rows: table.rows,
                 };
                 // The window out of the chart's way, as Sonuçları seç leaves it.
-                self.processing.dialog = None;
+                self.gis.processing.dialog = None;
                 self.dialog = None;
                 self.open_table_chart(chart);
             }
             Event::SaveTableAs(format) => {
                 let (Some(table), Some(window)) =
-                    (self.processing_table(), &self.processing.dialog)
+                    (self.processing_table(), &self.gis.processing.dialog)
                 else {
                     return Task::none();
                 };
@@ -552,7 +554,7 @@ impl App {
             }
             Event::Undo => {
                 self.undo();
-                if let Some(window) = &mut self.processing.dialog {
+                if let Some(window) = &mut self.gis.processing.dialog {
                     window.status = RunStatus::Idle;
                 }
             }
@@ -561,7 +563,7 @@ impl App {
                 return Task::none();
             }
             Event::PickChoice(name) => {
-                let picks = self.processing.dialog.as_ref().and_then(|w| {
+                let picks = self.gis.processing.dialog.as_ref().and_then(|w| {
                     w.tool
                         .parameters
                         .iter()
@@ -582,13 +584,17 @@ impl App {
                 return Task::none();
             }
             Event::Target(choice) => {
-                if let Some(window) = &self.processing.dialog {
-                    self.processing.memory.set_target(&window.tool.id, &choice);
+                if let Some(window) = &self.gis.processing.dialog {
+                    self.gis
+                        .processing
+                        .memory
+                        .set_target(&window.tool.id, &choice);
                 }
                 return Task::none();
             }
             Event::Reset => {
-                if let (Some(doc), Some(window)) = (&self.document, &mut self.processing.dialog) {
+                if let (Some(doc), Some(window)) = (&self.document, &mut self.gis.processing.dialog)
+                {
                     window.reset(&Defaults::of(&doc.model));
                 }
             }
@@ -597,7 +603,7 @@ impl App {
                     .document
                     .as_ref()
                     .map(|d| d.model.layers().active().to_owned());
-                if let Some(window) = &mut self.processing.dialog {
+                if let Some(window) = &mut self.gis.processing.dialog {
                     window.edit(e, active.as_deref().unwrap_or(""));
                 }
             }
@@ -617,13 +623,13 @@ impl App {
         let environment = match self.processing_environment_resolved() {
             Ok(e) => e,
             Err(why) => {
-                if let Some(window) = &mut self.processing.dialog {
+                if let Some(window) = &mut self.gis.processing.dialog {
                     window.status = RunStatus::Invalid(why);
                 }
                 return Task::none();
             }
         };
-        let Some(window) = &mut self.processing.dialog else {
+        let Some(window) = &mut self.gis.processing.dialog else {
             return Task::none();
         };
         if window.running() {
@@ -635,9 +641,9 @@ impl App {
         };
         let values = window.values.clone();
         let tool = window.tool.clone();
-        let targets = window.targets(&self.processing.registry, &server);
+        let targets = window.targets(&self.gis.processing.registry, &server);
         let choice = plan::effective_choice(
-            plan::Choice::read(self.processing.memory.target(&tool.id)),
+            plan::Choice::read(self.gis.processing.memory.target(&tool.id)),
             &targets.available,
         );
         // On the server (server.rs): the tool does not run here; a job is asked for.
@@ -656,7 +662,7 @@ impl App {
             _ => false,
         };
         // The last values keep a file's name and path, not its rows (docs/adr/0200 §7).
-        self.processing.memory.remember(
+        self.gis.processing.memory.remember(
             &tool.id,
             &kentos_processing::parameters::stored_values(&tool, &values),
         );
@@ -671,8 +677,8 @@ impl App {
             variables,
         };
         let mut log: Vec<LogLine> = Vec::new();
-        let registry = &self.processing.registry;
-        let runner = &mut self.processing.runner;
+        let registry = &self.gis.processing.registry;
+        let runner = &mut self.gis.processing.runner;
         runner.environment = environment.clone();
         let (running, task) = if let Some(model) = tool
             .id
@@ -697,9 +703,9 @@ impl App {
                 generation: stage.doc.generation(),
                 environment,
             };
-            self.processing.runs += 1;
+            self.gis.processing.runs += 1;
             background::start_model(
-                self.processing.runs,
+                self.gis.processing.runs,
                 run,
                 stage.doc.reading_copy(),
                 stage.selection.ids().to_vec(),
@@ -707,7 +713,7 @@ impl App {
                 session,
                 Some(files),
                 stage.variables.clone(),
-                |id, reply| Message::Processing(Event::Background(id, reply)),
+                |id, reply| Message::Gis(gis::Event::Processing(Event::Background(id, reply))),
             )
         } else {
             let mut job = match runner.prepare(&stage, &tool, &values, false, &mut log) {
@@ -723,23 +729,23 @@ impl App {
                 return self.result_shown();
             }
             job.target = Target::Worker;
-            self.processing.runs += 1;
+            self.gis.processing.runs += 1;
             background::start_tool(
-                self.processing.runs,
+                self.gis.processing.runs,
                 job,
                 stage.doc.reading_copy(),
                 session,
                 Some(files),
-                |id, reply| Message::Processing(Event::Background(id, reply)),
+                |id, reply| Message::Gis(gis::Event::Processing(Event::Background(id, reply))),
             )
         };
         let id = running.id;
-        self.processing.running.push(running);
+        self.gis.processing.running.push(running);
         // What resolving the inputs left out, said as the run starts (the web's).
         for line in log {
             self.say_line(line);
         }
-        if let Some(window) = &mut self.processing.dialog {
+        if let Some(window) = &mut self.gis.processing.dialog {
             window.started(id);
         }
         task
@@ -747,7 +753,7 @@ impl App {
 
     /// After a run that gave a table, the form scrolled to its end so the table under it is seen (the web's).
     fn result_shown(&self) -> Task<Message> {
-        match self.processing.dialog.as_ref().map(|w| &w.status) {
+        match self.gis.processing.dialog.as_ref().map(|w| &w.status) {
             Some(RunStatus::Ok { table: Some(_), .. }) => {
                 iced::widget::operation::snap_to_end(window::FORM)
             }
@@ -785,7 +791,7 @@ impl App {
         }
         let window = match waiting {
             Some(id) => self.window_waiting(id),
-            None => self.processing.dialog.as_mut(),
+            None => self.gis.processing.dialog.as_mut(),
         };
         if let Some(window) = window {
             window.ran(outcome);
@@ -796,7 +802,7 @@ impl App {
     /// The window waiting for background run `id`: open, or put aside
     /// while one of its fields is picked on the drawing.
     fn window_waiting(&mut self, id: u64) -> Option<&mut ToolDialog> {
-        let p = &mut self.processing;
+        let p = &mut self.gis.processing;
         if p.dialog.as_ref().is_some_and(|w| w.waiting == Some(id)) {
             return p.dialog.as_mut();
         }
@@ -812,7 +818,7 @@ impl App {
 
     /// What a background run says; a stopped run's words are not heard.
     fn processing_background(&mut self, id: u64, reply: background::Reply) {
-        let Some(at) = self.processing.running.iter().position(|r| r.id == id) else {
+        let Some(at) = self.gis.processing.running.iter().position(|r| r.id == id) else {
             return;
         };
         match reply {
@@ -823,12 +829,12 @@ impl App {
             }
             background::Reply::Line(line) => self.say_line(line),
             background::Reply::Done => {
-                let running = self.processing.running.remove(at);
+                let running = self.gis.processing.running.remove(at);
                 let answer = running.answer().ok_or_else(|| "sonuç alınamadı".to_owned());
                 self.processing_finish(running, answer);
             }
             background::Reply::Failed(why) => {
-                let running = self.processing.running.remove(at);
+                let running = self.gis.processing.running.remove(at);
                 self.processing_finish(running, Err(why));
             }
         }
@@ -851,7 +857,7 @@ impl App {
             id, work, session, ..
         } = running;
         let mut log = Vec::new();
-        let runner = &mut self.processing.runner;
+        let runner = &mut self.gis.processing.runner;
         let view = Some(self.viewport.camera.visible_bounds());
         let mut stage = self
             .document
@@ -917,16 +923,16 @@ impl App {
         if self.processing_sink_stop() {
             return;
         }
-        let Some(id) = self.processing.dialog.as_ref().and_then(|w| w.waiting) else {
+        let Some(id) = self.gis.processing.dialog.as_ref().and_then(|w| w.waiting) else {
             return;
         };
-        let Some(at) = self.processing.running.iter().position(|r| r.id == id) else {
+        let Some(at) = self.gis.processing.running.iter().position(|r| r.id == id) else {
             return;
         };
-        let running = self.processing.running.remove(at);
+        let running = self.gis.processing.running.remove(at);
         running.stop();
         let label = running.work.label();
-        let runner = &mut self.processing.runner;
+        let runner = &mut self.gis.processing.runner;
         let outcome = match running.work {
             background::Work::Tool(job) => runner.stop(*job),
             background::Work::Model(run) => {
@@ -940,6 +946,7 @@ impl App {
     /// parameter's extensions, read on its answer.
     fn processing_choose_file(&mut self, name: String) -> Task<Message> {
         let accept: Vec<String> = self
+            .gis
             .processing
             .dialog
             .as_ref()
@@ -972,7 +979,7 @@ impl App {
                 let name = name.clone();
                 iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
                     let read = dialog::file_value(&file, &path, &bytes, None);
-                    let answer = Message::Processing(Event::FileRead(name, read));
+                    let answer = Message::Gis(gis::Event::Processing(Event::FileRead(name, read)));
                     let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
                         &mut out, answer,
                     ));
@@ -986,6 +993,7 @@ impl App {
     /// parameter's extensions; the path becomes the parameter's value.
     fn processing_choose_save(&mut self, name: String) -> Task<Message> {
         let accept: Vec<String> = self
+            .gis
             .processing
             .dialog
             .as_ref()
@@ -1011,9 +1019,14 @@ impl App {
                     .map(|f| f.path().to_string_lossy().into_owned())
             },
             move |path| match path {
-                Some(p) => Message::Processing(Event::Value(name.clone(), json!(p))),
+                Some(p) => {
+                    Message::Gis(gis::Event::Processing(Event::Value(name.clone(), json!(p))))
+                }
                 // Given up: nothing changes.
-                None => Message::Processing(Event::FileChosen(name.clone(), None)),
+                None => Message::Gis(gis::Event::Processing(Event::FileChosen(
+                    name.clone(),
+                    None,
+                ))),
             },
         )
     }
@@ -1033,7 +1046,7 @@ impl App {
                     .document
                     .as_ref()
                     .map(|d| d.model.layers().active().to_owned());
-                if let Some(window) = &mut self.processing.dialog {
+                if let Some(window) = &mut self.gis.processing.dialog {
                     window.edit(Event::Value(name, value), active.as_deref().unwrap_or(""));
                 }
             }
@@ -1043,7 +1056,7 @@ impl App {
 
     /// The open window's last run's table.
     fn processing_table(&self) -> Option<dialog::ResultTable> {
-        match &self.processing.dialog.as_ref()?.status {
+        match &self.gis.processing.dialog.as_ref()?.status {
             RunStatus::Ok { table, .. } => table.clone(),
             _ => None,
         }
@@ -1052,7 +1065,7 @@ impl App {
     /// Sonuçları seç: what the run made or changed becomes the selection,
     /// the window closes and the view goes to it (the web's).
     fn processing_results(&mut self) {
-        let Some(window) = self.processing.dialog.take() else {
+        let Some(window) = self.gis.processing.dialog.take() else {
             return;
         };
         if let RunStatus::Ok { pick, selected, .. } = &window.status
@@ -1078,7 +1091,7 @@ impl App {
     /// drawing (snaps apply), then opens again with it (the web's
     /// `pickPoint`); `then` chooses a choice's option with it.
     fn processing_pick(&mut self, name: String, then: Option<(String, String)>) {
-        let Some(window) = self.processing.dialog.take() else {
+        let Some(window) = self.gis.processing.dialog.take() else {
             return;
         };
         let label = window
@@ -1088,7 +1101,7 @@ impl App {
             .find(|p| p.name == name)
             .map_or_else(|| name.clone(), |p| p.label.clone());
         self.say(Level::Command, format!("{}: {label}", window.tool.label));
-        self.processing.picking = Some(Picking::Point { window, name, then });
+        self.gis.processing.picking = Some(Picking::Point { window, name, then });
         self.dialog = None;
         self.field = None;
         self.snap = None;
@@ -1100,11 +1113,11 @@ impl App {
     /// are picked on the drawing (the field's kinds only), and Enter brings
     /// the window back with them as its selection; Esc as it was.
     fn processing_pick_objects(&mut self, name: String) {
-        let Some(window) = self.processing.dialog.take() else {
+        let Some(window) = self.gis.processing.dialog.take() else {
             return;
         };
         let Some(def) = window.tool.parameters.iter().find(|p| p.name == name) else {
-            self.processing.dialog = Some(window);
+            self.gis.processing.dialog = Some(window);
             return;
         };
         // The kinds the field takes, narrowed to the kinds chosen with its chips.
@@ -1122,7 +1135,7 @@ impl App {
         let before: Vec<Slot> = self.selection.ids().to_vec();
         // A fresh pick: what was selected comes back on Esc.
         self.selection.clear();
-        self.processing.picking = Some(Picking::Objects {
+        self.gis.processing.picking = Some(Picking::Objects {
             window,
             name,
             before,
@@ -1139,7 +1152,7 @@ impl App {
     /// The point shown, or none (Esc): the window opens again as it was.
     /// Returns false when no processing window was waiting for it.
     pub(crate) fn processing_picked(&mut self, p: Option<Vec2>) -> bool {
-        let picking = self.processing.picking.take();
+        let picking = self.gis.processing.picking.take();
         if let Some(Picking::Designer {
             designer,
             step,
@@ -1156,7 +1169,7 @@ impl App {
             then,
         }) = picking
         else {
-            self.processing.picking = picking;
+            self.gis.processing.picking = picking;
             return false;
         };
         if let Some(p) = p {
@@ -1170,8 +1183,8 @@ impl App {
                 window.touch(&choice);
             }
         }
-        self.processing.dialog = Some(window);
-        self.dialog = Some(Dialog::Processing);
+        self.gis.processing.dialog = Some(window);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Processing));
         self.refresh_processing();
         true
     }
@@ -1184,7 +1197,7 @@ impl App {
             mut window,
             name,
             before,
-        }) = self.processing.picking.take()
+        }) = self.gis.processing.picking.take()
         else {
             return false;
         };
@@ -1208,8 +1221,8 @@ impl App {
         } else {
             self.selection.set(before);
         }
-        self.processing.dialog = Some(window);
-        self.dialog = Some(Dialog::Processing);
+        self.gis.processing.dialog = Some(window);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Processing));
         self.refresh_processing();
         true
     }

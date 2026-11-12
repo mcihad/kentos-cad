@@ -10,6 +10,7 @@
 //! Kitaplığım or the project; an edited one stays where it is; a system
 //! template is copied to Kitaplığım.
 
+use crate::arch;
 use iced::widget::{Column, Id, button, column, container, row};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_expression::js::number;
@@ -117,7 +118,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::TemplateEditor(event)
+    Message::Arch(arch::Event::TemplateEditor(event))
 }
 
 /// The tools a template draws with, as the select lists them: Blok ekle where the program has blocks (KentOS GIS
@@ -216,14 +217,14 @@ impl App {
             Some(Source::Project) => Where::Project,
             _ => Where::User,
         };
-        self.template_editor = Some(Editor {
+        self.arch.template_editor = Some(Editor {
             in_place,
             copy,
             form,
             to,
             focus: true,
         });
-        self.dialog = Some(Dialog::TemplateEditor);
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::TemplateEditor));
         Task::none()
     }
 
@@ -271,7 +272,7 @@ impl App {
 
     /// The window opened: the keyboard to its name, the name chosen.
     pub(crate) fn template_editor_tasks(&mut self) -> Task<Message> {
-        let Some(editor) = &mut self.template_editor else {
+        let Some(editor) = &mut self.arch.template_editor else {
             return Task::none();
         };
         if !std::mem::take(&mut editor.focus) {
@@ -285,7 +286,7 @@ impl App {
     }
 
     pub(crate) fn template_editor_event(&mut self, event: Event) -> Task<Message> {
-        let Some(editor) = &mut self.template_editor else {
+        let Some(editor) = &mut self.arch.template_editor else {
             return Task::none();
         };
         let f = &mut editor.form;
@@ -386,24 +387,24 @@ impl App {
 
     /// The symbol the Stil yöneticisi picked for the window, which comes back.
     pub(crate) fn template_symbol_picked(&mut self, id: Option<String>) {
-        if let (Some(editor), Some(id)) = (&mut self.template_editor, id) {
+        if let (Some(editor), Some(id)) = (&mut self.arch.template_editor, id) {
             editor.form.symbol = id;
         }
-        if self.template_editor.is_some() {
-            self.dialog = Some(Dialog::TemplateEditor);
+        if self.arch.template_editor.is_some() {
+            self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::TemplateEditor));
         }
     }
 
     pub(crate) fn close_template_editor(&mut self) {
-        self.template_editor = None;
-        if self.dialog == Some(Dialog::TemplateEditor) {
+        self.arch.template_editor = None;
+        if self.dialog == Some(Dialog::Arch(arch::ArchDialogKind::TemplateEditor)) {
             self.dialog = None;
         }
     }
 
     /// Kaydet: the template into its library, the window closed.
     fn save_template(&mut self) {
-        let Some(editor) = &self.template_editor else {
+        let Some(editor) = &self.arch.template_editor else {
             return;
         };
         let Ok(made) = from_form(&editor.form) else {
@@ -563,7 +564,7 @@ impl App {
 
     /// Şablon düzenleyici.
     pub(crate) fn template_editor_view(&self) -> Element<'_, Message> {
-        let Some(editor) = &self.template_editor else {
+        let Some(editor) = &self.arch.template_editor else {
             return label::body("").into();
         };
         let f = &editor.form;
@@ -1004,7 +1005,7 @@ mod tests {
     use crate::files_testing::app_with_drawing;
 
     fn send(app: &mut App, event: Event) {
-        let _ = app.update(Message::TemplateEditor(event));
+        let _ = app.update(Message::Arch(crate::arch::Event::TemplateEditor(event)));
     }
 
     /// The sample drawing with a project template, Parsel sınırı.
@@ -1055,7 +1056,7 @@ mod tests {
         send(&mut app, Event::MemberAdd);
         send(&mut app, Event::MemberTemplate(0, "p-parsel".into()));
         send(&mut app, Event::MemberRule(0, "vertices"));
-        let editor = app.template_editor.as_ref().expect("open");
+        let editor = app.arch.template_editor.as_ref().expect("open");
         let made = super::from_form(&editor.form).expect("a template");
         assert_eq!(
             app.template_member_issues(&made.template),
@@ -1065,7 +1066,7 @@ mod tests {
         );
         // Kaydet does nothing while a member does not fit.
         send(&mut app, Event::Save);
-        assert!(app.template_editor.is_some());
+        assert!(app.arch.template_editor.is_some());
         send(&mut app, Event::MemberTemplate(0, "p-nokta".into()));
         send(&mut app, Event::MemberAdd);
         send(&mut app, Event::MemberTemplate(1, "p-parsel".into()));
@@ -1092,8 +1093,11 @@ mod tests {
     fn a_new_template_starts_on_the_active_layer_and_goes_to_kitapligim() {
         let mut app = app();
         let _ = app.update(Message::Run("template.new"));
-        assert_eq!(app.dialog, Some(Dialog::TemplateEditor));
-        let form = &app.template_editor.as_ref().expect("open").form;
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Arch(crate::arch::ArchDialogKind::TemplateEditor))
+        );
+        let form = &app.arch.template_editor.as_ref().expect("open").form;
         assert_eq!(
             (form.name.as_str(), form.tool.as_str()),
             ("Yeni şablon", "polygon")
@@ -1126,20 +1130,25 @@ mod tests {
         let _ = app.update(Message::Run("template.new"));
         send(&mut app, Event::Name("  ".into()));
         send(&mut app, Event::Save);
-        assert_eq!(app.dialog, Some(Dialog::TemplateEditor), "not saved");
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Arch(crate::arch::ArchDialogKind::TemplateEditor)),
+            "not saved"
+        );
         // Esc closes it, nothing kept.
         let _ = app.update(Message::DialogClosed);
-        assert!(app.template_editor.is_none());
+        assert!(app.arch.template_editor.is_none());
     }
 
     #[test]
     fn a_project_template_is_edited_in_place() {
         let mut app = app();
-        let _ = app.update(Message::TemplatesPanel(
+        let _ = app.update(Message::Arch(crate::arch::Event::TemplatesPanel(
             crate::templates_panel::Event::Edit("p-parsel".into()),
-        ));
+        )));
         assert_eq!(
-            app.template_editor
+            app.arch
+                .template_editor
                 .as_ref()
                 .map(|e| e.form.name.clone())
                 .as_deref(),
@@ -1170,8 +1179,11 @@ mod tests {
             .expect("an object");
         app.selection.set(vec![first]);
         let _ = app.update(Message::Run("template.fromSelection"));
-        assert_eq!(app.dialog, Some(Dialog::TemplateEditor));
-        let form = &app.template_editor.as_ref().expect("open").form;
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Arch(crate::arch::ArchDialogKind::TemplateEditor))
+        );
+        let form = &app.arch.template_editor.as_ref().expect("open").form;
         assert!(!form.layer_name.is_empty());
         assert!(!form.name.is_empty());
     }
@@ -1183,9 +1195,13 @@ mod tests {
         send(&mut app, Event::PickSymbol);
         assert_eq!(app.dialog, Some(Dialog::StyleManager));
         app.template_symbol_picked(Some("temel.alan.kenar-ici".into()));
-        assert_eq!(app.dialog, Some(Dialog::TemplateEditor));
         assert_eq!(
-            app.template_editor
+            app.dialog,
+            Some(Dialog::Arch(crate::arch::ArchDialogKind::TemplateEditor))
+        );
+        assert_eq!(
+            app.arch
+                .template_editor
                 .as_ref()
                 .map(|e| e.form.symbol.clone())
                 .as_deref(),

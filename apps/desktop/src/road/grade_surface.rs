@@ -62,7 +62,7 @@ impl App {
     }
 
     fn drape_input(&self) -> EntitiesDrape {
-        let s = &self.grade;
+        let s = &self.road.grade;
         EntitiesDrape {
             uids: vec![s.uid.clone()],
             surface: s.surface.clone(),
@@ -80,19 +80,23 @@ impl App {
 
     /// The command's plan for what the window holds; none without a surface.
     pub(crate) fn drape_plan(&mut self) {
-        if self.grade.surface.is_empty() {
-            self.grade.draped = None;
+        if self.road.grade.surface.is_empty() {
+            self.road.grade.draped = None;
             return;
         }
         let input = self.drape_input();
-        let Some(doc) = self.document.as_mut() else { return };
-        self.grade.draped = Some(match entities_drape::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Önizleme alınamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.road.grade.draped = Some(
+            match entities_drape::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Önizleme alınamadı.".to_owned()),
+            },
+        );
     }
 
     /// Uygula: one undo step; the message says what was done.
@@ -102,7 +106,7 @@ impl App {
         match entities_drape::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => {
                 self.say(Level::Success, format!("Yüzeyden kot verildi: {} (tek adımda geri alınır).", drape_words(&output)));
-                self.grade = State::default();
+                self.road.grade = State::default();
                 self.dialog = None;
             }
             CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
@@ -118,7 +122,7 @@ impl App {
         if all.len() < 2 {
             return form;
         }
-        let at = self.grade.ring;
+        let at = self.road.grade.ring;
         let choices = all.iter().map(|r| (format!("{}:{}", r.0.0, r.0.1), ring_name(r.0))).collect();
         form.field("Halka", fields::select_owned(choices, &format!("{}:{}", at.0, at.1), |id| msg(Event::Ring(id))))
     }
@@ -126,12 +130,16 @@ impl App {
     /// The ring's name for the vertices' help line, “ (2. parça, 1. delik)”; nothing for an object of one ring.
     pub(crate) fn ring_place(&self) -> String {
         let many = self.grade_object().map(rings).is_some_and(|r| r.len() > 1);
-        if many { format!(" ({})", ring_name(self.grade.ring)) } else { String::new() }
+        if many {
+            format!(" ({})", ring_name(self.road.grade.ring))
+        } else {
+            String::new()
+        }
     }
 
     /// Yüzeyden's rows: the surface and the break points; the summary's lines; whether Uygula may go.
     pub(crate) fn surface_form<'a>(&'a self, form: Form<'a, Message>) -> (Form<'a, Message>, Vec<Element<'a, Message>>, bool) {
-        let s = &self.grade;
+        let s = &self.road.grade;
         let surfaces = self.grade_surfaces();
         if surfaces.is_empty() {
             let line = words::text_line(

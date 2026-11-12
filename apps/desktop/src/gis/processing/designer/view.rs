@@ -5,6 +5,7 @@
 //! the web's size (1400 × 880 at most, 92 % of the window's height).
 //! Closing with changes and Modeli sil ask over it.
 
+use crate::gis;
 use iced::widget::tooltip::Position;
 use iced::widget::{button, canvas, column, container, responsive, row, space, stack};
 use iced::{Border, Center, Element, Fill, Length, Theme};
@@ -22,7 +23,7 @@ use super::{Asking, Designer, Event, palette};
 use crate::app::{App, Message};
 
 fn ev(e: Event) -> Message {
-    Message::ModelDesigner(e)
+    Message::Gis(gis::Event::ModelDesigner(e))
 }
 
 /// The window's size, the web's pixels at the default text size.
@@ -32,7 +33,7 @@ const HEIGHT: f32 = 880.0;
 impl App {
     /// Model tasarımcısı over the drawing, and what it asks over itself.
     pub(crate) fn model_designer_view(&self) -> Element<'_, Message> {
-        let Some(d) = self.processing.designer.as_deref() else {
+        let Some(d) = self.gis.processing.designer.as_deref() else {
             return space().into();
         };
         let mut layers: Vec<Element<'_, Message>> = vec![
@@ -72,7 +73,7 @@ impl App {
         width: f32,
         height: f32,
     ) -> Element<'a, Message> {
-        let registry = &self.processing.registry;
+        let registry = &self.gis.processing.registry;
         // A narrow window (or large text) takes from the side columns before the diagram.
         let left = typography::scaled(palette::WIDTH).min(width * 0.26).floor();
         let right = typography::scaled(inspector::WIDTH)
@@ -131,7 +132,7 @@ impl App {
 
     /// The diagram with its zoom buttons, and the menu a wire let go over a step opens.
     fn model_diagram<'a>(&'a self, d: &'a Designer) -> Element<'a, Message> {
-        let registry = &self.processing.registry;
+        let registry = &self.gis.processing.registry;
         let carrying = d
             .carrying
             .as_deref()

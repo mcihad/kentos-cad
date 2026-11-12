@@ -30,6 +30,7 @@ fn open(size: Size, text_size: u32, long: bool) -> App {
     app.window_size = size;
     app.open_wall_styles();
     let id = app
+        .arch
         .wall_styles
         .as_ref()
         .unwrap()
@@ -48,7 +49,7 @@ fn open(size: Size, text_size: u32, long: bool) -> App {
         for _ in 0..12 {
             let _ = app.wall_styles_event(Event::Add);
         }
-        let chosen = app.wall_styles.as_ref().unwrap().chosen.clone();
+        let chosen = app.arch.wall_styles.as_ref().unwrap().chosen.clone();
         for _ in 0..22 {
             let _ = app.wall_styles_event(Event::New);
         }
@@ -59,7 +60,7 @@ fn open(size: Size, text_size: u32, long: bool) -> App {
 
 fn view(app: &App) -> Element<'_, Message> {
     assert_typography(app);
-    if app.wall_styles.is_some() {
+    if app.arch.wall_styles.is_some() {
         app.wall_styles_view()
     } else {
         iced::widget::space().into()
@@ -261,7 +262,7 @@ fn short_large_wall_styles_scrolls_the_right_form_and_left_list_without_hiding_a
             &mut app,
             Input::Click(down.text(CANCEL).center()),
         );
-        assert!(app.wall_styles.is_none());
+        assert!(app.arch.wall_styles.is_none());
         assert_eq!(
             app.document.as_ref().unwrap().model.to_snapshot_v2(),
             before
@@ -297,7 +298,7 @@ fn wide_standard_wall_styles_keeps_its_natural_size_and_cancel_keeps_the_model()
         &mut app,
         Input::Click(actual.text(CANCEL).center()),
     );
-    assert!(app.wall_styles.is_none());
+    assert!(app.arch.wall_styles.is_none());
     assert_eq!(
         app.document.as_ref().unwrap().model.to_snapshot_v2(),
         before

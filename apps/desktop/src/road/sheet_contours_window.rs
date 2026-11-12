@@ -9,6 +9,7 @@
 //! in the summary. Yerleşik alan (m. 63(2), docs/adr/4740): a tick and the layers of the built-up areas and of the
 //! roads' lines (guessed from their names), heights about every 2 cm on the sheet.
 
+use crate::road;
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
 use kentos_commands::{CommandResult, SheetBuiltUp, SheetSlopes, TerrainsSheetContoured, TerrainsSheetContours, contour_rules_default};
@@ -94,7 +95,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::SheetContours(e)
+    Message::Road(road::Event::SheetContours(e))
 }
 
 impl State {
@@ -150,21 +151,25 @@ impl State {
 
 impl App {
     fn sheet_contours_run(&mut self) {
-        let input = match self.sheet_contours.input() {
+        let input = match self.road.sheet_contours.input() {
             Ok(i) => i,
             Err(why) => {
-                self.sheet_contours.answer = Some(Err(why));
+                self.road.sheet_contours.answer = Some(Err(why));
                 return;
             }
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.sheet_contours.answer = Some(match road_terrains_sheet::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Eğriler hazırlanamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.road.sheet_contours.answer = Some(
+            match road_terrains_sheet::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Eğriler hazırlanamadı.".to_owned()),
+            },
+        );
     }
 
     /// Pafta eğrileri (`terrain.sheetContours`): the project's first surface, a layer named for contours, the detail
@@ -220,7 +225,7 @@ impl App {
             .into_iter()
             .filter(|d| *d != slope_top && *d != slope_bottom && *d != chosen_layer && *d != built_area && *d != built_road)
             .collect();
-        self.sheet_contours = State {
+        self.road.sheet_contours = State {
             surfaces,
             surface: first,
             layers,
@@ -244,13 +249,13 @@ impl App {
             ..State::default()
         };
         self.sheet_contours_run();
-        self.dialog = Some(Dialog::SheetContours);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::SheetContours));
         Task::none()
     }
 
     /// Çiz: the lines and heights written, one undo step.
     pub(crate) fn sheet_contours_draw(&mut self) {
-        let input = match self.sheet_contours.input() {
+        let input = match self.road.sheet_contours.input() {
             Ok(i) => i,
             Err(why) => return self.warn(why),
         };
@@ -266,13 +271,13 @@ impl App {
                     out.spots.len()
                 ),
             );
-            self.sheet_contours = State::default();
+            self.road.sheet_contours = State::default();
             self.dialog = None;
         }
     }
 
     pub(crate) fn sheet_contours_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.sheet_contours;
+        let s = &mut self.road.sheet_contours;
         match event {
             Event::Surface(v) => s.surface = v,
             Event::Layer(v) => s.layer = v,
@@ -301,7 +306,7 @@ impl App {
             Event::GridAngle(v) => {
                 let typed = v.trim().replace(',', ".").parse::<f64>().ok();
                 let turn = typed.map(|t| self.format().turn_from_typed(t));
-                let s = &mut self.sheet_contours;
+                let s = &mut self.road.sheet_contours;
                 s.grid_turn = turn;
                 s.grid_angle = v;
             }
@@ -310,7 +315,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.sheet_contours = State::default();
+                self.road.sheet_contours = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -320,7 +325,7 @@ impl App {
     }
 
     pub(crate) fn sheet_contours_view(&self) -> Element<'_, Message> {
-        let s = &self.sheet_contours;
+        let s = &self.road.sheet_contours;
         let package = contour_rules_default()
             .and_then(|r| r.intervals.iter().find(|i| f64::from(i.scale) == s.scale).map(|i| i.interval))
             .map_or("ölçek için aralık yok".to_owned(), |i| format!("{i} (m. 78(1)(c))"));
@@ -490,7 +495,9 @@ impl App {
             .push(body)
             .aside(words::secondary(
                 crate::section_check_window::OPEN,
-                Some(Message::SectionCheck(crate::section_check_window::Event::Open)),
+                Some(Message::Road(road::Event::SectionCheck(
+                    crate::section_check_window::Event::Open,
+                ))),
             ))
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(DRAW, ready.then(|| msg(Event::Draw))))
@@ -502,9 +509,9 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(DRAW) => Some(msg(Event::Draw)),
-            Control::Press(crate::section_check_window::OPEN) => {
-                Some(Message::SectionCheck(crate::section_check_window::Event::Open))
-            }
+            Control::Press(crate::section_check_window::OPEN) => Some(Message::Road(
+                road::Event::SectionCheck(crate::section_check_window::Event::Open),
+            )),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

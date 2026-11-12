@@ -21,6 +21,7 @@
 //! the thresholds' source and the reviewer's statement; the project's reviews listed, those whose points changed since
 //! said to belong to the earlier result. Grafik draws one mark's movement against time.
 
+use crate::map;
 use std::path::PathBuf;
 
 use iced::widget::{container, row, text_editor};
@@ -160,7 +161,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Asbuilt(e)
+    Message::Map(map::Event::Asbuilt(e))
 }
 
 /// A status in words.
@@ -346,7 +347,7 @@ fn package_lines(p: &kentos_commands::AsbuiltPackage, f: &kentos_interaction::Fo
 
 impl App {
     pub(crate) fn asbuilt_input(&self) -> Result<AsbuiltCheck, String> {
-        let s = &self.asbuilt;
+        let s = &self.map.asbuilt;
         // A monitoring job (docs/adr/3620) sets the earlier epoch's marks by name: the design's other parts stay out.
         let watch = s.kind == 2;
         let unless = |v: Option<String>| if watch { None } else { v };
@@ -395,7 +396,7 @@ impl App {
 
     /// Önceki dönemler (docs/adr/4420): the layers named, oldest first, each with its day; a name no layer has is said.
     fn asbuilt_epochs(&self) -> Result<Vec<kentos_commands::AsbuiltEpoch>, String> {
-        let s = &self.asbuilt;
+        let s = &self.map.asbuilt;
         let mut out = Vec::new();
         for name in s.epochs.split([',', ';']).map(str::trim).filter(|n| !n.is_empty()) {
             let low = name.to_lowercase();
@@ -409,7 +410,7 @@ impl App {
 
     /// The package's input from the form: its design and limits, the notes a line each (empty lines left out).
     fn asbuilt_package_input(&self, path: &std::path::Path) -> Result<FieldPackage, String> {
-        let s = &self.asbuilt;
+        let s = &self.map.asbuilt;
         Ok(FieldPackage {
             design: opt(&s.design),
             lines: opt(&s.lines),
@@ -459,7 +460,7 @@ impl App {
     fn asbuilt_run(&mut self) {
         let input = self.asbuilt_input();
         // Docs/adr/5220: the epochs' days for Grafik.
-        self.asbuilt.days = match &input {
+        self.map.asbuilt.days = match &input {
             Ok(i) => i
                 .epochs
                 .iter()
@@ -471,7 +472,7 @@ impl App {
         };
         self.asbuilt_reviews();
         let Some(doc) = self.document.as_mut() else { return };
-        self.asbuilt.answer = Some(input.and_then(|input| {
+        self.map.asbuilt.answer = Some(input.and_then(|input| {
             match asbuilt_check::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
@@ -481,12 +482,14 @@ impl App {
             }
         }));
         // Docs/adr/4420: the series' epochs as the table titles them.
-        let epochs = match &self.asbuilt.answer {
+        let epochs = match &self.map.asbuilt.answer {
             Some(Ok(r)) => r.tracks.first().map_or(0, |t| t.steps.len()),
             _ => 0,
         };
-        self.asbuilt.epoch_titles =
-            (1..epochs).map(|k| format!("{k}. dönem")).chain((epochs > 0).then(|| "Bu dönem".to_owned())).collect();
+        self.map.asbuilt.epoch_titles = (1..epochs)
+            .map(|k| format!("{k}. dönem"))
+            .chain((epochs > 0).then(|| "Bu dönem".to_owned()))
+            .collect();
     }
 
     /// Uygulama kontrolü (`asbuilt.check`): the layers guessed by their names (a measured layer, a design layer, a
@@ -532,7 +535,7 @@ impl App {
             .map(|r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
             .unwrap_or_default();
         let surface = find(&surfaces, &["tasarım", "tasarim", "proje"]).unwrap_or_default();
-        self.asbuilt = State {
+        self.map.asbuilt = State {
             layers,
             line_layers,
             surfaces,
@@ -545,12 +548,14 @@ impl App {
             ..State::default()
         };
         self.asbuilt_run();
-        self.dialog = Some(Dialog::Asbuilt);
+        self.dialog = Some(Dialog::Map(map::MapDialogKind::Asbuilt));
         Task::none()
     }
 
     pub(crate) fn asbuilt_save(&mut self, path: PathBuf) {
-        let Some(Ok(r)) = &self.asbuilt.answer else { return };
+        let Some(Ok(r)) = &self.map.asbuilt.answer else {
+            return;
+        };
         match std::fs::write(&path, csv(r)) {
             Ok(()) => self.say(Level::Success, format!("{TITLE}: {} nokta {} dosyasına yazıldı.", r.points.len(), path.display())),
             Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.", path.display())),
@@ -558,7 +563,7 @@ impl App {
     }
 
     pub(crate) fn asbuilt_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.asbuilt;
+        let s = &mut self.map.asbuilt;
         match event {
             Event::Measured(v) => s.measured = v,
             Event::Design(v) => s.design = v,
@@ -600,8 +605,12 @@ impl App {
                 return Task::none();
             }
             Event::Select => {
-                let Some(Ok(r)) = &self.asbuilt.answer else { return Task::none() };
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let Some(Ok(r)) = &self.map.asbuilt.answer else {
+                    return Task::none();
+                };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
                 let slots: Vec<Slot> = r
                     .points
                     .iter()
@@ -610,7 +619,7 @@ impl App {
                     .collect();
                 let n = slots.len();
                 self.selection.set(slots);
-                self.asbuilt = State::default();
+                self.map.asbuilt = State::default();
                 self.dialog = None;
                 self.say(Level::Info, format!("{TITLE}: içinde olmayan {n} nokta seçildi."));
                 return Task::none();
@@ -678,7 +687,7 @@ impl App {
             }
             Event::PackageDesign(on) => s.record_design = on,
             Event::Close => {
-                self.asbuilt = State::default();
+                self.map.asbuilt = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -688,7 +697,7 @@ impl App {
     }
 
     pub(crate) fn asbuilt_view(&self) -> Element<'_, Message> {
-        let s = &self.asbuilt;
+        let s = &self.map.asbuilt;
         let f = self.format();
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
             container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(width)

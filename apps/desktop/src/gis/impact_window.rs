@@ -9,6 +9,7 @@
 //! Ölçüleri çizime yaz writes the comparison as a table on “Senaryo ölçüleri” (`cad.scenarios.record`, one undo step)
 //! and the summary says, for each table of the scenario in the drawing, whether it still holds.
 
+use crate::gis;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -152,7 +153,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Impact(e)
+    Message::Gis(gis::Event::Impact(e))
 }
 
 /// A change in words.
@@ -251,8 +252,12 @@ pub fn csv(r: &ScenariosImpacted) -> String {
 impl App {
     /// The comparison's input as the form says, or why it does not read.
     fn impact_input(&self) -> Result<ScenariosImpact, String> {
-        let since = self.impact_stamps.get(&self.impact.scenario).cloned();
-        let s = &self.impact;
+        let since = self
+            .gis
+            .impact_stamps
+            .get(&self.gis.impact.scenario)
+            .cloned();
+        let s = &self.gis.impact;
         let impervious = shares_of(&s.shares)?;
         let access = if s.distance.trim().is_empty() {
             None
@@ -322,18 +327,22 @@ impl App {
         let input = match self.impact_input() {
             Ok(input) => input,
             Err(why) => {
-                self.impact.answer = Some(Err(why));
+                self.gis.impact.answer = Some(Err(why));
                 return;
             }
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.impact.answer = Some(match scenarios_impact::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Karşılaştırma yapılamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.gis.impact.answer = Some(
+            match scenarios_impact::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Karşılaştırma yapılamadı.".to_owned()),
+            },
+        );
     }
 
     /// Senaryo ölçüleri (`scenario.impact`): the scenario at hand, else the first.
@@ -359,20 +368,29 @@ impl App {
         let networks = std::iter::once((String::new(), "düz uzaklık".to_owned()))
             .chain(doc.model.settings().networks.iter().map(|n| (n.id.clone(), n.name.clone())))
             .collect();
-        self.impact = State { scenarios, scenario: first, layers, surfaces, networks, ..State::default() };
+        self.gis.impact = State {
+            scenarios,
+            scenario: first,
+            layers,
+            surfaces,
+            networks,
+            ..State::default()
+        };
         self.impact_run();
-        self.dialog = Some(Dialog::Impact);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Impact));
         Task::none()
     }
 
     /// The report written to `path` as CSV, its stamp kept for the next comparison of this scenario (a test or a trace
     /// gives the path here, the picker in the app).
     pub(crate) fn impact_save(&mut self, path: PathBuf) {
-        let Some(Ok(r)) = &self.impact.answer else { return };
+        let Some(Ok(r)) = &self.gis.impact.answer else {
+            return;
+        };
         let (text, scenario, stamp) = (csv(r), r.scenario.clone(), r.stamp.clone());
         match std::fs::write(&path, text) {
             Ok(()) => {
-                self.impact_stamps.insert(scenario, stamp);
+                self.gis.impact_stamps.insert(scenario, stamp);
                 self.say(Level::Success, format!("{TITLE}: rapor {} dosyasına yazıldı; taban damgası saklandı.", path.display()));
                 self.impact_run();
             }
@@ -383,57 +401,57 @@ impl App {
     pub(crate) fn impact_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Scenario(id) => {
-                self.impact.scenario = id;
+                self.gis.impact.scenario = id;
                 self.impact_run();
             }
-            Event::View(v) => self.impact.view = v,
-            Event::Group(g) => self.impact.group = g,
+            Event::View(v) => self.gis.impact.view = v,
+            Event::Group(g) => self.gis.impact.group = g,
             Event::Shares(v) => {
-                self.impact.shares = v;
+                self.gis.impact.shares = v;
                 self.impact_run();
             }
             Event::From(v) => {
-                self.impact.from = v;
+                self.gis.impact.from = v;
                 self.impact_run();
             }
             Event::To(v) => {
-                self.impact.to = v;
+                self.gis.impact.to = v;
                 self.impact_run();
             }
             Event::Distance(v) => {
-                self.impact.distance = v;
+                self.gis.impact.distance = v;
                 self.impact_run();
             }
             Event::InfraLayer(v) => {
-                self.impact.infra_layer = v;
+                self.gis.impact.infra_layer = v;
                 self.impact_run();
             }
             Event::InfraDistance(v) => {
-                self.impact.infra_distance = v;
+                self.gis.impact.infra_distance = v;
                 self.impact_run();
             }
             Event::InfraFrom(v) => {
-                self.impact.infra_from = v;
+                self.gis.impact.infra_from = v;
                 self.impact_run();
             }
             Event::SlopeSurface(v) => {
-                self.impact.slope_surface = v;
+                self.gis.impact.slope_surface = v;
                 self.impact_run();
             }
             Event::SlopeThreshold(v) => {
-                self.impact.slope_threshold = v;
+                self.gis.impact.slope_threshold = v;
                 self.impact_run();
             }
             Event::SlopeFrom(v) => {
-                self.impact.slope_from = v;
+                self.gis.impact.slope_from = v;
                 self.impact_run();
             }
             Event::SlopeClasses(v) => {
-                self.impact.slope_classes = v;
+                self.gis.impact.slope_classes = v;
                 self.impact_run();
             }
             Event::SlopeAspect(on) => {
-                self.impact.slope_aspect = on;
+                self.gis.impact.slope_aspect = on;
                 self.impact_run();
             }
             Event::Save => {
@@ -453,13 +471,24 @@ impl App {
             Event::Saved(Some(path)) => self.impact_save(path),
             Event::Saved(None) => {}
             Event::DrawAccess => {
-                let (Some(Ok(answer)), Ok(input)) = (&self.impact.answer, self.impact_input()) else { return Task::none() };
-                let Some(reach) = answer.reach.clone() else { return Task::none() };
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let (Some(Ok(answer)), Ok(input)) = (&self.gis.impact.answer, self.impact_input())
+                else {
+                    return Task::none();
+                };
+                let Some(reach) = answer.reach.clone() else {
+                    return Task::none();
+                };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
                 let marks = crate::impact_reach_marks::ReachMarks::of(&doc.model, &reach);
-                let (yes, no) = (reach.alternative_reached.len(), reach.alternative_unreached.len());
-                self.impact_reach = Some(crate::impact_reach_marks::Shown::new(doc.session, input));
-                self.impact = State::default();
+                let (yes, no) = (
+                    reach.alternative_reached.len(),
+                    reach.alternative_unreached.len(),
+                );
+                self.gis.impact_reach =
+                    Some(crate::impact_reach_marks::Shown::new(doc.session, input));
+                self.gis.impact = State::default();
                 self.dialog = None;
                 // The view on the scenario's areas, a tenth wider each way.
                 if let Some([x0, y0, x1, y1]) = marks.bounds() {
@@ -475,13 +504,25 @@ impl App {
                 );
             }
             Event::DrawNear => {
-                let (Some(Ok(answer)), Ok(input)) = (&self.impact.answer, self.impact_input()) else { return Task::none() };
-                let Some(near) = answer.near.clone() else { return Task::none() };
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
-                let marks = crate::impact_reach_marks::ReachMarks::of_near(&doc.model, &near, &self.format());
+                let (Some(Ok(answer)), Ok(input)) = (&self.gis.impact.answer, self.impact_input())
+                else {
+                    return Task::none();
+                };
+                let Some(near) = answer.near.clone() else {
+                    return Task::none();
+                };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
+                let marks = crate::impact_reach_marks::ReachMarks::of_near(
+                    &doc.model,
+                    &near,
+                    &self.format(),
+                );
                 let (yes, no) = (near.alternative_near.len(), near.alternative_far.len());
-                self.impact_reach = Some(crate::impact_reach_marks::Shown::near(doc.session, input));
-                self.impact = State::default();
+                self.gis.impact_reach =
+                    Some(crate::impact_reach_marks::Shown::near(doc.session, input));
+                self.gis.impact = State::default();
                 self.dialog = None;
                 if let Some([x0, y0, x1, y1]) = marks.bounds() {
                     let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
@@ -496,17 +537,17 @@ impl App {
                 );
             }
             Event::Network(v) => {
-                self.impact.network = v;
+                self.gis.impact.network = v;
                 self.impact_run();
             }
             Event::Connect(v) => {
-                self.impact.connect = v;
+                self.gis.impact.connect = v;
                 self.impact_run();
             }
             Event::DrawSlope => self.impact_draw_slope(),
             Event::Record => self.impact_record(),
             Event::Close => {
-                self.impact = State::default();
+                self.gis.impact = State::default();
                 self.dialog = None;
             }
         }
@@ -516,7 +557,9 @@ impl App {
     /// Eğimi çizimde göster (docs/adr/5060): the window closes and the scenario's slope classes stay on the drawing,
     /// worked out again as it changes, until İşareti kaldır.
     fn impact_draw_slope(&mut self) {
-        let (Some(Ok(answer)), Ok(input)) = (&self.impact.answer, self.impact_input()) else { return };
+        let (Some(Ok(answer)), Ok(input)) = (&self.gis.impact.answer, self.impact_input()) else {
+            return;
+        };
         if !answer.measures.iter().any(|m| m.id == "slopeMean") {
             return;
         }
@@ -526,8 +569,8 @@ impl App {
             .ok()
             .map(|a| crate::impact_reach_marks::ReachMarks::of_slope(&a, &self.format()));
         let classes = marks.as_ref().map_or(0, |m| m.key.len());
-        self.impact_reach = Some(shown);
-        self.impact = State::default();
+        self.gis.impact_reach = Some(shown);
+        self.gis.impact = State::default();
         self.dialog = None;
         if let Some([x0, y0, x1, y1]) = marks.as_ref().and_then(|m| m.bounds()) {
             let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
@@ -590,7 +633,7 @@ impl App {
     }
 
     pub(crate) fn impact_view(&self) -> Element<'_, Message> {
-        let s = &self.impact;
+        let s = &self.gis.impact;
         let f = self.format();
         let pick = crate::style::fields::select_owned(s.scenarios.clone(), &s.scenario, |id| msg(Event::Scenario(id)));
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {

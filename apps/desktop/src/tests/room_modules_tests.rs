@@ -1,4 +1,5 @@
 use super::*;
+use crate::arch;
 use crate::files_testing::{app_with_drawing, make_cad};
 
 const CASES: &str = include_str!("../../../../fixtures/commands/v1/cad.modules.edit.json");
@@ -41,8 +42,11 @@ fn the_window_defines_the_selection_and_closing_writes_nothing() {
     let mut app = app();
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let _ = app.update(Message::Run("arch.modules"));
-    assert_eq!(app.dialog, Some(Dialog::RoomModules));
-    let _ = app.update(Message::RoomModules(Event::Close));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Arch(arch::ArchDialogKind::RoomModules))
+    );
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Close)));
     assert_eq!(
         app.document
             .as_ref()
@@ -54,8 +58,10 @@ fn the_window_defines_the_selection_and_closing_writes_nothing() {
     );
     select_bathroom(&mut app);
     let _ = app.update(Message::Run("arch.modules"));
-    let _ = app.update(Message::RoomModules(Event::Name("Banyo".into())));
-    let _ = app.update(Message::RoomModules(Event::Define));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Name(
+        "Banyo".into(),
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Define)));
     let m = modules(&app);
     assert_eq!(m.len(), 1);
     assert_eq!(m[0].members.len(), 9);
@@ -67,9 +73,11 @@ fn an_update_from_the_window_reaches_the_linked_instances_in_one_step() {
     let mut app = app();
     select_bathroom(&mut app);
     let _ = app.update(Message::Run("arch.modules"));
-    let _ = app.update(Message::RoomModules(Event::Name("Banyo".into())));
-    let _ = app.update(Message::RoomModules(Event::Define));
-    let _ = app.update(Message::RoomModules(Event::Close));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Name(
+        "Banyo".into(),
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Define)));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Close)));
     let doc = &mut app.document.as_mut().unwrap().model;
     for (x, mirror) in [(10.0, false), (20.0, true)] {
         let input: kentos_commands::ModulesEdit = serde_json::from_value(serde_json::json!({
@@ -96,12 +104,12 @@ fn an_update_from_the_window_reaches_the_linked_instances_in_one_step() {
     );
     app.selection.set([kentos_domain::Slot(5)]);
     let _ = app.update(Message::Run("arch.modules"));
-    let w = app.room_modules.as_ref().unwrap();
+    let w = app.arch.room_modules.as_ref().unwrap();
     let Some(Ok(plan)) = &w.preview else {
         panic!("{:?}", w.preview)
     };
     assert_eq!(plan.report.updated, ["banyo-1", "banyo-2", "banyo-3"]);
-    let _ = app.update(Message::RoomModules(Event::Update));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Update)));
     assert!((door_width(&app, 19) - 0.9).abs() < 1e-12);
     assert!((door_width(&app, 28) - 0.9).abs() < 1e-12);
     let _ = app.update(Message::Run("edit.undo"));
@@ -114,8 +122,8 @@ fn an_object_is_made_a_local_exception_from_the_selection() {
     let mut app = app();
     select_bathroom(&mut app);
     let _ = app.update(Message::Run("arch.modules"));
-    let _ = app.update(Message::RoomModules(Event::Define));
-    let _ = app.update(Message::RoomModules(Event::Close));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Define)));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Close)));
     app.selection.set([kentos_domain::Slot(5)]);
     let _ = app.update(Message::Run("arch.moduleExcept"));
     assert_eq!(
@@ -145,9 +153,11 @@ fn flat_app() -> App {
     make_cad(&mut app);
     app.selection.set((1..=13).map(kentos_domain::Slot));
     let _ = app.update(Message::Run("arch.modules"));
-    let _ = app.update(Message::RoomModules(Event::Name("Daire".into())));
-    let _ = app.update(Message::RoomModules(Event::Define));
-    let _ = app.update(Message::RoomModules(Event::Close));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Name(
+        "Daire".into(),
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Define)));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Close)));
     app
 }
 
@@ -182,7 +192,7 @@ fn the_selections_free_objects_join_the_instance_they_are_selected_with() {
 fn the_window_repeats_the_ground_floor_with_its_prefixes_in_one_step() {
     let mut app = flat_app();
     let _ = app.update(Message::Run("arch.modules"));
-    let w = app.room_modules.as_ref().unwrap();
+    let w = app.arch.room_modules.as_ref().unwrap();
     assert_eq!(w.repeat_from.as_deref(), Some("zemin"));
     assert_eq!(
         w.repeat_to
@@ -192,10 +202,17 @@ fn the_window_repeats_the_ground_floor_with_its_prefixes_in_one_step() {
         ["kat1", "kat2", "kat3"]
     );
     let before = app.document.as_ref().unwrap().model.entities().count();
-    let _ = app.update(Message::RoomModules(Event::RepeatPrefix(0, "1-".into())));
-    let _ = app.update(Message::RoomModules(Event::RepeatChoose(1, true)));
-    let Some(Ok(plan)) = &app.room_modules.as_ref().unwrap().repeat_preview else {
-        panic!("{:?}", app.room_modules.as_ref().unwrap().repeat_preview)
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(
+        Event::RepeatPrefix(0, "1-".into()),
+    )));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(
+        Event::RepeatChoose(1, true),
+    )));
+    let Some(Ok(plan)) = &app.arch.room_modules.as_ref().unwrap().repeat_preview else {
+        panic!(
+            "{:?}",
+            app.arch.room_modules.as_ref().unwrap().repeat_preview
+        )
     };
     assert_eq!(plan.placed.len(), 2);
     assert_eq!(
@@ -203,7 +220,7 @@ fn the_window_repeats_the_ground_floor_with_its_prefixes_in_one_step() {
         before,
         "the plan writes nothing"
     );
-    let _ = app.update(Message::RoomModules(Event::Repeat));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Repeat)));
     assert_eq!(modules(&app)[0].instances.len(), 3);
     assert_eq!(
         modules(&app)[0].instances[1].numbering.prefix.as_deref(),
@@ -227,9 +244,9 @@ fn an_object_moved_by_hand_is_said_drifted_and_restore_gives_it_back() {
     }
     doc.update(kentos_domain::Slot(10), bed);
     let _ = app.update(Message::Run("arch.modules"));
-    let w = app.room_modules.as_ref().unwrap();
+    let w = app.arch.room_modules.as_ref().unwrap();
     assert_eq!(w.rows[0].instances[0].drifted, [flat_uid(10)]);
-    let _ = app.update(Message::RoomModules(Event::Close));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Close)));
     app.selection.set([kentos_domain::Slot(10)]);
     let _ = app.update(Message::Run("arch.moduleRestore"));
     let Some(Entity::Insert(b)) = app
@@ -258,8 +275,10 @@ fn duplex_app() -> App {
     make_cad(&mut app);
     app.selection.set((1..=11).map(kentos_domain::Slot));
     let _ = app.update(Message::Run("arch.modules"));
-    let _ = app.update(Message::RoomModules(Event::Name("Dubleks".into())));
-    let _ = app.update(Message::RoomModules(Event::Define));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Name(
+        "Dubleks".into(),
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Define)));
     app
 }
 
@@ -268,7 +287,7 @@ fn the_window_defines_a_duplex_of_two_storeys_and_says_its_levels() {
     let app = duplex_app();
     let m = modules(&app);
     assert_eq!(m[0].storeys(), 2);
-    let w = app.room_modules.as_ref().unwrap();
+    let w = app.arch.room_modules.as_ref().unwrap();
     assert_eq!(w.rows[0].storeys, Some(2));
     assert_eq!(w.rows[0].instances[0].levels, ["zemin", "kat1"]);
 }
@@ -277,19 +296,28 @@ fn the_window_defines_a_duplex_of_two_storeys_and_says_its_levels() {
 fn the_window_repeats_a_floor_with_its_loose_objects_in_one_step() {
     let mut app = duplex_app();
     // The project lists its levels 1. kat, zemin, 2. kat, bodrum: the ground floor is the second.
-    let _ = app.update(Message::RoomModules(Event::RepeatFrom(1)));
-    let w = app.room_modules.as_ref().unwrap();
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::RepeatFrom(
+        1,
+    ))));
+    let w = app.arch.room_modules.as_ref().unwrap();
     assert_eq!(w.repeat_from.as_deref(), Some("zemin"));
     let k1 = w.repeat_to.iter().position(|t| t.level == "kat1").unwrap();
     let before = app.document.as_ref().unwrap().model.entities().count();
-    let _ = app.update(Message::RoomModules(Event::RepeatChoose(k1, true)));
-    let Some(Ok(plan)) = &app.room_modules.as_ref().unwrap().repeat_preview else {
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(
+        Event::RepeatChoose(k1, true),
+    )));
+    let Some(Ok(plan)) = &app.arch.room_modules.as_ref().unwrap().repeat_preview else {
         panic!()
     };
     assert!(plan.copied.is_empty(), "without Modülsüz nesneler de");
-    let _ = app.update(Message::RoomModules(Event::RepeatLoose(true)));
-    let Some(Ok(plan)) = &app.room_modules.as_ref().unwrap().repeat_preview else {
-        panic!("{:?}", app.room_modules.as_ref().unwrap().repeat_preview)
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::RepeatLoose(
+        true,
+    ))));
+    let Some(Ok(plan)) = &app.arch.room_modules.as_ref().unwrap().repeat_preview else {
+        panic!(
+            "{:?}",
+            app.arch.room_modules.as_ref().unwrap().repeat_preview
+        )
     };
     assert_eq!(plan.copied.len(), 8);
     assert_eq!(plan.report.left.len(), 3);
@@ -298,7 +326,7 @@ fn the_window_repeats_a_floor_with_its_loose_objects_in_one_step() {
         before,
         "the plan writes nothing"
     );
-    let _ = app.update(Message::RoomModules(Event::Repeat));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Repeat)));
     assert_eq!(
         app.document.as_ref().unwrap().model.entities().count(),
         before + 11 + 8
@@ -326,8 +354,10 @@ fn a_module_without_walls_has_its_base_at_its_objects_lower_left() {
     app.selection
         .set([2, 5, 6].into_iter().map(kentos_domain::Slot));
     let _ = app.update(Message::Run("arch.modules"));
-    let _ = app.update(Message::RoomModules(Event::Name("Merdiven".into())));
-    let _ = app.update(Message::RoomModules(Event::Define));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Name(
+        "Merdiven".into(),
+    ))));
+    let _ = app.update(Message::Arch(arch::Event::RoomModules(Event::Define)));
     let m = modules(&app);
     assert_eq!(m.len(), 1);
     assert_eq!(m[0].members.len(), 3);

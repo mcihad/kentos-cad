@@ -2,6 +2,7 @@
 
 use crate::app::{App, Dialog, Message};
 use crate::haul_plan_window::Event as W;
+use crate::road;
 
 const CASES: &str = include_str!("../../../../fixtures/commands/v1/road.hauls.plan.json");
 
@@ -22,7 +23,7 @@ fn plan_app(name: Option<&str>) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::HaulPlan(e));
+    let _ = app.update(Message::Road(road::Event::HaulPlan(e)));
 }
 
 #[test]
@@ -31,10 +32,13 @@ fn the_window_reads_a_haul_plan() {
     let mut app = plan_app(Some(NAME));
     let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
     let _ = app.update(Message::Run("haul.plan"));
-    assert!(matches!(app.dialog, Some(Dialog::HaulPlan)));
+    assert!(matches!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::HaulPlan))
+    ));
     send(&mut app, W::Haul("h-2".into()));
     send(&mut app, W::Preview);
-    let w = app.haul_plan_window.as_ref().expect("open");
+    let w = app.road.haul_plan_window.as_ref().expect("open");
     let Some(Ok(r)) = &w.preview else { panic!("a read") };
     let want = &case(NAME)["steps"][0]["result"]["output"];
     assert!(r.feasible);
@@ -50,7 +54,7 @@ fn an_unclosed_plan_says_why() {
     let _ = app.update(Message::Run("haul.plan"));
     send(&mut app, W::Haul("h-3".into()));
     send(&mut app, W::Preview);
-    let w = app.haul_plan_window.as_ref().expect("open");
+    let w = app.road.haul_plan_window.as_ref().expect("open");
     let Some(Ok(r)) = &w.preview else { panic!("a read") };
     assert!(!r.feasible && r.shortage > 0.0);
     assert!(w.warnings.iter().any(|x| x.contains("karşılanmayan dolgu")));
@@ -64,7 +68,7 @@ fn the_window_reads_an_economic_plan() {
     send(&mut app, W::Haul("h-3".into()));
     send(&mut app, W::Aim(crate::haul_plan_window::Aim::Cost));
     send(&mut app, W::Preview);
-    let w = app.haul_plan_window.as_ref().expect("open");
+    let w = app.road.haul_plan_window.as_ref().expect("open");
     let Some(Ok(r)) = &w.preview else { panic!("a read") };
     let want = &case(NAME)["steps"][0]["result"]["output"];
     let c = r.cost.as_ref().expect("a cost");
@@ -126,7 +130,7 @@ fn the_window_reads_a_sorted_plan() {
     let _ = app.update(Message::Run("haul.plan"));
     send(&mut app, W::Haul("h-1".into()));
     send(&mut app, W::Preview);
-    let w = app.haul_plan_window.as_ref().expect("open");
+    let w = app.road.haul_plan_window.as_ref().expect("open");
     let Some(Ok(r)) = &w.preview else { panic!("a read") };
     let want = &case(NAME)["steps"][0]["result"]["output"];
     let close = |a: f64, v: &serde_json::Value| (a - v.as_f64().expect("a number")).abs() <= 1e-5 * v.as_f64().unwrap().abs().max(1.0);
@@ -183,7 +187,7 @@ fn the_plan_sheets_carry_the_plan() {
     let _ = app.update(Message::Run("haul.plan"));
     send(&mut app, W::Haul("h-1".into()));
     send(&mut app, W::Preview);
-    let w = app.haul_plan_window.as_ref().expect("open");
+    let w = app.road.haul_plan_window.as_ref().expect("open");
     let Some(Ok(r)) = &w.preview else { panic!("a read") };
     let sheets = kentos_native_application::road_hauls_plan::sheets(&app.document.as_ref().expect("a drawing").model, r);
     let names: Vec<&str> = sheets.iter().map(|s| s.name.as_str()).collect();
@@ -243,7 +247,7 @@ fn screens_write() {
         println!("{}", path.display());
         if theme == "light" {
             // The workbook Planı yaz writes, for the owner to open.
-            let w = app.haul_plan_window.as_ref().expect("open");
+            let w = app.road.haul_plan_window.as_ref().expect("open");
             let Some(Ok(r)) = &w.preview else { panic!("a read") };
             let sheets = kentos_native_application::road_hauls_plan::sheets(&app.document.as_ref().expect("a drawing").model, r);
             let book = out.join("y47-tasima-plani.xlsx");
@@ -265,7 +269,7 @@ fn the_window_approves_and_takes_the_approval_off() {
     let haul = |app: &App| app.document.as_ref().expect("a drawing").model.road_hauls()[0].clone();
     let a = haul(&app).approved.expect("approved");
     assert_eq!((a.number, a.note.as_deref(), a.cost), (1, Some("Şantiye şefiyle görüşüldü"), false));
-    let w = app.haul_plan_window.as_ref().expect("open");
+    let w = app.road.haul_plan_window.as_ref().expect("open");
     assert!(w.approval_note.is_empty(), "the note is written once");
     let Some(Ok(r)) = &w.preview else { panic!("a read") };
     let approval = r.approval.as_ref().expect("read against its approval");
@@ -276,7 +280,7 @@ fn the_window_approves_and_takes_the_approval_off() {
     assert!(h.approved.is_none());
     assert_eq!(h.history.len(), 1);
     assert!(h.history[0].ended.as_ref().is_some_and(|e| e.revoked));
-    let w = app.haul_plan_window.as_ref().expect("open");
+    let w = app.road.haul_plan_window.as_ref().expect("open");
     let Some(Ok(r)) = &w.preview else { panic!("a read") };
     assert!(r.approval.is_none());
 }
@@ -289,7 +293,7 @@ fn a_stale_approval_says_why() {
     let _ = app.update(Message::Run("haul.plan"));
     send(&mut app, W::Haul("h-1".into()));
     send(&mut app, W::List(crate::haul_plan_window::Listed::Approval));
-    let w = app.haul_plan_window.as_ref().expect("open");
+    let w = app.road.haul_plan_window.as_ref().expect("open");
     let Some(Ok(r)) = &w.preview else { panic!("a read") };
     let a = r.approval.as_ref().expect("an approval");
     let want = &case(NAME)["steps"][0]["result"]["output"]["approval"];
@@ -361,7 +365,7 @@ fn the_window_reads_the_haul_road_network() {
     let _ = app.update(Message::Run("haul.plan"));
     send(&mut app, W::Haul("h-1".into()));
     send(&mut app, W::Show(crate::haul_plan_window::Shown::Network));
-    let w = app.haul_plan_window.as_ref().expect("open");
+    let w = app.road.haul_plan_window.as_ref().expect("open");
     let Some(Ok(r)) = &w.preview else { panic!("a read") };
     let want = &case(NAME)["steps"][0]["result"]["output"];
     assert!((r.moment - want["moment"].as_f64().expect("a moment")).abs() < 1e-5 * r.moment);

@@ -385,7 +385,7 @@ impl App {
             }
         }
         // A time of its own needs the slider: without it every view follows (the slider's window is none).
-        if !self.time.slider.open {
+        if !self.gis.time.slider.open {
             self.viewport.time = ViewTime::Follow;
             if let Some(split) = self.split.as_mut() {
                 for o in &mut split.others {
@@ -512,7 +512,7 @@ impl App {
             Event::Candidates(event) => return self.revision_candidates_event(event),
             Event::Take(event) => return self.revision_take_event(event),
             Event::Time { view, ask } => {
-                let s = &self.time.slider;
+                let s = &self.gis.time.slider;
                 let (anchor, step, last, moment) = (s.anchor, s.step, s.last, s.moment());
                 if let Some(view) = self.view_at_mut(view) {
                     view.time = match (ask, view.time) {
@@ -606,7 +606,7 @@ impl App {
     /// What a view with this time shows now (docs/adr/0576 §1): its own moment's position of the slider's grid, or the
     /// slider's window (none while the slider is closed).
     pub(crate) fn view_window(&self, time: ViewTime) -> Option<Window> {
-        let s = &self.time.slider;
+        let s = &self.gis.time.slider;
         match time {
             ViewTime::Own(moment) if s.open => Some(s.window_near(moment)),
             _ => s.window(),
@@ -616,7 +616,7 @@ impl App {
     /// A view's time control (docs/adr/0576 §1): while the slider is open, Kendi zamanı, or ◀ the moment ▶ and
     /// Sürgüyü izle. A revision's view has one too (docs/adr/0637 §2): its own drawing at its own time.
     fn time_chip<'a>(&'a self, view: Option<usize>) -> Option<Element<'a, Message>> {
-        let slider = &self.time.slider;
+        let slider = &self.gis.time.slider;
         if !slider.open {
             return None;
         }

@@ -4,6 +4,7 @@
 //! Profili uygula (`cad.profiles.apply`); Uygula writes one undo step “Kodla çiz”. The selected points, in their order,
 //! when some are selected; else every coded point on a shown, unlocked layer.
 
+use crate::gis;
 use iced::widget::Column;
 use iced::{Element, Task};
 use kentos_commands::{CommandResult, FeaturesCode, FeaturesCoded, ProfilesApply, ProfilesList};
@@ -45,17 +46,17 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::FeaturesCode(e)
+    Message::Gis(gis::Event::FeaturesCode(e))
 }
 
 impl App {
     fn features_input(&self) -> FeaturesCode {
-        let field = self.features_code.field.trim();
+        let field = self.gis.features_code.field.trim();
         FeaturesCode {
-            name: self.features_code.profile.clone(),
+            name: self.gis.features_code.profile.clone(),
             drawing: self.features_drawing(),
             field: (!field.is_empty() && field != kentos_commands::DEFAULT_CODE_FIELD).then(|| field.to_owned()),
-            uids: self.features_code.uids.clone(),
+            uids: self.gis.features_code.uids.clone(),
             expected_revision: None,
         }
     }
@@ -67,16 +68,20 @@ impl App {
 
     fn features_plan(&mut self) {
         let input = self.features_input();
-        let Some(doc) = self.document.as_mut() else { return };
-        self.features_code.plan = Some(match map_features::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, warnings } => {
-                Ok((output, warnings.into_iter().map(|w| w.message).collect()))
-            }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err((error.code, error.message))
-            }
-            _ => Err((String::new(), "Önizleme alınamadı.".to_owned())),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.gis.features_code.plan = Some(
+            match map_features::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, warnings } => {
+                    Ok((output, warnings.into_iter().map(|w| w.message).collect()))
+                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err((error.code, error.message)),
+                _ => Err((String::new(), "Önizleme alınamadı.".to_owned())),
+            },
+        );
     }
 
     /// Kodla çiz (`map.featuresCode`): the profiles listed, the selected points (or all coded ones), previewed.
@@ -106,7 +111,7 @@ impl App {
             .filter(|i| i.kind == kentos_commands::ProfileFileKind::Profile && i.problem.is_none())
             .map(|i| (i.name.clone(), if i.title.is_empty() { i.name } else { i.title }))
             .collect();
-        self.features_code = State {
+        self.gis.features_code = State {
             profile: FIRST_PROFILE.to_owned(),
             field: kentos_commands::DEFAULT_CODE_FIELD.to_owned(),
             uids: (!points.is_empty()).then_some(points),
@@ -114,23 +119,23 @@ impl App {
             plan: None,
         };
         self.features_plan();
-        self.dialog = Some(Dialog::FeaturesCode);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FeaturesCode));
         Task::none()
     }
 
     pub(crate) fn features_code_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Profile(name) => {
-                self.features_code.profile = name;
+                self.gis.features_code.profile = name;
                 self.features_plan();
             }
             Event::Field(f) => {
-                self.features_code.field = f;
+                self.gis.features_code.field = f;
                 self.features_plan();
             }
             Event::ApplyProfile => {
                 let input = ProfilesApply {
-                    name: Some(self.features_code.profile.clone()),
+                    name: Some(self.gis.features_code.profile.clone()),
                     profile: None,
                     mapping: None,
                     mapping_name: None,
@@ -140,7 +145,13 @@ impl App {
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
                 match profiles::apply::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { .. } => {
-                        self.say(Level::Success, format!("“{}” profili uygulandı: sınıfların katmanları eklendi.", self.features_code.profile));
+                        self.say(
+                            Level::Success,
+                            format!(
+                                "“{}” profili uygulandı: sınıfların katmanları eklendi.",
+                                self.gis.features_code.profile
+                            ),
+                        );
                     }
                     CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
@@ -164,7 +175,7 @@ impl App {
                         for w in warnings {
                             self.warn(format!("{TITLE}: {}", w.message));
                         }
-                        self.features_code = State::default();
+                        self.gis.features_code = State::default();
                         self.dialog = None;
                     }
                     CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
@@ -174,7 +185,7 @@ impl App {
                 }
             }
             Event::Close => {
-                self.features_code = State::default();
+                self.gis.features_code = State::default();
                 self.dialog = None;
             }
         }
@@ -182,7 +193,7 @@ impl App {
     }
 
     pub(crate) fn features_code_view(&self) -> Element<'_, Message> {
-        let s = &self.features_code;
+        let s = &self.gis.features_code;
         let choices: Vec<(String, String)> = s.profiles.clone();
         let pick = crate::style::fields::select_owned(choices, &s.profile, |n| msg(Event::Profile(n)));
         let field = crate::style::fields::input(None, "Kod", &s.field, false, false).on_input(|f| msg(Event::Field(f)));

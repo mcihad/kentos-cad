@@ -14,6 +14,7 @@
 //!
 //! Each raster result is written into a scratch folder. Test code only.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::DocumentSnapshotV1;
@@ -64,7 +65,10 @@ fn view(s: &mut Snapshot, app: &mut App) {
 fn window(app: &mut App, tool: &'static str, values: &[(&str, Value)]) {
     let _ = app.update(Message::Run(tool));
     for (name, v) in values {
-        let _ = app.update(Message::Processing(Event::Value((*name).into(), v.clone())));
+        let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+            (*name).into(),
+            v.clone(),
+        ))));
     }
 }
 
@@ -85,7 +89,7 @@ fn ran(app: &mut App, tool: &'static str, values: &[(&str, Value)]) {
         matches!(status, crate::processing::RunStatus::Ok { .. }),
         "{tool}: {status:?}"
     );
-    let _ = app.update(Message::Processing(Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
 }
 
 pub(crate) fn layer(id: &str) -> Value {

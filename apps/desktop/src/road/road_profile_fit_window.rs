@@ -14,6 +14,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -68,7 +69,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::RoadProfileFit(event)
+    Message::Road(road::Event::RoadProfileFit(event))
 }
 
 fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
@@ -144,34 +145,49 @@ impl App {
         let x = source.iter().map(|p| p[0]).fold(f64::INFINITY, f64::min);
         let y = source.iter().map(|p| p[1]).fold(f64::INFINITY, f64::min);
         let round = |v: f64| (v * 1000.0).round() / 1000.0;
-        self.road_profile_fit_window = Some(Box::new(Window {
+        self.road.road_profile_fit_window = Some(Box::new(Window {
             uid,
             source,
             alignment: Some(alignment),
             fields: [format!("{}; {}", round(x), round(y)), "0".into(), String::new(), "1".into(), String::new(), String::new(), String::new()],
             preview: Preview::default(),
         }));
-        self.dialog = Some(Dialog::RoadProfileFit);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::RoadProfileFit));
         self.refresh_road_profile_fit();
     }
 
     fn refresh_road_profile_fit(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.road_profile_fit_window.as_mut() else { return };
-        w.preview = match w.input().and_then(|q| road_profiles_fit::preview(&doc.model, &q)) {
-            Err(why) => Preview { why: Some(why), ..Preview::default() },
-            Ok((fitted, warnings, line)) => Preview { fitted: Some(fitted), warnings, why: None, line },
+        let Some(w) = self.road.road_profile_fit_window.as_mut() else {
+            return;
+        };
+        w.preview = match w
+            .input()
+            .and_then(|q| road_profiles_fit::preview(&doc.model, &q))
+        {
+            Err(why) => Preview {
+                why: Some(why),
+                ..Preview::default()
+            },
+            Ok((fitted, warnings, line)) => Preview {
+                fitted: Some(fitted),
+                warnings,
+                why: None,
+                line,
+            },
         };
     }
 
     pub(crate) fn road_profile_fit_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.road_profile_fit_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.road_profile_fit_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Alignment(a) => w.alignment = Some(a),
             Event::Field(k, t) => w.fields[k.min(6)] = t,
             Event::Make => return self.make_road_profile_fit(),
             Event::Close => {
-                self.road_profile_fit_window = None;
+                self.road.road_profile_fit_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -182,7 +198,9 @@ impl App {
 
     /// Boykesiti oluştur: `road.profiles.fit`, one undo step.
     fn make_road_profile_fit(&mut self) -> Task<Message> {
-        let Some(w) = self.road_profile_fit_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.road_profile_fit_window.as_ref() else {
+            return Task::none();
+        };
         let input = match w.input() {
             Ok(i) => i,
             Err(why) => {
@@ -203,13 +221,13 @@ impl App {
                 out.deviation
             ),
         );
-        self.road_profile_fit_window = None;
+        self.road.road_profile_fit_window = None;
         self.dialog = None;
         Task::none()
     }
 
     pub(crate) fn road_profile_fit_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.road_profile_fit_window else {
+        let Some(w) = &self.road.road_profile_fit_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -309,7 +327,7 @@ impl App {
     }
 
     pub(crate) fn road_profile_fit_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.road_profile_fit_window.is_none() {
+        if self.road.road_profile_fit_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

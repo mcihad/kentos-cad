@@ -380,7 +380,7 @@ impl App {
     /// The rows for the drawing, the selection and the query as they are,
     /// worked out again only when one of them changed.
     pub(crate) fn point_rows(&self, doc: &Document) -> Rows {
-        let panel = &self.points;
+        let panel = &self.gis.points;
         let key = (
             doc.session,
             doc.model.generation(),
@@ -476,20 +476,20 @@ impl App {
     pub(crate) fn points_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Search(text) => {
-                self.points.search = text;
-                self.points.changed();
+                self.gis.points.search = text;
+                self.gis.points.changed();
             }
             Event::Layer(layer) => {
-                self.points.layer = layer;
-                self.points.changed();
+                self.gis.points.layer = layer;
+                self.gis.points.changed();
             }
             Event::OnlySelected(on) => {
-                self.points.only_selected = on;
-                self.points.changed();
+                self.gis.points.only_selected = on;
+                self.gis.points.changed();
             }
-            Event::Follow(on) => self.points.follow = on,
+            Event::Follow(on) => self.gis.points.follow = on,
             Event::Sort(column) => {
-                let p = &mut self.points;
+                let p = &mut self.gis.points;
                 (p.sort, p.descending) = next_sort(p.sort, p.descending, COLUMNS[column].1);
                 p.changed();
             }
@@ -503,12 +503,12 @@ impl App {
                     self.selection.ids(),
                     &shown,
                     at,
-                    self.points.anchor,
+                    self.gis.points.anchor,
                     ctrl,
                     shift,
                 );
                 if !shift {
-                    self.points.anchor = Some(at);
+                    self.gis.points.anchor = Some(at);
                 }
                 self.selection.set(ids);
             }
@@ -526,22 +526,22 @@ impl App {
                 let shown = self.shown_points();
                 let target = match shown.get(at) {
                     Some(&slot) => Target::Point(slot),
-                    None if self.points.draft.is_some() => Target::Draft,
+                    None if self.gis.points.draft.is_some() => Target::Draft,
                     None => return Task::none(),
                 };
                 return self.edit_cell(Some((target, col)));
             }
-            Event::Input(text) => self.points.text = text,
+            Event::Input(text) => self.gis.points.text = text,
             Event::Finish(walk) => return self.finish_cell(walk),
             Event::Cancel => {
-                if matches!(self.points.editing, Some((Target::Draft, _))) {
-                    self.points.draft = None;
+                if matches!(self.gis.points.editing, Some((Target::Draft, _))) {
+                    self.gis.points.draft = None;
                 }
-                self.points.editing = None;
+                self.gis.points.editing = None;
             }
             Event::AddRow => {
-                if self.points.draft.is_none() {
-                    self.points.draft = Some(Draft::default());
+                if self.gis.points.draft.is_none() {
+                    self.gis.points.draft = Some(Draft::default());
                 }
                 return self.edit_cell(Some((Target::Draft, EditColumn::Name)));
             }
@@ -556,7 +556,7 @@ impl App {
                 };
                 if !self.selection.contains(slot) {
                     self.selection.set([slot]);
-                    self.points.anchor = Some(at);
+                    self.gis.points.anchor = Some(at);
                 }
                 return match action {
                     RowAction::Show => {
@@ -570,7 +570,7 @@ impl App {
                 };
             }
             Event::Window(event) => return self.point_batch_event(event),
-            Event::ClearGroups => self.points.show_groups(None),
+            Event::ClearGroups => self.gis.points.show_groups(None),
         }
         Task::none()
     }
@@ -618,13 +618,13 @@ impl App {
 
     /// The cell edited from now (none: no editor), its text the value's.
     fn edit_cell(&mut self, to: Option<(Target, EditColumn)>) -> Task<Message> {
-        self.points.editing = to;
+        self.gis.points.editing = to;
         let Some((target, col)) = to else {
             return Task::none();
         };
-        self.points.text = match target {
+        self.gis.points.text = match target {
             Target::Draft => {
-                let d = self.points.draft.clone().unwrap_or_default();
+                let d = self.gis.points.draft.clone().unwrap_or_default();
                 match col {
                     EditColumn::Name => d.name,
                     EditColumn::East => d.east,
@@ -650,13 +650,13 @@ impl App {
     /// `walk`'s way (none: it stops). A value refused keeps the cell open
     /// with what was typed when a key ended it.
     fn finish_cell(&mut self, walk: Option<Walk>) -> Task<Message> {
-        let Some((target, col)) = self.points.editing else {
+        let Some((target, col)) = self.gis.points.editing else {
             return Task::none();
         };
-        let text = std::mem::take(&mut self.points.text);
+        let text = std::mem::take(&mut self.gis.points.text);
         match target {
             Target::Draft => {
-                let mut d = self.points.draft.clone().unwrap_or_default();
+                let mut d = self.gis.points.draft.clone().unwrap_or_default();
                 match col {
                     EditColumn::Name => d.name = text,
                     EditColumn::East => d.east = text,
@@ -664,10 +664,10 @@ impl App {
                     EditColumn::Z => d.z = text,
                     EditColumn::Code => d.code = text,
                 }
-                self.points.draft = Some(d.clone());
+                self.gis.points.draft = Some(d.clone());
                 match walk {
                     None => {
-                        self.points.editing = None;
+                        self.gis.points.editing = None;
                         Task::none()
                     }
                     Some(Walk::Down) => {
@@ -687,7 +687,7 @@ impl App {
                         match out.next {
                             // Written: the next row, its name one more, its Y open.
                             Some(next) => {
-                                self.points.draft = Some(Draft {
+                                self.gis.points.draft = Some(Draft {
                                     name: next,
                                     ..Draft::default()
                                 });
@@ -711,7 +711,7 @@ impl App {
             Target::Point(slot) => {
                 // Where to go next, by the rows' order before the write (a sort may move the row).
                 let next = walk.and_then(|w| next_cell(&self.shown_points(), slot, col, w));
-                let follow = self.points.follow;
+                let follow = self.gis.points.follow;
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
@@ -720,8 +720,8 @@ impl App {
                     self.warn(line);
                 }
                 if out.stay && walk.is_some() {
-                    self.points.editing = Some((target, col));
-                    self.points.text = text;
+                    self.gis.points.editing = Some((target, col));
+                    self.gis.points.text = text;
                     return focus_field();
                 }
                 self.edit_cell(next.map(|(s, c)| (Target::Point(s), c)))

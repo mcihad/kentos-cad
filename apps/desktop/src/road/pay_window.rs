@@ -16,6 +16,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Task, Theme};
 use kentos_commands::{
@@ -102,7 +103,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Pay(event)
+    Message::Road(road::Event::Pay(event))
 }
 
 fn trimmed(v: f64) -> String {
@@ -188,22 +189,36 @@ impl App {
             // A new book: its source, items and prices are the agency's; nothing is filled in.
             None => Window { saved: false, fields: Default::default(), items: vec![Default::default()], rules: Vec::new(), preview: Preview::default() },
         };
-        self.pay_window = Some(Box::new(window));
-        self.dialog = Some(Dialog::Pay);
+        self.road.pay_window = Some(Box::new(window));
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Pay));
         self.refresh_pay();
     }
 
     fn refresh_pay(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.pay_window.as_mut() else { return };
-        w.preview = match w.input().and_then(|q| road_pay_edit::preview(&doc.model, &q)) {
-            Err(why) => Preview { why: Some(why), ..Preview::default() },
-            Ok((answer, warnings)) => Preview { answer: Some(answer), warnings, why: None },
+        let Some(w) = self.road.pay_window.as_mut() else {
+            return;
+        };
+        w.preview = match w
+            .input()
+            .and_then(|q| road_pay_edit::preview(&doc.model, &q))
+        {
+            Err(why) => Preview {
+                why: Some(why),
+                ..Preview::default()
+            },
+            Ok((answer, warnings)) => Preview {
+                answer: Some(answer),
+                warnings,
+                why: None,
+            },
         };
     }
 
     pub(crate) fn pay_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.pay_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.pay_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Field(k, t) => w.fields[k.min(2)] = t,
             Event::Item(i, k, t) => {
@@ -255,7 +270,7 @@ impl App {
             Event::Save => return self.save_pay(),
             Event::Remove => return self.remove_pay(),
             Event::Close => {
-                self.pay_window = None;
+                self.road.pay_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -265,7 +280,9 @@ impl App {
     }
 
     fn save_pay(&mut self) -> Task<Message> {
-        let Some(w) = self.pay_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.pay_window.as_ref() else {
+            return Task::none();
+        };
         let input = match w.input() {
             Ok(i) => i,
             Err(why) => {
@@ -279,7 +296,7 @@ impl App {
             if let Some(b) = &out.book {
                 self.say(Level::Success, format!("Poz defteri yazıldı: {} pozla, {} kuralla.", b.items.len(), b.rules.len()));
             }
-            if let Some(w) = self.pay_window.as_mut() {
+            if let Some(w) = self.road.pay_window.as_mut() {
                 w.saved = true;
             }
             self.refresh_pay();
@@ -300,7 +317,7 @@ impl App {
         };
         let result = road_pay_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
-            self.pay_window = None;
+            self.road.pay_window = None;
             self.dialog = None;
             self.say(Level::Success, "Poz defteri kaldırıldı.");
         }
@@ -308,7 +325,7 @@ impl App {
     }
 
     pub(crate) fn pay_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.pay_window else {
+        let Some(w) = &self.road.pay_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -440,7 +457,7 @@ impl App {
     }
 
     pub(crate) fn pay_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.pay_window.is_none() {
+        if self.road.pay_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

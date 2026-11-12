@@ -3,6 +3,7 @@
 //! filters the table, Dışındakileri seç selects the one outside, CSV kaydet writes the table, nothing is written to
 //! the drawing; a selection checks only its areas. Harita and GIS offer it, Yol and Mimari do not. And its pictures.
 
+use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -26,16 +27,44 @@ fn the_parcel_layer_is_checked_and_the_ones_outside_selected() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("parcels.check"));
-    assert_eq!(app.dialog, Some(Dialog::ParcelsCheck));
-    let r = app.parcels_check.answer.clone().expect("an answer").expect("checked");
-    assert_eq!((r.parcels.len(), r.within, r.outside, r.no_record, r.invalid_record), (7, 3, 1, 1, 2));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Map(map::MapDialogKind::ParcelsCheck))
+    );
+    let r = app
+        .map
+        .parcels_check
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    assert_eq!(
+        (
+            r.parcels.len(),
+            r.within,
+            r.outside,
+            r.no_record,
+            r.invalid_record
+        ),
+        (7, 3, 1, 1, 2)
+    );
     assert_eq!(r.duplicates, ["Ankara/Çankaya/Merkez/101/2"]);
-    let _ = app.update(Message::ParcelsCheck(C::Show(Show::Outside)));
-    assert_eq!(app.parcels_check.show, Show::Outside);
-    let _ = app.update(Message::ParcelsCheck(C::Select));
+    let _ = app.update(Message::Map(map::Event::ParcelsCheck(C::Show(
+        Show::Outside,
+    ))));
+    assert_eq!(app.map.parcels_check.show, Show::Outside);
+    let _ = app.update(Message::Map(map::Event::ParcelsCheck(C::Select)));
     assert_eq!(app.dialog, None);
-    assert_eq!(app.selection.ids(), [Slot(2)], "Ada 101 Parsel 2, 10 m² over ±6.8");
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.selection.ids(),
+        [Slot(2)],
+        "Ada 101 Parsel 2, 10 m² over ±6.8"
+    );
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
 }
 
 #[test]
@@ -43,7 +72,13 @@ fn a_selection_checks_its_areas_only() {
     let mut app = opened(Some(Module::Map));
     app.selection.set([Slot(1), Slot(8)]);
     let _ = app.update(Message::Run("parcels.check"));
-    let r = app.parcels_check.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .map
+        .parcels_check
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     assert_eq!(r.parcels.len(), 1, "the line is no area");
     assert_eq!(r.parcels[0].status, "within");
 }

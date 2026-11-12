@@ -270,12 +270,12 @@ impl App {
         } else {
             BottomTab::History
         };
-        self.processing.panel.tab = if keeper.text("processingTab") == "history" {
+        self.gis.processing.panel.tab = if keeper.text("processingTab") == "history" {
             ProcessingTab::History
         } else {
             ProcessingTab::Tools
         };
-        self.processing.panel.folded = keeper
+        self.gis.processing.panel.folded = keeper
             .texts("processingFolded")
             .map(str::to_owned)
             .collect();
@@ -407,13 +407,13 @@ impl App {
         }
         keeper.keep(
             "processingTab",
-            Value::from(match self.processing.panel.tab {
+            Value::from(match self.gis.processing.panel.tab {
                 ProcessingTab::Tools => "tools",
                 ProcessingTab::History => "history",
             }),
             now,
         );
-        let folded = &self.processing.panel.folded;
+        let folded = &self.gis.processing.panel.folded;
         let same = keeper.texts("processingFolded").count() == folded.len()
             && keeper
                 .texts("processingFolded")

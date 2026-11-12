@@ -1,6 +1,7 @@
 //! Güzergâh (alignment_window.rs, plan/road.md Y3): the window writes through `road.alignments`, each write one undo
 //! step; and its pictures.
 
+use crate::road;
 use kentos_domain::Slot;
 
 use crate::alignment_window::Event as W;
@@ -30,7 +31,7 @@ fn app(alignments: serde_json::Value) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Alignments(e));
+    let _ = app.update(Message::Road(road::Event::Alignments(e)));
 }
 
 fn alignments(app: &App) -> Vec<kentos_commands::AlignmentDef> {
@@ -41,7 +42,10 @@ fn alignments(app: &App) -> Vec<kentos_commands::AlignmentDef> {
 fn made(app: &mut App) {
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("alignment.new"));
-    assert_eq!(app.dialog, Some(Dialog::Alignments));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Alignments))
+    );
     send(app, W::Start("2000".into()));
     send(app, W::Pi(1, 2, "400".into()));
     send(app, W::Pi(1, 3, "80".into()));
@@ -53,7 +57,10 @@ fn made(app: &mut App) {
 fn the_window_makes_an_alignment_and_its_parallel_each_one_undo_step() {
     let mut app = app(serde_json::json!([]));
     made(&mut app);
-    assert!(app.alignment_window.is_none(), "Kaydet closes the window");
+    assert!(
+        app.road.alignment_window.is_none(),
+        "Kaydet closes the window"
+    );
     let list = alignments(&app);
     assert_eq!(list.len(), 1);
     let a = &list[0];
@@ -72,8 +79,17 @@ fn the_window_makes_an_alignment_and_its_parallel_each_one_undo_step() {
     // The window asks a point's km on the saved alignment.
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Point("485520; 4420030".into()));
-    let answer = app.alignment_window.as_ref().expect("open").answer.clone();
-    assert!(answer.starts_with("km 2+525,205 · sol 19,496 m"), "{answer}");
+    let answer = app
+        .road
+        .alignment_window
+        .as_ref()
+        .expect("open")
+        .answer
+        .clone();
+    assert!(
+        answer.starts_with("km 2+525,205 · sol 19,496 m"),
+        "{answer}"
+    );
     // Km'yi çizime yaz: the km's ticks and words on the layer, one undo step.
     let before = app.document.as_ref().expect("doc").model.entities().count();
     send(&mut app, W::Choose(0));
@@ -85,7 +101,10 @@ fn the_window_makes_an_alignment_and_its_parallel_each_one_undo_step() {
     // Removing the source while the parallel follows it is refused in the window.
     send(&mut app, W::Choose(0));
     send(&mut app, W::Remove);
-    assert_eq!(app.alignment_window.as_ref().map(|w| w.rows.len()), Some(2));
+    assert_eq!(
+        app.road.alignment_window.as_ref().map(|w| w.rows.len()),
+        Some(2)
+    );
     // Ters çevir: one step; the parallel changes sides.
     send(&mut app, W::Reverse);
     let list = alignments(&app);
@@ -105,7 +124,10 @@ fn a_curve_that_overlaps_says_so_before_it_is_saved() {
     let _ = app.update(Message::Run("alignment.new"));
     send(&mut app, W::Pi(1, 2, "4000".into()));
     send(&mut app, W::Save);
-    assert!(app.alignment_window.is_some(), "a refused write leaves the window open");
+    assert!(
+        app.road.alignment_window.is_some(),
+        "a refused write leaves the window open"
+    );
     assert!(alignments(&app).is_empty());
 }
 
@@ -198,20 +220,49 @@ fn typing_a_radius_tells_what_moves_on_the_stations() {
     let mut app = impact_app();
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Choose(0));
-    assert!(app.alignment_window.as_ref().expect("open").impact.is_none(), "nothing typed yet");
+    assert!(
+        app.road
+            .alignment_window
+            .as_ref()
+            .expect("open")
+            .impact
+            .is_none(),
+        "nothing typed yet"
+    );
     send(&mut app, W::Pi(1, 2, "180".into()));
     let cases: serde_json::Value =
         serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.alignments.impact.json")).expect("cases");
     let want = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Yarıçap 150'den 180'e").expect("the case")["steps"][0]
         ["result"]["output"]
         .clone();
-    let Some(Ok((imp, warnings))) = app.alignment_window.as_ref().expect("open").impact.clone() else { panic!("the impact reads") };
-    assert_eq!(imp.removed.len(), want["removed"].as_array().expect("removed").len());
-    assert!((imp.removed[0].from - want["removed"][0]["from"].as_f64().expect("from")).abs() < 1e-6);
+    let Some(Ok((imp, warnings))) = app
+        .road
+        .alignment_window
+        .as_ref()
+        .expect("open")
+        .impact
+        .clone()
+    else {
+        panic!("the impact reads")
+    };
+    assert_eq!(
+        imp.removed.len(),
+        want["removed"].as_array().expect("removed").len()
+    );
+    assert!(
+        (imp.removed[0].from - want["removed"][0]["from"].as_f64().expect("from")).abs() < 1e-6
+    );
     assert_eq!(imp.refs.len(), want["refs"].as_array().expect("refs").len());
     assert!(warnings.iter().any(|w| w.code == "alignment_impact_approved"));
     send(&mut app, W::Pi(1, 2, "150".into()));
-    assert!(app.alignment_window.as_ref().expect("open").impact.is_none());
+    assert!(
+        app.road
+            .alignment_window
+            .as_ref()
+            .expect("open")
+            .impact
+            .is_none()
+    );
 }
 
 /// The impact under the alignment's form, wide and narrow, light and dark; `.run/gui-evidence/yol-y57/`:
@@ -316,20 +367,30 @@ fn screens_reverse() {
         let _ = app.update(Message::RibbonTab("alignment"));
         for (k, label) in [(0usize, "satirli"), (1, "kurplu")] {
             let _ = app.update(Message::Run("superelevation.editor"));
-            let _ = app.update(Message::Superelevations(crate::superelevation_window::Event::Choose(k)));
+            let _ = app.update(Message::Road(road::Event::Superelevations(
+                crate::superelevation_window::Event::Choose(k),
+            )));
             shot(&mut app, &format!("{label}-once"));
-            let _ = app.update(Message::Superelevations(crate::superelevation_window::Event::Cancel));
+            let _ = app.update(Message::Road(road::Event::Superelevations(
+                crate::superelevation_window::Event::Cancel,
+            )));
         }
         let _ = app.update(Message::Run("alignment.editor"));
         send(&mut app, W::Choose(0));
         send(&mut app, W::Reverse);
         shot(&mut app, "ters-cevrildi");
-        let _ = app.update(Message::Alignments(crate::alignment_window::Event::Cancel));
+        let _ = app.update(Message::Road(road::Event::Alignments(
+            crate::alignment_window::Event::Cancel,
+        )));
         for (k, label) in [(0usize, "satirli"), (1, "kurplu")] {
             let _ = app.update(Message::Run("superelevation.editor"));
-            let _ = app.update(Message::Superelevations(crate::superelevation_window::Event::Choose(k)));
+            let _ = app.update(Message::Road(road::Event::Superelevations(
+                crate::superelevation_window::Event::Choose(k),
+            )));
             shot(&mut app, &format!("{label}-sonra"));
-            let _ = app.update(Message::Superelevations(crate::superelevation_window::Event::Cancel));
+            let _ = app.update(Message::Road(road::Event::Superelevations(
+                crate::superelevation_window::Event::Cancel,
+            )));
         }
     }
 }
@@ -392,12 +453,16 @@ fn screens_reverse_profile() {
         let _ = app.update(Message::RibbonTab("alignment"));
         let _ = app.update(Message::Run("profile.editor"));
         shot(&mut app, "boykesit-once");
-        let _ = app.update(Message::Profiles(crate::profile_window::Event::Cancel));
+        let _ = app.update(Message::Road(road::Event::Profiles(
+            crate::profile_window::Event::Cancel,
+        )));
         let _ = app.update(Message::Run("alignment.editor"));
         send(&mut app, W::Choose(0));
         send(&mut app, W::Reverse);
         shot(&mut app, "ters-cevrildi");
-        let _ = app.update(Message::Alignments(crate::alignment_window::Event::Cancel));
+        let _ = app.update(Message::Road(road::Event::Alignments(
+            crate::alignment_window::Event::Cancel,
+        )));
         let _ = app.update(Message::Run("profile.editor"));
         shot(&mut app, "boykesit-sonra");
     }
@@ -410,8 +475,18 @@ fn the_window_says_the_chain_s_continuity() {
     let mut app = impact_app();
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Choose(0));
-    let said = |app: &App| -> String { app.alignment_window.as_ref().map(crate::alignment_window::status_of).unwrap_or_default() };
-    assert!(said(&app).contains("konum, doğrultu ve eğrilik sürekli"), "{}", said(&app));
+    let said = |app: &App| -> String {
+        app.road
+            .alignment_window
+            .as_ref()
+            .map(crate::alignment_window::status_of)
+            .unwrap_or_default()
+    };
+    assert!(
+        said(&app).contains("konum, doğrultu ve eğrilik sürekli"),
+        "{}",
+        said(&app)
+    );
     send(&mut app, W::Pi(1, 3, "0".into()));
     send(&mut app, W::Pi(1, 4, "0".into()));
     assert!(said(&app).contains("2 yerde eğrilik sıçrar"), "{}", said(&app));
@@ -476,10 +551,21 @@ fn offset_inside(app: &mut App, radius: &str) {
 fn the_window_says_the_parallel_axis_fix() {
     let mut app = impact_app();
     let _ = app.update(Message::Run("alignment.editor"));
-    let said = |app: &App| -> String { app.alignment_window.as_ref().map(crate::alignment_window::status_of).unwrap_or_default() };
+    let said = |app: &App| -> String {
+        app.road
+            .alignment_window
+            .as_ref()
+            .map(crate::alignment_window::status_of)
+            .unwrap_or_default()
+    };
     offset_inside(&mut app, "3");
     assert!(said(&app).contains("p1 kurbunun yarıçapını 5.000 m'nin üstüne çıkarın ya da ötelemeyi 3.000 m'nin altına indirin."), "{}", said(&app));
-    let red = |app: &App| app.alignment_window.as_ref().is_some_and(crate::alignment_window::refused);
+    let red = |app: &App| {
+        app.road
+            .alignment_window
+            .as_ref()
+            .is_some_and(crate::alignment_window::refused)
+    };
     assert!(red(&app), "the refusal is said in red");
     offset_inside(&mut app, "0");
     assert!(red(&app));
@@ -555,10 +641,26 @@ fn an_ove_is_ticked_solved_and_saved() {
     let mut app = ove_app();
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Choose(0));
-    let said = |app: &App| -> String { app.alignment_window.as_ref().map(crate::alignment_window::status_of).unwrap_or_default() };
+    let said = |app: &App| -> String {
+        app.road
+            .alignment_window
+            .as_ref()
+            .map(crate::alignment_window::status_of)
+            .unwrap_or_default()
+    };
     // The PIs are the reference's built from A = 250, kept as the project holds them (not their three decimals).
-    assert!(said(&app).contains("p1–p2 ovesi A 250,000 m, L 187,500 m, daireler arası 4,363 m"), "{}", said(&app));
-    assert!(app.alignment_window.as_ref().is_some_and(|w| w.impact.is_none()), "unchanged PIs move no station");
+    assert!(
+        said(&app).contains("p1–p2 ovesi A 250,000 m, L 187,500 m, daireler arası 4,363 m"),
+        "{}",
+        said(&app)
+    );
+    assert!(
+        app.road
+            .alignment_window
+            .as_ref()
+            .is_some_and(|w| w.impact.is_none()),
+        "unchanged PIs move no station"
+    );
     send(&mut app, W::PiOve(1));
     assert!(!said(&app).contains("ovesi"), "{}", said(&app));
     send(&mut app, W::Save);
@@ -608,7 +710,7 @@ fn screens_ove() {
         send(&mut app, W::PiOve(1));
         send(&mut app, W::LabelLayer("km".into()));
         send(&mut app, W::Label);
-        let _ = app.update(Message::Alignments(W::Cancel));
+        let _ = app.update(Message::Road(road::Event::Alignments(W::Cancel)));
         app.viewport.camera.fit(&ove_bounds(), 24.0);
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y72-ove-planda-{name}.png"));

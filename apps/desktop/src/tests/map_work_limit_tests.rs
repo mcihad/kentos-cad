@@ -37,18 +37,35 @@ fn the_shift_table_sets_each_shift_against_the_limit() {
     let mut app = opened();
     let _ = approved_then_moved_and_removed(&mut app, 0.3, 0.4);
     send(&mut app, P::Changes("is-4".into()));
-    assert_eq!(app.map_work.shifts[0].len(), 6, "no limit: no column");
-    limit(&mut app, vec![L::Basis("method"), L::Method("sayisal".into()), L::Scale("1000".into())]);
-    assert_eq!(app.map_work.shifts[0][1], "Dışında (2 köşe)");
+    assert_eq!(app.map.map_work.shifts[0].len(), 6, "no limit: no column");
+    limit(
+        &mut app,
+        vec![
+            L::Basis("method"),
+            L::Method("sayisal".into()),
+            L::Scale("1000".into()),
+        ],
+    );
+    assert_eq!(app.map.map_work.shifts[0][1], "Dışında (2 köşe)");
     assert_eq!(tree(&app).limit.expect("the limit").metres, 0.09);
-    assert_eq!(tree(&app).items[3].changes.clone().expect("changes").beyond, Some(1));
+    assert_eq!(
+        tree(&app).items[3].changes.clone().expect("changes").beyond,
+        Some(1)
+    );
     limit(&mut app, vec![L::Basis("drawing"), L::Scale("5000".into())]);
-    assert_eq!(app.map_work.shifts[0][1], "İçinde");
+    assert_eq!(app.map.map_work.shifts[0][1], "İçinde");
     // A cell the table leaves empty: said under the row, the query without a limit.
-    limit(&mut app, vec![L::Basis("method"), L::Method("fotogrametrik".into()), L::Scale("1000".into())]);
-    assert!(matches!(app.map_work.limit.used(), Some(Err(_))));
+    limit(
+        &mut app,
+        vec![
+            L::Basis("method"),
+            L::Method("fotogrametrik".into()),
+            L::Scale("1000".into()),
+        ],
+    );
+    assert!(matches!(app.map.map_work.limit.used(), Some(Err(_))));
     assert!(tree(&app).limit.is_none());
-    assert_eq!(app.map_work.shifts[0].len(), 6);
+    assert_eq!(app.map.map_work.shifts[0].len(), 6);
 }
 
 /// `.run/gui-evidence/kayma-siniri-5280/`:

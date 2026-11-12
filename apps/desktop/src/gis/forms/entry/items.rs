@@ -213,7 +213,7 @@ impl App {
                     out = flush(&mut run, out);
                     let known = tool
                         .as_ref()
-                        .is_none_or(|t| self.processing.registry.get(t).is_some());
+                        .is_none_or(|t| self.gis.processing.registry.get(t).is_some());
                     let read_only =
                         self.entry_locked(e) || e.screen.prepared.locked_by_state(&e.before);
                     let can = known

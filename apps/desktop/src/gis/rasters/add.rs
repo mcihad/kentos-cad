@@ -13,6 +13,7 @@
 //! the drawing keeping the address. The window opens at once and the file
 //! dialog over it: closing the dialog leaves the window for an address.
 
+use crate::gis;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -128,7 +129,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Rasters(Rasters::Add(e))
+    Message::Gis(gis::Event::Rasters(Rasters::Add(e)))
 }
 
 /// Raster ekle with the file (Kaynaklar, docs/adr/0599 §1).
@@ -356,7 +357,7 @@ impl App {
         } else {
             words::base_name(&name)
         };
-        self.rasters.add = Some(State {
+        self.gis.rasters.add = Some(State {
             from,
             path,
             address,
@@ -369,7 +370,7 @@ impl App {
             status: None,
             downloading: false,
         });
-        self.dialog = Some(Asking::RasterAdd);
+        self.dialog = Some(Asking::Gis(gis::GisDialogKind::RasterAdd));
         id
     }
 
@@ -413,7 +414,7 @@ impl App {
                 return super::off_thread(move || msg(Event::Read(id, Box::new(inspect(&path)))));
             }
             Event::From(f) => {
-                if let Some(s) = &self.rasters.add
+                if let Some(s) = &self.gis.rasters.add
                     && s.from != f
                 {
                     if f == From::File {
@@ -424,7 +425,7 @@ impl App {
                 }
             }
             Event::Address(t) => {
-                if let Some(s) = &mut self.rasters.add {
+                if let Some(s) = &mut self.gis.rasters.add {
                     // Another address: what was read is not its; Oku reads it.
                     if s.address.trim() != t.trim() {
                         s.name.clear();
@@ -436,6 +437,7 @@ impl App {
             }
             Event::ReadAddress => {
                 let Some(address) = self
+                    .gis
                     .rasters
                     .add
                     .as_ref()
@@ -463,7 +465,7 @@ impl App {
             }
             Event::Read(id, read) => {
                 let read = *read;
-                if let Some(s) = &mut self.rasters.add
+                if let Some(s) = &mut self.gis.rasters.add
                     && s.reading == id
                 {
                     if read
@@ -477,6 +479,7 @@ impl App {
             }
             Event::Multidim(url) => {
                 if self
+                    .gis
                     .rasters
                     .add
                     .as_ref()
@@ -486,22 +489,22 @@ impl App {
                 }
             }
             Event::Confirm => {
-                if let Some(s) = &mut self.rasters.add {
+                if let Some(s) = &mut self.gis.rasters.add {
                     s.confirmed = !s.confirmed;
                 }
             }
             Event::Keep(k) => {
-                if let Some(s) = &mut self.rasters.add {
+                if let Some(s) = &mut self.gis.rasters.add {
                     s.keep = k;
                 }
             }
             Event::Layer(t) => {
-                if let Some(s) = &mut self.rasters.add {
+                if let Some(s) = &mut self.gis.rasters.add {
                     s.layer = t;
                 }
             }
             Event::Download => {
-                let Some(s) = &mut self.rasters.add else {
+                let Some(s) = &mut self.gis.rasters.add else {
                     return Task::none();
                 };
                 if s.downloading {
@@ -530,7 +533,7 @@ impl App {
                 });
             }
             Event::Downloaded(Err(why)) => {
-                if let Some(s) = &mut self.rasters.add {
+                if let Some(s) = &mut self.gis.rasters.add {
                     s.downloading = false;
                     s.status = Some(why);
                 }
@@ -546,8 +549,8 @@ impl App {
             Event::Run => self.raster_add_run(),
             Event::Reproject => self.raster_add_reproject(),
             Event::Close => {
-                self.rasters.add = None;
-                if self.dialog == Some(Asking::RasterAdd) {
+                self.gis.rasters.add = None;
+                if self.dialog == Some(Asking::Gis(gis::GisDialogKind::RasterAdd)) {
                     self.dialog = None;
                 }
             }
@@ -586,7 +589,7 @@ impl App {
 
     /// Ekle: the new layer and the raster on it, one undo step; embedded first into the library.
     fn raster_add_run(&mut self) {
-        let Some(s) = self.rasters.add.clone() else {
+        let Some(s) = self.gis.rasters.add.clone() else {
             return;
         };
         let (Some((affine, srid)), Some(Ok(read))) =
@@ -676,7 +679,7 @@ impl App {
                 model.end_group(group);
                 let slots: Vec<kentos_domain::Slot> =
                     output.ids.iter().map(|&i| kentos_domain::Slot(i)).collect();
-                self.rasters.add = None;
+                self.gis.rasters.add = None;
                 self.dialog = None;
                 self.zoom_to(&slots);
                 let how = match (s.from, s.keep) {
@@ -718,7 +721,7 @@ impl App {
     /// Projenin sistemine çevir: the file resampled onto the project's grid beside it (`<ad>-epsg<kod>.tif`) and added
     /// on a new layer, one undo step “Rasteri projenin sistemine çevir”.
     fn raster_add_reproject(&mut self) {
-        let Some(s) = self.rasters.add.clone() else {
+        let Some(s) = self.gis.rasters.add.clone() else {
             return;
         };
         if s.from != From::File {
@@ -755,7 +758,7 @@ impl App {
                     .as_deref()
                     .and_then(|u| kentos_domain::Uuid::parse_str(u).ok())
                     .and_then(|u| model.slot_of(u));
-                self.rasters.add = None;
+                self.gis.rasters.add = None;
                 self.dialog = None;
                 if let Some(slot) = slot {
                     self.zoom_to(&[slot]);
@@ -779,13 +782,13 @@ impl App {
     }
 
     fn raster_add_status(&mut self, why: String) {
-        if let Some(s) = &mut self.rasters.add {
+        if let Some(s) = &mut self.gis.rasters.add {
             s.status = Some(why);
         }
     }
 
     pub(crate) fn raster_add_view(&self) -> Element<'_, Message> {
-        let Some(s) = &self.rasters.add else {
+        let Some(s) = &self.gis.rasters.add else {
             return iced::widget::text("").into();
         };
         let from = Segmented::new([From::File, From::Address], s.from, |f| msg(Event::From(f)));

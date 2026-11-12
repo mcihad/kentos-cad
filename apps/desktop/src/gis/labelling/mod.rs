@@ -16,6 +16,7 @@
 
 mod form;
 
+use crate::gis;
 use std::collections::{HashMap, HashSet};
 
 use iced::widget::{Column, Row, button, column, container, row, scrollable, text, text_editor};
@@ -147,7 +148,7 @@ pub enum Event {
 }
 
 pub(crate) fn msg(event: Event) -> Message {
-    Message::Labelling(event)
+    Message::Gis(gis::Event::Labelling(event))
 }
 
 /// A new class's name: “Sınıf n”, the first free.
@@ -324,8 +325,8 @@ impl App {
             return;
         };
         let w = self.labelling_window(id, Tab::Text);
-        self.labelling = Some(w);
-        self.dialog = Some(Dialog::Labelling);
+        self.gis.labelling = Some(w);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Labelling));
     }
 
     /// The labelling checked as the contract does (its rules, its expressions); Kaydet and Uygula follow it.
@@ -387,7 +388,7 @@ impl App {
     }
 
     pub(crate) fn labelling_event(&mut self, event: Event) -> Task<Message> {
-        let Some(mut w) = self.labelling.take() else {
+        let Some(mut w) = self.gis.labelling.take() else {
             return Task::none();
         };
         match event {
@@ -490,7 +491,7 @@ impl App {
                     Field::When => w.classes[w.selected].when.clone().unwrap_or_default(),
                 };
                 let layer = w.layer.clone();
-                self.labelling = Some(w);
+                self.gis.labelling = Some(w);
                 return self.open_builder_for_labels(field, &layer, &value);
             }
             Event::Expression(field, text) => {
@@ -526,13 +527,13 @@ impl App {
             }
             Event::Report => {
                 w.lines = self.labelling_report(&w);
-                self.labelling = Some(w);
+                self.gis.labelling = Some(w);
                 return Task::none();
             }
             Event::ReportAt(i) => {
                 w.report_at = i;
                 w.lines = self.labelling_report(&w);
-                self.labelling = Some(w);
+                self.gis.labelling = Some(w);
                 return Task::none();
             }
             Event::Cancel => {
@@ -541,7 +542,7 @@ impl App {
             }
         }
         self.labelling_check(&mut w);
-        self.labelling = Some(w);
+        self.gis.labelling = Some(w);
         Task::none()
     }
 
@@ -720,7 +721,7 @@ impl App {
     }
 
     pub(crate) fn labelling_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.labelling else {
+        let Some(w) = &self.gis.labelling else {
             return text("").into();
         };
         let layers = self.label_layers();
@@ -906,7 +907,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        let Some(w) = &self.labelling else {
+        let Some(w) = &self.gis.labelling else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

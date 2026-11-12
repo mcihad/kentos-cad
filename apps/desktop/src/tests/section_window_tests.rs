@@ -2,6 +2,7 @@
 //! `road.templates.edit`, `road.sections.edit` and `road.sections.draw`, each write one undo step; and its pictures.
 
 use crate::app::{App, Dialog, Message};
+use crate::road;
 use crate::section_window::{Chosen, Event as W};
 
 /// A road project with `road.sections.query`'s drawing: 120 points with heights, a surface, the main and the side
@@ -23,7 +24,7 @@ fn app(sets: bool) -> App {
 }
 
 fn send(app: &mut App, e: W) {
-    let _ = app.update(Message::Sections(e));
+    let _ = app.update(Message::Road(road::Event::Sections(e)));
 }
 
 fn model(app: &mut App) -> &mut kentos_domain::Document {
@@ -33,7 +34,10 @@ fn model(app: &mut App) -> &mut kentos_domain::Document {
 /// Tip kesit oluştur: two lanes and a shoulder, a ditch in the cut; then a set on the main alignment with it.
 fn made(app: &mut App) {
     let _ = app.update(Message::Run("section.template"));
-    assert_eq!(app.dialog, Some(Dialog::Sections));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Road(road::RoadDialogKind::Sections))
+    );
     send(app, W::Name("İki şerit".into()));
     send(app, W::Part(0, 0, "3,5".into()));
     send(app, W::Part(0, 1, "-2,5".into()));
@@ -53,15 +57,24 @@ fn made(app: &mut App) {
 fn the_window_makes_a_template_and_a_set_and_shows_their_sections() {
     let mut app = app(false);
     made(&mut app);
-    let w = app.section_window.as_ref().expect("open");
+    let w = app.road.section_window.as_ref().expect("open");
     assert_eq!(w.chosen, Some(Chosen::Set(0)));
     assert!(w.preview.why.is_none(), "builds: {:?}", w.preview.why);
-    assert!(w.preview.rows.len() > 20, "every 20 m and the curve's points");
-    assert!(w.preview.rows.iter().any(|r| r.left.is_some()), "the platform is built on the profile");
+    assert!(
+        w.preview.rows.len() > 20,
+        "every 20 m and the curve's points"
+    );
+    assert!(
+        w.preview.rows.iter().any(|r| r.left.is_some()),
+        "the platform is built on the profile"
+    );
     send(&mut app, W::Next);
-    assert_eq!(app.section_window.as_ref().expect("open").at, 1);
+    assert_eq!(app.road.section_window.as_ref().expect("open").at, 1);
     send(&mut app, W::Save);
-    assert!(app.section_window.is_none(), "Kaydet closes the window");
+    assert!(
+        app.road.section_window.is_none(),
+        "Kaydet closes the window"
+    );
     let doc = model(&mut app);
     assert_eq!(doc.road_templates().len(), 1);
     assert_eq!(doc.road_templates()[0].left.components.len(), 2);
@@ -88,7 +101,15 @@ fn a_saved_set_is_drawn_and_a_used_template_is_kept() {
     // A template a set uses stays.
     send(&mut app, W::Choose(Chosen::Template(0)));
     send(&mut app, W::Remove);
-    assert_eq!(app.section_window.as_ref().expect("open").templates.len(), 2);
+    assert_eq!(
+        app.road
+            .section_window
+            .as_ref()
+            .expect("open")
+            .templates
+            .len(),
+        2
+    );
     // The stale side set is rebound, one undo step.
     send(&mut app, W::Choose(Chosen::Set(1)));
     send(&mut app, W::Rebind);
@@ -102,7 +123,10 @@ fn a_template_with_a_side_left_blank_is_refused_and_the_window_stays() {
     let mut app = app(false);
     let _ = app.update(Message::Run("section.template"));
     send(&mut app, W::Save);
-    assert!(app.section_window.is_some(), "a blank width leaves the window open");
+    assert!(
+        app.road.section_window.is_some(),
+        "a blank width leaves the window open"
+    );
     assert!(model(&mut app).road_templates().is_empty());
 }
 
@@ -116,7 +140,10 @@ fn a_saved_set_is_laid_on_sheets_as_one_step() {
     send(&mut app, W::Place("0; -500".into()));
     send(&mut app, W::SheetScale("500".into()));
     send(&mut app, W::Sheets);
-    assert!(app.section_window.is_none(), "the window closes on the sheets");
+    assert!(
+        app.road.section_window.is_none(),
+        "the window closes on the sheets"
+    );
     let doc = model(&mut app);
     let sets = doc.road_sheet_sets().to_vec();
     assert_eq!(sets.len(), 1);
@@ -329,7 +356,7 @@ fn breaks_and_crossing_arms_are_typed_said_and_clipped() {
     send(&mut app, W::SetField(3, "600".into()));
     send(&mut app, W::SetField(7, "0,1".into()));
     send(&mut app, W::SetField(8, "20".into()));
-    let w = app.section_window.as_ref().expect("open");
+    let w = app.road.section_window.as_ref().expect("open");
     assert!(w.preview.why.is_none(), "{:?}", w.preview.why);
     // The case drawing's 0–600 m breaks within 0,1 m, at most 20 m apart (32, the query's case), and the set keeps
     // its Kurp noktaları ve PVI'ler: 7 more.
@@ -340,15 +367,20 @@ fn breaks_and_crossing_arms_are_typed_said_and_clipped() {
     send(&mut app, W::SetField(3, "420".into()));
     send(&mut app, W::SetField(4, "20".into()));
     send(&mut app, W::SetField(0, "180".into()));
-    let w = app.section_window.as_ref().unwrap();
+    let w = app.road.section_window.as_ref().unwrap();
     let said = w.preview.crossing.clone().expect("said");
     // Every 20 m and, with Kurp noktaları ve PVI'ler, the curve's points: 37 pairs (23 without them, the query's case).
     assert!(said.contains("37 çift"), "{said}");
     send(&mut app, W::Clip);
-    let w = app.section_window.as_ref().unwrap();
+    let w = app.road.section_window.as_ref().unwrap();
     assert!(w.preview.crossing.is_none());
     // The right arms stay 25 m; on the circle the left ones end at the centre, R 150 m out.
-    let lengths: Vec<f64> = w.preview.rows.iter().map(|r| (r.ends[0][0] - r.ends[1][0]).hypot(r.ends[0][1] - r.ends[1][1])).collect();
+    let lengths: Vec<f64> = w
+        .preview
+        .rows
+        .iter()
+        .map(|r| (r.ends[0][0] - r.ends[1][0]).hypot(r.ends[0][1] - r.ends[1][1]))
+        .collect();
     assert!(lengths.iter().all(|l| *l <= 205.0 + 1e-6), "{lengths:?}");
     assert!(lengths.iter().any(|l| (l - 175.0).abs() < 1e-6), "150 + 25 on the circle: {lengths:?}");
     send(&mut app, W::Save);
@@ -513,10 +545,17 @@ fn an_empty_place_puts_the_sections_under_the_drawing() {
     for sheets in [false, true] {
         let mut app = app(true);
         let _ = app.update(Message::Run("section.editor"));
-        assert!(app.section_window.as_ref().is_some_and(|w| w.place.is_empty()), "Yer starts empty");
+        assert!(
+            app.road
+                .section_window
+                .as_ref()
+                .is_some_and(|w| w.place.is_empty()),
+            "Yer starts empty"
+        );
         send(&mut app, W::Choose(Chosen::Set(0)));
         send(&mut app, W::DrawLayer("0".into()));
-        let before_ids: std::collections::HashSet<u32> = model(&mut app).entities().map(|e| e.base().id).collect();
+        let before_ids: std::collections::HashSet<u32> =
+            model(&mut app).entities().map(|e| e.base().id).collect();
         let doc = &app.document.as_ref().expect("doc").model;
         app.spatial.sync(doc);
         let before = app.spatial.extent().expect("a drawing");
@@ -576,12 +615,27 @@ fn the_window_says_where_the_design_has_no_ground() {
     let mut app = app(true);
     let _ = app.update(Message::Run("section.editor"));
     send(&mut app, W::Choose(Chosen::Set(1)));
-    let w = app.section_window.as_ref().expect("open");
+    let w = app.road.section_window.as_ref().expect("open");
     let missing = w.preview.missing.clone().expect("the warning");
-    assert!(missing.contains("km 0+050.000") && missing.contains("alana katılmadı"), "{missing}");
-    assert!(w.preview.rows.iter().any(|r| !r.missing.is_empty()), "a section gives its stretches off the surface");
+    assert!(
+        missing.contains("km 0+050.000") && missing.contains("alana katılmadı"),
+        "{missing}"
+    );
+    assert!(
+        w.preview.rows.iter().any(|r| !r.missing.is_empty()),
+        "a section gives its stretches off the surface"
+    );
     send(&mut app, W::Choose(Chosen::Set(0)));
-    assert!(app.section_window.as_ref().expect("open").preview.missing.is_none(), "the main set has ground under its design");
+    assert!(
+        app.road
+            .section_window
+            .as_ref()
+            .expect("open")
+            .preview
+            .missing
+            .is_none(),
+        "the main set has ground under its design"
+    );
 }
 
 /// Enkesit on the side set, its first section over a stretch off the surface, light and dark; `.run/gui-evidence/yol-y99/`:
@@ -621,8 +675,21 @@ fn the_window_says_what_the_sections_are_computed_from() {
     let mut app = app(true);
     let _ = app.update(Message::Run("section.editor"));
     send(&mut app, W::Choose(Chosen::Set(0)));
-    let said = app.section_window.as_ref().expect("open").preview.sources.clone().expect("the sources");
-    assert!(said.starts_with("Kaynaklar: takım k-1 (1), aks g-1 (1), boykesit b-1 (1), tip kesit tk-1 (1)"), "{said}");
+    let said = app
+        .road
+        .section_window
+        .as_ref()
+        .expect("open")
+        .preview
+        .sources
+        .clone()
+        .expect("the sources");
+    assert!(
+        said.starts_with(
+            "Kaynaklar: takım k-1 (1), aks g-1 (1), boykesit b-1 (1), tip kesit tk-1 (1)"
+        ),
+        "{said}"
+    );
     // Docs/adr/1040: the ground by its digest of now, to eight digits, and its acceptance.
     let ground = said.split(", arazi t-1 (").nth(1).expect("the ground");
     assert!(ground.len() > 8 && ground[..8].bytes().all(|b| b.is_ascii_hexdigit()), "{said}");

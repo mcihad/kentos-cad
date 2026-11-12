@@ -5,6 +5,7 @@
 //! natural order; Doğruluk analizi its matrix without touching the drawing;
 //! Bantlara ayır one raster a band.
 
+use crate::gis;
 use kentos_commands::Entity;
 use serde_json::{Value, json};
 
@@ -89,7 +90,9 @@ fn the_classes_come_in_their_names_order_and_the_matrix_leaves_the_drawing() {
         }
         s => panic!("{s:?}"),
     }
-    let _ = app.update(crate::app::Message::Processing(super::Event::Close));
+    let _ = app.update(crate::app::Message::Gis(gis::Event::Processing(
+        super::Event::Close,
+    )));
     let before = app
         .document
         .as_ref()

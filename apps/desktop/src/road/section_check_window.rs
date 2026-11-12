@@ -4,6 +4,7 @@
 //! far off the line a point may lie. The summary says the RMS against 1.5 · KOH_Z and the gaps past 20 m; the table
 //! lists the points along the section. Read only.
 
+use crate::road;
 use iced::widget::container;
 use iced::{Element, Length, Task};
 use kentos_commands::{CommandResult, Entity, TerrainsSectionCheck, TerrainsSectionChecked};
@@ -45,7 +46,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::SectionCheck(e)
+    Message::Road(road::Event::SectionCheck(e))
 }
 
 /// A point's state in words.
@@ -61,14 +62,14 @@ pub fn state_word(state: &str) -> &'static str {
 
 impl App {
     fn section_check_run(&mut self) {
-        let s = &self.section_check;
+        let s = &self.road.section_check;
         let corridor = match s.corridor.trim() {
             "" => None,
             t => match t.replace(',', ".").parse::<f64>() {
                 Ok(v) => Some(v),
                 Err(_) => {
                     let why = format!("Kesitten uzaklık “{t}” bir sayı değil.");
-                    self.section_check.answer = Some(Err(why));
+                    self.road.section_check.answer = Some(Err(why));
                     return;
                 }
             },
@@ -82,14 +83,20 @@ impl App {
             corridor,
             rules: None,
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.section_check.answer = Some(match road_terrains_section::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, warnings } => Ok((output, warnings.into_iter().map(|w| w.message).collect())),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Kesit kontrolü yapılamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.road.section_check.answer = Some(
+            match road_terrains_section::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, warnings } => {
+                    Ok((output, warnings.into_iter().map(|w| w.message).collect()))
+                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Kesit kontrolü yapılamadı.".to_owned()),
+            },
+        );
     }
 
     /// Kesit kontrolü from the selection: its points with their own heights, the two farthest apart the ends.
@@ -131,12 +138,12 @@ impl App {
             let n = n.to_lowercase();
             ["eğri", "egri", "yükselti", "yukselti", "kontur"].iter().any(|w| n.contains(w))
         });
-        let contours = Some(self.sheet_contours.layer.clone())
+        let contours = Some(self.road.sheet_contours.layer.clone())
             .filter(|l| layers.iter().any(|(id, _)| id == l))
             .or_else(|| named.map(|l| l.0.clone()))
             .or_else(|| layers.first().map(|l| l.0.clone()))
             .unwrap_or_default();
-        self.section_check = State {
+        self.road.section_check = State {
             from: picked[a].0.clone(),
             to: picked[b].0.clone(),
             points: picked.iter().enumerate().filter(|(k, _)| *k != a && *k != b).map(|(_, p)| p.0.clone()).collect(),
@@ -145,7 +152,7 @@ impl App {
             ..State::default()
         };
         self.section_check_run();
-        self.dialog = Some(Dialog::SectionCheck);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::SectionCheck));
         Task::none()
     }
 
@@ -153,15 +160,15 @@ impl App {
         match event {
             Event::Open => return self.open_section_check(),
             Event::Contours(v) => {
-                self.section_check.contours = v;
+                self.road.section_check.contours = v;
                 self.section_check_run();
             }
             Event::Corridor(v) => {
-                self.section_check.corridor = v;
+                self.road.section_check.corridor = v;
                 self.section_check_run();
             }
             Event::Close => {
-                self.section_check = State::default();
+                self.road.section_check = State::default();
                 self.dialog = None;
             }
         }
@@ -169,7 +176,7 @@ impl App {
     }
 
     pub(crate) fn section_check_view(&self) -> Element<'_, Message> {
-        let s = &self.section_check;
+        let s = &self.road.section_check;
         let f = self.format();
         let mut lines = Vec::new();
         let mut rows = Vec::new();

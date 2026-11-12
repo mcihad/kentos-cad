@@ -2,6 +2,7 @@
 //! box, offers and footer; the list as rows, a table, bars or cards.
 
 use super::*;
+use crate::gis;
 
 impl App {
     /// A related item's object linked to the record (its field takes the record's id) or unlinked (its
@@ -17,7 +18,7 @@ impl App {
             self.say(Level::Warn, why);
             return Task::none();
         }
-        let Some(e) = self.form_entry.as_ref() else {
+        let Some(e) = self.gis.form_entry.as_ref() else {
             return Task::none();
         };
         let Some(FormItem::Related { layer, field, .. }) =
@@ -43,7 +44,7 @@ impl App {
                 .map(|r| r.id.clone())
         });
         if let Some(relation) = relation {
-            if let Some(e) = self.form_entry.as_mut() {
+            if let Some(e) = self.gis.form_entry.as_mut() {
                 let undone = e
                     .links
                     .iter()
@@ -65,7 +66,7 @@ impl App {
                 }
             }
             // The bounds count the pending link now (docs/adr/0444 §1).
-            if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
+            if let (Some(e), Some(doc)) = (self.gis.form_entry.as_mut(), self.document.as_ref()) {
                 e.recompute(&doc.model);
             }
             self.say(
@@ -157,7 +158,7 @@ impl App {
             self.say(Level::Warn, why);
             return Task::none();
         }
-        let Some(e) = self.form_entry.as_ref() else {
+        let Some(e) = self.gis.form_entry.as_ref() else {
             return Task::none();
         };
         let Some(FormItem::Related { layer, field, .. }) =
@@ -236,7 +237,7 @@ impl App {
     /// The window's record prepared again (another object changed): the values typed stay, the
     /// drawing's revision is the new one.
     pub(crate) fn refresh_entry(&mut self) -> Task<Message> {
-        let Some(e) = self.form_entry.as_ref() else {
+        let Some(e) = self.gis.form_entry.as_ref() else {
             return Task::none();
         };
         let (form, uid, draft) = (e.form.clone(), e.uid.clone(), e.draft);
@@ -255,7 +256,7 @@ impl App {
             return Task::none();
         };
         let revision = doc.model.revision().to_string();
-        if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
+        if let (Some(e), Some(doc)) = (self.gis.form_entry.as_mut(), self.document.as_ref()) {
             // The record as the drawing holds it now (a related record's change worked its calculations
             // out again, docs/adr/0761): what the typed values go onto.
             if !e.preview && !e.new_record && e.members.is_empty() {
@@ -272,13 +273,13 @@ impl App {
     /// The form closed: the record's form under it, if one waits, comes back with its draft and its
     /// related objects read anew (docs/adr/0440 §7); else the window closes.
     pub(crate) fn entry_closed(&mut self) -> Task<Message> {
-        self.form_entry = self.form_stack.pop();
-        if self.form_entry.is_none() {
+        self.gis.form_entry = self.gis.form_stack.pop();
+        if self.gis.form_entry.is_none() {
             self.dialog = None;
             return Task::none();
         }
         let task = self.refresh_entry();
-        if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
+        if let (Some(e), Some(doc)) = (self.gis.form_entry.as_mut(), self.document.as_ref()) {
             e.recompute(&doc.model);
         }
         task
@@ -289,13 +290,13 @@ impl App {
     pub(super) fn open_related(&mut self, item: &str, uid: &str) -> Task<Message> {
         // Read-only when the item offers reading its children and not changing them, or the user
         // may not change them (docs/adr/0762 §1, §2).
-        let read_only = self.form_entry.as_ref().is_some_and(|e| {
+        let read_only = self.gis.form_entry.as_ref().is_some_and(|e| {
             !self
                 .related_offers(e, item)
                 .iter()
                 .any(|o| o.action == RelatedAction::Update && o.allowed())
         });
-        if self.form_stack.len() + 1 >= MOST_NESTED {
+        if self.gis.form_stack.len() + 1 >= MOST_NESTED {
             self.say(
                 Level::Warn,
                 format!(
@@ -318,12 +319,12 @@ impl App {
         };
         match self.form_of_layer(&layer) {
             Some(form) => {
-                if let Some(parent) = self.form_entry.take() {
-                    self.form_stack.push(parent);
+                if let Some(parent) = self.gis.form_entry.take() {
+                    self.gis.form_stack.push(parent);
                 }
                 self.selection.set([slot]);
                 let task = self.open_entry(slot, &form);
-                if let Some(e) = self.form_entry.as_mut() {
+                if let Some(e) = self.gis.form_entry.as_mut() {
                     e.read_only = read_only;
                 }
                 task
@@ -585,7 +586,7 @@ impl App {
     /// Why the related item `item` does not let its action be taken now: it does not offer it, or the
     /// user may not (docs/adr/0762 §2); none when it may.
     pub(super) fn related_refusal(&self, item: &str, action: RelatedAction) -> Option<String> {
-        let e = self.form_entry.as_ref()?;
+        let e = self.gis.form_entry.as_ref()?;
         match self
             .related_offers(e, item)
             .into_iter()
@@ -602,7 +603,7 @@ impl App {
     /// The child asked to be deleted, deleted (docs/adr/0762 §4): `cad.entities.delete`, its own undo
     /// step; the project relations' delete rules hold.
     pub(super) fn delete_related(&mut self) -> Task<Message> {
-        let Some((item, uid)) = self.form_entry.as_mut().and_then(|e| e.removing.take()) else {
+        let Some((item, uid)) = self.gis.form_entry.as_mut().and_then(|e| e.removing.take()) else {
             return Task::none();
         };
         if let Some(why) = self.related_refusal(&item, RelatedAction::Delete) {
@@ -673,7 +674,12 @@ impl App {
                     Select::new(
                         candidates.iter().map(|(_, w)| Choice::new(w.clone())),
                         None,
-                        move |i| Message::FormEntry(Event::Link(item.clone(), picks[i].0.clone())),
+                        move |i| {
+                            Message::Gis(gis::Event::FormEntry(Event::Link(
+                                item.clone(),
+                                picks[i].0.clone(),
+                            )))
+                        },
                     )
                     .placeholder("Bağla: bir nesne seçin"),
                 )

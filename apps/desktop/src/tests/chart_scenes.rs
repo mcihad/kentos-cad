@@ -18,6 +18,7 @@
 //!
 //! Test code only.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::DocumentSnapshotV1;
@@ -42,7 +43,7 @@ pub(crate) fn open_charts(app: &mut App) {
 }
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::Charts(e));
+    let _ = app.update(Message::Gis(gis::Event::Charts(e)));
 }
 
 /// The parcels whose Kullanım is `code`.
@@ -68,7 +69,9 @@ fn settle(_s: &mut Snapshot, app: &mut App) {
         if !app.stats_counting() {
             break;
         }
-        let _ = app.update(Message::Statistics(crate::statistics::Event::Count));
+        let _ = app.update(Message::Gis(gis::Event::Statistics(
+            crate::statistics::Event::Count,
+        )));
     }
 }
 
@@ -79,7 +82,7 @@ fn spec(kind: ChartKind) -> Spec {
 /// Where element `e` of the chart on screen is in the window: its band's middle, or its point.
 fn element_at(app: &App, e: u32) -> iced::Point {
     use kentos_geometry_core::ops::charts::layout::Target;
-    let room = crate::charts::canvas::last_room(&app.charts).expect("the chart was drawn");
+    let room = crate::charts::canvas::last_room(&app.gis.charts).expect("the chart was drawn");
     let at = app
         .charts_work(|w| {
             w.layout().and_then(|l| {
@@ -104,7 +107,7 @@ fn element_at(app: &App, e: u32) -> iced::Point {
 /// The chart's bar named `category`: its element.
 fn bar_of(app: &App, category: &str) -> u32 {
     app.chart_refresh();
-    let now = app.charts.chart.borrow();
+    let now = app.gis.charts.chart.borrow();
     let rows = &now.table.as_ref().expect("a chart").rows;
     rows.iter().position(|r| r[0] == category).expect("the bar") as u32
 }
@@ -130,8 +133,8 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             |app| {
                 open_charts(app);
                 app.open_statistics(Some("parsel".into()));
-                let _ = app.update(Message::Statistics(crate::statistics::Event::Field(
-                    "Kullanım".into(),
+                let _ = app.update(Message::Gis(gis::Event::Statistics(
+                    crate::statistics::Event::Field("Kullanım".into()),
                 )));
             },
             settle,
@@ -262,7 +265,7 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             },
             |s, app| {
                 drawn(s, app);
-                let room = crate::charts::canvas::last_room(&app.charts).expect("drawn");
+                let room = crate::charts::canvas::last_room(&app.gis.charts).expect("drawn");
                 let (a, b) = (
                     iced::Point::new(room.x + room.width * 0.62, room.y + room.height * 0.12),
                     iced::Point::new(room.x + room.width * 0.97, room.y + room.height * 0.78),

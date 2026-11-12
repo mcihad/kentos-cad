@@ -4,6 +4,7 @@
 //! changed one, En yakın tesis writes its ways in one step; and the pictures
 //! for the owner (the web's `shots.mjs networks`).
 
+use crate::gis;
 use kentos_commands::DocumentSnapshotV1;
 use serde_json::json;
 
@@ -33,11 +34,11 @@ fn send(app: &mut App, message: Message) {
 }
 
 fn window(app: &mut App, e: Event) {
-    send(app, Message::Networks(Networks::Window(e)));
+    send(app, Message::Gis(gis::Event::Networks(Networks::Window(e))));
 }
 
 fn processing(app: &mut App, e: Processing) {
-    send(app, Message::Processing(e));
+    send(app, Message::Gis(gis::Event::Processing(e)));
 }
 
 fn value(app: &mut App, name: &str, v: serde_json::Value) {
@@ -51,6 +52,7 @@ fn layer(id: &str) -> serde_json::Value {
 /// Denetle's counts for the chosen network, as the window keeps them.
 fn checked(app: &App) -> (usize, usize, f64) {
     let c = app
+        .gis
         .networks
         .window
         .as_ref()
@@ -63,7 +65,13 @@ fn checked(app: &App) -> (usize, usize, f64) {
 fn the_window_lists_the_networks_and_checks_the_chosen_one_off_the_thread() {
     let mut app = app();
     send(&mut app, Message::Run("network.manage"));
-    let names: Vec<String> = app.networks.window.as_ref().expect("Ağlar is open").names();
+    let names: Vec<String> = app
+        .gis
+        .networks
+        .window
+        .as_ref()
+        .expect("Ağlar is open")
+        .names();
     assert_eq!(names, ["Yollar", "İçme suyu"]);
     window(&mut app, Event::Check);
     // The street grid: 12 crossings, 17 blocks, the curved one 123.175 m (scripts/fixtures/network_cases.py).
@@ -77,7 +85,7 @@ fn the_window_lists_the_networks_and_checks_the_chosen_one_off_the_thread() {
     assert_eq!((nodes, pieces), (11, 10));
     assert!((length - 580.0).abs() < 1e-9, "{length}");
     // Denetle builds the window's definition under a key of its own: the project's network is not built for it.
-    assert!(!app.networks.built_for("yollar"));
+    assert!(!app.gis.networks.built_for("yollar"));
 }
 
 #[test]
@@ -86,7 +94,10 @@ fn kaydet_writes_the_changed_network_as_a_project_setting() {
     send(&mut app, Message::Run("network.manage"));
     window(&mut app, Event::Name("Ana yollar".into()));
     window(&mut app, Event::Save);
-    assert!(app.networks.window.is_none(), "Kaydet closes the window");
+    assert!(
+        app.gis.networks.window.is_none(),
+        "Kaydet closes the window"
+    );
     let doc = &app.document.as_ref().expect("open").model;
     let names: Vec<&str> = doc
         .settings()
@@ -119,7 +130,7 @@ fn en_yakin_tesis_writes_a_way_for_each_school_in_one_step() {
     value(&mut app, "facilities", layer("itfaiye"));
     value(&mut app, "count", json!(1));
     processing(&mut app, Processing::Run);
-    let status = app.processing.dialog.as_ref().map(|w| w.status.clone());
+    let status = app.gis.processing.dialog.as_ref().map(|w| w.status.clone());
     let Some(RunStatus::Ok { text, .. }) = status else {
         panic!("{status:?}");
     };
@@ -263,7 +274,9 @@ fn screens() {
                         if name == "alt-aglar-guncel" {
                             send(
                                 &mut app,
-                                Message::Subnetworks(crate::subnetworks_window::Event::Update),
+                                Message::Gis(gis::Event::Subnetworks(
+                                    crate::subnetworks_window::Event::Update,
+                                )),
                             );
                         }
                     }

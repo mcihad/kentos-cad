@@ -4,6 +4,7 @@
 //! holds its editor (a list for a value list and yes or no, else Noktalar's
 //! field), a refused value its reason on hover.
 
+use crate::gis;
 use iced::widget::text::Wrapping;
 use iced::widget::{button, container, mouse_area, row, space};
 use iced::{Center, Color, Element, Fill, Length, Padding, Theme};
@@ -24,7 +25,7 @@ use crate::icons::from_web;
 use crate::points::cell;
 
 fn msg(e: Event) -> Message {
-    Message::Features(e)
+    Message::Gis(gis::Event::Features(e))
 }
 
 /// A bar button: its icon alone, without a frame; its words and hint above it.
@@ -120,7 +121,7 @@ impl App {
             .unwrap_or_default();
         let ids: Vec<String> = rows.layers.iter().map(|(id, _, _)| id.clone()).collect();
         let n = ids.len();
-        let chosen = match self.features.join.view.as_deref() {
+        let chosen = match self.gis.features.join.view.as_deref() {
             Some(v) => views.iter().position(|(id, _)| id == v).map(|k| n + k),
             None => rows
                 .layer
@@ -149,7 +150,7 @@ impl App {
     }
 
     fn features_bar<'a>(&self, rows: &Rows, width: f32) -> Element<'a, Message> {
-        let panel = &self.features;
+        let panel = &self.gis.features;
         let layer = self.layer_select(rows);
         let search = SearchBox::new(panel.search.clone(), texts::SEARCH, |t| {
             msg(Event::Search(t))
@@ -183,7 +184,7 @@ impl App {
         );
         let pane = kentos_ui::widget::segmented::Segmented::new(
             [super::Pane::Table, super::Pane::Form],
-            self.features.pane,
+            self.gis.features.pane,
             |p| msg(Event::Pane(p)),
         )
         .compact();
@@ -353,7 +354,7 @@ impl App {
             return container(label::muted(texts::NO_LAYERS)).padding(12).into();
         };
         let rows = self.feature_rows(doc);
-        let panel = &self.features;
+        let panel = &self.gis.features;
         if let Some(v) = self.join_view(doc) {
             let picker = container(self.layer_select(&rows))
                 .width(Length::Fixed(260.0))
@@ -672,6 +673,7 @@ impl App {
     /// beside it, written through the form as Formla düzenle writes.
     fn form_pane<'a>(&'a self, rows: &super::Rows) -> Element<'a, Message> {
         let chosen = self
+            .gis
             .form_entry
             .as_ref()
             .filter(|e| e.docked)

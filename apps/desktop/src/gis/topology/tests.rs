@@ -6,6 +6,7 @@
 //! plays the flow with the mouse; the rules themselves are the core's
 //! (fixtures/topology-rules/v1).
 
+use crate::gis;
 use kentos_commands::{TopologyRuleKind, TopologySettings};
 use kentos_domain::Slot;
 
@@ -27,7 +28,7 @@ fn app() -> App {
 }
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::Topology(e));
+    let _ = app.update(Message::Gis(gis::Event::Topology(e)));
 }
 
 /// The drawing with a block of 2 500 parcels beside its own, one of them overlapping its neighbour: enough objects
@@ -67,10 +68,10 @@ fn big() -> App {
 fn a_large_check_goes_on_its_own_thread_and_finds_what_the_core_finds() {
     let mut app = big();
     let task = app.update(Message::Run("topology.check"));
-    assert!(app.topology.running.is_some(), "on its own thread");
+    assert!(app.gis.topology.running.is_some(), "on its own thread");
     assert!(app.topology_checked().is_none(), "not found yet");
     crate::files_testing::drive(&mut app, task);
-    assert!(app.topology.running.is_none());
+    assert!(app.gis.topology.running.is_none());
     let c = app.topology_checked().expect("checked");
     let g = kentos_native_application::topology_check::gather(
         &app.document.as_ref().expect("open").model,
@@ -99,8 +100,13 @@ fn a_large_check_goes_on_its_own_thread_and_finds_what_the_core_finds() {
         .position(|&i| i == at)
         .expect("shown");
     ev(&mut app, Event::Press(row));
-    let task = app.update(Message::Topology(Event::Fix("subtractFirst")));
-    assert!(app.topology.running.is_some(), "the recheck on its thread");
+    let task = app.update(Message::Gis(gis::Event::Topology(Event::Fix(
+        "subtractFirst",
+    ))));
+    assert!(
+        app.gis.topology.running.is_some(),
+        "the recheck on its thread"
+    );
     crate::files_testing::drive(&mut app, task);
     let c = app.topology_checked().expect("rechecked");
     assert!(c.incremental.is_some(), "over what changed");
@@ -128,17 +134,17 @@ fn durdur_ends_a_check_and_keeps_what_was_found() {
     let task = app.update(Message::Run("topology.check"));
     crate::files_testing::drive(&mut app, task);
     let before = app.topology_checked().expect("checked").findings.clone();
-    let task = app.update(Message::Topology(Event::Check));
-    assert!(app.topology.running.is_some());
+    let task = app.update(Message::Gis(gis::Event::Topology(Event::Check)));
+    assert!(app.gis.topology.running.is_some());
     ev(&mut app, Event::Stop);
-    assert!(app.topology.running.is_none(), "ended at once");
+    assert!(app.gis.topology.running.is_none(), "ended at once");
     assert_eq!(
         crate::files_testing::last_said(&app),
         "Topoloji denetimi durduruldu."
     );
     // The thread's later words are not waited for: the last check stays.
     crate::files_testing::drive(&mut app, task);
-    assert!(app.topology.running.is_none());
+    assert!(app.gis.topology.running.is_none());
     assert_eq!(app.topology_checked().expect("kept").findings, before);
 }
 
@@ -147,8 +153,8 @@ fn the_bar_moves_on_smoothly_and_through_a_stretch_by_the_time() {
     use super::running::Reply;
     let mut app = big();
     let task = app.update(Message::Run("topology.check"));
-    let id = app.topology.running.as_ref().expect("running").id;
-    let mut r = app.topology.running.take().expect("running");
+    let id = app.gis.topology.running.as_ref().expect("running").id;
+    let mut r = app.gis.topology.running.take().expect("running");
     let t0 = std::time::Instant::now();
     r.heard(&Reply::Progress(0.5));
     r.frame(t0 + std::time::Duration::from_millis(16));
@@ -293,24 +299,28 @@ fn the_words_are_the_webs() {
 fn the_rules_window_writes_the_rules_and_refuses_what_does_not_hold() {
     let mut app = app();
     let _ = app.update(Message::Run("topology.rules"));
-    assert!(app.topology_rules.is_some());
-    let _ = app.update(Message::TopologyRules(rules::Event::Add));
+    assert!(app.gis.topology_rules.is_some());
+    let _ = app.update(Message::Gis(gis::Event::TopologyRules(rules::Event::Add)));
     // The new rule: on the active layer, Çakışmamalı; made a rule between layers without its other layer.
     let between = TopologyRuleKind::ALL
         .iter()
         .position(|k| *k == TopologyRuleKind::MustNotOverlapWith)
         .expect("a kind");
-    let _ = app.update(Message::TopologyRules(rules::Event::Kind(6, between)));
-    let _ = app.update(Message::TopologyRules(rules::Event::Save));
+    let _ = app.update(Message::Gis(gis::Event::TopologyRules(rules::Event::Kind(
+        6, between,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::TopologyRules(rules::Event::Save)));
     assert_eq!(topology(&app).rules.len(), 6, "refused: no other layer");
     // Its other layer chosen (Yol, the third in the list), it is kept.
-    let _ = app.update(Message::TopologyRules(rules::Event::Other(6, 2)));
-    let _ = app.update(Message::TopologyRules(rules::Event::Save));
+    let _ = app.update(Message::Gis(gis::Event::TopologyRules(
+        rules::Event::Other(6, 2),
+    )));
+    let _ = app.update(Message::Gis(gis::Event::TopologyRules(rules::Event::Save)));
     let t = topology(&app);
     assert_eq!(t.rules.len(), 7);
     assert_eq!(t.rules[6].kind, TopologyRuleKind::MustNotOverlapWith);
     assert_eq!(t.rules[6].other.as_deref(), Some("yol"));
-    assert!(app.topology_rules.is_none());
+    assert!(app.gis.topology_rules.is_none());
 }
 
 #[test]
@@ -395,11 +405,27 @@ fn a_parts_neighbour_outside_its_area_is_checked() {
     assert!(c.g.incomplete.is_empty());
     // Düzelt ▾ says what each fix would do: the part's row may change, the outside row may not.
     ev(&mut app, Event::Press(0));
-    let previews = app.topology.previews.clone();
-    let first = &previews.iter().find(|(k, _)| *k == "subtractFirst").expect("a preview").1;
-    assert_eq!(first.as_deref(), Ok("alan 110.00 m² → 107.50 m²; “parsel” tablosuna 1 satır"));
-    let second = &previews.iter().find(|(k, _)| *k == "subtractSecond").expect("a preview").1;
-    assert!(second.as_ref().is_err_and(|w| w.contains("alanın dışındaki bir satırı değiştirir")), "{second:?}");
+    let previews = app.gis.topology.previews.clone();
+    let first = &previews
+        .iter()
+        .find(|(k, _)| *k == "subtractFirst")
+        .expect("a preview")
+        .1;
+    assert_eq!(
+        first.as_deref(),
+        Ok("alan 110.00 m² → 107.50 m²; “parsel” tablosuna 1 satır")
+    );
+    let second = &previews
+        .iter()
+        .find(|(k, _)| *k == "subtractSecond")
+        .expect("a preview")
+        .1;
+    assert!(
+        second
+            .as_ref()
+            .is_err_and(|w| w.contains("alanın dışındaki bir satırı değiştirir")),
+        "{second:?}"
+    );
 }
 
 /// A part's object reaching out of the band: the check is not complete and says so (docs/adr/0589 §1).
@@ -491,7 +517,7 @@ fn screens() {
                 let task = app.update(Message::Run("topology.check"));
                 if name == "suruyor" {
                     // A check on its own thread, its bar at 42 % (docs/adr/0756): drawn as it goes.
-                    if let Some(r) = app.topology.running.as_mut() {
+                    if let Some(r) = app.gis.topology.running.as_mut() {
                         r.shown = 0.42;
                     }
                     snapshot.settle(&mut app, App::view, &mut update);
@@ -501,7 +527,7 @@ fn screens() {
                         .save(&file)
                         .expect("writes the picture");
                     println!("{}", file.display());
-                    if let Some(r) = app.topology.running.take() {
+                    if let Some(r) = app.gis.topology.running.take() {
                         r.stop();
                     }
                     continue;
@@ -533,7 +559,7 @@ fn screens() {
                     ev(&mut app, Event::Press(0));
                 } else if name == "tarif" {
                     // A recipe of two findings planned (docs/adr/1260 §4): what it would do over the table.
-                    app.topology.selected = vec![0, 1];
+                    app.gis.topology.selected = vec![0, 1];
                     ev(&mut app, Event::Recipe);
                 } else if name != "eksik" {
                     ev(
@@ -559,7 +585,7 @@ fn screens() {
                         rules::Event::Precision("0.0001".into()),
                         rules::Event::Acceptance("0.05".into()),
                     ] {
-                        let _ = app.update(Message::TopologyRules(e));
+                        let _ = app.update(Message::Gis(gis::Event::TopologyRules(e)));
                     }
                 }
                 if name == "degisti" || name == "yeniden" {
@@ -627,7 +653,7 @@ fn a_finding_is_marked_as_an_error_with_its_reason() {
 fn a_recipe_is_planned_then_applied_in_one_step() {
     let mut app = checked();
     let revision = app.document.as_ref().expect("open").model.revision();
-    app.topology.selected = vec![0];
+    app.gis.topology.selected = vec![0];
     ev(&mut app, Event::Recipe);
     let r = app.topology_recipe().expect("planned").clone();
     assert_eq!(r.planned.recipe.len(), 1);
@@ -663,7 +689,7 @@ fn the_recheck_after_a_move_finds_what_checking_all_finds() {
     ev(&mut app, Event::Press(0));
     let key = {
         let c = app.topology_checked().expect("checked");
-        c.key(&c.findings[app.topology.selected[0]])
+        c.key(&c.findings[app.gis.topology.selected[0]])
     };
     move_road(&mut app);
     assert!(app.topology_stale(), "the findings are old");
@@ -671,7 +697,11 @@ fn the_recheck_after_a_move_finds_what_checking_all_finds() {
     assert!(!app.topology_stale());
     let c = app.topology_checked().expect("rechecked");
     assert_eq!(c.incremental, Some(1), "one object changed");
-    assert_eq!(c.key(&c.findings[app.topology.selected[0]]), key, "the chosen row follows its finding");
+    assert_eq!(
+        c.key(&c.findings[app.gis.topology.selected[0]]),
+        key,
+        "the chosen row follows its finding"
+    );
     let mut again = app.topology_seen().expect("the tab").1;
     ev(&mut app, Event::Check);
     let mut all = app.topology_seen().expect("the tab").1;

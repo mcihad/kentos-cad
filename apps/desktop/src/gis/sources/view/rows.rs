@@ -179,7 +179,7 @@ impl App {
                 let kept = Kept::File {
                     path: folder.join(&file.name),
                 };
-                let favourite = self.sources.folders.is_favourite(&kept);
+                let favourite = self.gis.sources.folders.is_favourite(&kept);
                 let parts = if file.parts.len() > 1 {
                     format!(" ({})", file.parts.join(", "))
                 } else {
@@ -285,7 +285,7 @@ impl App {
                     add.clone(),
                     chosen,
                 );
-                let favourite = self.sources.folders.is_favourite(&kept);
+                let favourite = self.gis.sources.folders.is_favourite(&kept);
                 ContextMenu::new(face, move |_| {
                     star_item(
                         Menu::new()
@@ -329,7 +329,7 @@ impl App {
                     )),
                     tooltip::Position::Left,
                 );
-                let favourite = self.sources.folders.is_favourite(&kept);
+                let favourite = self.gis.sources.folders.is_favourite(&kept);
                 let at = *at;
                 ContextMenu::new(face, move |_| {
                     star_item(
@@ -371,7 +371,7 @@ impl App {
                     add.clone(),
                     chosen,
                 );
-                let favourite = self.sources.folders.is_favourite(&kept);
+                let favourite = self.gis.sources.folders.is_favourite(&kept);
                 ContextMenu::new(face, move |_| {
                     star_item(
                         Menu::new()
@@ -680,7 +680,7 @@ impl App {
             tooltip::Position::Left,
         );
         let kept = origin.kept(&t.name);
-        let favourite = self.sources.folders.is_favourite(&kept);
+        let favourite = self.gis.sources.folders.is_favourite(&kept);
         let copy = Some(msg(Event::OpenTable(origin.clone(), t.name.clone(), false)));
         let extent = t
             .extent
@@ -723,7 +723,7 @@ impl App {
         add: Message,
         chosen: bool,
     ) -> Element<'a, Message> {
-        let dragged = self.sources.drag.as_ref().is_some_and(|d| d.key == key);
+        let dragged = self.gis.sources.drag.as_ref().is_some_and(|d| d.key == key);
         let face = mouse_area(face.spacing(6).padding([0, 8]).align_y(Center).height(Fill))
             .on_press(msg(Event::Press(
                 key.to_owned(),

@@ -224,7 +224,7 @@ flowchart LR
 - **12 Kasım 2026 ([ADR 8054 §5](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** kökte yalnız `lib.rs`/`main.rs`; `tests/` 353, `shell/` 252, `cad/` 212, `gis/` 224, `map/` 37, `road/` 45, `arch/` 34 dosya; modül yolları `#[path]` ile aynı; 2 312 masaüstü testi geçti.
 ---
 
-### [ ] ADIM 06 — `App` Struct, `Dialog` ve `Message` Enum'larının Modül Alt-Durumlarına (`Sub-State`) Bölünmesi (Öncelik: P0)
+### [x] ADIM 06 — `App` Struct, `Dialog` ve `Message` Enum'larının Modül Alt-Durumlarına (`Sub-State`) Bölünmesi (Öncelik: P0)
 
 - **Kod İnceleme Bulgusu:** [apps/desktop/src/app.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/app.rs) (**5.061 satır**) içindeki `App` struct'ı dört disiplinin ~200 pencere/panel alanını aynı yapıda tutuyor; `Dialog` (130+ pencere) ve `Message` (150+ olay) enum'ları dev birer merkezi dağıtıcıya dönüşmüş durumda.
 - **Yapılacak İşlem:**
@@ -242,6 +242,7 @@ flowchart LR
      - 30+ ayrı Yol mesajı tek bir `Message::Road(crate::road::Event)` dalında; 25+ Yol diyaloğu tek bir `Dialog::Road(crate::road::RoadDialogKind)` dalında toplanacaktır.
      - Aynı gruplama `Message::Arch` / `Dialog::Arch`, `Message::Map` / `Dialog::Map` ve `Message::Gis` / `Dialog::Gis` için uygulanacaktır.
 - **Tamamlanma Ölçütü:** `app.rs` 5.061 satırdan ~1.200 satıra iner; bir modüle yeni pencere eklemek `app.rs`'e dokunmayı gerektirmez.
+- **12 Kasım 2026 ([ADR 8054 §6](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** Yol, harita, CBS ve mimarinin pencere durumu, iletileri ve pencereleri `road/state.rs`, `map/state.rs`, `gis/state.rs`, `arch/state.rs`'te (`App::road`, `Message::Road(road::Event)`, `Dialog::Road(RoadDialogKind)` …). `App` 346 → 220 alan, `Message` 293 → 174, `Dialog` 195 → 82 kol; `app.rs` 5.061 → 1.289 satır. Ayrım koddan okundu (tipin ve görünümün klasörü); `tests/shell_boundary_tests.rs` `app.rs`'in disiplin penceresi adlandırmasını engeller. 2.314 masaüstü testi geçti.
 
 ---
 

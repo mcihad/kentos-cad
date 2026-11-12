@@ -41,15 +41,31 @@ fn degisenler_draws_the_moved_line_s_approved_shape() {
     let with_shape: Vec<&str> = c.objects.iter().filter(|o| o.approved.is_some()).map(|o| o.uid.as_str()).collect();
     assert_eq!(with_shape, [moved.as_str()], "only the moved line's shape");
     send(&mut app, P::Changes("is-4".into()));
-    let shown = app.map_work.approved.clone().expect("the approved shapes");
+    let shown = app
+        .map
+        .map_work
+        .approved
+        .clone()
+        .expect("the approved shapes");
     assert_eq!(shown.objects, 1);
-    assert_eq!(shown.lines, vec![vec![then[0], then[1]]], "the line as approved");
-    assert_eq!(shown.version, app.selection.version(), "with Değişenler's selection");
+    assert_eq!(
+        shown.lines,
+        vec![vec![then[0], then[1]]],
+        "the line as approved"
+    );
+    assert_eq!(
+        shown.version,
+        app.selection.version(),
+        "with Değişenler's selection"
+    );
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(said.iter().any(|l| l.contains("Geometrisi değişen 1 nesnenin onaylanan şekli kesik çizgiyle gösteriliyor.")), "{said:?}");
     // Another selection: the shapes go with Değişenler's.
     app.selection.set(vec![kentos_domain::Slot(6)]);
-    assert_ne!(app.map_work.approved.as_ref().map(|a| a.version), Some(app.selection.version()));
+    assert_ne!(
+        app.map.map_work.approved.as_ref().map(|a| a.version),
+        Some(app.selection.version())
+    );
 }
 
 /// `.run/gui-evidence/onayli-sekil-4480/`:

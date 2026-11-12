@@ -2,6 +2,7 @@
 //! choice that gives a layer found here the recipe's fields it lacks (İş grafiği, project_graph_window.rs;
 //! docs/adr/5240), on the shared cases' road project of `road.project.produce`. And their pictures.
 
+use crate::road;
 use serde_json::Value;
 
 use crate::app::{App, Message};
@@ -22,13 +23,21 @@ fn definition(name: &str) -> Value {
 fn the_added_layer_takes_its_combination_rule_index_and_form() {
     let def = definition("tanimli-katmanli.json");
     let mut b = other_project();
-    let _ = b.update(Message::ProjectGraph(G::Open));
-    let _ = b.update(Message::ProjectGraph(G::Picked(Some(recipe("tanimli-katmanli.json")))));
-    let lines = plan_lines(b.project_graph.recipe.as_ref().expect("the recipe shown"));
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+        recipe("tanimli-katmanli.json"),
+    )))));
+    let lines = plan_lines(
+        b.road
+            .project_graph
+            .recipe
+            .as_ref()
+            .expect("the recipe shown"),
+    );
     let more = "1 değer bileşimi, 1 kayıt kuralı ve 1 dizin de tarifteki gibi. “Sınır formu” formu taslak olarak.";
     assert!(lines.iter().any(|(_, l)| l.contains(more)), "{lines:?}");
-    let _ = b.update(Message::ProjectGraph(G::Confirm));
-    let out = b.project_graph.produced.clone().expect("produced");
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Confirm)));
+    let out = b.road.project_graph.produced.clone().expect("produced");
     let model = &b.document.as_ref().expect("a drawing").model;
     let layers = model.layers();
     let added = layers.get(&out.layers[0].to).expect("added");
@@ -45,17 +54,42 @@ fn the_added_layer_takes_its_combination_rule_index_and_form() {
 #[test]
 fn add_fields_gives_the_found_layer_what_it_lacks() {
     let mut b = other_project();
-    let _ = b.update(Message::ProjectGraph(G::Open));
-    let _ = b.update(Message::ProjectGraph(G::Picked(Some(recipe("tanimli-adli.json")))));
-    let before = b.project_graph.recipe.as_ref().expect("shown").warnings.clone();
-    assert!(before.iter().any(|w| w.contains("kendi alanlarını korur")), "{before:?}");
-    let _ = b.update(Message::ProjectGraph(G::AddFields(true)));
-    let r = b.project_graph.recipe.as_ref().expect("shown");
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+        recipe("tanimli-adli.json"),
+    )))));
+    let before = b
+        .road
+        .project_graph
+        .recipe
+        .as_ref()
+        .expect("shown")
+        .warnings
+        .clone();
+    assert!(
+        before.iter().any(|w| w.contains("kendi alanlarını korur")),
+        "{before:?}"
+    );
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::AddFields(true))));
+    let r = b.road.project_graph.recipe.as_ref().expect("shown");
     assert!(r.add_fields);
-    assert!(r.warnings.iter().any(|w| w.contains("katmanının alanlarının sonuna eklenecek")), "{:?}", r.warnings);
-    let _ = b.update(Message::ProjectGraph(G::Confirm));
+    assert!(
+        r.warnings
+            .iter()
+            .any(|w| w.contains("katmanının alanlarının sonuna eklenecek")),
+        "{:?}",
+        r.warnings
+    );
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Confirm)));
     let model = &b.document.as_ref().expect("a drawing").model;
-    let names: Vec<String> = model.layers().get("sifir").expect("sifir").fields.iter().map(|f| f.name.clone()).collect();
+    let names: Vec<String> = model
+        .layers()
+        .get("sifir")
+        .expect("sifir")
+        .fields
+        .iter()
+        .map(|f| f.name.clone())
+        .collect();
     assert_eq!(names, ["Ad", "Tür", "Derinlik", "Zemin"]);
     assert!(model.settings().forms.is_empty());
 }
@@ -80,10 +114,12 @@ fn screens() {
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
-            let _ = app.update(Message::ProjectGraph(G::Open));
-            let _ = app.update(Message::ProjectGraph(G::Picked(Some(recipe(file)))));
+            let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+            let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+                recipe(file),
+            )))));
             if add {
-                let _ = app.update(Message::ProjectGraph(G::AddFields(true)));
+                let _ = app.update(Message::Road(road::Event::ProjectGraph(G::AddFields(true))));
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {

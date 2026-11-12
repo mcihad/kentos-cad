@@ -5,6 +5,7 @@
 //! a drawing without the profile's layers offered Profili uygula, after which the layers are there. Harita and GIS
 //! offer it, Yol and Mimari do not. And its pictures.
 
+use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -33,12 +34,25 @@ const BARE: &str = "profil katmanları yoksa söylenir";
 fn the_messy_plan_is_found_out_and_its_areas_shown() {
     let mut app = opened(Some(Module::Map), MESSY);
     let _ = app.update(Message::Run("zoning.check"));
-    assert_eq!(app.dialog, Some(Dialog::Zoning));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
-    assert_eq!((r.plans, r.decisions, r.notes, r.findings.len()), (4, 7, 3, 17));
-    assert_eq!(r.counts.get("outsideUpper"), Some(&1), "UIP-3 lies outside UIP-1");
-    let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
-    let _ = app.update(Message::Zoning(Z::Show));
+    assert_eq!(app.dialog, Some(Dialog::Map(map::MapDialogKind::Zoning)));
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    assert_eq!(
+        (r.plans, r.decisions, r.notes, r.findings.len()),
+        (4, 7, 3, 17)
+    );
+    assert_eq!(
+        r.counts.get("outsideUpper"),
+        Some(&1),
+        "UIP-3 lies outside UIP-1"
+    );
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
     assert_eq!(app.dialog, None);
     // UIP-1 (uncovered), K1, K2 and K5 (the two overlaps, K5 outside).
     assert_eq!(app.selection.ids(), [Slot(5), Slot(9), Slot(6), Slot(1)]);
@@ -54,12 +68,24 @@ const SYMBOL: &str =
 fn a_symbol_that_does_not_show_its_decision_is_found() {
     let mut app = opened(Some(Module::Map), SYMBOL);
     let _ = app.update(Message::Run("zoning.check"));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
-    assert_eq!((r.findings.len(), r.counts.get("symbolMismatch")), (1, Some(&1)));
-    assert_eq!(crate::zoning_window::kind_word("symbolMismatch"), "Sembol uyuşmazlığı");
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    assert_eq!(
+        (r.findings.len(), r.counts.get("symbolMismatch")),
+        (1, Some(&1))
+    );
+    assert_eq!(
+        crate::zoning_window::kind_word("symbolMismatch"),
+        "Sembol uyuşmazlığı"
+    );
     assert!(Group::Decisions.holds("symbolMismatch"));
-    let _ = app.update(Message::Zoning(Z::Group(Group::Decisions)));
-    let _ = app.update(Message::Zoning(Z::Show));
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Decisions))));
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
     assert_eq!(app.selection.ids(), [Slot(2)], "S1, the trade area");
 }
 
@@ -102,20 +128,48 @@ const OUTSIDE_UPPER: &str = "alt plan üst planın sınırının dışına taş�
 fn a_broken_road_and_a_plan_outside_its_upper_plan() {
     let mut app = opened(Some(Module::Map), ROAD_GAP);
     let _ = app.update(Message::Run("zoning.check"));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     let kinds: Vec<&str> = r.findings.iter().map(|f| f.kind.as_str()).collect();
     assert_eq!(kinds, ["roadGap"]);
     assert_eq!(crate::zoning_window::kind_word("roadGap"), "Kopuk yol");
-    assert!(r.findings[0].message.contains("(Y 487050.000, X 4420045.000)"), "{}", r.findings[0].message);
-    let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
-    let _ = app.update(Message::Zoning(Z::Show));
+    assert!(
+        r.findings[0]
+            .message
+            .contains("(Y 487050.000, X 4420045.000)"),
+        "{}",
+        r.findings[0].message
+    );
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
     assert_eq!(app.selection.ids().len(), 1, "the road");
     let mut app = opened(Some(Module::Map), OUTSIDE_UPPER);
     let _ = app.update(Message::Run("zoning.check"));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
-    assert_eq!(r.findings.iter().map(|f| f.kind.as_str()).collect::<Vec<_>>(), ["outsideUpper"]);
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    assert_eq!(
+        r.findings
+            .iter()
+            .map(|f| f.kind.as_str())
+            .collect::<Vec<_>>(),
+        ["outsideUpper"]
+    );
     assert!(Group::Plans.holds("outsideUpper"));
-    assert_eq!(r.findings[0].area, Some(1000.0), "UIP-1's 20 m × 50 m past NIP-1");
+    assert_eq!(
+        r.findings[0].area,
+        Some(1000.0),
+        "UIP-1's 20 m × 50 m past NIP-1"
+    );
 }
 
 const ROAD_WIDTH: &str = "yol genişliği çizilenden geniş: iki yandaki dört karar yola giriyor";
@@ -126,16 +180,37 @@ const ROAD_WIDTH: &str = "yol genişliği çizilenden geniş: iki yandaki dört 
 fn the_decisions_inside_a_road_s_width() {
     let mut app = opened(Some(Module::Map), ROAD_WIDTH);
     let _ = app.update(Message::Run("zoning.check"));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     let kinds: Vec<&str> = r.findings.iter().map(|f| f.kind.as_str()).collect();
     assert_eq!(kinds, ["roadWidth"; 4]);
-    assert!(r.findings.iter().all(|f| f.area == Some(45.0)), "{:?}", r.findings);
-    assert_eq!(crate::zoning_window::kind_word("roadWidth"), "Yola giren karar");
+    assert!(
+        r.findings.iter().all(|f| f.area == Some(45.0)),
+        "{:?}",
+        r.findings
+    );
+    assert_eq!(
+        crate::zoning_window::kind_word("roadWidth"),
+        "Yola giren karar"
+    );
     assert!(Group::Areas.holds("roadWidth"));
-    assert!(r.findings[0].message.starts_with("“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1”"));
-    let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
-    let _ = app.update(Message::Zoning(Z::Show));
-    assert_eq!(app.selection.ids().len(), 5, "the road and the four decisions");
+    assert!(
+        r.findings[0]
+            .message
+            .starts_with("“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1”")
+    );
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+    assert_eq!(
+        app.selection.ids().len(),
+        5,
+        "the road and the four decisions"
+    );
 }
 
 const ROAD_PARCEL: &str = "yol genişliği çizilenden geniş: yola giren kararlar ve parseller";
@@ -146,15 +221,38 @@ const ROAD_PARCEL: &str = "yol genişliği çizilenden geniş: yola giren kararl
 fn the_parcels_inside_a_road_s_width() {
     let mut app = opened(Some(Module::Map), ROAD_PARCEL);
     let _ = app.update(Message::Run("zoning.check"));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
-    let parcels: Vec<&kentos_commands::ZoningFinding> = r.findings.iter().filter(|f| f.kind == "roadParcel").collect();
-    assert_eq!(parcels.iter().map(|f| f.area).collect::<Vec<_>>(), [Some(20.0), Some(25.0), Some(45.0)]);
-    assert_eq!(crate::zoning_window::kind_word("roadParcel"), "Yola giren parsel");
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    let parcels: Vec<&kentos_commands::ZoningFinding> = r
+        .findings
+        .iter()
+        .filter(|f| f.kind == "roadParcel")
+        .collect();
+    assert_eq!(
+        parcels.iter().map(|f| f.area).collect::<Vec<_>>(),
+        [Some(20.0), Some(25.0), Some(45.0)]
+    );
+    assert_eq!(
+        crate::zoning_window::kind_word("roadParcel"),
+        "Yola giren parsel"
+    );
     assert!(Group::Areas.holds("roadParcel"));
-    assert_eq!(parcels[0].message, "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor.");
-    let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
-    let _ = app.update(Message::Zoning(Z::Show));
-    assert_eq!(app.selection.ids().len(), 8, "the road, the four decisions and the three parcels");
+    assert_eq!(
+        parcels[0].message,
+        "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor."
+    );
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+    assert_eq!(
+        app.selection.ids().len(),
+        8,
+        "the road, the four decisions and the three parcels"
+    );
 }
 
 /// docs/adr/3040: a third road across parcel 101/2 puts it in two road widths; the summary sums its parts (25 m² in
@@ -180,10 +278,17 @@ fn a_parcel_in_two_roads_is_summed_and_the_parts_hatched() {
     assert_eq!(totals[0].1, 2, "two roads");
     assert!((totals[0].2 - 275.0).abs() < 1e-6, "{totals:?}");
     // Bulguları göster: the parts hatched, kept until İşareti kaldır.
-    let _ = app.update(Message::Zoning(Z::Show));
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
     let m = app.zoning_marks().expect("hatched");
-    let area: f64 = m.regions.iter().map(|a| kentos_geometry_core::geom::region::net_area(a)).sum();
-    assert!(area > 275.0, "the decisions' and the parcels' parts: {area}");
+    let area: f64 = m
+        .regions
+        .iter()
+        .map(|a| kentos_geometry_core::geom::region::net_area(a))
+        .sum();
+    assert!(
+        area > 275.0,
+        "the decisions' and the parcels' parts: {area}"
+    );
     assert!(app.available("data.unmark"));
     let _ = app.update(Message::Run("data.unmark"));
     assert!(app.zoning_marks().is_none());
@@ -197,7 +302,13 @@ const U_ROAD: &str = "U biçimli yol karara iki yerden girer: tek bulgu, iki bö
 fn a_road_entering_a_decision_twice_carries_two_regions() {
     let mut app = opened(Some(Module::Map), U_ROAD);
     let _ = app.update(Message::Run("zoning.check"));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     assert_eq!(r.findings.len(), 1);
     let f = &r.findings[0];
     assert_eq!((f.kind.as_str(), f.regions.len()), ("roadWidth", 2));
@@ -206,7 +317,7 @@ fn a_road_entering_a_decision_twice_carries_two_regions() {
     let fmt = app.format();
     assert!(app.zoning_shown().iter().any(|x| x.regions.len() == 2));
     let cell = format!("{} (2 parça)", fmt.area(1200.0));
-    let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
     let shown: Vec<String> = app
         .zoning_shown()
         .into_iter()
@@ -216,7 +327,7 @@ fn a_road_entering_a_decision_twice_carries_two_regions() {
         })
         .collect();
     assert!(shown.contains(&cell), "{shown:?}");
-    let _ = app.update(Message::Zoning(Z::Show));
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
     let m = app.zoning_marks().expect("hatched");
     assert_eq!(m.regions.len(), 2);
 }
@@ -246,12 +357,15 @@ fn region_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("zoning.check"));
-        let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+        let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::Zoning(Z::Show));
+        let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("cizimde-{name}.png"));
@@ -264,7 +378,13 @@ fn region_screens() {
 fn the_clean_plan_has_no_finding() {
     let mut app = opened(Some(Module::Map), GOOD);
     let _ = app.update(Message::Run("zoning.check"));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     assert!(r.findings.is_empty(), "{:?}", r.findings);
 }
 
@@ -272,14 +392,32 @@ fn the_clean_plan_has_no_finding() {
 fn profili_uygula_adds_the_missing_layers() {
     let mut app = opened(Some(Module::Map), BARE);
     let _ = app.update(Message::Run("zoning.check"));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     assert_eq!(r.counts.get("missingLayer"), Some(&2));
-    let _ = app.update(Message::Zoning(Z::ApplyProfile));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::ApplyProfile)));
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     assert_eq!(r.counts.get("missingLayer"), None, "{:?}", r.findings);
     let _ = app.update(Message::Run("edit.undo"));
-    let _ = app.update(Message::Zoning(Z::Tolerance(0.01)));
-    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    let _ = app.update(Message::Map(map::Event::Zoning(Z::Tolerance(0.01))));
+    let r = app
+        .map
+        .zoning
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     assert_eq!(r.counts.get("missingLayer"), Some(&2), "one undo step");
 }
 
@@ -312,9 +450,9 @@ fn road_width_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("zoning.check"));
-            let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+            let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
             if show {
-                let _ = app.update(Message::Zoning(Z::Show));
+                let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
@@ -390,9 +528,9 @@ fn road_parcel_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("zoning.check"));
-            let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+            let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
             if show {
-                let _ = app.update(Message::Zoning(Z::Show));
+                let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
@@ -440,12 +578,15 @@ fn hatch_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("zoning.check"));
-        let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+        let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::Zoning(Z::Show));
+        let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("cizimde-{name}.png"));

@@ -11,6 +11,7 @@
 //!
 //! Test code only.
 
+use crate::arch;
 use kentos_commands::{ArchPhase, Entity, WallChange, WallsEdit, WallsOperation};
 use kentos_domain::Slot;
 
@@ -34,10 +35,13 @@ fn template_large(app: &mut App) {
 }
 fn template_office(app: &mut App) {
     template_large(app);
-    let session = app.arch_template.as_ref().unwrap().session;
-    let _ = app.update(crate::app::Message::ArchTemplate(crate::architecture_template::Event::Mode {
-        session, mode: kentos_commands::TemplateSettingsMode::Template,
-    }));
+    let session = app.arch.arch_template.as_ref().unwrap().session;
+    let _ = app.update(crate::app::Message::Arch(arch::Event::ArchTemplate(
+        crate::architecture_template::Event::Mode {
+            session,
+            mode: kentos_commands::TemplateSettingsMode::Template,
+        },
+    )));
 }
 fn template_existing(app: &mut App) {
     template_large(app);
@@ -46,11 +50,12 @@ fn template_existing(app: &mut App) {
 }
 /// A scene fixture explicitly accepts the visible package, like the Apply button.
 fn approve_template(app: &mut App) {
-    let window = app.arch_template.as_ref().unwrap();
+    let window = app.arch.arch_template.as_ref().unwrap();
     let event = crate::architecture_template::Event::Apply {
-        session: window.session, input: window.input.clone(),
+        session: window.session,
+        input: window.input.clone(),
     };
-    let _ = app.update(crate::app::Message::ArchTemplate(event));
+    let _ = app.update(crate::app::Message::Arch(arch::Event::ArchTemplate(event)));
 }
 
 /// The walls' persistent ids and their styles' ids.

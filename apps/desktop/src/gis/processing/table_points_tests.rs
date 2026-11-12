@@ -4,6 +4,7 @@
 //! the dialog reads it, a workbook on its first sheet), and the pictures for
 //! the owner.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::DocumentSnapshotV1;
@@ -28,11 +29,12 @@ fn app_with_drawing() -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn status(app: &App) -> RunStatus {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())
@@ -304,8 +306,8 @@ fn screens() {
                     "disa-aktar" => {
                         drawn(&mut app);
                         let _ = app.update(Message::Run("data.featureTable"));
-                        let _ = app.update(Message::Features(crate::features::Event::Layer(
-                            "islem-noktalar".into(),
+                        let _ = app.update(Message::Gis(gis::Event::Features(
+                            crate::features::Event::Layer("islem-noktalar".into()),
                         )));
                         click(&mut snapshot, &mut app, "Dışa aktar");
                     }

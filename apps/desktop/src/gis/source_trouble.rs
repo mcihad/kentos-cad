@@ -88,12 +88,13 @@ impl crate::app::App {
     /// Kaynağın tümü's page from its cursor and İstatistik's question.
     pub(crate) fn source_back(&mut self, layer: &str) -> iced::Task<Message> {
         let mut tasks = Vec::new();
-        if self.features.whole.layer.as_deref() == Some(layer)
-            && self.features.whole.missed.is_some()
+        if self.gis.features.whole.layer.as_deref() == Some(layer)
+            && self.gis.features.whole.missed.is_some()
         {
             tasks.push(self.whole_retry());
         }
         let refused = self
+            .gis
             .charts
             .whole
             .answer

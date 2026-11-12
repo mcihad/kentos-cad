@@ -18,6 +18,7 @@ mod tests;
 mod terminal_tests;
 pub mod window;
 
+use crate::gis;
 use std::collections::{HashMap, HashSet};
 
 use iced::Task;
@@ -141,10 +142,12 @@ impl App {
             Task::done(Message::ScopedReply {
                 document,
                 run,
-                reply: Box::new(Message::Networks(Event::Answered(NetworkReply {
-                    ticket,
-                    answer: Answer::Failed(why),
-                }))),
+                reply: Box::new(Message::Gis(gis::Event::Networks(Event::Answered(
+                    NetworkReply {
+                        ticket,
+                        answer: Answer::Failed(why),
+                    },
+                )))),
             })
         };
         let def = ask.def.clone().or_else(|| {
@@ -172,7 +175,7 @@ impl App {
             .as_ref()
             .map(|d| kentos_native_application::sources::stale_layers(&d.model, &def.layers()))
             .unwrap_or_default();
-        if let Some(stamp) = self.networks.built.get_mut(&ask.network)
+        if let Some(stamp) = self.gis.networks.built.get_mut(&ask.network)
             && stale != stamp.stale
         {
             stamp.stale.clone_from(&stale);
@@ -188,7 +191,7 @@ impl App {
             }
         }
         let (done, wait) = oneshot::channel();
-        self.networks.engine.send(Job::Ask {
+        self.gis.networks.engine.send(Job::Ask {
             network: ask.network,
             ticket,
             question: ask.question,
@@ -198,10 +201,12 @@ impl App {
             done,
         });
         let answer = Task::perform(wait, move |r| {
-            Message::Networks(Event::Answered(r.unwrap_or(NetworkReply {
-                ticket,
-                answer: Answer::Failed("Ağların iş parçacığı yanıt vermedi.".into()),
-            })))
+            Message::Gis(gis::Event::Networks(Event::Answered(r.unwrap_or(
+                NetworkReply {
+                    ticket,
+                    answer: Answer::Failed("Ağların iş parçacığı yanıt vermedi.".into()),
+                },
+            ))))
         });
         Task::batch([build, self.tool_reply(answer)])
     }
@@ -213,7 +218,7 @@ impl App {
             return Ok(Task::none());
         };
         let model = &doc.model;
-        if self.networks.fresh(key, def, model) {
+        if self.gis.networks.fresh(key, def, model) {
             return Ok(Task::none());
         }
         self.spatial.sync(model);
@@ -221,6 +226,7 @@ impl App {
         let store = self.spatial.store();
         // Read again only the objects that changed since the last read of this definition over this layer tree.
         let part = self
+            .gis
             .networks
             .built
             .get_mut(key)
@@ -256,7 +262,7 @@ impl App {
                 )
             }
         };
-        self.networks.built.insert(
+        self.gis.networks.built.insert(
             key.to_owned(),
             Stamp {
                 def: def.clone(),
@@ -268,7 +274,7 @@ impl App {
             },
         );
         let (done, wait) = oneshot::channel();
-        self.networks.engine.send(Job::Build {
+        self.gis.networks.engine.send(Job::Build {
             network: key.to_owned(),
             name: def.name.clone(),
             rules: Box::new(rules),
@@ -278,8 +284,8 @@ impl App {
             done,
         });
         let task = Task::perform(wait, |r| match r {
-            Ok(built) => Message::Networks(Event::Built(built)),
-            Err(_) => Message::Networks(Event::Built(Built {
+            Ok(built) => Message::Gis(gis::Event::Networks(Event::Built(built))),
+            Err(_) => Message::Gis(gis::Event::Networks(Event::Built(Built {
                 network: String::new(),
                 name: String::new(),
                 problems: vec!["Ağ kurulamadı: ağların iş parçacığı yanıt vermedi.".into()],
@@ -288,7 +294,7 @@ impl App {
                 pieces: 0,
                 millis: 0.0,
                 again: false,
-            })),
+            }))),
         });
         Ok(self.document_reply(task))
     }
@@ -297,6 +303,7 @@ impl App {
         match e {
             Event::Answered(reply) => {
                 if self
+                    .gis
                     .networks
                     .window
                     .as_ref()
@@ -310,7 +317,7 @@ impl App {
             Event::Built(b) => {
                 // The network thread had no last input for a read of the changed objects: read whole next time.
                 if b.again {
-                    self.networks.built.remove(&b.network);
+                    self.gis.networks.built.remove(&b.network);
                 }
                 // What building said, once a build (not every question) says it (the web's service).
                 for p in &b.problems {
@@ -338,10 +345,10 @@ impl App {
     /// The networks built from the drawing left go with it, and Denetle's mark (docs/adr/0209 §12): a network of
     /// the next drawing is built from that drawing whatever it is called.
     pub(crate) fn networks_reset(&mut self) {
-        for k in std::mem::take(&mut self.networks.built).into_keys() {
-            self.networks.engine.send(Job::Drop(k));
+        for k in std::mem::take(&mut self.gis.networks.built).into_keys() {
+            self.gis.networks.engine.send(Job::Drop(k));
         }
-        self.networks.mark = None;
+        self.gis.networks.mark = None;
     }
 
     /// The networks taken out of the project (Ağlar's Kaydet) are let go.
@@ -357,6 +364,7 @@ impl App {
             .map(|n| n.id.as_str())
             .collect();
         let gone: Vec<String> = self
+            .gis
             .networks
             .built
             .keys()
@@ -364,8 +372,8 @@ impl App {
             .cloned()
             .collect();
         for k in gone {
-            self.networks.built.remove(&k);
-            self.networks.engine.send(Job::Drop(k));
+            self.gis.networks.built.remove(&k);
+            self.gis.networks.engine.send(Job::Drop(k));
         }
     }
 }

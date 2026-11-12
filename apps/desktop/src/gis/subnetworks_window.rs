@@ -4,6 +4,7 @@
 //! under it what no controller reaches, what two reach, and whether the attribute the network names for them is up to
 //! date. A row selects its objects; Güncelle writes the names in one undo step and the window reads again.
 
+use crate::gis;
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -58,7 +59,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Subnetworks(event)
+    Message::Gis(gis::Event::Subnetworks(event))
 }
 
 /// The project's networks that define subnetworks.
@@ -109,19 +110,19 @@ impl App {
             .first()
             .map(|n| n.id.clone())
             .unwrap_or_default();
-        self.subnetworks_window = Some(Window {
+        self.gis.subnetworks_window = Some(Window {
             network,
             report: Err(String::new()),
             preview: Err(String::new()),
             chosen: None,
         });
-        self.dialog = Some(Dialog::Subnetworks);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Subnetworks));
         self.refresh_subnetworks();
     }
 
     /// The subnetworks and the preview read again.
     fn refresh_subnetworks(&mut self) {
-        let (Some(w), Some(doc)) = (&self.subnetworks_window, &self.document) else {
+        let (Some(w), Some(doc)) = (&self.gis.subnetworks_window, &self.document) else {
             return;
         };
         let (report, preview) = if w.network.is_empty() {
@@ -141,7 +142,7 @@ impl App {
             };
             (report, preview)
         };
-        if let Some(w) = self.subnetworks_window.as_mut() {
+        if let Some(w) = self.gis.subnetworks_window.as_mut() {
             let count = report.as_ref().map_or(0, |r| r.subnetworks.len());
             w.chosen = w.chosen.filter(|p| match p {
                 Pick::Subnetwork(i) => *i < count,
@@ -153,14 +154,14 @@ impl App {
     }
 
     pub(crate) fn subnetworks_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.subnetworks_window.as_mut() else {
+        let Some(w) = self.gis.subnetworks_window.as_mut() else {
             return Task::none();
         };
         match event {
             Event::Network(k) => {
                 if let Some(n) = defined(self).get(k) {
                     let id = n.id.clone();
-                    if let Some(w) = self.subnetworks_window.as_mut() {
+                    if let Some(w) = self.gis.subnetworks_window.as_mut() {
                         w.network = id;
                         w.chosen = None;
                     }
@@ -175,12 +176,12 @@ impl App {
                 self.update_subnetworks();
             }
             Event::Networks => {
-                self.subnetworks_window = None;
+                self.gis.subnetworks_window = None;
                 self.dialog = None;
                 return self.open_networks();
             }
             Event::Close => {
-                self.subnetworks_window = None;
+                self.gis.subnetworks_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -191,7 +192,12 @@ impl App {
 
     /// A row's objects selected and brought into view.
     fn show_subnetwork(&mut self, pick: Pick) {
-        let Some(Ok(r)) = self.subnetworks_window.as_ref().map(|w| w.report.clone()) else {
+        let Some(Ok(r)) = self
+            .gis
+            .subnetworks_window
+            .as_ref()
+            .map(|w| w.report.clone())
+        else {
             return;
         };
         let uids: Vec<String> = match pick {
@@ -218,6 +224,7 @@ impl App {
     /// Writes the subnetworks' names; whether it wrote (what it did said).
     pub(crate) fn update_subnetworks(&mut self) -> bool {
         let Some(input) = self
+            .gis
             .subnetworks_window
             .as_ref()
             .map(|w| update_input(&w.network))
@@ -247,7 +254,7 @@ impl App {
     }
 
     pub(crate) fn subnetworks_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.subnetworks_window else {
+        let Some(w) = &self.gis.subnetworks_window else {
             return iced::widget::text("").into();
         };
         let format = self.format();
@@ -441,7 +448,7 @@ impl App {
     /// The window's report (tests read it).
     #[cfg(test)]
     pub(crate) fn subnetworks_report(&self) -> Option<&SubnetworksFound> {
-        self.subnetworks_window.as_ref()?.report.as_ref().ok()
+        self.gis.subnetworks_window.as_ref()?.report.as_ref().ok()
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
@@ -449,7 +456,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.subnetworks_window.is_none() {
+        if self.gis.subnetworks_window.is_none() {
             return Err(format!("{SUBNETWORKS_TITLE} penceresi açık değil"));
         }
         Ok(match control {

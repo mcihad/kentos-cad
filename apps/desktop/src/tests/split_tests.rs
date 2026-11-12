@@ -26,7 +26,7 @@ fn temporal() -> App {
     sized(&mut app);
     let task = app.run("time.slider");
     crate::files_testing::drive(&mut app, task);
-    assert!(app.time.slider.open);
+    assert!(app.gis.time.slider.open);
     let _ = app.update(Message::Run("view.split"));
     app
 }
@@ -50,7 +50,7 @@ fn back(app: &mut App, active: bool, years: usize) {
 #[test]
 fn each_view_shows_its_own_time_and_the_active_ones_is_what_is_picked() {
     let mut app = temporal();
-    let latest = app.time.slider.window();
+    let latest = app.gis.time.slider.window();
     back(&mut app, false, 9);
     let ViewTime::Own(m) = app.split.as_ref().expect("split").others[0].viewport.time else {
         panic!("the other view has a time of its own");
@@ -82,14 +82,14 @@ fn each_view_shows_its_own_time_and_the_active_ones_is_what_is_picked() {
     );
     assert!(app.spatial.store().view_shown(1.0));
     assert_eq!(
-        app.time.slider.window(),
+        app.gis.time.slider.window(),
         latest,
         "the slider is the slider's"
     );
     // The slider closed: every view follows again (no window at all).
     let task = app.update(Message::Run("time.slider"));
     crate::files_testing::drive(&mut app, task);
-    assert!(!app.time.slider.open);
+    assert!(!app.gis.time.slider.open);
     assert_eq!(app.viewport.time, ViewTime::Follow);
     assert_eq!(
         app.split.as_ref().expect("split").others[0].viewport.time,

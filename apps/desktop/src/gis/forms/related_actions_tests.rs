@@ -1,6 +1,7 @@
 //! A related item's actions in the form's window (docs/adr/0762): what the form offers, what the
 //! user may, Sil asked in the row, a child opened read-only.
 
+use crate::gis;
 use kentos_commands::RelatedAction as A;
 use kentos_domain::Slot;
 use serde_json::json;
@@ -11,12 +12,12 @@ use crate::forms::entry::Event;
 fn owners(actions: serde_json::Value, locked: bool) -> App {
     let mut app = crate::files_testing::app_with_drawing();
     crate::form_scenes::owner_actions(&mut app, actions, locked);
-    assert!(app.form_entry.is_some(), "the building's form is open");
+    assert!(app.gis.form_entry.is_some(), "the building's form is open");
     app
 }
 
 fn offers(app: &App) -> Vec<(A, bool)> {
-    let e = app.form_entry.as_ref().expect("the form");
+    let e = app.gis.form_entry.as_ref().expect("the form");
     app.related_offers(e, "malikler")
         .into_iter()
         .map(|o| (o.action, o.allowed()))
@@ -24,14 +25,15 @@ fn offers(app: &App) -> Vec<(A, bool)> {
 }
 
 fn linked(app: &App) -> Vec<String> {
-    app.form_entry
+    app.gis
+        .form_entry
         .as_ref()
         .expect("the form")
         .related_of("malikler")
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::FormEntry(e));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(e)));
 }
 
 #[test]
@@ -81,7 +83,7 @@ fn a_locked_child_layer_keeps_reading_open() {
         .map(|(a, _)| a)
         .collect();
     assert_eq!(open, vec![A::View, A::Show]);
-    let e = app.form_entry.as_ref().expect("the form");
+    let e = app.gis.form_entry.as_ref().expect("the form");
     let why = app
         .related_offers(e, "malikler")
         .into_iter()
@@ -119,7 +121,7 @@ fn sil_asks_in_the_row_then_deletes_in_its_own_step() {
             .slot_of(kentos_domain::Uuid::parse_str(&before[0]).expect("an id"))
             .is_none()
     );
-    assert!(app.form_entry.is_some(), "the window stays");
+    assert!(app.gis.form_entry.is_some(), "the window stays");
 }
 
 #[test]
@@ -143,12 +145,12 @@ fn a_child_opened_to_read_is_read_only() {
         &mut app,
         Event::OpenRelated("malikler".into(), first.clone()),
     );
-    let e = app.form_entry.as_ref().expect("the owner's form");
+    let e = app.gis.form_entry.as_ref().expect("the owner's form");
     assert!(e.read_only);
     // Update offered: the same child opens to edit.
     let mut app = owners(json!(["view", "update"]), false);
     event(&mut app, Event::OpenRelated("malikler".into(), first));
-    let e = app.form_entry.as_ref().expect("the owner's form");
+    let e = app.gis.form_entry.as_ref().expect("the owner's form");
     assert!(!e.read_only);
     assert!(app.selection.ids() != [Slot(0)]);
 }
@@ -171,7 +173,7 @@ fn a_data_entry_writes_children_through_their_own_form() {
             (A::Show, true),
         ]
     );
-    let e = app.form_entry.as_ref().expect("the form");
+    let e = app.gis.form_entry.as_ref().expect("the form");
     let link = app
         .related_offers(e, "malikler")
         .into_iter()

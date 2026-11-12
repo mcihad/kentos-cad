@@ -15,6 +15,7 @@
 //! - The photos shown are decoded off the UI thread, each once
 //!   (`photo_view`).
 
+use crate::gis;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -560,7 +561,11 @@ impl App {
             Event::ViewerClose => {
                 self.photo_viewer = None;
                 // A photo opened from Formla düzenle goes back to its form.
-                self.dialog = self.form_entry.is_some().then_some(Dialog::FormEntry);
+                self.dialog = self
+                    .gis
+                    .form_entry
+                    .is_some()
+                    .then_some(Dialog::Gis(gis::GisDialogKind::FormEntry));
             }
         }
         Task::none()

@@ -22,6 +22,7 @@ pub mod layer;
 pub mod scenario;
 pub mod sensors;
 
+use crate::gis;
 use std::time::{Duration, Instant};
 
 use iced::Task;
@@ -245,7 +246,7 @@ pub struct State {
 }
 
 pub(crate) fn msg(event: Event) -> Message {
-    Message::Time(event)
+    Message::Gis(gis::Event::Time(event))
 }
 
 /// Playback's clock: a tick every 40 ms while it plays; each is handled after the drawing showed the last step.
@@ -336,7 +337,7 @@ impl App {
     /// The slider's time as a source question asks it of a temporal layer (docs/adr/0595 §4): the window and the day
     /// known while the slider is open, the layer's own time fields; none for a layer without them or a closed slider.
     pub(crate) fn source_time(&self, layer: &str) -> Option<kentos_commands::QueryTime> {
-        let s = &self.time.slider;
+        let s = &self.gis.time.slider;
         let fields = self
             .document
             .as_ref()?
@@ -369,8 +370,8 @@ impl App {
     /// The slider's time an export writes with (docs/adr/0646 §2): its window and its day known while the slider is
     /// open and Zaman sürgüsünün zamanıyla is ticked; each written layer's own time fields.
     pub(crate) fn export_time(&self) -> Option<kentos_commands::QueryTime> {
-        let s = &self.time.slider;
-        if !self.time.export {
+        let s = &self.gis.time.slider;
+        if !self.gis.time.export {
             return None;
         }
         let utc = |t: f64| {
@@ -391,7 +392,7 @@ impl App {
 
     /// Zaman sürgüsünün zamanıyla, the row an export window shows while the slider is open.
     pub(crate) fn export_time_row(&self) -> Option<iced::Element<'_, Message>> {
-        let s = &self.time.slider;
+        let s = &self.gis.time.slider;
         let window = s.window()?;
         let shown = time::show_window(&window, s.step.unit);
         let known = s
@@ -401,7 +402,7 @@ impl App {
         Some(crate::exchange::words::field(
             "Zaman",
             crate::exchange::words::check(
-                self.time.export,
+                self.gis.time.export,
                 format!("Zaman sürgüsünün zamanıyla: {shown}{known}"),
                 Some(msg(Event::ExportTime)),
             ),
@@ -416,9 +417,15 @@ impl App {
     /// the attribute table's Kaynağın tümü and İstatistik's.
     pub(crate) fn time_sources(&mut self) -> Task<Message> {
         let mut tasks = Vec::new();
-        if let Some(layer) = self.features.whole.layer.clone()
+        if let Some(layer) = self.gis.features.whole.layer.clone()
             && self.whole_link(Some(&layer)).is_some()
-            && self.features.whole.asked.as_ref().map(|a| a.2.time.clone())
+            && self
+                .gis
+                .features
+                .whole
+                .asked
+                .as_ref()
+                .map(|a| a.2.time.clone())
                 != Some(self.source_time(&layer))
         {
             tasks.push(self.whole_ask(false));
@@ -429,10 +436,10 @@ impl App {
 
     /// The slider's window into the geometry store, which every query and the styled layers follow.
     fn time_apply(&mut self) {
-        let window = self.time.slider.window();
+        let window = self.gis.time.slider.window();
         self.spatial.set_time_window(window);
         // Bilinen gün holds while the slider is open (docs/adr/0537).
-        let s = &self.time.slider;
+        let s = &self.gis.time.slider;
         self.spatial
             .set_known_at(if s.open { s.known_at } else { None });
     }
@@ -462,7 +469,7 @@ impl App {
             .leaves()
             .iter()
             .any(|l| l.time.as_ref().is_some_and(|t| t.end.is_some()) && layers.is_visible(&l.id));
-        let s = &mut self.time.slider;
+        let s = &mut self.gis.time.slider;
         s.ranged = ranged;
         s.step = time::auto_step(extent);
         s.count = s.step.n.to_string();
@@ -477,7 +484,7 @@ impl App {
     }
 
     pub(crate) fn time_close(&mut self) {
-        let s = &mut self.time.slider;
+        let s = &mut self.gis.time.slider;
         s.open = false;
         s.playing = false;
         self.time_apply();
@@ -485,7 +492,7 @@ impl App {
 
     /// Zaman sürgüsü (`time.slider`): opens or closes it.
     pub(crate) fn time_toggle(&mut self) {
-        if self.time.slider.open {
+        if self.gis.time.slider.open {
             self.time_close();
         } else if let Some(why) = self.time_show() {
             self.warn(why);
@@ -493,7 +500,7 @@ impl App {
     }
 
     fn time_go(&mut self, k: i64) {
-        let s = &mut self.time.slider;
+        let s = &mut self.gis.time.slider;
         let next = k.clamp(0, s.last);
         if next != s.position {
             s.position = next;
@@ -502,7 +509,7 @@ impl App {
     }
 
     fn time_step(&mut self, step: Step) {
-        let s = &mut self.time.slider;
+        let s = &mut self.gis.time.slider;
         let at = s.moment();
         let before = s.step;
         s.step = step;
@@ -518,7 +525,7 @@ impl App {
 
     /// The drawing changed: the range and the positions again, the position at the nearest moment.
     pub(crate) fn time_refresh(&mut self) {
-        if !self.time.slider.open {
+        if !self.gis.time.slider.open {
             return;
         }
         let summary = self.spatial.time_summary();
@@ -530,7 +537,7 @@ impl App {
             self.time_close();
             return;
         };
-        let s = &mut self.time.slider;
+        let s = &mut self.gis.time.slider;
         if s.extent == Some(extent) {
             return;
         }
@@ -546,31 +553,31 @@ impl App {
     }
 
     pub(crate) fn time_event(&mut self, event: Event) -> Task<Message> {
-        let last = self.time.slider.last;
-        let position = self.time.slider.position;
+        let last = self.gis.time.slider.last;
+        let position = self.gis.time.slider.position;
         match event {
             Event::First => {
-                self.time.slider.playing = false;
+                self.gis.time.slider.playing = false;
                 self.time_go(0);
             }
             Event::Prev => {
-                self.time.slider.playing = false;
+                self.gis.time.slider.playing = false;
                 self.time_go(position - 1);
             }
             Event::Next => {
-                self.time.slider.playing = false;
+                self.gis.time.slider.playing = false;
                 self.time_go(position + 1);
             }
             Event::Last => {
-                self.time.slider.playing = false;
+                self.gis.time.slider.playing = false;
                 self.time_go(last);
             }
             Event::Go(k) => {
-                self.time.slider.playing = false;
+                self.gis.time.slider.playing = false;
                 self.time_go(k);
             }
             Event::PlayStop => {
-                let s = &mut self.time.slider;
+                let s = &mut self.gis.time.slider;
                 if s.playing {
                     s.playing = false;
                 } else if s.open {
@@ -578,13 +585,13 @@ impl App {
                     if s.position >= s.last {
                         self.time_go(0);
                     }
-                    let s = &mut self.time.slider;
+                    let s = &mut self.gis.time.slider;
                     s.playing = true;
                     s.stepped = Some(Instant::now());
                 }
             }
             Event::Tick => {
-                let s = &self.time.slider;
+                let s = &self.gis.time.slider;
                 // A tick comes after the drawing showed the last step; the next waits for the speed.
                 let due = Duration::from_secs_f64(1.0 / SPEEDS[s.speed.min(SPEEDS.len() - 1)]);
                 if !s.playing || s.stepped.is_some_and(|t| t.elapsed() < due) {
@@ -594,23 +601,23 @@ impl App {
                     if s.looping {
                         self.time_go(0);
                     } else {
-                        self.time.slider.playing = false;
+                        self.gis.time.slider.playing = false;
                         return Task::none();
                     }
                 } else {
                     self.time_go(position + 1);
                 }
-                self.time.slider.stepped = Some(Instant::now());
+                self.gis.time.slider.stepped = Some(Instant::now());
             }
-            Event::Count(text) => self.time.slider.count = text,
-            Event::Known(text) => self.time.slider.known = text,
+            Event::Count(text) => self.gis.time.slider.count = text,
+            Event::Known(text) => self.gis.time.slider.known = text,
             Event::KnownDone => {
-                let text = self.time.slider.known.clone();
+                let text = self.gis.time.slider.known.clone();
                 match time::read(&text) {
-                    time::Read::Empty => self.time.slider.known_at = None,
+                    time::Read::Empty => self.gis.time.slider.known_at = None,
                     time::Read::Moment(t) => {
-                        self.time.slider.known_at = Some(t);
-                        self.time.slider.known = time::show(t, Unit::Day);
+                        self.gis.time.slider.known_at = Some(t);
+                        self.gis.time.slider.known = time::show(t, Unit::Day);
                     }
                     time::Read::Unreadable => {
                         self.warn("Bilinen gün bir tarih olmalı (01.06.2024 ya da 2024-06-01); boş bırakılırsa bütün sürümler.");
@@ -620,7 +627,7 @@ impl App {
                 self.time_apply();
             }
             Event::CountDone => {
-                let s = &self.time.slider;
+                let s = &self.gis.time.slider;
                 let n = s
                     .count
                     .trim()
@@ -634,25 +641,25 @@ impl App {
                     }),
                     Some(_) => {}
                     None => {
-                        self.time.slider.count = self.time.slider.step.n.to_string();
+                        self.gis.time.slider.count = self.gis.time.slider.step.n.to_string();
                         self.warn("Adım 1 ile 999 birim arasında olmalı.");
                     }
                 }
             }
             Event::Unit(i) => {
                 if let Some(unit) = Unit::ALL.get(i).copied() {
-                    let n = self.time.slider.step.n;
+                    let n = self.gis.time.slider.step.n;
                     self.time_step(Step { n, unit });
                 }
             }
             Event::Ranged(ranged) => {
-                if self.time.slider.ranged != ranged {
-                    self.time.slider.ranged = ranged;
+                if self.gis.time.slider.ranged != ranged {
+                    self.gis.time.slider.ranged = ranged;
                     self.time_apply();
                 }
             }
-            Event::Speed(i) => self.time.slider.speed = i.min(SPEEDS.len() - 1),
-            Event::Loop => self.time.slider.looping = !self.time.slider.looping,
+            Event::Speed(i) => self.gis.time.slider.speed = i.min(SPEEDS.len() - 1),
+            Event::Loop => self.gis.time.slider.looping = !self.gis.time.slider.looping,
             Event::Close => self.time_close(),
             Event::OpenLayer(id) => self.open_time_layer(Some(id)),
             Event::Show(id) => self.show_scenario(&id),
@@ -663,13 +670,13 @@ impl App {
             Event::Scenario(e) => return self.scenario_event(e),
             Event::Sensors(e) => return self.sensors_event(e),
             Event::ExportTime => {
-                self.time.export = !self.time.export;
+                self.gis.time.export = !self.gis.time.export;
                 self.export_replan();
                 return Task::none();
             }
         }
         // The latest each sensor had at the slider's moment.
-        if self.time.sensors.is_some() {
+        if self.gis.time.sensors.is_some() {
             self.sensors_refresh();
         }
         Task::none()
@@ -795,7 +802,7 @@ impl App {
         let Some(rule) = layer.time.clone() else {
             return;
         };
-        let s = &self.time.slider;
+        let s = &self.gis.time.slider;
         let dates = if s.open {
             Some((
                 s.position_text((s.position - 1).max(0)),

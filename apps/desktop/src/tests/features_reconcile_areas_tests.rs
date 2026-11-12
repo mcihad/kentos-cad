@@ -4,6 +4,7 @@
 //! when set to 0.2, and Eşleştir writes the agreed building as its most trusted footprint with Örtüşme, one undo step.
 //! And the pictures.
 
+use crate::gis;
 use kentos_commands::Entity;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -27,12 +28,20 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("map.featuresReconcile"));
-    assert_eq!(app.dialog, Some(Dialog::FeaturesReconcile));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::FeaturesReconcile))
+    );
     app
 }
 
 fn answer(app: &App) -> kentos_commands::FeaturesReconciled {
-    app.features_reconcile.answer.clone().expect("an answer").expect("reconciled")
+    app.gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled")
 }
 
 #[test]
@@ -45,14 +54,28 @@ fn footprints_agree_by_their_overlap_and_uzlastir_writes_the_trusted_one() {
     assert_eq!(statuses, wanted);
     let building = a.groups.iter().find(|g| g.status == "agreed").expect("the agreed building");
     let ratio = building.overlap.expect("an area group's ratio");
-    assert!((ratio - want[0]["overlap"].as_f64().expect("ratio")).abs() < 1e-9 && ratio > 0.85, "{ratio}");
+    assert!(
+        (ratio - want[0]["overlap"].as_f64().expect("ratio")).abs() < 1e-9 && ratio > 0.85,
+        "{ratio}"
+    );
     // 0.2: the two footprints overlapping 0.25 are one group.
-    let _ = app.update(Message::FeaturesReconcile(R::Overlap(0.2)));
-    assert_eq!(answer(&app).groups.iter().filter(|g| g.status == "agreed").count(), 2);
-    let _ = app.update(Message::FeaturesReconcile(R::Overlap(0.5)));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Overlap(0.2))));
+    assert_eq!(
+        answer(&app)
+            .groups
+            .iter()
+            .filter(|g| g.status == "agreed")
+            .count(),
+        2
+    );
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Overlap(0.5))));
     // Eşleştir: the agreed footprint on Bina izleri, with its overlap, one undo step.
-    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app.update(Message::FeaturesReconcile(R::Run));
+    let before = app
+        .document
+        .as_ref()
+        .map(|d| d.model.entities().count())
+        .unwrap_or(0);
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Run)));
     let doc = &app.document.as_ref().expect("a drawing").model;
     let written: Vec<&Entity> = doc
         .entities()
@@ -91,10 +114,13 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-plan-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::FeaturesReconcile(R::Run));
-        let _ = app.update(Message::FeaturesReconcile(R::Close));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Run)));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Close)));
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-yazildi-{name}.png"));

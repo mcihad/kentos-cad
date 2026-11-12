@@ -2,6 +2,7 @@
 //! step by step, and reads back what a step can see (the web runner's
 //! `act` and `observe`).
 
+use crate::gis;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -777,7 +778,7 @@ impl<'a> Player<'a> {
         }
         // Zaman sürgüsü's bar, a button by its words (docs/adr/0210 §10).
         if let Some(words) = &step.timebar {
-            if !self.app.time.slider.open {
+            if !self.app.gis.time.slider.open {
                 return Err("Zaman sürgüsü açık değil".to_owned());
             }
             use crate::temporal::Event;
@@ -792,7 +793,7 @@ impl<'a> Player<'a> {
                 "Aralık" => Event::Ranged(true),
                 other => return Err(format!("Zaman sürgüsünde “{other}” düğmesi yok")),
             };
-            return self.apply(Message::Time(event));
+            return self.apply(Message::Gis(gis::Event::Time(event)));
         }
         // The bonds' refusal card, a button by its words (docs/adr/0790 §2).
         if let Some(words) = &step.bond_notice {
@@ -877,8 +878,8 @@ impl<'a> Player<'a> {
                 _ => Modifiers::empty(),
             };
             self.apply(Message::Modifiers(held))?;
-            let done = self.apply(Message::Charts(crate::charts::Event::Press(
-                n.checked_sub(1),
+            let done = self.apply(Message::Gis(gis::Event::Charts(
+                crate::charts::Event::Press(n.checked_sub(1)),
             )));
             self.apply(Message::Modifiers(Modifiers::empty()))?;
             return done;
@@ -1453,8 +1454,8 @@ impl<'a> Player<'a> {
                 .map(|p| [p.x, p.y]),
             overview: app.overview_extent(),
             magnifier: app.magnifier_state(),
-            time: app.time.slider.open.then(|| {
-                let s = &app.time.slider;
+            time: app.gis.time.slider.open.then(|| {
+                let s = &app.gis.time.slider;
                 (s.label(), s.position, s.last)
             }),
             active_layer: doc.map_or_else(Vec::new, |d| {

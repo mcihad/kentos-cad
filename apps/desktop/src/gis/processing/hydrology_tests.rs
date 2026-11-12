@@ -6,6 +6,7 @@
 //! their streams and writes their watersheds; Havzalar finds the streams
 //! the road crosses.
 
+use crate::gis;
 use kentos_commands::{Entity, RasterSample};
 use serde_json::{Value, json};
 
@@ -14,7 +15,10 @@ use crate::app::{App, Message};
 use crate::hydrology_scenes::open_hydrology;
 
 fn value(app: &mut App, name: &str, v: Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 fn run(app: &mut App) -> RunStatus {
@@ -147,7 +151,7 @@ fn the_outlets_watersheds_and_the_roads_crossings() {
         // A watershed is more than the outlet's cell and less than the model.
         assert!(area > 1000.0 && area < 768.0 * 518.4, "{area}");
     }
-    let _ = app.update(Message::Processing(Event::Close));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     // The road crosses the eastern streams: a basin each, by km on the road.
     open(&mut app, "processing.run.hydrology.basins");
     value(&mut app, "mode", json!("route"));

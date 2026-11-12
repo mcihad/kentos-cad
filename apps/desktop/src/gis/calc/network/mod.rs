@@ -707,7 +707,7 @@ impl crate::app::App {
     pub(crate) fn network_event(&mut self, e: Event) -> Task<Message> {
         let task = match e {
             Event::Kind(kind) => {
-                self.calc.level.kind = kind;
+                self.gis.calc.level.kind = kind;
                 Task::none()
             }
             Event::Cell(sheet, row, col, text) => {
@@ -744,20 +744,20 @@ impl crate::app::App {
     /// A table of the windows.
     fn network_table(&mut self, sheet: Sheet) -> &mut Cells {
         match sheet {
-            Sheet::NetworkKnown => &mut self.calc.network.known,
-            Sheet::NetworkRows => &mut self.calc.network.rows,
-            Sheet::LevelKnown => &mut self.calc.level.known,
-            Sheet::LevelRows => &mut self.calc.level.rows,
-            Sheet::LevelLeapfrog => &mut self.calc.level.leapfrog,
+            Sheet::NetworkKnown => &mut self.gis.calc.network.known,
+            Sheet::NetworkRows => &mut self.gis.calc.network.rows,
+            Sheet::LevelKnown => &mut self.gis.calc.level.known,
+            Sheet::LevelRows => &mut self.gis.calc.level.rows,
+            Sheet::LevelLeapfrog => &mut self.gis.calc.level.leapfrog,
         }
     }
 
     /// Both windows solved again on the open drawing.
     pub(crate) fn network_solve(&mut self) {
         if let Some(doc) = &self.document {
-            match self.calc.open {
-                Some(super::Window::Network) => self.calc.network.solve(&doc.model),
-                Some(super::Window::Level) => self.calc.level.solve(&doc.model),
+            match self.gis.calc.open {
+                Some(super::Window::Network) => self.gis.calc.network.solve(&doc.model),
+                Some(super::Window::Level) => self.gis.calc.level.solve(&doc.model),
                 _ => {}
             }
         }
@@ -765,7 +765,7 @@ impl crate::app::App {
 
     /// ↑ or ↓ in a field of the windows: the table the field is in.
     pub(crate) fn network_arrow(&mut self, up: bool, from: &iced::widget::Id) -> Task<Message> {
-        let sheets: &[Sheet] = match self.calc.open {
+        let sheets: &[Sheet] = match self.gis.calc.open {
             Some(super::Window::Level) => &[Sheet::LevelKnown, Sheet::LevelRows, Sheet::LevelLeapfrog],
             _ => &[Sheet::NetworkKnown, Sheet::NetworkRows],
         };

@@ -2,12 +2,13 @@
 //! sections, rules and policies, retired values, lists and packages, links, child forms, snapshots and searched lists.
 
 use super::*;
+use crate::gis;
 
 #[test]
 fn a_publish_that_breaks_records_asks_first_and_publishes_when_asked_again() {
     let mut app = crate::files_testing::app_with_drawing();
     breaking_publish(&mut app);
-    let w = app.forms_window.as_ref().expect("the window");
+    let w = app.gis.forms_window.as_ref().expect("the window");
     let b = w.breaking.as_ref().expect("asked about the broken records");
     assert_eq!(
         b.records, 2,
@@ -51,10 +52,13 @@ fn a_reviewer_s_notes_go_with_the_step_and_show_under_the_fields_after() {
 fn a_new_release_opens_the_record_again_keeping_what_was_typed() {
     let mut app = crate::files_testing::app_with_drawing();
     new_release(&mut app);
-    assert!(app.form_entry.is_some(), "the window stays on the conflict");
+    assert!(
+        app.gis.form_entry.is_some(),
+        "the window stays on the conflict"
+    );
     entry(&mut app, entry::Event::Reload);
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none(), "written by the new release");
+    assert!(app.gis.form_entry.is_none(), "written by the new release");
     let kat = app
         .document
         .as_ref()
@@ -119,21 +123,24 @@ fn a_step_action_takes_its_step_and_a_show_action_selects_the_record() {
 fn the_attachments_facts_are_read_by_the_command() {
     let mut app = crate::files_testing::app_with_drawing();
     attachment_facts(&mut app);
-    assert!(app.form_entry.is_some());
+    assert!(app.gis.form_entry.is_some());
 }
 
 #[test]
 fn a_divider_and_an_action_show_and_the_action_opens_its_tool_on_the_record() {
     let mut app = crate::files_testing::app_with_drawing();
     meters_chart(&mut app);
-    assert!(app.form_entry.is_some(), "the form");
+    assert!(app.gis.form_entry.is_some(), "the form");
     entry(&mut app, entry::Event::RunAction("hesapla".into()));
     assert_eq!(
         app.selection.ids(),
         [Slot(1)],
         "the record is the tool's input"
     );
-    assert!(app.processing.dialog.is_some(), "the tool's window opened");
+    assert!(
+        app.gis.processing.dialog.is_some(),
+        "the tool's window opened"
+    );
 }
 
 #[test]
@@ -161,10 +168,10 @@ fn comments_go_through_cad_forms_edit_and_are_settled() {
 fn a_draft_lost_with_the_window_is_offered_back_and_saving_forgets_it() {
     let mut app = crate::files_testing::app_with_drawing();
     meters_kept(&mut app);
-    let w = app.forms_window.as_ref().expect("the window");
+    let w = app.gis.forms_window.as_ref().expect("the window");
     assert!(w.kept.is_some(), "the kept draft is offered");
     designer(&mut app, designer::Event::RestoreDraft);
-    let w = app.forms_window.as_ref().expect("the window");
+    let w = app.gis.forms_window.as_ref().expect("the window");
     assert!(w.dirty);
     assert!(
         w.body
@@ -179,7 +186,7 @@ fn a_draft_lost_with_the_window_is_offered_back_and_saving_forgets_it() {
     designer(&mut app, designer::Event::Save);
     let key = app.form_project_key();
     assert_eq!(
-        app.form_files.kept_draft(&key, "bina"),
+        app.gis.form_files.kept_draft(&key, "bina"),
         None,
         "saved: nothing kept"
     );
@@ -189,7 +196,7 @@ fn a_draft_lost_with_the_window_is_offered_back_and_saving_forgets_it() {
 fn a_section_goes_into_the_library_and_comes_back_into_another_form_with_its_fields_bound() {
     let mut app = crate::files_testing::app_with_drawing();
     meters_sections(&mut app);
-    let sections = app.form_files.sections();
+    let sections = app.gis.form_files.sections();
     assert_eq!(
         sections
             .iter()
@@ -199,7 +206,7 @@ fn a_section_goes_into_the_library_and_comes_back_into_another_form_with_its_fie
     );
     // Bina adı into the meter form: its Ad field is not on the meter layer, the item goes in, said.
     designer(&mut app, designer::Event::InsertSection(2));
-    let w = app.forms_window.as_ref().expect("the window");
+    let w = app.gis.forms_window.as_ref().expect("the window");
     assert!(w.dirty);
     assert!(
         app.log
@@ -222,7 +229,7 @@ fn a_tables_rules_are_written_through_the_window_in_one_step() {
     assert!(rows.look(0, Some("Kod")).is_plain());
     run(&mut app, "data.tableStyles");
     let step = |app: &mut App, e: Event| {
-        let _ = app.update(Message::TableStyles(e));
+        let _ = app.update(Message::Gis(gis::Event::TableStyles(e)));
     };
     step(&mut app, Event::New);
     step(&mut app, Event::Condition("Kat < 3".into()));
@@ -232,13 +239,13 @@ fn a_tables_rules_are_written_through_the_window_in_one_step() {
     step(&mut app, Event::Condition("Kat <".into()));
     step(&mut app, Event::Save);
     assert!(
-        app.table_styles.is_some(),
+        app.gis.table_styles.is_some(),
         "a broken condition is not written"
     );
     step(&mut app, Event::Condition("Kat < 3".into()));
     step(&mut app, Event::Save);
     assert!(
-        app.table_styles.is_none(),
+        app.gis.table_styles.is_none(),
         "Kaydet closes the window: {:?}",
         app.log.lines().map(|l| &l.text).collect::<Vec<_>>()
     );
@@ -268,7 +275,9 @@ fn a_tables_rules_are_written_through_the_window_in_one_step() {
 fn the_fields_window_writes_the_split_and_merge_policies() {
     let mut app = crate::files_testing::app_with_drawing();
     field_policies(&mut app);
-    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Save));
+    let _ = app.update(Message::Gis(gis::Event::LayerFields(
+        crate::layer_fields::Event::Save,
+    )));
     let doc = app.document.as_ref().unwrap();
     let kat = &doc.model.layers().get("bina").unwrap().fields[2];
     assert_eq!(kat.name, "Kat");
@@ -306,24 +315,24 @@ fn a_retired_value_stays_where_it_is_and_is_not_written_anew() {
     // B-1 is in a good state: the form does not write “orta” anew.
     app.selection.set([Slot(1)]);
     run(&mut app, "data.formEdit");
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Durum".into(),
         "orta".into(),
-    )));
-    let _ = app.update(Message::FormEntry(entry::Event::Save));
-    assert!(app.form_entry.is_some(), "refused: the window stays");
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
+    assert!(app.gis.form_entry.is_some(), "refused: the window stays");
     assert_eq!(attrs(&app, 1).get("Durum").map(String::as_str), Some("iyi"));
-    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
-    let _ = app.update(Message::FormEntry(entry::Event::Discard));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Cancel)));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Discard)));
     // B-3 holds it: its floor count is written and its state kept.
     app.selection.set([Slot(3)]);
     run(&mut app, "data.formEdit");
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Kat".into(),
         "3".into(),
-    )));
-    let _ = app.update(Message::FormEntry(entry::Event::Save));
-    assert!(app.form_entry.is_none());
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
+    assert!(app.gis.form_entry.is_none());
     assert_eq!(
         attrs(&app, 3).get("Durum").map(String::as_str),
         Some("orta")
@@ -335,12 +344,17 @@ fn a_retired_value_stays_where_it_is_and_is_not_written_anew() {
 fn an_overridable_calculation_follows_until_typed_over() {
     let mut app = crate::files_testing::app_with_drawing();
     overridable_height(&mut app);
-    let value = |app: &App, name: &str| app.form_entry.as_ref().and_then(|e| e.after_value(name));
+    let value = |app: &App, name: &str| {
+        app.gis
+            .form_entry
+            .as_ref()
+            .and_then(|e| e.after_value(name))
+    };
     let typed = |app: &mut App, key: &str, text: &str| {
-        let _ = app.update(Message::FormEntry(entry::Event::Value(
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
             key.into(),
             text.into(),
-        )));
+        ))));
     };
     assert_eq!(
         value(&app, "Yükseklik").as_deref(),
@@ -360,7 +374,7 @@ fn an_overridable_calculation_follows_until_typed_over() {
         Some("10.5"),
         "typed over: kept"
     );
-    let _ = app.update(Message::FormEntry(entry::Event::Save));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
     assert_eq!(
         attrs(&app, 1).get("Yükseklik").map(String::as_str),
         Some("10.5")
@@ -371,7 +385,7 @@ fn an_overridable_calculation_follows_until_typed_over() {
     assert_eq!(value(&app, "Yükseklik").as_deref(), Some("10.5"));
     typed(&mut app, "Yükseklik", "");
     assert_eq!(value(&app, "Yükseklik").as_deref(), Some("18"));
-    let _ = app.update(Message::FormEntry(entry::Event::Save));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
     assert_eq!(
         attrs(&app, 1).get("Yükseklik").map(String::as_str),
         Some("18")
@@ -383,16 +397,18 @@ fn the_subtypes_window_writes_through_its_command_and_closes() {
     use crate::forms::subtypes::Event;
     let mut app = crate::files_testing::app_with_drawing();
     subtypes_window(&mut app);
-    let w = app.subtypes.as_ref().expect("the window");
+    let w = app.gis.subtypes.as_ref().expect("the window");
     assert_eq!(w.types.len(), 3);
     // Depo is no longer a subtype; the industrial one offers concrete only.
-    let _ = app.update(Message::Subtypes(Event::Toggle("depo".into())));
-    let _ = app.update(Message::Subtypes(Event::Offer(
+    let _ = app.update(Message::Gis(gis::Event::Subtypes(Event::Toggle(
+        "depo".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Subtypes(Event::Offer(
         "Malzeme".into(),
         "celik".into(),
-    )));
-    let _ = app.update(Message::Subtypes(Event::Save));
-    assert!(app.subtypes.is_none(), "Kaydet closes the window");
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::Subtypes(Event::Save)));
+    assert!(app.gis.subtypes.is_none(), "Kaydet closes the window");
     let doc = &app.document.as_ref().unwrap().model;
     let s = doc.layers().get("bina").unwrap().subtypes.clone().unwrap();
     assert_eq!(s.types.len(), 2);
@@ -408,12 +424,12 @@ fn the_subtypes_window_writes_through_its_command_and_closes() {
 fn a_step_of_the_workflow_writes_the_state_and_closes_the_editor() {
     let mut app = crate::files_testing::app_with_drawing();
     workflow_steps(&mut app);
-    assert!(app.form_entry.is_some());
-    let _ = app.update(Message::FormEntry(entry::Event::Transition(
-        "Onayla".into(),
+    assert!(app.gis.form_entry.is_some());
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(
+        entry::Event::Transition("Onayla".into()),
     )));
     assert!(
-        app.form_entry.is_none(),
+        app.gis.form_entry.is_none(),
         "the editor closes when the step went in"
     );
     let doc = &app.document.as_ref().unwrap().model;
@@ -424,22 +440,22 @@ fn a_step_of_the_workflow_writes_the_state_and_closes_the_editor() {
     );
     // The approved building is locked: Kaydet is off, Düzelt asks for a reason.
     workflow_locked(&mut app);
-    let _ = app.update(Message::FormEntry(entry::Event::Transition(
-        "Düzelt".into(),
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(
+        entry::Event::Transition("Düzelt".into()),
     )));
     assert!(
-        app.form_entry.is_some(),
+        app.gis.form_entry.is_some(),
         "no reason: the step is refused, the editor stays"
     );
     // Its reason stays open on the locked record; written, Düzelt opens it again.
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Gerekçe".into(),
         "Kat yeniden ölçülecek.".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(
+        entry::Event::Transition("Düzelt".into()),
     )));
-    let _ = app.update(Message::FormEntry(entry::Event::Transition(
-        "Düzelt".into(),
-    )));
-    assert!(app.form_entry.is_none());
+    assert!(app.gis.form_entry.is_none());
     let doc = &app.document.as_ref().unwrap().model;
     let attrs = &doc.get(Slot(3)).unwrap().base().attrs;
     assert_eq!(attrs.get("Durum").map(String::as_str), Some("iade"));
@@ -459,9 +475,11 @@ fn a_step_of_the_workflow_writes_the_state_and_closes_the_editor() {
 fn a_list_dropping_a_code_moves_its_records_in_one_undo_step() {
     let mut app = crate::files_testing::app_with_drawing();
     domains_window(&mut app);
-    let _ = app.update(Message::Domains(crate::forms::domains::Event::Save));
+    let _ = app.update(Message::Gis(gis::Event::Domains(
+        crate::forms::domains::Event::Save,
+    )));
     assert!(
-        app.domains.is_none(),
+        app.gis.domains.is_none(),
         "the window closes when the lists went in"
     );
     let doc = &app.document.as_ref().unwrap().model;
@@ -510,11 +528,16 @@ fn a_code_records_hold_keeps_the_window_open_until_it_is_moved() {
     let mut app = crate::files_testing::app_with_drawing();
     listed_buildings(&mut app);
     run(&mut app, "data.domains");
-    let _ = app.update(Message::Domains(crate::forms::domains::Event::RemoveCode(
-        2,
+    let _ = app.update(Message::Gis(gis::Event::Domains(
+        crate::forms::domains::Event::RemoveCode(2),
     )));
-    let _ = app.update(Message::Domains(crate::forms::domains::Event::Save));
-    assert!(app.domains.is_some(), "refused: Yığma is held by a depot");
+    let _ = app.update(Message::Gis(gis::Event::Domains(
+        crate::forms::domains::Event::Save,
+    )));
+    assert!(
+        app.gis.domains.is_some(),
+        "refused: Yığma is held by a depot"
+    );
     let doc = &app.document.as_ref().unwrap().model;
     assert!(!doc.can_undo() || doc.settings().domains[0].values.as_ref().map(Vec::len) == Some(4));
 }
@@ -523,17 +546,20 @@ fn a_code_records_hold_keeps_the_window_open_until_it_is_moved() {
 fn a_draft_is_kept_incomplete_and_a_valid_step_refuses_it() {
     let mut app = crate::files_testing::app_with_drawing();
     workflow_draft(&mut app);
-    let _ = app.update(Message::FormEntry(entry::Event::Save));
-    assert!(app.form_entry.is_none(), "a draft saves with its warning");
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
+    assert!(
+        app.gis.form_entry.is_none(),
+        "a draft saves with its warning"
+    );
     let doc = &app.document.as_ref().unwrap().model;
     assert_eq!(doc.get(Slot(1)).unwrap().base().attrs.get("Kat"), None);
     // Gönder asks for a valid record: refused, nothing written.
     app.selection.set([Slot(1)]);
     run(&mut app, "data.formEdit");
-    let _ = app.update(Message::FormEntry(entry::Event::Transition(
-        "Gönder".into(),
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(
+        entry::Event::Transition("Gönder".into()),
     )));
-    assert!(app.form_entry.is_some());
+    assert!(app.gis.form_entry.is_some());
     let doc = &app.document.as_ref().unwrap().model;
     assert_eq!(
         doc.get(Slot(1))
@@ -564,7 +590,7 @@ fn a_form_package_goes_to_another_layer_with_its_fields() {
         Some("Durum")
     );
     assert_eq!(
-        app.forms_window.as_ref().and_then(|w| w.chosen.clone()),
+        app.gis.forms_window.as_ref().and_then(|w| w.chosen.clone()),
         Some(copy.id.clone())
     );
 }
@@ -580,7 +606,8 @@ fn a_rule_is_shown_on_its_field_and_a_check_kept_for_saving_waits_for_kaydet() {
         entry::Event::Value("Bitiş".into(), "01.02.2026".into()),
     );
     let codes = |app: &App| -> Vec<String> {
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .map(|e| e.issues.iter().map(|i| i.code.clone()).collect())
             .unwrap_or_default()
@@ -597,14 +624,14 @@ fn a_rule_is_shown_on_its_field_and_a_check_kept_for_saving_waits_for_kaydet() {
     );
     assert!(!codes(&app).contains(&"form_check_failed".to_owned()));
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_some(), "the check refused Kaydet");
+    assert!(app.gis.form_entry.is_some(), "the check refused Kaydet");
     assert!(codes(&app).contains(&"form_check_failed".to_owned()));
     entry(
         &mut app,
         entry::Event::Value("Açıklama".into(), "Kolonlarda çatlak.".into()),
     );
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none(), "written and closed");
+    assert!(app.gis.form_entry.is_none(), "written and closed");
 }
 
 /// docs/adr/0440 §2: a link made in the window waits for Kaydet and goes in with the record, one
@@ -613,7 +640,7 @@ fn a_rule_is_shown_on_its_field_and_a_check_kept_for_saving_waits_for_kaydet() {
 fn a_link_waits_for_kaydet_and_goes_in_with_the_record() {
     let mut app = crate::files_testing::app_with_drawing();
     meters_pending(&mut app);
-    let e = app.form_entry.as_ref().expect("open");
+    let e = app.gis.form_entry.as_ref().expect("open");
     assert_eq!(e.pending_for_tests(), 1);
     assert_eq!(
         e.related_of("sayaclar").len(),
@@ -635,7 +662,7 @@ fn a_link_waits_for_kaydet_and_goes_in_with_the_record() {
     };
     assert_eq!(link(&app), None, "not written yet");
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none());
+    assert!(app.gis.form_entry.is_none());
     let parent = app
         .document
         .as_ref()
@@ -677,17 +704,21 @@ fn a_link_waits_for_kaydet_and_goes_in_with_the_record() {
 fn a_child_form_opens_over_its_parent_and_the_parent_comes_back_with_its_draft() {
     let mut app = crate::files_testing::app_with_drawing();
     meters_nested(&mut app);
-    assert_eq!(app.form_stack.len(), 1, "the building waits");
+    assert_eq!(app.gis.form_stack.len(), 1, "the building waits");
     assert_eq!(
-        app.form_entry.as_ref().map(|e| e.name.clone()).as_deref(),
+        app.gis
+            .form_entry
+            .as_ref()
+            .map(|e| e.name.clone())
+            .as_deref(),
         Some("Sayaç")
     );
     entry(&mut app, entry::Event::Value("no".into(), "S-900".into()));
     entry(&mut app, entry::Event::Save);
-    let e = app.form_entry.as_ref().expect("the building back");
+    let e = app.gis.form_entry.as_ref().expect("the building back");
     assert_eq!(e.name, "Bina");
     assert!(e.dirty_now(), "its typed name kept");
-    assert!(app.form_stack.is_empty());
+    assert!(app.gis.form_stack.is_empty());
     let meter = &app
         .document
         .as_ref()
@@ -729,7 +760,7 @@ fn a_step_s_snapshot_is_logged_and_a_later_change_is_said() {
 fn a_chosen_parcel_is_copied_with_its_stamp_and_shown_with_its_columns() {
     let mut app = crate::files_testing::app_with_drawing();
     sources_entry(&mut app);
-    let e = app.form_entry.as_ref().expect("open");
+    let e = app.gis.form_entry.as_ref().expect("open");
     let state = e.state_for_tests("parsel").expect("the parcel's state");
     let offered: Vec<&str> = state
         .options
@@ -740,7 +771,7 @@ fn a_chosen_parcel_is_copied_with_its_stamp_and_shown_with_its_columns() {
     let preview = state.preview.as_ref().expect("the chosen parcel's columns");
     assert_eq!(preview[0].value, "450.50");
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none(), "written and closed");
+    assert!(app.gis.form_entry.is_none(), "written and closed");
     let doc = &app.document.as_ref().unwrap().model;
     let attrs = &doc.get(Slot(5)).unwrap().base().attrs;
     assert_eq!(attrs.get("Ada").map(String::as_str), Some("101"));
@@ -762,22 +793,24 @@ fn a_searched_list_takes_the_newest_answer_and_drops_a_late_one() {
     sources(&mut app);
     app.selection.set([Slot(6)]);
     run(&mut app, "data.formEdit");
-    let _ = app.update(Message::FormEntry(entry::Event::Query(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Query(
         "Mahalle".into(),
         "k".into(),
-    )));
+    ))));
     let first = app
+        .gis
         .form_entry
         .as_ref()
         .unwrap()
         .search_for_tests("Mahalle")
         .0
         .unwrap();
-    let _ = app.update(Message::FormEntry(entry::Event::Query(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Query(
         "Mahalle".into(),
         "ka".into(),
-    )));
+    ))));
     let second = app
+        .gis
         .form_entry
         .as_ref()
         .unwrap()
@@ -785,12 +818,13 @@ fn a_searched_list_takes_the_newest_answer_and_drops_a_late_one() {
         .0
         .unwrap();
     assert!(second > first);
-    let _ = app.update(Message::FormEntry(entry::Event::Search(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Search(
         "Mahalle".into(),
         first,
-    )));
+    ))));
     assert_eq!(
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .unwrap()
             .search_for_tests("Mahalle")
@@ -798,12 +832,13 @@ fn a_searched_list_takes_the_newest_answer_and_drops_a_late_one() {
         None,
         "a late answer is dropped"
     );
-    let _ = app.update(Message::FormEntry(entry::Event::Search(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Search(
         "Mahalle".into(),
         second,
-    )));
+    ))));
     assert_eq!(
-        app.form_entry
+        app.gis
+            .form_entry
             .as_ref()
             .unwrap()
             .search_for_tests("Mahalle")
@@ -812,12 +847,17 @@ fn a_searched_list_takes_the_newest_answer_and_drops_a_late_one() {
         Some("ka")
     );
     // An answer for another field does not land here.
-    let _ = app.update(Message::FormEntry(entry::Event::Search(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Search(
         "Kat".into(),
         second,
-    )));
+    ))));
     assert_eq!(
-        app.form_entry.as_ref().unwrap().search_for_tests("Kat").1,
+        app.gis
+            .form_entry
+            .as_ref()
+            .unwrap()
+            .search_for_tests("Kat")
+            .1,
         None
     );
 }
@@ -864,11 +904,11 @@ fn values_written_before_the_fields_are_turned_into_their_canonical_texts() {
 fn a_record_changed_meanwhile_is_reloaded_with_what_was_typed_or_written_over() {
     let mut app = crate::files_testing::app_with_drawing();
     permit_conflict(&mut app);
-    let e = app.form_entry.as_ref().expect("still open");
+    let e = app.gis.form_entry.as_ref().expect("still open");
     assert!(e.conflict_for_tests(), "the bar says it changed");
     entry(&mut app, entry::Event::Reload);
     entry(&mut app, entry::Event::Save);
-    assert!(app.form_entry.is_none());
+    assert!(app.gis.form_entry.is_none());
     let doc = &app.document.as_ref().unwrap().model;
     let attrs = &doc.get(Slot(1)).unwrap().base().attrs;
     assert_eq!(
@@ -889,14 +929,18 @@ fn the_rules_window_writes_through_the_command_in_one_step() {
     permits(&mut app);
     run(&mut app, "data.layerRules");
     use crate::forms::layer_rules::Event as R;
-    let _ = app.update(Message::LayerRules(R::New));
-    let _ = app.update(Message::LayerRules(R::Name("Kat sınırı".into())));
-    let _ = app.update(Message::LayerRules(R::Rule(
+    let _ = app.update(Message::Gis(gis::Event::LayerRules(R::New)));
+    let _ = app.update(Message::Gis(gis::Event::LayerRules(R::Name(
+        "Kat sınırı".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::LayerRules(R::Rule(
         "Kat boş veya Kat <= 40".into(),
-    )));
-    let _ = app.update(Message::LayerRules(R::Message("En çok 40 kat.".into())));
-    let _ = app.update(Message::LayerRules(R::Save));
-    assert!(app.layer_rules.is_none(), "closed on Kaydet");
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::LayerRules(R::Message(
+        "En çok 40 kat.".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::LayerRules(R::Save)));
+    assert!(app.gis.layer_rules.is_none(), "closed on Kaydet");
     let doc = &app.document.as_ref().unwrap().model;
     assert_eq!(doc.layers().get("ruhsat").unwrap().rules.len(), 4);
     // A write breaking it is refused, whatever writes it.
@@ -919,25 +963,28 @@ fn a_step_form_keeps_a_step_with_an_error_and_its_mirror_writes_nothing() {
     let mut app = crate::files_testing::app_with_drawing();
     stepped_survey(&mut app);
     // Kat is required on step 2: İleri from step 2 is refused while it is empty.
-    let _ = app.update(Message::FormEntry(entry::Event::Tab(1)));
-    let _ = app.update(Message::FormEntry(entry::Event::Tab(2)));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Tab(1))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Tab(2))));
     assert_eq!(
-        app.form_entry.as_ref().map(|e| e.tab_for_tests()),
+        app.gis.form_entry.as_ref().map(|e| e.tab_for_tests()),
         Some(1),
         "held on Yapı"
     );
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Kat".into(),
         "6".into(),
-    )));
-    let _ = app.update(Message::FormEntry(entry::Event::Tab(2)));
-    assert_eq!(app.form_entry.as_ref().map(|e| e.tab_for_tests()), Some(2));
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Tab(2))));
+    assert_eq!(
+        app.gis.form_entry.as_ref().map(|e| e.tab_for_tests()),
+        Some(2)
+    );
     // The tree picks a code; the mirror shows it, nothing more.
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "Kullanım".into(),
         "ofi".into(),
-    )));
-    let _ = app.update(Message::FormEntry(entry::Event::Save));
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
     let doc = &app.document.as_ref().unwrap().model;
     let attrs = &doc.get(Slot(1)).unwrap().base().attrs;
     assert_eq!(attrs.get("Kullanım").map(String::as_str), Some("ofi"));
@@ -951,7 +998,7 @@ fn a_copied_group_is_pasted_with_fresh_ids_and_its_fields_rebound() {
     designer(&mut app, designer::Event::SelectItem("yapi".into()));
     designer(&mut app, designer::Event::CopyItem);
     designer(&mut app, designer::Event::PasteItem);
-    let w = app.forms_window.as_ref().unwrap();
+    let w = app.gis.forms_window.as_ref().unwrap();
     let body = w.body.as_ref().unwrap();
     assert_eq!(body.items.len(), 4, "the tab pasted as a fourth step");
     let pasted = &body.items[3];
@@ -962,10 +1009,17 @@ fn a_copied_group_is_pasted_with_fresh_ids_and_its_fields_rebound() {
     );
     // Alt+↑ moves it back up one.
     designer(&mut app, designer::Event::Move(-1));
-    let body = app.forms_window.as_ref().unwrap().body.as_ref().unwrap();
+    let body = app
+        .gis
+        .forms_window
+        .as_ref()
+        .unwrap()
+        .body
+        .as_ref()
+        .unwrap();
     assert_eq!(body.items[2].id(), pasted_id(&app));
 }
 
 pub(super) fn pasted_id(app: &App) -> String {
-    app.forms_window.as_ref().unwrap().item.clone().unwrap()
+    app.gis.forms_window.as_ref().unwrap().item.clone().unwrap()
 }

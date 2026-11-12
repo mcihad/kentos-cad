@@ -54,7 +54,7 @@ const OPERATORS: [(&str, &str, Kind); 15] = [
 impl App {
     /// The builder over the window that opened it, while it is open and not picking.
     pub(crate) fn builder_view(&self) -> Option<Element<'_, Message>> {
-        let b = self.builder.as_ref().filter(|b| !b.is_picking())?;
+        let b = self.gis.builder.as_ref().filter(|b| !b.is_picking())?;
         let flow = b.view_mode == ViewMode::Flow;
         let help_column: Element<'_, Message> =
             match flow_view::inspector(b, self.mode).filter(|_| flow) {

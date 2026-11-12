@@ -5,6 +5,7 @@
 
 use crate::app::{App, Message};
 use crate::data_profile::{Event, Keep};
+use crate::gis;
 use kentos_commands::ProfileFileKind;
 
 const PARK: &str = include_str!("../../../../fixtures/profiles/v1/park-r1.json");
@@ -49,16 +50,14 @@ fn carried(app: &App) -> Vec<(ProfileFileKind, String)> {
 #[test]
 fn a_profile_is_kept_inside_a_drawing_without_a_file_and_taken_out_after_its_question() {
     let mut app = park();
-    assert!(app.data_profile.is_some(), "the window opens");
+    assert!(app.gis.data_profile.is_some(), "the window opens");
     // Nereye starts at the drawing: no file is needed.
-    let _ = app.update(Message::DataProfile(Event::Imported(Some(file(
-        "park-bahce.json",
-        PARK_PROFILE,
-    )))));
-    let _ = app.update(Message::DataProfile(Event::Imported(Some(file(
-        "park-esleme.json",
-        PARK_MAPPING,
-    )))));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Imported(
+        Some(file("park-bahce.json", PARK_PROFILE)),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Imported(
+        Some(file("park-esleme.json", PARK_MAPPING)),
+    ))));
     assert_eq!(
         carried(&app),
         [
@@ -66,24 +65,38 @@ fn a_profile_is_kept_inside_a_drawing_without_a_file_and_taken_out_after_its_que
             (ProfileFileKind::Mapping, "park-bahce-kurum".to_owned()),
         ]
     );
-    assert!(app.document.as_ref().is_some_and(|d| d.model.is_dirty()), "the drawing is to be saved");
+    assert!(
+        app.document.as_ref().is_some_and(|d| d.model.is_dirty()),
+        "the drawing is to be saved"
+    );
     // What came in is chosen: the mapping, of the profile it names.
-    let w = app.data_profile.as_ref().expect("the window");
+    let w = app.gis.data_profile.as_ref().expect("the window");
     assert_eq!(w.profile_name(), "park-bahce");
     assert_eq!(w.mapping_name(), Some("park-bahce-kurum"));
     // Taking the profile out asks first; no leaves it.
-    let _ = app.update(Message::DataProfile(Event::Remove(ProfileFileKind::Profile)));
-    assert!(app.data_profile.as_ref().is_some_and(|w| w.asking()), "the question is open");
-    let _ = app.update(Message::DataProfile(Event::Removed(false)));
-    assert!(app.data_profile.as_ref().is_some_and(|w| !w.asking()));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Remove(
+        ProfileFileKind::Profile,
+    ))));
+    assert!(
+        app.gis.data_profile.as_ref().is_some_and(|w| w.asking()),
+        "the question is open"
+    );
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Removed(false))));
+    assert!(app.gis.data_profile.as_ref().is_some_and(|w| !w.asking()));
     assert_eq!(carried(&app).len(), 2, "no took nothing out");
     // Yes takes the profile out, and the drawing's mapping of it with it: no other copy of the profile is left, so the
     // mapping could be chosen no more.
-    let _ = app.update(Message::DataProfile(Event::Remove(ProfileFileKind::Profile)));
-    let _ = app.update(Message::DataProfile(Event::Removed(true)));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Remove(
+        ProfileFileKind::Profile,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Removed(true))));
     assert!(carried(&app).is_empty(), "{:?}", carried(&app));
-    let w = app.data_profile.as_ref().expect("the window");
-    assert_eq!(w.profile_name(), "tucbs-temel", "KentOS's profile is chosen again");
+    let w = app.gis.data_profile.as_ref().expect("the window");
+    assert_eq!(
+        w.profile_name(),
+        "tucbs-temel",
+        "KentOS's profile is chosen again"
+    );
     assert_eq!(w.mapping_name(), None);
 }
 
@@ -91,15 +104,19 @@ fn a_profile_is_kept_inside_a_drawing_without_a_file_and_taken_out_after_its_que
 fn a_mapping_alone_is_taken_out_and_its_profile_stays() {
     let mut app = park();
     for (name, text) in [("p.json", PARK_PROFILE), ("m.json", PARK_MAPPING)] {
-        let _ = app.update(Message::DataProfile(Event::Imported(Some(file(name, text)))));
+        let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Imported(
+            Some(file(name, text)),
+        ))));
     }
-    let _ = app.update(Message::DataProfile(Event::Remove(ProfileFileKind::Mapping)));
-    let _ = app.update(Message::DataProfile(Event::Removed(true)));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Remove(
+        ProfileFileKind::Mapping,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Removed(true))));
     assert_eq!(
         carried(&app),
         [(ProfileFileKind::Profile, "park-bahce".to_owned())]
     );
-    let w = app.data_profile.as_ref().expect("the window");
+    let w = app.gis.data_profile.as_ref().expect("the window");
     assert_eq!(w.profile_name(), "park-bahce", "the profile stays chosen");
     assert_eq!(w.mapping_name(), None);
 }
@@ -107,12 +124,16 @@ fn a_mapping_alone_is_taken_out_and_its_profile_stays() {
 #[test]
 fn the_folder_needs_the_drawings_file() {
     let mut app = park();
-    let _ = app.update(Message::DataProfile(Event::Keep(Keep::Folder)));
-    let _ = app.update(Message::DataProfile(Event::Imported(Some(file(
-        "park-bahce-2.json",
-        PARK_PROFILE,
-    )))));
-    assert!(carried(&app).is_empty(), "nothing is kept: the drawing has no folder");
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Keep(
+        Keep::Folder,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Imported(
+        Some(file("park-bahce-2.json", PARK_PROFILE)),
+    ))));
+    assert!(
+        carried(&app).is_empty(),
+        "nothing is kept: the drawing has no folder"
+    );
     assert!(
         !app.document.as_ref().is_some_and(|d| d.model.is_dirty()),
         "the drawing is as it was"

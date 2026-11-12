@@ -3,6 +3,7 @@
 //! what the layer takes before anything is written, Üret adds it so (the list too) and the window says it again; a
 //! layer of the name here keeps its own fields and the plan says what of the recipe's it lacks. And its pictures.
 
+use crate::road;
 use serde_json::Value;
 
 use crate::app::{App, Message};
@@ -25,19 +26,31 @@ fn definition(name: &str) -> Value {
 fn tariften_uret_adds_the_layer_with_its_fields_list_and_subtypes() {
     let def = definition("alanli-katmanli.json");
     let mut b = other_project();
-    let _ = b.update(Message::ProjectGraph(G::Open));
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Open)));
     let revision = b.document.as_ref().map(|d| d.model.revision());
-    let _ = b.update(Message::ProjectGraph(G::Picked(Some(recipe("alanli-katmanli.json")))));
-    let lines = plan_lines(b.project_graph.recipe.as_ref().expect("the recipe shown"));
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+        recipe("alanli-katmanli.json"),
+    )))));
+    let lines = plan_lines(
+        b.road
+            .project_graph
+            .recipe
+            .as_ref()
+            .expect("the recipe shown"),
+    );
     let planned = "“Kazı sınırı” katmanı bu projede yok; tarifteki stiliyle eklenecek. Alanları (3) ve alt türleri \
                    tarifteki gibi. “Sınır türü” değer listesi de eklenecek.";
     assert!(lines.iter().any(|(_, l)| l == planned), "{lines:?}");
-    assert_eq!(b.document.as_ref().map(|d| d.model.revision()), revision, "nothing written before Üret");
-    let _ = b.update(Message::ProjectGraph(G::Confirm));
-    let out = b.project_graph.produced.clone().expect("produced");
+    assert_eq!(
+        b.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written before Üret"
+    );
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Confirm)));
+    let out = b.road.project_graph.produced.clone().expect("produced");
     let done = "“Kazı sınırı” katmanı tarifteki stiliyle eklendi. Alanları (3) ve alt türleri tarifteki gibi. “Sınır \
                 türü” değer listesi de eklendi.";
-    let said = produced_lines(&out, &b.project_graph.looks);
+    let said = produced_lines(&out, &b.road.project_graph.looks);
     assert!(said.iter().any(|(_, l)| l == done), "{said:?}");
     let model = &b.document.as_ref().expect("a drawing").model;
     let layers = model.layers();
@@ -51,9 +64,17 @@ fn tariften_uret_adds_the_layer_with_its_fields_list_and_subtypes() {
 #[test]
 fn a_layer_of_the_name_here_keeps_its_fields_and_the_plan_says_the_lack() {
     let mut b = other_project();
-    let _ = b.update(Message::ProjectGraph(G::Open));
-    let _ = b.update(Message::ProjectGraph(G::Picked(Some(recipe("alanli-adli.json")))));
-    let lines = plan_lines(b.project_graph.recipe.as_ref().expect("the recipe shown"));
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Open)));
+    let _ = b.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+        recipe("alanli-adli.json"),
+    )))));
+    let lines = plan_lines(
+        b.road
+            .project_graph
+            .recipe
+            .as_ref()
+            .expect("the recipe shown"),
+    );
     let lack = "“Sıfır hattı” katmanı bu projede bulundu ve kendi alanlarını korur: tarifin “Ad”, “Tür”, “Derinlik” \
                 alanları onda yok.";
     assert!(lines.iter().any(|(_, l)| l.starts_with(lack)), "{lines:?}");
@@ -78,7 +99,7 @@ fn fields_screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
-        let _ = app.update(Message::ProjectGraph(G::Open));
+        let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Open)));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -91,16 +112,18 @@ fn fields_screens() {
         .into_iter()
         .enumerate()
         {
-            let _ = app.update(Message::ProjectGraph(G::Picked(Some(recipe(file)))));
+            let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Picked(Some(
+                recipe(file),
+            )))));
             if done {
-                let _ = app.update(Message::ProjectGraph(G::Confirm));
+                let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Confirm)));
             }
             snapshot.settle(&mut app, App::view, &mut update);
             let shot = out.join(format!("{}-{what}-{name}.png", k + 1));
             snapshot.render(app.view(), &app.theme()).save(&shot).expect("writes");
             println!("{}", shot.display());
             if !done {
-                let _ = app.update(Message::ProjectGraph(G::Cancel));
+                let _ = app.update(Message::Road(road::Event::ProjectGraph(G::Cancel)));
             }
         }
     }

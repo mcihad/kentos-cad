@@ -135,7 +135,7 @@ impl App {
 
     /// Yatay ağ dengelemesi's Çizime yaz: the new points moved or added.
     pub(crate) fn network_write(&mut self) {
-        let form = &self.calc.network;
+        let form = &self.gis.calc.network;
         let Some(Ok(_)) = &form.solved.result else {
             return;
         };
@@ -163,13 +163,13 @@ impl App {
                 kept_words(&done.kept)
             ),
         );
-        self.calc.open = None;
+        self.gis.calc.open = None;
         self.dialog = None;
     }
 
     /// Kot ağı dengelemesi's Çizime yaz: the new points' heights.
     pub(crate) fn level_write(&mut self) {
-        let form = &self.calc.level;
+        let form = &self.gis.calc.level;
         let Some(Ok(_)) = &form.solved.result else {
             return;
         };
@@ -205,7 +205,7 @@ impl App {
         if let Some(absent) = absent {
             self.warn(absent);
         }
-        self.calc.open = None;
+        self.gis.calc.open = None;
         self.dialog = None;
     }
 }

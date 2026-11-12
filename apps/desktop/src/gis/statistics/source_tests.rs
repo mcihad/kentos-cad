@@ -2,6 +2,7 @@
 //! tümü asks the whole table for the chosen field, the answer is shown for the
 //! layer and the field it was asked for, Durdur and Çalışma kopyası leave it.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::{CallOp, QueryScope, SourcesQuery};
@@ -16,7 +17,7 @@ use crate::source_trouble::Refused;
 const LAYER: &str = "import-nokta";
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::Statistics(e));
+    let _ = app.update(Message::Gis(gis::Event::Statistics(e)));
 }
 
 /// A drawing with `sorgu.gpkg`'s `nokta` bound by a part (its first 12 points), İstatistik open on it.
@@ -47,7 +48,7 @@ fn scene(name: &str) -> App {
 fn answer(app: &mut App) {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let link = doc.settings().sources[0].clone();
-    let field = app.charts.field.clone().expect("a field");
+    let field = app.gis.charts.field.clone().expect("a field");
     let input = SourcesQuery {
         layer: Some(LAYER.into()),
         scope: Some(QueryScope::Source),
@@ -83,16 +84,17 @@ fn the_whole_source_is_asked_for_the_chosen_field() {
     ev(&mut app, Event::Field("kot".into()));
     // The working copy: the part's 12 points.
     app.stats_refresh();
-    assert_eq!(app.charts.stats.borrow().objects, 12);
+    assert_eq!(app.gis.charts.stats.borrow().objects, 12);
     ev(&mut app, Event::Scope(true));
-    assert!(app.charts.whole.running.is_some());
+    assert!(app.gis.charts.whole.running.is_some());
     assert_eq!(
-        app.charts.whole.asked,
+        app.gis.charts.whole.asked,
         Some((LAYER.to_owned(), "kot".to_owned()))
     );
     answer(&mut app);
-    assert!(app.charts.whole.running.is_none());
+    assert!(app.gis.charts.whole.running.is_none());
     let told = app
+        .gis
         .charts
         .whole
         .answer
@@ -116,10 +118,17 @@ fn the_whole_source_is_asked_for_the_chosen_field() {
             })),
         ),
     );
-    assert!(app.charts.whole.answer.as_ref().is_some_and(Result::is_ok));
+    assert!(
+        app.gis
+            .charts
+            .whole
+            .answer
+            .as_ref()
+            .is_some_and(Result::is_ok)
+    );
     // Çalışma kopyası leaves it.
     ev(&mut app, Event::Scope(false));
-    assert!(app.charts.whole.answer.is_none() && app.charts.whole.asked.is_none());
+    assert!(app.gis.charts.whole.answer.is_none() && app.gis.charts.whole.asked.is_none());
 }
 
 /// A source that could not be read (docs/adr/0740 §2): the refusal is kept with what helps; Yeniden dene asks again
@@ -142,6 +151,7 @@ fn a_source_not_read_is_said_and_asked_again() {
     ev(&mut app, Event::Scope(true));
     answer(&mut app);
     let refused = app
+        .gis
         .charts
         .whole
         .answer
@@ -153,9 +163,10 @@ fn a_source_not_read_is_said_and_asked_again() {
     // Back: Yeniden dene asks the same field again.
     std::fs::rename(&away, &file).expect("moved back");
     ev(&mut app, Event::WholeRetry);
-    assert!(app.charts.whole.running.is_some());
+    assert!(app.gis.charts.whole.running.is_some());
     answer(&mut app);
     let told = app
+        .gis
         .charts
         .whole
         .answer
@@ -168,7 +179,14 @@ fn a_source_not_read_is_said_and_asked_again() {
     std::fs::rename(&file, &moved).expect("moved");
     ev(&mut app, Event::WholeRetry);
     answer(&mut app);
-    assert!(app.charts.whole.answer.as_ref().is_some_and(Result::is_err));
+    assert!(
+        app.gis
+            .charts
+            .whole
+            .answer
+            .as_ref()
+            .is_some_and(Result::is_err)
+    );
     let id = app
         .document
         .as_ref()
@@ -182,9 +200,16 @@ fn a_source_not_read_is_said_and_asked_again() {
         id,
         Some(moved),
     )));
-    assert!(app.charts.whole.running.is_some(), "asked again");
+    assert!(app.gis.charts.whole.running.is_some(), "asked again");
     answer(&mut app);
-    assert!(app.charts.whole.answer.as_ref().is_some_and(Result::is_ok));
+    assert!(
+        app.gis
+            .charts
+            .whole
+            .answer
+            .as_ref()
+            .is_some_and(Result::is_ok)
+    );
 }
 
 #[test]
@@ -192,10 +217,10 @@ fn durdur_stops_the_question() {
     let mut app = scene("istatistik-durdur");
     ev(&mut app, Event::Field("kot".into()));
     ev(&mut app, Event::Scope(true));
-    let stop = app.charts.whole.running.clone().expect("running");
+    let stop = app.gis.charts.whole.running.clone().expect("running");
     ev(&mut app, Event::WholeStop);
     assert!(stop.load(std::sync::atomic::Ordering::Relaxed));
-    assert!(app.charts.whole.running.is_none());
+    assert!(app.gis.charts.whole.running.is_none());
 }
 
 /// İstatistik with Kapsam: the part's statistics, the whole source's, and the source being read
@@ -225,7 +250,10 @@ fn screens() {
             // Every summary counted, as the frames count them.
             let _ = app.statistics_seen();
             snapshot.settle(app, App::view, &mut |app: &mut App, message| {
-                if !matches!(message, Message::Statistics(Event::Scope(_))) {
+                if !matches!(
+                    message,
+                    Message::Gis(gis::Event::Statistics(Event::Scope(_)))
+                ) {
                     let _ = app.update(message);
                 }
             });

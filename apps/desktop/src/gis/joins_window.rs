@@ -21,6 +21,7 @@
 //! read off the UI thread through `cad.sources.describe`, the key one of the table's columns). Toplama sütunları:
 //! each a heading, what it does (Sayı, Toplam, En küçük, En büyük, Ortalama) and the joined records' field.
 
+use crate::gis;
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
@@ -124,7 +125,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Joins(event)
+    Message::Gis(gis::Event::Joins(event))
 }
 
 /// An id `base`, `base-2`, … none of `taken` has.
@@ -149,14 +150,14 @@ impl App {
             return;
         };
         let rows = doc.model.settings().join_views.clone();
-        self.joins_window = Some(Window {
+        self.gis.joins_window = Some(Window {
             chosen: (!rows.is_empty()).then_some(0),
             kept: rows.clone(),
             rows,
             tables: None,
             reading: false,
         });
-        self.dialog = Some(Dialog::Joins);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Joins));
     }
 
     pub(crate) fn joins_event(&mut self, event: Event) -> Task<Message> {
@@ -166,7 +167,7 @@ impl App {
             .as_ref()
             .map(|d| d.model.settings().relations.clone())
             .unwrap_or_default();
-        let Some(w) = self.joins_window.as_mut() else {
+        let Some(w) = self.gis.joins_window.as_mut() else {
             return Task::none();
         };
         let taken: Vec<String> = w.rows.iter().map(|v| v.id.clone()).collect();
@@ -373,7 +374,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.joins_window = None;
+                self.gis.joins_window = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_joins(),
@@ -383,7 +384,7 @@ impl App {
 
     /// Kaydet: what changed through `cad.joins.edit`: the removed, the changed, the new.
     fn save_joins(&mut self) -> Task<Message> {
-        let Some(w) = self.joins_window.clone() else {
+        let Some(w) = self.gis.joins_window.clone() else {
             return Task::none();
         };
         let mut edits = Vec::new();
@@ -412,16 +413,16 @@ impl App {
             );
             if self.answered(result).is_none() {
                 if let Some(doc) = &self.document
-                    && let Some(w) = self.joins_window.as_mut()
+                    && let Some(w) = self.gis.joins_window.as_mut()
                 {
                     w.kept = doc.model.settings().join_views.clone();
                 }
                 return Task::none();
             }
         }
-        self.joins_window = None;
+        self.gis.joins_window = None;
         self.dialog = None;
-        self.features.changed();
+        self.gis.features.changed();
         self.say(Level::Success, "Birleşik görünümler kaydedildi.");
         Task::none()
     }
@@ -453,7 +454,7 @@ impl App {
     }
 
     pub(crate) fn joins_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.joins_window else {
+        let Some(w) = &self.gis.joins_window else {
             return iced::widget::text("").into();
         };
         let layers = self.relation_layers();
@@ -619,7 +620,7 @@ impl App {
                 joined_fields = self.join_keys_of(&v.with).into_iter().skip(1).collect();
             }
             Some(src) => {
-                let w = self.joins_window.as_ref();
+                let w = self.gis.joins_window.as_ref();
                 let path = kentos_ui::widget::text_field(
                     "GeoPackage dosyası ya da postgresql://kullanıcı@sunucu/veritabanı",
                     &src.path,
@@ -762,7 +763,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn joins_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.joins_window else {
+        let Some(w) = &self.gis.joins_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

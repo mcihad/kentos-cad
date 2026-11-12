@@ -6,6 +6,7 @@
 //! karşılaştırma gives its weights' table without touching the drawing;
 //! ROC ile doğrulama its curve and AUC.
 
+use crate::gis;
 use serde_json::{Value, json};
 
 use super::{Event, RunStatus};
@@ -13,7 +14,10 @@ use crate::app::{App, Message};
 use crate::suitability_scenes::{overlay, pairwise, roc, with_criteria};
 
 fn value(app: &mut App, name: &str, v: Value) {
-    let _ = app.update(Message::Processing(Event::Value(name.into(), v)));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
+        name.into(),
+        v,
+    ))));
 }
 
 fn run(app: &mut App) -> RunStatus {
@@ -53,7 +57,13 @@ fn the_rows_are_the_criteria_and_the_overlay_goes_above_the_first() {
         "processing.run.suitability.weightedOverlay",
         &overlay(),
     );
-    let rasters = app.processing.dialog.as_ref().expect("the window").inputs["input"]
+    let rasters = app
+        .gis
+        .processing
+        .dialog
+        .as_ref()
+        .expect("the window")
+        .inputs["input"]
         .rasters
         .clone();
     assert_eq!(rasters, ["Eğim", "Yola uzaklık", "Arazi örtüsü"]);
@@ -150,7 +160,7 @@ fn the_curve_says_how_well_the_slope_finds_the_landslides() {
         "processing.run.suitability.pairwise",
         &[("input", json!({ "scope": "selection" }))],
     );
-    let w = app.processing.dialog.as_ref().expect("the window");
+    let w = app.gis.processing.dialog.as_ref().expect("the window");
     let (rows, note) = kentos_processing::raster_rows::pairs_view(
         &w.values["comparisons"],
         Some(&w.inputs["input"].rasters),

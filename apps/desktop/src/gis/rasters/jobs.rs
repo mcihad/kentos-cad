@@ -7,6 +7,7 @@
 //! (`<ad>-oturtulmus.tif`, a file beside it first, renamed when whole) or,
 //! for an embedded one, in memory to embed.
 
+use crate::gis;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
@@ -210,8 +211,8 @@ impl App {
                         (p.done * 100.0).round()
                     ))
                     .running(Some(p.done as f32))
-                    .on_cancel(Message::PointClouds(crate::pointclouds::Event::StopIndex(
-                        key,
+                    .on_cancel(Message::Gis(gis::Event::PointClouds(
+                        crate::pointclouds::Event::StopIndex(key),
                     ))),
             );
         }
@@ -224,7 +225,7 @@ impl App {
                         (p.done * 100.0).round()
                     ))
                     .running(Some(p.done as f32))
-                    .on_cancel(Message::Rasters(Rasters::StopPyramid(key))),
+                    .on_cancel(Message::Gis(gis::Event::Rasters(Rasters::StopPyramid(key)))),
             );
         }
         if let Some(w) = warp {
@@ -232,7 +233,7 @@ impl App {
                 Job_::new(format!("Raster oturtuluyor: {}", w.name))
                     .detail(format!("%{} yeniden örneklendi", (w.done * 100.0).round()))
                     .running(Some(w.done as f32))
-                    .on_cancel(Message::Rasters(Rasters::StopWarp)),
+                    .on_cancel(Message::Gis(gis::Event::Rasters(Rasters::StopWarp))),
             );
         }
         let panel = container(list)

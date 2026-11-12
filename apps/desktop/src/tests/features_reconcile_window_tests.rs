@@ -3,6 +3,7 @@
 //! Kabul and a conflict's correction make them written; Eşleştir writes in one undo step and marks the candidates, so a
 //! second run writes nothing; Harita offers it, GIS and Mimari do not. And its pictures.
 
+use crate::gis;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -23,18 +24,36 @@ fn opened(program: Option<Module>) -> App {
 }
 
 fn statuses(app: &App) -> Vec<(String, bool)> {
-    let a = app.features_reconcile.answer.clone().expect("an answer").expect("reconciled");
-    a.groups.iter().map(|g| (g.status.clone(), g.writes)).collect()
+    let a = app
+        .gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled");
+    a.groups
+        .iter()
+        .map(|g| (g.status.clone(), g.writes))
+        .collect()
 }
 
 #[test]
 fn the_window_plans_as_the_shared_case_and_uzlastir_writes_once() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("map.featuresReconcile"));
-    assert_eq!(app.dialog, Some(Dialog::FeaturesReconcile));
-    assert_eq!(app.features_reconcile.sources[0].0, "aday-lidar");
-    assert_eq!(app.features_reconcile.sources[1].0, "aday-orto");
-    let a = app.features_reconcile.answer.clone().expect("an answer").expect("reconciled");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::FeaturesReconcile))
+    );
+    assert_eq!(app.gis.features_reconcile.sources[0].0, "aday-lidar");
+    assert_eq!(app.gis.features_reconcile.sources[1].0, "aday-orto");
+    let a = app
+        .gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled");
     let want = &cases()["cases"][0]["steps"][0]["result"]["output"];
     let got: Value = serde_json::to_value(&a.groups).expect("json");
     assert_eq!(got.as_array().map(Vec::len), want["groups"].as_array().map(Vec::len));
@@ -43,14 +62,27 @@ fn the_window_plans_as_the_shared_case_and_uzlastir_writes_once() {
         assert_eq!(Value::from(g.writes), w["writes"]);
     }
     // The single manhole accepted and the conflict made a pole: both written then.
-    let single = a.groups.iter().position(|g| g.status == "single").expect("a single");
-    let conflict = a.groups.iter().position(|g| g.status == "conflict").expect("a conflict");
-    let _ = app.update(Message::FeaturesReconcile(R::Accept(single)));
-    let _ = app.update(Message::FeaturesReconcile(R::Correct(conflict, "direk".into())));
+    let single = a
+        .groups
+        .iter()
+        .position(|g| g.status == "single")
+        .expect("a single");
+    let conflict = a
+        .groups
+        .iter()
+        .position(|g| g.status == "conflict")
+        .expect("a conflict");
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Accept(
+        single,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Correct(
+        conflict,
+        "direk".into(),
+    ))));
     let now = statuses(&app);
     assert!(now.iter().filter(|(_, w)| *w).count() >= 5, "{now:?}");
     let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
-    let _ = app.update(Message::FeaturesReconcile(R::Run));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Run)));
     let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
     assert!(after > before, "assets written");
     // Run again: every candidate written or matched is reviewed now; nothing more is written.
@@ -64,10 +96,28 @@ fn the_window_plans_as_the_shared_case_and_uzlastir_writes_once() {
 fn reddet_rejects_a_group_s_candidates() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("map.featuresReconcile"));
-    let a = app.features_reconcile.answer.clone().expect("an answer").expect("reconciled");
-    let single = a.groups.iter().position(|g| g.status == "single").expect("a single");
-    let _ = app.update(Message::FeaturesReconcile(R::Reject(single)));
-    let a = app.features_reconcile.answer.clone().expect("an answer").expect("reconciled");
+    let a = app
+        .gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled");
+    let single = a
+        .groups
+        .iter()
+        .position(|g| g.status == "single")
+        .expect("a single");
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Reject(
+        single,
+    ))));
+    let a = app
+        .gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled");
     assert!(a.candidates.iter().any(|c| c.status == "rejected"));
 }
 
@@ -105,12 +155,12 @@ fn screens() {
         let file = out.join(format!("1-plan-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::FeaturesReconcile(R::Run));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Run)));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-uzlastirildi-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::FeaturesReconcile(R::Close));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Close)));
         let _ = app.update(Message::RibbonTab("survey"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("3-serit-{name}.png"));
@@ -142,14 +192,14 @@ fn arcs_opened() -> App {
 fn an_arc_is_measured_as_an_arc() {
     let mut app = arcs_opened();
     let _ = app.update(Message::Run("map.featuresReconcile"));
-    let _ = app.update(Message::FeaturesReconcile(R::Radius(0.5)));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Radius(0.5))));
     assert_eq!(
         statuses(&app),
         [("single".to_owned(), false), ("single".to_owned(), false), ("agreed".to_owned(), true)]
     );
     let before: Vec<kentos_domain::Slot> =
         app.document.as_ref().map(|d| d.model.entities().map(|e| kentos_domain::Slot(e.base().id)).collect()).unwrap_or_default();
-    let _ = app.update(Message::FeaturesReconcile(R::Run));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Run)));
     let doc = app.document.as_ref().expect("open");
     let written: Vec<&kentos_commands::Entity> =
         doc.model.entities().filter(|e| !before.contains(&kentos_domain::Slot(e.base().id))).collect();
@@ -179,7 +229,7 @@ fn arc_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("map.featuresReconcile"));
-        let _ = app.update(Message::FeaturesReconcile(R::Radius(0.5)));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Radius(0.5))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -198,13 +248,34 @@ fn arc_screens() {
 fn eşleştir_records_the_decisions_as_review_notes() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("map.featuresReconcile"));
-    let _ = app.update(Message::FeaturesReconcile(R::Reviewer("Ayşe Demir".into())));
-    let a = app.features_reconcile.answer.clone().expect("an answer").expect("reconciled");
-    let single = a.groups.iter().position(|g| g.status == "single").expect("a single");
-    let conflict = a.groups.iter().position(|g| g.status == "conflict").expect("a conflict");
-    let _ = app.update(Message::FeaturesReconcile(R::Accept(single)));
-    let _ = app.update(Message::FeaturesReconcile(R::Correct(conflict, "direk".into())));
-    let _ = app.update(Message::FeaturesReconcile(R::Run));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Reviewer(
+        "Ayşe Demir".into(),
+    ))));
+    let a = app
+        .gis
+        .features_reconcile
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("reconciled");
+    let single = a
+        .groups
+        .iter()
+        .position(|g| g.status == "single")
+        .expect("a single");
+    let conflict = a
+        .groups
+        .iter()
+        .position(|g| g.status == "conflict")
+        .expect("a conflict");
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Accept(
+        single,
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Correct(
+        conflict,
+        "direk".into(),
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Run)));
     let said = app.log.lines().last().map(|l| l.text.clone()).unwrap_or_default();
     assert!(said.contains("inceleme notları olarak kaydedildi"), "{said}");
     let doc = app.document.as_ref().expect("open");
@@ -254,22 +325,43 @@ fn review_note_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("map.featuresReconcile"));
-        let _ = app.update(Message::FeaturesReconcile(R::Reviewer("Ayşe Demir".into())));
-        let a = app.features_reconcile.answer.clone().expect("an answer").expect("reconciled");
-        let single = a.groups.iter().position(|g| g.status == "single").expect("a single");
-        let conflict = a.groups.iter().position(|g| g.status == "conflict").expect("a conflict");
-        let _ = app.update(Message::FeaturesReconcile(R::Accept(single)));
-        let _ = app.update(Message::FeaturesReconcile(R::Correct(conflict, "direk".into())));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Reviewer(
+            "Ayşe Demir".into(),
+        ))));
+        let a = app
+            .gis
+            .features_reconcile
+            .answer
+            .clone()
+            .expect("an answer")
+            .expect("reconciled");
+        let single = a
+            .groups
+            .iter()
+            .position(|g| g.status == "single")
+            .expect("a single");
+        let conflict = a
+            .groups
+            .iter()
+            .position(|g| g.status == "conflict")
+            .expect("a conflict");
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Accept(
+            single,
+        ))));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Correct(
+            conflict,
+            "direk".into(),
+        ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
-        let _ = app.update(Message::FeaturesReconcile(R::Run));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Run)));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-eslestirildi-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::FeaturesReconcile(R::Close));
+        let _ = app.update(Message::Gis(gis::Event::FeaturesReconcile(R::Close)));
         let first = app.document.as_ref().and_then(|d| d.model.settings().review_notes.first().map(|n| n.id.clone()));
         let _ = app.update(Message::Run("review.notes"));
         if let Some(id) = first {

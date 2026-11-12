@@ -5,6 +5,7 @@
 //! the summary is the command's answer: cut above the base, fill below, their total and areas, the base, the corners'
 //! heights, the warnings and notes. Reads only: nothing is written.
 
+use crate::road;
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
 use kentos_commands::{CommandWarning, Entity, TerrainsStockpile, TerrainsStockpiled};
@@ -83,7 +84,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Stockpile(e)
+    Message::Road(road::Event::Stockpile(e))
 }
 
 impl State {
@@ -115,8 +116,13 @@ fn tin_line(triangles: &[[[f64; 3]; 3]]) -> String {
 
 impl App {
     fn stockpile_run(&mut self) {
-        let Some(doc) = self.document.as_ref() else { return };
-        self.stockpile.answer = Some(road_terrains_stockpile::preview(&doc.model, &self.stockpile.input()));
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        self.road.stockpile.answer = Some(road_terrains_stockpile::preview(
+            &doc.model,
+            &self.road.stockpile.input(),
+        ));
     }
 
     /// Stok hacmi (`terrain.stockpile`): the project's first surface (the selection's own when it has one), the
@@ -152,7 +158,7 @@ impl App {
             .filter_map(|s| doc.model.uid(*s).map(|u| u.to_string()))
             .find(|u| boundaries.iter().any(|(b, _)| b == u));
         let boundary = selected.or_else(|| boundaries.first().map(|b| b.0.clone())).unwrap_or_default();
-        self.stockpile = State {
+        self.road.stockpile = State {
             surfaces,
             surface: first,
             boundaries,
@@ -162,12 +168,12 @@ impl App {
             answer: None,
         };
         self.stockpile_run();
-        self.dialog = Some(Dialog::Stockpile);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::Stockpile));
         Task::none()
     }
 
     pub(crate) fn stockpile_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.stockpile;
+        let s = &mut self.road.stockpile;
         match event {
             Event::Surface(v) => s.surface = v,
             Event::Boundary(v) => s.boundary = v,
@@ -183,7 +189,7 @@ impl App {
             }
             Event::Elevation(v) => s.elevation = v,
             Event::Close => {
-                self.stockpile = State::default();
+                self.road.stockpile = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -245,7 +251,12 @@ impl App {
             let first = self
                 .document
                 .as_ref()
-                .and_then(|d| kentos_native_application::road_terrains_coverage::boundary_region(&d.model, &self.stockpile.boundary))
+                .and_then(|d| {
+                    kentos_native_application::road_terrains_coverage::boundary_region(
+                        &d.model,
+                        &self.road.stockpile.boundary,
+                    )
+                })
                 .and_then(|g| g.outer.first().copied());
             let at = first.map_or(String::new(), |p| format!(", sınırın ilk köşesinde {} m", fixed(a * p[0] + b * p[1] + c, 3)));
             format!("Taban düzlemi: eğimi %{}{at}.", fixed(100.0 * a.hypot(b), 2))
@@ -255,7 +266,7 @@ impl App {
     /// The summary's lines as words (the tests read them).
     #[cfg(test)]
     pub(crate) fn stockpile_lines_text(&self) -> Vec<String> {
-        match &self.stockpile.answer {
+        match &self.road.stockpile.answer {
             Some(Ok((r, warnings))) => self.stockpile_said(r, warnings).into_iter().map(|(_, t)| t).collect(),
             Some(Err(why)) => vec![why.clone()],
             None => Vec::new(),
@@ -263,7 +274,7 @@ impl App {
     }
 
     pub(crate) fn stockpile_view(&self) -> Element<'_, Message> {
-        let s = &self.stockpile;
+        let s = &self.road.stockpile;
         let base: Element<'_, Message> = {
             let choice =
                 Segmented::new(

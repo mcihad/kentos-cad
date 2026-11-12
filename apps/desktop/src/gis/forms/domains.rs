@@ -16,6 +16,7 @@
 //! The window edits a copy; Kaydet writes every change through `cad.domains.edit` as one undo step and
 //! closes; a refusal keeps the window open and says why.
 
+use crate::gis;
 use std::collections::BTreeMap;
 
 use iced::widget::{Column, button, column, container, row, scrollable, space};
@@ -114,7 +115,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Domains(event)
+    Message::Gis(gis::Event::Domains(event))
 }
 
 impl App {
@@ -125,7 +126,7 @@ impl App {
             return Task::none();
         };
         let domains = doc.model.settings().domains.clone();
-        self.domains = Some(Window {
+        self.gis.domains = Some(Window {
             chosen: (!domains.is_empty()).then_some(0),
             kept: domains.clone(),
             domains,
@@ -133,7 +134,7 @@ impl App {
             recode: BTreeMap::new(),
             replace: false,
         });
-        self.dialog = Some(Dialog::Domains);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Domains));
         Task::none()
     }
 
@@ -152,7 +153,7 @@ impl App {
             }
             _ => {}
         }
-        let Some(w) = self.domains.as_mut() else {
+        let Some(w) = self.gis.domains.as_mut() else {
             return Task::none();
         };
         let at = w.chosen.filter(|i| *i < w.domains.len());
@@ -305,7 +306,7 @@ impl App {
                 }
             }
             Event::Cancel => {
-                self.domains = None;
+                self.gis.domains = None;
                 self.dialog = None;
             }
             Event::Save => return self.save_domains(),
@@ -322,7 +323,7 @@ impl App {
         else {
             return Task::none();
         };
-        let Some(w) = self.domains.as_mut() else {
+        let Some(w) = self.gis.domains.as_mut() else {
             return Task::none();
         };
         let mut name = f.label().to_owned();
@@ -405,12 +406,12 @@ impl App {
 
     /// Kaydet: the edits through `cad.domains.edit` as one undo step; the window closes when they go in.
     fn save_domains(&mut self) -> Task<Message> {
-        let Some(w) = self.domains.clone() else {
+        let Some(w) = self.gis.domains.clone() else {
             return Task::none();
         };
         let edits = Self::domain_edits(&w);
         if edits.is_empty() {
-            self.domains = None;
+            self.gis.domains = None;
             self.dialog = None;
             return Task::none();
         }
@@ -448,7 +449,7 @@ impl App {
         for w in warnings {
             self.warn(w.message);
         }
-        self.domains = None;
+        self.gis.domains = None;
         self.dialog = None;
         let n = w.domains.len();
         self.say(
@@ -464,7 +465,8 @@ impl App {
 
     /// Whether the window holds changes Kaydet has not written.
     fn domains_edited(&self) -> bool {
-        self.domains
+        self.gis
+            .domains
             .as_ref()
             .is_some_and(|w| !Self::domain_edits(w).is_empty())
     }
@@ -562,7 +564,7 @@ impl App {
             self.warn(format!("{file} bir KentOS değer listesi paketi değil."));
             return;
         }
-        let replace = self.domains.as_ref().is_some_and(|w| w.replace);
+        let replace = self.gis.domains.as_ref().is_some_and(|w| w.replace);
         let Some(doc) = self.document.as_mut() else {
             return;
         };
@@ -579,9 +581,9 @@ impl App {
         let Some(done) = self.answered(result) else {
             return;
         };
-        let chosen = self.domains.as_ref().and_then(|w| w.chosen);
+        let chosen = self.gis.domains.as_ref().and_then(|w| w.chosen);
         let _ = self.open_domains();
-        if let Some(w) = self.domains.as_mut() {
+        if let Some(w) = self.gis.domains.as_mut() {
             w.replace = replace;
             w.chosen = done
                 .imported
@@ -648,7 +650,7 @@ impl App {
     }
 
     pub(crate) fn domains_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.domains else {
+        let Some(w) = &self.gis.domains else {
             return iced::widget::text("").into();
         };
         let mut list = Column::new().spacing(1).padding(2);
@@ -770,7 +772,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn domains_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.domains.is_none() {
+        if self.gis.domains.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

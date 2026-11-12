@@ -4,6 +4,7 @@
 //! measured in TUREF (layer `tm`), P5 with a 15 cm blunder. The steps of the
 //! web's `vectorfit` scenes (shots.mjs), and their pictures.
 
+use crate::gis;
 use kentos_interaction::Format;
 
 use super::*;
@@ -118,7 +119,7 @@ fn app_with_fit_drawing() -> App {
 }
 
 fn calc(app: &mut App, e: Calc) {
-    let _ = app.update(Message::Calc(e));
+    let _ = app.update(Message::Gis(gis::Event::Calc(e)));
 }
 
 fn fit(app: &mut App, e: Event) {
@@ -130,7 +131,7 @@ fn fit(app: &mut App, e: Event) {
 fn matched() -> App {
     let mut app = app_with_fit_drawing();
     let _ = app.run("transform.fit");
-    assert_eq!(app.dialog, Some(Asking::Calc));
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
     fit(&mut app, Event::Kind(Kind::Helmert));
     fit(&mut app, Event::Source("yerel".into()));
     fit(&mut app, Event::Target("tm".into()));
@@ -159,7 +160,7 @@ fn gap(app: &App, name: &str) -> f64 {
 
 /// The summary's first line's m0 in millimetres.
 fn m0_mm(app: &App) -> f64 {
-    app.calc.fit.fit().and_then(|f| f.m0).expect("an m0") * 1000.0
+    app.gis.calc.fit.fit().and_then(|f| f.m0).expect("an m0") * 1000.0
 }
 
 /// On opening, the layers holding named points are offered (the drawing's
@@ -168,7 +169,7 @@ fn m0_mm(app: &App) -> f64 {
 fn adla_esle_pairs_the_named_points_and_p5_reads_worst() {
     let mut app = app_with_fit_drawing();
     let _ = app.run("transform.fit");
-    let form = &app.calc.fit;
+    let form = &app.gis.calc.fit;
     assert_eq!(form.source.as_deref(), Some("yerel"));
     assert_eq!(form.target.as_deref(), Some("tm"));
     assert_eq!(form.scope, Scope::All, "nothing is selected");
@@ -176,7 +177,7 @@ fn adla_esle_pairs_the_named_points_and_p5_reads_worst() {
     assert!(form.fit().is_none(), "four empty rows");
     let app = matched();
     assert_eq!(last_said(&app), "Vektör oturtma: 6 çift adla eşlendi.");
-    let form = &app.calc.fit;
+    let form = &app.gis.calc.fit;
     let names: Vec<&str> = form.rows.iter().map(|r| r[NAME].as_str()).collect();
     assert_eq!(names, ["P1", "P2", "P3", "P4", "P5", "P6"]);
     assert_eq!(form.rows[1][SOURCE_Y], "1062.5");
@@ -192,7 +193,7 @@ fn adla_esle_pairs_the_named_points_and_p5_reads_worst() {
 fn leaving_p5_out_brings_m0_down_to_millimetres() {
     let mut app = matched();
     calc(&mut app, Calc::Cell(4, USE, "0".into()));
-    let form = &app.calc.fit;
+    let form = &app.gis.calc.fit;
     assert_eq!(form.mark(4), Some(Mark::Off));
     assert!(m0_mm(&app) < 5.0, "{}", m0_mm(&app));
     let v5: f64 = form.rows[4][RES].parse().expect("a residual");
@@ -271,8 +272,12 @@ fn a_locked_layer_is_said_in_the_window() {
         .model
         .toggle_layer_locked("yerel");
     fit(&mut app, Event::Apply);
-    assert_eq!(app.dialog, Some(Asking::Calc), "the window stays");
-    let status = app.calc.fit.status.clone().expect("the reason");
+    assert_eq!(
+        app.dialog,
+        Some(Asking::Gis(gis::GisDialogKind::Calc)),
+        "the window stays"
+    );
+    let status = app.gis.calc.fit.status.clone().expect("the reason");
     assert!(status.contains("kilitli"), "{status}");
     assert!(gap(&app, "P1") > 1000.0, "nothing written");
 }
@@ -290,8 +295,8 @@ fn a_rows_point_shown_on_the_drawing_comes_back_with_its_name() {
         "Vektör oturtma: 1. çiftin kaynağı: haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]"
     );
     let _ = app.submit_line("1062.5,2003.25");
-    assert_eq!(app.dialog, Some(Asking::Calc));
-    let row = &app.calc.fit.rows[0];
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
+    let row = &app.gis.calc.fit.rows[0];
     assert_eq!(
         (row[SOURCE_Y].as_str(), row[SOURCE_X].as_str()),
         ("1062.5", "2003.25")
@@ -300,14 +305,14 @@ fn a_rows_point_shown_on_the_drawing_comes_back_with_its_name() {
     // The target of the same row: the name stays.
     fit(&mut app, Event::Pick(0, Side::Target));
     let _ = app.submit_line("487177.949,4420235.009");
-    let row = &app.calc.fit.rows[0];
+    let row = &app.gis.calc.fit.rows[0];
     assert_eq!(row[NAME], "P2");
     assert_eq!(row[TARGET_Y], "487177.949");
     // Esc: nothing changes, the window opens again.
     fit(&mut app, Event::Pick(1, Side::Source));
     app.cancel();
-    assert_eq!(app.dialog, Some(Asking::Calc));
-    assert!(app.calc.fit.rows[1][SOURCE_Y].is_empty());
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
+    assert!(app.gis.calc.fit.rows[1][SOURCE_Y].is_empty());
 }
 
 /// Pasted lines fill the pairs; nothing goes into Kullan.
@@ -323,7 +328,7 @@ fn pasted_lines_fill_the_pairs_past_kullan() {
             Some("0\tA\t0\t0\t100\t200\n0\tB\t10\t0\t110\t200\n".into()),
         ),
     );
-    let form = &app.calc.fit;
+    let form = &app.gis.calc.fit;
     assert_eq!(form.rows[0][USE], "", "Kullan takes nothing pasted");
     assert_eq!(form.rows[0][NAME], "A");
     assert_eq!(form.rows[1][TARGET_X], "200");
@@ -345,7 +350,8 @@ fn with_params(base: &str, numbers: &[(Param, &str)]) -> App {
 fn said_now(app: &App) -> Vec<String> {
     let doc = app.document.as_ref().expect("open");
     let format = Format::of(doc.settings());
-    app.calc
+    app.gis
+        .calc
         .fit
         .summary_lines(&doc.model, &format)
         .into_iter()
@@ -386,7 +392,11 @@ fn parametrelerle_says_what_is_wrong_in_the_fields_order() {
         ]
     );
     fit(&mut app, Event::Apply);
-    assert_eq!(app.dialog, Some(Asking::Calc), "the window stays");
+    assert_eq!(
+        app.dialog,
+        Some(Asking::Gis(gis::GisDialogKind::Calc)),
+        "the window stays"
+    );
     assert!(gap(&app, "P1") > 1000.0, "nothing written");
 }
 
@@ -482,9 +492,9 @@ fn the_base_point_is_shown_on_the_drawing() {
         "Vektör oturtma: Taban noktası: haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]"
     );
     let _ = app.submit_line("1062.5,2003.25");
-    assert_eq!(app.dialog, Some(Asking::Calc));
-    assert_eq!(app.calc.fit.params.base, "P2");
-    assert_eq!(app.calc.fit.method, Method::Parameters);
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
+    assert_eq!(app.gis.calc.fit.params.base, "P2");
+    assert_eq!(app.gis.calc.fit.method, Method::Parameters);
 }
 
 /// Parametrelerle's report: the base, the numbers as read and the linear
@@ -494,7 +504,10 @@ fn parametrelerle_reports_its_numbers() {
     let mut app = with_params("P1", &[(Param::ScaleY, "1,5"), (Param::Rotation, "50")]);
     let report = |app: &App| {
         let doc = app.document.as_ref().expect("open");
-        app.calc.fit.report(&doc.model, &Format::of(doc.settings()))
+        app.gis
+            .calc
+            .fit
+            .report(&doc.model, &Format::of(doc.settings()))
     };
     let lines = report(&app).expect("a report");
     assert_eq!(lines[0], ["Vektör oturtma", "Parametrelerle"]);
@@ -514,9 +527,16 @@ fn parametrelerle_reports_its_numbers() {
 #[test]
 fn kaucuk_levha_takes_the_used_pairs_as_links() {
     let mut app = matched();
-    let helmert: Vec<String> = app.calc.fit.rows.iter().map(|r| r[RES].clone()).collect();
+    let helmert: Vec<String> = app
+        .gis
+        .calc
+        .fit
+        .rows
+        .iter()
+        .map(|r| r[RES].clone())
+        .collect();
     fit(&mut app, Event::Kind(Kind::Rubber));
-    let form = &app.calc.fit;
+    let form = &app.gis.calc.fit;
     let cells: Vec<String> = form.rows.iter().map(|r| r[RES].clone()).collect();
     assert_eq!(cells, helmert, "the residuals are Helmert's");
     assert_eq!(form.mark(4), Some(Mark::Worst));
@@ -544,7 +564,11 @@ fn kaucuk_levha_takes_the_used_pairs_as_links() {
     // P5 left out: five links.
     calc(&mut app, Calc::Cell(4, USE, "0".into()));
     let doc = app.document.as_ref().expect("open");
-    let lines = app.calc.fit.summary_lines(&doc.model, &Format::default());
+    let lines = app
+        .gis
+        .calc
+        .fit
+        .summary_lines(&doc.model, &Format::default());
     assert!(
         lines[0].1.starts_with("5 bağ (0 sabit nokta)"),
         "{}",
@@ -559,7 +583,7 @@ fn sabit_makes_a_row_a_fixed_point() {
     let mut app = matched();
     fit(&mut app, Event::Kind(Kind::Rubber));
     fit(&mut app, Event::Fix(2));
-    let form = &app.calc.fit;
+    let form = &app.gis.calc.fit;
     assert_eq!(form.rows[2][TARGET_Y], form.rows[2][SOURCE_Y]);
     assert_eq!(form.rows[2][TARGET_X], form.rows[2][SOURCE_X]);
     assert_eq!(form.status, None);
@@ -571,12 +595,13 @@ fn sabit_makes_a_row_a_fixed_point() {
         lines[0].1
     );
     // A new row has no source: its target stays.
-    app.calc
+    app.gis
+        .calc
         .fit
         .rows
         .push(row(["1", "Q", "", "", "487100", "4420200"]));
     fit(&mut app, Event::Fix(6));
-    let form = &app.calc.fit;
+    let form = &app.gis.calc.fit;
     assert_eq!(form.rows[6][TARGET_Y], "487100");
     assert_eq!(
         form.status.as_deref(),
@@ -592,7 +617,7 @@ fn kaucuk_levha_needs_three_links() {
     for r in 1..5 {
         calc(&mut app, Calc::Cell(r, USE, "0".into()));
     }
-    let form = &app.calc.fit;
+    let form = &app.gis.calc.fit;
     let doc = app.document.as_ref().expect("open");
     let lines = form.summary_lines(&doc.model, &Format::default());
     assert_eq!(
@@ -616,7 +641,7 @@ fn sheet_after_helmert() -> (App, kentos_commands::Vec2) {
     fit(&mut app, Event::Apply);
     assert_eq!(app.dialog, None, "Oturt wrote");
     let _ = app.run("transform.fit");
-    assert_eq!(app.dialog, Some(Asking::Calc));
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
     fit(&mut app, Event::Kind(Kind::Rubber));
     fit(&mut app, Event::Match);
     calc(&mut app, Calc::Cell(4, USE, "0".into()));
@@ -631,7 +656,11 @@ fn sheet_after_helmert() -> (App, kentos_commands::Vec2) {
 fn kaucuk_levha_meets_every_link_in_one_step() {
     let (mut app, p3) = sheet_after_helmert();
     let doc = app.document.as_ref().expect("open");
-    let lines = app.calc.fit.summary_lines(&doc.model, &Format::default());
+    let lines = app
+        .gis
+        .calc
+        .fit
+        .summary_lines(&doc.model, &Format::default());
     assert_eq!(
         lines[0].1,
         "5 bağ (1 sabit nokta); levha her bağdan tam geçer."
@@ -672,6 +701,7 @@ fn the_rubber_report_says_the_links_and_helmert() {
     fit(&mut app, Event::Kind(Kind::Rubber));
     let doc = app.document.as_ref().expect("open");
     let lines = app
+        .gis
         .calc
         .fit
         .report(&doc.model, &Format::default())

@@ -1,6 +1,7 @@
 //! The Hesap windows through the app: what they compute, what they write,
 //! the tables and Çizimden (docs/adr/0070, 0071); and their pictures.
 
+use crate::gis;
 use kentos_commands::Entity;
 use serde_json::{Value, json};
 
@@ -8,7 +9,7 @@ use super::*;
 use crate::files_testing::{app_with_drawing, drawing, last_said};
 
 pub(super) fn calc(app: &mut App, e: Event) {
-    let _ = app.update(Message::Calc(e));
+    let _ = app.update(Message::Gis(gis::Event::Calc(e)));
 }
 
 /// The journal's last call: its command and the work it was given (docs/adr/0622 §9).
@@ -28,13 +29,14 @@ pub(super) fn last_work(app: &App) -> (String, Value) {
 fn forward_intersection_adds_its_point_in_one_step() {
     let mut app = app_with_drawing();
     let _ = app.run("calc.forward");
-    assert_eq!(app.dialog, Some(Asking::Calc));
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
     calc(&mut app, Event::Known(Field::A, "0,0".into()));
     calc(&mut app, Event::Known(Field::B, "100;0".into()));
     calc(&mut app, Event::Alpha("50".into()));
     calc(&mut app, Event::Beta("50,0".into()));
     let doc = app.document.as_ref().expect("open");
     let found = app
+        .gis
         .calc
         .intersection
         .compute(&doc.model)
@@ -112,7 +114,7 @@ fn missing_fields_are_said_in_the_webs_order() {
     calc(&mut app, Event::Known(Field::B, "Q9".into()));
     calc(&mut app, Event::Alpha("x".into()));
     let doc = app.document.as_ref().expect("open");
-    let computed = app.calc.intersection.compute(&doc.model);
+    let computed = app.gis.calc.intersection.compute(&doc.model);
     assert_eq!(
         computed.errors,
         [
@@ -140,15 +142,15 @@ fn a_point_shown_on_the_drawing_comes_back_to_its_field() {
     );
     let _ = app.submit_line("486513.341,4420189.522");
     assert!(!app.session.is_running());
-    assert_eq!(app.dialog, Some(Asking::Calc));
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
     // The demo drawing's point P1 lies exactly there: its name is taken.
-    assert_eq!(app.calc.stakeout.station, "P1");
-    assert_eq!(app.calc.stakeout.back, "12,34", "the rest as it was");
+    assert_eq!(app.gis.calc.stakeout.station, "P1");
+    assert_eq!(app.gis.calc.stakeout.back, "12,34", "the rest as it was");
     // Esc: nothing picked, the window opens again.
     calc(&mut app, Event::Pick(Field::Back));
     app.cancel();
-    assert_eq!(app.dialog, Some(Asking::Calc));
-    assert_eq!(app.calc.stakeout.back, "12,34");
+    assert_eq!(app.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc)));
+    assert_eq!(app.gis.calc.stakeout.back, "12,34");
 }
 
 /// From (0, 0) oriented on (0, 100): the point (100, 0) is 100 g east,
@@ -161,7 +163,7 @@ fn stakeout_values_and_a_target_at_the_station() {
     calc(&mut app, Event::Known(Field::Back, "0,100".into()));
     calc(&mut app, Event::Cell(0, 0, "100,0".into()));
     let doc = app.document.as_ref().expect("open");
-    let read = app.calc.stakeout.compute(&doc.model);
+    let read = app.gis.calc.stakeout.compute(&doc.model);
     let stakes = read.stakes.expect("values");
     assert!((stakes[0].bearing - 100.0).abs() < 1e-9);
     assert!((stakes[0].distance - 100.0).abs() < 1e-9);
@@ -170,7 +172,7 @@ fn stakeout_values_and_a_target_at_the_station() {
     calc(&mut app, Event::Cell(1, 0, "0,0".into()));
     let doc = app.document.as_ref().expect("open");
     assert_eq!(
-        app.calc.stakeout.compute(&doc.model).errors,
+        app.gis.calc.stakeout.compute(&doc.model).errors,
         ["2. satırdaki nokta durulan noktayla aynı yerde; semt tanımsız."]
     );
 }
@@ -200,16 +202,19 @@ fn a_closed_traverse_closes_and_adds_its_points_in_one_step() {
             Some("P1\t100\t100\r\nP2\t100,0040\t100\nP3\t100\t100\n".into()),
         ),
     );
-    let form = &app.calc.traverse;
+    let form = &app.gis.calc.traverse;
     assert_eq!(form.rows.len(), 3, "a row added before the end station");
-    assert_eq!(form.rows[1][..3], ["P2", "100,0040", "100"].map(String::from));
+    assert_eq!(
+        form.rows[1][..3],
+        ["P2", "100,0040", "100"].map(String::from)
+    );
     // The end station: the start again, its angle typed, no leg.
     assert_eq!(form.last[NAME], "A");
     assert!(form.readonly(4, NAME) && form.readonly(4, DISTANCE));
     assert!(!form.readonly(4, ANGLE));
     calc(&mut app, Event::Cell(4, ANGLE, "300".into()));
     let doc = app.document.as_ref().expect("open");
-    let c = app.calc.traverse.compute(&doc.model);
+    let c = app.gis.calc.traverse.compute(&doc.model);
     assert!(c.errors.is_empty(), "{:?}", c.errors);
     let r = c.result.expect("a result");
     assert!(r.angle_misclosure.is_some_and(|f| (f - 0.004).abs() < 1e-9));
@@ -232,6 +237,7 @@ fn a_closed_traverse_closes_and_adds_its_points_in_one_step() {
     assert_eq!(c.names, ["P1", "P2", "P3"]);
     let format = Format::of(doc.settings());
     let report = app
+        .gis
         .calc
         .traverse
         .report(&doc.model, &format)
@@ -279,6 +285,7 @@ fn a_closed_traverse_closes_and_adds_its_points_in_one_step() {
     doc.model.set_settings(settings);
     let doc = app.document.as_ref().expect("open");
     let report = app
+        .gis
         .calc
         .traverse
         .report(&doc.model, &format)
@@ -320,14 +327,14 @@ fn an_open_traverse_ends_on_its_last_new_point() {
     calc(&mut app, Event::TraverseKind(traverse::Kind::Open));
     calc(&mut app, Event::Known(Field::Start, "P1".into()));
     calc(&mut app, Event::Known(Field::Back, "0,0".into()));
-    let form = &app.calc.traverse;
+    let form = &app.gis.calc.traverse;
     assert_eq!(form.first[NAME], "P1", "the start's row takes its name");
     assert_eq!(Table::rows(form), 3, "no end station");
     assert!(form.readonly(2, ANGLE) && form.readonly(2, DISTANCE));
     assert!(!form.readonly(2, NAME));
     let doc = app.document.as_ref().expect("open");
     assert_eq!(
-        app.calc.traverse.compute(&doc.model).errors,
+        app.gis.calc.traverse.compute(&doc.model).errors,
         [
             "Başlangıç satırında kırılma açısı yok.",
             "Başlangıç satırında kenar uzunluğu yok.",
@@ -335,11 +342,11 @@ fn an_open_traverse_ends_on_its_last_new_point() {
         ]
     );
     // Enter under the last row adds one; it is the new last point.
-    let _ = app.update(Message::Calc(Event::Submit(2, NAME)));
-    assert_eq!(Table::rows(&app.calc.traverse), 4);
+    let _ = app.update(Message::Gis(gis::Event::Calc(Event::Submit(2, NAME))));
+    assert_eq!(Table::rows(&app.gis.calc.traverse), 4);
     calc(&mut app, Event::RemoveRow(3));
     calc(&mut app, Event::RemoveRow(0));
-    assert_eq!(Table::rows(&app.calc.traverse), 3, "the start stays");
+    assert_eq!(Table::rows(&app.gis.calc.traverse), 3, "the start stays");
 }
 
 /// Kutupsal alım adds its points with their heights, as one step.
@@ -356,7 +363,7 @@ fn polar_points_come_with_their_heights() {
     calc(&mut app, Event::Cell(0, DISTANCE, "10".into()));
     calc(&mut app, Event::Cell(0, ZENITH, "100".into()));
     let doc = app.document.as_ref().expect("open");
-    let read = app.calc.polar.compute(&doc.model);
+    let read = app.gis.calc.polar.compute(&doc.model);
     let points = read.points.expect("the points");
     assert_eq!(points.len(), 1);
     assert_eq!(read.names, ["K1"]);
@@ -405,17 +412,17 @@ fn the_layer_is_chosen_on_opening_and_kept() {
     let _ = app.run("calc.polar");
     let doc = app.document.as_ref().expect("open");
     let active = doc.model.layers().active().to_owned();
-    assert_eq!(app.calc.polar.layer.as_deref(), Some(active.as_str()));
+    assert_eq!(app.gis.calc.polar.layer.as_deref(), Some(active.as_str()));
     let other = leaves(&doc.model)
         .into_iter()
         .position(|(id, _, locked)| id != active && !locked)
         .expect("another layer");
     calc(&mut app, Event::Layer(other));
-    let chosen = app.calc.polar.layer.clone();
+    let chosen = app.gis.calc.polar.layer.clone();
     assert_ne!(chosen.as_deref(), Some(active.as_str()));
     calc(&mut app, Event::Close);
     let _ = app.run("calc.polar");
-    assert_eq!(app.calc.polar.layer, chosen);
+    assert_eq!(app.gis.calc.polar.layer, chosen);
 }
 
 /// The windows filled in, for the owner. Not run by default:
@@ -462,7 +469,7 @@ fn screens() {
                 };
                 snapshot.settle(&mut app, App::view, &mut update);
                 let calc = |app: &mut App, e: Event| {
-                    let _ = app.update(Message::Calc(e));
+                    let _ = app.update(Message::Gis(gis::Event::Calc(e)));
                 };
                 if name.ends_with("-zemin") {
                     let doc = app.document.as_mut().expect("open");
@@ -638,7 +645,13 @@ fn the_survey_windows_take_lengths_to_the_grid() {
     calc(&mut app, Event::Cell(0, READING, "100".into()));
     calc(&mut app, Event::Cell(0, DISTANCE, "1000".into()));
     let doc = app.document.as_ref().expect("open");
-    let points = app.calc.polar.compute(&doc.model).points.expect("computed");
+    let points = app
+        .gis
+        .calc
+        .polar
+        .compute(&doc.model)
+        .points
+        .expect("computed");
     let core = polar_survey(&PolarInput {
         unit: "grad".to_owned(),
         station: Vec2::new(486500.0, 4420200.0),
@@ -666,6 +679,7 @@ fn the_survey_windows_take_lengths_to_the_grid() {
     );
     let format = kentos_interaction::Format::of(doc.settings());
     let report = app
+        .gis
         .calc
         .polar
         .report(&doc.model, &format)
@@ -694,6 +708,7 @@ fn the_survey_windows_take_lengths_to_the_grid() {
     calc(&mut app, Event::Cell(0, 0, "487500,4420200".into()));
     let doc = app.document.as_ref().expect("open");
     let stakes = app
+        .gis
         .calc
         .stakeout
         .compute(&doc.model)
@@ -729,7 +744,13 @@ fn the_survey_windows_take_lengths_to_the_grid() {
     });
     doc.model.set_settings(settings);
     let doc = app.document.as_ref().expect("open");
-    let points = app.calc.polar.compute(&doc.model).points.expect("computed");
+    let points = app
+        .gis
+        .calc
+        .polar
+        .compute(&doc.model)
+        .points
+        .expect("computed");
     assert_eq!(points[0].grid, None);
     assert!((points[0].p.x - 487500.0).abs() < 1e-9);
 }
@@ -750,8 +771,17 @@ fn a_closed_traverse_carries_its_heights() {
     calc(&mut app, Event::Known(Field::Back, "-100,0".into()));
     calc(&mut app, Event::TraverseHeights(true));
     calc(&mut app, Event::TraverseStartZ("100".into()));
-    assert!(!app.calc.traverse.readonly(0, ZENITH), "the start's row takes its zenith");
-    for (col, v) in [(ANGLE, "200"), (DISTANCE, "100"), (ZENITH, "99"), (INSTRUMENT, "1,5"), (TARGET, "1,6")] {
+    assert!(
+        !app.gis.calc.traverse.readonly(0, ZENITH),
+        "the start's row takes its zenith"
+    );
+    for (col, v) in [
+        (ANGLE, "200"),
+        (DISTANCE, "100"),
+        (ZENITH, "99"),
+        (INSTRUMENT, "1,5"),
+        (TARGET, "1,6"),
+    ] {
         calc(&mut app, Event::Cell(0, col, v.into()));
     }
     calc(
@@ -763,9 +793,12 @@ fn a_closed_traverse_carries_its_heights() {
         ),
     );
     calc(&mut app, Event::Cell(4, ANGLE, "300".into()));
-    assert!(app.calc.traverse.readonly(4, ZENITH), "the end station has no leg");
+    assert!(
+        app.gis.calc.traverse.readonly(4, ZENITH),
+        "the end station has no leg"
+    );
     let doc = app.document.as_ref().expect("open");
-    let c = app.calc.traverse.compute(&doc.model);
+    let c = app.gis.calc.traverse.compute(&doc.model);
     assert!(c.errors.is_empty(), "{:?}", c.errors);
     let r = c.result.expect("a result");
     let k = doc.settings().refraction();
@@ -784,9 +817,22 @@ fn a_closed_traverse_carries_its_heights() {
     }
     assert_eq!(heights.len(), 3, "the new points' heights");
     let format = Format::of(doc.settings());
-    let report = app.calc.traverse.report(&doc.model, &format).expect("a report");
-    assert!(report.iter().any(|row| row.iter().any(|c| c == "Δh")), "{report:?}");
-    assert!(report.iter().any(|row| row.first().is_some_and(|c| c == "Kot kapanma hatası")), "{report:?}");
+    let report = app
+        .gis
+        .calc
+        .traverse
+        .report(&doc.model, &format)
+        .expect("a report");
+    assert!(
+        report.iter().any(|row| row.iter().any(|c| c == "Δh")),
+        "{report:?}"
+    );
+    assert!(
+        report
+            .iter()
+            .any(|row| row.first().is_some_and(|c| c == "Kot kapanma hatası")),
+        "{report:?}"
+    );
     calc(&mut app, Event::AddPoints);
     let (_, work) = last_work(&app);
     assert_eq!(work["heights"]["start"], json!(100.0));

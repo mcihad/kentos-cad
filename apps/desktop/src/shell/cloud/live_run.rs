@@ -12,6 +12,7 @@
 //! Copies and drafts go to `.run/cloud-live/`, never to the user's folders.
 //! Projects it makes stay in the development database, named “Masaüstü canlı …”.
 
+use crate::gis;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::mpsc;
@@ -1311,18 +1312,22 @@ fn jobs_live() {
     assert!(!areas.is_empty(), "the sample has parcels");
     r.app.selection.set(areas.iter().copied());
     r.send(Message::Run("processing.run.attributes.calculate"));
-    r.send(Message::Processing(crate::processing::Event::Target(
-        "server".into(),
+    r.send(Message::Gis(gis::Event::Processing(
+        crate::processing::Event::Target("server".into()),
     )));
-    r.send(Message::Processing(crate::processing::Event::Run));
+    r.send(Message::Gis(gis::Event::Processing(
+        crate::processing::Event::Run,
+    )));
     r.until("iş istendi", Duration::from_secs(20), |a| {
         matches!(
-            a.processing.dialog.as_ref().map(|w| &w.status),
+            a.gis.processing.dialog.as_ref().map(|w| &w.status),
             Some(crate::processing::RunStatus::Asked(text)) if text.starts_with("Sunucu işi istendi")
         )
     });
     r.shot("isler-05-islem-istendi");
-    r.send(Message::Processing(crate::processing::Event::ServerJobs));
+    r.send(Message::Gis(gis::Event::Processing(
+        crate::processing::Event::ServerJobs,
+    )));
     r.until("işlem işi", Duration::from_secs(90), |a| {
         let list = jobs(a);
         list.len() == 3 && list[0].state.is_over() && list[0].kind == "project.processing"

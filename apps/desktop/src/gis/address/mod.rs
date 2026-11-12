@@ -29,6 +29,7 @@ pub(crate) mod providers;
 mod tests;
 mod view;
 
+use crate::gis;
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
@@ -276,7 +277,8 @@ impl App {
     /// The source asked: the one chosen when it can be asked, else the first that can.
     pub(crate) fn address_source(&self) -> Option<SourceOption> {
         let all = self.address_sources();
-        self.address
+        self.gis
+            .address
             .source
             .as_ref()
             .and_then(|id| all.iter().find(|s| &s.id == id && s.why.is_none()).cloned())
@@ -299,7 +301,7 @@ impl App {
         if f64::from(self.bottom_log()) + bar < PANEL_HEIGHT {
             self.bottom_dragged(Some((PANEL_HEIGHT - bar) as f32), Instant::now());
         }
-        self.address.focus = false;
+        self.gis.address.focus = false;
         let id = iced::widget::Id::new(ADDRESS_FIELD);
         Task::batch([
             iced::widget::operation::focus(id.clone()),
@@ -309,10 +311,10 @@ impl App {
 
     pub(crate) fn address_event(&mut self, e: Event) -> Task<Message> {
         match e {
-            Event::Text(t) => self.address.text = t,
+            Event::Text(t) => self.gis.address.text = t,
             Event::Source(id) => {
-                self.address.source = Some(id);
-                self.address.said = None;
+                self.gis.address.source = Some(id);
+                self.gis.address.said = None;
             }
             Event::Find => return self.address_find(),
             Event::Reverse => return self.run("address.reverse"),
@@ -321,13 +323,13 @@ impl App {
                 if b.key.starts_with('#') {
                     return Task::none();
                 }
-                if let Some(w) = self.address.data.as_mut() {
+                if let Some(w) = self.gis.address.data.as_mut() {
                     w.built(&b);
                 }
             }
             Event::Press(i) => {
-                if i < self.address.rows.len() {
-                    self.address.current = Some(i);
+                if i < self.gis.address.rows.len() {
+                    self.gis.address.current = Some(i);
                     self.address_go();
                 }
             }
@@ -350,7 +352,7 @@ impl App {
             return Task::none();
         };
         let model = &doc.model;
-        if self.address.fresh(key, def, model) {
+        if self.gis.address.fresh(key, def, model) {
             return Task::none();
         }
         let input = kentos_native_application::addresses::input(model, def);
@@ -359,7 +361,7 @@ impl App {
             .iter()
             .flat_map(|l| model.by_layer(l).map(|e| e.base().id))
             .collect();
-        self.address.built.insert(
+        self.gis.address.built.insert(
             key.to_owned(),
             Stamp {
                 def: def.clone(),
@@ -369,17 +371,17 @@ impl App {
             },
         );
         let (done, wait) = oneshot::channel();
-        self.address.engine.send(Job::Build {
+        self.gis.address.engine.send(Job::Build {
             key: key.to_owned(),
             input: Box::new(input),
             done,
         });
         Task::perform(wait, |r| {
-            Message::Address(Event::Built(r.unwrap_or(Built {
+            Message::Gis(gis::Event::Address(Event::Built(r.unwrap_or(Built {
                 key: String::new(),
                 doors: 0,
                 millis: 0.0,
-            })))
+            }))))
         })
     }
 
@@ -393,11 +395,13 @@ impl App {
     ) -> Task<Message> {
         let build = self.address_build(key, def);
         let (done, wait) = oneshot::channel();
-        self.address.engine.send(job(done));
+        self.gis.address.engine.send(job(done));
         Task::batch([
             build,
             Task::perform(wait, move |r| {
-                Message::Address(Event::Answered(r.unwrap_or_else(|_| failed(ticket))))
+                Message::Gis(gis::Event::Address(Event::Answered(
+                    r.unwrap_or_else(|_| failed(ticket)),
+                )))
             }),
         ])
     }
@@ -436,19 +440,19 @@ impl App {
 
     /// Ara: the address typed, looked for in the source.
     fn address_find(&mut self) -> Task<Message> {
-        let text = self.address.text.trim().to_owned();
+        let text = self.gis.address.text.trim().to_owned();
         if text.is_empty() {
-            self.address.said = Some((Say::Warn, texts::NO_TEXT.into()));
+            self.gis.address.said = Some((Say::Warn, texts::NO_TEXT.into()));
             return Task::none();
         }
         let Some(source) = self.address_source() else {
-            self.address.said = Some((Say::Warn, texts::NO_SOURCE.into()));
+            self.gis.address.said = Some((Say::Warn, texts::NO_SOURCE.into()));
             return Task::none();
         };
-        let ticket = self.address.next_ticket();
-        self.address.waiting = Some(ticket);
-        self.address.question = Some(Question::Address(text.clone()));
-        self.address.said = Some((Say::Info, texts::SEARCHING.into()));
+        let ticket = self.gis.address.next_ticket();
+        self.gis.address.waiting = Some(ticket);
+        self.gis.address.question = Some(Question::Address(text.clone()));
+        self.gis.address.said = Some((Say::Info, texts::SEARCHING.into()));
         if let Some(id) = source.id.strip_prefix(LOCATOR) {
             let Some(def) = self
                 .document
@@ -457,7 +461,7 @@ impl App {
             else {
                 return Task::none();
             };
-            self.address.answerer = Some(Answerer {
+            self.gis.address.answerer = Some(Answerer {
                 name: def.name.clone(),
                 ..Answerer::default()
             });
@@ -484,13 +488,13 @@ impl App {
         let (p, plane) = match self.address_provider(&id) {
             Ok(x) => x,
             Err(why) => {
-                self.address.waiting = None;
-                self.address.said = Some((Say::Warn, why));
+                self.gis.address.waiting = None;
+                self.gis.address.said = Some((Say::Warn, why));
                 return Task::none();
             }
         };
         let bias = self.address_bias(&plane);
-        self.address.answerer = Some(Answerer {
+        self.gis.address.answerer = Some(Answerer {
             name: p.name.clone(),
             attribution: p.attribution.clone(),
             host: Some(p.host()),
@@ -516,15 +520,17 @@ impl App {
                 let _ = done.send(Reply { ticket, answer });
             });
         if asked.is_err() {
-            self.address.waiting = None;
-            self.address.said = Some((
+            self.gis.address.waiting = None;
+            self.gis.address.said = Some((
                 Say::Error,
                 "Sağlayıcıya sorulamadı: iş parçacığı açılmadı.".into(),
             ));
             return Task::none();
         }
         Task::perform(wait, move |r| {
-            Message::Address(Event::Answered(r.unwrap_or_else(|_| failed(ticket))))
+            Message::Gis(gis::Event::Address(Event::Answered(
+                r.unwrap_or_else(|_| failed(ticket)),
+            )))
         })
     }
 
@@ -541,13 +547,13 @@ impl App {
             }
         }
         let Some(source) = self.address_source() else {
-            self.address.said = Some((Say::Warn, texts::NO_SOURCE.into()));
+            self.gis.address.said = Some((Say::Warn, texts::NO_SOURCE.into()));
             return Task::none();
         };
-        let ticket = self.address.next_ticket();
-        self.address.waiting = Some(ticket);
-        self.address.question = Some(Question::Place(at));
-        self.address.said = Some((Say::Info, texts::SEARCHING.into()));
+        let ticket = self.gis.address.next_ticket();
+        self.gis.address.waiting = Some(ticket);
+        self.gis.address.question = Some(Question::Place(at));
+        self.gis.address.said = Some((Say::Info, texts::SEARCHING.into()));
         if let Some(id) = source.id.strip_prefix(LOCATOR) {
             let Some(def) = self
                 .document
@@ -556,7 +562,7 @@ impl App {
             else {
                 return Task::none();
             };
-            self.address.answerer = Some(Answerer {
+            self.gis.address.answerer = Some(Answerer {
                 name: def.name.clone(),
                 ..Answerer::default()
             });
@@ -583,17 +589,17 @@ impl App {
         let (p, plane) = match self.address_provider(&id) {
             Ok(x) => x,
             Err(why) => {
-                self.address.waiting = None;
-                self.address.said = Some((Say::Warn, why));
+                self.gis.address.waiting = None;
+                self.gis.address.said = Some((Say::Warn, why));
                 return Task::none();
             }
         };
         let Some((lon, lat)) = plane.to_wgs84(at) else {
-            self.address.waiting = None;
-            self.address.said = Some((Say::Warn, "Bu yer WGS 84'e çevrilemedi.".into()));
+            self.gis.address.waiting = None;
+            self.gis.address.said = Some((Say::Warn, "Bu yer WGS 84'e çevrilemedi.".into()));
             return Task::none();
         };
-        self.address.answerer = Some(Answerer {
+        self.gis.address.answerer = Some(Answerer {
             name: p.name.clone(),
             attribution: p.attribution.clone(),
             host: Some(p.host()),
@@ -619,21 +625,23 @@ impl App {
                 let _ = done.send(Reply { ticket, answer });
             });
         if asked.is_err() {
-            self.address.waiting = None;
-            self.address.said = Some((
+            self.gis.address.waiting = None;
+            self.gis.address.said = Some((
                 Say::Error,
                 "Sağlayıcıya sorulamadı: iş parçacığı açılmadı.".into(),
             ));
             return Task::none();
         }
         Task::perform(wait, move |r| {
-            Message::Address(Event::Answered(r.unwrap_or_else(|_| failed(ticket))))
+            Message::Gis(gis::Event::Address(Event::Answered(
+                r.unwrap_or_else(|_| failed(ticket)),
+            )))
         })
     }
 
     /// The tool's places, asked after the update.
     pub(crate) fn address_tasks(&mut self) -> Task<Message> {
-        let asked = std::mem::take(&mut self.address.wanted);
+        let asked = std::mem::take(&mut self.gis.address.wanted);
         Task::batch(
             asked
                 .into_iter()
@@ -644,45 +652,46 @@ impl App {
 
     fn address_answered(&mut self, reply: Reply) {
         if self
+            .gis
             .address
             .data
             .as_ref()
             .is_some_and(|w| w.waits_for(reply.ticket))
         {
-            if let Some(w) = self.address.data.as_mut() {
+            if let Some(w) = self.gis.address.data.as_mut() {
                 w.answered(reply);
             }
             return;
         }
-        if self.address.waiting != Some(reply.ticket) {
+        if self.gis.address.waiting != Some(reply.ticket) {
             // A later question was asked: this answer is old.
             return;
         }
-        self.address.waiting = None;
-        let place = matches!(self.address.question, Some(Question::Place(_)));
+        self.gis.address.waiting = None;
+        let place = matches!(self.gis.address.question, Some(Question::Place(_)));
         match reply.answer {
             Answer::Found { rows, status } => {
-                self.address.status = status;
-                self.address.current = (!rows.is_empty()).then_some(0);
-                self.address.said = rows
+                self.gis.address.status = status;
+                self.gis.address.current = (!rows.is_empty()).then_some(0);
+                self.gis.address.said = rows
                     .is_empty()
                     .then(|| (Say::Warn, texts::NOT_FOUND.to_owned()));
-                self.address.rows = rows;
+                self.gis.address.rows = rows;
             }
             Answer::Place(found) => {
-                self.address.status = None;
-                self.address.said = found
+                self.gis.address.status = None;
+                self.gis.address.said = found
                     .is_none()
                     .then(|| (Say::Warn, texts::NO_PLACE.to_owned()));
-                self.address.rows = found.into_iter().map(|m| *m).collect();
-                self.address.current = (!self.address.rows.is_empty()).then_some(0);
+                self.gis.address.rows = found.into_iter().map(|m| *m).collect();
+                self.gis.address.current = (!self.gis.address.rows.is_empty()).then_some(0);
             }
             Answer::Checked(_) => {}
             Answer::Failed(why) => {
-                self.address.rows.clear();
-                self.address.current = None;
-                self.address.status = None;
-                self.address.said = Some((Say::Error, why));
+                self.gis.address.rows.clear();
+                self.gis.address.current = None;
+                self.gis.address.status = None;
+                self.gis.address.said = Some((Say::Error, why));
             }
         }
         // A place's address is marked where it is; an address looked for, when Git or a row asks.
@@ -694,21 +703,25 @@ impl App {
     /// The chosen row marked over the drawing.
     fn address_mark_current(&mut self) {
         let (Some(m), Some(session)) = (
-            self.address.current.and_then(|i| self.address.rows.get(i)),
+            self.gis
+                .address
+                .current
+                .and_then(|i| self.gis.address.rows.get(i)),
             self.document.as_ref().map(|d| d.session),
         ) else {
             return;
         };
-        self.address.mark = Some((session, m.at, m.label.clone()));
+        self.gis.address.mark = Some((session, m.at, m.label.clone()));
         self.search_unmark();
     }
 
     /// Git: the view comes to the chosen row, which is marked.
     fn address_go(&mut self) {
         let Some(m) = self
+            .gis
             .address
             .current
-            .and_then(|i| self.address.rows.get(i))
+            .and_then(|i| self.gis.address.rows.get(i))
             .cloned()
         else {
             return;
@@ -720,7 +733,8 @@ impl App {
     /// The place marked, as the drawing shows it.
     pub(crate) fn address_mark_label(&self) -> Option<(Vec2, String)> {
         let doc = self.document.as_ref()?;
-        self.address
+        self.gis
+            .address
             .mark
             .as_ref()
             .filter(|(session, _, _)| *session == doc.session)
@@ -729,7 +743,7 @@ impl App {
 
     /// İşareti kaldır, and a new drawing: the mark goes.
     pub(crate) fn address_unmark(&mut self) {
-        self.address.mark = None;
+        self.gis.address.mark = None;
     }
 
     /// What a point written at the chosen row says of it; none for a place's address.
@@ -737,23 +751,29 @@ impl App {
         &self,
         base: &std::collections::BTreeMap<String, String>,
     ) -> Result<(Match, std::collections::BTreeMap<String, String>), String> {
-        let i = self.address.current.ok_or("Bir aday seçin.")?;
-        let m = self.address.rows.get(i).cloned().ok_or("Bir aday seçin.")?;
-        let Some(Question::Address(input)) = &self.address.question else {
+        let i = self.gis.address.current.ok_or("Bir aday seçin.")?;
+        let m = self
+            .gis
+            .address
+            .rows
+            .get(i)
+            .cloned()
+            .ok_or("Bir aday seçin.")?;
+        let Some(Question::Address(input)) = &self.gis.address.question else {
             return Err(texts::NOT_FOR_PLACE.into());
         };
-        let answerer = self.address.answerer.clone().unwrap_or_default();
+        let answerer = self.gis.address.answerer.clone().unwrap_or_default();
         if let Some(why) = &answerer.keeps_none {
             return Err(why.clone());
         }
-        let status = match (i, self.address.status) {
+        let status = match (i, self.gis.address.status) {
             (0, Some(s)) => s.word(),
             _ => texts::BY_HAND,
         };
         let mut attrs = match_attributes(
             base,
             &Matched {
-                status: self.address.status.unwrap_or(Status::Matched),
+                status: self.gis.address.status.unwrap_or(Status::Matched),
                 found: &m,
                 source: &answerer.name,
                 attribution: &answerer.attribution,
@@ -769,7 +789,7 @@ impl App {
         let (m, attrs) = match self.address_attributes(&Default::default()) {
             Ok(x) => x,
             Err(why) => {
-                self.address.said = Some((Say::Warn, why));
+                self.gis.address.said = Some((Say::Warn, why));
                 return;
             }
         };
@@ -818,7 +838,7 @@ impl App {
             }
             other => {
                 model.cancel_group(step);
-                self.address.said = Some((Say::Error, refusal(other, "Nokta yazılamadı.")));
+                self.gis.address.said = Some((Say::Error, refusal(other, "Nokta yazılamadı.")));
             }
         }
     }
@@ -836,13 +856,13 @@ impl App {
             _ => None,
         };
         let Some((slot, from, base)) = point else {
-            self.address.said = Some((Say::Warn, "Taşınacak tek bir nokta seçin.".into()));
+            self.gis.address.said = Some((Say::Warn, "Taşınacak tek bir nokta seçin.".into()));
             return;
         };
         let (m, attrs) = match self.address_attributes(&base) {
             Ok(x) => x,
             Err(why) => {
-                self.address.said = Some((Say::Warn, why));
+                self.gis.address.said = Some((Say::Warn, why));
                 return;
             }
         };
@@ -869,7 +889,7 @@ impl App {
         );
         if !matches!(moved, CommandResult::Completed { .. }) {
             model.cancel_group(step);
-            self.address.said = Some((Say::Error, refusal(moved, "Nokta taşınamadı.")));
+            self.gis.address.said = Some((Say::Error, refusal(moved, "Nokta taşınamadı.")));
             return;
         }
         let set = kentos_native_application::set::execute(
@@ -903,23 +923,23 @@ impl App {
             }
             other => {
                 model.cancel_group(step);
-                self.address.said = Some((Say::Error, refusal(other, "Nokta taşınamadı.")));
+                self.gis.address.said = Some((Say::Error, refusal(other, "Nokta taşınamadı.")));
             }
         }
     }
 
     /// A new drawing: what was built and found for the last one goes.
     pub(crate) fn address_reset(&mut self) {
-        for key in std::mem::take(&mut self.address.built).into_keys() {
-            self.address.engine.send(Job::Drop(key));
+        for key in std::mem::take(&mut self.gis.address.built).into_keys() {
+            self.gis.address.engine.send(Job::Drop(key));
         }
-        self.address.rows.clear();
-        self.address.current = None;
-        self.address.status = None;
-        self.address.question = None;
-        self.address.waiting = None;
-        self.address.said = None;
-        self.address.mark = None;
+        self.gis.address.rows.clear();
+        self.gis.address.current = None;
+        self.gis.address.status = None;
+        self.gis.address.question = None;
+        self.gis.address.waiting = None;
+        self.gis.address.said = None;
+        self.gis.address.mark = None;
     }
 
     /// The device learns whether a Google basemap is shown (Google's results only beside its map).
@@ -940,6 +960,7 @@ impl App {
             (None, None) => "—".to_owned(),
         };
         let source = self
+            .gis
             .address
             .answerer
             .as_ref()
@@ -957,7 +978,7 @@ impl App {
 
     /// The status line: how many, the best one's status, the attribution and where the address went.
     pub(crate) fn address_status_line(&self) -> String {
-        let a = &self.address;
+        let a = &self.gis.address;
         if a.waiting.is_some() {
             return texts::SEARCHING.to_owned();
         }
@@ -991,20 +1012,26 @@ impl App {
 
     /// The tab's controls by their words (a trace's `panel` step).
     pub(crate) fn address_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let msg = |e| Some(Message::Address(e));
+        let msg = |e| Some(Message::Gis(gis::Event::Address(e)));
         Ok(match control {
             Control::Fill(texts::SEARCH, t) => msg(Event::Text(t.to_owned())),
             Control::Press(texts::FIND) | Control::Key("Enter") => msg(Event::Find),
             Control::Press(texts::REVERSE) => msg(Event::Reverse),
-            Control::Press(texts::GO) => self.address.current.map(|_| Message::Address(Event::Go)),
+            Control::Press(texts::GO) => self
+                .gis
+                .address
+                .current
+                .map(|_| Message::Gis(gis::Event::Address(Event::Go))),
             Control::Press(texts::ADD) => self
+                .gis
                 .address
                 .current
-                .map(|_| Message::Address(Event::AddPoint)),
+                .map(|_| Message::Gis(gis::Event::Address(Event::AddPoint))),
             Control::Press(texts::MOVE) => self
+                .gis
                 .address
                 .current
-                .map(|_| Message::Address(Event::MovePoint)),
+                .map(|_| Message::Gis(gis::Event::Address(Event::MovePoint))),
             Control::Press(texts::DATA) => msg(Event::OpenData),
             Control::Press(texts::PROVIDERS) => msg(Event::OpenProviders),
             Control::Pick(texts::SOURCE, item) => {
@@ -1019,7 +1046,7 @@ impl App {
                 msg(Event::Source(s.id))
             }
             Control::Row(n) => {
-                if n == 0 || n > self.address.rows.len() {
+                if n == 0 || n > self.gis.address.rows.len() {
                     return Err(format!("{n}. aday satırı yok"));
                 }
                 msg(Event::Press(n - 1))
@@ -1036,6 +1063,7 @@ impl App {
         }
         let format = self.format();
         let rows = self
+            .gis
             .address
             .rows
             .iter()
@@ -1046,6 +1074,7 @@ impl App {
             .collect();
         // What the tab's status line shows: what was said, else the answer's line.
         let line = self
+            .gis
             .address
             .said
             .as_ref()

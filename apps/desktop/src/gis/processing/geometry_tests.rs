@@ -6,6 +6,7 @@
 //! (fixtures/processing/v1/topology.kcad, docs/adr/1980) and, asked to, on an
 //! error layer in one step (docs/adr/2200), and the pictures for the owner.
 
+use crate::gis;
 use kentos_commands::DocumentSnapshotV1;
 use serde_json::json;
 
@@ -40,7 +41,7 @@ fn app_with(text: &str) -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Processing(e));
+    let _ = app.update(Message::Gis(gis::Event::Processing(e)));
 }
 
 fn value(app: &mut App, name: &str, v: serde_json::Value) {
@@ -48,7 +49,8 @@ fn value(app: &mut App, name: &str, v: serde_json::Value) {
 }
 
 fn status(app: &App) -> RunStatus {
-    app.processing
+    app.gis
+        .processing
         .dialog
         .as_ref()
         .map_or(RunStatus::Idle, |w| w.status.clone())
@@ -277,12 +279,18 @@ fn zoning_screens() {
     event(&mut app, Event::Run);
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("2-sonuc-acik-genis.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
-    app.processing.dialog = None;
+    app.gis.processing.dialog = None;
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("3-cizimde-acik-genis.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
 }
 
@@ -343,12 +351,18 @@ fn links_screens() {
     event(&mut app, Event::Run);
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("1-pencere-acik-genis.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
-    app.processing.dialog = None;
+    app.gis.processing.dialog = None;
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("2-cizimde-acik-genis.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
 }
 

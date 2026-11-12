@@ -16,6 +16,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Task, Theme};
 use kentos_commands::{
@@ -91,7 +92,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::TerrainCloud(event)
+    Message::Road(road::Event::TerrainCloud(event))
 }
 
 fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
@@ -169,7 +170,7 @@ impl App {
         let n = doc.model.settings().road.as_ref().map_or(0, |r| r.surfaces.len()) + 1;
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         let area = chosen_area(self);
-        self.terrain_cloud_window = Some(Box::new(Window {
+        self.road.terrain_cloud_window = Some(Box::new(Window {
             cloud: Some(cloud),
             classes: Vec::new(),
             returns: CloudReturns::All,
@@ -182,13 +183,15 @@ impl App {
             preview: None,
             warnings: Vec::new(),
         }));
-        self.dialog = Some(Dialog::TerrainCloud);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::TerrainCloud));
     }
 
     fn preview_terrain_cloud(&mut self) {
         let drawing = self.drawing_path();
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.terrain_cloud_window.as_mut() else { return };
+        let Some(w) = self.road.terrain_cloud_window.as_mut() else {
+            return;
+        };
         let (preview, warnings) = match w.input(drawing) {
             Err(why) => (Err(why), Vec::new()),
             Ok(input) => match road_terrain_cloud::plan(&ExecutionContext::new(&mut doc.model.reading_copy()), &input) {
@@ -207,7 +210,9 @@ impl App {
 
     pub(crate) fn terrain_cloud_event(&mut self, event: Event) -> Task<Message> {
         let picked = chosen_area(self);
-        let Some(w) = self.terrain_cloud_window.as_mut() else { return Task::none() };
+        let Some(w) = self.road.terrain_cloud_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Cloud(c) => w.cloud = Some(c),
             Event::Class(c) => {
@@ -238,13 +243,13 @@ impl App {
             }
             Event::Apply => return self.apply_terrain_cloud(),
             Event::Close => {
-                self.terrain_cloud_window = None;
+                self.road.terrain_cloud_window = None;
                 self.dialog = None;
                 return Task::none();
             }
         }
         // What was previewed was for the values then.
-        if let Some(w) = self.terrain_cloud_window.as_mut() {
+        if let Some(w) = self.road.terrain_cloud_window.as_mut() {
             w.preview = None;
             w.warnings.clear();
         }
@@ -253,7 +258,9 @@ impl App {
 
     fn apply_terrain_cloud(&mut self) -> Task<Message> {
         let drawing = self.drawing_path();
-        let Some(w) = self.terrain_cloud_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.terrain_cloud_window.as_ref() else {
+            return Task::none();
+        };
         let input = match w.input(drawing) {
             Ok(i) => i,
             Err(why) => {
@@ -274,14 +281,14 @@ impl App {
                     out.cloud.coverage * 100.0
                 ),
             );
-            self.terrain_cloud_window = None;
+            self.road.terrain_cloud_window = None;
             self.dialog = None;
         }
         Task::none()
     }
 
     pub(crate) fn terrain_cloud_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.terrain_cloud_window else {
+        let Some(w) = &self.road.terrain_cloud_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -443,7 +450,7 @@ impl App {
     }
 
     pub(crate) fn terrain_cloud_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.terrain_cloud_window.is_none() {
+        if self.road.terrain_cloud_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

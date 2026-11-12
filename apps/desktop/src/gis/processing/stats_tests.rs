@@ -206,7 +206,7 @@ fn the_accidents_clusters_are_numbered() {
             .all(|e| e.base().color.as_deref() == Some("#BDBDBD"))
     );
     // The window keeps its values for the next run.
-    let w = app.processing.dialog.as_ref().expect("the window");
+    let w = app.gis.processing.dialog.as_ref().expect("the window");
     assert_eq!(w.values["radius"], json!(30));
 }
 

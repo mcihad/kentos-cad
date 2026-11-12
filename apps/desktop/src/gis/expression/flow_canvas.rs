@@ -11,6 +11,7 @@
 //! - the wheel zooms, dragging the background pans; a palette entry carried
 //!   out of the tree is let go here.
 
+use crate::gis;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -33,7 +34,7 @@ const DRAG: f32 = 4.0;
 const PIN: f32 = 9.0;
 
 fn flow_event(e: FlowEvent) -> Message {
-    Message::Builder(super::Event::Flow(e))
+    Message::Gis(gis::Event::Builder(super::Event::Flow(e)))
 }
 
 fn publish(e: FlowEvent) -> canvas::Action<Message> {

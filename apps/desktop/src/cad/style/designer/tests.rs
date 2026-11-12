@@ -4,6 +4,7 @@
 //! Kitaplığım and to the project, a system symbol's copy, the question on
 //! closing, a layer style's symbol handed back with Uygula, pictures taken in.
 
+use crate::gis;
 use iced::widget::Id;
 use kentos_native_style::designer::{LayerPath, Patch, set};
 use kentos_native_style::library::Source;
@@ -631,13 +632,15 @@ fn an_expression_takes_fields_and_the_builder_s_text() {
             key: "width".into(),
         },
     );
-    let b = app.builder.as_mut().expect("the builder is open");
+    let b = app.gis.builder.as_mut().expect("the builder is open");
     assert_eq!(b.source, "Uzunluk * max(");
     assert!(b.context.starts_with("Çizgi sembolü tasarımcısı"));
     b.source = "[Uzunluk] / 100".into();
     b.check.error = None;
-    let _ = app.update(Message::Builder(crate::expression::Event::Ok));
-    assert!(app.builder.is_none());
+    let _ = app.update(Message::Gis(gis::Event::Builder(
+        crate::expression::Event::Ok,
+    )));
+    assert!(app.gis.builder.is_none());
     assert_eq!(
         layers(&app)[0]["width"],
         json!({ "expr": "[Uzunluk] / 100", "fallback": 0.5 })

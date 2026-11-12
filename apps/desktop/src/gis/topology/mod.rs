@@ -35,6 +35,7 @@ mod tests;
 
 pub(crate) use plan::{Filter, texts};
 
+use crate::gis;
 use std::sync::Arc;
 
 use iced::Task;
@@ -184,7 +185,8 @@ impl App {
     /// The last check, if it is the open drawing's.
     pub(crate) fn topology_checked(&self) -> Option<&Checked> {
         let doc = self.document.as_ref()?;
-        self.topology
+        self.gis
+            .topology
             .checked
             .as_ref()
             .filter(|c| c.session == doc.session)
@@ -221,6 +223,7 @@ impl App {
             return Task::none();
         }
         let chosen: Vec<String> = self
+            .gis
             .topology
             .selected
             .iter()
@@ -235,7 +238,7 @@ impl App {
     /// A check: at once when the rules' layers hold few objects, else on its own thread with the bar (docs/adr/0756),
     /// a check going on stopped for it.
     fn topology_run(&mut self, work: Work, then: Then) -> Task<Message> {
-        if let Some(r) = self.topology.running.take() {
+        if let Some(r) = self.gis.topology.running.take() {
             r.stop();
         }
         let Some(doc) = self.document.as_ref() else {
@@ -257,26 +260,26 @@ impl App {
             }
             return Task::none();
         }
-        let id = self.topology.next;
-        self.topology.next += 1;
+        let id = self.gis.topology.next;
+        self.gis.topology.next += 1;
         let copy = doc.model.reading_copy();
         let (running, task) = running::start(id, work, copy, objects, then, state, |id, reply| {
-            Message::Topology(Event::Ran(id, reply))
+            Message::Gis(gis::Event::Topology(Event::Ran(id, reply)))
         });
-        self.topology.running = Some(running);
+        self.gis.topology.running = Some(running);
         task
     }
 
     /// What a check's thread said: its progress, or its answer, which applies to the drawing it was started on.
     fn topology_heard(&mut self, id: u64, reply: Reply) {
-        let Some(r) = self.topology.running.as_mut().filter(|r| r.id == id) else {
+        let Some(r) = self.gis.topology.running.as_mut().filter(|r| r.id == id) else {
             // A check stopped or replaced: its words are not waited for.
             return;
         };
         match reply {
             Reply::Progress(..) | Reply::Stretch(..) => r.heard(&reply),
             Reply::Done => {
-                let Some(r) = self.topology.running.take() else {
+                let Some(r) = self.gis.topology.running.take() else {
                     return;
                 };
                 let open = self.document.as_ref().map(|d| d.session);
@@ -285,7 +288,7 @@ impl App {
                 }
             }
             Reply::Failed(why) => {
-                self.topology.running = None;
+                self.gis.topology.running = None;
                 self.warn(format!("Topoloji denetimi yapılamadı: {why}"));
             }
         }
@@ -293,7 +296,7 @@ impl App {
 
     /// Durdur: the check going on ends; the last check's findings stay.
     fn topology_stop(&mut self) {
-        if let Some(r) = self.topology.running.take() {
+        if let Some(r) = self.gis.topology.running.take() {
             r.stop();
             self.say(Level::Info, "Topoloji denetimi durduruldu.");
         }
@@ -328,10 +331,10 @@ impl App {
                     .iter()
                     .filter(|f| !f.exception && checked.g.lapsed(f))
                     .count();
-                self.topology.checked = Some(checked);
-                self.topology.selected.clear();
-                self.topology.anchor = None;
-                self.topology.previews.clear();
+                self.gis.topology.checked = Some(checked);
+                self.gis.topology.selected.clear();
+                self.gis.topology.anchor = None;
+                self.gis.topology.previews.clear();
                 if !quiet {
                     if missing > 0 {
                         self.warn(plan::missing_layers(missing));
@@ -382,9 +385,9 @@ impl App {
                     .filter(|(_, f)| chosen.contains(&checked.key(f)))
                     .map(|(i, _)| i)
                     .collect();
-                self.topology.checked = Some(checked);
-                self.topology.selected = selected;
-                self.topology.anchor = None;
+                self.gis.topology.checked = Some(checked);
+                self.gis.topology.selected = selected;
+                self.gis.topology.anchor = None;
                 self.topology_previews();
                 if !quiet {
                     self.say(
@@ -406,14 +409,14 @@ impl App {
                     .map(|c| c.findings.len())
                     .filter(|n| *n > 0)
                 {
-                    self.topology.selected = vec![at.min(n - 1)];
+                    self.gis.topology.selected = vec![at.min(n - 1)];
                     self.topology_previews();
                 }
             }
             // The chosen rows follow their keys.
             Then::Marked { keys, said } => {
                 if let Some(c) = self.topology_checked() {
-                    self.topology.selected = c
+                    self.gis.topology.selected = c
                         .findings
                         .iter()
                         .enumerate()
@@ -454,20 +457,20 @@ impl App {
     /// The rows shown now, as places in the findings.
     pub(crate) fn topology_shown(&self) -> Vec<usize> {
         self.topology_checked().map_or_else(Vec::new, |c| {
-            let rule = self.topology.rule.filter(|&r| r < c.g.rules.len());
-            plan::shown_findings(&c.findings, self.topology.filter, rule)
+            let rule = self.gis.topology.rule.filter(|&r| r < c.g.rules.len());
+            plan::shown_findings(&c.findings, self.gis.topology.filter, rule)
         })
     }
 
     /// The finding shown over the drawing: the one chosen row's.
     pub(crate) fn topology_problem(&self) -> Option<ProblemMark> {
-        if self.topology.selected.len() != 1 {
+        if self.gis.topology.selected.len() != 1 {
             return None;
         }
         let f = self
             .topology_checked()?
             .findings
-            .get(self.topology.selected[0])?;
+            .get(self.gis.topology.selected[0])?;
         Some(ProblemMark {
             at: f.at,
             label: core::problem_label(f.problem).to_owned(),
@@ -483,20 +486,20 @@ impl App {
             Event::Ran(id, reply) => self.topology_heard(id, reply),
             Event::Stop => self.topology_stop(),
             Event::Frame => {
-                if let Some(r) = self.topology.running.as_mut() {
+                if let Some(r) = self.gis.topology.running.as_mut() {
                     r.frame(std::time::Instant::now());
                 }
             }
             Event::Rules => return self.open_topology_rules(),
             Event::Filter(f) => {
-                self.topology.filter = f;
-                self.topology.selected.clear();
-                self.topology.anchor = None;
+                self.gis.topology.filter = f;
+                self.gis.topology.selected.clear();
+                self.gis.topology.anchor = None;
             }
             Event::Rule(r) => {
-                self.topology.rule = r;
-                self.topology.selected.clear();
-                self.topology.anchor = None;
+                self.gis.topology.rule = r;
+                self.gis.topology.selected.clear();
+                self.gis.topology.anchor = None;
             }
             Event::Press(at) => self.topology_press(at),
             Event::Fix(key) => return self.topology_fix(key),
@@ -508,14 +511,21 @@ impl App {
                 });
             }
             Event::Error => return self.topology_review(TopologyExceptionOperation::Error),
-            Event::Reason(t) => self.topology.reason = t,
+            Event::Reason(t) => self.gis.topology.reason = t,
             Event::Recipe => self.topology_plan_recipe(),
             Event::Apply => return self.topology_apply_recipe(),
-            Event::Drop => self.topology.recipe = None,
+            Event::Drop => self.gis.topology.recipe = None,
             Event::Show(key) => self.topology_open_finding(&key),
             Event::Review(key, op) => {
                 let keep: Vec<String> = match self.topology_checked() {
-                    Some(c) => self.topology.selected.iter().filter_map(|&at| c.findings.get(at)).map(|f| c.key(f)).collect(),
+                    Some(c) => self
+                        .gis
+                        .topology
+                        .selected
+                        .iter()
+                        .filter_map(|&at| c.findings.get(at))
+                        .map(|f| c.key(f))
+                        .collect(),
                     None => Vec::new(),
                 };
                 return self.topology_review_keys(vec![key], op, keep);
@@ -535,6 +545,7 @@ impl App {
         if ctrl || shift {
             let picked: Vec<Slot> = crate::points::click_pick(
                 &self
+                    .gis
                     .topology
                     .selected
                     .iter()
@@ -542,19 +553,19 @@ impl App {
                     .collect::<Vec<_>>(),
                 &shown.iter().map(|&i| Slot(i as u32)).collect::<Vec<_>>(),
                 at,
-                self.topology.anchor,
+                self.gis.topology.anchor,
                 ctrl,
                 shift,
             );
             if !shift {
-                self.topology.anchor = Some(at);
+                self.gis.topology.anchor = Some(at);
             }
-            self.topology.selected = picked.into_iter().map(|s| s.0 as usize).collect();
+            self.gis.topology.selected = picked.into_iter().map(|s| s.0 as usize).collect();
             self.topology_previews();
             return;
         }
-        self.topology.anchor = Some(at);
-        self.topology.selected = vec![finding];
+        self.gis.topology.anchor = Some(at);
+        self.gis.topology.selected = vec![finding];
         self.topology_previews();
         self.topology_show(finding);
     }
@@ -590,7 +601,7 @@ impl App {
             self.warn("Çizim denetimden sonra değişti; önce Denetle ile yenileyin.");
             return Task::none();
         }
-        let [at] = self.topology.selected[..] else {
+        let [at] = self.gis.topology.selected[..] else {
             return Task::none();
         };
         let Some(c) = self.topology_checked() else {
@@ -661,11 +672,11 @@ impl App {
     /// Each fix of the one chosen finding previewed (docs/adr/0589 §4): its words in Düzelt ▾, with the measures it
     /// changes and the bound sources it would leave with rows to write.
     pub(crate) fn topology_previews(&mut self) {
-        self.topology.previews.clear();
+        self.gis.topology.previews.clear();
         let (Some(doc), Some(c)) = (self.document.as_ref(), self.topology_checked()) else {
             return;
         };
-        let [at] = self.topology.selected[..] else {
+        let [at] = self.gis.topology.selected[..] else {
             return;
         };
         let Some(f) = c.findings.get(at) else {
@@ -681,7 +692,7 @@ impl App {
                 (*k, words)
             })
             .collect();
-        self.topology.previews = previews;
+        self.gis.topology.previews = previews;
     }
 
     /// Whether İstisna yap marks (some chosen row is open) or unmarks.
@@ -689,8 +700,9 @@ impl App {
         let Some(c) = self.topology_checked() else {
             return true;
         };
-        self.topology.selected.is_empty()
+        self.gis.topology.selected.is_empty()
             || self
+                .gis
                 .topology
                 .selected
                 .iter()
@@ -700,30 +712,30 @@ impl App {
     /// The tab's controls by their words (a trace's `panel` step): Denetle,
     /// Kurallar…, the filter, a rule, a row, Düzelt's fixes, İstisna yap.
     pub(crate) fn topology_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let msg = |e| Some(Message::Topology(e));
+        let msg = |e| Some(Message::Gis(gis::Event::Topology(e)));
         Ok(match control {
             Control::Press(texts::CHECK) => msg(Event::Check),
             Control::Press(texts::RULES) => msg(Event::Rules),
-            Control::Press(texts::MARK) => (!self.topology.selected.is_empty()
+            Control::Press(texts::MARK) => (!self.gis.topology.selected.is_empty()
                 && self.topology_marking())
-            .then(|| Message::Topology(Event::Exception(true))),
-            Control::Press(texts::UNMARK) => (!self.topology.selected.is_empty()
+            .then(|| Message::Gis(gis::Event::Topology(Event::Exception(true)))),
+            Control::Press(texts::UNMARK) => (!self.gis.topology.selected.is_empty()
                 && !self.topology_marking())
-            .then(|| Message::Topology(Event::Exception(false))),
-            Control::Press(texts::ERROR) => (!self.topology.selected.is_empty())
-                .then(|| Message::Topology(Event::Error)),
-            Control::Press(texts::RECIPE) => (!self.topology.selected.is_empty())
-                .then(|| Message::Topology(Event::Recipe)),
+            .then(|| Message::Gis(gis::Event::Topology(Event::Exception(false)))),
+            Control::Press(texts::ERROR) => (!self.gis.topology.selected.is_empty())
+                .then(|| Message::Gis(gis::Event::Topology(Event::Error))),
+            Control::Press(texts::RECIPE) => (!self.gis.topology.selected.is_empty())
+                .then(|| Message::Gis(gis::Event::Topology(Event::Recipe))),
             Control::Press(texts::APPLY) => self
                 .topology_recipe()
-                .map(|_| Message::Topology(Event::Apply)),
+                .map(|_| Message::Gis(gis::Event::Topology(Event::Apply))),
             Control::Press(texts::DROP) => msg(Event::Drop),
             Control::Fill(texts::REASON, t) => msg(Event::Reason(t.to_owned())),
             Control::Press(texts::OPEN) => msg(Event::Filter(Filter::Open)),
             Control::Press(texts::EXCEPTIONS) => msg(Event::Filter(Filter::Exception)),
             Control::Press(texts::ALL) => msg(Event::Filter(Filter::All)),
             Control::Pick(texts::FIX, item) => {
-                let [at] = self.topology.selected[..] else {
+                let [at] = self.gis.topology.selected[..] else {
                     return Err("Düzelt için tek bulgu seçilmeli".to_owned());
                 };
                 let c = self.topology_checked().ok_or("denetim yok")?;

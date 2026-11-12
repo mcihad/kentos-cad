@@ -15,6 +15,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
@@ -88,7 +89,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::RetainingWalls(event)
+    Message::Road(road::Event::RetainingWalls(event))
 }
 
 fn trimmed(v: f64) -> String {
@@ -158,7 +159,7 @@ impl App {
         let corridor = first.id.clone();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         let chosen = doc.model.road_walls().first().map(|w| w.id.clone());
-        self.retaining_wall_window = Some(Box::new(Window {
+        self.road.retaining_wall_window = Some(Box::new(Window {
             chosen: None,
             corridor: Some(corridor),
             side: WallSide::Right,
@@ -166,22 +167,40 @@ impl App {
             layer,
             preview: Preview::default(),
         }));
-        self.dialog = Some(Dialog::RetainingWalls);
+        self.dialog = Some(Dialog::Road(road::RoadDialogKind::RetainingWalls));
         let _ = self.retaining_wall_event(Event::Choose(chosen));
     }
 
     fn refresh_retaining_wall(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(w) = self.retaining_wall_window.as_mut() else { return };
-        w.preview = match w.input().and_then(|q| road_walls_edit::preview(&doc.model, &q)) {
-            Err(why) => Preview { why: Some(why), ..Preview::default() },
-            Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None },
+        let Some(w) = self.road.retaining_wall_window.as_mut() else {
+            return;
+        };
+        w.preview = match w
+            .input()
+            .and_then(|q| road_walls_edit::preview(&doc.model, &q))
+        {
+            Err(why) => Preview {
+                why: Some(why),
+                ..Preview::default()
+            },
+            Ok((report, warnings)) => Preview {
+                report: Some(report),
+                warnings,
+                why: None,
+            },
         };
     }
 
     pub(crate) fn retaining_wall_event(&mut self, event: Event) -> Task<Message> {
-        let kept = self.document.as_ref().map(|d| d.model.road_walls().to_vec()).unwrap_or_default();
-        let Some(w) = self.retaining_wall_window.as_mut() else { return Task::none() };
+        let kept = self
+            .document
+            .as_ref()
+            .map(|d| d.model.road_walls().to_vec())
+            .unwrap_or_default();
+        let Some(w) = self.road.retaining_wall_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Choose(id) => {
                 w.chosen = id.clone();
@@ -221,7 +240,7 @@ impl App {
             Event::Draw => return self.draw_retaining_wall(),
             Event::Remove => return self.remove_retaining_wall(),
             Event::Close => {
-                self.retaining_wall_window = None;
+                self.road.retaining_wall_window = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -231,7 +250,9 @@ impl App {
     }
 
     fn save_retaining_wall(&mut self) -> Task<Message> {
-        let Some(w) = self.retaining_wall_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.retaining_wall_window.as_ref() else {
+            return Task::none();
+        };
         let input = match w.input() {
             Ok(i) => i,
             Err(why) => {
@@ -251,7 +272,9 @@ impl App {
     }
 
     fn draw_retaining_wall(&mut self) -> Task<Message> {
-        let Some(w) = self.retaining_wall_window.as_ref() else { return Task::none() };
+        let Some(w) = self.road.retaining_wall_window.as_ref() else {
+            return Task::none();
+        };
         let (Some(id), Some(layer)) = (w.chosen.clone(), w.layer.clone()) else {
             self.warn("Çizmek için önce duvarı kaydedin ve bir katman seçin.".to_owned());
             return Task::none();
@@ -261,15 +284,24 @@ impl App {
         let result = road_walls_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.say(Level::Success, format!("İstinat duvarı planda, {:.2} m.", out.length));
-            self.retaining_wall_window = None;
+            self.road.retaining_wall_window = None;
             self.dialog = None;
         }
         Task::none()
     }
 
     fn remove_retaining_wall(&mut self) -> Task<Message> {
-        let Some(id) = self.retaining_wall_window.as_ref().and_then(|w| w.chosen.clone()) else { return Task::none() };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(id) = self
+            .road
+            .retaining_wall_window
+            .as_ref()
+            .and_then(|w| w.chosen.clone())
+        else {
+            return Task::none();
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let input = RetainingWallsEdit {
             operation: RoadEditOperation::Remove,
             wall: Some(id),
@@ -293,7 +325,7 @@ impl App {
     }
 
     pub(crate) fn retaining_wall_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.retaining_wall_window else {
+        let Some(w) = &self.road.retaining_wall_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
@@ -434,7 +466,7 @@ impl App {
     }
 
     pub(crate) fn retaining_wall_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.retaining_wall_window.is_none() {
+        if self.road.retaining_wall_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

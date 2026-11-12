@@ -5,6 +5,7 @@
 //! as large by resvg with KentOS's own faces. Where is asked; the file is
 //! written on its own thread.
 
+use crate::gis;
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 
@@ -99,7 +100,8 @@ pub(crate) fn png_of(svg: &str, width: f32, height: f32) -> Result<Vec<u8>, Stri
 impl App {
     /// Kaydet ▾'s picture: where is asked, then it is written.
     pub(crate) fn save_chart(&mut self, picture: Picture) -> Task<Message> {
-        let size = last_room(&self.charts).map_or(iced::Size::new(LEAST.0, LEAST.1), |r| r.size());
+        let size =
+            last_room(&self.gis.charts).map_or(iced::Size::new(LEAST.0, LEAST.1), |r| r.size());
         let frame = Room {
             width: size.width.max(LEAST.0),
             height: size.height.max(LEAST.1),
@@ -110,7 +112,7 @@ impl App {
         let Some(svg) = svg else {
             return Task::none();
         };
-        let title = self.charts.chart.borrow().y_title.clone();
+        let title = self.gis.charts.chart.borrow().y_title.clone();
         let suggested = file_name(&title, picture);
         let (filter, extension) = match picture {
             Picture::Png => (texts::PNG, "png"),
@@ -134,8 +136,9 @@ impl App {
             Some(path) => {
                 let svg = svg.clone();
                 iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
-                    let answer =
-                        Message::Charts(Event::Saved(write(&svg, picture, width, height, &path)));
+                    let answer = Message::Gis(gis::Event::Charts(Event::Saved(write(
+                        &svg, picture, width, height, &path,
+                    ))));
                     let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
                         &mut out, answer,
                     ));

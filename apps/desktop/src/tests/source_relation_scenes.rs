@@ -10,6 +10,7 @@
 //!
 //! The files are copies in a temporary folder: a picture writes nothing to the fixtures. Test code only.
 
+use crate::gis;
 use std::path::PathBuf;
 
 use kentos_commands::CallOp;
@@ -122,20 +123,24 @@ fn set(app: &mut App, uid: &str, attrs: Value) {
 fn text(app: &mut App) {
     open(app, world("iliskili.gpkg", "iliski-metin"));
     run(app, "data.relations");
-    let _ = app.update(Message::Relations(relations::Event::Choose(0)));
+    let _ = app.update(Message::Gis(gis::Event::Relations(
+        relations::Event::Choose(0),
+    )));
 }
 
 /// Dosyaya eşle pressed: the relation is the file's own now, its mapping table named and counted.
 fn mapped(app: &mut App) {
     text(app);
-    let _ = app.update(Message::Relations(relations::Event::Map));
+    let _ = app.update(Message::Gis(gis::Event::Relations(relations::Event::Map)));
 }
 
 /// A file that relates the two tables another way: said, not rewritten, not read as text.
 fn foreign(app: &mut App) {
     open(app, world("iliskili-yabanci.gpkg", "iliski-yabanci"));
     run(app, "data.relations");
-    let _ = app.update(Message::Relations(relations::Event::Choose(0)));
+    let _ = app.update(Message::Gis(gis::Event::Relations(
+        relations::Event::Choose(0),
+    )));
 }
 
 /// Formla düzenle on the first owner: Tür typed, Kaynağa da yaz on.
@@ -143,17 +148,19 @@ fn form(app: &mut App) {
     open(app, world("iliskili-eslenmis.gpkg", "iliski-form"));
     app.selection.set([Slot(2)]);
     run(app, "data.formEdit");
-    let _ = app.update(Message::FormEntry(entry::Event::Value(
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Value(
         "tur".into(),
         "Tüzel".into(),
-    )));
-    let _ = app.update(Message::FormEntry(entry::Event::Commit(true)));
+    ))));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Commit(
+        true,
+    ))));
 }
 
 /// Kaydet pressed: the record and its file's side said together.
 fn form_written(app: &mut App) {
     form(app);
-    let _ = app.update(Message::FormEntry(entry::Event::Save));
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
 }
 
 /// A parcel and an owner changed locally, written together from the parcels' Kaynak ▸ menu.
@@ -212,14 +219,14 @@ mod tests {
     fn a_text_reference_is_mapped_from_the_window_and_unmapped_again() {
         let mut app = app_with_drawing();
         text(&mut app);
-        let w = app.relations_window.as_ref().expect("the window");
+        let w = app.gis.relations_window.as_ref().expect("the window");
         assert!(w.has_filed("parsel-malik", kentos_commands::RelationState::Text));
-        let _ = app.update(Message::Relations(relations::Event::Map));
-        let w = app.relations_window.as_ref().expect("the window");
+        let _ = app.update(Message::Gis(gis::Event::Relations(relations::Event::Map)));
+        let w = app.gis.relations_window.as_ref().expect("the window");
         assert!(w.has_filed("parsel-malik", kentos_commands::RelationState::Mapped));
         assert!(said(&app, "GeoPackage ilişkisi olarak eşlendi"));
-        let _ = app.update(Message::Relations(relations::Event::Unmap));
-        let w = app.relations_window.as_ref().expect("the window");
+        let _ = app.update(Message::Gis(gis::Event::Relations(relations::Event::Unmap)));
+        let w = app.gis.relations_window.as_ref().expect("the window");
         assert!(w.has_filed("parsel-malik", kentos_commands::RelationState::Text));
     }
 
@@ -227,10 +234,10 @@ mod tests {
     fn a_foreign_relation_is_said_and_offers_nothing() {
         let mut app = app_with_drawing();
         foreign(&mut app);
-        let w = app.relations_window.as_ref().expect("the window");
+        let w = app.gis.relations_window.as_ref().expect("the window");
         assert!(w.has_filed("parsel-malik", kentos_commands::RelationState::Foreign));
         // Pressing Map would be refused (the window shows no button for it).
-        let _ = app.update(Message::Relations(relations::Event::Map));
+        let _ = app.update(Message::Gis(gis::Event::Relations(relations::Event::Map)));
         assert!(said(&app, "başka bir temsille ilişkili"));
     }
 
