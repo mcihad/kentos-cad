@@ -5211,14 +5211,15 @@
    "id": "map.catalogReport",
    "kind": "command",
    "title": "Katalog geçiş raporu…",
-   "level": "query",
+   "level": "semantic",
    "via": [
-    "cad.profiles.compare"
+    "cad.profiles.compare",
+    "cad.profiles.carry"
    ],
    "operation": null,
-   "python": "kentos.cad.profiles.compare",
-   "mcp": "cad.profiles.compare",
-   "note": "Pencere iki nesne kataloğunu cad.profiles.compare ile karşılaştırır (salt okunur): sınıflar kimlikleriyle, yoksa saha kodlarıyla izlenir; alanlar, değer listelerinin kodları ve Detay eşleştirmenin kayıtlı kararları nesne sayılarıyla, karar isteyenler işaretli (ADR 4940).",
+   "python": "kentos.cad.profiles.compare, kentos.cad.profiles.carry",
+   "mcp": "cad.profiles.compare, cad.profiles.carry",
+   "note": "Pencere iki nesne kataloğunu cad.profiles.compare ile karşılaştırır (salt okunur): sınıflar kimlikleriyle, yoksa saha kodlarıyla izlenir; alanlar, değer listelerinin kodları ve Detay eşleştirmenin kayıtlı kararları nesne sayılarıyla, karar isteyenler işaretli (ADR 4940). Kataloğa taşı nesneleri cad.profiles.carry ile yeni sınıfların katmanlarına taşır, tek adım (ADR 5340).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

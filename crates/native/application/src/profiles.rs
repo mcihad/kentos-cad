@@ -190,6 +190,7 @@ pub(crate) fn mapping_found(
 }
 
 /// Where a class's layer path leads in the tree.
+#[derive(PartialEq)]
 pub(crate) enum Place {
     /// The layer, by its id.
     Layer(String),

@@ -5117,6 +5117,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Kataloğa taşı (plan/map-cad.md MAP-04, docs/adr/5340).
+    Entry {
+        id: "cad.profiles.carry",
+        refusals: &[REVISION, &["unknown_profile", "invalid_profile", "layer_locked", "layer_refused", "nothing_to_set"]],
+        warnings: &["catalog_objects_left", "profile_field_differs", "profile_domain_differs"],
+        targets: none,
+    },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.
     Entry {
         id: "cad.walls.joins",

@@ -289,6 +289,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   çekirdek `volume_sections::along_axis` WASM'den) ve `road.terrains.cutfill`'de `sections`, `materials` (compare.sections'ın
   15, cutfill'in 14 yeni durumu); web Yüzey analizi › Fark › Kesit'te Eksen, genişlikler, Eksen noktalarında da,
   Başlangıç km.
+- MAP-04 / ADR 5340: web'in `cad.profiles.carry` işleyicisi (26 durum; raporun izlemesi ve profil yazıcısı) ve web
+  Katalog geçiş raporu'nda Kataloğa taşı.
 - MAP-03 / ADR 5320: web'in `map.survey.query`'sinde bazın `independent`'i ve `map.survey.edit`'te `independent`
   işlemi (map.survey.edit.json'un 6 yeni durumu); web GNSS ağ dengelemesi'nde Bağımsız sütunu, Oturumlar sekmesi ve
   Bağımsız bazları seç.

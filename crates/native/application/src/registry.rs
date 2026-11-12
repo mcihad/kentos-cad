@@ -87,6 +87,7 @@ use crate::pointcloud_overlap;
 use crate::pointcloud_network;
 use crate::pointcloud_place;
 use crate::profiles_compare;
+use crate::profiles_carry;
 use crate::profiles_names;
 use crate::pointcloud_register;
 use crate::addresses_compare;
@@ -663,6 +664,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_PROFILES_COMPARE => {
                 $then!(profiles_compare, kentos_commands::ProfilesCompare)
+            }
+            kentos_commands::CAD_PROFILES_CARRY => {
+                $then!(profiles_carry, kentos_commands::ProfilesCarry)
             }
             kentos_commands::MAP_SURVEY_QUERY => {
                 $then!(map_survey, kentos_commands::MapSurveyQuery)

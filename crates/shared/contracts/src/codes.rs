@@ -2175,6 +2175,9 @@ codes! {
     PROFILE_FIELD_DIFFERS = "profile_field_differs", Warning, false, "Katmanın alanı profilinkinden başka türde; katmanınki korundu.";
     /// A value list the project has with other values than the profile's; the project's was kept (docs/adr/0541).
     PROFILE_DOMAIN_DIFFERS = "profile_domain_differs", Warning, false, "Projenin değer listesi profilinkinden farklı; projeninki korundu.";
+    /// docs/adr/5340: objects a catalog's carrying left where they were (a retired class's, a split class's whose code
+    /// no new class holds).
+    CATALOG_OBJECTS_LEFT = "catalog_objects_left", Warning, false, "Bazı nesneler yeni katalogda yeri olmadığı için yerinde kaldı.";
     /// A class left out: its path names something not a layer, or its layer is locked (docs/adr/0541).
     PROFILE_LAYER_SKIPPED = "profile_layer_skipped", Warning, false, "Profilin bir sınıfı ya da parçası atlandı; iletisi nedenini söyler.";
     /// Nothing to import: no source file, no profile and no mapping given (docs/adr/0558).

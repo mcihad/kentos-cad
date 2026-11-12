@@ -36,7 +36,7 @@ başladı (ADR 5280–).
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480, 4880, 5280 | sınırın projede saklanması; aplikasyon yanılma sınırı (m. 11) | nesnenin üretim yönteminin kaydı ve Ek-1 URETIM_YONTEMI eşlemesi (kurum kodları); içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500, 4900, 5300 | kurulumdan kırılma kestirimi; karşılıklı-eşzamanlı ve atlamalının birleşimi | haritada il sınırları (idari sınır verisi); zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520, 4920, 5320 | işleme istatistiğiyle ağırlıklı bağımsız baz seçimi; oturumsuz bazların eş zamanlılığı; C2/C3 “en az iki bağımsız baz” denetimi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
-| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940 | iki katalog arasında rapordan taşıma (göç adımları) | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
+| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940, 5340 | kurumun alan ve kod eşlemesiyle değerlerin çevrilmesi; geometrisi değişen sınıfın nesnelerinin çevrilmesi | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560, 4960 | ağırlıklı benzerlik; bölümlü dengeleme; kabulde dayanıklı kestirim | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580, 4980 | dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot; Paralel kaydır'da çok parçalı nesne | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600, 5000 | tutamaçla birden çok nesne; gidiş okunun anahtarı ve ilk/son köşe rengi | büyük veri ölçümü |
@@ -788,6 +788,16 @@ satır başına farkın karşılaştırılması (ArcGIS Pro Feature Compare); Ne
 
 Açık: iki katalog arasında rapordan göç adımları üretip uygulamak (taşıma), AI çıkarımı ve gerçek çıkarımla ölçüm
 (sahibin bekleyen işleri). Madde `[ ]` kalır.
+
+**12 Kasım 2026, on birinci tur — Kataloğa taşı ([ADR 5340](../docs/adr/5340-carry-data-between-catalogs.md)).**
+Kapsam: **Harita + CBS**. Dayanak: alan eşlemeli ekleme ve alan yeniden düzenleme araçları hedef şemayı korur, satır
+satır kodla dağıtım belgelenmemiş; BÖHHBÜY kod göçü için kural koymaz. Kanıtlanan: yeni `cad.profiles.carry` raporun
+sınıf izlemesini uygular (aynı, değişen, yeniden adlandırılan, birleşen sınıfın nesneleri yeni sınıfın katmanına; bölünen
+sınıfınkiler kendi saha koduyla; kalkan sınıfınkiler yerinde, uyarı `catalog_objects_left`); hedef katman yoksa
+alanlarıyla açılır; tek adım, ya hep ya hiç (`layer_locked`, `layer_refused`, `nothing_to_set`); Katalog geçiş raporu'nda
+Kataloğa taşı. 26 bağımsız durum, Python, MCP, masaüstü. Açık: kurumun alan ve kod eşlemesi, geometrisi değişen sınıf,
+AI çıkarımı (sahip).
+
 
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 

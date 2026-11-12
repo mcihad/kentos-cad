@@ -356,6 +356,7 @@ pub mod pointcloud_overlap;
 pub mod pointcloud_network;
 pub mod pointcloud_place;
 pub mod profiles_compare;
+pub mod profiles_carry;
 pub mod profiles_names;
 pub mod pointcloud_register;
 pub mod map_work_edit;
@@ -1591,6 +1592,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_POINTCLOUDS_PLACE, kentos_commands::CAD_POINTCLOUDS_PLACE_VERSION),
     // The catalog's migration report (plan/map-cad.md MAP-04, docs/adr/4940).
     (kentos_commands::CAD_PROFILES_COMPARE, kentos_commands::CAD_PROFILES_COMPARE_VERSION),
+    (kentos_commands::CAD_PROFILES_CARRY, kentos_commands::CAD_PROFILES_CARRY_VERSION),
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).
     (kentos_commands::MAP_SURVEY_QUERY, kentos_commands::MAP_SURVEY_QUERY_VERSION),
     (kentos_commands::MAP_SURVEY_EDIT, kentos_commands::MAP_SURVEY_EDIT_VERSION),

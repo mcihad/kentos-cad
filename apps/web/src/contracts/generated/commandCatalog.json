@@ -16378,6 +16378,206 @@
       ]
     },
     {
+      "id": "cad.profiles.carry",
+      "version": 1,
+      "title": "Kataloğa taşı",
+      "summary": "Çizimin verisini bir nesne kataloğundan (veri profili) ötekine, Katalog geçiş raporunun (cad.profiles.compare) sınıf izlemesiyle taşır; tek geri alma adımı, ya hep ya hiç. Eski katalog from ya da fromProfile, yeni katalog to ya da toProfile ile verilir; drawing projenin klasörü içindir. Aynı kalan, değişen, yeniden adlandırılan ya da birleşen sınıfın nesneleri yeni sınıfın katmanına gider; bölünen sınıfın her nesnesi kendi saha kodunu (field alanının, yoksa Kod'un baştaki büyük harfleri) taşıyan yeni sınıfa gider; kalkan sınıfın ve kodu yeni sınıflarda olmayan nesneler yerinde kalır (uyarı catalog_objects_left). Nesne alan yeni sınıfın katmanı yoksa alanlarıyla açılır, varsa eksik alanları eklenir (cad.profiles.apply'ın yazıcısı). Değerler nesneyle taşınır; hiçbir değer silinmez ya da yeniden kodlanmaz. Çıktı her nesnesi olan eski sınıfın taşınan ve kalan nesne sayısı, açılan katmanlar ve alanlar. Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, layer_locked (nesnenin bıraktığı ya da gittiği katman kilitli), layer_refused (yeni sınıfın yolu bir gruba ya da katmanın içine çıkıyor), nothing_to_set (taşınacak nesne yok). Uyarılar: catalog_objects_left, profile_field_differs, profile_domain_differs. Plan yazmadan aynı sayıları verir.",
+      "aliases": [
+        "katalogatasi",
+        "katalogtasima"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.profiles.carry` v1: the old catalog (`from`, a profile's name, or `fromProfile`, the profile itself),\nthe new one (`to` or `toProfile`), the project's file for its folder's profiles (`drawing`), the field holding an\nobject's field code (none: `Kod`). Refusals, in this order: `invalid_revision`, `revision_conflict`;\n`unknown_profile`, `invalid_profile` (as `cad.profiles.compare`'s); `layer_locked` (a layer an object leaves or\ngoes to is locked); `layer_refused` (a receiving class's path leads to a group or into a layer); `nothing_to_set`\n(no object to carry).",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fromProfile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "to": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "toProfile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ProfilesCarry",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.profiles.carry` v1: each old class with objects (the old catalog's order), the objects moved and\nleft, the layers and fields made (`layer id`, `layer id/field`), the revision.",
+        "properties": {
+          "classes": {
+            "items": {
+              "$ref": "#/$defs/CarriedClass"
+            },
+            "type": "array"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "left": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "classes",
+          "moved",
+          "left",
+          "revision"
+        ],
+        "title": "ProfilesCarried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.profiles.carry` v1: each old class with objects (the old catalog's order), the objects moved and\nleft, the layers and fields made (`layer id`, `layer id/field`), the revision.",
+        "properties": {
+          "classes": {
+            "items": {
+              "$ref": "#/$defs/CarriedClass"
+            },
+            "type": "array"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "left": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "classes",
+          "moved",
+          "left",
+          "revision"
+        ],
+        "title": "ProfilesCarried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_profile",
+          "invalid_profile",
+          "layer_locked",
+          "layer_refused",
+          "nothing_to_set"
+        ],
+        "warnings": [
+          "catalog_objects_left",
+          "profile_field_differs",
+          "profile_domain_differs"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Harita varlıklarından kurumun kataloğuna taşı",
+          "input": {
+            "drawing": "/projeler/harita/alim.kcad",
+            "from": "harita-varliklari",
+            "to": "belediye-harita"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.profiles.remove",
       "version": 1,
       "title": "Veri profilini çizimden kaldır",
@@ -113498,6 +113698,12 @@
       "meaning": "Projenin değer listesi profilinkinden farklı; projeninki korundu."
     },
     {
+      "code": "catalog_objects_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı nesneler yeni katalogda yeri olmadığı için yerinde kaldı."
+    },
+    {
       "code": "profile_layer_skipped",
       "kind": "warning",
       "retryable": false,
@@ -126561,6 +126767,43 @@
       "required": [
         "layer",
         "name"
+      ],
+      "type": "object"
+    },
+    "CarriedClass": {
+      "description": "What became of an old class's objects: its id, the new classes, the report's kind, how many moved and stayed.",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/CatalogClassChangeKind"
+        },
+        "left": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "moved": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "to": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "kind",
+        "moved",
+        "left"
       ],
       "type": "object"
     },

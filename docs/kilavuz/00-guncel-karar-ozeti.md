@@ -734,6 +734,10 @@
   kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
   cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
   Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
+- **Kataloğa taşı (12 Kasım 2026; MAP-04, [ADR 5340](../../docs/adr/5340-carry-data-between-catalogs.md)).**
+  Yeni `cad.profiles.carry`: raporun sınıf izlemesiyle nesneler yeni sınıfın katmanına (bölünen sınıfınkiler kendi saha
+  koduyla, kalkanınkiler yerinde), hedef katman yoksa alanlarıyla açılır; değerler taşınır, silinmez; tek adım. Katalog
+  geçiş raporu › Kataloğa taşı. Harita + CBS.
 - **Oturumun bağımsız bazları ve blokları (12 Kasım 2026; MAP-03, [ADR 5320](../../docs/adr/5320-independent-baselines-and-session-blocks.md)).**
   `map.survey.query`'de oturumdaki bazın `independent`'i (n − 1, kısadan uzuna yayılan ağaç); `map.survey.edit`
   `independent` bağımlıları dengelemeden çıkarır. GNSS ağ dengelemesi › Bazlar'da Bağımsız, Oturumlar sekmesi,

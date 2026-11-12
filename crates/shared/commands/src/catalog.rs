@@ -3255,6 +3255,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Kataloğa taşı (plan/map-cad.md MAP-04, docs/adr/5340).
+        CommandDescriptor {
+            id: crate::CAD_PROFILES_CARRY.into(),
+            version: crate::CAD_PROFILES_CARRY_VERSION,
+            title: "Kataloğa taşı".into(),
+            summary: "Çizimin verisini bir nesne kataloğundan (veri profili) ötekine, Katalog geçiş raporunun (cad.profiles.compare) sınıf izlemesiyle taşır; tek geri alma adımı, ya hep ya hiç. Eski katalog from ya da fromProfile, yeni katalog to ya da toProfile ile verilir; drawing projenin klasörü içindir. \
+                      Aynı kalan, değişen, yeniden adlandırılan ya da birleşen sınıfın nesneleri yeni sınıfın katmanına gider; bölünen sınıfın her nesnesi kendi saha kodunu (field alanının, yoksa Kod'un baştaki büyük harfleri) taşıyan yeni sınıfa gider; kalkan sınıfın ve kodu yeni sınıflarda olmayan nesneler yerinde kalır (uyarı catalog_objects_left). Nesne alan yeni sınıfın katmanı yoksa alanlarıyla açılır, varsa eksik alanları eklenir (cad.profiles.apply'ın yazıcısı). Değerler nesneyle taşınır; hiçbir değer silinmez ya da yeniden kodlanmaz. \
+                      Çıktı her nesnesi olan eski sınıfın taşınan ve kalan nesne sayısı, açılan katmanlar ve alanlar. Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, layer_locked (nesnenin bıraktığı ya da gittiği katman kilitli), layer_refused (yeni sınıfın yolu bir gruba ya da katmanın içine çıkıyor), nothing_to_set (taşınacak nesne yok). Uyarılar: catalog_objects_left, profile_field_differs, profile_domain_differs. Plan yazmadan aynı sayıları verir."
+                .into(),
+            aliases: vec!["katalogatasi".into(), "katalogtasima".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesCarry>(),
+            output: schema::<crate::ProfilesCarried>(),
+            plan: Some(schema::<crate::ProfilesCarried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Harita varlıklarından kurumun kataloğuna taşı".into(),
+                input: json!({ "from": "harita-varliklari", "to": "belediye-harita", "drawing": "/projeler/harita/alim.kcad" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_PROFILES_REMOVE.into(),
             version: crate::CAD_PROFILES_REMOVE_VERSION,
@@ -16824,6 +16851,9 @@ mod tests {
                     }
                     crate::CAD_PROFILES_COMPARE => {
                         serde_json::from_value::<crate::ProfilesCompare>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROFILES_CARRY => {
+                        serde_json::from_value::<crate::ProfilesCarry>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_PROFILES_REMOVE => {
                         serde_json::from_value::<crate::ProfilesRemove>(e.input.clone()).map(|_| ())

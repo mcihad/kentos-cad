@@ -22078,6 +22078,39 @@ class CandidateSource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CarriedClass(_Model):
+    """What became of an old class's objects: its id, the new classes, the report's kind, how many moved and stayed.
+    Attributes:
+        moved: Unit: count.
+        left: Unit: count.
+    """
+    from_: str
+    to: list[str]
+    kind: CatalogClassChangeKind | CatalogClassChangeKindName
+    moved: int
+    left: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = list(self.to)
+        out["kind"] = _enum_out(self.kind)
+        out["moved"] = self.moved
+        out["left"] = self.left
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CarriedClass:
+        return cls(
+            from_=data["from"],
+            to=list(data["to"]),
+            kind=_enum_in(CatalogClassChangeKind, data["kind"]),
+            moved=data["moved"],
+            left=data["left"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CaseworkBuilt(_Model):
     """Output of `cad.casework.run` and of `cad.casework.edit`: the run's id, its objects in the plan's order, the library
     blocks brought, its modules, legs, fridge and fillers; a released run's objects and `released`.
@@ -77362,6 +77395,93 @@ class ProfilesApply(_Model):
             mapping_name=data.get("mappingName", UNSET),
             name=data.get("name", UNSET),
             profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesCarried(_Model):
+    """Output of `cad.profiles.carry` v1: each old class with objects (the old catalog's order), the objects moved and
+    left, the layers and fields made (`layer id`, `layer id/field`), the revision.
+    Attributes:
+        moved: Unit: count.
+        left: Unit: count.
+    """
+    classes: list[CarriedClass]
+    moved: int
+    left: int
+    revision: str
+    fields: list[str] | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        out["moved"] = self.moved
+        out["left"] = self.left
+        out["revision"] = self.revision
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCarried:
+        return cls(
+            classes=[CarriedClass.from_json(e0) for e0 in data["classes"]],
+            moved=data["moved"],
+            left=data["left"],
+            revision=data["revision"],
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesCarry(_Model):
+    """Input of `cad.profiles.carry` v1: the old catalog (`from`, a profile's name, or `fromProfile`, the profile itself),
+    the new one (`to` or `toProfile`), the project's file for its folder's profiles (`drawing`), the field holding an
+    object's field code (none: `Kod`). Refusals, in this order: `invalid_revision`, `revision_conflict`;
+    `unknown_profile`, `invalid_profile` (as `cad.profiles.compare`'s); `layer_locked` (a layer an object leaves or
+    goes to is locked); `layer_refused` (a receiving class's path leads to a group or into a layer); `nothing_to_set`
+    (no object to carry).
+    """
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    from_profile: DataProfile | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+    to_profile: DataProfile | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.from_profile is not UNSET:
+            out["fromProfile"] = None if self.from_profile is None else self.from_profile.to_json()
+        if self.to is not UNSET:
+            out["to"] = self.to
+        if self.to_profile is not UNSET:
+            out["toProfile"] = None if self.to_profile is None else self.to_profile.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCarry:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            field=data.get("field", UNSET),
+            from_=data.get("from", UNSET),
+            from_profile=UNSET if "fromProfile" not in data else None if data["fromProfile"] is None else DataProfile.from_json(data["fromProfile"]),
+            to=data.get("to", UNSET),
+            to_profile=UNSET if "toProfile" not in data else None if data["toProfile"] is None else DataProfile.from_json(data["toProfile"]),
         )
 
 
@@ -140104,6 +140224,7 @@ __all__ = [
     "CampaignMapSurveyOperation",
     "CandidateDecision",
     "CandidateSource",
+    "CarriedClass",
     "CaseworkBreak",
     "CaseworkBreakName",
     "CaseworkBuilt",
@@ -142442,6 +142563,8 @@ __all__ = [
     "ProfileStoreName",
     "ProfilesApplied",
     "ProfilesApply",
+    "ProfilesCarried",
+    "ProfilesCarry",
     "ProfilesCheck",
     "ProfilesCompare",
     "ProfilesCompared",

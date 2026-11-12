@@ -20,7 +20,7 @@ fn first() -> (Value, Value) {
 }
 
 /// The shared drawing, carrying the new catalog as a project profile (docs/adr/0735).
-fn opened(program: Option<Module>) -> App {
+pub(crate) fn opened(program: Option<Module>) -> App {
     let mut setup = cases()["setup"].clone();
     let (catalog, _) = first();
     setup["settings"]["profileFiles"] =

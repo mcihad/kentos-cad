@@ -219,6 +219,7 @@ COMMANDS: dict[str, Any] = {
     "cad.processing.run": processing.run,
     "cad.processing.tools": processing.tools,
     "cad.profiles.apply": profiles.apply,
+    "cad.profiles.carry": profiles.carry,
     "cad.profiles.check": profiles.check,
     "cad.profiles.compare": profiles.compare,
     "cad.profiles.import": profiles.import_,

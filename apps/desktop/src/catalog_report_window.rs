@@ -35,6 +35,8 @@ use crate::traces::Control;
 pub const TITLE: &str = "Katalog geçiş raporu";
 const CLOSE: &str = "Kapat";
 pub const SELECT: &str = "Karar isteyenleri seç";
+/// docs/adr/5340: the data carried to the new catalog (cad.profiles.carry), one undo step.
+pub const CARRY: &str = "Kataloğa taşı";
 /// The catalog the reconcile decisions are made with: the old one at first.
 const FIRST: &str = "harita-varliklari";
 
@@ -75,6 +77,7 @@ pub enum Event {
     To(String),
     Show(Show),
     Select,
+    Carry,
     Close,
 }
 
@@ -186,6 +189,41 @@ impl App {
         Task::none()
     }
 
+    /// Kataloğa taşı (docs/adr/5340): the objects to the new catalog's layers in one undo step; what moved and what
+    /// stayed said; the report read again.
+    fn catalog_report_carry(&mut self) {
+        let input = kentos_commands::ProfilesCarry {
+            from: Some(self.catalog_report.from.clone()),
+            from_profile: None,
+            to: Some(self.catalog_report.to.clone()),
+            to_profile: None,
+            drawing: self.catalog_report_drawing(),
+            field: None,
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else { return };
+        let result = kentos_native_application::profiles_carry::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        match result {
+            CommandResult::Completed { output, warnings } => {
+                let mut words = format!("{TITLE}: {} nesne yeni kataloğun katmanlarına taşındı", output.moved);
+                if !output.layers.is_empty() {
+                    words.push_str(&format!(", {} katman açıldı", output.layers.len()));
+                }
+                words.push('.');
+                for w in warnings {
+                    words.push(' ');
+                    words.push_str(&w.message);
+                }
+                self.output(words);
+            }
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                self.output(format!("{TITLE}: {}", error.message));
+            }
+            _ => {}
+        }
+        self.catalog_report_run();
+    }
+
     /// The persistent ids of the shown table's rows that need a decision.
     fn catalog_report_deciding(&self) -> Vec<String> {
         let Some(Ok(r)) = &self.catalog_report.answer else { return Vec::new() };
@@ -225,6 +263,10 @@ impl App {
                     self.selection.set(slots);
                     self.output(format!("{TITLE}: karar isteyen {n} nesne seçildi."));
                 }
+                return Task::none();
+            }
+            Event::Carry => {
+                self.catalog_report_carry();
                 return Task::none();
             }
             Event::Close => {
@@ -334,7 +376,7 @@ impl App {
                 container(fields::select_owned(choices.clone(), &s.from, |v| msg(Event::From(v)))).width(320),
             )
             .field("Yeni katalog", container(fields::select_owned(choices, &s.to, |v| msg(Event::To(v)))).width(320))
-            .help("Sınıflar kalıcı kimlikleriyle, yoksa saha kodlarıyla izlenir. Rapor çizime yazmaz; veriyi Profil göçü ve Veri profilini uygula taşır.");
+            .help("Sınıflar kalıcı kimlikleriyle, yoksa saha kodlarıyla izlenir. Rapor çizime yazmaz; Kataloğa taşı nesneleri yeni sınıfların katmanlarına taşır, tek adımda geri alınır.");
         let (lines, rows) = self.catalog_report_lines();
         let table = match s.show {
             Show::Classes => sheet(
@@ -366,6 +408,7 @@ impl App {
             Segmented::new([Show::Classes, Show::Fields, Show::Codes, Show::Decisions], s.show, |v| msg(Event::Show(v))),
             space::horizontal().width(Fill),
             words::secondary(SELECT, matches!(&s.answer, Some(Ok(r)) if r.decide > 0).then(|| msg(Event::Select))),
+            words::secondary(CARRY, matches!(&s.answer, Some(Ok(_))).then(|| msg(Event::Carry))),
         ]
         .spacing(10)
         .align_y(Center);
@@ -386,6 +429,7 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
+            Control::Press(CARRY) => Some(msg(Event::Carry)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
