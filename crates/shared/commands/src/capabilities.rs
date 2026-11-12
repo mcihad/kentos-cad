@@ -3309,6 +3309,8 @@ const ENTRIES: &[Entry] = &[
                 "wall_collapses",
                 "level_not_found",
                 "invalid_line_weight",
+                // Bu ölçüyü koru from an arc edge (docs/adr/8049 §1): the bond is between straight edges.
+                "invalid_constraint",
             ],
             LAYER,
             REVISION,

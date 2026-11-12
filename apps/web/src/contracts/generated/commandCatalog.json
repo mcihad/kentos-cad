@@ -10006,6 +10006,7 @@
           "wall_collapses",
           "level_not_found",
           "invalid_line_weight",
+          "invalid_constraint",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
