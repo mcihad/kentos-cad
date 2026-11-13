@@ -490,12 +490,16 @@ impl Writer<'_> {
         let layers = self.layers;
         let layer = match layers.name_of(&base.layer_id) {
             Some(name) => name,
-            // A definition's object without a layer of its own (or one not written) floats on 0.
-            None if self.defining => "0",
+            // A definition's object without a layer of its own (or one not written) floats on 0; so does an object
+            // that names layer 0 itself, a sheet's paper objects (UR-021): no layer is lost there.
+            None if self.defining || base.layer_id == "0" => "0",
             None => {
+                // Counted by its kind, so the report says what went to 0 (UR-021).
                 self.report.note(
                     "Katman",
-                    "katmanı çizimde bulunamayan nesneler 0 katmanına yazıldı",
+                    &format!(
+                        "katmanı çizimde bulunmayan {kind} nesneleri 0 katmanına yazıldı; katmanlarını atayıp yeniden aktarın"
+                    ),
                     0,
                 );
                 "0"

@@ -935,6 +935,26 @@ mod tests {
         assert!(super::dynamic_loss_warning(&plain.document.as_ref().unwrap().model).is_none());
     }
 
+    /// UR-021: a sheet's paper objects name layer 0 themselves; written there, they are no layer lost and the
+    /// writer's report says nothing of layers for a drawing whose objects all have theirs.
+    #[test]
+    fn a_sheets_paper_objects_on_layer_0_are_no_layer_lost() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.update(crate::app::Message::Sheet(kentos_sheet_ui::Message::NewSheet));
+        if app.sheets.questions().is_some() {
+            let _ = app.update(crate::app::Message::Sheet(kentos_sheet_ui::Message::Questions(
+                kentos_sheet_ui::questions::QuestionsMessage::Make,
+            )));
+        }
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        assert!(doc.sheets().is_some(), "a sheet to write");
+        let chosen = kentos_headless::export::by_layer(doc, doc.entities());
+        let input = kentos_headless::export::dxf_input(doc, &chosen);
+        assert!(input.layouts.iter().any(|l| !l.entities.is_empty()), "the sheet's paper objects written");
+        let (_, report) = kentos_formats::dxf::write_checked(&input).unwrap();
+        assert!(!report.notes.iter().any(|n| n.what == "Katman"), "{:?}", report.notes);
+    }
+
     /// An area whose only hole is in a later part has islands (docs/adr/0143).
     #[test]
     fn a_hole_in_any_part_is_an_island() {
