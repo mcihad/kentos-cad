@@ -582,7 +582,54 @@ kuruluma da KentOS'un sürecine de girmez: kullanıcı onaylayınca uv onu kulla
 - **Yapılmadı:** depoda Windows kurulum paketi (MSI/NSIS) henüz yok; betik, o paketin çağıracağı adım. uv'nin kendi
   bağımlılıklarının bildirimleri Astral'ın arşivinde de yok; KentOS'un toplu üçüncü taraf bildirimi ayrı iş.
 
-**Sıradaki dilimler:** Python'u kullanıcı onayıyla kurmak (`uv python install`, KentOS'un klasörüne), kişisel ortam ve
-paket önizleme (P04), eklenti başına değişmez ortam ve çevrimdışı çalışma (P05, P07), Windows'ta Python konsolu,
+**Üçüncü dilim (13 Kasım): KentOS'un Python'u — onayla kurmak, ilerleme, kaldırmak.** Sahibin bu dilimdeki istekleri:
+**"Aynı yerden kaldırılabilmesi Python ve hoş bir progress ve toast ile geri bildirim"**, ardından
+**"Kaldırılabilmelidir"**.
+
+- **Onay düğmedir (P03).** uv hazırken KentOS'un Python'u kullanıcının klasöründe aranır (`<python>/yorumlayici`). Yoksa
+  bölüm ne indirileceğini (Astral'ın python-build-standalone derlemesi, GitHub), boyunu ("yaklaşık 35 MB; kurulunca
+  100 MB kadar"), nereye kurulacağını ve neye dokunulmayacağını söyler; "Python 3.12'yi indir ve kur"a basılmadıkça
+  hiçbir şey inmez. 3.12: CBS paketlerinin tekerlekleri en geniş onda, güvenlik desteği Ekim 2028'e dek (manifestte
+  `python.install`).
+- **Sistemde iz yok:** `uv python install 3.12 --no-bin --no-registry --no-config --no-progress --system-certs`;
+  `UV_PYTHON_INSTALL_DIR` ve `UV_CACHE_DIR` KentOS'un klasörleri. `--no-bin` olmasa uv 0.8'den beri `python3.12`'yi
+  `~/.local/bin`'e koyar, `--no-registry` olmasa Windows kayıt defterine yazar (PEP 514). Ölçüldü: `~/.local/bin`'e
+  hiçbir şey eklenmedi. `--system-certs`: TLS denetleyen kurum ağında kurumun sertifikası sistemin deposundadır, uv'nin
+  kendi listesinde değil.
+- **Bulmak** `uv python list --only-installed --managed-python --output-format json`, KentOS'un klasöründe çalışarak:
+  yanındaki bir `.venv` ya da kullanıcının kendi uv Python'ları sayılmaz (ölçüldü). **Ölçülen tuzak:** uv, çalıştığı
+  klasörün altındaki yolu **göreli** yazıyor (`yorumlayici/cpython-3.12-…/bin/python3.12`); klasöre göre çözülür.
+- **İlerleme çubuğu** (sahibin isteği): uv başlarken arşivin boyunu yazar (`Downloading cpython-… (32.6MiB)`) ve
+  `UV_PYTHON_CACHE_DIR` verilince arşiv orada **tek dosya olarak büyür** (ölçüldü: 0 → 34.159.222 bayt, sonra
+  `Extracting`). İkisi indirilen payı verir: "İndiriliyor: 13,2 MB / 32,6 MB · %40". Açma aşamasının ölçüsü yok, çubuk
+  kayar ("Açılıyor ve yerine konuyor…"). Bunun için uv çağrısı izlenebilir oldu (`uv::run_watched`, `Watch`: Durdur
+  bayrağı, akarken okunan hata akışı, 150 ms'de bir çağrılan izleyici). Her kurulumun indirme klasörü kendine özel
+  (`indirme/<süreç>-<an>`) ve nasıl biterse bitsin silinir: arşiv saklanmaz, iki KentOS penceresi aynı anda kurarsa
+  birbirinin dosyasını silmez.
+- **Durdur** uv'yi hemen sonlandırır. **Hata** cümlesiyle söylenir (internet yok · sertifika · disk dolu · klasöre
+  yazılamıyor · bu sisteme derleme yok · 20 dakika sınırı), yanında uv'nin kendi sözü (ilk `error:` ve son
+  `Caused by:`). Sertifika önce denetlenir: uv sertifika hatasını da "indirilemedi" diye yazıyor.
+- **Kaldır** (sahibin isteği) önce sorar, açılacak yeri söyleyerek ("Python 3.12.13 kaldırılsın mı? 93 MB yer açılır…",
+  kırmızı "Evet, kaldır" ve Vazgeç). Sonra `uv python uninstall --all` ve klasör uv'nin bıraktıklarıyla (`.lock`,
+  `.temp`) birlikte silinir; kullanıcının seçimi (`ayarlar.json`) kalır. Windows'ta çalışan bir Python'un dosyaları
+  silinemez: "dosyaları kullanılıyor; Python konsolunu ve Python'lu eklentileri kapatıp yeniden deneyin".
+- **Toast** (sahibin isteği): "Python 3.12 kuruldu" · "Python kurulumu durduruldu" · "Python kurulamadı" (kendiliğinden
+  kapanmaz) · "Python kaldırıldı — 93 MB yer açıldı" · "Python kaldırılamadı". Pencerenin mevcut bildirim yığını
+  (`Toaster`); ayarlar kapalıyken de görünür. Hata ayrıca bölümde kalır.
+- **Ölçüm:** gerçek pencerede, programa yalnız onun için verilen ve hızı 1,5 MB/sn'ye düşüren yerel bir vekille:
+  2,5 sn'de %12, 8,5 sn'de %40; ~26 sn'de "kuruldu" bildirimi ve "Python 3.12.13 hazır · 93 MB"; Kaldır → onay →
+  "93 MB yer açıldı" ve kurulmamış duruma dönüş. Durdur 3,5 sn'de: bildirim, indirme klasörü silinmiş. Ulaşılamayan
+  vekille: "internete ulaşılamadı … Connection refused (os error 111)". Hızlı bağlantıda kurulum 2 sn (32,6 MiB
+  indirme, kurulu 93 MB).
+- **Ölçülen yan bulgu — `ETXTBSY`:** sınamalar sahte uv'yi yazıp hemen başlatıyor; başka bir iş parçacığının o an
+  başlattığı süreç dosyanın yazma tanıtıcısını exec'ine dek miras alıyor ve başlatma "Text file busy (os error 26)" ile
+  düşüyordu: sekiz iş parçacığıyla 25 koşuda 8 hata. `uv::spawn` bu hatada 25 ms arayla 8 kez yeniden dener; sonra 25
+  koşuda 0.
+- **Sınamalar:** python-env 10 (bulma, kurma bayrakları, ilerleme okuma, Durdur, hatanın cümlesi, kaldırma ve artıkları,
+  bağın iki kez sayılmaması), masaüstü eklenti sahneleri 13 (onay, ilerleme yazısı, bildirimler, onaylı kaldırma,
+  kaldırırken kurulamaması).
+
+**Sıradaki dilimler:** kişisel ortam ve paket önizleme (P04), eklenti başına değişmez ortam ve çevrimdışı çalışma (P05,
+P07), Windows'ta Python konsolu (KentOS'un Python'unu kullanacak), kaldırmanın eklenti ortamlarını da söylemesi,
 hazırlık penceresi.
 

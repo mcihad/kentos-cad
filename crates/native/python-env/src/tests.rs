@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use crate::compat::{self, Compat, Platform};
+use crate::python::{self, Cause, InstallError, Interpreter, Progress};
 use crate::settings::PythonSettings;
 use crate::uv::{self, UvStatus};
 
@@ -369,5 +370,330 @@ fn the_choice_is_off_until_the_user_turns_it_on_and_is_kept() {
         PythonSettings::load(&temp.0),
         PythonSettings::default(),
         "unreadable: off"
+    );
+}
+
+/// A fake uv that writes where it ran, KentOS's two folders it was given and its arguments to `log`, then does `body`.
+#[cfg(unix)]
+fn logging_uv(dir: &Path, log: &Path, body: &str) -> PathBuf {
+    fake_uv(
+        dir,
+        &format!(
+            "printf '%s|%s|%s|%s\\n' \"$(pwd -P)\" \"$UV_PYTHON_INSTALL_DIR\" \"$UV_CACHE_DIR\" \"$*\" >> '{}'\n{body}",
+            log.display()
+        ),
+    )
+}
+
+/// KentOS's Python is looked for in KentOS's folder alone, with uv's own list: the newest CPython (not PyPy, not the
+/// free-threaded build) in the manifest's range; none is none; uv's refusal is said.
+#[cfg(unix)]
+#[test]
+fn kentos_python_is_found_in_kentos_folder_alone() {
+    let temp = Temp::new("yorumlayici");
+    let root = temp.0.join("python");
+    let log = temp.0.join("kayit.txt");
+    let listed = temp.0.join("liste.json");
+    std::fs::write(
+        &listed,
+        r#"[
+          {"key":"cpython-3.11.9-linux-x86_64-gnu","version":"3.11.9","path":"/k/py311/bin/python3.11","implementation":"cpython","variant":"default"},
+          {"key":"cpython-3.12.13-linux-x86_64-gnu","version":"3.12.13","path":"yorumlayici/cpython-3.12-linux-x86_64-gnu/bin/python3.12","implementation":"cpython","variant":"default","yeniAlan":1},
+          {"key":"cpython-3.13.5+freethreaded-linux-x86_64-gnu","version":"3.13.5","path":"/k/py313t/bin/python3.13t","implementation":"cpython","variant":"freethreaded"},
+          {"key":"pypy-3.10.16-linux-x86_64-gnu","version":"3.10.16","path":"/k/pypy/bin/pypy3","implementation":"pypy","variant":"default"}
+        ]"#,
+    )
+    .unwrap();
+    let fake = logging_uv(
+        &temp.0.join("uv"),
+        &log,
+        &format!("cat '{}'", listed.display()),
+    );
+    let range = &compat::compat().python.range;
+    let found = python::installed(&fake, &root, range).unwrap();
+    // uv writes a path under the folder it runs in relative to it: read against KentOS's folder.
+    assert_eq!(
+        found,
+        Some(Interpreter {
+            version: "3.12.13".into(),
+            path: root.join("yorumlayici/cpython-3.12-linux-x86_64-gnu/bin/python3.12")
+        })
+    );
+    let line = std::fs::read_to_string(&log).unwrap();
+    let real_root = std::fs::canonicalize(&root).unwrap();
+    assert_eq!(
+        line.trim(),
+        format!(
+            "{}|{}|{}|python list --only-installed --managed-python --no-config --output-format json {range}",
+            real_root.display(),
+            root.join("yorumlayici").display(),
+            root.join("onbellek").display()
+        ),
+        "run in KentOS's folder, with KentOS's folders for uv"
+    );
+    let none = logging_uv(&temp.0.join("bos"), &log, "echo '[]'");
+    assert_eq!(python::installed(&none, &root, range), Ok(None));
+    let refusing = logging_uv(
+        &temp.0.join("ret"),
+        &log,
+        "echo 'error: liste bozuk' >&2; exit 2",
+    );
+    assert_eq!(
+        python::installed(&refusing, &root, range),
+        Err("liste bozuk".into())
+    );
+}
+
+/// Installing asks uv for the manifest's version into KentOS's folder and nothing of the system (no `bin` link, no
+/// registry entry, none of the user's uv settings, the system's certificates); the user's Durdur ends it at once.
+#[cfg(unix)]
+#[test]
+fn python_is_installed_into_kentos_folder_and_can_be_stopped() {
+    let temp = Temp::new("kurulum");
+    let root = temp.0.join("python");
+    let log = temp.0.join("kayit.txt");
+    // uv as it downloads: says the archive's size, the archive grows in the download folder it was given, then it
+    // unpacks (measured on uv 0.11.26).
+    let fake = logging_uv(
+        &temp.0.join("uv"),
+        &log,
+        "echo 'Downloading cpython-3.12.13-linux-x86_64-gnu (download) (1.0MiB)' >&2
+head -c 524288 /dev/zero > \"$UV_PYTHON_CACHE_DIR/.tmpindir\"
+sleep 0.6
+head -c 524288 /dev/zero >> \"$UV_PYTHON_CACHE_DIR/.tmpindir\"
+sleep 0.6
+echo ' Downloaded cpython-3.12.13-linux-x86_64-gnu (download)' >&2
+echo 'Extracting cpython-3.12.13-linux-x86_64-gnu (extract) (1.0MiB)' >&2
+sleep 0.6",
+    );
+    let version = &compat::compat().python.install;
+    assert_eq!(version, "3.12");
+    let stop = std::sync::atomic::AtomicBool::new(false);
+    let mut seen = Vec::new();
+    assert_eq!(
+        python::install(&fake, &root, version, &stop, &mut |p| seen.push(p)),
+        Ok(())
+    );
+    // How far it was, as it changed: the half and the whole of the archive, then unpacking.
+    assert_eq!(seen.first(), Some(&Progress::Starting), "{seen:?}");
+    let half = Progress::Downloading {
+        done: 524_288,
+        total: Some(1_048_576),
+    };
+    assert!(seen.contains(&half), "{seen:?}");
+    assert_eq!(half.share(), Some(0.5));
+    assert!(
+        seen.contains(&Progress::Downloading {
+            done: 1_048_576,
+            total: Some(1_048_576)
+        }),
+        "{seen:?}"
+    );
+    assert_eq!(seen.last(), Some(&Progress::Unpacking), "{seen:?}");
+    assert!(!root.join("indirme").exists(), "the download is not kept");
+    let line = std::fs::read_to_string(&log).unwrap();
+    assert!(
+        line.trim_end().ends_with(
+            "|python install 3.12 --no-bin --no-registry --no-config --no-progress --system-certs"
+        ),
+        "{line}"
+    );
+    assert!(line.contains(&format!("|{}|", root.join("yorumlayici").display())));
+    assert!(
+        root.join("yorumlayici").is_dir(),
+        "its folder is made first"
+    );
+    // Durdur.
+    let slow = fake_uv(&temp.0.join("yavas"), "sleep 30");
+    let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let pressed = stop.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(300));
+        pressed.store(true, std::sync::atomic::Ordering::Relaxed);
+    });
+    let started = std::time::Instant::now();
+    assert_eq!(
+        python::install(&slow, &root, version, &stop, &mut |_| {}),
+        Err(InstallError::Cancelled)
+    );
+    assert!(!root.join("indirme").exists(), "nor a stopped one");
+    assert!(
+        started.elapsed() < Duration::from_secs(10),
+        "stopped at once"
+    );
+    assert!(
+        InstallError::Cancelled
+            .words(version)
+            .contains("durduruldu")
+    );
+}
+
+/// A failed install says why in a sentence with what to do, and uv's own words beside it: no internet, an untrusted
+/// certificate (a network that inspects TLS), a full disk, a folder it may not write, no build for this system.
+#[test]
+fn a_failed_install_says_why_and_what_to_do() {
+    let offline = "error: Failed to install cpython-3.12.13-linux-x86_64-gnu
+  Caused by: Failed to download https://github.com/astral-sh/python-build-standalone/releases/download/x.tar.gz
+  Caused by: Request failed after 3 retries
+  Caused by: error sending request for url (https://github.com/)
+  Caused by: client error (Connect)
+  Caused by: dns error: failed to lookup address information: Name or service not known";
+    assert_eq!(python::cause_of(offline), Cause::Network);
+    assert_eq!(
+        python::said(offline).unwrap(),
+        "Failed to install cpython-3.12.13-linux-x86_64-gnu · dns error: failed to lookup address information: Name \
+         or service not known"
+    );
+    let failed = InstallError::Failed {
+        cause: Cause::Network,
+        said: python::said(offline).unwrap(),
+    };
+    let words = failed.words("3.12");
+    assert!(
+        words.starts_with("Python indirilemedi: internete ulaşılamadı")
+            && words.contains("HTTPS_PROXY")
+            && words.contains("uv: “Failed to install"),
+        "{words}"
+    );
+    let inspected = "error: Failed to install cpython-3.12.13
+  Caused by: Failed to download https://github.com/x
+  Caused by: error sending request for url (https://github.com/x)
+  Caused by: client error (Connect)
+  Caused by: invalid peer certificate: UnknownIssuer";
+    assert_eq!(python::cause_of(inspected), Cause::Certificate);
+    assert!(
+        InstallError::Failed {
+            cause: Cause::Certificate,
+            said: String::new()
+        }
+        .words("3.12")
+        .contains("kurumun sertifikası")
+    );
+    for (text, cause) in [
+        (
+            "error: x\n  Caused by: No space left on device (os error 28)",
+            Cause::Disk,
+        ),
+        (
+            "error: x\n  Caused by: There is not enough space on the disk. (os error 112)",
+            Cause::Disk,
+        ),
+        (
+            "error: x\n  Caused by: Access is denied. (os error 5)",
+            Cause::Folder,
+        ),
+        (
+            "error: x\n  Caused by: Permission denied (os error 13)",
+            Cause::Folder,
+        ),
+        (
+            "error: No download found for request: cpython-3.12-freebsd-x86_64",
+            Cause::Unavailable,
+        ),
+        ("error: something else entirely", Cause::Other),
+    ] {
+        assert_eq!(python::cause_of(text), cause, "{text}");
+    }
+    assert!(
+        InstallError::Failed {
+            cause: Cause::Unavailable,
+            said: String::new()
+        }
+        .words("3.12")
+        .starts_with("Python 3.12 bu sistem için indirilemiyor.")
+    );
+    assert_eq!(python::said("only words, no error line"), None);
+    assert!(InstallError::TimedOut.words("3.12").contains("20 dakikada"));
+}
+
+/// uv's sizes and phases read: the archive's size from its first line, the bytes downloaded beside it, unpacking once
+/// it says so; nothing said yet is a start.
+#[test]
+fn how_far_installing_is_is_read_from_uvs_words() {
+    assert_eq!(python::bytes("32.6MiB"), Some(34_183_578));
+    assert_eq!(python::bytes("512KiB"), Some(524_288));
+    assert_eq!(python::bytes("900B"), Some(900));
+    assert_eq!(python::bytes("1.2GiB"), Some(1_288_490_189));
+    assert_eq!(python::bytes("çok"), None);
+    assert_eq!(python::read_progress("", 0), Progress::Starting);
+    let said = "Downloading cpython-3.12.13-linux-x86_64-gnu (download) (32.6MiB)\n";
+    let early = python::read_progress(said, 3_418_399);
+    assert_eq!(
+        early,
+        Progress::Downloading {
+            done: 3_418_399,
+            total: Some(34_183_578)
+        }
+    );
+    assert!((early.share().unwrap() - 0.1).abs() < 0.001);
+    // A size uv rounds can be passed by a few bytes: never more than the whole.
+    assert_eq!(python::read_progress(said, 34_200_000).share(), Some(1.0));
+    // Bytes but no size said: downloading, share unknown.
+    let no_size = python::read_progress("", 1000);
+    assert_eq!(no_size.share(), None);
+    assert!(matches!(no_size, Progress::Downloading { total: None, .. }));
+    let unpacking = format!(
+        "{said} Downloaded cpython-3.12.13-linux-x86_64-gnu (download)\nExtracting cpython-3.12.13 (extract) (32.6MiB)\n"
+    );
+    assert_eq!(
+        python::read_progress(&unpacking, 34_159_222),
+        Progress::Unpacking
+    );
+}
+
+/// Removed from the same place: uv uninstalls KentOS's Pythons, then their folder and what downloads left go; the
+/// bytes freed are said; a link is not counted twice; a Python still in use is said so.
+#[cfg(unix)]
+#[test]
+fn kentos_python_is_removed_with_what_it_left() {
+    let temp = Temp::new("kaldir");
+    let root = temp.0.join("python");
+    let log = temp.0.join("kayit.txt");
+    let folder = root.join("yorumlayici");
+    std::fs::create_dir_all(folder.join("cpython-3.12.13/bin")).unwrap();
+    std::fs::write(folder.join("cpython-3.12.13/bin/python3.12"), [0u8; 1000]).unwrap();
+    std::os::unix::fs::symlink(folder.join("cpython-3.12.13"), folder.join("cpython-3.12"))
+        .unwrap();
+    std::fs::write(folder.join(".lock"), b"").unwrap();
+    std::fs::create_dir_all(root.join("indirme/1-2")).unwrap();
+    std::fs::write(root.join("indirme/1-2/.tmpx"), [0u8; 500]).unwrap();
+    std::fs::write(root.join("ayarlar.json"), b"{}").unwrap();
+    assert_eq!(
+        python::folder_size(&folder),
+        1000,
+        "the link is not counted twice"
+    );
+    let fake = logging_uv(&temp.0.join("uv"), &log, "exit 0");
+    assert_eq!(python::remove(Some(&fake), &root), Ok(1500));
+    assert!(
+        std::fs::read_to_string(&log)
+            .unwrap()
+            .trim_end()
+            .ends_with("|python uninstall --all --no-config")
+    );
+    assert!(!folder.exists() && !root.join("indirme").exists());
+    assert!(
+        root.join("ayarlar.json").exists(),
+        "the user's choice stays"
+    );
+    assert_eq!(
+        python::remove(None, &root),
+        Ok(0),
+        "nothing left: nothing to do"
+    );
+    // In use (Windows keeps a running Python's files).
+    std::fs::create_dir_all(&folder).unwrap();
+    let busy = logging_uv(
+        &temp.0.join("mesgul"),
+        &log,
+        "echo 'error: Failed to uninstall cpython-3.12.13' >&2
+echo '  Caused by: The process cannot access the file because it is being used by another process. (os error 32)' >&2
+exit 2",
+    );
+    let refused = python::remove(Some(&busy), &root).unwrap_err();
+    assert!(
+        refused.starts_with("Python kaldırılamadı: dosyaları kullanılıyor")
+            && refused.contains("Python konsolunu"),
+        "{refused}"
     );
 }

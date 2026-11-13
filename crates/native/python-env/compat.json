@@ -48,7 +48,9 @@
   },
   "python": {
     "range": ">=3.10,<3.15",
-    "note": "KentOS SDK'sının kararlı ABI'si 3.10'dan beri; 3.15 henüz denenmedi."
+    "note": "KentOS SDK'sının kararlı ABI'si 3.10'dan beri; 3.15 henüz denenmedi. Kullanıcı isteyince 3.12 kurulur: CBS paketlerinin tekerlekleri en geniş onda, güvenlik desteği Ekim 2028'e dek.",
+    "install": "3.12",
+    "size": "yaklaşık 35 MB; kurulunca 100 MB kadar yer kaplar"
   },
   "platforms": [
     {

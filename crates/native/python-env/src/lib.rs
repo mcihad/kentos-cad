@@ -10,11 +10,14 @@
 //!   may miss), its version
 //!   checked, and uv run with its arguments, never through a shell, with a time limit, a bounded output and none of
 //!   the environment's uv or Python settings deciding where it goes.
+//! - [`python`]: KentOS's own Python, installed by uv into the user's KentOS folder only when the user asks, found
+//!   there alone, and why installing failed said in a sentence.
 //! - [`settings`]: the user's choice (off by default) and their uv path.
-//! - [`places`]: where the settings and the environments are.
+//! - [`places`]: where the settings, KentOS's Pythons, uv's cache and the environments are.
 
 pub mod compat;
 pub mod places;
+pub mod python;
 pub mod settings;
 pub mod uv;
 

@@ -772,8 +772,11 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   KentOS kurulumunun içinde gelir** ("UV kurulum içine eklensin"); Python kuruluma ve KentOS'un sürecine girmez, kullanıcı
   onaylayınca indirilir. Teslim: önce kurulumun uv'si (`tools/uv[.exe]`; macOS `Contents/MacOS/uv`), manifestte sürüm
   0.11.26 ve 6 platformun SHA-256'sı, paketleme betiği `scripts/desktop/bundle_uv.py` (özet denetimi, lisanslar,
-  `--offline`). **Kalan:** Python'u onayla kurmak, kişisel ortam (P04), eklenti ortamları (P05, P07), Windows'ta Python
-  konsolu, hazırlık penceresi.
+  `--offline`). **KentOS'un Python'u** aynı bölümden onayla kurulur ve **kaldırılır** (sahibin istekleri: "Aynı yerden
+  kaldırılabilmesi … hoş bir progress ve toast ile geri bildirim", "Kaldırılabilmelidir"): uv'nin yazdığı boy ve büyüyen
+  arşivden yüzdeli ilerleme, Durdur, hatanın cümlesi, onaylı Kaldır, sonuçlar bildirimle; `--no-bin --no-registry` ile
+  sistemde iz yok. **Kalan:** kişisel ortam (P04), eklenti ortamları (P05, P07), Windows'ta Python konsolu, kaldırmanın
+  eklenti ortamlarını da söylemesi, hazırlık penceresi.
 - **Kabul:** P01–P07 (§5). İstemeyen kurmayı reddeder ve normal çalışır; NumPy isteyen kendi ortamına kurar; iki
   eklentinin farklı NumPy'ı birbirini bozmaz; internet kapalıyken hazır ortam çalışır; çalıştırma kendiliğinden paket ya
   da yorumlayıcı indirmez. Testler sahte taşımayla ve temiz bir kullanıcı profiliyle; gerçek kullanıcı ortamı

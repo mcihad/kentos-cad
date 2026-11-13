@@ -19,7 +19,9 @@
 use std::ffi::{OsStr, OsString};
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::{Child, Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use crate::compat::{self, Compat};
@@ -322,6 +324,8 @@ pub struct Ran {
     pub stderr: String,
     /// It ran out of time and was ended.
     pub timed_out: bool,
+    /// It was stopped when asked ([`Watch::cancel`]).
+    pub cancelled: bool,
     /// Its output was cut at [`MAX_OUTPUT`].
     pub cut: bool,
 }
@@ -342,7 +346,10 @@ const DRAINED: Duration = Duration::from_secs(2);
 
 /// A stream read up to [`MAX_OUTPUT`] bytes, the rest read and dropped so the program never blocks on a full pipe; what
 /// was kept comes over the channel when the stream ends.
-fn drain(mut stream: impl Read + Send + 'static) -> std::sync::mpsc::Receiver<(Vec<u8>, bool)> {
+fn drain(
+    mut stream: impl Read + Send + 'static,
+    live: Option<Arc<Mutex<String>>>,
+) -> std::sync::mpsc::Receiver<(Vec<u8>, bool)> {
     let (sent, got) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
         let mut kept = Vec::new();
@@ -355,12 +362,33 @@ fn drain(mut stream: impl Read + Send + 'static) -> std::sync::mpsc::Receiver<(V
                     let room = MAX_OUTPUT.saturating_sub(kept.len());
                     kept.extend_from_slice(&chunk[..n.min(room)]);
                     cut |= n > room;
+                    // As it comes, for a caller that follows the run (a download's size, uv's phases).
+                    if let Some(live) = &live
+                        && let Ok(mut text) = live.lock()
+                        && text.len() < MAX_OUTPUT
+                    {
+                        text.push_str(&String::from_utf8_lossy(&chunk[..n]));
+                    }
                 }
             }
         }
         let _ = sent.send((kept, cut));
     });
     got
+}
+
+/// How often [`Watch::tick`] is called while a program runs.
+pub const TICK: Duration = Duration::from_millis(150);
+
+/// How a run is followed while it lasts.
+#[derive(Default)]
+pub struct Watch<'a> {
+    /// Set, the program is ended (the user's Durdur).
+    pub cancel: Option<&'a AtomicBool>,
+    /// Its error stream as it is written, up to [`MAX_OUTPUT`] bytes: uv says there what it downloads and how big.
+    pub stderr: Option<Arc<Mutex<String>>>,
+    /// Called about every [`TICK`] while it runs.
+    pub tick: Option<&'a mut dyn FnMut()>,
 }
 
 /// Runs `program` with `args` in `dir` (none: as it is), `extra_env` added to an environment without the variables
@@ -372,6 +400,20 @@ pub fn run(
     extra_env: &[(&str, &OsStr)],
     limit: Duration,
 ) -> Result<Ran, String> {
+    run_watched(program, args, dir, extra_env, limit, Watch::default())
+}
+
+/// [`run`], followed while it lasts: ended as soon as `watch.cancel` is set, its error stream readable as it comes,
+/// `watch.tick` called every [`TICK`].
+pub fn run_watched(
+    program: &Path,
+    args: &[&OsStr],
+    dir: Option<&Path>,
+    extra_env: &[(&str, &OsStr)],
+    limit: Duration,
+    mut watch: Watch,
+) -> Result<Ran, String> {
+    let cancel = watch.cancel;
     let mut command = Command::new(program);
     command
         .args(args)
@@ -396,21 +438,37 @@ pub fn run(
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         command.creation_flags(CREATE_NO_WINDOW);
     }
-    let mut child = command.spawn().map_err(|e| e.to_string())?;
-    let out = child.stdout.take().map(drain);
-    let err = child.stderr.take().map(drain);
+    let mut child = spawn(&mut command)?;
+    let out = child.stdout.take().map(|s| drain(s, None));
+    let err = child.stderr.take().map(|s| drain(s, watch.stderr.clone()));
+    let mut ticked = Instant::now();
     let started = Instant::now();
     let mut timed_out = false;
+    let mut cancelled = false;
     let status = loop {
         match child.try_wait() {
             Ok(Some(status)) => break status.code(),
+            Ok(None) if cancel.is_some_and(|c| c.load(Ordering::Relaxed)) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                cancelled = true;
+                break None;
+            }
             Ok(None) if started.elapsed() >= limit => {
                 let _ = child.kill();
                 let _ = child.wait();
                 timed_out = true;
                 break None;
             }
-            Ok(None) => std::thread::sleep(Duration::from_millis(10)),
+            Ok(None) => {
+                if let Some(tick) = watch.tick.as_mut()
+                    && ticked.elapsed() >= TICK
+                {
+                    ticked = Instant::now();
+                    tick();
+                }
+                std::thread::sleep(Duration::from_millis(10));
+            }
             Err(e) => return Err(e.to_string()),
         }
     };
@@ -426,8 +484,30 @@ pub fn run(
         stdout: String::from_utf8_lossy(&stdout).into_owned(),
         stderr: String::from_utf8_lossy(&stderr).into_owned(),
         timed_out,
+        cancelled,
         cut: cut_out || cut_err,
     })
+}
+
+/// How many times a busy program is tried, [`BUSY_WAIT`] apart.
+const BUSY_TRIES: u32 = 8;
+const BUSY_WAIT: Duration = Duration::from_millis(25);
+
+/// Starts `command`, tried again briefly while its program is "busy" (`ETXTBSY`, os error 26 on Linux and macOS): a
+/// program written a moment ago is still open for writing in a process another thread has just started, whose inherited
+/// descriptor closes only at its own exec. Measured on this crate's tests, which write their fake uv and start them at
+/// once from eight threads: 8 failures in 25 runs before, none after.
+fn spawn(command: &mut Command) -> Result<Child, String> {
+    let mut tries = 1;
+    loop {
+        match command.spawn() {
+            Err(e) if cfg!(unix) && e.raw_os_error() == Some(26) && tries < BUSY_TRIES => {
+                tries += 1;
+                std::thread::sleep(BUSY_WAIT);
+            }
+            started => return started.map_err(|e| e.to_string()),
+        }
+    }
 }
 
 /// `args` as the operating system's strings, for [`run`].

@@ -68,6 +68,10 @@ pub struct PythonNeed {
     /// As uv reads a version request (`>=3.10,<3.15`).
     pub range: String,
     pub note: String,
+    /// The version installed when the user asks (`3.12`), inside `range`.
+    pub install: String,
+    /// What installing it costs, as the window says it.
+    pub size: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -132,6 +136,8 @@ impl Compat {
             python: PythonNeed {
                 range: "<0".to_owned(),
                 note: why,
+                install: String::new(),
+                size: String::new(),
             },
             platforms: Vec::new(),
             install: Install {

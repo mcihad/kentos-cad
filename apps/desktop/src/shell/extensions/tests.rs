@@ -845,8 +845,10 @@ fn a_kek_file_opened_is_reviewed_not_installed() {
 /// once; turned off, what was found is dropped.
 #[test]
 fn an_extensions_python_buttons_say_why_by_the_users_python() {
-    use crate::python_setup::PythonEdit;
+    use crate::python_setup::{OwnPython, PythonEdit};
+    use kentos_python_env::python::{Cause, InstallError, Interpreter, Progress};
     use kentos_python_env::uv::UvStatus;
+    use std::sync::Arc;
 
     let root = temp("python");
     let python_root = temp("python-ayar");
@@ -896,8 +898,151 @@ fn an_extensions_python_buttons_say_why_by_the_users_python() {
         version: "0.11.26".into(),
         bundled: false,
     }));
+    // uv ready: KentOS's own Python looked for in the background.
+    assert_eq!(gis.python_setup.python, Some(OwnPython::Looking));
+    assert!(
+        why(&gis).contains("KentOS'un Python'u aranıyor"),
+        "{}",
+        why(&gis)
+    );
+    let _ = gis.python_edit(PythonEdit::Found(Ok((None, 0))));
+    assert_eq!(gis.python_setup.python, Some(OwnPython::Missing));
+    assert!(
+        why(&gis).contains("KentOS'un Python'u kurulu değil"),
+        "{}",
+        why(&gis)
+    );
+    let _ = gis.python_section();
+    // Installed only when the user presses the button (the consent); Durdur stops it, and what ended it is said.
+    assert!(
+        gis.python_setup.installing.is_none(),
+        "nothing installed unasked"
+    );
+    let _ = gis.python_edit(PythonEdit::Install);
+    let stop = gis.python_setup.installing.clone().expect("installing");
+    assert!(why(&gis).contains("kuruluyor"), "{}", why(&gis));
+    let _ = gis.python_edit(PythonEdit::Install);
+    assert!(
+        Arc::ptr_eq(&stop, gis.python_setup.installing.as_ref().unwrap()),
+        "one install at a time"
+    );
+    let _ = gis.python_section();
+    // How far it is, as the bar says it: uv's size and the bytes so far, then unpacking.
+    assert_eq!(gis.python_setup.progress, Some(Progress::Starting));
+    let at = Progress::Downloading {
+        done: 13_002_342,
+        total: Some(34_183_578),
+    };
+    let _ = gis.python_edit(PythonEdit::Progressed(at));
+    assert_eq!(gis.python_setup.progress, Some(at));
+    assert_eq!(
+        crate::python_setup::progress_words(at),
+        "İndiriliyor: 12,4 MB / 32,6 MB · %38"
+    );
+    assert_eq!(
+        crate::python_setup::progress_words(Progress::Downloading {
+            done: 3_418_399,
+            total: Some(34_183_578)
+        }),
+        "İndiriliyor: 3,3 MB / 32,6 MB · %10"
+    );
+    let _ = gis.python_section();
+    let _ = gis.python_edit(PythonEdit::Progressed(Progress::Unpacking));
+    let _ = gis.python_section();
+    let _ = gis.python_edit(PythonEdit::StopInstall);
+    assert!(stop.load(std::sync::atomic::Ordering::Relaxed), "Durdur");
+    let toasts = gis.toasts.len();
+    let _ = gis.python_edit(PythonEdit::Installed(Err(InstallError::Cancelled)));
+    assert!(gis.python_setup.installing.is_none() && gis.python_setup.progress.is_none());
+    // Said by a notice; nothing stays in the section, where the button waits again.
+    assert_eq!(gis.toasts.len(), toasts + 1);
+    assert!(
+        gis.toasts
+            .iter()
+            .any(|(_, toast, _)| toast.title() == "Python kurulumu durduruldu")
+    );
+    assert!(gis.python_setup.note.is_none());
+    let _ = gis.python_edit(PythonEdit::Install);
+    let _ = gis.python_edit(PythonEdit::Installed(Err(InstallError::Failed {
+        cause: Cause::Network,
+        said: "dns error".into(),
+    })));
+    // A failure: in the section, and a notice that waits to be closed.
+    assert!(
+        matches!(&gis.python_setup.note, Some((_, said)) if said.contains("internete ulaşılamadı")),
+        "{:?}",
+        gis.python_setup.note
+    );
+    assert!(
+        gis.toasts
+            .iter()
+            .any(|(_, toast, _)| toast.title() == "Python kurulamadı")
+    );
+    let _ = gis.python_section();
+    let _ = gis.python_edit(PythonEdit::Install);
+    let _ = gis.python_edit(PythonEdit::Installed(Ok(())));
+    assert!(gis.python_setup.note.is_none());
+    assert!(
+        gis.toasts
+            .iter()
+            .any(|(_, toast, _)| toast.title() == "Python 3.12 kuruldu")
+    );
+    assert_eq!(
+        gis.python_setup.python,
+        Some(OwnPython::Looking),
+        "looked for again"
+    );
+    let installed = Interpreter {
+        version: "3.12.13".into(),
+        path: python_root.join("yorumlayici/cpython-3.12/bin/python3.12"),
+    };
+    let _ = gis.python_edit(PythonEdit::Found(Ok((
+        Some(installed.clone()),
+        102_640_000,
+    ))));
     assert!(why(&gis).contains("Python hazır"), "{}", why(&gis));
     let _ = gis.python_section();
+    // Removed from the same place: Kaldır asks first, Vazgeç keeps it, Evet, kaldır removes it and says the room freed.
+    let _ = gis.python_edit(PythonEdit::Remove);
+    assert!(gis.python_setup.confirm_remove, "asks first");
+    let _ = gis.python_section();
+    let _ = gis.python_edit(PythonEdit::RemoveCancelled);
+    assert!(!gis.python_setup.confirm_remove && !gis.python_setup.removing);
+    let _ = gis.python_edit(PythonEdit::Remove);
+    let _ = gis.python_edit(PythonEdit::RemoveConfirmed);
+    assert!(gis.python_setup.removing && !gis.python_setup.confirm_remove);
+    assert!(why(&gis).contains("kaldırılıyor"), "{}", why(&gis));
+    let _ = gis.python_section();
+    let _ = gis.python_edit(PythonEdit::Install);
+    assert!(gis.python_setup.installing.is_none(), "not while removing");
+    let _ = gis.python_edit(PythonEdit::Removed(Ok(102_640_000)));
+    assert!(!gis.python_setup.removing);
+    assert!(
+        gis.toasts
+            .iter()
+            .any(|(_, toast, _)| toast.title() == "Python kaldırıldı"),
+        "a notice"
+    );
+    assert_eq!(crate::python_setup::size_words(102_640_000), "98 MB");
+    let _ = gis.python_edit(PythonEdit::Found(Ok((None, 0))));
+    assert_eq!(gis.python_setup.python, Some(OwnPython::Missing));
+    // A removal that fails says why, in the section and by a notice.
+    let _ = gis.python_edit(PythonEdit::Found(Ok((Some(installed), 102_640_000))));
+    let _ = gis.python_edit(PythonEdit::Remove);
+    let _ = gis.python_edit(PythonEdit::RemoveConfirmed);
+    let _ = gis.python_edit(PythonEdit::Removed(Err(
+        "Python kaldırılamadı: dosyaları kullanılıyor.".into(),
+    )));
+    assert!(
+        matches!(&gis.python_setup.note, Some((_, said)) if said.contains("dosyaları kullanılıyor")),
+        "{:?}",
+        gis.python_setup.note
+    );
+    assert!(
+        gis.toasts
+            .iter()
+            .any(|(_, toast, _)| toast.title() == "Python kaldırılamadı")
+    );
     // A path by hand, kept.
     let _ = gis.python_edit(PythonEdit::UvTyped("/opt/araclar/uv".into()));
     let _ = gis.python_edit(PythonEdit::UvApply);
@@ -907,9 +1052,21 @@ fn an_extensions_python_buttons_say_why_by_the_users_python() {
             .as_deref(),
         Some("/opt/araclar/uv")
     );
-    // Off again: what was found is dropped; nothing looked for.
+    // Off again: what was found is dropped; nothing looked for; an install under way is stopped.
+    let _ = gis.python_edit(PythonEdit::Detected(UvStatus::Found {
+        path: "/ev/.local/bin/uv".into(),
+        version: "0.11.26".into(),
+        bundled: false,
+    }));
+    let _ = gis.python_edit(PythonEdit::Install);
+    let stop = gis.python_setup.installing.clone().expect("installing");
     let _ = gis.python_edit(PythonEdit::Enable(false));
+    assert!(
+        stop.load(std::sync::atomic::Ordering::Relaxed),
+        "stopped when turned off"
+    );
     assert!(gis.python_setup.uv.is_none() && !gis.python_setup.looking);
+    assert!(gis.python_setup.python.is_none());
     assert!(why(&gis).contains("Python kapalı"));
     // The settings window's section draws.
     gis.open_settings_at(crate::settings_sections::Section::Python);
