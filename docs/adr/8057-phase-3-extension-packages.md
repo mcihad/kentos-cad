@@ -205,3 +205,29 @@ art arda üç kez çökertilen eklenti kalıcı "Hata"ya geçiyor ve sonraki aç
 verisi kalıyor; bağımlılık döngüsü reddediliyor. Ayrıca: aynı sürüm farklı içerik, kaynak çakışması, kurum ilkesi,
 verilmeyen izin, geliştirici klasörünün yeniden yüklenmesi, diskte değiştirilmiş dosya, yeni SDK protokolü, inceleme
 farkı, proje ihtiyaçları, güvenli kip ve iki süreç. Clippy uyarısız; bağımlılık yönü temiz (60 crate).
+
+## §3. Masaüstü, katalog ve döküm (`ADIM 18`, sürüyor)
+
+**Katalog dizini** (`kentos_extensions::catalog`, `kentos.extension-catalog` v1). Kurum paylaşımındaki ya da çevrimdışı
+bir diskteki `.kek` dosyalarının yanında duran statik `index.json`; `kentos kek index <klasör> [--name <ad>]` onu
+paketlerin kendisinden yazar, yani dizinde yazan, denetleyicinin okuduğudur. Her paket için kurmadan önce gösterilecek
+her şey içindedir: ad, özet, açıklama, sınıf, modüller, anahtar sözcükler, yazarlar, yayımcı, lisans, bağlantılar,
+uyumluluk, bağımlılıklar, gerekçeli yetenekler, değişiklik notu (16 000 karaktere kadar) ve ikonun SVG metni; ayrıca
+dosyanın adı, boyu, SHA-256'sı ve içerik özeti. Kurulmayacak bir paket dizine girmez (dizin yazılmaz, sorunlar dosya
+adıyla söylenir); aynı kimlik ve sürüm iki dosyada olamaz. İndirilen paket kurulmadan önce boyu, SHA-256'sı ve içerik
+özetiyle dizindekine karşı doğrulanır (`catalog_mismatch`). `latest` her paketin en yeni sürümünü verir; önizleme
+(önsürüm) yalnız istenince. Dizine güven klasörü kadardır; genel kataloğun imzası ADIM 22A'da.
+
+**Yerler** (`kentos_extension_host::places`). Kayıt defteri programın veri klasörünün `eklentiler`'idir
+(`$XDG_DATA_HOME/kentos-cad/eklentiler`, Windows'ta `%APPDATA%\kentos-cad\eklentiler`, macOS'ta `~/Library/Application
+Support/kentos-cad/eklentiler`); kurum ilkesi kullanıcının yazamadığı sistem klasöründedir (`/etc/kentos-cad`,
+`%ProgramData%\kentos-cad`, `/Library/Application Support/kentos-cad`; dosya `eklenti-ilkesi.json`).
+`KENTOS_EXTENSIONS_DIR` ve `KENTOS_EXTENSIONS_POLICY` sınamaların ve gerçek pencere oturumlarının kullanıcının kendi
+klasörlerine dokunmamasını sağlar. **Okunamayan ilke dosyası her eklentiyi reddeder** ve nedenini söyler (yokluğu
+"ilke yok", bozukluğu "ilke yok" değildir).
+
+**Döküm.** `Registry::planned_contributions` çalışan ya da hazır her eklentinin eklediğini, hiçbir şeyi etkinleştirmeden
+ve kayıt defterine yazmadan hesaplar (hazır olanınki kuşak 0'lık bir kiralamayla), bırakılanları nedeniyle verir;
+`kentos kek dump [--root <klasör>]` kurulu her eklentinin durumuyla birlikte JSON olarak döker: "sekmem nereye düştü?"
+sorusunun kanıtı (Ö·38). Kayıt defterini açmak artık yalnız bir saatten eski hazırlık artıklarını siler: masaüstü kurulum
+yaparken MCP ya da CLI kayıt defterini açarsa süren kurulumun hazırladığı dosyalar silinirdi (sınamada yakalandı).
