@@ -304,6 +304,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Her üç alan için standart KentOS renk seçici ve güncel rengi gösteren örnek sunulsun; isteyen kodla girebilsin. Boş değer mevcut tabloda belirtildiği gibi tablonun kendi değerini devralmalı; geçersiz kod alanın yanında açıklanmalı ve önizleme seçimi yansıtmalı.
 - **İnceleme / çözüm yönü:** `apps/desktop/src/table_style_window.rs` içinde renk alanlarının `Field::BorderColor`, `Color`, `Fill` metin girdileri ve mevcut renk doğrulaması incelenerek ortak renk bileşeni bağlansın. Üç hücre türünde seçim birbirinden bağımsız korunmalı.
 - **Kabul:** Başlık, sütun başı ve veri için üç renk, boş/devralınan renk, kodla giriş ve geçersiz değer; açık/koyu tema, canlı önizleme, kaydet–yeniden aç, tabloya uygulama ve PDF çıktısı test edilsin.
+- **Durum (13.11.2026):** düzeltildi — Tablo stilleri penceresinde Kenar rengi, Yazı rengi ve Dolgu artık kitin renk seçicisini açan bir renk örneğiyle geliyor (örnek o anki rengi gösteriyor; boşken tablonun kendi rengi kullanılıyor ve örnek boş); kod yine yazılabiliyor, geçersiz kod eskisi gibi alanın sorunu olarak söyleniyor, önizleme seçimi hemen yansıtıyor. Başlık, Sütun başı ve Veri için ayrı. Resimler `.run/gui-evidence/kullanim-UR-033/` (Veri dolgusu seçilmiş, açık/koyu); tablo stili testleri geçiyor. PDF çıktısı ayrıca sınanmadı.
 
 ### İzlenecek gözlem — henüz hata olarak doğrulanmadı
 
