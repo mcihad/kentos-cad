@@ -700,7 +700,7 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   çift tık yalnız incelemeyi açar, Linux dosya türü ve masaüstü kaydı; `--eklentisiz` artık dosya sanılmıyor
   [PY-KEK-15]. **Bitti (13 Kasım);** katman şemasının projeye kurulması ve `.kcad` bağlantısı ADIM 22'de.
 
-### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
+### [~] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 
 [EKL-05; PY-OPT-01…14; PY-UV-01…31]
 
@@ -765,6 +765,11 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   hazırlama (ADIM 22A); kurum izinli paket listesi [D14]; genel çevrimiçi erişim anahtarı kapalıyken `network` yeteneği
   aracıda reddedilir [Ö·43]. Ölçülecek: venv başına disk ve hazırlama süresi, vekil sunucu ve platform tekerleği matrisi.
   Alt yorumlayıcı yalıtım için kullanılmaz [Ö·23].
+- **Sürüyor (13 Kasım, ADR 8057 §5):** `crates/native/python-env`; Uygulama ayarları › Python ve eklentiler (varsayılan
+  kapalı, kapalıyken hiçbir şey aranmaz); uv'nin arka planda algılanması ve sürüm denetimi; tek uyumluluk manifesti;
+  resmî kurulum komutları (KentOS kurmaz); kabuksuz, süreli, sınırlı uv çağrısı; **Windows:** konsol penceresi yok,
+  WinGet/Scoop/kullanıcı klasörleri, WinGet seçeneği, ortamlar `%LOCALAPPDATA%`'da. **Kalan:** kişisel ortam (P04),
+  eklenti ortamları (P05, P07), hazırlık penceresi.
 - **Kabul:** P01–P07 (§5). İstemeyen kurmayı reddeder ve normal çalışır; NumPy isteyen kendi ortamına kurar; iki
   eklentinin farklı NumPy'ı birbirini bozmaz; internet kapalıyken hazır ortam çalışır; çalıştırma kendiliğinden paket ya
   da yorumlayıcı indirmez. Testler sahte taşımayla ve temiz bir kullanıcı profiliyle; gerçek kullanıcı ortamı

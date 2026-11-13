@@ -496,3 +496,51 @@ sürerse eklentilerden değildir), sonra şüphelilerin yarısı (`watchdog::Bis
 yazmak kilit ister ve her satırda bütün dosyayı yeniden yazardı); durum çubuğu hücresi; "aynı parça çalıştı" kuralı;
 açılışta çalışmayanlar için her açılışta tek satır uyarı; kurulmayan paket eklentinin günlüğüne Uyarı olarak (çalışan
 sürüm iyi); bellekte 50 kayıt; eski kısa geçmişin taşınması; CLI'de zaman UTC; "yazarına" → "yayımcısına".
+
+## §5. Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (`ADIM 18A`, sürüyor)
+
+**İlk dilim (13 Kasım): seçim, uv'nin bulunması, Windows.** Yeni crate `crates/native/python-env`
+(`kentos-python-env`; `deps.mjs` grubu `python-env`, bağımlılığı yalnız serde): uyumluluk manifesti, uv'nin algılanması ve
+çalıştırılması, kullanıcının seçimi.
+
+- **Varsayılan kapalı (P01, P02).** Uygulama ayarları › **Python ve eklentiler**: "Python ve Python'lu eklentileri
+  kullan". Kapalıyken uv ve Python **aranmaz**, hiçbir şey indirilmez; CAD, CBS ve KentOS'un araçları çalışır.
+  Eklentinin Python düğmesi görünür, basılamaz ve nedenini söyler: "Python kapalı: Uygulama ayarları › Python ve
+  eklentiler'den açabilirsiniz." / "uv hazır değil…" / "Python hazır; yürütücü sonraki sürümde" (ADIM 19). Seçim
+  kullanıcınındır (`<python>/ayarlar.json`), Yapay zekâ'nın ajanları gibi taslaktan ayrı, hemen yazılır; okunamayan
+  dosya "kapalı" sayılır.
+- **Tek uyumluluk manifesti** (`crates/native/python-env/compat.json`, PY-UV-09): uv en az 0.9.0, Python `>=3.10,<3.15`,
+  desteklenen platformlar, sistem başına uv'nin resmî kurulum yolları. Okunamayan gömülü manifest her şeyi reddeder.
+- **uv bulunur (PY-UV-01, 02):** seçilen yol (verildiyse yalnız o), `PATH`, sonra menüden başlayan programın `PATH`'inde
+  çoğu zaman olmayan kullanıcı klasörleri. Sürüm sorulur (`uv --version`), manifestle karşılaştırılır: bulundu / çok eski
+  ("`uv self update`") / çalıştırılamıyor / bulunamadı / bu sistem desteklenmiyor; her biri ne yapılacağını söyler.
+  **Algılama arka planda** (ayrı iş parçacığı): pencere uv'yi beklemez. uv kendiliğinden değiştirilmez.
+- **KentOS uv kurmaz (PY-UV-03…06):** bulunamazsa sistemin resmî komutları her biri kendi "Kopyala" düğmesiyle
+  gösterilir; kullanıcı kendisi çalıştırır, sonra Yeniden algıla.
+- **uv'yi çalıştırmak (PY-UV-22, 24):** argv ile, kabuk yok (sınamada `a b; rm -rf /` tek bağımsız değişken kaldı);
+  süre sınırı (aşınca durdurulur), akış başına 256 KiB çıktı; ortamdaki `UV_*`, `VIRTUAL_ENV`, `PYTHONPATH`,
+  `PYTHONHOME`, `CONDA_PREFIX`, `PYTHONSTARTUP` çıkarılır: etkin bir venv ya da kullanıcının uv ayarı nereye kurulacağına
+  karar vermez. Durdurulan uv'nin alt süreci boruyu açık tutarsa çıktı en çok 2 sn beklenir (yoksa iş parçacığı
+  sonsuza dek beklerdi).
+- **Windows (sahibin notu, 13 Kasım: "Windows olabilir sistem, ona göre yap"):**
+  - uv `CREATE_NO_WINDOW` ile başlar: pencereli bir programdan başlayan konsol programı her çağrıda siyah bir pencere
+    açıp kapatırdı.
+  - Aranan yerler `uv.exe` adıyla: resmî kurulumcunun `%USERPROFILE%\.local\bin`'i, `.cargo\bin`, WinGet'in
+    `%LOCALAPPDATA%\Microsoft\WinGet\Links`'i, Scoop'un `%USERPROFILE%\scoop\shims`'i. Açık bir Windows programı,
+    kurulumcunun sonradan değiştirdiği `PATH`'i görmez; bu klasörler sayesinde yeniden başlatmadan bulunur.
+  - Kurulum yolu iki: PowerShell kurulumcusu ve **WinGet** (`winget install --id=astral-sh.uv -e`): kurum
+    bilgisayarlarında BT `-ExecutionPolicy ByPass`'ı çoğu zaman kapatır.
+  - Ortamlar **`%LOCALAPPDATA%`**'da (`%APPDATA%` değil): gigabaytlarca tutarlar ve o bilgisayarındır; kurum etki
+    alanının gezici profili onları her oturum açışta kopyalardı. (Eklenti kayıt defteri `%APPDATA%`'da kalır: paketler
+    küçük, kullanıcının eklentileri onunla dolaşır; Python ortamı yeni bilgisayarda yeniden hazırlanır.)
+  - Windows hedefi (`x86_64-pc-windows-msvc`) geliştirme makinesine eklendi: `kentos-python-env`, `-extension-host`,
+    `-extensions`, `-launch` sınamalarıyla Windows için derleme denetiminden geçiyor (depoda CI yok; masaüstünün tamamı
+    Windows için ayrıca denetlenmedi).
+- **Ölçüm:** gerçek pencerede kapalı → aç → "uv 0.11.26 bulundu" (arka planda, pencere beklemedi); yanlış yol →
+  "uv bulunamadı (1 yere bakıldı)", resmî komut ve Kopyala. Sınamalar: python-env 5 (manifest, Windows ve
+  masaüstü oturumu arama yerleri, sürüm denetimi sahte uv'yle, kabuksuz/süreli/sınırlı çalıştırma, seçim), masaüstü 1
+  (düğmenin nedeni seçime göre, hemen yazılan seçim, bölümün çizimi).
+
+**Sıradaki dilimler:** kişisel ortam ve paket önizleme (P04), eklenti başına değişmez ortam ve çevrimdışı çalışma (P05,
+P07), hazırlık penceresi.
+

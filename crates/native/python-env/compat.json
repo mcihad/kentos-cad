@@ -1,0 +1,48 @@
+{
+  "format": "kentos.python-compat",
+  "schemaVersion": 1,
+  "uv": {
+    "min": "0.9.0",
+    "note": "uv sync --locked, uv run --no-sync, --no-config ve --no-python-downloads bu sürümden beri bu anlamda."
+  },
+  "python": {
+    "range": ">=3.10,<3.15",
+    "note": "KentOS SDK'sının kararlı ABI'si 3.10'dan beri; 3.15 henüz denenmedi."
+  },
+  "platforms": [
+    {
+      "os": "linux",
+      "arch": "x86_64"
+    },
+    {
+      "os": "linux",
+      "arch": "aarch64"
+    },
+    {
+      "os": "windows",
+      "arch": "x86_64"
+    },
+    {
+      "os": "macos",
+      "arch": "aarch64"
+    },
+    {
+      "os": "macos",
+      "arch": "x86_64"
+    }
+  ],
+  "install": {
+    "linux": [
+      "curl -LsSf https://astral.sh/uv/install.sh | sh"
+    ],
+    "macos": [
+      "curl -LsSf https://astral.sh/uv/install.sh | sh",
+      "brew install uv"
+    ],
+    "windows": [
+      "powershell -ExecutionPolicy ByPass -c \"irm https://astral.sh/uv/install.ps1 | iex\"",
+      "winget install --id=astral-sh.uv -e"
+    ],
+    "page": "https://docs.astral.sh/uv/getting-started/installation/"
+  }
+}

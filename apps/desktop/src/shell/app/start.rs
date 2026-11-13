@@ -136,6 +136,7 @@ impl App {
             python: crate::python::Console::default(),
             assistant: crate::assistant::Assistant::default(),
             extensions: crate::extensions::Extensions::default(),
+            python_setup: crate::python_setup::PythonSetup::default(),
             bottom_log: None,
             dialog: None,
             dialog_under: None,

@@ -839,3 +839,79 @@ fn a_kek_file_opened_is_reviewed_not_installed() {
     let _ = std::fs::remove_dir_all(&root);
     let _ = std::fs::remove_dir_all(&files);
 }
+
+/// Python ve eklentiler (plan/eklenti.md ADIM 18A, P01/P02): off by default, nothing looked for; an extension's Python
+/// button says why it does not run: Python off, uv not ready, or the runner still to come; the choice is written at
+/// once; turned off, what was found is dropped.
+#[test]
+fn an_extensions_python_buttons_say_why_by_the_users_python() {
+    use crate::python_setup::PythonEdit;
+    use kentos_python_env::uv::UvStatus;
+
+    let root = temp("python");
+    let python_root = temp("python-ayar");
+    let mut gis = app(&root, Some(Module::Gis));
+    gis.python_setup.root = Some(python_root.clone());
+    // Without its dependency on another example extension: MEBİS alone runs.
+    install(
+        &mut gis,
+        "mebis.kek",
+        package("mebis", |m| {
+            m["dependencies"]["extensions"] = serde_json::json!([]);
+        }),
+    );
+    let why = |app: &App| -> String {
+        let tab = app
+            .extension_tabs()
+            .find(|t| t.extension == "tr.ornek.mebis")
+            .expect("MEBİS's tab");
+        match &tab.panels[0].items[0].action {
+            Action::Unavailable(why) => why.clone(),
+            other => panic!("{other:?}"),
+        }
+    };
+    assert!(!gis.python_setup.settings.enabled, "off by default");
+    assert!(gis.python_setup.uv.is_none(), "nothing looked for");
+    assert!(
+        why(&gis).contains("Python kapalı: Uygulama ayarları › Python ve eklentiler"),
+        "{}",
+        why(&gis)
+    );
+    // Turned on: written at once, uv looked for in the background.
+    let _ = gis.python_edit(PythonEdit::Enable(true));
+    assert!(gis.python_setup.looking);
+    assert!(
+        kentos_python_env::settings::PythonSettings::load(&python_root).enabled,
+        "written at once"
+    );
+    assert!(why(&gis).contains("uv aranıyor"));
+    let _ = gis.python_edit(PythonEdit::Detected(UvStatus::NotFound {
+        looked: Vec::new(),
+    }));
+    assert!(why(&gis).contains("uv hazır değil"), "{}", why(&gis));
+    let _ = gis.python_section();
+    let _ = gis.python_edit(PythonEdit::Detected(UvStatus::Found {
+        path: "/ev/.local/bin/uv".into(),
+        version: "0.11.26".into(),
+    }));
+    assert!(why(&gis).contains("Python hazır"), "{}", why(&gis));
+    let _ = gis.python_section();
+    // A path by hand, kept.
+    let _ = gis.python_edit(PythonEdit::UvTyped("/opt/araclar/uv".into()));
+    let _ = gis.python_edit(PythonEdit::UvApply);
+    assert_eq!(
+        kentos_python_env::settings::PythonSettings::load(&python_root)
+            .uv_path
+            .as_deref(),
+        Some("/opt/araclar/uv")
+    );
+    // Off again: what was found is dropped; nothing looked for.
+    let _ = gis.python_edit(PythonEdit::Enable(false));
+    assert!(gis.python_setup.uv.is_none() && !gis.python_setup.looking);
+    assert!(why(&gis).contains("Python kapalı"));
+    // The settings window's section draws.
+    gis.open_settings_at(crate::settings_sections::Section::Python);
+    let _ = gis.settings_dialog();
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&python_root);
+}

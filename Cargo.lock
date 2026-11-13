@@ -2694,6 +2694,7 @@ dependencies = [
  "kentos-postgis",
  "kentos-processing",
  "kentos-project",
+ "kentos-python-env",
  "kentos-render-wgpu",
  "kentos-road",
  "kentos-scene3d",
@@ -3166,6 +3167,14 @@ dependencies = [
  "kentos-project",
  "kentos-services",
  "pyo3",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-python-env"
+version = "0.1.0"
+dependencies = [
  "serde",
  "serde_json",
 ]

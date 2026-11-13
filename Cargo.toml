@@ -14,6 +14,7 @@ members = [
     # registry of the packages a user installed.
     "crates/shared/extensions",
     "crates/native/extension-host",
+    "crates/native/python-env",
     "crates/shared/qml",
     "crates/shared/maplibre",
     # DWG codec adapter (ADR 0586): OpenCADStudio's pinned, MPL-2.0 codec;
@@ -127,6 +128,7 @@ default-members = [
     "crates/shared/zip",
     "crates/shared/extensions",
     "crates/native/extension-host",
+    "crates/native/python-env",
     "crates/shared/qml",
     "crates/shared/maplibre",
     "crates/native/dwg",

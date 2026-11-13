@@ -32,16 +32,19 @@ pub enum Section {
     Engine,
     /// Yapay zekâ: the user's own AI agents (assistant/settings.rs, docs/adr/8056 §4).
     Ai,
+    /// Python ve eklentiler: the user's optional Python (python_setup.rs, plan/eklenti.md ADIM 18A).
+    Python,
     File,
 }
 
 impl Section {
-    pub const ALL: [Section; 6] = [
+    pub const ALL: [Section; 7] = [
         Self::Appearance,
         Self::Snap,
         Self::NewProjects,
         Self::Engine,
         Self::Ai,
+        Self::Python,
         Self::File,
     ];
 
@@ -53,6 +56,7 @@ impl Section {
             Self::NewProjects => "Yeni projeler",
             Self::Engine => "Çizim motoru",
             Self::Ai => "Yapay zekâ",
+            Self::Python => "Python ve eklentiler",
             Self::File => "Ayar dosyası",
         }
     }
@@ -64,6 +68,7 @@ impl Section {
             Self::NewProjects => Icon::DocumentNew,
             Self::Engine => Icon::Cube,
             Self::Ai => crate::icons::from_web(Some("assistant")),
+            Self::Python => crate::icons::from_web(Some("python")),
             Self::File => Icon::Open,
         }
     }
@@ -76,6 +81,7 @@ impl Section {
             Self::NewProjects => "Yeni proje varsayılanları",
             Self::Engine => "Çizim motoru",
             Self::Ai => "Yapay zekâ ajanları",
+            Self::Python => "Python ve eklentiler",
             Self::File => "Ayar dosyası",
         }
     }
@@ -97,6 +103,9 @@ impl Section {
             }
             Self::Ai => {
                 "Asistan panelinin konuştuğu yapay zekâ ajanları: sağlayıcı, model ve kendi API anahtarınız. Biri varsayılandır. Bu bölüm kendi Kaydet'iyle hemen yazılır; ayar dosyasıyla dışa aktarılmaz."
+            }
+            Self::Python => {
+                "Python ve Python'lu eklentiler isteğe bağlıdır; açınca KentOS uv'yi arar, sürümünü denetler. Bu bölüm hemen yazılır; ayar dosyasıyla dışa aktarılmaz."
             }
             Self::File => {
                 "Ayarları bir dosyaya aktarın, başka bir bilgisayardan ya da web uygulamasından alın, varsayılanlara döndürün."
@@ -177,7 +186,7 @@ impl Section {
                 "graphics.highlightColor",
                 "graphics.highlightWidth",
             ],
-            Self::Ai | Self::File => &[],
+            Self::Ai | Self::Python | Self::File => &[],
         }
     }
 }
@@ -345,6 +354,7 @@ impl App {
             Section::NewProjects => self.new_projects_section(&fields),
             Section::Engine => self.engine_section(&fields),
             Section::Ai => self.ai_section(),
+            Section::Python => self.python_section(),
             Section::File => self.file_section(draft),
         };
         let content = column![

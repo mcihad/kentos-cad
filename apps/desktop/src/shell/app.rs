@@ -841,6 +841,8 @@ pub struct App {
     pub(crate) assistant: crate::assistant::Assistant,
     /// The user's extension registry and the manager's state (docs/adr/8057 §3).
     pub(crate) extensions: crate::extensions::Extensions,
+    /// Python ve eklentiler: the user's optional Python (python_setup.rs, plan/eklenti.md ADIM 18A).
+    pub(crate) python_setup: crate::python_setup::PythonSetup,
     /// The open history's height when the panel's edge was dragged (in memory,
     /// as the docks' layout); `None`: the command line's own.
     pub bottom_log: Option<f32>,

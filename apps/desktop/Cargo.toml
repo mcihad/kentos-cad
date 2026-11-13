@@ -63,6 +63,8 @@ kentos-agent = { path = "../../crates/native/agent" }
 # Eklentiler (docs/adr/8057 §3): the .kek packages' inspector and catalog, and the user's extension registry.
 kentos-extensions = { path = "../../crates/shared/extensions" }
 kentos-extension-host = { path = "../../crates/native/extension-host" }
+# The user's optional Python: uv found and checked, the choice to use it (plan/eklenti.md ADIM 18A).
+kentos-python-env = { path = "../../crates/native/python-env" }
 # File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
 # the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
 kentos-formats = { path = "../../crates/shared/formats" }

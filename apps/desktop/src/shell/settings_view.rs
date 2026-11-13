@@ -151,6 +151,8 @@ pub enum Edit {
     OpenProject,
     /// Yapay zekâ's agents (assistant/settings.rs): written at once, apart from the draft.
     Agents(crate::assistant::AgentsEdit),
+    /// Python ve eklentiler (python_setup.rs): written at once, apart from the draft.
+    Python(crate::python_setup::PythonEdit),
 }
 
 impl App {
@@ -198,6 +200,9 @@ impl App {
     pub(crate) fn settings_edit(&mut self, edit: Edit) -> Task<Message> {
         if let Edit::Agents(edit) = edit {
             return self.agents_edit(edit);
+        }
+        if let Edit::Python(edit) = edit {
+            return self.python_edit(edit);
         }
         let Some(draft) = &mut self.settings_draft else {
             return Task::none();
@@ -298,7 +303,7 @@ impl App {
             }
             Edit::Save => return self.save_settings(),
             // Taken above, before the draft.
-            Edit::Agents(_) => {}
+            Edit::Agents(_) | Edit::Python(_) => {}
         }
         Task::none()
     }

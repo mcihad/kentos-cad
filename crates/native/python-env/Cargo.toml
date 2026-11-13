@@ -1,0 +1,14 @@
+[package]
+name = "kentos-python-env"
+description = "The user's optional Python (plan/eklenti.md ADIM 18A): uv found and checked against one compatibility manifest, the user's choice to use it, and the environments uv prepares, each extension version's its own"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native only and small (scripts/arch/deps.mjs, group `python-env`): uv is run as a program with its arguments, never
+# through a shell; no Python is embedded and no new dependency is taken. The desktop, the headless host and the Python
+# host share it.
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

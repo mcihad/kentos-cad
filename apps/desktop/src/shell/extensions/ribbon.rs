@@ -113,6 +113,7 @@ fn item_of(
     manifest: &Manifest,
     item: &RibbonItem,
     registered: &[&kentos_extension_host::Registered],
+    python: &str,
 ) -> ExtItem {
     let ext = manifest.id.as_str();
     let e = &manifest.entrypoints;
@@ -218,8 +219,9 @@ fn item_of(
         };
         let title = title.unwrap_or_else(|| local.clone());
         let action = if has(kind, local) {
+            // Why it does not run now: Python off, uv not ready, or the runner still to come (python_setup.rs).
             Action::Unavailable(format!(
-                "“{title}” eklentinin Python işlevini çalıştırır; Python ortamı hazırlanınca çalışacak."
+                "“{title}” eklentinin Python işlevini çalıştırır. {python}"
             ))
         } else {
             not_granted()
@@ -243,6 +245,7 @@ fn item_of(
 impl App {
     /// The extensions' tabs follow the registry's contributions.
     pub(crate) fn extension_tabs_changed(&mut self) {
+        let python = self.python_setup.why_not();
         let mut tabs = Vec::new();
         if let Some(registry) = self.extensions.registry.as_ref() {
             let contributions = registry.contributions();
@@ -287,7 +290,7 @@ impl App {
                             items: p
                                 .items
                                 .iter()
-                                .map(|i| item_of(registry, manifest, i, &registered))
+                                .map(|i| item_of(registry, manifest, i, &registered, python))
                                 .collect(),
                         })
                         .collect(),
@@ -338,7 +341,7 @@ impl App {
                 };
                 menus.push(ExtMenuItem {
                     target: entry.target,
-                    item: item_of(registry, manifest, &as_button, &registered),
+                    item: item_of(registry, manifest, &as_button, &registered, python),
                     modules: manifest
                         .modules
                         .iter()

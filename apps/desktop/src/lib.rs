@@ -1193,6 +1193,8 @@ mod project;
 mod properties;
 #[path = "shell/python/mod.rs"]
 mod python;
+#[path = "shell/python_setup.rs"]
+mod python_setup;
 #[cfg(test)]
 #[path = "tests/query_tests.rs"]
 mod query_tests;
@@ -1838,6 +1840,9 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
                     kept.display()
                 ));
             }
+            // Python ve eklentiler (plan/eklenti.md ADIM 18A): the user's choice; uv looked for in the background only
+            // while it is on (python_detect below).
+            app.python_setup = python_setup::PythonSetup::device();
             // Eklentiler (docs/adr/8057 §3): the user's registry and IT's policy; the enabled extensions started,
             // none on a start without extensions.
             let (extensions, notes) = crate::extensions::Extensions::device();
@@ -1903,7 +1908,8 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             let server = app.check_server_quietly();
             // The window's device pixels per logical pixel: the brand's pictures are chosen by it.
             let scale = iced::window::oldest().and_then(iced::window::scale_factor).map(app::Message::DeviceScale);
-            (app, iced::Task::batch([task, server, scale]))
+            let python = app.python_detect();
+            (app, iced::Task::batch([task, server, scale, python]))
         },
         app::App::update,
         app::App::view,
