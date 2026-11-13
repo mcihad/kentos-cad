@@ -412,6 +412,26 @@ pub fn execute_sector(cx: &mut ExecutionContext<'_>, input: SectorCreate) -> Com
 
 const CLOUD_RECT_DEGENERATE: &str = "Dikdörtgenin bir kenarı sıfır uzunlukta: iki köşe aynı doğu ya da kuzey çizgisinde. Başka bir karşı köşe verin.";
 const CLOUD_FLAT: &str = "Bulutun köşeleri bir doğru üzerinde: alanı yok. Başka köşeler verin.";
+const CLOUD_CROSSING: &str =
+    "Bulutun sınırı kendini kesiyor: kenarları birbirinin üstünden geçiyor. Köşeleri sınır boyunca sırayla verin.";
+
+/// Whether two edges of the closed ring that are not neighbours cross (each one's ends strictly on either side of
+/// the other, by the exact orientation).
+fn ring_crosses_itself(ring: &[Vec2]) -> bool {
+    use kentos_geometry_core::predicates::orient2d;
+    let n = ring.len();
+    if n < 4 {
+        return false;
+    }
+    let edge = |i: usize| (ring[i], ring[(i + 1) % n]);
+    (0..n).any(|i| {
+        (i + 2..n).filter(|&j| !(i == 0 && j == n - 1)).any(|j| {
+            let ((a, b), (c, d)) = (edge(i), edge(j));
+            let (d1, d2, d3, d4) = (orient2d(a, b, c), orient2d(a, b, d), orient2d(c, d, a), orient2d(c, d, b));
+            d1 * d2 < 0.0 && d3 * d4 < 0.0
+        })
+    })
+}
 const CLOUD_FEW: &str = "Bulutun en az üç köşesi olmalı.";
 const CLOUD_OPEN: &str = "Nesne kapalı değil: bulut alanın, kapalı çoklu çizginin, dairenin, kapalı eğrinin ya da tam elipsin çevresine çizilir.";
 
@@ -446,6 +466,11 @@ fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) ->
             }
             if ring.len() < 3 {
                 return Err(refuse(codes::TOO_FEW_CORNERS, CLOUD_FEW, "frame.pts"));
+            }
+            // A ring whose edges cross (a bow tie) is said as such, before its area (which crossing parts may cancel
+            // to none) is read as all its corners on one line.
+            if ring_crosses_itself(&ring) {
+                return Err(refuse(codes::DEGENERATE_SHAPE, CLOUD_CROSSING, "frame.pts"));
             }
             if kentos_geometry_core::geometry::signed_area(&ring).abs() <= 1e-9 {
                 return Err(refuse(codes::DEGENERATE_SHAPE, CLOUD_FLAT, "frame.pts"));
