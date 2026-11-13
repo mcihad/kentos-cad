@@ -400,9 +400,17 @@ impl Tool for Lengthen {
         false
     }
 
-    /// Drops a picked end or a value asked for; with neither, the tool leaves.
+    /// Onayla / bitir: a dynamic end being moved goes where its preview shows it (the pointer's last point), as a
+    /// click there would; a value asked for is dropped; with neither, the tool leaves.
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
         self.see(cx);
+        if let (Some((slot, at_end)), Some(mouse)) = (self.target, self.mouse) {
+            self.target = None;
+            self.apply(slot, at_end, LengthenChange::Dynamic { to: wire(mouse) }, cx);
+            self.drawn = Preview::default();
+            self.see(cx);
+            return Flow::Stay;
+        }
         if self.target.is_some() || self.ask.is_some() {
             self.target = None;
             self.ask = None;

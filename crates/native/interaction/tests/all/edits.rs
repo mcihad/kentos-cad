@@ -603,6 +603,24 @@ fn explode_takes_a_closed_area_apart_into_lines() {
 
 // ── Uzat-kısalt ─────────────────────────────────────────────────────────────
 
+/// UR-075: Dinamik's end previewed at the pointer, then Onayla / bitir: the end goes where the preview showed it,
+/// and the tool waits for the next end; a second confirm leaves.
+#[test]
+fn lengthen_confirm_takes_the_dynamic_preview() {
+    let mut b = bench(&[]);
+    b.start("lengthen");
+    b.click(-19.0, -12.0);
+    b.move_to(-15.0, -12.0);
+    let preview = b.session.preview(&Default::default()).expect("a preview");
+    assert_eq!(preview.tag.expect("a tag").lines, ["10.000 m → 13.000 m"]);
+    b.confirm();
+    assert_eq!(b.last_text(), Some("Uzunluk 10.000 m → 13.000 m."));
+    assert!(near(&line(&b, 11), &[[-28.0, -12.0], [-15.0, -12.0]]));
+    assert!(b.session.is_running(), "the next end is asked");
+    b.confirm();
+    assert!(!b.session.is_running());
+}
+
 #[test]
 fn lengthen_follows_the_mouse_or_takes_a_typed_total() {
     let mut b = bench(&[]);
