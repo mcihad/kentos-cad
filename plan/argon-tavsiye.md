@@ -431,7 +431,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 15 — MCP Resources (`kentos://*`) ve AI Eklenti Bilgi Paketi (`ai-kek-pack`) (Öncelik: P1)
+### [x] ADIM 15 — MCP Resources (`kentos://*`) ve AI Eklenti Bilgi Paketi (`ai-kek-pack`) (Öncelik: P1)
 
 - **Yapılacak İşlem:**
   1. [crates/native/mcp/src/server.rs](file:///home/cihad/Projects/kentos-cad/crates/native/mcp/src/server.rs) içine MCP standart `resources/list` ve `resources/read` uçları eklenecektir:
@@ -440,6 +440,10 @@ flowchart LR
      - `kentos://extensions/installed` → Kurulu `.kek` paketleri ve sundukları Ribbon/Processing/Audit katkıları.
      - **`kentos://sdk/ai-kek-pack` (AI Eklenti Üretim Rehberi):** Eklentiler **asla elle yazılmayacağı, tamamen AI ajanları tarafından üretileceği için**; bu kaynak AI ajanına tek okumada tüm geçerli ikon adlarını, `kentos.ui` bileşen şemalarını, `ProjectAuditFacts` veri alanlarını, `kentos_sdk.pyi` tip imzalarını ve çalışan altın `.kek` örneklerini sunar.
   2. Bir `.kek` eklentisi etkinleştirildiğinde veya sıcak yüklendiğinde (`hot_reload`) MCP sunucusu `notifications/tools/list_changed` bildirimi gönderecektir.
+- **13 Kasım 2026 ([ADR 8056 §5](../docs/adr/8056-phase-2-mcp-v2-and-in-app-agent.md)):** `kentos://session/overview`
+  (çizimler ve bağlı masaüstleri: özet, katman ağacı, kapılar; 5 873 bayt) ve `kentos://catalog/categories` (6 791
+  bayt) eklendi; `kentos://catalog` listede boyutuyla (43 897 695 bayt). `kentos://extensions/installed`,
+  `kentos://sdk/ai-kek-pack` ve `notifications/tools/list_changed` `.kek` sistemiyle Faz 3'e kaldı.
 
 ---
 

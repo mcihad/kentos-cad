@@ -389,6 +389,46 @@ fn a_host_that_does_not_offer_a_part_hides_and_refuses_it() {
     );
 }
 
+/// MCP's `kentos://session/overview` and `kentos://catalog/categories` (docs/adr/8056 §5): a drawing's summary, layer
+/// tree and doors in one read; the catalog's parts before any drawing is open.
+#[test]
+fn an_agent_reads_a_drawing_and_the_catalog_in_one_read() {
+    let mut s = drawing();
+    let seen = agent_tools::overview(&mut s).expect("the overview");
+    assert_eq!(seen["summary"]["name"], "Ajan");
+    assert!(seen["summary"]["activeLayer"].is_string());
+    assert!(
+        seen["layers"]
+            .as_array()
+            .or_else(|| seen["layers"]["layers"].as_array())
+            .is_some_and(|l| !l.is_empty()),
+        "{}",
+        seen["layers"]
+    );
+    assert_eq!(
+        seen["doors"],
+        json!(["cad.run", "arch.run", "map.run", "gis.run", "road.run"])
+    );
+    let mut host = WithoutArchitecture(&mut s);
+    let seen = agent_tools::overview(&mut host).expect("the overview");
+    assert_eq!(
+        seen["doors"],
+        json!(["cad.run", "map.run", "gis.run", "road.run"]),
+        "a door the host never opens is not offered"
+    );
+    let parts = agent_tools::every_category();
+    let doors: Vec<&str> = parts["parts"]
+        .as_array()
+        .expect("parts")
+        .iter()
+        .filter_map(|p| p["door"].as_str())
+        .collect();
+    assert_eq!(
+        doors,
+        ["cad.run", "arch.run", "map.run", "gis.run", "road.run"]
+    );
+}
+
 #[test]
 fn every_tool_is_listed_with_its_schema() {
     let names: Vec<&str> = agent_tools::tools().iter().map(|t| t.name).collect();

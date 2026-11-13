@@ -152,3 +152,31 @@ onunla sohbet ederek çizdirir; Anthropic, OpenAI, DeepSeek, Gemini, Kimi, GLM v
   6 m x 4 m bir odanın duvarlarını çiz; yeri sen seç, var olan nesnelerle çakışmasın." isteğinde ajan sahneyi okudu,
   katalogda aradı, `cad.walls.rectangle`'ın şemasını okudu, bir Duvar katmanı açıp odayı merdivenin üstündeki boş yere
   planlayıp yazdı (tur 25–55 sn). (20, 0) verildiğinde merdivenle çakışacağını görüp üç seçenek sordu.
+
+## §5. MCP kaynakları: oturumun özeti ve kataloğun bölümleri (`ADIM 15`)
+
+**İddianın denetimi.** Doğru ve ölçüldü: sunucunun iki kaynağı vardı, `kentos://catalog` ve her çizimin
+`kentos://drawing/{tutamaç}`'ı. Bir ajanın ilk okuyacağı şey yoktu: açık çizimlerin ve bağlı masaüstlerinin hepsi tek
+okumada, kataloğun bölümleri araç çağırmadan. Üstelik tek katalog kaynağı **43 897 695 bayt**tı ve listede bunu söylemiyordu.
+
+**Karar.**
+- `kentos://session/overview`: sunucudaki her çizim ve bağlı her masaüstü için özet (proje türü, birim, koordinat
+  sistemi, etkin katman), katman ağacı ve açtığı kapılar; koruyucunun kuralı ve sıradaki adım. Ajanın göreceği gibi:
+  araç katmanının evsahibinden okunur (`agent_tools::overview`; çizimin gizlediği alanlar gizli). Masaüstünün kapıları
+  burada bilinmez (programı sunmadığını kendisi reddeder, §1), `null` yazılır; yanıt vermeyen masaüstü nedenini söyler.
+- `kentos://catalog/categories`: bölümler, kapıları, aileleri, komut sayıları (`agent_tools::every_category`;
+  `catalog.categories` aracının aynısı, çizim açılmadan).
+- `kentos://catalog` kalır ama listede boyutu (`size`) ve "ajan için bölümler, arama ve tanım yeter" uyarısıyla.
+- **Faz 3'e kalanlar** (`.kek` sistemiyle): `kentos://extensions/installed`, `kentos://sdk/ai-kek-pack` ve eklenti
+  etkinleşince `notifications/tools/list_changed`. Özetteki `extensions` şimdilik boş liste.
+
+| Kaynak | Bayt (bir çizim açık) |
+|---|---|
+| `kentos://session/overview` | 5 873 |
+| `kentos://catalog/categories` | 6 791 |
+| `kentos://catalog` | 43 897 695 |
+
+**Doğrulama:** headless `an_agent_reads_a_drawing_and_the_catalog_in_one_read` (özet, katman ağacı, beş kapı; mimariyi
+sunmayan evsahibinde dört kapı; bölümler sırasıyla beş kapı). MCP'nin kaynak testi güncellendi (kural gereği koşulmadı,
+derlemesi denetlendi). Program elle sürüldü: `resources/list` dört kaynak ve kataloğun boyutu, özet çizimi ve beş kapıyı,
+bölümler 171 / 65 / 43 / 94 / 108 komutu verdi.

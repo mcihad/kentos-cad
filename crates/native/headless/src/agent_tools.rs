@@ -171,6 +171,33 @@ pub fn offered_tools(host: &dyn Host) -> Vec<Tool> {
         .collect()
 }
 
+/// What an agent reads first of a drawing (MCP's `kentos://session/overview`, docs/adr/8056 §5): its summary and
+/// layer tree as the host lets an agent see them, and the doors the host opens.
+pub fn overview(host: &mut dyn Host) -> Result<Value, HeadlessError> {
+    let none = json!({});
+    let summary = host.request("summary", &none)?;
+    let layers = host.request("layers", &none)?;
+    let doors: Vec<&str> = offered_tools(host)
+        .iter()
+        .filter(|t| DOORS.iter().any(|d| d.tool == t.name))
+        .map(|t| t.name)
+        .collect();
+    Ok(json!({ "summary": summary, "layers": layers, "doors": doors }))
+}
+
+/// The catalog's parts and families as `catalog.categories` gives them to a host of every part: MCP's
+/// `kentos://catalog/categories`, read before any drawing is open (docs/adr/8056 §5).
+pub fn every_category() -> Value {
+    /// A host that offers everything and has no drawing.
+    struct Every;
+    impl Host for Every {
+        fn request(&mut self, _method: &str, _params: &Value) -> Result<Value, HeadlessError> {
+            Err(HeadlessError::new("no_document", "Açık çizim yok."))
+        }
+    }
+    categories(&Every)
+}
+
 /// A tool as a host lists it: name, title, description, input schema, and whether it only reads or takes away.
 pub struct Tool {
     pub name: &'static str,

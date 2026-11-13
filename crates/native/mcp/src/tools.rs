@@ -1438,14 +1438,44 @@ fn job_envelope(args: &Value) -> Value {
 }
 
 /// The catalog, and each open drawing's summary and layers.
-pub fn resources(server: &Server) -> Vec<Value> {
-    let mut out = vec![json!({
-        "uri": "kentos://catalog",
-        "name": "catalog",
-        "title": "Komut kataloğu",
-        "description": "Bütün ürün komutları: sürüm, sunucular, izinler, girdi, çıktı ve plan şemaları, örnekler.",
+/// A resource as `resources/list` gives it.
+fn resource(uri: &str, name: &str, title: &str, description: &str) -> Value {
+    json!({
+        "uri": uri,
+        "name": name,
+        "title": title,
+        "description": description,
         "mimeType": "application/json",
-    })];
+    })
+}
+
+pub fn resources(server: &Server) -> Vec<Value> {
+    // What an agent reads first (docs/adr/8056 §5): the open drawings in one read, and the catalog's parts.
+    let mut out = vec![
+        resource(
+            "kentos://session/overview",
+            "session-overview",
+            "Oturumun özeti",
+            "Açık çizimler ve bağlı masaüstleri: her birinin özeti (proje türü, birim, koordinat sistemi, etkin katman), \
+             katman ağacı ve açtığı kapılar (cad.run, arch.run …); koruyucunun kuralı. Eklentiler (.kek) Faz 3'te.",
+        ),
+        resource(
+            "kentos://catalog/categories",
+            "catalog-categories",
+            "Komut kataloğunun bölümleri",
+            "Bölümler (çekirdek, mimari, harita, CBS, yol), kapıları, aileleri ve komut sayıları: catalog.search ile \
+             aranır, catalog.describe ile şeması alınır.",
+        ),
+    ];
+    let mut whole = resource(
+        "kentos://catalog",
+        "catalog",
+        "Komut kataloğu (tamamı)",
+        "Bütün ürün komutları: sürüm, sunucular, izinler, girdi, çıktı ve plan şemaları, örnekler. Çok büyüktür: \
+         bir ajan için kentos://catalog/categories, catalog.search ve catalog.describe yeter.",
+    );
+    whole["size"] = json!(serde_json::to_string(&server.catalog).map_or(0, |t| t.len()));
+    out.push(whole);
     for (handle, s) in &server.drawings {
         out.push(json!({
             "uri": format!("kentos://drawing/{handle}"),
@@ -1458,13 +1488,51 @@ pub fn resources(server: &Server) -> Vec<Value> {
     out
 }
 
-pub fn read(server: &Server, params: &Value) -> Result<Value, Fault> {
+/// `kentos://session/overview` (docs/adr/8056 §5): every drawing open here and on an attached desktop, through the
+/// agents' tools' host, so it is what an agent may see; a desktop that does not answer says why.
+fn overview(server: &mut Server) -> Value {
+    let mut drawings: Vec<Value> = Vec::new();
+    for (handle, s) in server.drawings.iter_mut() {
+        let mut seen = kentos_headless::agent_tools::overview(s)
+            .unwrap_or_else(|e| json!({ "code": e.code, "message": e.message }));
+        seen["drawing"] = json!(handle);
+        seen["where"] = json!("server");
+        drawings.push(seen);
+    }
+    for (handle, d) in server.desktops.iter_mut() {
+        let mut seen = kentos_headless::agent_tools::overview(d)
+            .unwrap_or_else(|e| json!({ "code": e.code, "message": e.message }));
+        // The desktop's program refuses what it does not offer itself (docs/adr/8056 §1); its doors are not known here.
+        seen["doors"] = Value::Null;
+        seen["drawing"] = json!(handle);
+        seen["where"] = json!("desktop");
+        seen["link"] = json!(d.path.display().to_string());
+        drawings.push(seen);
+    }
+    json!({
+        "profile": match server.profile {
+            crate::server::Profile::Compact => "compact",
+            crate::server::Profile::Full => "full",
+        },
+        "guard": "Yazan her komut önce mode: plan ile planlanır; execute yalnız o planı ve yalnız çizim o andan beri \
+                  değişmediyse yazar (planId). Okuyan komut hemen çalışır.",
+        "drawings": drawings,
+        "extensions": [],
+        "next": "Komutu catalog.search ile arayın, catalog.describe ile şemasını alın, kendi kapısından çalıştırın.",
+    })
+}
+
+pub fn read(server: &mut Server, params: &Value) -> Result<Value, Fault> {
     let uri = params
         .get("uri")
         .and_then(Value::as_str)
         .ok_or_else(|| Fault::new(-32602, "Invalid params: uri gerekli."))?;
     let value = if uri == "kentos://catalog" {
         server.catalog.clone()
+    } else if uri == "kentos://session/overview" {
+        overview(server)
+    } else if uri == "kentos://catalog/categories" {
+        kentos_headless::agent_tools::every_category()
     } else if let Some(handle) = uri.strip_prefix("kentos://drawing/")
         && let Some(s) = server.drawings.get(handle)
     {

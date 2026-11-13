@@ -1171,9 +1171,38 @@ fn the_catalog_and_the_open_drawings_are_resources() {
     assert_eq!(
         uris,
         [
+            "kentos://session/overview".to_owned(),
+            "kentos://catalog/categories".to_owned(),
             "kentos://catalog".to_owned(),
             format!("kentos://drawing/{drawing}")
         ]
+    );
+    // What an agent reads first (docs/adr/8056 §5): the drawings in one read, the catalog's parts.
+    let overview = ask(
+        &mut server,
+        10,
+        "resources/read",
+        json!({ "uri": "kentos://session/overview" }),
+    );
+    let overview: Value = serde_json::from_str(
+        overview["result"]["contents"][0]["text"]
+            .as_str()
+            .expect("text"),
+    )
+    .expect("JSON");
+    assert_eq!(overview["drawings"][0]["drawing"], drawing.as_str());
+    assert_eq!(overview["drawings"][0]["summary"]["name"], "Kaynak");
+    assert_eq!(overview["drawings"][0]["doors"][0], "cad.run");
+    let parts = ask(
+        &mut server,
+        11,
+        "resources/read",
+        json!({ "uri": "kentos://catalog/categories" }),
+    );
+    assert!(
+        parts["result"]["contents"][0]["text"]
+            .as_str()
+            .is_some_and(|t| t.contains("arch.run"))
     );
     let catalog = ask(
         &mut server,
