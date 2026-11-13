@@ -163,3 +163,29 @@ fn balansman_balances_the_turn_and_says_its_narrowest_tread() {
     let s = stair(&b);
     assert_eq!((s.winders, s.landing), (None, None), "{s:?}");
 }
+
+/// UR-057: a refused value is told by its own setting's rule (a ramp's slope never hears of risers or cuts) and the
+/// value before stays.
+#[test]
+fn a_refused_setting_says_its_own_rule() {
+    let mut b = Bench::new("ramp");
+    let mut settings = b.doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    settings.drawing_unit = Some(DrawingUnit::M);
+    b.doc.set_settings(settings);
+    b.start("ramp");
+    assert!(!b.run(|session, cx| session.configure("M", "0", cx)));
+    let said = b.last_text().unwrap_or_default().to_owned();
+    assert!(said.contains("Eğim (%) sıfırdan büyük") && said.contains("Eğim %6 kaldı"), "{said}");
+    assert!(!said.contains("Rıht") && !said.contains("Kesme"), "{said}");
+    assert!(!b.run(|session, cx| session.configure("E", "-1", cx)));
+    let said = b.last_text().unwrap_or_default().to_owned();
+    assert!(said.starts_with("Değer uygulanmadı: Genişlik sıfırdan büyük"), "{said}");
+    // The stair's riser count and cut height say theirs.
+    let mut b = bench();
+    assert!(!b.run(|session, cx| session.configure("S", "2.5", cx)));
+    assert!(b.last_text().unwrap_or_default().starts_with("Değer uygulanmadı: Rıht sayısı 0 (hesaplanır) ile"));
+    assert!(!b.run(|session, cx| session.configure("K", "abc", cx)));
+    assert!(b.last_text().unwrap_or_default().starts_with("Değer uygulanmadı: Kesme yüksekliği"));
+}

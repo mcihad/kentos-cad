@@ -1,4 +1,4 @@
-//! The constraints over the drawing (docs/adr/0338 §1, plan/cad.md `CAD-PARAM-11`; AutoCAD's constraint bars): a mark
+//! The constraints over the drawing (docs/adr/0338 §1, plan/cad.md `CAD-PARAM-11`): a mark
 //! by each part a constraint names, its kind's icon, a dimension's name and value beside it, a constraint the drawing
 //! does not meet marked as such; and the parts one constraint names, for the drawing to show when the pointer is on
 //! its mark. Read from the document; nothing is written.
@@ -185,6 +185,43 @@ pub fn parameter_value_words(
         ParameterKind::Number => format!("{value} · sayı"),
     }
 }
+/// A parameter value on the drawing's mark: rounded to what the project shows (a length to its length decimals, an
+/// angle and a plain number to four), trailing zeros dropped, so a measured `2.57040682429` reads `2.57`. The stored
+/// value is untouched and the parameter window keeps its full digits ([`parameter_value_words`]); a nonzero value
+/// the rounding would show as zero keeps its own digits rather than reading as none.
+pub fn parameter_label_words(
+    v: f64,
+    kind: ParameterKind,
+    settings: &kentos_commands::ProjectSettings,
+) -> String {
+    let decimals = match kind {
+        ParameterKind::Length => settings.length_decimals as usize,
+        ParameterKind::Angle | ParameterKind::Number => 4,
+    };
+    let rounded = kentos_geometry_core::display::fixed(v, decimals);
+    let shown: f64 = rounded.parse().unwrap_or(f64::NAN);
+    if !v.is_finite() || (shown == 0.0 && v != 0.0) {
+        return parameter_value_words(v, kind, settings);
+    }
+    let value = if rounded.contains('.') {
+        rounded.trim_end_matches('0').trim_end_matches('.').to_owned()
+    } else {
+        rounded
+    };
+    let value = if value == "-0" { "0".to_owned() } else { value };
+    match kind {
+        ParameterKind::Length => format!("{value} {}", settings.unit().mark()),
+        ParameterKind::Angle => format!(
+            "{value} {}",
+            match settings.angle_unit {
+                kentos_commands::AngleUnit::Deg => "°",
+                kentos_commands::AngleUnit::Grad => "gon",
+            }
+        ),
+        ParameterKind::Number => format!("{value} · sayı"),
+    }
+}
+
 /// The marks of the drawing's constraints, each part's in the set's order.
 pub fn glyphs(doc: &Document) -> Vec<Glyph> {
     let set = doc.constraints();
@@ -202,7 +239,7 @@ pub fn glyphs(doc: &Document) -> Vec<Glyph> {
             match values.get(name) {
                 Some(v) => format!(
                     "{name} = {}",
-                    parameter_value_words(*v, kind, doc.settings())
+                    parameter_label_words(*v, kind, doc.settings())
                 ),
                 None => name.to_owned(),
             }

@@ -587,3 +587,31 @@ fn trim_reaches_a_circle_beneath_its_hatch_and_one_undo_restores_the_tie() {
     assert_eq!(b.doc.undo().as_deref(), Some("Buda"));
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
+
+/// UR-056: a project pattern chosen, the hatch is written with it and the message names it, not the library's
+/// pattern the session held before.
+#[test]
+fn a_project_pattern_is_named_in_the_success_message() {
+    let mut b = bench();
+    let mut settings = b.doc.settings().clone();
+    settings.hatch_patterns = vec![
+        serde_json::from_value(serde_json::json!({
+            "name": "QA_HATCH",
+            "description": "Test horizontal",
+            "lines": [{"angle": 0, "origin": [0, 0], "offset": [0, 1]}]
+        }))
+        .unwrap(),
+    ];
+    b.doc.set_settings(settings);
+    assert!(b.type_text("QA_HATCH"));
+    b.click(-20.0, 1.0);
+    let Entity::Hatch(h) = b.newest() else {
+        panic!("a hatch: {:?}", b.newest());
+    };
+    assert_eq!(h.pattern.name.as_deref(), Some("QA_HATCH"));
+    assert_eq!(b.last_text(), Some("QA_HATCH tarama eklendi: 48.00 m²"));
+    // Back to a library pattern by its name: that one is named again.
+    assert!(b.type_text("ansi32"));
+    b.click(-20.0, 1.0);
+    assert!(b.last_text().is_some_and(|t| t.starts_with("ANSI32 tarama eklendi")), "{:?}", b.last_text());
+}
