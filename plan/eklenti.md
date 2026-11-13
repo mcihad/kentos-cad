@@ -637,7 +637,7 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   güncelleme, uyumlu sürüm önerisi ve imzalar (22A), şemalı verinin göçü (22), arayüz, ilke dosyasının sistem yolu ve
   `.kcad` bağlantısı (18).
 
-### [ ] ADIM 18 — Masaüstü: Eklentiler sekmesi, yöneticisi, dikey şerit sekmeleri ve Python'suz katkılar (P1)
+### [~] ADIM 18 — Masaüstü: Eklentiler sekmesi, yöneticisi, dikey şerit sekmeleri ve Python'suz katkılar (P1)
 
 [argon ADIM 18; EKL-02; PY-KEK-15; FORM-DESIGN-20; ADIM 15'ten kalan MCP keşfi]
 
@@ -675,6 +675,11 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   modülünde görünür, formu açılır, veri kaynağı Kaynaklar'da çıkar; güncellemede yeni yetenek farkı gösterilir; devre dışı
   bırakılınca sekme ve kayıtlar hayalet komut bırakmadan kalkar; ilgisiz modülün yüzeyi bozulmaz; MCP listesi değişikliği
   bildirir.
+- **Sürüyor (13 Kasım 2026):** kurum/çevrimdışı katalog dizini `kentos.extension-catalog` v1
+  (`kentos_extensions::catalog`): paketlerin kendisinden yazılır (`kentos kek index <klasör>`), kurmadan önce gösterilecek
+  açıklama, değişiklik notu (16 000 karaktere kadar), ikon, bağımlılıklar ve gerekçeli yetenekler içinde; indirilen paket
+  dosyanın boyu, SHA-256'sı ve içerik özetiyle katalogdakine karşı doğrulanır (`catalog_mismatch`); kurulmayacak paket
+  listelenmez. Masaüstü bağlantısı sırada.
 
 ### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 

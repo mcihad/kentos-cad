@@ -3,6 +3,7 @@
 //! ```text
 //! kentos kek inspect <paket.kek> [--json]
 //! kentos kek pack <klasör> [-o <paket.kek>] [--json]
+//! kentos kek index <klasör> [--name <ad>]
 //! ```
 //!
 //! The same inspector the installer, the catalog and `extension.verify` run (kentos_extensions): an author or an agent
@@ -15,11 +16,12 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use kentos_extensions::{Limits, Manifest, Problem, inspect, pack};
+use kentos_extensions::{Limits, Manifest, Problem, catalog, inspect, pack};
 
 const USAGE: &str = "Kullanım:
   kentos kek inspect <paket.kek> [--json]           paketi kodunu çalıştırmadan denetler
-  kentos kek pack <klasör> [-o <paket.kek>] [--json] klasörü denetleyip paketler";
+  kentos kek pack <klasör> [-o <paket.kek>] [--json] klasörü denetleyip paketler
+  kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar";
 
 /// Folders the packer leaves out whole, not read at all (a `.venv` holds hundreds of megabytes); the packer's own
 /// rules leave out the rest.
@@ -51,6 +53,8 @@ fn main() -> ExitCode {
         ["kek", "pack", folder, "-o", out] => {
             pack_folder(Path::new(folder), Some(PathBuf::from(out)), json)
         }
+        ["kek", "index", folder] => index_folder(Path::new(folder), None),
+        ["kek", "index", folder, "--name", name] => index_folder(Path::new(folder), Some(name)),
         _ => {
             eprintln!("{USAGE}");
             ExitCode::from(2)
@@ -220,4 +224,57 @@ fn pack_folder(folder: &Path, out: Option<PathBuf>, json: bool) -> ExitCode {
         print_list("Uyarılar", &packed.warnings);
     }
     ExitCode::SUCCESS
+}
+
+/// Writes a catalog folder's `index.json` from its `.kek` files (plan/eklenti.md ADIM 18): every package inspected,
+/// none listed that would not install.
+fn index_folder(folder: &Path, name: Option<&str>) -> ExitCode {
+    let entries = match std::fs::read_dir(folder) {
+        Ok(entries) => entries,
+        Err(e) => return fail(format!("{} okunamadı: {e}", folder.display())),
+    };
+    let mut packages = Vec::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let Some(file) = path.file_name().and_then(|n| n.to_str()) else {
+            continue;
+        };
+        if !file.ends_with(".kek") || !path.is_file() {
+            continue;
+        }
+        match std::fs::read(&path) {
+            Ok(bytes) => packages.push((file.to_owned(), bytes)),
+            Err(e) => return fail(format!("{} okunamadı: {e}", path.display())),
+        }
+    }
+    packages.sort();
+    let title = name.map_or_else(
+        || {
+            let folder_name = folder
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("Eklentiler");
+            format!("{folder_name} eklentileri")
+        },
+        str::to_owned,
+    );
+    match catalog::index(&title, &packages, &Limits::default()) {
+        Ok(index) => {
+            let out = folder.join(catalog::FILE);
+            if let Err(e) = std::fs::write(&out, index.to_json()) {
+                return fail(format!("{} yazılamadı: {e}", out.display()));
+            }
+            println!(
+                "Katalog yazıldı: {} ({} paket)",
+                out.display(),
+                index.packages.len()
+            );
+            ExitCode::SUCCESS
+        }
+        Err(problems) => {
+            print_list("Sorunlar", &problems);
+            println!("Katalog yazılmadı: {} sorun.", problems.len());
+            ExitCode::from(1)
+        }
+    }
 }

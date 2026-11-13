@@ -12,10 +12,12 @@
 //!   the manifest and what it names, the forms, the icons, the Python project) and [`pack`].
 //! - [`compat`]: whether a package runs on a host: one function, no implicit upper bound (QGIS's 2026 lesson).
 //! - [`version`]: semantic versions and the ranges dependencies are given in.
+//! - [`catalog`]: an organisation's or an offline folder's index of packages, written from the packages themselves.
 //!
 //! Pure: no file system and no network. A host reads the file and hands the bytes over.
 
 pub mod archive;
+pub mod catalog;
 pub mod compat;
 mod icon;
 pub mod integrity;
