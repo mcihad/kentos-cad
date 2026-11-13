@@ -50,8 +50,11 @@ fn every_schema_has_a_sample_and_the_one_before_refuses_its_feature() {
         }
     }
     for (index, &s) in SCHEMAS.iter().enumerate() {
+        // Schema 254 (docs/adr/8054 §10) adds a rule, not a field: `modules`, each module's own version of its data.
+        // No module has raised its version yet, so this build refuses every `modules` and no valid sample can carry
+        // one; its samples are the refused ones (`modules-*.kcad`, read by `fixtures`) and the one in 253 below.
         assert!(
-            written.contains(&s),
+            written.contains(&s) || s == kentos_kcad::SCHEMA_WITH_MODULE_VERSIONS,
             "schema {s} has no sample written in it"
         );
         // Schema 191 (docs/adr/0977) adds no field: it changes the unit of fields older schemas had. Nothing of it can

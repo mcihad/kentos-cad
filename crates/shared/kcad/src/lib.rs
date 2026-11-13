@@ -978,11 +978,39 @@ pub const SCHEMA_WITH_CLOUD_POSES: u32 = 251;
 pub const SCHEMA_WITH_KEPT_ADJUSTMENTS: u32 = 252;
 /// Schema 253 (docs/adr/5220): the reviews the project keeps of its monitoring jobs (`monitoringReviews`).
 pub const SCHEMA_WITH_MONITORING_REVIEWS: u32 = 253;
+/// Schema 254 (docs/adr/8054 §10): the payload's root may carry `modules`, each module's and each `.kek` extension's
+/// own version of the data it adds, so a module's new data no longer raises the document schema of the others.
+pub const SCHEMA_WITH_MODULE_VERSIONS: u32 = 254;
+
+/// The modules a root's `modules` may name: key, name for people, and the version of its data this build reads (none
+/// raised yet: 0). A file with a newer one, an unknown module or an extension's data is refused before its document is
+/// read, as written by a newer KentOS (docs/adr/8054 §10).
+pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
+    ("arch", "mimari", 0),
+    ("gis", "CBS", 0),
+    ("map", "harita", 0),
+    ("road", "yol", 0),
+];
+
+/// A payload root's `modules` (schema 254): the versions above 0 of each module's and each `.kek` extension's data.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ModuleVersions {
+    /// By module key (`arch`, `gis`, `map`, `road`).
+    pub modules: Vec<(String, u16)>,
+    /// By extension id.
+    pub extensions: Vec<(String, u16)>,
+}
+
+impl ModuleVersions {
+    pub fn is_empty(&self) -> bool {
+        self.modules.is_empty() && self.extensions.is_empty()
+    }
+}
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 251] = [
+pub const SCHEMAS: [u32; 252] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1234,6 +1262,7 @@ pub const SCHEMAS: [u32; 251] = [
     SCHEMA_WITH_CLOUD_POSES,
     SCHEMA_WITH_KEPT_ADJUSTMENTS,
     SCHEMA_WITH_MONITORING_REVIEWS,
+    SCHEMA_WITH_MODULE_VERSIONS,
 ];
 
 /// The file a drawing is saved as.

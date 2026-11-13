@@ -1311,6 +1311,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `paragraphLine`'ı) yazıları hâlâ etiket renginde çizer. CAD çalışma alanında yazı nesnesi, kılavuz notu ve bloğun
   yazısı kendi, yoksa katmanının renginde çizilmeli; bloğun yazısı parçanın kendi rengi, izlediği katman, yerleştirme
   sırasıyla (masaüstünde `kentos_interaction::spatial::PieceInk`).
+- Web'in sütun okuyucusu (`apps/web/src/io/columns.ts`) 19 nesne türü biliyor, Rust paketleyicisi
+  (`crates/shared/kcad/src/columns.rs`) 34 (`nurbs`, `record` ve mimari türler: duvar, açıklık, mahal, aks, kolon,
+  merdiven, rampa, etiket, görünüş işareti, döşeme, kiriş, çatı, korkuluk). Güncel kaynaktan derlenen WASM ile
+  `kcad.wasm.test.ts`'in iki sütun testi mimari örnek dosyalarda düşüyor ("1. nesnenin türü 25"); 13 Kasım 2026'da
+  ADR 8054 §10 sırasında görüldü, o işten önce de vardı.
 
 Web'in son hâli `1aad00d0`'dır (12 Ekim 2026). Bu liste web'e dönüşün planıdır. Şunlar buraya bir satır yazar:
 

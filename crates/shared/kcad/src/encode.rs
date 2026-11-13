@@ -47,15 +47,15 @@ use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, rend
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
-    SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_ATTACHMENTS,
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSION_REFS,
-    SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS,
-    SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_IMPERIAL,
-    SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
-    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LOOK, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM,
-    SCHEMA_WITH_NETWORKS, SCHEMA_WITH_NURBS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_RASTERS,
+    ModuleVersions, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ARRAYS,
+    SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_CUSTOM_CRS,
+    SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
+    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS,
+    SCHEMA_WITH_IMAGES, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS,
+    SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LOOK, SCHEMA_WITH_MEASURES,
+    SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_NURBS, SCHEMA_WITH_PARAGRAPHS,
+    SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_RASTERS,
     SCHEMA_WITH_REQUESTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS,
     SCHEMA_WITH_STYLES, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS,
     SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
@@ -83,6 +83,12 @@ pub(crate) fn payload(
     };
     e.root(doc)?;
     Ok(e.w.out)
+}
+
+/// The module versions a document needs (`modules`, schema 254): none has raised its version yet. A module's new data
+/// raises its own version here and in its reader's `MODULE_VERSIONS`; the document schema stays (docs/adr/8054 §10).
+fn modules_of(_doc: &DocumentSnapshotV2) -> ModuleVersions {
+    ModuleVersions::default()
 }
 
 /// A drawing's objects as the writer reads them: the snapshot's own, or the open document's shared ones, which a save
@@ -295,14 +301,63 @@ impl<'d> Encoder<'d> {
                 ),
             ));
         }
-        let schema = schema_of(doc, self.objs);
-        self.open(3, true)?;
+        self.root_with(doc, &modules_of(doc))
+    }
+
+    /// The root with the module versions `modules` (none: the three keys of schemas 2–253). `modules` sorts before
+    /// `version` and `document`, so a reader knows a newer module's data before it reads the document (§6.1).
+    fn root_with(
+        &mut self,
+        doc: &'d DocumentSnapshotV2,
+        modules: &ModuleVersions,
+    ) -> Result<(), KcadError> {
+        let mut schema = schema_of(doc, self.objs);
+        if !modules.is_empty() {
+            schema = schema.max(crate::SCHEMA_WITH_MODULE_VERSIONS);
+        }
+        self.open(if modules.is_empty() { 3 } else { 4 }, true)?;
         self.key("format");
         self.w.text(DOCUMENT_FORMAT);
+        if !modules.is_empty() {
+            self.key("modules");
+            self.module_versions(modules)?;
+        }
         self.key("version");
         self.w.uint(u64::from(schema));
         self.key("document");
         self.at(Seg::Name("document"), |e| e.body(doc))?;
+        self.close();
+        Ok(())
+    }
+
+    /// `modules`: the modules' versions, then the extensions' under `ext`, keys in canonical order (length, then bytes).
+    fn module_versions(&mut self, m: &ModuleVersions) -> Result<(), KcadError> {
+        let canonical = |a: &(String, u16), b: &(String, u16)| {
+            (a.0.len(), a.0.as_bytes()).cmp(&(b.0.len(), b.0.as_bytes()))
+        };
+        let mut entries: Vec<(String, u16)> = m.modules.clone();
+        let ext = !m.extensions.is_empty();
+        if ext {
+            // A placeholder that sorts where `ext` does; its value is the extensions' map.
+            entries.push(("ext".to_owned(), 0));
+        }
+        entries.sort_by(canonical);
+        self.open(entries.len(), true)?;
+        for (key, version) in &entries {
+            self.w.text(key);
+            if key == "ext" && ext {
+                let mut list = m.extensions.clone();
+                list.sort_by(canonical);
+                self.open(list.len(), true)?;
+                for (id, v) in &list {
+                    self.w.text(id);
+                    self.w.uint(u64::from(*v));
+                }
+                self.close();
+            } else {
+                self.w.uint(u64::from(*version));
+            }
+        }
         self.close();
         Ok(())
     }
@@ -1250,8 +1305,10 @@ mod tests {
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
         // The maps whose keys the writer writes by hand, in the order it writes them.
-        let maps: [&[&str]; 31] = [
+        let maps: [&[&str]; 33] = [
             &["format", "version", "document"],
+            &["format", "modules", "version", "document"],
+            &["ext", "gis", "map", "arch", "road"],
             &[
                 "name",
                 "blocks",
@@ -1397,6 +1454,73 @@ mod tests {
         }
         assert!(key_order("size", "symbol").is_lt());
         assert!(key_order("pts", "bulges").is_lt());
+    }
+
+    /// Module versions (docs/adr/8054 §10): `modules` written between `format` and `version` with schema 254, its keys
+    /// in canonical order and the extensions under `ext`; a reader that does not know the module's version refuses the
+    /// file as written by a newer KentOS, before its document.
+    #[test]
+    fn module_versions_come_before_the_document_and_a_newer_one_is_refused() {
+        let doc = crate::decode(include_bytes!("../../../../fixtures/kcad/v2/minimal.kcad"))
+            .expect("the minimal drawing");
+        let write = |modules: &ModuleVersions| {
+            let mut quiet = crate::watch::Quiet;
+            let mut e = Encoder {
+                w: Writer::default(),
+                path: Vec::new(),
+                depth: 0,
+                watch: &mut quiet,
+                objs: Objs::Plain(&doc.entities),
+            };
+            e.root_with(&doc, modules).expect("written");
+            crate::header::write(&e.w.out).expect("a file")
+        };
+        // None: the file of schemas 2–253, byte for byte.
+        assert_eq!(
+            write(&ModuleVersions::default()),
+            crate::encode(&doc).expect("encoded")
+        );
+        let road = ModuleVersions {
+            modules: vec![("road".into(), 1), ("arch".into(), 2)],
+            extensions: vec![("mezarlik-bs".into(), 3)],
+        };
+        let file = write(&road);
+        // A key as CBOR writes it (its text head, then its bytes): `document` is also in the format's value.
+        let at = |key: &str| {
+            let mut coded = vec![0x60 + key.len() as u8];
+            coded.extend_from_slice(key.as_bytes());
+            file.windows(coded.len())
+                .position(|w| w == coded.as_slice())
+                .expect(key)
+        };
+        assert!(
+            at("format") < at("modules")
+                && at("modules") < at("version")
+                && at("version") < at("document")
+        );
+        assert!(
+            at("arch") < at("road") && at("ext") < at("arch"),
+            "canonical keys: ext, arch, road"
+        );
+        let refused = crate::decode(&file).expect_err("a newer module");
+        assert_eq!(refused.code, Code::SchemaVersion);
+        assert!(
+            refused.message.contains("mimari verisi") || refused.message.contains("yol verisi"),
+            "{}",
+            refused.message
+        );
+        // An extension's data alone is refused by its name.
+        let ext = ModuleVersions {
+            modules: Vec::new(),
+            extensions: vec![("mezarlik-bs".into(), 1)],
+        };
+        let refused = crate::decode(&write(&ext)).expect_err("an extension's data");
+        assert_eq!(refused.code, Code::SchemaVersion);
+        assert!(
+            refused.message.contains("`mezarlik-bs` eklentisinin"),
+            "{}",
+            refused.message
+        );
     }
 }
 

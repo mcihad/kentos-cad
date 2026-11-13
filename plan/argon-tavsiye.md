@@ -261,7 +261,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 08 — Mobil & Görüntüleyici Modülerliği: `crates/native/scene-query` (`kentos-scene-query`) ve `crates/shared/arch` (`kentos-arch`) Crate'lerinin Ayrılması (Öncelik: P0)
+### [x] ADIM 08 — Mobil & Görüntüleyici Modülerliği: `crates/native/scene-query` (`kentos-scene-query`) ve `crates/shared/arch` (`kentos-arch`) Crate'lerinin Ayrılması (Öncelik: P0)
 
 - **Kod İnceleme Bulgusu:**
   1. **Görüntüleme (`render-wgpu`) ve Stil (`style`) Ters Bağımlılığı:** [crates/native/style/Cargo.toml#L19](file:///home/cihad/Projects/kentos-cad/crates/native/style/Cargo.toml#L19) içinde `kentos-native-style` (ve dolaylı olarak [crates/render/wgpu](file:///home/cihad/Projects/kentos-cad/crates/render/wgpu/Cargo.toml)), sırf `geometry::shape`, `shx_text` ve `expression_unit` okumak için **256.284 satırlık `kentos-native-application` crate'ini** kendisine bağlıyor. Bu yüzden sadece harita/CAD çizimi yapmak isteyen bir mobil veya hafif görüntüleyici bile 503 yazma komutunu, `kentos-dwg`, `kentos-ifc`, `kentos-ncz`, `kentos-pointcloud` ve `kentos-road` crate'lerini derlemek zorunda kalıyor.
@@ -282,7 +282,7 @@ flowchart LR
   3. **`crates/shared/arch` (`kentos-arch`) Ayrılacaktır:**
      - Mimariye özgü parametrik BIM/duvar/merdiven/çatı geometrisi `crates/shared/arch` crate'ine taşınacak; `kentos-geometry-core` yalnız 2B/3B temel analitik geometri, CRS/Karney jeodezi ve uzamsal indeks (`store`) içerecektir.
 - **Tamamlanma Ölçütü:** `cargo tree -p kentos-render-wgpu` ve `cargo tree -p kentos-scene-query` çıktısında `kentos-native-application`, `kentos-interaction`, `kentos-dwg`, `kentos-ifc` veya `schemars` kesinlikle yer almaz; mobil görüntüleyici/sorgulama/ölçüm çekirdeği tek başına derlenebilir hale gelir.
-- **12 Kasım 2026 ([ADR 8054 §8](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** 1. ve 2. işler tamam, ölçüt sağlandı: `kentos-scene-query` (geometri, bloklar, SHX ve etiket metinleri, katman süzgeci, görünüm kapsamı, geometri deposu, `Spatial`, katlar, `query`) ayrıldı, eski yollar yeniden dışa veriliyor; `kentos-render-wgpu` 216 → 165 crate, içinde uygulama, etkileşim, DWG, IFC ve `schemars` yok; `deps.mjs` bunu bekliyor. **3. iş (`kentos-arch`) ertelendi, karar bekliyor:** geometry-core'un çekirdeğinden 39 dosya (nesne sınırı, depo, işlemler) mimari geometriyi kullanıyor; ayırmak önce geometry-core'un tabanını ayrı crate'e indirmeyi gerektiriyor.
+- **12 Kasım 2026 ([ADR 8054 §8](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** 1. ve 2. işler tamam, ölçüt sağlandı: `kentos-scene-query` (geometri, bloklar, SHX ve etiket metinleri, katman süzgeci, görünüm kapsamı, geometri deposu, `Spatial`, katlar, `query`) ayrıldı, eski yollar yeniden dışa veriliyor; `kentos-render-wgpu` 216 → 165 crate, içinde uygulama, etkileşim, DWG, IFC ve `schemars` yok; `deps.mjs` bunu bekliyor. **3. iş (`kentos-arch`) sahibin kararıyla (13 Kasım) ayrı madde oldu** (aşağıda, Faz 1'in sonunda): geometry-core'un çekirdeğinden 39 dosya (nesne sınırı, depo, işlemler) mimari geometriyi kullanıyor; ayırmak önce geometry-core'un tabanını ayrı crate'e indirmeyi gerektiriyor.
 
 ---
 
@@ -301,7 +301,7 @@ flowchart LR
 - **12 Kasım 2026 ([ADR 8054 §9](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** `application`, `interaction`, `contracts` kökünde yalnız `lib.rs` ve disiplin klasörleri (etkileşimde ayrıca `viewer_tools/`); `contracts/road.rs` → `road/{mod,terrain,alignment,profile,corridor,structures}`; kayıt beş alt dağıtıcıda; test koşucusu `fixtures/` (7 674 → 2 514 satır + parçalar). Yatay bağımlılık denetimi ADIM 11 ile.
 ---
 
-### [ ] ADIM 10 — `crates/shared/kcad` (253 Doğrusal Şema Sabiti ve 4.500 Satırlık `encode`/`decode` Dosyaları) Refactoring'i (Öncelik: P1)
+### [x] ADIM 10 — `crates/shared/kcad` (253 Doğrusal Şema Sabiti ve 4.500 Satırlık `encode`/`decode` Dosyaları) Refactoring'i (Öncelik: P1)
 
 - **Kod İnceleme Bulgusu:**
   - [crates/shared/kcad/src/lib.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/kcad/src/lib.rs) içinde `SCHEMA_WITH_LINE_WEIGHTS = 3`'ten `SCHEMA_WITH_MONITORING_REVIEWS = 253`'e kadar **250 adet doğrusal şema sabiti** tanımlanmış durumda.
@@ -309,7 +309,7 @@ flowchart LR
 - **Yapılacak İşlem:**
   1. `encode.rs` ve `decode.rs` içindeki disiplin ayarları `encode/{arch,map,gis,road}.rs` ve `decode/{arch,map,gis,road}.rs` alt modüllerine; `decode/objects.rs` ise `decode/objects/{primitives,annotations,arch,gis_road}.rs` alt modüllerine bölünecektir.
   2. `.kcad` v2 başlığında yeni özellikler için **Çekirdek Şema (`core_schema`) + Modül Uzantı Sürümleri (`extensions: { arch?: u16, map?: u16, gis?: u16, road?: u16, ext?: BTreeMap<String, u16> }`)** yapısı desteklenecek; böylece bir modüldeki veya `.kek` eklentisindeki veri uzantısı diğer modüllerin şema numarasını bozmayacaktır.
-- **12 Kasım 2026 ([ADR 8054 §10](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** 1. iş tamam: çözücünün ayarları `decode/{arch,map,gis,road}.rs`'te (her disiplin kolu kendi işlevi), katmanlar `decode/layers.rs`; kodlayıcıda `encode/{schema,layers,map,gis}.rs`; `decode/objects/{features,object,build}.rs`; `columns/{pack,unpack,tests}.rs`. decode.rs 3.487 → 1.563, encode.rs 4.441 → 1.449, objects.rs 4.551 → 1.139, columns.rs 4.378 → 750; 244 kcad fikstürü geçti. **2. iş (uzantı sürümleri) karar bekliyor:** bilinmeyen bir modül sürümünde okuyucunun ne yapacağı bir biçim kararı.
+- **12 Kasım 2026 ([ADR 8054 §10](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** 1. iş tamam: çözücünün ayarları `decode/{arch,map,gis,road}.rs`'te (her disiplin kolu kendi işlevi), katmanlar `decode/layers.rs`; kodlayıcıda `encode/{schema,layers,map,gis}.rs`; `decode/objects/{features,object,build}.rs`; `columns/{pack,unpack,tests}.rs`. decode.rs 3.487 → 1.563, encode.rs 4.441 → 1.449, objects.rs 4.551 → 1.139, columns.rs 4.378 → 750; 244 kcad fikstürü geçti. 2. iş de tamam (sahibin kararı: bilinmeyen sürüm reddedilir): şema 254 ile yükün kökü `modules`'ü taşır (her modülün ve `ext` altında her eklentinin kendi veri sürümü; `extensions` değil `modules`, çünkü kanonik sırada `document`'ten önce gelmeli); bilmediği sürümü, modülü ya da eklenti verisini okuyucu belgeyi okumadan "daha yeni sürüm" diye reddeder; bugünkü dosyalar bayt bayt aynı.
 
 ---
 
@@ -328,12 +328,29 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 12 — Büyük Veri Bellek Sınırı, Modüller Arası Canlı Altlık (`Xref`) ve 4'lü Sahne Görünümü (Öncelik: P2)
+### [→] ADIM 12 — Büyük Veri Bellek Sınırı, Modüller Arası Canlı Altlık (`Xref`) ve 4'lü Sahne Görünümü (Öncelik: P2)
+
+> **13 Kasım 2026 (sahibin kararı):** yeniden düzenleme değil yeni ürün özellikleri olduğu için Faz 1'den ayrıldı; üç özellik araştırma, mevzuat ve ekran görüntüleriyle kendi maddeleri olarak [plan/argon-adim12.md](argon-adim12.md)'de. Faz 1 ADIM 11 ile kapanır.
 
 - **Yapılacak İşlem:**
   1. **Büyük Veri Sınırı:** LiDAR/COPC nokta bulutları, milyonlarca üçgenlik TIN yüzeyleri ve büyük GeoPackage/PostGIS katmanları `Document` içindeki `Entity` yuvalarına kopyalanmayacak; `Document` yalnız kaynak kimliğini, CRS/datum bilgisini ve değişmez revizyon özetini (`revision_id`) tutacaktır.
   2. **Disiplinlerarası Canlı Altlık (`Xref` & `SourceLink`):** *Harita → Mimari* (aplikasyon/parsel altlığı), *Harita → Yol* (onaylı halihazır TIN ve kamulaştırma sınırı) ve *Mimari/Yol/Harita → GIS* bağlantı sözleşmesi standartlaştırılacak; kaynak dosya değiştiğinde bağlı modülde hangi hesapların eskidiği (`stale`) gösterilecektir.
   3. **Yol ve Harita Çoklu Görünüm:** [apps/desktop/src/split_view.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/split_view.rs) genişletilerek **Plan + Boykesit + Enkesit + 3B Perspektif** sahnelerinin aynı pencerede 2×2 / 1+2 düzende ve ortak **İstasyon/Km İmleci (`StationCursor`)** ile eşzamanlı çalışması sağlanacaktır.
+
+---
+
+### [ ] Ayrı iş (ADIM 08'in 3. işi) — geometry-core'un taban / mimari / çekirdek olarak bölünmesi ve `kentos-arch`
+
+- **Ölçüm (13 Kasım 2026, [ADR 8054 §8](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** geometry-core'un mimari
+  modülleri 17 dosya, 13.101 satır (`geom/arch.rs`, duvar, döşeme, mahal, açıklık, çatı, kiriş, korkuluk, etiket, görünüş
+  işareti …). geometry-core'un kendi çekirdeğinden 39 dosya onları kullanıyor (`entity.rs`, `ops/` 14, `store/` 10, öbür
+  `geom/` 14); dışarıdan 10 crate'te 96 dosya `kentos_geometry_core::geom::<mimari>` yolunu kullanıyor; geometry-core web
+  için de (WASM) derleniyor.
+- **Yapılacak:** önce geometry-core'un tabanı (vektör, sayısal, öngörüler, temel geometri) ayrı bir crate'e iner; mimari
+  geometri (`kentos-arch`) onun üstüne, nesne ve depo (`entity`, `store`, `ops`) en üste. 96 dosyanın yolu ve WASM paketleri
+  güncellenir.
+- **Tamamlanma ölçütü:** `kentos-geometry-core`'un tabanı mimari kodu derlemeden kullanılabilir; `cargo tree` ve
+  `scripts/arch/deps.mjs` yönü bekler.
 
 ---
 

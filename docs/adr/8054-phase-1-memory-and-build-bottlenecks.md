@@ -309,7 +309,7 @@ koşucusu `tests/all/fixtures.rs` 7 674 satır.
 (veri güdümlü bütün komut durumları dahil), `-p kentos-headless`, `-p kentos-desktop --lib`; `cargo check --workspace
 --tests` (kentos-mcp hariç).
 
-## §10. KCAD'in dev dosyaları bölündü (`ADIM 10`, 1. iş)
+## §10. KCAD'in dev dosyaları bölündü, modül sürümleri geldi (`ADIM 10`)
 
 **İddianın denetimi.** Doğru: `decode/objects.rs` 4 551, `encode.rs` 4 441, `columns.rs` 4 378, `decode.rs` 3 487 satır;
 `lib.rs`'te 251 doğrusal şema sabiti (3 → 253). Ayrıntı: kodlayıcının `schema_of`'u tek başına 1 857, çözücünün
@@ -340,13 +340,22 @@ koşucusu `tests/all/fixtures.rs` 7 674 satır.
 | `decode/objects.rs` | 4 551 | 1 139 (+ `features` 944, `object` 1 448, `build` 1 041) |
 | `columns.rs` | 4 378 | 750 (+ `pack` 1 418, `unpack` 1 914, `tests` 307) |
 
-**2. iş (çekirdek şema + modül uzantı sürümleri) karar bekliyor.** Bugün yazıcı bir belgenin kullandığı en yeni
-özelliğin şemasını yazar, okuyucu bildiğinden yenisini reddeder; yol, harita, CBS ve mimari aynı sırayı paylaşır.
-Uzantı sürümleri (`extensions: {arch, map, gis, road, ext}`) bir modülün yeni verisinin ötekilerin numarasını
-yükseltmemesini sağlar ama okuyucunun bilmediği bir modül sürümünde ne yapacağı (reddetmek mi, o modülün verisini
-koruyup salt okunur açmak mı) ve `.kek` eklentilerinin verisinin nasıl korunacağı bir biçim kararıdır; bugünkü dosyalar
-değişmeden kalacak biçimde (uzantı ancak kullanılınca yazılır, onu taşıyan dosya yeni bir şema numarasıyla eski
-okuyucuya "daha yeni sürüm" der) uygulanabilir.
+**2. iş: modül sürümleri (şema 254, sahibin kararı 13 Kasım: bilinmeyen sürüm reddedilir).** Bugün yazıcı belgenin
+kullandığı en yeni özelliğin şemasını yazar ve yol, harita, CBS, mimari aynı sırayı paylaşır. Şema 254 ile yükün kökü
+`modules`'ü taşıyabilir: her modülün (`arch`, `gis`, `map`, `road`) ve `ext` altında her `.kek` eklentisinin kendi
+verisinin sürümü. Bir modülün yeni verisi bundan sonra belge şemasını değil kendi sürümünü yükseltir.
+- Anahtarın adı `extensions` değil `modules`: kök anahtarlar kanonik CBOR sırasıyla (önce uzunluk) yazılır;
+  `extensions` (10 harf) `document`'ten (8) sonra gelirdi ve okuyucu, yeni modül verisini "bilinmeyen alan" diye
+  reddederken sürüm bilgisini henüz görmemiş olurdu. `modules` (7) `version`'dan ve `document`'ten önce gelir.
+- Okuyucu bildiğinden yeni bir modül sürümünü, tanımadığı bir modülü ve bir eklentinin verisini belgeyi okumadan
+  `schema_version` ile reddeder ve modülün ya da eklentinin adını söyler ("Bu dosyanın yol verisi KentOS'un daha yeni
+  bir sürümüyle yazılmış …"); boş harita ve 0 sürüm `bad_value`, şema 253 yükünde `modules` bilinmeyen alandır.
+- Bu sürümün bildiği modül sürümlerinin hepsi 0 (`MODULE_VERSIONS`): hiçbir modül henüz sürüm yükseltmedi, yazıcı
+  `modules` yazmaz, bugünkü dosyalar bayt bayt aynı. Bu yüzden şema 254'ün geçerli örnek dosyası olamaz; kapsam testi
+  (`schemas.rs`) bunu şema 191'deki gibi açık bir istisna olarak yazar, reddedilen altı örnek dosya kuralı sınar.
+- Rust okuyucu ve yazıcı, bağımsız Python okuyucu (`tools/kcad/kcad.py`), örnek üretici, `expected.json` ve
+  spesifikasyon (§6.1, §11) birlikte güncellendi; `schema-version-254.kcad` → `255`.
 
-**Doğrulama:** `cargo test -p kentos-kcad` (6 + 244 fikstür gidiş-dönüşü), `cargo check -p kentos-kcad --target
+**Doğrulama:** `cargo test -p kentos-kcad` (7 + 244 fikstür gidiş-dönüşü; modül sürümlerinin yazıcı/okuyucu testi
+dahil), `python3 scripts/fixtures/kcad_v2_reference.py --check` (1 853 dosya), `cargo check -p kentos-kcad --target
 wasm32-unknown-unknown`, `cargo check --workspace --tests`; clippy'de kcad'de uyarı yok.

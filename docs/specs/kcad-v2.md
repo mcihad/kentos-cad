@@ -189,15 +189,22 @@ Profil hiçbir CBOR etiketi kullanmaz. ADR 0014 kimlikler için UUID etiketini (
 
 ### 6.1 Kök
 
-Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
+Yük, üç (şema 254'ten beri en çok dört) anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `253`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-254.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `modules` | harita, isteğe bağlı | modül sürümleri (şema 254, aşağıda); şema 2–253 yükünde bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/modules-in-schema-253.kcad`) |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `254`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-255.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
-`format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
+`format`, `modules` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü ve modül sürümlerini bilir.
+
+**Şema 254, modül sürümleri** ([ADR 8054 §10](../adr/8054-phase-1-memory-and-build-bottlenecks.md)): `modules`, her modülün (`arch` mimari, `gis` CBS, `map` harita, `road` yol) ve `ext` altında her `.kek` eklentisinin kendi verisinin sürümüdür. Bir modülün yeni verisi artık belge şemasını değil kendi sürümünü yükseltir: öbür modüllerin okuyucusu buna takılmaz.
+
+- Değerler 1–65535 arası tam sayılardır; sürümünü yükseltmemiş modül yazılmaz (`0`: `bad_value`, `broken/modules-zero.kcad`); `modules` ve `ext` boş olamaz (`bad_value`, `broken/modules-empty.kcad`).
+- Okuyucu bildiğinden yeni bir modül sürümünü, tanımadığı bir modülü ve bir eklentinin verisini **reddeder** ve bunu bozukluk değil daha yeni bir sürümle yazılmış dosya olarak söyler (`schema_version`; `broken/modules-road-newer.kcad`, `modules-unknown-module.kcad`, `modules-extension.kcad`): ileti modülün ya da eklentinin adını verir. Bu sürümün bildiği modül sürümlerinin hepsi henüz `0`'dır: bu sürüm her `modules`'ü reddeder, bu yüzden şema 254'ün geçerli bir örnek dosyası yoktur.
+- Yazıcı `modules`'ü yalnız bir modül sürümünü yükselttiğinde, şema en az `254` olarak yazar; başka her çizim eskisiyle bayt bayt aynıdır.
 
 **Şema 3**, şema 2'nin kendisi ve nesnenin kendi çizgi kalınlığıdır (`lineWeight`, §6.6; ADR 0139). Yazıcı `3`'ü **yalnız bir nesnenin kendi kalınlığı varken** yazar; başka her çizim şema 2'dir ve eskisiyle bayt bayt aynıdır, bu yüzden şema 2 okuyucusu onu açmaya devam eder. Şema 2 yükünde `lineWeight` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/line-weight-in-schema-2.kcad`).
 
@@ -2349,6 +2356,7 @@ Anahtar sırasına dikkat: `name` (4) < `layers` (6) < `origin` < `styles` < `en
 - **Ana sürüm** yalnız kap düzeni uyumsuz değişince artar (başlık alanlarının yeri, bütünlük yöntemi).
 - **Küçük sürüm** yeni bir kodek, bayrak, uzantı ya da isteğe bağlı başlık alanı getirir. Yazıcı `minReaderMinor`'ı yalnız o yeni şeyi gerçekten kullandığında yükseltir.
 - **Belge şeması sürümü** şema uyumsuz değişince artar (alan anlamı, zorunluluk). Yeni bir nesne türü ya da alan da şema sürümünü ya da bir zorunlu uzantıyı gerektirir: 2.0 okuyucusu bilmediği alanı ve türü reddeder.
+- **Modül sürümü** (şema 254'ten beri, §6.1) yalnız bir modülün ya da bir eklentinin kendi verisine yeni bir alan geldiğinde artar; belge şeması o zaman değişmez. Okuyucu bildiğinden yeni bir modül sürümünü belge şemasındaki gibi reddeder.
   - Yazıcı şema sürümünü, `minReaderMinor` gibi, dosyada **gerçekten kullandığı** en yeni alana göre yazar: köşe kotu, nesne kalınlığı ve parçalı alanı olmayan çizim şema 2'dir, yalnız nesne kalınlığı olan 3, köşe kotu olan 4, çok parçalı alanı olan 5 (§6.1).
 - **Profil** değişirse (etiket kullanımı gibi) yeni bir `encoding` kimliği alır.
 - Her değişiklik bu belgeyi, `fixtures/kcad/v2`'yi, Rust kodlayıcısını ve `tools/kcad/kcad.py`'yi birlikte günceller; eski örnek dosyalar okunmaya devam eder.

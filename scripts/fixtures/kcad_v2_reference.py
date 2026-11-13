@@ -3705,7 +3705,17 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-254.kcad"] = container(root(cmap(parts), version=uint(254)))
+    files["schema-version-255.kcad"] = container(root(cmap(parts), version=uint(255)))
+    # Schema 254's module versions (docs/adr/8054 §10): `modules` before `version`, refused before the document when
+    # this build does not know a module's version, the module or an extension's data.
+    def with_modules(modules, version):
+        return head(5, 4) + text("format") + text("kentos.document") + text("modules") + modules + text("version") + version + text("document") + cmap(parts)
+    files["modules-in-schema-253.kcad"] = container(with_modules(cmap({"road": uint(1)}), uint(253)))
+    files["modules-road-newer.kcad"] = container(with_modules(cmap({"road": uint(1)}), uint(254)))
+    files["modules-unknown-module.kcad"] = container(with_modules(cmap({"rail": uint(1)}), uint(254)))
+    files["modules-extension.kcad"] = container(with_modules(cmap({"ext": cmap({"mezarlik-bs": uint(1)})}), uint(254)))
+    files["modules-empty.kcad"] = container(with_modules(cmap({}), uint(254)))
+    files["modules-zero.kcad"] = container(with_modules(cmap({"road": uint(0)}), uint(254)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))

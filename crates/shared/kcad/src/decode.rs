@@ -29,6 +29,7 @@ mod views;
 mod arch;
 mod gis;
 mod map;
+mod modules;
 mod road;
 use gis::topology_settings;
 use map::{height_reference, survey_settings};
@@ -259,6 +260,8 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
     let mut format_ok = false;
     let mut schema: Option<u32> = None;
     let mut document = None;
+    // `modules` comes before `version` (§6.1): checked once the schema is known, before the document.
+    let mut modules: Option<modules::Read> = None;
     map(r, |r, key| {
         match key {
             "format" => {
@@ -267,9 +270,15 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
                 }
                 format_ok = true;
             }
+            "modules" => modules = Some(modules::read(r)?),
             "version" => match r.any()? {
                 Any::Uint(v) => match SCHEMAS.iter().find(|&&s| u64::from(s) == v) {
-                    Some(&known) => schema = Some(known),
+                    Some(&known) => {
+                        schema = Some(known);
+                        if let Some(read) = &modules {
+                            modules::check(r, known, read)?;
+                        }
+                    }
                     None => return Err(version_error(r, &v.to_string())),
                 },
                 _ => return Err(version_error(r, "(sayı değil)")),
