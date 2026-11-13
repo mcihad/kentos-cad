@@ -660,6 +660,30 @@ mod tests {
         assert!(matches!(app.listing(), super::Listing::Empty));
     }
 
+    /// UR-066: the status bar's message, cut to its room, opens Komut geçmişi where the whole line stays.
+    #[test]
+    fn the_status_message_opens_the_history_with_its_whole_line() {
+        use kentos_ui::snapshot::Input;
+        let mut app = app_with_drawing();
+        let size = iced::Size::new(1440.0, 900.0);
+        let _ = app.update(Message::WindowResized(size));
+        let mut shot = crate::files_testing::offscreen(size);
+        let mut update = |app: &mut App, message: Message| {
+            let _ = app.update(message);
+        };
+        shot.settle(&mut app, App::view, &mut update);
+        let line = "Alan 10848.51 m²   Çevre 494.422 m   Köşe 4   Kenar 4 — uzun bir ölçüm sonucu durum çubuğuna sığmaz";
+        app.say(kentos_interaction::Level::Success, line.to_owned());
+        assert!(!app.command_expanded);
+        shot.settle(&mut app, App::view, &mut update);
+        // The message's cell: after the cursor's coordinates, on the bar's line.
+        let at = iced::Point::new(400.0, size.height - 14.0);
+        shot.input(&mut app, App::view, &mut update, Input::Click(at));
+        assert!(app.command_expanded, "the panel opens");
+        assert_eq!(app.bottom_tab, BottomTab::History);
+        assert_eq!(crate::files_testing::last_said(&app), line);
+    }
+
     #[test]
     fn warnings_are_counted_until_their_tab_is_seen() {
         let mut app = app_with_drawing();
