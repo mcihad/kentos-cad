@@ -366,3 +366,31 @@ fn screens() {
         }
     }
 }
+
+/// UR-068: an object that is its own only reference is not “apart from every reference”: Ayrık on one parcel against
+/// itself selects nothing, as Kesişen does.
+#[test]
+fn an_object_is_not_disjoint_from_itself_alone() {
+    for relation in ["disjoint", "intersects"] {
+        let mut app = app_with_queries();
+        let first = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .entities()
+            .find(|e| e.base().layer_id == "parsel")
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .expect("a parcel");
+        app.selection.set([first]);
+        let _ = app.update(Message::Run("processing.run.selection.byLocation"));
+        value(&mut app, "input", json!({ "scope": "selection" }));
+        value(&mut app, "reference", json!({ "scope": "selection" }));
+        value(&mut app, "relation", json!(relation));
+        event(&mut app, Event::Run);
+        let RunStatus::Ok { text, .. } = status(&app) else {
+            panic!("{:?}", status(&app));
+        };
+        assert!(text.starts_with("0 / 1 nesne"), "{relation}: {text}");
+    }
+}

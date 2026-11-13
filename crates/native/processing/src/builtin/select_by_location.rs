@@ -156,10 +156,14 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         .map(|(i, _)| i)
         .collect();
     let disjoint = relation == Relation::Disjoint;
+    let ref_ids = ids(refs);
+    // An object is not compared with itself: Ayrık needs a reference other than the object to be apart from, else
+    // an object that is its only reference would be “apart from every reference” and selected.
+    let has_other = |id: &Slot| ref_ids.iter().any(|r| r != id);
     let hits: Vec<Slot> = input_ids
         .iter()
         .enumerate()
-        .filter(|(i, _)| met.contains(i) != disjoint)
+        .filter(|(i, id)| if disjoint { !met.contains(i) && has_other(id) } else { met.contains(i) })
         .map(|(_, id)| *id)
         .collect();
     let current = ctx.selection;
