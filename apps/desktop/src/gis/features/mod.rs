@@ -969,8 +969,9 @@ impl App {
                 .then(|| Message::Gis(gis::Event::Features(Event::ZoomSelection))),
             Control::Press(texts::ADD_RECORD) => rows
                 .layer
-                .is_some()
-                .then(|| Message::Gis(gis::Event::Features(Event::AddRecord))),
+                .as_deref()
+                .filter(|l| self.add_record_refusal(l).is_none())
+                .map(|_| Message::Gis(gis::Event::Features(Event::AddRecord))),
             Control::Press(texts::DUPLICATE) => (!self.selection.is_empty())
                 .then(|| Message::Gis(gis::Event::Features(Event::Duplicate))),
             Control::Press(texts::FIELDS) => rows
