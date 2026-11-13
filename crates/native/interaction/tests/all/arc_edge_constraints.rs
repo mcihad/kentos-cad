@@ -127,3 +127,36 @@ fn adjacent_edges_of_one_path_can_be_picked_independently_and_made_tangent() {
     };
     assert!((p.bulges.as_ref().unwrap()[1] - 0.5).abs() < 1e-8);
 }
+
+/// UR-034: a line made horizontal, then made vertical as well: the two hold only on a line of no length, so the
+/// second is refused, its words say why, and the line keeps its length; one constraint stays.
+#[test]
+fn horizontal_then_vertical_on_one_line_is_refused_not_collapsed() {
+    let mut b = Bench::new("line");
+    b.click(0., 0.);
+    b.click(8., 6.);
+    b.confirm();
+    let line = b.newest().clone();
+    let length = |e: &kentos_commands::Entity| match e {
+        kentos_commands::Entity::Line(l) => (l.b.x - l.a.x).hypot(l.b.y - l.a.y),
+        other => panic!("a line: {other:?}"),
+    };
+    b.start("constraint");
+    assert!(b.type_text("Y"));
+    b.click(4., 3.);
+    assert_eq!(b.doc.constraints().constraints.len(), 1, "{:?}", b.log);
+    let slot = Slot(line.base().id);
+    let flat = b.doc.get(slot).cloned().expect("the line");
+    let flat_length = length(&flat);
+    assert!(flat_length > 1.0, "made horizontal, a line still: {flat_length}");
+    assert!(b.type_text("D"));
+    let ends = match &flat { kentos_commands::Entity::Line(l) => (l.a, l.b), _ => unreachable!() };
+    b.click((ends.0.x + ends.1.x) / 2.0 - E, (ends.0.y + ends.1.y) / 2.0 - N);
+    assert_eq!(b.doc.constraints().constraints.len(), 1, "the vertical not added: {:?}", b.log);
+    assert!((length(b.doc.get(slot).expect("the line")) - flat_length).abs() < 1e-9, "not collapsed, unchanged");
+    assert!(
+        b.log.iter().any(|l| l.text.contains("sıfır uzunluğa")),
+        "{:?}",
+        b.log.iter().map(|l| l.text.clone()).collect::<Vec<_>>()
+    );
+}
