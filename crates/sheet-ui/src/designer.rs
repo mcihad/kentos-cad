@@ -398,6 +398,10 @@ impl Designer {
     }
 
     /// The sheet in front; none while the drawing is.
+    /// The inspector's tab now (Öğe, Ön denetim…).
+    pub fn inspector_tab(&self) -> InspectorTab {
+        self.inspector_tab
+    }
     pub fn open_sheet(&self) -> Option<&Sheet> {
         self.open.as_deref().and_then(|id| self.book.sheet(id))
     }

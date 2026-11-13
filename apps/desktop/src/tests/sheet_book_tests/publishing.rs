@@ -654,6 +654,18 @@ fn sheet_preflight_desktop_uses_the_native_query_and_cannot_publish_its_report()
 }
 
 #[test]
+fn a_preflight_finding_opens_its_sheet_and_that_sheets_own_check(){
+    use crate::exchange::{Window,sheet_publish::Event as E};
+    let mut app=sheet_preflight_app("light",13);let task=app.run("file.preflight.sheets");drive(&mut app,task);wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s))=&app.exchange else{panic!("preflight")};
+    let issue=s.report.as_ref().unwrap().issues.iter().find(|i|i.error&&s.rows.iter().any(|r|r.id==i.sheet)).expect("a sheet's own finding").sheet.clone();
+    let _=app.sheet_publish_event(E::Go(issue.clone()));
+    assert!(app.exchange.is_none(),"the window gives way to the sheet");
+    assert_eq!(app.sheets.open_sheet().map(|s|s.id.as_str().to_owned()),Some(issue));
+    assert_eq!(app.sheets.inspector_tab(),kentos_sheet_ui::InspectorTab::Preflight);
+}
+
+#[test]
 #[ignore="GPU native preflight report, run alone"]
 fn sheet_preflight_native_screens(){
     use crate::exchange::Window;

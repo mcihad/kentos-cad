@@ -85,6 +85,8 @@ pub enum Event {
     Unlink,
     Stop,
     Tick,
+    /// A check's row: close the window, open that sheet and its Ön denetim, where each finding has its item.
+    Go(String),
     Close,
 }
 fn event(e: Event) -> Message {
@@ -211,6 +213,16 @@ impl App {
         if matches!(e, Event::Close) {
             self.close_exchange();
             return Task::none();
+        }
+        if let Event::Go(sheet) = &e {
+            let Some(k) = self.sheets.book().sheets.iter().position(|x| x.id.as_str() == sheet.as_str()) else {
+                self.warn("Bu bulgu tek bir paftaya ait değil; pafta setinin ayarlarına bakın.");
+                return Task::none();
+            };
+            self.close_exchange();
+            let show = self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(k + 1)));
+            let tab = self.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(kentos_sheet_ui::InspectorTab::Preflight)));
+            return Task::batch([show, tab]);
         }
         let Some(Window::SheetPublish(s)) = &mut self.exchange else {
             return Task::none();
@@ -555,7 +567,7 @@ impl App {
                     }
                 }
             }
-            Event::Close => {}
+            Event::Go(_) | Event::Close => {}
         }
         Task::none()
     }
@@ -862,10 +874,26 @@ impl App {
                     i.message,
                     i.fix
                 );
-                results = results.push(if i.error {
-                    label::body(message).style(style::text::danger)
+                let line: Element<'a, Message> = if i.error {
+                    label::body(message).style(style::text::danger).into()
                 } else {
-                    label::caption(message)
+                    label::caption(message).into()
+                };
+                // A sheet's finding takes you to that sheet's own check, where each finding shows its item.
+                results = results.push(if s.rows.iter().any(|r| r.id == i.sheet) && !busy {
+                    Element::from(
+                        row![
+                            iced::widget::container(line).width(Fill),
+                            button(label::caption("Paftada göster"))
+                                .padding(kentos_ui::theme::metrics::action())
+                                .style(style::button::secondary)
+                                .on_press(event(Event::Go(i.sheet.clone())))
+                        ]
+                        .spacing(8)
+                        .align_y(iced::Alignment::Center),
+                    )
+                } else {
+                    line
                 });
             }
             body = body.push(results);
