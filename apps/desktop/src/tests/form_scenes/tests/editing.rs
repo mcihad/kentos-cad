@@ -1147,3 +1147,21 @@ fn a_form_is_made_saved_and_published_in_the_window() {
             .any(|f| f.name == "Hasar tespiti 2026")
     );
 }
+
+/// UR-070: a rectangle drawn on the buildings' layer, whose form is not published (none opens), leaves its required
+/// Durum empty: said at once, with where to fill it.
+#[test]
+fn a_drawn_object_with_an_empty_required_field_is_said() {
+    let mut app = crate::files_testing::app_with_drawing();
+    crate::form_scenes::buildings(&mut app, false);
+    run(&mut app, "tool.rectangle");
+    crate::tools_scenes::typed(&mut app, &format!("{},{}", E + 44.0, N));
+    crate::tools_scenes::typed(&mut app, &format!("{},{}", E + 54.0, N + 8.0));
+    crate::tools_scenes::forget(&mut app);
+    assert!(app.gis.form_entry.is_none());
+    let said: Vec<String> = app.log.lines().rev().take(4).map(|l| l.text.clone()).collect();
+    assert!(
+        said.iter().any(|s| s.starts_with("Yeni nesnenin zorunlu alanı boş: Durum.")),
+        "{said:?}"
+    );
+}
