@@ -46,22 +46,23 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz
     yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2,
     donum, ha), angleUnit (grad, deg), plotScale (1 ile 1 000 000 arası tam sayı payda;
-    eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri
-    alma adımında, “Yazı yüksekliklerini uydur”, alır), drawingFont, heights (kotların
-    ne olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve
-    geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve
-    coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok
-    sistem ister). arch bütün mimari tercihtir: katlar, ayrıntı, alan yöntemi, tadilat
-    görünümü, planın kesme yüksekliği (cutHeight, katın döşemesinden metre, 0,3–3; yoksa
-    1,10), çizgi kalınlıkları (lineGroups: byScale TS 88-23 çizgi grubu ölçeğe göre, own
-    ya da yoksa her nesne kendi kaleminde), isteğe bağlı spaceNames/spaceUsages
-    listeleri ve kalıcı kat kimliğine bağlı spaceNumberPrefixes. Liste değişiminde
-    mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir;
-    mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca
-    alınır. Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve
-    cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar
-    reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz, sonuç conflict olur.
+    eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini alır;
+    ölçek ve onlar tek geri alma adımıdır, “Çizim ölçeği”: geri alma ikisini birlikte
+    döndürür; izleyen yoksa ölçek de ayar gibi geri alma adımı değildir), drawingFont,
+    heights (kotların ne olduğu, bütün olarak: ellipsoidal ya da orthometric,
+    ortometrikte verticalSrid ve geoid {name, sha256}; {kind: unknown} kaldırır; atanır,
+    kot değişmez) ve coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit
+    yüksekliği ve epok sistem ister). arch bütün mimari tercihtir: katlar, ayrıntı, alan
+    yöntemi, tadilat görünümü, planın kesme yüksekliği (cutHeight, katın döşemesinden
+    metre, 0,3–3; yoksa 1,10), çizgi kalınlıkları (lineGroups: byScale TS 88-23 çizgi
+    grubu ölçeğe göre, own ya da yoksa her nesne kendi kaleminde), isteğe bağlı
+    spaceNames/spaceUsages listeleri ve kalıcı kat kimliğine bağlı spaceNumberPrefixes.
+    Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir.
+    Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık
+    seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma adımı
+    değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin
+    değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.settings.set"
@@ -110,10 +111,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm ya da m),
         lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit (grad,
         deg), plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki
-        yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı
-        yüksekliklerini uydur”, alır), drawingFont, heights (kotların ne olduğu, bütün
-        olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid {name,
-        sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch
+        yazılar, kılavuzlar, ölçüler ve tablolar yenisini alır; ölçek ve onlar tek geri alma
+        adımıdır, “Çizim ölçeği”: geri alma ikisini birlikte döndürür; izleyen yoksa ölçek
+        de ayar gibi geri alma adımı değildir), drawingFont, heights (kotların ne olduğu,
+        bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid
+        {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch
         (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister). arch
         bütün mimari tercihtir: katlar, ayrıntı, alan yöntemi, tadilat görünümü, planın
         kesme yüksekliği (cutHeight, katın döşemesinden metre, 0,3–3; yoksa 1,10), çizgi

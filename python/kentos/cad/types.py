@@ -93501,7 +93501,8 @@ class SettingsSet(_Model):
     - `areaUnit`, `angleUnit`;
     - `plotScale`: a whole denominator from 1 to 1 000 000; the texts,
       leaders, dimensions and tables at the old general height take the new
-      one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);
+      one, the scale and they in one undo step “Çizim ölçeği” (one undo gives
+      both back; docs/adr/0205 §3); none following, the scale is a setting;
     - `drawingFont`: the drawing's typeface;
     - `arch`: the project's levels and the detail its walls are drawn at
       (docs/adr/0339 §3), whole: the given settings take the place of the

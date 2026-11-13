@@ -122,6 +122,20 @@ impl Document {
         self.record(ops, label);
     }
 
+    /// The plot scale written as a change of the open step or group (its annotations follow in the same one, so one
+    /// undo gives both back); outside one, an undo step of its own named `label`.
+    pub fn set_plot_scale_in_step(&mut self, scale: f64, label: &str) -> bool {
+        let before = self.settings.plot_scale;
+        if !(scale.is_finite() && scale > 0.0) || before == scale {
+            return false;
+        }
+        self.record(vec![Op::PlotScale { before, after: scale }], label);
+        // What reads the scale, as `set_settings` refreshes it.
+        self.refresh_viewmarks();
+        self.refresh_dimension_set_rows();
+        true
+    }
+
     /// The drawing unit, the home view and the anchor as they are.
     pub fn unit_state(&self) -> UnitState {
         UnitState {

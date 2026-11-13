@@ -2,9 +2,10 @@
 //! the web's `app/annotationScale.ts` and `ui/settings/PlotScaleDialog.ts`):
 //! a scale chosen on the ribbon or typed in Ölçek yaz…, and Proje ayarları'
 //! Kaydet, give the texts, leaders, dimensions and tables at the old general
-//! height the new one in one undo step “Yazı yüksekliklerini uydur”
-//! (`kentos_interaction::annotation_scale`); what was changed by hand stays;
-//! those on a locked layer are counted.
+//! height the new one: a new scale and they are one undo step “Çizim
+//! ölçeği”, so undo gives both back; new general heights alone are “Yazı
+//! yüksekliklerini uydur” (`kentos_interaction::annotation_scale`); what was
+//! changed by hand stays; those on a locked layer are counted.
 
 use iced::widget::{Id, column, operation, row};
 use iced::{Center, Element, Task};
@@ -140,8 +141,8 @@ impl App {
     }
 
     /// The project's plot scale set to `scale` (the ribbon's Ölçek, Ölçek
-    /// yaz…): an edit of the project, never an undo step; its annotations
-    /// follow in one.
+    /// yaz…): with the annotations that follow it one undo step “Çizim
+    /// ölçeği”; when none follows, an edit of the project and no undo step.
     pub(crate) fn set_plot_scale(&mut self, scale: f64) {
         let Some(doc) = &mut self.document else {
             return;
@@ -252,5 +253,45 @@ impl App {
                 ))
                 .width(380.0)
 .modal(event(Event::Close))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::files_testing::{app_with_drawing, make_cad};
+
+    /// 1:100 → 1:50 → undo → redo: the scale and the text that follows it go together, and the status bar's scale
+    /// with them.
+    #[test]
+    fn undo_gives_back_the_scale_with_the_annotations_that_followed_it() {
+        let mut app = app_with_drawing();
+        make_cad(&mut app);
+        app.set_plot_scale(100.0);
+        let model = &mut app.document.as_mut().expect("a drawing").model;
+        let layer = model.layers().active().to_owned();
+        let text = model
+            .add(
+                serde_json::from_value(serde_json::json!({
+                    "kind":"text","id":0,"layerId":layer,"attrs":{},"p":{"x":500.,"y":500.},"text":"T","height":0.25,"rotation":0
+                }))
+                .expect("a text"),
+            )
+            .expect("added");
+        let read = |app: &crate::app::App| {
+            let m = &app.document.as_ref().expect("a drawing").model;
+            let h = match m.get(text) {
+                Some(kentos_commands::Entity::Text(t)) => t.height,
+                _ => f64::NAN,
+            };
+            (m.settings().plot_scale, h)
+        };
+        assert_eq!(read(&app), (100.0, 0.25));
+        app.set_plot_scale(50.0);
+        assert_eq!(read(&app), (50.0, 0.125));
+        app.undo();
+        assert_eq!(read(&app), (100.0, 0.25), "the scale back with the text");
+        assert!(crate::files_testing::last_said(&app).contains("Çizim ölçeği"));
+        app.step_history(false);
+        assert_eq!(read(&app), (50.0, 0.125), "and again together");
     }
 }

@@ -740,6 +740,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::Map(_)
             | Op::PatternTables { .. }
             | Op::ApprovedSheetTemplates { .. }
+            | Op::PlotScale { .. }
             | Op::StyleTables(_) => {
                 if !report.parts.contains(&ProjectPart::Settings) {
                     report.parts.push(ProjectPart::Settings);

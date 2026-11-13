@@ -5598,7 +5598,7 @@
         },
         {
           "op": "undo",
-          "returns": "Yazı yüksekliklerini uydur",
+          "returns": "Çizim ölçeği",
           "expect": {
             "entities": {
               "1": {
@@ -5612,6 +5612,30 @@
                 },
                 "text": "T1",
                 "height": 2.5,
+                "rotation": 0
+              }
+            },
+            "settings": {
+              "plotScale": 1000
+            }
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Çizim ölçeği",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "T1",
+                "height": 1.25,
                 "rotation": 0
               }
             },

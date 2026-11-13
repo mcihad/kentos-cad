@@ -163,6 +163,11 @@ impl Document {
                 after.apply_from(before, self);
                 return;
             }
+            Op::PlotScale { after, .. } => {
+                // Undo and redo refresh what reads the scale (view marks, dimension rows) after the step.
+                Arc::make_mut(&mut self.settings).plot_scale = *after;
+                return;
+            }
             Op::Units { before, after } => {
                 Arc::make_mut(&mut self.settings).drawing_unit = after.drawing_unit;
                 self.home_view = after.home_view;

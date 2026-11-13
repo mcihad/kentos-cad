@@ -6,7 +6,9 @@
 //! annotations at the old general height follow in one undo step,
 //! docs/adr/0205 §3) and the drawing's typeface. The settings are an edit of
 //! the project, no undo step (`Document::set_settings`, which keeps them as
-//! a project may: `ProjectSettings::sanitized`). The shared cases are in
+//! a project may: `ProjectSettings::sanitized`), save the plot scale when
+//! annotations follow it: then the scale and they are one step “Çizim
+//! ölçeği”, so one undo gives both back. The shared cases are in
 //! `fixtures/commands/v1/cad.settings.set.json`.
 
 use std::sync::OnceLock;
@@ -584,13 +586,47 @@ fn write_execute(
     }
 }
 
+/// The step a plot scale and the annotations that follow it make together: one undo gives both back.
+pub const PLOT_SCALE_STEP: &str = "Çizim ölçeği";
+
 fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> SettingsChanged {
     let before = doc.settings().clone();
     let name_before = doc.name().to_owned();
     if let Some(name) = input.name.as_deref() {
         doc.set_name(name.trim());
     }
-    doc.set_settings(next);
+    // The other settings first; the scale with the annotations that follow it (below).
+    let to_scale = next.plot_scale;
+    doc.set_settings(ProjectSettings {
+        plot_scale: before.plot_scale,
+        ..next
+    });
+    let heights = doc.settings().annotation.clone().unwrap_or_default();
+    let followed = if to_scale == before.plot_scale {
+        Default::default()
+    } else {
+        let group = doc.begin_group(PLOT_SCALE_STEP);
+        let followed = follow_annotation_change(
+            doc,
+            &ScaleChange {
+                from_scale: before.plot_scale,
+                to_scale,
+                from: heights.clone(),
+                to: heights,
+            },
+        );
+        if followed.written > 0 {
+            // In the step with them (or the open one around it): one undo gives the scale and they back.
+            doc.set_plot_scale_in_step(to_scale, PLOT_SCALE_STEP);
+        } else {
+            // Nothing followed: the scale alone is a project setting, outside the undo history, as before.
+            let mut s = doc.settings().clone();
+            s.plot_scale = to_scale;
+            doc.set_settings(s);
+        }
+        doc.end_group(group);
+        followed
+    };
     let after = doc.settings().clone();
     let mut changed = Vec::new();
     let mut key = |differs: bool, name: &str| {
@@ -635,16 +671,6 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
         "refraction",
     );
     key(before.tool_layers != after.tool_layers, "toolLayers");
-    let heights = after.annotation.clone().unwrap_or_default();
-    let followed = follow_annotation_change(
-        doc,
-        &ScaleChange {
-            from_scale: before.plot_scale,
-            to_scale: after.plot_scale,
-            from: heights.clone(),
-            to: heights,
-        },
-    );
     SettingsChanged {
         changed,
         followed: count(followed.written),

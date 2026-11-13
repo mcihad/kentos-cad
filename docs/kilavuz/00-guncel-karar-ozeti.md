@@ -3458,7 +3458,7 @@
   `kentos_raster::multidim`; CBS'de Raster › Raster ▾ (ADR 0243);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
-  tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
+  tek adımda izler (Yazı yüksekliklerini uydur; ölçek değişince ölçek de aynı adımdadır, “Çizim ölçeği”, UR-046), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
   (`graphics.annotationSize`), ölçünün çizgilerinin rengi, kalınlığı ve tipi (Ölçü stilleri'nin Çizgiler'i, Öznitelikler, DXF), kılavuzun
   AutoCAD gibi 14 ucu ve Ok boyu, DXF'te AutoCAD'in ok blokları (ADR 0205);
   paftada haritanın ölçeği: Çizim ölçeğini al, Görünüme sığdır, Görünümden al; koordinat listesinin kaynağı kimlikleriyle
