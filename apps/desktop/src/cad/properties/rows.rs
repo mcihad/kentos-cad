@@ -15,7 +15,7 @@ use kentos_interaction::{
 use kentos_interaction::{leader, text};
 use kentos_ui::icon::Icon;
 
-use super::{Event, Field, Spot};
+use super::{ArchField, Event, Field, Spot};
 
 mod arch;
 pub(crate) mod attachments;

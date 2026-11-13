@@ -803,7 +803,66 @@ pub(super) fn commit(
                     | ArchField::BeamOffset
                     | ArchField::BeamBase
                     | ArchField::RailingGap
+                    | ArchField::Overhang
+                    | ArchField::Gutter
+                    | ArchField::SnowGuard
             );
+            // A roof's part, typed as “0,5 × 0,6” (one length: square; a downpipe's diameter), what is after “·” left.
+            if let ArchField::RoofPart(k) = which {
+                let Some(kentos_commands::Entity::Roof(r)) = model.get(*slot) else {
+                    return Vec::new();
+                };
+                let mut parts = r.roof.parts.clone();
+                let Some(part) = parts.get_mut(usize::from(*k)) else {
+                    return Vec::new();
+                };
+                let size = t.split('·').next().unwrap_or("").replace('Ø', "");
+                let pieces: Vec<Option<f64>> = size
+                    .split(['×', 'x', 'X', '*'])
+                    .map(|p| kentos_interaction::js_trim(p))
+                    .filter(|p| !p.is_empty())
+                    .map(|p| length(p).filter(|v| v.is_finite() && *v > 0.0))
+                    .collect();
+                let (w, d) = match pieces.as_slice() {
+                    [Some(w)] => (*w, *w),
+                    [Some(w), Some(d)] => (*w, *d),
+                    _ => {
+                        return vec![
+                            "Parçanın boyutunu “genişlik × derinlik” olarak yazın; örneğin 0,5 × 0,6 ya da 40 cm × 40 cm."
+                                .into(),
+                        ];
+                    }
+                };
+                part.width = w;
+                part.depth = d;
+                return properties::edit_arch(
+                    model,
+                    *slot,
+                    ArchOperation::Set(Box::new(ArchChange {
+                        parts: Some(parts),
+                        ..Default::default()
+                    })),
+                );
+            }
+            // A roof's slope, “%33” or “33”: every sloping edge takes it, a gable end stays one.
+            if *which == ArchField::RoofSlope {
+                let n = web_number(t.trim_start_matches('%').trim());
+                let Some(kentos_commands::Entity::Roof(r)) = model.get(*slot) else {
+                    return Vec::new();
+                };
+                if !(n.is_finite() && n > 0.0) {
+                    return vec!["Eğimi yüzde olarak yazın; örneğin 33. Düz çatı için çatıyı yeniden çizin.".into()];
+                }
+                let slopes = r.roof.slopes.iter().map(|s| s.map(|_| n)).collect();
+                return properties::edit_arch(
+                    model,
+                    *slot,
+                    ArchOperation::Set(Box::new(ArchChange {
+                        slopes: Some(slopes),
+                        ..Default::default()
+                    })),
+                );
+            }
             let n = if physical && !t.is_empty() {
                 let Some(n) = length(text) else {
                     return vec![
@@ -853,6 +912,18 @@ pub(super) fn commit(
                 },
                 ArchField::RailingGap => ArchChange {
                     gap: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::Overhang => ArchChange {
+                    overhang: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::Gutter => ArchChange {
+                    gutter: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::SnowGuard => ArchChange {
+                    snow_guard: Some(words.map(|_| n)),
                     ..Default::default()
                 },
                 ArchField::BubbleSize => ArchChange {
@@ -952,7 +1023,9 @@ pub(super) fn commit(
                 ArchField::TagContent
                 | ArchField::TagSize
                 | ArchField::MarkNumber
-                | ArchField::MarkSize => {
+                | ArchField::MarkSize
+                | ArchField::RoofSlope
+                | ArchField::RoofPart(_) => {
                     return Vec::new();
                 }
             };

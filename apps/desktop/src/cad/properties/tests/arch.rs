@@ -602,3 +602,102 @@ fn a_slab_s_layers_are_picked_whole_and_typed_one_by_one() {
         [SlabLayerKind::Screed]
     );
 }
+
+/// A roof's slope, overhang, covering, gutter and its parts are edited in Özellikler, each one undo step: a slope
+/// typed on every sloping edge, a part's size as “width × depth”, a part taken away from the list.
+#[test]
+fn a_roofs_slope_eaves_and_parts_are_edited_in_its_properties() {
+    use super::super::ArchField as A;
+    use serde_json::json;
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(kentos_commands::Workspace::Cad);
+    settings.srid = 0;
+    doc.set_settings(settings);
+    let roof = add(&mut app, serde_json::from_value(json!({
+        "kind":"roof","id":0,"layerId":"parsel","attrs":{},
+        "pts":[{"x":0.,"y":0.},{"x":12.,"y":0.},{"x":12.,"y":9.},{"x":0.,"y":9.}],
+        "slopes":[33.,null,33.,null],
+        "parts":[
+            {"kind":"chimney","at":{"x":6.,"y":3.},"width":0.4,"depth":0.4},
+            {"kind":"window","at":{"x":4.,"y":6.},"width":0.78,"depth":1.18}
+        ]
+    })).unwrap());
+    select(&mut app, &[roof]);
+    let geometry: Vec<(String, bool)> = rows(&app)
+        .into_iter()
+        .flat_map(|(_, rows)| rows)
+        .map(|r| (r.label.to_string(), r.editor.is_some()))
+        .collect();
+    for label in ["Eğim", "Saçak", "Kaplama", "Oluk", "Kar siperliği", "Parçayı sil"] {
+        assert!(geometry.iter().any(|(l, e)| l == label && *e), "{label} editable in {geometry:?}");
+    }
+    let json = |app: &App| serde_json::to_value(entity(app, roof)).unwrap();
+    let snapshot = |app: &App| app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let before = snapshot(&app);
+    // The slope: the sloping edges take it, the gable ends stay.
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofSlope), "%40".into()));
+    assert_eq!(json(&app)["slopes"], json!([40.0, null, 40.0, null]));
+    for (field, key, text, want) in [(A::Overhang, "overhang", "0,6", 0.6), (A::Gutter, "gutter", "0,15", 0.15), (A::SnowGuard, "snowGuard", "0,3", 0.3)] {
+        event(&mut app, Event::Commit(Field::Arch(Slot(roof), field), text.into()));
+        assert!((json(&app)[key].as_f64().unwrap() - want).abs() < 1e-9, "{key}");
+    }
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::Material), "Sac".into()));
+    assert_eq!(json(&app)["material"], json!("Sac"));
+    // A part's size, its top's words after “·” left as they were.
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofPart(0)), "0,5 × 0,6 m · tepesi +6,89".into()));
+    assert_eq!((json(&app)["parts"][0]["width"].as_f64(), json(&app)["parts"][0]["depth"].as_f64()), (Some(0.5), Some(0.6)));
+    let kept = snapshot(&app);
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofPart(0)), "geniş".into()));
+    assert_eq!(snapshot(&app), kept, "words that are no size change nothing");
+    assert!(warned(&app).is_some());
+    // Parçayı sil: the window taken away, the chimney kept.
+    let delete = rows(&app)
+        .into_iter()
+        .flat_map(|(_, rows)| rows)
+        .find(|r| r.label == "Parçayı sil")
+        .and_then(|r| match r.editor {
+            Some(crate::properties::Editor::Select { items, .. }) => items.into_iter().nth(1),
+            _ => None,
+        })
+        .and_then(|c| match c {
+            crate::properties::Choice::Pick { message, .. } => Some(message),
+            _ => None,
+        })
+        .expect("the window's choice");
+    let _ = app.update(delete);
+    assert_eq!(json(&app)["parts"].as_array().map(Vec::len), Some(1));
+    assert_eq!(json(&app)["parts"][0]["kind"], json!("chimney"));
+    for _ in 0..7 {
+        assert!(undo_label(&mut app).is_some());
+    }
+    assert_eq!(snapshot(&app), before, "each edit one undo step");
+}
+
+#[test]
+#[ignore = "GPU: a roof's editable rows in Özellikler"]
+fn roof_properties_screens() {
+    use serde_json::json;
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-045");
+    std::fs::create_dir_all(&out).unwrap();
+    let mut app = objects();
+    let roof = add(&mut app, serde_json::from_value(json!({
+        "kind":"roof","id":0,"layerId":"parsel","attrs":{},
+        "pts":[{"x":0.,"y":0.},{"x":12.,"y":0.},{"x":12.,"y":9.},{"x":0.,"y":9.}],
+        "slopes":[33.,33.,33.,33.],"overhang":0.5,
+        "parts":[
+            {"kind":"chimney","at":{"x":6.,"y":3.},"width":0.4,"depth":0.4},
+            {"kind":"window","at":{"x":4.,"y":6.},"width":0.78,"depth":1.18}
+        ]
+    })).unwrap());
+    select(&mut app, &[roof]);
+    let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 1500.)).unwrap();
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snap.settle(&mut app, App::view, &mut update);
+    snap.render(app.view(), &app.theme()).save(out.join("cati-ozellikleri.png")).unwrap();
+}

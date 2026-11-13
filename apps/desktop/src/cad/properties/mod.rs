@@ -235,8 +235,16 @@ pub enum ArchField {
     BeamBase,
     /// A railing's balusters' clear gap (docs/adr/8045 §3); empty: PAİY 38/4's 0.10 m.
     RailingGap,
-    /// A column's or a beam's material (empty: Betonarme; docs/adr/8041 §2).
+    /// A column's or a beam's material (empty: Betonarme; docs/adr/8041 §2); a roof's covering (empty: Kiremit).
     Material,
+    /// A roof's slope, per cent, on every sloping edge; its gable ends stay.
+    RoofSlope,
+    /// A roof's overhang, gutter and snow guard; empty: none.
+    Overhang,
+    Gutter,
+    SnowGuard,
+    /// A roof's chimney, vent, window or downpipe at this place among its parts: its size typed as “width × depth”.
+    RoofPart(u16),
 }
 
 /// The value a cell edits.
