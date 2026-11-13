@@ -283,7 +283,8 @@ impl App {
                 let ids = panel.overflow.clone();
                 let checked = self.checks(&ids);
                 let heads = self.overflow_heads(&ids);
-                group = group.more(move || headed_menu_of(&ids, &checked, &heads, None));
+                let off = self.rows_off(&ids);
+                group = group.more(move || headed_menu_of(&ids, &checked, &heads, &off, None));
             }
             return Some(group);
         }
@@ -339,7 +340,8 @@ impl App {
             let ids = panel.overflow.clone();
             let checked = self.checks(&ids);
             let heads = self.overflow_heads(&ids);
-            group = group.more(move || headed_menu_of(&ids, &checked, &heads, None));
+            let off = self.rows_off(&ids);
+            group = group.more(move || headed_menu_of(&ids, &checked, &heads, &off, None));
         }
         if let Some(launcher) = &panel.launcher
             && let Some(message) = launch(launcher)
@@ -478,6 +480,7 @@ impl App {
                         None => run,
                     });
                 let names: Vec<&str> = entries.iter().map(|e| e.label).collect();
+                let runs = run.is_some();
                 let tip_of = match self.why_disabled(command.id) {
                     Some(why) => Tip::new(aria).body(why),
                     None => {
@@ -509,7 +512,13 @@ impl App {
                     );
                 let key = *key;
                 let entries = entries.clone();
-                let menu = move || crate::ribbon_bar::split_list(key, &entries);
+                let off = self.rows_off(&ids);
+                // A family none of whose methods can run here is off as a whole, its tip saying why (a point layer's
+                // Daire): no list that only offers dimmed rows.
+                if off.iter().all(Option::is_some) && !runs {
+                    return Some(button);
+                }
+                let menu = move || crate::ribbon_bar::split_list(key, &entries, &off);
                 Some(with_family(button, &ids, command.title, menu))
             }
             Item::Menu {
@@ -536,7 +545,8 @@ impl App {
                     return Some(with_family(button, ids, label, menu));
                 }
                 let name = *label;
-                let menu = move || menu_of(&members, &checked, Some(name));
+                let off = self.rows_off(&members);
+                let menu = move || menu_of(&members, &checked, &off, Some(name));
                 Some(with_family(button, ids, label, menu))
             }
             Item::Builtin(_) => None,
