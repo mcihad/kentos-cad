@@ -269,7 +269,7 @@
       "version": 1,
       "group": "drafting",
       "title": "Seçimde bağlamsal sekme",
-      "description": "Bir nesne seçilince şeritte türünün sekmesi (Çizgi, Alan, Raster, Nokta bulutu…) öne gelir; seçim kalkınca önceki sekmeye dönülür. Kapalıyken sekme yalnız gösterilir.",
+      "description": "Bir nesne seçilince şeritte türünün sekmesi (Çizgi, Alan, Raster, Nokta bulutu…) eklenir; şerit başlangıç sekmesindeyse öne gelir, başka bir sekme açıksa o sekme yerinde kalır. Seçim kalkınca önceki sekmeye dönülür. Kapalıyken sekme yalnız gösterilir.",
       "sensitive": false,
       "apply": "live"
     },

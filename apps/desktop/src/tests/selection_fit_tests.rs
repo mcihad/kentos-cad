@@ -107,6 +107,27 @@ fn selection_fit_screens() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
     }
+    // UR-010: Değiştir opened, then the circle selected: Değiştir keeps the front, Daire beside it.
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-010");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = drawing();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::RibbonTab("modify"));
+        select(&mut app, &[1]);
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let _ = app.update(Message::RibbonPanel(crate::ribbon_panels::Event::Color(None)));
+        assert_eq!(app.shown_tab(), "modify");
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("degistir-acik-kalir-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }
 
 /// UR-009: the linear dimension's words in the menu and the command's description name no axis (a CBS project's

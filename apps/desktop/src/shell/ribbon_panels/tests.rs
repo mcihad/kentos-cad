@@ -206,7 +206,17 @@ fn a_selection_brings_its_kinds_tab_and_gives_the_ribbon_back_when_it_empties() 
     // Nothing selected: no contextual tab to open.
     let _ = app.update(Message::RibbonTab("selection"));
     assert_eq!(app.shown_tab(), "edit");
-    // A point and a parcel: of two kinds, Seçim, in front by itself (docs/adr/0622 §4).
+    // A point and a parcel over Düzenle, a tab the user opened (UR-010): it keeps the front, so its buttons stay
+    // where they were; Seçim shows beside it and opens with a click.
+    app.selection.set(vec![Slot(1), Slot(4)]);
+    let _ = app.update(Message::RibbonPanel(Event::Color(None)));
+    assert_eq!(app.shown_tab(), "edit");
+    assert_eq!(app.selection_tab().map(|t| t.id), Some("selection"));
+    let _ = app.update(Message::RibbonTab("selection"));
+    assert_eq!(app.shown_tab(), "selection");
+    // Over the starting tab the selection's tab comes to the front by itself (docs/adr/0622 §4).
+    let _ = app.update(Message::Run("edit.deselect"));
+    let _ = app.update(Message::RibbonTab("map"));
     app.selection.set(vec![Slot(1), Slot(4)]);
     let _ = app.update(Message::RibbonPanel(Event::Color(None)));
     assert_eq!(app.shown_tab(), "selection");

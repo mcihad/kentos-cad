@@ -109,9 +109,16 @@ impl App {
         let follow = self.settings.effective("drafting.contextualTabs") != serde_json::Value::Bool(false);
         if self.selection.is_empty() {
             self.ribbon_context = false;
-        } else if follow {
+        } else if follow && self.regular_tab() == self.starting_tab() {
+            // Only over the starting tab (UR-010): a tab the user opened keeps the front, so its buttons stay where
+            // they were seen; the selection's tab shows beside it, its colour marking it, one click away.
             self.ribbon_context = true;
         }
+    }
+
+    /// The tab the ribbon starts on: the mode's first after Dosya.
+    fn starting_tab(&self) -> &'static str {
+        self.ribbon_tabs().nth(1).map_or("home", |t| t.id)
     }
 
     /// The tab shown: the selection's contextual tab while it is open and
@@ -143,9 +150,8 @@ impl App {
         if let Some(tab) = self.extension_tab(self.tab) {
             return tab.id;
         }
-        let mut tabs = self.ribbon_tabs();
-        let first = self.ribbon_tabs().nth(1).map_or("home", |t| t.id);
-        tabs.find(|t| t.id == self.tab).map_or(first, |t| t.id)
+        let first = self.starting_tab();
+        self.ribbon_tabs().find(|t| t.id == self.tab).map_or(first, |t| t.id)
     }
 
     /// `workspace.*`: the drawing's mode becomes this one.
@@ -307,8 +313,10 @@ mod tests {
         let tab = app.selection_tab().expect("selected area").id;
         let cached = app.selection_tab_cache.get().expect("cached");
         app.follow_selection_tab();
-        app.choose_tab("file");
-        assert_eq!(app.shown_tab(), "file");
+        // Back on the starting tab, where a selection's tab comes forward (UR-010).
+        let start = app.starting_tab();
+        app.choose_tab(start);
+        assert_eq!(app.shown_tab(), start);
         // A parked drawing may have the same selection/change counters. Its session must invalidate the cache.
         app.document.as_mut().expect("open").session += 1;
         assert_eq!(app.selection_tab().expect("selected area").id, tab);

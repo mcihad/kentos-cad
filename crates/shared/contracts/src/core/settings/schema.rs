@@ -188,7 +188,7 @@ fn settings() -> Vec<SettingDescriptor> {
             .hosts(&[Desktop])
             .text(
                 "Seçimde bağlamsal sekme",
-                "Bir nesne seçilince şeritte türünün sekmesi (Çizgi, Alan, Raster, Nokta bulutu…) öne gelir; seçim kalkınca önceki sekmeye dönülür. Kapalıyken sekme yalnız gösterilir.",
+                "Bir nesne seçilince şeritte türünün sekmesi (Çizgi, Alan, Raster, Nokta bulutu…) eklenir; şerit başlangıç sekmesindeyse öne gelir, başka bir sekme açıksa o sekme yerinde kalır. Seçim kalkınca önceki sekmeye dönülür. Kapalıyken sekme yalnız gösterilir.",
             ),
         // On by default (docs/adr/0403 §4): a drawing tool's new object on a layer with a
         // published form opens its form; the desktop only while the web waits (ADR 0228).
