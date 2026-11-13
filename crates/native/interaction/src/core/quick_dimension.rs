@@ -1,4 +1,4 @@
-//! Hızlı ölçü (docs/adr/0147 §7, AutoCAD's QDIM; the web's `QuickDimensionTool`,
+//! Hızlı ölçü (docs/adr/0147 §7; the web's `QuickDimensionTool`,
 //! `apps/web/src/tools/quickDimensionTool.ts`): the selected lines, polylines
 //! and areas measured at once, an aligned dimension along each straight edge
 //! and an arc length along each arc; out of an area, into a hole, on the

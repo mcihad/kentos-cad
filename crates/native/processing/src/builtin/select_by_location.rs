@@ -1,5 +1,5 @@
 //! Konuma göre seç (the web's `builtin/selectByLocation.ts`; docs/adr/0200
-//! §2; QGIS "Select by location", Netcad Konumsal Seçim): selects the
+//! §2): selects the
 //! objects that stand in a relation to any of the reference objects (Ayrık:
 //! to none), combined with the current selection as the user chose. The
 //! relations are the core's (`ops::spatial_query`): the run's store pairs the

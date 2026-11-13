@@ -1,4 +1,4 @@
-//! Eğriyi düzenle (AutoCAD's PEDIT and SPLINEDIT, docs/adr/0303): click a polyline or a NURBS curve; its points
+//! Eğriyi düzenle (docs/adr/0303): click a polyline or a NURBS curve; its points
 //! are marked (fit points as rings, control points as squares, the control polygon dashed) and the prompt offers
 //! what that curve takes:
 //!

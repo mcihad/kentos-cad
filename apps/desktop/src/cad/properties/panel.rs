@@ -60,7 +60,7 @@ impl App {
         for (kind, n) in counts {
             *types.entry(kind).or_default() += n;
         }
-        // Past the limit (AutoCAD's PROPOBJLIMIT, docs/adr/1027): the selection's size and kinds only, no values and no
+        // Past the limit (docs/adr/1027): the selection's size and kinds only, no values and no
         // editors — working out and comparing a million objects' values took most of a select-all.
         if selected.len() > PROPERTIES_LIMIT {
             let total: usize = types.values().sum();

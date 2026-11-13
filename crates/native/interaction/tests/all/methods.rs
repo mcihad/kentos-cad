@@ -1,4 +1,4 @@
-//! The drawing tools' methods added after the comparison with AutoCAD (docs/adr/0287): Yay's eight
+//! The drawing tools' methods added after the comparison in docs/adr/0287: Yay's eight
 //! constructions given before the first point, Daire's Merkez, çap, Düzgün çokgen's circles set (not
 //! turned), Dikdörtgen's Alan and its ribbon methods, Yardımcı çizgi's Paralel (and Noktadan) and
 //! Revizyon bulutu's Nesne. Every value is worked out by hand from the geometry.

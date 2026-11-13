@@ -11,8 +11,8 @@
 //! A CAD project has neither: its scene shows the coordinate axes' icon
 //! instead (docs/adr/0165 §5; the web's `drawUcsIcon`), X to the right and
 //! Y up from a small square, always at the bottom left (the owner's wish of
-//! 12 Oct: it stood on the origin when 0,0 was on screen, as AutoCAD's UCS
-//! icon does, in the middle of a local drawing).
+//! 12 Oct: it stood on the origin when 0,0 was on screen, in the middle of a
+//! local drawing).
 //!
 //! They depend only on the view, so they are kept with the text's cached
 //! picture.

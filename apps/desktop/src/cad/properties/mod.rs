@@ -482,8 +482,7 @@ pub(crate) struct InspectScope {
     epoch: u64,
 }
 
-/// Past this many objects of a selection Öznitelikler shows its size and kinds only (AutoCAD's PROPOBJLIMIT default,
-/// docs/adr/1027).
+/// Past this many objects of a selection Öznitelikler shows its size and kinds only (docs/adr/1027).
 pub(crate) const PROPERTIES_LIMIT: usize = 25_000;
 
 /// The drop-down's menu: its choices, their swatches, the commands.

@@ -118,7 +118,7 @@ impl App {
     }
 
     /// After a message: a selection made or changed brings its tab to the
-    /// front (AutoCAD's contextual tabs; docs/adr/0622 §4), one cleared
+    /// front (docs/adr/0622 §4), one cleared
     /// takes it away and the chosen tab shows again.
     pub(crate) fn follow_selection_tab(&mut self) {
         let stamp = self.document.as_ref().map(|d| (d.session, self.selection.version()));

@@ -1,6 +1,6 @@
 //! Katman stili on the desktop (docs/STYLE.md §4, docs/adr/0091; the web's
 //! `ui/style/LayerStyleDialog.ts` and `rulesEditor.ts`): how a layer's
-//! objects are drawn, as in QGIS's layer styling. Basit is the layer's own
+//! objects are drawn. Basit is the layer's own
 //! colour and line type; Tek sembol gives every object one symbol per
 //! geometry; Kategorili picks by an expression's value, Aralıklı by a
 //! number's class; Kurallar by conditions and scale ranges; the thematic

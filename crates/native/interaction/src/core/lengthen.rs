@@ -1,5 +1,5 @@
-//! Uzat-kısalt: the web's `LengthenTool` (AutoCAD LENGTHEN,
-//! `apps/web/src/tools/lengthenTool.ts`) on its edge-picking base, step for
+//! Uzat-kısalt: the web's `LengthenTool`
+//! (`apps/web/src/tools/lengthenTool.ts`) on its edge-picking base, step for
 //! step (docs/adr/0047):
 //!
 //! - click near the end of a line, an arc or an open polyline to change;
