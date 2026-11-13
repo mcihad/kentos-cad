@@ -127,6 +127,7 @@ mod interior_dims;
 mod column_distance;
 mod tagged_spaces;
 mod active_level;
+mod opening_after_place;
 mod opening_numbers;
 mod opening_special;
 mod recesses;

@@ -96,6 +96,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Tekrarlı yerleştirme korunurken başarılı tıklamadan sonra imleç hareketine kadar sonraki önizleme/çakışma uyarısı gizlensin veya açıkça “sonraki kapı” olarak ayırt edilsin. Gerçekten çakışan yeni bir konum seçildiğinde doğrulama ve açıklama korunmalı.
 - **İnceleme:** `crates/native/application/src/openings.rs` içindeki açıklık çakışması ile kapı aracının başarılı yerleştirme sonrası önizleme durumunu birlikte incele; geometrik çakışma denetimini zayıflatma.
 - **Kabul:** Tek kapı yerleştirmeden hemen sonra yanlış hata algısı yok; hareket edip aynı noktaya ikinci kapı yerleştirme denemesi engellenir; pencere/boşluk ve sayısal yerleştirmede de davranış sınanır; undo ve Esc korunur.
+- **Durum (13.11.2026):** düzeltildi — Kapı, Pencere ve Boşluk bir açıklığı yerleştirdikten sonra bir sonrakinin önizlemesini ve imleç yanındaki etiketini fare kımıldayana kadar göstermiyor; böylece başarı iletisinin yanında kırmızı çakışma uyarısı çıkmıyor. Çakışma denetimi zayıflatılmadı: fare yeni yerleştirilenin üstüne geri gelince uyarı kırmızı görünüyor ve oraya tıklamak açıklık eklemiyor; duvarın başka yerinde sonraki açıklık ekleniyor ve geri alınıyor. Test `opening_after_place::the_next_opening_waits_for_the_pointer_and_an_overlap_is_still_refused` (kapı, pencere, boşluk), resimler `.run/gui-evidence/kullanim-UR-008/`. Sayısal yerleştirme aynı tıklama yolundan geçtiği için ayrıca sınanmadı.
 
 #### UR-009 — CAD kopyalama sonucundaki eksen adları sahne göstergesiyle ters
 

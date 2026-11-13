@@ -7,7 +7,7 @@
 //! pockets' volume. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=kapi-carpisma,kapi-carpisma-secili,kapi-carpisma-duzeltildi,yayli-cep,yayli-cep-arac,cep-metraj cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=kapi-yerlesti,kapi-carpisma,kapi-carpisma-secili,kapi-carpisma-duzeltildi,yayli-cep,yayli-cep-arac,cep-metraj cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -119,8 +119,30 @@ fn quantities(app: &mut App) {
     )));
 }
 
+/// UR-008: a door placed with one click on an 8 m wall, the pointer still where it clicked: the success said, no
+/// preview of the next door and no overlap warning beside the cursor until it moves.
+fn placed(app: &mut App) {
+    use crate::tools_scenes::{E, N, Objects, click, typed};
+    crate::tools_scenes::open(app, Objects::new());
+    make_cad(app);
+    app.draft.snap = false;
+    app.command_expanded = true;
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: E - 1.0, min_y: N - 2.5, max_x: E + 9.0, max_y: N + 2.5 },
+        24.0,
+    );
+    run(app, "tool.wall");
+    click(app, [0.0, 0.0]);
+    click(app, [8.0, 0.0]);
+    typed(app, "");
+    typed(app, "");
+    run(app, "tool.door");
+    click(app, [3.0, 0.1]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("kapi-yerlesti", placed),
         ("kapi-carpisma", audited),
         ("kapi-carpisma-secili", chosen),
         ("kapi-carpisma-duzeltildi", fixed),
