@@ -259,7 +259,12 @@ impl Circle {
             Ok(None) => false,
             Err(why) => {
                 cx.say(Level::Warn, why);
-                self.d.pts.clear();
+                // Three points on a line: the first two stay, the third is asked again (UR-031); the others start over.
+                if self.mode == Mode::Three && self.d.pts.len() == 3 {
+                    self.d.pts.pop();
+                } else {
+                    self.d.pts.clear();
+                }
                 false
             }
         }
