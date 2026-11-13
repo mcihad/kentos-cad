@@ -641,3 +641,24 @@ fn a_copied_tied_hatch_is_said_untied() {
         "{warnings:?}"
     );
 }
+
+/// Usage review (Ek doğrulama): deleting a tied hatch's boundary says the hatch lost its tie, after the count, so the
+/// status bar keeps it.
+#[test]
+fn deleting_a_hatchs_boundary_says_its_tie_is_lost() {
+    let mut b = bench();
+    b.click(-20.0, 1.0);
+    let Entity::Hatch(h) = b.newest() else { panic!("a hatch") };
+    let outer = h.assoc.as_ref().and_then(|a| a.outer).expect("tied to its closed object");
+    let slot = b
+        .doc
+        .slot_of(kentos_domain::Uuid::from_bytes(outer.0))
+        .expect("the boundary");
+    b.confirm();
+    b.selection.set([slot]);
+    b.start("erase");
+    let said: Vec<&str> = b.said(0).into_iter().map(|(_, t)| t).collect();
+    let count = said.iter().rposition(|t| t.ends_with("nesne silindi.")).expect("the count");
+    let lost = said.iter().rposition(|t| t.contains("sınır bağı koptu")).expect("the tie said");
+    assert!(lost > count, "{said:?}");
+}
