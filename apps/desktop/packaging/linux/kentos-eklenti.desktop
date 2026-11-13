@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=KentOS eklenti paketi
+Comment=Eklenti paketini gözden geçirir; kurulum ancak siz Kur deyince olur
+TryExec=kentos-cad
+Exec=kentos-cad %f
+Icon=kentos-cad
+Terminal=false
+NoDisplay=true
+MimeType=application/x-kentos-kek;

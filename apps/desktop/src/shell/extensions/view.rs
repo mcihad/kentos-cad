@@ -1,15 +1,17 @@
 //! The Eklentiler window and the review over it (docs/adr/8057 §3): the list on the left, the chosen extension's
 //! details and actions on the right; a package's review with its capabilities, their reasons and what changed.
 
-use iced::widget::{Column, column, row};
+use iced::widget::{Column, column, container, row};
 use iced::{Element, Fill};
 use kentos_extension_host::{Change, ExtensionView, Level, NeedStatus, Record, State};
 use kentos_extensions::catalog::CatalogEntry;
 use kentos_extensions::manifest::Manifest;
 use kentos_ui::label;
 use kentos_ui::widget::Dialog as Frame;
+use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Form, ListDetails, Segmented};
 
+use super::browse::{self, Counted};
 use super::{Event, Part, Pending, is_update, msg, problems};
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind as Line};
@@ -113,27 +115,70 @@ impl App {
     pub(crate) fn extensions_view(&self) -> Element<'_, Message> {
         let x = &self.extensions;
         let mut frame = Frame::new(TITLE).key("eklentiler");
-        let Some(registry) = x.registry.as_ref() else {
+        if x.registry.is_none() {
             let why = x.missing.clone().unwrap_or_default();
             return frame
                 .push(Banner::warning(why))
                 .action(words::secondary("Kapat", Some(msg(Event::Close))))
                 .width(720.0)
                 .modal(msg(Event::Close));
-        };
-        let parts = Segmented::new([Part::Installed, Part::Catalog], x.part, |p| {
-            msg(Event::Part(p))
-        });
-        let body: Element<'_, Message> = match x.part {
-            Part::Installed => {
-                let list = registry.extensions();
-                let chosen = x.chosen.as_deref().and_then(|id| list.iter().find(|e| e.id == id).cloned());
-                ListDetails::new(self.installed_list(&list), self.installed_details(chosen))
-                    .list_width(380.0)
-                    .height(470.0)
-                    .into()
+        }
+        // The parts with their counts, the word and the program (browse.rs, D1).
+        let counted: Vec<Counted> = Part::ALL.iter().map(|p| Counted(*p, x.count(*p))).collect();
+        let selected = counted
+            .iter()
+            .copied()
+            .find(|c| c.0 == x.part)
+            .unwrap_or(Counted(x.part, 0));
+        let parts = Segmented::new(counted, selected, |c| msg(Event::Part(c.0)));
+        let programs = Select::new(
+            browse::PROGRAMS
+                .iter()
+                .map(|(_, words)| Choice::new(*words)),
+            browse::PROGRAMS.iter().position(|(m, _)| *m == x.program),
+            |i| msg(Event::ProgramFilter(i)),
+        );
+        let filters = row![
+            container(parts).width(Fill),
+            container(
+                kentos_ui::widget::text_field("Ara: ad, açıklama, anahtar sözcük", &x.query)
+                    .on_input(|t| msg(Event::Query(t)))
+            )
+            .width(kentos_ui::theme::typography::scaled(260.0)),
+            container(programs).width(kentos_ui::theme::typography::scaled(170.0)),
+        ]
+        .spacing(10)
+        .align_y(iced::Center);
+        let filtered = !x.query.trim().is_empty() || x.program.is_some();
+        let empty = |part: Part| -> &'static str {
+            if filtered {
+                return "Süzgeçle eşleşen eklenti yok.";
             }
-            Part::Catalog => match &x.catalog {
+            match part {
+                Part::Installed => {
+                    "Kurulu eklenti yok. Paket yükle… ya da Katalog klasörü… ile başlayın."
+                }
+                Part::Troubled => "Sorunlu eklenti yok.",
+                Part::Available => "Katalogdakilerin hepsi kurulu.",
+                Part::Updates => "Güncellenecek eklenti yok.",
+                Part::New => "Katalog önceki açılışından beri değişmedi.",
+            }
+        };
+        let body: Element<'_, Message> = if !x.part.is_catalog() {
+            let list = x.installed_of(x.part);
+            let chosen = x
+                .chosen
+                .as_deref()
+                .and_then(|id| list.iter().find(|e| e.id == id).cloned());
+            ListDetails::new(
+                self.installed_list(&list, empty(x.part)),
+                self.installed_details(chosen),
+            )
+            .list_width(380.0)
+            .height(470.0)
+            .into()
+        } else {
+            match &x.catalog {
                 None => column![
                     Banner::info(
                         "Kurumunuzun eklenti kataloğu bir klasörde (paylaşımlı klasör ya da çevrimdışı disk) durur; \
@@ -144,25 +189,31 @@ impl App {
                 .spacing(12)
                 .into(),
                 Some(found) => {
-                    let latest = found.catalog.latest(true);
-                    let chosen = x.chosen.as_deref().and_then(|f| latest.iter().find(|e| e.file == f).copied());
-                    ListDetails::new(self.catalog_list(&latest), self.catalog_details(chosen))
-                        .list_foot(label::caption(format!(
-                            "{} · {}",
-                            found.catalog.name,
-                            found.folder.display()
-                        )))
-                        .list_width(380.0)
-                        .height(470.0)
-                        .into()
+                    let latest = x.entries_of(x.part);
+                    let chosen = x
+                        .chosen
+                        .as_deref()
+                        .and_then(|f| latest.iter().find(|e| e.file == f).copied());
+                    ListDetails::new(
+                        self.catalog_list(&latest, empty(x.part)),
+                        self.catalog_details(chosen),
+                    )
+                    .list_foot(label::caption(format!(
+                        "{} · {}",
+                        found.catalog.name,
+                        found.folder.display()
+                    )))
+                    .list_width(380.0)
+                    .height(470.0)
+                    .into()
                 }
-            },
+            }
         };
         if let Some(line) = self.bisect_line() {
             frame = frame.push(line);
         }
         frame = frame
-            .push(parts)
+            .push(filters)
             .push(body)
             .aside(words::ghost("Paket yükle…", Some(msg(Event::PickPackage))))
             .aside(words::ghost(
@@ -194,14 +245,18 @@ impl App {
         frame.width(980.0).modal(msg(Event::Close))
     }
 
-    fn installed_list<'a>(&self, list: &[ExtensionView]) -> Element<'a, Message> {
+    fn installed_list<'a>(
+        &self,
+        list: &[ExtensionView],
+        empty: &'static str,
+    ) -> Element<'a, Message> {
         use kentos_ui::widget::table::{Column as Col, Row, Table};
         let mut table = Table::new([
             Col::new("Eklenti").width(Fill),
             Col::new("Sürüm").width(kentos_ui::theme::typography::scaled(64.0)),
             Col::new("Durum").width(kentos_ui::theme::typography::scaled(140.0)),
         ])
-        .empty("Kurulu eklenti yok. Paket yükle… ya da Katalog klasörü… ile başlayın.");
+        .empty(empty);
         for e in list {
             // A problem standing or a failed state is marked red, a state that keeps it from running amber.
             let state: Element<'a, Message> = match (&e.state, &e.problem) {
@@ -408,14 +463,18 @@ impl App {
         column![actions.wrap(), form].spacing(12).into()
     }
 
-    fn catalog_list<'a>(&self, latest: &[&CatalogEntry]) -> Element<'a, Message> {
+    fn catalog_list<'a>(
+        &self,
+        latest: &[&CatalogEntry],
+        empty: &'static str,
+    ) -> Element<'a, Message> {
         use kentos_ui::widget::table::{Column as Col, Row, Table};
         let mut table = Table::new([
             Col::new("Eklenti").width(Fill),
             Col::new("Sürüm").width(kentos_ui::theme::typography::scaled(64.0)),
             Col::new("").width(kentos_ui::theme::typography::scaled(96.0)),
         ])
-        .empty("Katalogda eklenti yok.");
+        .empty(empty);
         for entry in latest {
             let installed = self.installed_version(&entry.id);
             let state = match &installed {

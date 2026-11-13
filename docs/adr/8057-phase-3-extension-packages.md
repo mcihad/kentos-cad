@@ -206,7 +206,7 @@ verisi kalıyor; bağımlılık döngüsü reddediliyor. Ayrıca: aynı sürüm 
 verilmeyen izin, geliştirici klasörünün yeniden yüklenmesi, diskte değiştirilmiş dosya, yeni SDK protokolü, inceleme
 farkı, proje ihtiyaçları, güvenli kip ve iki süreç. Clippy uyarısız; bağımlılık yönü temiz (60 crate).
 
-## §3. Masaüstü, katalog ve döküm (`ADIM 18`, sürüyor)
+## §3. Masaüstü, katalog ve döküm (`ADIM 18`)
 
 **Katalog dizini** (`kentos_extensions::catalog`, `kentos.extension-catalog` v1). Kurum paylaşımındaki ya da çevrimdışı
 bir diskteki `.kek` dosyalarının yanında duran statik `index.json`; `kentos kek index <klasör> [--name <ad>]` onu
@@ -348,8 +348,29 @@ sürümü de orada tanımlanır. Bugün yapılan: `modules.ext` taşıyan dosyan
 açın" diyordu, oysa hiçbir KentOS eklenti verisini henüz okumuyor; ileti "bu KentOS eklenti verisi taşıyan dosyaları
 henüz açamıyor; KentOS'u güncelleyin" oldu.
 
-**ADIM 18'de kalan:** katalog görünümleri (Bulunabilir / Güncellenebilir / Yeni / Sorunlu, arama ve modül süzgeci,
-D1), `.kek` dosya ilişkilendirmesi (yalnız inceleme açar, PY-KEK-15). Hata, günlük ve "Sorunlu eklentiyi bul": §4.
+**Görünümler, arama ve program süzgeci (D1, 13 Kasım).** Yöneticinin bölümleri **Kurulu · Bulunabilir · Güncellenebilir
+· Yeni · Sorunlu**; sayısı olan "Güncellenebilir (1)" diye yazılır (`extensions/browse.rs`). Arama ad, özet, açıklama,
+anahtar sözcük, kimlik ve yayımcıda (Türkçe harfler katlanır); program süzgeci "Tüm programlar" ile başlar (bu programla
+başlasaydı başka programın kurulu eklentisi "kurulu listede yok" görünürdü). **Yeni**, kataloğun bir önceki açılışından
+beri gelendir: görülenler `<kayıt>/katalog-gorulen.json`'da, oturum boyunca liste değişmez (ilk açılışta hepsi yeni).
+Sorunlu, durum çubuğu hücresinin listesidir. Katalog klasörü açılınca güncelleme varsa Güncellenebilir, yoksa
+Bulunabilir açılır; boş liste neden boş olduğunu söyler ("Süzgeçle eşleşen eklenti yok.", "Güncellenecek eklenti yok."
+…). Sınama: sayılar, arama, iki program süzgeci, katalogda yeni sürüm (Güncellenebilir 1, Yeni yalnız o), Sorunlu.
+
+**`.kek` dosya ilişkilendirmesi (PY-KEK-15).** `kentos-cad paket.kek` (çift tık) paketi çizim gibi açmaz: açılışta
+Eklentiler'in üstünde **inceleme penceresi** gelir; açmak hiçbir şey kurmaz, çalıştırmaz, Kur kurar. Linux için
+`apps/desktop/packaging/linux/kentos-mime.xml` (`application/x-kentos-kek`, `*.kek`; depoda hiç olmayan
+`application/x-kentos-kcad` tanımı da) ve `kentos-eklenti.desktop` (`NoDisplay`). Windows ve macOS paketlemesi depoda
+yok; dosya ilişkisi orada kurulumla gelir.
+
+**Yan düzeltme: `--eklentisiz` bir dosya sanılıyordu.** `kentos-launch`'ın komut satırı onu tanımıyordu: `kentos-cad
+--modul cbs --eklentisiz` eklentisiz başlıyordu ama "--eklentisiz" adlı dosyayı da açmaya kalkıyordu. Bayrak artık komut
+satırının parçası (`Launch.safe`, `SAFE_FLAG`). Gerçek pencerede `--modul cbs --eklentisiz <paket.kek>`: eklentisiz
+açılış ve paketin incelemesi, dosya hatası yok. Aynı crate'teki `refusals_say_why` bu değişiklikten önce de kırıktı ("yol"
+artık bir modül); bilinmeyen bir adla düzeltildi.
+
+**ADIM 18 bitti.** ADIM 22'ye taşınanlar: katman şemasının projeye kurulması (biçimi orada sabitlenir) ve `.kcad`
+bağlantısı (yukarıda). Hata, günlük ve "Sorunlu eklentiyi bul": §4.
 
 ## §4. Hata ve günlük (`ADIM 18`, sahibin isteği)
 

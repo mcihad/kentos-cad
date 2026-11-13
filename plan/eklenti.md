@@ -637,7 +637,7 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   güncelleme, uyumlu sürüm önerisi ve imzalar (22A), şemalı verinin göçü (22), arayüz, ilke dosyasının sistem yolu ve
   `.kcad` bağlantısı (18).
 
-### [~] ADIM 18 — Masaüstü: Eklentiler sekmesi, yöneticisi, dikey şerit sekmeleri ve Python'suz katkılar (P1)
+### [x] ADIM 18 — Masaüstü: Eklentiler sekmesi, yöneticisi, dikey şerit sekmeleri ve Python'suz katkılar (P1)
 
 [argon ADIM 18; EKL-02; PY-KEK-15; FORM-DESIGN-20; ADIM 15'ten kalan MCP keşfi]
 
@@ -695,8 +695,10 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   kapalı"), yeniden açılışta kaldığı yerden sürer, bulunan eklenti günlüğe ve durum çubuğuna düşer (ADR 8057 §4).
   **Paket ikonları:** paketteki SVG ikonlar düğmelerde, sağ tık öğelerinde ve yönetici/katalog listelerinde çizilir;
   katalog dizinindeki ikon da denetlenir. **`.kcad` bağlantısı ADIM 22'ye** taşındı: eklentiye ait belge verisi ilk kez
-  katman şemasıyla gelir (ADR 8057 §3). **Kalan:** katalog görünümleri, arama ve modül süzgeci [D1]; `.kek` dosya
-  ilişkilendirmesi [PY-KEK-15].
+  katman şemasıyla gelir (ADR 8057 §3). **Görünümler:** Kurulu · Bulunabilir · Güncellenebilir · Yeni · Sorunlu,
+  sayılarıyla; arama ve program süzgeci; Yeni = kataloğun önceki açılışından beri gelenler [D1]. **`.kek` ilişkisi:**
+  çift tık yalnız incelemeyi açar, Linux dosya türü ve masaüstü kaydı; `--eklentisiz` artık dosya sanılmıyor
+  [PY-KEK-15]. **Bitti (13 Kasım);** katman şemasının projeye kurulması ve `.kcad` bağlantısı ADIM 22'de.
 
 ### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 

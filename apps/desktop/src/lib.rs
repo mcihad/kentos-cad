@@ -1780,6 +1780,12 @@ fn refused(why: &str) -> ExitCode {
 /// The window: `program` the module it works as (none: every module, kentos-cad's
 /// own), `path` the drawing it opens at once.
 fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
+    // An extension package double-clicked (PY-KEK-15, docs/adr/8057 §3) is not a drawing: its review opens over
+    // Eklentiler, nothing is installed until the user says Kur.
+    let (path, package) = match path {
+        Some(p) if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("kek")) => (None, Some(p)),
+        other => (other, None),
+    };
     // Embedded faces: nothing has to be installed on the machine.
     typography::load();
     // Bound layers on PostGIS (docs/adr/0505).
@@ -1844,6 +1850,9 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             // Sorunlu eklentiyi bul going on: its question again, over the manager.
             if app.extensions.bisect.is_some() {
                 app.open_extensions();
+            }
+            if let Some(package) = &package {
+                app.review_kek_file(package);
             }
             if let Some(folder) = app.extensions.startup_catalog() {
                 app.open_extension_catalog(&folder, false);

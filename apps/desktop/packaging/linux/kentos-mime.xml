@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- KentOS's file types for shared-mime-info (update-mime-database): a project or drawing (.kcad) and an extension
+     package (.kek). A package double-clicked opens its review in Eklentiler; nothing is installed until Kur
+     (docs/adr/8057 §3, PY-KEK-15). -->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-kentos-kcad">
+    <comment>KentOS çizimi</comment>
+    <comment xml:lang="tr">KentOS çizimi</comment>
+    <glob pattern="*.kcad"/>
+  </mime-type>
+  <mime-type type="application/x-kentos-kek">
+    <comment>KentOS eklenti paketi</comment>
+    <comment xml:lang="tr">KentOS eklenti paketi</comment>
+    <sub-class-of type="application/zip"/>
+    <glob pattern="*.kek" weight="80"/>
+  </mime-type>
+</mime-info>

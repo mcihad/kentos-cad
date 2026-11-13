@@ -1,5 +1,5 @@
 //! The command line that starts a KentOS program in a module (docs/adr/0801):
-//! `kentos-cad [--modul <id>] [dosya]`. The launcher writes it with
+//! `kentos-cad [--modul <id>] [--eklentisiz] [dosya]`. The launcher writes it with
 //! [`command_line`], the program reads it with [`parse`]; the program's own
 //! words (`snapshot`, `kullan`) are its own and come before this.
 
@@ -11,6 +11,9 @@ use crate::Module;
 /// The flag naming the module.
 pub const MODULE_FLAG: &str = "--modul";
 
+/// The flag that starts without extensions (docs/adr/8057 §3): not a file to open.
+pub const SAFE_FLAG: &str = "--eklentisiz";
+
 /// What a program was started with.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Launch {
@@ -18,6 +21,8 @@ pub struct Launch {
     pub module: Option<Module>,
     /// A file to open.
     pub path: Option<PathBuf>,
+    /// Started without extensions (`--eklentisiz`).
+    pub safe: bool,
 }
 
 /// Reads the arguments after the program's name. A file named more than once,
@@ -28,7 +33,9 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Launch, String>
     let mut args = args.into_iter();
     while let Some(arg) = args.next() {
         let text = arg.to_string_lossy();
-        if let Some(value) = text.strip_prefix(&format!("{MODULE_FLAG}=")) {
+        if text == SAFE_FLAG {
+            launch.safe = true;
+        } else if let Some(value) = text.strip_prefix(&format!("{MODULE_FLAG}=")) {
             launch.module = Some(module(value)?);
         } else if text == MODULE_FLAG {
             let value = args
@@ -82,6 +89,7 @@ mod tests {
         let want = Launch {
             module: Some(Module::Map),
             path: Some(PathBuf::from("/a/pafta.kcad")),
+            safe: false,
         };
         assert_eq!(
             parse(os(&["--modul", "harita", "/a/pafta.kcad"])),
@@ -93,7 +101,25 @@ mod tests {
             parse(os(&["x.dxf"])),
             Ok(Launch {
                 module: None,
-                path: Some(PathBuf::from("x.dxf"))
+                path: Some(PathBuf::from("x.dxf")),
+                safe: false,
+            })
+        );
+        // Without extensions is a flag, not a file (it was read as one, the program then tried to open
+        // “--eklentisiz”).
+        assert_eq!(
+            parse(os(&["--modul", "cbs", "--eklentisiz", "/a/paket.kek"])),
+            Ok(Launch {
+                module: Some(Module::Gis),
+                path: Some(PathBuf::from("/a/paket.kek")),
+                safe: true,
+            })
+        );
+        assert_eq!(
+            parse(os(&["--eklentisiz"])),
+            Ok(Launch {
+                safe: true,
+                ..Launch::default()
             })
         );
     }
@@ -111,9 +137,10 @@ mod tests {
 
     #[test]
     fn refusals_say_why() {
-        let e = parse(os(&["--modul", "yol"])).expect_err("unknown");
+        // Yol became a module of its own (plan/road.md): an id no module has.
+        let e = parse(os(&["--modul", "uzay"])).expect_err("unknown");
         assert!(
-            e.contains("“yol”") && e.contains("mimari, harita, cbs"),
+            e.contains("“uzay”") && e.contains("mimari, harita, cbs, yol"),
             "{e}"
         );
         let e = parse(os(&["--modul"])).expect_err("no value");

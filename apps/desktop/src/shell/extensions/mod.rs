@@ -11,6 +11,7 @@
 //! "bir sonraki açılışta eklentisiz başlat" from this window) activates nothing.
 
 mod bisect;
+mod browse;
 mod problems;
 mod ribbon;
 mod search;
@@ -37,26 +38,14 @@ const SAFE_NEXT: &str = "eklentisiz-baslat";
 /// The catalog folder opened last, opened again at the next start (an organisation's share stays the same).
 const CATALOG_FOLDER: &str = "katalog-klasoru";
 
-/// The window's parts.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Part {
-    Installed,
-    Catalog,
-}
-
-impl std::fmt::Display for Part {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            Part::Installed => "Kurulu",
-            Part::Catalog => "Katalog",
-        })
-    }
-}
+pub(crate) use browse::Part;
 
 /// A catalog folder opened in the window.
 pub(crate) struct CatalogFolder {
     pub(crate) folder: PathBuf,
     pub(crate) catalog: Catalog,
+    /// Its entries new since its previous opening (`id@version`, browse.rs).
+    pub(crate) fresh: std::collections::BTreeSet<String>,
 }
 
 /// A package being reviewed before it is installed.
@@ -109,6 +98,10 @@ pub(crate) struct Extensions {
     /// Each installed extension's own icon (its SVG in the package), read when the registry changes, not at every
     /// frame; the puzzle where none.
     pub(crate) icons: std::collections::BTreeMap<String, kentos_ui::icon::Icon>,
+    /// The word the lists are filtered by (browse.rs).
+    pub(crate) query: String,
+    /// The program the lists are filtered by; none: every program.
+    pub(crate) program: Option<kentos_extensions::manifest::Module>,
 }
 
 impl Default for Extensions {
@@ -130,6 +123,8 @@ impl Default for Extensions {
             flash: None,
             bisect: None,
             icons: std::collections::BTreeMap::new(),
+            query: String::new(),
+            program: None,
         }
     }
 }
@@ -180,6 +175,9 @@ pub(crate) enum Event {
     ShowTrouble,
     /// A revealed button's outline goes: its tab, panel and place.
     FlashEnd(&'static str, usize, usize),
+    /// The lists' word, and their program filter by its place in browse.rs's `PROGRAMS`.
+    Query(String),
+    ProgramFilter(usize),
     /// Sorunlu eklentiyi bul (bisect.rs): its window, its start, a round's answer (the problem still seen), leaving,
     /// closing the window (a bisection going on goes on), disabling the one found.
     BisectOpen,
@@ -351,6 +349,22 @@ impl App {
         self.dialog = Some(Dialog::Extensions);
     }
 
+    /// A `.kek` the program was started with, a double click on it (PY-KEK-15): its review over the manager. Opening a
+    /// package never installs or runs it; Kur does, after the review.
+    pub(crate) fn review_kek_file(&mut self, path: &Path) {
+        self.open_extensions();
+        match std::fs::read(path) {
+            Ok(bytes) => {
+                let source = Source {
+                    kind: SourceKind::File,
+                    location: path.display().to_string(),
+                };
+                self.review_package(path.display().to_string(), bytes, source);
+            }
+            Err(e) => self.extensions_say(true, format!("{} okunamadı: {e}.", path.display())),
+        }
+    }
+
     /// Paket yükle (`extensions.install`): the manager, then the file dialog.
     pub(crate) fn install_extension(&mut self) -> Task<Message> {
         self.open_extensions();
@@ -359,6 +373,17 @@ impl App {
 
     fn extensions_say(&mut self, error: bool, words: String) {
         self.extensions.note = Some((error, words));
+    }
+
+    /// The details show the first row of what the list shows now (an extension's id, or a catalog entry's file).
+    fn choose_first(&mut self) {
+        let x = &self.extensions;
+        let part = x.part;
+        self.extensions.chosen = if part.is_catalog() {
+            x.entries_of(part).first().map(|e| e.file.clone())
+        } else {
+            x.installed_of(part).first().map(|e| e.id.clone())
+        };
     }
 
     /// An extension's name, as the user knows it; its id when it is not installed.
@@ -406,18 +431,15 @@ impl App {
         match event {
             Event::Part(part) => {
                 self.extensions.part = part;
-                self.extensions.chosen = match part {
-                    Part::Installed => self
-                        .extensions
-                        .registry
-                        .as_ref()
-                        .and_then(|r| r.extensions().first().map(|e| e.id.clone())),
-                    Part::Catalog => self
-                        .extensions
-                        .catalog
-                        .as_ref()
-                        .and_then(|c| c.catalog.latest(true).first().map(|e| e.file.clone())),
-                };
+                self.choose_first();
+            }
+            Event::Query(text) => {
+                self.extensions.query = text;
+                self.choose_first();
+            }
+            Event::ProgramFilter(i) => {
+                self.extensions.program = browse::PROGRAMS.get(i).and_then(|(m, _)| *m);
+                self.choose_first();
             }
             Event::Choose(id) => {
                 self.extensions.chosen = Some(id);
@@ -908,20 +930,29 @@ impl App {
             .and_then(|text| Catalog::read(&text).map_err(|p| p.message));
         match read {
             Ok(catalog) => {
+                // What came since its previous opening (browse.rs): Yeni.
+                let fresh = browse::fresh_since_last(self.extensions.root.as_deref(), &catalog);
+                let count = catalog.latest(true).len();
+                let name = catalog.name.clone();
+                self.extensions.catalog = Some(CatalogFolder {
+                    folder: folder.to_path_buf(),
+                    catalog,
+                    fresh,
+                });
                 if shown {
-                    let count = catalog.latest(true).len();
-                    self.extensions_say(false, format!("“{}”: {count} eklenti.", catalog.name));
-                    self.extensions.chosen = catalog.latest(true).first().map(|e| e.file.clone());
-                    self.extensions.part = Part::Catalog;
+                    self.extensions_say(false, format!("“{name}”: {count} eklenti."));
+                    // Updates first when there are, else what can be installed.
+                    self.extensions.part = if self.extensions.count(Part::Updates) > 0 {
+                        Part::Updates
+                    } else {
+                        Part::Available
+                    };
+                    self.choose_first();
                     if let Some(root) = &self.extensions.root {
                         let _ =
                             std::fs::write(root.join(CATALOG_FOLDER), folder.display().to_string());
                     }
                 }
-                self.extensions.catalog = Some(CatalogFolder {
-                    folder: folder.to_path_buf(),
-                    catalog,
-                });
             }
             Err(why) if shown => self.extensions_say(true, why),
             Err(why) => self.warn(format!("Eklenti kataloğu açılamadı: {why}")),

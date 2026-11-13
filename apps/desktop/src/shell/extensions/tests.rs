@@ -278,7 +278,11 @@ fn a_catalog_folder_lists_its_packages_and_installs_the_verified_one() {
     let mut gis = app(&root, Some(Module::Gis));
     gis.open_extensions();
     let _ = gis.extensions_event(Event::PickedCatalog(Some(folder.clone())));
-    assert_eq!(gis.extensions.part, Part::Catalog);
+    assert_eq!(
+        gis.extensions.part,
+        Part::Available,
+        "nothing to update: what can be installed"
+    );
     assert_eq!(
         gis.extensions.chosen.as_deref(),
         Some("kent-rehberi-1.0.0.kek")
@@ -698,4 +702,140 @@ fn a_packages_own_icons_are_drawn() {
     let _ = gis.extensions_view();
     let _ = gis.ribbon(false);
     let _ = std::fs::remove_dir_all(&root);
+}
+
+/// Eklentiler's views (D1): Kurulu, Bulunabilir, Güncellenebilir, Yeni and Sorunlu with their counts; a word and the
+/// program filter the lists; Yeni is what came to the catalog since its previous opening.
+#[test]
+fn the_manager_lists_by_part_word_and_program() {
+    let root = temp("gorunum");
+    let folder = temp("gorunum-katalog");
+    let write_catalog = |packages: &[(&str, Vec<u8>)]| {
+        for (file, bytes) in packages {
+            std::fs::write(folder.join(file), bytes).unwrap();
+        }
+        let list: Vec<(String, Vec<u8>)> = packages
+            .iter()
+            .map(|(f, b)| ((*f).to_owned(), b.clone()))
+            .collect();
+        let index = kentos_extensions::catalog::index(
+            "Örnek Belediyesi eklentileri",
+            &list,
+            &Limits::default(),
+        )
+        .unwrap();
+        std::fs::write(folder.join("index.json"), index.to_json()).unwrap();
+    };
+    let kent = package("ornek-kent", |_| {});
+    let altlik = package("ornek-altlik", |_| {});
+    write_catalog(&[
+        ("kent-1.0.0.kek", kent.clone()),
+        ("altlik-1.0.0.kek", altlik.clone()),
+    ]);
+    let mut gis = app(&root, Some(Module::Gis));
+    gis.open_extensions();
+    let _ = gis.extensions_event(Event::PickedCatalog(Some(folder.clone())));
+    let counts =
+        |app: &App| -> Vec<usize> { Part::ALL.iter().map(|p| app.extensions.count(*p)).collect() };
+    // Kurulu, Bulunabilir, Güncellenebilir, Yeni (a first opening: all), Sorunlu.
+    assert_eq!(counts(&gis), [0, 2, 0, 2, 0]);
+    assert_eq!(gis.extensions.part, Part::Available);
+    for part in Part::ALL {
+        let _ = gis.extensions_event(Event::Part(part));
+        let _ = gis.extensions_view();
+    }
+    // Kent Rehberi from the catalog.
+    let _ = gis.extensions_event(Event::Get("kent-1.0.0.kek".into()));
+    let _ = gis.extensions_event(Event::Install);
+    assert_eq!(counts(&gis), [1, 1, 0, 2, 0]);
+    // A word: its name, its summary, a publisher; nothing found says so.
+    let _ = gis.extensions_event(Event::Query("altlık".into()));
+    assert_eq!(counts(&gis), [0, 1, 0, 1, 0]);
+    let _ = gis.extensions_event(Event::Query("öznitelik tablosu".into()));
+    assert_eq!(counts(&gis), [1, 0, 0, 1, 0], "Kent Rehberi's summary");
+    let _ = gis.extensions_event(Event::Query("yok böyle".into()));
+    assert_eq!(counts(&gis), [0, 0, 0, 0, 0]);
+    let _ = gis.extensions_view();
+    let _ = gis.extensions_event(Event::Query(String::new()));
+    // The program: KentOS Mimari's has neither; KentOS Harita's has Örnek altlıklar alone.
+    let mimari = super::browse::PROGRAMS
+        .iter()
+        .position(|(m, _)| *m == Some(kentos_extensions::manifest::Module::Mimari))
+        .unwrap();
+    let harita = super::browse::PROGRAMS
+        .iter()
+        .position(|(m, _)| *m == Some(kentos_extensions::manifest::Module::Harita))
+        .unwrap();
+    let _ = gis.extensions_event(Event::ProgramFilter(mimari));
+    assert_eq!(counts(&gis), [0, 0, 0, 0, 0]);
+    let _ = gis.extensions_event(Event::ProgramFilter(harita));
+    assert_eq!(counts(&gis), [0, 1, 0, 1, 0]);
+    let _ = gis.extensions_event(Event::ProgramFilter(0));
+    // Kent Rehberi 1.1.0 comes to the catalog: an update, and the one new thing since the previous opening.
+    let newer = package("ornek-kent", |m| m["version"] = "1.1.0".into());
+    write_catalog(&[
+        ("kent-1.0.0.kek", kent),
+        ("kent-1.1.0.kek", newer),
+        ("altlik-1.0.0.kek", altlik),
+    ]);
+    gis.open_extension_catalog(&folder, true);
+    assert_eq!(
+        gis.extensions.part,
+        Part::Updates,
+        "updates first when there are"
+    );
+    assert_eq!(counts(&gis), [1, 1, 1, 1, 0]);
+    assert_eq!(gis.extensions.entries_of(Part::New)[0].version, "1.1.0");
+    // Sorunlu: an extension with an error standing.
+    gis.extension_failed(
+        KENT,
+        "form “bina-denetimi”",
+        "form_invalid",
+        "Form okunamadı.",
+        None,
+    );
+    assert_eq!(counts(&gis)[4], 1);
+    let _ = gis.extensions_event(Event::Part(Part::Troubled));
+    assert_eq!(gis.extensions.chosen.as_deref(), Some(KENT));
+    let _ = gis.extensions_view();
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&folder);
+}
+
+/// A `.kek` double-clicked (PY-KEK-15): the program started with it opens its review over Eklentiler; opening it
+/// installs and runs nothing; a file that cannot be read says so.
+#[test]
+fn a_kek_file_opened_is_reviewed_not_installed() {
+    let root = temp("cift-tik");
+    let files = temp("cift-tik-dosya");
+    let file = files.join("kent-rehberi.kek");
+    std::fs::write(&file, package("ornek-kent", |_| {})).unwrap();
+    let mut gis = app(&root, Some(Module::Gis));
+    gis.review_kek_file(&file);
+    assert_eq!(gis.dialog, Some(Dialog::Extensions));
+    let pending = gis.extensions.review.as_ref().expect("its review");
+    assert_eq!(pending.source.kind, SourceKind::File);
+    assert!(pending.review.installable);
+    assert!(
+        gis.extensions
+            .registry
+            .as_ref()
+            .unwrap()
+            .extensions()
+            .is_empty(),
+        "nothing installed by opening it"
+    );
+    assert!(gis.extension_review_window().is_some());
+    gis.extensions.review = None;
+    gis.review_kek_file(&files.join("yok.kek"));
+    assert!(
+        gis.extensions
+            .note
+            .as_ref()
+            .is_some_and(|(error, words)| *error && words.contains("okunamadı")),
+        "{:?}",
+        gis.extensions.note
+    );
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&files);
 }
