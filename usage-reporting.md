@@ -203,6 +203,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** İkinci nokta seçildikten sonra düz merdiven Enter ile bitirilebilirken henüz verilmemiş üçüncü nokta hata olarak gösterilmemeli; imleç anlamlı bir dönüş noktası belirlemeden önizleme bekleme durumunda kalmalı. Gerçekten aynı noktaya üçüncü kez tıklanırsa açık doğrulama gösterilebilir.
 - **İnceleme:** `crates/native/interaction/src/arch_tools.rs` merdiven etkileşim aşamaları ve önizlemede `crates/shared/contracts/src/arch_elements.rs` yol doğrulamasının ne zaman çağrıldığı incelensin; işlenen veri doğrulaması zayıflatılmasın.
 - **Kabul:** Farklı yönlerde düz, L ve U merdivenleri; ikinci nokta sonrası imleç durağan/hareketli; Enter, geçerli dönüş tıklaması, aynı noktaya tıklama ve Esc ayrı denenmeli.
+- **Durum (13.11.2026):** düzeltildi — Merdiven ve Rampa, ikinci (ya da sonraki) nokta verildikten sonra imleç o noktada dururken onu üçüncü nokta saymıyor: önizleme o ana kadar verilen yolu (düz kol) çiziyor, «yolunun 2. ve 3. noktası aynı» hatası çıkmıyor ve Enter merdiveni/rampayı çiziyor; imleç hareket edince dönüş noktası önizlemesi eskisi gibi. Yol doğrulaması (kaydedilen veride) değişmedi. Test `the_pointer_on_the_point_just_given_is_no_third_point` (merdiven ve rampa); merdiven/rampa testleri ve izler geçiyor. Resim çekilmedi (değişiklik, imleç yanındaki hatanın kalkması).
 
 #### UR-019 — Katman paneli düğmesi katman listesini açmıyor
 

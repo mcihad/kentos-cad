@@ -163,3 +163,25 @@ fn balansman_balances_the_turn_and_says_its_narrowest_tread() {
     let s = stair(&b);
     assert_eq!((s.winders, s.landing), (None, None), "{s:?}");
 }
+
+/// UR-018: the second point given, the pointer still on it: no error of a third point not given yet, the plan the
+/// straight flight Enter draws; a ramp the same. Moved on to a turn, the L's plan.
+#[test]
+fn the_pointer_on_the_point_just_given_is_no_third_point() {
+    for tool in ["stair", "ramp"] {
+        let mut b = bench();
+        b.start(tool);
+        b.click(0., 0.);
+        b.move_to(0., 9.);
+        b.click(0., 9.);
+        let preview = b.session.preview(&Default::default()).expect("the plan drawn");
+        let said = preview.tag.as_ref().map(|t| t.lines.join(" ")).unwrap_or_default();
+        assert!(!said.contains("noktası aynı"), "{tool}: {said}");
+        assert_ne!(preview.tag_tone, kentos_interaction::Tone::Danger, "{tool}: {said}");
+        b.confirm();
+        assert!(
+            matches!(b.newest(), Entity::Stair(_) | Entity::Ramp(_)),
+            "{tool}: Enter draws it"
+        );
+    }
+}

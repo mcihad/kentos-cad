@@ -1341,9 +1341,12 @@ impl FlightTool {
 
     fn line(&self, with_hover: bool) -> Vec<Vec2> {
         let mut pts = self.pts.clone();
+        // The pointer still on the point just given is no next point (UR-018): the preview is the path given so far,
+        // not a turn of no length the path check would call an error.
         if with_hover
             && pts.len() < kentos_commands::MAX_FLIGHT_POINTS
             && let Some(h) = self.hover
+            && pts.last().is_none_or(|l| (l.x - h.x).hypot(l.y - h.y) > 1e-6)
         {
             pts.push(h);
         }
