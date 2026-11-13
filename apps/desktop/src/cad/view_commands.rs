@@ -46,6 +46,17 @@ impl App {
     /// together and come back as they were: their sides, tabs, sizes and
     /// floating windows (the web hides its right panel whole).
     pub(crate) fn toggle_right_panel(&mut self) {
+        // Katman paneli (UR-019): open with another tab in front (Bloklar, İşlemler…), it brings the layer list forward
+        // where it is docked rather than closing; with the list in front it closes as before.
+        let layers = self.shows_panel(Panel::Layers);
+        if layers && self.right_panel_shown() && self.layers_hidden_by_another() {
+            if !self.docks.contains(Panel::Layers) {
+                self.docks.show(Panel::Layers, Side::Right);
+            }
+            self.docks
+                .update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
+            return;
+        }
         if self.right_panel_shown() {
             self.hidden_docks = Some(self.docks.clone());
             for panel in SIDE_PANELS {
@@ -53,7 +64,14 @@ impl App {
             }
         } else {
             match self.hidden_docks.take() {
-                Some(docks) => self.docks = docks,
+                // As it was, the layer list in front (UR-019).
+                Some(docks) => {
+                    self.docks = docks;
+                    if layers && self.layers_hidden_by_another() {
+                        self.docks
+                            .update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
+                    }
+                }
                 // Folded to their titles: opened where they are; Katmanlar in front of its slot, as at start.
                 None => {
                     for panel in SIDE_PANELS {
@@ -65,6 +83,21 @@ impl App {
                         .update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
                 }
             }
+        }
+    }
+
+    /// Whether the layer list's stack has another panel than the pair (Katmanlar, Öznitelikler) in front: Bloklar,
+    /// İşlemler… (UR-019).
+    fn layers_hidden_by_another(&self) -> bool {
+        use kentos_ui::widget::docking::Slot;
+        match self.docks.slot(Panel::Layers) {
+            Some(Slot::Docked(side, i)) => self
+                .docks
+                .stacks(side)
+                .get(i)
+                .and_then(|s| s.active())
+                .is_some_and(|front| !matches!(front, Panel::Layers | Panel::Properties)),
+            _ => false,
         }
     }
 
@@ -212,6 +245,55 @@ mod tests {
                 vec!["help.about"]
             ]
         );
+    }
+
+    /// UR-019: Katman paneli with Bloklar in front of the layers' stack brings the layer list forward instead of
+    /// closing; with the list in front it closes, and opened again the list is in front.
+    #[test]
+    fn the_layer_panel_button_brings_the_layer_list_forward() {
+        let mut app = app_with_drawing();
+        if !app.docks.contains(Panel::Blocks) {
+            app.docks.show(Panel::Blocks, Side::Right);
+        }
+        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Blocks));
+        assert!(app.docks.is_shown(Panel::Blocks) && !app.docks.is_shown(Panel::Layers));
+        run(&mut app, "view.rightPanel");
+        assert!(app.docks.is_shown(Panel::Layers), "the list in front");
+        assert!(app.right_panel_shown(), "not closed");
+        run(&mut app, "view.rightPanel");
+        assert!(!app.right_panel_shown(), "with the list in front it closes");
+        run(&mut app, "view.rightPanel");
+        assert!(app.docks.is_shown(Panel::Layers), "opened again with the list in front");
+    }
+
+    /// UR-019's pictures (`.run/gui-evidence/kullanim-UR-019/`): Bloklar in front, then Katman paneli pressed.
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn layer_panel_screens() {
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-019");
+        std::fs::create_dir_all(&out).expect("a folder");
+        for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+            let mut app = app_with_drawing();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            if !app.docks.contains(Panel::Blocks) {
+                app.docks.show(Panel::Blocks, Side::Right);
+            }
+            app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Blocks));
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            for step in ["once", "sonra"] {
+                if step == "sonra" {
+                    run(&mut app, "view.rightPanel");
+                }
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("katman-paneli-{step}-{name}.png"));
+                snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+                println!("{}", file.display());
+            }
+        }
     }
 
     #[test]

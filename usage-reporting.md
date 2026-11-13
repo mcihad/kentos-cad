@@ -213,6 +213,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** `Katman paneli` eylemi paneli açıp katman listesini etkinleştirmeli; genel panel gizleme gösterme ayrı ad ve komut olarak kalmalı. Liste zaten etkinse kapatma davranışı açık ve tutarlı tanımlanmalı.
 - **Başlangıç noktası:** `apps/desktop/src/ribbon_panels.rs` içindeki katman grubunun `view.rightPanel` bağlantısı ve `apps/desktop/src/view_commands.rs` sağ panel geçişi.
 - **Kabul:** Bloklar, İşlemler ve başka sekmeler açıkken, panel açık/kapalıyken düğme sınanmalı; F4 ve kullanıcı panel düzeni korunmalı; liste klavyeyle erişilebilir olmalı.
+- **Durum (13.11.2026):** düzeltildi — Giriş › Katman paneli (F4, Katman ve öznitelik paneli) artık katman listesine götürüyor: panel açıkken listenin yığınında Bloklar, İşlemler gibi başka bir sekme öndeyse paneli kapatmak yerine Katmanlar sekmesini öne getiriyor; liste öndeyken eskisi gibi paneli kapatıyor; kapalı panel yeniden açıldığında önde başka bir sekme kalmışsa liste öne geliyor. Katmanlar ile Öznitelikler aynı yığında ve Öznitelikler öndeyse F4 paneli olduğu gibi kapatıp açıyor (kullanıcı düzeni korunuyor). Testler `the_layer_panel_button_brings_the_layer_list_forward`, `f4_brings_the_panels_back_as_they_were`, `layout_tests`; resimler `.run/gui-evidence/kullanim-UR-019/` (önce Bloklar, sonra Katmanlar).
 
 #### UR-020 — Hızlı ölçü kaynak çizgi uzatılınca eski değerde kalıyor
 
