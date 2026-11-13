@@ -364,8 +364,12 @@ impl App {
         if let Some(task) = self.while_opening(&message) {
             return task;
         }
-        // While Python code runs the drawing takes no other edit (python/).
+        // While Python code runs the drawing takes no other edit (python/), nor while an extension's code may write it
+        // (extensions/runner.rs).
         if let Some(task) = self.while_scripting(&message) {
+            return task;
+        }
+        if let Some(task) = self.while_extension_writes(&message) {
             return task;
         }
         // Nor while a large import goes in, a frame at a time (exchange/drawing_import.rs).

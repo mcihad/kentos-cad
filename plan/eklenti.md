@@ -794,6 +794,15 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
 
 [argon ADIM 19; EKL-04; PY-RUN-04…08, 10…12, 14…16, 19…23; PY-TOOL-01…23; PY-UI-07]
 
+**Durum (14 Kasım): birinci dilim — komutlar** (ADR 8057 §6). Yapıldı: eklenti sürümü başına süreç ve protokol 1
+(eklenti, sürüm, içerik özeti, çalışma kimliği), tembel içe aktarma ve işaret denetimi, aracı (`document.read` /
+`document.write`, ajan kuralıyla okuma, yalnız başladığı çizim), tek geri alma adımı ve hatada/Durdur'da geri alma,
+iş birlikli Durdur (iptalden 5,5 ms sonra) ve 5 sn'de süreç sonlandırma, sınırlı çıktı ve ayrı kanallar, iz kayıtlı
+hata ve Ayrıntı'lı bildirim, çökme sayacı, yazan çalıştırmada çizimin beklemesi, şerit/bağlam menüsü/komut aramada
+aynı komut kimliği, `kentos.ext` adları (§3.4 örneğiyle). Kalan: İşlemler (tanım, parametre penceresi, NumPy aracı,
+tipli sonuç ve yeni katman, `ToolHost`), ifade işlevleri, form eylemi, MCP eşdeğerliği ve sürümlü komut kaydı,
+boştaki sürecin kapanması ve bellek ölçümü, kabulün P10–P13'ü.
+
 **Süreç ve aracı:**
 - [ ] Her eklenti sürümü için ayrı süreç; IPC protokol sürümü, eklenti/sürüm/özet, istek/çalışma/oturum kimliği ve zaman
   aşımı taşır [PY-RUN-04]. Kod yürütme tembel başlar; tanımlar kod yüklenmeden gösterilir [PY-RUN-05]. Aracı bağlamı;

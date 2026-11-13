@@ -158,6 +158,12 @@ impl App {
                 "Masaüstü şu an meşgul (konsolda kod çalışıyor ya da çizim açılıyor): biraz sonra yeniden deneyin.",
             ));
         }
+        if let Some(writer) = self.extension_writing() {
+            return Err(refused(
+                "busy",
+                &format!("Masaüstü şu an meşgul: {writer} çizime yazıyor. Biraz sonra yeniden deneyin."),
+            ));
+        }
         let mut params = request.get("params").cloned().unwrap_or_else(|| json!({}));
         // The drawing it names, taken off the parameters the host reads.
         let named = params

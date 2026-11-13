@@ -348,6 +348,11 @@ fn mask_named(text: &str) -> String {
         if name.is_empty() || !SECRETS.iter().any(|s| name.contains(s)) {
             continue;
         }
+        // A traceback's last line names an exception, not a secret: `KeyError: 'parsel'` is the key it missed, the
+        // clue a failure is read by (an extension's run, 14 November 2026: it was written `KeyError: '***'`).
+        if c == ':' && ["error", "exception", "warning"].iter().any(|e| name.ends_with(e)) {
+            continue;
+        }
         // `scheme://` is not a name: `https:` would otherwise hide an address.
         if c == ':' && chars.get(i) == Some(&'/') {
             continue;
@@ -503,7 +508,13 @@ mod tests {
                 "Authorization: Bearer ***",
             ),
             ("şifre=1234 ve jeton: abc", "şifre=*** ve jeton: ***"),
-            // What is not a secret stays as it was.
+            // What is not a secret stays as it was: an exception's name is not a secret's.
+            ("KeyError: 'parsel'", "KeyError: 'parsel'"),
+            (
+                "requests.exceptions.InvalidTokenError: süresi dolmuş",
+                "requests.exceptions.InvalidTokenError: süresi dolmuş",
+            ),
+            ("apiKeyWarning=abc", "apiKeyWarning=***"),
             (
                 "Sunucu yanıt vermedi (HTTP 503): https://tiles.ornek.bel.tr/{z}/{x}/{y}.png",
                 "Sunucu yanıt vermedi (HTTP 503): https://tiles.ornek.bel.tr/{z}/{x}/{y}.png",

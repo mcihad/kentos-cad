@@ -19,7 +19,7 @@ mod agents;
 mod assist;
 pub(crate) mod echo;
 mod selection;
-mod host;
+pub(crate) mod host;
 pub(crate) mod link;
 pub(crate) mod script;
 mod view;
@@ -222,6 +222,45 @@ fn failed(error: impl Into<String>) -> RunResult {
     }
 }
 
+/// The selection's two requests (`select`, `selection`) as the console answers them: an extension's process asks them
+/// too (extensions/runner.rs).
+pub(crate) fn selection_answer(
+    doc: &kentos_domain::Document,
+    selected: &mut kentos_interaction::Selection,
+    method: &str,
+    params: &Value,
+) -> Result<Value, HeadlessError> {
+    selection::answer(doc, selected, method, params)
+}
+
+/// Whether a message edits the drawing, and so waits while code writes it (the console's, an extension's): `Some(true)`
+/// for one that waits silently (a shortcut: the console's own keys are its editor's), `Some(false)` for one the user is
+/// told about once, `None` for one that goes through (looking, panning, Durdur).
+pub(crate) fn held(message: &Message) -> Option<bool> {
+    match message {
+        Message::Key(_) => Some(true),
+        Message::Run(_)
+        | Message::RunKept(_)
+        | Message::RunMethod { .. }
+        | Message::SplitChosen { .. }
+        | Message::CommandSubmitted
+        | Message::CommandRun(_)
+        | Message::PromptOption(_)
+        | Message::Map(map::Event::PointCalc(_))
+        | Message::LayerVisible(_)
+        | Message::LayerLocked(_)
+        | Message::Layer(_)
+        | Message::Properties(_)
+        | Message::TextField(_)
+        | Message::DrawingMenu(_)
+        | Message::Settings(_)
+        | Message::Viewport(viewport::Event::Pressed(_) | viewport::Event::RightClick(_)) => {
+            Some(false)
+        }
+        _ => None,
+    }
+}
+
 fn no_document() -> HeadlessError {
     HeadlessError::new(
         "no_document",
@@ -340,6 +379,16 @@ impl App {
     /// Sends the REPL's request to the process (started when there is none);
     /// the run is one undo step from its first write.
     fn python_exec(&mut self, request: Request, file: Option<String>) -> Task<Message> {
+        // One code writes the drawing at a time: an extension's run is one undo step too (extensions/runner.rs).
+        if let Some(writer) = self.extension_writing() {
+            self.python.repl.finish(
+                request.id,
+                failed(format!(
+                    "{writer} çizime yazıyor: bitince ya da Durdur'a basılınca yeniden çalıştırın."
+                )),
+            );
+            return view::follow();
+        }
         let mut started = Task::none();
         if self.python.host.is_none() {
             match self.python_start() {
@@ -729,29 +778,7 @@ impl App {
     /// said once (the web's words for a busy document).
     pub(crate) fn while_scripting(&mut self, message: &Message) -> Option<Task<Message>> {
         let run = self.python.running.as_mut()?;
-        let quiet = match message {
-            // Shortcuts wait silently; the console's own keys are its editor's.
-            Message::Key(_) => true,
-            Message::Run(_)
-            | Message::RunKept(_)
-            | Message::RunMethod { .. }
-            | Message::SplitChosen { .. }
-            | Message::CommandSubmitted
-            | Message::CommandRun(_)
-            | Message::PromptOption(_)
-            | Message::Map(map::Event::PointCalc(_))
-            | Message::LayerVisible(_)
-            | Message::LayerLocked(_)
-            | Message::Layer(_)
-            | Message::Properties(_)
-            | Message::TextField(_)
-            | Message::DrawingMenu(_)
-            | Message::Settings(_)
-            | Message::Viewport(viewport::Event::Pressed(_) | viewport::Event::RightClick(_)) => {
-                false
-            }
-            _ => return None,
-        };
+        let quiet = held(message)?;
         if !quiet && !run.told {
             run.told = true;
             self.output(

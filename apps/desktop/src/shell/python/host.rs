@@ -4,6 +4,7 @@
 //! of its own; what the app sends goes through a writer thread, so a Python
 //! that stops reading never holds the UI thread.
 
+use std::ffi::OsStr;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -70,12 +71,38 @@ impl Host {
         generation: u64,
         to: impl Fn(u64, Said) -> Message + Send + 'static,
     ) -> Result<(Host, Task<Message>), String> {
-        let mut child = Command::new(python)
-            .args(["-m", "kentos.host"])
+        Host::start_with(
+            python,
+            &[OsStr::new("-m"), OsStr::new("kentos.host")],
+            generation,
+            to,
+        )
+    }
+
+    /// Starts Python with `args` (`-I -X pycache_prefix=… -m kentos.ext_host`
+    /// for an extension's process, extensions/runner.rs), its channel as the
+    /// console's. On Windows without a console window: started from a windowed
+    /// program, a console program would flash a black one.
+    pub fn start_with(
+        python: &Path,
+        args: &[&OsStr],
+        generation: u64,
+        to: impl Fn(u64, Said) -> Message + Send + 'static,
+    ) -> Result<(Host, Task<Message>), String> {
+        let mut command = Command::new(python);
+        command
+            .args(args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .env("PYTHONIOENCODING", "utf-8")
+            .env("PYTHONIOENCODING", "utf-8");
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+            command.creation_flags(CREATE_NO_WINDOW);
+        }
+        let mut child = command
             .spawn()
             .map_err(|e| {
                 format!(

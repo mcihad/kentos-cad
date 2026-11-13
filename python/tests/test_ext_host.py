@@ -1,0 +1,276 @@
+"""An extension's own process (kentos.ext_host, plan/eklenti.md ADIM 19) against a stand-in KentOS: this test starts
+`python -m kentos.ext_host` as KentOS does, says hello with a package of its own, invokes its contributions and answers
+their requests on a headless drawing, as KentOS answers them on its open one."""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import textwrap
+import time
+import unittest
+from typing import Any
+
+import kentos.cad as cad
+
+LOGIC = '''
+"""A stand-in extension's functions."""
+import os
+import pathlib
+
+from kentos import ext
+
+# Imported only when a contribution is invoked: this file says when.
+pathlib.Path(os.environ["KENTOS_TEST_IMPORTED"]).write_text("imported")
+
+
+@ext.command("count-layers")
+def count_layers(ctx):
+    print("katmanlar okunuyor")
+    names = [layer.name for layer in ctx.doc.layers()]
+    ctx.log(f"{len(names)} katman")
+    return ctx.report([{"katman": n} for n in names], title="Katmanlar")
+
+
+@ext.command("loop")
+def loop(ctx):
+    n = 0
+    while True:
+        n += 1
+        ctx.check()
+
+
+@ext.command("raises")
+def raises(ctx):
+    return 1 / 0
+
+
+@ext.command("ordered")
+def ordered(ctx):
+    return ctx.report([{"yapı": "B1", "mesafe_m": 2.0}, {"yapı": "B2", "durum": "parsel dışında"}])
+
+
+@ext.command("schema")
+def schema(ctx):
+    return ctx.apply_declarative_schema("schema.json")
+
+
+@ext.command("another-id")
+def wrong_id(ctx):
+    return ctx.message("çalışmamalıydı")
+
+
+def unmarked(ctx):
+    return ctx.message("çalışmamalıydı")
+'''
+
+
+class Kentos:
+    """Runs an extension's process as KentOS starts it (extensions/runner.rs `interpreter_args`) and answers it on a
+    headless drawing."""
+
+    def __init__(self, package: str, imported: str, pycache: str) -> None:
+        self.drawing = cad.Document.new("Eklenti", srid=5256)
+        self.session = self.drawing._session
+        env = dict(os.environ, KENTOS_TEST_IMPORTED=imported)
+        self.process = subprocess.Popen(
+            [sys.executable, "-I", "-X", f"pycache_prefix={pycache}", "-m", "kentos.ext_host"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+        )
+        self.package = package
+        self.runs = 0
+
+    def receive(self) -> dict[str, Any]:
+        assert self.process.stdout is not None
+        line = self.process.stdout.readline()
+        assert line, "the process ended"
+        message: dict[str, Any] = json.loads(line)
+        return message
+
+    def send(self, message: dict[str, Any]) -> None:
+        assert self.process.stdin is not None
+        self.process.stdin.write((json.dumps(message) + "\n").encode())
+        self.process.stdin.flush()
+
+    def hello(self, protocol: int = 1) -> dict[str, Any]:
+        self.send(
+            {
+                "type": "hello",
+                "protocol": protocol,
+                "extension": "tr.ornek.deneme",
+                "version": "1.0.0",
+                "digest": "sha256:0",
+                "source": self.package,
+                "paths": ["src"],
+            }
+        )
+        return self.receive()
+
+    def invoke(self, local: str, handler: str, cancel_after: float | None = None) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        """(done, what came before it)."""
+        self.runs += 1
+        self.send(
+            {
+                "type": "invoke",
+                "id": self.runs,
+                "kind": "command",
+                "local": local,
+                "handler": handler,
+                "params": {},
+                "settings": {},
+                "document": True,
+            }
+        )
+        if cancel_after is not None:
+            time.sleep(cancel_after)
+            self.send({"type": "cancel", "id": self.runs})
+        said: list[dict[str, Any]] = []
+        while True:
+            m = self.receive()
+            if m["type"] == "call":
+                self.answer(m)
+            elif m["type"] == "done":
+                assert m["id"] == self.runs
+                return m, said
+            else:
+                said.append(m)
+
+    def answer(self, call: dict[str, Any]) -> None:
+        method, params = call["method"], call["params"]
+        if method in ("summary", "layers"):
+            result: Any = json.loads(getattr(self.session, method)())
+            self.send({"type": "reply", "id": call["id"], "ok": True, "result": result})
+        else:
+            self.send({"type": "reply", "id": call["id"], "ok": False, "code": "capability", "message": method})
+
+    def close(self) -> None:
+        if self.process.poll() is None:
+            self.send({"type": "quit"})
+            try:
+                self.process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+        for stream in (self.process.stdin, self.process.stdout, self.process.stderr):
+            if stream is not None:
+                stream.close()
+
+
+class ExtHostTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.folder = tempfile.mkdtemp(prefix="kentos-ext-host-")
+        source = os.path.join(self.folder, "src", "deneme")
+        os.makedirs(source)
+        with open(os.path.join(source, "__init__.py"), "w", encoding="utf-8") as f:
+            f.write("")
+        with open(os.path.join(source, "logic.py"), "w", encoding="utf-8") as f:
+            f.write(textwrap.dedent(LOGIC))
+        self.imported = os.path.join(self.folder, "imported.txt")
+        self.pycache = tempfile.mkdtemp(prefix="kentos-ext-pyc-")
+        self.kentos = Kentos(self.folder, self.imported, self.pycache)
+
+    def tearDown(self) -> None:
+        self.kentos.close()
+        shutil.rmtree(self.folder, ignore_errors=True)
+        shutil.rmtree(self.pycache, ignore_errors=True)
+
+    def test_code_is_imported_only_when_invoked_and_answers_with_its_report(self) -> None:
+        ready = self.kentos.hello()
+        self.assertEqual(ready["type"], "ready")
+        self.assertEqual(ready["protocol"], 1)
+        self.assertFalse(os.path.exists(self.imported), "nothing imported at hello")
+        done, said = self.kentos.invoke("count-layers", "deneme.logic:count_layers")
+        self.assertTrue(done["ok"], done)
+        self.assertTrue(os.path.exists(self.imported))
+        result = done["result"]
+        self.assertEqual(result["kind"], "report")
+        self.assertEqual(result["title"], "Katmanlar")
+        self.assertGreaterEqual(len(result["rows"]), 1)
+        printed = [m for m in said if m["type"] == "out"]
+        self.assertEqual(printed[0]["text"], "katmanlar okunuyor\n")
+        self.assertEqual(printed[0]["id"], 1, "what a run prints carries its id")
+        logged = [m for m in said if m["type"] == "log"]
+        self.assertTrue(logged and logged[0]["text"].endswith("katman"))
+
+    def test_a_reports_columns_keep_the_order_its_rows_give(self) -> None:
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("ordered", "deneme.logic:ordered")
+        self.assertEqual(done["result"]["columns"], ["yapı", "mesafe_m", "durum"])
+
+    def test_what_this_kentos_cannot_do_is_said_as_unavailable(self) -> None:
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("schema", "deneme.logic:schema")
+        self.assertFalse(done["ok"])
+        self.assertTrue(done.get("unavailable"), done)
+        self.assertIn("schema.json", done["message"])
+        self.assertNotIn("error", done, "no traceback: the extension's code did not fail")
+
+    def test_the_package_stays_as_installed(self) -> None:
+        # Its integrity check refuses files added to it: the bytecode goes to the environment's folder (14 November 2026:
+        # an extension stopped at the next start after its first run).
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("count-layers", "deneme.logic:count_layers")
+        self.assertTrue(done["ok"], done)
+        added = [
+            os.path.join(root, name)
+            for root, dirs, files in os.walk(os.path.join(self.folder, "src"))
+            for name in dirs + files
+            if name == "__pycache__" or name.endswith(".pyc")
+        ]
+        self.assertEqual(added, [])
+        compiled = [name for _, _, files in os.walk(self.pycache) for name in files if name.startswith("logic.")]
+        self.assertTrue(compiled, "its bytecode is kept in the environment's folder")
+
+    def test_a_function_not_marked_as_the_manifest_says_is_refused(self) -> None:
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("count-layers", "deneme.logic:wrong_id")
+        self.assertTrue(done.get("refused"), done)
+        self.assertIn("@ext.command(\"another-id\")", done["message"])
+        done, _ = self.kentos.invoke("count-layers", "deneme.logic:unmarked")
+        self.assertTrue(done.get("refused"), done)
+        self.assertIn("işaretsiz", done["message"])
+        done, _ = self.kentos.invoke("count-layers", "deneme.logic:missing")
+        self.assertTrue(done.get("refused"), done)
+        done, _ = self.kentos.invoke("count-layers", "no-colon")
+        self.assertTrue(done.get("refused"), done)
+
+    def test_an_exception_is_reported_with_its_traceback(self) -> None:
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("raises", "deneme.logic:raises")
+        self.assertFalse(done["ok"])
+        self.assertEqual(done["exception"], "ZeroDivisionError")
+        self.assertIn("1 / 0", done["error"])
+
+    def test_durdur_is_heard_while_the_code_computes(self) -> None:
+        self.kentos.hello()
+        started = time.monotonic()
+        done, _ = self.kentos.invoke("loop", "deneme.logic:loop", cancel_after=0.3)
+        self.assertTrue(done.get("stopped"), done)
+        self.assertLess(time.monotonic() - started, 3.0, "stopped within a second of Durdur")
+        # The process goes on: the next run works.
+        done, _ = self.kentos.invoke("count-layers", "deneme.logic:count_layers")
+        self.assertTrue(done["ok"], done)
+
+    def test_a_package_carrying_kentos_is_refused(self) -> None:
+        # KentOS's library comes from the environment (PY-UV-31): a package's own `kentos` would shadow it.
+        os.makedirs(os.path.join(self.folder, "src", "kentos"))
+        with open(os.path.join(self.folder, "src", "kentos", "__init__.py"), "w", encoding="utf-8") as f:
+            f.write("")
+        refused = self.kentos.hello()
+        self.assertEqual(refused["type"], "refused")
+        self.assertIn("kentos", refused["message"])
+
+    def test_another_protocol_is_refused(self) -> None:
+        refused = self.kentos.hello(protocol=99)
+        self.assertEqual(refused["type"], "refused")
+        self.assertIn("protokol", refused["message"])
+
+
+if __name__ == "__main__":
+    unittest.main()

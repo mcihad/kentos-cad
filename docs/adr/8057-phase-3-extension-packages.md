@@ -703,7 +703,7 @@ ve durma, sonraki maddelere kendin geç" dedi.
   isteğe bağlı özellikler, "Ortamı hazırla" → kurulacaklar → Hazırla → ilerleme/Durdur → "Ortam hazır · Python 3.12.13 ·
   N paket · internetsiz çalışır", paketler ve klasör, "Ortamı kaldır"; her sonuç bildirimle. Şerit düğmesinin nedeni
   artık eklentinin kendisi: "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › … › Python ortamı" ya da "Python
-  ortamı hazır; yürütücü KentOS'un sonraki sürümünde". KentOS'un Python'u kurulurken ya da kaldırılırken genel durum önce
+  ortamı hazır; yürütücü KentOS'un sonraki sürümünde" (ADIM 19'un birinci diliminden sonra komutlar çalışır, §6). KentOS'un Python'u kurulurken ya da kaldırılırken genel durum önce
   gelir. Eklenti kaldırılınca ortamları da gider (PY-UV-30); başka özelliklerle yeniden hazırlanınca eskisi silinir.
 - **Yeni örnek** `fixtures/extensions/v1/ornek-imar` ("İmar Uygunluk Denetimi"): shapely `>=2.0,<2.1`, kilidi gerçek
   `uv lock` çıktısı (shapely 2.0.7). MEBİS shapely 2.2.0 kilitliyor.
@@ -724,3 +724,85 @@ penceresinden vazgeçen hiçbir şey kurmaz ve indirmez). **Sonraya kalan:** kur
 (PY-UV-25, 26), çevrimdışı tekerlek deposu (PY-UV-27, ADIM 22A), SBOM raporu (PY-UV-29), kişisel paketin betik ya da
 eklenti bağımlılığına eklenmesi (PY-OPT-06'nın son adımı), PyPI sürüm listesinden seçme, Windows'ta gerçek pencere.
 
+
+## §6. Yürütücü ve aracı: eklentinin Python'u kendi sürecinde (`ADIM 19`)
+
+**Birinci dilim (14 Kasım): komutlar.** Sahip geceye girerken "devam et ve durma, sonraki maddelere kendin geç" dedi.
+Kod: `python/kentos/ext.py` (eklentinin gördüğü), `python/kentos/ext_host.py` (sürecin kendisi),
+`apps/desktop/src/shell/extensions/runner.rs` (yürütücü ve aracı).
+
+- **Süreç:** her eklenti sürümüne bir süreç, eklentinin kendi ortamında:
+  `<ortam>/.venv/bin/python -I -X pycache_prefix=<ortam>/pyc -m kentos.ext_host`. İlk çağrıda başlar (PY-RUN-05),
+  çalıştırmalar arasında kalır, sürüm değişince bırakılır; Windows'ta konsol penceresi açmaz (`CREATE_NO_WINDOW`).
+  Ölçüm (gerçek pencere, İmar, 4 yapı ve 3 parsel): ilk çalıştırma 1,8–1,9 sn (süreç, shapely ve SDK içe aktarımı),
+  sonraki 0,1 sn.
+- **Protokol 1** (JSON satırları, konsolunki gibi; ADR 0132): KentOS → `hello` (eklenti, sürüm, paketin içerik özeti,
+  paket klasörü ve kod klasörleri), `invoke`, `cancel`, `reply`, `quit`; süreç → `ready`, `refused`, `out`, `progress`
+  (en çok saniyede 10), `log`, `call`, `done`. `done`: `ok` + sonuç (`kind`, `title`, `message`, `rows`, `columns`) ya da
+  `stopped`, `refused`, `unavailable`, `exception` (+ iz kaydı, en çok 20 000 karakter). Bir çalıştırmanın çıktısı en çok
+  1 MB; fazlası kesilir ve kesildiği yazılır (PY-RUN-11).
+- **Kod yalnız çağrılınca içe aktarılır.** Manifestin gösterdiği işlev `@ext.<tür>("<yerel kimlik>")` ile işaretli
+  değilse ya da başka bir kimlikle işaretliyse çalıştırılmaz (PY-RUN-08). Paketin klasörleri yola ortamınkilerden
+  **sonra** eklenir: bir paket kurulu bir kitaplığı gölgeleyemez; `kentos` adlı modül taşıyan paket hiç başlatılmaz
+  (PY-UV-31).
+- **Aracı:** her istek eklentinin izniyle cevaplanır: okuma `document.read`, yazma (`run`/`call`'ın `execute`'u ve
+  `replay`) `document.write`; geri alma, yineleme ve dosya işleri kullanıcınındır (`not_for_extensions`); yalnız
+  başladığı çizime (PY-RUN-16). **Eklenti çizimi ajan gibi okur:** çizimin gizlediği alanların değerleri kesilir,
+  onları anan çağrı reddedilir (ADR 0738, 0743). Konsolun kodu çizimin sahibinindir, bütün okur; eklenti üçüncü bir
+  tarafın (çoğu zaman bir yapay zekânın yazdığı) kodudur. Seçim (`ctx.doc.select`) oturum sonucudur, belge değişikliği
+  değil.
+- **Bir çalıştırma tek geri alma adımıdır**, adı komutun adı ("Izgara çiz (yavaş)"). Hata, Durdur, sürecin ölümü ya da
+  başarısız bir grup yazdıklarını geri alır. Ölçüm (gerçek pencere): 36 kare ve katmanı tek Ctrl+Z ile gitti (43 → 7
+  nesne); Durdur'da çizim 7 nesneye döndü; yazdıktan sonra `KeyError` veren komutun dikdörtgeni geri alındı.
+- **Tek yazan:** yazma izni olan bir çalıştırma sürerken çizim başka düzenleme almaz (konsolun kuralı, `python::held`)
+  ve bu bir kez söylenir; konsol, ajan ve yazan başka bir eklenti bekler. Görüntüleme, kaydırma, yakınlaştırma ve Durdur
+  çalışır (EKL-04). Yalnız okuyan eklenti (İmar) çalışırken çizim düzenlenebilir. Ölçüm: kuraldan önce, yazma sürerken
+  komut satırına yazılan `CIZGI` Çizgi'yi başlatıyordu; şimdi yazı satırda kalır, komut başlamaz.
+- **Durdur önce koda sorulur:** okuma iş parçacığı iptali hesap sürerken duyar, `ctx.check()` `Stopped` atar; 5 sn'de
+  yanıt yoksa süreç sonlandırılır ve bu ayrı yazılır (PY-RUN-12). Ölçüm: `ctx.check()` çağıran bir Python döngüsü iptalden
+  5,4–5,6 ms sonra durdu (5 ölçüm; planın hedefi 1 sn); gerçek pencerede Durdur'dan 1,5 sn sonraki görüntüde "durduruldu —
+  Çizime yazdıkları geri alındı" bildirimi ve 7 nesneye dönmüş çizim vardı.
+- **Paket kurulduğu gibi kalır.** Python içe aktardığının bayt kodunu kaynağın yanına (`__pycache__`) yazıyordu;
+  bütünlük denetimi eklenen dosyayı haklı olarak reddediyor (oradaki bir `.pyc` kaynağın yerine çalışabilir) ve eklenti
+  **ilk çalıştırmasından sonraki açılışta duruyordu** ("sonradan eklenmiş: `__pycache__/logic.cpython-312.pyc`";
+  gerçek pencerede bulundu). Bayt kodu artık ortamın `pyc` klasöründe (`-X pycache_prefix`; `-I` ortam değişkenlerini
+  yok saydığı için `PYTHONPYCACHEPREFIX` işe yaramazdı) ve ortamla birlikte silinir. Bekçiler iki tarafta: Python'da
+  paket klasörüne hiçbir şey yazılmadığı, masaüstünde yorumlayıcının argümanları.
+- **KentOS kitaplığı ortamda tazelenir:** ortamın kaydı kurulduğu SDK tekerleğinin SHA-256'sını tutar; KentOS'un
+  tekerleği değişmişse çalıştırmadan önce çevrimdışı yeniden kurulur (`--no-deps --offline --reinstall-package kentos`).
+  Kilitli paketlere dokunulmaz.
+- **Sonuç:** rapor satırları Komut geçmişi'ne, eklentinin verdiği sütun sırasıyla yazılır (`columns`: JSON nesnesinin
+  anahtarları Rust'ta sıralı geliyordu, "mesafe_m · sınır_m · yapı" diye); 500 satırdan sonrası sayıyla. Başlık ve özet
+  bildirimde.
+- **Açıkça söylenir** (sahibin "eklenti hata verdiğinde açıkça bilelim" isteği): hata → günlüğe iz kaydıyla, bildirim
+  "… hata verdi" ve **Ayrıntı** (eklentinin sayfası; Python ortamı da aranır, "aranıyor"da kalmaz), Komut geçmişi'nde
+  hatanın yeri (`logic.py:32, write_then_fail`; iz kaydının ilk satırı değil); kendiliğinden kapanan süreç çökme
+  sayacına (D6); `ext.NotAvailable` → "bu sürümde çalışmaz" uyarısı, iz kaydı yok, eklentinin hatası sayılmaz. Günlük
+  maskesi `KeyError: 'parsel'`i gizli sanıp `KeyError: '***'` yazıyordu ("key" geçen her ad gizli sayılıyordu);
+  `…Error:`, `…Exception:`, `…Warning:` artık istisna adı.
+- **`kentos.ext` adları** planın §3.4 örneğiyle (ADIM 19'un kabul hedefi): `command`, `processing`, `audit`,
+  `map_tool`, `expr`; `CommandContext` (`doc`, `settings`, `params`, `check`, `is_stopped`, `progress`, `log`, `report`,
+  `message`, `cancelled`, `apply_declarative_schema`), `AuditFinding(message, severity, feature_id, fix)`,
+  `SemanticFix(title, command, args)`, `Stopped`, `NotAvailable`. **`apply_declarative_schema` bu sürümde
+  `NotAvailable`:** `schema.json`'un biçimi ve onu kuran host komutu ADIM 22'nin işi (planın sırası); burada
+  kurulsaydı katman şeması kimliği, ad/başlık ve geometri eşlemesi o adımdan önce kararlaşmış olurdu. MEBİS'in "MEBİS
+  katmanlarını kur" düğmesi bu yüzden "bu sürümde çalışmaz" der.
+- **İmar örneği** seçili yapı varsa yalnız onları denetler, bulduklarını çizimde seçer ve satırları sıra numarasıyla
+  yazar (kalıcı kimlik kullanıcıya bir şey söylemiyordu).
+- **Uygularken verilen kararlar (planda yazılı değildi):** paket klasörleri yola sona eklenir; süreç
+  `os._exit` ile biter (okuma iş parçacığı standart girdiyi tutarken yorumlayıcının kapanışı "could not acquire lock …
+  at interpreter shutdown" ile düşüyordu, ölçüldü); SDK tekerleğinden `__pycache__` çıkarıldı (178 `.pyc` vardı);
+  eklenti aracıda ajan kuralıyla okur; yazan çalıştırma çizimi bekletir; bayt kodu ortam klasöründe; hata bildirimi
+  Ayrıntı'yla; `ext.NotAvailable`; bu dilimde yalnız komutlar (İşlemler aracı, harita aracı, denetim ve panel
+  şeritte "sonraki sürümde" der).
+- **Sınamalar:** Python 9 (`test_ext_host`: tembel içe aktarım, işaret reddi, iz kaydı, Durdur, protokol, `kentos`
+  reddi, sütun sırası, `NotAvailable`, paketin değişmemesi), masaüstü eklenti sahneleri 18 (yürütücü akışı, aracının
+  izinleri, tek geri alma adımı, bekletme, konsol/ajan/ikinci yazanın beklemesi, Durdur ve süreç sonlandırma, çökme,
+  `NotAvailable`, hata bildirimi ve Ayrıntı, yorumlayıcı argümanları), konsol 30, extension-host 28 (maske), python-env
+  18. Windows hedefi (`x86_64-pc-windows-msvc`) python-env ve extension-host için derlendi.
+- **Gerçek pencere (yalıtılmış eklenti ve Python klasörleriyle):** İmar ve yalnız sınama için yazılan, depoya girmeyen
+  "Deneme Yazıcı" katalog klasöründen kuruldu; Deneme Yazıcı'nın ortamı arayüzden hazırlandı ("0 paket · internetsiz
+  çalışır"); bayt kodu hatası bulundu, düzeltildi ve bozulan eklenti Sorunlu › Yeniden dene ile açıldı.
+- **Sonraya kalan (ADIM 19'un kalanı):** İşlemler araçları (tanım → parametre penceresi, NumPy aracı, tipli sonuç →
+  yeni katman), ifade işlevleri, denetimler, harita aracı, form eylemleri, MCP eşdeğerliği ve sürümlü komut kaydı,
+  boştaki sürecin kapanması ve süreç başına bellek ölçümü.

@@ -51,6 +51,8 @@ pub fn dirs_for(os: &str, dir: &Path) -> Vec<PathBuf> {
 pub struct Wheel {
     pub path: PathBuf,
     pub version: String,
+    /// Its SHA-256: an environment records which build it holds.
+    pub sha256: String,
 }
 
 /// The installation's wheel for this program (`version`, its own): in the first of `dirs` with a description; the
@@ -97,6 +99,7 @@ pub fn find(dirs: &[PathBuf], version: &str) -> Result<Wheel, String> {
     Ok(Wheel {
         path,
         version: described.version,
+        sha256: got.to_lowercase(),
     })
 }
 

@@ -1022,6 +1022,7 @@ fn a_change_is_previewed_aside_then_applied_or_undone() {
     let wheel = sdk::Wheel {
         path: temp.0.join("kentos-0.1.0-cp310-abi3-linux_x86_64.whl"),
         version: "0.1.0".into(),
+        sha256: "a".repeat(64),
     };
     let stop = std::sync::atomic::AtomicBool::new(false);
     let mut seen = Vec::new();
@@ -1276,6 +1277,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
     let wheel = sdk::Wheel {
         path: temp.0.join("kentos-0.1.0-cp310-abi3-linux_x86_64.whl"),
         version: "0.1.0".into(),
+        sha256: "a".repeat(64),
     };
     let stop = std::sync::atomic::AtomicBool::new(false);
     let mut seen = Vec::new();
@@ -1392,6 +1394,33 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         "the kept one stays"
     );
     assert!(extension::folder(&root).join("kullanicinin").exists());
+    // Another KentOS's library: put in offline before a run, the record says which; the same one: nothing run.
+    let ready = extension::ready(&root, &key).unwrap();
+    assert_eq!(ready.sdk, "a".repeat(64));
+    let calls = std::fs::read_to_string(&log).unwrap().lines().count();
+    assert_eq!(
+        extension::refresh_library(&fake, &root, &ready, &wheel).unwrap(),
+        ready
+    );
+    assert_eq!(
+        std::fs::read_to_string(&log).unwrap().lines().count(),
+        calls,
+        "the same build: uv not asked"
+    );
+    let newer = sdk::Wheel {
+        sha256: "b".repeat(64),
+        ..wheel.clone()
+    };
+    let fresh = extension::refresh_library(&fake, &root, &ready, &newer).unwrap();
+    assert_eq!(fresh.sdk, "b".repeat(64));
+    assert_eq!(
+        extension::ready(&root, &key).unwrap().sdk,
+        "b".repeat(64),
+        "the record follows"
+    );
+    assert!(std::fs::read_to_string(&log).unwrap().contains(
+        "|pip install --no-deps --offline --no-config --reinstall-package kentos --python"
+    ));
     extension::remove(&root, &key).unwrap();
     assert!(extension::ready(&root, &key).is_none());
 }

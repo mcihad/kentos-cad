@@ -47,6 +47,9 @@ pub(crate) enum Action {
     Source(String, String),
     /// The extension's form: (extension, its local id).
     Form(String, String),
+    /// The extension's Python, run in its own process: (extension, kind as the process is told, its local id)
+    /// (runner.rs).
+    Python(String, String, String),
     /// Shown, not pressable: why.
     Unavailable(String),
 }
@@ -113,7 +116,7 @@ fn item_of(
     manifest: &Manifest,
     item: &RibbonItem,
     registered: &[&kentos_extension_host::Registered],
-    python: &str,
+    python: Option<&str>,
 ) -> ExtItem {
     let ext = manifest.id.as_str();
     let e = &manifest.entrypoints;
@@ -218,13 +221,20 @@ fn item_of(
             };
         };
         let title = title.unwrap_or_else(|| local.clone());
-        let action = if has(kind, local) {
-            // Why it does not run now: Python off, uv not ready, or the runner still to come (python_setup.rs).
-            Action::Unavailable(format!(
-                "“{title}” eklentinin Python işlevini çalıştırır. {python}"
-            ))
-        } else {
-            not_granted()
+        let action = match (has(kind, local), python) {
+            (false, _) => not_granted(),
+            // Why it does not run now: Python off, uv not ready, its environment not prepared (environment.rs).
+            (true, Some(why)) => Action::Unavailable(format!(
+                "“{title}” eklentinin Python işlevini çalıştırır. {why}"
+            )),
+            // Its environment ready: a command runs in the extension's process (runner.rs).
+            (true, None) if kind == ContributionKind::Command => {
+                Action::Python(ext.to_owned(), "command".to_owned(), local.clone())
+            }
+            (true, None) => Action::Unavailable(format!(
+                "“{title}”: Python ortamı hazır; bu tür katkıları (İşlemler aracı, harita aracı, denetim, panel) \
+                 çalıştıran yürütücü KentOS'un sonraki sürümünde. Komutlar çalışır."
+            )),
         };
         let fallback = crate::icons::from_web(Some("processing"));
         let icon = icon.map_or(fallback, |name| icon_of(registry, ext, &name, fallback));
@@ -245,8 +255,8 @@ fn item_of(
 impl App {
     /// The extensions' tabs follow the registry's contributions.
     pub(crate) fn extension_tabs_changed(&mut self) {
-        // Why a Python button does not run, each extension's own: its environment too (environment.rs).
-        let reasons: std::collections::BTreeMap<String, String> = self
+        // Why a Python button does not run, each extension's own: its environment too (environment.rs); none: it runs.
+        let reasons: std::collections::BTreeMap<String, Option<String>> = self
             .extensions
             .registry
             .as_ref()
@@ -265,7 +275,8 @@ impl App {
             })
             .collect();
         let fallback = self.python_setup.why_not();
-        let python_of = |ext: &str| -> &str { reasons.get(ext).map_or(fallback, String::as_str) };
+        let python_of =
+            |ext: &str| -> Option<&str> { reasons.get(ext).map_or(Some(fallback), Option::as_deref) };
         let mut tabs = Vec::new();
         if let Some(registry) = self.extensions.registry.as_ref() {
             let contributions = registry.contributions();
@@ -403,6 +414,9 @@ impl App {
             Action::Builtin(id) => self.offers(id).then_some(Message::Run(id)),
             Action::Source(ext, local) => Some(msg(Event::OpenSource(ext.clone(), local.clone()))),
             Action::Form(ext, local) => Some(msg(Event::OpenForm(ext.clone(), local.clone()))),
+            Action::Python(ext, kind, local) => {
+                Some(msg(Event::Run(ext.clone(), kind.clone(), local.clone())))
+            }
             Action::Unavailable(_) => None,
         }
     }
@@ -499,6 +513,10 @@ impl App {
                         Action::Form(..) => {
                             "Eklentinin formunu projeye alır (Formu içe aktar gibi).".to_owned()
                         }
+                        Action::Python(..) => "Eklentinin Python işlevini kendi sürecinde, kendi ortamında \
+                                               çalıştırır; çizime yazdıkları tek adımda geri alınır. Ayrı süreç \
+                                               korumalı alan değildir: eklenti sizin haklarınızla çalışır."
+                            .to_owned(),
                         Action::Unavailable(why) => why.clone(),
                     };
                     let key_tip =

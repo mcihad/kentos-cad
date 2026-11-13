@@ -25,3 +25,5 @@ test = ["ezdxf==1.4.5"]
 manifest-path = "../crates/native/python/Cargo.toml"
 module-name = "kentos._native"
 python-source = "."
+# A checkout's compiled caches are not the package: 178 of them went into the wheel (measured, 14 November 2026).
+exclude = ["kentos/**/__pycache__/**", "kentos/**/*.pyc"]

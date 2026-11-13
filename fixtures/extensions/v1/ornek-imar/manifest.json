@@ -6,7 +6,7 @@
   "name": "İmar Uygunluk Denetimi",
   "icon": "assets/imar.svg",
   "summary": "Yapıların parsel sınırına yaklaşma mesafesini imar planına göre denetler.",
-  "description": "Seçili yapıların parsel sınırına en kısa uzaklığını hesaplar ve plan notundaki yaklaşma mesafesinden azsa işaretler. Geometri hesabı için shapely'nin 2.0 serisini kullanır; aynı bilgisayarda shapely 2.2 isteyen bir eklentiyle kendi ortamında yan yana çalışır.",
+  "description": "Yapıların (seçili yapı varsa yalnız onların) parsel sınırına en kısa uzaklığını hesaplar; plan notundaki yaklaşma mesafesinden yakın ya da parsel dışında kalanları raporlar ve çizimde seçer. Geometri hesabı için shapely'nin 2.0 serisini kullanır; aynı bilgisayarda shapely 2.2 isteyen bir eklentiyle kendi ortamında yan yana çalışır.",
   "authors": ["Örnek Belediyesi İmar ve Şehircilik Müdürlüğü"],
   "publisherId": "ornek-belediye",
   "license": "CC-BY-4.0",

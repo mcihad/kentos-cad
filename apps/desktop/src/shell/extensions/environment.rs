@@ -65,7 +65,7 @@ pub(crate) struct EnvState {
 /// What the section's controls ask, each for an extension (its id).
 #[derive(Debug, Clone)]
 pub(crate) enum EnvEvent {
-    Found(String, Result<Option<Ready>, String>),
+    Found(String, Result<Option<Box<Ready>>, String>),
     /// An optional feature (its extra) ticked or not.
     Extra(String, String, bool),
     Preview(String),
@@ -211,22 +211,19 @@ impl App {
     }
 
     /// Why an extension's Python button does not run now, for that extension: Python off, uv or KentOS's Python not
-    /// ready, its own environment not prepared, or the runner still to come.
-    pub(crate) fn python_reason(&self, id: &str) -> String {
+    /// ready, its own environment not prepared; none when it runs (its environment is ready: runner.rs).
+    pub(crate) fn python_reason(&self, id: &str) -> Option<String> {
         // Python itself first: off, looking, being installed or removed.
         let p = &self.python_setup;
         if !matches!(p.python, Some(OwnPython::Ready(..))) || p.installing.is_some() || p.removing {
-            return p.why_not().to_owned();
+            return Some(p.why_not().to_owned());
         }
-        if self.env_ready_now(id) {
-            "Python ortamı hazır; eklentilerin Python işlevlerini çalıştıran yürütücü KentOS'un sonraki sürümünde."
-                .to_owned()
-        } else {
+        (!self.env_ready_now(id)).then(|| {
             format!(
                 "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › {} › Python ortamı.",
                 self.extension_name(id)
             )
-        }
+        })
     }
 
     /// Looks for an extension's environment in the background.
@@ -248,13 +245,10 @@ impl App {
         in_background(
             move || {
                 let lock = extension::lock_digest(&c.package, &c.lock_file)?;
-                Ok(extension::find(
-                    &c.root,
-                    &asked,
-                    &c.version,
-                    &lock,
-                    &c.python.version,
-                ))
+                Ok(
+                    extension::find(&c.root, &asked, &c.version, &lock, &c.python.version)
+                        .map(Box::new),
+                )
             },
             Err("arama yarıda kaldı".to_owned()),
             move |found| env_msg(EnvEvent::Found(id.clone(), found)),
@@ -335,7 +329,7 @@ impl App {
                     Ok(Some(ready)) => {
                         // The features it was made with are the user's choice.
                         state.extras = ready.key.extras.iter().cloned().collect();
-                        EnvStatus::Ready(Box::new(ready))
+                        EnvStatus::Ready(ready)
                     }
                     Ok(None) => EnvStatus::Missing,
                     Err(why) => EnvStatus::Unknown(why),

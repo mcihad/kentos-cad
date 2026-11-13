@@ -85,12 +85,30 @@ pub(crate) fn when(ms: u64) -> String {
 
 /// The first line of an error, cut to a notice's length.
 pub(crate) fn short(text: &str) -> String {
+    // A Python traceback is told by where it failed, its innermost frame (`logic.py:32, write_then_fail`): its first
+    // line says only that it is one, and its exception is in the message already (an extension's run, 14 November).
+    if text.starts_with("Traceback (most recent call last):")
+        && let Some(frame) = text.lines().rev().find_map(frame_of)
+    {
+        return frame;
+    }
     let line = text.lines().next().unwrap_or_default();
     if line.chars().count() <= SHORT {
         line.to_owned()
     } else {
         format!("{}…", line.chars().take(SHORT).collect::<String>())
     }
+}
+
+/// A traceback's frame line, `  File "/…/src/imar/logic.py", line 32, in check`, as `logic.py:32, check`.
+fn frame_of(line: &str) -> Option<String> {
+    let rest = line.trim_start().strip_prefix("File \"")?;
+    let (path, rest) = rest.split_once("\", line ")?;
+    let file = path.rsplit(['/', '\\']).next().unwrap_or(path);
+    Some(match rest.split_once(", in ") {
+        Some((number, function)) => format!("{file}:{number}, {}", function.trim()),
+        None => format!("{file}:{}", rest.trim()),
+    })
 }
 
 /// A record's head line: when, the level, the part and the code.

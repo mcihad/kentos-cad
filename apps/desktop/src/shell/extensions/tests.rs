@@ -1454,7 +1454,7 @@ fn an_extensions_python_environment_is_previewed_prepared_and_removed() {
     };
     // Before KentOS's Python: the section says what comes first; nothing looked for.
     let _ = gis.extensions_event(Event::Choose(MEBIS.into()));
-    assert!(gis.extensions.envs.get(MEBIS).is_none());
+    assert!(!gis.extensions.envs.contains_key(MEBIS));
     let _ = gis.extensions_view();
     // KentOS's Python ready.
     let _ = gis.python_edit(PythonEdit::Enable(true));
@@ -1561,6 +1561,7 @@ fn an_extensions_python_environment_is_previewed_prepared_and_removed() {
         key: key.clone(),
         python: dir.join(".venv/bin/python"),
         packages: listed,
+        sdk: String::new(),
         made_at: 1,
     };
     std::fs::write(
@@ -1578,12 +1579,23 @@ fn an_extensions_python_environment_is_previewed_prepared_and_removed() {
             .iter()
             .any(|t| t.ends_with("Python ortamı hazır"))
     );
+    // Its command now runs (ADIM 19: an_extensions_command_runs_in_its_own_process_through_the_broker).
+    let action = gis
+        .extension_tabs()
+        .find(|t| t.extension == MEBIS)
+        .expect("MEBİS's tab")
+        .panels[0]
+        .items[0]
+        .action
+        .clone();
     assert!(
-        why(&gis).starts_with("“") && why(&gis).contains("Python ortamı hazır;"),
-        "{}",
-        why(&gis)
+        matches!(action, Action::Python(ref e, ref k, ref l) if e == MEBIS && k == "command" && l == "init-schema"),
+        "{action:?}"
     );
-    env(&mut gis, EnvEvent::Found(MEBIS.into(), Ok(Some(ready))));
+    env(
+        &mut gis,
+        EnvEvent::Found(MEBIS.into(), Ok(Some(Box::new(ready)))),
+    );
     assert!(matches!(
         gis.extensions.envs[MEBIS].status,
         Some(EnvStatus::Ready(_))
@@ -1616,7 +1628,492 @@ fn an_extensions_python_environment_is_previewed_prepared_and_removed() {
     assert!(dir.exists());
     let _ = gis.extensions_event(Event::Remove(MEBIS.into()));
     assert!(!dir.exists(), "its environments go with it");
-    assert!(gis.extensions.envs.get(MEBIS).is_none());
+    assert!(!gis.extensions.envs.contains_key(MEBIS));
     let _ = std::fs::remove_dir_all(&root);
     let _ = std::fs::remove_dir_all(&python_root);
+}
+
+/// Bir eklentinin komutu çalışırken (plan/eklenti.md ADIM 19): its ribbon button runs once its environment is ready;
+/// its process is started with a hello and the call; the broker answers its reads on the open drawing and refuses
+/// what it was not granted (İmar asked to read, not to write) and what is the user's (undo); its report comes back
+/// as a notice and the messages; a failure is logged with its traceback; Durdur asks the code, then ends a process
+/// that does not answer; a process that ends by itself is a crash. The process's lines are given here as it would
+/// send them (its own side: python/tests/test_ext_host.py).
+#[cfg(unix)]
+#[test]
+fn an_extensions_command_runs_in_its_own_process_through_the_broker() {
+    use super::runner::row_words;
+    use crate::python::host::Said;
+    use crate::python_setup::PythonEdit;
+    use kentos_python_env::extension::{self, Ready};
+    use kentos_python_env::python::Interpreter;
+    use kentos_python_env::uv::UvStatus;
+    use serde_json::json;
+
+    const IMAR: &str = "tr.ornek.imar-denetim";
+    let root = temp("yurutucu");
+    let python_root = temp("yurutucu-python");
+    let mut gis = crate::files_testing::app_with_drawing();
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&root, false).0;
+    gis.extensions_changed();
+    gis.python_setup.root = Some(python_root.clone());
+    install(&mut gis, "imar.kek", package("ornek-imar", |_| {}));
+    let _ = gis.python_edit(PythonEdit::Enable(true));
+    let _ = gis.python_edit(PythonEdit::Detected(UvStatus::Found {
+        path: "/k/tools/uv".into(),
+        version: "0.11.26".into(),
+        bundled: true,
+    }));
+    let python = Interpreter {
+        version: "3.12.13".into(),
+        path: python_root.join("yorumlayici/cpython-3.12/bin/python3.12"),
+    };
+    let _ = gis.python_edit(PythonEdit::Found(Ok((Some(python.clone()), 1))));
+    let button = |app: &App| {
+        app.extension_tabs()
+            .find(|t| t.extension == IMAR)
+            .expect("İmar's tab")
+            .panels[0]
+            .items[0]
+            .action
+            .clone()
+    };
+    assert!(
+        matches!(button(&gis), Action::Unavailable(_)),
+        "no environment yet"
+    );
+    // Its environment ready (a record on disk; its Python anything that starts: its lines are given here).
+    let package = gis
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.package_dir(IMAR))
+        .unwrap();
+    let key = extension::key_for(&package, "uv.lock", IMAR, "1.0.0", &python, &[]).unwrap();
+    let dir = extension::place(&python_root, &key);
+    std::fs::create_dir_all(&dir).unwrap();
+    let ready = Ready {
+        format: "kentos.extension-env".into(),
+        key,
+        python: "/bin/sh".into(),
+        packages: Vec::new(),
+        sdk: String::new(),
+        made_at: 1,
+    };
+    std::fs::write(
+        dir.join(extension::RECORD),
+        serde_json::to_string(&ready).unwrap(),
+    )
+    .unwrap();
+    gis.extensions_changed();
+    assert!(
+        matches!(button(&gis), Action::Python(ref e, ref k, ref l) if e == IMAR && k == "command" && l == "check-setbacks"),
+        "{:?}",
+        button(&gis)
+    );
+    // Pressed: the environment found in the background, then the process started and the call sent.
+    let launch = super::runner::Launch::for_test(
+        "/bin/sh".into(),
+        package.clone(),
+        "imar.logic:check_setbacks",
+        "Yaklaşma mesafelerini denetle",
+        false,
+    );
+    let _ = gis.extensions_event(Event::Launch(
+        IMAR.into(),
+        "command".into(),
+        "check-setbacks".into(),
+        Ok(launch.clone()),
+    ));
+    let generation = gis.extensions.runners[IMAR].generation;
+    let run = gis.extensions.runners[IMAR]
+        .run
+        .as_ref()
+        .expect("running")
+        .id;
+    let say = |app: &mut App, m: serde_json::Value| {
+        let _ = app.extensions_event(Event::Runner(IMAR.into(), generation, Said::Message(m)));
+    };
+    let titles = |app: &App| -> Vec<String> {
+        app.toasts
+            .iter()
+            .map(|(_, toast, _)| toast.title().to_owned())
+            .collect()
+    };
+    assert!(
+        titles(&gis).iter().any(|t| t.ends_with("çalışıyor")),
+        "{:?}",
+        titles(&gis)
+    );
+    say(&mut gis, json!({"type": "ready", "protocol": 1}));
+    assert!(gis.extensions.runners[IMAR].ready);
+    // The broker: reads answered on the open drawing; a write not granted, and the user's undo, refused.
+    let summary = gis.ext_answer_for_test(IMAR, "summary", &json!({}));
+    assert!(summary.is_ok(), "{summary:?}");
+    let layers = gis.ext_answer_for_test(IMAR, "layers", &json!({}));
+    assert!(layers.is_ok(), "{layers:?}");
+    let write = gis
+        .ext_answer_for_test(
+            IMAR,
+            "run",
+            &json!({"command": "cad.polygon.create", "op": "execute", "input": {}}),
+        )
+        .unwrap_err();
+    assert_eq!(write.code, "capability");
+    assert!(write.message.contains("document.write"));
+    let undo = gis
+        .ext_answer_for_test(IMAR, "undo", &json!({}))
+        .unwrap_err();
+    assert_eq!(undo.code, "not_for_extensions");
+    // Its report: a notice and the rows in the messages.
+    say(
+        &mut gis,
+        json!({"type": "progress", "id": run, "done": 1, "total": 3}),
+    );
+    say(
+        &mut gis,
+        json!({"type": "log", "id": run, "level": "info", "text": "3 yapı denetlendi"}),
+    );
+    say(
+        &mut gis,
+        json!({"type": "done", "id": run, "ok": true, "result": {
+            "kind": "report", "title": "Yaklaşma mesafesi denetimi", "message": "3 yapı denetlendi; 1 yapı sınırın içinde.",
+            "rows": [{"yapı": "B1", "mesafe_m": 2.0}]
+        }}),
+    );
+    assert!(gis.extensions.runners[IMAR].run.is_none());
+    assert!(
+        titles(&gis)
+            .iter()
+            .any(|t| t.ends_with("Yaklaşma mesafesi denetimi")),
+        "{:?}",
+        titles(&gis)
+    );
+    assert_eq!(
+        gis.extensions
+            .result
+            .as_ref()
+            .map(|(e, t, _)| (e.as_str(), t.as_str())),
+        Some((IMAR, "Yaklaşma mesafesi denetimi"))
+    );
+    // Its columns in the order it gave them (a JSON object's keys come sorted).
+    assert_eq!(
+        row_words(
+            &["yapı", "mesafe_m"],
+            &json!({"yapı": "B1", "mesafe_m": 2.0, "not": "x"})
+        ),
+        "yapı: B1 · mesafe_m: 2.0 · not: x"
+    );
+    let logged = |app: &App, code: &str| {
+        app.extensions
+            .registry
+            .as_ref()
+            .unwrap()
+            .log_of(IMAR)
+            .iter()
+            .any(|r| r.code == code)
+    };
+    assert!(logged(&gis, "run_started") && logged(&gis, "run_log") && logged(&gis, "run_done"));
+    // A failure: logged with its traceback, said by a notice naming the extension.
+    let _ = gis.extensions_event(Event::Launch(
+        IMAR.into(),
+        "command".into(),
+        "check-setbacks".into(),
+        Ok(launch.clone()),
+    ));
+    let run = gis.extensions.runners[IMAR].run.as_ref().unwrap().id;
+    say(
+        &mut gis,
+        json!({"type": "done", "id": run, "ok": false, "exception": "ZeroDivisionError", "message": "division by zero",
+               "error": "Traceback (most recent call last):\n  File \"logic.py\", line 3\nZeroDivisionError: division by zero"}),
+    );
+    let failed = gis
+        .extensions
+        .registry
+        .as_ref()
+        .unwrap()
+        .log_of(IMAR)
+        .iter()
+        .rev()
+        .find(|r| r.code == "run_failed")
+        .cloned()
+        .expect("logged");
+    assert!(failed.message.contains("ZeroDivisionError"));
+    assert!(
+        failed
+            .detail
+            .as_deref()
+            .is_some_and(|d| d.contains("Traceback"))
+    );
+    // Said where its start was said, with the way to its log.
+    assert!(
+        titles(&gis)
+            .iter()
+            .any(|t| t.ends_with("“Yaklaşma mesafelerini denetle” hata verdi")),
+        "{:?}",
+        titles(&gis)
+    );
+    // The messages' line points at where it failed, not at the traceback's first line.
+    assert!(
+        gis.log
+            .lines()
+            .any(|l| l.text.contains("[logic.py:3]") && l.text.contains("ZeroDivisionError")),
+        "{:?}",
+        gis.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>()
+    );
+    // Ayrıntı: the manager on it, its environment looked for as a click on its row would.
+    let _ = gis.extensions_event(Event::Show(IMAR.into()));
+    assert_eq!(gis.extensions.chosen.as_deref(), Some(IMAR));
+    assert!(gis.extensions.envs.contains_key(IMAR), "looked for");
+    // Durdur: asked of the code; a process that does not answer is ended.
+    let _ = gis.extensions_event(Event::Launch(
+        IMAR.into(),
+        "command".into(),
+        "check-setbacks".into(),
+        Ok(launch.clone()),
+    ));
+    let run = gis.extensions.runners[IMAR].run.as_ref().unwrap().id;
+    let _ = gis.extensions_event(Event::StopRun(IMAR.into()));
+    assert!(
+        gis.extensions.runners[IMAR]
+            .run
+            .as_ref()
+            .unwrap()
+            .stopping
+            .is_some()
+    );
+    let _ = gis.extensions_event(Event::RunOverdue(IMAR.into(), run));
+    assert!(
+        !gis.extensions.runners.contains_key(IMAR),
+        "its process ended"
+    );
+    assert!(titles(&gis).iter().any(|t| t.ends_with("durduruldu")));
+    // A process that ends by itself during a run: a crash, logged.
+    let _ = gis.extensions_event(Event::Launch(
+        IMAR.into(),
+        "command".into(),
+        "check-setbacks".into(),
+        Ok(launch),
+    ));
+    let generation = gis.extensions.runners[IMAR].generation;
+    let _ = gis.extensions_event(Event::Runner(IMAR.into(), generation, Said::Closed));
+    assert!(!gis.extensions.runners.contains_key(IMAR));
+    assert!(logged(&gis, "runner_crashed"));
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&python_root);
+}
+
+/// Bir eklenti çizime yazarken (ADIM 19): its run is one undo step named after its command, kept when it ends well and
+/// taken back when it fails or is stopped; meanwhile the drawing takes no other edit (the user is told once), and
+/// neither the console, an agent nor another writing run goes; an ability this KentOS lacks is said calmly.
+#[cfg(unix)]
+#[test]
+fn an_extensions_writes_are_one_undo_step_and_the_drawing_waits_for_them() {
+    use crate::python::host::Said;
+    use serde_json::json;
+
+    const MEBIS: &str = "tr.ornek.mebis";
+    let root = temp("yazan");
+    let mut gis = crate::files_testing::app_with_drawing();
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&root, false).0;
+    gis.extensions_changed();
+    install(
+        &mut gis,
+        "mebis.kek",
+        package("mebis", |m| {
+            m["dependencies"]["extensions"] = json!([]);
+        }),
+    );
+    let package = gis
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.package_dir(MEBIS))
+        .unwrap();
+    let launch = super::runner::Launch::for_test(
+        "/bin/sh".into(),
+        package,
+        "mebis.logic:init_schema",
+        "MEBİS katmanlarını kur",
+        true,
+    );
+    let start = |app: &mut App| {
+        let _ = app.extensions_event(Event::Launch(
+            MEBIS.into(),
+            "command".into(),
+            "init-schema".into(),
+            Ok(launch.clone()),
+        ));
+        let runner = &app.extensions.runners[MEBIS];
+        (runner.generation, runner.run.as_ref().expect("running").id)
+    };
+    let say = |app: &mut App, generation: u64, m: serde_json::Value| {
+        let _ = app.extensions_event(Event::Runner(MEBIS.into(), generation, Said::Message(m)));
+    };
+    let add_layer = |app: &mut App, name: &str| {
+        app.ext_answer_for_test(
+            MEBIS,
+            "run",
+            &json!({"command": "cad.layers.edit", "op": "execute",
+                    "input": {"operation": "add", "name": name, "geometry": "area"}}),
+        )
+    };
+    let has_layer = |app: &App, name: &str| {
+        app.document
+            .as_ref()
+            .unwrap()
+            .model
+            .layers()
+            .nodes()
+            .iter()
+            .any(|n| n.name == name)
+    };
+    let titles = |app: &App| -> Vec<String> {
+        app.toasts
+            .iter()
+            .map(|(_, toast, _)| toast.title().to_owned())
+            .collect()
+    };
+    // Running: the drawing waits for it, said once; the console and agents wait too.
+    let (generation, run) = start(&mut gis);
+    assert_eq!(
+        gis.extension_writing().as_deref(),
+        Some("Mezarlık Bilgi Sistemi (MEBİS): “MEBİS katmanlarını kur”")
+    );
+    let before = gis.log.lines().count();
+    assert!(
+        gis.while_extension_writes(&Message::CommandSubmitted)
+            .is_some()
+    );
+    assert!(
+        gis.while_extension_writes(&Message::CommandSubmitted)
+            .is_some()
+    );
+    let said: Vec<String> = gis
+        .log
+        .lines()
+        .skip(before)
+        .map(|l| l.text.clone())
+        .collect();
+    assert_eq!(said.len(), 1, "{said:?}");
+    assert!(said[0].contains("düzenlenemez"));
+    // A command typed meanwhile waits too (found in the real window, 14 November 2026: Çizgi started).
+    let tool = gis.session.tool_id().to_owned();
+    let _ = gis.update(Message::CommandInput("CIZGI".into()));
+    let _ = gis.update(Message::CommandSubmitted);
+    assert_eq!(gis.session.tool_id(), tool, "no command starts");
+    let busy = gis
+        .agent_request(&json!({"method": "summary"}), "Ajan")
+        .unwrap_err();
+    assert_eq!(busy.0, "busy");
+    assert!(busy.1.contains("MEBİS katmanlarını kur"));
+    let _ = gis.python_run_titled("print(1)".into(), "deneme.py".into());
+    assert!(gis.python.running.is_none(), "the console waits");
+    // Its writes: one undo step named after the command, kept when it ends well.
+    add_layer(&mut gis, "mezar_ada").expect("written");
+    add_layer(&mut gis, "mezar_yeri").expect("written");
+    say(
+        &mut gis,
+        generation,
+        json!({"type": "done", "id": run, "ok": true, "result": {"kind": "message", "message": "Kuruldu."}}),
+    );
+    assert!(gis.extension_writing().is_none());
+    assert!(
+        gis.while_extension_writes(&Message::CommandSubmitted)
+            .is_none()
+    );
+    assert!(has_layer(&gis, "mezar_ada") && has_layer(&gis, "mezar_yeri"));
+    let doc = gis.document.as_mut().unwrap();
+    assert_eq!(
+        doc.model.undo_labels().first().map(String::as_str),
+        Some("MEBİS katmanlarını kur")
+    );
+    doc.model.undo();
+    assert!(
+        !has_layer(&gis, "mezar_ada") && !has_layer(&gis, "mezar_yeri"),
+        "one step took both back"
+    );
+    // A failure takes back what it wrote.
+    let (generation, run) = start(&mut gis);
+    add_layer(&mut gis, "mezar_ada").expect("written");
+    say(
+        &mut gis,
+        generation,
+        json!({"type": "done", "id": run, "ok": false, "exception": "KeyError", "message": "x", "error": "Traceback …"}),
+    );
+    assert!(!has_layer(&gis, "mezar_ada"), "taken back");
+    // Durdur, answered by the code: taken back.
+    let (generation, run) = start(&mut gis);
+    add_layer(&mut gis, "mezar_ada").expect("written");
+    let _ = gis.extensions_event(Event::StopRun(MEBIS.into()));
+    say(
+        &mut gis,
+        generation,
+        json!({"type": "done", "id": run, "ok": false, "stopped": true}),
+    );
+    assert!(!has_layer(&gis, "mezar_ada"), "taken back");
+    assert!(titles(&gis).iter().any(|t| t.ends_with("durduruldu")));
+    // An ability this KentOS lacks: said calmly, logged as a warning; what it wrote taken back.
+    let (generation, run) = start(&mut gis);
+    add_layer(&mut gis, "mezar_ada").expect("written");
+    say(
+        &mut gis,
+        generation,
+        json!({"type": "done", "id": run, "ok": false, "unavailable": true,
+               "message": "Katman şeması kurulumu (schema.json) bu KentOS sürümünde yok."}),
+    );
+    assert!(!has_layer(&gis, "mezar_ada"), "taken back");
+    assert!(
+        titles(&gis)
+            .iter()
+            .any(|t| t.ends_with("bu sürümde çalışmaz")),
+        "{:?}",
+        titles(&gis)
+    );
+    let unavailable = gis
+        .extensions
+        .registry
+        .as_ref()
+        .unwrap()
+        .log_of(MEBIS)
+        .iter()
+        .rev()
+        .find(|r| r.code == "run_unavailable")
+        .cloned()
+        .expect("logged");
+    assert!(unavailable.detail.is_none(), "no traceback");
+    // Another writing run waits for one that writes.
+    let (_generation, _run) = start(&mut gis);
+    let before = gis.extensions.run_counter;
+    let _ = gis.extensions_event(Event::Launch(
+        MEBIS.into(),
+        "command".into(),
+        "init-schema".into(),
+        Ok(launch.clone()),
+    ));
+    assert_eq!(gis.extensions.run_counter, before, "not started twice");
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+/// An extension's process writes no bytecode beside its package (whose integrity check refuses added files): its
+/// interpreter's arguments send it to the environment's folder (real window, 14 November 2026).
+#[test]
+fn an_extensions_bytecode_goes_to_its_environment_not_its_package() {
+    let args = super::runner::interpreter_args(std::path::Path::new("/k/ortamlar/ab12/pyc"));
+    let args: Vec<String> = args
+        .iter()
+        .map(|a| a.to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(
+        args,
+        [
+            "-I",
+            "-X",
+            "pycache_prefix=/k/ortamlar/ab12/pyc",
+            "-m",
+            "kentos.ext_host"
+        ]
+    );
 }

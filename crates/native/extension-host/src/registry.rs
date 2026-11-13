@@ -584,6 +584,13 @@ impl Registry {
         Some(self.layout.package(id, &entry.active))
     }
 
+    /// The content digest of the version in use (`sha256:…`), the one its files are checked against: what a runner
+    /// tells the extension's process it runs (plan/eklenti.md ADIM 19, PY-RUN-04).
+    pub fn digest(&self, id: &str) -> Option<String> {
+        let entry = self.file.extensions.get(id)?;
+        entry.version(&entry.active).map(|v| v.digest.clone())
+    }
+
     /// A file of the version in use, by its path in the package; none when it has no such file.
     pub fn package_file(&self, id: &str, path: &str) -> Option<Vec<u8>> {
         if kentos_extensions::manifest::is_extension_id(id)

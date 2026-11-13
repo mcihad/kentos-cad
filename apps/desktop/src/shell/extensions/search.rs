@@ -101,6 +101,7 @@ impl App {
             Action::Source(ext, local) => self.extensions_event(Event::OpenSource(ext, local)),
             Action::Form(ext, local) => self.extensions_event(Event::OpenForm(ext, local)),
             Action::Builtin(id) => self.run(id),
+            Action::Python(ext, kind, local) => self.extensions_event(Event::Run(ext, kind, local)),
             Action::Unavailable(_) => Task::none(),
         }
     }

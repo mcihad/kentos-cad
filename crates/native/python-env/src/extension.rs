@@ -87,6 +87,9 @@ pub struct Ready {
     pub python: PathBuf,
     /// What it holds besides KentOS's library.
     pub packages: Vec<Listed>,
+    /// The SHA-256 of KentOS's library's wheel it holds: another KentOS's is put in before a run ([`refresh_library`]).
+    #[serde(default)]
+    pub sdk: String,
     /// Seconds since 1970.
     pub made_at: u64,
 }
@@ -488,6 +491,7 @@ fn make(
         key: key.clone(),
         python,
         packages,
+        sdk: sdk.sha256.clone(),
         made_at: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_secs())
@@ -562,6 +566,55 @@ fn listed(
             version: row.version,
         })
         .collect())
+}
+
+/// Puts this KentOS's library into a ready environment when it holds another build (KentOS updated since it was
+/// made): offline, from the installation's wheel, its record updated. The environment's packages are not touched, so
+/// a ready environment keeps working without the internet after an update (P07, PY-UV-31).
+pub fn refresh_library(
+    uv_path: &Path,
+    root: &Path,
+    ready: &Ready,
+    sdk: &Wheel,
+) -> Result<Ready, String> {
+    if ready.sdk == sdk.sha256 {
+        return Ok(ready.clone());
+    }
+    let dir = place(root, &ready.key);
+    let env = env_for(root, &dir.join(".venv"));
+    let mut args: Vec<OsString> = [
+        "pip",
+        "install",
+        "--no-deps",
+        "--offline",
+        "--no-config",
+        "--reinstall-package",
+        "kentos",
+        "--python",
+    ]
+    .iter()
+    .map(OsString::from)
+    .collect();
+    args.push(ready.python.clone().into_os_string());
+    args.push(sdk.path.clone().into_os_string());
+    check_ran(uv::run(
+        uv_path,
+        &uv::os_args(&args),
+        Some(&dir),
+        &refs(&env),
+        CHECK_LIMIT,
+    ))
+    .map_err(|why| format!("KentOS'un Python kitaplığı ortama konamadı: {why}"))?;
+    let fresh = Ready {
+        sdk: sdk.sha256.clone(),
+        ..ready.clone()
+    };
+    let text = serde_json::to_string_pretty(&fresh).unwrap_or_default();
+    let part = dir.join(format!("{RECORD}.yazilan"));
+    std::fs::write(&part, text)
+        .and_then(|()| std::fs::rename(&part, dir.join(RECORD)))
+        .map_err(|e| format!("{} yazılamadı: {e}", dir.join(RECORD).display()))?;
+    Ok(fresh)
 }
 
 /// Removes `key`'s environment.

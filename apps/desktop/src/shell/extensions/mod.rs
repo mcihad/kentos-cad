@@ -15,6 +15,7 @@ mod browse;
 pub(crate) mod environment;
 mod problems;
 mod ribbon;
+pub(crate) mod runner;
 mod search;
 mod view;
 
@@ -105,6 +106,13 @@ pub(crate) struct Extensions {
     pub(crate) program: Option<kentos_extensions::manifest::Module>,
     /// Each extension's Python environment, by id, once looked for (environment.rs).
     pub(crate) envs: std::collections::BTreeMap<String, environment::EnvState>,
+    /// The extensions' processes, by id: one an extension version, kept between its runs (runner.rs).
+    pub(crate) runners: std::collections::BTreeMap<String, runner::Runner>,
+    /// The runs' and the processes' numbers.
+    pub(crate) run_counter: u64,
+    pub(crate) runner_generation: u64,
+    /// The last run's result: the extension, its title, what it returned.
+    pub(crate) result: Option<(String, String, serde_json::Value)>,
 }
 
 impl Default for Extensions {
@@ -129,6 +137,10 @@ impl Default for Extensions {
             query: String::new(),
             program: None,
             envs: std::collections::BTreeMap::new(),
+            runners: std::collections::BTreeMap::new(),
+            run_counter: 0,
+            runner_generation: 0,
+            result: None,
         }
     }
 }
@@ -148,6 +160,16 @@ pub(crate) enum Event {
     Choose(String),
     /// An extension's Python environment (environment.rs).
     Env(environment::EnvEvent),
+    /// An extension's contribution run in its process: extension, kind (`command`), local id (runner.rs).
+    Run(String, String, String),
+    /// Its environment found (or why not): extension, kind, local id, what starting it needs.
+    Launch(String, String, String, Result<runner::Launch, String>),
+    /// Durdur on an extension's run.
+    StopRun(String),
+    /// A stopped run not answered in time: its process is ended.
+    RunOverdue(String, u64),
+    /// What an extension's process said: extension, its process's generation, what.
+    Runner(String, u64, crate::python::host::Said),
     Enable(String),
     Disable(String),
     Remove(String),
@@ -179,6 +201,8 @@ pub(crate) enum Event {
     FullLog(bool),
     /// The status bar's cell: the manager on the first extension in trouble.
     ShowTrouble,
+    /// The manager on this extension, its log in view (a failure's notice's Ayrıntı).
+    Show(String),
     /// A revealed button's outline goes: its tab, panel and place.
     FlashEnd(&'static str, usize, usize),
     /// The lists' word, and their program filter by its place in browse.rs's `PROGRAMS`.
@@ -454,6 +478,13 @@ impl App {
                 return self.env_look(&id);
             }
             Event::Env(event) => return self.env_event(event),
+            Event::Run(ext, kind, local) => return self.ext_run(&ext, &kind, &local),
+            Event::Launch(ext, kind, local, launch) => {
+                return self.ext_launch(&ext, &kind, &local, launch);
+            }
+            Event::StopRun(ext) => return self.ext_stop(&ext),
+            Event::RunOverdue(ext, id) => self.ext_overdue(&ext, id),
+            Event::Runner(ext, generation, said) => return self.ext_said(&ext, generation, said),
             Event::Enable(id) => {
                 let result = self.extensions.registry.as_mut().map(|r| r.enable(&id));
                 match result {
@@ -739,9 +770,15 @@ impl App {
                 let first = self.extensions.troubles.first().map(|t| t.id.clone());
                 self.open_extensions();
                 self.extensions.part = Part::Installed;
-                if first.is_some() {
-                    self.extensions.chosen = first;
+                // Chosen as a click on its row chooses it: its Python environment looked for, not left “aranıyor”.
+                if let Some(first) = first {
+                    return self.extensions_event(Event::Choose(first));
                 }
+            }
+            Event::Show(ext) => {
+                self.open_extensions();
+                self.extensions.part = Part::Installed;
+                return self.extensions_event(Event::Choose(ext));
             }
         }
         Task::none()
