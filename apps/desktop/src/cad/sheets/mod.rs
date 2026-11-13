@@ -290,6 +290,7 @@ impl SheetMaps {
                         source: crate::document::Source::Local,
                         session: drawing.session,
                         legacy: false,
+                        disk: None,
                     };
                     (copy, spatial)
                 });

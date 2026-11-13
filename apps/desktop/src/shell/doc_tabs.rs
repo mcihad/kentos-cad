@@ -202,6 +202,32 @@ impl App {
         }
     }
 
+    /// The drawing whose file is `path` (by its canonical place), brought in front if it is open, said; false when
+    /// no open drawing is that file.
+    pub(crate) fn show_open_file(&mut self, path: &std::path::Path) -> bool {
+        let canonical = |p: &std::path::Path| std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
+        let want = canonical(path);
+        let same = |d: &Document| d.path.as_deref().is_some_and(|p| canonical(p) == want) && d.cloud_source().is_none();
+        let front = self.document.as_ref().is_some_and(same);
+        let at = if front {
+            Some(self.doc_tabs.at)
+        } else {
+            self.doc_tabs.parked.iter().position(|p| same(&p.document)).map(|k| if k >= self.doc_tabs.at { k + 1 } else { k })
+        };
+        let Some(k) = at else {
+            return false;
+        };
+        if !front {
+            self.show_tab(k);
+        }
+        let name = self.document.as_ref().map(|d| d.name().to_owned()).unwrap_or_default();
+        self.say(
+            Level::Info,
+            format!("“{name}” zaten açık; sekmesine geçildi. Aynı dosyanın iki kopyası birbirinin kaydını silerdi."),
+        );
+        true
+    }
+
     pub(crate) fn doc_tabs_command(&mut self, id: &str) -> iced::Task<Message> {
         match id {
             "file.openTab" => {
@@ -608,5 +634,38 @@ mod tests {
         assert!(app.doc_tabs_view().is_none(), "one drawing: no strip");
         app.close_tab_now();
         assert!(app.document.is_none());
+    }
+}
+
+#[cfg(test)]
+mod same_file_tests {
+    use crate::app::{App, Message};
+    use crate::files_testing::{app_with_drawing, drive, last_said, scratch};
+
+    /// UR-088: a file already open is not opened in a second tab (its tab comes in front), and a save over a file
+    /// another program changed since it was read is refused with the way on, the other work kept.
+    #[test]
+    fn one_file_is_one_tab_and_a_changed_file_is_not_written_over() {
+        let dir = scratch("same-file");
+        let path = dir.join("ayni.kcad");
+        let mut app: App = app_with_drawing();
+        app.picker = crate::app::Picker::File(path.clone());
+        let task = app.update(Message::Run("file.save"));
+        drive(&mut app, task);
+        assert!(last_said(&app).starts_with("Kaydedildi:"), "{}", last_said(&app));
+        let tabs = app.doc_tabs.count(true);
+        let _ = app.update(Message::Opening(crate::opening::Event::PickedTab(Some(path.clone()))));
+        assert_eq!(app.doc_tabs.count(true), tabs, "no second tab of the file");
+        assert!(last_said(&app).contains("zaten açık"), "{}", last_said(&app));
+        // Another program writes the file meanwhile.
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        let other = std::fs::read(&path).unwrap();
+        std::fs::write(&path, [other.as_slice(), b" "].concat()).unwrap();
+        let before = std::fs::read(&path).unwrap();
+        let task = app.update(Message::Run("file.save"));
+        drive(&mut app, task);
+        assert!(last_said(&app).contains("diskte değişti"), "{}", last_said(&app));
+        assert_eq!(std::fs::read(&path).unwrap(), before, "the other write is kept");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

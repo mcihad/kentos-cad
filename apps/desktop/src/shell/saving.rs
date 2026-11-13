@@ -477,6 +477,14 @@ impl App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
+        // Over its own file, which changed since it was read or written: refused, the other work kept.
+        if let Target::File(path) = &target
+            && doc.path.as_deref() == Some(path.as_path())
+            && let Some(why) = doc.changed_on_disk()
+        {
+            self.warn(why);
+            return Task::none();
+        }
         let model = doc.model.clone();
         let (id, session, revision) = (next_id(), doc.session, doc.model.revision());
         // The level and view on screen go with the file, no edit of the drawing (docs/adr/0720 §1).

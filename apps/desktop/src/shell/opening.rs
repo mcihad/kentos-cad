@@ -496,6 +496,9 @@ impl App {
                 }
                 return self.start_opening_unit(path, purpose, selected);
             }
+            // A file already open (on screen or in a tab) is shown, not opened twice: two copies saved over each other
+            // lost the first one's work without a word.
+            Event::Picked(Some(path)) | Event::PickedTab(Some(path)) if self.show_open_file(&path) => {}
             Event::Picked(Some(path)) => return self.start_opening(path, Purpose::File),
             Event::PickedTab(Some(path)) => return self.start_opening(path, Purpose::Tab),
             Event::Picked(None) | Event::PickedTab(None) => {}
