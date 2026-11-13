@@ -1520,6 +1520,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Tekrar:** `13fa7e12c` release CAD uygulamasında Ötele aracını açın, sağdaki `Etkin aracın ayarları → Mesafe` değerini önce `2` yapın. Alanı yeniden seçip `0` yazın ve Enter'a basın. Alan hiçbir uyarı olmadan `2.000 m` değerine döner; araç nesne seçmeyi bekler. Bu denemede sıfırla geometri üretilmedi; sonraki işlemde eski 2 m değerinin geçerli olması kullanıcı tarafından fark edilmeyebilir.
 - **Beklenen / öneri:** Geçersiz sayı için açık ve alana bağlı “Mesafe sıfırdan büyük olmalı” uyarısı verin; etkin değeri açıkça gösterin ve kullanıcı değeri düzeltmeden eski değerle istemeden işlem yapmasını önleyin. `crates/native/interaction/src/offset.rs` içinde `configure("distance")`, `input` fonksiyonuna yönleniyor; `input` geçersiz değerde bildirim üretmeden `false` döndürüyor. Alanın onay/odak davranışı ve komut satırı girişi birlikte ele alınmalı.
 - **Kabul:** Sıfır, negatif, metin, sonsuz/taşan sayı ve desteklenen birimler; Enter ve odak kaybı; son geçerli değer, Noktadan geç modu, Escape ve geçerli girişle devam senaryoları denetlenmeli.
+- **Durum (13.11.2026):** düzeltildi — Ötele'nin Mesafe ayarına (ve komut satırına) 0 ya da eksi yazılınca «Mesafe sıfırdan büyük olmalı; mesafe 2.000 m kaldı.», sayı olmayan değerde «Mesafe bir uzunluk olmalı … mesafe 2.000 m kaldı.» deniyor; test `edits::offset_says_a_zero_distance_and_takes_a_typed_through_point` (kentos-interaction).
 
 ### UR-112 — Noktadan geçerek ötelemede koordinat, mesafe olarak okunup kip değiştiriliyor
 
@@ -1528,6 +1529,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Nokta beklenen aşamada standart koordinat girdisi çizgiye paralel sonucun geçeceği nokta olarak yorumlanmalı; sayısal mesafe girişi ile Türkçe ondalık virgül belirsizliği açık bir kip/anahtar sözcükle çözülmeli. En azından nokta desteği yoksa koordinat mesafeye dönüştürülmemeli ve açıkça yönlendirilmelidir.
 - **Kod / çözüm:** `crates/native/interaction/src/offset.rs` içinde araç `point_count()` için daima `0` döndürüyor; konum `pointer_down` ile alınıyor. `input` ise `typed_length` ile sayıyı okuyup `offset_through = false` yapıyor. Nokta beklenen aşamayı koordinat çözümleme akışına bağlayın ve uzunluk seçimini bu aşamada belirsiz bırakmayın.
 - **Kabul:** Mutlak/göreli koordinat ve birimli sayılar, ondalık virgüllü mesafe, fare ve kenetle geçiş noktası; iki yana, kaynak silme, önizleme, iptal, geri al/yinele ve komut geçmişi sınanmalı.
+- **Durum (13.11.2026):** düzeltildi — Noktadan geç açık ve nesne seçilmişken komut satırına yazılan X,Y artık kopyanın geçeceği nokta olarak alınıyor (400,25 → (400; 25) noktası), Noktadan geç kapanmıyor; yalnız sayı yazılırsa eskisi gibi mesafe; test `edits::offset_says_a_zero_distance_and_takes_a_typed_through_point`.
 
 ### UR-113 — Yay seçildiğinde bağlamsal sekme `Çizgi` adını gösteriyor
 
@@ -1543,6 +1545,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen / öneri:** Önizlemede iki taraftan hangisinin üretilemediği ve kaynağın silineceği açıkça belirtilmeli. Özellikle kaynak silme açıkken kısmi sonucu sessizce tamamlamak yerine varsayılan olarak kaynağı koruyup düzeltme istemek veya kısmi sonucu ve silmeyi açıkça kullanıcıya seçtirmek değerlendirilmeli. İşlem geçmişi ve tek adımlık geri alma korunmalı.
 - **Kod:** `crates/native/application/src/offset.rs` iki taraftan üretilen sonuçları ayrı işler; hata için uyarı yazar, `input.delete_source && made > 0` olduğunda en az bir kopya başarılı diye kaynağı kaldırır. Bu mevcut tasarımın gözlenen sonucudur; masaüstü önizlemesiyle komut/Python/MCP davranışı birlikte ele alınmalı.
 - **Kabul:** İki sonuç başarılı, biri ve ikisi başarısız; kaynak sil açık/kapalı; yay, daire, kapalı alan ve çoklu seçim; önizleme, kaydet–aç, geri al/yinele ve API üzerinden kısmi sonuç bildirimi sınanmalı.
+- **Durum (13.11.2026):** düzeltildi — `cad.entities.offset` Kaynağı sil açıkken istenen yanlardan biri yapılamazsa (yarıçap sıfırın altına düşen iç yan) kaynağı artık silmiyor, yapılan kopyayı ekleyip «Kaynağı sil açıktı, ama bir yanın kopyası yapılamadığı için kaynak silinmedi; yalnız yapılan kopya eklendi.» uyarısını veriyor (masaüstü, Python ve MCP aynı komut); ortak durumlar geçti; test `edits::a_failed_side_keeps_the_source` (kentos-interaction). Önizlemede hangi yanın yapılamayacağının gösterilmesi ayrıca yapılmadı.
 
 ### Ek doğrulama — başarısız dosya açma ve kaydedilmemiş çizim
 

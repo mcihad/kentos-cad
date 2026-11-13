@@ -394,6 +394,22 @@ impl Tool for Offset {
             }
             return true;
         }
+        // Noktadan geç with an object picked: a typed point is the point the copy goes through (400,25 a point, not
+        // 400.25 m of distance).
+        if self.memory().offset_through
+            && let Some(slot) = self.target
+            && !matches!(upper_tr(js_trim(text)).as_str(), "Y" | "T" | "N" | "I" | "S")
+            && let Some(p) = cx.typed_point(text, None, None)
+        {
+            if cx.doc.get(slot).is_none() {
+                self.drop_target();
+            } else if self.write(slot, p, cx) {
+                self.drop_target();
+            }
+            self.see(cx);
+            self.redraw(cx);
+            return true;
+        }
         match upper_tr(js_trim(text)).as_str() {
             "Y" => cx.memory.offset_approximate = !cx.memory.offset_approximate,
             "T" => self.ask_tolerance = true,
@@ -402,11 +418,20 @@ impl Tool for Offset {
             "S" => cx.memory.offset_erase = !cx.memory.offset_erase,
             // Typed in the project's unit (docs/adr/0165 §2).
             _ => match cx.typed_length(text) {
-                Some(n) if n > 0.0 => {
+                Some(n) if n > 0.0 && n.is_finite() => {
                     cx.memory.offset_distance = n;
                     cx.memory.offset_through = false;
                 }
-                _ => return false,
+                // A number not above zero: said, the distance as it was.
+                Some(_) => {
+                    let was = cx.format().length(cx.memory.offset_distance);
+                    cx.say(
+                        Level::Warn,
+                        format!("Mesafe sıfırdan büyük olmalı; mesafe {was} kaldı."),
+                    );
+                    return true;
+                }
+                None => return false,
             },
         }
         self.see(cx);
@@ -460,7 +485,17 @@ impl Tool for Offset {
                 };
                 cx.memory.offset_tolerance = n;
             }
-            "distance" => return self.input(value, cx),
+            "distance" => {
+                if self.input(value, cx) {
+                    return true;
+                }
+                let was = cx.format().length(cx.memory.offset_distance);
+                cx.say(
+                    Level::Warn,
+                    format!("Mesafe bir uzunluk olmalı (ör. 2 ya da 250 mm); mesafe {was} kaldı."),
+                );
+                return false;
+            }
             _ => return false,
         }
         self.see(cx);

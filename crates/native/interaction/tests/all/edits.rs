@@ -1109,3 +1109,46 @@ fn lattice_axis_input_is_explicit_degrees_and_every_edit_is_one_undo() {
     assert_eq!(b.doc.arrays()[0].items,before.arrays[0].items);
     b.doc.undo();assert_eq!(b.doc.to_snapshot_v2(),before);b.doc.redo();assert_eq!(b.doc.to_snapshot_v2(),after);
 }
+
+/// UR-111, UR-112: a distance of 0 is said and the one before kept; with Noktadan geç and an object picked, a typed
+/// X,Y is the point the copy goes through (not 400.25 m of distance).
+#[test]
+fn offset_says_a_zero_distance_and_takes_a_typed_through_point() {
+    let mut b = bench(&[]);
+    b.start("offset");
+    assert!(b.type_text("2"));
+    assert!(b.run(|s, cx| s.configure("distance", "0", cx)));
+    assert_eq!(b.memory.offset_distance, 2.0);
+    assert_eq!(b.last_text(), Some("Mesafe sıfırdan büyük olmalı; mesafe 2.000 m kaldı."));
+    assert!(b.type_text("n"));
+    b.click(-20.0, 10.0);
+    let through = format!("{},{}", common::E - 17.0, common::N + 9.0);
+    assert!(b.type_text(&through));
+    assert!(b.memory.offset_through, "Noktadan geç stays on");
+    assert!(near(&line(&b, 14), &[[-17.0, 6.0], [-17.0, 18.0]]), "the copy through the typed point");
+}
+
+/// UR-114: an arc of radius 10 offset 12 to both sides with Kaynağı sil: the inner side cannot be made, so the source
+/// stays (said) and only the outer copy is added.
+#[test]
+fn a_failed_side_keeps_the_source() {
+    let mut b = bench(&[]);
+    let arc = b.add_arc("cizim", [100.0, 100.0], 10.0, 0.0, 2.0);
+    let uid = b.doc.uid(arc).expect("a uid").to_string();
+    let before = b.doc.len();
+    let input: kentos_commands::EntitiesOffset = serde_json::from_value(serde_json::json!({
+        "uids": [uid],
+        "by": {"kind": "distance", "distance": 12.0, "side": {"x": common::E + 200.0, "y": common::N + 100.0}},
+        "bothSides": true,
+        "deleteSource": true
+    }))
+    .expect("an offset");
+    let result = kentos_native_application::offset::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut b.doc),
+        input,
+    );
+    let kentos_commands::CommandResult::Completed { warnings, .. } = result else { panic!("{result:?}") };
+    assert!(b.doc.get(arc).is_some(), "the source stays");
+    assert_eq!(b.doc.len(), before + 1, "the outer copy only");
+    assert!(warnings.iter().any(|w| w.message.starts_with("Kaynağı sil açıktı, ama bir yanın kopyası yapılamadığı")), "{warnings:?}");
+}
