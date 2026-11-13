@@ -405,8 +405,8 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
                     Severity::Warning,
                     "non_standard_scale",
                     Some(it),
-                    format!("{} 1/{} ölçeğinde: standart bir ölçek değil.", named(it), f.denominator()),
-                    "Kadastro ve imar paftaları standart ölçek ister (1/500, 1/1000, 1/2000, 1/5000 …).",
+                    format!("{} 1/{} ölçeğinde: standart bir ölçek değil.", named(it), scale_text(f.denominator())),
+                    "Basılı paftada ölçek cetvelle okunabilsin diye standart bir ölçek seçin (1/50, 1/100, 1/500, 1/1000 …); bir kurumun istediği ölçek varsa onu.",
                     fixes,
                 );
             }
@@ -966,19 +966,6 @@ fn note(out: &mut Out, n: &Note, it: Option<&Item>) {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn the_nearest_standard_scale() {
-        assert_eq!(nearest_standard(855), Some(1000));
-        assert_eq!(nearest_standard(1200), Some(1000));
-        assert_eq!(nearest_standard(2300), Some(2500));
-        assert_eq!(nearest_standard(7000), Some(5000));
-    }
-}
-
 /// A map that leaves part of the drawing out (usage review UR-011): its fixed view of the drawing, at its scale and
 /// centre, does not take in the drawing's extent `bounds` (ground metres: min x, min y, max x, max y). A warning, not
 /// an error: a detail view leaves the rest out on purpose; the fix fits the whole drawing at the next standard scale.
@@ -1023,4 +1010,36 @@ pub fn drawing_overrun(item: &Item, bounds: [f64; 4]) -> Option<Finding> {
         fixes,
         placeholder: false,
     })
+}
+
+/// A scale's denominator as a sentence says it (UR-013): whole as it is, else to three decimals without trailing
+/// zeros (1/8.598 for 8.598007570535621); the value kept is not changed.
+fn scale_text(denominator: f64) -> String {
+    if denominator.fract() == 0.0 {
+        return format!("{denominator}");
+    }
+    let text = format!("{denominator:.3}");
+    text.trim_end_matches('0').trim_end_matches('.').to_owned()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_nearest_standard_scale() {
+        assert_eq!(nearest_standard(855), Some(1000));
+        assert_eq!(nearest_standard(1200), Some(1000));
+        assert_eq!(nearest_standard(2300), Some(2500));
+        assert_eq!(nearest_standard(7000), Some(5000));
+    }
+
+    /// UR-013: a scale said to three decimals at most, the value kept whole.
+    #[test]
+    fn a_scale_is_said_to_three_decimals() {
+        assert_eq!(scale_text(100.0), "100");
+        assert_eq!(scale_text(8.598007570535621), "8.598");
+        assert_eq!(scale_text(12.5), "12.5");
+        assert_eq!(scale_text(0.2), "0.2");
+    }
 }
