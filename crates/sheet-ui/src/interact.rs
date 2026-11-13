@@ -197,6 +197,7 @@ impl Designer {
                 // Ctrl reaches into a group; Shift adds or takes away.
                 let id = if ctrl { item } else { top };
                 if shift {
+                    self.keep_open_texts();
                     if let Some(i) = self.selection.iter().position(|x| *x == id) {
                         self.selection.remove(i);
                         self.after_select();

@@ -174,6 +174,7 @@ impl Designer {
             Message::Select(ids) => self.select(ids),
             Message::TreeClick(id, add) => {
                 if add {
+                    self.keep_open_texts();
                     if let Some(i) = self.selection.iter().position(|x| *x == id) {
                         self.selection.remove(i);
                     } else {
@@ -666,7 +667,16 @@ impl Designer {
 
     // ── Choosing ──
 
+    /// A text written in the inspector's editor and not yet applied is applied to the items it was written for
+    /// before the choice changes (UR-027): it was dropped with them, unseen when Uygula was below the panel's edge.
+    pub(crate) fn keep_open_texts(&mut self) {
+        for id in self.inspector.open_editors() {
+            self.inspector_event(kentos_ui::widget::inspector::Event::CloseEditor { id, apply: true });
+        }
+    }
+
     pub(crate) fn select(&mut self, ids: Vec<ItemId>) {
+        self.keep_open_texts();
         let mut seen = std::collections::BTreeSet::new();
         self.selection = ids
             .into_iter()

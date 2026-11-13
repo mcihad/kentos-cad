@@ -2393,3 +2393,29 @@ fn a_failed_host_output_reopens_options_without_losing_scope_or_changing_the_boo
     d.update(Message::Print);
     assert!(d.error().is_none());
 }
+
+/// UR-027: a text written in the inspector's editor and not applied is applied to its item when another item is
+/// chosen, not dropped with the choice.
+#[test]
+fn a_text_written_and_not_applied_is_kept_when_another_item_is_chosen() {
+    let mut d = designer();
+    let sheet = &d.book().sheets[0];
+    let texts: Vec<String> = sheet
+        .items
+        .iter()
+        .filter(|i| matches!(i.kind, ItemKind::Text(_)))
+        .map(|i| i.id.clone())
+        .collect();
+    let (first, other) = (texts[0].clone(), texts[1].clone());
+    d.update(Message::Select(vec![first.clone()]));
+    let field = d
+        .kind_field_names()
+        .iter()
+        .position(|p| *p == "Metin")
+        .expect("the text's field");
+    d.update(Message::Inspector(kentos_ui::widget::inspector::Event::Edit { id: field, text: "Ada 101 vaziyet planı".into() }));
+    d.update(Message::Select(vec![other]));
+    let item = d.book().sheets[0].items.iter().find(|i| i.id == first).expect("the item");
+    let ItemKind::Text(t) = &item.kind else { panic!("a text") };
+    assert_eq!(t.content, "Ada 101 vaziyet planı", "applied, not lost");
+}
