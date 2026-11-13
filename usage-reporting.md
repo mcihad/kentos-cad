@@ -1420,6 +1420,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Tekrar:** 13.11.2026 `13fa7e12c` release sürümünde bir CAD çizimini aç; `Görünüm → Böl` ile iki görünüm oluştur. Sol görünümde fare tekeriyle güçlü yakınlaştırma yap. Sol görünümün rozetinde `Ölçek 1:0`, sağ görünümde ise önceki `Ölçek 1:68` kalıyor. Bu testte iki görünümün yakınlaştırması birbirinden bağımsız değişti; `1:0` etiketinin gösterilmesi doğrulandı. Test edilen aşırı yakınlaştırmada sol sahne boş bir bölge gösterdi; geometrinin kaybolmasının nedeni veya hassasiyet davranışı bu adımda ayrı araştırılmadı.
 - **Kod ipucu:** `apps/desktop/src/cad/split_view.rs::scale_chip` ekran ölçeğinin paydasını tam sayıya yuvarlayıp `scale_text` biçimleyicisine veriyor; 0 ile 0,5 arası değerler sıfıra yuvarlanabilir. Bu, ekran yakınlaştırması göstergesidir; proje/pafta ölçeğinin değiştiği anlamına gelmez.
 - **Kabul:** Birden küçük pozitif değerler uygun ondalık veya `N:1` biçimiyle gösterilsin; gerçek değeri sıfırlama ve yazdırma ölçeğiyle karıştırma. Çok küçük/büyük yakınlaştırmalar, iki bağlı/bağımsız görünüm, farklı DPI ve kullanıcıya gösterilen metin test edilmeli.
+- **Durum (13.11.2026):** düzeltildi — bölünmüş görünümün ölçek rozeti tam boydan yakın yakınlaştırmada «1:0» yerine büyütmeyi «5:1» gibi yazıyor, okunamayan değerde «—»; test `split_view::tests::a_view_closer_than_full_size_says_its_enlargement`. Aşırı yakınlaştırmada sahnenin boş görünmesi ayrıca araştırılmadı.
 
 ### UR-099 — Görünüm dışındaki üst üste seçim göstergesi sahne kenarında kalıyor
 
