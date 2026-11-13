@@ -182,6 +182,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Her iki yerde platform ve gerçek tuş eşlemesinden üretilmiş aynı kısayol gösterilmeli; Enter yeni satır, Esc iptal davranışları korunmalı.
 - **Başlangıç noktası:** `crates/native/interaction/src/paragraph.rs` sabit komut istemi ve `apps/desktop/src/paragraph_editor.rs` editör kısayolu; ortak platform kısayol gösterimini kullan.
 - **Kabul:** macOS ve Windows/Linux'ta editör ve komut satırının aynı gerçek kısayolu göstermesi; çok satır, ⌘/Ctrl+Enter, Tamam ve Esc ile ayrı test.
+- **Durum (13.11.2026):** düzeltildi — Çok satırlı yazı düzenleyicisinin ipucu ve komut satırı artık aynı kısayolu aynı yazımla gösteriyor: macOS'ta ikisi de «⌘Enter» (düzenleyici «⌘Enter: ekle · Esc: vazgeç», komut satırı «Enter yeni satır, ⌘Enter ya da Tamam ekler, Esc vazgeçer»), Windows/Linux'ta «Ctrl+Enter»; yazım tek yerden (`keys::shown`) geliyor ve bütün araç istemlerinde geçerli. Düzenleyicinin tuşları değişmedi (Enter yeni satır, ⌘/Ctrl+Enter ekler, Esc vazgeçer). Test `a_steps_shortcut_reads_as_the_platform_writes_it`; resimler `.run/gui-evidence/kullanim-UR-016/`. Windows/Linux'ta gerçek pencere denemesi yapılmadı.
 
 #### UR-017 — Boş tablo önizlemesinde sütun ayraçları görünmüyor
 

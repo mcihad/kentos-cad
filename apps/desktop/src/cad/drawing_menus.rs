@@ -560,7 +560,8 @@ impl App {
     /// as it really works (UR-015). Unless a quick right click is Enter, a right click opens this menu, so “sağ
     /// tıklayın” reads “Enter'a basın (ya da sağ tık › Onayla / bitir)”, the menu's own row named.
     pub(crate) fn step_words(&self, text: &str) -> String {
-        let text = self.format().axes_text(text);
+        // The shortcuts in the platform's spelling (UR-016): ⌘Enter on macOS, as the editors beside it say.
+        let text = crate::keys::shown(&self.format().axes_text(text));
         if self.settings.bool(RIGHT_CLICK_ENTER) || !text.contains("sağ tık") {
             return text;
         }
@@ -791,6 +792,40 @@ mod tests {
         }
     }
 
+    /// UR-016's pictures (`.run/gui-evidence/kullanim-UR-016/`): Çok satırlı yazı's editor open, its hint and the
+    /// command line saying the same shortcut, light and dark.
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn paragraph_shortcut_screens() {
+        use crate::app::{App, Message};
+        use crate::tools_scenes::{E, N, Objects, click, open, run};
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-016");
+        std::fs::create_dir_all(&out).expect("a folder");
+        for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+            let (mut app, _) = App::boot(None);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            open(&mut app, Objects::new());
+            crate::files_testing::make_cad(&mut app);
+            app.draft.snap = false;
+            app.viewport.camera.fit(
+                &kentos_render_wgpu::Bounds { min_x: E - 2.0, min_y: N - 6.0, max_x: E + 22.0, max_y: N + 6.0 },
+                24.0,
+            );
+            run(&mut app, "tool.mtext");
+            click(&mut app, [2.0, 3.0]);
+            click(&mut app, [14.0, -3.0]);
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("cok-satirli-yazi-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
+    }
+
     /// UR-015: the command line says it by the user's choice: with a quick right click as Enter, as the tool wrote it.
     #[test]
     fn the_command_line_says_a_right_click_by_the_users_choice() {
@@ -801,6 +836,18 @@ mod tests {
         );
         let _ = app.settings.choose(&[(super::RIGHT_CLICK_ENTER, serde_json::Value::Bool(true))]);
         assert_eq!(app.step_words("uygulamak için sağ tıklayın"), "uygulamak için sağ tıklayın");
+    }
+
+    /// UR-016: a step's shortcut in the platform's spelling, the same the paragraph editor's hint uses.
+    #[test]
+    fn a_steps_shortcut_reads_as_the_platform_writes_it() {
+        let app = crate::files_testing::app_with_drawing();
+        let step = app.step_words("Enter yeni satır, Ctrl+Enter ya da Tamam ekler, Esc vazgeçer");
+        assert_eq!(step, crate::keys::shown("Enter yeni satır, Ctrl+Enter ya da Tamam ekler, Esc vazgeçer"));
+        if cfg!(target_os = "macos") {
+            assert!(step.contains("⌘Enter ya da Tamam ekler"), "{step}");
+        }
+        assert!(crate::keys::shown("Ctrl+Enter: ekle · Esc: vazgeç").starts_with(if cfg!(target_os = "macos") { "⌘Enter" } else { "Ctrl+Enter" }));
     }
     use iced::Point;
     use kentos_interaction::SnapKind;
