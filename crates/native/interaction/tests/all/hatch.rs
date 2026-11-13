@@ -615,3 +615,29 @@ fn a_project_pattern_is_named_in_the_success_message() {
     b.click(-20.0, 1.0);
     assert!(b.last_text().is_some_and(|t| t.starts_with("ANSI32 tarama eklendi")), "{:?}", b.last_text());
 }
+
+/// UR-089: a tied hatch copied with its boundary: the copy follows nothing (the decision of copies), and the command
+/// says so with the way to tie it again rather than leaving it unsaid.
+#[test]
+fn a_copied_tied_hatch_is_said_untied() {
+    let mut b = bench();
+    b.click(-20.0, 1.0);
+    let Entity::Hatch(h) = b.newest() else { panic!("a hatch") };
+    assert!(h.assoc.is_some(), "tied as drawn");
+    let hatch = b.newest().base().id;
+    let uids: Vec<String> = [hatch].iter().filter_map(|s| b.doc.uid(kentos_domain::Slot(*s))).map(|u| u.to_string()).collect();
+    let input: kentos_commands::EntitiesTransform = serde_json::from_value(serde_json::json!({
+        "uids": uids, "transform": {"kind": "move", "dx": 50.0, "dy": 0.0}, "copy": true
+    }))
+    .expect("a transform");
+    let result = kentos_native_application::transform::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut b.doc),
+        input,
+    );
+    let kentos_commands::CommandResult::Completed { warnings, .. } = result else { panic!("{result:?}") };
+    assert!(
+        warnings.iter().any(|w| w.code == kentos_commands::codes::HATCH_ASSOCIATION_LOST
+            && w.message.starts_with("1 kopya taramanın sınır bağı yok")),
+        "{warnings:?}"
+    );
+}
