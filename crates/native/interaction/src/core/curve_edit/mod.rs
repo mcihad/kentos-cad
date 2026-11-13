@@ -500,6 +500,20 @@ impl CurveEditTool {
             return false;
         };
         let degree = cx.memory.nurbs_degree;
+        // A polyline an associative array follows cannot be made a curve: the array lays its items along lines,
+        // arcs and polylines only, and would be left where it was. Said, nothing written.
+        if matches!(key, "E" | "N" | "R")
+            && matches!(kind, Kind::Polyline { .. })
+            && let Some(n) = self.picked.and_then(|s| arrays_along(cx.doc, s)).filter(|n| *n > 0)
+        {
+            cx.say(
+                Level::Warn,
+                format!(
+                    "Bu çoklu çizgi {n} ilişkili dizinin yolu; eğriye çevrilirse dizi onu izleyemez ve eski yerinde kalır. Önce diziyi Patlat ile bağımsız nesnelere çevirin ya da yolu çoklu çizgi bırakın."
+                ),
+            );
+            return true;
+        }
         let now = |edit: CurveEdit| Some(Err(edit));
         let ask = |a: Ask| Some(Ok(a));
         let chosen = match (key, kind) {
@@ -981,4 +995,15 @@ impl Tool for CurveEditTool {
     fn preview(&self, _format: &Format) -> Preview {
         self.drawn.clone()
     }
+}
+
+/// How many associative arrays lay their items along the object at `slot` (none: no uid).
+fn arrays_along(doc: &kentos_domain::Document, slot: kentos_domain::Slot) -> Option<usize> {
+    let uid = doc.uid(slot)?.to_string();
+    Some(
+        doc.arrays()
+            .iter()
+            .filter(|a| matches!(&a.layout, kentos_commands::ArrayLayout::Path { path, .. } if *path == uid))
+            .count(),
+    )
 }
