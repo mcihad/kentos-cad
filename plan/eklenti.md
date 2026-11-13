@@ -13,6 +13,13 @@ Eski kimlikler aşağıda köşeli ayraçta durur: başka belgelerin "PY-KEK-07"
 dosya bu plana yönlendiren kısa notlara indi; `argon-tavsiye.md` FAZ 3'ü adımların tek satırlık özetini ve bu belgeye
 bağlantıyı tutar.
 
+**Örneğimiz QGIS (13 Kasım 2026, sahip):** "Bu konuyu çok iyi çalışman gerekiyor çünkü bu ekosistemi büyütecek en iyi
+şey QGIS eklenti sistemi kadar güçlü ve sağlıklı çalışmalı, örneğimiz orası." Planın dayanağı iki kaynaklı araştırmadır:
+[QGIS eklenti sistemi](../docs/research/2026-11-13-qgis-eklenti-sistemi.md) (resmî belgeler, QGIS kaynak kodu,
+plugins.qgis.org'un kodu, QEP'ler; kataloğun 13 Kasım sayımları) ve [öbür ekosistemler](../docs/research/2026-11-13-eklenti-ekosistemleri.md)
+(Blender, VS Code, ArcGIS Pro, JupyterLab, Obsidian). Dersleri §1.5'te, kaynak kimlikleriyle adımlara bağlıdır: `[Q·n]` QGIS araştırmasının
+§10 dersi, `[E·n]` öbür ekosistemler araştırmasının §7 önerisi, `[Ö·n]` aynı araştırmanın §6 tablosundaki satır.
+
 **Form sistemi ayrı plandır:** CBS formu, tasarımcı, domain/ilişki, merkezi yayın, ACL ve mobil saha akışı
 [form.md](form.md)'nindir. Burada yalnız eklentinin form taşıması ve form eylemiyle kesişimi vardır. Temel form
 Python, uv ya da `.kek` beklemez.
@@ -128,6 +135,43 @@ flowchart TB
     HOST --> EP7["7. Katman şeması, form ve olay kancaları"]
 ```
 
+### 1.5 QGIS'ten ve öbür ekosistemlerden dersler (13 Kasım 2026)
+
+QGIS'i büyüten formül basittir: bir klasör ve iki dosya, uygulamanın içinde önceden tanımlı katalog, tek tıkla kurma ve
+güncelleme bildirimi, PyQGIS'in bütün gücü. Sonuç: QGIS 3.44 kataloğunda 3.927 paket, toplamı yaklaşık 103 milyon
+indirme; 2026'da açılan paket sayısı 1.567 (13 Kasım'a dek). Kronik dertleri ise tek kökten gelir: tek süreç, tek Python
+yorumlayıcısı, kodla kurulan arayüz. Temizlik yazarın `unload()`'ına bağlıdır ve unutulunca QGIS çöker; bağımlılık
+çatışması 2020'den beri çözülemedi (QEP 202 uygulanmadan kapandı; Mayıs 2026'da çalışırken bağımlılık indiren eklentiler
+kaldırıldı); Qt6'ya geçişten 8 ay sonra paketlerin yalnız %42'si yeni sürümde. Öbür ekosistemlerde: beyan edilen izin
+hiçbirinde zorlanmıyor; Blender bütün eklentilerin tekerleklerini tek `site-packages`'a açıyor ve en yüksek sürüm
+kazanıyor; Obsidian "yalnız ilk sürümü incele" modelini kuyruk 2.300'ü aşınca bıraktı; VS Marketplace'ten 2026'da
+kaldırılan 2.140 eklentinin 1.109'u taklit; Open VSX'in tarayıcısı yük altında taranmamış paketi "geçti" saydı.
+
+**Sonuç:** planın kökleri kesen kararları (ayrı süreç, kilitli uv ortamı, kiralama, bildirimsel UI, `integrity.json`,
+yetenekler) "kolaylık" için gevşetilmez. Eksikler aşağıdaki derslerle kapanır; sıra ekosistemin büyümesine ve
+sağlığına etkiye göredir.
+
+| # | Ders | Kaynak | Adım |
+|---|---|---|---|
+| D1 | **Katalog uygulamanın içinde, ilk günden.** Tek tıkla kurma, güncelleme bildirimi; yerel `.kek`, kurum kataloğu ve çevrimdışı katalog aynı akıştan geçer. | Q·1, E·10 | 18, 22A |
+| D2 | **Eşik düşük, kapı sıkı.** `blueprint`/`pack` zorunlu dosyaları üretir; tek doğrulayıcı (`kentos kek verify`) yazarın makinesinde, CI'da ve katalogda aynı koddur. QGIS'te yazarların %71'i tek eklentili ve denetim yüklemeden sonra. | Q·2, E·2, E·11 | 16, 21 |
+| D3 | **Eklenti başına kilitli ortam ve süreç**, çalışırken indirme yok, paylaşılan `site-packages` yok. | Q·3, E·6 | 18A, 19 |
+| D4 | **Temizliği host yapar:** kiralama ve "kaldırınca sıfır kalıntı" kabul testi pazarlık konusu değildir. | Q·4 | 17 |
+| D5 | **Yetenek: gerekçeli, gösterilen, zorlanan, doğrulanan.** Her yetenek kısa Türkçe gerekçeyle kurulumda ve her güncellemede **farkıyla** gösterilir; aracıdan geçen işlem yetenekle zorlanır; `verify` AST'den gerçek kullanımı çıkarır, beyan dışını reddeder. İncelenen hiçbir ekosistem bunu yapmıyor. | E·1 | 16–19, 21 |
+| D6 | **Çökme yalıtımı ve bekçi.** Art arda çökmede nedenli ve **kalıcı** devre dışı (QGIS'te başarısız eklenti her açılışta yeniden denenir); "Eklentisiz başlat", "Sorunlu eklentiyi bul" (ikiye bölme); eklenti başına etkinleşme süresi/bellek görünür; etkinleşme manifestten türer, v1'de "açılışta çalış" yoktur. | Q·5, Q·14, E·7, E·8 | 17, 18, 19 |
+| D7 | **Yazılı API kararlılığı** (QEP 425 benzeri), deneysel API kapısı (yayımlanamaz), sürüm göçü denetleyicisi ve `kentos kek upgrade`; UI bildirimsel ve araç takımından bağımsız (Qt6 dersi). | Q·6, E·9 | 19, 21, 22 |
+| D8 | **Uyumluluk anlamı tek fonksiyonda**, örtük üst sınır yok, değişikliği ADR'yle; katalog bilinen kırılmada üst sınırı sonradan daraltır. QGIS'te host ile depo boş `qgisMaximumVersion`'u farklı yorumladı. | Q·7, E·9 | 16, 22A |
+| D9 | **Keşif ve bağımlılık üst verisi v1'de:** uzun açıklama, yazarlar, bağlantılar, anahtar sözcükler, değişiklik notu, SPDX lisans, yerelleştirme, eklenti bağımlılığı (kimlik + aralık, kurmadan önce görünür), önizleme kanalı, emeklilik. Manifest bilinmeyen alanı reddettiği için sonra eklemek `schemaVersion: 2` demektir. | Q·8, Q·12, Q·13 | 16 |
+| D10 | **Veri kaynağı/altlık katkısı.** QGIS'te en çok indirilen 15 eklentinin en az 5'i veri/altlık erişimi, birincisi bir servis kataloğu. Python'suz, bildirimsel katkı olarak v1'de. | Q·9 | 16, 18 |
+| D11 | **Her sürüme otomatik ve "açık kalmayan" kapılar:** sır taraması (AI yapılandırma dosyaları dahil), görünmez Unicode reddi, bağımlılık açığı, dönemsel yeniden tarama; "taranmadı" hiçbir zaman "geçti" sayılmaz; engelleyen kural az ve kesindir; yeni kural önce sahibine gösterilir, geriye dönük herkese açık "güvenlik sorunu" rozeti verilmez (QGIS'te yanlış pozitif tepkisi). | Q·10, E·3 | 16, 20, 21, 22A |
+| D12 | **İnsan onayı farka ve riske odaklı**, kapasite baştan planlı; güvenilir yayımcı hızlı yolu yalnız yetenek/bağımlılık farkı olmayan sürümde. | Q·11, E·4 | 22A |
+| D13 | **Yayımcı ve ad alanı doğrulama:** `id` öneki doğrulanmış alan adına bağlı, benzer ad/simge denetimi, kısa ömürlü kimlikle yayın (OIDC). | E·5 | 16, 22A |
+| D14 | **Kurum katalogları ve ilke:** statik indeks (`kentos kek index`), erişim jetonu, engel listesi, BT'nin salt okunur sistem dizini, yayımcı/kimlik/sürüm izin listesi; kullanıcı ilkeyi gevşetemez; güvensiz varsayılan yok. | E·10 | 17, 18, 22A |
+| D15 | **Geri çekme, zorunlu devre dışı, şeffaf kayıt, itiraz; gecikmeli güncelleme ve kanallar.** | E·12, E·14 | 17, 22A |
+| D16 | **Proje güveni:** dışarıdan gelen `.kcad`'i açmak eklenti kodu çalıştırmaz; eklenti ifadeleri ve denetimleri onaylanana dek kısıtlı kipte; eksik eklenti kurdurulmaz. | E·13 | 17, 19, 22 |
+| D17 | **Dürüst güven sinyalleri:** yıldız oyu yok (QGIS'te istismar edildi, Eylül–Kasım 2026'da kaldırıldı); `trusted` kod denetimi değildir; onay kaydı, doğrulanmış yayımcı, karne, AI üretim kökeni, `network` hedefleri ve harici servis/LLM kullanımı açık; istemci telemetrisi yasak. | Q·15, E·15 | 16, 21, 22A |
+| D18 | **Ajan için kaldıraçlar:** kapalı sözlükler (yetenek, koşul, ikon, modül, platform), araç tanımında model açıklaması (`modelDescription`) ve girdi şeması, makine okur SDK belgesi (`llms.txt`), uydurulmuş paket adı denetimi ve bağımlılık soğuma süresi. LLM'lerin uydurduğu paket adları ticari modellerde en az %5,2. | E·2, E·6 | 21 |
+
 ---
 
 ## 2. Bugün kodda olan (13 Kasım 2026)
@@ -171,9 +215,10 @@ ajan rehberi oradan üretilir [PY-KEK-01]. Aşağıdaki örnekler v1'in kendisid
 
 ```text
 mebis.kek
-├── manifest.json              # kimlik, sınıf, modüller, katkılar, istenen yetenekler (zorunlu)
+├── manifest.json              # kimlik, sınıf, modüller, keşif üst verisi, katkılar, yetenekler (zorunlu)
 ├── integrity.json             # her dosyanın yolu, boyu ve SHA-256'sı; kendini içermez (zorunlu)
 ├── LICENSE                    # (zorunlu)
+├── CHANGELOG.md               # sürüm notları; kurmadan ve güncellemeden önce gösterilir (genel katalogda zorunlu)
 ├── schema.json                # dikey eklentinin katman/domain/ilişki şeması (isteğe bağlı)
 ├── pyproject.toml             # Python katkısı varsa zorunlu: gereksinimlerin kaynağı
 ├── uv.lock                    # Python katkısı varsa zorunlu: çözülmüş sürümlerin kaynağı
@@ -181,23 +226,33 @@ mebis.kek
 ├── tools/*.tool.json          # İşlemler araç tanımları
 ├── ui/*.panel.json            # kentos.ui panel tanımları
 ├── forms/*.kform              # taşınabilir form paketleri (kentos.form-package, ADR 0435)
+├── l10n/<dil>.json            # manifest, şerit, panel ve form metinlerinin çevirileri (isteğe bağlı)
 ├── assets/                    # ikonlar (SVG), görseller
 ├── docs/                      # yardım
 └── tests/                     # örnek veri ve doğruluk testleri
 ```
 
 - **Paket içi yollar ASCII'dir** (`A–Z a–z 0–9 . _ -` ve `/`): Unicode biçim/harf büyüklüğü çakışmaları ve benzer
-  görünen adlar baştan imkânsızdır; büyük/küçük harf yalnız farkıyla iki dosya reddedilir [PY-KEK-07].
-- **Girmez:** `.venv`, yorumlayıcı, `__pycache__`/`.pyc`, `.git`, kullanıcı sırları (`.env`, anahtarlar), mutlak kullanıcı
-  yolları, derleme önbelleği [PY-KEK-05]. v1 kaynak paketidir: platforma özel tekerlek/ikili (`.so`, `.dll`, `.dylib`,
-  `.pyd`, `.exe`) girmez; ileride girerse platform işareti, özeti, lisansı ve bağımlılık önizlemesiyle [PY-KEK-06].
+  görünen adlar baştan imkânsızdır; büyük/küçük harf yalnız farkıyla iki dosya reddedilir [PY-KEK-07]. İçerik Türkçe
+  olabilir; yalnız dosya adları ASCII'dir.
+- **Girmez:** `.venv`, yorumlayıcı, `__pycache__`/`.pyc`, `.git`, kullanıcı sırları (`.env`, anahtarlar) ve AI araç
+  yapılandırmaları (`mcp.json`, `.cursorrules` ve benzeri; sızıntının artan kaynağı [D11]), mutlak kullanıcı yolları,
+  derleme önbelleği [PY-KEK-05]. v1 kaynak paketidir: platforma özel tekerlek/ikili (`.so`, `.dll`, `.dylib`, `.pyd`,
+  `.exe`) girmez; platform tekerlekleri genel katalogda onaylı kilitten **katalog** üretir (ADIM 22A) [PY-KEK-06].
+- **Görünmez Unicode yok:** `.py` ve JSON dosyalarında görünmez biçim karakterleri (sıfır genişlik, değişken seçici,
+  yön denetimi) reddedilir; insan inceleyici bunları boşluk görür (GlassWorm). Türkçe harfler serbesttir [D11].
 - **`integrity.json`:** içerik dosyalarının yolu, boyu ve SHA-256'sı; kendi özetini içermez. Pakette olup listede
   olmayan, listede olup pakette olmayan ya da özeti tutmayan her dosya paketi geçersiz kılar [PY-KEK-09]. Paketin
   **içerik özeti**, bu listenin kanonik biçiminin SHA-256'sıdır: ZIP'in sıkıştırma ve tarih ayrıntılarından bağımsız,
   "aynı sürüm, farklı içerik" sorusunun cevabı. Bulut onayı ve imza bu özete **dışarıdan** bağlanır; paketin içindeki
   liste tek başına yayıncı güveni değildir.
 - **Deterministik paketleme:** sıralı girişler, sabit zaman damgası, aynı girdiden bayt bayt aynı paket [PY-KEK-04].
+- **İkonlar** masaüstünün çizdiği 20×20'lik çizgi ikon alt kümesidir (`viewBox="0 0 20 20"`; `path`, `rect`, `circle`,
+  `ellipse` ve belgeli öznitelikleri): bilinmeyen öğe sessizce atlanacağı için reddedilir; betik, dış bağlantı (`href`),
+  gömülü görsel ve olay özniteliği taşımaz. Şerit düğmesi ikonu ayrıca yerleşik ikon adlarından biri olabilir.
 - **MIME:** `application/vnd.kentos.extension+zip` önerilir; tescilli standart gibi sunulmaz, tanıma manifestten yapılır.
+- **En küçük paket** (Python'suz, D2): `manifest.json`, `integrity.json`, `LICENSE` ve bir katkı (form, veri kaynağı ya da
+  yerleşik komuta bağlı şerit düğmesi). `blueprint` ve `pack` bunu üretir; QGIS'teki "iki dosya" kadar kolay ama denetimli.
 
 ### 3.2 Manifest v1
 
@@ -209,14 +264,29 @@ mebis.kek
   "version": "1.0.0",
   "name": "Mezarlık Bilgi Sistemi (MEBİS)",
   "summary": "Mezarlık adaları, mezar yerleri ve defin kayıtları.",
+  "description": "Ada ve mezar yeri katmanlarını kurar, defin kayıtlarını formla tutar, doluluğu hesaplar ve defin kaydı ile mezar durumunun uyuşmadığı yerleri denetler.",
+  "authors": ["Örnek Belediyesi CBS Birimi"],
   "publisherId": "ornek-belediye",
+  "license": "GPL-3.0-or-later",
+  "licenseFile": "LICENSE",
+  "links": {
+    "homepage": "https://cbs.ornek.bel.tr/mebis",
+    "source": "https://git.ornek.bel.tr/cbs/mebis",
+    "issues": "https://git.ornek.bel.tr/cbs/mebis/issues"
+  },
+  "keywords": ["mezarlık", "defin", "cbs"],
+  "changelogFile": "CHANGELOG.md",
+  "icon": "assets/mebis.svg",
   "kind": "vertical",
   "modules": ["cbs", "harita"],
-  "licenseFile": "LICENSE",
-  "icon": "assets/mebis.svg",
+  "runtimes": ["desktop", "headless"],
   "compatibility": {
-    "sdkProtocol": 1,
+    "sdkProtocol": { "min": 1, "max": 1 },
+    "kentos": { "min": "0.2.0" },
     "operatingSystems": ["windows", "macos", "linux"]
+  },
+  "dependencies": {
+    "extensions": [ { "id": "tr.ornek.kent-temel", "version": ">=1.2, <2" } ]
   },
   "python": {
     "projectFile": "pyproject.toml",
@@ -224,6 +294,7 @@ mebis.kek
     "optionalFeatures": { "grafik": { "extra": "charts", "label": "Doluluk grafikleri" } }
   },
   "schemaFile": "schema.json",
+  "l10n": { "default": "tr", "files": { "en": "l10n/en.json" } },
   "entrypoints": {
     "commands": [
       { "id": "init-schema", "title": "MEBİS katmanlarını kur", "icon": "layers", "handler": "mebis.logic:init_schema" }
@@ -256,18 +327,26 @@ mebis.kek
       { "id": "mebis", "label": "Mezarlık BS", "module": "cbs",
         "panels": [
           { "label": "Proje ve katmanlar", "items": [ { "command": "init-schema", "size": "large" } ] },
-          { "label": "Mezar planlama", "items": [ { "mapTool": "single-grave", "size": "large" } ] },
+          { "label": "Mezar planlama",
+            "items": [ { "mapTool": "single-grave", "size": "large", "when": { "layerSchema": "mezar_parsel" } } ] },
           { "label": "Denetim ve rapor",
             "items": [ { "audit": "status-mismatch", "size": "large" }, { "processing": "occupancy-by-island" } ] }
         ] }
     ],
-    "contextMenus": [ { "command": "init-schema", "target": "layer" } ]
+    "contextMenus": [ { "command": "init-schema", "target": "layer", "when": { "documentOpen": true } } ],
+    "dataSources": [
+      { "id": "ornek-ortofoto", "title": "Örnek Belediyesi ortofoto (2026)", "kind": "wmts",
+        "url": "https://harita.ornek.bel.tr/wmts", "layers": ["ortofoto_2026"], "crs": "EPSG:5254",
+        "attribution": "Örnek Belediyesi" }
+    ]
   },
   "requestedCapabilities": [
-    { "id": "document.write", "scope": "current-project" },
-    { "id": "ui.ribbonTab", "scope": "plugin-owned" },
-    { "id": "processing.provider", "scope": "plugin-owned" },
-    { "id": "audit.provider", "scope": "plugin-owned" }
+    { "id": "document.write", "scope": "current-project", "reason": "Mezar yeri ve defin kaydı katmanlarına yazar." },
+    { "id": "ui.ribbonTab", "scope": "plugin-owned", "reason": "CBS'de Mezarlık BS sekmesini açar." },
+    { "id": "processing.provider", "scope": "plugin-owned", "reason": "Doluluk analizini İşlemler'e ekler." },
+    { "id": "audit.provider", "scope": "plugin-owned", "reason": "Defin kaydı ile mezar durumunu denetler." },
+    { "id": "network", "scope": "plugin-owned", "reason": "Belediyenin ortofoto servisini okur.",
+      "hosts": ["harita.ornek.bel.tr"], "sendsDataToAi": false }
   ]
 }
 ```
@@ -275,31 +354,61 @@ mebis.kek
 Kurallar (inceleyici bunları kod çalıştırmadan uygular; ihlal, yapısal bir sorun kaydıdır):
 
 - `format` `kentos.extension`; `schemaVersion` tam sayı. Bilmediği yeni bir sürüm "daha yeni bir KentOS gerekir" diye
-  reddedilir. Bilinmeyen alan reddedilir: ajanın uydurduğu anahtar burada yakalanır.
-- `id`: ters alan adı biçimi, küçük harf, en az iki parça (`tr.ornek.mebis`). `version`: anlamsal sürüm. `publisherId`
-  pakette bir iddiadır; ad alanı sahipliğini bulut katalog doğrular [PY §6.2].
+  reddedilir. Bilinmeyen alan reddedilir: ajanın uydurduğu anahtar burada yakalanır. Bu yüzden keşif, bağımlılık, kanal
+  ve emeklilik alanları **v1'de isteğe bağlı olarak vardır** [D9].
+- `id`: ters alan adı biçimi, küçük harf, en az iki parça (`tr.ornek.mebis`); genel katalogda öneki yayımcının
+  doğrulanmış alan adına bağlanır [D13]. `version`: anlamsal sürüm; **önsürüm eki** (`1.2.0-beta.1`) sürümü önizleme
+  kanalına koyar, ayrı bir kanal alanı yoktur (QGIS'in `experimental`'ının karşılığı; katalog yalnız isteyene gösterir)
+  [D9]. `publisherId` pakette bir iddiadır; sahipliği katalog doğrular. `authors` görünen addır; e-posta pakete girmez
+  (kişisel veri; iletişimi katalog hesabı doğrular).
+- Keşif: `summary` tek satır; `description` uzun düz metin (HTML yok), kurmadan önce gösterilir; `keywords` arama ve
+  süzgeç; `links.homepage`, `links.source`, `links.issues` (genel katalogda `source` ve `issues` zorunlu); `license` SPDX
+  ifadesi ve `licenseFile`; `changelogFile` güncelleme ekranında. `l10n` manifest, şerit, panel ve form metinlerinin
+  çevirilerini taşır; varsayılan dil Türkçe.
 - `kind`: `vertical` ya da `utility`. **`utility` şerit sekmesi açamaz** [EKL-02]. `modules`: `mimari`, `harita`, `cbs`,
-  `yol` alt kümesi, boş olmaz; her sekmenin `module`'ü bu listededir.
-- Katkı kimlikleri pakette yereldir (`init-schema`); host onları `ext.<id>.<yerel>` ad alanına koyar, yerleşik bir komutu
-  gölgeleyemez [EKL-02, PY-TOOL-03].
+  `yol` alt kümesi, boş olmaz; her sekmenin `module`'ü bu listededir. `runtimes` (`desktop`, `headless`, `cloud`) katalog
+  süzgecinin üst düzey özetidir; her araç kendi çalışma zamanını ayrıca bildirir.
+- **Uyumluluk** tek fonksiyondur (`kentos_extensions::compatible`): `sdkProtocol` aralığı (en az ve en çok, ikisi de
+  dahil) ve isteğe bağlı KentOS sürüm aralığı (`min` dahil, `maxExclusive` hariç). **Üst sınır yazılmamışsa üst sınır
+  yoktur**; anlam örtük değildir ve değiştirmek ADR ister. Katalog, bilinen kırılmada üst sınırı paketin dışından
+  daraltabilir; yazar dönmese de kullanıcı uyumsuz sürüm almaz [D8].
+- `dependencies.extensions`: başka eklentiler, **kimlik ve sürüm aralığıyla**, kurmadan önce görünür ve kurulumda çözülür;
+  anlamı "kurulu ve etkin olmalı"dır. Eklentiler arası **kod içe aktarma yoktur** (her biri kendi sürecinde); birlikte
+  kurulan dikey sistemler katalogda "paket kümesi" olur. Döngü reddedilir [D9].
+- `deprecation` (isteğe bağlı): `{ "message": "...", "replacedBy": "tr.ornek.mebis2" }`; katalog ayrıca askıya alma, geri
+  çekme ve arşivleme durumlarını tutar; bakıcı devri katalog işidir [D9].
+- Katkı kimlikleri pakette yereldir (`init-schema`); host onları `ext.<id>.<yerel>` ad alanına koyar; bir katkı yalnız
+  **ekler**: yerleşiği ya da başka eklentiyi gizleyemez, silemez, gölgeleyemez; kısıtlamayı yalnız kurum ilkesi yapar
+  [EKL-02, PY-TOOL-03, Ö·10].
+- **Koşullar (`when`)** kapalı sözlükten, kod yüklenmeden değerlendirilir: `module`, `documentOpen`, `selection`
+  (`none`, `feature`, `layer`, `many`), `layerSchema`, `capabilityGranted`. Python'suz kullanıcıda bile şerit doğru görünür;
+  tembel etkinleşmenin ön şartıdır [D6, E·8].
+- **Etkinleşme manifestten türer:** bir eklentinin süreci ancak katkısı ilk kez çağrıldığında başlar (komut, MapTool,
+  İşlemler, denetim, ifade, panel); v1'de "açılışta çalış" yoktur [D6].
 - `handler` `modül.yolu:fonksiyon` biçimindedir ve **içe aktarılmadan** bilinir: inceleme, önizleme ve yardım Python
   çalıştırmaz [PY-KEK-11, PY-RUN-05]. Dekoratörler çalışma anında fonksiyonu bildirilen kimliğe bağlar; `extension.verify`
   AST'den her bildirilen kimliğin tam bir dekoratörlü fonksiyonu olduğunu ve fazlası olmadığını denetler (ADIM 21).
 - Python katkısı (bir `handler`) varsa `python.projectFile` ve `python.lockFile` zorunludur. Python sürüm aralığının
   **tek kaynağı** `pyproject.toml`'un `requires-python`'udur; manifest onu tekrar etmez [PY-UV-13]. Paket listesi
-  manifestte tutulmaz; gereksinimler `pyproject.toml`'da, çözülmüş sürümler `uv.lock`'ta.
-- Başvurulan her dosya (`descriptor`, `definition`, `schemaFile`, `licenseFile`, `icon`) pakette ve `integrity.json`'da
-  vardır. Şerit öğesi var olan bir katkıyı gösterir.
+  manifestte tutulmaz. `pyproject.toml`'un `[tool.uv] required-environments`'ı `compatibility.operatingSystems`'ı
+  karşılamalıdır: "Linux'ta çalışıyor, Windows'ta tekerlek yok" paketleme anında yakalanır [D3, Ö·17].
+- **Veri kaynakları** (`contributions.dataSources`, Python'suz): `kind` `wms`, `wmts`, `xyz`, `wfs`, `ogcapiFeatures`,
+  `vectorTiles` ya da `geopackage` (paketteki dosya); `url`'nin sunucusu `network` yeteneğinin `hosts` listesindedir;
+  katman, CRS, ilişkilendirme ve lisans notu bildirilir. KentOS'un mevcut servis/altlık yolundan (`cad.layers.service`,
+  Kaynaklar) açılır [D10].
+- Başvurulan her dosya (`descriptor`, `definition`, `schemaFile`, `licenseFile`, `changelogFile`, `icon`, `l10n`) pakette
+  ve `integrity.json`'da vardır. Şerit ve menü öğesi var olan bir katkıyı gösterir.
 - Formlar `kentos.form-package` v1'dir ve form çekirdeğinin ön denetiminden (`kentos_forms::preflight`) hatasız geçer.
-- İkonlar SVG'dir; betik, dış bağlantı (`href`), gömülü görsel ve olay özniteliği taşımaz; masaüstünün çizdiği öğelerle
-  (path, circle, rect, ellipse) sınırlıdır.
-- `requestedCapabilities` v1 sözlüğündendir (aşağıda); istenen yetenek **verilmiş yetki değildir**, kurum politikası ve
-  kullanıcı seçimiyle birlikte değerlendirilir [PY §6.2].
+- **Yetenekler:** `requestedCapabilities` v1 sözlüğündendir; her kayıt kısa Türkçe bir **`reason`** taşır (en çok 120
+  karakter), kurulumda ve her güncellemede **önceki sürüme göre farkıyla** gösterilir. `network` hedef sunucuları
+  (`hosts`) ve dış bir yapay zekâ servisine veri gönderip göndermediğini (`sendsDataToAi`) bildirir. İstenen yetenek
+  **verilmiş yetki değildir**: kurum ilkesi ve kullanıcı seçimiyle birlikte değerlendirilir, aracıdan geçen işlemde
+  zorlanır, `verify` AST'deki gerçek kullanımla karşılaştırır [D5, PY §6.2].
 
 **Yetenek sözlüğü v1** (ADIM 16'da sabitlenir, genişletmek sürüm artışıdır): `document.read`, `document.write`,
 `datasets.read`, `datasets.create`, `datasets.manage`, `ui.ribbonTab`, `ui.panel`, `ui.contextMenu`, `processing.provider`,
-`audit.provider`, `expression.provider`, `mapTool`, `files.userSelected`, `network`. Kapsamlar: `user-selected`,
-`current-project`, `plugin-owned`.
+`audit.provider`, `expression.provider`, `mapTool`, `dataSource`, `files.userSelected`, `network`. Kapsamlar:
+`user-selected`, `current-project`, `plugin-owned`.
 
 ### 3.3 Araç tanımı [PY §9.2]
 
@@ -434,12 +543,21 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   Doğrulama bitmeden canlı eklenti klasörüne hiçbir şey çıkarılmaz.
 - **`pack`:** aynı denetimden geçen, deterministik paketleyici; `integrity.json`'ı kendisi yazar [PY-KEK-03, 04]. SDK
   şablonu, `extension.verify` ve paket komutu aynı doğrulayıcıyı kullanır.
+- **Derslerden (13 Kasım):** manifest v1'in keşif, bağlantı, lisans, değişiklik notu, yerelleştirme, eklenti bağımlılığı,
+  önizleme kanalı (önsürüm eki), emeklilik ve `runtimes` alanları [D9]; uyumluluğun tek fonksiyonu ve "üst sınır yazılmadıysa
+  yoktur" kuralı [D8]; koşul sözlüğü (`when`) [D6]; Python'suz veri kaynağı katkısı ve `dataSource` yeteneği [D10]; gerekçeli
+  yetenekler, `network` hedefleri ve dış yapay zekâya veri gönderme beyanı [D5, D17]; görünmez Unicode ve AI araç
+  yapılandırma dosyalarının reddi [D11]; `required-environments` ile `operatingSystems` uyumu [D3]; ikonların 20×20 alt
+  kümesi; en küçük Python'suz şablon [D2]. Yerel komut: `kentos kek inspect` ve `kentos kek pack` (başsız ikili), aynı
+  doğrulayıcı [D2].
 - **Önce:** ZIP okuyucusu kendi crate'ine (`kentos-zip`) ayrılır; `kentos-formats` onu `zip` adıyla verir (13 Kasım).
 - **Kabul:** altın örnek paket (`fixtures/extensions/v1/`) paketlenir, incelenir, içerik özeti iki kez aynı; olumsuz
   korpus (zip-slip, mutlak yol, sembolik bağ, yinelenen ve harf çakışmalı ad, bomba oranı, şifreli girdi, listede olmayan
   dosya, özet uyuşmazlığı, `.venv`/`.pyc`/ikili, eksik manifest, yanlış biçim, bilinmeyen alan, kötü kimlik/sürüm,
-  `utility`'nin sekmesi, bilinmeyen modül ve yetenek, kayıp başvuru, bozuk form, betikli ikon, eskimiş kilit) her biri
-  yapısal ve Türkçe bir ret, hiçbiri panik değil [P08, ECO-QA-02].
+  `utility`'nin sekmesi, bilinmeyen modül ve yetenek, gerekçesiz yetenek, `hosts`'ta olmayan veri kaynağı sunucusu,
+  kayıp başvuru, bozuk form, betikli ya da desteklenmeyen öğeli ikon, görünmez Unicode, `mcp.json`, eskimiş kilit,
+  platform kapsamı eksik kilit, döngülü bağımlılık, uyumluluk aralığının her uç durumu) her biri yapısal ve Türkçe bir
+  ret, hiçbiri panik değil [P08, ECO-QA-02]; en küçük Python'suz paket geçer.
 
 ### [ ] ADIM 17 — Kayıt defteri, kiralama ve yerel yaşam döngüsü (P1)
 
@@ -464,8 +582,30 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   [PY-RUN-18].
 - Yerel paket, kurum paketi ve onaylı genel paketin güven durumu ayrı görünür; yerel geliştirme için bulut yayını
   gerekmez [PY-KEK-12]. Çökme uygulamayı kapatmaz, taslak korunur, yeniden başlatılabilir [PY-RUN-13].
+- **Derslerden (13 Kasım):**
+  - **Bekçi:** etkinleştirme ve çalışma çökmeleri sayılır; art arda çöken eklenti nedeni yazılarak **kalıcı** "hata"
+    durumuna geçer ve her açılışta yeniden denenmez (QGIS'te başarısız eklenti etkin kalıyor ve her açılışta yeniden
+    düşüyor) [D6]. "Eklentisiz başlat" bayrağı ve "Sorunlu eklentiyi bul" (ikiye bölme) [D6].
+  - **Etkinleşme ölçümü:** eklenti başına etkinleşme süresi, bellek ve süreç sayısı kaydedilir, yöneticide görünür;
+    eşik ancak ölçümden sonra konur [D6, ECO-QA-14].
+  - **Bağımlılık sırası:** `dependencies.extensions` kurulumda çözülür, etkinleştirme sırası ondan çıkar, döngü
+    reddedilir; bağımlı olunan eklenti devre dışı kalırsa bağımlısı nedeniyle devre dışı kalır [D9].
+  - **Kaynaklar:** aynı `id` birden çok kaynaktan (yerel dosya, geliştirici klasörü, kurum kataloğu, genel katalog)
+    gelirse seçim açıkça kullanıcınındır; geliştirici klasörü kaynağı yeniden yüklemeyle (QGIS'in Plugin Reloader'ı
+    gibi, ama kiralamayla kalıntısız) [D2].
+  - **Güven durumları:** yerel / kurum / onaylı genel / bütünlüğü bozuk / engellenmiş, her zaman görünür [Ö·5]; imzalı
+    geri çekme listesi çevrimiçi eşitlemede eklentiyi nedeniyle devre dışı bırakır, kullanıcı verisini silmez [D15];
+    kurum ilkesi (yayımcı/kimlik/sürüm/platform izin listesi), kullanıcı gevşetemez; BT'nin salt okunur sistem dizini
+    [D14]. Paket dizini salt okunur, eklentinin kullanıcı verisi ayrı dizinde [Ö·42].
+  - **Güncelleme:** kanal (kararlı/önizleme), gecikmeli kendiliğinden güncelleme (güvenlik düzeltmesi hariç; süre
+    ölçümle), belirli sürüme dönme [D15]; SDK protokolü artınca kurulu liste korunur ve uyumlu sürüm önerilir.
+  - **Proje güveni:** dışarıdan gelen `.kcad` eklenti verisi ya da işlevi taşıyorsa açmak kod çalıştırmaz; eklenti
+    ifadeleri ve denetimleri kullanıcı onaylayana dek kısıtlı kipte (etiket/stil yer tutucuyla çizilir); eksik eklenti
+    kurdurulmaz [D16, PY-TOOL-20].
 - **Kabul:** Python'suz bir paket kur → etkinleştir → devre dışı → yeniden etkinleştir → güncelle → geri dön → kaldır;
-  her adımdan sonra kayıt defterinde o kiralamaya ait hiçbir şey kalmaz; yarım güncelleme çalışan sürümü bozmaz.
+  her adımdan sonra kayıt defterinde o kiralamaya ait hiçbir şey kalmaz; yarım güncelleme çalışan sürümü bozmaz; art
+  arda çökertilen sahte eklenti kalıcı "hata"ya geçer ve sonraki açılışta denenmez; geri çekme listesindeki sürüm
+  devre dışı kalır, verisi durur; bağımlılık döngüsü reddedilir.
 
 ### [ ] ADIM 18 — Masaüstü: Eklentiler sekmesi, yöneticisi, dikey şerit sekmeleri ve Python'suz katkılar (P1)
 
@@ -488,9 +628,23 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
 - **MCP:** `kentos://extensions/installed` (kurulu paketler ve katkıları) ve eklenti etkinleşince/kalkınca
   `notifications/tools/list_changed`; sayfalama ve liste değişikliği modern ve eski protokol sürümlerinin kurallarına
   uyar [EKL-06].
-- **Kabul:** Python'suz bir `vertical` örnek (form + şema + şerit sekmesi) gerçek pencerede kurulur, sekmesi yalnız kendi
-  modülünde görünür, formu açılır, devre dışı bırakılınca sekme ve kayıtlar hayalet komut bırakmadan kalkar; ilgisiz
-  modülün yüzeyi bozulmaz; MCP listesi değişikliği bildirir.
+- **Derslerden (13 Kasım):**
+  - **Katalog ilk günden** [D1]: Eklentiler sekmesi Kurulu / Bulunabilir / Güncellenebilir / Yeni / Sorunlu
+    görünümleriyle, anahtar sözcük ve modül süzgeciyle, kurmadan önce açıklama, değişiklik notu, bağımlılıklar,
+    yetenekler ve gerekçeleriyle; güncellemede yetenek ve bağımlılık **farkı**; güven durumu her zaman görünür. Bu adımda
+    kaynaklar yerel `.kek`, geliştirici klasörü ve **kurum/çevrimdışı kataloğu**dur (statik indeks dosyası, `kentos kek
+    index` ile üretilir; erişim jetonu); genel bulut kataloğu aynı ekrana ADIM 22A'da bağlanır [D14].
+  - **Veri kaynakları** (Python'suz) [D10]: `dataSources` katkıları Kaynaklar paneline ve altlık seçimine düşer, mevcut
+    servis yolundan açılır; `network` yeteneği ve hedefleri kurulumda gösterilir.
+  - **Teşhis:** eklenti başına günlük, etkinleşme süresi ve bellek; "Eklentisiz başlat", "Sorunlu eklentiyi bul" [D6].
+  - **Birleşik katkı dökümü:** etkin bütün katkıların tek görünümü (MCP kaynağı ve `kentos kek dump`): ajan "sekmem nereye
+    düştü?" sorusunu kanıtla cevaplar [Ö·38].
+  - **Yıldız oyu yok** [D17]; sağlık göstergeleri (bakım, uyumluluk, kapılar) ADIM 22A'nın karnesinden gelir.
+- **Kabul:** Python'suz bir `vertical` örnek (form + şema + veri kaynağı + şerit sekmesi) kurum kataloğundan gerçek
+  pencerede kurulur, kurmadan önce açıklaması, değişiklik notu ve gerekçeli yetenekleri görünür, sekmesi yalnız kendi
+  modülünde görünür, formu açılır, veri kaynağı Kaynaklar'da çıkar; güncellemede yeni yetenek farkı gösterilir; devre dışı
+  bırakılınca sekme ve kayıtlar hayalet komut bırakmadan kalkar; ilgisiz modülün yüzeyi bozulmaz; MCP listesi değişikliği
+  bildirir.
 
 ### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 
@@ -548,6 +702,15 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   tanılar [PY-UV-28]. Sır içermeyen kilit/ortam/SBOM raporu dışa aktarılır [PY-UV-29]. Önbellek/venv/yorumlayıcı
   temizliğinde sahiplik ve etkin iş başvuruları denetlenir [PY-UV-30]. Aracı (broker) SDK'sı host'un doğrulanmış,
   sürümü eşleşen tekerleğinden gelir; eklenti aynı SDK paket adını başka dizinden gölgeleyemez [PY-UV-31].
+- [ ] **Derslerden (13 Kasım):** QGIS'te bağımlılık çatışması 2020'den beri çözülemedi ve Mayıs 2026'da çalışırken
+  bağımlılık indiren eklentiler kaldırıldı; Blender bütün eklentilerin tekerleklerini tek `site-packages`'a açıyor ve en
+  yüksek sürüm kazanıyor [D3]. Bu yüzden: eklenti başına ortam kesin; **çalışırken kurma/indirme yasağı eklenti koduna da
+  uzanır** (aracı `pip`/uv çağrısını reddeder, AST kuralı ADIM 21); `required-environments` platform kapsamı paketlemede
+  denetlenir; genel katalogda kaynaktan derleme kapalı (`no-build`, gerekçeli istisna); ajanın kilitlediği paketlere
+  soğuma süresi (`exclude-newer`) [D18]; katalogun onaylı kilitten ürettiği platform tekerlek deposundan dizine düşmeden
+  hazırlama (ADIM 22A); kurum izinli paket listesi [D14]; genel çevrimiçi erişim anahtarı kapalıyken `network` yeteneği
+  aracıda reddedilir [Ö·43]. Ölçülecek: venv başına disk ve hazırlama süresi, vekil sunucu ve platform tekerleği matrisi.
+  Alt yorumlayıcı yalıtım için kullanılmaz [Ö·23].
 - **Kabul:** P01–P07 (§5). İstemeyen kurmayı reddeder ve normal çalışır; NumPy isteyen kendi ortamına kurar; iki
   eklentinin farklı NumPy'ı birbirini bozmaz; internet kapalıyken hazır ortam çalışır; çalıştırma kendiliğinden paket ya
   da yorumlayıcı indirmez. Testler sahte taşımayla ve temiz bir kullanıcı profiliyle; gerçek kullanıcı ortamı
@@ -613,6 +776,11 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
 - [ ] **Komutlar:** `@ext.command` sürümlü komut kaydına; şerit, Eklentiler, bağlam menüsü ve komut aramada aynı kimlik.
 - [ ] **Form eylemi:** isteğe bağlı eklenti/form eylemi için tanım/sürüm/yürütücü/izin özeti sabitlenir; eksik ya da
   çevrimdışı yürütücü açık "bekliyor/kullanılamaz" sonucudur [FORM-API-13, ECO-DEC-09].
+- [ ] **Derslerden (13 Kasım):** her araç `runtimes`'ını bildirir, başsız eşdeğerlik zorunludur [D6, Q·14]; Python'a host
+  nesnesinin sahipliği verilmez (QEP 427'nin gerekçesi: nesne ömrü Python'a geçince çökme); süreç başına çökme sayacı
+  bekçiye bağlanır, yanıt vermeyen süreç sonlandırılıp yeniden başlatılır, boştaki süreç kapanır; arayüzde "ayrı süreç
+  kum havuzu değildir" açıkça yazılır [D6, Ö·9]; süreç başına bellek ilk dilimde ölçülür; araç tanımında kullanıcı
+  etiketinden ayrı model açıklaması (`modelDescription`) ve girdi şeması: MCP listesi kod yüklemeden kurulur [D18, Ö·39].
 - **Kabul (birinci dikey dilim, [EKL §5 sıra 1]):** tek kullanıcıda yerel `.kek`; NumPy kullanan tek İşlemler
   algoritması ve KentOS parametre penceresi: uv seçimi, bağımlılık açıklığı, ayrı süreç, gerçek iptal, tipli sonuç, yeni
   katman, tek geri alma; Python/MCP eşdeğerliği. İlk mühendislik hedefleri (ölçülmüş garanti değil): iptal isteği 100
@@ -643,6 +811,8 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   bulgular, geçen/kalan kurallar, düzeltmeler ve istenmişse `delta`.
 - **Köken:** her rapora betiğin sürümü ve SHA-256'sı (`paiy_2026.py @ sha256:…`) ile denetlenen revizyonun özeti
   (`snapshot_etag`) yazılır; masaüstü ile bulut sonucu aynı girdide birebir aynıdır.
+- **Derslerden (13 Kasım):** denetim kuralının ve ifade fonksiyonunun davranışı sürümlenir; sürüm değişince eski
+  raporun hangi kural sürümüyle üretildiği okunur (QEP 425 §2.4.1'in dersi) [D7].
 - **Kabul:** aynı proje ve betikle masaüstü ve bulut aynı bulgu kümesini ve aynı kökeni üretir; düzeltme tek geri alma
   adımıdır; bulut kutusu ağa ve yerel dosyalara erişemez.
 
@@ -700,6 +870,21 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   girmez [ECO-API-13]; hata ayıklama raporu sır içermeden ortam özeti, kaynak sürümleri, şemalar ve hata kodunu toplar
   [ECO-API-14]; kapsam manifesti UI/komut/Python/AI/web/masaüstü/mobil/başsız ve seçenek düzeyinde tamlığı ölçer
   [ECO-API-06].
+- [ ] **Derslerden (13 Kasım):**
+  - **Yazılı SDK kararlılık politikası** (QEP 425 benzeri ADR, ADIM 19'un başında): kararlı yüzey yalnız ana sürümde
+    kırılır, kaldırmadan önce en az bir sürüm "eskiyor" uyarısı; deneysel yüzeyler yalnız geliştirici ortamında açılır
+    ve genel/kiracı katalog onları kullanan paketi reddeder [D7].
+  - **Sürüm göçü:** `verify`'da kalıcı kimlikli göç kuralları ve `kentos kek upgrade` (otomatik dönüştürme); ajana
+    geçiş notu. QGIS'te Qt6'ya geçişten 8 ay sonra paketlerin yalnız %42'si yeni sürümde [D7].
+  - **AST kuralları:** çalışma anında paket kurma/indirme, kendi kendini güncelleme, `sys.path` oynama yasak; beyan
+    edilmemiş yetenek kullanımı (ağ, dosya, alt süreç, pano) ret; görünmez Unicode ret [D5, D11, Ö·41].
+  - **Araç zinciri** tek doğrulayıcı üzerinde: `kentos kek new | verify | pack | test | serve | index | dump | upgrade`,
+    CI şablonu ve başsız test koşucusu; sürümlü belge aynı commit'te; düz metin SDK belgesi (`llms.txt`) ve
+    `kentos://sdk/ai-kek-pack` [D2, D18].
+  - **Bağımlılık:** `blueprint` izinli ve yaygın paketleri önerir; `verify` dizinde olmayan, çok yeni ya da adı popüler
+    pakete benzeyen bağımlılığı işaretler (uydurulmuş paket adı saldırısı) [D18].
+  - **Üretim kökeni:** AI ile üretilen paket hangi ajan/model ve hangi `blueprint` sürümüyle üretildiğini katalog
+    kaydına yazar; kullanıcıya dürüst gösterilir [D17].
 - **Kabul:** A01–A03 (§5). Uygulama içi ajan ve bağımsız bir dış MCP istemcisi aynı küçük eklentiyi kurulu belgeden
   üretip doğrular; README ya da çizim metni kod yürütme/kurulum/yayın yetkisi değildir. Kod üretimi başarısı, anlamsal
   araç doğruluğu ve niyeti doğru anlama ayrı değerlendirilir [PY-AI-14, ECO-QA-16].
@@ -741,6 +926,9 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   panelini, iki İşlemler aracını, bir MapTool'u ve bir denetim kuralını sunar; şerit, Eklentiler, İşlemler, Denetim,
   komut arama ve MCP aynı kimliğe gider; devre dışı bırakılınca hepsi hayalet komut/geri çağırma bırakmadan kalkar
   [EKL-02 kabulü].
+- [ ] **Derslerden (13 Kasım):** UI bildirimseldir ve araç takımından bağımsızdır: Python'a çizim nesnesi ya da araç
+  takımı tipi verilmez, özel bileşen kaçış yolu da vermez (QGIS'te Qt değişince paketlerin %58'i geride kaldı) [D7];
+  `l10n` anahtarları panel ve form metinlerine bağlanır.
 - **Kabul:** Python'dan dialog + dock + tablo + katman seçici; açık/koyu tema, dar pencere ve büyük yazıda gerçek fare ve
   klavyeyle; yanlış sayı, Tab/Enter/Esc, giriş sırasında yama, kapat/kaldır ve geç geri çağırma sınanır; bileşen kapsam
   raporu ile üretilen API referansı aynı sürümü gösterir [EKL-03]. P10, P13 (§5).
@@ -771,6 +959,26 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   incelemeyi atlayamaz [PY-CLOUD-18].
 - [ ] Bulut Python işleri ayrı işçi/kapta, kaynak sınırı, ağ politikası, kapsamlı kimlik bilgisi ve kiracı yalıtımıyla;
   masaüstü eklenti süreci sunucu yalıtımı sayılmaz [PY-RUN-22].
+- [ ] **Derslerden (13 Kasım):**
+  - **Kapı durumları "açık kalmaz":** doğrulanıyor / engellendi / doğrulandı; "taranmadı" ya da "tarama hata verdi"
+    hiçbir zaman "geçti" değildir (Open VSX yük altında taranmamış paketi geçirdi) [D11].
+  - **Taramalar her sürümde:** `verify` kapıları, sır taraması (AI araç yapılandırmaları dahil), görünmez Unicode,
+    bağımlılık açığı; onaylı sürümler dönemsel yeniden taranır. **Engelleyen kural az ve kesindir**; kural kaydı, gerekçeli
+    atlama, yeni kuralın önce yalnız sahibine gösterilmesi; geriye dönük herkese açık "güvenlik sorunu" rozeti yok (QGIS'te
+    yanlış pozitif tepkisi) [D11].
+  - **İnsan onayı farka ve riske odaklı:** inceleyici önceki onaylı sürüme göre farkı görür (yetenek, bağımlılık, kod,
+    ikili); yeni yetenek ya da yeni bağımlılık zorunlu derin inceleme, yalnız metin/ikon değişikliği hızlı yol; güvenilir
+    yayımcı hızlı yolu yalnız yetenek/bağımlılık farkı olmayan sürümde; ret gerekçeleri hazır kodlarla ve ajanın tek
+    adımda düzelteceği biçimde; inceleyici kapasitesi baştan planlanır (Obsidian kuyruğu 2.300'ü aştı) [D12].
+  - **Yayımcı:** `id` öneki doğrulanmış alan adına bağlı; görünen ad, simge ve kimlik benzerliği (taklit) denetimi; yayın
+    kısa ömürlü kimlikle (OIDC), jetonlar önekli ve süreli; iletişim doğrulaması [D13].
+  - **Platform tekerlek deposu:** katalog onaylı kilitten platform başına tekerlekleri kendisi üretir, ikilileri tarar,
+    özetlerini onay kaydına bağlar; masaüstü bu depodan dizine düşmeden kurar [D3].
+  - **Kurum ve çevrimdışı katalog:** kiracı kataloğu, statik indeks, erişim jetonu, engel listesi; güvensiz varsayılan
+    yok [D14]. **Geri çekme:** imzalı liste, kamuya açık kaldırma kaydı, "şüpheli" ile "kesin" ayrımı, itiraz yolu [D15].
+  - **Emeklilik ve devir:** "yerine geçen" eklenti, bakıcı devri, terk edilmiş paketin işaretlenmesi [D9].
+  - **Karne ve dürüst sinyaller:** geçen kapılar, yetenekler ve gerekçeleri, tespit edilen kullanım, bakım ve uyumluluk;
+    **yıldız oyu yok**; AI üretim kökeni; istemci telemetrisi yasak; protokol göç oranı ve sağlık ölçütleri izlenir [D17].
 - **Kabul:** P14–P15 (§5). Onaysız sürüm genel/kiracı yayın ucundan görülmez ve kurulmaz; onaylı paketin tek baytı ya da
   kilidi değişirse yeniden inceleme gerekir; kullanıcı buluta yayımlamadan `.kek` ile yerelde çalışır; yerel
   yükle–çalıştır–durdur–devre dışı–etkinleştir–güncelle–geri dön–kaldır akışı gerçek arayüzde geçer [EKL-07].
@@ -874,6 +1082,15 @@ Kaynaklar arasındaki çelişkiler şöyle bağlandı; sahip itiraz ederse ADIM 
 | B7 | Yollar | python.md "case/Unicode çakışması" | Paket içi yollar ASCII; büyük/küçük harf çakışması reddedilir |
 | B8 | Sıra | argon'da uv ve bulut adımı yok; plugins.md'de ilk dilim NumPy aracı | uv ADIM 18A, bulut ADIM 22A; Python'suz katkılar ADIM 18'de ilk değer; NumPy dilimi ADIM 19'un kabulü |
 | B9 | Eklenti verisi `.kcad`'de | — | Şema 254'ün `modules.ext` yeri kullanılır; okuyucunun eklenti verisini tanıması ADIM 17/18'de, eklenti verisinin sürümü manifestle bağlanır |
+| B10 | Keşif, bağımlılık, kanal, emeklilik alanları | Planda yoktu; QGIS'te kanıtlı ihtiyaç; manifest bilinmeyen alanı reddediyor | v1'de isteğe bağlı olarak var (§3.2): sonra eklemek `schemaVersion: 2` olurdu [D9] |
+| B11 | Önizleme kanalı | QGIS'te `experimental` alanı; araştırma ayrı `channel` alanını da önerdi | Anlamsal sürümün önsürüm eki (`1.2.0-beta.1`); ayrı alan yok, tek kaynak [D9] |
+| B12 | Eklentiler arası bağımlılık | QGIS görünen adla, yalnız `==` ve kurulumdan sonra; Blender yasaklıyor; VS Code `extensionDependencies` | Kimlik + sürüm aralığı, kurmadan önce görünür; anlamı "kurulu ve etkin"; kod içe aktarma yok; birlikte kurulanlar katalogda paket kümesi [D9] |
+| B13 | Veri kaynağı/altlık katkısı | Planın yedi katkı noktasında yoktu; QGIS'te en çok indirilenlerin en az üçte biri | v1'de Python'suz `dataSources` + `dataSource` yeteneği; sunucu `network.hosts`'ta olmalı [D10] |
+| B14 | Yetenek gerekçesi ve zorlanması | Blender gerekçe ister ama arayüzde göstermez ve zorlamaz; hiçbir ekosistem zorlamıyor | Zorunlu kısa Türkçe `reason`; kurulumda ve güncellemede farkla gösterim; aracıda zorlama; AST'den doğrulama [D5] |
+| B15 | Uyumluluk aralığı | QGIS'te boş `qgisMaximumVersion` host ve depoda farklı yorumlandı | `sdkProtocol` aralığı + isteğe bağlı KentOS aralığı; yazılmadıysa üst sınır yok; tek fonksiyon; katalog dışarıdan daraltır [D8] |
+| B16 | Güven sinyalleri | QGIS'te anonim oy istismar edildi ve kaldırıldı; `trusted` kod denetimi değil | Yıldız oyu yok; onay kaydı + doğrulanmış yayımcı + karne + AI üretim kökeni [D17] |
+| B17 | Etkinleşme | QGIS açılışta hepsini yüklüyor; VS Code `*`'ı caydırıyor | v1'de "açılışta çalış" yok; süreç katkı ilk çağrıldığında başlar; koşullar kod yüklenmeden [D6] |
+| B18 | Katalogun sırası | plugins.md'de bulut kataloğu en sondaydı; QGIS'in büyüme motoru uygulama içi katalog | Yerel, geliştirici ve kurum/çevrimdışı katalog ADIM 18'de aynı ekranla; genel bulut kataloğu ADIM 22A'da o ekrana bağlanır [D1] |
 
 ### 6.2 Açık kararlar [ECO-DEC-01…12]
 
@@ -931,3 +1148,5 @@ Bu kaynaklar KentOS'un yazılmamış eklenti katmanının çalıştığına ya d
 | [MCP 2026-07-28 — tools](https://modelcontextprotocol.io/specification/2026-07-28/server/tools) | Araç keşfi, şema, sayfalama, değişiklik bildirimi |
 | [MCP 2025-11-25 — cancellation](https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/cancellation) | İptal bildirimi ve geç sonuç yarışı (eski sürüm; modern sürümün kuralları ayrıca izlenir) |
 | `docs/research/2026-11-13-yapay-zeka-saglayicilari.md` | Uygulama içi ajanın sağlayıcıları (ADR 8056 §4) |
+| [`docs/research/2026-11-13-qgis-eklenti-sistemi.md`](../docs/research/2026-11-13-qgis-eklenti-sistemi.md) | QGIS eklenti sistemi: anatomi, yönetici, plugins.qgis.org, bağımlılık, API kararlılığı, güvenlik, ekosistem sağlığı; `metadata.txt` eşlemesi; 15 ders (13 Kasım 2026) |
+| [`docs/research/2026-11-13-eklenti-ekosistemleri.md`](../docs/research/2026-11-13-eklenti-ekosistemleri.md) | Blender, VS Code, ArcGIS Pro, JupyterLab, Obsidian; 48 öneri ve sıralı 15 öneri (13 Kasım 2026) |
