@@ -537,3 +537,39 @@ fn screens() {
         }
     }
 }
+
+/// UR-067: an inward buffer of parcels drawn by a categorized fill: its new layer goes right above the parcels', so
+/// the results are drawn over the fill rather than hidden under it, and its own look draws them.
+#[test]
+fn an_inward_buffer_result_goes_above_its_source() {
+    use kentos_native_application::{ExecutionContext, layers_renderer};
+    let mut app = app_with_geometry();
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let input = kentos_commands::LayersRenderer {
+        layer: "parsel".into(),
+        renderer: Some(json!({ "type": "categorized", "expr": "Tür", "categories": [
+            { "value": "Konut", "label": "Konut", "symbols": { "fill": { "type": "fill", "color": "#ff0000" } } },
+            { "value": "Ticaret", "label": "Ticaret", "symbols": { "fill": { "type": "fill", "color": "#0000ff" } } }
+        ] })),
+        expected_revision: None,
+    };
+    assert!(matches!(
+        layers_renderer::execute(&mut ExecutionContext::new(doc), input),
+        kentos_commands::CommandResult::Completed { .. }
+    ));
+    let _ = app.update(Message::Run("processing.run.geometry.buffer"));
+    value(&mut app, "input", layer("parsel"));
+    value(&mut app, "distance", json!(-1));
+    event(&mut app, Event::Run);
+    let RunStatus::Ok { pick, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    let doc = &app.document.as_ref().expect("open").model;
+    let out_layer = doc.get(pick[0]).expect("a result").base().layer_id.clone();
+    let order: Vec<String> = doc.layers().leaves().iter().map(|l| l.id.clone()).collect();
+    let at = |id: &str| order.iter().position(|l| l == id).expect("in the tree");
+    // The tree's first is drawn on top: the results' layer right above the parcels'.
+    assert_eq!(at(&out_layer) + 1, at("parsel"), "{order:?}");
+    let uids: Vec<String> = pick.iter().filter_map(|s| doc.uid(*s)).map(|u| u.to_string()).collect();
+    assert_eq!(app.unstyled_note(&uids), None, "its own look draws every result");
+}

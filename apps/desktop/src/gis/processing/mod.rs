@@ -783,8 +783,16 @@ impl App {
             self.say_line(line);
         }
         match &outcome {
-            Outcome::Ok { record, .. } => {
+            Outcome::Ok { record, added, .. } => {
                 self.say(Level::Success, format!("{label}: {}", record.summary));
+                // A result its layer's style draws nothing for (a categorized fill without Diğer değerler): said, so
+                // a written result is not taken for a missing one.
+                let uids: Vec<String> = self.document.as_ref().map_or_else(Vec::new, |d| {
+                    added.iter().filter_map(|s| d.model.uid(*s)).map(|u| u.to_string()).collect()
+                });
+                if let Some(note) = self.unstyled_note(&uids) {
+                    self.warn(format!("{label}: {note}"));
+                }
             }
             Outcome::Stopped { message, .. } => self.warn(message.clone()),
             Outcome::Invalid { .. } => {}
