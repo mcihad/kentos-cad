@@ -217,7 +217,19 @@ impl App {
 
     /// KentOS blok kitaplığı (docs/adr/0318 §4): KentOS's own blocks taken in by name, in one undo step; the names
     /// the drawing has kept and said; the Bloklar panel shown.
+    /// `block.library` (Donatı › Kitaplık, Ekle › Blok kitaplığı; UR-024): Bloklar › Kitaplık opened at its libraries,
+    /// KentOS's own among them; the drawing is not changed by looking.
     pub(crate) fn blocks_builtin(&mut self) {
+        self.show_blocks_panel();
+        self.blocks_panel.library_shown = true;
+        self.blocks_panel.library.at = None;
+        self.blocks_panel.library.open = None;
+        self.blocks_panel.library.builtin = true;
+    }
+
+    /// KentOS temel blokları › Tanımlarını çizime al: the built-in library's definitions in one undo step, those whose
+    /// names the drawing has left as they are.
+    pub(crate) fn blocks_take_builtin(&mut self) {
         let edit = BlocksEdit {
             name: Some("kentos-temel".into()),
             ..input(BlockEditOperation::Import)
@@ -233,9 +245,8 @@ impl App {
                 done.skipped.join(", ")
             ));
         }
-        words.push('.');
-        self.say(Level::Info, words);
-        self.show_blocks_panel();
+        words.push_str("; geri almak için ⌘Z/Ctrl+Z.");
+        self.say(Level::Info, crate::keys::shown(&words.replace("⌘Z/Ctrl+Z", "Ctrl+Z")));
     }
 
     /// Sabit bloğa çevir (docs/adr/0319 §4): the selected dynamic blocks' inserts made inserts of plain blocks drawing

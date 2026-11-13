@@ -1128,6 +1128,9 @@ mod selection_fit;
 #[path = "shell/open_report_window.rs"]
 mod open_report_window;
 #[cfg(test)]
+#[path = "tests/fixture_library_tests.rs"]
+mod fixture_library_tests;
+#[cfg(test)]
 #[path = "tests/open_report_tests.rs"]
 mod open_report_tests;
 #[cfg(test)]
