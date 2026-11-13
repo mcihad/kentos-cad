@@ -106,7 +106,12 @@ fn wants(kind: Kind, first: Option<&CadElement>) -> Vec<Want> {
         Kind::Parallel | Kind::Perpendicular | Kind::Collinear | Kind::Angle => {
             vec![Segment, Segment]
         }
-        Kind::Tangent => vec![SegmentOrCircle, Circle],
+        // A circle first takes a line or a circle next, as a line first takes a circle (UR-035): the order is the
+        // user's.
+        Kind::Tangent => match first {
+            Some(CadElement::Circle | CadElement::ArcEdge { .. }) => vec![SegmentOrCircle, SegmentOrCircle],
+            _ => vec![SegmentOrCircle, Circle],
+        },
         Kind::Concentric => vec![Circle, Circle],
         Kind::Equal => match first {
             Some(CadElement::Circle | CadElement::ArcEdge { .. }) => vec![SegmentOrCircle, Circle],
@@ -396,12 +401,18 @@ impl ConstraintTool {
             Kind::Vertical => ConstraintRule::Vertical { a, b: b() },
             Kind::Parallel => ConstraintRule::Parallel { a, b: b()? },
             Kind::Perpendicular => ConstraintRule::Perpendicular { a, b: b()? },
-            Kind::Tangent => ConstraintRule::Tangent {
-                a,
-                b: b()?,
-                inside: false,
-                left: false,
-            },
+            // The line first, as when it was picked first (UR-035): the rule reads its edge and the curve after it.
+            Kind::Tangent => {
+                let b = b()?;
+                let curve = |e: &CadElement| matches!(e, CadElement::Circle | CadElement::ArcEdge { .. });
+                let (a, b) = if curve(&a.element) && !curve(&b.element) { (b, a) } else { (a, b) };
+                ConstraintRule::Tangent {
+                    a,
+                    b,
+                    inside: false,
+                    left: false,
+                }
+            }
             Kind::Concentric => ConstraintRule::Concentric { a, b: b()? },
             Kind::Collinear => ConstraintRule::Collinear { a, b: b()? },
             Kind::Equal => ConstraintRule::Equal { a, b: b()? },

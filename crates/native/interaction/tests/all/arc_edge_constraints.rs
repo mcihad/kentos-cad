@@ -160,3 +160,30 @@ fn horizontal_then_vertical_on_one_line_is_refused_not_collapsed() {
         b.log.iter().map(|l| l.text.clone()).collect::<Vec<_>>()
     );
 }
+
+/// UR-035: Teğet takes a circle then a line as it takes a line then a circle: the same rule, the line first, the line
+/// touching the circle after.
+#[test]
+fn tangent_takes_the_circle_or_the_line_first() {
+    for circle_first in [true, false] {
+        let mut b = Bench::new("line");
+        b.click(-10., 5.);
+        b.click(10., 5.);
+        b.confirm();
+        b.start("circle");
+        b.click(0., 0.);
+        assert!(b.type_text("3"));
+        let line_at = (0., 5.);
+        let circle_at = (3., 0.);
+        b.start("constraint");
+        assert!(b.type_text("T"));
+        let (first, second) = if circle_first { (circle_at, line_at) } else { (line_at, circle_at) };
+        b.click(first.0, first.1);
+        b.click(second.0, second.1);
+        let cs = &b.doc.constraints().constraints;
+        assert_eq!(cs.len(), 1, "circle first: {circle_first}: {:?}", b.log.iter().map(|l| l.text.clone()).collect::<Vec<_>>());
+        let kentos_commands::ConstraintRule::Tangent { a, b: c, .. } = &cs[0].rule else { panic!("a tangent") };
+        assert!(matches!(a.element, CadElement::Segment { .. }), "the line first: {:?}", a.element);
+        assert!(matches!(c.element, CadElement::Circle), "{:?}", c.element);
+    }
+}
