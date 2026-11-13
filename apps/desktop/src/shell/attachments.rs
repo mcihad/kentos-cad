@@ -57,6 +57,8 @@ pub(crate) struct AttachmentView {
     pub key: Option<String>,
     /// Where it is: “Gömülü fotoğraf (1200×800 piksel)”, “Bağlı dosya: tapu.pdf”, the address.
     pub source: String,
+    /// A linked file's whole path as it is looked for now, and whether it is not there.
+    pub linked: Option<(PathBuf, bool)>,
 }
 
 /// A kind's word: Fotoğraf, Belge, Bağlantı.
@@ -117,6 +119,9 @@ pub enum Event {
     Edit(Slot, usize),
     Remove(Slot, usize),
     Embed(Slot, usize),
+    /// Yeni yol seç…: a linked file chosen again where it is now (moved, renamed, another computer).
+    Relink(Slot, usize),
+    Relinked(Slot, usize, Option<PathBuf>),
     /// Aç: a photo in the viewer, a document or an address outside.
     Open(Slot, usize),
     Picked(Slot, Vec<PathBuf>),
@@ -247,6 +252,11 @@ impl App {
             .enumerate()
             .map(|(index, a)| {
                 let kind = a.kind();
+                let linked = a.asset.is_none().then_some(()).and(a.file.as_ref()).map(|file| {
+                    let path = crate::pictures::resolve(file, folder.as_deref());
+                    let missing = !path.exists();
+                    (path, missing)
+                });
                 let source = if let Some(asset) = &a.asset {
                     let item = doc.model.styles().items.iter().find(|it| {
                         it.get("kind").and_then(|k| k.as_str()) == Some("asset")
@@ -280,6 +290,7 @@ impl App {
                     attachment: a.clone(),
                     kind,
                     source,
+                    linked,
                 }
             })
             .collect()
@@ -483,6 +494,26 @@ impl App {
                     );
                 }
             },
+            Event::Relink(slot, index) => match &self.picker {
+                Picker::File(path) => {
+                    return Task::done(msg(Event::Relinked(slot, index, Some(path.clone()))));
+                }
+                Picker::Dialog => {
+                    return Task::perform(
+                        async move {
+                            rfd::AsyncFileDialog::new()
+                                .set_title("Ekin dosyası")
+                                .add_filter("Fotoğraf ve belge", &FILES)
+                                .pick_file()
+                                .await
+                                .map(|f| f.path().to_path_buf())
+                        },
+                        move |path| msg(Event::Relinked(slot, index, path)),
+                    );
+                }
+            },
+            Event::Relinked(slot, index, Some(path)) => self.relink_attachment(slot, index, &path),
+            Event::Relinked(_, _, None) => {}
             Event::Picked(slot, paths) => {
                 self.attach_files(slot, paths);
                 // A form showing the record counts its attachments again (docs/adr/0407 §1).
@@ -593,14 +624,7 @@ impl App {
                 || path.to_string_lossy().into_owned(),
                 |n| n.to_string_lossy().into_owned(),
             );
-            // Under the drawing's folder: relative, so the folder moves with it.
-            let link = folder
-                .as_deref()
-                .and_then(|f| path.strip_prefix(f).ok())
-                .map_or_else(
-                    || path.to_string_lossy().into_owned(),
-                    |r| r.to_string_lossy().replace('\\', "/"),
-                );
+            let link = link_of(&path, folder.as_deref());
             list.push(Attachment {
                 name,
                 asset: None,
@@ -614,14 +638,40 @@ impl App {
             return;
         }
         if self.write_attachments(slot, list) {
+            // Linked, not copied: said, with what it takes to move the drawing.
             self.say(
                 kentos_interaction::Level::Success,
                 if n == 1 {
-                    format!("“{first}” eklendi.")
+                    format!("“{first}” bağlandı: dosya çizime kopyalanmadı; çizimi taşırken onu da taşıyın.")
                 } else {
-                    format!("{n} dosya eklendi.")
+                    format!("{n} dosya bağlandı: dosyalar çizime kopyalanmadı; çizimi taşırken onları da taşıyın.")
                 },
             );
+        }
+    }
+
+    /// Yeni yol seç…: the attachment's file where it is now, its name and note kept, one step “Ekler”.
+    fn relink_attachment(&mut self, slot: Slot, index: usize, path: &Path) {
+        let folder = self.drawing_folder();
+        let mut list: Vec<Attachment> = self
+            .attachment_views(slot)
+            .into_iter()
+            .map(|v| v.attachment)
+            .collect();
+        let Some(a) = list.get_mut(index) else {
+            return;
+        };
+        if a.file.is_none() {
+            return;
+        }
+        a.file = Some(link_of(path, folder.as_deref()));
+        let name = a.name.clone();
+        if let Some(problem) = kentos_commands::attachments_problem(&list) {
+            self.warn(format!("Bağlanamadı: {problem}."));
+            return;
+        }
+        if self.write_attachments(slot, list) {
+            self.say(kentos_interaction::Level::Success, format!("“{name}” yeniden bağlandı: {}.", path.display()));
         }
     }
 
@@ -986,4 +1036,15 @@ impl App {
             self.photos.done(key, picture);
         }
     }
+}
+
+/// A linked file's path as the attachment keeps it: under the drawing's folder relative, so the folder moves with it;
+/// elsewhere whole.
+fn link_of(path: &Path, folder: Option<&Path>) -> String {
+    folder
+        .and_then(|f| path.strip_prefix(f).ok())
+        .map_or_else(
+            || path.to_string_lossy().into_owned(),
+            |r| r.to_string_lossy().replace('\\', "/"),
+        )
 }

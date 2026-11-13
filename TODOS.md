@@ -58,6 +58,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   yerleştirmelerini saysın (`cad.schedules.*` ortak durumları masaüstüne göre yeniden yazıldı).
 - UR-037: web'in Eğri boyunca yazı aracı başarı iletisinde yazının kaynak eğriye bağlı olmadığını söylesin
   (`fixtures/interaction/v1/text-along.json` masaüstüne göre güncellendi).
+- UR-047: web'in nesne ekleri satırları bağlı/gömülü durumunu (“Bağlı: çizimle taşıyın.”, “Gömülü: çizimle taşınır.”, eksikte “Bulunamadı: Yeni yol seç…”) göstersin, menüde dosyanın tam yolu ve Yeni yol seç… olsun; Dosya ekle iletisi “bağlandı: dosya çizime kopyalanmadı” desin.
 - UR-046: web'in `app/annotationScale.ts` çizim ölçeği değişimi açıklamaları izletiyorsa ölçeği de aynı geri alma adımına koysun (“Çizim ölçeği”; masaüstü ve çekirdek `PlotScale` işlemiyle yapıyor), izleyen yoksa ölçek ayar olarak kalsın.
 - UR-042: web'in pafta öğe ağacında Shift ya da ⌘/Ctrl ile tıklanan satır seçime eklensin ya da çıkarılsın; `SheetInspector.ts` boş seçim açıklaması masaüstüyle aynı olsun (Ctrl paftada grubun içindeki öğeyi seçer, çıkarmaz).
 - UR-003: `io/kcad.ts` şema 255 (`toolLayers`), web'in yeni CAD projesi ölçü/yazı/tarama araç katmanlarını yazsın
