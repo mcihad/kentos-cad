@@ -89,6 +89,9 @@ const MODES: [(Mode, &str); 10] = [
     (Mode::Slope, "E"),
 ];
 
+/// What a point given again where the last one is says.
+pub const SAME_POINT: &str = "Bu nokta bir öncekiyle aynı yerde; ölçünün noktaları farklı olmalı. Başka bir nokta gösterin.";
+
 impl Mode {
     /// The style's name (the web's `DIMENSION_STYLE_LABEL`).
     pub fn label(self) -> &'static str {
@@ -488,6 +491,9 @@ impl Dimension {
                 if self.mode() == Mode::Slope {
                     self.zs.push(snapped_elevation(snap, p, cx));
                 }
+            } else {
+                // The same point again: said, the points and elevations given so far kept.
+                cx.say(Level::Warn, SAME_POINT);
             }
             return;
         }

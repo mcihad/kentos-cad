@@ -91,6 +91,11 @@ impl Stages for Mirror {
             return Flow::Stay;
         };
         if dist(p1, p) < SAME {
+            // The axis needs two places: said, the first point and the selection kept.
+            cx.say(
+                Level::Warn,
+                "Simetri ekseninin iki noktası farklı olmalı; ikinci noktayı yeniden belirtin.",
+            );
             return Flow::Stay;
         }
         let t = Transform::Mirror {

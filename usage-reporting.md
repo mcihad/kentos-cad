@@ -1488,6 +1488,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Tekrar:** 13.11.2026 tarihli yerel `13fa7e12c` release testinde Giriş → Ölçülendirme → Eğim seçildi. İlk nokta `200,0`, ilk kot `101` girildi. İkinci nokta olarak tekrar `200,0` iki kez girildi: komut geçmişi her iki girişi ve X 200.000 / Y 0.000 değerlerini gösterdi, fakat hata veya açıklama göstermedi; komut satırı `ikinci noktayı gösterin` aşamasında kaldı. Sonraki `210,0` girişi kabul edilip ikinci kot istendi. Diğer ölçü türleri ve fareyle aynı nokta seçimi bu turda ayrıca sınanmadı.
 - **Kod ipucu / çözüm:** `crates/native/interaction/src/dimension.rs::accept` önceki nokta ile uzaklık `points::SAME` toleransı içinde olduğunda noktayı eklemeden sessizce dönüyor. İkinci noktanın ilkinden farklı olması gerektiğini komut satırında ve geçmişte açıkça bildirin; geçerli ilk noktayı ve kotu koruyun. Ortak davranış varsa ilgili ölçü türlerine de aynı doğrulamayı uygulayın.
 - **Kabul:** Çakışık/çok yakın nokta fare, kenet ve koordinat girişiyle denenir; anlaşılır uyarı bir kez gösterilir, nesne oluşturulmaz, geçerli ikinci noktayla işleme devam edilir ve Escape / geri al doğru çalışır.
+- **Durum (13.11.2026):** düzeltildi — ölçü araçlarında (Eğim dahil) bir önceki noktayla aynı yere verilen nokta artık «Bu nokta bir öncekiyle aynı yerde; ölçünün noktaları farklı olmalı. Başka bir nokta gösterin.» diyor, ilk nokta ve kotu korunuyor; test `dimension::a_second_point_on_the_first_is_said` (kentos-interaction).
 
 ### UR-108 — Kesişen revizyon bulutu sınırı bazen yanlış nedenle reddediliyor, bazen kabul ediliyor
 
@@ -1503,6 +1504,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Tekrar:** 13.11.2026 yerel `13fa7e12c` release testinde Görünüm → `Pencere yakınlaştır` açıldı; sahnede ilk köşeye ve aynı ekran noktasına ikinci kez tıklandı. Araç kapandı, görünüm değişmedi ve durum çubuğunda ya da komut geçmişinde nedenini açıklayan uyarı görülmedi. Geçerli iki farklı köşeyle yakınlaştırma, önceki ve sonraki görünüm aynı oturumda çalıştı.
 - **Kod ipucu / çözüm:** `crates/native/interaction/src/navigate.rs::ZoomWindow::finish`, her iki kenar `LEAST_SIDE` değerini aşmadığında `ViewChange::Fit` üretmiyor ama koşulsuz `done = true` yapıyor. Sıfır/çok küçük pencereyi açıkça bildirin ve mümkünse ilk köşeyi koruyup geçerli karşı köşeyi yeniden isteyin; Escape ile iptal davranışı korunmalı.
 - **Kabul:** Aynı nokta, tek eksende sıfır uzunluk, eşiğin iki tarafı, tıklama ve sürükleme; büyük koordinat ve farklı yakınlıkta denenmeli. Geçerli pencerede görünüm geçmişi doğru çalışmalı, iptalde görünüm değişmemeli.
+- **Durum (13.11.2026):** düzeltildi — Pencere yakınlaştır'da eni ya da boyu olmayan pencere artık «Pencerenin eni ya da boyu yok; karşı köşeyi ilk köşeden uzakta gösterin (Esc: vazgeç).» diyor ve araç ilk köşeyi koruyup karşı köşeyi bekliyor (önce sessizce kapanıyordu; eski testi bu kurala göre güncellendi); test `navigate::a_box_without_size_is_said_and_the_first_corner_kept`.
 
 ### UR-110 — Aynalama ekseninin iki noktası çakışınca neden kabul edilmediği açıklanmıyor
 
@@ -1510,6 +1512,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Tekrar:** `13fa7e12c` release derlemesindeki CAD test projesinde bir çizgi seçin; `Aynala` ile eksenin ilk noktası için `390,5`, ikinci noktası için tekrar `390,5` girin. Komut geçmişi iki girdiyi gösterir; araç ikinci noktayı istemeye devam eder ama bunların çakıştığını açıklamaz ve yeni nesne oluşturmaz. Sonrasında `405,5` girildiğinde işlem yeniden başlatılmadan tamamlanır.
 - **Beklenen:** İkinci nokta birincisiyle aynı veya tolerans içinde ise “Simetri ekseninin noktaları farklı olmalı; ikinci noktayı yeniden belirtin” gibi açık bir uyarı hem durum satırında hem geçmişte görünmeli; seçim ve ilk nokta korunmalı.
 - **Kod / çözüm:** `crates/native/interaction/src/mirror.rs` içindeki `Mirror::point` fonksiyonunda `dist(p1, p) < SAME` doğrudan `Flow::Stay` döndürüyor. Bu dalda uygun uyarı yayınlayın; sayısal ve fare girdileri için aynı davranışı kullanın. Uyarı sırasında sahne değişmemeli, geçerli yeni ikinci nokta işlemi tamamlamalı; Escape, undo/redo ve büyük koordinat/tolerans sınırları regresyonla sınanmalı.
+- **Durum (13.11.2026):** düzeltildi — Aynala'da eksenin ikinci noktası ilkiyle aynı yerdeyse «Simetri ekseninin iki noktası farklı olmalı; ikinci noktayı yeniden belirtin.» deniyor, seçim ve ilk nokta korunuyor, sonraki geçerli nokta işlemi bitiriyor; test `modify::a_mirror_axis_of_one_point_is_said`.
 
 ### UR-111 — Öteleme mesafesindeki geçersiz değer uyarısız eski değere dönüyor
 

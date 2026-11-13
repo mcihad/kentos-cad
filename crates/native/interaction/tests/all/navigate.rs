@@ -142,7 +142,10 @@ fn a_box_with_no_width_or_height_changes_nothing() {
     b.click(1.0, 1.0);
     b.click(1.0, 9.0);
     assert!(b.views.is_empty(), "no width");
-    assert!(!b.session.is_running(), "the tool leaves all the same");
+    // UR-109: said, and the tool stays for another opposite corner (Esc leaves).
+    assert!(b.session.is_running(), "the first corner is kept");
+    assert!(b.last_text().is_some_and(|t| t.starts_with("Pencerenin eni ya da boyu yok")));
+    b.run(|s, cx| s.cancel(cx));
     b.start("zoomWindow");
     b.click(1.0, 1.0);
     b.click(1.0, 1.0);
@@ -151,4 +154,17 @@ fn a_box_with_no_width_or_height_changes_nothing() {
     b.start("zoomWindow");
     assert!(!b.type_text("10,10"));
     assert!(!b.undo_step());
+}
+
+/// UR-109: a second corner where the first is: said, the first corner kept, and a real corner then fits the box.
+#[test]
+fn a_box_without_size_is_said_and_the_first_corner_kept() {
+    let mut b = Bench::new("zoomWindow");
+    b.click(-24.0, -14.0);
+    b.click(-24.0, -14.0);
+    assert!(b.last_text().is_some_and(|t| t.starts_with("Pencerenin eni ya da boyu yok")), "{:?}", b.last_text());
+    assert!(b.views.is_empty(), "no view change");
+    assert_eq!(b.session.prompt().text(), "Pencere yakınlaştır: karşı köşeyi belirtin");
+    b.click(-4.0, -2.0);
+    assert_eq!(b.views.len(), 1);
 }
