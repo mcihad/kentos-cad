@@ -65,6 +65,33 @@ pub(crate) fn write(
     label: &str,
 ) -> Result<Made, Stop> {
     crate::blocks_define::reject_owned_dimension_members(doc, sources)?;
+    // The drawing's plan cannot be in a block (UR-040; the file's rule, docs/adr/0343 §1): refused before anything
+    // is written, rather than a block the file would not read back.
+    for (i, u) in sources.iter().enumerate() {
+        let plan = Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|slot| doc.get(slot))
+            .is_some_and(|e| {
+                matches!(
+                    e,
+                    Entity::Column(_)
+                        | Entity::Grid(_)
+                        | Entity::Stair(_)
+                        | Entity::Ramp(_)
+                        | Entity::Wall(_)
+                        | Entity::Tag(_)
+                        | Entity::ViewMark(_)
+                )
+            });
+        if plan {
+            return Err(Stop::failed(error(
+                codes::BLOCK_REFUSED,
+                "İlişkili dizi bir blok kurar; kolon, aks, merdiven, rampa, duvar, etiket ve görünüm işareti çizimin planıdır, bloğa konamaz. İlişkisiz dizi kullanın: kopyalar kendi nesneleri olur.".into(),
+                Some(format!("uids[{i}]")),
+            )));
+        }
+    }
     let found: Vec<(Slot, Entity)> = sources
         .iter()
         .filter_map(|u| Uuid::parse_str(u).ok())

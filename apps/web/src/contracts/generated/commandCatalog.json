@@ -4290,6 +4290,7 @@
           "invalid_path",
           "pointcloud_fixed",
           "slots_exhausted",
+          "block_refused",
           "invalid_revision",
           "revision_conflict"
         ],
