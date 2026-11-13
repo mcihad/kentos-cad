@@ -5,9 +5,8 @@
 //! shared cases are `fixtures/commands/v1/cad.forms.import.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, FORM_PACKAGE_FORMAT, FORM_PACKAGE_VERSION, FieldBinding,
-    FieldDomain, FormItem, FormSeverity, FormsImport, FormsImported, LayerField, LayerNodeType,
-    MOST_FORMS, ProjectForm, body_problem, domains_problem, fields_problem, form_id_ok,
+    CommandResult, CommandWarning, FieldBinding, FieldDomain, FormSeverity, FormsImport,
+    FormsImported, LayerField, LayerNodeType, MOST_FORMS, ProjectForm, fields_problem, form_id_ok,
     form_name_ok, link_problem,
 };
 use kentos_domain::Document;
@@ -39,63 +38,12 @@ fn kind_words(f: &LayerField) -> String {
     f.kind.label().to_lowercase()
 }
 
-/// The keys the body's items bind.
-fn bound_keys(items: &[FormItem], out: &mut Vec<String>) {
-    for i in items {
-        if let FormItem::Field(f) = i {
-            out.push(f.field.clone());
-        }
-        bound_keys(i.items(), out);
-    }
-}
-
 fn check(doc: &Document, input: &FormsImport) -> Result<Planned, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     let p = &input.package;
-    if p.format != FORM_PACKAGE_FORMAT || p.version != FORM_PACKAGE_VERSION {
-        return Err(fail(
-            codes::INVALID_PACKAGE,
-            format!(
-                "Paketin biçimi “{}” sürüm {}; KentOS form paketi ({FORM_PACKAGE_FORMAT}, sürüm {FORM_PACKAGE_VERSION}) değil.",
-                p.format, p.version
-            ),
-            "package",
-        ));
-    }
-    if let Some(problem) = body_problem(&p.body) {
-        return Err(fail(
-            codes::INVALID_PACKAGE,
-            format!("Paketin formu kurallarına uymuyor: {problem}"),
-            "package.body",
-        ));
-    }
-    if !p.fields.is_empty()
-        && let Some(problem) = fields_problem(&p.fields)
-    {
-        return Err(fail(
-            codes::INVALID_PACKAGE,
-            format!("Paketin alanları kurallarına uymuyor: {problem}"),
-            "package.fields",
-        ));
-    }
-    if let Some((_, problem)) = domains_problem(&p.domains) {
-        return Err(fail(
-            codes::INVALID_PACKAGE,
-            format!("Paketin değer listeleri kurallarına uymuyor: {problem}"),
-            "package.domains",
-        ));
-    }
-    let mut keys = Vec::new();
-    bound_keys(&p.body.items, &mut keys);
-    if let Some(k) = keys
-        .iter()
-        .find(|k| !p.fields.iter().any(|f| f.key() == k.as_str()))
-    {
-        return Err(fail(
-            codes::INVALID_PACKAGE,
-            format!("Paketin formu “{k}” alanını anıyor; alan paketin alanlarında yok."),
-            "package.body",
-        ));
+    // The package's own rules, the same a `.kek` extension's inspector applies (docs/adr/8057 §1).
+    if let Some((at, problem)) = p.problem() {
+        return Err(fail(codes::INVALID_PACKAGE, problem, at));
     }
     let Some(node) = doc.layers().get(&input.layer) else {
         return Err(fail(

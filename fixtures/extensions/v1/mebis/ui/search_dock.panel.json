@@ -1,0 +1,10 @@
+{
+  "format": "kentos.ui.panel",
+  "schemaVersion": 1,
+  "title": "Mezar ve merhum sorgulama",
+  "body": [
+    { "type": "textField", "id": "query", "label": "Mezar no ya da merhum adı" },
+    { "type": "button", "id": "search", "label": "Ara", "action": "search" },
+    { "type": "table", "id": "results", "columns": ["mezar_no", "ada_no", "durum", "merhum_adi"] }
+  ]
+}

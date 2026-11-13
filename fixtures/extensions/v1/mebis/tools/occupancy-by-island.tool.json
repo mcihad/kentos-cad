@@ -1,0 +1,17 @@
+{
+  "format": "kentos.processingTool",
+  "schemaVersion": 1,
+  "id": "occupancy-by-island",
+  "version": "1.0.0",
+  "label": "Ada bazlı doluluk",
+  "category": "Mezarlık BS",
+  "parameters": [
+    { "id": "islands", "type": "features", "required": true, "accepts": { "geometryKinds": ["polygon"] }, "readIntent": "snapshot" },
+    { "id": "graves", "type": "features", "required": true, "accepts": { "geometryKinds": ["polygon"] }, "readIntent": "snapshot" },
+    { "id": "destination", "type": "destination", "allowedKinds": ["table", "file"], "default": { "kind": "table" } }
+  ],
+  "outputs": [{ "id": "report", "type": "table", "sinkParameter": "destination" }],
+  "mutation": { "mode": "none" },
+  "feedback": { "progress": true, "cancel": true },
+  "capabilities": { "runtimes": ["desktop-python"] }
+}

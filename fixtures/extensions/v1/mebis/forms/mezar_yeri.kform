@@ -1,0 +1,39 @@
+{
+  "format": "kentos.form-package",
+  "version": 1,
+  "name": "Mezar yeri",
+  "body": {
+    "revision": 1,
+    "items": [
+      { "type": "field", "id": "mezar-no", "field": "mezar_no", "required": true },
+      { "type": "field", "id": "ada-no", "field": "ada_no" },
+      { "type": "field", "id": "durum", "field": "durum", "required": true }
+    ]
+  },
+  "fields": [
+    { "name": "mezar_no", "kind": "text" },
+    { "name": "ada_no", "kind": "text" },
+    {
+      "name": "durum",
+      "kind": "text",
+      "values": [
+        { "code": "BOS", "label": "Boş" },
+        { "code": "DOLU", "label": "Dolu" },
+        { "code": "AYRILMIS", "label": "Ayrılmış" }
+      ],
+      "domain": "mezar_durumu"
+    }
+  ],
+  "domains": [
+    {
+      "id": "mezar_durumu",
+      "name": "Mezar durumu",
+      "kind": "text",
+      "values": [
+        { "code": "BOS", "label": "Boş" },
+        { "code": "DOLU", "label": "Dolu" },
+        { "code": "AYRILMIS", "label": "Ayrılmış" }
+      ]
+    }
+  ]
+}

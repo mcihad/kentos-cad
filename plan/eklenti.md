@@ -198,6 +198,7 @@ Kaynak okumaları; satırlar ilgili commit'indir. "Var" bu oturumda test edildi�
 | AI yüzeyleri | `crates/ui/src/widget/ai` (ADR 0154) | Sağlayıcıdan bağımsız sohbet bileşenleri; Asistan bunları kullanıyor. |
 | `.kcad` modül sürümleri | `crates/shared/kcad` şema 254 (ADR 8054 §10) | Her `.kek` eklentisinin verisinin kendi sürümü için yer var; bugün eklenti verisi okunmaz, reddedilir. |
 | ZIP | `crates/shared/zip` (`kentos-zip`) | Sınırlı, CRC denetimli okuyucu/yazıcı; 13 Kasım'da `kentos-formats`'tan ayrıldı (ADIM 16). |
+| Eklenti paketi | `crates/shared/extensions` (`kentos-extensions`), `apps/cli` (`kentos kek`) (ADR 8057 §1) | Manifest v1, bütünlük, kod çalıştırmayan denetleyici, deterministik paketleyici; kayıt defteri ve kurulum yok (ADIM 17). |
 | Gerçek yeni parçalar | — | `.kek` yöneticisi, uv akışı, `kentos.ui` Python katmanı, dinamik Python sağlayıcı yaşam döngüsü, eklenti bulut kataloğu: **yok**. |
 
 Form ilişkileri ve çıktı işleri gibi alanlarda eski Python planının bazı "yok" kayıtları artık güncel değildir; yeni iş
@@ -343,8 +344,13 @@ mebis.kek
   "requestedCapabilities": [
     { "id": "document.write", "scope": "current-project", "reason": "Mezar yeri ve defin kaydı katmanlarına yazar." },
     { "id": "ui.ribbonTab", "scope": "plugin-owned", "reason": "CBS'de Mezarlık BS sekmesini açar." },
+    { "id": "ui.contextMenu", "scope": "plugin-owned", "reason": "Katmanın sağ tık menüsüne katmanları kurmayı ekler." },
+    { "id": "ui.panel", "scope": "plugin-owned", "reason": "Mezar ve merhum sorgulama panelini açar." },
     { "id": "processing.provider", "scope": "plugin-owned", "reason": "Doluluk analizini İşlemler'e ekler." },
     { "id": "audit.provider", "scope": "plugin-owned", "reason": "Defin kaydı ile mezar durumunu denetler." },
+    { "id": "expression.provider", "scope": "plugin-owned", "reason": "Mezar etiketini ifadelere işlev olarak ekler." },
+    { "id": "mapTool", "scope": "plugin-owned", "reason": "Tekli mezarı haritada yerleştirme aracını ekler." },
+    { "id": "dataSource", "scope": "plugin-owned", "reason": "Belediyenin ortofoto altlığını Kaynaklar'a ekler." },
     { "id": "network", "scope": "plugin-owned", "reason": "Belediyenin ortofoto servisini okur.",
       "hosts": ["harita.ornek.bel.tr"], "sendsDataToAi": false }
   ]
@@ -398,12 +404,19 @@ Kurallar (inceleyici bunları kod çalıştırmadan uygular; ihlal, yapısal bir
   Kaynaklar) açılır [D10].
 - Başvurulan her dosya (`descriptor`, `definition`, `schemaFile`, `licenseFile`, `changelogFile`, `icon`, `l10n`) pakette
   ve `integrity.json`'da vardır. Şerit ve menü öğesi var olan bir katkıyı gösterir.
-- Formlar `kentos.form-package` v1'dir ve form çekirdeğinin ön denetiminden (`kentos_forms::preflight`) hatasız geçer.
+- Formlar `kentos.form-package` v1'dir: `cad.forms.import`'un kuralları ve form çekirdeğinin ön denetimi
+  (`kentos_forms::preflight`) paketin kendi alanlarıyla hatasız geçer. Kurulacağı projeyi gerektirenler (başka katmandan
+  liste, ilişki) uyarıdır ve kurulumda proje bağlamıyla yeniden denetlenir (ADR 8057 §1).
 - **Yetenekler:** `requestedCapabilities` v1 sözlüğündendir; her kayıt kısa Türkçe bir **`reason`** taşır (en çok 120
   karakter), kurulumda ve her güncellemede **önceki sürüme göre farkıyla** gösterilir. `network` hedef sunucuları
   (`hosts`) ve dış bir yapay zekâ servisine veri gönderip göndermediğini (`sendsDataToAi`) bildirir. İstenen yetenek
   **verilmiş yetki değildir**: kurum ilkesi ve kullanıcı seçimiyle birlikte değerlendirilir, aracıdan geçen işlemde
   zorlanır, `verify` AST'deki gerçek kullanımla karşılaştırır [D5, PY §6.2].
+- **Kapsam yeteneğe göredir:** `document.*` açık proje ya da kullanıcının seçtiği; `datasets.*` üçü de;
+  `files.userSelected` yalnız kullanıcının seçtiği; arayüz ve sağlayıcı yetenekleri ile `network` yalnız `plugin-owned`.
+- **Katkı yeteneğini yazar:** şerit sekmesi, sağ tık, panel, İşlemler, denetim, ifade, harita aracı ve veri kaynağı
+  kendi yeteneğini, adresli veri kaynağı ayrıca `network`'ü ister; eksiği ret, kullanılmayan arayüz yeteneği uyarı.
+  Kurulum ekranı böylece eklentinin eklediği her şeyi gösterir (ADR 8057 §1).
 
 **Yetenek sözlüğü v1** (ADIM 16'da sabitlenir, genişletmek sürüm artışıdır): `document.read`, `document.write`,
 `datasets.read`, `datasets.create`, `datasets.manage`, `ui.ribbonTab`, `ui.panel`, `ui.contextMenu`, `processing.provider`,
@@ -526,7 +539,7 @@ Her adımın teslimi: ilgili Rust/Python/komut ve fikstür testleri; hata, iptal
 fare/klavyeyle pencere sınaması ve ekran görüntüsü; uzun işte arayüz yanıtı, iptal gecikmesi, CPU/bellek ve aktarım
 boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen işte kod testi çalıştırılmış gibi yazılmaz.
 
-### [~] ADIM 16 — Sözleşme crate'i, manifest v1, güvenli `.kek` okuyucu ve paketleyici (P1)
+### [x] ADIM 16 — Sözleşme crate'i, manifest v1, güvenli `.kek` okuyucu ve paketleyici (P1)
 
 [argon ADIM 16; PY-KEK-01…09, PY-KEK-11; PY-UV-13, PY-UV-17'nin paket tarafı; ECO-QA-02; P08]
 
@@ -558,6 +571,14 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   kayıp başvuru, bozuk form, betikli ya da desteklenmeyen öğeli ikon, görünmez Unicode, `mcp.json`, eskimiş kilit,
   platform kapsamı eksik kilit, döngülü bağımlılık, uyumluluk aralığının her uç durumu) her biri yapısal ve Türkçe bir
   ret, hiçbiri panik değil [P08, ECO-QA-02]; en küçük Python'suz paket geçer.
+- **Teslim (13 Kasım 2026, [ADR 8057 §1](../docs/adr/8057-phase-3-extension-packages.md)):** `crates/shared/extensions`
+  (manifest v1, bütünlük listesi, `inspect`/`open`, `pack`, `compatible`, sürüm aralıkları, `dependency_cycle`),
+  `kentos_zip::layout_problem` (iki okuyucu aynı dosyaları görmeli), `apps/cli` (`kentos kek inspect|pack [--json]`),
+  altın örnekler `fixtures/extensions/v1/mebis` (kilidi gerçek `uv lock` çıktısı) ve `ornek-altlik` (Python'suz en küçük
+  paket). 49 + 8 test; olumsuz korpusun her maddesi yapısal Türkçe ret; ~450 bozuk paket panik yok; MEBİS'in içerik özeti
+  bağımsız Python hesabıyla aynı; `wasm32` derlemesi ve bağımlılık yönü temiz; yeni dış bağımlılık yok. Uygularken
+  verilen 22 karar ADR'de; sözleşmeyi değiştirenler §3.2'ye işlendi (katkı yeteneğini yazar, kapsamlar, formların proje
+  gerektiren denetimi kurulumda). Arayüzü olmadığı için pencere sınaması yok; ilk pencere işi ADIM 18.
 
 ### [ ] ADIM 17 — Kayıt defteri, kiralama ve yerel yaşam döngüsü (P1)
 
@@ -1098,7 +1119,7 @@ Kaynaklar arasındaki çelişkiler şöyle bağlandı; sahip itiraz ederse ADIM 
 |---|---|---|---|
 | ECO-DEC-01 | Çalışma zamanı OS yalıtım profilleri; hangi masaüstü/sunucu ortamında gerçekten uygulanacağı | 19 | **Sahip** |
 | ECO-DEC-02 | uv/Python sürüm/ABI/yerel tekerlek matrisi; çekirdek yorumlayıcı ile dış derleme ayrımı | 18A | Ölçümle |
-| ECO-DEC-03 | Ad alanı/imza/inceleme güven kökü ve içerik özeti kanonikleştirme standardı | 16 (özet), 22A (güven kökü) | **Sahip** (güven kökü) |
+| ECO-DEC-03 | Ad alanı/imza/inceleme güven kökü ve içerik özeti kanonikleştirme standardı | 16 (özet: ADR 8057 §1'de bağlandı), 22A (güven kökü) | **Sahip** (güven kökü) |
 | ECO-DEC-04 | Kişisel/geliştirici/çalışma ortamı sahipliği, önbellek ve kilit/disk düzeni | 18A | Ölçümle |
 | ECO-DEC-05 | Taşınabilir eklenti UI'si ile form standardının bileşen/profil/sürüm bağı | 22 | form.md ile |
 | ECO-DEC-06 | Python araç yürütücü DTO'su, tipli anlık görüntü/toplu API, çıktı hedefi, işlem sınırı | 19 | ADR |

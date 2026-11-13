@@ -117,6 +117,9 @@ const GROUPS = [
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   // The process that runs one İşlemler tool for a server job (docs/adr/0559 §3): the headless host and the tools over
   // one project file; no database, no server framework. Listed before `native`'s catch-all like the headless host.
+  // kentos, the command line (plan/eklenti.md ADIM 16): the extension packages' inspector and packer over the file
+  // system; the shared libraries only, nothing of a server, a window or Python.
+  { name: 'cli', path: 'apps/cli/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },

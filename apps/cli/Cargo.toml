@@ -1,0 +1,17 @@
+[package]
+name = "kentos-cli"
+description = "kentos: KentOS's command line for authors and agents; its first commands are `kentos kek inspect` and `kentos kek pack` (plan/eklenti.md ADIM 16)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "kentos"
+path = "src/main.rs"
+
+# Native only and small (scripts/arch/deps.mjs, group `cli`): the extension crate's inspector and packer over the
+# file system, nothing else; no argument-parsing dependency for two subcommands.
+[dependencies]
+kentos-extensions = { path = "../../crates/shared/extensions" }
+serde_json = { workspace = true }

@@ -1,0 +1,22 @@
+[package]
+name = "kentos-extensions"
+description = "KentOS extension packages (.kek): the manifest v1, the integrity list, the inspector that opens a package without running its code, and the deterministic packer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure (docs/adr/8057 §1, plan/eklenti.md ADIM 16): no file system and no network, so every surface (the desktop, the
+# headless host, MCP, the cloud catalog) inspects a package the same way and the web can too. Zips are kentos-zip's; a
+# package's forms answer to the form package's own rules (kentos-commands' `FormPackage::problem`, the same words
+# `cad.forms.import` refuses with); an icon is read as XML by roxmltree, which refuses a DTD and so entity bombs.
+[dependencies]
+kentos-commands = { path = "../commands", default-features = false }
+# The form core's preflight (docs/adr/0401 §4), over the package's own fields: rules that do not compile, widgets that
+# do not fit, fields named twice. What needs the project it is installed into (another layer's list) is said there.
+kentos-forms = { path = "../forms" }
+kentos-zip = { path = "../zip" }
+roxmltree = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }

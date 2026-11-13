@@ -2611,6 +2611,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-cli"
+version = "0.1.0"
+dependencies = [
+ "kentos-extensions",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-cloud"
 version = "0.1.0"
 dependencies = [
@@ -2747,6 +2755,19 @@ dependencies = [
  "regex-lite",
  "serde_json",
  "sha1 0.10.7",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "kentos-extensions"
+version = "0.1.0"
+dependencies = [
+ "kentos-commands",
+ "kentos-forms",
+ "kentos-zip",
+ "roxmltree",
+ "serde",
+ "serde_json",
  "sha2 0.10.9",
 ]
 

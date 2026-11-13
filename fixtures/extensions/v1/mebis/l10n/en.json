@@ -1,0 +1,6 @@
+{
+  "name": "Cemetery Information System (MEBİS)",
+  "summary": "Cemetery islands, grave plots and burial records.",
+  "entrypoints.commands.init-schema.title": "Set up the MEBİS layers",
+  "contributions.ribbonTabs.mebis.label": "Cemetery IS"
+}

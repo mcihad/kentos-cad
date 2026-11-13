@@ -1,0 +1,8 @@
+Mezarlık Bilgi Sistemi (MEBİS) örnek eklentisi
+Telif hakkı (C) 2026 Örnek Belediyesi CBS Birimi
+
+Bu program özgür yazılımdır: Özgür Yazılım Vakfı'nın yayımladığı GNU Genel Kamu Lisansı'nın 3. sürümü ya da
+(seçiminize göre) daha sonraki bir sürümü koşullarıyla yeniden dağıtabilir ve/veya değiştirebilirsiniz
+(SPDX: GPL-3.0-or-later). Lisansın tam metni: https://www.gnu.org/licenses/gpl-3.0.html
+
+Bu paket KentOS eklenti sisteminin sınama örneğidir; içindeki kurum ve kişi adları örnektir.

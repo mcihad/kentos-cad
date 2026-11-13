@@ -1058,6 +1058,62 @@ pub struct FormPackage {
     pub domains: Vec<crate::FieldDomain>,
 }
 
+impl FormPackage {
+    /// What keeps the package from being a form anywhere, before a layer is chosen: its format and version, its body's,
+    /// fields' and value lists' rules, a field the body binds that the package does not carry. `cad.forms.import`
+    /// refuses with it (docs/adr/0435), and a `.kek` extension's inspector does too, the same words (docs/adr/8057 §1):
+    /// the place in the package and the problem.
+    pub fn problem(&self) -> Option<(&'static str, String)> {
+        if self.format != FORM_PACKAGE_FORMAT || self.version != FORM_PACKAGE_VERSION {
+            return Some((
+                "package",
+                format!(
+                    "Paketin biçimi “{}” sürüm {}; KentOS form paketi ({FORM_PACKAGE_FORMAT}, sürüm {FORM_PACKAGE_VERSION}) değil.",
+                    self.format, self.version
+                ),
+            ));
+        }
+        if let Some(problem) = crate::body_problem(&self.body) {
+            return Some((
+                "package.body",
+                format!("Paketin formu kurallarına uymuyor: {problem}"),
+            ));
+        }
+        if !self.fields.is_empty()
+            && let Some(problem) = crate::fields_problem(&self.fields)
+        {
+            return Some((
+                "package.fields",
+                format!("Paketin alanları kurallarına uymuyor: {problem}"),
+            ));
+        }
+        if let Some((_, problem)) = crate::domains_problem(&self.domains) {
+            return Some((
+                "package.domains",
+                format!("Paketin değer listeleri kurallarına uymuyor: {problem}"),
+            ));
+        }
+        fn bound(items: &[crate::FormItem], out: &mut Vec<String>) {
+            for i in items {
+                if let crate::FormItem::Field(f) = i {
+                    out.push(f.field.clone());
+                }
+                bound(i.items(), out);
+            }
+        }
+        let mut keys = Vec::new();
+        bound(&self.body.items, &mut keys);
+        keys.into_iter()
+            .find(|k| !self.fields.iter().any(|f| f.key() == k.as_str()))
+            .map(|k| {
+                (
+                    "package.body",
+                    format!("Paketin formu “{k}” alanını anıyor; alan paketin alanlarında yok."),
+                )
+            })
+    }
+}
+
 /// Input of `cad.forms.export` v1: the form's latest release (or its draft) as a package; writes
 /// nothing. Refusals: `unknown_form`, `form_unpublished`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

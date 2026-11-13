@@ -10,6 +10,8 @@ members = [
     "crates/shared/commands",
     "crates/shared/formats",
     "crates/shared/zip",
+    # Extension packages, .kek (docs/adr/8057, plan/eklenti.md): the manifest, the inspector, the packer.
+    "crates/shared/extensions",
     "crates/shared/qml",
     "crates/shared/maplibre",
     # DWG codec adapter (ADR 0586): OpenCADStudio's pinned, MPL-2.0 codec;
@@ -99,6 +101,8 @@ members = [
     "apps/api",
     # The process that runs an İşlemler tool for a server job (docs/adr/0559 §3).
     "apps/jobrun",
+    # kentos, the command line for authors and agents: `kentos kek inspect|pack` (plan/eklenti.md ADIM 16).
+    "apps/cli",
     # Desktop (docs/adr/0010, 0016): the KentOS UI library and its showcase. Not in
     # default-members, so web and server work never builds Iced and wgpu (TODOS.md UI-04);
     # pnpm rust:test:desktop and make test-desktop build them.
@@ -119,6 +123,7 @@ default-members = [
     "crates/shared/commands",
     "crates/shared/formats",
     "crates/shared/zip",
+    "crates/shared/extensions",
     "crates/shared/qml",
     "crates/shared/maplibre",
     "crates/native/dwg",
@@ -161,6 +166,7 @@ default-members = [
     "crates/server/application",
     "apps/api",
     "apps/jobrun",
+    "apps/cli",
 ]
 # GeographicLib's Rust port with libm's functions (docs/adr/0171): the release's own code, a path
 # dependency of the geometry core but not a member (its tests run by hand, its lints its authors').

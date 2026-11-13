@@ -1,4 +1,4 @@
-//! Zip archives in (docs/adr/0053): the files of a zipped Shapefile. Only
+//! Zip archives in (docs/adr/0053): the files of a zipped Shapefile, a `.kek` extension package (docs/adr/8057 §1). Only
 //! what GIS programs write is read: stored and deflated entries in one
 //! archive, no encryption, no ZIP64. The central directory is the index;
 //! each entry's local header is checked against it and its bytes against
@@ -39,6 +39,12 @@ pub struct Listed {
     crc: u32,
     encrypted: bool,
     local: u64,
+    /// "Version made by": its high byte is the host that wrote the entry (3: Unix).
+    made_by: u16,
+    /// The external attributes: on a Unix host the file's mode in the high 16 bits.
+    external: u32,
+    /// The name as written held a backslash (made `/` in `name`).
+    backslash: bool,
 }
 
 impl Listed {
@@ -50,6 +56,43 @@ impl Listed {
     /// The size it unpacks to, as declared.
     pub fn size(&self) -> u64 {
         self.unpacked
+    }
+
+    /// A folder's entry (its name ends in `/`).
+    pub fn is_folder(&self) -> bool {
+        self.name.ends_with('/')
+    }
+
+    /// A Mac's resource fork or `__MACOSX` folder: not a file of the archive's.
+    pub fn is_mac_junk(&self) -> bool {
+        self.name.starts_with("__MACOSX/")
+            || self.name.contains("/._")
+            || self.name.starts_with("._")
+    }
+
+    pub fn is_encrypted(&self) -> bool {
+        self.encrypted
+    }
+
+    /// The entry's Unix mode, when a Unix host wrote it.
+    pub fn unix_mode(&self) -> Option<u32> {
+        (self.made_by >> 8 == 3).then_some(self.external >> 16)
+    }
+
+    /// A symbolic link (a Unix host's `S_IFLNK`): its bytes are the link's target, not a file.
+    pub fn is_link(&self) -> bool {
+        self.unix_mode()
+            .is_some_and(|mode| mode & 0o170_000 == 0o120_000)
+    }
+
+    /// The name as written held a backslash; `name` has it as `/`.
+    pub fn had_backslash(&self) -> bool {
+        self.backslash
+    }
+
+    /// The bytes it takes in the archive, as declared.
+    pub fn packed(&self) -> u64 {
+        self.packed
     }
 }
 
@@ -80,6 +123,15 @@ pub fn sniff(bytes: &[u8]) -> bool {
 /// The archive's entries, folders and macOS resource forks left out,
 /// without unpacking anything.
 pub fn list(bytes: &[u8], limits: &Limits) -> Result<Vec<Listed>, String> {
+    Ok(list_every(bytes, limits)?
+        .into_iter()
+        .filter(|l| !l.is_folder() && !l.is_mac_junk())
+        .collect())
+}
+
+/// Every entry of the central directory as the archive names it, folders and a Mac's resource forks too: a `.kek`
+/// package refuses what the Shapefile reader skips (docs/adr/8057 §1).
+pub fn list_every(bytes: &[u8], limits: &Limits) -> Result<Vec<Listed>, String> {
     let broken = |why: &str| format!("Zip arşivi bozuk: {why}. Arşivi yeniden oluşturup deneyin.");
     // The end of central directory record: the last 22 bytes plus a comment of up to 64 KiB.
     let lowest = bytes.len().saturating_sub(22 + 0xffff);
@@ -123,6 +175,7 @@ pub fn list(bytes: &[u8], limits: &Limits) -> Result<Vec<Listed>, String> {
         }
         let field = |o: usize| u16_at(bytes, at + o).ok_or_else(|| broken("dizin kaydı kesik"));
         let word = |o: usize| u32_at(bytes, at + o).ok_or_else(|| broken("dizin kaydı kesik"));
+        let made_by = field(4)?;
         let flags = field(8)?;
         let method = field(10)?;
         let crc = word(16)?;
@@ -131,11 +184,13 @@ pub fn list(bytes: &[u8], limits: &Limits) -> Result<Vec<Listed>, String> {
         let name_len = usize::from(field(28)?);
         let extra_len = usize::from(field(30)?);
         let comment_len = usize::from(field(32)?);
+        let external = word(38)?;
         let local = word(42)?;
         let name_bytes = bytes
             .get(at + 46..at + 46 + name_len)
             .ok_or_else(|| broken("dosya adı kesik"))?;
         // Bit 11: the name is UTF-8; otherwise it is IBM 437, as ASCII names are in both.
+        let backslash = name_bytes.contains(&b'\\');
         let name = String::from_utf8_lossy(name_bytes).replace('\\', "/");
         at += 46 + name_len + extra_len + comment_len;
         if packed == 0xffff_ffff || unpacked == 0xffff_ffff || local == 0xffff_ffff {
@@ -143,13 +198,6 @@ pub fn list(bytes: &[u8], limits: &Limits) -> Result<Vec<Listed>, String> {
                 "Zip64 arşivi okunmuyor (4 GB'tan büyük dosya). Dosyaları sıkıştırmadan birlikte seçin."
                     .to_owned(),
             );
-        }
-        if name.ends_with('/')
-            || name.starts_with("__MACOSX/")
-            || name.contains("/._")
-            || name.starts_with("._")
-        {
-            continue;
         }
         out.push(Listed {
             name,
@@ -159,6 +207,9 @@ pub fn list(bytes: &[u8], limits: &Limits) -> Result<Vec<Listed>, String> {
             crc,
             encrypted: flags & 1 != 0,
             local: u64::from(local),
+            made_by,
+            external,
+            backslash,
         });
     }
     Ok(out)
@@ -233,6 +284,70 @@ pub fn unpack(
         });
     }
     Ok(out)
+}
+
+/// What makes two readers see the archive differently, when anything does: bytes before the first entry, a local
+/// header whose name is not the directory's, two entries over the same bytes. One reads the directory (this crate,
+/// the central directory's names), another walks the local headers from the start; a `.kek` package must read the
+/// same in a reviewer's tool and in KentOS (docs/adr/8057 §1). The listing as [`list_every`] gives it.
+pub fn layout_problem(bytes: &[u8], listed: &[Listed]) -> Option<String> {
+    let mut spans: Vec<(u64, u64, &str)> = Vec::with_capacity(listed.len());
+    for l in listed {
+        let name = l.name.as_str();
+        let broken = || Some(format!("“{name}” girdisinin yerel kaydı okunamadı."));
+        let Ok(at) = usize::try_from(l.local) else {
+            return broken();
+        };
+        if u32_at(bytes, at) != Some(LOCAL) {
+            return broken();
+        }
+        let (Some(flags), Some(name_len), Some(extra_len)) = (
+            u16_at(bytes, at + 6),
+            u16_at(bytes, at + 26),
+            u16_at(bytes, at + 28),
+        ) else {
+            return broken();
+        };
+        let (name_len, extra_len) = (usize::from(name_len), usize::from(extra_len));
+        let Some(local_name) = bytes.get(at + 30..at + 30 + name_len) else {
+            return broken();
+        };
+        if String::from_utf8_lossy(local_name).replace('\\', "/") != l.name {
+            return Some(format!(
+                "“{name}” girdisinin yerel kaydında başka bir ad yazıyor (“{}”); arşivi okuyan araçlar farklı \
+                 dosyalar görür.",
+                String::from_utf8_lossy(local_name)
+            ));
+        }
+        // The data descriptor after the bytes, when bit 3 says so: 12 bytes, 16 with its signature.
+        let mut end = (at + 30 + name_len + extra_len) as u64 + l.packed;
+        if flags & 8 != 0 {
+            end += 12;
+            if usize::try_from(end - 12)
+                .ok()
+                .and_then(|e| u32_at(bytes, e))
+                == Some(0x0807_4b50)
+            {
+                end += 4;
+            }
+        }
+        spans.push((l.local, end, name));
+    }
+    spans.sort_unstable();
+    if let Some((start, _, _)) = spans.first()
+        && *start != 0
+    {
+        return Some(format!(
+            "Arşivin başında {start} bayt başka veri var (ör. bir program ya da başka bir dosya); paket ZIP olarak \
+             başlamalı."
+        ));
+    }
+    spans.windows(2).find(|w| w[0].1 > w[1].0).map(|w| {
+        format!(
+            "“{}” ile “{}” girdileri aynı baytları paylaşıyor; arşiv olağan dışı kurulmuş.",
+            w[0].2, w[1].2
+        )
+    })
 }
 
 /// CRC-32 (IEEE 802.3, the zip format's), bit by bit over a table built once.
@@ -509,6 +624,70 @@ mod tests {
         let listed = list(&z, &Limits::default()).expect("lists");
         let names: Vec<&str> = listed.iter().map(Listed::file_name).collect();
         assert_eq!(names, ["a.shp"]);
+    }
+
+    /// The archive with `prefix` before it, its offsets moved to match: what a self-extracting program looks like.
+    fn after(prefix: &[u8], z: &[u8]) -> Vec<u8> {
+        let shift = prefix.len() as u32;
+        let mut out = [prefix, z].concat();
+        let end = out.len() - 22;
+        let cd = u32_at(&out, end + 16).unwrap() + shift;
+        out[end + 16..end + 20].copy_from_slice(&cd.to_le_bytes());
+        let mut at = cd as usize;
+        while u32_at(&out, at) == Some(CENTRAL) {
+            let local = u32_at(&out, at + 42).unwrap() + shift;
+            out[at + 42..at + 46].copy_from_slice(&local.to_le_bytes());
+            let len = |o: usize| usize::from(u16_at(&out, at + o).unwrap());
+            at += 46 + len(28) + len(30) + len(32);
+        }
+        out
+    }
+
+    #[test]
+    fn an_archive_two_readers_would_read_differently_is_named() {
+        let limits = Limits::default();
+        let entries: [(&str, &[u8]); 2] = [("a.txt", b"bir"), ("b/c.txt", b"iki")];
+        let z = write(&entries).unwrap();
+        assert_eq!(layout_problem(&z, &list_every(&z, &limits).unwrap()), None);
+        let hand = archive(&entries, true);
+        assert_eq!(
+            layout_problem(&hand, &list_every(&hand, &limits).unwrap()),
+            None
+        );
+
+        let prefixed = after(b"MZ\x90\x00 a program", &z);
+        let listed = list_every(&prefixed, &limits).expect("still a readable archive");
+        assert_eq!(
+            unpack(&prefixed, &listed, &limits, |_| true).unwrap().len(),
+            2
+        );
+        assert!(
+            layout_problem(&prefixed, &listed)
+                .unwrap()
+                .contains("başında 14 bayt")
+        );
+
+        let mut renamed = z.clone();
+        renamed[30..35].copy_from_slice(b"x.txt");
+        let listed = list_every(&renamed, &limits).unwrap();
+        assert!(
+            layout_problem(&renamed, &listed)
+                .unwrap()
+                .contains("“x.txt”")
+        );
+
+        // The second entry's directory record points at the first's bytes.
+        let twice = archive(&[("a.txt", b"bir"), ("a.txt", b"bir")], false);
+        let mut overlapping = twice.clone();
+        let cd = u32_at(&overlapping, overlapping.len() - 22 + 16).unwrap() as usize;
+        let second = cd + 46 + 5;
+        overlapping[second + 42..second + 46].copy_from_slice(&0u32.to_le_bytes());
+        let listed = list_every(&overlapping, &limits).unwrap();
+        assert!(
+            layout_problem(&overlapping, &listed)
+                .unwrap()
+                .contains("aynı baytları")
+        );
     }
 
     #[test]

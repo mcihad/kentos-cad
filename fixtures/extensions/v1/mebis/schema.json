@@ -1,0 +1,27 @@
+{
+  "layers": [
+    { "name": "mezar_ada", "title": "Mezarlık adası", "geometry": "polygon",
+      "fields": [ { "name": "ada_no", "kind": "text", "required": true } ] },
+    { "name": "mezar_parsel", "title": "Mezar parseli", "geometry": "polygon",
+      "fields": [ { "name": "ada_no", "kind": "text" }, { "name": "parsel_no", "kind": "text" } ] },
+    { "name": "mezar_yeri", "title": "Mezar yeri", "geometry": "polygon",
+      "fields": [
+        { "name": "mezar_no", "kind": "text", "required": true },
+        { "name": "ada_no", "kind": "text" },
+        { "name": "durum", "kind": "text", "domain": "mezar_durumu" }
+      ] },
+    { "name": "defin_kaydi", "title": "Defin kaydı", "geometry": "none",
+      "fields": [
+        { "name": "mezar_id", "kind": "text", "required": true },
+        { "name": "merhum_adi", "kind": "text" },
+        { "name": "defin_tarihi", "kind": "date" }
+      ] }
+  ],
+  "domains": [
+    { "id": "mezar_durumu", "kind": "text",
+      "values": [ { "code": "BOS", "label": "Boş" }, { "code": "DOLU", "label": "Dolu" }, { "code": "AYRILMIS", "label": "Ayrılmış" } ] }
+  ],
+  "relations": [
+    { "from": "defin_kaydi", "field": "mezar_id", "to": "mezar_yeri" }
+  ]
+}

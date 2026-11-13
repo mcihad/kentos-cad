@@ -1,0 +1,3 @@
+# Extension packages are byte-exact: a package's content digest is over its files' bytes (docs/adr/8057 §1), so no
+# checkout may change their line endings.
+* -text

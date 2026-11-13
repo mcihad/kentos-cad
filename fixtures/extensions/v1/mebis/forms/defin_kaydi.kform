@@ -1,0 +1,17 @@
+{
+  "format": "kentos.form-package",
+  "version": 1,
+  "name": "Defin kaydı",
+  "body": {
+    "revision": 1,
+    "items": [
+      { "type": "field", "id": "mezar", "field": "mezar_id", "required": true },
+      { "type": "field", "id": "merhum", "field": "merhum_adi", "required": true },
+      { "type": "note", "id": "bilgi", "text": "Defin kaydı mezar yerinin durumunu 'Dolu' yapmaz; denetim uyuşmazlığı gösterir." }
+    ]
+  },
+  "fields": [
+    { "name": "mezar_id", "kind": "text" },
+    { "name": "merhum_adi", "kind": "text" }
+  ]
+}

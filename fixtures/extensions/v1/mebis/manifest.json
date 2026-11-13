@@ -1,0 +1,133 @@
+{
+  "format": "kentos.extension",
+  "schemaVersion": 1,
+  "id": "tr.ornek.mebis",
+  "version": "1.0.0",
+  "name": "Mezarlık Bilgi Sistemi (MEBİS)",
+  "summary": "Mezarlık adaları, mezar yerleri ve defin kayıtları.",
+  "description": "Ada ve mezar yeri katmanlarını kurar, defin kayıtlarını formla tutar, doluluğu hesaplar ve defin kaydı ile mezar durumunun uyuşmadığı yerleri denetler.",
+  "authors": ["Örnek Belediyesi CBS Birimi"],
+  "publisherId": "ornek-belediye",
+  "license": "GPL-3.0-or-later",
+  "licenseFile": "LICENSE",
+  "links": {
+    "homepage": "https://cbs.ornek.bel.tr/mebis",
+    "source": "https://git.ornek.bel.tr/cbs/mebis",
+    "issues": "https://git.ornek.bel.tr/cbs/mebis/issues"
+  },
+  "keywords": ["mezarlık", "defin", "cbs"],
+  "changelogFile": "CHANGELOG.md",
+  "icon": "assets/mebis.svg",
+  "kind": "vertical",
+  "modules": ["cbs", "harita"],
+  "runtimes": ["desktop", "headless"],
+  "compatibility": {
+    "sdkProtocol": { "min": 1, "max": 1 },
+    "kentos": { "min": "0.2.0" },
+    "operatingSystems": ["windows", "macos", "linux"]
+  },
+  "dependencies": {
+    "extensions": [{ "id": "tr.ornek.kent-temel", "version": ">=1.2, <2" }]
+  },
+  "python": {
+    "projectFile": "pyproject.toml",
+    "lockFile": "uv.lock",
+    "optionalFeatures": { "grafik": { "extra": "charts", "label": "Doluluk grafikleri" } }
+  },
+  "schemaFile": "schema.json",
+  "l10n": { "default": "tr", "files": { "en": "l10n/en.json" } },
+  "entrypoints": {
+    "commands": [
+      { "id": "init-schema", "title": "MEBİS katmanlarını kur", "icon": "layers", "handler": "mebis.logic:init_schema" }
+    ],
+    "mapTools": [
+      {
+        "id": "single-grave",
+        "title": "Tekli mezar",
+        "capture": "orientedRectangle",
+        "templateWidthM": 1.1,
+        "templateLengthM": 2.2,
+        "snapLayers": ["mezar_parsel", "mezar_yeri"],
+        "handler": "mebis.logic:on_single_grave_placed"
+      }
+    ],
+    "processing": [
+      {
+        "id": "occupancy-by-island",
+        "descriptor": "tools/occupancy-by-island.tool.json",
+        "handler": "mebis.logic:occupancy_by_island"
+      }
+    ],
+    "audits": [
+      {
+        "id": "status-mismatch",
+        "title": "Defin kaydı / mezar durumu uyuşmazlığı",
+        "domain": "cbs",
+        "handler": "mebis.logic:audit_status_mismatch"
+      }
+    ],
+    "expressions": [{ "id": "mezar-etiketi", "handler": "mebis.logic:mebis_mezar_etiketi" }],
+    "panels": [
+      { "id": "search-dock", "title": "Mezar ve merhum sorgulama", "side": "right", "definition": "ui/search_dock.panel.json" }
+    ],
+    "forms": [
+      { "id": "mezar-yeri", "definition": "forms/mezar_yeri.kform" },
+      { "id": "defin-kaydi", "definition": "forms/defin_kaydi.kform" }
+    ]
+  },
+  "contributions": {
+    "ribbonTabs": [
+      {
+        "id": "mebis",
+        "label": "Mezarlık BS",
+        "module": "cbs",
+        "panels": [
+          { "label": "Proje ve katmanlar", "items": [{ "command": "init-schema", "size": "large" }] },
+          {
+            "label": "Mezar planlama",
+            "items": [{ "mapTool": "single-grave", "size": "large", "when": { "layerSchema": "mezar_parsel" } }]
+          },
+          {
+            "label": "Denetim ve rapor",
+            "items": [
+              { "audit": "status-mismatch", "size": "large" },
+              { "processing": "occupancy-by-island" },
+              { "panel": "search-dock" },
+              { "dataSource": "ornek-ortofoto" }
+            ]
+          }
+        ]
+      }
+    ],
+    "contextMenus": [{ "command": "init-schema", "target": "layer", "when": { "documentOpen": true } }],
+    "dataSources": [
+      {
+        "id": "ornek-ortofoto",
+        "title": "Örnek Belediyesi ortofoto (2026)",
+        "kind": "wmts",
+        "url": "https://harita.ornek.bel.tr/wmts",
+        "layers": ["ortofoto_2026"],
+        "crs": "EPSG:5254",
+        "attribution": "Örnek Belediyesi"
+      }
+    ]
+  },
+  "requestedCapabilities": [
+    { "id": "document.write", "scope": "current-project", "reason": "Mezar yeri ve defin kaydı katmanlarına yazar." },
+    { "id": "ui.ribbonTab", "scope": "plugin-owned", "reason": "CBS'de Mezarlık BS sekmesini açar." },
+    { "id": "ui.contextMenu", "scope": "plugin-owned", "reason": "Katmanın sağ tık menüsüne katmanları kurmayı ekler." },
+    { "id": "ui.panel", "scope": "plugin-owned", "reason": "Mezar ve merhum sorgulama panelini açar." },
+    { "id": "processing.provider", "scope": "plugin-owned", "reason": "Doluluk analizini İşlemler'e ekler." },
+    { "id": "audit.provider", "scope": "plugin-owned", "reason": "Defin kaydı ile mezar durumunu denetler." },
+    { "id": "expression.provider", "scope": "plugin-owned", "reason": "Mezar etiketini ifadelere işlev olarak ekler." },
+    { "id": "mapTool", "scope": "plugin-owned", "reason": "Tekli mezarı haritada yerleştirme aracını ekler." },
+    { "id": "dataSource", "scope": "plugin-owned", "reason": "Belediyenin ortofoto altlığını Kaynaklar'a ekler." },
+    {
+      "id": "network",
+      "scope": "plugin-owned",
+      "reason": "Belediyenin ortofoto servisini okur.",
+      "hosts": ["harita.ornek.bel.tr"],
+      "sendsDataToAi": false
+    }
+  ]
+}

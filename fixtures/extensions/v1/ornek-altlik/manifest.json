@@ -1,0 +1,48 @@
+{
+  "format": "kentos.extension",
+  "schemaVersion": 1,
+  "id": "tr.ornek.altlik",
+  "version": "1.0.0",
+  "name": "Örnek Belediyesi altlıkları",
+  "summary": "Belediyenin ortofoto ve imar planı servislerini Kaynaklar'a ekler.",
+  "authors": ["Örnek Belediyesi CBS Birimi"],
+  "license": "CC-BY-4.0",
+  "licenseFile": "LICENSE",
+  "kind": "utility",
+  "modules": ["harita", "cbs"],
+  "runtimes": ["desktop", "headless", "cloud"],
+  "compatibility": { "sdkProtocol": { "min": 1, "max": 1 } },
+  "contributions": {
+    "dataSources": [
+      {
+        "id": "ortofoto-2026",
+        "title": "Ortofoto (2026)",
+        "kind": "wmts",
+        "url": "https://harita.ornek.bel.tr/wmts",
+        "layers": ["ortofoto_2026"],
+        "crs": "EPSG:5254",
+        "attribution": "Örnek Belediyesi",
+        "licenseNote": "Kurum içi kullanım; yeniden dağıtılmaz."
+      },
+      {
+        "id": "imar-plani",
+        "title": "Uygulama imar planı",
+        "kind": "wms",
+        "url": "https://harita.ornek.bel.tr/wms",
+        "layers": ["imar_plani"],
+        "crs": "EPSG:5254",
+        "attribution": "Örnek Belediyesi İmar ve Şehircilik Müdürlüğü"
+      }
+    ]
+  },
+  "requestedCapabilities": [
+    { "id": "dataSource", "scope": "plugin-owned", "reason": "Ortofoto ve imar planı servislerini Kaynaklar'a ekler." },
+    {
+      "id": "network",
+      "scope": "plugin-owned",
+      "reason": "Belediyenin harita servislerinden görüntü okur.",
+      "hosts": ["harita.ornek.bel.tr"],
+      "sendsDataToAi": false
+    }
+  ]
+}

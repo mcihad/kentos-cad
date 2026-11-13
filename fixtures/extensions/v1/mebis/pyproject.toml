@@ -1,0 +1,24 @@
+# The Python side of the MEBİS example extension (plan/eklenti.md §3.4). Python's version range has one source:
+# requires-python below; the manifest does not repeat it. `uv lock` writes uv.lock from this file.
+[project]
+name = "mebis"
+version = "1.0.0"
+description = "Mezarlık Bilgi Sistemi örnek eklentisinin işlevleri"
+requires-python = ">=3.12,<3.15"
+dependencies = ["shapely>=2.0"]
+
+[project.optional-dependencies]
+charts = ["pygal>=3.0"]
+
+[tool.uv]
+# Resolve for, and require wheels on, the three systems the manifest names (compatibility.operatingSystems).
+environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+required-environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
