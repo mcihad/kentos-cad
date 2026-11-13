@@ -1733,7 +1733,44 @@ pub(crate) fn roof_parts_placed(
             ));
         }
     }
+    // Two roof windows over one another (a second placed where the first is) would draw as one: refused.
+    let windows: Vec<(usize, Vec<kentos_geometry_core::Vec2>)> = parts
+        .iter()
+        .enumerate()
+        .filter(|(_, p)| p.kind == RoofPartKind::Window)
+        .filter_map(|(k, p)| {
+            core::part_ring(pts, spec, &kentos_formats::arch_elements::core_roof_part(p)).map(|r| (k, r))
+        })
+        .collect();
+    for (i, (_, a)) in windows.iter().enumerate() {
+        for (k, b) in &windows[i + 1..] {
+            if rings_overlap(a, b) {
+                return Err(fail(
+                    codes::INVALID_ROOF,
+                    "Çatı penceresi başka bir çatı penceresinin üstüne geliyor; yerini kaydırın.".to_owned(),
+                    &format!("{at}.parts[{k}].at"),
+                ));
+            }
+        }
+    }
     Ok(())
+}
+
+/// Whether two convex rings (roof windows) share some area: a corner of one inside the other, or edges crossing.
+fn rings_overlap(a: &[kentos_geometry_core::Vec2], b: &[kentos_geometry_core::Vec2]) -> bool {
+    use kentos_geometry_core::geometry::point_in_polygon;
+    use kentos_geometry_core::predicates::orient2d;
+    if a.iter().any(|p| point_in_polygon(*p, b)) || b.iter().any(|p| point_in_polygon(*p, a)) {
+        return true;
+    }
+    let edges = |r: &[kentos_geometry_core::Vec2]| -> Vec<(kentos_geometry_core::Vec2, kentos_geometry_core::Vec2)> {
+        (0..r.len()).map(|i| (r[i], r[(i + 1) % r.len()])).collect()
+    };
+    edges(a).iter().any(|&(p, q)| {
+        edges(b).iter().any(|&(r, s)| {
+            orient2d(p, q, r) * orient2d(p, q, s) < 0.0 && orient2d(r, s, p) * orient2d(r, s, q) < 0.0
+        })
+    })
 }
 
 fn validated(checked: Result<Checked, Stop>) -> CommandResult<()> {
