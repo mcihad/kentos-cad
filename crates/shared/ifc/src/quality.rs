@@ -358,7 +358,12 @@ pub fn ek9(b: &Building, written: &Written, k: &Particulars) -> Vec<Row> {
                 14 => Answer::Yes("mahal kapalı sınırından katının ya da kendi yüksekliğine.".into()),
                 15 => Answer::Ask("Mimari denetim › Kat grubuna bakın.".into()),
                 16 => Answer::Ask("Mimari denetim › Duvarlar grubuna (üst üste duvar) bakın.".into()),
-                18 => Answer::Yes("IFC 4.3 (IFC4X3_ADD2, EK-5 §5.4), uzantı .ifc.".into()),
+                // The delivery itself is not in the drawing: what the writer makes is said, the file is the architect's
+                // to check (a form placed before any export must not say Evet).
+                18 => Answer::Ask(
+                    "Teslim edilen dosyayı denetleyin; KentOS modeli IFC 4.3 (IFC4X3_ADD2, EK-5 §5.4) ve .ifc uzantısıyla yazar, bu form dosyayı görmez."
+                        .into(),
+                ),
                 19 => Answer::Yes("her sınıfın ön tanımlı tipi yazıldı.".into()),
                 20 => Answer::Yes("özellikler IFC'nin Pset_… ve EK-6'nın setlerinde.".into()),
                 21 if written.left.is_empty() => {
@@ -449,6 +454,16 @@ mod tests {
         assert_eq!(sentence("ilçe"), "İlçe");
         assert_eq!(sentence("ışık"), "Işık");
         assert!(!is_form(&table[1]));
+    }
+
+    #[test]
+    fn the_delivered_file_is_the_architects_to_check_not_a_yes() {
+        let rows = ek9(&Building::default(), &Written::default(), &kunye());
+        let table = form_rows(&rows);
+        let delivery = table.iter().find(|r| r[0] == "18").expect("question 18");
+        assert_eq!(delivery[4], "", "no Evet before any file is delivered");
+        assert!(delivery[5].starts_with("Teslim edilen dosyayı denetleyin"), "{delivery:?}");
+        assert!(matches!(rows[17].answer, Answer::Ask(_)));
     }
 
     #[test]

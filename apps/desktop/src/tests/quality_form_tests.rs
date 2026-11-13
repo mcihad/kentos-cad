@@ -119,6 +119,9 @@ fn the_form_in_the_drawing_is_the_set_s_fr_mkf_sheet_with_its_answers_now() {
     assert_eq!(answer("3")[4], "Evet", "the project's code is 260457");
     assert_eq!(answer("6")[4], "Hayır");
     assert_eq!(answer("1")[4], "", "the architect answers the file size");
+    // No IFC was exported here: the delivered file's version is the architect's to check, not an Evet (UR-052).
+    assert_eq!(answer("18")[4], "", "{:?}", answer("18"));
+    assert!(answer("18")[5].starts_with("Teslim edilen dosyayı denetleyin"));
     // The set: the form a sheet of its own after the plans, named by EK-2's form and model control form.
     let input = kentos_native_application::permit_set::PermitSet {
         phase: kentos_sheet::permit::Phase::Permit,
