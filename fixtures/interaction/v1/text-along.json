@@ -62,7 +62,7 @@
         "entities": 6,
         "log": "success",
         "logged": [
-          "Eğri boyunca yazı eklendi: “Atatürk Caddesi”"
+          "Eğri boyunca yazı eklendi: “Atatürk Caddesi”. Yazı eğrinin şimdiki biçimini taşır; eğri sonra değişirse yazı izlemez."
         ],
         "newest": {
           "kind": "text",

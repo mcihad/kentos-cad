@@ -571,7 +571,11 @@ impl Tool for TextAlong {
                 self.last_text = Some(words.to_owned());
                 cx.say(
                     Level::Success,
-                    format!("Eğri boyunca yazı eklendi: “{words}”"),
+                    // The text keeps the curve as it is now (UR-037): said, so a later edit of the curve is not taken
+                    // for one the text should follow.
+                    format!(
+                        "Eğri boyunca yazı eklendi: “{words}”. Yazı eğrinin şimdiki biçimini taşır; eğri sonra değişirse yazı izlemez."
+                    ),
                 );
             }
         }

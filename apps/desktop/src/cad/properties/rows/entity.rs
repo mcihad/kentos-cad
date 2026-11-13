@@ -818,6 +818,8 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                 let curve = kentos_native_application::geometry::core_curve(path);
                 let p = kentos_geometry_core::Vec2::new(t.p.x, t.p.y);
                 geo.push(metres("Eğri", curve.length(p, t.rotation)));
+                // The curve is the text's own, taken when it was written (UR-037): said, not found out later.
+                geo.push(Row::text("Kaynak eğri", "Bağlı değil: yazının kendi kopyası".to_owned()));
             }
             geo.extend([len("Konum Y", t.p.x), len("Konum X", t.p.y)]);
         }
