@@ -303,7 +303,7 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Option<Element<'a, Message>> {
             slider(5.0..=100.0, pct as f32, |v| with(
                 move |r| r.spec.opacity = f64::from(v) / 100.0
             ))
-            .step(5.0)
+            .step(5.0_f32)
         )
         .width(typography::scaled(110.0)),
         label::caption(format!("%{pct}")).font(typography::mono()),

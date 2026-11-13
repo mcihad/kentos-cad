@@ -325,8 +325,10 @@ impl<'a, Message: 'a> Grows<'a, Message> {
         self
     }
 
-    pub fn spacing(mut self, spacing: impl Into<f32>) -> Self {
-        self.spacing = spacing.into();
+    /// The gap between children, logical pixels. An `f32`, not `impl Into<f32>`: a float literal then is one
+    /// without the `f32: From<{float}>` fallback Rust 1.97 began to warn about (docs/adr/8055 §2).
+    pub fn spacing(mut self, spacing: f32) -> Self {
+        self.spacing = spacing;
         self
     }
 

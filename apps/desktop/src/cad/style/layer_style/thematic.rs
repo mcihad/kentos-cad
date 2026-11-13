@@ -1606,7 +1606,7 @@ fn heatmap<'a>(
         .push(line(
             "Opaklık",
             vec![
-                container(slider(0.0..=100.0, opacity, |v| th(Edit::Opacity(v))).step(1.0))
+                container(slider(0.0..=100.0, opacity, |v| th(Edit::Opacity(v))).step(1.0_f32))
                     .width(Length::Fixed(typography::scaled(160.0)))
                     .into(),
                 muted(format!("%{}", opacity.round() as i32)),

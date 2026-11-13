@@ -35,7 +35,7 @@ Sunucu yığını kesindir: Axum, Tokio, SQLx (PostgreSQL + PostGIS) ve Tower. F
   | axum | 0.8.9 |
   | tokio | 1.53.1 |
 
-- Araç zinciri `rust-toolchain.toml` ile 1.96.0'a sabitlenir; `wasm32-unknown-unknown` hedefi zincirle birlikte kurulur.
+- Araç zinciri `rust-toolchain.toml` ile sabitlenir (1.96.0; 13 Kasım 2026'dan beri 1.100.0, [ADR 8055](8055-rust-1-100.md)); `wasm32-unknown-unknown` hedefi zincirle birlikte kurulur.
 - WASM paketi `wasm-bindgen-cli` 0.2.128 ile üretilir (`pnpm rust:wasm`, `--target web`, `apps/web/src/wasm/pkg`). Komutun sürümü `wasm-bindgen` crate'iyle aynı olmak zorundadır; paket depoya girmez. `apps/web/src/wasm/golden.wasm.test.ts` paketin çalışma alanı sürümüyle derlendiğini denetler, eski paket testte yakalanır.
 - **Derleme sınırı:** `.cargo/config.toml` derlemeyi 4 işle sınırlar. Geliştirici makinesi tarayıcı, Vite ve başsız Chrome ile paylaşılıyor. Paralel ağır süreçler makineyi bir kez kilitledi. Cargo derlerken e2e ya da başka bir ağır iş çalıştırılmaz.
 - ~~Ana `pnpm test` Rust araç zincirine bağımlı değildir.~~ **2026-09-24'te değişti (ADR 0008):** uygulama geometriyi Rust çekirdeğinden aldığı için `pnpm dev`, `test`, `build` ve `e2e` önce `scripts/wasm/ensure.mjs` ile WASM paketini (gerekirse) derler; Rust araç zinciri bunlar için de gereklidir. `serde_json` `float_roundtrip` özelliğiyle kullanılır; paket `wasm` profiliyle (`lto = "fat"`, `panic = "abort"`) derlenir. `pnpm test:rust` Rust testleri, clippy ve WASM testlerini birlikte çalıştırır.

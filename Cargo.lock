@@ -3044,15 +3044,6 @@ dependencies = [
 [[package]]
 name = "kentos-pointcloud-wasm"
 version = "0.1.0"
-dependencies = [
- "kentos-contracts",
- "kentos-formats",
- "kentos-geometry-core",
- "kentos-pointcloud",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
 
 [[package]]
 name = "kentos-postgis"

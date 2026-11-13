@@ -114,7 +114,7 @@ pub fn sidebar(launcher: &Launcher) -> Element<'_, Message> {
             .width(Fill)
             .height(Fill)
             .content_fit(ContentFit::Cover)
-            .opacity(if mode == Mode::Light { 0.26 } else { 0.22 })
+            .opacity(if mode == Mode::Light { 0.26_f32 } else { 0.22_f32 })
             .style(|theme: &iced::Theme, _| svg::Style {
                 color: Some(Tokens::of(theme).text),
             }),

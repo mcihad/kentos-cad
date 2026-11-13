@@ -166,7 +166,7 @@ exclude = ["crates/shared/geographiclib-rs", "crates/vendor/block"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.96"
+rust-version = "1.100"
 publish = false
 
 # Exact versions: adding or bumping a dependency is a decision (CLAUDE.md §3).
@@ -306,7 +306,9 @@ lto = "thin"
 codegen-units = 4
 
 # The desktop's and the launcher's programs ship without their symbol tables (docs/adr/0802 §1: 39 of kentos-cad's
-# 255 MB). For a profile with names (perf, a symbolised backtrace): CARGO_PROFILE_RELEASE_PACKAGE_KENTOS_DESKTOP_STRIP=none.
+# 255 MB). For a profile with names (perf, a symbolised backtrace, PGO): cargo build --release
+# --config 'profile.release.package.kentos-desktop.strip="none"' (a config profile comes before the manifest's; the
+# environment variable for a package's setting does not override it, docs/adr/8055 §3).
 [profile.release.package.kentos-desktop]
 strip = "symbols"
 

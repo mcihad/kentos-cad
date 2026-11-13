@@ -122,7 +122,7 @@ Kod değil, derlemeye giren dış veri. Satırı bağımlılık gibi yazılır: 
 
 | Araç | Sürüm | Kaynak |
 |---|---|---|
-| Rust | 1.96.0, `wasm32-unknown-unknown` hedefiyle | `rust-toolchain.toml` |
+| Rust | 1.100.0, `wasm32-unknown-unknown` hedefiyle (13 Kasım 2026; geçiş: [ADR 8055](../adr/8055-rust-1-100.md)) | `rust-toolchain.toml` |
 | wasm-bindgen-cli | 0.2.128 | crate sürümüyle aynı olmak zorunda (CLAUDE.md §2) |
 | Node, pnpm | 24.16.0, 11.24.0 (referans makinede, 25 Eylül; depoda kilitli değil) | `docs/baseline/` |
 | Python 3 | yalnız standart kitaplık (`decimal`, `fractions`, `math`, `json`, `random`, `re`) | `scripts/fixtures/*.py` bağımsız referans üreticileri; `scripts/python/sdk.py` (Python SDK'sının üreticisi) |
