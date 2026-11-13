@@ -47,7 +47,7 @@ PREVIEW_URL := http://localhost:$(PREVIEW_PORT)
 		restart status logs logs-web logs-api logs-desktop open \
 		db-status db-start db-stop db-setup db-migrate kentosd \
 		build wasm build-api build-rust build-desktop catalog inventory \
-		check verify typecheck test test-rust test-wasm test-desktop fmt fmt-check arch e2e e2e-visual e2e-interaction e2e-cloud inventory-check ui-snapshots desktop-snapshot \
+		check verify typecheck test test-rust test-wasm test-desktop test-module fixtures-changed fmt fmt-check arch e2e e2e-visual e2e-interaction e2e-cloud inventory-check ui-snapshots desktop-snapshot \
 		perf-startup perf-interaction clean clean-wasm clean-rust
 
 ##@ Yardım
@@ -239,6 +239,13 @@ test-wasm: ## Rust testleri + WASM paketleri + WASM ve biçim entegrasyon testle
 
 test-desktop: ## Arayüz kütüphanesi, vitrin ve masaüstü testleri + clippy
 	$(HEAVY) pnpm rust:test:desktop
+
+test-module: ## Uygulama katmanı testleri tek modülle: make test-module MOD=arch|map|gis|road (ADR 8054 §11)
+	$(if $(filter $(MOD),arch map gis road),,$(error MOD=arch, map, gis ya da road olmalı))
+	$(HEAVY) cargo test -p kentos-native-application --no-default-features --features mod-$(MOD)
+
+fixtures-changed: ## Yalnız değişenin ortak komut durumları (BASE=origin/main, FILES=a,b; eşlenemeyen değişiklikte hepsi)
+	$(HEAVY) node scripts/dev/changed-fixtures.mjs
 
 fmt: ## Rust kaynaklarını biçimler
 	cargo fmt --all

@@ -301,6 +301,7 @@ const ASPECTS: [(&str, &str, &str); 9] = [
 /// normal (the cross product of two edges); and its aspect (docs/adr/4660): the upward
 /// normal's horizontal part points down the slope, its direction clockwise from north, 0 for a level triangle (the
 /// normal straight up), else 1 + ⌊(direction + 22.5°) / 45°⌋ mod 8. None for a vertical or degenerate triangle.
+#[cfg(feature = "terrain")]
 fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<SlopeTriangle> {
     s.triangles
         .iter()
@@ -683,94 +684,158 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
         }
     }
     // Arazi eğimi (docs/adr/4260): the same surface on both sides.
+    #[cfg_attr(not(feature = "terrain"), allow(unused_mut))]
     let mut slope_map = None;
     if let Some(wanted) = &input.slope {
-        crate::road_terrains::terrain_project(doc)?;
-        let id = crate::road_profiles::surface_id(doc, wanted.surface.trim(), "slope.surface")?;
-        let def = crate::road_terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
-        let made = crate::road_terrains::make(doc, &def);
-        let triangles = slope_triangles(made.built()?);
-        let (mut x, mut y) = (slopes(&b, wanted, &triangles), slopes(&a, wanted, &triangles));
-        if wanted.map {
-            slope_map = Some(kentos_commands::ImpactSlopeMap { base: std::mem::take(&mut x.pieces), alternative: std::mem::take(&mut y.pieces) });
+        // The slopes are read off a terrain surface (TIN): road design's or mapping's (docs/adr/8054 §11).
+        #[cfg(not(feature = "terrain"))]
+        {
+            let _ = wanted;
+            return Err(Stop::failed(crate::checks::error(
+                codes::INVALID_INPUT,
+                "Arazi eğimi bu derlemede yok: yol ya da harita modülüyle derlenmiş KentOS'ta ölçülür.".into(),
+                Some("slope".into()),
+            )));
         }
-        let name = &def.name;
-        let uses: Vec<&str> = wanted.from.iter().map(|u| u.trim()).filter(|u| !u.is_empty()).collect();
-        let whose = if uses.is_empty() { name.clone() } else { format!("{}, {name}", uses.join(", ")) };
-        let threshold = wanted.threshold;
-        let mean = |r: &Slopes| if r.on > 0.0 { r.weighted / r.on } else { 0.0 };
-        let share = |r: &Slopes| if r.on > 0.0 { r.steep / r.on * 100.0 } else { 0.0 };
-        let off = |r: &Slopes| (r.whole - r.on).max(0.0);
-        measures.push(measure(
-            "slopeMean",
-            &format!("Ortalama eğim ({whose})"),
-            "%",
-            mean(&x),
-            mean(&y),
-            &format!(
-                "Ölçülen alanların {name} yüzeyinin üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden (normali, iki kenarının vektörel çarpımı), düşeyin yataya oranı, yüzde. Yüzeyin dışındaki kısım sayılmaz."
-            ),
-        ));
-        measures.push(measure(
-            "slopeSteep",
-            &format!("Dik alan (en az {threshold} %, {whose})"),
-            "m2",
-            x.steep,
-            y.steep,
-            &format!("Eğimi en az {threshold} % olan üçgenlere düşen alan."),
-        ));
-        measures.push(measure(
-            "slopeSteepShare",
-            "Dik alanın payı",
-            "%",
-            share(&x),
-            share(&y),
-            "Dik alanın yüzeyin üstündeki ölçülen alana oranı; yüzeyde alanı olmayan tarafta 0.",
-        ));
-        measures.push(measure(
-            "slopeOff",
-            "Yüzeyin dışındaki alan",
-            "m2",
-            off(&x),
-            off(&y),
-            &format!("Ölçülen alanların {name} yüzeyinin üçgenlerine düşmeyen kısmı; eğimi bilinmez."),
-        ));
-        // Docs/adr/4660: the areas by slope class (each holding its lower break) and by aspect.
-        let breaks = &wanted.classes;
-        if !breaks.is_empty() {
-            for k in 0..=breaks.len() {
-                let (label, note) = if k == 0 {
-                    (format!("Eğimi {} %'den az ({whose})", breaks[0]), format!("Eğimi {} %'den az olan üçgenlere düşen alan.", breaks[0]))
-                } else if k == breaks.len() {
-                    (
-                        format!("Eğimi en az {} % ({whose})", breaks[k - 1]),
-                        format!("Eğimi en az {} % olan üçgenlere düşen alan.", breaks[k - 1]),
-                    )
-                } else {
-                    (
-                        format!("Eğimi {}–{} % ({whose})", breaks[k - 1], breaks[k]),
-                        format!("Eğimi en az {} %, {} %'den az olan üçgenlere düşen alan.", breaks[k - 1], breaks[k]),
-                    )
-                };
-                measures.push(measure(&format!("slopeClass{}", k + 1), &label, "m2", x.classes[k], y.classes[k], &note));
+        #[cfg(feature = "terrain")]
+        {
+            crate::road_terrains::terrain_project(doc)?;
+            let id = crate::road_profiles::surface_id(doc, wanted.surface.trim(), "slope.surface")?;
+            let def = crate::road_terrains::surfaces(doc)
+                .iter()
+                .find(|s| s.id == id)
+                .cloned()
+                .ok_or(Stop::Cancelled)?;
+            let made = crate::road_terrains::make(doc, &def);
+            let triangles = slope_triangles(made.built()?);
+            let (mut x, mut y) = (
+                slopes(&b, wanted, &triangles),
+                slopes(&a, wanted, &triangles),
+            );
+            if wanted.map {
+                slope_map = Some(kentos_commands::ImpactSlopeMap {
+                    base: std::mem::take(&mut x.pieces),
+                    alternative: std::mem::take(&mut y.pieces),
+                });
             }
-        }
-        if wanted.aspect {
-            for (k, (id, word, bounds)) in ASPECTS.iter().enumerate() {
-                let note = if k == 0 {
-                    "Eğimi 0 olan (yatay) üçgenlere düşen alan; bakısı yok.".to_owned()
+            let name = &def.name;
+            let uses: Vec<&str> = wanted
+                .from
+                .iter()
+                .map(|u| u.trim())
+                .filter(|u| !u.is_empty())
+                .collect();
+            let whose = if uses.is_empty() {
+                name.clone()
+            } else {
+                format!("{}, {name}", uses.join(", "))
+            };
+            let threshold = wanted.threshold;
+            let mean = |r: &Slopes| if r.on > 0.0 { r.weighted / r.on } else { 0.0 };
+            let share = |r: &Slopes| {
+                if r.on > 0.0 {
+                    r.steep / r.on * 100.0
                 } else {
-                    format!("Bakısı (eğimin indiği yön, kuzeyden saat yönünde) {bounds} olan üçgenlere düşen alan; alt sınır dahil.")
-                };
-                measures.push(measure(id, &format!("Bakı: {word} ({whose})"), "m2", x.aspects[k], y.aspects[k], &note));
+                    0.0
+                }
+            };
+            let off = |r: &Slopes| (r.whole - r.on).max(0.0);
+            measures.push(measure(
+                "slopeMean",
+                &format!("Ortalama eğim ({whose})"),
+                "%",
+                mean(&x),
+                mean(&y),
+                &format!(
+                    "Ölçülen alanların {name} yüzeyinin üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden (normali, iki kenarının vektörel çarpımı), düşeyin yataya oranı, yüzde. Yüzeyin dışındaki kısım sayılmaz."
+                ),
+            ));
+            measures.push(measure(
+                "slopeSteep",
+                &format!("Dik alan (en az {threshold} %, {whose})"),
+                "m2",
+                x.steep,
+                y.steep,
+                &format!("Eğimi en az {threshold} % olan üçgenlere düşen alan."),
+            ));
+            measures.push(measure(
+                "slopeSteepShare",
+                "Dik alanın payı",
+                "%",
+                share(&x),
+                share(&y),
+                "Dik alanın yüzeyin üstündeki ölçülen alana oranı; yüzeyde alanı olmayan tarafta 0.",
+            ));
+            measures.push(measure(
+                "slopeOff",
+                "Yüzeyin dışındaki alan",
+                "m2",
+                off(&x),
+                off(&y),
+                &format!(
+                    "Ölçülen alanların {name} yüzeyinin üçgenlerine düşmeyen kısmı; eğimi bilinmez."
+                ),
+            ));
+            // Docs/adr/4660: the areas by slope class (each holding its lower break) and by aspect.
+            let breaks = &wanted.classes;
+            if !breaks.is_empty() {
+                for k in 0..=breaks.len() {
+                    let (label, note) = if k == 0 {
+                        (
+                            format!("Eğimi {} %'den az ({whose})", breaks[0]),
+                            format!("Eğimi {} %'den az olan üçgenlere düşen alan.", breaks[0]),
+                        )
+                    } else if k == breaks.len() {
+                        (
+                            format!("Eğimi en az {} % ({whose})", breaks[k - 1]),
+                            format!("Eğimi en az {} % olan üçgenlere düşen alan.", breaks[k - 1]),
+                        )
+                    } else {
+                        (
+                            format!("Eğimi {}–{} % ({whose})", breaks[k - 1], breaks[k]),
+                            format!(
+                                "Eğimi en az {} %, {} %'den az olan üçgenlere düşen alan.",
+                                breaks[k - 1],
+                                breaks[k]
+                            ),
+                        )
+                    };
+                    measures.push(measure(
+                        &format!("slopeClass{}", k + 1),
+                        &label,
+                        "m2",
+                        x.classes[k],
+                        y.classes[k],
+                        &note,
+                    ));
+                }
             }
-        }
-        // A residue below a square millimetre is the overlay's rounding, not land off the surface.
-        for (r, side) in [(&x, "mevcut durumda"), (&y, "senaryoda")] {
-            if off(r) > 1e-6 {
-                asked_gaps.push(format!(
-                    "Ölçülen alanların bir kısmı {side} {name} yüzeyinin dışında; eğim yalnız yüzeyin üstündeki kısımdan."
-                ));
+            if wanted.aspect {
+                for (k, (id, word, bounds)) in ASPECTS.iter().enumerate() {
+                    let note = if k == 0 {
+                        "Eğimi 0 olan (yatay) üçgenlere düşen alan; bakısı yok.".to_owned()
+                    } else {
+                        format!(
+                            "Bakısı (eğimin indiği yön, kuzeyden saat yönünde) {bounds} olan üçgenlere düşen alan; alt sınır dahil."
+                        )
+                    };
+                    measures.push(measure(
+                        id,
+                        &format!("Bakı: {word} ({whose})"),
+                        "m2",
+                        x.aspects[k],
+                        y.aspects[k],
+                        &note,
+                    ));
+                }
+            }
+            // A residue below a square millimetre is the overlay's rounding, not land off the surface.
+            for (r, side) in [(&x, "mevcut durumda"), (&y, "senaryoda")] {
+                if off(r) > 1e-6 {
+                    asked_gaps.push(format!(
+                        "Ölçülen alanların bir kısmı {side} {name} yüzeyinin dışında; eğim yalnız yüzeyin üstündeki kısımdan."
+                    ));
+                }
             }
         }
     }
@@ -897,10 +962,13 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ScenariosImpact) -> CommandRe
 /// The answer; reads only.
 /// The answer for a window or the drawing's marks (docs/adr/2260), or why it does not read.
 pub fn preview(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, String> {
-    run(doc, input).map_err(crate::road_corridors::words)
+    run(doc, input).map_err(crate::checks::words)
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &ScenariosImpact) -> CommandResult<ScenariosImpacted> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &ScenariosImpact,
+) -> CommandResult<ScenariosImpacted> {
     match run(cx.doc, input) {
         Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
         Err(stop) => stop.into(),

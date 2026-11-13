@@ -8,7 +8,7 @@
 
 use kentos_contracts::{GnssLine, GnssPoint, GnssRead, LineError};
 
-use crate::field::exact::Exact;
+use crate::exact::Exact;
 use crate::text;
 
 /// What is said of a sentence not read; `{line}`, `{data}` and `{count}` are

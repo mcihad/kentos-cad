@@ -728,5 +728,5 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: PipesCheck) -> CommandResul
 
 /// The check for a window's marks (docs/adr/3160), or why it does not read.
 pub fn preview(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, String> {
-    run(doc, input).map_err(crate::road_corridors::words)
+    run(doc, input).map_err(crate::checks::words)
 }

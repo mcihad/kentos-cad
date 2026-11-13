@@ -34,7 +34,6 @@ pub fn rounded_weight(mm: f64) -> f64 {
 }
 mod template;
 
-pub(crate) use input::{Definitions, Objects};
 pub use input::{WriteInput, input_from_json};
 
 use std::collections::{BTreeMap, HashMap};

@@ -1,11 +1,11 @@
 use kentos_contracts::DocumentSnapshotV1;
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
 use kentos_geometry_core::Vec2;
 use kentos_plot::{
     maps::{MapSource, vector_content},
     book::library_of,
 };
+use kentos_scene_query::Spatial;
 use kentos_sheet::{
     *,
     display::{self, Prim, RenderInputs},

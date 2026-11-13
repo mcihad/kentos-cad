@@ -160,7 +160,7 @@ fn the_cpu_print_picture_has_the_same_stroke_ink_and_keeps_large_coordinate_came
             serde_json::from_value(c["model"].clone()).unwrap(),
         )
         .unwrap();
-        let mut spatial = kentos_interaction::spatial::Spatial::new();
+        let mut spatial = kentos_scene_query::spatial::Spatial::new();
         spatial.reload(&doc);
         let before = doc.to_snapshot_v2();
         let inputs = kentos_sheet::display::RenderInputs::default();
@@ -349,7 +349,7 @@ fn a_wide_plot_pen_collects_geometry_outside_the_unstyled_view_box() {
         ..Default::default()
     };
     let draw = |doc: &kentos_domain::Document| {
-        let mut spatial = kentos_interaction::Spatial::new();
+        let mut spatial = kentos_scene_query::Spatial::new();
         spatial.reload(doc);
         let library = kentos_plot::book::library_of(doc);
         let src = kentos_plot::maps::MapSource {

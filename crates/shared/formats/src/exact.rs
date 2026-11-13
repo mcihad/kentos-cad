@@ -1,8 +1,9 @@
 //! Exact field values (docs/adr/0169 §1, CLAUDE.md §23): a number as the
 //! instrument wrote it, decimal or DDD.MMSS, kept as a fraction until it is
 //! rounded once to the nearest float64. The readers of Topcon GTS-7, Nikon
-//! RAW, GPX and NMEA share it; their independent references compute with
-//! Python's `Fraction` and its `float()`.
+//! RAW, GPX, NMEA and EXIF share it; their independent references compute with
+//! Python's `Fraction` and its `float()`. At the crate's root, not in the field
+//! books, so the GNSS and EXIF readers have it without them (docs/adr/8054 §11).
 
 use std::cmp::Ordering;
 

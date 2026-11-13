@@ -18,7 +18,9 @@ kentos-expression = { path = "../../shared/expression" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 # A run's result written to a GeoPackage carries its lineage in the metadata extension (docs/adr/0511).
 kentos-geopackage = { path = "../geopackage" }
-kentos-native-application = { path = "../application" }
+# İşlemler is CBS's toolbox (docs/adr/0508): its tools read CBS's sources, topology, scenarios and addresses
+# (docs/adr/8054 §11).
+kentos-native-application = { path = "../application", default-features = false, features = ["mod-gis"] }
 # Point clouds read whole and their results written (docs/adr/0207 §7): the machines
 # of the point cloud core; the host's files do the reading and writing (files.rs).
 kentos-pointcloud = { path = "../../shared/pointcloud" }

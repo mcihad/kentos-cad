@@ -134,9 +134,15 @@ pub fn map_drawing_of(
 }
 
 /// Kat görünümü as a map of `level` shows it (docs/adr/0716): Etkin kat ve alt kat with `below`, else Yalnız etkin kat.
-pub fn level_view(level: &kentos_sheet::kinds::MapLevel) -> kentos_interaction::level_view::LevelView {
-    use kentos_interaction::level_view::LevelView;
-    if level.below { LevelView::Below } else { LevelView::Active }
+pub fn level_view(
+    level: &kentos_sheet::kinds::MapLevel,
+) -> kentos_scene_query::level_view::LevelView {
+    use kentos_scene_query::level_view::LevelView;
+    if level.below {
+        LevelView::Below
+    } else {
+        LevelView::Active
+    }
 }
 
 /// What a map of `level` leaves out and draws faint (docs/adr/0716): Kat görünümü's rule (docs/adr/0715) for that level,
@@ -151,9 +157,9 @@ pub fn level_looks(
 ) {
     // The roof plan (docs/adr/8044 §7): every roof whole, the levels' other objects out.
     let l = if level.roof {
-        kentos_interaction::level_view::roof_plan(doc)
+        kentos_scene_query::level_view::roof_plan(doc)
     } else {
-        kentos_interaction::level_view::looks(doc, level_view(level), Some(&level.id))
+        kentos_scene_query::level_view::looks(doc, level_view(level), Some(&level.id))
     };
     (
         l.hidden.into_iter().collect(),
@@ -172,7 +178,7 @@ pub fn shows_from_above(
     if level.roof {
         return false;
     }
-    let l = kentos_interaction::level_view::looks(doc, level_view(level), Some(&level.id));
+    let l = kentos_scene_query::level_view::looks(doc, level_view(level), Some(&level.id));
     !l.upper.is_empty() || !l.overhead.is_empty() || !l.roofs.is_empty()
 }
 

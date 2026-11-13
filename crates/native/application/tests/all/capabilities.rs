@@ -1379,11 +1379,14 @@ const FORMS: &[(&str, &str, Form)] = &[
         }
     }),
     ("cad.entities.hatch", "spline", |e| {
-    if let kentos_commands::Entity::Spline(s) = e {
-        s.closed = true;
-    }
-})];
+        if let kentos_commands::Entity::Spline(s) = e {
+            s.closed = true;
+        }
+    }),
+];
 
+// Its cases draw walls (docs/adr/8054 §11).
+#[cfg(feature = "mod-arch")]
 #[test]
 fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
     let kinds = one_of_each_kind();

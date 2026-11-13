@@ -80,7 +80,19 @@ pub(crate) fn run_drawing(
         "road.platforms.draw" => again!(road_platforms_draw, k::PlatformsDraw),
         "road.terrains.zeroline" => again!(road_terrains_zeroline, k::TerrainsZeroLine),
         "road.terrains.cutfill" => again!(road_terrains_cutfill, k::TerrainsCutFill),
+        #[cfg(feature = "mod-map")]
         "cad.pipes.profile" => again!(pipes_profile, k::PipesProfile),
+        // A pipes profile is mapping's (docs/adr/8054 §11): a build without it leaves the drawing as it was.
+        #[cfg(not(feature = "mod-map"))]
+        "cad.pipes.profile" => {
+            let why = format!(
+                "“{id}” çizimi (boru profili) bu derlemede yeniden üretilemez: harita modülüyle derlenmiş KentOS'ta üretilir."
+            );
+            return Err((
+                Box::new(Stop::failed(error(codes::UNKNOWN_DRAWING, why, None)).into()),
+                false,
+            ));
+        }
         "road.terrains.sheetcontours" => again!(road_terrains_sheet, k::TerrainsSheetContours),
         _ => again!(road_terrains_contours, k::TerrainsContours),
     })

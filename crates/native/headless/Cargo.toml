@@ -17,15 +17,16 @@ kentos-scene-query = { path = "../scene-query" }
 kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }
 kentos-domain = { path = "../domain" }
 kentos-expression = { path = "../../shared/expression" }
-kentos-native-application = { path = "../application" }
+kentos-native-application = { path = "../application", default-features = false }
 kentos-project = { path = "../project" }
 kentos-kcad = { path = "../../shared/kcad" }
 # The DXF writer and, for the PDF, the sheet core (docs/adr/0252).
 kentos-formats = { path = "../../shared/formats" }
 kentos-dwg = { path = "../dwg" }
-kentos-plot = { path = "../plot" }
+kentos-plot = { path = "../plot", default-features = false }
 kentos-sheet = { path = "../../shared/sheet", default-features = false }
-kentos-processing = { path = "../processing" }
+# İşlemler, CBS's toolbox, registered with the commands (docs/adr/0508); only with CBS (docs/adr/8054 §11).
+kentos-processing = { path = "../processing", optional = true }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 # A MapLibre style's sprite (docs/adr/0635 §9): its icons drawn with the drawing's own marker shapes.
 kentos-maplibre = { path = "../../shared/maplibre" }
@@ -33,6 +34,16 @@ kentos-native-style = { path = "../style" }
 tiny-skia = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[features]
+# The disciplines' commands this host runs (docs/adr/8054 §11), the application's features of the same name: a server
+# or agent host built for one module compiles the core and that discipline; another's command answers that it is not
+# in this build. The contracts, the command types and KCAD stay whole, so a file's other data is kept as it is.
+default = ["mod-arch", "mod-map", "mod-gis", "mod-road"]
+mod-arch = ["kentos-native-application/mod-arch", "kentos-plot/mod-arch"]
+mod-map = ["kentos-native-application/mod-map", "kentos-plot/mod-map"]
+mod-gis = ["kentos-native-application/mod-gis", "kentos-plot/mod-gis", "dep:kentos-processing"]
+mod-road = ["kentos-native-application/mod-road", "kentos-plot/mod-road"]
 
 [dev-dependencies]
 miniz_oxide = { workspace = true }

@@ -2,20 +2,17 @@
 //! drawing by its definition, reported as the catalog says, and the project's road settings written back. The
 //! commands are [`crate::road_terrains_create`], [`crate::road_terrains_edit`] and [`crate::road_terrains_query`].
 
+pub(crate) use crate::exchange_files::fail;
 use kentos_commands::{
-    CadWork, CommandWarning, ProjectSettings, RoadSettings, TerrainFigures, TerrainLeft, TerrainProblem, TerrainReport,
-    TerrainState, TerrainSurfaceDef,
+    CadWork, CommandWarning, ProjectSettings, RoadSettings, TerrainFigures, TerrainLeft,
+    TerrainProblem, TerrainReport, TerrainState, TerrainSurfaceDef,
 };
 use kentos_domain::Document;
 use kentos_road::sources::{self, Gathered, SourceObject, SurfaceState};
 use kentos_road::surface::{self, Surface};
 
-use crate::checks::{Stop, error};
+use crate::checks::Stop;
 use crate::codes;
-
-pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::failed(error(code, message, (!path.is_empty()).then(|| path.to_owned())))
-}
 
 /// Whether a project of this work holds terrain surfaces: Harita's and Yol's (docs/adr/1520; Netcad's NetSURF is a
 /// map engineer's tool as much as a road engineer's).

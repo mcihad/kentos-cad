@@ -7,9 +7,7 @@ macro_rules! trim_like {
     ($name:ident, $act:expr, $id:path, $version:path, $doc:literal) => {
         #[doc = $doc]
         pub mod $name {
-            use kentos_commands::{
-                CommandResult, EntitiesTrim, EntitiesTrimPlan, EntitiesTrimmed,
-            };
+            use kentos_commands::{CommandResult, EntitiesTrim, EntitiesTrimPlan, EntitiesTrimmed};
 
             use crate::ExecutionContext;
             use crate::trim;

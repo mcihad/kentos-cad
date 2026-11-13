@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use kentos_commands::encoding::sha256_reader_hex;
 use kentos_commands::{CommandError, SourceLink, codes};
 use kentos_domain::{Document, NewLayer, Slot, Uuid};
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::sources_query::{StageFrom, stage};
 
 use crate::file_commands::Refused;
@@ -113,6 +114,7 @@ pub(crate) struct DatabaseCopy {
 /// The rows `link` reads (its area's only, for a part) written into a GeoPackage in `dir`, in the project's system with
 /// their lasting ids. None when the link reads no row: there is no table to write. Refused, at `databases`, when the
 /// database is not reached, when its table changed since the layer last matched it, or when it holds too many rows.
+#[cfg(feature = "mod-gis")]
 pub(crate) fn copy_database(
     doc: &Document,
     link: &SourceLink,
@@ -215,6 +217,23 @@ pub(crate) fn copy_database(
         rows,
         sha256,
     }))
+}
+
+/// A build without CBS reads no database (docs/adr/8054 §11): a package of a layer bound to one is refused.
+#[cfg(not(feature = "mod-gis"))]
+pub(crate) fn copy_database(
+    _: &Document,
+    link: &SourceLink,
+    _: &Path,
+) -> Result<Option<DatabaseCopy>, Refused> {
+    Err(refuse(
+        codes::UNKNOWN_COMMAND,
+        format!(
+            "“{}” katmanının veritabanı bu derlemede okunmaz, pakete alınamaz: CBS modülüyle derlenmiş KentOS'ta alınır.",
+            link.layer
+        ),
+        "databases",
+    ))
 }
 
 /// The folder a plan's database copies are written in, removed with them when the plan goes.

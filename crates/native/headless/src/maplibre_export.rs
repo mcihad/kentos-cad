@@ -11,6 +11,7 @@ use kentos_commands::{
     MaplibreExported, MaplibreSourceKind, codes,
 };
 use kentos_domain::Document;
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::maplibre::{self, Picked};
 use serde_json::{Map, json};
 
@@ -27,6 +28,7 @@ pub struct Made {
 }
 
 /// How a layer is bound to its source: the source's id and, for vector tiles, the tile layer.
+#[cfg(feature = "mod-gis")]
 type Bind = Box<dyn Fn(&Picked) -> (String, Option<String>)>;
 
 /// A layer id as a file name part: letters, digits, `-` and `_`; the rest `_`.
@@ -50,6 +52,7 @@ fn vector_url(url: &str, kind: Option<MaplibreSourceKind>) -> bool {
     }
 }
 
+#[cfg(feature = "mod-gis")]
 pub fn make(doc: &Document, input: &ExportMaplibre) -> Result<Made, Refused> {
     let (path, _) = target(&input.path, input.overwrite)?;
     let selection = maplibre::pick(doc, input.layer.as_deref())?;
@@ -260,6 +263,16 @@ pub fn make(doc: &Document, input: &ExportMaplibre) -> Result<Made, Refused> {
         output,
         warnings,
     })
+}
+
+/// A build without CBS writes no MapLibre style (docs/adr/8054 §11).
+#[cfg(not(feature = "mod-gis"))]
+pub fn make(_: &Document, _: &ExportMaplibre) -> Result<Made, Refused> {
+    Err(refuse(
+        kentos_commands::codes::UNKNOWN_COMMAND,
+        "MapLibre biçemi yazmak bu derlemede yok: CBS modülüyle derlenmiş KentOS'ta yazılır.",
+        "path",
+    ))
 }
 
 /// Writes the files made, the GeoJSON first.

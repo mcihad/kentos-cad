@@ -61,6 +61,14 @@ impl Stop {
     }
 }
 
+/// A stop in its words, for a host that reads the drawing outside a command; a stop asked has none.
+pub(crate) fn words(stop: Stop) -> String {
+    match stop {
+        Stop::Failed(e) | Stop::Conflict(e) => e.message,
+        Stop::Cancelled => String::new(),
+    }
+}
+
 impl<T> From<Stop> for CommandResult<T> {
     fn from(stop: Stop) -> Self {
         match stop {

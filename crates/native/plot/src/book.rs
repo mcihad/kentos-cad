@@ -12,8 +12,8 @@
 
 use kentos_contracts::{LayerNodeType, ProjectSettings};
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
 use kentos_native_style::library::{Source, StyleLibrary};
+use kentos_scene_query::Spatial;
 use kentos_sheet::display::{self, CrsInfo, Prim, ProjectInfo, RenderInputs, RenderMode};
 use kentos_sheet::model::SheetBook;
 use kentos_sheet::pdf::{PdfAsset, PdfInputs, PdfMap, PdfOptions};
@@ -222,7 +222,7 @@ impl<'a> MapDrawer<'a> {
             library,
             window,
             annotative: doc.has_annotative(),
-            axes: kentos_native_application::road_plan_axes::has_axes(doc),
+            axes: has_axes(doc),
             scaled: std::collections::HashMap::new(),
             notes: Vec::new(),
             errors: Vec::new(),
@@ -303,16 +303,16 @@ impl<'a> MapDrawer<'a> {
                     if !axes {
                         return copy;
                     }
-                    let kept = copy.reading_copy();
                     let turn = f64::from(m.view.rotation) / 1000.0;
-                    let room = kentos_native_application::road_plan_axes::Room::of_map(
+                    with_axes(
+                        copy,
+                        annotation,
+                        turn,
                         [center.x, center.y],
                         m.clip.width,
                         m.clip.height,
                         at,
-                    );
-                    kentos_native_application::road_plan_axes::with_axes_on(copy, annotation, turn, Some(room))
-                        .unwrap_or(kept)
+                    )
                 });
             let window = self.window;
             let main = self.spatial;
@@ -703,6 +703,43 @@ pub fn current_user() -> String {
     std::env::var("USER")
         .or_else(|_| std::env::var("USERNAME"))
         .unwrap_or_default()
+}
+
+/// Whether the drawing has a road project's alignments to show on its maps (docs/adr/0982). A build without road
+/// design shows none (docs/adr/8054 §11).
+#[cfg(feature = "mod-road")]
+fn has_axes(doc: &Document) -> bool {
+    kentos_native_application::road_plan_axes::has_axes(doc)
+}
+
+#[cfg(not(feature = "mod-road"))]
+fn has_axes(_: &Document) -> bool {
+    false
+}
+
+/// `copy` with the road project's alignments on a layer of their own, for a map at `center`, `width_um` × `height_um`
+/// on paper at `at`, turned `turn` (docs/adr/0982): the model has no object for them. `copy` as it was when they do
+/// not draw.
+#[cfg(feature = "mod-road")]
+fn with_axes(
+    copy: Document,
+    annotation: f64,
+    turn: f64,
+    center: [f64; 2],
+    width_um: i32,
+    height_um: i32,
+    at: f64,
+) -> Document {
+    let kept = copy.reading_copy();
+    let room =
+        kentos_native_application::road_plan_axes::Room::of_map(center, width_um, height_um, at);
+    kentos_native_application::road_plan_axes::with_axes_on(copy, annotation, turn, Some(room))
+        .unwrap_or(kept)
+}
+
+#[cfg(not(feature = "mod-road"))]
+fn with_axes(copy: Document, _: f64, _: f64, _: [f64; 2], _: i32, _: i32, _: f64) -> Document {
+    copy
 }
 
 #[cfg(test)]

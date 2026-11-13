@@ -34,6 +34,8 @@ apps/desktop/scripts/cloud-live.sh   # masaüstünün bulut arayüzü gerçek ke
 cargo test -p kentos-desktop cloud::file_follow_tests::revision_screens -- --ignored --nocapture   # dosya projesinin revizyon resimleri, .run/shots/bulut-revizyon-* (ADR 0119)
 cargo test -p kentos-processing   # işlem araçlarının ortak durumları masaüstünde (fixtures/processing/v1, ADR 0084)
 cargo test -p kentos-native-application   # ürün komutlarının durumları masaüstünde (fixtures/commands, ADR 0022, 0027, 0029, 0032, 0037, 0047, 0057, 0066)
+make test-module MOD=gis   # uygulama katmanının testleri tek modülle: arch | map | gis | road (testler CBS'yi kendileri açar; ADR 8054 §11)
+make fixtures-changed   # yalnız değişenin ortak komut durumları: değişen durum dosyaları ve işleyicisi değişen komutlar, tek disiplinse o modülün derlemesiyle (BASE=origin/main, FILES=a,b; komutlara eşlenemeyen değişiklikte hepsi)
 python3 scripts/fixtures/transform_command_cases.py --check   # cad.entities.transform durumlarını dönüşümlerin tanımından denetle (ADR 0037; Kauçuk levha'nınkiler levhanın çekirdekle aynı işlem sırasıyla Python ikizinden, sheet_f64.py, ADR 0158)
 python3 scripts/fixtures/edit_command_cases.py --check   # cad.entities.edit durumlarını sözleşmenin kuralından denetle (ADR 0047)
 python3 scripts/fixtures/array_command_cases.py --check   # cad.entities.array durumlarını dizilerin tanımından denetle (ADR 0047)

@@ -21,12 +21,11 @@ use kentos_contracts::{
     AtlasBindings, AtlasCoverage, AtlasLayerRole, AtlasPageInfo, AtlasPin, AtlasPinLayer,
     AtlasPinSource, AtlasRead, Entity, LayerNode, SourceKind, SourceLink, Vec2 as CVec2,
 };
-use kentos_domain::{Slot, Uuid};
-use kentos_native_application::sources_query::{self, StageFrom};
 use kentos_domain::Document;
+use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::time::{Read, Window};
-use kentos_interaction::Spatial;
+use kentos_scene_query::Spatial;
 use kentos_sheet::atlas::atlas_plan;
 use kentos_sheet::display::{self, AtlasFeature, Attribute, Prim, RenderInputs};
 use kentos_sheet::kinds::{CoordSource, ItemKind, MapLayers, MapView, TableSource, ThemeRef};
@@ -54,6 +53,48 @@ impl AtlasError {
             path: path.to_owned(),
         }
     }
+}
+
+/// A bound layer's rows read from its source within `bbox` (the staging `cad.sources.query` reads with): the objects
+/// and how many rows the source read. A build without CBS reads no source (docs/adr/8054 §11).
+#[cfg(feature = "mod-gis")]
+fn source_rows(
+    settings: &kentos_contracts::ProjectSettings,
+    link: &SourceLink,
+    filter: Option<&str>,
+    bbox: Option<[f64; 4]>,
+    time: Option<&kentos_commands::QueryTime>,
+) -> Result<(Vec<(Uuid, Entity)>, u64), AtlasError> {
+    use kentos_native_application::sources_query::{StageFrom, stage};
+    let (staging, queried) = stage(
+        settings,
+        &StageFrom::Layer(link),
+        filter,
+        bbox,
+        time,
+        "coverage",
+        &|| false,
+    )
+    .map_err(|e| match e {
+        Some(e) => AtlasError::new(&e.code, e.message, "coverage"),
+        None => AtlasError::new("pdf_unwritable", "Okuma durduruldu.", "coverage"),
+    })?;
+    Ok((staging.objects, queried.read))
+}
+
+#[cfg(not(feature = "mod-gis"))]
+fn source_rows(
+    _: &kentos_contracts::ProjectSettings,
+    _: &SourceLink,
+    _: Option<&str>,
+    _: Option<[f64; 4]>,
+    _: Option<&kentos_commands::QueryTime>,
+) -> Result<(Vec<(Uuid, Entity)>, u64), AtlasError> {
+    Err(AtlasError::new(
+        "unknown_command",
+        "Kaynaktan okuma bu derlemede yok: CBS modülüyle derlenmiş KentOS'ta okunur.",
+        "coverage",
+    ))
 }
 
 /// A warning: a code, the words and the input it is about.
@@ -456,27 +497,15 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
                     ..Default::default()
                 }
             });
-            let (staging, queried) = sources_query::stage(
-                settings,
-                &StageFrom::Layer(link),
-                filter,
-                None,
-                time.as_ref(),
-                "coverage",
-                &|| false,
-            )
-            .map_err(|e| match e {
-                Some(e) => AtlasError::new(&e.code, e.message, "coverage"),
-                None => AtlasError::new("pdf_unwritable", "Okuma durduruldu.", "coverage"),
-            })?;
-            source_left = queried.read.saturating_sub(staging.objects.len() as u64);
+            let (objects, read) = source_rows(settings, link, filter, None, time.as_ref())?;
+            source_left = read.saturating_sub(objects.len() as u64);
             source_read.push(AtlasRead {
                 layer: layer.clone(),
                 table: link.table.clone(),
-                rows: staging.objects.len() as u64,
+                rows: objects.len() as u64,
                 pages: None,
             });
-            Some(staging.objects)
+            Some(objects)
         }
     };
     // The theme: the atlas maps draw it in place of the layers they show.
@@ -1043,24 +1072,11 @@ impl AtlasPlanned {
                 added.clear();
                 if let Some(reach) = self.reach_of(&list) {
                     for (i, link) in parts.iter().enumerate() {
-                        let (staging, queried) = sources_query::stage(
-                            work.settings(),
-                            &StageFrom::Layer(link),
-                            None,
-                            Some(reach),
-                            None,
-                            "coverage",
-                            &|| false,
-                        )
-                        .map_err(|e| match e {
-                            Some(e) => AtlasError::new(&e.code, e.message, "coverage"),
-                            None => AtlasError::new("pdf_unwritable", "Okuma durduruldu.", "coverage"),
-                        })?;
-                        let _ = queried;
-                        rows_read[i] += staging.objects.len() as u64;
+                        let (objects, _) =
+                            source_rows(work.settings(), link, None, Some(reach), None)?;
+                        rows_read[i] += objects.len() as u64;
                         // The part's own objects (edits not yet written among them) stay: the rows they are are left out.
-                        let rows: Vec<(Uuid, Entity)> = staging
-                            .objects
+                        let rows: Vec<(Uuid, Entity)> = objects
                             .into_iter()
                             .filter(|(u, _)| work.slot_of(*u).is_none())
                             .map(|(u, mut e)| {

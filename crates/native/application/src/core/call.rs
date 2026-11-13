@@ -159,7 +159,9 @@ where
                             warnings.extend(crate::subnetwork_follow::follow(inner.doc, command));
                             // The events of the links that keep them on their routes (docs/adr/0569 §3).
                             warnings.extend(crate::event_follow::follow(inner.doc, command));
-                            // The stale road drawings drawn again by themselves (docs/adr/0911 §3).
+                            // The stale road drawings drawn again by themselves (docs/adr/0911 §3); a build without
+                            // road design leaves them as they are for the road program (docs/adr/8054 §11).
+                            #[cfg(feature = "mod-road")]
                             warnings.extend(crate::road_project_rebuild::follow(inner.doc, command));
                             Ok((output, warnings, followed.relaxed))
                         }

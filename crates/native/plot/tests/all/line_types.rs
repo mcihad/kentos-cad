@@ -1,8 +1,8 @@
 //! CAD-ADV-11: output must report the pattern actually selected by the style
 //! compiler, not every definition in a drawing. All inspections are read-only.
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
 use kentos_plot::{book, maps::MapSource};
+use kentos_scene_query::Spatial;
 use kentos_sheet::{
     SheetBook,
     display::{self, Prim},

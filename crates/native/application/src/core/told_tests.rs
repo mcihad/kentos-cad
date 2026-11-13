@@ -28,7 +28,10 @@ pub(crate) fn told_and_stopped<T>(read: impl Fn(&dyn Fn(u64, u64) -> bool) -> Re
         false
     });
     if let Err(stop) = whole {
-        panic!("the whole reckoning is refused: {}", crate::road_corridors::words(stop));
+        panic!(
+            "the whole reckoning is refused: {}",
+            crate::checks::words(stop)
+        );
     }
     let seen = seen.into_inner();
     assert!(seen.len() > 4, "{} ticks", seen.len());

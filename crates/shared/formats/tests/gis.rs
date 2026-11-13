@@ -5,6 +5,7 @@
 //! layer, label, attribute and coordinate, float for float. Then the
 //! exports in `export/`: the writer's bytes as committed (which the same
 //! reader checks against their input), and what this crate reads back.
+#![cfg(all(feature = "geojson", feature = "shapefile"))]
 
 use std::path::{Path, PathBuf};
 

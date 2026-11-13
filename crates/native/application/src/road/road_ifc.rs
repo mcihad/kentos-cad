@@ -2,6 +2,7 @@
 //! profiles written to an IFC 4.3 file (`IFC4X3_ADD2`) by the IFC core (`kentos_ifc::alignment`, docs/adr/8047), whole
 //! or not at all. The drawing does not change. The shared cases are `fixtures/commands/v1/file.export.ifc.json`.
 
+pub(crate) use crate::exchange_files::write_file;
 use std::path::{Path, PathBuf};
 
 use kentos_commands::{CommandResult, CommandWarning, ExportIfc, IfcAlignmentWritten, IfcExported};
@@ -178,26 +179,12 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
         bytes: text.len() as u64,
         sha256,
     };
-    Ok(Planned { path, out, text, warnings })
-}
-
-/// The text written at `path` whole or not at all: beside it, read back whole, then moved over it.
-pub(crate) fn write_file(path: &Path, text: &str) -> Result<(), String> {
-    let mut tmp = path.as_os_str().to_owned();
-    tmp.push(".kentos-yaziliyor");
-    let tmp = PathBuf::from(tmp);
-    let done = (|| -> Result<(), String> {
-        std::fs::write(&tmp, text.as_bytes()).map_err(|e| format!("{} yazılamadı: {e}", tmp.display()))?;
-        let back = std::fs::read_to_string(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
-        if back != text {
-            return Err("yazılan dosya geri okununca aynı çıkmadı".into());
-        }
-        std::fs::rename(&tmp, path).map_err(|e| format!("{} yerine konamadı: {e}", path.display()))
-    })();
-    if done.is_err() {
-        let _ = std::fs::remove_file(&tmp);
-    }
-    done
+    Ok(Planned {
+        path,
+        out,
+        text,
+        warnings,
+    })
 }
 
 /// Checks `input` against the document; writes nothing.

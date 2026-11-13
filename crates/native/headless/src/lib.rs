@@ -23,6 +23,16 @@
 //! server speak too. Objects are named by their persistent ids (UUID text),
 //! never by their slots, which mean nothing once a drawing is closed.
 #![forbid(unsafe_code)]
+// A build without every module (docs/adr/8054 §11) leaves helpers only the missing ones call.
+#![cfg_attr(
+    not(all(
+        feature = "mod-arch",
+        feature = "mod-map",
+        feature = "mod-gis",
+        feature = "mod-road"
+    )),
+    allow(dead_code, unused_imports)
+)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

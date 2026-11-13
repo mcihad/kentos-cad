@@ -4,7 +4,7 @@
 
 use kentos_contracts::DocumentSnapshotV1;
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
+use kentos_scene_query::Spatial;
 use kentos_sheet::{
     display::{self, Prim, RenderInputs},
     ops::{self, Op},

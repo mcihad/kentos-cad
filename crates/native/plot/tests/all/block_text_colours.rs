@@ -1,7 +1,7 @@
 //! ADR 8053 §14: a block's text prints in its own colour, else the layer it follows, else the insert's; before, every
 //! block text printed in the insert's colour (a definition's green words came out in the insert's red).
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
+use kentos_scene_query::Spatial;
 use kentos_sheet::{
     SheetBook,
     display::{self, Prim},

@@ -7,10 +7,10 @@
 use kentos_contracts::{DocumentSnapshotV1, DrawingFont, DrawingUnit, Entity, Workspace};
 use kentos_domain::Document;
 use kentos_geometry_core::Vec2;
-use kentos_interaction::Spatial;
 use kentos_native_style::library::StyleLibrary;
 use kentos_plot::maps::{MapSource, vector_content};
 use kentos_project::new_project::{NewProject, new_project};
+use kentos_scene_query::Spatial;
 use kentos_sheet::kinds::MapLayers;
 use kentos_sheet::pdf::MapContent;
 use serde_json::{Value, json};

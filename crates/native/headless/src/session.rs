@@ -106,7 +106,8 @@ impl Session {
     }
 
     fn of(doc: Document, path: Option<PathBuf>, legacy: bool) -> Self {
-        // İşlemler's tools for cad.processing.tools and .run (docs/adr/0508).
+        // İşlemler's tools for cad.processing.tools and .run (docs/adr/0508), CBS's (docs/adr/8054 §11).
+        #[cfg(feature = "mod-gis")]
         kentos_processing::command::register();
         Self {
             doc,

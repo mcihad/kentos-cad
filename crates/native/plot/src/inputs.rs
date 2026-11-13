@@ -16,9 +16,10 @@ use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::Entity;
 use kentos_domain::{Document, Slot};
-use kentos_interaction::{Spatial, Vec2, spatial};
+use kentos_geometry_core::Vec2;
 use kentos_native_style::legend::{LegendLayer, LegendSources, legend_layers, legend_of};
 use kentos_native_style::library::StyleLibrary;
+use kentos_scene_query::{Spatial, spatial};
 use kentos_sheet::display::{
     Attribute, CoordPoint, CoordinateInput, CrsInfo, DisplayList, FeatureInput, LegendEntryInput,
     LegendInput, LegendSymbol, LineSymbol, MarkerShape, MarkerSymbol, PatchSymbol, Prim,

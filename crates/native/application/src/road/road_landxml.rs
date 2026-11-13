@@ -3,6 +3,7 @@
 //! the reader reads it, then moved over it). The drawing does not change. The shared cases are
 //! `fixtures/commands/v1/file.export.landxml.json`.
 
+pub(crate) use crate::exchange_files::{now, stamp_of};
 use std::path::{Path, PathBuf};
 
 use kentos_commands::{
@@ -88,23 +89,6 @@ pub(crate) fn equations(b: &Built) -> (f64, Vec<WEquation>) {
         });
     }
     (start, out)
-}
-
-/// The `$`-less stamp, `YYYY-MM-DDThh:mm:ss`, as the file's date and time; none where it does not read.
-pub(crate) fn stamp_of(text: &str) -> Option<(String, String)> {
-    let (d, t) = text.split_once('T')?;
-    let ok_date = d.len() == 10 && d.as_bytes()[4] == b'-' && d.as_bytes()[7] == b'-';
-    let ok_time = t.len() == 8 && t.as_bytes()[2] == b':' && t.as_bytes()[5] == b':';
-    let digits = |s: &str| s.chars().filter(|c| *c != '-' && *c != ':').all(|c| c.is_ascii_digit());
-    (ok_date && ok_time && digits(d) && digits(t)).then(|| (d.to_owned(), t.to_owned()))
-}
-
-/// Now, UTC, as a stamp.
-pub(crate) fn now() -> (String, String) {
-    let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs()) as i64;
-    let (y, m, d) = kentos_geometry_core::time::civil_from_days(secs.div_euclid(86_400));
-    let s = secs.rem_euclid(86_400);
-    (format!("{y:04}-{m:02}-{d:02}"), format!("{:02}:{:02}:{:02}", s / 3600, s / 60 % 60, s % 60))
 }
 
 /// A built alignment as LandXML writes it, with the given profiles of it; a profile that does not build is left out

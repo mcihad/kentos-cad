@@ -26,6 +26,10 @@ const WASM = 'wasm32-unknown-unknown';
  * Groups by path: the targets they are built for, the workspace groups they
  * may use, and the external crates (a name, or a prefix ending in `*`) that
  * must not appear anywhere below them. Paths not in use yet follow TODOS.md §2.1.
+ * `formats`, when given, lists the kentos-formats features the group's graph may
+ * enable: the viewer core's groups take none of its codecs (docs/adr/8054 §11), and
+ * Cargo unites a crate's features over the whole graph, so one dependency that keeps
+ * the defaults would bring every codec back.
  */
 const RUNTIMES = ['tokio', 'sqlx*', 'axum*', 'hyper*', 'tower*', 'reqwest'];
 const BROWSER = ['wasm-bindgen*', 'js-sys', 'web-sys'];
@@ -39,7 +43,7 @@ const GROUPS = [
   // The native drawing document (docs/adr/0020): innermost native layer, pure like the shared
   // libraries but never built for the browser (the web keeps its TypeScript document). Listed
   // before `native`, whose path contains it. Only the contracts and other shared libraries below it.
-  { name: 'domain', path: 'crates/native/domain/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'domain', path: 'crates/native/domain/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'], formats: [] },
   // The native product commands (docs/adr/0022): typed, versioned operations over the document.
   // Pure like the document: no interface, GPU, runtime or browser; the web runs its own
   // TypeScript handlers. Listed before `native`, whose path contains it.
@@ -63,7 +67,7 @@ const GROUPS = [
   // systems) and the shared libraries. No
   // command writes here; a viewer, a phone and the renderer take it without the authoring crates, the DWG or IFC
   // codecs or the schema generators. Listed before `native`.
-  { name: 'scene-query', path: 'crates/native/scene-query/', targets: [HOST], uses: ['shared', 'domain', 'project'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'schemars*'] },
+  { name: 'scene-query', path: 'crates/native/scene-query/', targets: [HOST], uses: ['shared', 'domain', 'project'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'schemars*'], formats: [] },
   { name: 'application', path: 'crates/native/application/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'scene-query', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The native tool session (docs/adr/0021): tools, prompts and typed input over the document;
   // a finished object goes through the product commands. Pure like the document: no Iced,
@@ -80,27 +84,27 @@ const GROUPS = [
   // no Iced, window system or GPU (the renderer draws what it gives). Listed before `native`.
   // The objects' shapes and labels through the read-only viewer core (docs/adr/8054 §8), never the authoring crates,
   // the DWG codec or GeoPackage: the renderer and a phone take it.
-  { name: 'style', path: 'crates/native/style/', targets: [HOST], uses: ['shared', 'domain', 'project', 'scene-query', 'stylelib'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'schemars*'] },
+  { name: 'style', path: 'crates/native/style/', targets: [HOST], uses: ['shared', 'domain', 'project', 'scene-query', 'stylelib'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'schemars*'], formats: [] },
   // A drawing on paper (docs/adr/0252): the sheet book's maps as vectors through the style
   // engine, the sheets' tables and legends, the PDF's faces; what the desktop's sheet PDF and the
   // headless host's share. Pure like the style engine it draws with. Listed before `native`.
-  { name: 'plot', path: 'crates/native/plot/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'project', 'style', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'plot', path: 'crates/native/plot/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'project', 'style', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // A drawing's project model (the coordinate system registry, a new project's content): pure
   // like the document, which it builds on. Listed before `native`.
-  { name: 'project', path: 'crates/native/project/', targets: [HOST], uses: ['shared', 'domain'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'project', path: 'crates/native/project/', targets: [HOST], uses: ['shared', 'domain'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'], formats: [] },
   // The headless command host (docs/adr/0130): a drawing without a window, its product commands
   // by name, the catalog, queries and files; what the Python SDK and the MCP server stand on.
   // Pure like the commands it runs. Listed before `native`.
-  { name: 'headless', path: 'crates/native/headless/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'processing', 'project', 'style', 'plot', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'headless', path: 'crates/native/headless/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'style', 'plot', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The Python SDK's extension module (docs/adr/0131): the headless host under CPython. The one
   // native crate that uses pyo3. Listed before `native`.
   // `processing` for kentos.network (docs/adr/0209 §11): a network built from the drawing as the İşlemler tools build it.
   // `postgis` registers the PostGIS provider (docs/adr/0505): its tokio and sqlx come in only through it.
-  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
   // The MCP server (docs/adr/0133, 0134): the headless host's tools over stdio, JSON-RPC by hand;
   // the server's commands through the desktop's cloud client (`native`). No UI, database or
   // server framework. Listed before `native`.
-  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'processing', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   // The forms' guard (docs/adr/0411 §4) reads a project's `@` values as the desktop's document does: the pure
   // project model (`project`, over shared and domain) is the server's to use too.
@@ -109,7 +113,7 @@ const GROUPS = [
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   // The process that runs one İşlemler tool for a server job (docs/adr/0559 §3): the headless host and the tools over
   // one project file; no database, no server framework. Listed before `native`'s catch-all like the headless host.
-  { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
   // Sheet layouts on the desktop (docs/sheet/design.md §11): the UI components over the shared
@@ -120,7 +124,7 @@ const GROUPS = [
   // It draws the style crate's batches (docs/adr/0090).
   // Through the style crate and the read-only viewer core (docs/adr/8054 §8): no authoring crate, DWG codec, GeoPackage
   // or schema generator.
-  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared', 'domain', 'project', 'scene-query', 'style', 'stylelib'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*', 'schemars*'] },
+  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared', 'domain', 'project', 'scene-query', 'style', 'stylelib'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*', 'schemars*'], formats: [] },
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
@@ -146,10 +150,11 @@ for (const member of members) {
   }
   for (const target of group.targets) {
     checked++;
-    const tree = cargo(['tree', '--locked', '-p', member.name, '-e', 'normal,build', '--target', target, '--prefix', 'depth', '--format', '{p}']);
+    const tree = cargo(['tree', '--locked', '-p', member.name, '-e', 'normal,build', '--target', target, '--prefix', 'depth', '--format', '{p} {f}']);
     const stack = [];
     for (const line of tree.split('\n')) {
-      // "3serde v1.0.229", "1kentos-contracts v0.1.0 (/abs/path) (*)", "2serde_derive v1.0.229 (proc-macro)"
+      // "3serde v1.0.229 default,derive,std", "1kentos-contracts v0.1.0 (/abs/path)  (*)",
+      // "2serde_derive v1.0.229 (proc-macro) default": the package, then its enabled features.
       const m = line.match(/^(\d+)(\S+) v\S+(?: \(([^)]*)\))?/);
       if (!m) continue;
       const depth = Number(m[1]);
@@ -164,6 +169,11 @@ for (const member of members) {
         else if (!group.uses.includes(used.name)) problems.push(`${where}: ${group.name} grubu ${used.name} grubuna bağlanamaz.`);
       } else if (group.forbid.some((p) => matches(m[2], p))) {
         problems.push(`${where}: ${group.name} grubunda ${m[2]} bulunamaz.`);
+      }
+      if (group.formats && m[2] === 'kentos-formats') {
+        const enabled = line.slice(m[0].length).replace(/\(\*\)\s*$/, '').trim().split(',').filter(Boolean);
+        const extra = enabled.filter((f) => !group.formats.includes(f));
+        if (extra.length) problems.push(`${where}: ${group.name} grubunda kentos-formats codec'leriyle derleniyor (${extra.join(', ')}); görüntüleyici çekirdeği onları almaz, bağımlılığa default-features = false yazın (ADR 8054 §11).`);
       }
     }
   }

@@ -4,6 +4,7 @@
 //! patterns), layers keep their colour, line type, weight, visibility and
 //! lock, and the file has what a DXF reader needs of a 2000+ drawing (unique
 //! handles below the seed, owners, the tables, blocks and objects).
+#![cfg(feature = "dxf")]
 
 use std::collections::{BTreeMap, HashSet};
 

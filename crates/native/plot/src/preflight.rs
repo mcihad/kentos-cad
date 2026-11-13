@@ -1,8 +1,8 @@
 //! Native print checks: the same visible map layers and source resources as the PDF/CPU painter.
 use kentos_contracts::Entity;
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
 use kentos_native_style::picture::ImageSource;
+use kentos_scene_query::Spatial;
 use kentos_sheet::{
     SheetBook,
     display::{self, Prim, RenderInputs},
@@ -27,6 +27,7 @@ fn finding(item: &str, code: &str, message: String, fix: &str, severity: Severit
 /// whose objects lie within the map's ground. An error: the sheet is not delivered until the drawing is drawn again
 /// (Proje ağacı › Hepsini yeniden üret) or the map is moved off it. An atlas map shows another ground on each page and
 /// is left to the atlas's own checks.
+#[cfg(feature = "mod-road")]
 pub(crate) fn outdated_on_maps(doc: &Document, scene: &kentos_sheet::scene::Scene) -> Vec<Finding> {
     let outdated = kentos_native_application::outdated_drawings(doc);
     if outdated.is_empty() {
@@ -55,6 +56,13 @@ pub(crate) fn outdated_on_maps(doc: &Document, scene: &kentos_sheet::scene::Scen
         }
     }
     out
+}
+
+/// A build without road design (and so without mapping) draws no road or map project drawing again, so it finds none
+/// stale (docs/adr/8054 §11); the drawings a full build kept are checked there.
+#[cfg(not(feature = "mod-road"))]
+pub(crate) fn outdated_on_maps(_: &Document, _: &kentos_sheet::scene::Scene) -> Vec<Finding> {
+    Vec::new()
 }
 
 /// The datum families a sheet's text may name, each with the words that name it and the registry's datum id.

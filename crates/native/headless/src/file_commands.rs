@@ -810,6 +810,7 @@ pub fn export_fgb(
     Ok((output, warnings))
 }
 
+#[cfg(feature = "mod-gis")]
 fn parquet(doc: &Document, input: &kentos_commands::ExportParquet) -> Result<ParquetMade, Refused> {
     let (path, _) = target(&input.path, input.overwrite)?;
     let made = kentos_native_application::parquet_write::export(doc, input)
@@ -828,6 +829,16 @@ fn parquet(doc: &Document, input: &kentos_commands::ExportParquet) -> Result<Par
     };
     warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok((path, made.bytes, output, warnings))
+}
+
+/// A build without CBS writes none (docs/adr/8054 §11).
+#[cfg(not(feature = "mod-gis"))]
+fn parquet(_: &Document, _: &kentos_commands::ExportParquet) -> Result<ParquetMade, Refused> {
+    Err(refuse(
+        codes::UNKNOWN_COMMAND,
+        "GeoParquet yazmak bu derlemede yok: CBS modülüyle derlenmiş KentOS'ta yazılır.",
+        "path",
+    ))
 }
 
 /// The GeoParquet written whole, as `file.export.parquet` writes it (docs/adr/0628).
@@ -928,6 +939,7 @@ pub fn export_table(
     Ok((output, warnings))
 }
 
+#[cfg(feature = "mod-gis")]
 fn xyz(doc: &Document, input: &kentos_commands::ExportXyz) -> Result<XyzMade, Refused> {
     let (path, _) = target(&input.path, input.overwrite)?;
     let made = kentos_native_application::xyz_table::export(doc, input)
@@ -946,6 +958,16 @@ fn xyz(doc: &Document, input: &kentos_commands::ExportXyz) -> Result<XyzMade, Re
     };
     warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok((path, made.bytes, output, warnings))
+}
+
+/// A build without CBS writes none (docs/adr/8054 §11).
+#[cfg(not(feature = "mod-gis"))]
+fn xyz(_: &Document, _: &kentos_commands::ExportXyz) -> Result<XyzMade, Refused> {
+    Err(refuse(
+        codes::UNKNOWN_COMMAND,
+        "XYZ tablosu yazmak bu derlemede yok: CBS modülüyle derlenmiş KentOS'ta yazılır.",
+        "path",
+    ))
 }
 
 /// The XYZ file written whole, as `file.export.xyz` writes it (docs/adr/0545).

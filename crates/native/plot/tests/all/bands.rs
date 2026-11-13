@@ -3,8 +3,8 @@
 
 use kentos_contracts::{CallOp, DocumentSnapshotV1};
 use kentos_domain::Document;
-use kentos_interaction::spatial::Spatial;
 use kentos_native_application::{ExecutionContext, registry};
+use kentos_scene_query::spatial::Spatial;
 use serde_json::json;
 
 fn doc() -> Document {

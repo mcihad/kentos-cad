@@ -1,6 +1,6 @@
 //! Independent physical text cases and a real PDF reader (CAD-SHEET-06).
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
+use kentos_scene_query::Spatial;
 use kentos_sheet::{
     display::{self, Prim, RenderInputs},
     model::SheetBook,

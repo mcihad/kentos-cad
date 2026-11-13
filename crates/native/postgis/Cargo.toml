@@ -13,7 +13,7 @@ publish.workspace = true
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts" }
 kentos-geopackage = { path = "../geopackage" }
-kentos-native-application = { path = "../application" }
+kentos-native-application = { path = "../application", default-features = false }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true, features = ["tls-rustls-ring-native-roots"] }

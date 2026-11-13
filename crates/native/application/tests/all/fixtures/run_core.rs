@@ -1,5 +1,6 @@
 //! The fixture runner's core commands (docs/adr/8054 §9): `core_cases!` calls `$then!(module, InputType)` for one
-//! of them, else gives `$else`; run_op chains the parts.
+//! of them, else gives `$else`; run_op chains the parts. The two that read a terrain surface call run_op's `terrain!`,
+//! which runs them in a build with one (docs/adr/8054 §11).
 
 macro_rules! core_cases {
     ($command:expr, $then:ident, $else:expr) => {
@@ -189,25 +190,25 @@ macro_rules! core_cases {
             kentos_commands::CAD_ENTITIES_CREATE => $then!(create, EntitiesCreate),
             kentos_commands::CAD_NURBS_CREATE => $then!(nurbs, NurbsCreate),
             kentos_commands::CAD_COLUMNS_DISTANCES => {
-                $then!(columns_distances, kentos_commands::ColumnsDistancesInput)
+                arch!(columns_distances, kentos_commands::ColumnsDistancesInput)
             }
             kentos_commands::CAD_GRIDS_CREATE => {
-                $then!(grids_create, kentos_commands::GridsCreate)
+                arch!(grids_create, kentos_commands::GridsCreate)
             }
             kentos_commands::CAD_COLUMNS_CREATE => {
-                $then!(columns_create, kentos_commands::ColumnsCreate)
+                arch!(columns_create, kentos_commands::ColumnsCreate)
             }
             kentos_commands::CAD_STAIRS_CREATE => {
-                $then!(stairs_create, kentos_commands::StairsCreate)
+                arch!(stairs_create, kentos_commands::StairsCreate)
             }
             kentos_commands::CAD_RAMPS_CREATE => {
-                $then!(ramps_create, kentos_commands::RampsCreate)
+                arch!(ramps_create, kentos_commands::RampsCreate)
             }
             kentos_commands::CAD_BEAMS_CREATE => {
-                $then!(beams_create, kentos_commands::BeamsCreate)
+                arch!(beams_create, kentos_commands::BeamsCreate)
             }
             kentos_commands::CAD_RAILINGS_CREATE => {
-                $then!(railings_create, kentos_commands::RailingsCreate)
+                arch!(railings_create, kentos_commands::RailingsCreate)
             }
             kentos_commands::CAD_SHEETS_SET => {
                 $then!(sheets_set, kentos_commands::SheetsSet)
@@ -257,7 +258,7 @@ macro_rules! core_cases {
                 $then!(blocks_freeze, kentos_commands::BlocksFreeze)
             }
             kentos_commands::FILE_IMPORT_LANDXML => {
-                $then!(file_import_landxml, kentos_commands::ImportLandxml)
+                terrain!(file_import_landxml, kentos_commands::ImportLandxml)
             }
             kentos_commands::CAD_ENTITIES_GRADE => {
                 $then!(entities_grade, kentos_commands::EntitiesGrade)
@@ -266,7 +267,7 @@ macro_rules! core_cases {
                 $then!(entities_raise, kentos_commands::EntitiesRaise)
             }
             kentos_commands::CAD_ENTITIES_DRAPE => {
-                $then!(entities_drape, kentos_commands::EntitiesDrape)
+                terrain!(entities_drape, kentos_commands::EntitiesDrape)
             }
             kentos_commands::CAD_PROFILES_COMPARE => {
                 $then!(profiles_compare, kentos_commands::ProfilesCompare)

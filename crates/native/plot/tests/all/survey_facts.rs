@@ -140,10 +140,11 @@ fn scope_case() -> (Value, Document) {
 #[test]
 fn each_map_says_its_own_points() {
     let (case, doc) = scope_case();
-    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets"))
+        .expect("the book");
     let mut render = base_inputs(&doc, "Ayşe", "2026-11-08");
     let first = display_list(&book, "pafta", &render).expect("drawn");
-    let mut spatial = kentos_interaction::Spatial::new();
+    let mut spatial = kentos_scene_query::Spatial::new();
     spatial.reload(&doc);
     let library = kentos_plot::book::library_of(&doc);
     let sheet = book.sheet("pafta").expect("the sheet");

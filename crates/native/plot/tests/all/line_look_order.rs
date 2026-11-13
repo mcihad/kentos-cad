@@ -6,9 +6,14 @@
 //! paper's white over A only, B is the device's thinnest line in the paper palette's ink, C's ink is half opaque, and A's dashes are
 //! the same paper millimetres in both; the CPU picture shows the same at the mask (A gone, B there).
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
 use kentos_plot::{book, maps::MapSource};
-use kentos_sheet::{SheetBook, display::{self, Prim}, pdf::MapPath, project::project_sheets};
+use kentos_scene_query::Spatial;
+use kentos_sheet::{
+    SheetBook,
+    display::{self, Prim},
+    pdf::MapPath,
+    project::project_sheets,
+};
 use serde_json::{Value, json};
 
 fn drawing(scale: u32) -> (Document, SheetBook) {

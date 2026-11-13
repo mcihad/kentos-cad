@@ -20,6 +20,7 @@ kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-expression = { path = "../../shared/expression" }
 kentos-forms = { path = "../../shared/forms" }
 # A façade or space dimension recipe reads its objects by the rule the server checks it with (docs/adr/0729 §2).
-kentos-formats = { path = "../../shared/formats" }
+# The objects' rules only, none of the codecs (docs/adr/8054 §11): the viewer core takes this crate.
+kentos-formats = { path = "../../shared/formats", default-features = false }
 serde_json = { workspace = true }
 uuid = { workspace = true }

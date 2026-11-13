@@ -31,9 +31,9 @@ pub const PX_MM: f64 = 25.4 / 96.0;
 /// the paper), its size in paper mm (the screen's pixels at 100 % are the paper's CSS pixels), its
 /// face, its colour and its halo's (`#rrggbb` or `#rrggbbaa`); the paper-coloured box under a
 /// masked text (docs/adr/0145), on the ground. The host lays them out (the desktop's labels.rs).
-#[derive(Clone,Debug,PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct UnicodeLabel {
-    pub text: std::rc::Rc<kentos_interaction::spatial::UnicodeText>,
+    pub text: std::rc::Rc<kentos_scene_query::spatial::UnicodeText>,
     pub scale: f64,
     pub rotation: f64,
     pub colors: Vec<Option<String>>,

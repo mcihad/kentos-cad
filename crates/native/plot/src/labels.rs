@@ -5,7 +5,9 @@ use kentos_geometry_core::{
     Vec2,
     text::paragraph::{self, Run, Script},
 };
-use kentos_interaction::{Format, LabelSpot, Spatial};
+use kentos_project::format::Format;
+use kentos_scene_query::Spatial;
+use kentos_scene_query::spatial::LabelSpot;
 use kentos_sheet::{display::MapPrim, pdf::TextAnchor};
 
 use crate::maps::{MapLabel, PX_MM};
@@ -44,7 +46,7 @@ pub(crate) fn paper_color(c: Option<&str>) -> String {
 /// the block's layer; `find`: as the view shows it), else the insert's own, else the insert's layer's. Before, it was
 /// the insert's: a definition's green words were printed in the insert's colour.
 fn piece_color<'a>(
-    ink: &kentos_interaction::spatial::PieceInk,
+    ink: &kentos_scene_query::spatial::PieceInk,
     insert: &Entity,
     layer: &'a kentos_contracts::LayerNode,
     find: impl Fn(&str) -> Option<&'a kentos_contracts::LayerNode>,
@@ -444,7 +446,7 @@ pub fn labels_in_view(
                 ground_height = *height;
                 ground_mask = *mask;
                 l.width_factor = *width_factor;
-                l.text = kentos_interaction::spatial::shown_text(
+                l.text = kentos_scene_query::spatial::shown_text(
                     text,
                     attribute.as_deref(),
                     &entity.base().attrs,
@@ -716,7 +718,7 @@ pub fn labels_in_view(
                         .style
                         .label
                         .clone()
-                        .or_else(|| kentos_interaction::spatial::default_label(entity.kind())),
+                        .or_else(|| kentos_scene_query::spatial::default_label(entity.kind())),
                 };
                 if let Some(s) = &style {
                     backdrop(

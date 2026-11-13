@@ -3,8 +3,8 @@
 //! shx_font_reference.py) puts them, at the object's line weight; what the font cannot draw blocks the PDF with
 //! `text_shx_unsupported`, and a font the project does not embed stays an explicit substitute.
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
 use kentos_plot::{book, maps::MapSource};
+use kentos_scene_query::Spatial;
 use kentos_sheet::{
     SheetBook,
     display::{self, Prim},

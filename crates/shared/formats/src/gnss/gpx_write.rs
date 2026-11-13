@@ -20,12 +20,12 @@ use kentos_geometry_core::crs::{Choice, System, Unreached, transform_in};
 use serde::{Deserialize, Deserializer};
 
 use crate::blocks::Placing;
-use crate::dxf::{Definitions, Objects};
 use crate::export_geom::{Geometry, Words, geometry};
 use crate::gis::Ring;
-use crate::kml::write::{DEGREE_DECIMALS, WGS84, escape, say_unreached, tally};
 use crate::num::{decimals, plain};
 use crate::report::Report;
+use crate::wgs84::{DEGREE_DECIMALS, WGS84, escape, say_unreached, tally};
+use crate::wire::{Definitions, Objects};
 
 /// GPX's words for what it cannot hold.
 pub(crate) const GPX: Words = Words {

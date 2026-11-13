@@ -2,6 +2,8 @@
 # builds use at most four jobs so they never starve the desktop.
 [build]
 jobs = 4
+# Linking is the toolchain's own rust-lld, x86_64 Linux's default since Rust 1.90: no linker setting is needed
+# (ADR 8054 §11; the binaries' .comment says "Linker: LLD").
 
 [env]
 # ts-rs writes the TypeScript contract types here (crates/shared/contracts, `cargo test`).

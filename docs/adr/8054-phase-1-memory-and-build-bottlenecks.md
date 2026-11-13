@@ -1,7 +1,8 @@
 # ADR 8054: Faz 1 — bellek, hız ve derleme darboğazları
 
-- **Durum:** uygulanıyor (12 Kasım 2026). Sahibin isteği: "Argon tavsiye'deki ilk refactoring ve optimizasyon maddelerine
-  başlayalım", ardından "Faz 1 tüm maddelerini bitir". Kaynak: `plan/argon-tavsiye.md` FAZ 1 (`ADIM 01` – `ADIM 12`).
+- **Durum:** uygulandı (13 Kasım 2026). Sahibin isteği: "Argon tavsiye'deki ilk refactoring ve optimizasyon maddelerine
+  başlayalım", ardından "Faz 1 tüm maddelerini bitir". Kaynak: `plan/argon-tavsiye.md` FAZ 1 (`ADIM 01` – `ADIM 11`;
+  `ADIM 12` sahibin kararıyla ayrı plana çıktı: `plan/argon-adim12.md`).
 - **Bağlam belgesi:** ADR 0029 (masaüstü deposu), ADR 0253 (komut kaydı ve plan), ADR 0654 (kaydın kopyasız yazımı).
 
 Her adım kendi bölümünde: incelemenin iddiası koda karşı denetlenir, önce/sonra ölçülür, davranış değişmez.
@@ -359,3 +360,78 @@ verisinin sürümü. Bir modülün yeni verisi bundan sonra belge şemasını de
 **Doğrulama:** `cargo test -p kentos-kcad` (7 + 244 fikstür gidiş-dönüşü; modül sürümlerinin yazıcı/okuyucu testi
 dahil), `python3 scripts/fixtures/kcad_v2_reference.py --check` (1 853 dosya), `cargo check -p kentos-kcad --target
 wasm32-unknown-unknown`, `cargo check --workspace --tests`; clippy'de kcad'de uyarı yok.
+
+## §11. Disiplin bayrakları uygulama katmanında, kodekler ayrı, headless etkileşimsiz (`ADIM 11`)
+
+**İddianın denetimi.** Doğru ama hedef bu yolla tutmuyor. Bir modül üzerinde çalışırken her şey derleniyor; ölçüm
+(uygulama değişince `cargo test -p kentos-desktop --no-run`, dev, artımsız): 158 sn, bunun 96 sn'si masaüstü crate'i,
+58 sn'si uygulama katmanı. Masaüstü 561 bin satır: kabuk 139 bin, CAD çekirdeği 121 bin, CBS 127 bin, testler 102 bin,
+yol 32 bin, mimari 21 bin, harita 18 bin. Masaüstü de bayraklansa CBS-yalnız derleme satır oranından ~1,5 kat, mimari-
+yalnız ~1,8 kat hızlanırdı; planın istediği 5–10 kat ancak masaüstünün ayrı crate'lere bölünmesiyle gelir (değişen
+modülün crate'i tek başına derlenir). **Sahibin kararı (13 Kasım):** bayraklar uygulama katmanında kalır; etkileşim
+ve masaüstü bayraklanmaz (her yere koşul ve beş derlemeyi sürekli yeşil tutma yükü getirmesin); masaüstünü crate'lere
+bölme Faz 2'ye ayrı madde.
+
+**Karar.**
+- **Uygulama katmanı** (`kentos-native-application`, 254 894 satır): `mod-arch`, `mod-map` (→ `mod-road`), `mod-gis`,
+  `mod-road` (→ `terrain`) ve `terrain` (arazi yüzeyi okuyanlar: LandXML alımı, giydirme, yolun arazi, profil ve eksen
+  modülleri); `default` hepsi. Klasöründe bayrak arkasında: mimari 70, harita 37, CBS 75, yol 132 + 3 (`terrain`)
+  modül, çekirdekte 2 (`terrain`). Bayrağı olmayan disiplinin komutu `unknown_command` ve "“…” bu derlemede yok: …
+  modülüyle derlenmiş KentOS'ta çalışır." der (dağıtıcı kolları `{arch,map,gis,road}_arm!`; işleyicinin adı o
+  derlemede hiç geçmez). Katalog, sözleşmeler, komut türleri ve KCAD her derlemede bütündür: dosyadaki öbür
+  disiplinlerin verisi olduğu gibi okunur ve yazılır. `registry::left_out(komut)` derlemenin bıraktığı komutu söyler.
+- **Çekirdeğin ulaştığı disiplin modülleri her derlemede:** 72 modül (CBS 42: kaynaklar, alanlar, katman ve dosya
+  tabloları; mimari 15: duvar, mekân, doğrama; harita 15: ölçme, harita işi, imar). Bunlar
+  `tests/all/module_features.rs`'te açık liste; liste yalnız küçülür, çekirdeğin yeni bir disiplin modülüne
+  ulaşması yan etki değil yazılı bir karar olur. Komutları yine yalnız kendi modülünün derlemesinde çalışır.
+- **Bulunan hata:** Buda, Uzat, Köşe yuvarla ve Pah (`edge_commands`) ADIM 09'dan beri `arch/` klasöründeydi ve
+  dağıtıcı onları mimariye bağlamıştı; tam derlemede fark yoktu, CBS-yalnız derlemede dört temel CAD komutu "yok"
+  diyecekti. CBS-yalnız test koşusu (dört `corner` testi) yakaladı; dosya `core/`a taşındı. Aynı gözden geçirmede
+  proje ızgaraları (`project_grids`, açılışta NTv2/geoid) çekirdeğe alındı, `words` (`Stop` → metin) `checks`'e taşındı,
+  CBS senaryo etkisinin arazi eğimi `terrain`'e, boru profilinin yeniden üretimi `mod-map`'e bağlandı.
+- **Tüketiciler:** çıktı (`kentos-plot`: atlasın bağlı kaynak okuması CBS, haritadaki yol eksenleri ve ön denetimin
+  eskimiş çizimleri yol), headless (MapLibre, GeoParquet, XYZ, veritabanına bağlı katmanı pakete alma CBS; yayında
+  eskimiş kesitler mimari; İşlemler CBS ve `kentos-processing` isteğe bağlı), MCP (headless ve uygulamaya aktarır;
+  STAC kaydı CBS) bayrakları ileri taşır. İşlemler (`kentos-processing`) CBS'nin araç kutusudur, hep CBS'li; PostGIS
+  yalnız çekirdekle derlenir; Python ve masaüstü hepsini alır. Bayraksız yolda dönen metinler aynı kalıpta.
+- **Çıktı etkileşimi çekmiyor:** `kentos-plot`'un etkileşimden aldığı altı ad (`Spatial`, `spatial`, `level_view`,
+  `LabelSpot`, `Format`, `Vec2`) zaten scene-query, project ve geometry-core'un yeniden ihracıydı; bağ koptu. Headless,
+  MCP, Python ve jobrun etkileşimin 106 bin satırını artık hiç derlemiyor; `scripts/arch/deps.mjs` bu grupların
+  `interaction`'a dönmesini yasaklıyor.
+- **Modül başına test:** `make test-module MOD=arch|map|gis|road` → `cargo test -p kentos-native-application
+  --no-default-features --features mod-…`. Uygulamanın testleri her derlemede CBS'lidir: İşlemler bir geliştirme
+  bağımlılığı ve CBS ister (uygulamada CBS'nin payı ~2 sn). Fikstür koşucusu bırakılan komutun dosyasını
+  (`registry::left_out`) ve böyle bir komuttan geçen adımı atlar; tam derlemede atlanacak bir şey olamaz. Test
+  dosyaları adıyla kullandıkları (49) ya da `registry::run` ile çalıştırdıkları disipline bağlandı (11 dosya, 1 test).
+- **Biçim kodekleri** (`kentos-formats`, 78 647 satır): 13 özellik (`dxf`, `geojson`, `shapefile`, `kml`, `gnss`,
+  `field-book`, `landxml`, `pdf`, `raster` (+ `compress`, mesh ve NetCDF'in raster okuyucunun çizdiği dört alt
+  modülü), `multidim`, `parquet`, `sld` (+ dört `style_*`), `spreadsheet`); `default` hepsi, `image-webp` yalnız
+  `raster`'la. Görüntüleyici zinciri (`kentos-domain`, `kentos-scene-query`) hiçbirini almaz; `deps.mjs` o grafta
+  kodek özelliğini yakalar. Kodekler arası bağ için taşınanlar: `field/exact.rs` → `exact.rs`, nesnelerin JSON
+  okuyucusu (`Wire`, `Objects`, `Definitions`) `dxf/writer/input.rs`'ten `wire.rs`'e, KML yardımcıları `wgs84.rs`'e.
+- **Bağlayıcı:** zaten araç zincirinin rust-lld'si (x86_64 Linux'ta Rust 1.90'dan beri varsayılan; ikililerin
+  `.comment`'i "Linker: LLD 22.1.2"); mold kurulu değil (sudo ister). Değişecek ayar yok, `.cargo/config.toml`'a not.
+- **Seçici fikstür:** `make fixtures-changed` (`scripts/dev/changed-fixtures.mjs`): BASE'ten
+  (`origin/main`) bu yana değişen durum dosyaları ve işleyicisi değişen komutların durumları; komutlara eşlenemeyen bir
+  değişiklik (ortak denetim, kayıt, koşucu, başka crate) hepsini koşar, tek disiplinin değişikliği o modülün
+  derlemesiyle. `KENTOS_CASES_ONLY` masaüstü klasöründe dosya bulamayınca "no files" diye düşüyordu; düzeldi.
+
+| Ölçüm (dev, artımsız) | Önce | Sonra |
+|---|---|---|
+| Uygulama, `lib.rs` değişince | 47,9 sn | CBS 23,2 · mimari 29,9 · yol 27,2 · çekirdek 21,3 sn |
+| MCP, uygulama değişince (işlemci) | 97,2 sn | CBS 64,9 · mimari 60,4 · yol 59,1 · çekirdek 48,6 sn |
+| MCP, uygulama değişince (duvar saati) | 56,5 sn | CBS 34,7 · mimari 31,6 · yol 44,3 · çekirdek 27,7 sn |
+| Görüntüleyici zincirinde biçim kaynağı | 178 dosya, 78 647 satır | 31 dosya, 11 979 satır |
+| `kentos-formats` birimi, görüntüleyici zinciri | 7,5 sn | 1,2 sn |
+| `scene-query` + `render-wgpu`, biçim değişince | 12,4 sn | 8,1 sn |
+| Fikstürler: `walls_create.rs` değişince | 141 sn (hepsi) | 1,5 sn (`cad.walls.create`) |
+
+Tam derlemeler değişmedi: `kentos-formats`'ın tam derlemesi 7,1–7,8 sn, uygulamanın testleri 221 + 585 (39 yok
+sayılan) önceki gibi.
+
+**Doğrulama:** uygulama testleri beş derlemede: CBS 137 + 395, yol 186 + 414, mimari 162 + 563, harita 196 + 417,
+tam 221 + 585; `cargo check` uygulama, çıktı, headless ve MCP için çekirdek ve dört modül tek tek (MCP'nin testleri
+koşulmadı, kural); `cargo test` çıktı 119, İşlemler 74, PostGIS 18, headless 147, biçimler 223 + 138 + 60 + 6 ve
+`--no-default-features` 60 + 13; `cargo check -p kentos-desktop --tests -p kentos-python`; `node scripts/arch/deps.mjs`
+(55 crate, 74 hedef) temiz; clippy'de değişen satırlarda uyarı yok.
+

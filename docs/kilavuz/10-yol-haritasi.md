@@ -134,7 +134,7 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](../../docs/MADDE-T
   yönden farkı, poligonun kapanmaları, `.kcad` şema 15; `BookLeg.over`, `survey::traverse::closure`) tamam; 4. adım bitti. 5. adım
   dört parçada, her biri üreticinin belgesinden bağımsız başvurusuyla ve aynı karnenin örneğiyle (`field_samples.py`): 5a Sokkia SDR2x ve
   SDR33 (`formats::field::sdr`, başvuru `field_sdr_cases.py`; Sokkia'nın “Interfacing with the SOKKIA SDR Electronic Field Book”u) ve 5b
-  Topcon GTS-7 (`formats::field::gts7`, kesin değerler `field::exact`; başvuru `field_gts7_cases.py`, Topcon Link Reference Manual'ın Ek C'si)
+  Topcon GTS-7 (`formats::field::gts7`, kesin değerler `exact`; başvuru `field_gts7_cases.py`, Topcon Link Reference Manual'ın Ek C'si)
   ve 5d Nikon RAW (`formats::field::nikon`; başvuru `field_nikon_cases.py`, Nivo kılavuzu) ve 5c Trimble JobXML (`formats::field::jobxml`;
   başvuru `field_jobxml_cases.py`, şema 5.3; XML roxmltree ile, sahibin 4 Ekim onayıyla biçim çekirdeğinde de, derinlik koruması
   `formats::xml`) tamam; 5. adım bitti. 6. adım GNSS: 6a okuyucular (`formats::gnss`, `readGnss`; GPX 1.1 ve NMEA 0183, başvurular

@@ -711,7 +711,7 @@ pub fn check_on(
             (self.0)()
         }
     }
-    check_in(doc, input, &Stops(stopped)).map_err(crate::road_corridors::words)
+    check_in(doc, input, &Stops(stopped)).map_err(crate::checks::words)
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &TopologyCheck) -> CommandResult<()> {

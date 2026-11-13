@@ -548,9 +548,7 @@ fn work(
     let mut issues = Vec::new();
     // A stale section or elevation a sheet prints (docs/adr/8042 §6, 8043): said, not refused (the drawing's own choice
     // to print it).
-    for (sheet, name) in
-        kentos_native_application::sections_query::stale_on_sheets(doc, &book, &chosen)
-    {
+    for (sheet, name) in stale_sections(doc, &book, &chosen) {
         let (what, it) = if name.ends_with("görünüşü") {
             ("görünüş", "Görünüşü")
         } else {
@@ -911,6 +909,26 @@ pub(crate) fn run(
         Err(e) if e.code == "cancelled" => (CommandResult::Cancelled, None),
         Err(e) => (crate::file_commands::refused_result(*e), None),
     }
+}
+
+/// The stale sections and elevations the chosen sheets print (docs/adr/8042 §6, 8043): the sheet and the mark's name.
+/// A build without Mimari draws no section again, so it finds none stale (docs/adr/8054 §11).
+#[cfg(feature = "mod-arch")]
+fn stale_sections(
+    doc: &Document,
+    book: &kentos_sheet::SheetBook,
+    sheets: &[String],
+) -> Vec<(String, String)> {
+    kentos_native_application::sections_query::stale_on_sheets(doc, book, sheets)
+}
+
+#[cfg(not(feature = "mod-arch"))]
+fn stale_sections(
+    _: &Document,
+    _: &kentos_sheet::SheetBook,
+    _: &[String],
+) -> Vec<(String, String)> {
+    Vec::new()
 }
 
 #[cfg(test)]

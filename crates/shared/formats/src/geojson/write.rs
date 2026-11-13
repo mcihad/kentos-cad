@@ -41,13 +41,13 @@ use kentos_geometry_core::crs::{Choice, System, Unreached, transform_in};
 use serde::{Deserialize, Deserializer};
 
 use crate::blocks::Placing;
-use crate::dxf::{Definitions, Objects};
 use crate::export_geom::{GEOJSON, Geometry, geometry};
 use crate::gis::Ring;
 use crate::json::quote;
-use crate::kml::write::{DEGREE_DECIMALS, WGS84, say_unreached, tally};
 use crate::num::{plain, rounded};
 use crate::report::Report;
+use crate::wgs84::{DEGREE_DECIMALS, WGS84, say_unreached, tally};
+use crate::wire::{Definitions, Objects};
 
 fn position(p: Vec2, z: Option<f64>, out: &mut String) {
     out.push('[');

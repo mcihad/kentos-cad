@@ -16,16 +16,17 @@ use std::collections::HashMap;
 use std::fmt::Write as _;
 
 use kentos_contracts::{Entity, ExportReport, KmlLayer, KmlWriteInput, Vec2};
-use kentos_geometry_core::crs::{Choice, Datum, System, Unreached, transform_in};
+use kentos_geometry_core::crs::{Choice, System, Unreached, transform_in};
 use serde::{Deserialize, Deserializer};
 
 use super::style::{MM_PER_PIXEL, to_kml};
 use crate::blocks::Placing;
-use crate::dxf::{Definitions, Objects};
 use crate::export_geom::{Geometry, Words, geometry};
 use crate::gis::Ring;
 use crate::num::{decimals, plain};
 use crate::report::Report;
+use crate::wgs84::{DEGREE_DECIMALS, WGS84, escape, say_unreached, tally};
+use crate::wire::{Definitions, Objects};
 use crate::zip;
 
 /// KML's words for what it cannot hold.
@@ -54,30 +55,6 @@ pub(crate) const KML: Words = Words {
 
 /// What a text becomes.
 const TEXT: &str = "yazının metni nokta (Point) yer iminin adı olarak yazıldı";
-
-/// WGS 84 longitude and latitude.
-pub(crate) const WGS84: System = System::Geographic {
-    datum: Datum::Wgs84,
-};
-
-/// Decimals of a longitude or latitude (1e-10° is about 0.01 mm).
-pub(crate) const DEGREE_DECIMALS: usize = 10;
-
-/// Text in an XML element or attribute.
-pub(crate) fn escape(t: &str, out: &mut String) {
-    for c in t.chars() {
-        match c {
-            '&' => out.push_str("&amp;"),
-            '<' => out.push_str("&lt;"),
-            '>' => out.push_str("&gt;"),
-            '"' => out.push_str("&quot;"),
-            '\'' => out.push_str("&apos;"),
-            // XML 1.0 has no other control characters.
-            c if (c as u32) < 0x20 && !matches!(c, '\t' | '\n' | '\r') => {}
-            c => out.push(c),
-        }
-    }
-}
 
 /// The elevations of a run when every vertex has one.
 fn all_heights(r: &Ring) -> Option<Vec<f64>> {
@@ -244,30 +221,6 @@ struct Placed<'a> {
     entity: &'a Entity,
     body: String,
     style: usize,
-}
-
-/// One more of `u` among the objects left out.
-pub(crate) fn tally(list: &mut Vec<(Unreached, u32)>, u: Unreached) {
-    match list.iter_mut().find(|(w, _)| *w == u) {
-        Some((_, n)) => *n += 1,
-        None => list.push((u, 1)),
-    }
-}
-
-/// The objects one of whose vertices WGS 84 does not reach, said by why.
-pub(crate) fn say_unreached(rep: &mut Report, mut list: Vec<(Unreached, u32)>) {
-    list.sort_by_key(|(u, _)| u.as_str());
-    for (u, n) in list {
-        rep.skip_n(
-            "Çevrilemeyen nesne",
-            &format!(
-                "bir köşesi WGS 84'e çevrilemedi ({}); yazılmadı",
-                crate::reproject::why(u)
-            ),
-            0,
-            n,
-        );
-    }
 }
 
 /// Writes the objects as KML (or KMZ), moved from `from` into WGS 84 with `choices`.

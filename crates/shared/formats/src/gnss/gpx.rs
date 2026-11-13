@@ -12,7 +12,7 @@ use std::cmp::Ordering;
 use kentos_contracts::{GnssLine, GnssPoint, GnssRead, LineError};
 use roxmltree::Node;
 
-use crate::field::exact::Exact;
+use crate::exact::Exact;
 use crate::text;
 use crate::xml::{DEPTH, Rows, Unparsed, document};
 

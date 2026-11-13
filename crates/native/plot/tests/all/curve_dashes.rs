@@ -2,8 +2,8 @@
 //! curve at 1:1, 1:20 and 1:100 (arc, circle, ellipse, bulge path, NURBS), and a dotted wide polyline's dots as the
 //! band's cross-sections. Expected places are the curves' closed forms (r·θ, the band's width), not the output.
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
 use kentos_plot::{book, maps::MapSource};
+use kentos_scene_query::Spatial;
 use kentos_sheet::{
     SheetBook,
     display::{self, Prim},

@@ -47,18 +47,22 @@ macro_rules! map_cases {
                 $then!(parcel_register, kentos_commands::ParcelsRecord)
             }
             kentos_commands::CAD_PARCELS_RECORDS => {
+                #[cfg(feature = "mod-map")]
                 use kentos_native_application::parcel_register::list_cmd as parcel_register_list;
                 $then!(parcel_register_list, kentos_commands::ParcelsRecords)
             }
             kentos_commands::CAD_PARCELS_APPROVE => {
+                #[cfg(feature = "mod-map")]
                 use kentos_native_application::parcel_drafts as parcel_approve;
                 $then!(parcel_approve, kentos_commands::ParcelsApprove)
             }
             kentos_commands::CAD_ASBUILT_REVIEW => {
+                #[cfg(feature = "mod-map")]
                 use kentos_native_application::asbuilt_review;
                 $then!(asbuilt_review, kentos_commands::AsbuiltReview)
             }
             kentos_commands::CAD_PARCELS_WITHDRAW => {
+                #[cfg(feature = "mod-map")]
                 use kentos_native_application::parcel_drafts::withdraw as parcel_withdraw;
                 $then!(parcel_withdraw, kentos_commands::ParcelsWithdraw)
             }
@@ -102,10 +106,12 @@ macro_rules! map_cases {
                 $then!(orthophoto_seamlines, kentos_commands::OrthophotoSeamlines)
             }
             kentos_commands::CAD_ORTHOPHOTO_NETWORK => {
+                #[cfg(feature = "mod-map")]
                 use kentos_native_application::orthophoto_network::network as orthophoto_network;
                 $then!(orthophoto_network, kentos_commands::OrthophotoNetwork)
             }
             kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT => {
+                #[cfg(feature = "mod-map")]
                 use kentos_native_application::orthophoto_network::outline as orthophoto_footprint;
                 $then!(orthophoto_footprint, kentos_commands::OrthophotoFootprint)
             }

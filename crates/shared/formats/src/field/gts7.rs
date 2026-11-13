@@ -15,7 +15,7 @@ use std::cmp::Ordering;
 
 use kentos_contracts::{FieldBookRead, FieldObservation, FieldStation, LineError};
 
-use super::exact::{Dms, Exact};
+use crate::exact::{Dms, Exact};
 use crate::text;
 
 /// What is said of a record not read; `{line}`, `{data}`, `{target}` and

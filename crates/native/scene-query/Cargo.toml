@@ -11,8 +11,9 @@ publish.workspace = true
 # heavy codecs (DWG, IFC) or the schema generators. The authoring crates re-export its modules under their old paths.
 [dependencies]
 kentos-commands = { path = "../../shared/commands", default-features = false }
-# The walls' and texts' drawing rules shared with the files (DXF, KCAD).
-kentos-formats = { path = "../../shared/formats" }
+# The walls' and texts' drawing rules shared with the files (DXF, KCAD): the rules only, none of the codecs, which a
+# viewer and a phone do not read (docs/adr/8054 §11; scripts/arch/deps.mjs checks the graph).
+kentos-formats = { path = "../../shared/formats", default-features = false }
 kentos-domain = { path = "../domain" }
 kentos-expression = { path = "../../shared/expression" }
 # A layer filter's kind names (`kind_label`, the forms' own).

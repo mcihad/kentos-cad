@@ -592,12 +592,7 @@ pub(crate) fn broken(doc: &Document, def: &CorridorDef, why: String) -> Corridor
     }
 }
 
-pub(crate) fn words(stop: Stop) -> String {
-    match stop {
-        Stop::Failed(e) | Stop::Conflict(e) => e.message,
-        Stop::Cancelled => String::new(),
-    }
-}
+pub(crate) use crate::checks::words;
 
 /// The corridor's report now, or why it does not build.
 pub(crate) fn report(doc: &Document, def: &CorridorDef) -> CorridorReport {

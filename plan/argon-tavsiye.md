@@ -313,7 +313,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 11 — Cargo Feature-Gated Modüller (`mod-arch`, `mod-map`, `mod-gis`, `mod-road`) ve Mobil (`viewer-sdk`) Derleme Profili (Öncelik: P1)
+### [x] ADIM 11 — Cargo Feature-Gated Modüller (`mod-arch`, `mod-map`, `mod-gis`, `mod-road`) ve Mobil (`viewer-sdk`) Derleme Profili (Öncelik: P1)
 
 - **Sorun:** Tek bir modül üzerinde çalışırken veya mobil/görüntüleyici hedefi derlenirken tüm disiplinlerin UI, yazma komutu, ağır dosya codec'leri (`dwg`, `ifc`, `ncz`) ve test kodları derlenip bağlanıyor (linking).
 - **Yapılacak İşlem:**
@@ -325,6 +325,16 @@ flowchart LR
   - Masaüstünde `cargo build --release` tüm modülleri içeren tek `kentos-cad` binary'sini üretmeye devam eder,
   - `cargo test -p kentos-desktop --no-default-features --features mod-gis` yalnız kabuk + CBS modülünü 5–10 kat daha hızlı derleyip test eder,
   - Mobil/Saha çekirdeği (`cargo build -p kentos-scene-query -p kentos-render-wgpu`) 256 bin satırlık `application` ve 106 bin satırlık `interaction` yazarlık kodlarını **hiç derlemeden** saniyeler içinde üretilir.
+- **13 Kasım 2026 ([ADR 8054 §11](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** ölçüm hedefin bu yolla
+  tutmadığını gösterdi: masaüstü test derlemesinin 158 sn'sinin 96 sn'si masaüstü crate'inde ve orada kabuk + CAD
+  çekirdeği 260 bin, CBS tek başına 127 bin satır; masaüstü de bayraklansa CBS-yalnız ~1,5, mimari-yalnız ~1,8 kat.
+  **Sahibin kararı:** bayraklar uygulama katmanında kaldı (uygulama: 47,9 sn → CBS 23,2 · mimari 29,9 · yol 27,2 ·
+  çekirdek 21,3 sn), etkileşim ve masaüstü bayraklanmadı, masaüstünü crate'lere bölme Faz 2'nin sonunda ayrı madde.
+  Headless/MCP/Python etkileşimi artık hiç derlemiyor (çıktı katmanının bağı koptu) ve MCP modül başına derleniyor
+  (işlemci 97,2 → 59–65 sn); biçimlerin 13 kodeği özellik oldu, görüntüleyici zinciri 78 647 yerine 11 979 satır
+  derliyor (biçim birimi 7,5 → 1,2 sn); bağlayıcı zaten rust-lld; `make test-module MOD=…` ve `make fixtures-changed`
+  (tek komutun durumları 141 sn yerine 1,5 sn). CBS-yalnız test koşusu, ADIM 09'dan beri `arch/`ta duran ve modül
+  derlemesinde kaybolacak dört temel CAD komutunu (Buda, Uzat, Köşe yuvarla, Pah) yakaladı.
 
 ---
 
@@ -420,6 +430,21 @@ flowchart LR
   2. Bir `.kek` eklentisi etkinleştirildiğinde veya sıcak yüklendiğinde (`hot_reload`) MCP sunucusu `notifications/tools/list_changed` bildirimi gönderecektir.
 
 ---
+
+---
+
+### [ ] Ayrı iş (ADIM 11'in devamı) — Masaüstünün crate'lere bölünmesi (Öncelik: P1)
+
+- **Ölçüm (13 Kasım 2026, [ADR 8054 §11](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** uygulama değişince
+  masaüstü test derlemesi 158 sn; 96 sn'si 561 bin satırlık tek `kentos-desktop` crate'i (kabuk 139 bin, CAD 121 bin,
+  CBS 127 bin, testler 102 bin, yol 32 bin, mimari 21 bin, harita 18 bin). Cargo özellikleri bunu en çok ~1,5–1,8 kat
+  kısaltır; bir modülde çalışırken 5–10 kat ancak değişen modülün crate'inin tek başına derlenmesiyle gelir.
+- **Yapılacak:** kabuk (`App`, pencere, kurdele, ortak araçlar) bir crate, CAD çekirdeği, CBS, mimari, harita ve yol
+  kendi crate'lerinde; testler kendi crate'lerinde. ADIM 06'nın sınırları (`road::Event`, `App::road_event`,
+  `App::road_dialog_view` …) bir sözleşmeye (trait / mesaj) dönüşür, çünkü disiplin crate'i `App`'e kendi `impl`'ini
+  yazamaz. Önce sınırın envanteri ve tek disiplinle (en küçük: harita, 18 bin satır) deneme; ölçüm, sonra karar.
+- **Tamamlanma ölçütü:** bir disiplin dosyası değişince yalnız o disiplinin crate'i ve son bağlama derlenir; ölçüm
+  önce/sonra; `release` ikilisi ve davranış aynı.
 
 ## FAZ 3 — %100 AI-Native (Sıfır Elle Kodlama) ve QGIS İlhamlı `.kek` Eklenti Sistemi (`ADIM 16` – `ADIM 22`)
 

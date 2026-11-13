@@ -4,7 +4,7 @@
 //! own header. Only the header is read: the JPEG's segments up to its first
 //! scan, the TIFF's IFD0, its Exif IFD and its GPS IFD (no other IFD, none
 //! twice). A place's degrees, minutes and seconds are three rationals, added
-//! as fractions and rounded to the nearest float64 once (`field::exact`).
+//! as fractions and rounded to the nearest float64 once (`exact`).
 //! Nothing the file says panics or loops: offsets are checked, an IFD has at
 //! most `MAX_ENTRIES` entries.
 //!
@@ -17,7 +17,7 @@
 
 use kentos_contracts::PhotoExif;
 
-use crate::field::exact::Exact;
+use crate::exact::Exact;
 
 /// The most entries an IFD may have; past it the header is broken.
 pub const MAX_ENTRIES: usize = 1_000;

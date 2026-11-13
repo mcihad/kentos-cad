@@ -1,7 +1,7 @@
 //! ADR 1126 §3: a table that follows a table style prints the style's fill, colour and alignment where it sets none
 //! itself, its own cell styles over the style's; a table without a style is as before.
 use kentos_domain::Document;
-use kentos_interaction::Spatial;
+use kentos_scene_query::Spatial;
 use kentos_sheet::{
     SheetBook,
     display::{self, Prim},

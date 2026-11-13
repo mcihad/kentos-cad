@@ -21,7 +21,12 @@ macro_rules! core_commands {
             kentos_commands::CAD_BLOCKS_DEFINE => $then!(blocks_define, BlocksDefine),
             kentos_commands::CAD_BLOCKS_EDIT => $then!(blocks_edit, BlocksEdit),
             kentos_commands::FILE_IMPORT_LANDXML => {
-                $then!(file_import_landxml, kentos_commands::ImportLandxml)
+                crate::core_dispatch::terrain_arm!(
+                    $command,
+                    $then,
+                    file_import_landxml,
+                    kentos_commands::ImportLandxml
+                )
             }
             kentos_commands::CAD_ENTITIES_GRADE => {
                 $then!(entities_grade, kentos_commands::EntitiesGrade)
@@ -30,7 +35,12 @@ macro_rules! core_commands {
                 $then!(entities_raise, kentos_commands::EntitiesRaise)
             }
             kentos_commands::CAD_ENTITIES_DRAPE => {
-                $then!(entities_drape, kentos_commands::EntitiesDrape)
+                crate::core_dispatch::terrain_arm!(
+                    $command,
+                    $then,
+                    entities_drape,
+                    kentos_commands::EntitiesDrape
+                )
             }
             kentos_commands::CAD_PROFILES_COMPARE => {
                 $then!(profiles_compare, kentos_commands::ProfilesCompare)
@@ -71,13 +81,30 @@ macro_rules! core_commands {
             }
             kentos_commands::CAD_SHAPES_EDIT => $then!(shape_edits, kentos_commands::ShapesEdit),
             kentos_commands::CAD_NURBS_CREATE => $then!(nurbs, NurbsCreate),
-            kentos_commands::CAD_COLUMNS_DISTANCES => $then!(columns_distances, kentos_commands::ColumnsDistancesInput),
-            kentos_commands::CAD_GRIDS_CREATE => $then!(grids_create, GridsCreate),
-            kentos_commands::CAD_COLUMNS_CREATE => $then!(columns_create, ColumnsCreate),
-            kentos_commands::CAD_STAIRS_CREATE => $then!(stairs_create, StairsCreate),
-            kentos_commands::CAD_RAMPS_CREATE => $then!(ramps_create, RampsCreate),
-            kentos_commands::CAD_BEAMS_CREATE => $then!(beams_create, BeamsCreate),
-            kentos_commands::CAD_RAILINGS_CREATE => $then!(railings_create, RailingsCreate),
+            kentos_commands::CAD_COLUMNS_DISTANCES => crate::arch_dispatch::arch_arm!(
+                $command,
+                $then,
+                columns_distances,
+                kentos_commands::ColumnsDistancesInput
+            ),
+            kentos_commands::CAD_GRIDS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, grids_create, GridsCreate)
+            }
+            kentos_commands::CAD_COLUMNS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, columns_create, ColumnsCreate)
+            }
+            kentos_commands::CAD_STAIRS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, stairs_create, StairsCreate)
+            }
+            kentos_commands::CAD_RAMPS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, ramps_create, RampsCreate)
+            }
+            kentos_commands::CAD_BEAMS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, beams_create, BeamsCreate)
+            }
+            kentos_commands::CAD_RAILINGS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, railings_create, RailingsCreate)
+            }
             kentos_commands::CAD_SHEETS_SET => $then!(sheets_set, SheetsSet),
             kentos_commands::CAD_NAVIGATOR_READ => $then!(navigator, NavigatorRead),
             kentos_commands::CAD_XREFS_EDIT => $then!(xrefs_edit, XrefsEdit),
@@ -210,3 +237,19 @@ macro_rules! core_commands {
     };
 }
 pub(crate) use core_commands;
+
+/// A core command that drapes onto or reads a terrain surface (TIN): with road design or mapping (feature `terrain`,
+/// docs/adr/8054 §11), else the answer that this build has none.
+#[cfg(feature = "terrain")]
+macro_rules! terrain_arm {
+    ($command:expr, $then:ident, $module:ident, $input:ty) => {
+        $then!($module, $input)
+    };
+}
+#[cfg(not(feature = "terrain"))]
+macro_rules! terrain_arm {
+    ($command:expr, $then:ident, $module:ident, $input:ty) => {
+        Err(crate::registry::not_built($command, "yol ya da harita"))
+    };
+}
+pub(crate) use terrain_arm;

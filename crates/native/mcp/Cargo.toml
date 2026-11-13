@@ -17,12 +17,21 @@ path = "src/main.rs"
 kentos-postgis = { path = "../postgis" }
 kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }
 kentos-domain = { path = "../domain" }
-kentos-headless = { path = "../headless" }
+kentos-headless = { path = "../headless", default-features = false }
 # STAC searches (docs/adr/0528 §2): the host registers the cloud client's HTTP fetcher with the commands.
-kentos-native-application = { path = "../application" }
+kentos-native-application = { path = "../application", default-features = false }
 # The server's commands (docs/adr/0134): the desktop's cloud client, on its own runtime.
 kentos-cloud = { path = "../cloud" }
 serde_json = { workspace = true }
+
+[features]
+# The disciplines whose commands the server offers (docs/adr/8054 §11): a server built for one module compiles the core
+# and that discipline; the catalog stays whole and another's command answers that it is not in this build.
+default = ["mod-arch", "mod-map", "mod-gis", "mod-road"]
+mod-arch = ["kentos-headless/mod-arch", "kentos-native-application/mod-arch"]
+mod-map = ["kentos-headless/mod-map", "kentos-native-application/mod-map"]
+mod-gis = ["kentos-headless/mod-gis", "kentos-native-application/mod-gis"]
+mod-road = ["kentos-headless/mod-road", "kentos-native-application/mod-road"]
 
 [dev-dependencies]
 # Writing a shared cases' drawing to a file the tools open (tests/road_structures.rs).

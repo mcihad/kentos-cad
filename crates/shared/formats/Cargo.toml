@@ -26,7 +26,8 @@ miniz_oxide = { workspace = true }
 # 2026-09-27, docs/deps/README.md).
 roxmltree = { workspace = true }
 # A GeoPackage's WebP tiles (docs/adr/0627 §1; the owner's approval for CBS-03, October 2026).
-image-webp = { workspace = true }
+# Only the raster codec reads them.
+image-webp = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
@@ -34,3 +35,52 @@ serde_json = { workspace = true }
 # JPEG-compressed TIFF blocks in the raster tests (docs/adr/0204 §1): the host decodes
 # them; in the tests that host is the desktop's decoder. Not in the WASM module.
 zune-jpeg = { workspace = true }
+
+# One feature a codec (docs/adr/8054 §11): the viewer core (`kentos-scene-query`, the renderer, a phone) takes the
+# crate with none of them, so it compiles the objects' own rules (blocks, walls, spaces, openings, grids, units,
+# numbers, texts, reports) without the heavy readers and writers. `default` is every codec: every other dependent
+# and every full build reads and writes exactly what it did before. Without a codec its module is absent; the hosts
+# that dispatch on a file's kind decide what to say of it.
+[features]
+default = [
+    "dxf",
+    "geojson",
+    "shapefile",
+    "kml",
+    "gnss",
+    "field-book",
+    "landxml",
+    "pdf",
+    "raster",
+    "multidim",
+    "parquet",
+    "sld",
+    "spreadsheet",
+]
+# ASCII DXF in and out (`dxf`).
+dxf = []
+# GeoJSON in and out (`geojson`).
+geojson = []
+# ESRI Shapefile in and out (`shp`).
+shapefile = []
+# KML and KMZ in and out (`kml`).
+kml = []
+# GNSS files: GPX and NMEA positions, RINEX headers, GVX vectors; GPX out (`gnss`).
+gnss = []
+# Total stations' field books in (GSI, SDR, GTS-7, Nikon RAW, JobXML, CSV) and their coordinate files out (`field`).
+field-book = []
+# LandXML surfaces in, a road project's LandXML out (`landxml`, `landxml_write`).
+landxml = []
+# The PDF underlay reader (`pdf`).
+pdf = []
+# Raster layers' files: GeoTIFF, PNG, JPEG, WebP, VRT, GeoPackage tiles (`raster`, with `compress`, and the mesh and
+# NetCDF model its reader draws: `multidim::{mesh, ugrid, cf, netcdf}`).
+raster = ["dep:image-webp"]
+# NetCDF, HDF5, GRIB, Zarr and SMS files read and written (the rest of `multidim`), shown through the raster codec.
+multidim = ["raster"]
+# Apache Parquet (`parquet`, with `compress`).
+parquet = []
+# Style files: SLD, and the labels, expressions and symbol layers QML and MapLibre share with it (`sld`, `style_*`).
+sld = []
+# Spreadsheets: CSV, XLSX and ODS tables in (`table_file`, `xml_scan`) and out (`workbook`).
+spreadsheet = []

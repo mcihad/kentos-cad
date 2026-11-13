@@ -59,12 +59,19 @@ use kentos_commands::{
     MeasuredPoint, UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
+#[cfg(feature = "mod-arch")]
 use kentos_native_application::spaces_discover;
-use kentos_native_application::{arch_exceptions, dimension_sets_create, dimension_sets_edit, dimension_sets_query};
+use kentos_native_application::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
+#[cfg(feature = "mod-arch")]
+use kentos_native_application::arch_exceptions;
+#[cfg(feature = "mod-arch")]
 use kentos_native_application::arch_recognize;
 use kentos_native_application::dimensions_interior;
+#[cfg(feature = "mod-arch")]
 use kentos_native_application::spaces_separators;
+#[cfg(feature = "mod-arch")]
 use kentos_native_application::spaces_number;
+#[cfg(feature = "mod-arch")]
 use kentos_native_application::{program_check, program_edit};
 use kentos_native_application::donut_create;
 use kentos_native_application::drawing_compare;
@@ -76,10 +83,13 @@ use kentos_native_application::arrays_adopt;
 use kentos_native_application::arrays_find;
 use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::layers_crs::{
     assign as layers_crs_assign, reproject as layers_reproject,
 };
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::mesh_areas::{profile as meshes_profile, region as meshes_region};
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::meshes::{describe as meshes_describe, query as meshes_query};
 use kentos_native_application::pointcloud_areas::{
     profile as pointclouds_profile, region as pointclouds_region,
@@ -92,76 +102,101 @@ use kentos_native_application::profile_files::{
     remove as profiles_remove,
 };
 use kentos_native_application::profiles::{apply as profiles_apply, check as profiles_check};
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::records_page;
 use kentos_native_application::sources::{
     describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile,
     relate as sources_relate, sync as sources_sync,
 };
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::sources_query;
 use kentos_native_application::standards_palettes;
-use kentos_native_application::standards::{apply as standards_apply, check as standards_check, conflicts as standards_conflicts, resolve as standards_resolve};
+use kentos_native_application::standards::{
+    apply as standards_apply, check as standards_check, conflicts as standards_conflicts,
+    resolve as standards_resolve,
+};
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::time_query;
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, addresses_compare,
-    addresses_normalize, adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit,
-    arch_ifc, areas, array, asbuilt_check, blocks_define, blocks_edit, casework_edit,
-    casework_query, casework_run, circle, columns_distances, constructions, crs_factors,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, adjoin_cmd, annotations_scales,
+    annotations_write, arc, areas, array, blocks_define, blocks_edit, circle, constructions,
     crs_transform, curves_construct, delete, dimensions_edit, dimensions_query,
-    dimensions_reassociate, edit, elevations_edit, elevations_query, entities_chamfer,
-    entities_drape, entities_extend, entities_fillet, entities_flatten, entities_grade,
-    entities_order, entities_pick, entities_raise, entities_relate, entities_select, entities_trim,
-    entities_vertex, field_package, fields_edit, fields_usage, file_import_landxml, fonts_report,
-    hatches_edit, images_clip, labels_pin, labels_report, layers_compose, layers_contingents,
-    layers_edit, layers_filter, layers_find, layers_indexes, layers_info, layers_labels,
-    layers_renderer, layers_rules, layers_service, layers_set, layers_states, layers_subtypes,
-    layers_table, layers_time, layers_translate, leaders_edit, legends, levels_assign, line,
-    linearref_define, map_features, map_features_reconcile, map_survey, map_survey_edit,
-    map_survey_network, map_work, map_work_edit, map_work_restore, materials_edit, modules_edit,
-    modules_query, network_define, north, nurbs, objects_derive, offset, opening_types_edit,
-    openings_create, openings_distances, openings_edit, openings_query, options_edit,
-    options_query, orthophoto_check, orthophoto_compare, orthophoto_seamlines, parcel_register,
-    parcels, parcels_boundaries, parcels_check, pipes_check, pipes_profile, plot_styles_import,
-    point, pointcloud_network, pointcloud_overlap, pointcloud_place, pointcloud_register,
+    dimensions_reassociate, edit, entities_chamfer, entities_extend, entities_fillet,
+    entities_flatten, entities_grade, entities_order, entities_pick, entities_raise,
+    entities_relate, entities_select, entities_trim, entities_vertex, fields_edit, fields_usage,
+    fonts_report, hatches_edit, labels_pin, labels_report, layers_indexes, layers_labels,
+    layers_renderer, layers_translate, leaders_edit, line, map_survey, map_survey_network,
+    map_work, map_work_restore, nurbs, objects_derive, offset, plot_styles_import, point,
     points_construct, polygon, polygon_regular, polyline, profiles_carry, profiles_compare,
-    profiles_names, readjustment, readjustment_scope, readjustment_sheets, rectangle_create,
-    revcloud_create, revisions, road_alignments_check, road_alignments_create,
-    road_alignments_edit, road_alignments_fit, road_alignments_impact, road_alignments_import,
-    road_alignments_label, road_alignments_query, road_corridors_daylights, road_corridors_draw,
-    road_corridors_edit, road_corridors_preflight, road_corridors_protected, road_corridors_query,
-    road_corridors_water, road_culverts_closure, road_culverts_draw, road_culverts_edit,
-    road_culverts_hydraulics, road_culverts_query, road_drainage, road_drainage_draw,
-    road_guardrails_draw, road_guardrails_edit, road_guardrails_query, road_hauls_approve,
-    road_hauls_edit, road_hauls_network, road_hauls_plan, road_hauls_query, road_hauls_trucks,
-    road_ifc, road_junctions_clearance, road_junctions_draw, road_junctions_edit,
-    road_junctions_overlap, road_junctions_query, road_junctions_tie, road_landxml, road_pay_edit,
-    road_pay_query, road_platforms_draw, road_platforms_edit, road_platforms_query,
-    road_profiles_check, road_profiles_create, road_profiles_draw, road_profiles_edit,
-    road_profiles_fit, road_profiles_impact, road_profiles_lengths, road_profiles_propose,
-    road_profiles_query, road_profiles_sight, road_project_edit, road_project_graph,
-    road_project_produce, road_project_query, road_project_rebuild, road_routes_draw,
-    road_routes_find, road_scene, road_sections_draw, road_sections_edit, road_sections_query,
-    road_sheets, road_sheets_sections, road_stakeout, road_stakeout_send,
-    road_superelevations_check, road_superelevations_edit, road_superelevations_query,
-    road_superelevations_transitions, road_superelevations_widen, road_swept, road_swept_draw,
-    road_templates_edit, road_terrain_cloud, road_terrains_analysis, road_terrains_compare,
-    road_terrains_contours, road_terrains_coverage, road_terrains_coverage_draw,
-    road_terrains_create, road_terrains_cutfill, road_terrains_density, road_terrains_edit,
-    road_terrains_quality, road_terrains_query, road_terrains_repair, road_terrains_section,
-    road_terrains_sheet, road_terrains_sparse, road_terrains_stockpile, road_terrains_zeroline,
-    road_volumes_approve, road_volumes_compare, road_volumes_edit, road_volumes_history,
-    road_volumes_ledger, road_volumes_progress, road_volumes_query, road_volumes_states,
-    road_volumes_uncertainty, road_walls_draw, road_walls_edit, road_walls_query, roads_edit,
-    scenarios_edit, scenarios_impact, scenarios_record, sections_edit, sections_query,
-    sector_create, set, settings_set, shape_edits, sheets_create, sheets_details, sheets_edit,
-    sheets_fit, sheets_levels, slabs_create, slabs_edit, snap_find, spaces_create, spaces_edit,
-    spaces_quantities, styles_edit, survey_adjust, survey_baselines, survey_points, tables_edit,
-    texts_check, texts_edit, time_version, topology_clean, transform, ucs_set, units_change,
-    views_edit, walls_create, walls_distances, walls_edit, walls_from_lines, walls_joins,
-    walls_partition, walls_rectangle, zoning_check, zoning_draft, zoning_symbolize,
+    profiles_names, rectangle_create, revcloud_create, sector_create, set, settings_set,
+    shape_edits, sheets_create, sheets_details, sheets_edit, sheets_fit, sheets_levels, snap_find,
+    styles_edit, tables_edit, texts_check, texts_edit, transform, ucs_set, units_change,
+    zoning_check, zoning_draft, zoning_symbolize,
 };
+#[cfg(feature = "mod-arch")]
 use kentos_native_application::{
-    arch_edit, beams_create, columns_create, grids_create, railings_create, ramps_create, roofs_create, stairs_create,
+    arch_audit, arch_ifc, casework_edit, casework_query, casework_run, columns_distances,
+    elevations_edit, elevations_query, legends, levels_assign, materials_edit, modules_edit,
+    modules_query, north, opening_types_edit, openings_create, openings_distances, openings_edit,
+    openings_query, options_edit, options_query, revisions, sections_edit, sections_query,
+    slabs_create, slabs_edit, spaces_create, spaces_edit, spaces_quantities, views_edit,
+    walls_create, walls_distances, walls_edit, walls_from_lines, walls_joins, walls_partition,
+    walls_rectangle,
+};
+#[cfg(feature = "mod-map")]
+use kentos_native_application::{
+    asbuilt_check, crs_factors, field_package, map_features, map_features_reconcile,
+    map_survey_edit, map_work_edit, orthophoto_check, orthophoto_compare, orthophoto_seamlines,
+    parcel_register, parcels, parcels_boundaries, parcels_check, pipes_check, pipes_profile,
+    pointcloud_network, pointcloud_overlap, pointcloud_place, pointcloud_register, readjustment,
+    readjustment_scope, readjustment_sheets, survey_adjust, survey_baselines, survey_points,
+};
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{
+    addresses_check, addresses_compare, addresses_normalize, images_clip, layers_compose,
+    layers_contingents, layers_edit, layers_filter, layers_find, layers_info, layers_rules,
+    layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
+    linearref_define, network_define, scenarios_edit, scenarios_impact, scenarios_record,
+    time_version, topology_clean,
+};
+#[cfg(feature = "mod-road")]
+use kentos_native_application::{
+    road_alignments_check, road_alignments_create, road_alignments_edit, road_alignments_fit,
+    road_alignments_impact, road_alignments_import, road_alignments_label, road_alignments_query,
+    road_corridors_daylights, road_corridors_draw, road_corridors_edit, road_corridors_preflight,
+    road_corridors_protected, road_corridors_query, road_corridors_water, road_culverts_closure,
+    road_culverts_draw, road_culverts_edit, road_culverts_hydraulics, road_culverts_query,
+    road_drainage, road_drainage_draw, road_guardrails_draw, road_guardrails_edit,
+    road_guardrails_query, road_hauls_approve, road_hauls_edit, road_hauls_network,
+    road_hauls_plan, road_hauls_query, road_hauls_trucks, road_ifc, road_junctions_clearance,
+    road_junctions_draw, road_junctions_edit, road_junctions_overlap, road_junctions_query,
+    road_junctions_tie, road_landxml, road_pay_edit, road_pay_query, road_platforms_draw,
+    road_platforms_edit, road_platforms_query, road_profiles_check, road_profiles_create,
+    road_profiles_draw, road_profiles_edit, road_profiles_fit, road_profiles_impact,
+    road_profiles_lengths, road_profiles_propose, road_profiles_query, road_profiles_sight,
+    road_project_edit, road_project_graph, road_project_produce, road_project_query,
+    road_project_rebuild, road_routes_draw, road_routes_find, road_scene, road_sections_draw,
+    road_sections_edit, road_sections_query, road_sheets, road_sheets_sections, road_stakeout,
+    road_stakeout_send, road_superelevations_check, road_superelevations_edit,
+    road_superelevations_query, road_superelevations_transitions, road_superelevations_widen,
+    road_swept, road_swept_draw, road_templates_edit, road_terrain_cloud, road_terrains_analysis,
+    road_terrains_compare, road_terrains_contours, road_terrains_coverage,
+    road_terrains_coverage_draw, road_terrains_create, road_terrains_cutfill,
+    road_terrains_density, road_terrains_edit, road_terrains_quality, road_terrains_query,
+    road_terrains_repair, road_terrains_section, road_terrains_sheet, road_terrains_sparse,
+    road_terrains_stockpile, road_terrains_zeroline, road_volumes_approve, road_volumes_compare,
+    road_volumes_edit, road_volumes_history, road_volumes_ledger, road_volumes_progress,
+    road_volumes_query, road_volumes_states, road_volumes_uncertainty, road_walls_draw,
+    road_walls_edit, road_walls_query, roads_edit,
+};
+#[cfg(feature = "terrain")]
+use kentos_native_application::{entities_drape, file_import_landxml};
+#[cfg(feature = "mod-arch")]
+use kentos_native_application::{
+    arch_edit, beams_create, columns_create, grids_create, railings_create, ramps_create,
+    roofs_create, stairs_create,
 };
 use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit,
@@ -169,33 +204,45 @@ use kentos_native_application::{
     entities_copy, entities_explode, entities_hatch, entities_join, entities_lengthen,
     entities_match, entities_paste, entities_reverse, file_import, file_import_csv,
     file_import_dwg, file_import_fgb, file_import_geojson, file_import_gml, file_import_gpkg,
-    file_import_kml, file_import_parquet, file_import_pdf, file_import_shp, gis_derivation,
-    gis_detach, gis_takeback, maplibre, parameters_edit, qml, sld, stretch,
+    file_import_kml, file_import_parquet, file_import_pdf, file_import_shp, parameters_edit, qml,
+    sld, stretch,
 };
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{gis_derivation, gis_detach, gis_takeback, maplibre};
 use kentos_native_application::{
-    assets_check, images_edit, inserts_clip, rasters_georef, rasters_mosaic, rasters_reproject,
-    sheets_set, navigator, spaces_finish, templates_apply, viewmarks_create, viewmarks_edit,
-    viewmarks_references, xrefs_edit, xrefs_list,
+    assets_check, inserts_clip, navigator, rasters_georef, sheets_set, xrefs_edit, xrefs_list,
 };
+#[cfg(feature = "mod-arch")]
+use kentos_native_application::{
+    spaces_finish, templates_apply, viewmarks_create, viewmarks_edit, viewmarks_references,
+};
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{images_edit, rasters_mosaic, rasters_reproject};
+use kentos_native_application::relations_edit;
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::{
     attachments_inspect, domains_edit, domains_export, fields_migrate, forms_audit, forms_compare,
     forms_edit, forms_export, forms_fill, forms_import, forms_recompute, forms_sources,
     forms_submit, forms_test, forms_transition, forms_validate, records, records_duplicate,
-    relations_edit, schema_describe,
+    schema_describe,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
     file_import_block, hatch_patterns_edit, library_edit, line_types_edit, styles_impact,
 };
-use kentos_native_application::{datasets_describe, datasets_edit, joins_edit, joins_query};
-use kentos_native_application::{
-    processing_batch, processing_run, processing_tools, subnetworks, subnetworks_update,
-};
-use kentos_native_application::{
-    schedules_create, schedules_edit, schedules_query, tags_check, tags_create, tags_edit,
-};
+use kentos_native_application::datasets_edit;
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{datasets_describe, joins_edit, joins_query};
+use kentos_native_application::{subnetworks, subnetworks_update};
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{processing_batch, processing_run, processing_tools};
+use kentos_native_application::{schedules_create, schedules_edit, schedules_query};
+#[cfg(feature = "mod-arch")]
+use kentos_native_application::{tags_check, tags_create, tags_edit};
 use kentos_native_application::{extract_run, extract_table};
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
+#[cfg(feature = "mod-gis")]
 use kentos_native_application::{topology_check, topology_exceptions, topology_repair};
 use serde_json::{Value, json};
 
@@ -217,6 +264,9 @@ struct State {
     /// their number (`$layer:1`, `$layer:2` …, docs/adr/0210 §11).
     fresh: Vec<String>,
 }
+
+/// What a step of a command this build leaves out answers (docs/adr/8054 §11), the application's own words.
+const LEFT_OUT: &str = "bu derlemede yok";
 
 const STEP_KEYS: &[&str] = &[
     "op",
@@ -1387,7 +1437,96 @@ fn run_op(
             )?
         }};
     }
-    core_cases!(command, run, arch_cases!(command, run, map_cases!(command, run, gis_cases!(command, run, road_cases!(command, run, return Err(format!("{at}: {command} için koşucu yok")))))))
+    // A command of a discipline this build leaves out (docs/adr/8054 §11): its handler is not named, the step stops
+    // the case and the case is left out, not failed.
+    #[allow(unused_macros)]
+    macro_rules! left_out {
+        ($module:ident, $input:ty) => {
+            return Err(format!("{at}: {command} {LEFT_OUT}"))
+        };
+    }
+    #[cfg(feature = "mod-arch")]
+    macro_rules! arch {
+        ($module:ident, $input:ty) => {
+            run!($module, $input)
+        };
+    }
+    #[cfg(not(feature = "mod-arch"))]
+    macro_rules! arch {
+        ($module:ident, $input:ty) => {
+            left_out!($module, $input)
+        };
+    }
+    #[cfg(feature = "mod-map")]
+    macro_rules! map {
+        ($module:ident, $input:ty) => {
+            run!($module, $input)
+        };
+    }
+    #[cfg(not(feature = "mod-map"))]
+    macro_rules! map {
+        ($module:ident, $input:ty) => {
+            left_out!($module, $input)
+        };
+    }
+    #[cfg(feature = "mod-gis")]
+    macro_rules! gis {
+        ($module:ident, $input:ty) => {
+            run!($module, $input)
+        };
+    }
+    #[cfg(not(feature = "mod-gis"))]
+    macro_rules! gis {
+        ($module:ident, $input:ty) => {
+            left_out!($module, $input)
+        };
+    }
+    #[cfg(feature = "mod-road")]
+    macro_rules! road {
+        ($module:ident, $input:ty) => {
+            run!($module, $input)
+        };
+    }
+    #[cfg(not(feature = "mod-road"))]
+    macro_rules! road {
+        ($module:ident, $input:ty) => {
+            left_out!($module, $input)
+        };
+    }
+    // A terrain surface's (road design's or mapping's) core commands: LandXML in, drape.
+    #[cfg(feature = "terrain")]
+    macro_rules! terrain {
+        ($module:ident, $input:ty) => {
+            run!($module, $input)
+        };
+    }
+    #[cfg(not(feature = "terrain"))]
+    macro_rules! terrain {
+        ($module:ident, $input:ty) => {
+            left_out!($module, $input)
+        };
+    }
+    core_cases!(
+        command,
+        run,
+        arch_cases!(
+            command,
+            arch,
+            map_cases!(
+                command,
+                map,
+                gis_cases!(
+                    command,
+                    gis,
+                    road_cases!(
+                        command,
+                        road,
+                        return Err(format!("{at}: {command} için koşucu yok"))
+                    )
+                )
+            )
+        )
+    )
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
 }
 
@@ -2429,7 +2568,12 @@ fn run_folder(dir: &std::path::Path, least: usize) -> (Vec<String>, usize, Vec<S
         })
         .collect();
     files.sort();
-    assert!(!files.is_empty(), "{}: no files", dir.display());
+    // KENTOS_CASES_ONLY may name no file of this folder (scripts/dev/changed-fixtures.mjs names another's).
+    assert!(
+        !files.is_empty() || only.is_some(),
+        "{}: no files",
+        dir.display()
+    );
     let mut problems = Vec::new();
     let mut cases = 0;
     let mut commands = Vec::new();
@@ -2466,12 +2610,19 @@ fn run_folder(dir: &std::path::Path, least: usize) -> (Vec<String>, usize, Vec<S
         commands.push(command.0.to_owned());
         let listed = fixture["cases"].as_array().expect("cases");
         assert!(listed.len() >= least, "{file}: {} cases", listed.len());
+        // A command of a discipline this build leaves out (docs/adr/8054 §11): its cases run in a build with it.
+        if kentos_native_application::registry::left_out(command.0) {
+            continue;
+        }
         for case in listed {
             cases += 1;
             let name = case["name"].as_str().unwrap_or("?");
             let setup = case.get("setup").unwrap_or(&fixture["setup"]);
             if let Err(problem) = run_case(command.0, setup, case, &format!("{file} › {name}")) {
-                problems.push(problem);
+                // A case that steps through such a command too; a build with every module never says so.
+                if !problem.contains(LEFT_OUT) {
+                    problems.push(problem);
+                }
             }
         }
     }

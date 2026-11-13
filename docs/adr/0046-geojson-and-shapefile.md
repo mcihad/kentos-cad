@@ -23,7 +23,7 @@
 - Sözleşme (`FORMATS_VERSION` 7):
   - `ImportResult.declaredCrs`: `DeclaredCrs { srid?, text, source }`; `source` `rfc7946`, `geoJsonCrs` ya da `prj`'dir.
   - `GeoJsonReadOptions`, `ShapefileReadOptions`, `GeoJsonLayer`, `GeoJsonWriteInput`.
-- WASM: `readGeoJson`, `writeGeoJson`, `readShapefile` (dosyalar ayrı `Uint8Array`'lerle; .shp zorunlu, öbürleri isteğe bağlı). Yazıcının girdisindeki nesneler DXF yazıcısının elle yazılmış ziyaretçisiyle okunur (`dxf::Objects`).
+- WASM: `readGeoJson`, `writeGeoJson`, `readShapefile` (dosyalar ayrı `Uint8Array`'lerle; .shp zorunlu, öbürleri isteğe bağlı). Yazıcının girdisindeki nesneler DXF yazıcısının elle yazılmış ziyaretçisiyle okunur (`wire::Objects`; 13 Kasım 2026'ya dek `dxf::Objects`).
 - Web:
   - `io/protocol.ts`, `io/client.ts`, `io/formatsWorker.ts`: üç işlem.
   - `io/shapefile.ts`: seçilen dosyalardan bir Shapefile katmanı.

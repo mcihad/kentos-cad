@@ -374,5 +374,5 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ReadjustmentScope) -> Comma
 
 /// The scope for a window, or why it does not read.
 pub fn preview(doc: &Document, input: &ReadjustmentScope) -> Result<ReadjustmentScoped, String> {
-    run(doc, input).map_err(crate::road_corridors::words)
+    run(doc, input).map_err(crate::checks::words)
 }

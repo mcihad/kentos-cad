@@ -161,7 +161,7 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    hesaplanmış koordinatıdır, atlanır. BS, FS ve SS sonraki ölçülerin noktasını (prizma yüksekliği verilmezse istasyonun sonuncusu, FS
    ve SS'te kod) verir; HV ve SD bu noktanın gözlemidir (yatay açı, başucu, SD'de eğik uzunluk), HD indirgenmiş ölçüdür, söylenir;
    sıfır olmayan OFFSET önündeki gözlemi dışarıda bırakır, söylenir. Sayılar en çok 30 rakam; açılar kesin kesirden tek yuvarlamayla
-   (`field::exact`), eksi yatay okuma turuna çevrilir (Topcon'un örneğindeki −37.2644 = 322°33'16"), tam dönüşten büyük açı ve eksi
+   (`exact`; 13 Kasım 2026'ya dek `field::exact`), eksi yatay okuma turuna çevrilir (Topcon'un örneğindeki −37.2644 = 322°33'16"), tam dönüşten büyük açı ve eksi
    başucu okunmaz. İçerikten tanıma: boş olmayan ilk on satırdan biri `GTS-7` ile ya da UNITS veya STN sözcüğü ve virgüllü alanlarla
    başlıyorsa. Bağımsız başvuru `field_gts7_cases.py` (`gts7.json`, 3 durum; Topcon'un örneği dahil) ve 6000 rastgele karnede Rust
    ile birebir; örnek `sample.gt7` GSI örneğiyle aynı karne; dosya süzgecinde `.gt7`, `.raw`; resimler `karne-gts7-*`,
@@ -183,7 +183,7 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    sayılır, bir kez söylenir). Birimler yazılmadan önceki ölçüler bir kez söylenir. Koordinat kayıtları (UP, MP, CC, RE: kuzey, doğu,
    kot) bir adın son koordinatlarıdır; ST istasyonu (alet yüksekliği, geri bakış noktası) başlatır, koordinatları adının son kaydından.
    Gözlemler F1, F2 (nokta boşsa istasyonun geri bakışı), SS, CP, SO; prizma yüksekliği boşsa istasyonun sonuncusu, eğik uzunluk
-   boşsa yalnız doğrultu. Sayılar ve açılar GTS-7'nin kurallarıyla (`field::exact`). İçerikten tanıma: boş olmayan ilk on satırdan
+   boşsa yalnız doğrultu. Sayılar ve açılar GTS-7'nin kurallarıyla (`exact`). İçerikten tanıma: boş olmayan ilk on satırdan
    biri `CO,` ile başlıyorsa. Bağımsız başvuru `field_nikon_cases.py` (`nikon.json`, 3 durum) ve 6000 rastgele karnede Rust ile
    birebir; örnek `sample-nikon.raw` GSI örneğiyle aynı karne; resimler `karne-nikon-*`, `fieldbook-nikon-*`. Kılavuzun “Data
    examples” örneği kendi içinde tutarsızdır (SS'in değerleri DDD.MMSS değil), örnek olarak alınmadı.
