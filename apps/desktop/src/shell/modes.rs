@@ -85,6 +85,13 @@ impl App {
                         }
                     }
                 }
+                // A point cloud with the lines or areas its profile and statistics read keeps the cloud's tab (UR-038):
+                // the mixed selection's Seçim tab has neither.
+                let cloud_inputs = kinds.contains(&"pointcloud")
+                    && kinds
+                        .iter()
+                        .all(|k| matches!(*k, "pointcloud" | "line" | "polyline" | "polygon"));
+                let kinds = if cloud_inputs { vec!["pointcloud"] } else { kinds };
                 let id = catalog()
                     .contextual_for(self.work_mode(), self.ribbon_work(), &kinds)
                     .map(|t| t.id);

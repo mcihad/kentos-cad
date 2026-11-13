@@ -168,7 +168,7 @@ fn shape_of(app: &App) -> Result<Shape, String> {
             said,
         });
     }
-    Err("Seçimde alan yok: bir alan (ya da kapalı çoklu çizgi) seçip Seçimden al'a basın.".into())
+    Err("Seçimde alan yok. Pencereyi kapatın, alanı (ya da kapalı çoklu çizgiyi) nokta bulutuyla birlikte Shift ile seçin; Nokta bulutu sekmesi açık kalır, komutu oradan yeniden açın.".into())
 }
 
 /// The line or polyline the selection holds; why not.
@@ -185,7 +185,8 @@ fn path_of(app: &App) -> Result<(Vec<Vec2>, String), String> {
             _ => {}
         }
     }
-    Err("Seçimde çizgi yok: bir çizgi ya da çoklu çizgi seçip Seçimden al'a basın.".into())
+    // The way to it said (UR-038): the window does not let the drawing be clicked while it is open.
+    Err("Seçimde çizgi yok. Pencereyi kapatın, profil yolunu (çizgi ya da çoklu çizgi) nokta bulutuyla birlikte Shift ile seçin; Nokta bulutu sekmesi açık kalır, profili oradan yeniden açın.".into())
 }
 
 /// The first selected point, its place as typed text.

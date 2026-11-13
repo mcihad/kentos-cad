@@ -140,3 +140,15 @@ fn the_linear_dimensions_menu_words_name_no_axis() {
     let description = catalog.get("tool.dimension").expect("Ölçülendirme").description;
     assert!(description.contains("doğrusal (yatay ya da düşey)") && !description.contains('Δ'), "{description}");
 }
+
+/// UR-038: a point cloud chosen with an area (the input its statistics read) keeps the cloud's tab, so its commands
+/// stay one click away; a cloud with another kind goes to Seçim as before.
+#[test]
+fn a_cloud_with_its_inputs_keeps_the_clouds_tab() {
+    let (mut app, _) = App::boot(None);
+    crate::cloud_scenes::opened(&mut app, [-40.0, -40.0, 260.0, 220.0]);
+    app.selection.set([Slot(1)]);
+    assert_eq!(app.selection_tab().map(|t| t.id), Some("ctx.pointcloud"));
+    app.selection.set([Slot(1), Slot(2)]);
+    assert_eq!(app.selection_tab().map(|t| t.id), Some("ctx.pointcloud"), "the cloud and an area");
+}
