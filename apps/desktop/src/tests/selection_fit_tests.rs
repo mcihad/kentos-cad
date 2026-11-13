@@ -108,3 +108,14 @@ fn selection_fit_screens() {
         println!("{}", file.display());
     }
 }
+
+/// UR-009: the linear dimension's words in the menu and the command's description name no axis (a CBS project's
+/// ΔY is a CAD project's ΔX).
+#[test]
+fn the_linear_dimensions_menu_words_name_no_axis() {
+    let catalog = crate::catalog::catalog();
+    let linear = catalog.method_by_alias("DIMLIN").expect("Doğrusal");
+    assert_eq!(linear.description, Some("Yatay ya da düşey"));
+    let description = catalog.get("tool.dimension").expect("Ölçülendirme").description;
+    assert!(description.contains("doğrusal (yatay ya da düşey)") && !description.contains('Δ'), "{description}");
+}

@@ -599,3 +599,21 @@ fn screens() {
         }
     }
 }
+
+/// UR-009: in a CAD project a line's ends read X to the right and Y up, as the status bar and the axes' icon do;
+/// a CBS project's rows keep Y to the right.
+#[test]
+fn a_cad_projects_line_names_its_ends_x_to_the_right() {
+    let mut app = objects();
+    let line = line_z(&mut app, None, None);
+    select(&mut app, &[line]);
+    assert_eq!(value(&app, "Geometri", "Başlangıç Y"), app.document.as_ref().map_or(String::new(), |d| {
+        kentos_interaction::Format::of(d.settings()).length_bare(E)
+    }));
+    crate::files_testing::make_cad(&mut app);
+    select(&mut app, &[line]);
+    let f = kentos_interaction::Format::of(app.document.as_ref().expect("a drawing").settings());
+    assert_eq!(value(&app, "Geometri", "Başlangıç X"), f.length_bare(E), "the east value is X");
+    assert_eq!(value(&app, "Geometri", "Başlangıç Y"), f.length_bare(N + 30.0), "the north value is Y");
+    assert_eq!(value(&app, "Geometri", "Bitiş X"), f.length_bare(E + 40.0));
+}

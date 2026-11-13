@@ -216,9 +216,11 @@ impl Stretch {
         if let Some(out) = points::written(result, cx) {
             let f = cx.format();
             let line = format!(
-                "{} nesne esnetildi: ΔY {}  ΔX {}",
+                "{} nesne esnetildi: Δ{} {}  Δ{} {}",
                 out.stretched.len(),
+                f.east_label(),
                 f.length_bare(dx),
+                f.north_label(),
                 f.length_bare(dy)
             );
             cx.say(Level::Success, line);

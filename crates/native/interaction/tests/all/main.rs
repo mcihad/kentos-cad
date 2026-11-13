@@ -5,6 +5,7 @@
 mod adjoin;
 mod aids;
 mod area;
+mod cad_axes_names;
 mod arrange;
 mod beam_tool;
 mod roof_part_tool;

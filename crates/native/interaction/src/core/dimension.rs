@@ -420,10 +420,12 @@ impl Dimension {
                 return true;
             }
         }
+        // The east axis's key is its name in the project (UR-009): Y in a CBS project, X in a CAD one.
+        let (east, north) = (self.format.east_label(), self.format.north_label());
         if cx.memory.dimension_mode == Mode::Ordinate && self.d.pts.len() == 1 {
             cx.memory.ordinate_lock = match key {
-                "Y" => Some(0.0),
-                "X" => Some(90.0),
+                k if k == east => Some(0.0),
+                k if k == north => Some(90.0),
                 "O" => None,
                 _ => return false,
             };
@@ -431,8 +433,8 @@ impl Dimension {
         }
         if cx.memory.dimension_mode == Mode::Linear && self.d.pts.len() == 2 && !self.asking_angle {
             cx.memory.dimension_lock = match key {
-                "Y" => Some(0.0),
-                "X" => Some(90.0),
+                k if k == east => Some(0.0),
+                k if k == north => Some(90.0),
                 "O" => None,
                 "A" => {
                     self.asking_angle = true;
@@ -949,6 +951,9 @@ impl Tool for Dimension {
         }
         let step = match self.mode() {
             Mode::Linear => match n {
+                0 if self.format.axes == crate::format::Axes::Cad => {
+                    "doğrusal ölçünün (ΔX / ΔY) ilk noktasını belirtin"
+                }
                 0 => "doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin",
                 1 => "ikinci ölçü noktasını belirtin",
                 _ => "ölçü çizgisinin yerini gösterin ya da mesafe yazın",
@@ -1020,21 +1025,25 @@ impl Tool for Dimension {
                 Some(deg) => self.format.angle(deg * std::f64::consts::PI / 180.0),
                 None => "imleçten".to_owned(),
             };
+            let (east, north) = (self.format.east_label(), self.format.north_label());
+            let cad = self.format.axes == crate::format::Axes::Cad;
             prompt = prompt
-                .option("Yatay ΔY", "Y")
-                .option("Düşey ΔX", "X")
+                .option(if cad { "Yatay ΔX" } else { "Yatay ΔY" }, east)
+                .option(if cad { "Düşey ΔY" } else { "Düşey ΔX" }, north)
                 .option_with("Yön", "O", way)
                 .option("Açı", "A");
         }
         if self.mode() == Mode::Ordinate && n == 1 {
+            let (east, north) = (self.format.east_label(), self.format.north_label());
             let way = match self.memory.ordinate_lock {
-                Some(0.0) => "Y",
-                Some(_) => "X",
+                Some(0.0) => east,
+                Some(_) => north,
                 None => "imleçten",
             };
+            let cad = self.format.axes == crate::format::Axes::Cad;
             prompt = prompt
-                .option("Y koordinatı", "Y")
-                .option("X koordinatı", "X")
+                .option(if cad { "X koordinatı" } else { "Y koordinatı" }, east)
+                .option(if cad { "Y koordinatı" } else { "X koordinatı" }, north)
                 .option_with("Eksen", "O", way);
         }
         if self.fresh() {

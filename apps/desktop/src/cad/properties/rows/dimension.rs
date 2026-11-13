@@ -262,16 +262,18 @@ pub(super) fn rows(
         type_row("Uzatma tipi", Part::Ext, dims, slots, locked),
         color_row("Değer rengi", Part::Value, dims, slots, locked),
     ]);
-    // An ordinate's axis: its Y (0) or its X (90).
+    // An ordinate's axis: its east (0) or its north (90).
     if dims
         .iter()
         .all(|d| d.style == Some(DimensionStyle::Ordinate))
     {
-        let axis = common(dims, |d| if is_y_axis(d.angle) { "Y" } else { "X" });
+        // The east axis as the project names it (UR-009): Y in a CBS project, X in a CAD one.
+        let (east, north) = (f.east_label(), f.north_label());
+        let axis = common(dims, |d| if is_y_axis(d.angle) { east } else { north });
         let text = axis.unwrap_or(MIXED);
         rows.push(Row::text("Koordinat", text).editor(edit(select(
             text,
-            [("Y", 0.0), ("X", 90.0)].map(|(name, angle)| {
+            [(east, 0.0), (north, 90.0)].map(|(name, angle)| {
                 (
                     name,
                     axis == Some(name),
