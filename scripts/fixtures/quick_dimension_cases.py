@@ -11,7 +11,8 @@ give the same within 1e-9 m on both platforms
 The rules:
 
 - The objects are taken in the order given. A line is a path of one edge, a
-  polyline an open path; an area is rings: its outer ring, then its holes,
+  polyline an open path, a closed polyline (closed: true) a ring measured as an
+  area's outer ring, its closing edge too; an area is rings: its outer ring, then its holes,
   then each further part's outer ring and its holes. Anything else is
   skipped (and counted).
 - A path or ring is its edges in order, from each vertex to the next (a ring
@@ -147,6 +148,8 @@ def paths_of(obj):
         return [(edges_of([xy(obj["a"]), xy(obj["b"])], None, False), "open", None)]
     if kind == "polyline":
         pts = [xy(p) for p in obj["pts"]]
+        if obj.get("closed"):
+            return [(edges_of(pts, obj.get("bulges"), True), "outer", ring_area(pts, obj.get("bulges")))]
         return [(edges_of(pts, obj.get("bulges"), False), "open", None)]
     if kind == "polygon":
         out = []
@@ -239,6 +242,8 @@ CASES = [
     ),
     ("açık çoklu çizgi: imlecin tarafında, en yakın kenarına göre", [{"kind": "polyline", "pts": P((0, 0), (10, 0), (10, 10))}], (5, 3), None),
     ("açık çoklu çizgi, imleç öbür yanda", [{"kind": "polyline", "pts": P((0, 0), (10, 0), (10, 10))}], (13, 6), None),
+    # A closed polyline: its four edges, the closing one too, outside it as an area's outer ring (usage review UR-090).
+    ("kapalı çoklu çizgi: kapanış kenarı da ölçülür", [{"kind": "polyline", "pts": P((0, 0), (10, 0), (10, 10), (0, 10)), "closed": True}], (5, 5), None),
     ("çizgi, yazılan uzaklık işaretsiz alınır", [{"kind": "line", "a": pt((0, 0)), "b": pt((30, 0))}], (10, -2), -4.0),
     (
         "dışa kabaran yaylı kenar: yay uzunluğu dışarıda",
