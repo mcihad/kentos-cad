@@ -270,6 +270,14 @@ impl Designer {
                 .style(style::container::bordered),
             );
         }
+        // A map that leaves part of the drawing out (UR-011): said here too, the file not held back for it.
+        for f in self.findings.iter().filter(|f| f.code == "drawing_cut") {
+            body = body.push(
+                container(label::body(f.message.as_str()))
+                    .padding(8)
+                    .style(style::container::bordered),
+            );
+        }
         let ready = !going.is_empty();
         let anyway = errors > 0;
         let save = button(label::body(if anyway {

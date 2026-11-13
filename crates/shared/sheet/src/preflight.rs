@@ -978,3 +978,49 @@ mod tests {
         assert_eq!(nearest_standard(7000), Some(5000));
     }
 }
+
+/// A map that leaves part of the drawing out (usage review UR-011): its fixed view of the drawing, at its scale and
+/// centre, does not take in the drawing's extent `bounds` (ground metres: min x, min y, max x, max y). A warning, not
+/// an error: a detail view leaves the rest out on purpose; the fix fits the whole drawing at the next standard scale.
+/// None for a map that holds it, an atlas map, a map of another source or a view without a centre.
+pub fn drawing_overrun(item: &Item, bounds: [f64; 4]) -> Option<Finding> {
+    let ItemKind::Map(m) = &item.kind else { return None };
+    let MapView::Fixed(view) = &m.view else { return None };
+    if !m.source.is_drawing() || bounds.iter().any(|v| !v.is_finite()) || bounds[2] < bounds[0] || bounds[3] < bounds[1] {
+        return None;
+    }
+    let c = view.center?;
+    // The box about the view's centre that holds the drawing: the scale it needs against the one it has.
+    let half_w = (bounds[0] - c.x).abs().max((bounds[2] - c.x).abs());
+    let half_h = (bounds[1] - c.y).abs().max((bounds[3] - c.y).abs());
+    let frame = display::map_content_rect(item, m);
+    if frame.width <= 0 || frame.height <= 0 {
+        return None;
+    }
+    let need = crate::projection::fitting_denominator(2.0 * half_w, 2.0 * half_h, &frame, view.rotation);
+    let has = view.denominator();
+    if need <= has * (1.0 + 1e-9) {
+        return None;
+    }
+    let fixes = if item.locked || m.view_locked {
+        Vec::new()
+    } else {
+        crate::fit::map(item, bounds, 5, true)
+            .ok()
+            .map(|op| vec![op_fix("Çizimin tamamını sığdır", op)])
+            .unwrap_or_default()
+    };
+    Some(Finding {
+        severity: Severity::Warning,
+        code: "drawing_cut".to_owned(),
+        item: Some(item.id.clone()),
+        message: format!(
+            "{} çizimin tamamını göstermiyor: 1:{} ölçekte çizimin bir bölümü pencerenin dışında kalıyor.",
+            named(item),
+            libm::round(has)
+        ),
+        fix: "Bilinçli bir ayrıntı görünümü değilse çizimin tamamını sığdırın ya da pencereyi büyütün.".to_owned(),
+        fixes,
+        placeholder: false,
+    })
+}

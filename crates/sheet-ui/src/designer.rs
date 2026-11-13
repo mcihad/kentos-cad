@@ -742,6 +742,20 @@ impl Designer {
                 preflight::preflight(&self.book, id, &self.inputs(RenderMode::Design)).ok()
             })
             .unwrap_or_default();
+        // A map that leaves part of the drawing out (UR-011): said beside the layout's findings, errors first.
+        if let (Some(id), Some(bounds)) = (self.open.as_deref(), self.ctx.drawing_bounds)
+            && let Some(sheet) = self.book.sheet(id)
+        {
+            let cut: Vec<_> = sheet
+                .items
+                .iter()
+                .filter_map(|it| preflight::drawing_overrun(it, bounds))
+                .collect();
+            if !cut.is_empty() {
+                self.findings.extend(cut);
+                self.findings.sort_by_key(|f| f.severity);
+            }
+        }
         self.sync_guides();
         self.reset_caches();
         crate::inspect::refresh_fields(self);

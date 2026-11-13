@@ -927,3 +927,86 @@ fn each_programs_sheets_start_with_its_own_template_and_gallery() {
 }
 
 mod screens;
+
+/// UR-011: a new sheet's map looks where the drawing area does; zoomed in on one parcel, it leaves the rest of the
+/// drawing out, and the preflight says so with a fix that fits the whole drawing; zoomed out to all of it, nothing
+/// is said.
+#[test]
+fn a_map_that_leaves_part_of_the_drawing_out_is_said_and_fitted() {
+    let cut = |app: &App| app.sheets.findings().iter().position(|f| f.code == "drawing_cut");
+    // The drawing area on the whole drawing (about 50 × 70 m: 1:1000 holds it on A3).
+    let mut app = app_with_drawing();
+    let b = kentos_native_application::sheets_fit::object_extent(&app.document.as_ref().expect("open").model, None)
+        .ok()
+        .flatten()
+        .expect("the drawing's extent");
+    app.viewport.camera.set_size(1200.0, 800.0);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: b[0], min_y: b[1], max_x: b[2], max_y: b[3] },
+        24.0,
+    );
+    new_sheet(&mut app);
+    assert_eq!(cut(&app), None, "the whole drawing in view: {:?}", app.sheets.findings());
+
+    // At 1:100, zoomed in on a corner of it: the map at the project's scale leaves the rest out.
+    let mut app = app_with_drawing();
+    let doc = app.document.as_mut().expect("open");
+    let mut settings = doc.settings().clone();
+    settings.plot_scale = 100.0;
+    doc.model.set_settings(settings);
+    let b = kentos_native_application::sheets_fit::object_extent(&app.document.as_ref().expect("open").model, None)
+        .ok()
+        .flatten()
+        .expect("the drawing's extent");
+    let c = kentos_render_wgpu::Vec2::new(b[0], b[1]);
+    app.viewport.camera.set_size(1200.0, 800.0);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: c.x - 2.0, min_y: c.y - 2.0, max_x: c.x + 2.0, max_y: c.y + 2.0 },
+        0.0,
+    );
+    new_sheet(&mut app);
+    let i = cut(&app).expect("the cut said");
+    let finding = &app.sheets.findings()[i];
+    assert_eq!(finding.severity, kentos_sheet::preflight::Severity::Warning, "a detail view may be meant");
+    assert!(finding.message.contains("çizimin tamamını göstermiyor"), "{}", finding.message);
+    assert_eq!(finding.fixes.first().map(|f| f.label.as_str()), Some("Çizimin tamamını sığdır"));
+    let _ = app.update(Message::Sheet(Sheet::Fix(i, 0)));
+    assert_eq!(cut(&app), None, "fitted: {:?}", app.sheets.findings());
+}
+
+/// UR-011's pictures (`.run/gui-evidence/kullanim-UR-011/`): a 1:100 sheet zoomed in on a corner, Ön denetim with
+/// the cut said and its fix, light and dark.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn drawing_cut_screens() {
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-011");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = app_with_drawing();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let doc = app.document.as_mut().expect("open");
+        let mut settings = doc.settings().clone();
+        settings.plot_scale = 100.0;
+        doc.model.set_settings(settings);
+        let b = kentos_native_application::sheets_fit::object_extent(&app.document.as_ref().expect("open").model, None)
+            .ok()
+            .flatten()
+            .expect("the drawing's extent");
+        app.viewport.camera.set_size(1200.0, 800.0);
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds { min_x: b[0] - 2.0, min_y: b[1] - 2.0, max_x: b[0] + 12.0, max_y: b[1] + 12.0 },
+            0.0,
+        );
+        new_sheet(&mut app);
+        let _ = app.update(Message::Sheet(Sheet::InspectorTab(InspectorTab::Preflight)));
+        let mut snapshot = kentos_ui::snapshot::Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("pafta-kesik-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
