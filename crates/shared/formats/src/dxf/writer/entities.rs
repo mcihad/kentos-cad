@@ -239,6 +239,26 @@ fn core(p: Vec2) -> CoreVec2 {
     CoreVec2::new(p.x, p.y)
 }
 
+/// The seed a tied hatch is written with: its own while it lies in the hatched region; else (an island added over
+/// it) a point inside the region, so a reader finds the region again and keeps the tie.
+fn hatched_seed(h: &HatchEntity, seed: Vec2) -> Vec2 {
+    use kentos_geometry_core::geom::arrangement::Ring;
+    let ring = |r: &[Vec2]| r.iter().map(|p| core(*p)).collect::<Vec<_>>();
+    let holes: Vec<Vec<CoreVec2>> = h.holes.iter().flatten().filter(|r| r.len() >= 3).map(|r| ring(r)).collect();
+    let rings: Vec<Vec<CoreVec2>> = std::iter::once(ring(&h.ring)).chain(holes.iter().cloned()).collect();
+    if kentos_geometry_core::labels::geom::inside_rings(core(seed), &rings) {
+        return seed;
+    }
+    let shape = kentos_geometry_core::entity::Shape::Polygon {
+        pts: ring(&h.ring),
+        bulges: None,
+        holes: (!holes.is_empty()).then(|| holes.into_iter().map(|pts| Ring { pts, bulges: None }).collect()),
+        parts: None,
+    };
+    kentos_geometry_core::ops::convert::points::interior_point(&shape)
+        .map_or(seed, |p| Vec2 { x: p.x, y: p.y })
+}
+
 /// Running sums from 0: a table's grid lines from its rows' or columns' sizes.
 fn edges(sizes: &[f64]) -> Vec<f64> {
     let mut out = Vec::with_capacity(sizes.len() + 1);
@@ -2536,7 +2556,7 @@ impl Writer<'_> {
         match (&sources, &h.assoc) {
             (Some(_), Some(a)) => {
                 self.out.int(98, 1);
-                self.out.xy(10, a.seed);
+                self.out.xy(10, hatched_seed(h, a.seed));
             }
             _ => self.out.int(98, 0),
         }
