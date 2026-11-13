@@ -1003,3 +1003,103 @@ fn the_registrys_earlier_history_moves_into_the_log() {
         1
     );
 }
+
+/// "Sorunlu eklentiyi bul" (D6): the running extensions are halved round by round; the user's choices never change
+/// (a round only holds extensions off); a restart in the middle goes on where it was; the culprit is named in its log;
+/// at the end, or when the user leaves, every extension runs again.
+#[test]
+fn finding_the_culprit_holds_extensions_off_without_changing_the_users_choices() {
+    use crate::watchdog::Finding;
+
+    let temp = Temp::new("bulma");
+    let mut r = open(&temp.0);
+    let ids = ["tr.ornek.birinci", "tr.ornek.ikinci", "tr.ornek.ucuncu"];
+    for id in ids {
+        install(&mut r, &package(id, "1.0.0", &[]));
+    }
+    let enabled_in_file = |root: &Path| -> Vec<bool> {
+        let file: Value =
+            serde_json::from_str(&fs::read_to_string(root.join("registry.json")).unwrap()).unwrap();
+        ids.iter()
+            .map(|id| file["extensions"][id]["enabled"].as_bool().unwrap())
+            .collect()
+    };
+    // The first round runs none.
+    assert_eq!(r.start_bisection().unwrap(), Finding::Testing(Vec::new()));
+    for id in ids {
+        assert_eq!(r.state(id), Some(State::Held), "{id}");
+    }
+    assert!(r.contributions().is_empty());
+    assert_eq!(
+        enabled_in_file(&temp.0),
+        [true, true, true],
+        "the user's choices"
+    );
+    // Not seen with none: the first half alone.
+    assert_eq!(
+        r.answer_bisection(false).unwrap(),
+        Finding::Testing(vec![ids[0].to_owned()])
+    );
+    assert_eq!(r.state(ids[0]), Some(State::Active));
+    assert_eq!(r.state(ids[1]), Some(State::Held));
+    // A restart in the middle goes on where it was.
+    drop(r);
+    let mut r = open(&temp.0);
+    let started: Vec<String> = r.startup().into_iter().map(|(id, _)| id).collect();
+    assert_eq!(started, [ids[0]]);
+    assert_eq!(r.bisection().map(|b| b.rounds()), Some(1));
+    // The culprit is the third: not seen with the first, not seen with the second.
+    assert_eq!(
+        r.answer_bisection(false).unwrap(),
+        Finding::Testing(vec![ids[1].to_owned()])
+    );
+    assert_eq!(
+        r.answer_bisection(false).unwrap(),
+        Finding::Found(ids[2].to_owned())
+    );
+    for id in ids {
+        assert_eq!(r.state(id), Some(State::Active), "back: {id}");
+    }
+    assert!(!temp.0.join("sorun-bulma.json").exists());
+    let named = r
+        .extensions()
+        .into_iter()
+        .find(|e| e.id == ids[2])
+        .and_then(|e| e.problem)
+        .expect("named in its log");
+    assert_eq!(
+        (named.code.as_str(), named.part.as_deref()),
+        ("bisect_found", Some("sorun bulma"))
+    );
+    assert!(named.message.contains("3 turda"), "{}", named.message);
+    // Seen with none: not an extension's; and leaving: back as before.
+    r.start_bisection().unwrap();
+    assert_eq!(r.answer_bisection(true).unwrap(), Finding::NotAnExtension);
+    r.start_bisection().unwrap();
+    r.stop_bisection().unwrap();
+    for id in ids {
+        assert_eq!(r.state(id), Some(State::Active), "{id}");
+    }
+    assert_eq!(enabled_in_file(&temp.0), [true, true, true]);
+    let codes: Vec<String> = r
+        .journal()
+        .tail(None, 10)
+        .into_iter()
+        .map(|x| x.code)
+        .collect();
+    assert_eq!(
+        codes,
+        [
+            "bisect_started",
+            "bisect_started",
+            "bisect_not_extension",
+            "bisect_started",
+            "bisect_stopped"
+        ]
+    );
+    // Nothing running: nothing to find.
+    for id in ids {
+        r.disable(id).unwrap();
+    }
+    assert_eq!(r.start_bisection().unwrap_err().code, "bisect_nothing");
+}

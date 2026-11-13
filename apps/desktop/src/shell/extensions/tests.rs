@@ -595,3 +595,68 @@ fn an_extensions_tab_and_its_buttons_have_key_tips() {
     let _ = std::fs::remove_dir_all(&root);
     let _ = std::fs::remove_dir_all(&bare_root);
 }
+
+/// Sorunlu eklentiyi bul in the window (docs/adr/8057 §4): the manager's button opens it; Başla holds every running
+/// extension off (its tab goes) without changing the user's choices; closed in the middle it goes on, and a restart
+/// asks again; the answer names the culprit, brings every extension back, and the one found can be disabled there.
+#[test]
+fn sorunlu_eklentiyi_bul_finds_the_culprit_in_the_window() {
+    use super::bisect::BisectStep;
+
+    let root = temp("sorun-bul");
+    let mut gis = app(&root, Some(Module::Gis));
+    install(&mut gis, "kent-rehberi.kek", package("ornek-kent", |_| {}));
+    assert_eq!(gis.extension_tabs().count(), 1);
+    let _ = gis.extensions_event(Event::BisectOpen);
+    assert_eq!(gis.extensions.bisect, Some(BisectStep::Intro));
+    assert!(gis.extension_bisect_window().is_some());
+    let _ = gis.extensions_event(Event::BisectStart);
+    assert_eq!(gis.extensions.bisect, Some(BisectStep::Asking));
+    assert_eq!(gis.extension_tabs().count(), 0, "held off: its tab goes");
+    assert_eq!(
+        gis.extensions.registry.as_ref().unwrap().state(KENT),
+        Some(State::Held)
+    );
+    assert!(gis.extensions.troubles.is_empty(), "held is no trouble");
+    assert!(gis.extension_bisect_window().is_some());
+    assert!(gis.bisect_line().is_some(), "the manager says it goes on");
+    let _ = gis.extensions_view();
+    // Closed in the middle: it goes on; a restart asks again.
+    let _ = gis.extensions_event(Event::BisectClose);
+    assert_eq!(gis.extensions.bisect, None);
+    let (again, notes) = Extensions::open(&root, false);
+    assert_eq!(again.bisect, Some(BisectStep::Asking));
+    assert!(
+        notes.iter().any(|(level, words)| *level == Level::Warn
+            && words.starts_with("Sorunlu eklentiyi bulma sürüyor (tur 1)")),
+        "{notes:#?}"
+    );
+    drop(again);
+    // Not seen with none running: with one suspect, it is that one.
+    let _ = gis.extensions_event(Event::BisectOpen);
+    assert_eq!(gis.extensions.bisect, Some(BisectStep::Asking));
+    let _ = gis.extensions_event(Event::BisectAnswer(false));
+    assert_eq!(
+        gis.extensions.bisect,
+        Some(BisectStep::Found {
+            id: KENT.into(),
+            rounds: 1
+        })
+    );
+    assert_eq!(gis.extension_tabs().count(), 1, "back");
+    assert!(gis.bisect_line().is_none());
+    assert!(gis.extension_bisect_window().is_some());
+    // Named in its log: the status bar's cell says so until it is mended or disabled.
+    assert_eq!(gis.extensions.troubles.len(), 1);
+    let _ = gis.extensions_event(Event::BisectDisable(KENT.into()));
+    assert_eq!(gis.extensions.bisect, None);
+    assert_eq!(
+        gis.extensions.registry.as_ref().unwrap().state(KENT),
+        Some(State::Disabled)
+    );
+    assert!(
+        gis.extensions.troubles.is_empty(),
+        "disabled: no trouble of now"
+    );
+    let _ = std::fs::remove_dir_all(&root);
+}

@@ -20,6 +20,9 @@ pub enum State {
     Ready,
     /// Stopped by the user.
     Disabled,
+    /// Enabled, held off for this round of "Sorunlu eklentiyi bul": it comes back at the end; the user's choice did
+    /// not change.
+    Held,
     /// An extension it depends on is missing, stopped or of another version.
     Waiting { reason: String },
     /// The organisation's policy refuses it, or its version was withdrawn.
@@ -36,6 +39,7 @@ impl State {
             State::Active => "Etkin",
             State::Ready => "Hazır",
             State::Disabled => "Devre dışı",
+            State::Held => "Sorun bulmada kapalı",
             State::Waiting { .. } => "Bağımlılık bekliyor",
             State::Blocked { .. } => "Engellendi",
             State::Incompatible { .. } => "Uyumsuz",
@@ -52,6 +56,9 @@ impl State {
                     .to_owned()
             }
             State::Disabled => "Siz kapattınız; Etkinleştir ile açılır. Verisi duruyor.".to_owned(),
+            State::Held => "Sorunlu eklentiyi bulma sürüyor: bu turda kapalı. Bitince ya da bırakılınca kendiliğinden \
+                            açılır; seçiminiz değişmedi."
+                .to_owned(),
             State::Waiting { reason } => format!("{reason} Önce onu kurun ya da etkinleştirin."),
             State::Blocked { reason } => format!("{reason} Verisi silinmedi."),
             State::Incompatible { reason } => reason.clone(),

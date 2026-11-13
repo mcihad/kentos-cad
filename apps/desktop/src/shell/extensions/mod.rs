@@ -10,6 +10,7 @@
 //! real-window sessions never touch the user's own. A start without extensions (`--eklentisiz`, `KENTOS_EKLENTISIZ`, or
 //! "bir sonraki açılışta eklentisiz başlat" from this window) activates nothing.
 
+mod bisect;
 mod problems;
 mod ribbon;
 mod search;
@@ -103,6 +104,8 @@ pub(crate) struct Extensions {
     pub(crate) troubles: Vec<problems::Trouble>,
     /// The button Komut ara revealed, outlined for a moment (search.rs).
     pub(crate) flash: Option<ExtHit>,
+    /// Sorunlu eklentiyi bul's window over the manager while it is open (bisect.rs).
+    pub(crate) bisect: Option<bisect::BisectStep>,
 }
 
 impl Default for Extensions {
@@ -122,6 +125,7 @@ impl Default for Extensions {
             full_log: false,
             troubles: Vec::new(),
             flash: None,
+            bisect: None,
         }
     }
 }
@@ -172,6 +176,14 @@ pub(crate) enum Event {
     ShowTrouble,
     /// A revealed button's outline goes: its tab, panel and place.
     FlashEnd(&'static str, usize, usize),
+    /// Sorunlu eklentiyi bul (bisect.rs): its window, its start, a round's answer (the problem still seen), leaving,
+    /// closing the window (a bisection going on goes on), disabling the one found.
+    BisectOpen,
+    BisectStart,
+    BisectAnswer(bool),
+    BisectStop,
+    BisectClose,
+    BisectDisable(String),
 }
 
 impl Extensions {
@@ -218,7 +230,10 @@ impl Extensions {
                     .filter(|e| {
                         e.enabled
                             && !safe_mode
-                            && !matches!(e.state, State::Active | State::Ready | State::Disabled)
+                            && !matches!(
+                                e.state,
+                                State::Active | State::Ready | State::Disabled | State::Held
+                            )
                             && !started.iter().any(|(id, r)| *id == e.id && r.is_err())
                     })
                     .map(|e| format!("{} ({})", e.name, e.state_label))
@@ -231,6 +246,18 @@ impl Extensions {
                             idle.join(", ")
                         ),
                     ));
+                }
+                // Sorunlu eklentiyi bul goes on after a restart: its question again (bisect.rs).
+                if let Some(b) = registry.bisection() {
+                    notes.push((
+                        Level::Warn,
+                        format!(
+                            "Sorunlu eklentiyi bulma sürüyor (tur {}): bazı eklentiler bu turda kapalı. Soru Eklentiler \
+                             penceresinde.",
+                            b.rounds() + 1
+                        ),
+                    ));
+                    extensions.bisect = Some(bisect::BisectStep::Asking);
                 }
                 let active = registry
                     .extensions()
@@ -628,6 +655,28 @@ impl App {
                 }
             }
             Event::FullLog(on) => self.extensions.full_log = on,
+            Event::BisectOpen => self.open_bisection(),
+            Event::BisectStart => self.bisect_start(),
+            Event::BisectAnswer(seen) => self.bisect_answer(seen),
+            Event::BisectStop => self.bisect_stop(),
+            Event::BisectClose => {
+                self.extensions.bisect = None;
+                if self
+                    .extensions
+                    .registry
+                    .as_ref()
+                    .is_some_and(|r| r.bisection().is_some())
+                {
+                    self.extensions_say(
+                        false,
+                        "Sorunlu eklentiyi bulma sürüyor; “Soruya dön” ile cevaplayın ya da bırakın.".to_owned(),
+                    );
+                }
+            }
+            Event::BisectDisable(id) => {
+                self.extensions.bisect = None;
+                return self.extensions_event(Event::Disable(id));
+            }
             Event::FlashEnd(tab, panel, item) => {
                 self.extension_flash_end(ExtHit { tab, panel, item });
             }

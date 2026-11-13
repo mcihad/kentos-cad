@@ -1841,6 +1841,10 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
                 app.say(level, note);
             }
             app.extensions_changed();
+            // Sorunlu eklentiyi bul going on: its question again, over the manager.
+            if app.extensions.bisect.is_some() {
+                app.open_extensions();
+            }
             if let Some(folder) = app.extensions.startup_catalog() {
                 app.open_extension_catalog(&folder, false);
             }

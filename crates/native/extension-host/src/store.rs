@@ -221,6 +221,11 @@ impl Layout {
         self.root.join("staging")
     }
 
+    /// A "Sorunlu eklentiyi bul" going on (watchdog.rs).
+    pub fn bisect(&self) -> PathBuf {
+        self.root.join("sorun-bulma.json")
+    }
+
     pub fn data(&self, id: &str) -> PathBuf {
         self.root.join("data").join(id)
     }

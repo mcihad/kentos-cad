@@ -150,6 +150,9 @@ impl App {
                 }
             },
         };
+        if let Some(line) = self.bisect_line() {
+            frame = frame.push(line);
+        }
         frame = frame
             .push(parts)
             .push(body)
@@ -157,6 +160,10 @@ impl App {
             .aside(words::ghost(
                 "Katalog klasörü…",
                 Some(msg(Event::PickCatalog)),
+            ))
+            .aside(words::ghost(
+                "Sorunlu eklentiyi bul…",
+                Some(msg(Event::BisectOpen)),
             ))
             .aside(words::check(
                 x.safe_next(),
@@ -269,7 +276,7 @@ impl App {
             )
             .field("Güven", label::body(e.trust.label()));
         let banner = match &e.state {
-            State::Active | State::Ready | State::Disabled => {
+            State::Active | State::Ready | State::Disabled | State::Held => {
                 Banner::info(format!("{}: {}", e.state_label, e.help))
             }
             _ => Banner::warning(format!("{}: {}", e.state_label, e.help)),

@@ -691,7 +691,9 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   çubuğunda kırmızı hücre, yöneticide duran hata kutusu, seviyeli günlük ve rapor; `kentos kek log`; MCP kaynağında
   `problem`. **Komut ara ve tuş ipuçları:** eklenti düğmeleri adıyla bulunur, yerini ve sahibini söyler, Alt+Enter
   sekmesini açar; eklenti sekmesi ve düğmeleri KentOS'un harflerini değiştirmeden tuş ipucu alır (kullanıcı tuş ataması
-  masaüstünde yok). **Kalan:** sorunlu eklentiyi bulma penceresi, `.kcad` bağlantısı, paket SVG ikonları.
+  masaüstünde yok). **Sorunlu eklentiyi bul:** ilk tur hiçbiri, sonra yarılar; seçimler değişmez ("Sorun bulmada
+  kapalı"), yeniden açılışta kaldığı yerden sürer, bulunan eklenti günlüğe ve durum çubuğuna düşer (ADR 8057 §4).
+  **Kalan:** `.kcad` bağlantısı, paket SVG ikonları.
 
 ### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 

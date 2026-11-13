@@ -6,12 +6,16 @@
 //! misbehaves and no extension is named, [`Bisection`] finds it: first a start with none (is it an extension's at
 //! all?), then halves of the suspects, about 1 + log₂ n restarts.
 
+use serde::{Deserialize, Serialize};
+
 /// Crashes in a row (activation or running) that stop an extension for good.
 pub const CRASHES_TO_FAIL: u32 = 3;
 
 /// Finding the extension behind a problem: each round enables [`Bisection::testing`] alone, the user says whether the
-/// problem is still there.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// problem is still there. Kept in the registry's folder while it goes on (`sorun-bulma.json`), so a restart between
+/// rounds goes on where it was.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Bisection {
     suspects: Vec<String>,
     testing: Vec<String>,
@@ -81,6 +85,20 @@ impl Bisection {
     pub fn rounds(&self) -> u32 {
         self.rounds
     }
+
+    /// The extensions still suspected.
+    pub fn suspects(&self) -> &[String] {
+        &self.suspects
+    }
+
+    /// The most rounds `n` suspects can take: the one with none, then halves.
+    pub fn most_rounds(n: usize) -> u32 {
+        let mut halves = 0;
+        while (1usize << halves) < n {
+            halves += 1;
+        }
+        1 + halves
+    }
 }
 
 #[cfg(test)]
@@ -118,6 +136,7 @@ mod tests {
                     "{n} / {culprit}"
                 );
                 let most = 1 + (n as f64).log2().ceil() as u32;
+                assert_eq!(Bisection::most_rounds(n), most);
                 assert!(rounds <= most, "{n} extensions: {rounds} rounds > {most}");
             }
         }

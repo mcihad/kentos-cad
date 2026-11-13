@@ -173,8 +173,9 @@ impl App {
         }
         // A Yapay zekâ ajanı window over Uygulama ayarları (assistant/settings.rs).
         layers.extend(self.agent_window());
-        // A package's review over Eklentiler (extensions/view.rs).
+        // A package's review over Eklentiler (extensions/view.rs), and Sorunlu eklentiyi bul's window (bisect.rs).
         layers.extend(self.extension_review_window());
+        layers.extend(self.extension_bisect_window());
         // İfade oluşturucu over the window whose field opened it (expression/).
         layers.extend(self.builder_view());
         // The connection window, the password question and Sil's question over the window that asked for them

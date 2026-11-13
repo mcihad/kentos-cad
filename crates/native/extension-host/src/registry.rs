@@ -28,7 +28,7 @@ use crate::view::{
     DependencyStatus, ExtensionView, NeedStatus, ProjectNeed, Review, State, Trust,
     capability_lines,
 };
-use crate::watchdog::CRASHES_TO_FAIL;
+use crate::watchdog::{Bisection, CRASHES_TO_FAIL, Finding};
 
 /// How the registry runs.
 #[derive(Clone, Debug)]
@@ -109,6 +109,27 @@ pub struct Registry {
     /// The newest records of each installed extension's log, as read at opening and as written since: the manager
     /// shows them without reading files at every frame.
     logs: BTreeMap<String, Vec<Record>>,
+    /// "Sorunlu eklentiyi bul" going on, as read at opening and as answered since (`sorun-bulma.json`).
+    bisect: Option<Bisection>,
+}
+
+/// `sorun-bulma.json`: a bisection going on.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct BisectFile {
+    format: String,
+    schema_version: u32,
+    bisection: Bisection,
+}
+
+const BISECT_FORMAT: &str = "kentos.extension-bisect";
+
+/// The bisection the registry's folder keeps; none when there is none or it cannot be read (the window then runs
+/// every enabled extension, as without one).
+fn read_bisect(layout: &Layout) -> Option<Bisection> {
+    let text = fs::read_to_string(layout.bisect()).ok()?;
+    let file: BisectFile = serde_json::from_str(&text).ok()?;
+    (file.format == BISECT_FORMAT && file.schema_version == 1).then_some(file.bisection)
 }
 
 fn not_installed(id: &str) -> Problem {
@@ -198,6 +219,7 @@ impl Registry {
         options: Options,
     ) -> Result<Registry, Problem> {
         let layout = Layout { root: root.into() };
+        let layout_for_bisect = layout.clone();
         let journal = Journal::new(&layout.root);
         let mut file = match layout.read() {
             Ok(file) => file,
@@ -244,6 +266,7 @@ impl Registry {
             leases: BTreeMap::new(),
             registered: Vec::new(),
             generation: 0,
+            bisect: read_bisect(&layout_for_bisect),
             journal,
             logs,
         };
@@ -378,6 +401,14 @@ impl Registry {
         }
         if !entry.enabled {
             return State::Disabled;
+        }
+        // A round of "Sorunlu eklentiyi bul" runs only its own (the first, none).
+        if self
+            .bisect
+            .as_ref()
+            .is_some_and(|b| !b.testing().iter().any(|t| t == id))
+        {
+            return State::Held;
         }
         if let Some(reason) = self.dependency_problem(manifest) {
             return State::Waiting { reason };
@@ -1515,6 +1546,168 @@ impl Registry {
         match self.state(id) {
             Some(State::Ready) if !self.options.safe_mode => Ok(Some(self.activate(id)?)),
             _ => Ok(None),
+        }
+    }
+
+    // ---- Sorunlu eklentiyi bul ----
+
+    /// The bisection going on, if one.
+    pub fn bisection(&self) -> Option<&Bisection> {
+        self.bisect.as_ref()
+    }
+
+    /// Starts finding the extension behind a problem the user sees: the running extensions are the suspects; the
+    /// first round runs none of them. The user's choices stay as they are: a round only holds extensions off
+    /// ([`State::Held`]), the end brings every one back.
+    pub fn start_bisection(&mut self) -> Result<Finding, Problem> {
+        let suspects: Vec<String> = self
+            .order()
+            .into_iter()
+            .filter(|id| self.leases.contains_key(id))
+            .collect();
+        if suspects.is_empty() {
+            return Err(problem(
+                "bisect_nothing",
+                "Çalışan eklenti yok: aranacak bir eklenti de yok.",
+            ));
+        }
+        let b = Bisection::new(suspects.clone());
+        self.save_bisection(Some(&b))?;
+        self.journal.write(
+            Record::info(
+                "bisect_started",
+                format!(
+                    "Sorunlu eklentiyi bulma başladı: {} eklenti ({}), en çok {} tur.",
+                    suspects.len(),
+                    suspects.join(", "),
+                    Bisection::most_rounds(suspects.len())
+                ),
+            )
+            .part("sorun bulma"),
+        );
+        let finding = b.finding();
+        self.bisect = Some(b);
+        self.apply_round();
+        Ok(finding)
+    }
+
+    /// The user's answer for the round: whether the problem was still there. The next round runs, or the extension is
+    /// named (in its log, as an error), or the problem is no extension's; at the end every extension is back.
+    pub fn answer_bisection(&mut self, problem_seen: bool) -> Result<Finding, Problem> {
+        let Some(mut b) = self.bisect.clone() else {
+            return Err(problem("bisect_none", "Süren bir sorun bulma yok."));
+        };
+        b.answer(problem_seen);
+        let finding = b.finding();
+        let rounds = b.rounds();
+        match &finding {
+            Finding::Testing(_) => {
+                self.save_bisection(Some(&b))?;
+                self.bisect = Some(b);
+                self.apply_round();
+            }
+            Finding::Found(id) => {
+                self.finish_bisection()?;
+                self.log(
+                    id,
+                    Record::error(
+                        "bisect_found",
+                        format!(
+                            "Sorunlu eklentiyi bulma bu eklentiyi gösterdi ({rounds} turda): sorun yalnız o açıkken \
+                             görüldü. Devre dışı bırakın ya da güncelleyin; sürerse yayımcısına bildirin."
+                        ),
+                    )
+                    .part("sorun bulma"),
+                );
+            }
+            Finding::NotAnExtension => {
+                self.finish_bisection()?;
+                self.journal.write(
+                    Record::info(
+                        "bisect_not_extension",
+                        "Sorun hiçbir eklenti açık değilken de görüldü: eklentilerden değil.",
+                    )
+                    .part("sorun bulma"),
+                );
+            }
+        }
+        Ok(finding)
+    }
+
+    /// The user leaves the bisection: every extension back as it was.
+    pub fn stop_bisection(&mut self) -> Result<(), Problem> {
+        if self.bisect.is_none() {
+            return Ok(());
+        }
+        self.finish_bisection()?;
+        self.journal.write(
+            Record::info(
+                "bisect_stopped",
+                "Sorunlu eklentiyi bulma bırakıldı; eklentiler eskisi gibi.",
+            )
+            .part("sorun bulma"),
+        );
+        Ok(())
+    }
+
+    fn finish_bisection(&mut self) -> Result<(), Problem> {
+        self.save_bisection(None)?;
+        self.bisect = None;
+        self.apply_round();
+        Ok(())
+    }
+
+    /// Runs what the round runs: the held extensions' leases go, the others that are ready start in order (every
+    /// enabled one when no bisection goes on).
+    fn apply_round(&mut self) {
+        let held: Vec<ExtensionLease> = self
+            .leases
+            .iter()
+            .filter(|(id, _)| self.state_of_entry(id) == Some(State::Held))
+            .map(|(_, lease)| lease.clone())
+            .collect();
+        for lease in held {
+            self.revoke_lease(&lease);
+        }
+        if self.options.safe_mode {
+            return;
+        }
+        for id in self.order() {
+            if self.state(&id) == Some(State::Ready) {
+                let _ = self.activate(&id);
+            }
+        }
+    }
+
+    /// The state an extension would have without its lease: what a round decides by.
+    fn state_of_entry(&self, id: &str) -> Option<State> {
+        let entry = self.file.extensions.get(id)?;
+        if !entry.enabled {
+            return Some(State::Disabled);
+        }
+        self.bisect
+            .as_ref()
+            .is_some_and(|b| !b.testing().iter().any(|t| t == id))
+            .then_some(State::Held)
+    }
+
+    fn save_bisection(&self, b: Option<&Bisection>) -> Result<(), Problem> {
+        let path = self.layout.bisect();
+        match b {
+            Some(b) => {
+                let file = BisectFile {
+                    format: BISECT_FORMAT.to_owned(),
+                    schema_version: 1,
+                    bisection: b.clone(),
+                };
+                let text = serde_json::to_string_pretty(&file).unwrap_or_default();
+                store::write_atomic(&path, text.as_bytes())
+            }
+            None => match fs::remove_file(&path) {
+                Ok(()) => Ok(()),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+                Err(e) => Err(store::io("Sorun bulma dosyası silinemedi", &path, &e)),
+            },
         }
     }
 

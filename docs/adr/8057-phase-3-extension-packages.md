@@ -329,8 +329,8 @@ testleri (şerit, katalog, menü, komut, tuş ipuçları) 335 geçti.
 - Plan "kısayollar `ext.<id>.*` kimliklerini bulur" diyordu: masaüstünde kullanıcının tuş ataması yok (Kısayollar
   penceresi kataloğun sabit tuşlarını listeler); eklentinin klavye yolu tuş ipuçları ve Komut ara.
 
-**ADIM 18'de kalan:** "Sorunlu eklentiyi bul"un penceresi, `.kcad` proje bağlantısı, paket SVG ikonlarının düğmelerde
-çizilmesi. Hata ve günlük: §4.
+**ADIM 18'de kalan:** `.kcad` proje bağlantısı, paket SVG ikonlarının düğmelerde çizilmesi. Hata, günlük ve "Sorunlu
+eklentiyi bul": §4.
 
 ## §4. Hata ve günlük (`ADIM 18`, sahibin isteği)
 
@@ -424,6 +424,33 @@ izleme `logs/` dosyalarının boy ve zamanını da özetler, yeni bir hata da iz
   zinciri, bozuk kayıt defteri bir kez, eski geçmişin taşınması), masaüstü eklenti sahneleri 6 (+1: adıyla bildirim,
   hücre, yönetici, rapor, düzelince kapanma, açılış hatası, eklentisiz açılış), ilgili masaüstü 343, CLI 1, eklenti
   paketi 52 geçti.
+
+**Sorunlu eklentiyi bul (D6).** Bir şey ters gidip hangi eklentiden olduğu belli değilken: yöneticinin altındaki
+"Sorunlu eklentiyi bul…" (`extensions/bisect.rs`). Çalışan eklentiler şüphelidir; ilk tur **hiçbirini** açmaz (sorun
+sürerse eklentilerden değildir), sonra şüphelilerin yarısı (`watchdog::Bisection`, en çok 1 + ⌈log₂ n⌉ tur).
+
+- **Kullanıcının seçimi değişmez:** turun kapattığı eklenti yeni `State::Held`'dir ("Sorun bulmada kapalı");
+  `registry.json`'daki `enabled` dokunulmaz. Bitince ya da "Bırak"ta hepsi eskisi gibi açılır (sınamada dosyadan
+  okunarak denetlendi).
+- **Yeniden başlatmaya dayanır:** tur `<kayıt>/sorun-bulma.json`'da durur; sorun açılışta görülüyorsa kullanıcı
+  programı kapatıp açar, açılış turun kapattıklarını çalıştırmaz ve soruyu Eklentiler penceresinde yeniden sorar
+  (gerçek pencerede: yeniden açılış → "Tur 1" sorusu kendiliğinden).
+- Pencere: tanıtım (çalışan eklentiler, en çok kaç tur, seçimlerin değişmediği), tur ("Tur 2 — en çok 1 tur kaldı",
+  bu turda açık ve kapalı olanlar, "Sorun hâlâ görülüyor mu?": Evet, sürüyor / Hayır, geçti / Bırak), sonuç ("Sorun büyük
+  olasılıkla “Kent Rehberi” eklentisinden… (2 tur)": Raporu kopyala / Açık kalsın / Devre dışı bırak; ya da "eklentilerden
+  değil"). Pencere kapatılırsa sorun bulma sürer; yöneticinin üstünde "Sorunlu eklentiyi bulma sürüyor (tur N)… Soruya
+  dön" satırı kalır. Esc önce bu pencereyi kapatır.
+- Bulunan eklenti günlüğüne Hata olarak yazılır (`bisect_found`, parça `sorun bulma`): durum çubuğu hücresi ve
+  yöneticinin hata kutusu onu söyler. Kayıt defterinin günlüğünde `bisect_started` / `bisect_not_extension` /
+  `bisect_stopped`.
+- Durum çubuğu hücresi artık yalnız **etkin** eklentileri sayar: kullanıcının kendisinin kapattığı bir eklentinin eski
+  hatası hücreyi sonsuza dek açık tutardı. "Sorun bulmada kapalı" bir sorun sayılmaz.
+- MCP izlemesi `sorun-bulma.json`'ı da özetler: turun kapattıkları ajana da bildirilir.
+- Ölçüm: gerçek pencerede iki eklentiyle (Örnek Belediyesi altlıkları, Kent Rehberi) tanıtım → Başla → tur 1 (ikisi de
+  kapalı, Kent Rehberi sekmesi şeritten kalktı) → programı kapatıp açma → soru yeniden → Hayır → tur 2 (yalnız Örnek
+  altlıklar açık) → Hayır → "Kent Rehberi" (2 tur); ikisi de yeniden etkin, sekme geri geldi, `sorun-bulma.json` silindi.
+  Sınamalar: kayıt defteri 28 (+1: üç eklentide suçlu, yeniden açılışta süreklilik, seçimlerin dosyada aynı kalması,
+  eklentilerden değil, bırakma, çalışan yokken ret), eklenti sahneleri 9 (+1).
 
 **Uygularken verilen kararlar (planda yazılı değildi):** günlük `registry.json`'dan ayrı dosyalarda (kayıt defteri
 yazmak kilit ister ve her satırda bütün dosyayı yeniden yazardı); durum çubuğu hücresi; "aynı parça çalıştı" kuralı;

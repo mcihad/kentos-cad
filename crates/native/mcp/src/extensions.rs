@@ -106,6 +106,8 @@ fn stamp(root: Option<&Path>) -> u64 {
         };
         files.push(layout.registry());
         files.push(layout.revocations());
+        // A round of Sorunlu eklentiyi bul holds extensions off (State::Held).
+        files.push(layout.bisect());
     }
     for file in files {
         file.hash(&mut hasher);

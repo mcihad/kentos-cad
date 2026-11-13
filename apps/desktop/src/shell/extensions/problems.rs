@@ -24,8 +24,8 @@ pub(crate) struct Trouble {
     pub(crate) words: String,
 }
 
-/// The extensions in trouble, the ones with an error first. None on a start without extensions: nothing runs on
-/// purpose then.
+/// The extensions in trouble, the ones with an error first: enabled ones only (one the user disabled is known to
+/// them). None on a start without extensions: nothing runs on purpose then.
 pub(crate) fn troubles(x: &Extensions) -> Vec<Trouble> {
     let Some(registry) = x.registry.as_ref() else {
         return Vec::new();
@@ -38,7 +38,8 @@ pub(crate) fn troubles(x: &Extensions) -> Vec<Trouble> {
         .into_iter()
         .filter_map(|e| {
             let words = match (&e.problem, &e.state) {
-                (Some(p), _) => {
+                // One the user disabled is no trouble of now: they know.
+                (Some(p), _) if e.enabled => {
                     format!("{}: {}", p.part.as_deref().unwrap_or("eklenti"), p.message)
                 }
                 (

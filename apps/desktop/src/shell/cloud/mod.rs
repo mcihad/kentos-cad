@@ -1014,9 +1014,14 @@ impl App {
                 self.cloud.upload = None;
             }
             Some(Dialog::Settings) => self.settings_draft = None,
-            // A package's review over Eklentiler goes first.
+            // A package's review over Eklentiler goes first, Sorunlu eklentiyi bul's window too (a bisection going on
+            // goes on: the manager's line goes back to its question).
             Some(Dialog::Extensions) if self.extensions.review.is_some() => {
                 self.extensions.review = None;
+                self.dialog = Some(Dialog::Extensions);
+            }
+            Some(Dialog::Extensions) if self.extensions.bisect.is_some() => {
+                self.extensions.bisect = None;
                 self.dialog = Some(Dialog::Extensions);
             }
             Some(Dialog::RemoveCopy) => {
