@@ -1000,7 +1000,12 @@ fn an_extensions_python_buttons_say_why_by_the_users_python() {
         Some(installed.clone()),
         102_640_000,
     ))));
-    assert!(why(&gis).contains("Python hazır"), "{}", why(&gis));
+    // KentOS's Python ready: the button now says what the extension's own environment needs (environment.rs).
+    assert!(
+        why(&gis).contains("Bu eklentinin Python ortamı hazırlanmadı"),
+        "{}",
+        why(&gis)
+    );
     let _ = gis.python_section();
     // Removed from the same place: Kaldır asks first, Vazgeç keeps it, Evet, kaldır removes it and says the room freed.
     let _ = gis.python_edit(PythonEdit::Remove);
@@ -1400,6 +1405,218 @@ fn the_personal_environment_is_made_previewed_changed_and_removed() {
     assert!(gis.python_setup.personal.env.is_none());
     gis.open_settings_at(crate::settings_sections::Section::Python);
     let _ = gis.settings_dialog();
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&python_root);
+}
+
+/// Bir eklentinin Python ortamı (plan/eklenti.md ADIM 18A, P05, P07): in the extension's details, once KentOS's Python
+/// is ready: looked for when chosen; what preparing would install previewed from its lock, its optional feature ticked
+/// into it; made with a bar and Durdur, each outcome a notice; the ribbon's button says, for that extension, whether
+/// its environment is ready (files on disk); removed from the same place, and with the extension.
+#[test]
+fn an_extensions_python_environment_is_previewed_prepared_and_removed() {
+    use super::environment::{EnvBusy, EnvEvent, EnvStatus};
+    use crate::python_setup::{OwnPython, PythonEdit};
+    use kentos_python_env::extension::{self, Listed, Ready};
+    use kentos_python_env::python::{InstallError, Interpreter, Progress};
+    use kentos_python_env::uv::UvStatus;
+
+    const MEBIS: &str = "tr.ornek.mebis";
+    let root = temp("ortam");
+    let python_root = temp("ortam-python");
+    let mut gis = app(&root, Some(Module::Gis));
+    gis.python_setup.root = Some(python_root.clone());
+    install(
+        &mut gis,
+        "mebis.kek",
+        package("mebis", |m| {
+            m["dependencies"]["extensions"] = serde_json::json!([]);
+        }),
+    );
+    let env = |app: &mut App, e: EnvEvent| {
+        let _ = app.extensions_event(Event::Env(e));
+    };
+    let titles = |app: &App| -> Vec<String> {
+        app.toasts
+            .iter()
+            .map(|(_, toast, _)| toast.title().to_owned())
+            .collect()
+    };
+    let why = |app: &App| -> String {
+        let tab = app
+            .extension_tabs()
+            .find(|t| t.extension == MEBIS)
+            .expect("MEBİS's tab");
+        match &tab.panels[0].items[0].action {
+            Action::Unavailable(why) => why.clone(),
+            other => panic!("{other:?}"),
+        }
+    };
+    // Before KentOS's Python: the section says what comes first; nothing looked for.
+    let _ = gis.extensions_event(Event::Choose(MEBIS.into()));
+    assert!(gis.extensions.envs.get(MEBIS).is_none());
+    let _ = gis.extensions_view();
+    // KentOS's Python ready.
+    let _ = gis.python_edit(PythonEdit::Enable(true));
+    let _ = gis.python_edit(PythonEdit::Detected(UvStatus::Found {
+        path: "/k/tools/uv".into(),
+        version: "0.11.26".into(),
+        bundled: true,
+    }));
+    let python = Interpreter {
+        version: "3.12.13".into(),
+        path: python_root.join("yorumlayici/cpython-3.12/bin/python3.12"),
+    };
+    let _ = gis.python_edit(PythonEdit::Found(Ok((Some(python.clone()), 97_885_768))));
+    assert!(matches!(
+        gis.python_setup.python,
+        Some(OwnPython::Ready(..))
+    ));
+    assert!(
+        why(&gis).contains("Bu eklentinin Python ortamı hazırlanmadı: Eklentiler ›"),
+        "{}",
+        why(&gis)
+    );
+    // Looked for when chosen.
+    let _ = gis.extensions_event(Event::Choose(MEBIS.into()));
+    assert_eq!(gis.extensions.envs[MEBIS].status, Some(EnvStatus::Looking));
+    env(&mut gis, EnvEvent::Found(MEBIS.into(), Ok(None)));
+    assert_eq!(gis.extensions.envs[MEBIS].status, Some(EnvStatus::Missing));
+    let _ = gis.extensions_view();
+    // Its optional feature ticked; previewed from the lock.
+    env(
+        &mut gis,
+        EnvEvent::Extra(MEBIS.into(), "charts".into(), true),
+    );
+    assert!(gis.extensions.envs[MEBIS].extras.contains("charts"));
+    env(&mut gis, EnvEvent::Preview(MEBIS.into()));
+    assert_eq!(gis.extensions.envs[MEBIS].busy, Some(EnvBusy::Previewing));
+    let listed = vec![
+        Listed {
+            name: "numpy".into(),
+            version: "2.5.4".into(),
+        },
+        Listed {
+            name: "shapely".into(),
+            version: "2.2.0".into(),
+        },
+    ];
+    assert_eq!(
+        super::environment::listed_words(&listed),
+        "Kurulacak paketler (2): numpy 2.5.4, shapely 2.2.0."
+    );
+    env(
+        &mut gis,
+        EnvEvent::Previewed(MEBIS.into(), Ok(listed.clone())),
+    );
+    assert!(gis.extensions.envs[MEBIS].preview.is_some());
+    let _ = gis.extensions_view();
+    // Prepared on the press, with a bar; Durdur stops it.
+    env(&mut gis, EnvEvent::Prepare(MEBIS.into()));
+    assert_eq!(gis.extensions.envs[MEBIS].busy, Some(EnvBusy::Preparing));
+    let stop = gis.extensions.envs[MEBIS].stop.clone().expect("preparing");
+    env(
+        &mut gis,
+        EnvEvent::Progressed(
+            MEBIS.into(),
+            Progress::Downloading {
+                done: 9_000_000,
+                total: Some(17_000_000),
+            },
+        ),
+    );
+    let _ = gis.extensions_view();
+    env(&mut gis, EnvEvent::Stop(MEBIS.into()));
+    assert!(stop.load(std::sync::atomic::Ordering::Relaxed));
+    env(
+        &mut gis,
+        EnvEvent::Prepared(MEBIS.into(), Err(InstallError::Cancelled)),
+    );
+    assert!(
+        titles(&gis)
+            .iter()
+            .any(|t| t.ends_with("ortam hazırlama durduruldu"))
+    );
+    // Ready: made on disk as the module makes it, so the ribbon's words follow (files only, offline).
+    let package = gis
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.package_dir(MEBIS))
+        .unwrap();
+    let key = extension::key_for(
+        &package,
+        "uv.lock",
+        MEBIS,
+        "1.0.0",
+        &python,
+        &["charts".into()],
+    )
+    .unwrap();
+    let dir = extension::place(&python_root, &key);
+    std::fs::create_dir_all(dir.join(".venv/bin")).unwrap();
+    std::fs::write(dir.join(".venv/bin/python"), b"").unwrap();
+    let ready = Ready {
+        format: "kentos.extension-env".into(),
+        key: key.clone(),
+        python: dir.join(".venv/bin/python"),
+        packages: listed,
+        made_at: 1,
+    };
+    std::fs::write(
+        dir.join(extension::RECORD),
+        serde_json::to_string(&ready).unwrap(),
+    )
+    .unwrap();
+    env(&mut gis, EnvEvent::Prepare(MEBIS.into()));
+    env(
+        &mut gis,
+        EnvEvent::Prepared(MEBIS.into(), Ok(Box::new(ready.clone()))),
+    );
+    assert!(
+        titles(&gis)
+            .iter()
+            .any(|t| t.ends_with("Python ortamı hazır"))
+    );
+    assert!(
+        why(&gis).starts_with("“") && why(&gis).contains("Python ortamı hazır;"),
+        "{}",
+        why(&gis)
+    );
+    env(&mut gis, EnvEvent::Found(MEBIS.into(), Ok(Some(ready))));
+    assert!(matches!(
+        gis.extensions.envs[MEBIS].status,
+        Some(EnvStatus::Ready(_))
+    ));
+    let _ = gis.extensions_view();
+    // A failure is said in the section and by a notice that waits.
+    env(&mut gis, EnvEvent::Prepare(MEBIS.into()));
+    env(
+        &mut gis,
+        EnvEvent::Prepared(
+            MEBIS.into(),
+            Err(InstallError::Failed {
+                cause: kentos_python_env::python::Cause::Network,
+                said: "dns error".into(),
+            }),
+        ),
+    );
+    assert!(
+        titles(&gis)
+            .iter()
+            .any(|t| t.ends_with("Python ortamı hazırlanamadı"))
+    );
+    assert!(
+        gis.extensions.envs[MEBIS]
+            .note
+            .as_deref()
+            .is_some_and(|n| n.contains("internete ulaşılamadı"))
+    );
+    // Removed with the extension.
+    assert!(dir.exists());
+    let _ = gis.extensions_event(Event::Remove(MEBIS.into()));
+    assert!(!dir.exists(), "its environments go with it");
+    assert!(gis.extensions.envs.get(MEBIS).is_none());
     let _ = std::fs::remove_dir_all(&root);
     let _ = std::fs::remove_dir_all(&python_root);
 }

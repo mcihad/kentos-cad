@@ -700,7 +700,7 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   çift tık yalnız incelemeyi açar, Linux dosya türü ve masaüstü kaydı; `--eklentisiz` artık dosya sanılmıyor
   [PY-KEK-15]. **Bitti (13 Kasım);** katman şemasının projeye kurulması ve `.kcad` bağlantısı ADIM 22'de.
 
-### [~] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
+### [x] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 
 [EKL-05; PY-OPT-01…14; PY-UV-01…31]
 
@@ -779,8 +779,12 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   tekerlekten (`bundle_sdk.py`, sürüm + SHA-256, çevrimdışı); kişisel ortam KentOS'un Python'una ve sisteme sabit küçük bir
   uv projesi; paketler aranır, listelenir, önerilen listeden çoklu seçilir ya da adıyla istenir, güncellenir, kaldırılır,
   her biri önce önizlenir; bağımlılık ağacı; akıcı ilerleme çubuğu; paket önbelleği ayrı; Python konsolu bu ortamda
-  (Windows'ta da). **Kalan:** eklenti ortamları (P05, P07), kaldırmanın eklenti ortamlarını da söylemesi, kurum
-  dizini/aynası, hazırlık penceresi.
+  (Windows'ta da). **Eklenti ortamları (P05, P07, 14 Kasım):** her eklenti
+  sürümü kendi ortamında (kimlik + sürüm + kilit özeti + Python + sistem + özellikler); kilitten önizleme, isteğe bağlı
+  özellikler, hazırla/Durdur/ilerleme, "hazır" kaydı en son, çalışırken eşitleme ya da indirme yok; eklentiyle kaldırılır;
+  yeni örnek `ornek-imar` (shapely 2.0) MEBİS'le (shapely 2.2) yan yana. **Teslim edildi; sonraya kalan:** kurum
+  dizini/aynası (PY-UV-25, 26), çevrimdışı tekerlek deposu (ADIM 22A), SBOM (PY-UV-29), kişisel paketi bağımlılığa
+  ekleme, Windows'ta gerçek pencere ([ADR 8057 §5](../docs/adr/8057-phase-3-extension-packages.md)).
 - **Kabul:** P01–P07 (§5). İstemeyen kurmayı reddeder ve normal çalışır; NumPy isteyen kendi ortamına kurar; iki
   eklentinin farklı NumPy'ı birbirini bozmaz; internet kapalıyken hazır ortam çalışır; çalıştırma kendiliğinden paket ya
   da yorumlayıcı indirmez. Testler sahte taşımayla ve temiz bir kullanıcı profiliyle; gerçek kullanıcı ortamı

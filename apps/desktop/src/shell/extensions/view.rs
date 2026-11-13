@@ -360,6 +360,8 @@ impl App {
                 )),
             );
         }
+        // Its Python environment, when it has Python contributions (environment.rs).
+        form = self.env_section(form, &e.id);
         if let Some(m) = manifest {
             if !m.requested_capabilities.is_empty() {
                 form = form.section("Yetenekler");

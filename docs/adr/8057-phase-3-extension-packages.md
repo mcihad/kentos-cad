@@ -497,7 +497,7 @@ yazmak kilit ister ve her satırda bütün dosyayı yeniden yazardı); durum çu
 açılışta çalışmayanlar için her açılışta tek satır uyarı; kurulmayan paket eklentinin günlüğüne Uyarı olarak (çalışan
 sürüm iyi); bellekte 50 kayıt; eski kısa geçmişin taşınması; CLI'de zaman UTC; "yazarına" → "yayımcısına".
 
-## §5. Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (`ADIM 18A`, sürüyor)
+## §5. Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (`ADIM 18A`)
 
 **İlk dilim (13 Kasım): seçim, uv'nin bulunması, Windows.** Yeni crate `crates/native/python-env`
 (`kentos-python-env`; `deps.mjs` grubu `python-env`, bağımlılığı yalnız serde): uyumluluk manifesti, uv'nin algılanması ve
@@ -679,6 +679,48 @@ paket dizinindeki her paket adıyla istenir.
   güncelleme ve ağaç, öneri listesi ve Türkçe arama), masaüstü eklenti sahneleri 14 (oluşturma, önizleme, Durdur,
   çoklu seçim, güncelleme, ağaç, kaldırma, bildirimler).
 
-**Sıradaki dilimler:** eklenti başına değişmez ortam ve çevrimdışı çalışma (P05, P07), kaldırmanın eklenti ortamlarını da
-söylemesi, kurum dizini/aynası, hazırlık penceresi.
+**Beşinci dilim (14 Kasım): eklenti başına ortam (P05) ve çevrimdışı çalışma (P07).** Sahip geceye girerken "devam et
+ve durma, sonraki maddelere kendin geç" dedi.
+
+- **Her eklenti sürümünün kendi ortamı** (`kentos-python-env::extension`): anahtar eklenti kimliği + sürüm + kilidin
+  SHA-256'sı + KentOS'un Python'u + sistem + seçilen isteğe bağlı özellikler; anahtarın 16 haneli özeti klasörün adı
+  (`<python>/ortamlar/<özet>`; Windows'un yol uzunluğu için kısa). İndirme önbelleği ortak, venv asla (PY-UV-11, 12).
+- **Yalnız paketin kilidinden:** `uv sync --locked --no-dev --no-install-project`: yazarın kilitlediği, yeni bir çözüm
+  değil; geliştirme bağımlılıkları kurulmaz (PY-UV-17, 19). Projenin iki dosyası ortamın klasörüne kopyalanır, kurulu
+  paket salt okunur kalır.
+- **Önce önizleme** (PY-UV-14): `uv sync --dry-run` hiçbir şey indirmeden ve yazmadan bu bilgisayarda kurulacakları
+  söyler. İsteğe bağlı özellikler (manifestin `optionalFeatures`'ı) işaretlenince listeye girer: MEBİS için 2 paket,
+  "Doluluk grafikleri" ile 6.
+- **Kur, denetle, en son "hazır" yaz** (PY-UV-18, 28, 31): eşitleme (ilerleme çubuğu ve Durdur, kişisel ortamdakiyle
+  aynı ölçü), KentOS kitaplığı kurulumdaki tekerlekten çevrimdışı (kilitte `kentos` adlı paket varsa reddedilir),
+  `uv pip check`, ortamın kendi Python'uyla `import kentos`. Kayıt (`ortam.json`) ancak bunlardan sonra yazılır; kaydı
+  olmayan klasör yarım ortamdır, kullanılmaz ve yeniden yapılırken silinir. Kullanımdaki ortam yerinde değişmez:
+  başka anahtar, başka klasör.
+- **Hazır olmak diskteki dosyalardır** (P07): `ready`/`find` uv çağırmaz. Ölçüldü: hazır bir ortamı yeniden eşitlemek
+  KentOS kitaplığını siliyor (tam eşitleme kilitte olmayanı kaldırır); bu yüzden çalışırken hiçbir şey eşitlemez ya da
+  indirmez, yürütücü (ADIM 19) ortamın kendi Python'unu kullanacak.
+- **Masaüstü:** eklentinin ayrıntısında "Python ortamı" bölümü (kurulumda Python katkıları seçildiyse): durum,
+  isteğe bağlı özellikler, "Ortamı hazırla" → kurulacaklar → Hazırla → ilerleme/Durdur → "Ortam hazır · Python 3.12.13 ·
+  N paket · internetsiz çalışır", paketler ve klasör, "Ortamı kaldır"; her sonuç bildirimle. Şerit düğmesinin nedeni
+  artık eklentinin kendisi: "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › … › Python ortamı" ya da "Python
+  ortamı hazır; yürütücü KentOS'un sonraki sürümünde". KentOS'un Python'u kurulurken ya da kaldırılırken genel durum önce
+  gelir. Eklenti kaldırılınca ortamları da gider (PY-UV-30); başka özelliklerle yeniden hazırlanınca eskisi silinir.
+- **Yeni örnek** `fixtures/extensions/v1/ornek-imar` ("İmar Uygunluk Denetimi"): shapely `>=2.0,<2.1`, kilidi gerçek
+  `uv lock` çıktısı (shapely 2.0.7). MEBİS shapely 2.2.0 kilitliyor.
+- **Ölçüm (gerçek pencere, yalıtılmış eklenti ve Python klasörleriyle):** iki paket katalog klasöründen kuruldu; MEBİS
+  "Doluluk grafikleri"yle önizlendi (6 paket) ve 1,5 MB/sn'lik vekil üzerinden hazırlandı (çubuk %18 → %54 → hazır);
+  İmar önizlendi (numpy 2.5.4, shapely 2.0.7) ve hazırlandı (numpy önbellekten). İki ortam yan yana: ağ kapalıyken
+  (ulaşılamayan vekil) MEBİS'in Python'u "shapely 2.2.0", İmar'ınki "shapely 2.0.7" açtı (P05, P07). Şerit ipucu: "Python
+  ortamı hazır; …".
+- **Uygularken verilen kararlar:** ortam klasörü yeniden adlandırılmaz (venv'ler taşınamaz: betiklerin yolları mutlak),
+  "hazır" kaydı en son yazılır; özelliklerin seçimi ayrı bir ayar dosyası yerine son yapılan ortamın anahtarından okunur;
+  ortam, eklenti etkin olmasa da hazırlanabilir (ortam sürüme aittir); yeniden eşitleme yerine kayıt.
+- **Sınamalar:** python-env 18 (anahtar ve ayrı klasörler, önizleme, hazırlama ve kayıt, yarım ortamın silinmesi,
+  `kentos` reddi, uv'siz yeniden kullanım, temizlik), masaüstü eklenti sahneleri 15 (bölüm, önizleme, özellik,
+  hazırla/Durdur, şerit nedeni diskteki kayıtla, hata, eklentiyle kaldırma), eklenti crate'leri 28 + 52.
+
+**ADIM 18A'nın kabulü (P01–P07):** P01–P04 önceki dilimlerde, P05 ve P07 bu dilimde, P06 ADIM 17–18'de (inceleme
+penceresinden vazgeçen hiçbir şey kurmaz ve indirmez). **Sonraya kalan:** kurum dizini/aynası ve kimlik bilgileri
+(PY-UV-25, 26), çevrimdışı tekerlek deposu (PY-UV-27, ADIM 22A), SBOM raporu (PY-UV-29), kişisel paketin betik ya da
+eklenti bağımlılığına eklenmesi (PY-OPT-06'nın son adımı), PyPI sürüm listesinden seçme, Windows'ta gerçek pencere.
 

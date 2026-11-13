@@ -1,0 +1,22 @@
+# İmar Uygunluk Denetimi örnek eklentisinin Python tarafı (plan/eklenti.md ADIM 18A, P05). shapely'nin 2.0 serisini
+# ister; MEBİS 2.2'yi kilitler: iki eklenti aynı bilgisayarda, her biri kendi ortamında yan yana çalışır. Python aralığı
+# tek kaynaktır: aşağıdaki requires-python (shapely 2.0'ın tekerlekleri 3.13'e kadar). `uv lock` uv.lock'u buradan yazar.
+[project]
+name = "imar-denetim"
+version = "1.0.0"
+description = "İmar uygunluk denetimi örnek eklentisinin işlevleri"
+requires-python = ">=3.12,<3.14"
+dependencies = ["shapely>=2.0,<2.1"]
+
+[tool.uv]
+# Manifestin adını verdiği üç sistem için çözülür ve tekerlek ister (compatibility.operatingSystems).
+environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+required-environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]

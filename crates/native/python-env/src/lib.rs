@@ -17,11 +17,14 @@
 //! - [`personal`]: the user's personal environment (P04): where the console runs and NumPy goes; a small uv project
 //!   pinned to KentOS's Python and this system, each change previewed aside before the environment follows it.
 //! - [`catalog`]: the recommended packages, each with a Turkish line and group, searched offline.
+//! - [`extension`]: an extension version's own environment (P05, P07): keyed, previewed, made from its lock, checked,
+//!   marked ready last; ready is files on disk, used offline.
 //! - [`settings`]: the user's choice (off by default) and their uv path.
 //! - [`places`]: where the settings, KentOS's Pythons, uv's cache and the environments are.
 
 pub mod catalog;
 pub mod compat;
+pub mod extension;
 pub mod personal;
 pub mod places;
 pub mod python;

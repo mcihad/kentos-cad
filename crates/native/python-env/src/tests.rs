@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use crate::compat::{self, Compat, Platform};
+use crate::extension;
 use crate::personal::{self, Change, Package};
 use crate::python::{self, Cause, InstallError, Interpreter, Progress};
 use crate::sdk;
@@ -1155,4 +1156,242 @@ esac"#,
         )
         .is_err()
     );
+}
+
+/// A fake uv for an extension's environment: `sync --dry-run` says what it would install; `sync` makes the venv's
+/// Python (a script that answers the import) and says its downloads, or fails when told to (`bozuk` beside it);
+/// `pip install`, `pip check` succeed; `pip list` lists shapely.
+#[cfg(unix)]
+fn extension_uv(dir: &Path, log: &Path) -> PathBuf {
+    let fails = dir.join("bozuk");
+    logging_uv(
+        dir,
+        log,
+        &format!(
+            r#"case "$1 $2" in
+  "sync --locked")
+    case "$*" in
+      *--dry-run*) echo 'Would install 2 packages' >&2; echo ' + numpy==2.5.4' >&2; echo ' + shapely==2.2.0' >&2; exit 0 ;;
+    esac
+    if [ -e '{fails}' ]; then echo 'error: Failed to download shapely' >&2; echo '  Caused by: dns error' >&2; exit 2; fi
+    mkdir -p "$UV_PROJECT_ENVIRONMENT/bin"
+    printf '#!/bin/sh\nexit 0\n' > "$UV_PROJECT_ENVIRONMENT/bin/python"
+    chmod +x "$UV_PROJECT_ENVIRONMENT/bin/python"
+    echo 'Downloading shapely (1.0MiB)' >&2; echo ' Downloaded shapely' >&2; echo 'Prepared 2 packages in 1s' >&2 ;;
+  "pip list") printf '%s' '[{{"name":"numpy","version":"2.5.4"}},{{"name":"Shapely","version":"2.2.0"}}]' ;;
+esac"#,
+            fails = fails.display()
+        ),
+    )
+}
+
+/// An extension version's environment is its own: keyed by the extension, its version, its lock, KentOS's Python,
+/// this system and the features chosen, so two extensions asking for different versions of a package never share one
+/// (P05); previewed from the lock; made, checked and marked ready last; a half-made one goes; ready is files on disk,
+/// used again without uv (P07); unused ones are cleaned, nothing else.
+#[cfg(unix)]
+#[test]
+fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
+    let temp = Temp::new("eklenti-ortami");
+    let root = temp.0.join("python");
+    let package = temp.0.join("paket");
+    std::fs::create_dir_all(&package).unwrap();
+    std::fs::write(
+        package.join("pyproject.toml"),
+        "[project]\nname = \"mebis\"\n",
+    )
+    .unwrap();
+    std::fs::write(
+        package.join("uv.lock"),
+        "version = 1\n[[package]]\nname = \"shapely\"\n",
+    )
+    .unwrap();
+    let python = Interpreter {
+        version: "3.12.13".into(),
+        path: "/k/py/bin/python3.12".into(),
+    };
+    let key = extension::key_for(
+        &package,
+        "uv.lock",
+        "tr.ornek.mebis",
+        "1.0.0",
+        &python,
+        &["charts".into(), "charts".into(), " ".into()],
+    )
+    .unwrap();
+    assert_eq!(key.extras, ["charts"]);
+    assert_eq!(key.lock.len(), 64);
+    assert_eq!(key.platform, extension::platform());
+    assert_eq!(key.hash().len(), 16);
+    // Another extension, or the same with another lock, another environment.
+    let other = extension::Key {
+        id: "tr.ornek.imar".into(),
+        ..key.clone()
+    };
+    assert_ne!(key.hash(), other.hash());
+    assert_ne!(
+        key.hash(),
+        extension::Key {
+            lock: "0".repeat(64),
+            ..key.clone()
+        }
+        .hash()
+    );
+    assert_ne!(
+        extension::place(&root, &key),
+        extension::place(&root, &other)
+    );
+    let log = temp.0.join("kayit.txt");
+    let fake = extension_uv(&temp.0.join("uv"), &log);
+    // Previewed: what it would install here, nothing written.
+    let would = extension::preview(
+        &fake,
+        &root,
+        &python,
+        &package,
+        ("pyproject.toml", "uv.lock"),
+        &key,
+    )
+    .unwrap();
+    assert_eq!(
+        would,
+        [
+            extension::Listed {
+                name: "numpy".into(),
+                version: "2.5.4".into()
+            },
+            extension::Listed {
+                name: "shapely".into(),
+                version: "2.2.0".into()
+            }
+        ]
+    );
+    assert!(extension::ready(&root, &key).is_none());
+    let logged = std::fs::read_to_string(&log).unwrap();
+    assert!(
+        logged.contains("|sync --locked --no-dev --no-install-project --no-config --no-python-downloads --system-certs --dry-run --extra charts --python /k/py/bin/python3.12"),
+        "{logged}"
+    );
+    // Made: synced, the library put in, checked, then the record.
+    let wheel = sdk::Wheel {
+        path: temp.0.join("kentos-0.1.0-cp310-abi3-linux_x86_64.whl"),
+        version: "0.1.0".into(),
+    };
+    let stop = std::sync::atomic::AtomicBool::new(false);
+    let mut seen = Vec::new();
+    let made = extension::prepare(
+        &fake,
+        &root,
+        &python,
+        &wheel,
+        &package,
+        ("pyproject.toml", "uv.lock"),
+        &key,
+        &stop,
+        &mut |p| seen.push(p),
+    )
+    .unwrap();
+    assert_eq!(made.packages.len(), 2);
+    assert_eq!(made.packages[1].name, "shapely", "normalised");
+    assert_eq!(seen.last(), Some(&Progress::Unpacking), "{seen:?}");
+    let dir = extension::place(&root, &key);
+    assert!(dir.join(extension::RECORD).is_file());
+    assert_eq!(made.python, dir.join(".venv/bin/python"));
+    assert!(
+        dir.join("proje/uv.lock").is_file(),
+        "the project's files copied, the package left as it is"
+    );
+    let logged = std::fs::read_to_string(&log).unwrap();
+    for asked in [
+        "|sync --locked --no-dev --no-install-project --no-config --no-python-downloads --system-certs --extra charts --python",
+        "|pip install --no-deps --offline --no-config --python",
+        "|pip check --no-config --python",
+        "|pip list --format json --exclude kentos --no-config --python",
+    ] {
+        assert!(logged.contains(asked), "{asked}\n{logged}");
+    }
+    // Ready is files on disk: used again without uv (offline, P07).
+    assert_eq!(extension::ready(&root, &key), Some(made.clone()));
+    let calls = std::fs::read_to_string(&log).unwrap().lines().count();
+    let again = extension::prepare(
+        &fake,
+        &root,
+        &python,
+        &wheel,
+        &package,
+        ("pyproject.toml", "uv.lock"),
+        &key,
+        &stop,
+        &mut |_| {},
+    )
+    .unwrap();
+    assert_eq!(again, made);
+    assert_eq!(
+        std::fs::read_to_string(&log).unwrap().lines().count(),
+        calls,
+        "uv not asked"
+    );
+    // A sync that fails leaves nothing half-made.
+    std::fs::write(temp.0.join("uv").join("bozuk"), b"").unwrap();
+    let failed = extension::prepare(
+        &fake,
+        &root,
+        &python,
+        &wheel,
+        &package,
+        ("pyproject.toml", "uv.lock"),
+        &other,
+        &stop,
+        &mut |_| {},
+    )
+    .unwrap_err();
+    assert!(
+        matches!(
+            &failed,
+            InstallError::Failed {
+                cause: Cause::Network,
+                ..
+            }
+        ),
+        "{failed:?}"
+    );
+    assert!(
+        !extension::place(&root, &other).exists(),
+        "no half-made environment"
+    );
+    // A lock that names `kentos` is refused before anything runs.
+    std::fs::write(package.join("uv.lock"), "[[package]]\nname = \"kentos\"\n").unwrap();
+    assert!(extension::shadows_library(
+        "[[package]]\nname = \"Kentos\"\n"
+    ));
+    assert!(!extension::shadows_library(
+        "[[package]]\nname = \"kentos-plus\"\n"
+    ));
+    assert!(
+        extension::preview(
+            &fake,
+            &root,
+            &python,
+            &package,
+            ("pyproject.toml", "uv.lock"),
+            &other
+        )
+        .unwrap_err()
+        .contains("KentOS'un kendi kitaplığının")
+    );
+    // Unused environments are cleaned; folders not named as KentOS names them stay.
+    std::fs::create_dir_all(extension::folder(&root).join("0123456789abcdef")).unwrap();
+    std::fs::create_dir_all(extension::folder(&root).join("kullanicinin")).unwrap();
+    assert_eq!(
+        extension::unused(&root, std::slice::from_ref(&key)),
+        [extension::folder(&root).join("0123456789abcdef")]
+    );
+    assert_eq!(extension::clean(&root, std::slice::from_ref(&key)), 1);
+    assert!(
+        extension::ready(&root, &key).is_some(),
+        "the kept one stays"
+    );
+    assert!(extension::folder(&root).join("kullanicinin").exists());
+    extension::remove(&root, &key).unwrap();
+    assert!(extension::ready(&root, &key).is_none());
 }

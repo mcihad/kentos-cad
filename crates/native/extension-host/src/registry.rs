@@ -567,6 +567,12 @@ impl Registry {
         })
     }
 
+    /// What the user granted an extension at install: its capabilities and whether its Python contributions are
+    /// wanted (an environment is prepared only then, PY-KEK-17).
+    pub fn grant(&self, id: &str) -> Option<&crate::store::Grant> {
+        self.file.extensions.get(id).map(|entry| &entry.grant)
+    }
+
     /// The version in use's manifest.
     pub fn manifest(&self, id: &str) -> Option<&Manifest> {
         self.manifests.get(id)

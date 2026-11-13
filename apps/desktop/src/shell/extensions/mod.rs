@@ -12,6 +12,7 @@
 
 mod bisect;
 mod browse;
+pub(crate) mod environment;
 mod problems;
 mod ribbon;
 mod search;
@@ -102,6 +103,8 @@ pub(crate) struct Extensions {
     pub(crate) query: String,
     /// The program the lists are filtered by; none: every program.
     pub(crate) program: Option<kentos_extensions::manifest::Module>,
+    /// Each extension's Python environment, by id, once looked for (environment.rs).
+    pub(crate) envs: std::collections::BTreeMap<String, environment::EnvState>,
 }
 
 impl Default for Extensions {
@@ -125,6 +128,7 @@ impl Default for Extensions {
             icons: std::collections::BTreeMap::new(),
             query: String::new(),
             program: None,
+            envs: std::collections::BTreeMap::new(),
         }
     }
 }
@@ -142,6 +146,8 @@ fn msg(event: Event) -> Message {
 pub(crate) enum Event {
     Part(Part),
     Choose(String),
+    /// An extension's Python environment (environment.rs).
+    Env(environment::EnvEvent),
     Enable(String),
     Disable(String),
     Remove(String),
@@ -442,9 +448,12 @@ impl App {
                 self.choose_first();
             }
             Event::Choose(id) => {
-                self.extensions.chosen = Some(id);
+                self.extensions.chosen = Some(id.clone());
                 self.extensions.full_log = false;
+                // Its Python environment, when it has one, looked for while its details are shown.
+                return self.env_look(&id);
             }
+            Event::Env(event) => return self.env_event(event),
             Event::Enable(id) => {
                 let result = self.extensions.registry.as_mut().map(|r| r.enable(&id));
                 match result {
@@ -498,6 +507,11 @@ impl App {
                             false,
                             format!("{name} kaldırıldı. Verisi duruyor; aynı eklenti yeniden kurulunca kullanılır."),
                         );
+                        // Its Python environments go with it: they are of no other extension (PY-UV-30).
+                        if let Some(root) = self.python_setup.root.as_deref() {
+                            kentos_python_env::extension::clean_for(root, &id, None);
+                        }
+                        self.extensions.envs.remove(&id);
                         self.extensions.chosen = self
                             .extensions
                             .registry

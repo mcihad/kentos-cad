@@ -245,7 +245,27 @@ fn item_of(
 impl App {
     /// The extensions' tabs follow the registry's contributions.
     pub(crate) fn extension_tabs_changed(&mut self) {
-        let python = self.python_setup.why_not();
+        // Why a Python button does not run, each extension's own: its environment too (environment.rs).
+        let reasons: std::collections::BTreeMap<String, String> = self
+            .extensions
+            .registry
+            .as_ref()
+            .map(|r| {
+                r.extensions()
+                    .into_iter()
+                    .filter(|e| r.manifest(&e.id).is_some_and(|m| m.python.is_some()))
+                    .map(|e| e.id)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default()
+            .into_iter()
+            .map(|id| {
+                let reason = self.python_reason(&id);
+                (id, reason)
+            })
+            .collect();
+        let fallback = self.python_setup.why_not();
+        let python_of = |ext: &str| -> &str { reasons.get(ext).map_or(fallback, String::as_str) };
         let mut tabs = Vec::new();
         if let Some(registry) = self.extensions.registry.as_ref() {
             let contributions = registry.contributions();
@@ -290,7 +310,9 @@ impl App {
                             items: p
                                 .items
                                 .iter()
-                                .map(|i| item_of(registry, manifest, i, &registered, python))
+                                .map(|i| {
+                                    item_of(registry, manifest, i, &registered, python_of(ext))
+                                })
                                 .collect(),
                         })
                         .collect(),
@@ -341,7 +363,7 @@ impl App {
                 };
                 menus.push(ExtMenuItem {
                     target: entry.target,
-                    item: item_of(registry, manifest, &as_button, &registered, python),
+                    item: item_of(registry, manifest, &as_button, &registered, python_of(ext)),
                     modules: manifest
                         .modules
                         .iter()
