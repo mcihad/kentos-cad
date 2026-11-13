@@ -16,7 +16,7 @@ use kentos_interaction::Level;
 
 const HATCH: &str = include_str!("../../../../../fixtures/interaction/v1/hatch.kcad");
 
-const PROMPT: &str = "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B): kapalı nesne / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır]";
+const PROMPT: &str = "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Yazılar (Y): boş bırakılır / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B): kapalı nesne / Adalar (A): taranmaz / İlişkili (İ): açık]";
 
 fn bench() -> Bench {
     let mut b = Bench::on(HATCH);
@@ -232,7 +232,7 @@ fn by_lines_the_face_around_the_click_with_its_island() {
     assert!(b.type_text("B"));
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Yazılar (Y): boş bırakılır / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Sınır katmanı (K): tümü / Boşluk (G): 0]"
     );
     b.click(8.0, -3.0);
     let (bx, holes, _, area) = newest(&b);
@@ -336,7 +336,7 @@ fn patterns_cycle_by_their_key_or_go_by_their_name() {
         b.session
             .prompt()
             .text()
-            .starts_with("Tarama: taranacak yerin içine tıklayın [Desen (D): Dolu / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B):"),
+            .starts_with("Tarama: taranacak yerin içine tıklayın [Desen (D): Dolu / Yazılar (Y): boş bırakılır / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B):"),
         "{}",
         b.session.prompt().text()
     );
@@ -354,7 +354,7 @@ fn patterns_cycle_by_their_key_or_go_by_their_name() {
     b.start("hatch");
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz / Yazılar (Y): boş bırakılır / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Sınır katmanı (K): tümü / Boşluk (G): 0]"
     );
 }
 
@@ -586,4 +586,32 @@ fn trim_reaches_a_circle_beneath_its_hatch_and_one_undo_restores_the_tie() {
     assert_eq!(now, &expected, "the frozen hatch keeps its analytic geometry and pattern");
     assert_eq!(b.doc.undo().as_deref(), Some("Buda"));
     assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
+/// UR-004: a text inside the region is left open by default, its box cut from the hatch, and the message says so;
+/// Yazılar (Y) hatches over it, the choice kept for the next hatch.
+#[test]
+fn a_text_inside_is_left_open_unless_asked() {
+    let mut b = Bench::on(HATCH);
+    b.draft.snap = false;
+    b.start("text");
+    b.click(-22.0, 0.5);
+    b.run(|s, cx| s.text_typed(Some("Ad"), cx));
+    assert!(matches!(b.newest(), Entity::Text(_)), "a text");
+    b.start("hatch");
+    assert!(b.session.prompt().text().contains("Yazılar (Y): boş bırakılır"));
+    b.click(-17.0, 3.5);
+    let Entity::Hatch(h) = b.newest() else { panic!("a hatch") };
+    assert_eq!(h.assoc.as_ref().map(|a| a.cutouts.len()), Some(1), "the text is tied as a cut-out");
+    let (bx, _, _, area) = newest(&b);
+    assert_eq!(bx, [-24.0, -2.0, -16.0, 4.0]);
+    assert!(area < 48.0 - 10.0, "the text's box is left open: {area}");
+    assert!(b.last_text().is_some_and(|t| t.ends_with(", 1 yazı boş bırakıldı")), "{:?}", b.last_text());
+
+    assert!(b.type_text("Y"));
+    assert!(b.session.prompt().text().contains("Yazılar (Y): taranır"));
+    b.click(-17.0, 3.5);
+    let (_, _, _, area) = newest(&b);
+    assert!(near(area, 48.0), "hatched over the text: {area}");
+    assert!(!b.memory.hatch_texts, "the choice is kept");
 }

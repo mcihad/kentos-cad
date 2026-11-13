@@ -1218,7 +1218,8 @@ impl Default for Memory {
             hatch_assoc: true,
             hatch_edit_mode: 0,
             hatch_recreate_polyline: false,
-            hatch_texts: false,
+            // UR-004: texts and inserts are left open unless asked otherwise, so a hatch never runs over words.
+            hatch_texts: true,
             hatch_user: None,
             hatch_world: false,
             hatch_origin: 0,

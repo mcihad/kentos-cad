@@ -203,9 +203,11 @@ pub fn with_pattern_options(prompt: Prompt, m: &Memory, user: &[String]) -> Prom
         .option("Özellik al", "Z")
 }
 
-/// Adalar, İlişkili (where the hatch can follow its objects) and Yazılar.
+/// Adalar, İlişkili (where the hatch can follow its objects) and Yazılar. Yazılar goes right after Desen (UR-004):
+/// the command line keeps its first options in sight and folds the rest into Diğer, and whether the words are
+/// hatched over is what a hatch is read by.
 pub fn with_region_options(prompt: Prompt, m: &Memory, tie: bool) -> Prompt {
-    prompt
+    let mut prompt = prompt
         .option_with("Adalar", "A", islands_word(m))
         .option_if(tie, "İlişkili", "İ", on(m.hatch_assoc))
         .option_with(
@@ -216,7 +218,13 @@ pub fn with_region_options(prompt: Prompt, m: &Memory, tie: bool) -> Prompt {
             } else {
                 "taranır"
             },
-        )
+        );
+    if let Some(desen) = prompt.options.iter().position(|o| o.key == "D")
+        && let Some(texts) = prompt.options.pop()
+    {
+        prompt.options.insert(desen + 1, texts);
+    }
+    prompt
 }
 
 /// What a stage that asks says.
