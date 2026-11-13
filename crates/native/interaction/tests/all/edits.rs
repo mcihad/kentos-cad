@@ -1152,3 +1152,21 @@ fn a_failed_side_keeps_the_source() {
     assert_eq!(b.doc.len(), before + 1, "the outer copy only");
     assert!(warnings.iter().any(|w| w.message.starts_with("Kaynağı sil açıktı, ama bir yanın kopyası yapılamadığı")), "{warnings:?}");
 }
+
+/// UR-103: Kır on a circle says which way round is cut (counter-clockwise from the first point to the second), and
+/// does so: top then right leaves the quarter between them.
+#[test]
+fn breaking_a_circle_says_which_part_goes() {
+    let mut b = bench(&[]);
+    let circle = b.add_circle("cizim", [120.0, 5.0], 3.0);
+    b.spatial.sync(&b.doc);
+    b.start("break");
+    b.click(120.0, 8.0);
+    assert!(b.session.prompt().text().contains("saat yönünün tersine ikinciye kadar olan kısım silinir"), "{}", b.session.prompt().text());
+    b.click(123.0, 5.0);
+    let Entity::Arc(a) = b.doc.get(circle).or_else(|| Some(b.newest())).expect("the arc") else {
+        panic!("an arc: {:?}", b.newest())
+    };
+    let sweep = (a.a1 - a.a0).rem_euclid(std::f64::consts::TAU);
+    assert!((sweep - std::f64::consts::FRAC_PI_2).abs() < 1e-9, "{sweep}");
+}
