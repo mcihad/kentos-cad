@@ -500,3 +500,4 @@ fn divide_places_blocks_aligned_the_ends_and_a_first_distance() {
     b.confirm();
     assert!(b.session.prompt().text().contains("İlk (İ): aralıkta"));
 }
+

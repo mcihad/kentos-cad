@@ -128,3 +128,32 @@ pub(crate) fn scenes() -> Vec<Scene> {
         }),
     ]
 }
+
+#[cfg(test)]
+mod corner_tests {
+    use super::*;
+
+    /// UR-095: Resim ekle's first corner typed as a point on the command line, then the width: the picture's lower
+    /// left is the typed point.
+    #[test]
+    fn a_pictures_first_corner_is_typed() {
+        let (mut app, _) = App::boot(None);
+        inserting(&mut app);
+        let before = app.document.as_ref().unwrap().model.len();
+        typed(&mut app, &format!("{},{}", E + 40.0, N));
+        typed(&mut app, "5");
+        let doc = &app.document.as_ref().unwrap().model;
+        assert_eq!(doc.len(), before + 1, "{}", crate::files_testing::last_said(&app));
+        let im = doc
+            .entities()
+            .filter_map(|e| match e {
+                kentos_commands::Entity::Image(i) => Some((i.base.id, i.image.clone())),
+                _ => None,
+            })
+            .max_by_key(|(id, _)| *id)
+            .map(|(_, im)| im)
+            .expect("the new picture");
+        assert!((im.p.x - (E + 40.0)).abs() < 1e-9 && (im.p.y - N).abs() < 1e-9, "{:?}", im.p);
+        assert!((im.width - 5.0).abs() < 1e-9);
+    }
+}
