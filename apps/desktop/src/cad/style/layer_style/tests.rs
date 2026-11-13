@@ -379,3 +379,40 @@ fn an_expression_is_written_with_the_builder() {
     )));
     assert_eq!(window(&app).expr_text(&Field::Rule(vec![0])), "$alan > 400");
 }
+
+/// UR-065: a categorized style without Diğer değerler: an object whose value has no category is said not drawn after
+/// a write, with the way back; one its category takes says nothing.
+#[test]
+fn an_object_its_categorized_style_no_longer_draws_is_said() {
+    use kentos_native_application::{ExecutionContext, layers_renderer};
+    let mut app = app_with_drawing();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let uid = doc
+        .entities()
+        .find(|e| e.base().layer_id == "parsel")
+        .and_then(|e| doc.uid(kentos_domain::Slot(e.base().id)))
+        .expect("a parcel")
+        .to_string();
+    let style = |value: &str| {
+        json!({ "type": "categorized", "expr": "$katman", "categories": [
+            { "value": value, "label": value, "symbols": { "fill": { "type": "fill", "color": "#ff0000" } } }
+        ] })
+    };
+    let set = |doc: &mut kentos_domain::Document, renderer: Value| {
+        let input = kentos_commands::LayersRenderer {
+            layer: "parsel".into(),
+            renderer: Some(renderer),
+            expected_revision: None,
+        };
+        assert!(matches!(
+            layers_renderer::execute(&mut ExecutionContext::new(doc), input),
+            kentos_commands::CommandResult::Completed { .. }
+        ));
+    };
+    set(doc, style("Başka"));
+    let note = app.unstyled_note(std::slice::from_ref(&uid)).expect("said");
+    assert!(note.starts_with("1 nesne haritada görünmüyor: “Parsel” katmanının stili “Parsel” için"), "{note}");
+    let doc = &mut app.document.as_mut().unwrap().model;
+    set(doc, style("Parsel"));
+    assert_eq!(app.unstyled_note(&[uid]), None);
+}

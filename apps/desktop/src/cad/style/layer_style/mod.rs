@@ -324,7 +324,7 @@ impl Source<'_> {
     /// store, in the project's drawing unit: what the window lists and counts
     /// is read as the layer's renderer reads it when it draws (docs/adr/0165
     /// §2, the 13 Ekim addendum).
-    fn scope<T>(&self, f: impl FnOnce(&ExprScope) -> T) -> T {
+    pub(crate) fn scope<T>(&self, f: impl FnOnce(&ExprScope) -> T) -> T {
         let layers = self.doc.layers();
         let name = |id: &str| {
             layers
@@ -1244,6 +1244,80 @@ fn guess_field(entities: &[&Entity]) -> String {
 
 impl App {
     /// Katman stili for layer `id` (the Katmanlar menu's), or the active layer (`style.layerStyle`).
+    /// After a write of values (a form's Kaydet): the objects of `uids` their layer's categorized or graduated style
+    /// no longer draws (a value no enabled category or class takes, Diğer değerler off), said with the way back, or
+    /// none. An object that vanishes from the map is not taken for deleted.
+    pub(crate) fn unstyled_note(&self, uids: &[String]) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let src = Source {
+            doc: &doc.model,
+            store: self.spatial.store(),
+        };
+        let mut missed: Vec<(String, String)> = Vec::new();
+        for uid in uids {
+            let Some(e) = kentos_domain::Uuid::parse_str(uid)
+                .ok()
+                .and_then(|u| doc.model.slot_of(u))
+                .and_then(|s| doc.model.get(s))
+            else {
+                continue;
+            };
+            if !drawable(&[e])[0] {
+                continue;
+            }
+            let layers = doc.model.layers();
+            let Some(node) = layers.get(&e.base().layer_id) else {
+                continue;
+            };
+            let Some(renderer) = node.style.renderer.as_ref().and_then(|v| Renderer::from_value(v).ok()) else {
+                continue;
+            };
+            let value = match &renderer {
+                Renderer::Categorized(c) if c.other.is_none() && !c.expr.trim().is_empty() => {
+                    let v = src
+                        .scope(|scope| values_of(&[e], c.expr.trim(), scope))
+                        .values
+                        .into_iter()
+                        .next()
+                        .flatten()
+                        .unwrap_or_default();
+                    let drawn = c
+                        .categories
+                        .iter()
+                        .find(|k| k.value == v)
+                        .is_some_and(|k| k.enabled != Some(false));
+                    (!drawn).then_some(v)
+                }
+                Renderer::Graduated(g) if !g.expr.trim().is_empty() => {
+                    let n = src
+                        .scope(|scope| classify::numbers_of(&[e], g.expr.trim(), scope))
+                        .values
+                        .into_iter()
+                        .next();
+                    let last = g.classes.len().wrapping_sub(1);
+                    let taken = n.is_some_and(|n| {
+                        g.classes
+                            .iter()
+                            .enumerate()
+                            .any(|(i, k)| n >= k.min && (n < k.max || (i == last && n <= k.max)))
+                    });
+                    (!taken).then(|| n.map_or_else(String::new, |n| n.to_string()))
+                }
+                _ => None,
+            };
+            if let Some(v) = value {
+                missed.push((node.name.clone(), v));
+            }
+        }
+        let (layer, value) = missed.first()?;
+        let shown = if value.is_empty() { "boş değer".to_owned() } else { format!("“{value}”") };
+        Some(format!(
+            "{} nesne haritada görünmüyor: “{layer}” katmanının stili {shown} için sembol tanımlamıyor (Diğer değerler kapalı). \
+             Katman stili'nde değerleri yeniden sınıflandırın ya da Diğer değerler'i açın.",
+            missed.len()
+        ))
+    }
+
     pub(crate) fn open_layer_style(&mut self, id: Option<String>) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
