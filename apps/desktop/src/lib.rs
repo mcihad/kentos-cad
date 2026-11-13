@@ -1123,6 +1123,11 @@ mod method_scenes;
 mod mirror_scenes;
 #[path = "shell/modes.rs"]
 mod modes;
+#[path = "shell/selection_fit.rs"]
+mod selection_fit;
+#[cfg(test)]
+#[path = "tests/selection_fit_tests.rs"]
+mod selection_fit_tests;
 #[cfg(test)]
 #[path = "tests/module_screens.rs"]
 mod module_screens;

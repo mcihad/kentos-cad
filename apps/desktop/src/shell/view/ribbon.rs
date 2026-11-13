@@ -85,7 +85,7 @@ impl App {
         if let Some(tab) = self.selection_tab() {
             tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
             ribbon = ribbon.contextual_tab(
-                tab.label,
+                self.selection_tab_title(tab),
                 self.selection.len().to_string(),
                 tab.id == shown,
                 Message::RibbonTab(tab.id),

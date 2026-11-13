@@ -78,7 +78,8 @@ impl App {
                 let mut kinds: Vec<&'static str> = Vec::new();
                 for slot in self.selection.ids() {
                     if let Some(e) = doc.model.get(*slot) {
-                        let kind = e.kind();
+                        // An open elliptical arc opens the curves' tab (UR-007).
+                        let kind = crate::selection_fit::tab_kind(e);
                         if !kinds.contains(&kind) {
                             kinds.push(kind);
                         }

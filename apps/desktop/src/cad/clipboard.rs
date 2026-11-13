@@ -253,7 +253,7 @@ mod tests {
         assert!(!app.session.is_running());
         assert_eq!(
             said(&app),
-            Some("Açık çizim yok. Önce bir çizim açın (Ctrl+O).")
+            Some(crate::keys::shown("Açık çizim yok. Önce bir çizim açın (Ctrl+O).").as_str())
         );
     }
 

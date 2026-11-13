@@ -852,7 +852,7 @@ fn ek3_numbers_the_storey_s_rooms_kat_bolum_sira_clockwise_from_north() {
 }
 
 /// The MO room tag (M27, docs/adr/8027): Etiket's all-at-once with Elips içinde numara frames the room's number in an
-/// ellipse, its name and net area below it; the drawing then writes KCAD schema 219, and reads back the same.
+/// ellipse, its name and net area below it; the drawing then writes KCAD schema 219 or later, and reads back the same.
 #[test]
 fn a_room_tag_in_an_ellipse_writes_schema_207() {
     let (mut app, _) = building();
@@ -889,14 +889,13 @@ fn a_room_tag_in_an_ellipse_writes_schema_207() {
             .any(|p| matches!(p.shape, kentos_geometry_core::entity::Shape::Ellipse { .. }))
     );
     let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes");
-    assert_eq!(
-        bytes
-            .windows(10)
-            .filter(|w| *w == b"\x67version\x18\xdb")
-            .count(),
-        1,
-        "schema 219"
-    );
+    // At least schema 219: the building's CAD project may need a later one for something else (its tool layers,
+    // schema 255, UR-003).
+    let schema = bytes
+        .windows(10)
+        .find(|w| w[..9] == *b"\x67version\x18")
+        .map(|w| w[9]);
+    assert!(schema.is_some_and(|v| v >= 219), "schema {schema:?}");
     let back = kentos_kcad::decode(&bytes).expect("reads");
     assert!(
         back.entities

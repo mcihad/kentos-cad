@@ -988,6 +988,8 @@ impl App {
             "edit.autoSelect" => doc.is_some(),
             // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
             id if self.layer_misfit(id).is_some() => false,
+            // A selection tool that takes none of the selected kinds (UR-007).
+            id if self.selection_misfit(id).is_some() => false,
             "block.purge" | "block.export" => doc.is_some_and(|d| !d.blocks().is_empty()),
             "block.find" | "array.find" => doc.is_some() && !self.session.is_running(),
             "block.import" | "layer.impact" => doc.is_some(),
@@ -1040,8 +1042,9 @@ impl App {
             {
                 Some("Projede senaryo yok; önce Senaryo oluştur ile bir senaryo yapın.".to_owned())
             }
-            // The typed active layer does not hold what the tool draws (docs/adr/0622 §5).
-            id => self.layer_misfit(id),
+            // The typed active layer does not hold what the tool draws (docs/adr/0622 §5); a selection tool
+            // that takes none of the selected kinds (UR-007).
+            id => self.layer_misfit(id).or_else(|| self.selection_misfit(id)),
         }
     }
 
