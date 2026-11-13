@@ -157,3 +157,24 @@ fn broken(app: &mut App) {
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![("olcu-secenekler", options), ("olcu-aralik", spaced), ("olcu-kirma", broken)]
 }
+
+#[cfg(test)]
+mod break_tests {
+    use super::*;
+    use crate::app::Message;
+
+    /// UR-080: Kır says its breaks stay where the crossings are now and how to break again after a move.
+    #[test]
+    fn kir_says_its_breaks_do_not_follow_a_moved_crossing() {
+        let (mut app, _) = App::boot(None);
+        drawing(&mut app);
+        app.selection.set([Slot(2)]);
+        let _ = app.update(Message::Run("dimension.break"));
+        let said = crate::files_testing::last_said(&app);
+        assert!(said.starts_with("Ölçü çizgileri şu anki kesişimlerde kırıldı."), "{said}");
+        // Nothing to break (the short dimension, crossed by nothing): no such note.
+        app.selection.set([Slot(5)]);
+        let _ = app.update(Message::Run("dimension.break"));
+        assert!(!crate::files_testing::last_said(&app).starts_with("Ölçü çizgileri şu anki"));
+    }
+}

@@ -725,10 +725,18 @@ impl App {
                 }
             }),
             "dimension.break" => {
+                let before = self.document.as_ref().map(|d| d.model.revision());
                 self.dimensions_edit(|uids| kentos_commands::DimensionEdit::Break {
                     uids,
                     objects: None,
-                })
+                });
+                // The breaks are where the crossings are now; they do not follow a crossing object that moves.
+                if self.document.as_ref().map(|d| d.model.revision()) != before {
+                    self.say(
+                        kentos_interaction::Level::Info,
+                        "Ölçü çizgileri şu anki kesişimlerde kırıldı. Kesen nesne taşınırsa kırma onu izlemez: Kırmayı kaldır, sonra yeniden Kır.".to_owned(),
+                    );
+                }
             }
             "dimension.unbreak" => {
                 self.dimensions_edit(|uids| kentos_commands::DimensionEdit::Unbreak { uids })
