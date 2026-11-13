@@ -192,6 +192,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Önizleme satır ve sütun sayısını, başlık biçimini ve Tümü/Dış/Satırlar/Yok çizgi tercihlerini yerleştirilecek tabloyla aynı şekilde göstermeli.
 - **Başlangıç noktası:** `apps/desktop/src/tables/insert.rs` Tablo ekle önizlemesi ile çizime eklenen tablo görselleştirmesini karşılaştır.
 - **Kabul:** 1/3/çok sütun ve değişik satır sayıları; dört çizgi seçeneği, başlık açık/kapalı, tema ve pencere boyutlarında önizleme ile gerçek tablo karşılaştırılsın.
+- **Durum (13.11.2026):** düzeltildi — Tablo ekle önizlemesi artık yerleştirilecek tablonun çizgilerini gösteriyor: Tümü dış çizgi, satır ve sütun ayraçları; Satırlar dış çizgi ve satır ayraçları; Dış yalnız dış çizgi; Yok çizgisiz; Kalın çerçeve dış çizgiyi kalınlaştırıyor; başlık satırı kalın, sayı sütunları sağa yaslı (çekirdeğin tablo çizgisi kurallarıyla aynı). Önceki önizleme kitin veri tablosuydu ve sütun ayracı yoktu. Resimler `.run/gui-evidence/kullanim-UR-017/` (boş 4×3 Tümü açık/koyu, koordinat Satırlar, alan Tümü + çerçeve); tablo testleri geçiyor. Önizlemenin piksel piksel tabloyla karşılaştırması ayrıca otomatik test edilmedi.
 
 #### UR-018 — Merdiven ve rampada ikinci noktadan hemen sonra yanıltıcı hata
 
