@@ -472,11 +472,57 @@ fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) ->
                     ))
                 })?;
             let shape = crate::geometry_store::record(entity).3;
-            closed_outline(&shape, 64.0)
-                .filter(|ring| ring.len() >= 3)
+            // A smooth outline (a circle, an ellipse, a closed curve) has no corners: its points go every arc's
+            // length round it, so the arcs are as long as Yay boyu says rather than one per tessellation step.
+            let smooth = matches!(
+                shape,
+                kentos_geometry_core::entity::Shape::Circle { .. }
+                    | kentos_geometry_core::entity::Shape::Ellipse { .. }
+                    | kentos_geometry_core::entity::Shape::Spline { .. }
+                    | kentos_geometry_core::entity::Shape::Nurbs { .. }
+            );
+            let ring = if smooth {
+                closed_outline(&shape, 1024.0).map(|dense| even_ring(&dense, input.arc))
+            } else {
+                closed_outline(&shape, 64.0)
+            };
+            ring.filter(|ring| ring.len() >= 3)
                 .ok_or_else(|| refuse(codes::NOT_CLOSED, CLOUD_OPEN, "frame.uid"))
         }
     }
+}
+
+/// `dense` (a closed ring) walked round at even steps as near `arc` long as a whole number of them makes, at least
+/// three: the corners of a smooth outline's cloud.
+fn even_ring(dense: &[Vec2], arc: f64) -> Vec<Vec2> {
+    let n = dense.len();
+    if n < 3 || !(arc > 0.0) {
+        return dense.to_vec();
+    }
+    let side = |i: usize| {
+        let (a, b) = (dense[i], dense[(i + 1) % n]);
+        ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt()
+    };
+    let total: f64 = (0..n).map(side).sum();
+    let count = (total / arc).round().max(3.0);
+    if !count.is_finite() || count >= n as f64 {
+        return dense.to_vec();
+    }
+    let step = total / count;
+    let mut out = Vec::with_capacity(count as usize);
+    let (mut i, mut walked) = (0usize, 0.0);
+    for k in 0..count as usize {
+        let want = step * k as f64;
+        while i < n && walked + side(i) < want {
+            walked += side(i);
+            i += 1;
+        }
+        let (a, b) = (dense[i % n], dense[(i + 1) % n]);
+        let len = side(i % n);
+        let t = if len > 0.0 { (want - walked) / len } else { 0.0 };
+        out.push(Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t));
+    }
+    out
 }
 
 /// The cloud as the command writes it, or why not.
