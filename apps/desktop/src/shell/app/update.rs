@@ -513,6 +513,7 @@ impl App {
             Message::Modifiers(modifiers) => {
                 let shift = self.modifiers.shift() != modifiers.shift();
                 self.modifiers = modifiers;
+                self.sheets.set_modifiers(modifiers);
                 // Shift turns ortho over while held (docs/adr/0268 §2): the preview follows at once, the pointer still.
                 if shift && self.session.takes_points() {
                     self.repoint();

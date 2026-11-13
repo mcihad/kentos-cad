@@ -173,7 +173,8 @@ impl Designer {
 
             Message::Select(ids) => self.select(ids),
             Message::TreeClick(id, add) => {
-                if add {
+                // A row clicked with Shift or ⌘/Ctrl held adds or takes away, as Shift does on the paper.
+                if add || self.held.shift() || self.held.command() {
                     self.keep_open_texts();
                     if let Some(i) = self.selection.iter().position(|x| *x == id) {
                         self.selection.remove(i);

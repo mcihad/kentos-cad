@@ -2440,3 +2440,21 @@ fn a_chosen_items_handle_wins_over_the_item_under_it() {
     assert_eq!(d.selection(), std::slice::from_ref(&shape.id), "still the shape chosen");
     assert!(after.frame.width > shape.frame.width + 10_000, "{:?} → {:?}", shape.frame, after.frame);
 }
+
+#[test]
+fn a_list_row_clicked_with_shift_or_command_adds_and_takes_away_as_on_the_paper() {
+    use iced::keyboard::Modifiers;
+    let mut d = designer();
+    let ids: Vec<_> = d.open_sheet().expect("a sheet").items.iter().take(2).map(|i| i.id.clone()).collect();
+    assert_eq!(ids.len(), 2, "the template's items");
+    d.update(Message::TreeClick(ids[0].clone(), false));
+    d.set_modifiers(Modifiers::SHIFT);
+    d.update(Message::TreeClick(ids[1].clone(), false));
+    assert_eq!(d.selection(), ids.as_slice(), "Shift adds the row");
+    d.set_modifiers(Modifiers::COMMAND);
+    d.update(Message::TreeClick(ids[0].clone(), false));
+    assert_eq!(d.selection(), std::slice::from_ref(&ids[1]), "⌘/Ctrl takes it away");
+    d.set_modifiers(Modifiers::empty());
+    d.update(Message::TreeClick(ids[0].clone(), false));
+    assert_eq!(d.selection(), std::slice::from_ref(&ids[0]), "a plain click chooses that row alone");
+}

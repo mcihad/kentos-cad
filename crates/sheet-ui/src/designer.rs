@@ -273,6 +273,8 @@ pub struct Designer {
     pub(crate) hovered_item: Option<ItemId>,
     /// Space held: the hand for a moment.
     pub(crate) space: bool,
+    /// The modifier keys held now (the host tells): Shift or ⌘/Ctrl on an item list row adds or takes away.
+    pub(crate) held: iced::keyboard::Modifiers,
 
     // Panels.
     pub(crate) inspector_tab: InspectorTab,
@@ -360,6 +362,7 @@ impl Designer {
             hover: None,
             hovered_item: None,
             space: false,
+            held: iced::keyboard::Modifiers::empty(),
             inspector_tab: InspectorTab::Item,
             inspector: inspector::State::new(),
             kind_fields: Vec::new(),
@@ -398,6 +401,10 @@ impl Designer {
     }
 
     /// The sheet in front; none while the drawing is.
+    /// The modifier keys held now, from the host's keyboard: a click on the item list reads them.
+    pub fn set_modifiers(&mut self, held: iced::keyboard::Modifiers) {
+        self.held = held;
+    }
     /// The inspector's tab now (Öğe, Ön denetim…).
     pub fn inspector_tab(&self) -> InspectorTab {
         self.inspector_tab

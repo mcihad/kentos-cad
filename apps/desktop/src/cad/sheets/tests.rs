@@ -1010,3 +1010,41 @@ fn drawing_cut_screens() {
         println!("{}", file.display());
     }
 }
+
+#[test]
+fn shift_held_in_the_window_reaches_the_sheet_item_list() {
+    let mut app = app_with_drawing();
+    new_sheet(&mut app);
+    let ids: Vec<_> = app.sheets.open_sheet().expect("a sheet").items.iter().take(2).map(|i| i.id.clone()).collect();
+    let _ = app.update(Message::Sheet(Sheet::TreeClick(ids[0].clone(), false)));
+    let _ = app.update(Message::Modifiers(iced::keyboard::Modifiers::SHIFT));
+    let _ = app.update(Message::Sheet(Sheet::TreeClick(ids[1].clone(), false)));
+    let _ = app.update(Message::Modifiers(iced::keyboard::Modifiers::empty()));
+    assert_eq!(app.sheets.selection(), ids.as_slice());
+}
+
+#[test]
+#[ignore = "GPU: the item list with two rows chosen by Shift"]
+fn item_list_shift_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-042");
+    std::fs::create_dir_all(&out).expect("folder");
+    let mut app = app_with_drawing();
+    new_sheet(&mut app);
+    let ids: Vec<_> = app.sheets.open_sheet().expect("a sheet").items.iter().take(2).map(|i| i.id.clone()).collect();
+    let _ = app.update(Message::Sheet(Sheet::TreeClick(ids[0].clone(), false)));
+    let _ = app.update(Message::Modifiers(iced::keyboard::Modifiers::SHIFT));
+    let _ = app.update(Message::Sheet(Sheet::TreeClick(ids[1].clone(), false)));
+    let _ = app.update(Message::Modifiers(iced::keyboard::Modifiers::empty()));
+    let mut snapshot = kentos_ui::snapshot::Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("oge-listesi-shift.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    let _ = app.update(Message::Sheet(Sheet::Select(Vec::new())));
+    snapshot.settle(&mut app, App::view, &mut update);
+    snapshot.render(app.view(), &app.theme()).save(out.join("bos-secim-aciklamasi.png")).expect("writes");
+}
