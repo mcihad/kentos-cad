@@ -1048,3 +1048,38 @@ fn item_list_shift_screens() {
     snapshot.settle(&mut app, App::view, &mut update);
     snapshot.render(app.view(), &app.theme()).save(out.join("bos-secim-aciklamasi.png")).expect("writes");
 }
+
+#[test]
+#[ignore = "GPU: two sheets of one template, numbered, in the tabs, the list and the publish window"]
+fn same_template_sheets_screens() {
+    use kentos_sheet_ui::drawing_set::{Field as SetField, SetMessage};
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-048");
+    std::fs::create_dir_all(&out).expect("folder");
+    let mut app = app_with_drawing();
+    new_sheet(&mut app);
+    new_sheet(&mut app);
+    for m in [
+        SetMessage::Open,
+        SetMessage::Select(0),
+        SetMessage::Edit(SetField::Number, "QA-001".into()),
+        SetMessage::Select(1),
+        SetMessage::Edit(SetField::Number, "QA-002".into()),
+        SetMessage::Save,
+    ] {
+        let _ = app.update(Message::Sheet(Sheet::DrawingSet(m)));
+    }
+    let names: Vec<String> = app.sheets.book().sheets.iter().map(|s| s.listed_name().into_owned()).collect();
+    assert_eq!(names.len(), 2);
+    assert!(names[0].starts_with("QA-001 · ") && names[1].starts_with("QA-002 · "), "{names:?}");
+    let mut snapshot = kentos_ui::snapshot::Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    snapshot.render(app.view(), &app.theme()).save(out.join("paftalar.png")).expect("writes");
+    let _ = app.sheet_publish_open();
+    snapshot.settle(&mut app, App::view, &mut update);
+    snapshot.render(app.view(), &app.theme()).save(out.join("toplu-yayin.png")).expect("writes");
+}

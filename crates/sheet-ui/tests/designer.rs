@@ -2458,3 +2458,18 @@ fn a_list_row_clicked_with_shift_or_command_adds_and_takes_away_as_on_the_paper(
     d.update(Message::TreeClick(ids[0].clone(), false));
     assert_eq!(d.selection(), std::slice::from_ref(&ids[0]), "a plain click chooses that row alone");
 }
+
+#[test]
+fn a_second_sheet_of_one_template_takes_a_name_of_its_own_and_lists_show_its_number() {
+    let mut d = designer();
+    new_sheet(&mut d);
+    let names: Vec<String> = d.book().sheets.iter().map(|s| s.name.clone()).collect();
+    assert_eq!(names.len(), 2);
+    assert_ne!(names[0], names[1], "{names:?}");
+    assert_eq!(names[1], format!("{} 2", names[0]));
+    let mut sheet = d.book().sheets[0].clone();
+    sheet.drawing_info = Some(kentos_sheet::drawing_set::DrawingInfo { number: "QA-001".into(), ..Default::default() });
+    assert_eq!(sheet.listed_name(), format!("QA-001 · {}", names[0]));
+    sheet.name = "QA-001 Kat planı".into();
+    assert_eq!(sheet.listed_name(), "QA-001 Kat planı", "a name that starts with its number is not said twice");
+}

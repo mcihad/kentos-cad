@@ -146,7 +146,7 @@ impl App {
             .iter()
             .map(|s| Row {
                 id: s.id.clone(),
-                name: s.name.clone(),
+                name: s.listed_name().into_owned(),
                 selected: selected.contains(&s.id),
             })
             .collect();

@@ -167,7 +167,7 @@ impl Designer {
             );
             let mut line = row![
                 icon(icons::LAYOUT).size(16.0),
-                label::body(s.name.as_str()).width(Fill),
+                label::body(s.listed_name().into_owned()).width(Fill),
             ]
             .spacing(8)
             .align_y(Center);
