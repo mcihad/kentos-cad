@@ -711,6 +711,17 @@ impl Spatial {
                     Vec::new()
                 };
                 self.store.remove(&gone);
+                // A changed object's labels are placed afresh: the last places are kept only for a view that moved
+                // (an undone label move would otherwise stay where the move put it).
+                {
+                    let mut prior = self.prior.borrow_mut();
+                    for e in &changed {
+                        prior.forget(f64::from(e.base().id));
+                    }
+                    for id in &gone {
+                        prior.forget(*id);
+                    }
+                }
                 let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
                 for entity in &changed {
                     match crate::viewport_scope::record_at(entity, scale, doc.settings()) {
