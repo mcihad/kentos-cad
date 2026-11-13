@@ -50,6 +50,22 @@ pub fn library_item(name: &str, bytes: &[u8]) -> Result<(String, Value), String>
     Ok((id, item))
 }
 
+/// What a picture shown in a frame of `w` × `h` metres says when its file is `pw` × `ph` pixels of another shape
+/// (more than 1 % apart): it is stretched, and the height that keeps its shape; none when the shapes agree.
+pub fn stretch_note(w: f64, h: f64, pw: f64, ph: f64) -> Option<String> {
+    if !(w > 0.0 && h > 0.0 && pw > 0.0 && ph > 0.0) {
+        return None;
+    }
+    let (frame, file) = (w / h, pw / ph);
+    if (frame / file - 1.0).abs() <= 0.01 {
+        return None;
+    }
+    let keep = w / file;
+    Some(format!(
+        "Yeni resmin en-boy oranı ({file:.2}) çerçeveninkinden ({frame:.2}) farklı: resim eski çerçeveye esnetildi. Oranını korumak için Özellikler'de yüksekliği {keep:.3} m yapın ya da geri alın."
+    ))
+}
+
 /// Adds the image to the project's library unless it is there (an edit, no undo step; docs/adr/0092).
 pub fn keep_in_library(model: &mut Model, id: &str, item: Value) {
     if kentos_native_application::edit::has_picture(model, id) {
@@ -221,5 +237,17 @@ impl crate::app::App {
                 _ => None,
             })
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod stretch_tests {
+    /// UR-096: a square file in a 4 × 2.828 m frame is said stretched, with the height that keeps it square; a file of
+    /// the frame's shape says nothing.
+    #[test]
+    fn another_shape_in_the_frame_is_said() {
+        let note = super::stretch_note(4.0, 2.828, 1254.0, 1254.0).expect("said");
+        assert!(note.contains("(1.00)") && note.contains("(1.41)") && note.contains("4.000 m"), "{note}");
+        assert_eq!(super::stretch_note(4.0, 2.828, 2977.0, 2105.0), None);
     }
 }

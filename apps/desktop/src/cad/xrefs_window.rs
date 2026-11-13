@@ -376,12 +376,27 @@ impl App {
             uids: vec![uid.to_string()],
             file: path.display().to_string(),
         };
+        // The frame as it was and the new file's pixels: another shape is stretched into the frame, said.
+        let frame = match doc.model.get(slot) {
+            Some(kentos_commands::Entity::Image(i)) => Some((i.image.width, i.image.height)),
+            _ => None,
+        };
+        let pixels = std::fs::read(path).ok().and_then(|bytes| {
+            let item = crate::pictures::library_item(&file_name(path), &bytes).ok()?.1;
+            let size = |k: &str| item.get(k).and_then(serde_json::Value::as_f64);
+            Some((size("width")?, size("height")?))
+        });
         let said = crate::pictures::edit(&mut doc.model, operation, drawing.as_deref());
         if said.is_empty() {
             self.say(
                 Level::Success,
                 format!("Resim artık {} dosyasını gösteriyor.", file_name(path)),
             );
+            if let (Some((w, h)), Some((pw, ph))) = (frame, pixels)
+                && let Some(note) = crate::pictures::stretch_note(w, h, pw, ph)
+            {
+                self.warn(note);
+            }
         }
         for s in said {
             self.warn(format!("Resmin kaynağı: {s}"));
