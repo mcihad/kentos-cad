@@ -2403,13 +2403,6 @@ impl Writer<'_> {
             self.report
                 .skip("Tarama adası", "üç köşesi yok; yazılmadı", 0);
         }
-        if h.assoc.is_some() {
-            self.report.note(
-                "Tarama",
-                "ilişkili taramalar ilişkisiz yazıldı; DXF'te sınır nesnelerini izlemezler",
-                0,
-            );
-        }
         let p = &h.pattern;
         let kind = p.kind;
         let fill = matches!(kind, HatchPatternType::Solid | HatchPatternType::Gradient);
@@ -2432,6 +2425,16 @@ impl Writer<'_> {
         } else {
             self.ties.sources.get(&h.base.id).cloned()
         };
+        // Only a tie the file cannot carry is said lost: its objects not written with it (left out of the
+        // selection, on a layer not written), or the hatch inside a block. A hatch written with its objects keeps it.
+        let partial = sources.as_ref().is_some_and(|paths| paths.iter().any(Vec::is_empty));
+        if h.assoc.is_some() && (sources.is_none() || partial) {
+            self.report.note(
+                "Tarama",
+                "sınır nesneleri dosyaya yazılmadığından ilişkili tarama ilişkisiz yazıldı; DXF'te sınırını izlemez",
+                0,
+            );
+        }
         self.out.int(71, i64::from(sources.is_some()));
         let of = |k: usize| sources.as_ref().and_then(|s| s.get(k)).cloned().unwrap_or_default();
         // The exact boundary when it has one (docs/adr/0328 §1): lines and arcs a polyline path with bulges, ellipses'
