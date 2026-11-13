@@ -12,6 +12,7 @@
 //! it runs no extension code: Python is ADIM 18A/19's.
 
 mod lease;
+pub mod places;
 pub mod policy;
 mod registry;
 pub mod store;

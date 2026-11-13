@@ -42,6 +42,9 @@ pub struct Policy {
     /// Whether an extension may send data to an outside AI service (`network.sendsDataToAi`); not written: yes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allow_data_to_ai: Option<bool>,
+    /// The policy file is there but cannot be read: everything is refused with this reason (fail closed).
+    #[serde(skip)]
+    pub broken: Option<String>,
 }
 
 impl Policy {
@@ -64,6 +67,9 @@ impl Policy {
 
     /// Why the policy refuses this package from this source; none when it allows it.
     pub fn refusal(&self, manifest: &Manifest, source: SourceKind) -> Option<String> {
+        if let Some(reason) = &self.broken {
+            return Some(reason.clone());
+        }
         let id = &manifest.id;
         if self.blocked_extensions.iter().any(|b| b == id) {
             return Some(format!("Kurum ilkesi “{id}” eklentisini engelliyor."));
@@ -128,6 +134,21 @@ impl Policy {
             ));
         }
         None
+    }
+}
+
+impl Policy {
+    /// A policy file that is there but cannot be read: it refuses everything, saying why (an unreadable policy must not
+    /// mean "no policy").
+    pub fn broken(reason: String) -> Policy {
+        Policy {
+            format: POLICY_FORMAT.to_owned(),
+            schema_version: 1,
+            broken: Some(format!(
+                "{reason} Bilgi işlem birimine bildirin; eklentiler bu arada çalışmaz."
+            )),
+            ..Policy::default()
+        }
     }
 }
 
