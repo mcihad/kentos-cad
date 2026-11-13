@@ -344,6 +344,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen / çözüm:** Henüz yeni bir nokta seçilmemişken son kabul edilen noktayla aynı olan imleç konumu bir sonraki nokta gibi doğrulanıp hata gösterilmemeli. Üst üste nokta gerçekten tıklanırsa açıklayıcı uyarı verilmeli. Kesit için sonuç mesajı işaret türünü doğru adlandırmalı.
 - **Kod ipucu:** `crates/native/interaction/src/viewmark_tools.rs` 205–223 civarında önizleme kabul edilen noktalara `hover` ekleyerek `plan_in` çağırıyor; `crates/shared/contracts/src/viewmark.rs` 240–252 yinelenen noktaları doğruluyor. 239 civarındaki ortak başarı mesajı türden bağımsız. Önizlemenin son nokta/hover ayrımını olay akışıyla inceleyin; kök neden henüz değişiklikle doğrulanmadı.
 - **Kabul:** İki ve çok parçalı kesit, fare sabit/hareketli, gerçekten aynı noktaya ikinci tıklama, Enter/sağ tık/Escape, kenet açık/kapalı ve sonuç mesajları denenmeli.
+- **Durum (13.11.2026):** düzeltildi — Kesit işareti, nokta verildikten sonra imleç o noktada dururken onu bir sonraki nokta saymıyor: «Kesme çizgisinin art arda iki noktası aynı olamaz» kırmızı uyarısı çıkmıyor, Enter işareti yazıyor; imleç hareket edince önizleme ve gerçekten aynı noktaya tıklama denetimi değişmedi. Başarı iletisi türü ve harfiyle: «Kesit işareti A yazıldı; …» (Görünüş ve Detay için kendi adları). Test `a_section_marks_resting_pointer_is_no_third_point`; etkileşim testleri geçiyor.
 
 #### UR-031 — Üç noktalı daire uyarısı bir nokta isterken tüm noktaları sıfırlıyor
 
