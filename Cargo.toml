@@ -9,6 +9,7 @@ members = [
     "crates/shared/contracts",
     "crates/shared/commands",
     "crates/shared/formats",
+    "crates/shared/zip",
     "crates/shared/qml",
     "crates/shared/maplibre",
     # DWG codec adapter (ADR 0586): OpenCADStudio's pinned, MPL-2.0 codec;
@@ -117,6 +118,7 @@ default-members = [
     "crates/shared/contracts",
     "crates/shared/commands",
     "crates/shared/formats",
+    "crates/shared/zip",
     "crates/shared/qml",
     "crates/shared/maplibre",
     "crates/native/dwg",

@@ -134,6 +134,7 @@ pub mod workbook;
 pub mod xml;
 #[cfg(feature = "spreadsheet")]
 pub mod xml_scan;
-pub mod zip;
+// Zip archives (docs/adr/0053): their own crate since docs/adr/8057 §1, here by the name they always had.
+pub use kentos_zip as zip;
 
 pub use kentos_contracts as contracts;

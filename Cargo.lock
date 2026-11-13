@@ -2757,6 +2757,7 @@ dependencies = [
  "image-webp",
  "kentos-contracts",
  "kentos-geometry-core",
+ "kentos-zip",
  "libm",
  "miniz_oxide 0.9.1",
  "roxmltree",
@@ -3351,6 +3352,13 @@ version = "0.1.0"
 dependencies = [
  "iced",
  "kentos-ui",
+]
+
+[[package]]
+name = "kentos-zip"
+version = "0.1.0"
+dependencies = [
+ "miniz_oxide 0.9.1",
 ]
 
 [[package]]
