@@ -72,6 +72,9 @@ enum Kind {
 }
 
 /// A polyline or a NURBS curve on an unlocked layer.
+/// Why a curve drawn with Eğri is not taken, and how it is edited.
+const SPLINE_WORDS: &str = "Eğri aracıyla çizilen eğri burada düzenlenmez; noktalarını tutamaçlarıyla sürükleyin. Eğriyi düzenle çoklu çizgi ve NURBS eğrisi alır.";
+
 fn editable(e: &Entity, doc: &Document) -> bool {
     matches!(e, Entity::Polyline(_) | Entity::Nurbs(_)) && edge::unlocked(e, doc)
 }
@@ -761,6 +764,12 @@ impl Tool for CurveEditTool {
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        // A curve drawn with Eğri selected: what this tool cannot take, said at once with the way that works.
+        if let [slot] = *cx.selection.ids()
+            && matches!(cx.doc.get(slot), Some(Entity::Spline(_)))
+        {
+            cx.say(Level::Warn, SPLINE_WORDS);
+        }
         // One polyline or NURBS curve selected: it is the curve to edit.
         if let [slot] = *cx.selection.ids()
             && cx.doc.get(slot).is_some_and(|e| editable(e, cx.doc))
@@ -858,10 +867,12 @@ impl Tool for CurveEditTool {
         }
         let Some(slot) = edge::pick_said(p, cx, editable) else {
             if self.picked.is_none() {
-                cx.say(
-                    Level::Warn,
-                    "Kilitsiz katmanda bir çoklu çizgiye ya da NURBS eğrisine tıklayın.",
-                );
+                let spline = cx
+                    .spatial
+                    .pick(p.raw, cx.pick_tolerance())
+                    .and_then(|s| cx.doc.get(s))
+                    .is_some_and(|e| matches!(e, Entity::Spline(_)));
+                cx.say(Level::Warn, if spline { SPLINE_WORDS } else { "Kilitsiz katmanda bir çoklu çizgiye ya da NURBS eğrisine tıklayın." });
             }
             return;
         };

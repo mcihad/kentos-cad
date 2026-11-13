@@ -1321,6 +1321,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Alternatif yol doğrulaması:** Araçtan Escape ile çıkıldıktan sonra aynı seçili eğrinin orta tutamacı yukarı sürüklendi; eğri şekli değişti ve uzunluk 5,778’den 7,384 m’ye çıktı. ⌘Z uzunluğu tekrar 5,778 m yaptı. Tutamaçla düzenleme bu örnekte çalışıyor; sorun özellikle açıkça sunulan `Eğriyi düzenle` aracının nesneyi kabul etmemesidir.
 - **Komşu araç:** Aynı seçili eğri için bağlamsal Çizgi şeridindeki etkin `Sadeleştir` tıklandığında yalnız çoklu çizgi ve kapalı alanların köşelerini attığını söyleyen uyarı verildi, eğri değişmedi. Desteklenmeyen araçların seçili nesneye göre pasif gösterilmesi ve nedeninin açıklanması bu karışıklığı azaltır.
 - **Kabul:** Giriş → Eğri ile oluşturulmuş açık/kapalı eğri, içe aktarılan NURBS ve çoklu çizgide seçimden düzenleme; düğüm ekle/taşı/sil, kilitli katman uyarısı, iptal ve undo/redo; geometri ve kaydet–aç denetimi.
+- **Durum (13.11.2026):** kısmen — Eğriyi düzenle, Eğri aracıyla çizilen eğri seçiliyken açıldığında ya da ona tıklandığında genel «çoklu çizgiye ya da NURBS eğrisine tıklayın» yerine «Eğri aracıyla çizilen eğri burada düzenlenmez; noktalarını tutamaçlarıyla sürükleyin …» diyor; test `nurbs::a_drawn_curve_is_said_not_taken_by_curve_edit` (kentos-interaction). Açık: geçiş noktalı eğriyi düzenleyiciye köprüleyen tür dönüşümü (`cad.curves.edit` sözleşmesi) ve Sadeleştir gibi uymayan araçların seçime göre soluk gösterilmesi.
 
 ### UR-088 — Aynı KCAD dosyasının iki sekmede kaydı önceki değişikliği uyarısız siliyor
 

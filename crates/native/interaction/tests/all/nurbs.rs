@@ -535,3 +535,25 @@ fn edited_by_command_from(
     let doc = kentos_domain::Document::from_snapshot_v2(snapshot.clone()).unwrap();
     edited_by_command(&doc, slot, edit)
 }
+
+/// UR-087: a curve drawn with Eğri is not taken by Eğriyi düzenle; selected or clicked, the tool says so and how it
+/// is edited instead.
+#[test]
+fn a_drawn_curve_is_said_not_taken_by_curve_edit() {
+    let mut b = Bench::new("spline");
+    b.draft.snap = false;
+    for p in [[2.0, 1.0], [4.0, 3.0], [6.0, 1.0]] {
+        b.click(p[0], p[1]);
+    }
+    b.confirm();
+    let curve = kentos_domain::Slot(b.newest().base().id);
+    assert!(matches!(b.newest(), Entity::Spline(_)), "{:?}", b.newest());
+    b.selection.set([curve]);
+    b.start("curveEdit");
+    assert!(b.last_text().is_some_and(|t| t.starts_with("Eğri aracıyla çizilen eğri burada düzenlenmez")), "{:?}", b.last_text());
+    b.selection.set([]);
+    b.start("curveEdit");
+    b.spatial.sync(&b.doc);
+    b.click(4.0, 3.0);
+    assert!(b.last_text().is_some_and(|t| t.starts_with("Eğri aracıyla çizilen eğri burada düzenlenmez")), "{:?}", b.last_text());
+}
