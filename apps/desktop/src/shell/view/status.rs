@@ -71,7 +71,7 @@ impl App {
                 // The notes after the step in brackets, as the web's command line reads them;
                 // the axes as the project's type names them (docs/adr/0165 §4).
                 p.options.iter().fold(
-                    LinePrompt::new(self.format().axes_text(&p.step_with_notes()))
+                    LinePrompt::new(self.step_words(&p.step_with_notes()))
                         .command(p.title().unwrap_or_default()),
                     |prompt, o| {
                         // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).

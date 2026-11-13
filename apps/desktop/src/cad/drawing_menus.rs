@@ -540,12 +540,10 @@ impl App {
             .icon(crate::icons::from_web(Some("snap")))
     }
 
-    /// A command running (the web's `commandItems`).
-    fn command_menu(&self) -> Menu<Message> {
-        let prompt = self.prompt();
-        // Enter may finish picking, advance a stage, or apply a fence without
-        // leaving the command. Use the tool's own description of that action.
-        let confirm = prompt
+    /// The command menu's confirm row: Enter may finish picking, advance a stage, or apply a fence without leaving the
+    /// command; the tool's own words for that action, else Onayla / bitir.
+    fn confirm_label(&self) -> String {
+        self.prompt()
             .options
             .iter()
             .find(|option| option.key == "Enter")
@@ -555,7 +553,24 @@ impl App {
                     Some(value) => format!("{}: {value}", option.label),
                     None => option.label.to_owned(),
                 },
-            );
+            )
+    }
+
+    /// A running command's step as the command line shows it: the axes as the project names them, and a right click
+    /// as it really works (UR-015). Unless a quick right click is Enter, a right click opens this menu, so “sağ
+    /// tıklayın” reads “Enter'a basın (ya da sağ tık › Onayla / bitir)”, the menu's own row named.
+    pub(crate) fn step_words(&self, text: &str) -> String {
+        let text = self.format().axes_text(text);
+        if self.settings.bool(RIGHT_CLICK_ENTER) || !text.contains("sağ tık") {
+            return text;
+        }
+        right_click_words(&text, &self.confirm_label())
+    }
+
+    /// A command running (the web's `commandItems`).
+    fn command_menu(&self) -> Menu<Message> {
+        let prompt = self.prompt();
+        let confirm = self.confirm_label();
         let draft=self.field.as_ref().filter(|f|f.preview!=kentos_interaction::InputPreview::Off);
         let invalid=draft.is_some_and(|f|f.preview==kentos_interaction::InputPreview::Invalid);
         let confirm=match draft {
@@ -703,8 +718,90 @@ impl App {
     }
 }
 
+
+/// “sağ tıklayın”, “Enter ya da sağ tıkla …” and “Enter ya da sağ tık …” when a right click opens the command menu:
+/// Enter first, the menu's row `confirm` after the right click.
+fn right_click_words(text: &str, confirm: &str) -> String {
+    const MARK: &str = "\u{1}";
+    text.replace("Enter ya da sağ tıkla ", MARK)
+        .replace("Enter ya da sağ tık ", &format!("{MARK}{MARK}"))
+        .replace("sağ tıklayın", &format!("Enter'a basın (ya da sağ tık › {confirm})"))
+        .replace(&format!("{MARK}{MARK}"), &format!("Enter (ya da sağ tık › {confirm}) "))
+        .replace(MARK, &format!("Enter (ya da sağ tık › {confirm}) ile "))
+}
+
 #[cfg(test)]
 mod tests {
+
+    /// UR-015: a right click that opens the menu is said as it works, the menu's row named; Enter first.
+    #[test]
+    fn a_right_click_is_said_as_the_menu_takes_it() {
+        let c = "Onayla / bitir";
+        assert_eq!(
+            super::right_click_words("merkez tamam; uygulamak için sağ tıklayın", c),
+            "merkez tamam; uygulamak için Enter'a basın (ya da sağ tık › Onayla / bitir)"
+        );
+        assert_eq!(
+            super::right_click_words("seçin, Enter ya da sağ tıkla tarayın", c),
+            "seçin, Enter (ya da sağ tık › Onayla / bitir) ile tarayın"
+        );
+        assert_eq!(
+            super::right_click_words("Enter ya da sağ tık bitirir", c),
+            "Enter (ya da sağ tık › Onayla / bitir) bitirir"
+        );
+        assert_eq!(super::right_click_words("bir noktaya tıklayın", c), "bir noktaya tıklayın");
+    }
+
+    /// UR-015's pictures (`.run/gui-evidence/kullanim-UR-015/`): Dikme in, its line picked, the step saying Enter and
+    /// the menu's row, light and dark:
+    ///
+    /// ```text
+    /// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib drawing_menus::tests::right_click_screens -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn right_click_screens() {
+        use crate::app::{App, Message};
+        use crate::tools_scenes::{E, N, Objects, click, open, run};
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-015");
+        std::fs::create_dir_all(&out).expect("a folder");
+        for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+            let (mut app, _) = App::boot(None);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let mut o = Objects::new();
+            o.line("cizim", [0.0, 0.0], [20.0, 0.0]);
+            open(&mut app, o);
+            crate::files_testing::make_cad(&mut app);
+            app.draft.snap = false;
+            app.viewport.camera.fit(
+                &kentos_render_wgpu::Bounds { min_x: E - 2.0, min_y: N - 6.0, max_x: E + 22.0, max_y: N + 6.0 },
+                24.0,
+            );
+            run(&mut app, "tool.perpIn");
+            click(&mut app, [10.0, 0.0]);
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("sag-tik-istemi-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
+    }
+
+    /// UR-015: the command line says it by the user's choice: with a quick right click as Enter, as the tool wrote it.
+    #[test]
+    fn the_command_line_says_a_right_click_by_the_users_choice() {
+        let mut app = crate::files_testing::app_with_drawing();
+        assert_eq!(
+            app.step_words("uygulamak için sağ tıklayın"),
+            "uygulamak için Enter'a basın (ya da sağ tık › Onayla / bitir)"
+        );
+        let _ = app.settings.choose(&[(super::RIGHT_CLICK_ENTER, serde_json::Value::Bool(true))]);
+        assert_eq!(app.step_words("uygulamak için sağ tıklayın"), "uygulamak için sağ tıklayın");
+    }
     use iced::Point;
     use kentos_interaction::SnapKind;
 
