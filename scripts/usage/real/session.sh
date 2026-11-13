@@ -32,11 +32,12 @@ done
 export XDG_CONFIG_HOME=$HOME_DIR/.config XDG_DATA_HOME=$HOME_DIR/.local/share XDG_STATE_HOME=$HOME_DIR/.local/state \
   XDG_CACHE_HOME=$HOME_DIR/.cache
 # The runtime folder too: the agents' links open there (masaustu-<modül>.sock, docs/adr/0137); in the owner's they would
-# meet the owner's own program's (13 November 2026). KENTOS_REAL_RUNTIME names one an agent outside the session can
-# reach.
+# meet the owner's own program's (13 November 2026). Its path is written to OUT/runtime.txt, for an agent outside the
+# session; a socket's path is at most ~107 bytes, so KENTOS_REAL_RUNTIME, when given, must be short.
 RUNTIME_DIR=${KENTOS_REAL_RUNTIME:-$HOME_DIR/run}
 mkdir -p "$RUNTIME_DIR" && chmod 700 "$RUNTIME_DIR"
 export XDG_RUNTIME_DIR=$RUNTIME_DIR
+echo "$RUNTIME_DIR" > "$OUT/runtime.txt"
 cd "$ROOT"
 "${KENTOS_BIN:-$ROOT/target/debug/kentos-cad}" "$@" > "$OUT/app.log" 2>&1 &
 APP=$!

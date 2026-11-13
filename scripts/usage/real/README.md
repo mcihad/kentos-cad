@@ -18,7 +18,8 @@ sınar ([ADR 8000](../../../docs/adr/8000-real-window-acceptance.md)).
   listesine yazıldı. Veritabanı bağlantıları kopyalanmaz.
 - **Çalışma klasörü de yalıtık:** `XDG_RUNTIME_DIR` oturumun ev dizinindedir; ajan bağlantısının soketi
   (`masaustu-<modül>.sock`) oraya açılır, sahibin açık programının soketiyle karşılaşmaz (13 Kasım 2026).
-  `KENTOS_REAL_RUNTIME` oturum dışındaki bir ajanın (MCP) bağlanacağı klasörü verir.
+  Klasörün yolu `ÇIKTI/runtime.txt`'ye yazılır: oturum dışındaki bir ajan (MCP) soketi oradan bulur. Soket yolu en çok
+  ~107 bayttır; `KENTOS_REAL_RUNTIME` verilirse kısa olmalıdır.
 - **Oturum veriyolu yok:** `DBUS_SESSION_BUS_ADDRESS` hiçbir yere gitmeyen bir adres olur (silinse libdbus sahibinkini
   `XDG_RUNTIME_DIR`'de bulurdu). Dosya penceresi (Aç, Farklı kaydet) masaüstü portalına bu veriyoluyla sorulur ve sahibin
   kendi ekranında açılırdı (12 Kasım 2026). Dosya seçen adımlar burada sınanmaz; dosya uygulamaya komut satırından
@@ -44,7 +45,7 @@ python3 scripts/usage/real/count.py fixtures/interaction/real/daire-2p1.txt
 - `KENTOS_REAL_SETTINGS`: başka bir ayar klasörü.
 - `KENTOS_REAL_DISPLAY`: başka bir ekran numarası.
 - `KENTOS_REAL_START`: açılış beklemesi, saniye.
-- `KENTOS_REAL_RUNTIME`: ajan bağlantısının açılacağı çalışma klasörü (oturum dışından bağlanmak için).
+- `KENTOS_REAL_RUNTIME`: ajan bağlantısının açılacağı çalışma klasörü (kısa bir yol; verilmezse oturumun kendisi).
 
 ## Senaryo biçimi
 
