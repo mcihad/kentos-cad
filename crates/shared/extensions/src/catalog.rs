@@ -329,7 +329,7 @@ mod tests {
         assert_eq!(mebis.requested_capabilities.len(), 10);
         assert_eq!(
             mebis.digest,
-            "sha256:3e1163602de302f2deebf2a90a21d661c9e446aa2de285445b37279fc90e2002"
+            "sha256:e3816e901e3241d238547ddd25a9d31731d0e6931e96752ee8ff8507030a3b1b"
         );
         assert_eq!(Catalog::read(&catalog.to_json()).unwrap(), catalog);
         mebis.verify(&packages[0].1, &Limits::default()).unwrap();

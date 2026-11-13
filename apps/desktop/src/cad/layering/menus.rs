@@ -105,6 +105,8 @@ impl App {
             } else {
                 menu
             };
+            // What the extensions add to a layer's menu (extensions/ribbon.rs, docs/adr/8057 §3).
+            let menu = self.extension_menu(kentos_extensions::manifest::MenuTarget::Layer, menu);
             return menu
                 .separator()
                 .submenu("Görünürlük", visibility)
@@ -292,6 +294,8 @@ impl App {
                 )
                 .icon(icon("layerMerge"));
         }
+        // What the extensions add to a layer's menu (extensions/ribbon.rs, docs/adr/8057 §3).
+        let menu = self.extension_menu(kentos_extensions::manifest::MenuTarget::Layer, menu);
         menu.separator()
             // Always offered: what cannot go says why (the web's).
             .item("Sil", event(Event::Remove(id)))

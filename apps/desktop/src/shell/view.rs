@@ -173,6 +173,8 @@ impl App {
         }
         // A Yapay zekâ ajanı window over Uygulama ayarları (assistant/settings.rs).
         layers.extend(self.agent_window());
+        // A package's review over Eklentiler (extensions/view.rs).
+        layers.extend(self.extension_review_window());
         // İfade oluşturucu over the window whose field opened it (expression/).
         layers.extend(self.builder_view());
         // The connection window, the password question and Sil's question over the window that asked for them
@@ -261,6 +263,7 @@ impl App {
             Asking::CloudRename => self.rename_view(),
             Asking::CloudTrash => self.trash_view(),
             Asking::Settings => self.settings_dialog(),
+            Asking::Extensions => self.extensions_view(),
             Asking::Recovery => self.recovery_dialog(),
             Asking::SignIn => self.sign_in_view(),
             Asking::Catalog => self.catalog_view(),

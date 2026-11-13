@@ -210,6 +210,8 @@ fn the_whole_lifecycle_leaves_nothing_of_a_lease_behind() {
     assert_eq!(started.len(), 1);
     assert!(started[0].1.is_ok());
 
+    assert_eq!(r.package_file(ID, "LICENSE").as_deref(), Some(&b"MIT"[..]));
+    assert_eq!(r.package_file(ID, "../registry.json"), None);
     let data = r.data_dir(ID).unwrap();
     fs::write(data.join("ayar.json"), "{}").unwrap();
     assert_eq!(r.remove(ID, true).unwrap(), Vec::<String>::new());

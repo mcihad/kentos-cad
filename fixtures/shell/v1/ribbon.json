@@ -110,6 +110,10 @@
     "label": "Yönet"
    },
    {
+    "id": "extensions",
+    "label": "Eklentiler"
+   },
+   {
     "id": "output",
     "label": "Çıktı"
    },
@@ -232,6 +236,10 @@
    {
     "id": "view",
     "label": "Görünüm"
+   },
+   {
+    "id": "extensions",
+    "label": "Eklentiler"
    },
    {
     "id": "output",

@@ -413,6 +413,25 @@ impl Registry {
         self.manifests.get(id)
     }
 
+    /// The folder of the version in use, read-only: where a form's or a GeoPackage's file is read from.
+    pub fn package_dir(&self, id: &str) -> Option<PathBuf> {
+        let entry = self.file.extensions.get(id)?;
+        Some(self.layout.package(id, &entry.active))
+    }
+
+    /// A file of the version in use, by its path in the package; none when it has no such file.
+    pub fn package_file(&self, id: &str, path: &str) -> Option<Vec<u8>> {
+        if kentos_extensions::manifest::is_extension_id(id)
+            && !path.split('/').any(|p| p.is_empty() || p == "..")
+        {
+            let full = path
+                .split('/')
+                .fold(self.package_dir(id)?, |dir, part| dir.join(part));
+            return fs::read(full).ok();
+        }
+        None
+    }
+
     /// The lease of a running extension.
     pub fn lease(&self, id: &str) -> Option<&ExtensionLease> {
         self.leases.get(id)

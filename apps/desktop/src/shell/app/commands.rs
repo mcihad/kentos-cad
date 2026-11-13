@@ -142,6 +142,9 @@ impl App {
             "view.theme.toggle" => self.choose_theme(self.mode.toggled()),
             id if id.starts_with("workspace.") => self.choose_mode(id),
             "tools.options" => self.open_settings(),
+            // Eklentiler (docs/adr/8057 §3): the manager, and a package straight to its review.
+            "extensions.manage" => self.open_extensions(),
+            "extensions.install" => return self.install_extension(),
             // Yeni pafta and Şablondan pafta (docs/adr/0622 §3): the sheet mode's own, from the ribbon.
             "sheet.new" => return self.sheet_message(kentos_sheet_ui::Message::NewSheet),
             // Kat planı paftaları (docs/adr/0718): the sheet mode's own, from the drawing too.

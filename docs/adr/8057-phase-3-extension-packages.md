@@ -116,7 +116,7 @@ yeterli.
 - `fixtures/extensions/v1/mebis/`: dikey eklenti; komut, harita aracı, İşlemler aracı, denetim, ifade, panel, iki form,
   Python'suz veri kaynağı, şema, çeviri, ikon; `pyproject.toml` ve **gerçek `uv lock` çıktısı** (uv 0.11.26; `shapely`,
   isteğe bağlı `pygal`; üç sistem `environments` ve `required-environments`'ta). Paket 14 382 bayt, 16 dosya, içerik özeti
-  `sha256:3e1163602de302f2deebf2a90a21d661c9e446aa2de285445b37279fc90e2002`.
+  `sha256:e3816e901e3241d238547ddd25a9d31731d0e6931e96752ee8ff8507030a3b1b`.
 - `fixtures/extensions/v1/ornek-altlik/`: en küçük paket (D2): `manifest.json`, `LICENSE` ve iki servis veri kaynağı;
   Python yok. Paket 1 400 bayt; tek uyarı değişiklik notunun yokluğu.
 
@@ -231,3 +231,49 @@ ve kayıt defterine yazmadan hesaplar (hazır olanınki kuşak 0'lık bir kirala
 `kentos kek dump [--root <klasör>]` kurulu her eklentinin durumuyla birlikte JSON olarak döker: "sekmem nereye düştü?"
 sorusunun kanıtı (Ö·38). Kayıt defterini açmak artık yalnız bir saatten eski hazırlık artıklarını siler: masaüstü kurulum
 yaparken MCP ya da CLI kayıt defterini açarsa süren kurulumun hazırladığı dosyalar silinirdi (sınamada yakalandı).
+
+**Masaüstü (13 Kasım, gerçek pencerede sınandı).**
+
+- **Eklentiler penceresi** (`extensions.manage`, `apps/desktop/src/shell/extensions/`): solda liste, sağda ayrıntı;
+  Kurulu ve Katalog bölümleri. Eylemler (Etkinleştir / Devre dışı bırak / Yeniden dene, önceki sürüme dön, verisini
+  sıfırla, kaldır) ayrıntının **başında**: ilk sürümde katalogdaki "Gözden geçir ve kur…" düğmesi uzun ayrıntının
+  altında kalıp kesiliyordu (ekran görüntüsünde görüldü). Değişiklik notu Markdown'dan okunur yazıya çevrilir (ilk
+  sürüm `#` ve `##` işaretlerini olduğu gibi gösteriyordu). Durum satırı eklentinin kimliğini değil adını söyler.
+- **Gözden geçirme penceresi**, yöneticinin üstünde (Esc önce onu kapatır): tür, programlar, yayımcı, lisans, kaynak,
+  kurulu sürüm; uyumsuzluk, kurum ilkesi, geri çekme ve döngü uyarıları; kaynak çakışmasında açık seçim kutusu;
+  bağımlılıklar; istenen her yetenek **işaret kutusuyla** (varsayılan işaretli), gerekçesi, sunucuları, dış yapay zekâ
+  bilgisi ve kurulu sürüme göre `YENİ` / `DEĞİŞTİ` / "artık istemiyor"; Python katkısı varsa ayrı kutu; uyarılar;
+  değişiklik notu. Geçersiz paket yalnız sorunlarıyla açılır, kurulamaz.
+- **Kurum kataloğu klasörü:** pencereden seçilir (`Katalog klasörü…`) ve bir sonraki açılış için hatırlanır
+  (`<kayıt>/katalog-klasoru`); `KENTOS_EXTENSIONS_CATALOG` kurulumun ya da gerçek pencere oturumunun klasörünü verir.
+  İndirilen paket dizine karşı doğrulanır; dizinden sonra değişmiş dosya reddedilir.
+- **Eklentisiz başlatma:** `--eklentisiz`, `KENTOS_EKLENTISIZ` ya da pencerenin "Bir sonraki açılışta eklentisiz
+  başlat" kutusu (tek seferlik bayrak dosyası; o açılış siler).
+- **Şerit:** her iki kipte kalıcı bir **Eklentiler** sekmesi (CAD'de Yönet'in, CBS'de Görünüm'ün yanında; Eklentiler,
+  Paket yükle). Dikey bir eklentinin sekmesi (`ui.ribbonTab` verildiyse) yalnız **kendi programında** eklenir
+  (kentos-cad'de programının çalışma kipinde); sekmeler kayıt defteri her değiştiğinde ondan yeniden kurulur, bu yüzden
+  devre dışı bırakılan ya da kaldırılan eklenti sekme ve düğme bırakmaz; seçili sekme eklentinin sekmesiyse programın
+  kendi sekmesine düşer. Düğmeler eklenti kodu gerektirmeyeni yapar: yerleşik komut (`builtin`; programın sunmadığı
+  komut basılamaz), veri kaynağı, form. Python isteyen düğme görünür ama basılamaz; ipucu nedenini söyler (ADIM 18A/19).
+- **Sağ tık:** `ui.contextMenu` verilmiş öğeler Katmanlar'daki katman menüsüne (`layer`) ve çizimin menüsüne
+  (`drawing`) Sil'den önce, kendi çizgisiyle eklenir; eklentinin programı dışında görünmez.
+- **Veri kaynağı:** WMS, WMTS, XYZ ve vektör karo Kaynaklar'ın Harita servisi penceresinde adresi, türü ve ilk katmanı
+  dolu açılır; GeoPackage paketin klasöründen **kopya** olarak alınır (bağlı katman, eklenti kaldırılınca kırılırdı);
+  WFS ve OGC API Features bu sürümde açılmaz, adresini söyler.
+- **Form:** `Formu içe aktar` yolundan (seçili formun ya da etkin katmanın katmanına, eksik alanlar eklenerek).
+- **Kabul örneği** `fixtures/extensions/v1/ornek-kent/` (Kent Rehberi): Python'suz dikey eklenti; form, şema, veri
+  kaynağı ve CBS şerit sekmesi.
+- **Yan düzeltme (ADIM 15A'nın açığı):** CAD Görünüm › Paneller'e eklenen Asistan grubu üç sütuna taşırıp sekmeyi
+  1440 pikselde yalnız simgeye indiriyordu (`every_tab_fits_1100_pixels_without_scrolling`); Asistan'sız koşuda test
+  geçti, yani neden oydu. Tam ekran (pencerenin çubuğunda da var) grubun ▾ menüsüne alındı. Ortak şerit fikstürü
+  (`fixtures/shell/v1/ribbon.json`) masaüstünü izler (ADR 0622 §3); Eklentiler sekmesi oraya eklendi. Webin
+  `ribbonPlan.test.ts`'i bu değişiklikten önce de fikstürden ayrı düşüyordu (web masaüstünün gerisinde).
+
+**Ölçüm ve doğrulama:** gerçek pencerede (Xvfb, `scripts/usage/real/session.sh`, yalıtılmış kayıt defteri) KentOS
+GIS'te kurum kataloğundan kur → sekme görünür → veri kaynağı ve form düğmeleri çalışır → KentOS Mimari'de sekme yok →
+1.1.0'a güncelle (yeni yetenek `YENİ` işaretli) → katman menüsünde eklentinin öğesi → devre dışı bırakınca sekme ve
+öğe kalkar; Kent Rehberi'nin etkinleşmesi 0,2–0,3 ms. Masaüstü sahne testleri 5 (yönetici, sekme ve program kapısı,
+hayalet bırakmama, güncelleme farkı ve verilmeyen yetenek, bozuk paket, katalog), kayıt defteri 21; ilgili masaüstü
+testleri (şerit, katalog, menü, komut, tuş ipuçları) 335 geçti. **ADIM 18'de kalan:** Kaynaklar'da eklenti veri
+kaynaklarının dalı, Komut ara'da eklenti öğeleri, MCP kaynağı ve liste değişikliği bildirimi, "Sorunlu eklentiyi
+bul"un penceresi, `.kcad` proje bağlantısı, paket SVG ikonlarının düğmelerde çizilmesi.

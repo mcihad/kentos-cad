@@ -2614,6 +2614,7 @@ dependencies = [
 name = "kentos-cli"
 version = "0.1.0"
 dependencies = [
+ "kentos-extension-host",
  "kentos-extensions",
  "serde_json",
 ]
@@ -2674,6 +2675,8 @@ dependencies = [
  "kentos-domain",
  "kentos-dwg",
  "kentos-expression",
+ "kentos-extension-host",
+ "kentos-extensions",
  "kentos-formats",
  "kentos-forms",
  "kentos-geometry-core",

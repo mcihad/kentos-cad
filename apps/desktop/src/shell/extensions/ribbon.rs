@@ -1,0 +1,431 @@
+//! What the extensions add to the ribbon (docs/adr/8057 §3; plan/eklenti.md ADIM 18).
+//!
+//! A vertical extension's tab, registered under its lease when the user granted `ui.ribbonTab`, joins the ribbon of
+//! its own program only: KentOS GIS's tab is not offered in KentOS Mimari (kentos-cad, which runs every program's
+//! commands, shows it in the work mode of its program). Its buttons do what needs no extension code: a KentOS command
+//! (`builtin`), the extension's data source (opened as Kaynaklar's services are) and its form (imported as Formu içe
+//! aktar does). A button that runs the extension's Python is shown, not pressable, with the reason, until its
+//! environment is ready (ADIM 18A, 19). The tabs are rebuilt from the registry whenever it changes, so a disabled or
+//! removed extension leaves no tab and no button behind.
+
+use std::collections::HashSet;
+use std::sync::{Mutex, OnceLock};
+
+use kentos_extension_host::ContributionKind;
+use kentos_extensions::manifest::{ItemSize, Manifest, MenuTarget, RibbonItem};
+use kentos_launch::Module;
+use kentos_ui::icon::Icon;
+use kentos_ui::widget::ribbon::{Button, Group};
+use kentos_ui::widget::{Menu, Tip};
+
+use super::{Event, msg};
+use crate::app::{App, Message};
+use crate::catalog::catalog;
+
+/// A string kept for the program's lifetime, once per distinct value: tab ids and command ids are `&'static str` in
+/// the ribbon's messages. The extensions' ids are few and kept as long as the program runs.
+pub(crate) fn intern(text: &str) -> &'static str {
+    static KEPT: OnceLock<Mutex<HashSet<&'static str>>> = OnceLock::new();
+    let mut kept = KEPT
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    if let Some(found) = kept.get(text) {
+        return found;
+    }
+    let leaked: &'static str = Box::leak(text.to_owned().into_boxed_str());
+    kept.insert(leaked);
+    leaked
+}
+
+/// What a button of an extension's tab does.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum Action {
+    /// A KentOS command.
+    Builtin(&'static str),
+    /// The extension's data source: (extension, its local id).
+    Source(String, String),
+    /// The extension's form: (extension, its local id).
+    Form(String, String),
+    /// Shown, not pressable: why.
+    Unavailable(String),
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct ExtItem {
+    pub(crate) label: String,
+    pub(crate) icon: Icon,
+    pub(crate) large: bool,
+    pub(crate) action: Action,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct ExtPanel {
+    pub(crate) label: String,
+    pub(crate) items: Vec<ExtItem>,
+}
+
+/// An extension's ribbon tab.
+#[derive(Clone, Debug)]
+pub(crate) struct ExtTab {
+    /// `ext.<extension>.<tab>`, kept for the ribbon's messages.
+    pub(crate) id: &'static str,
+    pub(crate) label: String,
+    pub(crate) module: Module,
+    pub(crate) extension: String,
+    pub(crate) panels: Vec<ExtPanel>,
+}
+
+/// A right-click menu's item an extension adds (`ui.contextMenu`): which menu, and what it does.
+#[derive(Clone, Debug)]
+pub(crate) struct ExtMenuItem {
+    pub(crate) target: MenuTarget,
+    pub(crate) item: ExtItem,
+    pub(crate) modules: Vec<Module>,
+}
+
+/// The program a manifest's module names.
+fn module_of(m: kentos_extensions::manifest::Module) -> Option<Module> {
+    Module::ALL.into_iter().find(|p| p.id() == m.id())
+}
+
+/// What an item points at, its words and icon, and what pressing it does.
+fn item_of(
+    manifest: &Manifest,
+    item: &RibbonItem,
+    registered: &[&kentos_extension_host::Registered],
+) -> ExtItem {
+    let ext = manifest.id.as_str();
+    let e = &manifest.entrypoints;
+    let has = |kind: ContributionKind, local: &str| {
+        let id = format!("ext.{ext}.{local}");
+        registered.iter().any(|r| r.kind == kind && r.id == id)
+    };
+    let not_granted = || {
+        Action::Unavailable(
+            "Bu katkının istediği yetenek kurulurken verilmedi; Eklentiler penceresinden yeniden kurup izin verin."
+                .to_owned(),
+        )
+    };
+    let (label, icon, action): (String, Icon, Action) = if let Some(id) = &item.builtin {
+        match catalog().get(id) {
+            Some(command) => (
+                command.short.to_owned(),
+                command.icon,
+                Action::Builtin(command.id),
+            ),
+            None => (
+                id.clone(),
+                Icon::Button,
+                Action::Unavailable(format!("“{id}” bu KentOS'ta bir komut değil.")),
+            ),
+        }
+    } else if let Some(local) = &item.data_source {
+        let title = manifest
+            .contributions
+            .data_sources
+            .iter()
+            .find(|s| s.id == *local)
+            .map_or_else(|| local.clone(), |s| s.title.clone());
+        let action = if has(ContributionKind::DataSource, local) {
+            Action::Source(ext.to_owned(), local.clone())
+        } else {
+            not_granted()
+        };
+        (
+            title,
+            crate::icons::from_web(Some("serviceSettings")),
+            action,
+        )
+    } else if let Some(local) = &item.form {
+        let action = if has(ContributionKind::Form, local) {
+            Action::Form(ext.to_owned(), local.clone())
+        } else {
+            not_granted()
+        };
+        (
+            local.clone(),
+            crate::icons::from_web(Some("featureTable")),
+            action,
+        )
+    } else {
+        // The extension's code: a command, a map tool, an İşlemler tool, an audit or a panel.
+        let (kind, local, title, icon) = if let Some(local) = &item.command {
+            let c = e.commands.iter().find(|c| c.id == *local);
+            (
+                ContributionKind::Command,
+                local,
+                c.map(|c| c.title.clone()),
+                c.and_then(|c| c.icon.clone()),
+            )
+        } else if let Some(local) = &item.map_tool {
+            let t = e.map_tools.iter().find(|t| t.id == *local);
+            (
+                ContributionKind::MapTool,
+                local,
+                t.map(|t| t.title.clone()),
+                t.and_then(|t| t.icon.clone()),
+            )
+        } else if let Some(local) = &item.processing {
+            (
+                ContributionKind::Processing,
+                local,
+                None,
+                Some("processing".to_owned()),
+            )
+        } else if let Some(local) = &item.audit {
+            let a = e.audits.iter().find(|a| a.id == *local);
+            (
+                ContributionKind::Audit,
+                local,
+                a.map(|a| a.title.clone()),
+                Some("standardsCheck".to_owned()),
+            )
+        } else if let Some(local) = &item.panel {
+            let p = e.panels.iter().find(|p| p.id == *local);
+            (
+                ContributionKind::Panel,
+                local,
+                p.map(|p| p.title.clone()),
+                Some("panelRight".to_owned()),
+            )
+        } else {
+            return ExtItem {
+                label: "?".to_owned(),
+                icon: Icon::Button,
+                large: false,
+                action: Action::Unavailable("Öğe bir katkı göstermiyor.".to_owned()),
+            };
+        };
+        let title = title.unwrap_or_else(|| local.clone());
+        // A built-in icon by its name; a package's own SVG file waits for the manager's icons.
+        let icon = icon.filter(|i| !i.contains('/') && !i.contains('.'));
+        let action = if has(kind, local) {
+            Action::Unavailable(format!(
+                "“{title}” eklentinin Python işlevini çalıştırır; Python ortamı hazırlanınca çalışacak."
+            ))
+        } else {
+            not_granted()
+        };
+        (
+            title,
+            crate::icons::from_web(Some(icon.as_deref().unwrap_or("processing"))),
+            action,
+        )
+    };
+    let icon = match item.icon.as_deref() {
+        Some(name) if !name.contains('/') && !name.contains('.') => {
+            crate::icons::from_web(Some(name))
+        }
+        _ => icon,
+    };
+    ExtItem {
+        label: item.label.clone().unwrap_or(label),
+        icon,
+        large: item.size == ItemSize::Large,
+        action,
+    }
+}
+
+impl App {
+    /// The extensions' tabs follow the registry's contributions.
+    pub(crate) fn extension_tabs_changed(&mut self) {
+        let mut tabs = Vec::new();
+        if let Some(registry) = self.extensions.registry.as_ref() {
+            let contributions = registry.contributions();
+            for tab_contribution in contributions
+                .iter()
+                .filter(|c| c.kind == ContributionKind::RibbonTab)
+            {
+                let ext = &tab_contribution.lease.extension;
+                let Some(manifest) = registry.manifest(ext) else {
+                    continue;
+                };
+                let registered: Vec<&kentos_extension_host::Registered> = contributions
+                    .iter()
+                    .filter(|c| c.lease == tab_contribution.lease)
+                    .collect();
+                let prefix = format!("ext.{ext}.");
+                let local = tab_contribution
+                    .id
+                    .strip_prefix(&prefix)
+                    .unwrap_or_default();
+                let Some(tab) = manifest
+                    .contributions
+                    .ribbon_tabs
+                    .iter()
+                    .find(|t| t.id == local)
+                else {
+                    continue;
+                };
+                let Some(module) = module_of(tab.module) else {
+                    continue;
+                };
+                tabs.push(ExtTab {
+                    id: intern(&tab_contribution.id),
+                    label: tab.label.clone(),
+                    module,
+                    extension: ext.clone(),
+                    panels: tab
+                        .panels
+                        .iter()
+                        .map(|p| ExtPanel {
+                            label: p.label.clone(),
+                            items: p
+                                .items
+                                .iter()
+                                .map(|i| item_of(manifest, i, &registered))
+                                .collect(),
+                        })
+                        .collect(),
+                });
+            }
+        }
+        self.extensions.tabs = tabs;
+        // The right-click menus' items, under the same leases.
+        let mut menus = Vec::new();
+        if let Some(registry) = self.extensions.registry.as_ref() {
+            let contributions = registry.contributions();
+            for c in contributions
+                .iter()
+                .filter(|c| c.kind == ContributionKind::ContextMenuItem)
+            {
+                let ext = &c.lease.extension;
+                let Some(manifest) = registry.manifest(ext) else {
+                    continue;
+                };
+                let Some(n) =
+                    c.id.rsplit('.')
+                        .next()
+                        .and_then(|n| n.parse::<usize>().ok())
+                else {
+                    continue;
+                };
+                let Some(entry) = manifest.contributions.context_menus.get(n) else {
+                    continue;
+                };
+                let registered: Vec<&kentos_extension_host::Registered> = contributions
+                    .iter()
+                    .filter(|r| r.lease == c.lease)
+                    .collect();
+                // The menu item points as a ribbon button does.
+                let as_button = RibbonItem {
+                    command: entry.command.clone(),
+                    map_tool: entry.map_tool.clone(),
+                    processing: entry.processing.clone(),
+                    audit: entry.audit.clone(),
+                    panel: entry.panel.clone(),
+                    form: entry.form.clone(),
+                    data_source: entry.data_source.clone(),
+                    builtin: entry.builtin.clone(),
+                    size: ItemSize::Small,
+                    label: entry.label.clone(),
+                    icon: entry.icon.clone(),
+                    when: entry.when.clone(),
+                };
+                menus.push(ExtMenuItem {
+                    target: entry.target,
+                    item: item_of(manifest, &as_button, &registered),
+                    modules: manifest
+                        .modules
+                        .iter()
+                        .filter_map(|m| module_of(*m))
+                        .collect(),
+                });
+            }
+        }
+        self.extensions.menus = menus;
+    }
+
+    /// The extensions' items of a right-click menu, after a line, where this program shows their extension.
+    pub(crate) fn extension_menu(&self, target: MenuTarget, menu: Menu<Message>) -> Menu<Message> {
+        let items: Vec<&ExtMenuItem> = self
+            .extensions
+            .menus
+            .iter()
+            .filter(|m| {
+                m.target == target
+                    && m.modules
+                        .iter()
+                        .any(|module| self.extension_tab_here(*module))
+            })
+            .collect();
+        if items.is_empty() {
+            return menu;
+        }
+        items.into_iter().fold(menu.separator(), |menu, m| {
+            let on = match &m.item.action {
+                Action::Builtin(id) => self.offers(id).then_some(Message::Run(id)),
+                Action::Source(ext, local) => {
+                    Some(msg(Event::OpenSource(ext.clone(), local.clone())))
+                }
+                Action::Form(ext, local) => Some(msg(Event::OpenForm(ext.clone(), local.clone()))),
+                Action::Unavailable(_) => None,
+            };
+            menu.item(m.item.label.clone(), on).icon(m.item.icon)
+        })
+    }
+
+    /// Whether an extension's tab of this program shows here: its own program's, or in kentos-cad the work mode of
+    /// its program.
+    fn extension_tab_here(&self, module: Module) -> bool {
+        match self.program {
+            Some(program) => program == module,
+            None => crate::program::type_of(module) == self.work_mode(),
+        }
+    }
+
+    /// The extensions' tabs this program shows.
+    pub(crate) fn extension_tabs(&self) -> impl Iterator<Item = &ExtTab> {
+        self.extensions
+            .tabs
+            .iter()
+            .filter(|t| self.extension_tab_here(t.module))
+    }
+
+    /// The extension's tab of this id, when this program shows it.
+    pub(crate) fn extension_tab(&self, id: &str) -> Option<&ExtTab> {
+        self.extension_tabs().find(|t| t.id == id)
+    }
+
+    /// An extension's tab's panels, as the ribbon draws them.
+    pub(crate) fn extension_groups(&self, tab: &ExtTab) -> Vec<Group<'static, Message>> {
+        tab.panels
+            .iter()
+            .map(|panel| {
+                let mut group = Group::new(panel.label.clone());
+                if let Some(first) = panel.items.first() {
+                    group = group.icon(first.icon);
+                }
+                for item in &panel.items {
+                    let button = if item.large {
+                        Button::large(item.icon, item.label.clone())
+                    } else {
+                        Button::small(item.icon, item.label.clone())
+                    };
+                    let (on, tip) = match &item.action {
+                        Action::Builtin(id) => (
+                            self.offers(id).then_some(Message::Run(id)),
+                            catalog().get(id).map_or_else(String::new, |c| c.description.to_owned()),
+                        ),
+                        Action::Source(ext, local) => (
+                            Some(msg(Event::OpenSource(ext.clone(), local.clone()))),
+                            "Eklentinin veri kaynağını haritaya ekler (Kaynaklar'ın servis yolundan).".to_owned(),
+                        ),
+                        Action::Form(ext, local) => (
+                            Some(msg(Event::OpenForm(ext.clone(), local.clone()))),
+                            "Eklentinin formunu projeye alır (Formu içe aktar gibi).".to_owned(),
+                        ),
+                        Action::Unavailable(why) => (None, why.clone()),
+                    };
+                    group = group.tool(
+                        button
+                            .on_press_maybe(on)
+                            .tip(Tip::new(item.label.clone()).body(format!("{tip} ({})", tab.extension))),
+                    );
+                }
+                group
+            })
+            .collect()
+    }
+}

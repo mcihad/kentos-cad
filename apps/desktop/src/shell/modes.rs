@@ -138,6 +138,10 @@ impl App {
 
     /// The chosen tab: the chosen one while the mode keeps it, else Giriş.
     pub(crate) fn regular_tab(&self) -> &'static str {
+        // An extension's tab while this program shows it (extensions/ribbon.rs).
+        if let Some(tab) = self.extension_tab(self.tab) {
+            return tab.id;
+        }
         let mut tabs = self.ribbon_tabs();
         let first = self.ribbon_tabs().nth(1).map_or("home", |t| t.id);
         tabs.find(|t| t.id == self.tab).map_or(first, |t| t.id)

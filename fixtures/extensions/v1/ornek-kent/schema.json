@@ -1,0 +1,44 @@
+{
+  "layers": [
+    {
+      "name": "bina",
+      "title": "Bina",
+      "geometry": "polygon",
+      "fields": [
+        {
+          "name": "Durum",
+          "kind": "text"
+        },
+        {
+          "name": "Kat",
+          "kind": "integer"
+        },
+        {
+          "name": "Malzeme",
+          "kind": "text",
+          "domain": "malzeme"
+        },
+        {
+          "name": "Not",
+          "kind": "text"
+        }
+      ]
+    }
+  ],
+  "domains": [
+    {
+      "id": "malzeme",
+      "kind": "text",
+      "values": [
+        {
+          "code": "ah",
+          "label": "Ahşap"
+        },
+        {
+          "code": "bt",
+          "label": "Betonarme"
+        }
+      ]
+    }
+  ]
+}

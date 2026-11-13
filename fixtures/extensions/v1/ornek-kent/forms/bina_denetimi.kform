@@ -1,0 +1,96 @@
+{
+  "format": "kentos.form-package",
+  "version": 1,
+  "name": "Bina denetimi",
+  "body": {
+    "revision": 3,
+    "items": [
+      {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+      },
+      {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "visibleWhen": "Durum = 'inceleme'"
+      },
+      {
+        "type": "field",
+        "id": "malzeme",
+        "field": "Malzeme"
+      },
+      {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Kat: {Kat}"
+      },
+      {
+        "type": "field",
+        "id": "not",
+        "field": "Not",
+        "requiredWhen": "Kat > 5"
+      }
+    ]
+  },
+  "fields": [
+    {
+      "name": "Durum",
+      "kind": "text",
+      "values": [
+        {
+          "code": "iyi",
+          "label": "İyi"
+        },
+        {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+        }
+      ]
+    },
+    {
+      "id": "kat-sayisi",
+      "name": "Kat",
+      "kind": "integer",
+      "min": "1"
+    },
+    {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+        {
+          "code": "ah",
+          "label": "Ahşap"
+        },
+        {
+          "code": "bt",
+          "label": "Betonarme"
+        }
+      ],
+      "domain": "malzeme"
+    },
+    {
+      "name": "Not",
+      "kind": "text"
+    }
+  ],
+  "domains": [
+    {
+      "id": "malzeme",
+      "name": "Yapı malzemesi",
+      "kind": "text",
+      "values": [
+        {
+          "code": "ah",
+          "label": "Ahşap"
+        },
+        {
+          "code": "bt",
+          "label": "Betonarme"
+        }
+      ]
+    }
+  ]
+}

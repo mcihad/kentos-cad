@@ -611,7 +611,9 @@
     "file.import.photos",
     "sheet.new",
     "sheet.fromTemplate",
-    "view.assistant"
+    "view.assistant",
+    "extensions.manage",
+    "extensions.install"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

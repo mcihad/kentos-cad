@@ -135,6 +135,7 @@ impl App {
             bottom_tab: crate::bottom::BottomTab::default(),
             python: crate::python::Console::default(),
             assistant: crate::assistant::Assistant::default(),
+            extensions: crate::extensions::Extensions::default(),
             bottom_log: None,
             dialog: None,
             dialog_under: None,

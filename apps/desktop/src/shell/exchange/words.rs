@@ -283,7 +283,7 @@ pub fn fitted<'a, Message: Clone + 'a>(
 
 /// The window's main button.
 pub fn primary<'a, Message: Clone + 'a>(
-    caption: &'a str,
+    caption: impl iced::widget::text::IntoFragment<'a>,
     on: Option<Message>,
 ) -> Element<'a, Message> {
     button(label::body(caption))
@@ -294,7 +294,7 @@ pub fn primary<'a, Message: Clone + 'a>(
 }
 
 pub fn secondary<'a, Message: Clone + 'a>(
-    caption: &'a str,
+    caption: impl iced::widget::text::IntoFragment<'a>,
     on: Option<Message>,
 ) -> Element<'a, Message> {
     button(label::body(caption))
@@ -306,7 +306,7 @@ pub fn secondary<'a, Message: Clone + 'a>(
 
 /// A quiet button at the start of the footer (“Başka dosya…”).
 pub fn ghost<'a, Message: Clone + 'a>(
-    caption: &'a str,
+    caption: impl iced::widget::text::IntoFragment<'a>,
     on: Option<Message>,
 ) -> Element<'a, Message> {
     button(label::body(caption))

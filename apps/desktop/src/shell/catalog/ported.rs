@@ -841,4 +841,7 @@ pub const PORTED: &[&str] = &[
     "sheet.fromTemplate",
     // docs/adr/8056 §4: Asistan, the user's own AI agent's panel (assistant/).
     "view.assistant",
+    // docs/adr/8057 §3: Eklentiler, the extension manager, and Paket yükle (extensions/).
+    "extensions.manage",
+    "extensions.install",
 ];

@@ -1014,6 +1014,11 @@ impl App {
                 self.cloud.upload = None;
             }
             Some(Dialog::Settings) => self.settings_draft = None,
+            // A package's review over Eklentiler goes first.
+            Some(Dialog::Extensions) if self.extensions.review.is_some() => {
+                self.extensions.review = None;
+                self.dialog = Some(Dialog::Extensions);
+            }
             Some(Dialog::RemoveCopy) => {
                 self.cloud.removing = None;
                 if self.cloud.catalog.is_some() {

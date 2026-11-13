@@ -372,7 +372,7 @@ impl App {
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let mut presets = row![].spacing(6);
         for (i, (name, _, _)) in VIEWS.iter().enumerate() {
-            presets = presets.push(words::secondary(name, Some(msg(Event::View(i)))));
+            presets = presets.push(words::secondary(*name, Some(msg(Event::View(i)))));
         }
         presets = presets.push(words::secondary(FIT, Some(msg(Event::Fit))));
         let top = row![

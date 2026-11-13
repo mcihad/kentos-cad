@@ -679,7 +679,12 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   (`kentos_extensions::catalog`): paketlerin kendisinden yazılır (`kentos kek index <klasör>`), kurmadan önce gösterilecek
   açıklama, değişiklik notu (16 000 karaktere kadar), ikon, bağımlılıklar ve gerekçeli yetenekler içinde; indirilen paket
   dosyanın boyu, SHA-256'sı ve içerik özetiyle katalogdakine karşı doğrulanır (`catalog_mismatch`); kurulmayacak paket
-  listelenmez. Masaüstü bağlantısı sırada.
+  listelenmez. **Masaüstü (13 Kasım, ADR 8057 §3):** Eklentiler penceresi (Kurulu/Katalog, gözden geçirme penceresi:
+  işaret kutulu gerekçeli yetenekler ve kurulu sürüme göre farkı), kurum kataloğu klasörü, eklentisiz başlatma,
+  her kipte Eklentiler sekmesi, dikey eklentinin kendi programındaki sekmesi (yerleşik komut, veri kaynağı ve form
+  düğmeleri; Python'lular nedeniyle pasif), katman ve çizim sağ tık menülerinde eklenti öğeleri; gerçek pencerede kabul
+  akışı ekran görüntüleriyle sınandı. **Kalan:** Kaynaklar dalı, Komut ara, MCP kaynağı ve `list_changed`, sorunlu
+  eklentiyi bulma penceresi, `.kcad` bağlantısı, paket SVG ikonları.
 
 ### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 

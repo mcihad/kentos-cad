@@ -60,6 +60,9 @@ kentos-geopackage = { path = "../../crates/native/geopackage" }
 kentos-cloud = { path = "../../crates/native/cloud" }
 # Asistan (docs/adr/8056 §4): the user's own AI agents and their providers; its own runtime, awaited on Iced's executor.
 kentos-agent = { path = "../../crates/native/agent" }
+# Eklentiler (docs/adr/8057 §3): the .kek packages' inspector and catalog, and the user's extension registry.
+kentos-extensions = { path = "../../crates/shared/extensions" }
+kentos-extension-host = { path = "../../crates/native/extension-host" }
 # File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
 # the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
 kentos-formats = { path = "../../crates/shared/formats" }

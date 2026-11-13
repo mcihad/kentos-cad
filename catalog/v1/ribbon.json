@@ -2719,13 +2719,10 @@
        {
         "command": "view.magnifier",
         "size": "small"
-       },
-       {
-        "command": "view.fullscreen",
-        "size": "small"
        }
       ],
       "overflow": [
+       "view.fullscreen",
        "view.keyTips"
       ]
      },
@@ -2990,6 +2987,26 @@
       ],
       "works": [
        "map"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "extensions",
+    "label": "Eklentiler",
+    "panels": [
+     {
+      "label": "Eklentiler",
+      "icon": "extensions",
+      "items": [
+       {
+        "command": "extensions.manage",
+        "size": "large"
+       },
+       {
+        "command": "extensions.install",
+        "size": "small"
+       }
       ]
      }
     ]
@@ -4407,14 +4424,31 @@
        {
         "command": "view.magnifier",
         "size": "small"
-       },
-       {
-        "command": "view.fullscreen",
-        "size": "small"
        }
       ],
       "overflow": [
+       "view.fullscreen",
        "view.keyTips"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "extensions",
+    "label": "Eklentiler",
+    "panels": [
+     {
+      "label": "Eklentiler",
+      "icon": "extensions",
+      "items": [
+       {
+        "command": "extensions.manage",
+        "size": "large"
+       },
+       {
+        "command": "extensions.install",
+        "size": "small"
+       }
       ]
      }
     ]

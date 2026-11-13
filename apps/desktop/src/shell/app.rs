@@ -158,6 +158,8 @@ pub enum Dialog {
     Unsaved(Then),
     /// Uygulama ayarları (`tools.options`); its draft is `App::settings_draft`.
     Settings,
+    /// Eklentiler (`extensions.manage`, docs/adr/8057 §3); its state is `App::extensions`.
+    Extensions,
     /// Unsaved work a crash left: the first of `App::recovery.offers` (recovery.rs).
     Recovery,
     /// “Buluta giriş” (cloud/account.rs); its fields are `App::cloud.sign_in`.
@@ -570,6 +572,8 @@ pub enum Message {
     Python(crate::python::Event),
     /// Asistan's events (assistant/, docs/adr/8056 §4).
     Assistant(crate::assistant::Event),
+    /// Eklentiler's window and what the extensions add (docs/adr/8057 §3).
+    Extensions(crate::extensions::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -835,6 +839,8 @@ pub struct App {
     pub(crate) python: crate::python::Console,
     /// Asistan: the user's agents and the chat with one (assistant/, docs/adr/8056 §4).
     pub(crate) assistant: crate::assistant::Assistant,
+    /// The user's extension registry and the manager's state (docs/adr/8057 §3).
+    pub(crate) extensions: crate::extensions::Extensions,
     /// The open history's height when the panel's edge was dragged (in memory,
     /// as the docks' layout); `None`: the command line's own.
     pub bottom_log: Option<f32>,

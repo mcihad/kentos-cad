@@ -421,6 +421,8 @@ impl App {
             "-" => menu.separator(),
             id => self.command_item(menu, id),
         });
+        // What the extensions add to the drawing's menu (extensions/ribbon.rs, docs/adr/8057 §3).
+        let menu = self.extension_menu(kentos_extensions::manifest::MenuTarget::Drawing, menu);
         // Eylemler ▸ (docs/adr/0225 §4): the actions of the object under the
         // pointer, else of the one selected, when its layer has some.
         match self.menu_actions() {

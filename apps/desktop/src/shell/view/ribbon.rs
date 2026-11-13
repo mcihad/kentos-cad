@@ -72,6 +72,15 @@ impl App {
                 ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id))
             };
         }
+        // The extensions' tabs of this program (extensions/ribbon.rs, docs/adr/8057 §3).
+        for tab in self.extension_tabs() {
+            tab_tips.push(None);
+            ribbon = ribbon.tab(
+                tab.label.clone(),
+                tab.id == shown,
+                Message::RibbonTab(tab.id),
+            );
+        }
         // The selection's tab, by its objects' kind, with the count (docs/adr/0622 §4).
         if let Some(tab) = self.selection_tab() {
             tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
@@ -95,6 +104,10 @@ impl App {
         ribbon = ribbon.key_tips(tab_tips, quick_tips);
         if sheet_tab {
             for group in self.sheets.ribbon_groups(Message::Sheet) {
+                ribbon = ribbon.group(group);
+            }
+        } else if let Some(tab) = self.extension_tab(shown) {
+            for group in self.extension_groups(tab) {
                 ribbon = ribbon.group(group);
             }
         } else if let Some(tab) = self

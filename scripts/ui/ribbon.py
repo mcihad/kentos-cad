@@ -205,9 +205,11 @@ def view_tab(cad):
           overflow=["view.lineWeights"],
           launcher=toCmd("tools.options", "Uygulama ayarları: görünüm")),
         # Asistan (docs/adr/8056 §4): the user's own AI agent's panel.
+        # Tam ekran is in the window's bar too: in the ▾, so the panel keeps two columns with Asistan and every CAD
+        # tab keeps its words at 1440 px (docs/adr/8057 §3).
         P("Paneller", "panelRight", [S("view.rightPanel"), S("view.bottomPanel"), S("view.assistant"), S("view.coords"),
-          S("view.overview"), S("view.magnifier"), S("view.fullscreen")],
-          overflow=["view.keyTips"]),
+          S("view.overview"), S("view.magnifier")],
+          overflow=["view.fullscreen", "view.keyTips"]),
     ]
     if cad:
         # Kat görünümü (docs/adr/0715): which levels the plan shows, and Üst kat / Alt kat (docs/adr/0720 §5); the
@@ -235,6 +237,12 @@ def output_tab(cad):
     if not cad:
         panels.append(P("Lejant", "legend", [L("style.legend")]))
     return T("output", "Çıktı", panels)
+
+
+# Eklentiler (docs/adr/8057 §3): the extension manager and Paket yükle; the extensions' own tabs and buttons are added at
+# run time from the user's registry, never written here.
+def extensions_tab():
+    return T("extensions", "Eklentiler", [P("Eklentiler", "extensions", [L("extensions.manage"), S("extensions.install")])])
 
 # ── CAD ──────────────────────────────────────────────────────────────────
 CAD = [
@@ -526,6 +534,7 @@ CAD = [
           overflow=["constraint.relaxNext"]),
         P("GIS", "exportGis", [S("file.export.gis"), S("gis.derivation")], works=MAP),
     ]),
+    extensions_tab(),
     output_tab(True),
 ]
 
@@ -611,6 +620,7 @@ GIS = [
     ]),
     survey_tab(False),
     view_tab(False),
+    extensions_tab(),
     output_tab(False),
 ]
 

@@ -1,0 +1,120 @@
+{
+  "format": "kentos.extension",
+  "schemaVersion": 1,
+  "id": "tr.ornek.kent-rehberi",
+  "version": "1.0.0",
+  "name": "Kent Rehberi",
+  "summary": "Bina denetim formu, ortofoto altlığı ve öznitelik tablosu tek sekmede.",
+  "description": "Örnek Belediyesi'nin bina denetim formunu projeye alır, belediyenin ortofoto servisini haritaya ekler ve öznitelik tablosunu aynı sekmeden açar. Python gerektirmez.",
+  "authors": [
+    "Örnek Belediyesi CBS Birimi"
+  ],
+  "publisherId": "ornek-belediye",
+  "license": "CC-BY-4.0",
+  "licenseFile": "LICENSE",
+  "changelogFile": "CHANGELOG.md",
+  "keywords": [
+    "denetim",
+    "ortofoto",
+    "form"
+  ],
+  "kind": "vertical",
+  "modules": [
+    "cbs"
+  ],
+  "runtimes": [
+    "desktop"
+  ],
+  "compatibility": {
+    "sdkProtocol": {
+      "min": 1,
+      "max": 1
+    },
+    "kentos": {
+      "min": "0.1.0"
+    }
+  },
+  "schemaFile": "schema.json",
+  "entrypoints": {
+    "forms": [
+      {
+        "id": "bina-denetimi",
+        "definition": "forms/bina_denetimi.kform"
+      }
+    ]
+  },
+  "contributions": {
+    "ribbonTabs": [
+      {
+        "id": "kent",
+        "label": "Kent Rehberi",
+        "module": "cbs",
+        "panels": [
+          {
+            "label": "Altlık",
+            "items": [
+              {
+                "dataSource": "ortofoto",
+                "size": "large"
+              }
+            ]
+          },
+          {
+            "label": "Denetim",
+            "items": [
+              {
+                "form": "bina-denetimi",
+                "size": "large",
+                "label": "Bina denetimi formu"
+              }
+            ]
+          },
+          {
+            "label": "Veri",
+            "items": [
+              {
+                "builtin": "data.featureTable",
+                "size": "large",
+                "label": "Öznitelik tablosu"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "dataSources": [
+      {
+        "id": "ortofoto",
+        "title": "Ortofoto (2026)",
+        "kind": "wmts",
+        "url": "https://harita.ornek.bel.tr/wmts",
+        "layers": [
+          "ortofoto_2026"
+        ],
+        "crs": "EPSG:5254",
+        "attribution": "Örnek Belediyesi"
+      }
+    ]
+  },
+  "requestedCapabilities": [
+    {
+      "id": "ui.ribbonTab",
+      "scope": "plugin-owned",
+      "reason": "KentOS GIS'te Kent Rehberi sekmesini açar."
+    },
+    {
+      "id": "dataSource",
+      "scope": "plugin-owned",
+      "reason": "Belediyenin ortofoto altlığını Kaynaklar'a ekler."
+    },
+    {
+      "id": "network",
+      "scope": "plugin-owned",
+      "reason": "Belediyenin ortofoto servisinden görüntü okur.",
+      "hosts": [
+        "harita.ornek.bel.tr"
+      ],
+      "sendsDataToAi": false
+    }
+  ]
+}
