@@ -214,7 +214,7 @@ fn the_agent_plans_then_draws_through_the_guard() {
         "{:?}",
         said.tools
     );
-    assert!(said.tools[0].name.contains("cad.polygon.create (plan)"));
+    assert_eq!(said.tools[0].name, "Kapalı alan oluştur · plan");
     assert_eq!(
         said.usage.map(|u| u.input_tokens),
         Some(240),

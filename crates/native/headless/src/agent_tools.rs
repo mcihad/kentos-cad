@@ -185,6 +185,54 @@ pub fn overview(host: &mut dyn Host) -> Result<Value, HeadlessError> {
     Ok(json!({ "summary": summary, "layers": layers, "doors": doors }))
 }
 
+/// A tool call in words, for a person watching it (the desktop's Asistan, docs/adr/8056 §4): the command's Turkish
+/// title and what the call does with it, else the tool's title and what it is asked: “Dikdörtgen duvar · plan”,
+/// “Komut ara · “duvar””, “Toplu yazma · 3 adım · yazma”. Ids stay in the call's details.
+pub fn call_words(name: &str, args: &Value) -> String {
+    static TITLES: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+    let titles = TITLES.get_or_init(|| tools().into_iter().map(|t| (t.name, t.title)).collect());
+    let title = titles.get(name).copied().unwrap_or(name);
+    let command = args
+        .get("command")
+        .and_then(Value::as_str)
+        .map(|c| descriptor(c).map_or(c, |d| d.title.as_str()));
+    let mode = match args.get("mode").and_then(Value::as_str) {
+        Some("plan") => Some("plan"),
+        Some("execute") => Some("yazma"),
+        Some("validate") => Some("denetim"),
+        _ => None,
+    };
+    let mut words: Vec<String> = Vec::new();
+    match name {
+        _ if DOORS.iter().any(|d| d.tool == name) => words.extend(command.map(str::to_owned)),
+        "catalog.search" => {
+            words.push(title.to_owned());
+            words.extend(text(args, "query").ok().map(|q| format!("“{q}”")));
+        }
+        "command.batch" => {
+            words.push(title.to_owned());
+            let steps = args
+                .get("steps")
+                .and_then(Value::as_array)
+                .map_or(0, Vec::len);
+            words.push(format!("{steps} adım"));
+        }
+        "processing.describe" | "processing.run" | "processing.batch" => {
+            words.push(title.to_owned());
+            words.extend(text(args, "tool").ok().map(str::to_owned));
+        }
+        _ => {
+            words.push(title.to_owned());
+            words.extend(command.map(str::to_owned));
+        }
+    }
+    if words.is_empty() {
+        words.push(title.to_owned());
+    }
+    words.extend(mode.map(str::to_owned));
+    words.join(" · ")
+}
+
 /// The catalog's parts and families as `catalog.categories` gives them to a host of every part: MCP's
 /// `kentos://catalog/categories`, read before any drawing is open (docs/adr/8056 §5).
 pub fn every_category() -> Value {

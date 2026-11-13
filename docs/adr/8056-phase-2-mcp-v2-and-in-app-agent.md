@@ -119,7 +119,10 @@ onunla sohbet ederek çizdirir; Anthropic, OpenAI, DeepSeek, Gemini, Kimi, GLM v
 - **Asistan paneli:** sağ yuvada bir sekme, her programda; Görünüm › Paneller'de ve Komut ara'da "Asistan"
   (`view.assistant`). `kentos-ui`'nin `AiConversation`'ı: akan yanıt, düşünce, araç kartları (araç, komut, plan ya da
   execute, girdi ve sonuç), Durdur, Yeniden dene, Kopyala; başlıkta Yeni sohbet ve Yapay zekâ ayarları; birden çok ajan
-  varken seçici. Ajan yoksa panel nasıl ekleneceğini söyler ve "Ajan ekle" formu açar.
+  varken seçici. Ajan yoksa panel nasıl ekleneceğini söyler ve "Ajan ekle" formu açar. Araç kartı komutun Türkçe adını
+  ve çağrının ne yaptığını söyler ("Dikdörtgen duvar · plan", "Komut ara · “duvar”"; `agent_tools::call_words`),
+  kimlikler kartın ayrıntısındadır. İletinin eylemleri dar panelde alt satıra akar, düğme yazıları kırılmaz ("Yararlı /
+  değil" kırılıp belirteçleri görünmez yapıyordu); oylar ipuçlu simge, belirteç ve süre ayrı satırda.
 - **Araçlar ADIM 14'ünkü** (`agent_tools`), öndeki çizimde (`AppHost`), ajan bağlantısıyla aynı çekirdekten
   (`App::agent_request`): programın sunduğu komutlar, çizimin gizlediği alanlar, her yazma bir geri alma adımı ve komut
   geçmişinde "Asistan: …". Programın hiçbir komutunu çalıştırmadığı bölümün kapısı sunulmaz
@@ -142,7 +145,7 @@ onunla sohbet ederek çizdirir; Anthropic, OpenAI, DeepSeek, Gemini, Kimi, GLM v
   `retry-after` → `RateLimit`; akış içinde hata → `Stream`; iptal → `Cancelled`. DeepSeek kaydının yeniden oynatılması;
   Mistral, Kimi, GLM, Ollama, LM Studio, OpenRouter tuhaflıkları; ajan dosyası geçici klasörde (0600, tek varsayılan,
   oturum anahtarı dosyaya yazılmaz, okunamayan dosya kenara alınır).
-- Masaüstü `assistant::tests` (9): sahte sağlayıcıyla planla → uygula ve alanın çizilmesi, iki turun belirteçleri,
+- Masaüstü `assistant::tests` (8): sahte sağlayıcıyla planla → uygula ve alanın çizilmesi, iki turun belirteçleri,
   talimat ve araç adları, tek geri alma; silen yazmanın onay beklemesi ve reddedilince çalışmaması; 401'in sohbette
   anahtarsız söylenmesi; ajansız sohbetin ayarlara yönlendirmesi; ajanların ve varsayılanın tutulması, ajan penceresinin
   Esc ile kapanıp ayarların kalması; model önerileri; onay kuralı; programların kapıları. Headless `agent_tools` (8),

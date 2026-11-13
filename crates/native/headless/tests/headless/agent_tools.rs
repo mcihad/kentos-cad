@@ -429,6 +429,46 @@ fn an_agent_reads_a_drawing_and_the_catalog_in_one_read() {
     );
 }
 
+/// A tool call in words for the person watching (docs/adr/8056 §4): the command's Turkish title and the call's mode,
+/// the tool's title and what it is asked; never an id alone.
+#[test]
+fn a_tool_call_reads_in_words() {
+    let words = |name: &str, args: Value| agent_tools::call_words(name, &args);
+    assert_eq!(
+        words(
+            "arch.run",
+            json!({ "command": "cad.walls.rectangle", "mode": "plan" })
+        ),
+        "Dikdörtgen duvar · plan"
+    );
+    assert_eq!(
+        words(
+            "cad.run",
+            json!({ "command": "cad.polygon.create", "mode": "execute", "planId": "p" })
+        ),
+        "Kapalı alan oluştur · yazma"
+    );
+    assert_eq!(
+        words("catalog.search", json!({ "query": "duvar" })),
+        "Komut ara · “duvar”"
+    );
+    assert_eq!(
+        words(
+            "catalog.describe",
+            json!({ "command": "cad.walls.rectangle" })
+        ),
+        "Komutun tanımı · Dikdörtgen duvar"
+    );
+    assert_eq!(
+        words(
+            "command.batch",
+            json!({ "steps": [{}, {}, {}], "mode": "plan" })
+        ),
+        "Toplu yazma · 3 adım · plan"
+    );
+    assert_eq!(words("scene.entities", json!({})), "Nesneler");
+}
+
 #[test]
 fn every_tool_is_listed_with_its_schema() {
     let names: Vec<&str> = agent_tools::tools().iter().map(|t| t.name).collect();

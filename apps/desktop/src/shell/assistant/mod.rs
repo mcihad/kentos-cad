@@ -248,16 +248,10 @@ fn bounded(value: Value) -> Value {
     })
 }
 
-/// The call's line in the panel: the tool, and the command it runs with its mode.
+/// The call's line in the panel, in words (the command's title and what the call does with it); the ids are in its
+/// details.
 fn call_title(name: &str, input: &Value) -> String {
-    let command = input.get("command").and_then(Value::as_str);
-    let mode = input.get("mode").and_then(Value::as_str);
-    match (command, mode) {
-        (Some(c), Some(m)) => format!("{name} · {c} ({m})"),
-        (Some(c), None) => format!("{name} · {c}"),
-        (None, Some(m)) => format!("{name} ({m})"),
-        (None, None) => name.to_owned(),
-    }
+    agent_tools::call_words(name, input)
 }
 
 impl App {

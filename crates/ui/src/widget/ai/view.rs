@@ -31,7 +31,9 @@ fn small<'a, Message: Clone + 'a>(
     button(
         row![
             icon(glyph).size(12.0),
-            text(label).size(typography::caption())
+            text(label)
+                .size(typography::caption())
+                .wrapping(Wrapping::None)
         ]
         .spacing(5)
         .align_y(iced::Center),
@@ -858,6 +860,10 @@ impl<'a, Message: Clone + 'a> AiMessage<'a, Message> {
             body = body.push(sources);
         }
         if matches!(phase, Phase::Complete | Phase::Stopped | Phase::Error) {
+            // A message's actions in a narrow panel (a dock is ~320 px): the buttons' words never break, the row flows
+            // onto a second line instead (CSS `flex-wrap: wrap` with `white-space: nowrap`), the votes are icons with a
+            // tip and the tokens and time a line of their own. Words breaking inside the buttons (“Yararlı / değil”)
+            // pushed the tokens out of sight (Asistan, 13 November 2026).
             let mut actions = row![
                 small(Icon::Copy, "Kopyala", (self.on_event)(AiEvent::Copy(id))),
                 small(
@@ -872,22 +878,18 @@ impl<'a, Message: Clone + 'a> AiMessage<'a, Message> {
                 (Vote::Helpful, "Yararlı", Icon::Check),
                 (Vote::Unhelpful, "Yararlı değil", Icon::Close),
             ] {
-                actions = actions.push(
-                    button(
-                        row![
-                            icon(glyph).size(12.0),
-                            text(label).size(typography::caption())
-                        ]
-                        .spacing(4)
-                        .align_y(iced::Center),
-                    )
-                    .on_press((self.on_event)(AiEvent::Feedback { message: id, vote }))
-                    .padding([5, 8])
-                    .style(style::button::toggle(data.vote == Some(vote))),
-                );
+                actions = actions.push(crate::widget::tip(
+                    button(icon(glyph).size(12.0))
+                        .on_press((self.on_event)(AiEvent::Feedback { message: id, vote }))
+                        .padding(crate::theme::metrics::icon_small(12.0))
+                        .style(style::button::toggle(data.vote == Some(vote))),
+                    crate::widget::Tip::new(label),
+                    iced::widget::tooltip::Position::Top,
+                ));
             }
+            body = body.push(actions.wrap().vertical_spacing(4));
             if let Some(usage) = data.usage {
-                actions = actions.push(space::horizontal()).push(
+                body = body.push(
                     text(format!(
                         "{} token, {:.1} sn",
                         usage.output_tokens,
@@ -898,7 +900,6 @@ impl<'a, Message: Clone + 'a> AiMessage<'a, Message> {
                     .style(style::text::muted),
                 );
             }
-            body = body.push(actions);
         }
         container(body).width(Fill).padding([4, 0]).into()
     }
