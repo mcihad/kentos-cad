@@ -685,10 +685,13 @@ impl Stages for Crossings {
         self.generation = None;
         self.refresh(cx);
         if self.parts.is_empty() {
-            cx.say(
-                Level::Warn,
-                "Seçilen nesneler birbirini kesmiyor; bölünecek bir şey yok. Kesişen çizgileri seçin ya da Eşit parçalara (E), Uzunluktan (U) ile tek nesneyi bölün.",
-            );
+            // Lines lying on one another do not cross: said as what they are, not as apart.
+            let words = if overlapping_lines(cx.doc, &self.targets) {
+                "Seçilen çizgiler üst üste biniyor (aynı doğru üzerinde); kesişimlerden parçalama yalnız birbirini kesen çizgileri böler. Üst üste binen kısmı Kır ile ayırın ya da fazlasını silin."
+            } else {
+                "Seçilen nesneler birbirini kesmiyor; bölünecek bir şey yok. Kesişen çizgileri seçin ya da Eşit parçalara (E), Uzunluktan (U) ile tek nesneyi bölün."
+            };
+            cx.say(Level::Warn, words);
             return Flow::Exit;
         }
         self.parts.clear();
@@ -734,4 +737,29 @@ impl Stages for Crossings {
         }
         Some(preview)
     }
+}
+
+/// Whether two of the selected lines lie on one line and share a stretch of it.
+fn overlapping_lines(doc: &kentos_domain::Document, targets: &[kentos_domain::Slot]) -> bool {
+    use kentos_geometry_core::predicates::orient2d;
+    let segs: Vec<(Vec2, Vec2)> = targets
+        .iter()
+        .filter_map(|s| match doc.get(*s) {
+            Some(kentos_commands::Entity::Line(l)) => Some((Vec2::new(l.a.x, l.a.y), Vec2::new(l.b.x, l.b.y))),
+            _ => None,
+        })
+        .collect();
+    segs.iter().enumerate().any(|(i, &(a, b))| {
+        segs[i + 1..].iter().any(|&(c, d)| {
+            if orient2d(a, b, c) != 0.0 || orient2d(a, b, d) != 0.0 {
+                return false;
+            }
+            // Along the line: the two stretches share more than a point.
+            let (dx, dy) = (b.x - a.x, b.y - a.y);
+            let t = |p: Vec2| (p.x - a.x) * dx + (p.y - a.y) * dy;
+            let (s0, s1) = (0.0f64, dx * dx + dy * dy);
+            let (u0, u1) = (t(c).min(t(d)), t(c).max(t(d)));
+            u1.min(s1) - u0.max(s0) > 0.0
+        })
+    })
 }
