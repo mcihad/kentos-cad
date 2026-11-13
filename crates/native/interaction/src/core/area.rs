@@ -744,6 +744,18 @@ impl AreaSplit {
         cx: &mut Context<'_>,
     ) -> Flow {
         let doc = &*cx.doc;
+        // The hatches tied to an area that is split: each keeps following the first piece only, so the others go
+        // unhatched; said with the result (counted now, before the write moves the ties).
+        let sources: Vec<String> = self.list.iter().map(|t| edge::uid(doc, t.slot)).collect();
+        let tied = doc
+            .entities()
+            .filter(|e| match e {
+                Entity::Hatch(h) => h.assoc.as_ref().is_some_and(|a| {
+                    a.outer.iter().chain(&a.bounds).any(|id| sources.contains(&id.to_string()))
+                }),
+                _ => false,
+            })
+            .count();
         let work = AreaWork::Split {
             ids: self.list.iter().map(|t| edge::uid(doc, t.slot)).collect(),
             line: line.map(|pts| pts.into_iter().map(points::wire).collect()),
@@ -776,6 +788,14 @@ impl AreaSplit {
                 out.objects
             ),
         );
+        if tied > 0 && count > 1 {
+            cx.say(
+                Level::Warn,
+                format!(
+                    "Bölünen alana bağlı {tied} tarama yalnız ilk parçayı izler; öbür parçalar taranmadı. Gerekirse onları ayrıca tarayın ya da bölmeyi geri alın."
+                ),
+            );
+        }
         Flow::Exit
     }
 }

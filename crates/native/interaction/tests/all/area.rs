@@ -542,3 +542,27 @@ fn a_circle_apart_keeps_its_kind_in_a_union() {
     let said = b.last_text().unwrap_or_default().to_owned();
     assert!(said.ends_with("Başkalarına değmeyen 1 nesne olduğu gibi bırakıldı (türü ve bağları korunur)."), "{said}");
 }
+
+/// UR-094: an area with a tied hatch split in two: the result says the hatch follows the first piece only.
+#[test]
+fn splitting_an_area_says_its_tied_hatch_follows_one_piece() {
+    let mut b = bench();
+    let uid = b.doc.uid(Slot(1)).expect("a uid").to_string();
+    let hatch: kentos_commands::Entity = serde_json::from_value(serde_json::json!({
+        "kind": "hatch", "id": 0, "layerId": "parsel", "attrs": {},
+        "ring": [{"x": 0.0, "y": 0.0}, {"x": 10.0, "y": 0.0}, {"x": 10.0, "y": 10.0}],
+        "pattern": {"type": "lines", "angle": 45, "spacing": 1},
+        "assoc": {"outer": uid, "seed": {"x": 7.0, "y": 2.0}}
+    }))
+    .expect("a hatch");
+    b.doc.add(hatch).expect("a slot");
+    b.spatial.sync(&b.doc);
+    select(&mut b, &[1]);
+    b.start("areaSplit");
+    let before = b.said(0).len();
+    b.click(5.0, -3.0);
+    b.click(5.0, 13.0);
+    b.confirm();
+    let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
+    assert!(said.iter().any(|t| t.starts_with("Bölünen alana bağlı 1 tarama yalnız ilk parçayı izler")), "{said:?}");
+}
