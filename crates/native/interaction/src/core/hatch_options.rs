@@ -70,6 +70,12 @@ pub fn user_names(cx: &Context<'_>) -> Vec<String> {
         .collect()
 }
 
+/// The name of the pattern a hatch is written with: the project pattern chosen, else the library's choice (what a
+/// success message names, as [`spec`] writes it).
+pub fn chosen_name(m: &Memory, user: &[String]) -> String {
+    user_of(m, user).map_or_else(|| choice(m).name, str::to_owned)
+}
+
 /// The project pattern chosen, by its name; none: the library's choice.
 pub fn user_of<'a>(m: &Memory, user: &'a [String]) -> Option<&'a str> {
     m.hatch_user
@@ -145,7 +151,7 @@ pub fn colour_text(m: &Memory) -> String {
 pub fn spec(m: &Memory, user: &[String]) -> kentos_commands::HatchPatternSpec {
     let lined = lined(m, user);
     kentos_commands::HatchPatternSpec {
-        name: user_of(m, user).map_or_else(|| choice(m).name, str::to_owned),
+        name: chosen_name(m, user),
         scale: Some(m.hatch_scale),
         angle: Some(m.hatch_angle),
         second_color: Some(colour_text(m)),
@@ -203,9 +209,11 @@ pub fn with_pattern_options(prompt: Prompt, m: &Memory, user: &[String]) -> Prom
         .option("Özellik al", "Z")
 }
 
-/// Adalar, İlişkili (where the hatch can follow its objects) and Yazılar.
+/// Adalar, İlişkili (where the hatch can follow its objects) and Yazılar. Yazılar goes right after Desen (UR-004):
+/// the command line keeps its first options in sight and folds the rest into Diğer, and whether the words are
+/// hatched over is what a hatch is read by.
 pub fn with_region_options(prompt: Prompt, m: &Memory, tie: bool) -> Prompt {
-    prompt
+    let mut prompt = prompt
         .option_with("Adalar", "A", islands_word(m))
         .option_if(tie, "İlişkili", "İ", on(m.hatch_assoc))
         .option_with(
@@ -216,7 +224,13 @@ pub fn with_region_options(prompt: Prompt, m: &Memory, tie: bool) -> Prompt {
             } else {
                 "taranır"
             },
-        )
+        );
+    if let Some(desen) = prompt.options.iter().position(|o| o.key == "D")
+        && let Some(texts) = prompt.options.pop()
+    {
+        prompt.options.insert(desen + 1, texts);
+    }
+    prompt
 }
 
 /// What a stage that asks says.
@@ -274,7 +288,7 @@ pub fn clicked(asking: &mut Option<Asking>, at: Vec2, raw: Vec2, cx: &mut Contex
     }
 }
 
-/// The options a hatch was made with, as near as its pattern says them (AutoCAD's Inherit properties, docs/adr/0331
+/// The options a hatch was made with, as near as its pattern says them (Özellik al, docs/adr/0331
 /// §2): its pattern (the project's by name first), Ölçek and Açı on paper at its own scale, its origin, Ölçekli.
 pub fn inherit(h: &kentos_commands::HatchEntity, m: &mut Memory, user: &[String], plot_scale: f64) {
     use kentos_commands::HatchPatternType as T;

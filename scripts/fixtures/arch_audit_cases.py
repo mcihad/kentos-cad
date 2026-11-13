@@ -915,12 +915,12 @@ def dimensions_findings(d):
             continue
         fix = None
         if e["layerId"] not in locked:
-            fix = {"label": "Kopan noktaları serbest bırak",
+            fix = {"label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                    "step": step("cad.dimensions.reassociate",
                                 {"uid": uid[e["id"]], "points": [{"point": k, "to": None} for k in broken]})}
         out.append(finding("dimensions", "arch_dimension_broken",
-                           f"İlişkili ölçünün bağı koptu ({', '.join(broken)}); noktaları son yerlerinde duruyor.",
-                           "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                           f"İlişkili ölçünün bağı koptu ({', '.join(broken)}); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                           "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                            [uid[e["id"]]], fx(e["a"]), fix))
     return out
 

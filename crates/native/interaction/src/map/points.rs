@@ -311,8 +311,14 @@ pub(crate) fn write_objects_each(
     cx: &mut Context<'_>,
 ) -> Option<kentos_commands::EntitiesCreated> {
     use kentos_native_application::{ExecutionContext, create};
+    // UR-003: texts, dimensions or hatches alone go to their tool's layer when the project names one.
+    let kinds: Vec<&kentos_commands::EntityGeometry> = objects.iter().map(|(g, _)| g).collect();
+    let layer_id = match crate::tool_layer::tool_of(&kinds) {
+        Some(tool) => crate::tool_layer::layer_for(cx.doc, tool),
+        None => cx.doc.layers().active().to_owned(),
+    };
     let input = kentos_commands::EntitiesCreate {
-        layer_id: cx.doc.layers().active().to_owned(),
+        layer_id,
         objects: objects
             .into_iter()
             .map(|(geometry, attrs)| kentos_commands::NewObject {

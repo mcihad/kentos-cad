@@ -134,6 +134,13 @@ fn paths(shape: &Shape) -> Option<Vec<(Vec<Run>, Rule)>> {
     };
     match shape {
         Shape::Line { a, b } => Some(vec![(runs(&[*a, *b], None, false), Rule::Open)]),
+        // A closed polyline is a ring, its closing edge measured too, placed as an area's outer ring.
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed: true,
+            ..
+        } => Some(vec![ring(pts, bulges.as_deref(), true)]),
         Shape::Polyline { pts, bulges, .. } => {
             Some(vec![(runs(pts, bulges.as_deref(), false), Rule::Open)])
         }

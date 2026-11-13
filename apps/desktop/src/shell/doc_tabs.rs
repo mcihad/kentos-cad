@@ -202,6 +202,32 @@ impl App {
         }
     }
 
+    /// The drawing whose file is `path` (by its canonical place), brought in front if it is open, said; false when
+    /// no open drawing is that file.
+    pub(crate) fn show_open_file(&mut self, path: &std::path::Path) -> bool {
+        let canonical = |p: &std::path::Path| std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
+        let want = canonical(path);
+        let same = |d: &Document| d.path.as_deref().is_some_and(|p| canonical(p) == want) && d.cloud_source().is_none();
+        let front = self.document.as_ref().is_some_and(same);
+        let at = if front {
+            Some(self.doc_tabs.at)
+        } else {
+            self.doc_tabs.parked.iter().position(|p| same(&p.document)).map(|k| if k >= self.doc_tabs.at { k + 1 } else { k })
+        };
+        let Some(k) = at else {
+            return false;
+        };
+        if !front {
+            self.show_tab(k);
+        }
+        let name = self.document.as_ref().map(|d| d.name().to_owned()).unwrap_or_default();
+        self.say(
+            Level::Info,
+            format!("“{name}” zaten açık; sekmesine geçildi. Aynı dosyanın iki kopyası birbirinin kaydını silerdi."),
+        );
+        true
+    }
+
     pub(crate) fn doc_tabs_command(&mut self, id: &str) -> iced::Task<Message> {
         match id {
             "file.openTab" => {
@@ -252,12 +278,17 @@ impl App {
             return None;
         }
         let (before, after) = self.doc_tabs.parked.split_at(self.doc_tabs.at.min(self.doc_tabs.parked.len()));
-        let tab = |d: &Document| Tab::new(d.name().to_owned()).icon(Icon::Document).dirty(d.dirty());
-        let tabs: Vec<Tab> = before
+        let docs: Vec<&Document> = before
             .iter()
-            .map(|p| tab(&p.document))
-            .chain(std::iter::once(tab(doc)))
-            .chain(after.iter().map(|p| tab(&p.document)))
+            .map(|p| &p.document)
+            .chain(std::iter::once(doc))
+            .chain(after.iter().map(|p| &p.document))
+            .collect();
+        let titles = tab_titles(&docs);
+        let tabs: Vec<Tab> = docs
+            .iter()
+            .zip(titles)
+            .map(|(d, title)| Tab::new(title).icon(Icon::Document).dirty(d.dirty()))
             .collect();
         Some(
             container(
@@ -271,10 +302,80 @@ impl App {
     }
 }
 
+/// The tabs' names: each drawing's own, and where two say the same, what tells them apart: the file's name with its
+/// extension (a.dxf, a.dwg, a.kcad), then its folder; a drawing with no file its place among those of the name.
+pub(crate) fn tab_titles(docs: &[&Document]) -> Vec<String> {
+    let count = |name: &str| docs.iter().filter(|d| d.name() == name).count();
+    let file = |d: &Document| {
+        d.path
+            .as_ref()
+            .and_then(|p| p.file_name())
+            .map(|f| f.to_string_lossy().into_owned())
+    };
+    let mut out: Vec<String> = docs
+        .iter()
+        .map(|d| match (count(d.name()) > 1, file(d)) {
+            (true, Some(f)) => f,
+            _ => d.name().to_owned(),
+        })
+        .collect();
+    // Still the same (one file name in two folders, or no file): the folder, else a number.
+    let firsts = out.clone();
+    let mut seen: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    for (k, d) in docs.iter().enumerate() {
+        if firsts.iter().filter(|t| **t == firsts[k]).count() < 2 {
+            continue;
+        }
+        let folder = d
+            .path
+            .as_ref()
+            .and_then(|p| p.parent())
+            .and_then(|p| p.file_name())
+            .map(|f| f.to_string_lossy().into_owned());
+        out[k] = match folder {
+            Some(folder) => format!("{} — {folder}", firsts[k]),
+            None => {
+                let n = seen.entry(firsts[k].clone()).or_insert(0);
+                *n += 1;
+                format!("{} ({n})", firsts[k])
+            }
+        };
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use crate::app::{App, Message};
     use crate::files_testing::{app_with_drawing, drawing};
+
+    /// UR-086: two drawings of one name are told apart on their tabs by their files' extensions, then folders, then
+    /// a number; a name alone stays as it is.
+    #[test]
+    fn tabs_of_one_name_are_told_apart() {
+        let named = |path: Option<&str>| {
+            let mut d = drawing(0);
+            d.model.set_name("kentos-alan-iliski");
+            d.path = path.map(std::path::PathBuf::from);
+            d
+        };
+        let (a, b, c) = (
+            named(Some("/tmp/qa/kentos-alan-iliski.dxf")),
+            named(Some("/tmp/qa/kentos-alan-iliski.dwg")),
+            drawing(0),
+        );
+        let titles = super::tab_titles(&[&a, &b, &c]);
+        assert_eq!(titles[0], "kentos-alan-iliski.dxf");
+        assert_eq!(titles[1], "kentos-alan-iliski.dwg");
+        assert_eq!(titles[2], c.name());
+        let (d, e) = (named(Some("/tmp/bir/kentos-alan-iliski.kcad")), named(Some("/tmp/iki/kentos-alan-iliski.kcad")));
+        assert_eq!(
+            super::tab_titles(&[&d, &e]),
+            ["kentos-alan-iliski.kcad — bir", "kentos-alan-iliski.kcad — iki"]
+        );
+        let (f, g) = (named(None), named(None));
+        assert_eq!(super::tab_titles(&[&f, &g]), ["kentos-alan-iliski (1)", "kentos-alan-iliski (2)"]);
+    }
 
     use super::Event;
 
@@ -533,5 +634,38 @@ mod tests {
         assert!(app.doc_tabs_view().is_none(), "one drawing: no strip");
         app.close_tab_now();
         assert!(app.document.is_none());
+    }
+}
+
+#[cfg(test)]
+mod same_file_tests {
+    use crate::app::{App, Message};
+    use crate::files_testing::{app_with_drawing, drive, last_said, scratch};
+
+    /// UR-088: a file already open is not opened in a second tab (its tab comes in front), and a save over a file
+    /// another program changed since it was read is refused with the way on, the other work kept.
+    #[test]
+    fn one_file_is_one_tab_and_a_changed_file_is_not_written_over() {
+        let dir = scratch("same-file");
+        let path = dir.join("ayni.kcad");
+        let mut app: App = app_with_drawing();
+        app.picker = crate::app::Picker::File(path.clone());
+        let task = app.update(Message::Run("file.save"));
+        drive(&mut app, task);
+        assert!(last_said(&app).starts_with("Kaydedildi:"), "{}", last_said(&app));
+        let tabs = app.doc_tabs.count(true);
+        let _ = app.update(Message::Opening(crate::opening::Event::PickedTab(Some(path.clone()))));
+        assert_eq!(app.doc_tabs.count(true), tabs, "no second tab of the file");
+        assert!(last_said(&app).contains("zaten açık"), "{}", last_said(&app));
+        // Another program writes the file meanwhile.
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        let other = std::fs::read(&path).unwrap();
+        std::fs::write(&path, [other.as_slice(), b" "].concat()).unwrap();
+        let before = std::fs::read(&path).unwrap();
+        let task = app.update(Message::Run("file.save"));
+        drive(&mut app, task);
+        assert!(last_said(&app).contains("diskte değişti"), "{}", last_said(&app));
+        assert_eq!(std::fs::read(&path).unwrap(), before, "the other write is kept");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

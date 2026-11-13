@@ -513,6 +513,7 @@ impl App {
             Message::Modifiers(modifiers) => {
                 let shift = self.modifiers.shift() != modifiers.shift();
                 self.modifiers = modifiers;
+                self.sheets.set_modifiers(modifiers);
                 // Shift turns ortho over while held (docs/adr/0268 §2): the preview follows at once, the pointer still.
                 if shift && self.session.takes_points() {
                     self.repoint();
@@ -593,6 +594,7 @@ impl App {
             Message::Xrefs(event) => return self.xrefs_event(event),
             Message::Flatten(event) => return self.flatten_event(event),
             Message::CleanReport(event) => return self.clean_report_event(event),
+            Message::OpenReport(event) => self.open_report_event(event),
             Message::ExchangeCheck(event) => return self.exchange_check_event(event),
             Message::CatalogReport(event) => return self.catalog_report_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
@@ -645,6 +647,10 @@ impl App {
             }
             Message::Opened(None) | Message::Saved(None) => {}
             Message::Opened(Some(Ok(mut doc))) => {
+                // Its file as read now: a later save checks nobody wrote it meanwhile.
+                if doc.disk.is_none() {
+                    doc.disk = doc.path.as_deref().and_then(crate::document::disk_stamp);
+                }
                 // Bound GeoPackages moved with the project are found again (docs/adr/0506).
                 let located = match doc.path.clone() {
                     Some(path) if doc.cloud_source().is_none() => {
@@ -694,8 +700,10 @@ impl App {
                 // The health check on opening, when asked for (docs/adr/1009).
                 return self.open_health_check();
             }
-            Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
-                self.error(error)
+            Message::Opened(Some(Err(error))) => self.error(error),
+            Message::Saved(Some(Err(error))) => {
+                self.error(error);
+                self.save_then_dropped();
             }
             Message::Saved(Some(Ok(written))) => match &mut self.document {
                 Some(doc) if doc.session == written.session => {
@@ -733,6 +741,16 @@ impl App {
                     }
                     self.recovery_saved();
                     self.remember_file();
+                    // UR-001: “Kaydet ve …” goes on once its drawing is saved whole.
+                    if let Some((session, then)) = self.save_then
+                        && session == written.session
+                    {
+                        self.save_then = None;
+                        if self.document.as_ref().is_some_and(|d| !d.dirty()) {
+                            return self.proceed(then);
+                        }
+                        self.warn("Kayıt sürerken yapılan değişiklikler kaydedilmedi; çizim açık kaldı.");
+                    }
                 }
                 // Its drawing set aside in its tab meanwhile (doc_tabs.rs, docs/adr/0351 §3): the file is
                 // its file all the same.
@@ -789,6 +807,15 @@ impl App {
                 Some(Dialog::SourceDiscard) => self.bound_discard(),
                 _ => {}
             },
+            Message::DialogSave => {
+                if let Some(Dialog::Unsaved(then)) = self.dialog.take()
+                    && let Some(session) = self.document.as_ref().map(|d| d.session)
+                {
+                    self.cloud.leave_failure = None;
+                    self.save_then = Some((session, then));
+                    return self.update(Message::Run("file.save"));
+                }
+            }
             Message::DialogClosed => self.close_dialog(),
             Message::Cloud(event) => return self.cloud_event(*event),
             Message::Exchange(event) => return self.exchange_event(*event),

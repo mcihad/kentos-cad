@@ -2,6 +2,7 @@
 //! arch.rs and the others), elevations, measures and where a value comes from.
 
 use super::*;
+use crate::properties::Coord;
 
 /// A Kot row (docs/adr/0142): the elevations as `summary` says them, in
 /// metres: a value or a range beside its unit, or `kot yok`; with vertices
@@ -291,14 +292,21 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
         }
         Entity::Line(l) => {
             // Each end's elevation follows its coordinates (docs/adr/0142).
-            geo.extend([len("Başlangıç Y", l.a.x), len("Başlangıç X", l.a.y)]);
+            // Each end typed as a point's coordinates are (a whole number, its unit if any).
+            geo.extend([
+                len("Başlangıç Y", l.a.x).editor(number(Field::Geometry(slot, Coord::StartEast))),
+                len("Başlangıç X", l.a.y).editor(number(Field::Geometry(slot, Coord::StartNorth))),
+            ]);
             geo.extend(elevation_row(
                 "Kot (başlangıç)",
                 Elevations::of(&[l.za]),
                 &f,
                 number(Field::Elevation(slot, Spot::Start)),
             ));
-            geo.extend([len("Bitiş Y", l.b.x), len("Bitiş X", l.b.y)]);
+            geo.extend([
+                len("Bitiş Y", l.b.x).editor(number(Field::Geometry(slot, Coord::EndEast))),
+                len("Bitiş X", l.b.y).editor(number(Field::Geometry(slot, Coord::EndNorth))),
+            ]);
             geo.extend(elevation_row(
                 "Kot (bitiş)",
                 Elevations::of(&[l.zb]),
@@ -387,14 +395,29 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                 if holes > 0 {
                     geo.push(Row::figure("Ada (delik)", holes.to_string()));
                 }
-                geo.extend(area(area_of.unwrap_or(0.0)));
+                // A one-part boundary whose edges cross (a bow tie) bounds no area: said, not a 0 shown as one.
+                let pts: Vec<kentos_geometry_core::Vec2> =
+                    p.pts.iter().map(|q| kentos_geometry_core::Vec2::new(q.x, q.y)).collect();
+                let crossings = if parts.is_empty() {
+                    kentos_geometry_core::geom::intersect::ring_self_crossings(&pts, p.bulges.as_deref()).len()
+                } else {
+                    0
+                };
+                if crossings > 0 {
+                    geo.push(Row::text("Alan", "Hesaplanamaz"));
+                    geo.push(Row::note(&format!(
+                        "Kenarlar {crossings} yerde kesişiyor."
+                    )));
+                } else {
+                    geo.extend(area(area_of.unwrap_or(0.0)));
+                }
             }
         }
         Entity::Circle(c) => {
             geo.extend([
-                len("Merkez Y", c.c.x),
-                len("Merkez X", c.c.y),
-                metres("Yarıçap", c.r),
+                len("Merkez Y", c.c.x).editor(number(Field::Geometry(slot, Coord::CenterEast))),
+                len("Merkez X", c.c.y).editor(number(Field::Geometry(slot, Coord::CenterNorth))),
+                metres("Yarıçap", c.r).editor(number(Field::Geometry(slot, Coord::Radius))),
             ]);
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
@@ -484,6 +507,11 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
         Entity::Roof(r) => {
             let x = &r.roof;
             let settings = doc.model.settings();
+            let roof_edit = |which: ArchField| edit(Editor::Number(Field::Arch(slot, which)));
+            let roof_length = |label: &'static str, v: Option<f64>, which: ArchField| match v {
+                Some(v) => metres(label, v).editor(roof_edit(which)),
+                None => Row::text(label, "Yok").editor(roof_edit(which)),
+            };
             geo.push(Row::text("Tür", x.kind_name()));
             let mut slopes: Vec<f64> = x.slopes.iter().flatten().copied().collect();
             slopes.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
@@ -492,7 +520,8 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                     .iter()
                     .map(|s| kentos_geometry_core::geom::roof::slope_words(*s))
                     .collect();
-                geo.push(Row::text("Eğim", words.join(" / ")));
+                // Typed, every sloping edge takes it; the gable ends stay.
+                geo.push(Row::text("Eğim", words.join(" / ")).editor(roof_edit(ArchField::RoofSlope)));
             }
             let gables = x.slopes.iter().filter(|s| s.is_none()).count();
             if gables > 0 && gables < x.slopes.len() {
@@ -532,17 +561,14 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                 }
                 Err(_) => {}
             }
-            if let Some(o) = x.overhang {
-                geo.push(metres("Saçak", o));
-            }
-            geo.push(Row::text("Kaplama", x.material_name()));
+            geo.push(roof_length("Saçak", x.overhang, ArchField::Overhang));
+            geo.push(
+                Row::text("Kaplama", x.material_name())
+                    .editor(edit(Editor::Text(Field::Arch(slot, ArchField::Material)))),
+            );
             // Its gutter and snow guard (docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5): along its sloping eaves.
-            for (label, v) in [("Oluk", x.gutter), ("Kar siperliği", x.snow_guard)] {
-                geo.push(match v {
-                    Some(v) => metres(label, v),
-                    None => Row::text(label, "Yok"),
-                });
-            }
+            geo.push(roof_length("Oluk", x.gutter, ArchField::Gutter));
+            geo.push(roof_length("Kar siperliği", x.snow_guard, ArchField::SnowGuard));
             // Its chimneys, vents and windows (docs/adr/8044 §6), numbered within their kind when more than one: each
             // one's size and a chimney's or a vent's top over ±0.00.
             if let kentos_geometry_core::entity::Shape::Roof { pts, roof: spec } =
@@ -568,7 +594,43 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                         ),
                         None => size,
                     };
-                    geo.push(Row::text(label, text));
+                    // Its size typed (“0,5 × 0,6”); its top follows.
+                    let k16 = u16::try_from(k).unwrap_or(u16::MAX);
+                    geo.push(Row::text(label, text).editor(edit(Editor::Text(Field::Arch(slot, ArchField::RoofPart(k16))))));
+                }
+                // Parçayı sil: one of them taken away, the others kept, as one undo step.
+                if !x.parts.is_empty() {
+                    let items = x
+                        .parts
+                        .iter()
+                        .enumerate()
+                        .map(|(k, part)| {
+                            let nth = x.parts[..=k].iter().filter(|p| p.kind == part.kind).count();
+                            let mut rest = x.parts.clone();
+                            rest.remove(k);
+                            Choice::Pick {
+                                label: format!("{} {nth}", part.kind.label()),
+                                swatch: None,
+                                icon: None,
+                                wide: false,
+                                chosen: false,
+                                enabled: !locked,
+                                message: Message::Properties(Event::Arch(
+                                    slot,
+                                    kentos_commands::ArchOperation::Set(Box::new(kentos_commands::ArchChange {
+                                        parts: Some(rest),
+                                        ..Default::default()
+                                    })),
+                                )),
+                            }
+                        })
+                        .collect();
+                    geo.push(Row::text("Parçayı sil", "Seçin").editor(edit(Editor::Select {
+                        text: "Seçin…".to_owned(),
+                        swatch: None,
+                        icon: None,
+                        items,
+                    })));
                 }
             }
             geo.push(metres("Çevre", length_of.unwrap_or(0.0)));
@@ -810,6 +872,8 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                 let curve = kentos_native_application::geometry::core_curve(path);
                 let p = kentos_geometry_core::Vec2::new(t.p.x, t.p.y);
                 geo.push(metres("Eğri", curve.length(p, t.rotation)));
+                // The curve is the text's own, taken when it was written (UR-037): said, not found out later.
+                geo.push(Row::text("Kaynak eğri", "Bağlı değil: yazının kendi kopyası".to_owned()));
             }
             geo.extend([len("Konum Y", t.p.x), len("Konum X", t.p.y)]);
         }

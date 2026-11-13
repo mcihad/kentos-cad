@@ -237,3 +237,53 @@ pub(crate) fn pointed() -> Vec<Pointed> {
         ("etiket-sabit", opened, pinned),
     ]
 }
+
+#[cfg(test)]
+mod undo_tests {
+    use super::*;
+
+    /// Where the main view last placed object `id`'s widest label.
+    fn label_of(app: &App, id: u32) -> Option<(f64, f64)> {
+        let b = app.viewport.camera.visible_bounds();
+        app.spatial
+            .labels_in(
+                kentos_interaction::Vec2::new(b.min_x, b.min_y),
+                kentos_interaction::Vec2::new(b.max_x, b.max_y),
+                false,
+            )
+            .iter()
+            .filter(|h| h.id as u32 == id)
+            .max_by(|a, b| a.w.total_cmp(&b.w))
+            .map(|h| (h.at.x, h.at.y))
+    }
+
+    /// UR-072: a label moved by Etiketi taşı, then ⌘Z after Esc: the next frame draws it where it was.
+    #[test]
+    fn undoing_a_label_move_puts_it_back_at_once() {
+        let (mut app, _) = App::boot(None);
+        opened(&mut app);
+        let mut s = crate::files_testing::offscreen(iced::Size::new(1440.0, 900.0));
+        close(&mut s, &mut app);
+        let (x, y) = label_on(&app, "parsel");
+        let b = app.viewport.camera.visible_bounds();
+        let hit = app
+            .spatial
+            .labels_in(kentos_interaction::Vec2::new(b.min_x, b.min_y), kentos_interaction::Vec2::new(b.max_x, b.max_y), false)
+            .into_iter()
+            .find(|h| (h.at.x - x).abs() < 1e-9 && (h.at.y - y).abs() < 1e-9)
+            .expect("the label");
+        let id = hit.id as u32;
+        let _ = app.update(Message::Run("tool.labelMove"));
+        let (from, to) = (at(&app, x, y), at(&app, x + 9.0, y - 6.0));
+        click(&mut app, from);
+        click(&mut app, to);
+        settle(&mut s, &mut app);
+        let moved = label_of(&app, id).expect("drawn");
+        assert!((moved.0 - x).abs() > 1.0, "moved: {moved:?} from {:?}", (x, y));
+        let _ = app.update(Message::Run("tool.cancel"));
+        let _ = app.update(Message::Run("edit.undo"));
+        settle(&mut s, &mut app);
+        let back = label_of(&app, id).expect("drawn");
+        assert!((back.0 - x).abs() < 1e-6 && (back.1 - y).abs() < 1e-6, "back: {back:?}, was {:?}", (x, y));
+    }
+}

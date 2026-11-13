@@ -642,6 +642,8 @@ codes! {
     APPROVAL_STALE = "approval_stale", Failed, false, "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın.";
     /// A refraction coefficient outside [−1, 1] (docs/adr/4900).
     INVALID_REFRACTION = "invalid_refraction", Failed, false, "Kırılma katsayısı k −1 ile 1 arasında olmalı (öntanımlı 0,13).";
+    /// A project's tool layers that do not hold (usage review UR-003): a tool twice, a layer the drawing has not, a group.
+    INVALID_TOOL_LAYERS = "invalid_tool_layers", Failed, false, "Araç katmanları geçersiz: bir araç iki kez ya da çizimde olmayan bir katman.";
     /// Approving an item whose typed layers break its profile (docs/adr/4880).
     APPROVAL_PROFILE = "approval_profile", Failed, false, "Öğenin tipli katmanlarında profiline uymayan nesne ya da eksik alan var; Profili denetle ile düzeltin, sonra onaylayın.";
     /// A class an item's profile names is not in the profile (docs/adr/4880).

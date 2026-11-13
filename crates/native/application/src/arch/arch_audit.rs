@@ -1143,7 +1143,8 @@ impl Audit<'_> {
                 let points: Vec<serde_json::Value> =
                     broken.iter().map(|k| json!({"point": k, "to": null})).collect();
                 fix(
-                    "Kopan noktaları serbest bırak",
+                    // UR-025: freeing is no fix of the value: the label says the points stay and the value with them.
+                    "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "cad.dimensions.reassociate",
                     json!({"uid": uid, "points": points}),
                 )
@@ -1152,10 +1153,10 @@ impl Audit<'_> {
                 ArchAuditCheck::Dimensions,
                 codes::ARCH_DIMENSION_BROKEN,
                 format!(
-                    "İlişkili ölçünün bağı koptu ({}); noktaları son yerlerinde duruyor.",
+                    "İlişkili ölçünün bağı koptu ({}); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
                     broken.join(", ")
                 ),
-                "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                 vec![uid],
                 core(d.a),
                 fix,

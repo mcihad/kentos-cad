@@ -471,6 +471,9 @@ pub use variables::*;
 /// Version of this set of contracts, reported by the API's health endpoint.
 pub const CONTRACTS_VERSION: u32 = 1;
 
+#[path = "core/tool_layers.rs"]
+pub mod tool_layers;
+pub use tool_layers::{AnnotationTool, ToolLayer, tool_layer, tool_layers_problem};
 #[path = "core/paper_scale.rs"]
 
 mod paper_scale;

@@ -187,7 +187,14 @@ impl Tool for ImageInsert {
             return true;
         }
         let Some(corner) = self.corner else {
-            return false;
+            // The first corner typed as any point is (X,Y, @dX,dY from the cursor's place …).
+            return match cx.typed_point(t, None, self.hover) {
+                Some(p) => {
+                    self.corner = Some(p);
+                    true
+                }
+                None => false,
+            };
         };
         match cx.typed_length(t) {
             Some(w) if w > 0.0 && w.is_finite() => {

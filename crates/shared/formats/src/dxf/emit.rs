@@ -3174,7 +3174,11 @@ impl<'l> Emitter<'l> {
         map.insert("layerId".into(), layer.into());
         let arch = matches!(
             map.get("kind").and_then(|k| k.as_str()),
-            Some("wall" | "opening" | "space" | "slab" | "grid" | "column" | "stair" | "ramp" | "tag" | "viewmark")
+            // Every kind the writer writes with its data (`is_arch`): a beam, a roof and a railing too (UR-022).
+            Some(
+                "wall" | "opening" | "space" | "slab" | "grid" | "column" | "stair" | "ramp" | "beam" | "roof"
+                    | "railing" | "tag" | "viewmark"
+            )
         ) || (map.get("kind").and_then(|k| k.as_str()) == Some("polyline") && map.contains_key("spaceSeparator"));
         // An architectural object keeps its own look, attributes and label (docs/adr/0347 §2).
         if arch {

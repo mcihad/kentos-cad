@@ -3171,7 +3171,7 @@ fn the_hatches_fixture_is_written_to_its_committed_bytes() {
         notes,
         [(
             "Tarama",
-            "ilişkili taramalar ilişkisiz yazıldı; DXF'te sınır nesnelerini izlemezler",
+            "sınır nesneleri dosyaya yazılmadığından ilişkili tarama ilişkisiz yazıldı; DXF'te sınırını izlemez",
             1
         )],
         "{:?}",
@@ -4307,4 +4307,91 @@ fn a_text_in_kentos_s_own_face_is_as_wide_in_arial_as_kentos_draws_it() {
         [None, None, Some(1.2), None],
         "KentOS's own width factors back"
     );
+}
+
+/// UR-022: KentOS's own architectural DXF reads back each
+/// object whole: none comes as its block's lines with “KentOS verisi okunamadı”.
+#[test]
+fn kentos_architectural_objects_read_back_whole() {
+    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/formats/v1/dxf-arch/mimari.dxf"))
+        .expect("the fixture");
+    let r = dxf::read(&bytes, &DxfReadOptions { unit: Some(DrawingUnit::M), ..DxfReadOptions::default() }).expect("reads");
+    let broken: Vec<_> = r
+        .report
+        .notes
+        .iter()
+        .chain(&r.report.skipped)
+        .filter(|n| n.reason.contains("okunamadı"))
+        .collect();
+    assert!(broken.is_empty(), "{broken:?}");
+    assert!(r.entities.iter().any(|e| matches!(e, Entity::Stair(_))), "the stair whole");
+}
+
+/// UR-085: a hatch written with the circle it follows keeps its tie and is not said to lose it; written without the
+/// circle (left out of the selection) it is said, once.
+#[test]
+fn a_hatch_written_with_its_boundary_is_not_said_untied() {
+    let circle_uid = "0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c01";
+    let circle: Entity = serde_json::from_value(serde_json::json!({
+        "kind": "circle", "id": 1, "layerId": "0", "attrs": {}, "c": {"x": 20.0, "y": 5.0}, "r": 2.0
+    }))
+    .expect("a circle");
+    let ring: Vec<serde_json::Value> = (0..32)
+        .map(|k| {
+            let a = std::f64::consts::TAU * f64::from(k) / 32.0;
+            serde_json::json!({"x": 20.0 + 2.0 * a.cos(), "y": 5.0 + 2.0 * a.sin()})
+        })
+        .collect();
+    let hatch: Entity = serde_json::from_value(serde_json::json!({
+        "kind": "hatch", "id": 2, "layerId": "0", "attrs": {}, "ring": ring,
+        "pattern": {"type": "lines", "angle": 45, "spacing": 1},
+        "assoc": {"outer": circle_uid, "seed": {"x": 20.0, "y": 5.0}}
+    }))
+    .expect("a hatch");
+    let mut with = input(vec![circle, hatch.clone()]);
+    with.uids.insert(1, kentos_contracts::EntityId::parse(circle_uid).expect("a uid"));
+    with.uids.insert(2, kentos_contracts::EntityId::parse("0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c02").expect("a uid"));
+    let (text, report) = write(&with);
+    assert!(report.notes.iter().all(|n| n.what != "Tarama"), "{:?}", report.notes);
+    assert!(text.contains("AcDbHatch"));
+    let mut without = input(vec![hatch]);
+    without.uids.insert(2, kentos_contracts::EntityId::parse("0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c02").expect("a uid"));
+    let (_, report) = write(&without);
+    let said: Vec<&str> = report.notes.iter().filter(|n| n.what == "Tarama").map(|n| n.reason.as_str()).collect();
+    assert_eq!(said, ["sınır nesneleri dosyaya yazılmadığından ilişkili tarama ilişkisiz yazıldı; DXF'te sınırını izlemez"]);
+}
+
+/// UR-092: a tied hatch whose island was added over its seed: the file's seed is moved into the hatched ring, so the
+/// hatch read back keeps its tie to both circles.
+#[test]
+fn an_island_over_the_seed_does_not_lose_the_tie() {
+    let (outer, island) = ("0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c11", "0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c12");
+    let circle = |id: u32, r: f64| -> Entity {
+        serde_json::from_value(serde_json::json!({
+            "kind": "circle", "id": id, "layerId": "0", "attrs": {}, "c": {"x": 20.0, "y": 5.0}, "r": r
+        }))
+        .expect("a circle")
+    };
+    let ring = |r: f64| -> Vec<serde_json::Value> {
+        (0..64)
+            .map(|k| {
+                let a = std::f64::consts::TAU * f64::from(k) / 64.0;
+                serde_json::json!({"x": 20.0 + r * a.cos(), "y": 5.0 + r * a.sin()})
+            })
+            .collect()
+    };
+    let hatch: Entity = serde_json::from_value(serde_json::json!({
+        "kind": "hatch", "id": 3, "layerId": "0", "attrs": {}, "ring": ring(2.0), "holes": [ring(0.5)],
+        "pattern": {"type": "lines", "angle": 45, "spacing": 0.25},
+        "assoc": {"outer": outer, "islands": [island], "seed": {"x": 19.9943, "y": 4.9791}}
+    }))
+    .expect("a hatch");
+    let mut i = input(vec![circle(1, 2.0), circle(2, 0.5), hatch]);
+    for (id, uid) in [(1, outer), (2, island), (3, "0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c13")] {
+        i.uids.insert(id, kentos_contracts::EntityId::parse(uid).expect("a uid"));
+    }
+    let (text, _) = write(&i);
+    let r = read(&text);
+    let tied = r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.assoc.is_some()));
+    assert!(tied, "{:?}", r.report);
 }

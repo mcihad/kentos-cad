@@ -751,7 +751,7 @@ impl Designer {
         responsive(move |size| {
             let ruler = rulers::thickness();
             let content = Size::new(
-                (size.width - ruler).max(1.0),
+                (size.width - rulers::left_thickness()).max(1.0),
                 (size.height - ruler).max(1.0),
             );
             let xf = self.view.xf(content, sheet.page.size);

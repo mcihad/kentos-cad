@@ -100,12 +100,7 @@ impl App {
     pub(crate) fn sheet_print_preview(&mut self) {
         let result = (|| {
             let doc = self.sheet_output_snapshot()?;
-            let id = self
-                .sheets
-                .pdf_sheets()
-                .into_iter()
-                .next()
-                .ok_or("Yazılacak bir pafta seçin.")?;
+            let id = self.sheets.print_preview_sheet().ok_or("Yazılacak bir pafta seçin.")?;
             let drawing = self
                 .document
                 .as_ref()
@@ -113,23 +108,19 @@ impl App {
                 .map(|p| p.to_string_lossy().into_owned());
             let mut captured=kentos_plot::provenance::Capture::new(&doc,&kentos_plot::book::current_user(),&kentos_plot::book::today(),drawing.as_deref()).map_err(|e|e.message)?;
             captured.dpi_override(Some(self.sheets.output_dpi())).map_err(|e|e.message)?;
-            let image=kentos_plot::preview::page_captured(&captured,&id,96).map_err(|e|e.message)?;
-            Ok::<_, String>((image, id))
+            let dpi = preview_dpi(self.sheets.book().sheet(&id).map(|s| s.page.size));
+            let image=kentos_plot::preview::page_captured(&captured,&id,dpi).map_err(|e|e.message)?;
+            Ok::<_, String>((image, id, dpi))
         })();
         match result {
-            Ok((image, id)) => {
+            Ok((image, id, dpi)) => {
+                let name = self.sheets.book().sheet(&id).map_or_else(|| id.as_str().to_owned(), |s| s.name.clone());
                 self.sheets.show_print_preview(
-                image.width,
-                image.height,
-                image.rgba,
-                format!(
-                    "{} · 96 dpi önizleme · PDF ile aynı ölçek ve baskı profili · ilk seçili pafta",
-                    self.sheets
-                        .book()
-                        .sheet(&id)
-                        .map_or(id.as_str(), |s| s.name.as_str())
-                ),
-            );
+                    image.width,
+                    image.height,
+                    image.rgba,
+                    format!("{name} · {dpi} dpi önizleme · PDF ile aynı ölçek ve baskı profili"),
+                );
             }
             Err(e) => {
                 self.sheets.print_preview_failed(&e);
@@ -214,4 +205,16 @@ thread_local! {
 pub(crate) fn open_with_viewer(path: &Path) -> std::io::Result<()> {
     OPENED.with(|o| o.borrow_mut().push(path.to_owned()));
     Ok(())
+}
+
+/// The preview's resolution: fine enough to read small dimension and title block text when enlarged, with the
+/// page's longer side kept to about 5000 pixels (an A3 at 300 dpi, an A0 at about 108) so a large sheet stays
+/// within memory; never below the screen's 96.
+pub(crate) fn preview_dpi(size: Option<kentos_sheet::units::SizeUm>) -> u16 {
+    let Some(size) = size else { return 96 };
+    let longest_in = (size.width.max(size.height) as f64) / 25_400.;
+    if longest_in <= 0. {
+        return 96;
+    }
+    (5000. / longest_in).floor().clamp(96., 300.) as u16
 }

@@ -47,6 +47,19 @@ impl fmt::Display for Filter {
     }
 }
 
+impl Filter {
+    /// Whether the table shows the note under this filter.
+    fn passes(self, n: &ReviewNoteState) -> bool {
+        match self {
+            Filter::All => true,
+            Filter::Open => n.note.status == ReviewStatus::Open,
+            Filter::Answered => n.note.status == ReviewStatus::Answered,
+            Filter::Resolved => n.note.status == ReviewStatus::Resolved,
+            Filter::Stale => n.stale,
+        }
+    }
+}
+
 /// A status as the window says it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Status(pub ReviewStatus);
@@ -186,12 +199,38 @@ impl App {
         self.answered(result)
     }
 
+    /// The chosen note while the table shows it: a note the filter hides is neither detailed nor acted on, so a
+    /// state change, reply or removal never reaches a row the user cannot see.
+    pub(crate) fn review_visible_chosen(&self) -> Option<String> {
+        let w = self.review_window.as_ref()?;
+        let id = w.chosen.as_ref()?;
+        self.review_listed()
+            .notes
+            .iter()
+            .find(|n| &n.note.id == id && w.filter.passes(n))
+            .map(|n| n.note.id.clone())
+    }
+
     pub(crate) fn review_notes_event(&mut self, event: Event) -> Task<Message> {
+        let visible = self.review_visible_chosen();
         let Some(w) = self.review_window.as_mut() else {
             return Task::none();
         };
         match event {
-            Event::Filter(f) => w.filter = f,
+            Event::Filter(f) => {
+                w.filter = f;
+                // The choice follows the filter: kept while shown, else the first note shown (none on an empty table).
+                let listed = self.review_listed();
+                if let Some(w) = self.review_window.as_mut() {
+                    let keeps = w
+                        .chosen
+                        .as_ref()
+                        .is_some_and(|id| listed.notes.iter().any(|n| &n.note.id == id && f.passes(n)));
+                    if !keeps {
+                        w.chosen = listed.notes.iter().find(|n| f.passes(n)).map(|n| n.note.id.clone());
+                    }
+                }
+            }
             Event::Pick(id) => w.chosen = Some(id),
             Event::Text(t) => w.text = t,
             Event::Reply(t) => w.reply = t,
@@ -222,7 +261,7 @@ impl App {
                 }
             }
             Event::SendReply => {
-                let Some(id) = w.chosen.clone() else {
+                let Some(id) = visible else {
                     return Task::none();
                 };
                 let text = w.reply.trim().to_owned();
@@ -235,29 +274,30 @@ impl App {
                 }
             }
             Event::Status(Status(status)) => {
-                if let Some(id) = w.chosen.clone() {
+                if let Some(id) = visible {
                     let _ = self.review_edit(ReviewNoteOp::Update { id, text: None, status: Some(status), revision: None });
                 }
             }
             Event::Rebind => {
-                if let Some(id) = w.chosen.clone()
+                if let Some(id) = visible
                     && self.review_edit(ReviewNoteOp::Rebind { id, anchors: None }).is_some()
                 {
                     self.say(Level::Success, "Not çizimin şimdiki hâline yeniden bağlandı.".to_owned());
                 }
             }
             Event::Remove => {
-                if let Some(id) = w.chosen.clone()
+                if let Some(id) = visible
                     && self.review_edit(ReviewNoteOp::Remove { id }).is_some()
                 {
-                    let next = self.review_listed().notes.first().map(|n| n.note.id.clone());
+                    let filter = self.review_window.as_ref().map(|w| w.filter).unwrap_or_default();
+                    let next = self.review_listed().notes.iter().find(|n| filter.passes(n)).map(|n| n.note.id.clone());
                     if let Some(w) = self.review_window.as_mut() {
                         w.chosen = next;
                     }
                 }
             }
             Event::Select => {
-                let Some(id) = w.chosen.clone() else {
+                let Some(id) = visible else {
                     return Task::none();
                 };
                 let listed = self.review_listed();
@@ -290,17 +330,7 @@ impl App {
             return iced::widget::text("").into();
         };
         let listed = self.review_listed();
-        let shown: Vec<&ReviewNoteState> = listed
-            .notes
-            .iter()
-            .filter(|n| match w.filter {
-                Filter::All => true,
-                Filter::Open => n.note.status == ReviewStatus::Open,
-                Filter::Answered => n.note.status == ReviewStatus::Answered,
-                Filter::Resolved => n.note.status == ReviewStatus::Resolved,
-                Filter::Stale => n.stale,
-            })
-            .collect();
+        let shown: Vec<&ReviewNoteState> = listed.notes.iter().filter(|n| w.filter.passes(n)).collect();
         let filters = Segmented::new(
             [Filter::All, Filter::Open, Filter::Answered, Filter::Resolved, Filter::Stale],
             w.filter,
@@ -337,7 +367,15 @@ impl App {
                     .on_press(msg(Event::Pick(n.note.id.clone())))
             })
             .collect();
-        let chosen = w.chosen.as_ref().and_then(|id| listed.notes.iter().find(|n| &n.note.id == id));
+        let chosen = w
+            .chosen
+            .as_ref()
+            .and_then(|id| listed.notes.iter().find(|n| &n.note.id == id && w.filter.passes(n)));
+        // A note whose state just took it out of the filter: said, its details and actions gone with its row.
+        let hidden = w
+            .chosen
+            .as_ref()
+            .and_then(|id| listed.notes.iter().find(|n| &n.note.id == id && !w.filter.passes(n)));
         let selected = self.selection.len();
         let add_row = row![
             container(
@@ -373,6 +411,13 @@ impl App {
             }),
         ]
         .spacing(10);
+        if let Some(n) = hidden {
+            body = body.push(label::caption(format!(
+                "{}. not bu süzgeçte görünmüyor ({}); ayrıntısı ve işlemleri için Tümü'ne geçin.",
+                n.note.number,
+                status_words(n.note.status).to_lowercase()
+            )));
+        }
         if let Some(n) = chosen {
             let mut detail = column![label::body(format!("{}. not", n.note.number)), label::caption(n.note.text.clone())]
                 .spacing(4);
@@ -442,3 +487,7 @@ impl App {
             .modal(Message::DialogClosed)
     }
 }
+
+#[cfg(test)]
+#[path = "../tests/review_window_tests.rs"]
+mod tests;

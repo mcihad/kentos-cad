@@ -261,3 +261,72 @@ fn a_building_of_fewer_than_ten_flats_asks_no_shelter() {
     );
     assert!(!report.short());
 }
+
+/// A flat with no room tied to it (UR-050, UR-051): Otopark hesabı lists it apart, its need unknown, the total “at
+/// least”, the empty-program line not shown; Sığınak hesabı says its rooms are unknown and one counted, the total and
+/// the exemption conditional. Tying a room to it makes both tables firm again.
+#[test]
+fn a_unit_without_rooms_is_said_missing_not_counted_as_none() {
+    let mut app = building(1, false);
+    run(
+        &mut app,
+        "cad.program.edit",
+        json!({"program": {"units": [
+            {"id": "d1", "number": "1", "nature": "Daire"},
+            {"id": "qa", "number": "QA", "nature": "Daire"},
+            {"id": "ortak", "number": "O", "name": "Ortak alan", "kind": "common"}
+        ]}}),
+    );
+    let _ = app.update(Message::Run("arch.parkingTable"));
+    let _ = app.submit_line("0,30");
+    let parking = table(&app, &kentos_commands::TableSource::Parking {});
+    let r = rows(&parking);
+    assert!(r.iter().all(|row| row[0] != "Bina programında bölüm yok"), "{r:?}");
+    let missing = r.iter().position(|row| row[0] == "“QA” Daire").expect("the unit without rooms");
+    assert_eq!(r[missing], ["“QA” Daire", "yok", "Bölüme mahal bağlayın; kayıtlı alan hesaba girmez", "?"]);
+    assert!(parking.styles.iter().any(|s| s.range.row as usize == missing && s.color.is_some()));
+    let total = r.iter().find(|row| row[0].starts_with("Toplam")).expect("the total");
+    assert_eq!(total[0], "Toplam (kesir bir üste, 8/4; alanı eksik bölüm var)");
+    assert!(total[3].starts_with("en az "), "{total:?}");
+    let _ = app.update(Message::Run("arch.shelterTable"));
+    let _ = app.submit_line("40,30");
+    let shelter = table(&app, &kentos_commands::TableSource::Shelter {});
+    let r = rows(&shelter);
+    let qa = r.iter().find(|row| row[0] == "“QA” Daire").expect("its row");
+    assert_eq!(qa[1], "oda bilinmiyor: mahal bağlayın (1 sayıldı)");
+    assert!(r.iter().any(|row| row[0] == "Toplam (kişi başına 1 m², 8/a; eksik veriyle, kesin değil)"), "{r:?}");
+    assert!(r.iter().any(|row| row[0] == "Sığınak aranmaz (eksik veriyle, koşullu)"), "{r:?}");
+}
+
+#[test]
+#[ignore = "GPU: the parking and shelter tables with a unit without rooms"]
+fn missing_unit_tables_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-050");
+    std::fs::create_dir_all(&out).unwrap();
+    let mut app = building(1, false);
+    run(
+        &mut app,
+        "cad.program.edit",
+        json!({"program": {"units": [
+            {"id": "d1", "number": "1", "nature": "Daire"},
+            {"id": "qa", "number": "QA", "nature": "Daire"},
+            {"id": "ortak", "number": "O", "name": "Ortak alan", "kind": "common"}
+        ]}}),
+    );
+    let _ = app.update(Message::Run("arch.parkingTable"));
+    let _ = app.submit_line("0,30");
+    let _ = app.update(Message::Run("arch.shelterTable"));
+    let _ = app.submit_line("0,0");
+    let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 900.)).unwrap();
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    for (name, b) in [("otopark", [-0.5, 24.5, 30.5, 30.5]), ("siginak", [-0.5, -6.0, 30.5, 0.5])] {
+        snap.settle(&mut app, App::view, &mut update);
+        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: b[0], min_y: b[1], max_x: b[2], max_y: b[3] }, 0.0);
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme()).save(out.join(format!("{name}-eksik.png"))).unwrap();
+    }
+}

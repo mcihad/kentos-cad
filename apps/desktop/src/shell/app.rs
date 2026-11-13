@@ -260,6 +260,8 @@ pub enum Dialog {
     Flatten,
     /// Taşınma raporu (clean_report_window.rs, docs/adr/1262); its state is `App::clean_report`.
     CleanReport,
+    /// Açılış raporu (open_report_window.rs, UR-014): the open drawing's `App::open_reports` entry.
+    OpenReport,
     /// Dışa aktarma kaybı denetimi (exchange_check_window.rs, docs/adr/1660); its state is `App::exchange_check`.
     ExchangeCheck,
     /// Katalog geçiş raporu (catalog_report_window.rs, docs/adr/4940); its state is `App::catalog_report`.
@@ -517,6 +519,7 @@ pub enum Message {
     Xrefs(crate::xrefs_window::Event),
     Flatten(crate::flatten_window::Event),
     CleanReport(crate::clean_report_window::Event),
+    OpenReport(crate::open_report_window::Event),
     ExchangeCheck(crate::exchange_check_window::Event),
     CatalogReport(crate::catalog_report_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
@@ -635,6 +638,9 @@ pub enum Message {
     CloseRequested(window::Id),
     DialogConfirmed,
     DialogClosed,
+    /// “Kaydet ve …” on the unsaved changes' question (usage review UR-001): the drawing is saved, and the leaving goes
+    /// on only when the save succeeds.
+    DialogSave,
     /// The drawing area: its size, the pointer, pan, zoom and clicks.
     Viewport(viewport::Event),
     /// The other view of a split drawing area (split_view.rs, docs/adr/0285 §3).
@@ -989,6 +995,8 @@ pub struct App {
     pub(crate) xrefs: crate::xrefs_window::State,
     pub(crate) flatten: crate::flatten_window::State,
     pub(crate) clean_report: crate::clean_report_window::State,
+    /// What opening each DWG, DXF or NCZ drawing reported, by its session (open_report_window.rs, UR-014).
+    pub(crate) open_reports: std::collections::HashMap<u64, crate::open_report_window::OpenReport>,
     pub(crate) exchange_check: crate::exchange_check_window::State,
     pub(crate) catalog_report: crate::catalog_report_window::State,
     /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
@@ -1062,6 +1070,9 @@ pub struct App {
     pub binding: Option<crate::exchange::binding::Binding>,
     /// The save under way, if any (saving.rs).
     pub saving: Option<saving::Saving>,
+    /// UR-001: the leaving “Kaydet ve …” waits for, with the drawing's session: it goes on when that drawing's save
+    /// succeeds; a cancelled or failed save keeps the drawing open with its changes.
+    pub save_then: Option<(u64, Then)>,
     /// Where tests make the disk fail during a save (none in the app).
     pub save_faults: saving::Faults,
     /// Recovery copies of unsaved work; kept only when `main` opens their folder.

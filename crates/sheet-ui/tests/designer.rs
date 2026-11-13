@@ -326,7 +326,8 @@ fn a_stage_drawn_at_a_new_size_says_so() {
         f64::from(page.height) / 1000.0,
     );
     // Sığdır: the page in the stage less the rulers, 28 pixels around it.
-    let fit = ((640.0 - f64::from(ruler) - 56.0) / w).min((420.0 - f64::from(ruler) - 56.0) / h);
+    let left = rulers::left_thickness();
+    let fit = ((640.0 - f64::from(left) - 56.0) / w).min((420.0 - f64::from(ruler) - 56.0) / h);
     assert_eq!(
         d.zoom_percent(),
         Some((fit / (96.0 / 25.4) * 100.0).round() as u32)
@@ -2391,4 +2392,84 @@ fn a_failed_host_output_reopens_options_without_losing_scope_or_changing_the_boo
     d.update(Message::CloseDialog);
     d.update(Message::Print);
     assert!(d.error().is_none());
+}
+
+/// UR-027: a text written in the inspector's editor and not applied is applied to its item when another item is
+/// chosen, not dropped with the choice.
+#[test]
+fn a_text_written_and_not_applied_is_kept_when_another_item_is_chosen() {
+    let mut d = designer();
+    let sheet = &d.book().sheets[0];
+    let texts: Vec<String> = sheet
+        .items
+        .iter()
+        .filter(|i| matches!(i.kind, ItemKind::Text(_)))
+        .map(|i| i.id.clone())
+        .collect();
+    let (first, other) = (texts[0].clone(), texts[1].clone());
+    d.update(Message::Select(vec![first.clone()]));
+    let field = d
+        .kind_field_names()
+        .iter()
+        .position(|p| *p == "Metin")
+        .expect("the text's field");
+    d.update(Message::Inspector(kentos_ui::widget::inspector::Event::Edit { id: field, text: "Ada 101 vaziyet planı".into() }));
+    d.update(Message::Select(vec![other]));
+    let item = d.book().sheets[0].items.iter().find(|i| i.id == first).expect("the item");
+    let ItemKind::Text(t) = &item.kind else { panic!("a text") };
+    assert_eq!(t.content, "Ada 101 vaziyet planı", "applied, not lost");
+}
+
+/// UR-028: a small shape over the map, chosen, its bottom-right handle dragged: the shape grows and stays chosen; the
+/// map under the handle is not chosen instead.
+#[test]
+fn a_chosen_items_handle_wins_over_the_item_under_it() {
+    let mut d = designer();
+    let map = item(&d, "Harita").clone();
+    let at = center(&map);
+    d.update(Message::Tool(Tool::Add { tool: "shape".into(), preset: Some("ellipse".into()) }));
+    drag(&mut d, at, [at[0] + 40_000.0, at[1] + 30_000.0], true);
+    let shape = d.open_sheet().unwrap().items.last().unwrap().clone();
+    assert_eq!(d.selection(), std::slice::from_ref(&shape.id));
+    let corner = [
+        f64::from(shape.frame.left + shape.frame.width),
+        f64::from(shape.frame.top + shape.frame.height),
+    ];
+    drag(&mut d, corner, [corner[0] + 20_000.0, corner[1] + 15_000.0], true);
+    let after = d.open_sheet().unwrap().items.iter().find(|i| i.id == shape.id).unwrap().clone();
+    assert_eq!(d.selection(), std::slice::from_ref(&shape.id), "still the shape chosen");
+    assert!(after.frame.width > shape.frame.width + 10_000, "{:?} → {:?}", shape.frame, after.frame);
+}
+
+#[test]
+fn a_list_row_clicked_with_shift_or_command_adds_and_takes_away_as_on_the_paper() {
+    use iced::keyboard::Modifiers;
+    let mut d = designer();
+    let ids: Vec<_> = d.open_sheet().expect("a sheet").items.iter().take(2).map(|i| i.id.clone()).collect();
+    assert_eq!(ids.len(), 2, "the template's items");
+    d.update(Message::TreeClick(ids[0].clone(), false));
+    d.set_modifiers(Modifiers::SHIFT);
+    d.update(Message::TreeClick(ids[1].clone(), false));
+    assert_eq!(d.selection(), ids.as_slice(), "Shift adds the row");
+    d.set_modifiers(Modifiers::COMMAND);
+    d.update(Message::TreeClick(ids[0].clone(), false));
+    assert_eq!(d.selection(), std::slice::from_ref(&ids[1]), "⌘/Ctrl takes it away");
+    d.set_modifiers(Modifiers::empty());
+    d.update(Message::TreeClick(ids[0].clone(), false));
+    assert_eq!(d.selection(), std::slice::from_ref(&ids[0]), "a plain click chooses that row alone");
+}
+
+#[test]
+fn a_second_sheet_of_one_template_takes_a_name_of_its_own_and_lists_show_its_number() {
+    let mut d = designer();
+    new_sheet(&mut d);
+    let names: Vec<String> = d.book().sheets.iter().map(|s| s.name.clone()).collect();
+    assert_eq!(names.len(), 2);
+    assert_ne!(names[0], names[1], "{names:?}");
+    assert_eq!(names[1], format!("{} 2", names[0]));
+    let mut sheet = d.book().sheets[0].clone();
+    sheet.drawing_info = Some(kentos_sheet::drawing_set::DrawingInfo { number: "QA-001".into(), ..Default::default() });
+    assert_eq!(sheet.listed_name(), format!("QA-001 · {}", names[0]));
+    sheet.name = "QA-001 Kat planı".into();
+    assert_eq!(sheet.listed_name(), "QA-001 Kat planı", "a name that starts with its number is not said twice");
 }

@@ -173,7 +173,9 @@ impl Designer {
 
             Message::Select(ids) => self.select(ids),
             Message::TreeClick(id, add) => {
-                if add {
+                // A row clicked with Shift or ⌘/Ctrl held adds or takes away, as Shift does on the paper.
+                if add || self.held.shift() || self.held.command() {
+                    self.keep_open_texts();
                     if let Some(i) = self.selection.iter().position(|x| *x == id) {
                         self.selection.remove(i);
                     } else {
@@ -609,7 +611,16 @@ impl Designer {
                 self.dialog = None;
                 return vec![self.ask_path(ExportKind::Pdf)];
             }
-            PdfMessage::Preview => return vec![Effect::PrintPreview],
+            PdfMessage::Preview => {
+                self.preview_at = 0;
+                return vec![Effect::PrintPreview];
+            }
+            PdfMessage::PreviewPage(at) => {
+                if at < self.pdf_sheets().len() {
+                    self.preview_at = at;
+                    return vec![Effect::PrintPreview];
+                }
+            }
             PdfMessage::Publish=>{self.dialog=None;return vec![Effect::HostAction("sheet.publish".into())];}
             PdfMessage::Print => {
                 self.dialog = None;
@@ -666,7 +677,16 @@ impl Designer {
 
     // ── Choosing ──
 
+    /// A text written in the inspector's editor and not yet applied is applied to the items it was written for
+    /// before the choice changes (UR-027): it was dropped with them, unseen when Uygula was below the panel's edge.
+    pub(crate) fn keep_open_texts(&mut self) {
+        for id in self.inspector.open_editors() {
+            self.inspector_event(kentos_ui::widget::inspector::Event::CloseEditor { id, apply: true });
+        }
+    }
+
     pub(crate) fn select(&mut self, ids: Vec<ItemId>) {
+        self.keep_open_texts();
         let mut seen = std::collections::BTreeSet::new();
         self.selection = ids
             .into_iter()

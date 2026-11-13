@@ -7,9 +7,9 @@ checks and their order, the codes, paths and words) and from the ADRs' meaning o
   the place of a defined system (docs/adr/0168 §1) and makes the unit metres (docs/adr/0165 §2); the systems are the
   registry's (fixtures/crs/v1/registry.json, data), 0 a local project;
 - a second system is another registered system than the project's own, for a project with one (docs/adr/0167 §1);
-- the plot scale's change gives the texts at the old general height the new one in one undo step “Yazı yüksekliklerini
-  uydur” (docs/adr/0205 §3): a text without its own height on paper is at the project's height for texts (2.5 mm by
-  default), on paper, times the scale over a thousand;
+- the plot scale's change gives the texts at the old general height the new one, the scale and they in one undo step
+  “Çizim ölçeği” (docs/adr/0205 §3, 13.11.2026): one undo gives both back; a text without its own height on paper is at
+  the project's height for texts (2.5 mm by default), on paper, times the scale over a thousand;
 - every other key is the project's setting: an edit, no undo step.
 
     python3 scripts/fixtures/settings_set_command_cases.py           # writes the file
@@ -30,7 +30,7 @@ STYLE = {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}
 X, Y = 500000, 4400000
 SCALE = 1000
 TEXT_MM = 2.5  # the general height of a text on paper (docs/adr/0205 §1)
-FOLLOW = "Yazı yüksekliklerini uydur"
+FOLLOW = "Çizim ölçeği"
 
 INVALID_REVISION = "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın."
 CONFLICT = "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
@@ -198,7 +198,8 @@ def cases():
     out.append({"name": "Çizim ölçeği: eski genel yükseklikteki yazılar yenisini tek adımda alır; elle verilen ve kilitli katmandaki kalır",
                 "steps": [step("execute", {"plotScale": 500}, done(["plotScale"], len(texts), locked),
                                {"ids": IDS, "entities": {**texts, "2": E["2"], "3": E["3"]}, "settings": {"plotScale": 500}, "canUndo": True, "dirty": True}),
-                          step("undo", returns=FOLLOW, expect={"entities": {k: E[k] for k in texts}, "settings": {"plotScale": 500}})]})
+                          step("undo", returns=FOLLOW, expect={"entities": {k: E[k] for k in texts}, "settings": {"plotScale": SCALE}}),
+                          step("redo", returns=FOLLOW, expect={"entities": texts, "settings": {"plotScale": 500}})]})
     out.append({"name": "Plan: değişecek anahtarlar ve yazılar; yazmaz",
                 "steps": [step("plan", {"plotScale": 500, "projectType": "gis"}, done(["plotScale"], len(texts), locked), {**UNCHANGED, "settings": {"plotScale": SCALE}})]})
     out.append({"name": "Doğrula: yazmaz", "steps": [step("validate", {"srid": 5255}, {"status": "completed", "output": None, "warnings": []}, UNCHANGED)]})
@@ -294,6 +295,24 @@ def cases():
                                {"settings": {"survey": None}, "revision": "changed"})]})
     out.append(refused("kırılma katsayısı 1'den büyük", {"refraction": 1.5}, "invalid_refraction",
                        "Kırılma katsayısı k −1 ile 1 arasında olmalı; 1.5 verildi.", "refraction"))
+    # Usage review UR-003: the layer each annotation tool draws on, whole; an empty list takes them away; each tool once,
+    # each layer one the drawing has.
+    tools = [{"tool": "text", "layer": "yazi"}, {"tool": "hatch", "layer": "kilitli"}]
+    out.append({"name": "Araç katmanları: yazı ve tarama kendi katmanlarına çizilir",
+                "steps": [step("execute", {"toolLayers": tools}, done(["toolLayers"]),
+                               {**FLAGS, "settings": {"toolLayers": tools}})]})
+    out.append({"name": "Araç katmanları boş liste: kalkar, araçlar etkin katmana çizer",
+                "setup": setup(toolLayers=tools),
+                "steps": [step("execute", {"toolLayers": []}, done(["toolLayers"]),
+                               {**FLAGS, "settings": {"toolLayers": None}})]})
+    out.append(refused("araç katmanında bir araç iki kez", {"toolLayers": tools + [{"tool": "text", "layer": "kilitli"}]},
+                       "invalid_tool_layers", "Araç katmanları: yazı aracının katmanı iki kez yazılmış.", "toolLayers"))
+    out.append(refused("araç katmanının katmanı boş", {"toolLayers": [{"tool": "dimension", "layer": " "}]},
+                       "invalid_tool_layers", "Araç katmanları: 1. araç katmanının katmanı boş.", "toolLayers"))
+    out.append(refused("araç katmanı çizimde yok", {"toolLayers": [{"tool": "dimension", "layer": "olcu"}]},
+                       "invalid_tool_layers",
+                       "ölçü için verilen “olcu” çizimde bir katman değil; var olan bir katmanın kimliğini verin.",
+                       "toolLayers[0].layer"))
     need = ("Koordinat sistemi olmayan yerel projede elipsoit yüksekliği ve koordinat epoku olmaz: ikisi de bir datumun "
             "elipsoidine ve zamanına bağlıdır. Önce projeye bir sistem atayın ya da ortometrik yüksekliği seçin.")
     out.append(refused("yerel projede elipsoit yüksekliği", {"srid": 0, "heights": {"kind": "ellipsoidal"}},

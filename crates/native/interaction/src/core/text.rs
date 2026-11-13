@@ -227,16 +227,10 @@ pub struct Text {
     last_text: Option<String>,
 }
 
-/// The active layer's lock sentence, when it is locked (the drawing tools' words).
+/// The text layer's lock sentence, when it is locked (the drawing tools' words): the active layer, or the project's
+/// text layer (UR-003).
 fn active_locked(cx: &Context<'_>) -> Option<String> {
-    let layers = cx.doc.layers();
-    let id = layers.active();
-    layers.is_locked(id).then(|| {
-        let name = layers.get(id).map_or(id, |n| n.name.as_str());
-        format!(
-            "“{name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin."
-        )
-    })
+    crate::tool_layer::locked(cx.doc, kentos_commands::AnnotationTool::Text)
 }
 
 /// A number as the web writes it in the prompt: `+n.toFixed(places)`.

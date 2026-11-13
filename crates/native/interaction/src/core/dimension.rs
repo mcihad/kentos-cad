@@ -89,6 +89,9 @@ const MODES: [(Mode, &str); 10] = [
     (Mode::Slope, "E"),
 ];
 
+/// What a point given again where the last one is says.
+pub const SAME_POINT: &str = "Bu nokta bir öncekiyle aynı yerde; ölçünün noktaları farklı olmalı. Başka bir nokta gösterin.";
+
 impl Mode {
     /// The style's name (the web's `DIMENSION_STYLE_LABEL`).
     pub fn label(self) -> &'static str {
@@ -420,10 +423,12 @@ impl Dimension {
                 return true;
             }
         }
+        // The east axis's key is its name in the project (UR-009): Y in a CBS project, X in a CAD one.
+        let (east, north) = (self.format.east_label(), self.format.north_label());
         if cx.memory.dimension_mode == Mode::Ordinate && self.d.pts.len() == 1 {
             cx.memory.ordinate_lock = match key {
-                "Y" => Some(0.0),
-                "X" => Some(90.0),
+                k if k == east => Some(0.0),
+                k if k == north => Some(90.0),
                 "O" => None,
                 _ => return false,
             };
@@ -431,8 +436,8 @@ impl Dimension {
         }
         if cx.memory.dimension_mode == Mode::Linear && self.d.pts.len() == 2 && !self.asking_angle {
             cx.memory.dimension_lock = match key {
-                "Y" => Some(0.0),
-                "X" => Some(90.0),
+                k if k == east => Some(0.0),
+                k if k == north => Some(90.0),
                 "O" => None,
                 "A" => {
                     self.asking_angle = true;
@@ -488,6 +493,9 @@ impl Dimension {
                 if self.mode() == Mode::Slope {
                     self.zs.push(snapped_elevation(snap, p, cx));
                 }
+            } else {
+                // The same point again: said, the points and elevations given so far kept.
+                cx.say(Level::Warn, SAME_POINT);
             }
             return;
         }
@@ -628,7 +636,8 @@ impl Dimension {
             measure,
             at: wire(at),
             offset: typed,
-            layer_id: cx.doc.layers().active().to_owned(),
+            // UR-003: the project's dimension layer when it names one.
+            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Dimension),
             dimension_style: styles::dimension_style(cx.memory, settings)
                 .filter(|_| styles::shown(settings))
                 .map(|s| s.name.clone()),
@@ -948,6 +957,9 @@ impl Tool for Dimension {
         }
         let step = match self.mode() {
             Mode::Linear => match n {
+                0 if self.format.axes == crate::format::Axes::Cad => {
+                    "doğrusal ölçünün (ΔX / ΔY) ilk noktasını belirtin"
+                }
                 0 => "doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin",
                 1 => "ikinci ölçü noktasını belirtin",
                 _ => "ölçü çizgisinin yerini gösterin ya da mesafe yazın",
@@ -1019,21 +1031,25 @@ impl Tool for Dimension {
                 Some(deg) => self.format.angle(deg * std::f64::consts::PI / 180.0),
                 None => "imleçten".to_owned(),
             };
+            let (east, north) = (self.format.east_label(), self.format.north_label());
+            let cad = self.format.axes == crate::format::Axes::Cad;
             prompt = prompt
-                .option("Yatay ΔY", "Y")
-                .option("Düşey ΔX", "X")
+                .option(if cad { "Yatay ΔX" } else { "Yatay ΔY" }, east)
+                .option(if cad { "Düşey ΔY" } else { "Düşey ΔX" }, north)
                 .option_with("Yön", "O", way)
                 .option("Açı", "A");
         }
         if self.mode() == Mode::Ordinate && n == 1 {
+            let (east, north) = (self.format.east_label(), self.format.north_label());
             let way = match self.memory.ordinate_lock {
-                Some(0.0) => "Y",
-                Some(_) => "X",
+                Some(0.0) => east,
+                Some(_) => north,
                 None => "imleçten",
             };
+            let cad = self.format.axes == crate::format::Axes::Cad;
             prompt = prompt
-                .option("Y koordinatı", "Y")
-                .option("X koordinatı", "X")
+                .option(if cad { "X koordinatı" } else { "Y koordinatı" }, east)
+                .option(if cad { "Y koordinatı" } else { "X koordinatı" }, north)
                 .option_with("Eksen", "O", way);
         }
         if self.fresh() {

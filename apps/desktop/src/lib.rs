@@ -1123,6 +1123,19 @@ mod method_scenes;
 mod mirror_scenes;
 #[path = "shell/modes.rs"]
 mod modes;
+#[path = "shell/selection_fit.rs"]
+mod selection_fit;
+#[path = "shell/open_report_window.rs"]
+mod open_report_window;
+#[cfg(test)]
+#[path = "tests/fixture_library_tests.rs"]
+mod fixture_library_tests;
+#[cfg(test)]
+#[path = "tests/open_report_tests.rs"]
+mod open_report_tests;
+#[cfg(test)]
+#[path = "tests/selection_fit_tests.rs"]
+mod selection_fit_tests;
 #[cfg(test)]
 #[path = "tests/module_screens.rs"]
 mod module_screens;
@@ -1267,6 +1280,9 @@ mod settings_look;
 #[cfg(test)]
 #[path = "tests/settings_look_tests.rs"]
 mod settings_look_tests;
+#[cfg(test)]
+#[path = "tests/tool_layer_settings_tests.rs"]
+mod tool_layer_settings_tests;
 #[path = "shell/settings_sections.rs"]
 mod settings_sections;
 #[path = "shell/settings_view.rs"]

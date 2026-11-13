@@ -1341,9 +1341,12 @@ impl FlightTool {
 
     fn line(&self, with_hover: bool) -> Vec<Vec2> {
         let mut pts = self.pts.clone();
+        // The pointer still on the point just given is no next point (UR-018): the preview is the path given so far,
+        // not a turn of no length the path check would call an error.
         if with_hover
             && pts.len() < kentos_commands::MAX_FLIGHT_POINTS
             && let Some(h) = self.hover
+            && pts.last().is_none_or(|l| (l.x - h.x).hypot(l.y - h.y) > 1e-6)
         {
             pts.push(h);
         }
@@ -1765,6 +1768,40 @@ impl FlightTool {
 }
 
 impl FlightTool {
+    /// Why a setting's value did not go in, the setting's own rule only (a ramp's Eğim never hears of risers), and
+    /// that the value before stays.
+    fn refusal(&self, key: &str) -> String {
+        let rule = match (key, self.ramp) {
+            ("M", true) => {
+                return format!(
+                    "Değer uygulanmadı: Eğim (%) sıfırdan büyük bir yüzde olmalı (ör. 6); boş ya da Hesaplanır yükseklik farkından hesaplar. Eğim {} kaldı.",
+                    self.slope.map_or_else(|| "hesaplanır".into(), |v| format!("%{v}"))
+                );
+            }
+            ("E", _) => "Genişlik sıfırdan büyük bir uzunluk olmalı".into(),
+            ("H", _) => "Sahanlık sıfırdan büyük bir uzunluk olmalı; boş ya da Genel genişliği alır".into(),
+            ("A", false) => "Balansman 1 ya da daha büyük bir tam sayı olmalı; Yok her dönüşte sahanlık koyar".into(),
+            ("L", true) => "En uzun kol sıfırdan büyük bir uzunluk olmalı; Yok kolu bölmez".into(),
+            ("Z", true) => "Başlangıç kotu bir sayı ya da Kat, Kat+0.15 gibi olmalı".into(),
+            ("Y", true) => "Yükseklik farkı bir sayı olmalı".into(),
+            ("Y", false) => "Yükseklik sıfırdan büyük bir uzunluk olmalı; boş ya da Kat etkin katınkini alır".into(),
+            ("R", _) => "En fazla rıht sıfırdan büyük bir uzunluk olmalı".into(),
+            ("S", _) => format!(
+                "Rıht sayısı 0 (hesaplanır) ile {} arası bir tam sayı olmalı",
+                kentos_commands::MAX_RISERS
+            ),
+            ("D", _) => "Basamak sıfırdan büyük bir uzunluk olmalı".into(),
+            ("K", _) => "Kesme yüksekliği sıfırdan büyük bir uzunluk olmalı; 0 ya da Yok kesmeyi kapatır".into(),
+            ("M", false) => "Merkez direği sıfırdan büyük bir uzunluk olmalı; 0 ya da Yok direksiz bırakır".into(),
+            ("O", _) => "Korkuluk Yok, Sol, Sağ ya da İki yan olmalı".into(),
+            ("B", _) => "Biçim Düz ya da Döner olmalı".into(),
+            ("U", _) => "Son kol Eğime/Rıhtlara göre ya da Tıklanan yerde biter olmalı".into(),
+            ("N", _) => "Basamak numaraları Açık ya da Kapalı olmalı".into(),
+            _ => "Bu ayar bu araçta yok".into(),
+        };
+        format!("Değer uygulanmadı: {rule}; önceki değer korundu.")
+    }
+
     /// Biçim: a curved or a straight stair; the points clicked so far go with the other shape's (they mean other things).
     fn shape(&mut self, curved: bool) {
         if self.curved != curved {
@@ -2183,10 +2220,7 @@ impl Tool for FlightTool {
             self.see(cx);
             return true;
         }
-        cx.say(
-            Level::Warn,
-            "Değer uygulanmadı: uzunluklar sıfırdan büyük; Rıht sayısı 0 (hesaplanır) ile 400 arası tam sayı; Kesme 0 ya da Yok ile kapanır.",
-        );
+        cx.say(Level::Warn, self.refusal(key));
         false
     }
 

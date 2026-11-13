@@ -163,3 +163,72 @@ fn balansman_balances_the_turn_and_says_its_narrowest_tread() {
     let s = stair(&b);
     assert_eq!((s.winders, s.landing), (None, None), "{s:?}");
 }
+
+/// UR-018: the second point given, the pointer still on it: no error of a third point not given yet, the plan the
+/// straight flight Enter draws; a ramp the same. Moved on to a turn, the L's plan.
+#[test]
+fn the_pointer_on_the_point_just_given_is_no_third_point() {
+    for tool in ["stair", "ramp"] {
+        let mut b = bench();
+        b.start(tool);
+        b.click(0., 0.);
+        b.move_to(0., 9.);
+        b.click(0., 9.);
+        let preview = b.session.preview(&Default::default()).expect("the plan drawn");
+        let said = preview.tag.as_ref().map(|t| t.lines.join(" ")).unwrap_or_default();
+        assert!(!said.contains("noktası aynı"), "{tool}: {said}");
+        assert_ne!(preview.tag_tone, kentos_interaction::Tone::Danger, "{tool}: {said}");
+        b.confirm();
+        assert!(
+            matches!(b.newest(), Entity::Stair(_) | Entity::Ramp(_)),
+            "{tool}: Enter draws it"
+        );
+    }
+}
+
+/// UR-057: a refused value is told by its own setting's rule (a ramp's slope never hears of risers or cuts) and the
+/// value before stays.
+#[test]
+fn a_refused_setting_says_its_own_rule() {
+    let mut b = Bench::new("ramp");
+    let mut settings = b.doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    settings.drawing_unit = Some(DrawingUnit::M);
+    b.doc.set_settings(settings);
+    b.start("ramp");
+    assert!(!b.run(|session, cx| session.configure("M", "0", cx)));
+    let said = b.last_text().unwrap_or_default().to_owned();
+    assert!(said.contains("Eğim (%) sıfırdan büyük") && said.contains("Eğim %6 kaldı"), "{said}");
+    assert!(!said.contains("Rıht") && !said.contains("Kesme"), "{said}");
+    assert!(!b.run(|session, cx| session.configure("E", "-1", cx)));
+    let said = b.last_text().unwrap_or_default().to_owned();
+    assert!(said.starts_with("Değer uygulanmadı: Genişlik sıfırdan büyük"), "{said}");
+    // The stair's riser count and cut height say theirs.
+    let mut b = bench();
+    assert!(!b.run(|session, cx| session.configure("S", "2.5", cx)));
+    assert!(b.last_text().unwrap_or_default().starts_with("Değer uygulanmadı: Rıht sayısı 0 (hesaplanır) ile"));
+    assert!(!b.run(|session, cx| session.configure("K", "abc", cx)));
+    assert!(b.last_text().unwrap_or_default().starts_with("Değer uygulanmadı: Kesme yüksekliği"));
+}
+
+/// UR-030: a section mark's second point given, the pointer still on it: no error of two points the same; Enter writes
+/// the mark, said as a section's with its letter.
+#[test]
+fn a_section_marks_resting_pointer_is_no_third_point() {
+    let mut b = bench();
+    b.start(kentos_interaction::viewmark_tools::SECTION_ID);
+    b.click(0., 0.);
+    b.move_to(10., 0.);
+    b.click(10., 0.);
+    let preview = b.session.preview(&Default::default()).expect("the mark drawn");
+    let said = preview.tag.as_ref().map(|t| t.lines.join(" ")).unwrap_or_default();
+    assert!(!said.contains("aynı olamaz"), "{said}");
+    assert_ne!(preview.tag_tone, kentos_interaction::Tone::Danger, "{said}");
+    b.confirm();
+    assert!(matches!(b.newest(), Entity::ViewMark(_)));
+    assert_eq!(
+        b.last_text(),
+        Some("Kesit işareti A yazıldı; hedefi yeniden adlandırılınca yazısı da değişir.")
+    );
+}

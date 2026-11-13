@@ -784,6 +784,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut zoning_plan = None;
     let mut survey_adjustments = Vec::new();
     let mut monitoring_reviews = Vec::new();
+    let mut tool_layers = Vec::new();
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -833,6 +834,8 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "monitoringReviews" if has.monitoring_reviews => {
                 monitoring_reviews = map::monitoring_reviews(r)?
             }
+            // Schema 255 (usage review UR-003): the layer each annotation tool draws on, read whole and checked.
+            "toolLayers" if has.tool_layers => tool_layers = map::tool_layers(r)?,
             "surveyAdjustments" if has.kept_adjustments => {
                 survey_adjustments = map::survey_adjustments(r)?
             }
@@ -1355,6 +1358,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         zoning_plan,
         survey_adjustments,
         monitoring_reviews,
+        tool_layers,
         source_bases,
         heights,
         coordinate_epoch,

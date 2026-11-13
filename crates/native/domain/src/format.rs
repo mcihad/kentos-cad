@@ -531,6 +531,13 @@ impl Format {
         look: &kentos_contracts::DimensionLook,
         text: Option<&str>,
     ) -> String {
+        // A coordinate's axis by the project's name for it (UR-009): the east axis is Y= in a CBS project, X= in a
+        // CAD one; the layout keeps the CBS name.
+        let prefix = match (self.axes, prefix) {
+            (Axes::Cad, "Y=") => "X=",
+            (Axes::Cad, "X=") => "Y=",
+            _ => prefix,
+        };
         let written = if matches!(unit, "length" | "coordinate") {
             self.length_value(prefix, value, look)
         } else {
@@ -766,6 +773,7 @@ mod tests {
             zoning_plan: None,
             survey_adjustments: Vec::new(),
             monitoring_reviews: Vec::new(),
+            tool_layers: Vec::new(),
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),
@@ -881,6 +889,7 @@ mod tests {
             zoning_plan: None,
             survey_adjustments: Vec::new(),
             monitoring_reviews: Vec::new(),
+            tool_layers: Vec::new(),
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),

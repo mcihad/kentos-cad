@@ -214,7 +214,7 @@ fn the_ends_meet_on_the_border_in_one_step() {
     assert_eq!(ends_on_edge(&app), 4, "every used link meets on the edge");
     assert_eq!(
         last_said(&app),
-        "Kenar eşleme: 4 bağ yazıldı, 8 çizgi düzeltildi. Ctrl+Z geri alır."
+        crate::keys::shown("Kenar eşleme: 4 bağ yazıldı, 8 çizgi düzeltildi. Ctrl+Z geri alır.")
     );
     assert_eq!(app.selection.len(), 8);
     let doc = app.document.as_mut().expect("open");

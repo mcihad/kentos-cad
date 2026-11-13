@@ -287,6 +287,17 @@ pub enum Paper {
     Custom,
 }
 
+impl Sheet {
+    /// Its name as lists, tabs and the publish window show it: its drawing number before it when it has one and the
+    /// name does not already start with it (“QA-002 · Teknik çizim”), so two sheets of one template are told apart.
+    pub fn listed_name(&self) -> std::borrow::Cow<'_, str> {
+        match self.drawing_info.as_ref().map(|i| i.number.trim()) {
+            Some(n) if !n.is_empty() && !self.name.starts_with(n) => format!("{n} · {}", self.name).into(),
+            _ => self.name.as_str().into(),
+        }
+    }
+}
+
 impl Paper {
     pub const STANDARD: [Paper; 11] = [
         Paper::A0,

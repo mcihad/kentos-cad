@@ -403,6 +403,8 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
                 .map(|(g, n)| (g, n, None))
                 .collect()
         };
+        let sides_asked = computed.len();
+        let mut my_error: Option<String> = None;
         for (copy, note, mut report) in computed {
             let made_one = match copy {
                 Geometry::Ok(copy) => {
@@ -434,6 +436,7 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
                         message: e.clone(),
                         path: Some(format!("uids[{i}]")),
                     });
+                    my_error.get_or_insert_with(|| e.clone());
                     first_error.get_or_insert(e);
                     None
                 }
@@ -456,9 +459,21 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
                 });
             }
         }
-        if input.delete_source && made > 0 {
+        // Kaynağı sil takes the source only when every side asked for was made: a side that could not be (a radius
+        // gone below zero) leaves the source, said, rather than half the result in its place.
+        let failed = sides_asked.saturating_sub(made);
+        if input.delete_source && made > 0 && failed == 0 {
             removes.push(EntityEdit::Remove {
                 uid: (*uid).clone(),
+            });
+        } else if input.delete_source && made > 0
+            && let Some(e) = &my_error
+        {
+            warnings.push(CommandWarning {
+                code: failed_code(e).into(),
+                message: "Kaynağı sil açıktı, ama bir yanın kopyası yapılamadığı için kaynak silinmedi; yalnız yapılan kopya eklendi."
+                    .into(),
+                path: Some(format!("uids[{i}]")),
             });
         }
     }

@@ -647,6 +647,7 @@ impl App {
         };
         let name = e.name.clone();
         let form = e.form.clone();
+        let written_uid = e.uid.clone();
         let docked = e.docked.then(|| e.uid.clone());
         // The "reuse last" fields' values, kept for the next new record when this one goes in.
         let reused: Vec<(String, String)> = e
@@ -727,6 +728,10 @@ impl App {
                     said.push_str(&self.together_words(committed, &path));
                 }
                 self.say(Level::Success, said);
+                // A value its layer's style draws nothing for: the object leaves the map, said (not taken for deleted).
+                if let Some(note) = self.unstyled_note(&[written_uid]) {
+                    self.say(Level::Warn, note);
+                }
                 back
             }
             None => self.go_to_first_issue(),
@@ -769,6 +774,9 @@ impl App {
                     )
                 };
                 self.say(Level::Success, said);
+                if let Some(note) = self.unstyled_note(&done.changed) {
+                    self.say(Level::Warn, note);
+                }
                 Task::none()
             }
             None => self.go_to_first_issue(),

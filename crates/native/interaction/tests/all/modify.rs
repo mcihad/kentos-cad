@@ -416,3 +416,19 @@ fn locked_objects_stay_and_alone_are_refused() {
         "the move leaves all the same"
     );
 }
+
+/// UR-110: the mirror axis's second point on its first: said, the first point kept; another point then mirrors.
+#[test]
+fn a_mirror_axis_of_one_point_is_said() {
+    let mut b = bench(&[1]);
+    b.start("mirror");
+    b.click(0.0, -20.0);
+    b.click(0.0, -20.0);
+    assert_eq!(
+        b.last_text(),
+        Some("Simetri ekseninin iki noktası farklı olmalı; ikinci noktayı yeniden belirtin.")
+    );
+    assert_eq!(b.doc.len(), 7, "nothing written");
+    b.click(0.0, 0.0);
+    assert_eq!(b.doc.len(), 8);
+}

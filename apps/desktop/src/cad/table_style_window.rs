@@ -410,8 +410,16 @@ impl App {
                 .field("Hizalama", align_pick);
             for (f, label) in FIELDS {
                 let typed = w.typed.get(&(s.id.clone(), w.cell, f)).cloned().unwrap_or_else(|| shown(cell, f));
-                let hint = if matches!(f, Field::Color | Field::Fill | Field::BorderColor) { "#rrggbb" } else { "Tablonun" };
-                form = form.field(label, kentos_ui::widget::text_field(hint, &typed).on_input(move |t| msg(Event::Field(f, t))));
+                let colour = matches!(f, Field::Color | Field::Fill | Field::BorderColor);
+                let hint = "Tablonun";
+                let field = kentos_ui::widget::text_field(hint, &typed).on_input(move |t| msg(Event::Field(f, t)));
+                if colour {
+                    // A colour chosen from the kit's picker too (UR-033), its swatch the colour now; the code may still be
+                    // typed, and empty is the table's own.
+                    form = form.field(label, colour_field(field, &typed, f));
+                } else {
+                    form = form.field(label, field);
+                }
             }
             form = form.help("Boş alan tablonun kendi değerini kullanır. Ölçüler kâğıtta, proje ölçeğinde çizilir.");
         }
@@ -628,6 +636,32 @@ pub(crate) mod tests {
         assert_eq!(table_style(&app).as_deref(), Some("yerel-sade"));
     }
 
+    /// UR-033's pictures (`.run/gui-evidence/kullanim-UR-033/`): a style's data cells, their fill chosen, light and dark.
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn colour_field_screens() {
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-033");
+        std::fs::create_dir_all(&out).expect("a folder");
+        for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+            let mut app = crate::files_testing::app_with_drawing();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            drawing(&mut app);
+            let _ = app.table_style_window_event(Event::Open);
+            let _ = app.table_style_window_event(Event::Choose(0));
+            let _ = app.table_style_window_event(Event::Cell(Cell::Data));
+            let _ = app.table_style_window_event(Event::Field(Field::Fill, "#ffe8a3".into()));
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("tablo-stili-renk-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
+    }
+
     #[test]
     fn the_window_saves_a_changed_style_and_a_removed_one_in_one_step() {
         let mut app = crate::files_testing::app_with_drawing();
@@ -652,3 +686,31 @@ pub(crate) mod tests {
         assert_eq!(doc.model.settings().table_styles.len(), 2);
     }
 }
+
+/// A colour field: its swatch opening the kit's colour picker (the colour now, an empty box while the field is empty
+/// and the table's own is used), then the code typed (UR-033).
+fn colour_field<'a>(
+    field: impl Into<Element<'a, Message>>,
+    typed: &str,
+    f: Field,
+) -> Element<'a, Message> {
+    use kentos_ui::widget::color::{ColorPicker, parse_hex, to_hex};
+    let shown = parse_hex(typed.trim());
+    let size = kentos_ui::theme::typography::scaled(22.0);
+    let face = iced::widget::container(iced::widget::Space::new())
+        .width(size * 1.6)
+        .height(size)
+        .style(move |t: &Theme| iced::widget::container::Style {
+            background: Some(iced::Background::Color(shown.unwrap_or(Color::TRANSPARENT))),
+            border: iced::Border {
+                color: kentos_ui::theme::Tokens::of(t).muted,
+                width: 1.0,
+                radius: kentos_ui::theme::shape::radius(3.0).into(),
+            },
+            ..iced::widget::container::Style::default()
+        });
+    let picker = ColorPicker::new(shown.unwrap_or(Color::BLACK), move |c| msg(Event::Field(f, to_hex(c)))).anchor(face);
+    let field: Element<'a, Message> = field.into();
+    iced::widget::row![picker, field].spacing(8).align_y(iced::Center).into()
+}
+

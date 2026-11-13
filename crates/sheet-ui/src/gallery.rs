@@ -1161,10 +1161,18 @@ impl Designer {
                 .map(|_| self.new_id("ao"))
                 .collect(),
         };
-        // The template's own sheet name, as the web's (the core names it).
+        // The template's own sheet name, as the web's; one the book has already takes “ 2”, “ 3” … so two sheets
+        // of one template are told apart.
+        let taken: std::collections::BTreeSet<&str> = self.book.sheets.iter().map(|s| s.name.as_str()).collect();
+        let name = taken.contains(t.sheet.name.as_str()).then(|| {
+            (2..)
+                .map(|n| format!("{} {n}", t.sheet.name))
+                .find(|c| !taken.contains(c.as_str()))
+                .unwrap_or_else(|| t.sheet.name.clone())
+        });
         let options = InstanceOptions {
             paper,
-            name: None,
+            name,
             center: self.ctx.center,
             scale: self.ctx.capabilities.plot_scale,
             values,

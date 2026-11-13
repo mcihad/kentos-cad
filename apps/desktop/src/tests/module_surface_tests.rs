@@ -751,7 +751,7 @@ fn kentos_mimari_takes_drawings_dropped_on_it_and_names_the_programs_for_the_res
     let _ = harita.sources_event(crate::sources::Event::Dropped(dir.join("parsel.shp")));
     assert_eq!(
         last_said(&harita),
-        "Açık çizim yok. Önce bir çizim açın (Ctrl+O)."
+        crate::keys::shown("Açık çizim yok. Önce bir çizim açın (Ctrl+O).")
     );
 }
 

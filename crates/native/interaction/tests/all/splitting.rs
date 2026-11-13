@@ -645,3 +645,22 @@ fn cleanup_time_on_a_big_drawing() {
         println!("{n} nesne: {:.0} ms", t.elapsed().as_secs_f64() * 1000.0);
     }
 }
+
+/// UR-105: two lines lying on one another are said to overlap, not to be apart; nothing is written.
+#[test]
+fn overlapping_lines_are_said_as_such() {
+    let mut b = bench();
+    let one = b.add_line("cizim", [130.0, 0.0], [150.0, 0.0]);
+    let two = b.add_line("cizim", [135.0, 0.0], [145.0, 0.0]);
+    b.spatial.sync(&b.doc);
+    b.selection.set([one, two]);
+    let rev = b.doc.revision();
+    b.start("split");
+    b.confirm();
+    assert!(
+        b.last_text().is_some_and(|t| t.starts_with("Seçilen çizgiler üst üste biniyor")),
+        "{:?}",
+        b.last_text()
+    );
+    assert_eq!(b.doc.revision(), rev);
+}

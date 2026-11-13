@@ -367,3 +367,44 @@ fn a_module_without_walls_has_its_base_at_its_objects_lower_left() {
         "{at:?}"
     );
 }
+
+/// UR-053: the help under Seçimden yeni modül says what the selection holds rather than always asking for one.
+#[test]
+fn the_new_module_help_follows_the_selection() {
+    let mut app = app();
+    app.selection.set([]);
+    assert_eq!(
+        app.room_module_selection_words(),
+        "Önce çizimde odanın nesnelerini seçin."
+    );
+    select_bathroom(&mut app);
+    assert_eq!(
+        app.room_module_selection_words(),
+        "Seçimde 9 nesne var; hepsi modüle alınabilir."
+    );
+    app.selection
+        .set([1, 5, 12].into_iter().map(kentos_domain::Slot));
+    let mixed = app.room_module_selection_words();
+    assert!(
+        mixed.contains("3 nesne") && mixed.contains("2 tanesi modüle alınabilir") && mixed.contains("çizgi"),
+        "{mixed}"
+    );
+    app.selection.set([kentos_domain::Slot(12)]);
+    assert!(app.room_module_selection_words().contains("modüle alınamaz (çizgi)"));
+}
+
+/// UR-053's pictures: the window with no selection, the bathroom selected and a line among it,
+/// `.run/gui-evidence/kullanim-053/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens() {
+    for (name, slots) in [("secimsiz", vec![]), ("gecerli", (1..=9).collect()), ("karma", vec![1, 5, 12])] {
+        crate::files_testing::usage_shots("053", name, || {
+            let mut app = app();
+            app.selection
+                .set(slots.iter().copied().map(kentos_domain::Slot));
+            let _ = app.update(Message::Run("arch.modules"));
+            app
+        });
+    }
+}

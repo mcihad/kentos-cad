@@ -337,18 +337,19 @@ fn parts(b: &Bench, slot: u32) -> Vec<f64> {
 
 #[test]
 fn union_with_one_object_makes_one_multi_part_area() {
-    // Parcels 1 and 8 do not touch: two areas, or one of two parts with Tek nesne.
+    // Parcels 1 and 8 do not touch: left as they are (UR-083: rewriting them changed a circle's kind and cut its
+    // hatch's tie for nothing), or one of two parts with Tek nesne.
     let mut b = bench();
+    let before = b.doc.get(Slot(8)).cloned();
     select(&mut b, &[1, 8]);
     b.start("areaUnion");
-    assert_eq!(b.selected().len(), 2);
     assert_eq!(
         b.last_text(),
         Some(
-            "2 alan birleştirildi: 2 ayrı alan (birbirine değmeyenler ayrı kalır), toplam 184.00 m²."
+            "Seçilen alanlar birbirine değmiyor: birleştirilecek bir şey yok, nesneler olduğu gibi kaldı. Tek nesne yapmak için Tek nesne seçeneğini açın."
         )
     );
-    undo(&mut b);
+    assert_eq!(b.doc.get(Slot(8)).cloned(), before, "nothing rewritten");
     select(&mut b, &[]);
     b.start("areaUnion");
     assert_eq!(
@@ -528,4 +529,62 @@ fn lines_and_points_join_and_come_apart() {
         b.last_text(),
         Some("Parçaları birleştirmek için en az iki çizgi ya da çoklu çizgi seçin.")
     );
+}
+
+/// UR-083: a circle apart from two touching areas keeps its kind when they are joined; the message says it was left.
+#[test]
+fn a_circle_apart_keeps_its_kind_in_a_union() {
+    let mut b = bench();
+    let circle = b.add_circle("parsel", [500.0, 500.0], 2.0);
+    select(&mut b, &[1, 2, circle.0]);
+    b.start("areaUnion");
+    assert!(matches!(b.doc.get(circle), Some(kentos_commands::Entity::Circle(_))), "the circle stays a circle");
+    let said = b.last_text().unwrap_or_default().to_owned();
+    assert!(said.ends_with("Başkalarına değmeyen 1 nesne olduğu gibi bırakıldı (türü ve bağları korunur)."), "{said}");
+}
+
+/// UR-094: an area with a tied hatch split in two: the result says the hatch follows the first piece only.
+#[test]
+fn splitting_an_area_says_its_tied_hatch_follows_one_piece() {
+    let mut b = bench();
+    let uid = b.doc.uid(Slot(1)).expect("a uid").to_string();
+    let hatch: kentos_commands::Entity = serde_json::from_value(serde_json::json!({
+        "kind": "hatch", "id": 0, "layerId": "parsel", "attrs": {},
+        "ring": [{"x": 0.0, "y": 0.0}, {"x": 10.0, "y": 0.0}, {"x": 10.0, "y": 10.0}],
+        "pattern": {"type": "lines", "angle": 45, "spacing": 1},
+        "assoc": {"outer": uid, "seed": {"x": 7.0, "y": 2.0}}
+    }))
+    .expect("a hatch");
+    b.doc.add(hatch).expect("a slot");
+    b.spatial.sync(&b.doc);
+    select(&mut b, &[1]);
+    b.start("areaSplit");
+    let before = b.said(0).len();
+    b.click(5.0, -3.0);
+    b.click(5.0, 13.0);
+    b.confirm();
+    let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
+    assert!(said.iter().any(|t| t.starts_with("Bölünen alana bağlı 1 tarama yalnız ilk parçayı izler")), "{said:?}");
+}
+
+/// UR-106: an ellipse split in two: the result says its pieces are straight-edged areas, not ellipses.
+#[test]
+fn splitting_an_ellipse_says_its_pieces_are_polygons() {
+    let mut b = bench();
+    let ellipse: kentos_commands::Entity = serde_json::from_value(serde_json::json!({
+        "kind": "ellipse", "id": 0, "layerId": "parsel", "attrs": {},
+        "c": {"x": common::E + 300.0, "y": common::N}, "major": {"x": 8.0, "y": 0.0}, "ratio": 0.75,
+        "t0": 0.0, "t1": std::f64::consts::TAU
+    }))
+    .expect("an ellipse");
+    let slot = b.doc.add(ellipse).expect("a slot");
+    b.spatial.sync(&b.doc);
+    select(&mut b, &[slot.0]);
+    b.start("areaSplit");
+    let before = b.said(0).len();
+    b.click(300.0, -10.0);
+    b.click(300.0, 10.0);
+    b.confirm();
+    let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
+    assert!(said.iter().any(|t| t.starts_with("Bölünen 1 elips ya da eğrinin parçaları düz kenarlı")), "{said:?}");
 }

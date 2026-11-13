@@ -341,9 +341,9 @@ fn cizime_yaz_moves_and_adds_in_one_step() {
     assert_eq!(app.gis.calc.open, None, "the window closes");
     assert_eq!(
         last_said(&app),
-        format!(
+        crate::keys::shown(&format!(
             "{NETWORK_TITLE}: 1 nokta dengelenmiş yerine taşındı, 1 nokta eklendi (Ctrl+Z geri alır)."
-        )
+        ))
     );
     let y1 = point(&app, "Y1").cloned().expect("Y1");
     assert_eq!((y1.p.x, y1.p.y), (r.points[0].y, r.points[0].x));

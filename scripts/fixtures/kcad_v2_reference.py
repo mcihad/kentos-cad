@@ -379,6 +379,8 @@ def settings(s):
                 "surveyAdjustments": (opaque, False),
                 # Schema 253 (docs/adr/5220): the monitoring reviews the project keeps, as their JSON.
                 "monitoringReviews": (opaque, False),
+                # Schema 255 (usage review UR-003): the layer each annotation tool draws on, as their JSON.
+                "toolLayers": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2844,6 +2846,9 @@ def document(d):
     if d["settings"].get("monitoringReviews"):
         # The monitoring reviews the project keeps (docs/adr/5220).
         schema = max(schema, 253)
+    if d["settings"].get("toolLayers"):
+        # The layer each annotation tool draws on (usage review UR-003).
+        schema = max(schema, 255)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3705,7 +3710,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-255.kcad"] = container(root(cmap(parts), version=uint(255)))
+    files["schema-version-256.kcad"] = container(root(cmap(parts), version=uint(256)))
     # Schema 254's module versions (docs/adr/8054 §10): `modules` before `version`, refused before the document when
     # this build does not know a module's version, the module or an extension's data.
     def with_modules(modules, version):
@@ -6420,6 +6425,24 @@ def build():
         broken_reviewed = copy.deepcopy(reviewed)
         change(broken_reviewed["settings"]["monitoringReviews"])
         out[f"broken/monitoring-reviews-{name}.kcad"] = container(document(broken_reviewed))
+    # Schema 255 (usage review UR-003): a CAD drawing's dimensions, texts and hatches each on its own layer; schema 254
+    # refuses it, a tool twice and a blank layer are refused.
+    tooled = copy.deepcopy(minimal)
+    tooled["name"] = "Araç katmanları"
+    tooled["settings"]["toolLayers"] = [{"tool": "dimension", "layer": "olcu"}, {"tool": "text", "layer": "yazi"},
+                                        {"tool": "hatch", "layer": "tarama"}]
+    out["tool-layers.json"] = json_text(tooled).encode("utf-8")
+    tooled_data = document(tooled)
+    assert tooled_data.count(b"\x67version\x18\xff") == 1, "tool layers are schema 255"
+    out["tool-layers.kcad"] = container(tooled_data)
+    out["broken/tool-layers-in-schema-254.kcad"] = container(
+        tooled_data.replace(b"\x67version\x18\xff", b"\x67version\x18\xfe"))
+    for name, change in (
+            ("tool-twice", lambda t: t[2].update({"tool": "text"})),
+            ("blank-layer", lambda t: t[0].update({"layer": " "}))):
+        broken_tooled = copy.deepcopy(tooled)
+        change(broken_tooled["settings"]["toolLayers"])
+        out[f"broken/tool-layers-{name}.kcad"] = container(document(broken_tooled))
     # Schema 208 (docs/adr/2580): a parcel's front edge kept 5 m from the road's edge, a map bond; schema 207 refuses
     # it, and a boundary edge in a parallel and a bond from a boundary to a segment are refused.
     kept = load("map-bond.json")

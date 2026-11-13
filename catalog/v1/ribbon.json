@@ -23,6 +23,10 @@
        {
         "command": "file.start",
         "size": "small"
+       },
+       {
+        "command": "file.openReport",
+        "size": "small"
        }
       ]
      },
@@ -3091,6 +3095,10 @@
        },
        {
         "command": "file.start",
+        "size": "small"
+       },
+       {
+        "command": "file.openReport",
         "size": "small"
        }
       ]

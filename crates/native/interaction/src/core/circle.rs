@@ -101,7 +101,7 @@ pub struct Circle {
     d: Taken,
     mode: Mode,
     tangents: Vec<TangentPick>,
-    /// Centre mode: the second input is a diameter (AutoCAD's “Çap”).
+    /// Centre mode: the second input is a diameter (Çap).
     diameter: bool,
     /// What the session remembered and the project's units, as of the last
     /// call: the prompt offers the last radius (the web's `lastRadius`).
@@ -259,7 +259,12 @@ impl Circle {
             Ok(None) => false,
             Err(why) => {
                 cx.say(Level::Warn, why);
-                self.d.pts.clear();
+                // Three points on a line: the first two stay, the third is asked again (UR-031); the others start over.
+                if self.mode == Mode::Three && self.d.pts.len() == 3 {
+                    self.d.pts.pop();
+                } else {
+                    self.d.pts.clear();
+                }
                 false
             }
         }
@@ -428,7 +433,23 @@ impl Tool for Circle {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let radius = points::plain_length(text, cx).filter(|r| *r > 0.0);
+        let typed = points::plain_length(text, cx);
+        // A length that reads but is not above zero, where a radius or a diameter is asked: said as such (not as words
+        // the line could not read), the step kept for the right value.
+        let asks_size = (self.mode == Mode::Ttr && self.tangents.len() == 2)
+            || (self.mode == Mode::Center && self.d.last().is_some());
+        if asks_size && typed.is_some_and(|r| !(r > 0.0)) {
+            let what = if self.mode == Mode::Center && self.diameter { "Çap" } else { "Yarıçap" };
+            cx.say(
+                Level::Warn,
+                format!(
+                    "{LABEL}: {what} sıfırdan büyük olmalı; {} cinsinden pozitif bir değer yazın.",
+                    cx.format().length_unit_name()
+                ),
+            );
+            return true;
+        }
+        let radius = typed.filter(|r| *r > 0.0);
         let done = if self.mode == Mode::Ttr && self.tangents.len() == 2 {
             match radius {
                 Some(r) => {
@@ -537,7 +558,12 @@ impl Tool for Circle {
             ],
             tag: Some(Tag {
                 at: h,
-                lines: vec![format!("r {}", format.length(round.r))],
+                // Merkez, çap asks for the diameter: the tag says the diameter, not the radius it halves.
+                lines: vec![if self.mode == Mode::Center && self.diameter {
+                    format!("çap {}", format.length(round.r * 2.0))
+                } else {
+                    format!("r {}", format.length(round.r))
+                }],
             }),
             ..Preview::default()
         }

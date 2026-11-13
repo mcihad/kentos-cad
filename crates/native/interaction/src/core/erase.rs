@@ -48,6 +48,20 @@ impl Erase {
             expected_revision: None,
         };
         let result = delete::execute(&mut ExecutionContext::new(cx.doc), input);
+        // What the deletion did to others (a hatch whose boundary went no longer follows it) is said after how many
+        // went, so the status bar keeps it rather than the count; the command's other warnings stay before it.
+        let (result, later) = match result {
+            kentos_native_application::CommandResult::Completed { output, warnings } => {
+                let (later, first): (Vec<_>, Vec<_>) = warnings
+                    .into_iter()
+                    .partition(|w| w.code == kentos_commands::codes::HATCH_ASSOCIATION_LOST);
+                (
+                    kentos_native_application::CommandResult::Completed { output, warnings: first },
+                    later,
+                )
+            }
+            other => (other, Vec::new()),
+        };
         let Some(deleted) = points::written(result, cx) else {
             return;
         };
@@ -58,6 +72,9 @@ impl Erase {
             Level::Success,
             format!("{} nesne silindi.", deleted.removed.len()),
         );
+        for w in later {
+            cx.say(Level::Warn, w.message);
+        }
     }
 }
 

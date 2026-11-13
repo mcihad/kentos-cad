@@ -194,7 +194,8 @@ impl DimensionChain {
             measure,
             at: wire(p),
             offset: None,
-            layer_id: cx.doc.layers().active().to_owned(),
+            // UR-003: the project's dimension layer when it names one.
+            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Dimension),
             dimension_style: None,
             height: None,
             mask: None,

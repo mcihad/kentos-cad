@@ -79,6 +79,12 @@ yüksekliklerini uydur”** (`cad.entities.edit`'in `annotationScale` işlemi: e
 kendisi bugünkü gibi düzenlemedir ama geri alma adımı değildir (ADR 0183'ün stil tablosu gibi). Bulutun başkasından gelen ayarı,
 dosyanın açılması ve geri alma izlemeyi tetiklemez.
 
+**Değişiklik (13.11.2026, kullanım raporu UR-046):** ölçek değişince açıklamalar izliyorsa ölçek de geri alma adımına girer: ikisi
+tek adımdır, **“Çizim ölçeği”** (`cad.settings.set`; geçmişte `PlotScale` işlemi). Bir geri alma ölçeği ve yükseklikleri birlikte
+eskiye döndürür, yineleme ikisini birlikte yeniden yazar; önceden yükseklikler dönüp ölçek yeni değerde kalıyor, ikisi sessizce
+ayrışıyordu. İzleyen açıklama yoksa ölçek eskisi gibi geri alma dışı bir ayardır. Genel yüksekliğin değişmesi (Proje ayarları)
+bugünkü gibi yalnız “Yazı yüksekliklerini uydur” adımıdır. Web'deki karşılığı TODOS §0.2'dedir.
+
 ### 4. Ölçek seçicileri
 
 Giriş › Özellikler › Ölçek ve Proje ayarları'nın çizim ölçeği projenin türünün ölçeklerini sunar (CAD 1:1 … 1:1000; CBS 1:500 …

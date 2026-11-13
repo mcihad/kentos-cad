@@ -141,6 +141,9 @@ enum Listing {
     Empty,
     /// Every selected object is a point.
     Points(Vec<Point>),
+    /// A circle's, an arc's or an ellipse's named points (its centre, its ends, its axes' ends) and its own measures:
+    /// a curve has no vertices and no straight edges to list (UR-036).
+    Named { points: Vec<Point>, footer: String },
     /// The first object that is not a point or a text: its vertices, in
     /// rings (a polygon's outer ring, then each hole), each edge within its ring.
     Vertices {
@@ -407,6 +410,38 @@ impl App {
             .iter()
             .find(|e| !matches!(e, Entity::Point(_) | Entity::Text(_)))
             .unwrap_or(&entities[0]);
+        // A curve's named points, not vertices and chords taken for edges (UR-036).
+        if let Some(points) = named_points(e, &layer_name(&e.base().layer_id)) {
+            let format = Format::of(doc.settings());
+            let title = format!("#{}", e.base().id);
+            let measures_text = match e {
+                Entity::Circle(c) => format!(
+                    "Yarıçap {}   Çevre {}",
+                    format.length(c.r),
+                    measures(e).1.map_or_else(String::new, |l| format.length(l))
+                ),
+                Entity::Arc(a) => format!(
+                    "Yarıçap {}   Yay uzunluğu {}",
+                    format.length(a.r),
+                    measures(e).1.map_or_else(String::new, |l| format.length(l))
+                ),
+                Entity::Ellipse(el) => {
+                    let major = el.major.x.hypot(el.major.y);
+                    format!(
+                        "Yarı eksenler {} / {}   Uzunluk {}",
+                        format.length(major),
+                        format.length(major * el.ratio),
+                        measures(e).1.map_or_else(String::new, |l| format.length(l))
+                    )
+                }
+                _ => String::new(),
+            };
+            let mut footer = format!("{title}   {measures_text}");
+            if entities.len() > 1 {
+                footer.push_str("   (ilk nesne gösteriliyor)");
+            }
+            return Listing::Named { points, footer };
+        }
         let pts = vertices(e);
         // The core lists a polygon's outer ring, then its holes; each is its own ring.
         let rings = match e {
@@ -487,6 +522,25 @@ impl App {
                 .padding(12)
                 .into();
             }
+            Listing::Named { points, footer } => {
+                let count = points.len();
+                let table = Table::new([
+                    TableColumn::new("Nokta").width(Length::FillPortion(2)),
+                    number(east.clone()),
+                    number(north.clone()),
+                    TableColumn::new("Katman").width(Length::FillPortion(2)),
+                ])
+                .virtualized(count, move |i| {
+                    let p = &points[i];
+                    TableRow::new([
+                        label::body(p.name.clone()).into(),
+                        label::mono(format.coord(p.x)).into(),
+                        label::mono(format.coord(p.y)).into(),
+                        label::body(p.layer.clone()).into(),
+                    ])
+                });
+                (table, footer)
+            }
             Listing::Points(points) => {
                 let count = points.len();
                 let table = Table::new([
@@ -552,6 +606,42 @@ impl App {
         ]
         .into()
     }
+}
+
+
+/// A circle's, an arc's or an ellipse's points by their names (UR-036): the centre; an arc's start and end; an
+/// ellipse's major and minor axes' ends (and an elliptical arc's ends). None for any other kind.
+fn named_points(e: &Entity, layer: &str) -> Option<Vec<Point>> {
+    let point = |name: &str, x: f64, y: f64| Point { name: name.to_owned(), x, y, z: None, layer: layer.to_owned() };
+    Some(match e {
+        Entity::Circle(c) => vec![point("Merkez", c.c.x, c.c.y)],
+        Entity::Arc(a) => vec![
+            point("Merkez", a.c.x, a.c.y),
+            point("Başlangıç", a.c.x + a.r * a.a0.cos(), a.c.y + a.r * a.a0.sin()),
+            point("Bitiş", a.c.x + a.r * a.a1.cos(), a.c.y + a.r * a.a1.sin()),
+        ],
+        Entity::Ellipse(el) => {
+            let minor = (-el.major.y * el.ratio, el.major.x * el.ratio);
+            let at = |t: f64| {
+                (
+                    el.c.x + el.major.x * t.cos() + minor.0 * t.sin(),
+                    el.c.y + el.major.y * t.cos() + minor.1 * t.sin(),
+                )
+            };
+            let mut out = vec![
+                point("Merkez", el.c.x, el.c.y),
+                point("Büyük eksen ucu", el.c.x + el.major.x, el.c.y + el.major.y),
+                point("Küçük eksen ucu", el.c.x + minor.0, el.c.y + minor.1),
+            ];
+            if el.t0 != el.t1 && (el.t1 - el.t0).rem_euclid(std::f64::consts::TAU) != 0.0 {
+                let (s, f) = (at(el.t0), at(el.t1));
+                out.push(point("Başlangıç", s.0, s.1));
+                out.push(point("Bitiş", f.0, f.1));
+            }
+            out
+        }
+        _ => return None,
+    })
 }
 
 #[cfg(test)]
@@ -660,6 +750,30 @@ mod tests {
         assert!(matches!(app.listing(), super::Listing::Empty));
     }
 
+    /// UR-066: the status bar's message, cut to its room, opens Komut geçmişi where the whole line stays.
+    #[test]
+    fn the_status_message_opens_the_history_with_its_whole_line() {
+        use kentos_ui::snapshot::Input;
+        let mut app = app_with_drawing();
+        let size = iced::Size::new(1440.0, 900.0);
+        let _ = app.update(Message::WindowResized(size));
+        let mut shot = crate::files_testing::offscreen(size);
+        let mut update = |app: &mut App, message: Message| {
+            let _ = app.update(message);
+        };
+        shot.settle(&mut app, App::view, &mut update);
+        let line = "Alan 10848.51 m²   Çevre 494.422 m   Köşe 4   Kenar 4 — uzun bir ölçüm sonucu durum çubuğuna sığmaz";
+        app.say(kentos_interaction::Level::Success, line.to_owned());
+        assert!(!app.command_expanded);
+        shot.settle(&mut app, App::view, &mut update);
+        // The message's cell: after the cursor's coordinates, on the bar's line.
+        let at = iced::Point::new(400.0, size.height - 14.0);
+        shot.input(&mut app, App::view, &mut update, Input::Click(at));
+        assert!(app.command_expanded, "the panel opens");
+        assert_eq!(app.bottom_tab, BottomTab::History);
+        assert_eq!(crate::files_testing::last_said(&app), line);
+    }
+
     #[test]
     fn warnings_are_counted_until_their_tab_is_seen() {
         let mut app = app_with_drawing();
@@ -708,6 +822,38 @@ mod tests {
         assert_eq!(app.bottom_log(), 540.0 - bar);
         let _ = app.update(Message::BottomReset);
         assert_eq!(app.bottom_log(), first);
+    }
+
+    /// UR-036: a circle lists its centre alone, an arc its centre and ends, by name; no chord is called an edge, and the
+    /// footer says the radius and the circumference or the arc's length.
+    #[test]
+    fn a_curve_lists_its_named_points_not_edges() {
+        use crate::tools_scenes::{E, N, Objects, open};
+        let (mut app, _) = App::boot(None);
+        let mut o = Objects::new();
+        let circle = o.circle("cizim", [0.0, 0.0], 5.0);
+        let arc = o.push(
+            "cizim",
+            serde_json::json!({"kind": "arc", "c": crate::tools_scenes::xy([20.0, 0.0]), "r": 5.0, "a0": 0.0, "a1": std::f64::consts::PI}),
+        );
+        open(&mut app, o);
+        app.selection.set(vec![kentos_domain::Slot(circle)]);
+        match app.listing() {
+            super::Listing::Named { points, footer } => {
+                assert_eq!(points.iter().map(|p| p.name.as_str()).collect::<Vec<_>>(), ["Merkez"]);
+                assert!((points[0].x - E).abs() < 1e-9 && (points[0].y - N).abs() < 1e-9);
+                assert!(footer.contains("Yarıçap 5.000 m") && footer.contains("Çevre 31.416 m"), "{footer}");
+            }
+            _ => panic!("the circle's named points"),
+        }
+        app.selection.set(vec![kentos_domain::Slot(arc)]);
+        match app.listing() {
+            super::Listing::Named { points, footer } => {
+                assert_eq!(points.iter().map(|p| p.name.as_str()).collect::<Vec<_>>(), ["Merkez", "Başlangıç", "Bitiş"]);
+                assert!(footer.contains("Yay uzunluğu 15.708 m"), "{footer}");
+            }
+            _ => panic!("the arc's named points"),
+        }
     }
 }
 
@@ -775,4 +921,6 @@ fn screens() {
             }
         }
     }
+
+
 }

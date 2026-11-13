@@ -22,6 +22,8 @@ pub struct Question {
     pub message: String,
     pub detail: String,
     pub confirm: &'static str,
+    /// UR-001: a local drawing's “Kaydet ve …”: saved first, the leaving going on once it is saved.
+    pub keep: Option<&'static str>,
 }
 
 impl Then {
@@ -199,6 +201,7 @@ impl App {
                     Then::NewProject => "Göndermeden yeni proje aç",
                     Then::CloseTab => "Göndermeden kapat",
                 },
+                keep: None,
             };
         }
         let cloud = self.document.as_ref().and_then(|d| d.cloud_source());
@@ -209,17 +212,27 @@ impl App {
             ),
             (Some(_), _) => (
                 format!("“{name}” bulut projesinde kaydedilmemiş değişiklikler var."),
-                "Kaydet (Ctrl+S) onları projenin yeni revizyonu olarak kaydeder; önce kaydetmek için Vazgeç'e basın.".to_owned(),
+                crate::keys::shown("Kaydet (Ctrl+S) onları projenin yeni revizyonu olarak kaydeder; önce kaydetmek için Vazgeç'e basın."),
             ),
             (None, _) => (
                 format!("“{name}” çiziminde kaydedilmemiş değişiklikler var."),
-                "Önce kaydetmek için Vazgeç'e basıp Ctrl+S kullanın.".to_owned(),
+                "Kaydet ile çizim önce kaydedilir, sonra devam edilir; kaydedilemezse ya da kayıt yeri seçilmezse çizim açık kalır.".to_owned(),
             ),
         };
+        // UR-001: a local drawing is saved first when asked; a cloud project saves with its own Kaydet.
+        let keep = cloud.is_none().then_some(match then {
+            Then::Close(_) => "Kaydet ve çık",
+            Then::CloseTab => "Kaydet ve kapat",
+            Then::NewProject => "Kaydet ve yeni proje aç",
+            Then::SignOut => "Kaydet ve oturumu kapat",
+            Then::Upload(_) => "Kaydet ve yükle",
+            _ => "Kaydet ve aç",
+        });
         Question {
             title: "Kaydedilmemiş değişiklikler var",
             message,
             detail,
+            keep,
             confirm: match then {
                 Then::Close(_) => "Kaydetmeden çık",
                 Then::Reopen => "Değişiklikleri bırak ve aç",

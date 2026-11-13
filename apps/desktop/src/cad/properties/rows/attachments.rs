@@ -36,17 +36,35 @@ pub(crate) fn sections(app: &App, slot: Slot) -> Vec<Section> {
     let mut rows = Vec::new();
     for (k, v) in views.into_iter().enumerate() {
         let photo = v.kind == AttachmentKind::Photo;
-        let mut items = vec![Choice::Action {
+        // Where a linked file is looked for, whole: a line of the menu, not a choice.
+        let place = v.linked.as_ref().map(|(path, missing)| Choice::Pick {
+            label: format!("{}: {}", if *missing { "Aranan yer" } else { "Konum" }, path.display()),
+            swatch: None,
+            icon: None,
+            wide: false,
+            chosen: false,
+            enabled: false,
+            message: attachment(Event::Open(slot, v.index)),
+        });
+        let mut items: Vec<Choice> = place.into_iter().chain([Choice::Separator]).filter(|_| v.linked.is_some()).collect();
+        items.push(Choice::Action {
             label: if photo { "Görüntüle" } else { "Aç" },
             icon: if photo { "photo" } else { "externalOpen" },
             message: Some(attachment(Event::Open(slot, v.index))),
-        }];
+        });
         if !locked {
             items.push(Choice::Action {
                 label: "Düzenle…",
                 icon: "edit",
                 message: Some(attachment(Event::Edit(slot, v.index))),
             });
+            if v.linked.is_some() {
+                items.push(Choice::Action {
+                    label: "Yeni yol seç…",
+                    icon: "folder",
+                    message: Some(attachment(Event::Relink(slot, v.index))),
+                });
+            }
             if photo && v.attachment.file.is_some() {
                 items.push(Choice::Action {
                     label: "Göm",
@@ -78,6 +96,16 @@ pub(crate) fn sections(app: &App, slot: Slot) -> Vec<Section> {
                 v.attachment.name.clone(),
             )
         });
+        // Linked or embedded, and where: a linked file does not move with the drawing.
+        match &v.linked {
+            // Short enough for the row; the whole path is the menu's first line.
+            Some((_, true)) => rows.push(Row::note("Bulunamadı: Yeni yol seç…")),
+            Some((_, false)) => rows.push(Row::note("Bağlı: çizimle taşıyın.")),
+            None if v.attachment.asset.is_some() => {
+                rows.push(Row::note("Gömülü: çizimle taşınır."));
+            }
+            None => {}
+        }
         if let Some(note) = v
             .attachment
             .note

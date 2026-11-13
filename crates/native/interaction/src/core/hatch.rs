@@ -3,11 +3,11 @@
 //! (docs/adr/0062, 0186). A click inside fills the region with the pattern.
 //! Two ways to find the region:
 //!
-//! - kapalı nesne (the default, Netcad's): the smallest closed object around
+//! - kapalı nesne (the default): the smallest closed object around
 //!   the click; closed objects inside it or across its edge (buildings in a
 //!   parcel) are islands left unhatched; with İlişkili on, the hatch follows
 //!   its objects (`assoc`, docs/adr/0186 §6);
-//! - çizgiler (AutoCAD's): the face the visible line work closes around the
+//! - çizgiler: the face the visible line work closes around the
 //!   click, closed groups inside it as islands; the boundary set can be one
 //!   layer (Sınır katmanı, picked by an object of it). It follows nothing.
 //!
@@ -135,7 +135,8 @@ impl Hatch {
                 gap: (m.hatch_by_lines && m.hatch_gap > 0.0).then_some(m.hatch_gap),
             },
             pattern: options::spec(&m, &self.user),
-            layer_id: cx.doc.layers().active().to_owned(),
+            // UR-003: the project's hatch layer when it names one.
+            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Hatch),
             look: NewLook {
                 color: cx.draft.color_text(),
                 line_weight: None,
@@ -212,7 +213,7 @@ impl Hatch {
             Some(t) => (t.islands.len(), t.cutouts.len()),
             None => (planned.area.holes.len(), 0),
         };
-        let name = options::choice(&self.memory).name;
+        let name = options::chosen_name(&self.memory, &options::user_names(cx));
         let text = format!(
             "{name} tarama eklendi: {}{}",
             cx.format().area(size),

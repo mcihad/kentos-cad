@@ -421,6 +421,7 @@ impl App {
     pub(crate) fn start_saving(&mut self, path: PathBuf) -> Task<Message> {
         if kentos_native_application::cad_open::Format::of(&path).is_some() {
             self.error("Kaydet yalnız KentOS (.kcad) biçimindedir. Kaynak CAD dosyası üzerine yazılmaz; .kcad uzantılı bir dosya seçin.");
+            self.save_then_dropped();
             return Task::none();
         }
         self.start_save(Target::File(path))
@@ -472,11 +473,20 @@ impl App {
     pub(crate) fn start_save(&mut self, target: Target) -> Task<Message> {
         if self.saving.is_some() {
             self.warn("Bir kayıt sürüyor; bitince yeniden kaydedin.");
+            self.save_then_dropped();
             return Task::none();
         }
         let Some(doc) = &self.document else {
             return Task::none();
         };
+        // Over its own file, which changed since it was read or written: refused, the other work kept.
+        if let Target::File(path) = &target
+            && doc.path.as_deref() == Some(path.as_path())
+            && let Some(why) = doc.changed_on_disk()
+        {
+            self.warn(why);
+            return Task::none();
+        }
         let model = doc.model.clone();
         let (id, session, revision) = (next_id(), doc.session, doc.model.revision());
         // The level and view on screen go with the file, no edit of the drawing (docs/adr/0720 §1).
@@ -535,11 +545,21 @@ impl App {
         })
     }
 
+    /// UR-001: the leaving “Kaydet ve …” waited for does not happen: the save was cancelled, refused or failed. The
+    /// drawing stays open with its changes, and the user is told.
+    pub(crate) fn save_then_dropped(&mut self) {
+        if self.save_then.take().is_some() {
+            self.warn("Kaydedilmedi; çizim açık kaldı, değişiklikleriniz duruyor.");
+        }
+    }
+
     /// A save's messages.
     pub(crate) fn saving_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Picked(Some(path)) => return self.start_saving(path),
-            Event::Picked(None) | Event::PickedCopy(None) => {}
+            // UR-001: “Kaydet ve …” whose file dialog was closed: the drawing stays open.
+            Event::Picked(None) => self.save_then_dropped(),
+            Event::PickedCopy(None) => {}
             Event::PickedCopy(Some(path)) => return self.start_copy(path),
             Event::Progress { id, stage } => {
                 if let Some(s) = self.saving.as_mut().filter(|s| s.id == id) {
@@ -615,6 +635,7 @@ impl App {
                         self.warn(format!(
                             "{name} kaydı durduruldu; dosyaya dokunulmadı, çizim kaydedilmemiş sayılıyor."
                         ));
+                        self.save_then_dropped();
                         Task::none()
                     }
                     Err(SaveError::Failed(why)) => {
@@ -622,6 +643,7 @@ impl App {
                             Level::Error,
                             format!("{why} Çizim kaydedilmemiş sayılıyor."),
                         );
+                        self.save_then_dropped();
                         Task::none()
                     }
                 };
@@ -783,6 +805,55 @@ mod tests {
             assert_eq!(std::fs::read(&path).expect("there"), b"onceki", "{stage}");
             assert_eq!(names(&dir), ["pafta.kcad"], "{stage}");
         }
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// UR-001: the unsaved question's “Kaydet ve kapat” saves the drawing and closes it; a failed save and a closed
+    /// file dialog keep it open with its changes.
+    #[test]
+    fn kaydet_ve_kapat_saves_then_closes_and_keeps_the_drawing_when_it_cannot() {
+        use crate::app::{Dialog, Then};
+        let dirty = |app: &mut App| {
+            let layer = app.document.as_ref().expect("a drawing").layers()[0].id.clone();
+            let _ = app.update(Message::LayerLocked(layer));
+        };
+        // A file it has: saved, then closed.
+        let dir = scratch("save-and-close");
+        let path = dir.join("pafta.kcad");
+        let mut app = app_with_drawing();
+        app.picker = Picker::File(path.clone());
+        dirty(&mut app);
+        let _ = app.leave(Then::CloseTab);
+        assert_eq!(app.dialog, Some(Dialog::Unsaved(Then::CloseTab)));
+        assert_eq!(app.unsaved_question(Then::CloseTab).keep, Some("Kaydet ve kapat"));
+        let task = app.update(Message::DialogSave);
+        drive(&mut app, task);
+        assert!(path.exists(), "saved");
+        assert!(app.document.is_none(), "then closed");
+        assert!(app.save_then.is_none());
+        // The disk fails: the drawing stays open, unsaved, and the user is told.
+        let path2 = dir.join("bozuk.kcad");
+        let mut app = app_with_drawing();
+        app.picker = Picker::File(path2.clone());
+        dirty(&mut app);
+        app.save_faults = Faults { fail: Some((Fault::Write, ErrorKind::StorageFull)), ..Faults::NONE };
+        let _ = app.leave(Then::CloseTab);
+        let task = app.update(Message::DialogSave);
+        drive(&mut app, task);
+        assert!(app.document.as_ref().is_some_and(|d| d.dirty()), "kept, unsaved");
+        assert!(app.save_then.is_none());
+        assert!(last_said(&app).contains("Kaydedilmedi; çizim açık kaldı"), "{}", last_said(&app));
+        assert!(!path2.exists());
+        // The file dialog closed without a place: the drawing stays.
+        let mut app = app_with_drawing();
+        app.picker = Picker::Dialog;
+        dirty(&mut app);
+        let _ = app.leave(Then::CloseTab);
+        let _ = app.update(Message::DialogSave);
+        assert!(app.save_then.is_some(), "waits for the file dialog");
+        let _ = app.update(Message::Saving(Event::Picked(None)));
+        assert!(app.document.as_ref().is_some_and(|d| d.dirty()), "kept");
+        assert!(app.save_then.is_none() && app.dialog.is_none());
         let _ = std::fs::remove_dir_all(&dir);
     }
 

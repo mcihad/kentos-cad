@@ -248,14 +248,16 @@ impl App {
             Asking::Unsaved(then) => {
                 // What would be lost, with the count (cloud/leaving.rs).
                 let q = self.unsaved_question(then);
-                overlay::modal(
-                    Confirm::new(q.title, Message::DialogConfirmed, Message::DialogClosed)
-                        .message(q.message)
-                        .detail(q.detail)
-                        .confirm(q.confirm)
-                        .destructive(),
-                    Message::DialogClosed,
-                )
+                let mut ask = Confirm::new(q.title, Message::DialogConfirmed, Message::DialogClosed)
+                    .message(q.message)
+                    .detail(q.detail)
+                    .confirm(q.confirm)
+                    .destructive();
+                // UR-001: a local drawing can be saved first, the leaving going on once it is saved.
+                if let Some(keep) = q.keep {
+                    ask = ask.keep(keep, Message::DialogSave);
+                }
+                overlay::modal(ask, Message::DialogClosed)
             }
             Asking::RemoveLayer => self.remove_layer_question(),
             Asking::Arch(inner) => self.arch_dialog_view(inner),
@@ -316,6 +318,7 @@ impl App {
             Asking::Flatten => self.flatten_view(),
             Asking::Map(inner) => self.map_dialog_view(inner),
             Asking::CleanReport => self.clean_report_view(),
+            Asking::OpenReport => self.open_report_view(),
             Asking::ExchangeCheck => self.exchange_check_view(),
             Asking::CatalogReport => self.catalog_report_view(),
             Asking::XrefAttach => self.xref_attach_view(),
@@ -398,8 +401,45 @@ fn is_choice(id: &str) -> bool {
 /// A drop-down's commands (the web's `commandItem`): a toggle shows its
 /// check instead of its icon, a choice its dot beside its icon, a tool and a
 /// plain command their icon.
-fn menu_of(ids: &[&'static str], checked: &[Option<bool>], menu: Option<&str>) -> Menu<Message> {
-    headed_menu_of(ids, checked, &[], menu)
+fn menu_of(
+    ids: &[&'static str],
+    checked: &[Option<bool>],
+    off: &[Option<String>],
+    menu: Option<&str>,
+) -> Menu<Message> {
+    headed_menu_of(ids, checked, &[], off, menu)
+}
+
+impl App {
+    /// The rows of a ribbon menu or split list that are off as their button would be ([`App::available`]), each with
+    /// why when the app says (a typed active layer that does not hold what the tool draws): the same rule as the
+    /// ribbon's own buttons, so a family's list never offers what its button refuses.
+    pub(crate) fn rows_off(&self, ids: &[&'static str]) -> Vec<Option<String>> {
+        ids.iter()
+            .map(|id| (!self.available(id)).then(|| self.why_disabled(id).unwrap_or_default()))
+            .collect()
+    }
+}
+
+/// A row turned off by [`App::rows_off`]: no action, and the reason under the first row that gives it (a family's rows
+/// share it; said once keeps the list narrow).
+pub(crate) fn row_off(
+    menu: Menu<Message>,
+    off: Option<&Option<String>>,
+    said: &mut Vec<String>,
+) -> (Menu<Message>, bool) {
+    match off {
+        Some(Some(why)) => {
+            let menu = if why.is_empty() || said.contains(why) {
+                menu
+            } else {
+                said.push(why.clone());
+                menu.detail(why.clone())
+            };
+            (menu, true)
+        }
+        _ => (menu, false),
+    }
 }
 
 /// A menu row's words: its command's title without the menu's own name before it. Under Tadilat ▾ “Tadilat: Mevcut
@@ -418,9 +458,11 @@ fn headed_menu_of(
     ids: &[&'static str],
     checked: &[Option<bool>],
     heads: &[Option<&'static str>],
+    off: &[Option<String>],
     menu_name: Option<&str>,
 ) -> Menu<Message> {
     let mut menu = Menu::new();
+    let mut said = Vec::new();
     let ticks = checked.iter().copied().chain(std::iter::repeat(None));
     for (k, (id, checked)) in ids.iter().zip(ticks).enumerate() {
         if let Some(Some(title)) = heads.get(k) {
@@ -430,16 +472,17 @@ fn headed_menu_of(
             continue;
         };
         let title = row_title(command.title, menu_name);
+        let is_off = matches!(off.get(k), Some(Some(_)));
+        let run = enabled(command).filter(|_| !is_off);
         menu = match checked {
-            Some(on) if is_choice(command.id) => {
-                menu.radio(title, on, enabled(command)).icon(command.icon)
-            }
-            Some(on) if !command.id.starts_with("tool.") => menu.check(title, on, enabled(command)),
-            _ => menu.item(title, enabled(command)).icon(command.icon),
+            Some(on) if is_choice(command.id) => menu.radio(title, on, run).icon(command.icon),
+            Some(on) if !command.id.starts_with("tool.") => menu.check(title, on, run),
+            _ => menu.item(title, run).icon(command.icon),
         };
         if let Some(keys) = command.shortcuts.first() {
             menu = menu.shortcut(*keys);
         }
+        menu = row_off(menu, off.get(k), &mut said).0;
     }
     menu
 }

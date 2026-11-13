@@ -157,7 +157,8 @@ impl ViewMarkTool {
         let (mut radius, mut at, mut angle) = (None, None, None);
         match self.form {
             ViewMarkForm::Section => {
-                pts.extend(last);
+                // The pointer still on the point just given is no next point (UR-030): no cut of no length.
+                pts.extend(last.filter(|p| pts.last().is_none_or(|q| js_hypot(p.x - q.x, p.y - q.y) > 1e-9)));
                 if pts.len() < 2 {
                     return None;
                 }
@@ -234,9 +235,15 @@ impl ViewMarkTool {
             points::written(result, cx).is_some()
         });
         if written {
+            // Named by its kind and letter (UR-030): a section's success said as a section's.
+            let kind = match self.form {
+                ViewMarkForm::Section => "Kesit",
+                ViewMarkForm::Elevation => "Görünüş",
+                ViewMarkForm::Detail => "Detay",
+            };
             cx.say(
                 Level::Success,
-                "Görünüm işareti yazıldı; hedefi yeniden adlandırılınca yazısı da değişir.",
+                format!("{kind} işareti {} yazıldı; hedefi yeniden adlandırılınca yazısı da değişir.", self.mark),
             );
             self.mark = next_mark(&self.mark);
         }

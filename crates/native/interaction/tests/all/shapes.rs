@@ -131,7 +131,7 @@ fn two_and_three_points() {
     let (c, r) = circle(&b);
     assert_eq!(c, [5.0, 5.0]);
     assert!(near(r, 50f64.sqrt()));
-    // Collinear points warn and start over.
+    // Collinear points warn; the first two stay for another third point (UR-031).
     let before = b.doc.len();
     b.click(0.0, 20.0);
     b.click(5.0, 20.0);
@@ -141,7 +141,7 @@ fn two_and_three_points() {
         b.last_text(),
         Some("Üç nokta aynı doğru üzerinde; daire geçmez. Doğrunun dışında bir nokta verin.")
     );
-    assert_eq!(b.points(), 0);
+    assert_eq!(b.points(), 2);
 }
 
 /// The traces' drawing with an L of lines and an empty space: tangent picks
@@ -489,4 +489,55 @@ fn the_shape_tools_write_through_their_commands() {
     b.click(0.0, 0.0);
     b.click(5.0, 0.0);
     assert_eq!(last(&b), "cad.polygon.regular");
+}
+
+/// UR-061: Merkez, çap with 0 says the diameter must be above zero (not that the words could not be read), keeps the
+/// step, and the tag beside the cursor says the diameter; 4 then writes a circle of radius 2.
+#[test]
+fn a_zero_diameter_is_refused_by_its_own_rule() {
+    let mut b = Bench::on(OBJECTS);
+    b.draft.snap = false;
+    b.start("circle");
+    b.click(40.0, 40.0);
+    assert!(b.type_text("Ç"));
+    b.move_to(44.0, 40.0);
+    let preview = b.run(|s, cx| s.preview(&cx.format())).expect("a preview");
+    let lines = preview.tag.map(|t| t.lines).expect("a tag");
+    assert_eq!(lines, ["çap 4.000 m"]);
+    let count = b.doc.entities().count();
+    for zero in ["0", "-3"] {
+        assert!(b.type_text(zero), "the value is taken as the tool's");
+        assert_eq!(b.last_level(), Some(Level::Warn));
+        assert_eq!(
+            b.last_text(),
+            Some("Daire: Çap sıfırdan büyük olmalı; metre cinsinden pozitif bir değer yazın.")
+        );
+        assert_eq!(b.doc.entities().count(), count, "nothing written");
+    }
+    assert!(b.type_text("4"));
+    let Entity::Circle(c) = b.newest() else {
+        panic!("a circle: {:?}", b.newest())
+    };
+    assert!((c.r - 2.0).abs() < 1e-12);
+}
+
+/// UR-031: three points on a line: the warning says so, the first two stay and the third is asked again; a point off
+/// the line then makes the circle through all three.
+#[test]
+fn three_points_on_a_line_keep_the_first_two() {
+    let mut b = Bench::on(OBJECTS);
+    b.draft.snap = false;
+    b.start("circle");
+    assert!(b.type_text("3N"));
+    let count = b.doc.entities().count();
+    b.click(40.0, 40.0);
+    b.click(44.0, 40.0);
+    b.click(48.0, 40.0);
+    assert_eq!(b.last_level(), Some(Level::Warn));
+    assert_eq!(b.doc.entities().count(), count, "nothing written");
+    assert!(b.session.prompt().text().contains("üçüncü noktayı"), "{}", b.session.prompt().text());
+    b.click(44.0, 44.0);
+    assert_eq!(b.doc.entities().count(), count + 1, "the circle through the first two and the new third");
+    let Entity::Circle(c) = b.newest() else { panic!("a circle: {:?}", b.newest()) };
+    assert!((c.r - 8f64.sqrt()).abs() < 1e-9, "through (40,40), (44,40), (44,44): {}", c.r);
 }

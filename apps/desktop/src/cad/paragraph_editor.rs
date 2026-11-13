@@ -872,9 +872,11 @@ impl App {
         .spacing(6)
         .align_y(Center);
         let buttons = row![
-            label::caption(format!("{}+Enter: {} · Esc: vazgeç",
-                if cfg!(target_os="macos") {"⌘"} else {"Ctrl"},
-                if open.editing.is_some() {"kaydet"} else {"ekle"}))
+            // The platform's own spelling, as the command line's (UR-016): ⌘Enter on macOS, Ctrl+Enter elsewhere.
+            label::caption(crate::keys::shown(&format!(
+                "Ctrl+Enter: {} · Esc: vazgeç",
+                if open.editing.is_some() { "kaydet" } else { "ekle" }
+            )))
             .wrapping(iced::widget::text::Wrapping::None)
             .width(Fill),
             button(label::body("Vazgeç"))

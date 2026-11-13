@@ -1,4 +1,4 @@
-//! The drawing tools' methods added after the comparison with AutoCAD (docs/adr/0287): Yay's eight
+//! The drawing tools' methods added after the comparison in docs/adr/0287: Yay's eight
 //! constructions given before the first point, Daire's Merkez, çap, Düzgün çokgen's circles set (not
 //! turned), Dikdörtgen's Alan and its ribbon methods, Yardımcı çizgi's Paralel (and Noktadan) and
 //! Revizyon bulutu's Nesne. Every value is worked out by hand from the geometry.
@@ -275,4 +275,23 @@ fn revision_cloud_round_an_object() {
     b.click(85.0, -20.0);
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(b.doc.len(), 3);
+}
+
+/// UR-081: a circle's cloud has as many arcs as its length takes at Yay boyu, not one per tessellation step: 8 mm
+/// and 40 mm at 1:100 (0.8 m and 4 m) round a 1.2 m circle (7.54 m) give 9 and 3 arcs.
+#[test]
+fn a_circles_cloud_follows_yay_boyu() {
+    for (mm, arcs) in [(8.0, 9usize), (40.0, 3)] {
+        let mut b = Bench::new("revcloud");
+        let mut settings = b.doc.settings().clone();
+        settings.plot_scale = 100.0;
+        b.doc.set_settings(settings);
+        b.add_circle("cizim", [0.0, 0.0], 1.2);
+        b.memory.cloud_arc_mm = mm;
+        assert!(b.type_text("N"));
+        b.click(1.2, 0.0);
+        let (pts, _) = ring(&b);
+        assert_eq!(pts.len(), arcs, "{mm} mm: {:?}", b.last_text());
+        assert_eq!(b.last_text(), Some(format!("Revizyon bulutu eklendi: {arcs} yay.").as_str()));
+    }
 }

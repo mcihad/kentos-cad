@@ -60,6 +60,8 @@ pub struct Library {
     read: HashMap<PathBuf, Reading>,
     units: HashMap<PathBuf, DrawingUnit>,
     query: String,
+    /// KentOS's own library shown (UR-024): its blocks listed, each placed alone.
+    pub(crate) builtin: bool,
 }
 
 /// A drawing being read, read, or not readable.
@@ -112,6 +114,13 @@ pub enum Event {
     Unit(PathBuf, DrawingUnit),
     /// Yerleştir: a block of the drawing by its name, or the whole drawing.
     Place(PathBuf, Option<String>),
+    /// KentOS'un temel blokları: the built-in library's definitions taken into the drawing at once, one undo step
+    /// (UR-024: asked for by its own button, never by looking at the library).
+    TakeBuiltin,
+    /// KentOS's own library shown or left.
+    Builtin(bool),
+    /// One of KentOS's blocks placed: its definition alone taken in, Blok ekle started with it.
+    PlaceBuiltin(String),
 }
 
 fn msg(e: Event) -> Message {
@@ -333,6 +342,9 @@ impl App {
         match event {
             Event::ReviewUpgrade(from, to, library, label) => return self.blocks_upgrade(from, to, (*library).clone(), label),
             Event::Search(t) => self.blocks_panel.library.query = t,
+            Event::TakeBuiltin => self.blocks_take_builtin(),
+            Event::Builtin(on) => self.blocks_panel.library.builtin = on,
+            Event::PlaceBuiltin(name) => return self.place_fixture(&name),
             Event::AddRoot => {
                 return Task::perform(
                     async {
@@ -499,6 +511,7 @@ impl App {
         let body: Element<'_, Message> = match (&lib.open, &lib.at) {
             (Some(file), _) => self.library_file_view(file),
             (None, Some(folder)) => self.library_folder_view(folder),
+            (None, None) if lib.builtin => self.library_builtin_view(),
             (None, None) => self.library_roots_view(),
         };
         column![bar, crumbs, body].into()
@@ -597,14 +610,67 @@ impl App {
         }
     }
 
+    /// KentOS temel blokları (UR-024): its blocks by category, the search narrowing them; a click places one, its
+    /// definition alone taken in; Tanımlarının hepsini çizime al takes the whole library as one undo step.
+    fn library_builtin_view(&self) -> Element<'_, Message> {
+        let lib = &self.blocks_panel.library;
+        let query = name_key(lib.query.trim());
+        let shown: Vec<&'static crate::fixture_search::Fixture> = crate::fixture_search::fixtures()
+            .iter()
+            .filter(|f| query.is_empty() || name_key(&f.name).contains(&query))
+            .collect();
+        let head = container(
+            row![
+                button(label::caption("‹ Kitaplıklar"))
+                    .on_press(msg(Event::Builtin(false)))
+                    .padding(kentos_ui::theme::metrics::action_small())
+                    .style(style::button::ghost),
+                iced::widget::Space::new().width(Fill),
+                button(label::caption("Tanımlarının hepsini çizime al"))
+                    .on_press(msg(Event::TakeBuiltin))
+                    .padding(kentos_ui::theme::metrics::action_small())
+                    .style(style::button::secondary),
+            ]
+            .align_y(Center),
+        )
+        .padding([4, 8])
+        .width(Fill);
+        let list = VirtualList::new(shown.len(), typography::scaled(ROW), move |i| {
+            let f = shown[i];
+            self.library_line(
+                icon(crate::icons::from_web(Some("blocks"))).size(15.0).into(),
+                f.name.clone(),
+                Some(f.category.replace('/', " › ")),
+                msg(Event::PlaceBuiltin(f.name.clone())),
+                Some((
+                    "Yerleştir".to_owned(),
+                    "Yalnız bu bloğun tanımı çizime alınır; Blok ekle onunla başlar.".to_owned(),
+                )),
+            )
+        })
+        .height(Fill);
+        column![head, list].into()
+    }
+
     fn library_roots_view(&self) -> Element<'_, Message> {
         let lib = &self.blocks_panel.library;
+        // KentOS's own library (UR-024): opened to look and place one by one; looking changes no drawing.
+        let builtin = self.library_line(
+            icon(Icon::Folder).size(15.0).into(),
+            "KentOS temel blokları".to_owned(),
+            Some(format!("{} blok: mobilya, donatı", crate::fixture_search::fixtures().len())),
+            msg(Event::Builtin(true)),
+            None,
+        );
         if lib.roots.is_empty() {
-            return container(label::caption(
-                "Kitaplık yok. + ile DWG, DXF ya da KCAD blok çizimlerinin bulunduğu bir klasörü ekleyin; alt klasörler kategori olur.",
-            ))
-            .padding([8, 12])
-            .width(Fill)
+            return column![
+                builtin,
+                container(label::caption(
+                    "Kitaplık yok. + ile DWG, DXF ya da KCAD blok çizimlerinin bulunduğu bir klasörü ekleyin; alt klasörler kategori olur.",
+                ))
+                .padding([8, 12])
+                .width(Fill)
+            ]
             .into();
         }
         let query = name_key(lib.query.trim());
@@ -614,7 +680,7 @@ impl App {
             .filter(|r| query.is_empty() || name_key(&name_of(r)).contains(&query))
             .cloned()
             .collect();
-        VirtualList::new(roots.len(), typography::scaled(ROW), move |i| {
+        let list = VirtualList::new(roots.len(), typography::scaled(ROW), move |i| {
             let root = roots[i].clone();
             let line = self.library_line(
                 icon(Icon::Folder).size(15.0).into(),
@@ -629,8 +695,8 @@ impl App {
             })
             .into()
         })
-        .height(Fill)
-        .into()
+        .height(Fill);
+        column![builtin, list].into()
     }
 
     fn library_folder_view(&self, folder: &Path) -> Element<'_, Message> {

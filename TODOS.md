@@ -51,6 +51,24 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- UR-004: web'in Tarama, Çoklu tara ve Taramayı düzenle'si yazıları varsayılan olarak boş bıraksın ve Yazılar (Y)
+  Desen'in hemen arkasına gelsin; `fixtures/interaction/v1/hatch-patterns.json` ve `hatches.json` masaüstüne göre
+  güncellendi (web'in oynatıcısı ondan sonra geçer).
+- UR-029: web'in Donatı çizelgesi yalnız kartında kategori olan ve kategorisi Mimari, İşaretler ya da Pafta olmayan blok
+  yerleştirmelerini saysın (`cad.schedules.*` ortak durumları masaüstüne göre yeniden yazıldı).
+- UR-037: web'in Eğri boyunca yazı aracı başarı iletisinde yazının kaynak eğriye bağlı olmadığını söylesin
+  (`fixtures/interaction/v1/text-along.json` masaüstüne göre güncellendi).
+- UR-050/051: web'in Otopark ve Sığınak hesabı tabloları çekirdeğin yeni satırlarını göstersin (alanı olmayan bölüm “mahal bağlayın”, toplam “en az N”; odası bağlanmamış konut “oda bilinmiyor (1 sayıldı)”, toplam ve muafiyet “eksik veriyle”).
+- UR-049: web'in Kapalı alan aracı kenarları kendini kesen sınırı (papyon) başarı değil uyarıyla bildirsin (kesişme sayısı ve ilk noktası; çekirdek `ring_self_crossings`), Özellikler'de Alan “Hesaplanamaz” görünsün.
+- UR-048: web'in pafta sekmeleri, pafta listesi ve toplu yayın penceresi paftayı çizim numarasıyla göstersin (`Sheet::listed_name`: “QA-002 · Teknik çizim”); şablondan ikinci pafta “Ad 2” adını alsın.
+- UR-047: web'in nesne ekleri satırları bağlı/gömülü durumunu (“Bağlı: çizimle taşıyın.”, “Gömülü: çizimle taşınır.”, eksikte “Bulunamadı: Yeni yol seç…”) göstersin, menüde dosyanın tam yolu ve Yeni yol seç… olsun; Dosya ekle iletisi “bağlandı: dosya çizime kopyalanmadı” desin.
+- UR-046: web'in `app/annotationScale.ts` çizim ölçeği değişimi açıklamaları izletiyorsa ölçeği de aynı geri alma adımına koysun (“Çizim ölçeği”; masaüstü ve çekirdek `PlotScale` işlemiyle yapıyor), izleyen yoksa ölçek ayar olarak kalsın.
+- UR-042: web'in pafta öğe ağacında Shift ya da ⌘/Ctrl ile tıklanan satır seçime eklensin ya da çıkarılsın; `SheetInspector.ts` boş seçim açıklaması masaüstüyle aynı olsun (Ctrl paftada grubun içindeki öğeyi seçer, çıkarmaz).
+- UR-003: `io/kcad.ts` şema 255 (`toolLayers`), web'in yeni CAD projesi ölçü/yazı/tarama araç katmanlarını yazsın
+  (`fixtures/project/v1/new-project.json` o zaman yeniden kaydedilir), web araçları `settings.toolLayers`'ı izlesin ve
+  Proje ayarları › Birim ve ölçek › Araç katmanları.
+- UR-090 (kullanım incelemesi): web'in `dimension.test.ts` ve WASM `quickDimensions`'ı kapalı çoklu çizginin `closed`'ını okusun (çekirdek belge okumasıyla kapanış kenarını ölçüyor; `fixtures/dimension/v1/quick.json`'a yeni durum eklendi).
+- UR-071 (kullanım incelemesi): web'in `model/ops/labelText.ts` etiket şablonu `{Ad}` gibi öznitelikleri de doldursun (masaüstünde `fill_template_with`; eksik alan `{…}` olarak kalır).
 - MAP-07 / ADR 1260: web'in Topoloji paneli ve `io/kcad.ts` şema 189 (kalite `profile`'ı; istisnanın `decision`,
   `reason`, `ruleDigest`, `scope`'u), bulgunun `state`/`reason`'ı, `cad.topology.exceptions`'ın `error`/`reason`/`scope`'u
   ve `cad.topology.repair`'in web işleyicisi; WASM `topologyCheck`'in istisnası `anywhere` almıyor (hep yerine bağlı).
@@ -2714,6 +2732,7 @@ Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" gö
   - 27 Eylül: SVG çizim düzenleyicisi ([ADR 0095](docs/adr/0095-desktop-svg-editor.md)). Web'in penceresi ve alt pencereleri masaüstünde: dokuz araç, şekil listesi, cetveller ve kılavuzlar, kenet, düğüm aracı, ölçü, Özellikler, Hizala, Dönüştür ve Dizi, Yol, Nesne ve Seç menüleri, web'in bütün tuşları, kendi geri alması; aç, içe alma penceresi, pano, pencereye bırakma, kitaplıktan aç, farklı kaydet, dışa aktarma (SVG, PNG), belge özellikleri, XML kaynağı, izleme altlığı ve Bitmap izle. Geometri SVG çekirdeğinden, kurallar iki platformda `svgedit.json` ile. Stil yöneticisinden, Sembol tasarımcısından ve `style.svgEditor` ile açılır; Kaydet Kitaplığım'a yazar. İki platformda iyileşti: ölçünün açısı Döndürme gibi saat yönünde, sürüklerken Esc geri koyar, Geri al ve Yinele düğmeleri, kılavuzlar belge özellikleriyle kayar, yeni çizim açık kategoriye, etiketler çipte. Kalan farklar: XML kaynağında seçili satırın arkası boyanmaz, PNG panoya kopyalanamaz, onarılamayan bozuk XML reddedilir.
   - Kalanlar: aplikasyon ve ifraz araçları; işlemler, bulut komutlarının kalanı, sağ tık menüleri.
 - [ ] `UI-12` Linux Wayland/X11, Windows ve macOS için pencere, DPI, IME, clipboard, dosya association ve erişilebilirlik matrisi oluştur; ilk geliştirme platformunu diğerlerinin mimari yasağına dönüştürme. Masaüstünün panosu şimdilik uygulama içi (ADR 0056); sistem panosu bu matrisle birlikte karara bağlanacak.
+- [ ] `UI-13` (kullanım raporu UR-006, 13.11.2026) Masaüstünün erişilebilirlik ağacı: iced 0.14'te erişilebilirlik bağdaştırıcısı yok; macOS erişilebilirlik istemcileri yalnız pencere çerçevesini ve menü çubuğunu görüyor. KentOS UI bileşenlerine ad, rol, değer, etkin/kapalı durum ve odak veren bir katman (ör. accesskit ve winit bağdaştırıcısı) yeni çalışma zamanı bağımlılığıdır, eklemeden önce sahibin onayı gerekir (CLAUDE.md §3). Kabul: VoiceOver ile yeni CAD projesi, çizgi aracı, değer girişi, kaydetme ve uyarı seçimi; ad ve odak sırası otomatik erişilebilirlik denetimiyle.
 
 Iced özel `shader` widget'ı wgpu pipeline entegrasyonu sunuyor; ViewCube kodu bunun depoda zaten kullanıldığını gösteriyor. Ana viewport için ortak Device/Queue ile özel render pass/texture kompozisyonu ilk prototiptir. Iced entegrasyonu kare zamanını veya surface kontrolünü kısıtlarsa ölçümle gerekçelenen özel compositor seçeneği değerlendirilir. [Iced shader API](https://docs.rs/iced/latest/iced/widget/shader/index.html).
 

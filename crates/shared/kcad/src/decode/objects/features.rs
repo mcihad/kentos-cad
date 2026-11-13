@@ -294,6 +294,8 @@ pub(crate) struct Features {
     pub(crate) kept_adjustments: bool,
     /// Schema 253: the reviews the project keeps of its monitoring jobs (docs/adr/5220).
     pub(crate) monitoring_reviews: bool,
+    /// Schema 255: the layer each annotation tool draws on (usage review UR-003).
+    pub(crate) tool_layers: bool,
     /// Schema 209: a road drawing's record with its version and revision (docs/adr/2840).
     pub(crate) drawing_provenance: bool,
     /// Schema 210: a map work approval's objects' digests (docs/adr/2880).
@@ -661,6 +663,7 @@ impl Features {
             cloud_poses: schema >= crate::SCHEMA_WITH_CLOUD_POSES,
             kept_adjustments: schema >= crate::SCHEMA_WITH_KEPT_ADJUSTMENTS,
             monitoring_reviews: schema >= crate::SCHEMA_WITH_MONITORING_REVIEWS,
+            tool_layers: schema >= crate::SCHEMA_WITH_TOOL_LAYERS,
             drawing_provenance: schema >= crate::SCHEMA_WITH_DRAWING_PROVENANCE,
             approved_objects: schema >= crate::SCHEMA_WITH_APPROVED_OBJECTS,
             approved_parts: schema >= crate::SCHEMA_WITH_APPROVED_PARTS,

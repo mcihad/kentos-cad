@@ -184,6 +184,17 @@ fn form<'a>(
         .style(style::button::ghost)
         .on_press(ev(Event::Advanced));
         let mut section = column![toggle, horizontal_divider()].spacing(6);
+        // Closed, the section still says what in it is set away from its default: it applies to the run.
+        let changed = window.advanced_changed();
+        if !open && !changed.is_empty() {
+            section = section.push(
+                label::caption(format!(
+                    "Değiştirilmiş: {}. Çalıştır'da uygulanır.",
+                    changed.join(", ")
+                ))
+                .style(style::text::warning),
+            );
+        }
         if open {
             section = section.push(rows(&advanced, window, env));
         }

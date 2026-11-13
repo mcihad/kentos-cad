@@ -165,7 +165,7 @@ fn files_are_linked_beside_the_drawing_and_a_photo_is_embedded() {
     assert_eq!(list[0].file.as_deref(), Some("foto/cephe.jpg"));
     assert_eq!(list[0].name, "cephe.jpg");
     assert_eq!(list[0].kind(), AttachmentKind::Photo);
-    assert_eq!(last_said(&app), "“cephe.jpg” eklendi.");
+    assert_eq!(last_said(&app), "“cephe.jpg” bağlandı: dosya çizime kopyalanmadı; çizimi taşırken onu da taşıyın.");
     // Göm: the photo in the project's library under Ekler, the attachment embedded, one step.
     let _ = app.attachment_event(Event::Embed(Slot(4), 0));
     let list = attachments(&app, Slot(4));
@@ -424,4 +424,43 @@ fn a_card_opens_in_a_frame() {
     }
     println!("Bilgi kartı: bir kartın açılması {best:.3} ms");
     assert!(best <= 16.0, "{best} ms");
+}
+
+/// A linked document renamed: its row says it is missing and where it was looked for; Yeni yol seç… links it again
+/// where it is now, its name kept, one step “Ekler”; a found one says it is linked, not copied.
+#[test]
+fn a_moved_linked_file_is_said_missing_and_linked_again_where_it_is() {
+    let dir = scratch("ek-yol");
+    let drawing = dir.join("cizim.kcad");
+    let doc_path = dir.join("rapor.txt");
+    std::fs::write(&doc_path, "rapor").expect("a document");
+    let mut app = scene();
+    app.document.as_mut().expect("open").path = Some(drawing);
+    app.selection.set([Slot(4)]);
+    app.picker = Picker::File(doc_path.clone());
+    let task = app.attachment_command("attachment.add");
+    drive(&mut app, task);
+    let notes = |app: &App| -> Vec<String> {
+        crate::properties::rows::attachments::sections(app, Slot(4))
+            .into_iter()
+            .flat_map(|s| s.rows)
+            .filter(|r| r.note)
+            .map(|r| r.value.clone())
+            .collect()
+    };
+    assert!(notes(&app).iter().any(|n| n == "Bağlı: çizimle taşıyın."), "{:?}", notes(&app));
+    let moved = dir.join("rapor-yeni.txt");
+    std::fs::rename(&doc_path, &moved).expect("renamed");
+    let views = app.attachment_views(Slot(4));
+    assert_eq!(views[0].linked.as_ref().map(|(_, missing)| *missing), Some(true));
+    assert!(notes(&app).iter().any(|n| n == "Bulunamadı: Yeni yol seç…"), "{:?}", notes(&app));
+    app.picker = Picker::File(moved.clone());
+    let task = app.attachment_event(Event::Relink(Slot(4), 0));
+    drive(&mut app, task);
+    let list = attachments(&app, Slot(4));
+    assert_eq!(list[0].file.as_deref(), Some("rapor-yeni.txt"));
+    assert_eq!(list[0].name, "rapor.txt", "its name kept");
+    assert_eq!(app.attachment_views(Slot(4))[0].linked.as_ref().map(|(_, m)| *m), Some(false));
+    assert_eq!(undo(&mut app).as_deref(), Some("Ekler"));
+    assert_eq!(attachments(&app, Slot(4))[0].file.as_deref(), Some("rapor.txt"));
 }

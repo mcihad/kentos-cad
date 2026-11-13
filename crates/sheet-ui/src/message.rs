@@ -157,6 +157,8 @@ pub enum PdfMessage {
     /// Kaydet: where the file goes (the host's file window).
     Save,
     Preview,
+    /// The print preview's page: the n-th of the chosen sheets (Önceki/Sonraki).
+    PreviewPage(usize),
     Publish,
     /// Yazdır: the host's viewer prints it.
     Print,

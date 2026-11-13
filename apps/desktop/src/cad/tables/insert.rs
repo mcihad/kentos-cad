@@ -17,7 +17,6 @@ use kentos_interaction::table::{self as table, Look};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::table::{self as grid, Table};
 use kentos_ui::widget::{Dialog as Frame, Segmented, Tip, tip};
 use kentos_ui::{label, style};
 
@@ -794,32 +793,6 @@ impl App {
                 Now::Cells(cells, source) => {
                     let header = w.source.schedule().is_some() || w.header;
                     let m = cells.cells.first().map_or(0, Vec::len).min(PREVIEW_COLUMNS);
-                    let columns = (0..m).map(|j| {
-                        let c = grid::Column::new(if header {
-                            cells.cells[0][j].clone()
-                        } else {
-                            String::new()
-                        })
-                        .width(Fill);
-                        if cells.aligns.get(j).is_some_and(|a| a == "right") {
-                            c.align_right()
-                        } else {
-                            c
-                        }
-                    });
-                    let body_rows = cells
-                        .cells
-                        .iter()
-                        .skip(usize::from(header))
-                        .take(PREVIEW_ROWS)
-                        .map(|r| {
-                            grid::Row::new(
-                                r.iter()
-                                    .take(m)
-                                    .map(|w| label::caption(w.clone()).into())
-                                    .collect::<Vec<Element<'_, Message>>>(),
-                            )
-                        });
                     let mut more = Vec::new();
                     let shown_rows = cells.cells.len().saturating_sub(usize::from(header));
                     if shown_rows > PREVIEW_ROWS {
@@ -829,11 +802,23 @@ impl App {
                     if all_columns > PREVIEW_COLUMNS {
                         more.push(format!("{} sütun daha", all_columns - PREVIEW_COLUMNS));
                     }
+                    // The first rows with the lines the table will have (UR-017), the drawing's look rather than the
+                    // kit's data table, whose rows had no column rules.
+                    let shown: Vec<Vec<String>> = cells
+                        .cells
+                        .iter()
+                        .take(PREVIEW_ROWS + usize::from(header))
+                        .map(|r| r.iter().take(m).cloned().collect())
+                        .collect();
                     let mut preview = column![
                         label::caption("Önizleme"),
-                        container(Table::new(columns).extend(body_rows))
-                            .width(Fill)
-                            .style(style::container::field_box),
+                        lined_preview(
+                            shown,
+                            &cells.aligns,
+                            header,
+                            w.lines,
+                            w.frame && w.lines != Lines::None
+                        ),
                     ]
                     .spacing(4);
                     if !more.is_empty() {
@@ -952,3 +937,68 @@ fn card(
         ..iced::widget::button::Style::default()
     }
 }
+
+/// The preview's grid as the table will draw it (UR-017; the core's table lines): Tümü the outline and every row and
+/// column rule, Satırlar the outline and the row rules, Dış the outline, Yok none; a frame the outline thicker. The
+/// header row in the strong face.
+fn lined_preview<'a>(
+    cells: Vec<Vec<String>>,
+    aligns: &[String],
+    header: bool,
+    lines: Lines,
+    frame: bool,
+) -> Element<'a, Message> {
+    let (outline, rows, columns) = match lines {
+        Lines::All => (true, true, true),
+        Lines::Rows => (true, true, false),
+        Lines::Outer => (true, false, false),
+        Lines::None => (false, false, false),
+    };
+    let rule_h = || -> Element<'a, Message> {
+        container(iced::widget::Space::new().height(1))
+            .width(Fill)
+            .style(|theme: &Theme| container::Style::default().background(Tokens::of(theme).text))
+            .into()
+    };
+    let rule_v = || -> Element<'a, Message> {
+        container(iced::widget::Space::new().width(1))
+            .height(Fill)
+            .style(|theme: &Theme| container::Style::default().background(Tokens::of(theme).text))
+            .into()
+    };
+    let mut body = Column::new();
+    for (i, row_cells) in cells.into_iter().enumerate() {
+        if i > 0 && rows {
+            body = body.push(rule_h());
+        }
+        let mut line = iced::widget::Row::new().height(Length::Fixed(typography::scaled(22.0)));
+        for (j, text) in row_cells.into_iter().enumerate() {
+            if j > 0 && columns {
+                line = line.push(rule_v());
+            }
+            let words = if header && i == 0 {
+                label::caption(text).font(typography::ui_strong())
+            } else {
+                label::caption(text)
+            };
+            // A column of numbers to the right, as the table writes it.
+            let right = aligns.get(j).is_some_and(|a| a == "right");
+            let cell = container(words).padding([2, 6]).width(Fill).center_y(Fill);
+            line = line.push(if right { cell.align_right(Fill) } else { cell });
+        }
+        body = body.push(line);
+    }
+    let width = if frame { 2.5 } else { 1.0 };
+    container(body)
+        .width(Fill)
+        .style(move |theme: &Theme| {
+            let t = Tokens::of(theme);
+            container::Style::default().background(t.field).border(iced::Border {
+                color: if outline { t.text } else { t.border },
+                width: if outline { width } else { 1.0 },
+                radius: 0.0.into(),
+            })
+        })
+        .into()
+}
+

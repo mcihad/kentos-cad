@@ -230,6 +230,12 @@ impl State {
         }
     }
 
+    /// Açık çok satırlı düzenleyicilerin özellikleri: incelenen nesne değişmeden önce uygulanabilsinler diye
+    /// (kullanım raporu UR-027; yazılmış ama uygulanmamış metin sessizce kaybolmasın).
+    pub fn open_editors(&self) -> Vec<PropertyId> {
+        self.editors.keys().copied().collect()
+    }
+
     /// Haritadan seçim bekleyen özellik.
     pub fn picking(&self) -> Option<PropertyId> {
         self.picking

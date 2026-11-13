@@ -57,6 +57,8 @@ POINT = {"kind": "point", **base(5), "p": p(80, 0)}
 ENTITIES = [CIRCLE, LINE, PATH, LOCKED, POINT]
 IDS = [e["id"] for e in ENTITIES]
 NEXT = 6
+COLUMN_WORDS = ("İlişkili dizi bir blok kurar; kolon, aks, merdiven, rampa, duvar, etiket ve görünüm işareti çizimin planıdır, "
+                "bloğa konamaz. İlişkisiz dizi kullanın: kopyalar kendi nesneleri olur.")
 LOCKED_WORDS = "1 nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın."
 
 
@@ -278,6 +280,17 @@ def cases():
                 "steps": [{"op": "execute", "input": assoc([4], GRID),
                            "result": {"status": "failed", "error": {"code": "layer_locked", "message": LOCKED_WORDS, "path": "uids"}},
                            "expect": {"ids": IDS, "blocks": [], "arrays": [], "canUndo": False, "revision": "same"}}]})
+
+    # A column cannot be in a block (the drawing's plan, docs/adr/0343 §1): an associative array of one is refused
+    # before anything is written, its words saying why and the way (UR-040).
+    column = {"kind": "column", **base(6), "at": p(60, 0), "width": 0.6, "depth": 0.5}
+    with_column = setup()
+    with_column["entities"].append(copy.deepcopy(column))
+    out.append({"name": "Kolonun ilişkili dizisi reddedilir: kolon bloğa konamaz; hiçbir şey yazılmaz",
+                "setup": with_column,
+                "steps": [{"op": "execute", "input": assoc([6], POLAR),
+                           "result": {"status": "failed", "error": {"code": "block_refused", "message": COLUMN_WORDS, "path": "uids[0]"}},
+                           "expect": {"ids": IDS + [6], "blocks": [], "arrays": [], "canUndo": False, "revision": "same"}}]})
 
     copies = [{**CIRCLE, "id": 0, "c": p(10 + j * 5, i * 4)} for i in range(2) for j in range(3)][1:]
     out.append({"name": "Plan ilişkili de olsa kopyaları gösterir; hiçbir şey yazılmaz",

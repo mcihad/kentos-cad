@@ -199,6 +199,15 @@ impl Tool for ImageClip {
 
     /// Enter: a polygon of three corners or more is the boundary; else the tool leaves.
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        // A boundary that crosses itself (a bow tie) is said as such and kept to be corrected, rather than refused
+        // as lying outside the picture or cut to an unexpected piece.
+        if self.polygon && self.pts.len() >= 4 && crosses_itself(&self.pts) {
+            cx.say(
+                Level::Warn,
+                "Kırpma sınırı kendini kesiyor; köşeleri sınır boyunca sırayla gösterin. Son köşeyi Esc ile geri alabilirsiniz.",
+            );
+            return Flow::Stay;
+        }
         if self.polygon && self.pts.len() >= 3 {
             let points = std::mem::take(&mut self.pts)
                 .into_iter()
@@ -243,5 +252,37 @@ impl Tool for ImageClip {
                 .push(Stroke::dashed(ring, true, [6.0, 4.0]).tone(Tone::Accent));
         }
         out
+    }
+}
+
+/// Whether the closed ring through `pts` has two edges that are not neighbours crossing or touching.
+fn crosses_itself(pts: &[Vec2]) -> bool {
+    use kentos_geometry_core::predicates::orient2d;
+    let n = pts.len();
+    let edge = |i: usize| (pts[i], pts[(i + 1) % n]);
+    let meets = |(a, b): (Vec2, Vec2), (c, d): (Vec2, Vec2)| {
+        let (d1, d2) = (orient2d(a, b, c), orient2d(a, b, d));
+        let (d3, d4) = (orient2d(c, d, a), orient2d(c, d, b));
+        (d1 > 0.0) != (d2 > 0.0) && (d3 > 0.0) != (d4 > 0.0) && d1 != 0.0 && d2 != 0.0 && d3 != 0.0 && d4 != 0.0
+    };
+    (0..n).any(|i| {
+        (i + 2..n)
+            .filter(|&j| !(i == 0 && j == n - 1))
+            .any(|j| meets(edge(i), edge(j)))
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// UR-097: a bow tie crosses itself and is said; a square, a triangle and a concave ring do not.
+    #[test]
+    fn a_bow_tie_boundary_is_found() {
+        let v = |x: f64, y: f64| Vec2::new(x, y);
+        assert!(crosses_itself(&[v(0.0, 0.0), v(10.0, 10.0), v(10.0, 0.0), v(0.0, 10.0)]));
+        assert!(!crosses_itself(&[v(0.0, 0.0), v(10.0, 0.0), v(10.0, 10.0), v(0.0, 10.0)]));
+        assert!(!crosses_itself(&[v(0.0, 0.0), v(10.0, 0.0), v(5.0, 8.0)]));
+        assert!(!crosses_itself(&[v(0.0, 0.0), v(10.0, 0.0), v(10.0, 10.0), v(5.0, 3.0), v(0.0, 10.0)]));
     }
 }

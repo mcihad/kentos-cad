@@ -75,11 +75,10 @@ fn drawn(app: &mut App) {
     cad(app, ground(), [-6.0, -8.0], [86.0, 30.0]);
 }
 
-/// Tarama with Yazılar on, the pointer in the first parcel: the region
+/// Tarama as it starts (Yazılar boş bırakılır, UR-004), the pointer in the first parcel: the region
 /// (the building an island, the number's box left open) and the pattern.
 fn tool(app: &mut App) {
     drawn(app);
-    app.memory.hatch_texts = true;
     run(app, "tool.hatch");
     hover(app, [24.0, 4.0]);
 }

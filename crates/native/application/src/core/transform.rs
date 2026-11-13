@@ -142,6 +142,21 @@ fn write_execute(
     };
     let mut warnings = checked.warnings;
     let (changed, created) = if copy {
+        // A tied hatch's copy follows nothing (docs/adr/0186: copies leave the tie): said, with the way to tie it again.
+        let untied = checked
+            .moved
+            .iter()
+            .filter(|e| matches!(e, Entity::Hatch(h) if h.assoc.is_some()))
+            .count();
+        if untied > 0 {
+            warnings.push(CommandWarning {
+                code: codes::HATCH_ASSOCIATION_LOST.into(),
+                message: format!(
+                    "{untied} kopya taramanın sınır bağı yok: kopyalar sınırlarını izlemez. Bağlamak için kopyayı Taramayı düzenle › Sınırı yeniden seç ile kendi sınırına bağlayın."
+                ),
+                path: None,
+            });
+        }
         // A linked text's copy is a text of its own (docs/adr/0175 §4).
         let copies: Vec<_> = checked.moved.into_iter().map(unlinked).collect();
         // The copies' groups: a space's sources and an opening's wall go onto their copies (docs/adr/0730 §4).

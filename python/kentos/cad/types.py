@@ -313,6 +313,22 @@ AnnotationStyleKindName = Literal["text", "dimension", "leader", "wall", "table"
 """The names of :class:`AnnotationStyleKind`, for a plain string."""
 
 
+class AnnotationTool(_StrEnum):
+    """A tool whose objects may go to a layer of their own.
+
+    - ``dimension``: Ölçülendirme: every kind of dimension.
+    - ``text``: Yazı and çok satırlı yazı.
+    - ``hatch``: Tarama.
+    """
+    DIMENSION = "dimension"
+    TEXT = "text"
+    HATCH = "hatch"
+
+
+AnnotationToolName = Literal["dimension", "text", "hatch"]
+"""The names of :class:`AnnotationTool`, for a plain string."""
+
+
 class AnnotativeOperation(_StrEnum):
     """What the command does.
 
@@ -80899,6 +80915,7 @@ class ProjectSettings(_Model):
         survey_adjustments: The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 252).
         table_styles: The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
+        tool_layers: The layer each annotation tool draws on (usage review UR-003); absent: the active layer (`.kcad` schema 255).
         topology: The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
         ucs: The drawing's user coordinate system (docs/adr/0261 §1); none: the
             world. How points are typed and shown, never where they are.
@@ -80966,6 +80983,7 @@ class ProjectSettings(_Model):
     survey_adjustments: list[KeptAdjustment] | Unset = UNSET
     table_styles: list[TableStyleDef] | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
+    tool_layers: list[ToolLayer] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
     ucs: Ucs | None | Unset = UNSET
     variables: list[ProjectVariable] | Unset = UNSET
@@ -81077,6 +81095,8 @@ class ProjectSettings(_Model):
             out["tableStyles"] = [e0.to_json() for e0 in self.table_styles]
         if self.text_styles is not UNSET:
             out["textStyles"] = [e0.to_json() for e0 in self.text_styles]
+        if self.tool_layers is not UNSET:
+            out["toolLayers"] = [e0.to_json() for e0 in self.tool_layers]
         if self.topology is not UNSET:
             out["topology"] = None if self.topology is None else self.topology.to_json()
         if self.ucs is not UNSET:
@@ -81151,6 +81171,7 @@ class ProjectSettings(_Model):
             survey_adjustments=[KeptAdjustment.from_json(e0) for e0 in data["surveyAdjustments"]] if "surveyAdjustments" in data else UNSET,
             table_styles=[TableStyleDef.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
+            tool_layers=[ToolLayer.from_json(e0) for e0 in data["toolLayers"]] if "toolLayers" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
             ucs=UNSET if "ucs" not in data else None if data["ucs"] is None else Ucs.from_json(data["ucs"]),
             variables=[ProjectVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else UNSET,
@@ -93480,7 +93501,8 @@ class SettingsSet(_Model):
     - `areaUnit`, `angleUnit`;
     - `plotScale`: a whole denominator from 1 to 1 000 000; the texts,
       leaders, dimensions and tables at the old general height take the new
-      one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);
+      one, the scale and they in one undo step “Çizim ölçeği” (one undo gives
+      both back; docs/adr/0205 §3); none following, the scale is a setting;
     - `drawingFont`: the drawing's typeface;
     - `arch`: the project's levels and the detail its walls are drawn at
       (docs/adr/0339 §3), whole: the given settings take the place of the
@@ -93494,6 +93516,8 @@ class SettingsSet(_Model):
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
     - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
     - `refraction`: the refraction coefficient k of trigonometric heights, within [−1, 1] (docs/adr/4900).
+    - `toolLayers`: the layer each annotation tool (dimension, text, hatch) draws on, whole; an empty list takes them
+      away and the tools draw on the active layer (usage review UR-003).
     - `standardDocs`: the entire ordered list of versioned drawing-standard
       documents retained by the project; an empty list removes all bindings.
       An ordered, byte-identical subset may remove unsupported existing
@@ -93507,7 +93531,8 @@ class SettingsSet(_Model):
     (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
     (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
     (two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or
-    view without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`; then
+    view without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`, `invalid_tool_layers` (a tool twice,
+    a layer the drawing has not or a group); then
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `project_type_locked` (an existing project type changed),
     `cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work
@@ -93541,6 +93566,7 @@ class SettingsSet(_Model):
         srid: Unit: epsg.
         standard_docs: Replace the project's ordered drawing-standard documents. Missing keeps
             the current list; an empty list removes it.
+        tool_layers: The layer each annotation tool draws on (usage review UR-003), whole; empty: the active layer for all.
     """
     angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET
     arch: ArchSettings | None | Unset = UNSET
@@ -93563,6 +93589,7 @@ class SettingsSet(_Model):
     second_srid: int | None | Unset = UNSET
     srid: int | None | Unset = UNSET
     standard_docs: list[ProjectStandardDocument] | None | Unset = UNSET
+    tool_layers: list[ToolLayer] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -93608,6 +93635,8 @@ class SettingsSet(_Model):
             out["srid"] = self.srid
         if self.standard_docs is not UNSET:
             out["standardDocs"] = None if self.standard_docs is None else [e0.to_json() for e0 in self.standard_docs]
+        if self.tool_layers is not UNSET:
+            out["toolLayers"] = None if self.tool_layers is None else [e0.to_json() for e0 in self.tool_layers]
         return out
 
     @classmethod
@@ -93634,6 +93663,7 @@ class SettingsSet(_Model):
             second_srid=data.get("secondSrid", UNSET),
             srid=data.get("srid", UNSET),
             standard_docs=UNSET if "standardDocs" not in data else None if data["standardDocs"] is None else [ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]],
+            tool_layers=UNSET if "toolLayers" not in data else None if data["toolLayers"] is None else [ToolLayer.from_json(e0) for e0 in data["toolLayers"]],
         )
 
 
@@ -111760,6 +111790,29 @@ class TmDefinition(_Model):
             custom_datum=UNSET if "customDatum" not in data else None if data["customDatum"] is None else CustomDatum.from_json(data["customDatum"]),
             datum=UNSET if "datum" not in data else None if data["datum"] is None else _enum_in(RegistryDatum, data["datum"]),
             latitude_of_origin=UNSET if "latitudeOfOrigin" not in data else None if data["latitudeOfOrigin"] is None else float(data["latitudeOfOrigin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ToolLayer(_Model):
+    """One tool's layer.
+    Attributes:
+        layer: The layer's id.
+    """
+    tool: AnnotationTool | AnnotationToolName
+    layer: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = _enum_out(self.tool)
+        out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToolLayer:
+        return cls(
+            tool=_enum_in(AnnotationTool, data["tool"]),
+            layer=data["layer"],
         )
 
 
@@ -140822,6 +140875,8 @@ __all__ = [
     "AnnotationHeights",
     "AnnotationStyleKind",
     "AnnotationStyleKindName",
+    "AnnotationTool",
+    "AnnotationToolName",
     "AnnotationWork",
     "AnnotationsScaled",
     "AnnotationsScales",
@@ -144757,6 +144812,7 @@ __all__ = [
     "ToleranceKind",
     "ToleranceKindName",
     "ToleranceMapSurveyOperation",
+    "ToolLayer",
     "ToolNote",
     "ToolPalette",
     "ToolParameter",

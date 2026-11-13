@@ -524,6 +524,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::KeptAdjustment>>"))]
     pub survey_adjustments: Vec<crate::KeptAdjustment>,
+    /// The layer each annotation tool draws on (usage review UR-003); absent: the active layer (`.kcad` schema 255).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::ToolLayer>>"))]
+    pub tool_layers: Vec<crate::ToolLayer>,
     /// The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none
     /// (`.kcad` schema 253).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

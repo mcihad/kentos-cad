@@ -177,3 +177,35 @@ fn cizimden_sec_steps_the_window_aside_and_brings_it_back() {
     assert_eq!(app.selection.ids(), &[Slot(2)]);
     assert!(!app.window_picked(true), "no window waits now");
 }
+
+/// UR-001/UR-002: the drawing's unsaved question with Kaydet ve kapat, in both themes (`.run/gui-evidence/kullanim-UR-001/`):
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib unsaved_close_tests::drawing_question_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn drawing_question_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-001");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let layer = app.document.as_ref().expect("a drawing").layers()[0].id.clone();
+        let _ = app.update(Message::LayerLocked(layer));
+        let _ = app.leave(crate::app::Then::CloseTab);
+        app.follow.flash = None;
+        let size = Size::new(1280.0, 800.0);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("kapat-sorusu-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

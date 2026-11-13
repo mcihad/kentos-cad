@@ -706,6 +706,7 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "invalid_path",
                 "pointcloud_fixed",
                 "slots_exhausted",
+                "block_refused",
             ],
             REVISION,
         ],

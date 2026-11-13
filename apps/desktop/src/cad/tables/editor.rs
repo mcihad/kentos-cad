@@ -34,6 +34,11 @@ use crate::exchange::words;
 use crate::keys::KeyPress;
 use crate::traces::Control;
 
+/// A schedule's cells and its draft (UR-058), apart so this file keeps to its subject's size.
+mod schedule;
+pub(crate) use schedule::schedule_cell;
+use schedule::schedule_planned;
+
 /// The window's title, which a trace names it by.
 pub const EDITOR_TITLE: &str = "Tabloyu düzenle";
 const SAVE: &str = "Kaydet";
@@ -393,6 +398,9 @@ impl App {
         let Some(doc) = &self.document else {
             return Err("Çizim yok.".to_owned());
         };
+        if matches!(saved.source, Some(kentos_commands::TableSource::Schedule { .. })) {
+            return schedule_planned(&doc.model, uid, edits, saved);
+        }
         let input = TablesEdit {
             operation: TablesOperation::Edit {
                 uid: uid.to_string(),
@@ -1531,7 +1539,7 @@ fn hex_color(hex: &str) -> iced::Color {
 fn bar_keys(press: text_editor::KeyPress) -> Option<text_editor::Binding<Message>> {
     use iced::keyboard::Key;
     match press.key.as_ref() {
-        // Shift+Enter, or Alt+Enter as AutoCAD's table cell takes it.
+        // Shift+Enter, or Alt+Enter as table cells commonly take it.
         Key::Named(Named::Enter) if press.modifiers.shift() || press.modifiers.alt() => Some(text_editor::Binding::Enter),
         Key::Named(Named::Enter) => Some(text_editor::Binding::Custom(msg(Event::Commit))),
         Key::Named(Named::Tab | Named::Escape) => None,
@@ -1577,102 +1585,6 @@ fn tool_by_words(words: &str) -> Option<Tool> {
 }
 
 /// The bar's words written to the active cell (a formula when they begin with `=`), the column widened as they ask.
-/// What a schedule's cell at `at` is (docs/adr/0733 §6): written to its row's objects (the words say which), or read
-/// only and why; none for another table.
-pub(crate) fn schedule_cell(
-    doc: &kentos_domain::Document,
-    t: &kentos_commands::TableEntity,
-    at: (usize, usize),
-) -> Option<Result<String, String>> {
-    let Some(kentos_commands::TableSource::Schedule {
-        of,
-        columns,
-        total,
-        members,
-        units,
-        ..
-    }) = &t.source
-    else {
-        return None;
-    };
-    let (r, c) = at;
-    // A units schedule's row is its program groups (docs/adr/0795).
-    let groups = (*of == kentos_commands::ScheduleOf::Units)
-        .then(|| units.get(r.wrapping_sub(1)).filter(|g| !g.is_empty()));
-    let column = columns.get(c)?;
-    if r == 0 {
-        return Some(Err(
-            "Başlık satırı: sütunun adı belgenin yazdığıdır; düzenlenmez.".into(),
-        ));
-    }
-    let objects = members.get(r - 1).filter(|m| !m.is_empty());
-    if let Some(Some(groups)) = groups {
-        if !kentos_native_application::schedules::editable(*of, column.field) {
-            return Some(Err(format!(
-                "Hesaplanır: “{}” bina programından ve mahallerden okunur; düzenlenmez.",
-                doc.schedule_heading_in(*of, column)
-            )));
-        }
-        let program = doc.program();
-        let names: Vec<String> = groups
-            .iter()
-            .filter_map(|g| program.unit(g))
-            .map(|u| match &u.name {
-                Some(n) => format!("{} {n}", u.number),
-                None => u.number.clone(),
-            })
-            .collect();
-        return Some(Ok(format!(
-            "Bina programına yazılır: {}. Kaydet tek adımda yazar; çizelge ve etiketler izler.",
-            names.join(", ")
-        )));
-    }
-    let Some(objects) = objects.filter(|_| groups.is_none()) else {
-        let what = if *total && r + 1 == t.cells.len() {
-            "Genel toplam"
-        } else {
-            "Grup başlığı ya da ara toplam"
-        };
-        return Some(Err(format!(
-            "{what}: nesnelerin satırı değil; düzenlenmez."
-        )));
-    };
-    if !kentos_native_application::schedules::editable(*of, column.field) {
-        return Some(Err(format!(
-            "Hesaplanır: “{}” çizimden okunur; düzenlenmez. Kaynağın kendi alanını değiştirin.",
-            doc.schedule_heading(column)
-        )));
-    }
-    let names: Vec<String> = objects
-        .iter()
-        .filter_map(|u| {
-            Uuid::parse_str(u)
-                .ok()
-                .and_then(|u| doc.slot_of(u))
-                .and_then(|s| doc.get(s))
-        })
-        .filter_map(|e| {
-            ["number", "tag", "name", "type"]
-                .iter()
-                .find_map(|p| {
-                    doc.arch_value(e, p, None)
-                        .map(|v| doc.arch_value_text(&v, false))
-                })
-                .filter(|w| !w.is_empty())
-        })
-        .take(6)
-        .collect();
-    let more = objects.len().saturating_sub(names.len());
-    let mut words = format!("Yazılır: {} nesne", objects.len());
-    if !names.is_empty() {
-        words.push_str(&format!(" — {}", names.join(", ")));
-        if more > 0 {
-            words.push_str(&format!(" ve {more} nesne daha"));
-        }
-    }
-    Some(Ok(format!("{words}. Kaydet hepsine tek adımda yazar.")))
-}
-
 fn commit_edits(e: &Editor) -> Vec<TableEdit> {
     let at = e.owner(e.active);
     if e.words == e.words_at(at) {

@@ -206,7 +206,17 @@ fn a_selection_brings_its_kinds_tab_and_gives_the_ribbon_back_when_it_empties() 
     // Nothing selected: no contextual tab to open.
     let _ = app.update(Message::RibbonTab("selection"));
     assert_eq!(app.shown_tab(), "edit");
-    // A point and a parcel: of two kinds, Seçim, in front by itself (docs/adr/0622 §4).
+    // A point and a parcel over Düzenle, a tab the user opened (UR-010): it keeps the front, so its buttons stay
+    // where they were; Seçim shows beside it and opens with a click.
+    app.selection.set(vec![Slot(1), Slot(4)]);
+    let _ = app.update(Message::RibbonPanel(Event::Color(None)));
+    assert_eq!(app.shown_tab(), "edit");
+    assert_eq!(app.selection_tab().map(|t| t.id), Some("selection"));
+    let _ = app.update(Message::RibbonTab("selection"));
+    assert_eq!(app.shown_tab(), "selection");
+    // Over the starting tab the selection's tab comes to the front by itself (docs/adr/0622 §4).
+    let _ = app.update(Message::Run("edit.deselect"));
+    let _ = app.update(Message::RibbonTab("map"));
     app.selection.set(vec![Slot(1), Slot(4)]);
     let _ = app.update(Message::RibbonPanel(Event::Color(None)));
     assert_eq!(app.shown_tab(), "selection");
@@ -402,4 +412,47 @@ fn ozellikler_offers_the_webs_values() {
             "{cad} {current}"
         );
     }
+}
+
+/// UR-076: with a selection the new objects' look panel is titled “Yeni nesneler”, so its colour is not read as the
+/// selected line's; without one it keeps its own name.
+#[test]
+fn the_look_panel_says_it_is_the_new_objects_while_something_is_selected() {
+    assert_eq!(properties_title("Özellikler", false), "Özellikler");
+    assert_eq!(properties_title("Özellikler", true), "Yeni nesneler");
+    let mut app = app_with_drawing();
+    app.selection.set([Slot(1)]);
+    let p = catalog()
+        .tabs()
+        .flat_map(|t| t.panels.iter())
+        .find(|p| p.items.iter().any(|i| matches!(i, crate::catalog::Item::Builtin(b) if *b == "properties")));
+    if let Some(p) = p {
+        assert!(app.properties_group(p).is_some());
+    }
+}
+
+/// UR-076's pictures: a CAD drawing with a line selected, the look panel titled for the new objects,
+/// `.run/gui-evidence/kullanim-076/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn look_panel_screens() {
+    crate::files_testing::usage_shots("076", "secimle-yeni-nesneler", || {
+        let mut app = app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        app.selection.set([Slot(1)]);
+        app.ribbon_context = false;
+        let tab = app
+            .ribbon_tabs()
+            .find(|t| {
+                t.panels
+                    .iter()
+                    .any(|p| p.items.iter().any(|i| matches!(i, crate::catalog::Item::Builtin(b) if *b == "properties")))
+            })
+            .map(|t| t.id)
+            .expect("the look panel's tab");
+        let _ = app.update(Message::RibbonTab(tab));
+        app.tab = tab;
+        app.ribbon_context = false;
+        app
+    });
 }

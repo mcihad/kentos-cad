@@ -940,6 +940,24 @@ pub(crate) fn settle(
             turned,
         ));
     }
+    // A solve that shrinks a line or a path's edge to nothing, or a circle's radius to none, is no shape kept (UR-034):
+    // a horizontal and a vertical on one line meet only there. Refused, nothing written, the constraints named.
+    let collapsed: Vec<String> = solved
+        .changed
+        .iter()
+        .filter(|(slot, after)| collapses(doc.get(*slot), after))
+        .filter_map(|(slot, _)| doc.uid(*slot).map(|u| u.to_string()))
+        .collect();
+    if !collapsed.is_empty() {
+        let mut named = ids(&added);
+        named.extend(collapsed);
+        return Err(refuse_ids(
+            codes::CONSTRAINT_CONFLICT,
+            "Kısıtlar birlikte yalnız bir kenarı sıfır uzunluğa (ya da bir yarıçapı sıfıra) indirerek tutuyor: örneğin aynı çizgi hem yatay hem düşey olamaz. Hiçbir şey yazılmadı; çelişen kısıtlardan birini kaldırın.".into(),
+            "edit",
+            named,
+        ));
+    }
     Ok(solved)
 }
 
@@ -1109,3 +1127,29 @@ pub(crate) fn add_bond_given(
         .map_err(|why| refuse(codes::INVALID_CONSTRAINT, why.to_string(), at))?;
     Ok(Uuid::from_bytes(id.0).to_string())
 }
+
+/// Whether `after` has a line, an edge or a radius of no length that `before` had a length for (UR-034).
+fn collapses(before: Option<&kentos_commands::Entity>, after: &kentos_commands::Entity) -> bool {
+    use kentos_commands::Entity;
+    const NONE: f64 = 1e-9;
+    let len = |a: &kentos_commands::Vec2, b: &kentos_commands::Vec2| (b.x - a.x).hypot(b.y - a.y);
+    let edges = |pts: &[kentos_commands::Vec2], closed: bool| -> Vec<f64> {
+        let n = pts.len();
+        let count = if closed { n } else { n.saturating_sub(1) };
+        (0..count).map(|i| len(&pts[i], &pts[(i + 1) % n])).collect()
+    };
+    let sizes = |e: &Entity| -> Vec<f64> {
+        match e {
+            Entity::Line(l) => vec![len(&l.a, &l.b)],
+            Entity::Polyline(p) => edges(&p.pts, p.closed),
+            Entity::Polygon(p) => edges(&p.pts, true),
+            Entity::Circle(c) => vec![c.r],
+            Entity::Arc(a) => vec![a.r],
+            _ => Vec::new(),
+        }
+    };
+    let Some(before) = before else { return false };
+    let (was, now) = (sizes(before), sizes(after));
+    was.len() == now.len() && was.iter().zip(&now).any(|(w, n)| *w > NONE && *n <= NONE)
+}
+

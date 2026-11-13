@@ -277,6 +277,8 @@ impl App {
         );
         // ⋯: what a table is rarely asked for: a record, a copy of the selected, values pasted, the fields.
         let selected = !self.selection.is_empty();
+        // A typed layer takes no record without a geometry: the row is off and says why.
+        let record_refused = rows.layer.as_deref().and_then(|l| self.add_record_refusal(l));
         let more = bar_menu(
             Icon::More,
             None,
@@ -284,9 +286,12 @@ impl App {
             texts::MORE_HINT,
             move || {
                 Menu::new()
-                    .item(texts::ADD_RECORD, has_layer.then(|| msg(Event::AddRecord)))
+                    .item(
+                        texts::ADD_RECORD,
+                        (has_layer && record_refused.is_none()).then(|| msg(Event::AddRecord)),
+                    )
                     .icon(from_web(Some("tableRowBelow")))
-                    .detail(texts::ADD_RECORD_HINT)
+                    .detail(record_refused.clone().unwrap_or_else(|| texts::ADD_RECORD_HINT.to_owned()))
                     .item(texts::DUPLICATE, selected.then(|| msg(Event::Duplicate)))
                     .icon(from_web(Some("copy")))
                     .detail(texts::DUPLICATE_HINT)

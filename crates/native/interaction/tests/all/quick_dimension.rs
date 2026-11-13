@@ -79,7 +79,7 @@ fn every_edge_of_the_selection_at_once_the_shared_one_once_out_of_the_areas() {
     assert_eq!(
         b.last_text(),
         Some(
-            "Hızlı ölçü: 9 ölçü eklendi; 1 nesne atlandı (yalnız çizgi, çoklu çizgi ve alan ölçülür)."
+            "Hızlı ölçü: 9 ölçü eklendi; 1 nesne atlandı (yalnız çizgi, çoklu çizgi ve alan ölçülür); ölçüler kenarlarının köşelerine bağlı. 1 yay uzunluğu ölçüsü nesneye bağlı değil (İlişki: Serbest): yay sonra değişirse kendiliğinden güncellenmez."
         )
     );
     assert_eq!(b.last_level(), Some(Level::Success));
@@ -125,7 +125,7 @@ fn a_typed_distance_and_zemin() {
     let made = dims(&b);
     assert_eq!(made.len(), 4);
     assert!(made.iter().all(|d| d.offset == -2.5 && d.mask), "{made:?}");
-    assert_eq!(b.last_text(), Some("Hızlı ölçü: 4 ölçü eklendi."));
+    assert_eq!(b.last_text(), Some("Hızlı ölçü: 4 ölçü eklendi; ölçüler kenarlarının köşelerine bağlı."));
     // Zemin stays for the next run, as Ölçülendirme's.
     assert!(b.memory.dimension_mask);
 }
@@ -147,4 +147,47 @@ fn picks_first_without_a_selection_and_leaves_with_nothing_to_measure() {
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(b.session.tool_id(), "select");
     assert!(dims(&b).is_empty());
+}
+
+/// UR-020: a quick dimension's ends follow the vertices they measure: the parcel moved, its dimensions move with it
+/// in the same step; an arc's length dimension stays as it was laid.
+#[test]
+fn quick_dimensions_follow_their_object() {
+    let (mut b, [west, _, road, _]) = ground();
+    b.selection.set([west, road]);
+    b.start("quickDimension");
+    b.click(10.0, 34.0);
+    let made = dims(&b);
+    let straight: Vec<&DimensionEntity> = made.iter().filter(|d| d.style.is_none()).collect();
+    assert!(!straight.is_empty());
+    assert!(
+        straight.iter().all(|d| d.refs.as_ref().is_some_and(|r| r.a.is_some() && r.b.is_some())),
+        "every straight edge's ends tied"
+    );
+    assert!(made.iter().filter(|d| d.style == Some(DimensionStyle::ArcLength)).all(|d| d.refs.is_none()));
+    let before: Vec<[[f64; 2]; 2]> = straight.iter().map(|d| [rel(d.a), rel(d.b)]).collect();
+    let ids: Vec<u32> = straight.iter().map(|d| d.base.id).collect();
+
+    b.selection.set([west]);
+    b.start("move");
+    b.click(0.0, 0.0);
+    assert!(b.type_text("@5,0"));
+    let after = dims(&b);
+    let mut followed = 0;
+    for (id, was) in ids.iter().zip(&before) {
+        let d = after.iter().find(|d| d.base.id == *id).expect("still there");
+        let moved = [rel(d.a), rel(d.b)];
+        let tied_to_west = d.refs.as_ref().and_then(|r| r.a.as_ref()).is_some_and(|r| {
+            Some(kentos_commands::EntityId(*b.doc.uid(west).expect("west's id").as_bytes())) == Some(r.uid)
+        });
+        if tied_to_west {
+            assert!(
+                near(moved[0][0], was[0][0] + 5.0) && near(moved[1][0], was[1][0] + 5.0),
+                "{id}: {was:?} → {moved:?}"
+            );
+            assert!(near(moved[0][1], was[0][1]) && near(moved[1][1], was[1][1]));
+            followed += 1;
+        }
+    }
+    assert_eq!(followed, 4, "the parcel's four edges followed it");
 }

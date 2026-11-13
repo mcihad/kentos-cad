@@ -102,6 +102,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         zoning_plan: None,
         survey_adjustments: Vec::new(),
         monitoring_reviews: Vec::new(),
+        tool_layers: Vec::new(),
         named_ucs: Vec::new(),
         named_views: Vec::new(),
         forms: Vec::new(),
@@ -174,6 +175,8 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
                 .drawing_unit
                 .filter(|u| crs.is_local() && *u != DrawingUnit::M),
             annotation: o.annotation.clone(),
+            // UR-003: a CAD project's dimensions, texts and hatches go to their own layers (Ölçü, Yazı, Tarama).
+            tool_layers: if cad { cad_tool_layers() } else { Vec::new() },
             // A local drawing has no heights' system: they rest on nothing but itself.
             heights: o.heights.clone().filter(|_| !crs.is_local()),
             // A building's project starts on its ground floor (docs/adr/8007): the first wall has a level.
@@ -364,6 +367,15 @@ fn group(id: &str, name: &str, children: Vec<LayerNode>) -> LayerNode {
         children,
         ..node(id, name, default_style())
     }
+}
+
+/// The layers a new CAD project's annotation tools draw on (usage review UR-003): its Ölçü, Yazı and Tarama layers.
+pub fn cad_tool_layers() -> Vec<kentos_contracts::ToolLayer> {
+    use kentos_contracts::{AnnotationTool as T, ToolLayer};
+    [(T::Dimension, "olcu"), (T::Text, "yazi"), (T::Hatch, "tarama")]
+        .into_iter()
+        .map(|(tool, layer)| ToolLayer { tool, layer: layer.to_owned() })
+        .collect()
 }
 
 /// The technical drawing layers a CAD project starts with (docs/adr/0165
@@ -582,8 +594,13 @@ mod tests {
                 cad_work: None,
                 heights: None,
             };
-            let want: DocumentSnapshotV1 =
+            let mut want: DocumentSnapshotV1 =
                 serde_json::from_value(case["snapshot"].clone()).expect("the web's drawing reads");
+            // The one thing the desktop adds to the web's record (usage review UR-003): a CAD project's
+            // dimensions, texts and hatches go to its named layers. The web is paused; TODOS.md §0.2 keeps it.
+            if workspace == Workspace::Cad {
+                want.settings.tool_layers = cad_tool_layers();
+            }
             let got = new_project(&options).expect("builds");
             assert_eq!(got, want, "{options:?}");
         }

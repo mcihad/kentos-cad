@@ -34,7 +34,7 @@ impl Designer {
                 .iter()
                 // A dot where the sheet's template has a newer revision (the web's tab).
                 .map(|s| {
-                    Tab::new(s.name.as_str())
+                    Tab::new(s.listed_name().into_owned())
                         .icon(icons::LAYOUT)
                         .note(self.template_newer(s))
                 }),

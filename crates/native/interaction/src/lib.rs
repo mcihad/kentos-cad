@@ -429,6 +429,8 @@ pub mod text_layout;
 pub mod text_file;
 #[path = "gis/time_version.rs"]
 pub mod time_version;
+#[path = "core/tool_layer.rs"]
+pub mod tool_layer;
 #[path = "core/tool.rs"]
 mod tool;
 #[path = "gis/topology.rs"]

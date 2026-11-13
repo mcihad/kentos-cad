@@ -40,6 +40,8 @@ fn editable(e: &Entity, doc: &Document) -> bool {
 pub struct Break {
     /// The object picked and the first break point.
     target: Option<(Slot, Vec2)>,
+    /// The object picked is a full circle (or an ellipse): which way round is cut matters, said in the prompt.
+    round: bool,
     drawn: Preview,
 }
 
@@ -107,6 +109,13 @@ impl Tool for Break {
 
     fn prompt(&self) -> Prompt {
         match self.target {
+            // A circle has two ways between the points: the one cut runs counter-clockwise from the first to the
+            // second; the points the other way round keep that part instead.
+            Some(_) if self.round => Prompt::new(
+                LABEL,
+                "ikinci kırılma noktasını belirtin (dairede ilkinden saat yönünün tersine ikinciye kadar olan kısım silinir; tersi için noktaları ters sırada verin)",
+            )
+            .option("Aynı noktadan böl", "Enter"),
             Some(_) => Prompt::new(LABEL, "ikinci kırılma noktasını belirtin")
                 .option("Aynı noktadan böl", "Enter"),
             None => Prompt::new(
@@ -181,6 +190,7 @@ impl Tool for Break {
             return;
         }
         self.target = Some((slot, p.world));
+        self.round = matches!(cx.doc.get(slot), Some(kentos_commands::Entity::Circle(_) | kentos_commands::Entity::Ellipse(_)));
         cx.selection.set_hover(None);
     }
 

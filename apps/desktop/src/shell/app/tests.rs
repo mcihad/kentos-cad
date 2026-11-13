@@ -84,7 +84,7 @@ fn a_method_from_the_ribbon_starts_its_tool_with_its_option() {
     assert_eq!(closed.log.len(), before + 1);
     assert_eq!(
         last_output(&closed),
-        "Açık çizim yok. Önce bir çizim açın (Ctrl+O)."
+        crate::keys::shown("Açık çizim yok. Önce bir çizim açın (Ctrl+O).")
     );
 }
 
@@ -321,7 +321,7 @@ fn a_tool_needs_an_open_drawing_and_says_so() {
     assert!(!app.session.is_running());
     assert_eq!(
         last_output(&app),
-        "Açık çizim yok. Önce bir çizim açın (Ctrl+O)."
+        crate::keys::shown("Açık çizim yok. Önce bir çizim açın (Ctrl+O).")
     );
     let mut app = with_demo();
     let _ = app.run("tool.polygon");

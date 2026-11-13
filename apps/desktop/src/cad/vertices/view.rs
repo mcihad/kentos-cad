@@ -157,9 +157,10 @@ impl App {
             ));
         }
         cols.extend([
+            // With arc edges the length is the chord's, not the arc's: named so (the arc is longer).
             col(
                 Key::Chord,
-                format!("Kenar ({unit})"),
+                chord_title(rows.iter().any(|r| r.radius.is_some()), unit),
                 true,
                 Length::FillPortion(2),
             ),
@@ -395,5 +396,24 @@ impl App {
         .width(Fill)
         .height(Fill)
         .into()
+    }
+}
+
+/// The edge length column's name: Kenar for straight edges; Kiriş when some edge is an arc, its length the chord's.
+pub(crate) fn chord_title(arcs: bool, unit: &str) -> String {
+    if arcs {
+        format!("Kiriş ({unit})")
+    } else {
+        format!("Kenar ({unit})")
+    }
+}
+
+#[cfg(test)]
+mod chord_tests {
+    /// UR-104: an area with an arc edge names the length column Kiriş, a straight one Kenar.
+    #[test]
+    fn an_arc_edges_length_is_named_chord() {
+        assert_eq!(super::chord_title(true, "m"), "Kiriş (m)");
+        assert_eq!(super::chord_title(false, "m"), "Kenar (m)");
     }
 }

@@ -699,6 +699,17 @@ impl App {
                 kentos_headless::export::DXF_SPACE_CHOICES_WARNING,
             ));
         }
+        // A tied hatch whose boundary objects are not among those written goes out following nothing: said before
+        // the file is written, with the way to keep the tie.
+        let untied = untied_hatches(&doc.model, &list);
+        if untied > 0 {
+            lines.push(words::text_line(
+                Line::Warn,
+                format!(
+                    "{untied} ilişkili taramanın sınır nesneleri yazılacaklar arasında değil: tarama ilişkisiz yazılır ve sınırını izlemez. Bağ kalsın istiyorsanız sınır nesnelerini de seçin."
+                ),
+            ));
+        }
         if dimensions > 0 {
             // What comes back is the form and the data written (docs/adr/0327 §6).
             let line = match (forms.dimensions, forms.metadata) {
@@ -889,9 +900,54 @@ impl State {
     }
 }
 
+/// How many of the tied hatches among `list` (what is written) have a boundary object that is not written: they go
+/// out following nothing.
+pub(crate) fn untied_hatches(doc: &kentos_domain::Document, list: &[&kentos_commands::Entity]) -> usize {
+    let written: std::collections::HashSet<String> = list
+        .iter()
+        .filter_map(|e| doc.uid(kentos_domain::Slot(e.base().id)))
+        .map(|u| u.to_string())
+        .collect();
+    list.iter()
+        .filter(|e| match e {
+            kentos_commands::Entity::Hatch(h) => h.assoc.as_ref().is_some_and(|a| {
+                a.outer
+                    .iter()
+                    .chain(&a.bounds)
+                    .chain(&a.islands)
+                    .any(|id| !written.contains(&id.to_string()))
+            }),
+            _ => false,
+        })
+        .count()
+}
+
 #[cfg(test)]
 mod tests {
     use kentos_commands::Entity;
+
+    /// UR-085: a tied hatch written without its circle is said before writing; with the circle it is not.
+    #[test]
+    fn a_hatch_written_without_its_boundary_is_said_before_writing() {
+        let mut doc = crate::files_testing::drawing(0).model;
+        let circle: Entity = serde_json::from_value(serde_json::json!({
+            "kind": "circle", "id": 0, "layerId": "cizim", "attrs": {}, "c": {"x": 20.0, "y": 5.0}, "r": 2.0
+        }))
+        .unwrap();
+        let c = doc.add(circle).expect("a slot");
+        let uid = doc.uid(c).expect("a uid").to_string();
+        let hatch: Entity = serde_json::from_value(serde_json::json!({
+            "kind": "hatch", "id": 0, "layerId": "cizim", "attrs": {},
+            "ring": [{"x": 18.0, "y": 3.0}, {"x": 22.0, "y": 3.0}, {"x": 22.0, "y": 7.0}],
+            "pattern": {"type": "lines", "angle": 45, "spacing": 1},
+            "assoc": {"outer": uid, "seed": {"x": 20.0, "y": 5.0}}
+        }))
+        .unwrap();
+        let h = doc.add(hatch).expect("a slot");
+        let (ce, he) = (doc.get(c).unwrap().clone(), doc.get(h).unwrap().clone());
+        assert_eq!(super::untied_hatches(&doc, &[&he]), 1);
+        assert_eq!(super::untied_hatches(&doc, &[&ce, &he]), 0);
+    }
 
     #[test]
     fn nested_dynamic_loss_is_visible_before_writing_and_preview_keeps_the_source_exact() {
@@ -933,6 +989,58 @@ mod tests {
             && n.severity == Some(kentos_commands::ReportSeverity::Warning)));
         let plain = crate::files_testing::app_with_drawing();
         assert!(super::dynamic_loss_warning(&plain.document.as_ref().unwrap().model).is_none());
+    }
+
+    /// UR-022: beams, a roof and railings written with KentOS's data come back whole from the DXF, each of its own
+    /// kind, with no “KentOS verisi okunamadı” (the reader knew walls, stairs and the rest, not these).
+    #[test]
+    fn beams_roofs_and_railings_come_back_whole_from_kentos_dxf() {
+        for (file, kind, n) in [
+            (include_str!("../../../../../fixtures/kcad/v2/beams.json"), "beam", 2),
+            (include_str!("../../../../../fixtures/kcad/v2/roof-edges.json"), "roof", 1),
+            (include_str!("../../../../../fixtures/kcad/v2/railing-objects.json"), "railing", 1),
+        ] {
+            let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(file).expect("the sample");
+            let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+            let chosen = kentos_headless::export::by_layer(&doc, doc.entities());
+            let input = kentos_headless::export::dxf_input(&doc, &chosen);
+            let (bytes, _) = kentos_formats::dxf::write_checked(&input).expect("writes");
+            let read = kentos_formats::dxf::read_checked(
+                &bytes,
+                &kentos_commands::DxfReadOptions { unit: Some(kentos_commands::DrawingUnit::M), ..Default::default() },
+            )
+            .expect("reads");
+            let broken: Vec<_> = read
+                .report
+                .notes
+                .iter()
+                .chain(&read.report.skipped)
+                .filter(|n| n.reason.contains("okunamadı"))
+                .collect();
+            assert!(broken.is_empty(), "{kind}: {broken:?}");
+            let got = read.entities.iter().filter(|e| e.kind() == kind).count();
+            assert!(got >= n, "{kind}: {got} of {n} back, {:?}", read.entities.iter().map(|e| e.kind()).collect::<Vec<_>>());
+        }
+    }
+
+    /// UR-021: a sheet's paper objects name layer 0 themselves; written there, they are no layer lost and the
+    /// writer's report says nothing of layers for a drawing whose objects all have theirs.
+    #[test]
+    fn a_sheets_paper_objects_on_layer_0_are_no_layer_lost() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.update(crate::app::Message::Sheet(kentos_sheet_ui::Message::NewSheet));
+        if app.sheets.questions().is_some() {
+            let _ = app.update(crate::app::Message::Sheet(kentos_sheet_ui::Message::Questions(
+                kentos_sheet_ui::questions::QuestionsMessage::Make,
+            )));
+        }
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        assert!(doc.sheets().is_some(), "a sheet to write");
+        let chosen = kentos_headless::export::by_layer(doc, doc.entities());
+        let input = kentos_headless::export::dxf_input(doc, &chosen);
+        assert!(input.layouts.iter().any(|l| !l.entities.is_empty()), "the sheet's paper objects written");
+        let (_, report) = kentos_formats::dxf::write_checked(&input).unwrap();
+        assert!(!report.notes.iter().any(|n| n.what == "Katman"), "{:?}", report.notes);
     }
 
     /// An area whose only hole is in a later part has islands (docs/adr/0143).

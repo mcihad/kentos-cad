@@ -30,6 +30,10 @@ impl App {
         }
         let c = self.selection.cycle()?;
         let n = c.candidates.len();
+        // Its place out of the view (the view moved away): no chip saying “burada” over what is there now.
+        if !cycle_in_view(&self.viewport.camera, c.at) {
+            return None;
+        }
         let [x, y] = self.viewport.camera.world_to_screen(c.at);
         let pill = container(
             row![
@@ -103,5 +107,33 @@ impl App {
                 .highlight(Message::CycleHover(Some(*slot)));
         }
         menu
+    }
+}
+
+/// Whether the place the overlapping objects were picked at is inside the view.
+pub(crate) fn cycle_in_view(camera: &kentos_render_wgpu::Camera, at: kentos_interaction::Vec2) -> bool {
+    let b = camera.visible_bounds();
+    at.x >= b.min_x && at.x <= b.max_x && at.y >= b.min_y && at.y <= b.max_y
+}
+
+#[cfg(test)]
+mod view_tests {
+    /// UR-099: the chip of a place moved out of the view is not shown; a place in it is.
+    #[test]
+    fn a_cycle_out_of_the_view_has_no_chip() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.update(crate::app::Message::WindowResized(iced::Size::new(1200.0, 800.0)));
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds { min_x: 0.0, min_y: 0.0, max_x: 100.0, max_y: 100.0 },
+            24.0,
+        );
+        let inside = kentos_interaction::Vec2::new(50.0, 50.0);
+        let far = kentos_interaction::Vec2::new(5000.0, 50.0);
+        assert!(super::cycle_in_view(&app.viewport.camera, inside));
+        assert!(!super::cycle_in_view(&app.viewport.camera, far));
+        app.selection.start_cycle(far, vec![kentos_domain::Slot(1), kentos_domain::Slot(2)]);
+        assert!(app.selection_chip().is_none(), "no chip for a place out of view");
+        app.selection.start_cycle(inside, vec![kentos_domain::Slot(1), kentos_domain::Slot(2)]);
+        assert!(app.selection_chip().is_some());
     }
 }

@@ -422,6 +422,54 @@ fn sheet23_print_preview_screens() {
 }
 
 #[test]
+fn the_print_preview_goes_through_every_chosen_sheet_at_a_readable_resolution() {
+    use kentos_sheet_ui::message::PdfMessage;
+    let mut app = multipage_set_app("light", 13);
+    sheet(&mut app, Sheet::Print);
+    let all = app.sheets.pdf_sheets();
+    assert!(all.len() > 1, "a set of sheets");
+    sheet(&mut app, Sheet::Pdf(PdfMessage::Preview));
+    assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
+    assert_eq!((app.sheets.print_preview_page(), app.sheets.print_preview_sheet()), (0, all.first().cloned()));
+    sheet(&mut app, Sheet::Pdf(PdfMessage::PreviewPage(1)));
+    assert_eq!((app.sheets.print_preview_page(), app.sheets.print_preview_sheet()), (1, all.get(1).cloned()));
+    sheet(&mut app, Sheet::Pdf(PdfMessage::PreviewPage(all.len())));
+    assert_eq!(app.sheets.print_preview_page(), 1, "past the last page stays where it was");
+    // An A3 is read at 300 dpi, an A0 kept to about 5000 pixels on its longer side.
+    let a3 = kentos_sheet::units::SizeUm { width: 420_000, height: 297_000 };
+    let a0 = kentos_sheet::units::SizeUm { width: 1_189_000, height: 841_000 };
+    assert_eq!(crate::sheet_pdf::preview_dpi(Some(a3)), 300);
+    assert_eq!(crate::sheet_pdf::preview_dpi(Some(a0)), 106);
+    assert_eq!(crate::sheet_pdf::preview_dpi(None), 96);
+}
+
+#[test]
+#[ignore = "GPU: the print preview's pages and its enlarged detail"]
+fn print_preview_pages_screens() {
+    use kentos_sheet_ui::message::PdfMessage;
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-043");
+    std::fs::create_dir_all(&out).unwrap();
+    let mut app = multipage_set_app("light", 13);
+    sheet(&mut app, Sheet::Print);
+    sheet(&mut app, Sheet::Pdf(PdfMessage::Preview));
+    sheet(&mut app, Sheet::Pdf(PdfMessage::PreviewPage(1)));
+    let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 900.)).unwrap();
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snap.settle(&mut app, App::view, &mut update);
+    snap.render(app.view(), &app.theme()).save(out.join("onizleme-sayfa-2.png")).unwrap();
+    // Over the page's small text: it stays under the pointer while it grows.
+    for _ in 0..4 {
+        snap.input(&mut app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(iced::Point::new(728., 424.), 3.));
+    }
+    snap.settle(&mut app, App::view, &mut update);
+    snap.render(app.view(), &app.theme()).save(out.join("onizleme-yakin.png")).unwrap();
+}
+
+#[test]
 #[ignore = "GPU calibration sheet and common native output, run alone"]
 fn sheet24_calibration_screens() {
     use kentos_sheet::template::*;
@@ -651,6 +699,18 @@ fn sheet_preflight_desktop_uses_the_native_query_and_cannot_publish_its_report()
     let mut app=sheet_preflight_app("light",13);let before=app.document.as_ref().unwrap().model.to_snapshot_v2();let task=app.update(Message::Sheet(kentos_sheet_ui::Message::NativePreflight));drive(&mut app,task);wait_sheet_publication(&mut app);
     let Some(Window::SheetPublish(s))=&app.exchange else{panic!("preflight window")};assert!(s.check_only);let report=s.report.as_ref().unwrap();assert!(!report.ready);assert!(report.issues.iter().any(|i|i.code=="missing_reference"&&i.error));assert!(report.files.is_empty());assert_eq!(before.entities,app.document.as_ref().unwrap().model.to_snapshot_v2().entities);
     let _=app.sheet_publish_event(E::Publish);assert!(!app.sheet_publish_running());
+}
+
+#[test]
+fn a_preflight_finding_opens_its_sheet_and_that_sheets_own_check(){
+    use crate::exchange::{Window,sheet_publish::Event as E};
+    let mut app=sheet_preflight_app("light",13);let task=app.run("file.preflight.sheets");drive(&mut app,task);wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s))=&app.exchange else{panic!("preflight")};
+    let issue=s.report.as_ref().unwrap().issues.iter().find(|i|i.error&&s.rows.iter().any(|r|r.id==i.sheet)).expect("a sheet's own finding").sheet.clone();
+    let _=app.sheet_publish_event(E::Go(issue.clone()));
+    assert!(app.exchange.is_none(),"the window gives way to the sheet");
+    assert_eq!(app.sheets.open_sheet().map(|s|s.id.as_str().to_owned()),Some(issue));
+    assert_eq!(app.sheets.inspector_tab(),kentos_sheet_ui::InspectorTab::Preflight);
 }
 
 #[test]

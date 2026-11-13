@@ -51,7 +51,8 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// - `areaUnit`, `angleUnit`;
 /// - `plotScale`: a whole denominator from 1 to 1 000 000; the texts,
 ///   leaders, dimensions and tables at the old general height take the new
-///   one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);
+///   one, the scale and they in one undo step “Çizim ölçeği” (one undo gives
+///   both back; docs/adr/0205 §3); none following, the scale is a setting;
 /// - `drawingFont`: the drawing's typeface;
 /// - `arch`: the project's levels and the detail its walls are drawn at
 ///   (docs/adr/0339 §3), whole: the given settings take the place of the
@@ -65,6 +66,8 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 ///   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
 /// - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
 /// - `refraction`: the refraction coefficient k of trigonometric heights, within [−1, 1] (docs/adr/4900).
+/// - `toolLayers`: the layer each annotation tool (dimension, text, hatch) draws on, whole; an empty list takes them
+///   away and the tools draw on the active layer (usage review UR-003).
 /// - `standardDocs`: the entire ordered list of versioned drawing-standard
 ///   documents retained by the project; an empty list removes all bindings.
 ///   An ordered, byte-identical subset may remove unsupported existing
@@ -78,7 +81,8 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
 /// (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
 /// (two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or
-/// view without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`; then
+/// view without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`, `invalid_tool_layers` (a tool twice,
+/// a layer the drawing has not or a group); then
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
 /// `project_type_locked` (an existing project type changed),
 /// `cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work
@@ -178,6 +182,10 @@ pub struct SettingsSet {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub refraction: Option<f64>,
+    /// The layer each annotation tool draws on (usage review UR-003), whole; empty: the active layer for all.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tool_layers: Option<Vec<crate::ToolLayer>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

@@ -212,7 +212,8 @@ pub(crate) struct MapCache {
 /// The windows over the mode.
 #[derive(Debug)]
 pub(crate) enum Dialog {
-    PrintPreview { image: crate::print_preview::Page, caption: String },
+    /// `at` of `count`: which of the chosen sheets the page is.
+    PrintPreview { image: crate::print_preview::Page, caption: String, at: usize, count: usize },
     Export {
         kind: ExportKind,
         dpi: u16,
@@ -273,6 +274,10 @@ pub struct Designer {
     pub(crate) hovered_item: Option<ItemId>,
     /// Space held: the hand for a moment.
     pub(crate) space: bool,
+    /// The modifier keys held now (the host tells): Shift or ⌘/Ctrl on an item list row adds or takes away.
+    pub(crate) held: iced::keyboard::Modifiers,
+    /// Which of the PDF's sheets the print preview shows (0: the first).
+    pub(crate) preview_at: usize,
 
     // Panels.
     pub(crate) inspector_tab: InspectorTab,
@@ -360,6 +365,8 @@ impl Designer {
             hover: None,
             hovered_item: None,
             space: false,
+            held: iced::keyboard::Modifiers::empty(),
+            preview_at: 0,
             inspector_tab: InspectorTab::Item,
             inspector: inspector::State::new(),
             kind_fields: Vec::new(),
@@ -398,6 +405,14 @@ impl Designer {
     }
 
     /// The sheet in front; none while the drawing is.
+    /// The modifier keys held now, from the host's keyboard: a click on the item list reads them.
+    pub fn set_modifiers(&mut self, held: iced::keyboard::Modifiers) {
+        self.held = held;
+    }
+    /// The inspector's tab now (Öğe, Ön denetim…).
+    pub fn inspector_tab(&self) -> InspectorTab {
+        self.inspector_tab
+    }
     pub fn open_sheet(&self) -> Option<&Sheet> {
         self.open.as_deref().and_then(|id| self.book.sheet(id))
     }
@@ -742,6 +757,20 @@ impl Designer {
                 preflight::preflight(&self.book, id, &self.inputs(RenderMode::Design)).ok()
             })
             .unwrap_or_default();
+        // A map that leaves part of the drawing out (UR-011): said beside the layout's findings, errors first.
+        if let (Some(id), Some(bounds)) = (self.open.as_deref(), self.ctx.drawing_bounds)
+            && let Some(sheet) = self.book.sheet(id)
+        {
+            let cut: Vec<_> = sheet
+                .items
+                .iter()
+                .filter_map(|it| preflight::drawing_overrun(it, bounds))
+                .collect();
+            if !cut.is_empty() {
+                self.findings.extend(cut);
+                self.findings.sort_by_key(|f| f.severity);
+            }
+        }
         self.sync_guides();
         self.reset_caches();
         crate::inspect::refresh_fields(self);

@@ -222,7 +222,7 @@ fn uygula_fits_the_local_layer_in_one_step() {
     let said = last_said(&app);
     assert!(
         said.starts_with("Vektör oturtma: 10 nesne Helmert dönüşümle oturtuldu (m0 ±")
-            && said.ends_with(" mm). Ctrl+Z geri alır."),
+            && said.ends_with(&crate::keys::shown(" mm). Ctrl+Z geri alır.")),
         "{said}"
     );
     let doc = app.document.as_mut().expect("open");
@@ -427,7 +427,7 @@ fn parametrelerle_stretches_the_local_layer_about_its_base() {
     assert!(close(named(&app, "yerel", "P4"), 996.5, 2038.0));
     assert!(logged(
         &app,
-        "Vektör oturtma: 10 nesne parametrelerle oturtuldu. Ctrl+Z geri alır."
+        &crate::keys::shown("Vektör oturtma: 10 nesne parametrelerle oturtuldu. Ctrl+Z geri alır.")
     ));
     let doc = app.document.as_mut().expect("open");
     assert!(
@@ -463,7 +463,7 @@ fn equal_scales_a_turn_and_a_shift_keep_every_shape() {
     fit(&mut app, Event::Apply);
     assert_eq!(
         last_said(&app),
-        "Vektör oturtma: 10 nesne parametrelerle oturtuldu. Ctrl+Z geri alır."
+        crate::keys::shown("Vektör oturtma: 10 nesne parametrelerle oturtuldu. Ctrl+Z geri alır.")
     );
     let p2 = named(&app, "yerel", "P2");
     assert!(
@@ -677,7 +677,7 @@ fn kaucuk_levha_meets_every_link_in_one_step() {
     assert!(
         logged(
             &app,
-            "Vektör oturtma: 10 nesne kauçuk levhayla oturtuldu. Ctrl+Z geri alır."
+            &crate::keys::shown("Vektör oturtma: 10 nesne kauçuk levhayla oturtuldu. Ctrl+Z geri alır.")
         ),
         "{:?}",
         app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>()

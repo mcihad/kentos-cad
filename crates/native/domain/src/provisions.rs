@@ -142,6 +142,9 @@ pub struct ParkingRow {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ParkingReport {
     pub rows: Vec<ParkingRow>,
+    /// The units without a gross area yet (no room tied to them), by number and nature: their need is unknown, so the
+    /// total is “at least” (a unit's registered area is not read: the gross comes from its rooms).
+    pub incomplete: Vec<(String, Option<String>)>,
     pub need: f64,
     /// The need rounded up (8/4).
     pub required: u32,
@@ -180,6 +183,9 @@ pub struct ShelterRow {
     /// What they are counted by: “3 oda”, “120.00 m² ÷ 20”.
     pub base: String,
     pub persons: u32,
+    /// Counted on an assumption: a dwelling without a living room or bedroom tied to it (one room counted), or a unit
+    /// without a gross area (none counted).
+    pub assumed: bool,
 }
 
 /// The building's shelter (docs/adr/8036).
@@ -365,12 +371,15 @@ impl Document {
         let program = self.program();
         let areas = self.paiy_areas();
         let mut rows = Vec::new();
+        let mut incomplete = Vec::new();
         for u in program.units.iter().filter(|u| u.kind == UnitKind::Unit) {
             let base = areas
                 .iter()
                 .find(|(id, _)| *id == u.id)
                 .map_or(0.0, |(_, g)| g.gross);
             if base <= 0.0 {
+                // Not none: unknown. Said apart, so the total is not taken as complete.
+                incomplete.push((u.number.clone(), u.nature.clone()));
                 continue;
             }
             let use_ = parking_use(u.nature.as_deref());
@@ -421,6 +430,7 @@ impl Document {
         };
         ParkingReport {
             rows,
+            incomplete,
             need,
             required,
             area,
@@ -460,10 +470,26 @@ impl Document {
                     unit: u.id.clone(),
                     number: u.number.clone(),
                     nature: u.nature.clone(),
-                    base: format!("{} oda", rooms.max(1)),
+                    // No room tied to it: one counted, and said so.
+                    base: if rooms == 0 {
+                        "oda bilinmiyor: mahal bağlayın (1 sayıldı)".to_owned()
+                    } else {
+                        format!("{rooms} oda")
+                    },
                     persons: dwelling_persons(rooms),
+                    assumed: rooms == 0,
                 });
-            } else if gross > 0.0 {
+            } else if gross <= 0.0 {
+                // A unit of another use without a gross area: its people unknown, said, none counted.
+                rows.push(ShelterRow {
+                    unit: u.id.clone(),
+                    number: u.number.clone(),
+                    nature: u.nature.clone(),
+                    base: "brüt alan yok: mahal bağlayın".to_owned(),
+                    persons: 0,
+                    assumed: true,
+                });
+            } else {
                 other_area += gross;
                 rows.push(ShelterRow {
                     unit: u.id.clone(),
@@ -474,6 +500,7 @@ impl Document {
                         crate::text_fields::number_text(gross, 1.0, 2, false)
                     ),
                     persons: (gross / 20.0 - 1e-9).ceil().max(0.0) as u32,
+                    assumed: false,
                 });
             }
         }
@@ -532,7 +559,20 @@ impl Document {
                 },
             ]);
         }
-        if r.rows.is_empty() {
+        // A unit without a gross area: its need unknown, said in the warning colour, with what to do.
+        for (number, nature) in &r.incomplete {
+            rows.push(vec![
+                match nature {
+                    Some(n) => format!("“{number}” {n}"),
+                    None => format!("“{number}”"),
+                },
+                "yok".into(),
+                "Bölüme mahal bağlayın; kayıtlı alan hesaba girmez".into(),
+                "?".into(),
+            ]);
+            styles.push(style(rows.len() - 1, 0, 4, false, true));
+        }
+        if r.rows.is_empty() && r.incomplete.is_empty() {
             rows.push(vec![
                 "Bina programında bölüm yok".into(),
                 String::new(),
@@ -541,10 +581,18 @@ impl Document {
             ]);
         }
         rows.push(vec![
-            "Toplam (kesir bir üste, 8/4)".into(),
+            if r.incomplete.is_empty() {
+                "Toplam (kesir bir üste, 8/4)".into()
+            } else {
+                "Toplam (kesir bir üste, 8/4; alanı eksik bölüm var)".into()
+            },
             String::new(),
             String::new(),
-            r.required.to_string(),
+            if r.incomplete.is_empty() {
+                r.required.to_string()
+            } else {
+                format!("en az {}", r.required)
+            },
         ]);
         styles.push(style(rows.len() - 1, 0, 4, true, false));
         // The places drawn (docs/adr/8045 §6), else the rooms' area over 20 m².
@@ -630,10 +678,14 @@ impl Document {
             rows.push(vec![
                 who,
                 row.base.clone(),
-                row.persons.to_string(),
+                if row.assumed && row.persons == 0 { "?".into() } else { row.persons.to_string() },
                 String::new(),
             ]);
+            if row.assumed {
+                styles.push(style(rows.len() - 1, 0, 4, false, true));
+            }
         }
+        let assumed = r.rows.iter().any(|row| row.assumed);
         if r.rows.is_empty() {
             rows.push(vec![
                 "Bina programında bölüm yok".into(),
@@ -643,7 +695,11 @@ impl Document {
             ]);
         }
         rows.push(vec![
-            "Toplam (kişi başına 1 m², 8/a)".into(),
+            if assumed {
+                "Toplam (kişi başına 1 m², 8/a; eksik veriyle, kesin değil)".into()
+            } else {
+                "Toplam (kişi başına 1 m², 8/a)".into()
+            },
             String::new(),
             r.persons.to_string(),
             area(r.area_needed),
@@ -660,7 +716,11 @@ impl Document {
         }
         if let Some(why) = r.exempt {
             rows.push(vec![
-                "Sığınak aranmaz".into(),
+                if assumed {
+                    "Sığınak aranmaz (eksik veriyle, koşullu)".into()
+                } else {
+                    "Sığınak aranmaz".into()
+                },
                 why.into(),
                 String::new(),
                 String::new(),

@@ -181,8 +181,8 @@ fn said(b: &Bench, before: usize) -> Vec<String> {
         .collect()
 }
 
-const PICKING: &str = "Kot ver: kot verilecek nesneleri seçin [Artır (A) / Sıfırla (S)]";
-const NUMBER: &str = "Kot ver: kotu yazın (m) [Artır (A) / Sıfırla (S)]";
+const PICKING: &str = "Kot ver: kot verilecek nesneleri seçin [Artır (A) / Kotu kaldır (S)]";
+const NUMBER: &str = "Kot ver: kotu yazın (m) [Artır (A) / Kotu kaldır (S)]";
 const NONE_TAKES: &str = "Seçimde kot alan nesne yok; çizgi, çoklu çizgi, alan ya da nokta seçin.";
 
 // ── The steps ───────────────────────────────────────────────────────────────
@@ -234,7 +234,7 @@ fn artir_is_a_toggle_and_the_number_asked_for_becomes_a_difference() {
     assert!(b.type_text("a"));
     assert_eq!(
         prompt(&b),
-        "Kot ver: eklenecek farkı yazın (m) [Artır (A): açık / Sıfırla (S)]"
+        "Kot ver: eklenecek farkı yazın (m) [Artır (A): açık / Kotu kaldır (S)]"
     );
     assert!(b.type_text("A"));
     assert_eq!(prompt(&b), NUMBER);
@@ -248,13 +248,13 @@ fn artir_set_while_picking_is_still_on_at_the_next_step() {
     assert!(b.type_text("A"));
     assert_eq!(
         prompt(&b),
-        "Kot ver: kot verilecek nesneleri seçin [Artır (A): açık / Sıfırla (S)]"
+        "Kot ver: kot verilecek nesneleri seçin [Artır (A): açık / Kotu kaldır (S)]"
     );
     select(&mut b, &[s.line]);
     b.confirm();
     assert_eq!(
         prompt(&b),
-        "Kot ver: eklenecek farkı yazın (m) [Artır (A): açık / Sıfırla (S)]"
+        "Kot ver: eklenecek farkı yazın (m) [Artır (A): açık / Kotu kaldır (S)]"
     );
 }
 
@@ -533,7 +533,7 @@ fn sifirla_writes_at_once_every_vertex_without_an_elevation_not_zero() {
     assert_eq!(path_z(&b, s.area), None);
     assert_eq!(hole_z(&b, s.area), None);
     assert_eq!(point_z(&b, s.spot), None);
-    assert_eq!(said(&b, before), ["info: Kot silindi: 4 nesne."]);
+    assert_eq!(said(&b, before), ["info: Kot kaldırıldı (kot yok, 0 değil): 4 nesne."]);
     assert!(b.selected().is_empty());
     assert_eq!(b.doc.undo().as_deref(), Some("Kot ver"));
     assert_eq!(line_z(&b, s.line), (Some(10.0), Some(20.0)));
@@ -548,7 +548,7 @@ fn sifirla_at_the_picking_step_acts_on_the_objects_picked_so_far() {
     select(&mut b, &[s.line]);
     assert!(b.type_text("s"));
     assert_eq!(line_z(&b, s.line), (None, None));
-    assert_eq!(b.last_text(), Some("Kot silindi: 1 nesne."));
+    assert_eq!(b.last_text(), Some("Kot kaldırıldı (kot yok, 0 değil): 1 nesne."));
     assert_eq!(prompt(&b), PICKING);
 }
 

@@ -671,8 +671,18 @@ impl App {
         };
         let mut warnings = Vec::new();
         let mut said = Vec::new();
+        // What the copy cannot carry (a plan object is written by its own command), by kind: said, not counted.
+        let mut unwritten: std::collections::BTreeMap<&'static str, usize> = Default::default();
+        let mut written = 0;
         for (name, color, list) in &kept {
-            if list.is_empty() {
+            let mut objects = Vec::new();
+            for e in list {
+                match new_object(e) {
+                    Some(o) => objects.push(o),
+                    None => *unwritten.entry(kentos_forms::kind_label(e)).or_default() += 1,
+                }
+            }
+            if objects.is_empty() {
                 continue;
             }
             let mut new = NewLayer::layer(*name);
@@ -685,9 +695,10 @@ impl App {
                     return false;
                 }
             };
+            let count = objects.len();
             let input = EntitiesCreate {
                 layer_id: layer,
-                objects: list.iter().filter_map(new_object).collect(),
+                objects,
                 operation: None,
                 expected_revision: None,
             };
@@ -707,19 +718,35 @@ impl App {
                     return false;
                 }
             }
-            said.push(format!("{} {}", list.len(), name.to_lowercase()));
+            written += count;
+            said.push(format!("{count} {}", name.to_lowercase()));
+        }
+        if written == 0 {
+            model.cancel_group(step);
+            self.warn(format!(
+                "Farklar çizime yazılamadı: {} bu yolla kopyalanamaz; satırlarına tıklayarak çizimde görün.",
+                kinds_said(&unwritten)
+            ));
+            return false;
         }
         model.end_group(step);
         for text in warnings {
             self.warn(text);
         }
-        self.say(
-            Level::Success,
-            format!(
-                "Farklar çizime yazıldı: “{group_name}” grubunda {} nesne.",
-                said.join(", ")
-            ),
+        let done = format!(
+            "Farklar çizime yazıldı: “{group_name}” grubunda {} nesne.",
+            said.join(", ")
         );
+        if unwritten.is_empty() {
+            self.say(Level::Success, done);
+        } else {
+            // A part written is not the whole: the message says what is missing and how many.
+            let missing: usize = unwritten.values().sum();
+            self.warn(format!(
+                "{done} {missing} fark yazılmadı ({}): bu nesneler yalnız kendi komutlarıyla çizilir; satırlarına tıklayarak çizimde görün.",
+                kinds_said(&unwritten)
+            ));
+        }
         if skipped > 0 {
             self.warn(format!(
                 "{skipped} blok yerleştirmesi yazılmadı: bloğu bu çizimde yok."
@@ -1262,4 +1289,51 @@ impl App {
 /// A button set at the bottom of its row, beside fields with labels above them.
 fn column_bottom<'a>(e: Element<'a, Message>) -> Element<'a, Message> {
     Column::new().push(e).into()
+}
+
+/// “3 Kapı/pencere, 1 Kolon”: the kinds a write left out, with how many of each.
+fn kinds_said(kinds: &std::collections::BTreeMap<&'static str, usize>) -> String {
+    kinds.iter().map(|(k, n)| format!("{n} {k}")).collect::<Vec<_>>().join(", ")
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::app::Message;
+    use crate::files_testing::app_with_drawing;
+    use kentos_domain::NewLayer;
+    use serde_json::json;
+
+    /// Two lines added and one removed, one plan column added: three written, the column said, not counted.
+    #[test]
+    fn a_write_counts_what_it_drew_and_says_the_kinds_it_left_out() {
+        let mut app = app_with_drawing();
+        let model = &mut app.document.as_mut().expect("a drawing").model;
+        let old = model.add_layer(NewLayer::layer("Eski"), None, false).expect("a layer");
+        let new = model.add_layer(NewLayer::layer("Yeni"), None, false).expect("a layer");
+        for (layer, e) in [
+            (&old, json!({"kind":"line","a":{"x":500.,"y":500.},"b":{"x":510.,"y":500.}})),
+            (&new, json!({"kind":"line","a":{"x":600.,"y":600.},"b":{"x":610.,"y":600.}})),
+            (&new, json!({"kind":"line","a":{"x":700.,"y":700.},"b":{"x":710.,"y":700.}})),
+            (&new, json!({"kind":"column","at":{"x":800.,"y":800.},"width":0.5,"depth":0.6})),
+        ] {
+            let mut e = e;
+            e["id"] = json!(0);
+            e["layerId"] = json!(layer);
+            e["attrs"] = json!({});
+            model.add(serde_json::from_value(e).expect("an object")).expect("added");
+        }
+        let before = model.entities().count();
+        app.open_data_compare_with(super::Preset {
+            old_node: Some(old.clone()),
+            new_node: Some(new.clone()),
+            ..super::Preset::default()
+        });
+        let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::Compare)));
+        let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::Write)));
+        let after = app.document.as_ref().expect("a drawing").model.entities().count();
+        assert_eq!(after - before, 3, "two added lines and the removed one");
+        let said = crate::files_testing::last_said(&app);
+        assert!(said.contains("2 eklenen") && said.contains("1 silinen"), "{said}");
+        assert!(said.contains("1 fark yazılmadı (1 Kolon)"), "{said}");
+    }
 }

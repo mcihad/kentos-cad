@@ -717,6 +717,9 @@ impl Tool for OpeningTool {
         });
         if written {
             self.placement.first = None;
+            // UR-008: the next opening's preview waits for the pointer to move; planned at the same point at once,
+            // it would overlap the one just placed and its warning would stand beside the success.
+            self.hover = None;
             // A number typed was the first: the next ones go on from it.
             if matches!(self.numbering, Numbering::Next(_)) {
                 self.numbering = Numbering::Auto;

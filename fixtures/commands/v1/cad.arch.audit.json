@@ -1316,8 +1316,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -1326,7 +1326,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -1928,8 +1928,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -1938,7 +1938,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -2713,8 +2713,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -2723,7 +2723,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -3841,8 +3841,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -3851,7 +3851,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -9489,8 +9489,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -9499,7 +9499,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -9562,8 +9562,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -9572,7 +9572,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -9591,8 +9591,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000015",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a, b); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a, b); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000015"
                   ],
@@ -9601,7 +9601,7 @@
                     "y": -2.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -9681,8 +9681,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -9691,7 +9691,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -9766,8 +9766,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -9776,7 +9776,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -9925,8 +9925,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -9935,7 +9935,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -25831,8 +25831,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -25841,7 +25841,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -26550,8 +26550,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -26560,7 +26560,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -28445,8 +28445,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -28455,7 +28455,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -30160,8 +30160,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -30170,7 +30170,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {
@@ -34112,8 +34112,8 @@
                   "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
                   "check": "dimensions",
                   "code": "arch_dimension_broken",
-                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
-                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000014"
                   ],
@@ -34122,7 +34122,7 @@
                     "y": -1.0
                   },
                   "fix": {
-                    "label": "Kopan noktaları serbest bırak",
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
                     "step": {
                       "command": "cad.dimensions.reassociate",
                       "input": {

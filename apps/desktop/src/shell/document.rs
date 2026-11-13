@@ -81,6 +81,18 @@ pub struct Document {
     /// Opened from a `.kcad` v1 file: Save asks where to write the v2 file
     /// instead of replacing the old one (docs/adr/0025).
     pub legacy: bool,
+    /// Its file as this drawing last read or wrote it (its time and size): a save over a file that changed since
+    /// (another tab, another program) is refused rather than losing that work.
+    pub disk: Option<DiskStamp>,
+}
+
+/// A file's last change and size.
+pub type DiskStamp = (std::time::SystemTime, u64);
+
+/// The file at `path` as it is now; none when it cannot be read (gone, no access).
+pub fn disk_stamp(path: &Path) -> Option<DiskStamp> {
+    let m = std::fs::metadata(path).ok()?;
+    Some((m.modified().ok()?, m.len()))
 }
 
 fn session() -> u64 {
@@ -99,6 +111,7 @@ impl Document {
             path,
             source: Source::Local,
             session: session(),
+            disk: None,
         })
     }
 
@@ -110,6 +123,7 @@ impl Document {
             path,
             source: Source::Local,
             session: session(),
+            disk: None,
         })
     }
 
@@ -129,6 +143,7 @@ impl Document {
             source: Source::Local,
             session: session(),
             legacy: false,
+            disk: None,
         }
     }
 
@@ -141,6 +156,7 @@ impl Document {
             source: Source::Cloud(Box::new(source)),
             session: session(),
             legacy: false,
+            disk: None,
         }
     }
 
@@ -148,10 +164,25 @@ impl Document {
     /// changed meanwhile (CLAUDE.md §4.8), and it lives in a v2 file now: a
     /// cloud project saved to a file is a local drawing from then on.
     pub fn saved(&mut self, path: PathBuf, revision: u64) {
+        self.disk = disk_stamp(&path);
         self.path = Some(path);
         self.legacy = false;
         self.source = Source::Local;
         self.model.mark_saved(revision);
+    }
+
+    /// Why saving over its own file would lose another's work: the file changed since this drawing read or wrote it.
+    pub fn changed_on_disk(&self) -> Option<String> {
+        let path = self.path.as_ref()?;
+        let (Some(was), Some(now)) = (self.disk, disk_stamp(path)) else {
+            return None;
+        };
+        (was != now).then(|| {
+            format!(
+                "“{}” bu çizim açıldıktan sonra diskte değişti (başka bir sekme ya da program kaydetti). Üzerine yazmak o kaydı silerdi: Farklı kaydet ile başka bir dosyaya yazın ya da dosyayı yeniden açın.",
+                path.display()
+            )
+        })
     }
 
     /// The cloud project this drawing is, if it is one.

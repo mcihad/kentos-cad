@@ -415,6 +415,7 @@ impl App {
             "survey.baselines" => return self.open_baselines(),
             "tool.grade" => return self.open_grade(),
             "topology.cleanReport" => return self.open_clean_report(),
+            "file.openReport" => self.show_open_report(),
             "parcels.check" => return self.open_parcels_check(),
             "pipes.check" => return self.open_pipes_check(),
             "file.exchangeCheck" => return self.open_exchange_check(),
@@ -725,10 +726,18 @@ impl App {
                 }
             }),
             "dimension.break" => {
+                let before = self.document.as_ref().map(|d| d.model.revision());
                 self.dimensions_edit(|uids| kentos_commands::DimensionEdit::Break {
                     uids,
                     objects: None,
-                })
+                });
+                // The breaks are where the crossings are now; they do not follow a crossing object that moves.
+                if self.document.as_ref().map(|d| d.model.revision()) != before {
+                    self.say(
+                        kentos_interaction::Level::Info,
+                        "Ölçü çizgileri şu anki kesişimlerde kırıldı. Kesen nesne taşınırsa kırma onu izlemez: Kırmayı kaldır, sonra yeniden Kır.".to_owned(),
+                    );
+                }
             }
             "dimension.unbreak" => {
                 self.dimensions_edit(|uids| kentos_commands::DimensionEdit::Unbreak { uids })
@@ -986,8 +995,11 @@ impl App {
                 self.tree_locked().is_none()
             }
             "edit.autoSelect" => doc.is_some(),
+            "file.openReport" => self.open_report().is_some(),
             // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
             id if self.layer_misfit(id).is_some() => false,
+            // A selection tool that takes none of the selected kinds (UR-007).
+            id if self.selection_misfit(id).is_some() => false,
             "block.purge" | "block.export" => doc.is_some_and(|d| !d.blocks().is_empty()),
             "block.find" | "array.find" => doc.is_some() && !self.session.is_running(),
             "block.import" | "layer.impact" => doc.is_some(),
@@ -1040,8 +1052,9 @@ impl App {
             {
                 Some("Projede senaryo yok; önce Senaryo oluştur ile bir senaryo yapın.".to_owned())
             }
-            // The typed active layer does not hold what the tool draws (docs/adr/0622 §5).
-            id => self.layer_misfit(id),
+            // The typed active layer does not hold what the tool draws (docs/adr/0622 §5); a selection tool
+            // that takes none of the selected kinds (UR-007).
+            id => self.layer_misfit(id).or_else(|| self.selection_misfit(id)),
         }
     }
 

@@ -1,4 +1,4 @@
-//! Hızlı ölçü (docs/adr/0147 §7, AutoCAD's QDIM; the web's `QuickDimensionTool`,
+//! Hızlı ölçü (docs/adr/0147 §7; the web's `QuickDimensionTool`,
 //! `apps/web/src/tools/quickDimensionTool.ts`): the selected lines, polylines
 //! and areas measured at once, an aligned dimension along each straight edge
 //! and an arc length along each arc; out of an area, into a hole, on the
@@ -78,7 +78,8 @@ impl QuickDimension {
         let _ = dimensions;
         // The command measures the same selection again (docs/adr/0622 §9).
         let input = AnnotationsWrite {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // UR-003: the project's dimension layer when it names one.
+            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Dimension),
             work: AnnotationWork::Dimensions {
                 ids: self
                     .slots
@@ -111,14 +112,28 @@ impl QuickDimension {
             } else {
                 String::new()
             };
+            // A straight edge's dimension follows its vertices (UR-020); an arc's length is tied to nothing yet, said now
+            // rather than found when the arc changes.
+            let free = out
+                .ids
+                .iter()
+                .filter(|id| {
+                    matches!(cx.doc.get(kentos_domain::Slot(**id)),
+                        Some(kentos_commands::Entity::Dimension(d)) if d.refs.is_none())
+                })
+                .count();
+            let note = if free > 0 { format!(" {free} {FREE}") } else { String::new() };
             cx.say(
                 Level::Success,
-                format!("Hızlı ölçü: {} ölçü eklendi{left}.", out.count),
+                format!("Hızlı ölçü: {} ölçü eklendi{left}; ölçüler kenarlarının köşelerine bağlı.{note}", out.count),
             );
         }
         Flow::Exit
     }
 }
+
+/// What an arc's length dimension from Hızlı ölçü is: measured once, tied to nothing yet (UR-020).
+pub const FREE: &str = "yay uzunluğu ölçüsü nesneye bağlı değil (İlişki: Serbest): yay sonra değişirse kendiliğinden güncellenmez.";
 
 impl Stages for QuickDimension {
     fn id(&self) -> &'static str {

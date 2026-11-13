@@ -1,4 +1,4 @@
-//! Nesnenin üstüne and Nesnenin altına (AutoCAD's DRAWORDER Above and Under, docs/adr/0310 §3), on the
+//! Nesnenin üstüne and Nesnenin altına (docs/adr/0310 §3), on the
 //! selection-first base ([`crate::modify`]): the selected objects (picked first when nothing is selected), then the
 //! object they go right above or under, clicked. They move through `cad.entities.order` with that reference, one undo
 //! step named after the tool; the command's refusals (another layer, a locked layer) are said and the tool waits for
@@ -10,6 +10,7 @@ use kentos_native_application::{ExecutionContext, entities_order};
 
 use crate::Vec2;
 use crate::format::Format;
+use crate::spatial::Spatial;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
 use crate::prompt::Prompt;
@@ -171,4 +172,70 @@ impl Stages for DrawOrder {
             .map(|e| crate::data_search::kind_name(e));
         None
     }
+}
+
+/// The kinds whose words are drawn over the scene (docs/adr/0310 §8): a mask under or over them never covers their
+/// words, whatever their order.
+const WORDS: [kentos_commands::SelectKind; 5] = [
+    kentos_commands::SelectKind::Text,
+    kentos_commands::SelectKind::Dimension,
+    kentos_commands::SelectKind::Leader,
+    kentos_commands::SelectKind::Table,
+    kentos_commands::SelectKind::Tag,
+];
+
+/// The shown objects of `kinds` in the box `a`–`b` (touching it counts), as `cad.entities.select` finds them.
+fn found_in(
+    doc: &kentos_domain::Document,
+    spatial: &Spatial,
+    a: Vec2,
+    b: Vec2,
+    kinds: Vec<kentos_commands::SelectKind>,
+) -> Vec<kentos_domain::Slot> {
+    let query = kentos_commands::EntitiesSelect {
+        model_scope: spatial.sheet_model_scope(),
+        region: kentos_commands::SelectRegion::Crossing {
+            a: kentos_commands::Vec2 { x: a.x.min(b.x), y: a.y.min(b.y) },
+            b: kentos_commands::Vec2 { x: a.x.max(b.x), y: a.y.max(b.y) },
+        },
+        kinds: Some(kinds),
+        layers: None,
+    };
+    kentos_native_application::entities_select::select(doc, spatial.store(), &query)
+        .map(|f| f.slots)
+        .unwrap_or_default()
+}
+
+/// What to add when a mask and words meet in the box `a`–`b`: the words stay readable over the mask, which neither
+/// Arkaya gönder nor the layers' order changes; none when there are no words there, or (`need_mask`) no mask.
+pub fn words_over_mask_note(
+    doc: &kentos_domain::Document,
+    spatial: &Spatial,
+    a: Vec2,
+    b: Vec2,
+    need_mask: bool,
+) -> Option<String> {
+    let words = found_in(doc, spatial, a, b, WORDS.to_vec()).len();
+    if words == 0 {
+        return None;
+    }
+    if need_mask {
+        let masked = found_in(doc, spatial, a, b, vec![kentos_commands::SelectKind::Polygon])
+            .iter()
+            .filter_map(|s| doc.get(*s))
+            .any(|e| matches!(e, kentos_commands::Entity::Polygon(p) if p.base.look.wipeout.is_some()));
+        if !masked {
+            return None;
+        }
+    }
+    Some(format!(
+        "Maske yazıları örtmez: buradaki {words} yazı, ölçü, kılavuz, tablo ya da etiketin yazısı maskenin üstünde \
+         okunmaya devam eder (çizim sırası bunu değiştirmez). Gizlemek için yazıyı taşıyın ya da katmanını kapatın."
+    ))
+}
+
+/// Whether the object carries words drawn over the scene (a text, dimension, leader, table or tag).
+pub fn carries_words(e: &kentos_commands::Entity) -> bool {
+    use kentos_commands::Entity as E;
+    matches!(e, E::Text(_) | E::Dimension(_) | E::Leader(_) | E::Table(_) | E::Tag(_))
 }

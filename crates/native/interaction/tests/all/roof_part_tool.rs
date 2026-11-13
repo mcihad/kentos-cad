@@ -260,3 +260,18 @@ fn a_downpipe_goes_under_the_gutter_nearest_the_click() {
         "{p:?}"
     );
 }
+
+/// UR-101: a second roof window clicked where the first stands is refused and said; one beside it goes in.
+#[test]
+fn a_roof_window_over_another_is_refused() {
+    let mut b = roofed();
+    b.start("roofWindow");
+    b.click(6.0, 1.5);
+    assert_eq!(the_roof(&b).roof.parts.len(), 1);
+    b.click(6.0, 1.5);
+    assert_eq!(the_roof(&b).roof.parts.len(), 1, "nothing over the first");
+    assert_eq!(b.last_level(), Some(Level::Warn));
+    assert_eq!(b.last_text(), Some("Çatı penceresi başka bir çatı penceresinin üstüne geliyor; yerini kaydırın."));
+    b.click(3.5, 1.5);
+    assert_eq!(the_roof(&b).roof.parts.len(), 2, "one beside it");
+}

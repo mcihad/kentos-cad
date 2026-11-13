@@ -257,7 +257,8 @@ pub fn merge_with_source(
             );
             let mut item = Item::new(
                 &Uuid::now_v7().to_string(),
-                &format!("DXF görünümü {}", i + 1),
+                // Named by what it is, not by the file it came from (UR-013): a DWG's too.
+                &format!("Görünüm penceresi {}", i + 1),
                 frame,
                 kind,
             );

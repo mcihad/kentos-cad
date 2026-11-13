@@ -142,6 +142,12 @@ pub const DRAWING_KEYS: [(&str, &str); 10] = [
 
 /// A chord as menus and tooltips write it (the web's `formatChord`).
 pub fn chord(text: &str) -> String {
+    // UR-002: as this platform shows it (⌘ on macOS).
+    crate::keys::shown(&plain_chord(text))
+}
+
+/// A chord's words as the web's `formatChord` writes them.
+fn plain_chord(text: &str) -> String {
     text.split('+')
         .map(|part| match part {
             "Delete" => "Del",
@@ -158,6 +164,8 @@ struct Line {
     title: &'static str,
     aliases: Vec<&'static str>,
     chords: Vec<String>,
+    /// The keys as the web writes them (`Ctrl+S`): the search finds them too, ⌘ shown on macOS or not.
+    plain: Vec<String>,
 }
 
 /// The commands with keys the program offers (`offers`: a module's program its own, docs/adr/0802; its keys run
@@ -173,10 +181,11 @@ fn groups(query: &str, offers: impl Fn(&str) -> bool) -> Vec<(&'static str, Vec<
             title: c.title,
             aliases: c.aliases.iter().take(2).copied().collect(),
             chords: c.shortcuts.iter().map(|s| chord(s)).collect(),
+            plain: c.shortcuts.iter().map(|s| plain_chord(s)).collect(),
         };
         let found = query.is_empty()
             || fold_turkish(line.title).contains(query)
-            || line.chords.iter().any(|k| fold_turkish(k).contains(query))
+            || line.chords.iter().chain(&line.plain).any(|k| fold_turkish(k).contains(query))
             || line.aliases.iter().any(|a| fold_turkish(a).contains(query));
         if !found {
             continue;
@@ -401,7 +410,8 @@ mod tests {
     #[test]
     fn chords_are_written_as_the_web_writes_them() {
         assert_eq!(chord("Delete"), "Del");
-        assert_eq!(chord("Ctrl+Space"), "Ctrl+Boşluk");
+        // UR-002: ⌘ on macOS.
+        assert_eq!(chord("Ctrl+Space"), crate::keys::shown("Ctrl+Boşluk"));
         assert_eq!(chord("Shift+F3"), "Shift+F3");
     }
 
@@ -418,7 +428,7 @@ mod tests {
         assert!(
             save.iter()
                 .flat_map(|(_, lines)| lines)
-                .any(|l| l.chords.iter().any(|k| k == "Ctrl+S")),
+                .any(|l| l.chords.iter().any(|k| *k == crate::keys::shown("Ctrl+S"))),
             "found by its key"
         );
         let snap = groups(&fold_turkish("kenet"), every);

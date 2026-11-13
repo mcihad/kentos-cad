@@ -43,14 +43,15 @@ impl App {
             return self.sheets.body(painter).map(Message::Sheet);
         }
         let ruler = kentos_ui::widget::rulers::thickness();
+        let left = kentos_ui::widget::rulers::left_thickness();
         let stage = stack![self.sheets.stage(painter).map(Message::Sheet)]
             .extend(
                 self.text_field_view()
-                    .map(|e| pin(e).x(ruler).y(ruler).into()),
+                    .map(|e| pin(e).x(left).y(ruler).into()),
             )
             .extend(
                 self.paragraph_view()
-                    .map(|e| pin(e).x(ruler).y(ruler).into()),
+                    .map(|e| pin(e).x(left).y(ruler).into()),
             );
         let stage = kentos_ui::widget::ContextMenu::controlled(
             stage,

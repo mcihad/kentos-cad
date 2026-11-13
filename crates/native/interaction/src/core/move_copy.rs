@@ -91,8 +91,10 @@ impl Move {
             if let Some(n) = array_selection(layout, false, cx) {
                 cx.memory.last_displacement = Some([dx, dy]);
                 let line = format!(
-                    "{n} kopya diziye yerleştirildi: {count} yer, ΔY {}  ΔX {}{}",
+                    "{n} kopya diziye yerleştirildi: {count} yer, Δ{} {}  Δ{} {}{}",
+                    f.east_label(),
                     f.length_bare(dx),
+                    f.north_label(),
                     f.length_bare(dy),
                     if fit { " (sığdırıldı)" } else { "" }
                 );
@@ -113,8 +115,10 @@ impl Move {
                 "taşındı"
             };
             let line = format!(
-                "{n} nesne {done}: ΔY {}  ΔX {}",
+                "{n} nesne {done}: Δ{} {}  Δ{} {}",
+                f.east_label(),
                 f.length_bare(dx),
+                f.north_label(),
                 f.length_bare(dy)
             );
             cx.say(Level::Success, line);

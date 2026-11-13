@@ -66,3 +66,31 @@ fn thin_paper_frames_preserve_all_twenty_independent_paths() {
         }
     }
 }
+
+/// UR-013: a layout's viewport comes in named by what it is, the same for a DWG and a DXF, numbered in its layout.
+#[test]
+fn an_imported_viewport_is_named_by_what_it_is() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+    let fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("commands/v1/file.import.dwg.json")).unwrap(),
+    )
+    .unwrap();
+    let doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap()).unwrap();
+    let view: kentos_commands::CadViewport = serde_json::from_value(serde_json::json!({
+        "paperClipMm": [], "framePlot": true, "locked": false,
+        "paperCenterMm": {"x": 100.0, "y": 80.0}, "widthMm": 120.0, "heightMm": 90.0,
+        "viewCenter": {"x": 0.0, "y": 0.0}, "viewHeight": 9.0, "twist": 0.0
+    }))
+    .expect("a viewport");
+    let layout = kentos_commands::CadLayout {
+        name: "Layout1".into(),
+        width_mm: 420.0,
+        height_mm: 297.0,
+        viewports: vec![view.clone(), view],
+        ..Default::default()
+    };
+    let sheets = cad_layouts::merge(&doc, &[layout]).expect("merged").expect("a sheet");
+    let (book, _) = kentos_sheet::project::read_project_sheets(&sheets).unwrap();
+    let names: Vec<&str> = book.sheets[0].items.iter().map(|i| i.name.as_str()).collect();
+    assert_eq!(names, ["Görünüm penceresi 1", "Görünüm penceresi 2"]);
+}

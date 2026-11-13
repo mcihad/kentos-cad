@@ -239,6 +239,26 @@ fn core(p: Vec2) -> CoreVec2 {
     CoreVec2::new(p.x, p.y)
 }
 
+/// The seed a tied hatch is written with: its own while it lies in the hatched region; else (an island added over
+/// it) a point inside the region, so a reader finds the region again and keeps the tie.
+fn hatched_seed(h: &HatchEntity, seed: Vec2) -> Vec2 {
+    use kentos_geometry_core::geom::arrangement::Ring;
+    let ring = |r: &[Vec2]| r.iter().map(|p| core(*p)).collect::<Vec<_>>();
+    let holes: Vec<Vec<CoreVec2>> = h.holes.iter().flatten().filter(|r| r.len() >= 3).map(|r| ring(r)).collect();
+    let rings: Vec<Vec<CoreVec2>> = std::iter::once(ring(&h.ring)).chain(holes.iter().cloned()).collect();
+    if kentos_geometry_core::labels::geom::inside_rings(core(seed), &rings) {
+        return seed;
+    }
+    let shape = kentos_geometry_core::entity::Shape::Polygon {
+        pts: ring(&h.ring),
+        bulges: None,
+        holes: (!holes.is_empty()).then(|| holes.into_iter().map(|pts| Ring { pts, bulges: None }).collect()),
+        parts: None,
+    };
+    kentos_geometry_core::ops::convert::points::interior_point(&shape)
+        .map_or(seed, |p| Vec2 { x: p.x, y: p.y })
+}
+
 /// Running sums from 0: a table's grid lines from its rows' or columns' sizes.
 fn edges(sizes: &[f64]) -> Vec<f64> {
     let mut out = Vec::with_capacity(sizes.len() + 1);
@@ -490,12 +510,16 @@ impl Writer<'_> {
         let layers = self.layers;
         let layer = match layers.name_of(&base.layer_id) {
             Some(name) => name,
-            // A definition's object without a layer of its own (or one not written) floats on 0.
-            None if self.defining => "0",
+            // A definition's object without a layer of its own (or one not written) floats on 0; so does an object
+            // that names layer 0 itself, a sheet's paper objects (UR-021): no layer is lost there.
+            None if self.defining || base.layer_id == "0" => "0",
             None => {
+                // Counted by its kind, so the report says what went to 0 (UR-021).
                 self.report.note(
                     "Katman",
-                    "katmanı çizimde bulunamayan nesneler 0 katmanına yazıldı",
+                    &format!(
+                        "katmanı çizimde bulunmayan {kind} nesneleri 0 katmanına yazıldı; katmanlarını atayıp yeniden aktarın"
+                    ),
                     0,
                 );
                 "0"
@@ -2403,13 +2427,6 @@ impl Writer<'_> {
             self.report
                 .skip("Tarama adası", "üç köşesi yok; yazılmadı", 0);
         }
-        if h.assoc.is_some() {
-            self.report.note(
-                "Tarama",
-                "ilişkili taramalar ilişkisiz yazıldı; DXF'te sınır nesnelerini izlemezler",
-                0,
-            );
-        }
         let p = &h.pattern;
         let kind = p.kind;
         let fill = matches!(kind, HatchPatternType::Solid | HatchPatternType::Gradient);
@@ -2432,6 +2449,16 @@ impl Writer<'_> {
         } else {
             self.ties.sources.get(&h.base.id).cloned()
         };
+        // Only a tie the file cannot carry is said lost: its objects not written with it (left out of the
+        // selection, on a layer not written), or the hatch inside a block. A hatch written with its objects keeps it.
+        let partial = sources.as_ref().is_some_and(|paths| paths.iter().any(Vec::is_empty));
+        if h.assoc.is_some() && (sources.is_none() || partial) {
+            self.report.note(
+                "Tarama",
+                "sınır nesneleri dosyaya yazılmadığından ilişkili tarama ilişkisiz yazıldı; DXF'te sınırını izlemez",
+                0,
+            );
+        }
         self.out.int(71, i64::from(sources.is_some()));
         let of = |k: usize| sources.as_ref().and_then(|s| s.get(k)).cloned().unwrap_or_default();
         // The exact boundary when it has one (docs/adr/0328 §1): lines and arcs a polyline path with bulges, ellipses'
@@ -2533,7 +2560,7 @@ impl Writer<'_> {
         match (&sources, &h.assoc) {
             (Some(_), Some(a)) => {
                 self.out.int(98, 1);
-                self.out.xy(10, a.seed);
+                self.out.xy(10, hatched_seed(h, a.seed));
             }
             _ => self.out.int(98, 0),
         }

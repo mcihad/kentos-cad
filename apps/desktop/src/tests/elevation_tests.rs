@@ -80,7 +80,7 @@ fn the_ribbons_command_starts_kot_ver_and_the_log_names_it() {
     assert_eq!(last_said(&app), "Kot ver");
     assert_eq!(
         prompt(&app),
-        "Kot ver: kot verilecek nesneleri seçin [Artır (A) / Sıfırla (S)]"
+        "Kot ver: kot verilecek nesneleri seçin [Artır (A) / Kotu kaldır (S)]"
     );
 }
 
@@ -102,7 +102,7 @@ fn a_typed_number_gives_the_selection_its_elevation_in_one_named_undo_step() {
     run(&mut app, "tool.setElevation");
     assert_eq!(
         prompt(&app),
-        "Kot ver: kotu yazın (m) [Artır (A) / Sıfırla (S)]"
+        "Kot ver: kotu yazın (m) [Artır (A) / Kotu kaldır (S)]"
     );
     typed(&mut app, "100.5");
     let n = app.log.len();
@@ -120,7 +120,7 @@ fn a_typed_number_gives_the_selection_its_elevation_in_one_named_undo_step() {
     assert!(app.selection.is_empty());
     assert_eq!(
         prompt(&app),
-        "Kot ver: kot verilecek nesneleri seçin [Artır (A) / Sıfırla (S)]"
+        "Kot ver: kot verilecek nesneleri seçin [Artır (A) / Kotu kaldır (S)]"
     );
     // One undo step, by the tool's name.
     run(&mut app, "edit.undo");
@@ -141,7 +141,7 @@ fn the_chips_are_options_of_the_prompt_artir_a_toggle_and_sifirla_at_once() {
     chip(&mut app, "A");
     assert_eq!(
         prompt(&app),
-        "Kot ver: eklenecek farkı yazın (m) [Artır (A): açık / Sıfırla (S)]"
+        "Kot ver: eklenecek farkı yazın (m) [Artır (A): açık / Kotu kaldır (S)]"
     );
     typed(&mut app, "-1.5");
     assert_eq!(last_said(&app), "Kotlar −1.500 m değişti: 2 nesne.");
@@ -151,7 +151,7 @@ fn the_chips_are_options_of_the_prompt_artir_a_toggle_and_sifirla_at_once() {
     assert!(app.selection.is_empty());
     app.selection.set([ROAD, SPOT]);
     chip(&mut app, "S");
-    assert_eq!(last_said(&app), "Kot silindi: 2 nesne.");
+    assert_eq!(last_said(&app), "Kot kaldırıldı (kot yok, 0 değil): 2 nesne.");
     assert_eq!(line_z(&app, ROAD), (None, None));
     assert_eq!(point_z(&app, SPOT), None);
 }
@@ -175,7 +175,7 @@ fn the_ribbons_methods_start_it_the_way_they_say() {
     });
     assert_eq!(
         prompt(&app),
-        "Kot ver: eklenecek farkı yazın (m) [Artır (A): açık / Sıfırla (S)]"
+        "Kot ver: eklenecek farkı yazın (m) [Artır (A): açık / Kotu kaldır (S)]"
     );
     // Sabit is the button itself: a fresh run, Artır off.
     run(&mut app, "tool.cancel");
@@ -183,7 +183,7 @@ fn the_ribbons_methods_start_it_the_way_they_say() {
     run(&mut app, "tool.setElevation");
     assert_eq!(
         prompt(&app),
-        "Kot ver: kotu yazın (m) [Artır (A) / Sıfırla (S)]"
+        "Kot ver: kotu yazın (m) [Artır (A) / Kotu kaldır (S)]"
     );
     // Sıfırla with a selection resets it.
     run(&mut app, "tool.cancel");
@@ -192,9 +192,9 @@ fn the_ribbons_methods_start_it_the_way_they_say() {
     let _ = app.update(Message::RunMethod {
         id: "tool.setElevation",
         option: "S",
-        label: "Sıfırla",
+        label: "Kotu kaldır",
     });
-    assert_eq!(last_said(&app), "Kot silindi: 2 nesne.");
+    assert_eq!(last_said(&app), "Kot kaldırıldı (kot yok, 0 değil): 2 nesne.");
     assert_eq!(path_z(&app, FOOTPATH), None);
     assert_eq!(line_z(&app, ROAD), (None, None));
 }
@@ -226,4 +226,23 @@ fn a_locked_layer_refuses_in_the_commands_own_words_and_the_tool_stays_at_the_nu
     );
     assert_eq!(line_z(&app, ROAD), (Some(100.0), Some(109.0)));
     assert!(prompt(&app).starts_with("Kot ver: kotu yazın (m)"));
+}
+
+/// UR-082: Kot ver's S is named for what it does (the elevation taken away, not set to 0) on the ribbon's list too.
+#[test]
+fn the_elevation_removal_is_named_kotu_kaldir() {
+    use crate::catalog::{Item, catalog};
+    let labels: Vec<&str> = catalog()
+        .every_tab()
+        .flat_map(|t| t.panels.iter())
+        .flat_map(|p| p.items.iter())
+        .filter_map(|i| match i {
+            Item::Split { entries, .. } => Some(entries.iter()),
+            _ => None,
+        })
+        .flatten()
+        .filter(|e| e.id == "tool.setElevation" && e.option == Some("S"))
+        .map(|e| e.label)
+        .collect();
+    assert!(!labels.is_empty() && labels.iter().all(|l| *l == "Kotu kaldır"), "{labels:?}");
 }

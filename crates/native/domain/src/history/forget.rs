@@ -62,6 +62,7 @@ impl Document {
                 | Op::StyleTables(_)
                 | Op::Sheets { .. }
                 | Op::Units { .. }
+                | Op::PlotScale { .. }
                 | Op::Road(_)
                 | Op::Map(_)
                 | Op::Arch(_)

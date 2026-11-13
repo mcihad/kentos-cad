@@ -15,7 +15,7 @@ use kentos_interaction::{
 use kentos_interaction::{leader, text};
 use kentos_ui::icon::Icon;
 
-use super::{Event, Field, Spot};
+use super::{ArchField, Event, Field, Spot};
 
 mod arch;
 pub(crate) mod attachments;
@@ -278,7 +278,7 @@ impl Kit<'_> {
     }
 
     pub(super) fn len(&self, label: &'static str, value: f64) -> Row {
-        Row::figure(label, self.f.length_bare(value))
+        Row::figure(axis_named(label, self.f.axes), self.f.length_bare(value))
     }
 
     /// Lengths in the project's unit: a local project's millimetres (docs/adr/0165 §2).
@@ -403,3 +403,26 @@ use annotation::*;
 
 mod many;
 use many::*;
+
+/// A row's name for a point's east or north value in the project's axes (UR-009): the rows are written in a CBS
+/// project's (`Başlangıç Y` the east value); a CAD project names the east value X and the north Y.
+fn axis_named(label: &'static str, axes: kentos_interaction::Axes) -> &'static str {
+    if axes != kentos_interaction::Axes::Cad {
+        return label;
+    }
+    match label {
+        "Başlangıç Y" => "Başlangıç X",
+        "Başlangıç X" => "Başlangıç Y",
+        "Bitiş Y" => "Bitiş X",
+        "Bitiş X" => "Bitiş Y",
+        "Merkez Y" => "Merkez X",
+        "Merkez X" => "Merkez Y",
+        "Geçtiği nokta Y" => "Geçtiği nokta X",
+        "Geçtiği nokta X" => "Geçtiği nokta Y",
+        "Ölçülen Y" => "Ölçülen X",
+        "Ölçülen X" => "Ölçülen Y",
+        "Konum Y" => "Konum X",
+        "Konum X" => "Konum Y",
+        other => other,
+    }
+}

@@ -40,7 +40,7 @@ impl Catalog {
                 let description = DESKTOP_DESCRIPTIONS
                     .iter()
                     .find(|(desktop, _)| *desktop == id)
-                    .map_or_else(|| leak(c.description.unwrap_or_default()), |(_, d)| *d);
+                    .map_or_else(|| leak(axis_free(c.description.unwrap_or_default())), |(_, d)| *d);
                 let pending_note = c.pending_note.map(leak);
                 // The sheet mode's keys are its own (docs/adr/0164): the web binds them only
                 // while a sheet is in front, and the desktop's sheet mode takes them itself
@@ -534,13 +534,13 @@ pub(super) fn item(raw: RawItem) -> Item {
             entries: split
                 .into_iter()
                 .map(|s| {
-                    let label = leak(s.label);
+                    let label = leak(renamed_method(&s.command, s.option.as_deref(), s.label));
                     Entry {
                         id: leak(s.command),
                         title: s.title.map_or(label, leak),
                         label,
                         option: s.option.map(leak),
-                        description: s.description.map(leak),
+                        description: s.description.map(axis_free).map(leak),
                         aliases: leak_list(s.aliases),
                         icon: s.icon.map(leak),
                     }
@@ -614,6 +614,13 @@ pub(super) fn line_note(
     })
 }
 
+/// The inventory's words for a linear dimension's two directions name them by a CBS project's axes (ΔY yatay, ΔX
+/// düşey); a CAD project calls the same directions ΔX and ΔY (UR-009), so the menu says them without an axis.
+fn axis_free(text: String) -> String {
+    text.replace("ΔY yatay ya da ΔX düşey", "Yatay ya da düşey")
+        .replace("(ΔY yatay / ΔX düşey)", "(yatay ya da düşey)")
+}
+
 pub(super) fn leak(text: String) -> &'static str {
     Box::leak(text.into_boxed_str())
 }
@@ -625,4 +632,13 @@ pub(super) fn leak_list(list: Vec<String>) -> &'static [&'static str] {
             .collect::<Vec<_>>()
             .into_boxed_slice(),
     )
+}
+
+/// A method the desktop names otherwise than the frozen web inventory: Kot ver's S takes the elevation away (none,
+/// not 0), which “Sıfırla” read as setting it to zero.
+fn renamed_method(command: &str, option: Option<&str>, label: String) -> String {
+    match (command, option) {
+        ("tool.setElevation", Some("S")) => "Kotu kaldır".to_owned(),
+        _ => label,
+    }
 }

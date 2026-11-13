@@ -179,7 +179,7 @@ impl Designer {
         if chosen.is_empty() {
             return container(
                 EmptyState::new(icons_select(), "Seçili öğe yok")
-                    .description("Paftada bir öğeye tıklayın ya da Öğeler listesinden seçin. Shift ile ekler, Ctrl ile çıkarırsınız; birden çok öğede ortak değerler birlikte düzenlenir."),
+                    .description("Paftada bir öğeye tıklayın ya da Öğeler listesinden seçin. Shift ile tıklamak seçime ekler ya da çıkarır (listede ⌘/Ctrl da olur); paftada Ctrl grubun içindeki öğeyi seçer. Birden çok öğede ortak değerler birlikte düzenlenir."),
             )
             .padding(16)
             .into();

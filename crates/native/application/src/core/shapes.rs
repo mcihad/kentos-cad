@@ -412,6 +412,26 @@ pub fn execute_sector(cx: &mut ExecutionContext<'_>, input: SectorCreate) -> Com
 
 const CLOUD_RECT_DEGENERATE: &str = "Dikdörtgenin bir kenarı sıfır uzunlukta: iki köşe aynı doğu ya da kuzey çizgisinde. Başka bir karşı köşe verin.";
 const CLOUD_FLAT: &str = "Bulutun köşeleri bir doğru üzerinde: alanı yok. Başka köşeler verin.";
+const CLOUD_CROSSING: &str =
+    "Bulutun sınırı kendini kesiyor: kenarları birbirinin üstünden geçiyor. Köşeleri sınır boyunca sırayla verin.";
+
+/// Whether two edges of the closed ring that are not neighbours cross (each one's ends strictly on either side of
+/// the other, by the exact orientation).
+fn ring_crosses_itself(ring: &[Vec2]) -> bool {
+    use kentos_geometry_core::predicates::orient2d;
+    let n = ring.len();
+    if n < 4 {
+        return false;
+    }
+    let edge = |i: usize| (ring[i], ring[(i + 1) % n]);
+    (0..n).any(|i| {
+        (i + 2..n).filter(|&j| !(i == 0 && j == n - 1)).any(|j| {
+            let ((a, b), (c, d)) = (edge(i), edge(j));
+            let (d1, d2, d3, d4) = (orient2d(a, b, c), orient2d(a, b, d), orient2d(c, d, a), orient2d(c, d, b));
+            d1 * d2 < 0.0 && d3 * d4 < 0.0
+        })
+    })
+}
 const CLOUD_FEW: &str = "Bulutun en az üç köşesi olmalı.";
 const CLOUD_OPEN: &str = "Nesne kapalı değil: bulut alanın, kapalı çoklu çizginin, dairenin, kapalı eğrinin ya da tam elipsin çevresine çizilir.";
 
@@ -447,6 +467,11 @@ fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) ->
             if ring.len() < 3 {
                 return Err(refuse(codes::TOO_FEW_CORNERS, CLOUD_FEW, "frame.pts"));
             }
+            // A ring whose edges cross (a bow tie) is said as such, before its area (which crossing parts may cancel
+            // to none) is read as all its corners on one line.
+            if ring_crosses_itself(&ring) {
+                return Err(refuse(codes::DEGENERATE_SHAPE, CLOUD_CROSSING, "frame.pts"));
+            }
             if kentos_geometry_core::geometry::signed_area(&ring).abs() <= 1e-9 {
                 return Err(refuse(codes::DEGENERATE_SHAPE, CLOUD_FLAT, "frame.pts"));
             }
@@ -472,11 +497,57 @@ fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) ->
                     ))
                 })?;
             let shape = crate::geometry_store::record(entity).3;
-            closed_outline(&shape, 64.0)
-                .filter(|ring| ring.len() >= 3)
+            // A smooth outline (a circle, an ellipse, a closed curve) has no corners: its points go every arc's
+            // length round it, so the arcs are as long as Yay boyu says rather than one per tessellation step.
+            let smooth = matches!(
+                shape,
+                kentos_geometry_core::entity::Shape::Circle { .. }
+                    | kentos_geometry_core::entity::Shape::Ellipse { .. }
+                    | kentos_geometry_core::entity::Shape::Spline { .. }
+                    | kentos_geometry_core::entity::Shape::Nurbs { .. }
+            );
+            let ring = if smooth {
+                closed_outline(&shape, 1024.0).map(|dense| even_ring(&dense, input.arc))
+            } else {
+                closed_outline(&shape, 64.0)
+            };
+            ring.filter(|ring| ring.len() >= 3)
                 .ok_or_else(|| refuse(codes::NOT_CLOSED, CLOUD_OPEN, "frame.uid"))
         }
     }
+}
+
+/// `dense` (a closed ring) walked round at even steps as near `arc` long as a whole number of them makes, at least
+/// three: the corners of a smooth outline's cloud.
+fn even_ring(dense: &[Vec2], arc: f64) -> Vec<Vec2> {
+    let n = dense.len();
+    if n < 3 || !(arc > 0.0) {
+        return dense.to_vec();
+    }
+    let side = |i: usize| {
+        let (a, b) = (dense[i], dense[(i + 1) % n]);
+        ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt()
+    };
+    let total: f64 = (0..n).map(side).sum();
+    let count = (total / arc).round().max(3.0);
+    if !count.is_finite() || count >= n as f64 {
+        return dense.to_vec();
+    }
+    let step = total / count;
+    let mut out = Vec::with_capacity(count as usize);
+    let (mut i, mut walked) = (0usize, 0.0);
+    for k in 0..count as usize {
+        let want = step * k as f64;
+        while i < n && walked + side(i) < want {
+            walked += side(i);
+            i += 1;
+        }
+        let (a, b) = (dense[i % n], dense[(i + 1) % n]);
+        let len = side(i % n);
+        let t = if len > 0.0 { (want - walked) / len } else { 0.0 };
+        out.push(Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t));
+    }
+    out
 }
 
 /// The cloud as the command writes it, or why not.

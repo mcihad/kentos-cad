@@ -175,3 +175,38 @@ fn nesnenin_ustune_puts_the_selection_right_above_the_object_clicked() {
     assert!(b.session.is_running());
     assert_eq!(order_of(&b, 1), None);
 }
+
+/// UR-060: a mask drawn over a text says the text stays readable over it; one over line work only says nothing more.
+#[test]
+fn a_mask_over_a_text_says_it_does_not_cover_words() {
+    let mut b = bench();
+    b.doc
+        .add(Entity::Text(kentos_commands::TextEntity {
+            annotative: None,
+            base: crate::common::base("cizim"),
+            p: kentos_commands::Vec2 { x: E + 5.0, y: N + 9.0 },
+            text: "TEST".to_owned(),
+            height: 1.0,
+            rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
+            label_of: None,
+            label_scale: None,
+            paragraph: Default::default(),
+            face: Default::default(),
+            path: None,
+        }))
+        .expect("a slot");
+    b.spatial.sync(&b.doc);
+    b.start("wipeout");
+    let before = b.said(0).len();
+    draw(&mut b, &[[2.0, 6.0], [14.0, 6.0], [14.0, 14.0], [2.0, 14.0]]);
+    let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
+    assert!(said.contains(&"Maske eklendi."), "{said:?}");
+    assert!(said.iter().any(|t| t.starts_with("Maske yazıları örtmez: buradaki 1 yazı")), "{said:?}");
+    let before = b.said(0).len();
+    draw(&mut b, &[[40.0, 40.0], [44.0, 40.0], [42.0, 44.0]]);
+    let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
+    assert_eq!(said.last(), Some(&"Maske eklendi."), "{said:?}");
+}

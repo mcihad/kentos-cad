@@ -3142,6 +3142,179 @@
    ]
   },
   {
+   "name": "Kolonun ilişkili dizisi reddedilir: kolon bloğa konamaz; hiçbir şey yazılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkili diziler",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100,
+     "workspace": "cad"
+    },
+    "origin": {
+     "x": 40,
+     "y": 20
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "circle",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "c": {
+       "x": 10,
+       "y": 0
+      },
+      "r": 1
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 20,
+       "y": 0
+      },
+      "b": {
+       "x": 22,
+       "y": 0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 30
+      },
+      "b": {
+       "x": 40,
+       "y": 30
+      }
+     },
+     {
+      "kind": "circle",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {},
+      "c": {
+       "x": 50,
+       "y": 50
+      },
+      "r": 1
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 80,
+       "y": 0
+      }
+     },
+     {
+      "kind": "column",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "at": {
+       "x": 60,
+       "y": 0
+      },
+      "width": 0.6,
+      "depth": 0.5
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "layout": {
+       "kind": "polar",
+       "center": {
+        "x": 10,
+        "y": 10
+       },
+       "count": 4,
+       "fill": 360,
+       "rotate": true
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "block_refused",
+       "message": "İlişkili dizi bir blok kurar; kolon, aks, merdiven, rampa, duvar, etiket ve görünüm işareti çizimin planıdır, bloğa konamaz. İlişkisiz dizi kullanın: kopyalar kendi nesneleri olur.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "blocks": [],
+      "arrays": [],
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "Plan ilişkili de olsa kopyaları gösterir; hiçbir şey yazılmaz",
    "steps": [
     {

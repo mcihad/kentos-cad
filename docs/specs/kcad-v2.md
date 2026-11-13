@@ -195,7 +195,7 @@ Yük, üç (şema 254'ten beri en çok dört) anahtarlı bir haritadır (anahtar
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
 | `modules` | harita, isteğe bağlı | modül sürümleri (şema 254, aşağıda); şema 2–253 yükünde bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/modules-in-schema-253.kcad`) |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `254`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-255.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `255`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-256.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format`, `modules` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü ve modül sürümlerini bilir.
@@ -205,6 +205,8 @@ Yük, üç (şema 254'ten beri en çok dört) anahtarlı bir haritadır (anahtar
 - Değerler 1–65535 arası tam sayılardır; sürümünü yükseltmemiş modül yazılmaz (`0`: `bad_value`, `broken/modules-zero.kcad`); `modules` ve `ext` boş olamaz (`bad_value`, `broken/modules-empty.kcad`).
 - Okuyucu bildiğinden yeni bir modül sürümünü, tanımadığı bir modülü ve bir eklentinin verisini **reddeder** ve bunu bozukluk değil daha yeni bir sürümle yazılmış dosya olarak söyler (`schema_version`; `broken/modules-road-newer.kcad`, `modules-unknown-module.kcad`, `modules-extension.kcad`): ileti modülün ya da eklentinin adını verir. Bu sürümün bildiği modül sürümlerinin hepsi henüz `0`'dır: bu sürüm her `modules`'ü reddeder, bu yüzden şema 254'ün geçerli bir örnek dosyası yoktur.
 - Yazıcı `modules`'ü yalnız bir modül sürümünü yükselttiğinde, şema en az `254` olarak yazar; başka her çizim eskisiyle bayt bayt aynıdır.
+
+**Şema 255, araç katmanları** (kullanım incelemesi UR-003): ayarların `toolLayers`'ı, ölçü (`dimension`), yazı (`text`) ve taramanın (`hatch`) çizildiği katmanın kimliğidir; boş liste yazılmaz, bir araç bir kez, katman kimliği boş olmaz (`bad_value`; `broken/tool-layers-tool-twice.kcad`, `tool-layers-blank-layer.kcad`); şema 254'te bilinmeyen alandır (`broken/tool-layers-in-schema-254.kcad`). Örnek `tool-layers.kcad`. Verilmezse araçlar etkin katmana çizer.
 
 **Şema 3**, şema 2'nin kendisi ve nesnenin kendi çizgi kalınlığıdır (`lineWeight`, §6.6; ADR 0139). Yazıcı `3`'ü **yalnız bir nesnenin kendi kalınlığı varken** yazar; başka her çizim şema 2'dir ve eskisiyle bayt bayt aynıdır, bu yüzden şema 2 okuyucusu onu açmaya devam eder. Şema 2 yükünde `lineWeight` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/line-weight-in-schema-2.kcad`).
 

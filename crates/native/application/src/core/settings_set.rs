@@ -6,7 +6,9 @@
 //! annotations at the old general height follow in one undo step,
 //! docs/adr/0205 §3) and the drawing's typeface. The settings are an edit of
 //! the project, no undo step (`Document::set_settings`, which keeps them as
-//! a project may: `ProjectSettings::sanitized`). The shared cases are in
+//! a project may: `ProjectSettings::sanitized`), save the plot scale when
+//! annotations follow it: then the scale and they are one step “Çizim
+//! ölçeği”, so one undo gives both back. The shared cases are in
 //! `fixtures/commands/v1/cad.settings.set.json`.
 
 use std::sync::OnceLock;
@@ -191,7 +193,8 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
         || input.heights.is_some()
         || input.standard_docs.is_some()
         || input.coordinate_epoch.is_some()
-        || input.refraction.is_some();
+        || input.refraction.is_some()
+        || input.tool_layers.is_some();
     if !given {
         return Err(Stop::failed(error(
             codes::NOTHING_TO_SET,
@@ -313,6 +316,26 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
             format!("Kırılma katsayısı k −1 ile 1 arasında olmalı; {k} verildi."),
             "refraction",
         ));
+    }
+    // UR-003: each tool once, each layer one the drawing has.
+    if let Some(list) = &input.tool_layers {
+        if let Some(why) = kentos_commands::tool_layers_problem(list) {
+            return Err(fail(codes::INVALID_TOOL_LAYERS, format!("Araç katmanları: {why}."), "toolLayers"));
+        }
+        for (i, t) in list.iter().enumerate() {
+            let is_layer = doc.layers().get(&t.layer).is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer);
+            if !is_layer {
+                return Err(fail(
+                    codes::INVALID_TOOL_LAYERS,
+                    format!(
+                        "{} için verilen “{}” çizimde bir katman değil; var olan bir katmanın kimliğini verin.",
+                        t.tool.word(),
+                        t.layer
+                    ),
+                    &format!("toolLayers[{i}].layer"),
+                ));
+            }
+        }
     }
     Ok(())
 }
@@ -470,6 +493,10 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
         survey.refraction = Some(k);
         s.survey = Some(survey);
     }
+    // UR-003: the tools' layers, whole.
+    if let Some(list) = &input.tool_layers {
+        s.tool_layers = list.clone();
+    }
     if !s.has_system() {
         let ellipsoidal = s
             .heights
@@ -559,13 +586,47 @@ fn write_execute(
     }
 }
 
+/// The step a plot scale and the annotations that follow it make together: one undo gives both back.
+pub const PLOT_SCALE_STEP: &str = "Çizim ölçeği";
+
 fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> SettingsChanged {
     let before = doc.settings().clone();
     let name_before = doc.name().to_owned();
     if let Some(name) = input.name.as_deref() {
         doc.set_name(name.trim());
     }
-    doc.set_settings(next);
+    // The other settings first; the scale with the annotations that follow it (below).
+    let to_scale = next.plot_scale;
+    doc.set_settings(ProjectSettings {
+        plot_scale: before.plot_scale,
+        ..next
+    });
+    let heights = doc.settings().annotation.clone().unwrap_or_default();
+    let followed = if to_scale == before.plot_scale {
+        Default::default()
+    } else {
+        let group = doc.begin_group(PLOT_SCALE_STEP);
+        let followed = follow_annotation_change(
+            doc,
+            &ScaleChange {
+                from_scale: before.plot_scale,
+                to_scale,
+                from: heights.clone(),
+                to: heights,
+            },
+        );
+        if followed.written > 0 {
+            // In the step with them (or the open one around it): one undo gives the scale and they back.
+            doc.set_plot_scale_in_step(to_scale, PLOT_SCALE_STEP);
+        } else {
+            // Nothing followed: the scale alone is a project setting, outside the undo history, as before.
+            let mut s = doc.settings().clone();
+            s.plot_scale = to_scale;
+            doc.set_settings(s);
+        }
+        doc.end_group(group);
+        followed
+    };
     let after = doc.settings().clone();
     let mut changed = Vec::new();
     let mut key = |differs: bool, name: &str| {
@@ -609,16 +670,7 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
         before.survey.clone().unwrap_or_default().refraction() != after.survey.clone().unwrap_or_default().refraction(),
         "refraction",
     );
-    let heights = after.annotation.clone().unwrap_or_default();
-    let followed = follow_annotation_change(
-        doc,
-        &ScaleChange {
-            from_scale: before.plot_scale,
-            to_scale: after.plot_scale,
-            from: heights.clone(),
-            to: heights,
-        },
-    );
+    key(before.tool_layers != after.tool_layers, "toolLayers");
     SettingsChanged {
         changed,
         followed: count(followed.written),

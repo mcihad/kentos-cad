@@ -172,7 +172,18 @@ impl Designer {
         self.dialog = Some(crate::designer::Dialog::PrintPreview {
             image: crate::print_preview::Page::new(width, height, rgba),
             caption,
+            at: self.preview_at,
+            count: self.pdf_sheets().len(),
         });
+    }
+    /// The sheet the print preview shows: the chosen one at its place in the PDF, or the first.
+    pub fn print_preview_sheet(&self) -> Option<kentos_sheet::model::SheetId> {
+        let sheets = self.pdf_sheets();
+        sheets.get(self.preview_at).or(sheets.first()).cloned()
+    }
+    /// Which of the PDF's sheets the print preview shows (0: the first).
+    pub fn print_preview_page(&self) -> usize {
+        self.preview_at
     }
     /// The sheets the PDF writes, in the book's order.
     pub fn pdf_sheets(&self) -> Vec<kentos_sheet::model::SheetId> {

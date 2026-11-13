@@ -134,6 +134,13 @@ impl Prior {
         self.scale
     }
 
+    /// Forgets object `id`'s labels: changed (its pins taken back by an undo, its shape or text), they are placed
+    /// afresh rather than put again where they last stood.
+    pub fn forget(&mut self, id: f64) {
+        let key = id.to_bits();
+        self.spots.retain(|(object, _, _), _| *object != key);
+    }
+
     /// How many labels it remembers.
     pub fn len(&self) -> usize {
         self.spots.len()

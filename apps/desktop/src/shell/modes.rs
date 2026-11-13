@@ -78,12 +78,20 @@ impl App {
                 let mut kinds: Vec<&'static str> = Vec::new();
                 for slot in self.selection.ids() {
                     if let Some(e) = doc.model.get(*slot) {
-                        let kind = e.kind();
+                        // An open elliptical arc opens the curves' tab (UR-007).
+                        let kind = crate::selection_fit::tab_kind(e);
                         if !kinds.contains(&kind) {
                             kinds.push(kind);
                         }
                     }
                 }
+                // A point cloud with the lines or areas its profile and statistics read keeps the cloud's tab (UR-038):
+                // the mixed selection's Seçim tab has neither.
+                let cloud_inputs = kinds.contains(&"pointcloud")
+                    && kinds
+                        .iter()
+                        .all(|k| matches!(*k, "pointcloud" | "line" | "polyline" | "polygon"));
+                let kinds = if cloud_inputs { vec!["pointcloud"] } else { kinds };
                 let id = catalog()
                     .contextual_for(self.work_mode(), self.ribbon_work(), &kinds)
                     .map(|t| t.id);
@@ -96,8 +104,29 @@ impl App {
         self.contextual_tabs().find(|t| t.id == id)
     }
 
+    /// The selection tab's name: the line tab, which several kinds share, by the kind when every selected object is
+    /// one kind (a lone arc's tab says Yay, not Çizgi); every other tab by its own name.
+    pub(crate) fn selection_tab_label(&self, tab: &'static Tab) -> &'static str {
+        if tab.id != "ctx.line" {
+            return tab.label;
+        }
+        let Some(doc) = self.document.as_ref() else {
+            return tab.label;
+        };
+        let mut names = self
+            .selection
+            .ids()
+            .iter()
+            .filter_map(|s| doc.model.get(*s))
+            .map(kentos_interaction::data_search::kind_name);
+        match names.next() {
+            Some(first) if names.all(|n| n == first) => first,
+            _ => tab.label,
+        }
+    }
+
     /// After a message: a selection made or changed brings its tab to the
-    /// front (AutoCAD's contextual tabs; docs/adr/0622 §4), one cleared
+    /// front (docs/adr/0622 §4), one cleared
     /// takes it away and the chosen tab shows again.
     pub(crate) fn follow_selection_tab(&mut self) {
         let stamp = self.document.as_ref().map(|d| (d.session, self.selection.version()));
@@ -108,9 +137,16 @@ impl App {
         let follow = self.settings.effective("drafting.contextualTabs") != serde_json::Value::Bool(false);
         if self.selection.is_empty() {
             self.ribbon_context = false;
-        } else if follow {
+        } else if follow && self.regular_tab() == self.starting_tab() {
+            // Only over the starting tab (UR-010): a tab the user opened keeps the front, so its buttons stay where
+            // they were seen; the selection's tab shows beside it, its colour marking it, one click away.
             self.ribbon_context = true;
         }
+    }
+
+    /// The tab the ribbon starts on: the mode's first after Dosya.
+    fn starting_tab(&self) -> &'static str {
+        self.ribbon_tabs().nth(1).map_or("home", |t| t.id)
     }
 
     /// The tab shown: the selection's contextual tab while it is open and
@@ -142,9 +178,8 @@ impl App {
         if let Some(tab) = self.extension_tab(self.tab) {
             return tab.id;
         }
-        let mut tabs = self.ribbon_tabs();
-        let first = self.ribbon_tabs().nth(1).map_or("home", |t| t.id);
-        tabs.find(|t| t.id == self.tab).map_or(first, |t| t.id)
+        let first = self.starting_tab();
+        self.ribbon_tabs().find(|t| t.id == self.tab).map_or(first, |t| t.id)
     }
 
     /// `workspace.*`: the drawing's mode becomes this one.
@@ -306,8 +341,10 @@ mod tests {
         let tab = app.selection_tab().expect("selected area").id;
         let cached = app.selection_tab_cache.get().expect("cached");
         app.follow_selection_tab();
-        app.choose_tab("file");
-        assert_eq!(app.shown_tab(), "file");
+        // Back on the starting tab, where a selection's tab comes forward (UR-010).
+        let start = app.starting_tab();
+        app.choose_tab(start);
+        assert_eq!(app.shown_tab(), start);
         // A parked drawing may have the same selection/change counters. Its session must invalidate the cache.
         app.document.as_mut().expect("open").session += 1;
         assert_eq!(app.selection_tab().expect("selected area").id, tab);
@@ -347,5 +384,35 @@ mod tests {
         assert_eq!(app.shown_tab(), "home");
         app.tab = "output";
         assert_eq!(app.shown_tab(), "output");
+    }
+}
+
+#[cfg(test)]
+mod tab_label_tests {
+    /// UR-113: a lone arc's contextual tab is named Yay, a line's Çizgi; a line and an arc together the tab's own.
+    #[test]
+    fn the_line_tab_is_named_by_the_selected_kind() {
+        let mut app = crate::files_testing::app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let arc = doc
+            .add(serde_json::from_value(serde_json::json!({
+                "kind": "arc", "id": 0, "layerId": "cizim", "attrs": {},
+                "c": {"x": 475.0, "y": 0.0}, "r": 10.0, "a0": 0.0, "a1": 5.0
+            })).unwrap())
+            .expect("a slot");
+        let line = doc
+            .add(serde_json::from_value(serde_json::json!({
+                "kind": "line", "id": 0, "layerId": "cizim", "attrs": {},
+                "a": {"x": 0.0, "y": 0.0}, "b": {"x": 10.0, "y": 0.0}
+            })).unwrap())
+            .expect("a slot");
+        let label = |app: &crate::app::App| app.selection_tab().map(|t| app.selection_tab_label(t));
+        app.selection.set([arc]);
+        assert_eq!(label(&app), Some("Yay"));
+        app.selection.set([line]);
+        assert_eq!(label(&app), Some("Çizgi"));
+        app.selection.set([arc, line]);
+        assert_eq!(label(&app), Some("Çizgi"));
     }
 }

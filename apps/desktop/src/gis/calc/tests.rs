@@ -63,7 +63,7 @@ fn forward_intersection_adds_its_point_in_one_step() {
     );
     assert_eq!(
         last_said(&app),
-        "Önden kestirme: P noktası çizime eklendi (Ctrl+Z geri alır)."
+        crate::keys::shown("Önden kestirme: P noktası çizime eklendi (Ctrl+Z geri alır).")
     );
     // What was typed went to the command, which computed the point (docs/adr/0622 §9).
     let (command, work) = last_work(&app);
@@ -303,7 +303,7 @@ fn a_closed_traverse_closes_and_adds_its_points_in_one_step() {
     assert_eq!(app.dialog, None);
     assert_eq!(
         last_said(&app),
-        "Poligon hesabı: 3 poligon noktası çizime eklendi (Ctrl+Z geri alır)."
+        crate::keys::shown("Poligon hesabı: 3 poligon noktası çizime eklendi (Ctrl+Z geri alır).")
     );
     let (command, work) = last_work(&app);
     assert_eq!(command, "cad.survey.points");
@@ -379,7 +379,7 @@ fn polar_points_come_with_their_heights() {
     calc(&mut app, Event::AddPoints);
     assert_eq!(
         last_said(&app),
-        "Kutupsal alım: 1 nokta çizime eklendi (Ctrl+Z geri alır)."
+        crate::keys::shown("Kutupsal alım: 1 nokta çizime eklendi (Ctrl+Z geri alır).")
     );
     let (command, work) = last_work(&app);
     assert_eq!(command, "cad.survey.points");

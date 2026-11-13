@@ -235,8 +235,16 @@ pub enum ArchField {
     BeamBase,
     /// A railing's balusters' clear gap (docs/adr/8045 §3); empty: PAİY 38/4's 0.10 m.
     RailingGap,
-    /// A column's or a beam's material (empty: Betonarme; docs/adr/8041 §2).
+    /// A column's or a beam's material (empty: Betonarme; docs/adr/8041 §2); a roof's covering (empty: Kiremit).
     Material,
+    /// A roof's slope, per cent, on every sloping edge; its gable ends stay.
+    RoofSlope,
+    /// A roof's overhang, gutter and snow guard; empty: none.
+    Overhang,
+    Gutter,
+    SnowGuard,
+    /// A roof's chimney, vent, window or downpipe at this place among its parts: its size typed as “width × depth”.
+    RoofPart(u16),
 }
 
 /// The value a cell edits.
@@ -247,6 +255,8 @@ pub enum Field {
     /// A point's Y (east) and X (north).
     PointX(Slot),
     PointY(Slot),
+    /// A line's end or a circle's centre coordinate, or a circle's radius, typed in the project's unit.
+    Geometry(Slot, Coord),
     DimensionOffset(Slot),
     DimensionSetGap(Slot),
     /// A dimension recipe's sheet scales (docs/adr/0730 §1), typed as Diğer ölçekler.
@@ -405,6 +415,18 @@ pub enum Spot {
 /// JavaScript's `parseFloat(text.replace(',', '.'))`, as the web reads the
 /// panel's numbers: the first comma is the decimal point, the longest number
 /// at the start is taken (“12abc” is 12), none is NaN.
+/// Which value of a line or a circle a [`Field::Geometry`] edits.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Coord {
+    StartEast,
+    StartNorth,
+    EndEast,
+    EndNorth,
+    CenterEast,
+    CenterNorth,
+    Radius,
+}
+
 pub(crate) fn web_number(text: &str) -> f64 {
     js_parse_float(&text.replacen(',', ".", 1))
 }
@@ -468,8 +490,7 @@ pub(crate) struct InspectScope {
     epoch: u64,
 }
 
-/// Past this many objects of a selection Öznitelikler shows its size and kinds only (AutoCAD's PROPOBJLIMIT default,
-/// docs/adr/1027).
+/// Past this many objects of a selection Öznitelikler shows its size and kinds only (docs/adr/1027).
 pub(crate) const PROPERTIES_LIMIT: usize = 25_000;
 
 /// The drop-down's menu: its choices, their swatches, the commands.

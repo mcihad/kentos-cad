@@ -173,6 +173,20 @@
       "status": "implemented"
     },
     {
+      "id": "file.openReport",
+      "title": "Açılış raporu…",
+      "short": "Açılış raporu",
+      "icon": "openReport",
+      "description": "DWG, DXF ya da NCZ dosyasından açılan çizimin açılış raporu: çizime alınmayan, değiştirilerek alınan ve yalnız bilgi olan öğeler, adetleri ve açıklamaları. Kaynak dosya değişmez; rapor çizim açık kaldıkça yeniden açılır. Bir şey alınmadığında ya da değiştiğinde açılışta kendiliğinden gelir.",
+      "aliases": [
+        "ACILISRAPORU",
+        "AKTARIMRAPORU"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
       "id": "tool.grade",
       "title": "Eğimle kot ver…",
       "short": "Eğimle kot",
@@ -5253,6 +5267,7 @@
     {"id": "extensions.install", "title": "Eklenti paketi yükle…", "short": "Paket yükle", "icon": "import", "description": "Bir .kek eklenti paketini seçtirir ve kurmadan önce gözden geçirtir: paket kodu çalıştırılmadan denetlenir, sorunları dosyası ve yeriyle söylenir; geçerliyse açıklaması, değişiklik notu, bağımlılıkları ve gerekçeli yetenekleri görünür, kurulu bir sürüm varsa farkıyla. Dosyaya çift tıklamak kurmaz.", "aliases": ["EKLENTIYUKLE", "EKLENTİYÜKLE", "KEK", "PAKETYUKLE", "PAKETYÜKLE"], "shortcuts": [], "category": "Eklentiler", "status": "implemented"}
   ],
   "icons": {
+    "openReport": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9h5M7.5 11.5h5M7.5 14h3\" stroke-width=\"1\"/>",
     "assistant": "<path d=\"M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9.2l-3.7 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5z\"/><path d=\"m10 6.6.75 1.75 1.75.75-1.75.75L10 11.6l-.75-1.75L7.5 9.1l1.75-.75z\" stroke-width=\"1\"/>",
     "extensions": "<path d=\"M3.5 6.5h4a2 2 0 1 1 4 0h3v3a2 2 0 1 1 0 4v3h-11z\"/>",
     "sheetContours": "<path d=\"M2 15.5c3-2 5 1 8-.5s5-2.5 8-1\" stroke-width=\"1\"/><path d=\"M2 11c3-2 5 1 8-.5\" stroke-width=\"1.8\"/><path d=\"M14.5 9.6c1.2-.4 2.3-.6 3.5-.4\" stroke-width=\"1.8\"/><path d=\"M2 6.5c3-2 5 1 8-.5s5-2.5 8-1\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.1\"/><path d=\"M11.2 8.7h2.4M12.4 8.7v3\" stroke-width=\"1\"/>",

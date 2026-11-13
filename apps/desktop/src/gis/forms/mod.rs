@@ -151,9 +151,6 @@ impl App {
         let Some(slot) = self.form_on_create.take() else {
             return Task::none();
         };
-        if !self.settings.bool(ON_CREATE) || self.dialog.is_some() {
-            return Task::none();
-        }
         let Some(layer) = self
             .document
             .as_ref()
@@ -166,11 +163,42 @@ impl App {
             .project_forms()
             .iter()
             .find(|f| f.layer == layer && !f.releases.is_empty())
-            .map(|f| f.id.clone());
+            .map(|f| f.id.clone())
+            .filter(|_| self.settings.bool(ON_CREATE) && self.dialog.is_none());
         match form {
             Some(id) => self.open_entry(slot, &id),
-            None => Task::none(),
+            None => {
+                // No form takes the new object: a required field it left empty is said now, not found later.
+                if let Some(note) = self.required_left_empty(slot) {
+                    self.warn(note);
+                }
+                Task::none()
+            }
         }
+    }
+
+    /// The layer's required fields without a default that the object at `slot` has no value for, said with the way
+    /// to fill them; none when every one is filled.
+    pub(crate) fn required_left_empty(&self, slot: kentos_domain::Slot) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let e = doc.model.get(slot)?;
+        let layers = doc.model.layers();
+        let node = layers.get(&e.base().layer_id)?;
+        let empty: Vec<String> = node
+            .fields
+            .iter()
+            .filter(|f| f.required)
+            .filter(|f| e.base().attrs.get(&f.name).is_none_or(|v| v.trim().is_empty()))
+            .map(|f| f.alias.clone().unwrap_or_else(|| f.name.clone()))
+            .collect();
+        if empty.is_empty() {
+            return None;
+        }
+        Some(format!(
+            "Yeni nesnenin zorunlu {} boş: {}. Öznitelik tablosunda ya da Özellikler panelinde doldurun; boş zorunlu hücreler tabloda işaretlidir.",
+            if empty.len() == 1 { "alanı" } else { "alanları" },
+            empty.join(", ")
+        ))
     }
 
     /// The layer's first published form, else its first form (a draft).

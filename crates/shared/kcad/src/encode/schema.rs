@@ -40,6 +40,10 @@ use super::*;
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 255 (usage review UR-003): the layer each annotation tool draws on.
+    if !doc.settings.tool_layers.is_empty() {
+        return crate::SCHEMA_WITH_TOOL_LAYERS;
+    }
     // Schema 253 (docs/adr/5220): the monitoring reviews the project keeps.
     if !doc.settings.monitoring_reviews.is_empty() {
         return crate::SCHEMA_WITH_MONITORING_REVIEWS;

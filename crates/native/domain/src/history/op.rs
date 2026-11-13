@@ -267,6 +267,11 @@ pub(crate) enum Op {
         before: Box<crate::import_metadata::ImportMetadata>,
         after: Box<crate::import_metadata::ImportMetadata>,
     },
+    /// The plot scale changed with the annotations that followed it, in one step (undo gives both back).
+    PlotScale {
+        before: f64,
+        after: f64,
+    },
     /// The drawing unit, home view and anchor changed with the scaled objects (ADR 0256).
     Units {
         before: UnitState,
@@ -555,6 +560,10 @@ impl Op {
             Op::Units { before, after } => Op::Units {
                 before: after.clone(),
                 after: before.clone(),
+            },
+            Op::PlotScale { before, after } => Op::PlotScale {
+                before: *after,
+                after: *before,
             },
             Op::Constraints { before, after } => Op::Constraints {
                 before: after.clone(),
