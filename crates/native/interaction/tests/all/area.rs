@@ -337,18 +337,19 @@ fn parts(b: &Bench, slot: u32) -> Vec<f64> {
 
 #[test]
 fn union_with_one_object_makes_one_multi_part_area() {
-    // Parcels 1 and 8 do not touch: two areas, or one of two parts with Tek nesne.
+    // Parcels 1 and 8 do not touch: left as they are (UR-083: rewriting them changed a circle's kind and cut its
+    // hatch's tie for nothing), or one of two parts with Tek nesne.
     let mut b = bench();
+    let before = b.doc.get(Slot(8)).cloned();
     select(&mut b, &[1, 8]);
     b.start("areaUnion");
-    assert_eq!(b.selected().len(), 2);
     assert_eq!(
         b.last_text(),
         Some(
-            "2 alan birleştirildi: 2 ayrı alan (birbirine değmeyenler ayrı kalır), toplam 184.00 m²."
+            "Seçilen alanlar birbirine değmiyor: birleştirilecek bir şey yok, nesneler olduğu gibi kaldı. Tek nesne yapmak için Tek nesne seçeneğini açın."
         )
     );
-    undo(&mut b);
+    assert_eq!(b.doc.get(Slot(8)).cloned(), before, "nothing rewritten");
     select(&mut b, &[]);
     b.start("areaUnion");
     assert_eq!(
@@ -528,4 +529,16 @@ fn lines_and_points_join_and_come_apart() {
         b.last_text(),
         Some("Parçaları birleştirmek için en az iki çizgi ya da çoklu çizgi seçin.")
     );
+}
+
+/// UR-083: a circle apart from two touching areas keeps its kind when they are joined; the message says it was left.
+#[test]
+fn a_circle_apart_keeps_its_kind_in_a_union() {
+    let mut b = bench();
+    let circle = b.add_circle("parsel", [500.0, 500.0], 2.0);
+    select(&mut b, &[1, 2, circle.0]);
+    b.start("areaUnion");
+    assert!(matches!(b.doc.get(circle), Some(kentos_commands::Entity::Circle(_))), "the circle stays a circle");
+    let said = b.last_text().unwrap_or_default().to_owned();
+    assert!(said.ends_with("Başkalarına değmeyen 1 nesne olduğu gibi bırakıldı (türü ve bağları korunur)."), "{said}");
 }
