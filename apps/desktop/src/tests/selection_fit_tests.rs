@@ -152,3 +152,34 @@ fn a_cloud_with_its_inputs_keeps_the_clouds_tab() {
     app.selection.set([Slot(1), Slot(2)]);
     assert_eq!(app.selection_tab().map(|t| t.id), Some("ctx.pointcloud"), "the cloud and an area");
 }
+
+/// UR-039: a column placed with a point cloud's layer active, on the cloud, at the project's large coordinates: the
+/// click is answered at once (the window stays responsive); run under a time limit.
+#[test]
+fn a_column_over_a_point_cloud_is_answered_at_once() {
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::Builder::new()
+        .stack_size(64 << 20)
+        .spawn(move || {
+            let (mut app, _) = App::boot(None);
+            crate::cloud_scenes::opened(&mut app, [-40.0, -40.0, 260.0, 220.0]);
+            make_cad(&mut app);
+            app.draft.snap = false;
+            assert!(app.document.as_mut().expect("open").model.set_active_layer("koy"));
+            let started = std::time::Instant::now();
+            let _ = app.update(Message::Run("tool.column"));
+            let at = crate::cloud_scenes::X0 + 100.0;
+            let at = (at, crate::cloud_scenes::Y0 + 90.0);
+            let [x, y] = app.viewport.camera.world_to_screen(kentos_render_wgpu::Vec2::new(at.0, at.1));
+            let p = iced::Point::new(x as f32, y as f32);
+            let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(p)));
+            let _ = app.update(Message::Viewport(crate::viewport::Event::Pressed(p)));
+            let _ = app.update(Message::Viewport(crate::viewport::Event::Released(p)));
+            let said = crate::files_testing::last_said(&app);
+            let _ = tx.send((started.elapsed(), said));
+        })
+        .expect("a thread");
+    let (took, said) = rx.recv_timeout(std::time::Duration::from_secs(20)).expect("the click answered within 20 s");
+    assert!(took < std::time::Duration::from_secs(5), "{took:?}: {said}");
+    assert_eq!(said, "1 kolon konuldu.");
+}
