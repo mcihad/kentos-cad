@@ -768,8 +768,12 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
 - **Sürüyor (13 Kasım, ADR 8057 §5):** `crates/native/python-env`; Uygulama ayarları › Python ve eklentiler (varsayılan
   kapalı, kapalıyken hiçbir şey aranmaz); uv'nin arka planda algılanması ve sürüm denetimi; tek uyumluluk manifesti;
   resmî kurulum komutları (KentOS kurmaz); kabuksuz, süreli, sınırlı uv çağrısı; **Windows:** konsol penceresi yok,
-  WinGet/Scoop/kullanıcı klasörleri, WinGet seçeneği, ortamlar `%LOCALAPPDATA%`'da. **Kalan:** kişisel ortam (P04),
-  eklenti ortamları (P05, P07), hazırlık penceresi.
+  WinGet/Scoop/kullanıcı klasörleri, WinGet seçeneği, ortamlar `%LOCALAPPDATA%`'da. **Sahibin kararı (13 Kasım): uv
+  KentOS kurulumunun içinde gelir** ("UV kurulum içine eklensin"); Python kuruluma ve KentOS'un sürecine girmez, kullanıcı
+  onaylayınca indirilir. Teslim: önce kurulumun uv'si (`tools/uv[.exe]`; macOS `Contents/MacOS/uv`), manifestte sürüm
+  0.11.26 ve 6 platformun SHA-256'sı, paketleme betiği `scripts/desktop/bundle_uv.py` (özet denetimi, lisanslar,
+  `--offline`). **Kalan:** Python'u onayla kurmak, kişisel ortam (P04), eklenti ortamları (P05, P07), Windows'ta Python
+  konsolu, hazırlık penceresi.
 - **Kabul:** P01–P07 (§5). İstemeyen kurmayı reddeder ve normal çalışır; NumPy isteyen kendi ortamına kurar; iki
   eklentinin farklı NumPy'ı birbirini bozmaz; internet kapalıyken hazır ortam çalışır; çalıştırma kendiliğinden paket ya
   da yorumlayıcı indirmez. Testler sahte taşımayla ve temiz bir kullanıcı profiliyle; gerçek kullanıcı ortamı

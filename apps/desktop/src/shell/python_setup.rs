@@ -3,11 +3,12 @@
 //!
 //! - **Off** (P01, P02): nothing looks for uv or Python and nothing is downloaded; CAD, GIS and KentOS's own tools work;
 //!   an extension's Python button stays shown, not pressable, and says why.
-//! - **On:** uv is looked for in the background (the window never waits for it): the chosen path, `PATH`, the user
-//!   folders a session started from the menu lacks; its version is checked against the compatibility manifest
-//!   (kentos-python-env). Not found or too old, the window says so and shows uv's official way in for the user to run
-//!   themselves: KentOS installs nothing on its own (PY-UV-03…06). A path can be given by hand; Yeniden algıla looks
-//!   again.
+//! - **On:** uv is looked for in the background (the window never waits for it): the chosen path; else the uv KentOS's
+//!   installation carries (the owner's decision, 13 November 2026), `PATH`, the user folders a session started from
+//!   the menu lacks; its version is checked against the compatibility manifest (kentos-python-env). Not found (the
+//!   installation's own removed) or too old, the window says so and shows uv's official way in for the user to run
+//!   themselves: the running program installs nothing on its own (PY-UV-03…06). A path can be given by hand;
+//!   Yeniden algıla looks again.
 //!
 //! The choice is the user's own (`<veri>/kentos-cad/python/ayarlar.json`), written at once, apart from the settings'
 //! draft, as Yapay zekâ's agents are.
@@ -108,8 +109,10 @@ impl App {
                 std::thread::spawn(move || {
                     let _ = sent.send(kentos_python_env::uv::detect(chosen.as_deref()));
                 });
-                got.await
-                    .unwrap_or(UvStatus::NotFound { looked: Vec::new() })
+                got.await.unwrap_or(UvStatus::NotFound {
+                    looked: Vec::new(),
+                    own: false,
+                })
             },
             |status| msg(PythonEdit::Detected(status)),
         )
@@ -214,14 +217,11 @@ impl App {
                 .spacing(8)
                 .align_y(iced::Center),
             );
-            if matches!(
-                p.uv,
-                Some(UvStatus::NotFound { .. } | UvStatus::TooOld { .. })
-            ) {
+            if p.uv.as_ref().is_some_and(UvStatus::offers_install) {
                 // uv's official ways in for this system, each with its own copy button; on Windows WinGet after the
                 // PowerShell installer, for computers that refuse `-ExecutionPolicy ByPass`.
                 let mut ways = Column::new().spacing(6).push(label::body(
-                    "uv'yi kendiniz kurun: KentOS bilgisayarınıza bir şey kurmaz.",
+                    "uv'yi kendiniz kurun: KentOS çalışırken bilgisayarınıza program kurmaz.",
                 ));
                 for (n, command) in c.install_commands().iter().enumerate() {
                     ways = ways.push(

@@ -1,7 +1,9 @@
-//! The compatibility manifest (PY-UV-09): one file says the least uv, the Python versions and the platforms KentOS's
-//! Python runs on, and uv's official ways to install; detection and the window read it, nothing repeats it. A manifest
-//! that cannot be read refuses everything and says why (it is built in, so a test reads it).
+//! The compatibility manifest (PY-UV-09): one file says the least uv, the uv KentOS's installation carries, the Python
+//! versions and the platforms KentOS's Python runs on, and uv's official ways to install; detection, the window and the
+//! packaging step (`scripts/desktop/bundle_uv.py`) read it, nothing repeats it. A manifest that cannot be read refuses
+//! everything and says why (it is built in, so a test reads it).
 
+use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
 use serde::Deserialize;
@@ -13,6 +15,8 @@ pub struct Compat {
     pub format: String,
     pub schema_version: u32,
     pub uv: UvNeed,
+    /// The uv the installation carries (the owner's decision, 13 November 2026).
+    pub bundled_uv: BundledUv,
     pub python: PythonNeed,
     pub platforms: Vec<Platform>,
     pub install: Install,
@@ -24,6 +28,38 @@ pub struct UvNeed {
     /// The least version, `x.y.z`.
     pub min: String,
     pub note: String,
+}
+
+/// The uv KentOS's installation carries: its version, where its official release files are, and each target's file
+/// with its SHA-256, for the packaging step (`scripts/desktop/bundle_uv.py`) that downloads, checks and places it with
+/// its licences.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BundledUv {
+    pub version: String,
+    pub note: String,
+    /// The release's folder, ending with `/`.
+    pub download: String,
+    /// The licence files, shipped beside uv: its release archives carry none.
+    pub licenses: Vec<Pinned>,
+    /// By Rust target (`x86_64-pc-windows-msvc` …).
+    pub targets: BTreeMap<String, Asset>,
+}
+
+/// A release file and its SHA-256 (lower-case hex).
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Asset {
+    pub file: String,
+    pub sha256: String,
+}
+
+/// A file at an address and its SHA-256 (lower-case hex).
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Pinned {
+    pub url: String,
+    pub sha256: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -85,6 +121,13 @@ impl Compat {
             uv: UvNeed {
                 min: "999.0.0".to_owned(),
                 note: format!("Uyumluluk dosyası okunamadı: {why}"),
+            },
+            bundled_uv: BundledUv {
+                version: String::new(),
+                note: String::new(),
+                download: String::new(),
+                licenses: Vec::new(),
+                targets: BTreeMap::new(),
             },
             python: PythonNeed {
                 range: "<0".to_owned(),

@@ -4,8 +4,10 @@
 //! nothing looks for uv or Python and nothing is downloaded (P01). Turned on, uv is found and checked against one
 //! compatibility manifest; the environments it prepares are the user's own.
 //!
-//! - [`compat`]: the manifest (`compat.json`): the least uv, the Python versions, the platforms, uv's official ways in.
-//! - [`uv`]: uv found (the chosen path, `PATH`, the user folders a desktop session's `PATH` may miss), its version
+//! - [`compat`]: the manifest (`compat.json`): the least uv, the uv the installation carries (its version and each
+//!   platform's file with its SHA-256, for the packaging step), the Python versions, the platforms, uv's official ways in.
+//! - [`uv`]: uv found (the chosen path; else the installation's own, `PATH`, the user folders a desktop session's `PATH`
+//!   may miss), its version
 //!   checked, and uv run with its arguments, never through a shell, with a time limit, a bounded output and none of
 //!   the environment's uv or Python settings deciding where it goes.
 //! - [`settings`]: the user's choice (off by default) and their uv path.

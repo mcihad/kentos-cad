@@ -887,12 +887,14 @@ fn an_extensions_python_buttons_say_why_by_the_users_python() {
     assert!(why(&gis).contains("uv aranıyor"));
     let _ = gis.python_edit(PythonEdit::Detected(UvStatus::NotFound {
         looked: Vec::new(),
+        own: false,
     }));
     assert!(why(&gis).contains("uv hazır değil"), "{}", why(&gis));
     let _ = gis.python_section();
     let _ = gis.python_edit(PythonEdit::Detected(UvStatus::Found {
         path: "/ev/.local/bin/uv".into(),
         version: "0.11.26".into(),
+        bundled: false,
     }));
     assert!(why(&gis).contains("Python hazır"), "{}", why(&gis));
     let _ = gis.python_section();

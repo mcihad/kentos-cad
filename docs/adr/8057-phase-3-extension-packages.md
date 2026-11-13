@@ -541,6 +541,48 @@ sürüm iyi); bellekte 50 kayıt; eski kısa geçmişin taşınması; CLI'de zam
   masaüstü oturumu arama yerleri, sürüm denetimi sahte uv'yle, kabuksuz/süreli/sınırlı çalıştırma, seçim), masaüstü 1
   (düğmenin nedeni seçime göre, hemen yazılan seçim, bölümün çizimi).
 
-**Sıradaki dilimler:** kişisel ortam ve paket önizleme (P04), eklenti başına değişmez ortam ve çevrimdışı çalışma (P05,
-P07), hazırlık penceresi.
+**İkinci dilim (13 Kasım): kurulumdaki uv.** Sahip "Python gömülü mü yoksa kuruluyor mu" diye sordu; üç yol önerildi
+(uv kurulumda · uv ve Python kurulumda · uv'yi kullanıcı/BT kurar) ve karar: **"UV kurulum içine eklensin senin önerdiğin
+yolu seçtim."** Gerekçe: kurum bilgisayarlarında kullanıcı komut çalıştıramayabilir, BT tek bir kurulumu onaylar. Python
+kuruluma da KentOS'un sürecine de girmez: kullanıcı onaylayınca uv onu kullanıcının klasörüne indirir (sonraki dilim).
+
+- **Arama sırası:** elle verilen yol (yalnız o) › **kurulumun kendi uv'si** › `PATH` › kullanıcı klasörleri. Kurulumun
+  uv'si `tools/uv[.exe]`, programın yanında; macOS uygulama paketinde `Contents/MacOS/uv`, programla **aynı düzeyde**.
+  Apple'ın "Placing content in a bundle" belgesi yardımcı aracı `Contents/MacOS/`'a koyar; `Resources` kod için değil, iç
+  içe klasördeki kod imzalamayı bozar. (İlk taslakta `Resources/tools` vardı; belgeyle düzeltildi.) Programın kendi
+  klasörü yalnız uygulama paketinin içindeyse "KentOS'un" sayılır: `/usr/bin`'deki bir programın yanındaki `/usr/bin/uv`
+  kullanıcınındır (`bundled_dirs_for`).
+- **Pencere ne bulduğunu söyler:** "KentOS'la gelen uv 0.11.26 hazır (…/tools/uv)." Bulunamazsa ileti gerçekten bakılan
+  yerlere göre kurulur: kendi klasörü de bakılanlar arasındaysa "KentOS'la gelen uv silinmiş olabilir: KentOS'u yeniden
+  kurun ya da resmî komutu kendiniz çalıştırın"; yalnız elle verilen yola bakıldıysa "uv verilen yolda yok: … Yolu
+  düzeltin ya da silip Uygula'ya basın: boş bırakılınca KentOS önce kendi uv'sini kullanır." İkincisinde kurulum
+  komutları **gösterilmez** (`UvStatus::offers_install`): çıkış yolu uv kurmak değil, yolu silmek.
+- **Manifest** (`bundledUv`): sürüm 0.11.26, resmî sürüm klasörü, 6 hedefin dosyası ve SHA-256'sı (sürümün
+  `dist-manifest.json`'ından), iki lisansın etiketli adresi ve SHA-256'sı. Sürüm arşivlerinde lisans dosyası **yok**
+  (ölçüldü: tar'da `uv`, `uvx`; zip'te `uv.exe`, `uvx.exe`, `uvw.exe`); lisanslar `0.11.26` etiketinden ayrı alınır.
+  Sınama: her desteklenen platformun bir dosyası var, özetler 64 küçük onaltılık, gömülü sürüm en düşük sürümden yeni
+  (yoksa kurulumun uv'si kendi kendini reddederdi).
+- **Paketleme** `scripts/desktop/bundle_uv.py HEDEF ÇIKTI [--cache KLASÖR] [--offline] [--list]`: manifesti okur,
+  arşivi indirir, **açmadan önce** SHA-256'yı denetler; arşivden yalnız `uv`/`uv.exe` üyesini okur (toplu çıkarma yok),
+  atomik yazar, lisansları `uv-LICENSE-MIT` / `uv-LICENSE-APACHE` adıyla yanına koyar; hedef bu bilgisayarsa
+  `uv --version` çalıştırıp sürümü doğrular. `--offline` internetsiz derleme makinesi içindir: önbellekte olmayan ya da
+  özeti tutmayan dosya kullanılmaz. macOS'ta `bundle_macos.py`'den sonra çalışır, uv paketten önce imzalanır.
+- **Boyut (ölçüldü):** Linux x86_64 arşivi 25,6 MB → uv 63,9 MB; Windows x86_64 zip'i 24,9 MB → `uv.exe` 74,0 MB; macOS
+  aarch64 arşivi 22,0 MB → uv 50,7 MB. Kurulum açılmış hâlde 51–74 MB büyür (sıkıştırılmış kurulum dosyasında ~22–25 MB).
+  Sahibe ilk söylenen "yaklaşık 40 MB" eksikti.
+- **Ölçüm:** çevrimiçi koşu indirdi, özeti denetledi, yerleştirdi, `uv 0.11.26 (x86_64-unknown-linux-gnu)` çalıştı;
+  aynısı önbellekten `--offline`; önbellekte zip yokken `--offline` adresini söyleyerek reddetti; sonuna bir bayt eklenen
+  arşiv "does not match its SHA-256" ile reddedildi, hiçbir şey yazılmadı; Windows ve macOS hedefleri yerleşti (bu
+  makinede çalıştırılmadı). Gerçek pencere: `target/debug/tools/uv` ile "KentOS'la gelen uv 0.11.26 hazır"; yanlış elle
+  yol yeni cümleyle, kurulum komutu olmadan. Sınamalar: python-env 5 (arama sırası, uygulama paketi kuralı, iki
+  "bulunamadı" iletisi, `bundled` işareti, manifestin hedefleri), masaüstü eklenti sahneleri 13.
+- **Uygularken verilen kararlar:** elle verilen yol kurulumun uv'sinden önce gelir (BT belirli bir uv'yi gösterebilir;
+  alan boşken kurulumun uv'si ilk); kurulumun uv'si eski çıkamaz, sınama gömülü sürümü en düşük sürüme karşı denetler;
+  `uvx`/`uvw` kuruluma konmaz; lisans adresleri de özetle sabitlendi.
+- **Yapılmadı:** depoda Windows kurulum paketi (MSI/NSIS) henüz yok; betik, o paketin çağıracağı adım. uv'nin kendi
+  bağımlılıklarının bildirimleri Astral'ın arşivinde de yok; KentOS'un toplu üçüncü taraf bildirimi ayrı iş.
+
+**Sıradaki dilimler:** Python'u kullanıcı onayıyla kurmak (`uv python install`, KentOS'un klasörüne), kişisel ortam ve
+paket önizleme (P04), eklenti başına değişmez ortam ve çevrimdışı çalışma (P05, P07), Windows'ta Python konsolu,
+hazırlık penceresi.
 

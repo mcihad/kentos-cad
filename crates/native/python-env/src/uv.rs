@@ -1,6 +1,9 @@
 //! uv found and run (PY-UV-01, PY-UV-02, PY-UV-08, PY-UV-22, PY-UV-24; PY-OPT-03).
 //!
-//! - **Found:** the path the user chose, alone when there is one; else `PATH`, then the folders uv's installers use that
+//! - **Found:** the path the user chose, alone when there is one; else **the uv KentOS's installation carries** (the
+//!   owner's decision, 13 November 2026: `tools/uv[.exe]` beside the program; in a macOS app bundle `Contents/MacOS/uv`,
+//!   flat beside the program, where Apple asks helper tools to be: `Resources` is not for code, and code in nested
+//!   folders breaks signing); else `PATH`, then the folders uv's installers use that
 //!   a desktop session's `PATH` often lacks (a program started from the menu does not read the shell's profile, and a
 //!   running Windows program does not see a `PATH` an installer changed after it started): `~/.local/bin` (the
 //!   standalone installer, on Windows `%USERPROFILE%\.local\bin`), `~/.cargo/bin`; on Windows also WinGet's
@@ -30,8 +33,12 @@ const VERSION_LIMIT: Duration = Duration::from_secs(10);
 /// What looking for uv found.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UvStatus {
-    /// Found and new enough.
-    Found { path: PathBuf, version: String },
+    /// Found and new enough; `bundled` when it is the one KentOS's installation carries.
+    Found {
+        path: PathBuf,
+        version: String,
+        bundled: bool,
+    },
     /// Found, older than the manifest asks.
     TooOld {
         path: PathBuf,
@@ -40,8 +47,9 @@ pub enum UvStatus {
     },
     /// A file is there but does not run, or does not say its version.
     NotRunnable { path: PathBuf, why: String },
-    /// Not where it was looked for.
-    NotFound { looked: Vec<PathBuf> },
+    /// Not where it was looked for; `own` when the installation's own folder was among them (not when the user's
+    /// chosen path was looked at alone).
+    NotFound { looked: Vec<PathBuf>, own: bool },
     /// This computer's platform is not one the manifest lists.
     Unsupported { platform: String },
 }
@@ -50,6 +58,16 @@ impl UvStatus {
     /// Ready to use.
     pub fn ok(&self) -> bool {
         matches!(self, UvStatus::Found { .. })
+    }
+
+    /// Whether uv's official ways in help: missing or too old; not when only the user's own path was wrong, for then
+    /// the way out is that path (left empty, KentOS's own uv is used).
+    pub fn offers_install(&self) -> bool {
+        match self {
+            UvStatus::TooOld { .. } => true,
+            UvStatus::NotFound { looked, own } => *own || looked.len() != 1,
+            _ => false,
+        }
     }
 
     /// uv's path, when one was found.
@@ -65,7 +83,12 @@ impl UvStatus {
     /// What it means and what to do, as the window says it.
     pub fn words(&self) -> String {
         match self {
-            UvStatus::Found { path, version } => {
+            UvStatus::Found {
+                path,
+                version,
+                bundled: true,
+            } => format!("KentOS'la gelen uv {version} hazır ({}).", path.display()),
+            UvStatus::Found { path, version, .. } => {
                 format!("uv {version} bulundu: {}.", path.display())
             }
             UvStatus::TooOld { path, version, min } => format!(
@@ -77,7 +100,19 @@ impl UvStatus {
                 "{} çalıştırılamıyor: {why}. Doğru dosya mı, çalıştırma izni var mı? Yolu düzeltip yeniden algılayın.",
                 path.display()
             ),
-            UvStatus::NotFound { looked } => format!(
+            // The user's own path, looked at alone: KentOS's own uv was not looked for.
+            UvStatus::NotFound { looked, own: false } if looked.len() == 1 => format!(
+                "uv verilen yolda yok: {}. Yolu düzeltin ya da silip Uygula'ya basın: boş bırakılınca KentOS önce \
+                 kendi uv'sini kullanır.",
+                looked[0].display()
+            ),
+            UvStatus::NotFound { looked, own: true } => format!(
+                "uv bulunamadı ({} yere bakıldı, KentOS'un kendi klasörü dahil). KentOS'la gelen uv silinmiş olabilir: \
+                 KentOS'u yeniden kurun ya da aşağıdaki resmî komutu kendiniz çalıştırıp yeniden algılayın; uv'nin \
+                 yolunu elle de verebilirsiniz.",
+                looked.len()
+            ),
+            UvStatus::NotFound { looked, .. } => format!(
                 "uv bulunamadı ({} yere bakıldı). Kurmak isterseniz aşağıdaki resmî komutu kendiniz çalıştırın, sonra \
                  yeniden algılayın; ya da uv'nin yolunu elle verin.",
                 looked.len()
@@ -98,18 +133,49 @@ fn exe(os: &str) -> &'static str {
 /// Where uv is looked for on this computer's system: see [`candidates_for`].
 pub fn candidates(
     chosen: Option<&Path>,
+    bundled: &[PathBuf],
     path_var: Option<&OsStr>,
     home: Option<&Path>,
     local_app_data: Option<&Path>,
 ) -> Vec<PathBuf> {
-    candidates_for(std::env::consts::OS, chosen, path_var, home, local_app_data)
+    candidates_for(
+        std::env::consts::OS,
+        chosen,
+        bundled,
+        path_var,
+        home,
+        local_app_data,
+    )
 }
 
-/// Where uv is looked for on a system (`linux`, `windows`, `macos`), in order: `chosen` alone when given; else every
-/// folder of `path_var`, then the user folders uv's installers use. `home` is `%USERPROFILE%` on Windows.
+/// The folders this program's installation keeps its own uv in ([`bundled_dirs_for`]); none when the program's path is
+/// not known.
+pub fn bundled_dirs() -> Vec<PathBuf> {
+    std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+        .map(|dir| bundled_dirs_for(std::env::consts::OS, &dir))
+        .unwrap_or_default()
+}
+
+/// The folders an installation keeps its own uv in, for a program in `dir` on a system: `tools` beside it; in a macOS
+/// app bundle also the program's own folder (`Contents/MacOS`). Nowhere else: a program in `/usr/bin` does not make
+/// `/usr/bin/uv` KentOS's.
+pub fn bundled_dirs_for(os: &str, dir: &Path) -> Vec<PathBuf> {
+    let mut out = vec![dir.join("tools")];
+    if os == "macos" && dir.ends_with("Contents/MacOS") {
+        out.push(dir.to_path_buf());
+    }
+    out
+}
+
+/// Where uv is looked for on a system (`linux`, `windows`, `macos`), in order: `chosen` alone when given; else the
+/// installation's own folders (`bundled`), every folder of `path_var`, then the user folders uv's installers use.
+/// `home` is `%USERPROFILE%` on Windows.
 pub fn candidates_for(
     os: &str,
     chosen: Option<&Path>,
+    bundled: &[PathBuf],
     path_var: Option<&OsStr>,
     home: Option<&Path>,
     local_app_data: Option<&Path>,
@@ -118,9 +184,16 @@ pub fn candidates_for(
         return vec![chosen.to_path_buf()];
     }
     let name = exe(os);
-    let mut out: Vec<PathBuf> = path_var
-        .map(|p| std::env::split_paths(p).map(|dir| dir.join(name)).collect())
-        .unwrap_or_default();
+    let mut out: Vec<PathBuf> = bundled.iter().map(|dir| dir.join(name)).collect();
+    out.extend(
+        path_var
+            .map(|p| {
+                std::env::split_paths(p)
+                    .map(|dir| dir.join(name))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default(),
+    );
     if let Some(home) = home {
         out.push(home.join(".local").join("bin").join(name));
         out.push(home.join(".cargo").join("bin").join(name));
@@ -148,17 +221,20 @@ pub fn candidates_for(
     out
 }
 
-/// Looks for uv on this computer: the chosen path, `PATH`, the user folders.
+/// Looks for uv on this computer: the chosen path; else the installation's own, `PATH`, the user folders.
 pub fn detect(chosen: Option<&Path>) -> UvStatus {
     let path_var = std::env::var_os("PATH");
     let home =
         std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).map(PathBuf::from);
     let local = std::env::var_os("LOCALAPPDATA").map(PathBuf::from);
+    let bundled = bundled_dirs();
     detect_in(
         compat::compat(),
         &compat::this_platform(),
+        &bundled,
         &candidates(
             chosen,
+            &bundled,
             path_var.as_deref(),
             home.as_deref(),
             local.as_deref(),
@@ -166,8 +242,14 @@ pub fn detect(chosen: Option<&Path>) -> UvStatus {
     )
 }
 
-/// The first of `looked` that is a file, asked its version and checked against `compat`.
-pub fn detect_in(compat: &Compat, platform: &compat::Platform, looked: &[PathBuf]) -> UvStatus {
+/// The first of `looked` that is a file, asked its version and checked against `compat`; found in one of `bundled`, it
+/// is the installation's own.
+pub fn detect_in(
+    compat: &Compat,
+    platform: &compat::Platform,
+    bundled: &[PathBuf],
+    looked: &[PathBuf],
+) -> UvStatus {
     if !compat.supports(platform) {
         return UvStatus::Unsupported {
             platform: format!("{} {}", platform.os, platform.arch),
@@ -175,6 +257,10 @@ pub fn detect_in(compat: &Compat, platform: &compat::Platform, looked: &[PathBuf
     }
     let Some(path) = looked.iter().find(|p| p.is_file()) else {
         return UvStatus::NotFound {
+            own: looked.iter().any(|p| {
+                p.parent()
+                    .is_some_and(|dir| bundled.iter().any(|b| b == dir))
+            }),
             looked: looked.to_vec(),
         };
     };
@@ -212,6 +298,9 @@ pub fn detect_in(compat: &Compat, platform: &compat::Platform, looked: &[PathBuf
     };
     if compat.uv_new_enough(&version) {
         UvStatus::Found {
+            bundled: path
+                .parent()
+                .is_some_and(|dir| bundled.iter().any(|b| b == dir)),
             path: path.clone(),
             version,
         }

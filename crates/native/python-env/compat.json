@@ -5,6 +5,47 @@
     "min": "0.9.0",
     "note": "uv sync --locked, uv run --no-sync, --no-config ve --no-python-downloads bu sürümden beri bu anlamda."
   },
+  "bundledUv": {
+    "version": "0.11.26",
+    "note": "KentOS kurulumu bu uv'yi içerir (sahibin kararı, 13 Kasım 2026). Paketleme adımı dosyayı resmî sürüm sayfasından indirir, SHA-256'yı doğrular ve lisanslarıyla kuruluma koyar: scripts/desktop/bundle_uv.py. Sürüm arşivlerinde lisans dosyası yok; iki lisans etiketli kaynaktan, özetleriyle alınır.",
+    "download": "https://github.com/astral-sh/uv/releases/download/0.11.26/",
+    "licenses": [
+      {
+        "url": "https://raw.githubusercontent.com/astral-sh/uv/0.11.26/LICENSE-MIT",
+        "sha256": "860e3d7a86b84e6a7012c7a635fc64df475cebc6cce34dfeb73a5982ec58176c"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/astral-sh/uv/0.11.26/LICENSE-APACHE",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    ],
+    "targets": {
+      "x86_64-pc-windows-msvc": {
+        "file": "uv-x86_64-pc-windows-msvc.zip",
+        "sha256": "4e1278ede866be6c0bf32d2f466cc6de7a9fb399ecf20c9ce2d186e52424be47"
+      },
+      "aarch64-pc-windows-msvc": {
+        "file": "uv-aarch64-pc-windows-msvc.zip",
+        "sha256": "98246149741f558e25e45ecf2b0b20f34de0634269f2bf0dcb4012d4b6ba289a"
+      },
+      "x86_64-unknown-linux-gnu": {
+        "file": "uv-x86_64-unknown-linux-gnu.tar.gz",
+        "sha256": "6426a73c3837e6e2483ee344cbc00f36394d179afcba6183cb77437e67db4af0"
+      },
+      "aarch64-unknown-linux-gnu": {
+        "file": "uv-aarch64-unknown-linux-gnu.tar.gz",
+        "sha256": "befa1a59c91e96eb601b0fd9a97c03dd666f17baba644b2b4db9c59a767e387e"
+      },
+      "x86_64-apple-darwin": {
+        "file": "uv-x86_64-apple-darwin.tar.gz",
+        "sha256": "922b460202707dd5f4ccacbadbe7f6a546cc46e82a99bf50ca99a7977a78eddd"
+      },
+      "aarch64-apple-darwin": {
+        "file": "uv-aarch64-apple-darwin.tar.gz",
+        "sha256": "8f7fbf1708399b921857bce71e1d60f0d3ccf52a30caebc1c1a2f175dce13ab6"
+      }
+    }
+  },
   "python": {
     "range": ">=3.10,<3.15",
     "note": "KentOS SDK'sının kararlı ABI'si 3.10'dan beri; 3.15 henüz denenmedi."
@@ -21,6 +62,10 @@
     {
       "os": "windows",
       "arch": "x86_64"
+    },
+    {
+      "os": "windows",
+      "arch": "aarch64"
     },
     {
       "os": "macos",

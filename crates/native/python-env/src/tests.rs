@@ -53,6 +53,35 @@ fn the_built_in_manifest_reads_and_a_broken_one_refuses_everything() {
     assert_eq!(c.uv.min, "0.9.0");
     assert!(c.supports(&linux()));
     assert!(c.uv_new_enough("0.11.26") && c.uv_new_enough("0.9.0") && !c.uv_new_enough("0.8.24"));
+    // The uv the installation carries: new enough, and a file with its SHA-256 for every platform listed.
+    let b = &c.bundled_uv;
+    assert!(c.uv_new_enough(&b.version), "{}", b.version);
+    assert!(b.download.ends_with(&format!("/{}/", b.version)));
+    assert!(
+        b.licenses.len() == 2
+            && b.licenses.iter().all(
+                |l| l.url.contains(&format!("/{}/LICENSE-", b.version)) && l.sha256.len() == 64
+            )
+    );
+    for p in &c.platforms {
+        let os = match p.os.as_str() {
+            "windows" => "pc-windows-msvc",
+            "macos" => "apple-darwin",
+            _ => "unknown-linux-gnu",
+        };
+        let target = format!("{}-{os}", p.arch);
+        let asset = b.targets.get(&target).unwrap_or_else(|| panic!("{target}"));
+        assert!(asset.file.starts_with(&format!("uv-{target}.")));
+        assert!(
+            asset.sha256.len() == 64
+                && asset
+                    .sha256
+                    .chars()
+                    .all(|ch| ch.is_ascii_hexdigit() && !ch.is_ascii_uppercase()),
+            "{target}"
+        );
+    }
+    assert_eq!(b.targets.len(), c.platforms.len());
     assert!(c.install_commands().iter().all(|cmd| !cmd.is_empty()));
     // Windows: the PowerShell installer, and WinGet for computers that refuse `-ExecutionPolicy ByPass`.
     let windows = c.install_commands_for("windows");
@@ -78,15 +107,28 @@ fn the_built_in_manifest_reads_and_a_broken_one_refuses_everything() {
     assert_eq!(compat::triple("yok"), None);
 }
 
-/// A program started from the desktop menu does not read the shell's profile: uv in `~/.local/bin` is found without it
-/// on `PATH`; a chosen path is looked at alone.
+/// The installation's own uv is looked at first (the owner's decision, 13 November 2026); then, as a program started
+/// from the desktop menu does not read the shell's profile, uv in `~/.local/bin` is found without it on `PATH`; a
+/// chosen path is looked at alone.
 #[test]
 fn uv_is_found_where_a_desktop_sessions_path_would_miss_it() {
     let home = Path::new("/ev/kullanici");
-    let looked = uv::candidates(None, Some(OsStr::new("/usr/bin:/bin")), Some(home), None);
+    let own = [
+        PathBuf::from("/opt/kentos/tools"),
+        PathBuf::from("/opt/kentos"),
+    ];
+    let looked = uv::candidates(
+        None,
+        &own,
+        Some(OsStr::new("/usr/bin:/bin")),
+        Some(home),
+        None,
+    );
     assert_eq!(
         looked,
         [
+            PathBuf::from("/opt/kentos/tools/uv"),
+            PathBuf::from("/opt/kentos/uv"),
             PathBuf::from("/usr/bin/uv"),
             PathBuf::from("/bin/uv"),
             home.join(".local/bin/uv"),
@@ -95,22 +137,61 @@ fn uv_is_found_where_a_desktop_sessions_path_would_miss_it() {
     );
     let chosen = Path::new("/opt/araclar/uv");
     assert_eq!(
-        uv::candidates(Some(chosen), Some(OsStr::new("/usr/bin")), Some(home), None),
+        uv::candidates(
+            Some(chosen),
+            &own,
+            Some(OsStr::new("/usr/bin")),
+            Some(home),
+            None
+        ),
         [chosen.to_path_buf()]
     );
-    let none = uv::detect_in(compat::compat(), &linux(), &[PathBuf::from("/yok/uv")]);
+    // Not found where the installation keeps it: said so; a chosen path looked at alone is said to be that path.
+    let none = uv::detect_in(
+        compat::compat(),
+        &linux(),
+        &own,
+        &uv::candidates(None, &own, None, None, None),
+    );
     assert!(
-        matches!(&none, UvStatus::NotFound { looked } if looked.len() == 1),
+        matches!(&none, UvStatus::NotFound { looked, own: true } if looked.len() == 2),
         "{none:?}"
     );
-    assert!(none.words().contains("resmî komutu kendiniz çalıştırın"));
-    // Windows: `uv.exe`; the standalone installer's `%USERPROFILE%\.local\bin`, WinGet's links, Scoop's shims.
+    assert!(none.words().contains("KentOS'un kendi klasörü dahil"));
+    assert!(
+        none.words()
+            .contains("KentOS'la gelen uv silinmiş olabilir")
+    );
+    assert!(none.words().contains("resmî komutu kendiniz çalıştırıp"));
+    assert!(none.offers_install());
+    let typed = uv::detect_in(
+        compat::compat(),
+        &linux(),
+        &own,
+        &uv::candidates(Some(Path::new("/yok/uv")), &own, None, None, None),
+    );
+    assert!(
+        matches!(&typed, UvStatus::NotFound { own: false, .. }),
+        "{typed:?}"
+    );
+    assert!(
+        typed.words().starts_with("uv verilen yolda yok: /yok/uv.")
+            && !typed.words().contains("kendi klasörü dahil"),
+        "{}",
+        typed.words()
+    );
+    // The way out is the path, not installing uv.
+    assert!(!typed.offers_install());
+    // Windows: `uv.exe` beside the program first; then the standalone installer's `%USERPROFILE%\.local\bin`,
+    // WinGet's links, Scoop's shims.
     let user = Path::new("C:/Users/ayse");
     let local = Path::new("C:/Users/ayse/AppData/Local");
-    let looked = uv::candidates_for("windows", None, None, Some(user), Some(local));
+    let program = [PathBuf::from("C:/Program Files/KentOS/tools")];
+    let looked = uv::candidates_for("windows", None, &program, None, Some(user), Some(local));
     assert_eq!(
         looked,
         [
+            PathBuf::from("C:/Program Files/KentOS/tools/uv.exe"),
             user.join(".local/bin/uv.exe"),
             user.join(".cargo/bin/uv.exe"),
             local.join("Microsoft/WinGet/Links/uv.exe"),
@@ -122,9 +203,33 @@ fn uv_is_found_where_a_desktop_sessions_path_would_miss_it() {
         arch: "x86_64".into(),
     };
     assert!(matches!(
-        uv::detect_in(compat::compat(), &elsewhere, &[]),
+        uv::detect_in(compat::compat(), &elsewhere, &own, &[]),
         UvStatus::Unsupported { .. }
     ));
+    // The installation's own folders: `tools` beside the program; in a macOS app bundle the program's own folder, as
+    // Apple asks helper tools to be placed; a program in `/usr/bin` does not make `/usr/bin/uv` KentOS's.
+    let app = Path::new("/Applications/KentOS.app/Contents/MacOS");
+    assert_eq!(
+        uv::bundled_dirs_for("macos", app),
+        [app.join("tools"), app.to_path_buf()]
+    );
+    assert_eq!(
+        uv::bundled_dirs_for("linux", Path::new("/usr/bin")),
+        [PathBuf::from("/usr/bin/tools")]
+    );
+    assert_eq!(
+        uv::bundled_dirs_for("macos", Path::new("/usr/local/bin")),
+        [PathBuf::from("/usr/local/bin/tools")]
+    );
+    let exe_dir = std::env::current_exe()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_path_buf();
+    assert_eq!(
+        uv::bundled_dirs(),
+        uv::bundled_dirs_for(std::env::consts::OS, &exe_dir)
+    );
 }
 
 #[cfg(unix)]
@@ -138,25 +243,41 @@ fn uvs_version_is_asked_and_checked() {
     let found = uv::detect_in(
         compat::compat(),
         &linux(),
+        &[],
         &[PathBuf::from("/yok/uv"), new.clone()],
     );
     assert_eq!(
         found,
         UvStatus::Found {
-            path: new,
-            version: "0.11.26".into()
+            path: new.clone(),
+            version: "0.11.26".into(),
+            bundled: false,
         }
     );
     assert!(found.ok());
+    assert!(found.words().starts_with("uv 0.11.26 bulundu"));
+    // The same file in the installation's own folder: said to be KentOS's.
+    let own = uv::detect_in(
+        compat::compat(),
+        &linux(),
+        &[temp.0.join("yeni")],
+        std::slice::from_ref(&new),
+    );
+    assert!(
+        matches!(&own, UvStatus::Found { bundled: true, .. }),
+        "{own:?}"
+    );
+    assert!(own.words().starts_with("KentOS'la gelen uv 0.11.26 hazır"));
     let old = fake_uv(&temp.0.join("eski"), "echo 'uv 0.5.1'");
-    let too_old = uv::detect_in(compat::compat(), &linux(), &[old]);
+    let too_old = uv::detect_in(compat::compat(), &linux(), &[], &[old]);
     assert!(
         matches!(&too_old, UvStatus::TooOld { min, .. } if min == "0.9.0"),
         "{too_old:?}"
     );
-    assert!(too_old.words().contains("uv self update"));
+    assert!(too_old.words().contains("uv self update") && too_old.offers_install());
+    assert!(!found.offers_install());
     let silent = fake_uv(&temp.0.join("sessiz"), "echo 'merhaba'; exit 3");
-    let not = uv::detect_in(compat::compat(), &linux(), &[silent]);
+    let not = uv::detect_in(compat::compat(), &linux(), &[], &[silent]);
     assert!(
         matches!(&not, UvStatus::NotRunnable { why, .. } if why.contains("merhaba")),
         "{not:?}"
@@ -166,7 +287,7 @@ fn uvs_version_is_asked_and_checked() {
     std::fs::create_dir_all(plain.parent().unwrap()).unwrap();
     std::fs::write(&plain, "uv değil").unwrap();
     assert!(matches!(
-        uv::detect_in(compat::compat(), &linux(), &[plain]),
+        uv::detect_in(compat::compat(), &linux(), &[], &[plain]),
         UvStatus::NotRunnable { .. }
     ));
 }
