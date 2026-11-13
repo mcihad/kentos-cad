@@ -113,12 +113,19 @@ impl QuickDimension {
             };
             cx.say(
                 Level::Success,
-                format!("Hızlı ölçü: {} ölçü eklendi{left}.", out.count),
+                // They follow nothing (İlişki: Serbest): said now, not found when the boundary changes.
+                format!(
+                    "Hızlı ölçü: {} ölçü eklendi{left}. {FREE}",
+                    out.count
+                ),
             );
         }
         Flow::Exit
     }
 }
+
+/// What a quick dimension is: measured once, tied to nothing.
+pub const FREE: &str = "Ölçüler nesneye bağlı değil (İlişki: Serbest): ölçülen sınır sonra değişirse kendiliğinden güncellenmez.";
 
 impl Stages for QuickDimension {
     fn id(&self) -> &'static str {
