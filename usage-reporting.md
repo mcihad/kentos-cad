@@ -63,6 +63,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Sabit işaretin bir yön göstergesi olduğu anlaşılmalı; kullanıcı isteğiyle gerçek `(0,0)` ve ana eksenler görünür/ayırt edilebilir olmalı. Izgara aralığı ve çizim birimi kolayca öğrenilebilmeli; çok büyük koordinat ve zoom düzeylerinde görüntü kalabalıklaşmamalı.
 - **İnceleme:** Sahne koordinat dönüşümü, eksen/ızgara çizimi ve durum çubuğu ayrı ele alınmalı; koordinat sistemli ve yerel çizimde davranış karşılaştırılmalı.
 - **Kabul:** `(0,0)` nesnesi, pan/zoom ve negatif koordinatlar; açık/koyu tema, farklı yoğunluk ve büyük koordinatlarda gerçek orijin ile yön göstergesi karışmamalı.
+- **Durum (13.11.2026):** kısmen — CAD projesinde çizimin gerçek 0,0 noktası görünümdeyse artık kendi işaretiyle çiziliyor: halkalı artı ve yanında «0,0», mürekkep renginde ve haleli (açık/koyu temada okunur); sol alttaki X/Y oku sabit yön göstergesi olarak kalıyor (sahibin 12 Ekim kararı) ve 0,0 onun altına düşerse işaret çizilmiyor. Görünüm dışında, negatif bölgede ya da büyük koordinatlı projede işaret yok, kalabalık yapmıyor. Test `map_marks::tests::the_origins_mark_stands_on_zero_zero_and_only_there` (kaydırma, negatif koordinat, büyük koordinat, köşe), resimler `.run/gui-evidence/kullanim-UR-005/`. Açık: işaretin aç/kapa ayarı, ana eksen çizgilerinin ızgarada ayrıca vurgulanması ve ızgara aralığının durum çubuğunda yazılması yapılmadı.
 
 #### UR-006 — macOS erişilebilirlik ağacında uygulama içi kontroller görünmüyor
 

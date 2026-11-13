@@ -11,8 +11,10 @@
 //! A CAD project has neither: its scene shows the coordinate axes' icon
 //! instead (docs/adr/0165 §5; the web's `drawUcsIcon`), X to the right and
 //! Y up from a small square, always at the bottom left (the owner's wish of
-//! 12 Oct: it stood on the origin when 0,0 was on screen, as AutoCAD's UCS
-//! icon does, in the middle of a local drawing).
+//! 12 Oct: it stood on the origin when 0,0 was on screen, in the middle of a
+//! local drawing). Being fixed, it was read as the origin (usage review
+//! UR-005): the real 0,0 has a mark of its own when it is in the view, a
+//! ringed cross with “0,0” beside it, never the corner icon's arrows.
 //!
 //! They depend only on the view, so they are kept with the text's cached
 //! picture.
@@ -67,15 +69,65 @@ pub fn paint(
                 ucs_icon(frame, ucs_at(size), colors, a - twist, ["Y", "X"], false);
             }
         }
-        Axes::Cad => ucs_icon(
-            frame,
-            ucs_at(size),
-            colors,
-            ucs.unwrap_or(0.0) - twist,
-            ["X", "Y"],
-            ucs.is_none(),
-        ),
+        Axes::Cad => {
+            origin_mark(frame, camera, colors);
+            ucs_icon(
+                frame,
+                ucs_at(size),
+                colors,
+                ucs.unwrap_or(0.0) - twist,
+                ["X", "Y"],
+                ucs.is_none(),
+            );
+        }
     }
+}
+
+/// How far the origin's mark reaches from its middle, pixels.
+const ORIGIN_ARM: f32 = 9.0;
+
+/// Where the drawing's 0,0 stands on screen, when it is in the view and clear of the corner icon (the icon says
+/// the axes' directions there; the mark would only be crowded under it).
+pub fn origin_at(camera: &Camera, size: Size) -> Option<Point> {
+    let [x, y] = camera.world_to_screen(kentos_render_wgpu::Vec2::new(0.0, 0.0));
+    let at = Point::new(x as f32, y as f32);
+    let corner = ucs_at(size);
+    let inside = (0.0..=size.width).contains(&at.x) && (0.0..=size.height).contains(&at.y);
+    let clear = (at.x - corner.x).abs() > UCS_ARM + 12.0 || (corner.y - at.y) > UCS_ARM + 12.0;
+    (x.is_finite() && y.is_finite() && inside && clear).then_some(at)
+}
+
+/// The drawing's 0,0 (UR-005): a small ring with a cross through it and “0,0” above to the right, in the ink's
+/// colour with a halo, so it reads on lines and fills alike.
+fn origin_mark(frame: &mut Frame, camera: &Camera, colors: &Colors) {
+    let Some(o) = origin_at(camera, frame.size()) else {
+        return;
+    };
+    let halo = Stroke::default().with_color(colors.halo).with_width(3.5);
+    let ink = Stroke::default().with_color(colors.fg).with_width(1.25);
+    let cross = Path::new(|p| {
+        p.move_to(Point::new(o.x - ORIGIN_ARM, o.y));
+        p.line_to(Point::new(o.x + ORIGIN_ARM, o.y));
+        p.move_to(Point::new(o.x, o.y - ORIGIN_ARM));
+        p.line_to(Point::new(o.x, o.y + ORIGIN_ARM));
+    });
+    let ring = Path::circle(o, 4.5);
+    for stroke in [halo, ink] {
+        frame.stroke(&cross, stroke);
+        frame.stroke(&ring, stroke);
+    }
+    haloed(
+        frame,
+        Mark {
+            text: "0,0",
+            at: Point::new(o.x + ORIGIN_ARM + 3.0, o.y - ORIGIN_ARM - 3.0),
+            size: 11.0,
+            font: typography::ui_strong(),
+            align: text::Alignment::Left,
+            color: colors.fg,
+        },
+        colors.halo,
+    );
 }
 
 /// Where the coordinate axes' icon stands: the bottom left of the drawing
@@ -327,6 +379,76 @@ mod tests {
         assert_eq!(unit, "5.0 cm");
         // 400 px a metre: 20 cm is 80 px, 50 cm 200 px.
         assert_eq!(scale_length(400.0).1, "20 cm");
+    }
+
+    /// UR-005: 0,0 has its own mark where it is on screen, none when it is out of the view or under the corner
+    /// icon; panned and zoomed, it follows the drawing, the icon stays.
+    #[test]
+    fn the_origins_mark_stands_on_zero_zero_and_only_there() {
+        let size = Size::new(800.0, 600.0);
+        let mut camera = Camera {
+            center: kentos_render_wgpu::Vec2::new(0.0, 0.0),
+            scale: 10.0,
+            width: 800.0,
+            height: 600.0,
+            ..Camera::default()
+        };
+        assert_eq!(origin_at(&camera, size), Some(Point::new(400.0, 300.0)));
+        // 30 m to the left and 20 m down: 0,0 is 300 px right and 200 px up of the middle.
+        camera.center = kentos_render_wgpu::Vec2::new(-30.0, -20.0);
+        assert_eq!(origin_at(&camera, size), Some(Point::new(700.0, 100.0)));
+        // Negative coordinates on screen only: 0,0 is out of the view.
+        camera.center = kentos_render_wgpu::Vec2::new(-100.0, -100.0);
+        assert_eq!(origin_at(&camera, size), None);
+        // A projected drawing's coordinates, far from 0,0: no mark.
+        camera.center = kentos_render_wgpu::Vec2::new(486_512.0, 4_420_118.0);
+        assert_eq!(origin_at(&camera, size), None);
+        // Under the corner icon (30 px from the left and bottom edges): left to the icon.
+        camera.center = kentos_render_wgpu::Vec2::new(37.0, 27.0);
+        let corner = ucs_at(size);
+        let [x, y] = camera.world_to_screen(kentos_render_wgpu::Vec2::new(0.0, 0.0));
+        assert!((x as f32 - corner.x).abs() < 1.0 && (y as f32 - corner.y).abs() < 1.0);
+        assert_eq!(origin_at(&camera, size), None);
+    }
+
+    /// UR-005's pictures (`.run/gui-evidence/kullanim-UR-005/`): a local CAD drawing, a line from 0,0 to 10,0 and
+    /// a rectangle in the negative quarter, Tümünü göster, in both themes:
+    ///
+    /// ```text
+    /// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib map_marks::tests::origin_screens -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn origin_screens() {
+        use crate::app::{App, Message};
+        use crate::tools_scenes::{E, N, Objects, open};
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-005");
+        std::fs::create_dir_all(&out).expect("a folder");
+        for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+            let (mut app, _) = App::boot(None);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let mut o = Objects::new();
+            o.line("cizim", [-E, -N], [10.0 - E, -N]);
+            o.path("parsel", &[[-8.0 - E, -6.0 - N], [-2.0 - E, -6.0 - N], [-2.0 - E, -2.0 - N], [-8.0 - E, -2.0 - N]], true);
+            open(&mut app, o);
+            crate::files_testing::make_cad(&mut app);
+            let doc = app.document.as_mut().expect("a drawing");
+            let mut settings = doc.settings().clone();
+            settings.srid = 0;
+            settings.second_srid = None;
+            doc.model.set_settings(settings);
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let size = Size::new(1280.0, 800.0);
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("orijin-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
     }
 
     #[test]
