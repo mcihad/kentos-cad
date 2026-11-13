@@ -2419,3 +2419,24 @@ fn a_text_written_and_not_applied_is_kept_when_another_item_is_chosen() {
     let ItemKind::Text(t) = &item.kind else { panic!("a text") };
     assert_eq!(t.content, "Ada 101 vaziyet planı", "applied, not lost");
 }
+
+/// UR-028: a small shape over the map, chosen, its bottom-right handle dragged: the shape grows and stays chosen; the
+/// map under the handle is not chosen instead.
+#[test]
+fn a_chosen_items_handle_wins_over_the_item_under_it() {
+    let mut d = designer();
+    let map = item(&d, "Harita").clone();
+    let at = center(&map);
+    d.update(Message::Tool(Tool::Add { tool: "shape".into(), preset: Some("ellipse".into()) }));
+    drag(&mut d, at, [at[0] + 40_000.0, at[1] + 30_000.0], true);
+    let shape = d.open_sheet().unwrap().items.last().unwrap().clone();
+    assert_eq!(d.selection(), std::slice::from_ref(&shape.id));
+    let corner = [
+        f64::from(shape.frame.left + shape.frame.width),
+        f64::from(shape.frame.top + shape.frame.height),
+    ];
+    drag(&mut d, corner, [corner[0] + 20_000.0, corner[1] + 15_000.0], true);
+    let after = d.open_sheet().unwrap().items.iter().find(|i| i.id == shape.id).unwrap().clone();
+    assert_eq!(d.selection(), std::slice::from_ref(&shape.id), "still the shape chosen");
+    assert!(after.frame.width > shape.frame.width + 10_000, "{:?} → {:?}", shape.frame, after.frame);
+}
