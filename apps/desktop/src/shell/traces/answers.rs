@@ -232,6 +232,7 @@ impl App {
             Dialog::Map(map::MapDialogKind::Baselines) => crate::baselines_window::TITLE.to_owned(),
             Dialog::Road(road::RoadDialogKind::Grade) => crate::grade_window::TITLE.to_owned(),
             Dialog::CleanReport => crate::clean_report_window::TITLE.to_owned(),
+            Dialog::OpenReport => crate::open_report_window::TITLE.to_owned(),
             Dialog::Map(map::MapDialogKind::ParcelsCheck) => {
                 crate::parcels_check_window::TITLE.to_owned()
             }
@@ -466,6 +467,7 @@ impl App {
             Some(Dialog::Map(map::MapDialogKind::Baselines)) => self.baselines_control(control),
             Some(Dialog::Road(road::RoadDialogKind::Grade)) => self.grade_control(control),
             Some(Dialog::CleanReport) => self.clean_report_control(control),
+            Some(Dialog::OpenReport) => self.open_report_control(control),
             Some(Dialog::Map(map::MapDialogKind::ParcelsCheck)) => {
                 self.parcels_check_control(control)
             }

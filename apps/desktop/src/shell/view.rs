@@ -317,6 +317,7 @@ impl App {
             Asking::Flatten => self.flatten_view(),
             Asking::Map(inner) => self.map_dialog_view(inner),
             Asking::CleanReport => self.clean_report_view(),
+            Asking::OpenReport => self.open_report_view(),
             Asking::ExchangeCheck => self.exchange_check_view(),
             Asking::CatalogReport => self.catalog_report_view(),
             Asking::XrefAttach => self.xref_attach_view(),

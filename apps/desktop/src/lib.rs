@@ -1125,6 +1125,11 @@ mod mirror_scenes;
 mod modes;
 #[path = "shell/selection_fit.rs"]
 mod selection_fit;
+#[path = "shell/open_report_window.rs"]
+mod open_report_window;
+#[cfg(test)]
+#[path = "tests/open_report_tests.rs"]
+mod open_report_tests;
 #[cfg(test)]
 #[path = "tests/selection_fit_tests.rs"]
 mod selection_fit_tests;

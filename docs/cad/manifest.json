@@ -4315,6 +4315,20 @@
    "tests": 0
   },
   {
+   "id": "file.openReport",
+   "kind": "command",
+   "title": "Açılış raporu…",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Açılan dosyanın raporunu gösterir; çizimi değiştirmez.",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.openTab",
    "kind": "command",
    "title": "Yeni sekmede aç",

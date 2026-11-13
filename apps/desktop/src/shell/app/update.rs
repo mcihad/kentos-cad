@@ -593,6 +593,7 @@ impl App {
             Message::Xrefs(event) => return self.xrefs_event(event),
             Message::Flatten(event) => return self.flatten_event(event),
             Message::CleanReport(event) => return self.clean_report_event(event),
+            Message::OpenReport(event) => self.open_report_event(event),
             Message::ExchangeCheck(event) => return self.exchange_check_event(event),
             Message::CatalogReport(event) => return self.catalog_report_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),

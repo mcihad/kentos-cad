@@ -591,6 +591,10 @@
       "level": "host",
       "note": "Kullanıcı tercihleri; proje verisi değil."
     },
+    "file.openReport": {
+      "level": "host",
+      "note": "Açılan dosyanın raporunu gösterir; çizimi değiştirmez."
+    },
     "extensions.install": {
       "level": "host",
       "note": "Eklentiyi bu bilgisayara kurar; çizimi ve proje verisini değiştirmez."

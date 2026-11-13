@@ -60,8 +60,9 @@ pub enum Stage {
     },
     /// The document is being built and checked.
     Building,
-    /// External CAD source: units and conversion/loss report, shown after opening.
-    Source(Vec<String>),
+    /// External CAD source: units and conversion/loss report, shown after opening; the report's rows kept for
+    /// Açılış raporu (UR-014).
+    Source(Vec<String>, Box<crate::open_report_window::OpenReport>),
     SourceUnit(UnitDecision, Option<[f64; 4]>),
 }
 
@@ -232,7 +233,9 @@ fn read_source(
                     .chain(&opened.report.skipped)
                     .map(|n| format!("{}: {}", n.what, n.reason)),
             );
-            tell(Stage::Source(notes));
+            let file = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
+            let report = crate::open_report_window::OpenReport::of(file, &opened.report);
+            tell(Stage::Source(notes, Box::new(report)));
             Ok(Some(Document::of_model(opened.document)))
         }
     }
@@ -282,6 +285,8 @@ pub(crate) struct Opened {
     pub purpose: Purpose,
     /// What the open says of a DWG, DXF or NCZ source.
     pub notes: Vec<String>,
+    /// Its rows for Açılış raporu (UR-014).
+    pub report: Option<crate::open_report_window::OpenReport>,
     /// The file read.
     pub source: PathBuf,
     /// A DWG, DXF or NCZ opened as a CAD drawing of its own (ADR 0624), not a KentOS project.
@@ -315,6 +320,8 @@ pub struct Opening {
     was: Option<(u64, u64)>,
     stop: Arc<AtomicBool>,
     notes: Vec<String>,
+    /// Açılış raporu's rows of a DWG, DXF or NCZ (UR-014).
+    report: Option<crate::open_report_window::OpenReport>,
     source_path: PathBuf,
     unit: Option<UnitDecision>,
     unit_bounds: Option<[f64; 4]>,
@@ -364,7 +371,7 @@ fn describe(stage: &Stage) -> (String, f32) {
             0.3 + 0.55 * part(*done as f64, *total as f64),
         ),
         Stage::Building => ("Çizim kuruluyor ve denetleniyor".to_owned(), 0.9),
-        Stage::Source(_) | Stage::SourceUnit(..) => ("CAD çizimi hazır".into(), 1.0),
+        Stage::Source(..) | Stage::SourceUnit(..) => ("CAD çizimi hazır".into(), 1.0),
     }
 }
 
@@ -407,6 +414,7 @@ impl App {
                 .map(|d| (d.session, d.model.revision())),
             stop: stop.clone(),
             notes: Vec::new(),
+            report: None,
             source_path: path.clone(),
             unit: None,
             unit_bounds: None,
@@ -419,7 +427,7 @@ impl App {
             let mut tell = |stage: Stage| {
                 let project = matches!(
                     stage,
-                    Stage::Project { .. } | Stage::Source(_) | Stage::SourceUnit(..)
+                    Stage::Project { .. } | Stage::Source(..) | Stage::SourceUnit(..)
                 );
                 let message = Message::Opening(Event::Progress { id, stage });
                 if project {
@@ -489,6 +497,7 @@ impl App {
                         purpose: o.purpose,
                         external: !o.notes.is_empty(),
                         notes: o.notes,
+                        report: o.report,
                         source: o.source_path,
                         asked: false,
                     };
@@ -505,8 +514,9 @@ impl App {
                         o.unit_bounds = *bounds;
                         o.unit = Some(unit.clone());
                     }
-                    if let Stage::Source(notes) = &stage {
+                    if let Stage::Source(notes, report) = &stage {
                         o.notes = notes.clone();
+                        o.report = Some((**report).clone());
                     }
                     if let Stage::Project {
                         name,
@@ -572,6 +582,7 @@ impl App {
                             purpose: o.purpose,
                             external: !o.notes.is_empty(),
                             notes: o.notes,
+                            report: o.report,
                             source: o.source_path,
                             asked: false,
                         };
@@ -593,6 +604,7 @@ impl App {
             mut doc,
             purpose,
             notes,
+            report,
             source,
             external,
             asked,
@@ -624,6 +636,14 @@ impl App {
         }
         for note in notes {
             self.output(note);
+        }
+        // Açılış raporu (UR-014): kept with the drawing; up by itself when something was left out or changed.
+        if let (Some(report), Some(session)) = (report, self.document.as_ref().map(|d| d.session)) {
+            let lossy = report.lossy();
+            self.open_reports.insert(session, report);
+            if lossy && self.dialog.is_none() {
+                self.dialog = Some(crate::app::Dialog::OpenReport);
+            }
         }
         // A project without a type is asked it (docs/adr/0165 §1), a CAD drawing without a work its work (docs/adr/0801);
         // a DWG, DXF or NCZ is not asked, being no KentOS project.
@@ -972,7 +992,7 @@ mod tests {
             Stage::Project { .. } => "project",
             Stage::Reading { .. } => "reading",
             Stage::Building => "building",
-            Stage::Source(_) | Stage::SourceUnit(..) => "source",
+            Stage::Source(..) | Stage::SourceUnit(..) => "source",
         }
     }
 

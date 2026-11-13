@@ -217,6 +217,7 @@ impl App {
             xrefs: Default::default(),
             flatten: Default::default(),
             clean_report: Default::default(),
+            open_reports: Default::default(),
             exchange_check: Default::default(),
             catalog_report: Default::default(),
             xref_watch: Default::default(),

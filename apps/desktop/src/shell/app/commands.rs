@@ -415,6 +415,7 @@ impl App {
             "survey.baselines" => return self.open_baselines(),
             "tool.grade" => return self.open_grade(),
             "topology.cleanReport" => return self.open_clean_report(),
+            "file.openReport" => self.show_open_report(),
             "parcels.check" => return self.open_parcels_check(),
             "pipes.check" => return self.open_pipes_check(),
             "file.exchangeCheck" => return self.open_exchange_check(),
@@ -986,6 +987,7 @@ impl App {
                 self.tree_locked().is_none()
             }
             "edit.autoSelect" => doc.is_some(),
+            "file.openReport" => self.open_report().is_some(),
             // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
             id if self.layer_misfit(id).is_some() => false,
             // A selection tool that takes none of the selected kinds (UR-007).
