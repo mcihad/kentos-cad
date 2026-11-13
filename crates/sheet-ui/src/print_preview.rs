@@ -45,26 +45,100 @@ impl Page {
         }
     }
 }
+/// The view over the page: 1 fits it whole; the offset moves the fitted page, in screen pixels.
+#[derive(Debug, Default)]
+pub(crate) struct Look {
+    zoom: f32,
+    offset: iced::Vector,
+    grab: Option<Point>,
+    last_click: Option<std::time::Instant>,
+}
+impl Look {
+    fn zoom(&self) -> f32 {
+        if self.zoom > 0. { self.zoom } else { 1. }
+    }
+}
+/// The most the preview enlarges the fitted page.
+const MOST: f32 = 32.;
+impl Page {
+    /// Where the page lies in `bounds` under `look`.
+    fn placed(&self, bounds: Size, look: &Look) -> (Rectangle, f32) {
+        let fit = (bounds.width / self.size.width).min(bounds.height / self.size.height);
+        let k = fit * look.zoom();
+        let size = Size::new(self.size.width * k, self.size.height * k);
+        let at = Point::new(
+            (bounds.width - size.width) / 2. + look.offset.x,
+            (bounds.height - size.height) / 2. + look.offset.y,
+        );
+        (Rectangle::new(at, size), k)
+    }
+}
 impl canvas::Program<Message> for &Page {
-    type State = ();
+    type State = Look;
+    fn update(
+        &self,
+        look: &mut Look,
+        event: &iced::Event,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> Option<canvas::Action<Message>> {
+        use iced::Event::Mouse;
+        match event {
+            Mouse(mouse::Event::WheelScrolled { delta }) => {
+                let at = cursor.position_in(bounds)?;
+                let lines = match delta {
+                    mouse::ScrollDelta::Lines { y, .. } => *y,
+                    mouse::ScrollDelta::Pixels { y, .. } => *y / 40.,
+                };
+                let before = look.zoom();
+                let after = (before * 1.25_f32.powf(lines)).clamp(1., MOST);
+                // The point under the pointer stays under it.
+                let centre = Point::new(bounds.width / 2., bounds.height / 2.);
+                let r = after / before;
+                look.offset = iced::Vector::new(
+                    (at.x - centre.x) - (at.x - centre.x - look.offset.x) * r,
+                    (at.y - centre.y) - (at.y - centre.y - look.offset.y) * r,
+                );
+                look.zoom = after;
+                if after <= 1. {
+                    look.offset = iced::Vector::ZERO;
+                }
+                Some(canvas::Action::request_redraw().and_capture())
+            }
+            Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
+                let at = cursor.position_in(bounds)?;
+                let now = std::time::Instant::now();
+                if look.last_click.is_some_and(|t| now.duration_since(t).as_millis() < 400) {
+                    *look = Look::default();
+                    return Some(canvas::Action::request_redraw().and_capture());
+                }
+                look.last_click = Some(now);
+                look.grab = Some(at);
+                Some(canvas::Action::capture())
+            }
+            Mouse(mouse::Event::CursorMoved { .. }) => {
+                let from = look.grab?;
+                let at = cursor.position_in(bounds).unwrap_or(from);
+                look.offset = look.offset + (at - from);
+                look.grab = Some(at);
+                Some(canvas::Action::request_redraw().and_capture())
+            }
+            Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
+                look.grab.take().map(|_| canvas::Action::capture())
+            }
+            _ => None,
+        }
+    }
     fn draw(
         &self,
-        _: &(),
+        look: &Look,
         renderer: &iced::Renderer,
         _: &Theme,
         bounds: Rectangle,
         _: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
         let mut frame = Frame::new(renderer, bounds.size());
-        let k = (bounds.width / self.size.width).min(bounds.height / self.size.height);
-        let size = Size::new(self.size.width * k, self.size.height * k);
-        let rect = Rectangle::new(
-            Point::new(
-                (bounds.width - size.width) / 2.,
-                (bounds.height - size.height) / 2.,
-            ),
-            size,
-        );
+        let (rect, k) = self.placed(bounds.size(), look);
         for tile in &self.tiles {
             let r = tile.rect;
             frame.draw_image(
@@ -77,11 +151,20 @@ impl canvas::Program<Message> for &Page {
         }
         vec![frame.into_geometry()]
     }
+    fn mouse_interaction(&self, look: &Look, bounds: Rectangle, cursor: mouse::Cursor) -> mouse::Interaction {
+        if look.grab.is_some() {
+            mouse::Interaction::Grabbing
+        } else if cursor.is_over(bounds) {
+            mouse::Interaction::Grab
+        } else {
+            mouse::Interaction::default()
+        }
+    }
 }
 pub(crate) fn view(page: &Page) -> Element<'_, Message> {
     canvas::Canvas::new(page)
         .width(Length::Fill)
-        .height(Length::Fixed(340.))
+        .height(Length::Fixed(540.))
         .into()
 }
 

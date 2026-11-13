@@ -212,7 +212,8 @@ pub(crate) struct MapCache {
 /// The windows over the mode.
 #[derive(Debug)]
 pub(crate) enum Dialog {
-    PrintPreview { image: crate::print_preview::Page, caption: String },
+    /// `at` of `count`: which of the chosen sheets the page is.
+    PrintPreview { image: crate::print_preview::Page, caption: String, at: usize, count: usize },
     Export {
         kind: ExportKind,
         dpi: u16,
@@ -275,6 +276,8 @@ pub struct Designer {
     pub(crate) space: bool,
     /// The modifier keys held now (the host tells): Shift or ⌘/Ctrl on an item list row adds or takes away.
     pub(crate) held: iced::keyboard::Modifiers,
+    /// Which of the PDF's sheets the print preview shows (0: the first).
+    pub(crate) preview_at: usize,
 
     // Panels.
     pub(crate) inspector_tab: InspectorTab,
@@ -363,6 +366,7 @@ impl Designer {
             hovered_item: None,
             space: false,
             held: iced::keyboard::Modifiers::empty(),
+            preview_at: 0,
             inspector_tab: InspectorTab::Item,
             inspector: inspector::State::new(),
             kind_fields: Vec::new(),

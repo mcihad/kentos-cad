@@ -611,7 +611,16 @@ impl Designer {
                 self.dialog = None;
                 return vec![self.ask_path(ExportKind::Pdf)];
             }
-            PdfMessage::Preview => return vec![Effect::PrintPreview],
+            PdfMessage::Preview => {
+                self.preview_at = 0;
+                return vec![Effect::PrintPreview];
+            }
+            PdfMessage::PreviewPage(at) => {
+                if at < self.pdf_sheets().len() {
+                    self.preview_at = at;
+                    return vec![Effect::PrintPreview];
+                }
+            }
             PdfMessage::Publish=>{self.dialog=None;return vec![Effect::HostAction("sheet.publish".into())];}
             PdfMessage::Print => {
                 self.dialog = None;

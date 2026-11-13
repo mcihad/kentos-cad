@@ -60,12 +60,27 @@ impl Designer {
             return Some(gallery);
         }
         let inner: Element<'_, Message> = match self.dialog.as_ref()? {
-            Dialog::PrintPreview { image, caption } => Window::new("Baskı önizlemesi")
+            Dialog::PrintPreview { image, caption, at, count } => Window::new("Baskı önizlemesi")
                 .on_close(Message::CloseDialog)
                 .push(
                     iced::widget::column![
-                        label::caption(caption).style(style::text::muted),
-                        crate::print_preview::view(image)
+                        iced::widget::row![
+                            button(label::caption("Önceki"))
+                                .padding(kentos_ui::theme::metrics::action())
+                                .style(style::button::secondary)
+                                .on_press_maybe((*at > 0).then(|| Message::Pdf(crate::message::PdfMessage::PreviewPage(at - 1)))),
+                            label::body(format!("Sayfa {} / {}", at + 1, (*count).max(1))),
+                            button(label::caption("Sonraki"))
+                                .padding(kentos_ui::theme::metrics::action())
+                                .style(style::button::secondary)
+                                .on_press_maybe((at + 1 < *count).then(|| Message::Pdf(crate::message::PdfMessage::PreviewPage(at + 1)))),
+                            label::caption(caption).style(style::text::muted).width(iced::Length::Fill),
+                        ]
+                        .spacing(8)
+                        .align_y(iced::Alignment::Center),
+                        crate::print_preview::view(image),
+                        label::caption("Tekerlekle imlecin olduğu yere yakınlaşın, sürükleyerek gezinin; çift tıklayınca sayfa sığar.")
+                            .style(style::text::muted),
                     ]
                     .spacing(8),
                 )
@@ -75,7 +90,7 @@ impl Designer {
                         .padding(kentos_ui::theme::metrics::action())
                         .style(style::button::primary),
                 )
-                .width(700.0)
+                .width(960.0)
                 .into(),
             Dialog::SaveTemplate(d) => self.save_template_view(d),
             Dialog::Questions(d) => self.questions_view(d),
