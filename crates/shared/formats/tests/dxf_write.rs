@@ -4308,3 +4308,21 @@ fn a_text_in_kentos_s_own_face_is_as_wide_in_arial_as_kentos_draws_it() {
         "KentOS's own width factors back"
     );
 }
+
+/// UR-022: KentOS's own architectural DXF reads back each
+/// object whole: none comes as its block's lines with “KentOS verisi okunamadı”.
+#[test]
+fn kentos_architectural_objects_read_back_whole() {
+    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/formats/v1/dxf-arch/mimari.dxf"))
+        .expect("the fixture");
+    let r = dxf::read(&bytes, &DxfReadOptions { unit: Some(DrawingUnit::M), ..DxfReadOptions::default() }).expect("reads");
+    let broken: Vec<_> = r
+        .report
+        .notes
+        .iter()
+        .chain(&r.report.skipped)
+        .filter(|n| n.reason.contains("okunamadı"))
+        .collect();
+    assert!(broken.is_empty(), "{broken:?}");
+    assert!(r.entities.iter().any(|e| matches!(e, Entity::Stair(_))), "the stair whole");
+}

@@ -935,6 +935,38 @@ mod tests {
         assert!(super::dynamic_loss_warning(&plain.document.as_ref().unwrap().model).is_none());
     }
 
+    /// UR-022: beams, a roof and railings written with KentOS's data come back whole from the DXF, each of its own
+    /// kind, with no “KentOS verisi okunamadı” (the reader knew walls, stairs and the rest, not these).
+    #[test]
+    fn beams_roofs_and_railings_come_back_whole_from_kentos_dxf() {
+        for (file, kind, n) in [
+            (include_str!("../../../../../fixtures/kcad/v2/beams.json"), "beam", 2),
+            (include_str!("../../../../../fixtures/kcad/v2/roof-edges.json"), "roof", 1),
+            (include_str!("../../../../../fixtures/kcad/v2/railing-objects.json"), "railing", 1),
+        ] {
+            let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(file).expect("the sample");
+            let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+            let chosen = kentos_headless::export::by_layer(&doc, doc.entities());
+            let input = kentos_headless::export::dxf_input(&doc, &chosen);
+            let (bytes, _) = kentos_formats::dxf::write_checked(&input).expect("writes");
+            let read = kentos_formats::dxf::read_checked(
+                &bytes,
+                &kentos_commands::DxfReadOptions { unit: Some(kentos_commands::DrawingUnit::M), ..Default::default() },
+            )
+            .expect("reads");
+            let broken: Vec<_> = read
+                .report
+                .notes
+                .iter()
+                .chain(&read.report.skipped)
+                .filter(|n| n.reason.contains("okunamadı"))
+                .collect();
+            assert!(broken.is_empty(), "{kind}: {broken:?}");
+            let got = read.entities.iter().filter(|e| e.kind() == kind).count();
+            assert!(got >= n, "{kind}: {got} of {n} back, {:?}", read.entities.iter().map(|e| e.kind()).collect::<Vec<_>>());
+        }
+    }
+
     /// UR-021: a sheet's paper objects name layer 0 themselves; written there, they are no layer lost and the
     /// writer's report says nothing of layers for a drawing whose objects all have theirs.
     #[test]
