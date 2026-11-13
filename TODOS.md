@@ -58,6 +58,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   yerleştirmelerini saysın (`cad.schedules.*` ortak durumları masaüstüne göre yeniden yazıldı).
 - UR-037: web'in Eğri boyunca yazı aracı başarı iletisinde yazının kaynak eğriye bağlı olmadığını söylesin
   (`fixtures/interaction/v1/text-along.json` masaüstüne göre güncellendi).
+- UR-049: web'in Kapalı alan aracı kenarları kendini kesen sınırı (papyon) başarı değil uyarıyla bildirsin (kesişme sayısı ve ilk noktası; çekirdek `ring_self_crossings`), Özellikler'de Alan “Hesaplanamaz” görünsün.
 - UR-048: web'in pafta sekmeleri, pafta listesi ve toplu yayın penceresi paftayı çizim numarasıyla göstersin (`Sheet::listed_name`: “QA-002 · Teknik çizim”); şablondan ikinci pafta “Ad 2” adını alsın.
 - UR-047: web'in nesne ekleri satırları bağlı/gömülü durumunu (“Bağlı: çizimle taşıyın.”, “Gömülü: çizimle taşınır.”, eksikte “Bulunamadı: Yeni yol seç…”) göstersin, menüde dosyanın tam yolu ve Yeni yol seç… olsun; Dosya ekle iletisi “bağlandı: dosya çizime kopyalanmadı” desin.
 - UR-046: web'in `app/annotationScale.ts` çizim ölçeği değişimi açıklamaları izletiyorsa ölçeği de aynı geri alma adımına koysun (“Çizim ölçeği”; masaüstü ve çekirdek `PlotScale` işlemiyle yapıyor), izleyen yoksa ölçek ayar olarak kalsın.

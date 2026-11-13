@@ -1396,9 +1396,29 @@ impl Path {
             Shape::Parcel => self.create_parcel(&pts, bulges, cx),
             Shape::Wipeout => self.create_wipeout(&pts, bulges, cx),
             Shape::Closed => {
+                let crossings =
+                    kentos_geometry_core::geom::intersect::ring_self_crossings(&pts, bulges.as_deref());
                 if let Some(area) = self.create_polygon(&pts, bulges, cx) {
-                    let text = format!("Kapalı alan eklendi: {}", cx.format().area(area));
-                    cx.say(Level::Success, text);
+                    match crossings.first() {
+                        // Its edges cross: drawn as asked, but its area is no area; said, where, and what to do.
+                        Some(at) => {
+                            let f = cx.format();
+                            cx.say(
+                                Level::Warn,
+                                format!(
+                                    "Kapalı alan eklendi, ama kenarları kendini {} yerde kesiyor (ilki Y {}, X {}): alanı ({}) hesaplanamaz. Geri alıp kenarları kesişmeyen bir sınır çizin.",
+                                    crossings.len(),
+                                    f.length_bare(at.x),
+                                    f.length_bare(at.y),
+                                    f.area(area)
+                                ),
+                            );
+                        }
+                        None => {
+                            let text = format!("Kapalı alan eklendi: {}", cx.format().area(area));
+                            cx.say(Level::Success, text);
+                        }
+                    }
                 }
             }
             Shape::Open => {

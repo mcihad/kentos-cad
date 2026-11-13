@@ -75,6 +75,31 @@ pub fn line_line(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<Hit> {
 /// Two segments' crossing, touching counted: t and u within `eps` of
 /// [0, 1] (a CAD tolerance). With `line_line`'s accurate parameters the
 /// decision is exact but for crossings within 2⁻⁴¹·|t| of the band's edge.
+/// Where a closed ring's edges cross each other (its arcs read as the outline's chords), neighbours and the last
+/// with the first aside: a bow tie's middle. Empty for a simple ring; a ring of more than 4 000 edges is not looked
+/// through. A region bounded so has no area of its own (its parts' signed areas cancel), so a tool says so.
+pub fn ring_self_crossings(pts: &[Vec2], bulges: Option<&[f64]>) -> Vec<Vec2> {
+    let ring = crate::entity::polygon_ring(pts, bulges);
+    let n = ring.len();
+    let mut out = Vec::new();
+    if !(4..=4000).contains(&n) {
+        return out;
+    }
+    for i in 0..n {
+        for j in i + 2..n {
+            if i == 0 && j == n - 1 {
+                continue;
+            }
+            let (a, b, c, d) = (ring[i], ring[(i + 1) % n], ring[j], ring[(j + 1) % n]);
+            // Strictly inside both edges: a corner on another edge is a touch, not a crossing.
+            if let Some(h) = line_line(a, b, c, d).filter(|h| h.t > 1e-9 && h.t < 1.0 - 1e-9 && h.u > 1e-9 && h.u < 1.0 - 1e-9) {
+                out.push(h.p);
+            }
+        }
+    }
+    out
+}
+
 pub fn seg_seg(a: Vec2, b: Vec2, c: Vec2, d: Vec2, eps: f64) -> Option<Hit> {
     line_line(a, b, c, d)
         .filter(|h| h.t >= -eps && h.t <= 1.0 + eps && h.u >= -eps && h.u <= 1.0 + eps)
@@ -394,6 +419,25 @@ pub(crate) static OPS: &[Op] = &[
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_bow_tie_crosses_once_and_simple_or_touching_rings_do_not() {
+        let v = |x: f64, y: f64| Vec2::new(x, y);
+        // Top left, bottom right, bottom left, top right: the middle at (2, 2), large coordinates too.
+        for (ox, oy) in [(0.0, 0.0), (500_000.0, 4_400_000.0)] {
+            let tie = [v(ox, oy + 4.0), v(ox + 4.0, oy), v(ox, oy), v(ox + 4.0, oy + 4.0)];
+            let hits = super::ring_self_crossings(&tie, None);
+            assert_eq!(hits.len(), 1, "{hits:?}");
+            assert!((hits[0].x - ox - 2.0).abs() < 1e-6 && (hits[0].y - oy - 2.0).abs() < 1e-6);
+        }
+        let square = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(0.0, 4.0)];
+        assert!(super::ring_self_crossings(&square, None).is_empty());
+        let concave = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(2.0, 1.0), v(0.0, 4.0)];
+        assert!(super::ring_self_crossings(&concave, None).is_empty());
+        // A corner touching another edge is no crossing.
+        let touching = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(2.0, 0.0), v(0.0, 4.0)];
+        assert!(super::ring_self_crossings(&touching, None).is_empty());
+    }
+
     use super::*;
 
     /// What `line_line` computed before: the plain rounded cross products.

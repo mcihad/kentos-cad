@@ -614,3 +614,44 @@ fn a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link() {
     assert_eq!(value(&app, "Geometri", "Bağlı nesne"), "Çizimde yok");
     assert_eq!(labels(&app), ["Bağı kopar"]);
 }
+
+/// A bow tie's Alan says it cannot be computed and why, not 0 as an area; a plain area keeps its number.
+#[test]
+fn a_bow_ties_area_is_said_not_computable() {
+    let mut app = objects();
+    let tie = add(&mut app, serde_json::from_value(serde_json::json!({
+        "kind":"polygon","id":0,"layerId":"parsel","attrs":{},
+        "pts":[{"x":0.,"y":4.},{"x":4.,"y":0.},{"x":0.,"y":0.},{"x":4.,"y":4.}]
+    })).unwrap());
+    select(&mut app, &[tie]);
+    assert_eq!(value(&app, "Geometri", "Alan"), "Hesaplanamaz");
+    let notes: Vec<String> = rows(&app).into_iter().flat_map(|(_, r)| r).filter(|r| r.note).map(|r| r.value).collect();
+    assert!(notes.iter().any(|n| n == "Kenarlar 1 yerde kesişiyor."), "{notes:?}");
+    let square = add(&mut app, serde_json::from_value(serde_json::json!({
+        "kind":"polygon","id":0,"layerId":"parsel","attrs":{},
+        "pts":[{"x":0.,"y":0.},{"x":4.,"y":0.},{"x":4.,"y":4.},{"x":0.,"y":4.}]
+    })).unwrap());
+    select(&mut app, &[square]);
+    assert_ne!(value(&app, "Geometri", "Alan"), "Hesaplanamaz");
+}
+
+#[test]
+#[ignore = "GPU: a bow tie's Alan in Özellikler"]
+fn bow_tie_properties_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-049");
+    std::fs::create_dir_all(&out).unwrap();
+    let mut app = objects();
+    let tie = add(&mut app, serde_json::from_value(serde_json::json!({
+        "kind":"polygon","id":0,"layerId":"parsel","attrs":{},
+        "pts":[{"x":0.,"y":4.},{"x":4.,"y":0.},{"x":0.,"y":0.},{"x":4.,"y":4.}]
+    })).unwrap());
+    select(&mut app, &[tie]);
+    let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 1500.)).unwrap();
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snap.settle(&mut app, App::view, &mut update);
+    snap.render(app.view(), &app.theme()).save(out.join("papyon-alan.png")).unwrap();
+}

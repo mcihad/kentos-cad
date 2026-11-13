@@ -395,7 +395,22 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                 if holes > 0 {
                     geo.push(Row::figure("Ada (delik)", holes.to_string()));
                 }
-                geo.extend(area(area_of.unwrap_or(0.0)));
+                // A one-part boundary whose edges cross (a bow tie) bounds no area: said, not a 0 shown as one.
+                let pts: Vec<kentos_geometry_core::Vec2> =
+                    p.pts.iter().map(|q| kentos_geometry_core::Vec2::new(q.x, q.y)).collect();
+                let crossings = if parts.is_empty() {
+                    kentos_geometry_core::geom::intersect::ring_self_crossings(&pts, p.bulges.as_deref()).len()
+                } else {
+                    0
+                };
+                if crossings > 0 {
+                    geo.push(Row::text("Alan", "Hesaplanamaz"));
+                    geo.push(Row::note(&format!(
+                        "Kenarlar {crossings} yerde kesişiyor."
+                    )));
+                } else {
+                    geo.extend(area(area_of.unwrap_or(0.0)));
+                }
             }
         }
         Entity::Circle(c) => {

@@ -377,3 +377,20 @@ fn the_preview_follows_the_cursor_and_measures() {
     );
     assert_eq!(b.doc.len(), 0);
 }
+
+/// A bow tie (top left, bottom right, bottom left, top right): written as asked, but its crossing is said with
+/// where it is and its area is not given out as a success.
+#[test]
+fn a_bow_tie_is_written_and_its_crossing_said_not_a_zero_area_success() {
+    let mut b = Bench::new("polygon");
+    for (de, dn) in [(0.0, 4.0), (4.0, 0.0), (0.0, 0.0), (4.0, 4.0)] {
+        b.click(de, dn);
+    }
+    b.confirm();
+    assert_eq!(b.doc.len(), 1);
+    assert_eq!(b.last_level(), Some(Level::Warn));
+    let said = b.log.last().map(|l| l.text.clone()).unwrap_or_default();
+    assert!(said.starts_with("Kapalı alan eklendi, ama kenarları kendini 1 yerde kesiyor"), "{said}");
+    assert!(said.contains("hesaplanamaz"), "{said}");
+    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+}
