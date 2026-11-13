@@ -408,6 +408,19 @@ impl Registry {
         (registered, skipped)
     }
 
+    /// Every installed extension with its state and what the running or ready ones add, as `kentos kek dump` prints it
+    /// and the MCP server's `kentos://extensions/installed` gives it (plan/eklenti.md ADIM 18, Ö·38): the evidence for
+    /// "where did my tab go?" in one shape for both. Activates nothing.
+    pub fn dump(&self) -> serde_json::Value {
+        let (contributions, skipped) = self.planned_contributions();
+        serde_json::json!({
+            "root": self.layout.root.display().to_string(),
+            "extensions": self.extensions(),
+            "contributions": contributions,
+            "skipped": skipped,
+        })
+    }
+
     /// The version in use's manifest.
     pub fn manifest(&self, id: &str) -> Option<&Manifest> {
         self.manifests.get(id)

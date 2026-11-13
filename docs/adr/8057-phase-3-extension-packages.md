@@ -278,5 +278,39 @@ GIS'te kurum kataloğundan kur → sekme görünür → veri kaynağı ve form d
 1.1.0'a güncelle (yeni yetenek `YENİ` işaretli) → katman menüsünde eklentinin öğesi → devre dışı bırakınca sekme ve
 öğe kalkar; Kent Rehberi'nin etkinleşmesi 0,2–0,3 ms. Masaüstü sahne testleri 5 (yönetici, sekme ve program kapısı,
 hayalet bırakmama, güncelleme farkı ve verilmeyen yetenek, bozuk paket, katalog), kayıt defteri 21; ilgili masaüstü
-testleri (şerit, katalog, menü, komut, tuş ipuçları) 335 geçti. **ADIM 18'de kalan:** Komut ara'da eklenti öğeleri, MCP kaynağı ve liste değişikliği bildirimi, "Sorunlu eklentiyi
-bul"un penceresi, `.kcad` proje bağlantısı, paket SVG ikonlarının düğmelerde çizilmesi.
+testleri (şerit, katalog, menü, komut, tuş ipuçları) 335 geçti.
+
+**MCP: kurulu eklentiler ve değişiklik bildirimi.**
+
+- `kentos://extensions/installed`: `kentos kek dump`'ın görünümünün **aynısı** (`Registry::dump`; CLI ile sunucu aynı
+  işlevi çağırır, ikisi ayrışamaz): kurulu her eklentinin durumu ve nedeni, sürümleri, kaynağı, güveni; çalışan ya da
+  hazır olanların katkıları ve bırakılanlar. `places::open_to_read` kayıt defterini kurum ilkesiyle, hiçbir şey
+  etkinleştirmeden açar. Oturum özetinin `extensions` alanı artık boş değil: kimlik, ad, sürüm, durum.
+- **Bildirim `notifications/resources/updated`, `tools/list_changed` değil.** Plan "eklenti etkinleşince
+  `tools/list_changed`" diyordu; ama bu adımdaki eklentiler sunucuya **araç eklemiyor** (komutları Python'un, ADIM 19).
+  Araç listesi değişmeden "araç listesi değişti" demek istemciyi boşuna listeyi yeniden çekmeye yollar; değişen şey
+  kurulu eklentiler kaynağıdır. `tools.listChanged` eklenti komutları araç olduğunda açılacak; abonelik düzeni hazır.
+- **2026-07-28:** bildirim yalnız `subscriptions/listen` akışını açmış istemciye gider; ilk mesaj
+  `notifications/subscriptions/acknowledged`'dır ve istenenin **karşılanan** kısmını söyler (`resourceSubscriptions`
+  içinde yalnız `kentos://extensions/installed`; `toolsListChanged` alınmaz). Her bildirim
+  `_meta.io.modelcontextprotocol/subscriptionId` taşır; `notifications/cancelled` akışı kapatır. Bu sürümde
+  `resources/subscribe` yoktur (-32601).
+- **2025-11-25 ve öncesi:** `resources/subscribe` / `resources/unsubscribe`; başka bir kaynağa abonelik hangi kaynağın
+  izlenebildiğini söyleyerek reddedilir (-32602); bildirim `notifications/initialized`'dan önce gitmez, `_meta`
+  taşımaz.
+- **İzleme:** sunucu iki mesaj arasında 2 saniyede bir (yalnız dinleyen varken) `registry.json`, `revocations.json` ve
+  kurum ilkesinin baytlarını özetler; özet değişince görünümü yeniden okur ve **görünüm de değiştiyse** söyler: aynı
+  içerikle yeniden yazılan dosya bildirim üretmez. Standart girdi bunun için ayrı bir iş parçacığında okunur
+  (`main.rs`); sunucunun kendisi tek iş parçacığında kalır.
+- **Önbellek ipuçları (planda yoktu):** 2026-07-28 `server/discover`, `tools/list`, `resources/list` ve `resources/read`
+  sonuçlarında `ttlMs` ve `cacheScope` ister; sunucu hiç vermiyordu. Yapıya ait olan (yetenekler, araçlar, katalog) bir
+  saat taze ve `public`; kullanıcının çizimini ya da eklentilerini taşıyan `0` ve `private`. Liste tek sayfadır,
+  `nextCursor` yoktur.
+- **Ölçüm:** gerçek ikili stdio üzerinden, karalama kayıt defteriyle sürüldü: abonelik onayı yalnız karşılananı söyledi;
+  eklenti devre dışı bırakılınca bildirim **1,0 saniyede** geldi; aynı içerikle yeniden yazılan kayıt bildirim
+  üretmedi; iptalden sonra sessiz; eski protokolde el sıkışmadan önce sessiz, sonra `_meta`'sız bildirim; kaynak
+  2 414 bayt. Bekçi: `tests/mcp.rs` `an_agent_is_told_when_the_installed_extensions_change` (MCP testleri kural gereği
+  burada koşulmaz, derlemesi denetlendi).
+
+**ADIM 18'de kalan:** Komut ara'da eklenti öğeleri, eklenti hatalarının açıkça bildirilmesi ve günlüğü, "Sorunlu
+eklentiyi bul"un penceresi, `.kcad` proje bağlantısı, paket SVG ikonlarının düğmelerde çizilmesi.

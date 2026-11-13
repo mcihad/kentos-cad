@@ -1108,6 +1108,169 @@ fn refusals_a_model_can_act_on_are_results_and_malformed_requests_are_errors() {
     assert_eq!(no_capabilities["error"]["code"], -32602);
 }
 
+/// The installed extensions an agent reads and is told about (plan/eklenti.md ADIM 18): a 2026-07-28 stream and a
+/// legacy subscription each hear once when the desktop disables one; the registry written back the same says nothing;
+/// a cancelled stream hears nothing more; the tool list is the build's and is not offered.
+#[test]
+fn an_agent_is_told_when_the_installed_extensions_change() {
+    use kentos_extension_host::{Choice, Grant, Options, Registry};
+    use kentos_extensions::manifest::Capability;
+    use kentos_extensions::version::Version;
+
+    let root = std::env::temp_dir().join(format!("kentos-mcp-eklenti-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let host = || {
+        kentos_extensions::Host::this(
+            Version::parse(env!("CARGO_PKG_VERSION")).expect("the version"),
+        )
+    };
+    let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/extensions/v1/ornek-kent");
+    let id = "tr.ornek.kent-rehberi";
+    let mut registry = Registry::open(&root, host(), Options::default()).expect("the registry");
+    let choice = Choice {
+        grant: Grant {
+            capabilities: vec![
+                Capability::UiRibbonTab,
+                Capability::DataSource,
+                Capability::Network,
+            ],
+            python: false,
+        },
+        enable: true,
+        replace_source: false,
+    };
+    registry
+        .install_folder(&fixture, &choice)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+
+    let mut server = Server::new().with_extensions_root(&root);
+    let read = ask(
+        &mut server,
+        1,
+        "resources/read",
+        json!({ "uri": "kentos://extensions/installed" }),
+    );
+    assert_eq!(read["result"]["ttlMs"], 0, "{read}");
+    assert_eq!(read["result"]["cacheScope"], "private");
+    let view: Value = serde_json::from_str(
+        read["result"]["contents"][0]["text"]
+            .as_str()
+            .expect("text"),
+    )
+    .expect("JSON");
+    assert_eq!(view["extensions"][0]["id"], id);
+    assert!(
+        view["contributions"]
+            .as_array()
+            .is_some_and(|c| !c.is_empty()),
+        "{view}"
+    );
+
+    let found = ask(&mut server, 2, "server/discover", json!({}));
+    assert_eq!(
+        found["result"]["capabilities"]["resources"],
+        json!({ "subscribe": true })
+    );
+    assert_eq!(found["result"]["ttlMs"], 3_600_000);
+    let ack = ask(
+        &mut server,
+        3,
+        "subscriptions/listen",
+        json!({ "notifications": { "toolsListChanged": true,
+            "resourceSubscriptions": ["kentos://extensions/installed", "kentos://catalog"] } }),
+    );
+    assert_eq!(
+        ack["method"], "notifications/subscriptions/acknowledged",
+        "{ack}"
+    );
+    assert_eq!(
+        ack["params"]["_meta"]["io.modelcontextprotocol/subscriptionId"],
+        3
+    );
+    assert_eq!(
+        ack["params"]["notifications"],
+        json!({ "resourceSubscriptions": ["kentos://extensions/installed"] }),
+        "what is honoured, nothing else"
+    );
+    assert_eq!(server.notices(), Vec::<Value>::new(), "nothing changed yet");
+
+    // The desktop disables it.
+    registry.disable(id).expect("disabled");
+    let told = server.notices();
+    assert_eq!(
+        told,
+        vec![
+            json!({ "jsonrpc": "2.0", "method": "notifications/resources/updated",
+            "params": { "_meta": { "io.modelcontextprotocol/subscriptionId": 3 },
+                        "uri": "kentos://extensions/installed" } })
+        ]
+    );
+    assert_eq!(server.notices(), Vec::<Value>::new(), "told once");
+    let file = root.join("registry.json");
+    let text = std::fs::read_to_string(&file).expect("the registry");
+    std::fs::write(&file, format!("{text}\n")).expect("written back");
+    assert_eq!(
+        server.notices(),
+        Vec::<Value>::new(),
+        "the same view says nothing"
+    );
+
+    assert!(
+        server
+            .handle(
+                &json!({ "jsonrpc": "2.0", "method": "notifications/cancelled",
+                "params": { "requestId": 3, "reason": "bitti" } })
+            )
+            .is_none()
+    );
+    registry.enable(id).expect("enabled");
+    assert_eq!(
+        server.notices(),
+        Vec::<Value>::new(),
+        "a cancelled stream hears nothing"
+    );
+
+    // A legacy client: told only after its handshake, without _meta; another resource cannot be watched.
+    let mut old = Server::new().with_extensions_root(&root);
+    old.handle(&json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize",
+        "params": { "protocolVersion": "2025-11-25", "capabilities": {} } }))
+        .expect("an answer");
+    let refused = old
+        .handle(
+            &json!({ "jsonrpc": "2.0", "id": 2, "method": "resources/subscribe",
+            "params": { "uri": "kentos://catalog" } }),
+        )
+        .expect("an answer");
+    assert_eq!(refused["error"]["code"], -32602);
+    let subscribed = old
+        .handle(
+            &json!({ "jsonrpc": "2.0", "id": 3, "method": "resources/subscribe",
+            "params": { "uri": "kentos://extensions/installed" } }),
+        )
+        .expect("an answer");
+    assert_eq!(subscribed["result"], json!({}));
+    old.handle(&json!({ "jsonrpc": "2.0", "method": "notifications/initialized" }));
+    registry.disable(id).expect("disabled");
+    assert_eq!(
+        old.notices(),
+        vec![
+            json!({ "jsonrpc": "2.0", "method": "notifications/resources/updated",
+            "params": { "uri": "kentos://extensions/installed" } })
+        ]
+    );
+    let listen = old
+        .handle(
+            &json!({ "jsonrpc": "2.0", "id": 4, "method": "subscriptions/listen", "params": {} }),
+        )
+        .expect("an answer");
+    assert_eq!(
+        listen["error"]["code"], -32601,
+        "2026-07-28's, not a legacy client's"
+    );
+    let _ = std::fs::remove_dir_all(&root);
+}
+
 #[test]
 fn a_legacy_client_shakes_hands_and_is_served_without_meta() {
     let mut server = Server::new();
@@ -1173,6 +1336,7 @@ fn the_catalog_and_the_open_drawings_are_resources() {
         [
             "kentos://session/overview".to_owned(),
             "kentos://catalog/categories".to_owned(),
+            "kentos://extensions/installed".to_owned(),
             "kentos://catalog".to_owned(),
             format!("kentos://drawing/{drawing}")
         ]

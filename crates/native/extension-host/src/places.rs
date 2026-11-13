@@ -8,7 +8,11 @@
 
 use std::path::{Path, PathBuf};
 
+use kentos_extensions::version::Version;
+use kentos_extensions::{Host, Problem};
+
 use crate::policy::Policy;
+use crate::registry::{Options, Registry};
 
 /// The policy file's name.
 pub const POLICY_FILE: &str = "eklenti-ilkesi.json";
@@ -61,6 +65,18 @@ pub fn load_policy(file: &Path) -> Option<Policy> {
             file.display()
         ))),
     }
+}
+
+/// The registry in `root` as a program reads it without running anything (`kentos kek dump`, the MCP server): the
+/// organisation's policy from its place, `kentos` the program's version. Nothing is activated; what the desktop runs
+/// shows as ready.
+pub fn open_to_read(root: &Path, kentos: &str) -> Result<Registry, Problem> {
+    let host = Host::this(Version::parse(kentos).unwrap_or_else(|| Version::new(0, 0, 0)));
+    let options = Options {
+        policy: load_policy(&policy_path()),
+        ..Options::default()
+    };
+    Registry::open(root, host, options)
 }
 
 #[cfg(test)]

@@ -2965,6 +2965,8 @@ dependencies = [
  "kentos-cloud",
  "kentos-commands",
  "kentos-domain",
+ "kentos-extension-host",
+ "kentos-extensions",
  "kentos-headless",
  "kentos-kcad",
  "kentos-native-application",

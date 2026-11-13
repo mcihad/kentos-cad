@@ -21,6 +21,8 @@ pub const NAME: &str = "kentos-mcp";
 
 const VERSION_KEY: &str = "/_meta/io.modelcontextprotocol~1protocolVersion";
 const CAPABILITIES_KEY: &str = "/_meta/io.modelcontextprotocol~1clientCapabilities";
+/// What every message of a `subscriptions/listen` stream carries in `_meta`: the listen request's id.
+const SUBSCRIPTION: &str = "io.modelcontextprotocol/subscriptionId";
 
 pub(crate) const INSTRUCTIONS: &str = "KentOS CAD çizimleri (.kcad) üzerinde çalışır. \
 Önce drawing.open (bir dosya) ya da drawing.new (koordinat sistemiyle yeni proje) ile bir çizim açın; \
@@ -90,6 +92,17 @@ pub struct Server {
     pub(crate) profile: Profile,
     /// The plans each drawing's agent was shown (the owner's guard, docs/adr/8056 §2), by handle.
     pub(crate) guards: BTreeMap<String, kentos_headless::agent_tools::Guard>,
+    /// The open `subscriptions/listen` streams watching `kentos://extensions/installed` (2026-07-28), by their
+    /// request's id.
+    streams: Vec<Value>,
+    /// A legacy client's handshake is over (`notifications/initialized`): notices may go to it.
+    legacy_ready: bool,
+    /// A legacy client subscribed to `kentos://extensions/installed` (`resources/subscribe`).
+    legacy_watch: bool,
+    /// The installed extensions as last told, while anyone listens.
+    watch: Option<crate::extensions::Watch>,
+    /// The user's extension folder (`kentos://extensions/installed`); none when this computer gives no data folder.
+    pub(crate) extensions_root: Option<std::path::PathBuf>,
 }
 
 impl Default for Server {
@@ -126,7 +139,57 @@ impl Server {
             tools,
             profile,
             guards: BTreeMap::new(),
+            streams: Vec::new(),
+            legacy_ready: false,
+            legacy_watch: false,
+            watch: None,
+            extensions_root: kentos_extension_host::places::user_root(),
         }
+    }
+
+    /// The server reading the extensions installed in `root` instead of the user's (a test's registry, a host's).
+    pub fn with_extensions_root(mut self, root: impl Into<std::path::PathBuf>) -> Self {
+        self.extensions_root = Some(root.into());
+        self.watch = None;
+        self
+    }
+
+    /// The notifications due now; the program asks after every message and every two seconds between them. When the
+    /// installed extensions read differently (one installed, enabled, disabled, updated, removed, failed, or IT's
+    /// policy changed), each stream and legacy client watching `kentos://extensions/installed` hears
+    /// `notifications/resources/updated` for it.
+    pub fn notices(&mut self) -> Vec<Value> {
+        // Watched while anyone subscribed; a legacy client hears only once its handshake is over.
+        if self.streams.is_empty() && !self.legacy_watch {
+            self.watch = None;
+            return Vec::new();
+        }
+        let watch = self
+            .watch
+            .get_or_insert_with(|| crate::extensions::Watch::new(self.extensions_root.clone()));
+        if !watch.changed() {
+            return Vec::new();
+        }
+        let uri = crate::extensions::INSTALLED;
+        let mut out: Vec<Value> = self
+            .streams
+            .iter()
+            .map(|id| {
+                json!({
+                    "jsonrpc": "2.0",
+                    "method": "notifications/resources/updated",
+                    "params": { "_meta": { SUBSCRIPTION: id }, "uri": uri },
+                })
+            })
+            .collect();
+        if self.legacy_watch && self.legacy_ready {
+            out.push(json!({
+                "jsonrpc": "2.0",
+                "method": "notifications/resources/updated",
+                "params": { "uri": uri },
+            }));
+        }
+        out
     }
 
     /// Answers one message; none for a notification.
@@ -143,11 +206,21 @@ impl Server {
             // Not a request: a stray response, or not JSON-RPC at all.
             return id.map(|id| failure(&id, Fault::new(-32600, "Invalid Request: method yok.")));
         };
+        let params = message.get("params").cloned().unwrap_or_else(|| json!({}));
         let Some(id) = id else {
-            // Notifications (initialized, cancelled …) need no answer.
+            // Notifications need no answer. The legacy handshake's end lets notices go; a cancellation ends the stream
+            // whose request it names.
+            match method {
+                "notifications/initialized" => self.legacy_ready = true,
+                "notifications/cancelled" => {
+                    if let Some(request) = params.get("requestId") {
+                        self.streams.retain(|open| open != request);
+                    }
+                }
+                _ => {}
+            }
             return None;
         };
-        let params = message.get("params").cloned().unwrap_or_else(|| json!({}));
         let modern = match params.pointer(VERSION_KEY).and_then(Value::as_str) {
             Some(version) if version != MODERN => {
                 return Some(failure(
@@ -198,6 +271,11 @@ impl Server {
             "tools/call" => self.call(&params),
             "resources/list" => Ok(json!({ "resources": tools::resources(self) })),
             "resources/read" => tools::read(self, &params),
+            // The stream's first message is its acknowledgement, not an answer: the request stays open.
+            "subscriptions/listen" if modern => return Some(self.listen(&id, &params)),
+            // 2025-11-25 and before; 2026-07-28 asks through subscriptions/listen.
+            "resources/subscribe" if !modern => self.subscribe(true, &params),
+            "resources/unsubscribe" if !modern => self.subscribe(false, &params),
             other => Err(Fault::new(-32601, format!("Method not found: {other}"))),
         };
         Some(match answer {
@@ -208,6 +286,10 @@ impl Server {
                         "_meta".into(),
                         json!({ "io.modelcontextprotocol/serverInfo": server_info() }),
                     );
+                    if let Some((ttl, scope)) = cache_hint(method, &params) {
+                        fields.insert("ttlMs".into(), json!(ttl));
+                        fields.insert("cacheScope".into(), json!(scope));
+                    }
                 }
                 success(&id, result)
             }
@@ -235,6 +317,56 @@ impl Server {
                 "instructions": INSTRUCTIONS,
             }),
         )
+    }
+
+    /// `subscriptions/listen` (2026-07-28): of what the client asks, updates of `kentos://extensions/installed` are
+    /// honoured; the acknowledgement says which, and is the stream's first message. The stream stays open until the
+    /// client cancels it (`notifications/cancelled`) or the process ends; the tool list does not change with the
+    /// extensions yet (their commands are Python's, ADIM 19), so `toolsListChanged` is not taken.
+    fn listen(&mut self, id: &Value, params: &Value) -> Value {
+        let uri = crate::extensions::INSTALLED;
+        let watched = params
+            .pointer("/notifications/resourceSubscriptions")
+            .and_then(Value::as_array)
+            .is_some_and(|uris| uris.iter().any(|u| u == uri));
+        let mut agreed = serde_json::Map::new();
+        if watched {
+            agreed.insert("resourceSubscriptions".into(), json!([uri]));
+            if !self.streams.contains(id) {
+                self.streams.push(id.clone());
+            }
+            self.watch
+                .get_or_insert_with(|| crate::extensions::Watch::new(self.extensions_root.clone()));
+        }
+        json!({
+            "jsonrpc": "2.0",
+            "method": "notifications/subscriptions/acknowledged",
+            "params": { "_meta": { SUBSCRIPTION: id }, "notifications": agreed },
+        })
+    }
+
+    /// `resources/subscribe` and `resources/unsubscribe` (2025-11-25 and before): `kentos://extensions/installed` is the
+    /// resource watched; another is refused, saying which is.
+    fn subscribe(&mut self, on: bool, params: &Value) -> Result<Value, Fault> {
+        let uri = params
+            .get("uri")
+            .and_then(Value::as_str)
+            .ok_or_else(|| Fault::new(-32602, "Invalid params: uri gerekli."))?;
+        if uri != crate::extensions::INSTALLED {
+            return Err(Fault::new(
+                -32602,
+                format!(
+                    "Invalid params: {uri} için güncelleme bildirimi yok; izlenebilen kaynak {}.",
+                    crate::extensions::INSTALLED
+                ),
+            ));
+        }
+        self.legacy_watch = on;
+        if on {
+            self.watch
+                .get_or_insert_with(|| crate::extensions::Watch::new(self.extensions_root.clone()));
+        }
+        Ok(json!({}))
     }
 
     fn discover(&self) -> Value {
@@ -267,8 +399,25 @@ impl Server {
     }
 }
 
+/// Resources can be watched (`kentos://extensions/installed`); the tool list is the build's and does not change.
 fn capabilities() -> Value {
-    json!({ "tools": {}, "resources": {} })
+    json!({ "tools": {}, "resources": { "subscribe": true } })
+}
+
+/// The caching hints 2026-07-28 asks of these results (`ttlMs`, `cacheScope`): what is the build's (the capabilities,
+/// the tools, the catalog) is fresh for an hour and the same for anyone; what holds the user's drawings or extensions
+/// is stale at once and theirs.
+fn cache_hint(method: &str, params: &Value) -> Option<(u64, &'static str)> {
+    const HOUR: u64 = 3_600_000;
+    match method {
+        "server/discover" | "tools/list" => Some((HOUR, "public")),
+        "resources/list" => Some((0, "private")),
+        "resources/read" => match params.get("uri").and_then(Value::as_str) {
+            Some("kentos://catalog" | "kentos://catalog/categories") => Some((HOUR, "public")),
+            _ => Some((0, "private")),
+        },
+        _ => None,
+    }
 }
 
 fn server_info() -> Value {

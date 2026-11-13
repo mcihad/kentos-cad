@@ -292,30 +292,14 @@ fn dump(root: Option<PathBuf>) -> ExitCode {
                 .to_owned(),
         );
     };
-    let host = kentos_extensions::Host::this(
-        kentos_extensions::version::Version::parse(env!("CARGO_PKG_VERSION"))
-            .unwrap_or_else(|| kentos_extensions::version::Version::new(0, 0, 0)),
-    );
-    let options = kentos_extension_host::Options {
-        policy: kentos_extension_host::places::load_policy(
-            &kentos_extension_host::places::policy_path(),
-        ),
-        ..kentos_extension_host::Options::default()
-    };
-    let registry = match kentos_extension_host::Registry::open(&root, host, options) {
-        Ok(registry) => registry,
-        Err(problem) => return fail(problem.to_string()),
-    };
-    let (contributions, skipped) = registry.planned_contributions();
-    let value = serde_json::json!({
-        "root": root.display().to_string(),
-        "extensions": registry.extensions(),
-        "contributions": contributions,
-        "skipped": skipped,
-    });
+    let registry =
+        match kentos_extension_host::places::open_to_read(&root, env!("CARGO_PKG_VERSION")) {
+            Ok(registry) => registry,
+            Err(problem) => return fail(problem.to_string()),
+        };
     println!(
         "{}",
-        serde_json::to_string_pretty(&value).unwrap_or_default()
+        serde_json::to_string_pretty(&registry.dump()).unwrap_or_default()
     );
     ExitCode::SUCCESS
 }

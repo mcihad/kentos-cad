@@ -1457,7 +1457,7 @@ pub fn resources(server: &Server) -> Vec<Value> {
             "session-overview",
             "Oturumun özeti",
             "Açık çizimler ve bağlı masaüstleri: her birinin özeti (proje türü, birim, koordinat sistemi, etkin katman), \
-             katman ağacı ve açtığı kapılar (cad.run, arch.run …); koruyucunun kuralı. Eklentiler (.kek) Faz 3'te.",
+             katman ağacı ve açtığı kapılar (cad.run, arch.run …); koruyucunun kuralı; kurulu eklentilerin kısa listesi.",
         ),
         resource(
             "kentos://catalog/categories",
@@ -1467,6 +1467,15 @@ pub fn resources(server: &Server) -> Vec<Value> {
              aranır, catalog.describe ile şeması alınır.",
         ),
     ];
+    out.push(resource(
+        crate::extensions::INSTALLED,
+        "extensions-installed",
+        "Kurulu eklentiler",
+        "Kurulu .kek eklentileri: durumu (etkin, hazır, devre dışı, bağımlılık bekliyor, engellendi, uyumsuz, hata) ve \
+         nedeni, sürümleri, kaynağı ve güveni; çalışan ya da hazır olanların katkıları (şerit sekmesi, sağ tık öğesi, \
+         veri kaynağı, form) ve dışarıda kalanlar nedenleriyle: \"sekmem nereye düştü?\" sorusunun kanıtı. Değişince \
+         izleyene notifications/resources/updated gider.",
+    ));
     let mut whole = resource(
         "kentos://catalog",
         "catalog",
@@ -1517,7 +1526,7 @@ fn overview(server: &mut Server) -> Value {
         "guard": "Yazan her komut önce mode: plan ile planlanır; execute yalnız o planı ve yalnız çizim o andan beri \
                   değişmediyse yazar (planId). Okuyan komut hemen çalışır.",
         "drawings": drawings,
-        "extensions": [],
+        "extensions": crate::extensions::short(&crate::extensions::installed(server.extensions_root.as_deref())),
         "next": "Komutu catalog.search ile arayın, catalog.describe ile şemasını alın, kendi kapısından çalıştırın.",
     })
 }
@@ -1533,6 +1542,8 @@ pub fn read(server: &mut Server, params: &Value) -> Result<Value, Fault> {
         overview(server)
     } else if uri == "kentos://catalog/categories" {
         kentos_headless::agent_tools::every_category()
+    } else if uri == crate::extensions::INSTALLED {
+        crate::extensions::installed(server.extensions_root.as_deref())
     } else if let Some(handle) = uri.strip_prefix("kentos://drawing/")
         && let Some(s) = server.drawings.get(handle)
     {

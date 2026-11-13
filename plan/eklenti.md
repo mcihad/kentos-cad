@@ -683,8 +683,11 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   işaret kutulu gerekçeli yetenekler ve kurulu sürüme göre farkı), kurum kataloğu klasörü, eklentisiz başlatma,
   her kipte Eklentiler sekmesi, dikey eklentinin kendi programındaki sekmesi (yerleşik komut, veri kaynağı ve form
   düğmeleri; Python'lular nedeniyle pasif), katman ve çizim sağ tık menülerinde eklenti öğeleri; gerçek pencerede kabul
-  akışı ekran görüntüleriyle sınandı. Kaynaklar'ın **Eklentilerden** dalı. **Kalan:** Komut ara, MCP kaynağı ve `list_changed`, sorunlu
-  eklentiyi bulma penceresi, `.kcad` bağlantısı, paket SVG ikonları.
+  akışı ekran görüntüleriyle sınandı. Kaynaklar'ın **Eklentilerden** dalı. **MCP:** `kentos://extensions/installed` (`kentos kek dump`'ın aynısı) ve
+  değişince `notifications/resources/updated` (2026-07-28'de `subscriptions/listen`, öncesinde `resources/subscribe`);
+  araç listesi eklentilerle değişmediği için `tools/list_changed` ADIM 19'a kaldı (ADR 8057 §3). **Kalan:** Komut ara,
+  eklenti hatalarının açık bildirimi ve günlüğü (sahibin isteği, 13 Kasım), sorunlu eklentiyi bulma penceresi, `.kcad`
+  bağlantısı, paket SVG ikonları.
 
 ### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 

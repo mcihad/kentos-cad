@@ -22,6 +22,9 @@ kentos-headless = { path = "../headless", default-features = false }
 kentos-native-application = { path = "../application", default-features = false }
 # The server's commands (docs/adr/0134): the desktop's cloud client, on its own runtime.
 kentos-cloud = { path = "../cloud" }
+# The installed extensions an agent reads and hears about (kentos://extensions/installed, plan/eklenti.md ADIM 18): the
+# user's registry, read only; no extension code runs here.
+kentos-extension-host = { path = "../extension-host" }
 serde_json = { workspace = true }
 
 [features]
@@ -34,6 +37,8 @@ mod-gis = ["kentos-headless/mod-gis", "kentos-native-application/mod-gis"]
 mod-road = ["kentos-headless/mod-road", "kentos-native-application/mod-road"]
 
 [dev-dependencies]
+# Installing the shared extension fixture into a test's registry (tests/mcp.rs).
+kentos-extensions = { path = "../../shared/extensions" }
 # Writing a shared cases' drawing to a file the tools open (tests/road_structures.rs).
 kentos-kcad = { path = "../../shared/kcad" }
 # Inflating the PDF's streams in the acceptance test's own reader (the plotter's tests/support/files.rs).

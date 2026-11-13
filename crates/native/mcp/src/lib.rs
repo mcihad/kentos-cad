@@ -16,6 +16,10 @@
 //! - `desktop.attach` gives a handle on the drawing open in the KentOS
 //!   desktop, through the link the user opens there (`desktop`, docs/adr/0137);
 //!   every KentOS program has its own, named by `program` (docs/adr/0802).
+//! - `kentos://extensions/installed` is the user's installed extensions and what
+//!   they add (`extensions`, plan/eklenti.md ADIM 18); a client watching it
+//!   hears when it changes ([`Server::notices`]: `subscriptions/listen` of
+//!   2026-07-28, `resources/subscribe` before).
 #![forbid(unsafe_code)]
 #![cfg_attr(
     not(test),
@@ -24,6 +28,7 @@
 
 mod cloud;
 mod desktop;
+mod extensions;
 mod server;
 mod tools;
 
