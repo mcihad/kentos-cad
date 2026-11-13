@@ -591,6 +591,14 @@
       "level": "host",
       "note": "Kullanıcı tercihleri; proje verisi değil."
     },
+    "extensions.install": {
+      "level": "host",
+      "note": "Eklentiyi bu bilgisayara kurar; çizimi ve proje verisini değiştirmez."
+    },
+    "extensions.manage": {
+      "level": "host",
+      "note": "Eklentiler penceresi; çizimi ve proje verisini değiştirmez."
+    },
     "layer.new": {
       "level": "semantic",
       "via": [

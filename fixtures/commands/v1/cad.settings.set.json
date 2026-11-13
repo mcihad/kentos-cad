@@ -10761,6 +10761,349 @@
       ]
     },
     {
+      "name": "Araç katmanları: yazı ve tarama kendi katmanlarına çizilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "toolLayers": [
+              {
+                "tool": "text",
+                "layer": "yazi"
+              },
+              {
+                "tool": "hatch",
+                "layer": "kilitli"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "toolLayers"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "toolLayers": [
+                {
+                  "tool": "text",
+                  "layer": "yazi"
+                },
+                {
+                  "tool": "hatch",
+                  "layer": "kilitli"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Araç katmanları boş liste: kalkar, araçlar etkin katmana çizer",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326,
+          "toolLayers": [
+            {
+              "tool": "text",
+              "layer": "yazi"
+            },
+            {
+              "tool": "hatch",
+              "layer": "kilitli"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "toolLayers": []
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "toolLayers"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "toolLayers": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "araç katmanında bir araç iki kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "toolLayers": [
+              {
+                "tool": "text",
+                "layer": "yazi"
+              },
+              {
+                "tool": "hatch",
+                "layer": "kilitli"
+              },
+              {
+                "tool": "text",
+                "layer": "kilitli"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tool_layers",
+              "message": "Araç katmanları: yazı aracının katmanı iki kez yazılmış.",
+              "path": "toolLayers"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "araç katmanının katmanı boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "toolLayers": [
+              {
+                "tool": "dimension",
+                "layer": " "
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tool_layers",
+              "message": "Araç katmanları: 1. araç katmanının katmanı boş.",
+              "path": "toolLayers"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "araç katmanı çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "toolLayers": [
+              {
+                "tool": "dimension",
+                "layer": "olcu"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tool_layers",
+              "message": "ölçü için verilen “olcu” çizimde bir katman değil; var olan bir katmanın kimliğini verin.",
+              "path": "toolLayers[0].layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "yerel projede elipsoit yüksekliği",
       "steps": [
         {

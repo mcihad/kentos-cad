@@ -191,7 +191,8 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
         || input.heights.is_some()
         || input.standard_docs.is_some()
         || input.coordinate_epoch.is_some()
-        || input.refraction.is_some();
+        || input.refraction.is_some()
+        || input.tool_layers.is_some();
     if !given {
         return Err(Stop::failed(error(
             codes::NOTHING_TO_SET,
@@ -313,6 +314,26 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
             format!("Kırılma katsayısı k −1 ile 1 arasında olmalı; {k} verildi."),
             "refraction",
         ));
+    }
+    // UR-003: each tool once, each layer one the drawing has.
+    if let Some(list) = &input.tool_layers {
+        if let Some(why) = kentos_commands::tool_layers_problem(list) {
+            return Err(fail(codes::INVALID_TOOL_LAYERS, format!("Araç katmanları: {why}."), "toolLayers"));
+        }
+        for (i, t) in list.iter().enumerate() {
+            let is_layer = doc.layers().get(&t.layer).is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer);
+            if !is_layer {
+                return Err(fail(
+                    codes::INVALID_TOOL_LAYERS,
+                    format!(
+                        "{} için verilen “{}” çizimde bir katman değil; var olan bir katmanın kimliğini verin.",
+                        t.tool.word(),
+                        t.layer
+                    ),
+                    &format!("toolLayers[{i}].layer"),
+                ));
+            }
+        }
     }
     Ok(())
 }
@@ -470,6 +491,10 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
         survey.refraction = Some(k);
         s.survey = Some(survey);
     }
+    // UR-003: the tools' layers, whole.
+    if let Some(list) = &input.tool_layers {
+        s.tool_layers = list.clone();
+    }
     if !s.has_system() {
         let ellipsoidal = s
             .heights
@@ -609,6 +634,7 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
         before.survey.clone().unwrap_or_default().refraction() != after.survey.clone().unwrap_or_default().refraction(),
         "refraction",
     );
+    key(before.tool_layers != after.tool_layers, "toolLayers");
     let heights = after.annotation.clone().unwrap_or_default();
     let followed = follow_annotation_change(
         doc,

@@ -42,6 +42,18 @@ pub(super) fn zoning_plan(
     Ok(Some(v))
 }
 
+/// `toolLayers` (schema 255, usage review UR-003): the layer each annotation tool draws on, checked as it is read.
+pub(super) fn tool_layers(r: &mut Reader<'_>) -> Result<Vec<kentos_contracts::ToolLayer>, KcadError> {
+    let (v, at): (Vec<kentos_contracts::ToolLayer>, usize) = objects::json_part(r, "araç katmanları")?;
+    if v.is_empty() {
+        return Err(r.fail_at(Code::BadValue, at, "boş araç katmanları yazılmaz"));
+    }
+    if let Some(problem) = kentos_contracts::tool_layers_problem(&v) {
+        return Err(r.fail_at(Code::BadValue, at, &problem));
+    }
+    Ok(v)
+}
+
 /// `monitoringReviews`: what the payload's schema lets it hold, checked as it is read.
 pub(super) fn monitoring_reviews(
     r: &mut Reader<'_>,

@@ -28,6 +28,7 @@ from .types import (  # noqa: F401
     ProjectStandardDocument,
     SettingsChanged,
     SettingsSet,
+    ToolLayer,
     Workspace,
     WorkspaceName,
 )
@@ -97,6 +98,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         second_srid: int | None | Unset = UNSET,
         srid: int | None | Unset = UNSET,
         standard_docs: Sequence[ProjectStandardDocument] | None | Unset = UNSET,
+        tool_layers: Sequence[ToolLayer] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SettingsChanged:
@@ -155,6 +157,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             srid: Unit: epsg.
             standard_docs: Replace the project's ordered drawing-standard documents. Missing keeps
                 the current list; an empty list removes it.
+            tool_layers: The layer each annotation tool draws on (usage review UR-003), whole; empty: the active layer for all.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -189,6 +192,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             second_srid=second_srid,
             srid=srid,
             standard_docs=_opt(standard_docs, lambda x: list(x)),
+            tool_layers=_opt(tool_layers, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -217,6 +221,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         second_srid: int | None | Unset = UNSET,
         srid: int | None | Unset = UNSET,
         standard_docs: Sequence[ProjectStandardDocument] | None | Unset = UNSET,
+        tool_layers: Sequence[ToolLayer] | None | Unset = UNSET,
     ) -> SettingsChanged:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -243,6 +248,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             second_srid=second_srid,
             srid=srid,
             standard_docs=_opt(standard_docs, lambda x: list(x)),
+            tool_layers=_opt(tool_layers, lambda x: list(x)),
         ))
 
     def validate(
@@ -271,6 +277,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         second_srid: int | None | Unset = UNSET,
         srid: int | None | Unset = UNSET,
         standard_docs: Sequence[ProjectStandardDocument] | None | Unset = UNSET,
+        tool_layers: Sequence[ToolLayer] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -297,6 +304,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             second_srid=second_srid,
             srid=srid,
             standard_docs=_opt(standard_docs, lambda x: list(x)),
+            tool_layers=_opt(tool_layers, lambda x: list(x)),
         ))
 
     def answer(
@@ -325,6 +333,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         second_srid: int | None | Unset = UNSET,
         srid: int | None | Unset = UNSET,
         standard_docs: Sequence[ProjectStandardDocument] | None | Unset = UNSET,
+        tool_layers: Sequence[ToolLayer] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -356,6 +365,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             second_srid=second_srid,
             srid=srid,
             standard_docs=_opt(standard_docs, lambda x: list(x)),
+            tool_layers=_opt(tool_layers, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

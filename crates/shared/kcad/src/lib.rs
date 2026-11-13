@@ -981,6 +981,8 @@ pub const SCHEMA_WITH_MONITORING_REVIEWS: u32 = 253;
 /// Schema 254 (docs/adr/8054 §10): the payload's root may carry `modules`, each module's and each `.kek` extension's
 /// own version of the data it adds, so a module's new data no longer raises the document schema of the others.
 pub const SCHEMA_WITH_MODULE_VERSIONS: u32 = 254;
+/// Schema 255 (usage review UR-003): the layer each annotation tool draws on (`toolLayers`).
+pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 
 /// The modules a root's `modules` may name: key, name for people, and the version of its data this build reads (none
 /// raised yet: 0). A file with a newer one, an unknown module or an extension's data is refused before its document is
@@ -1010,7 +1012,7 @@ impl ModuleVersions {
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 252] = [
+pub const SCHEMAS: [u32; 253] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1263,6 +1265,7 @@ pub const SCHEMAS: [u32; 252] = [
     SCHEMA_WITH_KEPT_ADJUSTMENTS,
     SCHEMA_WITH_MONITORING_REVIEWS,
     SCHEMA_WITH_MODULE_VERSIONS,
+    SCHEMA_WITH_TOOL_LAYERS,
 ];
 
 /// The file a drawing is saved as.

@@ -78,7 +78,8 @@ impl QuickDimension {
         let _ = dimensions;
         // The command measures the same selection again (docs/adr/0622 §9).
         let input = AnnotationsWrite {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // UR-003: the project's dimension layer when it names one.
+            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Dimension),
             work: AnnotationWork::Dimensions {
                 ids: self
                     .slots

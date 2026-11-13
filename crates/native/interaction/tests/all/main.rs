@@ -87,6 +87,7 @@ mod symbols;
 mod templates;
 mod temporary_refs;
 mod text;
+mod tool_layers;
 mod text_file;
 mod time_version;
 mod topology;

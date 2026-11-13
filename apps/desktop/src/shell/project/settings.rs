@@ -218,6 +218,8 @@ pub struct State {
     /// Kaydet's question when a local project's unit changes with a drawing
     /// in it (docs/adr/0256 §2; unit_change.rs), over this window.
     pub(super) unit_question: Option<super::unit_change::Question>,
+    /// Araç katmanları' choices (UR-003): the drawing's layers, their ids and paths, in tree order.
+    layers: Vec<(String, String)>,
 }
 
 #[derive(Debug, Clone)]
@@ -288,6 +290,8 @@ pub enum Event {
     ArchLocalRules(Option<kentos_commands::LocalRules>),
     /// Yangın güvenliği's sprinkler system switched (docs/adr/8035).
     ArchSprinklers(bool),
+    /// Araç katmanları (UR-003): the layer a tool's objects go to; none: the active layer.
+    ToolLayer(kentos_commands::AnnotationTool, Option<String>),
     RoomChoices(super::arch::ChoiceEvent),
     /// Kotlar ve epok: a field changed (docs/adr/0519 §5).
     Heights(super::heights::Edit),
@@ -352,6 +356,13 @@ impl State {
                 doc.settings().coordinate_epoch,
             ),
             unit_question: None,
+            layers: doc
+                .model
+                .layers()
+                .leaves()
+                .into_iter()
+                .map(|n| (n.id.clone(), doc.model.layers().path(&n.id)))
+                .collect(),
         }
     }
 
@@ -568,6 +579,15 @@ impl App {
             Event::LengthDecimals(n) => d.length_decimals = n.min(4),
             Event::AreaDecimals(n) => d.area_decimals = n.min(4),
             Event::AreaUnit(u) => d.area_unit = u,
+            Event::ToolLayer(tool, layer) => {
+                d.tool_layers.retain(|t| t.tool != tool);
+                if let Some(layer) = layer {
+                    d.tool_layers.push(kentos_commands::ToolLayer { tool, layer });
+                    d.tool_layers.sort_by_key(|t| {
+                        kentos_commands::AnnotationTool::ALL.iter().position(|a| *a == t.tool)
+                    });
+                }
+            }
             // The tolerances are typed in the unit's cc or ″: their texts follow it.
             Event::AngleUnit(u) => {
                 d.angle_unit = u;
@@ -1734,7 +1754,7 @@ fn units<'a>(
         None,
         decimals(d.area_decimals, Event::AreaDecimals),
     ));
-    Column::new()
+    let column = Column::new()
         .spacing(16)
         .push(group("Uzunluk ve koordinat", lengths))
         .push(scale)
@@ -1747,8 +1767,36 @@ fn units<'a>(
         .push(Banner::info(
             "Ondalık ayırıcı her zaman noktadır; komut satırına aynı biçimde yazılabilir (Y,X virgülle ayrılır).",
         ))
-        .push(heights)
-        .into()
+        .push(heights);
+    if crate::catalog::effective_mode(d.workspace).id == Workspace::Cad {
+        column.push(group("Araç katmanları", tool_layers(s))).into()
+    } else {
+        column.into()
+    }
+}
+
+/// Araç katmanları (UR-003): the layer each annotation tool draws on, “Etkin katman” when none is set or the one
+/// set is no longer in the drawing.
+fn tool_layers(s: &State) -> Element<'_, Message> {
+    use kentos_commands::AnnotationTool;
+    let mut rows = Column::new().spacing(10);
+    for tool in AnnotationTool::ALL {
+        let current = kentos_commands::tool_layer(&s.settings.tool_layers, tool);
+        let selected = current
+            .and_then(|id| s.layers.iter().position(|(l, _)| l == id))
+            .map_or(0, |i| i + 1);
+        let choices = std::iter::once(Choice::new("Etkin katman"))
+            .chain(s.layers.iter().map(|(_, path)| Choice::new(path.as_str())));
+        let ids: Vec<String> = s.layers.iter().map(|(id, _)| id.clone()).collect();
+        let pick = Select::new(choices, Some(selected), move |i| {
+            event(Event::ToolLayer(tool, i.checked_sub(1).and_then(|i| ids.get(i).cloned())))
+        });
+        rows = rows.push(setting(tool.plural(), None, pick));
+    }
+    rows.push(label::caption(
+        "Ölçü, yazı ve tarama araçları seçilen katmana çizer; katman kilitliyse araç durur ve nedenini söyler.",
+    ))
+    .into()
 }
 /// A section's own values back to the defaults the web's plan names
 /// (`PROJECT_SETTINGS_DEFAULTS`, the settings schema's `project.*`); the
@@ -1795,6 +1843,12 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
             if let Some(unit) = read("project.angleUnit") {
                 d.angle_unit = unit;
             }
+            // A CAD project's tools start on its named layers (UR-003), as a new one does.
+            d.tool_layers = if crate::catalog::effective_mode(d.workspace).id == Workspace::Cad {
+                kentos_project::new_project::cad_tool_layers()
+            } else {
+                Vec::new()
+            };
         }
         Section::Survey => d.survey = None,
         Section::Variables => d.variables = Vec::new(),

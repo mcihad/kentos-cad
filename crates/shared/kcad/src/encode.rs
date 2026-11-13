@@ -576,6 +576,7 @@ impl<'d> Encoder<'d> {
             + usize::from(s.zoning_plan.is_some())
             + usize::from(!s.survey_adjustments.is_empty())
             + usize::from(!s.monitoring_reviews.is_empty())
+            + usize::from(!s.tool_layers.is_empty())
             + usize::from(!s.approved_sheet_templates.is_empty())
             + usize::from(!s.table_styles.is_empty())
             + usize::from(!s.standard_exceptions.is_empty())
@@ -859,6 +860,18 @@ impl<'d> Encoder<'d> {
         if !s.text_styles.is_empty() {
             self.key("textStyles");
             self.at(Seg::Name("textStyles"), |e| e.text_styles(&s.text_styles))?;
+        }
+        // Schema 255 (usage review UR-003): the layer each annotation tool draws on, as their JSON (after textStyles,
+        // bytewise).
+        if !s.tool_layers.is_empty() {
+            self.key("toolLayers");
+            self.at(Seg::Name("toolLayers"), |e| {
+                if let Some(problem) = kentos_contracts::tool_layers_problem(&s.tool_layers) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.tool_layers).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
         }
         // Schema 75 (docs/adr/0339 §2): the wall styles, as their JSON.
         if !s.wall_styles.is_empty() {

@@ -294,6 +294,24 @@ def cases():
                                {"settings": {"survey": None}, "revision": "changed"})]})
     out.append(refused("kırılma katsayısı 1'den büyük", {"refraction": 1.5}, "invalid_refraction",
                        "Kırılma katsayısı k −1 ile 1 arasında olmalı; 1.5 verildi.", "refraction"))
+    # Usage review UR-003: the layer each annotation tool draws on, whole; an empty list takes them away; each tool once,
+    # each layer one the drawing has.
+    tools = [{"tool": "text", "layer": "yazi"}, {"tool": "hatch", "layer": "kilitli"}]
+    out.append({"name": "Araç katmanları: yazı ve tarama kendi katmanlarına çizilir",
+                "steps": [step("execute", {"toolLayers": tools}, done(["toolLayers"]),
+                               {**FLAGS, "settings": {"toolLayers": tools}})]})
+    out.append({"name": "Araç katmanları boş liste: kalkar, araçlar etkin katmana çizer",
+                "setup": setup(toolLayers=tools),
+                "steps": [step("execute", {"toolLayers": []}, done(["toolLayers"]),
+                               {**FLAGS, "settings": {"toolLayers": None}})]})
+    out.append(refused("araç katmanında bir araç iki kez", {"toolLayers": tools + [{"tool": "text", "layer": "kilitli"}]},
+                       "invalid_tool_layers", "Araç katmanları: yazı aracının katmanı iki kez yazılmış.", "toolLayers"))
+    out.append(refused("araç katmanının katmanı boş", {"toolLayers": [{"tool": "dimension", "layer": " "}]},
+                       "invalid_tool_layers", "Araç katmanları: 1. araç katmanının katmanı boş.", "toolLayers"))
+    out.append(refused("araç katmanı çizimde yok", {"toolLayers": [{"tool": "dimension", "layer": "olcu"}]},
+                       "invalid_tool_layers",
+                       "ölçü için verilen “olcu” çizimde bir katman değil; var olan bir katmanın kimliğini verin.",
+                       "toolLayers[0].layer"))
     need = ("Koordinat sistemi olmayan yerel projede elipsoit yüksekliği ve koordinat epoku olmaz: ikisi de bir datumun "
             "elipsoidine ve zamanına bağlıdır. Önce projeye bir sistem atayın ya da ortometrik yüksekliği seçin.")
     out.append(refused("yerel projede elipsoit yüksekliği", {"srid": 0, "heights": {"kind": "ellipsoidal"}},

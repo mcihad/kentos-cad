@@ -135,7 +135,8 @@ impl Hatch {
                 gap: (m.hatch_by_lines && m.hatch_gap > 0.0).then_some(m.hatch_gap),
             },
             pattern: options::spec(&m, &self.user),
-            layer_id: cx.doc.layers().active().to_owned(),
+            // UR-003: the project's hatch layer when it names one.
+            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Hatch),
             look: NewLook {
                 color: cx.draft.color_text(),
                 line_weight: None,

@@ -75,7 +75,8 @@ impl HatchSelected {
                 island_style: options::island_style(&m),
             },
             pattern: options::spec(&m, &self.user),
-            layer_id: doc.layers().active().to_owned(),
+            // UR-003: the project's hatch layer when it names one.
+            layer_id: crate::tool_layer::layer_for(doc, kentos_commands::AnnotationTool::Hatch),
             look: NewLook {
                 color: cx.draft.color_text(),
                 line_weight: None,

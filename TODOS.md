@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- UR-003: `io/kcad.ts` şema 255 (`toolLayers`), web'in yeni CAD projesi ölçü/yazı/tarama araç katmanlarını yazsın
+  (`fixtures/project/v1/new-project.json` o zaman yeniden kaydedilir), web araçları `settings.toolLayers`'ı izlesin ve
+  Proje ayarları › Birim ve ölçek › Araç katmanları.
 - MAP-07 / ADR 1260: web'in Topoloji paneli ve `io/kcad.ts` şema 189 (kalite `profile`'ı; istisnanın `decision`,
   `reason`, `ruleDigest`, `scope`'u), bulgunun `state`/`reason`'ı, `cad.topology.exceptions`'ın `error`/`reason`/`scope`'u
   ve `cad.topology.repair`'in web işleyicisi; WASM `topologyCheck`'in istisnası `anywhere` almıyor (hep yerine bağlı).

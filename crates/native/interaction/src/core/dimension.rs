@@ -628,7 +628,8 @@ impl Dimension {
             measure,
             at: wire(at),
             offset: typed,
-            layer_id: cx.doc.layers().active().to_owned(),
+            // UR-003: the project's dimension layer when it names one.
+            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Dimension),
             dimension_style: styles::dimension_style(cx.memory, settings)
                 .filter(|_| styles::shown(settings))
                 .map(|s| s.name.clone()),

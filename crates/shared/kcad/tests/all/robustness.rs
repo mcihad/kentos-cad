@@ -522,6 +522,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             zoning_plan: None,
             survey_adjustments: Vec::new(),
             monitoring_reviews: Vec::new(),
+            tool_layers: Vec::new(),
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),

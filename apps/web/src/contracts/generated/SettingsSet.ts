@@ -8,6 +8,7 @@ import type { DrawingUnit } from "./DrawingUnit";
 import type { HeightReference } from "./HeightReference";
 import type { LengthStyle } from "./LengthStyle";
 import type { ProjectStandardDocument } from "./ProjectStandardDocument";
+import type { ToolLayer } from "./ToolLayer";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -51,6 +52,8 @@ import type { Workspace } from "./Workspace";
  *   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
  * - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
  * - `refraction`: the refraction coefficient k of trigonometric heights, within [−1, 1] (docs/adr/4900).
+ * - `toolLayers`: the layer each annotation tool (dimension, text, hatch) draws on, whole; an empty list takes them
+ *   away and the tools draw on the active layer (usage review UR-003).
  * - `standardDocs`: the entire ordered list of versioned drawing-standard
  *   documents retained by the project; an empty list removes all bindings.
  *   An ordered, byte-identical subset may remove unsupported existing
@@ -64,7 +67,8 @@ import type { Workspace } from "./Workspace";
  * (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
  * (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
  * (two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or
- * view without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`; then
+ * view without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`, `invalid_tool_layers` (a tool twice,
+ * a layer the drawing has not or a group); then
  * `invalid_revision`, `revision_conflict` (status `conflict`);
  * `project_type_locked` (an existing project type changed),
  * `cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work
@@ -113,6 +117,10 @@ arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number,
  * written to the project (Poligon hesabı's Projeye yaz). Not an undo step, as every setting.
  */
 refraction?: number, 
+/**
+ * The layer each annotation tool draws on (usage review UR-003), whole; empty: the active layer for all.
+ */
+toolLayers?: Array<ToolLayer>, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

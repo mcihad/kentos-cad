@@ -43,6 +43,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Araç bazında hedef katman seçimi görünür olsun; isteğe bağlı şablon/araç katmanı eşlemesi sunulsun. Etkin katmanı kullanma tercihi korunabilsin; hedef katman gizli/kilitliyse işlem öncesi anlaşılır uyarı gösterilsin.
 - **Başlangıç noktası:** Yeni proje varsayılan katmanları `crates/native/project/src/wizard.rs`; ölçü/yazı/tarama araçlarının etkin katman seçimi ve `apps/desktop/src/layer_list.rs`.
 - **Kabul:** Üç araç için katman hedefi, kilitli/gizli katman, kaydet–aç ve geri alma testleri; mevcut kullanıcı şablonlarını sessizce değiştirme.
+- **Durum (13.11.2026):** düzeltildi — projeye araç katmanları eklendi (`.kcad` şema 255, `settings.toolLayers`): yeni CAD projesi ölçüleri «Ölçü», yazıları «Yazı», taramaları «Tarama» katmanına çizer; katman çizimde yoksa etkin katmana döner, kilitliyse araç durur ve hangi katmanın neden kilitli olduğunu söyler. Proje ayarları › Birim ve ölçek › Araç katmanları'nda (yalnız CAD) her araç için katman ya da «Etkin katman» seçilir; `cad.settings.set` `toolLayers` alır (Python/MCP aynı yoldan, 5 yeni ortak durum). Testler: `tool_layers` (kentos-interaction), `tool_layer_settings_tests` (masaüstü), kcad örnekleri (`tool-layers.kcad` ve üç bozuk), `new_project`; resimler `.run/gui-evidence/kullanim-UR-003/`. Açık: web tarafı (TODOS.md §0.2).
 
 #### UR-004 — Tarama çizgileri mevcut yazının üzerinden geçiyor
 

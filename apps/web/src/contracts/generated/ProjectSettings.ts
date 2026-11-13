@@ -43,6 +43,7 @@ import type { StandardException } from "./StandardException";
 import type { SurveySettings } from "./SurveySettings";
 import type { TableStyleDef } from "./TableStyleDef";
 import type { TextStyleDef } from "./TextStyleDef";
+import type { ToolLayer } from "./ToolLayer";
 import type { TopologySettings } from "./TopologySettings";
 import type { Ucs } from "./Ucs";
 import type { ViewTemplate } from "./ViewTemplate";
@@ -304,6 +305,10 @@ parcelRegister?: ParcelRegister,
  * The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 252).
  */
 surveyAdjustments?: Array<KeptAdjustment>, 
+/**
+ * The layer each annotation tool draws on (usage review UR-003); absent: the active layer (`.kcad` schema 255).
+ */
+toolLayers?: Array<ToolLayer>, 
 /**
  * The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none
  * (`.kcad` schema 253).

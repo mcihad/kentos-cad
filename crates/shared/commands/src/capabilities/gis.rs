@@ -544,6 +544,7 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "invalid_heights",
                 "invalid_epoch",
                 "invalid_refraction",
+                "invalid_tool_layers",
                 "heights_need_system",
             ],
             REVISION,
