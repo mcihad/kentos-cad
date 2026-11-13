@@ -566,3 +566,25 @@ fn splitting_an_area_says_its_tied_hatch_follows_one_piece() {
     let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
     assert!(said.iter().any(|t| t.starts_with("Bölünen alana bağlı 1 tarama yalnız ilk parçayı izler")), "{said:?}");
 }
+
+/// UR-106: an ellipse split in two: the result says its pieces are straight-edged areas, not ellipses.
+#[test]
+fn splitting_an_ellipse_says_its_pieces_are_polygons() {
+    let mut b = bench();
+    let ellipse: kentos_commands::Entity = serde_json::from_value(serde_json::json!({
+        "kind": "ellipse", "id": 0, "layerId": "parsel", "attrs": {},
+        "c": {"x": common::E + 300.0, "y": common::N}, "major": {"x": 8.0, "y": 0.0}, "ratio": 0.75,
+        "t0": 0.0, "t1": std::f64::consts::TAU
+    }))
+    .expect("an ellipse");
+    let slot = b.doc.add(ellipse).expect("a slot");
+    b.spatial.sync(&b.doc);
+    select(&mut b, &[slot.0]);
+    b.start("areaSplit");
+    let before = b.said(0).len();
+    b.click(300.0, -10.0);
+    b.click(300.0, 10.0);
+    b.confirm();
+    let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
+    assert!(said.iter().any(|t| t.starts_with("Bölünen 1 elips ya da eğrinin parçaları düz kenarlı")), "{said:?}");
+}

@@ -756,6 +756,12 @@ impl AreaSplit {
                 _ => false,
             })
             .count();
+        // An ellipse or a curve split comes out as areas of straight edges: said with the result.
+        let curved = self
+            .list
+            .iter()
+            .filter(|t| matches!(doc.get(t.slot), Some(Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_))))
+            .count();
         let work = AreaWork::Split {
             ids: self.list.iter().map(|t| edge::uid(doc, t.slot)).collect(),
             line: line.map(|pts| pts.into_iter().map(points::wire).collect()),
@@ -788,6 +794,14 @@ impl AreaSplit {
                 out.objects
             ),
         );
+        if curved > 0 && count > 1 {
+            cx.say(
+                Level::Warn,
+                format!(
+                    "Bölünen {curved} elips ya da eğrinin parçaları düz kenarlı kapalı alan oldu: eğrisel sınır çokgene yaklaşık çevrildi, elips olarak düzenlenemez. İstemediyseniz geri alın."
+                ),
+            );
+        }
         if tied > 0 && count > 1 {
             cx.say(
                 Level::Warn,
