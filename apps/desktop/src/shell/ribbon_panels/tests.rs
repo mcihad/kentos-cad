@@ -403,3 +403,46 @@ fn ozellikler_offers_the_webs_values() {
         );
     }
 }
+
+/// UR-076: with a selection the new objects' look panel is titled “Yeni nesneler”, so its colour is not read as the
+/// selected line's; without one it keeps its own name.
+#[test]
+fn the_look_panel_says_it_is_the_new_objects_while_something_is_selected() {
+    assert_eq!(properties_title("Özellikler", false), "Özellikler");
+    assert_eq!(properties_title("Özellikler", true), "Yeni nesneler");
+    let mut app = app_with_drawing();
+    app.selection.set([Slot(1)]);
+    let p = catalog()
+        .tabs()
+        .flat_map(|t| t.panels.iter())
+        .find(|p| p.items.iter().any(|i| matches!(i, crate::catalog::Item::Builtin(b) if *b == "properties")));
+    if let Some(p) = p {
+        assert!(app.properties_group(p).is_some());
+    }
+}
+
+/// UR-076's pictures: a CAD drawing with a line selected, the look panel titled for the new objects,
+/// `.run/gui-evidence/kullanim-076/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn look_panel_screens() {
+    crate::files_testing::usage_shots("076", "secimle-yeni-nesneler", || {
+        let mut app = app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        app.selection.set([Slot(1)]);
+        app.ribbon_context = false;
+        let tab = app
+            .ribbon_tabs()
+            .find(|t| {
+                t.panels
+                    .iter()
+                    .any(|p| p.items.iter().any(|i| matches!(i, crate::catalog::Item::Builtin(b) if *b == "properties")))
+            })
+            .map(|t| t.id)
+            .expect("the look panel's tab");
+        let _ = app.update(Message::RibbonTab(tab));
+        app.tab = tab;
+        app.ribbon_context = false;
+        app
+    });
+}

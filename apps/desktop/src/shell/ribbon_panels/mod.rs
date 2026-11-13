@@ -421,7 +421,7 @@ impl App {
                 .width(width)
                 .tip(
                     kentos_ui::widget::Tip::new("Renk")
-                        .body("Yeni nesnelerin rengi; “Katmana göre” katmanın rengini kullanır."),
+                        .body("Yeni nesnelerin rengi; “Katmana göre” katmanın rengini kullanır. Seçili nesneleri değiştirmez: onlarınki Öznitelikler panelindedir."),
                 );
             let m = view_menus.clone();
             let types = Choice::new(line_type_text(line_type), move || m().1)
@@ -430,7 +430,7 @@ impl App {
                 .width(width)
                 .tip(
                     kentos_ui::widget::Tip::new("Çizgi tipi")
-                        .body("Yeni nesnelerin çizgi tipi; “Katmana göre” katmanınkini kullanır."),
+                        .body("Yeni nesnelerin çizgi tipi; “Katmana göre” katmanınkini kullanır. Seçili nesneleri değiştirmez: onlarınki Öznitelikler panelindedir."),
                 );
             let m = view_menus.clone();
             let weights = Choice::new(weight_value_text(weight), move || m().2)
@@ -438,7 +438,7 @@ impl App {
                 .label_icon(glyph("lineWeight"))
                 .width(width)
                 .tip(kentos_ui::widget::Tip::new("Çizgi kalınlığı").body(
-                    "Yeni nesnelerin çizim kalınlığı; “Katmana göre” katmanınkini kullanır.",
+                    "Yeni nesnelerin çizim kalınlığı; “Katmana göre” katmanınkini kullanır. Seçili nesneleri değiştirmez: onlarınki Öznitelikler panelindedir.",
                 ));
             // The drawing scale is the status bar's (docs/adr/0622 §2): the panel keeps the new objects' look.
             container(column![colors, types, weights].spacing(3))
@@ -456,7 +456,7 @@ impl App {
                     weights,
                 )
         };
-        Some(Group::new(panel.label).stepped(widths, view, folded))
+        Some(Group::new(properties_title(panel.label, !self.selection.is_empty())).stepped(widths, view, folded))
     }
 
     /// Seçim: the count and the kinds of the selection, then its commands
@@ -562,3 +562,9 @@ const STACK_PAD: f32 = 2.0;
 mod menus;
 #[cfg(test)]
 mod tests;
+
+/// The new objects' look panel's title: its own while nothing is selected; with a selection, “Yeni nesneler”, so its
+/// colour, type and weight are not read as the selected objects' (theirs are in Öznitelikler).
+pub(crate) fn properties_title(own: &'static str, selection: bool) -> &'static str {
+    if selection { "Yeni nesneler" } else { own }
+}
