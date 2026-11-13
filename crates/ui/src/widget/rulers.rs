@@ -66,6 +66,18 @@ pub fn thickness() -> f32 {
     typography::scaled(THICKNESS).round()
 }
 
+/// Etiketlerin yazı boyu.
+fn label_size() -> f32 {
+    typography::scaled(9.0).round()
+}
+
+/// Sol cetvelin genişliği: dört basamaklı bir etiket tek satırda sığar (A0'ın 1189 mm'si; kullanım raporu UR-012);
+/// rakamlar alt alta dizilince sayı tek bakışta okunmuyordu.
+pub fn left_thickness() -> f32 {
+    let label = typography::measured_font_width("0000", label_size(), typography::mono());
+    thickness().max((label + 6.0).round())
+}
+
 /// Kılavuzun yönü.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Orientation {
@@ -314,21 +326,22 @@ struct Areas {
 
 fn areas(bounds: Rectangle) -> Areas {
     let size = thickness();
+    let left = left_thickness();
 
     Areas {
-        corner: Rectangle::new(bounds.position(), Size::new(size, size)),
+        corner: Rectangle::new(bounds.position(), Size::new(left, size)),
         top: Rectangle::new(
-            Point::new(bounds.x + size, bounds.y),
-            Size::new((bounds.width - size).max(0.0), size),
+            Point::new(bounds.x + left, bounds.y),
+            Size::new((bounds.width - left).max(0.0), size),
         ),
         left: Rectangle::new(
             Point::new(bounds.x, bounds.y + size),
-            Size::new(size, (bounds.height - size).max(0.0)),
+            Size::new(left, (bounds.height - size).max(0.0)),
         ),
         content: Rectangle::new(
-            Point::new(bounds.x + size, bounds.y + size),
+            Point::new(bounds.x + left, bounds.y + size),
             Size::new(
-                (bounds.width - size).max(0.0),
+                (bounds.width - left).max(0.0),
                 (bounds.height - size).max(0.0),
             ),
         ),
@@ -404,7 +417,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Rulers<'a, Message> {
         let size = limits.max();
         let ruler = thickness();
         let inner = Size::new(
-            (size.width - ruler).max(0.0),
+            (size.width - left_thickness()).max(0.0),
             (size.height - ruler).max(0.0),
         );
         let content = self.content.as_widget_mut().layout(
@@ -632,7 +645,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Rulers<'a, Message> {
         let decimals = axis::decimals(f64::from(major));
         let step = major / parts as f32;
         let font = typography::mono();
-        let size = Pixels(typography::scaled(9.0).round());
+        let size = Pixels(label_size());
         let ruler = thickness();
 
         // Kılavuzlar içeriğin üstünde; sürüklenen, eski yerinin yerine.
@@ -718,7 +731,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Rulers<'a, Message> {
             renderer.fill_quad(
                 Quad {
                     bounds: Rectangle::new(
-                        Point::new(areas.left.x + ruler - 1.0, areas.corner.y),
+                        Point::new(areas.left.x + areas.left.width - 1.0, areas.corner.y),
                         Size::new(1.0, areas.corner.height + areas.left.height),
                     ),
                     ..Quad::default()
@@ -800,14 +813,13 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Rulers<'a, Message> {
                 }
             });
 
-            // Sol cetvel: rakamlar alt alta.
+            // Sol cetvel: etiket tek satırda, çizginin altında (UR-012).
             renderer.with_layer(areas.left, |renderer| {
                 let from = transform.to_units(Point::new(0.0, 0.0)).y;
                 let to = transform.to_units(Point::new(0.0, content.height)).y;
                 let (low, high) = (from.min(to), from.max(to));
                 let first = (low / step).floor() as i64;
                 let last = (high / step).ceil() as i64;
-                let line_height = size.0;
 
                 for part in first..=last {
                     let value = part as f32 * step;
@@ -817,25 +829,18 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Rulers<'a, Message> {
                     tick(
                         renderer,
                         Rectangle::new(
-                            Point::new(areas.left.x + ruler - 1.0 - width, y.round()),
+                            Point::new(areas.left.x + areas.left.width - 1.0 - width, y.round()),
                             Size::new(width, 1.0),
                         ),
                     );
 
                     if part.rem_euclid(parts as i64) == 0 {
-                        let text = number::real(f64::from(value), decimals);
-
-                        for (row, character) in text.chars().enumerate() {
-                            label(
-                                renderer,
-                                character.to_string(),
-                                Point::new(
-                                    areas.left.x + 2.0,
-                                    y.round() + 2.0 + row as f32 * line_height,
-                                ),
-                                areas.left,
-                            );
-                        }
+                        label(
+                            renderer,
+                            number::real(f64::from(value), decimals),
+                            Point::new(areas.left.x + 2.0, y.round() + 2.0),
+                            areas.left,
+                        );
                     }
                 }
             });
@@ -849,7 +854,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Rulers<'a, Message> {
                     ),
                     Orientation::Horizontal => Rectangle::new(
                         Point::new(areas.left.x, content.y + position.round()),
-                        Size::new(ruler - 1.0, 1.0),
+                        Size::new(areas.left.width - 1.0, 1.0),
                     ),
                 };
 
@@ -1128,4 +1133,20 @@ mod interaction {
         );
         assert_eq!(guides.as_slice(), [Guide::horizontal(70.0)]);
     }
+
+    /// UR-012: the left ruler is wide enough for a four-digit label on one line (A0's 1189 mm), the top ruler as thin
+    /// as before.
+    #[test]
+    fn the_left_ruler_holds_a_four_digit_label_on_one_line() {
+        use super::{areas, label_size, left_thickness, thickness, typography};
+        use iced::{Point, Rectangle, Size};
+        let label = typography::measured_font_width("1189", label_size(), typography::mono());
+        assert!(left_thickness() >= label + 4.0, "{} for {label}", left_thickness());
+        assert!(left_thickness() >= thickness());
+        let a = areas(Rectangle::new(Point::ORIGIN, Size::new(800.0, 600.0)));
+        assert_eq!(a.left.width, left_thickness());
+        assert_eq!(a.top.height, thickness());
+        assert_eq!(a.content.x, left_thickness(), "the content starts after the left ruler");
+    }
+
 }

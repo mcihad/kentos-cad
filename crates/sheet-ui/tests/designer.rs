@@ -326,7 +326,8 @@ fn a_stage_drawn_at_a_new_size_says_so() {
         f64::from(page.height) / 1000.0,
     );
     // Sığdır: the page in the stage less the rulers, 28 pixels around it.
-    let fit = ((640.0 - f64::from(ruler) - 56.0) / w).min((420.0 - f64::from(ruler) - 56.0) / h);
+    let left = rulers::left_thickness();
+    let fit = ((640.0 - f64::from(left) - 56.0) / w).min((420.0 - f64::from(ruler) - 56.0) / h);
     assert_eq!(
         d.zoom_percent(),
         Some((fit / (96.0 / 25.4) * 100.0).round() as u32)

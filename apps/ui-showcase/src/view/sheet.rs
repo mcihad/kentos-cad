@@ -62,12 +62,12 @@ impl Showcase {
 
         responsive(move |size| {
             // Cetveller açıksa masa onların içinde kalır.
-            let ruler = if rulers_shown {
-                rulers::thickness()
+            let (ruler, left) = if rulers_shown {
+                (rulers::thickness(), rulers::left_thickness())
             } else {
-                0.0
+                (0.0, 0.0)
             };
-            let size = Size::new(size.width - ruler, size.height - ruler);
+            let size = Size::new(size.width - left, size.height - ruler);
             let room = Size::new(
                 (size.width - DESK * 2.0).max(PAPER.width / 2.0),
                 (size.height - DESK * 2.0).max(PAPER.height / 2.0),

@@ -142,6 +142,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Gözlenen:** Dikey cetvel alanı dar olduğundan `50`, `100`, `150`, `200` gibi değerlerin rakamları alt alta taşmış görünüyor. Kullanıcı bunları tek bir koordinat değeri olarak hızlıca okuyamıyor. Yatay cetvelde değerler tek satır halinde görünüyordu.
 - **Beklenen:** Dikey cetvel değerleri yeterli genişlikte tek satır veya bilinçli döndürülmüş ve okunabilir yerleştirilsin; yakınlaştırma ve DPI değişimlerinde etiketler birbirine çarpmasın.
 - **Kabul:** A4/A3, farklı pafta yakınlaştırmaları, macOS Retina ve normal yoğunluk, üç ve daha fazla basamak, açık/koyu tema ve pencere boyutu ile görsel kontrol.
+- **Durum (13.11.2026):** düzeltildi — paftanın sol cetveli artık dört basamaklı bir etiketi (A0'ın 1189 mm'si) tek satırda alacak genişlikte; 50, 100, 150 gibi değerler alt alta rakamlar yerine çizginin altında tek satırda yazılıyor. Üst cetvelin kalınlığı aynı; genişlik yazı ölçeğiyle büyüyor (`rulers::left_thickness`), pafta sahnesi, sahnedeki yazı alanları ve arayüz vitrini de aynı genişliği kullanıyor. Test `the_left_ruler_holds_a_four_digit_label_on_one_line` (kentos-ui), pafta testleri (sığdır yakınlaştırması dahil) geçiyor; resimler `.run/gui-evidence/kullanim-UR-012/` (açık/koyu). Retina ile normal yoğunluk karşılaştırması gerçek pencerede yapılmadı.
 
 #### UR-013 — DWG paftasında görünüm öğesi DXF diye adlandırılıyor ve uyarı bağlamı haritaya odaklanıyor
 
