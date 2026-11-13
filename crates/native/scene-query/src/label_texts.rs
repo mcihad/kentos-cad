@@ -11,7 +11,7 @@ use kentos_commands::{Entity, LabelStyle, LabelsMode, LayerNode, LineLabelMode, 
 use kentos_expression::rows::{As, RowsInput, TEXT, evaluate_rows_on};
 use kentos_expression::{Expr, Schema, Unit, compile_with};
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::ops::label_text::fill_template;
+use kentos_geometry_core::ops::label_text::{fill_template, fill_template_with};
 
 use crate::layer_filter::{kind_label, vertex_count};
 
@@ -94,6 +94,11 @@ pub fn layer_texts(node: Option<&LayerNode>, unit: Unit) -> LayerTexts {
             },
         },
     }
+}
+
+/// Whether a template names something other than `{label}`: an attribute (`{Ad}`).
+fn names_attributes(template: &str) -> bool {
+    template.replacen("{label}", "", 1).contains('{')
 }
 
 /// Kinds the engine labels: points and blocks, lines, areas.
@@ -255,6 +260,13 @@ pub fn object_texts<'s>(
             }
             let s = match &texts {
                 Some(t) => t[i].clone().unwrap_or_default(),
+                // A template naming attributes (`{Ad}`) is the object's own values, its label or not; a bare
+                // `{label}` one (or none) is its label alone, as before.
+                None if c.template.as_deref().is_some_and(names_attributes) => fill_template_with(
+                    c.template.as_deref(),
+                    e.base().label.as_deref(),
+                    &e.base().attrs,
+                ),
                 None => e
                     .base()
                     .label
@@ -322,4 +334,50 @@ pub fn texts_key(l: &LayerNode) -> String {
         l.style.labels.as_ref().map(|x| (&x.mode, &x.classes)),
     ))
     .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// UR-071: a single label's template `{ad}` writes each area's own attribute, without an object label; a
+    /// `{label}` template keeps writing the label alone.
+    #[test]
+    fn a_template_writes_the_objects_attributes() {
+        let area = |attrs: &[(&str, &str)], label: Option<&str>| -> Entity {
+            let mut e: Entity = serde_json::from_value(serde_json::json!({
+                "kind": "polygon", "id": 1, "layerId": "alan", "attrs": {},
+                "pts": [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 10, "y": 10}]
+            }))
+            .expect("an area");
+            let base = e.base_mut();
+            base.attrs = attrs.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())).collect();
+            base.label = label.map(str::to_owned);
+            e
+        };
+        let class = |template: &str| LayerTexts::Classes {
+            classes: vec![TextClass {
+                when: None,
+                text: None,
+                template: Some(template.to_owned()),
+                contour: false,
+                error: None,
+            }],
+            defaults: false,
+        };
+        let a = area(&[("ad", "Deneme parseli")], None);
+        let b = area(&[("Ad", "Test alanı"), ("No", "7")], Some("101/7"));
+        let list = [&a, &b];
+        let name = |id: &str| id.to_owned();
+        let none = |_: usize| None;
+        let texts = |t: &LayerTexts| -> Vec<Vec<String>> {
+            object_texts(&list, t, &name, &none).into_iter().map(|(v, _)| v.into_iter().map(|(_, s)| s).collect()).collect()
+        };
+        assert_eq!(texts(&class("{ad}")), [vec!["Deneme parseli".to_owned()], vec!["Test alanı".to_owned()]]);
+        assert_eq!(
+            texts(&class("{label} · {No} · {yok}")),
+            [vec![" · {No} · {yok}".to_owned()], vec!["101/7 · 7 · {yok}".to_owned()]]
+        );
+        assert_eq!(texts(&class("{label} m²")), [Vec::<String>::new(), vec!["101/7 m²".to_owned()]]);
+    }
 }

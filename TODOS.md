@@ -51,6 +51,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- UR-071 (kullanım incelemesi): web'in `model/ops/labelText.ts` etiket şablonu `{Ad}` gibi öznitelikleri de doldursun (masaüstünde `fill_template_with`; eksik alan `{…}` olarak kalır).
 - MAP-07 / ADR 1260: web'in Topoloji paneli ve `io/kcad.ts` şema 189 (kalite `profile`'ı; istisnanın `decision`,
   `reason`, `ruleDigest`, `scope`'u), bulgunun `state`/`reason`'ı, `cad.topology.exceptions`'ın `error`/`reason`/`scope`'u
   ve `cad.topology.repair`'in web işleyicisi; WASM `topologyCheck`'in istisnası `anywhere` almıyor (hep yerine bağlı).
