@@ -294,6 +294,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Satıra ilk çift tıklama seçim ve görünümü gösterme işlemini tek eylemde tamamlamalı; seçim panelinin açılması hedefi tıklama sırasında taşımamalı.
 - **İnceleme/öneri:** `apps/desktop/src/views.rs` içindeki görünüm listesi, çift tıklama işleyicisi ve seçime bağlı pencere yüksekliği birlikte incelenmeli; liste konumu sabitlenmeli veya çift tıklama birinci basışta yapılan yeniden yerleşimden etkilenmeyecek biçimde ele alınmalı. Satır seçimi ve klavyeyle gösterme davranışı korunmalı.
 - **Kabul:** Önceden seçili olmayan ve seçili satırda ilk çift tıklama, hızlı/yavaş çift tıklama, farklı pencere boyutları ve birden çok görünümle; Göster ve önceki görünüm de test edilmeli.
+- **Durum (13.11.2026):** düzeltildi — neden doğrulandı: ilk tıklama görünümü seçince pencerenin altına tarif bölümü ekleniyor, ortalanmış pencere büyüyüp liste yukarı kayıyordu (testte satır 231 px'ten 107 px'e), ikinci tıklama başka yere düşüyordu. Tarif bölümü artık seçim yokken de (kapalı hâlde) duruyor, pencere yüksekliği sabit; satır yerinde kaldığı için çift tıklama görünümü gösteriyor, Göster ve klavye değişmedi. Test `a_rows_first_click_does_not_move_it` (eski düzenle başarısız olduğu görüldü); görünüm testleri geçiyor.
 
 #### UR-033 — Tablo stili renkleri yalnızca onaltılı kodla giriliyor
 

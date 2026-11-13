@@ -418,12 +418,11 @@ impl App {
             .push(actions)
             .push(words::field(NAME, name, None))
             .push(saving);
-        // The chosen view's recipe (docs/adr/0774 §2).
-        let body = if chosen.is_some() {
-            body.push(iced::widget::rule::horizontal(1)).push(self.recipe_view(editable))
-        } else {
-            body
-        };
+        // The chosen view's recipe (docs/adr/0774 §2), shown off while none is chosen (UR-032): the window keeps its
+        // height, so a row's first click does not move the list from under the second of a double click.
+        let body = body
+            .push(iced::widget::rule::horizontal(1))
+            .push(self.recipe_view(editable && chosen.is_some()));
         Frame::new(VIEWS_TITLE)
             .scroll(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
@@ -523,6 +522,31 @@ mod tests {
         let _ = app.update(Message::Views(Event::Remove));
         assert!(app.named_views().is_empty());
         assert_eq!(last_said(&app), "“Ana giriş” görünümü silindi.");
+    }
+
+    /// UR-032: a view's row stays where it is on screen when its first click chooses it (the recipe's part is there
+    /// all along), so the second click of a double click lands on it and shows the view.
+    #[test]
+    fn a_rows_first_click_does_not_move_it() {
+        let mut app = open();
+        run(&mut app, "view.namedViews");
+        let _ = app.update(Message::Views(Event::Name("Giriş".into())));
+        let _ = app.update(Message::Views(Event::Save));
+        let _ = app.update(Message::Views(Event::Choose(String::new())));
+        if let Some(w) = app.views_window.as_mut() {
+            w.chosen = None;
+        }
+        let mut snapshot = crate::files_testing::offscreen(iced::Size::new(1280.0, 800.0));
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let before = crate::files_testing::find_texts(&mut snapshot, &app, "Giriş");
+        let _ = app.update(Message::Views(Event::Choose("Giriş".into())));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let after = crate::files_testing::find_texts(&mut snapshot, &app, "Giriş");
+        assert!(!before.is_empty());
+        assert_eq!(before.first().map(|r| r.y), after.first().map(|r| r.y), "the row did not move");
     }
 
     #[test]
