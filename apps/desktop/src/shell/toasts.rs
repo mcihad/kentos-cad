@@ -17,8 +17,8 @@ impl App {
 
     /// A save done: “… kaydedildi.” with where it went.
     pub(crate) fn toast_saved(&mut self, title: impl Into<String>, body: impl Into<String>) {
-        let body = body.into();
-        let toast = Toast::success(title);
+        let body = crate::keys::shown(&body.into());
+        let toast = Toast::success(crate::keys::shown(&title.into()));
         self.toast(if body.is_empty() {
             toast
         } else {
@@ -29,7 +29,7 @@ impl App {
     /// What a window that closed on its Kaydet did: in the message log as before, and as a notice,
     /// since the window that would have said it is gone. A warning stays longer; an error waits.
     pub(crate) fn announce(&mut self, level: Level, text: impl Into<String>) {
-        let text = text.into();
+        let text = crate::keys::shown(&text.into());
         self.say(level, text.clone());
         // The first sentence is the title, the rest its body: “Tablo kaydedildi” · “Ctrl+Z geri alır.”
         let (title, body) = match text.split_once(". ") {

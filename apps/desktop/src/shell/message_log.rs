@@ -111,6 +111,8 @@ impl App {
     /// typed, information, success, warnings, errors. Said while Uyarılar is
     /// on screen, it is seen (the web's badge).
     pub(crate) fn say(&mut self, level: Level, text: impl Into<String>) {
+        // UR-002: the shortcuts a message names as this platform shows them (⌘S on macOS).
+        let text = crate::keys::shown(&text.into());
         self.log.push(level, text, crate::cloud::now_ms());
         self.last_level = Some(level);
         if self.messages_on_screen() {

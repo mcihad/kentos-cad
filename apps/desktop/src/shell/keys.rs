@@ -110,6 +110,59 @@ impl KeyPress {
     }
 }
 
+/// A text's shortcuts as this platform shows them (usage review UR-002): shortcuts are kept as the web writes them
+/// (`Ctrl+S`, `Ctrl+Shift+Z`), and the command key that is Ctrl elsewhere is ⌘ on macOS (`chord` reads ⌘ as Ctrl), so
+/// there they read `⌘S`, `⇧⌘Z`, `⌥⌘C`. Elsewhere the text is as it is.
+pub fn shown(text: &str) -> String {
+    if cfg!(target_os = "macos") {
+        mac_keys(text)
+    } else {
+        text.to_owned()
+    }
+}
+
+/// Every `Ctrl+…` chord of a text in macOS's way: its other keys' symbols in Apple's order (⌥ ⇧), then ⌘, then the
+/// key; `Ctrl + tık` stays words.
+pub fn mac_keys(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(at) = rest.find("Ctrl+") {
+        out.push_str(&rest[..at]);
+        let mut tail = &rest[at + "Ctrl+".len()..];
+        let (mut alt, mut shift) = (false, false);
+        loop {
+            if let Some(t) = tail.strip_prefix("Shift+") {
+                shift = true;
+                tail = t;
+            } else if let Some(t) = tail.strip_prefix("Alt+") {
+                alt = true;
+                tail = t;
+            } else {
+                break;
+            }
+        }
+        // The key: a word (S, Enter, Boşluk, F3) or one sign (/, =).
+        let word: usize = tail.chars().take_while(|c| c.is_alphanumeric()).map(char::len_utf8).sum();
+        let len = if word > 0 { word } else { tail.chars().next().map_or(0, char::len_utf8) };
+        if len == 0 {
+            out.push_str("Ctrl+");
+            rest = tail;
+            continue;
+        }
+        if alt {
+            out.push('⌥');
+        }
+        if shift {
+            out.push('⇧');
+        }
+        out.push('⌘');
+        out.push_str(&tail[..len]);
+        rest = &tail[len..];
+    }
+    out.push_str(rest);
+    out
+}
+
 /// The chord a key press is, as the web writes shortcuts (`Ctrl+Shift+Z`,
 /// `G`, `+`, `Home`, `F3`); none for a modifier alone and for AltGr text.
 pub fn chord(press: &KeyPress) -> Option<String> {
@@ -404,6 +457,10 @@ mod tests {
         );
         assert_eq!((value_start(&enter), typed(&enter)), (None, None));
         assert!(is_chorded("Ctrl+S") && is_chorded("F3") && is_chorded("Shift+F3"));
+        // UR-002: macOS's way of the same chords.
+        assert_eq!(mac_keys("Kaydet (Ctrl+S); Ctrl+Z geri alır."), "Kaydet (⌘S); ⌘Z geri alır.");
+        assert_eq!(mac_keys("Ctrl+Shift+Z, Ctrl+Alt+/ ve Ctrl+Enter"), "⇧⌘Z, ⌥⌘/ ve ⌘Enter");
+        assert_eq!(mac_keys("Ctrl + tık"), "Ctrl + tık");
         assert!(!is_chorded("G") && !is_chorded("Space") && !is_chorded("+"));
     }
 }

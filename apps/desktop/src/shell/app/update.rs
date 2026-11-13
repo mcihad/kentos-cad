@@ -694,8 +694,10 @@ impl App {
                 // The health check on opening, when asked for (docs/adr/1009).
                 return self.open_health_check();
             }
-            Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
-                self.error(error)
+            Message::Opened(Some(Err(error))) => self.error(error),
+            Message::Saved(Some(Err(error))) => {
+                self.error(error);
+                self.save_then_dropped();
             }
             Message::Saved(Some(Ok(written))) => match &mut self.document {
                 Some(doc) if doc.session == written.session => {
@@ -733,6 +735,16 @@ impl App {
                     }
                     self.recovery_saved();
                     self.remember_file();
+                    // UR-001: “Kaydet ve …” goes on once its drawing is saved whole.
+                    if let Some((session, then)) = self.save_then
+                        && session == written.session
+                    {
+                        self.save_then = None;
+                        if self.document.as_ref().is_some_and(|d| !d.dirty()) {
+                            return self.proceed(then);
+                        }
+                        self.warn("Kayıt sürerken yapılan değişiklikler kaydedilmedi; çizim açık kaldı.");
+                    }
                 }
                 // Its drawing set aside in its tab meanwhile (doc_tabs.rs, docs/adr/0351 §3): the file is
                 // its file all the same.
@@ -789,6 +801,15 @@ impl App {
                 Some(Dialog::SourceDiscard) => self.bound_discard(),
                 _ => {}
             },
+            Message::DialogSave => {
+                if let Some(Dialog::Unsaved(then)) = self.dialog.take()
+                    && let Some(session) = self.document.as_ref().map(|d| d.session)
+                {
+                    self.cloud.leave_failure = None;
+                    self.save_then = Some((session, then));
+                    return self.update(Message::Run("file.save"));
+                }
+            }
             Message::DialogClosed => self.close_dialog(),
             Message::Cloud(event) => return self.cloud_event(*event),
             Message::Exchange(event) => return self.exchange_event(*event),

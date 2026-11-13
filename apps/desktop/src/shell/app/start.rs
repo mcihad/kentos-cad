@@ -256,6 +256,7 @@ impl App {
             importing: None,
             binding: None,
             saving: None,
+            save_then: None,
             save_faults: saving::Faults::NONE,
             recovery,
             cloud: CloudState::default(),

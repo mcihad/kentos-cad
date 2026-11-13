@@ -247,14 +247,16 @@ impl App {
             Asking::Unsaved(then) => {
                 // What would be lost, with the count (cloud/leaving.rs).
                 let q = self.unsaved_question(then);
-                overlay::modal(
-                    Confirm::new(q.title, Message::DialogConfirmed, Message::DialogClosed)
-                        .message(q.message)
-                        .detail(q.detail)
-                        .confirm(q.confirm)
-                        .destructive(),
-                    Message::DialogClosed,
-                )
+                let mut ask = Confirm::new(q.title, Message::DialogConfirmed, Message::DialogClosed)
+                    .message(q.message)
+                    .detail(q.detail)
+                    .confirm(q.confirm)
+                    .destructive();
+                // UR-001: a local drawing can be saved first, the leaving going on once it is saved.
+                if let Some(keep) = q.keep {
+                    ask = ask.keep(keep, Message::DialogSave);
+                }
+                overlay::modal(ask, Message::DialogClosed)
             }
             Asking::RemoveLayer => self.remove_layer_question(),
             Asking::Arch(inner) => self.arch_dialog_view(inner),

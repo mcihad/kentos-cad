@@ -21,6 +21,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** **Kaydet ve kapat**, **Kaydetmeden kapat**, **Vazgeç**. Yeni dosyada Kaydet ve kapat dosya seçiciyi açmalı; kullanıcı iptal ederse çizim açık ve değişiklikler korunmuş kalmalı. Yazma veya doğrulama hatasında kapatma gerçekleşmemeli. Birden çok sekmede yalnız hedef çizime uygulanmalı.
 - **Başlangıç noktası:** `apps/desktop/src/cloud/leaving.rs` içindeki `Question` ve kapatma devam akışı; `crates/ui/src/widget/dialog.rs` içindeki üç seçenekli kaydedilmemiş değişiklikler bileşenini ve `apps/desktop/src/unsaved_close_tests.rs` senaryolarını incele.
 - **Kabul:** Kayıtlı ve yeni yerel dosya için üç yol; yazma hatası / kayıt penceresini iptal etme / Esc ile çıkma / bulut akışı ayrı sınansın. İptal hiçbir veriyi kaybettirmesin.
+- **Durum (13.11.2026):** düzeltildi — çizimin kaydedilmemiş değişiklik sorusunda üç cevap var: Kaydetmeden kapat (solda), Vazgeç, Kaydet ve kapat (çıkış, yeni proje, açma için kendi adıyla). Kaydet ve … çizimi kaydeder, kayıt bitince devam eder; dosya penceresi kapatılırsa, kayıt reddedilir ya da diskte bozulursa çizim açık ve değişiklikleriyle kalır, “Kaydedilmedi; çizim açık kaldı” denir. Bulut projesinin sorusu değişmedi (kendi Kaydet'i revizyon yazar). Test saving::tests::kaydet_ve_kapat_saves_then_closes_and_keeps_the_drawing_when_it_cannot; resim .run/gui-evidence/kullanim-UR-001/. Gerçek pencerede fareyle denenmedi.
 
 #### UR-002 — macOS'ta kaydetme uyarısı platforma yanlış kısayol gösteriyor
 
@@ -32,6 +33,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Gerçek yapılandırılmış kısayol, macOS'ta ⌘S olarak gösterilsin; tuş ataması değiştirilebiliyorsa merkezi kısayol tanımından üretilsin. UR-001 çözülürse kaydet düğmesi de olsun.
 - **Başlangıç noktası:** `apps/desktop/src/cloud/leaving.rs`, yerel ve bulut `detail` metinleri; mevcut platform/kısayol gösterimiyle aynı kaynağı kullan.
 - **Kabul:** macOS ve Windows/Linux için doğru gösterim; varsa özel kısayol durumunda da arayüz ile gerçek davranışın uyumu.
+- **Durum (13.11.2026):** düzeltildi — kısayollar tek kaynaktan gösteriliyor (keys::shown): macOS'ta Ctrl+S ⌘S, Ctrl+Shift+Z ⇧⌘Z, Ctrl+Alt+/ ⌥⌘/ olarak; durum satırı, Uyarılar, bildirimler, kısayol listesi ve çıkış sorusu bundan geçer (tablo düzenleyicisinin ve Alan hesapla'nın “Ctrl+Z geri alır”ı da). Windows/Linux'ta metin aynı. Kısayol aramasında hem ⌘ hem Ctrl yazımı bulunur. Test keys::tests (mac_keys), shortcuts::tests. Açık: pencerelerin kendi içine sabit yazılmış birkaç ipucu metni (ör. Python betik penceresi) bu yoldan geçmiyor.
 
 #### UR-003 — Ölçü, yazı ve tarama hazır adlandırılmış katmanlara gitmiyor
 

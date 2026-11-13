@@ -635,6 +635,9 @@ pub enum Message {
     CloseRequested(window::Id),
     DialogConfirmed,
     DialogClosed,
+    /// “Kaydet ve …” on the unsaved changes' question (usage review UR-001): the drawing is saved, and the leaving goes
+    /// on only when the save succeeds.
+    DialogSave,
     /// The drawing area: its size, the pointer, pan, zoom and clicks.
     Viewport(viewport::Event),
     /// The other view of a split drawing area (split_view.rs, docs/adr/0285 §3).
@@ -1060,6 +1063,9 @@ pub struct App {
     pub binding: Option<crate::exchange::binding::Binding>,
     /// The save under way, if any (saving.rs).
     pub saving: Option<saving::Saving>,
+    /// UR-001: the leaving “Kaydet ve …” waits for, with the drawing's session: it goes on when that drawing's save
+    /// succeeds; a cancelled or failed save keeps the drawing open with its changes.
+    pub save_then: Option<(u64, Then)>,
     /// Where tests make the disk fail during a save (none in the app).
     pub save_faults: saving::Faults,
     /// Recovery copies of unsaved work; kept only when `main` opens their folder.
