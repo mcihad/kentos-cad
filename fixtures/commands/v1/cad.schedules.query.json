@@ -464,7 +464,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 6,
+              "rows": 5,
               "revision": "$current"
             },
             "warnings": []
@@ -588,20 +588,6 @@
                   "row": 5,
                   "role": "data",
                   "cells": [
-                    "Antet",
-                    "",
-                    "",
-                    "",
-                    "1"
-                  ],
-                  "members": [
-                    "$uidOf:8"
-                  ]
-                },
-                {
-                  "row": 6,
-                  "role": "data",
-                  "cells": [
                     "Lavabo",
                     "Vitrifiye/Lavabo",
                     "102 Banyo",
@@ -652,7 +638,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 3,
+              "rows": 2,
               "revision": "$current"
             },
             "warnings": []
@@ -722,21 +708,10 @@
                 },
                 {
                   "row": 3,
-                  "role": "data",
-                  "cells": [
-                    "Antet",
-                    "1"
-                  ],
-                  "members": [
-                    "$uidOf:8"
-                  ]
-                },
-                {
-                  "row": 4,
                   "role": "total",
                   "cells": [
                     "Toplam",
-                    "6"
+                    "5"
                   ],
                   "members": []
                 }
@@ -787,7 +762,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 6,
+              "rows": 5,
               "revision": "$current"
             },
             "warnings": []
@@ -926,28 +901,6 @@
                   "members": [
                     "$uidOf:7"
                   ]
-                },
-                {
-                  "row": 9,
-                  "role": "header",
-                  "cells": [
-                    "(boş)",
-                    "",
-                    ""
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 10,
-                  "role": "data",
-                  "cells": [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  "members": [
-                    "$uidOf:8"
-                  ]
                 }
               ],
               "revision": "$current"
@@ -996,7 +949,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 6,
+              "rows": 5,
               "revision": "$current"
             },
             "warnings": []
@@ -1135,28 +1088,6 @@
                     "1"
                   ],
                   "members": []
-                },
-                {
-                  "row": 9,
-                  "role": "data",
-                  "cells": [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  "members": [
-                    "$uidOf:8"
-                  ]
-                },
-                {
-                  "row": 10,
-                  "role": "footer",
-                  "cells": [
-                    "(boş) toplamı",
-                    "",
-                    "1"
-                  ],
-                  "members": []
                 }
               ],
               "revision": "$current"
@@ -1207,7 +1138,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 6,
+              "rows": 5,
               "revision": "$current"
             },
             "warnings": []
@@ -1379,43 +1310,11 @@
                 },
                 {
                   "row": 12,
-                  "role": "header",
-                  "cells": [
-                    "(boş)",
-                    "",
-                    ""
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 13,
-                  "role": "data",
-                  "cells": [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  "members": [
-                    "$uidOf:8"
-                  ]
-                },
-                {
-                  "row": 14,
-                  "role": "footer",
-                  "cells": [
-                    "(boş) toplamı",
-                    "",
-                    "1"
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 15,
                   "role": "total",
                   "cells": [
                     "Toplam",
                     "",
-                    "6"
+                    "5"
                   ],
                   "members": []
                 }
@@ -1471,7 +1370,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 6,
+              "rows": 5,
               "revision": "$current"
             },
             "warnings": []
@@ -1633,43 +1532,11 @@
                 },
                 {
                   "row": 11,
-                  "role": "data",
-                  "cells": [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  "members": [
-                    "$uidOf:8"
-                  ]
-                },
-                {
-                  "row": 12,
-                  "role": "footer",
-                  "cells": [
-                    "",
-                    "Antet toplamı",
-                    "1"
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 13,
-                  "role": "footer",
-                  "cells": [
-                    "(boş) toplamı",
-                    "",
-                    "1"
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 14,
                   "role": "total",
                   "cells": [
                     "Toplam",
                     "",
-                    "6"
+                    "5"
                   ],
                   "members": []
                 }
@@ -2205,7 +2072,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 6,
+              "rows": 5,
               "revision": "$current"
             },
             "warnings": []
@@ -2295,17 +2162,6 @@
                 },
                 {
                   "row": 5,
-                  "role": "data",
-                  "cells": [
-                    "Antet",
-                    ""
-                  ],
-                  "members": [
-                    "$uidOf:8"
-                  ]
-                },
-                {
-                  "row": 6,
                   "role": "data",
                   "cells": [
                     "Lavabo",
@@ -3270,7 +3126,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 6,
+              "rows": 5,
               "revision": "$current"
             },
             "warnings": []
@@ -3361,17 +3217,6 @@
                   "row": 5,
                   "role": "data",
                   "cells": [
-                    "Antet",
-                    "1"
-                  ],
-                  "members": [
-                    "$uidOf:8"
-                  ]
-                },
-                {
-                  "row": 6,
-                  "role": "data",
-                  "cells": [
                     "Lavabo",
                     "1"
                   ],
@@ -3427,7 +3272,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 6,
+              "rows": 5,
               "revision": "$current"
             },
             "warnings": []
@@ -3564,28 +3409,6 @@
                     "101 Salon toplamı",
                     "",
                     "2"
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 9,
-                  "role": "data",
-                  "cells": [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  "members": [
-                    "$uidOf:8"
-                  ]
-                },
-                {
-                  "row": 10,
-                  "role": "footer",
-                  "cells": [
-                    "(boş) toplamı",
-                    "",
-                    "1"
                   ],
                   "members": []
                 }

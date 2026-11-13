@@ -512,13 +512,6 @@
                     "1"
                   ],
                   [
-                    "Antet",
-                    "",
-                    "",
-                    "",
-                    "1"
-                  ],
-                  [
                     "Lavabo",
                     "Vitrifiye/Lavabo",
                     "102 Banyo",
@@ -568,9 +561,6 @@
                       "$uidOf:7"
                     ],
                     [
-                      "$uidOf:8"
-                    ],
-                    [
                       "$uidOf:9"
                     ]
                   ]
@@ -579,35 +569,35 @@
                   {
                     "row": 1,
                     "col": 0,
-                    "rows": 6,
+                    "rows": 5,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 1,
-                    "rows": 6,
+                    "rows": 5,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 2,
-                    "rows": 6,
+                    "rows": 5,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 3,
-                    "rows": 6,
+                    "rows": 5,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 4,
-                    "rows": 6,
+                    "rows": 5,
                     "cols": 1,
                     "color": "#7f8790"
                   }
@@ -679,11 +669,6 @@
                     "Adet"
                   ],
                   [
-                    "Antet",
-                    "",
-                    "1"
-                  ],
-                  [
                     "Koltuk",
                     "Mobilya/Oturma",
                     "3"
@@ -696,7 +681,7 @@
                   [
                     "Toplam",
                     "",
-                    "6"
+                    "5"
                   ]
                 ],
                 "header": true,
@@ -728,9 +713,6 @@
                   "total": true,
                   "members": [
                     [
-                      "$uidOf:8"
-                    ],
-                    [
                       "$uidOf:4",
                       "$uidOf:5",
                       "$uidOf:7"
@@ -745,26 +727,26 @@
                   {
                     "row": 1,
                     "col": 0,
-                    "rows": 3,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 1,
-                    "rows": 3,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 2,
-                    "rows": 3,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
-                    "row": 4,
+                    "row": 3,
                     "col": 0,
                     "rows": 1,
                     "cols": 3,
@@ -1506,13 +1488,6 @@
                     "1"
                   ],
                   [
-                    "Antet",
-                    "",
-                    "",
-                    "",
-                    "1"
-                  ],
-                  [
                     "Lavabo",
                     "Vitrifiye/Lavabo",
                     "102 Banyo",
@@ -1559,9 +1534,6 @@
                       "$uidOf:6"
                     ],
                     [
-                      "$uidOf:8"
-                    ],
-                    [
                       "$uidOf:9"
                     ]
                   ]
@@ -1570,35 +1542,35 @@
                   {
                     "row": 1,
                     "col": 0,
-                    "rows": 3,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 1,
-                    "rows": 3,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 2,
-                    "rows": 3,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 3,
-                    "rows": 3,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 4,
-                    "rows": 3,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   }
@@ -1846,16 +1818,6 @@
                     "201 Oda",
                     "Koltuk",
                     "1"
-                  ],
-                  [
-                    "(boş)",
-                    "",
-                    ""
-                  ],
-                  [
-                    "",
-                    "Antet",
-                    "1"
                   ]
                 ],
                 "header": true,
@@ -1902,10 +1864,6 @@
                     [],
                     [
                       "$uidOf:7"
-                    ],
-                    [],
-                    [
-                      "$uidOf:8"
                     ]
                   ]
                 },
@@ -1924,12 +1882,6 @@
                   },
                   {
                     "row": 7,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3
-                  },
-                  {
-                    "row": 9,
                     "col": 0,
                     "rows": 1,
                     "cols": 3
@@ -1958,13 +1910,6 @@
                     "bold": true
                   },
                   {
-                    "row": 9,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3,
-                    "bold": true
-                  },
-                  {
                     "row": 2,
                     "col": 0,
                     "rows": 2,
@@ -2022,27 +1967,6 @@
                   },
                   {
                     "row": 8,
-                    "col": 2,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 10,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 10,
-                    "col": 1,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 10,
                     "col": 2,
                     "rows": 1,
                     "cols": 1,
@@ -2156,19 +2080,9 @@
                     "1"
                   ],
                   [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  [
-                    "(boş) toplamı",
-                    "",
-                    "1"
-                  ],
-                  [
                     "Toplam",
                     "",
-                    "6"
+                    "5"
                   ]
                 ],
                 "header": true,
@@ -2216,10 +2130,6 @@
                     [
                       "$uidOf:7"
                     ],
-                    [],
-                    [
-                      "$uidOf:8"
-                    ],
                     []
                   ]
                 },
@@ -2246,13 +2156,6 @@
                     "bold": true
                   },
                   {
-                    "row": 10,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3,
-                    "bold": true
-                  },
-                  {
                     "row": 1,
                     "col": 0,
                     "rows": 2,
@@ -2317,27 +2220,6 @@
                   },
                   {
                     "row": 9,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 9,
-                    "col": 1,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 9,
-                    "col": 2,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 11,
                     "col": 0,
                     "rows": 1,
                     "cols": 3,
@@ -2467,24 +2349,9 @@
                     "1"
                   ],
                   [
-                    "(boş)",
-                    "",
-                    ""
-                  ],
-                  [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  [
-                    "(boş) toplamı",
-                    "",
-                    "1"
-                  ],
-                  [
                     "Toplam",
                     "",
-                    "6"
+                    "5"
                   ]
                 ],
                 "header": true,
@@ -2536,11 +2403,6 @@
                     [
                       "$uidOf:7"
                     ],
-                    [],
-                    [],
-                    [
-                      "$uidOf:8"
-                    ],
                     []
                   ]
                 },
@@ -2559,12 +2421,6 @@
                   },
                   {
                     "row": 9,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3
-                  },
-                  {
-                    "row": 12,
                     "col": 0,
                     "rows": 1,
                     "cols": 3
@@ -2614,105 +2470,70 @@
                     "bold": true
                   },
                   {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 10,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 10,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 10,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
                     "row": 12,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3,
-                    "bold": true
-                  },
-                  {
-                    "row": 14,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3,
-                    "bold": true
-                  },
-                  {
-                    "row": 2,
-                    "col": 0,
-                    "rows": 2,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 2,
-                    "col": 1,
-                    "rows": 2,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 2,
-                    "col": 2,
-                    "rows": 2,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 6,
-                    "col": 0,
-                    "rows": 2,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 6,
-                    "col": 1,
-                    "rows": 2,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 6,
-                    "col": 2,
-                    "rows": 2,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 10,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 10,
-                    "col": 1,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 10,
-                    "col": 2,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 13,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 13,
-                    "col": 1,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 13,
-                    "col": 2,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 15,
                     "col": 0,
                     "rows": 1,
                     "cols": 3,
@@ -2840,24 +2661,9 @@
                     "1"
                   ],
                   [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  [
-                    "",
-                    "Antet toplamı",
-                    "1"
-                  ],
-                  [
-                    "(boş) toplamı",
-                    "",
-                    "1"
-                  ],
-                  [
                     "Toplam",
                     "",
-                    "6"
+                    "5"
                   ]
                 ],
                 "header": true,
@@ -2911,11 +2717,6 @@
                       "$uidOf:7"
                     ],
                     [],
-                    [],
-                    [
-                      "$uidOf:8"
-                    ],
-                    [],
                     []
                   ]
                 },
@@ -2956,20 +2757,6 @@
                     "bold": true
                   },
                   {
-                    "row": 12,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3,
-                    "bold": true
-                  },
-                  {
-                    "row": 13,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3,
-                    "bold": true
-                  },
-                  {
                     "row": 1,
                     "col": 0,
                     "rows": 2,
@@ -3034,27 +2821,6 @@
                   },
                   {
                     "row": 11,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 11,
-                    "col": 1,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 11,
-                    "col": 2,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 14,
                     "col": 0,
                     "rows": 1,
                     "cols": 3,
@@ -3157,19 +2923,9 @@
                     "1"
                   ],
                   [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  [
-                    "(boş) toplamı",
-                    "",
-                    "1"
-                  ],
-                  [
                     "Toplam",
                     "",
-                    "6"
+                    "5"
                   ]
                 ],
                 "header": true,
@@ -3216,10 +2972,6 @@
                     [
                       "$uidOf:7"
                     ],
-                    [],
-                    [
-                      "$uidOf:8"
-                    ],
                     []
                   ]
                 },
@@ -3239,13 +2991,6 @@
                     "bold": true
                   },
                   {
-                    "row": 7,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3,
-                    "bold": true
-                  },
-                  {
                     "row": 1,
                     "col": 0,
                     "rows": 2,
@@ -3289,27 +3034,6 @@
                   },
                   {
                     "row": 6,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 6,
-                    "col": 1,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 6,
-                    "col": 2,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 8,
                     "col": 0,
                     "rows": 1,
                     "cols": 3,
@@ -3421,16 +3145,6 @@
                     "101 Salon toplamı",
                     "",
                     "2"
-                  ],
-                  [
-                    "",
-                    "Antet",
-                    "1"
-                  ],
-                  [
-                    "(boş) toplamı",
-                    "",
-                    "1"
                   ]
                 ],
                 "header": true,
@@ -3478,10 +3192,6 @@
                     [
                       "$uidOf:5"
                     ],
-                    [],
-                    [
-                      "$uidOf:8"
-                    ],
                     []
                   ]
                 },
@@ -3508,13 +3218,6 @@
                     "bold": true
                   },
                   {
-                    "row": 10,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3,
-                    "bold": true
-                  },
-                  {
                     "row": 1,
                     "col": 0,
                     "rows": 1,
@@ -3574,27 +3277,6 @@
                     "row": 6,
                     "col": 2,
                     "rows": 2,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 9,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 9,
-                    "col": 1,
-                    "rows": 1,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 9,
-                    "col": 2,
-                    "rows": 1,
                     "cols": 1,
                     "color": "#7f8790"
                   }
@@ -3672,10 +3354,6 @@
                     ""
                   ],
                   [
-                    "Antet",
-                    ""
-                  ],
-                  [
                     "Lavabo",
                     ""
                   ]
@@ -3711,9 +3389,6 @@
                       "$uidOf:7"
                     ],
                     [
-                      "$uidOf:8"
-                    ],
-                    [
                       "$uidOf:9"
                     ]
                   ]
@@ -3722,7 +3397,7 @@
                   {
                     "row": 1,
                     "col": 0,
-                    "rows": 6,
+                    "rows": 5,
                     "cols": 1,
                     "color": "#7f8790"
                   }
@@ -3866,7 +3541,7 @@
             "output": {
               "uid": "$uid",
               "id": 11,
-              "rows": 6,
+              "rows": 5,
               "revision": "$current"
             },
             "warnings": []

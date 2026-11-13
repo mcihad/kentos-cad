@@ -54,6 +54,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - UR-004: web'in Tarama, Çoklu tara ve Taramayı düzenle'si yazıları varsayılan olarak boş bıraksın ve Yazılar (Y)
   Desen'in hemen arkasına gelsin; `fixtures/interaction/v1/hatch-patterns.json` ve `hatches.json` masaüstüne göre
   güncellendi (web'in oynatıcısı ondan sonra geçer).
+- UR-029: web'in Donatı çizelgesi yalnız kartında kategori olan ve kategorisi Mimari, İşaretler ya da Pafta olmayan blok
+  yerleştirmelerini saysın (`cad.schedules.*` ortak durumları masaüstüne göre yeniden yazıldı).
 - UR-003: `io/kcad.ts` şema 255 (`toolLayers`), web'in yeni CAD projesi ölçü/yazı/tarama araç katmanlarını yazsın
   (`fixtures/project/v1/new-project.json` o zaman yeniden kaydedilir), web araçları `settings.toolLayers`'ı izlesin ve
   Proje ayarları › Birim ve ölçek › Araç katmanları.

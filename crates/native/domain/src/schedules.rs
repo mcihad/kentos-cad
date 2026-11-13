@@ -113,6 +113,11 @@ fn by_value(a: &Option<ArchValue>, at: &str, b: &Option<ArchValue>, bt: &str) ->
     }
 }
 
+
+/// The top categories of a block's card that are no fixture (UR-029): doors and windows (their own schedule), markers
+/// and a sheet's blocks. Any other category files a fixture (furniture, wet rooms, kitchens, lifts, parking places…).
+pub const NOT_FIXTURES: [&str; 3] = ["Mimari", "İşaretler", "Pafta"];
+
 impl Document {
     /// Whether `e` (of the schedule's kind) is one its filter takes.
     fn schedule_takes(&self, e: &Entity, filter: Option<&ScheduleFilter>) -> bool {
@@ -160,11 +165,17 @@ impl Document {
     /// Whether an insert is a fixture a schedule lists: not an external reference's or an underlay's.
     fn fixture(&self, e: &Entity) -> bool {
         match e {
-            Entity::Insert(i) => self
-                .blocks()
-                .iter()
-                .find(|b| b.id == i.block)
-                .is_some_and(|b| b.xref.is_none()),
+            // A fixture is a block its card files under a category (usage review UR-029): a block with no card (a drawing
+            // block, an array's definition, a legend or a list's block) is not counted by guess, nor a door's or a
+            // window's symbol, a marker or a sheet's block; giving a block a category on its card counts it.
+            Entity::Insert(i) => self.blocks().iter().find(|b| b.id == i.block).is_some_and(|b| {
+                b.xref.is_none()
+                    && b.card
+                        .as_ref()
+                        .and_then(|c| c.category.as_deref())
+                        .and_then(|c| c.split('/').next())
+                        .is_some_and(|top| !top.trim().is_empty() && !NOT_FIXTURES.contains(&top.trim()))
+            }),
             _ => true,
         }
     }

@@ -246,6 +246,17 @@ def takes(objs, i, flt):
     return True
 
 
+# The top categories of a block's card that file no fixture (usage review UR-029): doors and windows, markers, a
+# sheet's blocks. A block with no card is no fixture either: it is not counted by guess.
+NOT_FIXTURES = ("Mimari", "İşaretler", "Pafta")
+
+
+def is_fixture(f):
+    category = (BLOCKS[f["block"]].get("card") or {}).get("category") or ""
+    top = category.split("/")[0].strip()
+    return bool(top) and top not in NOT_FIXTURES
+
+
 def rows_of(objs, src):
     """The cells, members, merges, styles and aligns of a schedule (docs/adr/0733 §4)."""
     of, columns = src["of"], src["columns"]
@@ -253,6 +264,8 @@ def rows_of(objs, src):
     rows = []
     for i in sorted(objs):
         if objs[i][0] != KIND[of] or not takes(objs, i, src.get("filter")):
+            continue
+        if of == "fixtures" and not is_fixture(objs[i][2]):
             continue
         vals = [value(objs, i, c["field"], c.get("attr")) for c in columns]
         rows.append({"vals": vals, "texts": [text_of(v) for v in vals], "uids": [uid_of(i)]})
@@ -590,7 +603,8 @@ def edit_cases():
     c.add("Donatının özniteliği yazılır", edit(attr, 2, 1, "Mavi",
           {"status": "completed", "output": {"table": "$any", "edited": [uid_of(5)], "revision": "$current"}, "warnings": []},
           query(attr, after3)))
-    c.add("Ret: kilitli katmandaki donatı", edit(attr, 6, 1, "Beyaz", refusal(
+    # The locked layer's washbasin: the last data row (the title block, with no card, is no fixture; UR-029).
+    c.add("Ret: kilitli katmandaki donatı", edit(attr, 5, 1, "Beyaz", refusal(
         "layer_locked", "“Kilitli katman” katmanı kilitli; çizelgenin satırı ya da kendisi düzenlenemez. Kilidi Katmanlar panelinden açın.",
         "uid")))
     # Each finish of each space, and a finish cleared with empty words.
