@@ -23,6 +23,10 @@ const ADDITIONS: &str = include_str!("../../../../catalog/v1/additions.json");
 /// and the additions' places are not read for the desktop any more.
 const RIBBON: &str = include_str!("../../../../catalog/v1/ribbon.json");
 
+/// The product commands each desktop command and tool goes through (`via`, docs/adr/0244; hand-kept beside their
+/// levels): what an agent on a module program's link may run (docs/adr/8056 §1).
+const OPERATIONS: &str = include_str!("../../../../catalog/v1/operations.json");
+
 /// Where the desktop does otherwise than the web, its own description: the
 /// web's would say otherwise (docs/adr/0053: the desktop reads a zipped
 /// Shapefile; docs/adr/0058: no search box in the ribbon yet, Esc cancels first).
@@ -545,6 +549,56 @@ impl Catalog {
 }
 
 /// The catalog, built on first use.
+/// A product command → the desktop commands that go through it, a tool as its button (`tool.<id>`).
+fn product_routes() -> &'static HashMap<String, Vec<String>> {
+    #[derive(Default, Deserialize)]
+    struct Operations {
+        #[serde(default)]
+        commands: HashMap<String, Operation>,
+        #[serde(default)]
+        tools: HashMap<String, Operation>,
+    }
+    #[derive(Deserialize)]
+    struct Operation {
+        #[serde(default)]
+        via: Vec<String>,
+    }
+    static ROUTES: OnceLock<HashMap<String, Vec<String>>> = OnceLock::new();
+    ROUTES.get_or_init(|| {
+        let operations: Operations = serde_json::from_str(OPERATIONS).unwrap_or_else(|error| {
+            // The embedded file is checked by a test; a broken build still opens, every product command offered.
+            eprintln!("{error}");
+            Operations::default()
+        });
+        let mut routes: HashMap<String, Vec<String>> = HashMap::new();
+        for (id, operation) in operations.commands {
+            for product in operation.via {
+                routes.entry(product).or_default().push(id.clone());
+            }
+        }
+        for (id, operation) in operations.tools {
+            for product in operation.via {
+                routes
+                    .entry(product)
+                    .or_default()
+                    .push(format!("tool.{id}"));
+            }
+        }
+        routes
+    })
+}
+
+impl Catalog {
+    /// Whether a module's interface goes through a product command (docs/adr/8056 §1): a desktop command or tool
+    /// that names it in `via` is offered there ([`Catalog::module_has`]). Another discipline's command a module's
+    /// ribbon uses (Harita's Katman koordinat sistemi, CBS's `cad.layers.crs`) is that module's too.
+    pub fn routes_offer(&self, module: kentos_launch::Module, product: &str) -> bool {
+        product_routes()
+            .get(product)
+            .is_some_and(|routes| routes.iter().any(|id| self.module_has(module, id)))
+    }
+}
+
 pub fn catalog() -> &'static Catalog {
     static CATALOG: OnceLock<Catalog> = OnceLock::new();
     CATALOG.get_or_init(|| {

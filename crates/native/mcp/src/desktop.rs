@@ -7,8 +7,9 @@
 //! bringing another drawing in front does not move the agent to it; a drawing closed is `document_closed`.
 //!
 //! Every KentOS program opens a link of its own (docs/adr/0802): kentos-cad's `masaustu.sock`, KentOS Mimari's
-//! `masaustu-mimari.sock`, KentOS Harita's `masaustu-harita.sock`, KentOS GIS's `masaustu-cbs.sock`, side by side in
-//! the user's runtime folder; `desktop.attach` names the program (`program`), else it is kentos-cad's.
+//! `masaustu-mimari.sock`, KentOS Harita's `masaustu-harita.sock`, KentOS GIS's `masaustu-cbs.sock`, KentOS Yol's
+//! `masaustu-yol.sock` (docs/adr/8056 §1), side by side in the user's runtime folder; `desktop.attach` names the
+//! program (`program`), else it is kentos-cad's. A module's program runs only the commands it offers.
 
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -18,8 +19,8 @@ use std::time::Duration;
 use serde_json::{Value, json};
 
 /// The programs an agent may name, by their modules' ids (kentos-launch's `Module::id`): KentOS Mimari, KentOS
-/// Harita and KentOS GIS. None named: kentos-cad, every module at once.
-pub const PROGRAMS: [&str; 3] = ["mimari", "harita", "cbs"];
+/// Harita, KentOS GIS and KentOS Yol. None named: kentos-cad, every module at once.
+pub const PROGRAMS: [&str; 4] = ["mimari", "harita", "cbs", "yol"];
 
 /// Where the program is in a sentence (“KentOS Harita'da”): what to open says where; kentos-cad's, the desktop.
 pub fn in_program(program: Option<&str>) -> &'static str {
@@ -27,6 +28,7 @@ pub fn in_program(program: Option<&str>) -> &'static str {
         Some("mimari") => "KentOS Mimari'de",
         Some("harita") => "KentOS Harita'da",
         Some("cbs") => "KentOS GIS'te",
+        Some("yol") => "KentOS Yol'da",
         _ => "KentOS masaüstünde",
     }
 }
@@ -190,24 +192,32 @@ mod tests {
     #[test]
     fn every_program_has_a_link_of_its_own_beside_the_others() {
         let folder = Path::new("/run/user/1000/kentos-cad");
-        let names: Vec<PathBuf> = [None, Some("mimari"), Some("harita"), Some("cbs")]
-            .into_iter()
-            .map(|p| path_in(folder, p))
-            .collect();
+        let names: Vec<PathBuf> = [
+            None,
+            Some("mimari"),
+            Some("harita"),
+            Some("cbs"),
+            Some("yol"),
+        ]
+        .into_iter()
+        .map(|p| path_in(folder, p))
+        .collect();
         assert_eq!(
             names,
             [
                 "masaustu.sock",
                 "masaustu-mimari.sock",
                 "masaustu-harita.sock",
-                "masaustu-cbs.sock"
+                "masaustu-cbs.sock",
+                "masaustu-yol.sock"
             ]
             .map(|n| folder.join(n))
         );
         // The programs an agent names are the modules', in the launcher's order.
-        assert_eq!(PROGRAMS, ["mimari", "harita", "cbs"]);
+        assert_eq!(PROGRAMS, ["mimari", "harita", "cbs", "yol"]);
         assert_eq!(in_program(Some("harita")), "KentOS Harita'da");
         assert_eq!(in_program(Some("cbs")), "KentOS GIS'te");
+        assert_eq!(in_program(Some("yol")), "KentOS Yol'da");
         assert_eq!(in_program(None), "KentOS masaüstünde");
     }
 }

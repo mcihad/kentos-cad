@@ -1020,6 +1020,70 @@ fn an_agent_reads_and_writes_the_open_drawing_each_write_its_own_step() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+/// docs/adr/8056 §1: an agent on a module's program runs the core's commands, the module's own and another
+/// discipline's its interface goes through, not the rest, and is told which programs have it; kentos-cad runs every
+/// one.
+#[cfg(unix)]
+#[test]
+fn an_agent_on_a_module_program_runs_what_the_program_offers() {
+    let mut app = app_with_drawing();
+    let dir = crate::files_testing::scratch("ajan-modul");
+    let (open, _task) = super::link::Link::open(&dir.join("m.sock"), |heard| {
+        Message::Python(Event::Agent(heard))
+    })
+    .expect("the link");
+    app.python.link = Some(open);
+    let (answerer, answers) = super::link::Answerer::testing();
+    let _ = app.update(Message::Python(Event::Agent(
+        super::link::Heard::Connected(7, answerer),
+    )));
+    app.program = Some(kentos_launch::Module::Map);
+
+    let wall = ask_agent(
+        &mut app,
+        &answers,
+        "run",
+        json!({ "command": "cad.walls.create", "op": "plan", "input": {} }),
+    );
+    assert_eq!(
+        (wall["ok"].clone(), wall["code"].clone()),
+        (json!(false), json!("not_offered"))
+    );
+    assert_eq!(
+        wall["message"],
+        "“cad.walls.create” KentOS Harita'da yok; KentOS Mimari'de var."
+    );
+    // A journal with such a row is refused whole, before any row runs.
+    let replay = ask_agent(
+        &mut app,
+        &answers,
+        "replay",
+        json!({ "journal": { "calls": [{ "command": "cad.walls.create" }] } }),
+    );
+    assert_eq!(replay["code"], "not_offered");
+    // The core's command, Harita's own and CBS's that Harita's ribbon goes through (Katman koordinat sistemi):
+    // their answers are the commands', not the program's refusal.
+    for command in ["cad.polygon.create", "cad.parcels.create", "cad.layers.crs"] {
+        let asked = ask_agent(
+            &mut app,
+            &answers,
+            "run",
+            json!({ "command": command, "op": "validate", "input": {} }),
+        );
+        assert_ne!(asked["code"], "not_offered", "{command}");
+    }
+    // kentos-cad: every command.
+    app.program = None;
+    let wall = ask_agent(
+        &mut app,
+        &answers,
+        "run",
+        json!({ "command": "cad.walls.create", "op": "validate", "input": {} }),
+    );
+    assert_ne!(wall["code"], "not_offered");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
 /// docs/adr/0738 §1: an agent on the desktop's link reads no value of a field the drawing withholds; the
 /// console's Python, the drawing's owner, reads it.
 #[cfg(unix)]

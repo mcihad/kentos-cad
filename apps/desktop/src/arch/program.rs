@@ -83,6 +83,19 @@ pub(crate) fn in_program(m: Module) -> &'static str {
     }
 }
 
+/// Whether `module`'s program offers product command `product` to an agent (docs/adr/8056 §1).
+fn offers_product(module: Module, product: &str) -> bool {
+    use kentos_native_application::registry::{Discipline, discipline_of};
+    let own = match discipline_of(product) {
+        None | Some(Discipline::Core) => true,
+        Some(Discipline::Arch) => module == Module::Architecture,
+        Some(Discipline::Map) => module == Module::Map,
+        Some(Discipline::Gis) => module == Module::Gis,
+        Some(Discipline::Road) => module == Module::Road,
+    };
+    own || catalog().routes_offer(module, product)
+}
+
 /// “KentOS Harita'nın”: whose something is, a module's program in a sentence.
 pub(crate) fn of_program(m: Module) -> &'static str {
     match m {
@@ -270,6 +283,31 @@ impl App {
         } else {
             format!(
                 "“{title}” {} yok; {} var.",
+                in_program(here),
+                and_list(&others)
+            )
+        })
+    }
+
+    /// Why an agent on this program's link may not run a product command (docs/adr/8056 §1): the programs that
+    /// offer it; none in kentos-cad. A module's program offers the core's commands and its discipline's
+    /// ([`kentos_native_application::registry::discipline_of`]), and another discipline's its interface goes
+    /// through ([`crate::catalog::Catalog::routes_offer`]); a command the registry does not know is left to it.
+    pub(crate) fn product_not_offered(&self, product: &str) -> Option<String> {
+        let here = self.program?;
+        if offers_product(here, product) {
+            return None;
+        }
+        let others: Vec<&str> = Module::ALL
+            .into_iter()
+            .filter(|m| *m != here && offers_product(*m, product))
+            .map(in_program)
+            .collect();
+        Some(if others.is_empty() {
+            format!("“{product}” {} yok.", in_program(here))
+        } else {
+            format!(
+                "“{product}” {} yok; {} var.",
                 in_program(here),
                 and_list(&others)
             )

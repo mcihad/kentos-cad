@@ -400,6 +400,55 @@ macro_rules! by_command {
     };
 }
 
+/// The part of the product a command belongs to (docs/adr/8054 §9, §11): the core every module has, or one
+/// discipline's.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Discipline {
+    Core,
+    Arch,
+    Map,
+    Gis,
+    Road,
+}
+
+/// The discipline whose part of the registry answers `command`, whether this build runs it or not; none for a
+/// command the registry does not know. A module's program offers the core's and its own discipline's commands to an
+/// agent (docs/adr/8056 §1).
+pub fn discipline_of(command: &str) -> Option<Discipline> {
+    // An arm answers `Ok(true)`, or that this build leaves it out; `Ok(false)` is no arm of that part.
+    macro_rules! held {
+        ($module:ident, $input:ty) => {
+            Ok::<bool, Unrun>(true)
+        };
+    }
+    let has = |answer: Result<bool, Unrun>| !matches!(answer, Ok(false));
+    if has(crate::arch_dispatch::arch_commands!(
+        command,
+        held,
+        Ok(false)
+    )) {
+        Some(Discipline::Arch)
+    } else if has(crate::map_dispatch::map_commands!(command, held, Ok(false))) {
+        Some(Discipline::Map)
+    } else if has(crate::gis_dispatch::gis_commands!(command, held, Ok(false))) {
+        Some(Discipline::Gis)
+    } else if has(crate::road_dispatch::road_commands!(
+        command,
+        held,
+        Ok(false)
+    )) {
+        Some(Discipline::Road)
+    } else if has(crate::core_dispatch::core_commands!(
+        command,
+        held,
+        Ok(false)
+    )) {
+        Some(Discipline::Core)
+    } else {
+        None
+    }
+}
+
 /// Whether this build leaves `command` out (docs/adr/8054 §11): a command of a discipline it was built without, which
 /// answers that it is not in this build. The catalog stays whole; a command the registry does not know is not one.
 pub fn left_out(command: &str) -> bool {

@@ -107,6 +107,7 @@ mod entries;
 // The shared cases run in every build; a left-out discipline's are skipped there (docs/adr/8054 §11).
 mod fixtures;
 mod module_features;
+mod disciplines;
 #[cfg(feature = "mod-gis")]
 mod forms_timing;
 mod gml;

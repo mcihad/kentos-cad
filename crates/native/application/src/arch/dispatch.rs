@@ -296,6 +296,31 @@ macro_rules! arch_commands {
                 review_notes_list,
                 kentos_commands::ReviewNotesList
             ),
+            // The building elements (moved from the core's part, docs/adr/8056 §1: they are architecture's).
+            kentos_commands::CAD_COLUMNS_DISTANCES => crate::arch_dispatch::arch_arm!(
+                $command,
+                $then,
+                columns_distances,
+                kentos_commands::ColumnsDistancesInput
+            ),
+            kentos_commands::CAD_GRIDS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, grids_create, GridsCreate)
+            }
+            kentos_commands::CAD_COLUMNS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, columns_create, ColumnsCreate)
+            }
+            kentos_commands::CAD_STAIRS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, stairs_create, StairsCreate)
+            }
+            kentos_commands::CAD_RAMPS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, ramps_create, RampsCreate)
+            }
+            kentos_commands::CAD_BEAMS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, beams_create, BeamsCreate)
+            }
+            kentos_commands::CAD_RAILINGS_CREATE => {
+                crate::arch_dispatch::arch_arm!($command, $then, railings_create, RailingsCreate)
+            }
             _ => $else,
         }
     };

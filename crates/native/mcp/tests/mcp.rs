@@ -1487,7 +1487,7 @@ fn desktop_attach_names_the_program_whose_link_it_takes() {
         message.contains("yok.sock") && message.contains("KentOS Mimari'de Python sekmesinden"),
         "{message}"
     );
-    // The tool says it takes a program, one of the three.
+    // The tool says it takes a program, one of the four.
     let listed = ask(&mut server, 2, "tools/list", json!({}));
     let attach = listed["result"]["tools"]
         .as_array()
@@ -1496,7 +1496,7 @@ fn desktop_attach_names_the_program_whose_link_it_takes() {
         .clone();
     assert_eq!(
         attach["inputSchema"]["properties"]["program"]["enum"],
-        json!(["mimari", "harita", "cbs"])
+        json!(["mimari", "harita", "cbs", "yol"])
     );
 
     // The real process in a runtime folder of its own.

@@ -81,30 +81,6 @@ macro_rules! core_commands {
             }
             kentos_commands::CAD_SHAPES_EDIT => $then!(shape_edits, kentos_commands::ShapesEdit),
             kentos_commands::CAD_NURBS_CREATE => $then!(nurbs, NurbsCreate),
-            kentos_commands::CAD_COLUMNS_DISTANCES => crate::arch_dispatch::arch_arm!(
-                $command,
-                $then,
-                columns_distances,
-                kentos_commands::ColumnsDistancesInput
-            ),
-            kentos_commands::CAD_GRIDS_CREATE => {
-                crate::arch_dispatch::arch_arm!($command, $then, grids_create, GridsCreate)
-            }
-            kentos_commands::CAD_COLUMNS_CREATE => {
-                crate::arch_dispatch::arch_arm!($command, $then, columns_create, ColumnsCreate)
-            }
-            kentos_commands::CAD_STAIRS_CREATE => {
-                crate::arch_dispatch::arch_arm!($command, $then, stairs_create, StairsCreate)
-            }
-            kentos_commands::CAD_RAMPS_CREATE => {
-                crate::arch_dispatch::arch_arm!($command, $then, ramps_create, RampsCreate)
-            }
-            kentos_commands::CAD_BEAMS_CREATE => {
-                crate::arch_dispatch::arch_arm!($command, $then, beams_create, BeamsCreate)
-            }
-            kentos_commands::CAD_RAILINGS_CREATE => {
-                crate::arch_dispatch::arch_arm!($command, $then, railings_create, RailingsCreate)
-            }
             kentos_commands::CAD_SHEETS_SET => $then!(sheets_set, SheetsSet),
             kentos_commands::CAD_NAVIGATOR_READ => $then!(navigator, NavigatorRead),
             kentos_commands::CAD_XREFS_EDIT => $then!(xrefs_edit, XrefsEdit),

@@ -390,11 +390,16 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 13 — Masaüstü MCP Bağlantısına (`desktop.rs`) `"yol"` Modülünün Eklenmesi ve Modül Sınırı Denetimi (Öncelik: P1)
+### [x] ADIM 13 — Masaüstü MCP Bağlantısına (`desktop.rs`) `"yol"` Modülünün Eklenmesi ve Modül Sınırı Denetimi (Öncelik: P1)
 
 - **Yapılacak İşlem:**
   1. [crates/native/mcp/src/desktop.rs](file:///home/cihad/Projects/kentos-cad/crates/native/mcp/src/desktop.rs#L17) içindeki `const PROGRAMS: [&str; 3] = ["mimari", "harita", "cbs"];` tanımı `["mimari", "harita", "cbs", "yol"]` olarak güncellenecek; `masaustu-yol.sock` üzerinden canlı `kentos-yol` penceresine bağlanma desteği açılacaktır.
   2. Canlı bir modül penceresine (`masaustu-<modül>.sock`) bağlanan MCP oturumu veya yerel Python konsolu, o modülün sunmadığı bir komutu çalıştırmaya kalktığında masaüstüyle aynı `not_offered` kuralına tabi olacaktır (başsız `headless` modda ise tüm disiplin komutları açık kalmaya devam edecektir).
+- **13 Kasım 2026 ([ADR 8056 §1](../docs/adr/8056-phase-2-mcp-v2-and-in-app-agent.md)):** MCP dört programı biliyor
+  (`yol` → `masaustu-yol.sock`). Ajan bağlantısı bir modülün programında yalnız sunulan ürün komutlarını çalıştırıyor
+  (`run`, `call`, `start`, `replay`'in her satırı); kural, kaydın bölümü (`registry::discipline_of`: çekirdek her
+  modülün, disiplin kendi modülünün) ile arayüzün `via` yollarının birleşimi; reddin gerekçesi komutun hangi programda
+  olduğunu söylüyor. Aks, kolon, merdiven, rampa, kiriş, korkuluk ve kolon mesafesi kaydın mimari bölümüne taşındı.
 
 ---
 
@@ -430,6 +435,35 @@ flowchart LR
   2. Bir `.kek` eklentisi etkinleştirildiğinde veya sıcak yüklendiğinde (`hot_reload`) MCP sunucusu `notifications/tools/list_changed` bildirimi gönderecektir.
 
 ---
+
+---
+
+### [ ] ADIM 15A — Uygulama İçi Yapay Zekâ Ajanı: Ayarlardan Sağlayıcı ve API Anahtarı, Varsayılan Ajan, Sohbetle Çizim (Öncelik: P1)
+
+> **13 Kasım 2026, sahibin isteği:** "uygulama ayarlarına kişi kendi yapay zeka ajanını ayarlayabilmeli api key ile ve
+> bunun varsayılan olup olmadığını belirleyebilmeli daha sonra varsayılan ajanıyla chat yapabilmeli kentos-ui içinde bu
+> konuyla ilgili bileşenimiz mevcut … chat penceresi kullanarak mcp ve uygulama içi işler yapabilmen, agentic olacak,
+> anthropic openai deepseek gemini kimi glm ve diğerlerini desteklemeli, api dökümanlarını araştır." Faz 2 ile birlikte.
+
+- **Var olan:** `kentos-ui`'nin `widget/ai` modülü (4 045 satır: sohbet, yazma kutusu, akışlı yanıt, düşünme özeti,
+  araç çağrısı, soru, kaynak; ağ ve sağlayıcı kodu yok, masaüstü henüz kullanmıyor); MCP'nin araç katmanı (ADIM 14
+  onu ~22 çekirdek araca indirir); gizli bilginin yeri için yerleşik kalıp: `~/.config/kentos-cad/` altında yalnız
+  kullanıcının okuyabildiği (0600) dosya ya da yalnız bu oturum (veritabanı bağlantıları, ADR 0623; harita servisleri,
+  ADR 0208 §12); HTTP için `reqwest` 0.13 (rustls) ve `tokio`.
+- **Yapılacak:**
+  1. Sağlayıcıların API belgelerinin araştırması (`docs/research/`): Anthropic, OpenAI, DeepSeek, Google Gemini,
+     Moonshot Kimi, Zhipu GLM ve öbürleri (Mistral, xAI, Qwen, OpenRouter, yerel Ollama/LM Studio): adres, kimlik
+     doğrulama, araç çağrısı, akış (SSE), model adları, hata ve sınırlar.
+  2. Sağlayıcı katmanı (ağ kodu ayrı crate'te, arayüzde değil): iki tel biçimi (Anthropic Messages ve OpenAI uyumlu Chat
+     Completions) ve gerekiyorsa Gemini'nin kendi biçimi; akış, iptal, araç döngüsü. Testler gerçek API'ye gitmez.
+  3. Ayarlar › Yapay zekâ ajanları: ekle, düzenle, sil; sağlayıcı, model, adres, API anahtarı (gizli gösterilir; "Anahtarı
+     sakla" 0600 dosya, yoksa yalnız bu oturum; ortam değişkeni de okunur), **varsayılan** işareti, "Bağlantıyı dene".
+  4. Sohbet penceresi (`widget/ai`): varsayılan ajanla konuşma; ajan çizimi okur ve komutlarla yazar (ADIM 14'ün araç
+     katmanı, uygulamanın içinde): her yazma önce planlanır (MCP koruyucusu), planı sohbette görünür, bir geri alma
+     adımıdır; modül penceresinde yalnız o modülün komutları (ADIM 13).
+- **Tamamlanma ölçütü:** ayarlardan bir sağlayıcı anahtarla tanımlanır, varsayılan seçilir; sohbetten verilen bir çizim
+  isteği ajanın araç çağrılarıyla çizilir, geri alınabilir; altı sağlayıcının tel biçimi sahte sunucuya karşı test
+  edilir; anahtar hiçbir günlüğe, çizime ya da hata kaydına düşmez.
 
 ---
 

@@ -108,7 +108,7 @@ pub fn list(catalog: &Value) -> Vec<Value> {
              Kaydetmek ve geri almak kullanıcınındır.",
             object(
                 json!({
-                    "program": { "type": "string", "enum": desktop::PROGRAMS, "description": "Hangi KentOS programının açık çizimi: mimari (KentOS Mimari), harita (KentOS Harita) ya da cbs (KentOS GIS); yoksa kentos-cad. Bağlantı programın kendi soketidir (masaustu-<program>.sock); KENTOS_DESKTOP ortam değişkeni verilmişse o kullanılır." },
+                    "program": { "type": "string", "enum": desktop::PROGRAMS, "description": "Hangi KentOS programının açık çizimi: mimari (KentOS Mimari), harita (KentOS Harita), cbs (KentOS GIS) ya da yol (KentOS Yol); yoksa kentos-cad. Bir modülün programı yalnız o modülün sunduğu komutları çalıştırır (not_offered). Bağlantı programın kendi soketidir (masaustu-<program>.sock); KENTOS_DESKTOP ortam değişkeni verilmişse o kullanılır." },
                     "path": { "type": "string", "description": "Bağlantının yolu; verilirse program ve KENTOS_DESKTOP'ın yerine geçer." },
                     "document": { "type": "integer", "minimum": 0, "description": "Masaüstünde birden çok çizim açıksa hangisi: hello'nun documents listesindeki numara; yoksa öndeki. Tutamaç bu çizimde kalır, kullanıcı başka sekmeye geçse de." }
                 }),
@@ -1231,7 +1231,7 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                             refused(
                                 "invalid_input",
                                 format!(
-                                    "program {v} olamaz: mimari (KentOS Mimari), harita (KentOS Harita) ya da cbs (KentOS GIS); kentos-cad için verilmez."
+                                    "program {v} olamaz: mimari (KentOS Mimari), harita (KentOS Harita), cbs (KentOS GIS) ya da yol (KentOS Yol); kentos-cad için verilmez."
                                 ),
                             )
                         })?,

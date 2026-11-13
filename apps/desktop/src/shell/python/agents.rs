@@ -94,6 +94,32 @@ impl App {
         }
     }
 
+    /// Why the product commands a request runs are not this program's (docs/adr/8056 §1): `run`'s and a job's
+    /// command, a call's envelope's, each row of a journal replayed; none for a request that runs no command.
+    fn offered_to_agent(&self, method: &str, params: &Value) -> Option<String> {
+        let commands: Vec<&str> = match method {
+            "run" | "call" | "start" => params
+                .get("command")
+                .and_then(Value::as_str)
+                .into_iter()
+                .collect(),
+            "replay" => params
+                .pointer("/journal/calls")
+                .and_then(Value::as_array)
+                .map(|calls| {
+                    calls
+                        .iter()
+                        .filter_map(|c| c.get("command").and_then(Value::as_str))
+                        .collect()
+                })
+                .unwrap_or_default(),
+            _ => Vec::new(),
+        };
+        commands
+            .into_iter()
+            .find_map(|command| self.product_not_offered(command))
+    }
+
     pub(crate) fn agents_answer(&mut self, request: &Value) -> Result<Value, (String, String)> {
         if self.python.link.is_none() {
             return Err(refused("closed", "Ajan bağlantısı kapatıldı."));
@@ -118,10 +144,21 @@ impl App {
             .filter(|v| !v.is_null());
         let named = match named {
             None => None,
-            Some(v) => Some(v.as_u64().or_else(|| v.as_str().and_then(|t| t.parse().ok())).ok_or_else(|| {
-                refused("invalid_request", "document, hello'nun verdiği çizim numarasıdır (document).")
-            })?),
+            Some(v) => Some(
+                v.as_u64()
+                    .or_else(|| v.as_str().and_then(|t| t.parse().ok()))
+                    .ok_or_else(|| {
+                        refused(
+                            "invalid_request",
+                            "document, hello'nun verdiği çizim numarasıdır (document).",
+                        )
+                    })?,
+            ),
         };
+        // A module's program runs only the product commands it offers (docs/adr/8056 §1), as its interface does.
+        if let Some(why) = self.offered_to_agent(method, &params) {
+            return Err(refused("not_offered", &why));
+        }
         let front = self.document.as_ref().map(|d| d.session);
         let documents: Vec<Value> = self
             .doc_tabs
