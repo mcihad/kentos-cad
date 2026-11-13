@@ -496,6 +496,31 @@ impl App {
                 });
             }
         }
+        // Eklentilerden (docs/adr/8057 §3): the running extensions' data sources, opened as a service is.
+        let brought = self.extension_sources();
+        if !brought.is_empty() {
+            let open = s.open.contains(EXTENSIONS);
+            lines.push(Line::Branch {
+                key: EXTENSIONS.to_owned(),
+                label: "Eklentilerden",
+                glyph: "extensions",
+                depth: 1,
+                open,
+            });
+            if open {
+                for (extension, owner, source) in brought {
+                    lines.push(Line::Extension {
+                        key: format!("{EXTENSIONS}:{extension}:{}", source.id),
+                        extension,
+                        local: source.id.clone(),
+                        title: source.title.clone(),
+                        owner,
+                        kind: crate::extensions::kind_word(source.kind),
+                        depth: 2,
+                    });
+                }
+            }
+        }
         let saved_open = s.open.contains(SAVED);
         lines.push(Line::Branch {
             key: SAVED.to_owned(),

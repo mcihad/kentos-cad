@@ -76,6 +76,8 @@ pub(crate) const DATABASES: &str = "veritabanlari";
 pub(crate) const SERVICES: &str = "servisler";
 pub(crate) const PRESETS: &str = "hazir";
 pub(crate) const SAVED: &str = "kayitli";
+/// Eklentilerden: the running extensions' data sources (docs/adr/8057 §3).
+pub(crate) const EXTENSIONS: &str = "eklentilerden";
 /// The sample rows a table's preview reads, and the columns each shows.
 pub(crate) const SAMPLE_ROWS: u32 = 5;
 pub(crate) const SAMPLE_COLUMNS: usize = 4;
@@ -289,7 +291,7 @@ impl Default for SourcesPanel {
             folders: SourceFolders::memory(),
             open: BTreeSet::from(
                 [
-                    FOLDERS, KENTOS, RECENT, FAVOURITES, DATABASES, SERVICES, SAVED,
+                    FOLDERS, KENTOS, RECENT, FAVOURITES, DATABASES, SERVICES, SAVED, EXTENSIONS,
                 ]
                 .map(str::to_owned),
             ),

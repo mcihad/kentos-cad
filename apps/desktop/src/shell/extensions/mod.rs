@@ -771,6 +771,61 @@ impl App {
     }
 }
 
+/// A data source's kind in a word, as Kaynaklar shows it.
+pub(crate) fn kind_word(kind: kentos_extensions::manifest::DataSourceKind) -> &'static str {
+    use kentos_extensions::manifest::DataSourceKind as K;
+    match kind {
+        K::Wms => "WMS",
+        K::Wmts => "WMTS",
+        K::Xyz => "XYZ",
+        K::Wfs => "WFS",
+        K::OgcapiFeatures => "OGC API Features",
+        K::VectorTiles => "Vektör karo",
+        K::Geopackage => "GeoPackage",
+    }
+}
+
+impl App {
+    /// The data sources of the running extensions this program shows (extension, its name, the source), for
+    /// Kaynaklar's Eklentilerden.
+    pub(crate) fn extension_sources(
+        &self,
+    ) -> Vec<(String, String, kentos_extensions::manifest::DataSource)> {
+        let Some(registry) = self.extensions.registry.as_ref() else {
+            return Vec::new();
+        };
+        let mut out = Vec::new();
+        for c in registry.contributions() {
+            if c.kind != kentos_extension_host::ContributionKind::DataSource {
+                continue;
+            }
+            let ext = &c.lease.extension;
+            let Some(manifest) = registry.manifest(ext) else {
+                continue;
+            };
+            if !manifest
+                .modules
+                .iter()
+                .any(|m| self.extension_module_here(*m))
+            {
+                continue;
+            }
+            let local =
+                c.id.strip_prefix(&format!("ext.{ext}."))
+                    .unwrap_or_default();
+            if let Some(source) = manifest
+                .contributions
+                .data_sources
+                .iter()
+                .find(|s| s.id == local)
+            {
+                out.push((ext.clone(), manifest.name.clone(), source.clone()));
+            }
+        }
+        out
+    }
+}
+
 /// Whether a catalog entry is newer than what is installed.
 pub(crate) fn is_update(entry: &CatalogEntry, installed: Option<&str>) -> bool {
     installed.is_some_and(|v| Version::parse(&entry.version) > Version::parse(v))

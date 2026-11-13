@@ -24,9 +24,9 @@ use kentos_postgis::connections::DbConnection;
 use kentos_postgis::probe::{Problem, Relation};
 
 use super::{
-    Browse, DATABASES, Event, FAVOURITES, FOLDERS, KENTOS, Kept, LIMIT, LISTS, Origin, PRESETS,
-    ProjectDrawing, RECENT, Read, SAVED, SERVICES, SavedService, connection_key, folder_key,
-    folder_name, list_key, msg, project_key, service_key, table_key, tables_key,
+    Browse, DATABASES, EXTENSIONS, Event, FAVOURITES, FOLDERS, KENTOS, Kept, LIMIT, LISTS, Origin,
+    PRESETS, ProjectDrawing, RECENT, Read, SAVED, SERVICES, SavedService, connection_key,
+    folder_key, folder_name, list_key, msg, project_key, service_key, table_key, tables_key,
 };
 use crate::app::{App, Message};
 use crate::db_connections::{Event as Db, Then, msg as db};
@@ -101,6 +101,17 @@ pub(crate) enum Line {
         service: SavedService,
         depth: usize,
         open: bool,
+    },
+    /// A data source a running extension brings (docs/adr/8057 §3): its extension, its local id, its title, the
+    /// extension's name and the kind's word.
+    Extension {
+        key: String,
+        extension: String,
+        local: String,
+        title: String,
+        owner: String,
+        kind: &'static str,
+        depth: usize,
     },
     ServiceLayer {
         key: String,
@@ -189,6 +200,7 @@ impl Line {
             | Line::Table { key, .. }
             | Line::Branch { key, .. }
             | Line::Preset { key, .. }
+            | Line::Extension { key, .. }
             | Line::Service { key, .. }
             | Line::ServiceLayer { key, .. }
             | Line::Kept { key, .. }
@@ -213,6 +225,7 @@ impl Line {
             | Line::Extent { depth, .. }
             | Line::Branch { depth, .. }
             | Line::Preset { depth, .. }
+            | Line::Extension { depth, .. }
             | Line::Service { depth, .. }
             | Line::ServiceLayer { depth, .. }
             | Line::Kept { depth, .. }
@@ -265,6 +278,14 @@ impl Line {
             Line::Preset { name, group, .. } => {
                 vec![name.clone(), group.clone(), "Hazır altlık".to_owned()]
             }
+            Line::Extension {
+                title, owner, kind, ..
+            } => vec![
+                title.clone(),
+                owner.clone(),
+                (*kind).to_owned(),
+                "Eklenti".to_owned(),
+            ],
             Line::Service { service, .. } => vec![
                 service.name.clone(),
                 service.kind.label().to_owned(),

@@ -683,7 +683,7 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   işaret kutulu gerekçeli yetenekler ve kurulu sürüme göre farkı), kurum kataloğu klasörü, eklentisiz başlatma,
   her kipte Eklentiler sekmesi, dikey eklentinin kendi programındaki sekmesi (yerleşik komut, veri kaynağı ve form
   düğmeleri; Python'lular nedeniyle pasif), katman ve çizim sağ tık menülerinde eklenti öğeleri; gerçek pencerede kabul
-  akışı ekran görüntüleriyle sınandı. **Kalan:** Kaynaklar dalı, Komut ara, MCP kaynağı ve `list_changed`, sorunlu
+  akışı ekran görüntüleriyle sınandı. Kaynaklar'ın **Eklentilerden** dalı. **Kalan:** Komut ara, MCP kaynağı ve `list_changed`, sorunlu
   eklentiyi bulma penceresi, `.kcad` bağlantısı, paket SVG ikonları.
 
 ### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)

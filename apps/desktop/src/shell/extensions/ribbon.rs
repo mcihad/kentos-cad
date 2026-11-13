@@ -375,6 +375,14 @@ impl App {
         }
     }
 
+    /// Whether this program shows what an extension of a manifest's module adds.
+    pub(crate) fn extension_module_here(
+        &self,
+        module: kentos_extensions::manifest::Module,
+    ) -> bool {
+        module_of(module).is_some_and(|m| self.extension_tab_here(m))
+    }
+
     /// The extensions' tabs this program shows.
     pub(crate) fn extension_tabs(&self) -> impl Iterator<Item = &ExtTab> {
         self.extensions

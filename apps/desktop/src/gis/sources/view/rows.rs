@@ -297,6 +297,45 @@ impl App {
                 })
                 .into()
             }
+            // A running extension's data source (docs/adr/8057 §3): its title and whose it is; opened as a service.
+            Line::Extension {
+                key,
+                extension,
+                local,
+                title,
+                owner,
+                kind,
+                depth,
+            } => {
+                let add = Message::Extensions(crate::extensions::Event::OpenSource(
+                    extension.clone(),
+                    local.clone(),
+                ));
+                let face = self.drag_row(
+                    row![
+                        indent(*depth),
+                        space().width(Length::Fixed(12.0)),
+                        glyph("serviceSettings"),
+                        // The title alone: the panel is narrow; whose it is and its kind are in its menu.
+                        name(title.clone(), false),
+                        add_button(add.clone()),
+                    ],
+                    key,
+                    None,
+                    add.clone(),
+                    chosen,
+                );
+                let whose = format!("{owner} eklentisinden · {kind}");
+                ContextMenu::new(face, move |_| {
+                    Menu::new()
+                        .item("Haritaya ekle", add.clone())
+                        .icon(from_web(Some("layerAdd")))
+                        .separator()
+                        .item(whose.clone(), None)
+                        .icon(from_web(Some("extensions")))
+                })
+                .into()
+            }
             Line::Service {
                 key,
                 at,

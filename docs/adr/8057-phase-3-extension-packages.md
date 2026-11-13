@@ -261,6 +261,10 @@ yaparken MCP ya da CLI kayıt defterini açarsa süren kurulumun hazırladığı
   dolu açılır; GeoPackage paketin klasöründen **kopya** olarak alınır (bağlı katman, eklenti kaldırılınca kırılırdı);
   WFS ve OGC API Features bu sürümde açılmaz, adresini söyler.
 - **Form:** `Formu içe aktar` yolundan (seçili formun ya da etkin katmanın katmanına, eksik alanlar eklenerek).
+- **Kaynaklar:** Servisler'in altında açık başlayan **Eklentilerden** dalı: çalışan eklentilerin (bu programın)
+  veri kaynakları başlıklarıyla; tık ya da "+" haritaya ekler, sağ tık "Haritaya ekle" ve hangi eklentiden, hangi
+  türde olduğu. Satırda yalnız başlık var: ilk sürüm "başlık · tür · eklenti" yazıyordu, dar panelde yazı "+" düğmesinin
+  altına giriyordu (ekran görüntüsünde görüldü). Arama eklentinin adını ve türü de bulur.
 - **Kabul örneği** `fixtures/extensions/v1/ornek-kent/` (Kent Rehberi): Python'suz dikey eklenti; form, şema, veri
   kaynağı ve CBS şerit sekmesi.
 - **Yan düzeltme (ADIM 15A'nın açığı):** CAD Görünüm › Paneller'e eklenen Asistan grubu üç sütuna taşırıp sekmeyi
@@ -274,6 +278,5 @@ GIS'te kurum kataloğundan kur → sekme görünür → veri kaynağı ve form d
 1.1.0'a güncelle (yeni yetenek `YENİ` işaretli) → katman menüsünde eklentinin öğesi → devre dışı bırakınca sekme ve
 öğe kalkar; Kent Rehberi'nin etkinleşmesi 0,2–0,3 ms. Masaüstü sahne testleri 5 (yönetici, sekme ve program kapısı,
 hayalet bırakmama, güncelleme farkı ve verilmeyen yetenek, bozuk paket, katalog), kayıt defteri 21; ilgili masaüstü
-testleri (şerit, katalog, menü, komut, tuş ipuçları) 335 geçti. **ADIM 18'de kalan:** Kaynaklar'da eklenti veri
-kaynaklarının dalı, Komut ara'da eklenti öğeleri, MCP kaynağı ve liste değişikliği bildirimi, "Sorunlu eklentiyi
+testleri (şerit, katalog, menü, komut, tuş ipuçları) 335 geçti. **ADIM 18'de kalan:** Komut ara'da eklenti öğeleri, MCP kaynağı ve liste değişikliği bildirimi, "Sorunlu eklentiyi
 bul"un penceresi, `.kcad` proje bağlantısı, paket SVG ikonlarının düğmelerde çizilmesi.

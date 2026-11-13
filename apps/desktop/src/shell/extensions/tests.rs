@@ -94,8 +94,21 @@ fn a_vertical_extensions_tab_shows_in_its_own_program_only() {
     gis.choose_tab(id);
     assert_eq!(gis.regular_tab(), "ext.tr.ornek.kent-rehberi.kent");
     let _ = gis.ribbon(false);
-    // The same registry in KentOS Mimari: no tab.
+    // Kaynaklar's Eklentilerden: the data source, whose it is.
+    let sources = gis.extension_sources();
+    assert_eq!(sources.len(), 1);
+    assert_eq!(
+        (
+            sources[0].0.as_str(),
+            sources[0].1.as_str(),
+            sources[0].2.id.as_str()
+        ),
+        (KENT, "Kent Rehberi", "ortofoto")
+    );
+    assert_eq!(super::kind_word(sources[0].2.kind), "WMTS");
+    // The same registry in KentOS Mimari: no tab, no source.
     let mimari = app(&root, Some(Module::Architecture));
+    assert!(mimari.extension_sources().is_empty());
     assert_eq!(mimari.extension_tabs().count(), 0);
     assert!(
         mimari

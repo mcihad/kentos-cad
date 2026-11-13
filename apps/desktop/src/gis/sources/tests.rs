@@ -118,6 +118,9 @@ fn rows(app: &App) -> Vec<String> {
                 format!("{}[kapsam {:?}]", "  ".repeat(depth), extent)
             }
             Line::Preset { name, depth, .. }
+            | Line::Extension {
+                title: name, depth, ..
+            }
             | Line::ServiceLayer {
                 title: name, depth, ..
             } => {
