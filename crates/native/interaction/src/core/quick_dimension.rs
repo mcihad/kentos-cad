@@ -112,21 +112,28 @@ impl QuickDimension {
             } else {
                 String::new()
             };
+            // A straight edge's dimension follows its vertices (UR-020); an arc's length is tied to nothing yet, said now
+            // rather than found when the arc changes.
+            let free = out
+                .ids
+                .iter()
+                .filter(|id| {
+                    matches!(cx.doc.get(kentos_domain::Slot(**id)),
+                        Some(kentos_commands::Entity::Dimension(d)) if d.refs.is_none())
+                })
+                .count();
+            let note = if free > 0 { format!(" {free} {FREE}") } else { String::new() };
             cx.say(
                 Level::Success,
-                // They follow nothing (İlişki: Serbest): said now, not found when the boundary changes.
-                format!(
-                    "Hızlı ölçü: {} ölçü eklendi{left}. {FREE}",
-                    out.count
-                ),
+                format!("Hızlı ölçü: {} ölçü eklendi{left}; ölçüler kenarlarının köşelerine bağlı.{note}", out.count),
             );
         }
         Flow::Exit
     }
 }
 
-/// What a quick dimension is: measured once, tied to nothing.
-pub const FREE: &str = "Ölçüler nesneye bağlı değil (İlişki: Serbest): ölçülen sınır sonra değişirse kendiliğinden güncellenmez.";
+/// What an arc's length dimension from Hızlı ölçü is: measured once, tied to nothing yet (UR-020).
+pub const FREE: &str = "yay uzunluğu ölçüsü nesneye bağlı değil (İlişki: Serbest): yay sonra değişirse kendiliğinden güncellenmez.";
 
 impl Stages for QuickDimension {
     fn id(&self) -> &'static str {
