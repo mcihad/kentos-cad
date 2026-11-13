@@ -79,7 +79,7 @@ fn every_edge_of_the_selection_at_once_the_shared_one_once_out_of_the_areas() {
     assert_eq!(
         b.last_text(),
         Some(
-            "Hızlı ölçü: 9 ölçü eklendi; 1 nesne atlandı (yalnız çizgi, çoklu çizgi ve alan ölçülür)."
+            "Hızlı ölçü: 9 ölçü eklendi; 1 nesne atlandı (yalnız çizgi, çoklu çizgi ve alan ölçülür). Ölçüler nesneye bağlı değil (İlişki: Serbest): ölçülen sınır sonra değişirse kendiliğinden güncellenmez."
         )
     );
     assert_eq!(b.last_level(), Some(Level::Success));
@@ -125,7 +125,7 @@ fn a_typed_distance_and_zemin() {
     let made = dims(&b);
     assert_eq!(made.len(), 4);
     assert!(made.iter().all(|d| d.offset == -2.5 && d.mask), "{made:?}");
-    assert_eq!(b.last_text(), Some("Hızlı ölçü: 4 ölçü eklendi."));
+    assert_eq!(b.last_text(), Some("Hızlı ölçü: 4 ölçü eklendi. Ölçüler nesneye bağlı değil (İlişki: Serbest): ölçülen sınır sonra değişirse kendiliğinden güncellenmez."));
     // Zemin stays for the next run, as Ölçülendirme's.
     assert!(b.memory.dimension_mask);
 }

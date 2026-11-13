@@ -60,7 +60,7 @@ impl App {
         for (kind, n) in counts {
             *types.entry(kind).or_default() += n;
         }
-        // Past the limit (AutoCAD's PROPOBJLIMIT, docs/adr/1027): the selection's size and kinds only, no values and no
+        // Past the limit (docs/adr/1027): the selection's size and kinds only, no values and no
         // editors — working out and comparing a million objects' values took most of a select-all.
         if selected.len() > PROPERTIES_LIMIT {
             let total: usize = types.values().sum();
@@ -918,8 +918,28 @@ impl App {
         if let Some(refused) = kentos_interaction::properties::take_bonds_refused() {
             self.bonds_refused = refused;
         }
-        for text in said {
+        for text in in_saying_order(said) {
             self.warn(text);
         }
+    }
+}
+
+/// A command's warnings in the order they are said: its first (its weightiest: a stair that does not fit before
+/// its step rule) said last, so the status bar keeps it; the others stay in the history above it.
+pub(crate) fn in_saying_order(mut said: Vec<String>) -> Vec<String> {
+    said.reverse();
+    said
+}
+
+#[cfg(test)]
+mod saying_order_tests {
+    /// UR-102: a stair edit's two warnings: “rıhta yetmiyor” is the one the status bar keeps.
+    #[test]
+    fn the_weightiest_warning_is_said_last() {
+        let said = super::in_saying_order(vec![
+            "Yürüme çizgisi (5.84 m) 20 rıhta yetmiyor: 2 rıht sığmıyor.".to_owned(),
+            "2 × rıht + basamak = 0,580 m".to_owned(),
+        ]);
+        assert!(said.last().is_some_and(|w| w.contains("rıhta yetmiyor")));
     }
 }

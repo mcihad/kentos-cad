@@ -321,12 +321,76 @@ pub fn write_selection(
         crate::saving::SaveError::Failed(why) => format!("Seçilenler yazılamadı: {why}"),
         crate::saving::SaveError::Stopped => "Seçilenler yazılamadı: kayıt durduruldu.".to_owned(),
     })?;
+    let (hatches, dimensions) = lost_ties(drawing, uids);
+    let mut lost = Vec::new();
+    if hatches > 0 {
+        lost.push(format!("{hatches} tarama"));
+    }
+    if dimensions > 0 {
+        lost.push(format!("{dimensions} ölçü"));
+    }
+    let lost = if lost.is_empty() {
+        String::new()
+    } else {
+        format!(
+            " Kaynak nesneleri seçilmediği için {} dosyada bağsız (ilişkisiz) kaldı; bağ kalsın istiyorsanız kaynaklarını da seçip yeniden kaydedin.",
+            lost.join(" ve ")
+        )
+    };
     Ok(format!(
-        "Seçilenler kaydedildi: {} nesne, {} blok → “{}”. Açık çizim değişmedi.",
+        "Seçilenler kaydedildi: {} nesne, {} blok → “{}”. Açık çizim değişmedi.{lost}",
         made.entities.len(),
         made.blocks.len(),
         file_name(path)
     ))
+}
+
+/// How many of the chosen hatches and dimensions are tied to objects not chosen (their ties do not go into the file):
+/// a hatch by its boundary objects, a dimension by the objects its points are on.
+pub(crate) fn lost_ties(drawing: &DocumentSnapshotV2, uids: &[EntityId]) -> (usize, usize) {
+    use kentos_commands::Entity;
+    let chosen: std::collections::HashSet<String> = uids.iter().map(|u| u.to_string()).collect();
+    // Every “uid” string under a value (a dimension's references).
+    fn named(v: &serde_json::Value, out: &mut Vec<String>) {
+        match v {
+            serde_json::Value::Object(m) => {
+                for (k, x) in m {
+                    match (k.as_str(), x) {
+                        ("uid", serde_json::Value::String(u)) => out.push(u.clone()),
+                        _ => named(x, out),
+                    }
+                }
+            }
+            serde_json::Value::Array(a) => a.iter().for_each(|x| named(x, out)),
+            _ => {}
+        }
+    }
+    let (mut hatches, mut dimensions) = (0, 0);
+    for (e, uid) in drawing.entities.iter().zip(&drawing.uids) {
+        if !chosen.contains(&uid.to_string()) {
+            continue;
+        }
+        match e {
+            Entity::Hatch(h) => {
+                if h.assoc.as_ref().is_some_and(|a| {
+                    a.outer.iter().chain(&a.bounds).chain(&a.islands).any(|id| !chosen.contains(&id.to_string()))
+                }) {
+                    hatches += 1;
+                }
+            }
+            Entity::Dimension(d) => {
+                if let Some(refs) = &d.refs {
+                    let mut ids = Vec::new();
+                    named(&serde_json::to_value(refs).unwrap_or_default(), &mut ids);
+                    if ids.iter().any(|id| !chosen.contains(id)) {
+                        dimensions += 1;
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    (hatches, dimensions)
 }
 
 impl App {
@@ -1087,5 +1151,35 @@ mod tests {
         assert_eq!(settings.length_decimals, 2);
         assert_eq!(settings.plot_scale, 1000.0);
         assert!(app.take_from.is_none());
+    }
+}
+
+#[cfg(test)]
+mod lost_tie_tests {
+    use kentos_commands::Entity;
+
+    /// UR-093: a tied hatch saved without its circle is counted as losing its tie; saved with it, it is not.
+    #[test]
+    fn a_hatch_saved_without_its_boundary_is_counted() {
+        let mut doc = crate::files_testing::drawing(0).model;
+        let circle: Entity = serde_json::from_value(serde_json::json!({
+            "kind": "circle", "id": 0, "layerId": "cizim", "attrs": {}, "c": {"x": 20.0, "y": 5.0}, "r": 2.0
+        }))
+        .unwrap();
+        let c = doc.add(circle).expect("a slot");
+        let cu = doc.uid(c).expect("a uid");
+        let hatch: Entity = serde_json::from_value(serde_json::json!({
+            "kind": "hatch", "id": 0, "layerId": "cizim", "attrs": {},
+            "ring": [{"x": 18.0, "y": 3.0}, {"x": 22.0, "y": 3.0}, {"x": 22.0, "y": 7.0}],
+            "pattern": {"type": "lines", "angle": 45, "spacing": 1},
+            "assoc": {"outer": cu.to_string(), "seed": {"x": 21.0, "y": 4.0}}
+        }))
+        .unwrap();
+        let h = doc.add(hatch).expect("a slot");
+        let hu = doc.uid(h).expect("a uid");
+        let snapshot = doc.to_snapshot_v2();
+        let id = |u: kentos_domain::Uuid| kentos_commands::EntityId::parse(&u.to_string()).expect("an id");
+        assert_eq!(super::lost_ties(&snapshot, &[id(hu)]), (1, 0));
+        assert_eq!(super::lost_ties(&snapshot, &[id(hu), id(cu)]), (0, 0));
     }
 }

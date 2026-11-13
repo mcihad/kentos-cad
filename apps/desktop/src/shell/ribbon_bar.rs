@@ -120,18 +120,22 @@ pub(crate) fn split_entry(e: &Entry) -> SplitEntry<'static> {
 /// its name, a family without a title; each row the entry's icon, words,
 /// what it does and the command's shortcut. Choosing one keeps it on top
 /// and runs it; a command not on the desktop is off.
-pub(crate) fn split_list(key: &'static str, entries: &[Entry]) -> Menu<Message> {
+/// A split button's list: its entries, each off as its command is (`off`, [`crate::app::App::rows_off`]), the reason
+/// under the first that gives it.
+pub(crate) fn split_list(key: &'static str, entries: &[Entry], off: &[Option<String>]) -> Menu<Message> {
     let plan_entries: Vec<SplitEntry> = entries.iter().map(split_entry).collect();
     let (header, rows) = plan::split_menu(&plan_entries);
     let menu = match header {
         Some(title) => Menu::new().header(title),
         None => Menu::new(),
     };
-    entries.iter().zip(rows).fold(menu, |menu, (entry, row)| {
+    let mut said = Vec::new();
+    entries.iter().zip(rows).enumerate().fold(menu, |menu, (k, (entry, row))| {
         let Some(command) = catalog().get(entry.id) else {
             return menu;
         };
-        let run = (command.standing == crate::catalog::Standing::Ported).then_some(
+        let is_off = matches!(off.get(k), Some(Some(_)));
+        let run = (command.standing == crate::catalog::Standing::Ported && !is_off).then_some(
             Message::SplitChosen {
                 key,
                 id: entry.id,
@@ -148,10 +152,11 @@ pub(crate) fn split_list(key: &'static str, entries: &[Entry]) -> Menu<Message> 
             Some(hint) => menu.hint(hint),
             None => menu,
         };
-        match command.shortcuts.first() {
+        let menu = match command.shortcuts.first() {
             Some(keys) => menu.shortcut(*keys),
             None => menu,
-        }
+        };
+        crate::view::row_off(menu, off.get(k), &mut said).0
     })
 }
 
@@ -176,6 +181,32 @@ mod tests {
                 _ => None,
             })
             .expect("Daire's split button")
+    }
+
+    /// UR-062: on a point layer the Daire family's list is off as its button is, row by row, the reason under the
+    /// first row; back on a free layer the rows run again.
+    #[test]
+    fn a_familys_list_is_off_where_the_active_layer_does_not_hold_it() {
+        let mut app = app_with_drawing();
+        let (key, entries) = circle();
+        let ids: Vec<&'static str> = entries.iter().map(|e| e.id).collect();
+        assert!(app.rows_off(&ids).iter().all(Option::is_none));
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let active = doc.layers().active().to_owned();
+        // The drawing's active layer holds points only (its objects fit or the type is refused).
+        if doc.set_layer_geometry(&active, Some(kentos_commands::LayerGeometry::Point), "Katman türü").is_err() {
+            app.new_typed_layer(kentos_commands::LayerGeometry::Point);
+        }
+        assert!(!app.available("tool.circle"));
+        let off = app.rows_off(&ids);
+        assert!(off.iter().all(Option::is_some), "{off:?}");
+        let why = off[0].clone().unwrap_or_default();
+        assert!(why.contains("nokta katmanı"), "{why}");
+        let menu = format!("{:?}", super::split_list(key, &entries, &off));
+        assert!(!menu.contains("SplitChosen"), "no row runs: {menu}");
+        assert_eq!(menu.matches(why.as_str()).count(), 1, "the reason once: {menu}");
+        // Düzgün çokgen, on Çizim's own list, is off too.
+        assert!(!app.available("tool.regularPolygon"));
     }
 
     #[test]
@@ -392,6 +423,43 @@ mod screens {
                     println!("{}", file.display());
                 }
             }
+        }
+    }
+
+    /// UR-062's pictures: the Daire list opened on a point layer, its rows off and the reason under the first,
+    /// `.run/gui-evidence/kullanim-062/`.
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn point_layer_screens() {
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-062");
+        std::fs::create_dir_all(&out).expect("a folder");
+        for (mode, width, height) in [("light", 1440.0, 900.0), ("dark", 1100.0, 760.0)] {
+            let mut app = app_with_drawing();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(Size::new(width, height)));
+            app.new_typed_layer(kentos_commands::LayerGeometry::Point);
+            // The tab that holds Daire in this drawing's mode.
+            let tab = app
+                .ribbon_tabs()
+                .find(|t| {
+                    t.panels.iter().flat_map(|p| p.items.iter()).any(|i| {
+                        matches!(i, crate::catalog::Item::Split { entries, .. } if entries.first().is_some_and(|e| e.id == "tool.circle"))
+                    })
+                })
+                .map(|t| t.id)
+                .expect("a tab with Daire");
+            let _ = app.update(Message::RibbonTab(tab));
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let at = find_text(&mut snapshot, &app, "Daire").expect("Daire");
+            press(&mut snapshot, &mut app, at.center(), mouse::Button::Left);
+            let file = out.join(format!("daire-listesi-nokta-katmani-{mode}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
         }
     }
 }

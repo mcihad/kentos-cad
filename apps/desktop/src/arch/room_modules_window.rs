@@ -847,8 +847,52 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
             )
-            .push(label::caption("Önce çizimde odanın nesnelerini seçin."))
+            .push(label::caption(self.room_module_selection_words()))
             .into()
+    }
+
+    /// What Seçimden tanımla would take from the current selection: that one is needed, how many objects it holds, and
+    /// which of them a module cannot take (the definition is refused whole while any is selected).
+    pub(crate) fn room_module_selection_words(&self) -> String {
+        let ids = self.selection.ids();
+        let Some(doc) = self.document.as_ref().filter(|_| !ids.is_empty()) else {
+            return "Önce çizimde odanın nesnelerini seçin.".into();
+        };
+        let mut unfit: Vec<&'static str> = Vec::new();
+        let mut unfit_count = 0usize;
+        for s in ids {
+            let Some(e) = doc.model.get(*s) else { continue };
+            let tied_column = matches!(e, Entity::Column(c) if c.column.grids.is_some());
+            if !kentos_commands::module_kind_ok(e) || tied_column {
+                unfit_count += 1;
+                let name = if tied_column {
+                    "aksa bağlı kolon"
+                } else {
+                    kentos_interaction::data_search::kind_name(e)
+                };
+                if !unfit.contains(&name) {
+                    unfit.push(name);
+                }
+            }
+        }
+        let n = ids.len();
+        if unfit_count == 0 {
+            return format!("Seçimde {n} nesne var; hepsi modüle alınabilir.");
+        }
+        let names = unfit
+            .iter()
+            .map(|w| w.to_lowercase())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fit = n - unfit_count;
+        if fit == 0 {
+            return format!(
+                "Seçimdeki {n} nesne modüle alınamaz ({names}). Duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ya da yazı seçin."
+            );
+        }
+        format!(
+            "Seçimde {n} nesne var: {fit} tanesi modüle alınabilir, {unfit_count} tanesi alınamaz ({names}). Tanımlamadan önce bunları seçimden çıkarın."
+        )
     }
 
     /// The chosen module's details: what it is (name and values), its own actions, its instances in a table, and the

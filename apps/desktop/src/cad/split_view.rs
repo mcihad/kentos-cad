@@ -661,8 +661,7 @@ impl App {
         let camera = self
             .view_at(view)
             .map_or(self.viewport.camera, |v| v.camera);
-        let n = view_link::screen_scale(camera.scale).round();
-        let scale = kentos_project::wizard::scale_text(n);
+        let scale = screen_scale_words(view_link::screen_scale(camera.scale));
         // A narrow view says the scale alone (docs/adr/0637 §1).
         let words = match self.view_width(view) {
             Some(w) if w < NARROW => scale,
@@ -1084,8 +1083,31 @@ impl App {
     }
 }
 
+/// A view's screen scale as its chip says it: 1:N at N of one or more; closer in than full size, the enlargement N:1
+/// (a denominator rounded to 0 read “1:0”, no scale); none readable, a dash.
+pub(crate) fn screen_scale_words(n: f64) -> String {
+    if !n.is_finite() || n <= 0.0 {
+        return "—".to_owned();
+    }
+    if n.round() >= 1.0 {
+        return kentos_project::wizard::scale_text(n.round());
+    }
+    format!("{}:1", kentos_project::wizard::scale_text((1.0 / n).round()).trim_start_matches("1:"))
+}
+
 #[cfg(test)]
 mod tests {
+
+    /// UR-098: a view zoomed in past full size says its enlargement, never “1:0”.
+    #[test]
+    fn a_view_closer_than_full_size_says_its_enlargement() {
+        assert_eq!(super::screen_scale_words(68.4), "1:68");
+        assert_eq!(super::screen_scale_words(1.0), "1:1");
+        assert_eq!(super::screen_scale_words(0.2), "5:1");
+        assert_eq!(super::screen_scale_words(0.4), "3:1");
+        assert_eq!(super::screen_scale_words(0.0), "—");
+        assert!(!super::screen_scale_words(0.3).contains("1:0"));
+    }
     use iced::{Point, Rectangle, Size};
 
     use crate::app::{App, Message};

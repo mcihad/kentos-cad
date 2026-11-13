@@ -332,11 +332,23 @@ impl App {
             .style(move |theme: &Theme| text::Style {
                 color: Some(Tokens::of(theme).muted.scale_alpha(alpha)),
             });
-        container(row![mark, words].spacing(6).align_y(Center))
-            .padding([0, 12])
-            .width(Fill)
-            .clip(true)
-            .into()
+        // A long result (Alan hesapla's area and perimeter) is cut to the bar's room: the whole line is its tip, and a
+        // click opens Komut geçmişi, where it stays.
+        let cell = iced::widget::button(
+            container(row![mark, words].spacing(6).align_y(Center))
+                .padding([0, 12])
+                .width(Fill)
+                .clip(true),
+        )
+        .padding(0)
+        .width(Fill)
+        .style(kentos_ui::style::button::flat)
+        .on_press(Message::BottomTab(crate::bottom::BottomTab::History));
+        kentos_ui::widget::tip(
+            cell,
+            kentos_ui::widget::Tip::new(flash.text.clone()).body("Komut geçmişinde tutulur; açmak için tıklayın."),
+            iced::widget::tooltip::Position::Top,
+        )
     }
 }
 

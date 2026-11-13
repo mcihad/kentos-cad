@@ -11,7 +11,7 @@
 //!   - Artır (A), a toggle: every vertex that has an elevation gets it plus
 //!     the difference typed; one without stays without, a point with a `z`
 //!     is raised;
-//!   - Sıfırla (S) writes at once: every vertex without an elevation (not 0),
+//!   - Kotu kaldır (S) writes at once: every vertex without an elevation (not 0),
 //!     a point without `z`. With objects picked and not yet confirmed, they
 //!     are the ones.
 //! - After a write the tool is back at picking with nothing selected. Esc
@@ -25,7 +25,7 @@
 //! its own message. Objects that take no elevation are counted and said.
 //!
 //! Artır is kept for the run, not in [`crate::tool::Memory`]: the ribbon's
-//! methods (Sabit, Artır, Sıfırla) each start the tool the way they say.
+//! methods (Sabit, Artır, Kotu kaldır) each start the tool the way they say.
 
 use kentos_commands::{ShapeElevation, ShapeWork};
 use kentos_domain::Slot;
@@ -51,7 +51,7 @@ pub const NONE_TAKES: &str =
 /// What is said when Artır has no elevation to raise.
 pub const NOTHING_TO_RAISE: &str =
     "Seçili nesnelerin hiçbir köşesinde kot yok; fark eklenecek bir şey bulunamadı.";
-/// What is said by Sıfırla before any object is picked.
+/// What is said by Kotu kaldır before any object is picked.
 pub const PICK_FIRST: &str = "Önce kotu silinecek nesneleri seçin.";
 
 /// What a write does.
@@ -61,7 +61,7 @@ enum Give {
     Set(f64),
     /// Artır: this difference.
     Raise(f64),
-    /// Sıfırla.
+    /// Kotu kaldır: none, not 0.
     Clear,
 }
 
@@ -92,11 +92,11 @@ impl SetElevation {
         Modify::with(Self::default())
     }
 
-    /// The chips both steps offer: Artır, a toggle, and Sıfırla.
+    /// The chips both steps offer: Artır, a toggle, and Kotu kaldır.
     fn chips(&self, prompt: Prompt) -> Prompt {
         prompt
             .toggle("Artır", "A", self.raise)
-            .option("Sıfırla", "S")
+            .option("Kotu kaldır", "S")
     }
 
     /// The selected objects that still exist.
@@ -162,7 +162,7 @@ impl SetElevation {
         let n = chosen.len();
         let text = match give {
             Give::Raise(by) => format!("Kotlar {} değişti: {n} nesne.", signed(by, &cx.format())),
-            Give::Clear => format!("Kot silindi: {n} nesne."),
+            Give::Clear => format!("Kot kaldırıldı (kot yok, 0 değil): {n} nesne."),
             Give::Set(_) => format!("Kot verildi: {n} nesne."),
         };
         cx.say(Level::Info, text);

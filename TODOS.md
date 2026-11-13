@@ -57,6 +57,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - UR-003: `io/kcad.ts` şema 255 (`toolLayers`), web'in yeni CAD projesi ölçü/yazı/tarama araç katmanlarını yazsın
   (`fixtures/project/v1/new-project.json` o zaman yeniden kaydedilir), web araçları `settings.toolLayers`'ı izlesin ve
   Proje ayarları › Birim ve ölçek › Araç katmanları.
+- UR-090 (kullanım incelemesi): web'in `dimension.test.ts` ve WASM `quickDimensions`'ı kapalı çoklu çizginin `closed`'ını okusun (çekirdek belge okumasıyla kapanış kenarını ölçüyor; `fixtures/dimension/v1/quick.json`'a yeni durum eklendi).
+- UR-071 (kullanım incelemesi): web'in `model/ops/labelText.ts` etiket şablonu `{Ad}` gibi öznitelikleri de doldursun (masaüstünde `fill_template_with`; eksik alan `{…}` olarak kalır).
 - MAP-07 / ADR 1260: web'in Topoloji paneli ve `io/kcad.ts` şema 189 (kalite `profile`'ı; istisnanın `decision`,
   `reason`, `ruleDigest`, `scope`'u), bulgunun `state`/`reason`'ı, `cad.topology.exceptions`'ın `error`/`reason`/`scope`'u
   ve `cad.topology.repair`'in web işleyicisi; WASM `topologyCheck`'in istisnası `anywhere` almıyor (hep yerine bağlı).

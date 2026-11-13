@@ -65,6 +65,21 @@ impl App {
         records
     }
 
+    /// Why Kayıt ekle cannot add to layer `layer`: a typed layer (nokta, çizgi, alan, açıklama) holds only its own
+    /// geometry, so a record without one is refused by the command; the menu shows it off with this, rather than
+    /// offering it and failing.
+    pub(crate) fn add_record_refusal(&self, layer: &str) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let layers = doc.model.layers();
+        let node = layers.get(layer)?;
+        let geometry = node.geometry?;
+        Some(format!(
+            "“{}” bir {}; geometrisiz kayıt yalnız türü Karışık olan katmana eklenir. Yeni nesneyi çizin ya da kayıtlar için Karışık bir katman seçin.",
+            node.name,
+            geometry.layer_words()
+        ))
+    }
+
     /// Kayıt ekle: an empty record on the table's layer, selected; its form opens when the layer has one,
     /// else the table shows it.
     pub(crate) fn feature_add_record(&mut self) -> Task<Message> {
@@ -75,6 +90,10 @@ impl App {
         let Some(layer) = layer else {
             return Task::none();
         };
+        if let Some(why) = self.add_record_refusal(&layer) {
+            self.warn(why);
+            return Task::none();
+        }
         let Some(slot) = self.add_record(&layer, BTreeMap::new()) else {
             return Task::none();
         };
@@ -148,5 +167,20 @@ impl App {
             Err(e) => self.say(Level::Warn, format!("Çoğaltılamadı: {e:?}")),
         }
         Task::none()
+    }
+}
+
+#[cfg(test)]
+mod refusal_tests {
+    /// UR-074: Kayıt ekle is off on a typed layer, saying why; a layer of no type (Karışık) takes a record.
+    #[test]
+    fn a_typed_layer_refuses_a_record_before_it_is_asked() {
+        let mut app = crate::files_testing::app_with_drawing();
+        assert_eq!(app.add_record_refusal("parsel"), None);
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        doc.set_layer_geometry("parsel", Some(kentos_commands::LayerGeometry::Area), "Katman türü")
+            .expect("its objects are areas");
+        let why = app.add_record_refusal("parsel").expect("refused");
+        assert!(why.starts_with("“Parsel” bir alan katmanı; geometrisiz kayıt yalnız türü Karışık"), "{why}");
     }
 }

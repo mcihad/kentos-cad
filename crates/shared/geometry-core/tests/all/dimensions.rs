@@ -672,7 +672,7 @@ fn quick_dimensions_are_the_references() {
     .expect("the cases are JSON");
     assert_eq!(file["format"], "kentos.quick-dimension-cases");
     let cases = file["cases"].as_array().expect("a case list");
-    assert_eq!(cases.len(), 31, "the cases are all there");
+    assert_eq!(cases.len(), 32, "the cases are all there");
     let near = |a: f64, e: &Value| {
         let e = e.as_f64().expect("a number");
         (a - e).abs() <= 1e-9 + 1e-15 * e.abs()
@@ -687,7 +687,8 @@ fn quick_dimensions_are_the_references() {
             .iter()
             .map(|o| {
                 let json = Json::parse(&o.to_string()).expect("the object reads");
-                Entity::from_json(&json).expect("an object").shape
+                // The document's reading: a closed polyline's `closed` is kept (UR-090).
+                Entity::from_document_json(&json).expect("an object").shape
             })
             .collect();
         let cursor = v(

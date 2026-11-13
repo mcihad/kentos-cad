@@ -948,3 +948,15 @@ fn dimension_placement_warns_about_coincident_text_without_moving_or_writing_it(
     assert!(!clear.tag.as_ref().unwrap().lines.iter().any(|s| s.contains("çakışabilir")));
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
+
+/// UR-107: a dimension's second point given where the first is: said, the first kept; another point then goes on.
+#[test]
+fn a_second_point_on_the_first_is_said() {
+    let mut b = Bench::new("dimension");
+    b.click(0.0, 0.0);
+    b.click(0.0, 0.0);
+    assert_eq!(b.last_text(), Some(kentos_interaction::dimension::SAME_POINT));
+    assert_eq!(b.session.prompt().text(), "Ölçü: ikinci ölçü noktasını belirtin");
+    b.click(10.0, 0.0);
+    assert!(b.session.prompt().text().starts_with("Ölçü: ölçü çizgisinin yerini gösterin"));
+}

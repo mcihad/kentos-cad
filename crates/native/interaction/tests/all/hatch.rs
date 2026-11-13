@@ -615,3 +615,78 @@ fn a_text_inside_is_left_open_unless_asked() {
     assert!(near(area, 48.0), "hatched over the text: {area}");
     assert!(!b.memory.hatch_texts, "the choice is kept");
 }
+
+/// UR-056: a project pattern chosen, the hatch is written with it and the message names it, not the library's
+/// pattern the session held before.
+#[test]
+fn a_project_pattern_is_named_in_the_success_message() {
+    let mut b = bench();
+    let mut settings = b.doc.settings().clone();
+    settings.hatch_patterns = vec![
+        serde_json::from_value(serde_json::json!({
+            "name": "QA_HATCH",
+            "description": "Test horizontal",
+            "lines": [{"angle": 0, "origin": [0, 0], "offset": [0, 1]}]
+        }))
+        .unwrap(),
+    ];
+    b.doc.set_settings(settings);
+    assert!(b.type_text("QA_HATCH"));
+    b.click(-20.0, 1.0);
+    let Entity::Hatch(h) = b.newest() else {
+        panic!("a hatch: {:?}", b.newest());
+    };
+    assert_eq!(h.pattern.name.as_deref(), Some("QA_HATCH"));
+    assert_eq!(b.last_text(), Some("QA_HATCH tarama eklendi: 48.00 m²"));
+    // Back to a library pattern by its name: that one is named again.
+    assert!(b.type_text("ansi32"));
+    b.click(-20.0, 1.0);
+    assert!(b.last_text().is_some_and(|t| t.starts_with("ANSI32 tarama eklendi")), "{:?}", b.last_text());
+}
+
+/// UR-089: a tied hatch copied with its boundary: the copy follows nothing (the decision of copies), and the command
+/// says so with the way to tie it again rather than leaving it unsaid.
+#[test]
+fn a_copied_tied_hatch_is_said_untied() {
+    let mut b = bench();
+    b.click(-20.0, 1.0);
+    let Entity::Hatch(h) = b.newest() else { panic!("a hatch") };
+    assert!(h.assoc.is_some(), "tied as drawn");
+    let hatch = b.newest().base().id;
+    let uids: Vec<String> = [hatch].iter().filter_map(|s| b.doc.uid(kentos_domain::Slot(*s))).map(|u| u.to_string()).collect();
+    let input: kentos_commands::EntitiesTransform = serde_json::from_value(serde_json::json!({
+        "uids": uids, "transform": {"kind": "move", "dx": 50.0, "dy": 0.0}, "copy": true
+    }))
+    .expect("a transform");
+    let result = kentos_native_application::transform::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut b.doc),
+        input,
+    );
+    let kentos_commands::CommandResult::Completed { warnings, .. } = result else { panic!("{result:?}") };
+    assert!(
+        warnings.iter().any(|w| w.code == kentos_commands::codes::HATCH_ASSOCIATION_LOST
+            && w.message.starts_with("1 kopya taramanın sınır bağı yok")),
+        "{warnings:?}"
+    );
+}
+
+/// Usage review (Ek doğrulama): deleting a tied hatch's boundary says the hatch lost its tie, after the count, so the
+/// status bar keeps it.
+#[test]
+fn deleting_a_hatchs_boundary_says_its_tie_is_lost() {
+    let mut b = bench();
+    b.click(-20.0, 1.0);
+    let Entity::Hatch(h) = b.newest() else { panic!("a hatch") };
+    let outer = h.assoc.as_ref().and_then(|a| a.outer).expect("tied to its closed object");
+    let slot = b
+        .doc
+        .slot_of(kentos_domain::Uuid::from_bytes(outer.0))
+        .expect("the boundary");
+    b.confirm();
+    b.selection.set([slot]);
+    b.start("erase");
+    let said: Vec<&str> = b.said(0).into_iter().map(|(_, t)| t).collect();
+    let count = said.iter().rposition(|t| t.ends_with("nesne silindi.")).expect("the count");
+    let lost = said.iter().rposition(|t| t.contains("sınır bağı koptu")).expect("the tie said");
+    assert!(lost > count, "{said:?}");
+}

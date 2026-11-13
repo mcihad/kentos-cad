@@ -150,14 +150,16 @@ pub fn attrs_of(e: &Entity) -> BTreeMap<String, String> {
     e.base().attrs.clone()
 }
 
-/// The output layer's parameter (the web's `{ name: 'layer', … }`).
+/// The output layer's parameter (the web's `{ name: 'layer', … }`). A new one goes right above the layer of the
+/// input's first object, so a result drawn inside its source (an inward buffer, a clip) is not hidden under the
+/// source's fill; a tool without an `input` puts it last, as before.
 pub fn layer_param(name: &str, color: &str) -> crate::types::ParamDef {
     crate::types::ParamDef::new(
         "layer",
         "Çıktı katmanı",
         crate::types::ParamKind::Layer {
             new_layer_style: output_style(color),
-            above: None,
+            above: Some("input".to_owned()),
             below: None,
         },
     )

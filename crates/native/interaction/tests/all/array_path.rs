@@ -321,3 +321,25 @@ fn objects_on_a_locked_layer_are_refused() {
     assert_eq!(b.doc.len(), before);
     assert!(b.session.is_running(), "the tool waits for another try");
 }
+
+/// UR-079: a polyline an associative path array follows is not made a curve: Eğriye çevir says why and writes
+/// nothing, so the array is never left where the path was.
+#[test]
+fn an_arrays_path_is_not_made_a_curve() {
+    let mut b = empty();
+    let object = b.add_line("cizim", [0.0, 1.0], [1.0, 1.0]);
+    let path = b.add_path("cizim", &[[0.0, 0.0], [10.0, 0.0], [20.0, 5.0]], false);
+    b.selection.set([object]);
+    b.start("arrayPath");
+    b.click(5.0, 0.0);
+    assert!(b.type_text("İ"));
+    b.confirm();
+    assert_eq!(b.doc.arrays().len(), 1, "an associative array along the path");
+    let before = b.doc.get(path).cloned();
+    b.start("curveEdit");
+    b.click(5.0, 0.0);
+    assert!(b.type_text("E"));
+    let said = b.last_text().unwrap_or_default().to_owned();
+    assert!(said.starts_with("Bu çoklu çizgi 1 ilişkili dizinin yolu"), "{said}");
+    assert_eq!(b.doc.get(path).cloned(), before, "the path is as it was");
+}

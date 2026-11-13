@@ -1,4 +1,4 @@
-//! Çoklu tara (docs/adr/0186 §4; Netcad's Çoklu Tara; the web's
+//! Çoklu tara (docs/adr/0186 §4; the web's
 //! `HatchSelectedTool`, `apps/web/src/tools/hatchSelectedTool.ts`):
 //! selection first; each closed object of it (an area and each part of a
 //! multi-part one, a circle, a full ellipse, a closed curve) is hatched by
@@ -117,7 +117,7 @@ impl HatchSelected {
         let Some(out) = points::written(result, cx) else {
             return Flow::Stay;
         };
-        let name = options::choice(&self.memory).name;
+        let name = options::chosen_name(&self.memory, &options::user_names(cx));
         cx.say(
             Level::Success,
             format!(

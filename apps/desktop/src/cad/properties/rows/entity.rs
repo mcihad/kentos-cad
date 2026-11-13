@@ -2,6 +2,7 @@
 //! arch.rs and the others), elevations, measures and where a value comes from.
 
 use super::*;
+use crate::properties::Coord;
 
 /// A Kot row (docs/adr/0142): the elevations as `summary` says them, in
 /// metres: a value or a range beside its unit, or `kot yok`; with vertices
@@ -291,14 +292,21 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
         }
         Entity::Line(l) => {
             // Each end's elevation follows its coordinates (docs/adr/0142).
-            geo.extend([len("Başlangıç Y", l.a.x), len("Başlangıç X", l.a.y)]);
+            // Each end typed as a point's coordinates are (a whole number, its unit if any).
+            geo.extend([
+                len("Başlangıç Y", l.a.x).editor(number(Field::Geometry(slot, Coord::StartEast))),
+                len("Başlangıç X", l.a.y).editor(number(Field::Geometry(slot, Coord::StartNorth))),
+            ]);
             geo.extend(elevation_row(
                 "Kot (başlangıç)",
                 Elevations::of(&[l.za]),
                 &f,
                 number(Field::Elevation(slot, Spot::Start)),
             ));
-            geo.extend([len("Bitiş Y", l.b.x), len("Bitiş X", l.b.y)]);
+            geo.extend([
+                len("Bitiş Y", l.b.x).editor(number(Field::Geometry(slot, Coord::EndEast))),
+                len("Bitiş X", l.b.y).editor(number(Field::Geometry(slot, Coord::EndNorth))),
+            ]);
             geo.extend(elevation_row(
                 "Kot (bitiş)",
                 Elevations::of(&[l.zb]),
@@ -392,9 +400,9 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
         }
         Entity::Circle(c) => {
             geo.extend([
-                len("Merkez Y", c.c.x),
-                len("Merkez X", c.c.y),
-                metres("Yarıçap", c.r),
+                len("Merkez Y", c.c.x).editor(number(Field::Geometry(slot, Coord::CenterEast))),
+                len("Merkez X", c.c.y).editor(number(Field::Geometry(slot, Coord::CenterNorth))),
+                metres("Yarıçap", c.r).editor(number(Field::Geometry(slot, Coord::Radius))),
             ]);
             geo.extend(area(area_of.unwrap_or(0.0)));
         }

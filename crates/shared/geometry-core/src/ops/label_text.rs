@@ -28,6 +28,51 @@ pub const PX_PER_M: f64 = 96.0 / 0.0254;
 /// A multi-line label's lines are 1.2 sizes apart; a multi-line text's in 5/3 of its height.
 const LINE_SPACING: f64 = 1.2 / (5.0 / 3.0);
 
+/// A template filled with the object's own values: its first `{label}` the label (empty without one), each `{Name}`
+/// the attribute of that name (its letters' case as written first, else any case), literally; a `{…}` that names no
+/// attribute is left as written, so a misspelt field shows rather than vanishing. Without a template, or with an
+/// empty one, the label. The labels window offers `{Ad}` as well as `{label}`.
+pub fn fill_template_with(
+    template: Option<&str>,
+    label: Option<&str>,
+    attrs: &std::collections::BTreeMap<String, String>,
+) -> String {
+    let Some(t) = template.filter(|t| !t.is_empty()) else {
+        return label.unwrap_or_default().to_owned();
+    };
+    let t = t.replacen("{label}", label.unwrap_or_default(), 1);
+    let mut out = String::with_capacity(t.len());
+    let mut rest = t.as_str();
+    while let Some(open) = rest.find('{') {
+        out.push_str(&rest[..open]);
+        let after = &rest[open + 1..];
+        match after.find('}') {
+            Some(close) => {
+                let name = &after[..close];
+                let value = attrs.get(name).or_else(|| {
+                    let folded = name.to_lowercase();
+                    attrs.iter().find(|(k, _)| k.to_lowercase() == folded).map(|(_, v)| v)
+                });
+                match value {
+                    Some(v) if !name.is_empty() => out.push_str(v),
+                    _ => {
+                        out.push('{');
+                        out.push_str(name);
+                        out.push('}');
+                    }
+                }
+                rest = &after[close + 1..];
+            }
+            None => {
+                out.push_str(&rest[open..]);
+                rest = "";
+            }
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
 /// A label's text: the template's first `{label}` the label, literally (no
 /// `$&` and such, as JavaScript's `replace` has); without a template, or
 /// with an empty one, the label.

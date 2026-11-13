@@ -699,6 +699,17 @@ impl App {
                 kentos_headless::export::DXF_SPACE_CHOICES_WARNING,
             ));
         }
+        // A tied hatch whose boundary objects are not among those written goes out following nothing: said before
+        // the file is written, with the way to keep the tie.
+        let untied = untied_hatches(&doc.model, &list);
+        if untied > 0 {
+            lines.push(words::text_line(
+                Line::Warn,
+                format!(
+                    "{untied} ilişkili taramanın sınır nesneleri yazılacaklar arasında değil: tarama ilişkisiz yazılır ve sınırını izlemez. Bağ kalsın istiyorsanız sınır nesnelerini de seçin."
+                ),
+            ));
+        }
         if dimensions > 0 {
             // What comes back is the form and the data written (docs/adr/0327 §6).
             let line = match (forms.dimensions, forms.metadata) {
@@ -889,9 +900,54 @@ impl State {
     }
 }
 
+/// How many of the tied hatches among `list` (what is written) have a boundary object that is not written: they go
+/// out following nothing.
+pub(crate) fn untied_hatches(doc: &kentos_domain::Document, list: &[&kentos_commands::Entity]) -> usize {
+    let written: std::collections::HashSet<String> = list
+        .iter()
+        .filter_map(|e| doc.uid(kentos_domain::Slot(e.base().id)))
+        .map(|u| u.to_string())
+        .collect();
+    list.iter()
+        .filter(|e| match e {
+            kentos_commands::Entity::Hatch(h) => h.assoc.as_ref().is_some_and(|a| {
+                a.outer
+                    .iter()
+                    .chain(&a.bounds)
+                    .chain(&a.islands)
+                    .any(|id| !written.contains(&id.to_string()))
+            }),
+            _ => false,
+        })
+        .count()
+}
+
 #[cfg(test)]
 mod tests {
     use kentos_commands::Entity;
+
+    /// UR-085: a tied hatch written without its circle is said before writing; with the circle it is not.
+    #[test]
+    fn a_hatch_written_without_its_boundary_is_said_before_writing() {
+        let mut doc = crate::files_testing::drawing(0).model;
+        let circle: Entity = serde_json::from_value(serde_json::json!({
+            "kind": "circle", "id": 0, "layerId": "cizim", "attrs": {}, "c": {"x": 20.0, "y": 5.0}, "r": 2.0
+        }))
+        .unwrap();
+        let c = doc.add(circle).expect("a slot");
+        let uid = doc.uid(c).expect("a uid").to_string();
+        let hatch: Entity = serde_json::from_value(serde_json::json!({
+            "kind": "hatch", "id": 0, "layerId": "cizim", "attrs": {},
+            "ring": [{"x": 18.0, "y": 3.0}, {"x": 22.0, "y": 3.0}, {"x": 22.0, "y": 7.0}],
+            "pattern": {"type": "lines", "angle": 45, "spacing": 1},
+            "assoc": {"outer": uid, "seed": {"x": 20.0, "y": 5.0}}
+        }))
+        .unwrap();
+        let h = doc.add(hatch).expect("a slot");
+        let (ce, he) = (doc.get(c).unwrap().clone(), doc.get(h).unwrap().clone());
+        assert_eq!(super::untied_hatches(&doc, &[&he]), 1);
+        assert_eq!(super::untied_hatches(&doc, &[&ce, &he]), 0);
+    }
 
     #[test]
     fn nested_dynamic_loss_is_visible_before_writing_and_preview_keeps_the_source_exact() {

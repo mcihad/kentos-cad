@@ -250,6 +250,24 @@ impl ToolDialog {
         }
     }
 
+    /// The advanced parameters shown and set away from their fixed default, by their labels (CAD özellik süzgeci
+    /// turned on): said while Gelişmiş ayarlar is closed, and beside a preview that counts the expression only, so a
+    /// run that selects fewer is not a surprise.
+    pub(super) fn advanced_changed(&self) -> Vec<String> {
+        self.tool
+            .parameters
+            .iter()
+            .filter(|p| p.advanced && kentos_processing::parameters::is_visible(p, &self.values))
+            .filter_map(|p| match &p.default {
+                Some(kentos_processing::types::DefaultValue::Value(d)) => {
+                    let now = self.values.get(&p.name).unwrap_or(&Value::Null);
+                    (now != d && !(now.is_null() && d.is_null())).then(|| p.label.clone())
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
     /// A file the last values name (its path kept, not its rows) read again
     /// from its place; one that cannot be read is left to be chosen again.
     pub fn reread_files(&mut self) {

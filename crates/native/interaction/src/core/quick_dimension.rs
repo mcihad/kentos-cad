@@ -1,4 +1,4 @@
-//! Hızlı ölçü (docs/adr/0147 §7, AutoCAD's QDIM; the web's `QuickDimensionTool`,
+//! Hızlı ölçü (docs/adr/0147 §7; the web's `QuickDimensionTool`,
 //! `apps/web/src/tools/quickDimensionTool.ts`): the selected lines, polylines
 //! and areas measured at once, an aligned dimension along each straight edge
 //! and an arc length along each arc; out of an area, into a hole, on the
@@ -114,12 +114,19 @@ impl QuickDimension {
             };
             cx.say(
                 Level::Success,
-                format!("Hızlı ölçü: {} ölçü eklendi{left}.", out.count),
+                // They follow nothing (İlişki: Serbest): said now, not found when the boundary changes.
+                format!(
+                    "Hızlı ölçü: {} ölçü eklendi{left}. {FREE}",
+                    out.count
+                ),
             );
         }
         Flow::Exit
     }
 }
+
+/// What a quick dimension is: measured once, tied to nothing.
+pub const FREE: &str = "Ölçüler nesneye bağlı değil (İlişki: Serbest): ölçülen sınır sonra değişirse kendiliğinden güncellenmez.";
 
 impl Stages for QuickDimension {
     fn id(&self) -> &'static str {

@@ -97,8 +97,29 @@ impl App {
         self.contextual_tabs().find(|t| t.id == id)
     }
 
+    /// The selection tab's name: the line tab, which several kinds share, by the kind when every selected object is
+    /// one kind (a lone arc's tab says Yay, not Çizgi); every other tab by its own name.
+    pub(crate) fn selection_tab_label(&self, tab: &'static Tab) -> &'static str {
+        if tab.id != "ctx.line" {
+            return tab.label;
+        }
+        let Some(doc) = self.document.as_ref() else {
+            return tab.label;
+        };
+        let mut names = self
+            .selection
+            .ids()
+            .iter()
+            .filter_map(|s| doc.model.get(*s))
+            .map(kentos_interaction::data_search::kind_name);
+        match names.next() {
+            Some(first) if names.all(|n| n == first) => first,
+            _ => tab.label,
+        }
+    }
+
     /// After a message: a selection made or changed brings its tab to the
-    /// front (AutoCAD's contextual tabs; docs/adr/0622 §4), one cleared
+    /// front (docs/adr/0622 §4), one cleared
     /// takes it away and the chosen tab shows again.
     pub(crate) fn follow_selection_tab(&mut self) {
         let stamp = self.document.as_ref().map(|d| (d.session, self.selection.version()));
@@ -356,5 +377,35 @@ mod tests {
         assert_eq!(app.shown_tab(), "home");
         app.tab = "output";
         assert_eq!(app.shown_tab(), "output");
+    }
+}
+
+#[cfg(test)]
+mod tab_label_tests {
+    /// UR-113: a lone arc's contextual tab is named Yay, a line's Çizgi; a line and an arc together the tab's own.
+    #[test]
+    fn the_line_tab_is_named_by_the_selected_kind() {
+        let mut app = crate::files_testing::app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let arc = doc
+            .add(serde_json::from_value(serde_json::json!({
+                "kind": "arc", "id": 0, "layerId": "cizim", "attrs": {},
+                "c": {"x": 475.0, "y": 0.0}, "r": 10.0, "a0": 0.0, "a1": 5.0
+            })).unwrap())
+            .expect("a slot");
+        let line = doc
+            .add(serde_json::from_value(serde_json::json!({
+                "kind": "line", "id": 0, "layerId": "cizim", "attrs": {},
+                "a": {"x": 0.0, "y": 0.0}, "b": {"x": 10.0, "y": 0.0}
+            })).unwrap())
+            .expect("a slot");
+        let label = |app: &crate::app::App| app.selection_tab().map(|t| app.selection_tab_label(t));
+        app.selection.set([arc]);
+        assert_eq!(label(&app), Some("Yay"));
+        app.selection.set([line]);
+        assert_eq!(label(&app), Some("Çizgi"));
+        app.selection.set([arc, line]);
+        assert_eq!(label(&app), Some("Çizgi"));
     }
 }

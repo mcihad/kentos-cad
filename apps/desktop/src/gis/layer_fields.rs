@@ -44,13 +44,14 @@ const DOWN: &str = "Aşağı";
 const FROM_DATA: &str = "Verilerden al";
 const MIGRATE: &str = "Değerleri biçime çevir";
 
-/// The table's columns: header and width (logical pixels).
+/// The table's columns: header and width (logical pixels), each wide enough for its header in the strong caption
+/// face with the cell's padding (a narrower one ran Uzunluk / Basamak over Zorunlu).
 const HEADS: [(&str, f32); 9] = [
     ("Ad", 130.0),
     ("Takma ad", 120.0),
     ("Tür", 130.0),
-    ("Uzunluk / Basamak", 80.0),
-    ("Zorunlu", 60.0),
+    ("Uzunluk / Basamak", 128.0),
+    ("Zorunlu", 72.0),
     ("Varsayılan", 100.0),
     ("En az", 80.0),
     ("En çok", 80.0),
@@ -1033,14 +1034,22 @@ impl App {
         // As tall as its rows, at most 300 px; 200 px while the places of a field are listed under it.
         let most = if w.chosen.is_some() { 200.0 } else { 300.0 };
         let rows_height = (w.rows.len().max(3) as f32 * 36.0 + 8.0).min(most);
+        // A window narrower than the columns scrolls them sideways, header and rows together, rather than cutting the
+        // last column off.
         let table = container(
-            Column::new()
-                .push(container(head).padding([4, 8]))
-                .push(kentos_ui::widget::horizontal_divider())
-                .push(
-                    iced::widget::scrollable(rows)
-                        .height(Length::Fixed(typography::scaled(rows_height))),
-                ),
+            iced::widget::scrollable(
+                Column::new()
+                    .push(container(head).padding([4, 8]))
+                    .push(kentos_ui::widget::horizontal_divider())
+                    .push(
+                        iced::widget::scrollable(rows)
+                            .height(Length::Fixed(typography::scaled(rows_height))),
+                    ),
+            )
+            .direction(iced::widget::scrollable::Direction::Horizontal(
+                iced::widget::scrollable::Scrollbar::new(),
+            ))
+            .width(Fill),
         )
         .style(style::container::field_box)
         .width(Fill);
@@ -1568,6 +1577,27 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// UR-063's pictures: Alanlar on the drawing's active layer with a field added, `.run/gui-evidence/kullanim-063/`.
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn screens() {
+        crate::files_testing::usage_shots("063", "alanlar", || {
+            let mut app = crate::files_testing::app_with_drawing();
+            let _ = app.update(Message::Run("layer.fields"));
+            let _ = app.update(msg(Event::Add));
+            app
+        });
+    }
+
+    /// UR-063: every header fits its column at the interface's caption size, its 8 px padding either side.
+    #[test]
+    fn every_header_fits_its_column() {
+        for (head, width) in HEADS {
+            let words = typography::measured_width(head, typography::caption(), true);
+            assert!(words + 16.0 <= width, "{head}: {words} + 16 > {width}");
+        }
+    }
 
     #[test]
     fn a_row_writes_its_kinds_own_parts_and_renames_say_old_and_new() {

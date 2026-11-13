@@ -492,6 +492,88 @@
       }
     },
     {
+      "name": "kapalı çoklu çizgi: kapanış kenarı da ölçülür",
+      "objects": [
+        {
+          "kind": "polyline",
+          "pts": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 10,
+              "y": 0
+            },
+            {
+              "x": 10,
+              "y": 10
+            },
+            {
+              "x": 0,
+              "y": 10
+            }
+          ],
+          "closed": true
+        }
+      ],
+      "at": {
+        "x": 5,
+        "y": 5
+      },
+      "typed": null,
+      "height": 2.5,
+      "want": {
+        "dimensions": [
+          {
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 10,
+              "y": 0
+            },
+            "offset": -5.0
+          },
+          {
+            "a": {
+              "x": 10,
+              "y": 0
+            },
+            "b": {
+              "x": 10,
+              "y": 10
+            },
+            "offset": -5.0
+          },
+          {
+            "a": {
+              "x": 10,
+              "y": 10
+            },
+            "b": {
+              "x": 0,
+              "y": 10
+            },
+            "offset": -5.0
+          },
+          {
+            "a": {
+              "x": 0,
+              "y": 10
+            },
+            "b": {
+              "x": 0,
+              "y": 0
+            },
+            "offset": -5.0
+          }
+        ],
+        "skipped": 0
+      }
+    },
+    {
       "name": "çizgi, yazılan uzaklık işaretsiz alınır",
       "objects": [
         {

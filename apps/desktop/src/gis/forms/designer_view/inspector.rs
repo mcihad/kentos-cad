@@ -595,6 +595,10 @@ impl App {
                         ]
                         .spacing(16),
                     )
+                    .extend(
+                        required_scope_words(f.required, layer_required)
+                            .map(|w| label::caption(w).style(muted).into()),
+                    )
                     .push(
                         row![
                             words::check(f.unique, "Tekil", Some(msg(Event::Unique(!f.unique)))),
@@ -1263,5 +1267,51 @@ impl App {
         }))
         .height(Fill)
         .into()
+    }
+}
+
+/// Where a field's Zorunlu holds, said under its box: the layer's own is every way in (table, properties, Python); the
+/// form's only this form's entries.
+pub(crate) fn required_scope_words(form: bool, layer: bool) -> Option<&'static str> {
+    if layer {
+        Some("Katman alanı zorunlu: tabloda, özelliklerde ve Python'da da boş bırakılamaz.")
+    } else if form {
+        Some(
+            "Yalnız bu formla girişte zorunlu; tabloda ve özelliklerde boş bırakılabilir. Her yerde zorunlu olması için Veri › Alanlar'da alanın Zorunlu kutusunu açın.",
+        )
+    } else {
+        None
+    }
+}
+
+#[cfg(test)]
+mod required_tests {
+    /// UR-069: the form's Zorunlu says it holds only in this form, the layer's that it holds everywhere.
+    #[test]
+    fn zorunlu_says_where_it_holds() {
+        use super::required_scope_words as words;
+        assert_eq!(words(false, false), None);
+        assert!(words(true, false).is_some_and(|w| w.starts_with("Yalnız bu formla girişte zorunlu")));
+        assert!(words(true, true).is_some_and(|w| w.starts_with("Katman alanı zorunlu")));
+        assert!(words(false, true).is_some_and(|w| w.starts_with("Katman alanı zorunlu")));
+    }
+}
+
+#[cfg(test)]
+mod required_screens {
+    /// UR-069's pictures: a field made Zorunlu in the form only, its scope said under the box,
+    /// `.run/gui-evidence/kullanim-069/`.
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn screens() {
+        use crate::forms::designer as fd;
+        crate::files_testing::usage_shots("069", "form-zorunlu-kapsami", || {
+            let mut app = crate::files_testing::app_with_drawing();
+            crate::form_scenes::buildings(&mut app, true);
+            crate::tools_scenes::run(&mut app, "data.forms");
+            crate::form_scenes::designer(&mut app, fd::Event::SelectItem("durum".into()));
+            crate::form_scenes::designer(&mut app, fd::Event::Required(true));
+            app
+        });
     }
 }

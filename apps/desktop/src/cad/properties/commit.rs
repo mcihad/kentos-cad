@@ -348,6 +348,62 @@ pub(super) fn commit(
             _ => vec!["Bu sıranın duvar yüzüne uzaklığını girin; örneğin 40 cm.".into()],
         };
     }
+    // A coordinate or a radius reads the whole text: a number in the project's unit, or with its own unit
+    // (1200 mm); anything left over (12abc) is refused and changes nothing, rather than read as its first digits.
+    if let Field::PointX(slot) | Field::PointY(slot) | Field::Geometry(slot, _) = field {
+        let Some(n) = kentos_geometry_core::tools::point_text::parse_length(text)
+            .map(|value| value.metres(|v| f.to_metres(v)))
+            .filter(|n| n.is_finite())
+        else {
+            return vec![format!(
+                "“{}” bir uzunluk olarak okunamadı; bir sayı yazın, gerekirse birimiyle (12,5 ya da 1200 mm).",
+                kentos_interaction::js_trim(text)
+            )];
+        };
+        let Some(mut e) = model.get(*slot).cloned() else {
+            return Vec::new();
+        };
+        let set = |p: &mut kentos_commands::Vec2, east: bool| {
+            if east { p.x = n } else { p.y = n }
+        };
+        let taken = match (field, &mut e) {
+            (Field::PointX(_), Entity::Point(p)) => {
+                p.p.x = n;
+                true
+            }
+            (Field::PointY(_), Entity::Point(p)) => {
+                p.p.y = n;
+                true
+            }
+            (Field::Geometry(_, Coord::StartEast | Coord::StartNorth), Entity::Line(l)) => {
+                set(&mut l.a, matches!(field, Field::Geometry(_, Coord::StartEast)));
+                true
+            }
+            (Field::Geometry(_, Coord::EndEast | Coord::EndNorth), Entity::Line(l)) => {
+                set(&mut l.b, matches!(field, Field::Geometry(_, Coord::EndEast)));
+                true
+            }
+            (Field::Geometry(_, Coord::CenterEast | Coord::CenterNorth), Entity::Circle(c)) => {
+                set(&mut c.c, matches!(field, Field::Geometry(_, Coord::CenterEast)));
+                true
+            }
+            (Field::Geometry(_, Coord::Radius), Entity::Circle(c)) => {
+                if n <= 0.0 {
+                    return vec!["Yarıçap sıfırdan büyük olmalı.".into()];
+                }
+                c.r = n;
+                true
+            }
+            _ => false,
+        };
+        if let Entity::Line(l) = &e
+            && (l.a.x - l.b.x).abs() < 1e-12
+            && (l.a.y - l.b.y).abs() < 1e-12
+        {
+            return vec!["Çizginin iki ucu aynı yere gelemez; başka bir değer yazın.".into()];
+        }
+        return if taken { properties::set_geometry(model, *slot, &e) } else { Vec::new() };
+    }
     match field {
         Field::Elevation(slot, spot) => return commit_elevation(model, &[*slot], *spot, text),
         // Typed in the project's unit; emptied or 0, none (docs/adr/0258 §2).
@@ -1200,6 +1256,7 @@ pub(super) fn commit(
     let slot = match field {
         Field::PointX(s)
         | Field::PointY(s)
+        | Field::Geometry(s, _)
         | Field::DimensionOffset(s)
         | Field::DimensionHeight(s)
         | Field::DimensionText(s)

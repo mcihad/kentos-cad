@@ -534,7 +534,7 @@ pub(super) fn item(raw: RawItem) -> Item {
             entries: split
                 .into_iter()
                 .map(|s| {
-                    let label = leak(s.label);
+                    let label = leak(renamed_method(&s.command, s.option.as_deref(), s.label));
                     Entry {
                         id: leak(s.command),
                         title: s.title.map_or(label, leak),
@@ -632,4 +632,13 @@ pub(super) fn leak_list(list: Vec<String>) -> &'static [&'static str] {
             .collect::<Vec<_>>()
             .into_boxed_slice(),
     )
+}
+
+/// A method the desktop names otherwise than the frozen web inventory: Kot ver's S takes the elevation away (none,
+/// not 0), which “Sıfırla” read as setting it to zero.
+fn renamed_method(command: &str, option: Option<&str>, label: String) -> String {
+    match (command, option) {
+        ("tool.setElevation", Some("S")) => "Kotu kaldır".to_owned(),
+        _ => label,
+    }
 }

@@ -1116,12 +1116,22 @@ fn expression<'a>(
     // The live line, hidden while the field shows a problem (the web's).
     if let (Some(text), false) = (env.window.previews.get(&def.name), invalid) {
         let note = text.contains(" yok.") || text.contains(" boş.");
+        // The preview counts the expression alone: what Gelişmiş ayarlar adds is said with it.
+        let changed = env.window.advanced_changed();
+        let text = if changed.is_empty() || note {
+            text.clone()
+        } else {
+            format!(
+                "{text} Yalnız ifade sayıldı; gelişmiş ayarlardaki {} Çalıştır'da ayrıca uygulanır, seçilen daha az olabilir.",
+                changed.join(", ")
+            )
+        };
         out = out.push(
             row![
                 icon(if note { Icon::Info } else { Icon::Check })
                     .size(14.0)
                     .tone(if note { Tone::Muted } else { Tone::Success }),
-                label::body(text.clone()).style(style::text::muted)
+                label::body(text).style(style::text::muted)
             ]
             .spacing(6)
             .align_y(Alignment::Start),

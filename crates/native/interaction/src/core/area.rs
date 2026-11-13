@@ -301,8 +301,57 @@ impl AreaAction {
 
     fn union_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
         let one = cx.memory.area_one_object;
+        // An area whose box meets no other target's touches none of them: as separate parts it would come out
+        // unchanged in shape but rewritten as a plain area (a circle losing its centre and radius, its hatch its tie).
+        // Left as it is, said; with Tek nesne the parts are meant to become one object, so all go in.
+        // Only objects the command takes (on unlocked layers) are looked at; with fewer than two the command says why.
+        let writable = targets
+            .iter()
+            .filter(|s| {
+                cx.doc
+                    .get(**s)
+                    .is_some_and(|e| !cx.doc.layers().is_locked(&e.base().layer_id))
+            })
+            .count();
+        let (joined, apart): (Vec<Slot>, Vec<Slot>) = if one || writable < 2 {
+            (targets.to_vec(), Vec::new())
+        } else {
+            let boxes: Vec<Option<[f64; 4]>> = targets
+                .iter()
+                .map(|s| {
+                    cx.spatial
+                        .store()
+                        .extent(Some(&[f64::from(s.0)]))
+                        .map(|b| [b.min_x, b.min_y, b.max_x, b.max_y])
+                })
+                .collect();
+            let meets = |a: [f64; 4], b: [f64; 4]| {
+                let tol = 1e-9 * (1.0 + a.iter().chain(&b).fold(0.0f64, |m, v| m.max(v.abs())));
+                a[0] <= b[2] + tol && b[0] <= a[2] + tol && a[1] <= b[3] + tol && b[1] <= a[3] + tol
+            };
+            let touches: Vec<bool> = (0..targets.len())
+                .map(|i| match boxes[i] {
+                    Some(a) => boxes
+                        .iter()
+                        .enumerate()
+                        .any(|(j, b)| j != i && b.is_some_and(|b| meets(a, b))),
+                    None => true,
+                })
+                .collect();
+            let pick = |want: bool| -> Vec<Slot> {
+                targets.iter().zip(&touches).filter(|(_, t)| **t == want).map(|(s, _)| *s).collect()
+            };
+            (pick(true), pick(false))
+        };
+        if joined.len() < 2 && targets.len() >= 2 {
+            cx.say(
+                Level::Warn,
+                "Seçilen alanlar birbirine değmiyor: birleştirilecek bir şey yok, nesneler olduğu gibi kaldı. Tek nesne yapmak için Tek nesne seçeneğini açın.",
+            );
+            return;
+        }
         let work = AreaWork::Union {
-            ids: uids(targets, cx.doc),
+            ids: uids(&joined, cx.doc),
             single: one,
         };
         let Some(out) = write_work(work, cx) else {
@@ -320,10 +369,18 @@ impl AreaAction {
             )
         };
         let total = cx.format().area(out.size);
+        let kept = if apart.is_empty() {
+            String::new()
+        } else {
+            format!(
+                " Başkalarına değmeyen {} nesne olduğu gibi bırakıldı (türü ve bağları korunur).",
+                apart.len()
+            )
+        };
         cx.say(
             Level::Success,
             format!(
-                "{} alan birleştirildi: {parts}, toplam {total}.",
+                "{} alan birleştirildi: {parts}, toplam {total}.{kept}",
                 out.objects
             ),
         );
@@ -687,6 +744,24 @@ impl AreaSplit {
         cx: &mut Context<'_>,
     ) -> Flow {
         let doc = &*cx.doc;
+        // The hatches tied to an area that is split: each keeps following the first piece only, so the others go
+        // unhatched; said with the result (counted now, before the write moves the ties).
+        let sources: Vec<String> = self.list.iter().map(|t| edge::uid(doc, t.slot)).collect();
+        let tied = doc
+            .entities()
+            .filter(|e| match e {
+                Entity::Hatch(h) => h.assoc.as_ref().is_some_and(|a| {
+                    a.outer.iter().chain(&a.bounds).any(|id| sources.contains(&id.to_string()))
+                }),
+                _ => false,
+            })
+            .count();
+        // An ellipse or a curve split comes out as areas of straight edges: said with the result.
+        let curved = self
+            .list
+            .iter()
+            .filter(|t| matches!(doc.get(t.slot), Some(Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_))))
+            .count();
         let work = AreaWork::Split {
             ids: self.list.iter().map(|t| edge::uid(doc, t.slot)).collect(),
             line: line.map(|pts| pts.into_iter().map(points::wire).collect()),
@@ -719,6 +794,22 @@ impl AreaSplit {
                 out.objects
             ),
         );
+        if curved > 0 && count > 1 {
+            cx.say(
+                Level::Warn,
+                format!(
+                    "Bölünen {curved} elips ya da eğrinin parçaları düz kenarlı kapalı alan oldu: eğrisel sınır çokgene yaklaşık çevrildi, elips olarak düzenlenemez. İstemediyseniz geri alın."
+                ),
+            );
+        }
+        if tied > 0 && count > 1 {
+            cx.say(
+                Level::Warn,
+                format!(
+                    "Bölünen alana bağlı {tied} tarama yalnız ilk parçayı izler; öbür parçalar taranmadı. Gerekirse onları ayrıca tarayın ya da bölmeyi geri alın."
+                ),
+            );
+        }
         Flow::Exit
     }
 }

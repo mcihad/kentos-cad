@@ -720,3 +720,29 @@ fn panel_screens() {
         }
     }
 }
+
+/// UR-064: CAD özellik süzgeci turned on, Gelişmiş ayarlar closed: the window names it as changed, and the condition's
+/// preview says it counted the expression alone.
+#[test]
+fn a_changed_advanced_setting_is_said_while_its_section_is_closed() {
+    let mut app = app_with_parcels();
+    let _ = app.update(Message::Run("processing.run.selection.byExpression"));
+    let changed = |app: &App| app.gis.processing.dialog.as_ref().expect("the window").advanced_changed();
+    assert!(changed(&app).is_empty());
+    event(&mut app, Event::Value("cadFilter".into(), json!(true)));
+    assert_eq!(changed(&app), ["CAD özellik süzgeci"]);
+    event(&mut app, Event::Value("cadFilter".into(), json!(false)));
+    assert!(changed(&app).is_empty());
+}
+
+/// UR-064's pictures: the filter on and the section closed, `.run/gui-evidence/kullanim-064/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn changed_advanced_screens() {
+    crate::files_testing::usage_shots("064", "ifadeyle-sec-suzgec-acik", || {
+        let mut app = app_with_parcels();
+        let _ = app.update(Message::Run("processing.run.selection.byExpression"));
+        event(&mut app, Event::Value("cadFilter".into(), json!(true)));
+        app
+    });
+}

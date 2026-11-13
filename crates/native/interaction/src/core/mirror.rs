@@ -5,7 +5,7 @@
 //! - the objects, then the two points of the axis;
 //! - Kaynağı sil (S): off, mirrored copies are added and the originals
 //!   stay; on, the originals themselves turn over, in place;
-//! - Yazılar (Y): okunur (AutoCAD's MIRRTEXT = 0, the default) or aynalı
+//! - Yazılar (Y): okunur (the default) or aynalı
 //!   (docs/adr/0292), kept for the session with the grip mode's.
 //!
 //! Written through `cad.entities.transform` (a reflection across the axis;
@@ -91,6 +91,11 @@ impl Stages for Mirror {
             return Flow::Stay;
         };
         if dist(p1, p) < SAME {
+            // The axis needs two places: said, the first point and the selection kept.
+            cx.say(
+                Level::Warn,
+                "Simetri ekseninin iki noktası farklı olmalı; ikinci noktayı yeniden belirtin.",
+            );
             return Flow::Stay;
         }
         let t = Transform::Mirror {

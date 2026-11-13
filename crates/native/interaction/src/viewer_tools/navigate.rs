@@ -17,6 +17,7 @@ use kentos_geometry_core::jsmath::js_hypot;
 
 use crate::Vec2;
 use crate::format::Format;
+use crate::log::Level;
 use crate::prompt::Prompt;
 use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Stroke, Tool, ViewChange};
 
@@ -138,6 +139,16 @@ impl ZoomWindow {
 
     /// The opposite corner: the view shows the box, when it has a width and a height.
     fn finish(&mut self, corner: Vec2, cx: &mut Context<'_>) {
+        // A box with no width or no height: said, its first corner kept for another opposite corner.
+        if let Some((a, _)) = self.first
+            && ((corner.x - a.x).abs() <= LEAST_SIDE || (corner.y - a.y).abs() <= LEAST_SIDE)
+        {
+            cx.say(
+                Level::Warn,
+                "Pencerenin eni ya da boyu yok; karşı köşeyi ilk köşeden uzakta gösterin (Esc: vazgeç).",
+            );
+            return;
+        }
         if let Some((a, _)) = self.first
             && (corner.x - a.x).abs() > LEAST_SIDE
             && (corner.y - a.y).abs() > LEAST_SIDE

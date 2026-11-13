@@ -646,6 +646,10 @@ impl App {
             }
             Message::Opened(None) | Message::Saved(None) => {}
             Message::Opened(Some(Ok(mut doc))) => {
+                // Its file as read now: a later save checks nobody wrote it meanwhile.
+                if doc.disk.is_none() {
+                    doc.disk = doc.path.as_deref().and_then(crate::document::disk_stamp);
+                }
                 // Bound GeoPackages moved with the project are found again (docs/adr/0506).
                 let located = match doc.path.clone() {
                     Some(path) if doc.cloud_source().is_none() => {

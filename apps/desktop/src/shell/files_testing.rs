@@ -124,6 +124,35 @@ pub fn offscreen(size: iced::Size) -> kentos_ui::snapshot::Snapshot {
     kentos_ui::snapshot::Snapshot::software(size).expect("a software renderer")
 }
 
+/// A usage review finding's picture (`usage-reporting.md`): the window as it stands, light at 1440×900 then dark at
+/// 1100×760 (`prepare` sets each fresh app up), into `.run/gui-evidence/kullanim-<ur>/<name>-<theme>.png`. For the
+/// owner, run by hand; the folder is not committed.
+pub fn usage_shots(ur: &str, name: &str, prepare: impl Fn() -> App) {
+    use iced::Size;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join(format!("../../.run/gui-evidence/kullanim-{ur}"));
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size) in [("light", Size::new(1440.0, 900.0)), ("dark", Size::new(1100.0, 760.0))] {
+        let mut app = prepare();
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = kentos_ui::snapshot::Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("{name}-{theme}.png"));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
+        println!("{}", file.display());
+    }
+}
+
 /// Where a text is drawn: the first widget showing exactly `caption`.
 pub fn find_text(
     snapshot: &mut kentos_ui::snapshot::Snapshot,

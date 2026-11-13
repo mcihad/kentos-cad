@@ -38,6 +38,10 @@ const HALO: f32 = 1.5;
 /// bottom edges it stands, and its arms' length, pixels.
 const UCS_MARGIN: f32 = 30.0;
 const UCS_ARM: f32 = 38.0;
+/// The room kept between the turned icon and the drawing area's edge.
+const UCS_PAD: f32 = 6.0;
+/// Half a name's box (an 11 px letter with its halo).
+const UCS_NAME: f32 = 7.0;
 
 /// Draws a CBS project's grid north and scale bar over the drawing, or a CAD
 /// project's coordinate axes (docs/adr/0165 §5); the scale bar `lift` pixels
@@ -66,14 +70,14 @@ pub fn paint(
                 colors,
             );
             if let Some(a) = ucs {
-                ucs_icon(frame, ucs_at(size), colors, a - twist, ["Y", "X"], false);
+                ucs_icon(frame, ucs_origin(size, a - twist), colors, a - twist, ["Y", "X"], false);
             }
         }
         Axes::Cad => {
             origin_mark(frame, camera, colors);
             ucs_icon(
                 frame,
-                ucs_at(size),
+                ucs_origin(size, ucs.unwrap_or(0.0) - twist),
                 colors,
                 ucs.unwrap_or(0.0) - twist,
                 ["X", "Y"],
@@ -136,10 +140,36 @@ pub fn ucs_at(size: Size) -> Point {
     Point::new(UCS_MARGIN, size.height - UCS_MARGIN)
 }
 
+/// Where the icon turned by `angle` stands: the bottom left corner as [`ucs_at`] says, moved in as far as its turned
+/// arms, arrows and names need to stay inside the drawing area (an arm turned toward the left or the bottom edge was
+/// cut there).
+pub fn ucs_origin(size: Size, angle: f64) -> Point {
+    let (left, bottom) = ucs_reach(angle);
+    let at = ucs_at(size);
+    Point::new(at.x.max(UCS_PAD + left), at.y.min(size.height - UCS_PAD - bottom))
+}
+
+/// How far the icon turned by `angle` reaches left of and below its origin, in pixels: its arms' tips with their
+/// names and a name's half width round them.
+fn ucs_reach(angle: f64) -> (f32, f32) {
+    let (c, s) = (angle.cos() as f32, angle.sin() as f32);
+    let turn = |dx: f32, dy: f32| (dx * c + dy * s, -dx * s + dy * c);
+    // The ends: the origin, each tip with its arrow, each name with room for its letter round it.
+    let mut points = vec![(0.0, 0.0), turn(UCS_ARM + 2.0, 0.0), turn(0.0, -UCS_ARM - 2.0)];
+    for (cx, cy) in [turn(UCS_ARM + 9.0, 4.0), turn(0.0, -UCS_ARM - 5.0)] {
+        for (ox, oy) in [(-UCS_NAME, -UCS_NAME), (UCS_NAME, UCS_NAME), (-UCS_NAME, UCS_NAME), (UCS_NAME, -UCS_NAME)] {
+            points.push((cx + ox, cy + oy));
+        }
+    }
+    let left = points.iter().map(|p| -p.0).fold(0.0f32, f32::max);
+    let bottom = points.iter().map(|p| p.1).fold(0.0f32, f32::max);
+    (left, bottom)
+}
+
 /// X to the right and Y up from a small square, each arm with its arrow and
 /// name, in the drawing's ink; turned by `angle` (the UCS's, counter-clockwise
 /// on the ground, so the screen's way round), the square only for the world's
-/// axes (AutoCAD's: a UCS's icon has none).
+/// axes (a UCS's icon has none).
 fn ucs_icon(
     frame: &mut Frame,
     o: Point,
@@ -365,6 +395,27 @@ fn haloed(frame: &mut Frame, mark: Mark<'_>, halo: Color) {
 mod tests {
     use super::*;
 
+    /// UR-084: the icon turned to any angle (206.5651° among them) keeps both arms, arrows and names inside the
+    /// drawing area; unturned it stands where it always did.
+    #[test]
+    fn a_turned_ucs_icon_stays_inside_the_drawing_area() {
+        let size = Size::new(800.0, 600.0);
+        assert_eq!(ucs_origin(size, 0.0), ucs_at(size));
+        for deg in [0.0, 45.0, 90.0, 135.0, 180.0, 206.5651, 225.0, 270.0, 315.0, 359.0] {
+            let a: f64 = f64::to_radians(deg);
+            let o = ucs_origin(size, a);
+            let (left, bottom) = ucs_reach(a);
+            assert!(o.x - left >= UCS_PAD - 1e-3, "{deg}°: left {}", o.x - left);
+            assert!(o.y + bottom <= size.height - UCS_PAD + 1e-3, "{deg}°: bottom {}", o.y + bottom);
+            // The tips themselves, as the icon draws them.
+            let (c, s) = (a.cos() as f32, a.sin() as f32);
+            for (dx, dy) in [(UCS_ARM + 2.0, 0.0), (0.0, -UCS_ARM - 2.0)] {
+                let (x, y) = (o.x + dx * c + dy * s, o.y - dx * s + dy * c);
+                assert!(x >= 0.0 && y <= size.height, "{deg}°: tip at {x}, {y}");
+            }
+        }
+    }
+
     #[test]
     fn the_scale_bar_takes_the_webs_length_and_words() {
         // 8 px a metre: 10 m is 80 px and 20 m 160 px, as near; the first stays.
@@ -456,5 +507,30 @@ mod tests {
         assert_eq!(two_digits(50.0), "50");
         assert_eq!(two_digits(5.0), "5.0");
         assert_eq!(two_digits(0.5), "0.50");
+    }
+}
+
+#[cfg(test)]
+mod ucs_screens {
+    /// UR-084's pictures: a CAD drawing with its UCS turned 206.5651°, the icon whole at the bottom left,
+    /// `.run/gui-evidence/kullanim-084/`.
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn screens() {
+        crate::files_testing::usage_shots("084", "ucs-206", || {
+            let mut app = crate::files_testing::app_with_drawing();
+            crate::files_testing::make_cad(&mut app);
+            let doc = &mut app.document.as_mut().expect("a drawing").model;
+            let mut settings = doc.settings().clone();
+            settings.ucs = Some(
+                serde_json::from_value(serde_json::json!({
+                    "origin": {"x": 16.512, "y": 28.194},
+                    "angle": 206.5651_f64.to_radians()
+                }))
+                .expect("a UCS"),
+            );
+            doc.set_settings(settings);
+            app
+        });
     }
 }
