@@ -506,6 +506,53 @@ fn along_of(
     })
 }
 
+/// The lasting place of a selected object `p` is a vertex of (UR-020): a line's start or end, a polyline's vertex,
+/// an area's vertex on its outer ring or a hole, in its own part or a further one; the first object that has it.
+fn vertex_ref(ids: &[String], shapes: &[kentos_geometry_core::entity::Shape], p: Vec2) -> Option<kentos_commands::SubRef> {
+    use kentos_commands::SubPlace;
+    use kentos_geometry_core::entity::Shape;
+    let vertex = |part: usize, ring: usize, pts: &[Vec2]| {
+        let index = pts.iter().position(|q| *q == p)?;
+        Some(SubPlace::Vertex {
+            part: u32::try_from(part).ok()?,
+            ring: u32::try_from(ring).ok()?,
+            index: u32::try_from(index).ok()?,
+        })
+    };
+    for (id, shape) in ids.iter().zip(shapes) {
+        let place = match shape {
+            Shape::Line { a, .. } if *a == p => Some(SubPlace::Start),
+            Shape::Line { b, .. } if *b == p => Some(SubPlace::End),
+            Shape::Polyline { pts, .. } => vertex(0, 0, pts),
+            Shape::Polygon {
+                pts, holes, parts, ..
+            } => {
+                let rings = |part: usize, pts: &[Vec2], holes: &[kentos_geometry_core::geom::arrangement::Ring]| {
+                    vertex(part, 0, pts).or_else(|| {
+                        holes.iter().enumerate().find_map(|(h, ring)| vertex(part, h + 1, &ring.pts))
+                    })
+                };
+                rings(0, pts, holes.as_deref().unwrap_or_default()).or_else(|| {
+                    parts.as_deref().unwrap_or_default().iter().enumerate().find_map(|(k, part)| {
+                        rings(k + 1, &part.pts, part.holes.as_deref().unwrap_or_default())
+                    })
+                })
+            }
+            _ => None,
+        };
+        if let Some(place) = place {
+            let u = Uuid::parse_str(id).ok()?;
+            return Some(kentos_commands::SubRef {
+                uid: kentos_commands::EntityId(*u.as_bytes()),
+                place,
+                path: Vec::new(),
+                broken: None,
+            });
+        }
+    }
+    None
+}
+
 /// Hızlı ölçü: the selection's edges measured at once by the core's `quick_dimensions` (docs/adr/0147 §7).
 fn dimensions_of(
     doc: &Document,
@@ -564,10 +611,21 @@ fn dimensions_of(
             "work.ids",
         ));
     }
+    // UR-020: each end of a straight edge's dimension follows the vertex it is, so the dimension changes with its
+    // object (a grip, a stretch, a move) as a dimension drawn on places does.
+    let tie = |p: Vec2| vertex_ref(ids, &shapes, p);
     let objects = q
         .dimensions
         .iter()
         .map(|d| {
+            let refs = match (d.style.as_deref(), tie(d.a), tie(d.b)) {
+                (None, Some(a), Some(b)) => Some(Box::new(kentos_commands::DimensionRefs {
+                    a: Some(a),
+                    b: Some(b),
+                    ..Default::default()
+                })),
+                _ => None,
+            };
             (
                 EntityGeometry::Dimension {
                     annotative: None,
@@ -587,7 +645,7 @@ fn dimensions_of(
                     mask,
                     za: None,
                     zb: None,
-                    refs: None,
+                    refs,
                     look: look.clone(),
                     level: None,
                 },
