@@ -629,7 +629,56 @@ kuruluma da KentOS'un sürecine de girmez: kullanıcı onaylayınca uv onu kulla
   bağın iki kez sayılmaması), masaüstü eklenti sahneleri 13 (onay, ilerleme yazısı, bildirimler, onaylı kaldırma,
   kaldırırken kurulamaması).
 
-**Sıradaki dilimler:** kişisel ortam ve paket önizleme (P04), eklenti başına değişmez ortam ve çevrimdışı çalışma (P05,
-P07), Windows'ta Python konsolu (KentOS'un Python'unu kullanacak), kaldırmanın eklenti ortamlarını da söylemesi,
-hazırlık penceresi.
+**Dördüncü dilim (13 Kasım): kişisel ortam ve paketler (P04), Python konsolu.** Sahibin istekleri:
+**"Paketler de kaldırılabilmeli listelenebilmeli aranabilmeli listeden seçilerek kurulabilmeli UV harika bir araç ve arayüz
+ile kolaylaştır"**; sorusu **"Sadece bu listedeki paketlerle sınırlamıyoruz değil mi"**: hayır, önerilen liste bir başlangıç,
+paket dizinindeki her paket adıyla istenir.
+
+- **KentOS'un Python kitaplığı kurulumda** (PY-UV-31): konsol `python -m kentos.host` çalıştırıyor, yani ortamda `kentos`
+  paketi olmalı. `scripts/desktop/bundle_sdk.py` tekerleği maturin ile derler (ya da `--wheel` ile hazırını alır),
+  programın yanına `tools/` (macOS'ta `Contents/Resources/python/`: tekerlek kod değil, programın okuduğu dosya) koyar ve
+  `kentos-sdk.json` yazar (dosya, sürüm, SHA-256). Program tekerleği yalnız bu dosyadan, **çevrimdışı ve bağımlılıksız**
+  kurar; sürümü programınkiyle aynı değilse ya da özeti tutmazsa reddeder. Hiçbir zaman paket dizininden değil: PyPI'deki
+  ilgisiz bir `kentos` yerine geçemez; `kentos` adı paket olarak istenince reddedilir. Ölçüm: hata ayıklama + strip
+  tekerleği 137 sn'de 92,8 MB (yayın derlemesi yapılmadı; sahibin "az yayın derlemesi" kararı).
+- **Kişisel ortam küçük bir uv projesi** (`<python>/kisisel`: `pyproject.toml`, `uv.lock`, `.venv`), KentOS'un Python'una
+  (`requires-python = "==3.12.*"`) ve bu sisteme (`environments`) **sabit**. Ölçüldü: sabitsiz proje uv'ye kilidi bütün
+  Python'lar için çözdürdü ve önizleme iki pandas okudu (3.10 için 2.3.3, 3.11+ için 3.1.1). Oluşturmak çevrimdışı: boş
+  kilit 31 ms, eşitleme, kitaplık 444 ms.
+- **Her değişiklik önce önizlenir:** proje bir kenara kopyalanır (`kisisel-onizleme`, projenin içinde değil: uv onu
+  çalışma alanı üyesi sanardı), uv orada ekler/çıkarır/yükseltir, iki kilidin paketleri karşılaştırılır: kurulacak
+  (istenen), bağımlılık olarak gelecek, sürümü değişecek, kaldırılacak. Kullanıcı onaylayınca kopya projenin yerine geçer
+  ve ortam ona **tam** eşitlenir; tam eşitleme kilitte olmayanı sildiği için (ölçüldü: `kentos` silindi) kitaplık hemen
+  geri kurulur. Eşitleme başarısız olursa önceki proje geri gelir ve ortam ona çevrimdışı yeniden eşitlenir.
+- **Paket arayüzü** (sahibin isteği): tek arama alanı kurulu paketleri ve **önerilen paketleri** süzer (`paketler.json`:
+  7 grupta 29 paket, Türkçe açıklamalı; arama Türkçe harfsiz de bulur: `sayisal` → "Sayısal"). Önerilenler **işaretlenip
+  birlikte** önizlenir. Listede olmayan bir ad paket dizininde aranır; ama yalnız ad gibi okunduğunda teklif edilir
+  (sürüm yazılmışsa ya da arama hiçbir şey bulmadıysa). Ölçüldü: önce "koordinat" araması pyproj'u bulurken bir de
+  "“koordinat” paketini önizle" diyordu. Kurulu paketler satırında Güncelle ve Kaldır; bağımlılıklar altta.
+  **Güncellemeleri denetle** `uv pip list --outdated --exclude kentos` ile sorar. İstenen paket `uv add "pandas>=3.1.1"`
+  ile yükseltilir (ölçüldü: yalın adı yeniden eklemek kullanıcının yazdığı `==2.3.3` sabitini koruyor), bağımlılık
+  `uv lock --upgrade-package` ile. **Bağımlılık ağacı** `uv tree --frozen`.
+- **Paket ilerleme çubuğu:** uv büyük indirmeleri boyuyla yazıyor ama bitmeden bir şey demiyor. İlk sürümde çubuk 4. ve
+  12. saniyede "0,0 MB / 27,5 MB · %0"da kaldı (ölçüldü). Şimdi önbelleğin üstündeki `.tmp…` klasörlerinde açılan bayt
+  3,5'e bölünerek inen bayta çevriliyor (ölçüm: 27,5 MiB indirme → 100,7 MB açılmış, ×3,66). uv bitti demeden çubuk dolmaz
+  (%99). Gerçek pencerede: 2,5 sn'de "3,0 / 11,8 MB · %25", 6 sn'de "9,0 / 11,8 MB · %76".
+- **Yer:** uv paketleri önbellekten ortama sabit bağla koyuyor (ölçüldü: önbellek sayıldıktan sonra `du` `.venv`'i 392 KB
+  gösterdi, gerçek boy 104 MB). Ortamı silmek o yeri açmaz; bu yüzden kaldırma bildirimi yanlış bir "yer açıldı" yazmaz,
+  **paket önbelleği** boyuyla ayrı gösterilir ve ayrı temizlenir (`uv cache clean`; ortamlar çalışmaya devam eder).
+- **Konsol:** `KENTOS_PYTHON`, sonra Python açıkken ve hazırsa **kişisel ortam** (Windows'ta `.venv\Scripts\python.exe`),
+  sonra geliştirme kopyasının `.run/py`'si, en son `python3`. Ölçüm: gerçek pencerede konsol "Hazır" açıldı ve
+  `import pandas, numpy` "pandas 3.1.1 · numpy 2.5.4" yazdı (P04 kabulü). KentOS'un Python'u kaldırılınca kişisel ortam
+  da silinir (onun Python'u buna bağ), onay cümlesi bunu söyler.
+- **Uygularken verilen kararlar:** proje uv projesi (kilit, ağaç ve "betiğe/eklentiye ekle" için) ama kitaplık kilide
+  girmez; önizleme klasörü projenin dışında; arama gruba da bakar ("cbs" bütün CBS paketlerini listeler); işaretliyken
+  aramada Enter seçilenleri önizler; paket önbelleği ortamla birlikte silinmez.
+- **Yapılmadı:** PyPI'nin arama API'si yok (2021'de kapatıldı); bu yüzden adla arama paket dizininde uv'nin çözümüyle
+  yapılıyor, sürüm listesinden seçme yok (sürüm yazılabilir: `pandas==2.3.3`). Kurum aynası/dizin ayarı, Windows'ta gerçek
+  pencere sınaması (bu makine Linux) ve yayın SDK tekerleğinin boyu sonraki işler.
+- **Sınamalar:** python-env 17 (tekerlek denetimi, ad denetimi, sabit proje, ilerleme okuma, önizleme/uygulama/geri alma,
+  güncelleme ve ağaç, öneri listesi ve Türkçe arama), masaüstü eklenti sahneleri 14 (oluşturma, önizleme, Durdur,
+  çoklu seçim, güncelleme, ağaç, kaldırma, bildirimler).
+
+**Sıradaki dilimler:** eklenti başına değişmez ortam ve çevrimdışı çalışma (P05, P07), kaldırmanın eklenti ortamlarını da
+söylemesi, kurum dizini/aynası, hazırlık penceresi.
 

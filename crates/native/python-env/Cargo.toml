@@ -12,3 +12,5 @@ publish.workspace = true
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+# The KentOS library's wheel is checked against the SHA-256 the packaging step wrote (sdk.rs); the workspace's own.
+sha2 = { workspace = true }

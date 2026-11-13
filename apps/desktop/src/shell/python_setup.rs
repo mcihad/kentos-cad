@@ -77,6 +77,8 @@ pub(crate) struct PythonSetup {
     pub(crate) uv_typed: String,
     /// The last action's outcome and its words.
     pub(crate) note: Option<(Line, String)>,
+    /// The personal environment (python_personal.rs), while KentOS's Python is ready.
+    pub(crate) personal: crate::python_personal::PersonalSetup,
 }
 
 impl PythonSetup {
@@ -96,7 +98,7 @@ impl PythonSetup {
     }
 
     /// uv's path while it is ready to use.
-    fn ready_uv(&self) -> Option<PathBuf> {
+    pub(crate) fn ready_uv(&self) -> Option<PathBuf> {
         match &self.uv {
             Some(UvStatus::Found { path, .. }) if self.settings.enabled => Some(path.clone()),
             _ => None,
@@ -159,6 +161,8 @@ pub enum PythonEdit {
     RemoveCancelled,
     /// How removing ended: the bytes freed.
     Removed(Result<u64, String>),
+    /// The personal environment's part (python_personal.rs).
+    Personal(crate::python_personal::PersonalEdit),
 }
 
 /// A size as the window says it: `98 MB`, `32,6 MB`, `512 KB`.
@@ -203,7 +207,7 @@ fn msg(edit: PythonEdit) -> Message {
 }
 
 /// `work` on a thread of its own, its answer as a message: the window never waits for uv.
-fn in_background<T: Send + 'static>(
+pub(crate) fn in_background<T: Send + 'static>(
     work: impl FnOnce() -> T + Send + 'static,
     lost: T,
     then: impl Fn(T) -> Message + Send + 'static,
@@ -326,8 +330,13 @@ impl App {
                     p.uv = None;
                     p.looking = false;
                     p.python = None;
-                    // Turned off while installing: the install stops.
+                    p.personal.env = None;
+                    p.personal.preview = None;
+                    // Turned off while installing: the install stops; so does a change of packages.
                     if let Some(stop) = &p.installing {
+                        stop.store(true, Ordering::Relaxed);
+                    }
+                    if let Some(stop) = &p.personal.stop {
                         stop.store(true, Ordering::Relaxed);
                     }
                 }
@@ -374,7 +383,10 @@ impl App {
                     });
                 }
                 self.extensions_changed();
+                // With KentOS's Python ready, the personal environment on it; without it, none.
+                return self.personal_look();
             }
+            PythonEdit::Personal(edit) => return self.personal_edit(edit),
             PythonEdit::Install => return self.python_install(),
             PythonEdit::Progressed(at) => {
                 if self.python_setup.installing.is_some() {
@@ -528,6 +540,12 @@ impl App {
             if p.ready_uv().is_some() {
                 page = page.push(self.own_python_part());
             }
+            if matches!(p.python, Some(OwnPython::Ready(..)))
+                && p.installing.is_none()
+                && !p.removing
+            {
+                page = page.push(self.personal_part());
+            }
             page = page.push(label::caption(format!(
                 "KentOS'un Python'u {} · uv en az {}.",
                 c.python.range, c.uv.min
@@ -584,10 +602,18 @@ impl App {
                     .push(words::summary(vec![words::text_line(
                         Line::Warn,
                         format!(
-                            "Python {} kaldırılsın mı? {} yer açılır. Python isteyen eklentiler yeniden kurulana dek \
-                             çalışmaz; yeniden kurmak için yeniden indirilir.",
+                            "Python {} kaldırılsın mı? {} yer açılır.{} Python isteyen eklentiler yeniden kurulana \
+                             dek çalışmaz; yeniden kurmak için yeniden indirilir.",
                             python.version,
-                            size_words(*size)
+                            size_words(*size),
+                            if matches!(
+                                p.personal.env,
+                                Some(crate::python_personal::OwnEnv::Ready(_))
+                            ) {
+                                " Üzerinde çalışan kişisel ortam da silinir."
+                            } else {
+                                ""
+                            }
                         ),
                     )]))
                     .push(

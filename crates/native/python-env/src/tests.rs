@@ -8,7 +8,9 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use crate::compat::{self, Compat, Platform};
+use crate::personal::{self, Change, Package};
 use crate::python::{self, Cause, InstallError, Interpreter, Progress};
+use crate::sdk;
 use crate::settings::PythonSettings;
 use crate::uv::{self, UvStatus};
 
@@ -658,6 +660,8 @@ fn kentos_python_is_removed_with_what_it_left() {
     std::fs::create_dir_all(root.join("indirme/1-2")).unwrap();
     std::fs::write(root.join("indirme/1-2/.tmpx"), [0u8; 500]).unwrap();
     std::fs::write(root.join("ayarlar.json"), b"{}").unwrap();
+    std::fs::create_dir_all(root.join("kisisel/.venv/bin")).unwrap();
+    std::fs::write(root.join("kisisel/pyproject.toml"), b"").unwrap();
     assert_eq!(
         python::folder_size(&folder),
         1000,
@@ -672,6 +676,10 @@ fn kentos_python_is_removed_with_what_it_left() {
             .ends_with("|python uninstall --all --no-config")
     );
     assert!(!folder.exists() && !root.join("indirme").exists());
+    assert!(
+        !root.join("kisisel").exists(),
+        "the personal environment, which runs on it, goes too"
+    );
     assert!(
         root.join("ayarlar.json").exists(),
         "the user's choice stays"
@@ -695,5 +703,456 @@ exit 2",
         refused.starts_with("Python kaldırılamadı: dosyaları kullanılıyor")
             && refused.contains("Python konsolunu"),
         "{refused}"
+    );
+}
+
+/// KentOS's library comes from the installation's wheel as its description says: there, of this program's version,
+/// with its SHA-256; anything else is refused with what to do.
+#[test]
+fn the_kentos_library_wheel_is_found_only_as_described() {
+    let temp = Temp::new("sdk");
+    let dir = temp.0.join("tools");
+    std::fs::create_dir_all(&dir).unwrap();
+    let wheel = dir.join("kentos-0.1.0-cp310-abi3-linux_x86_64.whl");
+    std::fs::write(&wheel, b"tekerlek").unwrap();
+    let sum = sdk::sha256_file(&wheel).unwrap();
+    assert_eq!(sum.len(), 64);
+    let describe = |version: &str, file: &str, sha256: &str| {
+        std::fs::write(
+            dir.join(sdk::DESCRIPTION),
+            format!(
+                r#"{{"format":"kentos.sdk-wheel","version":"{version}","file":"{file}","sha256":"{sha256}"}}"#
+            ),
+        )
+        .unwrap();
+    };
+    let missing = sdk::find(std::slice::from_ref(&dir), "0.1.0").unwrap_err();
+    assert!(missing.contains("bu kurulumda yok"), "{missing}");
+    describe("0.1.0", "kentos-0.1.0-cp310-abi3-linux_x86_64.whl", &sum);
+    let found = sdk::find(&[temp.0.join("yok"), dir.clone()], "0.1.0").unwrap();
+    // Where an installation keeps it: `tools`; in a macOS app bundle its Resources.
+    let app = Path::new("/Applications/KentOS.app/Contents/MacOS");
+    assert_eq!(
+        sdk::dirs_for("macos", app),
+        [
+            app.join("tools"),
+            PathBuf::from("/Applications/KentOS.app/Contents/Resources/python")
+        ]
+    );
+    assert_eq!(
+        sdk::dirs_for("windows", Path::new("C:/KentOS")),
+        [PathBuf::from("C:/KentOS/tools")]
+    );
+    assert_eq!(found.path, wheel);
+    assert_eq!(found.version, "0.1.0");
+    let older = sdk::find(std::slice::from_ref(&dir), "0.2.0").unwrap_err();
+    assert!(
+        older.contains("0.1.0 sürümünde") && older.contains("yeniden kurun"),
+        "{older}"
+    );
+    describe("0.1.0", "../kentos.whl", &sum);
+    assert!(
+        sdk::find(std::slice::from_ref(&dir), "0.1.0").is_err(),
+        "a path is not a file name"
+    );
+    describe("0.1.0", "kentos-0.1.0-cp310-abi3-linux_x86_64.whl", &sum);
+    std::fs::write(&wheel, b"bozulmus").unwrap();
+    let broken = sdk::find(std::slice::from_ref(&dir), "0.1.0").unwrap_err();
+    assert!(broken.contains("bozuk"), "{broken}");
+}
+
+/// What the user types is a package of the index with an optional version: never one of uv's options (it would read a
+/// requirement starting with `-` as its own flag), a path or an address; `kentos` is KentOS's library's name.
+#[test]
+fn requirements_are_packages_of_the_index_only() {
+    assert_eq!(personal::check("numpy"), Ok("numpy".into()));
+    assert_eq!(personal::check(" Pandas>=2,<3 "), Ok("pandas".into()));
+    assert_eq!(
+        personal::check("shapely[vectorized]==2.1"),
+        Ok("shapely".into())
+    );
+    assert_eq!(
+        personal::check("Python_Dateutil"),
+        Ok("python-dateutil".into())
+    );
+    for refused in [
+        "",
+        "--index-url=https://ornek.invalid/simple",
+        "-e .",
+        "./yerel-paket",
+        "C:\\paketler\\x.whl",
+        "git+https://ornek.invalid/x.git",
+        "numpy @ https://ornek.invalid/numpy.whl",
+        "numpy; sys_platform == 'win32'",
+        "numpy && rm",
+    ] {
+        assert!(personal::check(refused).is_err(), "{refused}");
+    }
+    for own in ["kentos", "Kentos", "kentos>=0.1"] {
+        let refused = personal::check(own).unwrap_err();
+        assert!(
+            refused.contains("KentOS'un kendi Python kitaplığı"),
+            "{refused}"
+        );
+    }
+}
+
+/// The project KentOS writes is pinned to KentOS's Python and this system (measured: open to every Python, uv locked
+/// two pandas at once); the lock's packages and the ones asked for are read from uv's export and the project.
+#[test]
+fn the_personal_project_is_pinned_and_read() {
+    let written = personal::pyproject("3.12.13", "windows");
+    assert!(
+        written.contains("requires-python = \"==3.12.*\""),
+        "{written}"
+    );
+    assert!(written.contains("environments = [\"sys_platform == 'win32'\"]"));
+    assert!(written.contains("package = false") && written.contains("dependencies = []"));
+    assert!(personal::pyproject("3.12.13", "linux").contains("sys_platform == 'linux'"));
+    assert!(personal::pyproject("3.13.1", "macos").contains("==3.13.*"));
+    assert!(personal::direct_names(&written).is_empty());
+    let by_uv = "[project]\nname = \"kentos-kisisel\"\ndependencies = [\n    \"pandas>=3.1.1\",\n    \"Shapely[vectorized]>=2.1\",\n]\n\n[tool.uv]\npackage = false\n";
+    assert_eq!(personal::direct_names(by_uv), ["pandas", "shapely"]);
+    assert_eq!(
+        personal::direct_names(
+            "[project]\ndependencies = [\"numpy>=2\"]\n[dependency-groups]\ndev = [\"pytest\"]\n"
+        ),
+        ["numpy"]
+    );
+    let export = "numpy==2.5.4 ; sys_platform == 'linux'\npandas==3.1.1 ; sys_platform == 'linux'\nPython_Dateutil==4.0.0\n# yorum\n\n-e .\n";
+    let packages = personal::exported(export);
+    assert_eq!(packages.len(), 3);
+    assert_eq!(packages["python-dateutil"], "4.0.0");
+    assert_eq!(packages["numpy"], "2.5.4");
+    assert_eq!(
+        personal::python_in(Path::new("C:/k/.venv"), "windows"),
+        Path::new("C:/k/.venv/Scripts/python.exe")
+    );
+    assert_eq!(
+        personal::python_in(Path::new("/k/.venv"), "linux"),
+        Path::new("/k/.venv/bin/python")
+    );
+}
+
+/// How far a sync is: the sizes uv says it downloads, the bytes being unpacked counted back to downloaded ones (so the
+/// bar moves before a package is done), those it finished, then installing; never the whole before uv says so.
+#[test]
+fn a_syncs_progress_is_read_from_uvs_words() {
+    assert_eq!(personal::read_sync_progress("", 0), Progress::Starting);
+    let started = "Resolved 5 packages in 0.72ms\nDownloading numpy (16.0MiB)\nDownloading pandas (11.5MiB)\n";
+    let numpy = python::bytes("16.0MiB").unwrap();
+    let pandas = python::bytes("11.5MiB").unwrap();
+    let total = numpy + pandas;
+    assert_eq!(
+        personal::read_sync_progress(started, 0),
+        Progress::Downloading {
+            done: 0,
+            total: Some(total)
+        }
+    );
+    // 35 MB unpacked so far: about 10 MB downloaded.
+    assert_eq!(
+        personal::read_sync_progress(started, 35_000_000),
+        Progress::Downloading {
+            done: 10_000_000,
+            total: Some(total)
+        }
+    );
+    // More unpacked than the whole would be: not the whole until uv says so.
+    let Progress::Downloading { done, .. } = personal::read_sync_progress(started, 500_000_000)
+    else {
+        panic!("downloading");
+    };
+    assert!(done < total);
+    let one = format!("{started} Downloaded pandas\n");
+    assert_eq!(
+        personal::read_sync_progress(&one, 0),
+        Progress::Downloading {
+            done: pandas,
+            total: Some(total)
+        }
+    );
+    let all = format!("{one} Downloaded numpy\nPrepared 4 packages in 1.27s\n");
+    assert_eq!(personal::read_sync_progress(&all, 0), Progress::Unpacking);
+    // What is being unpacked: the cache's `.tmp…` at its top.
+    let temp = Temp::new("acilan");
+    std::fs::create_dir_all(temp.0.join(".tmpAbC/numpy")).unwrap();
+    std::fs::write(temp.0.join(".tmpAbC/numpy/core.so"), [0u8; 700]).unwrap();
+    std::fs::create_dir_all(temp.0.join("archive-v0/x")).unwrap();
+    std::fs::write(temp.0.join("archive-v0/x/done.py"), [0u8; 300]).unwrap();
+    assert_eq!(personal::under_way(&temp.0), 700);
+    assert_eq!(personal::under_way(&temp.0.join("yok")), 0);
+}
+
+/// The recommended packages: each a package of the index under its normal name, in a known group, found by Turkish
+/// words typed with or without their letters.
+#[test]
+fn recommended_packages_are_found_in_turkish() {
+    use crate::catalog;
+    let list = catalog::builtin();
+    assert_eq!(list.format, "kentos.python-packages");
+    assert!(list.packages.len() >= 25, "{}", list.packages.len());
+    let mut names = std::collections::BTreeSet::new();
+    for entry in &list.packages {
+        assert_eq!(
+            personal::check(&entry.name),
+            Ok(entry.name.clone()),
+            "{}",
+            entry.name
+        );
+        assert!(names.insert(entry.name.clone()), "twice: {}", entry.name);
+        assert!(list.groups.contains(&entry.group), "{}", entry.group);
+        assert!(!entry.title.is_empty());
+    }
+    let found =
+        |q: &str| -> Vec<String> { list.search(q).iter().map(|e| e.name.clone()).collect() };
+    assert_eq!(found("").len(), list.packages.len());
+    assert!(found("koordinat").contains(&"pyproj".to_owned()));
+    assert!(
+        found("SAYISAL").contains(&"numpy".to_owned()),
+        "ı without its letter"
+    );
+    assert!(found("sayısal").contains(&"numpy".to_owned()));
+    assert!(found("excel").contains(&"openpyxl".to_owned()));
+    assert!(found("nokta bulutu").contains(&"laspy".to_owned()));
+    assert!(found("İSTATİSTİK").contains(&"scipy".to_owned()));
+    assert!(found("bulunmayan bir şey").is_empty());
+    assert_eq!(
+        catalog::fold("İstatistik Şehir Çağrı"),
+        "istatistik sehir cagri"
+    );
+    assert_eq!(
+        list.find("geopandas").map(|e| e.group.as_str()),
+        Some("CBS ve geometri")
+    );
+}
+
+/// A fake uv for the personal project: `add` writes the project uv would (pandas asked for), `export` gives the lock's
+/// packages (the project aside: pandas and its dependencies; the project: an older tzdata), `sync` fails when told to
+/// (a file `bozuk` beside it), `pip` installs nothing; each call logged.
+#[cfg(unix)]
+fn personal_uv(dir: &Path, log: &Path) -> PathBuf {
+    let fails = dir.join("bozuk");
+    logging_uv(
+        dir,
+        log,
+        &format!(
+            r#"case "$1" in
+  add) printf '%s\n' '[project]' 'name = "kentos-kisisel"' 'dependencies = [' '    "pandas>=3.1.1",' ']' > pyproject.toml ;;
+  export)
+    if [ "$(basename "$(pwd -P)")" = "kisisel-onizleme" ]; then
+      printf '%s\n' "numpy==2.5.4 ; sys_platform == 'linux'" "pandas==3.1.1 ; sys_platform == 'linux'" "tzdata==2026.6"
+    else
+      printf '%s\n' "tzdata==2025.1"
+    fi ;;
+  sync)
+    if [ -e '{fails}' ]; then echo 'error: Failed to fetch: numpy' >&2; echo '  Caused by: dns error' >&2; exit 2; fi
+    echo 'Downloading numpy (16.0MiB)' >&2; echo ' Downloaded numpy' >&2; echo 'Prepared 3 packages in 1s' >&2 ;;
+esac"#,
+            fails = fails.display()
+        ),
+    )
+}
+
+/// A change is resolved aside and said package by package (asked for or a dependency, new or a new version); the project
+/// is untouched until the user agrees; then the environment follows, KentOS's library is put back; a failed sync puts the
+/// previous project back.
+#[cfg(unix)]
+#[test]
+fn a_change_is_previewed_aside_then_applied_or_undone() {
+    let temp = Temp::new("kisisel");
+    let root = temp.0.join("python");
+    let project = root.join("kisisel");
+    std::fs::create_dir_all(&project).unwrap();
+    let before = personal::pyproject("3.12.13", "linux");
+    std::fs::write(project.join("pyproject.toml"), &before).unwrap();
+    std::fs::write(project.join("uv.lock"), "version = 1\n").unwrap();
+    let log = temp.0.join("kayit.txt");
+    let fake = personal_uv(&temp.0.join("uv"), &log);
+    let python = Interpreter {
+        version: "3.12.13".into(),
+        path: "/k/yorumlayici/cpython-3.12/bin/python3.12".into(),
+    };
+    // A requirement that is an option never reaches uv.
+    assert!(
+        personal::preview(
+            &fake,
+            &root,
+            &python,
+            &Change::Add(vec!["--index-url=x".into()])
+        )
+        .is_err()
+    );
+    assert!(!log.exists(), "uv was not run");
+    let preview =
+        personal::preview(&fake, &root, &python, &Change::Add(vec!["pandas".into()])).unwrap();
+    assert_eq!(
+        preview.added,
+        [
+            Package {
+                name: "pandas".into(),
+                version: "3.1.1".into(),
+                direct: true
+            },
+            Package {
+                name: "numpy".into(),
+                version: "2.5.4".into(),
+                direct: false
+            },
+        ]
+    );
+    assert_eq!(
+        preview.changed,
+        [("tzdata".into(), "2025.1".into(), "2026.6".into())]
+    );
+    assert!(preview.removed.is_empty() && !preview.is_empty());
+    assert_eq!(preview.direct, ["pandas"]);
+    let logged = std::fs::read_to_string(&log).unwrap();
+    assert!(
+        logged.contains("|add pandas --no-sync --no-config --no-python-downloads --system-certs --python /k/yorumlayici/cpython-3.12/bin/python3.12"),
+        "{logged}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(project.join("pyproject.toml")).unwrap(),
+        before,
+        "the project is untouched by a preview"
+    );
+    // Agreed: the environment follows, with how far it is; KentOS's library goes back in.
+    let wheel = sdk::Wheel {
+        path: temp.0.join("kentos-0.1.0-cp310-abi3-linux_x86_64.whl"),
+        version: "0.1.0".into(),
+    };
+    let stop = std::sync::atomic::AtomicBool::new(false);
+    let mut seen = Vec::new();
+    personal::apply(&fake, &root, &python, &wheel, &stop, &mut |p| seen.push(p)).unwrap();
+    assert!(
+        std::fs::read_to_string(project.join("pyproject.toml"))
+            .unwrap()
+            .contains("pandas>=3.1.1")
+    );
+    assert_eq!(seen.last(), Some(&Progress::Unpacking), "{seen:?}");
+    assert_eq!(
+        std::fs::read_to_string(project.join(".kentos-sdk")).unwrap(),
+        "0.1.0"
+    );
+    // Ready for the console once its Python is there too.
+    assert_eq!(personal::ready(&root), None);
+    std::fs::create_dir_all(project.join(".venv/bin")).unwrap();
+    std::fs::write(project.join(".venv/bin/python"), b"").unwrap();
+    assert_eq!(
+        personal::ready(&root),
+        Some(project.join(".venv/bin/python"))
+    );
+    let logged = std::fs::read_to_string(&log).unwrap();
+    assert!(
+        logged.contains("|sync --locked --no-config --no-python-downloads --system-certs --python")
+    );
+    assert!(logged.contains("|pip install --no-deps --offline --no-config --python"));
+    assert!(
+        !root.join("kisisel-onizleme").exists() && !project.join("pyproject.toml.onceki").exists()
+    );
+    // A sync that fails: the previous project comes back.
+    let agreed = std::fs::read_to_string(project.join("pyproject.toml")).unwrap();
+    std::fs::write(project.join("pyproject.toml"), &before).unwrap();
+    personal::preview(&fake, &root, &python, &Change::Add(vec!["pandas".into()])).unwrap();
+    std::fs::write(temp.0.join("uv").join("bozuk"), b"").unwrap();
+    let failed = personal::apply(&fake, &root, &python, &wheel, &stop, &mut |_| {}).unwrap_err();
+    assert!(
+        matches!(
+            &failed,
+            InstallError::Failed {
+                cause: Cause::Network,
+                ..
+            }
+        ),
+        "{failed:?}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(project.join("pyproject.toml")).unwrap(),
+        before,
+        "the previous project is back"
+    );
+    assert_ne!(agreed, before);
+    assert!(std::fs::read_to_string(&log).unwrap().contains(
+        "|sync --locked --no-config --no-python-downloads --system-certs --offline --python"
+    ));
+}
+
+/// Updates are uv's (`pip list --outdated`), KentOS's library never among them; a pinned package asked for is raised
+/// to the newer version (`add "pandas>=3.1.1"`: re-adding a bare name keeps a pin, measured), a dependency upgraded in
+/// the lock; the tree is uv's drawing.
+#[cfg(unix)]
+#[test]
+fn updates_and_the_tree_come_from_uv() {
+    use crate::personal::Outdated;
+    let temp = Temp::new("guncelle");
+    let root = temp.0.join("python");
+    let project = root.join("kisisel");
+    std::fs::create_dir_all(&project).unwrap();
+    std::fs::write(
+        project.join("pyproject.toml"),
+        personal::pyproject("3.12.13", "linux"),
+    )
+    .unwrap();
+    std::fs::write(project.join("uv.lock"), "version = 1\n").unwrap();
+    let log = temp.0.join("kayit.txt");
+    let fake = logging_uv(
+        &temp.0.join("uv"),
+        &log,
+        r#"case "$1 $2" in
+  "pip list") printf '%s' '[{"name":"Pandas","version":"2.3.3","latest_version":"3.1.1","latest_filetype":"wheel"},{"name":"kentos","version":"0.1.0","latest_version":"9.9.9"},{"name":"six","version":"1.0","latest_version":null}]' ;;
+  "tree --frozen") printf 'kentos-kisisel v0\n└── pandas v2.3.3\n' ;;
+esac"#,
+    );
+    assert_eq!(
+        personal::outdated(&fake, &root).unwrap(),
+        [Outdated {
+            name: "pandas".into(),
+            version: "2.3.3".into(),
+            latest: "3.1.1".into()
+        }]
+    );
+    assert!(std::fs::read_to_string(&log).unwrap().contains(
+        "|pip list --outdated --exclude kentos --format json --no-config --system-certs --python"
+    ));
+    assert_eq!(
+        personal::tree(&fake, &root).unwrap(),
+        "kentos-kisisel v0\n└── pandas v2.3.3\n"
+    );
+    let python = Interpreter {
+        version: "3.12.13".into(),
+        path: "/k/py".into(),
+    };
+    personal::preview(
+        &fake,
+        &root,
+        &python,
+        &Change::Upgrade {
+            raise: vec![("pandas".into(), "3.1.1".into())],
+            others: vec!["tzdata".into()],
+        },
+    )
+    .unwrap();
+    let logged = std::fs::read_to_string(&log).unwrap();
+    assert!(
+        logged.contains("|add pandas>=3.1.1 --no-sync --no-config"),
+        "{logged}"
+    );
+    assert!(
+        logged.contains("|lock --upgrade-package tzdata --no-config"),
+        "{logged}"
+    );
+    // An option dressed as a package name never reaches uv.
+    assert!(
+        personal::preview(
+            &fake,
+            &root,
+            &python,
+            &Change::Upgrade {
+                raise: Vec::new(),
+                others: vec!["--upgrade".into()],
+            },
+        )
+        .is_err()
     );
 }

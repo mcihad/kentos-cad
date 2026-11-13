@@ -1193,6 +1193,8 @@ mod project;
 mod properties;
 #[path = "shell/python/mod.rs"]
 mod python;
+#[path = "shell/python_personal.rs"]
+mod python_personal;
 #[path = "shell/python_setup.rs"]
 mod python_setup;
 #[cfg(test)]

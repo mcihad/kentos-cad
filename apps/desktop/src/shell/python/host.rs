@@ -34,13 +34,22 @@ pub struct Host {
     writer: mpsc::Sender<String>,
 }
 
-/// The Python the console runs: `KENTOS_PYTHON`, else a checkout's own
+/// The Python the console runs: `KENTOS_PYTHON`, else the user's personal
+/// environment while Python is on and it is ready (Uygulama ayarları › Python
+/// ve eklentiler, python_personal.rs: KentOS's own Python with KentOS's
+/// library; on Windows the only one there is), else a checkout's own
 /// environment above the program (`.run/py`, which `scripts/python/test.sh`
 /// makes; the program is in `target/<profile>/`, a test in its `deps/`),
 /// else `python3`.
 pub fn interpreter() -> PathBuf {
     if let Some(path) = std::env::var_os("KENTOS_PYTHON") {
         return PathBuf::from(path);
+    }
+    if let Some(root) = kentos_python_env::places::root()
+        && kentos_python_env::settings::PythonSettings::load(&root).enabled
+        && let Some(own) = kentos_python_env::personal::ready(&root)
+    {
+        return own;
     }
     if let Ok(exe) = std::env::current_exe() {
         for folder in exe.ancestors().skip(1).take(4) {
@@ -70,7 +79,7 @@ impl Host {
             .spawn()
             .map_err(|e| {
                 format!(
-                    "Python başlatılamadı ({}): {e}. KENTOS_PYTHON ile kentos paketinin kurulu olduğu Python'u gösterin.",
+                    "Python başlatılamadı ({}): {e}. Uygulama ayarları › Python ve eklentiler'den KentOS'un Python'unu ve kişisel ortamı kurun; ya da KENTOS_PYTHON ile kentos paketinin kurulu olduğu Python'u gösterin.",
                     python.display()
                 )
             })?;

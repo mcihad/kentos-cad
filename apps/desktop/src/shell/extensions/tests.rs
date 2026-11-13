@@ -1074,3 +1074,332 @@ fn an_extensions_python_buttons_say_why_by_the_users_python() {
     let _ = std::fs::remove_dir_all(&root);
     let _ = std::fs::remove_dir_all(&python_root);
 }
+
+/// Kişisel ortam (plan/eklenti.md ADIM 18A, P04): on KentOS's Python, made on the user's press; a package typed as an
+/// option never reaches uv; a change is previewed (asked for, dependencies) and made only when agreed, with how far it
+/// is and Durdur; packages and the environment are removed from the same place, the environment asking first; each
+/// outcome a notice (the owner, 13 November 2026).
+#[test]
+fn the_personal_environment_is_made_previewed_changed_and_removed() {
+    use crate::python_personal::{Busy, OwnEnv, PersonalEdit};
+    use crate::python_setup::{OwnPython, PythonEdit};
+    use kentos_python_env::personal::{Change, Outdated, Package, Personal, Preview};
+    use kentos_python_env::python::{InstallError, Interpreter, Progress};
+    use kentos_python_env::uv::UvStatus;
+
+    let root = temp("kisisel");
+    let python_root = temp("kisisel-ayar");
+    let mut gis = app(&root, Some(Module::Gis));
+    gis.python_setup.root = Some(python_root.clone());
+    let edit = |app: &mut App, e: PersonalEdit| {
+        let _ = app.python_edit(PythonEdit::Personal(e));
+    };
+    let titles = |app: &App| -> Vec<String> {
+        app.toasts
+            .iter()
+            .map(|(_, toast, _)| toast.title().to_owned())
+            .collect()
+    };
+    let _ = gis.python_edit(PythonEdit::Enable(true));
+    let _ = gis.python_edit(PythonEdit::Detected(UvStatus::Found {
+        path: "/k/tools/uv".into(),
+        version: "0.11.26".into(),
+        bundled: true,
+    }));
+    assert!(
+        gis.python_setup.personal.env.is_none(),
+        "not before KentOS's Python"
+    );
+    let python = Interpreter {
+        version: "3.12.13".into(),
+        path: python_root.join("yorumlayici/cpython-3.12/bin/python3.12"),
+    };
+    let _ = gis.python_edit(PythonEdit::Found(Ok((Some(python), 97_885_768))));
+    assert!(matches!(
+        gis.python_setup.python,
+        Some(OwnPython::Ready(..))
+    ));
+    assert_eq!(gis.python_setup.personal.env, Some(OwnEnv::Looking));
+    edit(&mut gis, PersonalEdit::Found(Ok((None, 4096))));
+    assert_eq!(gis.python_setup.personal.env, Some(OwnEnv::Missing));
+    let _ = gis.python_section();
+    // Made on the user's press.
+    edit(&mut gis, PersonalEdit::Create);
+    assert_eq!(gis.python_setup.personal.busy, Some(Busy::Creating));
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::Created(Ok(())));
+    assert!(titles(&gis).contains(&"Kişisel ortam oluşturuldu".to_owned()));
+    let made = Personal {
+        python: python_root.join("kisisel/.venv/bin/python"),
+        size: 362_000_000,
+        sdk: Some("0.1.0".into()),
+        packages: Vec::new(),
+    };
+    edit(
+        &mut gis,
+        PersonalEdit::Found(Ok((Some(made.clone()), 4096))),
+    );
+    assert!(matches!(
+        &gis.python_setup.personal.env,
+        Some(OwnEnv::Ready(_))
+    ));
+    let _ = gis.python_section();
+    // An option typed as a package never reaches uv.
+    edit(
+        &mut gis,
+        PersonalEdit::Typed("--index-url=https://ornek.invalid".into()),
+    );
+    edit(&mut gis, PersonalEdit::PreviewAdd);
+    assert!(gis.python_setup.personal.busy.is_none(), "uv not asked");
+    assert!(gis.python_setup.personal.note.is_some());
+    // Previewed: what is asked for, what comes with it.
+    edit(&mut gis, PersonalEdit::Typed("pandas".into()));
+    edit(&mut gis, PersonalEdit::PreviewAdd);
+    assert_eq!(gis.python_setup.personal.busy, Some(Busy::Previewing));
+    let _ = gis.python_section();
+    let package = |name: &str, version: &str, direct| Package {
+        name: name.into(),
+        version: version.into(),
+        direct,
+    };
+    let adding = Preview {
+        change: Change::Add(vec!["pandas".into()]),
+        added: vec![
+            package("pandas", "3.1.1", true),
+            package("numpy", "2.5.4", false),
+            package("python-dateutil", "4.0.0", false),
+            package("tzdata", "2026.6", false),
+        ],
+        removed: Vec::new(),
+        changed: Vec::new(),
+        direct: vec!["pandas".into()],
+    };
+    assert_eq!(
+        crate::python_personal::preview_words(&adding),
+        [
+            "Kurulacak: pandas 3.1.1.",
+            "Bağımlılık olarak gelecek (3): numpy 2.5.4, python-dateutil 4.0.0, tzdata 2026.6."
+        ]
+    );
+    edit(&mut gis, PersonalEdit::Previewed(Ok(adding.clone())));
+    assert!(gis.python_setup.personal.preview.is_some());
+    let _ = gis.python_section();
+    // Agreed, then Durdur: the environment went back.
+    edit(&mut gis, PersonalEdit::Apply);
+    assert_eq!(gis.python_setup.personal.busy, Some(Busy::Applying));
+    let stop = gis.python_setup.personal.stop.clone().expect("applying");
+    edit(
+        &mut gis,
+        PersonalEdit::Progressed(Progress::Downloading {
+            done: 12_058_624,
+            total: Some(28_835_840),
+        }),
+    );
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::Stop);
+    assert!(stop.load(std::sync::atomic::Ordering::Relaxed));
+    edit(
+        &mut gis,
+        PersonalEdit::Applied(Err(InstallError::Cancelled)),
+    );
+    assert!(titles(&gis).contains(&"Paket kurulumu durduruldu".to_owned()));
+    assert!(
+        gis.python_setup.personal.busy.is_none() && gis.python_setup.personal.preview.is_none()
+    );
+    // Again, to the end.
+    edit(&mut gis, PersonalEdit::Previewed(Ok(adding)));
+    edit(&mut gis, PersonalEdit::Apply);
+    edit(&mut gis, PersonalEdit::Applied(Ok(())));
+    assert!(titles(&gis).contains(&"pandas 3.1.1 kuruldu".to_owned()));
+    assert!(gis.python_setup.personal.typed.is_empty());
+    let with_pandas = Personal {
+        packages: vec![
+            package("pandas", "3.1.1", true),
+            package("numpy", "2.5.4", false),
+            package("python-dateutil", "4.0.0", false),
+            package("tzdata", "2026.6", false),
+        ],
+        ..made
+    };
+    edit(
+        &mut gis,
+        PersonalEdit::Found(Ok((Some(with_pandas), 30_000_000))),
+    );
+    let _ = gis.python_section();
+    // A package removed from the same place, previewed too.
+    edit(&mut gis, PersonalEdit::PreviewRemove("pandas".into()));
+    assert_eq!(gis.python_setup.personal.busy, Some(Busy::Previewing));
+    let removing = Preview {
+        change: Change::Remove(vec!["pandas".into()]),
+        added: Vec::new(),
+        removed: vec![
+            package("pandas", "3.1.1", true),
+            package("numpy", "2.5.4", false),
+            package("python-dateutil", "4.0.0", false),
+            package("tzdata", "2026.6", false),
+        ],
+        changed: Vec::new(),
+        direct: Vec::new(),
+    };
+    edit(&mut gis, PersonalEdit::Previewed(Ok(removing)));
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::Apply);
+    edit(&mut gis, PersonalEdit::Applied(Ok(())));
+    assert!(titles(&gis).contains(&"pandas kaldırıldı".to_owned()));
+    // Picked from the recommended list, several at once, previewed together.
+    edit(&mut gis, PersonalEdit::Typed("koordinat".into()));
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::Typed(String::new()));
+    edit(&mut gis, PersonalEdit::ShowAll(true));
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::Pick("shapely".into(), true));
+    edit(&mut gis, PersonalEdit::Pick("pyproj".into(), true));
+    edit(&mut gis, PersonalEdit::Pick("numpy".into(), true));
+    edit(&mut gis, PersonalEdit::Pick("numpy".into(), false));
+    assert_eq!(
+        gis.python_setup
+            .personal
+            .picked
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>(),
+        ["pyproj", "shapely"]
+    );
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::PreviewPicked);
+    assert_eq!(gis.python_setup.personal.busy, Some(Busy::Previewing));
+    edit(
+        &mut gis,
+        PersonalEdit::Previewed(Ok(Preview {
+            change: Change::Add(vec!["pyproj".into(), "shapely".into()]),
+            added: vec![
+                package("pyproj", "3.7.2", true),
+                package("shapely", "2.1.2", true),
+                package("certifi", "2026.10.5", false),
+            ],
+            removed: Vec::new(),
+            changed: Vec::new(),
+            direct: vec!["pyproj".into(), "shapely".into()],
+        })),
+    );
+    edit(&mut gis, PersonalEdit::Apply);
+    edit(&mut gis, PersonalEdit::Applied(Ok(())));
+    assert!(titles(&gis).contains(&"pyproj 3.7.2, shapely 2.1.2 kuruldu".to_owned()));
+    assert!(
+        gis.python_setup.personal.picked.is_empty(),
+        "ticks cleared once made"
+    );
+    // A name not among the recommended ones is asked for as it is.
+    edit(&mut gis, PersonalEdit::Typed("pyogrio-yok-boyle".into()));
+    let _ = gis.python_section();
+    // Updates: asked of uv; one or all previewed as an upgrade.
+    let with_old = Personal {
+        packages: vec![
+            package("pandas", "2.3.3", true),
+            package("numpy", "2.5.4", false),
+        ],
+        python: python_root.join("kisisel/.venv/bin/python"),
+        size: 400_000_000,
+        sdk: Some("0.1.0".into()),
+    };
+    edit(&mut gis, PersonalEdit::Found(Ok((Some(with_old), 1))));
+    edit(&mut gis, PersonalEdit::CheckUpdates);
+    assert_eq!(gis.python_setup.personal.busy, Some(Busy::Checking));
+    edit(
+        &mut gis,
+        PersonalEdit::Checked(Ok(vec![
+            Outdated {
+                name: "pandas".into(),
+                version: "2.3.3".into(),
+                latest: "3.1.1".into(),
+            },
+            Outdated {
+                name: "numpy".into(),
+                version: "2.5.4".into(),
+                latest: "2.6.0".into(),
+            },
+        ])),
+    );
+    assert!(titles(&gis).contains(&"2 paketin yeni sürümü var".to_owned()));
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::Upgrade(None));
+    assert_eq!(gis.python_setup.personal.busy, Some(Busy::Previewing));
+    edit(
+        &mut gis,
+        PersonalEdit::Previewed(Ok(Preview {
+            change: Change::Upgrade {
+                raise: vec![("pandas".into(), "3.1.1".into())],
+                others: vec!["numpy".into()],
+            },
+            added: Vec::new(),
+            removed: Vec::new(),
+            changed: vec![
+                ("numpy".into(), "2.5.4".into(), "2.6.0".into()),
+                ("pandas".into(), "2.3.3".into(), "3.1.1".into()),
+            ],
+            direct: vec!["pandas".into()],
+        })),
+    );
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::Apply);
+    edit(&mut gis, PersonalEdit::Applied(Ok(())));
+    assert!(titles(&gis).contains(&"Paketler güncellendi".to_owned()));
+    assert!(
+        gis.python_setup.personal.outdated.is_none(),
+        "asked again when wanted"
+    );
+    // The dependency tree, shown and hidden.
+    edit(&mut gis, PersonalEdit::ToggleTree);
+    assert_eq!(gis.python_setup.personal.tree.as_deref(), Some(""));
+    edit(
+        &mut gis,
+        PersonalEdit::Tree(Ok("kentos-kisisel v0\n└── pandas v3.1.1\n".into())),
+    );
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::ToggleTree);
+    assert!(gis.python_setup.personal.tree.is_none());
+    edit(&mut gis, PersonalEdit::Tree(Ok("geç gelen".into())));
+    assert!(
+        gis.python_setup.personal.tree.is_none(),
+        "hidden meanwhile: stays hidden"
+    );
+    // A failure is said in the part and by a notice that waits.
+    edit(&mut gis, PersonalEdit::Typed("numpy".into()));
+    edit(&mut gis, PersonalEdit::PreviewAdd);
+    edit(
+        &mut gis,
+        PersonalEdit::Previewed(Err("Paket dizinine ulaşılamadı.".into())),
+    );
+    assert_eq!(
+        gis.python_setup.personal.note.as_deref(),
+        Some("Paket dizinine ulaşılamadı.")
+    );
+    // The cache, apart.
+    edit(&mut gis, PersonalEdit::CleanCache);
+    assert_eq!(gis.python_setup.personal.busy, Some(Busy::Cleaning));
+    edit(&mut gis, PersonalEdit::Cleaned(Ok(())));
+    assert!(titles(&gis).contains(&"Paket önbelleği temizlendi".to_owned()));
+    // KentOS's Python's removal says the environment goes with it.
+    let _ = gis.python_edit(PythonEdit::Remove);
+    let _ = gis.python_section();
+    let _ = gis.python_edit(PythonEdit::RemoveCancelled);
+    // The environment removed, asked first.
+    edit(&mut gis, PersonalEdit::Remove);
+    assert!(gis.python_setup.personal.confirm_remove);
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::RemoveCancelled);
+    assert!(!gis.python_setup.personal.confirm_remove);
+    edit(&mut gis, PersonalEdit::Remove);
+    edit(&mut gis, PersonalEdit::RemoveConfirmed);
+    assert_eq!(gis.python_setup.personal.busy, Some(Busy::Removing));
+    let _ = gis.python_section();
+    edit(&mut gis, PersonalEdit::Removed(Ok(())));
+    assert!(titles(&gis).contains(&"Kişisel ortam kaldırıldı".to_owned()));
+    // Python off: the environment is let go of.
+    let _ = gis.python_edit(PythonEdit::Enable(false));
+    assert!(gis.python_setup.personal.env.is_none());
+    gis.open_settings_at(crate::settings_sections::Section::Python);
+    let _ = gis.settings_dialog();
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&python_root);
+}

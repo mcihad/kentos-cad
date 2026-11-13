@@ -12,12 +12,20 @@
 //!   the environment's uv or Python settings deciding where it goes.
 //! - [`python`]: KentOS's own Python, installed by uv into the user's KentOS folder only when the user asks, found
 //!   there alone, and why installing failed said in a sentence.
+//! - [`sdk`]: KentOS's Python library (`kentos`) as the installation carries it: a wheel with its version and SHA-256,
+//!   installed into environments from that file alone.
+//! - [`personal`]: the user's personal environment (P04): where the console runs and NumPy goes; a small uv project
+//!   pinned to KentOS's Python and this system, each change previewed aside before the environment follows it.
+//! - [`catalog`]: the recommended packages, each with a Turkish line and group, searched offline.
 //! - [`settings`]: the user's choice (off by default) and their uv path.
 //! - [`places`]: where the settings, KentOS's Pythons, uv's cache and the environments are.
 
+pub mod catalog;
 pub mod compat;
+pub mod personal;
 pub mod places;
 pub mod python;
+pub mod sdk;
 pub mod settings;
 pub mod uv;
 

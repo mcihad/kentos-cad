@@ -338,6 +338,10 @@ pub fn install(
             tick: Some(&mut tick),
         },
     );
+    // Once more at the end, before the download folder goes: a quick install is over before its first tick.
+    if ran.is_ok() {
+        tick();
+    }
     let _ = std::fs::remove_dir_all(&downloads);
     // The downloads' folder too, when no other install is using it.
     let _ = std::fs::remove_dir(places::downloads(root));
@@ -358,12 +362,14 @@ pub fn install(
 }
 
 /// Removes KentOS's Pythons, as the user asked: uv uninstalls them (when it is there), then their folder and what
-/// downloads left go, so nothing of them stays. Says the bytes freed. Nothing else is touched: the user's own Pythons,
-/// uv and its settings are not KentOS's.
+/// downloads left go, so nothing of them stays; the personal environment, which runs on them, goes first. Says the
+/// bytes freed by the Pythons. Nothing else is touched: the user's own Pythons, uv and its settings are not KentOS's.
 pub fn remove(uv_path: Option<&Path>, root: &Path) -> Result<u64, String> {
     let folder = places::interpreters(root);
     let downloads = places::downloads(root);
     let freed = folder_size(&folder) + folder_size(&downloads);
+    // The personal environment's Python is a link to this one: without it the environment does not run.
+    crate::personal::remove(root)?;
     if let Some(uv_path) = uv_path
         && folder.is_dir()
     {

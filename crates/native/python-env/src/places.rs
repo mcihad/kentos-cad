@@ -31,6 +31,11 @@ pub fn downloads(root: &Path) -> PathBuf {
     root.join("indirme")
 }
 
+/// The personal environment's project (`pyproject.toml`, `uv.lock`, `.venv`): crate::personal.
+pub fn personal(root: &Path) -> PathBuf {
+    root.join("kisisel")
+}
+
 /// The user's Python folder; none when this computer gives no data folder.
 pub fn root() -> Option<PathBuf> {
     if let Some(dir) = env("KENTOS_PYTHON_DIR") {

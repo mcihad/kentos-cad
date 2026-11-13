@@ -775,8 +775,12 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   `--offline`). **KentOS'un Python'u** aynı bölümden onayla kurulur ve **kaldırılır** (sahibin istekleri: "Aynı yerden
   kaldırılabilmesi … hoş bir progress ve toast ile geri bildirim", "Kaldırılabilmelidir"): uv'nin yazdığı boy ve büyüyen
   arşivden yüzdeli ilerleme, Durdur, hatanın cümlesi, onaylı Kaldır, sonuçlar bildirimle; `--no-bin --no-registry` ile
-  sistemde iz yok. **Kalan:** kişisel ortam (P04), eklenti ortamları (P05, P07), Windows'ta Python konsolu, kaldırmanın
-  eklenti ortamlarını da söylemesi, hazırlık penceresi.
+  sistemde iz yok. **Kişisel ortam ve paketler (P04, sahibin istekleri):** KentOS'un Python kitaplığı kurulumdaki
+  tekerlekten (`bundle_sdk.py`, sürüm + SHA-256, çevrimdışı); kişisel ortam KentOS'un Python'una ve sisteme sabit küçük bir
+  uv projesi; paketler aranır, listelenir, önerilen listeden çoklu seçilir ya da adıyla istenir, güncellenir, kaldırılır,
+  her biri önce önizlenir; bağımlılık ağacı; akıcı ilerleme çubuğu; paket önbelleği ayrı; Python konsolu bu ortamda
+  (Windows'ta da). **Kalan:** eklenti ortamları (P05, P07), kaldırmanın eklenti ortamlarını da söylemesi, kurum
+  dizini/aynası, hazırlık penceresi.
 - **Kabul:** P01–P07 (§5). İstemeyen kurmayı reddeder ve normal çalışır; NumPy isteyen kendi ortamına kurar; iki
   eklentinin farklı NumPy'ı birbirini bozmaz; internet kapalıyken hazır ortam çalışır; çalıştırma kendiliğinden paket ya
   da yorumlayıcı indirmez. Testler sahte taşımayla ve temiz bir kullanıcı profiliyle; gerçek kullanıcı ortamı
