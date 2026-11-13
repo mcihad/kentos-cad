@@ -12,7 +12,10 @@
 
 mod problems;
 mod ribbon;
+mod search;
 mod view;
+
+pub(crate) use search::ExtHit;
 
 use std::path::{Path, PathBuf};
 
@@ -98,6 +101,8 @@ pub(crate) struct Extensions {
     /// The extensions with a problem standing or kept from running, as the status bar's cell says them; worked out
     /// when the registry or a log changes, not at every frame (problems.rs).
     pub(crate) troubles: Vec<problems::Trouble>,
+    /// The button Komut ara revealed, outlined for a moment (search.rs).
+    pub(crate) flash: Option<ExtHit>,
 }
 
 impl Default for Extensions {
@@ -116,6 +121,7 @@ impl Default for Extensions {
             menus: Vec::new(),
             full_log: false,
             troubles: Vec::new(),
+            flash: None,
         }
     }
 }
@@ -164,6 +170,8 @@ pub(crate) enum Event {
     FullLog(bool),
     /// The status bar's cell: the manager on the first extension in trouble.
     ShowTrouble,
+    /// A revealed button's outline goes: its tab, panel and place.
+    FlashEnd(&'static str, usize, usize),
 }
 
 impl Extensions {
@@ -620,6 +628,9 @@ impl App {
                 }
             }
             Event::FullLog(on) => self.extensions.full_log = on,
+            Event::FlashEnd(tab, panel, item) => {
+                self.extension_flash_end(ExtHit { tab, panel, item });
+            }
             Event::ShowTrouble => {
                 let first = self.extensions.troubles.first().map(|t| t.id.clone());
                 self.open_extensions();

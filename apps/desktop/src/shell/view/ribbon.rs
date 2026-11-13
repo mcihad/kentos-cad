@@ -74,7 +74,7 @@ impl App {
         }
         // The extensions' tabs of this program (extensions/ribbon.rs, docs/adr/8057 §3).
         for tab in self.extension_tabs() {
-            tab_tips.push(None);
+            tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
             ribbon = ribbon.tab(
                 tab.label.clone(),
                 tab.id == shown,

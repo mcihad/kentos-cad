@@ -27,7 +27,7 @@ pub const SEARCH_INPUT: &str = "ribbon-search";
 const LIMIT: usize = 9;
 
 /// How long a revealed button stays outlined (the web's 1600 ms).
-const FLASH: Duration = Duration::from_millis(1600);
+pub(crate) const FLASH: Duration = Duration::from_millis(1600);
 
 /// What Komut ara found: a command of the catalog, or one of the user's
 /// models (the web registers each as `processing.model.<id>`, “<label>…”).
@@ -39,6 +39,8 @@ pub enum Hit {
     },
     /// A furniture or fixture of KentOS's library (Donatı araması, docs/adr/8024).
     Fixture(&'static crate::fixture_search::Fixture),
+    /// A button of an extension's tab this program shows (docs/adr/8057 §3).
+    Extension(crate::extensions::ExtHit),
 }
 
 /// The commands `query` finds, best first (the web's `CommandRegistry.search`;
@@ -161,6 +163,12 @@ impl App {
                 ));
             }
         }
+        // The extensions' buttons of this program's tabs (docs/adr/8057 §3).
+        scored.extend(
+            self.extension_hits(&q)
+                .into_iter()
+                .map(|(score, hit)| (score, Hit::Extension(hit))),
+        );
         // KentOS's library's furniture and fixtures where blocks are placed (docs/adr/8024).
         if self.offers("tool.blockInsert") {
             scored.extend(
@@ -181,6 +189,7 @@ impl App {
             .map(|hit| {
                 let command = match hit {
                     Hit::Command(command) => command,
+                    Hit::Extension(hit) => return self.extension_found(hit),
                     Hit::Fixture(f) => {
                         return Found {
                             icon: catalog()
@@ -245,6 +254,11 @@ impl App {
     pub(crate) fn search_run(&mut self, index: usize) -> Task<Message> {
         let command = match self.hits().into_iter().nth(index) {
             Some(Hit::Command(command)) => command,
+            Some(Hit::Extension(hit)) => {
+                self.ribbon_search.clear();
+                let run = self.extension_hit_run(hit);
+                return Task::batch([release_keyboard(), run]);
+            }
             Some(Hit::Fixture(f)) => {
                 if self.document.is_none() {
                     return Task::none();
@@ -272,6 +286,11 @@ impl App {
     pub(crate) fn search_reveal(&mut self, index: usize) -> Task<Message> {
         let command = match self.hits().into_iter().nth(index) {
             Some(Hit::Command(command)) => command,
+            Some(Hit::Extension(hit)) => {
+                self.ribbon_search.clear();
+                let reveal = self.extension_hit_reveal(hit);
+                return Task::batch([release_keyboard(), reveal]);
+            }
             // A fixture's place: Donatı ▾'s Kitaplık (docs/adr/8024).
             Some(Hit::Fixture(_)) => match catalog().get("block.library") {
                 Some(command) => command,

@@ -354,16 +354,47 @@ impl App {
             return menu;
         }
         items.into_iter().fold(menu.separator(), |menu, m| {
-            let on = match &m.item.action {
-                Action::Builtin(id) => self.offers(id).then_some(Message::Run(id)),
-                Action::Source(ext, local) => {
-                    Some(msg(Event::OpenSource(ext.clone(), local.clone())))
-                }
-                Action::Form(ext, local) => Some(msg(Event::OpenForm(ext.clone(), local.clone()))),
-                Action::Unavailable(_) => None,
-            };
+            let on = self.item_message(&m.item.action);
             menu.item(m.item.label.clone(), on).icon(m.item.icon)
         })
+    }
+
+    /// What pressing an item sends: none when it cannot be pressed here.
+    fn item_message(&self, action: &Action) -> Option<Message> {
+        match action {
+            Action::Builtin(id) => self.offers(id).then_some(Message::Run(id)),
+            Action::Source(ext, local) => Some(msg(Event::OpenSource(ext.clone(), local.clone()))),
+            Action::Form(ext, local) => Some(msg(Event::OpenForm(ext.clone(), local.clone()))),
+            Action::Unavailable(_) => None,
+        }
+    }
+
+    /// An extension's tab's key tips' controls: its buttons that can be pressed, in reading order, with their names
+    /// (ribbon_keys.rs).
+    pub(crate) fn extension_tip_controls(
+        &self,
+        tab: &str,
+    ) -> Vec<(
+        crate::ribbon_keys::TipKey,
+        String,
+        crate::ribbon_keys::TipAction,
+    )> {
+        let Some(tab) = self.extension_tab(tab) else {
+            return Vec::new();
+        };
+        let mut out = Vec::new();
+        for (p, panel) in tab.panels.iter().enumerate() {
+            for (i, item) in panel.items.iter().enumerate() {
+                if let Some(message) = self.item_message(&item.action) {
+                    out.push((
+                        crate::ribbon_keys::TipKey::ExtItem(tab.id, p, i),
+                        item.label.clone(),
+                        crate::ribbon_keys::TipAction::Run(message),
+                    ));
+                }
+            }
+        }
+        out
     }
 
     /// Whether an extension's tab of this program shows here: its own program's, or in kentos-cad the work mode of
@@ -400,35 +431,45 @@ impl App {
     pub(crate) fn extension_groups(&self, tab: &ExtTab) -> Vec<Group<'static, Message>> {
         tab.panels
             .iter()
-            .map(|panel| {
+            .enumerate()
+            .map(|(p, panel)| {
                 let mut group = Group::new(panel.label.clone());
                 if let Some(first) = panel.items.first() {
                     group = group.icon(first.icon);
                 }
-                for item in &panel.items {
+                for (i, item) in panel.items.iter().enumerate() {
+                    // Komut ara's reveal (search.rs).
+                    let flash = self.extensions.flash
+                        == Some(super::ExtHit {
+                            tab: tab.id,
+                            panel: p,
+                            item: i,
+                        });
                     let button = if item.large {
                         Button::large(item.icon, item.label.clone())
                     } else {
                         Button::small(item.icon, item.label.clone())
                     };
-                    let (on, tip) = match &item.action {
-                        Action::Builtin(id) => (
-                            self.offers(id).then_some(Message::Run(id)),
-                            catalog().get(id).map_or_else(String::new, |c| c.description.to_owned()),
-                        ),
-                        Action::Source(ext, local) => (
-                            Some(msg(Event::OpenSource(ext.clone(), local.clone()))),
-                            "Eklentinin veri kaynağını haritaya ekler (Kaynaklar'ın servis yolundan).".to_owned(),
-                        ),
-                        Action::Form(ext, local) => (
-                            Some(msg(Event::OpenForm(ext.clone(), local.clone()))),
-                            "Eklentinin formunu projeye alır (Formu içe aktar gibi).".to_owned(),
-                        ),
-                        Action::Unavailable(why) => (None, why.clone()),
+                    let on = self.item_message(&item.action);
+                    let tip = match &item.action {
+                        Action::Builtin(id) => {
+                            catalog().get(id).map_or_else(String::new, |c| c.description.to_owned())
+                        }
+                        Action::Source(..) => {
+                            "Eklentinin veri kaynağını haritaya ekler (Kaynaklar'ın servis yolundan).".to_owned()
+                        }
+                        Action::Form(..) => {
+                            "Eklentinin formunu projeye alır (Formu içe aktar gibi).".to_owned()
+                        }
+                        Action::Unavailable(why) => why.clone(),
                     };
+                    let key_tip =
+                        self.key_tip(&crate::ribbon_keys::TipKey::ExtItem(tab.id, p, i));
                     group = group.tool(
                         button
                             .on_press_maybe(on)
+                            .flash(flash)
+                            .key_tips(key_tip, None)
                             .tip(Tip::new(item.label.clone()).body(format!("{tip} ({})", tab.extension))),
                     );
                 }

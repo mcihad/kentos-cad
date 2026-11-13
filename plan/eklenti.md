@@ -689,7 +689,9 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   (sahibin isteği, 13 Kasım; ADR 8057 §4):** eklenti başına seviyeli, kodlu, gizli değerleri maskeli günlük
   (`logs/<kimlik>.jsonl`, 256 KiB'da devrilir); hata anında eklentinin adıyla Uyarılar'da, düzelene kadar durum
   çubuğunda kırmızı hücre, yöneticide duran hata kutusu, seviyeli günlük ve rapor; `kentos kek log`; MCP kaynağında
-  `problem`. **Kalan:** Komut ara, sorunlu eklentiyi bulma penceresi, `.kcad` bağlantısı, paket SVG ikonları.
+  `problem`. **Komut ara ve tuş ipuçları:** eklenti düğmeleri adıyla bulunur, yerini ve sahibini söyler, Alt+Enter
+  sekmesini açar; eklenti sekmesi ve düğmeleri KentOS'un harflerini değiştirmeden tuş ipucu alır (kullanıcı tuş ataması
+  masaüstünde yok). **Kalan:** sorunlu eklentiyi bulma penceresi, `.kcad` bağlantısı, paket SVG ikonları.
 
 ### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 

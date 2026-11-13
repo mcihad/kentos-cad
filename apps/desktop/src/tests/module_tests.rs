@@ -599,7 +599,9 @@ fn komut_ara_the_command_line_and_the_shortcuts_find_only_the_modules_own() {
             .into_iter()
             .filter_map(|h| match h {
                 crate::ribbon_search::Hit::Command(c) => Some(c.id),
-                crate::ribbon_search::Hit::Model { .. } | crate::ribbon_search::Hit::Fixture(_) => None,
+                crate::ribbon_search::Hit::Model { .. }
+                | crate::ribbon_search::Hit::Fixture(_)
+                | crate::ribbon_search::Hit::Extension(_) => None,
             })
             .collect()
     };
@@ -656,6 +658,10 @@ fn found(app: &mut App, query: &str) -> Vec<String> {
             crate::ribbon_search::Hit::Model { id, .. } => format!("processing.model.{id}"),
             // KentOS's library's furniture and fixtures (docs/adr/8024), by name.
             crate::ribbon_search::Hit::Fixture(f) => format!("block:{}", f.name),
+            // An extension's button (docs/adr/8057 §3), by its tab and place.
+            crate::ribbon_search::Hit::Extension(e) => {
+                format!("ext:{}:{}:{}", e.tab, e.panel, e.item)
+            }
         })
         .collect()
 }

@@ -69,11 +69,20 @@ const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 /// label's first letter, nobody else starting with it), otherwise two
 /// (initials, then the first letter and another). Tips never start with a
 /// single tip, so a typed letter is never ambiguous. `reserved` are taken
-/// already (the first level's digits).
+/// already (the first level's digits; KentOS's own tabs' tips when the
+/// extensions' tabs get theirs after them, docs/adr/8057 §3): a single
+/// letter of them starts no new tip, and no new single letter starts one of
+/// them. A digit does not count as a single: the shared fixture gives `1A`
+/// beside the bar's `1`, as the web does.
 pub(crate) fn assign_key_tips(labels: &[&str], reserved: &[String]) -> Vec<String> {
     let mut used: Vec<String> = reserved.to_vec();
     let mut out = vec![String::new(); labels.len()];
-    let mut singles: Vec<char> = Vec::new();
+    let mut singles: Vec<char> = reserved
+        .iter()
+        .filter(|r| r.chars().count() == 1)
+        .filter_map(|r| r.chars().next())
+        .filter(|c| c.is_alphabetic())
+        .collect();
     // Pass 1: one letter for labels whose first letter nobody else starts with.
     let firsts: Vec<Option<char>> = labels
         .iter()
@@ -83,7 +92,7 @@ pub(crate) fn assign_key_tips(labels: &[&str], reserved: &[String]) -> Vec<Strin
         let Some(f) = first else { continue };
         let count = firsts.iter().filter(|x| *x == first).count();
         let tip = f.to_string();
-        if count == 1 && !used.contains(&tip) {
+        if count == 1 && !used.iter().any(|u| u.starts_with(&tip)) {
             out[i] = tip.clone();
             used.push(tip);
             singles.push(*f);
@@ -263,6 +272,33 @@ mod tests {
                 strings(&case["tips"]),
                 "{}",
                 case["title"]
+            );
+        }
+    }
+
+    /// The extensions' tabs get their tips after KentOS's own (docs/adr/8057 §3): never a single letter that starts
+    /// one of KentOS's, never two letters starting with one of KentOS's single letters, so nothing typed is ambiguous.
+    #[test]
+    fn tips_given_after_others_never_clash_with_theirs() {
+        let kentos: Vec<String> = ["DO", "H", "DU", "V", "A", "O", "G", "E", "C", "KR"]
+            .iter()
+            .map(|t| (*t).to_owned())
+            .collect();
+        let tips = assign_key_tips(&["Kent Rehberi", "Harita Ek", "Mezarlık"], &kentos);
+        assert_eq!(tips[2], "M", "a free first letter is a single");
+        for tip in &tips {
+            assert!(!kentos.contains(tip), "{tips:?}");
+            assert!(
+                !kentos
+                    .iter()
+                    .any(|k| k.chars().count() == 1 && tip.starts_with(k.as_str())),
+                "no tip begins with KentOS's single: {tips:?}"
+            );
+            assert!(
+                !kentos
+                    .iter()
+                    .any(|k| tip.chars().count() == 1 && k.starts_with(tip.as_str())),
+                "no single begins one of KentOS's: {tips:?}"
             );
         }
     }

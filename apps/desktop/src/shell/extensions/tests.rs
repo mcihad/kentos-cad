@@ -460,3 +460,138 @@ fn a_failing_extension_is_said_with_its_name_and_kept_in_its_log() {
     assert!(problems::troubles(&safe).is_empty());
     let _ = std::fs::remove_dir_all(&root);
 }
+
+/// Komut ara finds an extension's buttons in its own program (docs/adr/8057 §3): by the label, by the tab's and the
+/// extension's name; the row says where the button lives and whose it is; Enter runs it, Alt+Enter opens its tab and
+/// outlines it; a button that runs a KentOS command is not listed twice; KentOS Mimari does not find KentOS GIS's.
+#[test]
+fn komut_ara_finds_an_extensions_buttons_in_its_own_program() {
+    let root = temp("ara");
+    let mut gis = app(&root, Some(Module::Gis));
+    install(&mut gis, "kent-rehberi.kek", package("ornek-kent", |_| {}));
+    // After KentOS's own command whose alias is the very word (Raster ekle…, ORTOFOTO): an alias equal comes first.
+    gis.ribbon_search = "ortofoto".into();
+    let rows = gis.search_rows();
+    let at = rows
+        .iter()
+        .position(|r| r.title == "Ortofoto (2026)")
+        .expect("the extension's button");
+    let row = &rows[at];
+    assert_eq!(
+        (row.detail.as_ref(), row.enabled, row.revealable),
+        ("Kent Rehberi › Altlık · Kent Rehberi eklentisi", true, true)
+    );
+    // By the extension's name: its own buttons, not the KentOS command it also shows (Öznitelik tablosu).
+    gis.ribbon_search = "kent rehberi".into();
+    let titles: Vec<String> = gis
+        .search_rows()
+        .iter()
+        .map(|r| r.title.to_string())
+        .collect();
+    assert!(
+        titles.contains(&"Ortofoto (2026)".to_owned())
+            && titles.contains(&"Bina denetimi formu".to_owned()),
+        "{titles:?}"
+    );
+    assert!(
+        !titles.contains(&"Öznitelik tablosu".to_owned()),
+        "{titles:?}"
+    );
+    // Alt+Enter: its tab, the button outlined.
+    gis.ribbon_search = "ortofoto".into();
+    let _ = gis.search_reveal(at);
+    assert_eq!(gis.regular_tab(), "ext.tr.ornek.kent-rehberi.kent");
+    let hit = gis.extensions.flash.expect("outlined");
+    assert_eq!((hit.panel, hit.item), (0, 0));
+    let _ = gis.ribbon(false);
+    let _ = gis.extensions_event(Event::FlashEnd(hit.tab, hit.panel, hit.item));
+    assert_eq!(gis.extensions.flash, None);
+    // Enter: what pressing it does (no drawing: the service window says so, nothing breaks).
+    gis.ribbon_search = "ortofoto".into();
+    let _ = gis.search_run(at);
+    assert!(gis.ribbon_search.is_empty());
+    // KentOS Mimari: not its program's button.
+    let mut mimari = app(&root, Some(Module::Architecture));
+    mimari.ribbon_search = "ortofoto".into();
+    assert!(
+        mimari
+            .search_rows()
+            .iter()
+            .all(|r| r.title != "Ortofoto (2026)")
+    );
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+/// Alt or F6 (docs/specs/ribbon.md §1): an extension's tab has a key tip after KentOS's own tabs, which keep theirs;
+/// typed, the tab opens and its buttons get theirs; a button's tip typed runs it.
+#[test]
+fn an_extensions_tab_and_its_buttons_have_key_tips() {
+    use iced::keyboard::key::{NativeCode, Physical};
+    use iced::keyboard::{Key, Modifiers};
+
+    use crate::ribbon_keys::TipKey;
+
+    let letter = |app: &mut App, c: &str| {
+        let _ = app.update(Message::Key(crate::keys::KeyPress {
+            key: Key::Character(c.into()),
+            physical: Physical::Unidentified(NativeCode::Unidentified),
+            modifiers: Modifiers::default(),
+            text: Some(c.to_owned()),
+            repeat: false,
+        }));
+    };
+    let tip = |app: &App, key: TipKey| app.key_tip(&key).map(|t| t.tip);
+
+    let root = temp("ipucu");
+    let bare_root = temp("ipucu-bos");
+    let mut bare = app(&bare_root, Some(Module::Gis));
+    let mut gis = app(&root, Some(Module::Gis));
+    install(&mut gis, "kent-rehberi.kek", package("ornek-kent", |_| {}));
+    gis.open_extensions();
+    let _ = gis.extensions_event(Event::Close);
+    let _ = bare.update(Message::Run("view.keyTips"));
+    let _ = gis.update(Message::Run("view.keyTips"));
+    // KentOS's own tabs keep their tips.
+    let ids: Vec<&'static str> = bare.ribbon_tabs().map(|t| t.id).collect();
+    for id in ids {
+        assert_eq!(
+            tip(&gis, TipKey::Tab(id)),
+            tip(&bare, TipKey::Tab(id)),
+            "{id}"
+        );
+    }
+    let tab = "ext.tr.ornek.kent-rehberi.kent";
+    assert_eq!(tip(&gis, TipKey::Tab(tab)).as_deref(), Some("K"));
+    let _ = gis.ribbon(false);
+    // Typed: the tab opens, its buttons get tips; a builtin button too, where the program offers it.
+    letter(&mut gis, "k");
+    assert_eq!(gis.shown_tab(), tab);
+    let ortofoto = tip(&gis, TipKey::ExtItem(tab, 0, 0)).expect("Ortofoto's tip");
+    assert!(tip(&gis, TipKey::ExtItem(tab, 1, 0)).is_some(), "the form");
+    assert!(
+        tip(&gis, TipKey::ExtItem(tab, 2, 0)).is_some(),
+        "Öznitelik tablosu"
+    );
+    let _ = gis.ribbon(false);
+    // What Ortofoto's tip runs: the source, as its button does.
+    let controls = gis.extension_tip_controls(tab);
+    assert!(
+        matches!(
+            &controls[0],
+            (
+                TipKey::ExtItem(_, 0, 0),
+                label,
+                crate::ribbon_keys::TipAction::Run(Message::Extensions(Event::OpenSource(e, l)))
+            ) if label == "Ortofoto (2026)" && e == KENT && l == "ortofoto"
+        ),
+        "{:?}",
+        controls.iter().map(|(_, l, _)| l).collect::<Vec<_>>()
+    );
+    // Typed in full, it runs and the tips go.
+    for c in ortofoto.chars() {
+        letter(&mut gis, &c.to_lowercase().to_string());
+    }
+    assert!(gis.key_tips.is_none(), "a control ran");
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&bare_root);
+}

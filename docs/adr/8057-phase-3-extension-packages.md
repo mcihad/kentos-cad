@@ -312,8 +312,25 @@ testleri (şerit, katalog, menü, komut, tuş ipuçları) 335 geçti.
   2 414 bayt. Bekçi: `tests/mcp.rs` `an_agent_is_told_when_the_installed_extensions_change` (MCP testleri kural gereği
   burada koşulmaz, derlemesi denetlendi).
 
-**ADIM 18'de kalan:** Komut ara'da eklenti öğeleri, "Sorunlu eklentiyi bul"un penceresi, `.kcad` proje bağlantısı,
-paket SVG ikonlarının düğmelerde çizilmesi. Hata ve günlük: §4.
+**Komut ara ve tuş ipuçları (13 Kasım).**
+
+- Komut ara (`Menülerde ara…`, Alt+Q) bu programın eklenti sekmelerindeki düğmeleri bulur (`extensions/search.rs`):
+  veri kaynağı, form ve Python'lu düğmeler; etiketiyle (eşit, başlayan, içeren) ya da sekmenin ve eklentinin adıyla
+  (daha alt sırada). Satır yerini ve sahibini söyler ("Kent Rehberi › Altlık · Kent Rehberi eklentisi"), Python'lu
+  düğme sönük ve nedeniyle. Enter düğmenin işini yapar, Alt+Enter eklentinin sekmesini açıp düğmeyi 1,6 saniye çerçeveler.
+  **Yerleşik bir komuta bağlı düğme ikinci kez listelenmez**: komutun kendisi zaten bulunur ("Öznitelik tablosu" iki
+  satır olurdu). Takma adı tam tutan KentOS komutu yine en üstte ("ortofoto" önce Raster ekle…'yi bulur, ORTOFOTO
+  onun takma adı). Önce "“kent rehberi” menülerde yok" diyordu, sekme şeritte dururken bile.
+- **Tuş ipuçları:** eklenti sekmesi harfini KentOS'un sekmelerinden **sonra**, kalanlardan alır; KentOS'un harfleri
+  değişmez (ortak fikstürün ve web'in harfleri, kullanıcının alışkanlığı). Kent Rehberi "K", düğmeleri O2, B, OT.
+  `assign_key_tips` için iki kural eklendi, ikisi de var olan durumları değiştirmez (ortak fikstürün 7 durumu aynı
+  sonucu verir): ayrılmış tek **harf** yeni ipucunun başı olamaz (rakam olabilir: fikstürdeki `1A`), yeni tek harf
+  ayrılmış bir ipucunun başı olamaz; yoksa yazılan harf belirsiz kalırdı.
+- Plan "kısayollar `ext.<id>.*` kimliklerini bulur" diyordu: masaüstünde kullanıcının tuş ataması yok (Kısayollar
+  penceresi kataloğun sabit tuşlarını listeler); eklentinin klavye yolu tuş ipuçları ve Komut ara.
+
+**ADIM 18'de kalan:** "Sorunlu eklentiyi bul"un penceresi, `.kcad` proje bağlantısı, paket SVG ikonlarının düğmelerde
+çizilmesi. Hata ve günlük: §4.
 
 ## §4. Hata ve günlük (`ADIM 18`, sahibin isteği)
 

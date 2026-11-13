@@ -44,6 +44,8 @@ pub(crate) enum TipKey {
     Folded(&'static str),
     /// One of the user's models in the Modeller panel (by its id).
     Model(String),
+    /// A button of an extension's tab: the tab, its panel and its place (docs/adr/8057 §3).
+    ExtItem(&'static str, usize, usize),
 }
 
 /// What typing a key tip in full does.
@@ -168,6 +170,22 @@ impl App {
                         .filter(|(_, l)| !l.is_empty())
                         .map(|(t, l)| (TipKey::Tab(t.id), l, TipAction::Tab(t.id))),
                 );
+                // The extensions' tabs (docs/adr/8057 §3): letters of their own after KentOS's, which stay as they are.
+                let ext: Vec<(&'static str, &str)> = self
+                    .extension_tabs()
+                    .map(|t| (t.id, t.label.as_str()))
+                    .collect();
+                if !ext.is_empty() {
+                    let taken: Vec<String> = out.iter().map(|(_, tip, _)| tip.clone()).collect();
+                    let labels: Vec<&str> = ext.iter().map(|(_, label)| *label).collect();
+                    let tips = assign_key_tips(&labels, &taken);
+                    out.extend(
+                        ext.iter()
+                            .zip(tips)
+                            .filter(|(_, tip)| !tip.is_empty())
+                            .map(|((id, _), tip)| (TipKey::Tab(id), tip, TipAction::Tab(id))),
+                    );
+                }
                 out
             }
             Level::Controls => {
@@ -188,6 +206,10 @@ impl App {
     /// the ribbon shows them at the window's width.
     fn tip_controls(&self) -> Vec<(TipKey, String, TipAction)> {
         let shown = self.shown_tab();
+        // An extension's tab: its buttons that can be pressed (extensions/ribbon.rs).
+        if self.extension_tab(shown).is_some() {
+            return self.extension_tip_controls(shown);
+        }
         let Some(tab) = self
             .ribbon_tabs()
             .chain(self.contextual_tabs())
