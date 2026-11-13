@@ -693,7 +693,10 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   sekmesini açar; eklenti sekmesi ve düğmeleri KentOS'un harflerini değiştirmeden tuş ipucu alır (kullanıcı tuş ataması
   masaüstünde yok). **Sorunlu eklentiyi bul:** ilk tur hiçbiri, sonra yarılar; seçimler değişmez ("Sorun bulmada
   kapalı"), yeniden açılışta kaldığı yerden sürer, bulunan eklenti günlüğe ve durum çubuğuna düşer (ADR 8057 §4).
-  **Kalan:** `.kcad` bağlantısı, paket SVG ikonları.
+  **Paket ikonları:** paketteki SVG ikonlar düğmelerde, sağ tık öğelerinde ve yönetici/katalog listelerinde çizilir;
+  katalog dizinindeki ikon da denetlenir. **`.kcad` bağlantısı ADIM 22'ye** taşındı: eklentiye ait belge verisi ilk kez
+  katman şemasıyla gelir (ADR 8057 §3). **Kalan:** katalog görünümleri, arama ve modül süzgeci [D1]; `.kek` dosya
+  ilişkilendirmesi [PY-KEK-15].
 
 ### [ ] ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam (P0/P1)
 

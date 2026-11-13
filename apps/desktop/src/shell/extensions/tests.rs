@@ -660,3 +660,42 @@ fn sorunlu_eklentiyi_bul_finds_the_culprit_in_the_window() {
     );
     let _ = std::fs::remove_dir_all(&root);
 }
+
+/// A package's own icons (docs/adr/8057 §3): the 20×20 SVGs checked when it was installed are drawn on its buttons and
+/// beside its name in the manager; an item without one keeps the icon of what it does.
+#[test]
+fn a_packages_own_icons_are_drawn() {
+    use kentos_ui::icon::Icon;
+
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/extensions/v1/ornek-kent/assets");
+    let svg = |name: &str| {
+        Icon::Svg(super::ribbon::intern(
+            &std::fs::read_to_string(fixture.join(name)).unwrap(),
+        ))
+    };
+    let root = temp("ikon");
+    let mut gis = app(&root, Some(Module::Gis));
+    install(&mut gis, "kent-rehberi.kek", package("ornek-kent", |_| {}));
+    let tab = gis.extension_tabs().next().expect("the tab");
+    assert_eq!(
+        tab.panels[1].items[0].icon,
+        svg("denetim.svg"),
+        "the form's own icon"
+    );
+    assert_ne!(tab.panels[0].items[0].icon, svg("denetim.svg"));
+    assert_eq!(
+        tab.panels[0].items[0].icon,
+        crate::icons::from_web(Some("serviceSettings")),
+        "a data source without one: the service icon"
+    );
+    assert_eq!(
+        gis.extensions.icons.get(KENT),
+        Some(&svg("kent-rehberi.svg")),
+        "the package's icon"
+    );
+    gis.open_extensions();
+    let _ = gis.extensions_view();
+    let _ = gis.ribbon(false);
+    let _ = std::fs::remove_dir_all(&root);
+}

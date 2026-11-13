@@ -4,6 +4,7 @@
   "id": "tr.ornek.kent-rehberi",
   "version": "1.0.0",
   "name": "Kent Rehberi",
+  "icon": "assets/kent-rehberi.svg",
   "summary": "Bina denetim formu, ortofoto altlığı ve öznitelik tablosu tek sekmede.",
   "description": "Örnek Belediyesi'nin bina denetim formunu projeye alır, belediyenin ortofoto servisini haritaya ekler ve öznitelik tablosunu aynı sekmeden açar. Python gerektirmez.",
   "authors": [
@@ -65,7 +66,8 @@
               {
                 "form": "bina-denetimi",
                 "size": "large",
-                "label": "Bina denetimi formu"
+                "label": "Bina denetimi formu",
+                "icon": "assets/denetim.svg"
               }
             ]
           },

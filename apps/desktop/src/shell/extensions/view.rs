@@ -24,6 +24,14 @@ fn state_word(state: &State) -> &'static str {
 /// Records the details show before "Tüm günlük".
 const NEWEST: usize = 8;
 
+/// A list's first cell: the package's icon (its own SVG, else the puzzle) and the name.
+fn named_with_icon<'a>(icon: kentos_ui::icon::Icon, name: String) -> Element<'a, Message> {
+    row![kentos_ui::icon::icon(icon).size(16.0), label::body(name)]
+        .spacing(8)
+        .align_y(iced::Center)
+        .into()
+}
+
 /// A log record's mark.
 fn mark(level: Level) -> Line {
     match level {
@@ -121,7 +129,7 @@ impl App {
                 let list = registry.extensions();
                 let chosen = x.chosen.as_deref().and_then(|id| list.iter().find(|e| e.id == id).cloned());
                 ListDetails::new(self.installed_list(&list), self.installed_details(chosen))
-                    .list_width(300.0)
+                    .list_width(380.0)
                     .height(470.0)
                     .into()
             }
@@ -144,7 +152,7 @@ impl App {
                             found.catalog.name,
                             found.folder.display()
                         )))
-                        .list_width(300.0)
+                        .list_width(380.0)
                         .height(470.0)
                         .into()
                 }
@@ -206,9 +214,15 @@ impl App {
                 ) => words::line(Line::Warn, label::caption(state_word(&e.state))),
                 _ => label::caption(state_word(&e.state)).into(),
             };
+            let icon = self
+                .extensions
+                .icons
+                .get(&e.id)
+                .copied()
+                .unwrap_or_else(|| crate::icons::from_web(Some("extensions")));
             table = table.push(
                 Row::new([
-                    label::body(e.name.clone()).into(),
+                    named_with_icon(icon, e.name.clone()),
                     label::caption(e.version.clone()).into(),
                     state,
                 ])
@@ -409,9 +423,14 @@ impl App {
                 Some(_) if is_update(entry, installed.as_deref()) => "Güncelleme var".to_owned(),
                 Some(v) => format!("Kurulu ({v})"),
             };
+            // Checked when the catalog was read (Catalog::read).
+            let icon = entry.icon.as_deref().map_or_else(
+                || crate::icons::from_web(Some("extensions")),
+                |svg| kentos_ui::icon::Icon::Svg(super::ribbon::intern(svg)),
+            );
             table = table.push(
                 Row::new([
-                    label::body(entry.name.clone()).into(),
+                    named_with_icon(icon, entry.name.clone()),
                     label::caption(entry.version.clone()).into(),
                     label::caption(state).into(),
                 ])

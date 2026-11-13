@@ -88,8 +88,8 @@ pub(super) fn check(r: &Reader<'_>, schema: u32, read: &Read) -> Result<(), Kcad
         return Err(KcadError::new(
             Code::SchemaVersion,
             format!(
-                "Bu dosya `{id}` eklentisinin verisini taşıyor (sürüm {v}); bu KentOS onu okuyamıyor. Eklentiyi kurup ya \
-                 da KentOS'u güncelleyip yeniden açın."
+                "Bu dosya `{id}` eklentisinin verisini taşıyor (sürüm {v}); bu KentOS eklenti verisi taşıyan dosyaları \
+                 henüz açamıyor. KentOS'u güncelleyip yeniden açın."
             ),
         ));
     }

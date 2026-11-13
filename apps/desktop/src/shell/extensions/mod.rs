@@ -106,6 +106,9 @@ pub(crate) struct Extensions {
     pub(crate) flash: Option<ExtHit>,
     /// Sorunlu eklentiyi bul's window over the manager while it is open (bisect.rs).
     pub(crate) bisect: Option<bisect::BisectStep>,
+    /// Each installed extension's own icon (its SVG in the package), read when the registry changes, not at every
+    /// frame; the puzzle where none.
+    pub(crate) icons: std::collections::BTreeMap<String, kentos_ui::icon::Icon>,
 }
 
 impl Default for Extensions {
@@ -126,6 +129,7 @@ impl Default for Extensions {
             troubles: Vec::new(),
             flash: None,
             bisect: None,
+            icons: std::collections::BTreeMap::new(),
         }
     }
 }
@@ -371,6 +375,21 @@ impl App {
     pub(crate) fn extensions_changed(&mut self) {
         self.extension_tabs_changed();
         self.extensions.troubles = problems::troubles(&self.extensions);
+        self.extensions.icons = self
+            .extensions
+            .registry
+            .as_ref()
+            .map(|r| {
+                r.extensions()
+                    .into_iter()
+                    .filter_map(|e| {
+                        let path = r.manifest(&e.id)?.icon.clone()?;
+                        let fallback = crate::icons::from_web(Some("extensions"));
+                        Some((e.id.clone(), ribbon::icon_of(r, &e.id, &path, fallback)))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
     }
 
     pub(crate) fn extensions_event(&mut self, event: Event) -> Task<Message> {

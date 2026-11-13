@@ -111,7 +111,7 @@ pub struct Catalog {
 impl Catalog {
     /// Reads `index.json`.
     pub fn read(text: &str) -> Result<Catalog, Problem> {
-        let catalog: Catalog = serde_json::from_str(text).map_err(|e| {
+        let mut catalog: Catalog = serde_json::from_str(text).map_err(|e| {
             Problem::new(
                 "catalog_invalid",
                 format!(
@@ -130,6 +130,17 @@ impl Catalog {
                 ),
             )
             .file(FILE));
+        }
+        // The index is a file in a share anyone with write access can change: an icon the installer would refuse is
+        // not drawn (the window draws the checked subset only).
+        for entry in &mut catalog.packages {
+            if entry
+                .icon
+                .as_deref()
+                .is_some_and(|svg| crate::icon::problem(svg).is_some())
+            {
+                entry.icon = None;
+            }
         }
         Ok(catalog)
     }
@@ -332,6 +343,16 @@ mod tests {
             "sha256:e3816e901e3241d238547ddd25a9d31731d0e6931e96752ee8ff8507030a3b1b"
         );
         assert_eq!(Catalog::read(&catalog.to_json()).unwrap(), catalog);
+        // An icon changed in the share after indexing, to one the installer refuses, is not drawn.
+        let mut changed = catalog.clone();
+        changed.packages[1].icon = Some(
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\"><script>alert(1)</script></svg>"
+                .to_owned(),
+        );
+        assert_eq!(
+            Catalog::read(&changed.to_json()).unwrap().packages[1].icon,
+            None
+        );
         mebis.verify(&packages[0].1, &Limits::default()).unwrap();
         let p = mebis
             .verify(&packages[1].1, &Limits::default())

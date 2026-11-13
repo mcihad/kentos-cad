@@ -89,8 +89,27 @@ fn module_of(m: kentos_extensions::manifest::Module) -> Option<Module> {
     Module::ALL.into_iter().find(|p| p.id() == m.id())
 }
 
+/// An icon a manifest names: a built-in one by its name, or a 20×20 SVG file in the package, checked when the package
+/// was installed (kentos_extensions::icon) and with the package's files before it ran; drawn in the theme's colour.
+/// A package file that cannot be read now falls back to `fallback`.
+pub(crate) fn icon_of(
+    registry: &kentos_extension_host::Registry,
+    ext: &str,
+    name: &str,
+    fallback: Icon,
+) -> Icon {
+    if !name.contains('/') && !name.contains('.') {
+        return crate::icons::from_web(Some(name));
+    }
+    registry
+        .package_file(ext, name)
+        .and_then(|bytes| String::from_utf8(bytes).ok())
+        .map_or(fallback, |text| Icon::Svg(intern(&text)))
+}
+
 /// What an item points at, its words and icon, and what pressing it does.
 fn item_of(
+    registry: &kentos_extension_host::Registry,
     manifest: &Manifest,
     item: &RibbonItem,
     registered: &[&kentos_extension_host::Registered],
@@ -198,8 +217,6 @@ fn item_of(
             };
         };
         let title = title.unwrap_or_else(|| local.clone());
-        // A built-in icon by its name; a package's own SVG file waits for the manager's icons.
-        let icon = icon.filter(|i| !i.contains('/') && !i.contains('.'));
         let action = if has(kind, local) {
             Action::Unavailable(format!(
                 "“{title}” eklentinin Python işlevini çalıştırır; Python ortamı hazırlanınca çalışacak."
@@ -207,17 +224,13 @@ fn item_of(
         } else {
             not_granted()
         };
-        (
-            title,
-            crate::icons::from_web(Some(icon.as_deref().unwrap_or("processing"))),
-            action,
-        )
+        let fallback = crate::icons::from_web(Some("processing"));
+        let icon = icon.map_or(fallback, |name| icon_of(registry, ext, &name, fallback));
+        (title, icon, action)
     };
     let icon = match item.icon.as_deref() {
-        Some(name) if !name.contains('/') && !name.contains('.') => {
-            crate::icons::from_web(Some(name))
-        }
-        _ => icon,
+        Some(name) => icon_of(registry, ext, name, icon),
+        None => icon,
     };
     ExtItem {
         label: item.label.clone().unwrap_or(label),
@@ -274,7 +287,7 @@ impl App {
                             items: p
                                 .items
                                 .iter()
-                                .map(|i| item_of(manifest, i, &registered))
+                                .map(|i| item_of(registry, manifest, i, &registered))
                                 .collect(),
                         })
                         .collect(),
@@ -325,7 +338,7 @@ impl App {
                 };
                 menus.push(ExtMenuItem {
                     target: entry.target,
-                    item: item_of(manifest, &as_button, &registered),
+                    item: item_of(registry, manifest, &as_button, &registered),
                     modules: manifest
                         .modules
                         .iter()

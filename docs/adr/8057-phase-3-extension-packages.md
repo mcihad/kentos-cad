@@ -329,8 +329,27 @@ testleri (şerit, katalog, menü, komut, tuş ipuçları) 335 geçti.
 - Plan "kısayollar `ext.<id>.*` kimliklerini bulur" diyordu: masaüstünde kullanıcının tuş ataması yok (Kısayollar
   penceresi kataloğun sabit tuşlarını listeler); eklentinin klavye yolu tuş ipuçları ve Komut ara.
 
-**ADIM 18'de kalan:** `.kcad` proje bağlantısı, paket SVG ikonlarının düğmelerde çizilmesi. Hata, günlük ve "Sorunlu
-eklentiyi bul": §4.
+**Paketin kendi ikonları (13 Kasım).** Manifestin ikon alanları ya yerleşik bir ikonun adı ya da paketteki 20×20 SVG
+dosyasıdır; dosya olanlar kurulumda denetlenir (`kentos_extensions::icon`: izinli öğe ve öznitelikler, betik, bağlantı,
+renk yok), paketin dosyaları her etkinleşmede içerik özetine karşı doğrulanır. Bu yüzden masaüstü onları doğrudan
+çizer (`Icon::Svg`, temanın rengiyle): şerit düğmesi, sağ tık öğesi, komut ve harita aracı ikonu; yöneticinin kurulu ve
+katalog listelerinde adın yanında paketin ikonu (ikonsuz pakete yapboz). Önce paket dosyası olan ikon yerine genel bir
+simge çiziliyordu. Paket ikonları kayıt defteri değişince bir kez okunur (`Extensions::icons`), her çizimde değil.
+**Katalog dizinindeki ikon okunurken de denetlenir** (`Catalog::read`): dizin paylaşımlı klasörde durur ve elle
+değiştirilebilir; kurulumun reddedeceği ikon çizilmez (sınamada `<script>`'li ikon). Kent Rehberi örneğine paket
+ikonu ve form düğmesinin ikonu eklendi. Yan düzeltme: liste sütunları ikonla daraldı ("Kent Rehberi" "Ken / Reh" diye
+kesiliyordu, gerçek pencerede görüldü); liste 300 → 380 piksel.
+
+**`.kcad` bağlantısı ADIM 22'ye (planda ADIM 18'deydi).** Dosya biçiminde eklentinin yeri `modules.ext`: **eklentinin
+belgeye yazdığı verinin sürümü**. Bu adımdaki Python'suz katkılar belgeye kendine ait veri yazmaz: alınan form ve
+eklenen servis katmanı sıradan belge içeriği olur, eklenti kaldırılsa da açılır. Eklentiye ait belge verisi ilk kez
+ADIM 22'nin katman şemasıyla gelir; `project_needs` ve kısıtlı açılış (D16) o veriye bağlanır, manifestin veri
+sürümü de orada tanımlanır. Bugün yapılan: `modules.ext` taşıyan dosyanın ret iletisi "Eklentiyi kurup … yeniden
+açın" diyordu, oysa hiçbir KentOS eklenti verisini henüz okumuyor; ileti "bu KentOS eklenti verisi taşıyan dosyaları
+henüz açamıyor; KentOS'u güncelleyin" oldu.
+
+**ADIM 18'de kalan:** katalog görünümleri (Bulunabilir / Güncellenebilir / Yeni / Sorunlu, arama ve modül süzgeci,
+D1), `.kek` dosya ilişkilendirmesi (yalnız inceleme açar, PY-KEK-15). Hata, günlük ve "Sorunlu eklentiyi bul": §4.
 
 ## §4. Hata ve günlük (`ADIM 18`, sahibin isteği)
 
