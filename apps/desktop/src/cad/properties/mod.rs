@@ -247,6 +247,8 @@ pub enum Field {
     /// A point's Y (east) and X (north).
     PointX(Slot),
     PointY(Slot),
+    /// A line's end or a circle's centre coordinate, or a circle's radius, typed in the project's unit.
+    Geometry(Slot, Coord),
     DimensionOffset(Slot),
     DimensionSetGap(Slot),
     /// A dimension recipe's sheet scales (docs/adr/0730 §1), typed as Diğer ölçekler.
@@ -405,6 +407,18 @@ pub enum Spot {
 /// JavaScript's `parseFloat(text.replace(',', '.'))`, as the web reads the
 /// panel's numbers: the first comma is the decimal point, the longest number
 /// at the start is taken (“12abc” is 12), none is NaN.
+/// Which value of a line or a circle a [`Field::Geometry`] edits.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Coord {
+    StartEast,
+    StartNorth,
+    EndEast,
+    EndNorth,
+    CenterEast,
+    CenterNorth,
+    Radius,
+}
+
 pub(crate) fn web_number(text: &str) -> f64 {
     js_parse_float(&text.replacen(',', ".", 1))
 }

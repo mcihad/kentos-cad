@@ -263,7 +263,7 @@ fn a_line_shows_its_own_weight_and_kalinlik_sets_it_or_gives_it_back_to_the_laye
 }
 
 #[test]
-fn a_point_is_moved_by_its_typed_coordinates_read_as_the_web_reads_them() {
+fn a_point_is_moved_by_its_typed_coordinates_read_whole() {
     let mut app = objects();
     select(&mut app, &[5]);
     event(
@@ -274,20 +274,66 @@ fn a_point_is_moved_by_its_typed_coordinates_read_as_the_web_reads_them() {
         panic!("a point");
     };
     assert_eq!(p.p.x, E + 21.5);
-    // What is not a number changes nothing; “12abc” is 12, as parseFloat reads it.
-    event(
-        &mut app,
-        Event::Commit(Field::PointY(Slot(5)), "yok".into()),
-    );
-    event(
-        &mut app,
-        Event::Commit(Field::PointY(Slot(5)), "4419990abc".into()),
-    );
-    let Entity::Point(p) = entity(&app, 5) else {
-        panic!("a point");
+    // UR-078: what is not wholly a length changes nothing and says why: neither “yok” nor “4419990abc” (once read
+    // as its first digits, moving the point); a length with its unit is taken in that unit.
+    let y = |app: &App| match entity(app, 5) {
+        Entity::Point(p) => p.p.y,
+        _ => panic!("a point"),
     };
-    assert_eq!(p.p.y, N - 10.0);
+    let before = y(&app);
+    for typed in ["yok", "4419990abc", "12mmx"] {
+        event(&mut app, Event::Commit(Field::PointY(Slot(5)), typed.into()));
+        assert_eq!(y(&app), before, "{typed}");
+        let said = crate::files_testing::last_said(&app);
+        assert!(said.contains("bir uzunluk olarak okunamadı"), "{typed}: {said}");
+    }
+    event(&mut app, Event::Commit(Field::PointY(Slot(5)), "4419990000 mm".into()));
+    assert!((y(&app) - (N - 10.0)).abs() < 1e-6);
     assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+}
+
+/// UR-077: a line's ends and a circle's centre and radius are typed in the panel, each one undo step; a radius not
+/// above zero and ends that meet are refused.
+#[test]
+fn a_lines_ends_and_a_circles_centre_and_radius_are_typed() {
+    use super::super::Coord;
+    let mut app = objects();
+    let line = app
+        .document
+        .as_ref()
+        .unwrap()
+        .model
+        .entities()
+        .find(|e| matches!(e, Entity::Line(_)))
+        .map(|e| e.base().id)
+        .expect("a line");
+    select(&mut app, &[line]);
+    event(&mut app, Event::Commit(Field::Geometry(Slot(line), Coord::EndEast), (E + 50.0).to_string()));
+    let Entity::Line(l) = entity(&app, line) else { panic!("a line") };
+    assert!((l.b.x - (E + 50.0)).abs() < 1e-9);
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+    let Entity::Line(l) = entity(&app, line) else { panic!("a line") };
+    let (ax, ay) = (l.a.x, l.a.y);
+    event(&mut app, Event::Commit(Field::Geometry(Slot(line), Coord::EndEast), ax.to_string()));
+    event(&mut app, Event::Commit(Field::Geometry(Slot(line), Coord::EndNorth), ay.to_string()));
+    assert!(crate::files_testing::last_said(&app).contains("iki ucu aynı yere gelemez"));
+    // A circle: its centre and radius.
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let circle = doc
+        .add(serde_json::from_value(serde_json::json!({
+            "kind": "circle", "id": 0, "layerId": "cizim", "attrs": {}, "c": {"x": E, "y": N}, "r": 2.0
+        })).unwrap())
+        .expect("a slot");
+    select(&mut app, &[circle.0]);
+    assert!(rows(&app).iter().flat_map(|(_, r)| r).any(|r| r.label == "Yarıçap" && r.editor.is_some()));
+    event(&mut app, Event::Commit(Field::Geometry(circle, Coord::Radius), "3,5".into()));
+    event(&mut app, Event::Commit(Field::Geometry(circle, Coord::CenterNorth), (N + 1.0).to_string()));
+    let Entity::Circle(c) = entity(&app, circle.0) else { panic!("a circle") };
+    assert!((c.r - 3.5).abs() < 1e-12 && (c.c.y - (N + 1.0)).abs() < 1e-9);
+    event(&mut app, Event::Commit(Field::Geometry(circle, Coord::Radius), "0".into()));
+    assert_eq!(crate::files_testing::last_said(&app), "Yarıçap sıfırdan büyük olmalı.");
+    let Entity::Circle(c) = entity(&app, circle.0) else { panic!("a circle") };
+    assert!((c.r - 3.5).abs() < 1e-12);
 }
 
 /// A local project's drawing unit (docs/adr/0165 §2): rows read in it, typed
