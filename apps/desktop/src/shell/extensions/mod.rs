@@ -10,17 +10,21 @@
 //! real-window sessions never touch the user's own. A start without extensions (`--eklentisiz`, `KENTOS_EKLENTISIZ`, or
 //! "bir sonraki açılışta eklentisiz başlat" from this window) activates nothing.
 
+mod problems;
 mod ribbon;
 mod view;
 
 use std::path::{Path, PathBuf};
 
 use iced::Task;
-use kentos_extension_host::{Choice, Grant, Options, Registry, Review, Source, SourceKind, State};
+use kentos_extension_host::{
+    Choice, Grant, Options, Record, Registry, Review, Source, SourceKind, State,
+};
 use kentos_extensions::catalog::{self, Catalog, CatalogEntry};
 use kentos_extensions::manifest::Capability;
 use kentos_extensions::version::Version;
 use kentos_extensions::{Host, Limits};
+use kentos_interaction::Level;
 
 use crate::app::{App, Dialog, Message};
 
@@ -89,6 +93,11 @@ pub(crate) struct Extensions {
     pub(crate) tabs: Vec<ribbon::ExtTab>,
     /// The extensions' right-click menu items, rebuilt with the tabs.
     pub(crate) menus: Vec<ribbon::ExtMenuItem>,
+    /// The chosen extension's whole log is shown, not its newest lines.
+    pub(crate) full_log: bool,
+    /// The extensions with a problem standing or kept from running, as the status bar's cell says them; worked out
+    /// when the registry or a log changes, not at every frame (problems.rs).
+    pub(crate) troubles: Vec<problems::Trouble>,
 }
 
 impl Default for Extensions {
@@ -105,6 +114,8 @@ impl Default for Extensions {
             note: None,
             tabs: Vec::new(),
             menus: Vec::new(),
+            full_log: false,
+            troubles: Vec::new(),
         }
     }
 }
@@ -147,12 +158,18 @@ pub(crate) enum Event {
     OpenSource(String, String),
     /// An extension's form, from its tab: (extension, local id).
     OpenForm(String, String),
+    /// The chosen extension's report onto the clipboard, for its publisher or an agent.
+    CopyReport(String),
+    /// Its whole log, or its newest lines.
+    FullLog(bool),
+    /// The status bar's cell: the manager on the first extension in trouble.
+    ShowTrouble,
 }
 
 impl Extensions {
     /// The registry under `root`, with the organisation's policy; started unless `safe_mode`. The notes say what the
     /// start did, for the message log.
-    pub(crate) fn open(root: &Path, safe_mode: bool) -> (Extensions, Vec<(bool, String)>) {
+    pub(crate) fn open(root: &Path, safe_mode: bool) -> (Extensions, Vec<(Level, String)>) {
         let policy_file = kentos_extension_host::places::policy_path();
         let options = Options {
             safe_mode,
@@ -167,13 +184,45 @@ impl Extensions {
         };
         match Registry::open(root, host(), options) {
             Ok(mut registry) => {
-                for (id, result) in registry.startup() {
+                let started = registry.startup();
+                let name_of = |registry: &Registry, id: &str| {
+                    registry
+                        .manifest(id)
+                        .map_or_else(|| id.to_owned(), |m| m.name.clone())
+                };
+                for (id, result) in &started {
                     if let Err(problem) = result {
+                        let name = name_of(&registry, id);
                         notes.push((
-                            true,
-                            format!("“{id}” eklentisi etkinleştirilemedi: {}", problem.message),
+                            Level::Error,
+                            format!(
+                                "{name} eklentisi çalıştırılmadı: {} Ayrıntı ve rapor: Eklentiler › {name}.",
+                                problem.message
+                            ),
                         ));
                     }
+                }
+                // Enabled but kept from starting by a state of before (failed, blocked, incompatible, waiting): said at
+                // every start until the user decides, one line for all.
+                let idle: Vec<String> = registry
+                    .extensions()
+                    .iter()
+                    .filter(|e| {
+                        e.enabled
+                            && !safe_mode
+                            && !matches!(e.state, State::Active | State::Ready | State::Disabled)
+                            && !started.iter().any(|(id, r)| *id == e.id && r.is_err())
+                    })
+                    .map(|e| format!("{} ({})", e.name, e.state_label))
+                    .collect();
+                if !idle.is_empty() {
+                    notes.push((
+                        Level::Warn,
+                        format!(
+                            "Çalışmayan eklenti: {}. Nedenleri ve yapılacaklar Eklentiler penceresinde.",
+                            idle.join(", ")
+                        ),
+                    ));
                 }
                 let active = registry
                     .extensions()
@@ -182,21 +231,24 @@ impl Extensions {
                     .count();
                 if safe_mode && !registry.extensions().is_empty() {
                     notes.push((
-                        false,
+                        Level::Info,
                         "Eklentisiz başlatıldı: hiçbir eklenti etkinleştirilmedi. Eklentiler penceresinden tek tek \
                          açabilir ya da yeniden başlatabilirsiniz."
                             .to_owned(),
                     ));
                 } else if active > 0 {
-                    notes.push((false, format!("{active} eklenti etkinleştirildi.")));
+                    notes.push((Level::Info, format!("{active} eklenti etkinleştirildi.")));
                 }
                 extensions.registry = Some(registry);
                 extensions.missing = None;
             }
             Err(problem) => {
                 notes.push((
-                    true,
-                    format!("Eklenti kayıt defteri açılamadı: {}", problem.message),
+                    Level::Error,
+                    format!(
+                        "Eklenti kayıt defteri açılamadı; bu açılışta hiçbir eklenti çalışmıyor: {}",
+                        problem.message
+                    ),
                 ));
                 extensions.missing = Some(problem.message);
             }
@@ -206,7 +258,7 @@ impl Extensions {
 
     /// The device's registry: the user's folder; a start without extensions when asked by the command line, the
     /// environment or the window's one-shot flag (which this start removes).
-    pub(crate) fn device() -> (Extensions, Vec<(bool, String)>) {
+    pub(crate) fn device() -> (Extensions, Vec<(Level, String)>) {
         let Some(root) = kentos_extension_host::places::user_root() else {
             let why = "Bu bilgisayarda kullanıcı veri klasörü yok (XDG_DATA_HOME ya da HOME); eklentiler kurulamaz.";
             return (
@@ -214,7 +266,7 @@ impl Extensions {
                     missing: Some(why.to_owned()),
                     ..Extensions::default()
                 },
-                vec![(true, why.to_owned())],
+                vec![(Level::Warn, why.to_owned())],
             );
         };
         let flag = root.join(SAFE_NEXT);
@@ -271,7 +323,7 @@ impl App {
     }
 
     /// An extension's name, as the user knows it; its id when it is not installed.
-    fn extension_name(&self, id: &str) -> String {
+    pub(crate) fn extension_name(&self, id: &str) -> String {
         self.extensions
             .registry
             .as_ref()
@@ -279,9 +331,11 @@ impl App {
             .map_or_else(|| id.to_owned(), |m| m.name.clone())
     }
 
-    /// Something the extensions add changed: the ribbon, Kaynaklar and the agents' lists follow.
+    /// Something the extensions add changed: the ribbon, Kaynaklar, the agents' lists and the status bar's cell
+    /// follow.
     pub(crate) fn extensions_changed(&mut self) {
         self.extension_tabs_changed();
+        self.extensions.troubles = problems::troubles(&self.extensions);
     }
 
     pub(crate) fn extensions_event(&mut self, event: Event) -> Task<Message> {
@@ -291,7 +345,8 @@ impl App {
             | Event::Remove(id)
             | Event::Retry(id)
             | Event::Switch(id, _)
-            | Event::ResetData(id) => self.extension_name(id),
+            | Event::ResetData(id)
+            | Event::CopyReport(id) => self.extension_name(id),
             _ => String::new(),
         };
         match event {
@@ -310,7 +365,10 @@ impl App {
                         .and_then(|c| c.catalog.latest(true).first().map(|e| e.file.clone())),
                 };
             }
-            Event::Choose(id) => self.extensions.chosen = Some(id),
+            Event::Choose(id) => {
+                self.extensions.chosen = Some(id);
+                self.extensions.full_log = false;
+            }
             Event::Enable(id) => {
                 let result = self.extensions.registry.as_mut().map(|r| r.enable(&id));
                 match result {
@@ -463,6 +521,22 @@ impl App {
                 match std::fs::read(&path) {
                     Ok(bytes) => {
                         if let Err(problem) = entry.verify(&bytes, &Limits::default()) {
+                            // Said in the window and kept in the extension's log: a share whose file changed after
+                            // its index was written is the organisation's to mend.
+                            if let Some(registry) = self.extensions.registry.as_mut() {
+                                registry.write_log(
+                                    Record::warning(
+                                        problem.code,
+                                        format!(
+                                            "{} {} katalogdan kurulmadı: {}",
+                                            entry.name, entry.version, problem.message
+                                        ),
+                                    )
+                                    .of(&entry.id, None)
+                                    .part("katalog")
+                                    .detail(path.display().to_string()),
+                                );
+                            }
                             self.extensions_say(true, problem.message);
                             return Task::none();
                         }
@@ -534,12 +608,33 @@ impl App {
             }
             Event::OpenSource(ext, local) => return self.open_extension_source(&ext, &local),
             Event::OpenForm(ext, local) => self.open_extension_form(&ext, &local),
+            Event::CopyReport(id) => {
+                if let Some(report) = self.extension_report(&id) {
+                    self.extensions_say(
+                        false,
+                        format!(
+                            "{name} raporu panoya kopyalandı: yayımcısına ya da bir ajana yapıştırabilirsiniz."
+                        ),
+                    );
+                    return iced::clipboard::write(report);
+                }
+            }
+            Event::FullLog(on) => self.extensions.full_log = on,
+            Event::ShowTrouble => {
+                let first = self.extensions.troubles.first().map(|t| t.id.clone());
+                self.open_extensions();
+                self.extensions.part = Part::Installed;
+                if first.is_some() {
+                    self.extensions.chosen = first;
+                }
+            }
         }
         Task::none()
     }
 
     /// An extension's data source on the map, through Kaynaklar's own service window (its address, kind and first
-    /// layer filled in); a GeoPackage in the package opens as a file does.
+    /// layer filled in, the window knowing whose it is); a GeoPackage in the package opens as a file does. What fails is
+    /// said with the extension's name and kept in its log (problems.rs).
     fn open_extension_source(&mut self, ext: &str, local: &str) -> Task<Message> {
         use kentos_commands::ServiceKind;
         use kentos_extensions::manifest::DataSourceKind;
@@ -551,9 +646,18 @@ impl App {
             .and_then(|m| m.contributions.data_sources.iter().find(|s| s.id == local))
             .cloned()
         else {
+            self.extension_failed(
+                ext,
+                &format!("veri kaynağı “{local}”"),
+                "source_missing",
+                "Bu veri kaynağı eklentinin kurulu sürümünde yok. Eklentiyi güncelleyin ya da yayımcısına bildirin.",
+                None,
+            );
             return Task::none();
         };
-        let kind = match source.kind {
+        let package_dir = registry.package_dir(ext);
+        let part = format!("veri kaynağı “{}”", source.title);
+        let service = match source.kind {
             DataSourceKind::Wms => Some(ServiceKind::Wms),
             DataSourceKind::Wmts => Some(ServiceKind::Wmts),
             DataSourceKind::Xyz => Some(ServiceKind::Xyz),
@@ -562,24 +666,38 @@ impl App {
                 None
             }
         };
-        match (kind, &source.url, &source.file) {
-            (Some(kind), Some(url), _) => {
+        let incomplete = |app: &mut App| {
+            app.extension_failed(
+                ext,
+                &part,
+                "source_incomplete",
+                "Veri kaynağının adresi ya da dosyası yazılmamış; açılamadı. Yayımcısına bildirin.",
+                None,
+            );
+            Task::none()
+        };
+        match (source.kind, service) {
+            (_, Some(kind)) => {
+                let Some(url) = source.url.clone() else {
+                    return incomplete(self);
+                };
                 self.dialog = None;
-                self.open_saved_service(
-                    kind,
-                    url.clone(),
-                    None,
-                    source.layers.first().cloned(),
-                    None,
-                )
+                let task =
+                    self.open_saved_service(kind, url, None, source.layers.first().cloned(), None);
+                // Whose it is: a failure to connect or to add is the extension's to say (services/window.rs).
+                if let Some(w) = self.service_window.as_mut() {
+                    w.origin = Some((ext.to_owned(), source.title.clone()));
+                }
+                task
             }
-            (None, _, Some(file)) => {
-                let path = registry
-                    .package_dir(ext)
-                    .map(|dir| file.split('/').fold(dir, |d, part| d.join(part)));
+            (DataSourceKind::Geopackage, None) => {
+                let Some(file) = source.file.clone() else {
+                    return incomplete(self);
+                };
+                let path = package_dir.map(|dir| file.split('/').fold(dir, |d, part| d.join(part)));
                 match path {
                     // A copy, not a link: the package's folder goes when the extension is removed.
-                    Some(path) => {
+                    Some(path) if path.is_file() => {
                         self.dialog = None;
                         self.update(crate::exchange::open_gpkg(
                             path,
@@ -587,26 +705,48 @@ impl App {
                             false,
                         ))
                     }
-                    None => Task::none(),
+                    _ => {
+                        self.extension_failed(
+                            ext,
+                            &part,
+                            "source_file_missing",
+                            &format!(
+                                "Paketteki dosyası ({file}) yok. Eklentiyi yeniden kurun ya da yayımcısına bildirin."
+                            ),
+                            None,
+                        );
+                        Task::none()
+                    }
                 }
             }
-            _ => {
-                self.output(format!(
-                    "“{}” ({}) bu sürümde Kaynaklar'dan açılmıyor; adresi: {}.",
+            (kind, None) => {
+                // Not the extension's failure: this KentOS does not open the kind yet.
+                let words = format!(
+                    "{} eklentisinin “{}” veri kaynağı ({}) bu sürümde Kaynaklar'dan açılmıyor; adresi: {}.",
+                    self.extension_name(ext),
                     source.title,
-                    match source.kind {
+                    match kind {
                         DataSourceKind::Wfs => "WFS",
                         _ => "OGC API Features",
                     },
                     source.url.clone().unwrap_or_default()
-                ));
+                );
+                if let Some(registry) = self.extensions.registry.as_mut() {
+                    registry.write_log(
+                        Record::info("source_not_supported", words.clone())
+                            .of(ext, None)
+                            .part(part),
+                    );
+                }
+                self.warn(words);
                 Task::none()
             }
         }
     }
 
     /// An extension's form into the project, as Formu içe aktar takes a `.kform` file: onto the chosen form's layer,
-    /// else the active layer.
+    /// else the active layer. A form that is missing or not a form package is said with the extension's name and kept
+    /// in its log; the import's own refusal is said by the import.
     fn open_extension_form(&mut self, ext: &str, local: &str) {
         let Some(registry) = self.extensions.registry.as_ref() else {
             return;
@@ -616,24 +756,67 @@ impl App {
             .and_then(|m| m.entrypoints.forms.iter().find(|f| f.id == local))
             .map(|f| f.definition.clone())
         else {
+            self.extension_failed(
+                ext,
+                &format!("form “{local}”"),
+                "form_missing",
+                "Bu form eklentinin kurulu sürümünde yok. Eklentiyi güncelleyin ya da yayımcısına bildirin.",
+                None,
+            );
             return;
         };
-        match registry
-            .package_file(ext, &definition)
-            .map(String::from_utf8)
-        {
-            Some(Ok(text)) => {
-                let name = definition
-                    .rsplit('/')
-                    .next()
-                    .unwrap_or(&definition)
-                    .to_owned();
-                self.dialog = None;
-                self.form_imported(Some((name, text)));
+        let part = format!("form “{local}”");
+        let text = match registry.package_file(ext, &definition) {
+            None => {
+                self.extension_failed(
+                    ext,
+                    &part,
+                    "form_file_missing",
+                    &format!(
+                        "Form dosyası ({definition}) pakette yok. Eklentiyi yeniden kurun ya da yayımcısına bildirin."
+                    ),
+                    None,
+                );
+                return;
             }
-            _ => self.warn(format!(
-                "“{ext}” eklentisinin formu ({definition}) okunamadı; eklentiyi yeniden kurun."
-            )),
+            Some(bytes) => {
+                match String::from_utf8(bytes) {
+                    Ok(text) => text,
+                    Err(e) => {
+                        self.extension_failed(
+                            ext,
+                            &part,
+                            "form_unreadable",
+                            &format!("Form dosyası ({definition}) UTF-8 metin değil. Yayımcısına bildirin."),
+                            Some(&e.to_string()),
+                        );
+                        return;
+                    }
+                }
+            }
+        };
+        if let Err(e) = serde_json::from_str::<kentos_commands::FormPackage>(&text) {
+            self.extension_failed(
+                ext,
+                &part,
+                "form_invalid",
+                &format!("Form dosyası ({definition}) bir KentOS form paketi değil. Yayımcısına bildirin."),
+                Some(&format!("{definition}: {e}")),
+            );
+            return;
+        }
+        if self.document.is_none() {
+            self.output("Formu eklemek için önce bir çizim açın (Ctrl+O).");
+            return;
+        }
+        let name = definition
+            .rsplit('/')
+            .next()
+            .unwrap_or(&definition)
+            .to_owned();
+        self.dialog = None;
+        if self.form_imported(Some((name, text))) {
+            self.extension_worked(ext, &part, "form_imported", "Form projeye alındı.");
         }
     }
 

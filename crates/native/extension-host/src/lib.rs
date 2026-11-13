@@ -7,10 +7,12 @@
 //!   nothing; a late callback of an older lease is not applied.
 //! - [`watchdog`]: crashes in a row stop an extension for good; "Sorunlu eklentiyi bul" by halves.
 //! - [`policy`]: what IT allows (the user cannot loosen it) and the versions withdrawn.
+//! - [`journal`]: each extension's log, with levels, stable codes and the error as it came; secrets masked.
 //!
 //! The registry reads and writes the user's extension folder only (`<veri>/kentos-cad/eklentiler` on the desktop);
 //! it runs no extension code: Python is ADIM 18A/19's.
 
+pub mod journal;
 mod lease;
 pub mod places;
 pub mod policy;
@@ -19,6 +21,7 @@ pub mod store;
 mod view;
 pub mod watchdog;
 
+pub use journal::{Journal, Level, Record};
 pub use lease::{ContributionKind, ExtensionLease, Registered, Skipped};
 pub use policy::{Policy, Revocations, Revoked};
 pub use registry::{Activation, Choice, Crash, Installed, Options, Registry};

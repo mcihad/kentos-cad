@@ -17,11 +17,12 @@ use kentos_extensions::manifest::{ExtensionDependency, Manifest, dependency_cycl
 use kentos_extensions::version::{Version, VersionReq};
 use kentos_extensions::{Host, Limits, Problem, compatible};
 
+use crate::journal::{self, Journal, Record};
 use crate::lease::{self, ExtensionLease, Registered, Skipped};
 use crate::policy::{Policy, Revocations};
 use crate::store::{
-    self, Channel, Entry, Failure, Grant, InstalledVersion, Layout, Metrics, RegistryFile, Source,
-    SourceKind, problem,
+    self, Channel, Entry, Failure, Grant, InstalledVersion, LOG_LINES, Layout, Metrics,
+    RegistryFile, Source, SourceKind, problem,
 };
 use crate::view::{
     DependencyStatus, ExtensionView, NeedStatus, ProjectNeed, Review, State, Trust,
@@ -104,6 +105,10 @@ pub struct Registry {
     leases: BTreeMap<String, ExtensionLease>,
     registered: Vec<Registered>,
     generation: u64,
+    journal: Journal,
+    /// The newest records of each installed extension's log, as read at opening and as written since: the manager
+    /// shows them without reading files at every frame.
+    logs: BTreeMap<String, Vec<Record>>,
 }
 
 fn not_installed(id: &str) -> Problem {
@@ -116,7 +121,23 @@ fn conflicts(installed: &Source, new: &Source) -> bool {
         || (installed.kind == SourceKind::DeveloperFolder && installed.location != new.location)
 }
 
-/// The installed files against the content digest.
+/// The short history `registry.json` kept before the log (ADIM 17): read into the log once (when the extension has no
+/// log yet) and taken out of the file, so that it is no longer written.
+fn carry_history(journal: &Journal, file: &mut RegistryFile) {
+    for (id, entry) in file.extensions.iter_mut() {
+        let earlier = std::mem::take(&mut entry.log);
+        if !earlier.is_empty() && !journal.file(Some(id)).exists() {
+            for event in earlier {
+                let mut record = Record::info("earlier", event.message).of(id, Some(&entry.active));
+                record.at = event.at.saturating_mul(1000);
+                journal.write(record);
+            }
+        }
+    }
+}
+
+/// The installed files against the content digest; when they differ, which files and how, read against the package's
+/// own list as long as that list is still the one installed.
 fn verify_files(dir: &Path, digest: &str) -> Result<(), String> {
     let files = store::read_files(dir).map_err(|p| p.message)?;
     let list = Integrity::of(
@@ -126,11 +147,41 @@ fn verify_files(dir: &Path, digest: &str) -> Result<(), String> {
             .map(|(p, d)| (p.as_str(), d.as_slice())),
     );
     if list.digest() == digest {
-        Ok(())
-    } else {
-        Err("Kurulu dosyalar kurulduğu hâlinden farklı (içerik özeti tutmuyor); eklentiyi yeniden kurun.".to_owned())
+        return Ok(());
     }
+    let kept = files
+        .get(integrity::FILE)
+        .and_then(|bytes| std::str::from_utf8(bytes).ok())
+        .and_then(|text| Integrity::read(text).ok())
+        .filter(|kept| kept.digest() == digest);
+    let which = match kept {
+        Some(kept) => {
+            let found: Vec<String> = kept
+                .verify(&files)
+                .into_iter()
+                .filter_map(|p| {
+                    let how = match p.code {
+                        "integrity_mismatch" => "değişmiş",
+                        "integrity_missing" => "eksik",
+                        "integrity_unlisted" => "sonradan eklenmiş",
+                        _ => return None,
+                    };
+                    Some(format!("{} {how}", p.file.unwrap_or_default()))
+                })
+                .collect();
+            if found.is_empty() {
+                String::new()
+            } else {
+                format!(": {}", found.join(", "))
+            }
+        }
+        None => ": paketin dosya listesi (integrity.json) de değişmiş".to_owned(),
+    };
+    Err(format!("Kurulu dosyalar kurulduğu hâlinden farklı{which}."))
 }
+
+/// What to do when the files are not as installed.
+const MEND: &str = "Eklentiyi yeniden kurun ya da önceki sürüme dönün.";
 
 fn read_manifest(layout: &Layout, id: &str, version: &str) -> Result<Manifest, Problem> {
     let path = layout.package(id, version).join("manifest.json");
@@ -147,7 +198,23 @@ impl Registry {
         options: Options,
     ) -> Result<Registry, Problem> {
         let layout = Layout { root: root.into() };
-        let file = layout.read()?;
+        let journal = Journal::new(&layout.root);
+        let mut file = match layout.read() {
+            Ok(file) => file,
+            Err(problem) => {
+                // Said once until it changes: the program tries at every start.
+                journal.write_changed(
+                    Record::error(problem.code, problem.message.clone()).part("kayıt defteri"),
+                );
+                return Err(problem);
+            }
+        };
+        carry_history(&journal, &mut file);
+        let logs = file
+            .extensions
+            .keys()
+            .map(|id| (id.clone(), journal.tail(Some(id), LOG_LINES)))
+            .collect();
         let revocations = fs::read_to_string(layout.revocations())
             .ok()
             .and_then(|text| Revocations::read(&text).ok())
@@ -177,6 +244,8 @@ impl Registry {
             leases: BTreeMap::new(),
             registered: Vec::new(),
             generation: 0,
+            journal,
+            logs,
         };
         let ids: Vec<String> = registry.file.extensions.keys().cloned().collect();
         for id in ids {
@@ -208,8 +277,10 @@ impl Registry {
         change: impl FnOnce(&mut RegistryFile) -> Result<T, Problem>,
     ) -> Result<T, Problem> {
         let layout = self.layout.clone();
+        let journal = self.journal.clone();
         let (file, out) = layout.locked(self.options.lock_wait, || {
             let mut file = layout.read()?;
+            carry_history(&journal, &mut file);
             let out = change(&mut file)?;
             layout.write(&file)?;
             Ok((file, out))
@@ -218,15 +289,58 @@ impl Registry {
         Ok(out)
     }
 
-    /// Notes a line in an extension's log.
-    fn note(&mut self, id: &str, message: String) -> Result<(), Problem> {
-        let id = id.to_owned();
-        self.change(move |file| {
-            if let Some(entry) = file.extensions.get_mut(&id) {
-                entry.note(message);
-            }
-            Ok(())
-        })
+    /// The logs (`<kayıt>/logs`).
+    pub fn journal(&self) -> &Journal {
+        &self.journal
+    }
+
+    /// Writes a record to its extension's log (the registry's when it names none), with the version in use; what the
+    /// manager and the dump show follows. Returns it as written (masked).
+    pub fn write_log(&mut self, mut record: Record) -> Record {
+        if let Some(id) = &record.extension
+            && record.version.is_none()
+        {
+            record.version = self.file.extensions.get(id).map(|e| e.active.clone());
+        }
+        let record = self.journal.write(record);
+        self.keep_log(&record);
+        record
+    }
+
+    fn log(&mut self, id: &str, record: Record) {
+        self.write_log(record.of(id, None));
+    }
+
+    /// Writes a record unless the extension's newest is the same event (a state said at every start).
+    fn log_changed(&mut self, id: &str, record: Record) {
+        let version = self.file.extensions.get(id).map(|e| e.active.clone());
+        let record = self.journal.prepare(record.of(id, version.as_deref()));
+        if self
+            .logs
+            .get(id)
+            .and_then(|l| l.last())
+            .is_some_and(|last| last.same_event(&record))
+        {
+            return;
+        }
+        self.journal.append(&record);
+        self.keep_log(&record);
+    }
+
+    fn keep_log(&mut self, record: &Record) {
+        if let Some(id) = &record.extension
+            && self.file.extensions.contains_key(id)
+        {
+            let kept = self.logs.entry(id.clone()).or_default();
+            kept.push(record.clone());
+            let extra = kept.len().saturating_sub(LOG_LINES);
+            kept.drain(..extra);
+        }
+    }
+
+    /// The newest records of an installed extension's log, oldest first.
+    pub fn log_of(&self, id: &str) -> &[Record] {
+        self.logs.get(id).map_or(&[], Vec::as_slice)
     }
 
     // ---- What is shown ----
@@ -372,7 +486,8 @@ impl Registry {
                     channel: entry.channel,
                     pinned: entry.pinned.clone(),
                     metrics: entry.metrics,
-                    log: entry.log.clone(),
+                    problem: journal::problem_in(self.log_of(id)).cloned(),
+                    log: self.log_of(id).to_vec(),
                 }
             })
             .collect()
@@ -464,9 +579,36 @@ impl Registry {
         }
         let mut out = Vec::new();
         for id in self.order() {
-            if self.state(&id) == Some(State::Ready) {
-                let result = self.activate(&id);
-                out.push((id, result));
+            match self.state(&id) {
+                Some(State::Ready) => {
+                    let result = self.activate(&id);
+                    out.push((id, result));
+                }
+                // Enabled but not started: why, once until it changes.
+                Some(
+                    state @ (State::Waiting { .. }
+                    | State::Blocked { .. }
+                    | State::Incompatible { .. }
+                    | State::Failed { .. }),
+                ) => {
+                    let code = match state {
+                        State::Failed { .. } => "not_started_failed",
+                        State::Blocked { .. } => "not_started_blocked",
+                        State::Incompatible { .. } => "not_started_incompatible",
+                        _ => "not_started_waiting",
+                    };
+                    let record = Record::warning(
+                        code,
+                        format!(
+                            "Başlangıçta çalıştırılmadı — {}: {}",
+                            state.label(),
+                            state.help()
+                        ),
+                    )
+                    .part("başlangıç");
+                    self.log_changed(&id, record);
+                }
+                _ => {}
             }
         }
         out
@@ -563,18 +705,41 @@ impl Registry {
             .map(|v| v.digest.clone())
             .unwrap_or_default();
         if let Err(reason) = verify_files(&self.layout.package(id, &entry.active), &digest) {
-            let failed = reason.clone();
+            let failed = format!("{reason} {MEND}");
+            let said = failed.clone();
             let owner = id.to_owned();
             self.change(move |file| {
                 if let Some(entry) = file.extensions.get_mut(&owner) {
-                    entry.note(format!("Bütünlük denetimi düştü: {failed}"));
                     entry.failure = Some(Failure::Integrity { reason: failed });
                 }
                 Ok(())
             })?;
-            return Err(problem("registry_integrity", reason));
+            self.log(
+                id,
+                Record::error(
+                    "integrity_mismatch",
+                    "Dosyaları kurulduğu gibi değil; çalıştırılmadı. Eklentiyi yeniden kurun ya da önceki sürüme dönün.",
+                )
+                .part("etkinleştirme")
+                .detail(reason),
+            );
+            return Err(problem("registry_integrity", said));
         }
-        let manifest = read_manifest(&self.layout, id, &entry.active)?;
+        let manifest = match read_manifest(&self.layout, id, &entry.active) {
+            Ok(manifest) => manifest,
+            Err(p) => {
+                self.log(
+                    id,
+                    Record::error(
+                        "manifest_unreadable",
+                        "Kurulu sürümün manifesti okunamadı; çalıştırılmadı. Eklentiyi yeniden kurun.",
+                    )
+                    .part("etkinleştirme")
+                    .detail(p.to_string()),
+                );
+                return Err(p);
+            }
+        };
         self.generation += 1;
         let lease = ExtensionLease {
             extension: id.to_owned(),
@@ -587,7 +752,6 @@ impl Registry {
         self.manifests.insert(id.to_owned(), manifest);
         let micros = u64::try_from(started.elapsed().as_micros()).unwrap_or(u64::MAX);
         let owner = id.to_owned();
-        let version = entry.active.clone();
         self.change(move |file| {
             if let Some(entry) = file.extensions.get_mut(&owner) {
                 let before = entry.metrics.unwrap_or_default();
@@ -595,10 +759,15 @@ impl Registry {
                     activation_micros: micros,
                     ..before
                 });
-                entry.note(format!("{version} etkinleştirildi ({} ms).", micros / 1000));
             }
             Ok(())
         })?;
+        let record = Record::info(
+            "activated",
+            format!("Etkinleştirildi ({:.1} ms).", micros as f64 / 1000.0),
+        )
+        .part("etkinleştirme");
+        self.log(id, record);
         Ok(Activation {
             lease,
             skipped,
@@ -642,15 +811,16 @@ impl Registry {
             return Err(not_installed(id));
         }
         let owner = id.to_owned();
+        let was = self.file.extensions.get(id).is_some_and(|e| e.enabled);
         self.change(move |file| {
             if let Some(entry) = file.extensions.get_mut(&owner) {
-                if !entry.enabled {
-                    entry.note("Etkinleştirildi (kullanıcı).");
-                }
                 entry.enabled = true;
             }
             Ok(())
         })?;
+        if !was {
+            self.log(id, Record::info("enabled", "Kullanıcı etkinleştirdi."));
+        }
         if self.options.safe_mode || self.leases.contains_key(id) {
             return Ok(None);
         }
@@ -670,19 +840,25 @@ impl Registry {
         }
         let dependents = self.stop(id);
         let owner = id.to_owned();
-        let stopped = dependents.clone();
         self.change(move |file| {
-            for other in &stopped {
-                if let Some(entry) = file.extensions.get_mut(other) {
-                    entry.note(format!("Durduruldu: bağımlı olduğu “{owner}” devre dışı."));
-                }
-            }
             if let Some(entry) = file.extensions.get_mut(&owner) {
                 entry.enabled = false;
-                entry.note("Devre dışı bırakıldı (kullanıcı).");
             }
             Ok(())
         })?;
+        self.log(
+            id,
+            Record::info("disabled", "Kullanıcı devre dışı bıraktı."),
+        );
+        for other in &dependents {
+            self.log(
+                other,
+                Record::warning(
+                    "stopped_dependency",
+                    format!("Durduruldu: bağımlı olduğu “{id}” devre dışı bırakıldı."),
+                ),
+            );
+        }
         Ok(dependents)
     }
 
@@ -775,6 +951,41 @@ impl Registry {
     /// are prepared beside the installed ones and the registry switches in one write; the version in use stays as it
     /// was until then. A version is kept to go back to.
     pub fn install(
+        &mut self,
+        bytes: &[u8],
+        source: &Source,
+        choice: &Choice,
+    ) -> Result<Installed, Vec<Problem>> {
+        let result = self.install_checked(bytes, source, choice);
+        if let Err(problems) = &result {
+            // Whose and which version, when the package's manifest could be read; the registry's log otherwise.
+            let manifest = kentos_extensions::open(bytes, &self.options.limits)
+                .inspection
+                .manifest;
+            let first = problems
+                .first()
+                .map(|p| p.message.clone())
+                .unwrap_or_default();
+            let detail: Vec<String> = problems.iter().map(ToString::to_string).collect();
+            let what = manifest.as_ref().map_or_else(
+                || "Paket".to_owned(),
+                |m| format!("{} {}", m.name, m.version),
+            );
+            let mut record = Record::warning(
+                "install_refused",
+                format!("{what} kurulmadı ({}): {first}", source.kind.words()),
+            )
+            .part("kurulum")
+            .detail(detail.join("\n"));
+            if let Some(m) = &manifest {
+                record = record.of(&m.id, None);
+            }
+            self.write_log(record);
+        }
+        result
+    }
+
+    fn install_checked(
         &mut self,
         bytes: &[u8],
         source: &Source,
@@ -958,22 +1169,36 @@ impl Registry {
                 }
                 entry.failure = None;
                 entry.crashes = 0;
-                entry.note(match &before {
-                    _ if fresh => format!("{new_version} kuruldu ({}).", source_now.kind.words()),
-                    Some(old) if *old != new_version => {
+                let said = match &before {
+                    _ if fresh => Record::info(
+                        "installed",
+                        format!("{new_version} kuruldu ({}).", source_now.kind.words()),
+                    ),
+                    Some(old) if *old != new_version => Record::info(
+                        "updated",
                         format!(
                             "{old} → {new_version} güncellendi ({}).",
                             source_now.kind.words()
-                        )
-                    }
-                    _ => format!(
-                        "{new_version} yeniden kuruldu ({}).",
-                        source_now.kind.words()
+                        ),
                     ),
-                });
-                Ok(removed)
+                    _ => Record::info(
+                        "reinstalled",
+                        format!(
+                            "{new_version} yeniden kuruldu ({}).",
+                            source_now.kind.words()
+                        ),
+                    ),
+                };
+                Ok((removed, said))
             })
             .map_err(one)?;
+        let (removed, said) = removed;
+        if !self.logs.contains_key(&id) {
+            // Installed again after a removal: its history goes on.
+            let earlier = self.journal.tail(Some(&id), LOG_LINES);
+            self.logs.insert(id.clone(), earlier);
+        }
+        self.log(&id, said.part("kurulum"));
         for old in removed {
             let _ = store::remove_tree(&self.layout.package(&id, &old));
         }
@@ -1024,10 +1249,13 @@ impl Registry {
                 if enable {
                     entry.enabled = true;
                 }
-                entry.note("İzinler değişti (kullanıcı).");
             }
             Ok(())
         })?;
+        self.log(
+            id,
+            Record::info("grants_changed", "Kullanıcı izinleri değiştirdi."),
+        );
         let mut waiting = self.stop(id);
         if self.state(id) == Some(State::Ready) && !self.options.safe_mode {
             installed.activation = Some(self.activate(id));
@@ -1095,8 +1323,18 @@ impl Registry {
                 format!("“{id}” için {version} sürümü bu bilgisayarda yok."),
             ));
         };
-        verify_files(&self.layout.package(id, version), &target.digest)
-            .map_err(|m| problem("registry_integrity", m))?;
+        if let Err(reason) = verify_files(&self.layout.package(id, version), &target.digest) {
+            self.log(
+                id,
+                Record::error(
+                    "integrity_mismatch",
+                    format!("{version} sürümüne geçilemedi: dosyaları kurulduğu gibi değil."),
+                )
+                .part("sürüm değiştirme")
+                .detail(reason.clone()),
+            );
+            return Err(problem("registry_integrity", format!("{reason} {MEND}")));
+        }
         let owner = id.to_owned();
         let to = version.to_owned();
         let from = entry.active.clone();
@@ -1105,10 +1343,14 @@ impl Registry {
                 entry.active = to.clone();
                 entry.failure = None;
                 entry.crashes = 0;
-                entry.note(format!("{from} → {to} sürümüne geçildi."));
             }
             Ok(())
         })?;
+        self.log(
+            id,
+            Record::info("switched", format!("{from} → {version} sürümüne geçildi."))
+                .part("sürüm değiştirme"),
+        );
         let dependents = self.stop(id);
         self.reload_manifest(id);
         let activation = match self.state(id) {
@@ -1129,19 +1371,36 @@ impl Registry {
         }
         let dependents = self.stop(id);
         let owner = id.to_owned();
+        let version = self.file.extensions.get(id).map(|e| e.active.clone());
         self.change(move |file| {
             file.extensions.remove(&owner);
             Ok(())
         })?;
+        // The log stays: installed again, its history goes on.
+        self.journal.write(
+            Record::info(
+                "removed",
+                if keep_data {
+                    "Kaldırıldı; verisi duruyor."
+                } else {
+                    "Kaldırıldı; verisi de silindi."
+                },
+            )
+            .of(id, version.as_deref()),
+        );
+        self.logs.remove(id);
         self.manifests.remove(id);
         store::remove_tree(&self.layout.packages_of(id))?;
         if !keep_data {
             store::remove_tree(&self.layout.data(id))?;
         }
         for other in &dependents {
-            let _ = self.note(
+            self.log(
                 other,
-                format!("Durduruldu: bağımlı olduğu “{id}” kaldırıldı."),
+                Record::warning(
+                    "stopped_dependency",
+                    format!("Durduruldu: bağımlı olduğu “{id}” kaldırıldı."),
+                ),
             );
         }
         Ok(dependents)
@@ -1157,13 +1416,13 @@ impl Registry {
         }
         let owner = lease.extension.clone();
         let reason = reason.to_owned();
+        let reason_now = reason.clone();
         let (count, failed) = self.change(move |file| {
             let Some(entry) = file.extensions.get_mut(&owner) else {
                 return Ok((0, false));
             };
             entry.crashes += 1;
             let count = entry.crashes;
-            entry.note(format!("Çöktü ({count}. kez art arda): {reason}"));
             let failed = count >= CRASHES_TO_FAIL;
             if failed {
                 entry.failure = Some(Failure::Crashed {
@@ -1172,8 +1431,26 @@ impl Registry {
             }
             Ok((count, failed))
         })?;
+        let id = lease.extension.clone();
+        self.log(
+            &id,
+            Record::error("crashed", format!("Çöktü ({count}. kez art arda)."))
+                .part("çalışma")
+                .detail(reason_now),
+        );
         if failed {
-            self.stop(&lease.extension);
+            self.stop(&id);
+            self.log(
+                &id,
+                Record::error(
+                    "failed",
+                    format!(
+                        "Art arda {count} kez çöktüğü için durduruldu; açılışta denenmeyecek. Yayımcısına bildirin, \
+                         sonra Yeniden dene."
+                    ),
+                )
+                .part("bekçi"),
+            );
             Ok(Crash::Failed)
         } else {
             Ok(Crash::Counted(count))
@@ -1229,12 +1506,12 @@ impl Registry {
             Ok(file.extensions.get_mut(&owner).map(|entry| {
                 entry.failure = None;
                 entry.crashes = 0;
-                entry.note("Yeniden deneniyor (kullanıcı).");
             }))
         })?;
         if found.is_none() {
             return Err(not_installed(id));
         }
+        self.log(id, Record::info("retried", "Kullanıcı yeniden denedi."));
         match self.state(id) {
             Some(State::Ready) if !self.options.safe_mode => Ok(Some(self.activate(id)?)),
             _ => Ok(None),
@@ -1269,7 +1546,13 @@ impl Registry {
                 .and_then(|e| self.revocations.reason(id, &e.active))
                 .unwrap_or_default()
                 .to_owned();
-            self.note(id, format!("Geri çekildi: {reason}. Verisi duruyor."))?;
+            self.log(
+                id,
+                Record::warning(
+                    "revoked",
+                    format!("Bu sürüm geri çekildi: {reason}. Durduruldu; verisi duruyor."),
+                ),
+            );
         }
         Ok(stopped)
     }
@@ -1309,7 +1592,11 @@ impl Registry {
         store::remove_tree(&dir)?;
         fs::create_dir_all(&dir)
             .map_err(|e| store::io("Eklenti veri klasörü oluşturulamadı", &dir, &e))?;
-        self.note(id, "Verisi sıfırlandı (kullanıcı).".to_owned())
+        self.log(
+            id,
+            Record::info("data_reset", "Kullanıcı verisini sıfırladı."),
+        );
+        Ok(())
     }
 
     /// The extensions a project names (id, version range), each with its status here. Opening the project runs no

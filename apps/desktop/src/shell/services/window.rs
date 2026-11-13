@@ -108,6 +108,9 @@ pub struct Window {
     pub before: Option<ServiceLayer>,
     /// Kaynaklar's service layer (docs/adr/0599 §4): picked once Bağlan reads the service.
     pub pending_pick: Option<String>,
+    /// An extension's data source (docs/adr/8057 §4): the extension and the source's title. A failure to connect or to
+    /// add is said with the extension's name and kept in its log.
+    pub origin: Option<(String, String)>,
 }
 
 #[derive(Clone, Debug)]
@@ -171,6 +174,7 @@ impl Window {
             layer: None,
             before: None,
             pending_pick: None,
+            origin: None,
         }
     }
 
@@ -370,8 +374,29 @@ impl App {
             Event::Connected(answer) => {
                 w.busy = false;
                 match answer {
-                    Ok(c) => took_read(w, *c),
-                    Err(why) => w.said = Some((Kind::Error, why)),
+                    Ok(c) => {
+                        took_read(w, *c);
+                        if let Some((ext, title)) = w.origin.clone() {
+                            self.extension_worked(
+                                &ext,
+                                &format!("veri kaynağı “{title}”"),
+                                "source_connected",
+                                "Servise bağlanıldı.",
+                            );
+                        }
+                    }
+                    Err(why) => {
+                        w.said = Some((Kind::Error, why.clone()));
+                        if let Some((ext, title)) = w.origin.clone() {
+                            self.extension_failed(
+                                &ext,
+                                &format!("veri kaynağı “{title}”"),
+                                "source_unreachable",
+                                "Servise bağlanılamadı: adres, ağ ya da sunucu. Sürerse yayımcısına bildirin.",
+                                Some(&why),
+                            );
+                        }
+                    }
                 }
             }
             Event::Search(t) => w.search = t,
@@ -593,8 +618,18 @@ impl App {
             kentos_commands::CommandResult::Failed { error }
             | kentos_commands::CommandResult::Conflict { error }
             | kentos_commands::CommandResult::NeedsInput { error } => {
+                let origin = self.service_window.as_ref().and_then(|w| w.origin.clone());
                 if let Some(w) = &mut self.service_window {
-                    w.said = Some((Kind::Error, error.message));
+                    w.said = Some((Kind::Error, error.message.clone()));
+                }
+                if let Some((ext, title)) = origin {
+                    self.extension_failed(
+                        &ext,
+                        &format!("veri kaynağı “{title}”"),
+                        "source_add_failed",
+                        "Servis katmanı haritaya eklenemedi.",
+                        Some(&error.message),
+                    );
                 }
             }
             _ => {}
@@ -643,12 +678,26 @@ impl App {
         };
         let ready = w.connecting.is_some() && !w.picked.is_empty()
             || (w.connecting.is_none() && w.before.is_some());
+        // Whose the address is (docs/adr/8057 §4): a failure here is said as the extension's.
+        let mut lines = vec![line];
+        if let Some((ext, title)) = &w.origin {
+            lines.insert(
+                0,
+                words::text_line(
+                    Kind::Info,
+                    format!(
+                        "{} eklentisinin veri kaynağı: {title}.",
+                        self.extension_name(ext)
+                    ),
+                ),
+            );
+        }
         let mut frame = Frame::new(if w.layer.is_some() {
             "Servis ayarları"
         } else {
             TITLE
         })
-        .push(column![row![left, right].spacing(16), words::summary(vec![line])].spacing(12))
+        .push(column![row![left, right].spacing(16), words::summary(lines)].spacing(12))
         .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
         .width(900.0);
         if KINDS[w.kind].0.is_some() {

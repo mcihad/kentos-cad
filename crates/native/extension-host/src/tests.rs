@@ -864,3 +864,142 @@ fn every_state_says_what_to_do_in_turkish() {
         assert!(!trust.label().is_empty());
     }
 }
+
+/// The owner's wish (13 November): when an extension fails we know clearly what, where and why. Its log says it with
+/// a level, a code, the version, the part and the error as it came (which file changed); the manager's problem is the
+/// newest error until new files or a retry; a state that keeps it from starting is said once, not at every start.
+#[test]
+fn a_failing_extension_says_what_where_and_why() {
+    let temp = Temp::new("hata");
+    let mut r = open(&temp.0);
+    install(&mut r, &package(ID, "1.0.0", &[]));
+    drop(r);
+    let file = temp
+        .0
+        .join("packages")
+        .join(ID)
+        .join("1.0.0")
+        .join("CHANGELOG.md");
+    let mut permissions = fs::metadata(&file).unwrap().permissions();
+    #[allow(clippy::permissions_set_readonly_false)]
+    permissions.set_readonly(false);
+    fs::set_permissions(&file, permissions).unwrap();
+    fs::write(&file, "# değişti\n").unwrap();
+
+    let mut r = open(&temp.0);
+    let started = r.startup();
+    assert!(
+        matches!(&started[..], [(id, Err(p))] if id == ID && p.code == "registry_integrity"),
+        "{started:#?}"
+    );
+    let problem = r.extensions()[0].problem.clone().expect("the problem");
+    assert_eq!(
+        (problem.level, problem.code.as_str()),
+        (Level::Error, "integrity_mismatch")
+    );
+    assert_eq!(problem.version.as_deref(), Some("1.0.0"));
+    assert_eq!(problem.part.as_deref(), Some("etkinleştirme"));
+    assert!(
+        problem
+            .detail
+            .as_deref()
+            .is_some_and(|d| d.contains("CHANGELOG.md değişmiş")),
+        "which file: {problem:#?}"
+    );
+    // The same in the file, for the CLI, the MCP server and the publisher.
+    assert_eq!(r.journal().tail(Some(ID), 1)[0], problem);
+    drop(r);
+
+    // Failed: not tried at the next starts, and that is said once.
+    for _ in 0..2 {
+        let mut r = open(&temp.0);
+        assert!(r.startup().is_empty());
+    }
+    let mut r = open(&temp.0);
+    let said = r
+        .log_of(ID)
+        .iter()
+        .filter(|x| x.code == "not_started_failed")
+        .count();
+    assert_eq!(said, 1, "{:#?}", r.log_of(ID));
+
+    // A retry is a fresh start: failing again is the problem again.
+    assert!(r.retry(ID).is_err());
+    let codes: Vec<&str> = r.log_of(ID).iter().map(|x| x.code.as_str()).collect();
+    assert!(
+        codes.ends_with(&["retried", "integrity_mismatch"]),
+        "{codes:?}"
+    );
+    assert!(r.extensions()[0].problem.is_some());
+    // Installing the files again mends it.
+    install(&mut r, &package(ID, "1.0.0", &[]));
+    assert_eq!(r.extensions()[0].problem, None);
+    assert_eq!(r.state(ID), Some(State::Active));
+
+    // An update this KentOS cannot run is refused and said in the extension's log, naming the version refused; the
+    // version in use stays well.
+    let newer = package_with(ID, "2.0.0", &[], |m| {
+        m["compatibility"]["sdkProtocol"] = json!({ "min": 2, "max": 2 });
+    });
+    assert!(r.install(&newer, &file_source(), &all_granted()).is_err());
+    let last = r.log_of(ID).last().unwrap().clone();
+    assert_eq!(
+        (last.level, last.code.as_str()),
+        (Level::Warning, "install_refused")
+    );
+    assert!(
+        last.message.contains("2.0.0 kurulmadı (dosya)"),
+        "{}",
+        last.message
+    );
+    assert_eq!(last.version.as_deref(), Some("1.0.0"), "the version in use");
+    assert_eq!(r.extensions()[0].problem, None);
+    // What is no one extension's goes to the registry's log.
+    assert!(r.install(b"bozuk", &file_source(), &all_granted()).is_err());
+    assert_eq!(r.journal().tail(None, 1)[0].code, "install_refused");
+}
+
+#[test]
+fn an_unreadable_registry_is_said_once_in_the_registrys_log() {
+    let temp = Temp::new("bozuk-kayit");
+    fs::write(temp.0.join("registry.json"), "{ bozuk").unwrap();
+    for _ in 0..2 {
+        assert!(Registry::open(&temp.0, host(), Options::default()).is_err());
+    }
+    let log = Journal::new(&temp.0).tail(None, 10);
+    assert_eq!(log.len(), 1, "{log:#?}");
+    assert_eq!(
+        (log[0].level, log[0].code.as_str()),
+        (Level::Error, "registry_corrupt")
+    );
+}
+
+/// `registry.json` kept a short history before the log (ADIM 17): it is read into the log once and no longer written.
+#[test]
+fn the_registrys_earlier_history_moves_into_the_log() {
+    let temp = Temp::new("gecmis");
+    let mut r = open(&temp.0);
+    install(&mut r, &package(ID, "1.0.0", &[]));
+    drop(r);
+    let path = temp.0.join("registry.json");
+    let mut file: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    file["extensions"][ID]["log"] =
+        json!([{ "at": 1_763_000_000u64, "message": "1.0.0 kuruldu (dosya)." }]);
+    fs::write(&path, serde_json::to_string(&file).unwrap()).unwrap();
+    fs::remove_dir_all(temp.0.join("logs")).unwrap();
+
+    let mut r = open(&temp.0);
+    let earlier = r.log_of(ID)[0].clone();
+    assert_eq!(
+        (earlier.code.as_str(), earlier.at, earlier.message.as_str()),
+        ("earlier", 1_763_000_000_000, "1.0.0 kuruldu (dosya).")
+    );
+    r.disable(ID).unwrap();
+    let text = fs::read_to_string(&path).unwrap();
+    assert!(!text.contains("\"log\""), "no longer written: {text}");
+    let r = open(&temp.0);
+    assert_eq!(
+        r.log_of(ID).iter().filter(|x| x.code == "earlier").count(),
+        1
+    );
+}

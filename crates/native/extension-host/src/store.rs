@@ -100,7 +100,7 @@ pub enum Failure {
     Integrity { reason: String },
 }
 
-/// A line of an extension's log: what happened, in words.
+/// A line of the short history `registry.json` kept before the log (ADIM 17): what happened, in words.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Event {
@@ -144,25 +144,15 @@ pub struct Entry {
     pub crashes: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metrics: Option<Metrics>,
-    #[serde(default)]
+    /// The short history kept here before the log (`journal`): read into the log once at opening, no longer written.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub log: Vec<Event>,
 }
 
-/// Lines kept in an extension's log.
+/// Records of an extension's log kept in memory and shown: the newest.
 pub const LOG_LINES: usize = 50;
 
 impl Entry {
-    pub fn note(&mut self, message: impl Into<String>) {
-        self.log.push(Event {
-            at: now(),
-            message: message.into(),
-        });
-        if self.log.len() > LOG_LINES {
-            let extra = self.log.len() - LOG_LINES;
-            self.log.drain(..extra);
-        }
-    }
-
     pub fn version(&self, version: &str) -> Option<&InstalledVersion> {
         self.installed.iter().find(|v| v.version == version)
     }

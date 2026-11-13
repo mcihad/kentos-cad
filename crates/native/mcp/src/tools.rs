@@ -1472,9 +1472,10 @@ pub fn resources(server: &Server) -> Vec<Value> {
         "extensions-installed",
         "Kurulu eklentiler",
         "Kurulu .kek eklentileri: durumu (etkin, hazır, devre dışı, bağımlılık bekliyor, engellendi, uyumsuz, hata) ve \
-         nedeni, sürümleri, kaynağı ve güveni; çalışan ya da hazır olanların katkıları (şerit sekmesi, sağ tık öğesi, \
-         veri kaynağı, form) ve dışarıda kalanlar nedenleriyle: \"sekmem nereye düştü?\" sorusunun kanıtı. Değişince \
-         izleyene notifications/resources/updated gider.",
+         nedeni, sürümleri, kaynağı ve güveni; duran hatası (problem: kod, parça, sürüm, hatanın kendisi) ve günlüğünün \
+         son kayıtları; çalışan ya da hazır olanların katkıları (şerit sekmesi, sağ tık öğesi, veri kaynağı, form) ve \
+         dışarıda kalanlar nedenleriyle: \"sekmem nereye düştü?\" ve \"eklentim neden çalışmıyor?\" sorularının kanıtı. \
+         Değişince (yeni bir hata da) izleyene notifications/resources/updated gider.",
     ));
     let mut whole = resource(
         "kentos://catalog",

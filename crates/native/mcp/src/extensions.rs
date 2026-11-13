@@ -95,7 +95,8 @@ impl Watch {
 }
 
 /// The registry's, the withdrawn versions' and the organisation's policy files, hashed: what an install, an update, a
-/// switch, a removal or IT's change writes. A few kilobytes read every two seconds while a client listens.
+/// switch, a removal or IT's change writes; and the logs' sizes and times, so that an extension's new error is told
+/// too (docs/adr/8057 §4). A few kilobytes read every two seconds while a client listens.
 fn stamp(root: Option<&Path>) -> u64 {
     let mut hasher = DefaultHasher::new();
     let mut files = vec![places::policy_path()];
@@ -109,6 +110,19 @@ fn stamp(root: Option<&Path>) -> u64 {
     for file in files {
         file.hash(&mut hasher);
         std::fs::read(&file).ok().hash(&mut hasher);
+    }
+    if let Some(root) = root
+        && let Ok(logs) = std::fs::read_dir(root.join("logs"))
+    {
+        let mut seen: Vec<(std::ffi::OsString, u64, Option<std::time::SystemTime>)> = logs
+            .flatten()
+            .filter_map(|e| {
+                let meta = e.metadata().ok()?;
+                Some((e.file_name(), meta.len(), meta.modified().ok()))
+            })
+            .collect();
+        seen.sort();
+        seen.hash(&mut hasher);
     }
     hasher.finish()
 }

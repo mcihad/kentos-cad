@@ -3,14 +3,14 @@
 
 use iced::widget::{Column, column, row};
 use iced::{Element, Fill};
-use kentos_extension_host::{Change, ExtensionView, NeedStatus, State};
+use kentos_extension_host::{Change, ExtensionView, Level, NeedStatus, Record, State};
 use kentos_extensions::catalog::CatalogEntry;
 use kentos_extensions::manifest::Manifest;
 use kentos_ui::label;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::{Banner, Form, ListDetails, Segmented};
 
-use super::{Event, Part, Pending, is_update, msg};
+use super::{Event, Part, Pending, is_update, msg, problems};
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind as Line};
 
@@ -19,6 +19,31 @@ const TITLE: &str = "Eklentiler";
 /// A state as a short word for the list.
 fn state_word(state: &State) -> &'static str {
     state.label()
+}
+
+/// Records the details show before "Tüm günlük".
+const NEWEST: usize = 8;
+
+/// A log record's mark.
+fn mark(level: Level) -> Line {
+    match level {
+        Level::Error => Line::Error,
+        Level::Warning => Line::Warn,
+        Level::Info => Line::Info,
+    }
+}
+
+/// A log record as the details show it: its head (when, level, part, code), its words and the start of its error.
+fn record_line<'a>(r: &Record) -> Element<'a, Message> {
+    let mut lines = column![
+        label::caption(problems::head(r)),
+        label::body(r.message.clone())
+    ]
+    .spacing(2);
+    if let Some(detail) = &r.detail {
+        lines = lines.push(label::caption(problems::short(detail)));
+    }
+    words::line(mark(r.level), lines)
 }
 
 fn modules(m: &[kentos_extensions::manifest::Module]) -> String {
@@ -159,15 +184,26 @@ impl App {
         let mut table = Table::new([
             Col::new("Eklenti").width(Fill),
             Col::new("Sürüm").width(kentos_ui::theme::typography::scaled(64.0)),
-            Col::new("Durum").width(kentos_ui::theme::typography::scaled(96.0)),
+            Col::new("Durum").width(kentos_ui::theme::typography::scaled(140.0)),
         ])
         .empty("Kurulu eklenti yok. Paket yükle… ya da Katalog klasörü… ile başlayın.");
         for e in list {
+            // A problem standing or a failed state is marked red, a state that keeps it from running amber.
+            let state: Element<'a, Message> = match (&e.state, &e.problem) {
+                (State::Failed { .. }, _) | (_, Some(_)) => {
+                    words::line(Line::Error, label::caption(state_word(&e.state)))
+                }
+                (
+                    State::Blocked { .. } | State::Incompatible { .. } | State::Waiting { .. },
+                    None,
+                ) => words::line(Line::Warn, label::caption(state_word(&e.state))),
+                _ => label::caption(state_word(&e.state)).into(),
+            };
             table = table.push(
                 Row::new([
                     label::body(e.name.clone()).into(),
                     label::caption(e.version.clone()).into(),
-                    label::caption(state_word(&e.state)).into(),
+                    state,
                 ])
                 .selected(self.extensions.chosen.as_deref() == Some(e.id.as_str()))
                 .on_press(msg(Event::Choose(e.id.clone()))),
@@ -183,6 +219,26 @@ impl App {
         let registry = self.extensions.registry.as_ref();
         let manifest = registry.and_then(|r| r.manifest(&e.id));
         let mut form = Form::new().label_width(120.0).section(e.name.clone());
+        // The problem still standing first, where it cannot be missed (docs/adr/8057 §4).
+        if let Some(p) = &e.problem {
+            form = form.wide(
+                Banner::error(format!(
+                    "Hata — {}: {}",
+                    p.part.as_deref().unwrap_or("eklenti"),
+                    p.message
+                ))
+                .action("Raporu kopyala", msg(Event::CopyReport(e.id.clone()))),
+            );
+            let mut said = format!(
+                "{} · sürüm {}",
+                problems::head(p),
+                p.version.as_deref().unwrap_or("?")
+            );
+            if let Some(detail) = &p.detail {
+                said.push_str(&format!("\n{detail}"));
+            }
+            form = form.wide(label::caption(said));
+        }
         if let Some(m) = manifest {
             form = form.wide(label::body(m.summary.clone()));
             if let Some(d) = &m.description {
@@ -267,8 +323,36 @@ impl App {
         }
         if !e.log.is_empty() {
             form = form.section("Günlük");
-            for event in e.log.iter().rev().take(6) {
-                form = form.wide(label::caption(event.message.clone()));
+            let shown = if self.extensions.full_log {
+                e.log.len()
+            } else {
+                NEWEST
+            };
+            for r in e.log.iter().rev().take(shown) {
+                form = form.wide(record_line(r));
+            }
+            let mut more = row![].spacing(8);
+            if self.extensions.full_log {
+                more = more.push(words::ghost(
+                    "Son kayıtlar",
+                    Some(msg(Event::FullLog(false))),
+                ));
+            } else if e.log.len() > NEWEST {
+                more = more.push(words::ghost(
+                    format!("Tüm günlük ({} kayıt)", e.log.len()),
+                    Some(msg(Event::FullLog(true))),
+                ));
+            }
+            more = more.push(words::ghost(
+                "Raporu kopyala",
+                Some(msg(Event::CopyReport(e.id.clone()))),
+            ));
+            form = form.wide(more);
+            if let Some(registry) = registry {
+                form = form.wide(label::caption(format!(
+                    "Günlük dosyası: {}",
+                    registry.journal().file(Some(&e.id)).display()
+                )));
             }
         }
         let id = e.id.clone();
@@ -394,7 +478,7 @@ impl App {
         let mut window = Frame::new(title).key("eklenti-incele");
         if !r.inspection.is_valid() {
             let mut lines = Column::new().spacing(6).push(Banner::warning(format!(
-                "{} kurulamaz: {} sorun. Paketin yazarına bildirin.",
+                "{} kurulamaz: {} sorun. Paketin yayımcısına bildirin.",
                 p.file,
                 r.inspection.problems.len()
             )));

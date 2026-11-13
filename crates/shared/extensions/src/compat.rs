@@ -105,7 +105,7 @@ pub fn compatible(compatibility: &Compatibility, host: &Host) -> Result<(), Prob
         let fix = if host.sdk_protocol < protocol.min {
             "KentOS'u güncelleyin"
         } else {
-            "eklentinin yeni sürümünü bekleyin ya da yazarına bildirin"
+            "eklentinin yeni sürümünü bekleyin ya da yayımcısına bildirin"
         };
         return Err(Problem::new(
             "compat_sdk_protocol",
@@ -135,7 +135,7 @@ pub fn compatible(compatibility: &Compatibility, host: &Host) -> Result<(), Prob
                 "compat_kentos_max",
                 format!(
                     "Bu eklenti KentOS {max} öncesi için; bu KentOS {}. Eklentinin yeni sürümünü bekleyin ya da \
-                     yazarına bildirin.",
+                     yayımcısına bildirin.",
                     host.kentos
                 ),
             ));

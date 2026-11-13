@@ -375,6 +375,10 @@ impl App {
                     .push(ContextMenu::new(cell, move |_| self.crs_cell_menu()));
             }
         }
+        // Eklenti hatası (docs/adr/8057 §4): while an extension is in trouble, drawing or none.
+        if let Some(cell) = self.extension_trouble_cell() {
+            bar = bar.separator().push(cell);
+        }
         // The cloud: the save cell and the server cell with its account menu (docs/adr/0113).
         for cell in self.cloud_cells(fit < 4) {
             bar = bar.separator().push(cell);

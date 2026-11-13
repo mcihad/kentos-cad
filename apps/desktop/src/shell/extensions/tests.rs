@@ -308,3 +308,155 @@ fn a_catalog_folder_lists_its_packages_and_installs_the_verified_one() {
     let _ = std::fs::remove_dir_all(&root);
     let _ = std::fs::remove_dir_all(&folder);
 }
+
+/// The owner's wish (13 November): when an extension fails we know clearly what, where and why. A data source that
+/// cannot be reached is the extension's error with its name in Uyarılar, not a silent window; the manager opens on it,
+/// shows the problem first and copies a report; a start that cannot run it says so as an error with its name and which
+/// file changed, and the next start says it is not running.
+#[test]
+fn a_failing_extension_is_said_with_its_name_and_kept_in_its_log() {
+    let root = temp("hata");
+    let mut gis = app(&root, Some(Module::Gis));
+    install(&mut gis, "kent-rehberi.kek", package("ornek-kent", |_| {}));
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
+        "../../../../../fixtures/document/v1/sample.json"
+    ))
+    .expect("the demo file reads");
+    gis.document = Some(crate::document::Document::new(snapshot, None).expect("opens"));
+
+    // Its data source, and the server does not answer.
+    let _ = gis.extensions_event(Event::OpenSource(KENT.into(), "ortofoto".into()));
+    let origin = gis.service_window.as_ref().and_then(|w| w.origin.clone());
+    assert_eq!(
+        origin,
+        Some((KENT.to_owned(), "Ortofoto (2026)".to_owned()))
+    );
+    let _ = gis.update(Message::Services(crate::services::app::Event::Window(
+        crate::services::window::Event::Connected(Err(
+            "Bağlantı reddedildi: harita.ornek.bel.tr:443".to_owned(),
+        )),
+    )));
+    let said = gis.log.last().expect("said");
+    assert_eq!(said.level, Level::Error);
+    assert!(
+        said.text.starts_with(
+            "Kent Rehberi eklentisi hata verdi — veri kaynağı “Ortofoto (2026)”: Servise bağlanılamadı"
+        ) && said.text.contains("[Bağlantı reddedildi: harita.ornek.bel.tr:443]")
+            && said.text.ends_with("Ayrıntı ve rapor: Eklentiler › Kent Rehberi."),
+        "{}",
+        said.text
+    );
+    let view = gis.extensions.registry.as_ref().unwrap().extensions();
+    let problem = view[0].problem.clone().expect("the problem");
+    assert_eq!(
+        (problem.code.as_str(), problem.version.as_deref()),
+        ("source_unreachable", Some("1.0.0"))
+    );
+    assert_eq!(gis.extensions.chosen.as_deref(), Some(KENT));
+    // The status bar's cell stays until it is mended; clicked, the manager on it.
+    assert_eq!(
+        gis.extensions
+            .troubles
+            .iter()
+            .map(|t| t.name.as_str())
+            .collect::<Vec<_>>(),
+        ["Kent Rehberi"]
+    );
+    assert!(gis.extension_trouble_cell().is_some());
+    gis.extensions.chosen = None;
+    let _ = gis.extensions_event(Event::ShowTrouble);
+    assert_eq!(gis.dialog, Some(Dialog::Extensions));
+    assert_eq!(gis.extensions.chosen.as_deref(), Some(KENT));
+
+    // The manager: the problem first, the log by level, the report.
+    gis.open_extensions();
+    let _ = gis.extensions_view();
+    let _ = gis.extensions_event(Event::FullLog(true));
+    let _ = gis.extensions_view();
+    let report = gis.extension_report(KENT).expect("a report");
+    for part in [
+        "# Eklenti raporu: Kent Rehberi 1.0.0",
+        "- Kimlik: `tr.ornek.kent-rehberi`",
+        "## Sorun",
+        "veri kaynağı “Ortofoto (2026)” · source_unreachable",
+        "Bağlantı reddedildi: harita.ornek.bel.tr:443",
+        "## Son kayıtlar (yeniden eskiye)",
+        "installed",
+    ] {
+        assert!(report.contains(part), "{part}:\n{report}");
+    }
+    // The server answers at last (the service window's Bağlan read it): the source works again, its error no longer
+    // stands and the cell goes.
+    gis.extension_worked(
+        KENT,
+        "veri kaynağı “Ortofoto (2026)”",
+        "source_connected",
+        "Servise bağlanıldı.",
+    );
+    assert!(
+        gis.extensions.troubles.is_empty(),
+        "{:#?}",
+        gis.extensions.troubles
+    );
+    assert_eq!(
+        gis.extensions.registry.as_ref().unwrap().extensions()[0].problem,
+        None
+    );
+    let _ = gis.extensions_event(Event::CopyReport(KENT.into()));
+    assert!(
+        gis.extensions
+            .note
+            .as_ref()
+            .is_some_and(|(error, words)| !error && words.contains("panoya kopyalandı")),
+        "{:?}",
+        gis.extensions.note
+    );
+
+    // A file changed on disk: the next start says it as an error with the name and the file.
+    drop(gis);
+    let form = root
+        .join("packages")
+        .join(KENT)
+        .join("1.0.0")
+        .join("forms")
+        .join("bina_denetimi.kform");
+    let mut permissions = std::fs::metadata(&form).unwrap().permissions();
+    #[allow(clippy::permissions_set_readonly_false)]
+    permissions.set_readonly(false);
+    std::fs::set_permissions(&form, permissions).unwrap();
+    std::fs::write(&form, "{}").unwrap();
+    let (_, notes) = Extensions::open(&root, false);
+    let error = notes
+        .iter()
+        .find(|(level, _)| *level == Level::Error)
+        .map(|(_, words)| words.as_str())
+        .unwrap_or_default();
+    assert!(
+        error.starts_with("Kent Rehberi eklentisi çalıştırılmadı: Kurulu dosyalar kurulduğu hâlinden farklı: forms/bina_denetimi.kform değişmiş."),
+        "{notes:#?}"
+    );
+    // The start after: not running, said with its state.
+    let (opened, notes) = Extensions::open(&root, false);
+    assert!(
+        notes.iter().any(|(level, words)| *level == Level::Warn
+            && words.starts_with("Çalışmayan eklenti: Kent Rehberi (Hata).")),
+        "{notes:#?}"
+    );
+    let problem = opened.registry.as_ref().unwrap().extensions()[0]
+        .problem
+        .clone()
+        .expect("the problem");
+    assert_eq!(problem.code, "integrity_mismatch");
+    let troubles = problems::troubles(&opened);
+    assert_eq!(troubles.len(), 1);
+    assert!(
+        troubles[0]
+            .words
+            .starts_with("etkinleştirme: Dosyaları kurulduğu gibi değil"),
+        "{troubles:#?}"
+    );
+    // A start without extensions is no trouble: nothing runs on purpose.
+    let (safe, _) = Extensions::open(&root, true);
+    assert!(problems::troubles(&safe).is_empty());
+    let _ = std::fs::remove_dir_all(&root);
+}

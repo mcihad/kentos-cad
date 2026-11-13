@@ -312,5 +312,103 @@ testleri (şerit, katalog, menü, komut, tuş ipuçları) 335 geçti.
   2 414 bayt. Bekçi: `tests/mcp.rs` `an_agent_is_told_when_the_installed_extensions_change` (MCP testleri kural gereği
   burada koşulmaz, derlemesi denetlendi).
 
-**ADIM 18'de kalan:** Komut ara'da eklenti öğeleri, eklenti hatalarının açıkça bildirilmesi ve günlüğü, "Sorunlu
-eklentiyi bul"un penceresi, `.kcad` proje bağlantısı, paket SVG ikonlarının düğmelerde çizilmesi.
+**ADIM 18'de kalan:** Komut ara'da eklenti öğeleri, "Sorunlu eklentiyi bul"un penceresi, `.kcad` proje bağlantısı,
+paket SVG ikonlarının düğmelerde çizilmesi. Hata ve günlük: §4.
+
+## §4. Hata ve günlük (`ADIM 18`, sahibin isteği)
+
+**Bağlam.** Sahip (13 Kasım): "Hata işleme ve log mekanizması da düzgün olsun eklenti sisteminde", "Eklenti hata
+verdiğinde açıkça bilelim sorunu". Ölçülen durum: kayıt defterinin günlüğü `registry.json` içinde en çok 50 satırlık,
+seviyesiz, kodsuz bir metin listesiydi; masaüstünde eklentinin veri kaynağı ya da formu açılamayınca **hiçbir şey olmuyordu**
+(beş yerde sessiz `return`), olan hata eklentiye bağlanmıyordu; açılışta çalışmayan eklenti durum çubuğunda birkaç saniye
+görünüp kayboluyordu ve kimliğiyle ("“tr.ornek…” etkinleştirilemedi") söyleniyordu; bütünlük hatası hangi dosyanın
+değiştiğini söylemiyordu.
+
+**Günlük** (`kentos_extension_host::journal`).
+
+- Kayıt: zaman (ms, UTC), seviye (Bilgi / Uyarı / Hata), **sabit kod**, eklenti, o anki sürüm, parça (`etkinleştirme`,
+  `veri kaynağı “Ortofoto (2026)”`, `form “bina-denetimi”`, `kurulum`, `katalog`, `başlangıç`), kullanıcının okuyacağı
+  cümle, hatanın kendi metni (`detail`: G/Ç hatası, sunucunun yanıtı; ADIM 19'da Python izi) ve yazan program
+  (`kentos-cad`, `kentos`, `kentos-mcp`).
+- Dosya: `<kayıt>/logs/<kimlik>.jsonl`, eklentiye ait olmayan için `registry.jsonl`; JSON Lines, satır başına **tek
+  yazma** (masaüstü, CLI ve MCP yan yana yazar). 256 KiB'da `.1.jsonl`'e devrilir: eklenti başına en çok ~512 KiB.
+  Kaldırılan eklentinin günlüğü kalır; yeniden kurulursa geçmişi sürer.
+- **Gizli değer günlüğe girmez:** URL'deki `token`/`key`/`apikey`/`signature`…, `kullanıcı:parola@sunucu`'daki parola,
+  bağlantı dizesindeki `password=`, `Authorization` başlığı (şeması kalır: `Bearer ***`), JSON'daki `"apiKey": "…"`
+  yazılmadan önce `***` olur. Düzenli ifade kitaplığı eklenmedi (CLAUDE.md §3), tarayıcı elle yazıldı.
+- Günlük yazılamazsa işlem düşmez; standart hataya bir satır düşer.
+- **Duran hata** (`problem`): en yeni hata, ardından yeni dosya (kurulum, güncelleme, yeniden kurulum, sürüm değiştirme)
+  ya da Yeniden dene gelmediyse ve **aynı parça sonradan çalışmadıysa** (kaynağa bağlanıldı, form alındı, etkinleşme
+  oldu). İlk sürümde yalnız yeni dosya ve yeniden deneme temizliyordu: geçici bir bağlantı hatası, kaynak sonra
+  bağlansa da sonsuza dek "duran hata" kalırdı (gerçek pencerede görüldü).
+- Açılışta etkinleşemeyen eklentinin durumu (`not_started_*`) **değişene kadar bir kez** yazılır, her açılışta değil.
+- `registry.json`'ın eski kısa geçmişi açılışta (ve her yazmada) günlüğe `earlier` koduyla taşınır, dosyaya bir daha
+  yazılmaz; günlüğü olan eklentide iki kez taşınmaz.
+- Pencere her çizimde dosya okumasın diye kayıt defteri her eklentinin son **50** kaydını açılışta okur, yazdıkça
+  bellekte de günceller (`Registry::log_of`).
+
+| Kod | Seviye | Ne |
+|---|---|---|
+| `installed` / `updated` / `reinstalled` / `switched` / `retried` | Bilgi | Yeni dosya ya da yeniden deneme: eski hata kapanır |
+| `activated` | Bilgi | Etkinleşti, süresiyle |
+| `enabled` / `disabled` / `grants_changed` / `data_reset` / `removed` | Bilgi | Kullanıcının eylemi |
+| `integrity_mismatch` | Hata | Kurulu dosyalar değişmiş; **hangi dosya**, nasıl (değişmiş / eksik / sonradan eklenmiş) |
+| `manifest_unreadable` | Hata | Kurulu sürümün manifesti okunamadı |
+| `crashed` / `failed` | Hata | Çöktü; art arda 3'te durduruldu (bekçi) |
+| `not_started_failed` / `_blocked` / `_incompatible` / `_waiting` | Uyarı | Etkin ama açılışta çalıştırılmadı, nedeni |
+| `install_refused` | Uyarı | Paket ya da güncelleme kurulmadı (çalışan sürüm etkilenmez) |
+| `catalog_mismatch` | Uyarı | Katalog klasöründeki dosya dizinle tutmuyor |
+| `revoked` / `stopped_dependency` | Uyarı | Sürüm geri çekildi; bağlı olduğu eklenti durdu |
+| `source_unreachable` / `source_add_failed` / `source_missing` / `source_file_missing` / `source_incomplete` | Hata | Veri kaynağı |
+| `form_missing` / `form_file_missing` / `form_unreadable` / `form_invalid` | Hata | Form |
+| `source_connected` / `form_imported` | Bilgi | Parça yeniden çalıştı: o parçanın hatası kapanır |
+| `registry_corrupt` / `registry_newer` | Hata | Kayıt defteri okunamadı (`registry.jsonl`, değişene kadar bir kez) |
+
+**Masaüstü: hata açıkça söylenir.**
+
+- **Anında:** `App::extension_failed` hatayı Uyarılar'a ve durum çubuğuna **eklentinin adıyla, parçasıyla, nedeniyle ve
+  nereye bakılacağıyla** yazar: "Kent Rehberi eklentisi hata verdi — veri kaynağı “Ortofoto (2026)”: Servise
+  bağlanılamadı… [harita.ornek.bel.tr sunucusuna bağlanılamadı…] Ayrıntı ve rapor: Eklentiler › Kent Rehberi." Yönetici
+  bir sonraki açılışta o eklentide açılır.
+- **Kalıcı:** durum çubuğunda kırmızı **"Eklenti hatası: Kent Rehberi"** hücresi (Eski kesit rozetinin kalıbı); duran
+  bir hata ya da etkin ama çalışmayan bir eklenti oldukça kalır, ipucunda her birinin nedeni, tıklanınca yönetici o
+  eklentide açılır. Eklentisiz açılışta görünmez (bilerek hiçbir şey çalışmıyor). Uyarılar rozeti yalnız alt panel
+  açıkken görünüyordu: açılış hatası bu hücre olmadan kaçırılabiliyordu (gerçek pencerede görüldü).
+- **Açılış:** çalıştırılamayan eklenti **Hata** seviyesinde, adıyla ve nedeniyle ("Kent Rehberi eklentisi çalıştırılmadı:
+  Kurulu dosyalar kurulduğu hâlinden farklı: forms/bina_denetimi.kform değişmiş. Eklentiyi yeniden kurun ya da önceki
+  sürüme dönün."); önceki bir açılıştan kalan durumu olan her açılışta tek satır **Uyarı**: "Çalışmayan eklenti: Kent
+  Rehberi (Hata)."
+- **Yönetici:** duran hata ayrıntının **en üstünde** kırmızı kutuda (parça, cümle, "Raporu kopyala"), altında zaman ·
+  seviye · parça · kod · sürüm ve hatanın kendisi; listede satır kırmızı (hata) ya da sarı (engellendi, uyumsuz,
+  bekliyor) işaretli; Günlük bölümü seviye simgeli son 8 kayıt, "Tüm günlük", günlük dosyasının yolu.
+- **Rapor** (Markdown, panoya): eklenti, kimlik, durum, yayımcı, kaynak, güven, sürümler, program ve işletim sistemi,
+  günlük dosyası, duran hata (hatanın kendisi kod bloğunda) ve son 30 kayıt: yayımcıya ya da bir ajana yapıştırılır.
+- **Servis penceresi** eklentinin kaynağını açınca hangi eklentiden geldiğini söyler; bağlanamama ve katmanı
+  ekleyememe eklentinin hatası olarak yazılır, bağlanma hatayı kapatır.
+- Eklentinin hatası olmayan durum ayrı tutulur: WFS / OGC API Features bu sürümde açılmıyor (Bilgi, `source_not_supported`);
+  çizim açık değilken form düğmesi "önce bir çizim açın" der.
+- Durum yardımlarındaki "yazarına bildirin" "yayımcısına bildirin" oldu: pencerede alanın adı "Yayımcı".
+
+**CLI:** `kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]`: kayıtlar eskiden yeniye, zaman UTC
+(`2026-11-13 15:54:55Z`), hatanın kendisi girintili, sonda "Duran hata"; kimliksiz kayıt defterinin günlüğü; `--json`
+JSON Lines.
+
+**MCP:** `kentos://extensions/installed` her eklentinin `problem`'ini ve son kayıtlarını taşır (aynı `Registry::dump`);
+izleme `logs/` dosyalarının boy ve zamanını da özetler, yeni bir hata da izleyene `notifications/resources/updated` olur.
+
+**Ölçüm ve doğrulama (13 Kasım).**
+
+- Gerçek pencere (Xvfb, yalıtılmış kayıt defteri, KentOS GIS): Kent Rehberi'nin Ortofoto kaynağı → durum çubuğu ve
+  Uyarılar'da adıyla hata; servis penceresinde "Kent Rehberi eklentisinin veri kaynağı: Ortofoto (2026)."; yöneticide
+  duran hata kutusu. Paketin form dosyası değiştirildi → açılışta eklenti çalışmadı, durum çubuğunda kırmızı hücre
+  kaldı, tıklanınca yönetici Kent Rehberi'nde, kutu "forms/bina_denetimi.kform değişmiş" diyor.
+- MCP aynı kayıt defterinde: kaynak 5 470 bayt, `problem` `integrity_mismatch`, 19 kayıt.
+- Sınamalar: günlük 3 (maskeleme 8 durum, devir ve bozuk satır, duran hata kuralı), kayıt defteri 27 (+3: hata
+  zinciri, bozuk kayıt defteri bir kez, eski geçmişin taşınması), masaüstü eklenti sahneleri 6 (+1: adıyla bildirim,
+  hücre, yönetici, rapor, düzelince kapanma, açılış hatası, eklentisiz açılış), ilgili masaüstü 343, CLI 1, eklenti
+  paketi 52 geçti.
+
+**Uygularken verilen kararlar (planda yazılı değildi):** günlük `registry.json`'dan ayrı dosyalarda (kayıt defteri
+yazmak kilit ister ve her satırda bütün dosyayı yeniden yazardı); durum çubuğu hücresi; "aynı parça çalıştı" kuralı;
+açılışta çalışmayanlar için her açılışta tek satır uyarı; kurulmayan paket eklentinin günlüğüne Uyarı olarak (çalışan
+sürüm iyi); bellekte 50 kayıt; eski kısa geçmişin taşınması; CLI'de zaman UTC; "yazarına" → "yayımcısına".

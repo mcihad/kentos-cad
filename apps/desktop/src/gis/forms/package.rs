@@ -89,14 +89,17 @@ impl App {
     }
 
     /// The package made a new form of the chosen form's layer (else the active layer): its fields bound by
-    /// key or name, the missing ones added; the new form chosen.
-    pub(crate) fn form_imported(&mut self, read: Option<(String, String)>) {
-        let Some((file, text)) = read else { return };
+    /// key or name, the missing ones added; the new form chosen. True when it was imported (an extension's form
+    /// marks its part as working again, docs/adr/8057 §4).
+    pub(crate) fn form_imported(&mut self, read: Option<(String, String)>) -> bool {
+        let Some((file, text)) = read else {
+            return false;
+        };
         let package: FormPackage = match serde_json::from_str(&text) {
             Ok(p) => p,
             Err(e) => {
                 self.warn(format!("{file} bir KentOS form paketi değil: {e}."));
-                return;
+                return false;
             }
         };
         let layer = self.chosen_form().map(|f| f.layer.clone()).or_else(|| {
@@ -105,7 +108,7 @@ impl App {
                 .map(|d| d.model.layers().active().to_owned())
         });
         let (Some(layer), Some(doc)) = (layer, self.document.as_mut()) else {
-            return;
+            return false;
         };
         let result = forms_import::execute(
             &mut ExecutionContext::new(&mut doc.model),
@@ -120,7 +123,7 @@ impl App {
             },
         );
         let Some(done) = self.answered(result) else {
-            return;
+            return false;
         };
         let name = self.form_layer_name(&layer);
         let bound = done.bound.len() - done.added.len();
@@ -141,5 +144,6 @@ impl App {
         words.push('.');
         self.say(Level::Success, words);
         self.open_forms(Some(done.id));
+        true
     }
 }

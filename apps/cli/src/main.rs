@@ -5,6 +5,7 @@
 //! kentos kek pack <klasör> [-o <paket.kek>] [--json]
 //! kentos kek index <klasör> [--name <ad>]
 //! kentos kek dump [--root <klasör>]
+//! kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
 //! ```
 //!
 //! The same inspector the installer, the catalog and `extension.verify` run (kentos_extensions): an author or an agent
@@ -23,7 +24,9 @@ const USAGE: &str = "Kullanım:
   kentos kek inspect <paket.kek> [--json]           paketi kodunu çalıştırmadan denetler
   kentos kek pack <klasör> [-o <paket.kek>] [--json] klasörü denetleyip paketler
   kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
-  kentos kek dump [--root <klasör>]                 kurulu eklentileri ve katkılarını JSON olarak döker";
+  kentos kek dump [--root <klasör>]                 kurulu eklentileri ve katkılarını JSON olarak döker
+  kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
+                                                    bir eklentinin günlüğü (kimliksiz: kayıt defterininki)";
 
 /// Folders the packer leaves out whole, not read at all (a `.venv` holds hundreds of megabytes); the packer's own
 /// rules leave out the rest.
@@ -59,6 +62,7 @@ fn main() -> ExitCode {
         ["kek", "dump", "--root", root] => dump(Some(PathBuf::from(root))),
         ["kek", "index", folder] => index_folder(Path::new(folder), None),
         ["kek", "index", folder, "--name", name] => index_folder(Path::new(folder), Some(name)),
+        ["kek", "log", rest @ ..] => log(rest, json),
         _ => {
             eprintln!("{USAGE}");
             ExitCode::from(2)
@@ -302,4 +306,118 @@ fn dump(root: Option<PathBuf>) -> ExitCode {
         serde_json::to_string_pretty(&registry.dump()).unwrap_or_default()
     );
     ExitCode::SUCCESS
+}
+
+/// An extension's log, or the registry's without an id (docs/adr/8057 §4): its newest records, oldest first, each with
+/// its time (UTC), level, code, part and version, the error as it came under it; the error still standing at the end.
+/// `--json` gives the records as JSON Lines. Reads only.
+fn log(args: &[&str], json: bool) -> ExitCode {
+    let mut id: Option<&str> = None;
+    let mut count = 50usize;
+    let mut root: Option<PathBuf> = None;
+    let mut i = 0;
+    while i < args.len() {
+        match (args[i], args.get(i + 1)) {
+            ("--son", Some(n)) => {
+                let Ok(n) = n.parse() else {
+                    return fail(USAGE.to_owned());
+                };
+                count = n;
+                i += 2;
+            }
+            ("--root", Some(r)) => {
+                root = Some(PathBuf::from(r));
+                i += 2;
+            }
+            (a, _) if !a.starts_with('-') && id.is_none() => {
+                id = Some(a);
+                i += 1;
+            }
+            _ => return fail(USAGE.to_owned()),
+        }
+    }
+    let Some(root) = root.or_else(kentos_extension_host::places::user_root) else {
+        return fail(
+            "Bu bilgisayarda kullanıcı veri klasörü yok; --root ile eklenti klasörünü verin."
+                .to_owned(),
+        );
+    };
+    // Opening the registry carries the short history it kept before the log into the log, and says an unreadable
+    // registry there; what it says otherwise is the log's to show.
+    let _ = kentos_extension_host::places::open_to_read(&root, env!("CARGO_PKG_VERSION"));
+    let journal = kentos_extension_host::Journal::new(&root);
+    let records = journal.tail(id, count);
+    if json {
+        for r in &records {
+            println!("{}", serde_json::to_string(r).unwrap_or_default());
+        }
+        return ExitCode::SUCCESS;
+    }
+    if records.is_empty() {
+        println!("Günlükte kayıt yok ({}).", journal.file(id).display());
+        return ExitCode::SUCCESS;
+    }
+    for r in &records {
+        let part = r
+            .part
+            .as_ref()
+            .map(|p| format!(" · {p}"))
+            .unwrap_or_default();
+        let version = r
+            .version
+            .as_ref()
+            .map(|v| format!(" · {v}"))
+            .unwrap_or_default();
+        println!(
+            "{} {:<5} {}{part}{version} — {}",
+            utc(r.at),
+            r.level.label(),
+            r.code,
+            r.message
+        );
+        if let Some(detail) = &r.detail {
+            for line in detail.lines() {
+                println!("    {line}");
+            }
+        }
+    }
+    if let Some(id) = id
+        && let Some(p) = kentos_extension_host::journal::problem_in(&records)
+    {
+        println!("\nDuran hata ({id}): {} — {}", utc(p.at), p.message);
+    }
+    ExitCode::SUCCESS
+}
+
+/// Milliseconds since 1970 as a UTC time: `2026-11-13 18:42:07Z`.
+fn utc(ms: u64) -> String {
+    let secs = ms / 1000;
+    let (days, rest) = (secs / 86_400, secs % 86_400);
+    // Days since 1970 to a civil date (Howard Hinnant's days_from_civil, inverted).
+    let z = i64::try_from(days).unwrap_or(0) + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = yoe + era * 400 + i64::from(month <= 2);
+    format!(
+        "{year:04}-{month:02}-{day:02} {:02}:{:02}:{:02}Z",
+        rest / 3600,
+        rest % 3600 / 60,
+        rest % 60
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_log_time_is_written_in_utc() {
+        assert_eq!(super::utc(0), "1970-01-01 00:00:00Z");
+        // 2026-11-13T15:42:07.5Z
+        assert_eq!(super::utc(1_794_584_527_500), "2026-11-13 15:42:07Z");
+        assert_eq!(super::utc(951_782_400_000), "2000-02-29 00:00:00Z");
+    }
 }

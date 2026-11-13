@@ -1836,12 +1836,9 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             // none on a start without extensions.
             let (extensions, notes) = crate::extensions::Extensions::device();
             app.extensions = extensions;
-            for (error, note) in notes {
-                if error {
-                    app.warn(note);
-                } else {
-                    app.output(note);
-                }
+            // An extension that did not start is an error with its name (docs/adr/8057 §4), not a passing note.
+            for (level, note) in notes {
+                app.say(level, note);
             }
             app.extensions_changed();
             if let Some(folder) = app.extensions.startup_catalog() {

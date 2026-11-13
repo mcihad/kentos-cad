@@ -5,7 +5,8 @@ use kentos_extensions::Inspection;
 use kentos_extensions::manifest::{Capability, Manifest};
 use serde::Serialize;
 
-use crate::store::{Channel, Event, Metrics, Source};
+use crate::journal::Record;
+use crate::store::{Channel, Metrics, Source};
 
 /// An installed extension's state, worked out from the registry and what runs. A package being looked at, inspected
 /// or prepared is a [`Review`] or a call in progress, never a state on disk: a crash in the middle leaves the previous
@@ -56,7 +57,7 @@ impl State {
             State::Incompatible { reason } => reason.clone(),
             State::Failed { reason } => format!(
                 "{reason} Bir sonraki açılışta denenmez; Yeniden dene ile bir kez daha başlatın, sorun sürerse \
-                 yazarına bildirin."
+                 yayımcısına bildirin."
             ),
         }
     }
@@ -111,7 +112,11 @@ pub struct ExtensionView {
     pub pinned: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metrics: Option<Metrics>,
-    pub log: Vec<Event>,
+    /// The error still standing: the newest in its log not followed by new files or a retry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub problem: Option<Record>,
+    /// The newest records of its log, oldest first.
+    pub log: Vec<Record>,
 }
 
 /// A dependency as the review shows it.
