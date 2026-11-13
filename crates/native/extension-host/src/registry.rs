@@ -140,7 +140,7 @@ fn read_manifest(layout: &Layout, id: &str, version: &str) -> Result<Manifest, P
 
 impl Registry {
     /// Opens the registry under `root` (the user's extension folder). A version left half-prepared by a crash is
-    /// removed; nothing is activated until [`Registry::startup`].
+    /// removed; nothing is activated until [`Registry::startup`] and nothing else is written.
     pub fn open(
         root: impl Into<PathBuf>,
         host: Host,
@@ -152,7 +152,21 @@ impl Registry {
             .ok()
             .and_then(|text| Revocations::read(&text).ok())
             .unwrap_or_default();
-        let _ = store::remove_tree(&layout.staging());
+        // A version left half-prepared by a crash: an hour old at least, so another process's install in progress
+        // (seconds) is never taken from under it.
+        if let Ok(entries) = fs::read_dir(layout.staging()) {
+            for entry in entries.flatten() {
+                let stale = entry
+                    .metadata()
+                    .and_then(|m| m.modified())
+                    .ok()
+                    .and_then(|t| t.elapsed().ok())
+                    .is_none_or(|age| age > Duration::from_secs(3600));
+                if stale {
+                    let _ = store::remove_tree(&entry.path());
+                }
+            }
+        }
         let mut registry = Registry {
             layout,
             host,
@@ -367,6 +381,31 @@ impl Registry {
     /// What the active extensions add, each under its lease.
     pub fn contributions(&self) -> &[Registered] {
         &self.registered
+    }
+
+    /// What every running or ready extension adds or would add, worked out without activating anything or writing
+    /// the registry (`kentos kek dump`, the MCP resource): a ready one's under a lease of generation 0. With what was
+    /// left out and why.
+    pub fn planned_contributions(&self) -> (Vec<Registered>, Vec<Skipped>) {
+        let mut registered = self.registered.clone();
+        let mut skipped = Vec::new();
+        for (id, entry) in &self.file.extensions {
+            if self.leases.contains_key(id) || self.state_of(id, entry) != State::Ready {
+                continue;
+            }
+            let Some(manifest) = self.manifests.get(id) else {
+                continue;
+            };
+            let lease = ExtensionLease {
+                extension: id.clone(),
+                version: entry.active.clone(),
+                generation: 0,
+            };
+            let (more, left) = lease::contributions(manifest, &entry.grant, &lease);
+            registered.extend(more);
+            skipped.extend(left);
+        }
+        (registered, skipped)
     }
 
     /// The version in use's manifest.

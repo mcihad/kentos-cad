@@ -248,9 +248,17 @@ fn a_failed_update_leaves_the_running_version_untouched() {
     let leftover = temp.0.join("staging").join(format!("{ID}@1.1.0.1.1"));
     fs::create_dir_all(&leftover).unwrap();
     fs::write(leftover.join("manifest.json"), "{yarım").unwrap();
+    // Another process's install in progress is left alone; a crashed one's (an hour old) is removed.
+    let fresh = temp.0.join("staging").join(format!("{ID}@1.2.0.2.1"));
+    fs::create_dir_all(&fresh).unwrap();
+    let hours_ago = std::time::SystemTime::now() - Duration::from_secs(7200);
+    fs::File::open(&leftover)
+        .unwrap()
+        .set_modified(hours_ago)
+        .unwrap();
     drop(r);
     let mut r = open(&temp.0);
-    assert!(!leftover.exists());
+    assert!(!leftover.exists() && fresh.exists());
     assert!(r.startup()[0].1.is_ok());
     assert_eq!(r.lease(ID).unwrap().version, "1.0.0");
 }
@@ -730,6 +738,31 @@ fn a_projects_extensions_open_restricted_until_ready() {
     let needs = r.project_needs(&[(ID.to_owned(), "^1".to_owned())]);
     assert!(
         matches!(&needs[0].status, NeedStatus::NotRunning { reason } if reason.contains("kapattınız"))
+    );
+}
+
+#[test]
+fn the_dump_shows_what_would_run_without_running_it() {
+    let temp = Temp::new("dokum");
+    let mut r = open(&temp.0);
+    install(&mut r, &package(ID, "1.0.0", &[]));
+    drop(r);
+    let r = open(&temp.0);
+    let before = fs::read(temp.0.join("registry.json")).unwrap();
+    let (planned, skipped) = r.planned_contributions();
+    assert_eq!(planned.len(), 1);
+    assert_eq!(
+        (planned[0].id.as_str(), planned[0].lease.generation),
+        ("ext.tr.ornek.altlik.altlik", 0)
+    );
+    assert!(
+        skipped.is_empty() && r.contributions().is_empty(),
+        "nothing activated"
+    );
+    assert_eq!(
+        fs::read(temp.0.join("registry.json")).unwrap(),
+        before,
+        "nothing written"
     );
 }
 

@@ -4,6 +4,7 @@
 //! kentos kek inspect <paket.kek> [--json]
 //! kentos kek pack <klasör> [-o <paket.kek>] [--json]
 //! kentos kek index <klasör> [--name <ad>]
+//! kentos kek dump [--root <klasör>]
 //! ```
 //!
 //! The same inspector the installer, the catalog and `extension.verify` run (kentos_extensions): an author or an agent
@@ -21,7 +22,8 @@ use kentos_extensions::{Limits, Manifest, Problem, catalog, inspect, pack};
 const USAGE: &str = "Kullanım:
   kentos kek inspect <paket.kek> [--json]           paketi kodunu çalıştırmadan denetler
   kentos kek pack <klasör> [-o <paket.kek>] [--json] klasörü denetleyip paketler
-  kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar";
+  kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
+  kentos kek dump [--root <klasör>]                 kurulu eklentileri ve katkılarını JSON olarak döker";
 
 /// Folders the packer leaves out whole, not read at all (a `.venv` holds hundreds of megabytes); the packer's own
 /// rules leave out the rest.
@@ -53,6 +55,8 @@ fn main() -> ExitCode {
         ["kek", "pack", folder, "-o", out] => {
             pack_folder(Path::new(folder), Some(PathBuf::from(out)), json)
         }
+        ["kek", "dump"] => dump(None),
+        ["kek", "dump", "--root", root] => dump(Some(PathBuf::from(root))),
         ["kek", "index", folder] => index_folder(Path::new(folder), None),
         ["kek", "index", folder, "--name", name] => index_folder(Path::new(folder), Some(name)),
         _ => {
@@ -277,4 +281,41 @@ fn index_folder(folder: &Path, name: Option<&str>) -> ExitCode {
             ExitCode::from(1)
         }
     }
+}
+
+/// Every installed extension with its state, and what the running or ready ones add: the evidence for "where did my
+/// tab go?" (plan/eklenti.md ADIM 18, Ö·38). Activates nothing, writes nothing.
+fn dump(root: Option<PathBuf>) -> ExitCode {
+    let Some(root) = root.or_else(kentos_extension_host::places::user_root) else {
+        return fail(
+            "Bu bilgisayarda kullanıcı veri klasörü yok; --root ile eklenti klasörünü verin."
+                .to_owned(),
+        );
+    };
+    let host = kentos_extensions::Host::this(
+        kentos_extensions::version::Version::parse(env!("CARGO_PKG_VERSION"))
+            .unwrap_or_else(|| kentos_extensions::version::Version::new(0, 0, 0)),
+    );
+    let options = kentos_extension_host::Options {
+        policy: kentos_extension_host::places::load_policy(
+            &kentos_extension_host::places::policy_path(),
+        ),
+        ..kentos_extension_host::Options::default()
+    };
+    let registry = match kentos_extension_host::Registry::open(&root, host, options) {
+        Ok(registry) => registry,
+        Err(problem) => return fail(problem.to_string()),
+    };
+    let (contributions, skipped) = registry.planned_contributions();
+    let value = serde_json::json!({
+        "root": root.display().to_string(),
+        "extensions": registry.extensions(),
+        "contributions": contributions,
+        "skipped": skipped,
+    });
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&value).unwrap_or_default()
+    );
+    ExitCode::SUCCESS
 }

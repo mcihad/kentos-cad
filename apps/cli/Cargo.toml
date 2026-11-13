@@ -11,7 +11,9 @@ name = "kentos"
 path = "src/main.rs"
 
 # Native only and small (scripts/arch/deps.mjs, group `cli`): the extension crate's inspector and packer over the
-# file system, nothing else; no argument-parsing dependency for two subcommands.
+# file system and the user's extension registry, nothing else; no argument-parsing dependency for a few subcommands.
 [dependencies]
 kentos-extensions = { path = "../../crates/shared/extensions" }
+# `kentos kek dump`: the user's registry, read without activating anything.
+kentos-extension-host = { path = "../../crates/native/extension-host" }
 serde_json = { workspace = true }
