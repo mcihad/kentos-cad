@@ -8,7 +8,7 @@
 //!   typed text (the shared grammar, `point_text`);
 //! - Y turns the next segments into arcs (continuing tangentially, or shaped
 //!   once by Açı, Merkez, Yarıçap, İkinci nokta, Doğrultu), D back to lines;
-//!   AutoCAD's PLINE pairs (docs/adr/0288): after an angle typed Merkez (M,
+//!   the arc pairs (docs/adr/0288): after an angle typed Merkez (M,
 //!   the centre clicked) or Yarıçap (R, typed, then the chord's direction);
 //!   after a centre Açı (A, typed) or Uzunluk (U, the chord typed, negative
 //!   clockwise); after a radius typed Açı (A, then the chord's direction);
@@ -50,7 +50,7 @@
 //! Two options of the measuring shapes are docs/adr/0141's:
 //!
 //! - Mesafe ölç's Sabit ilk nokta (S) measures every new point from the first
-//!   (Netcad's cetvel, rays instead of a chain): the tag and the log say
+//!   (a ruler, rays instead of a chain): the tag and the log say
 //!   the distance and semt of each ray, and no total is said. It is offered
 //!   before the first point and while it is on; Yay and Uzunluk do not apply.
 //! - Alan hesapla's İçine tıkla (I) measures the region a click is inside, as
@@ -158,7 +158,7 @@ pub enum Shape {
     Continue,
     /// Biçim değiştir: a line of straight edges that reshapes an area or a path (docs/adr/0173 §2–§3).
     Reshape,
-    /// Maske: an area that covers what is drawn before it (AutoCAD's WIPEOUT, docs/adr/0310 §5).
+    /// Maske: an area that covers what is drawn before it (docs/adr/0310 §5).
     Wipeout,
     /// Duvar: a wall along the path (docs/adr/0339 §6).
     Wall,
@@ -211,7 +211,7 @@ impl Shape {
     }
 }
 
-/// How the next arc segment is shaped (AutoCAD's PLINE arc options). The
+/// How the next arc segment is shaped (the arc options). The
 /// default follows the path's end tangent; the others last one segment.
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Spec {
@@ -682,7 +682,7 @@ impl Path {
         self.memory.polyline_width_end = cx.memory.polyline_width_end;
     }
 
-    /// A value typed for AutoCAD PLINE's pairs (docs/adr/0288): an angle or a chord after a centre ends the arc; a
+    /// A value typed for the arc pairs (docs/adr/0288): an angle or a chord after a centre ends the arc; a
     /// radius after an angle, or an angle after a radius, then waits for the chord's direction. False when the
     /// step waits for none of them.
     fn typed_pair(&mut self, n: f64, metres: f64, cx: &mut Context<'_>) -> bool {
@@ -1226,7 +1226,7 @@ impl Path {
             self.width_start = None;
             return true;
         }
-        // AutoCAD PLINE's pairs (docs/adr/0288): what follows an angle, a centre or a radius.
+        // The arc pairs (docs/adr/0288): what follows an angle, a centre or a radius.
         if self.arc_mode && !self.pts.is_empty() {
             let pair = match (self.spec, key) {
                 (Spec::Angle { sweep: Some(sweep) }, "M") => Some(Spec::AngleCentre { sweep }),
@@ -1461,6 +1461,14 @@ impl Path {
         );
         if points::written(result, cx).is_some() {
             cx.say(Level::Success, "Maske eklendi.");
+            // Words under the mask stay over it (docs/adr/0310 §8): said now, not found later on the sheet.
+            let (lo, hi) = pts.iter().fold(
+                (Vec2::new(f64::INFINITY, f64::INFINITY), Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY)),
+                |(lo, hi), p| (Vec2::new(lo.x.min(p.x), lo.y.min(p.y)), Vec2::new(hi.x.max(p.x), hi.y.max(p.y))),
+            );
+            if let Some(note) = crate::draw_order::words_over_mask_note(cx.doc, cx.spatial, lo, hi, false) {
+                cx.say(Level::Info, note);
+            }
         }
     }
 
@@ -2484,7 +2492,7 @@ impl Tool for Path {
     }
 
     /// Esc on a wall chain (docs/adr/8001): a question asked is left first; then the segments already drawn are written
-    /// as Enter writes them and the tool stays for the next chain, as Revit's first Esc ends a chain and AutoCAD keeps
+    /// as Enter writes them and the tool stays for the next chain, as a first Esc commonly ends a chain and keeps
     /// what was drawn. The next Esc leaves. A chain without a finished segment has nothing to keep.
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
         if self.shape != Shape::Wall || self.separator_level.is_some() {

@@ -393,6 +393,9 @@ impl App {
         let Some(doc) = &self.document else {
             return Err("Çizim yok.".to_owned());
         };
+        if matches!(saved.source, Some(kentos_commands::TableSource::Schedule { .. })) {
+            return schedule_planned(&doc.model, uid, edits, saved);
+        }
         let input = TablesEdit {
             operation: TablesOperation::Edit {
                 uid: uid.to_string(),
@@ -1531,7 +1534,7 @@ fn hex_color(hex: &str) -> iced::Color {
 fn bar_keys(press: text_editor::KeyPress) -> Option<text_editor::Binding<Message>> {
     use iced::keyboard::Key;
     match press.key.as_ref() {
-        // Shift+Enter, or Alt+Enter as AutoCAD's table cell takes it.
+        // Shift+Enter, or Alt+Enter as table cells commonly take it.
         Key::Named(Named::Enter) if press.modifiers.shift() || press.modifiers.alt() => Some(text_editor::Binding::Enter),
         Key::Named(Named::Enter) => Some(text_editor::Binding::Custom(msg(Event::Commit))),
         Key::Named(Named::Tab | Named::Escape) => None,
@@ -1671,6 +1674,60 @@ pub(crate) fn schedule_cell(
         }
     }
     Some(Ok(format!("{words}. Kaydet hepsine tek adımda yazar.")))
+}
+
+/// A schedule's draft: its cells are its objects' values, so the draft is the
+/// schedule as Kaydet would leave it, worked out on a copy of the drawing (each cell through `cad.schedules.edit`, the
+/// sizes through `cad.tables.edit`, as [`App::save_schedule_editor`] writes them); a value the objects refuse is
+/// refused here, while the cell is being written. Nothing is written to the drawing.
+fn schedule_planned(
+    doc: &kentos_domain::Document,
+    uid: Uuid,
+    edits: &[TableEdit],
+    saved: &TableEntity,
+) -> Result<TableEntity, String> {
+    use kentos_commands::{ScheduleOperation, SchedulesEdit};
+    let mut copy = doc.reading_copy();
+    fn failed<T>(r: CommandResult<T>) -> Option<String> {
+        match r {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Some(error.message),
+            _ => None,
+        }
+    }
+    for edit in edits {
+        let why = match edit {
+            TableEdit::SetCell { row, col, words } => failed(kentos_native_application::schedules_edit::execute(
+                &mut ExecutionContext::new(&mut copy),
+                SchedulesEdit {
+                    uid: uid.to_string(),
+                    operation: ScheduleOperation::Cell { row: *row, column: *col, value: words.clone() },
+                    expected_revision: None,
+                },
+            )),
+            size @ (TableEdit::RowHeight { .. } | TableEdit::ColumnWidth { .. } | TableEdit::Fit { .. }) => {
+                failed(tables_edit::execute(
+                    &mut ExecutionContext::new(&mut copy),
+                    TablesEdit {
+                        operation: TablesOperation::Edit { uid: uid.to_string(), edits: vec![size.clone()] },
+                        expected_revision: None,
+                    },
+                ))
+            }
+            _ => Some(
+                "Çizelgenin satırları, sütunları ve biçimi belgenin yazdığıdır; yalnız hücreler, boylar ve genişlikler düzenlenir."
+                    .to_owned(),
+            ),
+        };
+        if let Some(why) = why {
+            return Err(why);
+        }
+    }
+    Ok(match copy.slot_of(uid).and_then(|s| copy.get(s)) {
+        Some(Entity::Table(t)) => t.clone(),
+        _ => saved.clone(),
+    })
 }
 
 fn commit_edits(e: &Editor) -> Vec<TableEdit> {
