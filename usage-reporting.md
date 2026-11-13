@@ -73,6 +73,7 @@ Bu dosya, tekrarlanabilir kullanıcı deneyimi incelemelerinin çalışma kaydı
 - **Beklenen:** Anlamlı ad ve roller, değer, etkin/devre dışı durumu ve odak; menüler, modal pencereler ve klavye sırası VoiceOver ve macOS erişilebilirlik istemcilerine sunulmalı. Çizim alanı için de seçili nesne ve etkin araç durumu okunabilir olmalı.
 - **İnceleme:** Masaüstü UI çerçevesinin erişilebilirlik ağacı/adapter desteği ve KentOS UI ortak bileşenleri; bu gözlem yalnız test edilen macOS sürümü ve pencere için geçerlidir.
 - **Kabul:** VoiceOver ile yeni CAD projesi oluştur, çizgi aracını seç, değer gir, kaydet ve uyarıda seçim yap; isim ve odak sırasını otomatik erişilebilirlik denetimiyle doğrula.
+- **Durum (13.11.2026):** ertelendi — doğrulandı: arayüz çatısı iced 0.14'ün hiçbir paketinde erişilebilirlik bağdaştırıcısı yok, bu yüzden macOS ağacı yalnız pencere çerçevesini ve menü çubuğunu görüyor; uygulama içi her bileşen için ad, rol, değer, durum ve odak sağlayan bir katman (accesskit ve winit bağdaştırıcısı gibi) yeni çalışma zamanı bağımlılığı ve KentOS UI'nin tüm bileşenlerine yayılan ayrı bir iştir; CLAUDE.md §3 gereği sahibin onayı olmadan eklenmedi. TODOS.md `UI-13` olarak kabul ölçütüyle yazıldı.
 
 #### UR-007 — Daire seçildiğinde daire yerine genel Alan sekmesi açılıyor
 
