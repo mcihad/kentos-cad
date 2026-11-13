@@ -445,7 +445,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 15A — Uygulama İçi Yapay Zekâ Ajanı: Ayarlardan Sağlayıcı ve API Anahtarı, Varsayılan Ajan, Sohbetle Çizim (Öncelik: P1)
+### [x] ADIM 15A — Uygulama İçi Yapay Zekâ Ajanı: Ayarlardan Sağlayıcı ve API Anahtarı, Varsayılan Ajan, Sohbetle Çizim (Öncelik: P1)
 
 > **13 Kasım 2026, sahibin isteği:** "uygulama ayarlarına kişi kendi yapay zeka ajanını ayarlayabilmeli api key ile ve
 > bunun varsayılan olup olmadığını belirleyebilmeli daha sonra varsayılan ajanıyla chat yapabilmeli kentos-ui içinde bu
@@ -471,6 +471,11 @@ flowchart LR
 - **Tamamlanma ölçütü:** ayarlardan bir sağlayıcı anahtarla tanımlanır, varsayılan seçilir; sohbetten verilen bir çizim
   isteği ajanın araç çağrılarıyla çizilir, geri alınabilir; altı sağlayıcının tel biçimi sahte sunucuya karşı test
   edilir; anahtar hiçbir günlüğe, çizime ya da hata kaydına düşmez.
+- **13 Kasım 2026 ([ADR 8056 §4](../docs/adr/8056-phase-2-mcp-v2-and-in-app-agent.md)):** `kentos-agent` crate'i (13
+  sağlayıcı, dört tel biçimi, kendi çalışma zamanı, 58 test); Uygulama ayarları › Yapay zekâ ve üstünde açılan ajan
+  penceresi; Asistan paneli (`view.assistant`, her programda); araçlar ADIM 14'ün katmanı, önce plan, silen ya da
+  değiştiren yazma onay ister. Gerçek pencerede DeepSeek `deepseek-flash` ile oda çizdirildi. Sahibin uyarısıyla
+  `Select` satırı ve model alanı bileşende düzeltildi (DESIGN.md §7.13).
 
 ---
 

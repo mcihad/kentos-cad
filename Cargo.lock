@@ -2547,6 +2547,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-agent"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "kentos-api"
 version = "0.1.0"
 dependencies = [
@@ -2649,6 +2660,7 @@ version = "0.1.0"
 dependencies = [
  "iced",
  "iced_runtime",
+ "kentos-agent",
  "kentos-cloud",
  "kentos-commands",
  "kentos-domain",

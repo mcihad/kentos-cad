@@ -74,6 +74,7 @@ fn a_new_tool_reveals_defaults_without_resetting_scroll_on_setting_edits() {
         Panel::Templates,
         Panel::Sources,
         Panel::Navigator,
+        Panel::Assistant,
     ] {
         app.docks.close(panel);
     }

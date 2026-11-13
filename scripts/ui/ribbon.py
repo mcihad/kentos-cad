@@ -204,7 +204,8 @@ def view_tab(cad):
             S("view.fills"), S("view.areaEdges"), S("view.transparency")],
           overflow=["view.lineWeights"],
           launcher=toCmd("tools.options", "Uygulama ayarları: görünüm")),
-        P("Paneller", "panelRight", [S("view.rightPanel"), S("view.bottomPanel"), S("view.coords"),
+        # Asistan (docs/adr/8056 §4): the user's own AI agent's panel.
+        P("Paneller", "panelRight", [S("view.rightPanel"), S("view.bottomPanel"), S("view.assistant"), S("view.coords"),
           S("view.overview"), S("view.magnifier"), S("view.fullscreen")],
           overflow=["view.keyTips"]),
     ]

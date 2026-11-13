@@ -941,6 +941,11 @@ impl App {
     pub(crate) fn close_dialog(&mut self) {
         use crate::app::Dialog;
         match self.dialog.take() {
+            // A Yapay zekâ ajanı window over Uygulama ayarları goes first (assistant/settings.rs).
+            Some(Dialog::Settings) if self.assistant.agents.editor.is_some() => {
+                self.assistant.agents.editor = None;
+                self.dialog = Some(Dialog::Settings);
+            }
             Some(Dialog::BlockReview) => self.block_editor_review_close(),
             Some(Dialog::BlockReplace) => self.block_replace_close(),
             Some(Dialog::BlockFind) => self.block_find_close_options(),

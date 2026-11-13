@@ -149,6 +149,8 @@ pub enum Edit {
     ResetSection,
     /// Proje ayarları over this window, which comes back when it closes.
     OpenProject,
+    /// Yapay zekâ's agents (assistant/settings.rs): written at once, apart from the draft.
+    Agents(crate::assistant::AgentsEdit),
 }
 
 impl App {
@@ -194,6 +196,9 @@ impl App {
     }
 
     pub(crate) fn settings_edit(&mut self, edit: Edit) -> Task<Message> {
+        if let Edit::Agents(edit) = edit {
+            return self.agents_edit(edit);
+        }
         let Some(draft) = &mut self.settings_draft else {
             return Task::none();
         };
@@ -292,6 +297,8 @@ impl App {
                 return task;
             }
             Edit::Save => return self.save_settings(),
+            // Taken above, before the draft.
+            Edit::Agents(_) => {}
         }
         Task::none()
     }
@@ -751,6 +758,7 @@ mod tests {
             (Section::Snap, "kenetleme"),
             (Section::NewProjects, "yeni-projeler"),
             (Section::Engine, "cizim-motoru"),
+            (Section::Ai, "yapay-zeka"),
             (Section::File, "ayar-dosyasi"),
         ];
         for (mode, suffix) in [("dark", ""), ("light", "-acik")] {

@@ -314,6 +314,7 @@ mod tests {
                         crate::app::Panel::Templates,
                         crate::app::Panel::Sources,
                         crate::app::Panel::Navigator,
+                        crate::app::Panel::Assistant,
                     ] {
                         app.docks.close(panel);
                     }

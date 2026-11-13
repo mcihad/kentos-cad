@@ -253,7 +253,10 @@ fn each_program_docks_its_own_panels() {
     use Panel::*;
     let expected: [(Option<Module>, &[Panel]); 4] = [
         (None, &Panel::ALL),
-        (MIMARI, &[Layers, Blocks, Templates, Navigator, Properties]),
+        (
+            MIMARI,
+            &[Layers, Blocks, Templates, Navigator, Assistant, Properties],
+        ),
         // Harita's project tree (docs/adr/1720): its surfaces, pads and what was drawn from them.
         (
             HARITA,
@@ -266,10 +269,16 @@ fn each_program_docks_its_own_panels() {
                 MapWork,
                 MapSurvey,
                 RoadProject,
+                Assistant,
                 Properties,
             ],
         ),
-        (GIS, &[Layers, Processing, Templates, Sources, Properties]),
+        (
+            GIS,
+            &[
+                Layers, Processing, Templates, Sources, Assistant, Properties,
+            ],
+        ),
     ];
     for (program, panels) in expected {
         let app = started(program);

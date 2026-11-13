@@ -58,6 +58,8 @@ kentos-geopackage = { path = "../../crates/native/geopackage" }
 # The cloud client (docs/adr/0040): signing in, the catalog, opening, saving and following
 # cloud projects, device drafts; its own runtime, awaited on Iced's executor (docs/adr/0041).
 kentos-cloud = { path = "../../crates/native/cloud" }
+# Asistan (docs/adr/8056 §4): the user's own AI agents and their providers; its own runtime, awaited on Iced's executor.
+kentos-agent = { path = "../../crates/native/agent" }
 # File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
 # the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
 kentos-formats = { path = "../../crates/shared/formats" }

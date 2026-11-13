@@ -61,12 +61,14 @@ pub enum Panel {
     /// GNSS arşivi: a map project's arazi ölçümleri, solutions and accepted points (map_survey_panel.rs,
     /// docs/adr/1340 §6).
     MapSurvey,
+    /// Asistan: the user's own AI agent, chatting and drawing (assistant/, docs/adr/8056 §4).
+    Assistant,
     Properties,
 }
 
 impl Panel {
     /// Every panel, in the dock's order at start (a module's program docks its own, module_surfaces.rs).
-    pub(crate) const ALL: [Panel; 10] = [
+    pub(crate) const ALL: [Panel; 11] = [
         Panel::Layers,
         Panel::Processing,
         Panel::Blocks,
@@ -76,6 +78,7 @@ impl Panel {
         Panel::RoadProject,
         Panel::MapWork,
         Panel::MapSurvey,
+        Panel::Assistant,
         Panel::Properties,
     ];
 
@@ -90,6 +93,7 @@ impl Panel {
             Panel::RoadProject => "Yol projesi",
             Panel::MapWork => "Harita işi",
             Panel::MapSurvey => "GNSS arşivi",
+            Panel::Assistant => "Asistan",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -105,6 +109,7 @@ impl Panel {
             Panel::RoadProject => crate::icons::from_web(Some("corridorEditor")),
             Panel::MapWork => crate::icons::from_web(Some("sourceLinked")),
             Panel::MapSurvey => crate::icons::from_web(Some("gnssArchive")),
+            Panel::Assistant => crate::icons::from_web(Some("assistant")),
             Panel::Properties => Icon::Properties,
         }
     }
@@ -123,6 +128,7 @@ impl Panel {
             Panel::RoadProject,
             Panel::MapWork,
             Panel::MapSurvey,
+            Panel::Assistant,
         ] {
             if crate::module_surfaces::shows_panel_in(program, panel) {
                 docks.dock(panel, Side::Right);
@@ -562,6 +568,8 @@ pub enum Message {
     SvgEdit(Box<crate::style::svgedit::Event>),
     /// The Python console (python/, docs/adr/0132).
     Python(crate::python::Event),
+    /// Asistan's events (assistant/, docs/adr/8056 §4).
+    Assistant(crate::assistant::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -825,6 +833,8 @@ pub struct App {
     pub bottom_tab: crate::bottom::BottomTab,
     /// The Python console, the bottom panel's Python tab (python/, docs/adr/0132).
     pub(crate) python: crate::python::Console,
+    /// Asistan: the user's agents and the chat with one (assistant/, docs/adr/8056 §4).
+    pub(crate) assistant: crate::assistant::Assistant,
     /// The open history's height when the panel's edge was dragged (in memory,
     /// as the docks' layout); `None`: the command line's own.
     pub bottom_log: Option<f32>,

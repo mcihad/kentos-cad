@@ -132,6 +132,8 @@ impl App {
                     (Panel::RoadProject, _) => pane.scrollable(),
                     (Panel::MapWork, _) => pane.scrollable(),
                     (Panel::MapSurvey, _) => pane.scrollable(),
+                    // Asistan's chat scrolls itself, its composer stays at the foot (assistant/view.rs).
+                    (Panel::Assistant, _) => pane.actions(self.assistant_actions()),
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
                         Some(meta) => pane.meta(label::caption(meta)),
                         None => pane,
@@ -169,6 +171,8 @@ impl App {
         if let Some(dialog) = self.dialog {
             layers.push(self.dialog_view(dialog));
         }
+        // A Yapay zekâ ajanı window over Uygulama ayarları (assistant/settings.rs).
+        layers.extend(self.agent_window());
         // İfade oluşturucu over the window whose field opened it (expression/).
         layers.extend(self.builder_view());
         // The connection window, the password question and Sil's question over the window that asked for them

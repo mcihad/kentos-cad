@@ -2705,6 +2705,10 @@
         "size": "small"
        },
        {
+        "command": "view.assistant",
+        "size": "small"
+       },
+       {
         "command": "view.coords",
         "size": "small"
        },
@@ -4386,6 +4390,10 @@
        },
        {
         "command": "view.bottomPanel",
+        "size": "small"
+       },
+       {
+        "command": "view.assistant",
         "size": "small"
        },
        {

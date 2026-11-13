@@ -626,6 +626,7 @@ impl App {
             Message::Designer(event) => return self.designer_event(*event),
             Message::SvgEdit(event) => return self.svgedit_event(*event),
             Message::Python(event) => return self.python_event(event),
+            Message::Assistant(event) => return self.assistant_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             // Through `cad.layers.set`, as Python and MCP do (docs/adr/0248 §6).

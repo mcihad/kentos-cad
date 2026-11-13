@@ -88,3 +88,67 @@ denetim/onarım ve İşlemler kapıları. Masaüstü: değişiklik kümesi adım
 kompakt liste, `drawing.new`, `catalog.search`, plansız yazma reddi, plan (1 eklenecek), yazma, aynı planla ikinci
 yazmanın reddi, yanlış kapı, `session.status`, `audit.list_providers`.
 
+## §4. Uygulama içi yapay zekâ ajanı (`ADIM 15A`)
+
+**İstek.** Kullanıcı kendi ajanını (sağlayıcı, model, kendi API anahtarı) ayarlardan tanımlar, birini varsayılan yapar,
+onunla sohbet ederek çizdirir; Anthropic, OpenAI, DeepSeek, Gemini, Kimi, GLM ve öbürleri. Araştırma:
+`docs/research/2026-11-13-yapay-zeka-saglayicilari.md`.
+
+**Karar.**
+- **Sağlayıcı katmanı ayrı crate, `kentos-agent`** (`crates/native/agent`): arayüz, GPU, veritabanı ya da başka bir
+  KentOS crate'i yok (`scripts/arch/deps.mjs`, `agent` grubu). Kendi tokio çalışma zamanı (iki iş parçacığı,
+  `kentos-ajan`); sonuçlar kanalla gelir, Iced'in yürütücüsü bekler. 13 sağlayıcı, dört tel biçimi (araştırmanın
+  "Soyutlama önerisi"): Anthropic Messages; OpenAI Responses (OpenAI, xAI; `store: false`, şifreli düşünce öğeleri geri
+  gider); Chat Completions, her sağlayıcıya bir tuhaflık profiliyle (DeepSeek, Kimi, GLM, Qwen `reasoning_content`; GLM
+  `tool_stream`; Mistral çağrı kimliği; Ollama ve LM Studio `tool_choice`'suz); Gemini'nin `streamGenerateContent`'i
+  (düşünce imzaları). Araç adları geri dönüşlü eşlenir (`cad.run` ↔ `cad__run`); `tool_choice` yalnız auto, örnekleme
+  parametresi yok, en çok 25 araç turu.
+- **Sağlayıcının kaydı aynen geri gider** (araştırmanın 1. tuzağı): bir turun düşünce öğeleri ve imzaları, sağlayıcı ve
+  modelle etiketli, olduğu gibi saklanır ve yalnız ona gönderilir. Sohbetin ortasında ajan değişirse başkasınınki
+  gönderilmez. Başarısız ya da durdurulan turdan sonra sohbet son bütün adımda kalır: çizimde yapılanlar unutulmaz.
+- **Ajanlar ve anahtarlar ayarlarda değil**, yalnız kullanıcının okuyabildiği `yapay-zeka-ajanlari.json`'da (0600):
+  Ayar dosyası dışa aktarılıp paylaşılıyor, anahtar onunla gitmemeli. Anahtarın yeri üç: bu bilgisayarda (o dosyada),
+  yalnız bu oturum (bellekte), sağlayıcının ortam değişkeni (`DEEPSEEK_API_KEY` …). Anahtar `Debug`'da, hata
+  iletisinde ve günlükte görünmez, sağlayıcının hata metninden de ayıklanır. Okunamayan dosya kenara alınır, üstüne
+  yazılmaz, açılışta söylenir. Testler ve görüntü üreticileri kullanıcının dosyasına dokunmaz (`App::boot`: bellekte).
+- **Uygulama ayarları › Yapay zekâ:** ajanlar (Varsayılan / Varsayılan yap, Düzenle, Sil) ve Ajan ekle. Ajan, ayarlar
+  penceresinin üstünde açılan kendi penceresinde, kendi Vazgeç ve Kaydet'iyle düzenlenir (formun ve pencerenin iki
+  Kaydet satırı hangisinin ajanı sakladığını sorduruyordu): sağlayıcı, ad, model (öneri alanı: sağlayıcının önerileri
+  ve "Listeyi getir"le sağlayıcının listesi), adres (Çin uç noktası), API anahtarı ve yeri, varsayılan, gizlilik notu;
+  alt çubukta "Bağlantıyı dene" en ucuz çağrıyla anahtarı sınar ve sonucu söyler.
+- **Asistan paneli:** sağ yuvada bir sekme, her programda; Görünüm › Paneller'de ve Komut ara'da "Asistan"
+  (`view.assistant`). `kentos-ui`'nin `AiConversation`'ı: akan yanıt, düşünce, araç kartları (araç, komut, plan ya da
+  execute, girdi ve sonuç), Durdur, Yeniden dene, Kopyala; başlıkta Yeni sohbet ve Yapay zekâ ayarları; birden çok ajan
+  varken seçici. Ajan yoksa panel nasıl ekleneceğini söyler ve "Ajan ekle" formu açar.
+- **Araçlar ADIM 14'ünkü** (`agent_tools`), öndeki çizimde (`AppHost`), ajan bağlantısıyla aynı çekirdekten
+  (`App::agent_request`): programın sunduğu komutlar, çizimin gizlediği alanlar, her yazma bir geri alma adımı ve komut
+  geçmişinde "Asistan: …". Programın hiçbir komutunu çalıştırmadığı bölümün kapısı sunulmaz
+  (`agent_tools::offered_tools`; ölçüm: Mimari ve GIS'te `road.run` yok, Harita ve Yol arayüz yollarıyla beşini de
+  açıyor, Görünümler'in `cad.views.edit`'i mimarinin). Koruyucu turlar arasında tutulur. 48 000 baytı aşan sonuç kesilir
+  ve "daha dar sorun" denir: belirteçler kullanıcının parası.
+- **Onay:** silen ya da var olanı değiştiren bir yazma (MCP'nin yıkıcı listesi, adımlarından biri öyle olan küme, onarım
+  ve İşlemler) panelde "Onay gerekiyor" kartıyla bekler; reddedilirse çalışmaz ve ajana söylenir. Ekleyen yazma hemen
+  çalışır.
+- **Sistem talimatı** Türkçe: önce `drawing.summary`, katalogda arama ve şema, kapılar, önce plan sonra aynı girdiyle
+  execute, birim ve eksenler, hatayı okumak, kısa yanıt; kullanıcıya iç kimlik, sürüm ya da plan numarası yazılmaz
+  (ilk denemede yanıt "id 7, revision 2" diyordu).
+- **Bileşen düzeltmeleri** (sahibin 13 Kasım uyarıları: "combobox her şey iç içe girmiş", model düğmeleri silik):
+  `Select` satırı tek satırdır, ad önce sığar, ayrıntı kalan yere "…" ile (DESIGN.md §7.13, "Açılır liste satırı");
+  elle yazılan ama önerisi olan değer `Suggest` ile seçilir, düğme sırasıyla değil (§7.13, "Öneri alanı").
+
+**Doğrulama.**
+- `kentos-agent`: 15 + 43 test. Dört tel biçimi sahte sunucuya karşı: metin; parçalı araç çağrısı → cevap → metin;
+  düşüncenin ikinci istekte aynen gitmesi; 401 → `Auth` (sahte sunucu anahtarı yankılar, iletide yok); 429 ve
+  `retry-after` → `RateLimit`; akış içinde hata → `Stream`; iptal → `Cancelled`. DeepSeek kaydının yeniden oynatılması;
+  Mistral, Kimi, GLM, Ollama, LM Studio, OpenRouter tuhaflıkları; ajan dosyası geçici klasörde (0600, tek varsayılan,
+  oturum anahtarı dosyaya yazılmaz, okunamayan dosya kenara alınır).
+- Masaüstü `assistant::tests` (9): sahte sağlayıcıyla planla → uygula ve alanın çizilmesi, iki turun belirteçleri,
+  talimat ve araç adları, tek geri alma; silen yazmanın onay beklemesi ve reddedilince çalışmaması; 401'in sohbette
+  anahtarsız söylenmesi; ajansız sohbetin ayarlara yönlendirmesi; ajanların ve varsayılanın tutulması, ajan penceresinin
+  Esc ile kapanıp ayarların kalması; model önerileri; onay kuralı; programların kapıları. Headless `agent_tools` (8),
+  panel listeleri, katalog, ayarlar ve `kentos-ui` seçim kutusu testleri.
+- Gerçek pencere (Xvfb, KentOS Mimari, sentetik çizim; DeepSeek `deepseek-flash`, anahtar yalnız oturumun ortam
+  değişkeninde): ajan ayarlardan tanımlandı, "Bağlantı çalışıyor: DeepSeek 2 model listeledi."; "Çizimde boş bir yere
+  6 m x 4 m bir odanın duvarlarını çiz; yeri sen seç, var olan nesnelerle çakışmasın." isteğinde ajan sahneyi okudu,
+  katalogda aradı, `cad.walls.rectangle`'ın şemasını okudu, bir Duvar katmanı açıp odayı merdivenin üstündeki boş yere
+  planlayıp yazdı (tur 25–55 sn). (20, 0) verildiğinde merdivenle çakışacağını görüp üç seçenek sordu.

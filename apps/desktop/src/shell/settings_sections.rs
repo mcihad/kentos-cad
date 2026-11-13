@@ -30,15 +30,18 @@ pub enum Section {
     Snap,
     NewProjects,
     Engine,
+    /// Yapay zekâ: the user's own AI agents (assistant/settings.rs, docs/adr/8056 §4).
+    Ai,
     File,
 }
 
 impl Section {
-    pub const ALL: [Section; 5] = [
+    pub const ALL: [Section; 6] = [
         Self::Appearance,
         Self::Snap,
         Self::NewProjects,
         Self::Engine,
+        Self::Ai,
         Self::File,
     ];
 
@@ -49,6 +52,7 @@ impl Section {
             Self::Snap => "Kenetleme",
             Self::NewProjects => "Yeni projeler",
             Self::Engine => "Çizim motoru",
+            Self::Ai => "Yapay zekâ",
             Self::File => "Ayar dosyası",
         }
     }
@@ -59,6 +63,7 @@ impl Section {
             Self::Snap => Icon::Magnet,
             Self::NewProjects => Icon::DocumentNew,
             Self::Engine => Icon::Cube,
+            Self::Ai => crate::icons::from_web(Some("assistant")),
             Self::File => Icon::Open,
         }
     }
@@ -70,6 +75,7 @@ impl Section {
             Self::Snap => "Kenetleme ve seçim",
             Self::NewProjects => "Yeni proje varsayılanları",
             Self::Engine => "Çizim motoru",
+            Self::Ai => "Yapay zekâ ajanları",
             Self::File => "Ayar dosyası",
         }
     }
@@ -88,6 +94,9 @@ impl Section {
             }
             Self::Engine => {
                 "Çizim alanını ekran kartında çizerken kenar yumuşatma, çözünürlük, sembol boyutu ve çizgi kalınlığı. Bu cihaza özgüdür; menüler, paneller ve pencereler her zaman tam kalitede çizilir."
+            }
+            Self::Ai => {
+                "Asistan panelinin konuştuğu yapay zekâ ajanları: sağlayıcı, model ve kendi API anahtarınız. Biri varsayılandır. Bu bölüm kendi Kaydet'iyle hemen yazılır; ayar dosyasıyla dışa aktarılmaz."
             }
             Self::File => {
                 "Ayarları bir dosyaya aktarın, başka bir bilgisayardan ya da web uygulamasından alın, varsayılanlara döndürün."
@@ -168,7 +177,7 @@ impl Section {
                 "graphics.highlightColor",
                 "graphics.highlightWidth",
             ],
-            Self::File => &[],
+            Self::Ai | Self::File => &[],
         }
     }
 }
@@ -335,6 +344,7 @@ impl App {
             Section::Snap => snap_section(&fields, self.grid_titles()),
             Section::NewProjects => self.new_projects_section(&fields),
             Section::Engine => self.engine_section(&fields),
+            Section::Ai => self.ai_section(),
             Section::File => self.file_section(draft),
         };
         let content = column![

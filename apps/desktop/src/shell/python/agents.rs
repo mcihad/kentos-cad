@@ -135,6 +135,17 @@ impl App {
         if self.python.link.is_none() {
             return Err(refused("closed", "Ajan bağlantısı kapatıldı."));
         }
+        self.agent_request(request, "Ajan")
+    }
+
+    /// An agent's request on the drawings open here, whoever asks it: an agent on the link, or the desktop's own
+    /// assistant (docs/adr/8056 §4), which needs no link. The same rules either way: the program's offer, the fields
+    /// the drawing hides, a write one undo step said in the log under `who` (“Ajan: …”, “Asistan: …”).
+    pub(crate) fn agent_request(
+        &mut self,
+        request: &Value,
+        who: &str,
+    ) -> Result<Value, (String, String)> {
         let Some(method) = request.get("method").and_then(Value::as_str) else {
             return Err(refused(
                 "invalid_request",
@@ -264,12 +275,12 @@ impl App {
                 if wrote && !in_front {
                     // Its drawing waits in its tab: the store on screen is another drawing's.
                     let command = params.get("command").and_then(Value::as_str).unwrap_or("?");
-                    self.output(format!("Ajan: {command} (arka sekmedeki çizimde)"));
+                    self.output(format!("{who}: {command} (arka sekmedeki çizimde)"));
                 } else if wrote {
                     let command = params.get("command").and_then(Value::as_str).unwrap_or("?");
-                    self.output(format!("Ajan: {command}"));
+                    self.output(format!("{who}: {command}"));
                 } else if method == "replay" {
-                    self.output("Ajan: kayıt yeniden oynatıldı".to_owned());
+                    self.output(format!("{who}: kayıt yeniden oynatıldı"));
                 }
                 Ok(answer)
             }

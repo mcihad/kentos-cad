@@ -438,7 +438,7 @@ Uygulama bir şeyi yapmadan önce sorduğunda **tek yol budur** (`ui/widgets/con
 |---|---|---|
 | Açılış | Dosya → Proje ayarları…, CRS düğmeleri | Araçlar → Uygulama ayarları…, `Ctrl+,` |
 | Sol alttaki kapsam notu | kaydet simgesi + "Proje dosyasına kaydedilir" + dosya adı | ayar simgesi + "Bu tarayıcıda saklanır / Tüm projeler için geçerlidir" |
-| Bölümler | Genel, Koordinat sistemi, Birimler ve hassasiyet | Görünüm, Kenetleme, Yeni projeler, Çizim motoru, Ayar dosyası (dışa/içe aktar, varsayılanlara döndür, kaydın yeri) |
+| Bölümler | Genel, Koordinat sistemi, Birimler ve hassasiyet | Görünüm, Kenetleme, Yeni projeler, Çizim motoru, Yapay zekâ (kullanıcının ajanları; bir ajan kendi Vazgeç ve Kaydet'iyle bu pencerenin üstünde açılan “Yapay zekâ ajanı” penceresinde düzenlenir), Ayar dosyası (dışa/içe aktar, varsayılanlara döndür, kaydın yeri) |
 
 - **Yerleşim:** 940 px genişlik ve sabit yükseklik; bölüm değişince pencere zıplamaz. Solda bölüm menüsü (etkin bölümde 3 px amber çubuk ve amber simge), sağda başlık (19 px), bir satırlık açıklama ve gruplar.
 - **Satır (`settingRow`):** solda etiket (14 px, 500) ve açıklama (üçüncül renk, en fazla 52 karakter satır), sağda kontrol.
@@ -652,6 +652,8 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
 | Girdi | Metin, açılır liste, sayı, tarih, renk, arama, öneri, etiket: alan zemini, 1 px çizgi; üzerine gelince güçlü çizgi, odakta vurgu çizgisi: hepsinde aynı. Metin kutularında odak halkası çizilmez; kenarlık yeterlidir. Boyları aynıdır (§5.2). |
 | Düğme | İkincil (çizgili), birincil (dolu vurgu, 600), hayalet (çizgisiz): 28 px; satır içindeki küçüğü 22 px. Yalnız ikonlu düğme aynı iki boyda karedir. |
 | Tablo | [ADR 0805](docs/adr/0805-data-tables-head-rows-cells.md): başlık satırla aynı boyda kendi bandında, yarı kalın ana metin rengi, altında güçlü çizgi; başlıklı sütunlar arasında çizgi. Satır en az 28 px, altında ince çizgi, tıklanmasa da aydınlanır. Sayılar sağda ve eş aralıklı, başlıkları üstlerinde. Sıralanabilir başlığın bütün hücresi basılır; ok sıralıyken vurgu renginde, imleçte soluk, yazıyı kaydırmaz. Sütun kenarı sürüklenir, çift tık sığdırır. Sığmayan yazı “…” ile biter. Hücre hücre okunan tablolarda sütun çizgileri satırlardan da geçer (`Table::grid`). |
+| Açılır liste satırı | Tek satır, boyu sabit (Material 3'ün tek satırlık liste öğesi). Ad genişliğini önce alır, yalnız kendisi sığmazsa “…” ile biter; sağdaki ayrıntı (sönük, eş aralıklı: “#12”, “require”) kalan yere sığar, sığmazsa “…” ile biter. Bir seçeneğin uzun açıklaması ayrıntıya değil alanın altındaki yardıma yazılır. Ölçüm (13 Kasım 2026, Uygulama ayarları › Yapay zekâ): ayrıntıya cümle yazılınca adlar “Op…”a iniyor, ayrıntı alt satıra taşıp satırlar üst üste biniyordu. |
+| Öneri alanı | Elle yazılabilen ama bilinen değerleri de olan alan (model adı, kişi): `Suggest`; odaklanınca öneriler açılır, yazdıkça süzülür. Seçenekleri düğme sırası olarak dizmek yapılmaz: düğmeler satırı taşırıyor, seçili olanın yazısı vurgu zemininde okunmuyordu. |
 | Sekme şeridi | Satırla aynı boyda. Sekmeler daralmaz; sığmayınca `‹ ›`, tekerlek ve bütün sekmelerin listesi ([ADR 0806](docs/adr/0806-tabs-keep-their-width.md)). |
 | Seçili satır | Tablo, ağaç, liste: yumuşak vurgu zemini. Birkaçı seçiliyken birincil satır ayrıca vurgu kenarında. Sol 2 px çubuk seçim değil “etkin” demektir (etkin katman). Döşemeler (malzeme, nesne) kenarlıdır: aralarında satır çizgisi yoktur. |
 | Küçük yazı | `Tokens::soft`: okunur en sessiz ton (AA). `faint` yazıda kullanılmaz, çizgi ve işaretlerindir. |

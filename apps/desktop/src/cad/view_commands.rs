@@ -13,8 +13,9 @@ use kentos_ui::widget::docking::Side;
 use crate::app::{App, Message, Panel};
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 5] = [
+pub const COMMANDS: [&str; 6] = [
     "view.rightPanel",
+    "view.assistant",
     "view.properties",
     "view.fullscreen",
     "view.commandSearch",
@@ -23,12 +24,14 @@ pub const COMMANDS: [&str; 5] = [
 
 /// The side panels F4 hides and shows together (the web's right panel): the program's own of them
 /// (module_surfaces.rs). Kaynaklar shares Katmanlar' slot and goes with them too.
-const SIDE_PANELS: [Panel; 10] = Panel::ALL;
+const SIDE_PANELS: [Panel; Panel::ALL.len()] = Panel::ALL;
 
 impl App {
     pub(crate) fn view_command(&mut self, id: &'static str) -> Task<Message> {
         match id {
             "view.rightPanel" => self.toggle_right_panel(),
+            // Asistan (docs/adr/8056 §4): its tab in front, the side panels shown; the composer takes the keyboard.
+            "view.assistant" => return self.show_assistant(),
             "view.properties" => self.docks.show(Panel::Properties, Side::Right),
             "view.fullscreen" => return self.toggle_fullscreen(),
             // Komut ara in the tab row takes the keyboard (ribbon_search.rs).

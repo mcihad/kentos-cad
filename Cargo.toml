@@ -83,6 +83,7 @@ members = [
     "crates/native/mcp",
     # The desktop's cloud client (docs/adr/0040): the web's protocol through a native adapter.
     "crates/native/cloud",
+    "crates/native/agent",
     # The desktop's style engine page (docs/adr/0090): the style library and a layer's way to the GPU.
     "crates/native/style",
     # The style library and its .kstil file (docs/adr/0314 §3), under the product commands and the style page.

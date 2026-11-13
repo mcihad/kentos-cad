@@ -33,7 +33,7 @@ use std::rc::Rc;
 use iced::advanced::widget;
 use iced::keyboard::key::Named;
 use iced::widget::{Column, button, column, container, row, rule, scrollable, space};
-use iced::{Center, Color, Element, Fill};
+use iced::{Center, Color, Element, Fill, Right, Shrink};
 
 use crate::attribute::text;
 use crate::icon::{Icon, Tone, icon};
@@ -524,11 +524,18 @@ fn panel<'a>(
             line = line.push(icon(glyph).size(14.0));
         }
 
-        // One line: a long name ends in “…”, the row keeps its height.
+        // One line, the row's height whatever the words (DESIGN.md §7.13, a one-line list item): the name takes its
+        // width first and ends in “…” only when it alone does not fit; the detail takes what is left, at the right,
+        // and ends in “…” when it does not fit. A detail written as a sentence once squeezed the names to “Op…” and
+        // wrapped onto the next rows (Uygulama ayarları › Yapay zekâ's providers).
         let name = Elided::new(choice.label.clone())
             .size(typography::body())
             .font(typography::ui())
-            .width(Fill);
+            .width(if choice.detail.is_some() {
+                Shrink
+            } else {
+                Fill
+            });
         line = line.push(if choice.disabled {
             name.style(style::text::disabled)
         } else {
@@ -536,7 +543,16 @@ fn panel<'a>(
         });
 
         if let Some(detail) = &choice.detail {
-            line = line.push(label::mono_caption(detail.clone()));
+            line = line.push(
+                container(
+                    Elided::new(detail.clone())
+                        .size(typography::caption())
+                        .font(typography::mono())
+                        .style(style::text::faint),
+                )
+                .width(Fill)
+                .align_x(Right),
+            );
         }
 
         // The row's content in the middle of its height, not at its top.

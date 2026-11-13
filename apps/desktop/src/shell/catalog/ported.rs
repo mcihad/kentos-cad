@@ -839,4 +839,6 @@ pub const PORTED: &[&str] = &[
     // new sheet and template gallery, as the tabs under the drawing open them (sheets.rs).
     "sheet.new",
     "sheet.fromTemplate",
+    // docs/adr/8056 §4: Asistan, the user's own AI agent's panel (assistant/).
+    "view.assistant",
 ];

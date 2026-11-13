@@ -156,6 +156,21 @@ fn descriptor(command: &str) -> Option<&'static CommandDescriptor> {
     catalog().iter().find(|c| c.id == command)
 }
 
+/// The tools `host` offers: [`tools`] without the door of a part none of whose commands it runs (a module's program,
+/// docs/adr/8056 §1). The desktop's assistant offers these (§4): a door that could only answer `not_offered` costs the
+/// model tokens and a wrong turn. MCP lists every door, its drawings being of every module.
+pub fn offered_tools(host: &dyn Host) -> Vec<Tool> {
+    tools()
+        .into_iter()
+        .filter(|t| match DOORS.iter().find(|d| d.tool == t.name) {
+            Some(door) if door.part != Discipline::Core => catalog()
+                .iter()
+                .any(|c| part_of(&c.id) == door.part && host.not_offered(&c.id).is_none()),
+            _ => true,
+        })
+        .collect()
+}
+
 /// A tool as a host lists it: name, title, description, input schema, and whether it only reads or takes away.
 pub struct Tool {
     pub name: &'static str,

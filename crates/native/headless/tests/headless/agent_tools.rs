@@ -363,6 +363,30 @@ fn a_host_that_does_not_offer_a_part_hides_and_refuses_it() {
         "not_offered",
         "a step of a batch is checked too"
     );
+    // The desktop's assistant is offered no door the host never opens (docs/adr/8056 §4).
+    let offered: Vec<&str> = agent_tools::offered_tools(&host)
+        .iter()
+        .map(|t| t.name)
+        .collect();
+    assert!(
+        !offered.contains(&"arch.run"),
+        "a part the host never runs has no door"
+    );
+    for name in [
+        "cad.run",
+        "map.run",
+        "gis.run",
+        "road.run",
+        "command.batch",
+        "catalog.search",
+    ] {
+        assert!(offered.contains(&name), "{name}");
+    }
+    assert_eq!(
+        agent_tools::offered_tools(&s).len(),
+        agent_tools::tools().len(),
+        "a host of every part offers every tool"
+    );
 }
 
 #[test]

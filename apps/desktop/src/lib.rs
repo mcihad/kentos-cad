@@ -226,6 +226,9 @@ mod wall_styles;
 mod table_style_window;
 #[path = "shell/app.rs"]
 mod app;
+// Asistan: the user's own AI agent (docs/adr/8056 §4).
+#[path = "shell/assistant/mod.rs"]
+mod assistant;
 
 // Each discipline's part of the shell: its windows' state, messages and windows (docs/adr/8054 §6).
 #[path = "arch/state.rs"]
@@ -1817,6 +1820,15 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             app.arch.grids.library = grids::Library::device();
             // The forms designer's section library and kept drafts (docs/adr/0441 §1, §5).
             app.gis.form_files = forms::library::FormFiles::device();
+            // The user's AI agents, in a file of their own readable by the user alone (docs/adr/8056 §4).
+            app.assistant.store = kentos_agent::ProfileStore::device();
+            app.assistant.refresh();
+            if let Some(kept) = app.assistant.store.take_set_aside() {
+                app.output(format!(
+                    "Yapay zekâ ajanlarının dosyası okunamadı; {} olarak bir kenara alındı. Ajanları Uygulama ayarları › Yapay zekâ'dan yeniden tanımlayın.",
+                    kept.display()
+                ));
+            }
             // The recent files, kept beside the program's other history.
             if let Some(folder) = recent::RecentFiles::default_folder() {
                 app.recent = recent::RecentFiles::open(&folder);

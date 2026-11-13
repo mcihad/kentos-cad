@@ -1,0 +1,17 @@
+[package]
+name = "kentos-agent"
+description = "The in-app AI agent's provider layer: agents, provider presets, four wire formats and the tool loop (docs/adr/8056 §4)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# A pure network crate (scripts/arch/deps.mjs, group `agent`): no UI, GPU, database or other KentOS crate. HTTP goes
+# through reqwest on a tokio runtime of the crate's own (runtime.rs), as the cloud client's does, so the desktop keeps its
+# own executor. Nothing here is new to the lockfile: reqwest, tokio, serde and uuid are the workspace's.
+[dependencies]
+reqwest = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }

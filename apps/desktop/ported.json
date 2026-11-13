@@ -610,7 +610,8 @@
     "attachment.addLink",
     "file.import.photos",
     "sheet.new",
-    "sheet.fromTemplate"
+    "sheet.fromTemplate",
+    "view.assistant"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

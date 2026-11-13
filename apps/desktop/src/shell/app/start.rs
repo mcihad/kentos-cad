@@ -134,6 +134,7 @@ impl App {
             command_expanded: false,
             bottom_tab: crate::bottom::BottomTab::default(),
             python: crate::python::Console::default(),
+            assistant: crate::assistant::Assistant::default(),
             bottom_log: None,
             dialog: None,
             dialog_under: None,
