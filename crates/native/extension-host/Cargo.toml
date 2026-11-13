@@ -1,0 +1,16 @@
+[package]
+name = "kentos-extension-host"
+description = "The extension registry (docs/adr/8057 §2, plan/eklenti.md ADIM 17): installed .kek packages per user, their states, leases, updates and rollbacks, the watchdog, the organisation's policy and the revocation list"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native only, small and its own (scripts/arch/deps.mjs, group `extension-host`): the package inspector of
+# kentos-extensions over the user's file system, nothing of a window, a runtime or Python; the desktop, the headless
+# host, MCP and the Python host share it. Not inside kentos-native-application: the registry changes often while the
+# extension system grows, and that crate takes minutes to rebuild (docs/adr/8054).
+[dependencies]
+kentos-extensions = { path = "../../shared/extensions" }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -10,8 +10,10 @@ members = [
     "crates/shared/commands",
     "crates/shared/formats",
     "crates/shared/zip",
-    # Extension packages, .kek (docs/adr/8057, plan/eklenti.md): the manifest, the inspector, the packer.
+    # Extension packages, .kek (docs/adr/8057, plan/eklenti.md): the manifest, the inspector, the packer; and the
+    # registry of the packages a user installed.
     "crates/shared/extensions",
+    "crates/native/extension-host",
     "crates/shared/qml",
     "crates/shared/maplibre",
     # DWG codec adapter (ADR 0586): OpenCADStudio's pinned, MPL-2.0 codec;
@@ -124,6 +126,7 @@ default-members = [
     "crates/shared/formats",
     "crates/shared/zip",
     "crates/shared/extensions",
+    "crates/native/extension-host",
     "crates/shared/qml",
     "crates/shared/maplibre",
     "crates/native/dwg",

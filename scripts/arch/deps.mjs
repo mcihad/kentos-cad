@@ -108,6 +108,9 @@ const GROUPS = [
   // The in-app AI agent's provider layer (docs/adr/8056 §4): agents, the providers' wire formats and a chat turn's tool
   // loop over HTTP, on a tokio runtime of its own. A pure network crate: no other KentOS crate (the desktop hands it the
   // tools' schemas and runs the tools), no UI, GPU, database, server framework or browser. Listed before `native`.
+  // The extension registry (docs/adr/8057 §2): the shared package inspector over the user's file system; no window,
+  // runtime, database or Python. Listed before `native`, whose path contains it; its users name it in `uses`.
+  { name: 'extension-host', path: 'crates/native/extension-host/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'sqlx*', 'rusqlite'] },
   { name: 'agent', path: 'crates/native/agent/', targets: [HOST], uses: [], forbid: ['sqlx*', 'rusqlite', 'libsqlite3-sys', 'tokio-postgres', 'postgres*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   // The forms' guard (docs/adr/0411 §4) reads a project's `@` values as the desktop's document does: the pure

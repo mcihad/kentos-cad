@@ -291,6 +291,12 @@ impl VersionReq {
         (!comparators.is_empty()).then_some(VersionReq { comparators })
     }
 
+    /// Whether every comparator holds for `v`, a pre-release too: what withdrawing versions needs, where a preview
+    /// inside a bad range is bad as well (`<1.4.2` holds for `1.4.2-beta.1`).
+    pub fn contains(&self, v: &Version) -> bool {
+        self.comparators.iter().all(|c| c.holds(v))
+    }
+
     /// Whether `v` is in the range. A pre-release only when a comparator names one of the same core version.
     pub fn matches(&self, v: &Version) -> bool {
         if v.is_prerelease()
@@ -374,6 +380,9 @@ mod tests {
         assert!(!holds(">=1.2, <2", "1.5.0-beta.1"));
         assert!(holds(">=1.5.0-beta.1, <2", "1.5.0-beta.2"));
         assert!(!holds(">=1.5.0-beta.1, <2", "1.6.0-beta.1"));
+        let below = VersionReq::parse("<1.4.2").unwrap();
+        assert!(below.contains(&v("1.4.2-beta.1")) && !below.matches(&v("1.4.2-beta.1")));
+        assert!(!below.contains(&v("1.4.2")));
         for bad in ["", ">=", "1.x", "^1.2.3.4", ">=1.2-beta", "=>1.2", "1.2, "] {
             assert!(VersionReq::parse(bad).is_none(), "{bad}");
         }

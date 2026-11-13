@@ -508,7 +508,7 @@ flowchart LR
 | Durum | Adım | Ayrıntı |
 |---|---|---|
 | `[x]` | ADIM 16 — Sözleşme crate'i, manifest v1, güvenli `.kek` okuyucu ve paketleyici | [eklenti.md §4](eklenti.md), [ADR 8057 §1](../docs/adr/8057-phase-3-extension-packages.md) |
-| `[ ]` | ADIM 17 — Kayıt defteri, `ExtensionLease` ve yerel yaşam döngüsü | [eklenti.md §4](eklenti.md) |
+| `[x]` | ADIM 17 — Kayıt defteri, `ExtensionLease` ve yerel yaşam döngüsü | [eklenti.md §4](eklenti.md), [ADR 8057 §2](../docs/adr/8057-phase-3-extension-packages.md) |
 | `[ ]` | ADIM 18 — Eklentiler sekmesi, yönetici, dikey şerit sekmeleri ve Python'suz katkılar | [eklenti.md §4](eklenti.md) |
 | `[ ]` | ADIM 18A — Python ve uv: kullanıcının seçtiği isteğe bağlı ortam | [eklenti.md §4](eklenti.md) |
 | `[ ]` | ADIM 19 — Python yürütücüsü, aracı ve İşlemler/ifade köprüsü (birinci dikey dilim) | [eklenti.md §4](eklenti.md) |

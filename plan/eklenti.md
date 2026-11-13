@@ -198,7 +198,8 @@ Kaynak okumaları; satırlar ilgili commit'indir. "Var" bu oturumda test edildi�
 | AI yüzeyleri | `crates/ui/src/widget/ai` (ADR 0154) | Sağlayıcıdan bağımsız sohbet bileşenleri; Asistan bunları kullanıyor. |
 | `.kcad` modül sürümleri | `crates/shared/kcad` şema 254 (ADR 8054 §10) | Her `.kek` eklentisinin verisinin kendi sürümü için yer var; bugün eklenti verisi okunmaz, reddedilir. |
 | ZIP | `crates/shared/zip` (`kentos-zip`) | Sınırlı, CRC denetimli okuyucu/yazıcı; 13 Kasım'da `kentos-formats`'tan ayrıldı (ADIM 16). |
-| Eklenti paketi | `crates/shared/extensions` (`kentos-extensions`), `apps/cli` (`kentos kek`) (ADR 8057 §1) | Manifest v1, bütünlük, kod çalıştırmayan denetleyici, deterministik paketleyici; kayıt defteri ve kurulum yok (ADIM 17). |
+| Eklenti paketi | `crates/shared/extensions` (`kentos-extensions`), `apps/cli` (`kentos kek`) (ADR 8057 §1) | Manifest v1, bütünlük, kod çalıştırmayan denetleyici, deterministik paketleyici. |
+| Eklenti kayıt defteri | `crates/native/extension-host` (ADR 8057 §2) | Kurulum, güncelleme, geri dönüş, kaldırma, kiralama, bekçi, kurum ilkesi, geri çekme; henüz hiçbir yüzeye bağlı değil (ADIM 18). |
 | Gerçek yeni parçalar | — | `.kek` yöneticisi, uv akışı, `kentos.ui` Python katmanı, dinamik Python sağlayıcı yaşam döngüsü, eklenti bulut kataloğu: **yok**. |
 
 Form ilişkileri ve çıktı işleri gibi alanlarda eski Python planının bazı "yok" kayıtları artık güncel değildir; yeni iş
@@ -580,12 +581,13 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   verilen 22 karar ADR'de; sözleşmeyi değiştirenler §3.2'ye işlendi (katkı yeteneğini yazar, kapsamlar, formların proje
   gerektiren denetimi kurulumda). Arayüzü olmadığı için pencere sınaması yok; ilk pencere işi ADIM 18.
 
-### [ ] ADIM 17 — Kayıt defteri, kiralama ve yerel yaşam döngüsü (P1)
+### [x] ADIM 17 — Kayıt defteri, kiralama ve yerel yaşam döngüsü (P1)
 
 [argon ADIM 17; PY-RUN-01, 02, 03, 09, 13, 17, 18; PY-KEK-10, 12, 13, 14, 16, 17; EKL-02 (ad alanı), EKL-07 (yerel)]
 
-- `ExtensionRegistry` (`crates/native/application`): paket dizini, kurulum makbuzu, etkin durum, ortam, izin kararları ve
-  çalışan oturumlar **kullanıcı başına** [PY-RUN-01].
+- `ExtensionRegistry` (`crates/native/extension-host`; ilk yazıldığında `crates/native/application` diye düşünülmüştü,
+  ADR 8057 §2): paket dizini, kurulum makbuzu, etkin durum, ortam, izin kararları ve çalışan oturumlar **kullanıcı
+  başına** [PY-RUN-01].
 - Durum makinesi: keşfedildi → incelendi → bağımlılık/izin bekliyor → hazırlanıyor → hazır → etkin/çalışıyor →
   durduruldu/hata/devre dışı/güncelleme bekliyor [PY-RUN-02, EKL-07]. Kurma, ortam hazırlama, etkinleştirme, çalıştırma,
   devre dışı bırakma, güncelleme ve kaldırma ayrı işlemlerdir; birinin başarısı ötekinin olduğu anlamına gelmez
@@ -627,6 +629,13 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   her adımdan sonra kayıt defterinde o kiralamaya ait hiçbir şey kalmaz; yarım güncelleme çalışan sürümü bozmaz; art
   arda çökertilen sahte eklenti kalıcı "hata"ya geçer ve sonraki açılışta denenmez; geri çekme listesindeki sürüm
   devre dışı kalır, verisi durur; bağımlılık döngüsü reddedilir.
+- **Teslim (13 Kasım 2026, [ADR 8057 §2](../docs/adr/8057-phase-3-extension-packages.md)):** `crates/native/extension-host`
+  (`Registry`, `ExtensionLease`, durumlar ve güven, kurum ilkesi, geri çekme listesi, bekçi ve `Bisection`, proje
+  ihtiyaçları). Kabulün her maddesi bir testte (19 test); ayrıca aynı sürüm farklı içerik, kaynak çakışması, verilmeyen
+  izin, geliştirici klasörünün yeniden yüklenmesi, diskte değişmiş dosya, yeni SDK protokolü, inceleme farkı, güvenli
+  kip ve iki süreç. **Sonrakilere kalan:** Python ortamı (18A), süreç/aracı ve çökmede taslak (19), gecikmeli otomatik
+  güncelleme, uyumlu sürüm önerisi ve imzalar (22A), şemalı verinin göçü (22), arayüz, ilke dosyasının sistem yolu ve
+  `.kcad` bağlantısı (18).
 
 ### [ ] ADIM 18 — Masaüstü: Eklentiler sekmesi, yöneticisi, dikey şerit sekmeleri ve Python'suz katkılar (P1)
 

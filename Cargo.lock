@@ -2759,6 +2759,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-extension-host"
+version = "0.1.0"
+dependencies = [
+ "kentos-extensions",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-extensions"
 version = "0.1.0"
 dependencies = [

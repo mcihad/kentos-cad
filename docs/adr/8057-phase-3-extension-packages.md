@@ -137,3 +137,71 @@ yeterli.
 
 **Sonraki:** ADIM 17 (kayıt defteri, kiralama, yerel yaşam döngüsü) bu crate'in `open`'ını ve `dependency_cycle`'ını
 kullanır; yayımcı alan adı ve lisans listesi gibi katalog denetimleri ADIM 22A'nındır.
+
+## §2. Kayıt defteri, kiralama ve yerel yaşam döngüsü (`ADIM 17`)
+
+**Ne yapıldı.** `crates/native/extension-host` (`kentos-extension-host`): bir kullanıcının kurduğu paketler, durumları,
+kiralamaları, güncelleme ve geri dönüşleri, bekçi, kurum ilkesi ve geri çekme listesi. Planda yeri
+`crates/native/application` idi; **ayrı crate'e alındı**: kayıt defteri eklenti sistemi büyüdükçe sık değişecek ve o
+crate'in yeniden derlenmesi dakikalar sürüyor (ADR 8054); masaüstü, başsız host, MCP ve Python host'u aynı kodu
+kullanacak. Bağımlılık yönünde kendi grubu (`extension-host`): yalnız ortak kütüphaneler; kullananlar ADIM 18'den
+başlayarak `uses`'a adını yazar. Eklenti kodu çalıştırmaz.
+
+**Diskteki yeri** (masaüstünde `<veri>/kentos-cad/eklentiler`, ADIM 18): `registry.json` (`kentos.extension-registry`
+v1: kaynak, kurulu sürümler ve özetleri, kullanılan sürüm, etkinlik, izinler, kanal, sabitlenen sürüm, hata, art arda
+çökme sayısı, ölçüm, son 50 satırlık günlük), `revocations.json` (son uygulanan geri çekme listesi, çevrimdışı da
+geçerli), `packages/<id>/<sürüm>/` (salt okunur dosyalar), `staging/` (hazırlanan sürüm; açılışta artığı silinir),
+`data/<id>/` (eklentinin kendi verisi; kaldırınca kalır), `.lock`.
+
+**Kararlar.**
+
+1. **Durumlar** diskten ve çalışandan hesaplanır, kaydedilmez: Etkin, Hazır, Devre dışı, Bağımlılık bekliyor,
+   Engellendi, Uyumsuz, Hata; her birinin Türkçe adı ve "ne yapmalı" metni var. Planın "keşfedildi, incelendi,
+   hazırlanıyor" durumları `Review` ve süren bir çağrıdır (yarıda kalan çağrı önceki durumu bırakır); "güncelleme
+   bekliyor" katalogla gelir (ADIM 22A).
+2. **Kiralama:** her etkinleştirme yeni bir kuşakla `ExtensionLease` alır; katkılar (veri kaynağı, form, şerit sekmesi,
+   sağ tık, panel, komut, harita aracı, İşlemler, denetim, ifade) `ext.<eklenti>.<yerel>` adıyla onun altında kaydolur;
+   `revoke_lease` hepsini birden siler; `is_current` eski kuşağın geç çağrısını ayırır.
+3. **Kurulum** baytları yeniden inceler (önceki `Review`'a güvenmez), uyumluluk, kurum ilkesi, geri çekme, bağımlılık
+   döngüsü ve verilen izinlerin paketin istediklerinden olmasını denetler; dosyaları `staging`'e yazıp geri okuyarak
+   özeti doğrular, yerine taşır ve kaydı **tek yazımla** değiştirir. Bundan önceki her hata kullanılan sürüme
+   dokunmaz. Diskte iki sürüm tutulur: kullanılan ve bir önceki (`switch_version` ile geri dönüş).
+4. **Aynı sürüm, farklı içerik reddedilir** (yalnız geliştirici klasörü aynı sürümü yeniden yükler). Aynı paket başka
+   bir seçimle yeniden kurulursa izinler değişir ve eklenti yeni kiralamayla yeniden başlar; dosyaları bozulmuş bir
+   sürüm aynı paketle yeniden kurulunca onarılır.
+5. **Bütünlük her etkinleştirmeden önce:** kurulu dosyalar yeniden özetlenir; tutmazsa kalıcı "Hata" ve güven
+   "Bütünlüğü bozuk"; dosyalar salt okunur yazılır.
+6. **Bağımlılıklar:** eksik, kapalı ya da aralık dışı bağımlılık "Bağımlılık bekliyor"; açılış sırası bağımlılıktan
+   çıkar; bağımlı olunan durunca bağımlıları da durur, gelince yeniden başlar; döngü kurulumda reddedilir.
+7. **Bekçi:** art arda **3** çökme (`CRASHES_TO_FAIL`) kalıcı "Hata"; iyi bir çalışma sayacı sıfırlar; durdurulmuş
+   kiralamanın raporu yok sayılır; "Yeniden dene" kullanıcının. Eklentisiz başlatma (`safe_mode`) hiçbir şeyi
+   etkinleştirmez. "Sorunlu eklentiyi bul" (`Bisection`): önce eklentisiz bir açılış (sorun eklentiden mi?), sonra
+   yarılar; en çok 1 + ⌈log₂ n⌉ yeniden başlatma.
+8. **Kaynak ve güven:** aynı kimlik başka kaynaktan (ya da başka bir geliştirici klasöründen) ancak kullanıcının açık
+   seçimiyle değişir. Güven: Yerel (dosya, geliştirici klasörü), Kurum, Onaylı (genel katalog; imzası ADIM 22A'nın),
+   Bütünlüğü bozuk, Engelli.
+9. **Kurum ilkesi** (`kentos.extension-policy` v1): izinli kaynaklar, yayımcılar, eklentiler; engelli eklentiler ve
+   yetenekler; eklenti başına en düşük sürüm; dış yapay zekâya veri izni. Host sistem klasöründen okur, kullanıcı
+   gevşetemez; kurulu bir eklentiyi sonradan yasaklarsa eklenti durur, silinmez.
+10. **Geri çekme listesi** (`kentos.extension-revocations` v1): kimlik, sürüm aralığı, gerekçe; aralıktaki önizleme de
+    geri çekilmiş sayılır (`VersionReq::contains`). Kullanılan sürüm durur, verisi kalır, o sürüm yeniden kurulamaz;
+    düzeltilmiş sürüm kurulur. İmza denetimi kataloğun güven köküyle (ADIM 22A).
+11. **Birden çok süreç:** her değişiklik kilidi alır, kaydı yeniden okur, değiştirir, geçici dosyaya yazıp yerine
+    taşır; iki dakikadan eski kilit çökmüş bir sürecindir ve devralınır.
+12. **Proje:** `project_needs` bir projenin istediği eklentilerin durumunu verir (Hazır, Çalışmıyor ve nedeni, Yok);
+    proje açmak kod çalıştırmaz, eksik eklentiyi kurdurmaz; `.kcad`'in `modules.ext`'ini okumak ve kısıtlı kip ADIM 18.
+13. **Ölçüm:** etkinleştirme süresi (mikrosaniye) her etkinleştirmede kaydedilir; süreç belleği ve sayısı Python
+    süreciyle gelir (`record_metrics`, ADIM 19); eşik ölçümden sonra.
+
+**Sonraki adımlara kalanlar:** Python ortamının hazırlanması (ADIM 18A) ve süreç/aracı (ADIM 19); çökmede taslağın
+korunması süreç düzeyidir (ADIM 19); gecikmeli otomatik güncelleme, uyumlu sürüm önerisi ve imzalar katalogla (ADIM 22A);
+güncellemede veri göçü, eklentinin şemalı verisi ile (ADIM 22); arayüz, ilke dosyasının sistem yolu ve `.kcad` bağlantısı
+ADIM 18.
+
+**Doğrulama:** `cargo test -p kentos-extension-host`: 19 test (0,08 s). Plandaki kabul: Python'suz paket kur →
+etkinleştir → devre dışı → yeniden etkinleştir → güncelle → geri dön → kaldır, her adımdan sonra eski kiralamadan hiçbir
+katkı kalmıyor ve yeniden açılan kayıt aynı; yarım güncelleme (bozuk paket, `staging` artığı) çalışan sürüme dokunmuyor;
+art arda üç kez çökertilen eklenti kalıcı "Hata"ya geçiyor ve sonraki açılışta denenmiyor; geri çekilen sürüm duruyor,
+verisi kalıyor; bağımlılık döngüsü reddediliyor. Ayrıca: aynı sürüm farklı içerik, kaynak çakışması, kurum ilkesi,
+verilmeyen izin, geliştirici klasörünün yeniden yüklenmesi, diskte değiştirilmiş dosya, yeni SDK protokolü, inceleme
+farkı, proje ihtiyaçları, güvenli kip ve iki süreç. Clippy uyarısız; bağımlılık yönü temiz (60 crate).
