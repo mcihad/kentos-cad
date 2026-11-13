@@ -27,4 +27,4 @@ mod desktop;
 mod server;
 mod tools;
 
-pub use server::{LEGACY, MODERN, NAME, Server};
+pub use server::{LEGACY, MODERN, NAME, Profile, Server};

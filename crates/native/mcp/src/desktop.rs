@@ -221,3 +221,38 @@ mod tests {
         assert_eq!(in_program(None), "KentOS masaüstünde");
     }
 }
+
+/// A desktop's drawing as the agents' tools' host (docs/adr/8056 §2): each request goes over the link; the desktop
+/// answers it as an agent may see it and refuses what its program does not offer (docs/adr/8056 §1).
+impl kentos_headless::agent_tools::Host for Desktop {
+    fn request(
+        &mut self,
+        method: &str,
+        params: &Value,
+    ) -> Result<Value, kentos_headless::HeadlessError> {
+        self.ask(method, params.clone())
+            .map_err(|(code, message)| kentos_headless::HeadlessError::new(stable(&code), message))
+    }
+}
+
+/// A desktop's refusal code as a host's stable one; another is the desktop's own (`desktop_refused`).
+fn stable(code: &str) -> &'static str {
+    const KNOWN: &[&str] = &[
+        "not_offered",
+        "busy",
+        "closed",
+        "no_document",
+        "document_closed",
+        "invalid_request",
+        "invalid_input",
+        "unknown_method",
+        "unknown_command",
+        "unknown_object",
+    ];
+    KNOWN
+        .iter()
+        .find(|k| **k == code)
+        .copied()
+        .unwrap_or("desktop_refused")
+}
+

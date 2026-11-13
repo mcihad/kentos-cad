@@ -403,7 +403,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 14 — 535 Düz Araç Yerine 8 Kategorili (~22 Çekirdek Araç) ve Aşamalı Keşifli MCP v2 Yüzeyi (Öncelik: P1)
+### [x] ADIM 14 — 535 Düz Araç Yerine 8 Kategorili (~22 Çekirdek Araç) ve Aşamalı Keşifli MCP v2 Yüzeyi (Öncelik: P1)
 
 - **Yapılacak İşlem:**
   - [crates/native/mcp/src/tools.rs](file:///home/cihad/Projects/kentos-cad/crates/native/mcp/src/tools.rs) içinde `McpProfile` (`Compact`, `Module(Module)`, `Full`) tanımlanacaktır.
@@ -421,6 +421,13 @@ flowchart LR
 | **8. AI Eklenti Fabrikası (`.kek`) (`extension.*`)** | `extension.blueprint`, `extension.verify`, `extension.hot_reload`, `extension.list`, `extension.run` | **Sıfır elle kodlama:** AI ajanına `.kek` yazması için tam bağlam şablonu (`blueprint`) verir, üretilen eklentiyi 4 kapılı simülatörde (`verify`) doğrular ve canlı masaüstüne sıcak yükler (`hot_reload`). |
 
   - Eski entegrasyon testlerinin kırılmaması için `--profile full` seçeneğiyle 535 araçlık düz liste modu geriye dönük uyumlu olarak korunacaktır.
+- **13 Kasım 2026 ([ADR 8056 §2](../docs/adr/8056-phase-2-mcp-v2-and-in-app-agent.md)):** ölçüm: tam liste 534 araç,
+  7 864 902 bayt; kompakt 44 araç, 39 787 bayt. Araçlar ortak katmanda (`kentos_headless::agent_tools`): MCP'nin kendi
+  çizimleri, bağlı masaüstü ve uygulama içi ajan (ADIM 15A) aynısını kullanır. Sahibin koruyucusu: yazan komut önce
+  `plan`, `execute` yalnız o `planId` ile ve çizim değişmediyse; plansız yazma `plan_required`. Kapılar `cad.run`,
+  `arch.run`, `map.run`, `gis.run`, `road.run`, `command.batch`; `catalog.*`, `scene.*`, `audit.*`, `processing.*`,
+  `session.status`, `desktop.detach`. Program varsayılan kompakt, `--profile full` eskisi; `Server::new()` tam (testler
+  için). `extension.*` Faz 3'e kaldı (`.kek` sistemi gelince).
 
 ---
 

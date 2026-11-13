@@ -38,6 +38,8 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+/// The agents' tools, one surface for the MCP server and the desktop's chat (docs/adr/8056 §2).
+pub mod agent_tools;
 mod dispatch;
 mod error;
 pub mod export;

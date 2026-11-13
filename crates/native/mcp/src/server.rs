@@ -49,6 +49,34 @@ impl Fault {
     }
 }
 
+/// Which tools the server offers (docs/adr/8056 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Profile {
+    /// The v2 surface, what the program starts with: the server's own tools for drawings, desktops and the cloud,
+    /// and the agents' tools (the catalog step by step, a door per part, a write planned first:
+    /// `kentos_headless::agent_tools`).
+    Compact,
+    /// Every catalog command a tool of its own, written at once, as before docs/adr/8056 §2: `--profile full`, and
+    /// what [`Server::new`] gives the tests and earlier hosts.
+    Full,
+}
+
+impl Profile {
+    /// The program's choice: `--profile compact|full`, else `KENTOS_MCP_PROFILE`, else compact.
+    pub fn chosen(args: &[String], env: Option<&str>) -> Result<Self, String> {
+        let named = args
+            .iter()
+            .position(|a| a == "--profile")
+            .map(|i| args.get(i + 1).map(String::as_str).unwrap_or_default())
+            .or(env);
+        match named {
+            None | Some("compact") => Ok(Profile::Compact),
+            Some("full") => Ok(Profile::Full),
+            Some(other) => Err(format!("profil “{other}” olamaz: compact ya da full.")),
+        }
+    }
+}
+
 /// The drawings open in this process, by handle; the handshake a legacy client made.
 pub struct Server {
     pub(crate) drawings: BTreeMap<String, Session>,
@@ -59,6 +87,9 @@ pub struct Server {
     legacy: Option<String>,
     pub(crate) catalog: Value,
     tools: Vec<Value>,
+    pub(crate) profile: Profile,
+    /// The plans each drawing's agent was shown (the owner's guard, docs/adr/8056 §2), by handle.
+    pub(crate) guards: BTreeMap<String, kentos_headless::agent_tools::Guard>,
 }
 
 impl Default for Server {
@@ -68,7 +99,13 @@ impl Default for Server {
 }
 
 impl Server {
+    /// The server with every catalog command a tool of its own ([`Profile::Full`]), as the tests and earlier hosts
+    /// expect; the program starts [`Server::with_profile`]'s compact one.
     pub fn new() -> Self {
+        Self::with_profile(Profile::Full)
+    }
+
+    pub fn with_profile(profile: Profile) -> Self {
         // Bound layers on PostGIS (docs/adr/0505): the provider, once per process.
         kentos_postgis::register();
         // STAC searches (docs/adr/0528 §2): over the cloud client's HTTP; CBS's (docs/adr/8054 §11).
@@ -76,7 +113,10 @@ impl Server {
         kentos_native_application::stac_host::register(Box::new(kentos_cloud::stac::HttpFetch));
         kentos_native_application::remote_host::register(Box::new(kentos_cloud::range::HttpRemote));
         let catalog = kentos_headless::catalog();
-        let tools = tools::list(&catalog);
+        let tools = match profile {
+            Profile::Full => tools::list(&catalog),
+            Profile::Compact => tools::compact(&catalog),
+        };
         Self {
             drawings: BTreeMap::new(),
             account: crate::cloud::Account::default(),
@@ -84,6 +124,8 @@ impl Server {
             legacy: None,
             catalog,
             tools,
+            profile,
+            guards: BTreeMap::new(),
         }
     }
 

@@ -38,3 +38,53 @@ Yol'un bağlantısını (`masaustu-yol.sock`) zaten açıyordu, ajan ona adıyla
 gerekçesi Mimari'yi söyler, satırında duvar olan günlük bütünüyle reddedilir, çokgen, parsel ve katman koordinat
 sistemi reddedilmez, kentos-cad duvarı reddetmez. MCP'nin testleri (`desktop.rs`, `tests/mcp.rs`) güncellendi; kural
 gereği koşulmadı, derlemesi denetlendi.
+
+## §2. MCP v2: kompakt yüzey, kademeli keşif ve "önce plan" koruyucusu (`ADIM 14`)
+
+**İddianın denetimi.** Doğru ve ölçüldü: `tools/list` her katalog komutunu kendi aracı olarak veriyordu: **534 araç,
+7 864 902 bayt** şema. Bir ajan bu kadarını her oturumda taşıyamaz, yanlış aracı seçer.
+
+**Karar.**
+- **Ortak araç katmanı `kentos_headless::agent_tools`.** Bir `Host` (çizimin adlı istekleri: `summary`, `layers`,
+  `entities`, `entity`, `measure`, `selection`, `call`; ve modülün sunduğu, §1) üzerine kurulu araçlar: `drawing.summary`,
+  `scene.layers|entities|entity|measure|selection`, `catalog.categories|search|describe`, kapılar `cad.run`, `arch.run`,
+  `map.run`, `gis.run`, `road.run`, `command.batch` (`cad.changeset.apply`), `audit.list_providers|run|apply_fix`,
+  `processing.list|describe|run|batch`. Aynı kod MCP'nin kendi çizimlerinde (`Session`), bağlı masaüstünde (bağlantı,
+  `Desktop`) ve uygulama içi ajanda (§4) çalışır; MCP'nin testleri kural gereği koşulmadığı için kod test edilebilir
+  yerde, headless'ta durur.
+- **Sahibin koruyucusu.** Yazan komut önce `mode: "plan"` ile çağrılır: cevap ne ekleneceğini, değişeceğini,
+  silineceğini ve `planId`'yi söyler, hiçbir şey yazmaz. `mode: "execute"` aynı komut ve girdiyle (anahtar sırasından
+  bağımsız karşılaştırılır) ve o `planId` ile yazar; protokole `expected.plan` ve `expected.revision` gider: çizim
+  plandan sonra değiştiyse `revision_conflict`, plan tutmuyorsa `plan_changed`, hiçbir şey yazılmaz. Plan bir kez
+  kullanılır, en çok 64 plan tutulur. Plansız yazma `plan_required`. Yalnız okuyan komut (katalogda `effect` query ya da
+  view, yıkıcı listede değil, dosya yazmıyor) hemen çalışır.
+- **Kapılar.** Komut kendi bölümünün kapısından çalışır (`registry::discipline_of`); yanlış kapı `wrong_tool` ve doğru
+  kapıyı söyler ("“cad.walls.create” mimarinin komutu: arch.run ile çağırın.").
+- **Kademeli keşif.** `catalog.categories` bölümleri, aileleri ve sayıları; `catalog.search` sözcüklerden en çoğunu
+  tutanı önce verir (Türkçe sözcük İngilizce kimlikli komutu bulur: "çokgen alan" → Kapalı alan oluştur); `catalog.describe`
+  tek komutun tam şemasını ve üç örneğini. Modülün sunmadığı komut aramada ve kategorilerde görünmez.
+- **Denetim ve İşlemler.** `*.check`/`*.audit` komutları (20) denetim; ailesinin `*.repair`'i onarımı
+  (`cad.topology.check` → `cad.topology.repair`); `audit.apply_fix` yalnız onarım komutu alır ve koruyucudan geçer.
+  `processing.*` İşlemler'in araçlarını listeler, tanımlar, çalıştırır (yazma, koruyucudan geçer).
+- **Profiller.** Program (`kentos-mcp`) varsayılan **kompakt** profille açılır; `--profile full` ya da
+  `KENTOS_MCP_PROFILE=full` eski düz listeyi verir. `Server::new()` tam profildir: ~200 test dosyası katalog komutlarını
+  doğrudan ve plansız çağırıyor; kural gereği koşulamıyorlar, kırılmasınlar diye. Kompakt listede eski
+  `drawing.layers|entities|entity|measure|selection` (yerlerini `scene.*` aldı), `drawing.replay` ve `drawing.job.*`
+  (koruyucuyu atlatırdı) yok; `session.status` ve `desktop.detach` eklendi. Çizim kapanınca koruyucusu da gider.
+- **`extension.*`** Faz 3'ün `.kek` sistemi olmadan anlamsız; o faza kaldı.
+- **§1'in açığı kapandı:** masaüstü bağlantısı bir değişiklik kümesinin adımlarını da modül kuralından geçirir; küme
+  çekirdeğin olsa da içine konan duvar Harita'da reddedilir. MCP'nin yıkıcı komut listesi ortak katmana taşındı.
+
+| Ölçüm | Tam profil | Kompakt |
+|---|---|---|
+| Araç sayısı | 534 | 44 |
+| `tools/list` şeması | 7 864 902 bayt | 39 787 bayt (~198 kat küçük) |
+
+**Doğrulama:** `agent_tools` testleri (headless, 8): kategoriler ve arama (Türkçe sözcük, bölüm süzgeci), plansız
+yazmanın reddi, planla yazma ve planın tek kullanımı, başka girdinin planı kullanamaması, değişmiş çizimde
+`revision_conflict` ve hiçbir şey yazılmaması, yanlış kapı, okuyan komutun plansız çalışması, iki adımlı kümenin tek
+geri alma adımı, mimariyi sunmayan evsahibinde aramanın ve kapının gizlemesi ve kümeye gizlenen komutun reddi,
+denetim/onarım ve İşlemler kapıları. Masaüstü: değişiklik kümesi adımının reddi. MCP programı elle sürüldü (JSON-RPC):
+kompakt liste, `drawing.new`, `catalog.search`, plansız yazma reddi, plan (1 eklenecek), yazma, aynı planla ikinci
+yazmanın reddi, yanlış kapı, `session.status`, `audit.list_providers`.
+

@@ -16,6 +16,9 @@ sınar ([ADR 8000](../../../docs/adr/8000-real-window-acceptance.md)).
   önbellek klasörleri o ev dizinindedir: sahibin `~/.config/kentos-cad`'i, kurtarma kopyaları ve son dosyaları hiç
   yazılmaz. 12 Kasım 2026'ya dek durum klasörü yalıtılmıyordu ve oturumların açtığı dosyalar sahibin Son dosyalar
   listesine yazıldı. Veritabanı bağlantıları kopyalanmaz.
+- **Çalışma klasörü de yalıtık:** `XDG_RUNTIME_DIR` oturumun ev dizinindedir; ajan bağlantısının soketi
+  (`masaustu-<modül>.sock`) oraya açılır, sahibin açık programının soketiyle karşılaşmaz (13 Kasım 2026).
+  `KENTOS_REAL_RUNTIME` oturum dışındaki bir ajanın (MCP) bağlanacağı klasörü verir.
 - **Oturum veriyolu yok:** `DBUS_SESSION_BUS_ADDRESS` hiçbir yere gitmeyen bir adres olur (silinse libdbus sahibinkini
   `XDG_RUNTIME_DIR`'de bulurdu). Dosya penceresi (Aç, Farklı kaydet) masaüstü portalına bu veriyoluyla sorulur ve sahibin
   kendi ekranında açılırdı (12 Kasım 2026). Dosya seçen adımlar burada sınanmaz; dosya uygulamaya komut satırından
@@ -41,6 +44,7 @@ python3 scripts/usage/real/count.py fixtures/interaction/real/daire-2p1.txt
 - `KENTOS_REAL_SETTINGS`: başka bir ayar klasörü.
 - `KENTOS_REAL_DISPLAY`: başka bir ekran numarası.
 - `KENTOS_REAL_START`: açılış beklemesi, saniye.
+- `KENTOS_REAL_RUNTIME`: ajan bağlantısının açılacağı çalışma klasörü (oturum dışından bağlanmak için).
 
 ## Senaryo biçimi
 

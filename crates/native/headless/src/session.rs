@@ -512,3 +512,21 @@ fn to_json<T: serde::Serialize>(value: &T) -> Result<Value, HeadlessError> {
 fn static_code(code: &str) -> &'static str {
     kentos_commands::codes::info(code).map_or("file_unwritable", |c| c.code)
 }
+
+/// A headless drawing as the agents' tools' host (docs/adr/8056 §2): the drawing's requests as an agent may see
+/// them, the session's own selection.
+impl crate::agent_tools::Host for Session {
+    fn request(&mut self, method: &str, params: &Value) -> Result<Value, HeadlessError> {
+        if method == "selection" {
+            return Ok(serde_json::json!({ "uids": self.selection() }));
+        }
+        crate::rpc::call_for_agent(
+            &mut self.doc,
+            Some(&mut self.jobs),
+            self.path.as_deref(),
+            method,
+            params,
+        )
+    }
+}
+

@@ -1061,6 +1061,14 @@ fn an_agent_on_a_module_program_runs_what_the_program_offers() {
         json!({ "journal": { "calls": [{ "command": "cad.walls.create" }] } }),
     );
     assert_eq!(replay["code"], "not_offered");
+    // So is a change set with such a step, though the set itself is the core's (docs/adr/8056 §2).
+    let set = ask_agent(
+        &mut app,
+        &answers,
+        "run",
+        json!({ "command": "cad.changeset.apply", "op": "plan", "input": { "steps": [{ "command": "cad.walls.create", "input": {} }] } }),
+    );
+    assert_eq!(set["code"], "not_offered");
     // The core's command, Harita's own and CBS's that Harita's ribbon goes through (Katman koordinat sistemi):
     // their answers are the commands', not the program's refusal.
     for command in ["cad.polygon.create", "cad.parcels.create", "cad.layers.crs"] {

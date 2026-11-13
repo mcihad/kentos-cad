@@ -577,6 +577,108 @@ fn expected_arg() -> Value {
     })
 }
 
+/// The server's tools the compact profile leaves out (docs/adr/8056 §2): the agents' tools answer for them (the
+/// summary and the scene), or they would write past the guard (a journal replayed, a command as a job).
+const LEFT_OUT_OF_COMPACT: &[&str] = &[
+    "drawing.summary",
+    "drawing.layers",
+    "drawing.entities",
+    "drawing.entity",
+    "drawing.measure",
+    "drawing.selection",
+    "drawing.replay",
+    "drawing.job.start",
+    "drawing.job.status",
+    "drawing.job.wait",
+    "drawing.job.cancel",
+];
+
+/// The compact profile's tools (docs/adr/8056 §2): the server's own for drawings, desktops and the cloud, then the
+/// agents' tools, each on a drawing (`drawing`). No catalog command is a tool of its own: they run through their
+/// part's door, a write planned first.
+pub fn compact(catalog: &Value) -> Vec<Value> {
+    let commands: std::collections::HashSet<&str> = catalog["commands"]
+        .as_array()
+        .map(|c| c.iter().filter_map(|c| c["id"].as_str()).collect())
+        .unwrap_or_default();
+    let mut tools: Vec<Value> = list(catalog)
+        .into_iter()
+        .filter(|t| {
+            let name = t["name"].as_str().unwrap_or_default();
+            !commands.contains(name) && !LEFT_OUT_OF_COMPACT.contains(&name)
+        })
+        .collect();
+    tools.push(tool(
+        "session.status",
+        "Oturum",
+        "Bu oturumun profili, koruyucusu (yazan her komut önce planlanır) ve açık çizimleri: sunucunun kendi \
+         çizimleri ve bağlı masaüstleri, tutamaçlarıyla.",
+        object(json!({}), &[]),
+        annotations(true, false),
+    ));
+    tools.push(tool(
+        "desktop.detach",
+        "Masaüstünden ayrıl",
+        "Bağlı bir masaüstünün tutamacını bırakır; masaüstündeki çizime dokunmaz.",
+        object(json!({ "drawing": drawing_arg() }), &["drawing"]),
+        annotations(false, false),
+    ));
+    for t in kentos_headless::agent_tools::tools() {
+        let mut schema = t.input.clone();
+        schema["properties"]["drawing"] = drawing_arg();
+        match schema["required"].as_array_mut() {
+            Some(required) => required.insert(0, json!("drawing")),
+            None => schema["required"] = json!(["drawing"]),
+        }
+        tools.push(json!({
+            "name": t.name,
+            "title": t.title,
+            "description": t.description,
+            "inputSchema": schema,
+            "annotations": annotations(t.read_only, t.destructive),
+        }));
+    }
+    tools
+}
+
+/// An agents' tool on a drawing (docs/adr/8056 §2): the server's own or a desktop's, the drawing's guard keeping
+/// the plans it was shown.
+fn agent_call(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
+    let handle = text(args, "drawing")
+        .ok_or_else(|| refused("invalid_input", "drawing gerekli."))?
+        .to_owned();
+    let mut args = args.clone();
+    if let Some(fields) = args.as_object_mut() {
+        fields.remove("drawing");
+    }
+    let Server {
+        drawings,
+        desktops,
+        guards,
+        ..
+    } = server;
+    let guard = guards.entry(handle.clone()).or_default();
+    let result = if let Some(s) = drawings.get_mut(&handle) {
+        kentos_headless::agent_tools::call(s, guard, name, &args)
+    } else if let Some(d) = desktops.get_mut(&handle) {
+        kentos_headless::agent_tools::call(d, guard, name, &args)
+    } else {
+        return Err(refused(
+            "unknown_drawing",
+            format!(
+                "“{handle}” açık bir çizim değil: drawing.list açık olanları söyler, drawing.open açar."
+            ),
+        ));
+    };
+    match result {
+        Ok(value) => {
+            let failed = value.get("status").is_some_and(|s| s != "completed");
+            Ok(answer(value, failed))
+        }
+        Err(e) => Err(refused(e.code, e.message)),
+    }
+}
+
 /// A catalog command as a tool: its input schema with `drawing`, `op`,
 /// `requestId` and `expected`.
 fn command_tool(c: &Value) -> Value {
@@ -602,312 +704,8 @@ fn command_tool(c: &Value) -> Value {
     // Deleting, editing, moving and setting change what is there, and so do
     // a block's changes; the rest adds (a block defined with `replace`
     // deletes its objects too).
-    let destructive = matches!(
-        id,
-        "cad.entities.delete"
-            | "cad.entities.edit"
-            | "cad.entities.transform"
-            | "cad.entities.set"
-            // A topology repair recipe changes and deletes the findings' objects (docs/adr/1260 §4).
-            | "cad.topology.repair"
-            | "cad.blocks.define"
-            | "cad.blocks.edit"
-            // It moves inserts to another block and may purge the first (docs/adr/0317 §3).
-            | "cad.blocks.replace"
-            // It writes the inserts' parameter values (docs/adr/0318 §3).
-            | "cad.blocks.parameters"
-            | "cad.blocks.freeze"
-            // deleteSource deletes the objects it offsets (docs/adr/0246).
-            | "cad.entities.offset"
-            // It binds or frees a dimension's points (docs/adr/0249 §3).
-            | "cad.dimensions.reassociate"
-            | "cad.dimensions.edit"
-            | "cad.fields.edit"
-            | "cad.hatches.edit"
-            | "cad.leaders.edit"
-            | "cad.tables.edit"
-            | "cad.texts.edit"
-            // It takes an object's scales away (docs/adr/0323 §4).
-            | "cad.annotations.scales"
-            // They cut, grow or round what is there; a trim takes objects away (docs/adr/0250).
-            | "cad.entities.trim"
-            | "cad.entities.extend"
-            | "cad.entities.fillet"
-            | "cad.entities.chamfer"
-            // They move vertices, replace an object by its pieces and delete the joined ones;
-            // Böl, Alan oluştur, Tarama and Ölçü ekle only add (docs/adr/0254, 0255).
-            | "cad.entities.stretch"
-            // Köşeyi sil takes a vertex away (docs/adr/0279).
-            | "cad.entities.vertex"
-            // The area operations delete and replace their sources (docs/adr/0622 §9).
-            | "cad.areas.edit"
-            // The shape edits change the objects in place (docs/adr/0622 §9).
-            | "cad.shapes.edit"
-            | "cad.roads.edit"
-            // Resmi kırp changes the picture in place (docs/adr/0622 §9).
-            | "cad.images.clip"
-            | "cad.time.version"
-            // A duplicate's last policy ends or changes the observation there (docs/adr/0646 §4).
-            | "cad.sensors.ingest"
-            // It writes over the doors' names (docs/adr/0647 §2).
-            | "cad.addresses.normalize"
-            // The adjustment moves the drawing's points of its new points' names (docs/adr/0622 §9).
-            | "cad.survey.adjust"
-            | "cad.entities.break"
-            | "cad.entities.join"
-            // Yönü çevir turns the objects in place (docs/adr/0296).
-            | "cad.entities.reverse"
-            // Uzat-kısalt moves an end or cuts the object back (docs/adr/0298).
-            | "cad.entities.lengthen"
-            // A wall's fields changed; walls from lines take their sources away (docs/adr/0339 §5).
-            | "cad.walls.edit"
-            | "cad.walls.convert"
-            // An opening's fields, place and wall changed (docs/adr/0341 §4).
-            | "cad.openings.edit"
-            // A type's change rewrites the openings following it; remove detaches them (docs/adr/0772).
-            | "cad.openingtypes.edit"
-            // A material's change rewrites the styles, walls and slabs bound to it (docs/adr/0785).
-            | "cad.materials.edit"
-            | "cad.modules.edit"
-            // Accepting or deleting an option deletes its objects (docs/adr/0788).
-            | "cad.options.edit"
-            // A refresh writes over the elevation's objects and deletes those no longer drawn (docs/adr/0799).
-            | "cad.elevations.edit"
-            // A refresh writes the section's block again: every placement shows the new drawing (docs/adr/8042).
-            | "cad.sections.edit"
-            // A space's fields and boundary changed; Birleştir removes the others (docs/adr/0342 §4).
-            | "cad.spaces.edit"
-            | "cad.spaces.separators"
-            | "cad.spaces.number"
-            // A slab's fields, edges and outline changed; a hole cut out of it (docs/adr/0722 §4).
-            | "cad.slabs.edit"
-            // A grid's, column's, stair's or ramp's fields changed; columns tied to grids move (docs/adr/0343 §4).
-            | "cad.arch.edit"
-            // It changes objects' levels; a room's boundary is found again on its new level (docs/adr/0717).
-            | "cad.levels.assign"
-            // A material legend the drawing has is made again in its place (docs/adr/0721 §5).
-            | "cad.legends.materials"
-            // A tag's template and frame changed (docs/adr/0344 §4); a schedule's cell written to its objects.
-            | "cad.tags.edit"
-            | "cad.schedules.edit"
-            // A view mark's number, target and words changed; a finish replaces the space's earlier one (docs/adr/0345).
-            | "cad.viewmarks.edit"
-            | "cad.spaces.finish"
-            // A reload replaces a reference's content; detach, unload and bind remove or change it (docs/adr/0348).
-            | "cad.xrefs.edit"
-            // Göm and Yeniden bağla change an image's source (docs/adr/0350 §1).
-            | "cad.images.edit"
-            // 2B düzleme indir removes the objects' elevations and measures (docs/adr/1061 §4).
-            | "cad.entities.flatten"
-            // Eğimle kot ver, Referanstan kot ver and Yüzeyden kot ver write over the vertices' elevations
-            // (docs/adr/1290, 3780, 4180).
-            | "cad.entities.grade"
-            | "cad.entities.raise"
-            | "cad.entities.drape"
-            // Sembolü karardan ver writes over the decision areas' symbols (docs/adr/4240).
-            | "cad.zoning.symbolize"
-            // Plan değişikliği taslağı replaces the project's draft of the id, or takes it out (docs/adr/5040).
-            | "cad.zoning.draft"
-            // With overwrite it writes over an existing VRT file (docs/adr/0517 §4).
-            | "cad.rasters.mosaic"
-            // With overwrite it writes over an existing GeoTIFF (docs/adr/0644 §3).
-            | "cad.rasters.reproject"
-            // With overwrite they write over an existing GeoTIFF or GeoPackage; mode add changes a GeoPackage that is
-            // there (docs/adr/0556 §3, §4).
-            | "cad.rasters.gpkgread"
-            | "cad.rasters.gpkgwrite"
-            // An import writes over a profile or a mapping of the same name with overwrite (or a newer release); a
-            // migration renames fields and layers and rewrites values (docs/adr/0558); a removal takes the drawing's
-            // copy out of it (docs/adr/0735).
-            | "cad.profiles.import"
-            | "cad.profiles.migrate"
-            | "cad.profiles.remove"
-            | "cad.inserts.clip"
-            // It moves a raster, or points it at a resampled file, and replaces its record (docs/adr/0518).
-            | "cad.rasters.georef"
-            // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
-            | "cad.entities.array"
-            // It moves, replaces and deletes an array's items (docs/adr/0301).
-            | "cad.arrays.edit"
-            // It lays a kitchen run anew: its objects changed, removed or added (docs/adr/0727 §6).
-            | "cad.casework.edit"
-            // A solve moves the constrained objects; remove takes constraints away (docs/adr/0335).
-            | "cad.constraints.edit"
-            // A parameter's new value moves the constrained objects; remove takes one away (docs/adr/0336).
-            | "cad.parameters.edit"
-            // Patlat replaces objects by their pieces (docs/adr/0302).
-            | "cad.entities.explode"
-            // It reshapes or replaces a polyline or a NURBS curve (docs/adr/0303).
-            | "cad.curves.edit"
-            | "cad.entities.match"
-            | "cad.entities.cleanup"
-            | "cad.drawing.audit"
-            | "cad.entities.paste"
-            // Keeping the numbers scales every object of the drawing (docs/adr/0256 §1).
-            | "cad.units.change"
-            // Its remove takes a service layer away (docs/adr/0208 §15).
-            | "cad.layers.service"
-            // Its remove takes a network's definition away (docs/adr/0209 §11).
-            | "cad.network.define"
-            // Its remove takes an event link away (docs/adr/0569 §2).
-            | "cad.linearref.define"
-            // Its remove takes a terrain surface's definition away; its set changes one (plan/road.md Y2.3).
-            | "road.terrains.edit"
-            // Its set and reverse change an alignment, its remove takes one away (docs/adr/0901).
-            | "road.alignments.edit"
-            | "road.profiles.edit"
-            | "road.templates.edit"
-            | "road.sections.edit"
-            | "road.superelevations.edit"
-            | "road.corridors.edit"
-            | "road.volumes.edit"
-            | "road.volumes.approve"
-            | "road.hauls.edit"
-            | "road.guardrails.edit"
-            | "road.culverts.edit"
-            | "road.walls.edit"
-            | "road.platforms.edit"
-            | "road.terrains.cloud"
-            | "road.pay.edit"
-            | "road.junctions.edit"
-            | "road.project.rebuild"
-            // Its remove takes an item of a map's work away, its forget a derivation record; its relink points rasters
-            // and images at another file (docs/adr/1200 §3).
-            | "map.work.edit"
-            // Its remove takes records of the GNSS archive away, its exclude leaves a solution out, its regenerate
-            // moves an accepted point (docs/adr/1340 §4).
-            | "map.survey.edit"
-            // It overwrites the attribute's values and takes them away from what no subnetwork reaches (docs/adr/0557 §2).
-            | "cad.subnetworks.update"
-            // Its remove takes address data's definition away (docs/adr/0229 §14).
-            | "cad.addresses.define"
-            // Without a time it takes a layer's away; apply removes a scenario's
-            // layers and the base layers' objects (docs/adr/0210 §11).
-            | "cad.layers.time"
-            | "cad.scenarios.edit"
-            // Null takes a labelling or a label's pin away (docs/adr/0212 §5).
-            | "cad.layers.labels"
-            | "cad.labels.pin"
-            // Null takes a layer's renderer away (docs/adr/0213 §5).
-            | "cad.layers.renderer"
-            // Without actions or a card it takes a layer's away (docs/adr/0225 §4, §5).
-            | "cad.layers.info"
-            // Without opacity, mode or mask it takes a layer's composition away (docs/adr/0226 §3, §4).
-            | "cad.layers.compose"
-            // An empty list takes a layer's table rules away (docs/adr/0413 §2).
-            | "cad.layers.table"
-            | "cad.layers.subtypes"
-            | "cad.layers.contingents"
-            | "cad.layers.rules"
-            | "cad.layers.indexes"
-            // Its unmark takes the project's topology exceptions away (docs/adr/0589 §3).
-            | "cad.topology.exceptions"
-            // Its unmark and prune take Mimari denetim's exceptions away (docs/adr/0732 §3).
-            | "cad.arch.exceptions"
-            // It replaces the building program and takes groups and spaces' memberships away (docs/adr/0773).
-            | "cad.program.edit"
-            // Without srid it takes a layer's source system record away; reproject moves every object of the
-            // layer (docs/adr/0583 §2).
-            | "cad.layers.crs"
-            | "cad.layers.reproject"
-            // The layer tree's, the styles' and the settings' commands remove layers,
-            // groups, objects, definitions, states and styles, hide and rename, and
-            // assign a coordinate system (docs/adr/0248).
-            | "cad.layers.edit"
-            | "cad.layers.set"
-            | "cad.layers.states"
-            | "cad.layers.translate"
-            | "cad.standards.apply"
-            // Its replace writes a library block, a line type or a style over the drawing's of that name
-            // (docs/adr/1002 §2, 1100 §2).
-            | "cad.standards.install"
-            | "cad.linetypes.edit"
-            // Its remove and replace take a project pattern away (docs/adr/0331 §1).
-            | "cad.hatchpatterns.edit"
-            | "cad.library.edit"
-            | "cad.styles.edit"
-            | "cad.settings.set"
-            // Its delete takes a named UCS away (docs/adr/0261 §2).
-            | "cad.ucs.set"
-            // Its delete takes a named view away, its save writes over one (docs/adr/0285 §1).
-            | "cad.views.edit"
-            // Its remove takes a form away, its update writes over the draft (docs/adr/0401 §9).
-            | "cad.forms.edit"
-            // It writes over a record's attributes (docs/adr/0401 §9).
-            | "cad.forms.submit"
-            // It writes over many records' attributes (docs/adr/0403 §5).
-            | "cad.forms.fill"
-            | "cad.forms.recompute"
-            | "cad.forms.transition"
-            | "cad.domains.edit"
-            | "cad.fields.migrate"
-            | "cad.forms.import"
-            // Its remove takes a relation away, its update writes over one (docs/adr/0405 §3).
-            | "cad.relations.edit"
-            | "cad.joins.edit"
-            | "cad.datasets.edit"
-            // It removes sheets and their items as the designer does (docs/adr/0252 §2).
-            | "cad.sheets.edit"
-            | "cad.sheets.fit"
-            // Its sheets get the imported profile in place of their own (docs/adr/1130).
-            | "cad.plotstyles.import"
-            // A change set runs any of these (docs/adr/0253 §8).
-            | "cad.changeset.apply"
-            // A file there is written over with `overwrite` (docs/adr/0253 §10).
-            | "file.export.dxf"
-            | "file.export.dwg"
-            | "file.export.pdf"
-            | "file.publish.sheets"
-            | "file.export.block"
-            | "file.export.gpkg"
-            | "file.export.shp"
-            | "file.export.sld"
-            | "file.import.sld"
-            | "file.export.qml"
-            | "file.import.qml"
-            | "file.export.maplibre"
-            | "file.import.maplibre"
-            | "file.export.csv"
-            | "file.export.fgb"
-            | "file.export.parquet"
-            | "file.export.gml"
-            | "file.export.xyz"
-            | "file.export.landxml"
-            | "file.export.ifc"
-            | "cad.arch.ifc"
-            | "file.export.gltf"
-            | "road.stakeout.send"
-            | "file.export.atlas"
-            | "file.import.csv"
-            | "file.import.fgb"
-            | "file.import.parquet"
-            | "file.import.shp"
-            | "file.import.geojson"
-            | "file.import.kml"
-            | "file.import.gml"
-            // A derived dataset's file is written over with `overwrite` (docs/adr/0530).
-            | "file.export.gis"
-            | "cad.gis.takeback"
-            // It breaks a derived file's tables' links in the file (docs/adr/0634 §2).
-            | "cad.gis.detach"
-            // With `replace` it redefines the drawing's blocks of the file's names (docs/adr/0316 §3).
-            | "file.import.block"
-            // A bound layer's binding changes; a sync writes its table or replaces its objects (docs/adr/0503).
-            | "cad.sources.edit"
-            | "cad.sources.sync"
-            // It takes the table's side into the layer and writes the layer's to the table (docs/adr/0538).
-            | "cad.sources.reconcile"
-            // It writes a many-to-many reference's mapping table into the file or takes it out (docs/adr/0532 §2).
-            | "cad.sources.relate"
-            // It writes over the attributes of many objects (docs/adr/0507).
-            | "cad.fields.write"
-            // A processing tool writes what it computes (docs/adr/0508).
-            | "cad.processing.run"
-            | "cad.processing.batch"
-            // The drawing order of what is there shifts, as a set changes it (docs/adr/0260 §3, 0310). A layer's
-            // filter is its view and takes nothing away (docs/adr/0211): not here.
-            | "cad.entities.order"
-    );
+    // Deleting, editing, moving and setting change what is there (the list the agents' tools keep, docs/adr/8056 §2).
+    let destructive = kentos_headless::agent_tools::DESTRUCTIVE.contains(&id);
     // It writes nothing: the catalog says it only reads the drawing (`effect: query`), it writes no file of its own
     // (the destructive ones above, the file commands but the print check) (docs/adr/0622 §8).
     let read_only = c["effect"] == "query"
@@ -1160,6 +958,7 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
         },
         "drawing.close" => {
             server.desktops.remove(handle);
+            server.guards.remove(handle);
             return Ok(answer(json!({ "closed": handle, "detached": true }), false));
         }
         "drawing.save" | "drawing.undo" | "drawing.redo" | "drawing.exportDxf"
@@ -1215,6 +1014,41 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
 }
 
 fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
+    if server.profile == crate::server::Profile::Compact {
+        match name {
+            "session.status" => {
+                let open = run(server, "drawing.list", &json!({}))?;
+                return Ok(answer(
+                    json!({
+                        "profile": "compact",
+                        "guard": "Yazan her komut önce mode: plan ile planlanır; execute yalnız o planı ve yalnız çizim \
+                                  o andan beri değişmediyse yazar (planId). Okuyan komut hemen çalışır.",
+                        "drawings": open["structuredContent"]["drawings"],
+                    }),
+                    false,
+                ));
+            }
+            "desktop.detach" => {
+                let handle = text(args, "drawing")
+                    .ok_or_else(|| refused("invalid_input", "drawing gerekli."))?;
+                if server.desktops.remove(handle).is_none() {
+                    return Err(refused(
+                        "unknown_drawing",
+                        format!("“{handle}” bağlı bir masaüstü değil."),
+                    ));
+                }
+                server.guards.remove(handle);
+                return Ok(answer(json!({ "detached": handle }), false));
+            }
+            name if kentos_headless::agent_tools::tools()
+                .iter()
+                .any(|t| t.name == name) =>
+            {
+                return agent_call(server, name, args);
+            }
+            _ => {}
+        }
+    }
     if let Some(handle) = text(args, "drawing").filter(|h| server.desktops.contains_key(*h)) {
         let handle = handle.to_owned();
         return on_desktop(server, &handle, name, args);
@@ -1299,6 +1133,7 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                 ));
             }
             server.drawings.remove(&handle);
+            server.guards.remove(&handle);
             Ok(answer(json!({ "closed": handle }), false))
         }
         "drawing.save" => {

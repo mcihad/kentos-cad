@@ -95,9 +95,10 @@ impl App {
     }
 
     /// Why the product commands a request runs are not this program's (docs/adr/8056 §1): `run`'s and a job's
-    /// command, a call's envelope's, each row of a journal replayed; none for a request that runs no command.
+    /// command, a call's envelope's, each row of a journal replayed, each step of a change set; none for a
+    /// request that runs no command.
     fn offered_to_agent(&self, method: &str, params: &Value) -> Option<String> {
-        let commands: Vec<&str> = match method {
+        let mut commands: Vec<&str> = match method {
             "run" | "call" | "start" => params
                 .get("command")
                 .and_then(Value::as_str)
@@ -115,6 +116,16 @@ impl App {
                 .unwrap_or_default(),
             _ => Vec::new(),
         };
+        // A change set's steps are commands of their own: a step is not let in by the set (docs/adr/8056 §2).
+        if commands.first() == Some(&kentos_commands::CAD_CHANGESET_APPLY)
+            && let Some(steps) = params.pointer("/input/steps").and_then(Value::as_array)
+        {
+            commands.extend(
+                steps
+                    .iter()
+                    .filter_map(|s| s.get("command").and_then(Value::as_str)),
+            );
+        }
         commands
             .into_iter()
             .find_map(|command| self.product_not_offered(command))
