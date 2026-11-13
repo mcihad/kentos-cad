@@ -204,3 +204,22 @@ fn kata_ver_gives_every_object_without_a_level_one() {
         .collect();
     assert!(back.iter().all(|l| l.as_deref() != Some("kat-1")), "one step: {back:?}");
 }
+
+/// UR-025: the broken dimension's finding says its value is the old geometry's and offers Yeniden bağla first; the
+/// fix that frees the points is said as a tie undone, the dimension still measuring from where it was, not as fixed.
+#[test]
+fn freeing_a_broken_dimension_is_said_as_what_it_does() {
+    let mut app = App::boot(None).0;
+    audited(&mut app);
+    let row = row_of(&app, "arch_dimension_broken");
+    let shown = app.arch_audit_shown();
+    let finding = &app.arch.arch_audit.audited.as_ref().expect("audited").findings[shown[row]];
+    assert!(finding.message.contains("değeri nesnenin bugünkü ölçüsü değil"), "{}", finding.message);
+    assert!(finding.repair.starts_with("Yeniden bağla"), "{}", finding.repair);
+    assert_eq!(finding.fix.as_ref().map(|f| f.label.as_str()), Some("Bağı çöz (noktalar eski yerinde, değer değişmez)"));
+    event(&mut app, Event::Press(row));
+    event(&mut app, Event::Fix);
+    let said = crate::files_testing::last_said(&app);
+    assert!(said.starts_with("Bağ çözüldü: ölçü eski noktalarından ölçmeye devam ediyor"), "{said}");
+    assert!(!said.starts_with("Düzeltildi"));
+}

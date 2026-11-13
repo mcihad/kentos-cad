@@ -54,10 +54,18 @@ impl App {
         match answer {
             Ok(v) if v["status"] == "completed" => {
                 self.arch.arch_audit.chosen.clear();
-                self.say(
-                    Level::Success,
-                    format!("Düzeltildi: {label}. Geri al ile dönülür."),
-                );
+                // A dimension's tie undone measures on from the old place (UR-025): said as what it is, not fixed.
+                if command == kentos_commands::CAD_DIMENSIONS_REASSOCIATE {
+                    self.say(
+                        Level::Warn,
+                        "Bağ çözüldü: ölçü eski noktalarından ölçmeye devam ediyor, değeri nesnenin bugünkü ölçüsü değil. Yeniden bağla ile nesneye bağlayın; geri al ile dönülür.",
+                    );
+                } else {
+                    self.say(
+                        Level::Success,
+                        format!("Düzeltildi: {label}. Geri al ile dönülür."),
+                    );
+                }
                 for w in v["warnings"].as_array().into_iter().flatten() {
                     if let Some(m) = w["message"].as_str() {
                         self.warn(m.to_owned());
