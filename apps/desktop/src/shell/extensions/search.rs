@@ -97,7 +97,7 @@ impl App {
         let Some((_, _, item)) = self.extension_item(hit) else {
             return Task::none();
         };
-        if let Some(why) = self.item_when_why(&item) {
+        if let Some(why) = self.item_when_why(item) {
             self.output(format!("“{}”: {why}", item.label));
             return Task::none();
         }
