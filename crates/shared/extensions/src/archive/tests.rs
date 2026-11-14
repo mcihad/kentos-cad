@@ -70,10 +70,12 @@ fn the_demo_extension_packs_and_passes_its_check() {
             e.commands.len(),
             e.processing.len(),
             e.expressions.len(),
-            e.map_tools.len()
+            e.map_tools.len(),
+            e.panels.len()
         ),
-        (5, 1, 1, 1),
-        "commands (one sets up its layer schema), an İşlemler tool, an expression function and a map tool"
+        (6, 1, 1, 1, 2),
+        "commands (one sets up its layer schema, two answer its panels), an İşlemler tool, an expression function, a \
+         map tool and two panels"
     );
     let c = &manifest.contributions;
     assert_eq!(

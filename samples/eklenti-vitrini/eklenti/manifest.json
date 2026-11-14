@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -78,6 +78,11 @@
         "id": "yapi-ara",
         "title": "Yapı ara",
         "handler": "vitrin.logic:yapi_ara"
+      },
+      {
+        "id": "deger-say",
+        "title": "Değer say",
+        "handler": "vitrin.logic:deger_say"
       }
     ],
     "panels": [
@@ -86,6 +91,12 @@
         "title": "Yapı ara",
         "side": "right",
         "definition": "ui/yapi-ara.panel.json"
+      },
+      {
+        "id": "deger-paneli",
+        "title": "Değer say",
+        "side": "right",
+        "definition": "ui/deger-say.panel.json"
       }
     ],
     "processing": [
@@ -175,6 +186,10 @@
                 "panel": "yapi-paneli",
                 "size": "large",
                 "icon": "search"
+              },
+              {
+                "panel": "deger-paneli",
+                "icon": "field-statistics"
               }
             ]
           },

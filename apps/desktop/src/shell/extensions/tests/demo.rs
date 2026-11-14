@@ -105,6 +105,7 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "TAKS",
             "Yapı numarası",
             "Yapı ara",
+            "Değer say",
             "Yapı yerleştir"
         ]
     );
@@ -643,6 +644,98 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
     assert!(gis.extensions.panel.is_none());
     gis.ext_panel_answer(&origin, Err("geç".into()));
     assert!(gis.extensions.panel.is_none(), "a late answer goes nowhere");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/8057 §24: Vitrin's Değer say on the demo drawing: its field picker lists the fields of the layer its layer
+/// picker holds; its feature picker takes the selected objects of that layer when asked, says why when none fit and
+/// keeps what it held; another layer clears both.
+#[test]
+fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
+    use super::panels::PanelEvent;
+
+    let dir = temp("secici");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/vitrin.kcad");
+    let snapshot = kentos_kcad::decode(&std::fs::read(path).unwrap()).expect("the demo drawing");
+    gis.document = Some(crate::document::Document::from_v2(snapshot, None).expect("opens"));
+    let _ = gis.extensions_event(Event::OpenPanel(
+        "tr.ornek.vitrin".into(),
+        "deger-paneli".into(),
+    ));
+    let names = |gis: &App, layer: Option<&str>| -> Vec<String> {
+        gis.panel_fields(layer, &[])
+            .into_iter()
+            .map(|(name, _)| name)
+            .collect()
+    };
+    assert_eq!(names(&gis, None), [""], "no layer: none only");
+    let say = |gis: &mut App, e: PanelEvent| {
+        let _ = gis.extensions_event(Event::Panel(e));
+    };
+    say(
+        &mut gis,
+        PanelEvent::Choose("katman".into(), "parsel".into()),
+    );
+    assert_eq!(names(&gis, Some("parsel")), ["", "ada", "parsel"]);
+    assert_eq!(
+        gis.panel_fields(Some("parsel"), &["integer".to_owned()])
+            .len(),
+        1,
+        "of a kind it has none of: none only"
+    );
+    say(&mut gis, PanelEvent::Choose("alan".into(), "ada".into()));
+    // Nothing selected: said, nothing taken.
+    say(&mut gis, PanelEvent::Pick("nesneler".into()));
+    let said = |gis: &App| gis.extensions.panel.as_ref().unwrap().said.clone();
+    assert_eq!(
+        said(&gis),
+        Some((true, "“Nesneler”: önce çizimde nesne seçin.".to_owned()))
+    );
+    // Two parcels and a building selected: the parcels taken.
+    let doc = gis.document.as_ref().unwrap();
+    let slots = |layer: &str| -> Vec<kentos_domain::Slot> {
+        doc.model
+            .by_layer(layer)
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .collect()
+    };
+    let (parcels, buildings) = (slots("parsel"), slots("yapi"));
+    let uids: Vec<String> = parcels[..2]
+        .iter()
+        .map(|&s| doc.model.uid(s).unwrap().to_string())
+        .collect();
+    gis.selection.set([parcels[0], parcels[1], buildings[0]]);
+    say(&mut gis, PanelEvent::Pick("nesneler".into()));
+    let panel = gis.extensions.panel.as_ref().unwrap();
+    assert_eq!(panel.said, None);
+    assert_eq!(
+        panel.params().unwrap(),
+        serde_json::json!({ "katman": "parsel", "alan": "ada", "nesneler": uids })
+    );
+    // Only a building: none fits, said with the layer's name; the parcels stay.
+    gis.selection.set([buildings[0]]);
+    say(&mut gis, PanelEvent::Pick("nesneler".into()));
+    assert_eq!(
+        said(&gis),
+        Some((
+            true,
+            "“Nesneler”: seçili 1 nesneden hiçbiri “Parsel sınırı” katmanından değil.".to_owned()
+        ))
+    );
+    assert_eq!(
+        gis.extensions.panel.as_ref().unwrap().picks["nesneler"].len(),
+        2
+    );
+    // Another layer: the field and the objects chosen from the one before go.
+    say(&mut gis, PanelEvent::Choose("katman".into(), "yapi".into()));
+    assert_eq!(
+        gis.extensions.panel.as_ref().unwrap().params().unwrap(),
+        serde_json::json!({ "katman": "yapi", "alan": null, "nesneler": [] })
+    );
+    let _ = gis.extension_panel_view();
     let _ = std::fs::remove_dir_all(&dir);
 }
 

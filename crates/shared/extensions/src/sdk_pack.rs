@@ -70,9 +70,13 @@ Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.pa
 bileşenleri: `text` (`text`), `textField` (`id`, `label`, `placeholder`, `value`), `numberField` (`id`, `label`,
 `min`, `max`, `unit`, `value`), `select` (`id`, `label`, `options: [{value, label}]`, `value`), `checkbox` (`id`,
 `label`, `value`), `layerPicker` (`id`, `label`, `geometry`: point, line, area, annotation; açık çizimin katmanları,
-değeri katmanın kimliği ya da seçilmezse None), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği,
-`table`, `primary`),
-`table` (`id`, `label`). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
+değeri katmanın kimliği ya da seçilmezse None), `fieldPicker` (`id`, `label`, `layer`: bu paneldeki bir `layerPicker`'ın
+kimliği, `kinds`: alan türleri, ör. `["integer", "decimal"]`; orada seçilen katmanın alanları, değeri alanın adı ya da
+None), `featurePicker` (`id`, `label`, `layer`: bir `layerPicker`'ın kimliği, `geometry`, `multiple`: varsayılan true;
+kullanıcı "Seçimi al"a basınca çizimdeki seçimden o katmanın ve türün nesnelerini alır, değeri kalıcı kimliklerin
+listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.entity(uid)` ile okur; katman değişince
+alan ve nesne seçimi temizlenir), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
+`primary`), `table` (`id`, `label`). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
 doldurur. Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
 `uid` sütun olarak görünmez. Panel Python'suz açılır; ortam hazır değilse düğmeler nedenini söyler. İskelette

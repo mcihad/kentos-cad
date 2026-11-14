@@ -11,6 +11,8 @@
 //! - **A late answer goes nowhere:** a run's rows are written only to the panel it started from, while it is open.
 //! - **A row with a `uid` is an object:** clicking it selects and zooms to it, as an audit's Göster; the `uid` is not
 //!   shown as a column.
+//! - **Pickers follow their layer picker:** a field picker lists the fields of the layer chosen there, a feature picker
+//!   takes the selected objects of that layer when the user asks ("Seçimi al"); choosing another layer clears both.
 
 use std::collections::BTreeMap;
 
@@ -39,6 +41,8 @@ pub(crate) struct OpenPanel {
     pub(crate) texts: BTreeMap<String, String>,
     pub(crate) checks: BTreeMap<String, bool>,
     pub(crate) choices: BTreeMap<String, String>,
+    /// Each feature picker's objects, their persistent ids.
+    pub(crate) picks: BTreeMap<String, Vec<String>>,
     /// Each table's columns and rows, from its button's command.
     pub(crate) tables: BTreeMap<String, (Vec<String>, Vec<Value>)>,
     /// The panel's last words: (an error, the words).
@@ -71,6 +75,10 @@ pub(crate) enum PanelEvent {
     Text(String, String),
     Check(String, bool),
     Choose(String, String),
+    /// A feature picker takes the drawing's selection.
+    Pick(String),
+    /// A feature picker lets its objects go.
+    Unpick(String),
     Press(String),
     /// A table's row with a `uid`: its object selected and zoomed to.
     Show(String),
@@ -87,6 +95,7 @@ impl OpenPanel {
             texts: BTreeMap::new(),
             checks: BTreeMap::new(),
             choices: BTreeMap::new(),
+            picks: BTreeMap::new(),
             tables: BTreeMap::new(),
             said: None,
             running: None,
@@ -106,9 +115,12 @@ impl OpenPanel {
                 Component::Checkbox { id, value, .. } => {
                     panel.checks.insert(id.clone(), *value);
                 }
-                // A layer is chosen by the user: none at first.
-                Component::LayerPicker { id, .. } => {
+                // A layer, a field and objects are chosen by the user: none at first.
+                Component::LayerPicker { id, .. } | Component::FieldPicker { id, .. } => {
                     panel.choices.insert(id.clone(), String::new());
+                }
+                Component::FeaturePicker { id, .. } => {
+                    panel.picks.insert(id.clone(), Vec::new());
                 }
                 Component::Select {
                     id, options, value, ..
@@ -164,10 +176,20 @@ impl OpenPanel {
                         json!(self.choices.get(id).cloned().unwrap_or_default()),
                     );
                 }
-                // A layer's id; none when no layer is chosen.
-                Component::LayerPicker { id, .. } => {
+                // A layer's id, a field's name; none when none is chosen.
+                Component::LayerPicker { id, .. } | Component::FieldPicker { id, .. } => {
                     let chosen = self.choices.get(id).filter(|l| !l.is_empty());
                     out.insert(id.clone(), chosen.map_or(Value::Null, |l| json!(l)));
+                }
+                // The objects' persistent ids; one or none when it takes one.
+                Component::FeaturePicker { id, multiple, .. } => {
+                    let picked = self.picks.get(id).cloned().unwrap_or_default();
+                    let value = if *multiple {
+                        json!(picked)
+                    } else {
+                        picked.first().map_or(Value::Null, |u| json!(u))
+                    };
+                    out.insert(id.clone(), value);
                 }
                 Component::Checkbox { id, .. } => {
                     out.insert(
@@ -179,6 +201,41 @@ impl OpenPanel {
             }
         }
         Ok(Value::Object(out))
+    }
+
+    /// A choice made: another layer in a layer picker clears the field and the objects chosen from the one before.
+    pub(crate) fn choose(&mut self, id: String, value: String) {
+        let layer = self
+            .definition
+            .body
+            .iter()
+            .any(|c| matches!(c, Component::LayerPicker { id: l, .. } if *l == id));
+        if layer && self.choices.get(&id) != Some(&value) {
+            for c in &self.definition.body {
+                match c {
+                    Component::FieldPicker { id: f, layer, .. } if *layer == id => {
+                        self.choices.insert(f.clone(), String::new());
+                    }
+                    Component::FeaturePicker {
+                        id: f,
+                        layer: Some(layer),
+                        ..
+                    } if *layer == id => {
+                        self.picks.insert(f.clone(), Vec::new());
+                    }
+                    _ => {}
+                }
+            }
+        }
+        self.choices.insert(id, value);
+    }
+
+    /// The layer a picker's layer picker holds now; none when it has none or none is chosen.
+    fn layer_of(&self, picker: Option<&str>) -> Option<&str> {
+        picker
+            .and_then(|l| self.choices.get(l))
+            .map(String::as_str)
+            .filter(|l| !l.is_empty())
     }
 
     /// The table a button's rows go to: its own, else the panel's first.
@@ -318,9 +375,11 @@ impl App {
             PanelEvent::Check(id, on) => {
                 panel.checks.insert(id, on);
             }
-            PanelEvent::Choose(id, value) => {
-                panel.choices.insert(id, value);
+            PanelEvent::Choose(id, value) => panel.choose(id, value),
+            PanelEvent::Unpick(id) => {
+                panel.picks.insert(id, Vec::new());
             }
+            PanelEvent::Pick(id) => return self.ext_panel_pick(&id),
             PanelEvent::Close => self.extensions.panel = None,
             PanelEvent::Press(button) => return self.ext_panel_press(&button),
             PanelEvent::Show(uid) => {
@@ -330,6 +389,83 @@ impl App {
                 );
             }
         }
+        Task::none()
+    }
+
+    /// A feature picker takes the drawing's selection: the selected objects of the layer its layer picker holds and of
+    /// its type (the first only when it takes one); or the panel says why none fit, and what it held stays.
+    fn ext_panel_pick(&mut self, picker: &str) -> Task<Message> {
+        let Some(panel) = self.extensions.panel.as_ref() else {
+            return Task::none();
+        };
+        let Some(Component::FeaturePicker {
+            label: words,
+            layer,
+            geometry,
+            multiple,
+            ..
+        }) = panel
+            .definition
+            .body
+            .iter()
+            .find(|c| c.id() == Some(picker))
+            .cloned()
+        else {
+            return Task::none();
+        };
+        let layer = panel.layer_of(layer.as_deref()).map(str::to_owned);
+        let kind = geometry
+            .as_deref()
+            .and_then(|g| serde_json::from_value::<kentos_commands::LayerGeometry>(json!(g)).ok());
+        let selected = self.selection.ids();
+        let mut picked: Vec<String> = Vec::new();
+        let mut layer_name = None;
+        if let Some(doc) = &self.document {
+            picked = selected
+                .iter()
+                .filter_map(|&slot| {
+                    let e = doc.model.get(slot)?;
+                    let fits = layer.as_ref().is_none_or(|l| e.base().layer_id == *l)
+                        && kind.is_none_or(|k| k.admits(e.kind()));
+                    fits.then(|| doc.model.uid(slot)).flatten()
+                })
+                .map(|u| u.to_string())
+                .collect();
+            layer_name = layer
+                .as_deref()
+                .and_then(|l| doc.model.layers().get(l))
+                .map(|n| n.name.clone());
+        }
+        let count = selected.len();
+        let Some(panel) = self.extensions.panel.as_mut() else {
+            return Task::none();
+        };
+        if picked.is_empty() {
+            let mut wanted: Vec<String> = Vec::new();
+            if let Some(name) = layer_name {
+                wanted.push(format!("“{name}” katmanından"));
+            }
+            if let Some(k) = kind {
+                wanted.push(format!("{} türünde", k.label().to_lowercase()));
+            }
+            let why = if count == 0 {
+                format!("“{words}”: önce çizimde nesne seçin.")
+            } else if wanted.is_empty() {
+                format!("“{words}”: seçili nesnelerin kalıcı kimliği yok.")
+            } else {
+                format!(
+                    "“{words}”: seçili {count} nesneden hiçbiri {} değil.",
+                    wanted.join(" ve ")
+                )
+            };
+            panel.said = Some((true, why));
+            return Task::none();
+        }
+        if !multiple {
+            picked.truncate(1);
+        }
+        panel.picks.insert(picker.to_owned(), picked);
+        panel.said = None;
         Task::none()
     }
 
@@ -361,6 +497,17 @@ impl App {
         if let Some(why) = why {
             panel.said = Some((true, why));
             return Task::none();
+        }
+        // Objects taken before and deleted since are not given: the code would not find them.
+        if let Some(doc) = &self.document {
+            for uids in panel.picks.values_mut() {
+                uids.retain(|u| {
+                    kentos_domain::Uuid::parse_str(u)
+                        .ok()
+                        .and_then(|u| doc.model.slot_of(u))
+                        .is_some()
+                });
+            }
         }
         let params = match panel.params() {
             Ok(params) => params,
@@ -544,6 +691,50 @@ impl App {
                     );
                     form = form.field(words.clone(), pick);
                 }
+                Component::FieldPicker {
+                    id,
+                    label: words,
+                    layer,
+                    kinds,
+                } => {
+                    let fields = self.panel_fields(p.layer_of(Some(layer)), kinds);
+                    let at = fields
+                        .iter()
+                        .position(|(f, _)| p.choices.get(id) == Some(f));
+                    let (id, names): (String, Vec<String>) =
+                        (id.clone(), fields.iter().map(|(f, _)| f.clone()).collect());
+                    let pick = Select::new(
+                        fields.into_iter().map(|(_, words)| Choice::new(words)),
+                        at,
+                        move |i| event(PanelEvent::Choose(id.clone(), names[i].clone())),
+                    );
+                    form = form.field(words.clone(), pick);
+                }
+                Component::FeaturePicker {
+                    id, label: words, ..
+                } => {
+                    // Two lines: beside both buttons the count had no room in a narrow dock and Temizle ran past its
+                    // edge (real window, 14 November 2026).
+                    let picked = p.picks.get(id).map_or(0, Vec::len);
+                    let count: Element<'_, Message> = if picked == 0 {
+                        label::muted("Seçilmedi").into()
+                    } else {
+                        label::caption(format!("{picked} nesne")).into()
+                    };
+                    let mut line = row![count].spacing(8).align_y(iced::Center);
+                    if picked > 0 {
+                        line = line.push(words::ghost(
+                            "Temizle",
+                            Some(event(PanelEvent::Unpick(id.clone()))),
+                        ));
+                    }
+                    let cell = column![
+                        line,
+                        words::secondary("Seçimi al", Some(event(PanelEvent::Pick(id.clone())))),
+                    ]
+                    .spacing(4);
+                    form = form.field(words.clone(), cell);
+                }
                 Component::Checkbox {
                     id, label: words, ..
                 } => {
@@ -649,6 +840,37 @@ impl App {
         out
     }
 
+    /// The fields a field picker offers: none ("—") first, then the fields of `layer` (of `kinds` when given), each by
+    /// its alias and name; only none while no layer is chosen.
+    pub(crate) fn panel_fields(
+        &self,
+        layer: Option<&str>,
+        kinds: &[String],
+    ) -> Vec<(String, String)> {
+        let mut out = vec![(String::new(), "—".to_owned())];
+        let node = layer.and_then(|l| self.document.as_ref()?.model.layers().get(l));
+        for f in node.into_iter().flat_map(|n| &n.fields) {
+            let kind = serde_json::to_value(f.kind).ok();
+            if !kinds.is_empty()
+                && !kinds
+                    .iter()
+                    .any(|k| kind.as_ref().and_then(Value::as_str) == Some(k))
+            {
+                continue;
+            }
+            let words = match f
+                .alias
+                .as_deref()
+                .filter(|a| !a.trim().is_empty() && *a != f.name)
+            {
+                Some(alias) => format!("{alias} ({})", f.name),
+                None => f.name.clone(),
+            };
+            out.push((f.name.clone(), words));
+        }
+        out
+    }
+
     /// A table's rows, the first [`SHOWN_ROWS`]; empty until its button's command answered.
     fn panel_table<'a>(
         &self,
@@ -726,6 +948,47 @@ mod tests {
             "yapi-ara",
             kentos_extensions::ui_panel::read(&value).unwrap(),
         )
+    }
+
+    #[test]
+    fn pickers_follow_their_layer_picker_and_give_names_and_ids() {
+        let value = json!({
+            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Değer say",
+            "body": [
+                { "type": "layerPicker", "id": "katman", "label": "Katman" },
+                { "type": "fieldPicker", "id": "alan", "label": "Alan", "layer": "katman" },
+                { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman" },
+                { "type": "featurePicker", "id": "bir", "label": "Bir nesne", "multiple": false },
+                { "type": "button", "id": "say", "label": "Say", "command": "deger-say" }
+            ]
+        });
+        let mut p = OpenPanel::new(
+            "tr.ornek.vitrin",
+            "deger-paneli",
+            kentos_extensions::ui_panel::read(&value).unwrap(),
+        );
+        assert_eq!(
+            p.params().unwrap(),
+            json!({ "katman": null, "alan": null, "nesneler": [], "bir": null }),
+            "nothing chosen: none, no objects"
+        );
+        p.choose("katman".into(), "parsel".into());
+        p.choose("alan".into(), "ada".into());
+        p.picks
+            .insert("nesneler".into(), vec!["a".into(), "b".into()]);
+        p.picks.insert("bir".into(), vec!["c".into()]);
+        assert_eq!(
+            p.params().unwrap(),
+            json!({ "katman": "parsel", "alan": "ada", "nesneler": ["a", "b"], "bir": "c" })
+        );
+        // The same layer again keeps them; another clears what was chosen from the one before, not the free picker.
+        p.choose("katman".into(), "parsel".into());
+        assert_eq!(p.params().unwrap()["alan"], json!("ada"));
+        p.choose("katman".into(), "yapi".into());
+        assert_eq!(
+            p.params().unwrap(),
+            json!({ "katman": "yapi", "alan": null, "nesneler": [], "bir": "c" })
+        );
     }
 
     #[test]

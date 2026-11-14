@@ -1484,5 +1484,24 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
     kırmızı.
   - **İşlemler aracının şerit düğmesi kimliğini yazıyordu** ("occupancy-by-island"): manifest yalnız tanım dosyasını
     adlandırır; ad artık tanımın `label`'ından ("Ada bazlı doluluk"), komut aramasında da.
-- **Kalan (ADIM 22):** nesne ve alan seçici; ağaç, kart, ilerleme bileşenleri; sol ve alt yerleşim (`side` şimdilik
+- **Alan ve nesne seçici** (Vitrin 1.0.10, Değer say; `16-secici`):
+  - `fieldPicker` (`id`, `label`, `layer`, isteğe bağlı `kinds`): `layer` bu paneldeki bir `layerPicker`'ın kimliğidir;
+    liste orada seçilen katmanın alanlarıdır (takma adıyla, "Takma ad (ad)"), `kinds` katman şemasının alan türleriyle
+    süzer (`["integer", "decimal"]`). Değeri alanın adı, seçilmezse None. Katman seçilmeden yalnız "—".
+  - `featurePicker` (`id`, `label`, isteğe bağlı `layer`, `geometry`, `multiple`): **seçimi kullanıcı verir:** "Seçimi
+    al" çizimdeki seçimden o katmanın (bağlı katman seçicide seçilen) ve türün nesnelerini alır; değeri kalıcı
+    kimliklerin listesi (`multiple: false`: ilk kimlik ya da None). Haritada tıklatan bir seçim kipi yerine bu yol
+    seçildi: KentOS'un seçimi zaten bütün araçların girdisi (pencere, çit, süzgeç), panel ikinci bir seçim aracı
+    kurmaz. Uygun nesne yoksa nedenini adıyla söyler ("seçili 1 nesneden hiçbiri “Parsel sınırı” katmanından değil")
+    ve önceki seçimi tutar; düğmeye basılınca o arada silinen nesneler verilmez.
+  - **Bağlı katman değişince** alan seçimi ve o katmandan alınan nesneler temizlenir; aynı katmanı yeniden seçmek bir
+    şey silmez. Kapı 1: `layer` paneldeki bir katman seçiciyi göstermeli (alan seçicide zorunlu), `kinds` bilinen
+    türler, `multiple` true/false.
+  - **Gerçek pencere:** Parsel sınırı + ada → Say "katmanın 4 nesnesinde 2 farklı “ada” değeri" (101 → 3, 102 → 1);
+    pencereyle iki parsel + Seçimi al → "2 nesne", Say → 101 → 2; Yapı seçilince Alan "—", Nesneler "Seçilmedi".
+    **Bulgu (düzeltildi):** sayı ile iki düğme aynı satırdayken dar dock'ta sayı görünmüyor, Temizle kenardan
+    taşıyordu; satır ikiye bölündü (üstte "2 nesne · Temizle", altta Seçimi al).
+  - İskeletin panelinde katman seçiciye bağlı alan seçici var (`nesne-ara` istenirse yalnız o alanda arar; gerçek
+    eklenti süreciyle sınandı: alanla 1, alansız 2 nesne).
+- **Kalan (ADIM 22):** ağaç, kart, ilerleme bileşenleri; sol ve alt yerleşim (`side` şimdilik
   sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince).

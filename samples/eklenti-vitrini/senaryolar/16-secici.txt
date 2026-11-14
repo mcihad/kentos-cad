@@ -1,0 +1,42 @@
+# Panelin seçicileri: Değer say'ın Alan listesi Katman'da seçilen katmanın alanlarıdır; Say, alanın değerlerini sayar
+# (Parsel sınırı, ada: 101 → 3, 102 → 1). İki parsel pencereyle seçilip Seçimi al'a basılınca Nesneler "2 nesne" der ve
+# Say yalnız onları sayar (101 → 2). Başka katman seçilince alan ve nesneler temizlenir.
+# (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 843 20    # Vitrin
+wait 1200
+click 501 57    # Değer say (şeritte, Panel grubunda)
+wait 2000
+drag 1280 508 1280 845   # paneli aşağı doğru büyüt
+wait 1000
+click 1354 316  # Katman
+wait 1000
+click 1294 469  # Kadastro › Parsel sınırı
+wait 800
+click 1354 353  # Alan
+wait 1000
+click 1308 417  # ada
+wait 800
+click 1305 450  # Say
+wait 6000
+shot 16-katman
+drag 160 480 705 770     # pencereyle 101/1 ve 101/2 (yalnız etkin katman seçilir)
+wait 1000
+click 1321 412  # Seçimi al
+wait 1000
+shot 16-alindi
+click 1305 456  # Say
+wait 5000
+shot 16-secili
+click 1354 316  # Katman
+wait 1000
+click 1294 498  # Kadastro › Yapı
+wait 800
+shot 16-temiz

@@ -2565,9 +2565,10 @@
   - Eklentinin katmanları `schema.json`'da (`kentos.layerSchema` 1, KentOS'un sözcükleriyle); bir komut
     `ctx.apply_declarative_schema` ile kurar: var olana dokunmaz, eksiği tek geri alma adımıyla ekler; katmanın kimliği
     şema adıdır (`cad.layers.edit` `add` `id` alır); katmanın formu aynı adımda bağlanır.
-  - Eklentinin paneli veridir (`kentos.ui.panel` 1: metin, metin/sayı alanı, seçim, onay, düğme, tablo), dock'un
-    Eklenti sekmesinde KentOS'un bileşenleriyle çizilir; düğmesi eklentinin bir komutunu panelin değerleriyle
-    (`ctx.params`) çalıştırır, satırları panelin tablosuna gelir. Kodu arayüz nesnesi almaz.
+  - Eklentinin paneli veridir (`kentos.ui.panel` 1: metin, metin/sayı alanı, seçim, onay, katman/alan/nesne seçici,
+    düğme, tablo), dock'un Eklenti sekmesinde KentOS'un bileşenleriyle çizilir; düğmesi eklentinin bir komutunu
+    panelin değerleriyle (`ctx.params`) çalıştırır, satırları panelin tablosuna gelir; nesne seçici çizimdeki seçimi
+    alır. Kodu arayüz nesnesi almaz.
   - Örnek ve bütün gösterimler `samples/eklenti-vitrini` (Vitrin) ile; yeni yetenek aynı değişiklikte oraya girer.
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](../../docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
   - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.

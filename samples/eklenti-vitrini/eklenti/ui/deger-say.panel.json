@@ -1,0 +1,41 @@
+{
+  "format": "kentos.ui.panel",
+  "schemaVersion": 1,
+  "title": "Değer say",
+  "body": [
+    {
+      "type": "text",
+      "text": "Bir alanın değerlerini sayar: seçilen nesnelerde, seçilmediyse katmanın bütün nesnelerinde. Alanlar katman seçilince gelir; nesneler çizimdeki seçimden alınır."
+    },
+    {
+      "type": "layerPicker",
+      "id": "katman",
+      "label": "Katman"
+    },
+    {
+      "type": "fieldPicker",
+      "id": "alan",
+      "label": "Alan",
+      "layer": "katman"
+    },
+    {
+      "type": "featurePicker",
+      "id": "nesneler",
+      "label": "Nesneler",
+      "layer": "katman"
+    },
+    {
+      "type": "button",
+      "id": "say",
+      "label": "Say",
+      "command": "deger-say",
+      "table": "dagilim",
+      "primary": true
+    },
+    {
+      "type": "table",
+      "id": "dagilim",
+      "label": "Değerler"
+    }
+  ]
+}

@@ -29,11 +29,13 @@ ekran görüntüleri bununla yapılır (plan/eklenti.md, docs/adr/8057).
 | Denetim kuralı ve düzeltme | `audits` › Yapı numarası (`@ext.audit`) | Vitrin › Yapı numarası: numarasız yapılar alt paneldeki Eklenti denetimi'nde listelenir; Göster nesneye götürür, Düzelt sıradaki numarayı tek geri alma adımıyla yazar (`11-denetim`) |
 | Katman şeması | `schema.json` (`schemaFile`): Vitrin grubu, Örnek tesis (nokta, formuyla: `forms/tesis.kform`) ve Bakım kaydı katmanları, Tesis türü listesi, ilişki | Vitrin › Katmanları kur: katman ağacında Vitrin grubu belirir, rapor ne eklendiğini söyler; ikinci basış bir şey değiştirmez (`13-sema`) |
 | Panel | `ui/yapi-ara.panel.json` (`entrypoints.panels`, `ui.panel`): metin, arama kutusu, katman seçici, onay kutusu, düğme, tablo | Vitrin › Yapı ara: sağdaki Eklenti sekmesinde açılır; Ara `yapi-ara` komutunu panelin değerleriyle çalıştırır, bulunanlar panelin tablosunda; satıra tıklamak yapıyı gösterir (`14-panel`); Katman seçilirse o katmanda arar (`15-katman-secici`) |
+| Panel seçicileri | `ui/deger-say.panel.json`: katman seçici, ona bağlı alan seçici (`fieldPicker`: seçilen katmanın alanları) ve nesne seçici (`featurePicker`: çizimdeki seçimden) | Vitrin › Değer say: Katman › Parsel sınırı, Alan › ada, Say: 101 → 3, 102 → 1; iki parsel seçip Seçimi al, Say: yalnız onlar; başka katman alanı ve nesneleri temizler (`16-secici`) |
 | Yerleşik ikon | `icon: "space-number"`, `"layer-fields"` (kümenin `spaceNumber`, `layerFields` ikonları) | Vitrin sekmesinde Yapıları numarala, katmanın sağ tık menüsünde Katman özeti (`12-ikonlar`); kendi ikonları paketteki SVG'ler |
 | Python'suz katkı | `dataSources` (XYZ altlık) | Kaynaklar: Örnek Belediyesi altlığı (sunucusu örnektir, yanıt vermez) |
 
-Panelin bileşenleri `kentos.ui.panel` 1'in yedisidir (metin, metin alanı, sayı alanı, seçim, onay kutusu, düğme, tablo); yenileri
-geldiğinde buraya eklenecek.
+Vitrin'in iki paneli `kentos.ui.panel` 1'in bileşenlerinden metni, metin alanını, onay kutusunu, katman, alan ve nesne
+seçicilerini, düğmeyi ve tabloyu gösterir; sayı alanı ile seçim kutusu biçimin kendi testlerinde sınanır. Yeni bileşen
+geldiğinde buraya eklenir.
 
 ## Hazırlama
 

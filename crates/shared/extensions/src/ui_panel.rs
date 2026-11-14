@@ -13,6 +13,7 @@ use std::collections::BTreeSet;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
+use crate::layer_schema::FIELD_KINDS;
 use crate::problem::Problem;
 
 /// `format`.
@@ -84,6 +85,28 @@ pub enum Component {
         #[serde(default)]
         geometry: Option<String>,
     },
+    /// One of the fields of the layer the panel's layer picker `layer` holds, of `kinds` only when given (the layer
+    /// schema's words): its name, none when none is chosen.
+    FieldPicker {
+        id: String,
+        label: String,
+        layer: String,
+        #[serde(default)]
+        kinds: Vec<String>,
+    },
+    /// The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`
+    /// holds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else
+    /// one id or none.
+    FeaturePicker {
+        id: String,
+        label: String,
+        #[serde(default)]
+        layer: Option<String>,
+        #[serde(default)]
+        geometry: Option<String>,
+        #[serde(default = "many")]
+        multiple: bool,
+    },
     /// Yes or no.
     Checkbox {
         id: String,
@@ -109,6 +132,11 @@ pub enum Component {
     },
 }
 
+/// A feature picker takes many objects unless it says otherwise.
+fn many() -> bool {
+    true
+}
+
 impl Component {
     /// Its id, when it has one.
     pub fn id(&self) -> Option<&str> {
@@ -118,6 +146,8 @@ impl Component {
             | Component::NumberField { id, .. }
             | Component::Select { id, .. }
             | Component::LayerPicker { id, .. }
+            | Component::FieldPicker { id, .. }
+            | Component::FeaturePicker { id, .. }
             | Component::Checkbox { id, .. }
             | Component::Button { id, .. }
             | Component::Table { id, .. } => Some(id),
@@ -132,6 +162,8 @@ impl Component {
                 | Component::NumberField { .. }
                 | Component::Select { .. }
                 | Component::LayerPicker { .. }
+                | Component::FieldPicker { .. }
+                | Component::FeaturePicker { .. }
                 | Component::Checkbox { .. }
         )
     }
@@ -150,6 +182,8 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "numberField" => &["id", "label", "value", "min", "max", "unit"],
         "select" => &["id", "label", "options", "value"],
         "layerPicker" => &["id", "label", "geometry"],
+        "fieldPicker" => &["id", "label", "layer", "kinds"],
+        "featurePicker" => &["id", "label", "layer", "geometry", "multiple"],
         "checkbox" => &["id", "label", "value"],
         "button" => &["id", "label", "command", "table", "primary"],
         "table" => &["id", "label"],
@@ -157,7 +191,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, textField, numberField, select, layerPicker, checkbox, button, table";
+const TYPES: &str = "text, textField, numberField, select, layerPicker, fieldPicker, featurePicker, checkbox, button, table";
 
 /// A component's id: lowercase letters, digits, `_` and `-`, a letter first, at most 63: the key its value is given to
 /// the command under (`ctx.params["sorgu"]`).
@@ -242,11 +276,14 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             format!("Panelde 1 ile {MOST_COMPONENTS} arasında bileşen olmalı."),
         );
     }
-    let tables: BTreeSet<&str> = body
-        .iter()
-        .filter(|c| c.get("type").and_then(Value::as_str) == Some("table"))
-        .filter_map(|c| c.get("id").and_then(Value::as_str))
-        .collect();
+    let of_type = |kind: &str| -> BTreeSet<&str> {
+        body.iter()
+            .filter(|c| c.get("type").and_then(Value::as_str) == Some(kind))
+            .filter_map(|c| c.get("id").and_then(Value::as_str))
+            .collect()
+    };
+    let tables = of_type("table");
+    let layer_pickers = of_type("layerPicker");
     let mut ids = BTreeSet::new();
     for (i, component) in body.iter().enumerate() {
         let at = format!("/body/{i}");
@@ -374,7 +411,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     );
                 }
             }
-            "layerPicker" => {
+            "layerPicker" | "featurePicker" => {
                 if let Some(geometry) = c.get("geometry")
                     && !geometry
                         .as_str()
@@ -384,6 +421,60 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                         format!("{at}/geometry"),
                         "Katman türü point, line, area ya da annotation olmalı.".to_owned(),
                     );
+                }
+                if kind == "featurePicker" {
+                    if let Some(layer) = c.get("layer")
+                        && !layer.as_str().is_some_and(|l| layer_pickers.contains(l))
+                    {
+                        add(
+                            format!("{at}/layer"),
+                            "Nesne seçicinin katmanı (layer) bu paneldeki bir katman seçicinin (layerPicker) \
+                             kimliği olmalı: nesneler orada seçilen katmandan alınır."
+                                .to_owned(),
+                        );
+                    }
+                    if c.get("multiple").is_some_and(|v| !v.is_boolean()) {
+                        add(
+                            format!("{at}/multiple"),
+                            "multiple true ya da false olmalı.".to_owned(),
+                        );
+                    }
+                }
+            }
+            "fieldPicker" => {
+                match c.get("layer") {
+                    None => add(
+                        at.clone(),
+                        "Alan seçici, alanlarını listeleyeceği katman seçicinin kimliğini (layer) ister."
+                            .to_owned(),
+                    ),
+                    Some(layer) if !layer.as_str().is_some_and(|l| layer_pickers.contains(l)) => add(
+                        format!("{at}/layer"),
+                        "Alan seçicinin katmanı (layer) bu paneldeki bir katman seçicinin (layerPicker) kimliği \
+                         olmalı: alanlar orada seçilen katmanınkilerdir."
+                            .to_owned(),
+                    ),
+                    Some(_) => {}
+                }
+                match c.get("kinds").map(Value::as_array) {
+                    None => {}
+                    Some(Some(kinds)) => {
+                        for (j, k) in kinds.iter().enumerate() {
+                            if !k.as_str().is_some_and(|k| FIELD_KINDS.contains(&k)) {
+                                add(
+                                    format!("{at}/kinds/{j}"),
+                                    format!(
+                                        "Alan türü şunlardan biri olmalı: {}.",
+                                        FIELD_KINDS.join(", ")
+                                    ),
+                                );
+                            }
+                        }
+                    }
+                    Some(None) => add(
+                        format!("{at}/kinds"),
+                        "kinds alan türlerinin listesi ([…]) olmalı.".to_owned(),
+                    ),
                 }
             }
             "checkbox" => {
@@ -456,7 +547,9 @@ mod tests {
                 { "type": "checkbox", "id": "secili", "label": "Yalnız seçililer" },
                 { "type": "layerPicker", "id": "katman", "label": "Katman", "geometry": "area" },
                 { "type": "button", "id": "ara", "label": "Ara", "command": "yapi-ara", "table": "sonuc", "primary": true },
-                { "type": "table", "id": "sonuc", "label": "Sonuçlar" }
+                { "type": "table", "id": "sonuc", "label": "Sonuçlar" },
+                { "type": "fieldPicker", "id": "alan", "label": "Alan", "layer": "katman", "kinds": ["integer", "decimal"] },
+                { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman", "geometry": "area" }
             ]
         })
     }
@@ -467,14 +560,22 @@ mod tests {
         assert!(check("ui/ara.panel.json", &value, &["yapi-ara"]).is_empty());
         let read = read(&value).expect("read");
         assert_eq!(read.title, "Yapı ara");
-        assert_eq!(read.body.len(), 8);
-        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 5);
+        assert_eq!(read.body.len(), 10);
+        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 7);
         assert!(
             matches!(&read.body[5], Component::LayerPicker { geometry: Some(g), .. } if g == "area")
         );
         assert!(
             matches!(&read.body[6], Component::Button { command, table: Some(t), .. }
             if command == "yapi-ara" && t == "sonuc")
+        );
+        assert!(
+            matches!(&read.body[8], Component::FieldPicker { layer, kinds, .. }
+            if layer == "katman" && kinds == &["integer", "decimal"])
+        );
+        assert!(
+            matches!(&read.body[9], Component::FeaturePicker { layer: Some(l), multiple: true, .. } if l == "katman"),
+            "it takes many objects unless it says otherwise"
         );
     }
 
@@ -487,10 +588,17 @@ mod tests {
         p["body"][5]["geometry"] = json!("polygon");
         p["body"][6]["command"] = json!("ara");
         p["body"][6]["table"] = json!("liste");
+        p["body"][8]["layer"] = json!("sonuc");
+        p["body"][8]["kinds"] = json!(["sayi"]);
+        p["body"][9]["multiple"] = json!("evet");
         p["body"]
             .as_array_mut()
             .unwrap()
             .push(json!({ "type": "slider", "id": "x" }));
+        p["body"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!({ "type": "fieldPicker", "id": "y", "label": "Y" }));
         p["renk"] = json!("mavi");
         let at: Vec<String> = check("ui/ara.panel.json", &p, &["yapi-ara"])
             .into_iter()
@@ -506,7 +614,11 @@ mod tests {
                 "/body/5/geometry",
                 "/body/6/command",
                 "/body/6/table",
-                "/body/8/type"
+                "/body/8/layer",
+                "/body/8/kinds/0",
+                "/body/9/multiple",
+                "/body/10/type",
+                "/body/11"
             ]
         );
     }

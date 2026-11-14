@@ -12,6 +12,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``yapi_no``: denetim kuralı; numarasız yapıları bulur, her birine sıradaki numarayı yazan bir düzeltme önerir.
 - ``katmanlari_kur``: katman şeması; schema.json'daki grubu, katmanları, değer listesini ve ilişkiyi tek adımda kurar.
 - ``yapi_ara``: panelin düğmesi; "Yapı ara" panelinin değerleriyle çalışır, satırları panelin tablosuna gider.
+- ``deger_say``: seçicili panelin düğmesi; "Değer say"ın katmanı, alanı ve seçilen nesneleriyle değerleri sayar.
 """
 
 import time
@@ -210,3 +211,24 @@ def yapi_no(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     if facts.cut:
         bulgular.append(ext.AuditFinding(message="Çizimin yalnız ilk nesneleri denetlendi.", severity="info"))
     return bulgular
+
+
+@ext.command("deger-say")
+def deger_say(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Değer say" panelinin düğmesi: seçilen katmanın seçilen alanındaki değerleri sayar; nesneler alındıysa yalnız
+    onlarda, alınmadıysa katmanın bütün nesnelerinde (docs/adr/8057 §24). Panelin değerleri ctx.params'tadır: katman
+    (kimliği), alan (adı), nesneler (çizimdeki seçimden alınanların kalıcı kimlikleri; boş liste: hiçbiri)."""
+    katman, alan = ctx.params.get("katman"), ctx.params.get("alan")
+    if ctx.doc is None or not katman or not alan:
+        return ctx.message("Bir katman ve onun bir alanını seçin.")
+    secilen = ctx.params.get("nesneler") or []
+    kayitlar = [ctx.doc.entity(uid) for uid in secilen] if secilen else ctx.doc.entities(layer=katman)
+    sayac: dict[str, int] = {}
+    for kayit in kayitlar:
+        deger = str((kayit.entity.attrs or {}).get(alan) or "—")
+        sayac[deger] = sayac.get(deger, 0) + 1
+    # Çoktan aza; eşitlerde değerin sırasıyla.
+    satirlar = [{"Değer": d, "Nesne": n} for d, n in sorted(sayac.items(), key=lambda dn: (-dn[1], dn[0]))]
+    toplam = sum(sayac.values())
+    nerede = f"seçilen {toplam} nesnede" if secilen else f"katmanın {toplam} nesnesinde"
+    return ctx.report(satirlar, title="Değer say", message=f"{nerede} {len(sayac)} farklı “{alan}” değeri.")

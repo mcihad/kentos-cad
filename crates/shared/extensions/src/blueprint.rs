@@ -231,6 +231,7 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
                 { "type": "text", "text": "Bir özniteliğinde aranan geçen nesneleri listeler; satıra tıklamak nesneyi gösterir." },
                 { "type": "textField", "id": "sorgu", "label": "Aranan", "placeholder": "ad, no …" },
                 { "type": "layerPicker", "id": "katman", "label": "Katman" },
+                { "type": "fieldPicker", "id": "alan", "label": "Alan", "layer": "katman" },
                 { "type": "button", "id": "ara", "label": "Ara", "command": "nesne-ara", "table": "sonuc", "primary": true },
                 { "type": "table", "id": "sonuc", "label": "Bulunanlar" }
             ]
@@ -486,17 +487,19 @@ const PANEL: &str = r#"
 @ext.command("nesne-ara")
 def nesne_ara(ctx: ext.CommandContext) -> ext.CommandResult:
     """"Nesne ara" panelinin düğmesi: bir özniteliğinde aranan geçen nesneleri listeler (en çok 500). Panelin değerleri
-    ctx.params'tadır: sorgu ve katman (seçilen katmanın kimliği; None: bütün katmanlar). Satırın uid'i, satıra
-    tıklanınca nesneyi gösterir (sütun olarak görünmez)."""
+    ctx.params'tadır: sorgu, katman (seçilen katmanın kimliği; None: bütün katmanlar) ve alan (o katmanın seçilen
+    alanının adı; None: bütün öznitelikler). Satırın uid'i, satıra tıklanınca nesneyi gösterir (sütun olarak
+    görünmez)."""
     if ctx.doc is None:
         return ctx.message("Açık çizim yok.")
     sorgu = str(ctx.params.get("sorgu") or "").strip().casefold()
-    katman = ctx.params.get("katman")
+    katman, alan = ctx.params.get("katman"), ctx.params.get("alan")
     satirlar = []
     for kayit in ctx.doc.entities(layer=katman) if katman else ctx.doc.entities():
         ctx.check()
         oznitelikler = dict(getattr(kayit.entity, "attrs", None) or {})
-        if sorgu and not any(sorgu in str(deger).casefold() for deger in oznitelikler.values()):
+        bakilan = [oznitelikler.get(alan, "")] if alan else list(oznitelikler.values())
+        if sorgu and not any(sorgu in str(deger).casefold() for deger in bakilan):
             continue
         yazi = ", ".join(f"{ad}={deger}" for ad, deger in oznitelikler.items())
         satirlar.append({"uid": kayit.uid, "tür": kayit.entity.kind, "öznitelikler": yazi or "—"})

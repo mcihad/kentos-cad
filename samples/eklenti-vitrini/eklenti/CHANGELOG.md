@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.10 — 14 Kasım 2026
+
+- Panel: "Değer say" (`ui/deger-say.panel.json`): katman seçici, ona bağlı alan seçici (seçilen katmanın alanları) ve
+  nesne seçici (çizimdeki seçimden "Seçimi al"); Say, `deger-say` komutuyla alanın değerlerini sayar.
+
 ## 1.0.9 — 14 Kasım 2026
 
 - "Yapı ara"da katman seçici (yalnız alan katmanları): seçilen katmanda arar, seçilmezse `yapi`'de.
