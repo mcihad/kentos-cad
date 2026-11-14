@@ -2532,6 +2532,15 @@
   ve saydamlıkları korunur (önce yerleştirmenin bütün görünüşü üstlerine yazılıyordu). CAD çiziminde yazılar ekranda
   kendi, yoksa katmanının renginde (sahibin seçimi; CBS'de etiket renginde kalır); bloğun yazısı ekranda, paftada ve
   PDF'te yerleştirmenin değil kendi rengini alır.
+- **Etiketler: görünür ölçekler, Denetle ve her yerden ölçek (14 Kasım 2026; [ADR 8058](../../docs/adr/8058-labels-scale-ranges-and-check.md)).**
+  - Tek ölçek kuralı `kentos_geometry_core::scale`: 1:N = 1 / (px/m × 0,00026458); aralık QGIS gibi okunur, en uzak uç
+    gösterilmez, en yakın gösterilir (`visible_at`, göreli 1e-9 tolerans). Stil kurallarının aralığı iki ucu da çizer.
+  - Etiket penceresi "Görünür ölçekler": En uzak / En yakın 1:N, ikisinin yanında Şimdiki (görünümü aralıkta tutan tam
+    N). Saklama px/m kaldı. Kurallar'da da her 1:N ucunda Şimdiki ölçek düğmesi var.
+  - Denetle penceredeki taslağı sayar, çizim yazılarını engel sayar (kâğıtta gerçek boy, ekranda ayardaki boy), uzak
+    görünümü kâğıt ölçeğinde ortasından sayıp söyler, seçilen ölçeği hatırlar.
+  - Görünüm ölçeği ajanlara açık: bağlantının ve konsolun `view`'u, Python `Document.view()`, MCP `drawing.view`.
+  - Ertelenen: katmanın kendi ölçek aralığı (Katman çizimi), ifadede görünüm ölçeği değişkeni.
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](../../docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
   - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.
     Gerçek koordinatlı CAD ve GIS metre/harita ölçeğiyle devam eder. Model gerçek boyuttadır; pafta ve yazı ölçeği ayrıdır.
