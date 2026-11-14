@@ -754,6 +754,28 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
     let call = |host: &mut WithWorkshop, guard: &mut Guard, name: &str, args: Value| {
         agent_tools::call(host, guard, name, &args)
     };
+    // The next step a host with a workshop is told: write there, not to a folder of the user's.
+    let told = call(
+        &mut host,
+        &mut guard,
+        "extension.blueprint",
+        json!({ "id": "tr.ornek.mezarlik", "name": "Mezarlık bilgi", "contributions": ["command"] }),
+    )
+    .unwrap();
+    assert!(
+        told["next"]
+            .as_str()
+            .unwrap()
+            .contains("extension.workshop.write"),
+        "{told:#}"
+    );
+    assert!(
+        blueprint["next"]
+            .as_str()
+            .unwrap()
+            .contains("boş bir klasöre"),
+        "without a workshop, a folder of its own"
+    );
     let written = call(
         &mut host,
         &mut guard,
@@ -850,5 +872,52 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
     )
     .unwrap();
     assert!(!root.join("tr.ornek.mezarlik/CHANGELOG.md").exists());
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[cfg(unix)]
+#[test]
+fn the_workshop_does_not_write_or_pack_through_a_link() {
+    // docs/adr/8057 §22: a link in the workshop could lead a write, a read or the package outside it.
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let root = std::env::temp_dir().join(format!("kentos-atolye-bag-{}", std::process::id()));
+    let outside = root.join("disari");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&outside).unwrap();
+    std::fs::create_dir_all(root.join("tr.ornek.bag")).unwrap();
+    std::os::unix::fs::symlink(&outside, root.join("tr.ornek.bag/src")).unwrap();
+    std::os::unix::fs::symlink(&outside, root.join("tr.ornek.tum")).unwrap();
+    let mut host = WithWorkshop {
+        inner: &mut s,
+        root: root.clone(),
+        reviewed: Vec::new(),
+    };
+    for (id, path) in [
+        ("tr.ornek.bag", "src/x.py"),
+        ("tr.ornek.tum", "manifest.json"),
+    ] {
+        let refused = agent_tools::call(
+            &mut host,
+            &mut guard,
+            "extension.workshop.write",
+            &json!({ "id": id, "files": { path: "x" } }),
+        )
+        .unwrap_err();
+        assert!(refused.message.contains("bağlantı"), "{refused}");
+    }
+    assert!(
+        std::fs::read_dir(&outside).unwrap().next().is_none(),
+        "nothing written outside"
+    );
+    let refused = agent_tools::call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.review",
+        &json!({ "id": "tr.ornek.bag" }),
+    )
+    .unwrap_err();
+    assert!(refused.message.contains("bağlantı"), "{refused}");
+    assert!(host.reviewed.is_empty());
     let _ = std::fs::remove_dir_all(&root);
 }

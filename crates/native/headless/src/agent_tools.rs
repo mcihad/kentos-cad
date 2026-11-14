@@ -752,7 +752,7 @@ pub fn call(
         "extension.workshop.write" => workshop_write(host, args),
         "extension.workshop.read" => workshop_read(host, args),
         "extension.workshop.review" => workshop_review(host, args),
-        "extension.blueprint" => extension_blueprint(args),
+        "extension.blueprint" => extension_blueprint(host, args),
         "extension.sdk" => extension_sdk(args),
         "processing.describe" => {
             let tool = text(args, "tool")?;
@@ -1179,10 +1179,10 @@ fn extension_verify(host: &dyn Host, args: &Value) -> Result<Value, HeadlessErro
         "digest": v.digest,
         "problems": v.problems,
         "warnings": v.warnings,
-        "next": if v.is_valid() {
-            "Doğrulandı: `kentos kek pack` paketler; kurulum kullanıcının incelemesiyle olur."
-        } else {
-            "Sorunları dosya ve satırlarıyla düzeltip yeniden doğrulayın."
+        "next": match (v.is_valid(), args.get("id").is_some()) {
+            (true, true) => "Doğrulandı: extension.workshop.review paketler ve kullanıcının incelemesine açar.",
+            (true, false) => "Doğrulandı: `kentos kek pack` paketler; kurulum kullanıcının incelemesiyle olur.",
+            (false, _) => "Sorunları dosya ve satırlarıyla düzeltip yeniden doğrulayın.",
         },
     }))
 }
@@ -1205,6 +1205,16 @@ fn read_folder(
             let entry = entry.map_err(unreadable)?;
             let at = entry.path();
             let name = entry.file_name().to_string_lossy().into_owned();
+            // A link can point outside the folder: refused, as the command line's packer refuses it.
+            if entry.file_type().map_err(unreadable)?.is_symlink() {
+                return Err(HeadlessError::new(
+                    "invalid_input",
+                    format!(
+                        "{} bir bağlantı (symlink): klasörün dışını gösterebilir, okunmaz ve paketlenmez.",
+                        at.display()
+                    ),
+                ));
+            }
             if at.is_dir() {
                 if !NOT_READ.contains(&name.as_str()) {
                     stack.push(at);
@@ -1254,6 +1264,30 @@ fn workshop_folder(host: &dyn Host, id: &str) -> Result<std::path::PathBuf, Head
     Ok(root.join(id))
 }
 
+/// Why `path` in `folder` goes through a link, the folder's own included (a link there could lead the write outside
+/// the workshop); none when it does not.
+fn through_link(folder: &std::path::Path, path: &str) -> Option<String> {
+    let mut at = folder.to_path_buf();
+    let parts = std::iter::once("").chain(path.split('/'));
+    for part in parts {
+        if !part.is_empty() {
+            at.push(part);
+        }
+        match std::fs::symlink_metadata(&at) {
+            Ok(meta) if meta.file_type().is_symlink() => {
+                return Some(format!(
+                    "{} bir bağlantı (symlink): atölyede bağlantının içinden yazılmaz ve okunmaz.",
+                    at.display()
+                ));
+            }
+            Ok(_) => {}
+            // What is not there yet is made by the write: no link in it.
+            Err(_) => return None,
+        }
+    }
+    None
+}
+
 /// `extension.workshop.write` (docs/adr/8057 §22): an agent's files into its workshop folder, each path a package's;
 /// nothing outside it, nothing run.
 fn workshop_write(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> {
@@ -1277,6 +1311,9 @@ fn workshop_write(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError>
                 "invalid_input",
                 format!("“{path}”: {why}"),
             ));
+        }
+        if let Some(why) = through_link(&folder, path) {
+            return Err(HeadlessError::new("invalid_input", why));
         }
         let size = match content {
             Value::String(text) => text.len(),
@@ -1380,6 +1417,9 @@ fn workshop_read(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> 
                     format!("“{path}”: {why}"),
                 ));
             }
+            if let Some(why) = through_link(&folder, path) {
+                return Err(HeadlessError::new("invalid_input", why));
+            }
             let bytes = std::fs::read(folder.join(path)).map_err(|e| {
                 HeadlessError::new("file_not_found", format!("“{path}” okunamadı: {e}"))
             })?;
@@ -1451,7 +1491,7 @@ fn extension_sdk(args: &Value) -> Result<Value, HeadlessError> {
 
 /// `extension.blueprint` (plan/eklenti.md ADIM 21, docs/adr/8057 §19): a new extension's working folder as files, valid
 /// by construction; nothing is written.
-fn extension_blueprint(args: &Value) -> Result<Value, HeadlessError> {
+fn extension_blueprint(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> {
     use kentos_extensions::blueprint::{Ask, Contribution, blueprint};
     use kentos_extensions::manifest::Module;
     let module = match args.get("module").and_then(Value::as_str).unwrap_or("cbs") {
@@ -1496,10 +1536,19 @@ fn extension_blueprint(args: &Value) -> Result<Value, HeadlessError> {
         contributions,
     };
     let files = blueprint(&ask).map_err(|why| HeadlessError::new("invalid_input", why))?;
-    Ok(json!({
-        "files": files,
-        "next": "Dosyaları boş bir klasöre yazın; örnekleri isteğe göre değiştirin; her adımda extension.verify ile \
-                 doğrulayın. Kütüphane gerekirse klasörde `uv add <paket>` (pyproject.toml ve uv.lock birlikte \
-                 yazılır). Kurulum kullanıcının incelemesiyle olur.",
-    }))
+    // What comes next depends on where the agent writes: its workshop here, or a folder of its own.
+    let next = if host.workshop().is_some() {
+        format!(
+            "Örnekleri isteğe göre değiştirip extension.workshop.write ile atölyeye yazın (id: {}); \
+             extension.verify (id ile) doğrular; sorun kalmayınca extension.workshop.review kullanıcının \
+             incelemesine açar. Kullanıcıya dosya yazdırmayın: atölye sizin.",
+            ask.id
+        )
+    } else {
+        "Dosyaları boş bir klasöre yazın; örnekleri isteğe göre değiştirin; her adımda extension.verify ile \
+         doğrulayın. Kütüphane gerekirse klasörde `uv add <paket>` (pyproject.toml ve uv.lock birlikte yazılır). \
+         Kurulum kullanıcının incelemesiyle olur."
+            .to_owned()
+    };
+    Ok(json!({ "files": files, "next": next }))
 }

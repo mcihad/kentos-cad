@@ -1351,5 +1351,19 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **Onay:** atölyeye yazmak Asistan'da onay beklemez (kendi klasörü, panelde her çağrı görünür); kurulum zaten
   kullanıcının penceresi. Asistan'ın yönergesine akış yazıldı: sdk → blueprint → workshop.write → verify →
   workshop.review.
+- **Bağlantı yok:** atölyede önceden duran bir sembolik bağlantı (`src` → `/etc`) yazmayı, okumayı ya da paketi
+  atölyenin dışına taşıyabilirdi. Yazma ve okuma yolu bağlantıdan geçmez, klasör okuyucusu (doğrulama ve paket)
+  bağlantıyı komut satırı paketleyicisi gibi reddeder (sınandı: dışarıya hiçbir şey yazılmadı, paket açılmadı).
+- **Bulgu (gözden geçirme):** `extension.blueprint`'in ve SDK'nın "sıradaki adım" metinleri dosya araçları olan dış
+  ajana göre yazılmıştı ("dosyaları boş bir klasöre yazın", "`kentos kek pack`"); uygulama içindeki ajan için bu
+  "kullanıcıya bırak" demekti. Artık atölyesi olan ajana atölyenin adımları söylenir, olmayana klasörün; SDK'nın akışı
+  ikisini ayrı yazar ve atölyede uv çalışmadığını (kütüphanesiz yazılacağını) söyler.
+- **Gerçek pencere (DeepSeek `deepseek-v4-pro`, test anahtarı yalnız sürecin ortamında, sentetik istek ve Vitrin
+  çizimi):** "Mezarlık için bir eklenti yaz ve kurulum için incelemeye aç…" isteğiyle Asistan SDK'yı ve iskeleti okudu,
+  harita aracını (dikdörtgen, `mezar` katmanına ad/ada/parsel) ve adsız mezar denetimini yazdı, doğruladı; yaklaşık 2
+  dakikada Gözden geçir ve kur penceresi üç yeteneği gerekçeleriyle gösterdi, Kur kullanıcıda kaldı. Üretilen paket
+  `kentos kek verify` ve `inspect`'ten 0 uyarıyla geçti. Ajan, `mezar` katmanının çizimde bulunması gerektiğini kendisi
+  söyledi (katman şeması kurulumu ADIM 22). Oturum betiği sahibin ajan dosyasını kopyalamaz; yalnız oturuma verilen
+  ayar klasöründekini.
 - **Uygularken verilen kararlar:** paket atölyede kalır (silinmez, kullanıcı yeniden açabilir); kaynak türü "dosya"
   olarak görünür; MCP'nin masaüstü bağlantısında incelemeye açma sonraki iş.

@@ -168,10 +168,14 @@ pub fn sdk_pack() -> Value {
         },
         "workflow": [
             "İsteği ve parametrelerini netleştirin; kurulu eklentileri ve yetenekleri kentos://extensions/installed'dan okuyun.",
-            "extension.blueprint ile iskeleti alın, boş bir klasöre yazın.",
-            "Örnekleri isteğe göre değiştirin; her adımda extension.verify.",
-            "Kütüphane gerekiyorsa klasörde `uv add <paket>`.",
-            "`kentos kek pack <klasör>` paketler; kurulum, yetki ve yayın kullanıcının incelemesiyle olur."
+            "extension.blueprint ile iskeleti alın.",
+            "Dosyaları yazın: atölyesi olan ajan (KentOS'un Asistan'ı, MCP) extension.workshop.write ile kendi atölyesine; \
+             kendi dosya araçları olan ajan boş bir klasöre. Kullanıcıya dosya yazdırmayın.",
+            "Örnekleri isteğe göre değiştirin; her adımda extension.verify (atölyede id, klasörde path ile).",
+            "Kütüphane gerekiyorsa klasörde `uv add <paket>`; atölyede uv çalışmaz: Python'un kendi kitaplığıyla ve \
+             kentos ile yazın, kütüphane gerekiyorsa kullanıcıya söyleyin.",
+            "Paket: atölyede extension.workshop.review paketleyip kullanıcının Gözden geçir ve kur penceresine açar; \
+             klasörde `kentos kek pack <klasör>`. Kurulum, yetki ve yayın kullanıcının incelemesiyle olur."
         ],
         "example": example,
         "icons": {
