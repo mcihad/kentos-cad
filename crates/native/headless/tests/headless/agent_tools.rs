@@ -654,3 +654,37 @@ fn an_agent_gets_a_blueprint_that_verifies() {
     assert!(refused.to_string().contains("bir katkı değil"), "{refused}");
     let _ = std::fs::remove_dir_all(&folder);
 }
+
+#[test]
+fn an_agent_reads_the_sdk_before_writing_an_extension() {
+    // docs/adr/8057 §20: the pack in one read, or one part; a part the pack has not is said with the ones it has.
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let pack = agent_tools::call(&mut s, &mut guard, "extension.sdk", &json!({})).unwrap();
+    assert_eq!(pack["format"], "kentos.ai-kek-pack");
+    assert!(pack["guide"].as_str().unwrap().contains("@ext.processing"));
+    assert!(
+        pack["api"]["stub"]
+            .as_str()
+            .unwrap()
+            .contains("class ProcessingContext(CommandContext):")
+    );
+    assert!(pack["example"]["manifest.json"].is_string());
+    let part = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.sdk",
+        &json!({ "part": "verifyCodes" }),
+    )
+    .unwrap();
+    assert_eq!(part["part"], "verifyCodes");
+    assert!(part["value"]["python_decorator_missing"].is_string());
+    let refused = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.sdk",
+        &json!({ "part": "paneller" }),
+    )
+    .unwrap_err();
+    assert!(refused.to_string().contains("guide, api"), "{refused}");
+}

@@ -1272,3 +1272,32 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **Uygularken verilen kararlar:** Python paket adı kimliğin son parçasından (`mezarlik-bilgi` → `mezarlik_bilgi`);
   sürüm 0.1.0; harita aracı `taslak` katmanına yazar (CBS şablonunda var); `kentos://sdk/ai-kek-pack` (SDK başvurusu,
   ikon listesi, şemalar tek okumada) ve Kapı 3 sonraki dilimlerde.
+
+## §20. `kentos://sdk/ai-kek-pack`, `extension.sdk` ve `kek sdk`: SDK tek okumada (`ADIM 21`, üçüncü dilim)
+
+**14 Kasım.** Kod: `crates/shared/extensions/src/sdk_pack.rs` (`GUIDE`, `EXT_STUB`, `PARTS`, `sdk_pack`, `sdk_part`),
+`crates/shared/extensions/sdk/kentos_ext.pyi` (üretilmiş), `crates/native/mcp/src/tools.rs` (kaynak),
+`crates/native/headless/src/agent_tools.rs` (`extension.sdk`), `apps/cli/src/main.rs` (`kentos kek sdk`).
+
+- **Ne verir (33 KB, dokuz bölüm):** `guide` (Türkçe rehber: paket, beş işaret ve imzaları, bağlamın ortak yöntemleri,
+  kurallar), `api` (`kentos.ext`'in Python imzaları, 9 KB'lık stub), `capabilities` (15 yetenek: kimlik, kurulumda
+  görünen başlık, kapsamlar), `modules`, `contributions` (sekiz katkı: işareti, manifest anahtarı, istediği yetenek),
+  `toolDescriptor` (İşlemler tanımının 8 parametre, 4 çıktı türü ve alanları), `verifyCodes` (doğrulama kodlarının
+  anlamı), `workflow` (istekten pakete beş adım; kurma, yetki ve yayın kullanıcının) ve `example` (beş katkının hepsiyle
+  dikey bir iskelet: `verify`'dan sorunsuz, uyarısız geçer).
+- **Kayma yok:** yetenekler `Capability::ALL`'dan, örnek `blueprint`'ten, stub `python/kentos/ext.py`'den üretilir.
+  Stub depoda durur (`include_str!`, paylaşılan crate dosya sistemi okumaz, wasm'da derlenir); sınama kaynaktan yeniden
+  üretip karşılaştırır, fark varsa `KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- sdk_pack` der.
+  Rehberin her iddiası Python SDK'sıyla tek tek karşılaştırıldı (bağlam yöntemleri, `Feature` alanları, `NewFeature`'ın
+  `source`/`geometry` yolu, `GisAuditFacts`, `AuditFinding`, `SemanticFix`, `MapToolContext.add_feature`).
+- **Yüzeyler:** MCP kaynağı `kentos://sdk/ai-kek-pack` (yapının malı: bir saat, herkese aynı önbellek ipucu); ajan
+  aracı `extension.sdk` (`part` ile tek bölüm; bilinmeyen bölüm bölümlerin listesiyle reddedilir; masaüstü Asistan'ın
+  48 KB sonuç sınırının altında); `kentos kek sdk` rehberi ve imzaları okunur biçimde, `--json` paketi, `--part`
+  bölümü verir.
+- **Uygularken verilen kararlar:** stub `python/kentos/ext.pyi` olarak YAZILMADI: aynı klasördeki `.pyi`, tür
+  denetleyicilerinde `ext.py`'nin tam belgelerini gölgelerdi. `to_json` yöntemleri (KentOS'un sonucu okuması) ve `_`
+  ile başlayanlar stub'da yok; `__geo_interface__` var. Belge ilk cümleyle ve 400 karakterle sınırlı. MCP sunucusu
+  `kentos-extensions`'ı artık normal bağımlılık olarak alıyor (önceden yalnız sınamalarda).
+- **Kalan (ADIM 21):** geçerli yerleşik ikon adlarının listesi (masaüstünün ikon kümesinden üretilmeli; paylaşılan
+  crate onu bilmiyor), `kentos.ui` bileşen ve `ProjectAuditFacts` şemaları (ilgili adımlarla), Kapı 3 kuru koşu,
+  `hot_reload`/`preview_render`.

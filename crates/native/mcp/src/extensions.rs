@@ -10,6 +10,8 @@ use serde_json::{Value, json};
 
 /// The resource's address.
 pub(crate) const INSTALLED: &str = "kentos://extensions/installed";
+/// The SDK in one read (plan/eklenti.md ADIM 21, docs/adr/8057 §20): what `extension.sdk` gives.
+pub(crate) const SDK_PACK: &str = "kentos://sdk/ai-kek-pack";
 
 /// What `kentos://extensions/installed` reads: every installed extension with its state, what the running or ready
 /// ones add and what was left out, from the registry in `root` (the user's, `KENTOS_EXTENSIONS_DIR` or a test's).

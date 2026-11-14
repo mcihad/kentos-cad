@@ -13,6 +13,8 @@
 //! - [`compat`]: whether a package runs on a host: one function, no implicit upper bound (QGIS's 2026 lesson).
 //! - [`version`]: semantic versions and the ranges dependencies are given in.
 //! - [`catalog`]: an organisation's or an offline folder's index of packages, written from the packages themselves.
+//! - [`verify`], [`blueprint`], [`sdk_pack`]: what an agent writing an extension is given: the folder's check, a
+//!   starting folder that passes it, and the SDK in one read (`kentos://sdk/ai-kek-pack`).
 //!
 //! Pure: no file system and no network. A host reads the file and hands the bytes over.
 
@@ -27,6 +29,7 @@ mod paths;
 mod pointer;
 mod problem;
 mod python;
+pub mod sdk_pack;
 mod text;
 pub mod verify;
 pub mod version;
@@ -35,4 +38,5 @@ pub use archive::{Inspection, Limits, Opened, Packed, inspect, open, pack};
 pub use compat::{Host, Os, SDK_PROTOCOL, compatible};
 pub use manifest::Manifest;
 pub use problem::Problem;
+pub use sdk_pack::sdk_pack;
 pub use verify::{Verification, verify};

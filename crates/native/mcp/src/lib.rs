@@ -20,6 +20,9 @@
 //!   they add (`extensions`, plan/eklenti.md ADIM 18); a client watching it
 //!   hears when it changes ([`Server::notices`]: `subscriptions/listen` of
 //!   2026-07-28, `resources/subscribe` before).
+//! - `kentos://sdk/ai-kek-pack` is what an agent writing an extension reads
+//!   first: the SDK's guide, signatures, capabilities, contributions and a
+//!   working example (docs/adr/8057 §20).
 #![forbid(unsafe_code)]
 #![cfg_attr(
     not(test),

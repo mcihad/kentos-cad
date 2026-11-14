@@ -435,6 +435,23 @@ pub fn tools() -> Vec<Tool> {
         destructive: true,
     });
     list.push(Tool {
+        name: "extension.sdk",
+        title: "Eklenti SDK'sı",
+        description: "Bir KentOS eklentisi yazmak için gereken her şey tek okumada (MCP'de kentos://sdk/ai-kek-pack): \
+                      rehber, kentos.ext'in imzaları (api.stub), yetenekler ve kapsamları, katkılar (işaret, manifest \
+                      anahtarı, istediği yetenek), İşlemler aracı tanımının parametre ve çıktı türleri, extension.verify \
+                      kodlarının anlamı, istekten pakete adımlar ve her katkının çalışan örneği. Eklenti yazmadan önce \
+                      okuyun; part ile tek bölüm alınır."
+            .into(),
+        input: object(
+            json!({ "part": { "type": "string", "enum": kentos_extensions::sdk_pack::PARTS,
+                              "description": "Yalnız bu bölüm; verilmezse paketin tamamı" } }),
+            &[],
+        ),
+        read_only: true,
+        destructive: false,
+    });
+    list.push(Tool {
         name: "extension.blueprint",
         title: "Eklenti iskeleti",
         description: "Yeni bir eklentinin çalışma klasörünü verir (dosya yolu → içerik): manifest, Python projesi ve \
@@ -661,6 +678,7 @@ pub fn call(
         "processing.list" => processing_tools(host),
         "extension.verify" => extension_verify(args),
         "extension.blueprint" => extension_blueprint(args),
+        "extension.sdk" => extension_sdk(args),
         "processing.describe" => {
             let tool = text(args, "tool")?;
             let tools = processing_tools(host)?;
@@ -1121,6 +1139,22 @@ fn extension_verify(args: &Value) -> Result<Value, HeadlessError> {
             "Sorunları dosya ve satırlarıyla düzeltip yeniden doğrulayın."
         },
     }))
+}
+
+/// `extension.sdk` (plan/eklenti.md ADIM 21, docs/adr/8057 §20): the SDK pack, or one of its parts.
+fn extension_sdk(args: &Value) -> Result<Value, HeadlessError> {
+    use kentos_extensions::sdk_pack::{PARTS, sdk_part};
+    let Some(part) = args.get("part").and_then(Value::as_str) else {
+        return Ok(kentos_extensions::sdk_pack());
+    };
+    sdk_part(part)
+        .map(|value| json!({ "part": part, "value": value }))
+        .ok_or_else(|| {
+            HeadlessError::new(
+                "invalid_input",
+                format!("“{part}” paketin bir bölümü değil: {}.", PARTS.join(", ")),
+            )
+        })
 }
 
 /// `extension.blueprint` (plan/eklenti.md ADIM 21, docs/adr/8057 §19): a new extension's working folder as files, valid

@@ -6,6 +6,7 @@
 //! kentos kek index <klasör> [--name <ad>]
 //! kentos kek dump [--root <klasör>]
 //! kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
+//! kentos kek sdk [--part <bölüm>] [--json]
 //! ```
 //!
 //! The same inspector the installer, the catalog and `extension.verify` run (kentos_extensions): an author or an agent
@@ -28,6 +29,8 @@ const USAGE: &str = "Kullanım:
   kentos kek new <klasör> --id <kimlik> --name <ad> [--summary <cümle>] [--module cbs|harita|mimari|yol]
                  [--utility] [--with command,processing,audit,expression,mapTool]
                                                     doğrulamadan geçen bir eklenti iskeleti yazar
+  kentos kek sdk [--part <bölüm>] [--json]          eklenti yazma rehberi ve kentos.ext imzaları (--json: paketin
+                                                    tamamı, ajanların kentos://sdk/ai-kek-pack'i)
   kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
   kentos kek dump [--root <klasör>]                 kurulu eklentileri ve katkılarını JSON olarak döker
   kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
@@ -62,6 +65,8 @@ fn main() -> ExitCode {
         ["kek", "pack", folder] => pack_folder(Path::new(folder), None, json),
         ["kek", "verify", folder] => verify_folder(Path::new(folder), json),
         ["kek", "new", folder, rest @ ..] => new_folder(Path::new(folder), rest),
+        ["kek", "sdk"] => sdk(None, json),
+        ["kek", "sdk", "--part", part] => sdk(Some(part), json),
         ["kek", "pack", folder, "-o", out] => {
             pack_folder(Path::new(folder), Some(PathBuf::from(out)), json)
         }
@@ -176,6 +181,33 @@ fn read_folder(root: &Path) -> Result<Folder, String> {
     }
     not_read.sort();
     Ok((files, not_read))
+}
+
+/// `kek sdk` (plan/eklenti.md ADIM 21, docs/adr/8057 §20): the guide and `kentos.ext`'s signatures to read, or the
+/// pack (`--json`) or one part of it as an agent reads it.
+fn sdk(part: Option<&str>, json: bool) -> ExitCode {
+    use kentos_extensions::sdk_pack::{EXT_STUB, GUIDE, PARTS, sdk_part};
+    let text = match part {
+        None if json => {
+            serde_json::to_string_pretty(&kentos_extensions::sdk_pack()).unwrap_or_default()
+        }
+        None => format!("{GUIDE}\n## kentos.ext\n\n```python\n{EXT_STUB}```\n"),
+        Some(part) => match sdk_part(part) {
+            Some(serde_json::Value::String(text)) if !json => text,
+            Some(serde_json::Value::Object(stub)) if part == "api" && !json => stub
+                .get("stub")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or_default()
+                .to_owned(),
+            Some(value) => serde_json::to_string_pretty(&value).unwrap_or_default(),
+            None => {
+                eprintln!("“{part}” paketin bir bölümü değil: {}.", PARTS.join(", "));
+                return ExitCode::from(2);
+            }
+        },
+    };
+    println!("{text}");
+    ExitCode::SUCCESS
 }
 
 /// `kek new` (plan/eklenti.md ADIM 21, docs/adr/8057 §19): a new extension's working folder from

@@ -1337,9 +1337,26 @@ fn the_catalog_and_the_open_drawings_are_resources() {
             "kentos://session/overview".to_owned(),
             "kentos://catalog/categories".to_owned(),
             "kentos://extensions/installed".to_owned(),
+            "kentos://sdk/ai-kek-pack".to_owned(),
             "kentos://catalog".to_owned(),
             format!("kentos://drawing/{drawing}")
         ]
+    );
+    // What an agent writing an extension reads first (docs/adr/8057 §20): the guide, the signatures, an example.
+    let sdk = ask(
+        &mut server,
+        12,
+        "resources/read",
+        json!({ "uri": "kentos://sdk/ai-kek-pack" }),
+    );
+    let sdk: Value =
+        serde_json::from_str(sdk["result"]["contents"][0]["text"].as_str().expect("text"))
+            .expect("JSON");
+    assert_eq!(sdk["format"], "kentos.ai-kek-pack");
+    assert!(
+        sdk["api"]["stub"]
+            .as_str()
+            .is_some_and(|t| t.contains("class GisAuditFacts:"))
     );
     // What an agent reads first (docs/adr/8056 §5): the drawings in one read, the catalog's parts.
     let overview = ask(

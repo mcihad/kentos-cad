@@ -1497,6 +1497,15 @@ pub fn resources(server: &Server) -> Vec<Value> {
          dışarıda kalanlar nedenleriyle: \"sekmem nereye düştü?\" ve \"eklentim neden çalışmıyor?\" sorularının kanıtı. \
          Değişince (yeni bir hata da) izleyene notifications/resources/updated gider.",
     ));
+    out.push(resource(
+        crate::extensions::SDK_PACK,
+        "sdk-ai-kek-pack",
+        "Eklenti yazma paketi",
+        "Bir KentOS eklentisi (.kek) yazmak için gereken her şey tek okumada: Türkçe rehber, kentos.ext'in Python \
+         imzaları, yetenekler ve kapsamları, katkılar (işaret, manifest anahtarı, istediği yetenek), İşlemler aracı \
+         tanımının türleri, doğrulama kodlarının anlamı, istekten pakete adımlar ve her katkının doğrulamadan geçen \
+         örneği. Ajan aracı extension.sdk aynısını verir.",
+    ));
     let mut whole = resource(
         "kentos://catalog",
         "catalog",
@@ -1565,6 +1574,8 @@ pub fn read(server: &mut Server, params: &Value) -> Result<Value, Fault> {
         kentos_headless::agent_tools::every_category()
     } else if uri == crate::extensions::INSTALLED {
         crate::extensions::installed(server.extensions_root.as_deref())
+    } else if uri == crate::extensions::SDK_PACK {
+        kentos_extensions::sdk_pack()
     } else if let Some(handle) = uri.strip_prefix("kentos://drawing/")
         && let Some(s) = server.drawings.get(handle)
     {

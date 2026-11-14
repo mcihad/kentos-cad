@@ -74,3 +74,5 @@ sonraki çalıştırmada onu alır.
   işlevlerinin `@ext` işaretleri ve tehlikeli çağrılar; her bulgu dosyası, satırı ve ne yazılacağıyla.
 - Yeni bir eklentiye Vitrin'i kopyalayarak değil iskeletle başlayın: `kentos kek new KLASÖR --id … --name … --with
   command,processing,audit,expression,mapTool` (ajanlarda `extension.blueprint`): doğrulamadan sorunsuz geçer.
+- SDK'nın rehberi ve `kentos.ext` imzaları: `kentos kek sdk` (`--json` paketin tamamı; ajanlarda `extension.sdk`, MCP'de
+  `kentos://sdk/ai-kek-pack`). Bir ajan eklenti yazmadan önce bunu okur.

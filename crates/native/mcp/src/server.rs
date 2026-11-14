@@ -413,7 +413,9 @@ fn cache_hint(method: &str, params: &Value) -> Option<(u64, &'static str)> {
         "server/discover" | "tools/list" => Some((HOUR, "public")),
         "resources/list" => Some((0, "private")),
         "resources/read" => match params.get("uri").and_then(Value::as_str) {
-            Some("kentos://catalog" | "kentos://catalog/categories") => Some((HOUR, "public")),
+            Some(
+                "kentos://catalog" | "kentos://catalog/categories" | crate::extensions::SDK_PACK,
+            ) => Some((HOUR, "public")),
             _ => Some((0, "private")),
         },
         _ => None,

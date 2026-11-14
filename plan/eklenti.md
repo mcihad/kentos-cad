@@ -986,9 +986,10 @@ ve AI/MCP `audit.run`.
 **Durum (14 Kasım): birinci dilim — `kek verify` / `extension.verify`** (ADR 8057 §18): pencere açmadan Kapı 1 (paket),
 Kapı 2 (Python işaretleri, tehlikeli çağrı uyarıları) ve Kapı 4 (satırlı, önerili rapor); komut satırı ve ajan aracı
 aynı kod. **İkinci dilim — `extension.blueprint` / `kek new`** (ADR 8057 §19): istenen katkıların küçük, çalışan
-örnekleriyle doğrulamadan sorunsuz geçen iskelet; komut satırı klasöre yazar, ajan aracı içerik verir. Kalan: Kapı 3
-(sentetik çizimde kuru koşu), `kentos://sdk/ai-kek-pack`, `hot_reload`/`preview_render`, üretilen SDK tip imzaları ve
-şemalar.
+örnekleriyle doğrulamadan sorunsuz geçen iskelet; komut satırı klasöre yazar, ajan aracı içerik verir. **Üçüncü dilim —
+`kentos://sdk/ai-kek-pack` / `extension.sdk` / `kek sdk`** (ADR 8057 §20): rehber, `kentos.ext` imzaları (kaynaktan
+üretilen stub), yetenekler, katkılar, araç tanımı türleri, doğrulama kodları, akış ve doğrulanan örnek tek okumada.
+Kalan: Kapı 3 (sentetik çizimde kuru koşu), `hot_reload`/`preview_render`, yerleşik ikon listesi ve şemalar.
 
 - [ ] **Kod üretimi:** Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
   `kentos.ui` bileşen şeması, `ProjectAuditFacts` şeması ve manifest/araç/panel JSON Schema'ları üretilir; üretilmiş
