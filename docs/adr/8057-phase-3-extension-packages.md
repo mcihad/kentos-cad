@@ -1409,5 +1409,11 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **Gerçek pencere (`13-sema`, Vitrin 1.0.5):** 1.0.4 → 1.0.5 güncellendi, ortam hazırlandı; "Katmanları kur" Vitrin
   grubunu, Örnek tesis (nokta) ve Bakım kaydı katmanlarını, Tesis türü listesini ve ilişkiyi kurdu; ikinci basış
   "Şema zaten kurulu: değişiklik yok." dedi.
+- **Gerçek pencere, uçtan uca (Asistan, DeepSeek test anahtarı, sentetik istek):** "Kendi katmanını kursun…" diye
+  istenen Mezarlık Bilgi'yi ajan bu kez `schema.json`'uyla yazdı (grup `mezarlik`, `mezar_yeri` alan katmanı: ada,
+  parsel, ad; harita aracı dikdörtgeni `mezar_yeri`'ne, denetim aynı katmana bakıyor), paket 0 uyarıyla doğrulandı.
+  Kullanıcı gibi: kurum kataloğundan kuruldu, ortam hazırlandı ("kurulacak paket yok"), sekmede Katmanları kur grubu
+  ve katmanı kurdu, Mezar yeri çiz dikdörtgeni yazdı (nesne 9 → 10), Adı boş mezarlar 1,4 sn'de 1 uyarı verdi, Göster
+  seçip yakınlaştırdı, "Meçhul olarak işaretle" düzeltmesinden sonra yeniden denetim "bulgu yok" dedi.
 - **Kalan:** formlar (`forms/*.kform`) şemayla birlikte kurulmuyor; alt türler ve değer bileşimleri biçimde yok;
   geometrisiz tablo katmanı KentOS'ta henüz yok (kayıtlar `mixed` katmana yazılır).
