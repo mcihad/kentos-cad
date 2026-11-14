@@ -16,11 +16,18 @@ pub fn px_per_metre(denominator: f64) -> f64 {
     1.0 / (denominator * METRES_PER_PX)
 }
 
+/// How near a scale is to a range's end to count as at it, relative: a scale goes through pixels a metre and back (a
+/// typed 1:2510 reads 1:2510.0000000000005), and a view set to 1:10 000 from the status bar is at a range's 1:10 000
+/// end however the two were worked out.
+pub const PRECISION: f64 = 1e-9;
+
 /// Whether a view at 1:`n` is in a visibility range as QGIS reads one (its "Minimum (exclusive)" and "Maximum
 /// (inclusive)"): `farthest` the most zoomed-out scale's denominator, itself not shown (1:10 000: shown from 1:9 999
 /// in); `nearest` the most zoomed-in, itself shown (1:500: shown down to 1:500, not at 1:499). Either may be absent.
+/// A scale within [`PRECISION`] of an end is at it.
 pub fn visible_at(n: f64, farthest: Option<f64>, nearest: Option<f64>) -> bool {
-    farthest.is_none_or(|f| n < f) && nearest.is_none_or(|m| n >= m)
+    farthest.is_none_or(|f| n < f * (1.0 - PRECISION))
+        && nearest.is_none_or(|m| n >= m * (1.0 - PRECISION))
 }
 
 #[cfg(test)]
@@ -50,5 +57,15 @@ mod tests {
         assert!(!visible_at(499.0, farthest, nearest));
         assert!(visible_at(1.0, None, None), "no range: every scale");
         assert!(visible_at(1_000_000.0, None, Some(500.0)));
+        // A typed end goes through pixels a metre and back; the view at it is still at it.
+        let typed = |n: f64| denominator(px_per_metre(n));
+        for n in [435.0, 2510.0, 10_000.0, 1_000_000.0] {
+            assert!(
+                !visible_at(n, Some(typed(n)), None),
+                "at the farthest 1:{n}"
+            );
+            assert!(visible_at(typed(n), None, Some(n)), "at the nearest 1:{n}");
+            assert!(visible_at(n - 0.5, Some(typed(n)), None));
+        }
     }
 }

@@ -755,6 +755,7 @@ impl App {
             typed: &w.typed,
             invalid: &w.invalid,
             dictionary: &w.dictionary,
+            view_scale: self.viewport.camera.screen_scale(),
         };
         let tabs = Tabs::new(
             form::TABS.map(|(_, words)| TabFace::new(words).closable(false)),

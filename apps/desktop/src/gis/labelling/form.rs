@@ -94,6 +94,8 @@ pub enum Paint {
 pub enum Edit {
     /// Metnin kaynağı: İfade (true) or Şablon.
     Expression(bool),
+    /// An end of the visible scale range set to the view's scale (Şimdiki): the farthest (true) or the nearest, 1:N.
+    ScaleHere(bool, f64),
     Bold(bool),
     Italic(bool),
     /// A colour; none: the default the control names.
@@ -122,11 +124,30 @@ pub struct Host<'a> {
     pub typed: &'a HashMap<Key, String>,
     pub invalid: &'a HashSet<Key>,
     pub dictionary: &'a text_editor::Content,
+    /// The view's scale now, 1:N (Şimdiki).
+    pub view_scale: f64,
 }
 
 /// A change of a control applied to the style (the web's patches, field for field).
 pub fn apply(s: &mut LabelStyle, edit: Edit) {
     match edit {
+        Edit::ScaleHere(farthest, n) if n.is_finite() && n > 0.0 => {
+            // A whole N that keeps the view as it is now inside the range: the farthest end is not shown itself, so it
+            // is the next N past the view's (1:435.4 → 1:436); the nearest is shown, so it is the view's N or under.
+            // A rounded N could leave the view just outside and Şimdiki would hide the labels it was pressed for.
+            let end = if farthest {
+                n.floor() + 1.0
+            } else {
+                n.floor().max(1.0)
+            };
+            let px = Some(kentos_geometry_core::scale::px_per_metre(end));
+            if farthest {
+                s.min_scale = px;
+            } else {
+                s.max_scale = px;
+            }
+        }
+        Edit::ScaleHere(..) => {}
         Edit::Expression(on) => {
             s.text = if on {
                 Some(s.text.take().unwrap_or_else(|| "$etiket".to_owned()))
@@ -283,8 +304,45 @@ pub fn value_text(s: &LabelStyle, key: Key) -> String {
         Key::Priority => s.priority.map(|p| p.to_string()).unwrap_or_default(),
         Key::Duplicates => n(s.duplicates),
         Key::MinFeature => n(s.min_feature_px),
-        Key::MinScale => n(s.min_scale),
-        Key::MaxScale => n(s.max_scale),
+        Key::MinScale => denominator_text(s.min_scale),
+        Key::MaxScale => denominator_text(s.max_scale),
+    }
+}
+
+/// A range's end held in pixels a metre, as the window shows it: the N of 1:N, its thousands with dots (the status
+/// bar's way); empty for none.
+fn denominator_text(px: Option<f64>) -> String {
+    px.filter(|p| p.is_finite() && *p > 0.0)
+        .map(|p| {
+            let n = kentos_geometry_core::scale::denominator(p).round() as u64;
+            let digits = n.to_string();
+            let mut out = String::new();
+            for (i, c) in digits.chars().enumerate() {
+                if i > 0 && (digits.len() - i) % 3 == 0 {
+                    out.push('.');
+                }
+                out.push(c);
+            }
+            out
+        })
+        .unwrap_or_default()
+}
+
+/// A range's end typed as 1:N, N or N with dots between its digits, held in pixels a metre; none when empty, an
+/// error when it is not a whole number over 0.
+fn typed_denominator(text: &str) -> Result<Option<f64>, ()> {
+    let t = text.trim();
+    if t.is_empty() {
+        return Ok(None);
+    }
+    let t = t.strip_prefix("1:").unwrap_or(t);
+    let digits: String = t
+        .chars()
+        .filter(|c| *c != '.' && !c.is_whitespace())
+        .collect();
+    match digits.parse::<u64>() {
+        Ok(n) if n > 0 => Ok(Some(kentos_geometry_core::scale::px_per_metre(n as f64))),
+        _ => Err(()),
     }
 }
 
@@ -362,8 +420,8 @@ pub fn typed(s: &mut LabelStyle, key: Key, text: &str) -> bool {
             Key::Priority => s.priority = number(0.0, 10.0)?.map(|v| v.round() as u8),
             Key::Duplicates => s.duplicates = number(1.0, 10_000.0)?,
             Key::MinFeature => s.min_feature_px = number(0.0, 100_000.0)?,
-            Key::MinScale => s.min_scale = number(0.0, 1e9)?,
-            Key::MaxScale => s.max_scale = number(0.0, 1e9)?,
+            Key::MinScale => s.min_scale = typed_denominator(text)?,
+            Key::MaxScale => s.max_scale = typed_denominator(text)?,
         }
         Ok(())
     })();
@@ -986,14 +1044,28 @@ fn order_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
             Some("Ekranda bundan küçük nesnenin etiketi yazılmaz."),
         ),
         row_of(
-            "Ölçek aralığı",
+            "Görünür ölçekler",
             row![
-                h.number(Key::MinScale, "sınırsız", Some("px/m")),
-                h.number(Key::MaxScale, "sınırsız", Some("px/m")),
+                label::caption("En uzak 1:"),
+                h.number(Key::MinScale, "sınırsız", None),
+                crate::exchange::words::secondary(
+                    "Şimdiki",
+                    Some(msg(Event::Edit(Edit::ScaleHere(true, h.view_scale)))),
+                ),
+                label::caption("En yakın 1:"),
+                h.number(Key::MaxScale, "sınırsız", None),
+                crate::exchange::words::secondary(
+                    "Şimdiki",
+                    Some(msg(Event::Edit(Edit::ScaleHere(false, h.view_scale)))),
+                ),
             ]
-            .spacing(10)
+            .spacing(8)
             .align_y(Center),
-            Some("Etiket yalnız bu yakınlıklar arasında yazılır."),
+            Some(
+                "Etiket görünümün ölçeği bu ikisinin arasındayken yazılır: en uzak ölçekte ve daha uzakta yazılmaz, \
+                 en yakın ölçekte yazılır, daha yakında yazılmaz. Boş: sınırsız. Şimdiki: görünümün ölçeği; şimdiki \
+                 görünüm aralığın içinde kalır.",
+            ),
         ),
     ]
 }
@@ -1019,6 +1091,46 @@ mod tests {
             size: 10.0,
             ..LabelStyle::default()
         }
+    }
+
+    #[test]
+    fn the_scale_range_reads_and_writes_as_one_to_n() {
+        // Held in pixels a metre (the contract, the web), shown and typed as 1:N (14 November 2026).
+        let mut s = LabelStyle::default();
+        assert!(typed(&mut s, Key::MinScale, "1:10.000"));
+        assert!(typed(&mut s, Key::MaxScale, "500"));
+        let px = |n: f64| kentos_geometry_core::scale::px_per_metre(n);
+        assert!((s.min_scale.unwrap() - px(10_000.0)).abs() < 1e-12);
+        assert!((s.max_scale.unwrap() - px(500.0)).abs() < 1e-12);
+        assert_eq!(value_text(&s, Key::MinScale), "10.000");
+        assert_eq!(value_text(&s, Key::MaxScale), "500");
+        // The renderer's rule reads it as QGIS does: shown between them.
+        let class = |s: &LabelStyle| (s.min_scale, s.max_scale);
+        assert_eq!(class(&s), (Some(px(10_000.0)), Some(px(500.0))));
+        assert!(!typed(&mut s, Key::MinScale, "on bin"), "not a scale");
+        assert!(typed(&mut s, Key::MinScale, ""), "empty: no limit");
+        assert_eq!(s.min_scale, None);
+        // Şimdiki: the view's scale, its view left inside the range (the farthest end is not shown, the nearest is).
+        apply(&mut s, Edit::ScaleHere(true, 2509.4));
+        apply(&mut s, Edit::ScaleHere(false, 2509.4));
+        assert_eq!(value_text(&s, Key::MinScale), "2.510");
+        assert_eq!(value_text(&s, Key::MaxScale), "2.509");
+        let n = |px: Option<f64>| px.map(kentos_geometry_core::scale::denominator);
+        assert!(kentos_geometry_core::scale::visible_at(
+            2509.4,
+            n(s.min_scale),
+            n(s.max_scale)
+        ));
+        assert!(!kentos_geometry_core::scale::visible_at(
+            2510.0,
+            n(s.min_scale),
+            None
+        ));
+        apply(&mut s, Edit::ScaleHere(true, 2509.0));
+        assert!(
+            kentos_geometry_core::scale::visible_at(2509.0, n(s.min_scale), None),
+            "a whole N too"
+        );
     }
 
     #[test]

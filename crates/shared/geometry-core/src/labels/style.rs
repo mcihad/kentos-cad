@@ -144,9 +144,16 @@ impl Class {
         }
     }
 
-    /// Whether `scale` is inside its range.
+    /// Whether a view at `scale` px per metre is inside its range, read as every range is ([`crate::scale::visible_at`],
+    /// QGIS's way): `min_scale` the farthest end (the fewest pixels a metre), itself not shown; `max_scale` the nearest,
+    /// itself shown. Both ends were shown before 14 November 2026; only a view at exactly the farthest end differs.
     pub fn shown_at(&self, scale: f64) -> bool {
-        !(self.min_scale.is_some_and(|m| scale < m) || self.max_scale.is_some_and(|m| scale > m))
+        use crate::scale::{denominator, visible_at};
+        visible_at(
+            denominator(scale),
+            self.min_scale.map(denominator),
+            self.max_scale.map(denominator),
+        )
     }
 
     /// The room round its letters a box takes: its halo or its background, and the spacing.
@@ -438,6 +445,24 @@ mod tests {
         );
         assert_eq!((c.halo, c.priority, c.overlap), (HALO, 5, Overlap::Never));
         assert_eq!(c.min_scale, Some(1.6));
+    }
+
+    #[test]
+    fn a_range_shows_its_nearest_end_and_hides_its_farthest() {
+        // Held in pixels a metre, read as 1:N as QGIS reads a range: from 1:10 000 (not shown) in to 1:500 (shown).
+        use crate::scale::px_per_metre;
+        let mut c = read_class(&Json::parse(r#"{"size":10}"#).unwrap(), None).unwrap();
+        (c.min_scale, c.max_scale) = (Some(px_per_metre(10_000.0)), Some(px_per_metre(500.0)));
+        assert!(
+            !c.shown_at(px_per_metre(10_000.0)),
+            "the farthest end is not shown"
+        );
+        assert!(!c.shown_at(px_per_metre(20_000.0)));
+        assert!(c.shown_at(px_per_metre(9_999.0)));
+        assert!(c.shown_at(px_per_metre(500.0)), "the nearest end is shown");
+        assert!(!c.shown_at(px_per_metre(499.0)));
+        (c.min_scale, c.max_scale) = (None, None);
+        assert!(c.shown_at(px_per_metre(1.0)) && c.shown_at(px_per_metre(1e7)));
     }
 
     #[test]
