@@ -67,5 +67,7 @@ pub use color::StylePalette;
 pub use kentos_scene_query::geometry::shape as entity_shape;
 /// What Görünüm kipleri leave out of a layer build (docs/adr/0195).
 pub use kentos_style_core::style::build::{View, raster_key};
+/// The extensions' functions a style may call (docs/adr/8057 §8): what the host registers.
+pub use kentos_style_core::style::externals;
 pub use library::{Item, ItemKind, Source, StyleLibrary};
 pub use program::{BuildOptions, LayerCall, ReadingUnit, reading_unit, symbol_scale_of};

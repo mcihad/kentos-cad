@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::api::json::Json;
 
-use crate::expr::{Expr, Schema, Unit as ReadingUnit, compile, compile_with};
+use crate::expr::{Expr, Unit as ReadingUnit};
 
 /// Size unit: paper mm at the plot scale (the default), screen px, metres.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -66,12 +66,14 @@ impl Exprs {
         }
     }
 
-    /// A symbol's expression: geometry values in metres.
+    /// A symbol's expression: geometry values in metres. The extensions' functions the host offers are known
+    /// (`externals`, docs/adr/8057 §8).
     pub fn intern(&mut self, source: &str) -> usize {
         if let Some(&i) = self.index.get(source) {
             return i;
         }
-        self.list.push(compile(source).ok());
+        self.list
+            .push(super::externals::compile_in(source, ReadingUnit::METRE).ok());
         self.index.insert(source.to_string(), self.list.len() - 1);
         self.list.len() - 1
     }
@@ -86,11 +88,8 @@ impl Exprs {
         if let Some(&i) = self.readings.get(source) {
             return i;
         }
-        let schema = Schema {
-            unit: self.unit,
-            ..Schema::default()
-        };
-        self.list.push(compile_with(source, &schema).ok());
+        self.list
+            .push(super::externals::compile_in(source, self.unit).ok());
         self.readings
             .insert(source.to_string(), self.list.len() - 1);
         self.list.len() - 1

@@ -12,9 +12,7 @@ use std::collections::HashMap;
 
 use kentos_contracts::Entity;
 use kentos_style_core::expr::rows::{As, MEASURE_STRIDE};
-use kentos_style_core::expr::{
-    CompileError, Expr, Measured, Schema, Scope, Unit, Value, compile_with,
-};
+use kentos_style_core::expr::{CompileError, Expr, Measured, Scope, Unit, Value};
 use kentos_style_core::js::collate::compare_tr;
 use kentos_style_core::js::number;
 use serde_json::json;
@@ -99,11 +97,8 @@ impl ExprScope<'_> {
     /// `source` compiled as the drawing compiles a renderer's expression: its
     /// geometry values in this scope's unit.
     pub fn compile(&self, source: &str) -> Result<Expr, CompileError> {
-        let schema = Schema {
-            unit: self.unit,
-            ..Schema::default()
-        };
-        compile_with(source, &schema)
+        // The extensions' functions the host offers are known, as the drawing knows them (docs/adr/8057 §8).
+        kentos_style_core::style::externals::compile_in(source, self.unit)
     }
 }
 
@@ -130,6 +125,17 @@ pub fn evaluate(expr: &Expr, list: &[&Entity], scope: &ExprScope, want: As) -> V
                 index,
                 measures: measured.as_deref(),
             };
+            // An extension's function: the host's answers, never waiting; the classes made before an answer came
+            // read it empty (docs/adr/8057 §8).
+            if !expr.externals().is_empty()
+                && let Some(calls) = kentos_style_core::style::externals::calls()
+            {
+                let calling = kentos_style_core::style::externals::Calling {
+                    inner: &row,
+                    calls: &*calls,
+                };
+                return want.convert(expr.evaluate(&calling)).into_owned();
+            }
             want.convert(expr.evaluate(&row)).into_owned()
         })
         .collect()

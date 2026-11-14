@@ -280,6 +280,7 @@ impl LabelAnswers {
                     // the extension is ready, never in a loop.
                     if kept > 0 {
                         kentos_native_application::label_texts::answers_changed();
+                        kentos_native_style::externals::answers_changed();
                         me.fresh.store(true, Ordering::Relaxed);
                     }
                 }
@@ -964,8 +965,14 @@ impl App {
         if self.extensions.tools.label_readiness != readiness {
             self.extensions.tools.label_readiness = readiness;
             kentos_native_application::label_texts::answers_changed();
+            kentos_native_style::externals::answers_changed();
         }
         kentos_native_application::label_texts::set_externals(
+            defs.clone(),
+            Arc::new(LabelCalls(Arc::clone(&self.extensions.tools.labels))),
+        );
+        // The layers' styles too, the same way: a rule's condition, a category's value (docs/adr/8057 §8).
+        kentos_native_style::externals::set_externals(
             defs.clone(),
             Arc::new(LabelCalls(Arc::clone(&self.extensions.tools.labels))),
         );

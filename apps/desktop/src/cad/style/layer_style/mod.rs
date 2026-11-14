@@ -307,6 +307,9 @@ pub type Counts = Rc<HashMap<Vec<usize>, RuleCount>>;
 #[derive(Default)]
 struct Cache {
     generation: Option<u64>,
+    /// How many times the extensions' answers had grown (docs/adr/8057 §8): a value or a count read before an
+    /// answer came is read again after.
+    answers: u64,
     values: HashMap<String, Rc<Evaluated<Option<String>>>>,
     numbers: HashMap<String, Rc<Evaluated<Option<f64>>>>,
     rules: Option<(String, Counts)>,
@@ -690,9 +693,11 @@ impl LayerStyleWindow {
 
     fn fresh(&self, doc: &kentos_domain::Document) {
         let mut c = self.cache.borrow_mut();
-        if c.generation != Some(doc.generation()) {
+        let answers = kentos_native_style::externals::answers_generation();
+        if c.generation != Some(doc.generation()) || c.answers != answers {
             *c = Cache {
                 generation: Some(doc.generation()),
+                answers,
                 ..Cache::default()
             };
         }

@@ -136,6 +136,9 @@ pub struct StyledCache {
     theme: Option<kentos_commands::LayerState>,
     /// Each table's [`drawn_print`] when its part was last built (docs/adr/8051 §4).
     table_prints: SlotMap<u64>,
+    /// How many times the extensions' answers had grown when the layers were last built
+    /// (`kentos_native_style::externals`, docs/adr/8057 §8): a layer whose style calls one is built again after.
+    answers: u64,
 }
 
 impl StyledCache {
@@ -406,9 +409,15 @@ impl StyledCache {
             && self.wall_view == Some(walls)
             && self.theme.as_ref() == theme
             && !self.view_built.values().any(|b| b.stale(view, q, settled))
+            && self.answers == kentos_native_style::externals::answers_generation()
         {
             return self.scene.clone();
         }
+        // The extensions' answers grew (a background ask came back): the layers whose styles call their functions are
+        // built again, now with the answers (docs/adr/8057 §8).
+        let answers = kentos_native_style::externals::answers_generation();
+        let answered = self.answers != answers;
+        self.answers = answers;
         let started = Instant::now();
         let mut all = false;
         if self.theme.as_ref() != theme {
@@ -623,8 +632,13 @@ impl StyledCache {
                     .view_built
                     .get(&node.id)
                     .is_none_or(|b| b.stale(view, q, settled));
+            let calls_ext = answered
+                && node.style.renderer.as_ref().is_some_and(|r| {
+                    kentos_native_style::externals::mentions_externals(&r.to_string())
+                });
             let reset = all
                 || view_stale
+                || calls_ext
                 || cached.is_none_or(|l| {
                     l.stale
                         || l.style != node.style

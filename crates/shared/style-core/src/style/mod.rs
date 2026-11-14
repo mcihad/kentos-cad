@@ -12,6 +12,7 @@ pub mod build;
 pub mod charts;
 pub mod compile;
 pub mod dots;
+pub mod externals;
 pub mod generate;
 pub mod groups;
 pub mod heat;

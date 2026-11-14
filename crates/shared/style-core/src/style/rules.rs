@@ -66,7 +66,7 @@ fn expr(v: &Json, name: &str) -> Check {
         Json::Str(s) if s.encode_utf16().count() > 10_000 => {
             Err(format!("“{name}” 10 000 karakterden uzun."))
         }
-        Json::Str(s) => crate::expr::compile(s)
+        Json::Str(s) => super::externals::compile_in(s, crate::expr::Unit::METRE)
             .map(|_| ())
             .map_err(|e| format!("“{name}” ifadesi derlenmiyor: {}", e.text())),
         Json::Null => Err(format!(

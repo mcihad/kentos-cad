@@ -415,6 +415,16 @@ impl RowValues<'_, '_> {
         let row = self
             .table
             .row(self.i, self.program.slots.get(expr).map(Vec::as_slice));
+        // An extension's function is answered by the host, never waiting (`externals`, docs/adr/8057 §8).
+        if !e.externals().is_empty()
+            && let Some(calls) = super::externals::calls()
+        {
+            let calling = super::externals::Calling {
+                inner: &row,
+                calls: &*calls,
+            };
+            return read(e.evaluate(&calling));
+        }
         read(e.evaluate(&row))
     }
 }
@@ -2390,6 +2400,15 @@ impl ObjectValues<'_> {
             measured: self.measured,
             scale: self.scale,
         };
+        if !e.externals().is_empty()
+            && let Some(calls) = super::externals::calls()
+        {
+            let calling = super::externals::Calling {
+                inner: &scope,
+                calls: &*calls,
+            };
+            return read(e.evaluate(&calling));
+        }
         read(e.evaluate(&scope))
     }
 }

@@ -515,6 +515,69 @@ fn rules_draw_every_match_narrow_scales_and_catch_the_rest() {
 }
 
 #[test]
+fn a_rule_calls_an_extensions_function_answered_without_waiting() {
+    // docs/adr/8057 §8: a rule's condition calls an extension's function; the host answers what it has at once and
+    // an answer it does not have yet is empty (the rule draws nothing, the else rule takes the object); built again
+    // after the answers came, the rule takes it. Without the function registered the condition does not compile.
+    use crate::expr::external::{Arg, ExternalCalls, ExternalDef};
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    const NAME: &str = "ext.tr.ornek.imar-denetim.ada-parsel";
+    struct Host(AtomicBool);
+    impl ExternalCalls for Host {
+        fn call(&self, name: &str, rows: &[Vec<Arg>]) -> Vec<Arg> {
+            assert_eq!(name, NAME);
+            rows.iter()
+                .map(|r| match (&r[0], &r[1], self.0.load(Ordering::Relaxed)) {
+                    (Arg::Text(a), Arg::Text(p), true) => Arg::Text(format!("{a}/{p}")),
+                    _ => Arg::Null,
+                })
+                .collect()
+        }
+    }
+    let rules = program(&format!(
+        r#"{{"type":"rules","rules":[
+            {{"id":"1","label":"101/2","filter":"{NAME}(ada, parsel) = '101/2'","symbols":{{"line":{RED}}}}},
+            {{"id":"2","label":"Diğer","isElse":true,"symbols":{{"line":{BLUE}}}}}]}}"#
+    ));
+    let host = Arc::new(Host(AtomicBool::new(false)));
+    super::externals::set_externals(
+        vec![ExternalDef {
+            name: NAME.into(),
+            description: "Ada/parsel".into(),
+        }],
+        host.clone(),
+    );
+    let draw = || {
+        strokes(
+            &build(
+                &rules,
+                &[line(
+                    (0.0, 0.0),
+                    (1.0, 0.0),
+                    &[("ada", "101"), ("parsel", "2")],
+                    [MODE_RENDERER, 0, -1, 0],
+                )],
+                v(0.0, 0.0),
+            )
+            .0,
+        )
+    };
+    assert_eq!(
+        draw(),
+        [("#0000FF".into(), None, None)],
+        "not answered yet: the else rule"
+    );
+    host.0.store(true, Ordering::Relaxed);
+    super::externals::answers_changed();
+    assert_eq!(
+        draw(),
+        [("#FF0000".into(), None, None)],
+        "answered: the rule"
+    );
+}
+
+#[test]
 fn equal_styles_share_a_batch_of_origin_relative_segments() {
     let p = format!(
         r##"{{"symbols":{{}},"renderer":null,"sets":[{{"line":{RED}}}],"refs":[],"colors":["#FF0000"],"assets":{{}}}}"##
