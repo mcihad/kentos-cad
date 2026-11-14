@@ -108,6 +108,8 @@ pub struct Spatial {
     /// texts were made with.
     label_layers: String,
     label_keys: std::collections::HashMap<String, String>,
+    /// The extensions' answers generation the labels were last worked out at (label_texts::answers_generation).
+    answers_seen: u64,
     /// Nokta adları off (`graphics.pointNames` false) and Nokta kodları on (docs/adr/1540): what a point's label
     /// says. Both default to the drawing's own labels (names, no codes).
     hide_point_names: bool,
@@ -670,6 +672,12 @@ impl Spatial {
         if mark == self.mark && self.revision == Some(doc.revision()) {
             if self.isolation_version != doc.isolation_version() {
                 self.sync_phases(doc);
+            }
+            // An extension's answers came for labels that call its function: those layers' texts are worked out again.
+            let answers = crate::label_texts::answers_generation();
+            if answers != self.answers_seen {
+                self.answers_seen = answers;
+                self.sync_labels(doc, &[], false);
             }
             return;
         }
