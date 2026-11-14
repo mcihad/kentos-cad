@@ -139,9 +139,19 @@ pub struct StyledCache {
     /// How many times the extensions' answers had grown when the layers were last built
     /// (`kentos_native_style::externals`, docs/adr/8057 §8): a layer whose style calls one is built again after.
     answers: u64,
+    /// The store's filters calling an extension's function as worked out now (`Spatial::filters_version`) and as
+    /// the layers were last built with: a layer such a filter filters is built again after (docs/adr/8057 §8).
+    filters_now: u64,
+    filters_built: u64,
 }
 
 impl StyledCache {
+    /// The store's filters calling an extension's function were worked out again (`Spatial::filters_version`): the
+    /// layers they filter are built again at the next scene.
+    pub fn filters_at(&mut self, version: u64) {
+        self.filters_now = version;
+    }
+
     /// The layer parts built now, every layer's (docs/adr/1062's edit scope).
     #[cfg(test)]
     pub fn part_count(&self) -> usize {
@@ -410,9 +420,12 @@ impl StyledCache {
             && self.theme.as_ref() == theme
             && !self.view_built.values().any(|b| b.stale(view, q, settled))
             && self.answers == kentos_native_style::externals::answers_generation()
+            && self.filters_built == self.filters_now
         {
             return self.scene.clone();
         }
+        let refiltered = self.filters_built != self.filters_now;
+        self.filters_built = self.filters_now;
         // The extensions' answers grew (a background ask came back): the layers whose styles call their functions are
         // built again, now with the answers (docs/adr/8057 §8).
         let answers = kentos_native_style::externals::answers_generation();
@@ -632,10 +645,16 @@ impl StyledCache {
                     .view_built
                     .get(&node.id)
                     .is_none_or(|b| b.stale(view, q, settled));
-            let calls_ext = answered
+            let calls_ext = (answered
                 && node.style.renderer.as_ref().is_some_and(|r| {
                     kentos_native_style::externals::mentions_externals(&r.to_string())
-                });
+                }))
+                || (refiltered
+                    && node
+                        .filter
+                        .as_ref()
+                        .and_then(|f| f.expression.as_deref())
+                        .is_some_and(kentos_native_style::externals::mentions_externals));
             let reset = all
                 || view_stale
                 || calls_ext

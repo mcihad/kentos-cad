@@ -187,6 +187,18 @@ impl App {
         iced::widget::operation::focus(expression_id())
     }
 
+    /// The open window's count again: an extension's function it calls answered since (docs/adr/8057 §8). It
+    /// counted the objects whose answer had not come as not passing ("0 / 4 nesne süzgeçten geçiyor") and kept
+    /// saying so after the answers came.
+    pub(crate) fn layer_filter_recount(&mut self) {
+        if let Some(mut w) = self.gis.layer_filter.take() {
+            if w.expression.contains("ext.") {
+                self.layer_filter_check(&mut w, true);
+            }
+            self.gis.layer_filter = Some(w);
+        }
+    }
+
     /// The filter checked at once (Kaydet follows it as it is typed); with `count`, how many of the
     /// layer's objects pass counted too.
     fn layer_filter_check(&self, w: &mut Window, count: bool) {

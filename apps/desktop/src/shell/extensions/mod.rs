@@ -495,10 +495,11 @@ impl App {
             Event::RunOverdue(ext, id) => self.ext_overdue(&ext, id),
             Event::RunnerIdle(ext, generation) => self.ext_idle(&ext, generation),
             Event::LabelAnswers => {
-                if self.extensions.tools.labels.take_fresh()
-                    && let Some(doc) = &self.document
-                {
-                    self.spatial.sync(&doc.model);
+                if self.extensions.tools.labels.take_fresh() {
+                    if let Some(doc) = &self.document {
+                        self.spatial.sync(&doc.model);
+                    }
+                    self.layer_filter_recount();
                 }
             }
             Event::Runner(ext, generation, said) => return self.ext_said(&ext, generation, said),

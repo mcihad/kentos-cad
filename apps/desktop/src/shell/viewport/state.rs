@@ -421,6 +421,10 @@ impl Viewport {
         let nodes = themed
             .as_deref()
             .map_or(doc.model.layers().nodes(), |t| t.nodes());
+        // A filter calling an extension's function worked out again with its answers: its layer is drawn again.
+        self.styled
+            .borrow_mut()
+            .filters_at(s.spatial.filters_version());
         let scene = self.styled.borrow_mut().scene_themed(
             self.generation,
             &doc.model,

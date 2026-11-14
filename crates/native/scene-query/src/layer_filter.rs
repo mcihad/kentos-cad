@@ -10,7 +10,7 @@
 use std::collections::HashSet;
 
 use kentos_commands::{Entity, EntityId, LayerFilter};
-use kentos_expression::rows::{As, RowsInput, evaluate_rows_on};
+use kentos_expression::rows::{As, RowsInput, evaluate_rows_on, evaluate_rows_on_with};
 use kentos_expression::{Expr, Schema, Unit, compile_with};
 use kentos_geometry_core::entity::Shape;
 
@@ -29,8 +29,11 @@ pub fn compile_filter(filter: &LayerFilter, unit: Unit) -> Result<CompiledFilter
     let expr = match &filter.expression {
         None => None,
         Some(text) => {
+            // The extensions' functions the host offers are known, as in a label (docs/adr/8057 §8): answered
+            // without waiting, the filter worked out again when the answers come (`Spatial::sync`).
             let schema = Schema {
                 unit,
+                externals: crate::label_texts::external_defs(),
                 ..Schema::default()
             };
             let e = compile_with(text, &schema).map_err(|e| e.text())?;
@@ -186,8 +189,19 @@ impl CompiledFilter {
             scale: f64::NAN,
         };
         // A table that does not read (it cannot: it was built for this
-        // condition) lets nothing through rather than everything.
-        let Ok(column) = evaluate_rows_on(e, &input, As::Bool, shape) else {
+        // condition) lets nothing through rather than everything. An extension's function is answered by the host
+        // without waiting: an answer not had yet is empty (the object left out until it comes).
+        let calls = (!e.externals().is_empty())
+            .then(crate::label_texts::external_calls)
+            .flatten();
+        let read = match &calls {
+            Some(c) => {
+                let c: &dyn kentos_expression::external::ExternalCalls = &**c;
+                evaluate_rows_on_with(e, &input, As::Bool, shape, Some(c))
+            }
+            None => evaluate_rows_on(e, &input, As::Bool, shape),
+        };
+        let Ok(column) = read else {
             return vec![false; list.len()];
         };
         // 3: a true/false value, and 1 in its number when true.
@@ -251,4 +265,67 @@ pub fn left_out(doc: &kentos_domain::Document) -> HashSet<kentos_domain::Slot> {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    use kentos_commands::{Entity, LayerFilter};
+    use kentos_expression::Unit;
+    use kentos_expression::external::{Arg, ExternalCalls, ExternalDef};
+
+    use super::compile_filter;
+
+    const NAME: &str = "ext.tr.ornek.imar-denetim.ada-parsel";
+
+    /// The host: "ada/parsel" once it has answered, empty before.
+    struct Host(AtomicBool);
+
+    impl ExternalCalls for Host {
+        fn call(&self, name: &str, rows: &[Vec<Arg>]) -> Vec<Arg> {
+            assert_eq!(name, NAME);
+            rows.iter()
+                .map(|r| match (&r[0], &r[1], self.0.load(Ordering::Relaxed)) {
+                    (Arg::Text(a), Arg::Text(p), true) => Arg::Text(format!("{a}/{p}")),
+                    _ => Arg::Null,
+                })
+                .collect()
+        }
+    }
+
+    fn parcel(id: u32, ada: &str, parsel: &str) -> Entity {
+        serde_json::from_value(serde_json::json!({
+            "kind": "polygon", "id": id, "layerId": "parsel", "attrs": { "ada": ada, "parsel": parsel },
+            "pts": [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 10, "y": 10}]
+        }))
+        .expect("a parcel")
+    }
+
+    #[test]
+    fn a_filter_calls_an_extensions_function_answered_without_waiting() {
+        // docs/adr/8057 §8: the host answers what it has at once; before its answer the object is left out, after
+        // it the filter lets the object it holds for through (Spatial works the filter out again when answers come).
+        let host = Arc::new(Host(AtomicBool::new(false)));
+        crate::label_texts::set_externals(
+            vec![ExternalDef {
+                name: NAME.into(),
+                description: "Ada/parsel".into(),
+            }],
+            host.clone(),
+        );
+        let filter = LayerFilter {
+            expression: Some(format!("{NAME}(ada, parsel) = '101/2'")),
+            objects: Vec::new(),
+        };
+        let compiled =
+            compile_filter(&filter, Unit::METRE).expect("it compiles with the function offered");
+        let (a, b) = (parcel(1, "101", "1"), parcel(2, "101", "2"));
+        let names = |id: &str| id.to_owned();
+        let passes = || compiled.condition(&[&a, &b], &names, |_| None);
+        assert_eq!(passes(), [false, false], "not answered yet: left out");
+        host.0.store(true, Ordering::Relaxed);
+        assert_eq!(passes(), [false, true], "answered: 101/2 passes");
+    }
 }

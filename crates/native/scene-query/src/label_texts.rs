@@ -46,7 +46,7 @@ pub fn set_externals(defs: Vec<ExternalDef>, calls: LabelCalls) {
     }
 }
 
-fn external_defs() -> Vec<ExternalDef> {
+pub(crate) fn external_defs() -> Vec<ExternalDef> {
     EXTERNALS
         .read()
         .ok()
@@ -54,7 +54,7 @@ fn external_defs() -> Vec<ExternalDef> {
         .unwrap_or_default()
 }
 
-fn external_calls() -> Option<LabelCalls> {
+pub(crate) fn external_calls() -> Option<LabelCalls> {
     EXTERNALS
         .read()
         .ok()

@@ -113,6 +113,9 @@ pub struct Spatial {
     /// How many times the labels' texts were worked out: what the desktop's label drawing is keyed by, so that texts
     /// that change without the drawing (an extension's answers) are drawn (cad/labels: its key had no such count).
     texts_version: u64,
+    /// How many times a filter calling an extension's function was worked out again with new answers: the layers it
+    /// filters are drawn again (the desktop's styled layers are keyed by it, docs/adr/8057 §8).
+    filters_version: u64,
     /// Nokta adları off (`graphics.pointNames` false) and Nokta kodları on (docs/adr/1540): what a point's label
     /// says. Both default to the drawing's own labels (names, no codes).
     hide_point_names: bool,
@@ -676,11 +679,13 @@ impl Spatial {
             if self.isolation_version != doc.isolation_version() {
                 self.sync_phases(doc);
             }
-            // An extension's answers came for labels that call its function: those layers' texts are worked out again.
+            // An extension's answers came for labels and filters that call its function: those layers' texts and
+            // filters are worked out again.
             let answers = crate::label_texts::answers_generation();
             if answers != self.answers_seen {
                 self.answers_seen = answers;
                 self.sync_labels(doc, &[], false);
+                self.refilter_external(doc);
             }
             return;
         }
@@ -937,6 +942,35 @@ impl Spatial {
     /// (docs/adr/0211 §3); the list starts again empty.
     pub fn take_hidden_new(&mut self) -> Vec<(String, usize)> {
         std::mem::take(&mut self.hidden_new)
+    }
+
+    /// The filters that call an extension's function, worked out again whole (its answers came): forgotten, then
+    /// filtered as a filter just changed; the filtered layers drawn again (`filters_version`).
+    fn refilter_external(&mut self, doc: &Document) {
+        let calling: Vec<String> = self
+            .filters
+            .iter()
+            .filter(|(_, f)| {
+                f.filter
+                    .expression
+                    .as_deref()
+                    .is_some_and(|e| e.contains("ext."))
+            })
+            .map(|(id, _)| id.clone())
+            .collect();
+        if calling.is_empty() {
+            return;
+        }
+        for id in &calling {
+            self.filters.remove(id);
+        }
+        self.sync_filters(doc, &[], true);
+        self.filters_version = self.filters_version.wrapping_add(1);
+    }
+
+    /// How many times a filter calling an extension's function was worked out again with new answers.
+    pub fn filters_version(&self) -> u64 {
+        self.filters_version
     }
 
     /// The layers' filters' marks (docs/adr/0211 §3): a layer whose filter
