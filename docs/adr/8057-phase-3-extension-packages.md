@@ -1248,3 +1248,27 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **Sınamalar:** extensions 3 (Vitrin her kapıdan geçer; işaretsiz, yanlış tür, yanlış kimlik, eksik işlev ve önerisi,
   pakette olmayan modül, iki kez kimlik; ağ ve işletim sistemi uyarıları, ad içindeki sözcük çağrı sayılmaz), headless
   ajan araçları 1 (Vitrin klasörü geçerli; işaretini yitiren kopya satırıyla reddedilir).
+
+## §19. `extension.blueprint` ve `kek new`: doğrulamadan geçen iskelet (`ADIM 21`, ikinci dilim)
+
+**14 Kasım.** Kod: `crates/shared/extensions/src/blueprint.rs` (`Ask`, `Contribution`, `blueprint`),
+`apps/cli/src/main.rs` (`kentos kek new`), `crates/native/headless/src/agent_tools.rs` (`extension.blueprint`).
+
+- **Ne verir:** manifest (kimlik, ad, özet, tür, program, uyumluluk, Python projesi, giriş noktaları, katkıların
+  istediği yetenekler ve nedenleri; dikey eklentide şerit sekmesi), `pyproject.toml` (bağımlılıksız, üç sistem),
+  `uv.lock` (uv 0.11'in bağımlılıksız proje için yazdığı kilit; `uv lock --check` geçer), ikon, MIT lisansı,
+  değişiklik notu ve istenen her katkının küçük, çalışan örneği: katmanları okuyan komut, tanımlı İşlemler aracı
+  (alan özeti, `modelDescription`'ıyla), düzeltmeli denetim (adsız nesneler), ifade işlevi (Türkçe büyük harf),
+  harita aracı (işaret koy). Komut yalnız okuyorsa `document.read`, harita aracı varsa `document.write`.
+- **Doğruluk inşa gereği:** on iki birleşimin (beş katkı tek tek, hepsi; dikey ve yardımcı) hepsi `verify`'dan sorunsuz
+  ve uyarısız geçer; Python ayrıştırıcısı örnekleri ayrıştırır; masaüstü iskeleti paketleyip incelemesinden (kendi araç
+  denetimi dahil) geçirerek kurar, sekmesinde dört örnek, İşlemler'de aracı görünür.
+- **Yüzeyler:** `kentos kek new KLASÖR --id … --name … [--summary …] [--module …] [--utility] [--with …]` yalnız boş ya
+  da yeni klasöre yazar; ajan aracı `extension.blueprint` dosyaları içerik olarak verir, hiçbir şey yazmaz (yazma ve
+  kurma kullanıcının ve ajanın açık adımı, PY-AI-05).
+- **Bulgu (düzeltildi):** Python şablonları önce Rust dizesinde satır devamlarıyla yazılmıştı; devam satırının baştaki
+  boşlukları silindiği için iç içe bir bloğun girintisi bozuluyordu. Şablonlar ham çok satırlı dizelere taşındı ve
+  sınama Python'un kendi ayrıştırıcısıyla denetliyor.
+- **Uygularken verilen kararlar:** Python paket adı kimliğin son parçasından (`mezarlik-bilgi` → `mezarlik_bilgi`);
+  sürüm 0.1.0; harita aracı `taslak` katmanına yazar (CBS şablonunda var); `kentos://sdk/ai-kek-pack` (SDK başvurusu,
+  ikon listesi, şemalar tek okumada) ve Kapı 3 sonraki dilimlerde.

@@ -435,6 +435,30 @@ pub fn tools() -> Vec<Tool> {
         destructive: true,
     });
     list.push(Tool {
+        name: "extension.blueprint",
+        title: "Eklenti iskeleti",
+        description: "Yeni bir eklentinin çalışma klasörünü verir (dosya yolu → içerik): manifest, Python projesi ve \
+                      kilidi, ikon, lisans ve istenen her katkının küçük, çalışan bir örneği (command, processing, \
+                      audit, expression, mapTool). İskelet extension.verify'dan sorunsuz geçer. Hiçbir şey yazmaz: \
+                      dosyaları siz yazar, örnekleri isteğe göre değiştirip doğrularsınız."
+            .into(),
+        input: object(
+            json!({
+                "id": { "type": "string", "description": "Ters alan adı, küçük harf (tr.belediye.mezarlik)" },
+                "name": { "type": "string", "description": "İnsanların gördüğü ad" },
+                "summary": { "type": "string", "description": "Ne yaptığını söyleyen tek cümle" },
+                "kind": { "type": "string", "enum": ["vertical", "utility"], "default": "vertical",
+                          "description": "vertical kendi şerit sekmesini açar, utility KentOS'unkilere araç ekler" },
+                "module": { "type": "string", "enum": ["cbs", "harita", "mimari", "yol"], "default": "cbs" },
+                "contributions": { "type": "array", "items": { "type": "string",
+                    "enum": ["command", "processing", "audit", "expression", "mapTool"] } }
+            }),
+            &["id", "name", "contributions"],
+        ),
+        read_only: true,
+        destructive: false,
+    });
+    list.push(Tool {
         name: "extension.verify",
         title: "Eklentiyi doğrula",
         description: "Bir eklentinin çalışma klasörünü (ya da .kek paketini) çalıştırmadan doğrular (kentos kek verify): \
@@ -636,6 +660,7 @@ pub fn call(
         "audit.apply_fix" => audit(host, guard, args, true),
         "processing.list" => processing_tools(host),
         "extension.verify" => extension_verify(args),
+        "extension.blueprint" => extension_blueprint(args),
         "processing.describe" => {
             let tool = text(args, "tool")?;
             let tools = processing_tools(host)?;
@@ -1095,5 +1120,60 @@ fn extension_verify(args: &Value) -> Result<Value, HeadlessError> {
         } else {
             "Sorunları dosya ve satırlarıyla düzeltip yeniden doğrulayın."
         },
+    }))
+}
+
+/// `extension.blueprint` (plan/eklenti.md ADIM 21, docs/adr/8057 §19): a new extension's working folder as files, valid
+/// by construction; nothing is written.
+fn extension_blueprint(args: &Value) -> Result<Value, HeadlessError> {
+    use kentos_extensions::blueprint::{Ask, Contribution, blueprint};
+    use kentos_extensions::manifest::Module;
+    let module = match args.get("module").and_then(Value::as_str).unwrap_or("cbs") {
+        "cbs" => Module::Cbs,
+        "harita" => Module::Harita,
+        "mimari" => Module::Mimari,
+        "yol" => Module::Yol,
+        other => {
+            return Err(HeadlessError::new(
+                "invalid_input",
+                format!("“{other}” bir program değil: cbs, harita, mimari ya da yol."),
+            ));
+        }
+    };
+    let mut contributions = Vec::new();
+    for word in args
+        .get("contributions")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let word = word.as_str().unwrap_or_default();
+        contributions.push(Contribution::parse(word).ok_or_else(|| {
+            HeadlessError::new(
+                "invalid_input",
+                format!(
+                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool."
+                ),
+            )
+        })?);
+    }
+    let name = text(args, "name")?;
+    let ask = Ask {
+        id: text(args, "id")?.to_owned(),
+        name: name.to_owned(),
+        summary: args
+            .get("summary")
+            .and_then(Value::as_str)
+            .map_or_else(|| format!("{name} eklentisi."), str::to_owned),
+        vertical: args.get("kind").and_then(Value::as_str) != Some("utility"),
+        module,
+        contributions,
+    };
+    let files = blueprint(&ask).map_err(|why| HeadlessError::new("invalid_input", why))?;
+    Ok(json!({
+        "files": files,
+        "next": "Dosyaları boş bir klasöre yazın; örnekleri isteğe göre değiştirin; her adımda extension.verify ile \
+                 doğrulayın. Kütüphane gerekirse klasörde `uv add <paket>` (pyproject.toml ve uv.lock birlikte \
+                 yazılır). Kurulum kullanıcının incelemesiyle olur.",
     }))
 }

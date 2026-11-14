@@ -72,3 +72,5 @@ sonraki çalıştırmada onu alır.
 - Bir eklentinin hatası eklentinin günlüğüne (`<eklenti klasörü>/logs/tr.ornek.vitrin.jsonl`) iz kaydıyla yazılır.
 - Paketlemeden önce `kentos kek verify samples/eklenti-vitrini/eklenti` (ajanlarda `extension.verify`): paket, Python
   işlevlerinin `@ext` işaretleri ve tehlikeli çağrılar; her bulgu dosyası, satırı ve ne yazılacağıyla.
+- Yeni bir eklentiye Vitrin'i kopyalayarak değil iskeletle başlayın: `kentos kek new KLASÖR --id … --name … --with
+  command,processing,audit,expression,mapTool` (ajanlarda `extension.blueprint`): doğrulamadan sorunsuz geçer.

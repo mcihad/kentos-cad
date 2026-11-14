@@ -611,3 +611,46 @@ fn walk(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
     }
     out
 }
+
+#[test]
+fn an_agent_gets_a_blueprint_that_verifies() {
+    // docs/adr/8057 §19: `extension.blueprint` gives the files; written out, `extension.verify` passes them.
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let answer = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.blueprint",
+        &json!({ "id": "tr.ornek.mezarlik", "name": "Mezarlık bilgi",
+                 "contributions": ["command", "processing", "audit", "expression", "mapTool"] }),
+    )
+    .unwrap();
+    let files = answer["files"].as_object().expect("files");
+    assert!(files.contains_key("manifest.json") && files.contains_key("src/mezarlik/logic.py"));
+    let folder = std::env::temp_dir().join(format!("kentos-blueprint-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&folder);
+    for (path, text) in files {
+        let to = folder.join(path);
+        std::fs::create_dir_all(to.parent().unwrap()).unwrap();
+        std::fs::write(&to, text.as_str().unwrap()).unwrap();
+    }
+    let verified = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.verify",
+        &json!({ "path": folder.to_string_lossy() }),
+    )
+    .unwrap();
+    assert_eq!(verified["valid"], true, "{verified:#}");
+    assert_eq!(verified["warnings"].as_array().map(Vec::len), Some(0));
+    // A wrong contribution is said.
+    let refused = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.blueprint",
+        &json!({ "id": "tr.ornek.mezarlik", "name": "M", "contributions": ["panel"] }),
+    )
+    .unwrap_err();
+    assert!(refused.to_string().contains("bir katkı değil"), "{refused}");
+    let _ = std::fs::remove_dir_all(&folder);
+}

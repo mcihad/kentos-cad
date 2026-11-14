@@ -2646,3 +2646,56 @@ fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
     assert!(why.contains("document.write"), "{why}");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_blueprint_installs_with_every_contribution_and_passes_the_desktops_own_checks() {
+    // docs/adr/8057 §19: what `extension.blueprint` gives packs, passes the desktop's review (its tool check
+    // included) and installs, its tab holding each example.
+    use kentos_extensions::blueprint::{Ask, Contribution, blueprint};
+    let files = blueprint(&Ask {
+        id: "tr.belediye.mezarlik-bilgi".into(),
+        name: "Mezarlık bilgi".into(),
+        summary: "Mezarlık adalarını ve mezar yerlerini yönetir.".into(),
+        vertical: true,
+        module: kentos_extensions::manifest::Module::Cbs,
+        contributions: Contribution::ALL.to_vec(),
+    })
+    .unwrap();
+    let files: std::collections::BTreeMap<String, Vec<u8>> = files
+        .into_iter()
+        .map(|(k, v)| (k, v.into_bytes()))
+        .collect();
+    let bytes = kentos_extensions::pack(&files, &Limits::default())
+        .unwrap_or_else(|p| panic!("{p:#?}"))
+        .bytes;
+    let dir = temp("iskelet");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "iskelet.kek", bytes);
+    let tab = gis
+        .extension_tabs()
+        .find(|t| t.extension == "tr.belediye.mezarlik-bilgi")
+        .expect("its tab");
+    let labels: Vec<String> = tab
+        .panels
+        .iter()
+        .flat_map(|p| p.items.iter().map(|i| i.label.clone()))
+        .collect();
+    assert_eq!(
+        labels,
+        [
+            "Katman listesi",
+            "Alan özeti",
+            "Adsız nesneler",
+            "İşaret koy"
+        ]
+    );
+    assert!(
+        gis.gis
+            .processing
+            .registry
+            .get("ext.tr.belediye.mezarlik-bilgi.alan-ozeti")
+            .is_some(),
+        "its İşlemler tool is listed"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

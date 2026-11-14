@@ -25,6 +25,9 @@ const USAGE: &str = "Kullanım:
   kentos kek pack <klasör> [-o <paket.kek>] [--json] klasörü denetleyip paketler
   kentos kek verify <klasör> [--json]               klasörü pencere açmadan doğrular: paket, Python işaretleri,
                                                     satırlı rapor (yapay zekâ ajanlarının tek adımda düzelteceği)
+  kentos kek new <klasör> --id <kimlik> --name <ad> [--summary <cümle>] [--module cbs|harita|mimari|yol]
+                 [--utility] [--with command,processing,audit,expression,mapTool]
+                                                    doğrulamadan geçen bir eklenti iskeleti yazar
   kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
   kentos kek dump [--root <klasör>]                 kurulu eklentileri ve katkılarını JSON olarak döker
   kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
@@ -58,6 +61,7 @@ fn main() -> ExitCode {
         ["kek", "inspect", file] => inspect_file(Path::new(file), json),
         ["kek", "pack", folder] => pack_folder(Path::new(folder), None, json),
         ["kek", "verify", folder] => verify_folder(Path::new(folder), json),
+        ["kek", "new", folder, rest @ ..] => new_folder(Path::new(folder), rest),
         ["kek", "pack", folder, "-o", out] => {
             pack_folder(Path::new(folder), Some(PathBuf::from(out)), json)
         }
@@ -172,6 +176,93 @@ fn read_folder(root: &Path) -> Result<Folder, String> {
     }
     not_read.sort();
     Ok((files, not_read))
+}
+
+/// `kek new` (plan/eklenti.md ADIM 21, docs/adr/8057 §19): a new extension's working folder from
+/// `kentos_extensions::blueprint`, written into an empty or new folder; nothing is overwritten.
+fn new_folder(folder: &Path, args: &[&str]) -> ExitCode {
+    use kentos_extensions::blueprint::{Ask, Contribution, blueprint};
+    use kentos_extensions::manifest::Module;
+    let mut flags: BTreeMap<&str, &str> = BTreeMap::new();
+    let mut utility = false;
+    let mut i = 0;
+    while i < args.len() {
+        match args[i] {
+            "--utility" => utility = true,
+            flag @ ("--id" | "--name" | "--summary" | "--module" | "--with")
+                if i + 1 < args.len() =>
+            {
+                flags.insert(flag, args[i + 1]);
+                i += 1;
+            }
+            other => return fail(format!("“{other}” bilinmiyor.\n{USAGE}")),
+        }
+        i += 1;
+    }
+    let (Some(id), Some(name)) = (flags.get("--id"), flags.get("--name")) else {
+        return fail(format!("--id ve --name gerekli.\n{USAGE}"));
+    };
+    let module = match flags.get("--module").copied().unwrap_or("cbs") {
+        "cbs" => Module::Cbs,
+        "harita" => Module::Harita,
+        "mimari" => Module::Mimari,
+        "yol" => Module::Yol,
+        other => {
+            return fail(format!(
+                "“{other}” bir program değil: cbs, harita, mimari ya da yol."
+            ));
+        }
+    };
+    let mut contributions = Vec::new();
+    for word in flags.get("--with").copied().unwrap_or("command").split(',') {
+        match Contribution::parse(word.trim()) {
+            Some(c) => contributions.push(c),
+            None => {
+                return fail(format!(
+                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool."
+                ));
+            }
+        }
+    }
+    let ask = Ask {
+        id: (*id).to_owned(),
+        name: (*name).to_owned(),
+        summary: flags
+            .get("--summary")
+            .map_or_else(|| format!("{name} eklentisi."), |s| (*s).to_owned()),
+        vertical: !utility,
+        module,
+        contributions,
+    };
+    let files = match blueprint(&ask) {
+        Ok(files) => files,
+        Err(why) => return fail(why),
+    };
+    if folder.exists() && std::fs::read_dir(folder).is_ok_and(|mut d| d.next().is_some()) {
+        return fail(format!(
+            "{} boş değil: iskelet yalnız boş ya da yeni bir klasöre yazılır.",
+            folder.display()
+        ));
+    }
+    for (path, text) in &files {
+        let to = folder.join(path);
+        if let Some(parent) = to.parent()
+            && let Err(e) = std::fs::create_dir_all(parent)
+        {
+            return fail(format!("{} yazılamadı: {e}", parent.display()));
+        }
+        if let Err(e) = std::fs::write(&to, text) {
+            return fail(format!("{} yazılamadı: {e}", to.display()));
+        }
+    }
+    println!(
+        "{} dosya yazıldı: {}. Sıradaki: örnekleri değiştirin, `kentos kek verify {}` ile doğrulayın, `kentos kek pack` \
+         ile paketleyin.",
+        files.len(),
+        folder.display(),
+        folder.display()
+    );
+    ExitCode::SUCCESS
 }
 
 /// `kek verify` (plan/eklenti.md ADIM 21, docs/adr/8057 §18): the folder through the package's gates and its Python's
