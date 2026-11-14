@@ -103,6 +103,8 @@ pub struct Server {
     watch: Option<crate::extensions::Watch>,
     /// The user's extension folder (`kentos://extensions/installed`); none when this computer gives no data folder.
     pub(crate) extensions_root: Option<std::path::PathBuf>,
+    /// The agents' extension workshop beside it (`extension.workshop.*`, docs/adr/8057 §22).
+    pub(crate) workshop_root: Option<std::path::PathBuf>,
 }
 
 impl Default for Server {
@@ -144,12 +146,15 @@ impl Server {
             legacy_watch: false,
             watch: None,
             extensions_root: kentos_extension_host::places::user_root(),
+            workshop_root: kentos_extension_host::places::workshop_root(),
         }
     }
 
     /// The server reading the extensions installed in `root` instead of the user's (a test's registry, a host's).
     pub fn with_extensions_root(mut self, root: impl Into<std::path::PathBuf>) -> Self {
-        self.extensions_root = Some(root.into());
+        let root = root.into();
+        self.workshop_root = kentos_extension_host::places::workshop_beside(&root);
+        self.extensions_root = Some(root);
         self.watch = None;
         self
     }

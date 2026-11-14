@@ -21,6 +21,30 @@ impl Host for AppHost<'_> {
     fn not_offered(&self, command: &str) -> Option<String> {
         self.0.product_not_offered(command)
     }
+
+    /// The agents' extension workshop beside this app's extension folder (docs/adr/8057 §22).
+    fn workshop(&self) -> Option<std::path::PathBuf> {
+        self.0
+            .extensions
+            .root
+            .as_deref()
+            .and_then(kentos_extension_host::places::workshop_for)
+    }
+
+    /// Eklentiler's review of the package, as when the user opens a `.kek`: nothing is installed by it.
+    fn review_package(&mut self, path: &std::path::Path) -> Result<Value, HeadlessError> {
+        self.0.extensions.note = None;
+        self.0.review_kek_file(path);
+        if let Some((true, words)) = &self.0.extensions.note {
+            return Err(HeadlessError::new("invalid_input", words.clone()));
+        }
+        let review = self.0.extensions.review.as_ref().map(|r| &r.review);
+        Ok(json!({
+            "opened": review.is_some(),
+            "installable": review.is_some_and(|r| r.installable),
+            "where": "Eklentiler › Gözden geçir ve kur",
+        }))
+    }
 }
 
 /// A refusal's code as a host's stable one; another is the desktop's own (`desktop_refused`).

@@ -652,6 +652,31 @@ pub fn compact(catalog: &Value) -> Vec<Value> {
     tools
 }
 
+/// A drawing's host with the server's extension workshop (`extension.workshop.*`, docs/adr/8057 §22). A package
+/// made there is not opened for review here: the user opens it in KentOS (Eklentiler › Paket yükle…).
+struct WithWorkshop<'a> {
+    inner: &'a mut dyn kentos_headless::agent_tools::Host,
+    workshop: Option<std::path::PathBuf>,
+}
+
+impl kentos_headless::agent_tools::Host for WithWorkshop<'_> {
+    fn request(
+        &mut self,
+        method: &str,
+        params: &Value,
+    ) -> Result<Value, kentos_headless::HeadlessError> {
+        self.inner.request(method, params)
+    }
+
+    fn not_offered(&self, command: &str) -> Option<String> {
+        self.inner.not_offered(command)
+    }
+
+    fn workshop(&self) -> Option<std::path::PathBuf> {
+        self.workshop.clone()
+    }
+}
+
 /// An agents' tool on a drawing (docs/adr/8056 §2): the server's own or a desktop's, the drawing's guard keeping
 /// the plans it was shown.
 fn agent_call(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
@@ -666,13 +691,25 @@ fn agent_call(server: &mut Server, name: &str, args: &Value) -> Result<Value, Va
         drawings,
         desktops,
         guards,
+        workshop_root,
         ..
     } = server;
     let guard = guards.entry(handle.clone()).or_default();
+    let workshop = workshop_root.clone();
     let result = if let Some(s) = drawings.get_mut(&handle) {
-        kentos_headless::agent_tools::call(s, guard, name, &args)
+        kentos_headless::agent_tools::call(
+            &mut WithWorkshop { inner: s, workshop },
+            guard,
+            name,
+            &args,
+        )
     } else if let Some(d) = desktops.get_mut(&handle) {
-        kentos_headless::agent_tools::call(d, guard, name, &args)
+        kentos_headless::agent_tools::call(
+            &mut WithWorkshop { inner: d, workshop },
+            guard,
+            name,
+            &args,
+        )
     } else {
         return Err(refused(
             "unknown_drawing",

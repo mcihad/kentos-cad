@@ -39,5 +39,10 @@ pub use archive::{Inspection, Limits, Opened, Packed, inspect, open, pack};
 pub use compat::{Host, Os, SDK_PROTOCOL, compatible};
 pub use manifest::Manifest;
 pub use problem::Problem;
+
+/// Why `path` cannot be a file's path in a package (`../x`, an absolute path, a reserved name …); none when it can.
+pub fn path_problem(path: &str) -> Option<String> {
+    paths::problem(path)
+}
 pub use sdk_pack::sdk_pack;
 pub use verify::{Verification, verify};

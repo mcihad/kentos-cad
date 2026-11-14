@@ -513,3 +513,66 @@ fn a_module_program_offers_its_own_doors() {
     }
     assert_eq!(doors(Some(kentos_launch::Module::Road)), every);
 }
+
+/// docs/adr/8057 §22: Asistan's extension workshop is beside this app's extension folder; the package it makes there
+/// opens Eklentiler's review, and nothing is installed by it.
+#[test]
+fn the_assistants_workshop_opens_its_package_for_review() {
+    use kentos_headless::agent_tools::{self, Guard, Host};
+
+    let root = std::env::temp_dir().join(format!("kentos-asistan-atolye-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let extensions = root.join("eklentiler");
+    std::fs::create_dir_all(&extensions).unwrap();
+    let (mut app, _) = App::boot(None);
+    app.program = Some(kentos_launch::Module::Gis);
+    app.extensions = crate::extensions::Extensions::open(&extensions, false).0;
+    let mut guard = Guard::new();
+    let mut host = super::host::AppHost(&mut app);
+    assert_eq!(host.workshop(), Some(root.join("eklenti-atolyesi")));
+    assert!(
+        agent_tools::offered_tools(&host)
+            .iter()
+            .any(|t| t.name == "extension.workshop.review"),
+        "Asistan is offered the workshop"
+    );
+    let id = "tr.ornek.mezarlik";
+    let blueprint = agent_tools::call(
+        &mut host,
+        &mut guard,
+        "extension.blueprint",
+        &json!({ "id": id, "name": "Mezarlık bilgi", "contributions": ["command", "mapTool"] }),
+    )
+    .unwrap();
+    agent_tools::call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.write",
+        &json!({ "id": id, "files": blueprint["files"] }),
+    )
+    .unwrap();
+    let review = agent_tools::call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.review",
+        &json!({ "id": id }),
+    )
+    .unwrap();
+    assert_eq!(review["review"]["opened"], true, "{review:#}");
+    assert_eq!(review["review"]["installable"], true, "{review:#}");
+    assert_eq!(app.dialog, Some(crate::app::Dialog::Extensions));
+    assert!(
+        app.extension_review_window().is_some(),
+        "the review is shown"
+    );
+    assert!(
+        app.extensions
+            .registry
+            .as_ref()
+            .unwrap()
+            .extensions()
+            .is_empty(),
+        "nothing installed by it"
+    );
+    let _ = std::fs::remove_dir_all(&root);
+}

@@ -165,6 +165,9 @@ fn instructions(program: Option<kentos_launch::Module>) -> String {
          - Silen ya da var olanı değiştiren bir yazma kullanıcının onayını bekler. Reddedilirse yazma; ne istediğini sor.\n\
          - Koordinatlar çizim biriminde (çoğunlukla metre); x doğuya, y kuzeye artar. Nokta: {{\"x\": 0, \"y\": 0}}.\n\
          - Bir araç hata verirse kodunu ve iletisini oku, girdiyi düzelt; aynı çağrıyı değiştirmeden yineleme.\n\
+         - Eklenti yazman istenirse: önce extension.sdk'yı oku; extension.blueprint ile iskeleti al, \
+         extension.workshop.write ile atölyeye yaz, isteğe göre değiştir, extension.verify (id ile) doğrula; sorun \
+         kalmayınca extension.workshop.review kullanıcının incelemesine açar. Kurmak ve yetki vermek kullanıcınındır.\n\
          - Kısa yanıt ver: ne yaptığını ve sonucunu (kaç nesne, hangi katman, hangi ölçüde, nerede) söyle. \
          Kullanıcıya iç kimlik, sürüm ya da plan numarası (id, uid, revision, planId) ve komut kimliği yazma; \
          katman ve nesne adlarını, ölçüleri, Türkçe adları kullan. İstenmeyen değişikliği yapma."

@@ -1327,3 +1327,29 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **Vitrin 1.0.4:** "Yapıları numarala" `space-number`, katmanın sağ tık "Katman özeti" öğesi `layer-fields` (ikisi de
   camelCase adlı). Gerçek pencerede (`12-ikonlar`): 1.0.3 → 1.0.4 güncellendi; sekmede ve sağ tık menüsünde ikonlar
   web'deki çizimleriyle göründü. Örnek çizim yeniden üretildi (formun ve modelin sabitlediği paket özeti değişti).
+
+## §22. Ajanların eklenti atölyesi: yaz, doğrula, incelemeye aç (`ADIM 21`, akış ve yüzeyler)
+
+**14 Kasım.** Kod: `crates/native/headless/src/agent_tools.rs` (`extension.workshop.write`, `.read`, `.review`;
+`Host::workshop`, `Host::review_package`), `crates/native/extension-host/src/places.rs` (`workshop_root`,
+`workshop_for`, `workshop_beside`), masaüstü `assistant/host.rs`, MCP `tools.rs` (`WithWorkshop`).
+
+- **Bulgu:** masaüstü Asistan'ı `extension.sdk` ve `extension.blueprint` ile eklentinin dosyalarını alıyor ama diske
+  yazacak aracı olmadığı için akış yarıda kalıyordu; dış ajanın kendi dosya araçları var, Asistan'ın yok.
+- **Atölye:** `…/kentos-cad/eklenti-atolyesi/<kimlik>/` (eklenti klasörünün yanında; `KENTOS_EXTENSIONS_WORKSHOP`
+  başka yer). Masaüstünde uygulamanın kendi kayıt defteri klasörünün yanında: sınama ve gerçek pencere oturumu
+  kullanıcının klasörüne yazmaz. Atölyesi olmayan bağlantıya araçlar hiç sunulmaz.
+- **`write`:** dosya yolu → metin (`null` siler). Her yol paketin yol kuralıyla (`kentos_extensions::path_problem`:
+  `..`, mutlak yol, ayrılmış ad), dosya başına 512 KB, çağrı başına 4 MB; hepsi denetlenmeden hiçbir şey yazılmaz
+  (kötü yollu çağrının iyi dosyası da yazılmadı, sınandı). Atölye dışına yazmaz, hiçbir şey çalıştırmaz.
+- **`read`:** atölyedeki eklentiler (ad, sürüm), bir eklentinin dosyaları, bir dosyanın içeriği. **`verify`** artık
+  `id` ile de çalışır.
+- **`review`:** doğrular; geçmeyen eklenti paketlenmez ve sorunlarını döndürür. Geçeni klasörün YANINA paketler
+  (`<kimlik>-<sürüm>.kek`; içine yazsaydı bir sonraki paket öncekini taşırdı) ve host'a incelemeye açtırır: masaüstünde
+  kullanıcının `.kek` açtığındaki Gözden geçir ve kur penceresi. Kurmak ve yetki vermek kullanıcınındır (PY-AI-05);
+  açmak hiçbir şey kurmaz (sınandı). MCP sunucusu paketi açamaz, Paket yükle… ile açılacağını söyler.
+- **Onay:** atölyeye yazmak Asistan'da onay beklemez (kendi klasörü, panelde her çağrı görünür); kurulum zaten
+  kullanıcının penceresi. Asistan'ın yönergesine akış yazıldı: sdk → blueprint → workshop.write → verify →
+  workshop.review.
+- **Uygularken verilen kararlar:** paket atölyede kalır (silinmez, kullanıcı yeniden açabilir); kaynak türü "dosya"
+  olarak görünür; MCP'nin masaüstü bağlantısında incelemeye açma sonraki iş.

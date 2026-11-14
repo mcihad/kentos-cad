@@ -4,7 +4,8 @@
 //! else `~/.local/share/kentos-cad/eklentiler`; `%APPDATA%\kentos-cad\eklentiler` on Windows; `~/Library/Application
 //! Support/kentos-cad/eklentiler` on macOS). The policy is IT's file in a system folder a user cannot write
 //! (`/etc/kentos-cad`, `%ProgramData%\kentos-cad`, `/Library/Application Support/kentos-cad`). `KENTOS_EXTENSIONS_DIR`
-//! and `KENTOS_EXTENSIONS_POLICY` point elsewhere: tests and real-window sessions never touch the user's own.
+//! and `KENTOS_EXTENSIONS_POLICY` point elsewhere: tests and real-window sessions never touch the user's own. The
+//! agents' workshop is beside the extension folder (`eklenti-atolyesi`), or where `KENTOS_EXTENSIONS_WORKSHOP` says.
 
 use std::path::{Path, PathBuf};
 
@@ -36,6 +37,23 @@ pub fn user_root() -> Option<PathBuf> {
         env("XDG_DATA_HOME").or_else(|| env("HOME").map(|h| h.join(".local").join("share")))
     };
     base.map(|b| b.join("kentos-cad").join("eklentiler"))
+}
+
+/// The agents' extension workshop (docs/adr/8057 §22): the folders an agent writes a new extension in, one per
+/// extension id, beside the user's extension folder (`…/kentos-cad/eklenti-atolyesi`; `KENTOS_EXTENSIONS_WORKSHOP`
+/// elsewhere). Nothing there runs or is installed: a package made there is opened for the user's review.
+pub fn workshop_root() -> Option<PathBuf> {
+    env("KENTOS_EXTENSIONS_WORKSHOP").or_else(|| workshop_beside(&user_root()?))
+}
+
+/// The workshop of a registry in `extensions`: `KENTOS_EXTENSIONS_WORKSHOP`, else beside it.
+pub fn workshop_for(extensions: &Path) -> Option<PathBuf> {
+    env("KENTOS_EXTENSIONS_WORKSHOP").or_else(|| workshop_beside(extensions))
+}
+
+/// The workshop beside an extension folder.
+pub fn workshop_beside(extensions: &Path) -> Option<PathBuf> {
+    Some(extensions.parent()?.join("eklenti-atolyesi"))
 }
 
 /// The organisation's policy file.

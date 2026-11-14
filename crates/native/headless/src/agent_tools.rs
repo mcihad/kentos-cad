@@ -35,6 +35,23 @@ pub trait Host {
     fn not_offered(&self, _command: &str) -> Option<String> {
         None
     }
+
+    /// The agents' extension workshop (docs/adr/8057 §22): where `extension.workshop.*` write, one folder per
+    /// extension id; none when this host gives none (its tools are then not offered).
+    fn workshop(&self) -> Option<std::path::PathBuf> {
+        None
+    }
+
+    /// Opens a package for the user's review (the desktop's "Gözden geçir ve kur"): nothing is installed by it.
+    fn review_package(&mut self, path: &std::path::Path) -> Result<Value, HeadlessError> {
+        Err(HeadlessError::new(
+            "not_offered",
+            format!(
+                "Bu bağlantı paketi kuruluma açamaz: KentOS'ta Eklentiler › Paket yükle… ile {} dosyasını açın.",
+                path.display()
+            ),
+        ))
+    }
 }
 
 /// Commands that change or take away what is there (the MCP tools' `destructiveHint`); the rest add. Deleting, editing,
@@ -160,8 +177,10 @@ fn descriptor(command: &str) -> Option<&'static CommandDescriptor> {
 /// docs/adr/8056 §1). The desktop's assistant offers these (§4): a door that could only answer `not_offered` costs the
 /// model tokens and a wrong turn. MCP lists every door, its drawings being of every module.
 pub fn offered_tools(host: &dyn Host) -> Vec<Tool> {
+    let workshop = host.workshop().is_some();
     tools()
         .into_iter()
+        .filter(|t| workshop || !t.name.starts_with("extension.workshop."))
         .filter(|t| match DOORS.iter().find(|d| d.tool == t.name) {
             Some(door) if door.part != Discipline::Core => catalog()
                 .iter()
@@ -476,6 +495,56 @@ pub fn tools() -> Vec<Tool> {
         destructive: false,
     });
     list.push(Tool {
+        name: "extension.workshop.write",
+        title: "Atölyeye yaz",
+        description: "Eklentinin dosyalarını ajanların eklenti atölyesine yazar (her eklentiye bir klasör, kimliğiyle): \
+                      extension.blueprint'in verdiği dosyalar ya da değiştirdikleriniz. Var olan dosyanın üstüne yazar; \
+                      null verilen dosyayı siler. Atölye dışına yazmaz, hiçbir şey çalıştırmaz ya da kurmaz; sonra \
+                      extension.verify ile doğrulayın."
+            .into(),
+        input: object(
+            json!({
+                "id": { "type": "string", "description": "Eklentinin kimliği (tr.belediye.mezarlik): atölyedeki klasörü" },
+                "files": { "type": "object", "description": "Dosya yolu → metin içerik (UTF-8) ya da silmek için null",
+                           "additionalProperties": { "type": ["string", "null"] } }
+            }),
+            &["id", "files"],
+        ),
+        read_only: false,
+        destructive: false,
+    });
+    list.push(Tool {
+        name: "extension.workshop.read",
+        title: "Atölyeyi oku",
+        description: "Ajanların eklenti atölyesi: kimlik verilmezse oradaki eklentiler (ad, sürüm), kimlikle o eklentinin \
+                      dosyaları (boyutlarıyla), yol da verilirse dosyanın içeriği."
+            .into(),
+        input: object(
+            json!({
+                "id": { "type": "string", "description": "Eklentinin kimliği" },
+                "path": { "type": "string", "description": "Okunacak dosyanın klasördeki yolu" }
+            }),
+            &[],
+        ),
+        read_only: true,
+        destructive: false,
+    });
+    list.push(Tool {
+        name: "extension.workshop.review",
+        title: "Kuruluma aç",
+        description: "Atölyedeki eklentiyi doğrular, paketler (.kek, atölyede klasörün yanına) ve kullanıcının \
+                      incelemesine açar: masaüstünde Eklentiler'in Gözden geçir ve kur penceresi; istediği yetenekleri \
+                      kullanıcı görür, kurmak onun kararıdır. Doğrulamadan geçmeyen eklenti paketlenmez, sorunları \
+                      döner."
+            .into(),
+        input: object(
+            json!({ "id": { "type": "string", "description": "Eklentinin kimliği" } }),
+            &["id"],
+        ),
+        read_only: false,
+        destructive: false,
+    });
+    list.push(Tool {
         name: "extension.verify",
         title: "Eklentiyi doğrula",
         description: "Bir eklentinin çalışma klasörünü (ya da .kek paketini) çalıştırmadan doğrular (kentos kek verify): \
@@ -483,8 +552,11 @@ pub fn tools() -> Vec<Tool> {
                       satırı ya da JSON işaretçisi ve ne yazılacağıyla. Bu bilgisayardaki yolu okur, hiçbir şey yazmaz."
             .into(),
         input: object(
-            json!({ "path": { "type": "string", "description": "Eklentinin klasörü ya da .kek dosyası, mutlak yol" } }),
-            &["path"],
+            json!({
+                "path": { "type": "string", "description": "Eklentinin klasörü ya da .kek dosyası, mutlak yol" },
+                "id": { "type": "string", "description": "Ya da atölyedeki eklentinin kimliği" }
+            }),
+            &[],
         ),
         read_only: true,
         destructive: false,
@@ -676,7 +748,10 @@ pub fn call(
         "audit.run" => audit(host, guard, args, false),
         "audit.apply_fix" => audit(host, guard, args, true),
         "processing.list" => processing_tools(host),
-        "extension.verify" => extension_verify(args),
+        "extension.verify" => extension_verify(host, args),
+        "extension.workshop.write" => workshop_write(host, args),
+        "extension.workshop.read" => workshop_read(host, args),
+        "extension.workshop.review" => workshop_review(host, args),
         "extension.blueprint" => extension_blueprint(args),
         "extension.sdk" => extension_sdk(args),
         "processing.describe" => {
@@ -1072,8 +1147,11 @@ const NOT_READ: &[&str] = &[
 
 /// `extension.verify` (plan/eklenti.md ADIM 21, docs/adr/8057 §18): an extension's working folder through
 /// `kentos_extensions::verify`, or a `.kek` file through the package's check; nothing runs, nothing is written.
-fn extension_verify(args: &Value) -> Result<Value, HeadlessError> {
-    let path = std::path::PathBuf::from(text(args, "path")?);
+fn extension_verify(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> {
+    let path = match args.get("id").and_then(Value::as_str) {
+        Some(id) if args.get("path").is_none() => workshop_folder(host, id)?,
+        _ => std::path::PathBuf::from(text(args, "path")?),
+    };
     let limits = kentos_extensions::Limits::default();
     let unreadable = |e: std::io::Error| {
         HeadlessError::new(
@@ -1093,8 +1171,35 @@ fn extension_verify(args: &Value) -> Result<Value, HeadlessError> {
             "next": "Paketin kaynağını doğrulamak için klasörünü verin: Python işaretleri de denetlenir.",
         }));
     }
+    let files = read_folder(&path, &limits)?;
+    let v = kentos_extensions::verify(&files, &limits);
+    Ok(json!({
+        "valid": v.is_valid(),
+        "extension": v.manifest.as_ref().map(|m| json!({ "id": m.id, "version": m.version.to_string(), "name": m.name })),
+        "digest": v.digest,
+        "problems": v.problems,
+        "warnings": v.warnings,
+        "next": if v.is_valid() {
+            "Doğrulandı: `kentos kek pack` paketler; kurulum kullanıcının incelemesiyle olur."
+        } else {
+            "Sorunları dosya ve satırlarıyla düzeltip yeniden doğrulayın."
+        },
+    }))
+}
+
+/// A working folder's files as the packer reads them (path → bytes), what every folder has left out ([`NOT_READ`]).
+fn read_folder(
+    path: &std::path::Path,
+    limits: &kentos_extensions::Limits,
+) -> Result<std::collections::BTreeMap<String, Vec<u8>>, HeadlessError> {
+    let unreadable = |e: std::io::Error| {
+        HeadlessError::new(
+            "file_not_found",
+            format!("{} okunamadı: {e}", path.display()),
+        )
+    };
     let mut files = std::collections::BTreeMap::new();
-    let mut stack = vec![path.clone()];
+    let mut stack = vec![path.to_path_buf()];
     while let Some(dir) = stack.pop() {
         for entry in std::fs::read_dir(&dir).map_err(unreadable)? {
             let entry = entry.map_err(unreadable)?;
@@ -1116,7 +1221,7 @@ fn extension_verify(args: &Value) -> Result<Value, HeadlessError> {
                 ));
             }
             let Some(key) = at
-                .strip_prefix(&path)
+                .strip_prefix(path)
                 .ok()
                 .and_then(|p| p.to_str())
                 .map(|p| p.replace('\\', "/"))
@@ -1126,18 +1231,205 @@ fn extension_verify(args: &Value) -> Result<Value, HeadlessError> {
             files.insert(key, std::fs::read(&at).map_err(unreadable)?);
         }
     }
-    let v = kentos_extensions::verify(&files, &limits);
+    Ok(files)
+}
+
+/// How many bytes one file the workshop writes may have, and all of a call's.
+const WORKSHOP_FILE: usize = 512 * 1024;
+const WORKSHOP_CALL: usize = 4 * 1024 * 1024;
+
+/// The workshop's folder of extension `id`, the id checked; whether it is there is the caller's.
+fn workshop_folder(host: &dyn Host, id: &str) -> Result<std::path::PathBuf, HeadlessError> {
+    let root = host
+        .workshop()
+        .ok_or_else(|| HeadlessError::new("not_offered", "Bu bağlantının eklenti atölyesi yok."))?;
+    if !kentos_extensions::manifest::is_extension_id(id) {
+        return Err(HeadlessError::new(
+            "invalid_input",
+            format!(
+                "“{id}” bir eklenti kimliği değil: ters alan adı, küçük harf, en az iki parça (tr.belediye.mezarlik)."
+            ),
+        ));
+    }
+    Ok(root.join(id))
+}
+
+/// `extension.workshop.write` (docs/adr/8057 §22): an agent's files into its workshop folder, each path a package's;
+/// nothing outside it, nothing run.
+fn workshop_write(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> {
+    let id = text(args, "id")?;
+    let folder = workshop_folder(host, id)?;
+    let files = args
+        .get("files")
+        .and_then(Value::as_object)
+        .filter(|f| !f.is_empty())
+        .ok_or_else(|| {
+            HeadlessError::new(
+                "invalid_input",
+                "files gerekli: dosya yolu → içerik (silmek için null).",
+            )
+        })?;
+    // Every path and size checked before anything is written: a call writes all of it or none.
+    let mut total = 0;
+    for (path, content) in files {
+        if let Some(why) = kentos_extensions::path_problem(path) {
+            return Err(HeadlessError::new(
+                "invalid_input",
+                format!("“{path}”: {why}"),
+            ));
+        }
+        let size = match content {
+            Value::String(text) => text.len(),
+            Value::Null => 0,
+            _ => {
+                return Err(HeadlessError::new(
+                    "invalid_input",
+                    format!("“{path}”: içerik metin (UTF-8) ya da silmek için null olmalı."),
+                ));
+            }
+        };
+        if size > WORKSHOP_FILE {
+            return Err(HeadlessError::new(
+                "input_too_large",
+                format!(
+                    "“{path}” {size} bayt: atölyeye yazılan bir dosya en çok {WORKSHOP_FILE} bayttır."
+                ),
+            ));
+        }
+        total += size;
+    }
+    if total > WORKSHOP_CALL {
+        return Err(HeadlessError::new(
+            "input_too_large",
+            format!("Bir çağrı en çok {WORKSHOP_CALL} bayt yazar; dosyaları bölün."),
+        ));
+    }
+    let failed = |path: &str, e: std::io::Error| {
+        HeadlessError::new("write_failed", format!("“{path}” yazılamadı: {e}"))
+    };
+    let (mut written, mut removed) = (Vec::new(), Vec::new());
+    for (path, content) in files {
+        let at = folder.join(path);
+        match content.as_str() {
+            Some(text) => {
+                if let Some(parent) = at.parent() {
+                    std::fs::create_dir_all(parent).map_err(|e| failed(path, e))?;
+                }
+                std::fs::write(&at, text).map_err(|e| failed(path, e))?;
+                written.push(path.clone());
+            }
+            None => match std::fs::remove_file(&at) {
+                Ok(()) => removed.push(path.clone()),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                Err(e) => return Err(failed(path, e)),
+            },
+        }
+    }
     Ok(json!({
-        "valid": v.is_valid(),
-        "extension": v.manifest.as_ref().map(|m| json!({ "id": m.id, "version": m.version.to_string(), "name": m.name })),
-        "digest": v.digest,
-        "problems": v.problems,
+        "folder": folder.display().to_string(),
+        "written": written,
+        "removed": removed,
+        "next": "extension.verify (id ile) doğrular; sorun kalmayınca extension.workshop.review kullanıcının incelemesine açar.",
+    }))
+}
+
+/// `extension.workshop.read`: the workshop's extensions, an extension's files, or a file.
+fn workshop_read(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> {
+    let limits = kentos_extensions::Limits::default();
+    let Some(id) = args.get("id").and_then(Value::as_str) else {
+        let root = host.workshop().ok_or_else(|| {
+            HeadlessError::new("not_offered", "Bu bağlantının eklenti atölyesi yok.")
+        })?;
+        let mut listed = Vec::new();
+        for entry in std::fs::read_dir(&root).into_iter().flatten().flatten() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if !entry.path().is_dir() || !kentos_extensions::manifest::is_extension_id(&name) {
+                continue;
+            }
+            let manifest = std::fs::read(entry.path().join("manifest.json"))
+                .ok()
+                .and_then(|b| serde_json::from_slice::<Value>(&b).ok());
+            listed.push(json!({
+                "id": name,
+                "name": manifest.as_ref().and_then(|m| m.get("name")).cloned(),
+                "version": manifest.as_ref().and_then(|m| m.get("version")).cloned(),
+            }));
+        }
+        listed.sort_by(|a, b| a["id"].as_str().cmp(&b["id"].as_str()));
+        return Ok(json!({ "folder": root.display().to_string(), "extensions": listed }));
+    };
+    let folder = workshop_folder(host, id)?;
+    if !folder.is_dir() {
+        return Err(HeadlessError::new(
+            "unknown_object",
+            format!("Atölyede “{id}” yok: extension.workshop.write ile yazın."),
+        ));
+    }
+    match args.get("path").and_then(Value::as_str) {
+        None => {
+            let files = read_folder(&folder, &limits)?;
+            Ok(json!({
+                "folder": folder.display().to_string(),
+                "files": files.iter().map(|(path, bytes)| json!({ "path": path, "bytes": bytes.len() })).collect::<Vec<_>>(),
+            }))
+        }
+        Some(path) => {
+            if let Some(why) = kentos_extensions::path_problem(path) {
+                return Err(HeadlessError::new(
+                    "invalid_input",
+                    format!("“{path}”: {why}"),
+                ));
+            }
+            let bytes = std::fs::read(folder.join(path)).map_err(|e| {
+                HeadlessError::new("file_not_found", format!("“{path}” okunamadı: {e}"))
+            })?;
+            let text = String::from_utf8(bytes).map_err(|_| {
+                HeadlessError::new("invalid_input", format!("“{path}” metin değil (UTF-8)."))
+            })?;
+            Ok(json!({ "path": path, "content": text }))
+        }
+    }
+}
+
+/// `extension.workshop.review`: verified, packed beside its folder, opened for the user's review by the host.
+fn workshop_review(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessError> {
+    let id = text(args, "id")?;
+    let folder = workshop_folder(host, id)?;
+    let limits = kentos_extensions::Limits::default();
+    let files = read_folder(&folder, &limits)?;
+    let v = kentos_extensions::verify(&files, &limits);
+    let Some(manifest) = v.manifest.as_ref().filter(|_| v.is_valid()) else {
+        return Ok(json!({
+            "valid": false,
+            "problems": v.problems,
+            "warnings": v.warnings,
+            "next": "Doğrulamadan geçmeyen eklenti paketlenmez: sorunları düzeltip yeniden deneyin.",
+        }));
+    };
+    let packed = kentos_extensions::pack(&files, &limits).map_err(|problems| {
+        HeadlessError::new(
+            "invalid_input",
+            problems
+                .first()
+                .map_or_else(|| "Paketlenemedi.".to_owned(), |p| p.message.clone()),
+        )
+    })?;
+    let file = folder.with_file_name(format!("{id}-{}.kek", manifest.version));
+    std::fs::write(&file, &packed.bytes).map_err(|e| {
+        HeadlessError::new(
+            "write_failed",
+            format!("{} yazılamadı: {e}", file.display()),
+        )
+    })?;
+    let opened = host.review_package(&file)?;
+    Ok(json!({
+        "valid": true,
+        "package": file.display().to_string(),
+        "digest": packed.digest,
         "warnings": v.warnings,
-        "next": if v.is_valid() {
-            "Doğrulandı: `kentos kek pack` paketler; kurulum kullanıcının incelemesiyle olur."
-        } else {
-            "Sorunları dosya ve satırlarıyla düzeltip yeniden doğrulayın."
-        },
+        "review": opened,
+        "next": "Kullanıcı istediği yetenekleri görüp kurmaya karar verir; kurulmadan önce eklenti çalışmaz. Python \
+                 katkıları kurulduktan sonra ortamı hazırlanınca çalışır.",
     }))
 }
 

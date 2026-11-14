@@ -384,8 +384,11 @@ fn a_host_that_does_not_offer_a_part_hides_and_refuses_it() {
     }
     assert_eq!(
         agent_tools::offered_tools(&s).len(),
-        agent_tools::tools().len(),
-        "a host of every part offers every tool"
+        agent_tools::tools()
+            .iter()
+            .filter(|t| !t.name.starts_with("extension.workshop."))
+            .count(),
+        "a host of every part offers every tool but the workshop's: it has none"
     );
 }
 
@@ -687,4 +690,165 @@ fn an_agent_reads_the_sdk_before_writing_an_extension() {
     )
     .unwrap_err();
     assert!(refused.to_string().contains("guide, api"), "{refused}");
+}
+
+/// A drawing with the agents' extension workshop, its reviews kept (docs/adr/8057 §22).
+struct WithWorkshop<'a> {
+    inner: &'a mut Session,
+    root: std::path::PathBuf,
+    reviewed: Vec<std::path::PathBuf>,
+}
+
+impl Host for WithWorkshop<'_> {
+    fn request(&mut self, method: &str, params: &Value) -> Result<Value, HeadlessError> {
+        self.inner.request(method, params)
+    }
+
+    fn workshop(&self) -> Option<std::path::PathBuf> {
+        Some(self.root.clone())
+    }
+
+    fn review_package(&mut self, path: &std::path::Path) -> Result<Value, HeadlessError> {
+        self.reviewed.push(path.to_owned());
+        Ok(json!({ "opened": true }))
+    }
+}
+
+#[test]
+fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
+    // docs/adr/8057 §22: the blueprint written to the workshop, verified by its id, listed and read; a call with a
+    // path outside the folder writes nothing; the package is made beside the folder and opened for review; a broken
+    // extension is not packed.
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let names = |host: &dyn Host| -> Vec<&'static str> {
+        agent_tools::offered_tools(host)
+            .iter()
+            .map(|t| t.name)
+            .filter(|n| n.starts_with("extension.workshop."))
+            .collect()
+    };
+    assert!(names(&s).is_empty(), "no workshop, no workshop tools");
+    let root = std::env::temp_dir().join(format!("kentos-atolye-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let blueprint = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.blueprint",
+        &json!({ "id": "tr.ornek.mezarlik", "name": "Mezarlık bilgi", "contributions": ["command", "audit"] }),
+    )
+    .unwrap();
+    let mut host = WithWorkshop {
+        inner: &mut s,
+        root: root.clone(),
+        reviewed: Vec::new(),
+    };
+    assert_eq!(
+        names(&host),
+        [
+            "extension.workshop.write",
+            "extension.workshop.read",
+            "extension.workshop.review"
+        ]
+    );
+    let call = |host: &mut WithWorkshop, guard: &mut Guard, name: &str, args: Value| {
+        agent_tools::call(host, guard, name, &args)
+    };
+    let written = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.write",
+        json!({ "id": "tr.ornek.mezarlik", "files": blueprint["files"] }),
+    )
+    .unwrap();
+    assert_eq!(
+        written["written"].as_array().map(Vec::len),
+        blueprint["files"].as_object().map(|f| f.len())
+    );
+    let verified = call(
+        &mut host,
+        &mut guard,
+        "extension.verify",
+        json!({ "id": "tr.ornek.mezarlik" }),
+    )
+    .unwrap();
+    assert_eq!(verified["valid"], true, "{verified:#}");
+    let listed = call(&mut host, &mut guard, "extension.workshop.read", json!({})).unwrap();
+    assert_eq!(listed["extensions"][0]["id"], "tr.ornek.mezarlik");
+    assert_eq!(listed["extensions"][0]["name"], "Mezarlık bilgi");
+    let manifest = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.read",
+        json!({ "id": "tr.ornek.mezarlik", "path": "manifest.json" }),
+    )
+    .unwrap();
+    assert!(
+        manifest["content"]
+            .as_str()
+            .unwrap()
+            .contains("tr.ornek.mezarlik")
+    );
+    // Outside the folder: refused, and the good file of the same call not written either.
+    let refused = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.write",
+        json!({ "id": "tr.ornek.mezarlik", "files": { "NOTLAR.md": "x", "../disari.py": "x" } }),
+    )
+    .unwrap_err();
+    assert_eq!(refused.code, "invalid_input", "{refused}");
+    assert!(!root.join("tr.ornek.mezarlik/NOTLAR.md").exists());
+    assert!(!root.join("disari.py").exists());
+    // Packed beside the folder, opened for review.
+    let review = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.review",
+        json!({ "id": "tr.ornek.mezarlik" }),
+    )
+    .unwrap();
+    assert_eq!(review["valid"], true, "{review:#}");
+    let package = root.join("tr.ornek.mezarlik-0.1.0.kek");
+    assert!(package.is_file());
+    assert_eq!(host.reviewed, [package]);
+    // A function that lost its mark: not packed, said.
+    let logic = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.read",
+        json!({ "id": "tr.ornek.mezarlik", "path": "src/mezarlik/logic.py" }),
+    )
+    .unwrap();
+    let broken = logic["content"]
+        .as_str()
+        .unwrap()
+        .replace("@ext.audit(\"adsiz\")\n", "");
+    call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.write",
+        json!({ "id": "tr.ornek.mezarlik", "files": { "src/mezarlik/logic.py": broken } }),
+    )
+    .unwrap();
+    let review = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.review",
+        json!({ "id": "tr.ornek.mezarlik" }),
+    )
+    .unwrap();
+    assert_eq!(review["valid"], false);
+    assert_eq!(review["problems"][0]["code"], "python_decorator_missing");
+    assert_eq!(host.reviewed.len(), 1, "not opened again");
+    // A file removed with null.
+    call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.write",
+        json!({ "id": "tr.ornek.mezarlik", "files": { "CHANGELOG.md": null } }),
+    )
+    .unwrap();
+    assert!(!root.join("tr.ornek.mezarlik/CHANGELOG.md").exists());
+    let _ = std::fs::remove_dir_all(&root);
 }

@@ -2557,9 +2557,10 @@
     eklentide).
   - Hata eklentinin adıyla söylenir, iz kaydı eklentinin günlüğündedir; Durdur önce sorar, 5 sn'de süreci sonlandırır;
     yazan çalıştırma tek geri alma adımıdır.
-  - Yapay zekâ eklentiyi aynı üç adımla yazar: `extension.sdk` (MCP'de `kentos://sdk/ai-kek-pack`: rehber, kaynaktan
-    üretilen `kentos.ext` imzaları, örnek), `extension.blueprint` (doğrulamadan geçen iskelet), `extension.verify`;
-    komut satırında `kentos kek sdk|new|verify`. Yerleşik ikonlar tire biçiminde yazılır (`space-number`), bilinmeyen
+  - Yapay zekâ eklentiyi aynı adımlarla yazar: `extension.sdk` (MCP'de `kentos://sdk/ai-kek-pack`: rehber, kaynaktan
+    üretilen `kentos.ext` imzaları, örnek), `extension.blueprint` (doğrulamadan geçen iskelet), `extension.workshop.write`
+    (ajanın kendi atölye klasörüne), `extension.verify`, `extension.workshop.review` (paketler, kullanıcının Gözden
+    geçir ve kur penceresine açar; kurmak kullanıcının); komut satırında `kentos kek sdk|new|verify`. Yerleşik ikonlar tire biçiminde yazılır (`space-number`), bilinmeyen
     ikon ret değil uyarıdır.
   - Örnek ve bütün gösterimler `samples/eklenti-vitrini` (Vitrin) ile; yeni yetenek aynı değişiklikte oraya girer.
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](../../docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
