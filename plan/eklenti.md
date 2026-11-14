@@ -819,6 +819,16 @@ okuyup arka planda dolduran yol; denetimler, harita aracı, form eylemi, büyük
 kurulumda tam denetimi. MCP: araçlar `cad.processing.*` ile her çağrıda güncel listeden gelir; `tools/list_changed`
 eklenti komutları kendi MCP aracı olunca (ADR 8057 §7).
 
+**Sıradaki dilim (tasarım, 14 Kasım): çizimdeki ifadelerde eklenti işlevi.** Etiket metni ve koşulu
+(`scene-query::label_texts`), katman süzgeci (`layer_filter`), tematik stil kuralları (`native-style::classify`) ve sanal
+alanlar çizim sırasında değerlendirilir; orada **hiç beklenmez**: (1) bu derleyiciler eklenti işlevlerinin listesini
+çağırandan alır (scene-query İşlemler'i tanımaz; masaüstü `kentos_processing::external::expressions()`'ı geçirir);
+(2) değerlendirme bekletmeyen bir sağlayıcıyla yapılır: önbellekte olan yanıt hemen, olmayan boş döner ve satırı arka
+plandaki işçiye sıraya koyar; (3) işçi farklı satırları eklentinin sürecine sorar (`Answers`'ın yolu), önbelleği doldurur
+ve pencereye haber verir; pencere etiketleri ve stilleri yeniden değerlendirir (ikinci geçişte hepsi önbellekten);
+(4) bir işlev hata verirse ya da süreç yanıt vermezse satırları boş kalır, günlüğe bir kez yazılır, yeniden sorulmaz
+(sonsuz yeniden çizim olmasın); (5) form hesabı aynı yoldan, form kaydedilirken değer önbellekte yoksa bekleyip sorar.
+
 **Süreç ve aracı:**
 - [ ] Her eklenti sürümü için ayrı süreç; IPC protokol sürümü, eklenti/sürüm/özet, istek/çalışma/oturum kimliği ve zaman
   aşımı taşır [PY-RUN-04]. Kod yürütme tembel başlar; tanımlar kod yüklenmeden gösterilir [PY-RUN-05]. Aracı bağlamı;
