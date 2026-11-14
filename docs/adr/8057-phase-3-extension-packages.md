@@ -123,7 +123,7 @@ yeterli.
   `sha256:1a6af9c39da91b1fd7552a85204bf0ffea6c2e650c64bb06f936302db3bd317a` (aynı Python hesabı eskisini de birebir
   verdi); katmanlarına formları bağlanınca `sha256:05585d1c96e53cb10e90ca819f9fe121db6c359830437ea1a8aaa2266b09a05f`; arama paneli
   v1'e geçip `search` komutunu alınca (§24) `sha256:a0bf2174415400e8cdd44b8942f11cad47c67ff15bb3aee39b9a00446f727a97`;
-  denetimin düzeltmesi `operation`'ını, doluluk aracı Durdur'u SDK'nın yoluyla alınca `sha256:6ef13bdd8590e97126909bd494480d1e3345183599b095dc03d6dd18fa05a9bb`.
+  denetimin düzeltmesi `operation`'ını, doluluk aracı Durdur'u SDK'nın yoluyla alınca `sha256:6ef13bdd8590e97126909bd494480d1e3345183599b095dc03d6dd18fa05a9bb`; arama nesnenin özniteliklerini okuyup satırlarına `uid`, okunur başlıklar ve durumun adını verince (§24 kabulü) `sha256:750a026ca3d9a75da06e660da0d068931c63ca9c151f6e6078b82cbf1ceb4054`.
 - `fixtures/extensions/v1/ornek-altlik/`: en küçük paket (D2): `manifest.json`, `LICENSE` ve iki servis veri kaynağı;
   Python yok. Paket 1 400 bayt; tek uyarı değişiklik notunun yokluğu.
 
@@ -1471,5 +1471,18 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **MEBİS (düzeltildi):** denetimin düzeltmesi `cad.entities.set`'e `operation: "attributes"` vermiyordu (düzeltme
   çalışmazdı); doluluk aracı durdurulunca sözlük yerine `ctx.cancelled()` döndürüyordu (`read_features` Durdur'u zaten
   `Stopped`la söyler). MEBİS'in `tr.ornek.kent-temel` bağımlılığı fikstürlerde yok: kurulunca bağımlılık bekler.
+- **Referans eklentinin gerçek pencere kabulü (MEBİS, kurum kataloğundan; `kek pack` + `kek index`, bağımlılığı
+  çıkarılmış kopya):** Eklentiler → Bulunabilir → Gözden geçir ve kur → Ortamı hazırla (Python 3.12, 6 paket).
+  Mezarlık BS sekmesinde Tekli mezar katmanlar kurulmadan kapalı (`when`); "MEBİS katmanlarını kur" → "Şema kuruldu:
+  1 grup, 1 değer listesi, 4 katman, 2 form, 1 ilişki"; Tekli mezar 1,10 × 2,20 m mezarı yerleştirdi (nesne 9 → 10);
+  Ada bazlı doluluk boş ada katmanını reddetti, Parsel sınırıyla `BELIRSIZ 1 0`; denetim "Bulgu yok (1,4 sn)"; Mezar
+  sorgulama "BOS" ile 1 mezar, satırına tıklanınca mezar seçilip yakınlaştı (Vitrin çizimi üzerinde). İki bulgu düzeltildi:
+  - **Arama hiçbir mezarı bulmuyordu:** öznitelikleri kayıttan okuyordu (`record.attrs` yok; nesnenin öznitelikleri
+    `record.entity.attrs`'ta), "0 mezar yeri bulundu" diyordu. Artık katman yoksa "önce MEBİS katmanlarını kur" der;
+    satırları `uid`, okunur başlık (Mezar no, Ada no, Durum) ve durumun adını taşır ("Boş": "bos" da "boş" da bulur).
+    MEBİS'i kendi klasöründen gerçek eklenti süreciyle koşan ilk Python testi (`ReferenceExtensionTest`) eski kodda
+    kırmızı.
+  - **İşlemler aracının şerit düğmesi kimliğini yazıyordu** ("occupancy-by-island"): manifest yalnız tanım dosyasını
+    adlandırır; ad artık tanımın `label`'ından ("Ada bazlı doluluk"), komut aramasında da.
 - **Kalan (ADIM 22):** nesne ve alan seçici; ağaç, kart, ilerleme bileşenleri; sol ve alt yerleşim (`side` şimdilik
   sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince).

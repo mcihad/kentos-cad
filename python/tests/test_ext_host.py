@@ -293,6 +293,19 @@ class Kentos:
         if method in ("summary", "layers"):
             result: Any = json.loads(getattr(self.session, method)())
             self.send({"type": "reply", "id": call["id"], "ok": True, "result": result})
+        elif method == "entities":
+            # A page of objects, as KentOS reads its open drawing for doc.entities.
+            bbox = params.get("bbox")
+            result = json.loads(
+                self.session.entities(
+                    params.get("layer"),
+                    params.get("kinds"),
+                    None if bbox is None else tuple(bbox),
+                    params.get("after"),
+                    params.get("limit"),
+                )
+            )
+            self.send({"type": "reply", "id": call["id"], "ok": True, "result": result})
         elif method == "run":
             # A write, as KentOS's broker runs it on its drawing (the map tool's add_feature).
             result = json.loads(
@@ -584,6 +597,42 @@ class ExtHostTest(unittest.TestCase):
         refused = self.kentos.hello(protocol=99)
         self.assertEqual(refused["type"], "refused")
         self.assertIn("protokol", refused["message"])
+
+
+class ReferenceExtensionTest(unittest.TestCase):
+    """MEBİS, the reference extension (fixtures/extensions/v1/mebis), run from its own folder as KentOS runs it."""
+
+    def setUp(self) -> None:
+        here = os.path.dirname(os.path.abspath(__file__))
+        self.package = os.path.normpath(os.path.join(here, "..", "..", "fixtures", "extensions", "v1", "mebis"))
+        self.pycache = tempfile.mkdtemp(prefix="kentos-ext-pyc-")
+        self.kentos = Kentos(self.package, os.path.join(self.pycache, "imported.txt"), self.pycache)
+
+    def tearDown(self) -> None:
+        self.kentos.close()
+        shutil.rmtree(self.pycache, ignore_errors=True)
+
+    def test_its_search_lists_the_graves_whose_number_or_status_has_the_query(self) -> None:
+        # Real window, 14 November 2026: the panel's search read the record instead of its object and found no grave.
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("search", "mebis.logic:search", params={"query": "BOS"})
+        self.assertTrue(done["ok"], done)
+        self.assertIn("MEBİS katmanlarını kur", done["result"]["message"], "no layer yet: said, not a traceback")
+        doc = self.kentos.drawing
+        cad.layers.edit(doc, operation="add", id="mezar_yeri", name="Mezar yeri", geometry="area")
+        ring = [(0.0, 0.0), (1.1, 0.0), (1.1, 2.2), (0.0, 2.2)]
+        empty = cad.polygon.create(doc, layer_id="mezar_yeri", pts=ring, attrs={"mezar_no": "M-12", "durum": "BOS"})
+        cad.polygon.create(doc, layer_id="mezar_yeri", pts=[(x + 2, y) for x, y in ring],
+                           attrs={"mezar_no": "M-13", "durum": "DOLU"})
+        for query in ("bos", "Boş"):
+            done, _ = self.kentos.invoke("search", "mebis.logic:search", params={"query": query})
+            self.assertTrue(done["ok"], done)
+            result = done["result"]
+            self.assertEqual(result["message"], "1 mezar yeri bulundu.", query)
+            # The row's uid shows the grave when clicked; its columns are the user's words.
+            self.assertEqual(result["rows"], [{"uid": empty.uid, "Mezar no": "M-12", "Ada no": "—", "Durum": "Boş"}])
+        done, _ = self.kentos.invoke("search", "mebis.logic:search", params={"query": ""})
+        self.assertEqual([r["Mezar no"] for r in done["result"]["rows"]], ["M-12", "M-13"])
 
 
 if __name__ == "__main__":

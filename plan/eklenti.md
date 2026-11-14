@@ -1103,7 +1103,10 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
   adımda kurar, katman kimliği şema adı (`cad.layers.edit` `id`), katmanın formu (`.kform`) aynı adımda bağlanır; kalan:
   alt türler, değer bileşimleri.* `schema.json` (katmanlar, alt türler/domain'ler, `1:N` ilişkiler) ve formlar host'un tek
   komutuyla projeye kurulur; biçim bu adımda ADR'yle sabitlenir, form planının şema/ilişki sözleşmesini yeniden yazmaz.
-- [ ] **Referans eklenti** (`fixtures/extensions/v1/mebis.kek`, §3): AI ajanı üretir; kendi şerit sekmesini, sağ dock
+- [ ] **Referans eklenti** — *gerçek pencerede uçtan uca kabul edildi (ADR 8057 §24, 14 Kasım): kurum kataloğundan
+  kurulum, ortam, şema, Tekli mezar, doluluk, denetim, arama paneli; kalan: ikinci İşlemler aracı, devre dışı
+  bırakınca iz kalmadığının gerçek pencerede sınanması, MCP'den aynı kimlik, ajanın üretmesi.*
+  (`fixtures/extensions/v1/mebis.kek`, §3): AI ajanı üretir; kendi şerit sekmesini, sağ dock
   panelini, iki İşlemler aracını, bir MapTool'u ve bir denetim kuralını sunar; şerit, Eklentiler, İşlemler, Denetim,
   komut arama ve MCP aynı kimliğe gider; devre dışı bırakılınca hepsi hayalet komut/geri çağırma bırakmadan kalkar
   [EKL-02 kabulü].

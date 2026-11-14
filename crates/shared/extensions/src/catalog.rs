@@ -340,7 +340,7 @@ mod tests {
         assert_eq!(mebis.requested_capabilities.len(), 10);
         assert_eq!(
             mebis.digest,
-            "sha256:6ef13bdd8590e97126909bd494480d1e3345183599b095dc03d6dd18fa05a9bb"
+            "sha256:750a026ca3d9a75da06e660da0d068931c63ca9c151f6e6078b82cbf1ceb4054"
         );
         assert_eq!(Catalog::read(&catalog.to_json()).unwrap(), catalog);
         // An icon changed in the share after indexing, to one the installer refuses, is not drawn.

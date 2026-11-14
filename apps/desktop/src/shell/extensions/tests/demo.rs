@@ -647,7 +647,8 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
 }
 
 /// docs/adr/8057 §24: an item's `when` is checked as the window is drawn: MEBİS's grave tool waits for its layers
-/// (`layerSchema: mezar_parsel`) and says so; once a layer of that id is in the drawing it can be pressed.
+/// (`layerSchema: mezar_parsel`) and says so; once a layer of that id is in the drawing it can be pressed. Its İşlemler
+/// tool's button reads the tool's own label.
 #[test]
 fn an_items_when_holds_it_back_until_its_layer_is_there() {
     let root = temp("kosul");
@@ -674,6 +675,14 @@ fn an_items_when_holds_it_back_until_its_layer_is_there() {
         .find(|i| i.label == "Tekli mezar")
         .expect("the grave tool")
         .clone();
+    // An İşlemler tool's button reads its descriptor's label, not its id (real window, 14 November 2026).
+    let labels: Vec<&str> = tab
+        .panels
+        .iter()
+        .flat_map(|p| &p.items)
+        .map(|i| i.label.as_str())
+        .collect();
+    assert!(labels.contains(&"Ada bazlı doluluk"), "{labels:?}");
     let why = gis.item_when_why(&grave).expect("held back");
     assert!(why.contains("mezar_parsel"), "{why}");
     assert!(gis.item_on(&grave).is_none());

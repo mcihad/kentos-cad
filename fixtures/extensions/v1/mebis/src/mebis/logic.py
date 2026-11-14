@@ -4,7 +4,10 @@ Kimlikler manifestteki yerel kimliklerdir; KentOS onları içe aktarmadan bilir.
 `kentos.ext` adları ve bağlam API'si o adımda kesinleşir.
 """
 
-from kentos import ext
+from kentos import cad, ext
+
+#: The grave statuses' words, as schema.json's mezar_durumu list gives them.
+DURUM = {"BOS": "Boş", "DOLU": "Dolu", "AYRILMIS": "Ayrılmış"}
 
 
 @ext.command("init-schema")
@@ -16,17 +19,25 @@ def init_schema(ctx: ext.CommandContext) -> ext.CommandResult:
 @ext.command("search")
 def search(ctx: ext.CommandContext) -> ext.CommandResult:
     """Arama panelinin düğmesi: mezar no ya da durumunda sorgu geçen mezar yerlerini listeler. Panelin değerleri
-    ctx.params'tadır (kimlikleriyle), satırlar panelin tablosunu doldurur."""
+    ctx.params'tadır (kimlikleriyle), satırlar panelin tablosunu doldurur; satırın uid'i tıklanınca mezarı gösterir."""
     if ctx.doc is None:
         return ctx.message("Açık çizim yok.")
+    try:
+        layer = ctx.doc.layer("mezar_yeri")
+    except cad.UnknownObject:
+        return ctx.message("Çizimde mezar yeri katmanı yok: önce “MEBİS katmanlarını kur”.")
     query = str(ctx.params.get("query") or "").strip().casefold()
     rows = []
-    for record in ctx.doc.entities(layer="mezar_yeri"):
-        attrs = dict(getattr(record, "attrs", None) or {})
-        if query and query not in " ".join(str(v) for v in attrs.values()).casefold():
+    for record in ctx.doc.entities(layer=layer.id):
+        # The object's attributes are on its entity; the record holds its persistent id and state stamp.
+        attrs = dict(record.entity.attrs or {})
+        status = attrs.get("durum", "")
+        words = DURUM.get(status, status)
+        # Its code or its word: "bos" and "boş" both find an empty grave.
+        if query and query not in " ".join([*map(str, attrs.values()), words]).casefold():
             continue
-        rows.append({"mezar_no": attrs.get("mezar_no", ""), "ada_no": attrs.get("ada_no", ""),
-                     "durum": attrs.get("durum", "")})
+        rows.append({"uid": record.uid, "Mezar no": attrs.get("mezar_no") or "—", "Ada no": attrs.get("ada_no") or "—",
+                     "Durum": words or "—"})
     return ctx.report(rows, title="Mezar sorgulama", message=f"{len(rows)} mezar yeri bulundu.")
 
 
