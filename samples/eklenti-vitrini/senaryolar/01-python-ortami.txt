@@ -1,0 +1,21 @@
+# Vitrin'in Python ortamı: önce kurulacak paketler gösterilir, onaylanınca hazırlanır (00-kurulum'dan sonra).
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 300 852   # komut satırı
+type EKLENTILER
+key Return
+wait 2500
+click 1197 142  # pencereyi büyüt
+wait 1000
+click 290 261   # Eklenti Vitrini
+wait 1000
+wheel 930 400 -3
+wait 1000
+click 535 349   # Ortamı hazırla
+wait 10000
+shot 01-paketler
+click 514 387   # Hazırla
+wait 45000
+shot 01-ortam-hazir

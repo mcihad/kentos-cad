@@ -2185,3 +2185,41 @@ fn a_tool_the_desktop_would_not_make_is_refused_before_kur() {
         .expect_err("refused");
     assert_eq!(refused[0].code, "tool_descriptor");
 }
+
+#[test]
+fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
+    // samples/eklenti-vitrini: the extension every demo uses (the owner, 14 November 2026). The review asks the
+    // desktop's own tool check (its TAKS tool passes), and its tab shows each of its Python contributions.
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/eklenti");
+    let files: std::collections::BTreeMap<String, Vec<u8>> =
+        kentos_extension_host::store::read_files(&root)
+            .unwrap()
+            .into_iter()
+            .filter(|(path, _)| !path.contains("__pycache__"))
+            .collect();
+    let bytes = kentos_extensions::pack(&files, &Limits::default())
+        .unwrap_or_else(|p| panic!("{p:#?}"))
+        .bytes;
+    let dir = temp("vitrin");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", bytes);
+    let tab = gis
+        .extension_tabs()
+        .find(|t| t.extension == "tr.ornek.vitrin")
+        .expect("Vitrin's tab");
+    let labels: Vec<String> = tab
+        .panels
+        .iter()
+        .flat_map(|p| p.items.iter().map(|i| i.label.clone()))
+        .collect();
+    assert_eq!(
+        labels,
+        [
+            "Katman özeti",
+            "Yapıları numarala",
+            "Hata örneği",
+            "TAKS",
+            "Yapı yerleştir"
+        ]
+    );
+}

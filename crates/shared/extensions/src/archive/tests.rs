@@ -10,9 +10,16 @@ use super::*;
 
 /// A fixture folder's files, by their paths inside it.
 fn folder(name: &str) -> BTreeMap<String, Vec<u8>> {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../fixtures/extensions/v1")
-        .join(name);
+    files_under(
+        &Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/extensions/v1")
+            .join(name),
+    )
+}
+
+/// Every file under `root` by its path from there.
+fn files_under(root: &Path) -> BTreeMap<String, Vec<u8>> {
+    let root = root.to_path_buf();
     let mut files = BTreeMap::new();
     let mut stack = vec![root.clone()];
     while let Some(dir) = stack.pop() {
@@ -32,6 +39,51 @@ fn folder(name: &str) -> BTreeMap<String, Vec<u8>> {
         }
     }
     files
+}
+
+/// The repository's demo extension (samples/eklenti-vitrini/eklenti, the owner's 14 November 2026: every demo with
+/// it) packs without a warning and passes the package's check; its contributions are all there. A change that breaks
+/// it breaks the demos, so it is held here.
+#[test]
+fn the_demo_extension_packs_and_passes_its_check() {
+    let files = files_under(
+        &Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../samples/eklenti-vitrini/eklenti"),
+    );
+    // A Python run of it leaves __pycache__ beside its code; the packer leaves it out.
+    let files: BTreeMap<String, Vec<u8>> = files
+        .into_iter()
+        .filter(|(p, _)| !p.contains("__pycache__"))
+        .collect();
+    let packed = pack(&files, &limits()).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(packed.warnings, Vec::new());
+    let opened = open(&packed.bytes, &limits());
+    assert!(
+        opened.inspection.is_valid(),
+        "{:#?}",
+        opened.inspection.problems
+    );
+    let manifest = opened.inspection.manifest.expect("its manifest");
+    assert_eq!(manifest.id, "tr.ornek.vitrin");
+    let e = &manifest.entrypoints;
+    assert_eq!(
+        (
+            e.commands.len(),
+            e.processing.len(),
+            e.expressions.len(),
+            e.map_tools.len()
+        ),
+        (3, 1, 1, 1),
+        "commands, an İşlemler tool, an expression function and a map tool"
+    );
+    let c = &manifest.contributions;
+    assert_eq!(
+        (
+            c.ribbon_tabs.len(),
+            c.context_menus.len(),
+            c.data_sources.len()
+        ),
+        (1, 1, 1)
+    );
 }
 
 fn limits() -> Limits {

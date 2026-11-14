@@ -1,0 +1,206 @@
+{
+  "format": "kentos.extension",
+  "schemaVersion": 1,
+  "id": "tr.ornek.vitrin",
+  "version": "1.0.0",
+  "name": "Eklenti Vitrini",
+  "icon": "assets/vitrin.svg",
+  "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
+  "description": "KentOS'un geliştirme ve gösterim örneği (samples/eklenti-vitrini): çizimi okuyan ve yazan komutlar, Durdur ve hata örnekleri, shapely ve NumPy kullanan bir İşlemler aracı (parsel TAKS), etiketlerde, stil kurallarında, katman süzgeçlerinde ve İşlemler'de kullanılan bir ifade işlevi (ada/parsel), haritada yapı yerleştiren bir harita aracı, sağ tık menüsü ve Python'suz bir altlık. Örnek çizim: samples/eklenti-vitrini/vitrin.kcad.",
+  "authors": [
+    "KentOS"
+  ],
+  "publisherId": "kentos",
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "changelogFile": "CHANGELOG.md",
+  "keywords": [
+    "örnek",
+    "vitrin",
+    "TAKS",
+    "harita aracı",
+    "ifade işlevi"
+  ],
+  "kind": "vertical",
+  "modules": [
+    "cbs"
+  ],
+  "runtimes": [
+    "desktop"
+  ],
+  "compatibility": {
+    "sdkProtocol": {
+      "min": 1,
+      "max": 1
+    },
+    "kentos": {
+      "min": "0.1.0"
+    },
+    "operatingSystems": [
+      "windows",
+      "macos",
+      "linux"
+    ]
+  },
+  "python": {
+    "projectFile": "pyproject.toml",
+    "lockFile": "uv.lock"
+  },
+  "entrypoints": {
+    "commands": [
+      {
+        "id": "katman-ozeti",
+        "title": "Katman özeti",
+        "handler": "vitrin.logic:katman_ozeti"
+      },
+      {
+        "id": "yapilari-numarala",
+        "title": "Yapıları numarala",
+        "handler": "vitrin.logic:yapilari_numarala"
+      },
+      {
+        "id": "hata-ornegi",
+        "title": "Hata örneği",
+        "handler": "vitrin.logic:hata_ornegi"
+      }
+    ],
+    "processing": [
+      {
+        "id": "taks",
+        "descriptor": "tools/taks.tool.json",
+        "handler": "vitrin.logic:taks"
+      }
+    ],
+    "expressions": [
+      {
+        "id": "ada-parsel",
+        "title": "Ada/parsel yazımı",
+        "handler": "vitrin.logic:ada_parsel"
+      }
+    ],
+    "mapTools": [
+      {
+        "id": "yapi-yerlestir",
+        "title": "Yapı yerleştir",
+        "capture": "orientedRectangle",
+        "templateWidthM": 10,
+        "templateLengthM": 12,
+        "snapLayers": [
+          "parsel"
+        ],
+        "handler": "vitrin.logic:yapi_yerlestir"
+      }
+    ]
+  },
+  "contributions": {
+    "ribbonTabs": [
+      {
+        "id": "vitrin",
+        "label": "Vitrin",
+        "module": "cbs",
+        "panels": [
+          {
+            "label": "Komutlar",
+            "items": [
+              {
+                "command": "katman-ozeti",
+                "size": "large",
+                "icon": "assets/vitrin.svg"
+              },
+              {
+                "command": "yapilari-numarala"
+              },
+              {
+                "command": "hata-ornegi"
+              }
+            ]
+          },
+          {
+            "label": "Analiz",
+            "items": [
+              {
+                "processing": "taks",
+                "label": "TAKS",
+                "size": "large",
+                "icon": "assets/taks.svg"
+              }
+            ]
+          },
+          {
+            "label": "Harita",
+            "items": [
+              {
+                "mapTool": "yapi-yerlestir",
+                "size": "large",
+                "icon": "assets/yapi.svg"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "contextMenus": [
+      {
+        "command": "katman-ozeti",
+        "target": "layer",
+        "when": {
+          "documentOpen": true
+        }
+      }
+    ],
+    "dataSources": [
+      {
+        "id": "ornek-altlik",
+        "title": "Örnek Belediyesi altlığı",
+        "kind": "xyz",
+        "url": "https://tiles.ornek.bel.tr/{z}/{x}/{y}.png"
+      }
+    ]
+  },
+  "requestedCapabilities": [
+    {
+      "id": "document.write",
+      "scope": "current-project",
+      "reason": "Katmanları okur, yapıları numaralar, haritada gösterilen yere yapı yazar."
+    },
+    {
+      "id": "processing.provider",
+      "scope": "plugin-owned",
+      "reason": "Parsel TAKS hesabını İşlemler'e ekler."
+    },
+    {
+      "id": "expression.provider",
+      "scope": "plugin-owned",
+      "reason": "İfadelere ada/parsel yazımını ekler."
+    },
+    {
+      "id": "mapTool",
+      "scope": "plugin-owned",
+      "reason": "Haritaya yapı yerleştirme aracı ekler."
+    },
+    {
+      "id": "ui.ribbonTab",
+      "scope": "plugin-owned",
+      "reason": "CBS'de Vitrin sekmesini açar."
+    },
+    {
+      "id": "ui.contextMenu",
+      "scope": "plugin-owned",
+      "reason": "Katmanın sağ tık menüsüne katman özetini ekler."
+    },
+    {
+      "id": "dataSource",
+      "scope": "plugin-owned",
+      "reason": "Örnek altlığı Kaynaklar'a ekler."
+    },
+    {
+      "id": "network",
+      "scope": "plugin-owned",
+      "reason": "Örnek altlığın karolarını okur.",
+      "hosts": [
+        "tiles.ornek.bel.tr"
+      ],
+      "sendsDataToAi": false
+    }
+  ]
+}

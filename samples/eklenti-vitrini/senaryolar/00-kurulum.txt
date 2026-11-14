@@ -1,0 +1,20 @@
+# Eklenti Vitrini'ni katalogdan kur (hazirla.sh HEDEF; KENTOS_EXTENSIONS_CATALOG=HEDEF/katalog, KENTOS_EXTENSIONS_DIR boş).
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 300 852   # komut satırı
+type EKLENTILER
+key Return
+wait 2500
+click 343 192   # Bulunabilir
+wait 1200
+click 290 261   # Eklenti Vitrini
+wait 1200
+shot 00-bulunabilir
+click 749 232   # Gözden geçir ve kur
+wait 2000
+shot 00-inceleme
+click 1041 829  # Kur
+wait 3000
+shot 00-kuruldu

@@ -1,0 +1,24 @@
+# Harita aracı (Yapı yerleştir): ortası ve uzun kenarın yönü gösterilir, eklenti 10 × 12 m yapıyı yazar; araç Esc'e
+# kadar sürer, her yerleştirme tek geri alma adımıdır.
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 345 75    # Yapı yerleştir
+wait 1000
+shot 02-istem
+click 620 300   # birinci yapının ortası
+click 720 260   # uzun kenarı doğu-kuzeydoğuya
+wait 5000
+shot 02-birinci
+click 1000 330  # ikinci yapının ortası
+click 1000 200  # uzun kenarı kuzeye
+wait 4000
+shot 02-ikinci
+key Escape
+wait 800
+shot 02-bitti
