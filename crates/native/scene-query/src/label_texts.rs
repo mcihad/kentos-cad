@@ -8,12 +8,44 @@
 //! first vertex's). The web's is `apps/web/src/model/labelTexts.ts`.
 
 use kentos_commands::{Entity, LabelStyle, LabelsMode, LayerNode, LineLabelMode, default_label};
-use kentos_expression::rows::{As, RowsInput, TEXT, evaluate_rows_on};
+use std::sync::{Arc, RwLock};
+
+use kentos_expression::external::{ExternalCalls, ExternalDef};
+use kentos_expression::rows::{As, RowsInput, TEXT, evaluate_rows_on_with};
 use kentos_expression::{Expr, Schema, Unit, compile_with};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::label_text::{fill_template, fill_template_with};
 
 use crate::layer_filter::{kind_label, vertex_count};
+
+/// What answers the extensions' functions in a label (`ext.<eklenti>.<işlev>`, docs/adr/8057 §8): the host's, which
+/// never waits (an answer it does not have yet is empty and asked in the background; the labels are worked out again
+/// when it comes).
+pub type LabelCalls = Arc<dyn ExternalCalls + Send + Sync>;
+
+static EXTERNALS: RwLock<Option<(Vec<ExternalDef>, LabelCalls)>> = RwLock::new(None);
+
+/// The extensions' functions a label may call and what answers them; replaced as extensions change.
+pub fn set_externals(defs: Vec<ExternalDef>, calls: LabelCalls) {
+    if let Ok(mut slot) = EXTERNALS.write() {
+        *slot = Some((defs, calls));
+    }
+}
+
+fn external_defs() -> Vec<ExternalDef> {
+    EXTERNALS
+        .read()
+        .ok()
+        .and_then(|e| e.as_ref().map(|(d, _)| d.clone()))
+        .unwrap_or_default()
+}
+
+fn external_calls() -> Option<LabelCalls> {
+    EXTERNALS
+        .read()
+        .ok()
+        .and_then(|e| e.as_ref().map(|(_, c)| Arc::clone(c)))
+}
 
 /// An expression for a label (its text or its class's condition), compiled
 /// in `unit` (a label is a reading: the project's drawing unit,
@@ -22,6 +54,7 @@ use crate::layer_filter::{kind_label, vertex_count};
 pub fn compile_label_expression(source: &str, unit: Unit) -> Result<Expr, String> {
     let schema = Schema {
         unit,
+        externals: external_defs(),
         ..Schema::default()
     };
     let e = compile_with(source, &schema).map_err(|e| e.text())?;
@@ -187,7 +220,14 @@ pub fn values<'s>(
         measures: &[],
         scale: f64::NAN,
     };
-    let Ok(column) = evaluate_rows_on(e, &input, want, shape) else {
+    let calls = external_calls();
+    let Ok(column) = evaluate_rows_on_with(
+        e,
+        &input,
+        want,
+        shape,
+        calls.as_deref().map(|c| c as &dyn ExternalCalls),
+    ) else {
         return vec![None; list.len()];
     };
     let units: Vec<u16> = column.texts.encode_utf16().collect();
