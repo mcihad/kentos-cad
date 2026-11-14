@@ -24,7 +24,7 @@ SCHEMA = {
          "values": [{"code": "BOS", "label": "Boş"}, {"code": "DOLU", "label": "Dolu"}]},
     ],
     "layers": [
-        {"name": "mezar_yeri", "title": "Mezar yeri", "geometry": "area",
+        {"name": "mezar_yeri", "title": "Mezar yeri", "geometry": "area", "form": "forms/mezar_yeri.kform",
          "fields": [{"name": "mezar_no", "kind": "text", "required": True, "alias": "Mezar no"},
                     {"name": "durum", "kind": "text", "domain": "mezar_durumu"}]},
         {"name": "defin_kaydi", "title": "Defin kaydı",
@@ -41,10 +41,22 @@ def context(doc: object, source: str | None) -> ext.CommandContext:
     return ext.CommandContext(ext._Link(lambda _m: None, 1, threading.Event()), doc, source=source)
 
 
+FORM = {
+    "format": "kentos.form-package",
+    "version": 1,
+    "name": "Mezar yeri",
+    "body": {"revision": 1, "items": [{"type": "field", "id": "mezar-no", "field": "mezar_no", "required": True}]},
+    "fields": [{"name": "mezar_no", "kind": "text"}],
+}
+
+
 def package(schema: dict) -> tempfile.TemporaryDirectory:
     folder = tempfile.TemporaryDirectory()
     with open(os.path.join(folder.name, "schema.json"), "w", encoding="utf-8") as f:
         json.dump(schema, f, ensure_ascii=False)
+    os.makedirs(os.path.join(folder.name, "forms"))
+    with open(os.path.join(folder.name, "forms", "mezar_yeri.kform"), "w", encoding="utf-8") as f:
+        json.dump(FORM, f, ensure_ascii=False)
     return folder
 
 
@@ -53,7 +65,9 @@ class LayerSchemaTests(unittest.TestCase):
         doc = cad.Document.new("Mezarlık", srid=5256)
         with package(SCHEMA) as folder:
             said = context(doc, folder).apply_declarative_schema("schema.json")
-        self.assertEqual(said.message, "Şema kuruldu: 1 grup, 1 değer listesi, 2 katman, 1 ilişki.")
+        self.assertEqual(said.message, "Şema kuruldu: 1 grup, 1 değer listesi, 2 katman, 1 form, 1 ilişki.")
+        forms = cad.schema.describe(doc, kinds=["forms"]).items
+        self.assertEqual([(f.id, f.name, f.layer) for f in forms], [("mezar_yeri", "Mezar yeri", "mezar_yeri")])
         yeri = doc.layer("mezar_yeri")
         self.assertEqual(yeri.name, "Mezar yeri")
         self.assertEqual([f.name for f in yeri.fields], ["mezar_no", "durum"])
@@ -77,7 +91,9 @@ class LayerSchemaTests(unittest.TestCase):
         with package(later) as folder:
             grown = context(doc, folder).apply_declarative_schema()
         self.assertEqual(grown.message, "Şema kuruldu: 1 katman.")
-        self.assertEqual(grown.rows[-2]["Sonuç"], "vardı; 1 alan eklendi")
+        defin = next(r for r in grown.rows if r["Tür"] == "Katman" and r["Kimlik"] == "defin_kaydi")
+        self.assertEqual(defin["Sonuç"], "vardı; 1 alan eklendi")
+        self.assertEqual([r["Sonuç"] for r in grown.rows if r["Tür"] == "Form"], ["vardı"], "the form is kept")
         self.assertEqual([f.name for f in doc.layer("defin_kaydi").fields],
                          ["mezar_id", "defin_tarihi", "not", "merhum_adi"])
 

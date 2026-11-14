@@ -37,7 +37,7 @@ const TOP: [&str; 6] = [
     "layers",
     "relations",
 ];
-const LAYER: [&str; 4] = ["name", "title", "geometry", "fields"];
+const LAYER: [&str; 5] = ["name", "title", "geometry", "fields", "form"];
 const FIELD: [&str; 12] = [
     "name",
     "kind",
@@ -176,9 +176,10 @@ impl Check<'_> {
     }
 }
 
-/// What is wrong with `value`, `schema.json` read as JSON (`file` its path in the package): problems, and warnings
-/// (a relation naming a layer the schema does not make, which the project must then have).
-pub fn check(file: &str, value: &Value) -> (Vec<Problem>, Vec<Problem>) {
+/// What is wrong with `value`, `schema.json` read as JSON (`file` its path in the package; `forms` the form packages
+/// the manifest declares, `entrypoints.forms`' definitions): problems, and warnings (a relation naming a layer the
+/// schema does not make, which the project must then have).
+pub fn check(file: &str, value: &Value, forms: &[&str]) -> (Vec<Problem>, Vec<Problem>) {
     let mut c = Check {
         file,
         problems: Vec::new(),
@@ -324,6 +325,20 @@ pub fn check(file: &str, value: &Value) -> (Vec<Problem>, Vec<Problem>) {
             }
         }
         c.optional_text(&at, l, "title");
+        // The layer's form: one the manifest declares, so the inspector reads it as a form package.
+        if let Some(form) = l.get("form") {
+            match form.as_str() {
+                Some(path) if forms.contains(&path) => {}
+                Some(path) => c.add(
+                    format!("{at}/form"),
+                    format!(
+                        "“{path}” manifestin entrypoints.forms listesinde bildirilmiş bir form değil: formu orada \
+                         bildirin (dosyası paket incelemesinde denetlenir)."
+                    ),
+                ),
+                None => c.add(format!("{at}/form"), "Form, paketteki .kform dosyasının yolu olmalı.".to_owned()),
+            }
+        }
         if let Some(geometry) = l.get("geometry")
             && !geometry.as_str().is_some_and(|g| GEOMETRIES.contains(&g))
         {
@@ -462,9 +477,11 @@ mod tests {
         serde_json::from_str(&std::fs::read_to_string(path).expect("the fixture")).expect("JSON")
     }
 
+    const FORMS: [&str; 2] = ["forms/mezar_yeri.kform", "forms/defin_kaydi.kform"];
+
     #[test]
     fn the_reference_schema_passes() {
-        let (problems, warnings) = check("schema.json", &mebis());
+        let (problems, warnings) = check("schema.json", &mebis(), &FORMS);
         assert!(problems.is_empty(), "{problems:#?}");
         assert!(warnings.is_empty(), "{warnings:#?}");
     }
@@ -478,8 +495,9 @@ mod tests {
         s["layers"][3]["name"] = json!("Defin Kaydi");
         s["relations"][0]["field"] = json!("mezar_kimligi");
         s["domains"][0]["values"][1]["code"] = json!("BOS");
+        s["layers"][1]["form"] = json!("forms/yok.kform");
         s["renk"] = json!("mavi");
-        let (problems, _) = check("schema.json", &s);
+        let (problems, _) = check("schema.json", &s, &FORMS);
         let at: Vec<&str> = problems.iter().filter_map(|p| p.at.as_deref()).collect();
         assert_eq!(
             at,
@@ -487,6 +505,7 @@ mod tests {
                 "/renk",
                 "/domains/0/values/1/code",
                 "/layers/0/geometry",
+                "/layers/1/form",
                 "/layers/1/fields/0/kind",
                 "/layers/2/fields/2/domain",
                 "/layers/3/name",
@@ -494,13 +513,13 @@ mod tests {
             "{problems:#?}"
         );
         // The relation's child is now a layer the schema does not make: a warning, and its field not checked.
-        let (_, warnings) = check("schema.json", &s);
+        let (_, warnings) = check("schema.json", &s, &FORMS);
         assert_eq!(
             warnings.iter().map(|w| w.code).collect::<Vec<_>>(),
             ["layer_schema_outside"]
         );
         let newer = json!({"version": 2, "layers": [{"name": "a"}]});
-        let (problems, _) = check("schema.json", &newer);
+        let (problems, _) = check("schema.json", &newer, &[]);
         assert!(
             problems[0].message.contains("daha yeni bir KentOS"),
             "{problems:#?}"

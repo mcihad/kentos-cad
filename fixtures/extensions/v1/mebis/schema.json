@@ -11,13 +11,13 @@
       "fields": [ { "name": "ada_no", "kind": "text", "required": true } ] },
     { "name": "mezar_parsel", "title": "Mezar parseli", "geometry": "area",
       "fields": [ { "name": "ada_no", "kind": "text" }, { "name": "parsel_no", "kind": "text" } ] },
-    { "name": "mezar_yeri", "title": "Mezar yeri", "geometry": "area",
+    { "name": "mezar_yeri", "title": "Mezar yeri", "geometry": "area", "form": "forms/mezar_yeri.kform",
       "fields": [
         { "name": "mezar_no", "kind": "text", "required": true },
         { "name": "ada_no", "kind": "text" },
         { "name": "durum", "kind": "text", "domain": "mezar_durumu" }
       ] },
-    { "name": "defin_kaydi", "title": "Defin kaydı",
+    { "name": "defin_kaydi", "title": "Defin kaydı", "form": "forms/defin_kaydi.kform",
       "fields": [
         { "name": "mezar_id", "kind": "text", "required": true },
         { "name": "merhum_adi", "kind": "text" },

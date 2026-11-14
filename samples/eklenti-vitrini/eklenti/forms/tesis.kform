@@ -1,0 +1,76 @@
+{
+  "format": "kentos.form-package",
+  "version": 1,
+  "name": "Örnek tesis",
+  "body": {
+    "revision": 1,
+    "items": [
+      {
+        "type": "field",
+        "id": "ad",
+        "field": "ad",
+        "required": true
+      },
+      {
+        "type": "field",
+        "id": "tur",
+        "field": "tur"
+      },
+      {
+        "type": "field",
+        "id": "kapasite",
+        "field": "kapasite"
+      }
+    ]
+  },
+  "fields": [
+    {
+      "name": "ad",
+      "kind": "text"
+    },
+    {
+      "name": "tur",
+      "kind": "text",
+      "values": [
+        {
+          "code": "OKUL",
+          "label": "Okul"
+        },
+        {
+          "code": "PARK",
+          "label": "Park"
+        },
+        {
+          "code": "SAGLIK",
+          "label": "Sağlık ocağı"
+        }
+      ],
+      "domain": "tesis_turu"
+    },
+    {
+      "name": "kapasite",
+      "kind": "integer"
+    }
+  ],
+  "domains": [
+    {
+      "id": "tesis_turu",
+      "name": "Tesis türü",
+      "kind": "text",
+      "values": [
+        {
+          "code": "OKUL",
+          "label": "Okul"
+        },
+        {
+          "code": "PARK",
+          "label": "Park"
+        },
+        {
+          "code": "SAGLIK",
+          "label": "Sağlık ocağı"
+        }
+      ]
+    }
+  ]
+}

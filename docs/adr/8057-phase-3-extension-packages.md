@@ -121,7 +121,7 @@ yeterli.
   `sha256:ec9730da3c4841b7ec3b5ff82103e90db52766eb7d3e3c3da47ebec40ac46501` (Python'da ayrıca hesaplandı). 14 Kasım
   (§23): şema `kentos.layerSchema` v1'in sözcüklerine geçti (`area`, ilişkinin `id`/`parent`/`child`'ı, grup); özet
   `sha256:1a6af9c39da91b1fd7552a85204bf0ffea6c2e650c64bb06f936302db3bd317a` (aynı Python hesabı eskisini de birebir
-  verdi).
+  verdi); katmanlarına formları bağlanınca `sha256:05585d1c96e53cb10e90ca819f9fe121db6c359830437ea1a8aaa2266b09a05f`.
 - `fixtures/extensions/v1/ornek-altlik/`: en küçük paket (D2): `manifest.json`, `LICENSE` ve iki servis veri kaynağı;
   Python yok. Paket 1 400 bayt; tek uyarı değişiklik notunun yokluğu.
 
@@ -1415,5 +1415,10 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   Kullanıcı gibi: kurum kataloğundan kuruldu, ortam hazırlandı ("kurulacak paket yok"), sekmede Katmanları kur grubu
   ve katmanı kurdu, Mezar yeri çiz dikdörtgeni yazdı (nesne 9 → 10), Adı boş mezarlar 1,4 sn'de 1 uyarı verdi, Göster
   seçip yakınlaştırdı, "Meçhul olarak işaretle" düzeltmesinden sonra yeniden denetim "bulgu yok" dedi.
-- **Kalan:** formlar (`forms/*.kform`) şemayla birlikte kurulmuyor; alt türler ve değer bileşimleri biçimde yok;
-  geometrisiz tablo katmanı KentOS'ta henüz yok (kayıtlar `mixed` katmana yazılır).
+- **Formlar şemayla birlikte:** katman isteğe bağlı `form` alır (paketteki `.kform`; manifestin `entrypoints.forms`'unda
+  bildirilmiş olmalı ki inceleme onu form paketi olarak okusun, yoksa `layer_schema`). Kurulum formu
+  `cad.forms.import_` ile katmana katmanın adıyla (form kimliği) ve eksik alanları ekleyerek bağlar; tekrarda "vardı".
+  MEBİS'in iki katmanı formlarına bağlandı (özet yeniden hesaplandı), Vitrin 1.0.6 Örnek tesis formunu taşır.
+  Gerçek pencere: "Şema kuruldu: 1 grup, 1 değer listesi, 2 katman, 1 form, 1 ilişki."
+- **Kalan:** alt türler ve değer bileşimleri biçimde yok; geometrisiz tablo katmanı KentOS'ta henüz yok (kayıtlar
+  `mixed` katmana yazılır).

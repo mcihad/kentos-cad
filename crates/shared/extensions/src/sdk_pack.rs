@@ -55,7 +55,8 @@ Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "s
 - `layers`: her biri `name` (çizimdeki kimliği: küçük harf, rakam, `_`; harita aracı ve denetim katmanı bununla bulur:
   `ctx.add_feature("mezar_yeri", …)`, `facts.features("mezar_yeri")`), `title`, `geometry` (point, line, area,
   annotation, mixed; verilmezse her tür), `fields`: `{name, kind, alias, required, default, length, min, max, domain}`
-  (kind: text, integer, decimal, date, boolean, datetime, time, bigint, instant, uuid, json, binary).
+  (kind: text, integer, decimal, date, boolean, datetime, time, bigint, instant, uuid, json, binary); isteğe bağlı `form`:
+  paketteki `.kform` (manifestin `entrypoints.forms`'unda bildirilir), kurulumda katmana katmanın adıyla bağlanır.
 - `group` (isteğe bağlı): `{id, name}`, katmanlar altına girer. `domains`: `{id, name, kind, values: [{code, label}]}` ya
   da `min`/`max`. `relations`: `{id, name, parent, child, field, onDelete}`: çocuğun alanı ebeveynin kalıcı kimliğini
   tutar (onDelete: keep, unlink, cascade, restrict).

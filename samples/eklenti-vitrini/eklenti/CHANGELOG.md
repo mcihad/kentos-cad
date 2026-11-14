@@ -1,5 +1,9 @@
 # Değişiklikler
 
+## 1.0.6 — 14 Kasım 2026
+
+- Örnek tesis formu (`forms/tesis.kform`): "Katmanları kur" formu Örnek tesis katmanına aynı adımda bağlar.
+
 ## 1.0.5 — 14 Kasım 2026
 
 - Katman şeması (`schema.json`): "Katmanları kur" Vitrin grubunu, Örnek tesis ve Bakım kaydı katmanlarını, Tesis türü

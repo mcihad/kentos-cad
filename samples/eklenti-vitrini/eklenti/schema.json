@@ -31,6 +31,7 @@
       "name": "vitrin_tesis",
       "title": "Örnek tesis",
       "geometry": "point",
+      "form": "forms/tesis.kform",
       "fields": [
         {
           "name": "ad",

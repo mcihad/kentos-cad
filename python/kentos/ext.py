@@ -255,7 +255,7 @@ class CommandContext:
                 "Açık çizim yok ya da eklentiye çizimi okuma ve yazma izni verilmedi: katman şeması kurulamaz."
             )
         schema = self._package_json(path)
-        rows = _install_schema(self.doc, schema, path)
+        rows = _install_schema(self.doc, schema, path, self._package_json)
         added = sum(1 for r in rows if r["Sonuç"] != "vardı")
         if not added:
             return CommandResult(title="Katman şeması", message="Şema zaten kurulu: değişiklik yok.", rows=rows)
@@ -264,7 +264,8 @@ class CommandContext:
             if r["Sonuç"] != "vardı":
                 counts[r["Tür"]] = counts.get(r["Tür"], 0) + 1
         # Written out, not lowered: Python's lower() makes “İlişki” “i̇lişki” (a dotted i and a combining dot).
-        words = {"Grup": "grup", "Değer listesi": "değer listesi", "Katman": "katman", "İlişki": "ilişki"}
+        words = {"Grup": "grup", "Değer listesi": "değer listesi", "Katman": "katman", "Form": "form",
+                 "İlişki": "ilişki"}
         said = ", ".join(f"{n} {words.get(kind, kind)}" for kind, n in counts.items())
         return CommandResult(title="Katman şeması", message=f"Şema kuruldu: {said}.", rows=rows)
 
@@ -311,9 +312,11 @@ def _schema_ids(doc: Any, kind: str) -> set[str]:
             return ids
 
 
-def _install_schema(doc: Any, schema: Any, path: str) -> list[dict[str, Any]]:
-    """What ``apply_declarative_schema`` writes: the group, the value lists, the layers with their fields, the relations,
-    in that order (a field links a list, a relation its layers); what is there is kept. A row each."""
+def _install_schema(doc: Any, schema: Any, path: str, read: Callable[[str], Any]) -> list[dict[str, Any]]:
+    """What ``apply_declarative_schema`` writes: the group, the value lists, the layers with their fields, their forms
+    (a package's ``.kform`` read by ``read``, bound to the layer under its name as the form's id), the relations, in
+    that order (a field links a list, a form a layer's fields, a relation its layers); what is there is kept. A row
+    each."""
     from kentos import cad
 
     if not isinstance(schema, dict) or not isinstance(schema.get("layers"), list) or not schema["layers"]:
@@ -373,6 +376,17 @@ def _install_schema(doc: Any, schema: Any, path: str) -> list[dict[str, Any]]:
             else:
                 result = "vardı"
         rows.append({"Tür": "Katman", "Kimlik": lid, "Ad": title, "Sonuç": result})
+    forms = [layer for layer in schema["layers"] if layer.get("form")]
+    if forms:
+        have = _schema_ids(doc, "forms")
+        for layer in forms:
+            lid = str(layer["name"])
+            package = read(str(layer["form"]))
+            made = lid not in have
+            if made:
+                cad.forms.import_(doc, layer=lid, package=cad.FormPackage.from_json(package), id=lid, add_fields=True)
+            rows.append({"Tür": "Form", "Kimlik": lid, "Ad": str(package.get("name") or lid),
+                         "Sonuç": "eklendi" if made else "vardı"})
     if schema.get("relations"):
         have = _schema_ids(doc, "relations")
         for r in schema["relations"]:

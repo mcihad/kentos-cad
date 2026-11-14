@@ -609,7 +609,13 @@ fn check_references(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>, out:
                     .push(problem("reference_json", format!("Dosya {why}."))),
                 // The layer schema's own rules (docs/adr/8057 §23), each problem where it is.
                 Ok(value) => {
-                    let (problems, warnings) = crate::layer_schema::check(path, &value);
+                    let forms: Vec<&str> = manifest
+                        .entrypoints
+                        .forms
+                        .iter()
+                        .map(|f| f.definition.as_str())
+                        .collect();
+                    let (problems, warnings) = crate::layer_schema::check(path, &value, &forms);
                     out.problems.extend(problems);
                     out.warnings.extend(warnings);
                 }
