@@ -110,6 +110,9 @@ pub struct Spatial {
     label_keys: std::collections::HashMap<String, String>,
     /// The extensions' answers generation the labels were last worked out at (label_texts::answers_generation).
     answers_seen: u64,
+    /// How many times the labels' texts were worked out: what the desktop's label drawing is keyed by, so that texts
+    /// that change without the drawing (an extension's answers) are drawn (cad/labels: its key had no such count).
+    texts_version: u64,
     /// Nokta adları off (`graphics.pointNames` false) and Nokta kodları on (docs/adr/1540): what a point's label
     /// says. Both default to the drawing's own labels (names, no codes).
     hide_point_names: bool,
@@ -807,7 +810,13 @@ impl Spatial {
     /// (its classes' texts, conditions and templates; its name, for
     /// `$katman`) whole, then those of the objects just put (`all`: every
     /// object, after a reload); the objects' pins (a put object lost its own).
+    /// How many times the labels' texts were worked out (every `sync_labels`).
+    pub fn texts_version(&self) -> u64 {
+        self.texts_version
+    }
+
     fn sync_labels(&mut self, doc: &Document, put: &[&Entity], all: bool) {
+        self.texts_version = self.texts_version.wrapping_add(1);
         let leaves: Vec<&LayerNode> = doc
             .layers()
             .leaves()

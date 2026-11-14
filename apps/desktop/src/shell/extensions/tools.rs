@@ -92,6 +92,8 @@ pub(crate) struct ExtTools {
     notes: Arc<Mutex<Vec<Note>>>,
     /// The labels' answers to the extensions' functions: never waiting (drawing slice).
     pub(crate) labels: Arc<LabelAnswers>,
+    /// The functions offered and Python's state the labels were last worked out with.
+    label_readiness: String,
     /// The descriptors' refusals already written to a log this session.
     said: BTreeSet<String>,
 }
@@ -125,6 +127,7 @@ impl Default for ExtTools {
             pool,
             notes,
             labels,
+            label_readiness: String::new(),
             said: BTreeSet::new(),
         }
     }
@@ -264,17 +267,21 @@ impl LabelAnswers {
                     let mut names: Vec<String> = batch.iter().map(|(n, _)| n.clone()).collect();
                     names.sort();
                     names.dedup();
+                    let mut kept = 0usize;
                     for name in names {
                         let rows: Vec<Vec<kentos_expression::external::Arg>> = batch
                             .iter()
                             .filter(|(n, _)| *n == name)
                             .map(|(_, r)| r.clone())
                             .collect();
-                        use kentos_expression::external::ExternalCalls;
-                        let _ = me.answers.call(&name, &rows);
+                        kept += me.answers.answer(&name, &rows).1;
                     }
-                    kentos_native_application::label_texts::answers_changed();
-                    me.fresh.store(true, Ordering::Relaxed);
+                    // Only answers that were kept change a label: rows not kept (not started yet) are asked again when
+                    // the extension is ready, never in a loop.
+                    if kept > 0 {
+                        kentos_native_application::label_texts::answers_changed();
+                        me.fresh.store(true, Ordering::Relaxed);
+                    }
                 }
             });
     }
@@ -290,6 +297,14 @@ impl kentos_expression::external::ExternalCalls for LabelCalls {
         rows: &[Vec<kentos_expression::external::Arg>],
     ) -> Vec<kentos_expression::external::Arg> {
         let kept = self.0.answers.kept(name, rows);
+        // Not askable yet (its extension off, no Python): empty, not queued; the labels are worked out again when it
+        // becomes ready (ext_tools_changed).
+        if !self.0.answers.ready_for(name) {
+            return kept
+                .into_iter()
+                .map(|a| a.unwrap_or(kentos_expression::external::Arg::Null))
+                .collect();
+        }
         let missing: Vec<(String, Vec<kentos_expression::external::Arg>)> = kept
             .iter()
             .zip(rows)
@@ -334,6 +349,26 @@ impl kentos_expression::external::ExternalCalls for Answers {
         name: &str,
         rows: &[Vec<kentos_expression::external::Arg>],
     ) -> Vec<kentos_expression::external::Arg> {
+        self.answer(name, rows).0
+    }
+}
+
+impl Answers {
+    /// Whether `name` can be asked now: its extension installed and on, Python ready.
+    fn ready_for(&self, name: &str) -> bool {
+        self.shared
+            .read()
+            .is_ok_and(|s| s.python.is_some() && s.expressions.contains_key(name))
+    }
+
+    /// `name`'s answers for `rows`, and how many answers were newly kept. An answer is kept only when the extension's
+    /// process answered (a failed row too, so it is not asked again and again); without a ready Python or plan, or
+    /// when the process did not start, nothing is kept: the rows are asked again once it is ready.
+    fn answer(
+        &self,
+        name: &str,
+        rows: &[Vec<kentos_expression::external::Arg>],
+    ) -> (Vec<kentos_expression::external::Arg>, usize) {
         use kentos_expression::external::Arg;
         let keys: Vec<String> = rows
             .iter()
@@ -359,11 +394,14 @@ impl kentos_expression::external::ExternalCalls for Answers {
                 missing.push(i);
             }
         }
+        let mut newly = 0usize;
         if !missing.is_empty() {
             let (plan, python) = match self.shared.read() {
                 Ok(shared) => (shared.expressions.get(name).cloned(), shared.python.clone()),
                 Err(_) => (None, None),
             };
+            // Whether the process answered (only then are the answers kept).
+            let mut kept_now = false;
             let got: Vec<Arg> = match (plan, python) {
                 (Some(plan), Some(python)) => {
                     let invoke = json!({
@@ -383,6 +421,7 @@ impl kentos_expression::external::ExternalCalls for Answers {
                         &mut |_| {},
                     ) {
                         Ended::Answered(done) if done["ok"] == true => {
+                            kept_now = true;
                             let result = &done["result"];
                             if let Some(failed) = result["failed"].as_u64() {
                                 self.tell(
@@ -401,6 +440,7 @@ impl kentos_expression::external::ExternalCalls for Answers {
                                 .unwrap_or_default()
                         }
                         Ended::Answered(done) => {
+                            kept_now = true;
                             let words = done["message"].as_str().unwrap_or_default().to_owned();
                             self.tell(
                                 &plan,
@@ -410,7 +450,19 @@ impl kentos_expression::external::ExternalCalls for Answers {
                             );
                             Vec::new()
                         }
+                        // Ended or overdue: kept empty, so a hanging function is not asked again and again; not
+                        // started (no environment yet): not kept, asked again once it is ready.
+                        Ended::NotStarted(why) => {
+                            self.tell(
+                                &plan,
+                                name,
+                                "expression_failed",
+                                format!("{name}() çalıştırılamadı: {why}"),
+                            );
+                            Vec::new()
+                        }
                         other => {
+                            kept_now = true;
                             self.tell(
                                 &plan,
                                 name,
@@ -436,17 +488,19 @@ impl kentos_expression::external::ExternalCalls for Answers {
                     answers[i] = Some(asked[j].1.clone());
                 }
             }
-            if let Ok(mut cache) = self.cache.lock() {
+            if kept_now && let Ok(mut cache) = self.cache.lock() {
                 if cache.len() + asked.len() > CACHED_ANSWERS {
                     cache.clear();
                 }
+                newly = asked.len();
                 cache.extend(asked);
             }
         }
-        answers
+        let answers = answers
             .into_iter()
             .map(|a| a.unwrap_or(Arg::Null))
-            .collect()
+            .collect();
+        (answers, newly)
     }
 }
 
@@ -900,7 +954,17 @@ impl App {
                 );
             }
         }
-        // Labels know them too, answered without waiting (drawing slice).
+        // Labels know them too, answered without waiting (drawing slice); a label compiled before a function was
+        // offered, or asked before Python was ready, is worked out again.
+        let readiness = format!(
+            "{:?}|{}",
+            defs.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
+            self.python_setup.why_not()
+        );
+        if self.extensions.tools.label_readiness != readiness {
+            self.extensions.tools.label_readiness = readiness;
+            kentos_native_application::label_texts::answers_changed();
+        }
         kentos_native_application::label_texts::set_externals(
             defs.clone(),
             Arc::new(LabelCalls(Arc::clone(&self.extensions.tools.labels))),

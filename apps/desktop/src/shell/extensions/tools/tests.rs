@@ -336,15 +336,14 @@ fn an_extensions_expression_function_is_known_to_islemler_by_name() {
 }
 
 #[test]
-fn a_labels_call_never_waits_and_its_rows_are_asked_in_the_background() {
+fn a_labels_call_never_waits_and_an_answer_not_given_is_not_kept() {
     use kentos_expression::external::{Arg, ExternalCalls};
-    let gis = with_imar("etiket", imar(|_| {}));
+    let mut gis = with_imar("etiket", imar(|_| {}));
     let labels = std::sync::Arc::clone(&gis.extensions.tools.labels);
-    let before = kentos_native_application::label_texts::answers_generation();
     let calls = super::LabelCalls(std::sync::Arc::clone(&labels));
     let row = vec![Arg::Text("101".into()), Arg::Text("1".into())];
     let started = std::time::Instant::now();
-    // Its environment's Python is a stand-in (/bin/sh): the answer is empty, and kept.
+    // Its environment's Python is a stand-in (/bin/sh) that never says it is ready: asked in the background.
     let first = calls.call("ext.tr.ornek.imar-denetim.ada-parsel", &[row.clone()]);
     assert!(
         started.elapsed() < std::time::Duration::from_millis(200),
@@ -352,13 +351,20 @@ fn a_labels_call_never_waits_and_its_rows_are_asked_in_the_background() {
     );
     assert_eq!(first, [Arg::Null]);
     let until = std::time::Instant::now() + std::time::Duration::from_secs(30);
-    while labels.waiting() && !labels.take_fresh() && std::time::Instant::now() < until {
+    while labels.waiting() && std::time::Instant::now() < until {
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
-    assert!(kentos_native_application::label_texts::answers_generation() > before);
-    // Asked once: the row is kept (empty) and not asked again.
-    let again = calls.call("ext.tr.ornek.imar-denetim.ada-parsel", &[row]);
-    assert_eq!(again, [Arg::Null]);
-    std::thread::sleep(std::time::Duration::from_millis(50));
-    assert!(!labels.waiting() || labels.take_fresh(), "no second ask");
+    // The process did not start: nothing kept (asked again once ready), no label worked out again in a loop, and the
+    // failure said once in the extension's log.
+    assert!(!labels.take_fresh(), "nothing kept, no redraw");
+    gis.ext_tool_notes();
+    let said = gis
+        .extensions
+        .registry
+        .as_ref()
+        .unwrap()
+        .log_of(IMAR)
+        .iter()
+        .any(|r| r.code == "expression_failed" && r.message.contains("çalıştırılamadı"));
+    assert!(said, "said in the log");
 }
