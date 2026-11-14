@@ -66,6 +66,7 @@ __all__ = [
     "NotAvailable",
     "ProcessingContext",
     "SemanticFix",
+    "Shape",
     "Stopped",
     "audit",
     "command",
@@ -456,8 +457,75 @@ class ProcessingContext(CommandContext):
         self._select = [f.uid if isinstance(f, Feature) else str(f) for f in features]
 
 
+class Shape:
+    """A shape the user drew with an extension's map tool (plan/eklenti.md ADIM 19), as GeoJSON (``__geo_interface__``,
+    RFC 7946): a ``Point``, a ``LineString`` or a ``Polygon`` (a rectangle's four corners; a circle's ring of chords,
+    with ``circle`` its centre and radius), in the project's plane: x east, y north, metres. shapely reads it as it is:
+    ``shapely.geometry.shape(shape)``."""
+
+    __slots__ = ("type", "coordinates", "circle")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        self.type: str = str(raw.get("type", ""))
+        self.coordinates: Any = raw.get("coordinates")
+        circle = raw.get("circle")
+        #: A circle's centre ``(x, y)`` and radius, when the tool drew a circle; none otherwise.
+        self.circle: tuple[tuple[float, float], float] | None = (
+            ((float(circle["center"][0]), float(circle["center"][1])), float(circle["radius"]))
+            if isinstance(circle, dict)
+            else None
+        )
+
+    @property
+    def __geo_interface__(self) -> dict[str, Any]:
+        return {"type": self.type, "coordinates": self.coordinates}
+
+    @property
+    def points(self) -> list[tuple[float, float]]:
+        """Its corners in order: a point's one, a line's, an area's outer ring without its closing repeat."""
+        if self.type == "Point":
+            return [(float(self.coordinates[0]), float(self.coordinates[1]))]
+        ring = self.coordinates[0] if self.type == "Polygon" else self.coordinates
+        pts = [(float(p[0]), float(p[1])) for p in ring]
+        if self.type == "Polygon" and len(pts) > 1 and pts[0] == pts[-1]:
+            pts.pop()
+        return pts
+
+    def __repr__(self) -> str:
+        return f"Shape({self.type}, {len(self.points)} köşe)"
+
+
 class MapToolContext(CommandContext):
-    """A map tool's context; ADIM 19's next slice."""
+    """A map tool's context (plan/eklenti.md ADIM 19): a command's, and the writes of what the user drew. A placement
+    is one undo step; one that raises is taken back."""
+
+    def add_feature(self, layer: str, shape: Any, attrs: dict[str, Any] | None = None) -> CommandResult:
+        """Writes ``shape`` (a :class:`Shape`, any GeoJSON geometry or anything with ``__geo_interface__``) as a new
+        object of ``layer`` (its id, or its name when only one layer has it) with ``attrs``, and says what it wrote: an
+        area for a polygon, a line for a line string, a point for a point."""
+        if self.doc is None:
+            raise NotAvailable("Açık çizim yok: harita aracının yazacağı yer yok.")
+        from kentos import cad
+
+        node = self.doc.layer(layer)
+        geo = getattr(shape, "__geo_interface__", shape)
+        if not isinstance(geo, dict):
+            raise TypeError(f"{type(shape).__name__} bir şekil değil: GeoJSON ya da __geo_interface__ olmalı.")
+        values = {str(k): "" if v is None else str(v) for k, v in (attrs or {}).items()}
+        given = Shape(geo)
+        if given.type == "Polygon":
+            made = cad.polygon.create(self.doc, layer_id=node.id, pts=given.points, attrs=values)
+            what = "alan"
+        elif given.type == "LineString":
+            made = cad.polyline.create(self.doc, layer_id=node.id, pts=given.points, attrs=values)
+            what = "çizgi"
+        elif given.type == "Point":
+            made = cad.point.create(self.doc, layer_id=node.id, p=given.points[0], attrs=values)
+            what = "nokta"
+        else:
+            raise TypeError(f"“{given.type}” şekli yazılmaz: Point, LineString ya da Polygon olmalı.")
+        del made
+        return CommandResult(message=f"“{node.name}” katmanına bir {what} yazıldı.")
 
 
 class GisAuditFacts:

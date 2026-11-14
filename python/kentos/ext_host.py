@@ -383,6 +383,15 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
             if stop.is_set():
                 raise ext.Stopped()
             result = outputs_of(fn(pctx, **arguments), pctx)
+        elif kind == "mapTool":
+            # What the user drew, given to the tool with a command's context: its writes are one undo step.
+            doc = cad.Document(DesktopSession(channel)) if message.get("document") else None  # type: ignore[arg-type]
+            params = dict(message.get("params") or {})
+            shape = ext.Shape(dict(params.pop("shape", None) or {}))
+            mctx = ext.MapToolContext(link, doc, message.get("settings"), params)
+            if stop.is_set():
+                raise ext.Stopped()
+            result = result_of(fn(mctx, shape))
         else:
             doc = cad.Document(DesktopSession(channel)) if message.get("document") else None  # type: ignore[arg-type]
             ctx = ext.CommandContext(link, doc, message.get("settings"), message.get("params"))

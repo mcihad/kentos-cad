@@ -137,6 +137,8 @@ pub mod boundary;
 pub mod breaking;
 #[path = "gis/calc.rs"]
 pub mod calc;
+#[path = "viewer_tools/capture.rs"]
+pub mod capture;
 #[path = "road/centerline.rs"]
 pub mod centerline;
 #[path = "viewer_tools/chart_data.rs"]

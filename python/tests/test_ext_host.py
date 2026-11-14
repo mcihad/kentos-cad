@@ -59,6 +59,12 @@ def schema(ctx):
     return ctx.apply_declarative_schema("schema.json")
 
 
+@ext.map_tool("place")
+def place(ctx, shape):
+    print(repr(shape))
+    return ctx.add_feature(ctx.doc.active_layer, shape, {"durum": "BOS", "boyut": 1.1})
+
+
 @ext.command("another-id")
 def wrong_id(ctx):
     return ctx.message("çalışmamalıydı")
@@ -243,7 +249,7 @@ class Kentos:
             "handler": handler,
             "params": params or {},
             "settings": {},
-            "document": kind == "command",
+            "document": kind in ("command", "mapTool"),
         }
         if inputs is not None:
             message["inputs"] = inputs
@@ -266,6 +272,12 @@ class Kentos:
         method, params = call["method"], call["params"]
         if method in ("summary", "layers"):
             result: Any = json.loads(getattr(self.session, method)())
+            self.send({"type": "reply", "id": call["id"], "ok": True, "result": result})
+        elif method == "run":
+            # A write, as KentOS's broker runs it on its drawing (the map tool's add_feature).
+            result = json.loads(
+                self.session.run(params["command"], params["op"], json.dumps(params["input"]), params.get("version"))
+            )
             self.send({"type": "reply", "id": call["id"], "ok": True, "result": result})
         else:
             self.send({"type": "reply", "id": call["id"], "ok": False, "code": "capability", "message": method})
@@ -472,6 +484,26 @@ class ExtHostTest(unittest.TestCase):
         done, _ = self.kentos.invoke("bad-value", "deneme.logic:bad_value", kind="processing", inputs={"parcels": parcels})
         self.assertEqual(done["exception"], "TypeError")
         self.assertIn("parcels", done["message"])
+
+    def test_a_map_tool_writes_the_shape_the_user_drew(self) -> None:
+        # plan/eklenti.md ADIM 19: KentOS gives the drawn shape (GeoJSON) to the marked function with a command's
+        # context; add_feature writes it to the layer through KentOS's commands (one undo step there).
+        self.kentos.hello()
+        ring = [[0, 0], [1.1, 0], [1.1, 2.2], [0, 2.2], [0, 0]]
+        done, said = self.kentos.invoke(
+            "place",
+            "deneme.logic:place",
+            kind="mapTool",
+            params={"shape": {"type": "Polygon", "coordinates": [ring]}},
+        )
+        self.assertTrue(done["ok"], done)
+        self.assertIn("bir alan yazıldı", done["result"]["message"])
+        self.assertIn("Shape(Polygon, 4 köşe)", "".join(m.get("text", "") for m in said))
+        entities = json.loads(self.kentos.session.entities(None, None, None, None, None))["items"]
+        self.assertEqual(len(entities), 1)
+        made = entities[0]["entity"]
+        self.assertEqual((made["kind"], made["attrs"]), ("polygon", {"durum": "BOS", "boyut": "1.1"}))
+        self.assertEqual(len(made["pts"]), 4)
 
     def test_a_processing_tool_is_not_run_as_a_command(self) -> None:
         self.kentos.hello()

@@ -98,6 +98,52 @@ impl std::fmt::Debug for Runner {
 }
 
 /// What a run of a contribution needs, found from the manifest, the grants and the environment, ready to start.
+/// A map tool drawing: whose, which, its title and what the user draws (plan/eklenti.md ADIM 19).
+#[derive(Clone, Debug)]
+pub(crate) struct Capturing {
+    pub ext: String,
+    pub local: String,
+    pub title: String,
+    pub kind: kentos_interaction::capture::Kind,
+}
+
+/// The drawn shape as GeoJSON (RFC 7946) in the project's plane, as the extension's code reads it (`ext.Shape`): a
+/// rectangle a polygon of its corners, a circle a ring of 64 chords with its centre and radius beside.
+pub(crate) fn shape_json(shape: &kentos_interaction::capture::Shape) -> Value {
+    use kentos_interaction::capture::Shape;
+    let xy = |p: &kentos_interaction::Vec2| json!([p.x, p.y]);
+    let ring = |pts: &[kentos_interaction::Vec2]| {
+        let mut r: Vec<Value> = pts.iter().map(xy).collect();
+        if let Some(first) = pts.first() {
+            r.push(xy(first));
+        }
+        Value::Array(r)
+    };
+    match shape {
+        Shape::Point(p) => json!({ "type": "Point", "coordinates": xy(p) }),
+        Shape::Line(pts) => {
+            json!({ "type": "LineString", "coordinates": pts.iter().map(xy).collect::<Vec<_>>() })
+        }
+        Shape::Polygon(pts) => json!({ "type": "Polygon", "coordinates": [ring(pts)] }),
+        Shape::Circle { center, radius } => {
+            let pts: Vec<kentos_interaction::Vec2> = (0..64)
+                .map(|i| {
+                    let a = f64::from(i) / 64.0 * std::f64::consts::TAU;
+                    kentos_interaction::Vec2::new(
+                        center.x + radius * a.cos(),
+                        center.y + radius * a.sin(),
+                    )
+                })
+                .collect();
+            json!({
+                "type": "Polygon",
+                "coordinates": [ring(&pts)],
+                "circle": { "center": xy(center), "radius": radius },
+            })
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct Launch {
     kind: &'static str,
@@ -219,6 +265,12 @@ impl App {
                 .iter()
                 .find(|c| c.id == local)
                 .map(|c| (c.handler.clone(), c.title.clone())),
+            "mapTool" => manifest
+                .entrypoints
+                .map_tools
+                .iter()
+                .find(|t| t.id == local)
+                .map(|t| (t.handler.clone(), t.title.clone())),
             _ => None,
         }
         .ok_or_else(|| format!("“{local}” bu eklentinin bir komutu değil."))?;
@@ -239,7 +291,11 @@ impl App {
         };
         Ok(Plan {
             launch: Launch {
-                kind: "command",
+                kind: if kind == "mapTool" {
+                    "mapTool"
+                } else {
+                    "command"
+                },
                 handler,
                 title,
                 python: PathBuf::new(),
@@ -266,6 +322,10 @@ impl App {
             return self.processing_command(&format!("processing.run.ext.{ext}.{local}"));
         }
         let name = self.extension_name(ext);
+        // A map tool draws first (capture.rs): its run comes with the shape drawn (`ext_capture_tasks`).
+        if kind == "mapTool" && self.extensions.capture_shape.is_none() {
+            return self.ext_capture_start(ext, local);
+        }
         if let Some(run) = self
             .extensions
             .runners
@@ -436,13 +496,18 @@ impl App {
         let Some(runner) = self.extensions.runners.get_mut(ext) else {
             return task;
         };
+        // A map tool's run gives its code the shape drawn (`ext.Shape`).
+        let params = match (call.kind, self.extensions.capture_shape.take()) {
+            ("mapTool", Some(shape)) => json!({ "shape": shape }),
+            _ => json!({}),
+        };
         runner.host.send(&json!({
             "type": "invoke",
             "id": id,
             "kind": call.kind,
             "local": local,
             "handler": call.handler,
-            "params": {},
+            "params": params,
             "settings": {},
             "document": session.is_some() && call.read,
         }));
@@ -978,6 +1043,93 @@ impl App {
                 body.push_str(" Çizime yazdıkları geri alındı.");
             }
             self.failure_notice(ext, &run.title, body);
+        }
+        // A map tool goes on placing after a placement that went in; a failure or Durdur ends it.
+        if run.kind == "mapTool" {
+            self.ext_capture_next(ext, ok);
+        }
+    }
+
+    /// A map tool pressed: the shape it asks for is drawn on the map (capture.rs); why not, said, when its code cannot
+    /// run now (Python, its environment, its grant).
+    fn ext_capture_start(&mut self, ext: &str, local: &str) -> Task<Message> {
+        use kentos_extensions::manifest::Capture as Asked;
+        use kentos_interaction::capture::{Capture, Kind};
+        let name = self.extension_name(ext);
+        if let Err(why) = self.ext_plan(ext, "mapTool", local) {
+            self.toast(Toast::warning(format!("{name}: çalıştırılamadı")).body(why));
+            return Task::none();
+        }
+        let Some(entry) = self
+            .extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.manifest(ext))
+            .and_then(|m| {
+                m.entrypoints
+                    .map_tools
+                    .iter()
+                    .find(|t| t.id == local)
+                    .cloned()
+            })
+        else {
+            return Task::none();
+        };
+        let kind = match entry.capture {
+            Asked::Point => Kind::Point,
+            Asked::Line => Kind::Line,
+            Asked::Polygon => Kind::Polygon,
+            Asked::Rectangle => Kind::Rectangle,
+            Asked::OrientedRectangle => {
+                Kind::OrientedRectangle(entry.template_width_m.zip(entry.template_length_m))
+            }
+            Asked::Circle => Kind::Circle,
+        };
+        self.extensions.capturing = Some(Capturing {
+            ext: ext.to_owned(),
+            local: local.to_owned(),
+            title: entry.title.clone(),
+            kind,
+        });
+        self.session.run(Box::new(Capture::new(entry.title, kind)));
+        Task::none()
+    }
+
+    /// The map tool drawing again for the next placement, or left (a failure, Durdur, another tool since).
+    fn ext_capture_next(&mut self, ext: &str, ok: bool) {
+        let Some(c) = self.extensions.capturing.clone().filter(|c| c.ext == ext) else {
+            return;
+        };
+        // Another tool started meanwhile (the user moved on): the map tool is not taken up again over it.
+        if ok && !self.session.is_running() {
+            self.session
+                .run(Box::new(kentos_interaction::capture::Capture::new(
+                    c.title, c.kind,
+                )));
+        } else {
+            self.extensions.capturing = None;
+        }
+    }
+
+    /// The shape drawn (after the update): the map tool's code run with it; Esc ends the map tool.
+    pub(crate) fn ext_capture_tasks(&mut self) -> Task<Message> {
+        let Some(captured) = self.extensions.captured.take() else {
+            return Task::none();
+        };
+        let Some(c) = self.extensions.capturing.clone() else {
+            return Task::none();
+        };
+        match captured {
+            Some(shape) => {
+                // The launch finds the extension's environment in the background first; the shape waits for it in
+                // `capture_shape` and goes with the run's call.
+                self.extensions.capture_shape = Some(shape_json(&shape));
+                self.ext_run(&c.ext, "mapTool", &c.local)
+            }
+            None => {
+                self.extensions.capturing = None;
+                Task::none()
+            }
         }
     }
 

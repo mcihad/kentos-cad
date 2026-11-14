@@ -754,6 +754,7 @@ impl Viewport {
             | ViewChange::Paragraph(_)
             | ViewChange::Picked(_)
             | ViewChange::PickedObjects(_)
+            | ViewChange::Captured(_)
             | ViewChange::DefineBlock(_)
             | ViewChange::Copied(_)
             | ViewChange::AttributeValues(_)

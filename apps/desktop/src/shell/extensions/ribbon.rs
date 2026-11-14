@@ -235,9 +235,13 @@ fn item_of(
             (true, None) if kind == ContributionKind::Processing => {
                 Action::Python(ext.to_owned(), "processing".to_owned(), local.clone())
             }
+            // A map tool draws the shape it asks for, then its code places it (runner.rs, capture.rs).
+            (true, None) if kind == ContributionKind::MapTool => {
+                Action::Python(ext.to_owned(), "mapTool".to_owned(), local.clone())
+            }
             (true, None) => Action::Unavailable(format!(
-                "“{title}”: Python ortamı hazır; bu tür katkıları (harita aracı, denetim, panel) çalıştıran yürütücü \
-                 KentOS'un sonraki sürümünde. Komutlar ve İşlemler araçları çalışır."
+                "“{title}”: Python ortamı hazır; bu tür katkıları (denetim, panel) çalıştıran yürütücü KentOS'un \
+                 sonraki sürümünde. Komutlar, harita araçları ve İşlemler araçları çalışır."
             )),
         };
         let fallback = crate::icons::from_web(Some("processing"));

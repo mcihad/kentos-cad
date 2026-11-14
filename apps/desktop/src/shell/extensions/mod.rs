@@ -116,6 +116,13 @@ pub(crate) struct Extensions {
     pub(crate) result: Option<(String, String, serde_json::Value)>,
     /// Their İşlemler tools: listed from the registry, run in the extension versions' processes (tools.rs).
     pub(crate) tools: tools::ExtTools,
+    /// A map tool drawing (runner.rs, plan/eklenti.md ADIM 19): its extension, local id, title and what it captures;
+    /// started again after each placement until Esc or a failure.
+    pub(crate) capturing: Option<runner::Capturing>,
+    /// The shape just drawn, waiting for its run after the update; none: Esc.
+    pub(crate) captured: Option<Option<kentos_interaction::capture::Shape>>,
+    /// The drawn shape the next map tool run gives its code (GeoJSON).
+    pub(crate) capture_shape: Option<serde_json::Value>,
 }
 
 impl Default for Extensions {
@@ -145,6 +152,9 @@ impl Default for Extensions {
             runner_generation: 0,
             result: None,
             tools: tools::ExtTools::default(),
+            capturing: None,
+            captured: None,
+            capture_shape: None,
         }
     }
 }

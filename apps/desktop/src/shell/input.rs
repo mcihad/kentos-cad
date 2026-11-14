@@ -365,6 +365,8 @@ impl App {
                         self.calc_picked(p);
                     }
                 }
+                // An extension's map tool: what was drawn goes to its code after the update (extensions/runner.rs).
+                ViewChange::Captured(shape) => self.extensions.captured = Some(shape),
                 // Sahneden seç's objects: the processing window opens again (processing/).
                 ViewChange::PickedObjects(keep) => {
                     if !self.window_picked(keep)

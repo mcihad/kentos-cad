@@ -155,6 +155,9 @@ pub enum ViewChange {
     /// screen's x axis from the world's x, counter-clockwise, radians; the
     /// view turns about its middle.
     Twist(f64),
+    /// The shape an extension's map tool asked for ([`crate::capture::Capture`], plan/eklenti.md ADIM 19), or none
+    /// when the user left without one.
+    Captured(Option<crate::capture::Shape>),
 }
 
 /// Where a text field opens and how its text will look: its start, height in
