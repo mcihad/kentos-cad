@@ -85,6 +85,16 @@ class Desktop:
                 )
             elif method in ("entity", "measure"):
                 result = json.loads(getattr(self.session, method)(params["uid"]))
+            elif method == "view":
+                # The drawing area as the desktop answers it (agents.rs's view_answer).
+                result = {
+                    "scale": 1000.0,
+                    "pxPerMetre": 3.7795,
+                    "window": {"minX": 423400.0, "minY": 4512200.0, "maxX": 423700.0, "maxY": 4512400.0},
+                    "center": {"x": 423550.0, "y": 4512300.0},
+                    "twist": 0.0,
+                    "plotScale": 500.0,
+                }
             elif method in ("begin_group", "end_group", "cancel_group"):
                 self.groups.append(method if method != "begin_group" else f"begin:{params['label']}")
                 result = True
@@ -129,6 +139,14 @@ class Host(unittest.TestCase):
         self.assertTrue(done["ok"], done)
         self.assertEqual(out, "250.0\nTrue\n")
         self.assertEqual(len(self.desktop.drawing), 1)
+
+    def test_the_view_and_its_scale_are_the_desktops(self) -> None:
+        # The owner, 14 November 2026: "ölçek her yerden erişilebilir olmalı" (docs/adr/8058 §4).
+        done, out, _ = self.desktop.run(
+            "v = doc.view()\nprint(v.scale, v.px_per_metre, v.window.min_x, v.center.y, v.twist, v.plot_scale)"
+        )
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(out, "1000.0 3.7795 423400.0 4512300.0 0.0 500.0\n")
 
     def test_names_stay_and_a_last_expression_shows_its_value(self) -> None:
         self.desktop.run("a = 21")
@@ -195,6 +213,9 @@ class Host(unittest.TestCase):
 
 
 class Outside(unittest.TestCase):
+    def test_a_drawing_opened_here_has_no_view(self) -> None:
+        self.assertIsNone(cad.Document.new("Görünümsüz", srid=5256).view())
+
     def test_outside_the_console_there_is_no_desktop_drawing(self) -> None:
         with self.assertRaises(cad.NotRunHere) as caught:
             cad.current()

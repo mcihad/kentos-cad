@@ -42,6 +42,7 @@ from .types import (
     ProjectForm,
     ProjectSettings,
     SheetInfo,
+    Vec2,
     Workspace,
     WorkspaceName,
 )
@@ -151,6 +152,10 @@ class SessionBase:
     def select(self, uids: str) -> int:
         raise NotImplementedError
 
+    def view(self) -> str:
+        """The view the drawing is shown in, JSON; ``null`` for a drawing without a window."""
+        return "null"
+
 
 _CURRENT: Document | None = None
 
@@ -173,6 +178,25 @@ def _host(call: Callable[..., T], *args: Any) -> T:
     except _native.HostError as e:
         code, message = e.args
         raise host_error(code, message) from None
+
+
+@dataclass(frozen=True, slots=True)
+class View:
+    """The view a drawing is shown in on the desktop (docs/adr/8058 §4; the owner, 14 November 2026: "ölçek her
+    yerden erişilebilir olmalı"): its scale as the status bar shows it, what it shows and how it is turned."""
+
+    scale: float
+    """The view's scale, the N of 1:N on a 96 dpi screen (the status bar's): ``1000.0`` at 1:1000."""
+    px_per_metre: float
+    """Screen pixels a metre of the drawing is."""
+    window: Bounds
+    """The box it shows in the project's plane; with a twist, the box round the turned area."""
+    center: Vec2
+    """The point in its middle."""
+    twist: float
+    """Its twist, degrees counter-clockwise from the east; 0 has the north up."""
+    plot_scale: float
+    """The drawing's own scale (1:N), what it prints and draws its symbols at."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -962,6 +986,27 @@ class Document:
         """Selected persistent ids, omitting objects deleted since; shared session state with MCP."""
         return [str(u) for u in json.loads(_host(self._session.selection))]
 
+    # ------------------------------------------------------------ view
+
+    def view(self) -> View | None:
+        """The view the drawing is shown in: in the desktop's Python console, the drawing area's (its scale 1:N as
+        the status bar shows it, the box it shows, its twist). None for a drawing opened here, which has no view;
+        its drawing scale is ``info().settings.plot_scale``."""
+        ask = getattr(self._session, "view", None)
+        if ask is None:
+            return None
+        raw = json.loads(_host(ask))
+        if raw is None:
+            return None
+        return View(
+            scale=float(raw["scale"]),
+            px_per_metre=float(raw["pxPerMetre"]),
+            window=decode(Bounds, raw["window"], "Document.view"),
+            center=Vec2(float(raw["center"]["x"]), float(raw["center"]["y"])),
+            twist=float(raw["twist"]),
+            plot_scale=float(raw["plotScale"]),
+        )
+
     # ------------------------------------------------------------ history
 
     def undo(self) -> str | None:
@@ -1108,4 +1153,4 @@ def _walk(nodes: Iterable[LayerNode]) -> Iterator[LayerNode]:
         yield from _walk(n.children)
 
 
-__all__ = ["Basis", "BoundsLike", "Conventions", "Document", "UcsFrame", "WORLD_UCS", "DocumentInfo", "Exported", "Measure", "MeasureItem", "Measures", "Page", "Printed", "Record", "Saved", "Units", "current"]
+__all__ = ["Basis", "BoundsLike", "Conventions", "Document", "UcsFrame", "WORLD_UCS", "DocumentInfo", "Exported", "Measure", "MeasureItem", "Measures", "Page", "Printed", "Record", "Saved", "Units", "View", "current"]

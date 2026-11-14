@@ -562,6 +562,12 @@ impl App {
         if matches!(method, "select" | "selection") {
             return selection::answer(&doc.model, &mut self.selection, method, params);
         }
+        if method == "view" {
+            return Ok(agents::view_answer(
+                &self.viewport.camera,
+                doc.model.settings().plot_scale,
+            ));
+        }
         // A command's execute (by `run`, or by the protocol's `call`, whose form is execute when not
         // given) and a replay write: the run's step opens with the first.
         let op = params.get("op").and_then(Value::as_str);

@@ -943,6 +943,39 @@ fn real_python_runs_the_script_and_shows_where_it_failed() {
     let _ = app.update(Message::Python(Event::Stop));
 }
 
+#[test]
+fn an_agent_reads_the_view_and_its_scale() {
+    // 14 November 2026, the owner: "ölçek birçok yerde işimize yarayabilir, her yerden erişilebilir olmalı". The
+    // console's `Document.view()` asks the same (`view_answer`).
+    let mut app = app_with_drawing();
+    let camera = app.viewport.camera;
+    let view = app
+        .agent_request(&json!({ "id": 1, "method": "view", "params": {} }), "Ajan")
+        .expect("the view");
+    let n = view["scale"].as_f64().expect("scale");
+    assert!((n - camera.screen_scale()).abs() < 1e-9, "{view}");
+    assert_eq!(view["pxPerMetre"].as_f64(), Some(camera.scale));
+    let b = camera.visible_bounds();
+    assert_eq!(
+        (
+            view["window"]["minX"].as_f64(),
+            view["window"]["maxY"].as_f64()
+        ),
+        (Some(b.min_x), Some(b.max_y))
+    );
+    assert_eq!(
+        view["plotScale"].as_f64(),
+        app.document.as_ref().map(|d| d.model.settings().plot_scale)
+    );
+    assert_eq!(view["twist"].as_f64(), Some(0.0));
+    // A drawing that is not open has no view.
+    let gone = app.agent_request(
+        &json!({ "id": 2, "method": "view", "params": { "document": 999_999 } }),
+        "Ajan",
+    );
+    assert_eq!(gone.map_err(|e| e.0), Err("document_closed".to_owned()));
+}
+
 /// An agent's request answered on the open drawing (agents.rs), the
 /// answers read from a stand-in connection.
 fn ask_agent(

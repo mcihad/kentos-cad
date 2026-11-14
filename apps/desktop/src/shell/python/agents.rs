@@ -17,6 +17,23 @@ use super::{Event, Kind};
 use crate::app::{App, Message};
 
 /// A refusal: its code and message.
+/// The front drawing's view as an agent and the console read it (`view`; 14 November 2026, the owner: "ölçek birçok
+/// yerde işimize yarayabilir, her yerden erişilebilir olmalı"): its scale 1:N as the status bar shows it
+/// (`kentos_geometry_core::scale`), its pixels a metre, the box it shows and its middle in the project's plane, its
+/// twist and the drawing's own scale.
+pub(crate) fn view_answer(camera: &kentos_render_wgpu::camera::Camera, plot_scale: f64) -> Value {
+    let b = camera.visible_bounds();
+    let middle = camera.screen_to_world(camera.width / 2.0, camera.height / 2.0);
+    json!({
+        "scale": camera.screen_scale(),
+        "pxPerMetre": camera.scale,
+        "window": { "minX": b.min_x, "minY": b.min_y, "maxX": b.max_x, "maxY": b.max_y },
+        "center": { "x": middle.x, "y": middle.y },
+        "twist": camera.twist.to_degrees(),
+        "plotScale": plot_scale,
+    })
+}
+
 fn refused(code: &str, message: &str) -> (String, String) {
     (code.to_owned(), message.to_owned())
 }
@@ -214,6 +231,35 @@ impl App {
             let doc = doc.ok_or_else(|| refused("no_document", "Masaüstünde açık çizim yok."))?;
             return super::selection::answer(doc, selected, method, &params).map_err(|e| (e.code.to_owned(), e.message));
         }
+        if method == "view" {
+            // A drawing in a tab behind has no view on the screen: its camera waits with it.
+            if named.is_some() && named != front {
+                let behind = self
+                    .doc_tabs
+                    .parked
+                    .iter()
+                    .any(|p| Some(p.document.session) == named);
+                return Err(if behind {
+                    refused(
+                        "not_in_front",
+                        "Bu çizim arka sekmede; görünümü öne getirildiğinde okunur.",
+                    )
+                } else {
+                    refused(
+                        "document_closed",
+                        "İstenen çizim kapatıldı ya da hiç açılmadı.",
+                    )
+                });
+            }
+            let doc = self
+                .document
+                .as_ref()
+                .ok_or_else(|| refused("no_document", "Masaüstünde açık çizim yok."))?;
+            return Ok(view_answer(
+                &self.viewport.camera,
+                doc.model.settings().plot_scale,
+            ));
+        }
         let doc = match named {
             None => self.document.as_mut(),
             Some(s) if Some(s) == front => self.document.as_mut(),
@@ -293,7 +339,7 @@ impl App {
             other => Err(refused(
                 "unknown_method",
                 &format!(
-                    "“{other}” masaüstünde yanıtlanmaz: hello, run, call, summary, layers, entities, entity, measure, select, selection, journal, replay, start, job, wait ya da cancel."
+                    "“{other}” masaüstünde yanıtlanmaz: hello, run, call, summary, layers, entities, entity, measure, select, selection, view, journal, replay, start, job, wait ya da cancel."
                 ),
             )),
         }

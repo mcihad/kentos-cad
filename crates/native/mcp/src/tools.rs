@@ -185,6 +185,17 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         ),
         tool("drawing.selection", "Seçili nesneler", "Çizimin seçili nesnelerinin kalıcı kimlikleri. Masaüstüne bağlıysa ekrandaki seçimdir; silinmiş nesneler dönmez.",
             object(json!({"drawing":drawing_arg()}), &["drawing"]), annotations(true, false)),
+        tool(
+            "drawing.view",
+            "Görünüm ve ölçeği",
+            "Masaüstündeki çizimin görünümü: scale ekranın ölçeği 1:N'nin N'si (durum çubuğundaki gibi, 96 dpi), pxPerMetre \
+             bir metrenin piksel sayısı, window görünen kutu (minX, minY, maxX, maxY; döndürülmüşse dönük alanı saran \
+             kutu), center ortadaki nokta, twist görünümün dönüklüğü (derece, doğudan saat yönünün tersine; 0 kuzey \
+             yukarı), plotScale çizim ölçeği. Yalnız masaüstüne bağlı (desktop.attach) ve öndeki çizimde; drawing.open ya da \
+             drawing.new ile açılan çizimin görünümü yoktur, çizim ölçeği drawing.summary'dedir.",
+            object(json!({ "drawing": drawing_arg() }), &["drawing"]),
+            annotations(true, false),
+        ),
         tool("drawing.select", "Nesneleri seç", "uids kimliklerini seçer; [] seçimi kaldırır. Bilinmeyen kimlikte hiçbir seçim değişmez. Masaüstüne bağlıysa şeridin bağlamsal sekmesi de bu seçimi izler. Belgeyi değiştirmez, geri alma adımı değildir.",
             object(json!({"drawing":drawing_arg(), "uids":{"type":"array", "items":{"type":"string"}}}), &["drawing", "uids"]), annotations(false, false)),
         tool(
@@ -922,6 +933,7 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
         "drawing.summary" => ("summary", json!({})),
         "drawing.selection" => ("selection", json!({})),
         "drawing.select" => ("select", json!({"uids": args.get("uids")})),
+        "drawing.view" => ("view", json!({})),
         "drawing.layers" => ("layers", json!({})),
         "drawing.entities" => (
             "entities",
@@ -1176,6 +1188,14 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         "drawing.selection" => {
             let (s, _) = session(server, args)?;
             Ok(answer(json!({"uids":s.selection()}), false))
+        }
+        "drawing.view" => {
+            let _ = session(server, args)?;
+            Err(refused(
+                "no_view",
+                "Bu çizim ekranda değil, bu sunucuda açık: görünümü yok. Çizim ölçeği drawing.summary'dedir; ekrandaki \
+                 çizimin görünümü için desktop.attach.",
+            ))
         }
         "drawing.select" => {
             let (s, _) = session(server, args)?;

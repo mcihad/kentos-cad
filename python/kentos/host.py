@@ -240,6 +240,9 @@ class DesktopSession(_document.SessionBase):
     def selection(self) -> str:
         return self._ask("selection")
 
+    def view(self) -> str:
+        return self._ask("view")
+
     def select(self, uids: str) -> int:
         return int(self._channel.call("select", {"uids": json.loads(uids)}))
 

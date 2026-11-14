@@ -4299,6 +4299,7 @@ __all__ = [
     "VertexSubPlace",
     "VerticalConstraintRule",
     "VerticalPavementEdge",
+    "View",
     "ViewCategory",
     "ViewCategoryName",
     "ViewLinkPaperViewportSource",
