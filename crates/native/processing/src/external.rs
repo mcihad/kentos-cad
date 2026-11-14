@@ -76,6 +76,9 @@ pub struct ExternalTool {
     /// Its extension's package content digest, as installed (`sha256:…`): the host writes it, empty until then. A
     /// model's step records it with the version ([`pin_of`], docs/adr/8057 §13).
     pub digest: String,
+    /// What the descriptor tells an AI model about when and how to use it (`modelDescription`, docs/adr/8057 §14),
+    /// beside the user's description: `cad.processing.tools` lists it, read without the extension's code.
+    pub model_description: Option<String>,
     /// Its id in the extension's manifest.
     pub local: String,
     pub outputs: Vec<Output>,
@@ -199,6 +202,9 @@ pub fn find(id: &str) -> Option<ExternalTool> {
         .find(|t| t.tool.id == id)
         .cloned()
 }
+
+/// The longest `modelDescription` a descriptor gives, characters.
+pub const MOST_MODEL_DESCRIPTION: usize = 2000;
 
 /// An extension's tool's pin as installed now (docs/adr/8057 §13): what a model's step records when the tool is added
 /// to it, so that the model says which extension and version it was made with. None for a built-in tool, one not
@@ -378,6 +384,18 @@ pub fn from_descriptor(
     }
     let description = text(o, "description").unwrap_or_default().trim().to_owned();
     let own_help = text(o, "help").map(str::trim).filter(|h| !h.is_empty());
+    // For an AI model (docs/adr/8057 §14): optional, one paragraph or a few.
+    let model_description = match o.get("modelDescription") {
+        None | Some(Value::Null) => None,
+        Some(Value::String(t)) if t.trim().chars().count() <= MOST_MODEL_DESCRIPTION => {
+            Some(t.trim().to_owned()).filter(|t| !t.is_empty())
+        }
+        Some(_) => {
+            return Err(format!(
+                "modelDescription en çok {MOST_MODEL_DESCRIPTION} karakterlik bir metin olmalı."
+            ));
+        }
+    };
     let whose = format!(
         "{extension_name} eklentisinin aracı ({extension} {version}). Eklentinin kendi Python ortamında, ayrı bir \
          süreçte çalışır; ayrı süreç bir korumalı alan değildir: eklenti sizin haklarınızla çalışır, KentOS yalnız \
@@ -425,6 +443,7 @@ pub fn from_descriptor(
         extension: extension.to_owned(),
         version: version.to_owned(),
         digest: String::new(),
+        model_description,
         local: local.to_owned(),
         outputs,
         timeout,

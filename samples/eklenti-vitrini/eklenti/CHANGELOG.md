@@ -1,5 +1,9 @@
 # Değişiklikler
 
+## 1.0.2 — 14 Kasım 2026
+
+- TAKS aracının tanımı yapay zekâ için bir açıklama taşır (`modelDescription`): ne zaman ve nasıl kullanılacağı.
+
 ## 1.0.1 — 14 Kasım 2026
 
 - TAKS tablosunun başlıkları Türkçe ve birimli (parsel alanı (m²), taban alanı (m²), TAKS).

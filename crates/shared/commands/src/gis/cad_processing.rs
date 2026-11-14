@@ -79,6 +79,15 @@ pub struct ProcessingTool {
     /// Its category's path (“Geometri › Tampon”).
     pub category: String,
     pub description: String,
+    /// What an extension's tool's descriptor tells an AI model about when and how to use it (docs/adr/8057 §14),
+    /// beside `description`, which is the user's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub model_description: Option<String>,
+    /// An extension's tool's extension as installed (docs/adr/8057 §13): which code runs it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub extension: Option<crate::ExtensionPin>,
     /// The names the command line takes for it.
     #[serde(default)]
     pub aliases: Vec<String>,

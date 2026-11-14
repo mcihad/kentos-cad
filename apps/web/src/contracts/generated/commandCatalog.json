@@ -187302,11 +187302,29 @@
         "description": {
           "type": "string"
         },
+        "extension": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtensionPin"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "An extension's tool's extension as installed (docs/adr/8057 §13): which code runs it."
+        },
         "id": {
           "type": "string"
         },
         "label": {
           "type": "string"
+        },
+        "modelDescription": {
+          "description": "What an extension's tool's descriptor tells an AI model about when and how to use it (docs/adr/8057 §14),\nbeside `description`, which is the user's.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "parameters": {
           "items": {

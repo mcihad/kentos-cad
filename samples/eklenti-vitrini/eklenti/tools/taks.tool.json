@@ -5,6 +5,7 @@
   "version": "1.0.0",
   "label": "Parsel TAKS hesabı",
   "description": "Her imar parselinin taban alanı katsayısını (TAKS) hesaplar, plan notundaki sınırı aşanları işaretler ve parselleri yeni bir katmana yazar.",
+  "modelDescription": "İmar parsellerinin taban alanı katsayısını (TAKS = parselin içinde kalan yapı taban alanı / parsel alanı) hesaplamak ya da plan notundaki TAKS sınırını aşan parselleri bulmak için kullanın. parseller: imar parselleri (kapalı alanlar), yapilar: yapıların taban alanı çizgileri, taks_siniri: plan notundaki en büyük TAKS (ör. 0.4). Parseller yeni katmana parsel_alani_m2, taban_alani_m2, taks, taks_siniri, yapi_sayisi ve durum (uygun / aşıyor) öznitelikleriyle yazılır; sınırı aşanlar seçilir; tablo ve aşan parsel sayısı (asan) döner. Çizimi değiştirmeden yalnız hesap için sonucu bir GeoPackage dosyasına yönlendirin.",
   "help": "TAKS, taban alanının imar parseli alanına oranıdır (Planlı Alanlar İmar Yönetmeliği, madde 4). Taban alanı, yapıların parselin içinde kalan kısımlarının alanları toplanarak bulunur: iki parsele taşan bir yapının her parseldeki kısmı o parsele sayılır.\n\nParseller seçtiğiniz katmana taban alanı, parsel alanı, TAKS, sınır ve durum öznitelikleriyle kopyalanır; sınırı aşan parseller çizimde seçili kalır. Hesap eklentinin kendi ortamındaki shapely 2.0 ve NumPy ile yapılır; yay kenarlı parseller çizimdeki gibi yaylarıyla hesaplanır.",
   "keywords": [
     "taks",

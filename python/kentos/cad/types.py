@@ -76478,6 +76478,9 @@ class ProcessingTool(_Model):
     Attributes:
         category: Its category's path (“Geometri › Tampon”).
         aliases: The names the command line takes for it.
+        extension: An extension's tool's extension as installed (docs/adr/8057 §13): which code runs it.
+        model_description: What an extension's tool's descriptor tells an AI model about when and how to use it (docs/adr/8057 §14),
+            beside `description`, which is the user's.
     """
     id: str
     label: str
@@ -76485,6 +76488,8 @@ class ProcessingTool(_Model):
     description: str
     parameters: list[ToolParameter]
     aliases: list[str] = field(default_factory=list)
+    extension: ExtensionPin | None | Unset = UNSET
+    model_description: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -76494,6 +76499,10 @@ class ProcessingTool(_Model):
         out["description"] = self.description
         out["parameters"] = [e0.to_json() for e0 in self.parameters]
         out["aliases"] = list(self.aliases)
+        if self.extension is not UNSET:
+            out["extension"] = None if self.extension is None else self.extension.to_json()
+        if self.model_description is not UNSET:
+            out["modelDescription"] = self.model_description
         return out
 
     @classmethod
@@ -76505,6 +76514,8 @@ class ProcessingTool(_Model):
             description=data["description"],
             parameters=[ToolParameter.from_json(e0) for e0 in data["parameters"]],
             aliases=list(data["aliases"]) if "aliases" in data else list(),
+            extension=UNSET if "extension" not in data else None if data["extension"] is None else ExtensionPin.from_json(data["extension"]),
+            model_description=data.get("modelDescription", UNSET),
         )
 
 

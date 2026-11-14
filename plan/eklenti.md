@@ -845,9 +845,12 @@ hazır değil) / kullanılamaz (eklenti yok, kapalı, araç yok) der; Vitrin'in 
 **Durum (14 Kasım): model adımı sabitlenir** (ADR 8057 §13; PY-TOOL-20): model adımı eklenti aracını eklenirken
 eklentinin sürümü ve paket özetiyle sabitler (tasarımcı, Python, MCP aynı düzenlemeden); eklentisiz açılan model bir
 şey kurmaz, adım hangi eklentinin hangi sürümüyle yapıldığını söyler; tür `ExtensionPin` (form eylemiyle ortak).
-Kalan (ADIM 19): çalışma kökeni [PY-TOOL-22], büyük girdinin sayfalı/ikili aktarımı [PY-TOOL-08], `modelDescription`
-ve kod yüklemeden MCP listesi [D18], eklentiden eklentiye çağrı [PY-RUN-15], önizlemede aracının yazma izinlerini
-kapatması [PY-RUN-23]; `kek inspect`'in araç denetimi.
+
+**Durum (14 Kasım): `modelDescription`** (ADR 8057 §14; D18, Ö·39): araç tanımı yapay zekâ için ayrı bir açıklama
+taşır; `cad.processing.tools` onu ve aracın eklentisini (sürüm, özet) kod yüklemeden listeler; Vitrin 1.0.2'de örneği.
+Kalan (ADIM 19): çalışma kökeni [PY-TOOL-22], büyük girdinin sayfalı/ikili aktarımı [PY-TOOL-08], eklentiden
+eklentiye çağrı [PY-RUN-15], önizlemede aracının yazma izinlerini kapatması [PY-RUN-23]; `kek inspect`'in araç
+denetimi.
 
 **Sıradaki dilim (tasarım, 14 Kasım): çizimdeki ifadelerde eklenti işlevi.** Etiket metni ve koşulu
 (`scene-query::label_texts`), katman süzgeci (`layer_filter`), tematik stil kuralları (`native-style::classify`) ve sanal

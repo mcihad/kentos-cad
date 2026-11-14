@@ -1,6 +1,6 @@
 # Formdan eklenti aracı (Parsel formu, "TAKS hesapla"): 101/2 Formla düzenle'de açılır, düğme Vitrin'in TAKS aracını
 # o parselle açar (İmar parselleri: Seçili), Çalıştır yalnız onu hesaplar; Formlar'da eylemin aracı "Eklenti Vitrini
-# 1.0.1 ile sabitlendi" der. Ortam hazır değilken (KENTOS_PYTHON_DIR boş bir klasör) düğme kapalıdır, "Bekliyor: …" der.
+# <sürüm> ile sabitlendi" der. Ortam hazır değilken (KENTOS_PYTHON_DIR boş bir klasör) düğme kapalıdır, "Bekliyor: …" der.
 fit KentOS GIS — Eklenti vitrini
 wait 2500
 key Escape

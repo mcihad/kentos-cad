@@ -2,7 +2,7 @@
 # serisini ve NumPy'yi kullanır. `uv lock` uv.lock'u buradan yazar.
 [project]
 name = "vitrin"
-version = "1.0.1"
+version = "1.0.2"
 description = "KentOS Eklenti Vitrini'nin işlevleri"
 requires-python = ">=3.12,<3.14"
 dependencies = ["shapely>=2.0,<2.1", "numpy>=2.0,<3"]

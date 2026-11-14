@@ -2194,6 +2194,15 @@ fn a_tool_the_desktop_would_not_make_is_refused_before_kur() {
     assert_eq!(refused[0].code, "tool_descriptor");
 }
 
+/// The demo extension's version, as its manifest says (the tests follow its releases).
+fn vitrin_version() -> String {
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../samples/eklenti-vitrini/eklenti/manifest.json");
+    let manifest: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(manifest).unwrap()).unwrap();
+    manifest["version"].as_str().unwrap().to_owned()
+}
+
 /// samples/eklenti-vitrini's extension packed from its source, as `hazirla.sh` packs it.
 fn vitrin_package() -> Vec<u8> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/eklenti");
@@ -2315,14 +2324,17 @@ fn a_forms_action_opens_an_extensions_tool_pinned_and_says_why_when_it_cannot() 
     );
     // The pin: the installed version and digest; another version, another build or none is said.
     let pin = gis.tool_pin_of(TOOL).expect("installed");
-    assert_eq!(pin.version, "1.0.1");
+    assert_eq!(pin.version, vitrin_version());
     assert!(pin.digest.starts_with("sha256:") && pin.digest.len() == 71);
     assert_eq!(gis.tool_pin_drift(TOOL, Some(&pin)), None);
     let drift = gis
         .tool_pin_drift(TOOL, Some(&stale))
         .expect("another version");
     assert!(
-        drift.contains("0.9.0 ile seçildi, kurulu sürüm 1.0.1"),
+        drift.contains(&format!(
+            "0.9.0 ile seçildi, kurulu sürüm {}",
+            vitrin_version()
+        )),
         "{drift}"
     );
     let rebuilt = ExtensionPin {
@@ -2437,7 +2449,7 @@ fn a_models_step_on_an_extensions_tool_is_pinned_and_says_where_it_stands() {
     let pin = step.pin.clone().expect("pinned");
     assert_eq!(
         (pin.extension.as_str(), pin.version.as_str()),
-        (VITRIN, "1.0.1")
+        (VITRIN, vitrin_version().as_str())
     );
     assert_eq!(
         Some(pin.clone()),
@@ -2449,7 +2461,7 @@ fn a_models_step_on_an_extensions_tool_is_pinned_and_says_where_it_stands() {
     gis.extensions.python_reasons.insert(VITRIN.into(), None);
     assert_eq!(
         gis.step_pin_note(TOOL, Some(&pin)).as_deref(),
-        Some("Eklenti Vitrini 1.0.1 ile eklendi.")
+        Some(format!("Eklenti Vitrini {} ile eklendi.", vitrin_version()).as_str())
     );
     let older = ExtensionPin {
         version: "1.0.0".into(),
@@ -2457,7 +2469,10 @@ fn a_models_step_on_an_extensions_tool_is_pinned_and_says_where_it_stands() {
     };
     let note = gis.step_pin_note(TOOL, Some(&older)).expect("a line");
     assert!(
-        note.contains("1.0.0 ile eklendi; kurulu sürüm 1.0.1"),
+        note.contains(&format!(
+            "1.0.0 ile eklendi; kurulu sürüm {}",
+            vitrin_version()
+        )),
         "{note}"
     );
     assert_eq!(gis.step_pin_note("attributes.calculate", None), None);

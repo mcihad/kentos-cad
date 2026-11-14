@@ -19,6 +19,7 @@ fn descriptor() -> Value {
         "id": "olc",
         "label": "Parsel alanları",
         "description": "Her parselin alanını hesaplar ve parselleri yeni katmana yazar.",
+        "modelDescription": "Use it to get each parcel's area in square metres; parcels over the limit are selected.",
         "keywords": ["alan"],
         "parameters": [
             { "name": "parcels", "label": "Parseller", "type": "features", "kinds": ["polygon"],
@@ -733,4 +734,64 @@ fn a_models_step_pins_the_extension_its_tool_came_from() {
                     .contains("model tr.ornek.deneme 1.0.0 ile yapıldı")),
         "{issues:?}"
     );
+}
+
+#[test]
+fn the_tool_list_gives_an_ai_model_the_descriptors_words_and_the_extension() {
+    // docs/adr/8057 §14 (plan D18): `cad.processing.tools` lists an extension's tool with its descriptor's
+    // `modelDescription` and its extension as installed, read without the extension's code; a built-in tool has
+    // neither. A description too long is refused with the descriptor.
+    setup();
+    let hosted = kentos_native_application::processing_host::tools().expect("registered");
+    let listed = hosted
+        .list(
+            &drawing(false),
+            &kentos_commands::ProcessingTools::default(),
+        )
+        .expect("listed");
+    let ours = listed
+        .tools
+        .iter()
+        .find(|t| t.id == "ext.tr.ornek.deneme.olc")
+        .expect("the extension's tool");
+    assert_eq!(
+        ours.model_description.as_deref(),
+        Some(
+            "Use it to get each parcel's area in square metres; parcels over the limit are selected."
+        )
+    );
+    let pin = ours.extension.as_ref().expect("its extension");
+    assert_eq!(
+        (
+            pin.extension.as_str(),
+            pin.version.as_str(),
+            pin.digest.as_str()
+        ),
+        ("tr.ornek.deneme", "1.0.0", DIGEST)
+    );
+    let json = serde_json::to_value(ours).unwrap();
+    assert_eq!(
+        json["modelDescription"],
+        ours.model_description.clone().unwrap().as_str()
+    );
+    let builtin = listed
+        .tools
+        .iter()
+        .find(|t| t.id == "attributes.calculate")
+        .expect("a built-in tool");
+    assert!(builtin.model_description.is_none() && builtin.extension.is_none());
+    assert!(
+        serde_json::to_value(builtin)
+            .unwrap()
+            .get("modelDescription")
+            .is_none()
+    );
+    let mut long = descriptor();
+    long["modelDescription"] = json!("a".repeat(external::MOST_MODEL_DESCRIPTION + 1));
+    let Err(refused) =
+        external::from_descriptor("tr.ornek.deneme", "Deneme", "1.0.0", "olc", &long)
+    else {
+        panic!("a description too long is refused");
+    };
+    assert!(refused.contains("modelDescription en çok"), "{refused}");
 }

@@ -1,5 +1,5 @@
 # Modelde eklenti aracı: Model tasarımcısı'nda Vitrin'in TAKS aracı adım olarak eklenir ve eklentinin sürümüyle ve
-# paket özetiyle sabitlenir; adımın ayarları "Eklenti Vitrini 1.0.1 ile eklendi." der. Eklenti olmayan bilgisayarda
+# paket özetiyle sabitlenir; adımın ayarları "Eklenti Vitrini <sürüm> ile eklendi." der. Eklenti olmayan bilgisayarda
 # model açılır, hiçbir şey kurulmaz; adım hangi eklentinin hangi sürümüyle yapıldığını söyler.
 fit KentOS GIS — Eklenti vitrini
 wait 2500

@@ -1119,3 +1119,23 @@ temiz ve kaliteli"; "içinde birçok durum için örnekler olsun, sadece eklenti
 - **Uygularken verilen kararlar:** `ActionPin` → `ExtensionPin` (bir tür); özet host'tan `ExternalTool`'a; sürüm
   farkı uyarı, ret değil; çalışma kökeni (PY-TOOL-22: girdi anlık görüntüsü, parametreler, çıktı kimlikleri) ayrı
   dilim.
+
+## §14. Araç tanımında yapay zekâ açıklaması: `modelDescription` (`ADIM 19`, D18, Ö·39)
+
+**14 Kasım.** Kod: `crates/native/processing/src/external.rs` (`ExternalTool::model_description`,
+`MOST_MODEL_DESCRIPTION`), `command.rs` (`described`), `crates/shared/commands/src/gis/cad_processing.rs`
+(`ProcessingTool::model_description`, `extension`).
+
+- **Tanım:** `kentos.processingTool` v1'e isteğe bağlı `modelDescription` (en çok 2000 karakter): aracın bir yapay zekâ
+  modeli için ne zaman ve nasıl kullanılacağı, kullanıcının `description`'ından ayrı. Eklemeli bir alan; v1 tanımları
+  bilinmeyen anahtarı zaten reddetmiyordu. Uzun ya da metin olmayan değer tanımın sorunudur (Kur'dan önce, §10).
+- **Liste:** `cad.processing.tools` eklenti aracını `modelDescription` ve `extension` (kimlik, kurulu sürüm, paket
+  özeti; §13'ün `ExtensionPin`'i) ile listeler; ikisi de kod yüklenmeden tanımdan ve kayıt defterinden gelir.
+  Yerleşik araçlarda yoklar (JSON'da yazılmaz). MCP, Python ve uygulama içi ajan aynı komutu okur: MCP'nin kendi araç
+  listesi değişmez, eklenti araçları bu listeyle bulunur (§7).
+- **Vitrin 1.0.2:** TAKS tanımına Türkçe `modelDescription` (girdiler, yazılan öznitelikler, dönenler, GeoPackage
+  hedefi); `vitrin.kcad`'ın düğmesi yeni özete sabitlendi (bekçi sınaması). Sınamalar yeni sürümü manifestten okur.
+- **Sınamalar:** İşlemler 1 (listede açıklama ve eklenti, yerleşik araçta yok, JSON adı, uzun açıklamanın reddi);
+  masaüstü ve uygulama sınamaları değişmeden geçti.
+- **Uygularken verilen kararlar:** açıklama tanımda, manifestte değil (araç başına); en çok 2000 karakter; listede
+  `extension` da verilir (ajan hangi kodun çalışacağını bilsin); `llms.txt` ve kapalı sözlükler ADIM 21'de kalır.

@@ -112,6 +112,10 @@ fn described(registry: &Registry, tool: &Tool, doc: &Document) -> ProcessingTool
         label: tool.label.clone(),
         category: registry.category_path(&tool.category),
         description: tool.description.clone(),
+        // An extension's tool: what its descriptor tells an AI model and which extension runs it (docs/adr/8057
+        // §13–§14), read without its code.
+        model_description: crate::external::find(&tool.id).and_then(|t| t.model_description),
+        extension: crate::external::pin_of(&tool.id),
         aliases: tool.aliases.clone(),
         parameters: tool
             .parameters
