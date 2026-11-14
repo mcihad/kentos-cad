@@ -656,10 +656,23 @@ impl App {
         }
         // Otomatik's answer for the whole: a tool's is taken again from its
         // job below, its locked objects left out (the web's).
-        let background = |auto: Option<Target>| match choice {
-            Some(plan::Choice::At(Target::Worker)) => true,
-            Some(plan::Choice::Auto) => auto == Some(Target::Worker),
-            _ => false,
+        // An expression that calls an extension's function (`ext.…`) runs in the background whatever the choice: its
+        // answers come from the extension's process, and the window never waits for it (extensions/tools.rs).
+        let asks_extension = tool.targets.contains(&Target::Worker)
+            && tool.parameters.iter().any(|p| {
+                matches!(p.kind, kentos_processing::ParamKind::Expression { .. })
+                    && values
+                        .get(&p.name)
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|s| s.contains("ext."))
+            });
+        let background = |auto: Option<Target>| {
+            asks_extension
+                || match choice {
+                    Some(plan::Choice::At(Target::Worker)) => true,
+                    Some(plan::Choice::Auto) => auto == Some(Target::Worker),
+                    _ => false,
+                }
         };
         // The last values keep a file's name and path, not its rows (docs/adr/0200 §7).
         self.gis.processing.memory.remember(

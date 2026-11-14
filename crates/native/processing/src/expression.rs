@@ -230,6 +230,15 @@ pub fn preview_expression(
     let Some(first_object) = entities.first() else {
         return "Önizleme için uygun nesne yok.".into();
     };
+    // An extension's function is not asked for a preview (the window does not wait for its process): its values
+    // come at the run, not "empty" here.
+    if !expr.externals().is_empty() && how.externals.is_none() {
+        return format!(
+            "Önizleme yapılmadı: ifade bir eklenti işlevi çağırıyor ({}); değeri çalıştırınca eklentinin kendi \
+             sürecinde hesaplanır.",
+            expr.externals().join(", ")
+        );
+    }
     let missing: Vec<String> = expr
         .fields
         .iter()

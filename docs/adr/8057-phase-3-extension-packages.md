@@ -940,6 +940,13 @@ kaydı), `apps/desktop/src/shell/extensions/tools.rs` (`Answers`), `python/kento
   sınamaları (86 + bütünleşik); İşlemler 1 (Öznitelik hesapla üç parsele "101/1, 101/2, 101/3" yazdı, eklentiye tek
   yığınla soruldu; bilinmeyen işlev çalıştırmadan önce reddedildi); Python 1 (satır başına hata); masaüstü 1 (İmar'ın
   işlevi adıyla bilinir, pencerenin denetimi geçer).
+- **Gerçek pencere (14 Kasım):** İmar 1.1.2 (deneme sürümü) güncellemesinde "İfadelere işlev ekler · YENİ" yeteneği
+  gösterildi; Öznitelik hesapla'da `ext.tr.ornek.imar-denetim.ada-parsel(ada, parsel)` pencerenin denetiminden geçti,
+  "4 nesnede “etiket” yazıldı". Bulgu: önizleme sürece sormadığı için "4 nesnede sonuç boş" diyordu; artık "Önizleme
+  yapılmadı: ifade bir eklenti işlevi çağırıyor (…); değeri çalıştırınca eklentinin kendi sürecinde hesaplanır" der.
+  Bulgu: "Otomatik" 2000 nesnenin altında aracı pencerenin iş parçacığında çalıştırıyordu, eklentinin süreci beklenirdi;
+  `ext.` çağıran ifadesi olan çalıştırma artık her zaman arka planda (pencerenin "Nerede çalışır" satırı bunu henüz
+  söylemiyor).
 - **Uygularken verilen kararlar (planda yazılı değildi):** `ext` sonrası nokta ve tire adın içinde; bağımsız değişken
-  sayısı denetlenmez; yanıt önbelleği argümanlarla, 100 000 yanıt; önizleme sürece sormaz; etiket/stil/form sonraki
-  dilimde; İmar'ın işlevi biçimlendirme (mevzuat iddiası yok).
+  sayısı denetlenmez; yanıt önbelleği argümanlarla, 100 000 yanıt; önizleme sürece sormaz ve bunu söyler; eklenti işlevi
+  çağıran çalıştırma arka planda; etiket/stil/form sonraki dilimde; İmar'ın işlevi biçimlendirme (mevzuat iddiası yok).
