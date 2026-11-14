@@ -25,6 +25,20 @@ pub type LabelCalls = Arc<dyn ExternalCalls + Send + Sync>;
 
 static EXTERNALS: RwLock<Option<(Vec<ExternalDef>, LabelCalls)>> = RwLock::new(None);
 
+/// How many times the host's answers grew: a layer whose labels call an extension's function is worked out again.
+static ANSWERS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The host got answers it did not have (a background ask came back): the labels that call extensions' functions are
+/// worked out again at the next refresh.
+pub fn answers_changed() {
+    ANSWERS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// How many times the host's answers grew.
+pub fn answers_generation() -> u64 {
+    ANSWERS.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// The extensions' functions a label may call and what answers them; replaced as extensions change.
 pub fn set_externals(defs: Vec<ExternalDef>, calls: LabelCalls) {
     if let Ok(mut slot) = EXTERNALS.write() {

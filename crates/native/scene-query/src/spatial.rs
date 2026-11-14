@@ -819,9 +819,17 @@ impl Spatial {
         let mut seen = std::collections::HashSet::new();
         for l in &leaves {
             seen.insert(l.id.clone());
+            let texts = texts_key(l);
+            // A layer whose labels call an extension's function (`ext.`) is worked out again when its answers come
+            // (label_texts::answers_changed); the others are not.
+            let answers = if texts.contains("ext.") {
+                crate::label_texts::answers_generation()
+            } else {
+                0
+            };
             let key = format!(
-                "{}|{}|{}{}",
-                texts_key(l),
+                "{}|{}|{}{}|{answers}",
+                texts,
                 unit.factor(),
                 self.hide_point_names,
                 self.point_codes
