@@ -1575,4 +1575,15 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   her tuşta bir süreç çağrısı olurdu, onlar için düğme var. Komut çalışırken gelen değişiklik bekler, bitince **bir
   kez** o anki değerlerle yeniden çalışır (art arda üç seçim üç çalıştırma değil). Kapı 1: `onChange` eklentinin bir
   komutu olmalı. Vitrin'de alan seçilince ya da nesneler alınınca sayım kendiliğinden yenilenir; Say düğmesi durur.
+- **Koyu tema, büyük yazı, dar pencere, klavye** (ADIM 22 kabulü; 1100×650, 16 px yazı, koyu tema, gerçek fare ve
+  klavye; sahibin ayarlarının yalıtılmış bir kopyası): "Yapı ara" Alt+Q ile komut aramasından açıldı. İki bulgu:
+  1. **Dar yerde ortak `Form` etiket sütununu koruyordu:** alanlar yan panelin genişliğinin üçte birine iniyor, onay
+     kutusunun yazısı ("Yalnız numarasız yapılar") sağ kenardan kesiliyordu. Düzeltme ortak bileşende
+     (`kentos_ui::widget::form`, `Pair`): etiketin yanında alana en az 120 px (yazıyla ölçekli) kalmıyorsa etiket alanın
+     üstüne geçer ve alan bütün genişliği alır, adsız satır girintisiz durur. Geniş yerde görünüm aynı: 1440×900,
+     13 px'te Yapı ara değişmedi (aralık eskisi gibi sabit 12 px). Ekransız düzen testi iki genişliği ölçer.
+  2. **Enter:** panelin metin ve sayı alanında Enter birincil düğmeye (yoksa ilk düğmeye) basar; Yapı no'da Enter
+     aramayı çalıştırdı (5 satır).
+  Kalan: kısa pencerede Eklenti yığını yüksekliğin küçük bir payını alıyor (Öznitelikler altında), panel kaydırılarak
+  kullanılıyor; alanlar arası Tab uygulamada genel olarak yok (ayrı iş).
 - **Kalan (ADIM 22):** ağaç, kart bileşenleri; birden çok açık panel.

@@ -15,6 +15,11 @@
 //! Zorunlu alanın adının yanında yıldız, alanın altında yardım, uyarı ya da
 //! hata yazar; hata uyarının, uyarı yardımın yerini alır.
 //!
+//! Dar yerde (dar bir yan panel, büyük yazı) alanın yanında en az [`LEAST`]
+//! genişlik kalmıyorsa etiket alanın üstüne geçer ve alan bütün genişliği
+//! alır; adsız satır (onay kutusu, düğmeler) girintisiz durur. Geniş yerde
+//! görünüm aynıdır.
+//!
 //! ```ignore
 //! Form::new()
 //!     .section("Genel")
@@ -25,9 +30,15 @@
 //!     .error(self.latitude_error.as_deref())
 //! ```
 
+use iced::advanced::layout::{self, Layout, Node};
+use iced::advanced::widget::{Operation, Tree, Widget};
+use iced::advanced::{Clipboard, Shell, overlay, renderer};
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{Column, column, container, row, rule};
-use iced::{Alignment, Element, Fill, Padding};
+use iced::widget::{Column, column, container, row, rule, space};
+use iced::{
+    Alignment, Element, Event, Fill, Length, Padding, Rectangle, Renderer, Size, Theme, Vector,
+    mouse,
+};
 
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
@@ -36,6 +47,13 @@ use crate::theme::typography;
 
 /// Etiket sütununun varsayılan genişliği (12 piksellik gövde metnine göre).
 const LABEL: f32 = 110.0;
+
+/// Etiketin yanında alana kalması gereken en az genişlik (12 piksellik gövde
+/// metnine göre); kalmıyorsa etiket alanın üstüne geçer.
+const LEAST: f32 = 120.0;
+
+/// Etiket sütunuyla alan arası (piksel; yazı boyuyla büyümez, eskisi gibi).
+const GAP: f32 = 12.0;
 
 /// Form.
 pub struct Form<'a, Message> {
@@ -205,21 +223,21 @@ impl<'a, Message: 'a> From<Form<'a, Message>> for Element<'a, Message> {
                     };
 
                     // Ad, alanın ilk satırıyla aynı yükseklikte başlar.
-                    row![
-                        container(name_row).width(label_width).padding(Padding {
+                    Pair::new(
+                        container(name_row).padding(Padding {
                             top: 4.0,
                             ..Padding::ZERO
                         }),
                         body.width(Fill),
-                    ]
-                    .spacing(12)
+                        label_width,
+                    )
                     .into()
                 }
-                Line::Full(content) => row![
-                    container(iced::widget::space::horizontal()).width(label_width),
+                Line::Full(content) => Pair::new(
+                    space::horizontal().width(0),
                     container(content).width(Fill),
-                ]
-                .spacing(12)
+                    label_width,
+                )
                 .into(),
                 Line::Wide(content) => container(content).width(Fill).into(),
             };
@@ -228,5 +246,253 @@ impl<'a, Message: 'a> From<Form<'a, Message>> for Element<'a, Message> {
         }
 
         column.into()
+    }
+}
+
+/// A row's name and its control (with its help): side by side when the control has [`LEAST`] beside the name column,
+/// else the name above and the control the whole width below. A form in a narrow dock with large text kept its name
+/// column and left the controls a third of the width; a check box's words ran past the edge (real window, 15 November
+/// 2026: 1100×650, 16 px text). An unnamed row's name is empty: indented beside, flush below.
+struct Pair<'a, Message> {
+    /// The name, the control.
+    children: [Element<'a, Message>; 2],
+    label_width: f32,
+}
+
+impl<'a, Message: 'a> Pair<'a, Message> {
+    fn new(
+        name: impl Into<Element<'a, Message>>,
+        control: impl Into<Element<'a, Message>>,
+        label_width: f32,
+    ) -> Self {
+        Self {
+            children: [name.into(), control.into()],
+            label_width,
+        }
+    }
+}
+
+impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Pair<'a, Message> {
+    fn children(&self) -> Vec<Tree> {
+        self.children.iter().map(Tree::new).collect()
+    }
+
+    fn diff(&self, tree: &mut Tree) {
+        tree.diff_children(&self.children);
+    }
+
+    fn size(&self) -> Size<Length> {
+        Size::new(Length::Fill, Length::Shrink)
+    }
+
+    fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) -> Node {
+        let limits = limits.width(Length::Fill).height(Length::Shrink);
+        let width = limits.max().width;
+        let gap = GAP;
+        let beside = width >= self.label_width + gap + typography::scaled(LEAST);
+        let room = |w: f32| layout::Limits::new(Size::ZERO, Size::new(w.max(0.0), f32::INFINITY));
+        let [name, control] = &mut self.children;
+        let (name_tree, control_tree) = tree.children.split_at_mut(1);
+        let (name_width, control_x) = if beside {
+            (self.label_width, self.label_width + gap)
+        } else {
+            (width, 0.0)
+        };
+        let name_node = name
+            .as_widget_mut()
+            .layout(&mut name_tree[0], renderer, &room(name_width));
+        let mut control_node = control.as_widget_mut().layout(
+            &mut control_tree[0],
+            renderer,
+            &room(width - control_x),
+        );
+        let named = name_node.size().height > 0.0 && name_node.size().width > 0.0;
+        let below = if beside || !named {
+            0.0
+        } else {
+            name_node.size().height + 4.0
+        };
+        control_node.move_to_mut((control_x, below));
+        let height = if beside {
+            name_node.size().height.max(control_node.size().height)
+        } else {
+            below + control_node.size().height
+        };
+        let size = limits.resolve(Length::Fill, Length::Shrink, Size::new(width, height));
+        Node::with_children(size, vec![name_node, control_node])
+    }
+
+    fn operate(
+        &mut self,
+        tree: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn Operation,
+    ) {
+        operation.container(None, layout.bounds());
+        operation.traverse(&mut |operation| {
+            self.children
+                .iter_mut()
+                .zip(&mut tree.children)
+                .zip(layout.children())
+                .for_each(|((child, state), layout)| {
+                    child
+                        .as_widget_mut()
+                        .operate(state, layout, renderer, operation);
+                });
+        });
+    }
+
+    fn update(
+        &mut self,
+        tree: &mut Tree,
+        event: &Event,
+        layout: Layout<'_>,
+        cursor: mouse::Cursor,
+        renderer: &Renderer,
+        clipboard: &mut dyn Clipboard,
+        shell: &mut Shell<'_, Message>,
+        viewport: &Rectangle,
+    ) {
+        for ((child, tree), layout) in self
+            .children
+            .iter_mut()
+            .zip(&mut tree.children)
+            .zip(layout.children())
+        {
+            child.as_widget_mut().update(
+                tree, event, layout, cursor, renderer, clipboard, shell, viewport,
+            );
+        }
+    }
+
+    fn mouse_interaction(
+        &self,
+        tree: &Tree,
+        layout: Layout<'_>,
+        cursor: mouse::Cursor,
+        viewport: &Rectangle,
+        renderer: &Renderer,
+    ) -> mouse::Interaction {
+        self.children
+            .iter()
+            .zip(&tree.children)
+            .zip(layout.children())
+            .map(|((child, tree), layout)| {
+                child
+                    .as_widget()
+                    .mouse_interaction(tree, layout, cursor, viewport, renderer)
+            })
+            .max()
+            .unwrap_or_default()
+    }
+
+    fn draw(
+        &self,
+        tree: &Tree,
+        renderer: &mut Renderer,
+        theme: &Theme,
+        style: &renderer::Style,
+        layout: Layout<'_>,
+        cursor: mouse::Cursor,
+        viewport: &Rectangle,
+    ) {
+        for ((child, tree), layout) in self
+            .children
+            .iter()
+            .zip(&tree.children)
+            .zip(layout.children())
+        {
+            child
+                .as_widget()
+                .draw(tree, renderer, theme, style, layout, cursor, viewport);
+        }
+    }
+
+    fn overlay<'b>(
+        &'b mut self,
+        tree: &'b mut Tree,
+        layout: Layout<'b>,
+        renderer: &Renderer,
+        viewport: &Rectangle,
+        translation: Vector,
+    ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
+        overlay::from_children(
+            &mut self.children,
+            tree,
+            layout,
+            renderer,
+            viewport,
+            translation,
+        )
+    }
+}
+
+impl<'a, Message: 'a> From<Pair<'a, Message>> for Element<'a, Message> {
+    fn from(pair: Pair<'a, Message>) -> Self {
+        Element::new(pair)
+    }
+}
+
+#[cfg(all(test, feature = "snapshot"))]
+mod tests {
+    use iced::advanced::layout::Limits;
+    use iced::advanced::widget::Tree;
+    use iced::widget::space;
+    use iced::{Element, Length, Size};
+
+    use super::Form;
+    use crate::snapshot::Snapshot;
+
+    /// A named field and an unnamed row laid out in `width`: each row's name and control, (x, y) in the row.
+    fn rows(width: f32) -> Vec<Vec<(f32, f32)>> {
+        let snapshot = Snapshot::new(Size::new(width, 400.0)).expect("çizici kurulamadı");
+        let control = || {
+            space::horizontal()
+                .width(Length::Fill)
+                .height(Length::Fixed(28.0))
+        };
+        let form: Form<'_, ()> = Form::new().field("Katman", control()).row(control());
+        let mut element: Element<'_, ()> = form.into();
+        let mut tree = Tree::new(&element);
+        let limits = Limits::new(Size::ZERO, Size::new(width, 400.0));
+        let node = element
+            .as_widget_mut()
+            .layout(&mut tree, snapshot.renderer(), &limits);
+        node.children()
+            .iter()
+            .map(|row| {
+                row.children()
+                    .iter()
+                    .map(|c| (c.bounds().x, c.bounds().y))
+                    .collect()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_wide_form_keeps_its_name_column() {
+        let rows = rows(400.0);
+        let beside = crate::theme::typography::scaled(super::LABEL) + super::GAP;
+        assert_eq!(rows[0][1], (beside, 0.0), "the control beside the name");
+        assert_eq!(
+            rows[1][1],
+            (beside, 0.0),
+            "an unnamed row indented as the controls"
+        );
+    }
+
+    #[test]
+    fn a_narrow_form_puts_the_name_above_and_gives_the_control_the_width() {
+        // 1100×650 at 16 px text left a dock's controls a third of the width (real window, 15 November 2026).
+        let rows = rows(200.0);
+        let (x, y) = rows[0][1];
+        assert_eq!(x, 0.0, "the control the whole width");
+        assert!(y > 4.0, "below the name: {y}");
+        assert_eq!(
+            rows[1][1],
+            (0.0, 0.0),
+            "an unnamed row flush, no gap above it"
+        );
     }
 }

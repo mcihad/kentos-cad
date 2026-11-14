@@ -13,6 +13,7 @@
 //!   shown as a column.
 //! - **A running button shows how far it is:** its command's `ctx.progress` as a bar and words under the form, with
 //!   Durdur; a command that answers a message, not rows, leaves the table as it was.
+//! - **Enter presses the primary button** in a text or number field (else the panel's first button).
 //! - **A value changed can run a command:** an input's `onChange` runs it with the panel's values (its rows to the
 //!   first table); a change while a command runs waits for it, one rerun with the values then.
 //! - **Pickers follow their layer picker:** a field picker lists the fields of the layer chosen there, a feature picker
@@ -239,6 +240,24 @@ impl OpenPanel {
             }
         }
         self.choices.insert(id, value);
+    }
+
+    /// The button Enter presses in a text or number field: the primary one, else the first; none without buttons.
+    pub(crate) fn default_button(&self) -> Option<&str> {
+        let buttons: Vec<(&str, bool)> = self
+            .definition
+            .body
+            .iter()
+            .filter_map(|c| match c {
+                Component::Button { id, primary, .. } => Some((id.as_str(), *primary)),
+                _ => None,
+            })
+            .collect();
+        buttons
+            .iter()
+            .find(|(_, primary)| *primary)
+            .or(buttons.first())
+            .map(|(id, _)| *id)
     }
 
     /// The layer a picker's layer picker holds now; none when it has none or none is chosen.
@@ -732,6 +751,11 @@ impl App {
             .get(&p.ext)
             .and_then(Option::as_deref);
         let event = |e: PanelEvent| msg(Event::Panel(e));
+        // Enter in a text or number field presses the panel's primary button, as a form's.
+        let enter = p
+            .default_button()
+            .filter(|_| p.running.is_none() && why.is_none())
+            .map(|b| event(PanelEvent::Press(b.to_owned())));
         let mut form = Form::new().label_width(kentos_ui::theme::typography::scaled(110.0));
         let mut tables: Vec<Element<'_, Message>> = Vec::new();
         for c in &p.definition.body {
@@ -746,9 +770,12 @@ impl App {
                 } => {
                     let id = id.clone();
                     let value = p.texts.get(&id).map_or("", String::as_str);
-                    let field =
+                    let mut field =
                         kentos_ui::widget::text_field(placeholder.as_deref().unwrap_or(""), value)
                             .on_input(move |t| event(PanelEvent::Text(id.clone(), t)));
+                    if let Some(press) = enter.clone() {
+                        field = field.on_submit(press);
+                    }
                     form = form.field(words.clone(), field);
                 }
                 Component::NumberField {
@@ -763,6 +790,9 @@ impl App {
                         .on_input(move |t| event(PanelEvent::Text(id.clone(), t)));
                     if let Some(unit) = unit {
                         field = field.suffix(unit.clone());
+                    }
+                    if let Some(press) = enter.clone() {
+                        field = field.on_submit(press);
                     }
                     form = form.field(words.clone(), field);
                 }
@@ -1125,6 +1155,26 @@ mod tests {
         assert_eq!(
             p.params().unwrap(),
             json!({ "katman": "yapi", "alan": null, "nesneler": [], "bir": "c" })
+        );
+    }
+
+    #[test]
+    fn enter_presses_the_primary_button_else_the_first() {
+        let p = panel();
+        assert_eq!(p.default_button(), Some("ara"), "the only button");
+        let value = json!({
+            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "İki düğme",
+            "body": [
+                { "type": "textField", "id": "sorgu", "label": "Aranan" },
+                { "type": "button", "id": "numarala", "label": "Numarala", "command": "a" },
+                { "type": "button", "id": "ara", "label": "Ara", "command": "b", "primary": true }
+            ]
+        });
+        let two = OpenPanel::new("x", "y", kentos_extensions::ui_panel::read(&value).unwrap());
+        assert_eq!(
+            two.default_button(),
+            Some("ara"),
+            "the primary one, wherever it is"
         );
     }
 

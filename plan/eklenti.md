@@ -1117,7 +1117,9 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
 - [ ] **Derslerden (13 Kasım):** UI bildirimseldir ve araç takımından bağımsızdır: Python'a çizim nesnesi ya da araç
   takımı tipi verilmez, özel bileşen kaçış yolu da vermez (QGIS'te Qt değişince paketlerin %58'i geride kaldı) [D7];
   `l10n` anahtarları panel ve form metinlerine bağlanır.
-- **Kabul:** Python'dan dialog + dock + tablo + katman seçici; açık/koyu tema, dar pencere ve büyük yazıda gerçek fare ve
+- **Kabul** — *kısmen (ADR 8057 §24, 15 Kasım): koyu tema, 16 px, 1100×650'de panel gerçek fare ve klavyeyle
+  sınandı: dar yerde etiket alanın üstünde (ortak Form), Enter birincil düğme; kalan: Tab, giriş sırasında yama,
+  bileşen kapsam raporu.* Python'dan dialog + dock + tablo + katman seçici; açık/koyu tema, dar pencere ve büyük yazıda gerçek fare ve
   klavyeyle; yanlış sayı, Tab/Enter/Esc, giriş sırasında yama, kapat/kaldır ve geç geri çağırma sınanır; bileşen kapsam
   raporu ile üretilen API referansı aynı sürümü gösterir [EKL-03]. P10, P13 (§5).
 
