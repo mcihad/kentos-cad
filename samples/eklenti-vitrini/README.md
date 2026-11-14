@@ -23,6 +23,7 @@ ekran görüntüleri bununla yapılır (plan/eklenti.md, docs/adr/8057).
 | Hata veren komut | Hata örneği | Bildirim, Ayrıntı (Python iz kaydı) ve eklentinin günlüğü; çizim değişmez (`03-komutlar`) |
 | İşlemler aracı (shapely, NumPy) | `processing` › TAKS | Vitrin › TAKS: yeni katman, tablo ve sayı; Durdur (`04-taks`) |
 | Formdan eklenti aracı | Parsel formunun "TAKS hesapla" düğmesi → `ext.tr.ornek.vitrin.taks`, eklentinin sürümü ve özetiyle sabitli | Bir parseli Formla düzenle: düğme aracı o kayıtla açar; ortam hazır değilse "Bekliyor", eklenti yoksa ya da kapalıysa "Kullanılamaz" der; Formlar'da başka sürüm uyarılır (`08-form-eylemi`) |
+| Çalışma kökeni | TAKS'ın yazdığı katmanın türetim kaydı: eklenti, sürüm, paket özeti, ortam | TAKS'tan sonra TAKS katmanı › sağ tık › Veri › Veri kümesi bilgisi › Soy (`10-koken`); kaydedilen dosyada CBS verisi sürüm 1 |
 | Modelde eklenti aracı | Model tasarımcısı'nda TAKS adımı, eklentinin sürümü ve özetiyle sabitli | Yeni model › Araç ara: TAKS; adımın ayarları "Eklenti Vitrini <sürüm> ile eklendi." der, eklentisiz bilgisayarda hangi sürümle yapıldığını söyler (`09-model`) |
 | İfade işlevi | `expressions` › `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` | Etiket metni (`05-etiket`), Katman stili › Kurallar koşulu (`06-kural`), Katman süzgeci (`07-suzgec`), İşlemler'in ifadeleri; çizim beklemez, yanıt gelince yeniden çizilir |
 | Python'suz katkı | `dataSources` (XYZ altlık) | Kaynaklar: Örnek Belediyesi altlığı (sunucusu örnektir, yanıt vermez) |

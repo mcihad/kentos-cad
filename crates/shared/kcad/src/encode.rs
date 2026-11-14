@@ -87,8 +87,22 @@ pub(crate) fn payload(
 
 /// The module versions a document needs (`modules`, schema 254): none has raised its version yet. A module's new data
 /// raises its own version here and in its reader's `MODULE_VERSIONS`; the document schema stays (docs/adr/8054 §10).
-fn modules_of(_doc: &DocumentSnapshotV2) -> ModuleVersions {
-    ModuleVersions::default()
+fn modules_of(doc: &DocumentSnapshotV2) -> ModuleVersions {
+    // GIS 1 (docs/adr/8057 §15): a derivation that names an extension or its environment.
+    fn extended(nodes: &[kentos_contracts::LayerNode]) -> bool {
+        nodes.iter().any(|n| {
+            n.derivation
+                .as_ref()
+                .is_some_and(|d| d.extension.is_some() || d.environment.is_some())
+                || extended(&n.children)
+        })
+    }
+    let mut out = ModuleVersions::default();
+    if extended(&doc.layers) {
+        out.modules
+            .push(("gis".to_owned(), crate::GIS_WITH_EXTENSION_DERIVATIONS));
+    }
+    out
 }
 
 /// A drawing's objects as the writer reads them: the snapshot's own, or the open document's shared ones, which a save

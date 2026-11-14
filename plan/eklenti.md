@@ -848,9 +848,12 @@ eklentinin sürümü ve paket özetiyle sabitler (tasarımcı, Python, MCP aynı
 
 **Durum (14 Kasım): `modelDescription`** (ADR 8057 §14; D18, Ö·39): araç tanımı yapay zekâ için ayrı bir açıklama
 taşır; `cad.processing.tools` onu ve aracın eklentisini (sürüm, özet) kod yüklemeden listeler; Vitrin 1.0.2'de örneği.
-Kalan (ADIM 19): çalışma kökeni [PY-TOOL-22], büyük girdinin sayfalı/ikili aktarımı [PY-TOOL-08], eklentiden
-eklentiye çağrı [PY-RUN-15], önizlemede aracının yazma izinlerini kapatması [PY-RUN-23]; `kek inspect`'in araç
-denetimi.
+
+**Durum (14 Kasım): çalışma kökeni** (ADR 8057 §15; PY-TOOL-22): eklenti aracının yazdığı katmanın türetim kaydı
+eklentiyi (sürüm, paket özeti) ve kodun çalıştığı ortamı taşır; dosyada CBS verisi sürüm 1 (modül sürümünün ilk
+yükseltilişi, belge şeması değişmez); Veri kümesi bilgisi › Soy gösterir. Kalan (ADIM 19): büyük girdinin sayfalı/ikili
+aktarımı [PY-TOOL-08], eklentiden eklentiye çağrı [PY-RUN-15], önizlemede aracının yazma izinlerini kapatması
+[PY-RUN-23]; `kek inspect`'in araç denetimi.
 
 **Sıradaki dilim (tasarım, 14 Kasım): çizimdeki ifadelerde eklenti işlevi.** Etiket metni ve koşulu
 (`scene-query::label_texts`), katman süzgeci (`layer_filter`), tematik stil kuralları (`native-style::classify`) ve sanal

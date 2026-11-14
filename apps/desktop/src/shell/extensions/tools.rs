@@ -834,6 +834,17 @@ impl App {
     /// processes of versions no longer installed closed.
     pub(crate) fn ext_tools_changed(&mut self) {
         let mut tools: Vec<ExternalTool> = Vec::new();
+        // Where the extensions' code runs once KentOS's Python is ready: its version and this computer's platform
+        // (their packages' binaries depend on both; docs/adr/8057 §15).
+        let environment = match &self.python_setup.python {
+            Some(crate::python_setup::OwnPython::Ready(interpreter, _)) => format!(
+                "Python {} · {}-{}",
+                interpreter.version,
+                std::env::consts::OS,
+                std::env::consts::ARCH
+            ),
+            _ => String::new(),
+        };
         let mut plans: HashMap<String, Plan> = HashMap::new();
         let mut refusals: Vec<(String, String, String)> = Vec::new();
         if let Some(registry) = self.extensions.registry.as_ref() {
@@ -877,8 +888,10 @@ impl App {
                     });
                 match read {
                     Ok(mut tool) => {
-                        // The package's digest: what a model's step pins (docs/adr/8057 §13).
+                        // The package's digest: what a model's step pins (docs/adr/8057 §13); where its code runs,
+                        // which a layer it makes records (§15).
                         tool.digest = registry.digest(&ext).unwrap_or_default();
+                        tool.environment = environment.clone();
                         plans.insert(
                             tool.tool.id.clone(),
                             Plan {

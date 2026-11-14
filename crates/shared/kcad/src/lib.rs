@@ -984,15 +984,19 @@ pub const SCHEMA_WITH_MODULE_VERSIONS: u32 = 254;
 /// Schema 255 (usage review UR-003): the layer each annotation tool draws on (`toolLayers`).
 pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 
-/// The modules a root's `modules` may name: key, name for people, and the version of its data this build reads (none
-/// raised yet: 0). A file with a newer one, an unknown module or an extension's data is refused before its document is
-/// read, as written by a newer KentOS (docs/adr/8054 §10).
+/// The modules a root's `modules` may name: key, name for people, and the version of its data this build reads (0: not
+/// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
+/// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
     ("arch", "mimari", 0),
-    ("gis", "CBS", 0),
+    ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
 ];
+
+/// GIS data version 1 (docs/adr/8057 §15): a layer's derivation names the extension whose tool made it and where its
+/// code ran (`extension`, `environment`). The first module version raised: the document schema stays as it is.
+pub const GIS_WITH_EXTENSION_DERIVATIONS: u16 = 1;
 
 /// A payload root's `modules` (schema 254): the versions above 0 of each module's and each `.kek` extension's data.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -1006,6 +1010,14 @@ pub struct ModuleVersions {
 impl ModuleVersions {
     pub fn is_empty(&self) -> bool {
         self.modules.is_empty() && self.extensions.is_empty()
+    }
+
+    /// A module's version; 0 when it is not written (not raised).
+    pub fn module(&self, key: &str) -> u16 {
+        self.modules
+            .iter()
+            .find(|(k, _)| k == key)
+            .map_or(0, |(_, v)| *v)
     }
 }
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.

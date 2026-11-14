@@ -290,7 +290,9 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
                 let Some(schema) = schema else {
                     return Err(version_error(r, "(yok)"));
                 };
-                document = Some(body(r, schema)?);
+                // The GIS data's version (docs/adr/8057 §15): what its layers' derivations may name.
+                let gis = modules.as_ref().map_or(0, |m| m.versions.module("gis"));
+                document = Some(body(r, schema, gis)?);
             }
             _ => return Err(unknown(r)),
         }
@@ -307,8 +309,9 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
 
 /// The document; `schema` is its payload's (2, 3 with objects' line weights,
 /// 4 with vertex elevations too, 5 with areas' parts, 6 with blocks).
-fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError> {
-    let has = Features::of(schema);
+fn body(r: &mut Reader<'_>, schema: u32, gis: u16) -> Result<DocumentSnapshotV2, KcadError> {
+    let mut has = Features::of(schema);
+    has.gis = gis;
     let mut name = None;
     let mut blocks: Option<blocks::Definitions> = None;
     let mut layers = None;

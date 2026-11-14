@@ -694,8 +694,11 @@ SCHEMA_WITH_MODULE_VERSIONS = 254
 # Usage review UR-003: the layer each annotation tool draws on (`toolLayers`).
 SCHEMA_WITH_TOOL_LAYERS = 255
 # The modules a root's `modules` may name: their names for people and the version of their data this reader knows
-# (none raised yet). A newer one, an unknown module or an extension's data is a newer KentOS's file.
-MODULE_VERSIONS = {"arch": ("mimari", 0), "gis": ("CBS", 0), "map": ("harita", 0), "road": ("yol", 0)}
+# (0: not raised). A newer one, an unknown module or an extension's data is a newer KentOS's file.
+# GIS 1 (docs/adr/8057 §15): a layer's derivation names the extension whose tool made it and where its code ran.
+GIS_WITH_EXTENSION_DERIVATIONS = 1
+MODULE_VERSIONS = {"arch": ("mimari", 0), "gis": ("CBS", GIS_WITH_EXTENSION_DERIVATIONS), "map": ("harita", 0),
+                   "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
 def grades_from_percent(road):
@@ -3859,6 +3862,8 @@ class _Schema:
         self.labels = version >= SCHEMA_WITH_LABELS
         self.variables = version >= SCHEMA_WITH_VARIABLES
         modules = {"modules": (self.module_versions, False)} if version >= SCHEMA_WITH_MODULE_VERSIONS else {}
+        # The GIS data's version (docs/adr/8057 §15); `module_versions` reads it before the document.
+        self.gis_version = 0
         checked = self.fields({"format": (self.text, True), **modules, "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -3898,6 +3903,7 @@ class _Schema:
             name, known = MODULE_VERSIONS[k]
             if x > known:
                 self.fail("schema_version", f"{name} verisi sürüm {x}; bu okuyucunun bildiği: {known}")
+        self.gis_version = m.get("gis", 0)
         if ext:
             first, x = next(iter(ext.items()))
             self.fail("schema_version", f"`{first}` eklentisinin verisi (sürüm {x})")
@@ -5535,11 +5541,31 @@ class _Schema:
                 self.fail("bad_value", "değerler boş olmayan bir harita olur")
             return self.any(x)
 
-        return self.fields({
+        def environment(x):
+            t = nonempty(x)
+            if len(t) > 200 or t.strip() != t or any(c < " " for c in t):
+                self.fail("bad_value", "ortam en çok 200 karakterlik tek satırdır")
+            return t
+
+        # GIS data 1 (docs/adr/8057 §15): the extension whose tool made the layer, and where its code ran.
+        extended = {
+            "extension": (self.fields({"extension": (nonempty, True), "version": (nonempty, True),
+                                       "digest": (nonempty, True)}), False),
+            "environment": (environment, False),
+        } if getattr(self, "gis_version", 0) >= GIS_WITH_EXTENSION_DERIVATIONS else {}
+        d = self.fields({
             "tool": (nonempty, True), "label": (nonempty, True), "toolVersion": (self.uint(32), True),
             "parameters": (parameters, False), "inputs": (inputs, False), "documentRevision": (revision, True),
-            "engine": (nonempty, True), "at": (nonempty, True),
+            "engine": (nonempty, True), "at": (nonempty, True), **extended,
         })(v)
+        pin = d.get("extension")
+        if pin is not None:
+            tool = d["tool"]
+            if not (tool.startswith("ext.") and tool[4:].rsplit(".", 1)[0] == pin["extension"]) \
+                    or re.fullmatch(r"sha256:[0-9a-f]{64}", pin["digest"]) is None \
+                    or not all(c.isascii() and (c.isalnum() or c in ".-+") for c in pin["version"]):
+                self.fail("bad_value", "türetim kaydının eklentisi aracına uymuyor")
+        return d
 
     def source_crs_(self, v):
         """Schema 98 (docs/adr/0583 §1): the system a layer's objects came from; `srid` and `area` written only when

@@ -52936,6 +52936,9 @@ class LayerDerivation(_Model):
         document_revision: The drawing's revision when it ran.
         engine: `KentOS <version>`.
         at: When it ran, UTC (`2026-10-25T09:30:00Z`).
+        environment: Where an extension's tool's code ran (`Python 3.12.13 · linux-x86_64`): its packages' binaries depend on it.
+        extension: An extension's tool's extension as it ran (docs/adr/8057 §15, PY-TOOL-22): its id, version and package
+            digest, which name the code that made the layer. The KCAD file's GIS data version 1.
         parameters: The values it took, but its features inputs (they are `inputs`).
     """
     tool: str
@@ -52944,6 +52947,8 @@ class LayerDerivation(_Model):
     document_revision: str
     engine: str
     at: str
+    environment: str | None | Unset = UNSET
+    extension: ExtensionPin | None | Unset = UNSET
     inputs: list[DerivationInput] | Unset = UNSET
     parameters: dict[str, Any] | Unset = UNSET
 
@@ -52955,6 +52960,10 @@ class LayerDerivation(_Model):
         out["documentRevision"] = self.document_revision
         out["engine"] = self.engine
         out["at"] = self.at
+        if self.environment is not UNSET:
+            out["environment"] = self.environment
+        if self.extension is not UNSET:
+            out["extension"] = None if self.extension is None else self.extension.to_json()
         if self.inputs is not UNSET:
             out["inputs"] = [e0.to_json() for e0 in self.inputs]
         if self.parameters is not UNSET:
@@ -52970,6 +52979,8 @@ class LayerDerivation(_Model):
             document_revision=data["documentRevision"],
             engine=data["engine"],
             at=data["at"],
+            environment=data.get("environment", UNSET),
+            extension=UNSET if "extension" not in data else None if data["extension"] is None else ExtensionPin.from_json(data["extension"]),
             inputs=[DerivationInput.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
             parameters=dict(data["parameters"]) if "parameters" in data else UNSET,
         )

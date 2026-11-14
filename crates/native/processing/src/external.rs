@@ -76,6 +76,9 @@ pub struct ExternalTool {
     /// Its extension's package content digest, as installed (`sha256:…`): the host writes it, empty until then. A
     /// model's step records it with the version ([`pin_of`], docs/adr/8057 §13).
     pub digest: String,
+    /// Where its code runs (`Python 3.12.13 · linux-x86_64`): the host writes it once its Python is ready, empty
+    /// until then; a layer it makes records it (docs/adr/8057 §15).
+    pub environment: String,
     /// What the descriptor tells an AI model about when and how to use it (`modelDescription`, docs/adr/8057 §14),
     /// beside the user's description: `cad.processing.tools` lists it, read without the extension's code.
     pub model_description: Option<String>,
@@ -443,6 +446,7 @@ pub fn from_descriptor(
         extension: extension.to_owned(),
         version: version.to_owned(),
         digest: String::new(),
+        environment: String::new(),
         model_description,
         local: local.to_owned(),
         outputs,

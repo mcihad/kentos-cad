@@ -555,6 +555,20 @@ impl App {
                     )),
                     None,
                 ));
+                // An extension's tool: whose code made it and where it ran (docs/adr/8057 §15). The extension is
+                // named as installed now, its id when it is not.
+                if let Some(pin) = &dv.extension {
+                    let short = pin.digest.get(..19).unwrap_or(&pin.digest);
+                    col = col.push(words::field(
+                        "Eklenti",
+                        label::body(format!(
+                            "{} {} ({short}…)",
+                            self.extension_name(&pin.extension),
+                            pin.version
+                        )),
+                        dv.environment.as_ref().map(|e| format!("Ortam: {e}")),
+                    ));
+                }
                 if !dv.parameters.is_empty() {
                     let values: Vec<String> = dv
                         .parameters

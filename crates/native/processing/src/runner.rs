@@ -1294,6 +1294,11 @@ fn derivation_of(
         document_revision: doc.revision().to_string(),
         engine: crate::command::engine(),
         at: crate::command::utc_at(began),
+        // An extension's tool: which extension's code made it and where it ran (docs/adr/8057 §15).
+        extension: crate::external::pin_of(&tool.id),
+        environment: crate::external::find(&tool.id)
+            .map(|t| t.environment)
+            .filter(|e| !e.is_empty()),
     }
 }
 

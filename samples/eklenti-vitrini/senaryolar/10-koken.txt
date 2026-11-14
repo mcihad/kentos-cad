@@ -1,0 +1,32 @@
+# Çalışma kökeni: TAKS'ın yazdığı katmanın Veri kümesi bilgisi › Soy sekmesi aracı, değerleri ve girdileri yanında
+# katmanı yapan eklentiyi (sürümü, paket özeti) ve kodunun çalıştığı ortamı söyler. Dosyaya kaydedilince de kalır (CBS
+# verisi sürüm 1).
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 262 75    # TAKS
+wait 2500
+click 1167 775  # Çalıştır
+wait 9000
+click 1084 775  # Kapat
+wait 1500
+click 1270 220  # Katman ara
+type TAKS
+wait 1200
+click 1188 283 right  # TAKS katmanının menüsü
+wait 1200
+click 1004 544  # Veri
+wait 1000
+key Down
+key Down
+key Down
+key Return      # Veri kümesi bilgisi… (türetilmiş)
+wait 2000
+click 456 266   # Soy
+wait 1200
+shot 10-soy

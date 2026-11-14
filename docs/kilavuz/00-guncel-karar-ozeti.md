@@ -2550,7 +2550,8 @@
     denetlenir), ifade işlevi `ext.<eklenti>.<işlev>` (çizim beklemez, kaydetme bekler), harita aracı (şekli KentOS
     çizer, eklentinin kodu yerleştirir), Python'suz veri kaynağı. Form düğmesi ve model adımı eklentinin aracını
     sürümü ve paket özetiyle sabitler (`ExtensionPin`); düğme hazır / bekliyor / kullanılamaz der, eklentisiz açılan
-    model bir şey kurmaz, hangi sürümle yapıldığını söyler (sürüm farkı uyarıdır).
+    model bir şey kurmaz, hangi sürümle yapıldığını söyler (sürüm farkı uyarıdır). Eklenti aracının yazdığı katmanın
+    türetim kaydı eklentiyi ve ortamı taşır; dosyada CBS verisi sürüm 1 (belge şeması değişmez, ADR 8054 §10).
   - Hata eklentinin adıyla söylenir, iz kaydı eklentinin günlüğündedir; Durdur önce sorar, 5 sn'de süreci sonlandırır;
     yazan çalıştırma tek geri alma adımıdır.
   - Örnek ve bütün gösterimler `samples/eklenti-vitrini` (Vitrin) ile; yeni yetenek aynı değişiklikte oraya girer.

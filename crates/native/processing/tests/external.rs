@@ -173,14 +173,18 @@ fn one_at_a_time() -> std::sync::MutexGuard<'static, ()> {
 /// The extension's package digest the host gives (yapay).
 const DIGEST: &str = "sha256:abababababababababababababababababababababababababababababababab";
 
+/// Where the host says the extension's code runs (yapay).
+const ENVIRONMENT: &str = "Python 3.12.13 · linux-x86_64";
+
 fn setup() -> ExternalTool {
     static ONCE: OnceLock<()> = OnceLock::new();
     ONCE.get_or_init(|| {
         let mut tool =
             external::from_descriptor("tr.ornek.deneme", "Deneme", "1.0.0", "olc", &descriptor())
                 .unwrap();
-        // The host gives the package's digest (docs/adr/8057 §13).
+        // The host gives the package's digest (docs/adr/8057 §13) and where its code runs (§15).
         tool.digest = DIGEST.into();
+        tool.environment = ENVIRONMENT.into();
         external::set_tools(vec![tool]);
         external::register_provider(Arc::new(Stand));
         kentos_processing::command::register();
@@ -794,4 +798,44 @@ fn the_tool_list_gives_an_ai_model_the_descriptors_words_and_the_extension() {
         panic!("a description too long is refused");
     };
     assert!(refused.contains("modelDescription en çok"), "{refused}");
+}
+
+#[test]
+fn a_layer_an_extensions_tool_makes_records_the_extension_and_where_it_ran() {
+    // docs/adr/8057 §15, PY-TOOL-22: the new layer's derivation names the extension's id, version and digest and the
+    // environment its code ran in, beside the tool, its values and its inputs' digests.
+    let _turn = one_at_a_time();
+    setup();
+    seen().answer = None;
+    let mut host = Bare(drawing(false), Vec::new());
+    let tool = Registry::current().get("ext.tr.ornek.deneme.olc").unwrap();
+    let mut runner = Runner::new();
+    let mut log = Vec::new();
+    let outcome = runner.run(&mut host, &tool, &values(), false, &mut log);
+    assert!(matches!(outcome, Outcome::Ok { .. }), "{outcome:?}");
+    let layer = host
+        .0
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "Alanlar")
+        .expect("the new layer");
+    let derivation = host
+        .0
+        .layers()
+        .info_of(&layer.id)
+        .and_then(|i| i.derivation)
+        .expect("its derivation");
+    assert_eq!(derivation.tool, "ext.tr.ornek.deneme.olc");
+    assert_eq!(
+        derivation.extension,
+        Some(kentos_commands::ExtensionPin {
+            extension: "tr.ornek.deneme".into(),
+            version: "1.0.0".into(),
+            digest: DIGEST.into(),
+        })
+    );
+    assert_eq!(derivation.environment.as_deref(), Some(ENVIRONMENT));
+    assert!(!derivation.inputs.is_empty(), "its inputs' digests");
+    assert_eq!(kentos_commands::derivation_problem(&derivation), None);
 }

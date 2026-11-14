@@ -2997,6 +2997,15 @@ def document(d):
            for m in (d["settings"].get("arch") or {}).get("modules", [])):
         # A module's columns, stairs, ramps, slabs and room separators, and its kitchen runs (docs/adr/8050).
         schema = max(schema, 245)
+    # GIS data 1 (docs/adr/8057 §15): a derivation that names an extension or where its code ran raises the GIS
+    # module's version in the root's `modules`, not the document schema (schema 254's module versions).
+    def extended(nodes):
+        return any("extension" in n.get("derivation", {}) or "environment" in n.get("derivation", {})
+                   or extended(n.get("children", [])) for n in nodes)
+    if extended(d["layers"]):
+        schema = max(schema, 254)
+        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(1)})
+                + text("version") + uint(schema) + text("document") + cmap(body))
     return root(cmap(body), version=uint(schema))
 
 
@@ -5724,6 +5733,17 @@ def build():
     out["broken/derivation-short-digest.kcad"] = ds_broken(lambda d: derived_layer(d)["derivation"]["inputs"][0].update(digest="ab"))
     out["broken/derivation-twice.kcad"] = ds_broken(lambda d: derived_layer(d)["derivation"]["inputs"].append(
         dict(derived_layer(d)["derivation"]["inputs"][0])))
+    # An extension's tool's derivation (docs/adr/8057 §15): GIS data 1; without `modules` an unknown field, a pin of
+    # another extension than its tool's a bad value.
+    out["extension-derivation.kcad"] = container(document(load("extension-derivation.json")))
+    ext_payload = document(load("extension-derivation.json"))
+    with_gis = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(1)})
+    assert ext_payload.startswith(with_gis), "an extension's derivation raises the GIS data's version"
+    out["broken/derivation-extension-without-gis.kcad"] = container(
+        head(5, 3) + text("format") + text("kentos.document") + ext_payload[len(with_gis):])
+    ext_other = copy.deepcopy(load("extension-derivation.json"))
+    derived_layer(ext_other)["derivation"]["extension"]["extension"] = "tr.ornek.baska"
+    out["broken/derivation-extension-other-tool.kcad"] = container(document(ext_other))
     # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
     # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
     # two columns of one name, an unknown way, an empty list of columns.

@@ -480,6 +480,9 @@ pub(crate) struct Features {
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     pub(super) uids: bool,
+    /// The GIS data's version in the root's `modules` (docs/adr/8054 §10): 1, a derivation's extension and
+    /// environment (docs/adr/8057 §15). Not the schema's: set by the root.
+    pub(crate) gis: u16,
 }
 
 impl Features {
@@ -735,6 +738,7 @@ impl Features {
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
             uids: true,
+            gis: 0,
         }
     }
 

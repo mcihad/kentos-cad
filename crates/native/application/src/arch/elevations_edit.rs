@@ -397,6 +397,8 @@ fn stamp(
         document_revision: revision,
         engine: format!("KentOS {}", env!("CARGO_PKG_VERSION")),
         at: elevations::utc_now(),
+        extension: None,
+        environment: None,
     };
     let Some(mut info) = doc.layers().info_of(layer) else {
         return Err("İç görünüşün katmanı bulunamadı.".into());

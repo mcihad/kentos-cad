@@ -251,6 +251,16 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
                 if let Some(problem) = kentos_contracts::derivation_problem(&read) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
+                // GIS data 1 (docs/adr/8057 §15): the extension that made it and where its code ran.
+                if has.gis < crate::GIS_WITH_EXTENSION_DERIVATIONS
+                    && (read.extension.is_some() || read.environment.is_some())
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "türetim kaydında extension ve environment CBS verisi sürüm 1'den önce yok",
+                    ));
+                }
                 derivation = Some(read);
             }
             // Schema 98 (docs/adr/0583 §1): the system its objects came from, read whole and checked.

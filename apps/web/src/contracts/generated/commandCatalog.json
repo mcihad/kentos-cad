@@ -158180,6 +158180,24 @@
           "description": "`KentOS <version>`.",
           "type": "string"
         },
+        "environment": {
+          "description": "Where an extension's tool's code ran (`Python 3.12.13 · linux-x86_64`): its packages' binaries depend on it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "extension": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtensionPin"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "An extension's tool's extension as it ran (docs/adr/8057 §15, PY-TOOL-22): its id, version and package\ndigest, which name the code that made the layer. The KCAD file's GIS data version 1."
+        },
         "inputs": {
           "items": {
             "$ref": "#/$defs/DerivationInput"

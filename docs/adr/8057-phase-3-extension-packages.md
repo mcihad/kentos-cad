@@ -1139,3 +1139,33 @@ temiz ve kaliteli"; "içinde birçok durum için örnekler olsun, sadece eklenti
   masaüstü ve uygulama sınamaları değişmeden geçti.
 - **Uygularken verilen kararlar:** açıklama tanımda, manifestte değil (araç başına); en çok 2000 karakter; listede
   `extension` da verilir (ajan hangi kodun çalışacağını bilsin); `llms.txt` ve kapalı sözlükler ADIM 21'de kalır.
+
+## §15. Çalışma kökeni: katman onu yapan eklentiyi ve ortamı söyler (`ADIM 19`, PY-TOOL-22)
+
+**14 Kasım.** Kod: `crates/shared/contracts/src/gis/dataset.rs` (`LayerDerivation::extension`/`environment`,
+`derivation_problem`), `crates/native/processing/src/runner.rs` (`derivation_of`), `external.rs`
+(`ExternalTool::environment`), `crates/shared/kcad` (`GIS_WITH_EXTENSION_DERIVATIONS`, `modules_of`, okuyucunun kapısı),
+`tools/kcad/kcad.py`, `scripts/fixtures/kcad_v2_reference.py`, `apps/desktop/src/gis/dataset_window.rs` (Soy).
+
+- **Köken zaten vardı (ADR 0633 §2):** bir işlem aracının yazdığı katmanın türetim kaydı aracı, sürümünü, değerleri,
+  okunan katmanları içerik özetleriyle (girdinin anlık görüntüsü), çizimin sürümünü, motoru ve zamanı tutuyordu.
+  PY-TOOL-22'nin eksiği eklentiydi: aynı araç kimliği iki sürümde başka kod çalıştırabilir.
+- **Eklenen:** `extension` (§13'ün `ExtensionPin`'i: kimlik, sürüm, paket özeti; aracın eklentisi olmalı) ve
+  `environment` ("Python 3.12.13 · linux-x86_64": yorumlayıcı ve platform; paketlerin ikili dosyaları ikisine
+  bağlı). Masaüstü ortamı Python hazır olunca `ExternalTool::environment`'a yazar; işleyici kaydı kurarken ikisini
+  araçtan alır. Yerleşik araçlarda ikisi de yok, JSON'da yazılmaz. Çıktı kimlikleri ayrıca yazılmadı: kaydı taşıyan
+  katmanın kendisi çıktıdır.
+- **Dosyada: CBS verisi sürüm 1 (ADR 8054 §10'un ilk kullanımı).** Yeni alanlar belge şemasını yükseltmez: yazıcı bu
+  alanlardan birini taşıyan türetim varken kökün `modules`'üne `gis: 1` yazar (şema en az 254); okuyucu `gis < 1` iken
+  iki alanı bilinmeyen alan sayar (`unknown_field`), eski KentOS dosyayı "CBS verisi daha yeni bir sürümle yazılmış"
+  diye açmaz. Bağımsız okuyucu (`kcad.py`) ve başvuru yazıcısı aynı kuralla; şema 254'ün ilk geçerli örneği
+  `extension-derivation.kcad`, bozukları `derivation-extension-without-gis.kcad` ve `-other-tool.kcad`.
+- **Gösterim:** Veri kümesi bilgisi › Soy: "Eklenti: Eklenti Vitrini 1.0.2 (sha256:dc228a05b377…) · Ortam: Python
+  3.12.13 · linux-x86_64" (eklenti adı kurulu hâlinden, yoksa kimliği).
+- **Gerçek pencere (`10-koken`):** Vitrin 1.0.1 → 1.0.2 katalogdan güncellendi, ortamı hazırlandı; TAKS'ın TAKS
+  katmanı › Veri kümesi bilgisi › Soy eklentiyi, özeti ve ortamı gösterdi.
+- **Sınamalar:** sözleşme 1 (sabitleme araca uyar, ortam tek satır, JSON), İşlemler 1 (eklenti aracının katmanı
+  eklentiyi ve ortamı taşır), KCAD 244 (geçerli dosya sayısı 285 → 286; Rust yazıcısı başvuru yazıcısıyla bayt bayt
+  aynı), bağımsız okuyucu 1861 dosyada tutarlı, wasm derlemesi.
+- **Uygularken verilen kararlar:** köken yeni bir kayıt değil, türetim kaydının iki alanı; ortam "Python sürümü ·
+  işletim sistemi-mimari"; yeni alanlar belge şemasını değil CBS verisinin sürümünü yükseltir.

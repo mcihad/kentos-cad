@@ -18,6 +18,9 @@ pub const MAX_DATASET_LINE: usize = 200;
 pub const MAX_DATASET_TEXT: usize = 10_000;
 /// The most keywords.
 pub const MAX_DATASET_KEYWORDS: usize = 50;
+/// The longest environment a derivation names, characters.
+pub const MAX_DERIVATION_ENVIRONMENT: usize = 200;
+
 /// The most inputs a derivation names.
 pub const MAX_DERIVATION_INPUTS: usize = 200;
 
@@ -155,6 +158,15 @@ pub struct LayerDerivation {
     pub engine: String,
     /// When it ran, UTC (`2026-10-25T09:30:00Z`).
     pub at: String,
+    /// An extension's tool's extension as it ran (docs/adr/8057 §15, PY-TOOL-22): its id, version and package
+    /// digest, which name the code that made the layer. The KCAD file's GIS data version 1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub extension: Option<crate::ExtensionPin>,
+    /// Where an extension's tool's code ran (`Python 3.12.13 · linux-x86_64`): its packages' binaries depend on it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub environment: Option<String>,
 }
 
 fn line_ok(t: &str, most: usize) -> bool {
@@ -278,6 +290,23 @@ pub fn derivation_problem(d: &LayerDerivation) -> Option<String> {
             "Türetim kaydı en çok {MAX_DERIVATION_INPUTS} girdi anar."
         ));
     }
+    // An extension's tool's: its pin fits the tool, its environment is a line (docs/adr/8057 §15).
+    if d.extension
+        .as_ref()
+        .is_some_and(|p| !crate::extension_pin_ok(p, Some(&d.tool)))
+    {
+        return Some(
+            "Türetim kaydının eklentisi aracına uymuyor: aracın eklentisi, sürümü ve sha256 özeti yazılır.".into(),
+        );
+    }
+    if d.environment
+        .as_deref()
+        .is_some_and(|e| !line_ok(e, MAX_DERIVATION_ENVIRONMENT))
+    {
+        return Some(format!(
+            "Türetim kaydının ortamı boş olmayan, en çok {MAX_DERIVATION_ENVIRONMENT} karakterlik tek satırdır."
+        ));
+    }
     for (i, input) in d.inputs.iter().enumerate() {
         if input.layer.is_empty() || !hex64(&input.digest) {
             return Some(
@@ -298,6 +327,51 @@ pub fn derivation_problem(d: &LayerDerivation) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_extensions_derivation_names_its_extension_and_environment() {
+        // docs/adr/8057 §15: the pin is of the tool's extension, the environment one line.
+        let ok = LayerDerivation {
+            tool: "ext.tr.ornek.vitrin.taks".into(),
+            label: "Parsel TAKS hesabı".into(),
+            tool_version: 1,
+            parameters: BTreeMap::new(),
+            inputs: Vec::new(),
+            document_revision: "12".into(),
+            engine: "KentOS 0.1.0".into(),
+            at: "2026-11-14T09:30:00Z".into(),
+            extension: Some(crate::ExtensionPin {
+                extension: "tr.ornek.vitrin".into(),
+                version: "1.0.2".into(),
+                digest: format!("sha256:{}", "ab".repeat(32)),
+            }),
+            environment: Some("Python 3.12.13 · linux-x86_64".into()),
+        };
+        assert_eq!(derivation_problem(&ok), None);
+        let mut other = ok.clone();
+        other.tool = "ext.tr.ornek.baska.taks".into();
+        assert!(
+            derivation_problem(&other)
+                .unwrap()
+                .contains("eklentisi aracına uymuyor")
+        );
+        let mut long = ok.clone();
+        long.environment = Some("x".repeat(MAX_DERIVATION_ENVIRONMENT + 1));
+        assert!(derivation_problem(&long).unwrap().contains("ortamı"));
+        let mut lines = ok.clone();
+        lines.environment = Some("Python\n3".into());
+        assert!(derivation_problem(&lines).is_some());
+        let json = serde_json::to_value(&ok).unwrap();
+        assert_eq!(json["extension"]["version"], "1.0.2");
+        assert_eq!(json["environment"], "Python 3.12.13 · linux-x86_64");
+        let plain = LayerDerivation {
+            extension: None,
+            environment: None,
+            ..ok
+        };
+        let json = serde_json::to_value(&plain).unwrap();
+        assert!(json.get("extension").is_none() && json.get("environment").is_none());
+    }
 
     #[test]
     fn a_description_holds_by_its_parts() {
