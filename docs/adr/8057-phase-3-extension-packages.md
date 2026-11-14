@@ -1301,3 +1301,29 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **Kalan (ADIM 21):** geçerli yerleşik ikon adlarının listesi (masaüstünün ikon kümesinden üretilmeli; paylaşılan
   crate onu bilmiyor), `kentos.ui` bileşen ve `ProjectAuditFacts` şemaları (ilgili adımlarla), Kapı 3 kuru koşu,
   `hot_reload`/`preview_render`.
+
+## §21. Yerleşik ikonlar tire biçiminde: 1346 adın hepsi yazılabilir (`ADIM 21`, kod üretimi)
+
+**14 Kasım.** Kod: `crates/shared/extensions/src/icon_names.rs` (`LIST`, `is_builtin`, `web_name`, `nearest`),
+`crates/shared/extensions/sdk/icons.txt` (üretilmiş), `manifest.rs` (`manifest_icon_unknown`), masaüstü
+`extensions/ribbon.rs` (`icon_of`).
+
+- **Bulgu (ölçüldü):** masaüstünün ikon kümesi (`docs/inventory/web.json` 875 + `catalog/v1/additions.json` 471 = 1346
+  ad) camelCase yazıyor (`zoomExtents`), manifest ise yerleşik ikon adını küçük harf ve tireyle istiyor. Yalnız 213 ad
+  zaten küçük harfti; geri kalan **1133 ikonu bir eklenti hiç adlandıramıyordu** (manifest reddediyordu).
+- **Karar:** manifest tire biçiminde kalır (kimliklerle aynı yazım), masaüstü `zoom-extents`'i `zoomExtents`'e çevirir.
+  Dönüşüm 1346 adın hepsinde kayıpsız ve çakışmasız (sınama her adı gidip geri getirerek denetler); tiresiz bir ad
+  kendisidir, eski manifestler değişmeden çalışır.
+- **Liste:** iki JSON'dan sınamada üretilir, depoda durur (`include_str!`); küme değişince sınama kırılır ve
+  `KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- icon_names` der. SDK paketinde `icons` bölümü (tamamı;
+  pakette yalnız sayısı ve nasıl alınacağı, çünkü 19 KB'lık liste paketi Asistan'ın 48 KB sonuç sınırının üstüne
+  çıkarırdı; paket 33 KB'ta kalır ve sınama bunu tutar), `kentos kek sdk --part icons` her satıra bir ad yazar.
+- **Bilinmeyen ad ret değil uyarıdır** (`manifest_icon_unknown`): sonraki bir KentOS için yapılmış paket bu KentOS'ta
+  olmayan bir ikon adlandırabilir; düğmesi düz simgeyle çizilir. Uyarı en yakın adları önerir: bir iki harflik yazım
+  hatası (`space-numbr` → `space-number`), onu içeren ya da onda geçen ad (`number` → `…-number`), harflerinin üçte
+  biri kadar uzak ad; hiçbiri yoksa "yakın bir yerleşik ad yok" (rastgele harf ortaklığı önerilmez: `mezar`).
+- **Bulgu (düzeltildi):** `verify` paketleyicinin ve inceleyicinin aynı manifest uyarısını ayrı ayrı topladığı için her
+  manifest uyarısını iki kez yazıyordu (güvensiz bağlantı uyarısı dahil); artık bir kez.
+- **Vitrin 1.0.4:** "Yapıları numarala" `space-number`, katmanın sağ tık "Katman özeti" öğesi `layer-fields` (ikisi de
+  camelCase adlı). Gerçek pencerede (`12-ikonlar`): 1.0.3 → 1.0.4 güncellendi; sekmede ve sağ tık menüsünde ikonlar
+  web'deki çizimleriyle göründü. Örnek çizim yeniden üretildi (formun ve modelin sabitlediği paket özeti değişti).

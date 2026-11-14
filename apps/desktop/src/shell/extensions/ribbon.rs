@@ -102,7 +102,8 @@ pub(crate) fn icon_of(
     fallback: Icon,
 ) -> Icon {
     if !name.contains('/') && !name.contains('.') {
-        return crate::icons::from_web(Some(name));
+        // A built-in icon as a manifest writes it (`space-number`) is the set's `spaceNumber` (docs/adr/8057 §21).
+        return crate::icons::from_web(Some(&kentos_extensions::icon_names::web_name(name)));
     }
     registry
         .package_file(ext, name)

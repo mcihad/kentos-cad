@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -116,7 +116,8 @@
                 "icon": "assets/vitrin.svg"
               },
               {
-                "command": "yapilari-numarala"
+                "command": "yapilari-numarala",
+                "icon": "space-number"
               },
               {
                 "command": "hata-ornegi"
@@ -156,6 +157,7 @@
       {
         "command": "katman-ozeti",
         "target": "layer",
+        "icon": "layer-fields",
         "when": {
           "documentOpen": true
         }

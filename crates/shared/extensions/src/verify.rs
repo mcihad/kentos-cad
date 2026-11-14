@@ -48,8 +48,12 @@ pub fn verify(folder: &BTreeMap<String, Vec<u8>>, limits: &Limits) -> Verificati
             out.manifest = inspection.manifest;
             out.digest = Some(packed.digest);
             out.problems.extend(inspection.problems);
-            out.warnings.extend(packed.warnings);
-            out.warnings.extend(inspection.warnings);
+            // The packer and the inspector read the same manifest: a warning of it is said once.
+            for warning in packed.warnings.into_iter().chain(inspection.warnings) {
+                if !out.warnings.contains(&warning) {
+                    out.warnings.push(warning);
+                }
+            }
         }
         Err(problems) => {
             out.problems.extend(problems);
@@ -141,7 +145,7 @@ fn entries(m: &Manifest) -> Vec<Entry<'_>> {
 }
 
 /// How many single letters change one name into the other (Levenshtein).
-fn distance(a: &str, b: &str) -> usize {
+pub(crate) fn distance(a: &str, b: &str) -> usize {
     let b: Vec<char> = b.chars().collect();
     let mut row: Vec<usize> = (0..=b.len()).collect();
     for (i, ca) in a.chars().enumerate() {
@@ -498,6 +502,33 @@ mod tests {
             codes(&v.problems).contains(&"python_id_twice"),
             "{:#?}",
             v.problems
+        );
+    }
+
+    #[test]
+    fn an_icon_this_kentos_has_not_is_warned_once_with_the_nearest() {
+        // docs/adr/8057 §21: Vitrin names two built-in icons the set writes in camelCase; a slip of a letter is a
+        // warning naming the right one, said once though the packer and the inspector both read the manifest.
+        let mut f = vitrin();
+        edit(
+            &mut f,
+            "manifest.json",
+            "\"icon\": \"space-number\"",
+            "\"icon\": \"space-numbr\"",
+        );
+        let v = verify(&f, &Limits::default());
+        assert!(v.is_valid(), "{:#?}", v.problems);
+        assert_eq!(codes(&v.warnings), ["manifest_icon_unknown"]);
+        let w = &v.warnings[0];
+        assert_eq!(
+            w.at.as_deref(),
+            Some("/contributions/ribbonTabs/0/panels/0/items/1/icon")
+        );
+        assert!(
+            w.message
+                .contains("En yakın yerleşik ikonlar: space-number"),
+            "{}",
+            w.message
         );
     }
 

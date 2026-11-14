@@ -989,7 +989,9 @@ aynı kod. **İkinci dilim — `extension.blueprint` / `kek new`** (ADR 8057 §1
 örnekleriyle doğrulamadan sorunsuz geçen iskelet; komut satırı klasöre yazar, ajan aracı içerik verir. **Üçüncü dilim —
 `kentos://sdk/ai-kek-pack` / `extension.sdk` / `kek sdk`** (ADR 8057 §20): rehber, `kentos.ext` imzaları (kaynaktan
 üretilen stub), yetenekler, katkılar, araç tanımı türleri, doğrulama kodları, akış ve doğrulanan örnek tek okumada.
-Kalan: Kapı 3 (sentetik çizimde kuru koşu), `hot_reload`/`preview_render`, yerleşik ikon listesi ve şemalar.
+**Yerleşik ikonlar** (ADR 8057 §21): 1346 adın listesi kümeden üretilir, tire biçimiyle hepsi yazılabilir (önce 1133'ü
+yazılamıyordu), bilinmeyen ad en yakın önerilerle uyarıdır. Kalan: Kapı 3 (sentetik çizimde kuru koşu),
+`hot_reload`/`preview_render`, `kentos.ui`/`ProjectAuditFacts`/manifest şemaları.
 
 - [ ] **Kod üretimi:** Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
   `kentos.ui` bileşen şeması, `ProjectAuditFacts` şeması ve manifest/araç/panel JSON Schema'ları üretilir; üretilmiş

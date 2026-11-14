@@ -46,6 +46,12 @@ sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı a
   orientedRectangle, circle): `def f(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResult`; `ctx.add_feature(katman, sekil,
   öznitelikler)`. Şekli KentOS çizer (kenetleme, yazılan koordinat), kod yerleştirir.
 
+## İkonlar
+
+Bir düğmenin, komutun ya da harita aracının ikonu yerleşik bir addır, tire biçiminde (`space-number`, `layer-fields`;
+bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`assets/x.svg`: `path`, `rect`, `circle`,
+`ellipse`; renk yok, tema rengiyle çizilir). Bilinmeyen ad uyarıdır: düğme düz simgeyle görünür.
+
 ## Bağlamın ortak yöntemleri
 
 `ctx.progress(n, toplam, metin)`, `ctx.check()` (Durdur'a basıldıysa `ext.Stopped` atar: uzun döngülerde çağırın),
@@ -70,7 +76,7 @@ sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı a
 pub const EXT_STUB: &str = include_str!("../sdk/kentos_ext.pyi");
 
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 9] = [
+pub const PARTS: [&str; 10] = [
     "guide",
     "api",
     "capabilities",
@@ -80,10 +86,15 @@ pub const PARTS: [&str; 9] = [
     "verifyCodes",
     "workflow",
     "example",
+    "icons",
 ];
 
-/// One part of the pack; none for a name the pack has not.
+/// One part of the pack; none for a name the pack has not. `icons` is the whole list, which the pack only counts: its
+/// 19 KB would take the pack past what the desktop's Asistan gives a tool's result (48 KB).
 pub fn sdk_part(part: &str) -> Option<Value> {
+    if part == "icons" {
+        return Some(json!(crate::icon_names::names().collect::<Vec<_>>()));
+    }
     if !PARTS.contains(&part) {
         return None;
     }
@@ -152,7 +163,8 @@ pub fn sdk_pack() -> Value {
             "python_os_command": "Uyarı: işletim sistemi komutu.",
             "python_eval": "Uyarı: eval/exec.",
             "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",
-            "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil."
+            "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
+            "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir."
         },
         "workflow": [
             "İsteği ve parametrelerini netleştirin; kurulu eklentileri ve yetenekleri kentos://extensions/installed'dan okuyun.",
@@ -162,6 +174,11 @@ pub fn sdk_pack() -> Value {
             "`kentos kek pack <klasör>` paketler; kurulum, yetki ve yayın kullanıcının incelemesiyle olur."
         ],
         "example": example,
+        "icons": {
+            "count": crate::icon_names::names().count(),
+            "how": "Yerleşik ikonlar tire biçiminde yazılır (zoom-extents, space-number, layer-fields). Tamamı: \
+                    extension.sdk part=icons ya da kentos kek sdk --part icons. Yoksa paketteki 20×20 çizgi .svg.",
+        },
     })
 }
 
@@ -415,6 +432,16 @@ mod tests {
             assert!(sdk_part(part).is_some_and(|v| !v.is_null()), "{part}");
         }
         assert_eq!(keys.len(), PARTS.len() + 2, "{keys:?}");
+        assert_eq!(
+            sdk_part("icons").and_then(|v| v.as_array().map(Vec::len)),
+            pack["icons"]["count"].as_u64().map(|n| n as usize)
+        );
+        // The pack fits what the desktop's Asistan gives a tool's result.
+        assert!(
+            pack.to_string().len() < 48_000,
+            "{}",
+            pack.to_string().len()
+        );
         assert!(sdk_part("format").is_none());
         // The map tool's shapes are the manifest's.
         use crate::manifest::Capture;

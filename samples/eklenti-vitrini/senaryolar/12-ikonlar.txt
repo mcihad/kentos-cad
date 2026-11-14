@@ -1,0 +1,12 @@
+# Yerleşik ikonlar tire biçiminde: "Yapıları numarala" space-number, katmanın sağ tık "Katman özeti" layer-fields.
+# İkon kümesi bu adları camelCase yazıyor (spaceNumber, layerFields); manifest tire biçiminde, masaüstü çevirir.
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1500
+shot 12-sekme
+click 1201 395 right   # Yapı katmanı: sağ tık
+wait 1200
+shot 12-sagtik

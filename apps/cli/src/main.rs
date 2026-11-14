@@ -194,6 +194,11 @@ fn sdk(part: Option<&str>, json: bool) -> ExitCode {
         None => format!("{GUIDE}\n## kentos.ext\n\n```python\n{EXT_STUB}```\n"),
         Some(part) => match sdk_part(part) {
             Some(serde_json::Value::String(text)) if !json => text,
+            Some(serde_json::Value::Array(names)) if part == "icons" && !json => names
+                .iter()
+                .filter_map(serde_json::Value::as_str)
+                .collect::<Vec<_>>()
+                .join("\n"),
             Some(serde_json::Value::Object(stub)) if part == "api" && !json => stub
                 .get("stub")
                 .and_then(serde_json::Value::as_str)

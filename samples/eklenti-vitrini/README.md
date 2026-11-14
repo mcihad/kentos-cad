@@ -27,6 +27,7 @@ ekran görüntüleri bununla yapılır (plan/eklenti.md, docs/adr/8057).
 | Modelde eklenti aracı | Model tasarımcısı'nda TAKS adımı, eklentinin sürümü ve özetiyle sabitli | Yeni model › Araç ara: TAKS; adımın ayarları "Eklenti Vitrini <sürüm> ile eklendi." der, eklentisiz bilgisayarda hangi sürümle yapıldığını söyler (`09-model`) |
 | İfade işlevi | `expressions` › `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` | Etiket metni (`05-etiket`), Katman stili › Kurallar koşulu (`06-kural`), Katman süzgeci (`07-suzgec`), İşlemler'in ifadeleri; çizim beklemez, yanıt gelince yeniden çizilir |
 | Denetim kuralı ve düzeltme | `audits` › Yapı numarası (`@ext.audit`) | Vitrin › Yapı numarası: numarasız yapılar alt paneldeki Eklenti denetimi'nde listelenir; Göster nesneye götürür, Düzelt sıradaki numarayı tek geri alma adımıyla yazar (`11-denetim`) |
+| Yerleşik ikon | `icon: "space-number"`, `"layer-fields"` (kümenin `spaceNumber`, `layerFields` ikonları) | Vitrin sekmesinde Yapıları numarala, katmanın sağ tık menüsünde Katman özeti (`12-ikonlar`); kendi ikonları paketteki SVG'ler |
 | Python'suz katkı | `dataSources` (XYZ altlık) | Kaynaklar: Örnek Belediyesi altlığı (sunucusu örnektir, yanıt vermez) |
 
 Henüz çalıştırılamayan katkı türü (panel) eklenti sistemine geldiğinde buraya eklenecek.
@@ -76,3 +77,5 @@ sonraki çalıştırmada onu alır.
   command,processing,audit,expression,mapTool` (ajanlarda `extension.blueprint`): doğrulamadan sorunsuz geçer.
 - SDK'nın rehberi ve `kentos.ext` imzaları: `kentos kek sdk` (`--json` paketin tamamı; ajanlarda `extension.sdk`, MCP'de
   `kentos://sdk/ai-kek-pack`). Bir ajan eklenti yazmadan önce bunu okur.
+- Yerleşik ikonlar tire biçiminde yazılır (`space-number`, `layer-fields`; bütün adlar `kentos kek sdk --part icons`).
+  Vitrin'in "Yapıları numarala" düğmesi ve katmanın sağ tık "Katman özeti" öğesi örnektir (senaryo 12).

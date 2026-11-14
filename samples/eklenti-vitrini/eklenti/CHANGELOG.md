@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.4 — 14 Kasım 2026
+
+- "Yapıları numarala" düğmesi ve katmanın sağ tık öğesi yerleşik ikonları tire biçiminde adlandırır (`space-number`,
+  `layer-fields`): KentOS'un ikon kümesi camelCase yazıyor, manifest tire biçiminde; eskiden bu adlar yazılamıyordu.
+
 ## 1.0.3 — 14 Kasım 2026
 
 - Denetim: Yapı numarası (numarasız yapıları bulur, sıradaki numarayı yazan düzeltme önerir).

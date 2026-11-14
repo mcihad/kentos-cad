@@ -704,6 +704,28 @@ fn a_packages_own_icons_are_drawn() {
     let _ = std::fs::remove_dir_all(&root);
 }
 
+/// docs/adr/8057 §21: a built-in icon as a manifest writes it (`zoom-extents`) is the icon set's `zoomExtents`, drawn
+/// as the web draws it; before, the manifest could not name the 1133 icons the set writes in camelCase.
+#[test]
+fn a_built_in_icon_is_named_with_dashes() {
+    use kentos_ui::icon::Icon;
+
+    let root = temp("ikon-adi");
+    let mut gis = app(&root, Some(Module::Gis));
+    install(
+        &mut gis,
+        "kent-rehberi.kek",
+        package("ornek-kent", |m| {
+            m["contributions"]["ribbonTabs"][0]["panels"][0]["items"][0]["icon"] =
+                serde_json::json!("zoom-extents");
+        }),
+    );
+    let markup = crate::icons::web_markup("zoomExtents").expect("the set's icon");
+    let tab = gis.extension_tabs().next().expect("the tab");
+    assert_eq!(tab.panels[0].items[0].icon, Icon::Svg(markup));
+    let _ = std::fs::remove_dir_all(&root);
+}
+
 /// Eklentiler's views (D1): Kurulu, Bulunabilir, Güncellenebilir, Yeni and Sorunlu with their counts; a word and the
 /// program filter the lists; Yeni is what came to the catalog since its previous opening.
 #[test]

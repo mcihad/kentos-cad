@@ -23,6 +23,7 @@ pub mod blueprint;
 pub mod catalog;
 pub mod compat;
 mod icon;
+pub mod icon_names;
 pub mod integrity;
 pub mod manifest;
 mod paths;

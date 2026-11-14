@@ -1189,6 +1189,22 @@ impl Checker<'_> {
                     "İkon “{icon}” ne yerleşik bir ikon adı (küçük harf ve tire) ne de paketteki bir .svg dosyasının yolu."
                 ),
             );
+        } else if !crate::icon_names::is_builtin(icon) {
+            // A warning, not a refusal: a package for a later KentOS may name an icon this one does not have.
+            let near = crate::icon_names::nearest(icon, 3);
+            let near = if near.is_empty() {
+                "Yakın bir yerleşik ad yok.".to_owned()
+            } else {
+                format!("En yakın yerleşik ikonlar: {}.", near.join(", "))
+            };
+            self.warn(
+                "manifest_icon_unknown",
+                at,
+                format!(
+                    "“{icon}” bu KentOS'un yerleşik ikonlarından biri değil: düğme düz simgeyle görünür. {near} Bütün \
+                     adlar `kentos kek sdk --part icons`; ya da paketteki bir .svg."
+                ),
+            );
         }
     }
 
