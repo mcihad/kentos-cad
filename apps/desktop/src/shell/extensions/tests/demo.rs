@@ -622,7 +622,13 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
         .insert("tr.ornek.vitrin".into(), Some("Ortam hazırlanmadı.".into()));
     let _ = gis.extensions_event(Event::Panel(PanelEvent::Press("ara".into())));
     let panel = gis.extensions.panel.as_ref().unwrap();
-    assert_eq!(panel.said, Some((true, "Ortam hazırlanmadı.".to_owned())));
+    assert_eq!(
+        panel.said,
+        Some((
+            crate::exchange::words::Kind::Error,
+            "Ortam hazırlanmadı.".to_owned()
+        ))
+    );
     assert!(panel.running.is_none() && gis.extensions.panel_call.is_none());
     // A run's answer: its rows into the table, its words under the panel; a panel since closed takes none.
     let origin = PanelOrigin {
@@ -638,7 +644,13 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
     );
     let panel = gis.extensions.panel.as_ref().unwrap();
     assert_eq!(panel.tables["sonuc"].1.len(), 1);
-    assert_eq!(panel.said, Some((false, "1 yapı bulundu.".to_owned())));
+    assert_eq!(
+        panel.said,
+        Some((
+            crate::exchange::words::Kind::Ok,
+            "1 yapı bulundu.".to_owned()
+        ))
+    );
     let _ = gis.extension_panel_view();
     let _ = gis.extensions_event(Event::Panel(PanelEvent::Close));
     assert!(gis.extensions.panel.is_none());
@@ -692,7 +704,10 @@ fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
     let said = |gis: &App| gis.extensions.panel.as_ref().unwrap().said.clone();
     assert_eq!(
         said(&gis),
-        Some((true, "“Nesneler”: önce çizimde nesne seçin.".to_owned()))
+        Some((
+            crate::exchange::words::Kind::Error,
+            "“Nesneler”: önce çizimde nesne seçin.".to_owned()
+        ))
     );
     // Two parcels and a building selected: the parcels taken.
     let doc = gis.document.as_ref().unwrap();
@@ -721,7 +736,7 @@ fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
     assert_eq!(
         said(&gis),
         Some((
-            true,
+            crate::exchange::words::Kind::Error,
             "“Nesneler”: seçili 1 nesneden hiçbiri “Parsel sınırı” katmanından değil.".to_owned()
         ))
     );
@@ -736,6 +751,122 @@ fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
         serde_json::json!({ "katman": "yapi", "alan": null, "nesneler": [] })
     );
     let _ = gis.extension_panel_view();
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/8057 §24: a command's ctx.progress shows in its running notice (kept and never drawn until 14 November
+/// 2026) and, when a panel's button started it, in the panel with Durdur; its message leaves the panel's table as it
+/// was.
+#[test]
+fn a_commands_progress_shows_in_its_notice_and_its_panel() {
+    use super::panels::{PanelCall, PanelOrigin};
+    use crate::python::host::Said;
+    use serde_json::json;
+
+    const VITRIN: &str = "tr.ornek.vitrin";
+    assert_eq!(
+        super::runner::progress_words(&(2.0, Some(5.0), Some("3. yapı numaralanıyor".into()))),
+        (Some(0.4), "%40 · 3. yapı numaralanıyor".to_owned())
+    );
+    assert_eq!(
+        super::runner::progress_words(&(7.0, None, None)),
+        (None, "7 adım".to_owned()),
+        "no total: its steps, the bar moving"
+    );
+    let dir = temp("ilerleme");
+    let mut gis = crate::files_testing::app_with_drawing();
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&dir, false).0;
+    gis.extensions_changed();
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let _ = gis.extensions_event(Event::OpenPanel(VITRIN.into(), "yapi-paneli".into()));
+    let origin = PanelOrigin {
+        ext: VITRIN.into(),
+        panel: "yapi-paneli".into(),
+        button: "numarala".into(),
+        table: Some("sonuc".into()),
+    };
+    // The search's rows, then its Yapıları numarala button pressed (the launch the background step hands over).
+    gis.ext_panel_answer(
+        &origin,
+        Ok(json!({ "rows": [{ "no": "—" }], "columns": ["no"], "message": "1 yapı bulundu." })),
+    );
+    gis.extensions.panel.as_mut().unwrap().running = Some("numarala".into());
+    gis.extensions.panel_call = Some(PanelCall {
+        ext: VITRIN.into(),
+        command: "yapilari-numarala".into(),
+        params: json!({}),
+        origin: origin.clone(),
+    });
+    let package = gis
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.package_dir(VITRIN))
+        .unwrap();
+    let launch = super::runner::Launch::for_test(
+        "/bin/sh".into(),
+        package,
+        "vitrin.logic:yapilari_numarala",
+        "Yapıları numarala",
+        true,
+    );
+    let _ = gis.extensions_event(Event::Launch(
+        VITRIN.into(),
+        "command".into(),
+        "yapilari-numarala".into(),
+        Ok(launch),
+    ));
+    let runner = &gis.extensions.runners[VITRIN];
+    let run = runner.run.as_ref().expect("running");
+    assert_eq!(run.origin.as_ref(), Some(&origin), "started from the panel");
+    let (generation, id, notice) = (runner.generation, run.id, run.notice.expect("its notice"));
+    let _ = gis.extension_panel_view();
+    let _ = gis.extensions_event(Event::Runner(
+        VITRIN.into(),
+        generation,
+        Said::Message(json!({ "type": "progress", "id": id, "done": 2, "total": 5,
+                             "text": "3. yapı numaralanıyor" })),
+    ));
+    let toast = gis
+        .toasts
+        .iter()
+        .find(|(t, _, _)| *t == notice)
+        .map(|(_, t, _)| t)
+        .expect("its notice stays");
+    assert_eq!(toast.description(), Some("%40 · 3. yapı numaralanıyor"));
+    assert_eq!(toast.progress_value(), Some(Some(0.4)));
+    let _ = gis.extension_panel_view();
+    // Its message: said under the panel; the search's rows stay.
+    let _ = gis.extensions_event(Event::Runner(
+        VITRIN.into(),
+        generation,
+        Said::Message(json!({ "type": "done", "id": id, "ok": true,
+                             "result": { "kind": "message", "message": "5 yapı numaralandı." } })),
+    ));
+    let panel = gis.extensions.panel.as_ref().unwrap();
+    assert_eq!(
+        panel.said,
+        Some((
+            crate::exchange::words::Kind::Ok,
+            "5 yapı numaralandı.".to_owned()
+        ))
+    );
+    assert_eq!(
+        panel.tables["sonuc"].1.len(),
+        1,
+        "a message leaves the table"
+    );
+    assert!(panel.running.is_none());
+    // Durdur: said as the user's choice, not in red.
+    gis.ext_panel_stopped(&origin);
+    assert_eq!(
+        gis.extensions.panel.as_ref().unwrap().said,
+        Some((
+            crate::exchange::words::Kind::Info,
+            "Durduruldu; çizime yazdıkları geri alındı.".to_owned()
+        ))
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 

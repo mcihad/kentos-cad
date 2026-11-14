@@ -1,0 +1,28 @@
+# İlerleme: Yapı ara'nın "Yapıları numarala" düğmesi Vitrin'in yazan komutunu çalıştırır; komutun ctx.progress'i
+# sürerken panelde (çubuk, "%40 · 3. yapı numaralanıyor", Durdur) ve çalışma bildiriminde görünür. İkinci basışta
+# panelin Durdur'u: yazdıkları geri alınır, panel bunu bilgi olarak söyler; iletisi tabloyu boşaltmaz.
+# (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 417 75    # Yapı ara
+wait 2000
+drag 1280 508 1280 845   # paneli aşağı doğru büyüt
+wait 1000
+click 1346 488  # Yapıları numarala
+wait 2700
+shot 17-a
+wait 600
+shot 17-b
+wait 3500
+click 1346 488  # yeniden: süreç sıcak
+wait 1200
+shot 17-c
+click 1394 538  # panelin Durdur'u
+wait 2500
+shot 17-durdu

@@ -11,6 +11,8 @@
 //! - **A late answer goes nowhere:** a run's rows are written only to the panel it started from, while it is open.
 //! - **A row with a `uid` is an object:** clicking it selects and zooms to it, as an audit's Göster; the `uid` is not
 //!   shown as a column.
+//! - **A running button shows how far it is:** its command's `ctx.progress` as a bar and words under the form, with
+//!   Durdur; a command that answers a message, not rows, leaves the table as it was.
 //! - **Pickers follow their layer picker:** a field picker lists the fields of the layer chosen there, a feature picker
 //!   takes the selected objects of that layer when the user asks ("Seçimi al"); choosing another layer clears both.
 
@@ -45,8 +47,8 @@ pub(crate) struct OpenPanel {
     pub(crate) picks: BTreeMap<String, Vec<String>>,
     /// Each table's columns and rows, from its button's command.
     pub(crate) tables: BTreeMap<String, (Vec<String>, Vec<Value>)>,
-    /// The panel's last words: (an error, the words).
-    pub(crate) said: Option<(bool, String)>,
+    /// The panel's last words and their mark: done, stopped by the user, failed.
+    pub(crate) said: Option<(words::Kind, String)>,
     /// The button whose command runs now.
     pub(crate) running: Option<String>,
 }
@@ -458,7 +460,7 @@ impl App {
                     wanted.join(" ve ")
                 )
             };
-            panel.said = Some((true, why));
+            panel.said = Some((words::Kind::Error, why));
             return Task::none();
         }
         if !multiple {
@@ -495,7 +497,7 @@ impl App {
             return Task::none();
         };
         if let Some(why) = why {
-            panel.said = Some((true, why));
+            panel.said = Some((words::Kind::Error, why));
             return Task::none();
         }
         // Objects taken before and deleted since are not given: the code would not find them.
@@ -512,7 +514,7 @@ impl App {
         let params = match panel.params() {
             Ok(params) => params,
             Err(why) => {
-                panel.said = Some((true, why));
+                panel.said = Some((words::Kind::Error, why));
                 return Task::none();
             }
         };
@@ -589,7 +591,13 @@ impl App {
                         }
                     }
                 }
-                if let Some(table) = &origin.table {
+                // A message answers no rows: the table keeps what it showed (a button that writes, as Yapıları
+                // numarala, does not empty the search's results).
+                if let Some(table) = origin
+                    .table
+                    .as_ref()
+                    .filter(|_| result.get("rows").is_some())
+                {
                     panel.tables.insert(table.clone(), (columns, rows.clone()));
                 }
                 let words = result
@@ -597,9 +605,26 @@ impl App {
                     .and_then(Value::as_str)
                     .map(str::to_owned)
                     .unwrap_or_else(|| format!("{} satır.", rows.len()));
-                panel.said = Some((false, words));
+                panel.said = Some((words::Kind::Ok, words));
             }
-            Err(why) => panel.said = Some((true, why)),
+            Err(why) => panel.said = Some((words::Kind::Error, why)),
+        }
+    }
+
+    /// A run started from a panel stopped with Durdur: said as the user's choice, not a failure (it was shown in red,
+    /// real window, 14 November 2026); its table keeps what it showed.
+    pub(crate) fn ext_panel_stopped(&mut self, origin: &PanelOrigin) {
+        if let Some(panel) = self
+            .extensions
+            .panel
+            .as_mut()
+            .filter(|p| p.ext == origin.ext && p.local == origin.panel)
+        {
+            panel.running = None;
+            panel.said = Some((
+                words::Kind::Info,
+                "Durduruldu; çizime yazdıkları geri alındı.".to_owned(),
+            ));
         }
     }
 
@@ -782,19 +807,41 @@ impl App {
         ]
         .spacing(8);
         let mut body = column![header, form].spacing(12).padding(12).width(Fill);
+        // Its button's command running: how far it is, from its ctx.progress (moving until it says), and Durdur.
+        if let Some(run) = self
+            .extensions
+            .runners
+            .get(&p.ext)
+            .and_then(|r| r.run.as_ref())
+            .filter(|run| run.origin.as_ref().is_some_and(|o| o.panel == p.local))
+        {
+            let (share, text) = run.progress.as_ref().map_or(
+                (None, "Çalışıyor…".to_owned()),
+                super::runner::progress_words,
+            );
+            let stop: Element<'_, Message> = if run.stopping.is_some() {
+                label::muted("Durduruluyor…").into()
+            } else {
+                words::ghost("Durdur", Some(msg(Event::StopRun(p.ext.clone()))))
+            };
+            body = body.push(
+                column![
+                    kentos_ui::widget::progress::bar(share).width(Fill),
+                    row![container(label::caption(text)).width(Fill), stop]
+                        .spacing(8)
+                        .align_y(iced::Center),
+                ]
+                .spacing(6),
+            );
+        }
         if let Some(why) = why {
             body = body.push(words::line(
                 words::Kind::Warn,
                 label::caption(format!("Düğmeler komut çalıştırır: {why}")),
             ));
         }
-        if let Some((error, said)) = &p.said {
-            let kind = if *error {
-                words::Kind::Error
-            } else {
-                words::Kind::Ok
-            };
-            body = body.push(words::line(kind, label::caption(said.clone())));
+        if let Some((kind, said)) = &p.said {
+            body = body.push(words::line(*kind, label::caption(said.clone())));
         }
         for table in tables {
             body = body.push(table);

@@ -23,6 +23,9 @@
 //! - Bilgi ve başarı 5, uyarı 8 saniyede kapanır; eylemli bildirim en az 8
 //!   saniye durur. Hata kendiliğinden kapanmaz. İmleç bildirimlerin
 //!   üzerindeyken süre durur.
+//! - Süren işin bildirimi ilerleme çubuğu taşır ([`Toast::progress`]);
+//!   açıklaması ve çubuğu yerinde güncellenir ([`Toasts::edit`]): sırası,
+//!   sayısı ve süresi değişmez.
 //!
 //! Bildirim kuyruğu ([`Toasts`]) uygulamanındır:
 //!
@@ -97,6 +100,8 @@ pub struct Toast<Message> {
     body: Option<String>,
     action: Option<(String, Message)>,
     duration: Option<Duration>,
+    /// İlerleme çubuğu: `Some(oran)`, oranı bilinmeyen işte `Some(None)`.
+    progress: Option<Option<f32>>,
 }
 
 impl<Message> Toast<Message> {
@@ -107,6 +112,7 @@ impl<Message> Toast<Message> {
             title: title.into(),
             body: None,
             action: None,
+            progress: None,
             duration: match severity {
                 Severity::Info | Severity::Success => Some(SHORT),
                 Severity::Warning => Some(LONG),
@@ -157,12 +163,39 @@ impl<Message> Toast<Message> {
         self
     }
 
+    /// Açıklamanın altında ilerleme çubuğu: `Some(oran)` 0..=1, `None`
+    /// oranı bilinmeyen iş (çubukta bir parça kayar).
+    pub fn progress(mut self, value: Option<f32>) -> Self {
+        self.progress = Some(value.map(|v| v.clamp(0.0, 1.0)));
+        self
+    }
+
+    /// Açıklamayı değiştirir ([`Toasts::edit`] içinde).
+    pub fn set_body(&mut self, body: impl Into<String>) {
+        self.body = Some(body.into());
+    }
+
+    /// İlerlemeyi değiştirir ([`Toasts::edit`] içinde); bkz. [`Toast::progress`].
+    pub fn set_progress(&mut self, value: Option<f32>) {
+        self.progress = Some(value.map(|v| v.clamp(0.0, 1.0)));
+    }
+
     pub fn severity(&self) -> Severity {
         self.severity
     }
 
     pub fn title(&self) -> &str {
         &self.title
+    }
+
+    /// Başlığın altındaki açıklama.
+    pub fn description(&self) -> Option<&str> {
+        self.body.as_deref()
+    }
+
+    /// İlerleme çubuğu: yoksa `None`, oranı bilinmeyen işte `Some(None)`.
+    pub fn progress_value(&self) -> Option<Option<f32>> {
+        self.progress
     }
 
     /// Eylemi dışında aynı bildirim mi.
@@ -232,6 +265,18 @@ impl<Message> Toasts<Message> {
         });
 
         id
+    }
+
+    /// Bildirimi yerinde değiştirir (ör. süren işin açıklaması ve
+    /// ilerlemesi): sırası, sayısı ve süresi aynı kalır; yoksa `false`.
+    pub fn edit(&mut self, id: Id, edit: impl FnOnce(&mut Toast<Message>)) -> bool {
+        match self.items.iter_mut().find(|item| item.id == id) {
+            Some(item) => {
+                edit(&mut item.toast);
+                true
+            }
+            None => false,
+        }
     }
 
     /// Bildirimi kapatır; yoksa `false`.
@@ -361,6 +406,13 @@ impl<'a, Message: Clone + 'a> Entry<'a, Message> {
 
         if let Some(body) = &toast.body {
             text = text.push(label::muted(body.clone()));
+        }
+
+        if let Some(value) = toast.progress {
+            text = text
+                .push(space::vertical().height(4))
+                .push(crate::widget::progress::bar(value).width(Length::Fill))
+                .width(Length::Fill);
         }
 
         let message = row![
@@ -1174,6 +1226,31 @@ mod tests {
         assert!(toasts.dismiss(first));
         assert!(!toasts.contains(first));
         assert!(!toasts.dismiss(first));
+    }
+
+    #[test]
+    fn a_running_jobs_toast_is_edited_in_place() {
+        let mut toasts = Toasts::new();
+        let job = toasts.push(Toast::<()>::info("Numaralanıyor").progress(None).sticky());
+        toasts.push(Toast::info("Koordinat kopyalandı"));
+
+        assert!(toasts.edit(job, |t| {
+            t.set_body("%40 · 3. yapı");
+            t.set_progress(Some(0.4));
+        }));
+
+        // Yerinde: sırası ve sayısı değişmez, süresi yok.
+        let (id, toast, count) = toasts.iter().next().expect("bildirim yok");
+        assert_eq!((id, count), (job, 1));
+        assert_eq!(toast.body.as_deref(), Some("%40 · 3. yapı"));
+        assert_eq!((toast.progress, toast.duration), (Some(Some(0.4)), None));
+
+        // Oran 0..=1 içinde tutulur.
+        toasts.edit(job, |t| t.set_progress(Some(1.7)));
+        assert_eq!(toasts.iter().next().unwrap().1.progress, Some(Some(1.0)));
+
+        assert!(toasts.dismiss(job));
+        assert!(!toasts.edit(job, |t| t.set_body("geç")));
     }
 
     #[test]

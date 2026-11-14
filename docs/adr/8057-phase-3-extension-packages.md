@@ -1503,5 +1503,20 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
     taşıyordu; satır ikiye bölündü (üstte "2 nesne · Temizle", altta Seçimi al).
   - İskeletin panelinde katman seçiciye bağlı alan seçici var (`nesne-ara` istenirse yalnız o alanda arar; gerçek
     eklenti süreciyle sınandı: alanla 1, alansız 2 nesne).
-- **Kalan (ADIM 22):** ağaç, kart, ilerleme bileşenleri; sol ve alt yerleşim (`side` şimdilik
+- **İlerleme** (Vitrin 1.0.11, Yapı ara › Yapıları numarala; `17-ilerleme`): ayrı bir bileşen **gerekmez**: düğmenin
+  komutu `ctx.progress(done, total, text)` bildirdikçe panel formun altında ilerleme çubuğunu, sözlerini ("%40 · 3.
+  yapı numaralanıyor"; toplamsız: kodun sözleri ya da adım sayısı; ilk bildirime dek kayan çubuk, "Çalışıyor…") ve
+  Durdur'u gösterir. Bir bileşenin bildirdiği yer, eklentinin unutabileceği bir şey olurdu; çalışan her komut
+  ilerlemesini aynı yerde söyler.
+  - **Bulgu (düzeltildi): komutun ilerlemesi hiç çizilmiyordu.** `ctx.progress` sürece ulaşıyor, çalışmada
+    saklanıyor ama hiçbir yerde gösterilmiyordu: Vitrin'in Yapıları numarala'sı "ilerleme çubuğunu göstermek için
+    bekler" diyordu, çubuk yoktu. Artık çalışma bildirimi (Durdur'lu, kalıcı) çubuk ve sözleri taşır; ortak bileşende
+    (`kentos_ui::widget::toast`: `Toast::progress`, yerinde güncelleme `Toasts::edit`: sırası, sayısı, süresi değişmez)
+    düzeltildi, bütün kalıcı iş bildirimleri kullanabilir.
+  - İleti veren (satır vermeyen) komut panelin tablosunu boşaltmaz: Yapıları numarala sonrası arama sonuçları durur,
+    Ara yeni numaraları listeler (Y-01 … Y-05).
+  - **Durdur kullanıcının seçimidir, hata değil:** panelde kırmızı yazılıyordu (bildirim bilgi); artık panelin sözleri
+    üç işaretli (bitti, durduruldu, çalışmadı) ve durdurma bilgi işaretiyle yazılır. Gerçek pencerede %40'ta çubuk,
+    panelin Durdur'uyla "Durduruldu; çizime yazdıkları geri alındı" ve bildirimde "Çizimde bir şey değişmedi".
+- **Kalan (ADIM 22):** ağaç, kart bileşenleri; sol ve alt yerleşim (`side` şimdilik
   sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince).

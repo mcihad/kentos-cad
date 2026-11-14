@@ -164,6 +164,25 @@ pub(crate) struct Launch {
     write: bool,
 }
 
+/// A run's progress as its notice and panel show it: the share done (none without a total) and its words: "%40 ·
+/// 3. yapı numaralanıyor", "%40", the code's words alone, or the steps done.
+pub(crate) fn progress_words(
+    progress: &(f64, Option<f64>, Option<String>),
+) -> (Option<f32>, String) {
+    let (done, total, text) = progress;
+    let share = total
+        .filter(|t| *t > 0.0)
+        .map(|t| (done / t).clamp(0.0, 1.0) as f32);
+    let text = text.as_deref().map(str::trim).filter(|t| !t.is_empty());
+    let words = match (share, text) {
+        (Some(s), Some(t)) => format!("%{:.0} · {t}", s * 100.0),
+        (Some(s), None) => format!("%{:.0}", s * 100.0),
+        (None, Some(t)) => t.to_owned(),
+        (None, None) => format!("{done:.0} adım"),
+    };
+    (share, words)
+}
+
 #[cfg(test)]
 impl Launch {
     /// A run of a command as the background step would hand it over: reading, and writing when `write`.
@@ -806,11 +825,21 @@ impl App {
                     .get_mut(ext)
                     .and_then(|r| r.run.as_mut())
                 {
-                    run.progress = Some((
+                    let progress = (
                         m.get("done").and_then(Value::as_f64).unwrap_or(0.0),
                         m.get("total").and_then(Value::as_f64),
                         m.get("text").and_then(Value::as_str).map(str::to_owned),
-                    ));
+                    );
+                    // Its notice shows how far it is: kept and never drawn until 14 November 2026, so a command's
+                    // ctx.progress (Yapıları numarala's) said nothing.
+                    let (share, words) = progress_words(&progress);
+                    run.progress = Some(progress);
+                    if let Some(id) = run.notice {
+                        self.toasts.edit(id, |t| {
+                            t.set_body(words);
+                            t.set_progress(share);
+                        });
+                    }
                 }
             }
             "log" => {
@@ -996,15 +1025,14 @@ impl App {
         let seconds = run.started.elapsed().as_secs_f64();
         // A panel's button: its rows and words go to the panel it started from (panels.rs, docs/adr/8057 §24).
         if let Some(origin) = run.origin.clone() {
-            let outcome = if ok {
-                Ok(m.get("result").cloned().unwrap_or(Value::Null))
+            if ok {
+                self.ext_panel_answer(&origin, Ok(m.get("result").cloned().unwrap_or(Value::Null)));
             } else if m.get("stopped").and_then(Value::as_bool) == Some(true) {
-                Err("Durduruldu; çizime yazdıkları geri alındı.".to_owned())
+                self.ext_panel_stopped(&origin);
             } else {
                 let said = m.get("message").and_then(Value::as_str).unwrap_or_default();
-                Err(format!("“{}” çalışmadı: {said}", run.title))
-            };
-            self.ext_panel_answer(&origin, outcome);
+                self.ext_panel_answer(&origin, Err(format!("“{}” çalışmadı: {said}", run.title)));
+            }
         }
         if ok {
             let result = m.get("result").cloned().unwrap_or(Value::Null);

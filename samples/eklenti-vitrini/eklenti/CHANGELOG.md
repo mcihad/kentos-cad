@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.11 — 14 Kasım 2026
+
+- "Yapı ara"ya "Yapıları numarala" düğmesi: komutun `ctx.progress`'i sürerken panelde (çubuk, Durdur) ve bildiriminde
+  görünür; iletisi panelin tablosunu boşaltmaz, Ara yeni numaraları listeler.
+
 ## 1.0.10 — 14 Kasım 2026
 
 - Panel: "Değer say" (`ui/deger-say.panel.json`): katman seçici, ona bağlı alan seçici (seçilen katmanın alanları) ve

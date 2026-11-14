@@ -1093,7 +1093,8 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
 - [ ] **Panel köprüsü** — *ilk dilim yapıldı (ADR 8057 §24): `kentos.ui.panel` 1'in yedi bileşeni (metin, metin/sayı
   alanı, seçim, onay, düğme, tablo) dock'un Eklenti sekmesinde; düğme bir komutu panelin değerleriyle (`ctx.params`)
   çalıştırır, satırları tabloya; Kapı 1 denetimi; katman, alan ve nesne seçicileri (alan seçici bağlı katmanın
-  alanlarını, nesne seçici çizimdeki seçimi alır); kalan: ağaç, ilerleme, sol/alt yerleşim.* Eklentinin
+  alanlarını, nesne seçici çizimdeki seçimi alır); düğmenin komutu ilerlemesini panelde ve bildiriminde gösterir
+  (çubuk, Durdur); kalan: ağaç, sol/alt yerleşim.* Eklentinin
   JSON'la bildirdiği `Table`, `Tree`, `Form`, `LayerPicker`, `FeaturePicker`, `Progress` bileşenleri sağ/alt dock ya da
   kalıcı pencere olarak açılır.
 - [ ] **MapTool köprüsü:** manifestteki yakalama/kenetleme ve şablon önizleme kuralları (ör. 2,20 × 1,10 m mezar
