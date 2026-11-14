@@ -77,6 +77,9 @@ pub enum Component {
         options: Vec<Choice>,
         #[serde(default)]
         value: Option<String>,
+        /// A command run with the panel's values when the user changes it (its rows to the panel's first table).
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
     },
     /// One of the open drawing's layers, of `geometry`'s type (and the untyped ones) when given: its id.
     LayerPicker {
@@ -84,6 +87,8 @@ pub enum Component {
         label: String,
         #[serde(default)]
         geometry: Option<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
     },
     /// One of the fields of the layer the panel's layer picker `layer` holds, of `kinds` only when given (the layer
     /// schema's words): its name, none when none is chosen.
@@ -93,6 +98,8 @@ pub enum Component {
         layer: String,
         #[serde(default)]
         kinds: Vec<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
     },
     /// The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`
     /// holds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else
@@ -106,6 +113,8 @@ pub enum Component {
         geometry: Option<String>,
         #[serde(default = "many")]
         multiple: bool,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
     },
     /// Yes or no.
     Checkbox {
@@ -113,6 +122,8 @@ pub enum Component {
         label: String,
         #[serde(default)]
         value: bool,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
     },
     /// Runs `command` with the panel's values; its rows fill `table` (none: the panel's first table).
     Button {
@@ -154,6 +165,18 @@ impl Component {
         }
     }
 
+    /// The command it runs when the user changes it, when it names one.
+    pub fn on_change(&self) -> Option<&str> {
+        match self {
+            Component::Select { on_change, .. }
+            | Component::LayerPicker { on_change, .. }
+            | Component::FieldPicker { on_change, .. }
+            | Component::FeaturePicker { on_change, .. }
+            | Component::Checkbox { on_change, .. } => on_change.as_deref(),
+            _ => None,
+        }
+    }
+
     /// Whether the user gives it a value (a command's parameter).
     pub fn is_input(&self) -> bool {
         matches!(
@@ -180,11 +203,11 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "text" => &["id", "text"],
         "textField" => &["id", "label", "placeholder", "value"],
         "numberField" => &["id", "label", "value", "min", "max", "unit"],
-        "select" => &["id", "label", "options", "value"],
-        "layerPicker" => &["id", "label", "geometry"],
-        "fieldPicker" => &["id", "label", "layer", "kinds"],
-        "featurePicker" => &["id", "label", "layer", "geometry", "multiple"],
-        "checkbox" => &["id", "label", "value"],
+        "select" => &["id", "label", "options", "value", "onChange"],
+        "layerPicker" => &["id", "label", "geometry", "onChange"],
+        "fieldPicker" => &["id", "label", "layer", "kinds", "onChange"],
+        "featurePicker" => &["id", "label", "layer", "geometry", "multiple", "onChange"],
+        "checkbox" => &["id", "label", "value", "onChange"],
         "button" => &["id", "label", "command", "table", "primary"],
         "table" => &["id", "label"],
         _ => return None,
@@ -345,6 +368,17 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             add(
                 at.clone(),
                 format!("{kind} bileşeni boş olmayan bir ad (label) ister."),
+            );
+        }
+        // A value changed runs a command, as a button does: the command must be the extension's.
+        if let Some(command) = c.get("onChange")
+            && !command.as_str().is_some_and(|c| commands.contains(&c))
+        {
+            add(
+                format!("{at}/onChange"),
+                "onChange eklentinin bir komutu olmalı (manifestin entrypoints.commands listesinde): değer \
+                 değişince panelin değerleriyle o çalışır."
+                    .to_owned(),
             );
         }
         match kind {
@@ -548,7 +582,8 @@ mod tests {
                 { "type": "layerPicker", "id": "katman", "label": "Katman", "geometry": "area" },
                 { "type": "button", "id": "ara", "label": "Ara", "command": "yapi-ara", "table": "sonuc", "primary": true },
                 { "type": "table", "id": "sonuc", "label": "Sonuçlar" },
-                { "type": "fieldPicker", "id": "alan", "label": "Alan", "layer": "katman", "kinds": ["integer", "decimal"] },
+                { "type": "fieldPicker", "id": "alan", "label": "Alan", "layer": "katman", "kinds": ["integer", "decimal"],
+                  "onChange": "yapi-ara" },
                 { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman", "geometry": "area" }
             ]
         })
@@ -577,6 +612,8 @@ mod tests {
             matches!(&read.body[9], Component::FeaturePicker { layer: Some(l), multiple: true, .. } if l == "katman"),
             "it takes many objects unless it says otherwise"
         );
+        assert_eq!(read.body[8].on_change(), Some("yapi-ara"));
+        assert_eq!(read.body[9].on_change(), None);
     }
 
     #[test]
@@ -591,6 +628,7 @@ mod tests {
         p["body"][8]["layer"] = json!("sonuc");
         p["body"][8]["kinds"] = json!(["sayi"]);
         p["body"][9]["multiple"] = json!("evet");
+        p["body"][9]["onChange"] = json!("say");
         p["body"]
             .as_array_mut()
             .unwrap()
@@ -616,6 +654,7 @@ mod tests {
                 "/body/6/table",
                 "/body/8/layer",
                 "/body/8/kinds/0",
+                "/body/9/onChange",
                 "/body/9/multiple",
                 "/body/10/type",
                 "/body/11"

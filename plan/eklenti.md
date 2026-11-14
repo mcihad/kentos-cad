@@ -1094,7 +1094,8 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
   alanı, seçim, onay, düğme, tablo) dock'un Eklenti sekmesinde; düğme bir komutu panelin değerleriyle (`ctx.params`)
   çalıştırır, satırları tabloya; Kapı 1 denetimi; katman, alan ve nesne seçicileri (alan seçici bağlı katmanın
   alanlarını, nesne seçici çizimdeki seçimi alır); düğmenin komutu ilerlemesini panelde ve bildiriminde gösterir
-  (çubuk, Durdur); `side` sol/sağ/alt (kullanıcının taşıdığı yer korunur); kalan: ağaç, birden çok açık panel.* Eklentinin
+  (çubuk, Durdur); `side` sol/sağ/alt (kullanıcının taşıdığı yer korunur); değer değişince komut (`onChange`);
+  kalan: ağaç, birden çok açık panel.* Eklentinin
   JSON'la bildirdiği `Table`, `Tree`, `Form`, `LayerPicker`, `FeaturePicker`, `Progress` bileşenleri sağ/alt dock ya da
   kalıcı pencere olarak açılır.
 - [ ] **MapTool köprüsü:** manifestteki yakalama/kenetleme ve şablon önizleme kuralları (ör. 2,20 × 1,10 m mezar
@@ -1105,11 +1106,10 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
   adımda kurar, katman kimliği şema adı (`cad.layers.edit` `id`), katmanın formu (`.kform`) aynı adımda bağlanır; kalan:
   alt türler, değer bileşimleri.* `schema.json` (katmanlar, alt türler/domain'ler, `1:N` ilişkiler) ve formlar host'un tek
   komutuyla projeye kurulur; biçim bu adımda ADR'yle sabitlenir, form planının şema/ilişki sözleşmesini yeniden yazmaz.
-- [ ] **Referans eklenti** — *gerçek pencerede uçtan uca kabul edildi (ADR 8057 §24, 14 Kasım): kurum kataloğundan
-  kurulum, ortam, şema, Tekli mezar, doluluk, denetim, arama paneli; devre dışı bırakınca iz kalmaz (sekme,
-  panel, dock sekmesi, komut araması; denetimin düzeltmesi reddedilir), yeniden açınca döner; şerit, komut arama,
-  `kek dump` ve MCP aynı kimliği aynı adla gösterir; ikinci İşlemler aracı (Boş mezar yerleri, katman üretir);
-  kalan: ajanın üretmesi.*
+- [x] **Referans eklenti** — *tamamlandı (ADR 8057 §24, 14–15 Kasım): MEBİS gerçek pencerede uçtan uca (kurum
+  kataloğu, ortam, şema, Tekli mezar, iki İşlemler aracı, denetim, arama paneli); devre dışı bırakınca iz kalmaz,
+  yeniden açınca döner; şerit, komut arama, `kek dump` ve MCP aynı kimliği aynı adla gösterir; Asistan aynı biçimi
+  istekle üretti, üçüncü turda paketi kutudan çıktığı gibi çalıştı (dört bulgu düzeltildi).*
   (`fixtures/extensions/v1/mebis.kek`, §3): AI ajanı üretir; kendi şerit sekmesini, sağ dock
   panelini, iki İşlemler aracını, bir MapTool'u ve bir denetim kuralını sunar; şerit, Eklentiler, İşlemler, Denetim,
   komut arama ve MCP aynı kimliğe gider; devre dışı bırakılınca hepsi hayalet komut/geri çağırma bırakmadan kalkar

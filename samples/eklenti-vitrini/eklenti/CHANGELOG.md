@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.13 — 15 Kasım 2026
+
+- "Değer say" değer değişince çalışır (`onChange`): alan seçilince ya da nesneler alınınca sayım kendiliğinden yenilenir;
+  Say düğmesi yine durur.
+
 ## 1.0.12 — 14 Kasım 2026
 
 - "Değer say" haritanın solunda açılır (`side: "left"`): katman seçerken sağdaki Katmanlar görünür kalır.

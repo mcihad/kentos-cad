@@ -1564,4 +1564,15 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   4. **Panelin araması katmanı bulamadı:** şema katmanını görünen adıyla aradı (`name == "mezar_yeri"`); şemanın `name`'i
      katmanın kimliği, `title`'ı adıdır. Rehber bunu, `ctx.doc.layer(...)`'ı ve özniteliklerin `kayit.entity.attrs`'ta
      olduğunu söyler.
-- **Kalan (ADIM 22):** ağaç, kart bileşenleri; birden çok açık panel; panelin kendi olayları (değer değişince).
+
+  **Üçüncü tur, rehber düzeltmeleriyle:** ajanın paketi (Mezarlık Hizmet) kutudan çıktığı gibi çalıştı: araçlar
+  varsayılan katmanlarıyla açıldı (`layerId: mezar_yeri`), Boş mezarlar "1 boş mezar yeri yazıldı" (10 → 11), denetim
+  1 uyarı, panelin araması katmanı kimliğiyle okuyup "1 mezar yeri bulundu" dedi, satıra tıklayınca mezar seçilip
+  yakınlaştı; Ada doluluk ada çizilmediği için haklı olarak "uygun nesne yok" dedi.
+- **Değer değişince** (`onChange`; Vitrin 1.0.13, Değer say; `19-degisince`): `select`, `layerPicker`, `fieldPicker`,
+  `featurePicker` ve `checkbox` bir komut adlandırabilir; kullanıcı değeri değiştirince (nesne seçicide "Seçimi al" ya
+  da Temizle) komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir. Metin ve sayı alanında yok:
+  her tuşta bir süreç çağrısı olurdu, onlar için düğme var. Komut çalışırken gelen değişiklik bekler, bitince **bir
+  kez** o anki değerlerle yeniden çalışır (art arda üç seçim üç çalıştırma değil). Kapı 1: `onChange` eklentinin bir
+  komutu olmalı. Vitrin'de alan seçilince ya da nesneler alınınca sayım kendiliğinden yenilenir; Say düğmesi durur.
+- **Kalan (ADIM 22):** ağaç, kart bileşenleri; birden çok açık panel.

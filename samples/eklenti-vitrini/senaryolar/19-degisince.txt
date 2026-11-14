@@ -1,0 +1,29 @@
+# Değer değişince: Değer say'da alan seçilince sayım düğmesiz gelir (onChange: deger-say), iki parsel pencereyle
+# seçilip Seçimi al'a basılınca yeniden sayar. Değer say haritanın solunda açılır. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 843 20    # Vitrin
+wait 1200
+click 501 57    # Değer say
+wait 2000
+click 210 331   # Katman
+wait 1000
+click 254 485   # Kadastro › Parsel sınırı
+wait 800
+click 210 369   # Alan
+wait 1000
+shot 19-alanlar
+click 200 433   # ada: sayım kendiliğinden (onChange)
+wait 6000
+shot 19-alan-secildi
+drag 300 480 845 770     # pencereyle 101/1 ve 101/2 (yalnız etkin katman seçilir)
+wait 1000
+click 192 427   # Seçimi al: yeniden sayar (onChange)
+wait 5000
+shot 19-secim

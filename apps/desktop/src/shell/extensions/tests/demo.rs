@@ -725,10 +725,15 @@ fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
     gis.selection.set([parcels[0], parcels[1], buildings[0]]);
     say(&mut gis, PanelEvent::Pick("nesneler".into()));
     let panel = gis.extensions.panel.as_ref().unwrap();
-    assert_eq!(panel.said, None);
     assert_eq!(
         panel.params().unwrap(),
         serde_json::json!({ "katman": "parsel", "alan": "ada", "nesneler": uids })
+    );
+    // Taking them runs its onChange command (Vitrin 1.0.13): Python is off in a test, so the panel says why.
+    assert!(
+        matches!(&panel.said, Some((_, why)) if why.starts_with("Python kapalı")),
+        "{:?}",
+        panel.said
     );
     // Only a building: none fits, said with the layer's name; the parcels stay.
     gis.selection.set([buildings[0]]);
@@ -962,6 +967,80 @@ fn a_disabled_extensions_panel_and_audit_fixes_go_with_it() {
         Some("Eklenti Vitrini kapalı: düzeltmesi uygulanmaz; Eklentiler'den etkinleştirin."),
         "its findings stay to read, its fixes do not apply"
     );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/8057 §24: an input's onChange runs its command with the panel's values (Vitrin's Değer say recounts when a
+/// field is chosen); a change while a command runs waits for it, one rerun; an input without onChange runs nothing.
+#[test]
+fn an_inputs_change_runs_its_command_and_waits_for_a_running_one() {
+    use super::panels::PanelEvent;
+
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let dir = temp("degisince");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/vitrin.kcad");
+    let snapshot = kentos_kcad::decode(&std::fs::read(path).unwrap()).expect("the demo drawing");
+    gis.document = Some(crate::document::Document::from_v2(snapshot, None).expect("opens"));
+    let _ = gis.extensions_event(Event::OpenPanel(VITRIN.into(), "deger-paneli".into()));
+    gis.extensions.python_reasons.insert(VITRIN.into(), None);
+    let tried = |gis: &App| {
+        gis.toasts
+            .iter()
+            .filter(|(_, t, _)| t.title().ends_with("çalıştırılamadı"))
+            .count()
+    };
+    let say = |gis: &mut App, e: PanelEvent| {
+        let _ = gis.extensions_event(Event::Panel(e));
+    };
+    // The layer picker names no command: nothing runs.
+    say(
+        &mut gis,
+        PanelEvent::Choose("katman".into(), "parsel".into()),
+    );
+    assert_eq!(tried(&gis), 0);
+    // A command running: the field's change waits, and runs once when it ends.
+    gis.extensions.panel.as_mut().unwrap().running = Some("say".into());
+    say(&mut gis, PanelEvent::Choose("alan".into(), "ada".into()));
+    assert_eq!(
+        gis.extensions.panel.as_ref().unwrap().rerun.as_deref(),
+        Some("alan")
+    );
+    assert_eq!(tried(&gis), 0, "nothing started meanwhile");
+    let _ = gis.ext_panel_rerun();
+    assert_eq!(tried(&gis), 0, "still running: it waits");
+    gis.extensions.panel.as_mut().unwrap().running = None;
+    let _ = gis.ext_panel_rerun();
+    // Its command started (no environment in a test: it says it cannot run, in the panel and a notice).
+    assert_eq!(tried(&gis), 1, "the rerun started its command");
+    let panel = gis.extensions.panel.as_ref().unwrap();
+    assert!(panel.rerun.is_none() && panel.running.is_none());
+    assert!(matches!(
+        panel.said,
+        Some((crate::exchange::words::Kind::Error, _))
+    ));
+    // A field chosen with nothing running: its command starts at once.
+    say(&mut gis, PanelEvent::Choose("alan".into(), "parsel".into()));
+    assert_eq!(tried(&gis), 1, "the same notice, counted");
+    assert!(
+        gis.toasts
+            .iter()
+            .any(|(_, t, n)| t.title().ends_with("çalıştırılamadı") && n == 2),
+        "tried again"
+    );
+    // Durdur drops a change that waited: the user stopped it.
+    gis.extensions.panel.as_mut().unwrap().running = Some("say".into());
+    say(&mut gis, PanelEvent::Choose("alan".into(), "ada".into()));
+    let origin = super::panels::PanelOrigin {
+        ext: VITRIN.into(),
+        panel: "deger-paneli".into(),
+        button: "say".into(),
+        table: Some("dagilim".into()),
+    };
+    gis.ext_panel_stopped(&origin);
+    assert!(gis.extensions.panel.as_ref().unwrap().rerun.is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }
 

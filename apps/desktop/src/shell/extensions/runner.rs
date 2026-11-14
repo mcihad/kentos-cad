@@ -743,6 +743,8 @@ impl App {
         match said {
             Said::Message(m) => {
                 self.ext_message(ext, &m);
+                // A panel's input changed while it ran: its command again, with the values now (panels.rs).
+                let rerun = self.ext_panel_rerun();
                 // A run ended: the process is closed if nothing runs in it for a while.
                 if m.get("type").and_then(Value::as_str) == Some("done")
                     && let Some(runner) = self.extensions.runners.get_mut(ext)
@@ -750,18 +752,22 @@ impl App {
                 {
                     runner.ended = Some(Instant::now());
                     let owner = ext.to_owned();
-                    return Task::perform(
-                        async move {
-                            let (sent, got) = iced::futures::channel::oneshot::channel();
-                            std::thread::spawn(move || {
-                                std::thread::sleep(kentos_python_env::process::IDLE);
-                                let _ = sent.send(());
-                            });
-                            let _ = got.await;
-                        },
-                        move |()| msg(Event::RunnerIdle(owner.clone(), generation)),
-                    );
+                    return Task::batch([
+                        rerun,
+                        Task::perform(
+                            async move {
+                                let (sent, got) = iced::futures::channel::oneshot::channel();
+                                std::thread::spawn(move || {
+                                    std::thread::sleep(kentos_python_env::process::IDLE);
+                                    let _ = sent.send(());
+                                });
+                                let _ = got.await;
+                            },
+                            move |()| msg(Event::RunnerIdle(owner.clone(), generation)),
+                        ),
+                    ]);
                 }
+                return rerun;
             }
             Said::Stderr(text) | Said::Garbled(text) => {
                 if let Some(run) = self

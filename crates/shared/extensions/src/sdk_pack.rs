@@ -79,7 +79,9 @@ None), `featurePicker` (`id`, `label`, `layer`: bir `layerPicker`'ın kimliği, 
 kullanıcı "Seçimi al"a basınca çizimdeki seçimden o katmanın ve türün nesnelerini alır, değeri kalıcı kimliklerin
 listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.entity(uid)` ile okur; katman değişince
 alan ve nesne seçimi temizlenir), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
-`primary`), `table` (`id`, `label`). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
+`primary`), `table` (`id`, `label`). `select`, `layerPicker`, `fieldPicker`, `featurePicker` ve `checkbox` isteğe
+bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
+(çalışırken gelen değişiklik bitince bir kez yeniden çalıştırılır). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
 doldurur (`ctx.doc.entities(layer=…)` kayıt verir: `kayit.uid` kalıcı kimlik, öznitelikler `kayit.entity.attrs`'ta,
 kayıtta değil). Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;

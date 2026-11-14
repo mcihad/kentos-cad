@@ -5,7 +5,7 @@
   "body": [
     {
       "type": "text",
-      "text": "Bir alanın değerlerini sayar: seçilen nesnelerde, seçilmediyse katmanın bütün nesnelerinde. Alanlar katman seçilince gelir; nesneler çizimdeki seçimden alınır."
+      "text": "Bir alanın değerlerini sayar: seçilen nesnelerde, seçilmediyse katmanın bütün nesnelerinde. Alanlar katman seçilince gelir; alan seçilince ya da nesneler alınınca sayım kendiliğinden yenilenir."
     },
     {
       "type": "layerPicker",
@@ -16,13 +16,15 @@
       "type": "fieldPicker",
       "id": "alan",
       "label": "Alan",
-      "layer": "katman"
+      "layer": "katman",
+      "onChange": "deger-say"
     },
     {
       "type": "featurePicker",
       "id": "nesneler",
       "label": "Nesneler",
-      "layer": "katman"
+      "layer": "katman",
+      "onChange": "deger-say"
     },
     {
       "type": "button",

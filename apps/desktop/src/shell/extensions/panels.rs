@@ -13,6 +13,8 @@
 //!   shown as a column.
 //! - **A running button shows how far it is:** its command's `ctx.progress` as a bar and words under the form, with
 //!   Durdur; a command that answers a message, not rows, leaves the table as it was.
+//! - **A value changed can run a command:** an input's `onChange` runs it with the panel's values (its rows to the
+//!   first table); a change while a command runs waits for it, one rerun with the values then.
 //! - **Pickers follow their layer picker:** a field picker lists the fields of the layer chosen there, a feature picker
 //!   takes the selected objects of that layer when the user asks ("Seçimi al"); choosing another layer clears both.
 
@@ -52,8 +54,10 @@ pub(crate) struct OpenPanel {
     pub(crate) tables: BTreeMap<String, (Vec<String>, Vec<Value>)>,
     /// The panel's last words and their mark: done, stopped by the user, failed.
     pub(crate) said: Option<(words::Kind, String)>,
-    /// The button whose command runs now.
+    /// The button (or the changed input) whose command runs now.
     pub(crate) running: Option<String>,
+    /// An input with `onChange` changed while a command ran: its command runs again when that one ends.
+    pub(crate) rerun: Option<String>,
 }
 
 /// A panel's button pressed: what the next launch of its command gives its code, and where its answer goes.
@@ -105,6 +109,7 @@ impl OpenPanel {
             tables: BTreeMap::new(),
             said: None,
             running: None,
+            rerun: None,
         };
         for c in &panel.definition.body {
             match c {
@@ -398,11 +403,16 @@ impl App {
                 panel.texts.insert(id, text);
             }
             PanelEvent::Check(id, on) => {
-                panel.checks.insert(id, on);
+                panel.checks.insert(id.clone(), on);
+                return self.ext_panel_changed(&id);
             }
-            PanelEvent::Choose(id, value) => panel.choose(id, value),
+            PanelEvent::Choose(id, value) => {
+                panel.choose(id.clone(), value);
+                return self.ext_panel_changed(&id);
+            }
             PanelEvent::Unpick(id) => {
-                panel.picks.insert(id, Vec::new());
+                panel.picks.insert(id.clone(), Vec::new());
+                return self.ext_panel_changed(&id);
             }
             PanelEvent::Pick(id) => return self.ext_panel_pick(&id),
             PanelEvent::Close => self.extensions.panel = None,
@@ -491,12 +501,74 @@ impl App {
         }
         panel.picks.insert(picker.to_owned(), picked);
         panel.said = None;
-        Task::none()
+        self.ext_panel_changed(picker)
     }
 
-    /// A button: its command run with the panel's values; a number that is not one, or Python not ready, said in the
-    /// panel and nothing run.
+    /// A button: its command run with the panel's values, its rows to its table.
     fn ext_panel_press(&mut self, button: &str) -> Task<Message> {
+        let found = self
+            .extensions
+            .panel
+            .as_ref()
+            .filter(|p| p.running.is_none())
+            .and_then(
+                |p| match p.definition.body.iter().find(|c| c.id() == Some(button)) {
+                    Some(Component::Button { command, table, .. }) => {
+                        Some((command.clone(), table.clone()))
+                    }
+                    _ => None,
+                },
+            );
+        match found {
+            Some((command, table)) => self.ext_panel_start(button, command, table),
+            None => Task::none(),
+        }
+    }
+
+    /// An input changed: its `onChange` command runs with the panel's values, its rows to the panel's first table. A
+    /// change while a command runs waits for it: one rerun, with the values then.
+    fn ext_panel_changed(&mut self, input: &str) -> Task<Message> {
+        let Some(panel) = self.extensions.panel.as_mut() else {
+            return Task::none();
+        };
+        let Some(command) = panel
+            .definition
+            .body
+            .iter()
+            .find(|c| c.id() == Some(input))
+            .and_then(Component::on_change)
+            .map(str::to_owned)
+        else {
+            return Task::none();
+        };
+        if panel.running.is_some() {
+            panel.rerun = Some(input.to_owned());
+            return Task::none();
+        }
+        self.ext_panel_start(input, command, None)
+    }
+
+    /// A change that came while the panel's command ran: its command now, with the values now (runner.rs, when a run
+    /// ends).
+    pub(crate) fn ext_panel_rerun(&mut self) -> Task<Message> {
+        let input = match self.extensions.panel.as_mut() {
+            Some(p) if p.running.is_none() => p.rerun.take(),
+            _ => None,
+        };
+        match input {
+            Some(input) => self.ext_panel_changed(&input),
+            None => Task::none(),
+        }
+    }
+
+    /// The panel's `command` started by `trigger` (a button, a changed input) with the panel's values; a number that is
+    /// not one, or Python not ready, said in the panel and nothing run.
+    fn ext_panel_start(
+        &mut self,
+        trigger: &str,
+        command: String,
+        table: Option<String>,
+    ) -> Task<Message> {
         let ext = match self.extensions.panel.as_ref() {
             Some(p) if p.running.is_none() => p.ext.clone(),
             _ => return Task::none(),
@@ -508,15 +580,6 @@ impl App {
             .and_then(Option::as_deref)
             .map(str::to_owned);
         let Some(panel) = self.extensions.panel.as_mut() else {
-            return Task::none();
-        };
-        let Some(Component::Button { command, table, .. }) = panel
-            .definition
-            .body
-            .iter()
-            .find(|c| c.id() == Some(button))
-            .cloned()
-        else {
             return Task::none();
         };
         if let Some(why) = why {
@@ -544,10 +607,10 @@ impl App {
         let origin = PanelOrigin {
             ext: ext.clone(),
             panel: panel.local.clone(),
-            button: button.to_owned(),
+            button: trigger.to_owned(),
             table: panel.table_of(table.as_ref()),
         };
-        panel.running = Some(button.to_owned());
+        panel.running = Some(trigger.to_owned());
         panel.said = None;
         self.extensions.panel_call = Some(PanelCall {
             ext: ext.clone(),
@@ -644,6 +707,8 @@ impl App {
             .filter(|p| p.ext == origin.ext && p.local == origin.panel)
         {
             panel.running = None;
+            // A change that waited for it does not start it again: the user stopped it.
+            panel.rerun = None;
             panel.said = Some((
                 words::Kind::Info,
                 "Durduruldu; çizime yazdıkları geri alındı.".to_owned(),
@@ -725,6 +790,7 @@ impl App {
                     id,
                     label: words,
                     geometry,
+                    ..
                 } => {
                     let layers = self.panel_layers(geometry.as_deref());
                     let at = layers
@@ -744,6 +810,7 @@ impl App {
                     label: words,
                     layer,
                     kinds,
+                    ..
                 } => {
                     let fields = self.panel_fields(p.layer_of(Some(layer)), kinds);
                     let at = fields
