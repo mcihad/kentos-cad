@@ -181,6 +181,12 @@ def slow(ctx, parcels):
         ctx.check()
 
 
+@ext.processing("into-layer")
+def into_layer(ctx, parcels, hedef):
+    """Names its output layer: KentOS writes the outputs, the function is told where."""
+    return {"target": hedef.get("newName") or hedef.get("layerId")}
+
+
 @ext.processing("not-a-dict")
 def not_a_dict(ctx, parcels):
     return [1, 2]
@@ -258,6 +264,7 @@ class Kentos:
         params: dict[str, Any] | None = None,
         inputs: dict[str, Any] | None = None,
         document: bool | None = None,
+        layers: dict[str, Any] | None = None,
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         """(done, what came before it)."""
         self.runs += 1
@@ -273,6 +280,8 @@ class Kentos:
         }
         if inputs is not None:
             message["inputs"] = inputs
+        if layers is not None:
+            message["layers"] = layers
         self.send(message)
         if cancel_after is not None:
             time.sleep(cancel_after)
@@ -478,6 +487,23 @@ class ExtHostTest(unittest.TestCase):
         self.assertEqual(result["select"], ["u-1"])
         self.assertEqual(result["summary"], "2 parsel ölçüldü; 2 kapalı alan; tüm nesneler")
         self.assertFalse([m for m in said if m["type"] == "call"], "a tool does not ask for the drawing")
+
+    def test_an_output_layer_is_given_only_to_a_function_that_names_it(self) -> None:
+        # 15 November 2026: an agent's tool named its output layer and failed with a missing argument; a tool that does
+        # not name it (as Vitrin's TAKS) is not given it.
+        self.kentos.hello()
+        parcels = {"description": "1 kapalı alan", "features": [polygon("u-1", [(0, 0), (1, 0), (1, 1)])]}
+        layers = {"hedef": {"newName": "Boş mezarlar"}}
+        done, _ = self.kentos.invoke(
+            "into-layer", "deneme.logic:into_layer", kind="processing", inputs={"parcels": parcels}, layers=layers
+        )
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["outputs"]["target"], "Boş mezarlar")
+        done, _ = self.kentos.invoke(
+            "areas", "deneme.logic:areas", kind="processing", params={"limit": 50}, inputs={"parcels": parcels},
+            layers={"cikti": {"newName": "Alanlar"}},
+        )
+        self.assertTrue(done["ok"], done)
 
     def test_whatever_library_made_an_output_it_comes_plain(self) -> None:
         # Not NumPy alone: a shapely-shaped shape, a pandas-shaped table, dates and decimals (the extension's own

@@ -597,6 +597,34 @@ fn an_agent_verifies_an_extensions_folder_before_packing_it() {
             .unwrap()
             .contains("@ext.audit(\"yapi-no\")")
     );
+    std::fs::write(&logic, text).unwrap();
+    // An İşlemler tool KentOS's processing would not make: said here as the install review says it (an agent's
+    // package passed and was refused at Kur, 15 November 2026).
+    let descriptor = copy.join("tools/taks.tool.json");
+    let tool = std::fs::read_to_string(&descriptor).unwrap();
+    std::fs::write(
+        &descriptor,
+        tool.replace("\"sinkParameter\": \"cikti\"", "\"sinkParameter\": null"),
+    )
+    .unwrap();
+    let answer = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.verify",
+        &json!({ "path": copy.to_string_lossy() }),
+    )
+    .unwrap();
+    assert_eq!(answer["valid"], false, "{answer:#}");
+    let problem = &answer["problems"][0];
+    assert_eq!(problem["code"], "tool_descriptor");
+    assert_eq!(problem["file"], "tools/taks.tool.json");
+    assert!(
+        problem["message"]
+            .as_str()
+            .unwrap()
+            .contains("sinkParameter"),
+        "{problem}"
+    );
     let _ = std::fs::remove_dir_all(&copy);
 }
 

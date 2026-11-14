@@ -310,8 +310,24 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         Err(message) => return fail(message),
     };
     let v = kentos_extensions::verify(&files, &Limits::default());
+    // The İşlemler tools' descriptors are checked here for their shape only: their whole check is KentOS's processing,
+    // which this light command does not carry (scripts/arch/deps.mjs); the install review and the agents'
+    // extension.verify make it (docs/adr/8057 §24).
+    let tools = v
+        .manifest
+        .as_ref()
+        .is_some_and(|m| !m.entrypoints.processing.is_empty());
+    let note = "İşlemler araçlarının tanımları burada yalnız biçimiyle denetlendi; tam denetimi KentOS'un kurulum \
+                incelemesi ve ajanların extension.verify'ı yapar.";
     if json {
-        println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
+        let mut value = serde_json::to_value(&v).unwrap_or_default();
+        if tools && let Some(o) = value.as_object_mut() {
+            o.insert("note".to_owned(), serde_json::json!(note));
+        }
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&value).unwrap_or_default()
+        );
     } else {
         if let Some(m) = &v.manifest {
             println!("{} {} — {}", m.id, m.version, m.name);
@@ -344,6 +360,9 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
             );
         } else {
             println!("Doğrulanmadı: {} sorun.", v.problems.len());
+        }
+        if tools {
+            println!("Not: {note}");
         }
     }
     if v.is_valid() {

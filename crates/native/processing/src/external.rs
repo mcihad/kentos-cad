@@ -665,8 +665,10 @@ pub fn geojson(e: &Entity) -> Value {
     }
 }
 
-/// The tool's inputs: its parameters' values (`params`, every parameter but a layer one, a hidden one as none) and
-/// its features (`inputs`), as data.
+/// The tool's inputs: its parameters' values (`params`, every parameter but a layer one, a hidden one as none), its
+/// features (`inputs`), as data, and the layers KentOS writes its outputs to (`layers`: `{"layerId": …}` or
+/// `{"newName": …}`), given only to a function that names them (an agent's tool declared its output layer and failed
+/// with a missing argument, 15 November 2026; docs/adr/8057 §24).
 fn input_of(
     tool: &ExternalTool,
     resolved: &Resolved<'_>,
@@ -675,10 +677,14 @@ fn input_of(
     let hidden = redacted_names(ctx.doc);
     let mut params = Map::new();
     let mut inputs = Map::new();
+    let mut layers = Map::new();
     for p in &tool.tool.parameters {
         let shown = is_visible(p, &resolved.values);
         match &p.kind {
-            ParamKind::Layer { .. } => {}
+            ParamKind::Layer { .. } => {
+                let value = resolved.values.get(&p.name).cloned().unwrap_or(Value::Null);
+                layers.insert(p.name.clone(), value);
+            }
             ParamKind::Features { .. } => {
                 let set = resolved.features(&p.name);
                 let features: Vec<Value> = if shown {
@@ -716,7 +722,7 @@ fn input_of(
             }
         }
     }
-    Ok(json!({ "params": params, "inputs": inputs }))
+    Ok(json!({ "params": params, "inputs": inputs, "layers": layers }))
 }
 
 /// A value of an attribute as KentOS keeps it (text): a number as JavaScript writes it, a yes or no as `true` or

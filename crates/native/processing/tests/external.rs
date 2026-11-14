@@ -362,6 +362,12 @@ fn the_inputs_go_as_data_with_persistent_ids_and_hidden_fields_cut() {
         input["params"].get("output").is_none(),
         "where it writes is the host's"
     );
+    // Said apart, for a function that names its output layer (docs/adr/8057 §24): KentOS still writes there.
+    assert!(
+        input["layers"].get("output").is_some_and(|l| l.is_object()),
+        "{}",
+        input["layers"]
+    );
     assert_eq!(input["params"]["limit"], 500);
     assert!(
         input["inputs"]["parcels"]["description"]

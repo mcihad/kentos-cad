@@ -154,6 +154,11 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
             "feedback": { "progress": true, "cancel": true },
             "capabilities": { "runtimes": ["desktop-python"] }
         });
+        let mut descriptor = descriptor;
+        // With a schema, the tool opens on the extension's own layer (not the active one).
+        if schema {
+            descriptor["parameters"][0]["default"] = json!({ "scope": "layer", "layerId": layer });
+        }
         files.insert("tools/alan-ozeti.tool.json".to_owned(), pretty(&descriptor));
         python.push(PROCESSING.to_owned());
     }

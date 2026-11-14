@@ -1543,4 +1543,25 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   ve sayı üretir. Gerçek eklenti süreciyle sınandı (`ReferenceExtensionTest`: 3 mezardan 2 boş); gerçek pencerede
   bir Tekli mezar yerleştirildikten sonra "1 boş mezar yeri bulundu", nesne 10 → 11, çıktı katmanı Boş mezar
   yerleri; şeritte Ada bazlı doluluk'un altında, adı tanımından.
+- **Ajan referans biçimini üretti** (referans eklentinin son maddesi; Asistan, DeepSeek test anahtarı yalnız sürecin
+  ortamında, sentetik istek, Vitrin çizimi): kendi şerit sekmesi, `schema.json`'la ada ve mezar yeri katmanları, katman
+  kuran komut, harita aracı, arama paneli, iki İşlemler aracı (ada doluluk tablosu; boşları yeni katmana yazan) ve
+  denetim kuralı istendi; ajan iki-üç dakikada yazıp doğruladı, Gözden geçir ve kur penceresine altı yetenekle açtı.
+  Kurum kataloğundan kuruldu, ortam hazırlandı ("0 paket"), Katmanları kur, Mezar çiz (nesne 9 → 10), denetim "1 uyarı:
+  Durumu BOŞ ama mezar numarası boş", Ada doluluk tablosu ("1 ada, 1 mezar"), Boş mezarlar "1 boş mezar yeri yazıldı".
+  Dört bulgu:
+  1. **Ajanın doğrulaması kurulumdan gevşekti.** İlk turun paketi `extension.verify`'dan 0 sorunla geçti, inceleme
+     reddetti: yeni nesne veren çıktının `sinkParameter`'ı yoktu. Paylaşılan denetim araç tanımında yalnız biçime
+     bakıyor; tam denetim (`kentos-processing`'in `from_descriptor`'ı) yalnız masaüstü kurulumundaydı. Artık
+     `extension.verify` (klasör ve paket) ve atölyenin incelemeye açması aynı denetimi aynı kod ve sözlerle yapar (mod-gis;
+     MCP ve Asistan); komut satırındaki `kek verify` mimari gereği (`kentos-processing`'i taşımaz) yalnız biçime bakar
+     ve bunu söyler. İkinci turda ajan doğru yazdı.
+  2. **Çıktı katmanını imzasına yazan işlev çöktü** ("TypeError: … missing 1 required positional argument: 'hedef'"):
+     KentOS katman parametresini işleve hiç geçirmiyordu. Artık katman parametreleri ayrı gelir (`layers`:
+     `{"layerId"}` ya da `{"newName"}`) ve yalnız o adı alan işleve verilir: TAKS gibi almayan bozulmaz.
+  3. **Araçlar etkin katmanla (Taslak) açıldı:** `features` parametresinde varsayılan katman yoktu. Rehber
+     `default: {scope: "layer", layerId: …}`'ı söyler; şemalı iskeletin aracı şema katmanında açılır.
+  4. **Panelin araması katmanı bulamadı:** şema katmanını görünen adıyla aradı (`name == "mezar_yeri"`); şemanın `name`'i
+     katmanın kimliği, `title`'ı adıdır. Rehber bunu, `ctx.doc.layer(...)`'ı ve özniteliklerin `kayit.entity.attrs`'ta
+     olduğunu söyler.
 - **Kalan (ADIM 22):** ağaç, kart bileşenleri; birden çok açık panel; panelin kendi olayları (değer değişince).

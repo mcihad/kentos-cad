@@ -52,8 +52,10 @@ Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "s
 çizime kurar: `@ext.command("katmanlari-kur") def f(ctx): return ctx.apply_declarative_schema("schema.json")`
 (`document.write` ister). Biçim `kentos.layerSchema` 1, sözcükler KentOS'un:
 
-- `layers`: her biri `name` (çizimdeki kimliği: küçük harf, rakam, `_`; harita aracı ve denetim katmanı bununla bulur:
-  `ctx.add_feature("mezar_yeri", …)`, `facts.features("mezar_yeri")`), `title`, `geometry` (point, line, area,
+- `layers`: her biri `name` (çizimdeki **kimliği**, `layer.id`: küçük harf, rakam, `_`; harita aracı ve denetim
+  katmanı bununla bulur: `ctx.add_feature("mezar_yeri", …)`, `facts.features("mezar_yeri")`; bir komut
+  `ctx.doc.layer("mezar_yeri")` ile, nesnelerini `ctx.doc.entities(layer="mezar_yeri")` ile okur), `title` (görünen
+  adı, `layer.name`: "Mezar yeri"; katman ağacında adla aramak kimliği bulmaz), `geometry` (point, line, area,
   annotation, mixed; verilmezse her tür), `fields`: `{name, kind, alias, required, default, length, min, max, domain}`
   (kind: text, integer, decimal, date, boolean, datetime, time, bigint, instant, uuid, json, binary); isteğe bağlı `form`:
   paketteki `.kform` (manifestin `entrypoints.forms`'unda bildirilir), kurulumda katmana katmanın adıyla bağlanır.
@@ -79,7 +81,8 @@ listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.en
 alan ve nesne seçimi temizlenir), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
 `primary`), `table` (`id`, `label`). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
-doldurur. Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
+doldurur (`ctx.doc.entities(layer=…)` kayıt verir: `kayit.uid` kalıcı kimlik, öznitelikler `kayit.entity.attrs`'ta,
+kayıtta değil). Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
 `uid` sütun olarak görünmez. Panel Python'suz açılır; ortam hazır değilse düğmeler nedenini söyler. İskelette
 `panel` katkısı bir örnek verir.
 
@@ -99,7 +102,9 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 ## Kurallar
 
 - Her bildirilen kimliğin tek, doğru türde işaretli işlevi olur; `kentos kek verify` (ajanlarda `extension.verify`)
-  her adımda bunu ve paketin kurallarını denetler.
+  her adımda bunu ve paketin kurallarını denetler. İşlemler aracının tanımını (parametreler, çıktılar; yeni nesne veren
+  çıktının `sinkParameter`'ı bir `layer` parametresini adlandırır) kurulumdaki gibi tam denetleyen
+  `extension.verify`'dır; komut satırındaki `kek verify` yalnız biçimine bakar ve bunu söyler.
 - Bir katkı yeteneğini ister ve nedenini yazar (`requestedCapabilities`): kullanıcı kurarken her birini görüp onaylar.
   Ağa çıkan kod `network` ister; işletim sistemi komutu ve `eval`/`exec` uyarıdır.
 - Kütüphane `uv add <paket>` ile eklenir (`pyproject.toml` ve `uv.lock` birlikte yazılır); KentOS ortamı kilitten kurar.
@@ -193,7 +198,10 @@ pub fn sdk_pack() -> Value {
             "parameterTypes": ["features", "number", "string", "boolean", "enum", "field", "point", "layer"],
             "outputTypes": ["features", "table", "number", "string"],
             "fields": "id, version, label, description, modelDescription (yapay zekâ için, en çok 2000 karakter), help, \
-                       keywords, parameters, outputs, feedback, capabilities.runtimes, timeoutSeconds"
+                       keywords, parameters, outputs, feedback, capabilities.runtimes, timeoutSeconds",
+            "notes": "features parametresi default: {scope: \"layer\", layerId: \"<katman kimliği>\"} ile eklentinin kendi \
+                      katmanında açılır (verilmezse etkin katmanla); yeni nesne veren features çıktısı sinkParameter ile \
+                      bir layer parametresini adlandırır (o parametre default: {newName: \"…\"} ile yeni katman önerir)."
         },
         "verifyCodes": {
             "python_function_missing": "Manifestin işleyicisindeki işlev modülde yok (en yakını önerilir).",

@@ -705,6 +705,7 @@ impl Provider for Bridge {
             "handler": plan.handler,
             "params": input.get("params").cloned().unwrap_or_else(|| json!({})),
             "inputs": input.get("inputs").cloned().unwrap_or_else(|| json!({})),
+            "layers": input.get("layers").cloned().unwrap_or_else(|| json!({})),
             "settings": {},
             "document": false,
         });

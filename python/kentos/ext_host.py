@@ -53,6 +53,7 @@ Process → KentOS::
 from __future__ import annotations
 
 import importlib
+import inspect
 import io
 import itertools
 import json
@@ -194,6 +195,21 @@ class Stream(io.TextIOBase):
         if self.run is not None:
             message["id"] = self.run
         self._channel.send(message)
+
+
+def keyword_names(fn: Any) -> set[str] | None:
+    """The names ``fn`` takes as keywords; None when it takes any (``**kwargs``), none when it cannot be read."""
+    try:
+        signature = inspect.signature(fn)
+    except (TypeError, ValueError):
+        return set()
+    names: set[str] = set()
+    for p in signature.parameters.values():
+        if p.kind is inspect.Parameter.VAR_KEYWORD:
+            return None
+        if p.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
+            names.add(p.name)
+    return names
 
 
 def resolve(handler: str, kind: str, local: str) -> Any:
@@ -399,6 +415,12 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
             arguments = dict(params)
             for name, given in (message.get("inputs") or {}).items():
                 arguments[str(name)] = ext.FeatureInput(given)
+            # The layers KentOS writes the outputs to: given only to a function that names them (an agent's tool named
+            # its output layer and failed with a missing argument, 15 November 2026; docs/adr/8057 §24).
+            takes = keyword_names(fn)
+            for name, layer in (message.get("layers") or {}).items():
+                if takes is None or str(name) in takes:
+                    arguments[str(name)] = layer
             if stop.is_set():
                 raise ext.Stopped()
             result = outputs_of(fn(pctx, **arguments), pctx)

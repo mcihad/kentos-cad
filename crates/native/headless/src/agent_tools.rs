@@ -1162,30 +1162,80 @@ fn extension_verify(host: &dyn Host, args: &Value) -> Result<Value, HeadlessErro
     };
     if path.is_file() {
         let bytes = std::fs::read(&path).map_err(unreadable)?;
-        let i = kentos_extensions::inspect(&bytes, &limits);
+        let opened = kentos_extensions::open(&bytes, &limits);
+        let i = opened.inspection;
+        let problems = with_tool_problems(i.manifest.as_ref(), &opened.files, &i.problems);
         return Ok(json!({
-            "valid": i.is_valid(),
+            "valid": problems.is_empty(),
             "extension": i.manifest.as_ref().map(|m| json!({ "id": m.id, "version": m.version.to_string(), "name": m.name })),
             "digest": i.digest,
-            "problems": i.problems,
+            "problems": problems,
             "warnings": i.warnings,
             "next": "Paketin kaynağını doğrulamak için klasörünü verin: Python işaretleri de denetlenir.",
         }));
     }
     let files = read_folder(&path, &limits)?;
     let v = kentos_extensions::verify(&files, &limits);
+    let problems = with_tool_problems(v.manifest.as_ref(), &files, &v.problems);
+    let valid = problems.is_empty();
     Ok(json!({
-        "valid": v.is_valid(),
+        "valid": valid,
         "extension": v.manifest.as_ref().map(|m| json!({ "id": m.id, "version": m.version.to_string(), "name": m.name })),
         "digest": v.digest,
-        "problems": v.problems,
+        "problems": problems,
         "warnings": v.warnings,
-        "next": match (v.is_valid(), args.get("id").is_some()) {
+        "next": match (valid, args.get("id").is_some()) {
             (true, true) => "Doğrulandı: extension.workshop.review paketler ve kullanıcının incelemesine açar.",
             (true, false) => "Doğrulandı: `kentos kek pack` paketler; kurulum kullanıcının incelemesiyle olur.",
             (false, _) => "Sorunları dosya ve satırlarıyla düzeltip yeniden doğrulayın.",
         },
     }))
+}
+
+/// The problems found, and the İşlemler tools' descriptors as KentOS's processing makes them (docs/adr/8057 §10):
+/// what the desktop's install review refuses is said by the agent's verification too. An agent's package passed
+/// `extension.verify` and was refused at Kur for a features output without `sinkParameter` (15 November 2026). The
+/// same code and words as the extension host's check; a descriptor the package check already flagged is not said
+/// twice.
+fn with_tool_problems(
+    manifest: Option<&kentos_extensions::Manifest>,
+    files: &std::collections::BTreeMap<String, Vec<u8>>,
+    found: &[kentos_extensions::Problem],
+) -> Vec<kentos_extensions::Problem> {
+    let mut out = found.to_vec();
+    #[cfg(feature = "mod-gis")]
+    if let Some(manifest) = manifest {
+        for tool in &manifest.entrypoints.processing {
+            let flagged = found
+                .iter()
+                .any(|p| p.file.as_deref() == Some(tool.descriptor.as_str()));
+            let Some(value) = files
+                .get(&tool.descriptor)
+                .and_then(|b| serde_json::from_slice::<Value>(b).ok())
+                .filter(|_| !flagged)
+            else {
+                continue;
+            };
+            if let Err(why) = kentos_processing::external::from_descriptor(
+                &manifest.id,
+                &manifest.name,
+                &manifest.version.to_string(),
+                &tool.id,
+                &value,
+            ) {
+                out.push(
+                    kentos_extensions::Problem::new(
+                        "tool_descriptor",
+                        format!("“{}” aracı: {why}", tool.id),
+                    )
+                    .file(tool.descriptor.clone()),
+                );
+            }
+        }
+    }
+    #[cfg(not(feature = "mod-gis"))]
+    let _ = (manifest, files);
+    out
 }
 
 /// A working folder's files as the packer reads them (path → bytes), what every folder has left out ([`NOT_READ`]).
@@ -1439,10 +1489,11 @@ fn workshop_review(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessE
     let limits = kentos_extensions::Limits::default();
     let files = read_folder(&folder, &limits)?;
     let v = kentos_extensions::verify(&files, &limits);
-    let Some(manifest) = v.manifest.as_ref().filter(|_| v.is_valid()) else {
+    let problems = with_tool_problems(v.manifest.as_ref(), &files, &v.problems);
+    let Some(manifest) = v.manifest.as_ref().filter(|_| problems.is_empty()) else {
         return Ok(json!({
             "valid": false,
-            "problems": v.problems,
+            "problems": problems,
             "warnings": v.warnings,
             "next": "Doğrulamadan geçmeyen eklenti paketlenmez: sorunları düzeltip yeniden deneyin.",
         }));
