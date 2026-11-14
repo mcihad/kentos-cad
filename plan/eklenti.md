@@ -858,7 +858,7 @@ aktarımı [PY-TOOL-08], eklentiden eklentiye çağrı [PY-RUN-15], önizlemede 
 **Durum (14 Kasım): eklentiden eklentiye çağrı ve önizleme** (ADR 8057 §16; PY-RUN-15, PY-RUN-23): başka bir eklentinin
 aracı yalnız manifestte bağımlılık bildirilmişse çalıştırılır; çağrılan araç aracıya istek yapamadığı için zincir bir
 basamak, döngü yok; önizleme ve doğrulama yollarında eklenti kodu yazma izniyle çalışmaz. ADIM 19'da kalan: büyük
-girdinin sayfalı/ikili aktarımı [PY-TOOL-08] (başarım işi: sahibin sözüyle sonra) ve `kek inspect`'in araç denetimi
+girdinin sayfalı/ikili aktarımı [PY-TOOL-08] (başarım işi; ayrı karar bekliyor) ve `kek inspect`'in araç denetimi
 (komut satırı İşlemler'i içermez).
 
 **Sıradaki dilim (tasarım, 14 Kasım): çizimdeki ifadelerde eklenti işlevi.** Etiket metni ve koşulu
