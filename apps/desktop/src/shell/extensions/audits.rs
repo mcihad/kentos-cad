@@ -345,6 +345,18 @@ impl App {
                     .to_owned(),
             );
         }
+        // A stopped extension's findings stay to be read; its fixes do not write (they did, 14 November 2026).
+        if self
+            .extensions
+            .registry
+            .as_ref()
+            .is_none_or(|r| r.lease(&state.ext).is_none())
+        {
+            return Some(format!(
+                "{} kapalı: düzeltmesi uygulanmaz; Eklentiler'den etkinleştirin.",
+                self.extension_name(&state.ext)
+            ));
+        }
         if self.document.as_ref().map(|d| d.session) != Some(state.session) {
             return Some("Denetlenen çizim artık açık değil.".to_owned());
         }

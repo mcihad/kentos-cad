@@ -908,6 +908,63 @@ fn a_panel_opens_on_its_side_and_a_moved_tab_stays() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// plan/eklenti.md, Referans eklenti: an extension disabled leaves nothing behind: its open panel and its dock tab go,
+/// a fix its audit offered is refused (both stayed: the panel's buttons pressable, Düzelt writing for a stopped
+/// extension).
+#[test]
+fn a_disabled_extensions_panel_and_audit_fixes_go_with_it() {
+    use super::audits::{AuditState, Finding, Fix, Severity};
+    use crate::app::Panel;
+
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let dir = temp("hayalet");
+    let mut gis = crate::files_testing::app_with_drawing();
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&dir, false).0;
+    gis.extensions_changed();
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let _ = gis.extensions_event(Event::OpenPanel(VITRIN.into(), "yapi-paneli".into()));
+    assert!(gis.extensions.panel.is_some() && gis.docks.contains(Panel::Extension));
+    let session = gis.document.as_ref().unwrap().session;
+    gis.extensions.audit = Some(AuditState {
+        ext: VITRIN.into(),
+        local: "yapi-no".into(),
+        title: "Yapı numarası".into(),
+        running: None,
+        findings: vec![Finding {
+            severity: Severity::Warning,
+            message: "Yapı numarasız".into(),
+            feature: None,
+            fix: Some(Fix {
+                title: "Numara ver".into(),
+                command: "cad.entities.set".into(),
+                input: serde_json::json!({ "uids": [], "operation": "attributes", "attrs": { "no": "Y-99" } }),
+            }),
+            fixed: false,
+        }],
+        dropped: 0,
+        cut: false,
+        ms: 1,
+        error: None,
+        session,
+    });
+    assert_eq!(
+        gis.ext_audit_fix_refused(0),
+        None,
+        "running: its fix applies"
+    );
+    let _ = gis.extensions_event(Event::Disable(VITRIN.into()));
+    assert!(gis.extensions.panel.is_none(), "its panel went with it");
+    assert!(gis.extensions.panel_call.is_none());
+    assert!(!gis.docks.contains(Panel::Extension), "its tab too");
+    assert_eq!(
+        gis.ext_audit_fix_refused(0).as_deref(),
+        Some("Eklenti Vitrini kapalı: düzeltmesi uygulanmaz; Eklentiler'den etkinleştirin."),
+        "its findings stay to read, its fixes do not apply"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 /// docs/adr/8057 §24: an item's `when` is checked as the window is drawn: MEBİS's grave tool waits for its layers
 /// (`layerSchema: mezar_parsel`) and says so; once a layer of that id is in the drawing it can be pressed. Its İşlemler
 /// tool's button reads the tool's own label.

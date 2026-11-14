@@ -1523,4 +1523,11 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   `bottom` haritanın altında. Tek Eklenti sekmesi var: KentOS'un yerleştirdiği yerdeyken başka kenar isteyen panel
   açılırsa sekme oraya taşınır; **kullanıcının taşıdığı sekme yerinde kalır** (KentOS son yerleştirdiği kenarı
   bilir, `panel_placed`). Gerçek pencerede Değer say solda, ardından Yapı ara Katmanlar'ın yığınında.
+- **Kapatılan eklenti iz bırakmaz** (referans eklentinin kabul maddesi; gerçek pencerede MEBİS, paneli açıkken
+  Eklentiler › Devre dışı bırak): Mezarlık BS sekmesi, panel ve Eklenti dock sekmesi gider, komut araması "mezar" ve
+  "doluluk" için "menülerde yok" der; yeniden etkinleştirilince sekme döner, "doluluk" Ada bazlı doluluk'u bulur. İki
+  bulgu düzeltildi: (1) **açık panel kalıyordu**: düğmeleri basılabilir, eklentisi kapalıydı; artık eklenti durunca
+  paneli, düğmesinin bıraktığı çağrı ve dock sekmesi kapanır (`extensions_changed`). (2) **Denetim bulgusunun Düzelt'i
+  kapalı eklentinin düzeltmesini yazıyordu**; bulgular okunmak için durur, düzeltme "… kapalı: düzeltmesi uygulanmaz;
+  Eklentiler'den etkinleştirin" der.
 - **Kalan (ADIM 22):** ağaç, kart bileşenleri; birden çok açık panel; panelin kendi olayları (değer değişince).

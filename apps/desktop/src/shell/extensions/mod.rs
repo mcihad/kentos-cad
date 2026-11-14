@@ -508,6 +508,20 @@ impl App {
     pub(crate) fn extensions_changed(&mut self) {
         self.extension_tabs_changed();
         self.ext_tools_changed();
+        // What a stopped extension showed goes with it (plan/eklenti.md, Referans eklenti: no ghost): its open panel,
+        // the call its button left and its dock tab. Both stayed, the panel's buttons pressable (14 November 2026).
+        let stopped = self.extensions.panel.as_ref().is_some_and(|p| {
+            self.extensions
+                .registry
+                .as_ref()
+                .is_none_or(|r| r.lease(&p.ext).is_none())
+        });
+        if stopped {
+            self.extensions.panel = None;
+            self.extensions.panel_call = None;
+            self.extensions.panel_placed = None;
+            self.docks.close(crate::app::Panel::Extension);
+        }
         self.extensions.troubles = problems::troubles(&self.extensions);
         self.extensions.icons = self
             .extensions
