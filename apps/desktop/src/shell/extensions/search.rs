@@ -97,6 +97,10 @@ impl App {
         let Some((_, _, item)) = self.extension_item(hit) else {
             return Task::none();
         };
+        if let Some(why) = self.item_when_why(&item) {
+            self.output(format!("“{}”: {why}", item.label));
+            return Task::none();
+        }
         match item.action.clone() {
             Action::Source(ext, local) => self.extensions_event(Event::OpenSource(ext, local)),
             Action::Form(ext, local) => self.extensions_event(Event::OpenForm(ext, local)),

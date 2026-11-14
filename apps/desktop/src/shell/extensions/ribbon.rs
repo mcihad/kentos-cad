@@ -62,6 +62,9 @@ pub(crate) struct ExtItem {
     pub(crate) icon: Icon,
     pub(crate) large: bool,
     pub(crate) action: Action,
+    /// Its extension, and when it can be pressed (the manifest's `when`, checked as the window is drawn).
+    pub(crate) ext: String,
+    pub(crate) when: Option<kentos_extensions::manifest::When>,
 }
 
 #[derive(Clone, Debug)]
@@ -221,6 +224,8 @@ fn item_of(
                 icon: Icon::Button,
                 large: false,
                 action: Action::Unavailable("Öğe bir katkı göstermiyor.".to_owned()),
+                ext: ext.to_owned(),
+                when: None,
             };
         };
         let title = title.unwrap_or_else(|| local.clone());
@@ -267,6 +272,8 @@ fn item_of(
         icon,
         large: item.size == ItemSize::Large,
         action,
+        ext: ext.to_owned(),
+        when: item.when.clone(),
     }
 }
 
@@ -422,9 +429,66 @@ impl App {
             return menu;
         }
         items.into_iter().fold(menu.separator(), |menu, m| {
-            let on = self.item_message(&m.item.action);
+            let on = self.item_on(&m.item);
             menu.item(m.item.label.clone(), on).icon(m.item.icon)
         })
+    }
+
+    /// Why an item cannot be pressed now by its manifest's `when` (docs/adr/8057 §24): an open drawing, a selection,
+    /// a layer of a schema name (the extension's layers set up, §23), a capability granted; none when it can.
+    pub(crate) fn item_when_why(&self, item: &ExtItem) -> Option<String> {
+        use kentos_extensions::manifest::SelectionWhen;
+        let when = item.when.as_ref()?;
+        match when.document_open {
+            Some(true) if self.document.is_none() => {
+                return Some("Açık bir çizim gerekir.".to_owned());
+            }
+            Some(false) if self.document.is_some() => {
+                return Some("Çizim açıkken çalışmaz.".to_owned());
+            }
+            _ => {}
+        }
+        match when.selection {
+            Some(SelectionWhen::Feature) if self.selection.is_empty() => {
+                return Some("Önce bir nesne seçin.".to_owned());
+            }
+            Some(SelectionWhen::Many) if self.selection.len() < 2 => {
+                return Some("Önce birden çok nesne seçin.".to_owned());
+            }
+            _ => {}
+        }
+        if let Some(schema) = &when.layer_schema
+            && !self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.model.layers().get(schema).is_some())
+        {
+            return Some(format!(
+                "“{schema}” katmanı projede yok: önce eklentinin katmanlarını kurun."
+            ));
+        }
+        if let Some(capability) = when.capability_granted
+            && !self
+                .extensions
+                .registry
+                .as_ref()
+                .and_then(|r| r.grant(&item.ext))
+                .is_some_and(|g| g.capabilities.contains(&capability))
+        {
+            return Some(format!(
+                "Bu öğe “{}” iznini ister; eklentiye verilmedi.",
+                capability.title()
+            ));
+        }
+        None
+    }
+
+    /// What pressing an item sends now: none while its `when` does not hold or it cannot be pressed here.
+    pub(crate) fn item_on(&self, item: &ExtItem) -> Option<Message> {
+        if self.item_when_why(item).is_some() {
+            return None;
+        }
+        self.item_message(&item.action)
     }
 
     /// What pressing an item sends: none when it cannot be pressed here.
@@ -459,7 +523,7 @@ impl App {
         let mut out = Vec::new();
         for (p, panel) in tab.panels.iter().enumerate() {
             for (i, item) in panel.items.iter().enumerate() {
-                if let Some(message) = self.item_message(&item.action) {
+                if let Some(message) = self.item_on(item) {
                     out.push((
                         crate::ribbon_keys::TipKey::ExtItem(tab.id, p, i),
                         item.label.clone(),
@@ -524,8 +588,10 @@ impl App {
                     } else {
                         Button::small(item.icon, item.label.clone())
                     };
-                    let on = self.item_message(&item.action);
+                    let on = self.item_on(item);
                     let tip = match &item.action {
+                        // Its condition first: why it cannot be pressed now.
+                        _ if let Some(why) = self.item_when_why(item) => why,
                         Action::Builtin(id) => {
                             catalog().get(id).map_or_else(String::new, |c| c.description.to_owned())
                         }

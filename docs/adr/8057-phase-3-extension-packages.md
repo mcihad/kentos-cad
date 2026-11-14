@@ -122,7 +122,8 @@ yeterli.
   (§23): şema `kentos.layerSchema` v1'in sözcüklerine geçti (`area`, ilişkinin `id`/`parent`/`child`'ı, grup); özet
   `sha256:1a6af9c39da91b1fd7552a85204bf0ffea6c2e650c64bb06f936302db3bd317a` (aynı Python hesabı eskisini de birebir
   verdi); katmanlarına formları bağlanınca `sha256:05585d1c96e53cb10e90ca819f9fe121db6c359830437ea1a8aaa2266b09a05f`; arama paneli
-  v1'e geçip `search` komutunu alınca (§24) `sha256:a0bf2174415400e8cdd44b8942f11cad47c67ff15bb3aee39b9a00446f727a97`.
+  v1'e geçip `search` komutunu alınca (§24) `sha256:a0bf2174415400e8cdd44b8942f11cad47c67ff15bb3aee39b9a00446f727a97`;
+  denetimin düzeltmesi `operation`'ını, doluluk aracı Durdur'u SDK'nın yoluyla alınca `sha256:6ef13bdd8590e97126909bd494480d1e3345183599b095dc03d6dd18fa05a9bb`.
 - `fixtures/extensions/v1/ornek-altlik/`: en küçük paket (D2): `manifest.json`, `LICENSE` ve iki servis veri kaynağı;
   Python yok. Paket 1 400 bayt; tek uyarı değişiklik notunun yokluğu.
 
@@ -1461,5 +1462,14 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   girer**: türsüz katman her türü tutabilir; CBS şablonunun katmanları türsüz olduğundan "alan" süzgeci orada neredeyse
   bütün katmanları gösterir (gerçek pencerede görüldü, bilinçli). Vitrin 1.0.9'da Yapı ara'nın katmanı (boşsa `yapi`):
   Parsel sınırı seçilince 4 parsel geldi (`15-katman-secici`). İskeletin panelinde de var (boşsa bütün katmanlar).
+- **Bulgu (düzeltildi): şerit öğelerinin `when` koşulu hiç değerlendirilmiyordu.** `documentOpen`, `selection`,
+  `layerSchema`, `capabilityGranted` manifestte doğrulanıp öğede saklanıyor ama masaüstü onlara bakmıyordu: düğme
+  koşuldan bağımsız hep basılabiliyordu. Artık pencere çizilirken denetlenir (`item_when_why`): tutmayan koşulda düğme
+  kapalı ve ipucu nedenini söyler ("“mezar_parsel” katmanı projede yok: önce eklentinin katmanlarını kurun"); komut
+  aramasından basılınca da aynı neden yazılır. `layerSchema` katmanın kimliğiyle karşılaştırılır (§23: kimlik şema
+  adıdır). Sınandı: MEBİS'in Tekli mezar aracı katmanı yokken kapalı, `mezar_parsel` kimlikli katman eklenince açık.
+- **MEBİS (düzeltildi):** denetimin düzeltmesi `cad.entities.set`'e `operation: "attributes"` vermiyordu (düzeltme
+  çalışmazdı); doluluk aracı durdurulunca sözlük yerine `ctx.cancelled()` döndürüyordu (`read_features` Durdur'u zaten
+  `Stopped`la söyler). MEBİS'in `tr.ornek.kent-temel` bağımlılığı fikstürlerde yok: kurulunca bağımlılık bekler.
 - **Kalan (ADIM 22):** nesne ve alan seçici; ağaç, kart, ilerleme bileşenleri; sol ve alt yerleşim (`side` şimdilik
   sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince).

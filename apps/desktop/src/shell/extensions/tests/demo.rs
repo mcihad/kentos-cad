@@ -645,3 +645,47 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
     assert!(gis.extensions.panel.is_none(), "a late answer goes nowhere");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// docs/adr/8057 §24: an item's `when` is checked as the window is drawn: MEBİS's grave tool waits for its layers
+/// (`layerSchema: mezar_parsel`) and says so; once a layer of that id is in the drawing it can be pressed.
+#[test]
+fn an_items_when_holds_it_back_until_its_layer_is_there() {
+    let root = temp("kosul");
+    let mut gis = crate::files_testing::app_with_drawing();
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&root, false).0;
+    gis.extensions_changed();
+    // Without its dependency on a base extension the fixtures do not carry: it activates here.
+    install(
+        &mut gis,
+        "mebis.kek",
+        package("mebis", |m| {
+            m.as_object_mut().unwrap().remove("dependencies");
+        }),
+    );
+    let tab = gis
+        .extension_tabs()
+        .find(|t| t.extension == "tr.ornek.mebis")
+        .expect("MEBİS's tab");
+    let grave = tab
+        .panels
+        .iter()
+        .flat_map(|p| &p.items)
+        .find(|i| i.label == "Tekli mezar")
+        .expect("the grave tool")
+        .clone();
+    let why = gis.item_when_why(&grave).expect("held back");
+    assert!(why.contains("mezar_parsel"), "{why}");
+    assert!(gis.item_on(&grave).is_none());
+    let doc = gis.document.as_mut().expect("a drawing");
+    let added = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        "cad.layers.edit",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({ "operation": "add", "id": "mezar_parsel", "name": "Mezar parseli" }),
+    )
+    .expect("a known command");
+    assert_eq!(added["status"], "completed", "{added}");
+    assert_eq!(gis.item_when_why(&grave), None, "its layer is there");
+    let _ = std::fs::remove_dir_all(&root);
+}

@@ -39,9 +39,8 @@ def on_single_grave_placed(ctx: ext.MapToolContext, shape) -> ext.CommandResult:
 @ext.processing("occupancy-by-island")
 def occupancy_by_island(ctx: ext.ProcessingContext, islands, graves) -> dict:
     stats: dict[str, dict[str, int]] = {}
+    # read_features answers Durdur between the objects (ext.Stopped): what the run wrote is taken back.
     for g in ctx.read_features(graves):
-        if ctx.is_stopped():
-            return ctx.cancelled()
         row = stats.setdefault(g.attrs.get("ada_no", "BELIRSIZ"), {"toplam": 0, "dolu": 0})
         row["toplam"] += 1
         row["dolu"] += g.attrs.get("durum") == "DOLU"
@@ -62,7 +61,7 @@ def audit_status_mismatch(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
                     fix=ext.SemanticFix(
                         title="Durumu 'DOLU' yap",
                         command="cad.entities.set",
-                        args={"uids": [grave.id], "attrs": {"durum": "DOLU"}},
+                        args={"uids": [grave.id], "operation": "attributes", "attrs": {"durum": "DOLU"}},
                     ),
                 )
             )

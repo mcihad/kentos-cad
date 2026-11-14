@@ -169,7 +169,7 @@ fn the_golden_packages_pack_inspect_and_repeat_byte_for_byte() {
     // the canonical form is the documented one; fixtures/extensions/.gitattributes keeps the bytes on every checkout.
     assert_eq!(
         mebis.digest,
-        "sha256:a0bf2174415400e8cdd44b8942f11cad47c67ff15bb3aee39b9a00446f727a97"
+        "sha256:6ef13bdd8590e97126909bd494480d1e3345183599b095dc03d6dd18fa05a9bb"
     );
     let altlik = pack(&folder("ornek-altlik"), &limits()).unwrap();
     let warned: Vec<&str> = altlik.warnings.iter().map(|w| w.code).collect();
