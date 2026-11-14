@@ -320,6 +320,23 @@ def plain(value: Any, where: str) -> Any:
     )
 
 
+def findings_of(value: Any) -> dict[str, Any]:
+    """What an audit rule returned, as KentOS reads it: its findings in order (docs/adr/8057 §17)."""
+    if value is None:
+        value = []
+    if isinstance(value, ext.AuditFinding):
+        value = [value]
+    findings = []
+    for i, finding in enumerate(value):
+        if not isinstance(finding, ext.AuditFinding):
+            raise TypeError(
+                f"Denetim {i + 1}. bulgu yerine {type(finding).__name__} döndürdü: ext.AuditFinding listesi vermeli."
+            )
+        findings.append(finding.to_json())
+    json.dumps(findings)
+    return {"kind": "findings", "findings": findings}
+
+
 def outputs_of(value: Any, ctx: ext.ProcessingContext) -> dict[str, Any]:
     """What an İşlemler tool returned, as KentOS reads it: its outputs by name, its summary and its selection."""
     out: dict[str, Any] = {"kind": "outputs", "outputs": {}}
@@ -383,6 +400,12 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
             if stop.is_set():
                 raise ext.Stopped()
             result = outputs_of(fn(pctx, **arguments), pctx)
+        elif kind == "audit":
+            # The drawing's layers as data, taken when it began: a rule has no drawing, it answers findings.
+            facts = ext.GisAuditFacts(dict(message.get("facts") or {}))
+            if stop.is_set():
+                raise ext.Stopped()
+            result = findings_of(fn(facts))
         elif kind == "mapTool":
             # What the user drew, given to the tool with a command's context: its writes are one undo step.
             doc = cad.Document(DesktopSession(channel)) if message.get("document") else None  # type: ignore[arg-type]

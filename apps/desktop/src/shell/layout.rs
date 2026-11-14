@@ -210,6 +210,7 @@ fn tab_key(tab: BottomTab) -> &'static str {
         BottomTab::Address => "address",
         BottomTab::Topology => "topology",
         BottomTab::Audit => "audit",
+        BottomTab::ExtAudit => "extAudit",
         BottomTab::CadInspection => "cadInspection",
         BottomTab::ServiceInfo => "serviceInfo",
         BottomTab::Messages => "messages",

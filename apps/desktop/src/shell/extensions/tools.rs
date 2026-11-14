@@ -131,6 +131,101 @@ impl Default for ExtTools {
     }
 }
 
+/// What running one of an extension's contributions in its version's process needs (an audit rule's, audits.rs):
+/// ready to go to the pool from another thread, nothing read from the disk at the run.
+pub(crate) struct PoolJob {
+    pool: Arc<Pool>,
+    plan: Plan,
+    python: Python,
+}
+
+impl PoolJob {
+    /// Runs `invoke` (its `kind` and data; `local` and `handler` are filled in) in the extension version's process,
+    /// `stopped` asked while it runs: the process's answer (`done`), or why there is none, in a sentence.
+    pub(crate) fn run(
+        &self,
+        mut invoke: Value,
+        timeout: Duration,
+        stopped: &dyn Fn() -> bool,
+    ) -> Result<Value, String> {
+        invoke["type"] = json!("invoke");
+        invoke["local"] = json!(self.plan.local);
+        invoke["handler"] = json!(self.plan.handler);
+        invoke["document"] = json!(false);
+        let key = format!("{}@{}", self.plan.ext, self.plan.version);
+        match self.pool.run(
+            &key,
+            &|| start_of(&self.plan, &self.python),
+            invoke,
+            timeout,
+            stopped,
+            &mut |_| {},
+        ) {
+            Ended::Answered(done) => Ok(done),
+            Ended::StoppedBefore => Err("Başlamadan durduruldu.".to_owned()),
+            Ended::Killed { timed_out: true } => {
+                Err("Süresini aştı; eklentinin süreci sonlandırıldı.".to_owned())
+            }
+            Ended::Killed { timed_out: false } => {
+                Err("Durdur'a cevap vermedi; eklentinin süreci sonlandırıldı.".to_owned())
+            }
+            Ended::NotStarted(why) => Err(why),
+            Ended::Crashed(words) => {
+                Err(format!("Eklentinin süreci kendiliğinden kapandı: {words}"))
+            }
+        }
+    }
+}
+
+impl App {
+    /// A pool job for an extension's contribution, its handler given (an audit rule's): why not, in a sentence, when
+    /// its Python cannot run now.
+    pub(crate) fn pool_job(
+        &self,
+        ext: &str,
+        local: &str,
+        handler: &str,
+    ) -> Result<PoolJob, String> {
+        let (python, why_not) = {
+            let shared = self
+                .extensions
+                .tools
+                .shared
+                .read()
+                .map_err(|_| "Eklenti araçları okunamadı.".to_owned())?;
+            (shared.python.clone(), shared.why_not.clone())
+        };
+        let python = python.ok_or(why_not)?;
+        let registry = self
+            .extensions
+            .registry
+            .as_ref()
+            .ok_or("Eklenti kayıt defteri açık değil.")?;
+        let manifest = registry.manifest(ext).ok_or("Eklenti kurulu değil.")?;
+        let source = registry
+            .package_dir(ext)
+            .ok_or("Eklentinin paketi bulunamadı.")?;
+        let lock_file = manifest
+            .python
+            .as_ref()
+            .map(|p| p.lock_file.clone())
+            .ok_or("Eklentinin Python işlevi yok.")?;
+        Ok(PoolJob {
+            pool: Arc::clone(&self.extensions.tools.pool),
+            plan: Plan {
+                ext: ext.to_owned(),
+                local: local.to_owned(),
+                handler: handler.to_owned(),
+                version: manifest.version.to_string(),
+                source,
+                digest: registry.digest(ext).unwrap_or_default(),
+                lock_file,
+            },
+            python,
+        })
+    }
+}
+
 /// Tests run many windows in one process, and the lists a window gives the process (İşlemler' tools and functions,
 /// what runs and answers them, the expression engine's host) are the process's: a test whose window gives them keeps
 /// them until it ends, so another test's window does not replace them under it (it failed now and then with

@@ -49,6 +49,25 @@ def raises(ctx):
     return 1 / 0
 
 
+@ext.audit("no-number")
+def no_number(facts):
+    findings = []
+    for f in facts.features("Yapı"):
+        if not f.attrs.get("no"):
+            findings.append(ext.AuditFinding(
+                message=f"{f.id} numarasız", feature_id=f.id,
+                fix=ext.SemanticFix(title="Numara ver", command="cad.entities.set",
+                                    args={"uids": [f.id], "operation": "attributes", "attrs": {"no": "Y-99"}})))
+    if facts.cut:
+        findings.append(ext.AuditFinding(message="çizimin yalnız bir kısmı denetlendi", severity="info"))
+    return findings
+
+
+@ext.audit("not-findings")
+def not_findings(facts):
+    return ["bir bulgu değil"]
+
+
 @ext.command("ordered")
 def ordered(ctx):
     return ctx.report([{"yapı": "B1", "mesafe_m": 2.0}, {"yapı": "B2", "durum": "parsel dışında"}])
@@ -464,6 +483,38 @@ class ExtHostTest(unittest.TestCase):
         self.assertEqual(result["values"], ["101/1", None, None])
         self.assertEqual(result["failed"], 1, "a row's failure empties that row alone")
         self.assertIn("ValueError: geçersiz parsel", result["error"])
+
+    def audit(self, local: str, handler: str, facts: dict[str, Any]) -> dict[str, Any]:
+        """An audit rule run on `facts` (docs/adr/8057 §17): its done."""
+        self.kentos.runs += 1
+        self.kentos.send({"type": "invoke", "id": self.kentos.runs, "kind": "audit", "local": local,
+                          "handler": handler, "facts": facts, "document": False})
+        while True:
+            done = self.kentos.receive()
+            if done["type"] == "done":
+                return done
+
+    def test_an_audit_rule_reads_the_layers_as_data_and_answers_findings(self) -> None:
+        self.kentos.hello()
+        building = lambda uid, attrs: {"uid": uid, "layer": "Yapı", "geometry": None,  # noqa: E731
+                                       "entity": {"kind": "polygon", "attrs": attrs}}
+        facts = {"layers": [{"id": "yapi", "name": "Yapı",
+                             "features": [building("u1", {"no": "Y-01"}), building("u2", {})]}], "cut": True}
+        done = self.audit("no-number", "deneme.logic:no_number", facts)
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["kind"], "findings")
+        findings = done["result"]["findings"]
+        self.assertEqual([f.get("featureId") for f in findings], ["u2", None])
+        self.assertEqual(findings[0]["severity"], "warning")
+        self.assertEqual(findings[0]["fix"], {"title": "Numara ver", "command": "cad.entities.set",
+                                              "args": {"uids": ["u2"], "operation": "attributes",
+                                                       "attrs": {"no": "Y-99"}}})
+        self.assertEqual(findings[1]["severity"], "info", "the rule knows the facts were cut")
+        # What is not a finding is the rule's mistake, said with what to return.
+        done = self.audit("not-findings", "deneme.logic:not_findings", facts)
+        self.assertFalse(done["ok"])
+        self.assertEqual(done["exception"], "TypeError")
+        self.assertIn("ext.AuditFinding listesi", done["message"])
 
     def test_a_processing_tool_is_stopped_while_it_computes(self) -> None:
         self.kentos.hello()

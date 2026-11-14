@@ -174,6 +174,7 @@ impl App {
             | BottomTab::Topology
             | BottomTab::CadInspection
             | BottomTab::Audit
+            | BottomTab::ExtAudit
             | BottomTab::ServiceInfo
             | BottomTab::Python => None,
         }

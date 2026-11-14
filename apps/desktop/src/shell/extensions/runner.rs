@@ -348,6 +348,10 @@ impl App {
     /// Runs an extension's contribution: its environment found in the background (and this KentOS's library put in it
     /// when it holds another), then its process started when it has none and the call sent.
     pub(crate) fn ext_run(&mut self, ext: &str, kind: &str, local: &str) -> Task<Message> {
+        // An audit rule reads the layers as data in the pool; its findings go to Eklenti denetimi (audits.rs).
+        if kind == "audit" {
+            return self.ext_audit_run(ext, local);
+        }
         // An İşlemler tool opens its window; it runs from there, as the built-in tools do (tools.rs).
         if kind == "processing" {
             return self.processing_command(&format!("processing.run.ext.{ext}.{local}"));

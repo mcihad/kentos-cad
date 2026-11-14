@@ -113,7 +113,16 @@ fn each_program_has_its_own_bottom_tabs() {
     assert_eq!(started(None).bottom_tabs(), BottomTab::ALL);
     assert_eq!(
         started(MIMARI).bottom_tabs(),
-        [History, Coords, Search, Audit, CadInspection, Messages, Python]
+        [
+            History,
+            Coords,
+            Search,
+            Audit,
+            ExtAudit,
+            CadInspection,
+            Messages,
+            Python
+        ]
     );
     assert_eq!(
         started(HARITA).bottom_tabs(),
@@ -126,6 +135,7 @@ fn each_program_has_its_own_bottom_tabs() {
             Search,
             Address,
             Topology,
+            ExtAudit,
             CadInspection,
             ServiceInfo,
             Messages,

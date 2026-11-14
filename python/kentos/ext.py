@@ -275,6 +275,11 @@ class Feature:
         return {"type": "Feature", "id": self.uid, "geometry": self.geometry, "properties": dict(self.attrs)}
 
     @property
+    def id(self) -> str:
+        """Its persistent id (``uid``): what a finding names (``AuditFinding.feature_id``) and a fix writes to."""
+        return self.uid
+
+    @property
     def entity(self) -> Any:
         """Its whole object as :mod:`kentos.cad` types it (what ``ctx.doc.entities`` gives a command)."""
         if self._entity is None:
@@ -529,7 +534,46 @@ class MapToolContext(CommandContext):
 
 
 class GisAuditFacts:
-    """An audit rule's facts; ADIM 19's next slice."""
+    """What an audit rule reads (docs/adr/8057 §17): the drawing's layers holding objects, each object a
+    :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began. A rule
+    writes nothing: it answers :class:`AuditFinding` s, each with an optional fix the user chooses to apply."""
+
+    __slots__ = ("_layers", "cut")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        self._layers: list[tuple[str, str, list[Feature]]] = [
+            (str(layer.get("id", "")), str(layer.get("name", "")), [Feature(f) for f in layer.get("features") or []])
+            for layer in raw.get("layers") or []
+            if isinstance(layer, dict)
+        ]
+        #: KentOS gave only the first objects of a very large drawing (its limit): a rule may say so.
+        self.cut: bool = bool(raw.get("cut"))
+
+    def layers(self) -> list[tuple[str, str]]:
+        """The layers holding objects, ``(id, name)``, in the layer tree's order."""
+        return [(i, n) for i, n, _ in self._layers]
+
+    def features(self, layer: str) -> list[Feature]:
+        """A layer's objects, by its id or its name (KentOS's GIS template: ``parsel``, ``yapi``); none when no layer
+        has it."""
+        for i, n, found in self._layers:
+            if layer in (i, n):
+                return list(found)
+        return []
+
+    def all_features(self) -> list[Feature]:
+        """Every object given, layer by layer."""
+        return [f for _, _, found in self._layers for f in found]
+
+    def group_related(self, layer: str, foreign_key: str) -> dict[str, list[Feature]]:
+        """A layer's objects grouped by their ``foreign_key`` attribute's value (a related table's key); objects
+        without it are left out."""
+        out: dict[str, list[Feature]] = {}
+        for f in self.features(layer):
+            key = f.attrs.get(foreign_key)
+            if key:
+                out.setdefault(key, []).append(f)
+        return out
 
 
 @dataclass
@@ -549,3 +593,17 @@ class AuditFinding:
     severity: str = "warning"
     feature_id: str | None = None
     fix: SemanticFix | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        """As KentOS reads it; a severity other than error, warning or info and an empty message are the rule's
+        mistakes."""
+        if self.severity not in ("error", "warning", "info"):
+            raise ValueError(f"Bulgunun önemi “{self.severity}” olamaz: error, warning ya da info.")
+        if not str(self.message).strip():
+            raise ValueError("Bulgunun iletisi boş olamaz.")
+        out: dict[str, Any] = {"severity": self.severity, "message": str(self.message)[:2000]}
+        if self.feature_id:
+            out["featureId"] = str(self.feature_id)
+        if self.fix is not None:
+            out["fix"] = {"title": str(self.fix.title), "command": str(self.fix.command), "args": dict(self.fix.args)}
+        return out

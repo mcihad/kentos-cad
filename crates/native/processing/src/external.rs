@@ -520,6 +520,61 @@ fn feature(e: &Entity, ctx: &RunContext<'_>, hidden: &[String]) -> Option<Value>
     }))
 }
 
+/// What an extension's audit rule reads (`kind: "audit"`, docs/adr/8057 §17, plan/eklenti.md ADIM 20): every layer
+/// holding objects, in the tree's order, with its objects as a tool's inputs give them (`ext.Feature`): persistent id,
+/// layer name, shape as GeoJSON (arcs tessellated, [`geojson`]) and the whole object; a field the drawing hides from
+/// third parties is masked (docs/adr/0743 §1). At most `most` objects: past it none, and `cut` says so.
+pub fn audit_facts(doc: &kentos_domain::Document, most: usize) -> Value {
+    let hidden = redacted_names(doc);
+    let mut by_layer: BTreeMap<String, Vec<Value>> = BTreeMap::new();
+    let mut count = 0usize;
+    let mut cut = false;
+    for e in doc.entities() {
+        if count >= most {
+            cut = true;
+            break;
+        }
+        let Some(uid) = doc.uid(kentos_domain::Slot(e.base().id)) else {
+            continue;
+        };
+        let Ok(mut entity) = serde_json::to_value(e) else {
+            continue;
+        };
+        if let Some(o) = entity.as_object_mut() {
+            o.insert("id".into(), json!(0));
+            if let Some(Value::Object(attrs)) = o.get_mut("attrs") {
+                for (k, v) in attrs.iter_mut() {
+                    if hidden.contains(k) {
+                        *v = json!(HIDDEN);
+                    }
+                }
+            }
+        }
+        let layer = e.base().layer_id.clone();
+        let name = doc
+            .layers()
+            .get(&layer)
+            .map_or_else(|| layer.clone(), |n| n.name.clone());
+        by_layer.entry(layer).or_default().push(json!({
+            "uid": uid.to_string(),
+            "layer": name,
+            "geometry": geojson(e),
+            "entity": entity,
+        }));
+        count += 1;
+    }
+    let layers: Vec<Value> = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .filter_map(|n| {
+            let features = by_layer.remove(&n.id)?;
+            Some(json!({ "id": n.id, "name": n.name, "features": features }))
+        })
+        .collect();
+    json!({ "layers": layers, "cut": cut })
+}
+
 /// How far a chord of a tessellated arc may come from its arc, metres: a millimetre, below what a cadastral plan
 /// draws. A parcel's curve of chord 30 m and bulge 0.3 (r = 27.25 m) is cut into 69 chords and its area comes 0.02 m²
 /// short of the arc's 991.60 m²; the drawing's own 5° tessellation (`DEFAULT_STEP`) came 0.50 m² short (991.10 m²,

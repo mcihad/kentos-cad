@@ -2240,6 +2240,7 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "Yapıları numarala",
             "Hata örneği",
             "TAKS",
+            "Yapı numarası",
             "Yapı yerleştir"
         ]
     );
@@ -2543,5 +2544,105 @@ fn an_extension_runs_another_extensions_tool_only_when_it_depends_on_it() {
         "input": { "tool": "ext.tr.ornek.vitrin.taks", "rows": [] },
     });
     assert_eq!(gis.calls_refused("tr.ornek.mebis", &batch), None);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
+    // docs/adr/8057 §17 (plan ADIM 20): the rule's answer read into Eklenti denetimi; Göster selects the object, Düzelt
+    // writes the rule's fix as one undo step named by it; a fix of an extension not allowed to write is refused.
+    use super::audits::{AuditDone, AuditState, Severity, findings_of};
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let dir = temp("denetim");
+    let mut gis = crate::processing::tests::app_with_parcels();
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&dir, false).0;
+    gis.extensions_changed();
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let doc = gis.document.as_ref().unwrap();
+    let slot = doc
+        .model
+        .entities()
+        .next()
+        .map(|e| kentos_domain::Slot(e.base().id))
+        .unwrap();
+    let uid = doc.model.uid(slot).unwrap().to_string();
+    let session = doc.session;
+    let done = serde_json::json!({
+        "ok": true,
+        "result": { "kind": "findings", "findings": [
+            { "severity": "warning", "message": "Yapının numarası yok; sıradaki numara Y-01.", "featureId": uid,
+              "fix": { "title": "Y-01 yaz", "command": "cad.entities.set",
+                       "args": { "uids": [uid], "operation": "attributes", "attrs": { "no": "Y-01" } } } },
+            { "severity": "info", "message": "Çizimin yalnız ilk nesneleri denetlendi." },
+            { "severity": "ölümcül", "message": "okunmaz" }
+        ] }
+    });
+    let (findings, dropped) = findings_of(&done).expect("read");
+    assert_eq!(
+        (findings.len(), dropped),
+        (2, 0),
+        "an unknown severity is left out"
+    );
+    assert_eq!(findings[0].severity, Severity::Warning);
+    let failed = findings_of(
+        &serde_json::json!({ "ok": false, "exception": "TypeError", "message": "liste değil",
+                                                 "error": "Traceback…" }),
+    );
+    assert_eq!(failed.unwrap_err().0, "TypeError: liste değil");
+    // The run ends: its findings in the tab.
+    gis.extensions.audit = Some(AuditState {
+        ext: VITRIN.into(),
+        local: "yapi-no".into(),
+        title: "Yapı numarası".into(),
+        running: Some(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(
+            false,
+        ))),
+        findings: Vec::new(),
+        dropped: 0,
+        cut: false,
+        ms: 0,
+        error: None,
+        session,
+    });
+    gis.ext_audit_done(AuditDone {
+        ext: VITRIN.into(),
+        local: "yapi-no".into(),
+        answer: Ok(done),
+        ms: 12,
+    });
+    let state = gis.extensions.audit.as_ref().unwrap();
+    assert!(state.running.is_none() && state.error.is_none());
+    assert_eq!(state.findings.len(), 2);
+    let _ = gis.ext_audit_tab();
+    // Göster: the object selected.
+    let _ = gis.ext_audit_show(0);
+    assert_eq!(gis.selection.ids(), [slot]);
+    // Düzelt: one undo step named by the fix; undone, the attribute goes.
+    assert_eq!(gis.ext_audit_fix_refused(0), None);
+    gis.ext_audit_fix(0);
+    let attr = |gis: &App| {
+        gis.document
+            .as_ref()
+            .unwrap()
+            .model
+            .get(slot)
+            .unwrap()
+            .base()
+            .attrs
+            .get("no")
+            .cloned()
+    };
+    assert_eq!(attr(&gis).as_deref(), Some("Y-01"));
+    assert!(gis.extensions.audit.as_ref().unwrap().findings[0].fixed);
+    assert_eq!(gis.ext_audit_fix_refused(0).as_deref(), Some("Düzeltildi."));
+    let undone = gis.document.as_mut().unwrap().model.undo();
+    assert_eq!(undone.as_deref(), Some("Y-01 yaz"));
+    assert_eq!(attr(&gis), None);
+    // An extension not allowed to write: its fix is refused with why.
+    gis.extensions.audit.as_mut().unwrap().findings[0].fixed = false;
+    gis.extensions.audit.as_mut().unwrap().ext = "tr.ornek.yok".into();
+    let why = gis.ext_audit_fix_refused(0).expect("refused");
+    assert!(why.contains("document.write"), "{why}");
     let _ = std::fs::remove_dir_all(&dir);
 }

@@ -10,6 +10,7 @@
 //! real-window sessions never touch the user's own. A start without extensions (`--eklentisiz`, `KENTOS_EKLENTISIZ`, or
 //! "bir sonraki açılışta eklentisiz başlat" from this window) activates nothing.
 
+mod audits;
 mod tool_pins;
 mod bisect;
 mod browse;
@@ -106,6 +107,8 @@ pub(crate) struct Extensions {
     /// Why each Python extension's code does not run now (none: it runs), worked out with the ribbon's words: a
     /// form's action button reads it at every frame (actions.rs).
     pub(crate) python_reasons: std::collections::BTreeMap<String, Option<String>>,
+    /// The last audit rule's run, its findings in Eklenti denetimi (audits.rs).
+    pub(crate) audit: Option<audits::AuditState>,
     /// The word the lists are filtered by (browse.rs).
     pub(crate) query: String,
     /// The program the lists are filtered by; none: every program.
@@ -153,6 +156,7 @@ impl Default for Extensions {
             bisect: None,
             icons: std::collections::BTreeMap::new(),
             python_reasons: std::collections::BTreeMap::new(),
+            audit: None,
             query: String::new(),
             program: None,
             envs: std::collections::BTreeMap::new(),
@@ -186,6 +190,12 @@ pub(crate) enum Event {
     Env(environment::EnvEvent),
     /// An extension's contribution run in its process: extension, kind (`command`), local id (runner.rs).
     Run(String, String, String),
+    /// An audit rule's run ended (audits.rs).
+    AuditDone(Box<audits::AuditDone>),
+    /// Eklenti denetimi's Göster, Düzelt and Durdur, by the finding's place (audits.rs).
+    AuditShow(usize),
+    AuditFix(usize),
+    AuditStop,
     /// Its environment found (or why not): extension, kind, local id, what starting it needs.
     Launch(String, String, String, Result<runner::Launch, String>),
     /// Durdur on an extension's run.
@@ -533,6 +543,10 @@ impl App {
             }
             Event::Env(event) => return self.env_event(event),
             Event::Run(ext, kind, local) => return self.ext_run(&ext, &kind, &local),
+            Event::AuditDone(done) => self.ext_audit_done(*done),
+            Event::AuditShow(i) => return self.ext_audit_show(i),
+            Event::AuditFix(i) => self.ext_audit_fix(i),
+            Event::AuditStop => self.ext_audit_stop(),
             Event::Launch(ext, kind, local, launch) => {
                 return self.ext_launch(&ext, &kind, &local, launch);
             }

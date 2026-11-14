@@ -9,6 +9,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``taks``: İşlemler aracı; shapely 2.0 ve NumPy ile hesaplar, yeni katman, tablo ve sayı döndürür.
 - ``ada_parsel``: ifade işlevi; etiket metni, stil kuralı, katman süzgeci, İşlemler ve form hesabı çağırır.
 - ``yapi_yerlestir``: harita aracı; manifestteki 10 × 12 m şablonu kullanıcının gösterdiği yere yazar.
+- ``yapi_no``: denetim kuralı; numarasız yapıları bulur, her birine sıradaki numarayı yazan bir düzeltme önerir.
 """
 
 import time
@@ -147,3 +148,35 @@ def yapi_yerlestir(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResu
     """Kullanıcının gösterdiği yere 10 × 12 m bir yapı yazar (manifestteki şablon). Her yerleştirme tek geri alma
     adımıdır; araç Esc'e kadar sürer."""
     return ctx.add_feature("yapi", sekil, {"kaynak": "Vitrin", "kat": "2"})
+
+
+@ext.audit("yapi-no")
+def yapi_no(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """'yapi' katmanında "no"su olmayan her yapı bir uyarıdır; düzeltmesi sıradaki numarayı (Y-03 …) yazar. Kural
+    çizimi okumaz, KentOS'un verdiği katmanlara bakar; düzeltmeyi kullanıcı uygular (tek geri alma adımı)."""
+    yapilar = facts.features("yapi") or facts.features("Yapı")
+    kullanilan = {f.attrs.get("no") for f in yapilar}
+    sira = 1
+    bulgular = []
+    for yapi in yapilar:
+        if yapi.attrs.get("no"):
+            continue
+        while f"Y-{sira:02d}" in kullanilan:
+            sira += 1
+        no = f"Y-{sira:02d}"
+        kullanilan.add(no)
+        bulgular.append(
+            ext.AuditFinding(
+                message=f"Yapının numarası yok; sıradaki numara {no}.",
+                severity="warning",
+                feature_id=yapi.id,
+                fix=ext.SemanticFix(
+                    title=f"{no} yaz",
+                    command="cad.entities.set",
+                    args={"uids": [yapi.id], "operation": "attributes", "attrs": {"no": no}},
+                ),
+            )
+        )
+    if facts.cut:
+        bulgular.append(ext.AuditFinding(message="Çizimin yalnız ilk nesneleri denetlendi.", severity="info"))
+    return bulgular

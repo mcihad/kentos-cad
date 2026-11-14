@@ -1,0 +1,20 @@
+# Denetim kuralı: Vitrin › Yapı numarası kuralı eklentinin sürecinde katmanları veri olarak okur (çizime erişimsiz) ve
+# numarasız yapıları alt paneldeki Eklenti denetimi'ne bulgu olarak verir. Göster nesneyi seçip yakınlaştırır; Düzelt
+# sıradaki numarayı tek geri alma adımıyla yazar ("Y-01 yaz").
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 333 75    # Yapı numarası
+wait 6000
+shot 11-bulgular
+click 950 735   # Göster
+wait 1500
+shot 11-goster
+click 1040 735  # Düzelt: Y-01 yaz
+wait 1500
+shot 11-duzelt

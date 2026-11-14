@@ -65,6 +65,8 @@ pub enum BottomTab {
     Topology,
     /// Mimari denetim's findings (arch_audit.rs, docs/adr/0703).
     Audit,
+    /// An extension's audit rule's findings (extensions/audits.rs, docs/adr/8057 §17).
+    ExtAudit,
     CadInspection,
     /// Servis bilgisi's answers (services/info.rs, docs/adr/0208 §11).
     ServiceInfo,
@@ -74,7 +76,7 @@ pub enum BottomTab {
 
 impl BottomTab {
     /// Every tab in the web's order; a module's program shows its own of them (module_surfaces.rs).
-    pub(crate) const ALL: [BottomTab; 14] = [
+    pub(crate) const ALL: [BottomTab; 15] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
@@ -85,6 +87,7 @@ impl BottomTab {
         BottomTab::Address,
         BottomTab::Topology,
         BottomTab::Audit,
+        BottomTab::ExtAudit,
         BottomTab::CadInspection,
         BottomTab::ServiceInfo,
         BottomTab::Messages,
@@ -104,6 +107,7 @@ impl BottomTab {
             BottomTab::Address => plan::TAB_ADDRESS,
             BottomTab::Topology => plan::TAB_TOPOLOGY,
             BottomTab::Audit => crate::arch_audit::TAB,
+            BottomTab::ExtAudit => "Eklenti denetimi",
             BottomTab::CadInspection => crate::cad_inspection::TAB,
             BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,
             BottomTab::Messages => plan::TAB_MESSAGES,
@@ -124,6 +128,7 @@ impl BottomTab {
             BottomTab::Address => "addressSearch",
             BottomTab::Topology => "topologyCheck",
             BottomTab::Audit => "archAudit",
+            BottomTab::ExtAudit => "standardsCheck",
             BottomTab::CadInspection => "audit",
             BottomTab::ServiceInfo => "serviceInfo",
             BottomTab::Messages => "warning",
@@ -227,6 +232,7 @@ impl App {
             BottomTab::Address => self.address_tab(),
             BottomTab::Topology => self.topology_tab(),
             BottomTab::Audit => self.arch_audit_tab(),
+            BottomTab::ExtAudit => self.ext_audit_tab(),
             BottomTab::CadInspection => self.cad_inspection_tab(),
             BottomTab::ServiceInfo => self.service_info_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),

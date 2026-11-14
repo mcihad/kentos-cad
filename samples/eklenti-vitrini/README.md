@@ -26,9 +26,10 @@ ekran görüntüleri bununla yapılır (plan/eklenti.md, docs/adr/8057).
 | Çalışma kökeni | TAKS'ın yazdığı katmanın türetim kaydı: eklenti, sürüm, paket özeti, ortam | TAKS'tan sonra TAKS katmanı › sağ tık › Veri › Veri kümesi bilgisi › Soy (`10-koken`); kaydedilen dosyada CBS verisi sürüm 1 |
 | Modelde eklenti aracı | Model tasarımcısı'nda TAKS adımı, eklentinin sürümü ve özetiyle sabitli | Yeni model › Araç ara: TAKS; adımın ayarları "Eklenti Vitrini <sürüm> ile eklendi." der, eklentisiz bilgisayarda hangi sürümle yapıldığını söyler (`09-model`) |
 | İfade işlevi | `expressions` › `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` | Etiket metni (`05-etiket`), Katman stili › Kurallar koşulu (`06-kural`), Katman süzgeci (`07-suzgec`), İşlemler'in ifadeleri; çizim beklemez, yanıt gelince yeniden çizilir |
+| Denetim kuralı ve düzeltme | `audits` › Yapı numarası (`@ext.audit`) | Vitrin › Yapı numarası: numarasız yapılar alt paneldeki Eklenti denetimi'nde listelenir; Göster nesneye götürür, Düzelt sıradaki numarayı tek geri alma adımıyla yazar (`11-denetim`) |
 | Python'suz katkı | `dataSources` (XYZ altlık) | Kaynaklar: Örnek Belediyesi altlığı (sunucusu örnektir, yanıt vermez) |
 
-Henüz çalıştırılamayan katkı türleri (denetim, panel) eklenti sistemine geldiğinde buraya eklenecek.
+Henüz çalıştırılamayan katkı türü (panel) eklenti sistemine geldiğinde buraya eklenecek.
 
 ## Hazırlama
 

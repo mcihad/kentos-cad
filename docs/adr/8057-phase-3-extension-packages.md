@@ -1191,3 +1191,36 @@ temiz ve kaliteli"; "içinde birçok durum için örnekler olsun, sadece eklenti
 - **Uygularken verilen kararlar:** kural aracıda (komutun yolunda), kayıt defterinde değil; ifade işlevleri üzerinden
   dolaylı çağrı (bir eklentinin çalıştırdığı yerleşik aracın ifadesinde başkasının işlevi) sınırlanmadı: değer yalnız
   okunur, yazma yolu yoktur.
+
+## §17. Eklentinin denetim kuralı: bulgu, odak, düzeltme (`ADIM 20`, birinci dilim)
+
+**14 Kasım.** Kod: `crates/native/processing/src/external.rs` (`audit_facts`), `python/kentos/ext.py` (`GisAuditFacts`,
+`AuditFinding.to_json`, `Feature.id`), `python/kentos/ext_host.py` (`audit` türü, `findings_of`),
+`apps/desktop/src/shell/extensions/audits.rs` (çalıştırma, bulgular, Göster, Düzelt, sekme), `tools.rs` (`PoolJob`),
+alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
+
+- **Olgular:** kural, eklenti sürümünün sürecinde (havuz) çizimin nesne taşıyan katmanlarını veri olarak okur: her
+  nesne bir aracın girdisindeki gibi `ext.Feature` (kalıcı kimlik, tür, katman adı, öznitelikler, GeoJSON şekil, tam
+  nesne); üçüncü taraftan gizli alan maskelidir. En çok 50 000 nesne: fazlasında `facts.cut` doğru olur ve kural bunu
+  söyleyebilir (büyük girdinin parça parça aktarımı PY-TOOL-08'de). Kuralın çizimi yoktur: havuz isteklerini geri
+  çevirir, kural yazamaz.
+- **Bulgular:** `ext.AuditFinding` (önem: error, warning, info; ileti; nesne kimliği; isteğe bağlı `SemanticFix`:
+  başlık, KentOS komutu, girdisi). Başka bir şey döndüren kural `TypeError` ile, yeri söylenerek düşer; bir çalıştırmada
+  en çok 10 000 bulgu tutulur, sekme ilk 500'ü listeler, gerisini sayar. Hata eklentinin adıyla söylenir ve günlüğüne
+  iz kaydıyla yazılır (§4).
+- **Sekme:** şeritteki düğme kuralı arka planda çalıştırır, alt panel Eklenti denetimi sekmesinde açılır: "Eklenti
+  Vitrini › Yapı numarası · 5 uyarı (1,6 sn)", Durdur / Yeniden denetle. **Göster** nesneyi seçer ve yakınlaştırır.
+  **Düzelt** kuralın komutunu tek geri alma adımı olarak (adı düzeltmenin başlığı) yürütür; yalnız yazma izni
+  (`document.write`) verilmiş eklentinin düzeltmesi ve yalnız denetlenen çizimde. Düzeltme eklentinin sözü, basış
+  kullanıcınındır; komut KentOS'un sözleşmesiyle denetlenir, reddedilirse adım geri alınır ve nedeni söylenir.
+- **Vitrin 1.0.3:** "Yapı numarası" (`yapi-no`): `no`su olmayan her yapı bir uyarı, düzeltmesi sıradaki numarayı yazar
+  (`cad.entities.set`). `audit.provider` yeteneği güncellemede "YENİ" diye gösterildi.
+- **Gerçek pencere (`11-denetim`):** 1.0.2 → 1.0.3 güncellendi, ortam hazırlandı; düğme 5 uyarı verdi (1,6 sn), Göster
+  yapıyı seçip yakınlaştırdı, Düzelt "Y-01 yaz ✓" oldu, geri alma etkinleşti. Bulgu: satırın düğmeleri kaydırma
+  çubuğunun altında kalıyordu; listeye çubuk payı verildi.
+- **Sınamalar:** Python 1 (olgular veri olarak, bulgular ve düzeltme JSON'u, kesilen olgu, bulgu olmayanın reddi),
+  masaüstü 1 (cevabın okunması, bilinmeyen önemin elenmesi, hata metni, Göster, Düzelt tek adım ve geri alma, yazma
+  izni olmayanın reddi), programların sekme listeleri.
+- **Uygularken verilen kararlar:** olgular bütün katmanlar (manifest katman adı istemiyor); sınır 50 000 nesne, 10 000
+  bulgu, 500 satır, 120 sn; düzeltme `document.write` ister; sekme alt panelde ve her programda; ADIM 20'nin ortak
+  kural motoru (`ProjectAuditFacts`, bulut işi, PAİY kuralları Python'da) sonraki dilimlerde.

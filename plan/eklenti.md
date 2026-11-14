@@ -949,6 +949,13 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
 
 [argon ADIM 20; EKL-02'nin denetim satırı]
 
+**Durum (14 Kasım): birinci dilim — eklentinin denetim kuralı** (ADR 8057 §17): `@ext.audit` kuralı eklentinin
+sürecinde katmanları veri olarak okur (`GisAuditFacts`, gizli alanlar maskeli, en çok 50 000 nesne), bulgu ve
+düzeltme döndürür; alt panelin Eklenti denetimi sekmesi listeler, Göster nesneye götürür, Düzelt KentOS komutunu tek
+geri alma adımıyla yürütür (yalnız `document.write` izinli eklentide). Vitrin 1.0.3'te "Yapı numarası". Kalan:
+`ProjectAuditFacts` (Rust'ın çıkardığı ortak olgular), ulusal/belediye kurallarının Python betikleri, bulut işi, köken
+ve AI/MCP `audit.run`.
+
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 
 - **`ProjectAuditFacts`:** poligon kesişimleri, mahal net/brüt alanları (`paiy_areas`), yangın kaçış grafiği

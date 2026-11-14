@@ -239,9 +239,13 @@ fn item_of(
             (true, None) if kind == ContributionKind::MapTool => {
                 Action::Python(ext.to_owned(), "mapTool".to_owned(), local.clone())
             }
+            // An audit rule reads the layers as data; its findings go to Eklenti denetimi (audits.rs).
+            (true, None) if kind == ContributionKind::Audit => {
+                Action::Python(ext.to_owned(), "audit".to_owned(), local.clone())
+            }
             (true, None) => Action::Unavailable(format!(
-                "“{title}”: Python ortamı hazır; bu tür katkıları (denetim, panel) çalıştıran yürütücü KentOS'un \
-                 sonraki sürümünde. Komutlar, harita araçları ve İşlemler araçları çalışır."
+                "“{title}”: Python ortamı hazır; panelleri çalıştıran yürütücü KentOS'un sonraki sürümünde. \
+                 Komutlar, harita araçları, İşlemler araçları ve denetimler çalışır."
             )),
         };
         let fallback = crate::icons::from_web(Some("processing"));

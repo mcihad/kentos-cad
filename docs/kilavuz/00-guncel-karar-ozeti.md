@@ -2552,6 +2552,9 @@
     sürümü ve paket özetiyle sabitler (`ExtensionPin`); düğme hazır / bekliyor / kullanılamaz der, eklentisiz açılan
     model bir şey kurmaz, hangi sürümle yapıldığını söyler (sürüm farkı uyarıdır). Eklenti aracının yazdığı katmanın
     türetim kaydı eklentiyi ve ortamı taşır; dosyada CBS verisi sürüm 1 (belge şeması değişmez, ADR 8054 §10).
+  - Denetim kuralı (`@ext.audit`) katmanları veri olarak okur, yazamaz; bulgular alt panelin Eklenti denetimi
+    sekmesinde: Göster nesneye götürür, Düzelt kuralın komutunu tek geri alma adımıyla yürütür (yalnız yazma izinli
+    eklentide).
   - Hata eklentinin adıyla söylenir, iz kaydı eklentinin günlüğündedir; Durdur önce sorar, 5 sn'de süreci sonlandırır;
     yazan çalıştırma tek geri alma adımıdır.
   - Örnek ve bütün gösterimler `samples/eklenti-vitrini` (Vitrin) ile; yeni yetenek aynı değişiklikte oraya girer.
