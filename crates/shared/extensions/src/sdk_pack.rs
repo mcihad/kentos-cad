@@ -72,7 +72,9 @@ bileşenleri: `text` (`text`), `textField` (`id`, `label`, `placeholder`, `value
 `label`, `value`), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`, `primary`),
 `table` (`id`, `label`). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
-doldurur. Panel Python'suz açılır; ortam hazır değilse düğmeler nedenini söyler.
+doldurur. Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
+`uid` sütun olarak görünmez. Panel Python'suz açılır; ortam hazır değilse düğmeler nedenini söyler. İskelette
+`panel` katkısı bir örnek verir.
 
 ## İkonlar
 

@@ -1,5 +1,6 @@
 # Panel: Vitrin › Yapı ara sağdaki Eklenti sekmesinde (Katmanlar'ın yığınında) açılır. Ara, eklentinin yapi-ara
-# komutunu panelin değerleriyle (yapı no, yalnız numarasızlar) çalıştırır; bulunanlar panelin tablosuna gelir.
+# komutunu panelin değerleriyle (yapı no, yalnız numarasızlar) çalıştırır; bulunanlar panelin tablosuna gelir,
+# satıra tıklamak yapıyı seçip yakınlaştırır.
 # (Önce 01: ortam.)
 fit KentOS GIS — Eklenti vitrini
 wait 2500
@@ -11,14 +12,17 @@ click 417 75    # Yapı ara
 wait 2000
 drag 1280 508 1280 845
 wait 1000
-click 1304 381  # Ara
+click 1304 397  # Ara
 wait 7000
 shot 14-sonuc
-click 1288 341  # Yalnız numarasız yapılar
+click 1200 515  # 400 m² yapı
+wait 2500
+shot 14-goster
+click 1288 356  # Yalnız numarasız yapılar
 wait 500
-click 1350 299  # Yapı no
+click 1350 315  # Yapı no
 type Y-9
 wait 500
-click 1304 381  # Ara
+click 1304 397  # Ara
 wait 5000
 shot 14-yok

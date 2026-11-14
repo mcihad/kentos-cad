@@ -84,7 +84,8 @@ def yapi_ara(ctx: ext.CommandContext) -> ext.CommandResult:
         no = str((kayit.entity.attrs or {}).get("no", ""))
         if (numarasiz and no) or (sorgu and sorgu not in no.casefold()):
             continue
-        satirlar.append({"no": no or "—", "alan (m²)": round(Polygon(kayit.entity.pts).area, 1)})
+        # The row's uid: clicking it in the panel shows the building (not shown as a column).
+        satirlar.append({"uid": kayit.uid, "no": no or "—", "alan (m²)": round(Polygon(kayit.entity.pts).area, 1)})
     return ctx.report(satirlar, title="Yapı ara", message=f"{len(satirlar)} yapı bulundu.")
 
 

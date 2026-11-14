@@ -1452,6 +1452,9 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   (`mezar_yeri`'nde arar, `ctx.params["query"]`), panel v1'e geçti (özet yeniden hesaplandı).
 - **Gerçek pencere (`14-panel`, Vitrin 1.0.7):** Yapı ara açıldı; Ara "5 yapı bulundu" ve 5 satırlık tablo (no, alan
   m²); Y-9 ve "Yalnız numarasız" ile "0 yapı bulundu".
+- **Satır bir nesneyse:** komutun bir satırında `uid` varsa satıra tıklamak nesneyi seçip yakınlaştırır (denetimin
+  Göster'iyle ortak `ext_show_object`); `uid` sütun olarak gösterilmez. Vitrin 1.0.8'in Yapı ara satırları yapının
+  kimliğini taşır. İskelette `panel` katkısı: özniteliklerinde arama yapan `nesne-ara` komutu, onu çalıştıran panel ve
+  şerit düğmesi (yerleşik `search` ikonu); bütün birleşimler doğrulamadan uyarısız geçer.
 - **Kalan (ADIM 22):** katman, nesne ve alan seçici; ağaç, kart, ilerleme bileşenleri; sol ve alt yerleşim (`side`
-  şimdilik sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince); seçili satırı çizimde
-  gösterme.
+  şimdilik sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince).

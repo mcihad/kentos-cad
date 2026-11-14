@@ -1,5 +1,9 @@
 # Değişiklikler
 
+## 1.0.8 — 14 Kasım 2026
+
+- "Yapı ara"nın satırları yapının kimliğini (`uid`) taşır: satıra tıklamak yapıyı seçip yakınlaştırır.
+
 ## 1.0.7 — 14 Kasım 2026
 
 - Panel: "Yapı ara" (`ui/yapi-ara.panel.json`) sağdaki Eklenti sekmesinde açılır; Ara, `yapi-ara` komutunu panelin

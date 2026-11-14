@@ -39,10 +39,12 @@ pub enum Contribution {
     MapTool,
     /// A layer schema (`schema.json`, docs/adr/8057 §23) and the command that sets it up on the drawing.
     Schema,
+    /// A panel (`ui/nesne-ara.panel.json`, docs/adr/8057 §24) whose button runs a search command.
+    Panel,
 }
 
 impl Contribution {
-    /// Its name in an agent's call (`command`, `processing`, `audit`, `expression`, `mapTool`, `schema`).
+    /// Its name in an agent's call (`command`, `processing`, `audit`, `expression`, `mapTool`, `schema`, `panel`).
     pub fn parse(name: &str) -> Option<Contribution> {
         match name {
             "command" => Some(Contribution::Command),
@@ -51,17 +53,19 @@ impl Contribution {
             "expression" => Some(Contribution::Expression),
             "mapTool" => Some(Contribution::MapTool),
             "schema" => Some(Contribution::Schema),
+            "panel" => Some(Contribution::Panel),
             _ => None,
         }
     }
 
-    pub const ALL: [Contribution; 6] = [
+    pub const ALL: [Contribution; 7] = [
         Contribution::Command,
         Contribution::Processing,
         Contribution::Audit,
         Contribution::Expression,
         Contribution::MapTool,
         Contribution::Schema,
+        Contribution::Panel,
     ];
 }
 
@@ -203,6 +207,36 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
         files.insert("schema.json".to_owned(), pretty(&layer_schema));
         python.push(SCHEMA.to_owned());
     }
+    let panel = has(Contribution::Panel);
+    if panel {
+        // A declared panel whose button runs a command with the panel's values (docs/adr/8057 §24).
+        commands.push(
+            json!({ "id": "nesne-ara", "title": "Nesne ara", "handler": format!("{package}.logic:nesne_ara") }),
+        );
+        entrypoints.insert(
+            "panels".into(),
+            json!([{ "id": "nesne-paneli", "title": "Nesne ara", "side": "right", "definition": "ui/nesne-ara.panel.json" }]),
+        );
+        capabilities.push(json!({ "id": "ui.panel", "scope": "plugin-owned",
+                                  "reason": "Nesne arama panelini sağdaki Eklenti sekmesine ekler." }));
+        if !capabilities.iter().any(|c| c["id"] == "document.read") {
+            capabilities.push(json!({ "id": "document.read", "scope": "current-project",
+                                      "reason": "Açık çizimin nesnelerini okur (panelin araması)." }));
+        }
+        let definition = json!({
+            "format": crate::ui_panel::FORMAT,
+            "schemaVersion": crate::ui_panel::VERSION,
+            "title": "Nesne ara",
+            "body": [
+                { "type": "text", "text": "Bir özniteliğinde aranan geçen nesneleri listeler; satıra tıklamak nesneyi gösterir." },
+                { "type": "textField", "id": "sorgu", "label": "Aranan", "placeholder": "ad, no …" },
+                { "type": "button", "id": "ara", "label": "Ara", "command": "nesne-ara", "table": "sonuc", "primary": true },
+                { "type": "table", "id": "sonuc", "label": "Bulunanlar" }
+            ]
+        });
+        files.insert("ui/nesne-ara.panel.json".to_owned(), pretty(&definition));
+        python.push(PANEL.to_owned());
+    }
     if !commands.is_empty() {
         entrypoints.insert("commands".into(), Value::Array(commands));
     }
@@ -226,6 +260,9 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
         } else {
             MAP_TOOL.to_owned()
         });
+    }
+    if panel {
+        items.push(json!({ "panel": "nesne-paneli", "size": "large", "icon": "search" }));
     }
     // Reading and writing the drawing: one capability, the stronger when anything writes.
     if map_tool || schema {
@@ -443,6 +480,28 @@ def katmanlari_kur(ctx: ext.CommandContext) -> ext.CommandResult:
     return ctx.apply_declarative_schema("schema.json")
 "#;
 
+const PANEL: &str = r#"
+
+@ext.command("nesne-ara")
+def nesne_ara(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Nesne ara" panelinin düğmesi: bir özniteliğinde aranan geçen nesneleri listeler (en çok 500). Panelin değeri
+    ctx.params["sorgu"]'dadır; satırın uid'i, satıra tıklanınca nesneyi gösterir (sütun olarak görünmez)."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    sorgu = str(ctx.params.get("sorgu") or "").strip().casefold()
+    satirlar = []
+    for kayit in ctx.doc.entities():
+        ctx.check()
+        oznitelikler = dict(getattr(kayit.entity, "attrs", None) or {})
+        if sorgu and not any(sorgu in str(deger).casefold() for deger in oznitelikler.values()):
+            continue
+        yazi = ", ".join(f"{ad}={deger}" for ad, deger in oznitelikler.items())
+        satirlar.append({"uid": kayit.uid, "tür": kayit.entity.kind, "öznitelikler": yazi or "—"})
+        if len(satirlar) == 500:
+            break
+    return ctx.report(satirlar, title="Nesne ara", message=f"{len(satirlar)} nesne bulundu.")
+"#;
+
 const MAP_TOOL_SCHEMA: &str = r#"
 
 @ext.map_tool("alan-ciz")
@@ -548,6 +607,7 @@ mod tests {
         a.contributions.clear();
         assert!(blueprint(&a).unwrap_err().contains("En az bir katkı"));
         assert_eq!(Contribution::parse("mapTool"), Some(Contribution::MapTool));
-        assert_eq!(Contribution::parse("panel"), None);
+        assert_eq!(Contribution::parse("panel"), Some(Contribution::Panel));
+        assert_eq!(Contribution::parse("dialog"), None);
     }
 }

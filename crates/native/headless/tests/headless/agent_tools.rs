@@ -651,7 +651,7 @@ fn an_agent_gets_a_blueprint_that_verifies() {
         &mut s,
         &mut guard,
         "extension.blueprint",
-        &json!({ "id": "tr.ornek.mezarlik", "name": "M", "contributions": ["panel"] }),
+        &json!({ "id": "tr.ornek.mezarlik", "name": "M", "contributions": ["dialog"] }),
     )
     .unwrap_err();
     assert!(refused.to_string().contains("bir katkı değil"), "{refused}");

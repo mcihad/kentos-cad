@@ -9,6 +9,8 @@
 //! - **What is typed is kept as typed:** a number's text too, so a half-typed `12,` is not lost; it is read when a
 //!   button is pressed, and a text that is not a number is said there, nothing run.
 //! - **A late answer goes nowhere:** a run's rows are written only to the panel it started from, while it is open.
+//! - **A row with a `uid` is an object:** clicking it selects and zooms to it, as an audit's Göster; the `uid` is not
+//!   shown as a column.
 
 use std::collections::BTreeMap;
 
@@ -70,6 +72,8 @@ pub(crate) enum PanelEvent {
     Check(String, bool),
     Choose(String, String),
     Press(String),
+    /// A table's row with a `uid`: its object selected and zoomed to.
+    Show(String),
     Close,
 }
 
@@ -310,6 +314,12 @@ impl App {
             }
             PanelEvent::Close => self.extensions.panel = None,
             PanelEvent::Press(button) => return self.ext_panel_press(&button),
+            PanelEvent::Show(uid) => {
+                return self.ext_show_object(
+                    &uid,
+                    "Satırın nesnesi çizimde yok: silinmiş ya da başka bir çizim açık.",
+                );
+            }
         }
         Task::none()
     }
@@ -599,14 +609,20 @@ impl App {
             .spacing(4)
             .into();
         }
-        let mut table =
-            Table::new(columns.iter().map(|c| Col::new(c.clone()).width(Fill))).empty("Satır yok.");
+        // A row's `uid` names its object: a click shows it; it is not a column.
+        let shown: Vec<&String> = columns.iter().filter(|c| c.as_str() != "uid").collect();
+        let mut table = Table::new(shown.iter().map(|c| Col::new((*c).clone()).width(Fill)))
+            .empty("Satır yok.");
         for row in rows.iter().take(SHOWN_ROWS) {
-            table = table.push(Row::new(
-                columns
+            let mut line = Row::new(
+                shown
                     .iter()
-                    .map(|c| label::caption(cell_words(row.get(c))).into()),
-            ));
+                    .map(|c| label::caption(cell_words(row.get(c.as_str()))).into()),
+            );
+            if let Some(uid) = row.get("uid").and_then(Value::as_str) {
+                line = line.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
+            }
+            table = table.push(line);
         }
         let mut out = column![
             label::caption(words.unwrap_or("Sonuçlar").to_owned()),

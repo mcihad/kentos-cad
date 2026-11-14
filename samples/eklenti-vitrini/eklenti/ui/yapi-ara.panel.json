@@ -5,7 +5,7 @@
   "body": [
     {
       "type": "text",
-      "text": "Numarasında yazılan geçen yapıları alanlarıyla listeler. Ara, eklentinin komutunu panelin değerleriyle çalıştırır."
+      "text": "Numarasında yazılan geçen yapıları alanlarıyla listeler. Ara, eklentinin komutunu panelin değerleriyle çalıştırır; satıra tıklamak yapıyı gösterir."
     },
     {
       "type": "textField",

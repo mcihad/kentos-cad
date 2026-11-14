@@ -299,8 +299,17 @@ impl App {
         else {
             return Task::none();
         };
+        self.ext_show_object(
+            &uid,
+            "Bulgunun nesnesi çizimde yok: silinmiş ya da başka bir çizim açık.",
+        )
+    }
+
+    /// An object an extension named by its persistent id (a finding's, a panel row's), selected and zoomed to;
+    /// `missing` said when the drawing has none of that id.
+    pub(crate) fn ext_show_object(&mut self, uid: &str, missing: &str) -> Task<Message> {
         let slot = self.document.as_ref().and_then(|d| {
-            kentos_domain::Uuid::parse_str(&uid)
+            kentos_domain::Uuid::parse_str(uid)
                 .ok()
                 .and_then(|u| d.model.slot_of(u))
         });
@@ -310,7 +319,7 @@ impl App {
                 self.run("view.zoomSelection")
             }
             None => {
-                self.output("Bulgunun nesnesi çizimde yok: silinmiş ya da başka bir çizim açık.");
+                self.output(missing);
                 Task::none()
             }
         }
