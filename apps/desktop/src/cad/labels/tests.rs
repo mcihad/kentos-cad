@@ -31,6 +31,45 @@ fn the_labels_wait_for_the_view_to_settle() {
     );
 }
 
+/// A zoom out while the view still moves places the labels for the larger view at once: the last placing served
+/// whatever the view outside true sizes, and the edges a zoom out showed stayed without labels until the view stopped
+/// (14 November 2026, the owner: "zoom yaparken bazen kayboluyor").
+#[test]
+fn a_zoom_out_while_moving_places_the_labels_again() {
+    let mut app = crate::files_testing::app_with_drawing();
+    let _ = app.view();
+    let first = app.label_spots.key().expect("placed");
+    // A small pan: the last placing serves.
+    app.viewport.update(
+        crate::viewport::Event::Panned {
+            by: iced::Vector::new(10.0, 0.0),
+            at: iced::Point::new(300.0, 300.0),
+        },
+        None,
+    );
+    let _ = app.view();
+    assert_eq!(
+        app.label_spots.key(),
+        Some(first),
+        "a small pan keeps the placing"
+    );
+    // Twice as far, still moving: placed again for the larger view.
+    app.viewport.update(
+        crate::viewport::Event::Zoomed {
+            factor: 0.5,
+            at: iced::Point::new(300.0, 300.0),
+        },
+        None,
+    );
+    assert!(app.viewport.moving());
+    let _ = app.view();
+    assert_ne!(
+        app.label_spots.key(),
+        Some(first),
+        "placed again while moving"
+    );
+}
+
 /// The desktop's default label styles are the web's `DEFAULT_LABELS`
 /// (apps/web/src/model/labelDefaults.ts), read from its source.
 #[test]

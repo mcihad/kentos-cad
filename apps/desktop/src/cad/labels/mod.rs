@@ -106,9 +106,14 @@ impl Spots {
                     && b.max_y >= view.max_y
             })
         };
+        // Placed at a scale near this one: a quarter's zoom at most (a label grows and keeps apart with the scale; past
+        // that, the old places were drawn over a view they no longer fitted until the view stopped).
+        let near = |at: f64| at > 0.0 && scale > 0.0 && (scale / at).max(at / scale) <= 1.25;
         match kept.as_ref() {
             Some((known, _, spots, _, at)) if *known == key => (spots.clone(), *at),
-            Some((_, same, spots, asked, at)) if moving && *same == content && inside(asked) => {
+            Some((_, same, spots, asked, at))
+                if moving && *same == content && inside(asked) && near(*at) =>
+            {
                 (spots.clone(), *at)
             }
             _ => {
@@ -316,15 +321,28 @@ fn build<'a>(
     // the view and a view's width round it, it serves a pan or a zoom out until the view leaves that box.
     let true_size = size == LabelSize::Print;
     let view = camera.visible_bounds();
-    let wide = true_size.then(|| {
+    // Asked for a box round the view, every size: the last placing serves a move only inside it (and near its
+    // scale, `Spots::get`). Before, outside true sizes no box was asked, the last placing served whatever the view
+    // and a zoom out left the edges without labels until the view stopped (the owner: "zoom yaparken kayboluyor").
+    let wide = {
         let (w, h) = (view.max_x - view.min_x, view.max_y - view.min_y);
-        Bounds {
-            min_x: view.min_x - w,
-            min_y: view.min_y - h,
-            max_x: view.max_x + w,
-            max_y: view.max_y + h,
-        }
-    });
+        // True sizes keep a view's width round it (docs/adr/0626 §7); the others a quarter of it: their labels keep
+        // apart, so a larger box costs the placing more (the engine adds its own 256 px round it too).
+        let k = if true_size { 1.0 } else { 0.25 };
+        // At least 256 screen pixels round it, the engine's own margin: a small window's pan stays inside.
+        let least = if camera.scale > 0.0 {
+            256.0 / camera.scale
+        } else {
+            0.0
+        };
+        let (dx, dy) = ((w * k).max(least), (h * k).max(least));
+        Some(Bounds {
+            min_x: view.min_x - dx,
+            min_y: view.min_y - dy,
+            max_x: view.max_x + dx,
+            max_y: view.max_y + dy,
+        })
+    };
     let placed_scale = camera.scale;
     let (spots, placed_at) = kept.get(key.finish(), content, engine.moving, (view, wide, placed_scale), |view| {
         let mut spots = spatial.label_parts(
