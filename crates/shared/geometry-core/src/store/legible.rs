@@ -32,7 +32,7 @@ pub enum LabelSize {
     /// Paper output, and Gerçek boy on the screen (docs/adr/0626 §6): exact source size without
     /// size culling or enlargement.
     Print,
-    /// Kaybolmasın: never smaller than `LEGIBLE_PX`.
+    /// Kaybolmasın: never smaller than `LEGIBLE_PX`, and never left out for being large.
     Legible,
     /// Ekranda sabit: as high as on paper at 96 dpi, the plot scale 1:`plot_scale`.
     Screen { plot_scale: f64 },
@@ -157,9 +157,11 @@ impl Store {
     ) -> ShownParts {
         let mask: Option<Vec<bool>> =
             shown.map(|f| self.layer_names().into_iter().map(f).collect());
+        // Kaybolmasın never drops a text for being large: zooming in made every text past 240 px vanish under the
+        // setting named for not vanishing (14 November 2026, the owner: "zoom yaparken bazen kayboluyor").
         let max_px = match size {
-            LabelSize::Screen { .. } | LabelSize::Print => f64::INFINITY,
-            _ => TRUE_MAX_PX,
+            LabelSize::Screen { .. } | LabelSize::Print | LabelSize::Legible => f64::INFINITY,
+            LabelSize::True => TRUE_MAX_PX,
         };
         let min_px = if size == LabelSize::True {
             TRUE_MIN_PX
@@ -448,7 +450,13 @@ impl Store {
             || matches!(shape, Shape::Text { path: Some(_), .. })
             || matches!(item.shape, Shape::Tag { .. } | Shape::ViewMark { .. });
         if fixed {
-            if size!=LabelSize::Print && !(TRUE_MIN_PX..=TRUE_MAX_PX).contains(&px) {
+            // Too small to read is left out; too large only under the true rule (Kaybolmasın keeps it).
+            let upper = if size == LabelSize::True {
+                TRUE_MAX_PX
+            } else {
+                f64::INFINITY
+            };
+            if size != LabelSize::Print && !(TRUE_MIN_PX..=upper).contains(&px) {
                 return None;
             }
             return Some(Group {
@@ -740,12 +748,37 @@ mod tests {
 
     const ONE: &str = r#"[{"id":1,"layerId":"a","kind":"text","p":{"x":10,"y":20},"text":"Ada 101","height":2.5,"rotation":0}]"#;
 
+    #[test]
+    fn kaybolmasin_keeps_a_text_grown_past_240_px() {
+        // 2.5 m high at 200 px/m: 500 px on screen. Zooming in made it vanish under Kaybolmasın (14 November 2026).
+        let s = store(ONE);
+        assert_eq!(
+            shown(&s, 200.0, LabelSize::Legible).len(),
+            1,
+            "Kaybolmasın keeps it"
+        );
+        assert_eq!(shown(&s, 200.0, LabelSize::Print).len(), 1);
+        assert!(
+            shown(&s, 200.0, LabelSize::True).is_empty(),
+            "the true rule's 240 px stays"
+        );
+        // Too small to read is still left out under the true rule only.
+        assert!(shown(&s, 1.0, LabelSize::True).is_empty());
+        assert_eq!(
+            shown(&s, 1.0, LabelSize::Legible).len(),
+            1,
+            "grown to be read"
+        );
+    }
+
     /// The view's text as it was read before it came in parts (docs/adr/0786 §1): every object's records at once,
     /// grouped, kept apart under a rule whose texts keep apart, then the label engine's.
     fn whole(s: &Store, view: &Bounds, scale: f64, size: LabelSize) -> Vec<u64> {
+        // Kaybolmasın never drops a text for being large: zooming in made every text past 240 px vanish under the
+        // setting named for not vanishing (14 November 2026, the owner: "zoom yaparken bazen kayboluyor").
         let max_px = match size {
-            LabelSize::Screen { .. } | LabelSize::Print => f64::INFINITY,
-            _ => TRUE_MAX_PX,
+            LabelSize::Screen { .. } | LabelSize::Print | LabelSize::Legible => f64::INFINITY,
+            LabelSize::True => TRUE_MAX_PX,
         };
         let min_px = if size == LabelSize::True {
             TRUE_MIN_PX
