@@ -471,9 +471,8 @@ pub fn default_snap_kinds() -> u32 {
     })
 }
 
-/// Metres of paper per logical pixel at 96 dpi (0.26458 mm), the web's
-/// `METRES_PER_PX`: the status bar's “Ekran 1:N”.
-const METRES_PER_PX: f64 = 0.00026458;
+/// Metres of paper per logical pixel at 96 dpi (0.26458 mm): the one rule (`kentos_geometry_core::scale`).
+use kentos_geometry_core::scale::METRES_PER_PX;
 
 /// The view's screen scale as the status bar shows it, the N of 1:N, from
 /// the metres one logical pixel spans (the web's `screenScale`).

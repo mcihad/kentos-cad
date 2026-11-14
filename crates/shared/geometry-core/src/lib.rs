@@ -36,6 +36,7 @@ pub mod labels;
 pub mod measure;
 pub mod numeric;
 pub mod ops;
+pub mod scale;
 pub mod predicates;
 pub mod processing;
 pub mod store;

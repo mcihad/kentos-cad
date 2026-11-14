@@ -6,8 +6,8 @@
 use crate::time::{Step, Window, nearest, position};
 use crate::vec2::Vec2;
 
-/// Metres of paper a CSS pixel is at 96 dpi, the status bar's “Ekran 1:N” (the web's `METRES_PER_PX`).
-pub const METRES_PER_PX: f64 = 0.00026458;
+/// Metres of paper a CSS pixel is at 96 dpi, the status bar's “Ekran 1:N”: the one rule (`crate::scale`).
+pub use crate::scale::METRES_PER_PX;
 
 /// What the other view follows of the active one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -62,7 +62,7 @@ pub fn follow(link: Link, active: Frame, other: Frame) -> Frame {
 
 /// A scale in pixels per metre as 1:N on a 96 dpi screen.
 pub fn screen_scale(scale: f64) -> f64 {
-    1.0 / (scale * METRES_PER_PX)
+    crate::scale::denominator(scale)
 }
 
 /// The window a view with a time of its own shows (docs/adr/0576 §1): the position of the slider's grid nearest

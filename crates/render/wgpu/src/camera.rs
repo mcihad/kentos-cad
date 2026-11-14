@@ -19,7 +19,7 @@ pub const MAX_SCALE: f64 = 1e4;
 /// Margin a fit leaves around the box, logical pixels.
 pub const FIT_PADDING: f64 = 48.0;
 /// One CSS pixel at 96 dpi in metres: the screen scale 1:N the status bar shows.
-const METRES_PER_PX: f64 = 0.000_264_58;
+use kentos_geometry_core::scale::METRES_PER_PX;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
@@ -429,7 +429,7 @@ impl Camera {
 
     /// The view's scale as 1:N on a 96 dpi screen (the status bar's “Ekran 1:N”).
     pub fn screen_scale(&self) -> f64 {
-        1.0 / (self.scale * METRES_PER_PX)
+        kentos_geometry_core::scale::denominator(self.scale)
     }
 
     /// The frame uniform of this view for a scene whose GPU offsets are from
