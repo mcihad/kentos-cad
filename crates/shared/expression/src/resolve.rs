@@ -195,6 +195,9 @@ impl Resolver<'_> {
             Node::Var(v) => self.var(v),
             Node::Field(i) => self.field(i),
             n @ (Node::Lit(_) | Node::World(..) | Node::Local(..) | Node::Lambda(_)) => n,
+            Node::External(name, args) => {
+                Node::External(name, args.into_iter().map(|a| self.node(a)).collect())
+            }
         }
     }
 
@@ -451,6 +454,7 @@ fn renumber(n: Node, all: &[String], map: &mut Vec<Option<usize>>, kept: &mut Ve
         }
         Node::Call(f, args) => Node::Call(f, args.into_iter().map(go).collect()),
         Node::World(k, args) => Node::World(k, args.into_iter().map(go).collect()),
+        Node::External(name, args) => Node::External(name, args.into_iter().map(go).collect()),
         Node::Not(a) => Node::Not(Box::new(go(*a))),
         Node::Neg(a) => Node::Neg(Box::new(go(*a))),
         Node::Bin(op, x, y) => {

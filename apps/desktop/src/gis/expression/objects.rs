@@ -177,6 +177,8 @@ impl Objects {
             layer_name: &layer_name,
             store: Some(store),
             world: Some(&world),
+            // The builder's preview asks no extension's process: the window does not wait.
+            externals: None,
         };
         evaluate_in(expr, &list, &how, As::Value)
             .into_iter()

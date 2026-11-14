@@ -138,3 +138,18 @@ def taks(
     # Yalnız hesabı söyler: sonuç çizime de bir dosyaya da gidebilir, nereye gittiğini KentOS söyler.
     ctx.summary(f"{len(parsel)} parselin TAKS'ı hesaplandı; {asan} parsel plan notundaki {sinir} sınırını aşıyor.")
     return {"parseller": cikti, "tablo": tablo, "asan": asan}
+
+
+@ext.expr("ada-parsel")
+def ada_parsel(ada, parsel) -> str | None:
+    """Bir parselin "ada/parsel" yazımı (101/1); ikisinden biri boşsa boş. İfadelerde:
+    ext.tr.ornek.imar-denetim.ada-parsel(Ada, Parsel)."""
+    def metin(deger):
+        if deger is None:
+            return ""
+        if isinstance(deger, float) and deger.is_integer():
+            return str(int(deger))
+        return str(deger).strip()
+
+    a, p = metin(ada), metin(parsel)
+    return f"{a}/{p}" if a and p else None

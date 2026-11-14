@@ -83,6 +83,9 @@ pub struct Schema {
     /// The unit the geometry values speak: metres, or a local project's
     /// drawing unit where the values are readings (docs/adr/0165 §2).
     pub unit: Unit,
+    /// The installed extensions' functions this host answers (`ext.<eklenti>.<işlev>`, external.rs); a call to
+    /// another is refused.
+    pub externals: Vec<crate::external::ExternalDef>,
 }
 
 /// The unit an expression's geometry values speak (docs/adr/0165 §2, the 12
@@ -279,9 +282,31 @@ impl Expr {
         want: As,
         world: Option<&World<'_>>,
     ) -> Column {
+        self.evaluate_objects_with(objects, want, world, None)
+    }
+
+    /// `evaluate_objects_in` with the host's answers to the extensions' functions (external.rs); without them, or
+    /// when the expression calls none, as `evaluate_objects_in`.
+    pub fn evaluate_objects_with<'a, 'o>(
+        &self,
+        objects: &'o (dyn Objects<'a> + 'o),
+        want: As,
+        world: Option<&World<'_>>,
+        externals: Option<&dyn crate::external::ExternalCalls>,
+    ) -> Column {
         let source = ObjectsSource {
             expr: self,
             objects,
+        };
+        let externals = externals.filter(|_| !self.externals().is_empty());
+        let with_externals = |inner: &dyn Source<'a>| match externals {
+            Some(externals) => column(
+                self,
+                &crate::external::WithExternals { inner, externals },
+                objects.len(),
+                want,
+            ),
+            None => column(self, inner, objects.len(), want),
         };
         match world.filter(|_| self.looks_around()) {
             Some(world) => {
@@ -290,9 +315,9 @@ impl Expr {
                     inner: &source,
                     world: &session,
                 };
-                column(self, &with, objects.len(), want)
+                with_externals(&with)
             }
-            None => column(self, &source, objects.len(), want),
+            None => with_externals(&source),
         }
     }
 }

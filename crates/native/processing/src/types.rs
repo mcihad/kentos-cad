@@ -639,6 +639,8 @@ pub struct RunContext<'d> {
     pub world: Option<&'d World<'d>>,
     /// The raster tools' analysis environment (docs/adr/0643 §1); none: each tool's own grid.
     pub environment: Option<&'d kentos_raster::env::Environment>,
+    /// What answers the extensions' expression functions during the run (external.rs); none where none is offered.
+    pub externals: Option<crate::external::ExpressionCalls>,
 }
 
 impl RunContext<'_> {
@@ -653,6 +655,10 @@ impl RunContext<'_> {
             layer_name,
             store: Some(self.geometry.store()),
             world: self.world,
+            externals: self
+                .externals
+                .as_deref()
+                .map(|c| c as &dyn kentos_expression::external::ExternalCalls),
         }
     }
 

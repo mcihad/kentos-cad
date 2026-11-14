@@ -71,6 +71,9 @@ pub enum Node {
     Local(u8, u8),
     /// An inner expression resolved (docs/adr/0601).
     Lambda(Box<Lambda>),
+    /// An extension's function (`ext.<eklenti>.<işlev>(…)`, external.rs): its whole name and its arguments; compiling
+    /// refuses a name the schema does not offer.
+    External(String, Vec<Node>),
 }
 
 /// `dizi_her`, `dizi_süz`, `değişkenle` or `dene` resolved (docs/adr/0601): the arguments evaluated where the call
@@ -497,6 +500,9 @@ impl Parser {
 
     fn call(&mut self, name: &str, at: usize) -> Result<Node, CompileError> {
         let Some(f) = find_function(name) else {
+            if crate::external::is_external(name) {
+                return self.external(name);
+            }
             return Err(err(format!("Bilinmeyen işlev: {name}()."), at));
         };
         let roles = roles(f.func);
@@ -535,6 +541,24 @@ impl Parser {
             check_args(f, roles, &args, &starts, at)?;
         }
         Ok(Node::Call(f.func, args))
+    }
+
+    /// An extension's function's call: its arguments, any number (its code says what it takes).
+    fn external(&mut self, name: &str) -> Result<Node, CompileError> {
+        self.next(); // (
+        let mut args = Vec::new();
+        if self.peek().t != Tok::Op(")") {
+            loop {
+                args.push(self.binary(0)?);
+                if self.peek().t == Tok::Op(",") {
+                    self.next();
+                    continue;
+                }
+                break;
+            }
+        }
+        self.expect_close(&format!("{name}(…) kapanmamış: “)” bekleniyordu."))?;
+        Ok(Node::External(name.to_owned(), args))
     }
 
     /// A closing parenthesis, else `message` where the cursor is.

@@ -281,6 +281,13 @@ fn attribute_fields(
         world,
         relations: false,
         unit,
+        // The installed extensions' functions where İşlemler runs the expression (the calls to other layers' place);
+        // elsewhere (a label, a filter) none yet.
+        externals: if world {
+            kentos_processing::external::expressions()
+        } else {
+            Vec::new()
+        },
     }
 }
 

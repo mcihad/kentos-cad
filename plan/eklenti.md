@@ -810,8 +810,13 @@ kütüphaneden bağımsız çıktı (GeoJSON/`__geo_interface__`, DataFrame, `to
 tek geri alma adımı, bayt kodunun önceden derlenmesi (ilk süreç 364 → 129 MB), İmar 1.1.0'ın parsel TAKS aracı (shapely
 2.0 ve NumPy; örnek, sınırlama değil). Ölçüm: Durdur'dan 9–29 ms sonra durdu, dinlemeyen araç 5 sn'de sonlandı.
 Modelde yerleşik araçla zincirleme (P12) ve GeoPackage hedefi (P11, gerçek pencerede) sınandı; komut süreçleri de 10 dk
-boşta kalınca kapanır. Kalan: ifade işlevleri, denetimler, harita aracı, form eylemi, MCP'ye `tools/list_changed`,
-büyük girdinin sayfalı aktarımı, tanımın kurulumda tam denetimi.
+boşta kalınca kapanır.
+
+**Durum (14 Kasım): üçüncü dilim — ifade işlevleri** (ADR 8057 §8): `ext.<eklenti>.<işlev>(…)` dilde (adıyla bilinir,
+yığın başına bir çağrı), İşlemler'in ifadelerinde ve pencerenin denetiminde; masaüstü farklı satırları bir kez sorar ve
+yanıtları saklar; İmar'ın `ada-parsel`'i. Kalan: etiket, tematik stil, sanal alan, süzgeç ve form hesabında önbellekten
+okuyup arka planda dolduran yol; denetimler, harita aracı, form eylemi, MCP'ye `tools/list_changed`, büyük girdinin
+sayfalı aktarımı, tanımın kurulumda tam denetimi.
 
 **Süreç ve aracı:**
 - [ ] Her eklenti sürümü için ayrı süreç; IPC protokol sürümü, eklenti/sürüm/özet, istek/çalışma/oturum kimliği ve zaman

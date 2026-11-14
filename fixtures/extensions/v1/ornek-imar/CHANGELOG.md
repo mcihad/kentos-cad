@@ -7,6 +7,8 @@
   sınırı aşanları çizimde seçer. İmar sekmesinde TAKS düğmesi aracın penceresini açar.
 - Yaklaşma mesafesi denetimi katmanları kimlikleriyle de bulur: KentOS'un CBS şablonundaki "Parsel sınırı" (parsel) ve
   "Yapı" (yapi) katmanları.
+- İfade işlevi: `ext.tr.ornek.imar-denetim.ada-parsel(Ada, Parsel)` → "101/1" (İşlemler'in ifadelerinde, ör.
+  Öznitelik hesapla).
 - NumPy artık açıkça bağımlılık (shapely zaten getiriyordu).
 
 ## 1.0.0 — 14 Kasım 2026

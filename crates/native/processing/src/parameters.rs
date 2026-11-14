@@ -411,6 +411,8 @@ fn check_param(
             let schema = kentos_expression::Schema {
                 world: true,
                 relations: false,
+                // The installed extensions' functions are known by name (external.rs).
+                externals: crate::external::expressions(),
                 ..kentos_expression::Schema::default()
             };
             kentos_expression::compile_with(src, &schema)

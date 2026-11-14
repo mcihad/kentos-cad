@@ -103,6 +103,8 @@ pub fn schema_in(fields: &[LayerField], variables: &[Variable], unit: Unit) -> S
         world: false,
         relations: false,
         unit,
+        // A form's calculations offer no extension's function yet (plan/eklenti.md ADIM 19).
+        externals: Vec::new(),
     }
 }
 

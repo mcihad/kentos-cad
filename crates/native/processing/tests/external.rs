@@ -607,3 +607,80 @@ fn an_extensions_tool_chains_with_a_built_in_one_in_a_model() {
         "the whole model is one undo step"
     );
 }
+
+/// Stands in for an extension's expression function: `ada-parsel(ada, parsel)` → "101/1"; counts its batches.
+#[derive(Default)]
+struct AdaParsel {
+    batches: Mutex<Vec<usize>>,
+}
+
+impl kentos_expression::external::ExternalCalls for AdaParsel {
+    fn call(
+        &self,
+        name: &str,
+        rows: &[Vec<kentos_expression::external::Arg>],
+    ) -> Vec<kentos_expression::external::Arg> {
+        use kentos_expression::external::Arg;
+        assert_eq!(name, "ext.tr.ornek.deneme.ada-parsel");
+        self.batches.lock().unwrap().push(rows.len());
+        rows.iter()
+            .map(|r| match (r.first(), r.get(1)) {
+                (Some(Arg::Text(a)), Some(Arg::Text(p))) => Arg::Text(format!("{a}/{p}")),
+                _ => Arg::Null,
+            })
+            .collect()
+    }
+}
+
+#[test]
+fn an_extensions_expression_function_answers_a_processing_expression_a_batch_at_a_time() {
+    let _turn = one_at_a_time();
+    let _tool = setup();
+    let answers = Arc::new(AdaParsel::default());
+    external::set_expressions(vec![kentos_expression::external::ExternalDef {
+        name: "ext.tr.ornek.deneme.ada-parsel".into(),
+        description: "Ada/parsel".into(),
+    }]);
+    external::register_expression_calls(answers.clone());
+    let tool = Registry::current().get("attributes.calculate").unwrap();
+    let values = json!({
+        "input": { "scope": "layer", "layerId": "parsel" },
+        "field": "etiket",
+        "value": "ext.tr.ornek.deneme.ada-parsel(Ada, Parsel)",
+        "empty": "keep",
+        "label": false,
+    })
+    .as_object()
+    .unwrap()
+    .clone();
+    // The window checks the value without the extension's code: the name is known.
+    let doc = drawing(false);
+    let issues = kentos_processing::parameters::validate_values(&tool, &values, doc.layers());
+    assert!(issues.is_empty(), "{issues:?}");
+    let mut host = Bare(drawing(false), Vec::new());
+    let outcome = Runner::new().run(&mut host, &tool, &values, false, &mut Vec::new());
+    assert!(matches!(outcome, Outcome::Ok { .. }), "{outcome:?}");
+    let labels: Vec<String> = host
+        .0
+        .entities()
+        .filter(|e| e.base().layer_id == "parsel")
+        .map(|e| e.base().attrs.get("etiket").cloned().unwrap_or_default())
+        .collect();
+    assert_eq!(labels, ["101/1", "101/2", "101/3"]);
+    assert_eq!(
+        *answers.batches.lock().unwrap(),
+        [3],
+        "one call for the three parcels"
+    );
+    // A function no extension offers is refused before the run.
+    let mut wrong = values.clone();
+    wrong.insert("value".into(), json!("ext.tr.ornek.yok.islev(Ada)"));
+    let issues = kentos_processing::parameters::validate_values(&tool, &wrong, doc.layers());
+    assert!(
+        issues
+            .iter()
+            .any(|i| i.message.contains("ext.tr.ornek.yok.islev")),
+        "{issues:?}"
+    );
+    external::set_expressions(Vec::new());
+}

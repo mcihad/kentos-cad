@@ -141,6 +141,13 @@ def libraries(ctx, parcels, limit, prefix="P"):
     }
 
 
+@ext.expr("ada-parsel")
+def ada_parsel(ada, parsel):
+    if parsel == "x":
+        raise ValueError("geçersiz parsel")
+    return f"{ada}/{parsel}" if ada and parsel else None
+
+
 @ext.processing("slow")
 def slow(ctx, parcels):
     for parcel in ctx.read_features(parcels):
@@ -430,6 +437,21 @@ class ExtHostTest(unittest.TestCase):
         self.assertEqual(out["geo"]["geometry"]["type"], "Polygon")
         self.assertEqual(out["collection"], "FeatureCollection")
         self.assertEqual(out["pts"], [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], "the ring not closed again")
+
+    def test_an_expression_function_answers_a_batch_of_rows(self) -> None:
+        self.kentos.hello()
+        self.kentos.runs += 1
+        self.kentos.send({"type": "invoke", "id": self.kentos.runs, "kind": "expression", "local": "ada-parsel",
+                          "handler": "deneme.logic:ada_parsel", "rows": [["101", "1"], ["102", None], ["1", "x"]]})
+        while True:
+            done = self.kentos.receive()
+            if done["type"] == "done":
+                break
+        self.assertTrue(done["ok"], done)
+        result = done["result"]
+        self.assertEqual(result["values"], ["101/1", None, None])
+        self.assertEqual(result["failed"], 1, "a row's failure empties that row alone")
+        self.assertIn("ValueError: geçersiz parsel", result["error"])
 
     def test_a_processing_tool_is_stopped_while_it_computes(self) -> None:
         self.kentos.hello()

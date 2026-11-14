@@ -174,7 +174,7 @@ impl Layout {
         }
     }
 
-    fn of(e: &Expr) -> Layout {
+    pub(crate) fn of(e: &Expr) -> Layout {
         Layout::new(e.fields.len(), e.needs)
     }
 }
@@ -477,7 +477,7 @@ pub fn evaluate_rows_on<'s>(
     Ok(column(e, &source, input.n, want))
 }
 
-fn copy<'a>(input: &RowsInput<'a>) -> RowsInput<'a> {
+pub(crate) fn copy<'a>(input: &RowsInput<'a>) -> RowsInput<'a> {
     RowsInput {
         n: input.n,
         texts: input.texts,

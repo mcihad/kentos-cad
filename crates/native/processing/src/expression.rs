@@ -179,6 +179,9 @@ pub struct Evaluation<'a> {
     pub layer_name: &'a dyn Fn(&str) -> String,
     pub store: Option<&'a Store>,
     pub world: Option<&'a World<'a>>,
+    /// The host's answers to the extensions' functions (`ext.<eklenti>.<işlev>`); none: they are empty (a preview
+    /// asks no extension's process: the window does not wait).
+    pub externals: Option<&'a dyn kentos_expression::external::ExternalCalls>,
 }
 
 /// An expression's value for each object, as `want` asks, a batch at a time
@@ -190,7 +193,7 @@ pub fn evaluate_in(
     want: As,
 ) -> Vec<Value<'static>> {
     let objects = EntityObjects::new(list, how.layer_name, how.store);
-    expr.evaluate_objects_in(&View(&objects), want, how.world)
+    expr.evaluate_objects_with(&View(&objects), want, how.world, how.externals)
         .values()
 }
 
@@ -210,6 +213,7 @@ pub fn evaluate_all(
             layer_name,
             store: None,
             world: None,
+            externals: None,
         },
         want,
     )

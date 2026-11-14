@@ -300,3 +300,37 @@ fn how_a_run_ended_is_read_into_islemler_and_the_log() {
         (Err(Failure::Stopped), None)
     );
 }
+
+#[test]
+fn an_extensions_expression_function_is_known_to_islemler_by_name() {
+    let gis = with_imar("ifade", imar(|_| {}));
+    let defs = kentos_processing::external::expressions();
+    let def = defs
+        .iter()
+        .find(|d| d.name == "ext.tr.ornek.imar-denetim.ada-parsel")
+        .expect("İmar's function");
+    assert!(
+        def.description.contains("Ada/parsel yazımı"),
+        "{}",
+        def.description
+    );
+    // The window's check of an İşlemler expression knows it; an unknown one is refused.
+    let tool = gis
+        .gis
+        .processing
+        .registry
+        .get("attributes.calculate")
+        .unwrap();
+    let mut values = serde_json::Map::new();
+    values.insert("input".into(), json!({ "scope": "all" }));
+    values.insert("field".into(), json!("etiket"));
+    values.insert(
+        "value".into(),
+        json!("ext.tr.ornek.imar-denetim.ada-parsel(Ada, Parsel)"),
+    );
+    values.insert("empty".into(), json!("keep"));
+    values.insert("label".into(), json!(false));
+    let doc = gis.document.as_ref().unwrap();
+    let issues = kentos_processing::parameters::validate_values(&tool, &values, doc.model.layers());
+    assert!(issues.is_empty(), "{issues:?}");
+}

@@ -27,6 +27,9 @@ Process → KentOS::
     {"type": "call", "id": 7, "method": "entities", "params": {…}}
     {"type": "done", "id": 1, "ok": true, "result": {"kind": "report", "title": …, "rows": […]}}
     {"type": "done", "id": 2, "ok": true, "result": {"kind": "outputs", "outputs": {"parcels": […]}, "summary": …}}
+    {"type": "invoke", "id": 3, "kind": "expression", "local": "ada-parsel", "handler": "imar.logic:ada_parsel",
+     "rows": [["101", "1"], ["102", "4"]]}
+    {"type": "done", "id": 3, "ok": true, "result": {"kind": "values", "values": ["101/1", "102/4"]}}
     {"type": "done", "id": 1, "ok": false, "stopped": true}
     {"type": "done", "id": 1, "ok": false, "refused": true, "message": "…"}
     {"type": "done", "id": 1, "ok": false, "unavailable": true, "message": "…"}   (ext.NotAvailable)
@@ -351,7 +354,26 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
         kind = str(message.get("kind", ""))
         fn = resolve(str(message.get("handler", "")), kind, str(message.get("local", "")))
         link = ext._Link(channel.send, run_id, stop)
-        if kind == "processing":
+        if kind == "expression":
+            # A batch of rows, each a call with its arguments: one row's failure empties that row alone; how many
+            # failed and the first's words come back (KentOS writes them to the log once).
+            values: list[Any] = []
+            failed = 0
+            first = ""
+            for i, row in enumerate(message.get("rows") or []):
+                if stop.is_set():
+                    raise ext.Stopped()
+                try:
+                    values.append(plain(fn(*row), f"[{i}]"))
+                except Exception as e:  # noqa: BLE001 - a row's failure is counted, the others go on
+                    values.append(None)
+                    failed += 1
+                    if not first:
+                        first = f"{type(e).__name__}: {e}"[:500]
+            result: dict[str, Any] = {"kind": "values", "values": values}
+            if failed:
+                result.update(failed=failed, error=first)
+        elif kind == "processing":
             # Its parameters as keyword arguments, its features as data: it has no drawing (PY-TOOL-09).
             params = dict(message.get("params") or {})
             pctx = ext.ProcessingContext(link, message.get("settings"), params)

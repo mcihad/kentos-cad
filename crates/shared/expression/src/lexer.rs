@@ -79,6 +79,25 @@ pub(crate) fn word(u: &[u16], i: usize) -> usize {
     j - i
 }
 
+/// After `ext` at `i`: `(\.[\p{L}\p{N}_-]+)+`, its length in units (0: none).
+fn dotted(u: &[u16], i: usize) -> usize {
+    let mut j = i;
+    while unit_is(u, j, b'.') {
+        let mut k = j + 1;
+        while let Some((c, n)) = code_point(u, k) {
+            if !(c == '_' || c == '-' || c.is_alphanumeric()) {
+                break;
+            }
+            k += n;
+        }
+        if k == j + 1 {
+            break;
+        }
+        j = k;
+    }
+    j - i
+}
+
 pub(crate) fn is_digit(u: &[u16], i: usize) -> bool {
     u.get(i)
         .is_some_and(|&c| (u16::from(b'0')..=u16::from(b'9')).contains(&c))
@@ -220,6 +239,12 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>, CompileError> {
         }
         let n = word(&u, i);
         if n > 0 {
+            // `ext.<eklenti>.<işlev>` (external.rs): after `ext.` a dot and a hyphen are the name's.
+            let n = if &u[i..i + n] == [u16::from(b'e'), u16::from(b'x'), u16::from(b't')] {
+                n + dotted(&u, i + n)
+            } else {
+                n
+            };
             out.push(Token {
                 t: Tok::Word(String::from_utf16_lossy(&u[i..i + n])),
                 at,

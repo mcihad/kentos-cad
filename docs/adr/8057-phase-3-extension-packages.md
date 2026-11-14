@@ -906,3 +906,40 @@ dönen veriyi görür. Kod: `python/kentos/ext.py`, `python/kentos/ext_host.py`,
 - **Sonraya kalan (ADIM 19'un kalanı):** ifade işlevleri, denetimler, harita aracı, form eylemleri; sürümlü kaydın MCP'ye
   `tools/list_changed` ile bildirilmesi; büyük girdinin sayfalı/ikili aktarımı (PY-TOOL-08: girdi şimdi tek mesajda);
   tanımın kurulumda tam denetimi (ADIM 21'in `extension.verify`'ı).
+
+## §8. İfade işlevleri: `ext.<eklenti>.<işlev>(…)` (`ADIM 19`, üçüncü dilim)
+
+**14 Kasım.** Kod: `crates/shared/expression/src/external.rs` (dil), `crates/native/processing/src/external.rs` (İşlemler'in
+kaydı), `apps/desktop/src/shell/extensions/tools.rs` (`Answers`), `python/kentos/ext_host.py` (`expression`).
+
+- **Sözdizimi:** planın yazdığı gibi `ext.tr.ornek.imar-denetim.ada-parsel(Ada, Parsel)`. Eklenti kimliklerinde ve yerel
+  kimliklerde nokta ve tire var; sözcük çözümleyici yalnız `ext` sözcüğünden hemen sonra gelen `.` ile başlayan parçaları
+  (`[\p{L}\p{N}_-]+`) adın içine alır: başka her yerde tire eksidir, `ext` tek başına bir alan adıdır (sınandı). Ad
+  bütün yazılır; kısaltma yok.
+- **Derlemede adıyla bilinir, kod yüklenmeden (PY-TOOL-02):** şemanın `externals` listesi (`ExternalDef`: ad, bir satır
+  açıklama) masaüstünde kayıt defterindeki `expression.provider` izinli eklentilerin `entrypoints.expressions`
+  girdilerinden kurulur. Listede olmayan bir `ext.…` çağrısı ilk geçtiği yerde reddedilir ("Bilinmeyen işlev: … burada
+  kurulu ve açık bir eklentinin ifade işlevi değil"). Bağımsız değişken sayısı manifestte yok: eklentinin kodu söyler,
+  yanlış sayı o satırın hatasıdır.
+- **Yığın başına bir çağrı:** sütun motoru bir yığının (256 nesne) argümanlarını sütunlardan okur ve host'a bir kez sorar
+  (`ExternalCalls::call(ad, satırlar)`); tek nesne yolu (`walk`) bir satır sorar. Argümanı hata veren nesne hatalı
+  (THROWN) kalır; host yoksa (önizleme, eklentisiz host) yanıt boştur. `Expr::externals()` bir ifadenin çağırdığı
+  işlevleri verir.
+- **Masaüstünün yanıtları (`Answers`):** bir yığının yalnız farklı argüman satırları eklenti sürümünün sürecine tek
+  mesajla gider (`kind: "expression"`, `rows`), yanıtlar argümanlarıyla saklanır (100 000'i geçince baştan); aynı ifade
+  yeniden çalışınca ya da aynı değerler birçok nesnede olunca soru gitmez. Süreç İşlemler araçlarınınkiyle aynı havuzdadır
+  (§7). Bir satırın hatası yalnız o satırı boş bırakır; kaç satırın hata verdiği ve ilki eklentinin günlüğüne bir kez
+  yazılır (`expression_failed`); sürecin cevap vermemesi de.
+- **Nerede:** bu dilimde İşlemler'in ifadeleri (Öznitelik hesapla, İfadeyle seç …; araç arka planda çalışır, beklemek
+  pencereyi dondurmaz) ve pencerenin ifade denetimi (adı tanır). Oluşturucunun ve pencerenin önizlemesi sürece sormaz,
+  eklenti işlevinin değeri önizlemede boştur: pencere beklemez. Etiketler, tematik stil kuralları, sanal alanlar,
+  süzgeçler ve form hesapları çizim sırasında değerlendirilir; orada beklemek çizimi dondururdu: önbellekten okuyup
+  eksikleri arka planda dolduran yol sonraki dilim. Form şeması bu yüzden şimdilik eklenti işlevi sunmaz.
+- **İmar 1.1.0:** `ada-parsel(ada, parsel)` → "101/1" (ikisinden biri boşsa boş); `expression.provider` izni.
+- **Sınamalar:** ifade motoru 4 (adın okunması, bilinmeyenin yeriyle reddi, yığına bir çağrı, tek nesne) ve bütün dil
+  sınamaları (86 + bütünleşik); İşlemler 1 (Öznitelik hesapla üç parsele "101/1, 101/2, 101/3" yazdı, eklentiye tek
+  yığınla soruldu; bilinmeyen işlev çalıştırmadan önce reddedildi); Python 1 (satır başına hata); masaüstü 1 (İmar'ın
+  işlevi adıyla bilinir, pencerenin denetimi geçer).
+- **Uygularken verilen kararlar (planda yazılı değildi):** `ext` sonrası nokta ve tire adın içinde; bağımsız değişken
+  sayısı denetlenmez; yanıt önbelleği argümanlarla, 100 000 yanıt; önizleme sürece sormaz; etiket/stil/form sonraki
+  dilimde; İmar'ın işlevi biçimlendirme (mevzuat iddiası yok).

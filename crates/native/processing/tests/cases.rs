@@ -2800,6 +2800,7 @@ fn a_layer_filter_leaves_its_objects_out_of_the_calls_to_other_layers() {
             layer_name: &layer_name,
             store: Some(store.store()),
             world: Some(&world),
+            externals: None,
         };
         evaluate_in(&expr, &parcels, &how, As::Value)
     };

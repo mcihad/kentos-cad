@@ -297,6 +297,24 @@ pub fn walk<'a>(
         Node::IsNull(x, negated) => {
             Value::Bool(scalar::is_empty(walk(x, s, sc)?.view()) != *negated)
         }
+        // An extension's function (external.rs), answered by the scope's host: one row.
+        Node::External(name, own) => {
+            let values = own
+                .iter()
+                .map(|a| walk(a, s, sc))
+                .collect::<Result<Vec<_>, _>>()?;
+            let Some(host) = s.externals() else {
+                return Ok(Value::Null);
+            };
+            let row: Vec<crate::external::Arg> = values
+                .iter()
+                .map(|v| crate::external::Arg::of(v.view()))
+                .collect();
+            host.call(name, &[row])
+                .into_iter()
+                .next()
+                .map_or(Value::Null, crate::external::Arg::value)
+        }
         // A call that looks at other objects (docs/adr/0214 §3), answered by the scope's world.
         Node::World(k, own) => {
             let values = own

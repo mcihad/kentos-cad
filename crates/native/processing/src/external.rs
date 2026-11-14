@@ -111,6 +111,38 @@ static SHELF: RwLock<Shelf> = RwLock::new(Shelf {
 
 static PROVIDER: RwLock<Option<Arc<dyn Provider>>> = RwLock::new(None);
 
+/// The extensions' expression functions (`ext.<eklenti>.<işlev>`), as İşlemler' expressions may call them.
+static EXPRESSIONS: RwLock<Vec<kentos_expression::external::ExternalDef>> = RwLock::new(Vec::new());
+
+/// What answers them: the host's (the desktop's extension processes).
+pub type ExpressionCalls = Arc<dyn kentos_expression::external::ExternalCalls + Send + Sync>;
+
+static EXPRESSION_CALLS: RwLock<Option<ExpressionCalls>> = RwLock::new(None);
+
+/// The extensions' expression functions now, replaced whole as extensions change.
+pub fn set_expressions(defs: Vec<kentos_expression::external::ExternalDef>) {
+    if let Ok(mut slot) = EXPRESSIONS.write() {
+        *slot = defs;
+    }
+}
+
+/// The extensions' expression functions an İşlemler expression may call (the schema's `externals`).
+pub fn expressions() -> Vec<kentos_expression::external::ExternalDef> {
+    EXPRESSIONS.read().map(|d| d.clone()).unwrap_or_default()
+}
+
+/// Registers what answers the extensions' expression functions; a later registration replaces it.
+pub fn register_expression_calls(calls: ExpressionCalls) {
+    if let Ok(mut slot) = EXPRESSION_CALLS.write() {
+        *slot = Some(calls);
+    }
+}
+
+/// What answers them, where the host registered it.
+pub fn expression_calls() -> Option<ExpressionCalls> {
+    EXPRESSION_CALLS.read().ok().and_then(|c| c.clone())
+}
+
 /// Registers what runs the extensions' code; a later registration replaces it.
 pub fn register_provider(provider: Arc<dyn Provider>) {
     if let Ok(mut slot) = PROVIDER.write() {

@@ -29,6 +29,7 @@ pub(crate) fn hoist(n: Node, depth: u8, own: u8, captured: &mut Vec<Node>) -> No
     match n {
         Node::Call(f, args) => Node::Call(f, args.into_iter().map(go).collect()),
         Node::World(k, args) => Node::World(k, args.into_iter().map(go).collect()),
+        Node::External(name, args) => Node::External(name, args.into_iter().map(go).collect()),
         Node::Not(a) => Node::Not(Box::new(go(*a))),
         Node::Neg(a) => Node::Neg(Box::new(go(*a))),
         Node::IsNull(a, negated) => Node::IsNull(Box::new(go(*a)), negated),
@@ -107,11 +108,13 @@ fn lift(n: Node, drop: u8) -> Node {
 }
 
 /// Visits every node of `n` with the number of inner expressions' bodies it stands in (from `depth`).
-fn each(n: &Node, depth: u8, f: &mut impl FnMut(&Node, u8)) {
+pub(crate) fn each(n: &Node, depth: u8, f: &mut impl FnMut(&Node, u8)) {
     f(n, depth);
     let mut go = |m: &Node| each(m, depth, f);
     match n {
-        Node::Call(_, args) | Node::World(_, args) => args.iter().for_each(go),
+        Node::Call(_, args) | Node::World(_, args) | Node::External(_, args) => {
+            args.iter().for_each(go)
+        }
         Node::Not(a) | Node::Neg(a) | Node::IsNull(a, _) => go(a),
         Node::Bin(_, a, b) | Node::Like(a, b, ..) => {
             go(a);
@@ -155,6 +158,9 @@ fn map(n: Node, depth: u8, f: &mut impl FnMut(Node, u8) -> Node) -> Node {
         }
         Node::World(k, args) => {
             Node::World(k, args.into_iter().map(|a| map(a, depth, f)).collect())
+        }
+        Node::External(name, args) => {
+            Node::External(name, args.into_iter().map(|a| map(a, depth, f)).collect())
         }
         Node::Not(a) => Node::Not(Box::new(map(*a, depth, f))),
         Node::Neg(a) => Node::Neg(Box::new(map(*a, depth, f))),

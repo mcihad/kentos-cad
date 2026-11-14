@@ -165,6 +165,7 @@ fn schema(arg: SchemaArg) -> Result<Schema, String> {
         world,
         relations: false,
         unit: crate::Unit::per_metre(unit),
+        externals: Vec::new(),
     })
 }
 

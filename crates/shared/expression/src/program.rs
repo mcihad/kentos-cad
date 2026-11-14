@@ -102,6 +102,8 @@ pub enum Ins {
     /// An inner expression (docs/adr/0601): its place in `Program::lambdas`; its arguments, the parts taken out of its
     /// body, then `dene`'s value when the body gives none.
     Lambda(u32, Box<[Operand]>),
+    /// An extension's function (external.rs): its name's place in `Program::externals`; its arguments.
+    External(u32, Box<[Operand]>),
 }
 
 impl Ins {
@@ -115,13 +117,14 @@ impl Ins {
             | Ins::Case(args, _)
             | Ins::In(args, _)
             | Ins::World(_, args)
-            | Ins::Lambda(_, args) => args,
+            | Ins::Lambda(_, args)
+            | Ins::External(_, args) => args,
         }
     }
 
     /// Whether every operand is a constant (loads have none and are never constant).
     fn constant(&self) -> bool {
-        !matches!(self, Ins::Load(_) | Ins::World(..))
+        !matches!(self, Ins::Load(_) | Ins::World(..) | Ins::External(..))
             && self
                 .operands()
                 .iter()
@@ -174,6 +177,8 @@ pub struct Program {
     pub result: Option<Operand>,
     /// The inner expressions `Ins::Lambda` evaluates.
     pub lambdas: Vec<crate::lambda::Code>,
+    /// The extensions' functions `Ins::External` calls, by name.
+    pub externals: Vec<String>,
 }
 
 impl Program {
@@ -185,6 +190,7 @@ impl Program {
             consts: b.consts,
             result: Some(result),
             lambdas: b.lambdas,
+            externals: b.externals,
         };
         p.drop_unused_constants();
         p
@@ -243,7 +249,8 @@ impl Program {
                 | Ins::Case(args, _)
                 | Ins::In(args, _)
                 | Ins::World(_, args)
-                | Ins::Lambda(_, args) => args.iter_mut().for_each(renumber),
+                | Ins::Lambda(_, args)
+                | Ins::External(_, args) => args.iter_mut().for_each(renumber),
             }
         }
         self.result.iter_mut().for_each(renumber);
@@ -257,6 +264,7 @@ struct Builder {
     known: HashMap<Ins, u32>,
     scratch: Scratch,
     lambdas: Vec<crate::lambda::Code>,
+    externals: Vec<String>,
 }
 
 impl Builder {
@@ -335,6 +343,18 @@ impl Builder {
                     return self.constant(Const::Thrown);
                 }
                 self.emit(Ins::World(*k, args.into()))
+            }
+            Node::External(name, own) => {
+                let args: Vec<Operand> = own.iter().map(|a| self.node(a)).collect();
+                // Never folded: its answer is the host's.
+                let k = match self.externals.iter().position(|n| n == name) {
+                    Some(k) => k,
+                    None => {
+                        self.externals.push(name.clone());
+                        self.externals.len() - 1
+                    }
+                };
+                self.emit(Ins::External(k as u32, args.into()))
             }
             // Resolved before the program is made (`resolve`).
             Node::At(_) => self.constant(Const::Null),
@@ -418,7 +438,7 @@ impl Builder {
                 truth(scalar::like(get(x), get(pattern), *fold, &mut self.scratch) != *negated)
             }
             Ins::IsNull(x, negated) => truth(scalar::is_empty(get(x)) != *negated),
-            Ins::Load(_) | Ins::World(..) => R::V(V::Null),
+            Ins::Load(_) | Ins::World(..) | Ins::External(..) => R::V(V::Null),
             Ins::Not(a) => R::V(scalar::not(get(a))),
             Ins::Neg(a) => R::V(scalar::neg(get(a))),
             Ins::Bin(op, [a, b]) => {

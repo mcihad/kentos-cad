@@ -484,6 +484,7 @@ impl Runner {
             world: true,
             relations: false,
             unit: Unit::METRE,
+            externals: crate::external::expressions(),
         };
         let expr = compile_with(src, &schema).ok()?;
         let input = tool
@@ -535,6 +536,8 @@ impl Runner {
             layer_name: &layer_name,
             store,
             world: (!looked_at.is_empty()).then_some(&world),
+            // The window's preview asks no extension's process.
+            externals: None,
         };
         (!src.is_empty()).then(|| preview_expression(&expr, &set.entities, *returns, &how))
     }
@@ -866,6 +869,7 @@ impl Runner {
             world: true,
             relations: false,
             unit: Unit::METRE,
+            externals: crate::external::expressions(),
         };
         let mut resolved = Resolved::borrowed(&job.values);
         let mut objects: Vec<&Entity> = Vec::new();
@@ -975,6 +979,7 @@ impl Runner {
         };
         let ctx = RunContext {
             tool: &job.tool.id,
+            externals: crate::external::expression_calls(),
             doc,
             units: &units,
             selection: &job.selection,

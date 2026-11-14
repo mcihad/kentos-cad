@@ -37,6 +37,7 @@ pub mod compound;
 pub mod dates;
 pub mod editor;
 pub mod exec;
+pub mod external;
 pub mod functions;
 pub mod geometry;
 pub mod host;
@@ -157,6 +158,11 @@ pub trait Scope {
         None
     }
 
+    /// The host's answers to the extensions' functions (external.rs); without them they are empty.
+    fn externals(&self) -> Option<&dyn external::ExternalCalls> {
+        None
+    }
+
     /// A geometry value. By default the ones `measured` and `vertices` give;
     /// a scope that holds the object's shape gives the others too
     /// (`geometry::value`).
@@ -261,6 +267,30 @@ fn compile_in(source: &str, schema: &Schema) -> Result<Expr, CompileError> {
             at: first_call(source, &names).unwrap_or(1),
         });
     }
+    // An extension's function only where the host offers it (external.rs): refused where it is first called.
+    let mut unknown_external: Option<String> = None;
+    lambda::each(&root, 0, &mut |n, _| {
+        if let Node::External(name, _) = n
+            && unknown_external.is_none()
+            && !schema.externals.iter().any(|d| &d.name == name)
+        {
+            unknown_external = Some(name.clone());
+        }
+    });
+    if let Some(name) = unknown_external {
+        let at = lexer::tokenize(source).ok().and_then(|toks| {
+            toks.windows(2).find_map(|w| match (&w[0].t, &w[1].t) {
+                (lexer::Tok::Word(n), lexer::Tok::Op("(")) if *n == name => Some(w[0].at),
+                _ => None,
+            })
+        });
+        return Err(CompileError {
+            message: format!(
+                "Bilinmeyen işlev: {name}(): burada kurulu ve açık bir eklentinin ifade işlevi değil."
+            ),
+            at: at.unwrap_or(1),
+        });
+    }
     let mut needs = Needs::default();
     uses(&root, &mut needs);
     let types = fields.iter().map(|f| schema.resolve(f)).collect();
@@ -303,7 +333,7 @@ pub(crate) fn uses(n: &Node, needs: &mut Needs) {
                 needs.bounds = true
             }
         },
-        Node::Call(_, args) => args.iter().for_each(|a| uses(a, needs)),
+        Node::Call(_, args) | Node::External(_, args) => args.iter().for_each(|a| uses(a, needs)),
         Node::Not(a) | Node::Neg(a) | Node::IsNull(a, _) => uses(a, needs),
         Node::Bin(_, a, b) | Node::Like(a, b, ..) => {
             uses(a, needs);
@@ -345,6 +375,11 @@ pub(crate) fn uses(n: &Node, needs: &mut Needs) {
 }
 
 impl Expr {
+    /// The extensions' functions it calls, by name (external.rs): what a host may ask for ahead.
+    pub fn externals(&self) -> &[String] {
+        &self.program.externals
+    }
+
     /// The compiled program, for the column engine's callers (`rows`).
     pub fn program(&self) -> &Program {
         &self.program

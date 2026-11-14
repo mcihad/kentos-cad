@@ -131,6 +131,11 @@ pub trait Source<'a> {
     fn world(&self) -> Option<&dyn WorldCalls> {
         None
     }
+
+    /// The host's answers to the extensions' functions (external.rs); without them they are empty.
+    fn externals(&self) -> Option<&dyn crate::external::ExternalCalls> {
+        None
+    }
 }
 
 /// A run's registers: register `r`'s value for object `i` at `r * stride + i`,
@@ -400,6 +405,11 @@ pub fn run<'a>(
             Ins::World(k, args) => {
                 let cols: Vec<Col> = args.iter().map(|&o| col(o)).collect();
                 world(*k as usize, &cols, src.world(), &mut out);
+            }
+            Ins::External(k, args) => {
+                let cols: Vec<Col> = args.iter().map(|&o| col(o)).collect();
+                let name = p.externals.get(*k as usize).map_or("", String::as_str);
+                crate::external::column(name, &cols, src.externals(), &mut out);
             }
             // An inner expression (docs/adr/0601): its operands are columns, its body a program run over the items.
             Ins::Lambda(k, args) => {

@@ -52,6 +52,8 @@ struct Python {
 #[derive(Default)]
 struct Shared {
     plans: HashMap<String, Plan>,
+    /// The extensions' expression functions, by their whole names (`ext.<eklenti>.<işlev>`).
+    expressions: HashMap<String, Plan>,
     python: Option<Python>,
     /// Why there is no Python, in a sentence.
     why_not: String,
@@ -104,7 +106,195 @@ impl Default for ExtTools {
             pool: Arc::clone(&tools.pool),
             notes: Arc::clone(&tools.notes),
         }));
+        external::register_expression_calls(Arc::new(Answers {
+            shared: Arc::clone(&tools.shared),
+            pool: Arc::clone(&tools.pool),
+            notes: Arc::clone(&tools.notes),
+            cache: Mutex::default(),
+            told: Mutex::default(),
+        }));
         tools
+    }
+}
+
+/// How long a batch of an expression function's calls may take.
+const EXPRESSION_TIMEOUT: Duration = Duration::from_secs(60);
+
+/// The most answers kept; past it the store starts again.
+const CACHED_ANSWERS: usize = 100_000;
+
+/// Answers the extensions' expression functions for İşlemler (`ext.<eklenti>.<işlev>(…)`): a batch's distinct rows
+/// asked once of the extension version's process, answers kept by their arguments (an expression run again, or the
+/// same values on many objects, asks nothing); a failure said once in the extension's log, its rows empty.
+struct Answers {
+    shared: Arc<RwLock<Shared>>,
+    pool: Arc<Pool>,
+    notes: Arc<Mutex<Vec<Note>>>,
+    cache: Mutex<HashMap<String, kentos_expression::external::Arg>>,
+    /// The failures already said, by function and words.
+    told: Mutex<BTreeSet<String>>,
+}
+
+fn arg_json(a: &kentos_expression::external::Arg) -> Value {
+    use kentos_expression::external::Arg;
+    match a {
+        Arg::Null => Value::Null,
+        Arg::Num(x) => json!(x),
+        Arg::Text(t) => json!(t),
+        Arg::Bool(b) => json!(b),
+    }
+}
+
+fn json_arg(v: &Value) -> kentos_expression::external::Arg {
+    use kentos_expression::external::Arg;
+    match v {
+        Value::Null => Arg::Null,
+        Value::Bool(b) => Arg::Bool(*b),
+        Value::Number(n) => n.as_f64().map_or(Arg::Null, Arg::Num),
+        Value::String(s) => Arg::Text(s.clone()),
+        other => Arg::Text(other.to_string()),
+    }
+}
+
+impl Answers {
+    fn tell(&self, plan: &Plan, name: &str, code: &'static str, message: String) {
+        let first = self
+            .told
+            .lock()
+            .is_ok_and(|mut told| told.insert(format!("{name}/{code}/{message}")));
+        if first && let Ok(mut notes) = self.notes.lock() {
+            notes.push(Note::Failed {
+                ext: plan.ext.clone(),
+                part: format!("expression:{}", plan.local),
+                title: name.to_owned(),
+                code,
+                message,
+                detail: None,
+                crash: false,
+            });
+        }
+    }
+}
+
+impl kentos_expression::external::ExternalCalls for Answers {
+    fn call(
+        &self,
+        name: &str,
+        rows: &[Vec<kentos_expression::external::Arg>],
+    ) -> Vec<kentos_expression::external::Arg> {
+        use kentos_expression::external::Arg;
+        let keys: Vec<String> = rows
+            .iter()
+            .map(|r| {
+                format!(
+                    "{name}\u{1}{}",
+                    Value::Array(r.iter().map(arg_json).collect())
+                )
+            })
+            .collect();
+        let mut answers: Vec<Option<Arg>> = {
+            let cache = self.cache.lock().ok();
+            keys.iter()
+                .map(|k| cache.as_ref().and_then(|c| c.get(k).cloned()))
+                .collect()
+        };
+        // The distinct rows not answered yet, each asked once.
+        let mut missing: Vec<usize> = Vec::new();
+        let mut seen: HashMap<&str, usize> = HashMap::new();
+        for (i, k) in keys.iter().enumerate() {
+            if answers[i].is_none() && !seen.contains_key(k.as_str()) {
+                seen.insert(k.as_str(), missing.len());
+                missing.push(i);
+            }
+        }
+        if !missing.is_empty() {
+            let (plan, python) = match self.shared.read() {
+                Ok(shared) => (shared.expressions.get(name).cloned(), shared.python.clone()),
+                Err(_) => (None, None),
+            };
+            let got: Vec<Arg> = match (plan, python) {
+                (Some(plan), Some(python)) => {
+                    let invoke = json!({
+                        "kind": "expression",
+                        "local": plan.local,
+                        "handler": plan.handler,
+                        "rows": missing.iter().map(|&i| Value::Array(rows[i].iter().map(arg_json).collect())).collect::<Vec<_>>(),
+                        "document": false,
+                    });
+                    let key = format!("{}@{}", plan.ext, plan.version);
+                    match self.pool.run(
+                        &key,
+                        &|| start_of(&plan, &python),
+                        invoke,
+                        EXPRESSION_TIMEOUT,
+                        &|| false,
+                        &mut |_| {},
+                    ) {
+                        Ended::Answered(done) if done["ok"] == true => {
+                            let result = &done["result"];
+                            if let Some(failed) = result["failed"].as_u64() {
+                                self.tell(
+                                    &plan,
+                                    name,
+                                    "expression_failed",
+                                    format!(
+                                        "{name}() {failed} satırda hata verdi, o satırlar boş kaldı: {}",
+                                        result["error"].as_str().unwrap_or_default()
+                                    ),
+                                );
+                            }
+                            result["values"]
+                                .as_array()
+                                .map(|v| v.iter().map(json_arg).collect())
+                                .unwrap_or_default()
+                        }
+                        Ended::Answered(done) => {
+                            let words = done["message"].as_str().unwrap_or_default().to_owned();
+                            self.tell(
+                                &plan,
+                                name,
+                                "expression_failed",
+                                format!("{name}() çalışmadı: {words}"),
+                            );
+                            Vec::new()
+                        }
+                        other => {
+                            self.tell(
+                                &plan,
+                                name,
+                                "expression_failed",
+                                format!("{name}() yanıt vermedi: {other:?}"),
+                            );
+                            Vec::new()
+                        }
+                    }
+                }
+                _ => Vec::new(),
+            };
+            let mut got = got.into_iter();
+            let mut asked: Vec<(String, Arg)> = Vec::with_capacity(missing.len());
+            for &i in &missing {
+                let a = got.next().unwrap_or(Arg::Null);
+                asked.push((keys[i].clone(), a));
+            }
+            for (i, k) in keys.iter().enumerate() {
+                if answers[i].is_none()
+                    && let Some(&j) = seen.get(k.as_str())
+                {
+                    answers[i] = Some(asked[j].1.clone());
+                }
+            }
+            if let Ok(mut cache) = self.cache.lock() {
+                if cache.len() + asked.len() > CACHED_ANSWERS {
+                    cache.clear();
+                }
+                cache.extend(asked);
+            }
+        }
+        answers
+            .into_iter()
+            .map(|a| a.unwrap_or(Arg::Null))
+            .collect()
     }
 }
 
@@ -506,6 +696,59 @@ impl App {
                 );
             }
         }
+        // The extensions' expression functions (`ext.<eklenti>.<işlev>`), known by name without their code.
+        let mut expressions: HashMap<String, Plan> = HashMap::new();
+        let mut defs: Vec<kentos_expression::external::ExternalDef> = Vec::new();
+        if let Some(registry) = self.extensions.registry.as_ref() {
+            for c in registry
+                .contributions()
+                .iter()
+                .filter(|c| c.kind == ContributionKind::Expression)
+            {
+                let ext = c.lease.extension.clone();
+                let Some(manifest) = registry.manifest(&ext) else {
+                    continue;
+                };
+                let local =
+                    c.id.strip_prefix(&format!("ext.{ext}."))
+                        .unwrap_or_default();
+                let (Some(entry), Some(source)) = (
+                    manifest
+                        .entrypoints
+                        .expressions
+                        .iter()
+                        .find(|e| e.id == local),
+                    registry.package_dir(&ext),
+                ) else {
+                    continue;
+                };
+                defs.push(kentos_expression::external::ExternalDef {
+                    name: c.id.clone(),
+                    description: format!(
+                        "{} — {} eklentisinin ifade işlevi; kendi Python ortamında çalışır.",
+                        entry.title.as_deref().unwrap_or(local),
+                        manifest.name
+                    ),
+                });
+                expressions.insert(
+                    c.id.clone(),
+                    Plan {
+                        ext: ext.clone(),
+                        local: local.to_owned(),
+                        handler: entry.handler.clone(),
+                        version: manifest.version.to_string(),
+                        source,
+                        digest: registry.digest(&ext).unwrap_or_default(),
+                        lock_file: manifest
+                            .python
+                            .as_ref()
+                            .map(|p| p.lock_file.clone())
+                            .unwrap_or_default(),
+                    },
+                );
+            }
+        }
+        external::set_expressions(defs);
         let p = &self.python_setup;
         let python = match (&p.python, &p.root, p.ready_uv()) {
             (Some(crate::python_setup::OwnPython::Ready(interpreter, _)), Some(root), Some(uv)) => {
@@ -523,6 +766,7 @@ impl App {
             .collect();
         if let Ok(mut shared) = self.extensions.tools.shared.write() {
             shared.plans = plans;
+            shared.expressions = expressions;
             shared.python = python;
             shared.why_not = p.why_not().to_owned();
         }
