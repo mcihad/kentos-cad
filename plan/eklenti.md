@@ -828,6 +828,10 @@ plandaki işçiye sıraya koyar; (3) işçi farklı satırları eklentinin süre
 ve pencereye haber verir; pencere etiketleri ve stilleri yeniden değerlendirir (ikinci geçişte hepsi önbellekten);
 (4) bir işlev hata verirse ya da süreç yanıt vermezse satırları boş kalır, günlüğe bir kez yazılır, yeniden sorulmaz
 (sonsuz yeniden çizim olmasın); (5) form hesabı aynı yoldan, form kaydedilirken değer önbellekte yoksa bekleyip sorar.
+Uygulama: dil `evaluate_rows_on_with` ile, etiketler `scene_query::label_texts::set_externals` ile hazır (14 Kasım);
+kalan masaüstü: bekletmeyen `LabelAnswers` (`Answers`'ın önbelleği, eksik satırları kuyruğa koyar), kuyruğu boşaltan
+işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kalıbı) ve etiket anahtarına
+(`spatial.rs`, `texts_key` + birim + bayraklar) yalnız `ext.` içeren katmanlarda yanıt sayacının eklenmesi.
 
 **Süreç ve aracı:**
 - [ ] Her eklenti sürümü için ayrı süreç; IPC protokol sürümü, eklenti/sürüm/özet, istek/çalışma/oturum kimliği ve zaman
