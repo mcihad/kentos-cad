@@ -2541,6 +2541,17 @@
     görünümü kâğıt ölçeğinde ortasından sayıp söyler, seçilen ölçeği hatırlar.
   - Görünüm ölçeği ajanlara açık: bağlantının ve konsolun `view`'u, Python `Document.view()`, MCP `drawing.view`.
   - Ertelenen: katmanın kendi ölçek aralığı (Katman çizimi), ifadede görünüm ölçeği değişkeni.
+- **Eklentiler: `.kek` paketleri, kendi Python ortamı ve süreci (13–14 Kasım 2026; [ADR 8057](../../docs/adr/8057-phase-3-extension-packages.md)).**
+  - Paket `.kek` v1: manifest, onaylanan yetenekler, içerik özeti; kurum kataloğu ve ilkesi; kaldırılır, önceki sürüme
+    dönülür.
+  - Her eklenti sürümünün kendi Python ortamı (uv, kilitten; önce kurulacak paketler gösterilir) ve kendi süreci;
+    KentOS'a yetenek denetimli aracıyla erişir. Ayrı süreç korumalı alan değildir ve arayüz bunu söyler.
+  - Katkılar: komut (şerit, sağ tık, komut arama), İşlemler aracı (tanımı kod yüklenmeden okunur, Kur'dan önce
+    denetlenir), ifade işlevi `ext.<eklenti>.<işlev>` (çizim beklemez, kaydetme bekler), harita aracı (şekli KentOS
+    çizer, eklentinin kodu yerleştirir), Python'suz veri kaynağı.
+  - Hata eklentinin adıyla söylenir, iz kaydı eklentinin günlüğündedir; Durdur önce sorar, 5 sn'de süreci sonlandırır;
+    yazan çalıştırma tek geri alma adımıdır.
+  - Örnek ve bütün gösterimler `samples/eklenti-vitrini` (Vitrin) ile; yeni yetenek aynı değişiklikte oraya girer.
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](../../docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
   - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.
     Gerçek koordinatlı CAD ve GIS metre/harita ölçeğiyle devam eder. Model gerçek boyuttadır; pafta ve yazı ölçeği ayrıdır.

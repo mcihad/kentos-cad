@@ -986,3 +986,66 @@ ilerler ve yalnız işlev çağıranlar yeniden kurulur. Hata veren ya da yanıt
   dedi. Form hesabı birim sınamasıyla (yazarken boş, kaydederken "101/2"); tasarımcıda gerçek pencerede yürünmedi.
 - **Uygularken verilen kararlar:** tek kayıt ifade motorunda; formda yalnız hesap işlev tanır; kaydetme, yenileme ve
   toplu yazma bekler; yazdırma (pafta, PDF) çizimin önbelleğini okur, beklemez (ilk baskıda yanıt yoksa boş).
+
+## §9. Harita aracı: Rust şekli çizer, eklentinin kodu yerleştirir (`ADIM 19`, beşinci dilim; `cdce4c02e`)
+
+**14 Kasım.** Kod: `crates/native/interaction/src/viewer_tools/capture.rs` (`Capture`, `Kind`, `Shape`,
+`template_rectangle`), `apps/desktop/src/shell/extensions/runner.rs` (`ext_capture_start`/`next`/`tasks`, `Capturing`,
+`shape_json`), `python/kentos/ext.py` (`Shape`, `MapToolContext.add_feature`), `python/kentos/ext_host.py` (`mapTool`).
+Planda harita aracı ADIM 22'deydi (`kentos.ui` panelleriyle); Vitrin'in her katkıyı göstermesi için öne alındı. ADIM
+22'de panel ve katman şeması kurulumu kalır.
+
+- **Şekli KentOS çizer** (plan §1.4: "kenetleme ve önizlemeyi Rust yapar; Python onaylanan noktaları işler"):
+  manifestin `capture`'ı nokta, çizgi ve alan (Enter bitirir), iki köşeli dikdörtgen, yönlü dikdörtgen ve daire ister.
+  Yönlü dikdörtgen şablonla (`templateWidthM`/`templateLengthM`) ortası ve uzun kenarın yönüyle çizilir (Enter kuzeye
+  bakar; MEBİS'in 1,10 × 2,20 m mezarı, Vitrin'in 10 × 12 m yapısı), şablonsuz bir kenar ve genişlikle. Kenetleme ve
+  yazılan koordinat her komuttaki gibi; Esc şekil vermez (`ViewChange::Captured`).
+- **Eklentinin kodu yalnız sonucu alır:** masaüstü aracı şeritten başlatır (eklentinin Python'u çalışamıyorsa önce nedeni
+  söylenir), şekli GeoJSON olarak verir (`params.shape`; daire 64 kirişli halka, merkezi ve yarıçapı yanında) ve kodu
+  eklentinin sürecinde komut bağlamıyla çalıştırır. Yerleştirme yazıldıysa araç yeniden başlar; hata, Durdur, Esc ya da
+  bu arada başlatılan başka bir araç onu bitirir. Her yerleştirme bir komut çalıştırması gibi tek geri alma adımıdır.
+- **Python:** `ext.Shape` (GeoJSON, `__geo_interface__`, `points`, `circle`) ve `MapToolContext.add_feature(katman, şekil,
+  öznitelikler)`: alanı, çizgiyi ya da noktayı katmana (kimlikle, ya da adı tek katmandaysa adıyla) KentOS'un
+  komutlarıyla yazar ve ne yazdığını söyler.
+- **Gerçek pencere (Vitrin, `02-harita-araci`):** Yapı yerleştir iki yapı yazdı (Yapı katmanı 5 → 7), biri
+  doğu-kuzeydoğuya, biri kuzeye dönük; Esc'ten sonra araç bitti.
+- **Uygularken verilen kararlar (planda yazılı değildi):** şekil GeoJSON; daire 64 kiriş; yönlü dikdörtgen ortası ve
+  yönüyle, Enter kuzey; araç Esc'e kadar sürer; yerleştirme başına bir geri alma adımı.
+- **Sınamalar:** yakalamanın türleri ve şablonun dönüşü (2), Python host'unun çizilen alanı öznitelikleriyle aracıdan
+  yazması, masaüstü eklenti sahneleri.
+
+## §10. İşlemler aracının tanımı kurulumdan önce denetlenir (`5af293f9a`)
+
+Paketin kendi denetimi bir araç tanımının biçimini, sürümünü ve kimliğini okuyordu; masaüstünün kuramayacağı bir tanım
+(`kentos_processing::external::from_descriptor`'ın reddettiği) "kuruldu" diye kuruluyor, araç ilk listelendiğinde bir
+günlük satırıyla anlaşılıyordu. Artık kayıt defteri host'un denetimini alır (`Options::tools`, `ToolCheck`) ve gözden
+geçirmede (sorun paketin altında Kur'dan önce görünür, Kur önerilmez) ve kurarken (başka yoldan gelen kurulum da aynı
+reddedilir) sorar; her ret tanımın dosyasında bir `tool_descriptor` sorunudur ("“taks” aracı: …"). MEBİS'in örnek tanımı
+planın ADIM 19 öncesi taslağıydı, v1'e yazıldı (içerik özeti `sha256:ec9730da…46501`, Python'da ayrıca hesaplandı).
+**Yapılmadı:** `kentos kek inspect` paketin denetimiyle kalır (komut satırı İşlemler'i içermez).
+
+## §11. Eklenti Vitrini: her gösterimin eklentisi (`samples/eklenti-vitrini`; `bfba24a2e`, `a863d6892`, `da300f5b7`)
+
+Sahibin kararı (14 Kasım): "eklenti sisteminin bütün gücünü gösterecek demo bir eklentiyi … repoya dahil et ve bütün
+demoları o eklentiyle yap … eklenti sistemini geliştirirken bu eklentiyi de geliştir"; "çok fazla büyütme ama rafine,
+temiz ve kaliteli"; "içinde birçok durum için örnekler olsun, sadece eklenti de değil".
+
+- **İçerik:** `eklenti/` (`tr.ornek.vitrin` 1.0.1, MIT, yapay veri): okuyan (Katman özeti; katmanın sağ tık menüsünde
+  de), ilerleme ve Durdur'la yazan (Yapıları numarala) ve bilerek hata veren (Hata örneği) komutlar; shapely 2.0.7 ve
+  NumPy 2.5.4 kullanan TAKS İşlemler aracı (gerçek `uv lock`); `ext.tr.ornek.vitrin.ada-parsel` ifade işlevi (etiket,
+  kural, süzgeç, İşlemler); Yapı yerleştir harita aracı; Python'suz XYZ altlık. `vitrin_cizim.py` → `vitrin.kcad` (dört
+  parsel, biri yaylı; beş yapı; TM36), `hazirla.sh` (katalog), `senaryolar/00…07` (gerçek pencere, 1440 × 900): kurulum,
+  Python ortamı, harita aracı, komutlar, TAKS, etiket, kural, süzgeç. README her durumu, yerini ve nasıl deneneceğini;
+  ajanlar için kimlikleri, `drawing.view`'u ve eklentinin günlüğünü yazar.
+- **Kural:** eklenti sistemine gelen her yetenek aynı değişiklikte Vitrin'e de girer; gösterimler ve ekran görüntüleri
+  onunla yapılır, deneme paketleriyle değil. Henüz çalıştırılamayan katkılar (denetim, panel) README'de böyle yazılı.
+- **Bekçiler:** paket uyarısız paketlenir ve bütün katkılarıyla paketin denetiminden geçer (`extensions`); masaüstünün
+  gözden geçirmesi kendi araç denetiminden geçer, sekmede beş düğme görünür (masaüstü).
+- **Yaparken bulunanlar (düzeltildi):** eklentinin ortamındaki SDK tekerleği en son paketlenendir (eskisi "module
+  'kentos.ext' has no attribute 'Shape'" dedi, eklentinin hatası olarak açıkça gösterildi; çare
+  `bundle_sdk.py`); büyütülmüş Eklentiler penceresi bölmelerin 470 px'ini koruyup alt yarıyı boş bırakıyordu
+  (`ListDetails::grow`: elle boyutlandırılmış ya da tam ekran pencerede yükseklik pencerenin); pencere açılınca seçilen
+  eklentinin ortamı yalnız tıklanınca aranıyor, bölüm "Ortam aranıyor…"da kalıyordu (artık güncellemeden sonra aranır);
+  İşlemler'in araç ve işlev listeleri, yürütücüsü ve ifade host'u her pencere kurulurken sürece yazılıyordu: sınamalarda
+  bir pencere ötekinin listesini ezip "Bilinmeyen işlev" düşürüyordu. Artık araç ya da işlev sunan pencere yazar,
+  sınamada o sınama bitene dek tutar (`hold_process_lists`); dört ardışık koşu 25/25.

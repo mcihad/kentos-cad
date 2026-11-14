@@ -830,6 +830,16 @@ eklenti işlevini bekletmeden çağırır (tek kayıt `kentos_expression::extern
 isteğiyle etiket işleri girdi (görünür ölçekler 1:N, Denetle, her yerden ölçek; ADR 8058). "Sanal alan" ayrı bir
 özellik değil. Kalan: form tasarımcısında gerçek pencere yürüyüşü; yazdırmada yanıt beklemek.
 
+**Durum (14 Kasım): beşinci dilim — harita aracı, kurulumda tanım denetimi, Eklenti Vitrini** (ADR 8057 §9–§11).
+Harita aracı: KentOS manifestin istediği şekli çizer (nokta, çizgi, alan, dikdörtgen, şablonlu yönlü dikdörtgen,
+daire; kenetleme, yazılan koordinat, Esc), eklentinin kodu GeoJSON'u alıp `MapToolContext.add_feature` ile yazar; her
+yerleştirme tek geri alma adımı, araç Esc'e kadar sürer (ADIM 22'nin MapTool maddesi öne alındı). İşlemler aracının
+tanımı Kur'dan önce masaüstünün denetiminden geçer (`ToolCheck`). `samples/eklenti-vitrini`: her gösterimin ve ekran
+görüntüsünün eklentisi, sekiz gerçek pencere senaryosu; yeni her yetenek aynı değişiklikte oraya girer. Kalan (ADIM 19):
+form eylemi [FORM-API-13], büyük girdinin sayfalı/ikili aktarımı [PY-TOOL-08], modelde eklenti kökeni [PY-TOOL-20, 22],
+`modelDescription` ve kod yüklemeden MCP listesi [D18], eklentiden eklentiye çağrı [PY-RUN-15], önizlemede aracının
+yazma izinlerini kapatması [PY-RUN-23]; `kek inspect`'in araç denetimi.
+
 **Sıradaki dilim (tasarım, 14 Kasım): çizimdeki ifadelerde eklenti işlevi.** Etiket metni ve koşulu
 (`scene-query::label_texts`), katman süzgeci (`layer_filter`), tematik stil kuralları (`native-style::classify`) ve sanal
 alanlar çizim sırasında değerlendirilir; orada **hiç beklenmez**: (1) bu derleyiciler eklenti işlevlerinin listesini
