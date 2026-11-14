@@ -435,6 +435,20 @@ pub fn tools() -> Vec<Tool> {
         destructive: true,
     });
     list.push(Tool {
+        name: "extension.verify",
+        title: "Eklentiyi doğrula",
+        description: "Bir eklentinin çalışma klasörünü (ya da .kek paketini) çalıştırmadan doğrular (kentos kek verify): \
+                      paketin kuralları, manifestin başvuruları, Python işlevlerinin @ext işaretleri; her bulgu dosyası, \
+                      satırı ya da JSON işaretçisi ve ne yazılacağıyla. Bu bilgisayardaki yolu okur, hiçbir şey yazmaz."
+            .into(),
+        input: object(
+            json!({ "path": { "type": "string", "description": "Eklentinin klasörü ya da .kek dosyası, mutlak yol" } }),
+            &["path"],
+        ),
+        read_only: true,
+        destructive: false,
+    });
+    list.push(Tool {
         name: "processing.list",
         title: "İşlem araçları",
         description: "İşlemler'in araçları (tampon, kesişim, birleştirme …), parametreleriyle (cad.processing.tools)."
@@ -621,6 +635,7 @@ pub fn call(
         "audit.run" => audit(host, guard, args, false),
         "audit.apply_fix" => audit(host, guard, args, true),
         "processing.list" => processing_tools(host),
+        "extension.verify" => extension_verify(args),
         "processing.describe" => {
             let tool = text(args, "tool")?;
             let tools = processing_tools(host)?;
@@ -993,4 +1008,92 @@ fn processing(
     }
     let input = args.get("input").cloned().unwrap_or_else(|| json!({}));
     guarded(host, guard, command, false, input, args)
+}
+
+/// The folders an extension's working folder has that no package carries, not read at all (a `.venv` holds hundreds
+/// of megabytes); the packer's own rules leave out the rest.
+const NOT_READ: &[&str] = &[
+    ".venv",
+    ".git",
+    ".hg",
+    ".svn",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".nox",
+    "node_modules",
+    ".ipynb_checkpoints",
+];
+
+/// `extension.verify` (plan/eklenti.md ADIM 21, docs/adr/8057 §18): an extension's working folder through
+/// `kentos_extensions::verify`, or a `.kek` file through the package's check; nothing runs, nothing is written.
+fn extension_verify(args: &Value) -> Result<Value, HeadlessError> {
+    let path = std::path::PathBuf::from(text(args, "path")?);
+    let limits = kentos_extensions::Limits::default();
+    let unreadable = |e: std::io::Error| {
+        HeadlessError::new(
+            "file_not_found",
+            format!("{} okunamadı: {e}", path.display()),
+        )
+    };
+    if path.is_file() {
+        let bytes = std::fs::read(&path).map_err(unreadable)?;
+        let i = kentos_extensions::inspect(&bytes, &limits);
+        return Ok(json!({
+            "valid": i.is_valid(),
+            "extension": i.manifest.as_ref().map(|m| json!({ "id": m.id, "version": m.version.to_string(), "name": m.name })),
+            "digest": i.digest,
+            "problems": i.problems,
+            "warnings": i.warnings,
+            "next": "Paketin kaynağını doğrulamak için klasörünü verin: Python işaretleri de denetlenir.",
+        }));
+    }
+    let mut files = std::collections::BTreeMap::new();
+    let mut stack = vec![path.clone()];
+    while let Some(dir) = stack.pop() {
+        for entry in std::fs::read_dir(&dir).map_err(unreadable)? {
+            let entry = entry.map_err(unreadable)?;
+            let at = entry.path();
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if at.is_dir() {
+                if !NOT_READ.contains(&name.as_str()) {
+                    stack.push(at);
+                }
+                continue;
+            }
+            if files.len() >= limits.entries {
+                return Err(HeadlessError::new(
+                    "input_too_large",
+                    format!(
+                        "Klasörde {} dosyadan fazlası var: bir paket bu kadarını taşımaz.",
+                        limits.entries
+                    ),
+                ));
+            }
+            let Some(key) = at
+                .strip_prefix(&path)
+                .ok()
+                .and_then(|p| p.to_str())
+                .map(|p| p.replace('\\', "/"))
+            else {
+                continue;
+            };
+            files.insert(key, std::fs::read(&at).map_err(unreadable)?);
+        }
+    }
+    let v = kentos_extensions::verify(&files, &limits);
+    Ok(json!({
+        "valid": v.is_valid(),
+        "extension": v.manifest.as_ref().map(|m| json!({ "id": m.id, "version": m.version.to_string(), "name": m.name })),
+        "digest": v.digest,
+        "problems": v.problems,
+        "warnings": v.warnings,
+        "next": if v.is_valid() {
+            "Doğrulandı: `kentos kek pack` paketler; kurulum kullanıcının incelemesiyle olur."
+        } else {
+            "Sorunları dosya ve satırlarıyla düzeltip yeniden doğrulayın."
+        },
+    }))
 }

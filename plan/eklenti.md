@@ -983,6 +983,11 @@ ve AI/MCP `audit.run`.
 
 [argon ADIM 21; EKL-06; PY-AI-01…14; ECO-API-01…14; ADIM 15'ten kalan `kentos://sdk/ai-kek-pack`]
 
+**Durum (14 Kasım): birinci dilim — `kek verify` / `extension.verify`** (ADR 8057 §18): pencere açmadan Kapı 1 (paket),
+Kapı 2 (Python işaretleri, tehlikeli çağrı uyarıları) ve Kapı 4 (satırlı, önerili rapor); komut satırı ve ajan aracı
+aynı kod. Kalan: Kapı 3 (sentetik çizimde kuru koşu), `extension.blueprint`, `kentos://sdk/ai-kek-pack`,
+`hot_reload`/`preview_render`, üretilen SDK tip imzaları ve şemalar.
+
 - [ ] **Kod üretimi:** Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
   `kentos.ui` bileşen şeması, `ProjectAuditFacts` şeması ve manifest/araç/panel JSON Schema'ları üretilir; üretilmiş
   dosya elle düzeltilmez, kaynak ve üretici aynı commit'te güncellenir; sapma derleme hattında hatadır [ECO-API-01, 05].

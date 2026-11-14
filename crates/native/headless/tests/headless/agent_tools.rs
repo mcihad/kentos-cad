@@ -548,3 +548,66 @@ fn the_checks_and_the_processing_tools_have_doors_of_their_own() {
         "a processing run writes: planned first"
     );
 }
+
+#[test]
+fn an_agent_verifies_an_extensions_folder_before_packing_it() {
+    // plan/eklenti.md ADIM 21 (docs/adr/8057 §18): `extension.verify` reads a working folder without running it; each
+    // finding says its file, its line and what to write.
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../samples/eklenti-vitrini/eklenti");
+    let answer = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.verify",
+        &json!({ "path": root.to_string_lossy() }),
+    )
+    .unwrap();
+    assert_eq!(answer["valid"], true, "{answer:#}");
+    assert_eq!(answer["extension"]["id"], "tr.ornek.vitrin");
+    // A copy whose audit rule lost its mark.
+    let copy = std::env::temp_dir().join(format!("kentos-verify-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&copy);
+    for entry in walk(&root) {
+        let to = copy.join(entry.strip_prefix(&root).unwrap());
+        std::fs::create_dir_all(to.parent().unwrap()).unwrap();
+        std::fs::copy(&entry, &to).unwrap();
+    }
+    let logic = copy.join("src/vitrin/logic.py");
+    let text = std::fs::read_to_string(&logic).unwrap();
+    std::fs::write(&logic, text.replace("@ext.audit(\"yapi-no\")\n", "")).unwrap();
+    let answer = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.verify",
+        &json!({ "path": copy.to_string_lossy() }),
+    )
+    .unwrap();
+    assert_eq!(answer["valid"], false);
+    let problem = &answer["problems"][0];
+    assert_eq!(problem["code"], "python_decorator_missing");
+    assert_eq!(problem["file"], "src/vitrin/logic.py");
+    assert!(
+        problem["message"]
+            .as_str()
+            .unwrap()
+            .contains("@ext.audit(\"yapi-no\")")
+    );
+    let _ = std::fs::remove_dir_all(&copy);
+}
+
+fn walk(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let mut out = Vec::new();
+    for entry in std::fs::read_dir(dir).unwrap() {
+        let path = entry.unwrap().path();
+        if path.is_dir() {
+            if path.file_name().is_some_and(|n| n != "__pycache__") {
+                out.extend(walk(&path));
+            }
+        } else {
+            out.push(path);
+        }
+    }
+    out
+}

@@ -27,9 +27,11 @@ mod pointer;
 mod problem;
 mod python;
 mod text;
+pub mod verify;
 pub mod version;
 
 pub use archive::{Inspection, Limits, Opened, Packed, inspect, open, pack};
 pub use compat::{Host, Os, SDK_PROTOCOL, compatible};
 pub use manifest::Manifest;
 pub use problem::Problem;
+pub use verify::{Verification, verify};

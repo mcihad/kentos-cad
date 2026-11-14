@@ -20,6 +20,7 @@ kentos-expression = { path = "../../shared/expression" }
 kentos-native-application = { path = "../application", default-features = false }
 kentos-project = { path = "../project" }
 kentos-kcad = { path = "../../shared/kcad" }
+kentos-extensions = { path = "../../shared/extensions" }
 # The DXF writer and, for the PDF, the sheet core (docs/adr/0252).
 kentos-formats = { path = "../../shared/formats" }
 kentos-dwg = { path = "../dwg" }

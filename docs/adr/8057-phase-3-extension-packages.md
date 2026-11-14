@@ -1224,3 +1224,27 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **Uygularken verilen kararlar:** olgular bütün katmanlar (manifest katman adı istemiyor); sınır 50 000 nesne, 10 000
   bulgu, 500 satır, 120 sn; düzeltme `document.write` ister; sekme alt panelde ve her programda; ADIM 20'nin ortak
   kural motoru (`ProjectAuditFacts`, bulut işi, PAİY kuralları Python'da) sonraki dilimlerde.
+
+## §18. `kek verify` ve `extension.verify`: pencere açmadan doğrulama (`ADIM 21`, birinci dilim; EKL-06)
+
+**14 Kasım.** Kod: `crates/shared/extensions/src/verify.rs` (`verify`, `Verification`), `apps/cli/src/main.rs`
+(`kentos kek verify`), `crates/native/headless/src/agent_tools.rs` (`extension.verify`: MCP ve Asistan).
+
+- **Kapı 1, paket:** paketleyicinin bütün denetimi (yollar, manifest ve başvuruları, yeteneklerin kapsamı, bütünlük
+  listesi); işleyicinin modülü pakette yoksa `handler_missing` burada.
+- **Kapı 2, Python:** manifestin her giriş noktası (komut, İşlemler aracı, denetim, ifade işlevi, harita aracı) için
+  işleyicinin işlevi `src/` altındaki modülde bulunur ve üstünde türünün ve yerel kimliğinin işareti tek başına durur
+  (`@ext.audit("yapi-no")`); eksik işaret, yanlış tür, yanlış kimlik, iki işaret ve iki işleve verilmiş aynı kimlik
+  sorundur. Uyarılar: `network` yeteneği istemeden ağ kitaplığı (socket, requests, urllib, httpx, aiohttp, http),
+  işletim sistemi komutu (subprocess, os.system, os.popen), `eval`/`exec`. Kaynak metin olarak okunur; içe aktarılmaz,
+  çalıştırılmaz (paylaşılan crate, bağımlılıksız, wasm'da da derlenir).
+- **Kapı 4, rapor:** her bulgu kodu, dosyası, satırı ya da JSON işaretçisi ve ne yazılacağıyla: "src/vitrin/logic.py
+  satır 155: “yapi_no” işaretsiz: üstüne @ext.audit("yapi-no") yazın."; yanlış yazılmış işleyiciye en yakın işlev
+  önerilir ("En yakını: “taks”", düzenleme uzaklığı ya da en az dört harflik ortak baş).
+- **Yüzeyler:** `kentos kek verify KLASÖR [--json]` (doğrulanınca içerik özeti; sorunda çıkış 1); ajan aracı
+  `extension.verify {path}` klasör ya da `.kek` alır, yalnız okur. ADR 8056 §2'nin "`extension.*` Faz 3'e kaldı"
+  notunun ilk karşılığı.
+- **Kapı 3** (sentetik çizimde kuru koşu) KentOS'un Python'unu ister: masaüstüyle sonraki dilim.
+- **Sınamalar:** extensions 3 (Vitrin her kapıdan geçer; işaretsiz, yanlış tür, yanlış kimlik, eksik işlev ve önerisi,
+  pakette olmayan modül, iki kez kimlik; ağ ve işletim sistemi uyarıları, ad içindeki sözcük çağrı sayılmaz), headless
+  ajan araçları 1 (Vitrin klasörü geçerli; işaretini yitiren kopya satırıyla reddedilir).

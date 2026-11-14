@@ -23,6 +23,8 @@ use kentos_extensions::{Limits, Manifest, Problem, catalog, inspect, pack};
 const USAGE: &str = "Kullanım:
   kentos kek inspect <paket.kek> [--json]           paketi kodunu çalıştırmadan denetler
   kentos kek pack <klasör> [-o <paket.kek>] [--json] klasörü denetleyip paketler
+  kentos kek verify <klasör> [--json]               klasörü pencere açmadan doğrular: paket, Python işaretleri,
+                                                    satırlı rapor (yapay zekâ ajanlarının tek adımda düzelteceği)
   kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
   kentos kek dump [--root <klasör>]                 kurulu eklentileri ve katkılarını JSON olarak döker
   kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
@@ -55,6 +57,7 @@ fn main() -> ExitCode {
     match args.as_slice() {
         ["kek", "inspect", file] => inspect_file(Path::new(file), json),
         ["kek", "pack", folder] => pack_folder(Path::new(folder), None, json),
+        ["kek", "verify", folder] => verify_folder(Path::new(folder), json),
         ["kek", "pack", folder, "-o", out] => {
             pack_folder(Path::new(folder), Some(PathBuf::from(out)), json)
         }
@@ -169,6 +172,57 @@ fn read_folder(root: &Path) -> Result<Folder, String> {
     }
     not_read.sort();
     Ok((files, not_read))
+}
+
+/// `kek verify` (plan/eklenti.md ADIM 21, docs/adr/8057 §18): the folder through the package's gates and its Python's
+/// marks, each finding with its file, its line or pointer and what to write; nothing is packed or run.
+fn verify_folder(folder: &Path, json: bool) -> ExitCode {
+    let (files, _) = match read_folder(folder) {
+        Ok(read) => read,
+        Err(message) => return fail(message),
+    };
+    let v = kentos_extensions::verify(&files, &Limits::default());
+    if json {
+        println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
+    } else {
+        if let Some(m) = &v.manifest {
+            println!("{} {} — {}", m.id, m.version, m.name);
+        }
+        let line = |p: &Problem| {
+            let place = [p.file.as_deref(), p.at.as_deref()]
+                .into_iter()
+                .flatten()
+                .collect::<Vec<_>>()
+                .join(" ");
+            if place.is_empty() {
+                format!("  • {} ({})", p.message, p.code)
+            } else {
+                format!("  • {place}: {} ({})", p.message, p.code)
+            }
+        };
+        for (title, list) in [("Sorunlar", &v.problems), ("Uyarılar", &v.warnings)] {
+            if !list.is_empty() {
+                println!("{title}:");
+                for p in list.iter() {
+                    println!("{}", line(p));
+                }
+            }
+        }
+        if v.is_valid() {
+            println!(
+                "Doğrulandı: {} uyarı. İçerik özeti {}.",
+                v.warnings.len(),
+                v.digest.as_deref().unwrap_or("-")
+            );
+        } else {
+            println!("Doğrulanmadı: {} sorun.", v.problems.len());
+        }
+    }
+    if v.is_valid() {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    }
 }
 
 fn pack_folder(folder: &Path, out: Option<PathBuf>, json: bool) -> ExitCode {
