@@ -139,13 +139,15 @@ def place(w, at, width):
     return out
 
 
-def opening(id, w, at, width, form, sill=None, head=None, number=None):
+def opening(id, w, at, width, form, sill=None, head=None, number=None, depth=None):
     o = {"kind": "opening", "id": id, "layerId": "kapi", "attrs": {}, "host": UID(w["id"]), "at": at,
          "width": width, "form": form}
     if sill is not None:
         o["sill"] = sill
     if head is not None:
         o["head"] = head
+    if depth is not None:
+        o["depth"] = depth
     if number:
         o["number"] = number
     o["place"] = place(w, at, width)
@@ -182,7 +184,7 @@ def entities():
         mark(10, "section", LINES[10], "B"),
         mark(11, "section", [(-1.0, -1.0), (3.0, -1.0), (3.0, 5.0)], "C"),
         mark(12, "section", [(9.0, 0.0), (9.0004, 0.0)], "D"),
-        mark(13, "elevation", [(3.0, 7.0), (3.0, 6.0)], "E"),
+        mark(13, "elevation", [(3.0, 7.0)], "E"),  # an elevation is one point and its look (docs/adr/8043)
         {"kind": "text", "id": 14, "layerId": "cizim", "attrs": {}, "p": P(30, 30), "text": "Not", "height": 0.25,
          "rotation": 0.0},
         {"kind": "viewmark", "id": 15, "layerId": "isaret", "attrs": {}, "form": "detail", "points": [P(1.0, 1.0)],
@@ -194,15 +196,17 @@ def left_out_entities():
     """The drawing with what a section leaves out: a curved wall, a door without head, a niche, a ramp and a stair
     outside the slab."""
     ents = entities()
-    curved = wall(21, (8, 0), (10, 0), bulges=[0.3])
-    straight = wall(22, (8, 4), (12, 4))
+    # Their ids follow the drawing's (16 …): a KCAD v2 setup's object ids are its file order.
+    n = len(ents)
+    curved = wall(n + 1, (8, 0), (10, 0), bulges=[0.3, 0.0])  # a bulge for each point
+    straight = wall(n + 2, (8, 4), (12, 4))
     ents += [
         curved, straight,
-        opening(23, straight, 1.0, 0.9, "door", number="K02"),
-        opening(24, straight, 3.0, 0.6, "niche", sill=0.5, head=1.5),
-        {"kind": "ramp", "id": 25, "layerId": "cizim", "attrs": {}, "pts": [P(14, 0), P(17, 0)], "width": 1.2,
+        opening(n + 3, straight, 1.0, 0.9, "door", number="K02"),
+        opening(n + 4, straight, 3.0, 0.6, "niche", sill=0.5, head=1.5, depth=0.1),  # a niche has its depth
+        {"kind": "ramp", "id": n + 5, "layerId": "cizim", "attrs": {}, "pts": [P(14, 0), P(17, 0)], "width": 1.2,
          "rise": 0.15, "slope": 5.0},
-        {"kind": "stair", "id": 26, "layerId": "cizim", "attrs": {}, "pts": [P(20, 0), P(20, 3)], "width": 1.0,
+        {"kind": "stair", "id": n + 6, "layerId": "cizim", "attrs": {}, "pts": [P(20, 0), P(20, 3)], "width": 1.0,
          "risers": 16, "riserHeight": 0.1875, "tread": 0.25, "arch": {"level": "zemin"}},
     ]
     return ents
@@ -220,7 +224,7 @@ def setup(ents):
                    layer("isaret", "İşaret"), layer("cizim", "Çizim")],
         "activeLayer": "cizim",
         "styles": {"items": [], "categories": []},
-        "blocks": [],
+        # No `blocks`: KCAD v2 does not write an empty list (kcad_v2_reference refused the setup).
         "entities": ents,
     }
 
