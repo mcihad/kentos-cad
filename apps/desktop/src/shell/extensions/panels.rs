@@ -20,6 +20,7 @@ use std::collections::BTreeMap;
 
 use iced::widget::{column, container, row, scrollable};
 use iced::{Element, Fill, Task};
+use kentos_extensions::manifest::PanelSide;
 use kentos_extensions::ui_panel::{Component, PanelDefinition};
 use kentos_ui::label;
 use kentos_ui::widget::Form;
@@ -39,6 +40,8 @@ pub(crate) struct OpenPanel {
     pub(crate) ext: String,
     pub(crate) local: String,
     pub(crate) definition: PanelDefinition,
+    /// The side of the window its manifest asks for (`entrypoints.panels[].side`).
+    pub(crate) side: PanelSide,
     /// What each text and number field holds, as typed.
     pub(crate) texts: BTreeMap<String, String>,
     pub(crate) checks: BTreeMap<String, bool>,
@@ -94,6 +97,7 @@ impl OpenPanel {
             ext: ext.to_owned(),
             local: local.to_owned(),
             definition,
+            side: PanelSide::Right,
             texts: BTreeMap::new(),
             checks: BTreeMap::new(),
             choices: BTreeMap::new(),
@@ -326,26 +330,47 @@ impl App {
             );
             return Task::none();
         };
-        self.extensions.panel = Some(OpenPanel::new(ext, local, definition));
+        let mut panel = OpenPanel::new(ext, local, definition);
+        panel.side = entry.side;
+        self.extensions.panel = Some(panel);
         self.show_extension_panel()
     }
 
-    /// The dock shows the Eklenti tab, the side panels shown if F4 hid them.
+    /// The dock shows the Eklenti tab on the side the open panel's manifest asks for (right: beside Katmanlar, the side
+    /// panels shown if F4 hid them; left: beside the map, Katmanlar staying in sight; bottom: under the map). A tab
+    /// KentOS docked moves when another panel asks for another side; one the user moved stays where it is.
     pub(crate) fn show_extension_panel(&mut self) -> Task<Message> {
         use crate::app::Panel;
+        use kentos_ui::widget::docking::{Event as Dock, Side, Slot, Target};
         if !self.open_panel(Panel::Extension) {
             return Task::none();
         }
-        if !self.right_panel_shown() {
+        let wanted = match self
+            .extensions
+            .panel
+            .as_ref()
+            .map_or(PanelSide::Right, |p| p.side)
+        {
+            PanelSide::Left => Side::Left,
+            PanelSide::Right => Side::Right,
+            PanelSide::Bottom => Side::Bottom,
+        };
+        if wanted == Side::Right && !self.right_panel_shown() {
             self.toggle_right_panel();
         }
+        if let Some(Slot::Docked(side, _)) = self.docks.slot(Panel::Extension)
+            && side != wanted
+            && self.extensions.panel_placed == Some(side)
+        {
+            self.docks.close(Panel::Extension);
+        }
         if !self.docks.contains(Panel::Extension) {
-            use kentos_ui::widget::docking::{Event as Dock, Side, Slot, Target};
-            self.docks.show(Panel::Extension, Side::Right);
-            // Beside Katmanlar, in the side's tall stack: `show` puts a new panel at the end of the side's last stack,
-            // Öznitelikler's, where a panel of a form and a table had a third of the height (measured in the real
-            // window, 14 November 2026).
-            if let Some(Slot::Docked(side, index)) = self.docks.slot(Panel::Layers)
+            self.docks.show(Panel::Extension, wanted);
+            // Right: beside Katmanlar, in the side's tall stack: `show` puts a new panel at the end of the side's last
+            // stack, Öznitelikler's, where a panel of a form and a table had a third of the height (measured in the
+            // real window, 14 November 2026).
+            if wanted == Side::Right
+                && let Some(Slot::Docked(side, index)) = self.docks.slot(Panel::Layers)
                 && self.docks.slot(Panel::Extension) != Some(Slot::Docked(side, index))
             {
                 let end = self
@@ -358,11 +383,9 @@ impl App {
                     Target::Tab(Slot::Docked(side, index), end),
                 ));
             }
+            self.extensions.panel_placed = Some(wanted);
         }
-        self.docks
-            .update(kentos_ui::widget::docking::Event::Selected(
-                Panel::Extension,
-            ));
+        self.docks.update(Dock::Selected(Panel::Extension));
         Task::none()
     }
 

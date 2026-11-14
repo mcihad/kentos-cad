@@ -65,8 +65,9 @@ Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "s
 
 ## Panel (`ui/<id>.panel.json`)
 
-Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.panels` (`id`, `title`, `side`,
-`definition`), şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title` ve `body`
+Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.panels` (`id`, `title`, `side`: right
+Katmanlar'ın yanında, left haritanın solunda, bottom altında; kullanıcının taşıdığı yer korunur, `definition`),
+şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title` ve `body`
 bileşenleri: `text` (`text`), `textField` (`id`, `label`, `placeholder`, `value`), `numberField` (`id`, `label`,
 `min`, `max`, `unit`, `value`), `select` (`id`, `label`, `options: [{value, label}]`, `value`), `checkbox` (`id`,
 `label`, `value`), `layerPicker` (`id`, `label`, `geometry`: point, line, area, annotation; açık çizimin katmanları,

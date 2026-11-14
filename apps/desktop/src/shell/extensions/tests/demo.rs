@@ -870,6 +870,44 @@ fn a_commands_progress_shows_in_its_notice_and_its_panel() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// docs/adr/8057 §24: a panel opens on the side its manifest asks for: Vitrin's Değer say on the left, Yapı ara on the
+/// right beside Katmanlar; the tab KentOS docked follows the next panel's side, the one the user moved stays.
+#[test]
+fn a_panel_opens_on_its_side_and_a_moved_tab_stays() {
+    use crate::app::Panel;
+    use kentos_ui::widget::docking::{Event as Dock, Side, Slot, Target};
+
+    let dir = temp("kenar");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let side = |gis: &App| match gis.docks.slot(Panel::Extension) {
+        Some(Slot::Docked(side, _)) => Some(side),
+        _ => None,
+    };
+    let open = |gis: &mut App, local: &str| {
+        let _ = gis.extensions_event(Event::OpenPanel("tr.ornek.vitrin".into(), local.into()));
+    };
+    open(&mut gis, "deger-paneli");
+    assert_eq!(side(&gis), Some(Side::Left), "Değer say asks for the left");
+    open(&mut gis, "yapi-paneli");
+    assert_eq!(side(&gis), Some(Side::Right));
+    assert_eq!(
+        gis.docks
+            .slot(Panel::Extension)
+            .zip(gis.docks.slot(Panel::Layers))
+            .map(|(e, l)| e == l),
+        Some(true),
+        "beside Katmanlar"
+    );
+    // The user puts it under the map: it stays there for the next panel.
+    gis.docks
+        .update(Dock::Moved(Panel::Extension, Target::Edge(Side::Bottom)));
+    assert_eq!(side(&gis), Some(Side::Bottom));
+    open(&mut gis, "deger-paneli");
+    assert_eq!(side(&gis), Some(Side::Bottom), "the user's move is kept");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 /// docs/adr/8057 §24: an item's `when` is checked as the window is drawn: MEBİS's grave tool waits for its layers
 /// (`layerSchema: mezar_parsel`) and says so; once a layer of that id is in the drawing it can be pressed. Its İşlemler
 /// tool's button reads the tool's own label.

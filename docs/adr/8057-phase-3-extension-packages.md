@@ -1518,5 +1518,9 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   - **Durdur kullanıcının seçimidir, hata değil:** panelde kırmızı yazılıyordu (bildirim bilgi); artık panelin sözleri
     üç işaretli (bitti, durduruldu, çalışmadı) ve durdurma bilgi işaretiyle yazılır. Gerçek pencerede %40'ta çubuk,
     panelin Durdur'uyla "Durduruldu; çizime yazdıkları geri alındı" ve bildirimde "Çizimde bir şey değişmedi".
-- **Kalan (ADIM 22):** ağaç, kart bileşenleri; sol ve alt yerleşim (`side` şimdilik
-  sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince).
+- **Yer** (`entrypoints.panels[].side`; Vitrin 1.0.12, `18-kenar`): `right` Katmanlar'ın yığınında (F4'le gizlenen
+  yan paneller açılır), `left` haritanın solunda (Katmanlar görünür kalır: panelle katman seçerken listeye bakılır),
+  `bottom` haritanın altında. Tek Eklenti sekmesi var: KentOS'un yerleştirdiği yerdeyken başka kenar isteyen panel
+  açılırsa sekme oraya taşınır; **kullanıcının taşıdığı sekme yerinde kalır** (KentOS son yerleştirdiği kenarı
+  bilir, `panel_placed`). Gerçek pencerede Değer say solda, ardından Yapı ara Katmanlar'ın yığınında.
+- **Kalan (ADIM 22):** ağaç, kart bileşenleri; birden çok açık panel; panelin kendi olayları (değer değişince).

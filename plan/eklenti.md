@@ -1094,7 +1094,7 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
   alanı, seçim, onay, düğme, tablo) dock'un Eklenti sekmesinde; düğme bir komutu panelin değerleriyle (`ctx.params`)
   çalıştırır, satırları tabloya; Kapı 1 denetimi; katman, alan ve nesne seçicileri (alan seçici bağlı katmanın
   alanlarını, nesne seçici çizimdeki seçimi alır); düğmenin komutu ilerlemesini panelde ve bildiriminde gösterir
-  (çubuk, Durdur); kalan: ağaç, sol/alt yerleşim.* Eklentinin
+  (çubuk, Durdur); `side` sol/sağ/alt (kullanıcının taşıdığı yer korunur); kalan: ağaç, birden çok açık panel.* Eklentinin
   JSON'la bildirdiği `Table`, `Tree`, `Form`, `LayerPicker`, `FeaturePicker`, `Progress` bileşenleri sağ/alt dock ya da
   kalıcı pencere olarak açılır.
 - [ ] **MapTool köprüsü:** manifestteki yakalama/kenetleme ve şablon önizleme kuralları (ör. 2,20 × 1,10 m mezar

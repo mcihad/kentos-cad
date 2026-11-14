@@ -1,0 +1,17 @@
+# Panelin yeri: Değer say manifestinde sol ister (side: left), haritanın solunda açılır ve Katmanlar sağda görünür
+# kalır; Yapı ara sağ ister, KentOS'un yerleştirdiği Eklenti sekmesi Katmanlar'ın yığınına geçer. Kullanıcının
+# taşıdığı sekme yerinde kalır. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 501 57    # Değer say
+wait 2000
+shot 18-sol
+click 417 75    # Yapı ara
+wait 2000
+shot 18-sag

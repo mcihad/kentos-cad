@@ -139,6 +139,9 @@ pub(crate) struct Extensions {
     pub(crate) panel: Option<panels::OpenPanel>,
     /// A panel's button pressed: what its command's next launch gives the code, and where the rows go.
     pub(crate) panel_call: Option<panels::PanelCall>,
+    /// Where KentOS last docked the Eklenti tab for a panel's `side`: moved for another side only while it is still
+    /// there (the user's own move is kept).
+    pub(crate) panel_placed: Option<kentos_ui::widget::docking::Side>,
 }
 
 impl Default for Extensions {
@@ -176,6 +179,7 @@ impl Default for Extensions {
             look_wanted: None,
             panel: None,
             panel_call: None,
+            panel_placed: None,
         }
     }
 }

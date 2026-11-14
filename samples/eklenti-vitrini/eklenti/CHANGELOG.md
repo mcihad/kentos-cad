@@ -1,5 +1,9 @@
 # Değişiklikler
 
+## 1.0.12 — 14 Kasım 2026
+
+- "Değer say" haritanın solunda açılır (`side: "left"`): katman seçerken sağdaki Katmanlar görünür kalır.
+
 ## 1.0.11 — 14 Kasım 2026
 
 - "Yapı ara"ya "Yapıları numarala" düğmesi: komutun `ctx.progress`'i sürerken panelde (çubuk, Durdur) ve bildiriminde
