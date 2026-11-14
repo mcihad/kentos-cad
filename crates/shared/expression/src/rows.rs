@@ -459,6 +459,18 @@ pub fn evaluate_rows_on<'s>(
     want: As,
     shape: impl Fn(usize) -> Option<&'s Shape>,
 ) -> Result<Column, String> {
+    evaluate_rows_on_with(e, input, want, shape, None)
+}
+
+/// `evaluate_rows_on` with the host's answers to the extensions' functions (external.rs): a label's or a style's,
+/// whose host answers from what it already has and never waits (docs/adr/8057 §8).
+pub fn evaluate_rows_on_with<'s>(
+    e: &Expr,
+    input: &RowsInput,
+    want: As,
+    shape: impl Fn(usize) -> Option<&'s Shape>,
+    externals: Option<&dyn crate::external::ExternalCalls>,
+) -> Result<Column, String> {
     let layout = Layout::new(
         e.fields.len(),
         Needs {
@@ -474,7 +486,18 @@ pub fn evaluate_rows_on<'s>(
         },
         shapes: Shapes::new(shape),
     };
-    Ok(column(e, &source, input.n, want))
+    match externals.filter(|_| !e.externals().is_empty()) {
+        Some(externals) => Ok(column(
+            e,
+            &crate::external::WithExternals {
+                inner: &source,
+                externals,
+            },
+            input.n,
+            want,
+        )),
+        None => Ok(column(e, &source, input.n, want)),
+    }
 }
 
 pub(crate) fn copy<'a>(input: &RowsInput<'a>) -> RowsInput<'a> {

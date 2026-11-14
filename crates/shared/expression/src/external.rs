@@ -230,6 +230,30 @@ mod tests {
     }
 
     #[test]
+    fn a_labels_table_with_shapes_is_answered_by_the_host() {
+        // The way a label's text is evaluated (scene-query): the table's fields, the shapes the caller holds.
+        let e = compile_with(&format!("{NAME}(Ad)"), &schema()).unwrap();
+        let input = RowsInput {
+            n: 2,
+            texts: "ab",
+            text_lens: &[1, 1],
+            numbers: &[],
+            measures: &[],
+            scale: f64::NAN,
+        };
+        let host = Doubler::default();
+        let c = crate::rows::evaluate_rows_on_with(&e, &input, As::Value, |_| None, Some(&host))
+            .unwrap();
+        assert_eq!(c.texts, "aabb");
+        let c = crate::rows::evaluate_rows_on(&e, &input, As::Value, |_| None).unwrap();
+        assert_eq!(
+            c.kinds,
+            [crate::rows::EMPTY, crate::rows::EMPTY],
+            "without a host: empty"
+        );
+    }
+
+    #[test]
     fn one_object_is_asked_as_a_row() {
         struct One<'h>(&'h Doubler);
         impl crate::Scope for One<'_> {
