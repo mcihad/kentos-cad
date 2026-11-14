@@ -16,6 +16,7 @@ use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::label_audit::{AuditedLabel, audit};
+use kentos_geometry_core::store::legible::LabelSize;
 use kentos_geometry_core::store::placing::{ObjectLabels, Pin, PlaceOptions};
 use kentos_geometry_core::vec2::Vec2;
 
@@ -27,12 +28,29 @@ use crate::label_texts::{label_defaults_json, label_layers_json, layer_texts, ob
 /// A CSS pixel of the paper, millimetres: the unit a sheet's map lays its labels out in (`kentos_plot::maps::PX_MM`).
 const PAPER_PX_MM: f64 = 25.4 / 96.0;
 /// The most pixels a window may have: the engine places in a page this size.
-const MOST_PIXELS: f64 = 1.0e8;
+pub const MOST_PIXELS: f64 = 1.0e8;
 /// The largest paper scale a report takes.
 const MOST_SCALE: u32 = 1_000_000;
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
+}
+
+/// The pixels a metre a sheet's map lays its labels out at 1:`n` (`paperScale`).
+pub fn paper_px_per_metre(n: u32) -> f64 {
+    1000.0 / (PAPER_PX_MM * f64::from(n))
+}
+
+/// What a host adds to a report (14 November 2026, the owner: "denetle ölçeği de çalışmıyor olabilir"): the labelling
+/// of one layer as its window has it, not yet written, and how the drawing's texts are sized on its screen. Denetle
+/// counted the labelling the drawing had, so a change made in the window counted only after Kaydet.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Draft<'a> {
+    /// A layer as the window would write it (`layers_labels::plan`'s node): its labels are counted, not the drawing's.
+    pub layer: Option<&'a LayerNode>,
+    /// How the drawing's texts are sized on the host's screen; none: the project's own rule. On paper (`paperScale`)
+    /// they are their true size.
+    pub texts: Option<LabelSize>,
 }
 
 /// The scale as pixels per metre and the window, checked in the contract's order; the layers asked for.
@@ -44,7 +62,7 @@ struct Asked {
 fn check(doc: &Document, input: &LabelsReport) -> Result<Asked, Stop> {
     let scale = match (input.px_per_metre, input.paper_scale) {
         (Some(px), None) if px.is_finite() && px > 0.0 => px,
-        (None, Some(n)) if (1..=MOST_SCALE).contains(&n) => 1000.0 / (PAPER_PX_MM * f64::from(n)),
+        (None, Some(n)) if (1..=MOST_SCALE).contains(&n) => paper_px_per_metre(n),
         (Some(_), None) => {
             return Err(fail(
                 codes::INVALID_SCALE,
@@ -149,8 +167,13 @@ pub struct GivenBand {
 
 /// The store of `doc` with what the label engine reads: the layers' labelling, the objects' texts and pins. The rows
 /// round each bound layer's part that the layer holds no object for hold room as obstacles (docs/adr/0578 §1): the
-/// `given` bands when a host has them, else read from the files; what each band gave is the second answer.
-pub(crate) fn label_store(doc: &Document, given: Option<&[GivenBand]>) -> (Store, Vec<Band>) {
+/// `given` bands when a host has them, else read from the files; what each band gave is the second answer. A `draft`
+/// layer stands for the drawing's layer of its id: its labelling and texts are read, not the drawing's.
+pub(crate) fn label_store<'a>(
+    doc: &'a Document,
+    given: Option<&[GivenBand]>,
+    draft: Option<&'a LayerNode>,
+) -> (Store, Vec<Band>) {
     let mut store = crate::geometry_store::store_of(doc);
     let mut noted: Vec<Band> = Vec::new();
     for link in &doc.settings().sources {
@@ -193,6 +216,10 @@ pub(crate) fn label_store(doc: &Document, given: Option<&[GivenBand]>) -> (Store
         .leaves()
         .into_iter()
         .filter(|l| l.service.is_none())
+        .map(|l| match draft {
+            Some(d) if d.id == l.id => d,
+            _ => l,
+        })
         .collect();
     let _ = store.set_label_layers_json(&label_layers_json(&leaves));
     let ids: Vec<f64> = doc
@@ -262,9 +289,10 @@ fn report(
     doc: &Document,
     input: &LabelsReport,
     given: Option<&[GivenBand]>,
+    draft: Draft<'_>,
 ) -> Result<(LabelsReported, Vec<CommandWarning>), Stop> {
     let asked = check(doc, input)?;
-    let (store, bands) = label_store(doc, given);
+    let (store, bands) = label_store(doc, given, draft.layer);
     let mut warnings: Vec<CommandWarning> = Vec::new();
     let window = asked.window.or_else(|| store.extent(None));
     let Some(window) = window else {
@@ -290,15 +318,34 @@ fn report(
             max_y: window.max_y + 1.0,
         }
     };
-    let shown = store.place_labels(
-        &window,
-        asked.scale,
-        &[],
-        PlaceOptions {
-            unplaced: true,
-            hidden: true,
-        },
-    );
+    // The drawing's texts are placed first and keep the labels off them, as on the screen and the paper (docs/adr/0212
+    // §3.5): counted without them, a label the screen moves or leaves out for a text was counted placed where it is.
+    let size = match input.paper_scale {
+        Some(_) => LabelSize::Print,
+        None => draft.texts.unwrap_or_else(|| {
+            LabelSize::for_project(
+                "type",
+                doc.settings().plot_scale,
+                doc.settings().project_type() == Some(kentos_commands::Workspace::Cad),
+            )
+        }),
+    };
+    let shown = store
+        .labels_shown_parts(
+            &window,
+            asked.scale,
+            None,
+            size,
+            PlaceOptions {
+                unplaced: true,
+                hidden: true,
+            },
+            None,
+            None,
+            None,
+            None,
+        )
+        .placed;
     // The layers by their place in the tree, once.
     let leaves: Vec<&LayerNode> = doc.layers().leaves();
     let place: HashMap<&str, u32> = leaves
@@ -444,20 +491,22 @@ pub fn execute(
     answer(cx.doc, &input)
 }
 
-/// The counts, the bands a host has read already taken as they are (no file is read).
+/// The counts, the bands a host has read already taken as they are (no file is read), with what the host adds
+/// ([`Draft`]: its window's labelling of a layer, its screen's text sizes).
 pub fn execute_with(
     cx: &mut ExecutionContext<'_>,
     input: LabelsReport,
     given: &[GivenBand],
+    draft: Draft<'_>,
 ) -> CommandResult<LabelsReported> {
-    match report(cx.doc, &input, Some(given)) {
+    match report(cx.doc, &input, Some(given), draft) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
     }
 }
 
 fn answer(doc: &Document, input: &LabelsReport) -> CommandResult<LabelsReported> {
-    match report(doc, input, None) {
+    match report(doc, input, None, Draft::default()) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
     }

@@ -117,6 +117,7 @@ mod info_templates;
 mod kinds_timing;
 #[cfg(feature = "mod-arch")]
 mod templates_safe;
+mod labels_report_draft;
 mod layer_types;
 #[cfg(feature = "mod-gis")]
 mod layers_find_cmd;

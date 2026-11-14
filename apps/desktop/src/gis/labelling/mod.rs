@@ -311,7 +311,7 @@ impl App {
             dictionary: text_editor::Content::new(),
             lines: Vec::new(),
             ready: false,
-            report_at: 0,
+            report_at: self.gis.labelling_report_at,
         };
         w.rebuild(false);
         self.labelling_check(&mut w);
@@ -532,6 +532,7 @@ impl App {
             }
             Event::ReportAt(i) => {
                 w.report_at = i;
+                self.gis.labelling_report_at = i;
                 w.lines = self.labelling_report(&w);
                 self.gis.labelling = Some(w);
                 return Task::none();
@@ -547,30 +548,61 @@ impl App {
     }
 
     /// Denetle: how the engine places this layer's labels in the view at its scale, as `cad.labels.report` counts
-    /// them (docs/adr/0533 §6), with what a bound layer's loaded part means for them.
+    /// them (docs/adr/0533 §6), with what a bound layer's loaded part means for them. It counts the labelling as the
+    /// window has it, not yet written, with the drawing's texts as the screen sizes them keeping the labels off them
+    /// (14 November 2026: it counted the drawing's labelling, so a change counted only after Kaydet, and no text).
     fn labelling_report(&mut self, w: &Window) -> Vec<(Kind, String)> {
         let camera = self.viewport.camera.upright();
         let scopes = self.report_scopes();
         let scope = scopes.get(w.report_at).or(scopes.first());
+        let texts = self.label_size();
         let Some(doc) = self.document.as_mut() else {
             return Vec::new();
         };
         let view = camera.visible_bounds();
         let paper = scope.and_then(|s| s.paper);
+        let scale = paper.map_or(camera.scale, labels_report::paper_px_per_metre);
+        let mut window = scope
+            .and_then(|s| s.ground)
+            .unwrap_or([view.min_x, view.min_y, view.max_x, view.max_y]);
+        // A view far out counted at a paper scale is a page past what the engine places in (100 million pixels): its
+        // middle is counted and the summary says so. Denetle answered only that the window was too big.
+        let pixels = (window[2] - window[0]) * scale * (window[3] - window[1]) * scale;
+        let middle = (pixels > labels_report::MOST_PIXELS).then(|| {
+            let k = (0.98 * labels_report::MOST_PIXELS / pixels).sqrt();
+            let (x, y) = ((window[0] + window[2]) / 2.0, (window[1] + window[3]) / 2.0);
+            let (half_w, half_h) = (
+                (window[2] - window[0]) / 2.0 * k,
+                (window[3] - window[1]) / 2.0 * k,
+            );
+            window = [x - half_w, y - half_h, x + half_w, y + half_h];
+            (2.0 * half_w, 2.0 * half_h)
+        });
         let input = LabelsReport {
             px_per_metre: paper.is_none().then_some(camera.scale),
             paper_scale: paper,
-            window: Some(
-                scope
-                    .and_then(|s| s.ground)
-                    .unwrap_or([view.min_x, view.min_y, view.max_x, view.max_y]),
-            ),
+            window: Some(window),
             layers: Some(vec![w.layer.clone()]),
+        };
+        let draft = match layers_labels::plan(&ExecutionContext::new(&mut doc.model), &w.input()) {
+            CommandResult::Completed { output, .. } => output.node,
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => return vec![(Kind::Warn, error.message)],
+            _ => return Vec::new(),
         };
         // The bands round the parts are the ones the drawing is drawn with: no file is read on this thread.
         let bands = self.bands.given(&doc.model);
-        match labels_report::execute_with(&mut ExecutionContext::new(&mut doc.model), input, &bands)
-        {
+        let draft = labels_report::Draft {
+            layer: Some(&draft),
+            texts: Some(texts),
+        };
+        let mut lines = match labels_report::execute_with(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+            &bands,
+            draft,
+        ) {
             CommandResult::Completed { output, .. } => {
                 let t = &output.totals;
                 let mut lines = vec![(
@@ -634,7 +666,18 @@ impl App {
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => vec![(Kind::Warn, error.message)],
             _ => Vec::new(),
+        };
+        if let (Some((wide, high)), Some(n)) = (middle, paper) {
+            lines.push((
+                Kind::Info,
+                format!(
+                    "Görünüm 1:{n} ölçekte bir sayfaya sığmayacak kadar geniş: ortasındaki {} × {} m'lik kısım sayıldı.",
+                    wide.round(),
+                    high.round()
+                ),
+            ));
         }
+        lines
     }
 
     /// Where Denetle may count (docs/adr/0636 §7): the view at its scale, the view at the drawing's scale on paper, and

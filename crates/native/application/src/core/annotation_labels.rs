@@ -163,7 +163,7 @@ pub(crate) fn labels(
     let store = match store {
         Some(s) => s,
         None => {
-            own = crate::labels_report::label_store(doc, None).0;
+            own = crate::labels_report::label_store(doc, None, None).0;
             &own
         }
     };

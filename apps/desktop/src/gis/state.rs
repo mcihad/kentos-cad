@@ -58,6 +58,9 @@ pub(crate) struct GisUiState {
     pub(crate) dataset_info: Option<crate::dataset_window::Window>,
     /// Etiketler's window (labelling/, docs/adr/0212 §4).
     pub(crate) labelling: Option<crate::labelling::Window>,
+    /// Where Etiketler's Denetle counted last (its Denetle ölçeği's place): the next window starts there, not at the
+    /// view again (14 November 2026).
+    pub(crate) labelling_report_at: usize,
     /// Formlar's window (forms/designer.rs, docs/adr/0401).
     pub(crate) forms_window: Option<crate::forms::designer::Window>,
     /// The designer's copied item with its layer's fields (docs/adr/0437): pasted into this or another form.
