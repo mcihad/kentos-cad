@@ -538,3 +538,72 @@ fn an_input_goes_with_its_shape_as_geojson_its_arcs_tessellated() {
         twice.abs() / 2.0
     );
 }
+
+#[test]
+fn an_extensions_tool_chains_with_a_built_in_one_in_a_model() {
+    // P12: the extension's new objects are the next step's input, as a built-in tool's would be; the model is one undo
+    // step as a whole.
+    let _turn = one_at_a_time();
+    let _tool = setup();
+    seen().answer = None;
+    let model = kentos_processing::Model::from_text(&json!({
+        "id": "olc-tampon",
+        "label": "Ölç ve tampon",
+        "category": "analysis",
+        "description": "Parselleri ölçer, ölçülenlerin çevresine 2 m tampon çizer.",
+        "inputs": [{ "name": "parseller", "label": "Parseller", "type": "features", "kinds": ["polygon"] }],
+        "steps": [
+            { "id": "olc", "tool": "ext.tr.ornek.deneme.olc", "values": {
+                "parcels": { "kind": "input", "name": "parseller" },
+                "limit": { "kind": "value", "value": 500 },
+                "output": { "kind": "value", "value": { "newName": "Alanlar" } } } },
+            { "id": "tampon", "tool": "geometry.buffer", "values": {
+                "input": { "kind": "output", "step": "olc", "output": "parcels" },
+                "distance": { "kind": "value", "value": 2 },
+                "layer": { "kind": "value", "value": { "newName": "Tampon" } } } }
+        ],
+        "outputs": []
+    })
+    .to_string())
+    .expect("a model");
+    let mut host = Bare(drawing(false), Vec::new());
+    let before = host.0.entities().count();
+    let registry = Registry::current();
+    let lookup = |id: &str| registry.tool(id);
+    let inputs = json!({ "parseller": { "scope": "layer", "layerId": "parsel" } })
+        .as_object()
+        .unwrap()
+        .clone();
+    let outcome = kentos_processing::model_runner::run_model(
+        &model,
+        &inputs,
+        &mut Runner::new(),
+        &mut host,
+        &lookup,
+        &mut Vec::new(),
+    );
+    assert!(matches!(outcome, Outcome::Ok { .. }), "{outcome:?}");
+    let on = |name: &str| {
+        let layer = host
+            .0
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == name)
+            .map(|l| l.id.clone())
+            .unwrap_or_default();
+        host.0
+            .entities()
+            .filter(|e| e.base().layer_id == layer)
+            .count()
+    };
+    assert_eq!(on("Alanlar"), 3, "the extension's step wrote its objects");
+    assert_eq!(on("Tampon"), 3, "the built-in step buffered them");
+    assert_eq!(host.0.entities().count(), before + 6);
+    assert!(host.0.undo().is_some());
+    assert_eq!(
+        host.0.entities().count(),
+        before,
+        "the whole model is one undo step"
+    );
+}

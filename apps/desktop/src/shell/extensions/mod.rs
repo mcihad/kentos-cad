@@ -172,6 +172,8 @@ pub(crate) enum Event {
     StopRun(String),
     /// A stopped run not answered in time: its process is ended.
     RunOverdue(String, u64),
+    /// An extension's process may have been left unused long enough to close (its generation).
+    RunnerIdle(String, u64),
     /// What an extension's process said: extension, its process's generation, what.
     Runner(String, u64, crate::python::host::Said),
     Enable(String),
@@ -489,6 +491,7 @@ impl App {
             }
             Event::StopRun(ext) => return self.ext_stop(&ext),
             Event::RunOverdue(ext, id) => self.ext_overdue(&ext, id),
+            Event::RunnerIdle(ext, generation) => self.ext_idle(&ext, generation),
             Event::Runner(ext, generation, said) => return self.ext_said(&ext, generation, said),
             Event::Enable(id) => {
                 let result = self.extensions.registry.as_mut().map(|r| r.enable(&id));

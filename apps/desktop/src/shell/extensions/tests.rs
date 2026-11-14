@@ -1866,6 +1866,21 @@ fn an_extensions_command_runs_in_its_own_process_through_the_broker() {
     let _ = gis.extensions_event(Event::Show(IMAR.into()));
     assert_eq!(gis.extensions.chosen.as_deref(), Some(IMAR));
     assert!(gis.extensions.envs.contains_key(IMAR), "looked for");
+    // Unused for a while: its process closed (D6); the next call starts a new one.
+    let generation = gis.extensions.runners[IMAR].generation;
+    let _ = gis.extensions_event(Event::RunnerIdle(IMAR.into(), generation));
+    assert!(
+        gis.extensions.runners.contains_key(IMAR),
+        "not unused long enough"
+    );
+    let long_ago = std::time::Instant::now().checked_sub(kentos_python_env::process::IDLE);
+    gis.extensions.runners.get_mut(IMAR).unwrap().ended = long_ago;
+    let _ = gis.extensions_event(Event::RunnerIdle(IMAR.into(), generation));
+    assert!(
+        !gis.extensions.runners.contains_key(IMAR),
+        "closed when unused"
+    );
+    assert!(logged(&gis, "runner_idle"));
     // Durdur: asked of the code; a process that does not answer is ended.
     let _ = gis.extensions_event(Event::Launch(
         IMAR.into(),

@@ -894,7 +894,11 @@ dönen veriyi görür. Kod: `python/kentos/ext.py`, `python/kentos/ext_host.py`,
   geçersiz sonucun hiçbir şey yazmaması, GeoJSON şekilleri, yayların kirişleri ve alanı), python-env 24 (süreç havuzu 6:
   süreç korunur, Durdur önce sorulur sonra sonlandırır, zaman aşımı, çökme, çizim isteği reddi, boşta kapanma, bellek),
   masaüstü eklenti sahneleri 21 (listeleme, şerit düğmesi ve pencere, kapatınca çıkma, uymayan tanım, sonuç okuma).
+- **Modelde zincirleme (P12):** eklenti aracının yeni nesneleri aynı modelde yerleşik Tampon'un girdisi olur; model bütün
+  olarak tek geri alma adımıdır (`tests/external.rs`).
+- **Komut süreçleri de boşta kapanır:** bir komutun süreci 10 dk kullanılmazsa kapatılır ve günlüğe `runner_idle`
+  yazılır; sonraki çağrı yeni süreç başlatır (D6, Ö·9).
 - **Sonraya kalan (ADIM 19'un kalanı):** ifade işlevleri, denetimler, harita aracı, form eylemleri; sürümlü kaydın MCP'ye
-  `tools/list_changed` ile bildirilmesi; komut süreçlerinin de boşta kapanması; büyük girdinin sayfalı/ikili aktarımı
-  (PY-TOOL-08: girdi şimdi tek mesajda); tanımın kurulumda tam denetimi (ADIM 21'in `extension.verify`'ı); modelde
-  yerleşik araçla zincirlemenin sınaması (P12) ve dosya/GeoPackage hedefinin gerçek pencere sınaması (P11).
+  `tools/list_changed` ile bildirilmesi; büyük girdinin sayfalı/ikili aktarımı (PY-TOOL-08: girdi şimdi tek mesajda);
+  tanımın kurulumda tam denetimi (ADIM 21'in `extension.verify`'ı); dosya/GeoPackage hedefinin gerçek pencere sınaması
+  (P11).

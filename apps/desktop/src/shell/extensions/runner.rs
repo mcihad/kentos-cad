@@ -82,6 +82,8 @@ pub(crate) struct Runner {
     host: Host,
     pub(crate) ready: bool,
     pub(crate) run: Option<ExtRun>,
+    /// When its last run ended: a process left unused for [`kentos_python_env::process::IDLE`] is closed (D6, Ö·9).
+    pub(crate) ended: Option<Instant>,
 }
 
 impl std::fmt::Debug for Runner {
@@ -405,6 +407,7 @@ impl App {
                             host,
                             ready: false,
                             run: None,
+                            ended: None,
                         },
                     );
                     task = heard;
@@ -498,6 +501,26 @@ impl App {
         )
     }
 
+    /// A process unused for [`kentos_python_env::process::IDLE`] is closed (Host's Drop ends it); the next call starts
+    /// a new one. One that runs, or ran since, is kept.
+    pub(crate) fn ext_idle(&mut self, ext: &str, generation: u64) {
+        let idle = self.extensions.runners.get(ext).is_some_and(|r| {
+            r.generation == generation
+                && r.run.is_none()
+                && r.ended
+                    .is_some_and(|t| t.elapsed() >= kentos_python_env::process::IDLE)
+        });
+        if idle {
+            self.extensions.runners.remove(ext);
+            if let Some(registry) = self.extensions.registry.as_mut() {
+                registry.write_log(
+                    Record::info("runner_idle", "Süreç boşta kaldığı için kapatıldı.")
+                        .of(ext, None),
+                );
+            }
+        }
+    }
+
     /// A stopped run that has not answered: its process is ended, what it wrote taken back.
     pub(crate) fn ext_overdue(&mut self, ext: &str, id: u64) {
         let late = self
@@ -583,7 +606,28 @@ impl App {
             return Task::none();
         }
         match said {
-            Said::Message(m) => self.ext_message(ext, &m),
+            Said::Message(m) => {
+                self.ext_message(ext, &m);
+                // A run ended: the process is closed if nothing runs in it for a while.
+                if m.get("type").and_then(Value::as_str) == Some("done")
+                    && let Some(runner) = self.extensions.runners.get_mut(ext)
+                    && runner.run.is_none()
+                {
+                    runner.ended = Some(Instant::now());
+                    let owner = ext.to_owned();
+                    return Task::perform(
+                        async move {
+                            let (sent, got) = iced::futures::channel::oneshot::channel();
+                            std::thread::spawn(move || {
+                                std::thread::sleep(kentos_python_env::process::IDLE);
+                                let _ = sent.send(());
+                            });
+                            let _ = got.await;
+                        },
+                        move |()| msg(Event::RunnerIdle(owner.clone(), generation)),
+                    );
+                }
+            }
             Said::Stderr(text) | Said::Garbled(text) => {
                 if let Some(run) = self
                     .extensions

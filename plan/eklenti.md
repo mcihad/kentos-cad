@@ -809,9 +809,9 @@ zaman aşımı, çökme, 10 dk boşta kapanma, bellek ölçümü), girdiler veri
 kütüphaneden bağımsız çıktı (GeoJSON/`__geo_interface__`, DataFrame, `tolist`/`item`), bütün denetlenen tipli sonuç ve
 tek geri alma adımı, bayt kodunun önceden derlenmesi (ilk süreç 364 → 129 MB), İmar 1.1.0'ın parsel TAKS aracı (shapely
 2.0 ve NumPy; örnek, sınırlama değil). Ölçüm: Durdur'dan 9–29 ms sonra durdu, dinlemeyen araç 5 sn'de sonlandı.
-Kalan: ifade işlevleri, denetimler, harita aracı, form eylemi, MCP'ye `tools/list_changed`, komut süreçlerinin boşta
-kapanması, büyük girdinin sayfalı aktarımı, tanımın kurulumda tam denetimi, kabulün P10–P13'ünün kalanı (P11 dosya
-hedefi ve P12 modelde zincirleme sınaması).
+Modelde yerleşik araçla zincirleme (P12) sınandı; komut süreçleri de 10 dk boşta kalınca kapanır. Kalan: ifade
+işlevleri, denetimler, harita aracı, form eylemi, MCP'ye `tools/list_changed`, büyük girdinin sayfalı aktarımı, tanımın
+kurulumda tam denetimi, P11'in dosya hedefi.
 
 **Süreç ve aracı:**
 - [ ] Her eklenti sürümü için ayrı süreç; IPC protokol sürümü, eklenti/sürüm/özet, istek/çalışma/oturum kimliği ve zaman

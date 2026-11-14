@@ -538,12 +538,38 @@ fn with_root(text: &str, marker: &str, root: &std::path::Path) -> String {
 }
 
 /// The folder `$tmp:name` files are written in (a command that writes a file, docs/adr/0517): the test run's own,
-/// made empty once.
+/// made empty once, under the build's own temporary folder (`CARGO_TARGET_TMPDIR`). It was under the system's
+/// (`/tmp`), never removed: 91 runs' folders (48 MB each, 3.2 GB) filled a memory-backed `/tmp` until an environment
+/// could not be installed (14 November 2026). An earlier run's folder whose process is gone is removed here.
 fn tmp_folder() -> PathBuf {
     static FOLDER: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
     FOLDER
         .get_or_init(|| {
-            let dir = std::env::temp_dir().join(format!("kentos-cases-{}", std::process::id()));
+            let base = PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
+            let own = std::process::id();
+            for entry in std::fs::read_dir(&base).into_iter().flatten().flatten() {
+                let name = entry.file_name();
+                let Some(pid) = name
+                    .to_str()
+                    .and_then(|n| n.strip_prefix("kentos-cases-"))
+                    .and_then(|p| p.parse::<u32>().ok())
+                else {
+                    continue;
+                };
+                // Gone: no such process (where the system says it), or a day old.
+                let gone = std::path::Path::new("/proc").is_dir()
+                    && !std::path::Path::new(&format!("/proc/{pid}")).exists();
+                let old = entry
+                    .metadata()
+                    .and_then(|m| m.modified())
+                    .ok()
+                    .and_then(|t| t.elapsed().ok())
+                    .is_some_and(|age| age.as_secs() > 24 * 60 * 60);
+                if pid != own && (gone || old) {
+                    let _ = std::fs::remove_dir_all(entry.path());
+                }
+            }
+            let dir = base.join(format!("kentos-cases-{own}"));
             let _ = std::fs::remove_dir_all(&dir);
             let _ = std::fs::create_dir_all(&dir);
             dir
