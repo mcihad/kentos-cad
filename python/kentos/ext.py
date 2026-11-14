@@ -446,7 +446,9 @@ class ProcessingContext(CommandContext):
             yield feature
 
     def summary(self, text: str) -> None:
-        """The run's one line in İşlemler' history, in place of KentOS's own ("12 nesne eklendi")."""
+        """The run's one line in İşlemler' history, in place of KentOS's own ("12 nesne eklendi"). It says what was
+        computed, not where it went: the user may send the result to a file instead of the drawing, and KentOS adds
+        where it was written ("Sonuç … dosyasına yazıldı")."""
         self._summary = str(text)[:500]
 
     def select(self, features: Iterable[Feature | str]) -> None:

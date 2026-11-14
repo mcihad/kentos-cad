@@ -898,7 +898,11 @@ dönen veriyi görür. Kod: `python/kentos/ext.py`, `python/kentos/ext_host.py`,
   olarak tek geri alma adımıdır (`tests/external.rs`).
 - **Komut süreçleri de boşta kapanır:** bir komutun süreci 10 dk kullanılmazsa kapatılır ve günlüğe `runner_idle`
   yazılır; sonraki çağrı yeni süreç başlatır (D6, Ö·9).
+- **Dosya hedefi (P11, gerçek pencere):** "Sonucun yeri: GeoPackage dosyasına" seçilince araç çizimin bir kopyasında
+  çalışır, çizim değişmez: `TAKS` tablosu (CURVEPOLYGON, SRS 5256; yaylı parselin yayı eğri olarak kalır) dört satırı
+  pencerenin değerleriyle yazıldı ("Sonuç taks-sonuc.gpkg dosyasına yazıldı: TAKS (4 satır)"). Bulgu: İmar'ın özeti
+  "çizimde seçildi" diyordu, oysa dosya hedefinde seçim kopyada kalır; araç sonucunun nereye gittiğini bilmez, özeti
+  yalnız hesabı söyler (`ctx.summary`'nin belgesi de öyle der).
 - **Sonraya kalan (ADIM 19'un kalanı):** ifade işlevleri, denetimler, harita aracı, form eylemleri; sürümlü kaydın MCP'ye
   `tools/list_changed` ile bildirilmesi; büyük girdinin sayfalı/ikili aktarımı (PY-TOOL-08: girdi şimdi tek mesajda);
-  tanımın kurulumda tam denetimi (ADIM 21'in `extension.verify`'ı); dosya/GeoPackage hedefinin gerçek pencere sınaması
-  (P11).
+  tanımın kurulumda tam denetimi (ADIM 21'in `extension.verify`'ı).

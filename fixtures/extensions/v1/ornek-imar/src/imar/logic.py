@@ -135,8 +135,6 @@ def taks(
     asan = int(asiyor.sum())
     ctx.log(f"{len(parsel)} parsel, {len(yapi)} yapı; shapely {shapely.__version__}, NumPy {np.__version__}.")
     sinir = f"{limit:g}".replace(".", ",")  # Türkçe ondalık virgül
-    ctx.summary(
-        f"{len(parsel)} parselin TAKS'ı hesaplandı; {asan} parsel plan notundaki {sinir} sınırını aşıyor"
-        + (" ve çizimde seçildi." if asan else ".")
-    )
+    # Yalnız hesabı söyler: sonuç çizime de bir dosyaya da gidebilir, nereye gittiğini KentOS söyler.
+    ctx.summary(f"{len(parsel)} parselin TAKS'ı hesaplandı; {asan} parsel plan notundaki {sinir} sınırını aşıyor.")
     return {"parseller": cikti, "tablo": tablo, "asan": asan}
