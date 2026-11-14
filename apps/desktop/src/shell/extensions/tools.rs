@@ -96,6 +96,9 @@ pub(crate) struct ExtTools {
     label_readiness: String,
     /// The descriptors' refusals already written to a log this session.
     said: BTreeSet<String>,
+    /// The process's lists (İşlemler' tools and functions, what runs and answers them) are this window's: given once
+    /// it offered a tool or a function, not before.
+    registered: bool,
 }
 
 impl Default for ExtTools {
@@ -111,17 +114,11 @@ impl Default for ExtTools {
             told: Mutex::default(),
         });
         let labels = Arc::new(LabelAnswers {
-            answers: Arc::clone(&answers),
+            answers,
             queue: Mutex::default(),
             busy: AtomicBool::new(false),
             fresh: AtomicBool::new(false),
         });
-        external::register_provider(Arc::new(Bridge {
-            shared: Arc::clone(&shared),
-            pool: Arc::clone(&pool),
-            notes: Arc::clone(&notes),
-        }));
-        external::register_expression_calls(answers);
         ExtTools {
             shared,
             pool,
@@ -129,8 +126,28 @@ impl Default for ExtTools {
             labels,
             label_readiness: String::new(),
             said: BTreeSet::new(),
+            registered: false,
         }
     }
+}
+
+/// Tests run many windows in one process, and the lists a window gives the process (İşlemler' tools and functions,
+/// what runs and answers them, the expression engine's host) are the process's: a test whose window gives them keeps
+/// them until it ends, so another test's window does not replace them under it (it failed now and then with
+/// "Bilinmeyen işlev: ext.tr.ornek.imar-denetim.ada-parsel()"). A window that offers none, most tests', is not held.
+#[cfg(test)]
+fn hold_process_lists() {
+    use std::sync::{MutexGuard, PoisonError};
+    static LISTS: Mutex<()> = Mutex::new(());
+    thread_local! {
+        static HELD: RefCell<Option<MutexGuard<'static, ()>>> = const { RefCell::new(None) };
+    }
+    HELD.with(|held| {
+        let mut held = held.borrow_mut();
+        if held.is_none() {
+            *held = Some(LISTS.lock().unwrap_or_else(PoisonError::into_inner));
+        }
+    });
 }
 
 /// How long a batch of an expression function's calls may take.
@@ -954,24 +971,41 @@ impl App {
                 );
             }
         }
-        // Labels know them too, answered without waiting (drawing slice); a label compiled before a function was
-        // offered, or asked before Python was ready, is worked out again.
-        let readiness = format!(
-            "{:?}|{}",
-            defs.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
-            self.python_setup.why_not()
-        );
-        if self.extensions.tools.label_readiness != readiness {
-            self.extensions.tools.label_readiness = readiness;
-            kentos_native_application::label_texts::answers_changed();
+        // The process's lists are given once a tool or a function is offered, and kept up to date after; a window
+        // that never offered one leaves them alone (in tests many windows share the process, `hold_process_lists`).
+        let global = self.extensions.tools.registered || !tools.is_empty() || !defs.is_empty();
+        if global && !self.extensions.tools.registered {
+            #[cfg(test)]
+            hold_process_lists();
+            let t = &self.extensions.tools;
+            external::register_provider(Arc::new(Bridge {
+                shared: Arc::clone(&t.shared),
+                pool: Arc::clone(&t.pool),
+                notes: Arc::clone(&t.notes),
+            }));
+            external::register_expression_calls(Arc::<Answers>::clone(&t.labels.answers));
+            self.extensions.tools.registered = true;
         }
-        // One registry for whatever works an expression out while drawing: labels, styles, filters, forms
-        // (`kentos_expression::external::set_host`, docs/adr/8057 §8).
-        kentos_native_application::label_texts::set_externals(
-            defs.clone(),
-            Arc::new(LabelCalls(Arc::clone(&self.extensions.tools.labels))),
-        );
-        external::set_expressions(defs);
+        if global {
+            // Labels know them too, answered without waiting (drawing slice); a label compiled before a function
+            // was offered, or asked before Python was ready, is worked out again.
+            let readiness = format!(
+                "{:?}|{}",
+                defs.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
+                self.python_setup.why_not()
+            );
+            if self.extensions.tools.label_readiness != readiness {
+                self.extensions.tools.label_readiness = readiness;
+                kentos_native_application::label_texts::answers_changed();
+            }
+            // One registry for whatever works an expression out while drawing: labels, styles, filters, forms
+            // (`kentos_expression::external::set_host`, docs/adr/8057 §8).
+            kentos_native_application::label_texts::set_externals(
+                defs.clone(),
+                Arc::new(LabelCalls(Arc::clone(&self.extensions.tools.labels))),
+            );
+            external::set_expressions(defs);
+        }
         let p = &self.python_setup;
         let python = match (&p.python, &p.root, p.ready_uv()) {
             (Some(crate::python_setup::OwnPython::Ready(interpreter, _)), Some(root), Some(uv)) => {
@@ -1000,7 +1034,9 @@ impl App {
             }
         }
         let listed: Vec<kentos_processing::Tool> = tools.iter().map(|t| t.tool.clone()).collect();
-        external::set_tools(tools);
+        if global {
+            external::set_tools(tools);
+        }
         self.gis.processing.registry.set_external(listed);
     }
 

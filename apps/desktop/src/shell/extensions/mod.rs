@@ -123,6 +123,9 @@ pub(crate) struct Extensions {
     pub(crate) captured: Option<Option<kentos_interaction::capture::Shape>>,
     /// The drawn shape the next map tool run gives its code (GeoJSON).
     pub(crate) capture_shape: Option<serde_json::Value>,
+    /// An extension chosen without a click (the window opened, its part changed): its Python environment is looked
+    /// for after the update. Only a click looked for it, so the details said "Ortam aranıyor…" until one.
+    pub(crate) look_wanted: Option<String>,
 }
 
 impl Default for Extensions {
@@ -155,6 +158,7 @@ impl Default for Extensions {
             capturing: None,
             captured: None,
             capture_shape: None,
+            look_wanted: None,
         }
     }
 }
@@ -407,6 +411,7 @@ impl App {
                 .as_ref()
                 .and_then(|r| r.extensions().first().map(|e| e.id.clone()));
         }
+        self.extensions.look_wanted = self.extensions.chosen.clone();
         self.dialog = Some(Dialog::Extensions);
     }
 
@@ -445,6 +450,17 @@ impl App {
         } else {
             x.installed_of(part).first().map(|e| e.id.clone())
         };
+        if !part.is_catalog() {
+            self.extensions.look_wanted = self.extensions.chosen.clone();
+        }
+    }
+
+    /// The environment of the extension chosen without a click, looked for after the update.
+    pub(crate) fn ext_look_tasks(&mut self) -> Task<Message> {
+        match self.extensions.look_wanted.take() {
+            Some(id) => self.env_look(&id),
+            None => Task::none(),
+        }
     }
 
     /// An extension's name, as the user knows it; its id when it is not installed.

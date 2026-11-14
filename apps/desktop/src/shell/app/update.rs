@@ -216,6 +216,8 @@ impl App {
             self.command_tasks(),
             // An extension's map tool: the shape drawn, run through its code (extensions/runner.rs).
             self.ext_capture_tasks(),
+            // The Python environment of an extension the manager chose itself (extensions/environment.rs).
+            self.ext_look_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
             // The grids the project's datum choices name, read into the core (grids.rs).

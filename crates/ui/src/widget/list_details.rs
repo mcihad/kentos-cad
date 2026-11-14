@@ -18,7 +18,8 @@
 //!   yanındadır; pencerenin alt çubuğunda pencerenin kendi eylemleri durur (DESIGN.md §7.9).
 //! - İki bölmeyi ince dikey çizgi ayırır. Bileşenin yüksekliği sabittir ([`ListDetails::height`], öntanımlı 420
 //!   piksel): seçim değişince pencere zıplamaz, kısa içerik pencerenin dibinde boşluk bırakmaz (sekmeli pencerelerin
-//!   kuralı, DESIGN.md §7.9).
+//!   kuralı, DESIGN.md §7.9). Büyütülmüş ya da elle boyutlandırılmış pencerede ([`ListDetails::grow`]) kalan yeri
+//!   alır: sabit yükseklik, tam ekran Eklentiler penceresinin alt yarısını boş bırakıyordu.
 //!
 //! Ölçüler 12 piksellik gövde metnine göredir, yazı boyutuyla büyür ([`typography::scaled`]).
 //!
@@ -43,6 +44,7 @@ pub struct ListDetails<'a, Message> {
     details: Element<'a, Message>,
     list_width: f32,
     height: f32,
+    grow: bool,
 }
 
 impl<'a, Message: 'a> ListDetails<'a, Message> {
@@ -57,6 +59,7 @@ impl<'a, Message: 'a> ListDetails<'a, Message> {
             details: details.into(),
             list_width: 240.0,
             height: 420.0,
+            grow: false,
         }
     }
 
@@ -75,6 +78,13 @@ impl<'a, Message: 'a> ListDetails<'a, Message> {
     /// Bileşenin yüksekliği, 12 piksellik gövde metnine göre.
     pub fn height(mut self, height: f32) -> Self {
         self.height = height;
+        self
+    }
+
+    /// Kendi yüksekliği yerine verilen yerin tamamını alır (`true`): elle boyutlandırılmış ya da tam ekran pencerede
+    /// (anahtarının `sizable::sizes::get` değeri varken); pencere gövdeyi `Dialog::fill` ile verir.
+    pub fn grow(mut self, grow: bool) -> Self {
+        self.grow = grow;
         self
     }
 }
@@ -100,7 +110,36 @@ impl<'a, Message: 'a> From<ListDetails<'a, Message>> for Element<'a, Message> {
             container(right).width(Fill).height(Fill),
         ]
         .spacing(typography::scaled(16.0))
-        .height(typography::scaled(l.height))
+        .height(if l.grow {
+            iced::Length::Fill
+        } else {
+            iced::Length::Fixed(typography::scaled(l.height))
+        })
         .into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use iced::widget::text;
+    use iced::{Element, Length};
+
+    use super::ListDetails;
+
+    fn height(list_details: ListDetails<'_, ()>) -> Length {
+        let element: Element<'_, ()> = list_details.into();
+        element.as_widget().size().height
+    }
+
+    #[test]
+    fn it_keeps_its_own_height_unless_it_grows() {
+        let fixed = height(ListDetails::new(text("liste"), text("ayrıntı")).height(470.0));
+        assert!(matches!(fixed, Length::Fixed(h) if h > 0.0), "{fixed:?}");
+        let grown = height(
+            ListDetails::new(text("liste"), text("ayrıntı"))
+                .height(470.0)
+                .grow(true),
+        );
+        assert_eq!(grown, Length::Fill);
     }
 }

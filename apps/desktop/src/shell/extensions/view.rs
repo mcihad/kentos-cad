@@ -164,6 +164,8 @@ impl App {
                 Part::New => "Katalog önceki açılışından beri değişmedi.",
             }
         };
+        // Resized or full screen, the list and its details take the window's height (`Dialog::fill`).
+        let kept = kentos_ui::widget::sizable::sizes::get("eklentiler").is_some();
         let body: Element<'_, Message> = if !x.part.is_catalog() {
             let list = x.installed_of(x.part);
             let chosen = x
@@ -176,6 +178,7 @@ impl App {
             )
             .list_width(380.0)
             .height(470.0)
+            .grow(kept)
             .into()
         } else {
             match &x.catalog {
@@ -205,6 +208,7 @@ impl App {
                     )))
                     .list_width(380.0)
                     .height(470.0)
+                    .grow(kept)
                     .into()
                 }
             }
@@ -212,9 +216,13 @@ impl App {
         if let Some(line) = self.bisect_line() {
             frame = frame.push(line);
         }
+        frame = frame.push(filters);
+        frame = if kept {
+            frame.fill(body)
+        } else {
+            frame.push(body)
+        };
         frame = frame
-            .push(filters)
-            .push(body)
             .aside(words::ghost("Paket yükle…", Some(msg(Event::PickPackage))))
             .aside(words::ghost(
                 "Katalog klasörü…",

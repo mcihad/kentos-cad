@@ -1477,6 +1477,14 @@ fn an_extensions_python_environment_is_previewed_prepared_and_removed() {
         "{}",
         why(&gis)
     );
+    // Looked for when the window opens on it, without a click: only a click looked, and until one the section said
+    // "Ortam aranıyor…".
+    gis.open_extensions();
+    assert_eq!(gis.extensions.look_wanted.as_deref(), Some(MEBIS));
+    let _ = gis.ext_look_tasks();
+    assert_eq!(gis.extensions.look_wanted, None);
+    assert_eq!(gis.extensions.envs[MEBIS].status, Some(EnvStatus::Looking));
+    gis.extensions.envs.remove(MEBIS);
     // Looked for when chosen.
     let _ = gis.extensions_event(Event::Choose(MEBIS.into()));
     assert_eq!(gis.extensions.envs[MEBIS].status, Some(EnvStatus::Looking));

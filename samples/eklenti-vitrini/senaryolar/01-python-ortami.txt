@@ -1,4 +1,5 @@
-# Vitrin'in Python ortamı: önce kurulacak paketler gösterilir, onaylanınca hazırlanır (00-kurulum'dan sonra).
+# Vitrin'in Python ortamı (00-kurulum'dan sonra): pencere büyütülür, kurulu eklentinin ortamı kendiliğinden aranır;
+# "Ortamı hazırla" önce kurulacak paketleri gösterir, onaylanınca indirmeden ortam hazırlanır.
 fit KentOS GIS — Eklenti vitrini
 wait 2500
 key Escape
@@ -8,14 +9,11 @@ type EKLENTILER
 key Return
 wait 2500
 click 1197 142  # pencereyi büyüt
-wait 1000
-click 290 261   # Eklenti Vitrini
-wait 1000
-wheel 930 400 -3
-wait 1000
-click 535 349   # Ortamı hazırla
+wait 2500
+shot 01-hazir-degil
+click 535 721   # Ortamı hazırla
 wait 10000
 shot 01-paketler
-click 514 387   # Hazırla
+click 514 759   # Hazırla
 wait 45000
 shot 01-ortam-hazir
