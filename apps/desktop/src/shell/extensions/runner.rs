@@ -226,6 +226,17 @@ fn writes(method: &str, params: &Value) -> bool {
     }
 }
 
+/// The extension whose tool a broker call runs (`cad.processing.run` or `batch` of an `ext.<eklenti>.<araç>`), when it
+/// is not the caller's own (PY-RUN-15, docs/adr/8057 §16).
+fn others_tool<'a>(ext: &str, params: &'a Value) -> Option<&'a str> {
+    let command = params.get("command").and_then(Value::as_str)?;
+    if !matches!(command, "cad.processing.run" | "cad.processing.batch") {
+        return None;
+    }
+    let tool = params.get("input")?.get("tool")?.as_str()?;
+    kentos_commands::action_tool_extension(tool).filter(|owner| *owner != ext)
+}
+
 /// What the broker answers at all; anything else (undo, redo, files) is the user's, never an extension's.
 fn answered(method: &str) -> bool {
     matches!(
@@ -249,6 +260,26 @@ fn answered(method: &str) -> bool {
 }
 
 impl App {
+    /// Why an extension's broker call may not run another extension's tool (PY-RUN-15, docs/adr/8057 §16): the caller
+    /// must list that extension in its manifest's `dependencies.extensions` (the registry keeps it installed, enabled
+    /// and of a fitting version). Its own tools it may run. The callee runs in its own process and cannot call the
+    /// broker itself, so a call is one level deep and never comes back round.
+    pub(crate) fn calls_refused(&self, ext: &str, params: &Value) -> Option<String> {
+        let owner = others_tool(ext, params)?;
+        let declared = self
+            .extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.manifest(ext))
+            .is_some_and(|m| m.dependencies.extensions.iter().any(|d| d.id == owner));
+        (!declared).then(|| {
+            format!(
+                "Eklenti, bağımlılıklarında bildirmediği “{owner}” eklentisinin aracını çalıştıramaz: manifestin \
+                 dependencies.extensions listesine ekleyin."
+            )
+        })
+    }
+
     /// The contribution's handler and what finding its environment needs; why not, in a sentence, when it cannot run.
     /// Nothing here reads the disk: the window does not wait.
     fn ext_plan(&self, ext: &str, kind: &str, local: &str) -> Result<Plan, String> {
@@ -823,6 +854,10 @@ impl App {
         method: &str,
         params: &Value,
     ) -> Result<Value, HeadlessError> {
+        // Another extension's tool, only for an extension that says it depends on it (PY-RUN-15).
+        if let Some(why) = self.calls_refused(ext, params) {
+            return Err(refused("capability", &why));
+        }
         let Some(run) = self
             .extensions
             .runners

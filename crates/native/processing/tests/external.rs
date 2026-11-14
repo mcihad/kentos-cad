@@ -839,3 +839,12 @@ fn a_layer_an_extensions_tool_makes_records_the_extension_and_where_it_ran() {
     assert!(!derivation.inputs.is_empty(), "its inputs' digests");
     assert_eq!(kentos_commands::derivation_problem(&derivation), None);
 }
+
+#[test]
+fn an_extensions_tool_runs_no_code_to_check_or_preview_its_values() {
+    // PY-RUN-23 (docs/adr/8057 §16): checking a window's values and its preview run KentOS's own rules, never the
+    // extension's code: its tool has neither, so no broker of any kind is open while values are checked.
+    let tool = setup();
+    assert!(tool.tool.validate.is_none(), "no check of its own");
+    assert!(tool.tool.preview.is_none(), "no preview of its own");
+}

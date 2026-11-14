@@ -2490,3 +2490,58 @@ fn a_models_step_on_an_extensions_tool_is_pinned_and_says_where_it_stands() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn an_extension_runs_another_extensions_tool_only_when_it_depends_on_it() {
+    // PY-RUN-15 (docs/adr/8057 §16): through the broker an extension's code may run its own tools and those of the
+    // extensions its manifest depends on; another's is refused with what to write.
+    let dir = temp("eklentiden-eklentiye");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let run = |tool: &str| {
+        serde_json::json!({
+            "command": "cad.processing.run",
+            "input": { "tool": tool, "parameters": {} },
+            "op": "execute",
+        })
+    };
+    let taks = run("ext.tr.ornek.vitrin.taks");
+    // MEBİS without the dependency: refused, saying where to declare it.
+    install(
+        &mut gis,
+        "mebis.kek",
+        package("mebis", |m| {
+            m["dependencies"]["extensions"] = serde_json::json!([]);
+        }),
+    );
+    let why = gis.calls_refused("tr.ornek.mebis", &taks).expect("refused");
+    assert!(
+        why.contains("“tr.ornek.vitrin”") && why.contains("dependencies.extensions"),
+        "{why}"
+    );
+    // Its own tools and calls that run no extension's tool pass.
+    assert_eq!(gis.calls_refused("tr.ornek.vitrin", &taks), None);
+    assert_eq!(
+        gis.calls_refused("tr.ornek.mebis", &run("attributes.calculate")),
+        None
+    );
+    let entities = serde_json::json!({ "command": "cad.entities.set", "input": {} });
+    assert_eq!(gis.calls_refused("tr.ornek.mebis", &entities), None);
+    // With the dependency declared (the registry keeps Vitrin installed, enabled and of a fitting version): it runs.
+    let _ = gis.extensions_event(Event::Remove("tr.ornek.mebis".into()));
+    install(
+        &mut gis,
+        "mebis.kek",
+        package("mebis", |m| {
+            m["dependencies"]["extensions"] =
+                serde_json::json!([{ "id": "tr.ornek.vitrin", "version": ">=1.0" }]);
+        }),
+    );
+    assert_eq!(gis.calls_refused("tr.ornek.mebis", &taks), None);
+    let batch = serde_json::json!({
+        "command": "cad.processing.batch",
+        "input": { "tool": "ext.tr.ornek.vitrin.taks", "rows": [] },
+    });
+    assert_eq!(gis.calls_refused("tr.ornek.mebis", &batch), None);
+    let _ = std::fs::remove_dir_all(&dir);
+}

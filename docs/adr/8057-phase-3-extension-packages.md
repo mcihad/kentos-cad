@@ -1169,3 +1169,25 @@ temiz ve kaliteli"; "içinde birçok durum için örnekler olsun, sadece eklenti
   aynı), bağımsız okuyucu 1861 dosyada tutarlı, wasm derlemesi.
 - **Uygularken verilen kararlar:** köken yeni bir kayıt değil, türetim kaydının iki alanı; ortam "Python sürümü ·
   işletim sistemi-mimari"; yeni alanlar belge şemasını değil CBS verisinin sürümünü yükseltir.
+
+## §16. Eklentiden eklentiye çağrı ve önizlemede kod yok (`ADIM 19`, PY-RUN-15, PY-RUN-23)
+
+**14 Kasım.** Kod: `apps/desktop/src/shell/extensions/runner.rs` (`others_tool`, `calls_refused`, aracının ilk denetimi).
+
+- **Eklentiden eklentiye (PY-RUN-15):** bir eklentinin kodu aracı üzerinden yalnız kendi araçlarını ve manifestinin
+  `dependencies.extensions`'ında bildirdiği eklentilerin araçlarını çalıştırabilir (`cad.processing.run`/`batch`'in
+  `ext.<eklenti>.<araç>`'ı); başkasınınki `capability` ile reddedilir ve ne yazılacağını söyler. Bağımlılığın kurulu,
+  açık ve uygun sürümde olmasını kayıt defteri zaten sağlıyor (yoksa çağıran "Bağımlılık bekliyor"dur).
+- **Döngü, derinlik, bütçe:** çağrılan araç kendi sürecinde çalışır ve aracıya istek yapamaz (havuz her isteği
+  "Bu çalıştırma çizime erişemez" diye geri çevirir, §7): zincir bir basamaktır, geri dönemez. Bütçe aracın kendi zaman
+  aşımıdır (tanımın `timeoutSeconds`'ı, en çok 3600 sn); çağıran o süre bekler, Durdur ikisini de durdurur.
+- **Önizleme ve doğrulama (PY-RUN-23):** eklenti kodu hiçbir önizleme ya da doğrulama yolunda yazma izniyle çalışmaz.
+  İşlemler aracının kendi doğrulaması ve önizlemesi yok (pencere KentOS'un kurallarıyla denetler; sınandı); ifade
+  işlevinin değeri oluşturucunun ve pencerenin önizlemesinde sorulmaz (§8); çizim sırasında sorulan değerler (etiket,
+  stil, süzgeç, form hesabı) havuzdan gelir ve havuz çizime hiçbir isteği geçirmez. Yazma izni yalnız komutun ve harita
+  aracının çalıştırmasında, yeteneği verilmişse vardır.
+- **Sınamalar:** masaüstü 1 (bağımlılıksız ret, kendi aracı, bağımlılıkla izin, toplu çalıştırma), İşlemler 1 (eklenti
+  aracının doğrulaması ve önizlemesi yok); havuzun istek reddi python-env'de sınanıyordu.
+- **Uygularken verilen kararlar:** kural aracıda (komutun yolunda), kayıt defterinde değil; ifade işlevleri üzerinden
+  dolaylı çağrı (bir eklentinin çalıştırdığı yerleşik aracın ifadesinde başkasının işlevi) sınırlanmadı: değer yalnız
+  okunur, yazma yolu yoktur.
