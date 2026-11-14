@@ -1,0 +1,16 @@
+# İşlemler aracı (TAKS): eklentinin kendi Python'unda shapely ve NumPy ile hesaplar; sonuç yeni katman, tablo ve sayı,
+# tek geri alma adımı.
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 262 75    # TAKS
+wait 2500
+shot 04-pencere
+click 1167 775  # Çalıştır
+wait 9000
+shot 04-sonuc

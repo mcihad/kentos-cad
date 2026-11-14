@@ -1,0 +1,21 @@
+# İfade işlevi katman süzgecinde: Parsel sınırı, ada-parsel(ada, parsel) = '101/2'. Pencere yanıt gelince "1 / 4"
+# der; Kaydet'ten sonra katmanda yalnız 101/2 kalır, Katmanlar "1 / 4" sayar.
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 300 852   # komut satırı
+type KATMANSUZGECI
+key Return
+wait 2500
+click 706 433   # İfade
+type ext.tr.ornek.vitrin.ada-parsel(ada, parsel) = '101/2'
+wait 3500
+shot 07-pencere
+click 1014 592  # Kaydet
+wait 4000
+shot 07-cizim

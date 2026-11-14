@@ -107,9 +107,17 @@ def taks(ctx: ext.ProcessingContext, parseller: ext.FeatureInput, yapilar: ext.F
     cikti, tablo = [], []
     for n, (f, a, t, r, s, x) in enumerate(zip(parseller, alan, taban, oran, sayi, asiyor), start=1):
         durum = "aşıyor" if x else "uygun"
-        olcu = {"parsel_alani_m2": round(float(a), 2), "taban_alani_m2": round(float(t), 2), "taks": round(float(r), 3)}
-        cikti.append(ext.NewFeature(source=f, attrs={**olcu, "taks_siniri": limit, "yapi_sayisi": int(s), "durum": durum}))
-        tablo.append({"parsel": _etiket(f, n), **olcu, "sınır": limit, "durum": durum})
+        a2, t2, r3 = round(float(a), 2), round(float(t), 2), round(float(r), 3)
+        cikti.append(
+            ext.NewFeature(
+                source=f,
+                attrs={"parsel_alani_m2": a2, "taban_alani_m2": t2, "taks": r3, "taks_siniri": limit,
+                       "yapi_sayisi": int(s), "durum": durum},
+            )
+        )
+        # Tablo okunmak için: başlıklar Türkçe ve birimli; katmanın öznitelik adları ifadelerde kullanılmak için.
+        tablo.append({"parsel": _etiket(f, n), "parsel alanı (m²)": a2, "taban alanı (m²)": t2, "TAKS": r3,
+                      "sınır": limit, "durum": durum})
     ctx.select(f for f, x in zip(parseller, asiyor) if x)
     asan = int(asiyor.sum())
     ctx.log(f"{len(parsel)} parsel, {len(yapi)} yapı; shapely {shapely.__version__}, NumPy {np.__version__}.")

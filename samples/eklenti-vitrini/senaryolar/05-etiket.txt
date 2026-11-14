@@ -1,0 +1,26 @@
+# İfade işlevi etikette: Parsel sınırı'nın etiketi ext.tr.ornek.vitrin.ada-parsel(ada, parsel). Çizim beklemez: yanıt
+# gelmeden etiket boştur, eklentinin süreci yanıtlayınca yerleşir.
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 343 20    # Harita
+wait 800
+click 1143 75   # Etiketler
+wait 2000
+click 470 121   # Katman listesi
+wait 800
+click 320 246   # Parsel sınırı
+wait 1000
+click 398 199   # İfade
+wait 800
+click 770 235   # ifade alanı
+key ctrl+a
+type ext.tr.ornek.vitrin.ada-parsel(ada, parsel)
+wait 1500
+shot 05-ifade
+click 1247 843  # Kaydet
+wait 4000
+shot 05-etiketler

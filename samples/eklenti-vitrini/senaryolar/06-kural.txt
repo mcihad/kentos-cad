@@ -1,0 +1,25 @@
+# İfade işlevi stil kuralında: Parsel sınırı › Katman stili › Kurallar, koşul ada-parsel(ada, parsel) = '101/2'.
+# Yanıt gelince kuralın sayacı 0 → 1 olur; Tamam'dan sonra yalnız 101/2 çizilir.
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 300 852   # komut satırı
+type KATMANSTILI
+key Return
+wait 2500
+click 370 116   # tür seçici
+wait 1000
+click 300 420   # Kurallar
+wait 1500
+click 518 219   # koşul
+type ext.tr.ornek.vitrin.ada-parsel(ada, parsel) = '101/2'
+wait 4500
+shot 06-kural
+click 1188 829  # Tamam
+wait 3000
+shot 06-cizim

@@ -18,11 +18,11 @@ ekran görüntüleri bununla yapılır (plan/eklenti.md, docs/adr/8057).
 | Katalogdan kurma, yetenek onayı | manifest, `requestedCapabilities` | Eklentiler › Bulunabilir › Gözden geçir ve kur (`00-kurulum`) |
 | Eklentinin kendi Python ortamı | `pyproject.toml`, `uv.lock` | Eklentiler › Python ortamı › Ortamı hazırla: önce paketler gösterilir (`01-python-ortami`) |
 | Haritada şekil isteyen araç | `mapTools` (yönlü dikdörtgen, 10 × 12 m şablon) | Vitrin › Yapı yerleştir: ortası, sonra uzun kenarın yönü; Esc'e kadar sürer (`02-harita-araci`) |
-| Çizimi okuyan komut, rapor | `commands` › Katman özeti | Vitrin › Katman özeti; katmanın sağ tık menüsünde de |
-| Çizime yazan komut, ilerleme, Durdur | Yapıları numarala | Çalışırken Durdur: yazdıkları geri alınır; bitince tek geri alma adımı |
-| Hata veren komut | Hata örneği | Bildirim, Ayrıntı (Python iz kaydı) ve eklentinin günlüğü; çizim değişmez |
-| İşlemler aracı (shapely, NumPy) | `processing` › TAKS | Vitrin › TAKS: yeni katman, tablo ve sayı; Durdur |
-| İfade işlevi | `expressions` › `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` | Etiketler (Parsel sınırı › İfade), Katman stili › Kurallar koşulu, Katman süzgeci, İşlemler'in ifadeleri |
+| Çizimi okuyan komut, rapor | `commands` › Katman özeti | Vitrin › Katman özeti; katmanın sağ tık menüsünde de (`03-komutlar`) |
+| Çizime yazan komut, ilerleme, Durdur | Yapıları numarala | Çalışırken Durdur: yazdıkları geri alınır; bitince tek geri alma adımı (`03-komutlar`) |
+| Hata veren komut | Hata örneği | Bildirim, Ayrıntı (Python iz kaydı) ve eklentinin günlüğü; çizim değişmez (`03-komutlar`) |
+| İşlemler aracı (shapely, NumPy) | `processing` › TAKS | Vitrin › TAKS: yeni katman, tablo ve sayı; Durdur (`04-taks`) |
+| İfade işlevi | `expressions` › `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` | Etiket metni (`05-etiket`), Katman stili › Kurallar koşulu (`06-kural`), Katman süzgeci (`07-suzgec`), İşlemler'in ifadeleri; çizim beklemez, yanıt gelince yeniden çizilir |
 | Python'suz katkı | `dataSources` (XYZ altlık) | Kaynaklar: Örnek Belediyesi altlığı (sunucusu örnektir, yanıt vermez) |
 
 Henüz çalıştırılamayan katkı türleri (denetim, panel) eklenti sistemine geldiğinde buraya eklenecek.
