@@ -620,7 +620,23 @@ fn check_references(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>, out:
                     out.warnings.extend(warnings);
                 }
             },
-            FileRole::Translation | FileRole::PanelDefinition => {
+            // A panel's own rules (docs/adr/8057 §24): its buttons run the extension's commands.
+            FileRole::PanelDefinition => match json(data) {
+                Err(why) => out
+                    .problems
+                    .push(problem("reference_json", format!("Dosya {why}."))),
+                Ok(value) => {
+                    let commands: Vec<&str> = manifest
+                        .entrypoints
+                        .commands
+                        .iter()
+                        .map(|c| c.id.as_str())
+                        .collect();
+                    out.problems
+                        .extend(crate::ui_panel::check(path, &value, &commands));
+                }
+            },
+            FileRole::Translation => {
                 if let Err(why) = json(data) {
                     out.problems
                         .push(problem("reference_json", format!("Dosya {why}.")));

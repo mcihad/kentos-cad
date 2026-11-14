@@ -63,6 +63,17 @@ Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "s
 - Var olana dokunmaz, yalnız eksiği ekler (katmanın eksik alanlarını da); ikinci çalıştırma bir şey değiştirmez. Şema
   paket incelemesinde denetlenir: her sorun JSON işaretçisiyle (`layer_schema`).
 
+## Panel (`ui/<id>.panel.json`)
+
+Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.panels` (`id`, `title`, `side`,
+`definition`), şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title` ve `body`
+bileşenleri: `text` (`text`), `textField` (`id`, `label`, `placeholder`, `value`), `numberField` (`id`, `label`,
+`min`, `max`, `unit`, `value`), `select` (`id`, `label`, `options: [{value, label}]`, `value`), `checkbox` (`id`,
+`label`, `value`), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`, `primary`),
+`table` (`id`, `label`). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
+da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
+doldurur. Panel Python'suz açılır; ortam hazır değilse düğmeler nedenini söyler.
+
 ## İkonlar
 
 Bir düğmenin, komutun ya da harita aracının ikonu yerleşik bir addır, tire biçiminde (`space-number`, `layer-fields`;
@@ -155,6 +166,9 @@ pub fn sdk_pack() -> Value {
               "capabilities": ["expression.provider"] },
             { "kind": "mapTool", "decorator": "@ext.map_tool", "manifest": "entrypoints.mapTools",
               "capabilities": ["mapTool", "document.write"] },
+            { "kind": "panel", "manifest": "entrypoints.panels", "file": "ui/<kimlik>.panel.json",
+              "capabilities": ["ui.panel"],
+              "note": "Bildirimsel bileşenler; düğmesi bir komutu panelin değerleriyle (ctx.params) çalıştırır, satırlar tabloya." },
             { "kind": "schema", "manifest": "schemaFile", "file": "schema.json",
               "capabilities": ["document.write (kuran komut için)"],
               "note": "Katmanlar, alanları, değer listeleri, ilişkiler; bir komut ctx.apply_declarative_schema(\"schema.json\") ile kurar." },
@@ -186,6 +200,7 @@ pub fn sdk_pack() -> Value {
             "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
             "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",
             "layer_schema": "schema.json'da bir kural bozuk; işaretçi yeri, ileti kuralı söyler.",
+            "ui_panel": "Panel tanımında bir kural bozuk (bileşen türü, kimlik, düğmenin komutu …); işaretçi yeri söyler.",
             "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmanı adlandırıyor; projede bulunmalı."
         },
         "workflow": [

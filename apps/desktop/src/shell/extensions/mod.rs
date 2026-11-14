@@ -15,6 +15,7 @@ mod tool_pins;
 mod bisect;
 mod browse;
 pub(crate) mod environment;
+mod panels;
 mod problems;
 mod ribbon;
 pub(crate) mod runner;
@@ -134,6 +135,10 @@ pub(crate) struct Extensions {
     /// An extension chosen without a click (the window opened, its part changed): its Python environment is looked
     /// for after the update. Only a click looked for it, so the details said "Ortam aranıyor…" until one.
     pub(crate) look_wanted: Option<String>,
+    /// The extension panel open in the dock's Eklenti tab (panels.rs, docs/adr/8057 §24).
+    pub(crate) panel: Option<panels::OpenPanel>,
+    /// A panel's button pressed: what its command's next launch gives the code, and where the rows go.
+    pub(crate) panel_call: Option<panels::PanelCall>,
 }
 
 impl Default for Extensions {
@@ -169,6 +174,8 @@ impl Default for Extensions {
             captured: None,
             capture_shape: None,
             look_wanted: None,
+            panel: None,
+            panel_call: None,
         }
     }
 }
@@ -233,6 +240,10 @@ pub(crate) enum Event {
     OpenSource(String, String),
     /// An extension's form, from its tab: (extension, local id).
     OpenForm(String, String),
+    /// An extension's panel, from its tab, in the dock's Eklenti tab: (extension, local id).
+    OpenPanel(String, String),
+    /// What the user does in the open panel.
+    Panel(panels::PanelEvent),
     /// The chosen extension's report onto the clipboard, for its publisher or an agent.
     CopyReport(String),
     /// Its whole log, or its newest lines.
@@ -543,6 +554,8 @@ impl App {
             }
             Event::Env(event) => return self.env_event(event),
             Event::Run(ext, kind, local) => return self.ext_run(&ext, &kind, &local),
+            Event::OpenPanel(ext, local) => return self.ext_panel_open(&ext, &local),
+            Event::Panel(event) => return self.ext_panel_event(event),
             Event::AuditDone(done) => self.ext_audit_done(*done),
             Event::AuditShow(i) => return self.ext_audit_show(i),
             Event::AuditFix(i) => self.ext_audit_fix(i),

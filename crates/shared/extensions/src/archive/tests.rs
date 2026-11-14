@@ -72,7 +72,7 @@ fn the_demo_extension_packs_and_passes_its_check() {
             e.expressions.len(),
             e.map_tools.len()
         ),
-        (4, 1, 1, 1),
+        (5, 1, 1, 1),
         "commands (one sets up its layer schema), an İşlemler tool, an expression function and a map tool"
     );
     let c = &manifest.contributions;
@@ -169,7 +169,7 @@ fn the_golden_packages_pack_inspect_and_repeat_byte_for_byte() {
     // the canonical form is the documented one; fixtures/extensions/.gitattributes keeps the bytes on every checkout.
     assert_eq!(
         mebis.digest,
-        "sha256:05585d1c96e53cb10e90ca819f9fe121db6c359830437ea1a8aaa2266b09a05f"
+        "sha256:a0bf2174415400e8cdd44b8942f11cad47c67ff15bb3aee39b9a00446f727a97"
     );
     let altlik = pack(&folder("ornek-altlik"), &limits()).unwrap();
     let warned: Vec<&str> = altlik.warnings.iter().map(|w| w.code).collect();

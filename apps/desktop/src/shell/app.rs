@@ -63,12 +63,14 @@ pub enum Panel {
     MapSurvey,
     /// Asistan: the user's own AI agent, chatting and drawing (assistant/, docs/adr/8056 §4).
     Assistant,
+    /// Eklenti: the extension panel opened from an extension's tab (extensions/panels.rs, docs/adr/8057 §24).
+    Extension,
     Properties,
 }
 
 impl Panel {
     /// Every panel, in the dock's order at start (a module's program docks its own, module_surfaces.rs).
-    pub(crate) const ALL: [Panel; 11] = [
+    pub(crate) const ALL: [Panel; 12] = [
         Panel::Layers,
         Panel::Processing,
         Panel::Blocks,
@@ -79,6 +81,7 @@ impl Panel {
         Panel::MapWork,
         Panel::MapSurvey,
         Panel::Assistant,
+        Panel::Extension,
         Panel::Properties,
     ];
 
@@ -94,6 +97,7 @@ impl Panel {
             Panel::MapWork => "Harita işi",
             Panel::MapSurvey => "GNSS arşivi",
             Panel::Assistant => "Asistan",
+            Panel::Extension => "Eklenti",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -110,6 +114,7 @@ impl Panel {
             Panel::MapWork => crate::icons::from_web(Some("sourceLinked")),
             Panel::MapSurvey => crate::icons::from_web(Some("gnssArchive")),
             Panel::Assistant => crate::icons::from_web(Some("assistant")),
+            Panel::Extension => crate::icons::from_web(Some("extensions")),
             Panel::Properties => Icon::Properties,
         }
     }

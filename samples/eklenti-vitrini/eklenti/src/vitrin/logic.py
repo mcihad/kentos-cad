@@ -11,6 +11,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``yapi_yerlestir``: harita aracı; manifestteki 10 × 12 m şablonu kullanıcının gösterdiği yere yazar.
 - ``yapi_no``: denetim kuralı; numarasız yapıları bulur, her birine sıradaki numarayı yazan bir düzeltme önerir.
 - ``katmanlari_kur``: katman şeması; schema.json'daki grubu, katmanları, değer listesini ve ilişkiyi tek adımda kurar.
+- ``yapi_ara``: panelin düğmesi; "Yapı ara" panelinin değerleriyle çalışır, satırları panelin tablosuna gider.
 """
 
 import time
@@ -67,6 +68,24 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
         cad.entities.set(ctx.doc, uids=[kayit.uid], operation="attributes", attrs={"no": f"Y-{n:02d}"})
         time.sleep(0.5)
     return ctx.message(f"{len(kayitlar)} yapı numaralandı (Y-01 … Y-{len(kayitlar):02d}).")
+
+
+@ext.command("yapi-ara")
+def yapi_ara(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Yapı ara" panelinin düğmesi: numarasında aranan geçen yapıları alanlarıyla listeler. Panelin değerleri
+    ctx.params'tadır (sorgu, numarasiz), satırlar panelin tablosunu doldurur (docs/adr/8057 §24)."""
+    yapi = _katman(ctx.doc, "yapi") if ctx.doc is not None else None
+    if yapi is None:
+        return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
+    sorgu = str(ctx.params.get("sorgu") or "").strip().casefold()
+    numarasiz = bool(ctx.params.get("numarasiz"))
+    satirlar = []
+    for kayit in ctx.doc.entities(layer=yapi, kinds=["polygon"]):
+        no = str((kayit.entity.attrs or {}).get("no", ""))
+        if (numarasiz and no) or (sorgu and sorgu not in no.casefold()):
+            continue
+        satirlar.append({"no": no or "—", "alan (m²)": round(Polygon(kayit.entity.pts).area, 1)})
+    return ctx.report(satirlar, title="Yapı ara", message=f"{len(satirlar)} yapı bulundu.")
 
 
 @ext.command("katmanlari-kur")

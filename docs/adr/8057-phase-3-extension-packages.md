@@ -121,7 +121,8 @@ yeterli.
   `sha256:ec9730da3c4841b7ec3b5ff82103e90db52766eb7d3e3c3da47ebec40ac46501` (Python'da ayrıca hesaplandı). 14 Kasım
   (§23): şema `kentos.layerSchema` v1'in sözcüklerine geçti (`area`, ilişkinin `id`/`parent`/`child`'ı, grup); özet
   `sha256:1a6af9c39da91b1fd7552a85204bf0ffea6c2e650c64bb06f936302db3bd317a` (aynı Python hesabı eskisini de birebir
-  verdi); katmanlarına formları bağlanınca `sha256:05585d1c96e53cb10e90ca819f9fe121db6c359830437ea1a8aaa2266b09a05f`.
+  verdi); katmanlarına formları bağlanınca `sha256:05585d1c96e53cb10e90ca819f9fe121db6c359830437ea1a8aaa2266b09a05f`; arama paneli
+  v1'e geçip `search` komutunu alınca (§24) `sha256:a0bf2174415400e8cdd44b8942f11cad47c67ff15bb3aee39b9a00446f727a97`.
 - `fixtures/extensions/v1/ornek-altlik/`: en küçük paket (D2): `manifest.json`, `LICENSE` ve iki servis veri kaynağı;
   Python yok. Paket 1 400 bayt; tek uyarı değişiklik notunun yokluğu.
 
@@ -1422,3 +1423,35 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   Gerçek pencere: "Şema kuruldu: 1 grup, 1 değer listesi, 2 katman, 1 form, 1 ilişki."
 - **Kalan:** alt türler ve değer bileşimleri biçimde yok; geometrisiz tablo katmanı KentOS'ta henüz yok (kayıtlar
   `mixed` katmana yazılır).
+
+## §24. Eklentinin paneli: `kentos.ui.panel` 1, düğmesi bir komut (`ADIM 22`, panel köprüsü, ilk dilim)
+
+**14 Kasım.** Kod: `crates/shared/extensions/src/ui_panel.rs` (tipler, Kapı 1), masaüstü
+`extensions/panels.rs` (durum, görünüm, düğme), `runner.rs` (`PanelCall`, `ExtRun.origin`), `app.rs`
+(`Panel::Extension`), Vitrin 1.0.7, MEBİS'in arama paneli.
+
+- **Karar: panel veridir, düğmesi bir komuttur.** `kentos.ui.panel` 1'in yedi bileşeni KentOS'un kendi
+  bileşenleriyle çizilir: `text`, `textField`, `numberField` (birimi, sınırları), `select`, `checkbox`, `button`,
+  `table`. Eklentinin kodu bir arayüz nesnesi ya da araç takımı tipi almaz (QGIS'te Qt değişince paketlerin %58'i
+  geride kaldı, D7). Düğme `entrypoints.commands`'tan bir komutu panelin değerleriyle çalıştırır: değerler
+  `ctx.params`'tadır (bileşen kimlikleriyle; metin kırpılır, sayı virgül ya da noktayla okunur ve boşsa None, seçim
+  değeri, onay true/false), komutun satırları panelin tablosunu, iletisi altını doldurur. Komut yürütücüsü olduğu gibi
+  kullanılır (süreç, aracı, tek geri alma adımı, Durdur, günlük): **Python API'sine hiçbir şey eklenmedi.**
+- **Panel Python'suz açılır:** şerit düğmesi her zaman açar; ortam hazır değilse panelin düğmeleri kapalıdır ve
+  nedeni panelde yazar (şeridin sözleriyle). Yazılan değerler yazıldığı gibi tutulur (yarım `12,` kaybolmaz), basınca
+  okunur; sayı olmayan ya da sınır dışı değer adıyla söylenir, hiçbir şey çalışmaz. Aynı panel yeniden açılınca
+  değerleri durur. Geç gelen yanıt yalnız başladığı açık panele yazılır (kapandıysa hiçbir yere).
+- **Yer:** dock'un "Eklenti" sekmesi, her programda. İlk açılış Katmanlar'ın yığınına: `show` yeni paneli kenarın son
+  yığınına (Öznitelikler'inkine) koyuyordu, form ve tablo yüksekliğin üçte birine sıkışıyordu (gerçek pencerede
+  ölçüldü); metin bileşeni form sütununda birkaç sözcükte bir kırılıyordu, tam genişliğe alındı. Boş sonuçta sütun
+  olmadığından boş başlık şeridi yerine "Satır yok." yazar.
+- **Kapı 1** (`ui_panel`, JSON işaretçili): biçim/sürüm, başlık, 1–100 bileşen, bilinmeyen tür ve alan, kimlik kuralı
+  (küçük harf, rakam, `_`, `-`; ctx.params anahtarı) ve tekliği, zorunlu ad, sayı alanının sınırları, seçimin
+  seçenekleri ve başlangıç değeri, **düğmenin komutu manifestte olmalı**, düğmenin tablosu panelde olmalı.
+- **MEBİS:** taslağın düğmesi olmayan bir `search` eylemine bağlıydı; MEBİS'e gerçek `search` komutu eklendi
+  (`mezar_yeri`'nde arar, `ctx.params["query"]`), panel v1'e geçti (özet yeniden hesaplandı).
+- **Gerçek pencere (`14-panel`, Vitrin 1.0.7):** Yapı ara açıldı; Ara "5 yapı bulundu" ve 5 satırlık tablo (no, alan
+  m²); Y-9 ve "Yalnız numarasız" ile "0 yapı bulundu".
+- **Kalan (ADIM 22):** katman, nesne ve alan seçici; ağaç, kart, ilerleme bileşenleri; sol ve alt yerleşim (`side`
+  şimdilik sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince); seçili satırı çizimde
+  gösterme.

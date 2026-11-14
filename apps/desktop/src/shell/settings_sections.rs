@@ -68,7 +68,7 @@ impl Section {
             Self::NewProjects => Icon::DocumentNew,
             Self::Engine => Icon::Cube,
             Self::Ai => crate::icons::from_web(Some("assistant")),
-            Self::Python => crate::icons::from_web(Some("python")),
+            Self::Python => crate::icons::from_web(Some("terminal")),
             Self::File => Icon::Open,
         }
     }

@@ -1,10 +1,10 @@
 {
   "format": "kentos.ui.panel",
   "schemaVersion": 1,
-  "title": "Mezar ve merhum sorgulama",
+  "title": "Mezar sorgulama",
   "body": [
-    { "type": "textField", "id": "query", "label": "Mezar no ya da merhum adı" },
-    { "type": "button", "id": "search", "label": "Ara", "action": "search" },
-    { "type": "table", "id": "results", "columns": ["mezar_no", "ada_no", "durum", "merhum_adi"] }
+    { "type": "textField", "id": "query", "label": "Mezar no ya da durum", "placeholder": "M-12" },
+    { "type": "button", "id": "search", "label": "Ara", "command": "search", "table": "results", "primary": true },
+    { "type": "table", "id": "results", "label": "Bulunan mezar yerleri" }
   ]
 }

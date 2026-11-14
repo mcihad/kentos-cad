@@ -1090,8 +1090,11 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
   kaydedilmemiş taslak tanımlı; pencere kapanması, kaldırma ve belge değişimi geç geri çağırmayı etkisiz kılar, bir
   taslak başka belgeye uygulanmaz [PY-UI-17, EKL-03]; aynı tanımın masaüstü/web/mobil önizlemesi ve başsız durum testleri
   ortak fikstürlerde [PY-UI-18]. Tablo ve listede büyük veri sayfalama ve sanallaştırmayla.
-- [ ] **Panel köprüsü:** eklentinin JSON'la bildirdiği `Table`, `Tree`, `Form`, `LayerPicker`, `FeaturePicker`,
-  `Progress` bileşenleri sağ/alt dock ya da kalıcı pencere olarak açılır.
+- [ ] **Panel köprüsü** — *ilk dilim yapıldı (ADR 8057 §24): `kentos.ui.panel` 1'in yedi bileşeni (metin, metin/sayı
+  alanı, seçim, onay, düğme, tablo) dock'un Eklenti sekmesinde; düğme bir komutu panelin değerleriyle (`ctx.params`)
+  çalıştırır, satırları tabloya; Kapı 1 denetimi; kalan: seçiciler, ağaç, ilerleme, sol/alt yerleşim.* Eklentinin
+  JSON'la bildirdiği `Table`, `Tree`, `Form`, `LayerPicker`, `FeaturePicker`, `Progress` bileşenleri sağ/alt dock ya da
+  kalıcı pencere olarak açılır.
 - [ ] **MapTool köprüsü:** manifestteki yakalama/kenetleme ve şablon önizleme kuralları (ör. 2,20 × 1,10 m mezar
   dikdörtgeni) Rust etkileşim oturumunda çizilir; kullanıcı noktaları onaylayınca `@ext.map_tool` çağrılır; sonuç tek
   geri alma adımı.

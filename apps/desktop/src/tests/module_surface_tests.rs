@@ -295,10 +295,16 @@ fn each_program_docks_its_own_panels() {
         for panel in Panel::ALL {
             assert_eq!(
                 app.docks.contains(panel),
-                panels.contains(&panel),
+                panels.contains(&panel) && panel != Panel::Extension,
                 "{program:?} {panel:?}"
             );
-            assert_eq!(app.shows_panel(panel), panels.contains(&panel));
+            // Eklenti is every program's, docked when an extension's panel opens (docs/adr/8057 §24): no empty tab at
+            // start.
+            assert_eq!(
+                app.shows_panel(panel),
+                panels.contains(&panel) || panel == Panel::Extension,
+                "{program:?} {panel:?}"
+            );
         }
         assert_eq!(in_front(&app), Some(Layers), "{program:?}");
         assert!(app.right_panel_shown());

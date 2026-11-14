@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.7 — 14 Kasım 2026
+
+- Panel: "Yapı ara" (`ui/yapi-ara.panel.json`) sağdaki Eklenti sekmesinde açılır; Ara, `yapi-ara` komutunu panelin
+  değerleriyle (yapı no, yalnız numarasızlar) çalıştırır, bulunan yapılar panelin tablosunda listelenir.
+
 ## 1.0.6 — 14 Kasım 2026
 
 - Örnek tesis formu (`forms/tesis.kform`): "Katmanları kur" formu Örnek tesis katmanına aynı adımda bağlar.

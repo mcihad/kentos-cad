@@ -198,6 +198,8 @@ const ARCHITECTURE: Surfaces = Surfaces {
         Panel::Navigator,
         // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
         Panel::Assistant,
+        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
+        Panel::Extension,
         Panel::Properties,
     ],
     cells: &[Cell::Level],
@@ -256,6 +258,8 @@ const MAP: Surfaces = Surfaces {
         Panel::RoadProject,
         // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
         Panel::Assistant,
+        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
+        Panel::Extension,
         Panel::Properties,
     ],
     cells: &[Cell::MapCrs, Cell::SecondCrs, Cell::Topology, Cell::Overlap],
@@ -323,6 +327,8 @@ const ROAD: Surfaces = Surfaces {
         Panel::RoadProject,
         // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
         Panel::Assistant,
+        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
+        Panel::Extension,
         Panel::Properties,
     ],
     cells: &[Cell::SecondCrs],
@@ -372,6 +378,8 @@ const GIS: Surfaces = Surfaces {
         Panel::Sources,
         // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
         Panel::Assistant,
+        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
+        Panel::Extension,
         Panel::Properties,
     ],
     cells: &[

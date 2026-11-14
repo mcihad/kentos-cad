@@ -33,6 +33,7 @@ mod problem;
 mod python;
 pub mod sdk_pack;
 mod text;
+pub mod ui_panel;
 pub mod verify;
 pub mod version;
 

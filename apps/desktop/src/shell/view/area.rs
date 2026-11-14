@@ -365,6 +365,10 @@ impl App {
         if panel == Panel::Assistant {
             return self.assistant_view();
         }
+        // An extension's panel shows without a drawing too; its buttons' commands say when there is none.
+        if panel == Panel::Extension {
+            return self.extension_panel_view();
+        }
         let Some(doc) = &self.document else {
             return container(label::muted("Açık çizim yok."))
                 .padding(12)
@@ -433,6 +437,7 @@ impl App {
             // GNSS arşivi: a map project's arazi ölçümleri (map_survey_panel.rs, docs/adr/1340 §6).
             Panel::MapSurvey => self.map_survey_view(),
             Panel::Assistant => self.assistant_view(),
+            Panel::Extension => self.extension_panel_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.architecture_properties_view(doc),
         }

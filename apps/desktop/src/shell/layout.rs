@@ -238,6 +238,7 @@ fn panel_of_key(key: &str) -> Panel {
         "mapWork" => Panel::MapWork,
         "mapSurvey" => Panel::MapSurvey,
         "assistant" => Panel::Assistant,
+        "extension" => Panel::Extension,
         _ => Panel::Layers,
     }
 }
@@ -399,6 +400,7 @@ impl App {
             Some(Panel::MapWork) => "mapWork",
             Some(Panel::MapSurvey) => "mapSurvey",
             Some(Panel::Assistant) => "assistant",
+            Some(Panel::Extension) => "extension",
             _ => "layers",
         };
         if !(others_panel && front == "layers") {

@@ -466,7 +466,8 @@ mod tests {
             &mut f,
             "manifest.json",
             "vitrin.logic:yapi_no",
-            "vitrin.logic:yapi_numara",
+            // A slip of one letter: Vitrin's `yapi_ara` is nearer than `yapi_no` to a longer misspelling.
+            "vitrin.logic:yapi_n0",
         );
         let v = verify(&f, &Limits::default());
         assert_eq!(codes(&v.problems), ["python_function_missing"]);

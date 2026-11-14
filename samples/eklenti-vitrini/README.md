@@ -28,10 +28,12 @@ ekran görüntüleri bununla yapılır (plan/eklenti.md, docs/adr/8057).
 | İfade işlevi | `expressions` › `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` | Etiket metni (`05-etiket`), Katman stili › Kurallar koşulu (`06-kural`), Katman süzgeci (`07-suzgec`), İşlemler'in ifadeleri; çizim beklemez, yanıt gelince yeniden çizilir |
 | Denetim kuralı ve düzeltme | `audits` › Yapı numarası (`@ext.audit`) | Vitrin › Yapı numarası: numarasız yapılar alt paneldeki Eklenti denetimi'nde listelenir; Göster nesneye götürür, Düzelt sıradaki numarayı tek geri alma adımıyla yazar (`11-denetim`) |
 | Katman şeması | `schema.json` (`schemaFile`): Vitrin grubu, Örnek tesis (nokta, formuyla: `forms/tesis.kform`) ve Bakım kaydı katmanları, Tesis türü listesi, ilişki | Vitrin › Katmanları kur: katman ağacında Vitrin grubu belirir, rapor ne eklendiğini söyler; ikinci basış bir şey değiştirmez (`13-sema`) |
+| Panel | `ui/yapi-ara.panel.json` (`entrypoints.panels`, `ui.panel`): metin, arama kutusu, onay kutusu, düğme, tablo | Vitrin › Yapı ara: sağdaki Eklenti sekmesinde açılır; Ara `yapi-ara` komutunu panelin değerleriyle çalıştırır, bulunanlar panelin tablosunda (`14-panel`) |
 | Yerleşik ikon | `icon: "space-number"`, `"layer-fields"` (kümenin `spaceNumber`, `layerFields` ikonları) | Vitrin sekmesinde Yapıları numarala, katmanın sağ tık menüsünde Katman özeti (`12-ikonlar`); kendi ikonları paketteki SVG'ler |
 | Python'suz katkı | `dataSources` (XYZ altlık) | Kaynaklar: Örnek Belediyesi altlığı (sunucusu örnektir, yanıt vermez) |
 
-Henüz çalıştırılamayan katkı türü (panel) eklenti sistemine geldiğinde buraya eklenecek.
+Panelin bileşenleri `kentos.ui.panel` 1'in yedisidir (metin, metin alanı, sayı alanı, seçim, onay kutusu, düğme, tablo); yenileri
+geldiğinde buraya eklenecek.
 
 ## Hazırlama
 

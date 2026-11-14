@@ -38,7 +38,8 @@
   "l10n": { "default": "tr", "files": { "en": "l10n/en.json" } },
   "entrypoints": {
     "commands": [
-      { "id": "init-schema", "title": "MEBİS katmanlarını kur", "icon": "layers", "handler": "mebis.logic:init_schema" }
+      { "id": "init-schema", "title": "MEBİS katmanlarını kur", "icon": "layers", "handler": "mebis.logic:init_schema" },
+      { "id": "search", "title": "Mezar ara", "handler": "mebis.logic:search" }
     ],
     "mapTools": [
       {
@@ -68,7 +69,7 @@
     ],
     "expressions": [{ "id": "mezar-etiketi", "handler": "mebis.logic:mebis_mezar_etiketi" }],
     "panels": [
-      { "id": "search-dock", "title": "Mezar ve merhum sorgulama", "side": "right", "definition": "ui/search_dock.panel.json" }
+      { "id": "search-dock", "title": "Mezar sorgulama", "side": "right", "definition": "ui/search_dock.panel.json" }
     ],
     "forms": [
       { "id": "mezar-yeri", "definition": "forms/mezar_yeri.kform" },

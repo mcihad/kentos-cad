@@ -13,6 +13,23 @@ def init_schema(ctx: ext.CommandContext) -> ext.CommandResult:
     return ctx.apply_declarative_schema("schema.json")
 
 
+@ext.command("search")
+def search(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Arama panelinin düğmesi: mezar no ya da durumunda sorgu geçen mezar yerlerini listeler. Panelin değerleri
+    ctx.params'tadır (kimlikleriyle), satırlar panelin tablosunu doldurur."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    query = str(ctx.params.get("query") or "").strip().casefold()
+    rows = []
+    for record in ctx.doc.entities(layer="mezar_yeri"):
+        attrs = dict(getattr(record, "attrs", None) or {})
+        if query and query not in " ".join(str(v) for v in attrs.values()).casefold():
+            continue
+        rows.append({"mezar_no": attrs.get("mezar_no", ""), "ada_no": attrs.get("ada_no", ""),
+                     "durum": attrs.get("durum", "")})
+    return ctx.report(rows, title="Mezar sorgulama", message=f"{len(rows)} mezar yeri bulundu.")
+
+
 @ext.map_tool("single-grave")
 def on_single_grave_placed(ctx: ext.MapToolContext, shape) -> ext.CommandResult:
     """Yerleştirilen 1,10 × 2,20 m şablonu mezar yeri olarak yazar; durumu 'BOS' başlar."""

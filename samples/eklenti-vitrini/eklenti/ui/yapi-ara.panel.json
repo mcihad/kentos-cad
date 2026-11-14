@@ -1,0 +1,35 @@
+{
+  "format": "kentos.ui.panel",
+  "schemaVersion": 1,
+  "title": "Yapı ara",
+  "body": [
+    {
+      "type": "text",
+      "text": "Numarasında yazılan geçen yapıları alanlarıyla listeler. Ara, eklentinin komutunu panelin değerleriyle çalıştırır."
+    },
+    {
+      "type": "textField",
+      "id": "sorgu",
+      "label": "Yapı no",
+      "placeholder": "Y-0"
+    },
+    {
+      "type": "checkbox",
+      "id": "numarasiz",
+      "label": "Yalnız numarasız yapılar"
+    },
+    {
+      "type": "button",
+      "id": "ara",
+      "label": "Ara",
+      "command": "yapi-ara",
+      "table": "sonuc",
+      "primary": true
+    },
+    {
+      "type": "table",
+      "id": "sonuc",
+      "label": "Bulunan yapılar"
+    }
+  ]
+}

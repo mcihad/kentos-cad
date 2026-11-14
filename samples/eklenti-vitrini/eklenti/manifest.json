@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -73,6 +73,19 @@
         "id": "katmanlari-kur",
         "title": "Katmanları kur",
         "handler": "vitrin.logic:katmanlari_kur"
+      },
+      {
+        "id": "yapi-ara",
+        "title": "Yapı ara",
+        "handler": "vitrin.logic:yapi_ara"
+      }
+    ],
+    "panels": [
+      {
+        "id": "yapi-paneli",
+        "title": "Yapı ara",
+        "side": "right",
+        "definition": "ui/yapi-ara.panel.json"
       }
     ],
     "processing": [
@@ -156,6 +169,16 @@
             ]
           },
           {
+            "label": "Panel",
+            "items": [
+              {
+                "panel": "yapi-paneli",
+                "size": "large",
+                "icon": "search"
+              }
+            ]
+          },
+          {
             "label": "Harita",
             "items": [
               {
@@ -218,6 +241,11 @@
       "id": "ui.ribbonTab",
       "scope": "plugin-owned",
       "reason": "CBS'de Vitrin sekmesini açar."
+    },
+    {
+      "id": "ui.panel",
+      "scope": "plugin-owned",
+      "reason": "Yapı arama panelini sağdaki Eklenti sekmesine ekler."
     },
     {
       "id": "ui.contextMenu",

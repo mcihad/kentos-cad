@@ -73,6 +73,8 @@ pub(crate) struct ExtRun {
     pub(crate) write: bool,
     /// The notice saying it runs, with its Durdur.
     pub(crate) notice: Option<kentos_ui::widget::toast::Id>,
+    /// The panel whose button started it: its rows go there (panels.rs, docs/adr/8057 §24).
+    pub(crate) origin: Option<super::panels::PanelOrigin>,
 }
 
 /// An extension version's process.
@@ -367,15 +369,21 @@ impl App {
             .get(ext)
             .and_then(|r| r.run.as_ref())
         {
+            let busy = format!(
+                "“{}” sürüyor: bitmesini bekleyin ya da Durdur'a basın.",
+                run.title
+            );
             self.toast(
                 Toast::info(format!("{name}: “{}” sürüyor", run.title))
                     .body("Bitmesini bekleyin ya da Durdur'a basın."),
             );
+            self.ext_panel_dropped(ext, local, &busy);
             return Task::none();
         }
         let plan = match self.ext_plan(ext, kind, local) {
             Ok(plan) => plan,
             Err(why) => {
+                self.ext_panel_dropped(ext, local, &why);
                 self.toast(Toast::warning(format!("{name}: çalıştırılamadı")).body(why));
                 return Task::none();
             }
@@ -437,6 +445,7 @@ impl App {
         let call = match launch {
             Ok(call) => call,
             Err(why) => {
+                self.ext_panel_dropped(ext, local, &why);
                 self.toast(Toast::warning(format!("{name}: çalıştırılamadı")).body(why));
                 return Task::none();
             }
@@ -458,6 +467,7 @@ impl App {
                     .map(|writer| format!("{writer} çizime yazıyor"))
             };
             if let Some(busy) = busy {
+                self.ext_panel_dropped(ext, local, &format!("{busy}; bitince yeniden basın."));
                 self.toast(
                     Toast::info(format!("{name}: “{}” bekletildi", call.title))
                         .body(format!("{busy}; bitince yeniden çalıştırın.")),
@@ -528,13 +538,18 @@ impl App {
                 .action("Durdur", msg(Event::StopRun(ext.to_owned())))
                 .sticky(),
         );
+        // A map tool's run gives its code the shape drawn (`ext.Shape`); a panel's button, the panel's values.
+        let panel = (call.kind == "command")
+            .then(|| self.ext_panel_take(ext, local))
+            .flatten();
         let Some(runner) = self.extensions.runners.get_mut(ext) else {
             return task;
         };
-        // A map tool's run gives its code the shape drawn (`ext.Shape`).
         let params = match (call.kind, self.extensions.capture_shape.take()) {
             ("mapTool", Some(shape)) => json!({ "shape": shape }),
-            _ => json!({}),
+            _ => panel
+                .as_ref()
+                .map_or_else(|| json!({}), |p| p.params.clone()),
         };
         runner.host.send(&json!({
             "type": "invoke",
@@ -563,6 +578,7 @@ impl App {
             read: call.read,
             write: call.write,
             notice: Some(notice),
+            origin: panel.map(|p| p.origin),
         });
         if let Some(registry) = self.extensions.registry.as_mut() {
             registry.write_log(
@@ -978,6 +994,18 @@ impl App {
         let keep = ok && !run.poisoned;
         let wrote = self.ext_close(&mut run, keep);
         let seconds = run.started.elapsed().as_secs_f64();
+        // A panel's button: its rows and words go to the panel it started from (panels.rs, docs/adr/8057 §24).
+        if let Some(origin) = run.origin.clone() {
+            let outcome = if ok {
+                Ok(m.get("result").cloned().unwrap_or(Value::Null))
+            } else if m.get("stopped").and_then(Value::as_bool) == Some(true) {
+                Err("Durduruldu; çizime yazdıkları geri alındı.".to_owned())
+            } else {
+                let said = m.get("message").and_then(Value::as_str).unwrap_or_default();
+                Err(format!("“{}” çalışmadı: {said}", run.title))
+            };
+            self.ext_panel_answer(&origin, outcome);
+        }
         if ok {
             let result = m.get("result").cloned().unwrap_or(Value::Null);
             let rows = result

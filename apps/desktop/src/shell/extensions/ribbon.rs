@@ -47,6 +47,8 @@ pub(crate) enum Action {
     Source(String, String),
     /// The extension's form: (extension, its local id).
     Form(String, String),
+    /// The extension's panel, in the dock's Eklenti tab: (extension, its local id) (panels.rs).
+    OpenPanel(String, String),
     /// The extension's Python, run in its own process: (extension, kind as the process is told, its local id)
     /// (runner.rs).
     Python(String, String, String),
@@ -224,6 +226,10 @@ fn item_of(
         let title = title.unwrap_or_else(|| local.clone());
         let action = match (has(kind, local), python) {
             (false, _) => not_granted(),
+            // A panel is declared: it opens without Python; its buttons say why they wait (panels.rs).
+            (true, _) if kind == ContributionKind::Panel => {
+                Action::OpenPanel(ext.to_owned(), local.clone())
+            }
             // Why it does not run now: Python off, uv not ready, its environment not prepared (environment.rs).
             (true, Some(why)) => Action::Unavailable(format!(
                 "“{title}” eklentinin Python işlevini çalıştırır. {why}"
@@ -245,8 +251,7 @@ fn item_of(
                 Action::Python(ext.to_owned(), "audit".to_owned(), local.clone())
             }
             (true, None) => Action::Unavailable(format!(
-                "“{title}”: Python ortamı hazır; panelleri çalıştıran yürütücü KentOS'un sonraki sürümünde. \
-                 Komutlar, harita araçları, İşlemler araçları ve denetimler çalışır."
+                "“{title}”: bu katkı türü KentOS'un bu sürümünde çalışmaz."
             )),
         };
         let fallback = crate::icons::from_web(Some("processing"));
@@ -428,6 +433,9 @@ impl App {
             Action::Builtin(id) => self.offers(id).then_some(Message::Run(id)),
             Action::Source(ext, local) => Some(msg(Event::OpenSource(ext.clone(), local.clone()))),
             Action::Form(ext, local) => Some(msg(Event::OpenForm(ext.clone(), local.clone()))),
+            Action::OpenPanel(ext, local) => {
+                Some(msg(Event::OpenPanel(ext.clone(), local.clone())))
+            }
             Action::Python(ext, kind, local) => {
                 Some(msg(Event::Run(ext.clone(), kind.clone(), local.clone())))
             }
@@ -527,6 +535,9 @@ impl App {
                         Action::Form(..) => {
                             "Eklentinin formunu projeye alır (Formu içe aktar gibi).".to_owned()
                         }
+                        Action::OpenPanel(..) => "Eklentinin panelini sağdaki Eklenti sekmesinde açar; düğmeleri \
+                                                  eklentinin komutlarını panelin değerleriyle çalıştırır."
+                            .to_owned(),
                         Action::Python(..) => "Eklentinin Python işlevini kendi sürecinde, kendi ortamında \
                                                çalıştırır; çizime yazdıkları tek adımda geri alınır. Ayrı süreç \
                                                korumalı alan değildir: eklenti sizin haklarınızla çalışır."
