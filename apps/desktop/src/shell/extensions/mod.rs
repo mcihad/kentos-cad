@@ -174,6 +174,8 @@ pub(crate) enum Event {
     RunOverdue(String, u64),
     /// An extension's process may have been left unused long enough to close (its generation).
     RunnerIdle(String, u64),
+    /// A look at the labels' answers to the extensions' functions (tools.rs): those that came are drawn.
+    LabelAnswers,
     /// What an extension's process said: extension, its process's generation, what.
     Runner(String, u64, crate::python::host::Said),
     Enable(String),
@@ -492,6 +494,13 @@ impl App {
             Event::StopRun(ext) => return self.ext_stop(&ext),
             Event::RunOverdue(ext, id) => self.ext_overdue(&ext, id),
             Event::RunnerIdle(ext, generation) => self.ext_idle(&ext, generation),
+            Event::LabelAnswers => {
+                if self.extensions.tools.labels.take_fresh()
+                    && let Some(doc) = &self.document
+                {
+                    self.spatial.sync(&doc.model);
+                }
+            }
             Event::Runner(ext, generation, said) => return self.ext_said(&ext, generation, said),
             Event::Enable(id) => {
                 let result = self.extensions.registry.as_mut().map(|r| r.enable(&id));

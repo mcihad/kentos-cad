@@ -15,6 +15,7 @@
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
@@ -89,31 +90,43 @@ pub(crate) struct ExtTools {
     shared: Arc<RwLock<Shared>>,
     pub(crate) pool: Arc<Pool>,
     notes: Arc<Mutex<Vec<Note>>>,
+    /// The labels' answers to the extensions' functions: never waiting (drawing slice).
+    pub(crate) labels: Arc<LabelAnswers>,
     /// The descriptors' refusals already written to a log this session.
     said: BTreeSet<String>,
 }
 
 impl Default for ExtTools {
     fn default() -> Self {
-        let tools = ExtTools {
-            shared: Arc::default(),
-            pool: Arc::new(Pool::default()),
-            notes: Arc::default(),
-            said: BTreeSet::new(),
-        };
-        external::register_provider(Arc::new(Bridge {
-            shared: Arc::clone(&tools.shared),
-            pool: Arc::clone(&tools.pool),
-            notes: Arc::clone(&tools.notes),
-        }));
-        external::register_expression_calls(Arc::new(Answers {
-            shared: Arc::clone(&tools.shared),
-            pool: Arc::clone(&tools.pool),
-            notes: Arc::clone(&tools.notes),
+        let shared: Arc<RwLock<Shared>> = Arc::default();
+        let pool = Arc::new(Pool::default());
+        let notes: Arc<Mutex<Vec<Note>>> = Arc::default();
+        let answers = Arc::new(Answers {
+            shared: Arc::clone(&shared),
+            pool: Arc::clone(&pool),
+            notes: Arc::clone(&notes),
             cache: Mutex::default(),
             told: Mutex::default(),
+        });
+        let labels = Arc::new(LabelAnswers {
+            answers: Arc::clone(&answers),
+            queue: Mutex::default(),
+            busy: AtomicBool::new(false),
+            fresh: AtomicBool::new(false),
+        });
+        external::register_provider(Arc::new(Bridge {
+            shared: Arc::clone(&shared),
+            pool: Arc::clone(&pool),
+            notes: Arc::clone(&notes),
         }));
-        tools
+        external::register_expression_calls(answers);
+        ExtTools {
+            shared,
+            pool,
+            notes,
+            labels,
+            said: BTreeSet::new(),
+        }
     }
 }
 
@@ -174,6 +187,145 @@ impl Answers {
             });
         }
     }
+}
+
+impl Answers {
+    fn key(name: &str, row: &[kentos_expression::external::Arg]) -> String {
+        format!(
+            "{name}\u{1}{}",
+            Value::Array(row.iter().map(arg_json).collect())
+        )
+    }
+
+    /// The answers already kept, by row; none where a row was never asked.
+    fn kept(
+        &self,
+        name: &str,
+        rows: &[Vec<kentos_expression::external::Arg>],
+    ) -> Vec<Option<kentos_expression::external::Arg>> {
+        let cache = self.cache.lock().ok();
+        rows.iter()
+            .map(|r| {
+                cache
+                    .as_ref()
+                    .and_then(|c| c.get(&Self::key(name, r)).cloned())
+            })
+            .collect()
+    }
+}
+
+/// A label's answers (docs/adr/8057 §8): what `Answers` keeps, at once; a row not answered yet is empty and goes to a
+/// queue a background thread asks of the extension's process, after which the labels calling it are worked out again
+/// (`label_texts::answers_changed`). A failed row is kept empty: it is not asked again and again.
+pub(crate) struct LabelAnswers {
+    answers: Arc<Answers>,
+    queue: Mutex<Vec<(String, Vec<kentos_expression::external::Arg>)>>,
+    /// A thread is asking.
+    busy: AtomicBool,
+    /// Answers came since the window last looked.
+    fresh: AtomicBool,
+}
+
+impl LabelAnswers {
+    /// Whether the window should look again soon: a thread asks, or answers came.
+    pub(crate) fn waiting(&self) -> bool {
+        self.busy.load(Ordering::Relaxed) || self.fresh.load(Ordering::Relaxed)
+    }
+
+    /// Answers came since the last look (and it is now looked at).
+    pub(crate) fn take_fresh(&self) -> bool {
+        self.fresh.swap(false, Ordering::Relaxed)
+    }
+
+    fn ask_in_background(self: &Arc<Self>) {
+        if self.busy.swap(true, Ordering::Relaxed) {
+            return;
+        }
+        let me = Arc::clone(self);
+        let _ = std::thread::Builder::new()
+            .name("kentos-ext-etiket".into())
+            .spawn(move || {
+                loop {
+                    let batch: Vec<(String, Vec<kentos_expression::external::Arg>)> = me
+                        .queue
+                        .lock()
+                        .map(|mut q| std::mem::take(&mut *q))
+                        .unwrap_or_default();
+                    if batch.is_empty() {
+                        me.busy.store(false, Ordering::Relaxed);
+                        // One more look: a row queued while the flag was going down is not left.
+                        if me.queue.lock().is_ok_and(|q| q.is_empty())
+                            || me.busy.swap(true, Ordering::Relaxed)
+                        {
+                            return;
+                        }
+                        continue;
+                    }
+                    let mut names: Vec<String> = batch.iter().map(|(n, _)| n.clone()).collect();
+                    names.sort();
+                    names.dedup();
+                    for name in names {
+                        let rows: Vec<Vec<kentos_expression::external::Arg>> = batch
+                            .iter()
+                            .filter(|(n, _)| *n == name)
+                            .map(|(_, r)| r.clone())
+                            .collect();
+                        use kentos_expression::external::ExternalCalls;
+                        let _ = me.answers.call(&name, &rows);
+                    }
+                    kentos_native_application::label_texts::answers_changed();
+                    me.fresh.store(true, Ordering::Relaxed);
+                }
+            });
+    }
+}
+
+/// The labels' calls: never waiting. `Arc<LabelAnswers>` answers them (its background thread needs the `Arc`).
+pub(crate) struct LabelCalls(pub(crate) Arc<LabelAnswers>);
+
+impl kentos_expression::external::ExternalCalls for LabelCalls {
+    fn call(
+        &self,
+        name: &str,
+        rows: &[Vec<kentos_expression::external::Arg>],
+    ) -> Vec<kentos_expression::external::Arg> {
+        let kept = self.0.answers.kept(name, rows);
+        let missing: Vec<(String, Vec<kentos_expression::external::Arg>)> = kept
+            .iter()
+            .zip(rows)
+            .filter(|(k, _)| k.is_none())
+            .map(|(_, r)| (name.to_owned(), r.clone()))
+            .collect();
+        if !missing.is_empty() {
+            if let Ok(mut queue) = self.0.queue.lock() {
+                for m in missing {
+                    if !queue.contains(&m) {
+                        queue.push(m);
+                    }
+                }
+            }
+            self.0.ask_in_background();
+        }
+        kept.into_iter()
+            .map(|a| a.unwrap_or(kentos_expression::external::Arg::Null))
+            .collect()
+    }
+}
+
+/// While a label's answers are asked or came: the window looks again every 300 ms (Toplu çalıştır's way).
+pub(crate) fn label_ticks() -> impl iced::futures::Stream<Item = crate::app::Message> {
+    use iced::futures::SinkExt;
+    let (mut out, ticks) = iced::futures::channel::mpsc::channel(1);
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(Duration::from_millis(300));
+            let tick = crate::app::Message::Extensions(super::Event::LabelAnswers);
+            if iced::futures::executor::block_on(out.send(tick)).is_err() {
+                break;
+            }
+        }
+    });
+    ticks
 }
 
 impl kentos_expression::external::ExternalCalls for Answers {
@@ -748,6 +900,11 @@ impl App {
                 );
             }
         }
+        // Labels know them too, answered without waiting (drawing slice).
+        kentos_native_application::label_texts::set_externals(
+            defs.clone(),
+            Arc::new(LabelCalls(Arc::clone(&self.extensions.tools.labels))),
+        );
         external::set_expressions(defs);
         let p = &self.python_setup;
         let python = match (&p.python, &p.root, p.ready_uv()) {

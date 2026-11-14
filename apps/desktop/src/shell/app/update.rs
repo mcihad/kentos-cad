@@ -34,6 +34,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // The labels' answers to the extensions' functions, while asked or come (extensions/tools.rs).
+            if self.extensions.tools.labels.waiting() {
+                Subscription::run(crate::extensions::tools::label_ticks)
+            } else {
+                Subscription::none()
+            },
             // Toplu çalıştır: a running batch job is looked at every tick (processing/batch.rs).
             if self.gis.processing.batch_running() {
                 Subscription::run(crate::processing::batch::ticks)
