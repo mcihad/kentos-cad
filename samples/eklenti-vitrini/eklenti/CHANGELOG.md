@@ -1,5 +1,9 @@
 # Değişiklikler
 
+## 1.0.9 — 14 Kasım 2026
+
+- "Yapı ara"da katman seçici (yalnız alan katmanları): seçilen katmanda arar, seçilmezse `yapi`'de.
+
 ## 1.0.8 — 14 Kasım 2026
 
 - "Yapı ara"nın satırları yapının kimliğini (`uid`) taşır: satıra tıklamak yapıyı seçip yakınlaştırır.

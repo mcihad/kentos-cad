@@ -69,7 +69,9 @@ Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.pa
 `definition`), şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title` ve `body`
 bileşenleri: `text` (`text`), `textField` (`id`, `label`, `placeholder`, `value`), `numberField` (`id`, `label`,
 `min`, `max`, `unit`, `value`), `select` (`id`, `label`, `options: [{value, label}]`, `value`), `checkbox` (`id`,
-`label`, `value`), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`, `primary`),
+`label`, `value`), `layerPicker` (`id`, `label`, `geometry`: point, line, area, annotation; açık çizimin katmanları,
+değeri katmanın kimliği ya da seçilmezse None), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği,
+`table`, `primary`),
 `table` (`id`, `label`). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
 doldurur. Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;

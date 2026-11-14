@@ -14,6 +14,12 @@
       "placeholder": "Y-0"
     },
     {
+      "type": "layerPicker",
+      "id": "katman",
+      "label": "Katman",
+      "geometry": "area"
+    },
+    {
       "type": "checkbox",
       "id": "numarasiz",
       "label": "Yalnız numarasız yapılar"

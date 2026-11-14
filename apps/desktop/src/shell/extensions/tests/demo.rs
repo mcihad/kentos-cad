@@ -612,7 +612,8 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
     let panel = gis.extensions.panel.as_ref().unwrap();
     assert_eq!(
         panel.params().unwrap(),
-        serde_json::json!({ "sorgu": "Y-0", "numarasiz": true })
+        serde_json::json!({ "sorgu": "Y-0", "katman": null, "numarasiz": true }),
+        "no layer chosen: none"
     );
     // Its environment not prepared here: the button says why in the panel, nothing starts.
     gis.extensions

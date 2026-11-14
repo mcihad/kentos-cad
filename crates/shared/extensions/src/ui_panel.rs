@@ -77,6 +77,13 @@ pub enum Component {
         #[serde(default)]
         value: Option<String>,
     },
+    /// One of the open drawing's layers, of `geometry`'s type (and the untyped ones) when given: its id.
+    LayerPicker {
+        id: String,
+        label: String,
+        #[serde(default)]
+        geometry: Option<String>,
+    },
     /// Yes or no.
     Checkbox {
         id: String,
@@ -110,6 +117,7 @@ impl Component {
             Component::TextField { id, .. }
             | Component::NumberField { id, .. }
             | Component::Select { id, .. }
+            | Component::LayerPicker { id, .. }
             | Component::Checkbox { id, .. }
             | Component::Button { id, .. }
             | Component::Table { id, .. } => Some(id),
@@ -123,6 +131,7 @@ impl Component {
             Component::TextField { .. }
                 | Component::NumberField { .. }
                 | Component::Select { .. }
+                | Component::LayerPicker { .. }
                 | Component::Checkbox { .. }
         )
     }
@@ -140,6 +149,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "textField" => &["id", "label", "placeholder", "value"],
         "numberField" => &["id", "label", "value", "min", "max", "unit"],
         "select" => &["id", "label", "options", "value"],
+        "layerPicker" => &["id", "label", "geometry"],
         "checkbox" => &["id", "label", "value"],
         "button" => &["id", "label", "command", "table", "primary"],
         "table" => &["id", "label"],
@@ -147,7 +157,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, textField, numberField, select, checkbox, button, table";
+const TYPES: &str = "text, textField, numberField, select, layerPicker, checkbox, button, table";
 
 /// A component's id: lowercase letters, digits, `_` and `-`, a letter first, at most 63: the key its value is given to
 /// the command under (`ctx.params["sorgu"]`).
@@ -364,6 +374,18 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     );
                 }
             }
+            "layerPicker" => {
+                if let Some(geometry) = c.get("geometry")
+                    && !geometry
+                        .as_str()
+                        .is_some_and(|g| ["point", "line", "area", "annotation"].contains(&g))
+                {
+                    add(
+                        format!("{at}/geometry"),
+                        "Katman türü point, line, area ya da annotation olmalı.".to_owned(),
+                    );
+                }
+            }
             "checkbox" => {
                 if c.get("value").is_some_and(|v| !v.is_boolean()) {
                     add(
@@ -432,6 +454,7 @@ mod tests {
                 { "type": "select", "id": "durum", "label": "Durum", "value": "hepsi",
                   "options": [{ "value": "hepsi", "label": "Hepsi" }, { "value": "numarasiz", "label": "Numarasız" }] },
                 { "type": "checkbox", "id": "secili", "label": "Yalnız seçililer" },
+                { "type": "layerPicker", "id": "katman", "label": "Katman", "geometry": "area" },
                 { "type": "button", "id": "ara", "label": "Ara", "command": "yapi-ara", "table": "sonuc", "primary": true },
                 { "type": "table", "id": "sonuc", "label": "Sonuçlar" }
             ]
@@ -444,10 +467,13 @@ mod tests {
         assert!(check("ui/ara.panel.json", &value, &["yapi-ara"]).is_empty());
         let read = read(&value).expect("read");
         assert_eq!(read.title, "Yapı ara");
-        assert_eq!(read.body.len(), 7);
-        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 4);
+        assert_eq!(read.body.len(), 8);
+        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 5);
         assert!(
-            matches!(&read.body[5], Component::Button { command, table: Some(t), .. }
+            matches!(&read.body[5], Component::LayerPicker { geometry: Some(g), .. } if g == "area")
+        );
+        assert!(
+            matches!(&read.body[6], Component::Button { command, table: Some(t), .. }
             if command == "yapi-ara" && t == "sonuc")
         );
     }
@@ -458,8 +484,9 @@ mod tests {
         p["body"][1]["id"] = json!("Sorgu");
         p["body"][2]["max"] = json!(-1);
         p["body"][3]["value"] = json!("yok");
-        p["body"][5]["command"] = json!("ara");
-        p["body"][5]["table"] = json!("liste");
+        p["body"][5]["geometry"] = json!("polygon");
+        p["body"][6]["command"] = json!("ara");
+        p["body"][6]["table"] = json!("liste");
         p["body"]
             .as_array_mut()
             .unwrap()
@@ -476,9 +503,10 @@ mod tests {
                 "/body/1/id",
                 "/body/2/min",
                 "/body/3/value",
-                "/body/5/command",
-                "/body/5/table",
-                "/body/7/type"
+                "/body/5/geometry",
+                "/body/6/command",
+                "/body/6/table",
+                "/body/8/type"
             ]
         );
     }

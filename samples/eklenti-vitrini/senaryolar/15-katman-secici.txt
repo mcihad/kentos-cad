@@ -1,0 +1,21 @@
+# Panelin katman seçicisi: Yapı ara'nın Katman listesi açık çizimin katmanlarını grup yollarıyla verir (türsüz katmanlar
+# her türü tutabildiği için alan süzgecinde de görünür); Parsel sınırı seçilip Ara'ya basılınca komut o katmanda arar.
+# (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1200
+click 417 75    # Yapı ara
+wait 2000
+drag 1280 508 1280 845
+wait 1000
+click 1354 353  # Katman seçici
+wait 1200
+shot 15-liste
+click 1294 507  # Kadastro › Parsel sınırı
+wait 1000
+click 1304 435  # Ara
+wait 7000
+shot 15-parsel

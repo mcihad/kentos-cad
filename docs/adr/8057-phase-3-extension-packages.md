@@ -1456,5 +1456,10 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   Göster'iyle ortak `ext_show_object`); `uid` sütun olarak gösterilmez. Vitrin 1.0.8'in Yapı ara satırları yapının
   kimliğini taşır. İskelette `panel` katkısı: özniteliklerinde arama yapan `nesne-ara` komutu, onu çalıştıran panel ve
   şerit düğmesi (yerleşik `search` ikonu); bütün birleşimler doğrulamadan uyarısız geçer.
-- **Kalan (ADIM 22):** katman, nesne ve alan seçici; ağaç, kart, ilerleme bileşenleri; sol ve alt yerleşim (`side`
-  şimdilik sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince).
+- **Katman seçici** (`layerPicker`: `id`, `label`, isteğe bağlı `geometry`): açık çizimin katmanlarını grup yollarıyla
+  ("Kadastro › Parsel sınırı") listeler, değeri katmanın kimliği, seçilmezse None. Tür süzgecine **türsüz katmanlar da
+  girer**: türsüz katman her türü tutabilir; CBS şablonunun katmanları türsüz olduğundan "alan" süzgeci orada neredeyse
+  bütün katmanları gösterir (gerçek pencerede görüldü, bilinçli). Vitrin 1.0.9'da Yapı ara'nın katmanı (boşsa `yapi`):
+  Parsel sınırı seçilince 4 parsel geldi (`15-katman-secici`). İskeletin panelinde de var (boşsa bütün katmanlar).
+- **Kalan (ADIM 22):** nesne ve alan seçici; ağaç, kart, ilerleme bileşenleri; sol ve alt yerleşim (`side` şimdilik
+  sağ dock'ta); birden çok açık panel; panelin kendi olayları (değer değişince).

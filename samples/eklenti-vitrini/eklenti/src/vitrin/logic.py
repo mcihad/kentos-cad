@@ -73,8 +73,10 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
 @ext.command("yapi-ara")
 def yapi_ara(ctx: ext.CommandContext) -> ext.CommandResult:
     """"Yapı ara" panelinin düğmesi: numarasında aranan geçen yapıları alanlarıyla listeler. Panelin değerleri
-    ctx.params'tadır (sorgu, numarasiz), satırlar panelin tablosunu doldurur (docs/adr/8057 §24)."""
-    yapi = _katman(ctx.doc, "yapi") if ctx.doc is not None else None
+    ctx.params'tadır (sorgu, numarasiz, katman: seçilen alan katmanının kimliği ya da None), satırlar panelin tablosunu
+    doldurur (docs/adr/8057 §24)."""
+    secilen = ctx.params.get("katman")
+    yapi = (secilen or _katman(ctx.doc, "yapi")) if ctx.doc is not None else None
     if yapi is None:
         return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
     sorgu = str(ctx.params.get("sorgu") or "").strip().casefold()

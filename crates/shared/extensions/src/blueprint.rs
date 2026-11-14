@@ -230,6 +230,7 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
             "body": [
                 { "type": "text", "text": "Bir özniteliğinde aranan geçen nesneleri listeler; satıra tıklamak nesneyi gösterir." },
                 { "type": "textField", "id": "sorgu", "label": "Aranan", "placeholder": "ad, no …" },
+                { "type": "layerPicker", "id": "katman", "label": "Katman" },
                 { "type": "button", "id": "ara", "label": "Ara", "command": "nesne-ara", "table": "sonuc", "primary": true },
                 { "type": "table", "id": "sonuc", "label": "Bulunanlar" }
             ]
@@ -484,13 +485,15 @@ const PANEL: &str = r#"
 
 @ext.command("nesne-ara")
 def nesne_ara(ctx: ext.CommandContext) -> ext.CommandResult:
-    """"Nesne ara" panelinin düğmesi: bir özniteliğinde aranan geçen nesneleri listeler (en çok 500). Panelin değeri
-    ctx.params["sorgu"]'dadır; satırın uid'i, satıra tıklanınca nesneyi gösterir (sütun olarak görünmez)."""
+    """"Nesne ara" panelinin düğmesi: bir özniteliğinde aranan geçen nesneleri listeler (en çok 500). Panelin değerleri
+    ctx.params'tadır: sorgu ve katman (seçilen katmanın kimliği; None: bütün katmanlar). Satırın uid'i, satıra
+    tıklanınca nesneyi gösterir (sütun olarak görünmez)."""
     if ctx.doc is None:
         return ctx.message("Açık çizim yok.")
     sorgu = str(ctx.params.get("sorgu") or "").strip().casefold()
+    katman = ctx.params.get("katman")
     satirlar = []
-    for kayit in ctx.doc.entities():
+    for kayit in ctx.doc.entities(layer=katman) if katman else ctx.doc.entities():
         ctx.check()
         oznitelikler = dict(getattr(kayit.entity, "attrs", None) or {})
         if sorgu and not any(sorgu in str(deger).casefold() for deger in oznitelikler.values()):

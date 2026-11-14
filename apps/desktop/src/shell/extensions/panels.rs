@@ -106,6 +106,10 @@ impl OpenPanel {
                 Component::Checkbox { id, value, .. } => {
                     panel.checks.insert(id.clone(), *value);
                 }
+                // A layer is chosen by the user: none at first.
+                Component::LayerPicker { id, .. } => {
+                    panel.choices.insert(id.clone(), String::new());
+                }
                 Component::Select {
                     id, options, value, ..
                 } => {
@@ -159,6 +163,11 @@ impl OpenPanel {
                         id.clone(),
                         json!(self.choices.get(id).cloned().unwrap_or_default()),
                     );
+                }
+                // A layer's id; none when no layer is chosen.
+                Component::LayerPicker { id, .. } => {
+                    let chosen = self.choices.get(id).filter(|l| !l.is_empty());
+                    out.insert(id.clone(), chosen.map_or(Value::Null, |l| json!(l)));
                 }
                 Component::Checkbox { id, .. } => {
                     out.insert(
@@ -517,6 +526,24 @@ impl App {
                     );
                     form = form.field(words.clone(), pick);
                 }
+                Component::LayerPicker {
+                    id,
+                    label: words,
+                    geometry,
+                } => {
+                    let layers = self.panel_layers(geometry.as_deref());
+                    let at = layers
+                        .iter()
+                        .position(|(l, _)| p.choices.get(id) == Some(l));
+                    let (id, ids): (String, Vec<String>) =
+                        (id.clone(), layers.iter().map(|(l, _)| l.clone()).collect());
+                    let pick = Select::new(
+                        layers.into_iter().map(|(_, name)| Choice::new(name)),
+                        at,
+                        move |i| event(PanelEvent::Choose(id.clone(), ids[i].clone())),
+                    );
+                    form = form.field(words.clone(), pick);
+                }
                 Component::Checkbox {
                     id, label: words, ..
                 } => {
@@ -582,6 +609,44 @@ impl App {
             body = body.push(table);
         }
         scrollable(body).height(Fill).into()
+    }
+
+    /// The open drawing's layers a layer picker offers: none ("—") first, then each layer (groups give their names to
+    /// the path) of `geometry`'s type or untyped.
+    fn panel_layers(&self, geometry: Option<&str>) -> Vec<(String, String)> {
+        fn walk(
+            nodes: &[kentos_commands::LayerNode],
+            path: &str,
+            geometry: Option<&str>,
+            out: &mut Vec<(String, String)>,
+        ) {
+            for n in nodes {
+                let name = if path.is_empty() {
+                    n.name.clone()
+                } else {
+                    format!("{path} › {}", n.name)
+                };
+                if n.kind == kentos_commands::LayerNodeType::Group {
+                    walk(&n.children, &name, geometry, out);
+                    continue;
+                }
+                let fits = match (geometry, n.geometry) {
+                    (None, _) | (_, None) => true,
+                    (Some(want), Some(kind)) => serde_json::to_value(kind)
+                        .ok()
+                        .and_then(|v| v.as_str().map(|k| k == want))
+                        .unwrap_or(false),
+                };
+                if fits {
+                    out.push((n.id.clone(), name));
+                }
+            }
+        }
+        let mut out = vec![(String::new(), "—".to_owned())];
+        if let Some(doc) = &self.document {
+            walk(doc.model.layers().nodes(), "", geometry, &mut out);
+        }
+        out
     }
 
     /// A table's rows, the first [`SHOWN_ROWS`]; empty until its button's command answered.
