@@ -143,7 +143,9 @@ fn an_extensions_tool_is_listed_in_islemler_and_its_button_opens_its_window() {
 }
 
 #[test]
-fn a_descriptor_that_does_not_fit_is_said_once_and_its_tool_left_out() {
+fn a_descriptor_that_does_not_fit_is_refused_before_kur() {
+    // The desktop's own tool check runs on reviewing (plan/eklenti.md ADIM 19, "tanımın kurulumda tam denetimi"): a
+    // parameter type the tools do not take is said there, with the descriptor, instead of a log line after "kuruldu".
     let bytes = imar(|files| {
         let mut d: serde_json::Value =
             serde_json::from_slice(&files["tools/taks.tool.json"]).unwrap();
@@ -153,24 +155,26 @@ fn a_descriptor_that_does_not_fit_is_said_once_and_its_tool_left_out() {
             serde_json::to_vec_pretty(&d).unwrap(),
         );
     });
-    let mut gis = with_imar("uymaz", bytes);
-    assert!(gis.gis.processing.registry.get(TAKS).is_none());
-    gis.extensions_changed();
-    let log = gis
-        .extensions
-        .registry
-        .as_ref()
-        .unwrap()
-        .log_of(IMAR)
+    let root = temp("uymaz");
+    let (mut gis, _) = App::boot(None);
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&root, false).0;
+    gis.open_extensions();
+    let _ = gis.extensions_event(Event::Picked(Some(("imar.kek".to_owned(), bytes))));
+    let review = gis.extensions.review.as_ref().expect("reviewed");
+    let found: Vec<&str> = review
+        .review
+        .inspection
+        .problems
         .iter()
-        .filter(|r| r.code == "tool_descriptor")
-        .collect::<Vec<_>>();
-    assert_eq!(log.len(), 1, "said once a session: {log:?}");
+        .filter(|p| p.code == "tool_descriptor")
+        .map(|p| p.message.as_str())
+        .collect();
     assert!(
-        log[0].message.contains("“rasterValues” türü"),
-        "{}",
-        log[0].message
+        found.len() == 1 && found[0].contains("“rasterValues” türü"),
+        "{found:?}"
     );
+    assert!(!review.review.installable);
 }
 
 fn concluded(canceled: bool) -> Concluded<'static> {
@@ -303,7 +307,10 @@ fn how_a_run_ended_is_read_into_islemler_and_the_log() {
 
 #[test]
 fn an_extensions_expression_function_is_known_to_islemler_by_name() {
-    let gis = with_imar("ifade", imar(|_| {}));
+    let mut gis = with_imar("ifade", imar(|_| {}));
+    // The functions are the process's, as the window that changed its extensions last left them: another test's window
+    // may have just written its own; this one writes İmar's again and reads them at once.
+    gis.extensions_changed();
     let defs = kentos_processing::external::expressions();
     let def = defs
         .iter()

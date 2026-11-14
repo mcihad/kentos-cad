@@ -24,7 +24,7 @@ pub mod watchdog;
 pub use journal::{Journal, Level, Record};
 pub use lease::{ContributionKind, ExtensionLease, Registered, Skipped};
 pub use policy::{Policy, Revocations, Revoked};
-pub use registry::{Activation, Choice, Crash, Installed, Options, Registry};
+pub use registry::{Activation, Choice, Crash, Installed, Options, Registry, ToolCheck};
 pub use store::{Channel, Grant, Source, SourceKind};
 pub use view::{
     CapabilityLine, Change, DependencyStatus, ExtensionView, NeedStatus, ProjectNeed, Review,

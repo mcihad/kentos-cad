@@ -439,16 +439,21 @@ serileştirilen sözleşme olamaz.
   "label": "Ada bazlı doluluk",
   "category": "Mezarlık BS",
   "parameters": [
-    { "id": "islands", "type": "features", "required": true, "accepts": { "geometryKinds": ["polygon"] }, "readIntent": "snapshot" },
-    { "id": "graves", "type": "features", "required": true, "accepts": { "geometryKinds": ["polygon"] }, "readIntent": "snapshot" },
-    { "id": "destination", "type": "destination", "allowedKinds": ["table", "file"], "default": { "kind": "table" } }
+    { "name": "islands", "label": "Mezarlık adaları", "type": "features", "kinds": ["polygon"],
+      "scopes": ["layer", "selection", "visible", "all"], "default": { "scope": "layer", "layerId": "mezar_ada" } },
+    { "name": "graves", "label": "Mezar yerleri", "type": "features", "kinds": ["polygon"],
+      "scopes": ["layer", "selection", "visible", "all"], "default": { "scope": "layer", "layerId": "mezar_yeri" } }
   ],
-  "outputs": [ { "id": "report", "type": "table", "sinkParameter": "destination" } ],
-  "mutation": { "mode": "none" },
+  "outputs": [ { "name": "report", "label": "Ada bazlı doluluk tablosu", "type": "table" } ],
   "feedback": { "progress": true, "cancel": true },
   "capabilities": { "runtimes": ["desktop-python"] }
 }
 ```
+
+(14 Kasım: ADIM 19'un ikinci diliminde kesinleşen v1 bu: parametreler İşlemler'in parametre JSON'uyla, adı `name` ve
+Python işlevinin bağımsız değişkeni; çıktılar `name` ile, bir katmana yazılan çıktı `sinkParameter` ile bir `layer`
+parametresine bağlanır. Taslaktaki `id`/`accepts`/`readIntent`/`destination` biçimi kurulumdaki tam denetimden
+geçmez; ADR 8057 §7.)
 
 Girdi katman/seçimi **çağrı anında** açık kaynak/anlık görüntü/UUID girdisine çözülür. Kabul girdisi ayrıca yazılır
 (ör. min–maks normalleştirmede `[2, 4, 6] → [0, 0.5, 1]`; boş/null, bütün değerlerin eşit olması, ondalık→NumPy

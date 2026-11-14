@@ -2132,3 +2132,56 @@ fn an_extensions_bytecode_goes_to_its_environment_not_its_package() {
         ]
     );
 }
+
+#[test]
+fn a_tool_the_desktop_would_not_make_is_refused_before_kur() {
+    // plan/eklenti.md ADIM 19, "tanımın kurulumda tam denetimi": the package's own check reads the descriptor's format,
+    // version and id; a parameter Python cannot name (`class`) passed it, the install said "kuruldu" and the tool was
+    // found out only when it was listed, in a log line. The review now asks the desktop's own tool check
+    // (`kentos_processing::external::from_descriptor`) and says it before Kur.
+    let root =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/extensions/v1/ornek-imar");
+    let mut files = kentos_extension_host::store::read_files(&root).unwrap();
+    let mut tool: serde_json::Value =
+        serde_json::from_slice(&files["tools/taks.tool.json"]).unwrap();
+    tool["parameters"][0]["name"] = serde_json::json!("class");
+    files.insert(
+        "tools/taks.tool.json".into(),
+        serde_json::to_vec_pretty(&tool).unwrap(),
+    );
+    let bytes = kentos_extensions::pack(&files, &Limits::default())
+        .unwrap_or_else(|p| panic!("the package's own check passes it: {p:#?}"))
+        .bytes;
+    let dir = temp("arac-tanimi");
+    // Not `app`: its extensions_changed writes the process's functions, which other tests read.
+    let (mut gis, _) = App::boot(None);
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&dir, false).0;
+    gis.open_extensions();
+    let _ = gis.extensions_event(Event::Picked(Some(("imar.kek".to_owned(), bytes.clone()))));
+    let review = gis.extensions.review.as_ref().expect("reviewed");
+    let problem = review
+        .review
+        .inspection
+        .problems
+        .iter()
+        .find(|p| p.code == "tool_descriptor")
+        .unwrap_or_else(|| panic!("{:#?}", review.review.inspection.problems));
+    assert_eq!(problem.file.as_deref(), Some("tools/taks.tool.json"));
+    assert!(
+        problem.message.contains("“taks” aracı") && problem.message.contains("class"),
+        "{}",
+        problem.message
+    );
+    assert!(!review.review.installable, "not installable");
+    // Installing the bytes anyway (another way in) is refused the same.
+    let registry = gis.extensions.registry.as_mut().expect("a registry");
+    let source = kentos_extension_host::store::Source {
+        kind: kentos_extension_host::store::SourceKind::File,
+        location: "imar.kek".to_owned(),
+    };
+    let refused = registry
+        .install(&bytes, &source, &kentos_extension_host::Choice::default())
+        .expect_err("refused");
+    assert_eq!(refused[0].code, "tool_descriptor");
+}

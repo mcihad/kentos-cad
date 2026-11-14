@@ -234,6 +234,19 @@ impl Extensions {
         let options = Options {
             safe_mode,
             policy: kentos_extension_host::places::load_policy(&policy_file),
+            // A tool this host would not make is refused before Kur, not found out when it is first listed.
+            tools: Some(kentos_extension_host::ToolCheck(std::sync::Arc::new(
+                |m: &kentos_extensions::Manifest, local: &str, value: &serde_json::Value| {
+                    kentos_processing::external::from_descriptor(
+                        &m.id,
+                        &m.name,
+                        &m.version.to_string(),
+                        local,
+                        value,
+                    )
+                    .map(|_| ())
+                },
+            ))),
             ..Options::default()
         };
         let mut notes = Vec::new();

@@ -30,6 +30,26 @@ use crate::view::{
 };
 use crate::watchdog::{Bisection, CRASHES_TO_FAIL, Finding};
 
+/// A host's whole check of a processing tool's descriptor (`kentos.processingTool` v1), the one its tools are made with
+/// (the desktop's `kentos_processing::external::from_descriptor`): the manifest, the tool's local id and the
+/// descriptor; why not, in a sentence naming the place. The package's own check reads only the format, the version and
+/// the id; a tool the host would not make was found out when it was first listed, in a log line, after the install
+/// had said "kuruldu" (plan/eklenti.md ADIM 19: "tanımın kurulumda tam denetimi").
+#[derive(Clone)]
+pub struct ToolCheck(
+    pub  std::sync::Arc<
+        dyn Fn(&kentos_extensions::Manifest, &str, &serde_json::Value) -> Result<(), String>
+            + Send
+            + Sync,
+    >,
+);
+
+impl std::fmt::Debug for ToolCheck {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("ToolCheck")
+    }
+}
+
 /// How the registry runs.
 #[derive(Clone, Debug)]
 pub struct Options {
@@ -40,6 +60,9 @@ pub struct Options {
     /// How long a change waits for another process's.
     pub lock_wait: Duration,
     pub limits: Limits,
+    /// The host's check of the processing tools' descriptors, asked on reviewing and installing; none: the package's
+    /// own check alone.
+    pub tools: Option<ToolCheck>,
 }
 
 impl Default for Options {
@@ -49,8 +72,37 @@ impl Default for Options {
             policy: None,
             lock_wait: Duration::from_secs(5),
             limits: Limits::default(),
+            tools: None,
         }
     }
+}
+
+/// The package's processing tools the host's check refuses, each a `tool_descriptor` problem at its descriptor.
+fn tool_problems(
+    check: Option<&ToolCheck>,
+    manifest: &kentos_extensions::Manifest,
+    files: &std::collections::BTreeMap<String, Vec<u8>>,
+) -> Vec<Problem> {
+    let Some(check) = check else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for tool in &manifest.entrypoints.processing {
+        let read = files
+            .get(&tool.descriptor)
+            .and_then(|b| serde_json::from_slice::<serde_json::Value>(b).ok());
+        let why = match read {
+            Some(value) => (check.0)(manifest, &tool.id, &value).err(),
+            None => Some("Araç tanımı okunamadı.".to_owned()),
+        };
+        if let Some(why) = why {
+            out.push(
+                Problem::new("tool_descriptor", format!("“{}” aracı: {why}", tool.id))
+                    .file(tool.descriptor.clone()),
+            );
+        }
+    }
+    out
 }
 
 /// What the user chose when installing.
@@ -939,7 +991,15 @@ impl Registry {
 
     /// Everything to show before the user decides; installs nothing.
     pub fn review(&self, bytes: &[u8], source: &Source) -> Review {
-        let inspection = kentos_extensions::inspect(bytes, &self.options.limits);
+        let opened = kentos_extensions::open(bytes, &self.options.limits);
+        let mut inspection = opened.inspection;
+        // The host's whole check of the tools: a tool it would not make is said before Kur, not after.
+        if let Some(m) = &inspection.manifest
+            && inspection.is_valid()
+        {
+            let found = tool_problems(self.options.tools.as_ref(), m, &opened.files);
+            inspection.problems.extend(found);
+        }
         let manifest = inspection.manifest.clone();
         let mut review = Review {
             inspection,
@@ -1038,6 +1098,12 @@ impl Registry {
         let opened = kentos_extensions::open(bytes, &self.options.limits);
         if !opened.inspection.is_valid() {
             return Err(opened.inspection.problems);
+        }
+        if let Some(m) = &opened.inspection.manifest {
+            let found = tool_problems(self.options.tools.as_ref(), m, &opened.files);
+            if !found.is_empty() {
+                return Err(found);
+            }
         }
         let one = |p: Problem| vec![p];
         let (Some(manifest), Some(digest)) = (

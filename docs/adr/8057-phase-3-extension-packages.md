@@ -116,7 +116,9 @@ yeterli.
 - `fixtures/extensions/v1/mebis/`: dikey eklenti; komut, harita aracı, İşlemler aracı, denetim, ifade, panel, iki form,
   Python'suz veri kaynağı, şema, çeviri, ikon; `pyproject.toml` ve **gerçek `uv lock` çıktısı** (uv 0.11.26; `shapely`,
   isteğe bağlı `pygal`; üç sistem `environments` ve `required-environments`'ta). Paket 14 382 bayt, 16 dosya, içerik özeti
-  `sha256:e3816e901e3241d238547ddd25a9d31731d0e6931e96752ee8ff8507030a3b1b`.
+  `sha256:e3816e901e3241d238547ddd25a9d31731d0e6931e96752ee8ff8507030a3b1b`. 14 Kasım: araç tanımı ADIM 19'da
+  kesinleşen v1'e geçti (taslağın `id`/`accepts`/`destination` biçimi kurulumdaki tam denetimden geçmiyordu); özet
+  `sha256:ec9730da3c4841b7ec3b5ff82103e90db52766eb7d3e3c3da47ebec40ac46501` (Python'da ayrıca hesaplandı).
 - `fixtures/extensions/v1/ornek-altlik/`: en küçük paket (D2): `manifest.json`, `LICENSE` ve iki servis veri kaynağı;
   Python yok. Paket 1 400 bayt; tek uyarı değişiklik notunun yokluğu.
 
