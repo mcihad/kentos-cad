@@ -27,7 +27,7 @@ const USAGE: &str = "Kullanım:
   kentos kek verify <klasör> [--json]               klasörü pencere açmadan doğrular: paket, Python işaretleri,
                                                     satırlı rapor (yapay zekâ ajanlarının tek adımda düzelteceği)
   kentos kek new <klasör> --id <kimlik> --name <ad> [--summary <cümle>] [--module cbs|harita|mimari|yol]
-                 [--utility] [--with command,processing,audit,expression,mapTool]
+                 [--utility] [--with command,processing,audit,expression,mapTool,schema]
                                                     doğrulamadan geçen bir eklenti iskeleti yazar
   kentos kek sdk [--part <bölüm>] [--json]          eklenti yazma rehberi ve kentos.ext imzaları (--json: paketin
                                                     tamamı, ajanların kentos://sdk/ai-kek-pack'i)
@@ -256,7 +256,7 @@ fn new_folder(folder: &Path, args: &[&str]) -> ExitCode {
             Some(c) => contributions.push(c),
             None => {
                 return fail(format!(
-                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool."
+                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool, schema."
                 ));
             }
         }

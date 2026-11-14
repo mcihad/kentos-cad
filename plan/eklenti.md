@@ -1095,7 +1095,9 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
 - [ ] **MapTool köprüsü:** manifestteki yakalama/kenetleme ve şablon önizleme kuralları (ör. 2,20 × 1,10 m mezar
   dikdörtgeni) Rust etkileşim oturumunda çizilir; kullanıcı noktaları onaylayınca `@ext.map_tool` çağrılır; sonuç tek
   geri alma adımı.
-- [ ] **Katman şeması kurulumu:** `schema.json` (katmanlar, alt türler/domain'ler, `1:N` ilişkiler) ve formlar host'un tek
+- [ ] **Katman şeması kurulumu** — *ilk dilim yapıldı (ADR 8057 §23): `kentos.layerSchema` 1 (katmanlar ve alanları,
+  değer listeleri, ilişkiler, grup), Kapı 1 denetimi, `ctx.apply_declarative_schema` var olana dokunmadan eksiği tek
+  adımda kurar, katman kimliği şema adı (`cad.layers.edit` `id`); kalan: formlar, alt türler.* `schema.json` (katmanlar, alt türler/domain'ler, `1:N` ilişkiler) ve formlar host'un tek
   komutuyla projeye kurulur; biçim bu adımda ADR'yle sabitlenir, form planının şema/ilişki sözleşmesini yeniden yazmaz.
 - [ ] **Referans eklenti** (`fixtures/extensions/v1/mebis.kek`, §3): AI ajanı üretir; kendi şerit sekmesini, sağ dock
   panelini, iki İşlemler aracını, bir MapTool'u ve bir denetim kuralını sunar; şerit, Eklentiler, İşlemler, Denetim,

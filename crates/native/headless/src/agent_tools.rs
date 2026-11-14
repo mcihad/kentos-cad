@@ -475,7 +475,8 @@ pub fn tools() -> Vec<Tool> {
         title: "Eklenti iskeleti",
         description: "Yeni bir eklentinin çalışma klasörünü verir (dosya yolu → içerik): manifest, Python projesi ve \
                       kilidi, ikon, lisans ve istenen her katkının küçük, çalışan bir örneği (command, processing, \
-                      audit, expression, mapTool). İskelet extension.verify'dan sorunsuz geçer. Hiçbir şey yazmaz: \
+                      audit, expression, mapTool; schema: katmanları, değer listesini ve grubu kuran schema.json ile \
+                      komutu, harita aracı da varsa o katmana çizer). İskelet extension.verify'dan sorunsuz geçer. Hiçbir şey yazmaz: \
                       dosyaları siz yazar, örnekleri isteğe göre değiştirip doğrularsınız."
             .into(),
         input: object(
@@ -487,7 +488,7 @@ pub fn tools() -> Vec<Tool> {
                           "description": "vertical kendi şerit sekmesini açar, utility KentOS'unkilere araç ekler" },
                 "module": { "type": "string", "enum": ["cbs", "harita", "mimari", "yol"], "default": "cbs" },
                 "contributions": { "type": "array", "items": { "type": "string",
-                    "enum": ["command", "processing", "audit", "expression", "mapTool"] } }
+                    "enum": ["command", "processing", "audit", "expression", "mapTool", "schema"] } }
             }),
             &["id", "name", "contributions"],
         ),
@@ -1518,7 +1519,7 @@ fn extension_blueprint(host: &dyn Host, args: &Value) -> Result<Value, HeadlessE
             HeadlessError::new(
                 "invalid_input",
                 format!(
-                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool."
+                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool, schema."
                 ),
             )
         })?);

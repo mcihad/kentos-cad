@@ -82,7 +82,13 @@ kind?: LayerNodeType,
 /**
  * Add's and duplicate's name, trimmed.
  */
-name?: string, parent?: string, index?: number, color?: string, lineType?: LineType, 
+name?: string, 
+/**
+ * Add's id for the new node (docs/adr/8057 §23): a name a program finds it by again, as an extension's layer
+ * schema names its layers (`mezar_parsel`) and a template's layers have theirs (`parsel`). ASCII letters, digits,
+ * `_`, `-` and `.`, a letter first, 1–64; not one the tree has. Absent: one made (`layer-N`).
+ */
+id?: string, parent?: string, index?: number, color?: string, lineType?: LineType, 
 /**
  * add, style: a project line type by its name (docs/adr/0313 §1), its nearest built-in written as the line type
  * unless `lineType` is given; null: none (a `lineType` given alone takes it away too).

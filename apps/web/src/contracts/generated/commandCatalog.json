@@ -77912,6 +77912,13 @@
             ],
             "description": "add, geometry: what the layer holds (docs/adr/0622 §5); `mixed`: any kind."
           },
+          "id": {
+            "description": "Add's id for the new node (docs/adr/8057 §23): a name a program finds it by again, as an extension's layer\nschema names its layers (`mezar_parsel`) and a template's layers have theirs (`parsel`). ASCII letters, digits,\n`_`, `-` and `.`, a letter first, 1–64; not one the tree has. Absent: one made (`layer-N`).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "index": {
             "format": "uint32",
             "minimum": 0,
@@ -110005,6 +110012,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Belge değişikliği reddetti (silinemeyecek bir katman)."
+    },
+    {
+      "code": "invalid_layer_id",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katmanın kimliği kurallarına uymuyor ya da ağaçta var."
     },
     {
       "code": "no_network",

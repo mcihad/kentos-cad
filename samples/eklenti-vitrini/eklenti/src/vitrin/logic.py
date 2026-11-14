@@ -10,6 +10,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``ada_parsel``: ifade işlevi; etiket metni, stil kuralı, katman süzgeci, İşlemler ve form hesabı çağırır.
 - ``yapi_yerlestir``: harita aracı; manifestteki 10 × 12 m şablonu kullanıcının gösterdiği yere yazar.
 - ``yapi_no``: denetim kuralı; numarasız yapıları bulur, her birine sıradaki numarayı yazan bir düzeltme önerir.
+- ``katmanlari_kur``: katman şeması; schema.json'daki grubu, katmanları, değer listesini ve ilişkiyi tek adımda kurar.
 """
 
 import time
@@ -66,6 +67,13 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
         cad.entities.set(ctx.doc, uids=[kayit.uid], operation="attributes", attrs={"no": f"Y-{n:02d}"})
         time.sleep(0.5)
     return ctx.message(f"{len(kayitlar)} yapı numaralandı (Y-01 … Y-{len(kayitlar):02d}).")
+
+
+@ext.command("katmanlari-kur")
+def katmanlari_kur(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Vitrin'in katman şemasını (schema.json: Vitrin grubu, Örnek tesis ve Bakım kaydı katmanları, Tesis türü listesi,
+    bakım kaydından tesise ilişki) açık çizime kurar: var olana dokunmaz, eksiği ekler; tek geri alma adımıdır."""
+    return ctx.apply_declarative_schema("schema.json")
 
 
 @ext.command("hata-ornegi")

@@ -99,6 +99,8 @@ class Channel:
         self.work: queue.Queue[dict[str, Any] | None] = queue.Queue()
         #: The running runs' stop flags, by run id.
         self.stops: dict[int, threading.Event] = {}
+        #: The package's folder (the hello's ``source``): where a context reads the package's own files.
+        self.source: str | None = None
         threading.Thread(target=self._read, args=(incoming,), name="kentos-ext-oku", daemon=True).start()
 
     def send(self, message: dict[str, Any]) -> None:
@@ -411,13 +413,13 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
             doc = cad.Document(DesktopSession(channel)) if message.get("document") else None  # type: ignore[arg-type]
             params = dict(message.get("params") or {})
             shape = ext.Shape(dict(params.pop("shape", None) or {}))
-            mctx = ext.MapToolContext(link, doc, message.get("settings"), params)
+            mctx = ext.MapToolContext(link, doc, message.get("settings"), params, source=channel.source)
             if stop.is_set():
                 raise ext.Stopped()
             result = result_of(fn(mctx, shape))
         else:
             doc = cad.Document(DesktopSession(channel)) if message.get("document") else None  # type: ignore[arg-type]
-            ctx = ext.CommandContext(link, doc, message.get("settings"), message.get("params"))
+            ctx = ext.CommandContext(link, doc, message.get("settings"), message.get("params"), source=channel.source)
             if stop.is_set():
                 raise ext.Stopped()
             result = result_of(fn(ctx))
@@ -465,6 +467,7 @@ def main() -> int:
         )
         return 1
     source = str(hello.get("source", ""))
+    channel.source = source or None
     folders = [os.path.normpath(os.path.join(source, str(path))) for path in hello.get("paths") or []]
     # KentOS's library comes from the environment, never from an extension's own folders (PY-UV-31): a package
     # carrying a `kentos` module is refused, and its folders come after the environment's, so it cannot shadow an

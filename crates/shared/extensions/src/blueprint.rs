@@ -37,10 +37,12 @@ pub enum Contribution {
     Audit,
     Expression,
     MapTool,
+    /// A layer schema (`schema.json`, docs/adr/8057 §23) and the command that sets it up on the drawing.
+    Schema,
 }
 
 impl Contribution {
-    /// Its name in an agent's call (`command`, `processing`, `audit`, `expression`, `mapTool`).
+    /// Its name in an agent's call (`command`, `processing`, `audit`, `expression`, `mapTool`, `schema`).
     pub fn parse(name: &str) -> Option<Contribution> {
         match name {
             "command" => Some(Contribution::Command),
@@ -48,16 +50,18 @@ impl Contribution {
             "audit" => Some(Contribution::Audit),
             "expression" => Some(Contribution::Expression),
             "mapTool" => Some(Contribution::MapTool),
+            "schema" => Some(Contribution::Schema),
             _ => None,
         }
     }
 
-    pub const ALL: [Contribution; 5] = [
+    pub const ALL: [Contribution; 6] = [
         Contribution::Command,
         Contribution::Processing,
         Contribution::Audit,
         Contribution::Expression,
         Contribution::MapTool,
+        Contribution::Schema,
     ];
 }
 
@@ -93,12 +97,15 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
     let mut entrypoints = serde_json::Map::new();
     let mut capabilities = Vec::new();
     let mut items = Vec::new();
+    let mut commands = Vec::new();
     let mut python = vec![HEADER.replace("{NAME}", name)];
     let mut files = BTreeMap::new();
+    let schema = has(Contribution::Schema);
+    // The schema's layer: its id in the drawing, what the map tool draws into when there is one.
+    let layer = format!("{package}_alan");
     if has(Contribution::Command) {
-        entrypoints.insert(
-            "commands".into(),
-            json!([{ "id": "katman-listesi", "title": "Katman listesi", "handler": format!("{package}.logic:katman_listesi") }]),
+        commands.push(
+            json!({ "id": "katman-listesi", "title": "Katman listesi", "handler": format!("{package}.logic:katman_listesi") }),
         );
         capabilities.push(json!({ "id": "document.read", "scope": "current-project",
                                   "reason": "Açık çizimin katmanlarını ve nesne sayılarını okur." }));
@@ -167,26 +174,71 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
         );
         python.push(EXPRESSION.replace("{ID}", &ask.id));
     }
-    let writes = has(Contribution::MapTool);
-    if writes {
+    if schema {
+        // The layers it needs, set up by its own command (docs/adr/8057 §23).
+        commands.push(
+            json!({ "id": "katmanlari-kur", "title": "Katmanları kur", "handler": format!("{package}.logic:katmanlari_kur") }),
+        );
+        items.push(json!({ "command": "katmanlari-kur", "size": "large", "icon": "layer-add" }));
+        let layer_schema = json!({
+            "format": crate::layer_schema::FORMAT,
+            "version": crate::layer_schema::VERSION,
+            "group": { "id": package, "name": name },
+            "domains": [{
+                "id": format!("{package}_durum"),
+                "name": "Durum",
+                "kind": "text",
+                "values": [{ "code": "ETKIN", "label": "Etkin" }, { "code": "KAPALI", "label": "Kapalı" }]
+            }],
+            "layers": [{
+                "name": layer,
+                "title": format!("{name} alanı"),
+                "geometry": "area",
+                "fields": [
+                    { "name": "ad", "kind": "text", "alias": "Ad" },
+                    { "name": "durum", "kind": "text", "alias": "Durum", "domain": format!("{package}_durum") }
+                ]
+            }]
+        });
+        files.insert("schema.json".to_owned(), pretty(&layer_schema));
+        python.push(SCHEMA.to_owned());
+    }
+    if !commands.is_empty() {
+        entrypoints.insert("commands".into(), Value::Array(commands));
+    }
+    let map_tool = has(Contribution::MapTool);
+    if map_tool {
+        // With a schema, the tool draws an area into the schema's layer; without one, a point into the template's.
+        let (id, title, capture, function) = if schema {
+            ("alan-ciz", "Alan çiz", "rectangle", "alan_ciz")
+        } else {
+            ("isaret-koy", "İşaret koy", "point", "isaret_koy")
+        };
         entrypoints.insert(
             "mapTools".into(),
-            json!([{ "id": "isaret-koy", "title": "İşaret koy", "capture": "point", "handler": format!("{package}.logic:isaret_koy") }]),
+            json!([{ "id": id, "title": title, "capture": capture, "handler": format!("{package}.logic:{function}") }]),
         );
         capabilities.push(json!({ "id": "mapTool", "scope": "plugin-owned",
-                                  "reason": "Haritada gösterilen yere işaret koyan aracı ekler." }));
-        items.push(
-            json!({ "mapTool": "isaret-koy", "size": "large", "icon": "assets/eklenti.svg" }),
-        );
-        python.push(MAP_TOOL.to_owned());
+                                  "reason": format!("Haritaya “{title}” aracını ekler.") }));
+        items.push(json!({ "mapTool": id, "size": "large", "icon": "assets/eklenti.svg" }));
+        python.push(if schema {
+            MAP_TOOL_SCHEMA.replace("{LAYER}", &layer)
+        } else {
+            MAP_TOOL.to_owned()
+        });
     }
     // Reading and writing the drawing: one capability, the stronger when anything writes.
-    if writes {
+    if map_tool || schema {
+        let what = match (map_tool, schema) {
+            (true, true) => "eklentinin katmanlarını kurar ve harita aracıyla çizilen alanı yazar",
+            (false, true) => "eklentinin katmanlarını kurar",
+            _ => "harita aracıyla gösterilen yere işaret yazar",
+        };
         capabilities.retain(|c| c["id"] != "document.read");
         capabilities.insert(
             0,
             json!({ "id": "document.write", "scope": "current-project",
-                    "reason": "Açık çizimi okur; harita aracıyla gösterilen yere işaret yazar." }),
+                    "reason": format!("Açık çizimi okur; {what}.") }),
         );
     }
     let mut contributions = serde_json::Map::new();
@@ -224,6 +276,9 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
     });
     if !contributions.is_empty() {
         manifest["contributions"] = Value::Object(contributions);
+    }
+    if schema {
+        manifest["schemaFile"] = json!("schema.json");
     }
     files.insert("manifest.json".to_owned(), pretty(&manifest));
     files.insert(format!("src/{package}/__init__.py"), String::new());
@@ -377,6 +432,23 @@ def buyuk_harf(metin) -> str | None:
     if metin is None:
         return None
     return str(metin).replace("i", "İ").replace("ı", "I").upper()
+"#;
+
+const SCHEMA: &str = r#"
+
+@ext.command("katmanlari-kur")
+def katmanlari_kur(ctx: ext.CommandContext) -> ext.CommandResult:
+    """schema.json'daki grubu, değer listesini ve katmanları açık çizime kurar: var olana dokunmaz, yalnız eksiği ekler
+    (ikinci çalıştırma bir şey değiştirmez); tek geri alma adımıdır."""
+    return ctx.apply_declarative_schema("schema.json")
+"#;
+
+const MAP_TOOL_SCHEMA: &str = r#"
+
+@ext.map_tool("alan-ciz")
+def alan_ciz(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResult:
+    """Kullanıcının çizdiği dikdörtgeni eklentinin katmanına bir alan olarak yazar (önce Katmanları kur)."""
+    return ctx.add_feature("{LAYER}", sekil, {"ad": "yeni", "durum": "ETKIN"})
 "#;
 
 const MAP_TOOL: &str = r#"

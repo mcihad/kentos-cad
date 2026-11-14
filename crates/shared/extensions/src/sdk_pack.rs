@@ -46,6 +46,22 @@ sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı a
   orientedRectangle, circle): `def f(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResult`; `ctx.add_feature(katman, sekil,
   öznitelikler)`. Şekli KentOS çizer (kenetleme, yazılan koordinat), kod yerleştirir.
 
+## Katman şeması (`schema.json`)
+
+Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "schema.json"`) ve bir komut onları açık
+çizime kurar: `@ext.command("katmanlari-kur") def f(ctx): return ctx.apply_declarative_schema("schema.json")`
+(`document.write` ister). Biçim `kentos.layerSchema` 1, sözcükler KentOS'un:
+
+- `layers`: her biri `name` (çizimdeki kimliği: küçük harf, rakam, `_`; harita aracı ve denetim katmanı bununla bulur:
+  `ctx.add_feature("mezar_yeri", …)`, `facts.features("mezar_yeri")`), `title`, `geometry` (point, line, area,
+  annotation, mixed; verilmezse her tür), `fields`: `{name, kind, alias, required, default, length, min, max, domain}`
+  (kind: text, integer, decimal, date, boolean, datetime, time, bigint, instant, uuid, json, binary).
+- `group` (isteğe bağlı): `{id, name}`, katmanlar altına girer. `domains`: `{id, name, kind, values: [{code, label}]}` ya
+  da `min`/`max`. `relations`: `{id, name, parent, child, field, onDelete}`: çocuğun alanı ebeveynin kalıcı kimliğini
+  tutar (onDelete: keep, unlink, cascade, restrict).
+- Var olana dokunmaz, yalnız eksiği ekler (katmanın eksik alanlarını da); ikinci çalıştırma bir şey değiştirmez. Şema
+  paket incelemesinde denetlenir: her sorun JSON işaretçisiyle (`layer_schema`).
+
 ## İkonlar
 
 Bir düğmenin, komutun ya da harita aracının ikonu yerleşik bir addır, tire biçiminde (`space-number`, `layer-fields`;
@@ -138,6 +154,9 @@ pub fn sdk_pack() -> Value {
               "capabilities": ["expression.provider"] },
             { "kind": "mapTool", "decorator": "@ext.map_tool", "manifest": "entrypoints.mapTools",
               "capabilities": ["mapTool", "document.write"] },
+            { "kind": "schema", "manifest": "schemaFile", "file": "schema.json",
+              "capabilities": ["document.write (kuran komut için)"],
+              "note": "Katmanlar, alanları, değer listeleri, ilişkiler; bir komut ctx.apply_declarative_schema(\"schema.json\") ile kurar." },
             { "kind": "ribbonTab", "manifest": "contributions.ribbonTabs", "capabilities": ["ui.ribbonTab"],
               "note": "Yalnız dikey eklenti (kind: vertical); öğeleri command, processing, audit, mapTool gösterir." },
             { "kind": "contextMenu", "manifest": "contributions.contextMenus", "capabilities": ["ui.contextMenu"] },
@@ -164,7 +183,9 @@ pub fn sdk_pack() -> Value {
             "python_eval": "Uyarı: eval/exec.",
             "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",
             "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
-            "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir."
+            "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",
+            "layer_schema": "schema.json'da bir kural bozuk; işaretçi yeri, ileti kuralı söyler.",
+            "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmanı adlandırıyor; projede bulunmalı."
         },
         "workflow": [
             "İsteği ve parametrelerini netleştirin; kurulu eklentileri ve yetenekleri kentos://extensions/installed'dan okuyun.",

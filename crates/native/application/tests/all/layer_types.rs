@@ -99,3 +99,50 @@ fn a_layers_type_is_set_only_when_its_objects_fit() {
     assert_eq!(doc.undo().as_deref(), Some("Katman türü"));
     assert_eq!(doc.layers().get("serbest").and_then(|n| n.geometry), None);
 }
+
+/// docs/adr/8057 §23: add takes a program's id for the new layer (an extension's layer schema name), as the template's
+/// layers have theirs; a malformed id, an id the tree has, and an id for another operation are refused, nothing
+/// written.
+#[test]
+fn a_layer_added_with_an_id_is_found_by_it() {
+    let mut doc = drawing();
+    let added = run(
+        &mut doc,
+        "cad.layers.edit",
+        json!({"operation": "add", "id": "mezar_parsel", "name": "Mezar parseli", "geometry": "area"}),
+    );
+    assert_eq!(added["status"], "completed", "{added}");
+    assert_eq!(added["output"]["layer"], "mezar_parsel");
+    let node = doc.layers().get("mezar_parsel").expect("found by its id");
+    assert_eq!(node.name, "Mezar parseli");
+    let revision = doc.revision();
+    for (input, said) in [
+        (
+            json!({"operation": "add", "id": "mezar_parsel", "name": "İkinci"}),
+            "zaten var",
+        ),
+        (
+            json!({"operation": "add", "id": "parsel", "name": "Şablonun"}),
+            "zaten var",
+        ),
+        (
+            json!({"operation": "add", "id": "1parsel", "name": "Rakamla"}),
+            "katman kimliği değil",
+        ),
+        (
+            json!({"operation": "add", "id": "mezar parsel", "name": "Boşluklu"}),
+            "katman kimliği değil",
+        ),
+        (
+            json!({"operation": "geometry", "layer": "yol", "id": "x", "geometry": "line"}),
+            "yalnız",
+        ),
+    ] {
+        let refused = run(&mut doc, "cad.layers.edit", input);
+        assert_eq!(refused["status"], "failed", "{refused}");
+        assert_eq!(refused["error"]["code"], "invalid_layer_id", "{refused}");
+        let message = refused["error"]["message"].as_str().unwrap_or_default();
+        assert!(message.contains(said), "{message}");
+    }
+    assert_eq!(doc.revision(), revision, "nothing written");
+}

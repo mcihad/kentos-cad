@@ -257,6 +257,7 @@ class Kentos:
         kind: str = "command",
         params: dict[str, Any] | None = None,
         inputs: dict[str, Any] | None = None,
+        document: bool | None = None,
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         """(done, what came before it)."""
         self.runs += 1
@@ -268,7 +269,7 @@ class Kentos:
             "handler": handler,
             "params": params or {},
             "settings": {},
-            "document": kind in ("command", "mapTool"),
+            "document": kind in ("command", "mapTool") if document is None else document,
         }
         if inputs is not None:
             message["inputs"] = inputs
@@ -355,12 +356,30 @@ class ExtHostTest(unittest.TestCase):
         self.assertEqual(done["result"]["columns"], ["yapı", "mesafe_m", "durum"])
 
     def test_what_this_kentos_cannot_do_is_said_as_unavailable(self) -> None:
+        # A schema without a drawing it may write to: a missing ability, not the extension's failure.
         self.kentos.hello()
-        done, _ = self.kentos.invoke("schema", "deneme.logic:schema")
+        done, _ = self.kentos.invoke("schema", "deneme.logic:schema", document=False)
         self.assertFalse(done["ok"])
         self.assertTrue(done.get("unavailable"), done)
-        self.assertIn("schema.json", done["message"])
+        self.assertIn("katman şeması", done["message"])
         self.assertNotIn("error", done, "no traceback: the extension's code did not fail")
+
+    def test_a_packages_schema_is_set_up_through_the_broker(self) -> None:
+        # docs/adr/8057 §23: schema.json read from the package's own folder, its layer written through KentOS's broker
+        # with its schema name as its id.
+        with open(os.path.join(self.folder, "schema.json"), "w", encoding="utf-8") as f:
+            json.dump({"layers": [{"name": "mezar_yeri", "title": "Mezar yeri", "geometry": "area",
+                                   "fields": [{"name": "mezar_no", "kind": "text"}]}]}, f)
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("schema", "deneme.logic:schema")
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["message"], "Şema kuruldu: 1 katman.")
+        self.assertEqual(done["result"]["rows"], [{"Tür": "Katman", "Kimlik": "mezar_yeri", "Ad": "Mezar yeri",
+                                                   "Sonuç": "eklendi"}])
+        layers = json.loads(self.kentos.session.layers())
+        found = [n for n in layers if n["id"] == "mezar_yeri"]
+        self.assertEqual([n["name"] for n in found], ["Mezar yeri"])
+        self.assertEqual([f["name"] for f in found[0]["fields"]], ["mezar_no"])
 
     def test_the_package_stays_as_installed(self) -> None:
         # Its integrity check refuses files added to it: the bytecode goes to the environment's folder (14 November 2026:

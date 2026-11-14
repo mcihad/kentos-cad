@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -62,6 +62,11 @@
         "id": "hata-ornegi",
         "title": "Hata örneği",
         "handler": "vitrin.logic:hata_ornegi"
+      },
+      {
+        "id": "katmanlari-kur",
+        "title": "Katmanları kur",
+        "handler": "vitrin.logic:katmanlari_kur"
       }
     ],
     "processing": [
@@ -121,6 +126,10 @@
               },
               {
                 "command": "hata-ornegi"
+              },
+              {
+                "command": "katmanlari-kur",
+                "icon": "layer-add"
               }
             ]
           },
@@ -172,11 +181,12 @@
       }
     ]
   },
+  "schemaFile": "schema.json",
   "requestedCapabilities": [
     {
       "id": "document.write",
       "scope": "current-project",
-      "reason": "Katmanları okur, yapıları numaralar, haritada gösterilen yere yapı yazar."
+      "reason": "Katmanları okur, yapıları numaralar, haritada gösterilen yere yapı yazar, kendi katman şemasını kurar."
     },
     {
       "id": "processing.provider",

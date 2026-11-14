@@ -594,6 +594,8 @@ codes! {
     UNKNOWN_CONNECTION = "unknown_connection", Failed, false, "Servisin ya da kaynağın adını verdiği bağlantı projede yok.";
     /// The document refused the change (a layer that may not be removed).
     LAYER_REFUSED = "layer_refused", Failed, false, "Belge değişikliği reddetti (silinemeyecek bir katman).";
+    /// Add's id against its rules, or one the tree has (docs/adr/8057 §23).
+    INVALID_LAYER_ID = "invalid_layer_id", Failed, false, "Katmanın kimliği kurallarına uymuyor ya da ağaçta var.";
 
     // ── Networks and addresses (docs/adr/0209 §11, 0229 §14) ────────────
     /// `set` without a network.

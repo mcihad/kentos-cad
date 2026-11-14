@@ -118,7 +118,10 @@ yeterli.
   isteğe bağlı `pygal`; üç sistem `environments` ve `required-environments`'ta). Paket 14 382 bayt, 16 dosya, içerik özeti
   `sha256:e3816e901e3241d238547ddd25a9d31731d0e6931e96752ee8ff8507030a3b1b`. 14 Kasım: araç tanımı ADIM 19'da
   kesinleşen v1'e geçti (taslağın `id`/`accepts`/`destination` biçimi kurulumdaki tam denetimden geçmiyordu); özet
-  `sha256:ec9730da3c4841b7ec3b5ff82103e90db52766eb7d3e3c3da47ebec40ac46501` (Python'da ayrıca hesaplandı).
+  `sha256:ec9730da3c4841b7ec3b5ff82103e90db52766eb7d3e3c3da47ebec40ac46501` (Python'da ayrıca hesaplandı). 14 Kasım
+  (§23): şema `kentos.layerSchema` v1'in sözcüklerine geçti (`area`, ilişkinin `id`/`parent`/`child`'ı, grup); özet
+  `sha256:1a6af9c39da91b1fd7552a85204bf0ffea6c2e650c64bb06f936302db3bd317a` (aynı Python hesabı eskisini de birebir
+  verdi).
 - `fixtures/extensions/v1/ornek-altlik/`: en küçük paket (D2): `manifest.json`, `LICENSE` ve iki servis veri kaynağı;
   Python yok. Paket 1 400 bayt; tek uyarı değişiklik notunun yokluğu.
 
@@ -1367,3 +1370,44 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   ayar klasöründekini.
 - **Uygularken verilen kararlar:** paket atölyede kalır (silinmez, kullanıcı yeniden açabilir); kaynak türü "dosya"
   olarak görünür; MCP'nin masaüstü bağlantısında incelemeye açma sonraki iş.
+
+## §23. Eklentinin katman şeması: `schema.json` ve `apply_declarative_schema` (`ADIM 22`, katman şeması kurulumu)
+
+**14 Kasım.** Kod: `crates/shared/extensions/src/layer_schema.rs` (Kapı 1), `python/kentos/ext.py`
+(`CommandContext.apply_declarative_schema`, `_install_schema`), `cad.layers.edit`'in `id`'si
+(`crates/shared/commands/src/core/cad_layer_tree.rs`, `crates/native/application/src/gis/layers_edit.rs`), iskeletin
+`schema` katkısı, Vitrin 1.0.5.
+
+- **Bulgu (§22'nin gerçek pencere denemesi):** ajanın yazdığı harita aracı `mezar` katmanına yazıyordu ama eklentinin
+  katman kurma yolu yoktu (`apply_declarative_schema` `NotAvailable` idi); ajan kullanıcıya "önce katmanı oluşturun"
+  demek zorunda kaldı.
+- **Biçim `kentos.layerSchema` 1, KentOS'un kendi sözcükleriyle:** `layers` (`name`: çizimdeki kimliği; `title`;
+  `geometry`: point, line, area, annotation, mixed; `fields`: KentOS katman alanının alt kümesi `name, kind, alias,
+  required, default, length, min, max, minExclusive, maxExclusive, domain, multiple`), isteğe bağlı `group` (`id`,
+  `name`), `domains` (`cad.domains.edit`'in listesi), `relations` (`cad.relations.edit`'in ilişkisi; `parent`/`child`
+  katman kimlikleri). `format` ve `version` isteğe bağlı; daha yeni sürüm "daha yeni bir KentOS gerekir" der. Taslağın
+  `polygon`/`none`/`from`-`to` sözcükleri bırakıldı (MEBİS ve Kent fikstürleri geçirildi; MEBİS özeti yeniden
+  hesaplandı, §1).
+- **Katmanın kimliği şema adıdır:** `cad.layers.edit` `add` isteğe bağlı `id` aldı (geriye uyumlu; harf, rakam, `_`,
+  `-`, `.`, harfle başlar, 1–64; ağaçta olan, biçimsiz ya da `add` dışında verilen kimlik `invalid_layer_id`, hiçbir
+  şey yazılmaz). Alan modeli bunu zaten taşıyordu (`NewLayer.id`); şablonun katmanları da kimlikleriyle bulunuyor
+  (`parsel`). Eklentinin harita aracı ve denetimi katmanı bu kimlikle bulur.
+- **Kurulum Python'da, mevcut komutlarla:** grup → değer listeleri → katmanlar ve alanları → ilişkiler (alan listeyi,
+  ilişki katmanları gösterdiği için bu sırayla), eklentinin sürecinde aracının üzerinden; çalıştırmanın tek geri alma
+  adımı. Yeni bir Rust host komutu gerekmedi. **Var olana dokunmaz, yalnız eksiği ekler:** katmanın eksik alanları
+  kullanıcının kendi alanlarının sonuna eklenir; ikinci çalıştırma revizyonu değiştirmez (sınandı). Sonuç satır satır
+  rapor (Tür, Kimlik, Ad, Sonuç) ve tek cümle ("Şema kuruldu: 1 grup, 1 değer listesi, 2 katman, 1 ilişki.").
+- **Kapı 1:** paket incelemesi şemayı denetler, her sorun JSON işaretçisiyle (`layer_schema`): bilinmeyen alan,
+  biçim/sürüm, ad kuralı ve tekliği, katman türü, alan türü, şemada olmayan listeye bağlanan alan, tekrarlanan kod,
+  ilişkinin olmayan alanı. Şemanın kurmadığı katmanı adlandıran ilişki uyarıdır (`layer_schema_outside`: projede
+  bulunmalı, ör. şablonun `parsel`'i).
+- **Bulgu (düzeltildi):** Python'un `"İlişki".lower()`'ı "i̇lişki" (i + birleşik nokta) üretiyordu; ileti sözcükleri
+  açık bir eşlemeyle yazıldı.
+- **İskelet ve SDK:** `extension.blueprint`'te `schema` katkısı (`schema.json` + "Katmanları kur" komutu, yerleşik
+  `layer-add` ikonuyla; harita aracı da seçilirse dikdörtgen çizip şemanın katmanına yazar); SDK rehberinde bölüm,
+  katkı tablosunda satır, stub'da yeni imza.
+- **Gerçek pencere (`13-sema`, Vitrin 1.0.5):** 1.0.4 → 1.0.5 güncellendi, ortam hazırlandı; "Katmanları kur" Vitrin
+  grubunu, Örnek tesis (nokta) ve Bakım kaydı katmanlarını, Tesis türü listesini ve ilişkiyi kurdu; ikinci basış
+  "Şema zaten kurulu: değişiklik yok." dedi.
+- **Kalan:** formlar (`forms/*.kform`) şemayla birlikte kurulmuyor; alt türler ve değer bileşimleri biçimde yok;
+  geometrisiz tablo katmanı KentOS'ta henüz yok (kayıtlar `mixed` katmana yazılır).

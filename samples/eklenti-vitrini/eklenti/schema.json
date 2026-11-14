@@ -1,0 +1,87 @@
+{
+  "format": "kentos.layerSchema",
+  "version": 1,
+  "group": {
+    "id": "vitrin",
+    "name": "Vitrin"
+  },
+  "domains": [
+    {
+      "id": "tesis_turu",
+      "name": "Tesis türü",
+      "kind": "text",
+      "values": [
+        {
+          "code": "OKUL",
+          "label": "Okul"
+        },
+        {
+          "code": "PARK",
+          "label": "Park"
+        },
+        {
+          "code": "SAGLIK",
+          "label": "Sağlık ocağı"
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "name": "vitrin_tesis",
+      "title": "Örnek tesis",
+      "geometry": "point",
+      "fields": [
+        {
+          "name": "ad",
+          "kind": "text",
+          "required": true,
+          "alias": "Ad"
+        },
+        {
+          "name": "tur",
+          "kind": "text",
+          "domain": "tesis_turu",
+          "alias": "Tür"
+        },
+        {
+          "name": "kapasite",
+          "kind": "integer",
+          "min": "0",
+          "alias": "Kapasite"
+        }
+      ]
+    },
+    {
+      "name": "vitrin_bakim",
+      "title": "Bakım kaydı",
+      "fields": [
+        {
+          "name": "tesis_id",
+          "kind": "text",
+          "alias": "Tesis"
+        },
+        {
+          "name": "tarih",
+          "kind": "date",
+          "alias": "Tarih"
+        },
+        {
+          "name": "aciklama",
+          "kind": "text",
+          "length": 500,
+          "alias": "Açıklama"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "bakim-tesis",
+      "name": "Bakım kaydının tesisi",
+      "parent": "vitrin_tesis",
+      "child": "vitrin_bakim",
+      "field": "tesis_id"
+    }
+  ]
+}

@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.5 — 14 Kasım 2026
+
+- Katman şeması (`schema.json`): "Katmanları kur" Vitrin grubunu, Örnek tesis ve Bakım kaydı katmanlarını, Tesis türü
+  listesini ve aralarındaki ilişkiyi açık çizime kurar; ikinci kez basınca bir şey değişmez.
+
 ## 1.0.4 — 14 Kasım 2026
 
 - "Yapıları numarala" düğmesi ve katmanın sağ tık öğesi yerleşik ikonları tire biçiminde adlandırır (`space-number`,

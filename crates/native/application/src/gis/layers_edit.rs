@@ -80,6 +80,16 @@ fn sources(input: &LayersEdit) -> Vec<String> {
         .collect()
 }
 
+/// An id a program gives the node it adds (docs/adr/8057 §23): ASCII letters, digits, `_`, `-`, `.`, a letter first,
+/// 1–64 characters.
+fn layer_id_ok(id: &str) -> bool {
+    let b = id.as_bytes();
+    (1..=64).contains(&b.len())
+        && b[0].is_ascii_alphabetic()
+        && b.iter()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-' | b'.'))
+}
+
 /// The input's own rules, before the drawing is read.
 fn check_input(input: &LayersEdit) -> Result<(), Stop> {
     use LayerEditOperation as Op;
@@ -102,6 +112,25 @@ fn check_input(input: &LayersEdit) -> Result<(), Stop> {
                 .into(),
             "layers",
         ));
+    }
+    if let Some(id) = input.id.as_deref() {
+        if op != Op::Add {
+            return Err(fail(
+                codes::INVALID_LAYER_ID,
+                "Kimlik (id) yalnız katman ya da grup eklerken verilir.".into(),
+                "id",
+            ));
+        }
+        if !layer_id_ok(id) {
+            return Err(fail(
+                codes::INVALID_LAYER_ID,
+                format!(
+                    "“{id}” bir katman kimliği değil: harf, rakam, _, - ve . (ASCII), harfle başlar, en çok 64 \
+                     karakter (ör. mezar_parsel)."
+                ),
+                "id",
+            ));
+        }
     }
     if matches!(op, Op::Add | Op::Duplicate) && input.name.as_deref().is_some_and(checks::is_blank)
     {
@@ -343,6 +372,15 @@ fn check(doc: &Document, input: &LayersEdit) -> Result<(), Stop> {
         ));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
+    if let Some(id) = input.id.as_deref()
+        && doc.layers().get(id).is_some()
+    {
+        return Err(fail(
+            codes::INVALID_LAYER_ID,
+            format!("“{id}” kimlikli bir katman ya da grup zaten var; başka bir kimlik verin."),
+            "id",
+        ));
+    }
     check_doc(doc, input)
 }
 
@@ -562,6 +600,8 @@ fn add(doc: &mut Document, input: LayersEdit) -> CommandResult<LayersEdited> {
         style.line_weight = w;
     }
     let new = NewLayer {
+        // A program's own id (an extension's layer schema name), else one made (docs/adr/8057 §23).
+        id: input.id.clone(),
         visible: input.visible.unwrap_or(true),
         locked: input.locked.unwrap_or(false),
         style,

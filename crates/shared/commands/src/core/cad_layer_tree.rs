@@ -195,6 +195,12 @@ pub struct LayersEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
+    /// Add's id for the new node (docs/adr/8057 §23): a name a program finds it by again, as an extension's layer
+    /// schema names its layers (`mezar_parsel`) and a template's layers have theirs (`parsel`). ASCII letters, digits,
+    /// `_`, `-` and `.`, a letter first, 1–64; not one the tree has. Absent: one made (`layer-N`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub parent: Option<String>,
@@ -261,6 +267,7 @@ impl LayersEdit {
             blocks: None,
             kind: None,
             name: None,
+            id: None,
             parent: None,
             index: None,
             color: None,

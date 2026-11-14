@@ -1,0 +1,16 @@
+# Katman şeması: Vitrin › Katmanları kur, schema.json'daki Vitrin grubunu, Örnek tesis ve Bakım kaydı katmanlarını,
+# Tesis türü listesini ve ilişkiyi tek geri alma adımıyla kurar; ikinci basış bir şey değiştirmez. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1200
+click 160 110   # Katmanları kur
+wait 8000
+shot 13-kuruldu
+key Escape
+wait 800
+click 160 110   # Katmanları kur: yeniden
+wait 5000
+shot 13-yeniden

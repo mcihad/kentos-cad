@@ -67,8 +67,8 @@ class CommandContext:
         """A line to show the user."""
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""
-    def apply_declarative_schema(self, path: str) -> CommandResult:
-        """Sets up the layers, value lists and relations the package's ``schema.json`` declares, in one undo step."""
+    def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:
+        """Sets up the layers, value lists and relations the package's ``schema.json`` declares (docs/adr/8057 §23), in the run's one undo step, and says what it did, a row each."""
 
 
 class Feature:

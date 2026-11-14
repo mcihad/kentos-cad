@@ -603,7 +603,18 @@ fn check_references(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>, out:
                 Some(Some(why)) => out.problems.push(problem("icon_unsafe", why)),
                 Some(None) => {}
             },
-            FileRole::Schema | FileRole::Translation | FileRole::PanelDefinition => {
+            FileRole::Schema => match json(data) {
+                Err(why) => out
+                    .problems
+                    .push(problem("reference_json", format!("Dosya {why}."))),
+                // The layer schema's own rules (docs/adr/8057 §23), each problem where it is.
+                Ok(value) => {
+                    let (problems, warnings) = crate::layer_schema::check(path, &value);
+                    out.problems.extend(problems);
+                    out.warnings.extend(warnings);
+                }
+            },
+            FileRole::Translation | FileRole::PanelDefinition => {
                 if let Err(why) = json(data) {
                     out.problems
                         .push(problem("reference_json", format!("Dosya {why}.")));

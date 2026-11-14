@@ -3,7 +3,7 @@
     {
       "name": "bina",
       "title": "Bina",
-      "geometry": "polygon",
+      "geometry": "area",
       "fields": [
         {
           "name": "Durum",

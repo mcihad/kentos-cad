@@ -54285,6 +54285,9 @@ class LayersEdit(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text.
         fields: The layer's fields (docs/adr/0199 §1).
         geometry: add, geometry: what the layer holds (docs/adr/0622 §5); `mixed`: any kind.
+        id: Add's id for the new node (docs/adr/8057 §23): a name a program finds it by again, as an extension's layer
+            schema names its layers (`mezar_parsel`) and a template's layers have theirs (`parsel`). ASCII letters, digits,
+            `_`, `-` and `.`, a letter first, 1–64; not one the tree has. Absent: one made (`layer-N`).
         index: Unit: index.
         kind: Add's kind of node; absent: a layer.
         layer: The node it acts on; merge's target.
@@ -54301,6 +54304,7 @@ class LayersEdit(_Model):
     expected_revision: str | None | Unset = UNSET
     fields: list[LayerField] | None | Unset = UNSET
     geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET
+    id: str | None | Unset = UNSET
     index: int | None | Unset = UNSET
     kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET
     layer: str | None | Unset = UNSET
@@ -54329,6 +54333,8 @@ class LayersEdit(_Model):
             out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
         if self.geometry is not UNSET:
             out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
+        if self.id is not UNSET:
+            out["id"] = self.id
         if self.index is not UNSET:
             out["index"] = self.index
         if self.kind is not UNSET:
@@ -54365,6 +54371,7 @@ class LayersEdit(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             fields=UNSET if "fields" not in data else None if data["fields"] is None else [LayerField.from_json(e0) for e0 in data["fields"]],
             geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometryChoice, data["geometry"]),
+            id=data.get("id", UNSET),
             index=data.get("index", UNSET),
             kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(LayerNodeType, data["kind"]),
             layer=data.get("layer", UNSET),

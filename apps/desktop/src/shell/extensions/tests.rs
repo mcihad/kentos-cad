@@ -2261,6 +2261,7 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "Katman özeti",
             "Yapıları numarala",
             "Hata örneği",
+            "Katmanları kur",
             "TAKS",
             "Yapı numarası",
             "Yapı yerleştir"
@@ -2708,8 +2709,10 @@ fn a_blueprint_installs_with_every_contribution_and_passes_the_desktops_own_chec
             "Katman listesi",
             "Alan özeti",
             "Adsız nesneler",
-            "İşaret koy"
-        ]
+            "Katmanları kur",
+            "Alan çiz"
+        ],
+        "with a schema, its command; the map tool draws into its layer (docs/adr/8057 §23)"
     );
     assert!(
         gis.gis

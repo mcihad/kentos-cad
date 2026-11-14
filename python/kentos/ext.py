@@ -47,9 +47,11 @@ A separate process is not a sandbox: an extension runs with the user's rights (P
 
 from __future__ import annotations
 
+import json
+import math
+import os
 import threading
 import time
-import math
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Callable, TypeVar, overload
@@ -200,12 +202,16 @@ class CommandContext:
         doc: Any,
         settings: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
+        *,
+        source: str | None = None,
     ) -> None:
         self._link = link
         #: The drawing open in KentOS (kentos.cad.Document); none when no drawing is open.
         self.doc = doc
         self.settings: dict[str, Any] = dict(settings or {})
         self.params: dict[str, Any] = dict(params or {})
+        # The package's folder, as installed: where its own files (schema.json) are read from.
+        self._source = source
 
     def is_stopped(self) -> bool:
         """The user pressed Durdur."""
@@ -237,15 +243,147 @@ class CommandContext:
         """What a run that saw Durdur returns; its writes are taken back."""
         return CommandResult(cancelled=True)
 
-    def apply_declarative_schema(self, path: str) -> CommandResult:
-        """Sets up the layers, value lists and relations the package's ``schema.json`` declares, in one undo step.
+    def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:
+        """Sets up the layers, value lists and relations the package's ``schema.json`` declares (docs/adr/8057 §23), in
+        the run's one undo step, and says what it did, a row each.
 
-        Its format and KentOS's own command for it are fixed with the panels and forms (plan/eklenti.md ADIM 22); until
-        then this KentOS raises :class:`NotAvailable`."""
+        Each layer's id is its schema name (``mezar_parsel``): a run finds it again. What is there is left as it is and
+        only what is missing is added: a layer's missing fields, a missing value list or relation; a second run changes
+        nothing. Needs the drawing and ``document.write``."""
+        if self.doc is None:
+            raise NotAvailable(
+                "Açık çizim yok ya da eklentiye çizimi okuma ve yazma izni verilmedi: katman şeması kurulamaz."
+            )
+        schema = self._package_json(path)
+        rows = _install_schema(self.doc, schema, path)
+        added = sum(1 for r in rows if r["Sonuç"] != "vardı")
+        if not added:
+            return CommandResult(title="Katman şeması", message="Şema zaten kurulu: değişiklik yok.", rows=rows)
+        counts: dict[str, int] = {}
+        for r in rows:
+            if r["Sonuç"] != "vardı":
+                counts[r["Tür"]] = counts.get(r["Tür"], 0) + 1
+        # Written out, not lowered: Python's lower() makes “İlişki” “i̇lişki” (a dotted i and a combining dot).
+        words = {"Grup": "grup", "Değer listesi": "değer listesi", "Katman": "katman", "İlişki": "ilişki"}
+        said = ", ".join(f"{n} {words.get(kind, kind)}" for kind, n in counts.items())
+        return CommandResult(title="Katman şeması", message=f"Şema kuruldu: {said}.", rows=rows)
+
+    def _package_json(self, path: str) -> Any:
+        """A JSON file of the package, by its path in it; never a file outside it."""
+        if not self._source:
+            raise NotAvailable("Eklentinin paket klasörü bilinmiyor: paketin dosyaları okunamaz.")
+        parts = path.replace("\\", "/").split("/")
+        if path.startswith("/") or any(p in ("", ".", "..") for p in parts):
+            raise ValueError(f"“{path}” paketin içinde bir dosya yolu değil (ör. schema.json).")
+        full = os.path.join(self._source, *parts)
+        try:
+            with open(full, encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            raise ValueError(f"Pakette “{path}” yok.") from None
+        except json.JSONDecodeError as e:
+            raise ValueError(f"“{path}” JSON değil: satır {e.lineno}, sütun {e.colno}: {e.msg}.") from None
+
+
+#: The layer schema this KentOS installs (docs/adr/8057 §23): ``schema.json``'s ``format`` and ``version``, both
+#: optional.
+SCHEMA_FORMAT = "kentos.layerSchema"
+SCHEMA_VERSION = 1
+
+
+def _walk_nodes(nodes: Iterable[Any]) -> Iterator[Any]:
+    for n in nodes:
+        yield n
+        yield from _walk_nodes(getattr(n, "children", None) or [])
+
+
+def _schema_ids(doc: Any, kind: str) -> set[str]:
+    """The ids of the project's value lists or relations, every page."""
+    from kentos import cad
+
+    ids: set[str] = set()
+    cursor = None
+    while True:
+        page = cad.schema.describe(doc, kinds=[kind], limit=100, cursor=cursor)
+        ids.update(item.id for item in page.items)
+        cursor = page.next
+        if not cursor:
+            return ids
+
+
+def _install_schema(doc: Any, schema: Any, path: str) -> list[dict[str, Any]]:
+    """What ``apply_declarative_schema`` writes: the group, the value lists, the layers with their fields, the relations,
+    in that order (a field links a list, a relation its layers); what is there is kept. A row each."""
+    from kentos import cad
+
+    if not isinstance(schema, dict) or not isinstance(schema.get("layers"), list) or not schema["layers"]:
+        raise ValueError(f"“{path}” bir katman şeması değil: en az bir katmanlı bir layers listesi olmalı.")
+    if schema.get("format", SCHEMA_FORMAT) != SCHEMA_FORMAT or schema.get("version", SCHEMA_VERSION) > SCHEMA_VERSION:
         raise NotAvailable(
-            f"Katman şeması kurulumu ({path}) bu KentOS sürümünde yok: eklentinin katmanları, değer listeleri ve "
-            "ilişkileri henüz kurulamaz."
+            f"“{path}” {schema.get('format')} {schema.get('version')} biçiminde; bu KentOS {SCHEMA_FORMAT} "
+            f"{SCHEMA_VERSION} kurar."
         )
+    rows: list[dict[str, Any]] = []
+    nodes = {n.id: n for n in _walk_nodes(doc.layers())}
+    parent = None
+    group = schema.get("group")
+    if isinstance(group, dict) and group.get("id"):
+        parent = str(group["id"])
+        made = parent not in nodes
+        if made:
+            cad.layers.edit(doc, operation="add", kind="group", id=parent, name=str(group.get("name") or parent))
+        rows.append({"Tür": "Grup", "Kimlik": parent, "Ad": str(group.get("name") or parent),
+                     "Sonuç": "eklendi" if made else "vardı"})
+    if schema.get("domains"):
+        have = _schema_ids(doc, "domains")
+        for d in schema["domains"]:
+            made = d["id"] not in have
+            if made:
+                op: dict[str, Any] = {"kind": "create", "id": d["id"], "name": d.get("name") or d["id"],
+                                      "domainKind": d.get("kind", "text")}
+                for key in ("values", "min", "max", "minExclusive", "maxExclusive", "unit", "description"):
+                    if key in d:
+                        op[key] = d[key]
+                cad.domains.edit(doc, edit=cad.DomainsOp.from_json(op))
+            rows.append({"Tür": "Değer listesi", "Kimlik": d["id"], "Ad": d.get("name") or d["id"],
+                         "Sonuç": "eklendi" if made else "vardı"})
+    for layer in schema["layers"]:
+        lid = str(layer["name"])
+        title = str(layer.get("title") or lid)
+        wanted = list(layer.get("fields") or [])
+        if lid not in nodes:
+            given: dict[str, Any] = {"operation": "add", "id": lid, "name": title}
+            if layer.get("geometry"):
+                given["geometry"] = layer["geometry"]
+            if parent:
+                given["parent"] = parent
+            cad.layers.edit(doc, **given)
+            if wanted:
+                cad.layers.edit(doc, operation="fields", layer=lid,
+                                fields=[cad.LayerField.from_json(f) for f in wanted])
+            result = "eklendi"
+        else:
+            present = list(getattr(nodes[lid], "fields", None) or [])
+            names = {f.name for f in present}
+            missing = [f for f in wanted if f.get("name") not in names]
+            if missing:
+                cad.layers.edit(doc, operation="fields", layer=lid,
+                                fields=present + [cad.LayerField.from_json(f) for f in missing])
+                result = f"vardı; {len(missing)} alan eklendi"
+            else:
+                result = "vardı"
+        rows.append({"Tür": "Katman", "Kimlik": lid, "Ad": title, "Sonuç": result})
+    if schema.get("relations"):
+        have = _schema_ids(doc, "relations")
+        for r in schema["relations"]:
+            made = r["id"] not in have
+            if made:
+                relation = {key: r[key] for key in ("id", "name", "parent", "child", "field", "onDelete") if key in r}
+                relation.setdefault("name", r["id"])
+                cad.relations.edit(doc, edit=cad.RelationsOp.from_json({"kind": "create", "relation": relation}))
+            rows.append({"Tür": "İlişki", "Kimlik": r["id"], "Ad": r.get("name") or r["id"],
+                         "Sonuç": "eklendi" if made else "vardı"})
+    return rows
 
 
 class Feature:

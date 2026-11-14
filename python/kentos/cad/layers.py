@@ -545,6 +545,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         expected_revision: str | None | Unset = UNSET,
         fields: Sequence[LayerField] | None | Unset = UNSET,
         geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET,
+        id: str | None | Unset = UNSET,
         index: int | None | Unset = UNSET,
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
@@ -592,6 +593,9 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             expected_revision: The document revision the input was prepared against, as decimal text.
             fields: The layer's fields (docs/adr/0199 §1).
             geometry: add, geometry: what the layer holds (docs/adr/0622 §5); `mixed`: any kind.
+            id: Add's id for the new node (docs/adr/8057 §23): a name a program finds it by again, as an extension's layer
+                schema names its layers (`mezar_parsel`) and a template's layers have theirs (`parsel`). ASCII letters, digits,
+                `_`, `-` and `.`, a letter first, 1–64; not one the tree has. Absent: one made (`layer-N`).
             index: Unit: index.
             kind: Add's kind of node; absent: a layer.
             layer: The node it acts on; merge's target.
@@ -625,6 +629,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             expected_revision=expected_revision,
             fields=_opt(fields, lambda x: list(x)),
             geometry=geometry,
+            id=id,
             index=index,
             kind=kind,
             layer=layer,
@@ -651,6 +656,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         expected_revision: str | None | Unset = UNSET,
         fields: Sequence[LayerField] | None | Unset = UNSET,
         geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET,
+        id: str | None | Unset = UNSET,
         index: int | None | Unset = UNSET,
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
@@ -675,6 +681,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             expected_revision=expected_revision,
             fields=_opt(fields, lambda x: list(x)),
             geometry=geometry,
+            id=id,
             index=index,
             kind=kind,
             layer=layer,
@@ -701,6 +708,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         expected_revision: str | None | Unset = UNSET,
         fields: Sequence[LayerField] | None | Unset = UNSET,
         geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET,
+        id: str | None | Unset = UNSET,
         index: int | None | Unset = UNSET,
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
@@ -725,6 +733,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             expected_revision=expected_revision,
             fields=_opt(fields, lambda x: list(x)),
             geometry=geometry,
+            id=id,
             index=index,
             kind=kind,
             layer=layer,
@@ -751,6 +760,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         expected_revision: str | None | Unset = UNSET,
         fields: Sequence[LayerField] | None | Unset = UNSET,
         geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET,
+        id: str | None | Unset = UNSET,
         index: int | None | Unset = UNSET,
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
@@ -780,6 +790,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             expected_revision=expected_revision,
             fields=_opt(fields, lambda x: list(x)),
             geometry=geometry,
+            id=id,
             index=index,
             kind=kind,
             layer=layer,
