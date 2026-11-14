@@ -945,8 +945,8 @@ kaydı), `apps/desktop/src/shell/extensions/tools.rs` (`Answers`), `python/kento
   "4 nesnede “etiket” yazıldı". Bulgu: önizleme sürece sormadığı için "4 nesnede sonuç boş" diyordu; artık "Önizleme
   yapılmadı: ifade bir eklenti işlevi çağırıyor (…); değeri çalıştırınca eklentinin kendi sürecinde hesaplanır" der.
   Bulgu: "Otomatik" 2000 nesnenin altında aracı pencerenin iş parçacığında çalıştırıyordu, eklentinin süreci beklenirdi;
-  `ext.` çağıran ifadesi olan çalıştırma artık her zaman arka planda (pencerenin "Nerede çalışır" satırı bunu henüz
-  söylemiyor).
+  `ext.` çağıran ifadesi olan çalıştırma artık her zaman arka planda; pencerenin "Nerede çalışır" satırı da "Otomatik —
+  şimdi: arka planda" der (kullanıcı "Bu bilgisayarda"yı seçse de arka planda çalışır: eklentinin süreci beklenmez).
 - **Uygularken verilen kararlar (planda yazılı değildi):** `ext` sonrası nokta ve tire adın içinde; bağımsız değişken
   sayısı denetlenmez; yanıt önbelleği argümanlarla, 100 000 yanıt; önizleme sürece sormaz ve bunu söyler; eklenti işlevi
   çağıran çalıştırma arka planda; etiket/stil/form sonraki dilimde; İmar'ın işlevi biçimlendirme (mevzuat iddiası yok).

@@ -595,8 +595,22 @@ impl ToolDialog {
             }
         };
         let size = self.inputs.values().map(|s| s.count).sum();
+        // An expression that calls an extension's function runs in the background (mod.rs): Otomatik says so.
+        let asks_extension = available.contains(&Target::Worker)
+            && self.tool.parameters.iter().any(|p| {
+                matches!(p.kind, kentos_processing::ParamKind::Expression { .. })
+                    && self
+                        .values
+                        .get(&p.name)
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|s| s.contains("ext."))
+            });
         Targets {
-            auto: auto_target(&available, size),
+            auto: if asks_extension {
+                Some(Target::Worker)
+            } else {
+                auto_target(&available, size)
+            },
             declared,
             available,
             model: model.is_some(),
