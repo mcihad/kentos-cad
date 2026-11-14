@@ -141,6 +141,14 @@ pub enum Component {
         #[serde(default)]
         label: Option<String>,
     },
+    /// The rows a button's command answered, grouped by `group`'s columns (one to three) into nodes that open and
+    /// close, each with its count; a row with a `uid` is an object.
+    Tree {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        group: Vec<String>,
+    },
 }
 
 /// A feature picker takes many objects unless it says otherwise.
@@ -161,7 +169,8 @@ impl Component {
             | Component::FeaturePicker { id, .. }
             | Component::Checkbox { id, .. }
             | Component::Button { id, .. }
-            | Component::Table { id, .. } => Some(id),
+            | Component::Table { id, .. }
+            | Component::Tree { id, .. } => Some(id),
         }
     }
 
@@ -210,11 +219,13 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "checkbox" => &["id", "label", "value", "onChange"],
         "button" => &["id", "label", "command", "table", "primary"],
         "table" => &["id", "label"],
+        "tree" => &["id", "label", "group"],
         _ => return None,
     })
 }
 
-const TYPES: &str = "text, textField, numberField, select, layerPicker, fieldPicker, featurePicker, checkbox, button, table";
+const TYPES: &str = "text, textField, numberField, select, layerPicker, fieldPicker, featurePicker, checkbox, button, \
+                     table, tree";
 
 /// A component's id: lowercase letters, digits, `_` and `-`, a letter first, at most 63: the key its value is given to
 /// the command under (`ctx.params["sorgu"]`).
@@ -305,7 +316,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             .filter_map(|c| c.get("id").and_then(Value::as_str))
             .collect()
     };
-    let tables = of_type("table");
+    // Where a button's rows may go: a table or a tree.
+    let tables: BTreeSet<&str> = of_type("table").union(&of_type("tree")).copied().collect();
     let layer_pickers = of_type("layerPicker");
     let mut ids = BTreeSet::new();
     for (i, component) in body.iter().enumerate() {
@@ -364,7 +376,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             }
             continue;
         }
-        if kind != "table" && text(c, "label").is_none() {
+        if !matches!(kind, "table" | "tree") && text(c, "label").is_none() {
             add(
                 at.clone(),
                 format!("{kind} bileşeni boş olmayan bir ad (label) ister."),
@@ -539,7 +551,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                 {
                     add(
                         format!("{at}/table"),
-                        "Düğmenin tablosu (table) bu paneldeki bir tablonun kimliği olmalı."
+                        "Düğmenin tablosu (table) bu paneldeki bir tablonun ya da ağacın kimliği olmalı."
                             .to_owned(),
                     );
                 }
@@ -547,6 +559,25 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     add(
                         format!("{at}/primary"),
                         "primary true ya da false olmalı.".to_owned(),
+                    );
+                }
+            }
+            "tree" => {
+                let given = c.get("group").and_then(Value::as_array);
+                let names: Vec<&str> = given
+                    .into_iter()
+                    .flatten()
+                    .filter_map(Value::as_str)
+                    .filter(|s| !s.trim().is_empty())
+                    .collect();
+                let fits = given.is_some_and(|g| g.len() == names.len())
+                    && (1..=3).contains(&names.len())
+                    && names.iter().collect::<BTreeSet<_>>().len() == names.len();
+                if !fits {
+                    add(
+                        format!("{at}/group"),
+                        "Ağaç, satırlarını gruplayacağı 1–3 farklı sütun adı (group) ister: ör. [\"ada\"]."
+                            .to_owned(),
                     );
                 }
             }
@@ -584,7 +615,8 @@ mod tests {
                 { "type": "table", "id": "sonuc", "label": "Sonuçlar" },
                 { "type": "fieldPicker", "id": "alan", "label": "Alan", "layer": "katman", "kinds": ["integer", "decimal"],
                   "onChange": "yapi-ara" },
-                { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman", "geometry": "area" }
+                { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman", "geometry": "area" },
+                { "type": "tree", "id": "agac", "label": "Adalara göre", "group": ["ada"] }
             ]
         })
     }
@@ -595,7 +627,7 @@ mod tests {
         assert!(check("ui/ara.panel.json", &value, &["yapi-ara"]).is_empty());
         let read = read(&value).expect("read");
         assert_eq!(read.title, "Yapı ara");
-        assert_eq!(read.body.len(), 10);
+        assert_eq!(read.body.len(), 11);
         assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 7);
         assert!(
             matches!(&read.body[5], Component::LayerPicker { geometry: Some(g), .. } if g == "area")
@@ -614,6 +646,7 @@ mod tests {
         );
         assert_eq!(read.body[8].on_change(), Some("yapi-ara"));
         assert_eq!(read.body[9].on_change(), None);
+        assert!(matches!(&read.body[10], Component::Tree { group, .. } if group == &["ada"]));
     }
 
     #[test]
@@ -629,6 +662,7 @@ mod tests {
         p["body"][8]["kinds"] = json!(["sayi"]);
         p["body"][9]["multiple"] = json!("evet");
         p["body"][9]["onChange"] = json!("say");
+        p["body"][10]["group"] = json!(["ada", "ada"]);
         p["body"]
             .as_array_mut()
             .unwrap()
@@ -656,8 +690,9 @@ mod tests {
                 "/body/8/kinds/0",
                 "/body/9/onChange",
                 "/body/9/multiple",
-                "/body/10/type",
-                "/body/11"
+                "/body/10/group",
+                "/body/11/type",
+                "/body/12"
             ]
         );
     }

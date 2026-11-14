@@ -1,0 +1,30 @@
+# Ağaç: Değer say'ın sonucu bir ağaçta; Parsel sınırı ve ada seçilince (onChange) her değer bir grup: 101 (3), 102 (1),
+# altlarında parseller. Yaprağa tıklamak parseli gösterir, grubun oku grubu kapatır. Değer say haritanın solunda ve dar
+# yerde etiketler alanların üstünde. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 843 20    # Vitrin
+wait 1200
+click 501 57    # Değer say
+wait 2000
+click 140 388   # Katman
+wait 1000
+click 111 541   # Kadastro › Parsel sınırı
+wait 800
+click 140 450   # Alan
+wait 1000
+click 60 514    # ada: onChange, ağaç dolar
+wait 6000
+shot 20-agac
+click 78 758    # 101 › parsel 3
+wait 2500
+shot 20-yaprak
+click 30 674    # 101 grubunun oku: kapat
+wait 1200
+shot 20-kapali

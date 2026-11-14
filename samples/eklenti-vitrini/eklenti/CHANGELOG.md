@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.14 — 15 Kasım 2026
+
+- "Değer say" sonucu ağaçta (`tree`, `group: ["Değer"]`): her değer bir grup, yanında sayısı, altında nesneleri;
+  nesneye tıklamak onu gösterir.
+
 ## 1.0.13 — 15 Kasım 2026
 
 - "Değer say" değer değişince çalışır (`onChange`): alan seçilince ya da nesneler alınınca sayım kendiliğinden yenilenir;

@@ -5,7 +5,7 @@
   "body": [
     {
       "type": "text",
-      "text": "Bir alanın değerlerini sayar: seçilen nesnelerde, seçilmediyse katmanın bütün nesnelerinde. Alanlar katman seçilince gelir; alan seçilince ya da nesneler alınınca sayım kendiliğinden yenilenir."
+      "text": "Bir alanın değerlerini sayar: seçilen nesnelerde, seçilmediyse katmanın bütün nesnelerinde. Alanlar katman seçilince gelir; alan seçilince ya da nesneler alınınca sayım kendiliğinden yenilenir. Her değer bir grup: yanında sayısı, altında nesneleri (tıklayınca gösterir)."
     },
     {
       "type": "layerPicker",
@@ -35,9 +35,12 @@
       "primary": true
     },
     {
-      "type": "table",
+      "type": "tree",
       "id": "dagilim",
-      "label": "Değerler"
+      "label": "Değerler",
+      "group": [
+        "Değer"
+      ]
     }
   ]
 }

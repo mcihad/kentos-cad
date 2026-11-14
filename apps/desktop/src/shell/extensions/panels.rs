@@ -13,6 +13,8 @@
 //!   shown as a column.
 //! - **A running button shows how far it is:** its command's `ctx.progress` as a bar and words under the form, with
 //!   Durdur; a command that answers a message, not rows, leaves the table as it was.
+//! - **A tree groups a command's rows** by the columns its definition names, each group with its count and open
+//!   unless the user closed it; a leaf with a `uid` is an object.
 //! - **Enter presses the primary button** in a text or number field (else the panel's first button).
 //! - **A value changed can run a command:** an input's `onChange` runs it with the panel's values (its rows to the
 //!   first table); a change while a command runs waits for it, one rerun with the values then.
@@ -51,8 +53,10 @@ pub(crate) struct OpenPanel {
     pub(crate) choices: BTreeMap<String, String>,
     /// Each feature picker's objects, their persistent ids.
     pub(crate) picks: BTreeMap<String, Vec<String>>,
-    /// Each table's columns and rows, from its button's command.
+    /// Each table's (and tree's) columns and rows, from its button's command.
     pub(crate) tables: BTreeMap<String, (Vec<String>, Vec<Value>)>,
+    /// A tree's closed groups: the tree's id and the group's values, joined by `/`.
+    pub(crate) folded: std::collections::BTreeSet<String>,
     /// The panel's last words and their mark: done, stopped by the user, failed.
     pub(crate) said: Option<(words::Kind, String)>,
     /// The button (or the changed input) whose command runs now.
@@ -92,6 +96,8 @@ pub(crate) enum PanelEvent {
     Press(String),
     /// A table's row with a `uid`: its object selected and zoomed to.
     Show(String),
+    /// A tree's group opened or closed (its key: the tree's id and the group's values).
+    Fold(String),
     Close,
 }
 
@@ -108,6 +114,7 @@ impl OpenPanel {
             choices: BTreeMap::new(),
             picks: BTreeMap::new(),
             tables: BTreeMap::new(),
+            folded: std::collections::BTreeSet::new(),
             said: None,
             running: None,
             rerun: None,
@@ -268,11 +275,11 @@ impl OpenPanel {
             .filter(|l| !l.is_empty())
     }
 
-    /// The table a button's rows go to: its own, else the panel's first.
+    /// The table (or tree) a button's rows go to: its own, else the panel's first.
     fn table_of(&self, table: Option<&String>) -> Option<String> {
         table.cloned().or_else(|| {
             self.definition.body.iter().find_map(|c| match c {
-                Component::Table { id, .. } => Some(id.clone()),
+                Component::Table { id, .. } | Component::Tree { id, .. } => Some(id.clone()),
                 _ => None,
             })
         })
@@ -436,6 +443,11 @@ impl App {
             PanelEvent::Pick(id) => return self.ext_panel_pick(&id),
             PanelEvent::Close => self.extensions.panel = None,
             PanelEvent::Press(button) => return self.ext_panel_press(&button),
+            PanelEvent::Fold(key) => {
+                if !panel.folded.remove(&key) {
+                    panel.folded.insert(key);
+                }
+            }
             PanelEvent::Show(uid) => {
                 return self.ext_show_object(
                     &uid,
@@ -915,6 +927,13 @@ impl App {
                 } => {
                     tables.push(self.panel_table(p, id, words.as_deref()));
                 }
+                Component::Tree {
+                    id,
+                    label: words,
+                    group,
+                } => {
+                    tables.push(panel_tree(p, id, words.as_deref(), group));
+                }
             }
         }
         let header = row![
@@ -1093,6 +1112,125 @@ impl App {
     }
 }
 
+/// Rows grouped by a column's words, each group in the order its first row came.
+fn group_rows<'a>(rows: &[&'a Value], column: &str) -> Vec<(String, Vec<&'a Value>)> {
+    let mut out: Vec<(String, Vec<&'a Value>)> = Vec::new();
+    for row in rows {
+        let value = cell_words(row.get(column));
+        match out.iter_mut().find(|(v, _)| *v == value) {
+            Some((_, members)) => members.push(*row),
+            None => out.push((value, vec![*row])),
+        }
+    }
+    out
+}
+
+/// A tree's rows grouped by `group`'s columns (KentOS's tree view): each group in the order its first row came, its
+/// count beside it, open unless the user closed it; a leaf the row's first other column, its object shown when
+/// clicked. Rows past [`SHOWN_ROWS`] are counted.
+fn panel_tree<'a>(
+    p: &'a OpenPanel,
+    id: &str,
+    words: Option<&'a str>,
+    group: &'a [String],
+) -> Element<'a, Message> {
+    use kentos_ui::widget::tree_view::{Column as Col, Node, TreeView};
+    let title = label::caption(words.unwrap_or("Sonuçlar").to_owned());
+    let Some((columns, rows)) = p.tables.get(id) else {
+        return column![
+            title,
+            label::muted("Düğmeye basınca komutun satırları burada gruplanır."),
+        ]
+        .spacing(4)
+        .into();
+    };
+    if rows.is_empty() {
+        return column![title, label::muted("Satır yok.")].spacing(4).into();
+    }
+    // A leaf's columns: the rows' own but the grouped ones and its uid; the first names the leaf.
+    let leaf: Vec<&String> = columns
+        .iter()
+        .filter(|c| c.as_str() != "uid" && !group.contains(c))
+        .collect();
+    let mut cols = vec![Col::new(group[0].clone()).width(Fill)];
+    cols.extend(
+        leaf.iter()
+            .skip(1)
+            .map(|c| Col::new((*c).clone()).width(Fill)),
+    );
+    cols.push(Col::new("Sayı").width(40).align_right());
+    let shown: Vec<&Value> = rows.iter().take(SHOWN_ROWS).collect();
+    fn nodes<'a>(
+        tree: &str,
+        rows: &[&'a Value],
+        group: &'a [String],
+        leaf: &[&'a String],
+        depth: usize,
+        path: &str,
+        folded: &std::collections::BTreeSet<String>,
+    ) -> Vec<Node<'a, Message>> {
+        if depth == group.len() {
+            return rows
+                .iter()
+                .map(|row| {
+                    let name = leaf
+                        .first()
+                        .map_or_else(|| "—".to_owned(), |c| cell_words(row.get(c.as_str())));
+                    let mut cells: Vec<Element<'a, Message>> = leaf
+                        .iter()
+                        .skip(1)
+                        .map(|c| label::caption(cell_words(row.get(c.as_str()))).into())
+                        .collect();
+                    cells.push(iced::widget::space::horizontal().width(0).into());
+                    let mut node = Node::new(name).cells(cells);
+                    if let Some(uid) = row.get("uid").and_then(Value::as_str) {
+                        node = node.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
+                    }
+                    node
+                })
+                .collect();
+        }
+        group_rows(rows, group[depth].as_str())
+            .into_iter()
+            .map(|(value, members)| {
+                let key = format!("{tree}/{path}{value}");
+                let open = !folded.contains(&key);
+                let mut cells: Vec<Element<'a, Message>> = (1..leaf.len().max(1))
+                    .map(|_| iced::widget::space::horizontal().width(0).into())
+                    .collect();
+                cells.push(label::caption(members.len().to_string()).into());
+                let mut node = Node::new(value.clone())
+                    .folder()
+                    .cells(cells)
+                    .expanded(open, msg(Event::Panel(PanelEvent::Fold(key))));
+                if open {
+                    node = node.extend(nodes(
+                        tree,
+                        &members,
+                        group,
+                        leaf,
+                        depth + 1,
+                        &format!("{path}{value}/"),
+                        folded,
+                    ));
+                }
+                node
+            })
+            .collect()
+    }
+    let tree = TreeView::new(cols)
+        .header(leaf.len() > 1)
+        .extend(nodes(id, &shown, group, &leaf, 0, "", &p.folded));
+    let mut out = column![title, tree].spacing(4);
+    if rows.len() > SHOWN_ROWS {
+        out = out.push(label::muted(format!(
+            "… {} satır daha",
+            rows.len() - SHOWN_ROWS
+        )));
+    }
+    out.into()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1155,6 +1293,39 @@ mod tests {
         assert_eq!(
             p.params().unwrap(),
             json!({ "katman": "yapi", "alan": null, "nesneler": [], "bir": "c" })
+        );
+    }
+
+    #[test]
+    fn a_trees_groups_keep_the_order_of_their_first_row_and_count_them() {
+        let rows = [
+            json!({ "uid": "a", "Değer": "102", "Nesne": "parsel=1" }),
+            json!({ "uid": "b", "Değer": "101", "Nesne": "parsel=1" }),
+            json!({ "uid": "c", "Değer": "102", "Nesne": "parsel=2" }),
+            json!({ "uid": "d", "Nesne": "parsel=3" }),
+        ];
+        let refs: Vec<&Value> = rows.iter().collect();
+        let groups = group_rows(&refs, "Değer");
+        let summary: Vec<(&str, usize)> =
+            groups.iter().map(|(v, m)| (v.as_str(), m.len())).collect();
+        assert_eq!(
+            summary,
+            [("102", 2), ("101", 1), ("—", 1)],
+            "no value: its own group"
+        );
+        // A tree's group closed and opened again.
+        let value = json!({
+            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Ağaç",
+            "body": [
+                { "type": "button", "id": "say", "label": "Say", "command": "deger-say" },
+                { "type": "tree", "id": "agac", "group": ["Değer"] }
+            ]
+        });
+        let p = OpenPanel::new("x", "y", kentos_extensions::ui_panel::read(&value).unwrap());
+        assert_eq!(
+            p.table_of(None).as_deref(),
+            Some("agac"),
+            "a button's rows go to the tree"
         );
     }
 

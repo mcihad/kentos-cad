@@ -79,7 +79,9 @@ None), `featurePicker` (`id`, `label`, `layer`: bir `layerPicker`'ın kimliği, 
 kullanıcı "Seçimi al"a basınca çizimdeki seçimden o katmanın ve türün nesnelerini alır, değeri kalıcı kimliklerin
 listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.entity(uid)` ile okur; katman değişince
 alan ve nesne seçimi temizlenir), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
-`primary`), `table` (`id`, `label`). `select`, `layerPicker`, `fieldPicker`, `featurePicker` ve `checkbox` isteğe
+`primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
+göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak
+tıklanınca nesneyi gösterir; düğmenin `table`'ı bir ağacı da gösterebilir). `select`, `layerPicker`, `fieldPicker`, `featurePicker` ve `checkbox` isteğe
 bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
 (çalışırken gelen değişiklik bitince bir kez yeniden çalıştırılır). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu

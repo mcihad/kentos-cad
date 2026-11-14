@@ -1592,4 +1592,11 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
      aramayı çalıştırdı (5 satır).
   Kalan: kısa pencerede Eklenti yığını yüksekliğin küçük bir payını alıyor (Öznitelikler altında), panel kaydırılarak
   kullanılıyor; alanlar arası Tab uygulamada genel olarak yok (ayrı iş).
-- **Kalan (ADIM 22):** ağaç, kart bileşenleri; birden çok açık panel.
+- **Ağaç** (`tree`: `id`, `label`, `group`; Vitrin 1.0.14, Değer say; `20-agac`): düğmenin (ya da `onChange`'in) komutu
+  düz satır verir, KentOS onları `group`'un 1–3 sütununa göre iç içe gruplara dizer (KentOS'un ağaç görünümü): her grup
+  ilk satırının sırasıyla, yanında sayısı, kullanıcı kapatmadıkça açık; yaprağın adı satırın gruplanmayan ilk sütunu,
+  diğer sütunları yanında, `uid`'li yaprak tıklanınca nesneyi gösterir. **Python API'sine bir şey eklenmedi:** ağaç
+  satırları kendisi gruplar, komut bir tabloya yazar gibi yazar. Değersiz satır "—" grubuna düşer. Kapı 1: `group` 1–3
+  farklı sütun adı; düğmenin `table`'ı bir tabloyu ya da ağacı gösterir. Vitrin'in Değer say'ı artık nesne başına satır
+  verir; ağaç dağılımı başlık sayılarıyla gösterir, nesneler altında.
+- **Kalan (ADIM 22):** kart bileşeni; birden çok açık panel.
