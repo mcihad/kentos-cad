@@ -10,7 +10,7 @@
 //! real-window sessions never touch the user's own. A start without extensions (`--eklentisiz`, `KENTOS_EKLENTISIZ`, or
 //! "bir sonraki açılışta eklentisiz başlat" from this window) activates nothing.
 
-mod actions;
+mod tool_pins;
 mod bisect;
 mod browse;
 pub(crate) mod environment;
@@ -21,7 +21,7 @@ mod search;
 pub(crate) mod tools;
 mod view;
 
-pub(crate) use actions::ActionTool;
+pub(crate) use tool_pins::PinnedTool;
 pub(crate) use search::ExtHit;
 
 use std::path::{Path, PathBuf};

@@ -202,6 +202,8 @@ pub fn add_step(
         values: Vec::new(),
         position,
         caption: None,
+        // An extension's tool is pinned to its extension as installed (docs/adr/8057 §13).
+        pin: crate::external::pin_of(tool_id),
     });
     if let (Some(tool), Some(from)) = (&tool, from) {
         for p in &tool.parameters {

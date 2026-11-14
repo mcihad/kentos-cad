@@ -13044,36 +13044,6 @@ class AccuracyReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
-class ActionPin(_Model):
-    """Where a form action's extension tool came from (docs/adr/8057 §12): pinned when the form's author
-    chose it. The package's content digest covers the tool's descriptor, its code, its environment's
-    lock and the capabilities it asks for.
-    Attributes:
-        extension: The extension's id (`tr.ornek.vitrin`).
-        version: Its version then (`1.0.1`).
-        digest: Its package's content digest then: `sha256:` and 64 lower-case hex digits.
-    """
-    extension: str
-    version: str
-    digest: str
-
-    def to_json(self) -> dict[str, Any]:
-        out: dict[str, Any] = {}
-        out["extension"] = self.extension
-        out["version"] = self.version
-        out["digest"] = self.digest
-        return out
-
-    @classmethod
-    def from_json(cls, data: Mapping[str, Any]) -> ActionPin:
-        return cls(
-            extension=data["extension"],
-            version=data["version"],
-            digest=data["digest"],
-        )
-
-
-@dataclass(kw_only=True, slots=True)
 class AddressCodeRepeat(_Model):
     """An address code on more than one door."""
     code: str
@@ -39312,6 +39282,36 @@ class ExportXyz(_Model):
             time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
             vertices=_enum_in(XyzVertices, data["vertices"]) if "vertices" in data else XyzVertices.POINTS,
             without_z=_enum_in(XyzWithoutZ, data["withoutZ"]) if "withoutZ" in data else XyzWithoutZ.ZERO,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtensionPin(_Model):
+    """The extension an extension's tool came from when it was chosen (docs/adr/8057 §12, §13): a form's action, a
+    model's step. The package's content digest covers the tool's descriptor, its code, its environment's lock and the
+    capabilities it asks for.
+    Attributes:
+        extension: The extension's id (`tr.ornek.vitrin`).
+        version: Its version then (`1.0.1`).
+        digest: Its package's content digest then: `sha256:` and 64 lower-case hex digits.
+    """
+    extension: str
+    version: str
+    digest: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["extension"] = self.extension
+        out["version"] = self.version
+        out["digest"] = self.digest
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtensionPin:
+        return cls(
+            extension=data["extension"],
+            version=data["version"],
+            digest=data["digest"],
         )
 
 
@@ -127097,7 +127097,7 @@ class ActionFormItem(FormItem):
     id: str
     label: str
     kind: ActionKind | ActionKindName | Unset = UNSET
-    pin: ActionPin | None | Unset = UNSET
+    pin: ExtensionPin | None | Unset = UNSET
     runs: ActionRuns | ActionRunsName | Unset = UNSET
     step: str | None | Unset = UNSET
     tool: str | None | Unset = UNSET
@@ -127127,7 +127127,7 @@ class ActionFormItem(FormItem):
             id=data["id"],
             label=data["label"],
             kind=_enum_in(ActionKind, data["kind"]) if "kind" in data else UNSET,
-            pin=UNSET if "pin" not in data else None if data["pin"] is None else ActionPin.from_json(data["pin"]),
+            pin=UNSET if "pin" not in data else None if data["pin"] is None else ExtensionPin.from_json(data["pin"]),
             runs=_enum_in(ActionRuns, data["runs"]) if "runs" in data else UNSET,
             step=data.get("step", UNSET),
             tool=data.get("tool", UNSET),
@@ -140778,7 +140778,6 @@ __all__ = [
     "ActionFormItem",
     "ActionKind",
     "ActionKindName",
-    "ActionPin",
     "ActionRuns",
     "ActionRunsName",
     "AddArmLeaderEdit",
@@ -141944,6 +141943,7 @@ __all__ = [
     "ExportXyz",
     "ExpressionPaperGridLabelFormat",
     "ExtendWallsOperation",
+    "ExtensionPin",
     "ExtensionPointConstruction",
     "ExtentSourcesEditOp",
     "ExtentsPaperPlotArea",

@@ -339,7 +339,7 @@ impl App {
                                 .iter()
                                 .map(|(i, l)| Choice::new(l.clone()).detail(i.clone())),
                             at,
-                            move |i| msg(Event::ActionTool(ids[i].clone())),
+                            move |i| msg(Event::PinnedTool(ids[i].clone())),
                         )
                         .placeholder("İşlem aracı");
                         let missing = at.is_none().then(|| {

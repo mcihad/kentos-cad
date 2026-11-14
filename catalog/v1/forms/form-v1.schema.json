@@ -25,31 +25,6 @@
         }
       ]
     },
-    "ActionPin": {
-      "additionalProperties": false,
-      "description": "Where a form action's extension tool came from (docs/adr/8057 §12): pinned when the form's author\nchose it. The package's content digest covers the tool's descriptor, its code, its environment's\nlock and the capabilities it asks for.",
-      "properties": {
-        "digest": {
-          "description": "Its package's content digest then: `sha256:` and 64 lower-case hex digits.",
-          "pattern": "^sha256:[0-9a-f]{64}$",
-          "type": "string"
-        },
-        "extension": {
-          "description": "The extension's id (`tr.ornek.vitrin`).",
-          "type": "string"
-        },
-        "version": {
-          "description": "Its version then (`1.0.1`).",
-          "type": "string"
-        }
-      },
-      "required": [
-        "extension",
-        "version",
-        "digest"
-      ],
-      "type": "object"
-    },
     "ActionRuns": {
       "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
       "oneOf": [
@@ -110,6 +85,31 @@
           "type": "string"
         }
       ]
+    },
+    "ExtensionPin": {
+      "additionalProperties": false,
+      "description": "The extension an extension's tool came from when it was chosen (docs/adr/8057 §12, §13): a form's action, a\nmodel's step. The package's content digest covers the tool's descriptor, its code, its environment's lock and the\ncapabilities it asks for.",
+      "properties": {
+        "digest": {
+          "description": "Its package's content digest then: `sha256:` and 64 lower-case hex digits.",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "extension": {
+          "description": "The extension's id (`tr.ornek.vitrin`).",
+          "type": "string"
+        },
+        "version": {
+          "description": "Its version then (`1.0.1`).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "extension",
+        "version",
+        "digest"
+      ],
+      "type": "object"
     },
     "FormBody": {
       "additionalProperties": false,
@@ -738,7 +738,7 @@
             "pin": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ActionPin"
+                  "$ref": "#/$defs/ExtensionPin"
                 },
                 {
                   "type": "null"

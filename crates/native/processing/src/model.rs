@@ -93,6 +93,9 @@ pub struct ModelStep {
     pub position: Option<(f64, f64)>,
     /// A short caption in the diagram; the tool's name when none.
     pub caption: Option<String>,
+    /// An extension's tool's extension when the step was added (docs/adr/8057 §13): which extension and version the
+    /// model was made with; a model opened without it says so and installs nothing.
+    pub pin: Option<kentos_commands::ExtensionPin>,
 }
 
 impl ModelStep {
@@ -122,6 +125,9 @@ impl ModelStep {
         }
         if let Some(caption) = &self.caption {
             o.insert("caption".into(), json!(caption));
+        }
+        if let Some(pin) = &self.pin {
+            o.insert("pin".into(), json!(pin));
         }
         Value::Object(o)
     }
@@ -247,6 +253,8 @@ struct WireStep {
     position: Option<Value>,
     #[serde(default)]
     caption: Option<String>,
+    #[serde(default)]
+    pin: Option<kentos_commands::ExtensionPin>,
 }
 
 #[derive(Deserialize)]
@@ -299,6 +307,7 @@ impl<'de> Deserialize<'de> for Model {
                         .collect(),
                     position: s.position.as_ref().and_then(point_of),
                     caption: s.caption,
+                    pin: s.pin,
                 })
                 .collect(),
             outputs: w
@@ -363,6 +372,9 @@ impl Serialize for ModelStep {
         }
         if let Some(caption) = &self.caption {
             m.serialize_entry("caption", caption)?;
+        }
+        if let Some(pin) = &self.pin {
+            m.serialize_entry("pin", pin)?;
         }
         m.end()
     }
@@ -434,9 +446,18 @@ pub fn check_model(model: &Model, lookup: &dyn Fn(&str) -> Option<Tool>) -> Vec<
     }
     for s in &model.steps {
         let Some(tool) = lookup(&s.tool) else {
+            // An extension's tool says which extension and version the model was made with (docs/adr/8057 §13):
+            // nothing is installed for it, the user installs it from Eklentiler.
+            let message = match &s.pin {
+                Some(p) => format!(
+                    "“{}” aracının eklentisi bu bilgisayarda yok: model {} {} ile yapıldı; Eklentiler'den kurun.",
+                    s.tool, p.extension, p.version
+                ),
+                None => format!("Bilinmeyen işlem aracı: {}", s.tool),
+            };
             issues.push(ModelIssue {
                 step: Some(s.id.clone()),
-                message: format!("Bilinmeyen işlem aracı: {}", s.tool),
+                message,
             });
             continue;
         };

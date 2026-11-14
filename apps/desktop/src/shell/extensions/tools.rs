@@ -876,7 +876,9 @@ impl App {
                         )
                     });
                 match read {
-                    Ok(tool) => {
+                    Ok(mut tool) => {
+                        // The package's digest: what a model's step pins (docs/adr/8057 §13).
+                        tool.digest = registry.digest(&ext).unwrap_or_default();
                         plans.insert(
                             tool.tool.id.clone(),
                             Plan {

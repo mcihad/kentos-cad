@@ -182,6 +182,7 @@ impl App {
                 .collect(),
             position: None,
             caption: Some("Seçim koşulları".into()),
+            pin: kentos_processing::external::pin_of(&window.tool.id),
         });
         self.gis.processing.designer = Some(Box::new(Designer::new(model, false, false)));
         self.gis.processing.dialog = None;

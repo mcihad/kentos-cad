@@ -1052,8 +1052,8 @@ temiz ve kaliteli"; "içinde birçok durum için örnekler olsun, sadece eklenti
 
 ## §12. Form eylemi eklenti aracını açar; eklenti sabitlenir (`ADIM 19`, FORM-API-13, ECO-DEC-09)
 
-**14 Kasım.** Kod: `crates/shared/contracts/src/gis/forms.rs` (`ActionPin`, `action_tool_ok`, `action_tool_extension`,
-`action_pin_ok`), `apps/desktop/src/shell/extensions/actions.rs` (`ActionTool`), formun düğmesi
+**14 Kasım.** Kod: `crates/shared/contracts/src/gis/forms.rs` (`ExtensionPin`, önce `ActionPin`; `action_tool_ok`,
+`action_tool_extension`, `extension_pin_ok`), `apps/desktop/src/shell/extensions/tool_pins.rs` (`PinnedTool`), formun düğmesi
 (`gis/forms/entry/items.rs`, `steps.rs`) ve tasarımcı (`designer/step.rs`, `designer.rs`, `designer_view/inspector.rs`).
 
 - **Kimlik:** form eylemi (ADR 0441 §6) bir eklenti aracını `ext.<eklenti>.<araç>` diye anar. Önceki kural yalnız
@@ -1094,3 +1094,28 @@ temiz ve kaliteli"; "içinde birçok durum için örnekler olsun, sadece eklenti
   ret değil; sabitlemesiz eylem geçerli; bekleyen durumda düğme kapalı (aracın penceresi açılıp çalıştırınca düşmek
   yerine); kaydın girdisi kaydın katmanından bulunur; eklenti formları (manifestin `forms`'u) bu dilimde değil,
   ADIM 22.
+
+## §13. Model adımı eklenti aracını sabitler (`ADIM 19`, PY-TOOL-20)
+
+**14 Kasım.** Kod: `crates/native/processing/src/external.rs` (`ExternalTool::version`/`digest`, `pin_of`),
+`model.rs` (`ModelStep::pin`, `check_model`), `model_edit.rs` (`add_step`), `apps/web/src/processing/model.ts`,
+`apps/desktop/src/shell/extensions/tool_pins.rs` (`step_pin_note`), model tasarımcısının adım ayarları.
+
+- **Tek tür:** formun `ActionPin`'i `ExtensionPin` oldu (sözleşme, TS, Python, şema); form eylemi ve model adımı aynı
+  `{extension, version, digest}`'i taşır, JSON adı ikisinde de `pin`.
+- **Adım eklenirken sabitlenir:** `add_step` eklenti aracının kurulu sürümünü ve paket özetini yazar (`pin_of`; özet
+  masaüstünün kayıt defterinden `ExternalTool::digest`'e yazılır). Bütün yollar aynı düzenlemeden geçtiği için
+  tasarımcı, Python ve MCP'nin model düzenlemesi aynı sabitlemeyi yazar. Seçimden kurulan tarif modeli de.
+- **Eklentisiz açılış (PY-TOOL-20'nin "kod kurdurmaz"ı):** model açılır, hiçbir şey kurulmaz; adımın sorunu
+  "“ext.tr.ornek.vitrin.taks” aracının eklentisi bu bilgisayarda yok: model tr.ornek.vitrin 1.0.1 ile yapıldı;
+  Eklentiler'den kurun." der (Rust ve web aynı sözle). Sabitlemesiz eski adım "Bilinmeyen işlem aracı" der.
+- **Adımın satırı (masaüstü):** "Eklenti Vitrini 1.0.1 ile eklendi."; başka sürüm ya da yapı kuruluysa ikisini
+  söyler; eklentinin kodu çalışamıyorsa "Bekliyor: …", eklenti kapalıysa "Kullanılamaz: …". Sürüm farkı modeli
+  durdurmaz (adım aracın kurulu hâliyle çalışır).
+- **Gerçek pencere (`09-model`):** Yeni model › Araç ara "TAKS" › Eklentiler › Parsel TAKS hesabı: adım eklendi,
+  ayarları "Eklenti Vitrini 1.0.1 ile eklendi." dedi.
+- **Sınamalar:** İşlemler 1 (adım sabitlenir, yerleşik araç sabitlenmez, JSON geri okunur, eklentisiz açılışın sözü),
+  web 1 (aynı söz, JSON'da kalır), masaüstü 1 (tasarımcıda ekleme, kurulu paketin özeti, satırın dört hâli).
+- **Uygularken verilen kararlar:** `ActionPin` → `ExtensionPin` (bir tür); özet host'tan `ExternalTool`'a; sürüm
+  farkı uyarı, ret değil; çalışma kökeni (PY-TOOL-22: girdi anlık görüntüsü, parametreler, çıktı kimlikleri) ayrı
+  dilim.

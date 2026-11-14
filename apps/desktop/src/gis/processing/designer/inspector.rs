@@ -48,6 +48,9 @@ pub(super) struct Context<'a, 'b> {
     pub doc: Option<&'a kentos_domain::Document>,
     pub format: &'b Format,
     pub color: &'b dyn Fn(&str) -> iced::Color,
+    /// The selected step's extension tool's line (docs/adr/8057 §13): the version it was added with, pending or
+    /// unavailable; none for a built-in tool.
+    pub pin_note: Option<String>,
 }
 
 pub(super) fn inspector<'a>(d: &'a Designer, cx: &Context<'a, '_>) -> Element<'a, Message> {
@@ -659,14 +662,19 @@ fn step_settings<'a>(d: &'a Designer, id: &'a str, cx: &Context<'a, '_>) -> Elem
         return space().into();
     };
     let Some(tool) = lookup(&step.tool) else {
-        return section(
-            Some(words::step::UNKNOWN.to_owned()),
-            vec![
-                label::caption(words::step::unknown_note(&step.tool))
+        let mut rows = vec![
+            label::caption(words::step::unknown_note(&step.tool))
+                .style(style::text::muted)
+                .into(),
+        ];
+        if let Some(note) = &cx.pin_note {
+            rows.push(
+                label::caption(note.clone())
                     .style(style::text::muted)
                     .into(),
-            ],
-        );
+            );
+        }
+        return section(Some(words::step::UNKNOWN.to_owned()), rows);
     };
     // The controls read the fixed values and the tool's defaults, as the tool window holds them.
     let fields = d.fields.as_ref().filter(|f| f.tool.id == tool.id);
@@ -777,6 +785,9 @@ fn step_settings<'a>(d: &'a Designer, id: &'a str, cx: &Context<'a, '_>) -> Elem
         ),
     ]
     .spacing(18);
+    if let Some(note) = &cx.pin_note {
+        out = out.push(label::caption(note.clone()).style(style::text::muted));
+    }
     if let Some(p) = problems(d, Some(id), &lookup) {
         out = out.push(p);
     }

@@ -90,11 +90,22 @@ impl App {
                 .resolve(c)
                 .map_or_else(|| crate::view::hex_color(c), crate::view::rgba_color)
         };
+        // The selected step's extension tool, as this computer has it (docs/adr/8057 §13).
+        let pin_note = match &d.selected {
+            Some(kentos_processing::model_edit::NodeRef::Step(id)) => d
+                .draft
+                .steps
+                .iter()
+                .find(|s| &s.id == id)
+                .and_then(|s| self.step_pin_note(&s.tool, s.pin.as_ref())),
+            _ => None,
+        };
         let cx = Context {
             registry,
             doc: self.document.as_ref().map(|doc| &doc.model),
             format: &format,
             color: &color,
+            pin_note,
         };
         let cols = row![
             // The tools this program offers (docs/adr/0802), as the toolbox lists them.

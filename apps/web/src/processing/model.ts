@@ -1,3 +1,4 @@
+import type { ExtensionPin } from '../contracts/generated/ExtensionPin';
 import { isVisible } from './parameters';
 import type { ParamDef, ParamType, ProcessingTool } from './types';
 
@@ -24,6 +25,8 @@ export interface ModelStep {
   position?: { x: number; y: number };
   /** Short caption in the diagram; the tool name when absent. */
   caption?: string;
+  /** An extension's tool's extension when the step was added (docs/adr/8057 §13); the desktop writes it, the web keeps it. */
+  pin?: ExtensionPin;
 }
 
 export interface ProcessingModel {
@@ -75,7 +78,13 @@ export function checkModel(model: ProcessingModel, lookup: (id: string) => Proce
   for (const s of model.steps) {
     const tool = lookup(s.tool);
     if (!tool) {
-      issues.push({ step: s.id, message: `Bilinmeyen işlem aracı: ${s.tool}` });
+      // An extension's tool says which extension and version the model was made with (docs/adr/8057 §13).
+      issues.push({
+        step: s.id,
+        message: s.pin
+          ? `“${s.tool}” aracının eklentisi bu bilgisayarda yok: model ${s.pin.extension} ${s.pin.version} ile yapıldı; Eklentiler'den kurun.`
+          : `Bilinmeyen işlem aracı: ${s.tool}`,
+      });
       continue;
     }
     // What is known before running: fixed values and fixed defaults (for visibleWhen).

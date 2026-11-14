@@ -83,7 +83,7 @@ pub(crate) mod surface_tests;
 #[cfg(test)]
 mod table_points_tests;
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 #[cfg(test)]
 mod transfer_tests;
 mod window;

@@ -165,8 +165,8 @@ impl App {
                     // can run: docs/adr/8057 §12), where it runs as the action says (docs/adr/0442 §6).
                     K::Tool => {
                         let Some(tool) = tool.filter(|t| {
-                            self.action_tool_state(t, pin.as_ref())
-                                == crate::extensions::ActionTool::Ready
+                            self.pinned_tool_state(t, pin.as_ref())
+                                == crate::extensions::PinnedTool::Ready
                         }) else {
                             return Task::none();
                         };

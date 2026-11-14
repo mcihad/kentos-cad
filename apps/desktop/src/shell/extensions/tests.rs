@@ -2240,10 +2240,10 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
 fn a_forms_action_opens_an_extensions_tool_pinned_and_says_why_when_it_cannot() {
     // docs/adr/8057 §12, FORM-API-13: a form's button on Vitrin's TAKS tool. Missing, its code not runnable yet or
     // turned off, the button is off and says so; the designer pins the extension and says when it drifts.
-    use crate::extensions::ActionTool;
+    use crate::extensions::PinnedTool;
     use crate::form_scenes::{designer, entry, meters_rebodied};
     use crate::forms::{designer as d, entry as en};
-    use kentos_commands::{ActionPin, FormItem};
+    use kentos_commands::{ExtensionPin, FormItem};
     const TOOL: &str = "ext.tr.ornek.vitrin.taks";
     const VITRIN: &str = "tr.ornek.vitrin";
     let dir = temp("form-eylemi");
@@ -2255,32 +2255,32 @@ fn a_forms_action_opens_an_extensions_tool_pinned_and_says_why_when_it_cannot() 
             { "type": "action", "id": "taks", "label": "TAKS hesapla", "tool": TOOL }
         ]),
     );
-    let unavailable = |state: ActionTool| match state {
-        ActionTool::Unavailable(why) => why,
+    let unavailable = |state: PinnedTool| match state {
+        PinnedTool::Unavailable(why) => why,
         other => panic!("{other:?}"),
     };
-    let stale = ActionPin {
+    let stale = ExtensionPin {
         extension: VITRIN.into(),
         version: "0.9.0".into(),
         digest: format!("sha256:{}", "0".repeat(64)),
     };
     // Not installed: which extension, and with a pin which version the form expects.
-    let why = unavailable(gis.action_tool_state(TOOL, None));
+    let why = unavailable(gis.pinned_tool_state(TOOL, None));
     assert!(
         why.contains("tr.ornek.vitrin eklentisi bu bilgisayarda kurulu değil"),
         "{why}"
     );
-    let why = unavailable(gis.action_tool_state(TOOL, Some(&stale)));
+    let why = unavailable(gis.pinned_tool_state(TOOL, Some(&stale)));
     assert!(
         why.contains("tr.ornek.vitrin 0.9.0 bu bilgisayarda kurulu değil"),
         "{why}"
     );
-    let why = unavailable(gis.action_tool_state("vitrin.yok", None));
+    let why = unavailable(gis.pinned_tool_state("vitrin.yok", None));
     assert!(why.contains("kayıtlı bir işlem aracı değil"), "{why}");
     // Installed, its Python not ready (no Python in tests): pending, the press opens nothing.
     install(&mut gis, "vitrin.kek", vitrin_package());
-    let pending = gis.action_tool_state(TOOL, None);
-    assert!(matches!(pending, ActionTool::Pending(_)), "{pending:?}");
+    let pending = gis.pinned_tool_state(TOOL, None);
+    assert!(matches!(pending, PinnedTool::Pending(_)), "{pending:?}");
     gis.selection.set([kentos_domain::Slot(1)]);
     crate::tools_scenes::run(&mut gis, "data.formEdit");
     assert!(gis.gis.form_entry.is_some(), "the form");
@@ -2291,7 +2291,7 @@ fn a_forms_action_opens_an_extensions_tool_pinned_and_says_why_when_it_cannot() 
     );
     // Its code can run: the press opens the tool on the record.
     gis.extensions.python_reasons.insert(VITRIN.into(), None);
-    assert_eq!(gis.action_tool_state(TOOL, None), ActionTool::Ready);
+    assert_eq!(gis.pinned_tool_state(TOOL, None), PinnedTool::Ready);
     entry(&mut gis, en::Event::RunAction("taks".into()));
     assert_eq!(
         gis.gis
@@ -2314,28 +2314,28 @@ fn a_forms_action_opens_an_extensions_tool_pinned_and_says_why_when_it_cannot() 
         "its other input as it was"
     );
     // The pin: the installed version and digest; another version, another build or none is said.
-    let pin = gis.action_pin_of(TOOL).expect("installed");
+    let pin = gis.tool_pin_of(TOOL).expect("installed");
     assert_eq!(pin.version, "1.0.1");
     assert!(pin.digest.starts_with("sha256:") && pin.digest.len() == 71);
-    assert_eq!(gis.action_pin_drift(TOOL, Some(&pin)), None);
+    assert_eq!(gis.tool_pin_drift(TOOL, Some(&pin)), None);
     let drift = gis
-        .action_pin_drift(TOOL, Some(&stale))
+        .tool_pin_drift(TOOL, Some(&stale))
         .expect("another version");
     assert!(
         drift.contains("0.9.0 ile seçildi, kurulu sürüm 1.0.1"),
         "{drift}"
     );
-    let rebuilt = ActionPin {
+    let rebuilt = ExtensionPin {
         digest: format!("sha256:{}", "1".repeat(64)),
         ..pin.clone()
     };
     let drift = gis
-        .action_pin_drift(TOOL, Some(&rebuilt))
+        .tool_pin_drift(TOOL, Some(&rebuilt))
         .expect("another build");
     assert!(drift.contains("içeriği farklı"), "{drift}");
-    let drift = gis.action_pin_drift(TOOL, None).expect("not pinned");
+    let drift = gis.tool_pin_drift(TOOL, None).expect("not pinned");
     assert!(drift.contains("sabitlenmemiş"), "{drift}");
-    assert_eq!(gis.action_pin_drift("attributes.calculate", None), None);
+    assert_eq!(gis.tool_pin_drift("attributes.calculate", None), None);
     // The designer: the preflight says the missing pin; choosing the tool pins it, the warning goes.
     crate::tools_scenes::run(&mut gis, "data.forms");
     designer(&mut gis, d::Event::SelectItem("taks".into()));
@@ -2348,7 +2348,7 @@ fn a_forms_action_opens_an_extensions_tool_pinned_and_says_why_when_it_cannot() 
             .collect()
     };
     assert!(codes(&gis).contains(&kentos_forms::codes::ACTION_PIN.to_owned()));
-    designer(&mut gis, d::Event::ActionTool(TOOL.into()));
+    designer(&mut gis, d::Event::PinnedTool(TOOL.into()));
     let body = gis.gis.forms_window.as_ref().unwrap().body.clone().unwrap();
     let pinned = body.walk().into_iter().find_map(|(_, i)| match i {
         FormItem::Action { pin, .. } => pin.clone(),
@@ -2358,7 +2358,7 @@ fn a_forms_action_opens_an_extensions_tool_pinned_and_says_why_when_it_cannot() 
     assert!(!codes(&gis).contains(&kentos_forms::codes::ACTION_PIN.to_owned()));
     // Turned off: unavailable with the extension's state; the preflight says the button is off.
     let _ = gis.extensions_event(Event::Disable(VITRIN.into()));
-    let why = unavailable(gis.action_tool_state(TOOL, None));
+    let why = unavailable(gis.pinned_tool_state(TOOL, None));
     assert!(why.contains("Eklenti Vitrini — Devre dışı"), "{why}");
     assert!(codes(&gis).contains(&kentos_forms::codes::ACTION_UNKNOWN.to_owned()));
     let _ = std::fs::remove_dir_all(&dir);
@@ -2395,10 +2395,83 @@ fn the_demo_drawings_form_pins_the_demo_extension_as_it_packs_now() {
     let mut gis = app(&dir, Some(Module::Gis));
     install(&mut gis, "vitrin.kek", vitrin_package());
     assert_eq!(
-        gis.action_pin_drift("ext.tr.ornek.vitrin.taks", Some(&pin)),
+        gis.tool_pin_drift("ext.tr.ornek.vitrin.taks", Some(&pin)),
         None,
         "vitrin.kcad's TAKS button is pinned to another package: run `.run/py/bin/python \
          samples/eklenti-vitrini/vitrin_cizim.py`"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_models_step_on_an_extensions_tool_is_pinned_and_says_where_it_stands() {
+    // docs/adr/8057 §13, PY-TOOL-20: Model tasarımcısı adds Vitrin's TAKS pinned to the extension as installed; the
+    // step's line says the version (another one too), pending without Python, unavailable once the extension is off.
+    use crate::processing::designer::Event as Designer;
+    use kentos_commands::ExtensionPin;
+    const TOOL: &str = "ext.tr.ornek.vitrin.taks";
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let dir = temp("model-sabitleme");
+    // A drawing open (the designer asks for one), the extensions apart from the user's own.
+    let mut gis = crate::processing::tests::app_with_parcels();
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&dir, false).0;
+    gis.extensions_changed();
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let _ = gis.update(Message::Run("processing.newModel"));
+    let _ = gis.update(Message::Gis(crate::gis::Event::ModelDesigner(
+        Designer::AddTool {
+            tool: TOOL.into(),
+            at: None,
+        },
+    )));
+    let step = gis
+        .gis
+        .processing
+        .designer
+        .as_deref()
+        .expect("the designer")
+        .draft
+        .steps[0]
+        .clone();
+    let pin = step.pin.clone().expect("pinned");
+    assert_eq!(
+        (pin.extension.as_str(), pin.version.as_str()),
+        (VITRIN, "1.0.1")
+    );
+    assert_eq!(
+        Some(pin.clone()),
+        gis.tool_pin_of(TOOL),
+        "the installed package's"
+    );
+    let note = gis.step_pin_note(TOOL, Some(&pin)).expect("a line");
+    assert!(note.starts_with("Bekliyor: "), "{note}");
+    gis.extensions.python_reasons.insert(VITRIN.into(), None);
+    assert_eq!(
+        gis.step_pin_note(TOOL, Some(&pin)).as_deref(),
+        Some("Eklenti Vitrini 1.0.1 ile eklendi.")
+    );
+    let older = ExtensionPin {
+        version: "1.0.0".into(),
+        ..pin.clone()
+    };
+    let note = gis.step_pin_note(TOOL, Some(&older)).expect("a line");
+    assert!(
+        note.contains("1.0.0 ile eklendi; kurulu sürüm 1.0.1"),
+        "{note}"
+    );
+    assert_eq!(gis.step_pin_note("attributes.calculate", None), None);
+    // The inspector draws it.
+    gis.gis.processing.designer.as_deref_mut().unwrap().selected = Some(
+        kentos_processing::model_edit::NodeRef::Step(step.id.clone()),
+    );
+    let _ = gis.model_designer_view();
+    // Turned off: unavailable with the extension's state.
+    let _ = gis.extensions_event(Event::Disable(VITRIN.into()));
+    let note = gis.step_pin_note(TOOL, Some(&pin)).expect("a line");
+    assert!(
+        note.starts_with("Kullanılamaz: Eklenti Vitrini — Devre dışı"),
+        "{note}"
     );
     let _ = std::fs::remove_dir_all(&dir);
 }

@@ -786,22 +786,22 @@ pub enum FormItem {
         /// §12); the host says when the one installed differs or is missing.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
-        pin: Option<ActionPin>,
+        pin: Option<ExtensionPin>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
 }
 
-/// Where a form action's extension tool came from (docs/adr/8057 §12): pinned when the form's author
-/// chose it. The package's content digest covers the tool's descriptor, its code, its environment's
-/// lock and the capabilities it asks for.
+/// The extension an extension's tool came from when it was chosen (docs/adr/8057 §12, §13): a form's action, a
+/// model's step. The package's content digest covers the tool's descriptor, its code, its environment's lock and the
+/// capabilities it asks for.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
-pub struct ActionPin {
+pub struct ExtensionPin {
     /// The extension's id (`tr.ornek.vitrin`).
     pub extension: String,
     /// Its version then (`1.0.1`).
@@ -811,7 +811,7 @@ pub struct ActionPin {
     pub digest: String,
 }
 
-/// An action pin's digest as a pattern.
+/// A pin's digest as a pattern.
 pub const PIN_DIGEST_TEXT: &str = r"^sha256:[0-9a-f]{64}$";
 
 /// The longest extension tool id: `ext.`, an extension's id (128) and a tool's (63).
@@ -911,8 +911,9 @@ pub fn action_tool_extension(tool: &str) -> Option<&str> {
     action_tool_ok(tool).then_some(extension)
 }
 
-/// Whether a pin fits its action's tool: that tool's extension, a version and a digest.
-pub fn action_pin_ok(pin: &ActionPin, tool: Option<&str>) -> bool {
+/// Whether a pin fits its tool (a form's action's, a model's step's): that tool's extension, a version and a
+/// digest.
+pub fn extension_pin_ok(pin: &ExtensionPin, tool: Option<&str>) -> bool {
     let version = pin.version.as_bytes();
     tool.and_then(action_tool_extension) == Some(pin.extension.as_str())
         && !version.is_empty()
@@ -1905,7 +1906,7 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                 // An extension tool's pin: that tool's extension, its version and digest (docs/adr/8057 §12).
                 if pin
                     .as_ref()
-                    .is_some_and(|p| !action_pin_ok(p, tool.as_deref()))
+                    .is_some_and(|p| !extension_pin_ok(p, tool.as_deref()))
                 {
                     return Some(format!(
                         "“{id}” eyleminin sabitlemesi geçersiz: yalnız bir eklenti aracında, o eklentinin kimliği, sürümü ve sha256 özetiyle yazılır."
@@ -2298,35 +2299,35 @@ mod tests {
             Some("tr.ornek.imar-denetim")
         );
         assert_eq!(action_tool_extension("attributes.calculate"), None);
-        let pin = ActionPin {
+        let pin = ExtensionPin {
             extension: "tr.ornek.vitrin".into(),
             version: "1.0.1".into(),
             digest: format!("sha256:{}", "ab".repeat(32)),
         };
-        assert!(action_pin_ok(&pin, Some("ext.tr.ornek.vitrin.taks")));
-        assert!(!action_pin_ok(&pin, Some("ext.tr.ornek.baska.taks")));
-        assert!(!action_pin_ok(&pin, Some("attributes.calculate")));
-        assert!(!action_pin_ok(&pin, None));
+        assert!(extension_pin_ok(&pin, Some("ext.tr.ornek.vitrin.taks")));
+        assert!(!extension_pin_ok(&pin, Some("ext.tr.ornek.baska.taks")));
+        assert!(!extension_pin_ok(&pin, Some("attributes.calculate")));
+        assert!(!extension_pin_ok(&pin, None));
         for (version, digest) in [
             ("", pin.digest.clone()),
             ("1.0 beta", pin.digest.clone()),
             ("1.0.1", "sha256:AB".into()),
             ("1.0.1", format!("md5:{}", "ab".repeat(32))),
         ] {
-            let bad = ActionPin {
+            let bad = ExtensionPin {
                 version: version.into(),
                 digest,
                 ..pin.clone()
             };
             assert!(
-                !action_pin_ok(&bad, Some("ext.tr.ornek.vitrin.taks")),
+                !extension_pin_ok(&bad, Some("ext.tr.ornek.vitrin.taks")),
                 "{bad:?}"
             );
         }
         // In a body: a pin on its tool passes, on another extension's tool or a step it is refused; the JSON is
         // camelCase and left out without a pin.
         let action =
-            |tool: Option<&str>, kind: ActionKind, pin: Option<ActionPin>| FormItem::Action {
+            |tool: Option<&str>, kind: ActionKind, pin: Option<ExtensionPin>| FormItem::Action {
                 id: "taks".into(),
                 label: "TAKS hesapla".into(),
                 kind,

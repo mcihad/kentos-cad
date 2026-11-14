@@ -169,12 +169,17 @@ fn one_at_a_time() -> std::sync::MutexGuard<'static, ()> {
 }
 
 /// Every test's shelf: the tool registered, the provider standing in. The tests share one process and its shelf.
+/// The extension's package digest the host gives (yapay).
+const DIGEST: &str = "sha256:abababababababababababababababababababababababababababababababab";
+
 fn setup() -> ExternalTool {
     static ONCE: OnceLock<()> = OnceLock::new();
     ONCE.get_or_init(|| {
-        let tool =
+        let mut tool =
             external::from_descriptor("tr.ornek.deneme", "Deneme", "1.0.0", "olc", &descriptor())
                 .unwrap();
+        // The host gives the package's digest (docs/adr/8057 §13).
+        tool.digest = DIGEST.into();
         external::set_tools(vec![tool]);
         external::register_provider(Arc::new(Stand));
         kentos_processing::command::register();
@@ -683,4 +688,49 @@ fn an_extensions_expression_function_answers_a_processing_expression_a_batch_at_
         "{issues:?}"
     );
     external::set_expressions(Vec::new());
+}
+
+#[test]
+fn a_models_step_pins_the_extension_its_tool_came_from() {
+    // docs/adr/8057 §13, PY-TOOL-20: a step added for an extension's tool records the extension, its version and its
+    // package digest; the JSON keeps it; a model opened without the extension says which one it was made with, and
+    // nothing is installed for it.
+    use kentos_processing::model::{Model, check_model};
+    use kentos_processing::model_edit::{add_step, new_model};
+    setup();
+    let registry = Registry::current();
+    let lookup = |id: &str| registry.tool(id);
+    let mut model = new_model("eklentili".into());
+    let step = add_step(&mut model, "ext.tr.ornek.deneme.olc", &lookup, None, None);
+    let plain = add_step(&mut model, "attributes.calculate", &lookup, None, None);
+    let pinned = |id: &str| model.steps.iter().find(|s| s.id == id).unwrap().pin.clone();
+    assert_eq!(
+        pinned(&step),
+        Some(kentos_commands::ExtensionPin {
+            extension: "tr.ornek.deneme".into(),
+            version: "1.0.0".into(),
+            digest: DIGEST.into(),
+        })
+    );
+    assert_eq!(pinned(&plain), None, "a built-in tool has no pin");
+    let text = serde_json::to_string(&model).unwrap();
+    let back = Model::from_text(&text).expect("it reads back");
+    assert_eq!(back.steps[0].pin, pinned(&step));
+    assert_eq!(model.to_json()["steps"][0]["pin"]["version"], "1.0.0");
+    assert!(model.to_json()["steps"][1].get("pin").is_none());
+    // Opened where the extension is not: the step's problem names the extension and version.
+    let none = |id: &str| {
+        (!id.starts_with("ext."))
+            .then(|| registry.tool(id))
+            .flatten()
+    };
+    let issues = check_model(&back, &none);
+    assert!(
+        issues
+            .iter()
+            .any(|i| i.step.as_deref() == Some(step.as_str())
+                && i.message
+                    .contains("model tr.ornek.deneme 1.0.0 ile yapıldı")),
+        "{issues:?}"
+    );
 }

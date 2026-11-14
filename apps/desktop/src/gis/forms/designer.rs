@@ -276,7 +276,7 @@ pub enum Event {
     /// Bölücü and Eylem (docs/adr/0441 §2, §6); an action's processing tool by its id.
     AddDivider,
     AddAction,
-    ActionTool(String),
+    PinnedTool(String),
     /// An action's kind, its workflow step and where its tool runs (docs/adr/0442 §5, §6).
     ActionKind(kentos_commands::ActionKind),
     ActionStep(String),
@@ -811,14 +811,14 @@ impl App {
                 rule: None,
                 message,
             };
-            if let crate::extensions::ActionTool::Unavailable(why) =
-                self.action_tool_state(tool, pin.as_ref())
+            if let crate::extensions::PinnedTool::Unavailable(why) =
+                self.pinned_tool_state(tool, pin.as_ref())
             {
                 issues.push(warning(
                     kentos_forms::codes::ACTION_UNKNOWN,
                     format!("{why} Düğme formda kapalı görünür."),
                 ));
-            } else if let Some(drift) = self.action_pin_drift(tool, pin.as_ref()) {
+            } else if let Some(drift) = self.tool_pin_drift(tool, pin.as_ref()) {
                 issues.push(warning(kentos_forms::codes::ACTION_PIN, drift));
             }
         }

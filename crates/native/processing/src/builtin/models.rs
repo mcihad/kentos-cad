@@ -55,6 +55,7 @@ pub fn parcel_sheet() -> Model {
                 ],
                 position: Some((320.0, 60.0)),
                 caption: None,
+                pin: None,
             },
             ModelStep {
                 id: "edges".into(),
@@ -62,6 +63,7 @@ pub fn parcel_sheet() -> Model {
                 values: vec![("input".into(), input("parcels"))],
                 position: Some((320.0, 180.0)),
                 caption: None,
+                pin: None,
             },
             ModelStep {
                 id: "area".into(),
@@ -74,6 +76,7 @@ pub fn parcel_sheet() -> Model {
                 ],
                 position: Some((320.0, 300.0)),
                 caption: None,
+                pin: None,
             },
         ],
         outputs: vec![ModelOutput {

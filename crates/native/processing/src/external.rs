@@ -71,6 +71,11 @@ pub struct Output {
 pub struct ExternalTool {
     pub tool: Tool,
     pub extension: String,
+    /// Its extension's version, as installed.
+    pub version: String,
+    /// Its extension's package content digest, as installed (`sha256:…`): the host writes it, empty until then. A
+    /// model's step records it with the version ([`pin_of`], docs/adr/8057 §13).
+    pub digest: String,
     /// Its id in the extension's manifest.
     pub local: String,
     pub outputs: Vec<Output>,
@@ -193,6 +198,18 @@ pub fn find(id: &str) -> Option<ExternalTool> {
         .iter()
         .find(|t| t.tool.id == id)
         .cloned()
+}
+
+/// An extension's tool's pin as installed now (docs/adr/8057 §13): what a model's step records when the tool is added
+/// to it, so that the model says which extension and version it was made with. None for a built-in tool, one not
+/// listed, or one whose digest the host has not given.
+pub fn pin_of(id: &str) -> Option<kentos_commands::ExtensionPin> {
+    let t = find(id)?;
+    (!t.digest.is_empty()).then_some(kentos_commands::ExtensionPin {
+        extension: t.extension,
+        version: t.version,
+        digest: t.digest,
+    })
 }
 
 /// The extension and local id of `ext.<extension>.<tool>`: the local id is the last part (a manifest's local ids
@@ -406,6 +423,8 @@ pub fn from_descriptor(
             run: Some(run),
         },
         extension: extension.to_owned(),
+        version: version.to_owned(),
+        digest: String::new(),
         local: local.to_owned(),
         outputs,
         timeout,

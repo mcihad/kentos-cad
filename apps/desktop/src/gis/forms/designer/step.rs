@@ -447,9 +447,9 @@ impl App {
             }
             // An extension's tool is pinned to the extension installed now (docs/adr/8057 §12); choosing it
             // again pins it again.
-            Event::ActionTool(tool) => {
+            Event::PinnedTool(tool) => {
                 if let Some(id) = chosen_item.clone() {
-                    let pinned = self.action_pin_of(&tool);
+                    let pinned = self.tool_pin_of(&tool);
                     edited(&mut w, &|b| {
                         if let Some(FormItem::Action { tool: t, pin, .. }) =
                             find_mut(&mut b.items, &id)

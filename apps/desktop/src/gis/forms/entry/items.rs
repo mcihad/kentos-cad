@@ -216,10 +216,10 @@ impl App {
                     // (docs/adr/8057 §12).
                     let state = tool
                         .as_deref()
-                        .map(|t| self.action_tool_state(t, pin.as_ref()));
+                        .map(|t| self.pinned_tool_state(t, pin.as_ref()));
                     let known = state
                         .as_ref()
-                        .is_none_or(|s| *s == crate::extensions::ActionTool::Ready);
+                        .is_none_or(|s| *s == crate::extensions::PinnedTool::Ready);
                     let read_only =
                         self.entry_locked(e) || e.screen.prepared.locked_by_state(&e.before);
                     let can = known
@@ -244,10 +244,10 @@ impl App {
                     .style(style::button::secondary)
                     .on_press_maybe(can.then(|| e.msg(Event::RunAction(id.clone()))));
                     let why = match state {
-                        Some(crate::extensions::ActionTool::Pending(why)) => {
+                        Some(crate::extensions::PinnedTool::Pending(why)) => {
                             Some(format!("Bekliyor: {why}"))
                         }
-                        Some(crate::extensions::ActionTool::Unavailable(why)) => {
+                        Some(crate::extensions::PinnedTool::Unavailable(why)) => {
                             Some(format!("Kullanılamaz: {why}"))
                         }
                         _ => None,

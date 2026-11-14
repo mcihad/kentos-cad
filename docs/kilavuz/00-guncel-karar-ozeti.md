@@ -2548,8 +2548,9 @@
     KentOS'a yetenek denetimli aracıyla erişir. Ayrı süreç korumalı alan değildir ve arayüz bunu söyler.
   - Katkılar: komut (şerit, sağ tık, komut arama), İşlemler aracı (tanımı kod yüklenmeden okunur, Kur'dan önce
     denetlenir), ifade işlevi `ext.<eklenti>.<işlev>` (çizim beklemez, kaydetme bekler), harita aracı (şekli KentOS
-    çizer, eklentinin kodu yerleştirir), Python'suz veri kaynağı. Form düğmesi eklentinin aracını açar; tasarımcı
-    eklentiyi sürümü ve paket özetiyle sabitler, düğme hazır / bekliyor / kullanılamaz der (sürüm farkı uyarıdır).
+    çizer, eklentinin kodu yerleştirir), Python'suz veri kaynağı. Form düğmesi ve model adımı eklentinin aracını
+    sürümü ve paket özetiyle sabitler (`ExtensionPin`); düğme hazır / bekliyor / kullanılamaz der, eklentisiz açılan
+    model bir şey kurmaz, hangi sürümle yapıldığını söyler (sürüm farkı uyarıdır).
   - Hata eklentinin adıyla söylenir, iz kaydı eklentinin günlüğündedir; Durdur önce sorar, 5 sn'de süreci sonlandırır;
     yazan çalıştırma tek geri alma adımıdır.
   - Örnek ve bütün gösterimler `samples/eklenti-vitrini` (Vitrin) ile; yeni yetenek aynı değişiklikte oraya girer.

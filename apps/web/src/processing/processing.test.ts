@@ -315,6 +315,17 @@ describe('models', () => {
     expect(issues.some((s) => s.includes('olmayan bir çıktıya'))).toBe(true);
     expect(issues.some((s) => s.includes('Bilinmeyen işlem aracı'))).toBe(true);
   });
+  it('names the extension a step was made with when its tool is not here (docs/adr/8057 §13)', () => {
+    const r = new ProcessingRegistry();
+    for (const t of BUILTIN_TOOLS) r.register(t);
+    const pin = { extension: 'tr.ornek.vitrin', version: '1.0.1', digest: `sha256:${'ab'.repeat(32)}` };
+    const m = model([{ id: 'taks', tool: 'ext.tr.ornek.vitrin.taks', values: {}, pin }]);
+    const issues = checkModel(m, (id) => r.get(id)).map((i) => i.message);
+    expect(issues).toContain(
+      "“ext.tr.ornek.vitrin.taks” aracının eklentisi bu bilgisayarda yok: model tr.ornek.vitrin 1.0.1 ile yapıldı; Eklentiler'den kurun.",
+    );
+    expect(JSON.parse(JSON.stringify(m)).steps[0].pin).toEqual(pin);
+  });
 });
 
 describe('running models', () => {
