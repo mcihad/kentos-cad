@@ -149,25 +149,47 @@ impl App {
                     tool,
                     step,
                     runs,
+                    pin,
                     ..
                 }) = crate::forms::designer::find(&e.body.items, &item).cloned()
                 else {
                     return Task::none();
                 };
                 let slot = record_slot(&doc.model, &e.uid);
+                // The record's layer: the tool's input of objects on it reads the record (docs/adr/0441 §6).
+                let layer = slot
+                    .and_then(|s| doc.model.get(s))
+                    .map(|o| o.base().layer_id.clone());
                 match kind {
-                    // The record chosen, the tool's window opened with it (a registered tool only),
-                    // where it runs as the action says (docs/adr/0442 §6).
+                    // The record chosen, the tool's window opened with it (a registered tool whose code
+                    // can run: docs/adr/8057 §12), where it runs as the action says (docs/adr/0442 §6).
                     K::Tool => {
-                        let Some(tool) =
-                            tool.filter(|t| self.gis.processing.registry.get(t).is_some())
-                        else {
+                        let Some(tool) = tool.filter(|t| {
+                            self.action_tool_state(t, pin.as_ref())
+                                == crate::extensions::ActionTool::Ready
+                        }) else {
                             return Task::none();
                         };
                         if let Some(slot) = slot {
                             self.selection.set([slot]);
                         }
                         self.open_processing(&tool, None);
+                        if let Some(d) = self.gis.processing.dialog.as_mut()
+                            && let Some(input) = record_input(&d.tool, &d.values, layer.as_deref())
+                        {
+                            // Its kinds kept: only where it reads from changes.
+                            let kinds = d
+                                .values
+                                .get(&input)
+                                .and_then(kentos_processing::FeaturesValue::read)
+                                .and_then(|f| f.kinds);
+                            let selection = kentos_processing::FeaturesValue {
+                                scope: kentos_processing::Scope::Selection,
+                                kinds,
+                            };
+                            d.values.insert(input, selection.to_json());
+                            self.refresh_processing();
+                        }
                         let place = match runs {
                             kentos_commands::ActionRuns::Auto => None,
                             kentos_commands::ActionRuns::Here => Some("client"),
@@ -838,4 +860,38 @@ impl App {
         }
         (lines, stale)
     }
+}
+
+/// The tool's input of objects that reads the record a form's action opens it on (docs/adr/0441 §6): the one set to
+/// the record's layer, or the first that may read the selection. TAKS opened from a parcel's form reads that parcel,
+/// not its layer's every parcel, and its buildings stay as they were.
+fn record_input(
+    tool: &kentos_processing::Tool,
+    values: &kentos_processing::Values,
+    layer: Option<&str>,
+) -> Option<String> {
+    use kentos_processing::{ParamKind, ScopeKind};
+    let inputs: Vec<&kentos_processing::ParamDef> = tool
+        .parameters
+        .iter()
+        .filter(|p| match &p.kind {
+            ParamKind::Features { scopes, .. } => scopes
+                .as_ref()
+                .is_none_or(|s| s.contains(&ScopeKind::Selection)),
+            _ => false,
+        })
+        .collect();
+    let on_layer = |p: &&&kentos_processing::ParamDef| {
+        layer.is_some_and(|l| {
+            values
+                .get(&p.name)
+                .and_then(kentos_processing::FeaturesValue::read)
+                .is_some_and(|f| f.scope == kentos_processing::Scope::Layer(l.to_owned()))
+        })
+    };
+    inputs
+        .iter()
+        .find(on_layer)
+        .or(inputs.first())
+        .map(|p| p.name.clone())
 }

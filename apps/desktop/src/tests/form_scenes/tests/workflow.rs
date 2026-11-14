@@ -137,9 +137,14 @@ fn a_divider_and_an_action_show_and_the_action_opens_its_tool_on_the_record() {
         [Slot(1)],
         "the record is the tool's input"
     );
-    assert!(
-        app.gis.processing.dialog.is_some(),
-        "the tool's window opened"
+    assert_eq!(
+        app.gis
+            .processing
+            .dialog
+            .as_ref()
+            .map(|d| d.values["input"].clone()),
+        Some(serde_json::json!({ "scope": "selection" })),
+        "the tool's window opened on the record"
     );
 }
 

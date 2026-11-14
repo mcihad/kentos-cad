@@ -2658,6 +2658,33 @@ MOST_FORMS = 100
 MOST_FORM_ITEMS = 500
 MOST_FORM_RELEASES = 50
 MOST_FORM_NAME = 64
+# docs/adr/8057 §12: `ext.`, an extension's id (128) and its tool's (63).
+MOST_EXTENSION_TOOL = 196
+_EXTENSION_PART = re.compile(r"[a-z](?:[a-z0-9-]*[a-z0-9])?")
+_PIN_DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
+
+
+def _action_tool_ok(tool):
+    """A registered processing tool's id (docs/adr/0441 §6): dotted parts of ASCII letters and digits, a letter
+    first, at most 64; an extension's tool `ext.<eklenti>.<araç>` (docs/adr/8057 §12) in lower-case letters, digits
+    and hyphens, at most 196."""
+    if tool.startswith("ext."):
+        parts = tool[4:].split(".")
+        return len(tool) <= MOST_EXTENSION_TOOL and len(parts) >= 3 and all(
+            len(p) <= 63 and _EXTENSION_PART.fullmatch(p) for p in parts)
+    parts = tool.split(".")
+    return len(tool) <= MOST_FORM_NAME and len(parts) >= 2 and all(
+        p and p[0].isascii() and p[0].isalpha() and all(c.isascii() and c.isalnum() for c in p) for p in parts)
+
+
+def _action_pin_ok(pin, tool):
+    """An extension tool's pin: that tool's extension, a version and a sha256 digest (docs/adr/8057 §12)."""
+    if not tool.startswith("ext.") or not _action_tool_ok(tool):
+        return False
+    version = pin["version"]
+    return (pin["extension"] == tool[4:].rsplit(".", 1)[0] and 0 < len(version) <= MOST_FORM_NAME
+            and all(c.isascii() and (c.isalnum() or c in ".-+") for c in version)
+            and _PIN_DIGEST.fullmatch(pin["digest"]) is not None)
 MOST_FORM_TEXT = 1000
 MOST_FORM_RULE = 2000
 MOST_FORM_CHECKS = 20
@@ -2793,15 +2820,14 @@ def body_problem(body):
                 return f"“{iid}” eylemi geçersiz"
             if kind == "tool":
                 tool = i.get("tool")
-                parts = tool.split(".") if tool is not None else []
-                if tool is None or "step" in i or len(tool) > MOST_FORM_NAME or len(parts) < 2 or any(
-                        not p or not p[0].isascii() or not p[0].isalpha()
-                        or not all(c.isascii() and c.isalnum() for c in p) for p in parts):
+                if tool is None or "step" in i or not _action_tool_ok(tool):
                     return f"“{iid}” eylemi geçersiz"
+                if "pin" in i and not _action_pin_ok(i["pin"], tool):
+                    return f"“{iid}” eyleminin sabitlemesi geçersiz"
             elif kind == "step":
-                if "tool" in i or "step" not in i or not _form_name_ok(i["step"]) or "runs" in i:
+                if "tool" in i or "step" not in i or not _form_name_ok(i["step"]) or "runs" in i or "pin" in i:
                     return f"“{iid}” eylemi geçersiz"
-            elif "tool" in i or "step" in i or "runs" in i:
+            elif "tool" in i or "step" in i or "runs" in i or "pin" in i:
                 return f"“{iid}” eylemi geçersiz"
         if t == "field":
             if not i["field"].strip() or len(i["field"]) > MOST_FORM_NAME:
@@ -6400,6 +6426,12 @@ class _Schema:
                     "tool": (self.text, False),
                     "step": (self.text, False),
                     "runs": (self.enum(("here", "background")), False),
+                    # docs/adr/8057 §12: the extension an extension tool was chosen with.
+                    "pin": (self.fields({
+                        "extension": (self.text, True),
+                        "version": (self.text, True),
+                        "digest": (self.text, True),
+                    }), False),
                     "visibleWhen": (self.text, False),
                 },
             }

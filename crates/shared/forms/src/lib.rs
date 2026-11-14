@@ -69,6 +69,9 @@ pub mod codes {
     /// An action's processing tool the host has not (docs/adr/0441 §6): the host adds it, the core
     /// does not know the host's tools.
     pub const ACTION_UNKNOWN: &str = "form_action_unknown";
+    /// An action's extension tool not pinned, or pinned to another version or build than the one installed
+    /// (docs/adr/8057 §12): the host adds it.
+    pub const ACTION_PIN: &str = "form_action_pin";
     /// A step action whose step the form's workflow has not (docs/adr/0442 §5).
     pub const ACTION_STEP_UNKNOWN: &str = "form_action_step";
     /// A translation's words for an item the form has not (docs/adr/0443 §5).

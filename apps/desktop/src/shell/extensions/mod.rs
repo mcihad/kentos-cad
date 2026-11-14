@@ -10,6 +10,7 @@
 //! real-window sessions never touch the user's own. A start without extensions (`--eklentisiz`, `KENTOS_EKLENTISIZ`, or
 //! "bir sonraki açılışta eklentisiz başlat" from this window) activates nothing.
 
+mod actions;
 mod bisect;
 mod browse;
 pub(crate) mod environment;
@@ -20,6 +21,7 @@ mod search;
 pub(crate) mod tools;
 mod view;
 
+pub(crate) use actions::ActionTool;
 pub(crate) use search::ExtHit;
 
 use std::path::{Path, PathBuf};
@@ -101,6 +103,9 @@ pub(crate) struct Extensions {
     /// Each installed extension's own icon (its SVG in the package), read when the registry changes, not at every
     /// frame; the puzzle where none.
     pub(crate) icons: std::collections::BTreeMap<String, kentos_ui::icon::Icon>,
+    /// Why each Python extension's code does not run now (none: it runs), worked out with the ribbon's words: a
+    /// form's action button reads it at every frame (actions.rs).
+    pub(crate) python_reasons: std::collections::BTreeMap<String, Option<String>>,
     /// The word the lists are filtered by (browse.rs).
     pub(crate) query: String,
     /// The program the lists are filtered by; none: every program.
@@ -147,6 +152,7 @@ impl Default for Extensions {
             flash: None,
             bisect: None,
             icons: std::collections::BTreeMap::new(),
+            python_reasons: std::collections::BTreeMap::new(),
             query: String::new(),
             program: None,
             envs: std::collections::BTreeMap::new(),

@@ -3000,6 +3000,13 @@ def edit_cases():
         p.refused(create("A", body={"revision": 1, "items": [{"type": "action", "id": "git", "label": "Git",
                                                               "kind": "recompute", "runs": "here"}]}),
                   failed("invalid_form", ANY, "edit.body")),
+        # docs/adr/8057 §12: a pin is an extension tool's, of that tool's extension.
+        p.refused(create("A", body={"revision": 1, "items": [{"type": "action", "id": "git", "label": "Git",
+                                                              "tool": "attributes.calculate", "pin": PIN}]}),
+                  failed("invalid_form", ANY, "edit.body")),
+        p.refused(create("A", body={"revision": 1, "items": [{"type": "action", "id": "git", "label": "Git",
+                                                              "tool": "ext.tr.ornek.baska.taks", "pin": PIN}]}),
+                  failed("invalid_form", ANY, "edit.body")),
         p.refused({"kind": "publish", "id": "denetim", "note": "a\u0007"}, failed("invalid_form", NOTE_TEXT, "edit.note")),
     ]})
 
@@ -3214,6 +3221,14 @@ def validate_cases():
     showing = {**copy.deepcopy(FORM), "draft": shown}
     cases.append({"name": "göster eylemi kaydı sorar ve şekli gerektirir", "setup": setup([showing]),
                   "steps": [run({"form": "denetim", "draft": True, "uid": "$uidOf:1"}, answer(showing, shown, None, FIRST))]})
+    # docs/adr/8057 §12: an extension's tool with the extension it was chosen with; the core does not know the host's
+    # tools, it reads the action as any other and needs its tool (the desktop says whether it is here).
+    pinned = body_with(lambda b: b["items"][0]["items"].append(
+        {"type": "action", "id": "taks", "label": "TAKS hesapla", "tool": "ext.tr.ornek.imar-denetim.taks",
+         "pin": PIN}))
+    pinning = {**copy.deepcopy(FORM), "draft": pinned}
+    cases.append({"name": "eklenti aracını açan eylem sabitlemesiyle okunur ve aracını gerektirir", "setup": setup([pinning]),
+                  "steps": [run({"form": "denetim", "draft": True, "uid": "$uidOf:1"}, answer(pinning, pinned, None, FIRST))]})
     broken = {**copy.deepcopy(FORM), "draft": BROKEN}
     cases.append({"name": "ön denetimde hata olan form reddedilmez: kaydı sorulmaz", "setup": setup([broken]), "steps": [
         run({"form": "denetim", "draft": True, "uid": "$uidOf:1"}, answer(broken, BROKEN, None, FIRST))]})
@@ -3763,6 +3778,9 @@ LOOK_ROW_ATTRS = {
     12: {"kod": "M4", "ad": "Ulus", "ilce": "0602", "durum": "etkin"},
     13: {"ada": "101/5"}, 14: {"ada": "101/12"}, 15: {"no": "S-1"}, 16: {"no": "S-2"},
 }
+# docs/adr/8057 §12: the extension an extension tool was chosen with (yapay özet).
+PIN = {"extension": "tr.ornek.imar-denetim", "version": "1.1.0", "digest": "sha256:" + "ab" * 32}
+
 LOOK_FORM = {"id": "adres", "name": "Bina adresi", "layer": "bina", "draft": copy.deepcopy(LOOK_BODY),
              "releases": [release_of(LOOK_BODY, 1)]}
 LOOK_ENFORCED = {**copy.deepcopy(LOOK_FORM), "enforce": True}

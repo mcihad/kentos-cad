@@ -7,7 +7,7 @@ ekran görüntüleri bununla yapılır (plan/eklenti.md, docs/adr/8057).
 | Dosya | Ne |
 |---|---|
 | `eklenti/` | Paketin kaynağı (`tr.ornek.vitrin`): manifest, Python işlevleri, İşlemler aracı tanımı, kilit, ikonlar |
-| `vitrin_cizim.py` → `vitrin.kcad` | Örnek çizim: dört imar parseli (biri yay kenarlı), beş yapı; TM36, yapay veri |
+| `vitrin_cizim.py` → `vitrin.kcad` | Örnek çizim: dört imar parseli (biri yay kenarlı), beş yapı, TAKS düğmeli Parsel formu; TM36, yapay veri |
 | `hazirla.sh` | Paketi bir katalog klasörüne koyar ve kataloğun dizinini yazar |
 | `senaryolar/*.txt` | Gerçek pencere senaryoları (`scripts/usage/real/session.sh`; 1440 × 900, açık tema) |
 
@@ -22,6 +22,7 @@ ekran görüntüleri bununla yapılır (plan/eklenti.md, docs/adr/8057).
 | Çizime yazan komut, ilerleme, Durdur | Yapıları numarala | Çalışırken Durdur: yazdıkları geri alınır; bitince tek geri alma adımı (`03-komutlar`) |
 | Hata veren komut | Hata örneği | Bildirim, Ayrıntı (Python iz kaydı) ve eklentinin günlüğü; çizim değişmez (`03-komutlar`) |
 | İşlemler aracı (shapely, NumPy) | `processing` › TAKS | Vitrin › TAKS: yeni katman, tablo ve sayı; Durdur (`04-taks`) |
+| Formdan eklenti aracı | Parsel formunun "TAKS hesapla" düğmesi → `ext.tr.ornek.vitrin.taks`, eklentinin sürümü ve özetiyle sabitli | Bir parseli Formla düzenle: düğme aracı o kayıtla açar; ortam hazır değilse "Bekliyor", eklenti yoksa ya da kapalıysa "Kullanılamaz" der; Formlar'da başka sürüm uyarılır (`08-form-eylemi`) |
 | İfade işlevi | `expressions` › `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` | Etiket metni (`05-etiket`), Katman stili › Kurallar koşulu (`06-kural`), Katman süzgeci (`07-suzgec`), İşlemler'in ifadeleri; çizim beklemez, yanıt gelince yeniden çizilir |
 | Python'suz katkı | `dataSources` (XYZ altlık) | Kaynaklar: Örnek Belediyesi altlığı (sunucusu örnektir, yanıt vermez) |
 
@@ -36,7 +37,8 @@ samples/eklenti-vitrini/hazirla.sh /tmp/vitrin       # paket ve katalog
 
 `hazirla.sh` KentOS GIS'i bu kataloğu ve ayrı bir eklenti klasörünü görecek biçimde açan komutu da yazar. Paket
 değişince sürümü (`manifest.json`, `pyproject.toml`) ve `CHANGELOG.md`'yi yükseltin; bağımlılık değişince
-`eklenti/` içinde `uv lock` çalıştırın.
+`eklenti/` içinde `uv lock` çalıştırın. Paketin bir dosyası değişince `vitrin_cizim.py`'yi de çalıştırın: Parsel
+formunun düğmesi paketin içerik özetine sabitlidir (masaüstü sınaması eskiyen özeti söyler).
 
 ## Senaryolar
 

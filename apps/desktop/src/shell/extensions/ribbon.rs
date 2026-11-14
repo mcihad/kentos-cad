@@ -282,6 +282,7 @@ impl App {
                 (id, reason)
             })
             .collect();
+        self.extensions.python_reasons = reasons.clone();
         let fallback = self.python_setup.why_not();
         let python_of =
             |ext: &str| -> Option<&str> { reasons.get(ext).map_or(Some(fallback), Option::as_deref) };

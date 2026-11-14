@@ -47,6 +47,7 @@ __all__ = [
     "ActionFormItem",
     "ActionKind",
     "ActionKindName",
+    "ActionPin",
     "ActionRuns",
     "ActionRunsName",
     "AddArmLeaderEdit",

@@ -1049,3 +1049,48 @@ temiz ve kaliteli"; "içinde birçok durum için örnekler olsun, sadece eklenti
   İşlemler'in araç ve işlev listeleri, yürütücüsü ve ifade host'u her pencere kurulurken sürece yazılıyordu: sınamalarda
   bir pencere ötekinin listesini ezip "Bilinmeyen işlev" düşürüyordu. Artık araç ya da işlev sunan pencere yazar,
   sınamada o sınama bitene dek tutar (`hold_process_lists`); dört ardışık koşu 25/25.
+
+## §12. Form eylemi eklenti aracını açar; eklenti sabitlenir (`ADIM 19`, FORM-API-13, ECO-DEC-09)
+
+**14 Kasım.** Kod: `crates/shared/contracts/src/gis/forms.rs` (`ActionPin`, `action_tool_ok`, `action_tool_extension`,
+`action_pin_ok`), `apps/desktop/src/shell/extensions/actions.rs` (`ActionTool`), formun düğmesi
+(`gis/forms/entry/items.rs`, `steps.rs`) ve tasarımcı (`designer/step.rs`, `designer.rs`, `designer_view/inspector.rs`).
+
+- **Kimlik:** form eylemi (ADR 0441 §6) bir eklenti aracını `ext.<eklenti>.<araç>` diye anar. Önceki kural yalnız
+  harf ve rakam kabul ediyordu; tireli eklenti kimlikleri (`tr.ornek.imar-denetim`) reddediliyordu. Şimdi `ext.`
+  sonrası manifestin kuralıyla (küçük harf, rakam, tire; en az iki parça kimlik ve bir araç; en çok 196 karakter);
+  yerleşik araçlar eskisi gibi. Şemanın deseni (`ACTION_TOOL_TEXT`) ikisini ayrı dallarda yazar.
+- **Sabitleme (`pin`):** tasarımcıda eklenti aracı seçilince eylem `{extension, version, digest}` taşır: eklentinin
+  kimliği, kurulu sürümü ve paketinin içerik özeti. Özet aracın tanımını, kodunu, ortamın kilidini ve istenen
+  yetenekleri birlikte kapsar; FORM-API-13'ün "tanım/yayın/yürütücü/izin özeti" tek özettir. Yalnız eklenti aracında
+  ve o aracın eklentisiyle yazılır; aksi `invalid_form` (çekirdek, Python başvuru denetleyicisi `kcad.py` ve şema).
+  Sabitlemesiz eylem geçerlidir (ajanın yazdığı form): tasarımcı uyarır.
+- **Masaüstünde üç durum:** *hazır* (eklenti etkin, aracı listede, Python'u çalışır: düğme aracı kayıtla açar);
+  *bekliyor* (eklenti burada, kodu henüz çalışamaz: Python kapalı ya da ortamı hazırlanmadı; düğme kapalı, altında
+  "Bekliyor: …" ve ne yapılacağı; hiçbir şey başlatılıp düşürülmez); *kullanılamaz* (eklenti yok, kapalı, engelli ya da
+  kurulu sürümünde bu araç yok; "Kullanılamaz: …", sabitleme varsa formun beklediği sürümle). Nedenler şeridin
+  Python nedenleriyle aynı yerden (`python_reasons`, şerit tazelenirken bir kez).
+- **Tasarımcı:** aracı seçmek (yeniden seçmek de) sabitler; denetçi "Eklenti Vitrini 1.0.1 ile sabitlendi." der.
+  Ön denetim: kullanılamayan araç `form_action_unknown` (nedeniyle), kurulu sürümden ya da yapıdan farklı ya da hiç
+  sabitlenmemiş eylem `form_action_pin` (uyarı). **Sürüm farkı düğmeyi kapatmaz:** düğme aracın penceresini açar,
+  kullanıcı parametreleri görüp Çalıştır'a kendisi basar; her güncellemede formların düğmesi kapanmasın.
+- **Vitrin:** `vitrin.kcad`'a Parsel formu (ada, parsel, "TAKS hesapla"); düğmenin özeti `vitrin_cizim.py`'de KentOS'un
+  paketleyicisiyle çıkar (`kentos kek pack --json`). Bekçi: paket değişip çizim yeniden yazılmazsa masaüstü sınaması
+  düşer.
+- **Kayıt aracın girdisidir (bulgu, düzeltildi):** düğme kaydı seçiyordu ama aracın nesne girdisi tanımın
+  varsayılanında ("Katman") kalıyordu; TAKS formun parselini değil bütün parselleri hesaplıyordu. Artık kaydın
+  katmanını okuyan girdi (yoksa seçimi okuyabilen ilk girdi) "Seçili"ye geçer, türleri korunur, öteki girdiler olduğu
+  gibi kalır (ADR 0441 §6'nın "kayıt seçili olarak" sözü). Yerleşik araçlarda da (Öznitelik hesapla).
+- **Gerçek pencere (`08-form-eylemi`):** 101/2 Formla düzenle'de açıldı; "TAKS hesapla" aracı "İmar parselleri: Seçili —
+  1 kapalı alan" ile açtı; Çalıştır "1 parselin TAKS'ı hesaplandı; 0 parsel plan notundaki 0,4 sınırını aşıyor"
+  dedi (244 / 900 = 0,271). Formlar'da araç "Eklenti Vitrini 1.0.1 ile sabitlendi.", ön denetim sorun yok. Boş bir
+  Python klasörüyle düğme kapalı: "Bekliyor: Python kapalı: Uygulama ayarları › Python ve eklentiler'den
+  açabilirsiniz." Bulgu: Otomatik seçim kapalıyken yalnız etkin katmanın nesnesi seçilir; senaryo önce Parsel
+  sınırı'nı etkin yapar.
+- **Sınamalar:** sözleşme 1 (kimlik, sabitleme, gövde, JSON), komut fikstürleri (iki ret, bir okuma; Rust ve Python),
+  şema (1 geçerli, 3 bozuk), `kcad.py` aynı kararlar, masaüstü 2 (üç durum, düğme, tasarımcı, kaydın girdi oluşu;
+  Vitrin çiziminin sabitlemesi paketin bugünkü özetine uyar), form sahnesi (yerleşik araç da kaydı okur).
+- **Uygularken verilen kararlar (planda yazılı değildi):** tek içerik özeti dört özetin yerine; sürüm farkı uyarı,
+  ret değil; sabitlemesiz eylem geçerli; bekleyen durumda düğme kapalı (aracın penceresi açılıp çalıştırınca düşmek
+  yerine); kaydın girdisi kaydın katmanından bulunur; eklenti formları (manifestin `forms`'u) bu dilimde değil,
+  ADIM 22.

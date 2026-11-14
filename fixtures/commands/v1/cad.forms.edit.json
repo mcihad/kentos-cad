@@ -1882,6 +1882,104 @@
      "op": "execute",
      "input": {
       "edit": {
+       "kind": "create",
+       "name": "A",
+       "layer": "bina",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "action",
+          "id": "git",
+          "label": "Git",
+          "tool": "attributes.calculate",
+          "pin": {
+           "extension": "tr.ornek.imar-denetim",
+           "version": "1.1.0",
+           "digest": "sha256:abababababababababababababababababababababababababababababababab"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_form",
+       "message": "$any",
+       "path": "edit.body"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": null
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "name": "A",
+       "layer": "bina",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "action",
+          "id": "git",
+          "label": "Git",
+          "tool": "ext.tr.ornek.baska.taks",
+          "pin": {
+           "extension": "tr.ornek.imar-denetim",
+           "version": "1.1.0",
+           "digest": "sha256:abababababababababababababababababababababababababababababababab"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_form",
+       "message": "$any",
+       "path": "edit.body"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": null
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
        "kind": "publish",
        "id": "denetim",
        "note": "a\u0007"

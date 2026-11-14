@@ -835,8 +835,13 @@ Harita aracı: KentOS manifestin istediği şekli çizer (nokta, çizgi, alan, d
 daire; kenetleme, yazılan koordinat, Esc), eklentinin kodu GeoJSON'u alıp `MapToolContext.add_feature` ile yazar; her
 yerleştirme tek geri alma adımı, araç Esc'e kadar sürer (ADIM 22'nin MapTool maddesi öne alındı). İşlemler aracının
 tanımı Kur'dan önce masaüstünün denetiminden geçer (`ToolCheck`). `samples/eklenti-vitrini`: her gösterimin ve ekran
-görüntüsünün eklentisi, sekiz gerçek pencere senaryosu; yeni her yetenek aynı değişiklikte oraya girer. Kalan (ADIM 19):
-form eylemi [FORM-API-13], büyük girdinin sayfalı/ikili aktarımı [PY-TOOL-08], modelde eklenti kökeni [PY-TOOL-20, 22],
+görüntüsünün eklentisi, sekiz gerçek pencere senaryosu; yeni her yetenek aynı değişiklikte oraya girer.
+
+**Durum (14 Kasım): form eylemi** (ADR 8057 §12; FORM-API-13, ECO-DEC-09): form eylemi eklenti aracını
+`ext.<eklenti>.<araç>` diye anar (tireli kimlikler dahil); tasarımcı aracı seçince eklentiyi kimliği, sürümü ve paket
+özetiyle sabitler, farklı sürüm ya da yapı uyarılır (ret değil). Düğme masaüstünde hazır / bekliyor (Python ya da ortam
+hazır değil) / kullanılamaz (eklenti yok, kapalı, araç yok) der; Vitrin'in çiziminde TAKS düğmeli Parsel formu. Kalan
+(ADIM 19): büyük girdinin sayfalı/ikili aktarımı [PY-TOOL-08], modelde eklenti kökeni [PY-TOOL-20, 22],
 `modelDescription` ve kod yüklemeden MCP listesi [D18], eklentiden eklentiye çağrı [PY-RUN-15], önizlemede aracının
 yazma izinlerini kapatması [PY-RUN-23]; `kek inspect`'in araç denetimi.
 
@@ -908,8 +913,9 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
 - [ ] **İfade motoru:** `kentos-expression` kayıt defterine `ext.<id>.<fonksiyon>`; etiket, tematik stil kuralı, sanal
   alan, süzgeç ve form hesabında; önbellekli/vektörel değerlendirme.
 - [ ] **Komutlar:** `@ext.command` sürümlü komut kaydına; şerit, Eklentiler, bağlam menüsü ve komut aramada aynı kimlik.
-- [ ] **Form eylemi:** isteğe bağlı eklenti/form eylemi için tanım/sürüm/yürütücü/izin özeti sabitlenir; eksik ya da
-  çevrimdışı yürütücü açık "bekliyor/kullanılamaz" sonucudur [FORM-API-13, ECO-DEC-09].
+- [x] **Form eylemi:** isteğe bağlı eklenti/form eylemi için tanım/sürüm/yürütücü/izin özeti sabitlenir; eksik ya da
+  çevrimdışı yürütücü açık "bekliyor/kullanılamaz" sonucudur [FORM-API-13, ECO-DEC-09]. — *14 Kasım: tek paket
+  özetiyle sabitleme, üç durum (ADR 8057 §12).*
 - [ ] **Derslerden (13 Kasım):** her araç `runtimes`'ını bildirir, başsız eşdeğerlik zorunludur [D6, Q·14]; Python'a host
   nesnesinin sahipliği verilmez (QEP 427'nin gerekçesi: nesne ömrü Python'a geçince çökme); süreç başına çökme sayacı
   bekçiye bağlanır, yanıt vermeyen süreç sonlandırılıp yeniden başlatılır, boştaki süreç kapanır; arayüzde "ayrı süreç

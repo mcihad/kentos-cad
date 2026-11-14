@@ -13044,6 +13044,36 @@ class AccuracyReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ActionPin(_Model):
+    """Where a form action's extension tool came from (docs/adr/8057 §12): pinned when the form's author
+    chose it. The package's content digest covers the tool's descriptor, its code, its environment's
+    lock and the capabilities it asks for.
+    Attributes:
+        extension: The extension's id (`tr.ornek.vitrin`).
+        version: Its version then (`1.0.1`).
+        digest: Its package's content digest then: `sha256:` and 64 lower-case hex digits.
+    """
+    extension: str
+    version: str
+    digest: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["extension"] = self.extension
+        out["version"] = self.version
+        out["digest"] = self.digest
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ActionPin:
+        return cls(
+            extension=data["extension"],
+            version=data["version"],
+            digest=data["digest"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddressCodeRepeat(_Model):
     """An address code on more than one door."""
     code: str
@@ -127056,15 +127086,18 @@ class ActionFormItem(FormItem):
     record shown on the drawing; no address, query or script.
     Attributes:
         kind: What it does; written unless `tool`.
+        pin: The extension a `tool` action's extension tool came from when it was chosen (docs/adr/8057
+            §12); the host says when the one installed differs or is missing.
         runs: Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`.
         step: A `step` action's workflow step, by its label.
         tool: A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted
-            parts.
+            parts; an extension's tool as `ext.<eklenti>.<araç>` (docs/adr/8057 §12).
     """
     TAG_VALUE: ClassVar[str] = "action"
     id: str
     label: str
     kind: ActionKind | ActionKindName | Unset = UNSET
+    pin: ActionPin | None | Unset = UNSET
     runs: ActionRuns | ActionRunsName | Unset = UNSET
     step: str | None | Unset = UNSET
     tool: str | None | Unset = UNSET
@@ -127076,6 +127109,8 @@ class ActionFormItem(FormItem):
         out["label"] = self.label
         if self.kind is not UNSET:
             out["kind"] = _enum_out(self.kind)
+        if self.pin is not UNSET:
+            out["pin"] = None if self.pin is None else self.pin.to_json()
         if self.runs is not UNSET:
             out["runs"] = _enum_out(self.runs)
         if self.step is not UNSET:
@@ -127092,6 +127127,7 @@ class ActionFormItem(FormItem):
             id=data["id"],
             label=data["label"],
             kind=_enum_in(ActionKind, data["kind"]) if "kind" in data else UNSET,
+            pin=UNSET if "pin" not in data else None if data["pin"] is None else ActionPin.from_json(data["pin"]),
             runs=_enum_in(ActionRuns, data["runs"]) if "runs" in data else UNSET,
             step=data.get("step", UNSET),
             tool=data.get("tool", UNSET),
@@ -140742,6 +140778,7 @@ __all__ = [
     "ActionFormItem",
     "ActionKind",
     "ActionKindName",
+    "ActionPin",
     "ActionRuns",
     "ActionRunsName",
     "AddArmLeaderEdit",

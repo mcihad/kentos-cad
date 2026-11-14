@@ -1,7 +1,8 @@
 """Checks the form's published JSON Schema (catalog/v1/forms/form-v1.schema.json, docs/adr/0434) with the `jsonschema`
 package, without KentOS code: every form the repository's shared files hold (the KCAD samples, the command cases'
 drawings) is valid, and forms broken on purpose (an unknown key, an item without its id, an unknown widget, a release
-without its digest, a workflow without steps' states) are not.
+without its digest, a workflow without steps' states, an action's address or bad extension pin) are not; an action on an
+extension's tool with its pin (docs/adr/8057 §12) is.
 
     python3 scripts/fixtures/form_schema_cases.py --check
 """
@@ -50,6 +51,18 @@ def main() -> int:
         if errors:
             problems.append(f"{where}: “{form.get('id')}”: {errors[0].message} ({'/'.join(map(str, errors[0].path))})")
     base = next(x for _, x in found if x.get("releases") and x["draft"].get("items"))
+    # docs/adr/8057 §12: an extension's tool, with the extension it was chosen with.
+    pinned = {"type": "action", "id": "taks", "label": "TAKS hesapla", "tool": "ext.tr.ornek.imar-denetim.taks",
+              "pin": {"extension": "tr.ornek.imar-denetim", "version": "1.1.0", "digest": "sha256:" + "0" * 64}}
+    valid = {
+        "sabitlenmiş eklenti aracı": lambda f: f["draft"]["items"].append(copy.deepcopy(pinned)),
+    }
+    for name, change in valid.items():
+        f = copy.deepcopy(base)
+        change(f)
+        errors = list(validator.iter_errors(f))
+        if errors:
+            problems.append(f"geçerli form reddedildi: {name}: {errors[0].message}")
     broken = {
         "bilinmeyen anahtar": lambda f: f.update(color="#FF0000"),
         "kimliksiz öğe": lambda f: f["draft"]["items"][0].pop("id"),
@@ -59,6 +72,11 @@ def main() -> int:
         # docs/adr/0441 §6: an action names a tool by its id; an address is none.
         "adresli eylem": lambda f: f["draft"]["items"].append(
             {"type": "action", "id": "git", "label": "Git", "tool": "https://ornek.org/x"}),
+        "büyük harfli eklenti aracı": lambda f: f["draft"]["items"].append({**pinned, "tool": "ext.Tr.Ornek.x.taks"}),
+        "özeti bozuk sabitleme": lambda f: f["draft"]["items"].append(
+            {**pinned, "pin": {**pinned["pin"], "digest": "md5:0"}}),
+        "sabitlemede bilinmeyen anahtar": lambda f: f["draft"]["items"].append(
+            {**pinned, "pin": {**pinned["pin"], "imza": "x"}}),
     }
     for name, change in broken.items():
         f = copy.deepcopy(base)
@@ -68,7 +86,8 @@ def main() -> int:
     if problems:
         print("\n".join(problems), file=sys.stderr)
         return 1
-    print(f"form şeması: {len(seen)} form geçerli, {len(broken)} bozuk form reddedildi ({SCHEMA.relative_to(ROOT)})")
+    print(f"form şeması: {len(seen)} + {len(valid)} form geçerli, {len(broken)} bozuk form reddedildi "
+          f"({SCHEMA.relative_to(ROOT)})")
     return 0
 
 

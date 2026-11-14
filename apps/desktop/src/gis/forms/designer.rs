@@ -783,7 +783,7 @@ fn remove(body: &mut FormBody, id: &str) {
 impl App {
     /// The issues of the copy over the layer's fields, the project's `@` values and the other layers
     /// it reads known (docs/adr/0404).
-    pub(super) fn issues_of(&self, body: &FormBody, fields: &[LayerField]) -> Vec<FormIssue> {
+    pub(crate) fn issues_of(&self, body: &FormBody, fields: &[LayerField]) -> Vec<FormIssue> {
         let world = self
             .document
             .as_ref()
@@ -791,25 +791,35 @@ impl App {
             .unwrap_or_default();
         let mut issues =
             kentos_forms::preflight_in(body, fields, &self.expression_variables(), &world);
-        // An action's tool this host does not have (docs/adr/0441 §6): the host's check, not the core's.
+        // An action's tool this host does not have (docs/adr/0441 §6), an extension's tool not pinned to the
+        // extension installed (docs/adr/8057 §12): the host's checks, not the core's.
         for (_, item) in body.walk() {
-            if let FormItem::Action {
+            let FormItem::Action {
                 id,
                 tool: Some(tool),
+                pin,
                 ..
             } = item
-                && self.gis.processing.registry.get(tool).is_none()
+            else {
+                continue;
+            };
+            let warning = |code: &str, message: String| FormIssue {
+                code: code.into(),
+                severity: kentos_commands::FormSeverity::Warning,
+                item: Some(id.clone()),
+                field: None,
+                rule: None,
+                message,
+            };
+            if let crate::extensions::ActionTool::Unavailable(why) =
+                self.action_tool_state(tool, pin.as_ref())
             {
-                issues.push(FormIssue {
-                    code: kentos_forms::codes::ACTION_UNKNOWN.into(),
-                    severity: kentos_commands::FormSeverity::Warning,
-                    item: Some(id.clone()),
-                    field: None,
-                    rule: None,
-                    message: format!(
-                        "“{tool}” bu bilgisayarda kayıtlı bir işlem aracı değil; düğme formda kapalı görünür."
-                    ),
-                });
+                issues.push(warning(
+                    kentos_forms::codes::ACTION_UNKNOWN,
+                    format!("{why} Düğme formda kapalı görünür."),
+                ));
+            } else if let Some(drift) = self.action_pin_drift(tool, pin.as_ref()) {
+                issues.push(warning(kentos_forms::codes::ACTION_PIN, drift));
             }
         }
         issues

@@ -2194,10 +2194,8 @@ fn a_tool_the_desktop_would_not_make_is_refused_before_kur() {
     assert_eq!(refused[0].code, "tool_descriptor");
 }
 
-#[test]
-fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
-    // samples/eklenti-vitrini: the extension every demo uses (the owner, 14 November 2026). The review asks the
-    // desktop's own tool check (its TAKS tool passes), and its tab shows each of its Python contributions.
+/// samples/eklenti-vitrini's extension packed from its source, as `hazirla.sh` packs it.
+fn vitrin_package() -> Vec<u8> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/eklenti");
     let files: std::collections::BTreeMap<String, Vec<u8>> =
         kentos_extension_host::store::read_files(&root)
@@ -2205,12 +2203,18 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             .into_iter()
             .filter(|(path, _)| !path.contains("__pycache__"))
             .collect();
-    let bytes = kentos_extensions::pack(&files, &Limits::default())
+    kentos_extensions::pack(&files, &Limits::default())
         .unwrap_or_else(|p| panic!("{p:#?}"))
-        .bytes;
+        .bytes
+}
+
+#[test]
+fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
+    // samples/eklenti-vitrini: the extension every demo uses (the owner, 14 November 2026). The review asks the
+    // desktop's own tool check (its TAKS tool passes), and its tab shows each of its Python contributions.
     let dir = temp("vitrin");
     let mut gis = app(&dir, Some(Module::Gis));
-    install(&mut gis, "vitrin.kek", bytes);
+    install(&mut gis, "vitrin.kek", vitrin_package());
     let tab = gis
         .extension_tabs()
         .find(|t| t.extension == "tr.ornek.vitrin")
@@ -2230,4 +2234,171 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "Yapı yerleştir"
         ]
     );
+}
+
+#[test]
+fn a_forms_action_opens_an_extensions_tool_pinned_and_says_why_when_it_cannot() {
+    // docs/adr/8057 §12, FORM-API-13: a form's button on Vitrin's TAKS tool. Missing, its code not runnable yet or
+    // turned off, the button is off and says so; the designer pins the extension and says when it drifts.
+    use crate::extensions::ActionTool;
+    use crate::form_scenes::{designer, entry, meters_rebodied};
+    use crate::forms::{designer as d, entry as en};
+    use kentos_commands::{ActionPin, FormItem};
+    const TOOL: &str = "ext.tr.ornek.vitrin.taks";
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let dir = temp("form-eylemi");
+    let mut gis = app(&dir, Some(Module::Gis));
+    meters_rebodied(
+        &mut gis,
+        serde_json::json!([
+            { "type": "field", "id": "ad", "field": "Ad" },
+            { "type": "action", "id": "taks", "label": "TAKS hesapla", "tool": TOOL }
+        ]),
+    );
+    let unavailable = |state: ActionTool| match state {
+        ActionTool::Unavailable(why) => why,
+        other => panic!("{other:?}"),
+    };
+    let stale = ActionPin {
+        extension: VITRIN.into(),
+        version: "0.9.0".into(),
+        digest: format!("sha256:{}", "0".repeat(64)),
+    };
+    // Not installed: which extension, and with a pin which version the form expects.
+    let why = unavailable(gis.action_tool_state(TOOL, None));
+    assert!(
+        why.contains("tr.ornek.vitrin eklentisi bu bilgisayarda kurulu değil"),
+        "{why}"
+    );
+    let why = unavailable(gis.action_tool_state(TOOL, Some(&stale)));
+    assert!(
+        why.contains("tr.ornek.vitrin 0.9.0 bu bilgisayarda kurulu değil"),
+        "{why}"
+    );
+    let why = unavailable(gis.action_tool_state("vitrin.yok", None));
+    assert!(why.contains("kayıtlı bir işlem aracı değil"), "{why}");
+    // Installed, its Python not ready (no Python in tests): pending, the press opens nothing.
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let pending = gis.action_tool_state(TOOL, None);
+    assert!(matches!(pending, ActionTool::Pending(_)), "{pending:?}");
+    gis.selection.set([kentos_domain::Slot(1)]);
+    crate::tools_scenes::run(&mut gis, "data.formEdit");
+    assert!(gis.gis.form_entry.is_some(), "the form");
+    entry(&mut gis, en::Event::RunAction("taks".into()));
+    assert!(
+        gis.gis.processing.dialog.is_none(),
+        "pending: nothing opened"
+    );
+    // Its code can run: the press opens the tool on the record.
+    gis.extensions.python_reasons.insert(VITRIN.into(), None);
+    assert_eq!(gis.action_tool_state(TOOL, None), ActionTool::Ready);
+    entry(&mut gis, en::Event::RunAction("taks".into()));
+    assert_eq!(
+        gis.gis
+            .processing
+            .dialog
+            .as_ref()
+            .map(|d| d.tool.id.as_str()),
+        Some(TOOL),
+        "the tool's window"
+    );
+    assert_eq!(gis.selection.ids(), [kentos_domain::Slot(1)]);
+    let values = &gis.gis.processing.dialog.as_ref().unwrap().values;
+    assert_eq!(
+        values["parseller"],
+        serde_json::json!({ "scope": "selection" }),
+        "the record is the tool's input"
+    );
+    assert_eq!(
+        values["yapilar"]["layerId"], "yapi",
+        "its other input as it was"
+    );
+    // The pin: the installed version and digest; another version, another build or none is said.
+    let pin = gis.action_pin_of(TOOL).expect("installed");
+    assert_eq!(pin.version, "1.0.1");
+    assert!(pin.digest.starts_with("sha256:") && pin.digest.len() == 71);
+    assert_eq!(gis.action_pin_drift(TOOL, Some(&pin)), None);
+    let drift = gis
+        .action_pin_drift(TOOL, Some(&stale))
+        .expect("another version");
+    assert!(
+        drift.contains("0.9.0 ile seçildi, kurulu sürüm 1.0.1"),
+        "{drift}"
+    );
+    let rebuilt = ActionPin {
+        digest: format!("sha256:{}", "1".repeat(64)),
+        ..pin.clone()
+    };
+    let drift = gis
+        .action_pin_drift(TOOL, Some(&rebuilt))
+        .expect("another build");
+    assert!(drift.contains("içeriği farklı"), "{drift}");
+    let drift = gis.action_pin_drift(TOOL, None).expect("not pinned");
+    assert!(drift.contains("sabitlenmemiş"), "{drift}");
+    assert_eq!(gis.action_pin_drift("attributes.calculate", None), None);
+    // The designer: the preflight says the missing pin; choosing the tool pins it, the warning goes.
+    crate::tools_scenes::run(&mut gis, "data.forms");
+    designer(&mut gis, d::Event::SelectItem("taks".into()));
+    let fields = gis.layer_fields_of("bina");
+    let codes = |gis: &App| -> Vec<String> {
+        let body = gis.gis.forms_window.as_ref().unwrap().body.clone().unwrap();
+        gis.issues_of(&body, &fields)
+            .into_iter()
+            .map(|i| i.code)
+            .collect()
+    };
+    assert!(codes(&gis).contains(&kentos_forms::codes::ACTION_PIN.to_owned()));
+    designer(&mut gis, d::Event::ActionTool(TOOL.into()));
+    let body = gis.gis.forms_window.as_ref().unwrap().body.clone().unwrap();
+    let pinned = body.walk().into_iter().find_map(|(_, i)| match i {
+        FormItem::Action { pin, .. } => pin.clone(),
+        _ => None,
+    });
+    assert_eq!(pinned, Some(pin));
+    assert!(!codes(&gis).contains(&kentos_forms::codes::ACTION_PIN.to_owned()));
+    // Turned off: unavailable with the extension's state; the preflight says the button is off.
+    let _ = gis.extensions_event(Event::Disable(VITRIN.into()));
+    let why = unavailable(gis.action_tool_state(TOOL, None));
+    assert!(why.contains("Eklenti Vitrini — Devre dışı"), "{why}");
+    assert!(codes(&gis).contains(&kentos_forms::codes::ACTION_UNKNOWN.to_owned()));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_demo_drawings_form_pins_the_demo_extension_as_it_packs_now() {
+    // samples/eklenti-vitrini/vitrin.kcad's Parsel form opens Vitrin's TAKS tool pinned to the package's digest
+    // (docs/adr/8057 §12): a package changed without the drawing written again is said here, not in a demo.
+    use kentos_commands::FormItem;
+    let path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/vitrin.kcad");
+    let snapshot = kentos_kcad::decode(&std::fs::read(path).unwrap()).expect("the demo drawing");
+    let form = snapshot
+        .settings
+        .forms
+        .iter()
+        .find(|f| f.id == "parsel")
+        .expect("the Parsel form");
+    let pin = form
+        .draft
+        .walk()
+        .into_iter()
+        .find_map(|(_, i)| match i {
+            FormItem::Action {
+                tool: Some(tool),
+                pin,
+                ..
+            } if tool == "ext.tr.ornek.vitrin.taks" => pin.clone(),
+            _ => None,
+        })
+        .expect("its TAKS button, pinned");
+    let dir = temp("vitrin-cizim");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    assert_eq!(
+        gis.action_pin_drift("ext.tr.ornek.vitrin.taks", Some(&pin)),
+        None,
+        "vitrin.kcad's TAKS button is pinned to another package: run `.run/py/bin/python \
+         samples/eklenti-vitrini/vitrin_cizim.py`"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
 }

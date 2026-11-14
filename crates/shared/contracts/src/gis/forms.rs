@@ -769,7 +769,7 @@ pub enum FormItem {
         #[cfg_attr(feature = "ts", ts(as = "Option<ActionKind>", optional))]
         kind: ActionKind,
         /// A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted
-        /// parts.
+        /// parts; an extension's tool as `ext.<eklenti>.<araç>` (docs/adr/8057 §12).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(regex(pattern = ACTION_TOOL_TEXT)))]
@@ -782,11 +782,40 @@ pub enum FormItem {
         #[serde(default, skip_serializing_if = "ActionRuns::is_auto")]
         #[cfg_attr(feature = "ts", ts(as = "Option<ActionRuns>", optional))]
         runs: ActionRuns,
+        /// The extension a `tool` action's extension tool came from when it was chosen (docs/adr/8057
+        /// §12); the host says when the one installed differs or is missing.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        pin: Option<ActionPin>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
 }
+
+/// Where a form action's extension tool came from (docs/adr/8057 §12): pinned when the form's author
+/// chose it. The package's content digest covers the tool's descriptor, its code, its environment's
+/// lock and the capabilities it asks for.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ActionPin {
+    /// The extension's id (`tr.ornek.vitrin`).
+    pub extension: String,
+    /// Its version then (`1.0.1`).
+    pub version: String,
+    /// Its package's content digest then: `sha256:` and 64 lower-case hex digits.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = PIN_DIGEST_TEXT)))]
+    pub digest: String,
+}
+
+/// An action pin's digest as a pattern.
+pub const PIN_DIGEST_TEXT: &str = r"^sha256:[0-9a-f]{64}$";
+
+/// The longest extension tool id: `ext.`, an extension's id (128) and a tool's (63).
+pub const MOST_EXTENSION_TOOL: usize = 196;
 
 /// What a form action does (docs/adr/0442 §5).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -842,17 +871,59 @@ impl ActionRuns {
 }
 
 /// An action's tool id as a pattern (the schema's; [`action_tool_ok`] also bounds its length).
-pub const ACTION_TOOL_TEXT: &str = r"^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*)+$";
+pub const ACTION_TOOL_TEXT: &str = r"^(?:(?!ext\.)[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+|ext(?:\.[a-z](?:[a-z0-9-]*[a-z0-9])?){3,})$";
 
 /// Whether `tool` can name a registered processing tool (docs/adr/0441 §6): two or more dotted parts of
-/// ASCII letters and digits, each starting with a letter, at most 64 characters. An address, a query or
-/// a script is none.
+/// ASCII letters and digits, each starting with a letter, at most 64 characters; an extension's tool
+/// `ext.<eklenti>.<araç>` (docs/adr/8057 §12) in the extension's lower-case letters, digits and hyphens,
+/// at most 196. An address, a query or a script is none.
 pub fn action_tool_ok(tool: &str) -> bool {
+    if let Some(rest) = tool.strip_prefix("ext.") {
+        return tool.len() <= MOST_EXTENSION_TOOL
+            && rest.split('.').count() >= 3
+            && rest.split('.').all(extension_part_ok);
+    }
     tool.len() <= MOST_FORM_NAME
         && tool.split('.').count() >= 2
         && tool.split('.').all(|part| {
             part.chars().next().is_some_and(|c| c.is_ascii_alphabetic())
                 && part.chars().all(|c| c.is_ascii_alphanumeric())
+        })
+}
+
+/// A part of an extension's id or of its tool's: lower-case letters, digits and hyphens, a letter
+/// first, not ending in a hyphen, at most 63 characters (the extensions' manifest rule).
+fn extension_part_ok(part: &str) -> bool {
+    let b = part.as_bytes();
+    !b.is_empty()
+        && b.len() <= 63
+        && b[0].is_ascii_lowercase()
+        && b.iter()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || *c == b'-')
+        && !part.ends_with('-')
+}
+
+/// The extension an action's extension tool belongs to (`ext.tr.ornek.vitrin.taks` → `tr.ornek.vitrin`);
+/// none for a built-in tool.
+pub fn action_tool_extension(tool: &str) -> Option<&str> {
+    let rest = tool.strip_prefix("ext.")?;
+    let (extension, _) = rest.rsplit_once('.')?;
+    action_tool_ok(tool).then_some(extension)
+}
+
+/// Whether a pin fits its action's tool: that tool's extension, a version and a digest.
+pub fn action_pin_ok(pin: &ActionPin, tool: Option<&str>) -> bool {
+    let version = pin.version.as_bytes();
+    tool.and_then(action_tool_extension) == Some(pin.extension.as_str())
+        && !version.is_empty()
+        && version.len() <= MOST_FORM_NAME
+        && version
+            .iter()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'.' | b'-' | b'+'))
+        && pin.digest.len() == 71
+        && pin.digest.strip_prefix("sha256:").is_some_and(|hex| {
+            hex.bytes()
+                .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c))
         })
 }
 
@@ -1801,6 +1872,7 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                 tool,
                 step,
                 runs,
+                pin,
                 visible_when,
                 ..
             } => {
@@ -1814,7 +1886,7 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                     (ActionKind::Tool, Some(tool), None) if action_tool_ok(tool) => {}
                     (ActionKind::Tool, Some(tool), None) => {
                         return Some(format!(
-                            "“{id}” eylemi kayıtlı bir işlem aracını kimliğiyle anar (attributes.calculate gibi); “{tool}” bir araç kimliği değil. Adres, sorgu ya da betik yazılmaz."
+                            "“{id}” eylemi kayıtlı bir işlem aracını kimliğiyle anar (attributes.calculate ya da bir eklentinin ext.tr.ornek.vitrin.taks gibi); “{tool}” bir araç kimliği değil. Adres, sorgu ya da betik yazılmaz."
                         ));
                     }
                     (ActionKind::Step, None, Some(step)) if form_name_ok(step) => {}
@@ -1828,6 +1900,15 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                 if *kind != ActionKind::Tool && !runs.is_auto() {
                     return Some(format!(
                         "“{id}” eyleminin çalışacağı yer yalnız araç eyleminde seçilir."
+                    ));
+                }
+                // An extension tool's pin: that tool's extension, its version and digest (docs/adr/8057 §12).
+                if pin
+                    .as_ref()
+                    .is_some_and(|p| !action_pin_ok(p, tool.as_deref()))
+                {
+                    return Some(format!(
+                        "“{id}” eyleminin sabitlemesi geçersiz: yalnız bir eklenti aracında, o eklentinin kimliği, sürümü ve sha256 özetiyle yazılır."
                     ));
                 }
                 if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {
@@ -2187,6 +2268,107 @@ mod tests {
             releases: Vec::new(),
             enforce: false,
             comments: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn an_action_names_an_extensions_tool_and_pins_its_extension() {
+        // docs/adr/8057 §12: `ext.<eklenti>.<araç>` in the extension's lower case letters, digits and hyphens.
+        for ok in [
+            "attributes.calculate",
+            "ext.tr.ornek.vitrin.taks",
+            "ext.tr.ornek.imar-denetim.ada-parsel-yaz",
+        ] {
+            assert!(action_tool_ok(ok), "{ok}");
+        }
+        for bad in [
+            "ext.tr.taks",
+            "ext.Tr.Ornek.x.taks",
+            "ext.tr.ornek.vitrin.taks-",
+            "ext.tr..vitrin.taks",
+            "https://ornek.org/x",
+            "attributes-calculate.x",
+        ] {
+            assert!(!action_tool_ok(bad), "{bad}");
+        }
+        assert!(action_tool_ok(&format!("ext.tr.{}.taks", "a".repeat(63))));
+        assert!(!action_tool_ok(&format!("ext.tr.{}.taks", "a".repeat(64))));
+        assert_eq!(
+            action_tool_extension("ext.tr.ornek.imar-denetim.taks"),
+            Some("tr.ornek.imar-denetim")
+        );
+        assert_eq!(action_tool_extension("attributes.calculate"), None);
+        let pin = ActionPin {
+            extension: "tr.ornek.vitrin".into(),
+            version: "1.0.1".into(),
+            digest: format!("sha256:{}", "ab".repeat(32)),
+        };
+        assert!(action_pin_ok(&pin, Some("ext.tr.ornek.vitrin.taks")));
+        assert!(!action_pin_ok(&pin, Some("ext.tr.ornek.baska.taks")));
+        assert!(!action_pin_ok(&pin, Some("attributes.calculate")));
+        assert!(!action_pin_ok(&pin, None));
+        for (version, digest) in [
+            ("", pin.digest.clone()),
+            ("1.0 beta", pin.digest.clone()),
+            ("1.0.1", "sha256:AB".into()),
+            ("1.0.1", format!("md5:{}", "ab".repeat(32))),
+        ] {
+            let bad = ActionPin {
+                version: version.into(),
+                digest,
+                ..pin.clone()
+            };
+            assert!(
+                !action_pin_ok(&bad, Some("ext.tr.ornek.vitrin.taks")),
+                "{bad:?}"
+            );
+        }
+        // In a body: a pin on its tool passes, on another extension's tool or a step it is refused; the JSON is
+        // camelCase and left out without a pin.
+        let action =
+            |tool: Option<&str>, kind: ActionKind, pin: Option<ActionPin>| FormItem::Action {
+                id: "taks".into(),
+                label: "TAKS hesapla".into(),
+                kind,
+                tool: tool.map(str::to_owned),
+                step: (kind == ActionKind::Step).then(|| "Gönder".to_owned()),
+                runs: ActionRuns::Auto,
+                pin,
+                visible_when: None,
+            };
+        let body = |item: FormItem| FormBody {
+            revision: 1,
+            items: vec![item],
+            ..Default::default()
+        };
+        let pinned = action(
+            Some("ext.tr.ornek.vitrin.taks"),
+            ActionKind::Tool,
+            Some(pin.clone()),
+        );
+        assert_eq!(body_problem(&body(pinned.clone())), None);
+        let json = serde_json::to_value(&pinned).unwrap();
+        assert_eq!(json["pin"]["extension"], "tr.ornek.vitrin");
+        assert_eq!(
+            serde_json::from_value::<FormItem>(json).unwrap(),
+            pinned,
+            "it reads back"
+        );
+        let plain = action(Some("ext.tr.ornek.vitrin.taks"), ActionKind::Tool, None);
+        assert!(serde_json::to_value(&plain).unwrap().get("pin").is_none());
+        for refused in [
+            action(
+                Some("ext.tr.ornek.baska.taks"),
+                ActionKind::Tool,
+                Some(pin.clone()),
+            ),
+            action(None, ActionKind::Step, Some(pin.clone())),
+        ] {
+            let problem = body_problem(&body(refused)).expect("refused");
+            assert!(
+                problem.contains("sabitlemesi geçersiz") || problem.contains("hedefi"),
+                "{problem}"
+            );
         }
     }
 

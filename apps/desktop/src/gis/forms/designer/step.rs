@@ -439,17 +439,23 @@ impl App {
                     tool: Some("attributes.calculate".into()),
                     step: None,
                     runs: kentos_commands::ActionRuns::Auto,
+                    pin: None,
                     visible_when: None,
                 };
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
                 w.item = Some(id);
             }
+            // An extension's tool is pinned to the extension installed now (docs/adr/8057 §12); choosing it
+            // again pins it again.
             Event::ActionTool(tool) => {
                 if let Some(id) = chosen_item.clone() {
+                    let pinned = self.action_pin_of(&tool);
                     edited(&mut w, &|b| {
-                        if let Some(FormItem::Action { tool: t, .. }) = find_mut(&mut b.items, &id)
+                        if let Some(FormItem::Action { tool: t, pin, .. }) =
+                            find_mut(&mut b.items, &id)
                         {
                             *t = Some(tool.clone());
+                            *pin = pinned.clone();
                         }
                     });
                 }
@@ -469,6 +475,7 @@ impl App {
                             tool,
                             step,
                             runs,
+                            pin,
                             ..
                         }) = find_mut(&mut b.items, &id)
                         {
@@ -482,6 +489,7 @@ impl App {
                                 .flatten();
                             if kind != kentos_commands::ActionKind::Tool {
                                 *runs = kentos_commands::ActionRuns::Auto;
+                                *pin = None;
                             }
                         }
                     });

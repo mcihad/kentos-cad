@@ -295,6 +295,7 @@ impl App {
                 tool,
                 step,
                 runs,
+                pin,
                 visible_when,
                 ..
             } => {
@@ -344,6 +345,14 @@ impl App {
                         let missing = at.is_none().then(|| {
                             format!("“{current}” kayıtlı bir işlem aracı değil; listeden seçin.")
                         });
+                        // An extension's tool says the extension it is pinned to (docs/adr/8057 §12).
+                        let pinned = pin.as_ref().map(|p| {
+                            format!(
+                                "{} {} ile sabitlendi.",
+                                self.extension_name(&p.extension),
+                                p.version
+                            )
+                        });
                         let places = [R::Auto, R::Here, R::Background];
                         let runs_pick = Select::new(
                             ["Otomatik", "Bu bilgisayarda", "Arka planda"].map(Choice::new),
@@ -351,7 +360,7 @@ impl App {
                             move |i| msg(Event::ActionRuns(places[i])),
                         );
                         col = col
-                            .push(words::field("Araç", pick, missing))
+                            .push(words::field("Araç", pick, missing.or(pinned)))
                             .push(words::field("Nerede çalışır", runs_pick, None));
                     }
                     K::Step => {

@@ -25,6 +25,31 @@
         }
       ]
     },
+    "ActionPin": {
+      "additionalProperties": false,
+      "description": "Where a form action's extension tool came from (docs/adr/8057 §12): pinned when the form's author\nchose it. The package's content digest covers the tool's descriptor, its code, its environment's\nlock and the capabilities it asks for.",
+      "properties": {
+        "digest": {
+          "description": "Its package's content digest then: `sha256:` and 64 lower-case hex digits.",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "extension": {
+          "description": "The extension's id (`tr.ornek.vitrin`).",
+          "type": "string"
+        },
+        "version": {
+          "description": "Its version then (`1.0.1`).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "extension",
+        "version",
+        "digest"
+      ],
+      "type": "object"
+    },
     "ActionRuns": {
       "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
       "oneOf": [
@@ -710,6 +735,17 @@
             "label": {
               "type": "string"
             },
+            "pin": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ActionPin"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The extension a `tool` action's extension tool came from when it was chosen (docs/adr/8057\n§12); the host says when the one installed differs or is missing."
+            },
             "runs": {
               "$ref": "#/$defs/ActionRuns",
               "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
@@ -722,8 +758,8 @@
               ]
             },
             "tool": {
-              "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
-              "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+              "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts; an extension's tool as `ext.<eklenti>.<araç>` (docs/adr/8057 §12).",
+              "pattern": "^(?:(?!ext\\.)[A-Za-z][A-Za-z0-9]*(?:\\.[A-Za-z][A-Za-z0-9]*)+|ext(?:\\.[a-z](?:[a-z0-9-]*[a-z0-9])?){3,})$",
               "type": [
                 "string",
                 "null"

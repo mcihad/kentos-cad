@@ -208,12 +208,18 @@ impl App {
                     label: title,
                     kind,
                     tool,
+                    pin,
                     ..
                 } => {
                     out = flush(&mut run, out);
-                    let known = tool
+                    // A tool not here, or an extension's whose code cannot run yet, says so under the button
+                    // (docs/adr/8057 §12).
+                    let state = tool
+                        .as_deref()
+                        .map(|t| self.action_tool_state(t, pin.as_ref()));
+                    let known = state
                         .as_ref()
-                        .is_none_or(|t| self.gis.processing.registry.get(t).is_some());
+                        .is_none_or(|s| *s == crate::extensions::ActionTool::Ready);
                     let read_only =
                         self.entry_locked(e) || e.screen.prepared.locked_by_state(&e.before);
                     let can = known
@@ -237,13 +243,24 @@ impl App {
                     .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary)
                     .on_press_maybe(can.then(|| e.msg(Event::RunAction(id.clone()))));
-                    out = out.push(match tool.as_ref().filter(|_| !known) {
-                        Some(t) => row![
+                    let why = match state {
+                        Some(crate::extensions::ActionTool::Pending(why)) => {
+                            Some(format!("Bekliyor: {why}"))
+                        }
+                        Some(crate::extensions::ActionTool::Unavailable(why)) => {
+                            Some(format!("Kullanılamaz: {why}"))
+                        }
+                        _ => None,
+                    };
+                    out = out.push(match why {
+                        Some(why) => iced::widget::column![
                             button,
-                            label::caption(format!("“{t}” kayıtlı bir araç değil.")).style(muted)
+                            iced::widget::text(why)
+                                .size(typography::caption())
+                                .style(muted)
+                                .width(Fill)
                         ]
-                        .spacing(8)
-                        .align_y(Center)
+                        .spacing(4)
                         .into(),
                         None => Element::from(button),
                     });
