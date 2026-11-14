@@ -1823,6 +1823,11 @@ pub trait Tool {
     fn snap_from(&self) -> Option<Vec2> {
         None
     }
+    /// The only layers (ids) its points snap to: an extension's map tool's `snapLayers` (docs/adr/8057 §9); none:
+    /// every layer.
+    fn snap_layers(&self) -> Option<Vec<String>> {
+        None
+    }
     /// The object being drawn, its points so far (not the segment to the
     /// cursor) as an open path: snapped to as one more object while
     /// `snap.self` is on (the web's `draftPath`, docs/adr/0163 §3).

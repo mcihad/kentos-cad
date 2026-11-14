@@ -107,6 +107,8 @@ pub(crate) struct Capturing {
     pub local: String,
     pub title: String,
     pub kind: kentos_interaction::capture::Kind,
+    /// The only layers its points snap to (the manifest's `snapLayers`; empty: every layer).
+    pub snap_layers: Vec<String>,
 }
 
 /// The drawn shape as GeoJSON (RFC 7946) in the project's plane, as the extension's code reads it (`ext.Shape`): a
@@ -1191,8 +1193,13 @@ impl App {
             local: local.to_owned(),
             title: entry.title.clone(),
             kind,
+            snap_layers: entry.snap_layers.clone(),
         });
-        self.session.run(Box::new(Capture::new(entry.title, kind)));
+        // Its points snap to the layers its manifest names only (they were checked and never used until 15 November
+        // 2026: MEBİS's grave tool snapped to every layer).
+        self.session.run(Box::new(
+            Capture::new(entry.title, kind).snapping_to(entry.snap_layers),
+        ));
         Task::none()
     }
 
@@ -1203,10 +1210,10 @@ impl App {
         };
         // Another tool started meanwhile (the user moved on): the map tool is not taken up again over it.
         if ok && !self.session.is_running() {
-            self.session
-                .run(Box::new(kentos_interaction::capture::Capture::new(
-                    c.title, c.kind,
-                )));
+            self.session.run(Box::new(
+                kentos_interaction::capture::Capture::new(c.title, c.kind)
+                    .snapping_to(c.snap_layers),
+            ));
         } else {
             self.extensions.capturing = None;
         }

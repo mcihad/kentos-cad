@@ -186,3 +186,37 @@ fn an_edge_rested_on_gives_its_direction_and_a_typed_distance_goes_along_the_par
     assert_eq!(pts[0], [-2.0, -10.0]);
     assert!(near(pts[1], [2.0, -7.0]), "{:?}", pts[1]);
 }
+
+#[test]
+fn an_extensions_map_tool_snaps_to_its_snap_layers_only() {
+    // A map tool's points snap to the layers its manifest names (snapLayers, docs/adr/8057 §9); they were checked and
+    // never used until 15 November 2026. Parcel 7 is on "parsel"; its corner at (−20, −10).
+    use kentos_interaction::capture::{Capture, Kind};
+    let mut b = bench();
+    let corner = |b: &mut Bench| snap_at(b, -19.8, -9.8).map(|(_, at, id)| (at, id));
+    assert_eq!(
+        corner(&mut b),
+        Some(([-20.0, -10.0], 1.0)),
+        "a session tool: every layer"
+    );
+    b.session.run(Box::new(
+        Capture::new("Mezar", Kind::Point).snapping_to(vec!["parsel".into()]),
+    ));
+    assert_eq!(
+        corner(&mut b),
+        Some(([-20.0, -10.0], 1.0)),
+        "its layer named"
+    );
+    b.session.run(Box::new(
+        Capture::new("Mezar", Kind::Point).snapping_to(vec!["mezar_yeri".into()]),
+    ));
+    assert_eq!(
+        corner(&mut b),
+        None,
+        "another layer: the parcel is not snapped to"
+    );
+    b.session.run(Box::new(
+        Capture::new("Mezar", Kind::Point).snapping_to(Vec::new()),
+    ));
+    assert!(corner(&mut b).is_some(), "none named: every layer");
+}

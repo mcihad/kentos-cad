@@ -185,6 +185,9 @@ pub struct SnapExtras {
     /// The user coordinate system Karelaj's nodes follow: origin and angle,
     /// radians (docs/adr/0261 §4); none: the world's.
     pub grid_frame: Option<(Vec2, f64)>,
+    /// Only these layers' objects (their ids) are snapped to: an extension's map tool's `snapLayers` (docs/adr/8057
+    /// §9); a layer the drawing does not have takes none. None: every layer, as its snap kinds say.
+    pub layers: Option<Vec<String>>,
 }
 
 /// An edge near the cursor, for crossings; `ell` when it is one of an ellipse's chords.
@@ -468,7 +471,15 @@ impl Store {
             all: collect.then(Vec::new),
         };
         let mut nearby: Vec<Nearby> = Vec::new();
+        let only: Option<Vec<u32>> = extras.layers.as_ref().map(|ids| {
+            ids.iter()
+                .filter_map(|id| self.layer_ids.get(id).copied())
+                .collect()
+        });
         for it in self.near(p, tol) {
+            if only.as_ref().is_some_and(|o| !o.contains(&it.layer)) {
+                continue;
+            }
             let id = it.id;
             ch.mask = self.flags(it).snap;
             // A block's insertion point, then its pieces as objects of their own (docs/adr/0144).
@@ -1297,6 +1308,47 @@ mod tests {
     fn add(s: &mut Store, shape: Shape) {
         let id = (s.len() + 1) as f64;
         s.put(id, "a", false, shape);
+    }
+
+    #[test]
+    fn only_the_layers_asked_for_are_snapped_to() {
+        // An extension's map tool snaps to its snapLayers only (docs/adr/8057 §9).
+        let mut s = Store::new();
+        s.put(
+            1.0,
+            "parsel",
+            false,
+            line(Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0)),
+        );
+        s.put(
+            2.0,
+            "mezar_yeri",
+            false,
+            line(Vec2::new(0.0, 1.0), Vec2::new(10.0, 1.0)),
+        );
+        let p = Vec2::new(0.1, 0.4);
+        let kinds = SnapKind::Endpoint.bit();
+        let every = s.snap_ex(p, 1.0, kinds, None, &SnapExtras::default());
+        assert_eq!(
+            every.map(|h| h.id),
+            Some(1.0),
+            "the nearest end: the parcel's"
+        );
+        let asked = |layers: &[&str]| SnapExtras {
+            layers: Some(layers.iter().map(|l| (*l).to_owned()).collect()),
+            ..SnapExtras::default()
+        };
+        let graves = s.snap_ex(p, 1.0, kinds, None, &asked(&["mezar_yeri"]));
+        assert_eq!(
+            graves.map(|h| h.id),
+            Some(2.0),
+            "the grave layer's end only"
+        );
+        assert_eq!(
+            s.snap_ex(p, 1.0, kinds, None, &asked(&["mezar_parsel"])),
+            None,
+            "a layer the drawing lacks takes none"
+        );
     }
 
     fn line(a: Vec2, b: Vec2) -> Shape {

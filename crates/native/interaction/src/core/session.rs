@@ -1455,9 +1455,9 @@ impl Session {
         draft: &Draft,
         tracking: &ObjectTracking,
     ) -> Option<(Option<Vec2>, f64, SnapExtras)> {
-        let (from, path) = match &self.tool {
-            Some(tool) if tool.snaps() => (tool.snap_from(), tool.draft_path()),
-            None if self.select.grip_active() => (self.select.snap_from(), None),
+        let (from, path, layers) = match &self.tool {
+            Some(tool) if tool.snaps() => (tool.snap_from(), tool.draft_path(), tool.snap_layers()),
+            None if self.select.grip_active() => (self.select.snap_from(), None, None),
             _ => return None,
         };
         // Out of the snap's scale range no snap applies (docs/adr/0163 §5).
@@ -1477,6 +1477,7 @@ impl Session {
                 .all(|&g| g > 0.0)
                 .then_some(draft.snap_grid),
             grid_frame: draft.ucs,
+            layers,
         };
         Some((from, tol, extras))
     }

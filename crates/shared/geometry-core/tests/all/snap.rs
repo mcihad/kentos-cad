@@ -92,6 +92,7 @@ fn extras(v: &Value) -> SnapExtras {
         .unwrap_or_default();
     SnapExtras {
         grid_frame: None,
+        layers: None,
         extensions: v
             .get("extensions")
             .and_then(Value::as_array)

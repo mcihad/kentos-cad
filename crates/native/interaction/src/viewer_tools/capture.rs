@@ -48,6 +48,8 @@ pub struct Capture {
     points: Vec<Vec2>,
     hover: Option<Vec2>,
     done: bool,
+    /// The only layers its points snap to (the manifest's `snapLayers`); none: every layer.
+    snap_layers: Option<Vec<String>>,
 }
 
 /// An oriented rectangle of `width` × `length` about `middle`, its long side along `towards − middle` (north when
@@ -94,7 +96,14 @@ impl Capture {
             points: Vec::new(),
             hover: None,
             done: false,
+            snap_layers: None,
         }
+    }
+
+    /// Its points snap only to these layers (ids; an empty list: every layer).
+    pub fn snapping_to(mut self, layers: Vec<String>) -> Self {
+        self.snap_layers = (!layers.is_empty()).then_some(layers);
+        self
     }
 
     fn finish(&mut self, shape: Option<Shape>, cx: &mut Context<'_>) {
@@ -159,6 +168,10 @@ impl Capture {
 impl Tool for Capture {
     fn accepts_points(&self) -> bool {
         true
+    }
+
+    fn snap_layers(&self) -> Option<Vec<String>> {
+        self.snap_layers.clone()
     }
 
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {

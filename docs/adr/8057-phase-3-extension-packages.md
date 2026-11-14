@@ -1019,6 +1019,12 @@ Planda harita aracı ADIM 22'deydi (`kentos.ui` panelleriyle); Vitrin'in her kat
   yönüyle, Enter kuzey; araç Esc'e kadar sürer; yerleştirme başına bir geri alma adımı.
 - **Sınamalar:** yakalamanın türleri ve şablonun dönüşü (2), Python host'unun çizilen alanı öznitelikleriyle aracıdan
   yazması, masaüstü eklenti sahneleri.
+- **`snapLayers` (15 Kasım):** manifestte doğrulanıyordu ama hiç kullanılmıyordu: MEBİS'in mezar aracı her katmana
+  kenetleniyordu. Artık aracın noktaları yalnız bildirdiği katmanlara kenetlenir: kenetleme sorusu (`SnapExtras`)
+  katman süzgeci taşır (`layers`; çizimde olmayan katman hiçbir şey vermez, süzgeçsiz araç eskisi gibi), etkileşim
+  aracı bildirir (`Tool::snap_layers`), yakalama aracı manifestten alır (`Capture::snapping_to`). Gerçek pencerede aynı
+  parsel köşesinde Tekli mezar kenetlenmedi (parsel `snapLayers`'ta yok), Çizgi "Uç nokta · kapalı alan" dedi. Sınamalar:
+  çekirdekte katman süzgeci, oturumda yakalama aracının süzgeci (adı verilen, başka ve boş liste).
 
 ## §10. İşlemler aracının tanımı kurulumdan önce denetlenir (`5af293f9a`)
 

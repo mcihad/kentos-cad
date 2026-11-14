@@ -1098,7 +1098,9 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
   kalan: ağaç, birden çok açık panel.* Eklentinin
   JSON'la bildirdiği `Table`, `Tree`, `Form`, `LayerPicker`, `FeaturePicker`, `Progress` bileşenleri sağ/alt dock ya da
   kalıcı pencere olarak açılır.
-- [ ] **MapTool köprüsü:** manifestteki yakalama/kenetleme ve şablon önizleme kuralları (ör. 2,20 × 1,10 m mezar
+- [x] **MapTool köprüsü** — *tamamlandı (ADR 8057 §9): yakalama türleri, yönlü dikdörtgen şablonu, tek geri alma
+  adımı; 15 Kasım'da `snapLayers` da: aracın noktaları yalnız bildirdiği katmanlara kenetlenir.* Manifestteki
+  yakalama/kenetleme ve şablon önizleme kuralları (ör. 2,20 × 1,10 m mezar
   dikdörtgeni) Rust etkileşim oturumunda çizilir; kullanıcı noktaları onaylayınca `@ext.map_tool` çağrılır; sonuç tek
   geri alma adımı.
 - [ ] **Katman şeması kurulumu** — *ilk dilim yapıldı (ADR 8057 §23): `kentos.layerSchema` 1 (katmanlar ve alanları,
