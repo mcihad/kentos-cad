@@ -8,7 +8,6 @@
 //! first vertex's). The web's is `apps/web/src/model/labelTexts.ts`.
 
 use kentos_commands::{Entity, LabelStyle, LabelsMode, LayerNode, LineLabelMode, default_label};
-use std::sync::{Arc, RwLock};
 
 use kentos_expression::external::{ExternalCalls, ExternalDef};
 use kentos_expression::rows::{As, RowsInput, TEXT, evaluate_rows_on_with};
@@ -20,45 +19,32 @@ use crate::layer_filter::{kind_label, vertex_count};
 
 /// What answers the extensions' functions in a label (`ext.<eklenti>.<işlev>`, docs/adr/8057 §8): the host's, which
 /// never waits (an answer it does not have yet is empty and asked in the background; the labels are worked out again
-/// when it comes).
-pub type LabelCalls = Arc<dyn ExternalCalls + Send + Sync>;
-
-static EXTERNALS: RwLock<Option<(Vec<ExternalDef>, LabelCalls)>> = RwLock::new(None);
-
-/// How many times the host's answers grew: a layer whose labels call an extension's function is worked out again.
-static ANSWERS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// when it comes). The host's one registry (`kentos_expression::external::set_host`), which styles, filters and forms
+/// read too.
+pub type LabelCalls = kentos_expression::external::HostCalls;
 
 /// The host got answers it did not have (a background ask came back): the labels that call extensions' functions are
 /// worked out again at the next refresh.
 pub fn answers_changed() {
-    ANSWERS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    kentos_expression::external::host_answered();
 }
 
 /// How many times the host's answers grew.
 pub fn answers_generation() -> u64 {
-    ANSWERS.load(std::sync::atomic::Ordering::Relaxed)
+    kentos_expression::external::host_answers()
 }
 
 /// The extensions' functions a label may call and what answers them; replaced as extensions change.
 pub fn set_externals(defs: Vec<ExternalDef>, calls: LabelCalls) {
-    if let Ok(mut slot) = EXTERNALS.write() {
-        *slot = Some((defs, calls));
-    }
+    kentos_expression::external::set_host(defs, calls);
 }
 
 pub(crate) fn external_defs() -> Vec<ExternalDef> {
-    EXTERNALS
-        .read()
-        .ok()
-        .and_then(|e| e.as_ref().map(|(d, _)| d.clone()))
-        .unwrap_or_default()
+    kentos_expression::external::host_defs()
 }
 
 pub(crate) fn external_calls() -> Option<LabelCalls> {
-    EXTERNALS
-        .read()
-        .ok()
-        .and_then(|e| e.as_ref().map(|(_, c)| Arc::clone(c)))
+    kentos_expression::external::host_calls()
 }
 
 /// An expression for a label (its text or its class's condition), compiled

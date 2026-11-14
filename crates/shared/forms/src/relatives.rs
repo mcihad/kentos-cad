@@ -221,6 +221,7 @@ impl RelatedRecords {
                     expr,
                     attrs: &records[i].0,
                     object: &records[i].1,
+                    calls: None,
                 })
             },
             out,

@@ -44,7 +44,9 @@ pub use lookup::{OtherLayer, PickMiss, World, WorldRelation, labels_of};
 pub use relatives::{named_relations, related_needs};
 pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
-pub use record::{Attached, Attrs, Object, form_schema_in, schema_in, schema_of};
+pub use record::{
+    Attached, Attrs, Object, answering_with, calc_schema, form_schema_in, schema_in, schema_of,
+};
 pub use requirements::{requirements, unsupported};
 pub use session::{
     CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, Left, MOMENT, Moment, Prepared, added_key,

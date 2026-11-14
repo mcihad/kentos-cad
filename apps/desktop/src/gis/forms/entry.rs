@@ -477,6 +477,12 @@ impl Entry {
             .collect()
     }
 
+    /// The record worked out again because an extension's function a calculation calls answered (docs/adr/8057
+    /// §8): the value it read empty while the answer was coming is shown.
+    pub(crate) fn recompute_answered(&mut self, doc: &Document) {
+        self.recompute(doc);
+    }
+
     /// The record as the form sees it now: the values typed, a new record's defaults, the
     /// calculations; the unique fields asked of the layer only when their values changed.
     fn recompute(&mut self, doc: &Document) {

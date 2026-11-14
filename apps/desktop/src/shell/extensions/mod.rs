@@ -498,6 +498,10 @@ impl App {
                 if self.extensions.tools.labels.take_fresh() {
                     if let Some(doc) = &self.document {
                         self.spatial.sync(&doc.model);
+                        // An open form's calculation calling a function shows its answer.
+                        if let Some(e) = self.gis.form_entry.as_mut() {
+                            e.recompute_answered(&doc.model);
+                        }
                     }
                     self.layer_filter_recount();
                 }

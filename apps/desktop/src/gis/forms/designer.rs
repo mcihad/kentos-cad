@@ -915,10 +915,17 @@ impl App {
             user: None,
             expected_revision: None,
         };
-        let result = kentos_native_application::forms_recompute::execute(
-            &mut ExecutionContext::new(&mut doc.model),
-            input,
-        );
+        // A calculation calling an extension's function waits for its answers (docs/adr/8057 §8).
+        let recompute = || {
+            kentos_native_application::forms_recompute::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                input,
+            )
+        };
+        let result = match kentos_processing::external::expression_calls() {
+            Some(waiting) => kentos_forms::answering_with(waiting, recompute),
+            None => recompute(),
+        };
         if let Some(done) = self.answered(result) {
             let said = match (done.changed.len(), done.failed.len()) {
                 (0, 0) => format!(

@@ -539,7 +539,15 @@ impl Preflight<'_> {
             ("calculate", &f.calculate),
         ] {
             let Some(text) = text else { continue };
+            // A calculation knows the host's extensions' functions (docs/adr/8057 §8), a default does not.
+            let kept = (rule == "calculate").then(|| {
+                let calc = crate::record::calc_schema(&self.schema);
+                std::mem::replace(&mut self.schema, calc)
+            });
             let expr = self.rule(&f.id, Some(&f.field), None, rule, text);
+            if let Some(kept) = kept {
+                self.schema = kept;
+            }
             if expr.is_some() && reads_moment(text, &self.still) {
                 self.issues.push(issue(
                     codes::MOMENT_ONLY,

@@ -667,7 +667,13 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
-        let result = forms_submit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        // A calculation calling an extension's function waits for its answer on saving (docs/adr/8057 §8): the value
+        // goes into the drawing, it is not left empty because the answer had not come while typing.
+        let submit = || forms_submit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result = match kentos_processing::external::expression_calls() {
+            Some(waiting) => kentos_forms::answering_with(waiting, submit),
+            None => submit(),
+        };
         // Changed since the window opened: the bar says what, the values typed stay.
         if let kentos_commands::CommandResult::Conflict { error } = &result
             && matches!(
@@ -760,7 +766,12 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
-        let result = forms_fill::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        // A calculation calling an extension's function waits for its answers (docs/adr/8057 §8).
+        let fill = || forms_fill::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result = match kentos_processing::external::expression_calls() {
+            Some(waiting) => kentos_forms::answering_with(waiting, fill),
+            None => fill(),
+        };
         match self.answered(result) {
             Some(done) => {
                 self.gis.form_entry = None;

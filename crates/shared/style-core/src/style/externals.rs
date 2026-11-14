@@ -3,53 +3,38 @@
 //! what answers them; a drawing never waits: the host's answers are the ones it already has, an answer it does not
 //! have yet is empty and asked in the background, and when answers come it builds the layers calling them again
 //! ([`answers_generation`]). Without a host (the web, a headless run) there are none and such a call does not compile.
-
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, RwLock};
+//! The host's one registry is the expression engine's (`kentos_expression::external::set_host`): labels, filters and
+//! forms read it too.
 
 use crate::expr::external::{ExternalCalls, ExternalDef};
 use crate::expr::{CompileError, Expr, Schema, Unit, compile_with};
 
 /// What answers the calls: the host's, never waiting.
-pub type Calls = Arc<dyn ExternalCalls + Send + Sync>;
-
-static EXTERNALS: RwLock<Option<(Vec<ExternalDef>, Calls)>> = RwLock::new(None);
-
-/// How many times the host's answers grew.
-static ANSWERS: AtomicU64 = AtomicU64::new(0);
+pub type Calls = crate::expr::external::HostCalls;
 
 /// The functions a style may call and what answers them; replaced as the extensions change.
 pub fn set_externals(defs: Vec<ExternalDef>, calls: Calls) {
-    if let Ok(mut slot) = EXTERNALS.write() {
-        *slot = Some((defs, calls));
-    }
+    crate::expr::external::set_host(defs, calls);
 }
 
 /// The host got answers it did not have: the layers whose styles call extensions' functions are built again.
 pub fn answers_changed() {
-    ANSWERS.fetch_add(1, Ordering::Relaxed);
+    crate::expr::external::host_answered();
 }
 
 /// How many times the host's answers grew.
 pub fn answers_generation() -> u64 {
-    ANSWERS.load(Ordering::Relaxed)
+    crate::expr::external::host_answers()
 }
 
 /// The functions registered; none without a host.
 pub fn defs() -> Vec<ExternalDef> {
-    EXTERNALS
-        .read()
-        .ok()
-        .and_then(|e| e.as_ref().map(|(d, _)| d.clone()))
-        .unwrap_or_default()
+    crate::expr::external::host_defs()
 }
 
 /// What answers them; none without a host.
 pub fn calls() -> Option<Calls> {
-    EXTERNALS
-        .read()
-        .ok()
-        .and_then(|e| e.as_ref().map(|(_, c)| Arc::clone(c)))
+    crate::expr::external::host_calls()
 }
 
 /// `source` compiled with the registered functions known, its geometry values in `unit`.

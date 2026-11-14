@@ -1790,7 +1790,11 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
                     .position(|l| l.key() == f.field)
                     .unwrap_or(0);
                 let default_expr = compile(&f.default_expr);
-                let calculate = compile(&f.calculate);
+                // A calculation may call an extension's function (docs/adr/8057 §8; `calc_schema`).
+                let calculate = f
+                    .calculate
+                    .as_deref()
+                    .and_then(|r| compile_with(r, &crate::record::calc_schema(ctx.schema)).ok());
                 let bound = Bound {
                     index,
                     item: f.clone(),

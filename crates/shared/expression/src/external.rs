@@ -31,6 +31,50 @@ pub trait ExternalCalls {
     fn call(&self, name: &str, rows: &[Vec<Arg>]) -> Vec<Arg>;
 }
 
+/// What answers the host's calls when an expression is worked out while drawing: never waiting (an answer it does not
+/// have yet is empty and asked in the background).
+pub type HostCalls = std::sync::Arc<dyn ExternalCalls + Send + Sync>;
+
+static HOST: std::sync::RwLock<Option<(Vec<ExternalDef>, HostCalls)>> =
+    std::sync::RwLock::new(None);
+
+/// How many times the host's answers grew.
+static HOST_ANSWERS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The host's functions and what answers them while drawing (docs/adr/8057 §8): one place every part that works out
+/// an expression while drawing reads (a label's text, a style's rule, a layer's filter, a form's calculation);
+/// replaced as the extensions change. Without a host (the web, a headless run) there are none.
+pub fn set_host(defs: Vec<ExternalDef>, calls: HostCalls) {
+    if let Ok(mut slot) = HOST.write() {
+        *slot = Some((defs, calls));
+    }
+}
+
+/// The host's functions; none without a host.
+pub fn host_defs() -> Vec<ExternalDef> {
+    HOST.read()
+        .ok()
+        .and_then(|h| h.as_ref().map(|(d, _)| d.clone()))
+        .unwrap_or_default()
+}
+
+/// What answers them while drawing; none without a host.
+pub fn host_calls() -> Option<HostCalls> {
+    HOST.read()
+        .ok()
+        .and_then(|h| h.as_ref().map(|(_, c)| std::sync::Arc::clone(c)))
+}
+
+/// The host got answers it did not have (a background ask came back): what calls its functions is worked out again.
+pub fn host_answered() {
+    HOST_ANSWERS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// How many times the host's answers grew.
+pub fn host_answers() -> u64 {
+    HOST_ANSWERS.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// Whether a name is an extension's function's (`ext.` and more).
 pub fn is_external(name: &str) -> bool {
     name.len() > 4 && name.starts_with("ext.")
