@@ -447,7 +447,7 @@ impl ToolHost for Tools {
         doc: &Document,
         input: &ProcessingTools,
     ) -> Result<ProcessingToolsListed, Box<CommandError>> {
-        let registry = Registry::builtin();
+        let registry = Registry::current();
         if let Some(c) = input.category.as_deref()
             && registry.category(c).is_none()
         {
@@ -504,7 +504,7 @@ impl ToolHost for Tools {
     fn check(&self, doc: &Document, input: &ProcessingRun) -> Result<(), Box<CommandError>> {
         crate::source_inputs::check_sources(doc, input)?;
         if crate::source_inputs::source_params(input).is_empty() {
-            ready(&Registry::builtin(), doc, input).map(|_| ())
+            ready(&Registry::current(), doc, input).map(|_| ())
         } else {
             // A source input is read into a copy when the run is made; the rest is checked then.
             Ok(())
@@ -518,7 +518,7 @@ impl ToolHost for Tools {
         write: bool,
         flow: &dyn BatchFlow,
     ) -> Result<RunEnd, Box<CommandError>> {
-        let registry = Registry::builtin();
+        let registry = Registry::current();
         let sources = crate::source_inputs::source_params(input);
         crate::source_inputs::check_sources(doc, input)?;
         let ready_here = if sources.is_empty() {
@@ -618,7 +618,7 @@ impl ToolHost for Tools {
         doc: &Document,
         input: &ProcessingBatch,
     ) -> Result<(), Box<CommandError>> {
-        let registry = Registry::builtin();
+        let registry = Registry::current();
         batch_size(input)?;
         // The sink, and the batch's own inputs read from their source (docs/adr/0593 §1, §2).
         if let Some(sink) = &input.sink {
@@ -644,7 +644,7 @@ impl ToolHost for Tools {
         write: bool,
         flow: &dyn BatchFlow,
     ) -> Result<BatchEnd, Box<CommandError>> {
-        let registry = Registry::builtin();
+        let registry = Registry::current();
         batch_size(input)?;
         let clock = (now_ms(), Instant::now());
         let revision = doc.revision().to_string();

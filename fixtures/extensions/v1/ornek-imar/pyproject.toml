@@ -1,12 +1,14 @@
 # İmar Uygunluk Denetimi örnek eklentisinin Python tarafı (plan/eklenti.md ADIM 18A, P05). shapely'nin 2.0 serisini
-# ister; MEBİS 2.2'yi kilitler: iki eklenti aynı bilgisayarda, her biri kendi ortamında yan yana çalışır. Python aralığı
-# tek kaynaktır: aşağıdaki requires-python (shapely 2.0'ın tekerlekleri 3.13'e kadar). `uv lock` uv.lock'u buradan yazar.
+# ister; MEBİS 2.2'yi kilitler: iki eklenti aynı bilgisayarda, her biri kendi ortamında yan yana çalışır. TAKS aracı
+# NumPy'yi doğrudan kullandığı için onu da açıkça yazar (ADIM 19): kütüphaneleri eklentinin kilidi seçer, KentOS değil.
+# Python aralığı tek kaynaktır: aşağıdaki requires-python (shapely 2.0'ın tekerlekleri 3.13'e kadar). `uv lock`
+# uv.lock'u buradan yazar.
 [project]
 name = "imar-denetim"
-version = "1.0.0"
+version = "1.1.0"
 description = "İmar uygunluk denetimi örnek eklentisinin işlevleri"
 requires-python = ">=3.12,<3.14"
-dependencies = ["shapely>=2.0,<2.1"]
+dependencies = ["shapely>=2.0,<2.1", "numpy>=2.0,<3"]
 
 [tool.uv]
 # Manifestin adını verdiği üç sistem için çözülür ve tekerlek ister (compatibility.operatingSystems).

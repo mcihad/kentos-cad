@@ -360,6 +360,8 @@ impl App {
                 crate::view::thousands(n as f64)
             ));
         }
+        // What the extensions' İşlemler tools noted on their threads: their logs and notices (extensions/tools.rs).
+        self.ext_tool_notes();
         // While a drawing is being opened the app takes no command (opening.rs).
         if let Some(task) = self.while_opening(&message) {
             return task;

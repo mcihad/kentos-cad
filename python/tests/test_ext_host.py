@@ -66,7 +66,111 @@ def wrong_id(ctx):
 
 def unmarked(ctx):
     return ctx.message("çalışmamalıydı")
+
+
+class Scalar:
+    """Shaped as a NumPy scalar: what a tool's NumPy gives, without NumPy here."""
+
+    def __init__(self, value):
+        self.value = value
+
+    def item(self):
+        return self.value
+
+
+class Array:
+    """Shaped as a NumPy array."""
+
+    def __init__(self, values):
+        self.values = values
+
+    def tolist(self):
+        return list(self.values)
+
+
+def shoelace(pts):
+    return abs(sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]))) / 2
+
+
+@ext.processing("areas")
+def areas(ctx, parcels, limit, prefix="P"):
+    rows, out, big = [], [], []
+    for n, parcel in enumerate(ctx.read_features(parcels), start=1):
+        area = shoelace(parcel.pts)
+        rows.append({"parsel": f"{prefix}{n}", "alan": Scalar(area), "katman": parcel.layer})
+        out.append(ext.NewFeature(source=parcel, attrs={"alan": Scalar(area), "no": n}))
+        if area > limit:
+            big.append(parcel)
+    out.append(ext.NewFeature(geometry=ext.polygon(Array([(0, 0), (1, 0), (1, 1)])), attrs={"yeni": True}))
+    ctx.select(big)
+    ctx.summary(f"{len(rows)} parsel ölçüldü; {parcels.description}")
+    return {"parcels": out, "table": rows, "total": Array([sum(r["alan"].item() for r in rows)]),
+            "nan": float("nan"), "numbered": parcels[0].number("no")}
+
+
+class Shape:
+    """Shaped as a shapely geometry: what speaks GeoJSON through __geo_interface__."""
+
+    __geo_interface__ = {"type": "Point", "coordinates": (3.0, 4.0)}
+
+
+class Frame:
+    """Shaped as a pandas DataFrame: its columns in their order, its rows as records."""
+
+    columns = ["b", "a"]
+
+    def to_dict(self, orient):
+        assert orient == "records"
+        return [{"a": 1, "b": Scalar(2.5)}, {"a": 3, "b": None}]
+
+
+@ext.processing("libraries")
+def libraries(ctx, parcels, limit, prefix="P"):
+    import datetime
+    import decimal
+
+    first = parcels[0]
+    return {
+        "parcels": [ext.NewFeature(geometry=Shape(), attrs={"tarih": datetime.date(2026, 11, 14)}),
+                    ext.NewFeature(geometry=ext.polygon([(0, 0), (4, 0), (4, 4)], holes=[[(1, 1), (2, 1), (2, 2)]]))],
+        "table": Frame(),
+        "rows": [{"z": 1, "a": decimal.Decimal("2.5")}, {"a": 3}],
+        "geo": first.__geo_interface__,
+        "collection": parcels.__geo_interface__["type"],
+        "pts": first.pts,
+    }
+
+
+@ext.processing("slow")
+def slow(ctx, parcels):
+    for parcel in ctx.read_features(parcels):
+        pass
+    while True:
+        ctx.check()
+
+
+@ext.processing("not-a-dict")
+def not_a_dict(ctx, parcels):
+    return [1, 2]
+
+
+@ext.processing("bad-value")
+def bad_value(ctx, parcels):
+    return {"parcels": object()}
 '''
+
+
+def polygon(uid, pts, layer="parsel", attrs=None):
+    """A feature as KentOS sends it: its persistent id, its layer's name, its GeoJSON shape and its object (the slot id
+    zeroed)."""
+    ring = [list(p) for p in pts] + [list(pts[0])]
+    return {
+        "uid": uid,
+        "layer": layer,
+        "geometry": {"type": "Polygon", "coordinates": [ring]},
+        "entity": {"kind": "polygon", "id": 0, "layerId": "p", "attrs": attrs or {},
+                   "pts": [{"x": x, "y": y} for x, y in pts]},
+    }
 
 
 class Kentos:
@@ -113,21 +217,30 @@ class Kentos:
         )
         return self.receive()
 
-    def invoke(self, local: str, handler: str, cancel_after: float | None = None) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    def invoke(
+        self,
+        local: str,
+        handler: str,
+        cancel_after: float | None = None,
+        kind: str = "command",
+        params: dict[str, Any] | None = None,
+        inputs: dict[str, Any] | None = None,
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         """(done, what came before it)."""
         self.runs += 1
-        self.send(
-            {
-                "type": "invoke",
-                "id": self.runs,
-                "kind": "command",
-                "local": local,
-                "handler": handler,
-                "params": {},
-                "settings": {},
-                "document": True,
-            }
-        )
+        message: dict[str, Any] = {
+            "type": "invoke",
+            "id": self.runs,
+            "kind": kind,
+            "local": local,
+            "handler": handler,
+            "params": params or {},
+            "settings": {},
+            "document": kind == "command",
+        }
+        if inputs is not None:
+            message["inputs"] = inputs
+        self.send(message)
         if cancel_after is not None:
             time.sleep(cancel_after)
             self.send({"type": "cancel", "id": self.runs})
@@ -265,6 +378,83 @@ class ExtHostTest(unittest.TestCase):
         refused = self.kentos.hello()
         self.assertEqual(refused["type"], "refused")
         self.assertIn("kentos", refused["message"])
+
+    def test_a_processing_tool_gets_its_inputs_as_data_and_answers_with_typed_outputs(self) -> None:
+        self.kentos.hello()
+        parcels = {
+            "description": "2 kapalı alan; tüm nesneler",
+            "features": [
+                polygon("u-1", [(0, 0), (10, 0), (10, 10), (0, 10)], attrs={"no": "4,5"}),
+                polygon("u-2", [(0, 0), (2, 0), (2, 2), (0, 2)]),
+            ],
+        }
+        done, said = self.kentos.invoke(
+            "areas", "deneme.logic:areas", kind="processing", params={"limit": 50}, inputs={"parcels": parcels}
+        )
+        self.assertTrue(done["ok"], done)
+        result = done["result"]
+        self.assertEqual(result["kind"], "outputs")
+        outputs = result["outputs"]
+        self.assertEqual(outputs["parcels"][0], {"attrs": {"alan": 100.0, "no": 1}, "source": "u-1"})
+        self.assertEqual(
+            outputs["parcels"][2]["geometry"],
+            {"type": "Polygon", "coordinates": [[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]]]},
+        )
+        self.assertEqual(outputs["table"]["columns"], ["parsel", "alan", "katman"], "rows keep their columns' order")
+        self.assertEqual(outputs["table"]["rows"][1], ["P2", 4.0, "parsel"])
+        self.assertEqual(outputs["total"], [104.0], "a NumPy-shaped array comes as a list")
+        self.assertIsNone(outputs["nan"], "a NaN comes as nothing: JSON does not carry it")
+        self.assertEqual(outputs["numbered"], 4.5, "a Turkish decimal comma is read")
+        self.assertEqual(result["select"], ["u-1"])
+        self.assertEqual(result["summary"], "2 parsel ölçüldü; 2 kapalı alan; tüm nesneler")
+        self.assertFalse([m for m in said if m["type"] == "call"], "a tool does not ask for the drawing")
+
+    def test_whatever_library_made_an_output_it_comes_plain(self) -> None:
+        # Not NumPy alone: a shapely-shaped shape, a pandas-shaped table, dates and decimals (the extension's own
+        # environment decides its libraries).
+        self.kentos.hello()
+        parcels = {"features": [polygon("u-1", [(0, 0), (10, 0), (10, 10), (0, 10)])]}
+        done, _ = self.kentos.invoke(
+            "libraries", "deneme.logic:libraries", kind="processing", params={"limit": 1}, inputs={"parcels": parcels}
+        )
+        self.assertTrue(done["ok"], done)
+        out = done["result"]["outputs"]
+        self.assertEqual(out["parcels"][0]["geometry"], {"type": "Point", "coordinates": [3.0, 4.0]})
+        self.assertEqual(out["parcels"][0]["attrs"], {"tarih": "2026-11-14"})
+        hole = out["parcels"][1]["geometry"]["coordinates"][1]
+        self.assertEqual(hole[0], hole[-1], "a GeoJSON ring is closed")
+        self.assertEqual(out["table"], {"columns": ["b", "a"], "rows": [[2.5, 1], [None, 3]]})
+        self.assertEqual(out["rows"], {"columns": ["z", "a"], "rows": [[1, 2.5], [None, 3]]})
+        self.assertEqual(out["geo"]["type"], "Feature")
+        self.assertEqual(out["geo"]["id"], "u-1")
+        self.assertEqual(out["geo"]["geometry"]["type"], "Polygon")
+        self.assertEqual(out["collection"], "FeatureCollection")
+        self.assertEqual(out["pts"], [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], "the ring not closed again")
+
+    def test_a_processing_tool_is_stopped_while_it_computes(self) -> None:
+        self.kentos.hello()
+        parcels = {"features": [polygon("u-1", [(0, 0), (1, 0), (1, 1)])]}
+        started = time.monotonic()
+        done, _ = self.kentos.invoke(
+            "slow", "deneme.logic:slow", cancel_after=0.3, kind="processing", inputs={"parcels": parcels}
+        )
+        self.assertTrue(done.get("stopped"), done)
+        self.assertLess(time.monotonic() - started, 3.0)
+
+    def test_what_a_processing_tool_cannot_return_is_said_with_where(self) -> None:
+        self.kentos.hello()
+        parcels = {"features": []}
+        done, _ = self.kentos.invoke("not-a-dict", "deneme.logic:not_a_dict", kind="processing", inputs={"parcels": parcels})
+        self.assertEqual(done["exception"], "TypeError")
+        self.assertIn("sözlükte", done["message"])
+        done, _ = self.kentos.invoke("bad-value", "deneme.logic:bad_value", kind="processing", inputs={"parcels": parcels})
+        self.assertEqual(done["exception"], "TypeError")
+        self.assertIn("parcels", done["message"])
+
+    def test_a_processing_tool_is_not_run_as_a_command(self) -> None:
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("areas", "deneme.logic:areas")
+        self.assertTrue(done.get("refused"), done)
 
     def test_another_protocol_is_refused(self) -> None:
         refused = self.kentos.hello(protocol=99)

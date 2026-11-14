@@ -799,9 +799,19 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
 `document.write`, ajan kuralıyla okuma, yalnız başladığı çizim), tek geri alma adımı ve hatada/Durdur'da geri alma,
 iş birlikli Durdur (iptalden 5,5 ms sonra) ve 5 sn'de süreç sonlandırma, sınırlı çıktı ve ayrı kanallar, iz kayıtlı
 hata ve Ayrıntı'lı bildirim, çökme sayacı, yazan çalıştırmada çizimin beklemesi, şerit/bağlam menüsü/komut aramada
-aynı komut kimliği, `kentos.ext` adları (§3.4 örneğiyle). Kalan: İşlemler (tanım, parametre penceresi, NumPy aracı,
-tipli sonuç ve yeni katman, `ToolHost`), ifade işlevleri, form eylemi, MCP eşdeğerliği ve sürümlü komut kaydı,
-boştaki sürecin kapanması ve bellek ölçümü, kabulün P10–P13'ü.
+aynı komut kimliği, `kentos.ext` adları (§3.4 örneğiyle).
+
+**Durum (14 Kasım): ikinci dilim — İşlemler araçları** (ADR 8057 §7). Yapıldı: `kentos.processingTool` v1 tanımı
+(İşlemler'in parametre JSON'uyla, kod yüklenmeden okunur, uymayan tanım günlüğe), `ext.<eklenti>.<araç>` kimliğiyle
+pencere, komut, model, toplu iş, Python ve MCP için tek araç (`Registry::current()`; pencere ve komut yolunun
+eşdeğerliği sınandı), her iş parçacığından kullanılan süreç havuzu (sürüm başına süreç, Durdur → 5 sn → sonlandırma,
+zaman aşımı, çökme, 10 dk boşta kapanma, bellek ölçümü), girdiler veri olarak (UUID, GeoJSON, gizli alan kesilir),
+kütüphaneden bağımsız çıktı (GeoJSON/`__geo_interface__`, DataFrame, `tolist`/`item`), bütün denetlenen tipli sonuç ve
+tek geri alma adımı, bayt kodunun önceden derlenmesi (ilk süreç 364 → 129 MB), İmar 1.1.0'ın parsel TAKS aracı (shapely
+2.0 ve NumPy; örnek, sınırlama değil). Ölçüm: Durdur'dan 9–29 ms sonra durdu, dinlemeyen araç 5 sn'de sonlandı.
+Kalan: ifade işlevleri, denetimler, harita aracı, form eylemi, MCP'ye `tools/list_changed`, komut süreçlerinin boşta
+kapanması, büyük girdinin sayfalı aktarımı, tanımın kurulumda tam denetimi, kabulün P10–P13'ünün kalanı (P11 dosya
+hedefi ve P12 modelde zincirleme sınaması).
 
 **Süreç ve aracı:**
 - [ ] Her eklenti sürümü için ayrı süreç; IPC protokol sürümü, eklenti/sürüm/özet, istek/çalışma/oturum kimliği ve zaman

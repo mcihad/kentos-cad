@@ -259,6 +259,10 @@ impl App {
     /// Runs an extension's contribution: its environment found in the background (and this KentOS's library put in it
     /// when it holds another), then its process started when it has none and the call sent.
     pub(crate) fn ext_run(&mut self, ext: &str, kind: &str, local: &str) -> Task<Message> {
+        // An İşlemler tool opens its window; it runs from there, as the built-in tools do (tools.rs).
+        if kind == "processing" {
+            return self.processing_command(&format!("processing.run.ext.{ext}.{local}"));
+        }
         let name = self.extension_name(ext);
         if let Some(run) = self
             .extensions
@@ -307,7 +311,7 @@ impl App {
                 )?;
                 Ok(Launch {
                     pycache: kentos_python_env::extension::place(&plan.root, &ready.key)
-                        .join("pyc"),
+                        .join(kentos_python_env::extension::BYTECODE),
                     python: ready.python,
                     ..plan.launch
                 })
@@ -935,7 +939,7 @@ impl App {
 
     /// A run the user started failed: said where its start was said, beside the status bar's standing cell, with the
     /// way to its log and traceback.
-    fn failure_notice(&mut self, ext: &str, title: &str, body: String) {
+    pub(crate) fn failure_notice(&mut self, ext: &str, title: &str, body: String) {
         let name = self.extension_name(ext);
         self.toast(
             Toast::error(format!("{name}: “{title}” hata verdi"))

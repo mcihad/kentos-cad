@@ -231,9 +231,13 @@ fn item_of(
             (true, None) if kind == ContributionKind::Command => {
                 Action::Python(ext.to_owned(), "command".to_owned(), local.clone())
             }
+            // An İşlemler tool opens its window (tools.rs).
+            (true, None) if kind == ContributionKind::Processing => {
+                Action::Python(ext.to_owned(), "processing".to_owned(), local.clone())
+            }
             (true, None) => Action::Unavailable(format!(
-                "“{title}”: Python ortamı hazır; bu tür katkıları (İşlemler aracı, harita aracı, denetim, panel) \
-                 çalıştıran yürütücü KentOS'un sonraki sürümünde. Komutlar çalışır."
+                "“{title}”: Python ortamı hazır; bu tür katkıları (harita aracı, denetim, panel) çalıştıran yürütücü \
+                 KentOS'un sonraki sürümünde. Komutlar ve İşlemler araçları çalışır."
             )),
         };
         let fallback = crate::icons::from_web(Some("processing"));

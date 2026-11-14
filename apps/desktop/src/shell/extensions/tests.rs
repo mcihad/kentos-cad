@@ -1690,7 +1690,7 @@ fn an_extensions_command_runs_in_its_own_process_through_the_broker() {
         .as_ref()
         .and_then(|r| r.package_dir(IMAR))
         .unwrap();
-    let key = extension::key_for(&package, "uv.lock", IMAR, "1.0.0", &python, &[]).unwrap();
+    let key = extension::key_for(&package, "uv.lock", IMAR, "1.1.0", &python, &[]).unwrap();
     let dir = extension::place(&python_root, &key);
     std::fs::create_dir_all(&dir).unwrap();
     let ready = Ready {

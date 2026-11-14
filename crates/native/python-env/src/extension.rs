@@ -41,6 +41,13 @@ const FORMAT: &str = "kentos.extension-env";
 /// How long a check may take.
 const CHECK_LIMIT: Duration = Duration::from_secs(2 * 60);
 
+/// How long compiling an environment's code to bytecode may take.
+const COMPILE_LIMIT: Duration = Duration::from_secs(5 * 60);
+
+/// The folder of an environment's place its processes keep their bytecode in (`-X pycache_prefix`): never an
+/// extension's package, whose integrity check refuses files added to it (docs/adr/8057 §6).
+pub const BYTECODE: &str = "pyc";
+
 /// What an environment is for: the same key, the same environment.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -479,12 +486,7 @@ fn make(
         CHECK_LIMIT,
     ))
     .map_err(|why| other(format!("Ortamdaki paketler birbiriyle uyuşmuyor: {why}")))?;
-    let smoke = ["-I", "-c", "import kentos"].map(OsStr::new);
-    check_ran(uv::run(&python, &smoke, Some(dir), &[], CHECK_LIMIT)).map_err(|why| {
-        other(format!(
-            "Ortamın Python'u KentOS kitaplığını açamadı: {why}"
-        ))
-    })?;
+    precompile(&python, dir).map_err(other)?;
     let packages = listed(uv_path, dir, &python, &env).map_err(other)?;
     let record = Ready {
         format: FORMAT.to_owned(),
@@ -605,6 +607,7 @@ pub fn refresh_library(
         CHECK_LIMIT,
     ))
     .map_err(|why| format!("KentOS'un Python kitaplığı ortama konamadı: {why}"))?;
+    precompile(&ready.python, &dir)?;
     let fresh = Ready {
         sdk: sdk.sha256.clone(),
         ..ready.clone()
@@ -615,6 +618,30 @@ pub fn refresh_library(
         .and_then(|()| std::fs::rename(&part, dir.join(RECORD)))
         .map_err(|e| format!("{} yazılamadı: {e}", dir.join(RECORD).display()))?;
     Ok(fresh)
+}
+
+/// The environment's installed code compiled to bytecode where its processes read it (`<place>/pyc`, the
+/// `-X pycache_prefix` they start with), then KentOS's library opened from it: the check that the environment's Python
+/// opens the library. A process that compiles the library itself keeps the compiler's memory: an extension's first
+/// process held 355 MB where one that found the bytecode held 111 MB, and was ready in 1.8 s instead of 0.84 s
+/// (measured with the debug library, 14 November 2026). A file that does not compile (a package's test written for
+/// another Python) is left to compile when imported; only the library failing to open is a failure.
+pub fn precompile(python: &Path, dir: &Path) -> Result<(), String> {
+    let mut prefix = OsString::from("pycache_prefix=");
+    prefix.push(dir.join(BYTECODE));
+    let code = "import compileall, sysconfig\n\
+                compileall.compile_dir(sysconfig.get_paths()['purelib'], quiet=2, workers=0)\n\
+                import kentos";
+    let args: [&OsStr; 5] = [
+        OsStr::new("-I"),
+        OsStr::new("-X"),
+        &prefix,
+        OsStr::new("-c"),
+        OsStr::new(code),
+    ];
+    check_ran(uv::run(python, &args, Some(dir), &[], COMPILE_LIMIT))
+        .map(|_| ())
+        .map_err(|why| format!("Ortamın Python'u KentOS kitaplığını açamadı: {why}"))
 }
 
 /// Removes `key`'s environment.

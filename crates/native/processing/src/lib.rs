@@ -39,6 +39,7 @@ pub(crate) mod grid_record;
 pub mod command;
 pub mod designer;
 pub mod expression;
+pub mod external;
 pub mod features;
 pub mod field_map;
 pub mod files;

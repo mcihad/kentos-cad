@@ -25,6 +25,23 @@ the kind and id the manifest names (PY-RUN-08).
 - What this KentOS cannot do yet raises :class:`NotAvailable`: KentOS says so calmly, as a missing ability rather
   than a failure of the extension's code.
 
+An İşlemler tool is a function of its parameters, named as its descriptor (``tools/<id>.tool.json``) names them; it
+uses whatever its own environment holds (shapely, NumPy, pandas, SciPy, GeoPandas …: its lock decides)::
+
+    @ext.processing("taks")
+    def taks(ctx: ext.ProcessingContext, parcels: ext.FeatureInput, buildings: ext.FeatureInput, limit: float):
+        shapes = [shapely.geometry.shape(f) for f in parcels]
+        ...
+        return {"parcels": [ext.NewFeature(source=f, attrs={"taks": r}) for f, r in zip(parcels, ratios)]}
+
+- Its inputs come as data, as they were when the run began (:class:`Feature`): it does not read the drawing, and the
+  drawing is not held while it computes (PY-TOOL-09). Each input speaks GeoJSON (``__geo_interface__``, RFC 7946):
+  shapely, GeoPandas and the other Python libraries read it as it is.
+- It returns its outputs by the descriptor's names; KentOS checks every one (PY-TOOL-10) and writes them in one undo
+  step: new objects to the output layer the user chose (:class:`NewFeature`; a shape is any GeoJSON geometry or
+  anything with ``__geo_interface__``, a GeoDataFrame whole), rows to a table (dicts, or a DataFrame), numbers and
+  texts. A library's own numbers and arrays (anything with ``item()`` or ``tolist()``) come as plain ones.
+
 A separate process is not a sandbox: an extension runs with the user's rights (PY-RUN-19, 20).
 """
 
@@ -32,15 +49,20 @@ from __future__ import annotations
 
 import threading
 import time
+import math
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, TypeVar, overload
 
 __all__ = [
     "AuditFinding",
     "CommandContext",
     "CommandResult",
+    "Feature",
+    "FeatureInput",
     "GisAuditFacts",
     "MapToolContext",
+    "NewFeature",
     "NotAvailable",
     "ProcessingContext",
     "SemanticFix",
@@ -50,6 +72,9 @@ __all__ = [
     "expr",
     "map_tool",
     "marked",
+    "point",
+    "polygon",
+    "polyline",
     "processing",
 ]
 
@@ -222,8 +247,211 @@ class CommandContext:
         )
 
 
+class Feature:
+    """An object a tool was given, as it was when the run began: its persistent id (``uid``), its kind, its layer's
+    name, its attributes (texts, as KentOS keeps them) and its shape as GeoJSON (``geometry``; arcs tessellated as the
+    drawing draws them). It is a GeoJSON feature itself (``__geo_interface__``): ``shapely.geometry.shape(f)`` and
+    ``geopandas.GeoDataFrame.from_features(features)`` read it. A field the drawing hides from third parties comes
+    with its value cut, as an agent reads it (docs/adr/0738)."""
+
+    __slots__ = ("uid", "kind", "layer", "attrs", "geometry", "_raw", "_entity")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        entity = raw.get("entity") if isinstance(raw.get("entity"), dict) else {}
+        self.uid: str = str(raw.get("uid", ""))
+        self.kind: str = str(entity.get("kind", ""))
+        self.layer: str = str(raw.get("layer", ""))
+        self.attrs: dict[str, str] = {str(k): str(v) for k, v in (entity.get("attrs") or {}).items()}
+        #: Its shape, a GeoJSON geometry (Point, LineString, Polygon, their multi-part kinds); none for a kind GeoJSON
+        #: has no shape for (a text, a dimension).
+        self.geometry: dict[str, Any] | None = raw.get("geometry") if isinstance(raw.get("geometry"), dict) else None
+        self._raw: dict[str, Any] = entity
+        self._entity: Any = None
+
+    @property
+    def __geo_interface__(self) -> dict[str, Any]:
+        """The object as a GeoJSON feature: its id, its shape and its attributes as properties."""
+        return {"type": "Feature", "id": self.uid, "geometry": self.geometry, "properties": dict(self.attrs)}
+
+    @property
+    def entity(self) -> Any:
+        """Its whole object as :mod:`kentos.cad` types it (what ``ctx.doc.entities`` gives a command)."""
+        if self._entity is None:
+            from .cad import Entity
+            from .cad._runtime import decode
+
+            self._entity = decode(Entity, self._raw, "Feature.entity")
+        return self._entity
+
+    @property
+    def pts(self) -> list[tuple[float, float]]:
+        """Its vertices, ``(x, y)`` in metres, arcs tessellated: a point's one, a line's, an area's outline (without
+        repeating the first); its first part's for a multi-part one; none for a kind without a shape."""
+        g = self.geometry or {}
+        kind, c = g.get("type"), g.get("coordinates")
+        if not c:
+            return []
+        if kind == "Point":
+            return [(float(c[0]), float(c[1]))]
+        if kind in ("MultiPoint", "LineString"):
+            line = c
+        elif kind in ("Polygon", "MultiLineString"):
+            line = c[0]
+        elif kind == "MultiPolygon":
+            line = c[0][0]
+        else:
+            return []
+        out = [(float(p[0]), float(p[1])) for p in line]
+        if kind in ("Polygon", "MultiPolygon") and len(out) > 1 and out[0] == out[-1]:
+            out.pop()
+        return out
+
+    def number(self, name: str, default: float | None = None) -> float | None:
+        """An attribute as a number (``12,5`` read as 12.5); ``default`` when it is empty or not a number."""
+        text = self.attrs.get(name, "").strip().replace(" ", "")
+        if "," in text and "." not in text:
+            text = text.replace(",", ".")
+        try:
+            value = float(text)
+        except ValueError:
+            return default
+        return value if math.isfinite(value) else default
+
+    def __repr__(self) -> str:
+        return f"Feature({self.kind} {self.uid} on {self.layer!r})"
+
+
+class FeatureInput(Sequence[Feature]):
+    """A features parameter's objects, in the order KentOS resolved them, and how it described them
+    (``"12 kapalı alan; seçili nesneler"``). A GeoJSON FeatureCollection itself (``__geo_interface__``):
+    ``geopandas.GeoDataFrame.from_features(parcels)`` reads it whole."""
+
+    def __init__(self, raw: dict[str, Any] | None) -> None:
+        raw = raw or {}
+        self.description: str = str(raw.get("description", ""))
+        self._raw: list[Any] = list(raw.get("features") or [])
+        self._items: list[Feature | None] = [None] * len(self._raw)
+
+    @property
+    def __geo_interface__(self) -> dict[str, Any]:
+        return {"type": "FeatureCollection", "features": [f.__geo_interface__ for f in self]}
+
+    def __len__(self) -> int:
+        return len(self._raw)
+
+    @overload
+    def __getitem__(self, index: int) -> Feature: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list[Feature]: ...
+
+    def __getitem__(self, index: int | slice) -> Feature | list[Feature]:
+        if isinstance(index, slice):
+            return [self[i] for i in range(*index.indices(len(self)))]
+        item = self._items[index]
+        if item is None:
+            item = Feature(self._raw[index])
+            self._items[index] = item
+        return item
+
+    def __iter__(self) -> Iterator[Feature]:
+        for i in range(len(self)):
+            yield self[i]
+
+    def __repr__(self) -> str:
+        return f"FeatureInput({len(self)} nesne: {self.description!r})"
+
+
+def _xy(value: Any) -> list[float]:
+    if hasattr(value, "x") and hasattr(value, "y"):
+        return [float(value.x), float(value.y)]
+    x, y = value[0], value[1]
+    return [float(x), float(y)]
+
+
+def _pairs(pts: Iterable[Any]) -> list[list[float]]:
+    # An array of pairs (NumPy's and the like) reads fastest through its tolist, and its rows are arrays, not pairs.
+    tolist = getattr(pts, "tolist", None)
+    if callable(tolist):
+        pts = tolist()
+    return [_xy(p) for p in pts]
+
+
+def _ring(pts: Iterable[Any]) -> list[list[float]]:
+    ring = _pairs(pts)
+    if ring and ring[0] != ring[-1]:
+        ring.append(list(ring[0]))
+    return ring
+
+
+def point(x: float, y: float) -> dict[str, Any]:
+    """A point, GeoJSON, in metres."""
+    return {"type": "Point", "coordinates": _xy((x, y))}
+
+
+def polyline(pts: Iterable[Any]) -> dict[str, Any]:
+    """A line, GeoJSON: its vertices, ``(x, y)`` pairs (an array of them too)."""
+    return {"type": "LineString", "coordinates": _pairs(pts)}
+
+
+def polygon(pts: Iterable[Any], holes: Iterable[Iterable[Any]] = ()) -> dict[str, Any]:
+    """An area, GeoJSON: its outline's vertices and its holes', each ring closed as GeoJSON writes it."""
+    return {"type": "Polygon", "coordinates": [_ring(pts), *(_ring(h) for h in holes)]}
+
+
+@dataclass
+class NewFeature:
+    """An object a tool writes to an output layer: a shape of its own (``geometry``: a GeoJSON geometry, from
+    :func:`point`, :func:`polyline`, :func:`polygon`, or anything with ``__geo_interface__``, a shapely shape) or the
+    shape of one of its inputs (``source``: the :class:`Feature`, or its ``uid``), with its attributes; an input's
+    attributes come with it unless ``keep_attrs`` is false. KentOS checks every value before anything is written."""
+
+    attrs: dict[str, Any] = field(default_factory=dict)
+    geometry: Any = None
+    source: Feature | str | None = None
+    keep_attrs: bool = True
+    label: str | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"attrs": {str(k): v for k, v in self.attrs.items()}}
+        if self.geometry is not None:
+            out["geometry"] = self.geometry
+        if self.source is not None:
+            out["source"] = self.source.uid if isinstance(self.source, Feature) else str(self.source)
+            if not self.keep_attrs:
+                out["keepAttrs"] = False
+        if self.label is not None:
+            out["label"] = str(self.label)
+        return out
+
+
 class ProcessingContext(CommandContext):
-    """An İşlemler tool's context; its inputs and outputs are ADIM 19's next slice."""
+    """What an İşlemler tool is given besides its parameters: its run's controls (``check``, ``progress``, ``log``)
+    and its settings. Its inputs come as its parameters, as data; it has no drawing (``doc`` is none)."""
+
+    def __init__(
+        self,
+        link: _Link,
+        settings: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(link, None, settings, params)
+        self._summary: str | None = None
+        self._select: list[str] | None = None
+
+    def read_features(self, features: FeatureInput) -> Iterator[Feature]:
+        """A features parameter's objects one by one, Durdur answered between them."""
+        for feature in features:
+            self.check()
+            yield feature
+
+    def summary(self, text: str) -> None:
+        """The run's one line in İşlemler' history, in place of KentOS's own ("12 nesne eklendi")."""
+        self._summary = str(text)[:500]
+
+    def select(self, features: Iterable[Feature | str]) -> None:
+        """Leaves these inputs selected in the drawing when the run ends (a session result, not a change)."""
+        self._select = [f.uid if isinstance(f, Feature) else str(f) for f in features]
 
 
 class MapToolContext(CommandContext):

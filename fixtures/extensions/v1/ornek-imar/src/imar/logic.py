@@ -1,11 +1,13 @@
 """İmar Uygunluk Denetimi'nin işlevleri: yalnız @ext.* ile işaretli fonksiyonlar (plan/eklenti.md §3.4, ADIM 19).
 
 Kimlikler manifestteki yerel kimliklerdir. shapely'nin 2.0 serisine bağlıdır (P05: MEBİS 2.2'yi kilitler); raporda
-hangi sürümle çalıştığı yazar.
+hangi sürümle çalıştığı yazar. TAKS aracı (İşlemler) girdilerini veri olarak alır; her girdi GeoJSON konuştuğu için
+shapely onu doğrudan okur (shape). NumPy da bir örnektir: eklenti ortamındaki her kütüphaneyi kullanabilir.
 """
 
+import numpy as np
 import shapely
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, shape
 
 from kentos import ext
 
@@ -14,9 +16,10 @@ VARSAYILAN_M = 5.0
 
 
 def _katman(doc, ad):
-    """Adı verilen katmanın kimliği; yoksa None."""
+    """Kimliği ya da adı verilen katmanın kimliği (KentOS'un CBS şablonunda "parsel" ve "yapi" kimlikli katmanlar);
+    yoksa None."""
     for layer in doc.layers():
-        if getattr(layer, "name", None) == ad:
+        if layer.id == ad or getattr(layer, "name", None) == ad:
             return layer.id
     return None
 
@@ -30,7 +33,7 @@ def check_setbacks(ctx: ext.CommandContext) -> ext.CommandResult:
     limit = float(ctx.settings.get("yaklasma_m", VARSAYILAN_M))
     yapi, parsel = _katman(ctx.doc, "yapi"), _katman(ctx.doc, "parsel")
     if yapi is None or parsel is None:
-        return ctx.message("Çizimde 'yapi' ve 'parsel' adlı katmanlar yok.")
+        return ctx.message("Çizimde 'yapi' ve 'parsel' kimlikli ya da adlı katmanlar yok.")
     parseller = [Polygon(r.entity.pts) for r in ctx.doc.entities(layer=parsel, kinds=["polygon"])]
     yapilar = list(ctx.doc.entities(layer=yapi, kinds=["polygon"]))
     secili = set(ctx.doc.selection())
@@ -63,3 +66,77 @@ def check_setbacks(ctx: ext.CommandContext) -> ext.CommandResult:
     else:
         sonuc = f"{len(yapilar)} yapı denetlendi; hepsi {limit:g} m sınırın dışında."
     return ctx.report(rows, title="Yaklaşma mesafesi denetimi", message=f"{sonuc} (shapely {shapely.__version__})")
+
+
+def _etiket(feature: ext.Feature, n: int) -> str:
+    """Bir parselin tablodaki adı: ada/parsel öznitelikleri varsa onlar, yoksa sırası."""
+    attrs = {k.casefold(): v for k, v in feature.attrs.items() if v}
+    ada, parsel = attrs.get("ada"), attrs.get("parsel")
+    if ada and parsel:
+        return f"{ada}/{parsel}"
+    return parsel or attrs.get("no") or str(n)
+
+
+@ext.processing("taks")
+def taks(
+    ctx: ext.ProcessingContext,
+    parseller: ext.FeatureInput,
+    yapilar: ext.FeatureInput,
+    taks_siniri: float,
+) -> dict:
+    """Her imar parselinin taban alanı katsayısı (Planlı Alanlar İmar Yönetmeliği md. 4: taban alanının imar parseli
+    alanına oranı): yapıların parselin içinde kalan alanlarının toplamı / parsel alanı. Kesişimler shapely 2.0'ın
+    vektörel işlemleriyle (STRtree), toplamlar NumPy ile (bincount); KentOS'a giden yalnız sonuçtur."""
+    limit = float(taks_siniri if taks_siniri is not None else 0.4)
+    ctx.progress(0, 3, "Şekiller okunuyor")
+    parsel = np.array([shape(f.geometry) for f in ctx.read_features(parseller)], dtype=object)
+    yapi = np.array([shape(f.geometry) for f in ctx.read_features(yapilar)], dtype=object)
+    ctx.progress(1, 3, "Yapılar parsellerle kesiştiriliyor")
+    taban = np.zeros(len(parsel))
+    sayi = np.zeros(len(parsel), dtype=int)
+    if len(parsel) and len(yapi):
+        # Her (parsel, yapı) kesişen çifti bir kez; bir yapının parselden taşan kısmı o parsele sayılmaz.
+        i_parsel, i_yapi = shapely.STRtree(yapi).query(parsel, predicate="intersects")
+        kesisim = shapely.area(shapely.intersection(parsel[i_parsel], yapi[i_yapi]))
+        icinde = kesisim > 1e-6
+        taban = np.bincount(i_parsel[icinde], weights=kesisim[icinde], minlength=len(parsel))
+        sayi = np.bincount(i_parsel[icinde], minlength=len(parsel))
+    ctx.progress(2, 3, "TAKS hesaplanıyor")
+    alan = shapely.area(parsel).astype(float) if len(parsel) else np.zeros(0)
+    oran = np.divide(taban, alan, out=np.zeros_like(taban), where=alan > 0)
+    asiyor = oran > limit + 1e-9
+    cikti, tablo = [], []
+    for n, (f, a, t, r, s, x) in enumerate(zip(parseller, alan, taban, oran, sayi, asiyor), start=1):
+        durum = "aşıyor" if x else "uygun"
+        cikti.append(
+            ext.NewFeature(
+                source=f,
+                attrs={
+                    "parsel_alani_m2": round(float(a), 2),
+                    "taban_alani_m2": round(float(t), 2),
+                    "taks": round(float(r), 3),
+                    "taks_siniri": limit,
+                    "yapi_sayisi": int(s),
+                    "durum": durum,
+                },
+            )
+        )
+        tablo.append(
+            {
+                "parsel": _etiket(f, n),
+                "parsel alanı (m²)": round(float(a), 2),
+                "taban alanı (m²)": round(float(t), 2),
+                "TAKS": round(float(r), 3),
+                "sınır": limit,
+                "durum": durum,
+            }
+        )
+    ctx.select(f for f, x in zip(parseller, asiyor) if x)
+    asan = int(asiyor.sum())
+    ctx.log(f"{len(parsel)} parsel, {len(yapi)} yapı; shapely {shapely.__version__}, NumPy {np.__version__}.")
+    sinir = f"{limit:g}".replace(".", ",")  # Türkçe ondalık virgül
+    ctx.summary(
+        f"{len(parsel)} parselin TAKS'ı hesaplandı; {asan} parsel plan notundaki {sinir} sınırını aşıyor"
+        + (" ve çizimde seçildi." if asan else ".")
+    )
+    return {"parseller": cikti, "tablo": tablo, "asan": asan}

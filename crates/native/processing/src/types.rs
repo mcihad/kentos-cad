@@ -626,6 +626,8 @@ impl<'d> Resolved<'d> {
 
 /// What a run may consult beyond its inputs (the web's `RunContext`).
 pub struct RunContext<'d> {
+    /// The running tool's id: what an extension's tool is found by (external.rs).
+    pub tool: &'d str,
     pub doc: &'d Document,
     pub units: &'d Defaults,
     /// Selected when the run started (selection tools combine with it).

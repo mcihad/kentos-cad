@@ -2,17 +2,17 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.imar-denetim",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "İmar Uygunluk Denetimi",
   "icon": "assets/imar.svg",
-  "summary": "Yapıların parsel sınırına yaklaşma mesafesini imar planına göre denetler.",
-  "description": "Yapıların (seçili yapı varsa yalnız onların) parsel sınırına en kısa uzaklığını hesaplar; plan notundaki yaklaşma mesafesinden yakın ya da parsel dışında kalanları raporlar ve çizimde seçer. Geometri hesabı için shapely'nin 2.0 serisini kullanır; aynı bilgisayarda shapely 2.2 isteyen bir eklentiyle kendi ortamında yan yana çalışır.",
+  "summary": "Yapıların parsel sınırına yaklaşma mesafesini ve parsellerin TAKS'ını imar planına göre denetler.",
+  "description": "Yapıların (seçili yapı varsa yalnız onların) parsel sınırına en kısa uzaklığını hesaplar; plan notundaki yaklaşma mesafesinden yakın ya da parsel dışında kalanları raporlar ve çizimde seçer. İşlemler'e parsel TAKS hesabını ekler: taban alanının imar parseli alanına oranını bulur, plan notundaki sınırı aşanları işaretler ve parselleri yeni katmana yazar. Geometri hesabı için shapely'nin 2.0 serisini ve NumPy'yi kullanır; aynı bilgisayarda shapely 2.2 isteyen bir eklentiyle kendi ortamında yan yana çalışır.",
   "authors": ["Örnek Belediyesi İmar ve Şehircilik Müdürlüğü"],
   "publisherId": "ornek-belediye",
   "license": "CC-BY-4.0",
   "licenseFile": "LICENSE",
   "changelogFile": "CHANGELOG.md",
-  "keywords": ["imar", "yaklaşma mesafesi", "denetim"],
+  "keywords": ["imar", "yaklaşma mesafesi", "TAKS", "denetim"],
   "kind": "vertical",
   "modules": ["cbs"],
   "runtimes": ["desktop", "headless"],
@@ -28,6 +28,9 @@
   "entrypoints": {
     "commands": [
       { "id": "check-setbacks", "title": "Yaklaşma mesafelerini denetle", "handler": "imar.logic:check_setbacks" }
+    ],
+    "processing": [
+      { "id": "taks", "descriptor": "tools/taks.tool.json", "handler": "imar.logic:taks" }
     ]
   },
   "contributions": {
@@ -37,13 +40,20 @@
         "label": "İmar",
         "module": "cbs",
         "panels": [
-          { "label": "Denetim", "items": [{ "command": "check-setbacks", "size": "large", "icon": "assets/imar.svg" }] }
+          {
+            "label": "Denetim",
+            "items": [
+              { "command": "check-setbacks", "size": "large", "icon": "assets/imar.svg" },
+              { "processing": "taks", "label": "TAKS", "size": "large", "icon": "assets/taks.svg" }
+            ]
+          }
         ]
       }
     ]
   },
   "requestedCapabilities": [
     { "id": "document.read", "scope": "current-project", "reason": "Yapı ve parsel katmanlarını okur." },
+    { "id": "processing.provider", "scope": "plugin-owned", "reason": "Parsel TAKS hesabını İşlemler'e ekler." },
     { "id": "ui.ribbonTab", "scope": "plugin-owned", "reason": "CBS'de İmar sekmesini açar." }
   ]
 }

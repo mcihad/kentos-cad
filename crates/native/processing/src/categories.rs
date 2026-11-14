@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 30] = [
+pub const CATEGORIES: [Category; 31] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -226,5 +226,12 @@ pub const CATEGORIES: [Category; 30] = [
         "Çok boyutlu veri",
         "multidimData",
         "Kesit, zaman serisi ve mesh hesaplayıcı",
+    ),
+    // plan/eklenti.md ADIM 19 (external.rs): the installed extensions' tools, each run by its extension's Python.
+    category(
+        "extensions",
+        "Eklentiler",
+        "extensions",
+        "Kurulu eklentilerin araçları; her biri eklentinin kendi Python ortamında çalışır",
     ),
 ];

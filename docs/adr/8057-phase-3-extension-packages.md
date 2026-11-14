@@ -803,6 +803,98 @@ Kod: `python/kentos/ext.py` (eklentinin gördüğü), `python/kentos/ext_host.py
 - **Gerçek pencere (yalıtılmış eklenti ve Python klasörleriyle):** İmar ve yalnız sınama için yazılan, depoya girmeyen
   "Deneme Yazıcı" katalog klasöründen kuruldu; Deneme Yazıcı'nın ortamı arayüzden hazırlandı ("0 paket · internetsiz
   çalışır"); bayt kodu hatası bulundu, düzeltildi ve bozulan eklenti Sorunlu › Yeniden dene ile açıldı.
-- **Sonraya kalan (ADIM 19'un kalanı):** İşlemler araçları (tanım → parametre penceresi, NumPy aracı, tipli sonuç →
-  yeni katman), ifade işlevleri, denetimler, harita aracı, form eylemleri, MCP eşdeğerliği ve sürümlü komut kaydı,
-  boştaki sürecin kapanması ve süreç başına bellek ölçümü.
+- **Sonraya kalan:** İşlemler araçları, süreç başına bellek ve boştaki sürecin kapanması ikinci dilimde (§7); ifade
+  işlevleri, denetimler, harita aracı, form eylemleri §7'nin sonunda.
+
+## §7. İşlemler araçları: tanımdan pencere, ayrı süreçte iş, tipli sonuç (`ADIM 19`, ikinci dilim)
+
+**14 Kasım.** Sahip: "durma demiştim"; dilim ortasında: "Biz sadece numpy ile çalışmayacağız, numpy örnek olsun diye
+söyledim." Altyapı kütüphaneden bağımsızdır: her eklenti kendi paketlerini kendi kilidiyle getirir, KentOS yalnız giden ve
+dönen veriyi görür. Kod: `python/kentos/ext.py`, `python/kentos/ext_host.py`, `crates/native/processing/src/external.rs`,
+`crates/native/python-env/src/process.rs`, `apps/desktop/src/shell/extensions/tools.rs`; örnek: İmar 1.1.0.
+
+- **Araç tanımı (`kentos.processingTool` v1, `tools/<id>.tool.json`):** `format`, `schemaVersion`, `id` (manifestteki
+  yerel kimlik), `label`, `description`, `help`, `keywords`, `parameters`, `outputs`, `feedback`,
+  `capabilities.runtimes` (verilirse `desktop-python` içermeli), `timeoutSeconds` (varsayılan 600, en çok 3600).
+  **Parametreler İşlemler'in kendi JSON'uyla** (`web_param::param_from_json`, web'in `ParamDef`'i; modeller ve ortak
+  vakalar da böyle tutar): planın §3.3 taslağındaki `id`/`required`/`accepts` biçimi alınmadı; web araçları, modeller,
+  ortak vakalar ve eklentiler tek parametre sözleşmesini paylaşır (PY-TOOL-04). Desteklenen türler: `features`, `number`,
+  `string`, `boolean`, `enum`, `field`, `point`, `layer`; başkası yeriyle reddedilir. Adlar Python adı olmalı (işleve
+  anahtar sözcük argümanı olarak gider; `ctx` ve Python'un sözcükleri olmaz), tekrarsız; `field.of` ve
+  `visibleWhen.param` var olan bir parametreyi göstermeli. Çıktılar: `features` (`sinkParameter` bir katman
+  parametresini adlandırır), `table`, `number`, `string`. Tanım kod yüklenmeden okunur (PY-TOOL-02): masaüstü kayıt
+  defteri değişince okur; uymayan tanım oturumda bir kez eklentinin günlüğüne yazılır, aracı listelenmez. Kurulumdaki
+  paket denetimi yalnız biçimi ve kimliği bakar (paylaşılan crate İşlemler'i tanımaz); tam denetim listelemede.
+- **Tek araç, her yerden (PY-TOOL-21):** kimlik `ext.<eklenti>.<yerel>`; `Registry::current()` yerleşiklerle eklentilerin
+  araçlarını birlikte verir: pencere (araç kutusunda **Eklentiler** dalı), komut, model, toplu iş, `cad.processing.tools`
+  ve `.run` (Python, MCP). Sınama: aynı araç pencere yolundan (çalıştırıcı) ve komut yolundan (`ToolHost`) aynı nesneleri
+  aynı özniteliklerle yazar. İmar'ın şeritteki TAKS düğmesi aracın penceresini açar. Eklenti kapatılınca araç çıkar;
+  liste değişince `external::generation()` artar (sürümlü kayıt).
+- **Ayrı süreç, her iş parçacığından:** `kentos_python_env::process::Pool`: eklenti sürümüne bir süreç, çalıştırmalar
+  arasında kalır, bir süreçte bir çalıştırma (ikincisi sırasını bekler, Durdur'u duyarak); Durdur → `cancel`, 5 sn'de
+  yanıt yoksa süreç sonlandırılır; zaman aşımı aynı yoldan; kendiliğinden kapanan süreç hata çıktısının son satırlarıyla
+  çökme sayılır (bekçiye gider); 10 dk kullanılmayan süreç kapanır (D6, Ö·9); belleği Linux'un `/proc`'undan okunur.
+  Araçlar yalnız `Worker` hedefli: pencere hiç beklemez. İşlemler süreçleri komutlarınkinden (runner.rs) ayrıdır: komut
+  çizime aracıyla ana iş parçacığında erişir, araç verisini taşır; birleştirme sonraya.
+- **Girdiler veri olarak (PY-TOOL-05, 07, 09):** her nesne kalıcı kimliği (UUID), katmanının adı, GeoJSON şekli ve
+  nesnesiyle (iç yuva kimliği sıfırlanır) gider; çizimin üçüncü taraflardan gizlediği alanların değerleri `‹gizli›`
+  yazılır, gizli alanı seçen alan parametresi reddedilir (ADR 0738, 0743). Katman parametresi host'undur (çıktının
+  yeri), işleve gitmez. Aracın çizimi yoktur: sürecin `call`'u `capability` ile reddedilir; çizim hesap boyunca
+  tutulmaz.
+- **Kütüphaneden bağımsız:** şekiller iki yönde GeoJSON (RFC 7946) ve Python coğrafi kütüphanelerinin ortak
+  `__geo_interface__`'i: `ext.Feature` bir GeoJSON Feature'ı, `ext.FeatureInput` bir FeatureCollection'dır
+  (`shapely.geometry.shape(f)`, `GeoDataFrame.from_features(...)`); çıktıda `ext.NewFeature` (GeoJSON ya da
+  `__geo_interface__`'li bir şekil, ya da bir girdinin şekli: `source`, öznitelikleriyle), GeoJSON Feature sözlükleri ya
+  da bütün bir FeatureCollection (GeoDataFrame). Tablo: satır sözlükleri, bir DataFrame (sütun sırasıyla) ya da
+  `{columns, rows}`. Sayılar: `tolist()`/`item()` veren her dizi ve sayı (NumPy, pandas …), Decimal, ISO tarih; NaN ve
+  sonsuz → boş. Yaylar GeoJSON'a 1 mm'lik kirişlerle iner (`ops::derive::path_chords`): kirişi 30 m, yay değeri 0,3
+  olan parsel 69 kirişe bölünür, alanı yayınkinden 0,02 m² eksik (991,58; kesin 991,60 m²); çizimin kendi 5°'lik bölmesi
+  0,50 m² eksik veriyordu (gerçek pencerede 991,10 m² görüldü, düzeltildi).
+- **Tipli sonuç, bütün denetlenir (PY-TOOL-10):** tanımda olmayan çıktı, türü tutmayan değer, girdiler arasında olmayan
+  `source`/`select` kimliği, 3 köşeden az halka, sonlu olmayan koordinat, liste ya da sözlük öznitelik, 500 000 nesneden
+  ya da 100 000 satırdan fazlası, 10 000 karakterden uzun metin: "“…” tipli sonucu geçersiz: …" ile hiçbir şey yazılmaz,
+  geri alma adımı açılmaz. Katman alanları değerleri yerleşik araçlarınki gibi denetler (`writes::check`). Yeni nesnenin
+  görünüşü katmanınındır (kopyada renk, sembol, çizgi kalınlığı, etiket iğneleri, ekler ve görünüş sıfırlanır); çok
+  parçalı şekiller ve delikler korunur. Tablo `{columns, rows}` olarak gelir: Rust'ın JSON nesnesi anahtarları sıralıyor,
+  sütun sırası kayboluyordu.
+- **Tek geri alma adımı (PY-TOOL-11, 17):** yeni katman ve nesneleri çalıştırıcının tek adımında, adı aracın adı.
+  Gerçek pencerede tek Geri al: "Geri alındı: Parsel TAKS hesabı", TAKS katmanı ve dört nesnesi gitti.
+- **Açıkça söylenir:** köprünün iş parçacığı notlar bırakır, pencerenin iş parçacığı yazar: `run_started`,
+  `run_finished` (süre ve süreç belleği), `run_stopped` ("Durdur'dan 9 ms sonra durdu"), `run_killed`, `run_timed_out`,
+  `run_failed` (iz kaydı ve yazdırılanlarla), `runner_crashed` (bekçiye), `runner_not_started`, `handler_refused`,
+  `run_unavailable`; hata bildirimi "… hata verdi" ve **Ayrıntı**. Pencere sonucu ya da hatayı kendi satırında da söyler.
+- **Bayt kodu önceden derlenir:** gerçek pencerede ilk TAKS süreci 364 MB tutuyordu. Neden ölçüldü: süreç KentOS
+  kitaplığının bayt kodunu kendisi derliyordu (ortamın `pyc` klasörü, 17 MB) ve Python derleyicinin belleğini işletim
+  sistemine geri vermiyor. Ortam hazırlanırken ve kitaplık tazelenirken bayt kodu ayrı, kısa ömürlü bir süreçte
+  sürecin okuyacağı yere derlenir (`extension::precompile`, 2,2 sn, 15 MB; kitaplığın açıldığı denetimi de odur): ilk
+  süreç hazır olduğunda 113 MB (1,8 yerine 0,85 sn), TAKS'tan sonra 129 MB; gerçek pencerede "Bitti (1,6 sn; süreç
+  belleği 129 MB)" (önce "Bitti (2,9 sn; süreç belleği 364 MB)").
+- **Süreç başına bellek (hata ayıklama kitaplığıyla, Linux):** yalın Python 10 MB; NumPy ve shapely 26 MB; `import kentos`
+  111 MB (hata ayıklama derlemesinin `_native.abi3.so`'su 313 MB); TAKS'tan sonra 129 MB; paketsiz Deneme Yazıcı
+  111 MB. Yayın derlemesinin kitaplığıyla ölçülmedi (daha küçük beklenir); işlem aracının yerel modüle ihtiyacı yoktur,
+  tembel yükleme ayrı bir karar.
+- **Durdur (gerçek pencere):** Durdur'u dinleyen araç Durdur'dan 29 ms ve 9 ms sonra durdu (planın hedefi: iptal 100 ms'de
+  görünür, hesap 1 sn'de durur); dinlemeyen araç ("İnatçı") 5 sn sonra sonlandırıldı, çizim değişmedi; pencere Durdur'da
+  hemen "İşlem iptal edildi; çizim değişmedi." der.
+- **İmar 1.1.0: Parsel TAKS hesabı** (Planlı Alanlar İmar Yönetmeliği md. 4: taban alanının imar parseli alanına oranı):
+  shapely 2.0'ın `STRtree` ve vektörel kesişimi, NumPy'nin `bincount`'u; parseller seçilen katmana `parsel_alani_m2`,
+  `taban_alani_m2`, `taks`, `taks_siniri`, `yapi_sayisi`, `durum` ile kopyalanır, tablo yazılır, sınırı aşanlar seçilir.
+  Varsayılan girdiler KentOS CBS şablonunun standart katmanları (`parsel`: "Parsel sınırı", `yapi`: "Yapı"); yaklaşma
+  komutu da katmanları kimlikle bulur. NumPy açık bağımlılık (kilit en az değişiklikle: sürümler aynı). Gerçek pencerede
+  (sentetik çizim, sınır 0,40): 101/1 450/900 = 0,5 aşıyor (iki parsele taşan yapının 50 m²'si dahil); 101/2 0,271;
+  101/3 yaylı, 225/991,58 = 0,227; 102/1 200/500 = 0,4, sınırda, aşmaz.
+- **Uygularken verilen kararlar (planda yazılı değildi):** parametreler İşlemler'in JSON'uyla; tek şekil biçimi GeoJSON;
+  yay kirişleri 1 mm; çıktılar adlarıyla bir sözlükte; tablo `{columns, rows}`; işlem süreçleri komut süreçlerinden ayrı;
+  araçlar yalnız arka planda; katman parametresi host'un; zaman aşımı 600 sn; boşta 10 dk; uymayan tanım bir kez
+  yazılır, aracı listelenmez; şablon katman kimlikleri varsayılan; NumPy açık bağımlılık; bayt kodu önceden derlenir;
+  araç kutusunda "Eklentiler" dalı; aracın yardımı "ayrı süreç bir korumalı alan değildir" der (PY-RUN-19); süre,
+  bellek ve Durdur gecikmesi günlükte; "Deneme Yazıcı" 0.2.0'a dinleyen ve dinlemeyen iki deneme aracı (depoda değil).
+- **Sınamalar:** Python 14 (`test_ext_host`: girdiler veri olarak, tipli çıktılar, kütüphane biçimli değerler, Durdur,
+  yanlış dönüş), İşlemler 7 (`tests/external.rs`: tanım, pencere ve komut eşdeğerliği, kalıcı kimlik ve gizli alan,
+  geçersiz sonucun hiçbir şey yazmaması, GeoJSON şekilleri, yayların kirişleri ve alanı), python-env 24 (süreç havuzu 6:
+  süreç korunur, Durdur önce sorulur sonra sonlandırır, zaman aşımı, çökme, çizim isteği reddi, boşta kapanma, bellek),
+  masaüstü eklenti sahneleri 21 (listeleme, şerit düğmesi ve pencere, kapatınca çıkma, uymayan tanım, sonuç okuma).
+- **Sonraya kalan (ADIM 19'un kalanı):** ifade işlevleri, denetimler, harita aracı, form eylemleri; sürümlü kaydın MCP'ye
+  `tools/list_changed` ile bildirilmesi; komut süreçlerinin de boşta kapanması; büyük girdinin sayfalı/ikili aktarımı
+  (PY-TOOL-08: girdi şimdi tek mesajda); tanımın kurulumda tam denetimi (ADIM 21'in `extension.verify`'ı); modelde
+  yerleşik araçla zincirlemenin sınaması (P12) ve dosya/GeoPackage hedefinin gerçek pencere sınaması (P11).

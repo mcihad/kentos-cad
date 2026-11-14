@@ -974,6 +974,7 @@ impl Runner {
             store: Some(geometry.store()),
         };
         let ctx = RunContext {
+            tool: &job.tool.id,
             doc,
             units: &units,
             selection: &job.selection,

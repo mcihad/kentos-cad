@@ -55,7 +55,7 @@ pub(crate) fn batch_to_sink(
     write: bool,
     flow: &dyn BatchFlow,
 ) -> Result<BatchEnd, Box<CommandError>> {
-    let registry = Registry::builtin();
+    let registry = Registry::current();
     let clock = (now_ms(), Instant::now());
     let target = sink_target(sink)?;
     let total = input.rows.len() as u64;

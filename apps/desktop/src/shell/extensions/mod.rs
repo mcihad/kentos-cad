@@ -17,6 +17,7 @@ mod problems;
 mod ribbon;
 pub(crate) mod runner;
 mod search;
+pub(crate) mod tools;
 mod view;
 
 pub(crate) use search::ExtHit;
@@ -113,6 +114,8 @@ pub(crate) struct Extensions {
     pub(crate) runner_generation: u64,
     /// The last run's result: the extension, its title, what it returned.
     pub(crate) result: Option<(String, String, serde_json::Value)>,
+    /// Their İşlemler tools: listed from the registry, run in the extension versions' processes (tools.rs).
+    pub(crate) tools: tools::ExtTools,
 }
 
 impl Default for Extensions {
@@ -141,6 +144,7 @@ impl Default for Extensions {
             run_counter: 0,
             runner_generation: 0,
             result: None,
+            tools: tools::ExtTools::default(),
         }
     }
 }
@@ -429,6 +433,7 @@ impl App {
     /// follow.
     pub(crate) fn extensions_changed(&mut self) {
         self.extension_tabs_changed();
+        self.ext_tools_changed();
         self.extensions.troubles = problems::troubles(&self.extensions);
         self.extensions.icons = self
             .extensions

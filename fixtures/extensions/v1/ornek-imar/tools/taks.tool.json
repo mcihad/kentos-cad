@@ -1,0 +1,106 @@
+{
+  "format": "kentos.processingTool",
+  "schemaVersion": 1,
+  "id": "taks",
+  "version": "1.0.0",
+  "label": "Parsel TAKS hesabı",
+  "description": "Her imar parselinin taban alanı katsayısını (TAKS) hesaplar, plan notundaki sınırı aşanları işaretler ve parselleri yeni bir katmana yazar.",
+  "help": "TAKS, taban alanının imar parseli alanına oranıdır (Planlı Alanlar İmar Yönetmeliği, madde 4). Taban alanı, yapıların parselin içinde kalan kısımlarının alanları toplanarak bulunur: iki parsele taşan bir yapının her parseldeki kısmı o parsele sayılır.\n\nParseller seçtiğiniz katmana taban alanı, parsel alanı, TAKS, sınır ve durum öznitelikleriyle kopyalanır; sınırı aşan parseller çizimde seçili kalır. Hesap eklentinin kendi ortamındaki shapely 2.0 ve NumPy ile yapılır; yay kenarlı parseller çizimdeki gibi yaylarıyla hesaplanır.",
+  "keywords": [
+    "taks",
+    "taban alanı",
+    "taban alanı katsayısı",
+    "imar",
+    "plan notu"
+  ],
+  "parameters": [
+    {
+      "name": "parseller",
+      "label": "İmar parselleri",
+      "type": "features",
+      "kinds": [
+        "polygon"
+      ],
+      "scopes": [
+        "layer",
+        "selection",
+        "visible",
+        "all"
+      ],
+      "default": {
+        "scope": "layer",
+        "layerId": "parsel"
+      },
+      "description": "TAKS'ı hesaplanacak imar parselleri."
+    },
+    {
+      "name": "yapilar",
+      "label": "Yapılar",
+      "type": "features",
+      "kinds": [
+        "polygon"
+      ],
+      "scopes": [
+        "layer",
+        "selection",
+        "visible",
+        "all"
+      ],
+      "default": {
+        "scope": "layer",
+        "layerId": "yapi"
+      },
+      "allowEmpty": true,
+      "description": "Yapıların taban alanı çizgileri (±0,00 kotunda parsele oturan kısımları)."
+    },
+    {
+      "name": "taks_siniri",
+      "label": "Plan notundaki en çok TAKS",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "default": 0.4,
+      "description": "İmar planı notlarında bu parseller için verilen en büyük TAKS (ör. 0,40)."
+    },
+    {
+      "name": "cikti",
+      "label": "Çıktı katmanı",
+      "type": "layer",
+      "default": {
+        "newName": "TAKS"
+      },
+      "newLayerStyle": {
+        "color": "#c2410c",
+        "lineWeight": 0.35,
+        "fill": "#f9731633"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "name": "parseller",
+      "label": "TAKS'ı hesaplanan parseller",
+      "type": "features",
+      "sinkParameter": "cikti"
+    },
+    {
+      "name": "tablo",
+      "label": "TAKS tablosu",
+      "type": "table"
+    },
+    {
+      "name": "asan",
+      "label": "Sınırı aşan parsel sayısı",
+      "type": "number"
+    }
+  ],
+  "feedback": {
+    "progress": true,
+    "cancel": true
+  },
+  "capabilities": {
+    "runtimes": [
+      "desktop-python"
+    ]
+  }
+}

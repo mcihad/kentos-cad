@@ -25,6 +25,8 @@ pub struct CategoryNode {
 #[derive(Clone)]
 pub struct Registry {
     tools: Vec<Tool>,
+    /// The tools that ship with KentOS come first; the extensions' after them (external.rs).
+    builtin_tools: usize,
     models: Vec<Model>,
     builtin_models: usize,
 }
@@ -39,11 +41,37 @@ impl Registry {
     /// The tools and models that ship with KentOS.
     pub fn builtin() -> Self {
         let models = builtin::models();
+        let tools = builtin::tools();
         Self {
-            tools: builtin::tools(),
+            builtin_tools: tools.len(),
+            tools,
             builtin_models: models.len(),
             models,
         }
+    }
+
+    /// The tools and models that ship with KentOS and the tools the installed extensions add now (external.rs): what
+    /// the commands, the window and the models list and run.
+    pub fn current() -> Self {
+        let mut registry = Self::builtin();
+        registry.set_external(crate::external::tools());
+        registry
+    }
+
+    /// The extensions' tools as they are now, in place of those this registry held; one with a built-in tool's id is
+    /// left out.
+    pub fn set_external(&mut self, tools: Vec<Tool>) {
+        self.tools.truncate(self.builtin_tools);
+        for t in tools {
+            if self.tools.iter().all(|b| b.id != t.id) {
+                self.tools.push(t);
+            }
+        }
+    }
+
+    /// The extensions' tools this registry holds.
+    pub fn external(&self) -> &[Tool] {
+        &self.tools[self.builtin_tools..]
     }
 
     pub fn tools(&self) -> &[Tool] {
