@@ -84,9 +84,9 @@ fn the_golden_manifests_pass_and_round_trip() {
     }
     let m = Manifest::parse(MEBIS).unwrap();
     assert_eq!(m.kind, ExtensionKind::Vertical);
-    // init-schema, search (its panel's button, docs/adr/8057 §24), the map tool, the İşlemler tool, the audit, the
-    // expression function.
-    assert_eq!(m.handlers().len(), 6);
+    // init-schema, search (its panel's button, docs/adr/8057 §24), the map tool, the two İşlemler tools (a table, a
+    // layer), the audit, the expression function.
+    assert_eq!(m.handlers().len(), 7);
     assert!(!m.is_preview());
     assert_eq!(m.capabilities().len(), 10);
     let roles: Vec<FileRole> = m.references().iter().map(|r| r.role).collect();

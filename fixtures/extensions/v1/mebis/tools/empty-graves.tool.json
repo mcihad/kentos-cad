@@ -1,0 +1,71 @@
+{
+  "format": "kentos.processingTool",
+  "schemaVersion": 1,
+  "id": "empty-graves",
+  "version": "1.0.0",
+  "label": "Boş mezar yerleri",
+  "category": "Mezarlık BS",
+  "description": "Durumu boş olan mezar yerlerini yeni bir katmana yazar ve sayısını verir: defin planlaması için.",
+  "keywords": [
+    "mezarlık",
+    "boş",
+    "mezar yeri",
+    "defin"
+  ],
+  "parameters": [
+    {
+      "name": "graves",
+      "label": "Mezar yerleri",
+      "type": "features",
+      "kinds": [
+        "polygon"
+      ],
+      "scopes": [
+        "layer",
+        "selection",
+        "visible",
+        "all"
+      ],
+      "default": {
+        "scope": "layer",
+        "layerId": "mezar_yeri"
+      },
+      "description": "Durumu (durum) yazılı mezar yerleri; boş olanlar (BOS) alınır."
+    },
+    {
+      "name": "output",
+      "label": "Çıktı katmanı",
+      "type": "layer",
+      "default": {
+        "newName": "Boş mezar yerleri"
+      },
+      "newLayerStyle": {
+        "color": "#15803d",
+        "lineWeight": 0.35,
+        "fill": "#22c55e33"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "name": "empty",
+      "label": "Boş mezar yerleri",
+      "type": "features",
+      "sinkParameter": "output"
+    },
+    {
+      "name": "count",
+      "label": "Boş mezar yeri sayısı",
+      "type": "number"
+    }
+  ],
+  "feedback": {
+    "progress": true,
+    "cancel": true
+  },
+  "capabilities": {
+    "runtimes": [
+      "desktop-python"
+    ]
+  }
+}

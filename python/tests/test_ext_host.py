@@ -634,6 +634,31 @@ class ReferenceExtensionTest(unittest.TestCase):
         done, _ = self.kentos.invoke("search", "mebis.logic:search", params={"query": ""})
         self.assertEqual([r["Mezar no"] for r in done["result"]["rows"]], ["M-12", "M-13"])
 
+    def test_its_second_tool_writes_the_empty_graves_to_a_layer(self) -> None:
+        # The reference extension's two İşlemler tools: the first answers a table, this one a layer and a number.
+        self.kentos.hello()
+        ring = [(0, 0), (1.1, 0), (1.1, 2.2), (0, 2.2)]
+        graves = {
+            "description": "3 kapalı alan; katman",
+            "features": [
+                polygon("g-1", ring, layer="mezar_yeri", attrs={"mezar_no": "M-1", "ada_no": "A", "durum": "BOS"}),
+                polygon("g-2", ring, layer="mezar_yeri", attrs={"mezar_no": "M-2", "ada_no": "A", "durum": "DOLU"}),
+                polygon("g-3", ring, layer="mezar_yeri", attrs={"mezar_no": "M-3", "durum": "BOS"}),
+            ],
+        }
+        done, _ = self.kentos.invoke(
+            "empty-graves", "mebis.logic:empty_graves", kind="processing", inputs={"graves": graves}
+        )
+        self.assertTrue(done["ok"], done)
+        outputs = done["result"]["outputs"]
+        self.assertEqual(
+            outputs["empty"],
+            [{"source": "g-1", "attrs": {"mezar_no": "M-1", "ada_no": "A"}},
+             {"source": "g-3", "attrs": {"mezar_no": "M-3", "ada_no": ""}}],
+        )
+        self.assertEqual(outputs["count"], 2)
+        self.assertEqual(done["result"]["summary"], "2 boş mezar yeri bulundu.")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -123,7 +123,8 @@ yeterli.
   `sha256:1a6af9c39da91b1fd7552a85204bf0ffea6c2e650c64bb06f936302db3bd317a` (aynı Python hesabı eskisini de birebir
   verdi); katmanlarına formları bağlanınca `sha256:05585d1c96e53cb10e90ca819f9fe121db6c359830437ea1a8aaa2266b09a05f`; arama paneli
   v1'e geçip `search` komutunu alınca (§24) `sha256:a0bf2174415400e8cdd44b8942f11cad47c67ff15bb3aee39b9a00446f727a97`;
-  denetimin düzeltmesi `operation`'ını, doluluk aracı Durdur'u SDK'nın yoluyla alınca `sha256:6ef13bdd8590e97126909bd494480d1e3345183599b095dc03d6dd18fa05a9bb`; arama nesnenin özniteliklerini okuyup satırlarına `uid`, okunur başlıklar ve durumun adını verince (§24 kabulü) `sha256:750a026ca3d9a75da06e660da0d068931c63ca9c151f6e6078b82cbf1ceb4054`.
+  denetimin düzeltmesi `operation`'ını, doluluk aracı Durdur'u SDK'nın yoluyla alınca `sha256:6ef13bdd8590e97126909bd494480d1e3345183599b095dc03d6dd18fa05a9bb`; arama nesnenin özniteliklerini okuyup satırlarına `uid`, okunur başlıklar ve durumun adını verince (§24 kabulü) `sha256:750a026ca3d9a75da06e660da0d068931c63ca9c151f6e6078b82cbf1ceb4054`; ikinci İşlemler aracı (Boş mezar
+  yerleri: boşları yeni katmana yazar, sayısını verir) eklenince `sha256:4761924ff6428198c016ec3cb78d1c2929e1bf70b0a7dbabc09fc650e78bbe5b`.
 - `fixtures/extensions/v1/ornek-altlik/`: en küçük paket (D2): `manifest.json`, `LICENSE` ve iki servis veri kaynağı;
   Python yok. Paket 1 400 bayt; tek uyarı değişiklik notunun yokluğu.
 
@@ -1537,4 +1538,9 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   öğesini boş gösteriyordu. Barındırıcı artık kayıtta okur (`lease::file_titles`: tanımın `label`'ı, form paketinin
   `name`'i; okunmayan dosyada kimlik kalır), adsız menü öğesi gösterdiği komutun ya da aracın adını alır: "Ada bazlı
   doluluk", "Mezar yeri", "MEBİS katmanlarını kur". Şerit aynı başlığı kullanır (tanımı ikinci kez okumaz).
+- **İkinci İşlemler aracı** (referans eklentinin "iki İşlemler aracı"): MEBİS'in Boş mezar yerleri'si durumu BOS olan
+  mezarları yeni bir katmana (mezar ve ada numarasıyla; yeşil) yazar ve sayısını verir: ilk araç tablo, bu araç katman
+  ve sayı üretir. Gerçek eklenti süreciyle sınandı (`ReferenceExtensionTest`: 3 mezardan 2 boş); gerçek pencerede
+  bir Tekli mezar yerleştirildikten sonra "1 boş mezar yeri bulundu", nesne 10 → 11, çıktı katmanı Boş mezar
+  yerleri; şeritte Ada bazlı doluluk'un altında, adı tanımından.
 - **Kalan (ADIM 22):** ağaç, kart bileşenleri; birden çok açık panel; panelin kendi olayları (değer değişince).

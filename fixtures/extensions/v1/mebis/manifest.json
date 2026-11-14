@@ -57,6 +57,11 @@
         "id": "occupancy-by-island",
         "descriptor": "tools/occupancy-by-island.tool.json",
         "handler": "mebis.logic:occupancy_by_island"
+      },
+      {
+        "id": "empty-graves",
+        "descriptor": "tools/empty-graves.tool.json",
+        "handler": "mebis.logic:empty_graves"
       }
     ],
     "audits": [
@@ -93,6 +98,7 @@
             "items": [
               { "audit": "status-mismatch", "size": "large" },
               { "processing": "occupancy-by-island" },
+              { "processing": "empty-graves" },
               { "panel": "search-dock" },
               { "dataSource": "ornek-ortofoto" }
             ]

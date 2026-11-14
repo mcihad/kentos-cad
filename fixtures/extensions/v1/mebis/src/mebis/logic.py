@@ -58,6 +58,19 @@ def occupancy_by_island(ctx: ext.ProcessingContext, islands, graves) -> dict:
     return {"report": [{"ada_no": k, **v} for k, v in stats.items()]}
 
 
+@ext.processing("empty-graves")
+def empty_graves(ctx: ext.ProcessingContext, graves) -> dict:
+    """Durumu 'BOS' olan mezar yerlerini çıktı katmanına yazar (mezar ve ada numarasıyla) ve sayısını verir: ilk araç
+    tablo, bu araç katman üretir."""
+    empty = [
+        ext.NewFeature(source=g, attrs={"mezar_no": g.attrs.get("mezar_no", ""), "ada_no": g.attrs.get("ada_no", "")})
+        for g in ctx.read_features(graves)
+        if g.attrs.get("durum") == "BOS"
+    ]
+    ctx.summary(f"{len(empty)} boş mezar yeri bulundu.")
+    return {"empty": empty, "count": len(empty)}
+
+
 @ext.audit("status-mismatch")
 def audit_status_mismatch(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     findings = []
