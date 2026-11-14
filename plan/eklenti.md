@@ -819,10 +819,11 @@ okuyup arka planda dolduran yol; denetimler, harita aracı, form eylemi, büyük
 kurulumda tam denetimi. MCP: araçlar `cad.processing.*` ile her çağrıda güncel listeden gelir; `tools/list_changed`
 eklenti komutları kendi MCP aracı olunca (ADR 8057 §7).
 
-**Durum (14 Kasım): dördüncü dilimin etiket kısmı bitti** (ADR 8058 §1): eklenti işlevli etiket metni bekletmeden
-önbellekten okunur, eksik satırlar arka plandaki işçiye gider, yanıt gelince etiket yeniden yerleşir (gerçek pencerede
-kayıttan ~3 sn sonra). Araya sahibin isteğiyle etiket işleri girdi (görünür ölçekler 1:N, Denetle, her yerden ölçek;
-ADR 8058). Kalan: tematik stil kuralları, katman süzgeci, sanal alan ve form hesabı aynı yoldan.
+**Durum (14 Kasım): dördüncü dilim bitti** (ADR 8057 §8.1): etiket, stil kuralı, katman süzgeci ve form hesabı
+eklenti işlevini bekletmeden çağırır (tek kayıt `kentos_expression::external::set_host`); yanıt gelince yalnız işlev
+çağıranlar yeniden kurulur; form kaydederken, Hesapları yenile ve Formla toplu yaz yanıtı bekler. Araya sahibin
+isteğiyle etiket işleri girdi (görünür ölçekler 1:N, Denetle, her yerden ölçek; ADR 8058). "Sanal alan" ayrı bir
+özellik değil. Kalan: form tasarımcısında gerçek pencere yürüyüşü; yazdırmada yanıt beklemek.
 
 **Sıradaki dilim (tasarım, 14 Kasım): çizimdeki ifadelerde eklenti işlevi.** Etiket metni ve koşulu
 (`scene-query::label_texts`), katman süzgeci (`layer_filter`), tematik stil kuralları (`native-style::classify`) ve sanal

@@ -953,3 +953,34 @@ kaydı), `apps/desktop/src/shell/extensions/tools.rs` (`Answers`), `python/kento
 - **Uygularken verilen kararlar (planda yazılı değildi):** `ext` sonrası nokta ve tire adın içinde; bağımsız değişken
   sayısı denetlenmez; yanıt önbelleği argümanlarla, 100 000 yanıt; önizleme sürece sormaz ve bunu söyler; eklenti işlevi
   çağıran çalıştırma arka planda; etiket/stil/form sonraki dilimde; İmar'ın işlevi biçimlendirme (mevzuat iddiası yok).
+
+### §8.1. Dördüncü dilim: çizimdeki ifadelerde eklenti işlevi (14 Kasım)
+
+**Kural: çizim hiç beklemez.** Etiket metni ve koşulu, stil kuralı (koşul, kategori ve sınıf değeri, veriye bağlı
+sembol), katman süzgeci ve form hesabı çizerken değerlendirilir. Host'un yanıtlayıcısı elindeki yanıtı hemen verir;
+olmayan satır boş döner ve arka plandaki işçiye sıraya girer (`LabelCalls`, `LabelAnswers`); yanıt gelince sayaç
+ilerler ve yalnız işlev çağıranlar yeniden kurulur. Hata veren ya da yanıtlanmayan satır boş kalır, yeniden sorulmaz.
+
+- **Tek kayıt** (`a7da05404`): işlev listesi ve yanıtlayıcı ifade motorunda (`kentos_expression::external::set_host`,
+  `host_defs`, `host_calls`, `host_answered`, `host_answers`). Etiket, stil, süzgeç ve form aynı kaydı okur; masaüstü
+  bir kez kaydeder. Host yoksa (web, başsız Python, MCP'nin kendi açtığı çizim) işlev yoktur ve böyle bir çağrı
+  derlenmez, etiketteki gibi.
+- **Etiket** (`4f56a681e`, `eb63df1a2`; ADR 8058 §1): metin sürümü etiket çiziminin anahtarında.
+- **Stil** (`17c4e8f15`): `style-core::style::externals`; derleme yerleri (çizimin `Exprs`'i, oluşturucunun denetimi,
+  Katman stili'nin sınıf ve sayaçları) işlevleri tanır, değerlendirme `Calling` kapsamıyla. Stil önbelleği yanıt
+  sayacını tutar; ilerleyince yalnız oluşturucusu `ext.` geçen katmanlar yeniden kurulur. Pencerenin sayaçları da
+  (yanıttan önce 0 kalıyordu).
+- **Süzgeç** (`9a1e02e9d`): sütun motoru host'un yanıtlarıyla (`evaluate_rows_on_with`); yanıt gelmeden nesne dışarıda.
+  Yanıt gelince `Spatial` işlev çağıran süzgeçleri yeniden çalıştırır (`refilter_external`) ve `filters_version`'ı
+  ilerletir; stil önbelleği o katmanları yeniden kurar (yeni işaretlerle). Pencerenin "N / M nesne geçiyor"u da tazelenir.
+- **Form hesabı** (`a7da05404`): yalnız alanın `calculate`'i işlevleri tanır (`calc_schema`); koşul, denetim ve
+  varsayılan tanımaz (yanıt gelmeden yargılanırlardı); ön denetim de aynı ayrımla. Yazarken bekleyen yanıtlayıcı, açık
+  form yanıt gelince yeniden hesaplanır. **Kaydederken bekler:** masaüstü Kaydet'i, Hesapları yenile'yi ve Formla
+  toplu yaz'ı `kentos_forms::answering_with` altında İşlemler'in bekleyen yanıtlayıcısıyla çalıştırır; değer çizime boş
+  girmez.
+- **"Sanal alan"** bu kod tabanında ayrı bir özellik değil (katman alanında ifade yok); planın satırı karşılıksız.
+- **Gerçek pencere:** Kurallar koşulu `ext.tr.ornek.imar-denetim.ada-parsel(ada, parsel) = '101/2'` ile yalnız 101/2
+  çizildi, kural sayacı yanıt gelince 0 → 1; aynı süzgeçle Katmanlar "1 / 4" saydı, pencere "1 / 4 nesne geçiyor"
+  dedi. Form hesabı birim sınamasıyla (yazarken boş, kaydederken "101/2"); tasarımcıda gerçek pencerede yürünmedi.
+- **Uygularken verilen kararlar:** tek kayıt ifade motorunda; formda yalnız hesap işlev tanır; kaydetme, yenileme ve
+  toplu yazma bekler; yazdırma (pafta, PDF) çizimin önbelleğini okur, beklemez (ilk baskıda yanıt yoksa boş).
