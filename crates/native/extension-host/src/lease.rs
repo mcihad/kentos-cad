@@ -5,6 +5,9 @@
 //! İşlemler tool, an audit, an expression function, a panel) is registered under the lease, so revoking the lease
 //! removes all of it at once and leaves nothing. A late callback that comes with an older generation is not applied.
 
+use std::collections::BTreeMap;
+use std::path::Path;
+
 use kentos_extensions::manifest::{Capability, Manifest};
 use serde::Serialize;
 
@@ -57,11 +60,14 @@ pub struct Skipped {
 }
 
 /// What an extension's manifest adds under `lease`, given what the user granted: the registered contributions, and
-/// the ones left out (a capability not granted, Python not chosen).
+/// the ones left out (a capability not granted, Python not chosen). `titles` are the words of what the manifest names
+/// only by a file, by its path in the package ([`file_titles`]): without them an İşlemler tool and a form are
+/// titled by their ids.
 pub fn contributions(
     manifest: &Manifest,
     grant: &Grant,
     lease: &ExtensionLease,
+    titles: &BTreeMap<String, String>,
 ) -> (Vec<Registered>, Vec<Skipped>) {
     let granted = |c: Capability| grant.capabilities.contains(&c);
     let name = |local: &str| format!("ext.{}.{local}", manifest.id);
@@ -111,7 +117,8 @@ pub fn contributions(
         );
     }
     for form in &e.forms {
-        add(ContributionKind::Form, name(&form.id), &form.id, &[], false);
+        let title = titles.get(&form.definition).unwrap_or(&form.id);
+        add(ContributionKind::Form, name(&form.id), title, &[], false);
     }
     for tab in &k.ribbon_tabs {
         add(
@@ -123,7 +130,51 @@ pub fn contributions(
         );
     }
     for (i, item) in k.context_menus.iter().enumerate() {
-        let title = item.label.as_deref().unwrap_or("");
+        // Its own words, else those of what it shows: a menu item of a command read empty (kek dump, the MCP).
+        let shown = || -> Option<String> {
+            if let Some(c) = &item.command {
+                return e
+                    .commands
+                    .iter()
+                    .find(|x| x.id == *c)
+                    .map(|x| x.title.clone());
+            }
+            if let Some(t) = &item.map_tool {
+                return e
+                    .map_tools
+                    .iter()
+                    .find(|x| x.id == *t)
+                    .map(|x| x.title.clone());
+            }
+            if let Some(p) = &item.processing {
+                let tool = e.processing.iter().find(|x| x.id == *p)?;
+                return Some(titles.get(&tool.descriptor).unwrap_or(&tool.id).clone());
+            }
+            if let Some(a) = &item.audit {
+                return e
+                    .audits
+                    .iter()
+                    .find(|x| x.id == *a)
+                    .map(|x| x.title.clone());
+            }
+            if let Some(p) = &item.panel {
+                return e
+                    .panels
+                    .iter()
+                    .find(|x| x.id == *p)
+                    .map(|x| x.title.clone());
+            }
+            if let Some(s) = &item.data_source {
+                return k
+                    .data_sources
+                    .iter()
+                    .find(|x| x.id == *s)
+                    .map(|x| x.title.clone());
+            }
+            None
+        };
+        let fallback = shown().unwrap_or_default();
+        let title = item.label.as_deref().unwrap_or(&fallback);
         add(
             ContributionKind::ContextMenuItem,
             name(&format!("menu.{i}")),
@@ -163,7 +214,7 @@ pub fn contributions(
         add(
             ContributionKind::Processing,
             name(&tool.id),
-            &tool.id,
+            titles.get(&tool.descriptor).unwrap_or(&tool.id),
             &[Capability::ProcessingProvider],
             true,
         );
@@ -188,4 +239,31 @@ pub fn contributions(
         );
     }
     (out, skipped)
+}
+
+/// The words of the contributions a manifest names only by a file (docs/adr/8057 §24): an İşlemler tool's descriptor
+/// `label`, a form package's `name`, read from the package folder `dir` (its files checked when it was installed), by
+/// their paths. The desktop's ribbon, `kek dump` and the MCP then say the same; a file that does not read is left out
+/// (its id stands).
+pub fn file_titles(dir: &Path, manifest: &Manifest) -> BTreeMap<String, String> {
+    let read = |path: &str, key: &str| -> Option<String> {
+        if path.split('/').any(|p| p.is_empty() || p == "..") {
+            return None;
+        }
+        let full = path.split('/').fold(dir.to_path_buf(), |d, p| d.join(p));
+        let value: serde_json::Value = serde_json::from_slice(&std::fs::read(full).ok()?).ok()?;
+        value
+            .get(key)?
+            .as_str()
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
+            .map(str::to_owned)
+    };
+    let e = &manifest.entrypoints;
+    let tools = e.processing.iter().map(|t| (&t.descriptor, "label"));
+    let forms = e.forms.iter().map(|f| (&f.definition, "name"));
+    tools
+        .chain(forms)
+        .filter_map(|(path, key)| Some((path.clone(), read(path, key)?)))
+        .collect()
 }

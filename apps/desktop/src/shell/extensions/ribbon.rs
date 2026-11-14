@@ -196,15 +196,14 @@ fn item_of(
                 t.and_then(|t| t.icon.clone()),
             )
         } else if let Some(local) = &item.processing {
-            // Its words are its descriptor's `label`: the manifest names only the file (MEBİS's button read
-            // “occupancy-by-island”, real window, 14 November 2026).
-            let label = e
-                .processing
+            // Its words are its descriptor's `label`, read by the extension host as it registers the tool
+            // (lease::file_titles): the manifest names only the file (MEBİS's button read “occupancy-by-island”, real
+            // window, 14 November 2026); `kek dump` and the MCP say the same.
+            let id = format!("ext.{ext}.{local}");
+            let label = registered
                 .iter()
-                .find(|p| p.id == *local)
-                .and_then(|p| registry.package_file(ext, &p.descriptor))
-                .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-                .and_then(|d| d.get("label")?.as_str().map(str::to_owned));
+                .find(|r| r.kind == ContributionKind::Processing && r.id == id)
+                .map(|r| r.title.clone());
             (
                 ContributionKind::Processing,
                 local,

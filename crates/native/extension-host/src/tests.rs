@@ -629,6 +629,36 @@ fn python_contributions_wait_for_the_choice_and_a_working_folder_reloads_cleanly
         .find(|c| c.id == "ext.tr.ornek.mebis.init-schema")
         .unwrap();
     assert!(command.needs_python);
+    // What the manifest names only by a file is titled from it, as the window, `kek dump` and the MCP show it; a menu
+    // item without words takes its command's (all read as ids or empty, 14 November 2026).
+    let title = |id: &str| {
+        r.contributions()
+            .iter()
+            .find(|c| c.id == id)
+            .map(|c| c.title.clone())
+    };
+    assert_eq!(
+        title("ext.tr.ornek.mebis.occupancy-by-island").as_deref(),
+        Some("Ada bazlı doluluk")
+    );
+    assert_eq!(
+        title("ext.tr.ornek.mebis.mezar-yeri").as_deref(),
+        Some("Mezar yeri")
+    );
+    assert_eq!(
+        title("ext.tr.ornek.mebis.menu.0").as_deref(),
+        Some("MEBİS katmanlarını kur")
+    );
+    let dumped = r.dump();
+    assert!(
+        dumped["contributions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["id"] == "ext.tr.ornek.mebis.occupancy-by-island"
+                && c["title"] == "Ada bazlı doluluk"),
+        "the MCP's view says the same"
+    );
     assert!(r.reload(ID).is_err(), "not installed");
 }
 

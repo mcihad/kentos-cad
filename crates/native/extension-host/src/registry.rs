@@ -599,7 +599,8 @@ impl Registry {
                 version: entry.active.clone(),
                 generation: 0,
             };
-            let (more, left) = lease::contributions(manifest, &entry.grant, &lease);
+            let titles = lease::file_titles(&self.layout.package(id, &entry.active), manifest);
+            let (more, left) = lease::contributions(manifest, &entry.grant, &lease, &titles);
             registered.extend(more);
             skipped.extend(left);
         }
@@ -842,7 +843,8 @@ impl Registry {
             version: entry.active.clone(),
             generation: self.generation,
         };
-        let (registered, skipped) = lease::contributions(&manifest, &entry.grant, &lease);
+        let titles = lease::file_titles(&self.layout.package(id, &entry.active), &manifest);
+        let (registered, skipped) = lease::contributions(&manifest, &entry.grant, &lease, &titles);
         self.registered.extend(registered);
         self.leases.insert(id.to_owned(), lease.clone());
         self.manifests.insert(id.to_owned(), manifest);

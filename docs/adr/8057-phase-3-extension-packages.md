@@ -1530,4 +1530,11 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   paneli, düğmesinin bıraktığı çağrı ve dock sekmesi kapanır (`extensions_changed`). (2) **Denetim bulgusunun Düzelt'i
   kapalı eklentinin düzeltmesini yazıyordu**; bulgular okunmak için durur, düzeltme "… kapalı: düzeltmesi uygulanmaz;
   Eklentiler'den etkinleştirin" der.
+- **Aynı kimlik, aynı sözler** (referans eklentinin kabul maddesi: "şerit, Eklentiler, İşlemler, Denetim, komut arama
+  ve MCP aynı kimliğe gider"): kimlikler hep aynıydı (`ext.tr.ornek.mebis.occupancy-by-island`; hepsi barındırıcının
+  `Registered.id`'si), ama manifestin yalnız dosyasını adlandırdığı katkıların başlığı kimlikti: `kek dump` ve MCP'nin
+  `kentos://extensions/installed`'ı İşlemler aracını "occupancy-by-island", formları "mezar-yeri", adsız sağ tık
+  öğesini boş gösteriyordu. Barındırıcı artık kayıtta okur (`lease::file_titles`: tanımın `label`'ı, form paketinin
+  `name`'i; okunmayan dosyada kimlik kalır), adsız menü öğesi gösterdiği komutun ya da aracın adını alır: "Ada bazlı
+  doluluk", "Mezar yeri", "MEBİS katmanlarını kur". Şerit aynı başlığı kullanır (tanımı ikinci kez okumaz).
 - **Kalan (ADIM 22):** ağaç, kart bileşenleri; birden çok açık panel; panelin kendi olayları (değer değişince).
