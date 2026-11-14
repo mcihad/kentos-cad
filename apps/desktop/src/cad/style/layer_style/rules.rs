@@ -128,7 +128,7 @@ fn block<'a>(
             });
         let p = path.clone();
         let placeholder = if min { "en yakın" } else { "en uzak" };
-        number(placeholder, &text, 76.0, move |t| {
+        let typed = move |t: String| {
             ev(Event::Rule(
                 p.clone(),
                 if min {
@@ -137,7 +137,17 @@ fn block<'a>(
                     RuleEdit::MaxScale(t)
                 },
             ))
-        })
+        };
+        // Şimdiki: the view's scale as a whole N that keeps the view inside the rule's range, both of whose ends are
+        // drawn (`StyledBatch::in_scale`): the nearest end the view's N or under, the farthest its N or over.
+        let here = here_scale(env.view_scale, min).map(|n| typed(n.to_string()));
+        row![
+            number(placeholder, &text, 76.0, typed),
+            tool("zoomSelection", "Şimdiki ölçek", here),
+        ]
+        .spacing(0)
+        .align_y(Center)
+        .into()
     };
     let (count_text, count_tip) = match counts.get(&path) {
         Some(RuleCount::Count(n)) => (
@@ -227,5 +237,32 @@ fn block<'a>(
         let mut p = path.clone();
         p.push(k);
         block(out, child, p, children.len(), window, env, counts, fields);
+    }
+}
+
+/// A rule's end set to the view's scale 1:`n` (Şimdiki): a whole N the view stays inside of, both ends being drawn;
+/// none for a scale that is not one.
+fn here_scale(n: f64, nearest: bool) -> Option<u64> {
+    (n.is_finite() && n > 0.0).then(|| {
+        if nearest {
+            n.floor().max(1.0) as u64
+        } else {
+            n.ceil() as u64
+        }
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn simdiki_keeps_the_view_inside_the_rules_range() {
+        // A rule's range draws both its ends (`StyledBatch::in_scale`): at 1:435.4 the nearest end is 1:435, the
+        // farthest 1:436; a whole 1:500 is itself.
+        assert_eq!(super::here_scale(435.4, true), Some(435));
+        assert_eq!(super::here_scale(435.4, false), Some(436));
+        assert_eq!(super::here_scale(500.0, true), Some(500));
+        assert_eq!(super::here_scale(500.0, false), Some(500));
+        assert_eq!(super::here_scale(0.4, true), Some(1));
+        assert_eq!(super::here_scale(f64::NAN, true), None);
     }
 }

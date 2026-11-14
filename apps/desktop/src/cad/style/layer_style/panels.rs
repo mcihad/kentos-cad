@@ -64,6 +64,7 @@ impl App {
             simple: &simple,
             classes: &window.classes,
             name_of: &name_of,
+            view_scale: self.viewport.camera.screen_scale(),
         };
         let src = Source {
             doc: model,

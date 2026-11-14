@@ -37,6 +37,8 @@ pub(super) struct Env<'a> {
     pub classes: &'a [GeometryClass],
     /// The symbols' names by library id.
     pub name_of: &'a dyn Fn(&str) -> Option<String>,
+    /// The view's scale now, 1:N (a rule's Şimdiki).
+    pub view_scale: f64,
 }
 
 /// A symbol in a style: its picture (a class without one shows the layer's
