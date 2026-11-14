@@ -815,8 +815,9 @@ boşta kalınca kapanır.
 **Durum (14 Kasım): üçüncü dilim — ifade işlevleri** (ADR 8057 §8): `ext.<eklenti>.<işlev>(…)` dilde (adıyla bilinir,
 yığın başına bir çağrı), İşlemler'in ifadelerinde ve pencerenin denetiminde; masaüstü farklı satırları bir kez sorar ve
 yanıtları saklar; İmar'ın `ada-parsel`'i. Kalan: etiket, tematik stil, sanal alan, süzgeç ve form hesabında önbellekten
-okuyup arka planda dolduran yol; denetimler, harita aracı, form eylemi, MCP'ye `tools/list_changed`, büyük girdinin
-sayfalı aktarımı, tanımın kurulumda tam denetimi.
+okuyup arka planda dolduran yol; denetimler, harita aracı, form eylemi, büyük girdinin sayfalı aktarımı, tanımın
+kurulumda tam denetimi. MCP: araçlar `cad.processing.*` ile her çağrıda güncel listeden gelir; `tools/list_changed`
+eklenti komutları kendi MCP aracı olunca (ADR 8057 §7).
 
 **Süreç ve aracı:**
 - [ ] Her eklenti sürümü için ayrı süreç; IPC protokol sürümü, eklenti/sürüm/özet, istek/çalışma/oturum kimliği ve zaman

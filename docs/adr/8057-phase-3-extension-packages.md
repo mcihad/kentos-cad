@@ -903,9 +903,12 @@ dönen veriyi görür. Kod: `python/kentos/ext.py`, `python/kentos/ext_host.py`,
   pencerenin değerleriyle yazıldı ("Sonuç taks-sonuc.gpkg dosyasına yazıldı: TAKS (4 satır)"). Bulgu: İmar'ın özeti
   "çizimde seçildi" diyordu, oysa dosya hedefinde seçim kopyada kalır; araç sonucunun nereye gittiğini bilmez, özeti
   yalnız hesabı söyler (`ctx.summary`'nin belgesi de öyle der).
-- **Sonraya kalan (ADIM 19'un kalanı):** ifade işlevleri, denetimler, harita aracı, form eylemleri; sürümlü kaydın MCP'ye
-  `tools/list_changed` ile bildirilmesi; büyük girdinin sayfalı/ikili aktarımı (PY-TOOL-08: girdi şimdi tek mesajda);
-  tanımın kurulumda tam denetimi (ADIM 21'in `extension.verify`'ı).
+- **MCP:** eklenti araçları MCP'ye `cad.processing.tools` ve `cad.processing.run` üzerinden, pencereyle aynı kayıttan
+  (`Registry::current()`) ulaşır; liste her çağrıda o anki hâlidir. MCP'nin kendi araç listesi eklentilerle değişmediği
+  için `tools/list_changed` gerekmez; eklenti komutları kendi MCP aracı olduğunda (sonraki adım) `external::generation()`
+  o bildirimin ölçüsüdür.
+- **Sonraya kalan (ADIM 19'un kalanı):** denetimler, harita aracı, form eylemleri; büyük girdinin sayfalı/ikili aktarımı
+  (PY-TOOL-08: girdi şimdi tek mesajda); tanımın kurulumda tam denetimi (ADIM 21'in `extension.verify`'ı).
 
 ## §8. İfade işlevleri: `ext.<eklenti>.<işlev>(…)` (`ADIM 19`, üçüncü dilim)
 
