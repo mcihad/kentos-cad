@@ -1265,9 +1265,12 @@ fn a_real_agent_draws_on_the_open_drawing_through_mcp() {
         .expect("this test")
         .ancestors()
         .skip(1)
-        .take(3)
+        // target/<profile>/deps/…, or cargo's build directory: target/<profile>/build/<crate>/<hash>/out/….
+        .take(6)
         .map(|d| d.join("kentos-mcp"))
-        .find(|p| p.exists())
+        // A file: cargo's build directory has a folder of that name (target/<profile>/build/kentos-mcp/…), and
+        // running it failed with "Permission denied" before the agent ever connected (the test then waited forever).
+        .find(|p| p.is_file())
         .expect("target/<profile>/kentos-mcp: cargo build -p kentos-mcp");
     let dir = crate::files_testing::scratch("ajan-mcp");
     let path = dir.join("m.sock");
@@ -1305,20 +1308,28 @@ fn a_real_agent_draws_on_the_open_drawing_through_mcp() {
         let attached = call(1, "desktop.attach", json!({ "path": path }));
         let handle = attached["drawing"].as_str().expect("a handle").to_owned();
         let pts: Value = serde_json::from_str(SQUARE).expect("points");
-        let written = call(
+        // MCP v2 (docs/adr/8056 §2): a write goes through its part's door, planned, then executed as planned.
+        let input = json!({ "layerId": layer, "pts": pts });
+        let planned = call(
             2,
-            "cad.polygon.create",
-            json!({ "drawing": handle, "layerId": layer, "pts": pts }),
+            "cad.run",
+            json!({ "drawing": handle, "command": "cad.polygon.create", "input": input, "mode": "plan" }),
+        );
+        let plan = planned["planId"]
+            .as_str()
+            .unwrap_or_else(|| panic!("its plan: {planned:#}"))
+            .to_owned();
+        let written = call(
+            3,
+            "cad.run",
+            json!({ "drawing": handle, "command": "cad.polygon.create", "input": input, "mode": "execute",
+                    "planId": plan }),
         );
         let uid = written["output"]["uid"]
             .as_str()
-            .expect("its id")
+            .unwrap_or_else(|| panic!("its id: {written:#}"))
             .to_owned();
-        let measured = call(
-            3,
-            "drawing.measure",
-            json!({ "drawing": handle, "uid": uid }),
-        );
+        let measured = call(4, "scene.measure", json!({ "drawing": handle, "uid": uid }));
         let _ = child.kill();
         let _ = child.wait();
         (attached, written, measured)
@@ -1344,7 +1355,7 @@ fn a_real_agent_draws_on_the_open_drawing_through_mcp() {
     let (attached, written, measured) = agent.join().expect("the agent");
     assert_eq!(attached["desktop"]["objects"], before);
     assert_eq!(written["status"], "completed", "{written}");
-    assert_eq!(measured["area"], 250.0);
+    assert_eq!(measured["area"], 250.0, "{measured:#}");
     assert_eq!(
         objects(&app),
         before + 1,
@@ -1635,4 +1646,113 @@ fn an_agents_processing_run_chooses_its_tools_objects() {
         }
     }
     assert!(app.python.executing.is_empty(), "an ended job is forgotten");
+}
+
+/// docs/adr/8057 §27, the MCP side: a real `kentos-mcp` attached to the desktop runs an extension's Python tool as a
+/// job, its own thread asking after it over the link while the app answers (the window never computes it). İmar's
+/// TAKS here reaches its extension's bridge on the job's thread and fails to start (no KentOS Python library in
+/// tests): the agent gets the job's answer. `cargo build -p kentos-mcp` first.
+#[cfg(unix)]
+#[test]
+#[ignore = "needs the kentos-mcp program (cargo build -p kentos-mcp)"]
+fn a_real_agents_extension_tool_runs_as_a_job_through_mcp() {
+    use crate::extensions::tools::tests::{TAKS, imar, with_imar};
+    use iced::futures::StreamExt as _;
+    use std::io::{BufRead, BufReader, Write};
+    use std::process::{Command, Stdio};
+    let mcp = std::env::current_exe()
+        .expect("this test")
+        .ancestors()
+        .skip(1)
+        // target/<profile>/deps/…, or cargo's build directory: target/<profile>/build/<crate>/<hash>/out/….
+        .take(6)
+        .map(|d| d.join("kentos-mcp"))
+        // A file: cargo's build directory has a folder of that name (target/<profile>/build/kentos-mcp/…), and
+        // running it failed with "Permission denied" before the agent ever connected (the test then waited forever).
+        .find(|p| p.is_file())
+        .expect("target/<profile>/kentos-mcp: cargo build -p kentos-mcp");
+    kentos_processing::command::register_as("desktop");
+    let dir = crate::files_testing::scratch("ajan-mcp-is");
+    let path = dir.join("m.sock");
+    let mut app = with_imar("ajan-mcp-is", imar(|_| {}));
+    let (open, task) = super::link::Link::open(&path, |heard| Message::Python(Event::Agent(heard)))
+        .expect("the link");
+    app.python.link = Some(open);
+    let agent = std::thread::spawn(move || {
+        let mut child = Command::new(mcp)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("kentos-mcp");
+        let mut stdin = child.stdin.take().expect("its input");
+        let mut lines = BufReader::new(child.stdout.take().expect("its output")).lines();
+        let meta = json!({
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientCapabilities": {}
+        });
+        let mut call = |id: u64, name: &str, arguments: Value| -> Value {
+            let request = json!({ "jsonrpc": "2.0", "id": id, "method": "tools/call",
+                "params": { "_meta": meta, "name": name, "arguments": arguments } });
+            writeln!(stdin, "{request}").expect("asked");
+            stdin.flush().expect("sent");
+            let answer: Value =
+                serde_json::from_str(&lines.next().expect("a line").expect("read")).expect("JSON");
+            answer["result"].clone()
+        };
+        let attached = call(1, "desktop.attach", json!({ "path": path }));
+        let handle = attached["structuredContent"]["drawing"]
+            .as_str()
+            .expect("a handle")
+            .to_owned();
+        let planned = call(
+            2,
+            "processing.run",
+            json!({ "drawing": handle, "mode": "plan", "input": { "tool": TAKS, "parameters": {
+                "parseller": { "scope": "all" }, "yapilar": { "scope": "layer", "layerId": "cizim" } } } }),
+        );
+        let _ = child.kill();
+        let _ = child.wait();
+        planned
+    });
+    let mut stream = iced_runtime::task::into_stream(task).expect("the link's messages");
+    loop {
+        match iced::futures::executor::block_on(stream.next()) {
+            Some(iced_runtime::Action::Output(message)) => {
+                let closed = matches!(
+                    message,
+                    Message::Python(Event::Agent(super::link::Heard::Closed(_)))
+                );
+                let _ = app.update(message);
+                if closed {
+                    break;
+                }
+            }
+            Some(_) => {}
+            None => break,
+        }
+    }
+    let planned = agent.join().expect("the agent");
+    let answer = &planned["structuredContent"];
+    assert_eq!(answer["status"], "failed", "{planned:#}");
+    assert_eq!(answer["error"]["code"], "tool_failed", "{planned:#}");
+    assert!(
+        answer["error"]["message"]
+            .as_str()
+            .is_some_and(|m| m.starts_with("“Parsel TAKS hesabı”")),
+        "{planned:#}"
+    );
+    // It went as the desktop's job, asked after until it ended.
+    let job = app
+        .agent_request(
+            &json!({ "method": "job", "params": { "id": "is-1" } }),
+            "Deneme",
+        )
+        .expect("the job");
+    assert_eq!(
+        (job["command"].as_str(), job["phase"].as_str()),
+        (Some("cad.processing.run"), Some("failed")),
+        "{job:#}"
+    );
+    let _ = app.update(Message::Python(Event::Link));
+    let _ = std::fs::remove_dir_all(dir);
 }

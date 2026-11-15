@@ -447,9 +447,10 @@ pub enum Message {
     LayoutSave,
     /// The rows round a bound layer's part, read on a thread of their own (band_ghosts.rs, docs/adr/0578 §1).
     BandRead(crate::band_ghosts::Read),
-    /// The window's new size: the kept sizes are shown within it.
+    /// The main window's new size: the kept sizes are shown within it.
     WindowResized(iced::Size),
-    /// The window's device pixels per logical pixel, at opening and on another screen: the brand's sizes follow it.
+    /// The main window's device pixels per logical pixel, at opening and on another screen: the brand's sizes follow
+    /// it (a secondary window's screen does not, windows/routing.rs).
     DeviceScale(f32),
     /// The layer tree's rows and their menu (layering.rs).
     Layer(crate::layering::Event),
@@ -641,6 +642,8 @@ pub enum Message {
     /// A save finished, or `None` when the dialog was cancelled.
     Saved(Option<Result<Written, String>>),
     CloseRequested(window::Id),
+    /// The secondary windows' own events and keys (windows/, docs/adr/8060).
+    Windows(crate::windows::Event),
     DialogConfirmed,
     DialogClosed,
     /// “Kaydet ve …” on the unsaved changes' question (usage review UR-001): the drawing is saved, and the leaving goes
@@ -839,6 +842,8 @@ pub struct App {
     pub(crate) layout: crate::layout::Keeper,
     /// Where the windows' sizes are written (docs/adr/0746).
     pub(crate) dialog_sizes: crate::dialog_sizes::Keeper,
+    /// The main window and the windows of their own beside it (windows/, docs/adr/8060).
+    pub(crate) windows: crate::windows::Windows,
     /// The rows round the bound layers' parts, asked for and arrived (band_ghosts.rs, docs/adr/0578 §1).
     pub(crate) bands: crate::band_ghosts::Bands,
     pub(crate) window_size: iced::Size,
@@ -1300,15 +1305,6 @@ pub(crate) fn fold(text: &str) -> String {
 #[cfg(test)]
 #[path = "app/tests.rs"]
 mod tests;
-
-/// The window's device pixels per logical pixel when it changes (moved to another screen), for the brand's sizes
-/// (kentos_ui's brand.rs); at opening the app asks for it once.
-fn device_scale(event: iced::Event, _: iced::event::Status, _: iced::window::Id) -> Option<Message> {
-    match event {
-        iced::Event::Window(iced::window::Event::Rescaled(scale)) => Some(Message::DeviceScale(scale)),
-        _ => None,
-    }
-}
 
 #[path = "app/start.rs"]
 mod start;

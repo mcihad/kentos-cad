@@ -18,13 +18,16 @@
       "type": "dateField",
       "id": "tarih",
       "label": "Kart tarihi",
-      "onChange": "parsel-karti"
+      "defaultExpr": "bugün()",
+      "onChange": "parsel-karti",
+      "visibleWhen": "içerir(bilgiler, 'tarih')"
     },
     {
       "type": "timeField",
       "id": "saat",
       "label": "Saat",
-      "onChange": "parsel-karti"
+      "onChange": "parsel-karti",
+      "visibleWhen": "içerir(bilgiler, 'tarih')"
     },
     {
       "type": "dateTimeField",

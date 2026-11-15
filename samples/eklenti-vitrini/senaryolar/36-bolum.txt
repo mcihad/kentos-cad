@@ -1,0 +1,19 @@
+# Bölüm: Vitrin › Yapı ara'nın sonundaki İpuçları (section, collapsed) kapalı açılır; başlığına basınca altındaki
+# metin görünür, yeniden basınca kapanır. Bölüm bir görünüş: içindeki alanlar komuta yine gider. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1200
+click 417 70    # Yapı ara
+wait 2500
+wheel 1280 450 -10
+wait 800
+shot 36-kapali
+click 1184 427  # İpuçları: açılır
+wait 800
+shot 36-acik
+click 1184 427  # yeniden: kapanır
+wait 800
+shot 36-yeniden-kapali

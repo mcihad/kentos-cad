@@ -678,6 +678,8 @@ impl App {
                 }
                 Some(Task::none())
             }
+            // A secondary window's key waits too; Esc there does not stop the open (windows/routing.rs).
+            Message::Windows(crate::windows::Event::Key(..)) => Some(Task::none()),
             // A click on the drawing is a tool's point; moving the view is not an edit.
             Message::Run(_)
             | Message::RunKept(_)

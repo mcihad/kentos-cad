@@ -1799,7 +1799,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | Düzen | yığın | var | gövde tek sütun (ortak `Form`) | dar yerde ad alanın üstüne geçer |
 | | satır, ızgara | yok | — | iki sütunluk form düzeni yeter; ızgara tek sütuna inecek (PY-UI-13) |
 | | sekme | KentOS'ta | `widget::tabs`, `segmented` | açık paneller sekmeli; panel içi sekme yok |
-| | grup, akordeon | KentOS'ta | `property_grid` bölümleri, `tree_view` | ağacın grupları açılıp kapanır, form grubu yok |
+| | grup, akordeon | var | `section` (katlanır başlık; sonraki bileşenleri bir sonraki bölüme dek toplar, §38) | katlıyken değerler komuta gider; yanlış bırakılan alan bölümünü açar |
 | | kaydırma | var | panel kendi kaydırır, yerini tutar | sekmeler üstte kalır |
 | | bölücü | KentOS'ta | `sash` | |
 | | adımlayıcı | KentOS'ta | `wizard` | |
@@ -1818,7 +1818,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | CRS/birim | KentOS'ta | ayarların CRS seçimi (`crs_choice`) | |
 | | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
 | Kaynak ve çıktı | dosya/eser seçici, ek | yok | — | dosya erişimi host servisi ister (PY-UI-10) |
-| | görsel önizleme | KentOS'ta | `picture` | |
+| | görsel önizleme | var | `image` (kodun verdiği PNG, `ctx.panel.set(id, image=…)`; oranı korunur, §40) | yalnız PNG, en çok 4096 piksel kenar; JPEG sonraki dilim |
 | | çıktı hedefi | host | İşlemler aracının çıktısı (`sinkParameter`) | panel komutu çizime yazar |
 | Veri görünüşü | tablo | var | `table` (500 satır) | `uid`'li satır nesneyi gösterir |
 | | ağaç | var | `tree` (1–3 sütunla gruplar) | |
@@ -1956,9 +1956,26 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   hesabı” çalıştırılamadı"), çağrı bir yoklamada (251 ms) işin cevabıyla cevaplandı, çizimin revizyonu değişmedi
   (`assistant::tests::an_extensions_python_tool_runs_as_a_job_and_its_call_waits_for_it`); bağlantıda plan işi hiçbir
   şey yazmadı ve söylemedi, yürütme işi yazınca satır bir kez düştü
-  (`python::tests::an_agents_job_is_said_in_the_log_when_it_writes`). Sınamada çıkan tuzak: `cad.processing.run`'ın
+  (`python::tests::an_agents_job_is_said_in_the_log_when_it_writes`). MCP tarafı uçtan uca: gerçek `kentos-mcp`
+  masaüstüne bağlanıp İmar'ın TAKS planını istedi, iş bağlantı üzerinden kendi iş parçacığında yoklandı, işin cevabı
+  ajana döndü, masaüstünde `is-1` işi kaldı (`a_real_agents_extension_tool_runs_as_a_job_through_mcp`, yok sayılan;
+  `cargo build -p kentos-mcp` sonra `--ignored`, 3,3 sn). Aynı sırada eski "gerçek ajan çizer" sınamasının hiç
+  koşmadığı ortaya çıktı: ikiliyi yalnız üç üst klasörde arıyordu (cargo'nun derleme dizininde sınama ikilisi
+  `target/<profil>/build/<crate>/<özet>/out/` altında) ve bulamayınca hemen düşüyordu; arama genişleyince
+  `target/debug/build/kentos-mcp` klasörünü ikili sandı ("Permission denied"), ajan bağlanmadan öldü, sınama sonsuza dek
+  bağlantının kapanmasını bekledi. Artık dosya aranıyor (`is_file`) ve sınama MCP v2'nin araçlarıyla yazıyor (`cad.run`
+  plan → yürütme, `scene.measure`; `cad.polygon.create` ve `drawing.measure` artık araç değil). Sınamada çıkan tuzak: `cad.processing.run`'ın
   girdisi `parameters`'tır; `ProcessingRun` bilinmeyen anahtarı reddetmediği için `values` yazan çağrı sessizce
   varsayılanlarla çalışıyordu (ilk sınama "Yapılar: seçilen katman artık yok" ile düştü).
+- **İşin ilerlemesi ajana ulaşır (15 Kasım).** Tek bir İşlemler çalıştırmasında aracın kendi ilerlemesi (eklentinin
+  `ctx.progress`'i, yerleşik aracın adımları) Runner'ın geri bildiriminde düşüyordu (`Collect::progress` boştu): iş
+  çalışırken `job` hiç ilerleme söylemiyordu; yalnız toplu işin satırları ve dosyaya yazma söylüyordu. Artık işin sayaçları
+  başka iş parçacığından yazılabilen bir alıcı verir (`Progress::sink`, aşama payıyla), `BatchFlow::progress_sink` onu
+  tek çalıştırmaya geçirir, Runner aracın payını binde olarak ona iletir (`with_progress`); toplu işin satırları
+  eskisi gibi satır arasında söyler. Asistan'ın kartı "Çalışıyor · %40" der (`ToolCall.progress`, yüzde değişince
+  yeniden çizilir); MCP ajanı `job`'un `progress`'ini okur. Bekçiler: `jobs::a_progress_sink_reports_from_another_thread_through_its_span`,
+  `an_extensions_tools_progress_reaches_the_job_running_it` (sağlayıcının 0,5'i → 500/1000),
+  `assistant::tests::a_long_jobs_progress_shows_on_its_calls_card`.
 - **Yeni katman açan çalıştırma planlandığı gibi yürütülemiyordu (15 Kasım, gerçek pencerede bulundu).** Asistan
   Vitrin'in TAKS aracını planladı (plan işi arka planda, "İşlem aracını çalıştır · plan — Çalışıyor"), onay kartı geldi,
   Onayla → `plan_changed` "Yazılacak olan onaylanan plana eşit değil"; ajan yeniden planladı, yine farklı bir plan
@@ -2108,7 +2125,11 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   çalıştırmanın kodu o paneli değiştirir: `ctx.panel.set(id, value=…, options=…, enabled=…, visible=…, text=…)`,
   `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`. Çağrı panele değil çalıştırmanın kökenine
   (`PanelOrigin`) gider; şeritten çalışan komutun `ctx.panel`'i None, masaüstüne gelen `panel.*` isteği `no_panel`.
-  Başka bir paneli açmak (oluştur) bu dilimde yok: paneller şeritten ve komut aramasından açılıyor.
+- **Oluştur: `ctx.open_panel(id)`.** Komut eklentinin bildirdiği bir panelini açar (açıksa öne getirir) ve onu
+  değiştirmek için alır: şeritten çalışan komut yaptığını panelinde gösterir. İstek panelin kimliğini taşır (`panel`;
+  oturumun her isteği taşır), masaüstü onu eklentinin kurulu manifestinde arar: bildirilmemiş panel `unknown_panel`
+  (panelleri sayar), yalnız kendi panelleri. Açılan panel çalışma bitene dek tutulur (`held`): kullanıcının o sırada
+  değiştirdiği girdi onun kalır; bitince (ya da süreç kapanınca) bırakılır (`ext_panels_released`).
 - **Kullanıcının yazdığı kazanır (PY-UI-04):** komut çalışırken kullanıcının değiştirdiği girdiler (`touched`, her
   çalıştırmanın başında boşalır) kodun değerini almaz: `set` False döner, çağrının diğer özellikleri (seçenek, etkinlik,
   görünürlük) uygulanır. Odak, metnin imleci ve panelin kaydırması yamadan etkilenmez: form panelin durumundan çizilir,
@@ -2117,13 +2138,40 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   almadığı özellik ("“liste” (table) enabled almaz: düğmeler ile metin, sayı, tarih ve saat alanları kapatılır"),
   yanlış türde ya da sınırı dışında değer ("“adet” (numberField): 0 ile 10 arasında olmalı"), seçeneklerde olmayan seçim,
   Kapı 1'in seçenek kuralı (boş olmayan değer ve ad, tekrarsız) kodun hatasıdır: `kentos.HostError`, çağrının hiçbir
-  parçası uygulanmaz. Kapanmış panel hata değildir: `applied: false, closed: true` (kullanıcı kapattı).
+  parçası uygulanmaz; eklentinin günlüğüne de uyarı olarak yazılır (`panel_refused`, bölüm `panel:<kimlik>`): kod hatayı
+  yakalayıp sürebilir, yazarı izi günlükte bulur. Kapanmış panel hata değildir: `applied: false, closed: true`
+  (kullanıcı kapattı).
 - **Ne nasıl değişir:** değer alanın kullanıcı yazımıyla saklanır (sayı "4,5", tarih "15.11.2026"; kod ISO verir ya da
   `datetime.date`); yeni seçeneklerde olmayan seçim bırakılır (seçimde ilk seçenek); gizlenen zorunlu alan kullanıcıya
   sorulmaz ama değeri komuta gider; `say`'in sözü çalıştırma kendi sözünü söylemeden biterse kalır (`spoke`), satır
   sayısıyla ezilmez; `rows` grafiğini yeniden hesaplatır; başka sekmedeki panelin değişmesi sekmesinde nokta
   (`unseen`). `focus` yalnız gösterilen panelde, görünür ve açık yazı alanında: kod kullanıcının baktığı sekmeyi
   değiştirmez (False).
+- **Katman menüsünün komutu katmanı alır.** Eklentinin `contextMenus` öğesi (`target: "layer"`) şerit düğmesi gibi
+  çalışıyordu: komut sağ tıklanan katmanı bilmiyordu (QGIS'in katman eylemleri katmanı alır). Artık menü katmanın
+  kimliğini verir (`extension_menu`'nün `on`'u, `Event::RunOn`), çalıştırmanın çağrısında `params: {"layer": …}` olur
+  (`ctx.params["layer"]`); grubun menüsü katman vermez. Bekleyen hedef çalıştırmanın başlatılmasında alınır
+  (`target_params`, harita aracının şekli gibi), başlamayan çalıştırmayla gider: sonra şeritten çalışan aynı komut onu
+  almaz. Bekçi: `a_layer_menus_command_gets_the_layer_it_was_run_on` (sürece giden çağrının parametreleri). Vitrin
+  1.0.27: katmanın menüsünde "Değerlerini say", Değer say'ı o katman seçili açar (`ctx.open_panel` + `set`). Gerçek
+  pencerede (`33-katman-menusu`): etkin katman Taslak iken Parsel sınırı'nın menüsünde eklentinin iki öğesi (Katman
+  özeti, Değerlerini say); tıklanınca Değer say "Kadastro › Parsel sınırı" seçili açıldı (etkin katman değil, tıklanan),
+  altında kodun satırı; Alan › ada ile sayım "En sık değer: “101” (3 nesne)."
+- **Büyük veri: sayfalar (15 Kasım).** Panel tablosu ilk 500 satırı çizip "… N satır daha" diyordu: kalanlara
+  ulaşılamıyordu; ağaç da yalnız ilk 500 satırı gruplayıp grup sayılarını eksik söylüyordu (501. satırdan sonraki
+  değerler sayılmıyordu). Artık tablo sayfa sayfa (200 satır), kartlar 100'er; altında "‹ Önceki · 201–400 / 12.340 ·
+  Sonraki ›" (Türkçe binlik ayraç), sayfa bileşen başına tutulur ve komutun ya da `rows`'un yeni satırlarıyla başa döner.
+  Ağaç bütün satırları sayar, ilk 300 grubu ve grup başına 100 yaprağı çizer ("… N daha", "… N grup daha"); gruplama
+  her karede çalıştığı için gruplar haritayla bulunur (önce satır × grup aramaydı). Bekçiler:
+  `panel_view::tests::pages_go_through_every_row_and_counts_read_as_turkish`, `a_trees_counts_are_all_its_rows` (700
+  satır, 7 değer, her biri 100), `a_tables_pager_moves_and_new_rows_start_at_its_first_page`.
+- **Vitrin 1.0.26:** "Yapıları numarala" şeritten çalışınca bitince Yapı ara panelini açar: Yapı no önekle dolar,
+  numaralananlar tabloda (Ara'nın satır biçimiyle: tıklanan satır yapıyı gösterir), altında özet (`32-panel-ac`).
+  Gerçek pencerede: B- ve 10 ile Numarala → Eklenti sekmesi Asistan'ın yanında açıldı, Yapı no "B-", altında "5 yapı
+  numaralandı (B-10 … B-14).", tabloda B-10 400 … B-14 200; satıra tıklamak yapıya gitti ("1 seçili"). **Bulgu
+  (düzeltildi):** `rows` sütunları anahtarlardan çıkarıyordu ve JSON nesnesi sırayı taşımadığı için tablo "alan (m²) |
+  no" diziliyordu; SDK artık sütunları satırların verdiği sırayla gönderiyor (raporun yaptığı gibi). Senaryo notu:
+  sürecin ilk açılışı (SDK yenilenince) 3 sn'yi geçti, pencere gelmeden yazılanlar komut satırına gitti; bekleme 5 sn.
 - **Vitrin 1.0.24–25:** "Değer say" sayınca bulduğu değerleri yeni Seç kutusuna koyar (seçenekler veriden gelir:
   panelin JSON'u onları bilemez), sıklıklarıyla ("101 (3)"), en sık değeri formun altındaki satıra yazar; Seç'te bir
   değer o değerdeki nesneleri çizimde seçer (`deger-sec`, `onChange`). Gerçek pencerede (`31-oturum`): Parsel sınırı ve
@@ -2137,3 +2185,295 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   aracıdan uçtan uca: değer, söz, imleç, çalışma sırasında yazılan alan korunur, yanıtın sözsüz satırları tabloya,
   kodun sözü kalır, panelsiz çalıştırma `no_panel`), Python 1 (`ctx.panel`'in istekleri, tarih ISO metne, panelsiz
   None). Ayrıca SDK stub'ı özel nöbetçi varsayılanı (`_KEEP`) `...` yazıyor: stub'da tanımsız ad kalmıyor.
+
+## §33. Bileşen kuralları: `visibleWhen`, `requiredWhen`, `enabledWhen` (`ADIM 22`, PY-UI-08)
+
+**15 Kasım.** Kod: `crates/shared/extensions/src/ui_panel/rules.rs` (`Rules`, `inputs_of`, `compile`, `holds`),
+`ui_panel.rs` (`read` kuralları bileşenin anahtarlarından okur, Kapı 1'de `takes_rule` ve derleme, JSON Schema'da
+anahtarlar), masaüstü `panels.rs` (`CompiledRules`, `shown`, `usable`, `asked`, `rule_value`), `panel_view.rs`.
+
+- **Karar: formun ifade dili, Python'suz.** Bileşen kuralı KentOS'un ifade diliyle panelin girdilerini kimlikleriyle
+  okur; formun kurallarıyla aynı sözcükler (`visibleWhen`, `requiredWhen`) ve aynı doğruluk (`truthy`: boş doğru
+  değildir). Masaüstü kuralı kullanıcı değer değiştirdikçe hesaplar: süreç başlamaz, ortamı hazırlanmamış eklentinin
+  paneli de kurallarıyla çalışır. `enabledWhen` düğmede ve metin, sayı, tarih, saat, an alanlarında; `requiredWhen`
+  zorunlu olabilen girdide; `visibleWhen` her bileşende.
+- **Girdiler türleriyle:** sayı alanı sayı (`2,5` yazılsa da `adet > 0` doğru), onay evet/hayır (`tamam`), tarih ve an
+  ISO (sırayla karşılaştırılır), çoklu seçim seçilenler birleşik metin (`içerir(bilgiler, 'tarih')`), gerisi yazıldığı
+  gibi. Tireli kimlik köşeli parantezle yazılır (`[en-sik]`; çıplak yazılınca çıkarma okunur).
+- **Kapı 1:** kural, bileşenin alamadığı anahtar ("“requiredWhen” table bileşeninde bilinmeyen bir alan; olanlar: …,
+  visibleWhen"), girdi kimliği olmayan ad ("“mahalle” paneldeki bir girdinin kimliği değil; girdiler: …"), `@` değeri,
+  derlenmeyen ifade ve metin olmayan değer yerinde söylenir. Panelin JSON Schema'sı kuralları bileşen başına tanır
+  (editör tamamlaması); karar Kapı 1'indir.
+- **Oturumla birlikte (§32):** bileşen kural tutuyorsa ve kod gizlemediyse görünür, kural tutuyorsa ve kod kapatmadıysa
+  kullanılır; zorunluluk `required` ya da `requiredWhen`. Gizli girdi (kuralla ya da kodla) sorulmaz ama değeri komuta
+  gider; yıldız `requiredWhen` tutunca çıkar.
+- **Vitrin 1.0.28:** Parsel kartı'nın Kart tarihi ve Saat alanları yalnız Bilgiler'de Tarih seçiliyken görünür.
+  Gerçek pencerede (`34-kural`): Tarih çipi bırakılınca iki satır kalktı, Geçerlilik sonu ve çipler yukarı kaydı (çipin
+  `onChange` komutu da ayrıca çalıştı); yeniden seçilince satırlar döndü.
+- **Sınamalar:** paylaşılan 3 (değerleri türleriyle okur; girdi olmayan ad, `@`, derlenmeyen ifade, köşeli parantez;
+  Kapı 1'in yerleri), masaüstü 1 (onay kapalıyken alan gizli ve sorulmaz, açılınca görünür ve zorunlu, `2,5 > 0` ile düğme
+  kullanılır, kodun kapatması kuralı geçer).
+
+## §34. Panel bileşenlerinin Python işlevleri: `kentos.ui_panel` (`ADIM 22`, PY-UI-02)
+
+**15 Kasım.** Kod: `crates/shared/extensions/src/ui_panel/python.rs` (`python_builders`), üretilen
+`python/kentos/ui_panel.py`, SDK bölümü `panelBuilders` (`sdk_pack.rs`).
+
+- **Karar: şemadan üretilir, elle yazılmaz.** Bileşen başına bir işlev (`text_field`, `number_field`, `select`,
+  `feature_picker`, `chart`, …), panelin JSON Schema'sından (§25, `json_schema`) üretilir: gerekli anahtarlar sırayla
+  konumsal, kalanı yalnız adıyla (`on_change`, `visible_when`), dönen değer bileşenin JSON'u. Verilmeyen anahtar
+  yazılmaz; evet/hayır anahtarı yalnız varsayılanından farklıysa yazılır (`multiple=False`, `required=True`).
+  Seçenekler yalnız değerle verilebilir (`["A", "B"]`), `choice(value, label)` bir seçenek, `panel(title, body)` bütün
+  panel. Türler şemadan: sayı `float`, seçenek listesi `Sequence[Choice | str]`, grafiğin türü ve toplamı `Literal`.
+  Şema değişince (yeni bileşen, anahtar, kural) modül yeniden üretilir; sınama ikisi ayrışınca kırılır
+  (`KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- python_builders`).
+- **Neden:** `ctx.dialog`'un alanları, `set(options=…)` ve Python'dan yazılan paneller elle JSON'du: yanlış yazılan bir
+  anahtar (`"requred"`) Kapı 1'e ya da çalıştırmaya kadar görünmüyordu. İşlevde yanlış anahtar Python'da `TypeError`;
+  editör ve ajan imzayı görür. Karar yine Kapı 1'in ve oturumun: düğmenin komutu, kimliklerin tekliği, kuralın
+  adları şemada söylenemez.
+- **Ajanlar:** SDK kılavuzunda bir paragraf (paket 48 KB'nin altında kalır); kaynağın tamamı ayrı bölüm
+  (`extension.sdk part=panelBuilders`, `kentos kek sdk --part panelBuilders`, 16 KB), her istekte şemadan üretilir.
+- **Vitrin 1.0.29:** "Yapıları numarala"nın penceresi (`ui.text`, `ui.text_field`, `ui.number_field`) ve "Değer
+  say"ın Seç seçenekleri (`ui.choice`) işlevlerle; davranış aynı. Gerçek pencerede: güncelleme "1.0.28 → 1.0.29
+  güncellendi", ortam yeni KentOS kitaplığıyla kuruldu; `29-pencere` aynı pencere (açıklama, Önek, zorunlu İlk numara),
+  B- ve 10 ile "5 yapı numaralandı (B-10 … B-14)."; `31-oturum` Seç "Seçmeyin / 101 (3) / 102 (1)".
+- **Sınamalar:** paylaşılan 1 (modül şemanınki; imzalar; satır en çok 120 karakter), Python 5 (yalnız verilen yazılır;
+  seçenekler yalnız değerle; yanlış anahtar `TypeError`; örnek panellerin her bileşeni işleviyle aynı yazılır;
+  parametreler bileşenin anahtarları, gerekliler konumsal).
+
+## §35. Hesaplı değerler: `calculate` ve `defaultExpr` (`ADIM 22`, PY-UI-08'in kalanı)
+
+**15 Kasım.** Kod: `crates/shared/extensions/src/ui_panel/values.rs` (`VALUE_KEYS`, `takes_value`, `Moment`,
+`compile`, `value_of`, `calc_order`), `ui_panel.rs` (Kapı 1 ve JSON Schema), masaüstü `panel_values.rs`
+(`moment_now`, `apply_defaults`, `recalculate`), `panels.rs` (`CompiledRules::calculate`, `calc_order`,
+`calculated`, `usable`), `panel_session.rs` (ret), `dialogs.rs`, `panel_view.rs`.
+
+- **Karar: formun sözcükleri, Python'suz.** `calculate` bileşenin değerini panelin girdilerinden hesaplar ve okuduğu bir
+  değer (kullanıcının, kodun ya da başka bir hesabın) değiştikçe yeniden hesaplar; `defaultExpr` alanın ilk değerini panel
+  açılırken bir kez hesaplar (üstündeki alanlar değerlerini aldıktan sonra), sonra değer kullanıcınındır. İkisi formun
+  ifade diliyle ve girdileri kural gibi okur (§33); ayrıca `bugün()` ve `şimdi()` (`@tarih`, `@simdi`): panelin
+  açıldığı an, saatle ilerlemez. Başka `@` değeri yoktur.
+- **Kim alır:** `calculate` metin ile metin, sayı, tarih, saat ve an alanları; `defaultExpr` bu alanlar. Metinde hesap
+  yazıyı verir, `text` hesap boşken görünür (`eğer(boş(ilk), boş, …)`).
+- **Hesaplanan bileşen yazılmaz, sorulmaz, kodla değişmez:** alan soluk ve tuş almaz (`usable`), değeri komuta her
+  girdi gibi gider; `ctx.panel.set` değerini ya da yazısını reddeder (`invalid_input`, "hesaplanan bir bileşen:
+  değerini kendi hesabı (calculate) yazar"); kod okuduğu bir girdiyi değiştirirse hesap onu izler.
+- **Sonuç alanın sözleriyle:** sayı alanın yazdığı gibi (`2,5`), tarih `GG.AA.YYYY`, saat `SS:DD`, an
+  `GG.AA.YYYY SS:DD`; o tür değilse boş. `şimdi()` tarih alanına günü, saat alanına saati verir.
+- **Kapı 1:** derlenmeyen ifade, girdi olmayan ad, başka `@` değeri yerinde söylenir; `calculate` ile `value`,
+  `defaultExpr`, `required`, `requiredWhen`, `enabledWhen` ve `onChange` birlikte olmaz (her biri kendi işaretçisinde,
+  nedeniyle); `defaultExpr` ile `value` birlikte olmaz. Hesaplar okuduklarından sonra hesaplanır (`calc_order`):
+  kendini ya da birbirini döngüyle okuyan hesap reddedilir ("Hesaplar birbirini okuyor: b → c → b"). İletişim
+  kutusunun alanları aynı denetimden geçer.
+- **Python cephesi:** üretilen işlevler iki anahtarı da alır (`ui.text(…, calculate=…)`, `default_expr=`); JSON
+  Schema bileşen başına tanır.
+- **Vitrin 1.0.30:** "Yapıları numarala" penceresinin açıklaması hesaplı (yerleşim kaymasın diye yeni satır değil, var
+  olan açıklama); Parsel kartı'nın Kart tarihi `defaultExpr: "bugün()"`. Gerçek pencerede (`35-hesap`): açılınca
+  "“yapi” katmanındaki 5 yapıya Y-01 … Y-05 yazılır.", B- ve 10 yazılınca "… B-10 … B-14 yazılır.", İptal "Vazgeçildi";
+  Parsel kartı Kart tarihi "15.11.2026" ile açıldı. `24-tarih` artık yazmadan önce alanı seçer (ctrl+a), kartlar
+  20.11.2026 ile yenilendi.
+- **Sınamalar:** paylaşılan 4 (değer girdilerden ve andan; Kapı 1'in sözleri; bütün panelde yerler ve döngü; sıra ve
+  döngü), masaüstü 2 (açılışta varsayılan, hesap değerleri izler, alan yazılmaz, değerler komuta; kod hesaplanana
+  yazamaz, okuduğunu değiştirince hesap izler).
+
+## §36. Rust'ın ölçtüğü denetim olguları: `ProjectAuditFacts` (`ADIM 20`, olguların ilk dilimi)
+
+**15 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/audit_facts.rs` (`ProjectAuditFacts`, `LayerFacts`,
+`ValidityProblem`, `MOST_ITEMS`, `json_schema`) ve şeması `sdk/kentos-audit-facts.schema.json` (SDK'nın `factsSchema`
+bölümü), İşlemler `crates/native/processing/src/audit_facts.rs` (`project_facts`, `MOST_OBJECTS`), masaüstü
+`extensions/audits.rs`, `python/kentos/ext.py` (`GisAuditFacts.project`, `ProjectAuditFacts`, `LayerFacts`,
+`InvalidGeometry`, `Overlap`, `Gap`); örnek çizim ve olguları `fixtures/audit-facts/v1/denetim.kcad`, `denetim.json`.
+
+- **Karar: geometriyi Rust çıkarır, kararı Python verir.** Kural katmanları nesne nesne okumayı sürdürür (§17);
+  yanında `facts.project`, KentOS'un çizimde bir kez ve geometri çekirdeğiyle ölçtüğü özettir: her katmanın nesneleri
+  geometriye göre (nokta, çizgi, alan, diğer), alanlarının toplam alanı ve çizgilerinin toplam uzunluğu (yaylar
+  kesin, deliklerin alanı düşülmüş), ve Topoloji sekmesinin üç kuralının bulduğu: geçersiz geometriler (nesne, sorun,
+  yer), aynı katmandaki alanların çakışmaları (iki kalıcı kimlik, ortak alan, en büyük parçanın ağırlık merkezi),
+  alanların birleşiminin kapattığı boşluklar (parseller arası boşluk ya da alanın deliği: alanı, yeri, çevresindeki
+  alanlar, en uzun sınırı paylaşan önce). Projenin topoloji toleransıyla ve istisnaları uygulanmadan: olgular
+  çizimindir, ne anlama geldiklerini kural söyler. Kural shapely istemez, geometriyi yeniden hesaplamaz.
+- **Neden ayrı bir özet:** `GisAuditFacts`'in GeoJSON'u yayları parçalanmış verir (alan biraz eksik çıkar); çakışma ve
+  boşluk Python'da paket ister ve yavaştır; aynı ölçü masaüstü ile bulut işinde başka kütüphanelerle başka çıkabilirdi.
+  Özet iki yerde aynı Rust kodudur.
+- **Aynı baytlar:** sıra, yuvarlama ve sınır paylaşılan modülde yazılıdır ve her üretici olguları
+  `ProjectAuditFacts::new` ile kurar. Katmanlar ağacın sırasıyla; geçersizler nesne, sorun, yer; çakışmalar kimlik
+  çifti (küçüğü önce), yer; boşluklar kuzeyden güneye, batıdan doğuya, alan. Alan 0,0001 m², uzunluk ve yer 1 mm'ye
+  yuvarlanır (değer × 10ⁿ sıfırdan uzağa, geri bölünür); −0 ve sayı olmayan değer 0 yazılır; tolerans projenindir.
+  Nesneler çekirdeğe çizimin sırasıyla değil kalıcı kimlik sırasıyla gider: aynı nesneler hangi sırayla çizilmiş ya da
+  okunmuş olursa olsun aynı baytları verir. Harita sırası, saat ya da iş parçacığı sayısı girmez.
+- **Sınırlar:** bir liste en çok 10 000 öğe tutar (sırasındaki ilkleri), `totals` hepsini sayar; en çok 200 000 nesne
+  (kalıcı kimlik sırasıyla ilkleri) ölçülür, ötesi kalınca `cut`. Masaüstü ile bulut aynı sınırı (`MOST_OBJECTS`)
+  verir. Halkanın kapanmaması yazılamaz (alanın halkası kendiliğinden kapanır): hiçbir alana varmayan halka `zeroArea`,
+  alan katmanındaki açık çizgi `lines` sayısında görünür.
+- **Masaüstü:** olgular kuralın arka plan görevinde, denetimin başladığı anki çizimin okuma kopyasında ölçülür; arayüz
+  beklemez, Durdur ölçümü de keser. Kuralın sürecine `facts` içinde `project` olarak gider; ajanın `audit.run`'ı aynı
+  yoldur (§27). Hiçbir öznitelik okunmaz: gizli alan olgulara girmez.
+- **Python cephesi:** `facts.project.layer("parsel")` → `LayerFacts` (`points`, `lines`, `areas`, `other`, `area`,
+  `length`, `invalid`, `overlaps`, `gaps`, `totals`); öğeler değiştirilemez veri sınıfları (`InvalidGeometry`,
+  `Overlap`, `Gap`), yerler `(x, y)`; nesnesi olmayan katman boş olgular verir. Olguları vermeyen KentOS'ta
+  `facts.project` `NotAvailable` atar: yetenek eksiktir, kural bozuk değil. Stub ve rehber güncellendi; şema
+  türlerden üretilir, bekçisi kayıtlı şemanın üretilenle aynı olduğunu ve KentOS'un yazdığı olguları aldığını sınar.
+- **Kabulün payı:** sabit örnek çizimin olguları baytı baytına `denetim.json`'dur ve Python sınamaları aynı dosyayı
+  okur; bulut işi aynı çizimi aynı kodla ölçünce aynı dosyayı vermelidir.
+- **Sonraki dilim:** mimari olgular (`paiy_areas`: bağımsız bölümlerin brüt ve net alanları; `kentos_domain::escape`:
+  kaçış yolları ve uzunlukları) aynı belgede ayrı bir bölüm olarak; ikisi de `Document` üzerinde hazır ve okuma
+  kopyasında hesaplanabilir, ama biçimleri ve sınamaları ayrı bir iş. Bulutta `RunRequest::Audit` ve ortak köken
+  (olguların özeti rapora). Denemede (§37) kurallar olguları henüz almaz.
+- **Sınamalar:** paylaşılan 4 (yuvarlama ve sıra; liste sınırı ve toplam; JSON biçimi ve geri okuma; şemanın bekçisi),
+  İşlemler 8 (katmanların olguları; örneğin baytları; her sırada aynı baytlar; sınır kalıcı kimlikle; Durdur; tolerans
+  projenin; alanın deliği boşluk; sorun adları çekirdeğin), Python 5 ve eklenti süreci 1 (Rust'ın olgularını tipli
+  okur; kural yalnız olgulardan bulgu verir; olgusuz KentOS'ta yetenek eksik).
+- **Vitrin 1.0.32:** şeridin yeni Denetim grubunda "Parsel çakışması": çakışmayı ve boşluğu KentOS ölçer, kural
+  bulguyu parselin ada/parsel adıyla yazar (çakışma hata, boşluk uyarı; düzeltme önermez). Gerçek pencerede
+  (`37-olgular`) örnek çizimin parselleri temiz: "Bulgu yok" (1,6 sn), köken 1.0.32.
+
+## §37. Kapı 3'ün kodu çalıştıran payı: sentetik çizimde deneme (`ADIM 21`)
+
+**15 Kasım.** Kod: başsız `agent_tools/workshop_trial.rs` (`extension.workshop.trial`, `trial_outcome`,
+`Host::trial_wait`), masaüstü `extensions/trial.rs` (`ext_trial_start`, `ext_trial_report`, `run`) ve
+`trial/drawing.rs` (`synthetic`, `written`),
+`python/agents.rs` (`trial`, `trial_report` istekleri), Asistan `host.rs` ve `mod.rs` (`Pending::Trial`),
+`kentos_processing::external::shape` (GeoJSON'dan nesne, artık açık).
+
+- **Karar: kullanıcının kurduğu eklenti, ajanın verdiği sentetik çizimde.** §26'nın ayırdığı pay: eklentinin kodu
+  ancak kullanıcı kurduktan sonra ve ortamı hazırken çalışır; ajan ona kullanıcının çizimini değil, kendi verdiği örnek
+  nesnelerden kurulan bir çizimi verir (yeni CBS projesi, TUREF / TM36; her nesne katman adı, GeoJSON şekli ve
+  öznitelikleriyle; basit ad katmanın kimliği de olur, projenin var olan katmanı kullanılır). Çizim arka plan görevinde
+  yaşar, deneme bitince gider; kullanıcının çizimine, geri alma geçmişine ve dosyalarına dokunulmaz.
+- **Ne çalışır:** eklentinin denetim kuralları (verilenler, yoksa hepsi) çizimin olgularını okur, masaüstündeki
+  denetim gibi (`audit_facts`, aynı süre sınırı); istenen İşlemler araçları (`cad.processing.run` girdisiyle,
+  yalnız bu eklentininkiler) çizimde yürütülür. Adımlar sırayla, eklentinin kendi sürecinde; Durdur (ajanın turu
+  durunca) adımlar arasında ve çalışan kuralın sürecinde durdurur. Aynı anda bir deneme.
+- **Rapor:** her kuralın bulguları nesnenin ajanın listesindeki sırasıyla (`feature`), önemi, sözleri ve düzeltmesinin
+  başlığı ve komutu; hata veren kural istisnası ve iz kaydıyla (denemenin bulgusu, çağrının hatası değil); her aracın
+  özeti, uyarıları ve yazdıkları (katman başına sayı ve ilk 5 nesne GeoJSON ve öznitelikleriyle); bir satırlık özet.
+  Bulgular eklentinin sözleridir: ajan veri olarak okur (§31).
+- **Olgular:** denemenin kuralları KentOS'un ölçtüklerini de okur (`facts.project`, §36), çizimin denetimindeki gibi;
+  ölçüm kırılırsa kurallar katmanlarla çalışır. Gerçek pencerede Vitrin 1.0.32'nin Parsel çakışması, 2 m iç içe iki
+  20×20 m sentetik parselle: "101/1 ile 101/2 40.00 m² çakışıyor." (hata).
+- **Yüzeyler:** Asistan çağrıyı deneme bitince cevaplar (arayüz iş parçacığında beklenmez, denetimin yolu); masaüstüne
+  bağlı MCP ajanı `trial_report`'u sorar. Masaüstü olmayan bağlantı nerede çalıştığını söyler (`not_offered`).
+  SDK'nın iş akışı aracı anar.
+- **Gerçek pencerede** (Asistan, DeepSeek, yalnız sentetik veri): "Vitrin'in Yapı numarası denetimini sentetik bir
+  çizimde dene: yapi katmanında iki kare yapı, birinin no'su Y-01, diğerinin yok" → ajan `extension.workshop.trial`
+  çağırdı; 1 uyarı (numarasız yapı, sıradaki numara Y-02, düzeltmesi `cad.entities.set`), Y-01'e bulgu yok. TAKS aracı
+  20×20 m parsel ve içinde 10×10 m yapıyla: taban alanı 100 m², TAKS 0,25, uygun; kural verilmediği için eklentinin
+  denetimi de koştu (numarasız yapı, Y-01). İki koşuda da kullanıcının çizimi aynı kaldı.
+- **Sınırlar:** komutlar (`@ext.command`) ve harita araçları denenmez: aracı üzerinden canlı çizimle konuşurlar ve
+  kullanıcıya sorabilirler (bir sonraki dilim); şerit ve panelin kurulması ile kaldırmada kalıntı §26'nın kuru
+  bağlamasında.
+- **Sınamalar:** başsız 2 (çağrı masaüstüne olduğu gibi gider, raporla cevaplanır; nesnesiz ve masaüstüsüz çağrı
+  söylenir; atölye araçlarının listesi), masaüstü 2 (sentetik çizim nesnelerden kurulur, katman adları ve öznitelikler,
+  yanlış şekil yeriyle; bulgular nesnenin sırasıyla, hata veren kural nedeni ve iz kaydıyla).
+
+## §38. Katlanır bölüm: `section` (`ADIM 22`, bileşen envanteri, düzen)
+
+**15 Kasım.** Kod: `ui_panel.rs` (`Component::Section`, Kapı 1), ortak `kentos_ui::widget::Form::foldable_section`,
+masaüstü `panel_sections.rs` (`drawn`, `section_of`, `reveal`), `panels.rs` (`shown`, `closed`, `PanelEvent::Section`),
+`panel_view.rs`, `dialogs.rs`.
+
+- **Karar: düz gövde, başlık bileşeni.** Panelin gövdesi tek liste kaldı: `section` bir başlıktır, ardından gelen
+  bileşenleri bir sonraki bölüme dek toplar. İç içe bileşen listesi (grup içinde gövde) her denetimi, kuralı, oturumu ve
+  çizimi iki katmanlı yapardı; başlık modeli hepsini olduğu gibi bırakıyor. Anahtarlar: `label` (zorunlu), `id`
+  (isteğe bağlı; kod `set(id, visible=…)` ile gizler), `collapsed` (açılışta katlı), her bileşen gibi `visibleWhen`.
+- **Katlamak bir görünüştür, kural değil:** katlı bölümün bileşenleri çizilmez ama gösterilmiş sayılır: değerleri komuta
+  gider, zorunlu olanı yine sorulur ve yanlış bırakılan alan bölümünü açar (sözler alanın altında görülsün). Kuralı ya
+  da kodu bölümü gizlerse topladıkları da gizlenir (sorulmaz). Satırların görünüşleri (tablo, kart…) formun altında
+  çizilir; bölüm onları da katlar.
+- **Ortak bileşende:** katlanır başlık `Form`'un kendi satırı (adı, açıkken aşağı katlıyken sağa bakan ok, satır sonuna
+  çizgi; satırın tamamı basılır), panele özel çizim değil; başka formlar da kullanır. İletişim kutusunun alanları da
+  alır.
+- **Vitrin 1.0.31:** Yapı ara'nın sonunda kapalı "İpuçları". Gerçek pencerede (`36-bolum`): kapalı açıldı, başlığa
+  basınca kısayollar ve geri alma notu göründü, yeniden basınca kapandı; bölüm sonda olduğu için başka senaryonun
+  koordinatı kaymadı.
+- **Sınamalar:** paylaşılan 1 (başlık, isteğe bağlı kimlik, kural; adsız ve `collapsed`'ı yanlış olanın yerleri),
+  masaüstü 1 (katlıyken gösterilir ama çizilmez, zorunlu alan sorulur ve bölümünü açar, gizli bölüm topladıklarını
+  gizler, kullanıcı katlar); Python cephesi `ui.section(label, id=…, collapsed=…)`.
+
+## §39. Mimari olgular: katlar, mahaller, PAİY alanları ve kaçış yolları (`ADIM 20`, olguların ikinci dilimi)
+
+**15 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/audit_facts/architecture.rs` (`ArchitectureFacts`,
+`Storey`, `StoreyExits`, `RoomFacts`, `RoomEscape`, `EscapeWalk`, `UnitFacts`, `GroupKind`, `UnitLevel`,
+`DoorEscape`; `ProjectAuditFacts::with_architecture`), İşlemler
+`crates/native/processing/src/audit_facts/architecture.rs` (`measure`), `python/kentos/ext.py`
+(`ProjectAuditFacts.architecture` ve sınıfları); örnek bina
+`fixtures/audit-facts/v1/mimari.kcad` (KentOS'un komutlarıyla `scripts/fixtures/audit_facts_mimari.py` çizer) ve
+olguları `mimari.json`.
+
+- **Karar: sürüm 1'in isteğe bağlı bölümü, sürüm 2 değil.** §36 yazılı: okuyucu bilmediği alanı yok sayar, yeni olgu
+  aynı sürümde gelir, anlam değişirse sürüm değişir. Burada anlam değişmedi, olgu eklendi: `architecture` bölümü mahali
+  olan çizimde yazılır, olmayanda hiç yazılmaz. Bu yüzden §36'nın `denetim.json`'u baytı baytına aynı kaldı (sınaması
+  değişmeden geçiyor) ve sürüm 1 okuyucusu (masaüstü, eski Python) bölümü görmeden çalışır.
+- **Ne var:**
+  - `levels`: projenin katları (kimlik, ad, kot, yükseklik), alttan üste; `exits`: mahali olan her katın kat çıkışı
+    sayısı (BYKHY 4/u: kaçış merdiveninin mahali, açık merdivenin ayağı ya da başı, ±0.00 ve altındaki katta dışarı
+    açılan kapı).
+  - `rooms`: her mahal (boşluk ve dış mahal da): kalıcı kimlik, numara, ad, kullanım, kat, grup; `void`, `outdoor`
+    (kullanımının programdaki tarifi dış mahal), `broken` (sınırı tohumundan bulunamadı), `stair` (kaçış merdiveni
+    mahali); `net` (duvarların iç yüzleri arası, PAİY 4/ğ-3'ün ölçtüğü), `axis` (duvar eksenlerine göre çevre: Ek-5/A
+    kişi yükünün çoğu kullanımda okuduğu); `escape`: en uzak noktasından (duvarlardan 40 cm, 32/6) en yakın kat
+    çıkışına yürüyüş (uzunluk, başka çıkışa giden yolla ortak kalan tek yön payı, ulaşılan çıkış sayısı, kırılma
+    noktaları; 32/4, 4/i), konut bölümünün mahalinde daire kapısına yürüyüş (48/2), katında çıkışa ulaşıp ulaşmadığı
+    (33/6-b), kapı ve eşiksiz geçit sayısı (39/2).
+  - `units`: programın mahali olan grupları PAİY 4/ğ alanlarıyla (BB brüt, net, eklentilerin brüt ve neti, toplam
+    brüt, ortak alan payı, genel brüt, kat kat brüt ve net), türü, numarası, niteliği, eklentinin bölümü, konut olup
+    olmadığı.
+  - `doors`: her konut bağımsız bölümünün kapısından en yakın kat çıkışına yürüyüş (48/4).
+- **Brüt alan mahal başına verilmez:** BB brüt alanı bölümün dış çevresidir, başka bölümle paylaşılan duvar ekseninden
+  kesilir (4/ğ-1); mahal başına brüt paylaşılan duvarı iki kez sayardı. Mahal başına net ve eksen alanı, grup ve kat
+  başına brüt ve net. Hesaplar KentOS Mimari'nin (`Document::paiy_areas`, `kentos_domain::escape`): metrekare cetveli
+  ve Mimari denetim'in yangın kuralları neyi ölçüyorsa kural da onu okur.
+- **Aynı baytlar her sırada:** kaçış yolları eşit yürüyüşlerden birini, PAİY toplamları da toplananları çizimin
+  sırasıyla seçiyor. Ölçüldü: nesnelerin sırası ters çevrilince bir daire kapısının yolu aynı uzunlukta ama yinelenen
+  bir noktayla çıktı. Ölçü bu yüzden nesneleri kalıcı kimlik sırasına dizilmiş bir kopyada okur (yalnız mahali olan
+  çizimde); aynı nesneler ters ve karışık sırada aynı baytları verir (sınaması kopya kaldırılınca kırılıyor).
+- **Sıra ve yuvarlama:** katlar kota, sonra kimliğe göre; kat çıkışları ve grubun katları o sırayla (katsız mahaller
+  önce, projenin adlandırmadığı kat sonda); mahaller ve kapılar kalıcı kimliğe göre; gruplar programın sırasıyla;
+  yürüyüşün noktaları yüründüğü gibi. Alan 0,0001 m², uzunluk, yer, kot ve yükseklik 1 mm. Liste başına en çok 10 000
+  mahal ya da kapı; aşınca olgular `cut` der.
+- **Yalnız mimarisi olan çizimde:** mahal yoksa bölüm yok; Python'da `facts.project.architecture` boş olgular verir
+  (katlar, mahaller, gruplar, kapılar boş; `exits(kat)` 0). Bölümün ölçüsü bir planda kırılırsa bölüm yazılmaz,
+  katmanların olguları kalır.
+- **Maliyet (ölçüldü):** orta boy plan (`audit_facts_mimari.py --mid`: 8 kat, 152 mahal, 192 duvar, 144 kapı, 7
+  merdiven; olgular 77,6 KB) release derlemede 76 ms (bütün olgular 78 ms), debug derlemede 482 ms; mahal başına
+  yaklaşık 0,5 ms. **Karar: alana bağlanmadı**, mahali olan her çizimde ölçülür: kuralın süreci ve Python'u bundan
+  uzun sürüyor, ölçü masaüstünde arka planda ve okuma kopyasında. Durdur adımlar arasında sorulur (mahaller, PAİY
+  alanları, kaçış yolları); bir adımın içi durmaz. Binlerce mahalli bir planda (1 000 mahalde yarım saniye civarı
+  beklenir, ölçülmedi) yalnız `domain: "mimari"` denetimlerde ölçmek bir bayrakla eklenir.
+- **Python cephesi:** `facts.project.architecture` → `ext.ArchitectureFacts` (`levels`, `rooms`, `units`, `doors`;
+  `exits(kat)`, `room(uid)`, `unit(kimlik_ya_da_numara)`); öğeler değiştirilemez veri sınıfları (`Storey`,
+  `RoomFacts`, `RoomEscape`, `EscapeWalk`, `UnitFacts`, `UnitLevel`, `DoorEscape`). Stub, rehber ve `factsSchema`
+  güncellendi. Örnek: yalnız olgularla yazılmış bir BYKHY 32/4 ve 4/i kuralı (konut olmayan mahalde tek yön payı 15
+  m'yi aşarsa) örnek binada Mimari denetim'in yangın kurallarının bulduğu ikisini bulur: Arşiv 22,52 m, 1. katın
+  koridoru 21,82 m çıkmaz.
+- **Gösterim önerisi (Vitrin değil, mimari tarafta):** örnek bina gerçek pencerede açılır; bir mimari denetim
+  eklentisinin iki kuralı şeritten çalışır: tek yön payı (yukarıdaki kural) ve PAİY metrekare cetveli raporu
+  (`units`: her bölümün brüt, net, toplam ve genel brüt alanı). Göster bulgunun mahalini seçer; sonuçlar Mimari
+  denetim'in kendi bulgularıyla yan yana karşılaştırılır.
+- **Sınamalar:** paylaşılan 4 (yuvarlama ve sıra, katların sırası; sınır ve `cut`; bölümsüz olguların baytları ve
+  geri okuma; şema), İşlemler 5 (örnek binanın katları, mahalleri, grupları ve yürüyüşleri; örneğin baytları; her
+  sırada aynı baytlar; mahalsiz çizimde bölüm yok; Durdur), Python 6 (katlar ve çıkışlar, mahaller, gruplar, kapılar,
+  olgularla yazılan kural, mahalsiz çizimde boş bölüm).
+
+## §40. Görsel: `image` (`ADIM 22`, bileşen envanteri, görsel önizleme)
+
+**15 Kasım.** Kod: `ui_panel.rs` (`Component::Image`, Kapı 1), masaüstü `panel_image.rs` (`decode`, `panel_image`),
+`panel_session.rs` (`set(id, image=…)`), `panel_view.rs`; Python `PanelSession.set(..., image=…)`.
+
+- **Karar: görseli kod verir, KentOS denetleyip çizer.** `image` bileşeni bir yer tutar (`label`, `alt`, `height`
+  80–600 px, yoksa 200); görsel eklentinin kodundan gelir: `ctx.panel.set(id, image=…)` PNG baytlarını ya da bir PNG
+  dosyasının yolunu alır, aracıdan base64 geçer; `None` görseli kaldırır. Python'da grafik kitaplığı serbest:
+  matplotlib'in `savefig(format="png")` baytları da, NumPy dizisinden yazılan PNG de olur.
+- **Yalnız PNG, okumadan önce denetlenir:** grafik ve çizim kayıpsız ister; boyutu başlığından (IHDR) okunur, kenarı
+  4096 pikseli ya da toplamı 8 milyon pikseli aşan görsel çözülmeden reddedilir (düşmanca bir dosya sınırsız bellek
+  isteyemez); metin en çok yaklaşık 6 MB. Yanlışı kodun sözleriyle (`invalid_input`) ve hiçbir şey değişmeden söylenir;
+  önceki görsel kalır. Fotoğraf (JPEG) sonraki dilim.
+- **Oranı korunur:** panel genişliğinde, oranının verdiği yükseklikte, en çok `height` kadar; üstünde ve altında bant
+  kalmaz. Verilene dek `alt` görselin yerinde yazar. Tablo ve kartlar gibi formun altında çizilir.
+- **Vitrin 1.0.33:** Yapı ara'nın Özetle'si gösterge kartlarının altında taban alanlarını büyükten küçüğe çubuk grafik
+  olarak çizer: NumPy dizisine çizilip `zlib` ve `struct` ile PNG'ye çevrilir, ek kitaplık yok. Gerçek pencerede
+  (`38-gorsel`): beş yapının çubukları (400 m² en büyüğü) "Taban alanları"nın altında.
+- **Sınamalar:** paylaşılan 1 (alanlar, `alt` ve `height` sınırı yerinde), masaüstü 2 (PNG çizilir; başka biçim,
+  base64 olmayan metin, sınırı aşan başlık çözülmeden ve bozuk PNG reddedilir; kod görseli verir, yanlışı öncekini
+  bırakır, `None` kaldırır, başka bileşen almaz), Python 1 (bayt ve dosya base64 gider, `None` temizler).
+

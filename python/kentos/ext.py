@@ -47,6 +47,7 @@ A separate process is not a sandbox: an extension runs with the user's rights (P
 
 from __future__ import annotations
 
+import base64
 import json
 import math
 import os
@@ -57,20 +58,33 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, TypeVar, overload
 
 __all__ = [
+    "ArchitectureFacts",
     "AuditFinding",
     "CommandContext",
     "CommandResult",
+    "DoorEscape",
+    "EscapeWalk",
     "Feature",
     "FeatureInput",
+    "Gap",
     "GisAuditFacts",
+    "InvalidGeometry",
+    "LayerFacts",
     "MapToolContext",
     "NewFeature",
     "NotAvailable",
+    "Overlap",
     "PanelSession",
     "ProcessingContext",
+    "ProjectAuditFacts",
+    "RoomEscape",
+    "RoomFacts",
     "SemanticFix",
     "Shape",
     "Stopped",
+    "Storey",
+    "UnitFacts",
+    "UnitLevel",
     "audit",
     "command",
     "expr",
@@ -238,9 +252,18 @@ def _json_value(value: Any) -> Any:
     raise TypeError(f"{type(value).__name__} panele verilemez: metin, sayı, tarih, liste ya da sözlük olmalı.")
 
 
+def _png_bytes(image: Any) -> bytes:
+    """A picture given to a panel: bytes as they are, else a file's (a path or a path-like)."""
+    if isinstance(image, (bytes, bytearray, memoryview)):
+        return bytes(image)
+    with open(os.fspath(image), "rb") as f:
+        return f.read()
+
+
 class PanelSession:
-    """The panel whose button (or changed input) started this run, changed as the run goes (docs/adr/8057 §32):
-    ``ctx.panel``; None when the run did not start from a panel.
+    """One of the extension's panels, changed as the run goes (docs/adr/8057 §32): ``ctx.panel`` (the panel whose
+    button or changed input started the run; None when it did not start from a panel) or what
+    :meth:`CommandContext.open_panel` gives.
 
     Each change is checked as the panel's definition is: an id the panel does not have, a property its component does
     not take, a value of the wrong kind or out of its bounds, a choice not among the options raise
@@ -255,7 +278,7 @@ class PanelSession:
         self.id: str = local
 
     def _ask(self, method: str, params: dict[str, Any]) -> bool:
-        answer = self._link.ask(method, params)
+        answer = self._link.ask(method, {**params, "panel": self.id})
         return bool(isinstance(answer, dict) and answer.get("applied"))
 
     def set(
@@ -267,13 +290,15 @@ class PanelSession:
         enabled: bool | None = None,
         visible: bool | None = None,
         text: str | None = None,
+        image: Any = _KEEP,
     ) -> bool:
         """Changes component ``id``: ``value`` (a field's text or number, a date as ``datetime.date`` or ISO text, a
         choice's value, a multiple choice's values, a check's True or False, a layer picker's layer id, a feature
         picker's persistent ids; None empties it), ``options`` (a choice's or a multiple choice's: values, or dicts
         with ``value`` and ``label``; a chosen value no longer among them is let go), ``enabled`` (buttons and typed
-        fields), ``visible`` (any component with an id; a hidden required field is not asked of the user) and
-        ``text`` (a ``text`` component's words)."""
+        fields), ``visible`` (any component with an id; a hidden required field is not asked of the user),
+        ``text`` (a ``text`` component's words) and ``image`` (an ``image`` component's picture: a PNG's bytes, e.g.
+        ``fig.savefig(buf, format="png")``, or the path of a PNG file; None takes it away; at most 4096 pixels a side)."""
         params: dict[str, Any] = {"id": str(id)}
         if value is not _KEEP:
             params["value"] = _json_value(value)
@@ -285,14 +310,22 @@ class PanelSession:
             params["visible"] = bool(visible)
         if text is not None:
             params["text"] = str(text)
+        if image is not _KEEP:
+            params["image"] = None if image is None else base64.b64encode(_png_bytes(image)).decode("ascii")
         return self._ask("panel.set", params)
 
     def rows(self, id: str, rows: Iterable[dict[str, Any]], columns: Sequence[str] | None = None) -> bool:
         """Puts ``rows`` (each a dict of column → value) in table, tree, cards, figures or chart ``id`` now, as a
         command's report would at its end; ``columns`` in their order, else in the order the rows first give them."""
-        params: dict[str, Any] = {"id": str(id), "rows": [_json_value(dict(r)) for r in rows]}
-        if columns is not None:
-            params["columns"] = [str(c) for c in columns]
+        given = [dict(r) for r in rows]
+        # The columns in the order the rows first give them: a JSON object's keys have no order KentOS keeps ("no"
+        # came after "alan (m²)", real window, 15 November 2026).
+        order = list(columns) if columns is not None else list(dict.fromkeys(k for r in given for k in r))
+        params: dict[str, Any] = {
+            "id": str(id),
+            "rows": [_json_value(r) for r in given],
+            "columns": [str(c) for c in order],
+        }
         return self._ask("panel.rows", params)
 
     def say(self, text: str, kind: str = "info") -> bool:
@@ -380,6 +413,14 @@ class CommandContext:
     def confirm(self, text: str, title: str = "Onay", ok: str = "Evet", cancel: str = "Hayır") -> bool:
         """Asks the user yes or no in a KentOS window (:meth:`dialog` with ``text``): True for ``ok``."""
         return self.dialog(title, [{"type": "text", "text": str(text)}], ok=ok, cancel=cancel) is not None
+
+    def open_panel(self, id: str) -> PanelSession:
+        """Opens the extension's panel ``id`` (``entrypoints.panels[].id``; brought in front when it is open) and gives
+        it to change as the run goes (:class:`PanelSession`): a command run from the ribbon shows what it did in its
+        panel. Until the run ends an input the user changes there stays the user's. A panel the manifest does not
+        declare raises :class:`kentos.HostError` (``unknown_panel``)."""
+        self._link.ask("panel.open", {"panel": str(id)})
+        return PanelSession(self._link, str(id))
 
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""
@@ -850,10 +891,11 @@ class MapToolContext(CommandContext):
 
 class GisAuditFacts:
     """What an audit rule reads (docs/adr/8057 §17): the drawing's layers holding objects, each object a
-    :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began. A rule
-    writes nothing: it answers :class:`AuditFinding` s, each with an optional fix the user chooses to apply."""
+    :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began, and what
+    KentOS measured in it (:attr:`project`). A rule writes nothing: it answers :class:`AuditFinding` s, each with an
+    optional fix the user chooses to apply."""
 
-    __slots__ = ("_layers", "cut")
+    __slots__ = ("_layers", "cut", "_project")
 
     def __init__(self, raw: dict[str, Any]) -> None:
         self._layers: list[tuple[str, str, list[Feature]]] = [
@@ -863,6 +905,18 @@ class GisAuditFacts:
         ]
         #: KentOS gave only the first objects of a very large drawing (its limit): a rule may say so.
         self.cut: bool = bool(raw.get("cut"))
+        project = raw.get("project")
+        self._project: ProjectAuditFacts | None = ProjectAuditFacts(project) if isinstance(project, dict) else None
+
+    @property
+    def project(self) -> ProjectAuditFacts:
+        """What KentOS measured in the drawing, once and in Rust (:class:`ProjectAuditFacts`): read it rather than
+        working the geometry out again. :class:`NotAvailable` when they are missing (a KentOS that does not measure
+        them, or could not on this drawing)."""
+        if self._project is None:
+            raise NotAvailable("Çizimin ölçülmüş olguları (facts.project) bu denetimde yok: bu KentOS onları vermiyor "
+                               "ya da bu çizimde ölçemedi.")
+        return self._project
 
     def layers(self) -> list[tuple[str, str]]:
         """The layers holding objects, ``(id, name)``, in the layer tree's order."""
@@ -889,6 +943,290 @@ class GisAuditFacts:
             if key:
                 out.setdefault(key, []).append(f)
         return out
+
+
+class ProjectAuditFacts:
+    """What KentOS measured in the drawing for an audit (``kentos.auditFacts`` 1, the SDK's ``factsSchema``;
+    docs/adr/8057 §36): each layer's objects by geometry, its invalid geometries, the overlaps of its areas and the gaps
+    their union closes in, worked out once in Rust at the project's topology tolerance, the same on the desktop and in
+    a cloud job. Areas in m² to 4 decimals, lengths and places in metres to 3; a place is ``(x, y)`` in the project's
+    plane, as the features' GeoJSON gives it."""
+
+    __slots__ = ("tolerance", "cut", "_layers", "architecture")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        #: The project's topology tolerance (m): areas nearer than it touch, a piece no wider is no overlap or gap.
+        self.tolerance: float = float(raw.get("tolerance") or 0.0)
+        #: KentOS measured only the first objects of a very large drawing (by persistent id): a rule may say so.
+        self.cut: bool = bool(raw.get("cut"))
+        self._layers = [LayerFacts(layer) for layer in raw.get("layers") or [] if isinstance(layer, dict)]
+        #: The drawing's storeys, rooms, program groups and escape routes (docs/adr/8057 §39); empty without rooms.
+        self.architecture: ArchitectureFacts = ArchitectureFacts(raw.get("architecture") or {})
+
+    def layers(self) -> list[LayerFacts]:
+        """The layers holding objects, in the layer tree's order."""
+        return list(self._layers)
+
+    def layer(self, layer: str) -> LayerFacts:
+        """A layer's facts, by its id or its name (``parsel``, ``Parsel``); an empty one when no layer holding objects
+        has it."""
+        for found in self._layers:
+            if layer in (found.id, found.name):
+                return found
+        return LayerFacts({"id": layer, "name": layer})
+
+
+class LayerFacts:
+    """One layer's measured facts (:class:`ProjectAuditFacts`); a list holds at most 10 000 items, the first in its
+    order (invalid by object, overlaps by their pair, gaps north to south), and :attr:`totals` counts all of them."""
+
+    __slots__ = ("id", "name", "points", "lines", "areas", "other", "area", "length", "invalid", "overlaps", "gaps",
+                 "totals")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        counts = raw.get("objects") or {}
+        totals = raw.get("totals") or {}
+        self.id: str = str(raw.get("id", ""))
+        self.name: str = str(raw.get("name", ""))
+        #: Its objects by geometry: points, lines (a closed polyline too), areas and the rest (texts, blocks …).
+        self.points: int = int(counts.get("points") or 0)
+        self.lines: int = int(counts.get("lines") or 0)
+        self.areas: int = int(counts.get("areas") or 0)
+        self.other: int = int(counts.get("other") or 0)
+        #: Its areas' area summed, m²: holes out, arcs exact (not the tessellated GeoJSON's).
+        self.area: float = float(raw.get("area") or 0.0)
+        #: Its lines' length summed, m, arcs exact.
+        self.length: float = float(raw.get("length") or 0.0)
+        self.invalid: list[InvalidGeometry] = [
+            InvalidGeometry(str(x.get("uid", "")), str(x.get("problem", "")), _place(x.get("at")))
+            for x in raw.get("invalid") or []
+        ]
+        self.overlaps: list[Overlap] = [
+            Overlap(str(x.get("a", "")), str(x.get("b", "")), float(x.get("area") or 0.0), _place(x.get("at")))
+            for x in raw.get("overlaps") or []
+        ]
+        self.gaps: list[Gap] = [
+            Gap(float(x.get("area") or 0.0), _place(x.get("at")), tuple(str(u) for u in x.get("around") or []))
+            for x in raw.get("gaps") or []
+        ]
+        #: How many it has in all: ``{"invalid": …, "overlaps": …, "gaps": …}``.
+        self.totals: dict[str, int] = {k: int(totals.get(k) or 0) for k in ("invalid", "overlaps", "gaps")}
+
+    def __repr__(self) -> str:
+        return (f"LayerFacts({self.name!r}: {self.areas} alan, {self.totals['invalid']} geçersiz, "
+                f"{self.totals['overlaps']} çakışma, {self.totals['gaps']} boşluk)")
+
+
+def _place(at: Any) -> tuple[float, float]:
+    x, y = (list(at) + [0.0, 0.0])[:2] if isinstance(at, (list, tuple)) else (0.0, 0.0)
+    return (float(x), float(y))
+
+
+@dataclass(frozen=True)
+class InvalidGeometry:
+    """An object whose shape is not valid: its id, the problem (``repeated``, ``zeroArea``, ``ringCrossing``,
+    ``pathCrossing``, ``holeOutside``, ``holesOverlap``) and where it first shows."""
+
+    uid: str
+    problem: str
+    at: tuple[float, float]
+
+
+@dataclass(frozen=True)
+class Overlap:
+    """Two areas of one layer covering each other: their ids (``a`` the smaller), the area both cover (m²) and the
+    centroid of its largest piece."""
+
+    a: str
+    b: str
+    area: float
+    at: tuple[float, float]
+
+
+@dataclass(frozen=True)
+class Gap:
+    """What a layer's areas close in and none covers (a gap between parcels, an area's hole): its area (m²), its
+    centroid and the areas around it, the one sharing the longest boundary first."""
+
+    area: float
+    at: tuple[float, float]
+    around: tuple[str, ...]
+
+
+class ArchitectureFacts:
+    """The drawing's architecture as KentOS Mimari measured it (docs/adr/8057 §39): its storeys, every room with its
+    net area and its outline to the walls' axes, the program's groups with PAİY 4/ğ's areas and the escape routes
+    (BYKHY); empty when the drawing has no room. PAİY is Planlı Alanlar İmar Yönetmeliği, BYKHY Binaların Yangından
+    Korunması Hakkında Yönetmelik; areas in m² to 4 decimals, lengths in metres to 3."""
+
+    __slots__ = ("levels", "rooms", "units", "doors", "_exits")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        #: The project's storeys, lowest first.
+        self.levels: list[Storey] = [
+            Storey(str(s.get("id", "")), str(s.get("name", "")), float(s.get("elevation") or 0.0),
+                   _maybe_float(s.get("height")))
+            for s in raw.get("levels") or []
+        ]
+        #: Every room, a void and an outdoor one too, by persistent id.
+        self.rooms: list[RoomFacts] = [_room(r) for r in raw.get("rooms") or []]
+        #: The program's groups that have rooms, in the program's order.
+        self.units: list[UnitFacts] = [_unit(u) for u in raw.get("units") or []]
+        #: Each dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4).
+        self.doors: list[DoorEscape] = [
+            DoorEscape(str(d.get("uid", "")), str(d.get("unit", "")), _maybe_str(d.get("level")),
+                       _place(d.get("at")), _walk(d.get("exit")))
+            for d in raw.get("doors") or []
+        ]
+        self._exits = {_maybe_str(e.get("level")): int(e.get("count") or 0) for e in raw.get("exits") or []}
+
+    def exits(self, level: str | None) -> int:
+        """How many storey exits a storey has (BYKHY 4/u: an escape stair's room, an open stair, a door out on the
+        ground storey), by its id; 0 for a storey without rooms."""
+        return self._exits.get(level, 0)
+
+    def room(self, uid: str) -> RoomFacts | None:
+        """A room by its persistent id; none when the drawing has no such room."""
+        return next((r for r in self.rooms if r.uid == uid), None)
+
+    def unit(self, unit: str) -> UnitFacts | None:
+        """A program group by its id or its number; none when no group with rooms has it."""
+        return next((u for u in self.units if unit in (u.id, u.number)), None)
+
+
+def _maybe_str(v: Any) -> str | None:
+    return None if v is None else str(v)
+
+
+def _maybe_float(v: Any) -> float | None:
+    return None if v is None else float(v)
+
+
+def _walk(raw: Any) -> EscapeWalk | None:
+    if not isinstance(raw, dict):
+        return None
+    exits = raw.get("exits")
+    return EscapeWalk(float(raw.get("length") or 0.0), tuple(_place(p) for p in raw.get("path") or []),
+                      _maybe_float(raw.get("oneWay")), None if exits is None else int(exits))
+
+
+def _room(raw: dict[str, Any]) -> RoomFacts:
+    e = raw.get("escape")
+    escape = None if not isinstance(e, dict) else RoomEscape(
+        _walk(e.get("exit")), bool(e.get("storeyExits")), _walk(e.get("entrance")), bool(e.get("hasEntrance")),
+        int(e.get("passages") or 0))
+    text = {k: _maybe_str(raw.get(k)) for k in ("number", "name", "usage", "level", "unit")}
+    return RoomFacts(str(raw.get("uid", "")), *text.values(), bool(raw.get("void")), bool(raw.get("outdoor")),
+                     bool(raw.get("broken")), bool(raw.get("stair")), float(raw.get("net") or 0.0),
+                     float(raw.get("axis") or 0.0), escape)
+
+
+def _unit(raw: dict[str, Any]) -> UnitFacts:
+    area = {k: float(raw.get(k) or 0.0) for k in ("gross", "net", "annexGross", "annexNet", "total")}
+    return UnitFacts(
+        str(raw.get("id", "")), str(raw.get("number", "")), _maybe_str(raw.get("name")), str(raw.get("kind", "")),
+        _maybe_str(raw.get("nature")), _maybe_str(raw.get("annexOf")), bool(raw.get("dwelling")), *area.values(),
+        _maybe_float(raw.get("share")), _maybe_float(raw.get("general")),
+        tuple(UnitLevel(_maybe_str(x.get("level")), float(x.get("gross") or 0.0), float(x.get("net") or 0.0))
+              for x in raw.get("levels") or []))
+
+
+@dataclass(frozen=True)
+class Storey:
+    """A storey of the project: its id, its name, its floor's elevation (m) and its height (m; None when not given)."""
+
+    id: str
+    name: str
+    elevation: float
+    height: float | None
+
+
+@dataclass(frozen=True)
+class EscapeWalk:
+    """A walk along the points it turns at, its length in metres; a walk to an exit also says the part it shares with
+    the walk to the nearest other exit (``one_way``, tek yön: a dead end's) and how many exits its start reaches."""
+
+    length: float
+    path: tuple[tuple[float, float], ...]
+    one_way: float | None = None
+    exits: int | None = None
+
+
+@dataclass(frozen=True)
+class RoomEscape:
+    """A room's walks from its farthest point, 40 cm in front of its walls (BYKHY 32/6): to the nearest storey exit
+    (32/4; None when it reaches none) and, a dwelling unit's room, to its unit's door (48/2)."""
+
+    exit: EscapeWalk | None
+    storey_exits: bool
+    entrance: EscapeWalk | None
+    has_entrance: bool
+    passages: int
+
+
+@dataclass(frozen=True)
+class RoomFacts:
+    """A room: its persistent id, number, name, usage, storey and group; whether it is a void, outdoor, broken (its
+    boundary not found) or an escape stair's room; its net area and its outline to the walls' axes (m²); its walks
+    (None for a void, an outdoor, a broken or a stair's room)."""
+
+    uid: str
+    number: str | None
+    name: str | None
+    usage: str | None
+    level: str | None
+    unit: str | None
+    void: bool
+    outdoor: bool
+    broken: bool
+    stair: bool
+    net: float
+    axis: float
+    escape: RoomEscape | None
+
+
+@dataclass(frozen=True)
+class UnitLevel:
+    """A group's gross and net area on one storey (m²)."""
+
+    level: str | None
+    gross: float
+    net: float
+
+
+@dataclass(frozen=True)
+class UnitFacts:
+    """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross``
+    (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None
+    without a share)."""
+
+    id: str
+    number: str
+    name: str | None
+    kind: str
+    nature: str | None
+    annex_of: str | None
+    dwelling: bool
+    gross: float
+    net: float
+    annex_gross: float
+    annex_net: float
+    total: float
+    share: float | None
+    general: float | None
+    levels: tuple[UnitLevel, ...]
+
+
+@dataclass(frozen=True)
+class DoorEscape:
+    """A dwelling unit's door: its persistent id, unit, storey and middle, and its walk from its outer side to the
+    nearest storey exit (BYKHY 48/4; None when it opens into an escape stair's room)."""
+
+    uid: str
+    unit: str
+    level: str | None
+    at: tuple[float, float]
+    exit: EscapeWalk | None
 
 
 @dataclass

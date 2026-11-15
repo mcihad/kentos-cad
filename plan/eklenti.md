@@ -959,8 +959,16 @@ listesinde; ajanın çalıştırması şeridin yolu (sekme açılır, Asistan'ı
 bekler), `audit.report` son raporu okur, bulgunun düzeltmesi sahibin koruyucusundan geçer ve sekmede işaretlenir.
 Ajanın eklenti İşlemler aracı (Python) da pencereyi bekletmez (ADR 8057 §27, 15 Kasım): planı ve yürütmesi iş olarak
 okuma kopyasında hesaplanır, Asistan çağrıyı iş bitince cevaplar, iş başladığı çizime yazar.
-Kalan: `ProjectAuditFacts` (Rust'ın çıkardığı ortak olgular), ulusal/belediye kurallarının Python betikleri, bulut
-işi ve bulutla ortak köken.
+**`ProjectAuditFacts`, ilk dilim** (ADR 8057 §36, 15 Kasım): geometriyi Rust çıkarır; kural `facts.project` ile
+katman başına geometriye göre sayıları, alan ve uzunluk toplamlarını, geçersiz geometrileri, alanların çakışmalarını
+ve boşlukları okur (projenin toleransıyla; `kentos.auditFacts` 1, SDK'nın `factsSchema`'sı). Sıra, yuvarlama ve sınır
+paylaşılan modülde yazılı: aynı nesneler her sırada aynı baytları verir (`fixtures/audit-facts/v1`); masaüstünde
+okuma kopyasında arka planda ölçülür. **Mimari olgular, ikinci dilim** (ADR 8057 §39, 15 Kasım): mahali olan çizimde
+aynı sürümün isteğe bağlı `architecture` bölümü (`facts.project.architecture`): katlar ve kat çıkışları, her mahalin
+net ve eksen alanı, programın gruplarının PAİY 4/ğ alanları (`paiy_areas`), kaçış yolları (`kentos_domain::escape`:
+kat çıkışına ve daire kapısına yürüyüş, tek yön payı); 152 mahalli planda 76 ms. Kalan: kurp/görüş hesapları,
+ulusal/belediye kurallarının Python betikleri, bulut işi (`RunRequest::Audit`, aynı olguları aynı kodla) ve bulutla
+ortak köken.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 
@@ -1000,15 +1008,17 @@ yazılamıyordu), bilinmeyen ad en yakın önerilerle uyarıdır. **Atölye** (A
 `extension.workshop.write` ile kendi klasörüne yazar, `verify` ile doğrular, `workshop.review` paketleyip kullanıcının
 Gözden geçir ve kur penceresine açar (kurulum kullanıcının). **Canlı yükleme ve görünüş** (ADR 8057 §22, 15 Kasım):
 `extension.workshop.reload`, `.preview`; masaüstüne bağlı MCP ajanında da (ADR 8057 §30). **Kapı 3'ün kod çalıştırmayan payı** (ADR 8057 §26): `kek verify` ve
-`extension.verify` paketi geçici kayıt defterinde bağlar, katkılarını, atlananları ve kaldırınca kalıntıyı söyler. Kalan:
-Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çizim), `kentos.ui`/`ProjectAuditFacts`/manifest
-şemaları.
+`extension.verify` paketi geçici kayıt defterinde bağlar, katkılarını, atlananları ve kaldırınca kalıntıyı söyler.
+**Kapı 3'ün kodu çalıştıran payı** (ADR 8057 §37): `extension.workshop.trial` kullanıcının kurduğu eklentinin denetim
+kurallarını ve İşlemler araçlarını ajanın verdiği nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin
+sırasıyla, aracın yazdıkları, hata ve iz kaydı; kullanıcının çizimine dokunmaz). Kalan: komutların ve harita
+araçlarının denenmesi.
 
 - [ ] **Kod üretimi** — *kısmen: `kentos_ext.pyi` (ADR 8057 §20), ikon listesi (§21), panel tanımının JSON Schema'sı
   (§25, 15 Kasım: tiplerden üretilir, depoda durur, sapınca test kırmızı), manifestin, katman şemasının ve araç
   tanımının JSON Schema'ları (§28, 15 Kasım: aynı yol; katman şeması denetleyicinin anahtar listelerinden, araç tanımı
   okuyucunun sözlüklerinden; KentOS'un gönderdiği manifestler, katman şemaları, araç tanımları ve Vitrin'in panelleri
-  şemalara karşı sınanır); kalan: `ProjectAuditFacts` şeması (olgular ADIM 20'de).* Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
+  şemalara karşı sınanır); denetim olgularının şeması da (ADR 8057 §36, `factsSchema`).* Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
   `kentos.ui` bileşen şeması, `ProjectAuditFacts` şeması ve manifest/araç/panel JSON Schema'ları üretilir; üretilmiş
   dosya elle düzeltilmez, kaynak ve üretici aynı commit'te güncellenir; sapma derleme hattında hatadır [ECO-API-01, 05].
 - [ ] **`extension.blueprint(kind, module, prompt)`:** hedef modüle uygun hazır klasör iskeleti, kullanılabilir ikonlar,
@@ -1099,8 +1109,15 @@ Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çi
 - [ ] **Tanım ve oturum** — *ilk dilim (ADR 8057 §32, 15 Kasım): panel oturumu: panelden çalışan kod panelini
   değiştirir (`ctx.panel.set/rows/say/focus/close`: değer, veriden seçenek, yazı, etkin, görünür), kullanıcının o
   sırada yazdığı alan onun kalır, yama odağı ve kaydırmayı korur, tanım gibi denetlenir; Vitrin'in Değer say'ı
-  seçenekleri sayımdan doldurur. Kalan: oluştur (koddan panel açmak), Python cephesinin şemadan üretimi, ifade profiliyle
-  kurallar, büyük veride sayfalama.* Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
+  seçenekleri sayımdan doldurur; oluştur: `ctx.open_panel(id)` komutun kendi panelini açıp değiştirmesi (Vitrin'in
+  Yapıları numarala'sı sonucu Yapı ara'da gösterir); büyük veri: tablo ve kartlar sayfa sayfa, ağaç bütün satırları
+  sayar; bileşen kuralları (ADR 8057 §33): `visibleWhen`, `requiredWhen`, `enabledWhen` formun ifade diliyle,
+  Python'suz; Python cephesi şemadan üretilir (ADR 8057 §34): `kentos.ui_panel`, bileşen başına tipli bir işlev
+  (Vitrin'in penceresi ve seçenekleri onunla); hesaplı değerler (ADR 8057 §35): `calculate` girdiler değiştikçe
+  Python'suz hesaplanır, `defaultExpr` panel açılırken (`bugün()`, `şimdi()`), döngü Kapı 1'de reddedilir; katlanır
+  bölüm (ADR 8057 §38): `section` sonraki bileşenleri toplar, katlıyken değerleri gider, yanlış alan bölümünü açar;
+  görsel (ADR 8057 §40): `image` kodun verdiği PNG'yi gösterir (`ctx.panel.set(id, image=…)`, okumadan denetlenir). Katman menüsünün komutu tıklanan katmanı `ctx.params["layer"]`'da alıyor (Vitrin'in
+  Değerlerini say'ı).* Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
   düzen [PY-UI-01, 06]; `kentos.ui` Python cephesi şemadan üretilir [PY-UI-02]; aracı oluştur/yamala/kapat/odakla/bildir
   ve eylem kaydı [PY-UI-03]; yama geldiğinde kullanıcının odağı, taslağı ve kaydırması korunur [PY-UI-04]; bileşen değeri
   ile kalıcı nesne değeri ayrıdır, her tuş belge değişikliği değildir [PY-UI-05]; varsayılan/görünür/etkin/zorunlu/hesaplı
@@ -1159,6 +1176,24 @@ Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çi
 ### [ ] ADIM 22A — Bulut kataloğu, onaylı yayın ve güncelleme (P1)
 
 [EKL-07 (bulut); PY-CLOUD-01…18]
+
+**Durum (15 Kasım): birinci dilim — sürüm akışının durum makinesi** (ADR 8059): saf Rust
+(`kentos-extensions::release`): durumlar ve hareket tablosu, yetkiler veri olarak (onaylamak ile yayımlamak ayrı;
+genel katalogda yayımcının hiçbir üyesi kendi sürümünü onaylayamaz; karar hareketleri yalnız katalog penceresinden,
+programlı çağrı incelemeyi atlayamaz), onay içeriğe bağlı (paket, kilit, SBOM özeti ve istenen yetenekler; içerik
+değişince onay düşer, kurulum yalnız onaylı içerikle), kapılar açık kalmaz (taranmadı / hata verdi asla geçti
+değil), ret gerekçe koduyla, askı/geri çekme nedeniyle, her hareket denetim kaydında, kayıt okunurken kurallardan
+geçer; inceleme derinliği önceki onaylı sürüme göre farktan (yeni yetenek ya da bağımlılık derin, yalnız metin hızlı
+yol). 21 sınama. **İkinci dilim — sunucu uçları** (ADR 8059 §10): `apps/api`'de yükleme, liste, kayıt, yeni içerik,
+hareket, kurulum bileti ve onaylı paket uçları, yalnız akış modülüyle; katalog yetkileri katalog başına ve varsayılan
+yok, karar yalnız web penceresinden (anahtar, masaüstü, Python, MCP program), göremeyene aynı 404, beklenen sürümle
+yazma; bellekteki depoyla 12 sınama, katalog çalışan sunucuda kapalı (kalıcı depo ve kararlar için taze kimlik
+doğrulama gelene dek). **Üçüncü dilim — geri çekme listesi** (ADR 8059 §12): biçim
+(`kentos.extension-revocations` v1) masaüstünün barındırıcısıyla paylaşılan crate'e taşındı, liste akıştan üretilir
+(yayımlanmış ve şimdi askıda ya da geri çekilmiş sürümler, `=X.Y.Z` ve duyurunun gerekçesiyle, yeni alan olmadan) ve
+`GET /v1/extension-catalogs/{katalog}/revocations` ile her üyeye aynı gelir; imzasızdır, masaüstü onu imzalanana dek
+uygulamaz. Kalan: kalıcı depo (tasarımı §11), taze kimlik doğrulama, imza (onay kaydı ve geri çekme listesi) ve OIDC,
+platform tekerlek deposu, arayüz.
 
 - [ ] Durum makinesi: `taslak → gönderildi → denetleniyor → değişiklik isteniyor / onaylandı → yayımlandı → askıda /
   geri çekildi / arşivlendi`. Yüklenen taslağı yalnız yazarı ve yetkili inceleyenler görür; **yükleme yayın değildir**.

@@ -7,7 +7,7 @@
 //! unsaved changes, a viewer's edits (never kept), or unsent work whose
 //! draft could not be written.
 
-use iced::{Task, window};
+use iced::Task;
 use kentos_cloud::ApiFailure;
 
 use crate::app::{App, Dialog, Message, Then};
@@ -119,7 +119,8 @@ impl App {
                 // The project's copy is written whole before the program ends.
                 self.close_cloud_project();
                 self.recovery.finish();
-                window::close(window)
+                // The windows of their own go with the main window, then the program (windows/, docs/adr/8060).
+                self.close_every_window(window)
             }
             Then::SignOut => self.sign_out(),
             Then::OpenCloud { tenant, project } => self.start_cloud_open(tenant, project),

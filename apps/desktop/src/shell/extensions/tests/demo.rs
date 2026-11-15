@@ -1612,11 +1612,33 @@ fn a_panels_command_changes_its_panel_as_it_runs() {
     );
     assert_eq!(kept.ok(), Some(json!({ "applied": false })));
     assert_eq!(gis.extensions.panel().unwrap().texts["sorgu"], "Y-1");
-    // A wrong id is the code's mistake.
+    // A wrong id is the code's mistake: refused, and said in its log (the code may catch the error and go on).
     let wrong = gis.ext_panel_session(VITRIN, "panel.set", &json!({ "id": "yok", "value": 1 }));
     assert!(
         matches!(&wrong, Err(e) if e.code == "unknown_component"),
         "{wrong:?}"
+    );
+    call(
+        &mut gis,
+        5,
+        "panel.set",
+        json!({ "panel": "yapi-paneli", "id": "yok", "value": 1 }),
+    );
+    let logged = gis
+        .extensions
+        .registry
+        .as_ref()
+        .unwrap()
+        .log_of(VITRIN)
+        .iter()
+        .find(|r| r.code == "panel_refused")
+        .cloned()
+        .expect("its log line");
+    assert_eq!(logged.part.as_deref(), Some("panel:yapi-paneli"));
+    assert!(
+        logged.message.starts_with("panel.set: “yok” panelde yok"),
+        "{}",
+        logged.message
     );
     // Its answer has rows and no words: they go to the table, the code's words stay.
     let _ = gis.extensions_event(Event::Runner(
@@ -1642,6 +1664,131 @@ fn a_panels_command_changes_its_panel_as_it_runs() {
     ));
     let none = gis.ext_panel_session(VITRIN, "panel.say", &json!({ "text": "x" }));
     assert!(matches!(&none, Err(e) if e.code == "no_panel"), "{none:?}");
+    // It opens one of its panels (ctx.open_panel): shown in front, held until the run ends; the user's choice there
+    // stays the user's. A panel its manifest does not declare is the code's mistake.
+    let opened = gis.ext_panel_session(VITRIN, "panel.open", &json!({ "panel": "deger-paneli" }));
+    assert_eq!(opened.ok(), Some(json!({ "applied": true })));
+    assert_eq!(
+        gis.extensions.panel().map(|p| p.local.as_str()),
+        Some("deger-paneli")
+    );
+    assert!(gis.extensions.panel().unwrap().held);
+    let options = json!({ "panel": "deger-paneli", "id": "vurgula", "options": ["101", "102"], "value": "101" });
+    let set = gis.ext_panel_session(VITRIN, "panel.set", &options);
+    assert_eq!(set.ok(), Some(json!({ "applied": true })));
+    assert_eq!(gis.extensions.panel().unwrap().choices["vurgula"], "101");
+    let _ = gis.extensions_event(Event::Panel(PanelEvent::Choose(
+        "vurgula".into(),
+        "102".into(),
+    )));
+    let again = gis.ext_panel_session(
+        VITRIN,
+        "panel.set",
+        &json!({ "panel": "deger-paneli", "id": "vurgula", "value": "101" }),
+    );
+    assert_eq!(
+        again.ok(),
+        Some(json!({ "applied": false })),
+        "the user's choice stays"
+    );
+    let unknown = gis.ext_panel_session(VITRIN, "panel.open", &json!({ "panel": "yok-paneli" }));
+    assert!(
+        matches!(&unknown, Err(e) if e.code == "unknown_panel" && e.message.contains("yapi-paneli, deger-paneli")),
+        "{unknown:?}"
+    );
+    // Its end: the panel is the user's again.
+    let run = gis.extensions.runners[VITRIN].run.as_ref().unwrap().id;
+    let _ = gis.extensions_event(Event::Runner(
+        VITRIN.into(),
+        generation,
+        Said::Message(json!({ "type": "done", "id": run, "ok": true,
+            "result": { "kind": "message", "message": "Bitti." } })),
+    ));
+    let panel = gis.extensions.panel().unwrap();
+    assert!(!panel.held && panel.touched.is_empty());
+    let _ = gis.extension_panel_view();
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/8057 §32: a layer menu's command is given the layer it was run on (`ctx.params["layer"]`); the same
+/// command from elsewhere is not; a run that did not start leaves nothing for the next.
+#[test]
+fn a_layer_menus_command_gets_the_layer_it_was_run_on() {
+    use serde_json::json;
+
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let dir = temp("katman-menusu");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let item = gis
+        .extensions
+        .menus
+        .iter()
+        .find(|m| m.item.label == "Değerlerini say")
+        .expect("its layer menu item");
+    assert_eq!(item.target, kentos_extensions::manifest::MenuTarget::Layer);
+    // Python off in tests: the item says why it cannot run (with Python on it is the command's).
+    assert!(
+        matches!(&item.item.action, Action::Unavailable(why) if why.contains("Python kapalı")),
+        "{:?}",
+        item.item.action
+    );
+    let _ = gis.extension_menu(
+        kentos_extensions::manifest::MenuTarget::Layer,
+        Some("parsel"),
+        kentos_ui::widget::Menu::new(),
+    );
+    // Run from a layer's menu; it did not start (no Python in tests): what it was run on goes with it.
+    let _ = gis.extensions_event(Event::RunOn(
+        VITRIN.into(),
+        "command".into(),
+        "katman-degerleri".into(),
+        json!({ "layer": "parsel" }),
+    ));
+    assert!(
+        gis.extensions.target_params.is_none(),
+        "dropped with its run"
+    );
+    // Its launch takes it (the state the menu leaves while the environment is found).
+    gis.extensions.target_params = Some((
+        VITRIN.into(),
+        "katman-degerleri".into(),
+        json!({ "layer": "parsel" }),
+    ));
+    let package = gis
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.package_dir(VITRIN))
+        .unwrap();
+    let launch = || {
+        super::runner::Launch::for_test(
+            "/bin/sh".into(),
+            package.clone(),
+            "vitrin.logic:katman_degerleri",
+            "Değerlerini say",
+            false,
+        )
+    };
+    let _ = gis.extensions_event(Event::Launch(
+        VITRIN.into(),
+        "command".into(),
+        "katman-degerleri".into(),
+        Ok(launch()),
+    ));
+    let sent = gis.extensions.test_last_invoke.clone().expect("its call");
+    assert_eq!(sent["params"], json!({ "layer": "parsel" }), "{sent:#}");
+    assert!(gis.extensions.target_params.is_none(), "taken");
     let _ = gis.ext_stop(VITRIN);
+    gis.extensions.runners.clear();
+    // From elsewhere (its ribbon or command search): no layer.
+    let _ = gis.extensions_event(Event::Launch(
+        VITRIN.into(),
+        "command".into(),
+        "katman-degerleri".into(),
+        Ok(launch()),
+    ));
+    let sent = gis.extensions.test_last_invoke.clone().expect("its call");
+    assert_eq!(sent["params"], json!({}), "{sent:#}");
     let _ = std::fs::remove_dir_all(&dir);
 }

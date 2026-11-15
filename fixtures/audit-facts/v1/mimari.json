@@ -1,0 +1,959 @@
+{
+  "format": "kentos.auditFacts",
+  "schemaVersion": 1,
+  "tolerance": 0.001,
+  "layers": [
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "objects": {
+        "points": 0,
+        "lines": 0,
+        "areas": 0,
+        "other": 48
+      },
+      "area": 0.0,
+      "length": 0.0,
+      "totals": {
+        "invalid": 0,
+        "overlaps": 0,
+        "gaps": 0
+      },
+      "invalid": [],
+      "overlaps": [],
+      "gaps": []
+    }
+  ],
+  "architecture": {
+    "levels": [
+      {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+      },
+      {
+        "id": "k1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+      }
+    ],
+    "exits": [
+      {
+        "level": "zemin",
+        "count": 2
+      },
+      {
+        "level": "k1",
+        "count": 1
+      }
+    ],
+    "rooms": [
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e3989deaadbb",
+        "number": null,
+        "name": "Merdiven evi",
+        "usage": null,
+        "level": "zemin",
+        "unit": "ortak",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": true,
+        "net": 14.8225,
+        "axis": 16.0,
+        "escape": null
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e3999a1cb813",
+        "number": null,
+        "name": "Koridor",
+        "usage": null,
+        "level": "zemin",
+        "unit": "ortak",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 33.32,
+        "axis": 36.0,
+        "escape": {
+          "exit": {
+            "length": 21.819,
+            "oneWay": 0.0,
+            "exits": 2,
+            "path": [
+              [
+                23.5,
+                5.05
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": null,
+          "hasEntrance": false,
+          "passages": 6
+        }
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39ad272edb3",
+        "number": "Z01",
+        "name": "Dükkân",
+        "usage": null,
+        "level": "zemin",
+        "unit": "dk",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 30.415,
+        "axis": 32.0,
+        "escape": {
+          "exit": {
+            "length": 11.481,
+            "oneWay": 5.181,
+            "exits": 2,
+            "path": [
+              [
+                11.55,
+                0.5
+              ],
+              [
+                8.0,
+                3.85
+              ],
+              [
+                8.0,
+                4.15
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": null,
+          "hasEntrance": false,
+          "passages": 1
+        }
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
+        "number": "Z02",
+        "name": "Salon",
+        "usage": null,
+        "level": "zemin",
+        "unit": "d1",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 22.715,
+        "axis": 24.0,
+        "escape": {
+          "exit": {
+            "length": 17.81,
+            "oneWay": 4.51,
+            "exits": 2,
+            "path": [
+              [
+                17.55,
+                0.5
+              ],
+              [
+                15.0,
+                3.85
+              ],
+              [
+                15.0,
+                4.15
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": {
+            "length": 4.21,
+            "oneWay": null,
+            "exits": null,
+            "path": [
+              [
+                17.55,
+                0.5
+              ],
+              [
+                15.0,
+                3.85
+              ]
+            ]
+          },
+          "hasEntrance": true,
+          "passages": 2
+        }
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39cf0fe5491",
+        "number": "Z03",
+        "name": "Yatak odası",
+        "usage": null,
+        "level": "zemin",
+        "unit": "d1",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 22.5225,
+        "axis": 24.0,
+        "escape": {
+          "exit": {
+            "length": 22.868,
+            "oneWay": 9.568,
+            "exits": 2,
+            "path": [
+              [
+                23.5,
+                3.55
+              ],
+              [
+                18.15,
+                2.0
+              ],
+              [
+                17.85,
+                2.0
+              ],
+              [
+                15.0,
+                3.85
+              ],
+              [
+                15.0,
+                4.15
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": {
+            "length": 9.268,
+            "oneWay": null,
+            "exits": null,
+            "path": [
+              [
+                23.5,
+                3.55
+              ],
+              [
+                18.15,
+                2.0
+              ],
+              [
+                17.85,
+                2.0
+              ],
+              [
+                15.0,
+                3.85
+              ]
+            ]
+          },
+          "hasEntrance": true,
+          "passages": 1
+        }
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
+        "number": "Z04",
+        "name": "Depo",
+        "usage": null,
+        "level": "zemin",
+        "unit": "dp",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 19.5975,
+        "axis": 21.0,
+        "escape": {
+          "exit": {
+            "length": 5.986,
+            "oneWay": 4.124,
+            "exits": 2,
+            "path": [
+              [
+                5.55,
+                8.5
+              ],
+              [
+                3.0,
+                5.65
+              ],
+              [
+                3.0,
+                5.35
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": null,
+          "hasEntrance": false,
+          "passages": 1
+        }
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39ee6b0ea49",
+        "number": null,
+        "name": "Asansör boşluğu",
+        "usage": null,
+        "level": "zemin",
+        "unit": "ortak",
+        "void": true,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 6.365,
+        "axis": 7.0,
+        "escape": null
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39f8e07d64b",
+        "number": "Z05",
+        "name": "Ofis",
+        "usage": null,
+        "level": "zemin",
+        "unit": "of",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 53.0975,
+        "axis": 56.0,
+        "escape": {
+          "exit": {
+            "length": 22.721,
+            "oneWay": 8.37,
+            "exits": 2,
+            "path": [
+              [
+                8.45,
+                8.5
+              ],
+              [
+                16.0,
+                5.65
+              ],
+              [
+                16.0,
+                5.35
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": null,
+          "hasEntrance": false,
+          "passages": 1
+        }
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-499e70342853",
+        "number": null,
+        "name": "Merdiven evi",
+        "usage": null,
+        "level": "k1",
+        "unit": "ortak",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": true,
+        "net": 14.8225,
+        "axis": 16.0,
+        "escape": null
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-499fcf59dea1",
+        "number": null,
+        "name": "Koridor",
+        "usage": null,
+        "level": "k1",
+        "unit": "ortak",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 33.32,
+        "axis": 36.0,
+        "escape": {
+          "exit": {
+            "length": 21.819,
+            "oneWay": 21.819,
+            "exits": 1,
+            "path": [
+              [
+                23.5,
+                5.05
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": null,
+          "hasEntrance": false,
+          "passages": 3
+        }
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
+        "number": "K01",
+        "name": "Salon",
+        "usage": null,
+        "level": "k1",
+        "unit": "d2",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 30.415,
+        "axis": 32.0,
+        "escape": {
+          "exit": {
+            "length": 11.481,
+            "oneWay": 11.481,
+            "exits": 1,
+            "path": [
+              [
+                11.55,
+                0.5
+              ],
+              [
+                8.0,
+                3.85
+              ],
+              [
+                8.0,
+                4.15
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": {
+            "length": 4.881,
+            "oneWay": null,
+            "exits": null,
+            "path": [
+              [
+                11.55,
+                0.5
+              ],
+              [
+                8.0,
+                3.85
+              ]
+            ]
+          },
+          "hasEntrance": true,
+          "passages": 2
+        }
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
+        "number": "K02",
+        "name": "Yatak odası 1",
+        "usage": null,
+        "level": "k1",
+        "unit": "d2",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 22.715,
+        "axis": 24.0,
+        "escape": {
+          "exit": {
+            "length": 16.789,
+            "oneWay": 16.789,
+            "exits": 1,
+            "path": [
+              [
+                17.55,
+                3.55
+              ],
+              [
+                12.15,
+                2.0
+              ],
+              [
+                11.85,
+                2.0
+              ],
+              [
+                8.0,
+                3.85
+              ],
+              [
+                8.0,
+                4.15
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": {
+            "length": 10.189,
+            "oneWay": null,
+            "exits": null,
+            "path": [
+              [
+                17.55,
+                3.55
+              ],
+              [
+                12.15,
+                2.0
+              ],
+              [
+                11.85,
+                2.0
+              ],
+              [
+                8.0,
+                3.85
+              ]
+            ]
+          },
+          "hasEntrance": true,
+          "passages": 2
+        }
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a2bb4d2324",
+        "number": "K03",
+        "name": "Yatak odası 2",
+        "usage": null,
+        "level": "k1",
+        "unit": "d2",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 22.5225,
+        "axis": 24.0,
+        "escape": {
+          "exit": {
+            "length": 22.741,
+            "oneWay": 22.741,
+            "exits": 1,
+            "path": [
+              [
+                23.5,
+                3.55
+              ],
+              [
+                18.15,
+                2.0
+              ],
+              [
+                17.85,
+                2.0
+              ],
+              [
+                12.15,
+                2.0
+              ],
+              [
+                11.85,
+                2.0
+              ],
+              [
+                8.0,
+                3.85
+              ],
+              [
+                8.0,
+                4.15
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": {
+            "length": 16.141,
+            "oneWay": null,
+            "exits": null,
+            "path": [
+              [
+                23.5,
+                3.55
+              ],
+              [
+                18.15,
+                2.0
+              ],
+              [
+                17.85,
+                2.0
+              ],
+              [
+                12.15,
+                2.0
+              ],
+              [
+                11.85,
+                2.0
+              ],
+              [
+                8.0,
+                3.85
+              ]
+            ]
+          },
+          "hasEntrance": true,
+          "passages": 1
+        }
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a3b97636d7",
+        "number": "K04",
+        "name": "Arşiv",
+        "usage": null,
+        "level": "k1",
+        "unit": "of",
+        "void": false,
+        "outdoor": false,
+        "broken": false,
+        "stair": false,
+        "net": 79.73,
+        "axis": 84.0,
+        "escape": {
+          "exit": {
+            "length": 22.52,
+            "oneWay": 22.52,
+            "exits": 1,
+            "path": [
+              [
+                0.5,
+                8.5
+              ],
+              [
+                12.0,
+                5.65
+              ],
+              [
+                12.0,
+                5.35
+              ],
+              [
+                2.0,
+                4.15
+              ],
+              [
+                2.0,
+                3.85
+              ]
+            ]
+          },
+          "storeyExits": true,
+          "entrance": null,
+          "hasEntrance": false,
+          "passages": 1
+        }
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a42be36102",
+        "number": null,
+        "name": "Balkon",
+        "usage": "Balkon",
+        "level": "k1",
+        "unit": "d2",
+        "void": false,
+        "outdoor": true,
+        "broken": false,
+        "stair": false,
+        "net": 8.4,
+        "axis": 8.4,
+        "escape": null
+      }
+    ],
+    "units": [
+      {
+        "id": "d1",
+        "number": "1",
+        "name": null,
+        "kind": "unit",
+        "nature": "Daire",
+        "annexOf": null,
+        "dwelling": true,
+        "gross": 49.61,
+        "net": 45.2375,
+        "annexGross": 21.965,
+        "annexNet": 19.5975,
+        "total": 71.575,
+        "share": 22.34,
+        "general": 93.915,
+        "levels": [
+          {
+            "level": "zemin",
+            "gross": 49.61,
+            "net": 45.2375
+          }
+        ]
+      },
+      {
+        "id": "d2",
+        "number": "2",
+        "name": null,
+        "kind": "unit",
+        "nature": "Daire",
+        "annexOf": null,
+        "dwelling": true,
+        "gross": 90.81,
+        "net": 75.6525,
+        "annexGross": 0.0,
+        "annexNet": 0.0,
+        "total": 90.81,
+        "share": 28.35,
+        "general": 119.16,
+        "levels": [
+          {
+            "level": "k1",
+            "gross": 90.81,
+            "net": 75.6525
+          }
+        ]
+      },
+      {
+        "id": "dk",
+        "number": "3",
+        "name": null,
+        "kind": "unit",
+        "nature": "Dükkân",
+        "annexOf": null,
+        "dwelling": false,
+        "gross": 32.8,
+        "net": 30.415,
+        "annexGross": 0.0,
+        "annexNet": 0.0,
+        "total": 32.8,
+        "share": 10.24,
+        "general": 43.04,
+        "levels": [
+          {
+            "level": "zemin",
+            "gross": 32.8,
+            "net": 30.415
+          }
+        ]
+      },
+      {
+        "id": "of",
+        "number": "4",
+        "name": null,
+        "kind": "unit",
+        "nature": "Büro",
+        "annexOf": null,
+        "dwelling": false,
+        "gross": 145.085,
+        "net": 132.8275,
+        "annexGross": 0.0,
+        "annexNet": 0.0,
+        "total": 145.085,
+        "share": 45.29,
+        "general": 190.375,
+        "levels": [
+          {
+            "level": "zemin",
+            "gross": 57.965,
+            "net": 53.0975
+          },
+          {
+            "level": "k1",
+            "gross": 87.12,
+            "net": 79.73
+          }
+        ]
+      },
+      {
+        "id": "dp",
+        "number": "1-E",
+        "name": null,
+        "kind": "annex",
+        "nature": "Depo",
+        "annexOf": "d1",
+        "dwelling": false,
+        "gross": 21.965,
+        "net": 19.5975,
+        "annexGross": 0.0,
+        "annexNet": 0.0,
+        "total": 21.965,
+        "share": null,
+        "general": null,
+        "levels": [
+          {
+            "level": "zemin",
+            "gross": 21.965,
+            "net": 19.5975
+          }
+        ]
+      },
+      {
+        "id": "ortak",
+        "number": "O",
+        "name": "Ortak alan",
+        "kind": "common",
+        "nature": null,
+        "annexOf": null,
+        "dwelling": false,
+        "gross": 106.22,
+        "net": 96.285,
+        "annexGross": 0.0,
+        "annexNet": 0.0,
+        "total": 106.22,
+        "share": null,
+        "general": null,
+        "levels": [
+          {
+            "level": "zemin",
+            "gross": 53.11,
+            "net": 48.1425
+          },
+          {
+            "level": "k1",
+            "gross": 53.11,
+            "net": 48.1425
+          }
+        ]
+      }
+    ],
+    "doors": [
+      {
+        "uid": "01a1dfda-06e1-741c-8eb9-6ca56b114c83",
+        "unit": "d1",
+        "level": "zemin",
+        "at": [
+          15.0,
+          4.0
+        ],
+        "exit": {
+          "length": 13.3,
+          "oneWay": 0.0,
+          "exits": 2,
+          "path": [
+            [
+              15.0,
+              4.15
+            ],
+            [
+              2.0,
+              4.15
+            ],
+            [
+              2.0,
+              3.85
+            ]
+          ]
+        }
+      },
+      {
+        "uid": "01a1dfda-0709-75f9-b155-c59bd5fb560f",
+        "unit": "d2",
+        "level": "k1",
+        "at": [
+          8.0,
+          4.0
+        ],
+        "exit": {
+          "length": 6.3,
+          "oneWay": 6.3,
+          "exits": 1,
+          "path": [
+            [
+              8.0,
+              4.15
+            ],
+            [
+              2.0,
+              4.15
+            ],
+            [
+              2.0,
+              3.85
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "cut": false
+}

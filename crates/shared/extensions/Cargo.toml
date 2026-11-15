@@ -15,6 +15,9 @@ kentos-commands = { path = "../commands", default-features = false }
 # The form core's preflight (docs/adr/0401 §4), over the package's own fields: rules that do not compile, widgets that
 # do not fit, fields named twice. What needs the project it is installed into (another layer's list) is said there.
 kentos-forms = { path = "../forms" }
+# A panel's rules (`visibleWhen`, `requiredWhen`, `enabledWhen`, docs/adr/8057 §33): the expression language a form's
+# rules speak, compiled at Kapı 1 against the panel's inputs.
+kentos-expression = { path = "../expression" }
 kentos-zip = { path = "../zip" }
 roxmltree = { workspace = true }
 serde = { workspace = true }

@@ -11,11 +11,19 @@ use kentos_commands::{
 };
 use kentos_domain::Document;
 
+/// Where a running tool reports how far it is from its own thread (`done` of `total`): a job's counters.
+pub type ProgressSink = std::sync::Arc<dyn Fn(u64, u64) + Send + Sync>;
+
 /// What a batch asks of the command running it (docs/adr/0529 §1): whether it was asked to stop, asked between the
 /// rows, and where it has come to.
 pub trait BatchFlow {
     fn stopped(&self) -> bool;
     fn progress(&self, done: u64, total: u64);
+    /// Where a single run's tool reports its own progress as it goes (an extension's Python tool's `ctx.progress`, a
+    /// built-in tool's steps): a job's counters, read by `job` (docs/adr/8057 §27). None where the flow keeps none.
+    fn progress_sink(&self) -> Option<ProgressSink> {
+        None
+    }
     /// The stop as a flag the running tool reads as it goes, for a flow that can be stopped from another thread:
     /// the tool then stops inside a row, not only between rows (docs/adr/0551 §4). None: the stop is asked between
     /// rows only.
@@ -40,6 +48,10 @@ impl BatchFlow for JobFlow<'_> {
 
     fn stop_flag(&self) -> Option<std::sync::Arc<std::sync::atomic::AtomicBool>> {
         self.0.map(crate::jobs::Progress::stop_flag)
+    }
+
+    fn progress_sink(&self) -> Option<ProgressSink> {
+        self.0.map(crate::jobs::Progress::sink)
     }
 }
 

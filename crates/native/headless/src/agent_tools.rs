@@ -35,8 +35,12 @@ use crate::HeadlessError;
 mod extension_audits;
 mod link_workshop;
 mod long_calls;
+mod workshop_trial;
 
 pub use long_calls::{LongCall, finish as finish_long, job_answer};
+pub use workshop_trial::{
+    MOST_FEATURES as TRIAL_MOST_FEATURES, MOST_TOOLS as TRIAL_MOST_TOOLS, trial_outcome,
+};
 
 pub use link_workshop::{link_preview, link_reload, link_review_workshop};
 
@@ -143,6 +147,26 @@ pub trait Host {
                 return Err(HeadlessError::new(
                     "timeout",
                     "Denetim beklenenden uzun sürdü: sonucu audit.report ile sonra okuyun.",
+                ));
+            }
+            std::thread::sleep(std::time::Duration::from_millis(250));
+        }
+    }
+
+    /// The report of the trial `trial` started (Kapı 3's part that runs code, docs/adr/8057 §37), once it ran: a host
+    /// on another thread than the desktop's asks `trial_report` until it is not `running` (at most [`JOB_WAIT`]); the
+    /// desktop's own chat answers the call when the trial ends instead.
+    fn trial_wait(&mut self) -> Result<Value, HeadlessError> {
+        let began = std::time::Instant::now();
+        loop {
+            let report = self.request("trial_report", &json!({}))?;
+            if report["status"] != "running" {
+                return Ok(report);
+            }
+            if began.elapsed() > JOB_WAIT {
+                return Err(HeadlessError::new(
+                    "timeout",
+                    "Deneme koşusu beklenenden uzun sürdü: eklentinin kodu arka planda sürüyor.",
                 ));
             }
             std::thread::sleep(std::time::Duration::from_millis(250));
@@ -727,6 +751,8 @@ pub fn tools() -> Vec<Tool> {
         read_only: true,
         destructive: false,
     });
+    // Kapı 3's part that runs code: the installed extension on a synthetic drawing (docs/adr/8057 §37).
+    list.push(workshop_trial::tool());
     list.push(Tool {
         name: "extension.verify",
         title: "Eklentiyi doğrula",
@@ -945,6 +971,7 @@ pub fn call(
         "extension.workshop.review" => workshop_review(host, args),
         "extension.workshop.reload" => workshop_reload(host, args),
         "extension.workshop.preview" => host.preview_extension(text(args, "id")?),
+        "extension.workshop.trial" => workshop_trial::trial(host, args),
         "extension.blueprint" => extension_blueprint(host, args),
         "extension.sdk" => extension_sdk(args),
         "processing.describe" => {

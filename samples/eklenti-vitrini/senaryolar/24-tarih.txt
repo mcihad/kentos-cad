@@ -18,7 +18,8 @@ drag 160 480 705 770     # pencereyle 101/1 ve 101/2 (yalnız etkin katman seçi
 wait 1000
 click 1321 383  # Seçimi al: kartlar
 wait 5000
-click 1340 432  # Kart tarihi
+click 1340 432  # Kart tarihi (bugünle açılır: defaultExpr)
+key ctrl+a
 wait 400
 type 20.11.2026
 key Return      # Enter: onChange, kartlar yenilenir

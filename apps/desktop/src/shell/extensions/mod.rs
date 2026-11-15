@@ -15,6 +15,14 @@ mod audits;
 mod dialogs;
 mod panel_chart;
 mod panel_session;
+// A panel's pictures: the PNG an extension's code gives (docs/adr/8057 §40).
+mod panel_image;
+// A panel's sections: headings that fold what they gather (docs/adr/8057 §38).
+mod panel_sections;
+// A panel's worked-out values: defaults and calculations (docs/adr/8057 §35).
+mod panel_values;
+// Kapı 3's part that runs code: an agent's trial on a synthetic drawing (docs/adr/8057 §37).
+mod trial;
 mod tool_pins;
 mod bisect;
 mod browse;
@@ -121,9 +129,16 @@ pub(crate) struct Extensions {
     /// The run an agent started (audit_agents.rs): its background task, handed to the runtime when the agent's call
     /// returns; the call that started it cannot return a task.
     pub(crate) audit_job: Option<iced::Task<crate::app::Message>>,
+    /// The last agent's trial of an extension on a synthetic drawing (trial.rs), and its background task waiting for
+    /// the runtime as an audit's does.
+    pub(crate) trial: Option<trial::TrialState>,
+    pub(crate) trial_job: Option<iced::Task<crate::app::Message>>,
     /// A test's answer for the next rule's run, in place of its extension's process.
     #[cfg(test)]
     pub(crate) test_audit_answer: Option<Result<serde_json::Value, String>>,
+    /// The last call a run's process was sent (tests read its parameters).
+    #[cfg(test)]
+    pub(crate) test_last_invoke: Option<serde_json::Value>,
     /// The word the lists are filtered by (browse.rs).
     pub(crate) query: String,
     /// The program the lists are filtered by; none: every program.
@@ -146,6 +161,9 @@ pub(crate) struct Extensions {
     pub(crate) captured: Option<Option<kentos_interaction::capture::Shape>>,
     /// The drawn shape the next map tool run gives its code (GeoJSON).
     pub(crate) capture_shape: Option<serde_json::Value>,
+    /// What a right-click menu's item was opened on, for the next run of its command: (extension, command,
+    /// `ctx.params`): a layer's menu gives `{"layer": <its id>}` (ribbon.rs `extension_menu`).
+    pub(crate) target_params: Option<(String, String, serde_json::Value)>,
     /// An extension chosen without a click (the window opened, its part changed): its Python environment is looked
     /// for after the update. Only a click looked for it, so the details said "Ortam aranıyor…" until one.
     pub(crate) look_wanted: Option<String>,
@@ -191,8 +209,12 @@ impl Default for Extensions {
             python_reasons: std::collections::BTreeMap::new(),
             audit: None,
             audit_job: None,
+            trial: None,
+            trial_job: None,
             #[cfg(test)]
             test_audit_answer: None,
+            #[cfg(test)]
+            test_last_invoke: None,
             query: String::new(),
             program: None,
             envs: std::collections::BTreeMap::new(),
@@ -204,6 +226,7 @@ impl Default for Extensions {
             capturing: None,
             captured: None,
             capture_shape: None,
+            target_params: None,
             look_wanted: None,
             panels: Vec::new(),
             active_panel: 0,
@@ -257,8 +280,12 @@ pub(crate) enum Event {
     Env(environment::EnvEvent),
     /// An extension's contribution run in its process: extension, kind (`command`), local id (runner.rs).
     Run(String, String, String),
+    /// A right-click menu's command run on what the menu was opened on: its `ctx.params` (`{"layer": …}`).
+    RunOn(String, String, String, serde_json::Value),
     /// An audit rule's run ended (audits.rs).
     AuditDone(Box<audits::AuditDone>),
+    /// An agent's trial ended: its report (trial.rs).
+    TrialDone(Box<serde_json::Value>),
     /// Eklenti denetimi's Göster, Düzelt and Durdur, by the finding's place (audits.rs).
     AuditShow(usize),
     AuditFix(usize),
@@ -604,11 +631,16 @@ impl App {
             }
             Event::Env(event) => return self.env_event(event),
             Event::Run(ext, kind, local) => return self.ext_run(&ext, &kind, &local),
+            Event::RunOn(ext, kind, local, params) => {
+                self.extensions.target_params = Some((ext.clone(), local.clone(), params));
+                return self.ext_run(&ext, &kind, &local);
+            }
             Event::OpenPanel(ext, local) => return self.ext_panel_open(&ext, &local),
             Event::Panel(event) => return self.ext_panel_event(event),
             Event::Dialog(event) => self.ext_dialog_event(event),
             Event::DialogAnswer(ok) => self.ext_dialog_answer(ok),
             Event::AuditDone(done) => self.ext_audit_done(*done),
+            Event::TrialDone(report) => self.ext_trial_done(*report),
             Event::AuditShow(i) => return self.ext_audit_show(i),
             Event::AuditFix(i) => self.ext_audit_fix(i),
             Event::AuditStop => self.ext_audit_stop(),

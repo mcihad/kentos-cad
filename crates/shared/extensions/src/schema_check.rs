@@ -65,7 +65,10 @@ fn check(root: &Value, schema: &Value, value: &Value, at: &str, out: &mut Vec<St
         _ => Vec::new(),
     };
     if !kinds.is_empty() && !kinds.iter().any(|k| is_type(value, k)) {
-        out.push(format!("{at}: {} bekleniyordu, {value} var", kinds.join(" | ")));
+        out.push(format!(
+            "{at}: {} bekleniyordu, {value} var",
+            kinds.join(" | ")
+        ));
         return;
     }
     if let Some(constant) = schema.get("const")
@@ -78,13 +81,17 @@ fn check(root: &Value, schema: &Value, value: &Value, at: &str, out: &mut Vec<St
     {
         out.push(format!("{at}: {value} izinli değerlerden değil"));
     }
-    if let (Some(min), Some(v)) = (schema.get("minimum").and_then(Value::as_f64), value.as_f64())
-        && v < min
+    if let (Some(min), Some(v)) = (
+        schema.get("minimum").and_then(Value::as_f64),
+        value.as_f64(),
+    ) && v < min
     {
         out.push(format!("{at}: en az {min}"));
     }
-    if let (Some(max), Some(v)) = (schema.get("maximum").and_then(Value::as_f64), value.as_f64())
-        && v > max
+    if let (Some(max), Some(v)) = (
+        schema.get("maximum").and_then(Value::as_f64),
+        value.as_f64(),
+    ) && v > max
     {
         out.push(format!("{at}: en çok {max}"));
     }
@@ -100,7 +107,9 @@ fn check(root: &Value, schema: &Value, value: &Value, at: &str, out: &mut Vec<St
                 out.push(format!("{at}: {key} seçeneklerinin hiçbirine uymuyor"));
                 out.extend(nearest);
             } else if exactly_one && met > 1 {
-                out.push(format!("{at}: oneOf seçeneklerinden {met} tanesine birden uyuyor"));
+                out.push(format!(
+                    "{at}: oneOf seçeneklerinden {met} tanesine birden uyuyor"
+                ));
             }
         }
     }

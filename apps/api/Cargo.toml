@@ -16,6 +16,9 @@ kentos-application = { path = "../../crates/server/application" }
 kentos-postgres = { path = "../../crates/server/postgres" }
 # The sheet template library's types (docs/sheet/design.md §13).
 kentos-sheet = { path = "../../crates/shared/sheet", default-features = false }
+# The extension catalog's release flow and the package inspector (docs/adr/8059): the server moves releases only through
+# them, the same code the desktop and the agents use.
+kentos-extensions = { path = "../../crates/shared/extensions" }
 axum = { workspace = true }
 http-body = { workspace = true }
 tokio = { workspace = true }

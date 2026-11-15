@@ -311,7 +311,14 @@ impl App {
             _ => {}
         }
         // An extension's audit rules (extensions/audit_agents.rs, docs/adr/8057 §27): a run reads the front drawing.
+        // A trial (extensions/trial.rs, §37) reads none: it runs on a synthetic drawing of its own.
         match method {
+            "trial" => {
+                return self
+                    .ext_trial_start(&params)
+                    .map_err(|(code, why)| (code.to_owned(), why));
+            }
+            "trial_report" => return Ok(self.ext_trial_report()),
             "audits" => return Ok(self.ext_audit_rules()),
             "audit_report" => {
                 let offset = params.get("offset").and_then(Value::as_u64).unwrap_or(0);

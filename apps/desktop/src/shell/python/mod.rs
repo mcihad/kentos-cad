@@ -287,8 +287,8 @@ impl App {
             Event::Link => self.agents_toggle(),
             Event::Agent(heard) => {
                 self.agents_heard(heard);
-                // An extension audit an agent started: its run goes to the runtime (extensions/audit_agents.rs).
-                Task::batch([self.take_audit_job(), view::follow()])
+                // An extension audit or trial an agent started: its run goes to the runtime (extensions/audit_agents.rs).
+                Task::batch([self.take_agent_runs(), view::follow()])
             }
             Event::Stop => {
                 self.python_stop();

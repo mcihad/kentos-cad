@@ -971,7 +971,7 @@ impl App {
             return Task::none();
         }
         // 3. ↓ over the drawing: the value field opens on the running tool's first setting beside the cursor
-        // (docs/adr/8018), as AutoCAD's dynamic input shows a command's options; a room's sizes or Duvar's Hiza are
+        // (docs/adr/8018), as a dynamic input shows a command's options; a room's sizes or Duvar's Hiza are
         // typed without a click. Tab stays the snap candidates' (there is nearly always one: the grid's).
         if press.named() == Some(Named::ArrowDown)
             && !press.modifiers.control()
@@ -1038,8 +1038,8 @@ impl App {
 
     /// Why a letter's shortcut does not start its tool now (docs/adr/8003): a command runs, the letter is not one
     /// of its options (those come first, step 3) and the tool would end it, losing its points, the wall chain or the
-    /// stair taken so far. AutoCAD reads letters typed during a command as the command's input and never starts
-    /// another one by them; a KentOS letter did, so E pressed for a stair's width (G then) started Esnet. The
+    /// stair taken so far. A CAD program reads letters typed during a command as the command's input and never
+    /// starts another one by them; a KentOS letter did, so E pressed for a stair's width (G then) started Esnet. The
     /// command stays and is told how to leave; tools that run over a command (Kaydır, Pencere yakınlaştır, the
     /// measures) and commands that start no tool still run.
     fn letter_keeps_command(&self, press: &KeyPress, chord: &str, id: &'static str) -> Option<String> {

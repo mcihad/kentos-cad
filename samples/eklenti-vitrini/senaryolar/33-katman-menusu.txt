@@ -1,0 +1,19 @@
+# Katman menüsü: katmanın sağ tık menüsündeki "Değerlerini say", tıklanan katmanı alır (ctx.params["layer"]) ve
+# Değer say panelini o katman seçili açar (ctx.open_panel); Alan › ada seçilince sayar. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 1222 367 right # Parsel sınırı: sağ tık
+wait 1000
+shot 33-menu
+click 1045 563  # Değerlerini say: Değer say o katmanla açılır
+wait 6000
+shot 33-panel
+click 140 450   # Alan
+wait 1000
+click 60 514    # ada: onChange, sayım
+wait 6000
+shot 33-sayim

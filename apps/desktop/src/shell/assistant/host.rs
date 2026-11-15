@@ -89,6 +89,13 @@ impl Host for AppHost<'_> {
         Ok(json!({ "status": "running", "rule": rule }))
     }
 
+    /// An extension's trial runs in the background (docs/adr/8057 §37): the call is answered when it ends
+    /// (`App::assistant_trial_ended`), not waited for here.
+    fn trial_wait(&mut self) -> Result<Value, HeadlessError> {
+        self.0.assistant.later = Some(super::Pending::Trial);
+        Ok(json!({ "status": "running" }))
+    }
+
     /// An extension's Python tool computes on another thread as a job (docs/adr/8057 §27); the chat asks after it
     /// from its tick and answers the call when it ends (`App::assistant_job_look`), not waited for here.
     fn job_wait(
@@ -122,6 +129,8 @@ fn stable(code: &str) -> &'static str {
         "stale_report",
         "unknown_finding",
         "not_written",
+        // An extension's trial (extensions/trial.rs).
+        "unknown_extension",
     ];
     KNOWN
         .iter()

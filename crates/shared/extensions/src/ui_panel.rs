@@ -1,6 +1,6 @@
 //! An extension's panel, `ui/<id>.panel.json` (docs/adr/8057 §24): what a dock shows of it, declared in the package,
-//! drawn by KentOS with its own components. The extension's code never gets a widget or a toolkit type (QGIS's
-//! lesson: 58 % of its plugins were left behind when Qt changed, docs/research/2026-11-13-qgis-eklenti-sistemi.md).
+//! drawn by KentOS with its own components. The extension's code never gets a widget or a toolkit type (a plugin
+//! ecosystem's lesson in plan/eklenti.md: 58 % of its plugins were left behind when its toolkit changed).
 //!
 //! A button runs one of the extension's commands (`entrypoints.commands`) with the panel's values as its parameters
 //! (`ctx.params`, by each input's id); the rows the command answers fill the panel's table. The command runs as any
@@ -23,6 +23,14 @@ pub const VERSION: u64 = 1;
 /// Components a panel may have.
 pub const MOST_COMPONENTS: usize = 100;
 
+/// The components' Python builders, `kentos.ui_panel` (docs/adr/8057 §34), made from [`json_schema`].
+#[cfg(feature = "schema")]
+pub mod python;
+pub mod rules;
+pub mod values;
+
+pub use rules::Rules;
+
 /// A panel as KentOS draws it, read after [`check`] passed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -30,6 +38,10 @@ pub const MOST_COMPONENTS: usize = 100;
 pub struct PanelDefinition {
     pub title: String,
     pub body: Vec<Component>,
+    /// Each component's rules, in the body's order ([`rules`]): written beside its keys, read by [`read`].
+    #[serde(skip)]
+    #[cfg_attr(feature = "schema", schemars(skip))]
+    pub rules: Vec<Rules>,
 }
 
 /// One of a select's choices.
@@ -50,6 +62,16 @@ pub enum Component {
         #[serde(default)]
         id: Option<String>,
         text: String,
+    },
+    /// A heading that gathers the components after it, up to the next section: the user folds it to hide them
+    /// (`collapsed`: folded when the panel opens). A folded section's values still go to the commands, and one of its
+    /// fields left wrong opens it.
+    Section {
+        #[serde(default)]
+        id: Option<String>,
+        label: String,
+        #[serde(default)]
+        collapsed: bool,
     },
     /// A text the user types.
     TextField {
@@ -270,6 +292,18 @@ pub enum Component {
         #[serde(default)]
         aggregate: Option<ChartAggregate>,
     },
+    /// A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG): a chart drawn in Python, a preview. `alt` says
+    /// what it shows and stands in its place until the code gives one; `height` in pixels (80–600, none: 200), the
+    /// picture fitted inside it.
+    Image {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        #[serde(default)]
+        alt: Option<String>,
+        #[serde(default)]
+        height: Option<f64>,
+    },
     /// The rows a button's command answered, a card each: `title`'s column heads it (none: the first column), `tag`'s
     /// beside it, the other columns under it by name; a card with a `uid` is an object. Where a table's columns do not
     /// fit (a narrow dock), a card writes them one under the other.
@@ -321,7 +355,7 @@ impl Component {
     /// Its id, when it has one.
     pub fn id(&self) -> Option<&str> {
         match self {
-            Component::Text { id, .. } => id.as_deref(),
+            Component::Text { id, .. } | Component::Section { id, .. } => id.as_deref(),
             Component::TextField { id, .. }
             | Component::NumberField { id, .. }
             | Component::Select { id, .. }
@@ -338,6 +372,7 @@ impl Component {
             | Component::Tree { id, .. }
             | Component::Stats { id, .. }
             | Component::Chart { id, .. }
+            | Component::Image { id, .. }
             | Component::Card { id, .. } => Some(id),
         }
     }
@@ -418,18 +453,90 @@ pub fn json_schema() -> Value {
         );
         o.insert("additionalProperties".into(), Value::from(false));
     }
+    // The rules (rules.rs) are read beside a component's keys, not into its type: each component's schema says the
+    // ones it takes, for an editor's completion.
+    if let Some(Value::Array(kinds)) = schema.pointer_mut("/$defs/Component/oneOf") {
+        for kind in kinds {
+            let name = kind
+                .pointer("/properties/type/const")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_owned();
+            let Some(known) = keys_of(&name) else {
+                continue;
+            };
+            if let Some(Value::Object(props)) = kind.get_mut("properties") {
+                for key in rules::RULE_KEYS
+                    .iter()
+                    .filter(|r| takes_rule(&name, known, r))
+                {
+                    let words = match *key {
+                        "visibleWhen" => {
+                            "Shown only while this expression over the panel's inputs (by id) is true."
+                        }
+                        "requiredWhen" => "Asked of the user while this expression is true.",
+                        _ => "Usable (pressed, typed in) only while this expression is true.",
+                    };
+                    props.insert(
+                        (*key).to_owned(),
+                        serde_json::json!({ "type": "string", "description": words }),
+                    );
+                }
+                for key in values::VALUE_KEYS
+                    .iter()
+                    .filter(|k| values::takes_value(&name, k))
+                {
+                    let words = match *key {
+                        "calculate" => {
+                            "Its value, worked out from the panel's inputs (by id) as they change: not typed, not set by \
+                             code (a text's words; its text shows while this gives nothing)."
+                        }
+                        _ => {
+                            "Its first value, worked out when the panel opens (bugün(), şimdi() and the inputs above it)."
+                        }
+                    };
+                    props.insert(
+                        (*key).to_owned(),
+                        serde_json::json!({ "type": "string", "description": words }),
+                    );
+                }
+            }
+        }
+    }
     schema
 }
 
 /// The panel, when `value` passed [`check`]; none otherwise.
 pub fn read(value: &Value) -> Option<PanelDefinition> {
-    serde_json::from_value(value.clone()).ok()
+    let mut panel: PanelDefinition = serde_json::from_value(value.clone()).ok()?;
+    panel.rules = value
+        .get("body")
+        .and_then(Value::as_array)
+        .map(|body| body.iter().map(Rules::of).collect())
+        .unwrap_or_default();
+    panel.rules.resize(panel.body.len(), Rules::default());
+    Some(panel)
+}
+
+/// Whether component `kind` (its keys `known`) takes rule `key`: every component is shown by a rule, an input that
+/// can be asked for is asked by one, a button or a typed field is usable by one.
+fn takes_rule(kind: &str, known: &[&str], key: &str) -> bool {
+    match key {
+        "visibleWhen" => true,
+        "requiredWhen" => known.contains(&"required"),
+        "enabledWhen" => matches!(
+            kind,
+            "button" | "textField" | "numberField" | "dateField" | "timeField" | "dateTimeField"
+        ),
+        _ => false,
+    }
 }
 
 /// The component types and the keys each takes besides `type`.
 fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     Some(match kind {
         "text" => &["id", "text"],
+        "section" => &["id", "label", "collapsed"],
         "textField" => &["id", "label", "placeholder", "value", "required"],
         "numberField" => &["id", "label", "value", "min", "max", "unit", "required"],
         "select" => &["id", "label", "options", "value", "onChange"],
@@ -447,6 +554,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "table" => &["id", "label"],
         "tree" => &["id", "label", "group"],
         "card" => &["id", "label", "title", "tag"],
+        "image" => &["id", "label", "alt", "height"],
         "stats" => &["id", "label", "title", "value", "unit", "note"],
         "chart" => &[
             "id",
@@ -461,8 +569,8 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
-                     fieldPicker, featurePicker, checkbox, button, table, tree, card, stats, chart";
+const TYPES: &str = "text, section, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
+                     fieldPicker, featurePicker, checkbox, button, table, tree, card, stats, chart, image";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -652,7 +760,11 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
     let mut tables = shows.clone();
     tables.extend(of_type("chart"));
     let layer_pickers = of_type("layerPicker");
+    // What the components' rules read: the inputs by id, typed (rules.rs).
+    let inputs = rules::inputs_of(body);
     let mut ids = BTreeSet::new();
+    // The calculations: each one's place, id and what it reads, ordered after the loop (a round is refused).
+    let mut calculated: Vec<(usize, Option<String>, Vec<String>)> = Vec::new();
     for (i, component) in body.iter().enumerate() {
         let at = format!("/body/{i}");
         let Some(c) = component.as_object() else {
@@ -667,20 +779,105 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             );
             continue;
         };
-        for key in c
-            .keys()
-            .filter(|k| k.as_str() != "type" && !known.contains(&k.as_str()))
-        {
+        for key in c.keys().filter(|k| {
+            k.as_str() != "type"
+                && !known.contains(&k.as_str())
+                && !takes_rule(kind, known, k.as_str())
+                && !values::takes_value(kind, k.as_str())
+        }) {
+            let mut takes: Vec<&str> = known.to_vec();
+            takes.extend(
+                rules::RULE_KEYS
+                    .iter()
+                    .copied()
+                    .filter(|r| takes_rule(kind, known, r)),
+            );
+            takes.extend(
+                values::VALUE_KEYS
+                    .iter()
+                    .copied()
+                    .filter(|k| values::takes_value(kind, k)),
+            );
             add(
                 format!("{at}/{key}"),
                 format!(
                     "“{key}” {kind} bileşeninde bilinmeyen bir alan; olanlar: {}.",
-                    known.join(", ")
+                    takes.join(", ")
                 ),
             );
         }
+        // Its rules compile against the panel's inputs.
+        for key in rules::RULE_KEYS
+            .iter()
+            .filter(|r| takes_rule(kind, known, r))
+        {
+            match c.get(*key) {
+                None => {}
+                Some(Value::String(source)) if !source.trim().is_empty() => {
+                    if let Err(why) = rules::compile(source, &inputs) {
+                        add(format!("{at}/{key}"), why);
+                    }
+                }
+                Some(_) => add(
+                    format!("{at}/{key}"),
+                    format!("{key} bir ifade (metin) olmalı, ör. \"tur = 'Okul'\"."),
+                ),
+            }
+        }
+        // Its worked-out values compile against the inputs and the moment; a calculation is not typed, set or asked.
+        for key in values::VALUE_KEYS
+            .iter()
+            .filter(|k| values::takes_value(kind, k))
+        {
+            match c.get(*key) {
+                None => {}
+                Some(Value::String(source)) if !source.trim().is_empty() => {
+                    match values::compile(source, &inputs, &values::Moment::checking()) {
+                        Ok(expr) if *key == "calculate" => calculated.push((
+                            i,
+                            c.get("id").and_then(Value::as_str).map(str::to_owned),
+                            expr.fields.clone(),
+                        )),
+                        Ok(_) => {}
+                        Err(why) => add(format!("{at}/{key}"), why),
+                    }
+                }
+                Some(_) => add(
+                    format!("{at}/{key}"),
+                    format!("{key} bir ifade (metin) olmalı, ör. \"ilk + adet - 1\"."),
+                ),
+            }
+        }
+        if c.contains_key("calculate") {
+            for (other, why) in [
+                ("value", "değerini hesabı yazar"),
+                ("defaultExpr", "değerini hesabı yazar"),
+                ("required", "kullanıcıya sorulmaz"),
+                ("requiredWhen", "kullanıcıya sorulmaz"),
+                ("enabledWhen", "yazılmaz, hep kapalıdır"),
+                ("onChange", "kullanıcı değiştirmez, onChange çalışmaz"),
+            ] {
+                let given = match c.get(other) {
+                    None | Some(Value::Null) | Some(Value::Bool(false)) => false,
+                    Some(_) => true,
+                };
+                if given {
+                    add(
+                        format!("{at}/{other}"),
+                        format!(
+                            "calculate ile “{other}” birlikte olmaz: hesaplanan bileşen {why}."
+                        ),
+                    );
+                }
+            }
+        } else if c.contains_key("defaultExpr") && c.get("value").is_some_and(|v| !v.is_null()) {
+            add(
+                format!("{at}/value"),
+                "defaultExpr ile “value” birlikte olmaz: ilk değeri biri verir.".to_owned(),
+            );
+        }
         match c.get("id") {
-            None if kind == "text" => {}
+            None if kind == "text" || kind == "section" => {}
             None => add(
                 at.clone(),
                 format!("{kind} bileşeni bir kimlik (id) ister."),
@@ -715,8 +912,16 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                 "required true ya da false olmalı.".to_owned(),
             );
         }
-        if !matches!(kind, "table" | "tree" | "card" | "stats" | "chart")
-            && text(c, "label").is_none()
+        if c.get("collapsed").is_some_and(|v| !v.is_boolean()) {
+            add(
+                format!("{at}/collapsed"),
+                "collapsed true ya da false olmalı: bölüm panel açılırken kapalı mı.".to_owned(),
+            );
+        }
+        if !matches!(
+            kind,
+            "table" | "tree" | "card" | "stats" | "chart" | "image"
+        ) && text(c, "label").is_none()
         {
             add(
                 at.clone(),
@@ -1006,6 +1211,24 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     }
                 }
             }
+            "image" => {
+                if let Some(height) = c.get("height")
+                    && !height.as_f64().is_some_and(|h| (80.0..=600.0).contains(&h))
+                {
+                    add(
+                        format!("{at}/height"),
+                        "Görselin yüksekliği (height) 80 ile 600 piksel arasında bir sayı olmalı."
+                            .to_owned(),
+                    );
+                }
+                if c.get("alt").is_some() && text(c, "alt").is_none() {
+                    add(
+                        format!("{at}/alt"),
+                        "alt görselin ne gösterdiğini söyleyen boş olmayan bir metin olmalı."
+                            .to_owned(),
+                    );
+                }
+            }
             "chart" => {
                 let kind = match c.get("kind") {
                     None => "bar",
@@ -1116,6 +1339,14 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             }
             _ => {}
         }
+    }
+    // The calculations in an order each after those it reads: a round of them has none.
+    let reads: Vec<(Option<String>, Vec<String>)> = calculated
+        .iter()
+        .map(|(_, id, fields)| (id.clone(), fields.clone()))
+        .collect();
+    if let Err((at, why)) = values::calc_order(&reads) {
+        add(format!("/body/{}/calculate", calculated[at].0), why);
     }
     out
 }
@@ -1240,6 +1471,62 @@ mod tests {
                 "ADR 8057 §25 does not name `{kind}`: add it to the coverage report"
             );
         }
+    }
+
+    #[test]
+    fn a_components_rules_are_checked_where_they_are_written() {
+        // docs/adr/8057 §33: every component may be shown by a rule, an input that can be asked for asked by one, a
+        // button or a typed field usable by one; a rule compiles against the panel's inputs; read, the definition
+        // carries them in the body's order.
+        let mut p = panel();
+        p["body"][0]["visibleWhen"] = json!("secili");
+        p["body"][1]["requiredWhen"] = json!("durum = 'hepsi'");
+        p["body"][6]["enabledWhen"] = json!("[en-az] > 0 or sorgu <> ''");
+        assert!(
+            check("ui/ara.panel.json", &p, &["yapi-ara"]).is_empty(),
+            "{:?}",
+            check("ui/ara.panel.json", &p, &["yapi-ara"])
+        );
+        let read = read(&p).expect("read");
+        assert_eq!(read.rules.len(), read.body.len());
+        assert_eq!(read.rules[0].visible_when.as_deref(), Some("secili"));
+        assert_eq!(
+            read.rules[6].enabled_when.as_deref(),
+            Some("[en-az] > 0 or sorgu <> ''")
+        );
+        assert!(read.rules[2].is_empty());
+        // A rule a component does not take, one that names no input, one that is not text.
+        p["body"][7]["requiredWhen"] = json!("secili");
+        p["body"][3]["enabledWhen"] = json!("secili");
+        p["body"][5]["visibleWhen"] = json!("mahalle = 'Merkez'");
+        p["body"][4]["visibleWhen"] = json!(true);
+        let said: Vec<(String, String)> = check("ui/ara.panel.json", &p, &["yapi-ara"])
+            .into_iter()
+            .map(|pr| (pr.at.unwrap_or_default(), pr.message))
+            .collect();
+        let at: Vec<&str> = said.iter().map(|(a, _)| a.as_str()).collect();
+        assert_eq!(
+            at,
+            [
+                "/body/3/enabledWhen",
+                "/body/4/visibleWhen",
+                "/body/5/visibleWhen",
+                "/body/7/requiredWhen"
+            ],
+            "{said:#?}"
+        );
+        assert!(
+            said[0].1.contains("bilinmeyen bir alan") && said[0].1.contains("visibleWhen"),
+            "{}",
+            said[0].1
+        );
+        assert!(
+            said[2]
+                .1
+                .starts_with("“mahalle” paneldeki bir girdinin kimliği değil"),
+            "{}",
+            said[2].1
+        );
     }
 
     #[test]
@@ -1406,5 +1693,94 @@ mod date_tests {
         );
         assert_eq!(typed_date_time("15.11.2026"), None, "a time too");
         assert_eq!(typed_date_time("31.04.2026 10:00"), None);
+    }
+}
+
+#[cfg(test)]
+mod section_tests {
+    use serde_json::json;
+
+    use super::*;
+
+    fn problems(body: Value) -> Vec<(String, String)> {
+        let panel = json!({ "format": FORMAT, "schemaVersion": VERSION, "title": "Bölümler", "body": body });
+        check("ui/b.panel.json", &panel, &[])
+            .into_iter()
+            .map(|p| (p.at.unwrap_or_default(), p.message))
+            .collect()
+    }
+
+    /// docs/adr/8057 §38: a section is a heading with a label, its id optional, folded at first when `collapsed`, shown
+    /// by a rule as any component; without a label, with a `collapsed` that is not yes or no, it is said where.
+    #[test]
+    fn a_section_is_a_labelled_heading_folded_when_asked() {
+        let body = json!([
+            { "type": "textField", "id": "ad", "label": "Ad" },
+            { "type": "section", "label": "Gelişmiş", "collapsed": true },
+            { "type": "numberField", "id": "adet", "label": "Adet" },
+            { "type": "section", "id": "yardim", "label": "Yardım", "visibleWhen": "adet > 0" },
+            { "type": "text", "text": "Bir yardım satırı." }
+        ]);
+        assert!(problems(body.clone()).is_empty(), "{:?}", problems(body.clone()));
+        let panel = read(&json!({ "format": FORMAT, "schemaVersion": VERSION, "title": "B", "body": body })).unwrap();
+        assert_eq!(
+            panel.body[1],
+            Component::Section {
+                id: None,
+                label: "Gelişmiş".into(),
+                collapsed: true
+            }
+        );
+        assert_eq!(panel.body[3].id(), Some("yardim"));
+        assert!(!panel.body[1].is_input());
+        let wrong = problems(json!([
+            { "type": "section", "label": " " },
+            { "type": "section", "label": "Bir", "collapsed": "evet" }
+        ]));
+        assert_eq!(
+            wrong,
+            [
+                ("/body/0".to_owned(), "section bileşeni boş olmayan bir ad (label) ister.".to_owned()),
+                (
+                    "/body/1/collapsed".to_owned(),
+                    "collapsed true ya da false olmalı: bölüm panel açılırken kapalı mı.".to_owned()
+                )
+            ]
+        );
+    }
+}
+
+#[cfg(test)]
+mod image_tests {
+    use serde_json::json;
+
+    use super::*;
+
+    /// docs/adr/8057 §40: an image takes an id, and optionally its label, `alt` and `height` (80–600 px); a height out
+    /// of bounds and an empty `alt` are said where they are written.
+    #[test]
+    fn an_image_has_its_alt_and_height_in_bounds() {
+        let panel = |image: Value| json!({ "format": FORMAT, "schemaVersion": VERSION, "title": "Görsel", "body": [image] });
+        let fits = panel(
+            json!({ "type": "image", "id": "grafik", "label": "Alanlar", "alt": "Çubuklar", "height": 140 }),
+        );
+        assert!(check("ui/g.panel.json", &fits, &[]).is_empty());
+        assert_eq!(
+            read(&fits).unwrap().body[0],
+            Component::Image {
+                id: "grafik".into(),
+                label: Some("Alanlar".into()),
+                alt: Some("Çubuklar".into()),
+                height: Some(140.0)
+            }
+        );
+        let wrong = check(
+            "ui/g.panel.json",
+            &panel(json!({ "type": "image", "id": "grafik", "alt": " ", "height": 900 })),
+            &[],
+        );
+        let mut at: Vec<&str> = wrong.iter().filter_map(|p| p.at.as_deref()).collect();
+        at.sort_unstable();
+        assert_eq!(at, ["/body/0/alt", "/body/0/height"], "{wrong:?}");
     }
 }

@@ -3,8 +3,9 @@
 //! options, a text's words, what is shown and what can be used, a table's rows; it says a line under the form, puts the
 //! cursor in a field, or closes the panel.
 //!
-//! - **Its own panel only:** the run's origin (panels.rs `PanelOrigin`). A run not started from a panel has none: its
-//!   code's `ctx.panel` is None.
+//! - **Its own panels only:** the run's origin (panels.rs `PanelOrigin`), or one its manifest declares, named by the
+//!   request (`panel`): `ctx.open_panel` opens it (or brings it in front) and holds it until the run ends. A run not
+//!   started from a panel has no origin: its code's `ctx.panel` is None.
 //! - **The user's typing wins:** an input the user changed while the command runs keeps what the user gave; the code's
 //!   value is not put over it (`applied: false`). A change moves neither the focus, nor the text's cursor, nor the
 //!   panel's scroll: the form is drawn from the panel's state, the widgets keep their own.
@@ -62,6 +63,8 @@ fn component<'a>(panel: &'a OpenPanel, id: &str) -> Result<&'a Component, Headle
 fn kind_of(c: &Component) -> &'static str {
     match c {
         Component::Text { .. } => "text",
+        Component::Section { .. } => "section",
+        Component::Image { .. } => "image",
         Component::TextField { .. } => "textField",
         Component::NumberField { .. } => "numberField",
         Component::Select { .. } => "select",
@@ -208,6 +211,18 @@ fn set(
         )
     };
     let wrong = |why: String| refused("invalid_input", format!("“{id}” ({}): {why}.", kind_of(&c)));
+    // A calculated component's value is its calculation's (docs/adr/8057 §35): the code does not write it.
+    if panel.calculated_id(&id)
+        && (props.contains_key("value") || props.get("text").is_some_and(|v| !v.is_null()))
+    {
+        return Err(refused(
+            "invalid_input",
+            format!(
+                "“{id}” ({}) hesaplanan bir bileşen: değerini kendi hesabı (calculate) yazar.",
+                kind_of(&c)
+            ),
+        ));
+    }
     // Checked whole first: a wrong part applies nothing.
     let options = match props.get("options").filter(|v| !v.is_null()) {
         None => None,
@@ -235,6 +250,22 @@ fn set(
                     .collect::<String>(),
             ),
             _ => return Err(not_taken("text", "yalnız text bileşeninin yazısı değişir")),
+        },
+    };
+    // A picture (docs/adr/8057 §40): a PNG as base64, checked and decoded before anything changes; null takes it away.
+    let picture = match props.get("image") {
+        None => None,
+        Some(given) => match &c {
+            Component::Image { .. } => Some(match given {
+                Value::Null => None,
+                Value::String(text) => Some(super::panel_image::decode(text).map_err(wrong)?),
+                _ => {
+                    return Err(wrong(
+                        "image base64 kodlanmış PNG baytları olmalı".to_owned(),
+                    ));
+                }
+            }),
+            _ => return Err(not_taken("image", "yalnız image bileşeni görsel alır")),
         },
     };
     let enabled = match props.get("enabled").filter(|v| !v.is_null()) {
@@ -388,6 +419,15 @@ fn set(
     if let Some(words) = words {
         panel.words.insert(id.clone(), words);
     }
+    match picture {
+        Some(Some(handle)) => {
+            panel.images.insert(id.clone(), handle);
+        }
+        Some(None) => {
+            panel.images.remove(&id);
+        }
+        None => {}
+    }
     if let Some(on) = enabled {
         if on {
             panel.disabled.remove(&id);
@@ -403,6 +443,8 @@ fn set(
         }
     }
     let Some(value) = value else {
+        // New options may let a chosen value go: the calculations follow.
+        panel.recalculate();
         return Ok(true);
     };
     // The user's own value stays.
@@ -428,6 +470,7 @@ fn set(
     if panel.invalid.as_ref().is_some_and(|(at, _)| *at == id) {
         panel.invalid = None;
     }
+    panel.recalculate();
     Ok(true)
 }
 
@@ -486,38 +529,87 @@ fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, HeadlessError> 
         }
     }
     panel.tables.insert(id.clone(), (columns, list.clone()));
+    panel.pages.remove(&id);
     Ok(id)
 }
 
 impl App {
-    /// `method` (`panel.set`, `panel.rows`, `panel.say`, `panel.focus`, `panel.close`) asked by `ext`'s running code
-    /// of the panel its run started from: what it applied, or why not, the call's error.
+    /// `method` (`panel.open`, `panel.set`, `panel.rows`, `panel.say`, `panel.focus`, `panel.close`) asked by `ext`'s
+    /// running code of one of its panels (`panel`, else the one its run started from): what it applied, or why not, the
+    /// call's error.
     pub(crate) fn ext_panel_session(
         &mut self,
         ext: &str,
         method: &str,
         params: &Value,
     ) -> Result<Value, HeadlessError> {
-        let origin = self
+        let run = self
             .extensions
             .runners
             .get(ext)
             .and_then(|r| r.run.as_ref())
-            .and_then(|run| run.origin.clone())
-            .ok_or_else(|| {
+            .ok_or_else(|| refused("busy", "Eklentinin çalışan bir işlevi yok."))?;
+        let origin = run.origin.clone();
+        let local = match params.get("panel").and_then(Value::as_str) {
+            // One of its own, as its installed manifest declares them.
+            Some(local) => {
+                let declared: Vec<String> = self
+                    .extensions
+                    .registry
+                    .as_ref()
+                    .and_then(|r| r.manifest(ext))
+                    .map(|m| m.entrypoints.panels.iter().map(|p| p.id.clone()).collect())
+                    .unwrap_or_default();
+                if !declared.iter().any(|p| p == local) {
+                    return Err(refused(
+                        "unknown_panel",
+                        format!(
+                            "“{local}” eklentinin bir paneli değil; panelleri: {}.",
+                            if declared.is_empty() {
+                                "yok".to_owned()
+                            } else {
+                                declared.join(", ")
+                            }
+                        ),
+                    ));
+                }
+                local.to_owned()
+            }
+            None => origin.map(|o| o.panel).ok_or_else(|| {
                 refused(
                     "no_panel",
                     "Bu çalıştırma bir panelden başlamadı: ctx.panel yalnız bir panelin düğmesinin (ya da değişen \
-                     alanının) komutunda vardır.",
+                     alanının) komutunda vardır; başka bir panel için ctx.open_panel.",
+                )
+            })?,
+        };
+        let open = |app: &App| {
+            app.extensions
+                .panels
+                .iter()
+                .position(|p| p.ext == ext && p.local == local)
+        };
+        // Opened (or brought in front) and held until the run ends.
+        if method == "panel.open" {
+            let task = self.ext_panel_open(ext, &local);
+            self.extensions.later.push(task);
+            let at = open(self).ok_or_else(|| {
+                refused(
+                    "panel_invalid",
+                    format!("“{local}” paneli açılamadı: tanım dosyası okunamadı (eklentinin günlüğünde)."),
                 )
             })?;
-        let Some(at) = self
-            .extensions
-            .panels
-            .iter()
-            .position(|p| p.ext == origin.ext && p.local == origin.panel)
-        else {
+            self.extensions.panels[at].held = true;
+            return Ok(json!({ "applied": true }));
+        }
+        let Some(at) = open(self) else {
             return Ok(json!({ "applied": false, "closed": true }));
+        };
+        let origin = super::panels::PanelOrigin {
+            ext: ext.to_owned(),
+            panel: local.clone(),
+            button: String::new(),
+            table: None,
         };
         match method {
             "panel.set" => {
@@ -604,9 +696,20 @@ impl App {
             other => Err(refused(
                 "unknown_method",
                 format!(
-                    "“{other}” bir panel isteği değil: panel.set, panel.rows, panel.say, panel.focus ya da panel.close."
+                    "“{other}” bir panel isteği değil: panel.open, panel.set, panel.rows, panel.say, panel.focus ya da \
+                     panel.close."
                 ),
             )),
+        }
+    }
+
+    /// `ext`'s run ended (or its process closed): the panels its code held are the user's again.
+    pub(crate) fn ext_panels_released(&mut self, ext: &str) {
+        for panel in self.extensions.panels.iter_mut().filter(|p| p.ext == ext) {
+            panel.held = false;
+            if panel.running.is_none() {
+                panel.touched.clear();
+            }
         }
     }
 
@@ -654,6 +757,91 @@ mod tests {
             Ok(applied) => format!("ok {applied}"),
             Err(e) => format!("{}: {}", e.code, e.message),
         }
+    }
+
+    /// docs/adr/8057 §40: the code gives an `image` component a PNG (base64), checked before it is kept; null takes
+    /// it away; another component does not take one.
+    #[test]
+    fn the_code_gives_an_image_component_its_picture() {
+        let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Görsel",
+            "body": [
+                { "type": "image", "id": "grafik", "label": "Taban alanları", "height": 140 },
+                { "type": "textField", "id": "ad", "label": "Ad" }
+            ] });
+        let mut p = OpenPanel::new(
+            "tr.ornek.deneme",
+            "gorsel",
+            ui_panel::read(&value).expect("a panel"),
+        );
+        let png = super::super::panel_image::test_png(40, 20);
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "grafik", "image": png }), None)),
+            "ok true"
+        );
+        assert!(p.images.contains_key("grafik"));
+        assert!(
+            code(set(
+                &mut p,
+                &json!({ "id": "grafik", "image": "eA==" }),
+                None
+            ))
+            .contains("PNG olmalı"),
+            "not a PNG"
+        );
+        assert!(
+            p.images.contains_key("grafik"),
+            "a wrong picture leaves the one before"
+        );
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "grafik", "image": null }), None)),
+            "ok true"
+        );
+        assert!(!p.images.contains_key("grafik"));
+        assert!(
+            code(set(&mut p, &json!({ "id": "ad", "image": png }), None))
+                .starts_with("invalid_input: “ad” (textField) image almaz")
+        );
+    }
+
+    /// docs/adr/8057 §35: a calculated component's value is its calculation's: the code's value and words for it are
+    /// refused, and a value the code sets on what it reads is followed by the calculation.
+    #[test]
+    fn the_code_does_not_set_a_calculated_value_but_the_calculation_follows_its_values() {
+        let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Hesap",
+            "body": [
+                { "type": "numberField", "id": "adet", "label": "Adet", "value": 2 },
+                { "type": "numberField", "id": "iki-kat", "label": "İki katı", "calculate": "adet * 2" },
+                { "type": "text", "id": "ozet", "text": "—", "calculate": "'Toplam ' || (adet * 2)" }
+            ] });
+        let mut p = OpenPanel::new(
+            "tr.ornek.deneme",
+            "hesap",
+            ui_panel::read(&value).expect("a panel"),
+        );
+        assert_eq!(p.texts["iki-kat"], "4");
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "iki-kat", "value": 9 }), None)),
+            "invalid_input: “iki-kat” (numberField) hesaplanan bir bileşen: değerini kendi hesabı (calculate) yazar."
+        );
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "ozet", "text": "başka" }), None)),
+            "invalid_input: “ozet” (text) hesaplanan bir bileşen: değerini kendi hesabı (calculate) yazar."
+        );
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "adet", "value": 5 }), None)),
+            "ok true"
+        );
+        assert_eq!(p.texts["iki-kat"], "10");
+        assert_eq!(p.calculated[&2], "Toplam 10");
+        assert_eq!(
+            code(set(
+                &mut p,
+                &json!({ "id": "ozet", "visible": false }),
+                None
+            )),
+            "ok true",
+            "shown or hidden it may be"
+        );
     }
 
     /// docs/adr/8057 §32: values, options, words, what is shown and in use, set as the definition allows; a wrong part

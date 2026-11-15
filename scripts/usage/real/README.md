@@ -54,6 +54,7 @@ Her satır bir el hareketidir; `#` ile başlayan satır ve ` #`'ten sonrası aç
 | Satır | Ne yapar |
 |---|---|
 | `fit KentOS Mimari` | O başlıklı pencereyi ekranı kaplayacak biçimde büyütür ve klavyeyi ona verir (pencere yöneticisi yok). Dosyayla açılan pencerenin başlığı dosyanın adını da taşır: `fit KentOS Mimari — Kesme` |
+| `fit BAŞLIK X Y GEN YÜK` | Aynı pencereyi ekranın o bölgesine koyar (sol üst köşesi X Y, genişliği, yüksekliği) ve klavyeyi ona verir. Geniş bir ekran yan yana iki ekranın yerini tutar: `KENTOS_REAL_SIZE=2880x900` ile `fit KentOS GIS — Vitrin 0 0 1440 900` soldaki, `fit Tampon — KentOS GIS 1440 0 1440 900` sağdaki ekrandır ([ADR 8060](../../../docs/adr/8060-secondary-os-windows.md)). Son dört sözcük sayıysa bölgedir; sayıyla biten bir başlık bu yüzden yazılamaz |
 | `wait MS` | Bekler |
 | `move X Y` | İmleci aradaki noktalardan geçirerek götürür |
 | `click X Y [right\|middle]`, `dclick X Y`, `drag X1 Y1 X2 Y2` | Tık, çift tık, sürükleme |
@@ -74,7 +75,10 @@ Her satır bir el hareketidir; `#` ile başlayan satır ve ` #`'ten sonrası aç
 
 - **Pencere sistemi:** sahibin oturumu KDE Plasma Wayland'dır, burada X11 kullanılır. Wayland'e özgü ölçekleme farkları
   görülmez.
-- **Pencere yöneticisi:** yok. Pencere çerçevesi yoktur, odağı sürücü verir.
+- **Pencere yöneticisi:** yok. Pencere çerçevesi yoktur, odağı sürücü verir. Bir pencereyi `fit` taşıdığında program
+  bunu duymaz: X11'de taşınma haberini pencere yöneticisi gönderir (winit yalnız onun yapay `ConfigureNotify`'ını
+  okur). Ayrı pencerenin yeri bu yüzden kapanırken sorulur (ADR 8060 §4). Yeni pencere ekranın ortasında açılır;
+  yığında hangisinin üstte olduğunu da pencere yöneticisi değil açılış sırası belirler.
 - **Çizim:** yazılımla yapılır; kare süresi ölçümü için kullanılmaz.
 - **Çok oturum:** iki oturum aynı ekran numarasını kullanmamalıdır.
 - **Neden başka yol değil (7 Kasım'da denendi):**

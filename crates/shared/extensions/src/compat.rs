@@ -1,8 +1,8 @@
 //! Whether a package runs on a host (plan/eklenti.md §3.2 "Uyumluluk", docs/adr/8057 §1): one function, used alike by
 //! the inspector, the installer, the catalog and the updater.
 //!
-//! QGIS's 2026 lesson (docs/research/2026-11-13-qgis-eklenti-sistemi.md): a missing upper bound there was read as "the
-//! same major version", so every plugin had to be republished for QGIS 4 though most ran unchanged. Here **an upper
+//! A plugin ecosystem's lesson (plan/eklenti.md, docs/adr/8057): a missing upper bound read as "the same major version"
+//! made every plugin be republished for the host's next major version though most ran unchanged. Here **an upper
 //! bound not written is no upper bound**; the meaning is not implicit and changing it takes an ADR. A catalog that
 //! learns of a breakage narrows the range from outside the package (a narrower [`Compatibility`] handed to
 //! [`compatible`]), so a user does not get an incompatible version though its author has gone.

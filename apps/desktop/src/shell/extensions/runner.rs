@@ -581,11 +581,19 @@ impl App {
         let Some(runner) = self.extensions.runners.get_mut(ext) else {
             return task;
         };
+        // A right-click menu's command: what the menu was opened on (a layer's id, `ctx.params["layer"]`).
+        let target = self
+            .extensions
+            .target_params
+            .take_if(|(e, l, _)| e == ext && l == local)
+            .map(|(_, _, params)| params);
         let params = match (call.kind, self.extensions.capture_shape.take()) {
             ("mapTool", Some(shape)) => json!({ "shape": shape }),
             _ => panel
                 .as_ref()
-                .map_or_else(|| json!({}), |p| p.params.clone()),
+                .map(|p| p.params.clone())
+                .or(target)
+                .unwrap_or_else(|| json!({})),
         };
         let mut invoke = json!({
             "type": "invoke",
@@ -602,6 +610,10 @@ impl App {
             invoke["panel"] = json!(p.origin.panel);
         }
         runner.host.send(&invoke);
+        #[cfg(test)]
+        {
+            self.extensions.test_last_invoke = Some(invoke.clone());
+        }
         runner.run = Some(ExtRun {
             id,
             kind: call.kind,
@@ -925,9 +937,22 @@ impl App {
             }
             return;
         }
-        // Its panel changed as it runs (panel_session.rs): not the drawing's, no grant needed.
+        // Its panel changed as it runs (panel_session.rs): not the drawing's, no grant needed. A refused request is
+        // the code's mistake (an id its panel has not, a wrong value): written in its log too, where its author looks,
+        // for the code may catch the error and go on.
         let answer = if method.starts_with("panel.") {
-            self.ext_panel_session(ext, &method, &params)
+            let answer = self.ext_panel_session(ext, &method, &params);
+            if let Err(e) = &answer
+                && let Some(registry) = self.extensions.registry.as_mut()
+            {
+                let panel = params.get("panel").and_then(Value::as_str).unwrap_or("?");
+                registry.write_log(
+                    Record::warning("panel_refused", format!("{method}: {}", e.message))
+                        .of(ext, None)
+                        .part(format!("panel:{panel}")),
+                );
+            }
+            answer
         } else {
             self.ext_answer(ext, &method, &params)
         };
@@ -1062,8 +1087,9 @@ impl App {
     }
 
     fn ext_done(&mut self, ext: &str, m: &Value) {
-        // A dialog its code left open goes with the run.
+        // A dialog its code left open goes with the run; the panels it opened are the user's again.
         self.ext_dialog_close_for(ext);
+        self.ext_panels_released(ext);
         let id = m.get("id").and_then(Value::as_u64);
         let Some(mut run) = self
             .extensions
@@ -1303,6 +1329,7 @@ impl App {
 
     /// The process ended: during a run, a crash the watchdog counts; its writes taken back.
     fn ext_closed(&mut self, ext: &str) {
+        self.ext_panels_released(ext);
         let Some(mut runner) = self.extensions.runners.remove(ext) else {
             return;
         };

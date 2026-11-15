@@ -58,6 +58,23 @@
       "value": "değer",
       "unit": "birim",
       "note": "not"
+    },
+    {
+      "type": "image",
+      "id": "alanlar",
+      "label": "Taban alanları",
+      "height": 140,
+      "alt": "Özetle'ye basınca yapıların taban alanları büyükten küçüğe çubuk olarak çizilir."
+    },
+    {
+      "type": "section",
+      "id": "ipuclari",
+      "label": "İpuçları",
+      "collapsed": true
+    },
+    {
+      "type": "text",
+      "text": "Yapı no'da Enter Ara'ya basar. Satıra ya da Özetle'nin en büyük yapı kartına tıklamak yapıyı gösterir. Numaralamayı Durdur'la keserseniz yazılanlar geri alınır; Geri al da tek adımda geri alır."
     }
   ]
 }

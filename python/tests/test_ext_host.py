@@ -17,6 +17,9 @@ from typing import Any
 
 import kentos.cad as cad
 
+#: What KentOS's Rust measured in fixtures/audit-facts/v1/denetim.kcad (`kentos_processing::audit_facts`).
+FACTS = os.path.join(os.path.dirname(__file__), "..", "..", "fixtures", "audit-facts", "v1", "denetim.json")
+
 LOGIC = '''
 """A stand-in extension's functions."""
 import os
@@ -68,6 +71,14 @@ def not_findings(facts):
     return ["bir bulgu değil"]
 
 
+@ext.audit("overlaps")
+def overlaps(facts):
+    # What KentOS measured: the rule does no geometry of its own (docs/adr/8057 §36).
+    parcels = facts.project.layer("Parsel")
+    return [ext.AuditFinding(message=f"{o.area:g} m² çakışma", severity="error", feature_id=o.a)
+            for o in parcels.overlaps]
+
+
 @ext.command("ordered")
 def ordered(ctx):
     return ctx.report([{"yapı": "B1", "mesafe_m": 2.0}, {"yapı": "B2", "durum": "parsel dışında"}])
@@ -100,7 +111,23 @@ def fill(ctx):
     ctx.panel.rows("liste", [{"ad": "A", "alan": 12.5}], columns=["ad", "alan"])
     ctx.panel.say("Yüklendi.", "success")
     ctx.panel.focus("ad")
+    shown = ctx.open_panel("sonuc-paneli")
+    shown.rows("tablo", [{"no": 1}])
     return ctx.report([{"panel": ctx.panel.id, "kept": kept}])
+
+
+@ext.command("picture")
+def picture(ctx):
+    # docs/adr/8057 §40: a picture its code made, as PNG bytes or a PNG file; None takes it away.
+    import pathlib
+    import tempfile
+    png = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) + "-kucuk".encode()
+    ctx.panel.set("grafik", image=png)
+    path = pathlib.Path(tempfile.mkdtemp()) / "grafik.png"
+    path.write_bytes(png)
+    ctx.panel.set("grafik", image=path)
+    ctx.panel.set("grafik", image=None)
+    return ctx.message("Çizildi.")
 
 
 @ext.command("schema")
@@ -459,18 +486,39 @@ class ExtHostTest(unittest.TestCase):
         calls = self.kentos.panel_calls
         self.assertEqual(
             [m for m, _ in calls],
-            ["panel.set", "panel.set", "panel.set", "panel.rows", "panel.say", "panel.focus"],
+            ["panel.set", "panel.set", "panel.set", "panel.rows", "panel.say", "panel.focus", "panel.open", "panel.rows"],
         )
         self.assertEqual(
             calls[0][1],
-            {"id": "mahalle", "value": "Yeni", "options": [{"value": "m1", "label": "Merkez"}, "Yeni"]},
+            {"id": "mahalle", "value": "Yeni", "options": [{"value": "m1", "label": "Merkez"}, "Yeni"], "panel": "arama"},
         )
-        self.assertEqual(calls[1][1], {"id": "ara", "enabled": False})
-        self.assertEqual(calls[2][1], {"id": "gun", "value": "2026-11-15"})
-        self.assertEqual(calls[3][1], {"id": "liste", "rows": [{"ad": "A", "alan": 12.5}], "columns": ["ad", "alan"]})
-        self.assertEqual(calls[4][1], {"text": "Yüklendi.", "kind": "success"})
+        self.assertEqual(calls[1][1], {"id": "ara", "enabled": False, "panel": "arama"})
+        self.assertEqual(calls[2][1], {"id": "gun", "value": "2026-11-15", "panel": "arama"})
+        self.assertEqual(
+            calls[3][1], {"id": "liste", "rows": [{"ad": "A", "alan": 12.5}], "columns": ["ad", "alan"], "panel": "arama"}
+        )
+        self.assertEqual(calls[4][1], {"text": "Yüklendi.", "kind": "success", "panel": "arama"})
+        # Another of its panels, opened by the code: its requests name it.
+        self.assertEqual(calls[6][1], {"panel": "sonuc-paneli"})
+        self.assertEqual(calls[7][1], {"id": "tablo", "rows": [{"no": 1}], "columns": ["no"], "panel": "sonuc-paneli"})
         done, _ = self.kentos.invoke("fill", "deneme.logic:fill")
         self.assertEqual(done["result"]["message"], "Panel yok.")
+
+    def test_a_panels_picture_goes_as_base64_png(self) -> None:
+        # docs/adr/8057 §40: bytes or a file's, as base64; None clears it; KentOS checks the PNG.
+        import base64
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("picture", "deneme.logic:picture", panel="arama")
+        self.assertTrue(done["ok"], done)
+        sent = base64.b64encode(bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) + b"-kucuk").decode("ascii")
+        self.assertEqual(
+            [p for _, p in self.kentos.panel_calls],
+            [
+                {"id": "grafik", "image": sent, "panel": "arama"},
+                {"id": "grafik", "image": sent, "panel": "arama"},
+                {"id": "grafik", "image": None, "panel": "arama"},
+            ],
+        )
 
     def test_what_this_kentos_cannot_do_is_said_as_unavailable(self) -> None:
         # A schema without a drawing it may write to: a missing ability, not the extension's failure.
@@ -668,6 +716,21 @@ class ExtHostTest(unittest.TestCase):
         self.assertFalse(done["ok"])
         self.assertEqual(done["exception"], "TypeError")
         self.assertIn("ext.AuditFinding listesi", done["message"])
+
+    def test_an_audit_rule_reads_what_kentos_measured(self) -> None:
+        self.kentos.hello()
+        # The facts KentOS's Rust measured on fixtures/audit-facts/v1/denetim.kcad, byte for byte.
+        with open(FACTS, encoding="utf-8") as f:
+            project = json.load(f)
+        done = self.audit("overlaps", "deneme.logic:overlaps", {"layers": [], "cut": False, "project": project})
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["findings"], [
+            {"severity": "error", "message": "50 m² çakışma", "featureId": "0192f5a1-2590-7000-8000-000000000002"}])
+        # A KentOS that does not measure them: the ability is missing, not the rule broken.
+        done = self.audit("overlaps", "deneme.logic:overlaps", {"layers": [], "cut": False})
+        self.assertFalse(done["ok"])
+        self.assertTrue(done.get("unavailable"), done)
+        self.assertIn("facts.project", done["message"])
 
     def test_a_processing_tool_is_stopped_while_it_computes(self) -> None:
         self.kentos.hello()

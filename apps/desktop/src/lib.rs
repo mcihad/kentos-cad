@@ -61,6 +61,8 @@ mod unsaved_close;
 mod unsaved_close_tests;
 #[path = "shell/window_pick.rs"]
 mod window_pick;
+#[path = "shell/windows/mod.rs"]
+mod windows;
 #[cfg(test)]
 #[path = "tests/option_contract_tests.rs"]
 mod option_contract_tests;
@@ -1824,7 +1826,10 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
         std::sync::atomic::Ordering::Relaxed,
     );
 
-    let result = iced::application(
+    // One daemon whose windows the app opens (windows/, docs/adr/8060): the main window at once, with the settings it
+    // always had, and a window of its own for a dialog taken out of it. A daemon does not end with its last window:
+    // the main window's close ends the program (cloud/leaving.rs).
+    let result = iced::daemon(
         // The user's settings file (docs/adr/0023); in memory where no configuration folder is known.
         move || {
             let settings = settings::Settings::config_dir()
@@ -1915,6 +1920,8 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
                 }
                 // Each window's size (pencereler.json, docs/adr/0746).
                 app.dialog_sizes = dialog_sizes::Keeper::open(&dir);
+                // Which dialogs open in a window of their own, and its size (ayri-pencereler.json, docs/adr/8060).
+                app.windows.memory = windows::Memory::open(&dir);
                 app.layout = layout::Keeper::open_for(&dir, program);
                 app.apply_layout();
             }
@@ -1924,19 +1931,36 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             }
             // The server cell's first answer (the web asks once it is idle after start).
             let server = app.check_server_quietly();
-            // The window's device pixels per logical pixel: the brand's pictures are chosen by it.
-            let scale = iced::window::oldest().and_then(iced::window::scale_factor).map(app::Message::DeviceScale);
+            // The main window, opened first: the app's first tasks run once it is there, as with one window.
+            let (main, opened) = iced::window::open(main_window(program));
+            app.windows.set_main(main);
+            // The main window's device pixels per logical pixel: the brand's pictures are chosen by it.
+            let scale = iced::window::scale_factor(main).map(app::Message::DeviceScale);
             let python = app.python_detect();
-            (app, iced::Task::batch([task, server, scale, python]))
+            let first = iced::Task::batch([task, server, scale, python]);
+            (app, opened.discard().chain(first))
         },
         app::App::update,
-        app::App::view,
+        app::App::window_view,
     )
-    .title(app::App::title)
-    .theme(app::App::theme)
+    .title(app::App::window_title)
+    .theme(app::App::window_theme)
     .default_font(typography::ui())
     .subscription(app::App::subscription)
-    .window(iced::window::Settings {
+    .antialiasing(true)
+    .run();
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("{error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// The main window: the program's icon, 1440 × 900, its class to the desktop; a close asks first.
+fn main_window(program: Option<Module>) -> iced::window::Settings {
+    iced::window::Settings {
         icon: kentos_ui::widget::brand::window_icon(),
         size: iced::Size::new(1440.0, 900.0),
         // The smallest window the layouts are checked at: the ribbon fits (docs/adr/0051),
@@ -1952,14 +1976,5 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             ..Default::default()
         },
         ..iced::window::Settings::default()
-    })
-    .antialiasing(true)
-    .run();
-    match result {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(error) => {
-            eprintln!("{error}");
-            ExitCode::FAILURE
-        }
     }
 }

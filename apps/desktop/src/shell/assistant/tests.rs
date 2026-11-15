@@ -925,3 +925,50 @@ fn an_extensions_python_tool_runs_as_a_job_and_its_call_waits_for_it() {
         app.assistant.later
     );
 }
+
+#[test]
+fn a_long_jobs_progress_shows_on_its_calls_card() {
+    // docs/adr/8057 §27: while a call waits for its job, the job's progress (a tool's ctx.progress) shows on the
+    // call's card ("Çalışıyor · %40"), the card redrawn only when the per cent changes.
+    let provider = Provider::start(|_, _| says("Bitti."));
+    let mut app = chatting(&provider);
+    let (message, _task) = send(&mut app, "Aracı çalıştır.");
+    let long = kentos_headless::agent_tools::LongCall {
+        job: "is-1".into(),
+        command: "cad.processing.run".into(),
+        input: json!({ "tool": "ext.tr.ornek.vitrin.taks" }),
+        revision: "1".into(),
+        plan: true,
+    };
+    app.assistant.running.as_mut().expect("a turn").later = Some(super::Later {
+        tool: 7,
+        call: super::Call {
+            id: "call_1".into(),
+            name: "processing__run".into(),
+            input: json!({ "input": { "tool": "ext.tr.ornek.vitrin.taks" }, "mode": "plan" }),
+        },
+        pending: super::Pending::Job {
+            long,
+            document: None,
+        },
+        started: std::time::Instant::now(),
+        shown: None,
+    });
+    let revision = app.assistant.chat.revision();
+    app.assistant_job_progress(0.4);
+    let card = app
+        .assistant
+        .chat
+        .message(message)
+        .and_then(|m| m.tools.iter().find(|t| t.id == 7).cloned())
+        .expect("its card");
+    assert_eq!((card.phase, card.progress), (ToolPhase::Running, Some(0.4)));
+    let after = app.assistant.chat.revision();
+    assert_ne!(after, revision, "redrawn");
+    app.assistant_job_progress(0.401);
+    assert_eq!(
+        app.assistant.chat.revision(),
+        after,
+        "the same per cent: not redrawn"
+    );
+}

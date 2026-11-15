@@ -42,14 +42,23 @@ const SIDE: f32 = 300.0;
 const PROGRESS: f32 = 140.0;
 
 impl App {
-    /// The open processing window, over the drawing.
+    /// The open processing window, over the drawing; Ayrı pencerede aç in its header (apart.rs).
     pub(crate) fn processing_view(&self) -> Element<'_, Message> {
+        match self.processing_box() {
+            Some((dialog, dismiss)) => super::apart::placed(dialog, false).modal(dismiss),
+            None => space().into(),
+        }
+    }
+
+    /// The processing window's box, over the drawing or in its own window (apart.rs), and what a click beside it
+    /// does over the drawing.
+    pub(super) fn processing_box(&self) -> Option<(Dialog<'_, Message>, Message)> {
         // Toplu çalıştır: the same window with the table in the form's place (batch.rs).
         if self.gis.processing.batch.is_some() {
-            return self.batch_view();
+            return self.batch_dialog();
         }
         let (Some(window), Some(doc)) = (&self.gis.processing.dialog, &self.document) else {
-            return space().into();
+            return None;
         };
         let format = Format::of(doc.settings());
         let palette = crate::viewport::palette(self.canvas());
@@ -91,13 +100,13 @@ impl App {
         ]
         .spacing(16)
         .height(Fill);
-        Dialog::new(window.tool.label.clone())
+        let dialog = Dialog::new(window.tool.label.clone())
             .push(body)
             .push(horizontal_divider())
             .push(footer(window, at_server))
             .width(WIDTH)
-            .max_height(HEIGHT)
-            .modal(ev(Event::Close))
+            .max_height(HEIGHT);
+        Some((dialog, ev(Event::Close)))
     }
 }
 

@@ -36,7 +36,11 @@ sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı a
   `ctx.summary(metin)` geçmişteki tek satırı, `ctx.select(nesneler)` bitince seçili kalanları söyler.
 - `@ext.audit("kimlik")` → `entrypoints.audits`: `def f(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]`.
   `facts.layers()`, `facts.features(katman_kimliği_ya_da_adı)`, `facts.all_features()`, `facts.group_related(katman,
-  foreign_key=…)`, `facts.cut`. Kural yazamaz; bulgu `ext.AuditFinding(message, severity="error"|"warning"|"info",
+  foreign_key=…)`, `facts.cut`. KentOS'un Rust'ta ölçtüğü olgular `facts.project` (`ext.ProjectAuditFacts`;
+  `.layer("parsel")` → `ext.LayerFacts`: geometriye göre sayılar, `area`, `length`, `invalid`, `overlaps`, `gaps`,
+  `totals`; mimari çizimde `.architecture` → `ext.ArchitectureFacts`: katlar, `exits(kat)`, mahaller (`net`, `axis`,
+  `escape`: kat çıkışına ve daire kapısına yürüyüş), `units` (PAİY 4/ğ alanları), `doors`; şeması `factsSchema`):
+  geometriyi yeniden hesaplamayın. Kural yazamaz; bulgu `ext.AuditFinding(message, severity="error"|"warning"|"info",
   feature_id, fix=ext.SemanticFix(title, command, args))`. Düzeltmeyi kullanıcı uygular (tek geri alma adımı; yalnız
   `document.write` izinli eklentide).
 - `@ext.expr("kimlik")` → `entrypoints.expressions`: düz işlev, değer alır değer döndürür. İfadelerde eklenti
@@ -78,7 +82,9 @@ Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "s
 Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.panels` (`id`, `title`, `side`: right
 Katmanlar'ın yanında, left haritanın solunda, bottom altında; kullanıcının taşıdığı yer korunur, `definition`),
 şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title` ve `body`
-bileşenleri: `text` (`text`), `textField` (`id`, `label`, `placeholder`, `value`), `numberField` (`id`, `label`,
+bileşenleri: `text` (`text`), `section` (`label`, `collapsed`: katlanır başlık; sonraki bileşenleri bir sonraki bölüme
+dek toplar, katlıyken değerleri yine gider, yanlış bırakılan alanı bölümü açar), `textField` (`id`, `label`,
+`placeholder`, `value`), `numberField` (`id`, `label`,
 `min`, `max`, `unit`, `value`), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
 da YYYY-AA-GG yazar ya da takvimden seçer, değeri ISO tarih metni ya da boşsa None), `timeField` (`id`, `label`,
 `value`, `min`, `max`: SS:DD; kullanıcı 14:30, 14.30 ya da 9:05 yazar ya da saat seçicisinden seçer, değeri SS:DD ya da
@@ -105,7 +111,8 @@ her satır bir gösterge kartı: `title` sütunu adı (yoksa ilk sütun), `value
 pie, histogram, line; `category`: gruplanacak ya da yatay eksendeki sütun, `value`: sayı sütunu, `aggregate`: count
 (varsayılan; `value` verilirse sum), sum, mean, min, max, median; çubuk ve pasta `category` ister, histogram `value`,
 çizgi ikisini; satırları düğmenin `table`'ından ya da `of` ile bu paneldeki bir tablonun, ağacın, kartın ya da
-göstergenin satırlarından; KentOS'un grafik motoru çizer). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve katman/alan/nesne seçicileri `required: true` alır: boş
+göstergenin satırlarından; KentOS'un grafik motoru çizer), `image` (`id`, `label`, `alt`, `height`: 80–600 px; kodun
+verdiği PNG'yi oranını koruyarak gösterir, verilene dek `alt` yazar; ör. matplotlib ya da NumPy ile çizilen grafik). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve katman/alan/nesne seçicileri `required: true` alır: boş
 bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında ("“Önek” boş bırakılamaz"), adının yanında yıldız.
 `select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField`, `timeField`, `dateTimeField` (seçiciden seçilince ya da Enter'la) ve `checkbox` isteğe
 bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
@@ -114,8 +121,15 @@ da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırla
 doldurur (boş liste de bir cevaptır: tablo boşalır; `ctx.message` tabloya dokunmaz) (`ctx.doc.entities(layer=…)` kayıt verir: `kayit.uid` kalıcı kimlik, öznitelikler `kayit.entity.attrs`'ta,
 kayıtta değil). Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
 `uid` sütun olarak görünmez. Panel Python'suz açılır; ortam hazır değilse düğmeler nedenini söyler. İskelette
-`panel` katkısı bir örnek verir. Panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel`; panelden
-çalışmadıysa None): `set(id, value=…, options=…, enabled=…, visible=…, text=…)` (seçenekleri veriden doldurmak, düğmeyi
+`panel` katkısı bir örnek verir. Bileşen kuralı Python'suz çalışır, formun kurallarının ifade diliyle panelin
+girdilerini kimlikleriyle okur: `visibleWhen` (her bileşen), `requiredWhen` (zorunlu olabilen girdi), `enabledWhen`
+(düğme ve metin, sayı, tarih, saat alanları), ör. `"visibleWhen": "içerir(bilgiler, 'tarih')"`; tireli kimlik köşeli
+parantezle (`[en-sik]`). Hesaplı değer de Python'suz: `calculate` (metin; metin, sayı, tarih, saat, an alanı) değeri
+okuduğu girdiler değiştikçe yeniden hesaplar, alan yazılmaz ve kod onu değiştiremez, metinde `text` hesap boşken görünür;
+`defaultExpr` (alanlar) ilk değeri panel açılırken hesaplar (`"defaultExpr": "bugün()"`); ikisi `bugün()` ve `şimdi()`'yi
+okur, birbirini döngüyle okuyan hesaplar Kapı 1'de reddedilir. Katmanın sağ tık menüsünden (`contextMenus`, `target: "layer"`) çalışan komut tıklanan
+katmanın kimliğini `ctx.params["layer"]`'da alır. Panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel`;
+panelden çalışmadıysa None; başka bir panelini `ctx.open_panel(id)` açıp verir): `set(id, value=…, options=…, enabled=…, visible=…, text=…, image=…)` (`image`: PNG baytları ya da PNG dosyasının yolu, en çok 4096 piksel; seçenekleri veriden doldurmak, düğmeyi
 kapatmak, alanı gizlemek), `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`; yanlış kimlik ya da değer
 `kentos.HostError`, kullanıcının o sırada değiştirdiği alan onun kalır (False), kodun koyduğu değer `onChange`'i
 çalıştırmaz.
@@ -133,7 +147,11 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 `ctx.message(metin)`, `ctx.cancelled()`; kullanıcıya sormak için `ctx.dialog(başlık, alanlar, ok=…, cancel=…)` (alanlar
 bir panelin girdileri: textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, checkbox,
 layerPicker, fieldPicker, text; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
-bekler) ve `ctx.confirm(metin)` (evet: True); `ctx.params` ve `ctx.settings` sözlüklerdir. Bu KentOS'un yapamadığı bir şey
+bekler) ve `ctx.confirm(metin)` (evet: True). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
+as ui` ile yazın: bileşen başına bir işlev, gerekli anahtarlar sırayla, kalanı adıyla (`ui.text_field("onek", "Önek",
+value="Y-")`, `ui.number_field("ilk", "İlk numara", min=1, required=True)`, `ui.select("tur", "Tür", ["A", "B"])`,
+`ui.choice("-", "Seçmeyin")`, bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir, yanlış anahtar
+`TypeError`. `ctx.params` ve `ctx.settings` sözlüklerdir. Bu KentOS'un yapamadığı bir şey
 `ext.NotAvailable` atar: KentOS onu eklentinin hatası değil eksik bir yetenek olarak söyler.
 
 ## Kurallar
@@ -170,8 +188,12 @@ pub const LAYER_SCHEMA: &str = include_str!("../sdk/kentos-layer-schema.schema.j
 /// (`kentos_processing::external::descriptor_schema`, whose test writes it here): a part of its own (docs/adr/8057 §28).
 pub const TOOL_SCHEMA: &str = include_str!("../sdk/kentos-processing-tool.schema.json");
 
+/// The facts an audit rule reads (`facts.project`, `kentos.auditFacts` 1): their JSON Schema, made from their types
+/// (`audit_facts::json_schema`) and committed beside the stub: a part of its own (docs/adr/8057 §36).
+pub const FACTS_SCHEMA: &str = include_str!("../sdk/kentos-audit-facts.schema.json");
+
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 14] = [
+pub const PARTS: [&str; 16] = [
     "guide",
     "api",
     "capabilities",
@@ -183,9 +205,11 @@ pub const PARTS: [&str; 14] = [
     "example",
     "icons",
     "panelSchema",
+    "panelBuilders",
     "manifestSchema",
     "layerSchema",
     "toolSchema",
+    "factsSchema",
 ];
 
 /// One part of the pack; none for a name the pack has not. `icons` is the whole list, which the pack only counts: its
@@ -197,6 +221,11 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     if part == "panelSchema" {
         return serde_json::from_str(PANEL_SCHEMA).ok();
     }
+    // `kentos.ui_panel`'s source, made from the schema as the SDK's module is (16 KB, a part of its own).
+    #[cfg(feature = "schema")]
+    if part == "panelBuilders" {
+        return Some(Value::String(crate::ui_panel::python::python_builders()));
+    }
     if part == "manifestSchema" {
         return serde_json::from_str(MANIFEST_SCHEMA).ok();
     }
@@ -205,6 +234,9 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     }
     if part == "toolSchema" {
         return serde_json::from_str(TOOL_SCHEMA).ok();
+    }
+    if part == "factsSchema" {
+        return serde_json::from_str(FACTS_SCHEMA).ok();
     }
     if part == "example" {
         return serde_json::to_value(example()).ok();
@@ -318,7 +350,10 @@ pub fn sdk_pack() -> Value {
             "Kullanıcı atölyeden kurduktan sonra: değişiklikleri extension.workshop.reload uygulama kapanmadan yükler \
              (aynı sürüm, kullanıcının verdiği yeteneklerle; yeni yetenek isteyen yeniden review'a gider); \
              extension.workshop.preview kullanıcının gördüğünü (sekme, paneller, araçlar, kapalı düğmenin nedeni) \
-             yazıyla verir. Masaüstünün Asistan'ında ve masaüstüne bağlı ajanda (MCP'de desktop.attach)."
+             yazıyla verir; extension.workshop.trial denetim kurallarını ve İşlemler araçlarını verdiğiniz örnek \
+             nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin sırasıyla, aracın yazdıkları, hata ve \
+             iz kaydı; kullanıcının çizimine dokunmaz). Masaüstünün Asistan'ında ve masaüstüne bağlı ajanda (MCP'de \
+             desktop.attach)."
         ],
         "example": example,
         "icons": {
@@ -330,6 +365,11 @@ pub fn sdk_pack() -> Value {
             "how": "kentos.ui.panel 1'in JSON Schema'sı (bileşenler, anahtarları ve türleri): extension.sdk \
                     part=panelSchema ya da kentos kek sdk --part panelSchema. Kesin denetim yine extension.verify'da \
                     (düğmenin komutu, seçicinin katman seçicisi, kimliklerin tekliği şemada söylenemez).",
+        },
+        "panelBuilders": {
+            "how": "kentos.ui_panel'in kaynağı: panel bileşenlerinin Python işlevleri (ctx.dialog alanları, \
+                    set(options=…), ui.panel ile bütün panel), panelin şemasından üretilir: extension.sdk \
+                    part=panelBuilders ya da kentos kek sdk --part panelBuilders.",
         },
         "manifestSchema": {
             "how": "manifest.json'un (kentos.extension 1) JSON Schema'sı: anahtarlar, türleri, kapalı sözlükler (yetenekler, \
@@ -345,6 +385,12 @@ pub fn sdk_pack() -> Value {
             "how": "İşlemler aracı tanımının (tools/<id>.tool.json, kentos.processingTool 1) JSON Schema'sı: parametre ve \
                     çıktı türleri, anahtarları: extension.sdk part=toolSchema ya da kentos kek sdk --part toolSchema. \
                     Parametre adlarının ve sinkParameter'ın tutarlılığı extension.verify'da.",
+        },
+        "factsSchema": {
+            "how": "Denetim kuralının okuduğu ölçülmüş olguların (facts.project, kentos.auditFacts 1) JSON Schema'sı: \
+                    katman başına geometriye göre nesne sayıları, geçersiz geometriler, alanların çakışmaları ve \
+                    boşluklar; mimari çizimde katlar, mahaller, PAİY alanları ve kaçış yolları: extension.sdk \
+                    part=factsSchema ya da kentos kek sdk --part factsSchema.",
         },
     })
 }

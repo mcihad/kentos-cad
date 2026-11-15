@@ -1,0 +1,29 @@
+# Panel aç: Vitrin'in "Yapıları numarala"sı şeritten çalışınca, bitince "Yapı ara" panelini kendisi açar
+# (ctx.open_panel): Yapı no önekle dolar, numaralanan yapılar tabloda, altında özet. Satıra tıklamak yapıyı gösterir.
+# (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 155 56    # Yapıları numarala: önce pencere (süreç ilk kez açılıyor)
+wait 5000
+click 790 461   # Önek
+key ctrl+a
+type B-
+click 790 498   # İlk numara
+key ctrl+a
+type 10
+wait 400
+click 920 538   # Numarala
+wait 6000
+shot 32-panel
+wheel 1280 450 -8 # paneli kaydır: tablo ve özet
+wait 1000
+shot 32-tablo
+click 1250 400  # bir satır: yapıyı gösterir
+wait 2000
+shot 32-satir

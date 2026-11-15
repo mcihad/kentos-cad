@@ -9,6 +9,7 @@
 
 mod cli;
 mod config;
+mod extension_catalog;
 mod http;
 mod hub;
 mod oidc;
@@ -202,6 +203,9 @@ async fn serve(config: Config) -> Result<(), String> {
         logins: Default::default(),
         blobs,
         proxy: Some(Arc::new(proxy)),
+        // The extension catalog stays off until its store is persistent and its decisions ask for a fresh sign-in
+        // (docs/adr/8059 §10): its routes answer 404 meanwhile.
+        extension_catalog: None,
     };
     let listener = tokio::net::TcpListener::bind(addr)
         .await

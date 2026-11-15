@@ -114,8 +114,10 @@ fn panels_step_down_from_the_right_and_giris_keeps_its_drawing_tools() {
     let (levels, _) = ribbon::fit(&widths, &keep, 1100.0);
     for (i, &kept) in keep.iter().enumerate() {
         if kept && levels[i] > 0 {
-            // A panel whose design is as narrow as its small step is small already.
-            let small = |j: usize| levels[j] >= 1 || (widths[j][0] - widths[j][1]).abs() < 0.5;
+            // A panel whose small step saves nothing is small already: `fit` takes no step that saves less than
+            // half a pixel. Its small step may even be wider (CAD Giriş's third panel: 246.0 against 245.34, so the
+            // test failed while the ribbon did right: it keeps the large one, no wider).
+            let small = |j: usize| levels[j] >= 1 || widths[j][1] > widths[j][0] - 0.5;
             assert!(
                 (0..levels.len()).all(|j| keep[j] || small(j)),
                 "a kept panel shrank before the others went small: {levels:?}"

@@ -12,7 +12,7 @@ use tower::ServiceExt;
 use super::*;
 use crate::config::Config;
 
-fn config() -> Config {
+pub(super) fn config() -> Config {
     Config {
         env_file: ".env.test".into(),
         vars: Default::default(),
@@ -54,6 +54,7 @@ pub(super) fn app_with(database: Option<Db>, blobs: kentos_application::blobs::B
         logins: Default::default(),
         blobs,
         proxy: None,
+        extension_catalog: None,
     })
 }
 

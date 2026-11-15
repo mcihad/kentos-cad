@@ -28,6 +28,7 @@
 )]
 
 pub mod address;
+pub mod audit_facts;
 mod batch_sink;
 pub mod batch_table;
 pub mod builtin;

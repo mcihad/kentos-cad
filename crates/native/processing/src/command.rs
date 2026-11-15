@@ -541,7 +541,8 @@ impl ToolHost for Tools {
                 ));
             };
             let partial = partial_inputs(doc, &ready, &[]);
-            return match run_on(doc, ready, &registry, &mut Digests::new(), stop) {
+            let progress = flow.progress_sink();
+            return match run_on(doc, ready, &registry, &mut Digests::new(), stop, progress) {
                 Ok((ran, _)) => Ok(RunEnd::Ran(ran, partial)),
                 Err(Halt::Cancelled) => Ok(RunEnd::Cancelled),
                 Err(Halt::Refused(e)) => Err(e),
@@ -574,12 +575,18 @@ impl ToolHost for Tools {
             .iter()
             .map(|o| (o.name.clone(), o.label.clone()))
             .collect();
-        let (mut ran, added) =
-            match run_on(&mut copy, ready, &registry, &mut Digests::new(), stop) {
-                Ok(made) => made,
-                Err(Halt::Cancelled) => return Ok(RunEnd::Cancelled),
-                Err(Halt::Refused(e)) => return Err(e),
-            };
+        let (mut ran, added) = match run_on(
+            &mut copy,
+            ready,
+            &registry,
+            &mut Digests::new(),
+            stop,
+            flow.progress_sink(),
+        ) {
+            Ok(made) => made,
+            Err(Halt::Cancelled) => return Ok(RunEnd::Cancelled),
+            Err(Halt::Refused(e)) => return Err(e),
+        };
         // A stop that came while the tool computed and was not heard by it ends the run before the file is touched.
         if flow.stopped() {
             return Ok(RunEnd::Cancelled);
@@ -685,7 +692,7 @@ impl ToolHost for Tools {
             let at = doc.group_savepoint();
             let made = ready(&registry, doc, &row_run(input, row))
                 .map_err(Halt::Refused)
-                .and_then(|r| run_on(doc, r, &registry, &mut digests, stop.clone()))
+                .and_then(|r| run_on(doc, r, &registry, &mut digests, stop.clone(), None))
                 .map(|(ran, _)| ran);
             match made {
                 Ok(ran) => ran_rows.push(BatchRowRan {
@@ -1148,6 +1155,7 @@ pub(crate) fn run_on(
     registry: &Registry,
     digests: &mut Digests,
     stop: Option<Arc<AtomicBool>>,
+    progress: Option<kentos_native_application::processing_host::ProgressSink>,
 ) -> Result<(ProcessingRan, Vec<Slot>), Halt> {
     let begun = Begun::of(doc, &ready, digests);
     let Ready {
@@ -1176,6 +1184,11 @@ pub(crate) fn run_on(
     };
     if let Some(stop) = stop {
         runner = runner.with_stop(stop);
+    }
+    // A single run's tool reports how far it is to the job running it (docs/adr/8057 §27); a batch's rows report
+    // between them instead.
+    if let Some(progress) = progress {
+        runner = runner.with_progress(progress);
     }
     runner.environment = environment;
     let outcome = match &model {

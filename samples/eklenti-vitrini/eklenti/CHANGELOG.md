@@ -1,5 +1,50 @@
 # Değişiklikler
 
+## 1.0.33 — 15 Kasım 2026
+
+- "Yapı ara"nın Özetle'si göstergelerin altında taban alanlarını çubuk grafik olarak da çizer (`image`): kod grafiği
+  NumPy ile çizip PNG'ye çevirir (`ctx.panel.set("alanlar", image=...)`), ek kitaplık gerekmez.
+
+## 1.0.32 — 15 Kasım 2026
+
+- Yeni denetim "Parsel çakışması" (şeridin yeni Denetim grubunda): geometriyi KentOS ölçer (`facts.project`: Rust'ın
+  çakışma ve boşluk denetimi), kural yalnız karar verip bulguyu parselin adıyla yazar; çakışma hata, boşluk uyarı.
+
+## 1.0.31 — 15 Kasım 2026
+
+- "Yapı ara"nın sonunda katlanır bir bölüm (`section`): "İpuçları" kapalı açılır, başlığına basınca kısayollar ve
+  geri alma notu görünür.
+
+## 1.0.30 — 15 Kasım 2026
+
+- Hesaplı değerler, Python'suz: "Yapıları numarala" penceresinin açıklaması yazılan önek ve ilk numarayla hesaplanır
+  (`calculate`): açılınca "“yapi” katmanındaki 5 yapıya Y-01 … Y-05 yazılır.", B- ve 10 yazılınca "… B-10 … B-14
+  yazılır."; İlk numara boşken kendi metni görünür. "Parsel kartı"nın Kart tarihi bugünle açılır (`defaultExpr:
+  "bugün()"`).
+
+## 1.0.29 — 15 Kasım 2026
+
+- "Yapıları numarala"nın penceresi ve "Değer say"ın Seç seçenekleri `kentos.ui_panel`'in işlevleriyle yazılır
+  (`ui.text_field("onek", "Önek", value="Y-")`, `ui.choice("-", "Seçmeyin")`): panelin JSON şemasından üretilen
+  tipli işlevler; elle yazılan JSON'daki gibi bir anahtar yanlış yazılamaz. Davranış aynı.
+
+## 1.0.28 — 15 Kasım 2026
+
+- "Parsel kartı"nda Kart tarihi ve Saat yalnız Bilgiler'de Tarih seçiliyken görünür (`visibleWhen:
+  "içerir(bilgiler, 'tarih')"`): Python'suz bileşen kuralı, formların ifade diliyle; Tarih çipi bırakılınca iki alan
+  kalkar, yeniden seçilince yazılanlarla döner.
+
+## 1.0.27 — 15 Kasım 2026
+
+- Katmanın sağ tık menüsünde "Değerlerini say": "Değer say" panelini o katman seçili açar (menüden çalışan komut
+  tıklanan katmanı `ctx.params["layer"]`'da alır, `ctx.open_panel` ile panelini açar); alan seçilince sayım başlar.
+
+## 1.0.26 — 15 Kasım 2026
+
+- "Yapıları numarala" şeritten çalışınca bitince "Yapı ara" panelini açar (`ctx.open_panel`: komut kendi panelini
+  açar ve değiştirir): Yapı no önekle dolar, numaralanan yapılar tabloda (tıklanan satır yapıyı gösterir), altında
+  "5 yapı numaralandı (B-10 … B-14)." yazar.
+
 ## 1.0.25 — 15 Kasım 2026
 
 - "Değer say"ın açıklaması eski boyuna döndü (uzayınca Katman ve Alan kutuları kayıyordu); Seç'in ne yaptığını sayımdan

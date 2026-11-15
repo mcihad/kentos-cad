@@ -48,10 +48,10 @@ class CommandResult:
 
 
 class PanelSession:
-    """The panel whose button (or changed input) started this run, changed as the run goes (docs/adr/8057 §32): ``ctx.panel``; None when the run did not start from a panel."""
+    """One of the extension's panels, changed as the run goes (docs/adr/8057 §32): ``ctx.panel`` (the panel whose button or changed input started the run; None when it did not start from a panel) or what :meth:`CommandContext.open_panel` gives."""
     #: The panel's id in the manifest (``entrypoints.panels[].id``).
     id: str
-    def set(self, id: str, *, value: Any = ..., options: Iterable[Any] | None = None, enabled: bool | None = None, visible: bool | None = None, text: str | None = None) -> bool:
+    def set(self, id: str, *, value: Any = ..., options: Iterable[Any] | None = None, enabled: bool | None = None, visible: bool | None = None, text: str | None = None, image: Any = ...) -> bool:
         """Changes component ``id``: ``value`` (a field's text or number, a date as ``datetime.date`` or ISO text, a choice's value, a multiple choice's values, a check's True or False, a layer picker's layer id, a feature picker's persistent ids; None empties it), ``options`` (a choice's or a multiple choice's: values, or dicts with ``value`` and ``label``; a chosen value no longer among them is let go), ``…"""
     def rows(self, id: str, rows: Iterable[dict[str, Any]], columns: Sequence[str] | None = None) -> bool:
         """Puts ``rows`` (each a dict of column → value) in table, tree, cards, figures or chart ``id`` now, as a command's report would at its end; ``columns`` in their order, else in the order the rows first give them."""
@@ -87,6 +87,8 @@ class CommandContext:
         """Asks the user in a KentOS window over the drawing and waits for the answer (docs/adr/8057 §29): ``body`` is a panel's fields (``kentos.ui.panel`` components: ``text``, ``textField``, ``numberField``, ``dateField``, ``timeField``, ``dateTimeField``, ``select``, ``multiSelect``, ``checkbox``, ``layerPicker``, ``fieldPicker``), no buttons or commands."""
     def confirm(self, text: str, title: str = "Onay", ok: str = "Evet", cancel: str = "Hayır") -> bool:
         """Asks the user yes or no in a KentOS window (:meth:`dialog` with ``text``): True for ``ok``."""
+    def open_panel(self, id: str) -> PanelSession:
+        """Opens the extension's panel ``id`` (``entrypoints.panels[].id``; brought in front when it is open) and gives it to change as the run goes (:class:`PanelSession`): a command run from the ribbon shows what it did in its panel."""
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""
     def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:
@@ -178,9 +180,12 @@ class MapToolContext(CommandContext):
 
 
 class GisAuditFacts:
-    """What an audit rule reads (docs/adr/8057 §17): the drawing's layers holding objects, each object a :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began."""
+    """What an audit rule reads (docs/adr/8057 §17): the drawing's layers holding objects, each object a :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began, and what KentOS measured in it (:attr:`project`)."""
     #: KentOS gave only the first objects of a very large drawing (its limit): a rule may say so.
     cut: bool
+    @property
+    def project(self) -> ProjectAuditFacts:
+        """What KentOS measured in the drawing, once and in Rust (:class:`ProjectAuditFacts`): read it rather than working the geometry out again."""
     def layers(self) -> list[tuple[str, str]]:
         """The layers holding objects, ``(id, name)``, in the layer tree's order."""
     def features(self, layer: str) -> list[Feature]:
@@ -189,6 +194,167 @@ class GisAuditFacts:
         """Every object given, layer by layer."""
     def group_related(self, layer: str, foreign_key: str) -> dict[str, list[Feature]]:
         """A layer's objects grouped by their ``foreign_key`` attribute's value (a related table's key); objects without it are left out."""
+
+
+class ProjectAuditFacts:
+    """What KentOS measured in the drawing for an audit (``kentos.auditFacts`` 1, the SDK's ``factsSchema``; docs/adr/8057 §36): each layer's objects by geometry, its invalid geometries, the overlaps of its areas and the gaps their union closes in, worked out once in Rust at the project's topology tolerance, the same on the desktop and in a cloud job."""
+    #: The project's topology tolerance (m): areas nearer than it touch, a piece no wider is no overlap or gap.
+    tolerance: float
+    #: KentOS measured only the first objects of a very large drawing (by persistent id): a rule may say so.
+    cut: bool
+    #: The drawing's storeys, rooms, program groups and escape routes (docs/adr/8057 §39); empty without rooms.
+    architecture: ArchitectureFacts
+    def layers(self) -> list[LayerFacts]:
+        """The layers holding objects, in the layer tree's order."""
+    def layer(self, layer: str) -> LayerFacts:
+        """A layer's facts, by its id or its name (``parsel``, ``Parsel``); an empty one when no layer holding objects has it."""
+
+
+class LayerFacts:
+    """One layer's measured facts (:class:`ProjectAuditFacts`); a list holds at most 10 000 items, the first in its order (invalid by object, overlaps by their pair, gaps north to south), and :attr:`totals` counts all of them."""
+    id: str
+    name: str
+    #: Its objects by geometry: points, lines (a closed polyline too), areas and the rest (texts, blocks …).
+    points: int
+    lines: int
+    areas: int
+    other: int
+    #: Its areas' area summed, m²: holes out, arcs exact (not the tessellated GeoJSON's).
+    area: float
+    #: Its lines' length summed, m, arcs exact.
+    length: float
+    invalid: list[InvalidGeometry]
+    overlaps: list[Overlap]
+    gaps: list[Gap]
+    #: How many it has in all: ``{"invalid": …, "overlaps": …, "gaps": …}``.
+    totals: dict[str, int]
+
+
+@dataclass(frozen=True)
+class InvalidGeometry:
+    """An object whose shape is not valid: its id, the problem (``repeated``, ``zeroArea``, ``ringCrossing``, ``pathCrossing``, ``holeOutside``, ``holesOverlap``) and where it first shows."""
+    uid: str
+    problem: str
+    at: tuple[float, float]
+
+
+@dataclass(frozen=True)
+class Overlap:
+    """Two areas of one layer covering each other: their ids (``a`` the smaller), the area both cover (m²) and the centroid of its largest piece."""
+    a: str
+    b: str
+    area: float
+    at: tuple[float, float]
+
+
+@dataclass(frozen=True)
+class Gap:
+    """What a layer's areas close in and none covers (a gap between parcels, an area's hole): its area (m²), its centroid and the areas around it, the one sharing the longest boundary first."""
+    area: float
+    at: tuple[float, float]
+    around: tuple[str, ...]
+
+
+class ArchitectureFacts:
+    """The drawing's architecture as KentOS Mimari measured it (docs/adr/8057 §39): its storeys, every room with its net area and its outline to the walls' axes, the program's groups with PAİY 4/ğ's areas and the escape routes (BYKHY); empty when the drawing has no room."""
+    #: The project's storeys, lowest first.
+    levels: list[Storey]
+    #: Every room, a void and an outdoor one too, by persistent id.
+    rooms: list[RoomFacts]
+    #: The program's groups that have rooms, in the program's order.
+    units: list[UnitFacts]
+    #: Each dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4).
+    doors: list[DoorEscape]
+    def exits(self, level: str | None) -> int:
+        """How many storey exits a storey has (BYKHY 4/u: an escape stair's room, an open stair, a door out on the ground storey), by its id; 0 for a storey without rooms."""
+    def room(self, uid: str) -> RoomFacts | None:
+        """A room by its persistent id; none when the drawing has no such room."""
+    def unit(self, unit: str) -> UnitFacts | None:
+        """A program group by its id or its number; none when no group with rooms has it."""
+
+
+@dataclass(frozen=True)
+class Storey:
+    """A storey of the project: its id, its name, its floor's elevation (m) and its height (m; None when not given)."""
+    id: str
+    name: str
+    elevation: float
+    height: float | None
+
+
+@dataclass(frozen=True)
+class EscapeWalk:
+    """A walk along the points it turns at, its length in metres; a walk to an exit also says the part it shares with the walk to the nearest other exit (``one_way``, tek yön: a dead end's) and how many exits its start reaches."""
+    length: float
+    path: tuple[tuple[float, float], ...]
+    one_way: float | None = None
+    exits: int | None = None
+
+
+@dataclass(frozen=True)
+class RoomEscape:
+    """A room's walks from its farthest point, 40 cm in front of its walls (BYKHY 32/6): to the nearest storey exit (32/4; None when it reaches none) and, a dwelling unit's room, to its unit's door (48/2)."""
+    exit: EscapeWalk | None
+    storey_exits: bool
+    entrance: EscapeWalk | None
+    has_entrance: bool
+    passages: int
+
+
+@dataclass(frozen=True)
+class RoomFacts:
+    """A room: its persistent id, number, name, usage, storey and group; whether it is a void, outdoor, broken (its boundary not found) or an escape stair's room; its net area and its outline to the walls' axes (m²); its walks (None for a void, an outdoor, a broken or a stair's room)."""
+    uid: str
+    number: str | None
+    name: str | None
+    usage: str | None
+    level: str | None
+    unit: str | None
+    void: bool
+    outdoor: bool
+    broken: bool
+    stair: bool
+    net: float
+    axis: float
+    escape: RoomEscape | None
+
+
+@dataclass(frozen=True)
+class UnitLevel:
+    """A group's gross and net area on one storey (m²)."""
+    level: str | None
+    gross: float
+    net: float
+
+
+@dataclass(frozen=True)
+class UnitFacts:
+    """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross`` (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None without a share)."""
+    id: str
+    number: str
+    name: str | None
+    kind: str
+    nature: str | None
+    annex_of: str | None
+    dwelling: bool
+    gross: float
+    net: float
+    annex_gross: float
+    annex_net: float
+    total: float
+    share: float | None
+    general: float | None
+    levels: tuple[UnitLevel, ...]
+
+
+@dataclass(frozen=True)
+class DoorEscape:
+    """A dwelling unit's door: its persistent id, unit, storey and middle, and its walk from its outer side to the nearest storey exit (BYKHY 48/4; None when it opens into an escape stair's room)."""
+    uid: str
+    unit: str
+    level: str | None
+    at: tuple[float, float]
+    exit: EscapeWalk | None
 
 
 @dataclass

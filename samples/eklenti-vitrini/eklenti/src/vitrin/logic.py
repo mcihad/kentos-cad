@@ -10,16 +10,20 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``ada_parsel``: ifade işlevi; etiket metni, stil kuralı, katman süzgeci, İşlemler ve form hesabı çağırır.
 - ``yapi_yerlestir``: harita aracı; manifestteki 10 × 12 m şablonu kullanıcının gösterdiği yere yazar.
 - ``yapi_no``: denetim kuralı; numarasız yapıları bulur, her birine sıradaki numarayı yazan bir düzeltme önerir.
+- ``parsel_cakisma``: KentOS'un ölçtüğü olgularla denetim (``facts.project``); çakışan ve arası boş parseller.
 - ``katmanlari_kur``: katman şeması; schema.json'daki grubu, katmanları, değer listesini ve ilişkiyi tek adımda kurar.
 - ``yapi_ara``: panelin düğmesi; "Yapı ara" panelinin değerleriyle çalışır, satırları panelin tablosuna gider.
 - ``yapi_ozeti``: göstergeli panel; "Yapı ara"nın Özetle düğmesi, satırları gösterge kartları olur.
 - ``deger_say``: seçicili panelin düğmesi; "Değer say"ın katmanı, alanı ve seçilen nesneleriyle değerleri sayar,
   bulduklarını panelin Seç kutusuna koyar (``ctx.panel``: çalışan kod panelini değiştirir).
 - ``deger_sec``: Seç değişince çalışır; o değerdeki nesneleri çizimde seçer.
+- ``katman_degerleri``: katmanın sağ tık menüsünden; "Değer say"ı o katman seçili açar (``ctx.params["layer"]``).
 - ``parsel_karti``: kartlı panel; "Parsel kartı"nda alınan her parselin alanı, yapıları ve TAKS'ı bir kartta.
 """
 
+import struct
 import time
+import zlib
 from datetime import date, datetime
 
 import numpy as np
@@ -27,6 +31,7 @@ import shapely
 from shapely.geometry import Polygon, shape
 
 from kentos import cad, ext
+from kentos import ui_panel as ui
 
 
 def _yapraklar(nodes):
@@ -64,9 +69,10 @@ def katman_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
 @ext.command("yapilari-numarala")
 def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
     """'yapi' katmanındaki yapılara sırayla "no" yazar (Y-01, Y-02 …). Şeritten çalışınca önce öneki ve ilk numarayı
-    sorar (ctx.dialog: KentOS'un penceresi; İptal'de bir şey yazılmaz); "Yapı ara" panelinin düğmesinden çalışınca
-    Y-01'den başlar. İlerleme çubuğunu ve Durdur'u göstermek için her yapıda yarım saniye bekler: Durdur'a basılırsa
-    yazdıkları geri alınır."""
+    sorar (ctx.dialog: KentOS'un penceresi, alanları kentos.ui_panel'in işlevleriyle, açıklaması yazılanla hesaplanır;
+    İptal'de bir şey yazılmaz), bitince "Yapı ara" panelini açıp numaralananları listeler (ctx.open_panel); panelin
+    düğmesinden çalışınca Y-01'den başlar. İlerleme çubuğunu ve Durdur'u göstermek için her yapıda yarım saniye bekler:
+    Durdur'a basılırsa yazdıkları geri alınır."""
     yapi = _katman(ctx.doc, "yapi") if ctx.doc is not None else None
     if yapi is None:
         return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
@@ -76,10 +82,21 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
     if not ctx.params:
         cevap = ctx.dialog(
             "Yapıları numarala",
+            # Alanlar kentos.ui_panel'in işlevleriyle: her biri bileşenin JSON'unu yazar, anahtarları adıyla ve tipiyle
+            # (panelin JSON şemasından üretilir; yanlış yazılan bir anahtar Python'da TypeError olur). Açıklama hesaplıdır
+            # (calculate): yazılan önek ve ilk numarayla "… B-10 … B-14 yazılır." olur, Python'suz; İlk numara boşken
+            # kendi metni görünür.
             [
-                {"type": "text", "text": f"'yapi' katmanındaki {len(kayitlar)} yapıya sırayla numara yazılır."},
-                {"type": "textField", "id": "onek", "label": "Önek", "value": "Y-"},
-                {"type": "numberField", "id": "ilk", "label": "İlk numara", "value": 1, "min": 1, "required": True},
+                ui.text(
+                    f"'yapi' katmanındaki {len(kayitlar)} yapıya sırayla numara yazılır.",
+                    calculate=(
+                        f"eğer(boş(ilk), boş, '“yapi” katmanındaki {len(kayitlar)} yapıya ' || varsayılan(onek, '') "
+                        f"|| doldur(ilk, 2) || ' … ' || varsayılan(onek, '') || doldur(ilk + {len(kayitlar) - 1}, 2) "
+                        "|| ' yazılır.')"
+                    ),
+                ),
+                ui.text_field("onek", "Önek", value="Y-"),
+                ui.number_field("ilk", "İlk numara", value=1, min=1, required=True),
             ],
             ok="Numarala",
         )
@@ -91,7 +108,21 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
         cad.entities.set(ctx.doc, uids=[kayit.uid], operation="attributes", attrs={"no": f"{onek}{n:02d}"})
         time.sleep(0.5)
     son = ilk + len(kayitlar) - 1
-    return ctx.message(f"{len(kayitlar)} yapı numaralandı ({onek}{ilk:02d} … {onek}{son:02d}).")
+    ozet = f"{len(kayitlar)} yapı numaralandı ({onek}{ilk:02d} … {onek}{son:02d})."
+    if ctx.panel is None and kayitlar:
+        # Şeritten çalıştı: yaptığını "Yapı ara" panelinde gösterir (ctx.open_panel: komut kendi panelini açar,
+        # docs/adr/8057 §32). Satırlar Ara'nınkiyle aynı biçimde: tıklanan satır yapıyı gösterir.
+        panel = ctx.open_panel("yapi-paneli")
+        panel.set("sorgu", value=onek)
+        panel.rows(
+            "sonuc",
+            [
+                {"uid": k.uid, "no": f"{onek}{n:02d}", "alan (m²)": round(Polygon(k.entity.pts).area, 1)}
+                for n, k in enumerate(kayitlar, start=ilk)
+            ],
+        )
+        panel.say(ozet, "success")
+    return ctx.message(ozet)
 
 
 @ext.command("yapi-ara")
@@ -119,7 +150,8 @@ def yapi_ara(ctx: ext.CommandContext) -> ext.CommandResult:
 def yapi_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
     """"Yapı ara" panelinin Özetle düğmesi: yapıların sayısı, taban alanlarının toplamı, numarasızların sayısı ve en
     büyük yapı, her biri bir satır; panel her satırı bir gösterge kartı yapar ("ölçü" adı, "değer" sayısı, "birim" ve
-    "not"). En büyük yapının satırı uid taşır: kartına tıklamak onu gösterir (docs/adr/8057 §24)."""
+    "not"). En büyük yapının satırı uid taşır: kartına tıklamak onu gösterir (docs/adr/8057 §24). Panelden çalışınca
+    taban alanlarını çubuk grafik olarak da çizer (``image``: NumPy ile çizilir, PNG'ye çevrilir; docs/adr/8057 §40)."""
     secilen = ctx.params.get("katman")
     yapi = (secilen or _katman(ctx.doc, "yapi")) if ctx.doc is not None else None
     if yapi is None:
@@ -137,7 +169,38 @@ def yapi_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
         {"ölçü": "En büyük yapı", "değer": round(en_alan, 1), "birim": "m²", "uid": en.uid,
          "not": (en.entity.attrs or {}).get("no") or "numarasız"},
     ]
+    if ctx.panel is not None:
+        # Göstergelerin altında taban alanları, büyükten küçüğe çubuklar: kodun çizdiği görsel (panelin image'ı).
+        ctx.panel.set("alanlar", image=_cubuklar(sorted((a for a, _ in alanlar), reverse=True)))
     return ctx.report(satirlar, title="Yapı özeti", message=f"{len(kayitlar)} yapının özeti.")
+
+
+def _cubuklar(degerler: list[float]) -> bytes:
+    """Değerler için çubuk grafik (480 × 140 piksel): en büyüğü tam boy, mavi çubuklar beyaz zeminde, gri taban çizgisi.
+    NumPy dizisine çizilir ve PNG'ye çevrilir; çizim kitaplığı gerekmez (matplotlib'in ``savefig`` baytları da olur)."""
+    genislik, yukseklik, pay = 480, 140, 12
+    resim = np.full((yukseklik, genislik, 3), 255, dtype=np.uint8)
+    if degerler:
+        en = max(degerler) or 1.0
+        cubuk = max(4, (genislik - pay * (len(degerler) + 1)) // len(degerler))
+        for i, deger in enumerate(degerler):
+            boy = max(2, int((yukseklik - 2 * pay) * deger / en))
+            x = pay + i * (cubuk + pay)
+            resim[yukseklik - pay - boy : yukseklik - pay, x : x + cubuk] = (59, 130, 246)
+    resim[yukseklik - pay, pay : genislik - pay] = (140, 140, 140)
+    return _png(resim)
+
+
+def _png(rgb: np.ndarray) -> bytes:
+    """Bir RGB dizisini (yükseklik × genişlik × 3, uint8) PNG baytlarına çevirir: zlib ve struct, ek kitaplıksız."""
+    yukseklik, genislik, _ = rgb.shape
+    ham = b"".join(b"\x00" + rgb[y].tobytes() for y in range(yukseklik))
+
+    def parca(tur: bytes, veri: bytes) -> bytes:
+        return struct.pack(">I", len(veri)) + tur + veri + struct.pack(">I", zlib.crc32(tur + veri) & 0xFFFFFFFF)
+
+    baslik = struct.pack(">IIBBBBB", genislik, yukseklik, 8, 2, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + parca(b"IHDR", baslik) + parca(b"IDAT", zlib.compress(ham, 9)) + parca(b"IEND", b"")
 
 
 @ext.command("katmanlari-kur")
@@ -229,6 +292,34 @@ def yapi_yerlestir(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResu
     return ctx.add_feature("yapi", sekil, {"kaynak": "Vitrin", "kat": "2"})
 
 
+@ext.audit("parsel-cakisma")
+def parsel_cakisma(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """'parsel' katmanında birbirinin üstüne binen parseller (hata) ve aralarında boşluk kalanlar (uyarı). Geometriyi
+    KentOS ölçer (facts.project: Rust'ın çakışma ve boşluk denetimi, projenin toleransıyla); kural yalnız karar verir
+    ve bulguyu parselin ada/parsel adıyla yazar. Düzeltme önermez: hangi parselin sınırı yanlış, ölçen karar verir."""
+    katman = facts.project.layer("parsel")
+    adlar = {f.id: f"{f.attrs.get('ada', '?')}/{f.attrs.get('parsel', '?')}" for f in facts.features("parsel")}
+    bulgular = []
+    for c in katman.overlaps:
+        bulgular.append(
+            ext.AuditFinding(
+                message=f"{adlar.get(c.a, 'Bir parsel')} ile {adlar.get(c.b, 'bir parsel')} {c.area:.2f} m² çakışıyor.",
+                severity="error",
+                feature_id=c.a,
+            )
+        )
+    for b in katman.gaps:
+        cevre = ", ".join(adlar.get(u, "?") for u in b.around[:3]) or "parseller"
+        bulgular.append(
+            ext.AuditFinding(
+                message=f"{cevre} arasında {b.area:.2f} m² boşluk kalıyor.",
+                severity="warning",
+                feature_id=b.around[0] if b.around else None,
+            )
+        )
+    return bulgular
+
+
 @ext.audit("yapi-no")
 def yapi_no(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """'yapi' katmanında "no"su olmayan her yapı bir uyarıdır; düzeltmesi sıradaki numarayı (Y-03 …) yazar. Kural
@@ -289,14 +380,27 @@ def deger_say(ctx: ext.CommandContext) -> ext.CommandResult:
         # Panelden çalıştı: bulunan değerler Seç kutusunun seçenekleri olur, çoktan aza ve sayılarıyla (docs/adr/8057
         # §32). Seçenekler veriden gelir: panelin JSON'u bunları bilemez. Kodun koyduğu değer onChange'i çalıştırmaz.
         sirali = sorted(sayilar, key=lambda d: (-sayilar[d], d))
-        secenekler = [{"value": "-", "label": "Seçmeyin"}]
-        secenekler += [{"value": d, "label": f"{d} ({sayilar[d]})"} for d in sirali]
+        secenekler = [ui.choice("-", "Seçmeyin")] + [ui.choice(d, f"{d} ({sayilar[d]})") for d in sirali]
         ctx.panel.set("vurgula", options=secenekler, value="-")
         if sirali:
             ctx.panel.set("en-sik", text=f"En sık değer: “{sirali[0]}” ({sayilar[sirali[0]]} nesne).")
         else:
             ctx.panel.set("en-sik", text="Sayılacak nesne yok.")
     return ctx.report(satirlar, title="Değer say", message=f"{nerede} {len(sayilar)} farklı “{alan}” değeri.")
+
+
+@ext.command("katman-degerleri")
+def katman_degerleri(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Katmanın sağ tık menüsünden çalışır: "Değer say" panelini o katman seçili açar; alan seçilince değerler
+    sayılır. Menüden çalışan komutun ctx.params'ında tıklanan katmanın kimliği vardır (``layer``; şeritten çalışınca
+    yoktur, docs/adr/8057 §32)."""
+    katman = ctx.params.get("layer")
+    if not katman:
+        return ctx.message("Bir katmanın sağ tık menüsünden çalışır: Değerlerini say.")
+    panel = ctx.open_panel("deger-paneli")
+    panel.set("katman", value=katman)
+    panel.say("Bir alan seçin: değerleri sayılır.")
+    return ctx.message("Değer say katmanla açıldı.")
 
 
 @ext.command("deger-sec")

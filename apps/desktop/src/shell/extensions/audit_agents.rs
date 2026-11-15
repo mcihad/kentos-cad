@@ -61,7 +61,7 @@ impl App {
     }
 
     /// `audit`: rule `id` started on the front drawing as its ribbon button starts it; its background task waits in
-    /// `Extensions::audit_job` for the runtime ([`App::take_audit_job`]).
+    /// `Extensions::audit_job` for the runtime ([`App::take_agent_runs`]).
     pub(crate) fn ext_audit_start_rule(&mut self, id: &str) -> Result<Value, Refusal> {
         let found = self.extensions.registry.as_ref().and_then(|r| {
             r.contributions()
@@ -86,9 +86,11 @@ impl App {
         Ok(json!({ "status": "running", "rule": id }))
     }
 
-    /// The run an agent started, for the runtime: none when it started none.
-    pub(crate) fn take_audit_job(&mut self) -> Task<Message> {
-        self.extensions.audit_job.take().unwrap_or_else(Task::none)
+    /// The runs an agent started (an audit, a trial: trial.rs), for the runtime: none when it started none.
+    pub(crate) fn take_agent_runs(&mut self) -> Task<Message> {
+        let audit = self.extensions.audit_job.take().unwrap_or_else(Task::none);
+        let trial = self.extensions.trial_job.take().unwrap_or_else(Task::none);
+        Task::batch([audit, trial])
     }
 
     /// `audit_report`: the last run as an agent reads it, its findings past `offset`: each with its number (`finding`,

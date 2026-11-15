@@ -106,7 +106,11 @@ impl App {
                 menu
             };
             // What the extensions add to a layer's menu (extensions/ribbon.rs, docs/adr/8057 §3).
-            let menu = self.extension_menu(kentos_extensions::manifest::MenuTarget::Layer, menu);
+            let menu = self.extension_menu(
+                kentos_extensions::manifest::MenuTarget::Layer,
+                Some(node.id.as_str()),
+                menu,
+            );
             return menu
                 .separator()
                 .submenu("Görünürlük", visibility)
@@ -295,7 +299,12 @@ impl App {
                 .icon(icon("layerMerge"));
         }
         // What the extensions add to a layer's menu (extensions/ribbon.rs, docs/adr/8057 §3).
-        let menu = self.extension_menu(kentos_extensions::manifest::MenuTarget::Layer, menu);
+        // A group's menu gives its commands no layer.
+        let menu = self.extension_menu(
+            kentos_extensions::manifest::MenuTarget::Layer,
+            is_layer.then_some(node.id.as_str()),
+            menu,
+        );
         menu.separator()
             // Always offered: what cannot go says why (the web's).
             .item("Sil", event(Event::Remove(id)))
@@ -375,7 +384,7 @@ impl App {
             )
             .icon(icon("layerLabels"))
             .separator();
-        // The style files of QGIS, GeoServer and MapLibre: a map's programs' (module_surfaces.rs).
+        // The style files other map programs and servers read and write: a map's programs' (module_surfaces.rs).
         // Stil yükle / kaydet (docs/adr/0635 §9): one file, its extension the format.
         if self.shows_layer_entry(LayerEntry::StyleFiles) {
             menu = menu
@@ -385,7 +394,7 @@ impl App {
                 .icon(icon("styleSave"))
                 .separator();
         }
-        // SLD (docs/adr/0516): the look out to QGIS, GeoServer, MapServer, and theirs in.
+        // SLD (docs/adr/0516): the look out to map servers and desktop GIS, and theirs in.
         if self.shows_layer_entry(LayerEntry::Sld) {
             menu = menu
                 .item(
@@ -396,7 +405,7 @@ impl App {
                 .item("SLD'den görünüş al…", event(Event::SldImport(id.clone())))
                 .icon(icon("sldImport"));
         }
-        // QML (docs/adr/0555): QGIS's own style file, out and in.
+        // QML (docs/adr/0555): a desktop GIS's own style file, out and in.
         if self.shows_layer_entry(LayerEntry::Qml) {
             menu = menu
                 .item(

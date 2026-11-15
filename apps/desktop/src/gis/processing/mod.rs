@@ -18,7 +18,12 @@
 //!   ([`memory`]).
 //! - Toplu çalıştır ([`batch`], docs/adr/0529): the open tool or model over a
 //!   table of rows of parameter values, run as `cad.processing.batch`.
+//! - Ayrı pencerede aç ([`apart`], docs/adr/8060): the window in an operating-system
+//!   window of its own, beside the main one, the drawing free while it runs.
 
+mod apart;
+#[cfg(test)]
+mod apart_tests;
 mod background;
 pub(crate) mod batch;
 pub(crate) mod designer;
@@ -102,7 +107,7 @@ use kentos_processing::{
 };
 use serde_json::{Value, json};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 pub use dialog::{RunStatus, ToolDialog};
 
 /// Said when a model's drawing changed while it ran on another thread.
@@ -281,6 +286,8 @@ pub enum Event {
     Sink(sink::SinkEvent),
     /// Analiz ortamı (environment.rs, docs/adr/0643 §5).
     Environment(environment::EnvironmentEvent),
+    /// Ayrı pencerede aç (true) or Ana pencereye al (apart.rs, docs/adr/8060).
+    Apart(bool),
 }
 
 /// The app as the window reads it: the live descriptions and previews.
@@ -421,7 +428,7 @@ impl App {
         window.takes_environment = self.processing_takes_environment(&window.tool);
         self.gis.processing.dialog = Some(window);
         self.refresh_processing();
-        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Processing));
+        self.show_processing();
     }
 
     /// The window's live parts again: problems, what the inputs resolve to, previews.
@@ -452,7 +459,20 @@ impl App {
             Event::Close => {
                 self.gis.processing.dialog = None;
                 self.gis.processing.batch = None;
-                self.dialog = None;
+                self.processing_dialog_away();
+                // İfade oluşturucu of one of its fields goes with it: apart, it was over the main window.
+                if self
+                    .gis
+                    .builder
+                    .as_ref()
+                    .is_some_and(|b| matches!(b.target, crate::expression::Target::Processing(_)))
+                {
+                    self.gis.builder = None;
+                }
+                return Task::none();
+            }
+            Event::Apart(apart) => {
+                self.processing_set_apart(apart);
                 return Task::none();
             }
             Event::Batch(e) => return self.processing_batch_event(e),
@@ -524,9 +544,12 @@ impl App {
                     columns: table.columns,
                     rows: table.rows,
                 };
-                // The window out of the chart's way, as Sonuçları seç leaves it.
-                self.gis.processing.dialog = None;
-                self.dialog = None;
+                // The window out of the chart's way, as Sonuçları seç leaves it; in its own window it is in nobody's
+                // way and stays (apart.rs).
+                if !self.processing_is_apart() {
+                    self.gis.processing.dialog = None;
+                    self.processing_dialog_away();
+                }
                 self.open_table_chart(chart);
             }
             Event::SaveTableAs(format) => {
@@ -1084,25 +1107,31 @@ impl App {
     }
 
     /// Sonuçları seç: what the run made or changed becomes the selection,
-    /// the window closes and the view goes to it (the web's).
+    /// the window over the drawing closes and the view goes to it (the web's).
     fn processing_results(&mut self) {
-        let Some(window) = self.gis.processing.dialog.take() else {
+        let Some(window) = &self.gis.processing.dialog else {
             return;
         };
-        if let RunStatus::Ok { pick, selected, .. } = &window.status
-            && !selected
-        {
+        let pick = match &window.status {
+            RunStatus::Ok { pick, selected, .. } if !selected => Some(pick.clone()),
+            _ => None,
+        };
+        // Over the drawing the window steps aside to show them; in its own window it is in nobody's way and stays
+        // (apart.rs, docs/adr/8060).
+        if !self.processing_is_apart() {
+            self.gis.processing.dialog = None;
+            self.processing_dialog_away();
+        }
+        if let Some(pick) = pick {
             let exists: Vec<Slot> = match &self.document {
                 Some(doc) => pick
-                    .iter()
-                    .copied()
+                    .into_iter()
                     .filter(|id| doc.model.get(*id).is_some())
                     .collect(),
                 None => Vec::new(),
             };
             self.selection.set(exists);
         }
-        self.dialog = None;
         if !self.selection.is_empty() {
             self.zoom_selection();
         }
@@ -1123,7 +1152,7 @@ impl App {
             .map_or_else(|| name.clone(), |p| p.label.clone());
         self.say(Level::Command, format!("{}: {label}", window.tool.label));
         self.gis.processing.picking = Some(Picking::Point { window, name, then });
-        self.dialog = None;
+        self.processing_dialog_away();
         self.field = None;
         self.snap = None;
         self.session.run(Box::new(PickPoint::new("", label)));
@@ -1161,7 +1190,7 @@ impl App {
             name,
             before,
         });
-        self.dialog = None;
+        self.processing_dialog_away();
         self.field = None;
         self.snap = None;
         self.session.run(Box::new(
@@ -1205,7 +1234,7 @@ impl App {
             }
         }
         self.gis.processing.dialog = Some(window);
-        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Processing));
+        self.show_processing();
         self.refresh_processing();
         true
     }
@@ -1243,7 +1272,7 @@ impl App {
             self.selection.set(before);
         }
         self.gis.processing.dialog = Some(window);
-        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Processing));
+        self.show_processing();
         self.refresh_processing();
         true
     }

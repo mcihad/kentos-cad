@@ -80,6 +80,7 @@ impl Default for Studio {
             output: "toplam: 1545.25 m²\nen büyük: 1244 / 7".into(),
             elapsed: Some(Duration::from_millis(42)),
             expanded: false,
+            progress: None,
         });
         assistant.sources.push(Source {
             title: "Parseller · 3 örnek kayıt".into(),
@@ -95,7 +96,7 @@ impl Default for Studio {
             conversation, scenario: Scenario::Stream, speed: 1,
             question: question(77),
             thought: Thought { summary: "Katman yapısını ve seçili nesneleri inceliyorum. Hesap için gerekli alanlar hazırlanıyor.".into(), elapsed: Duration::from_millis(840), expanded: true, complete: false },
-            tool: ToolCall { id: 9, name: "Katmanı incele".into(), detail: "Parseller · alan ve geometri".into(), phase: ToolPhase::Running, output: "3 kayıt bulundu.\nKoordinat sistemi: EPSG:5254".into(), elapsed: None, expanded: false },
+            tool: ToolCall { id: 9, name: "Katmanı incele".into(), detail: "Parseller · alan ve geometri".into(), phase: ToolPhase::Running, output: "3 kayıt bulundu.\nKoordinat sistemi: EPSG:5254".into(), elapsed: None, expanded: false, progress: Some(0.4) },
             notice: String::new(), started: None, stream_started: None, offset: 0, waiting: false,
         }
     }
@@ -161,6 +162,7 @@ impl Studio {
                                 output: String::new(),
                                 elapsed: Some(Duration::from_millis(42)),
                                 expanded: false,
+                                progress: None,
                             },
                         );
                         self.stream_started = Some(Instant::now());
@@ -270,6 +272,7 @@ impl Studio {
                         output: String::new(),
                         elapsed: None,
                         expanded: false,
+                        progress: None,
                     },
                 );
             }
@@ -295,6 +298,7 @@ impl Studio {
                     output: "Toplam: 1545.25 m²".into(),
                     elapsed: Some(Duration::from_millis(42)),
                     expanded: false,
+                    progress: None,
                 },
             );
             if self.scenario == Scenario::Question {
