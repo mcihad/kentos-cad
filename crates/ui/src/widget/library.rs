@@ -32,22 +32,7 @@ pub(crate) fn chips<'a, Message: Clone + 'a>(
     selected: Option<&str>,
     on_category: &(dyn Fn(Option<String>) -> Message + 'a),
 ) -> Element<'a, Message> {
-    let chip = |name: String, active: bool, message: Message| {
-        button(
-            container(label::caption(name).style(move |theme: &iced::Theme| {
-                let t = Tokens::of(theme);
-
-                iced::widget::text::Style {
-                    color: Some(if active { t.accent_hover } else { t.muted }),
-                }
-            }))
-            .center_y(Fill),
-        )
-        .on_press(message)
-        .padding([0, 10])
-        .height(typography::from_default(24.0))
-        .style(style::button::chip(active))
-    };
+    let chip = crate::widget::chips::toggle;
 
     let mut chips = Row::new().spacing(4).push(chip(
         "Tümü".to_owned(),

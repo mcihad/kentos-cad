@@ -1,0 +1,25 @@
+# Çoklu seçim: Vitrin › Parsel kartı'nın Bilgiler çipleri (multiSelect). İki parsel alınınca kartlar bütün bilgilerle
+# gelir; Alan ve Yapı sayısı çipleri bırakılınca onChange kartları yeniler, kartlarda taban alanı, TAKS ve tarih kalır.
+# (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 843 20    # Vitrin
+wait 1200
+click 505 84    # Parsel kartı (şeritte, Panel grubunda)
+drag 160 480 705 770     # pencereyle 101/1 ve 101/2 (yalnız etkin katman seçilir)
+wait 1000
+click 1321 368  # Seçimi al: kartlar, bütün bilgilerle
+wait 5000
+click 1305 453  # Alan çipini bırak
+wait 1500
+click 1370 453  # Yapı sayısı çipini bırak
+wait 5000
+drag 1280 579 1280 845   # paneli aşağı doğru büyüt
+wait 1000
+shot 25-coklu

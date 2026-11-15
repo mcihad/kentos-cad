@@ -1666,6 +1666,12 @@ ulaşmıştı, sınır 2000), `runner.rs` (`PanelCall`, `ExtRun.origin`), `app.r
   pencere); `onChange`'siz alanda Enter eskisi gibi birincil düğmeye basar. Kapı 1: `value`/`min`/`max` takvimde var
   olan gün, YYYY-AA-GG; min ≤ max. Gerçek pencere: takvimden 20 Kasım seçilince ve "20.11.2026" yazılıp Enter'a
   basılınca kartlar "tarih 20.11.2026" ile yenilendi.
+- **Çoklu seçim** (`multiSelect`: `id`, `label`, `options`, `value`: başta seçili değerler, `onChange`; Vitrin 1.0.18,
+  Parsel kartı'nın Bilgiler'i; `25-coklu`): her seçenek KentOS'un seçilebilir bir çipi (ortak bileşene
+  `chips::toggles` olarak eklendi; kütüphanenin kategori çipleri aynı çipi kullanır), basınca seçilir ya da bırakılır
+  (`onChange`); değeri seçilenlerin listesi, seçeneklerin sırasıyla, hiçbiri seçilmezse boş liste. Kapı 1: seçenekler
+  seçimdeki gibi, `value` seçeneklerin değerlerinden her biri bir kez. Gerçek pencere: Alan ve Yapı sayısı bırakılınca
+  kartlarda taban alanı, TAKS ve tarih kaldı; üç çalıştırma tek bildirimde "×3" diye birleşti.
 - **Birden çok açık panel** (15 Kasım; Vitrin'in iki paneli, `21-paneller`): tek Eklenti dock sekmesi kalır, açık her
   panel onun üstünde bir sekmedir (KentOS'un belge sekmeleri: `kentos_ui::widget::tabs`; sürüklenerek sıralanır, ×'i
   ya da orta tık kapatır). Her eklenti panelini ayrı dock sekmesi yapmak dock'un sabit panel listesini (yerleşimin
@@ -1786,7 +1792,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | tarih | var | `dateField` (KentOS'un takvimi; GG.AA.YYYY ya da YYYY-AA-GG yazılır, değeri ISO tarih) | saat ve an henüz yok (`date_picker`'ın saatli hâli) |
 | | mantıksal | var | `checkbox` | `widget::switch` bağlanmadı |
 | | seçim | var | `select` | |
-| | çoklu seçim | KentOS'ta | `chips` | nesne seçici çoklu nesne alır |
+| | çoklu seçim | var | `multiSelect` (KentOS'un seçilebilir çipleri, `chips::toggles`) | değeri seçilenlerin listesi |
 | CBS girdisi | katman seçici | var | `layerPicker` (tür süzgeci) | |
 | | nesne seçici | var | `featurePicker` (çizimdeki seçimden) | haritada tıklatan kip bilinçli olarak yok (§24) |
 | | alan seçici | var | `fieldPicker` (bağlı katmanın alanları) | |
@@ -1811,14 +1817,14 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | komut/şerit/menü, bağlam eylemi | host | `contributions.ribbonTabs`, sağ tık menüleri | |
 | | iletişim kutusu | yok | — | panel dock'ta açılır |
 
-**Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `dateField`, `select`, `layerPicker`,
-`fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`.
+**Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `dateField`, `select`, `multiSelect`,
+`layerPicker`, `fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`.
 
 **Sınır: özel çizim ve düzenleyici bileşeni yok.** Eklentinin kodu bir arayüz nesnesi ya da tuval almaz (QGIS'in Qt
 dersi, D7): haritaya çizim harita aracının yakalamasıyla (KentOS çizer), panelde çizim hiç yok. Kayıtlı özel bileşen
 (tanım, değer kodlayıcı, platform çizicisi ve salt okunur yedek, PY-UI-15/16) ayrı bir maddedir; o gelene dek panel
 yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
 
-**Sıradaki adaylar** (KentOS'ta bileşeni olanlar, değerleri `ctx.params`'a basit tiplerle girer): çoklu seçim (`chips`:
-değer listesi), özet/ölçü (`stat_card`: komutun bir satırı). Her biri Vitrin'de gösterilmeden bağlanmaz. Tarih
-15 Kasım'da bağlandı (`dateField`).
+**Sıradaki aday** (KentOS'ta bileşeni olan, değeri `ctx.params`'a basit tiplerle giren): özet/ölçü (`stat_card`:
+komutun bir satırı). Vitrin'de gösterilmeden bağlanmaz. 15 Kasım'da bağlananlar: tarih (`dateField`), çoklu seçim
+(`multiSelect`).

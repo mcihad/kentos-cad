@@ -116,6 +116,17 @@ pub enum Component {
         #[serde(default, rename = "onChange")]
         on_change: Option<String>,
     },
+    /// Several of its options the user picks, each a chip that toggles: its value is the chosen options' values in the
+    /// options' order, an empty list when none is chosen.
+    MultiSelect {
+        id: String,
+        label: String,
+        options: Vec<Choice>,
+        #[serde(default)]
+        value: Vec<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
     /// A date the user types (GG.AA.YYYY or YYYY-AA-GG) or picks from KentOS's calendar; its value is the ISO date
     /// (`2026-11-15`), none when empty. `value`, `min` and `max` are ISO dates.
     DateField {
@@ -194,6 +205,7 @@ impl Component {
             | Component::FieldPicker { id, .. }
             | Component::FeaturePicker { id, .. }
             | Component::DateField { id, .. }
+            | Component::MultiSelect { id, .. }
             | Component::Checkbox { id, .. }
             | Component::Button { id, .. }
             | Component::Table { id, .. }
@@ -210,6 +222,7 @@ impl Component {
             | Component::FieldPicker { on_change, .. }
             | Component::FeaturePicker { on_change, .. }
             | Component::DateField { on_change, .. }
+            | Component::MultiSelect { on_change, .. }
             | Component::Checkbox { on_change, .. } => on_change.as_deref(),
             _ => None,
         }
@@ -226,6 +239,7 @@ impl Component {
                 | Component::FieldPicker { .. }
                 | Component::FeaturePicker { .. }
                 | Component::DateField { .. }
+                | Component::MultiSelect { .. }
                 | Component::Checkbox { .. }
         )
     }
@@ -248,6 +262,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "featurePicker" => &["id", "label", "layer", "geometry", "multiple", "onChange"],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" => &["id", "label", "value", "min", "max", "onChange"],
+        "multiSelect" => &["id", "label", "options", "value", "onChange"],
         "button" => &["id", "label", "command", "table", "primary"],
         "table" => &["id", "label"],
         "tree" => &["id", "label", "group"],
@@ -256,8 +271,8 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, textField, numberField, dateField, select, layerPicker, fieldPicker, featurePicker, checkbox, \
-                     button, table, tree, card";
+const TYPES: &str = "text, textField, numberField, dateField, select, multiSelect, layerPicker, fieldPicker, \
+                     featurePicker, checkbox, button, table, tree, card";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -488,7 +503,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     );
                 }
             }
-            "select" => {
+            "select" | "multiSelect" => {
                 let options = c.get("options").and_then(Value::as_array);
                 let mut values = BTreeSet::new();
                 match options {
@@ -526,13 +541,35 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                         "Seçim en az bir seçenek (options) ister.".to_owned(),
                     ),
                 }
-                if let Some(value) = c.get("value")
-                    && !value.as_str().is_some_and(|v| values.contains(v))
-                {
-                    add(
-                        format!("{at}/value"),
-                        "Başlangıç değeri seçeneklerden biri olmalı.".to_owned(),
-                    );
+                match (kind, c.get("value")) {
+                    (_, None) => {}
+                    ("select", Some(value)) => {
+                        if !value.as_str().is_some_and(|v| values.contains(v)) {
+                            add(
+                                format!("{at}/value"),
+                                "Başlangıç değeri seçeneklerden biri olmalı.".to_owned(),
+                            );
+                        }
+                    }
+                    (_, Some(value)) => {
+                        let chosen: Vec<&str> = value
+                            .as_array()
+                            .into_iter()
+                            .flatten()
+                            .filter_map(Value::as_str)
+                            .collect();
+                        let fits = value.as_array().is_some_and(|v| v.len() == chosen.len())
+                            && chosen.iter().all(|v| values.contains(*v))
+                            && chosen.iter().collect::<BTreeSet<_>>().len() == chosen.len();
+                        if !fits {
+                            add(
+                                format!("{at}/value"),
+                                "Başlangıçta seçilenler (value) seçeneklerin değerlerinden bir liste olmalı, her biri bir \
+                                 kez."
+                                    .to_owned(),
+                            );
+                        }
+                    }
                 }
             }
             "layerPicker" | "featurePicker" => {
@@ -738,7 +775,9 @@ mod tests {
                 { "type": "tree", "id": "agac", "label": "Adalara göre", "group": ["ada"] },
                 { "type": "card", "id": "kartlar", "label": "Yapılar", "title": "no", "tag": "durum" },
                 { "type": "dateField", "id": "tarih", "label": "Ruhsat tarihi", "min": "2020-01-01",
-                  "onChange": "yapi-ara" }
+                  "onChange": "yapi-ara" },
+                { "type": "multiSelect", "id": "katlar", "label": "Katlar", "value": ["1"],
+                  "options": [{ "value": "1", "label": "Bir" }, { "value": "2", "label": "İki" }] }
             ]
         })
     }
@@ -749,8 +788,9 @@ mod tests {
         assert!(check("ui/ara.panel.json", &value, &["yapi-ara"]).is_empty());
         let read = read(&value).expect("read");
         assert_eq!(read.title, "Yapı ara");
-        assert_eq!(read.body.len(), 13);
-        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 8);
+        assert_eq!(read.body.len(), 14);
+        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 9);
+        assert!(matches!(&read.body[13], Component::MultiSelect { value, .. } if value == &["1"]));
         assert_eq!(read.body[12].on_change(), Some("yapi-ara"));
         assert!(
             matches!(&read.body[5], Component::LayerPicker { geometry: Some(g), .. } if g == "area")
@@ -817,6 +857,7 @@ mod tests {
         p["body"][10]["group"] = json!(["ada", "ada"]);
         p["body"][11]["tag"] = json!("no");
         p["body"][12]["max"] = json!("2019-02-30");
+        p["body"][13]["value"] = json!(["1", "1"]);
         p["body"]
             .as_array_mut()
             .unwrap()
@@ -847,8 +888,9 @@ mod tests {
                 "/body/10/group",
                 "/body/11/tag",
                 "/body/12/max",
-                "/body/13/type",
-                "/body/14"
+                "/body/13/value",
+                "/body/14/type",
+                "/body/15"
             ]
         );
     }

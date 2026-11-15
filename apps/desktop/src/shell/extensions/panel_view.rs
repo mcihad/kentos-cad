@@ -146,6 +146,23 @@ impl App {
                     );
                     form = form.field(words.clone(), pick);
                 }
+                // KentOS's chips, each an option that toggles.
+                Component::MultiSelect {
+                    id,
+                    label: words,
+                    options,
+                    ..
+                } => {
+                    let chosen = p.multi.get(id);
+                    let chips = kentos_ui::widget::chips::toggles(options.iter().map(|o| {
+                        (
+                            o.label.clone(),
+                            chosen.is_some_and(|c| c.contains(&o.value)),
+                            event(PanelEvent::Toggle(id.clone(), o.value.clone())),
+                        )
+                    }));
+                    form = form.field(words.clone(), chips);
+                }
                 Component::LayerPicker {
                     id,
                     label: words,

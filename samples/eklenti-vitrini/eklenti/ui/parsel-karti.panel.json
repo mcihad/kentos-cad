@@ -5,7 +5,7 @@
   "body": [
     {
       "type": "text",
-      "text": "Seçilen her parselin kartı: adası ve parseli başlığında, TAKS durumu yanında; alanı, üzerindeki yapılar, taban alanı ve TAKS altında, kartın tarihiyle (boşsa bugün). Parselleri çizimde seçip Seçimi al'a basın; karta tıklamak parseli gösterir."
+      "text": "Seçilen her parselin kartı: adası ve parseli başlığında, TAKS durumu yanında; altında Bilgiler'de seçilenler (alan, yapı sayısı, taban alanı, TAKS, kartın tarihi; tarih boşsa bugün). Parselleri çizimde seçip Seçimi al'a basın; karta tıklamak parseli gösterir."
     },
     {
       "type": "featurePicker",
@@ -18,6 +18,41 @@
       "type": "dateField",
       "id": "tarih",
       "label": "Kart tarihi",
+      "onChange": "parsel-karti"
+    },
+    {
+      "type": "multiSelect",
+      "id": "bilgiler",
+      "label": "Bilgiler",
+      "options": [
+        {
+          "value": "alan",
+          "label": "Alan"
+        },
+        {
+          "value": "yapi",
+          "label": "Yapı sayısı"
+        },
+        {
+          "value": "taban",
+          "label": "Taban alanı"
+        },
+        {
+          "value": "taks",
+          "label": "TAKS"
+        },
+        {
+          "value": "tarih",
+          "label": "Tarih"
+        }
+      ],
+      "value": [
+        "alan",
+        "yapi",
+        "taban",
+        "taks",
+        "tarih"
+      ],
       "onChange": "parsel-karti"
     },
     {

@@ -69,6 +69,8 @@ pub(crate) struct OpenPanel {
     pub(crate) choices: BTreeMap<String, String>,
     /// Each feature picker's objects, their persistent ids.
     pub(crate) picks: BTreeMap<String, Vec<String>>,
+    /// Each multiple choice's chosen values.
+    pub(crate) multi: BTreeMap<String, Vec<String>>,
     /// Each table's (and tree's) columns and rows, from its button's command.
     pub(crate) tables: BTreeMap<String, (Vec<String>, Vec<Value>)>,
     /// A tree's closed groups: the tree's id and the group's values, joined by `/`.
@@ -115,6 +117,8 @@ pub(crate) enum PanelEvent {
     Unpick(String),
     /// A date field's day chosen from the calendar (its words, GG.AA.YYYY; empty: cleared).
     Picked(String, String),
+    /// A multiple choice's option chosen or let go: (its id, the option's value).
+    Toggle(String, String),
     Press(String),
     /// A table's row with a `uid`: its object selected and zoomed to.
     Show(String),
@@ -142,6 +146,7 @@ impl OpenPanel {
             checks: BTreeMap::new(),
             choices: BTreeMap::new(),
             picks: BTreeMap::new(),
+            multi: BTreeMap::new(),
             tables: BTreeMap::new(),
             folded: std::collections::BTreeSet::new(),
             said: None,
@@ -170,6 +175,9 @@ impl OpenPanel {
                         id.clone(),
                         value.as_deref().map(date_words).unwrap_or_default(),
                     );
+                }
+                Component::MultiSelect { id, value, .. } => {
+                    panel.multi.insert(id.clone(), value.clone());
                 }
                 // A layer, a field and objects are chosen by the user: none at first.
                 Component::LayerPicker { id, .. } | Component::FieldPicker { id, .. } => {
@@ -231,6 +239,16 @@ impl OpenPanel {
                         id.clone(),
                         json!(self.choices.get(id).cloned().unwrap_or_default()),
                     );
+                }
+                // The chosen values, in the options' order.
+                Component::MultiSelect { id, options, .. } => {
+                    let chosen = self.multi.get(id);
+                    let values: Vec<&str> = options
+                        .iter()
+                        .filter(|o| chosen.is_some_and(|c| c.contains(&o.value)))
+                        .map(|o| o.value.as_str())
+                        .collect();
+                    out.insert(id.clone(), json!(values));
                 }
                 // An ISO date; none when empty; a text that is no day, or a day out of its bounds, said by its label.
                 Component::DateField {
@@ -650,6 +668,16 @@ impl App {
                 panel.texts.insert(id.clone(), words);
                 return self.ext_panel_changed(at, &id);
             }
+            PanelEvent::Toggle(id, value) => {
+                let chosen = panel.multi.entry(id.clone()).or_default();
+                match chosen.iter().position(|v| *v == value) {
+                    Some(i) => {
+                        chosen.remove(i);
+                    }
+                    None => chosen.push(value),
+                }
+                return self.ext_panel_changed(at, &id);
+            }
             PanelEvent::Pick(id) => return self.ext_panel_pick(at, &id),
             PanelEvent::Activate(to) => return self.ext_panel_activate(to),
             PanelEvent::Move(from, to) => self.ext_panel_move(from, to),
@@ -1019,6 +1047,25 @@ mod tests {
         );
         p.texts.insert("tarih".into(), " ".into());
         assert_eq!(p.params().unwrap(), json!({ "tarih": null }));
+    }
+
+    /// A multiple choice gives the chosen values in the options' order, an empty list when none is chosen.
+    #[test]
+    fn a_multiple_choice_gives_the_chosen_values_in_the_options_order() {
+        let value = json!({
+            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Bilgiler",
+            "body": [{ "type": "multiSelect", "id": "bilgiler", "label": "Bilgiler", "value": ["taks", "alan"],
+                       "options": [{ "value": "alan", "label": "Alan" }, { "value": "yapi", "label": "Yapı" },
+                                   { "value": "taks", "label": "TAKS" }] }]
+        });
+        let mut p = OpenPanel::new(
+            "tr.ornek.vitrin",
+            "bilgiler",
+            kentos_extensions::ui_panel::read(&value).unwrap(),
+        );
+        assert_eq!(p.params().unwrap(), json!({ "bilgiler": ["alan", "taks"] }));
+        p.multi.insert("bilgiler".into(), Vec::new());
+        assert_eq!(p.params().unwrap(), json!({ "bilgiler": [] }));
     }
 
     #[test]

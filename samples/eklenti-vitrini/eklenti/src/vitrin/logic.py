@@ -272,16 +272,24 @@ def parsel_karti(ctx: ext.CommandContext) -> ext.CommandResult:
         oran = sum(tabanlar) / parsel.area if parsel.area > 0 else 0.0
         oznitelikler = {k.casefold(): v for k, v in (kayit.entity.attrs or {}).items() if v}
         ada, no = oznitelikler.get("ada"), oznitelikler.get("parsel")
-        satirlar.append({
+        bilgi = {
+            "alan": ("alan (m²)", round(parsel.area, 1)),
+            "yapi": ("yapı", len(tabanlar)),
+            "taban": ("taban alanı (m²)", round(sum(tabanlar), 1)),
+            "taks": ("TAKS", round(oran, 2)),
+            "tarih": ("tarih", gun.strftime("%d.%m.%Y")),
+        }
+        satir = {
             "uid": kayit.uid,
             "parsel": f"{ada}/{no}" if ada and no else f"{len(satirlar) + 1}. parsel",
             "durum": "TAKS aşıyor" if oran > TAKS_SINIRI + 1e-9 else "uygun",
-            "alan (m²)": round(parsel.area, 1),
-            "yapı": len(tabanlar),
-            "taban alanı (m²)": round(sum(tabanlar), 1),
-            "TAKS": round(oran, 2),
-            "tarih": gun.strftime("%d.%m.%Y"),
-        })
+        }
+        # Panelin çoklu seçimi seçilenlerin listesini verir (seçenek sırasıyla); yoksa hepsi.
+        for anahtar in ctx.params.get("bilgiler", list(bilgi)):
+            if anahtar in bilgi:
+                ad, deger = bilgi[anahtar]
+                satir[ad] = deger
+        satirlar.append(satir)
     if not secilen:
         mesaj = "Parselleri çizimde seçip Seçimi al'a basın."
     else:

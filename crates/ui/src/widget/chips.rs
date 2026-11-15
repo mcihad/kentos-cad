@@ -621,6 +621,44 @@ fn input_state_mut(tree: &mut Tree) -> &mut text_input::State<Paragraph> {
     tree.state.downcast_mut::<text_input::State<Paragraph>>()
 }
 
+/// Seçilebilir çipler: her biri bir seçenek, basmak onu seçer ya da bırakır (çoklu seçim); seçili çip vurgu renginde.
+/// Sığmayınca alt satıra geçer. Kütüphanenin kategori çipleri de bu görünüştedir.
+///
+/// ```ignore
+/// chips::toggles(options.iter().map(|o| (o.label.clone(), chosen.contains(&o.value), Message::Toggle(o.value.clone()))))
+/// ```
+pub fn toggles<'a, Message: Clone + 'a>(
+    items: impl IntoIterator<Item = (String, bool, Message)>,
+) -> Element<'a, Message> {
+    let mut chips = iced::widget::Row::new().spacing(4);
+    for (name, active, message) in items {
+        chips = chips.push(toggle(name, active, message));
+    }
+    chips.wrap().vertical_spacing(4).into()
+}
+
+/// Bir çip: adı, seçili olup olmadığı ve basınca ne gönderdiği.
+pub(crate) fn toggle<'a, Message: Clone + 'a>(
+    name: String,
+    active: bool,
+    message: Message,
+) -> Element<'a, Message> {
+    button(
+        container(crate::label::caption(name).style(move |theme: &Theme| {
+            let t = Tokens::of(theme);
+            iced::widget::text::Style {
+                color: Some(if active { t.accent_hover } else { t.muted }),
+            }
+        }))
+        .center_y(iced::Fill),
+    )
+    .on_press(message)
+    .padding([0, 10])
+    .height(typography::from_default(24.0))
+    .style(style::button::chip(active))
+    .into()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

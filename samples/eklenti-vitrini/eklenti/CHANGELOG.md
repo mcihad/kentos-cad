@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.18 — 15 Kasım 2026
+
+- "Parsel kartı"na çoklu seçim (`multiSelect`): Bilgiler çipleriyle kartta hangi satırların (alan, yapı sayısı, taban
+  alanı, TAKS, tarih) görüneceği seçilir; bir çip seçilince ya da bırakılınca kartlar yenilenir.
+
 ## 1.0.17 — 15 Kasım 2026
 
 - "Parsel kartı"na tarih alanı (`dateField`): GG.AA.YYYY yazılır ya da takvimden seçilir; seçilince kartlar yenilenir,
