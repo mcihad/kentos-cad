@@ -198,7 +198,7 @@ fn layer_ids(app: &App) -> Option<Vec<String>> {
 
 /// `panel.set` on `panel`: every property checked first, then applied; whether the value went in (not when the user
 /// changed that input while the command ran).
-fn set(
+pub(super) fn set(
     panel: &mut OpenPanel,
     params: &Value,
     layers: Option<&[String]>,
@@ -497,7 +497,7 @@ fn set(
 
 /// `panel.rows`: the rows of a table, a tree, cards, figures or a chart, as a command's report gives them (`rows`, and
 /// `columns` in their order, else in the order the rows first give them); the component's id.
-fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, HeadlessError> {
+pub(super) fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, HeadlessError> {
     let id = params
         .get("id")
         .and_then(Value::as_str)
@@ -554,6 +554,60 @@ fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, HeadlessError> 
     Ok(id)
 }
 
+/// `panel.say` on `panel`: its words (`text`, at most 500 characters) and their mark (`kind`) under the form.
+pub(super) fn say(panel: &mut OpenPanel, params: &Value) -> Result<(), HeadlessError> {
+    let text = params
+        .get("text")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|t| !t.is_empty())
+        .ok_or_else(|| {
+            refused(
+                "invalid_input",
+                "text gerekli: panelin altında söylenecek söz.",
+            )
+        })?;
+    let kind = match params.get("kind").and_then(Value::as_str).unwrap_or("info") {
+        "info" => words::Kind::Info,
+        "success" | "ok" => words::Kind::Ok,
+        "warning" => words::Kind::Warn,
+        "error" => words::Kind::Error,
+        other => {
+            return Err(refused(
+                "invalid_input",
+                format!("kind “{other}” olamaz: info, success, warning ya da error."),
+            ));
+        }
+    };
+    panel.said = Some((kind, text.chars().take(500).collect()));
+    panel.spoke = true;
+    Ok(())
+}
+
+/// Why `ext`'s code may not name panel `local`: not one its manifest declares (`declared`, its panels' ids).
+pub(super) fn unknown_panel(local: &str, declared: &[String]) -> HeadlessError {
+    refused(
+        "unknown_panel",
+        format!(
+            "“{local}” eklentinin bir paneli değil; panelleri: {}.",
+            if declared.is_empty() {
+                "yok".to_owned()
+            } else {
+                declared.join(", ")
+            }
+        ),
+    )
+}
+
+/// Why a run not started from a panel has no `ctx.panel`.
+pub(super) fn no_panel() -> HeadlessError {
+    refused(
+        "no_panel",
+        "Bu çalıştırma bir panelden başlamadı: ctx.panel yalnız bir panelin düğmesinin (ya da değişen alanının) \
+         komutunda vardır; başka bir panel için ctx.open_panel.",
+    )
+}
+
 impl App {
     /// `method` (`panel.open`, `panel.set`, `panel.rows`, `panel.say`, `panel.focus`, `panel.close`) asked by `ext`'s
     /// running code of one of its panels (`panel`, else the one its run started from): what it applied, or why not, the
@@ -582,27 +636,11 @@ impl App {
                     .map(|m| m.entrypoints.panels.iter().map(|p| p.id.clone()).collect())
                     .unwrap_or_default();
                 if !declared.iter().any(|p| p == local) {
-                    return Err(refused(
-                        "unknown_panel",
-                        format!(
-                            "“{local}” eklentinin bir paneli değil; panelleri: {}.",
-                            if declared.is_empty() {
-                                "yok".to_owned()
-                            } else {
-                                declared.join(", ")
-                            }
-                        ),
-                    ));
+                    return Err(unknown_panel(local, &declared));
                 }
                 local.to_owned()
             }
-            None => origin.map(|o| o.panel).ok_or_else(|| {
-                refused(
-                    "no_panel",
-                    "Bu çalıştırma bir panelden başlamadı: ctx.panel yalnız bir panelin düğmesinin (ya da değişen \
-                     alanının) komutunda vardır; başka bir panel için ctx.open_panel.",
-                )
-            })?,
+            None => origin.map(|o| o.panel).ok_or_else(no_panel)?,
         };
         let open = |app: &App| {
             app.extensions
@@ -647,32 +685,7 @@ impl App {
                 Ok(json!({ "applied": true }))
             }
             "panel.say" => {
-                let text = params
-                    .get("text")
-                    .and_then(Value::as_str)
-                    .map(str::trim)
-                    .filter(|t| !t.is_empty())
-                    .ok_or_else(|| {
-                        refused(
-                            "invalid_input",
-                            "text gerekli: panelin altında söylenecek söz.",
-                        )
-                    })?;
-                let kind = match params.get("kind").and_then(Value::as_str).unwrap_or("info") {
-                    "info" => words::Kind::Info,
-                    "success" | "ok" => words::Kind::Ok,
-                    "warning" => words::Kind::Warn,
-                    "error" => words::Kind::Error,
-                    other => {
-                        return Err(refused(
-                            "invalid_input",
-                            format!("kind “{other}” olamaz: info, success, warning ya da error."),
-                        ));
-                    }
-                };
-                let panel = &mut self.extensions.panels[at];
-                panel.said = Some((kind, text.chars().take(500).collect()));
-                panel.spoke = true;
+                say(&mut self.extensions.panels[at], params)?;
                 self.ext_panel_seen(at);
                 Ok(json!({ "applied": true }))
             }

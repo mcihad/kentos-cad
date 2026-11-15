@@ -22,7 +22,7 @@ use std::time::{Duration, Instant};
 use kentos_extension_host::{ContributionKind, Record};
 use kentos_processing::Feedback;
 use kentos_processing::external::{self, ExternalTool, Failure, Provider};
-use kentos_python_env::process::{Ended, Heard, Pool, Start};
+use kentos_python_env::process::{Answer, Ended, Heard, Pool, Start, refuse_calls};
 use serde_json::{Value, json};
 
 use crate::app::App;
@@ -139,27 +139,60 @@ pub(crate) struct PoolJob {
     python: Python,
 }
 
+/// What the key of a trial's process ends with (`<eklenti>@<sürüm>#deneme`, [`PoolJob::run_step`]).
+pub(crate) const TRIAL_KEY: &str = "#deneme";
+
 impl PoolJob {
     /// Runs `invoke` (its `kind` and data; `local` and `handler` are filled in) in the extension version's process,
     /// `stopped` asked while it runs: the process's answer (`done`), or why there is none, in a sentence.
     pub(crate) fn run(
         &self,
-        mut invoke: Value,
+        invoke: Value,
         timeout: Duration,
         stopped: &dyn Fn() -> bool,
+    ) -> Result<Value, String> {
+        let key = format!("{}@{}", self.plan.ext, self.plan.version);
+        let flow = Flow {
+            timeout,
+            stopped,
+            heard: &mut |_| {},
+            answer: &mut refuse_calls,
+        };
+        self.run_in(&key, invoke, false, flow)
+    }
+
+    /// A trial's command or map tool (trial/steps.rs, docs/adr/8057 §52), the drawing given when `document`: run in a
+    /// process of the version's own kept for trials, not the pool's (a command that runs its own extension's tool
+    /// would wait there for itself), what its code asks answered by `answer` and what it says `heard`.
+    pub(crate) fn run_step(
+        &self,
+        invoke: Value,
+        document: bool,
+        flow: Flow<'_>,
+    ) -> Result<Value, String> {
+        let key = format!("{}@{}{TRIAL_KEY}", self.plan.ext, self.plan.version);
+        self.run_in(&key, invoke, document, flow)
+    }
+
+    fn run_in(
+        &self,
+        key: &str,
+        mut invoke: Value,
+        document: bool,
+        flow: Flow<'_>,
     ) -> Result<Value, String> {
         invoke["type"] = json!("invoke");
         invoke["local"] = json!(self.plan.local);
         invoke["handler"] = json!(self.plan.handler);
-        invoke["document"] = json!(false);
-        let key = format!("{}@{}", self.plan.ext, self.plan.version);
-        match self.pool.run(
-            &key,
+        invoke["document"] = json!(document);
+        match self.pool.run_answering(
+            key,
             &|| start_of(&self.plan, &self.python),
             invoke,
-            timeout,
-            stopped,
-            &mut |_| {},
+            flow.timeout,
+            flow.stopped,
+            flow.heard,
+            flow.answer,
         ) {
             Ended::Answered(done) => Ok(done),
             Ended::StoppedBefore => Err("Başlamadan durduruldu.".to_owned()),
@@ -175,6 +208,14 @@ impl PoolJob {
             }
         }
     }
+}
+
+/// How a run in the pool goes: how long it may take, whether it was stopped, what it says and what answers its calls.
+pub(crate) struct Flow<'a> {
+    pub(crate) timeout: Duration,
+    pub(crate) stopped: &'a dyn Fn() -> bool,
+    pub(crate) heard: &'a mut dyn FnMut(Heard),
+    pub(crate) answer: &'a mut Answer<'a>,
 }
 
 impl App {
@@ -1144,9 +1185,11 @@ impl App {
             shared.python = python;
             shared.why_not = p.why_not().to_owned();
         }
-        // A version removed, turned off or replaced: its process closed (one that runs ends with its run).
+        // A version removed, turned off or replaced: its process closed (one that runs ends with its run), its trial's
+        // too.
         for running in self.extensions.tools.pool.running() {
-            if !keys.contains(&running.key) {
+            let version = running.key.strip_suffix(TRIAL_KEY).unwrap_or(&running.key);
+            if !keys.contains(version) {
                 self.extensions.tools.pool.close(&running.key);
             }
         }

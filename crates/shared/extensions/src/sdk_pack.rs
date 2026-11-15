@@ -355,10 +355,10 @@ pub fn sdk_pack() -> Value {
             "Kullanıcı atölyeden kurduktan sonra: değişiklikleri extension.workshop.reload uygulama kapanmadan yükler \
              (aynı sürüm, kullanıcının verdiği yeteneklerle; yeni yetenek isteyen yeniden review'a gider); \
              extension.workshop.preview kullanıcının gördüğünü (sekme, paneller, araçlar, kapalı düğmenin nedeni) \
-             yazıyla verir; extension.workshop.trial denetim kurallarını ve İşlemler araçlarını verdiğiniz örnek \
-             nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin sırasıyla, aracın yazdıkları, hata ve \
-             iz kaydı; kullanıcının çizimine dokunmaz). Masaüstünün Asistan'ında ve masaüstüne bağlı ajanda (MCP'de \
-             desktop.attach)."
+             yazıyla verir; extension.workshop.trial kuralları, İşlemler araçlarını, komutları ve harita araçlarını \
+             verdiğiniz örnek nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin sırasıyla, \
+             yazılanlar, pencere cevapları dialogs ile, hata ve iz kaydı; kullanıcının çizimine dokunmaz). \
+             Masaüstünün Asistan'ında ve masaüstüne bağlı ajanda (MCP'de desktop.attach)."
         ],
         "example": example,
         "icons": {

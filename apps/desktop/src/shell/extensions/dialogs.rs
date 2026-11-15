@@ -67,6 +67,93 @@ fn words_of(params: &Value, key: &str, default: &str) -> String {
         .map_or_else(|| default.to_owned(), |w| w.chars().take(40).collect())
 }
 
+/// A dialog's fields (`params`: `title`, `body`, `ok`, `cancel`) checked as the window checks them: its panel and its
+/// two buttons' words; or why not, the call's error. `granted` says whether the user gave the extension a capability
+/// (a file picker's); `srid` is the drawing's, a coordinate picker's first choice. The window's and a trial's
+/// (docs/adr/8057 §52) dialogs alike.
+pub(crate) fn dialog_panel(
+    ext: &str,
+    params: &Value,
+    granted: &dyn Fn(kentos_extensions::manifest::Capability) -> bool,
+    srid: Option<u32>,
+) -> Result<(OpenPanel, String, String), HeadlessError> {
+    let title = params
+        .get("title")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|t| !t.is_empty())
+        .ok_or_else(|| refused("invalid_input", "Pencerenin başlığı (title) gerekli."))?;
+    let body = params
+        .get("body")
+        .and_then(Value::as_array)
+        .ok_or_else(|| {
+            refused(
+                "invalid_input",
+                "Pencerenin alanları (body) bir liste olmalı.",
+            )
+        })?;
+    for (i, c) in body.iter().enumerate() {
+        let kind = c.get("type").and_then(Value::as_str).unwrap_or_default();
+        if !FIELDS.contains(&kind) {
+            return Err(refused(
+                "invalid_input",
+                format!(
+                    "body[{i}]: “{kind}” pencerede olamaz; olanlar: {}.",
+                    FIELDS.join(", ")
+                ),
+            ));
+        }
+        if c.get("onChange").is_some() {
+            return Err(refused(
+                "invalid_input",
+                format!(
+                    "body[{i}]: pencerenin alanı komut çalıştırmaz (onChange yok); değerler Tamam'la döner."
+                ),
+            ));
+        }
+    }
+    // A file picker reads a file the user gives, a save picker writes one where the user chose: only for an
+    // extension the user granted that (docs/adr/8057 §41, §44).
+    let pickers = || body.iter().filter(|c| c["type"] == "filePicker");
+    if pickers().any(|c| c["save"] != true)
+        && !granted(kentos_extensions::manifest::Capability::FilesUserSelected)
+    {
+        return Err(refused(
+            "invalid_input",
+            "Pencerenin dosya seçicisi (filePicker) kullanıcının seçtiği dosyayı okur: eklenti \
+             files.userSelected yeteneğini istemeli, kullanıcı da kurarken vermiş olmalı.",
+        ));
+    }
+    if pickers().any(|c| c["save"] == true)
+        && !granted(kentos_extensions::manifest::Capability::FilesUserSelectedWrite)
+    {
+        return Err(refused(
+            "invalid_input",
+            "Pencerenin kaydetme yeri (filePicker, save) kullanıcının seçtiği yere dosya yazar: eklenti \
+             files.userSelectedWrite yeteneğini istemeli, kullanıcı da kurarken vermiş olmalı.",
+        ));
+    }
+    // The fields as a panel's, through Kapı 1's check (its words, its places).
+    let panel = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": title,
+                        "body": body });
+    if let Some(problem) = ui_panel::check("dialog", &panel, &[]).into_iter().next() {
+        let at = problem.at.as_deref().unwrap_or("");
+        return Err(refused(
+            "invalid_input",
+            format!("{at}: {}", problem.message),
+        ));
+    }
+    let definition = ui_panel::read(&panel)
+        .ok_or_else(|| refused("invalid_input", "Pencerenin alanları okunamadı."))?;
+    let mut panel = OpenPanel::new(ext, "dialog", definition);
+    panel.default_crs(srid);
+    Ok((
+        panel,
+        words_of(params, "ok", "Tamam"),
+        words_of(params, "cancel", "İptal"),
+    ))
+}
+
 impl App {
     /// `dialog` asked by `ext`'s running code (`params`: `title`, `body`, `ok`, `cancel`): opened, answered later; or
     /// why not now, the call's error.
@@ -91,36 +178,6 @@ impl App {
                 "Bir eklenti penceresi zaten açık: kullanıcı onu yanıtlayınca sorun.",
             ));
         }
-        let title = params
-            .get("title")
-            .and_then(Value::as_str)
-            .map(str::trim)
-            .filter(|t| !t.is_empty())
-            .ok_or_else(|| refused("invalid_input", "Pencerenin başlığı (title) gerekli."))?;
-        let body = params
-            .get("body")
-            .and_then(Value::as_array)
-            .ok_or_else(|| refused("invalid_input", "Pencerenin alanları (body) bir liste olmalı."))?;
-        for (i, c) in body.iter().enumerate() {
-            let kind = c.get("type").and_then(Value::as_str).unwrap_or_default();
-            if !FIELDS.contains(&kind) {
-                return Err(refused(
-                    "invalid_input",
-                    format!(
-                        "body[{i}]: “{kind}” pencerede olamaz; olanlar: {}.",
-                        FIELDS.join(", ")
-                    ),
-                ));
-            }
-            if c.get("onChange").is_some() {
-                return Err(refused(
-                    "invalid_input",
-                    format!("body[{i}]: pencerenin alanı komut çalıştırmaz (onChange yok); değerler Tamam'la döner."),
-                ));
-            }
-        }
-        // A file picker reads a file the user gives, a save picker writes one where the user chose: only for an
-        // extension the user granted that (docs/adr/8057 §41, §44).
         let granted = |capability| {
             self.extensions
                 .registry
@@ -128,41 +185,13 @@ impl App {
                 .and_then(|r| r.grant(ext))
                 .is_some_and(|g| g.capabilities.contains(&capability))
         };
-        let pickers = || body.iter().filter(|c| c["type"] == "filePicker");
-        if pickers().any(|c| c["save"] != true)
-            && !granted(kentos_extensions::manifest::Capability::FilesUserSelected)
-        {
-            return Err(refused(
-                "invalid_input",
-                "Pencerenin dosya seçicisi (filePicker) kullanıcının seçtiği dosyayı okur: eklenti \
-                 files.userSelected yeteneğini istemeli, kullanıcı da kurarken vermiş olmalı.",
-            ));
-        }
-        if pickers().any(|c| c["save"] == true)
-            && !granted(kentos_extensions::manifest::Capability::FilesUserSelectedWrite)
-        {
-            return Err(refused(
-                "invalid_input",
-                "Pencerenin kaydetme yeri (filePicker, save) kullanıcının seçtiği yere dosya yazar: eklenti \
-                 files.userSelectedWrite yeteneğini istemeli, kullanıcı da kurarken vermiş olmalı.",
-            ));
-        }
-        // The fields as a panel's, through Kapı 1's check (its words, its places).
-        let panel = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": title,
-                            "body": body });
-        if let Some(problem) = ui_panel::check("dialog", &panel, &[]).into_iter().next() {
-            let at = problem.at.as_deref().unwrap_or("");
-            return Err(refused("invalid_input", format!("{at}: {}", problem.message)));
-        }
-        let definition = ui_panel::read(&panel)
-            .ok_or_else(|| refused("invalid_input", "Pencerenin alanları okunamadı."))?;
-        let mut panel = OpenPanel::new(ext, "dialog", definition);
-        panel.default_crs(self.document.as_ref().map(|d| d.model.settings().srid));
+        let srid = self.document.as_ref().map(|d| d.model.settings().srid);
+        let (panel, ok, cancel) = dialog_panel(ext, params, &granted, srid)?;
         self.extensions.dialog = Some(ExtDialog {
             ext: ext.to_owned(),
             call,
-            ok: words_of(params, "ok", "Tamam"),
-            cancel: words_of(params, "cancel", "İptal"),
+            ok,
+            cancel,
             panel,
         });
         Ok(())

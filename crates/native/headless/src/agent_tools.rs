@@ -39,7 +39,8 @@ mod workshop_trial;
 
 pub use long_calls::{LongCall, finish as finish_long, job_answer};
 pub use workshop_trial::{
-    MOST_FEATURES as TRIAL_MOST_FEATURES, MOST_TOOLS as TRIAL_MOST_TOOLS, trial_outcome,
+    MOST_COMMANDS as TRIAL_MOST_COMMANDS, MOST_FEATURES as TRIAL_MOST_FEATURES,
+    MOST_TOOLS as TRIAL_MOST_TOOLS, steps_given as trial_steps_given, trial_outcome,
 };
 
 pub use link_workshop::{link_preview, link_reload, link_review_workshop};

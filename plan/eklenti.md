@@ -1074,8 +1074,11 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). **Canlı yük
 `extension.verify` paketi geçici kayıt defterinde bağlar, katkılarını, atlananları ve kaldırınca kalıntıyı söyler.
 **Kapı 3'ün kodu çalıştıran payı** (ADR 8057 §37): `extension.workshop.trial` kullanıcının kurduğu eklentinin denetim
 kurallarını ve İşlemler araçlarını ajanın verdiği nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin
-sırasıyla, aracın yazdıkları, hata ve iz kaydı; kullanıcının çizimine dokunmaz). Kalan: komutların ve harita
-araçlarının denenmesi.
+sırasıyla, aracın yazdıkları, hata ve iz kaydı; kullanıcının çizimine dokunmaz). **Komutlar ve harita araçları**
+(ADR 8057 §52, 16 Kasım): denemede kullanıcının başlattığı gibi çalışır (şeritten ya da panelin düğmesinden, harita
+aracı manifestin istediği şekille), aracının kurallarıyla ve kullanıcının verdiği haklarla; pencereleri ajan cevaplar
+(dosya seçicili pencere İptal), paneller denemede tutulur, hata veren adımın yazdıkları geri alınır, `auditAfter`
+kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (kendi aracını çağırınca kendini beklemesin diye).
 
 - [x] **Kod üretimi** — *tamamlandı: `kentos_ext.pyi` (ADR 8057 §20), ikon listesi (§21), panel tanımının JSON Schema'sı
   (§25, 15 Kasım: tiplerden üretilir, depoda durur, sapınca test kırmızı), manifestin, katman şemasının ve araç
@@ -1087,15 +1090,16 @@ araçlarının denenmesi.
 - [x] **`extension.blueprint(kind, module, prompt)`:** hedef modüle uygun hazır klasör iskeleti, kullanılabilir ikonlar,
   bileşen şemaları ve çalışan altın örnek; MCP kaynağı `kentos://sdk/ai-kek-pack` aynı paketi tek okumada verir.
   — *tamamlandı (ADR 8057 §19, §20): `kek new` / `extension.blueprint` ve `kentos://sdk/ai-kek-pack`.*
-- [ ] **`extension.verify` / `kentos kek verify`** (pencere açmadan): Kapı 1 şema ve başvuru tutarlılığı (komut, ikon,
+- [x] **`extension.verify` / `kentos kek verify`** (pencere açmadan): Kapı 1 şema ve başvuru tutarlılığı (komut, ikon,
   katman/domain/ilişki alanı, form bağları); Kapı 2 Python AST ve imza uyumu (bildirilen her kimliğin tek dekoratörlü
   fonksiyonu, yasaklı/tehlikeli çağrı); Kapı 3 başsız kuru koşu (sentetik `.kcad` üzerinde bağlama, şerit ve panelin
   hatasız kurulması, algoritma ve denetimin örnek girdiyle geçerli değişiklik kümesi/bulgu döndürmesi, kaldırmada sıfır
   kalıntı); Kapı 4 ajanın tek adımda düzelteceği yapısal rapor ("manifest.json satır 28: `icon: 'grave'` yok; en yakın
   geçerli ikonlar: `polygon`, `grid`, `layers`"). Uydurulmuş API, eksik bağımlılık, eski şema ve kapalı belge
   açıklanabilir biçimde reddedilir [EKL-06].
-  — *kısmen (ADR 8057 §18, §26, §37): Kapı 1, 2 ve 4; Kapı 3 kuru bağlama ve kalıntı, kuralların ve İşlemler
-  araçlarının sentetik çizimde denenmesi; kalan: komutların ve harita araçlarının denenmesi.*
+  — *tamamlandı (ADR 8057 §18, §26, §37, §52): Kapı 1, 2 ve 4; Kapı 3 kuru bağlama ve kalıntı, kuralların, İşlemler
+  araçlarının, komutların ve harita araçlarının sentetik çizimde denenmesi (kod kullanıcının kurduğu yerde, masaüstünde
+  çalışır).*
 - [x] **`extension.hot_reload` ve `extension.preview_render`** — *tamamlandı (ADR 8057 §22, 15 Kasım):
   `extension.workshop.reload` atölyeden kullanıcının kurduğu eklentiyi kullanıcının verdiği yeteneklerle uygulama
   kapanmadan yükler (yeni yetenek isteyen review'a döner, her yükleme kullanıcıya bildirilir); `extension.workshop.preview`

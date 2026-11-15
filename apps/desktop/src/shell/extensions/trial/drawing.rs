@@ -103,11 +103,7 @@ pub(super) fn written(doc: &Document, before: &BTreeSet<Uuid>) -> Vec<Value> {
         if before.contains(&uid) {
             continue;
         }
-        let layer = doc
-            .layers()
-            .get(&e.base().layer_id)
-            .map_or_else(|| e.base().layer_id.clone(), |l| l.name.clone());
-        let (count, sample) = by_layer.entry(layer).or_default();
+        let (count, sample) = by_layer.entry(layer_name(doc, e)).or_default();
         *count += 1;
         if sample.len() < SAMPLE {
             sample.push(json!({
@@ -120,6 +116,13 @@ pub(super) fn written(doc: &Document, before: &BTreeSet<Uuid>) -> Vec<Value> {
         .into_iter()
         .map(|(layer, (objects, sample))| json!({ "layer": layer, "objects": objects, "sample": sample }))
         .collect()
+}
+
+/// The name of `e`'s layer (its id when the layer is not there).
+pub(super) fn layer_name(doc: &Document, e: &kentos_commands::Entity) -> String {
+    doc.layers()
+        .get(&e.base().layer_id)
+        .map_or_else(|| e.base().layer_id.clone(), |l| l.name.clone())
 }
 
 #[cfg(test)]

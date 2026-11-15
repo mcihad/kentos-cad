@@ -2360,8 +2360,8 @@ bölümü), İşlemler `crates/native/processing/src/audit_facts.rs` (`project_f
   20×20 m parsel ve içinde 10×10 m yapıyla: taban alanı 100 m², TAKS 0,25, uygun; kural verilmediği için eklentinin
   denetimi de koştu (numarasız yapı, Y-01). İki koşuda da kullanıcının çizimi aynı kaldı.
 - **Sınırlar:** komutlar (`@ext.command`) ve harita araçları denenmez: aracı üzerinden canlı çizimle konuşurlar ve
-  kullanıcıya sorabilirler (bir sonraki dilim); şerit ve panelin kurulması ile kaldırmada kalıntı §26'nın kuru
-  bağlamasında.
+  kullanıcıya sorabilirler (bir sonraki dilim; §52'de denenir); şerit ve panelin kurulması ile kaldırmada kalıntı §26'nın
+  kuru bağlamasında.
 - **Sınamalar:** başsız 2 (çağrı masaüstüne olduğu gibi gider, raporla cevaplanır; nesnesiz ve masaüstüsüz çağrı
   söylenir; atölye araçlarının listesi), masaüstü 2 (sentetik çizim nesnelerden kurulur, katman adları ve öznitelikler,
   yanlış şekil yeriyle; bulgular nesnenin sırasıyla, hata veren kural nedeni ve iz kaydıyla).
@@ -2912,3 +2912,70 @@ adresi ve SHA-256'sı).
   tek çıkışta 18 m uyarı, 32 m hata; iki çıkışta 40 m uyarı), erişim (uygun; çıkışa ulaşmayan arşiv hata; çıkışsız kat
   tek hata). Dört kural ayrıca çizimin kendisinde bulut işinin yoluyla (`run_audit`) çalışır: raporlar paketin
   sürümünün, örnek bina hepsine uygun. 5 sınama, 7,2 sn (hata ayıklama derlemesi, 18 Python süreci).
+
+## §52. Denemede komutlar ve harita araçları (`ADIM 21`, Kapı 3'ün kodu çalıştıran payının ikinci dilimi)
+
+**16 Kasım.** Kod: masaüstü `apps/desktop/src/shell/extensions/trial/steps.rs` (adımların okunması ve kurulu
+manifestle denetimi), `trial/broker.rs` (kodun istekleri sentetik çizimde, adımın raporu), `trial.rs` (sıra,
+`auditAfter`), `tools.rs` (`PoolJob::run_step`: denemenin süreci), `dialogs.rs` (`dialog_panel`: pencerenin denetimi
+pencereyle ortak), `panel_session.rs` (`set`, `rows`, `say`, `unknown_panel`, `no_panel` ortak), `panels.rs`
+(`OpenPanel::take_answer`: düğmenin cevabı panelle ortak), `runner.rs` (aracının ret sözleri sabit, ortak); ajan aracı
+`crates/native/headless/src/agent_tools/workshop_trial.rs` (şema ve açıklama); SDK rehberi.
+
+- **Karar: komut ve harita aracı kullanıcının başlattığı gibi denenir.** `commands[]`: ya `command` (şeritten: `params`
+  kodun `ctx.params`'ı, verilmezse boş) ya `panel` ile `button` (panelin düğmesi ya da onChange'i olan alanı: panel
+  açılır, ajanın değerleri panele kodun `panel.set`'iyle konur ve düğmenin denetimiyle sınanır, kod düğmenin
+  komutunu panelin değerleriyle alır; cevabın satırları düğmenin tablosuna, sözü formun altına gider); `selection`
+  (features'taki sıralar: kod çalışırken seçili olanlar). `mapTools[]`: `mapTool` ve `shape`, manifestin istediği
+  şekil (nokta: Point; çizgi: LineString; alan: Polygon; dikdörtgen ve yönlü dikdörtgen: dört köşeli Polygon; daire:
+  `center`, `radius`), kod onu çizimin çizilen şekli verdiği biçimde alır (runner.rs `shape_json`). Yanlış kimlik,
+  olmayan panel ya da düğme, şekle uymayan şekil, features dışında sıra: çağrının hatası, hiçbir şey çalışmadan.
+- **Karar: aracının kuralları aynen.** Okuma `document.read`, yazma `document.write` (kullanıcının verdiği); ilk yazma
+  adımın geri alma adımını açar (kodun koyduğu adla, yoksa adımın adıyla); kod hata verir, Durdur'la durur ya da bir
+  grubu başarısız olursa yazdıkları geri alınır ve sonraki adım onları görmez; başka eklentinin aracı yalnız
+  bildirilmiş bağımlılıkla; geri alma, yineleme ve dosya işlemleri hiç. Ret sözleri runner.rs'deki sabitlerdir:
+  kullanıcının çiziminde ve denemede aynı söz.
+- **Karar: pencereleri ajan cevaplar.** `dialogs[]` sorulduğu sırayla: alan kimliğine göre değerler (`{}` varsayılanlarla
+  Tamam), `null` İptal. Pencere gerçek pencerenin denetiminden geçer (bozuk tanım kodun hatasıdır); değerler kodun
+  `panel.set`'iyle konup Tamam'ın denetimiyle sınanır. Uymayan ya da verilmeyen cevap İptal sayılır ve raporda nedeniyle
+  söylenir (kod Vazgeç yolundan gider). **Dosya seçicili pencere İptal'dir:** kullanıcının dosyasını okutmak ya da
+  üstüne yazdırmak ajanın kararı olamaz (§41, §44).
+- **Karar: panelleri deneme tutar.** `ctx.open_panel` ve `ctx.panel.set/rows/say/close` panel_session.rs'nin
+  denetimleriyle denemenin panellerinde çalışır; paneller adımlar arasında kalır (sonraki düğme önceki adımın
+  doldurduğu seçeneklerle sınanır); `focus` bir şey yapmaz (pencere yok). Şeritten başlayan adımın `ctx.panel`'i yoktur
+  (`no_panel`, gerçekteki söz).
+- **Karar: denemenin kendi süreci.** Komut, havuzun sürüm sürecinde değil `<eklenti>@<sürüm>#deneme` anahtarlı ayrı bir
+  süreçte çalışır. Havuzun süreci komutla meşgulken komut kendi eklentisinin aracını çağırırsa
+  (`ctx.run_tool("ext.<kendi>.<araç>")`, §46) araç o sürecin sırasını, komut da aracı bekler ve ikisi 120 sn sonra
+  sonlandırılırdı. Kullanıcının çiziminde komutlar zaten ayrı süreçte (runner.rs). Denemenin süreci 10 dk boşta kalınca
+  kapanır; sürüm değişince ya da eklenti kaldırılınca sürümünkiyle birlikte kapanır.
+- **Sıra ve `auditAfter`:** kurallar, araçlar, komutlar, harita araçları; her adım öncekilerin yazdığını görür.
+  `auditAfter: true` kuralları en sonda son çizimde yeniden çalıştırır (`auditsAfter`): bir düzeltme komutunun bulguyu
+  kapattığı böyle görülür. Komut ya da harita aracı denerken `features` boş olabilir (katmanları kuran komut).
+- **Adımın raporu:** durum (`done`; `failed` istisnası ve iz kaydıyla; `refused`; `unavailable`; `stopped`;
+  `invalid`: panelin değerleri uymadı, kod çalışmadı), sonucun sözü, başlığı ve satırları (sayısı ve ilk 10'u), yazılan
+  nesneler katmana göre, değişen nesneler (features'taki sırasıyla, ilk 5'inin öznitelik ve şekli) ve silinenler,
+  `undone`, kodun seçtikleri, sorduğu pencereler ve verilen cevaplar, KentOS'un geri çevirdiği istekler (en çok 20),
+  dokunduğu paneller bıraktığı hâliyle (değerler, söz, tabloların satır sayısı ve ilk satırları), yazdırdıkları (en çok
+  8 KB), süre. Özet satırı komut ve harita aracı sayısını ve yeniden koşan kuralların bulgusunu da söyler.
+- **Sınırlar:** en çok 10 komut ve 10 harita aracı yerleştirmesi (`TRIAL_MOST_COMMANDS`), adım başına 10 pencere
+  cevabı; adımın süresi kuralınki (120 sn).
+- **Bilerek dışarıda:** dosya seçen pencere (yukarıda); harita aracının kenetlenmesi (ajan koordinatı kendisi verir) ve
+  yönlü dikdörtgenin şablon ölçüsü (verilen dört köşe olduğu gibi gider). Komut kullanıcının verdiği haklarla gerçekten
+  çalışır, deneme yalnız çizimi sentetik yapar: eklentinin ağa ya da diske doğrudan yaptığı bir şey varsa o da olur
+  (PY-RUN-19, "ayrı süreç korumalı alan değildir"); kurallarda ve araçlarda olduğu gibi.
+- **Sınamalar:** masaüstü 8 yeni: adımların okunması 3 (harita aracının istediği şekil ve yanlışları, seçim ve
+  cevaplar, panel düğmesinin ve değişen alanın komutu ve yanlışları), aracı 4 (sahte süreç, sentetik çizimde gerçek
+  KentOS komutlarıyla: okuma, yazma, seçim, tek geri alma adımı ve hata verenin yazdıklarının geri alınması; izinsiz
+  yazma, bağımlılıksız başka eklenti aracı ve okuma izni olmayana çizimin verilmemesi; pencerelerin cevabı, uymayan
+  ve verilmeyen cevap, dosya seçici, bozuk tanım; panel düğmesi: eksik değer `invalid`, kodun panel istekleri,
+  satırların düğmenin tablosuna gitmesi, şeritten `no_panel`); gerçek Python 1 (testin kendi küçük paketi
+  `kentos.ext_host` üzerinden: pencere cevabıyla iki yapıya B-05 ve B-06, panelin tablosu ve sözü, yazdırılan satır;
+  cevapsız pencere İptal, bir şey yazılmaz; yazıp hata veren komutun yazdığı iz kaydıyla geri alınır; harita aracı
+  verilen dikdörtgeni yazar; 1,07 sn; Python yoksa atlandığını söyler); ajan aracı 1 (komutla boş çizim kabul edilir).
+- **Gerçek pencerede** (Asistan, DeepSeek deneme anahtarı, sentetik istem, Vitrin 1.0.41): tek çağrıda Yapıları
+  numarala (pencerenin cevabı önek B-, ilk numara 5), Yapı yerleştir ((100, 100) köşeli 10 × 12 m dikdörtgen) ve
+  `auditAfter`. Komut B-05 ve B-06 yazdı, Yapı ara panelinin tablosunda 2 satır; Yapı numarası denetimi önce 2 bulgu,
+  sonra 1 (harita aracının eklediği numarasız yapı); deneme 5,2 sn (ilk koşuda süreç açılışıyla 4,2 sn). Bir koşuda
+  ajanın bir deneme çağrısı girdi denetiminde geri çevrildi (1 ms, hiçbir şey çalışmadan); ajan düzeltip yeniden
+  denedi. Kullanıcının çizimi aynı kaldı.

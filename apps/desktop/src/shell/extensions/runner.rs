@@ -246,7 +246,7 @@ fn refused(code: &'static str, message: &str) -> HeadlessError {
 
 /// Whether a method of the broker writes the drawing: a command's execute (by `run`, or by `call`, whose form is
 /// execute when not given) and a replay.
-fn writes(method: &str, params: &Value) -> bool {
+pub(super) fn writes(method: &str, params: &Value) -> bool {
     let op = params.get("op").and_then(Value::as_str);
     match method {
         "run" => op == Some("execute"),
@@ -258,7 +258,7 @@ fn writes(method: &str, params: &Value) -> bool {
 
 /// The extension whose tool a broker call runs (`cad.processing.run` or `batch` of an `ext.<eklenti>.<araç>`), when it
 /// is not the caller's own (PY-RUN-15, docs/adr/8057 §16).
-fn others_tool<'a>(ext: &str, params: &'a Value) -> Option<&'a str> {
+pub(super) fn others_tool<'a>(ext: &str, params: &'a Value) -> Option<&'a str> {
     let command = params.get("command").and_then(Value::as_str)?;
     if !matches!(command, "cad.processing.run" | "cad.processing.batch") {
         return None;
@@ -267,8 +267,24 @@ fn others_tool<'a>(ext: &str, params: &'a Value) -> Option<&'a str> {
     kentos_commands::action_tool_extension(tool).filter(|owner| *owner != ext)
 }
 
+/// Why an extension may not run `owner`'s tool: it does not list it among its dependencies (PY-RUN-15).
+pub(super) fn undeclared(owner: &str) -> String {
+    format!(
+        "Eklenti, bağımlılıklarında bildirmediği “{owner}” eklentisinin aracını çalıştıramaz: manifestin \
+         dependencies.extensions listesine ekleyin."
+    )
+}
+
+/// Why the broker does not answer a method it does not know ([`answered`]).
+pub(super) const NOT_FOR_EXTENSIONS: &str =
+    "Eklentiler bunu isteyemez: geri alma, yineleme ve dosya işlemleri kullanıcınındır.";
+/// Why an extension without `document.write` is not answered a write.
+pub(super) const NO_WRITE: &str = "Eklenti çizime yazma izni (document.write) istemedi; yazamaz.";
+/// Why an extension without `document.read` is not answered a read.
+pub(super) const NO_READ: &str = "Eklenti çizimi okuma izni (document.read) istemedi; okuyamaz.";
+
 /// What the broker answers at all; anything else (undo, redo, files) is the user's, never an extension's.
-fn answered(method: &str) -> bool {
+pub(super) fn answered(method: &str) -> bool {
     matches!(
         method,
         "summary"
@@ -302,12 +318,7 @@ impl App {
             .as_ref()
             .and_then(|r| r.manifest(ext))
             .is_some_and(|m| m.dependencies.extensions.iter().any(|d| d.id == owner));
-        (!declared).then(|| {
-            format!(
-                "Eklenti, bağımlılıklarında bildirmediği “{owner}” eklentisinin aracını çalıştıramaz: manifestin \
-                 dependencies.extensions listesine ekleyin."
-            )
-        })
+        (!declared).then(|| undeclared(owner))
     }
 
     /// The contribution's handler and what finding its environment needs; why not, in a sentence, when it cannot run.
@@ -1013,23 +1024,14 @@ impl App {
             _ => {}
         }
         if !answered(method) {
-            return Err(refused(
-                "not_for_extensions",
-                "Eklentiler bunu isteyemez: geri alma, yineleme ve dosya işlemleri kullanıcınındır.",
-            ));
+            return Err(refused("not_for_extensions", NOT_FOR_EXTENSIONS));
         }
         let write = writes(method, params);
         if write && !run.write {
-            return Err(refused(
-                "capability",
-                "Eklenti çizime yazma izni (document.write) istemedi; yazamaz.",
-            ));
+            return Err(refused("capability", NO_WRITE));
         }
         if !write && !run.read {
-            return Err(refused(
-                "capability",
-                "Eklenti çizimi okuma izni (document.read) istemedi; okuyamaz.",
-            ));
+            return Err(refused("capability", NO_READ));
         }
         let Some(doc) = self.document.as_mut() else {
             return Err(refused("no_document", "Masaüstünde açık çizim yok."));

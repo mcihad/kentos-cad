@@ -762,6 +762,50 @@ impl OpenPanel {
         format!("{by} komutun satırları burada {done}.")
     }
 
+    /// A button's command answered `result`: its rows to `table` (the button's output) when it gives rows, its words
+    /// (or the rows counted) under the form; the table filled, if one was.
+    pub(super) fn take_answer(&mut self, table: Option<&String>, result: &Value) -> Option<String> {
+        let rows = result
+            .get("rows")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        let mut columns: Vec<String> = result
+            .get("columns")
+            .and_then(Value::as_array)
+            .map(|c| {
+                c.iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_owned)
+                    .collect()
+            })
+            .unwrap_or_default();
+        if columns.is_empty() {
+            for row in &rows {
+                for key in row.as_object().into_iter().flat_map(|o| o.keys()) {
+                    if !columns.contains(key) {
+                        columns.push(key.clone());
+                    }
+                }
+            }
+        }
+        // A message answers no rows: the table keeps what it showed (a button that writes, as Yapıları numarala, does
+        // not empty the search's results).
+        let filled = table.filter(|_| result.get("rows").is_some()).cloned();
+        if let Some(table) = &filled {
+            self.tables.insert(table.clone(), (columns, rows.clone()));
+            // New rows from their first page.
+            self.pages.remove(table);
+        }
+        // Words its code said as it ran stay when its answer says none of its own (panel_session.rs).
+        match result.get("message").and_then(Value::as_str) {
+            Some(said) => self.said = Some((words::Kind::Ok, said.to_owned())),
+            None if self.spoke && self.said.is_some() => {}
+            None => self.said = Some((words::Kind::Ok, format!("{} satır.", rows.len()))),
+        }
+        filled
+    }
+
     /// The output (a table, a tree, a card) a button's rows go to: its own, else the panel's first.
     pub(super) fn table_of(&self, table: Option<&String>) -> Option<String> {
         table.cloned().or_else(|| {
@@ -1378,50 +1422,8 @@ impl App {
         panel.touched.clear();
         match outcome {
             Ok(result) => {
-                let rows = result
-                    .get("rows")
-                    .and_then(Value::as_array)
-                    .cloned()
-                    .unwrap_or_default();
-                let mut columns: Vec<String> = result
-                    .get("columns")
-                    .and_then(Value::as_array)
-                    .map(|c| {
-                        c.iter()
-                            .filter_map(Value::as_str)
-                            .map(str::to_owned)
-                            .collect()
-                    })
-                    .unwrap_or_default();
-                if columns.is_empty() {
-                    for row in &rows {
-                        for key in row.as_object().into_iter().flat_map(|o| o.keys()) {
-                            if !columns.contains(key) {
-                                columns.push(key.clone());
-                            }
-                        }
-                    }
-                }
-                // A message answers no rows: the table keeps what it showed (a button that writes, as Yapıları
-                // numarala, does not empty the search's results).
-                let filled = origin
-                    .table
-                    .as_ref()
-                    .filter(|_| result.get("rows").is_some())
-                    .cloned();
-                if let Some(table) = &filled {
-                    panel.tables.insert(table.clone(), (columns, rows.clone()));
-                    // New rows from their first page.
-                    panel.pages.remove(table);
-                }
-                // Words its code said as it ran stay when its answer says none of its own (panel_session.rs).
-                match result.get("message").and_then(Value::as_str) {
-                    Some(said) => panel.said = Some((words::Kind::Ok, said.to_owned())),
-                    None if panel.spoke && panel.said.is_some() => {}
-                    None => panel.said = Some((words::Kind::Ok, format!("{} satır.", rows.len()))),
-                }
                 // The charts drawing those rows, worked out again (panel_chart.rs).
-                if let Some(table) = filled {
+                if let Some(table) = panel.take_answer(origin.table.as_ref(), &result) {
                     self.ext_panel_charts(&origin.ext, &origin.panel, &table);
                 }
             }
