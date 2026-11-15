@@ -932,13 +932,14 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
   [PY-TOOL-09].
   — *kısmen (ADR 8057 §7): UUID ve GeoJSON, gizli alan kesilir, ortak doğrulama, hesap boyunca belge kilidi yok;
   kalan: büyük girdinin sayfalı/ikili aktarımı [PY-TOOL-08] (sahibin kararı bekliyor).*
-- [ ] Python ham sonuç değil tipli değişiklik kümesi / katman, tablo, eser kurucusu üretir; host tamamını doğrular
+- [x] Python ham sonuç değil tipli değişiklik kümesi / katman, tablo, eser kurucusu üretir; host tamamını doğrular
   [PY-TOOL-10]. Yeni katman adı/stili/şeması/CRS'si/kökeni mevcut çalıştırıcı yoluyla tek işlemde [PY-TOOL-11]; hedef
   seçimine göre geçici/yeni katman/dosya/bulut eseri; üzerine yazma ve kaynak değişikliği ayrı planlı seçenek
   [PY-TOOL-12]; dosya yazımı hazırlık yolu üzerinden, doğrulamadan sonra atomik, iptalde temizlik [PY-TOOL-13]; çıktı
   kuralları host'ta yeniden doğrulanır [PY-TOOL-14].
-  — *kısmen (ADR 8057 §7): tipli sonuç bütün denetlenir, yeni katman tek adımda, GeoPackage hedefi (P11); kalan:
-  kaynağın üzerine yazma seçeneği ve dosya yazımının hazırlık yolu [PY-TOOL-12, 13].*
+  — *tamamlandı (ADR 8057 §7, §49; ADR 0592): tipli sonuç bütün denetlenir, yeni katman tek adımda, GeoPackage
+  hedefi (P11), dosya geçici dosyadan atomik ve iptalde silinir, kaynağı değiştirmek tanımda `writes: true` ile
+  (`ctx.update`, tek geri alma adımı).*
 - [x] İlerleme/günlük/uyarı/kayıp/ölçü/sonuç/iş tutamacı tipli ve akışlı; başarı yalnız gerçek işlemeden sonra
   [PY-TOOL-15]. İptal istisnası, süreç öldürme, zaman aşımı, kaynak çatışması ve bellek taşması tek yaşam döngüsünde
   [PY-TOOL-16]. Kaynak düzenlemesi ya da çok katmanlı sonuç tek geri alma grubunda; dış dosya etkisinin kapsamı ayrıca

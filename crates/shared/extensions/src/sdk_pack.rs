@@ -100,10 +100,9 @@ None), `featurePicker` (`id`, `label`, `layer`: bir `layerPicker`'ın kimliği, 
 kullanıcı "Seçimi al"a basınca çizimdeki seçimden o katmanın ve türün nesnelerini alır, değeri kalıcı kimliklerin
 listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.entity(uid)` ile okur; katman değişince
 alan ve nesne seçimi temizlenir), `filePicker` (`id`, `label`, `filters`: `[{name, extensions}]`; okunacak dosyanın yolu
-yazılır ya da Seç… ile seçilir, değeri mutlak yol ya da None; manifest `files.userSelected` ister; `save: true` ile
-yazılacak dosyanın yeri, `defaultName` önerilen ad, uzantısız ada ilk uzantı eklenir, `files.userSelectedWrite`),
-`crsPicker` (`id`, `label`, `value`: "EPSG:5256"; KentOS'un sistemlerinden biri, verilmezse çizimin sistemi; değeri
-`EPSG:<kod>`, `cad.crs.transform`'a `CrsSide(srid=kod)`), `button` (`id`,
+yazılır ya da Seç… ile seçilir, değeri mutlak yol ya da None; manifest `files.userSelected` ister; `save: true`
+yazılacak yeri sorar: `defaultName`, `files.userSelectedWrite`),
+`crsPicker` (`id`, `label`, `value`; KentOS'un sistemlerinden, verilmezse çizimin; değeri `EPSG:<kod>`), `button` (`id`,
 `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
 `primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
 göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak

@@ -23,7 +23,7 @@ fn descriptor() -> Value {
         "keywords": ["alan"],
         "parameters": [
             { "name": "parcels", "label": "Parseller", "type": "features", "kinds": ["polygon"],
-              "scopes": ["layer", "selection", "all"] },
+              "scopes": ["layer", "selection", "all"], "writes": true },
             { "name": "limit", "label": "Büyük parsel sınırı", "type": "number", "unit": "m²", "default": 500 },
             { "name": "output", "label": "Çıktı katmanı", "type": "layer", "default": { "newName": "Alanlar" } }
         ],
@@ -74,7 +74,11 @@ impl Provider for Stand {
         input: Value,
         feedback: &mut dyn Feedback,
     ) -> Result<Value, Failure> {
-        assert_eq!(tool.local, "olc");
+        assert!(
+            matches!(tool.local.as_str(), "olc" | "oku"),
+            "{}",
+            tool.local
+        );
         feedback.progress(0.5, "ölçülüyor");
         let mut seen = seen();
         seen.inputs.push(input.clone());
@@ -185,7 +189,16 @@ fn setup() -> ExternalTool {
         // The host gives the package's digest (docs/adr/8057 §13) and where its code runs (§15).
         tool.digest = DIGEST.into();
         tool.environment = ENVIRONMENT.into();
-        external::set_tools(vec![tool]);
+        // The same tool whose input does not say it writes (docs/adr/8057 §49).
+        let mut reads = descriptor();
+        reads["id"] = json!("oku");
+        reads["parameters"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("writes");
+        let reads =
+            external::from_descriptor("tr.ornek.deneme", "Deneme", "1.0.0", "oku", &reads).unwrap();
+        external::set_tools(vec![tool, reads]);
         external::register_provider(Arc::new(Stand));
         kentos_processing::command::register();
     });
@@ -411,6 +424,14 @@ fn an_answer_that_does_not_fit_writes_nothing() {
             "“total” bir sayı olmalı",
         ),
         (json!({ "outputs": { "table": [1, 2] } }), "bir satır"),
+        (
+            json!({ "update": [{ "uid": "00000000-0000-0000-0000-000000000000", "attrs": {} }] }),
+            "update[0]: “00000000-0000-0000-0000-000000000000” araca verilen nesnelerden biri değil",
+        ),
+        (
+            json!({ "update": { "a": 1 } }),
+            "update bir değişiklik listesi",
+        ),
     ];
     for (answer, words) in cases {
         seen().answer = Some(Ok(answer));
@@ -881,4 +902,59 @@ fn an_extensions_tools_progress_reaches_the_job_running_it() {
             .unwrap_or_else(std::sync::PoisonError::into_inner),
         [(500, 1000)]
     );
+}
+
+/// docs/adr/8057 §49 (PY-TOOL-12): a tool changes its own input objects' attributes where its descriptor says the input
+/// writes, in the run's one undo step (`None` takes one away); the same change through an input that does not write is
+/// refused with nothing written.
+#[test]
+fn an_extensions_tool_changes_its_own_inputs_only_where_it_says_it_writes() {
+    let _turn = one_at_a_time();
+    let _tool = setup();
+    let parcel_of = |doc: &Document| {
+        doc.entities()
+            .find(|e| e.base().layer_id == "parsel")
+            .map(|e| Slot(e.base().id))
+            .expect("a parcel")
+    };
+    let answer = |doc: &Document| {
+        let uid = doc.uid(parcel_of(doc)).expect("its uid").to_string();
+        json!({ "kind": "outputs", "outputs": {},
+                "update": [{ "uid": uid, "attrs": { "durum": "ölçüldü", "Parsel": null, "puan": 3 } }] })
+    };
+    let mut host = Bare(drawing(false), Vec::new());
+    seen().answer = Some(Ok(answer(&host.0)));
+    let tool = Registry::current().get("ext.tr.ornek.deneme.olc").unwrap();
+    let outcome = Runner::new().run(&mut host, &tool, &values(), false, &mut Vec::new());
+    assert!(
+        !matches!(
+            outcome,
+            Outcome::Stopped {
+                status: Status::Error,
+                ..
+            }
+        ),
+        "{outcome:?}"
+    );
+    let attrs = host.0.get(parcel_of(&host.0)).unwrap().base().attrs.clone();
+    assert_eq!(attrs.get("durum").map(String::as_str), Some("ölçüldü"));
+    assert_eq!(
+        attrs.get("puan").map(String::as_str),
+        Some("3"),
+        "a number kept as text"
+    );
+    assert!(!attrs.contains_key("Parsel"), "None takes it away");
+    assert!(host.0.undo().is_some(), "one undo step");
+    // Through an input that does not say it writes: refused, nothing written.
+    let mut host = Bare(drawing(false), Vec::new());
+    seen().answer = Some(Ok(answer(&host.0)));
+    let before = host.0.get(parcel_of(&host.0)).unwrap().base().attrs.clone();
+    let tool = Registry::current().get("ext.tr.ornek.deneme.oku").unwrap();
+    let outcome = Runner::new().run(&mut host, &tool, &values(), false, &mut Vec::new());
+    assert!(
+        matches!(&outcome, Outcome::Stopped { status: Status::Error, message, .. } if message.contains("writes: true yok")),
+        "{outcome:?}"
+    );
+    assert_eq!(host.0.get(parcel_of(&host.0)).unwrap().base().attrs, before);
+    seen().answer = None;
 }

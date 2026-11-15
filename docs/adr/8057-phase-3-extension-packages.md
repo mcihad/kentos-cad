@@ -2733,3 +2733,27 @@ Python `ProcessingContext.run_tool`, `ToolAnswer`, `_tool_value`; Vitrin 1.0.39 
 - **Sınamalar:** İşlemler 1 (örnek okunur; adsız, şekilsiz ve on birinci örnek yeriyle söylenir) ve şemanın sapması,
   masaüstü 1 (sayı ve metin karşılaştırması, öznitelik kümesi, sonucun sözü), başsız 1 (örnek kipi nesnesiz
   masaüstüne gider); gerçek pencerede Vitrin'in iki örneği geçti.
+
+## §49. Aracın kendi girdisini yerinde değiştirmesi: `writes: true` ve `ctx.update` (`ADIM 19`, PY-TOOL-12)
+
+**15 Kasım.** Kod: İşlemler `external/updates.rs` (`updates_of`), `external.rs` (`result_of` değişikliği ekler);
+Python `ProcessingContext.update`, `ext_host.outputs_of` (`update`); Vitrin 1.0.41.
+
+- **Sorun:** eklentinin aracı yalnız yeni nesne (çıktı katmanına), tablo ve sayı verebiliyordu; girdisindeki nesneye
+  bir sonuç yazmak (parselin TAKS'ı, yapının çekme durumu) için kopyasını yeni katmana yazmak gerekiyordu.
+- **Karar: kaynağı değiştirmek aracın tanımında söylenir.** Yalnız tanımında `"writes": true` bildiren nesne
+  parametresinin nesneleri değiştirilebilir (parametre penceresi ve ajan aracın girdisini değiştirdiğini tanımdan
+  görür); kod `ctx.update(nesne, öznitelik=değer)` der, `None` özniteliği kaldırır, sayı ve evet/hayır metin olarak
+  saklanır. Yanıtta `update: [{uid, attrs}]`.
+- **Denetim yeni nesneninkiyle aynı:** değerler katmanın alanlarına göre denetlenir; araca verilmemiş nesne ("araca
+  verilen nesnelerden biri değil"), yazmayan girdiden gelen nesne ("verildiği girdinin tanımında writes: true yok"),
+  aynı nesnenin iki kez değişmesi ve sözlük olmayan öznitelikler reddedilir; bir değişiklik reddedilirse hiçbir şey
+  yazılmaz. Değişiklikler yeni nesnelerle aynı, tek geri alma adımında.
+- **Dosya hedefi zaten atomikti (PY-TOOL-13):** yeni dosya geçici dosyaya yazılıp doğrulandıktan sonra yeniden
+  adlandırılıyor, iptal ve hatada siliniyor; var olan dosyaya yazma tek işlemde (`command.rs` `write_sink`). Plan
+  notu bunu "kalan" sanıyordu; düzeltildi.
+- **Vitrin 1.0.41:** Çekme mesafesi denetimi yapıların girdisini `writes: true` bildirir ve her yapının `cekme`
+  özniteliğine "uygun" ya da "taşıyor" yazar (`46-yerinde`).
+- **Sınamalar:** İşlemler 1 (yazan girdide öznitelik yazılır, `None` kaldırır, sayı metin olur, tek geri alma
+  adımı; yazmayan girdide aynı değişiklik reddedilir, hiçbir şey yazılmaz) ve yanıtın denetimine iki durum (verilmeyen
+  nesne, liste olmayan `update`).

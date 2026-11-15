@@ -373,6 +373,11 @@ def outputs_of(value: Any, ctx: ext.ProcessingContext) -> dict[str, Any]:
         out["summary"] = ctx._summary
     if ctx._select is not None:
         out["select"] = ctx._select
+    if ctx._updates:
+        # NumPy's numbers as plain ones, as an output's values are.
+        out["update"] = [
+            {"uid": uid, "attrs": {k: plain(v, k) for k, v in attrs.items()}} for uid, attrs in ctx._updates.items()
+        ]
     return out
 
 

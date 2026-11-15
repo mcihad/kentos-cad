@@ -276,7 +276,8 @@ def cekme(ctx: ext.ProcessingContext, yapilar: ext.FeatureInput, parseller: ext.
     """Çekme mesafesi denetimi: her yapının çevresine KentOS'un yerleşik Tampon aracıyla (geometry.buffer) mesafe
     kadar alan çizilir; alan yapının oturduğu parselin dışına taşıyorsa yapı parsel sınırına bu mesafeden yakındır.
     Tamponu eklenti çizmez, KentOS'un aracı eklentiye verilen yapılar üzerinde çalışır (ctx.run_tool), kullanıcının
-    çizimine dokunmadan; karşılaştırma shapely ile. Yapıyı tamponuna sırası (öznitelik "sira") bağlar."""
+    çizimine dokunmadan; karşılaştırma shapely ile. Yapıyı tamponuna sırası (öznitelik "sira") bağlar. Her yapının
+    kendi "cekme" özniteliğine durumu yazılır (ctx.update; girdinin tanımı writes: true)."""
     uzaklik = float(mesafe if mesafe is not None else 3)
     ctx.progress(0, 3, "KentOS'un Tampon aracı çalışıyor")
     verilen = [{"type": "Feature", "geometry": f.geometry, "properties": {"sira": n}} for n, f in enumerate(yapilar)]
@@ -297,6 +298,8 @@ def cekme(ctx: ext.ProcessingContext, yapilar: ext.FeatureInput, parseller: ext.
         durum = "uygun" if tasan <= 1e-6 else "taşıyor"
         if durum == "taşıyor":
             tasanlar.append(yapi)
+        # Yapının kendisine de yazılır: girdinin tanımı "writes": true der (KentOS kaynağı başka türlü değiştirmez).
+        ctx.update(yapi, cekme=durum)
         etiket = yapi.attrs.get("no") or f"{n + 1}. yapı"
         cikti.append(ext.NewFeature(geometry=t.geometry, attrs={
             "yapi": etiket, "mesafe_m": uzaklik, "durum": durum, "tasan_alan_m2": tasan}))

@@ -55,6 +55,7 @@ const OUTPUT_KINDS: [&str; 4] = ["features", "table", "number", "string"];
 
 mod descriptor_schema;
 mod examples;
+mod updates;
 pub use examples::{MOST_EXAMPLE_FEATURES, MOST_EXAMPLES};
 
 pub use descriptor_schema::descriptor_schema;
@@ -1206,9 +1207,12 @@ fn result_of(
         .get("summary")
         .and_then(Value::as_str)
         .map(|s| s.chars().take(500).collect());
-    if !add.is_empty() {
+    // Its own inputs changed in place: only those it says it writes (updates.rs, docs/adr/8057 §49).
+    let update = updates::updates_of(tool, answer, resolved, ctx, &given).map_err(words)?;
+    if !add.is_empty() || !update.is_empty() {
         result.changes = Some(ChangeSet {
             add,
+            update,
             ..ChangeSet::default()
         });
     }

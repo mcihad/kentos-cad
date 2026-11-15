@@ -347,8 +347,7 @@ class PanelSession:
 
 
 def layer_input(layer: str, kinds: Sequence[str] | None = None) -> dict[str, Any]:
-    """An İşlemler tool's objects (``ctx.run_tool``): all of ``layer`` (its id), of ``kinds`` when given
-    (``["polygon"]``)."""
+    """The objects of ``layer`` (its id) for ``ctx.run_tool``; ``kinds`` narrows them (``["polygon"]``)."""
     given: dict[str, Any] = {"scope": "layer", "layerId": str(layer)}
     if kinds is not None:
         given["kinds"] = [str(k) for k in kinds]
@@ -356,7 +355,7 @@ def layer_input(layer: str, kinds: Sequence[str] | None = None) -> dict[str, Any
 
 
 def new_layer(name: str) -> dict[str, Any]:
-    """An İşlemler tool's output (``ctx.run_tool``): a new layer named ``name``."""
+    """A new layer ``name`` for ``ctx.run_tool``'s output."""
     return {"newName": str(name)}
 
 
@@ -444,7 +443,7 @@ class CommandContext:
         return CommandResult(cancelled=True)
 
     def run_tool(self, tool: str, /, **parameters: Any) -> Any:
-        """Runs a KentOS İşlemler tool from this command, with its rights and in its undo step (docs/adr/8057 §46).
+        """Runs a KentOS tool with this command's rights, in its undo step (docs/adr/8057 §46).
 
         A built-in one (``geometry.buffer``), this extension's own (``ext.<eklenti>.<araç>``) or one of an extension
         its manifest depends on. ``parameters`` are the tool's, by name: a layer's objects ``ext.layer_input("yapi")``,
@@ -831,6 +830,7 @@ class ProcessingContext(CommandContext):
         super().__init__(link, None, settings, params)
         self._summary: str | None = None
         self._select: list[str] | None = None
+        self._updates: dict[str, dict[str, Any]] = {}
 
     def read_features(self, features: FeatureInput) -> Iterator[Feature]:
         """A features parameter's objects one by one, Durdur answered between them."""
@@ -848,8 +848,18 @@ class ProcessingContext(CommandContext):
         """Leaves these inputs selected in the drawing when the run ends (a session result, not a change)."""
         self._select = [f.uid if isinstance(f, Feature) else str(f) for f in features]
 
+    def update(self, feature: Feature | str, /, **attrs: Any) -> None:
+        """Writes ``attrs`` into an input object of this tool, one that ``writes: true`` (docs/adr/8057 §49).
+
+        Only an input whose parameter says ``"writes": true`` in the descriptor can be changed: changing the source is
+        the tool's declared choice. ``None`` takes an attribute away; numbers and yes/no are kept as text, as every
+        attribute is. KentOS checks each value against the layer's fields and writes all changes in the run's one undo
+        step; a refused change writes nothing. Called again for the same object, the attributes add up."""
+        uid = feature.uid if isinstance(feature, Feature) else str(feature)
+        self._updates.setdefault(uid, {}).update({str(k): v for k, v in attrs.items()})
+
     def run_tool(self, tool: str, /, **parameters: Any) -> ToolAnswer:
-        """Runs a KentOS built-in tool on objects this tool holds, never the user's drawing (docs/adr/8057 §47).
+        """Runs a KentOS built-in tool on objects this tool holds, never on the drawing (docs/adr/8057 §47).
 
         A features parameter is given as objects (this tool's input, :class:`Feature`s, shapely shapes, GeoJSON
         features); KentOS runs the tool on a drawing of its own made of them, in the drawing's coordinate system, and

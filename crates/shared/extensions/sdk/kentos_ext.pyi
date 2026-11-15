@@ -64,11 +64,11 @@ class PanelSession:
 
 
 def layer_input(layer: str, kinds: Sequence[str] | None = None) -> dict[str, Any]:
-    """An İşlemler tool's objects (``ctx.run_tool``): all of ``layer`` (its id), of ``kinds`` when given (``["polygon"]``)."""
+    """The objects of ``layer`` (its id) for ``ctx.run_tool``; ``kinds`` narrows them (``["polygon"]``)."""
 
 
 def new_layer(name: str) -> dict[str, Any]:
-    """An İşlemler tool's output (``ctx.run_tool``): a new layer named ``name``."""
+    """A new layer ``name`` for ``ctx.run_tool``'s output."""
 
 
 class CommandContext:
@@ -100,7 +100,7 @@ class CommandContext:
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""
     def run_tool(self, tool: str, /, **parameters: Any) -> Any:
-        """Runs a KentOS İşlemler tool from this command, with its rights and in its undo step (docs/adr/8057 §46)."""
+        """Runs a KentOS tool with this command's rights, in its undo step (docs/adr/8057 §46)."""
     def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:
         """Sets up the layers, value lists and relations the package's ``schema.json`` declares (docs/adr/8057 §23), in the run's one undo step, and says what it did, a row each."""
 
@@ -167,8 +167,10 @@ class ProcessingContext(CommandContext):
         """The run's one line in İşlemler' history, in place of KentOS's own ("12 nesne eklendi")."""
     def select(self, features: Iterable[Feature | str]) -> None:
         """Leaves these inputs selected in the drawing when the run ends (a session result, not a change)."""
+    def update(self, feature: Feature | str, /, **attrs: Any) -> None:
+        """Writes ``attrs`` into an input object of this tool, one that ``writes: true`` (docs/adr/8057 §49)."""
     def run_tool(self, tool: str, /, **parameters: Any) -> ToolAnswer:
-        """Runs a KentOS built-in tool on objects this tool holds, never the user's drawing (docs/adr/8057 §47)."""
+        """Runs a KentOS built-in tool on objects this tool holds, never on the drawing (docs/adr/8057 §47)."""
 
 
 class ToolAnswer:

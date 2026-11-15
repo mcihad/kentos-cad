@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.41 — 15 Kasım 2026
+
+- Çekme mesafesi denetimi her yapının kendi `cekme` özniteliğine durumu (uygun / taşıyor) yazar: aracın girdisi
+  tanımında `"writes": true` der, kod `ctx.update(yapi, cekme=durum)` ile; değişiklikler tamponlarla aynı geri alma
+  adımında. Kaynağı değiştirmek aracın tanımında açıkça söylenir; söylemeyen girdi değiştirilemez.
+
 ## 1.0.40 — 15 Kasım 2026
 
 - İki aracın tanımında örnekler (`examples`): TAKS'ta biri aşan iki parsel, Çekme mesafesinde kenara yakın ve ortadaki

@@ -4,8 +4,8 @@
   "id": "cekme",
   "version": "1.0.0",
   "label": "Çekme mesafesi denetimi",
-  "description": "Her yapının çevresine çekme mesafesi kadar KentOS'un Tampon aracıyla alan çizer ve tamponun yapının parselinden taşıp taşmadığını söyler; tamponları yeni bir katmana yazar.",
-  "modelDescription": "Yapıların parsel sınırına çekme (bahçe) mesafesini denetlemek için kullanın. yapilar: yapıların taban alanı çizgileri, parseller: imar parselleri, mesafe: en az çekme mesafesi (metre, ör. 3). Her yapının tamponu yeni katmana yapi, mesafe_m, durum (uygun / taşıyor) ve tasan_alan_m2 öznitelikleriyle yazılır; parselinden taşan yapılar seçilir; taşan yapı sayısı (tasan) döner. Çizimi değiştirmeden yalnız hesap için sonucu bir GeoPackage dosyasına yönlendirin.",
+  "description": "Her yapının çevresine çekme mesafesi kadar KentOS'un Tampon aracıyla alan çizer ve tamponun yapının parselinden taşıp taşmadığını söyler; tamponları yeni bir katmana, her yapının durumunu kendi \"cekme\" özniteliğine yazar.",
+  "modelDescription": "Yapıların parsel sınırına çekme (bahçe) mesafesini denetlemek için kullanın. yapilar: yapıların taban alanı çizgileri, parseller: imar parselleri, mesafe: en az çekme mesafesi (metre, ör. 3). Her yapının tamponu yeni katmana yapi, mesafe_m, durum (uygun / taşıyor) ve tasan_alan_m2 öznitelikleriyle yazılır; her yapının kendi cekme özniteliğine uygun / taşıyor yazılır (girdiyi değiştirir); parselinden taşan yapılar seçilir; taşan yapı sayısı (tasan) döner. Çizimi değiştirmeden yalnız hesap için sonucu bir GeoPackage dosyasına yönlendirin.",
   "help": "Çekme mesafesi, yapının parsel sınırına en az uzaklığıdır (Planlı Alanlar İmar Yönetmeliği: ön, yan ve arka bahçe mesafeleri). Araç her yapının çevresine bu uzaklıkta alan çizer; alan yapının oturduğu parselin dışına taşıyorsa yapı parsel sınırına bu mesafeden yakındır.\n\nTamponu eklentinin kodu çizmez: KentOS'un yerleşik Tampon aracı, eklentiye verilen yapılar üzerinde, kullanıcının çizimine dokunmadan çalışır (ctx.run_tool); karşılaştırmayı eklentinin ortamındaki shapely yapar.",
   "keywords": [
     "çekme mesafesi",
@@ -32,7 +32,8 @@
         "scope": "layer",
         "layerId": "yapi"
       },
-      "description": "Denetlenecek yapıların taban alanı çizgileri."
+      "description": "Denetlenecek yapıların taban alanı çizgileri; her birine çekme durumu (cekme) yazılır.",
+      "writes": true
     },
     {
       "name": "parseller",
