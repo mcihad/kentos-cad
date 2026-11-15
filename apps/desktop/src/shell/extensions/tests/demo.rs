@@ -1041,6 +1041,12 @@ fn several_panels_stay_open_in_tabs_each_with_its_own() {
     let _ = gis.extension_panel_view();
     say(&mut gis, PanelEvent::Activate(0));
     assert!(!gis.extensions.panels[0].unseen, "seen once shown");
+    // Where each was scrolled is its own: shown again, it is given back.
+    say(&mut gis, PanelEvent::Scrolled(120.0));
+    say(&mut gis, PanelEvent::Activate(1));
+    assert_eq!(gis.extensions.panels[1].scroll, 0.0);
+    say(&mut gis, PanelEvent::Activate(0));
+    assert_eq!(gis.extensions.panels[0].scroll, 120.0);
     // A run of Vitrin's going (Yapıları numarala) when Değer say's call is launched: Değer say says so, not stuck.
     gis.extensions.panels[0].running = Some("numarala".into());
     gis.extensions.panel_calls.push(PanelCall {

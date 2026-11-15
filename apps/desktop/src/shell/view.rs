@@ -134,6 +134,9 @@ impl App {
                     (Panel::MapSurvey, _) => pane.scrollable(),
                     // Asistan's chat scrolls itself, its composer stays at the foot (assistant/view.rs).
                     (Panel::Assistant, _) => pane.actions(self.assistant_actions()),
+                    // An extension's panels scroll themselves, their tabs staying at the top: in the pane's own
+                    // scroller the tabs went with the rows (extensions/panels.rs, real window, 15 November 2026).
+                    (Panel::Extension, _) => pane,
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
                         Some(meta) => pane.meta(label::caption(meta)),
                         None => pane,

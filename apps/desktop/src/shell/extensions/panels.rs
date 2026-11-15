@@ -25,8 +25,9 @@
 //! - **Pickers follow their layer picker:** a field picker lists the fields of the layer chosen there, a feature picker
 //!   takes the selected objects of that layer when the user asks ("Seçimi al"); choosing another layer clears both.
 //! - **Several panels stay open:** each in its own tab at the top of the Eklenti tab (of any extensions), what was
-//!   typed in each kept; a panel opened again is shown, not opened twice. A panel's run answers it while another is
-//!   shown; its tab marks it (running, or words not yet seen). Closing the shown panel shows the next.
+//!   typed in each kept and where it was scrolled; a panel opened again is shown, not opened twice. A panel's run
+//!   answers it while another is shown; its tab marks it (running, or words not yet seen). Closing the shown panel
+//!   shows the next. The panels scroll under their tabs, which stay in sight.
 
 use std::collections::BTreeMap;
 
@@ -50,6 +51,19 @@ const SHOWN_ROWS: usize = 500;
 const SHOWN_CARDS: usize = 100;
 /// The least share of its side's open stacks the stack showing an opened panel has.
 const PANEL_SHARE: f32 = 0.6;
+/// The panels' scroller: one, showing the panel shown.
+const SCROLLER: &str = "extension-panel";
+
+/// The panels' scroller to `y`: the panel shown as it was left (the scroller was the last panel's).
+fn scroll_back(y: f32) -> Task<Message> {
+    iced::widget::operation::scroll_to(
+        iced::widget::Id::new(SCROLLER),
+        iced::widget::scrollable::AbsoluteOffset {
+            x: None,
+            y: Some(y),
+        },
+    )
+}
 
 /// A panel open in the dock.
 #[derive(Clone, Debug)]
@@ -77,6 +91,8 @@ pub(crate) struct OpenPanel {
     pub(crate) rerun: Option<String>,
     /// Its run answered while another panel was shown: its tab marks it until it is shown.
     pub(crate) unseen: bool,
+    /// How far down it was scrolled: given back when it is shown again.
+    pub(crate) scroll: f32,
 }
 
 /// A panel's button pressed: what the next launch of its command gives its code, and where its answer goes.
@@ -118,6 +134,8 @@ pub(crate) enum PanelEvent {
     Move(usize, usize),
     /// The open panel at this place closed.
     Close(usize),
+    /// The panel shown scrolled to here.
+    Scrolled(f32),
 }
 
 impl OpenPanel {
@@ -138,6 +156,7 @@ impl OpenPanel {
             running: None,
             rerun: None,
             unseen: false,
+            scroll: 0.0,
         };
         for c in &panel.definition.body {
             match c {
@@ -388,8 +407,8 @@ impl App {
             .iter()
             .position(|p| p.ext == ext && p.local == local)
         {
-            self.ext_panel_activate(at);
-            return self.show_extension_panel();
+            let back = self.ext_panel_activate(at);
+            return Task::batch([back, self.show_extension_panel()]);
         }
         let Some(registry) = self.extensions.registry.as_ref() else {
             return Task::none();
@@ -429,15 +448,18 @@ impl App {
         panel.side = entry.side;
         self.extensions.panels.push(panel);
         self.extensions.active_panel = self.extensions.panels.len() - 1;
-        self.show_extension_panel()
+        Task::batch([scroll_back(0.0), self.show_extension_panel()])
     }
 
-    /// The open panel at `at` shown; its answer seen.
-    fn ext_panel_activate(&mut self, at: usize) {
-        if let Some(panel) = self.extensions.panels.get_mut(at) {
-            panel.unseen = false;
-            self.extensions.active_panel = at;
-        }
+    /// The open panel at `at` shown, scrolled as it was left; its answer seen.
+    fn ext_panel_activate(&mut self, at: usize) -> Task<Message> {
+        let Some(panel) = self.extensions.panels.get_mut(at) else {
+            return Task::none();
+        };
+        panel.unseen = false;
+        let y = panel.scroll;
+        self.extensions.active_panel = at;
+        scroll_back(y)
     }
 
     /// A panel's tab moved among the others; the panel shown stays shown.
@@ -460,18 +482,23 @@ impl App {
         };
     }
 
-    /// The open panel at `at` closed (a run it started answers nowhere); the next one shown, else the one before.
-    fn ext_panel_close(&mut self, at: usize) {
+    /// The open panel at `at` closed (a run it started answers nowhere); the next one shown, else the one before,
+    /// scrolled as it was left.
+    fn ext_panel_close(&mut self, at: usize) -> Task<Message> {
         let x = &mut self.extensions;
         if at >= x.panels.len() {
-            return;
+            return Task::none();
         }
         x.panels.remove(at);
         if at < x.active_panel || (x.active_panel >= x.panels.len() && x.active_panel > 0) {
             x.active_panel -= 1;
         }
-        if let Some(panel) = x.panels.get_mut(x.active_panel) {
-            panel.unseen = false;
+        match x.panels.get_mut(x.active_panel) {
+            Some(panel) => {
+                panel.unseen = false;
+                scroll_back(panel.scroll)
+            }
+            None => Task::none(),
         }
     }
 
@@ -588,9 +615,10 @@ impl App {
                 return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Pick(id) => return self.ext_panel_pick(at, &id),
-            PanelEvent::Activate(to) => self.ext_panel_activate(to),
+            PanelEvent::Activate(to) => return self.ext_panel_activate(to),
             PanelEvent::Move(from, to) => self.ext_panel_move(from, to),
-            PanelEvent::Close(which) => self.ext_panel_close(which),
+            PanelEvent::Close(which) => return self.ext_panel_close(which),
+            PanelEvent::Scrolled(y) => panel.scroll = y,
             PanelEvent::Press(button) => return self.ext_panel_press(at, &button),
             PanelEvent::Fold(key) => {
                 if !panel.folded.remove(&key) {
@@ -1162,7 +1190,11 @@ impl App {
         for table in tables {
             body = body.push(table);
         }
-        let content = scrollable(body).height(Fill);
+        // Its own scroller (the pane's would take the tabs along), as far down as the panel was left.
+        let content = scrollable(body)
+            .id(iced::widget::Id::new(SCROLLER))
+            .height(Fill)
+            .on_scroll(move |v| event(PanelEvent::Scrolled(v.absolute_offset().y)));
         if self.extensions.panels.len() < 2 {
             return content.into();
         }

@@ -1660,5 +1660,13 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   None ise ileti, liste ise (boş da olsa) rapor: tablo boşalır ("Satır yok."), kart "Kart yok." der; Parsel kartı'nda
   Temizle kartları kaldırır. SDK masaüstüyle gelir (ortamın kitaplığı her başlatmada tazelenir): bütün eklentiler
   güncellemesiz düzelir. Test: MEBİS'in gerçek süreçteki araması "yok" için `("report", [])`.
+- **Giriş sırasında yanıt** (PY-UI-04'ün panel payı; gerçek pencere): Yapıları numarala sürerken Yapı no'ya "Y-"
+  yazıldı; yanıt gelince (ilerleme gitti, "5 yapı numaralandı" geldi) yazmak aynı alanda sürdü ("Y-0"): odak ve
+  taslak korunur, çünkü yanıt yalnız formun altını değiştirir, yazılanlar panelin durumundadır.
+- **Bulgu (düzeltildi): kaydırınca panellerin sekmeleri de kayıp gidiyordu.** Dock, Eklenti panelini kendi kaydırıcısına
+  sarıyordu (bütün panellerin varsayılanı) ve panel de kendi içinde kaydırıyordu: tekerlek dış kaydırıcıyı çevirip
+  sekme şeridini görünmez yapıyordu, sekmeye tıklanamıyordu. Artık panel kendi kaydırır (Asistan gibi), sekmeler
+  üstte durur. Her panel kaydırıldığı yeri tutar: Yapı ara aşağı kaydırılıp Değer say'a geçilince o en üstten,
+  Yapı ara'ya dönünce bırakıldığı yerden gösterilir (tek kaydırıcı, `scroll_to` ile geri verilir).
 - **Kalan (ADIM 22):** panel köprüsü tamamlandı; bileşen envanteri ve tanım/oturum maddeleri (PY-UI §8.1, PY-UI-01…18)
   ayrı maddeler.
