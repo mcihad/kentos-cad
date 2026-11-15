@@ -64,9 +64,9 @@ def katman_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
 @ext.command("yapilari-numarala")
 def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
     """'yapi' katmanındaki yapılara sırayla "no" yazar (Y-01, Y-02 …). Şeritten çalışınca önce öneki ve ilk numarayı
-    sorar (ctx.dialog: KentOS'un penceresi; İptal'de bir şey yazılmaz); "Yapı ara" panelinin düğmesinden çalışınca
-    Y-01'den başlar. İlerleme çubuğunu ve Durdur'u göstermek için her yapıda yarım saniye bekler: Durdur'a basılırsa
-    yazdıkları geri alınır."""
+    sorar (ctx.dialog: KentOS'un penceresi; İptal'de bir şey yazılmaz), bitince "Yapı ara" panelini açıp numaralananları
+    listeler (ctx.open_panel); panelin düğmesinden çalışınca Y-01'den başlar. İlerleme çubuğunu ve Durdur'u göstermek
+    için her yapıda yarım saniye bekler: Durdur'a basılırsa yazdıkları geri alınır."""
     yapi = _katman(ctx.doc, "yapi") if ctx.doc is not None else None
     if yapi is None:
         return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
@@ -91,7 +91,21 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
         cad.entities.set(ctx.doc, uids=[kayit.uid], operation="attributes", attrs={"no": f"{onek}{n:02d}"})
         time.sleep(0.5)
     son = ilk + len(kayitlar) - 1
-    return ctx.message(f"{len(kayitlar)} yapı numaralandı ({onek}{ilk:02d} … {onek}{son:02d}).")
+    ozet = f"{len(kayitlar)} yapı numaralandı ({onek}{ilk:02d} … {onek}{son:02d})."
+    if ctx.panel is None and kayitlar:
+        # Şeritten çalıştı: yaptığını "Yapı ara" panelinde gösterir (ctx.open_panel: komut kendi panelini açar,
+        # docs/adr/8057 §32). Satırlar Ara'nınkiyle aynı biçimde: tıklanan satır yapıyı gösterir.
+        panel = ctx.open_panel("yapi-paneli")
+        panel.set("sorgu", value=onek)
+        panel.rows(
+            "sonuc",
+            [
+                {"uid": k.uid, "no": f"{onek}{n:02d}", "alan (m²)": round(Polygon(k.entity.pts).area, 1)}
+                for n, k in enumerate(kayitlar, start=ilk)
+            ],
+        )
+        panel.say(ozet, "success")
+    return ctx.message(ozet)
 
 
 @ext.command("yapi-ara")

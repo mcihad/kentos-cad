@@ -2108,7 +2108,11 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   çalıştırmanın kodu o paneli değiştirir: `ctx.panel.set(id, value=…, options=…, enabled=…, visible=…, text=…)`,
   `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`. Çağrı panele değil çalıştırmanın kökenine
   (`PanelOrigin`) gider; şeritten çalışan komutun `ctx.panel`'i None, masaüstüne gelen `panel.*` isteği `no_panel`.
-  Başka bir paneli açmak (oluştur) bu dilimde yok: paneller şeritten ve komut aramasından açılıyor.
+- **Oluştur: `ctx.open_panel(id)`.** Komut eklentinin bildirdiği bir panelini açar (açıksa öne getirir) ve onu
+  değiştirmek için alır: şeritten çalışan komut yaptığını panelinde gösterir. İstek panelin kimliğini taşır (`panel`;
+  oturumun her isteği taşır), masaüstü onu eklentinin kurulu manifestinde arar: bildirilmemiş panel `unknown_panel`
+  (panelleri sayar), yalnız kendi panelleri. Açılan panel çalışma bitene dek tutulur (`held`): kullanıcının o sırada
+  değiştirdiği girdi onun kalır; bitince (ya da süreç kapanınca) bırakılır (`ext_panels_released`).
 - **Kullanıcının yazdığı kazanır (PY-UI-04):** komut çalışırken kullanıcının değiştirdiği girdiler (`touched`, her
   çalıştırmanın başında boşalır) kodun değerini almaz: `set` False döner, çağrının diğer özellikleri (seçenek, etkinlik,
   görünürlük) uygulanır. Odak, metnin imleci ve panelin kaydırması yamadan etkilenmez: form panelin durumundan çizilir,
@@ -2124,6 +2128,8 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   sayısıyla ezilmez; `rows` grafiğini yeniden hesaplatır; başka sekmedeki panelin değişmesi sekmesinde nokta
   (`unseen`). `focus` yalnız gösterilen panelde, görünür ve açık yazı alanında: kod kullanıcının baktığı sekmeyi
   değiştirmez (False).
+- **Vitrin 1.0.26:** "Yapıları numarala" şeritten çalışınca bitince Yapı ara panelini açar: Yapı no önekle dolar,
+  numaralananlar tabloda (Ara'nın satır biçimiyle: tıklanan satır yapıyı gösterir), altında özet (`32-panel-ac`).
 - **Vitrin 1.0.24–25:** "Değer say" sayınca bulduğu değerleri yeni Seç kutusuna koyar (seçenekler veriden gelir:
   panelin JSON'u onları bilemez), sıklıklarıyla ("101 (3)"), en sık değeri formun altındaki satıra yazar; Seç'te bir
   değer o değerdeki nesneleri çizimde seçer (`deger-sec`, `onChange`). Gerçek pencerede (`31-oturum`): Parsel sınırı ve

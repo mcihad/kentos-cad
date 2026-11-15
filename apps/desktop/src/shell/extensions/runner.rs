@@ -1062,8 +1062,9 @@ impl App {
     }
 
     fn ext_done(&mut self, ext: &str, m: &Value) {
-        // A dialog its code left open goes with the run.
+        // A dialog its code left open goes with the run; the panels it opened are the user's again.
         self.ext_dialog_close_for(ext);
+        self.ext_panels_released(ext);
         let id = m.get("id").and_then(Value::as_u64);
         let Some(mut run) = self
             .extensions
@@ -1303,6 +1304,7 @@ impl App {
 
     /// The process ended: during a run, a crash the watchdog counts; its writes taken back.
     fn ext_closed(&mut self, ext: &str) {
+        self.ext_panels_released(ext);
         let Some(mut runner) = self.extensions.runners.remove(ext) else {
             return;
         };

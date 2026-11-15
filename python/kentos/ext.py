@@ -239,8 +239,9 @@ def _json_value(value: Any) -> Any:
 
 
 class PanelSession:
-    """The panel whose button (or changed input) started this run, changed as the run goes (docs/adr/8057 §32):
-    ``ctx.panel``; None when the run did not start from a panel.
+    """One of the extension's panels, changed as the run goes (docs/adr/8057 §32): ``ctx.panel`` (the panel whose
+    button or changed input started the run; None when it did not start from a panel) or what
+    :meth:`CommandContext.open_panel` gives.
 
     Each change is checked as the panel's definition is: an id the panel does not have, a property its component does
     not take, a value of the wrong kind or out of its bounds, a choice not among the options raise
@@ -255,7 +256,7 @@ class PanelSession:
         self.id: str = local
 
     def _ask(self, method: str, params: dict[str, Any]) -> bool:
-        answer = self._link.ask(method, params)
+        answer = self._link.ask(method, {**params, "panel": self.id})
         return bool(isinstance(answer, dict) and answer.get("applied"))
 
     def set(
@@ -380,6 +381,14 @@ class CommandContext:
     def confirm(self, text: str, title: str = "Onay", ok: str = "Evet", cancel: str = "Hayır") -> bool:
         """Asks the user yes or no in a KentOS window (:meth:`dialog` with ``text``): True for ``ok``."""
         return self.dialog(title, [{"type": "text", "text": str(text)}], ok=ok, cancel=cancel) is not None
+
+    def open_panel(self, id: str) -> PanelSession:
+        """Opens the extension's panel ``id`` (``entrypoints.panels[].id``; brought in front when it is open) and gives
+        it to change as the run goes (:class:`PanelSession`): a command run from the ribbon shows what it did in its
+        panel. Until the run ends an input the user changes there stays the user's. A panel the manifest does not
+        declare raises :class:`kentos.HostError` (``unknown_panel``)."""
+        self._link.ask("panel.open", {"panel": str(id)})
+        return PanelSession(self._link, str(id))
 
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""

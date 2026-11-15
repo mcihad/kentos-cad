@@ -3,8 +3,9 @@
 //! options, a text's words, what is shown and what can be used, a table's rows; it says a line under the form, puts the
 //! cursor in a field, or closes the panel.
 //!
-//! - **Its own panel only:** the run's origin (panels.rs `PanelOrigin`). A run not started from a panel has none: its
-//!   code's `ctx.panel` is None.
+//! - **Its own panels only:** the run's origin (panels.rs `PanelOrigin`), or one its manifest declares, named by the
+//!   request (`panel`): `ctx.open_panel` opens it (or brings it in front) and holds it until the run ends. A run not
+//!   started from a panel has no origin: its code's `ctx.panel` is None.
 //! - **The user's typing wins:** an input the user changed while the command runs keeps what the user gave; the code's
 //!   value is not put over it (`applied: false`). A change moves neither the focus, nor the text's cursor, nor the
 //!   panel's scroll: the form is drawn from the panel's state, the widgets keep their own.
@@ -490,34 +491,82 @@ fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, HeadlessError> 
 }
 
 impl App {
-    /// `method` (`panel.set`, `panel.rows`, `panel.say`, `panel.focus`, `panel.close`) asked by `ext`'s running code
-    /// of the panel its run started from: what it applied, or why not, the call's error.
+    /// `method` (`panel.open`, `panel.set`, `panel.rows`, `panel.say`, `panel.focus`, `panel.close`) asked by `ext`'s
+    /// running code of one of its panels (`panel`, else the one its run started from): what it applied, or why not, the
+    /// call's error.
     pub(crate) fn ext_panel_session(
         &mut self,
         ext: &str,
         method: &str,
         params: &Value,
     ) -> Result<Value, HeadlessError> {
-        let origin = self
+        let run = self
             .extensions
             .runners
             .get(ext)
             .and_then(|r| r.run.as_ref())
-            .and_then(|run| run.origin.clone())
-            .ok_or_else(|| {
+            .ok_or_else(|| refused("busy", "Eklentinin çalışan bir işlevi yok."))?;
+        let origin = run.origin.clone();
+        let local = match params.get("panel").and_then(Value::as_str) {
+            // One of its own, as its installed manifest declares them.
+            Some(local) => {
+                let declared: Vec<String> = self
+                    .extensions
+                    .registry
+                    .as_ref()
+                    .and_then(|r| r.manifest(ext))
+                    .map(|m| m.entrypoints.panels.iter().map(|p| p.id.clone()).collect())
+                    .unwrap_or_default();
+                if !declared.iter().any(|p| p == local) {
+                    return Err(refused(
+                        "unknown_panel",
+                        format!(
+                            "“{local}” eklentinin bir paneli değil; panelleri: {}.",
+                            if declared.is_empty() {
+                                "yok".to_owned()
+                            } else {
+                                declared.join(", ")
+                            }
+                        ),
+                    ));
+                }
+                local.to_owned()
+            }
+            None => origin.map(|o| o.panel).ok_or_else(|| {
                 refused(
                     "no_panel",
                     "Bu çalıştırma bir panelden başlamadı: ctx.panel yalnız bir panelin düğmesinin (ya da değişen \
-                     alanının) komutunda vardır.",
+                     alanının) komutunda vardır; başka bir panel için ctx.open_panel.",
+                )
+            })?,
+        };
+        let open = |app: &App| {
+            app.extensions
+                .panels
+                .iter()
+                .position(|p| p.ext == ext && p.local == local)
+        };
+        // Opened (or brought in front) and held until the run ends.
+        if method == "panel.open" {
+            let task = self.ext_panel_open(ext, &local);
+            self.extensions.later.push(task);
+            let at = open(self).ok_or_else(|| {
+                refused(
+                    "panel_invalid",
+                    format!("“{local}” paneli açılamadı: tanım dosyası okunamadı (eklentinin günlüğünde)."),
                 )
             })?;
-        let Some(at) = self
-            .extensions
-            .panels
-            .iter()
-            .position(|p| p.ext == origin.ext && p.local == origin.panel)
-        else {
+            self.extensions.panels[at].held = true;
+            return Ok(json!({ "applied": true }));
+        }
+        let Some(at) = open(self) else {
             return Ok(json!({ "applied": false, "closed": true }));
+        };
+        let origin = super::panels::PanelOrigin {
+            ext: ext.to_owned(),
+            panel: local.clone(),
+            button: String::new(),
+            table: None,
         };
         match method {
             "panel.set" => {
@@ -604,9 +653,20 @@ impl App {
             other => Err(refused(
                 "unknown_method",
                 format!(
-                    "“{other}” bir panel isteği değil: panel.set, panel.rows, panel.say, panel.focus ya da panel.close."
+                    "“{other}” bir panel isteği değil: panel.open, panel.set, panel.rows, panel.say, panel.focus ya da \
+                     panel.close."
                 ),
             )),
+        }
+    }
+
+    /// `ext`'s run ended (or its process closed): the panels its code held are the user's again.
+    pub(crate) fn ext_panels_released(&mut self, ext: &str) {
+        for panel in self.extensions.panels.iter_mut().filter(|p| p.ext == ext) {
+            panel.held = false;
+            if panel.running.is_none() {
+                panel.touched.clear();
+            }
         }
     }
 

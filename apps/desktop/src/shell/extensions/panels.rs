@@ -97,6 +97,9 @@ pub(crate) struct OpenPanel {
     pub(crate) touched: std::collections::BTreeSet<String>,
     /// Its running code said something under it: kept when the run ends without words of its own.
     pub(crate) spoke: bool,
+    /// A running code of its extension opened it (`ctx.open_panel`) and may change it until the run ends: the inputs
+    /// the user changes meanwhile are the user's, as while its own command runs.
+    pub(crate) held: bool,
 }
 
 /// A panel's button pressed: what the next launch of its command gives its code, and where its answer goes.
@@ -174,6 +177,7 @@ impl OpenPanel {
             disabled: std::collections::BTreeSet::new(),
             touched: std::collections::BTreeSet::new(),
             spoke: false,
+            held: false,
         };
         for c in &panel.definition.body {
             match c {
@@ -267,7 +271,7 @@ impl OpenPanel {
             self.invalid = None;
         }
         if let Some(id) = changed
-            && self.running.is_some()
+            && (self.running.is_some() || self.held)
         {
             self.touched.insert(id.clone());
         }

@@ -48,7 +48,7 @@ class CommandResult:
 
 
 class PanelSession:
-    """The panel whose button (or changed input) started this run, changed as the run goes (docs/adr/8057 §32): ``ctx.panel``; None when the run did not start from a panel."""
+    """One of the extension's panels, changed as the run goes (docs/adr/8057 §32): ``ctx.panel`` (the panel whose button or changed input started the run; None when it did not start from a panel) or what :meth:`CommandContext.open_panel` gives."""
     #: The panel's id in the manifest (``entrypoints.panels[].id``).
     id: str
     def set(self, id: str, *, value: Any = ..., options: Iterable[Any] | None = None, enabled: bool | None = None, visible: bool | None = None, text: str | None = None) -> bool:
@@ -87,6 +87,8 @@ class CommandContext:
         """Asks the user in a KentOS window over the drawing and waits for the answer (docs/adr/8057 §29): ``body`` is a panel's fields (``kentos.ui.panel`` components: ``text``, ``textField``, ``numberField``, ``dateField``, ``timeField``, ``dateTimeField``, ``select``, ``multiSelect``, ``checkbox``, ``layerPicker``, ``fieldPicker``), no buttons or commands."""
     def confirm(self, text: str, title: str = "Onay", ok: str = "Evet", cancel: str = "Hayır") -> bool:
         """Asks the user yes or no in a KentOS window (:meth:`dialog` with ``text``): True for ``ok``."""
+    def open_panel(self, id: str) -> PanelSession:
+        """Opens the extension's panel ``id`` (``entrypoints.panels[].id``; brought in front when it is open) and gives it to change as the run goes (:class:`PanelSession`): a command run from the ribbon shows what it did in its panel."""
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""
     def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:

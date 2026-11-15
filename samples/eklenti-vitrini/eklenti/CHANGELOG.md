@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.26 — 15 Kasım 2026
+
+- "Yapıları numarala" şeritten çalışınca bitince "Yapı ara" panelini açar (`ctx.open_panel`: komut kendi panelini
+  açar ve değiştirir): Yapı no önekle dolar, numaralanan yapılar tabloda (tıklanan satır yapıyı gösterir), altında
+  "5 yapı numaralandı (B-10 … B-14)." yazar.
+
 ## 1.0.25 — 15 Kasım 2026
 
 - "Değer say"ın açıklaması eski boyuna döndü (uzayınca Katman ve Alan kutuları kayıyordu); Seç'in ne yaptığını sayımdan

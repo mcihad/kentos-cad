@@ -1642,6 +1642,48 @@ fn a_panels_command_changes_its_panel_as_it_runs() {
     ));
     let none = gis.ext_panel_session(VITRIN, "panel.say", &json!({ "text": "x" }));
     assert!(matches!(&none, Err(e) if e.code == "no_panel"), "{none:?}");
-    let _ = gis.ext_stop(VITRIN);
+    // It opens one of its panels (ctx.open_panel): shown in front, held until the run ends; the user's choice there
+    // stays the user's. A panel its manifest does not declare is the code's mistake.
+    let opened = gis.ext_panel_session(VITRIN, "panel.open", &json!({ "panel": "deger-paneli" }));
+    assert_eq!(opened.ok(), Some(json!({ "applied": true })));
+    assert_eq!(
+        gis.extensions.panel().map(|p| p.local.as_str()),
+        Some("deger-paneli")
+    );
+    assert!(gis.extensions.panel().unwrap().held);
+    let options = json!({ "panel": "deger-paneli", "id": "vurgula", "options": ["101", "102"], "value": "101" });
+    let set = gis.ext_panel_session(VITRIN, "panel.set", &options);
+    assert_eq!(set.ok(), Some(json!({ "applied": true })));
+    assert_eq!(gis.extensions.panel().unwrap().choices["vurgula"], "101");
+    let _ = gis.extensions_event(Event::Panel(PanelEvent::Choose(
+        "vurgula".into(),
+        "102".into(),
+    )));
+    let again = gis.ext_panel_session(
+        VITRIN,
+        "panel.set",
+        &json!({ "panel": "deger-paneli", "id": "vurgula", "value": "101" }),
+    );
+    assert_eq!(
+        again.ok(),
+        Some(json!({ "applied": false })),
+        "the user's choice stays"
+    );
+    let unknown = gis.ext_panel_session(VITRIN, "panel.open", &json!({ "panel": "yok-paneli" }));
+    assert!(
+        matches!(&unknown, Err(e) if e.code == "unknown_panel" && e.message.contains("yapi-paneli, deger-paneli")),
+        "{unknown:?}"
+    );
+    // Its end: the panel is the user's again.
+    let run = gis.extensions.runners[VITRIN].run.as_ref().unwrap().id;
+    let _ = gis.extensions_event(Event::Runner(
+        VITRIN.into(),
+        generation,
+        Said::Message(json!({ "type": "done", "id": run, "ok": true,
+            "result": { "kind": "message", "message": "Bitti." } })),
+    ));
+    let panel = gis.extensions.panel().unwrap();
+    assert!(!panel.held && panel.touched.is_empty());
+    let _ = gis.extension_panel_view();
     let _ = std::fs::remove_dir_all(&dir);
 }

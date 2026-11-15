@@ -100,6 +100,8 @@ def fill(ctx):
     ctx.panel.rows("liste", [{"ad": "A", "alan": 12.5}], columns=["ad", "alan"])
     ctx.panel.say("Yüklendi.", "success")
     ctx.panel.focus("ad")
+    shown = ctx.open_panel("sonuc-paneli")
+    shown.rows("tablo", [{"no": 1}])
     return ctx.report([{"panel": ctx.panel.id, "kept": kept}])
 
 
@@ -459,16 +461,21 @@ class ExtHostTest(unittest.TestCase):
         calls = self.kentos.panel_calls
         self.assertEqual(
             [m for m, _ in calls],
-            ["panel.set", "panel.set", "panel.set", "panel.rows", "panel.say", "panel.focus"],
+            ["panel.set", "panel.set", "panel.set", "panel.rows", "panel.say", "panel.focus", "panel.open", "panel.rows"],
         )
         self.assertEqual(
             calls[0][1],
-            {"id": "mahalle", "value": "Yeni", "options": [{"value": "m1", "label": "Merkez"}, "Yeni"]},
+            {"id": "mahalle", "value": "Yeni", "options": [{"value": "m1", "label": "Merkez"}, "Yeni"], "panel": "arama"},
         )
-        self.assertEqual(calls[1][1], {"id": "ara", "enabled": False})
-        self.assertEqual(calls[2][1], {"id": "gun", "value": "2026-11-15"})
-        self.assertEqual(calls[3][1], {"id": "liste", "rows": [{"ad": "A", "alan": 12.5}], "columns": ["ad", "alan"]})
-        self.assertEqual(calls[4][1], {"text": "Yüklendi.", "kind": "success"})
+        self.assertEqual(calls[1][1], {"id": "ara", "enabled": False, "panel": "arama"})
+        self.assertEqual(calls[2][1], {"id": "gun", "value": "2026-11-15", "panel": "arama"})
+        self.assertEqual(
+            calls[3][1], {"id": "liste", "rows": [{"ad": "A", "alan": 12.5}], "columns": ["ad", "alan"], "panel": "arama"}
+        )
+        self.assertEqual(calls[4][1], {"text": "Yüklendi.", "kind": "success", "panel": "arama"})
+        # Another of its panels, opened by the code: its requests name it.
+        self.assertEqual(calls[6][1], {"panel": "sonuc-paneli"})
+        self.assertEqual(calls[7][1], {"id": "tablo", "rows": [{"no": 1}], "panel": "sonuc-paneli"})
         done, _ = self.kentos.invoke("fill", "deneme.logic:fill")
         self.assertEqual(done["result"]["message"], "Panel yok.")
 
