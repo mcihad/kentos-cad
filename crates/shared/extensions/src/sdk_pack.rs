@@ -124,7 +124,10 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 
 `ctx.progress(n, toplam, metin)`, `ctx.check()` (Durdur'a basıldıysa `ext.Stopped` atar: uzun döngülerde çağırın),
 `ctx.is_stopped()`, `ctx.log(metin, level="info"|"warning"|"error")`, `ctx.report(satırlar, title=…, message=…)`,
-`ctx.message(metin)`, `ctx.cancelled()`; `ctx.params` ve `ctx.settings` sözlüklerdir. Bu KentOS'un yapamadığı bir şey
+`ctx.message(metin)`, `ctx.cancelled()`; kullanıcıya sormak için `ctx.dialog(başlık, alanlar, ok=…, cancel=…)` (alanlar
+bir panelin girdileri: textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, checkbox,
+layerPicker, fieldPicker, text; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
+bekler) ve `ctx.confirm(metin)` (evet: True); `ctx.params` ve `ctx.settings` sözlüklerdir. Bu KentOS'un yapamadığı bir şey
 `ext.NotAvailable` atar: KentOS onu eklentinin hatası değil eksik bir yetenek olarak söyler.
 
 ## Kurallar
@@ -197,15 +200,19 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     if part == "toolSchema" {
         return serde_json::from_str(TOOL_SCHEMA).ok();
     }
+    if part == "example" {
+        return serde_json::to_value(example()).ok();
+    }
     if !PARTS.contains(&part) {
         return None;
     }
     sdk_pack().get_mut(part).map(Value::take)
 }
 
-/// The pack, as the MCP resource and `extension.sdk` give it.
-pub fn sdk_pack() -> Value {
-    let example = blueprint(&Ask {
+/// The working example: a blueprint with every contribution, a package that verifies without a finding. A part of its
+/// own since 15 November 2026 (17 KB): with it the pack went past what the desktop's Asistan gives a tool's result.
+fn example() -> std::collections::BTreeMap<String, String> {
+    blueprint(&Ask {
         id: "tr.ornek.ornek-eklenti".into(),
         name: "Örnek eklenti".into(),
         summary: "Her katkı türünün küçük, çalışan örneği.".into(),
@@ -213,7 +220,17 @@ pub fn sdk_pack() -> Value {
         module: Module::Cbs,
         contributions: Contribution::ALL.to_vec(),
     })
-    .unwrap_or_default();
+    .unwrap_or_default()
+}
+
+/// The pack, as the MCP resource and `extension.sdk` give it.
+pub fn sdk_pack() -> Value {
+    let example = json!({
+        "files": example().keys().collect::<Vec<_>>(),
+        "how": "Her katkı türünün küçük, çalışan örneği (manifest, Python, panel, araç tanımı, form, katman şeması), \
+                doğrulamadan sorunsuz geçen bir paket: extension.sdk part=example ya da kentos kek sdk --part example. \
+                İsteğe göre iskelet için extension.blueprint.",
+    });
     let modules: Vec<&str> = [Module::Cbs, Module::Harita, Module::Mimari, Module::Yol]
         .iter()
         .map(|m| m.id())
@@ -824,7 +841,8 @@ mod tests {
             pack["capabilities"].as_array().map(Vec::len),
             Some(Capability::ALL.len())
         );
-        let example: std::collections::BTreeMap<String, Vec<u8>> = pack["example"]
+        let example: std::collections::BTreeMap<String, Vec<u8>> = sdk_part("example")
+            .expect("the example")
             .as_object()
             .expect("the example's files")
             .iter()

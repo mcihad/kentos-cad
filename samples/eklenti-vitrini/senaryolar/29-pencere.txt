@@ -1,0 +1,26 @@
+# Pencere: Vitrin'in "Yapıları numarala"sı şeritten çalışınca önce KentOS'un penceresiyle sorar (ctx.dialog): Önek ve
+# İlk numara. B- ve 10 yazılıp Numarala'ya basılınca komut sürer ve yapılar B-10 … B-14 olur. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 155 56    # Yapıları numarala: önce pencere
+wait 3000
+shot 29-pencere
+click 790 461   # Önek
+key ctrl+a
+type B-
+click 790 498   # İlk numara
+key ctrl+a
+type 10
+wait 400
+shot 29-yazildi
+click 920 538   # Numarala
+wait 1200
+shot 29-suruyor
+wait 4500
+shot 29-bitti

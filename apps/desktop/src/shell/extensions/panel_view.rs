@@ -44,6 +44,103 @@ impl App {
             .default_button()
             .filter(|_| p.running.is_none() && why.is_none())
             .map(|b| event(PanelEvent::Press(b.to_owned())));
+        let (form, tables) = self.panel_form(p, event, enter, why);
+        let header = row![
+            column![
+                label::strong(p.definition.title.clone()),
+                label::caption(name)
+            ]
+            .width(Fill),
+            words::ghost(
+                "Kapat",
+                Some(event(PanelEvent::Close(self.extensions.active_panel))),
+            ),
+        ]
+        .spacing(8);
+        let mut body = column![header, form].spacing(12).padding(12).width(Fill);
+        // Its button's command running: the button, how far it is from its ctx.progress (moving until it says), and
+        // Durdur. A change's command runs without a button.
+        if let Some(run) = self
+            .extensions
+            .runners
+            .get(&p.ext)
+            .and_then(|r| r.run.as_ref())
+            .filter(|run| run.origin.as_ref().is_some_and(|o| o.panel == p.local))
+        {
+            let button = p.definition.body.iter().find_map(|c| match c {
+                Component::Button { id, label, .. } if p.running.as_deref() == Some(id) => {
+                    Some(label.as_str())
+                }
+                _ => None,
+            });
+            let (share, said) = run.progress.as_ref().map_or((None, None), |progress| {
+                let (share, said) = super::runner::progress_words(progress);
+                (share, Some(said))
+            });
+            let text = match (button, said) {
+                (Some(button), Some(said)) => format!("{button} · {said}"),
+                (Some(button), None) => format!("“{button}” çalışıyor…"),
+                (None, Some(said)) => said,
+                (None, None) => "Çalışıyor…".to_owned(),
+            };
+            let stop: Element<'_, Message> = if run.stopping.is_some() {
+                label::muted("Durduruluyor…").into()
+            } else {
+                words::ghost("Durdur", Some(msg(Event::StopRun(p.ext.clone()))))
+            };
+            body = body.push(
+                column![
+                    kentos_ui::widget::progress::bar(share).width(Fill),
+                    row![container(label::caption(text)).width(Fill), stop]
+                        .spacing(8)
+                        .align_y(iced::Center),
+                ]
+                .spacing(6),
+            );
+        }
+        if let Some(why) = why {
+            body = body.push(words::line(
+                words::Kind::Warn,
+                label::caption(format!("Düğmeler komut çalıştırır: {why}")),
+            ));
+        }
+        if let Some((kind, said)) = &p.said {
+            body = body.push(words::line(*kind, label::caption(said.clone())));
+        }
+        for table in tables {
+            body = body.push(table);
+        }
+        // Its own scroller (the pane's would take the tabs along), as far down as the panel was left.
+        let content = scrollable(body)
+            .id(iced::widget::Id::new(SCROLLER))
+            .height(Fill)
+            .on_scroll(move |v| event(PanelEvent::Scrolled(v.absolute_offset().y)));
+        if self.extensions.panels.len() < 2 {
+            return content.into();
+        }
+        // Several open: a tab each, as the drawings' (a dot: its command runs, or it answered while another was shown).
+        let tabs = Tabs::new(
+            self.extensions.panels.iter().map(|p| {
+                Tab::new(p.definition.title.as_str()).note(p.running.is_some() || p.unseen)
+            }),
+            self.extensions.active_panel,
+            move |at| event(PanelEvent::Activate(at)),
+        )
+        .on_close(move |at| event(PanelEvent::Close(at)))
+        .on_reorder(move |from, to| event(PanelEvent::Move(from, to)));
+        column![tabs, content].into()
+    }
+
+    /// A panel's components as KentOS draws them, for the dock's panel and an extension's dialog alike: its form, and
+    /// the views of its rows (tables, trees, cards, figures, charts) to go under it. `event` takes what the user does
+    /// to its owner; `enter` is what Enter in a text or number field does; `why` why its buttons do not run.
+    pub(super) fn panel_form<'a>(
+        &'a self,
+        p: &'a OpenPanel,
+        event: fn(PanelEvent) -> Message,
+        enter: Option<Message>,
+        why: Option<&'a str>,
+    ) -> (Form<'a, Message>, Vec<Element<'a, Message>>) {
         let mut form = Form::new().label_width(kentos_ui::theme::typography::scaled(110.0));
         let mut tables: Vec<Element<'_, Message>> = Vec::new();
         for c in &p.definition.body {
@@ -386,90 +483,7 @@ impl App {
                 }
             }
         }
-        let header = row![
-            column![
-                label::strong(p.definition.title.clone()),
-                label::caption(name)
-            ]
-            .width(Fill),
-            words::ghost(
-                "Kapat",
-                Some(event(PanelEvent::Close(self.extensions.active_panel))),
-            ),
-        ]
-        .spacing(8);
-        let mut body = column![header, form].spacing(12).padding(12).width(Fill);
-        // Its button's command running: the button, how far it is from its ctx.progress (moving until it says), and
-        // Durdur. A change's command runs without a button.
-        if let Some(run) = self
-            .extensions
-            .runners
-            .get(&p.ext)
-            .and_then(|r| r.run.as_ref())
-            .filter(|run| run.origin.as_ref().is_some_and(|o| o.panel == p.local))
-        {
-            let button = p.definition.body.iter().find_map(|c| match c {
-                Component::Button { id, label, .. } if p.running.as_deref() == Some(id) => {
-                    Some(label.as_str())
-                }
-                _ => None,
-            });
-            let (share, said) = run.progress.as_ref().map_or((None, None), |progress| {
-                let (share, said) = super::runner::progress_words(progress);
-                (share, Some(said))
-            });
-            let text = match (button, said) {
-                (Some(button), Some(said)) => format!("{button} · {said}"),
-                (Some(button), None) => format!("“{button}” çalışıyor…"),
-                (None, Some(said)) => said,
-                (None, None) => "Çalışıyor…".to_owned(),
-            };
-            let stop: Element<'_, Message> = if run.stopping.is_some() {
-                label::muted("Durduruluyor…").into()
-            } else {
-                words::ghost("Durdur", Some(msg(Event::StopRun(p.ext.clone()))))
-            };
-            body = body.push(
-                column![
-                    kentos_ui::widget::progress::bar(share).width(Fill),
-                    row![container(label::caption(text)).width(Fill), stop]
-                        .spacing(8)
-                        .align_y(iced::Center),
-                ]
-                .spacing(6),
-            );
-        }
-        if let Some(why) = why {
-            body = body.push(words::line(
-                words::Kind::Warn,
-                label::caption(format!("Düğmeler komut çalıştırır: {why}")),
-            ));
-        }
-        if let Some((kind, said)) = &p.said {
-            body = body.push(words::line(*kind, label::caption(said.clone())));
-        }
-        for table in tables {
-            body = body.push(table);
-        }
-        // Its own scroller (the pane's would take the tabs along), as far down as the panel was left.
-        let content = scrollable(body)
-            .id(iced::widget::Id::new(SCROLLER))
-            .height(Fill)
-            .on_scroll(move |v| event(PanelEvent::Scrolled(v.absolute_offset().y)));
-        if self.extensions.panels.len() < 2 {
-            return content.into();
-        }
-        // Several open: a tab each, as the drawings' (a dot: its command runs, or it answered while another was shown).
-        let tabs = Tabs::new(
-            self.extensions.panels.iter().map(|p| {
-                Tab::new(p.definition.title.as_str()).note(p.running.is_some() || p.unseen)
-            }),
-            self.extensions.active_panel,
-            move |at| event(PanelEvent::Activate(at)),
-        )
-        .on_close(move |at| event(PanelEvent::Close(at)))
-        .on_reorder(move |from, to| event(PanelEvent::Move(from, to)));
-        column![tabs, content].into()
+        (form, tables)
     }
 
     /// The open drawing's layers a layer picker offers: none ("—") first, then each layer (groups give their names to

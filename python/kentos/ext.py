@@ -171,13 +171,26 @@ class CommandResult:
 
 
 class _Link:
-    """What a context needs of its process: its stop flag and a way to tell KentOS how far it is."""
+    """What a context needs of its process: its stop flag, a way to tell KentOS how far it is, and a way to ask it
+    (a dialog's answer comes when the user gives it)."""
 
-    def __init__(self, send: Callable[[dict[str, Any]], None], run: int, stop: threading.Event) -> None:
+    def __init__(
+        self,
+        send: Callable[[dict[str, Any]], None],
+        run: int,
+        stop: threading.Event,
+        call: Callable[[str, dict[str, Any]], Any] | None = None,
+    ) -> None:
         self._send = send
         self.run = run
         self.stop = stop
+        self._call = call
         self._last_progress = 0.0
+
+    def ask(self, method: str, params: dict[str, Any]) -> Any:
+        if self._call is None:
+            raise NotAvailable("Bu çalıştırma kullanıcıya soramaz: KentOS masaüstünde bir komut sorabilir.")
+        return self._call(method, params)
 
     def progress(self, done: float, total: float | None, text: str | None) -> None:
         # At most ten a second: the user cannot read more, and the channel stays free.
@@ -241,6 +254,27 @@ class CommandContext:
     def message(self, text: str, title: str | None = None) -> CommandResult:
         """A line to show the user."""
         return CommandResult(title=title, message=text)
+
+    def dialog(
+        self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal"
+    ) -> dict[str, Any] | None:
+        """Asks the user in a KentOS window over the drawing and waits for the answer (docs/adr/8057 §29): ``body`` is
+        a panel's fields (``kentos.ui.panel`` components: ``text``, ``textField``, ``numberField``, ``dateField``,
+        ``timeField``, ``dateTimeField``, ``select``, ``multiSelect``, ``checkbox``, ``layerPicker``, ``fieldPicker``),
+        no buttons or commands. Tamam gives the values by id, as a panel's command gets them; İptal, Esc and Durdur give
+        None (after Durdur the run stops: :class:`Stopped`)."""
+        self.check()
+        if not isinstance(body, list) or not all(isinstance(c, dict) for c in body):
+            raise TypeError("dialog: body bir alan listesi olmalı (her biri bir dict, ör. {'type': 'textField', …}).")
+        answer = self._link.ask(
+            "dialog", {"title": str(title), "body": list(body), "ok": str(ok), "cancel": str(cancel)}
+        )
+        self.check()
+        return answer if isinstance(answer, dict) else None
+
+    def confirm(self, text: str, title: str = "Onay", ok: str = "Evet", cancel: str = "Hayır") -> bool:
+        """Asks the user yes or no in a KentOS window (:meth:`dialog` with ``text``): True for ``ok``."""
+        return self.dialog(title, [{"type": "text", "text": str(text)}], ok=ok, cancel=cancel) is not None
 
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""

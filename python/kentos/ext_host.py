@@ -388,7 +388,7 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
     try:
         kind = str(message.get("kind", ""))
         fn = resolve(str(message.get("handler", "")), kind, str(message.get("local", "")))
-        link = ext._Link(channel.send, run_id, stop)
+        link = ext._Link(channel.send, run_id, stop, channel.call)
         if kind == "expression":
             # A batch of rows, each a call with its arguments: one row's failure empties that row alone; how many
             # failed and the first's words come back (KentOS writes them to the log once).

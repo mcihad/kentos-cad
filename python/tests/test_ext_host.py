@@ -73,6 +73,21 @@ def ordered(ctx):
     return ctx.report([{"yapı": "B1", "mesafe_m": 2.0}, {"yapı": "B2", "durum": "parsel dışında"}])
 
 
+@ext.command("ask")
+def ask(ctx):
+    values = ctx.dialog(
+        "Numarala",
+        [{"type": "textField", "id": "onek", "label": "Önek", "value": "Y-"},
+         {"type": "numberField", "id": "ilk", "label": "İlk numara", "value": 1}],
+        ok="Numarala",
+    )
+    if values is None:
+        return ctx.message("Vazgeçildi.")
+    if not ctx.confirm(f"{values['onek']}{int(values['ilk'])} ile başlansın mı?"):
+        return ctx.message("Onaylanmadı.")
+    return ctx.report([values])
+
+
 @ext.command("schema")
 def schema(ctx):
     return ctx.apply_declarative_schema("schema.json")
@@ -228,6 +243,9 @@ class Kentos:
         )
         self.package = package
         self.runs = 0
+        #: What the user answers each dialog, in turn (None: İptal); the dialogs asked, as they came.
+        self.dialog_answers: list[Any] = []
+        self.dialogs: list[dict[str, Any]] = []
 
     def receive(self) -> dict[str, Any]:
         assert self.process.stdout is not None
@@ -315,6 +333,11 @@ class Kentos:
                 )
             )
             self.send({"type": "reply", "id": call["id"], "ok": True, "result": result})
+        elif method == "dialog":
+            # The user answers in KentOS's window: here, the next answer given.
+            self.dialogs.append(params)
+            answer = self.dialog_answers.pop(0) if self.dialog_answers else None
+            self.send({"type": "reply", "id": call["id"], "ok": True, "result": answer})
         elif method == "run":
             # A write, as KentOS's broker runs it on its drawing (the map tool's add_feature).
             result = json.loads(
@@ -376,6 +399,28 @@ class ExtHostTest(unittest.TestCase):
         self.kentos.hello()
         done, _ = self.kentos.invoke("ordered", "deneme.logic:ordered")
         self.assertEqual(done["result"]["columns"], ["yapı", "mesafe_m", "durum"])
+
+    def test_a_command_asks_the_user_in_a_dialog_and_goes_on_with_the_answer(self) -> None:
+        # docs/adr/8057 §29: ctx.dialog sends a panel's fields and waits; Tamam's values come back by id, İptal's None;
+        # ctx.confirm is a dialog of words, True for its yes.
+        self.kentos.hello()
+        self.kentos.dialog_answers = [{"onek": "A-", "ilk": 7}, {}]
+        done, _ = self.kentos.invoke("ask", "deneme.logic:ask")
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["rows"], [{"onek": "A-", "ilk": 7}])
+        first, second = self.kentos.dialogs
+        self.assertEqual((first["title"], first["ok"], first["cancel"]), ("Numarala", "Numarala", "İptal"))
+        self.assertEqual([c["id"] for c in first["body"]], ["onek", "ilk"])
+        self.assertEqual(second["body"], [{"type": "text", "text": "A-7 ile başlansın mı?"}])
+        self.assertEqual((second["ok"], second["cancel"]), ("Evet", "Hayır"))
+        # İptal: None, the code says so.
+        self.kentos.dialog_answers = [None]
+        done, _ = self.kentos.invoke("ask", "deneme.logic:ask")
+        self.assertEqual(done["result"]["message"], "Vazgeçildi.")
+        # Onaylanmadı: the second dialog's İptal.
+        self.kentos.dialog_answers = [{"onek": "Y-", "ilk": 1}, None]
+        done, _ = self.kentos.invoke("ask", "deneme.logic:ask")
+        self.assertEqual(done["result"]["message"], "Onaylanmadı.")
 
     def test_what_this_kentos_cannot_do_is_said_as_unavailable(self) -> None:
         # A schema without a drawing it may write to: a missing ability, not the extension's failure.

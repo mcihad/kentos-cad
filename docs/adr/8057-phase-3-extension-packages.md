@@ -1833,7 +1833,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | Host yüzeyi | dock/panel | host | `entrypoints.panels` (`side`), birden çok açık panel | |
 | | kalıcı pencere | host | Eklenti sekmesi "Paneli yüzdür" | |
 | | komut/şerit/menü, bağlam eylemi | host | `contributions.ribbonTabs`, sağ tık menüleri | |
-| | iletişim kutusu | yok | — | panel dock'ta açılır |
+| | iletişim kutusu | var | `ctx.dialog`, `ctx.confirm` (KentOS'un penceresi, bir panelin alanları; §29) | çalışma yanıtı bekler |
 
 **Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `dateField`, `timeField`, `dateTimeField`,
 `select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`,
@@ -1960,3 +1960,38 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   MEBİS'in iki aracı ve iskeletin aracı şemaya uyar; yanlış yazılan anahtar, eklenti aracının almadığı tür
   (`rasterValues`) ve katman adlandırmayan yeni nesne çıktısı reddedilir.
 - **Kalan:** `ProjectAuditFacts`'in şeması (olgular henüz yok: ADIM 20).
+
+## §29. Eklentinin iletişim kutusu: `ctx.dialog`, `ctx.confirm` (`ADIM 22`, kabulün kalanı)
+
+**15 Kasım.** Kod: `python/kentos/ext.py` (`CommandContext.dialog`, `.confirm`, `_Link.ask`), `ext_host.py`
+(bağlamın `channel.call`'u), masaüstü `extensions/dialogs.rs` (açma, alanlar, Tamam/İptal, kapatma), `runner.rs`
+(`dialog` çağrısı bekletilir; Durdur ve çalışmanın sonu pencereyi kapatır), `panel_view.rs` (`panel_form`: panelin
+bileşen çizimi panel ve pencere için ortak), `shell/view.rs` (pencere katmanı).
+
+- **Karar: pencere bir panelin alanlarıdır.** Eklentinin kodu çalışırken kullanıcıya sorar: `ctx.dialog(başlık,
+  alanlar, ok=…, cancel=…)`; alanlar `kentos.ui.panel` girdileri (metin/sayı/tarih/saat/an alanı, seçim, çoklu seçim,
+  onay, katman ve alan seçici, yazı). Aynı Kapı 1 denetiminden geçer, aynı kodla çizilir (`panel_form`); ikinci bir
+  arayüz dili icat edilmedi (PY-UI-12). Düğme, tablo, grafik ve `onChange` pencerede yok: pencere komut çalıştırmaz,
+  onu açan koda cevap verir. `ctx.confirm(metin)` yazılı bir penceredir, evet `True`.
+- **Çağrı bekletilir.** Eklenti süreci `dialog` çağrısını mevcut kanaldan gönderir (`Channel.call` cevabı zaten
+  beklerken başka iletileri okuyor); masaüstü cevabı hemen değil kullanıcı yanıtlayınca yazar. **Tamam** değerleri
+  kimlikleriyle verir, bir panelin komutunun aldığı gibi (yanlış sayı adıyla söylenir, pencere açık kalır); **İptal**,
+  Esc ve ✕ `None`. Çalışmanın **Durdur**u ve sonu pencereyi kapatır, kod `None` alır ve ardından Durdur'u duyar
+  (`Stopped`); kapanmayan pencere ölü bir çalışmayı beklemez.
+- **Hatalı pencere kullanıcıya gösterilmez.** Düğmeli, komutlu ya da bozuk alanlı pencere çağrının hatasıdır
+  ("body[0]: “button” pencerede olamaz; olanlar: …"), eklentinin koduna ve günlüğüne gider. Aynı anda tek pencere;
+  ikincisi "Bir eklenti penceresi zaten açık" hatası alır.
+- **Yetenek istemez:** kullanıcının başlattığı bir komutun (ve harita aracının) penceresidir; havuzda çalışan İşlemler
+  aracı, ifade işlevi ve denetim kuralı soramaz (havuz çağrıları geri çevirir, bağlamlarında `dialog` yok).
+- **Paket boyutu:** rehbere `ctx.dialog` eklenince SDK paketi Asistan'ın araç sonucu sınırını (48 KB) aştı (49 042
+  bayt); §25'teki not gereği çalışan örnek ayrı bölüme alındı (`extension.sdk part=example`, `kentos kek sdk --part
+  example`), paket dosya adlarını ve nasıl alınacağını söyler.
+- **Vitrin 1.0.22:** "Yapıları numarala" şeritten çalışınca önek ve ilk numarayı sorar; "Yapı ara" panelinin
+  düğmesinden çalışınca Y-01'den başlar (panelin değerleri `ctx.params`'ta). Gerçek pencere (`29-pencere`): pencere
+  ("Eklenti Vitrini soruyor", Önek Y-, İlk numara 1, İptal/Numarala), B- ve 10 yazıldı, Numarala: "5 yapı numaralandı
+  (B-10 … B-14)"; `03-komutlar` pencerede Numarala'ya basıp Durdur'la geri aldı (bildirim başlığı iki satıra kayınca
+  Durdur 12 px yukarı çıkmıştı: koordinat ölçülüp düzeltildi).
+- **Sınamalar:** Python 1 (sahte KentOS: pencerenin başlığı, düğmeleri, alanları; Tamam'ın değerleri, İptal'in `None`,
+  onayın evet/hayırı), masaüstü 1 (girdisini dosyaya yazan sahte süreç: pencere açılır ve çizilir, yanlış sayı adıyla
+  söylenir, Tamam'ın değerleri ve İptal'in boşu sürece yazılır, düğmeli pencere hemen hata, Durdur pencereyi kapatıp
+  boş yanıt verir).

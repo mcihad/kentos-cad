@@ -1,5 +1,5 @@
-# Komutlar: okuyan (Katman özeti, rapor), yazan (Yapıları numarala; Durdur yazdıklarını geri alır) ve hata veren
-# (Hata örneği; bildirim, Ayrıntı ve günlük).
+# Komutlar: okuyan (Katman özeti, rapor), yazan (Yapıları numarala: önce pencerede sorar, Numarala; Durdur yazdıklarını
+# geri alır) ve hata veren (Hata örneği; bildirim, Ayrıntı ve günlük).
 fit KentOS GIS — Eklenti vitrini
 wait 2500
 key Escape
@@ -12,9 +12,11 @@ click 47 75     # Katman özeti
 wait 4000
 shot 03-ozet
 click 155 56    # Yapıları numarala
+wait 2500
+click 920 538   # pencerede Numarala (önek Y-, ilk numara 1)
 wait 1800
 shot 03-numarala-suruyor
-click 1373 809  # Durdur
+click 1373 797  # Durdur (bildirimin başlığı iki satır)
 wait 2500
 shot 03-durduruldu
 click 150 83    # Hata örneği

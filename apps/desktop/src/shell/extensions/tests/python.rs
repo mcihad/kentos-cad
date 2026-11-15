@@ -1090,6 +1090,152 @@ fn an_extensions_command_runs_in_its_own_process_through_the_broker() {
     let _ = std::fs::remove_dir_all(&python_root);
 }
 
+/// docs/adr/8057 §29: a running command's `dialog` opens a KentOS window with a panel's fields and is answered when the
+/// user is: Tamam's values by id (a wrong number said by its label, the window open), İptal's none; a dialog with a
+/// button or a command is the call's error at once; Durdur closes it, answered none.
+#[cfg(unix)]
+#[test]
+fn an_extensions_dialog_asks_the_user_and_answers_its_code() {
+    use super::panels::PanelEvent;
+    use crate::python::host::Said;
+    use serde_json::json;
+
+    const MEBIS: &str = "tr.ornek.mebis";
+    let root = temp("pencere");
+    let mut gis = crate::files_testing::app_with_drawing();
+    gis.program = Some(Module::Gis);
+    gis.extensions = Extensions::open(&root, false).0;
+    gis.extensions_changed();
+    install(
+        &mut gis,
+        "mebis.kek",
+        package("mebis", |m| {
+            m["dependencies"]["extensions"] = json!([]);
+        }),
+    );
+    let package = gis
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.package_dir(MEBIS))
+        .unwrap();
+    // Its "Python" keeps what KentOS writes to it: the replies are read back from there.
+    let heard = root.join("duyulan.jsonl");
+    let python = root.join("python");
+    std::fs::write(
+        &python,
+        format!("#!/bin/sh\nexec cat >> '{}'\n", heard.display()),
+    )
+    .unwrap();
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&python, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let launch = super::runner::Launch::for_test(
+        python,
+        package,
+        "mebis.logic:init_schema",
+        "Numarala",
+        false,
+    );
+    let _ = gis.extensions_event(Event::Launch(
+        MEBIS.into(),
+        "command".into(),
+        "init-schema".into(),
+        Ok(launch),
+    ));
+    let generation = gis.extensions.runners[MEBIS].generation;
+    let say = |app: &mut App, m: serde_json::Value| {
+        let _ = app.extensions_event(Event::Runner(MEBIS.into(), generation, Said::Message(m)));
+    };
+    // The reply to call `id`, once the process has it.
+    let reply = |id: u64| -> serde_json::Value {
+        for _ in 0..200 {
+            let text = std::fs::read_to_string(&heard).unwrap_or_default();
+            if let Some(found) = text
+                .lines()
+                .filter_map(|l| serde_json::from_str::<serde_json::Value>(l).ok())
+                .find(|m| m["type"] == "reply" && m["id"] == id)
+            {
+                return found;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        panic!("no reply to {id}");
+    };
+    say(&mut gis, json!({"type": "ready", "protocol": 1}));
+    let body = json!([
+        { "type": "text", "text": "Yapılar bu önekle numaralanır." },
+        { "type": "textField", "id": "onek", "label": "Önek", "value": "Y-" },
+        { "type": "numberField", "id": "ilk", "label": "İlk numara", "value": 1, "min": 1 }
+    ]);
+    say(
+        &mut gis,
+        json!({"type": "call", "id": 5, "method": "dialog",
+               "params": {"title": "Yapıları numarala", "body": body, "ok": "Numarala"}}),
+    );
+    let dialog = gis.extensions.dialog.as_ref().expect("the window is open");
+    assert_eq!(
+        (dialog.ok.as_str(), dialog.cancel.as_str()),
+        ("Numarala", "İptal")
+    );
+    assert!(gis.ext_dialog_view().is_some());
+    // A wrong number: said by its label, the window stays, nothing answered.
+    let _ = gis.extensions_event(Event::Dialog(PanelEvent::Text("onek".into(), "B-".into())));
+    let _ = gis.extensions_event(Event::Dialog(PanelEvent::Text("ilk".into(), "beş".into())));
+    let _ = gis.extensions_event(Event::DialogAnswer(true));
+    let said = gis
+        .extensions
+        .dialog
+        .as_ref()
+        .and_then(|d| d.panel.said.clone());
+    assert_eq!(
+        said.map(|(_, w)| w).as_deref(),
+        Some("“İlk numara”: “beş” bir sayı değil.")
+    );
+    let _ = gis.extensions_event(Event::Dialog(PanelEvent::Text("ilk".into(), "5".into())));
+    let _ = gis.extensions_event(Event::DialogAnswer(true));
+    assert!(gis.extensions.dialog.is_none(), "answered, closed");
+    assert_eq!(reply(5)["result"], json!({ "onek": "B-", "ilk": 5.0 }));
+    // İptal: none.
+    say(
+        &mut gis,
+        json!({"type": "call", "id": 6, "method": "dialog", "params": {"title": "Emin misiniz?",
+                          "body": [{ "type": "text", "text": "Sürsün mü?" }]}}),
+    );
+    let _ = gis.extensions_event(Event::DialogAnswer(false));
+    assert_eq!(reply(6)["result"], serde_json::Value::Null);
+    // A button in a dialog: the call's error at once, no window.
+    say(
+        &mut gis,
+        json!({"type": "call", "id": 7, "method": "dialog", "params": {"title": "Yanlış",
+                          "body": [{ "type": "button", "id": "b", "label": "B", "command": "x" }]}}),
+    );
+    assert!(gis.extensions.dialog.is_none());
+    let refused = reply(7);
+    assert_eq!(
+        (refused["ok"].clone(), refused["code"].clone()),
+        (json!(false), json!("invalid_input"))
+    );
+    assert!(
+        refused["message"]
+            .as_str()
+            .is_some_and(|m| m.contains("pencerede olamaz")),
+        "{refused}"
+    );
+    // Durdur while it asks: closed, answered none.
+    say(
+        &mut gis,
+        json!({"type": "call", "id": 8, "method": "dialog", "params": {"title": "Soru",
+                          "body": [{ "type": "checkbox", "id": "evet", "label": "Evet" }]}}),
+    );
+    assert!(gis.extensions.dialog.is_some());
+    let _ = gis.extensions_event(Event::StopRun(MEBIS.into()));
+    assert!(gis.extensions.dialog.is_none(), "Durdur closes it");
+    assert_eq!(reply(8)["result"], serde_json::Value::Null);
+    let _ = std::fs::remove_dir_all(&root);
+}
+
 /// Bir eklenti çizime yazarken (ADIM 19): its run is one undo step named after its command, kept when it ends well and
 /// taken back when it fails or is stopped; meanwhile the drawing takes no other edit (the user is told once), and
 /// neither the console, an agent nor another writing run goes; an ability this KentOS lacks is said calmly.

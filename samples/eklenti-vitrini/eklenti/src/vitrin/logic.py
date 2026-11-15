@@ -61,17 +61,35 @@ def katman_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
 
 @ext.command("yapilari-numarala")
 def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
-    """'yapi' katmanındaki yapılara sırayla "no" yazar (Y-01, Y-02 …). İlerleme çubuğunu ve Durdur'u göstermek için
-    her yapıda yarım saniye bekler: Durdur'a basılırsa yazdıkları geri alınır."""
+    """'yapi' katmanındaki yapılara sırayla "no" yazar (Y-01, Y-02 …). Şeritten çalışınca önce öneki ve ilk numarayı
+    sorar (ctx.dialog: KentOS'un penceresi; İptal'de bir şey yazılmaz); "Yapı ara" panelinin düğmesinden çalışınca
+    Y-01'den başlar. İlerleme çubuğunu ve Durdur'u göstermek için her yapıda yarım saniye bekler: Durdur'a basılırsa
+    yazdıkları geri alınır."""
     yapi = _katman(ctx.doc, "yapi") if ctx.doc is not None else None
     if yapi is None:
         return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
     kayitlar = list(ctx.doc.entities(layer=yapi, kinds=["polygon"]))
-    for n, kayit in enumerate(kayitlar, start=1):
-        ctx.progress(n - 1, len(kayitlar), f"{n}. yapı numaralanıyor")
-        cad.entities.set(ctx.doc, uids=[kayit.uid], operation="attributes", attrs={"no": f"Y-{n:02d}"})
+    onek, ilk = "Y-", 1
+    # Panelden çalışınca ctx.params panelin değerlerini taşır; şeritten çalışınca boştur: kullanıcıya sorulur.
+    if not ctx.params:
+        cevap = ctx.dialog(
+            "Yapıları numarala",
+            [
+                {"type": "text", "text": f"'yapi' katmanındaki {len(kayitlar)} yapıya sırayla numara yazılır."},
+                {"type": "textField", "id": "onek", "label": "Önek", "value": "Y-"},
+                {"type": "numberField", "id": "ilk", "label": "İlk numara", "value": 1, "min": 1},
+            ],
+            ok="Numarala",
+        )
+        if cevap is None:
+            return ctx.message("Vazgeçildi: numara yazılmadı.")
+        onek, ilk = cevap.get("onek") or "", int(cevap.get("ilk") or 1)
+    for n, kayit in enumerate(kayitlar, start=ilk):
+        ctx.progress(n - ilk, len(kayitlar), f"{n - ilk + 1}. yapı numaralanıyor")
+        cad.entities.set(ctx.doc, uids=[kayit.uid], operation="attributes", attrs={"no": f"{onek}{n:02d}"})
         time.sleep(0.5)
-    return ctx.message(f"{len(kayitlar)} yapı numaralandı (Y-01 … Y-{len(kayitlar):02d}).")
+    son = ilk + len(kayitlar) - 1
+    return ctx.message(f"{len(kayitlar)} yapı numaralandı ({onek}{ilk:02d} … {onek}{son:02d}).")
 
 
 @ext.command("yapi-ara")

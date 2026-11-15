@@ -1144,7 +1144,9 @@ Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çi
   onay kutusunu işaretler; komut yanıt verirken yazılan alan odağını ve metnini korur; yanlış sayı adıyla söylenir;
   kapatılan panele geç yanıt gitmez, kapatılan eklentinin paneli kalmaz; kapsam raporu (§25) ve SDK rehberi Kapı 1'in
   aynı türlerini adlandırır (test); Esc alandan çıkar, yazılan kalır (sonraki tuş komut satırına: uygulamanın genel
-  davranışı). Kalan: Python'dan iletişim kutusu (panel dock'ta açılır; kalıcı pencere yüzdürmeyle).* Python'dan dialog + dock + tablo + katman seçici; açık/koyu tema, dar pencere ve büyük yazıda gerçek fare ve
+  davranışı). Python'dan iletişim kutusu (ADR 8057 §29, 15 Kasım): `ctx.dialog`/`ctx.confirm` KentOS'un penceresinde
+  bir panelin alanlarıyla sorar, çalışma yanıtı bekler; Durdur pencereyi kapatır; Vitrin'in Yapıları numarala'sı
+  önek ve ilk numarayı sorar (gerçek pencere).* Python'dan dialog + dock + tablo + katman seçici; açık/koyu tema, dar pencere ve büyük yazıda gerçek fare ve
   klavyeyle; yanlış sayı, Tab/Enter/Esc, giriş sırasında yama, kapat/kaldır ve geç geri çağırma sınanır; bileşen kapsam
   raporu ile üretilen API referansı aynı sürümü gösterir [EKL-03]. P10, P13 (§5).
 

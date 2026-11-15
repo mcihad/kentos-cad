@@ -179,6 +179,8 @@ impl App {
         // A package's review over Eklentiler (extensions/view.rs), and Sorunlu eklentiyi bul's window (bisect.rs).
         layers.extend(self.extension_review_window());
         layers.extend(self.extension_bisect_window());
+        // A dialog an extension's running code opened (extensions/dialogs.rs).
+        layers.extend(self.ext_dialog_view());
         // İfade oluşturucu over the window whose field opened it (expression/).
         layers.extend(self.builder_view());
         // The connection window, the password question and Sil's question over the window that asked for them

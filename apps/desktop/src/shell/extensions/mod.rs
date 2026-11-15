@@ -12,6 +12,7 @@
 
 mod audit_agents;
 mod audits;
+mod dialogs;
 mod panel_chart;
 mod tool_pins;
 mod bisect;
@@ -155,6 +156,8 @@ pub(crate) struct Extensions {
     /// Where KentOS last docked the Eklenti tab for a panel's `side`: moved for another side only while it is still
     /// there (the user's own move is kept).
     pub(crate) panel_placed: Option<kentos_ui::widget::docking::Side>,
+    /// The dialog an extension's running code opened, waiting for the user (dialogs.rs).
+    pub(crate) dialog: Option<dialogs::ExtDialog>,
     /// The open panels' charts, by extension, panel and chart, worked out when their rows came (panel_chart.rs).
     pub(crate) panel_charts:
         std::collections::BTreeMap<(String, String, String), panel_chart::PanelChart>,
@@ -200,6 +203,7 @@ impl Default for Extensions {
             active_panel: 0,
             panel_calls: Vec::new(),
             panel_placed: None,
+            dialog: None,
             panel_charts: std::collections::BTreeMap::new(),
         }
     }
@@ -293,6 +297,10 @@ pub(crate) enum Event {
     OpenPanel(String, String),
     /// What the user does in the open panel.
     Panel(panels::PanelEvent),
+    /// What the user does in an extension's dialog's fields (dialogs.rs).
+    Dialog(panels::PanelEvent),
+    /// The dialog answered: Tamam (true), İptal / Esc (false).
+    DialogAnswer(bool),
     /// The chosen extension's report onto the clipboard, for its publisher or an agent.
     CopyReport(String),
     /// Its whole log, or its newest lines.
@@ -591,6 +599,8 @@ impl App {
             Event::Run(ext, kind, local) => return self.ext_run(&ext, &kind, &local),
             Event::OpenPanel(ext, local) => return self.ext_panel_open(&ext, &local),
             Event::Panel(event) => return self.ext_panel_event(event),
+            Event::Dialog(event) => self.ext_dialog_event(event),
+            Event::DialogAnswer(ok) => self.ext_dialog_answer(ok),
             Event::AuditDone(done) => self.ext_audit_done(*done),
             Event::AuditShow(i) => return self.ext_audit_show(i),
             Event::AuditFix(i) => self.ext_audit_fix(i),

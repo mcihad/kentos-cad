@@ -700,7 +700,16 @@ fn an_agent_reads_the_sdk_before_writing_an_extension() {
             .unwrap()
             .contains("class ProcessingContext(CommandContext):")
     );
-    assert!(pack["example"]["manifest.json"].is_string());
+    // The working example is a part of its own; the pack names its files and says how.
+    assert!(pack["example"]["how"].is_string());
+    let example = agent_tools::call(
+        &mut s,
+        &mut guard,
+        "extension.sdk",
+        &json!({ "part": "example" }),
+    )
+    .unwrap();
+    assert!(example["value"]["manifest.json"].is_string());
     let part = agent_tools::call(
         &mut s,
         &mut guard,

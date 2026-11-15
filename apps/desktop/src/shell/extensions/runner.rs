@@ -88,6 +88,13 @@ pub(crate) struct Runner {
     pub(crate) ended: Option<Instant>,
 }
 
+impl Runner {
+    /// A message to its process (a reply to a call answered later: a dialog's, dialogs.rs).
+    pub(crate) fn send(&self, message: &Value) {
+        self.host.send(message);
+    }
+}
+
 impl std::fmt::Debug for Runner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Runner")
@@ -621,6 +628,8 @@ impl App {
 
     /// Durdur: asked of the code; its process ended if it has not answered in [`KILL_AFTER`].
     pub(crate) fn ext_stop(&mut self, ext: &str) -> Task<Message> {
+        // Its dialog answered none: the code waiting in it goes on and hears Durdur.
+        self.ext_dialog_close_for(ext);
         let Some(runner) = self.extensions.runners.get_mut(ext) else {
             return Task::none();
         };
@@ -892,6 +901,18 @@ impl App {
             .unwrap_or_default()
             .to_owned();
         let params = m.get("params").cloned().unwrap_or(Value::Null);
+        // A dialog waits for the user: answered when it is (dialogs.rs), or now when it cannot open.
+        if method == "dialog" {
+            let Err(e) = self.ext_dialog_open(ext, id.clone(), &params) else {
+                return;
+            };
+            if let Some(runner) = self.extensions.runners.get(ext) {
+                runner.host.send(
+                    &json!({"type": "reply", "id": id, "ok": false, "code": e.code, "message": e.message}),
+                );
+            }
+            return;
+        }
         let reply = match self.ext_answer(ext, &method, &params) {
             Ok(result) => json!({"type": "reply", "id": id, "ok": true, "result": result}),
             Err(e) => {
@@ -1023,6 +1044,8 @@ impl App {
     }
 
     fn ext_done(&mut self, ext: &str, m: &Value) {
+        // A dialog its code left open goes with the run.
+        self.ext_dialog_close_for(ext);
         let id = m.get("id").and_then(Value::as_u64);
         let Some(mut run) = self
             .extensions
