@@ -1830,7 +1830,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | değer değişince | var | `onChange` (seçim, seçiciler, onay) | çalışırken gelen bir kez yeniden |
 | | ilerleme/günlük | var | `ctx.progress` panelde çubuk; `ctx.log` eklentinin günlüğünde | |
 | | iptal/yeniden dene | var | Durdur (çizime yazdıkları geri alınır); düğmeye yeniden basmak | |
-| | doğrulama özeti | var | `required` (alan başına zorunlu), sayı ve sınır hatası: sözler alanın altında (ortak `Form`'un hatası), adının yanında yıldız; tanım Kapı 1'de | hesaplı/koşullu kurallar yok (PY-UI-08'in kalanı) |
+| | doğrulama özeti | var | `required` (alan başına zorunlu), sayı ve sınır hatası: sözler alanın altında (ortak `Form`'un hatası), adının yanında yıldız; tanım Kapı 1'de | koşullu kurallar (`requiredWhen`, `visibleWhen`, `enabledWhen`, §33) ve hesaplı değerler (`calculate`, `defaultExpr`, §35) formun ifade diliyle |
 | Host yüzeyi | dock/panel | host | `entrypoints.panels` (`side`), birden çok açık panel | |
 | | kalıcı pencere | host | Eklenti sekmesi "Paneli yüzdür" | |
 | | komut/şerit/menü, bağlam eylemi | host | `contributions.ribbonTabs`, sağ tık menüleri | |
