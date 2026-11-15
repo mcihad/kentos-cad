@@ -50,6 +50,13 @@ const KINDS: [&str; 8] = [
     "features", "number", "string", "boolean", "enum", "field", "point", "layer",
 ];
 
+/// The outputs' kinds an extension's tool gives.
+const OUTPUT_KINDS: [&str; 4] = ["features", "table", "number", "string"];
+
+mod descriptor_schema;
+
+pub use descriptor_schema::descriptor_schema;
+
 /// Python's words a parameter cannot be named, since the tool's function takes its parameters by their names.
 const KEYWORDS: [&str; 36] = [
     "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue",
@@ -353,7 +360,8 @@ pub fn from_descriptor(
             "string" => OutputKind::Text,
             other => {
                 return Err(format!(
-                    "{at}: “{other}” çıktı türü desteklenmiyor (features, table, number, string)."
+                    "{at}: “{other}” çıktı türü desteklenmiyor ({}).",
+                    OUTPUT_KINDS.join(", ")
                 ));
             }
         };

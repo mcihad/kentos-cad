@@ -1908,7 +1908,7 @@ yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
   alma etkin; 1276 jeton, 26 sn.
 - **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi.
 
-## §28. Manifestin ve katman şemasının JSON Schema'ları (`ADIM 21`, kod üretimi)
+## §28. Manifestin, katman şemasının ve araç tanımının JSON Schema'ları (`ADIM 21`, kod üretimi)
 
 **15 Kasım.** Kod: `crates/shared/extensions/src/manifest.rs` (`json_schema`; manifestin 38 tipi ve `compat::Os`
 şemayı türetir, `schema` özelliğiyle), `sdk/kentos-extension-manifest.schema.json` (24,5 KB), `sdk_pack.rs`
@@ -1935,4 +1935,14 @@ yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
   10 000 bileşim) da oradan. `sdk/kentos-layer-schema.schema.json` (12,2 KB), `extension.sdk part=layerSchema`.
   Vitrin, ornek-kent, MEBİS ve iskeletin katman şemaları şemaya uyar ve denetleyiciden geçer; uydurma anahtar, KentOS'ta
   olmayan alan türü ("string") ve boş katman listesi reddedilir. Denetleyici `minItems`/`maxItems`'ı da okur.
-- **Kalan:** araç tanımının (`kentos.processingTool`) ve `ProjectAuditFacts`'in şemaları.
+- **Araç tanımı (`tools/<id>.tool.json`, `kentos.processingTool` 1):** doğru okuyucunun yanında, yerel `processing`
+  crate'inde (`external::descriptor_schema`): saf `kentos-extensions` ona bağımlı olamaz. Şema okuyucunun sözlüklerinden
+  kurulur (eklenti aracının aldığı 8 parametre türü, 4 çıktı türü; çıktı türlerinin listesi `OUTPUT_KINDS` olarak
+  okuyucunun hata iletisiyle ortak oldu), parametreler türlerine göre `oneOf`: her türün kendi anahtarları ve ortaklar.
+  Okuyucu kullanmadığı anahtarı geçer; şema kapalıdır ki yanlış yazılan anahtar ("lable") yazıldığı yerde söylensin.
+  `processing`'in sınaması dosyayı SDK'nın yanına yazar ve denetler (`KENTOS_WRITE_SDK=1 cargo test -p
+  kentos-processing --lib -- descriptor_schema`), sözlüklerin okuyucununki olduğunu da sınar: 8 × 4 birleşimin her biri
+  okunur. `sdk/kentos-processing-tool.schema.json` (20,4 KB), `extension.sdk part=toolSchema`. Vitrin, ornek-imar,
+  MEBİS'in iki aracı ve iskeletin aracı şemaya uyar; yanlış yazılan anahtar, eklenti aracının almadığı tür
+  (`rasterValues`) ve katman adlandırmayan yeni nesne çıktısı reddedilir.
+- **Kalan:** `ProjectAuditFacts`'in şeması (olgular henüz yok: ADIM 20).

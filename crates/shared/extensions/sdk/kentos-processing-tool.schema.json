@@ -1,0 +1,753 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "capabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "runtimes": {
+          "description": "Bu KentOS eklenti araçlarını masaüstünde çalıştırır: desktop-python.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "category": {
+      "description": "KentOS eklenti araçlarını kendi kategorisinde gösterir.",
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "feedback": {
+      "additionalProperties": false,
+      "properties": {
+        "cancel": {
+          "type": "boolean"
+        },
+        "progress": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "format": {
+      "const": "kentos.processingTool"
+    },
+    "help": {
+      "type": "string"
+    },
+    "id": {
+      "description": "Manifestin entrypoints.processing kimliği.",
+      "type": "string"
+    },
+    "keywords": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "label": {
+      "maxLength": 80,
+      "minLength": 1,
+      "type": "string"
+    },
+    "modelDescription": {
+      "description": "Yapay zekâ modeli için.",
+      "maxLength": 2000,
+      "type": "string"
+    },
+    "outputs": {
+      "items": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "properties": {
+              "type": {
+                "const": "features"
+              }
+            },
+            "required": [
+              "sinkParameter"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "enum": [
+                  "table",
+                  "number",
+                  "string"
+                ]
+              }
+            }
+          }
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "sinkParameter": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "features",
+              "table",
+              "number",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "parameters": {
+      "items": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "advanced": {
+                "type": "boolean"
+              },
+              "allowEmpty": {
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Türüne göre bir değer."
+              },
+              "description": {
+                "type": "string"
+              },
+              "kinds": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "label": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Aracın işlevine bu adla gider: Python'da bir ad (ctx ve Python'un sözcükleri olmaz).",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "picks": {
+                "additionalProperties": false,
+                "properties": {
+                  "option": {
+                    "type": "string"
+                  },
+                  "point": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "option",
+                  "point"
+                ],
+                "type": "object"
+              },
+              "scopes": {
+                "items": {
+                  "enum": [
+                    "selection",
+                    "visible",
+                    "all",
+                    "layer"
+                  ]
+                },
+                "type": "array"
+              },
+              "type": {
+                "const": "features"
+              },
+              "visibleWhen": {
+                "additionalProperties": false,
+                "properties": {
+                  "equals": {},
+                  "param": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "param"
+                ],
+                "type": "object"
+              },
+              "writes": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "advanced": {
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Türüne göre bir değer."
+              },
+              "description": {
+                "type": "string"
+              },
+              "integer": {
+                "type": "boolean"
+              },
+              "label": {
+                "type": "string"
+              },
+              "max": {
+                "type": "number"
+              },
+              "min": {
+                "type": "number"
+              },
+              "name": {
+                "description": "Aracın işlevine bu adla gider: Python'da bir ad (ctx ve Python'un sözcükleri olmaz).",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "picks": {
+                "additionalProperties": false,
+                "properties": {
+                  "option": {
+                    "type": "string"
+                  },
+                  "point": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "option",
+                  "point"
+                ],
+                "type": "object"
+              },
+              "placeholder": {
+                "type": "string"
+              },
+              "type": {
+                "const": "number"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "visibleWhen": {
+                "additionalProperties": false,
+                "properties": {
+                  "equals": {},
+                  "param": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "param"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "advanced": {
+                "type": "boolean"
+              },
+              "allowEmpty": {
+                "type": "boolean"
+              },
+              "colorInheritance": {
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Türüne göre bir değer."
+              },
+              "description": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "maxLength": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "description": "Aracın işlevine bu adla gider: Python'da bir ad (ctx ve Python'un sözcükleri olmaz).",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "picks": {
+                "additionalProperties": false,
+                "properties": {
+                  "option": {
+                    "type": "string"
+                  },
+                  "point": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "option",
+                  "point"
+                ],
+                "type": "object"
+              },
+              "placeholder": {
+                "type": "string"
+              },
+              "type": {
+                "const": "string"
+              },
+              "visibleWhen": {
+                "additionalProperties": false,
+                "properties": {
+                  "equals": {},
+                  "param": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "param"
+                ],
+                "type": "object"
+              },
+              "widget": {
+                "enum": [
+                  "color"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "advanced": {
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Türüne göre bir değer."
+              },
+              "description": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Aracın işlevine bu adla gider: Python'da bir ad (ctx ve Python'un sözcükleri olmaz).",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "picks": {
+                "additionalProperties": false,
+                "properties": {
+                  "option": {
+                    "type": "string"
+                  },
+                  "point": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "option",
+                  "point"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "const": "boolean"
+              },
+              "visibleWhen": {
+                "additionalProperties": false,
+                "properties": {
+                  "equals": {},
+                  "param": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "param"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "advanced": {
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Türüne göre bir değer."
+              },
+              "description": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Aracın işlevine bu adla gider: Python'da bir ad (ctx ve Python'un sözcükleri olmaz).",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "options": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "hint": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "value"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "picks": {
+                "additionalProperties": false,
+                "properties": {
+                  "option": {
+                    "type": "string"
+                  },
+                  "point": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "option",
+                  "point"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "const": "enum"
+              },
+              "visibleWhen": {
+                "additionalProperties": false,
+                "properties": {
+                  "equals": {},
+                  "param": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "param"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "advanced": {
+                "type": "boolean"
+              },
+              "allowNew": {
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Türüne göre bir değer."
+              },
+              "description": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "multiple": {
+                "type": "boolean"
+              },
+              "name": {
+                "description": "Aracın işlevine bu adla gider: Python'da bir ad (ctx ve Python'un sözcükleri olmaz).",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "of": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                ],
+                "description": "Alanları okunacak parametre(ler)in adı."
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "picks": {
+                "additionalProperties": false,
+                "properties": {
+                  "option": {
+                    "type": "string"
+                  },
+                  "point": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "option",
+                  "point"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "const": "field"
+              },
+              "visibleWhen": {
+                "additionalProperties": false,
+                "properties": {
+                  "equals": {},
+                  "param": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "param"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "advanced": {
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Türüne göre bir değer."
+              },
+              "description": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Aracın işlevine bu adla gider: Python'da bir ad (ctx ve Python'un sözcükleri olmaz).",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "picks": {
+                "additionalProperties": false,
+                "properties": {
+                  "option": {
+                    "type": "string"
+                  },
+                  "point": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "option",
+                  "point"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "const": "point"
+              },
+              "visibleWhen": {
+                "additionalProperties": false,
+                "properties": {
+                  "equals": {},
+                  "param": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "param"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "advanced": {
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Türüne göre bir değer."
+              },
+              "description": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Aracın işlevine bu adla gider: Python'da bir ad (ctx ve Python'un sözcükleri olmaz).",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "newLayerStyle": {
+                "additionalProperties": false,
+                "properties": {
+                  "color": {
+                    "type": "string"
+                  },
+                  "fill": {
+                    "type": "string"
+                  },
+                  "lineWeight": {
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "picks": {
+                "additionalProperties": false,
+                "properties": {
+                  "option": {
+                    "type": "string"
+                  },
+                  "point": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "option",
+                  "point"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "const": "layer"
+              },
+              "visibleWhen": {
+                "additionalProperties": false,
+                "properties": {
+                  "equals": {},
+                  "param": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "param"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "type"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "type": "array"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "timeoutSeconds": {
+      "maximum": 3600,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "format",
+    "schemaVersion",
+    "id",
+    "label",
+    "parameters"
+  ],
+  "title": "KentOS extension tool descriptor (kentos.processingTool 1)",
+  "type": "object"
+}

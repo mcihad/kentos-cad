@@ -150,8 +150,12 @@ pub const MANIFEST_SCHEMA: &str = include_str!("../sdk/kentos-extension-manifest
 /// (`layer_schema::json_schema`) and committed beside the stub: a part of its own (docs/adr/8057 §28).
 pub const LAYER_SCHEMA: &str = include_str!("../sdk/kentos-layer-schema.schema.json");
 
+/// An İşlemler tool descriptor's (`kentos.processingTool` 1) JSON Schema, built beside the reader from its vocabularies
+/// (`kentos_processing::external::descriptor_schema`, whose test writes it here): a part of its own (docs/adr/8057 §28).
+pub const TOOL_SCHEMA: &str = include_str!("../sdk/kentos-processing-tool.schema.json");
+
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 13] = [
+pub const PARTS: [&str; 14] = [
     "guide",
     "api",
     "capabilities",
@@ -165,6 +169,7 @@ pub const PARTS: [&str; 13] = [
     "panelSchema",
     "manifestSchema",
     "layerSchema",
+    "toolSchema",
 ];
 
 /// One part of the pack; none for a name the pack has not. `icons` is the whole list, which the pack only counts: its
@@ -181,6 +186,9 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     }
     if part == "layerSchema" {
         return serde_json::from_str(LAYER_SCHEMA).ok();
+    }
+    if part == "toolSchema" {
+        return serde_json::from_str(TOOL_SCHEMA).ok();
     }
     if !PARTS.contains(&part) {
         return None;
@@ -302,6 +310,11 @@ pub fn sdk_pack() -> Value {
             "how": "Dikey eklentinin schema.json'u (kentos.layerSchema 1: katmanlar, alanları, değer listeleri, alt türler, \
                     değer grupları, ilişkiler) için JSON Schema: extension.sdk part=layerSchema ya da kentos kek sdk \
                     --part layerSchema. Alanın listesi, alt türün kodu, ilişkinin katmanları extension.verify'da.",
+        },
+        "toolSchema": {
+            "how": "İşlemler aracı tanımının (tools/<id>.tool.json, kentos.processingTool 1) JSON Schema'sı: parametre ve \
+                    çıktı türleri, anahtarları: extension.sdk part=toolSchema ya da kentos kek sdk --part toolSchema. \
+                    Parametre adlarının ve sinkParameter'ın tutarlılığı extension.verify'da.",
         },
     })
 }
@@ -681,6 +694,70 @@ mod tests {
         let mut empty = vitrin.clone();
         empty["layers"] = json!([]);
         assert!(!errors(&schema, &empty).is_empty(), "at least one layer");
+    }
+
+    /// The tool descriptor schema takes the descriptors KentOS ships (the Vitrin's, the fixtures', a blueprint's); a key
+    /// written wrong and a parameter kind an extension's tool does not take, it refuses.
+    #[test]
+    fn the_tool_schema_takes_real_descriptors() {
+        use crate::schema_check::errors;
+        let schema = sdk_part("toolSchema").expect("the part");
+        assert_eq!(
+            schema["properties"]["format"]["const"],
+            "kentos.processingTool"
+        );
+        let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+        let mut descriptors: Vec<(String, Value)> = [
+            "samples/eklenti-vitrini/eklenti/tools/taks.tool.json",
+            "fixtures/extensions/v1/ornek-imar/tools/taks.tool.json",
+            "fixtures/extensions/v1/mebis/tools/occupancy-by-island.tool.json",
+            "fixtures/extensions/v1/mebis/tools/empty-graves.tool.json",
+        ]
+        .iter()
+        .map(|file| {
+            let text = std::fs::read_to_string(repo.join(file)).expect(file);
+            ((*file).to_owned(), serde_json::from_str(&text).expect(file))
+        })
+        .collect();
+        let files = crate::blueprint::blueprint(&crate::blueprint::Ask {
+            id: "tr.ornek.arac".into(),
+            name: "Araç".into(),
+            summary: "Araçlı bir iskelet.".into(),
+            vertical: true,
+            module: crate::manifest::Module::Cbs,
+            contributions: crate::blueprint::Contribution::ALL.to_vec(),
+        })
+        .expect("a blueprint");
+        for (path, text) in files.iter().filter(|(p, _)| p.ends_with(".tool.json")) {
+            descriptors.push((
+                path.clone(),
+                serde_json::from_str(text).expect("a descriptor"),
+            ));
+        }
+        assert_eq!(descriptors.len(), 5, "the blueprint makes a tool too");
+        for (name, descriptor) in &descriptors {
+            let found = errors(&schema, descriptor);
+            assert!(found.is_empty(), "{name}: {found:#?}");
+        }
+        let vitrin = &descriptors[0].1;
+        let mut typo = vitrin.clone();
+        typo["parameters"][0]["lable"] = json!("Parseller");
+        assert!(
+            !errors(&schema, &typo).is_empty(),
+            "a key written wrong is said where it was written"
+        );
+        let mut raster = vitrin.clone();
+        raster["parameters"][0]["type"] = json!("rasterValues");
+        assert!(
+            !errors(&schema, &raster).is_empty(),
+            "a kind İşlemler has but an extension's tool does not take"
+        );
+        let mut sink = vitrin.clone();
+        sink["outputs"] = json!([{ "name": "yeni", "type": "features" }]);
+        assert!(
+            !errors(&schema, &sink).is_empty(),
+            "new objects name the layer they go to"
+        );
     }
 
     /// The panel schema takes the Vitrin's panels; a component of a type KentOS does not draw, it refuses.
