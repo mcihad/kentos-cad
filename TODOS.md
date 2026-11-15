@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- IFC görüntüleyici (IFC-12, [ADR 8061](docs/adr/8061-ifc-viewer-and-reading-engine.md) §6.2): web'e dönüşte `crates/wasm/`
+  altında `kentos-ifc` (`mesh`) ile görüntüleyici çekirdeğinin bağlaması; çizim web'in WebGPU arka ucunda, ortak
+  `shaders/wgsl/scene3d` sözleşmesiyle; paneller web'in arayüz çatısıyla; okuma işçide; wasm32'nin 4 GB sınırını aşan
+  dosya açık iletiyle masaüstüne yönlendirilir. Masaüstü tarafı yalnız wasm32 derlemesini yeşil tutar.
 - UR-004: web'in Tarama, Çoklu tara ve Taramayı düzenle'si yazıları varsayılan olarak boş bıraksın ve Yazılar (Y)
   Desen'in hemen arkasına gelsin; `fixtures/interaction/v1/hatch-patterns.json` ve `hatches.json` masaüstüne göre
   güncellendi (web'in oynatıcısı ondan sonra geçer).
@@ -4264,7 +4268,7 @@ mevzuat denetimleri, Ruhsat takımı (PDF/A-2b) ve IFC 4.3 bina modeli (`kentos-
 Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik (RG 5.8.2026/33331) bu bölümün
 önceliğini değiştirdi: PDF/A paftalar 1.9.2027'den, IFC modeli 1.9.2029'dan kademeli zorunlu (Sivas'ta 1.3.2029 ve 1.9.2032;
 çıkarım), e-PYS 1.9.2028'de, konut dışı binalar 1.9.2033'te. Plan, sıra ve kapılar: [plan/bim-plan.md](plan/bim-plan.md)
-(BIM-01…20; B1…B23) ve [plan/ifc-uyum.md](plan/ifc-uyum.md) (IFC-01…11); dayanak
+(BIM-01…20; B1…B23) ve [plan/ifc-uyum.md](plan/ifc-uyum.md) (IFC-01…12); dayanak
 [araştırma notu](docs/research/2026-11-15-bim-ifc-yonetmelik.md). Web'de yok (ADR 0228, §0.2).
 
 **Ölçüm (15 Kasım 2026, kodda):** mimari modelde karşılaşılan 29 zorunlu IFC sınıfının 15'i yazılıyor; yangın dayanımı ve acil
@@ -4306,11 +4310,12 @@ mimari disiplinin modelini yazar; statik ve tesisat modelleri altlık olarak oku
 - [ ] `IFC-04` Tip nesneleri, katmanlı malzeme takımı, çok katlı elemanın başvuruları.
 - [ ] `IFC-05` Konum, kot, çok bina ve projenin ortak alanları: yerel orijin ve harita dönüşümü, kontrol noktaları, düşey datum; sıfır varsayımı yok.
 - [ ] `IFC-06` Geometri ve görünüm tanımı: kesilmiş gövde ve tasarım aktarımı profilleri; gelişim seviyesi kanıtı.
-- [ ] `IFC-07` STEP okuyucu çekirdeği: şema sözlüğü, sınırlar, bozuk dosyada panik yok.
+- [ ] `IFC-07` Okuma yüzü ve motor denemesi: IFClite'ın Rust çekirdeği yalnız `kentos-ifc`'in arkasında, sabit sürümle, denemeden geçerse ([ADR 8061](docs/adr/8061-ifc-viewer-and-reading-engine.md) §7); şema sözlüğü, sınırlar, bozuk dosyada panik yok; geçemezse kendi okuyucumuz.
 - [ ] `IFC-08` Yazılmış dosyadan doğrulama, katalogdan IDS, kontrol formunun 21 sorusunun kanıtı.
-- [ ] `IFC-09` Altlık model: IFC 4.3 dosyasını salt okunur açma, planda ve 3B'de gösterme.
+- [ ] `IFC-09` Altlık model: IFC 4.3 dosyasını projede salt okunur saklama, projenin koordinatında planda ve 3B'de gösterme (okuma ve gövdeler IFC-12'den).
 - [ ] `IFC-10` Federasyon, revizyon karşılaştırma ve açık sorun biçimi.
 - [ ] `IFC-11` Pilot paket, eski sürümleri okuma, sürüm takibi ve sertifika kararı.
+- [ ] `IFC-12` IFC görüntüleyici (sıra B12b; ADR 8061): uygulamanın içinde, gevşek bağlı (saf çekirdek yerel ve wasm32; arayüz bileşeni kendi paketinde; dar bağlantı yüzü); yapı ağacı, özellikler, gizle ve yalnız bırak, kesit; dışa aktarılan dosya tek tıkla görülür. Ayrı program ve web gerektiğinde (ADR 8061 §6); wasm32 derlemesi ve tek pencere örneği her dilimde.
 
 **Eski maddelerin karşılığı.** Bu bölümün 25 Eylül 2026 tarihli on maddesi (o günkü `BIM-01`…`BIM-10`) yeni paketlere dağıldı;
 numaralar 15 Kasım 2026'dan itibaren yukarıdaki anlamı taşır.

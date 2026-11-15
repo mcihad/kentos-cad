@@ -26,6 +26,9 @@ bağımlılığa göre yeniden kuruldu (§5, §6). Paket numaraları [TODOS.md �
 - **Yol:** önce kaynak (ekler sayfa sayfa kataloğa), sonra 2B teslimin kalanı, sonra ruhsat düzeyinde model (3B görünüm,
   yangın bilgisi, zonlar, eksik elemanlar, geometri, çok bina), sonra dosyadan doğrulama ve tek teslim paketi, sonra dış
   disiplinler ve belediyenin inceleme tarafı (§6).
+- **IFC görüntüleyici (15 Kasım, sahibin kararı; K9):** uygulamanın içinde gelir ama gevşek bağlıdır; gerektiğinde ayrı
+  program olur ya da WASM ile web'de çalışır. Okuma motoru bir denemeden geçince bağlanır. Öbür paketleri beklemez; erken
+  başlayabilir (B12, B12b).
 
 ## 1. Hedef ve sınır
 
@@ -123,7 +126,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | Z7 | **Tek bina:** program bina ve kanat tanıyor; model, künye ve dışa aktarma tek binalı; ortak bodrum yok | `building.rs` tek saha, tek bina; `program.rs` | Y | BIM-11 |
 | Z8 | **2B kuralların denetimi yarım:** EK-4 katmanı ve çizgi tipi, EK-3 numara biçimi ve mahal adı sözlüğü denetlenmiyor | ADR 8047 §9 "yalnız varlığı"; M9 "profil ve blok katmanı kaldı" | Y | BIM-03 |
 | Z9 | **Mevzuat denetimi yarım:** başvuru tarihine göre kural seti, plan notu katmanı, yangın dayanımları, erişilebilirlik, emsalin 22. madde sınırları | ADV-22 ve ADV-23 "Kalanlar" | Y | BIM-13 |
-| Z10 | **Dış model okunamıyor:** statik ve tesisat modeli altlık olamıyor, çakışma bulunamıyor, iki revizyon karşılaştırılamıyor; belediye gelen IFC'yi KentOS'ta açamıyor | Depoda IFC okuyucu yok | Y | IFC-07, IFC-09; BIM-17, BIM-18 |
+| Z10 | **Dış model okunamıyor:** statik ve tesisat modeli altlık olamıyor, çakışma bulunamıyor, iki revizyon karşılaştırılamıyor; belediye gelen IFC'yi KentOS'ta açamıyor | Depoda IFC okuyucu yok | Y | IFC-07, IFC-12, IFC-09; BIM-17, BIM-18 |
 | Z11 | **Tip sistemi yarım:** duvar stili ve kapı/pencere tipi var; döşeme, kolon, kiriş, çatı, merdiven, korkuluk tipsiz | W2 §2.1; IFC'de tip nesnesi ve katmanlı malzeme takımı yok | O | BIM-12 |
 | Z12 | **Teslim kaydı yok:** hangi revizyon, hangi dosyalarla, kime verildi, ne cevap geldi | Dosya revizyonu var (ADR 0031); teslim ve iade kaydı yok | O | BIM-15 |
 | Z13 | **Hız hedefi tutmadı:** 2+1 daire gerçek pencerede 82 etkileşim ve 121,3 s (hedef ≤ 80 ve ≤ 100 s) | `architecture-advanced.md` §7; ADR 8052 | O | BIM-20 |
@@ -157,6 +160,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
   belge.
 - **K4 — Doğrulama yazılmış dosyadan yapılır.** Formun cevabı bellekteki modelden değil, diske yazılan IFC ve PDF/A'dan
   okunur. `kentos-ifc` bunun için bir okuyucu kazanır; aynı okuyucu dış disiplin modeline ve idare incelemesine hizmet eder.
+  Okuyucunun motoru K9'da; ürünün motoru bağımsız başvuru sayılmaz, bağımsız okuyucular ürünle dağıtılmaz.
 - **K5 — Gerçek ruhsat modeli dış servise gönderilmez.** Doğrulama çevrimdışıdır; yalnız açık ve sentetik örnekler dış
   doğrulayıcıda sınanır.
 - **K6 — Kimlik kalıcıdır.** Nesnenin kimliği, tipinin kimliği ve pafta ya da mevzuat etiketi ayrı alanlardır. Taşıma ve tip
@@ -167,6 +171,13 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
   ADR ile yeniden açılır.
 - **K8 — Bir madde, bütün yüzleriyle.** Her paket `architecture-advanced.md` §6'nın talimatıyla yapılır: araştırma, ADR,
   çekirdek ve sözleşme, komut (katalog, ≥ 20 bağımsız durum, Python, MCP), arayüz kapıları, gerçek pencere kabulü, resimler.
+- **K9 — IFC görüntüleyici uygulamanın içindedir ve gevşek bağlıdır** (sahibin kararı, 15 Kasım;
+  [ADR 8061](../docs/adr/8061-ifc-viewer-and-reading-engine.md)). Saf çekirdeği yerel ve wasm32 için derlenir, arayüz
+  bileşeni kendi paketindedir, uygulamayla dar bir yüzden konuşur. Gerektiğinde hızlıca ayrı program olur ya da WASM ile
+  web'de çalışır; ikisi de şimdi yapılmaz. Dosyayı okuyan ve gövdeleri üçgene çeviren motor IFClite'ın Rust çekirdeğidir
+  (MPL-2.0): yalnız `kentos-ifc`'in içinde, sabit sürümle, denemeden geçerse. Üçgen ağ gösterimdir; ölçü kaynağı
+  değildir. K7 değişmez: bu, okunan dosyanın gösterimi içindir, KentOS'un kendi gövdeleri için bir katı modelleme
+  çekirdeği alınmamıştır.
 
 ## 5. İş paketleri
 
@@ -276,6 +287,9 @@ planda seçilir. Katları ayırır, kesit kutusuyla içine bakar. Denetim bulgul
   seç → 3B'de vurgula.
 - Model değişince sahne yenilenir. 2B proje açılışı 3B'yi yüklemez (kılavuz §20).
 - Çizimi değiştirmez: görünümdür, komut değildir.
+- **Ortak parçalar:** görüntüleyici çekirdeği ve pencere parçaları (ağaç, özellikler, kat süzgeci, kesit kutusu, gizle ve
+  yalnız bırak) IFC görüntüleyiciyle aynıdır ([IFC-12](ifc-uyum.md#10-iş-paketleri), K9). Çekirdek kaynağını bilmez: burada
+  kesit modeli, orada IFC dosyası aynı girdiyi doldurur. Hangisi önce yapılırsa parçaları o kurar.
 
 **İlk kabul:** bölüm binasının 68 gövdesi 3B'de; gövde sayısı dışa aktarılan dosyadakiyle eşit; 3B'de tıklanan duvar planda
 seçili; örtüşen iki mahal kırmızı; gerçek pencerede resim.
@@ -482,7 +496,8 @@ denetimi kendiliğinden koşar. İmar durumuyla karşılaştırma belediyenin ke
 gerekçesiyle ve nesnesiyle iade notuna dönüşür. Dayanak e-PYS Md. 4/3, 4/5, 5/2–3, 7/7; Z10.
 
 - **Paket ön denetimi:** beş kabulün ilk dördü (IFC-08) ve PDF/A; müellifin formu ile KentOS'un ölçtüğü yan yana.
-- **Görüntüleme:** 3B ve kat kat plan; mahal, bağımsız bölüm ve emsal alanı süzgeçleri; pafta ile model yan yana.
+- **Görüntüleme:** 3B ve kat kat plan; mahal, bağımsız bölüm ve emsal alanı süzgeçleri; pafta ile model yan yana. 3B
+  kısmı IFC görüntüleyicinin penceresidir (IFC-12); gevşek bağı sayesinde idare için ayrı bir programa da çıkarılabilir.
 - **İmar denetimi:** parsel, çekme, TAKS, emsal, kat adedi ve yükseklik; belediyenin CBS'sindeki onaylı plan ve parselle.
   Kaynağı ve onay tarihi görünür.
 - **İade notu:** madde, ölçülen ve istenen değer, nesne; yazıyla ve açık sorun biçimiyle.
@@ -546,7 +561,8 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| B12 | STEP okuyucu çekirdeği | IFC-07 | Yazılan dosya geri okunur |
+| B12 | Okuma yüzü ve motor denemesi | IFC-07 | Yazılan dosya geri okunur; motor kararı ADR 8061'de |
+| B12b | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür |
 | B13 | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan |
 | B14 | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket |
 | B15 | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti |
@@ -570,9 +586,12 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B23 | Kat irtifakı için 3B yapı modeli araştırması | BIM-19 | Karar ADR'de |
 
 - **Sürekli:** BIM-20 her fazda bir dilimle ilerler.
-- **Erken hazırlık:** B12 yalnız B1’e bağlıdır ve model geliştirmesiyle paralel başlayabilir. B15 model paketlerinden
+- **Erken hazırlık:** B12 model geliştirmesiyle paralel başlayabilir (aşağıdaki maddeye bakın). B15 model paketlerinden
   bağımsızdır. B14–B17’nin teknik ön kontrolü, zorunlu IFC teslimi ve e-PYS aktarımı devreye girmeden pilotlanabilir.
-- **Sahibin seçimi:** öncelik belediyenin inceleme tarafıysa B12 → B18 → B20 öne alınır; müellif tarafının sırası
+- **Görüntüleyici erken başlayabilir:** B12 ve B12b kataloğu (B1) ve model paketlerini beklemez; şema sözlüğü motordan
+  gelir. Kataloğa bağlı olan B13'tür. B6 (binanın 3B görünümü) ile B12b aynı çekirdeği ve pencere parçalarını kullanır;
+  hangisi önce yapılırsa parçaları o kurar.
+- **Sahibin seçimi:** öncelik belediyenin inceleme tarafıysa B12 → B12b → B18 → B20 öne alınır; müellif tarafının sırası
   değişmez.
 
 ## 7. Kabul ölçüleri ve kapılar
@@ -625,6 +644,10 @@ sahibin kısa listesi.
   araştırma notu §6 ve §8). Önlem: idare tarafında hoşgörülü okuyucu, açık bulgu.
 - **"Modelden üretildi" sözü 2B öncelikli bir araçta sorgulanır.** Önlem: BIM-04'ün kaydı ve yayın kapısı.
 - **Büyük model.** Önlem: süre ve bellek tabanı B13'te; bütçe ondan sonra (kılavuz §6).
+- **Okuma motoru dış bir projedir ve hızlı sürüm çıkarıyor** (on ayda 24 ana sürüm; araştırma notu). Önlem: sürüm sabit,
+  motorun türleri yalnız `kentos-ifc`'te, yükseltme örnek takımıyla; deneme geçemezse kendi okuyucumuz (ADR 8061 §7–§9).
+- **Gevşek bağ zamanla sıkılaşabilir.** Önlem: bağımlılık yönü denetimi, wasm32 derlemesi ve tek pencere örneği her
+  dilimde koşar (ADR 8061 §3.3).
 
 ## 9. Kurallar
 

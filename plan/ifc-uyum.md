@@ -3,12 +3,18 @@
 İnceleme: **15 Kasım 2026** (ikinci tur; ilki aynı gün, `8bc6bba77`). Kod tabanı: `8bc6bba77`. Dal: `codex/bim-ifc-uyum`.
 
 **Eş belge:** [Mimari BIM geliştirme planı](bim-plan.md) (sıra ve kapılar orada, §6–§7) · **Dayanak:**
-[araştırma notu](../docs/research/2026-11-15-bim-ifc-yonetmelik.md) · **Mevcut karar:** [ADR 8047](../docs/adr/8047-ifc-building-export.md).
+[araştırma notu](../docs/research/2026-11-15-bim-ifc-yonetmelik.md) · **Mevcut karar:** [ADR 8047](../docs/adr/8047-ifc-building-export.md)
+· **Görüntüleyici ve okuma motoru:** [ADR 8061](../docs/adr/8061-ifc-viewer-and-reading-engine.md) (karar; deneme
+bekliyor), [notu](../docs/research/2026-11-15-ifc-goruntuleyici.md).
 
 Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. İlk taslağa göre değişenler: bugünkü çıktı yönetmeliğin sınıf ve
 alan listesine karşı kodda ölçüldü (§4, §5); kontrol formunun 21 sorusu için bugünkü ve hedef kanıt yazıldı (§9); okuyucu
 ayrı bir paket oldu ve doğrulamanın önüne alındı (IFC-07); "69 sınıf, 68 tablo" sorusu kapandı (69. sınıf `IfcProject`,
 tablosu EK-7'de).
+
+**Görüntüleyici (15 Kasım, sahibin isteği ve kararı):** IFC görüntüleyici plana girdi (IFC-12). Uygulamanın içinde gelir
+ama gevşek bağlıdır: gerektiğinde hızlıca ayrı bir program olabilir ya da WASM ile web'de çalışabilir. Okuma ve üçgenleme
+motoru olarak IFClite'ın Rust çekirdeği seçildi; kabulü bir denemeye bağlıdır. Bu karar IFC-07'yi ve IFC-09'u değiştirdi.
 
 ## 1. Hedef ve kabul ayrımı
 
@@ -29,6 +35,8 @@ kabulü.** Tasarımın hukuki ve mesleki uygunluğuna müellif ve idare karar ve
 | Görünüm tanımı | Eklerde geçmiyor. Bugünkü başlık `DesignTransferView`: duvar kesilmemiş gövde, açıklığı okuyucu çıkarıyor. Hedef iki çıktı profili (§8); ruhsat profilinin hangisi olacağı ek sayfası ve idarenin cevabıyla kesinleşir. Başlıkta yazan ad tek başına sertifika değildir |
 | Öbür biçim ve sürümler | IFC4 ve IFC2x3 yalnız **okunur** (IFC-11). `.ifczip` ve `.ifcxml` yazılmaz; ruhsat denetimi yanlış sürümü ve uzantıyı açık hata sayar |
 | Kod sahipliği | IFC'ye ait her şey `crates/shared/ifc` (`kentos-ifc`) içindedir: şema sözlüğü, okuyucu, yazıcı, eşleme, adlar, koordinat, katalog, doğrulama, IDS. Uygulamada yalnız bağdaştırıcı kalır (`application::arch_ifc`). Yolun `IfcAlignment` çıktısı aynı çekirdektedir ve her değişiklikte sınanır ([ADR 0908](../docs/adr/0908-road-stakeout-sheets-and-exchange.md)) |
+| Okuma ve geometri motoru | Dosyayı okuyan ve gövdeleri üçgene çeviren motor IFClite'ın Rust çekirdeğidir (MPL-2.0). Yalnız `kentos-ifc`'nin içinde, isteğe bağlı özelliğin arkasında, sabit sürümle durur; türleri dışarı çıkmaz. Kabulü denemeye bağlıdır; geçemezse kendi okuyucumuz yazılır. Üçgen ağ gösterimdir, ölçü kaynağı değildir. Ürünün motoru bağımsız başvuru sayılmaz ([ADR 8061](../docs/adr/8061-ifc-viewer-and-reading-engine.md)) |
+| Görüntüleyici | Uygulamanın içinde, gevşek bağlı: saf çekirdek yerel ve wasm32 için derlenir, arayüz bileşeni kendi paketindedir, uygulamayla dar bir yüzden konuşur. Ayrı program ve web gerektiğinde çıkarılır; şimdi yapılmaz (ADR 8061 §3, §6) |
 | Sertifika | buildingSMART'ın yazılım sertifikası IFC 4.3 için de veriliyor. Başvuru kararı pilottan sonra ADR ile (IFC-11) |
 
 ## 3. Ekler ve kural kataloğu
@@ -196,9 +204,10 @@ karşılaştırılır.
 
 ## 9. Doğrulama katmanları ve kontrol formu
 
-1. **Okuma ve şema.** STEP sözdizimi, başlık, başvurular; şemanın tür, sayı ve WHERE kuralları. Kendi okuyucumuz (IFC-07)
-   ve bağımsız okuyucu ([`arch_ifc_check.py`](../scripts/fixtures/arch_ifc_check.py), IfcOpenShell). Okuyucunun sürümü ve
-   kapsamının sınırı raporda.
+1. **Okuma ve şema.** STEP sözdizimi, başlık, başvurular; şemanın tür, sayı ve WHERE kuralları. `kentos-ifc`'nin okuma
+   yüzü (IFC-07; motoru ADR 8061'in denemesiyle seçilir) ve bağımsız okuyucu
+   ([`arch_ifc_check.py`](../scripts/fixtures/arch_ifc_check.py), IfcOpenShell). Okuyucunun sürümü ve kapsamının sınırı
+   raporda.
 2. **Normatif kurallar.** buildingSMART'ın açık kural takımı, açık ve sentetik örneklerde. Servisin sınırı 256 MB'tır; ülkeye
    ve kuruma özgü kuralı denetlemez. [Kılavuz](https://buildingsmart.github.io/validate/user/index.html)
 3. **Türkiye profili.** Katalogdan çalışan denetleyici (`kentos-ifc`), yazılmış dosyada. Aynı katalogdan **IDS 1.0**
@@ -336,21 +345,28 @@ dosyanın içeriğiyle uyuşur. Gövdeleri BIM-10'dan gelir.
 **İlk kabul:** iki profilde eleman sayıları eşit; açıklıklı duvarın hacmi iki profilde yazılı tolerans içinde aynı; bütün
 gövdeler kapalı; sentetik örnek açık kural takımından uyarısız geçer.
 
-#### IFC-07 — STEP okuyucu çekirdeği [ ]
+#### IFC-07 — Okuma yüzü ve motor denemesi [ ]
 
 **Kullanıcı sonucu:** KentOS yazdığı dosyayı geri okur; bozuk ya da çok büyük bir dosya uygulamayı düşürmez, sebebini satırıyla
-söyler. Yalnız IFC-01'e bağlıdır; doğrulamanın (IFC-08), altlık modelin (IFC-09) ve idare incelemesinin (BIM-18) ortak
-temelidir.
+söyler. Doğrulamanın (IFC-08), görüntüleyicinin (IFC-12), altlık modelin (IFC-09) ve idare incelemesinin (BIM-18) ortak
+temelidir. IFC-01'i beklemez; kataloğa bağlı olan IFC-08'dir.
 
-- ISO 10303-21 ayrıştırıcısı: başlık, nesne tablosu, başvurular, Türkçe harflerin kodlaması; akışla okuma.
-- Şema sözlüğü: IFC 4.3'ün sınıfları, öznitelik sıraları ve türleri (şemadan üretilen veri); ters ilişki dizini.
-- Sınırlar: boyut, derinlik, süre, bellek; iptal; döngüsel başvuru ve yerleşim bulgudur. Kullanıcı girdisinde panik
-  üretilmez (kılavuz §14).
-- Geometri bu pakette yoktur.
+- **Motor denemesi önce** ([ADR 8061](../docs/adr/8061-ifc-viewer-and-reading-engine.md) §7): IFClite'ın Rust çekirdeği
+  sabit sürümle yalnız `kentos-ifc`'e bağlanır. Derleme (yerel ve wasm32), kendi dosyalarımız, Türkçe harfler, açık
+  örnekler, bozuk girdi, iptal, büyük koordinat, süre ve bellek ölçülür. Bağımlılık sahibin onayıyla eklenir (kılavuz §3).
+- **Okuma yüzü** (`kentos-ifc`, `read` özelliği): özet (şema, başlık, birimler, koordinat sistemi ve harita dönüşümü),
+  nesneler (`GlobalId`, sınıf, tip, ad), yapı ağacı, ters ilişki dizini, istenince özellik ve miktar setleri, bulgular.
+  Girdi bayttır; motorun türleri yüzde görünmez.
+- **Şema sözlüğü:** sınıflar, öznitelik adları ve sıraları motorun üretilmiş tablosundan gelir ve resmî IFC 4.3 şemasına
+  karşı sınanır. Tür ve sayı denetimine yetmediği yerde tablo resmî şemadan üretilir.
+- **Sınırlar:** boyut, derinlik, süre, bellek; iptal; döngüsel başvuru ve yerleşim bulgudur. Kullanıcı girdisinde panik
+  üretilmez (kılavuz §14); motorun çağrıları sınırda sarılır.
+- **Gövde ağları** (`mesh` özelliği) bu pakette yalnız denenir; ürüne görüntüleyiciyle girer (IFC-12).
+- **Deneme geçemezse** kendi ISO 10303-21 ayrıştırıcımız ve şemadan üretilen sözlük yazılır (ADR 8061 §8); yüz değişmez.
 
-**İlk kabul:** yazılan her örnek geri okununca aynı nesne çizgesini verir; bilerek bozulan dosyalar (kesik satır, olmayan
-başvuru, döngü, yanlış şema adı) hata verir, panik vermez; açık IFC 4.3 örnekleri okunur; ölçeklenmiş modelde süre ve bellek
-tabanı yazılır.
+**İlk kabul:** ADR 8061 §7'nin tablosu ölçülmüş ve karar ADR'ye yazılmış; yazılan her örnek geri okununca aynı nesne
+çizgesini verir; bilerek bozulan dosyalar (kesik satır, olmayan başvuru, döngü, yanlış şema adı) hata verir, panik vermez;
+açık IFC 4.3 örnekleri okunur; ölçeklenmiş modelde süre ve bellek tabanı yazılır.
 
 #### IFC-08 — Yazılmış dosyadan doğrulama, IDS ve kontrol formu [ ]
 
@@ -363,25 +379,31 @@ tabanı yazılır.
   listesi, okunan dosyanın kimlik ve sınıflarıyla karşılaştırılır. Kalan nesnelerin IDS sonucu olumlu olsa da
   tamamen eksik bir nesne EK-9/8 bulgusudur. [IDS kapsam ve kardinalite](https://github.com/buildingSMART/IDS/blob/development/Documentation/UserManual/specifications.md)
 - Mimari denetim'de "Model" grubu aynı denetimi son yazılan dosyada ya da geçici bir dışa aktarmada koşar.
-- Bağımsız okuyucular başvuru düzeneğindedir; ürünle dağıtılmaz.
+- Bağımsız okuyucular başvuru düzeneğindedir; ürünle dağıtılmaz. Ürünün okuma motoru (IFC-07) bağımsız başvuru sayılmaz.
+- Bulgular görüntüleyicide (IFC-12) nesnesini boyar ve seçer.
 
 **İlk kabul:** 21 sorunun her biri için geçen ve kalan kanıt örneği. Üç kapıdan biri ve ilgili başvurular IFC’den
 çıkarılır. Geçerli şemaya ve kalan kapıların olumlu IDS sonucuna rağmen EK-9/8 eksik kapıyı kaynak kimliğiyle bulur. Bulgu
 planda ve 3B'de nesneyi seçer; ikinci bağımsız denetleyiciyle ayrışan satır kalmaz.
 
-#### IFC-09 — Altlık model: içe alma ve görüntüleme [ ]
+#### IFC-09 — Altlık model: projede saklama ve gösterme [ ]
 
-**Kullanıcı sonucu:** Başka bir yazılımın IFC 4.3 modeli KentOS'ta salt okunur altlık olarak açılır: planda katında kesilmiş,
-3B'de gövdesiyle; tıklanan nesnenin sınıfı, adı ve özellikleri görünür.
+**Kullanıcı sonucu:** Başka bir yazılımın IFC 4.3 modeli KentOS projesinde salt okunur altlık olur: planda katında
+kesilmiş, 3B'de gövdesiyle, projenin koordinatında; tıklanan nesnenin sınıfı, adı ve özellikleri görünür.
 
-- Geometri: yerleşimler, öteleme ve yüzey gövdeleri, eşlenmiş gövdeler. Gösterilemeyen gösterim türü listelenir; nesne
-  sınır kutusuyla ve işaretiyle durur.
+- Okuma, gövdeler, yapı ağacı ve özellik paneli görüntüleyicinindir (IFC-12); bu paket onları projeye bağlar
+  (ADR 8061 §4'ün "altlık olarak ekle" isteği).
+- **Yerleştirme:** dosyanın koordinat sistemi ve harita dönüşümü projeninkiyle karşılaştırılır. Uyuşmazlık bulgudur;
+  sessiz dönüşüm yapılmaz (kılavuz §5).
+- **Planda gösterim:** katın kesme yüksekliğinde gövdelerin kesiti ve altındaki izdüşümü.
+- Gösterilemeyen gösterim türü listelenir; nesne sınır kutusuyla ve işaretiyle durur.
 - Dosya olduğu gibi saklanır (özeti, şeması, disiplini, revizyonu); yabancı özellik seti ve sınıflandırma kaybolmaz.
 - `GlobalId` haritası; yeni revizyon gelince fark (IFC-10).
 - Onayla düzenlenebilir KentOS nesnesine dönüştürme bu paketin dışındadır; ayrı ADR.
 
-**İlk kabul:** KentOS'un kendi dosyası geri alındığında sayılar ve sınır kutuları aynı; açık bir mimari IFC 4.3 örneği,
-gösterilen nesne oranı ve gösterilemeyenlerin listesiyle açılır; süre ve bellek ölçülür.
+**İlk kabul:** KentOS'un kendi dosyası geri alındığında sayılar ve sınır kutuları aynı, gövdeler çizimin üstüne oturur;
+açık bir mimari IFC 4.3 örneği, gösterilen nesne oranı ve gösterilemeyenlerin listesiyle açılır; koordinat sistemi farklı
+bir dosya yerleştirilmeden bulgu verir; süre ve bellek ölçülür.
 
 #### IFC-10 — Federasyon, karşılaştırma ve sorun değişimi [ ]
 
@@ -412,6 +434,37 @@ dosyaları kaybını söyleyerek okur. [BIM-16](bim-plan.md#5-iş-paketleri) ile
 **İlk kabul:** iki pilot paketi en az iki bağımsız model okuyucusundan ve bağımsız PDF/A doğrulayıcısından geçer; idarenin
 cevabındaki her madde kataloğa ya da bir pakete bağlanır.
 
+#### IFC-12 — IFC görüntüleyici [ ]
+
+**Kullanıcı sonucu:** Bir IFC dosyası KentOS'un içinde, kendi penceresinde açılır: model döndürülür, yapı ağacından kat ve
+nesne seçilir, tıklanan nesnenin özellikleri okunur, kesit düzlemiyle içine bakılır. Mimar dışa aktardığı dosyayı tek
+tıkla görür. Karar ve kurallar [ADR 8061](../docs/adr/8061-ifc-viewer-and-reading-engine.md); sıra B12b; IFC-07'ye bağlıdır.
+
+- **Gevşek bağ** (ADR 8061 §3): saf çekirdek (`kentos-model-view`; yerel ve wasm32), Iced bileşeni kendi paketinde,
+  uygulamada tek bağdaştırıcı. Uygulamayla yalnız bağlantı yüzünden konuşur (ADR 8061 §4). Bağımlılık yönü
+  `scripts/arch/deps.mjs`'e yazılır.
+- **Sürekli iki sınama:** çekirdeğin ve `kentos-ifc`'in wasm32 derlemesi; bileşeni uygulama olmadan açan tek pencere
+  örneği ve resmi. Ayrı program ve web bu paketin dışındadır (ADR 8061 §6); bu iki sınama o yolları açık tutar.
+- **Gövde ağları** (`kentos-ifc`, `mesh` özelliği): nesne başına float64 köşeler, üçgenler ve renk; gösterilemeyen
+  gösterim türü sebebiyle listede, nesne sınır kutusuyla.
+- **Pencere** (ADR 8061 §5): yapı ve sınıf ağacı, sahne, özellikler; gizle, yalnız bırak, hepsini göster; mahal ve açıklık
+  ayrı açılıp kapanır; kesit düzlemi ve kesit kutusu (çizicide kırpma yeni iştir); hazır bakışlar; ilerleme ve iptal.
+- **Mimari ve Yol ile bağ:** IFC dışa aktarımının sonucunda "Görüntüle"; görüntüleyicide seçilen nesne, dosyayı KentOS
+  yazdıysa, planda seçilir.
+- **Komutlar:** `ifc.view` (görünüm) ve salt okunur `ifc.inspect` (katalog, ≥ 20 bağımsız durum, Python, MCP). Şeritteki
+  yer resimle sahibe gönderilir; yeni tuşlar kısayol listesine girer.
+- **Ortak parçalar:** binanın 3B görünümü ([BIM-06](bim-plan.md#5-iş-paketleri)) aynı çekirdeği ve pencere parçalarını
+  kullanır; hangisi önce yapılırsa parçaları o kurar.
+- **Eski sürümler:** motorun okuduğu IFC4 ve IFC2x3 dosyaları şema adı gösterilerek açılır; kayıp listesi ve denetimi
+  IFC-11'dedir.
+- Üçgen ağdan ölçü, alan ya da hacim gösterilmez; miktarlar dosyadaki setlerden okunur (kılavuz §23.3).
+
+**İlk kabul:** bölüm binasının dosyası açılır: gövde sayısı dışa aktarılanla eşit, ağaçta katlar, tıklanan duvarın
+özellikleri dosyadakiyle aynı. Dışa aktarımdan tek tıkla açılır ve seçilen duvar planda seçilir. Açık bir IFC 4.3 örneği
+gösterilemeyenlerin listesiyle açılır; bozuk dosya açık iletiyle reddedilir; iptal edilen okuma pencereye yazmaz; pencere
+kapanınca bellek ve GPU kaynağı bırakılır. wasm32 derlemesi ve tek pencere örneği yeşil. Gerçek pencerede, gerçek fare ve
+klavyeyle kabul; resimler.
+
 ## 11. Örnekler ve regresyon
 
 | Örnek | Başarı ölçütü |
@@ -424,10 +477,13 @@ cevabındaki her madde kataloğa ya da bir pakete bağlanır.
 | Yeniden dışa aktarma, yeniden adlandırma, sil ve geri al, kopya, tip değişikliği | Kimlik korunur ya da yenisi üretilir; fark öngörülebilir; zaman damgası sabitlenmiş karşılaştırma |
 | Yolun IFC'si (`road_ifc_cases.py`) | `IfcAlignment` şeması, yerler ve kotlar; ortak koordinat ve STEP değişikliği yolu bozmaz |
 | Komut ve masaüstü akışı | Menü, komut, Python ve MCP aynı sonucu verir; geçersiz yol, üzerine yazma, iptal, karşılanmayan profil; gerçek pencerede kabul |
+| Görüntüleyici: kendi dosyalarımız, başka yazılımların açık örnekleri, bozuk ve çok büyük dosyalar | Sayılar yazılanla aynı; gösterilemeyenler listede; panik ve asılma yok; iptal temiz; wasm32 derlemesi ve tek pencere örneği yeşil (IFC-07, IFC-12) |
 
 **Araştırma sınırı.** İki yönetmeliğin ana metni tam okundu. Ekler ilk turda indirilmemişti; 15 Kasım 2026'da OCR ile
 okunup [mevzuat/bim/](../mevzuat/bim/README.md) altına yazıldı. EK-8 (nesne tablosu yok, LOD 300), EK-5 5.5.4'ün mahal
 kuralı ve EK-7'nin düşey datum notu sayfadan okundu (araştırma notu §4.1). TSE metinleri ve e-PYS'nin uygulama kuralları
 hâlâ okunmadı; EK-6 ve EK-7'nin uzun açıklamalarına dayanan kurallar üretim iddiasından önce PDF sayfasıyla
 karşılaştırılır (B1). ADR'lerdeki test sonuçları geçmiş kanıttır; bu plan çalışmasında ürün testleri
-yeniden çalıştırılmadı.
+yeniden çalıştırılmadı. Görüntüleyicinin ve okuma motorunun kaynakları
+[ayrı nottadır](../docs/research/2026-11-15-ifc-goruntuleyici.md): IFClite'ın paketleri derlenmedi ve ölçülmedi; benzer
+görüntüleyiciler belgelerinden okundu, çalıştırılmadı.

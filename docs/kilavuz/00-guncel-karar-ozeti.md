@@ -18,7 +18,7 @@
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
 - **BIM yönetmeliği ve IFC uyum planı (15 Kasım 2026; [plan/bim-plan.md](../../plan/bim-plan.md), [plan/ifc-uyum.md](../../plan/ifc-uyum.md), dal `codex/bim-ifc-uyum`).**
-  - **Bu tur plandır;** uygulama kodu değişmedi. Paket numaraları (BIM-01…20, IFC-01…11) TODOS.md §18 ile aynıdır; o bölümün
+  - **Bu tur plandır;** uygulama kodu değişmedi. Paket numaraları (BIM-01…20, IFC-01…12) TODOS.md §18 ile aynıdır; o bölümün
     eski on maddesi yeni paketlere eşlendi.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
@@ -39,6 +39,18 @@
   - **Sıra:** ekler kataloğa (B1) → 2B teslim (B3–B5) → ruhsat düzeyinde model: 3B görünüm, yangın bilgisi, zonlar, eksik
     elemanlar, geometri, çok bina (B6–B11) → dosyadan doğrulama ve tek paket (B12–B17) → dış disiplin ve belediyenin inceleme
     tarafı (B18–B20).
+  - **IFC görüntüleyici ve okuma motoru (15 Kasım 2026; [ADR 8061](../adr/8061-ifc-viewer-and-reading-engine.md), IFC-07,
+    IFC-12, sıra B12 ve B12b; karar, uygulanmadı):**
+    - Sahibin kararı: görüntüleyici uygulamanın içinde gelir ama gevşek bağlıdır; gerektiğinde hızlıca ayrı program olur
+      ya da WASM ile web'de çalışır. Ayrı program ve web şimdi yapılmaz.
+    - Üç katman: `kentos-ifc`'in okuma yüzü ve gövde ağları; saf görüntüleyici çekirdeği (yerel ve wasm32; kaynağını
+      bilmez, binanın 3B görünümü de onu kullanır); kendi paketinde Iced bileşeni. Uygulamada tek bağdaştırıcı, dar bir
+      bağlantı yüzü. Bağımlılık yönü `scripts/arch/deps.mjs` ile, ayrılabilirlik wasm32 derlemesi ve tek pencere örneğiyle
+      her dilimde sınanır.
+    - Motor IFClite'ın Rust çekirdeğidir (MPL-2.0): yalnız `kentos-ifc`'in içinde, sabit sürümle. **Henüz bağlanmadı:**
+      deneme (ADR 8061 §7) sahibin onayıyla başlar; geçemezse kendi okuyucumuz yazılır.
+    - Çizim mevcut 3B sahnedir; üçgen ağ ölçü kaynağı değildir; katı modelleme çekirdeği kararı (yukarıda) değişmez.
+    - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Paketler derlenmedi, hiçbir ölçüm yok.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.
