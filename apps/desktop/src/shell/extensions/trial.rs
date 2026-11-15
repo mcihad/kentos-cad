@@ -36,6 +36,8 @@ pub(crate) struct TrialState {
     pub(crate) ext: String,
     pub(crate) running: Option<Arc<AtomicBool>>,
     pub(crate) report: Option<Value>,
+    /// The user started it (the tool examples from Eklentiler, examples.rs): a toast and the log say how it went.
+    pub(crate) by_user: bool,
 }
 
 /// A rule's findings as a trial reports them: each by the object's place in the agent's list (`feature`), its fix's
@@ -105,6 +107,12 @@ impl App {
             })?;
         if let Some(Some(why)) = self.extensions.python_reasons.get(&ext) {
             return Err(("not_ready", format!("Eklentinin kodu çalışmıyor: {why}")));
+        }
+        // Its tools' own examples, on drawings of their own (docs/adr/8057 §48): no objects of the agent's.
+        if params.get("examples") == Some(&Value::Bool(true)) {
+            let (started, task) = self.ext_examples_start(&ext, false)?;
+            self.extensions.trial_job = Some(task);
+            return Ok(started);
         }
         let features = params
             .get("features")
@@ -187,6 +195,7 @@ impl App {
             ext: ext.clone(),
             running: Some(Arc::clone(&stop)),
             report: None,
+            by_user: false,
         });
         let head = json!({
             "extension": { "id": ext, "version": manifest.version.to_string() },
@@ -196,7 +205,7 @@ impl App {
                 "note": "Sentetik çizim: kullanıcının çizimine dokunulmadı; deneme bitince silindi.",
             },
         });
-        let task = crate::python_setup::in_background(
+        let task = crate::python_setup::in_background_deep(
             move || run(made, rules, tools, head, &stop),
             json!({ "status": "failed", "error": "Deneme koşusu cevapsız kaldı." }),
             |report| msg(Event::TrialDone(Box::new(report))),
@@ -219,6 +228,10 @@ impl App {
 
     /// The trial ended: its report kept, the agent's call waiting for it answered.
     pub(crate) fn ext_trial_done(&mut self, report: Value) {
+        let by_user = self.extensions.trial.as_ref().is_some_and(|t| t.by_user);
+        if by_user && report["kind"] == "examples" {
+            self.ext_examples_said(&report);
+        }
         if let Some(t) = self.extensions.trial.as_mut() {
             t.running = None;
             t.report = Some(report);

@@ -32,6 +32,7 @@ mod tool_pins;
 mod bisect;
 mod browse;
 pub(crate) mod environment;
+mod examples;
 mod panel_view;
 mod panels;
 mod workshop;
@@ -314,6 +315,8 @@ pub(crate) enum Event {
     /// Go to another installed version: the extension and the version.
     Switch(String, String),
     ResetData(String),
+    /// Its tools' examples run on drawings of their own (examples.rs, docs/adr/8057 §48).
+    RunExamples(String),
     PickPackage,
     /// The chosen `.kek`: its name and bytes; none when the user cancelled.
     Picked(Option<(String, Vec<u8>)>),
@@ -763,6 +766,10 @@ impl App {
                 }
                 self.extensions_changed();
             }
+            Event::RunExamples(id) => match self.ext_examples_start(&id, true) {
+                Ok((_, task)) => return task,
+                Err((_, why)) => self.extensions_say(true, why),
+            },
             Event::ResetData(id) => {
                 let result = self.extensions.registry.as_mut().map(|r| r.reset_data(&id));
                 match result {

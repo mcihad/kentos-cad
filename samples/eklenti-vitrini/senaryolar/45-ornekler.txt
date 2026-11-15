@@ -1,0 +1,16 @@
+# Aracın örnekleri: Eklentiler › Eklenti Vitrini › Örnekleri çalıştır. TAKS ve Çekme mesafesi araçlarının tanımındaki
+# örnekler KentOS'un kendi sentetik çiziminde koşar ve beklenenle karşılaştırılır; sonuç bildirimde. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 300 852   # komut satırı
+type EKLENTILER
+key Return
+wait 2500
+shot 45-eklentiler
+click 1003 232  # Örnekleri çalıştır
+wait 800
+shot 45-calisiyor
+wait 2500
+shot 45-sonuc

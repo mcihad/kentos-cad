@@ -54,6 +54,8 @@ const KINDS: [&str; 8] = [
 const OUTPUT_KINDS: [&str; 4] = ["features", "table", "number", "string"];
 
 mod descriptor_schema;
+mod examples;
+pub use examples::{MOST_EXAMPLE_FEATURES, MOST_EXAMPLES};
 
 pub use descriptor_schema::descriptor_schema;
 
@@ -94,6 +96,9 @@ pub struct ExternalTool {
     pub outputs: Vec<Output>,
     /// How long a run may take before it is stopped as overdue, seconds.
     pub timeout: u64,
+    /// Its examples as its descriptor gives them (docs/adr/8057 §48, PY-TOOL-23): run by the host on a drawing of
+    /// their own and checked against what each expects.
+    pub examples: Vec<Value>,
 }
 
 /// Why a run gave nothing.
@@ -407,6 +412,7 @@ pub fn from_descriptor(
             ));
         }
     };
+    let examples = examples::examples_of(o.get("examples"))?;
     let whose = format!(
         "{extension_name} eklentisinin aracı ({extension} {version}). Eklentinin kendi Python ortamında, ayrı bir \
          süreçte çalışır; ayrı süreç bir korumalı alan değildir: eklenti sizin haklarınızla çalışır, KentOS yalnız \
@@ -459,6 +465,7 @@ pub fn from_descriptor(
         local: local.to_owned(),
         outputs,
         timeout,
+        examples,
     })
 }
 

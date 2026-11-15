@@ -98,5 +98,130 @@
     "runtimes": [
       "desktop-python"
     ]
-  }
+  },
+  "examples": [
+    {
+      "title": "Kenara yakın ve ortadaki yapı",
+      "features": [
+        {
+          "layer": "parsel",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  20,
+                  0
+                ],
+                [
+                  20,
+                  20
+                ],
+                [
+                  0,
+                  20
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "layer": "yapi",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  1,
+                  1
+                ],
+                [
+                  6,
+                  1
+                ],
+                [
+                  6,
+                  6
+                ],
+                [
+                  1,
+                  6
+                ],
+                [
+                  1,
+                  1
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "no": "Y-01"
+          }
+        },
+        {
+          "layer": "yapi",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  8,
+                  8
+                ],
+                [
+                  12,
+                  8
+                ],
+                [
+                  12,
+                  12
+                ],
+                [
+                  8,
+                  12
+                ],
+                [
+                  8,
+                  8
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "no": "Y-02"
+          }
+        }
+      ],
+      "params": {
+        "mesafe": 3
+      },
+      "expect": {
+        "outputs": {
+          "tasan": 1,
+          "tamponlar": {
+            "count": 2,
+            "has": [
+              {
+                "yapi": "Y-01",
+                "durum": "taşıyor"
+              },
+              {
+                "yapi": "Y-02",
+                "durum": "uygun"
+              }
+            ]
+          }
+        },
+        "summary": "1 yapı"
+      }
+    }
+  ]
 }

@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.0.40 — 15 Kasım 2026
+
+- İki aracın tanımında örnekler (`examples`): TAKS'ta biri aşan iki parsel, Çekme mesafesinde kenara yakın ve ortadaki
+  yapı; her biri beklenen çıktılarıyla (aşan sayısı, yazılan nesnelerin durumu, özet). Eklentiler › Vitrin › Örnekleri
+  çalıştır onları KentOS'un kendi sentetik çiziminde koşturup sonucu söyler; ajan da `extension.workshop.trial` ile
+  `examples: true`.
+
 ## 1.0.39 — 15 Kasım 2026
 
 - İşlemler aracı "Çekme mesafesi denetimi" (Vitrin › Analiz › Çekme mesafesi): her yapının çevresine KentOS'un

@@ -22,6 +22,68 @@
     "description": {
       "type": "string"
     },
+    "examples": {
+      "description": "Örnekler: KentOS her birini kendi sentetik çiziminde çalıştırıp beklenenle karşılaştırır.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "expect": {
+            "additionalProperties": false,
+            "properties": {
+              "outputs": {
+                "description": "Çıktı adına: sayı ya da metnin değeri; nesne çıktısının count ve has (öznitelik kümeleri).",
+                "type": "object"
+              },
+              "summary": {
+                "description": "Özette geçmesi beklenen söz.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "features": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "attrs": {
+                  "type": "object"
+                },
+                "geometry": {
+                  "type": "object"
+                },
+                "layer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "layer",
+                "geometry"
+              ],
+              "type": "object"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "type": "array"
+          },
+          "params": {
+            "description": "Aracın parametreleri; nesne parametresi örneğin katmanlarını adıyla anar.",
+            "type": "object"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "features"
+        ],
+        "type": "object"
+      },
+      "maxItems": 10,
+      "type": "array"
+    },
     "feedback": {
       "additionalProperties": false,
       "properties": {

@@ -945,15 +945,15 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
   söylenir [PY-TOOL-17]. İşlenmiş sonuçta "iptal edildi" yalanı söylenmez; `already_committed` anlamı korunur [EKL-04].
   — *tamamlandı (ADR 8057 §7): akışlı ilerleme ve günlük, Durdur → 5 sn → sonlandırma, zaman aşımı, çökme ve bellek
   tek yaşam döngüsünde, tek geri alma adımı.*
-- [ ] Eklenti analizinden yerleşik araç çağrısı (`ProcessingService`) [PY-TOOL-18]; model tablo/dosya/katman/sonucu
+- [x] Eklenti analizinden yerleşik araç çağrısı (`ProcessingService`) [PY-TOOL-18]; model tablo/dosya/katman/sonucu
   sonraki adıma aktarır, mevcut tablo/dosya sınırları kapanır [PY-TOOL-19]; model eklenti kimliği/sürümü/özetini ve
   ortam gereksinimini saklar, eksik eklenti model açılırken kod kurdurmaz [PY-TOOL-20]. Arayüz, komut satırı, toplu iş,
   Python, AI/MCP ve başsız sunucu aynı araç kimliği/şema/sonuç sözleşmesi [PY-TOOL-21]; çalışma kökeni (araç, eklenti,
   sürüm, ortam özeti, girdi anlık görüntüsü, parametre/birim/CRS/tohum, çıktı kimlikleri) [PY-TOOL-22]; genel araç
   üst verisinde örnek veri ve doğruluk testleri [PY-TOOL-23].
-  — *kısmen (ADR 8057 §7, §13, §15): modelde yerleşiklerle zincir (P12), adım eklentiyi sabitler, her yüzeyde aynı
-  araç kimliği, çalışma kökeni, komuttan (§46) ve eklenti aracından (§47) yerleşik araç; kalan: araç üst verisinde
-  örnek veri ve doğruluk testleri [PY-TOOL-23].*
+  — *tamamlandı (ADR 8057 §7, §13, §15, §46–§48): modelde yerleşiklerle zincir (P12), adım eklentiyi sabitler, her yüzeyde aynı
+  araç kimliği, çalışma kökeni, komuttan (§46) ve eklenti aracından (§47) yerleşik araç, araç tanımında örnekler ve
+  doğruluk sınaması (§48).*
 - [x] **Bileşik `ToolHost`:** `crates/native/application/src/processing_host.rs`'in `ToolHost`'u yerleşik Rust
   algoritmalarıyla `ext.<id>.<araç>` Python algoritmalarını birleştirir; Python algoritması `uv run --locked --no-sync`
   ile ayrı süreçte, `BatchFlow` (`stopped()`, `progress(done, total)`, `stop_flag()`) üzerinden gerçekten durdurulabilir;

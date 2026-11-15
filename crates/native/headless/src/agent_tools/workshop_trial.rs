@@ -26,7 +26,9 @@ pub(super) fn tool() -> Tool {
                       features'taki sırasıyla, düzeltmesi varsa komutu), her aracın yazdığı katmanlar ve nesneler ya da \
                       eklentinin hatası iz kaydıyla döner. Nesne: katman adı, GeoJSON şekli, öznitelikler. Kural \
                       verilmezse eklentinin bütün denetimleri; araç yalnız istenince (cad.processing.run girdisi, \
-                      katmanlar features'taki adlarıyla). Eklenti kurulu, etkin ve Python ortamı hazır olmalı."
+                      katmanlar features'taki adlarıyla). examples: true ile araçların tanımındaki örnekler kendi \
+                      çizimlerinde çalışır ve beklenenle karşılaştırılır (features gerekmez). Eklenti kurulu, etkin ve \
+                      Python ortamı hazır olmalı."
             .into(),
         input: object(
             json!({
@@ -43,9 +45,11 @@ pub(super) fn tool() -> Tool {
                 "audits": { "type": "array", "items": { "type": "string" },
                             "description": "Denetimlerin yerel kimlikleri (entrypoints.audits[].id); verilmezse hepsi" },
                 "tools": { "type": "array", "maxItems": MOST_TOOLS,
-                           "items": { "type": "object", "description": "cad.processing.run girdisi: tool (ext.<eklenti>.<araç>), parameters" } }
+                           "items": { "type": "object", "description": "cad.processing.run girdisi: tool (ext.<eklenti>.<araç>), parameters" } },
+                "examples": { "type": "boolean",
+                              "description": "true: araçların tanımındaki örnekleri (examples) çalıştırıp beklenenle karşılaştırır; features gerekmez" }
             }),
-            &["id", "features"],
+            &["id"],
         ),
         read_only: false,
         destructive: false,
@@ -58,7 +62,9 @@ pub(super) fn trial(host: &mut dyn Host, args: &Value) -> Result<Value, Headless
         .get("features")
         .and_then(Value::as_array)
         .map_or(0, Vec::len);
-    if count == 0 || count > MOST_FEATURES {
+    // Its tools' own examples bring their objects (docs/adr/8057 §48).
+    let examples = args.get("examples") == Some(&Value::Bool(true));
+    if !examples && (count == 0 || count > MOST_FEATURES) {
         return Err(HeadlessError::new(
             "invalid_input",
             format!(
@@ -134,6 +140,15 @@ mod tests {
         assert_eq!(
             trial(&mut desktop, &none).unwrap_err().code,
             "invalid_input"
+        );
+        // Its tools' examples bring their own objects (docs/adr/8057 §48): no features needed.
+        let examples = json!({ "id": "tr.ornek.x", "examples": true });
+        assert_eq!(trial(&mut desktop, &examples).unwrap(), report);
+        assert!(
+            desktop
+                .asked
+                .iter()
+                .any(|(m, p)| m == "trial" && *p == examples)
         );
         struct Server;
         impl Host for Server {

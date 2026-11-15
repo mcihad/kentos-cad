@@ -104,6 +104,22 @@ pub fn descriptor_schema() -> Value {
             { "properties": { "type": { "enum": OUTPUT_KINDS.iter().filter(|k| **k != "features").collect::<Vec<_>>() } } }
         ]
     });
+    // Its examples (docs/adr/8057 §48): apart, the whole would pass the macro's depth.
+    let feature = json!({ "type": "object", "required": ["layer", "geometry"], "additionalProperties": false,
+        "properties": { "layer": text, "geometry": { "type": "object" }, "attrs": { "type": "object" } } });
+    let expect = json!({ "type": "object", "additionalProperties": false, "properties": {
+        "outputs": { "type": "object",
+                     "description": "Çıktı adına: sayı ya da metnin değeri; nesne çıktısının count ve has (öznitelik kümeleri)." },
+        "summary": { "type": "string", "description": "Özette geçmesi beklenen söz." } } });
+    let example = json!({ "type": "object", "required": ["title", "features"], "additionalProperties": false,
+        "properties": {
+            "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+            "features": { "type": "array", "minItems": 1, "maxItems": super::MOST_EXAMPLE_FEATURES, "items": feature },
+            "params": { "type": "object",
+                        "description": "Aracın parametreleri; nesne parametresi örneğin katmanlarını adıyla anar." },
+            "expect": expect } });
+    let examples = json!({ "type": "array", "maxItems": super::MOST_EXAMPLES, "items": example,
+        "description": "Örnekler: KentOS her birini kendi sentetik çiziminde çalıştırıp beklenenle karşılaştırır." });
     json!({
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "KentOS extension tool descriptor (kentos.processingTool 1)",
@@ -129,7 +145,8 @@ pub fn descriptor_schema() -> Value {
             "capabilities": { "type": "object", "additionalProperties": false, "properties": {
                 "runtimes": { "type": "array", "items": text,
                               "description": "Bu KentOS eklenti araçlarını masaüstünde çalıştırır: desktop-python." } } },
-            "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 3600 }
+            "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 3600 },
+            "examples": examples
         }
     })
 }

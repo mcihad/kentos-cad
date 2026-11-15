@@ -2700,3 +2700,36 @@ Python `ProcessingContext.run_tool`, `ToolAnswer`, `_tool_value`; Vitrin 1.0.39 
 - **Sınamalar:** süreç havuzu 1 (sahibi yanıtlayan koşuda çağrı yöntemi ve parametreleriyle ulaşır, cevabı koda
   döner; yanıtlamayan koşu eskisi gibi reddeder), masaüstü 1 (yerleşik Tampon verilen iki karenin iki tamponunu
   yeni katmanda verir; eklenti aracı, başka yöntem ve boş girdi söylenir).
+
+## §48. Aracın örnekleri: tanımda sentetik veri ve doğruluk sınaması (`ADIM 19`, PY-TOOL-23; `ADIM 21`, Kapı 3)
+
+**15 Kasım.** Kod: İşlemler `external/examples.rs` (`examples_of`, `MOST_EXAMPLES`, `MOST_EXAMPLE_FEATURES`),
+`ExternalTool::examples`, araç tanımının JSON Schema'sı; masaüstü `examples.rs` (`with_examples`, `ext_examples_start`,
+`run`, `one`, `check`, `ext_examples_said`), `trial.rs` (`TrialState::by_user`, `examples` kipi), Eklentiler penceresi
+(`Event::RunExamples`, "Örnekleri çalıştır"); başsız `extension.workshop.trial` (`examples`); Vitrin 1.0.40.
+
+- **Karar: örnek aracın tanımında, beklenenle birlikte.** `examples` (en çok 10): her biri bir ad, sentetik nesneler
+  (katman adı, GeoJSON şekli, öznitelikler; en çok 500), aracın parametreleri (nesne parametresi örneğin katmanını
+  adıyla anar; verilmeyen parametre aracın varsayılanıyla) ve beklenen (`expect`): sayı ya da metin çıktısının değeri,
+  nesne çıktısının `count`'u ve `has` (en az bir yazılan nesnenin taşıması gereken öznitelik kümeleri), özette geçmesi
+  gereken söz (`summary`). Biçimi araç tanımı okunurken denetlenir (yeri söylenir), JSON Schema'da kapalı.
+- **Koşu deneme koşusunun yolu (§37):** her örnek kendi sentetik çiziminde, kullanıcının çizimine dokunmadan; araç
+  İşlemler'in çalıştırdığı gibi (eklentinin süreci, tipli sonuç). Karşılaştırma: sayılar sayı olarak (metin ve ondalık
+  virgül de; milyarda bir pay), metin yazıldığı gibi; nesne çıktısının katmanı çıkış parametresinden (örneğin verdiği ya
+  da aracın varsayılanı: yeni katmanın adı ya da katmanın kimliği). Durdur örnekler arasında.
+- **İki yüz:** kullanıcı Eklentiler › eklenti › "Örnekleri çalıştır" (araçlarından biri örnek taşıyorsa; koşarken
+  "Örnekler çalışıyor…"): sonuç bildirimde ("2 örneğin hepsi geçti", "3 örnekten 2 tanesi geçti, 1 tanesi kaldı";
+  sayıdan sonra ek gerektirmeyen söz, "2'si", "3'ü" sayıya göre değişir), kalan her örnek eklentinin günlüğünde
+  nedeniyle ve eklenti sorunu olarak; hepsi geçince sorun kalkar. Ajan `extension.workshop.trial` ile `examples: true` (nesne
+  gerekmez): rapor örnek başına araç, ad, geçti/kaldı, nedenler, özet ve süre. Aynı anda bir deneme ya da örnek koşusu.
+- **Neden:** yapay zekânın ürettiği eklentiyi doğrulamanın en ucuz yolu aracın kendi söylediği örnekler; inceleyici ve
+  kullanıcı da aynı örneği görür (PY-AI-04: üretilen Python ayrı bir test koşusuyla doğrulanır).
+- **Vitrin 1.0.40:** TAKS'ta biri aşan iki parsel (aşan 1; 0,6 aşıyor, 0,08 uygun; özet "1 parsel"), Çekme
+  mesafesinde kenara yakın ve ortadaki yapı (taşan 1; Y-01 taşıyor, Y-02 uygun). `45-ornekler`.
+- **Derin yığın:** örnek ve deneme koşuları 64 MB yığınlı bir iş parçacığında (`in_background_deep`). Örnek aracı
+  komut zarfıyla çalıştırır, araç da içinden yerleşik aracı aynı yolla çağırır (§47): iki işleme koşusu tek iş
+  parçacığında iç içe; varsayılan 2 MB hata ayıklama derlemesinde taştı (gerçek pencere sınaması yakaladı: "stack
+  overflow"; İşlemler penceresinden aynı araç sorunsuz çalışıyordu).
+- **Sınamalar:** İşlemler 1 (örnek okunur; adsız, şekilsiz ve on birinci örnek yeriyle söylenir) ve şemanın sapması,
+  masaüstü 1 (sayı ve metin karşılaştırması, öznitelik kümesi, sonucun sözü), başsız 1 (örnek kipi nesnesiz
+  masaüstüne gider); gerçek pencerede Vitrin'in iki örneği geçti.
