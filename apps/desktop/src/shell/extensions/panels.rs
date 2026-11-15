@@ -331,6 +331,12 @@ impl OpenPanel {
                         .choices
                         .insert(id.clone(), value.clone().or(first).unwrap_or_default());
                 }
+                // Its own value; none waits for the drawing's system (panel_crs.rs `default_crs`).
+                Component::CrsPicker { id, value, .. } => {
+                    panel
+                        .choices
+                        .insert(id.clone(), value.clone().unwrap_or_default());
+                }
                 _ => {}
             }
         }
@@ -456,7 +462,8 @@ impl OpenPanel {
             }
             Component::Select { .. }
             | Component::LayerPicker { .. }
-            | Component::FieldPicker { .. } => {
+            | Component::FieldPicker { .. }
+            | Component::CrsPicker { .. } => {
                 self.choices.get(id).filter(|v| !v.is_empty()).cloned()
             }
             Component::MultiSelect { .. } => joined(self.multi.get(id)),
@@ -494,11 +501,14 @@ impl OpenPanel {
             | Component::DateField { label, .. }
             | Component::TimeField { label, .. }
             | Component::DateTimeField { label, .. }
-            | Component::FilePicker { label, .. } => label,
+            | Component::FilePicker { label, .. }
+            | Component::CrsPicker { label, .. } => label,
             _ => return None,
         };
         match c {
-            Component::LayerPicker { .. } | Component::FieldPicker { .. } => self
+            Component::LayerPicker { .. }
+            | Component::FieldPicker { .. }
+            | Component::CrsPicker { .. } => self
                 .choices
                 .get(id)
                 .is_none_or(String::is_empty)
@@ -576,6 +586,11 @@ impl OpenPanel {
                     id.clone(),
                     json!(self.choices.get(id).cloned().unwrap_or_default()),
                 );
+            }
+            // A coordinate system's `EPSG:<code>`, none when none is chosen (panel_crs.rs).
+            Component::CrsPicker { id, .. } => {
+                let chosen = self.choices.get(id).filter(|v| !v.is_empty());
+                out.insert(id.clone(), chosen.map_or(Value::Null, |v| json!(v)));
             }
             // The chosen values, in the options' order.
             Component::MultiSelect { id, options, .. } => {
@@ -891,6 +906,7 @@ impl App {
             return Task::none();
         };
         let mut panel = OpenPanel::new(ext, local, definition);
+        panel.default_crs(self.document.as_ref().map(|d| d.model.settings().srid));
         panel.side = entry.side;
         self.extensions.panels.push(panel);
         self.extensions.active_panel = self.extensions.panels.len() - 1;

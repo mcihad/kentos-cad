@@ -25,10 +25,11 @@ use crate::app::{App, Message};
 use crate::exchange::words;
 
 /// What a dialog may hold: a panel's fields and words.
-const FIELDS: [&str; 13] = [
+const FIELDS: [&str; 14] = [
     "text",
     "section",
     "filePicker",
+    "crsPicker",
     "textField",
     "numberField",
     "dateField",
@@ -155,12 +156,14 @@ impl App {
         }
         let definition = ui_panel::read(&panel)
             .ok_or_else(|| refused("invalid_input", "Pencerenin alanları okunamadı."))?;
+        let mut panel = OpenPanel::new(ext, "dialog", definition);
+        panel.default_crs(self.document.as_ref().map(|d| d.model.settings().srid));
         self.extensions.dialog = Some(ExtDialog {
             ext: ext.to_owned(),
             call,
             ok: words_of(params, "ok", "Tamam"),
             cancel: words_of(params, "cancel", "İptal"),
-            panel: OpenPanel::new(ext, "dialog", definition),
+            panel,
         });
         Ok(())
     }

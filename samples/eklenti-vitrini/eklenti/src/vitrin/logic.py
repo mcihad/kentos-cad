@@ -410,14 +410,16 @@ def csv_noktalar(ctx: ext.CommandContext) -> ext.CommandResult:
     """Katmanın sağ tık menüsünden: seçilen CSV dosyasındaki noktaları o katmana ekler (x, y sütunları TM36 metre;
     diğer sütunlar istenirse öznitelik olur). Dosyayı KentOS'un penceresi sorar (dosya seçici: yolu yazılır ya da Seç…
     ile seçilir); eklenti yalnız kullanıcının verdiği dosyayı okur (files.userSelected). Pencerenin iki sekmesi var:
-    Dosya ve Seçenekler (ayırıcı, öznitelikler); sekmesiz açıklama her sayfada. Tek geri alma adımıdır."""
+    Dosya ve Seçenekler (ayırıcı, öznitelikler, dosyanın koordinat sistemi); sekmesiz açıklama her sayfada. Dosyanın
+    sistemi çizimin sistemiyle başlar; başkası seçilirse noktalar KentOS'un dönüşümüyle (cad.crs.transform) çizimin
+    sistemine taşınır. Tek geri alma adımıdır."""
     katman = ctx.params.get("layer")
     if not katman or ctx.doc is None:
         return ctx.message("Bir katmanın sağ tık menüsünden çalışır: CSV'den nokta ekle.")
     cevap = ctx.dialog(
         "CSV'den nokta ekle",
         [
-            ui.text("Her satır bir nokta: x ve y sütunları (TM36, metre)."),
+            ui.text("Her satır bir nokta: x ve y sütunları, dosyanın koordinat sisteminde."),
             ui.file_picker(
                 "dosya", "CSV dosyası", filters=[ui.file_filter("CSV", "csv")], required=True, tab="Dosya"
             ),
@@ -429,12 +431,13 @@ def csv_noktalar(ctx: ext.CommandContext) -> ext.CommandResult:
                 tab="Seçenekler",
             ),
             ui.checkbox("oznitelik", "Diğer sütunlar öznitelik olsun", value=True, tab="Seçenekler"),
+            ui.crs_picker("crs", "Dosyanın koordinat sistemi", required=True, tab="Seçenekler"),
         ],
         ok="Ekle",
     )
     if cevap is None:
         return ctx.message("Vazgeçildi: nokta eklenmedi.")
-    eklenen, atlanan = 0, 0
+    okunan, atlanan = [], 0
     secilen = cevap.get("ayirici") or ","
     ayirici = "\t" if secilen == "sekme" else secilen
     with open(cevap["dosya"], newline="", encoding="utf-8-sig") as dosya:
@@ -445,10 +448,22 @@ def csv_noktalar(ctx: ext.CommandContext) -> ext.CommandResult:
                 atlanan += 1
                 continue
             oznitelikler = {k: v for k, v in satir.items() if k and v} if cevap.get("oznitelik") else {}
-            cad.point.create(ctx.doc, layer_id=katman, p=[x, y], attrs=oznitelikler)
-            eklenen += 1
+            okunan.append((x, y, oznitelikler))
+    # Dosyanın sisteminden çizimin sistemine: KentOS'un dönüşümü (aynı sistemde noktalar yerinde kalır).
+    kod = int(cevap["crs"].split(":")[1])
+    donen = cad.crs.transform(
+        ctx.doc, points=[cad.CrsPoint(x=x, y=y) for x, y, _ in okunan], from_=cad.CrsSide(srid=kod)
+    ).points
+    eklenen, varamayan = 0, 0
+    for (_, _, oznitelikler), nokta in zip(okunan, donen):
+        if nokta is None:
+            varamayan += 1
+            continue
+        cad.point.create(ctx.doc, layer_id=katman, p=[nokta.x, nokta.y], attrs=oznitelikler)
+        eklenen += 1
     ek = f"; {atlanan} satırın x ya da y'si okunamadı" if atlanan else ""
-    return ctx.message(f"{eklenen} nokta eklendi{ek}.")
+    ek += f"; {varamayan} nokta çizimin sistemine dönüştürülemedi" if varamayan else ""
+    return ctx.message(f"{eklenen} nokta eklendi ({cevap['crs']}){ek}.")
 
 
 @ext.command("katman-csv")

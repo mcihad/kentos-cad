@@ -16,6 +16,7 @@ mod dialogs;
 mod panel_chart;
 mod panel_session;
 // A panel's file picker: a file the user gives to be read (docs/adr/8057 §41).
+mod panel_crs;
 mod panel_files;
 // A panel's pictures: the PNG an extension's code gives (docs/adr/8057 §40).
 mod panel_image;

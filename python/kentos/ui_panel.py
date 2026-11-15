@@ -292,6 +292,36 @@ def file_picker(
     return out
 
 
+def crs_picker(
+    id: str,
+    label: str,
+    *,
+    value: str | None = None,
+    on_change: str | None = None,
+    required: bool = False,
+    visible_when: str | None = None,
+    required_when: str | None = None,
+    tab: str | None = None,
+) -> dict[str, Any]:
+    """A coordinate system of KentOS's list (docs/adr/8057 §45): its value `EPSG:<code>`, `value` when given, else
+    the open drawing's own (none for a drawing without one). The code reads it as it is (`pyproj.CRS(value)` too);
+    KentOS's `cad.crs.transform` takes its code (`CrsSide(srid=…)`)."""
+    out: dict[str, Any] = {"type": "crsPicker", "id": id, "label": label}
+    if value is not None:
+        out["value"] = value
+    if on_change is not None:
+        out["onChange"] = on_change
+    if required:
+        out["required"] = True
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    if required_when is not None:
+        out["requiredWhen"] = required_when
+    if tab is not None:
+        out["tab"] = tab
+    return out
+
+
 def feature_picker(
     id: str,
     label: str,
@@ -699,6 +729,6 @@ def card(
 
 __all__ = [
     "Choice", "choice", "file_filter", "panel", "text", "section", "text_field", "number_field", "select",
-    "layer_picker", "field_picker", "file_picker", "feature_picker", "multi_select", "date_field", "time_field",
-    "date_time_field", "checkbox", "button", "table", "tree", "stats", "chart", "image", "card",
+    "layer_picker", "field_picker", "file_picker", "crs_picker", "feature_picker", "multi_select", "date_field",
+    "time_field", "date_time_field", "checkbox", "button", "table", "tree", "stats", "chart", "image", "card",
 ]

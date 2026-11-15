@@ -69,6 +69,7 @@ fn kind_of(c: &Component) -> &'static str {
         Component::TextField { .. } => "textField",
         Component::NumberField { .. } => "numberField",
         Component::Select { .. } => "select",
+        Component::CrsPicker { .. } => "crsPicker",
         Component::LayerPicker { .. } => "layerPicker",
         Component::FieldPicker { .. } => "fieldPicker",
         Component::FeaturePicker { .. } => "featurePicker",
@@ -328,6 +329,19 @@ fn set(
                     return Err(wrong(format!("“{choice}” seçeneklerde yok")));
                 }
                 Given::Choice(choice.to_owned())
+            }
+            // One of KentOS's systems, written `EPSG:<code>` (docs/adr/8057 §45).
+            Component::CrsPicker { .. } => {
+                let code = given
+                    .as_str()
+                    .filter(|v| kentos_extensions::ui_panel::crs::code_of(v).is_some())
+                    .ok_or_else(|| {
+                        wrong(
+                            "value KentOS'un tanıdığı bir sistem olmalı, ör. \"EPSG:5256\""
+                                .to_owned(),
+                        )
+                    })?;
+                Given::Choice(code.trim().to_owned())
             }
             Component::MultiSelect {
                 options: defined, ..

@@ -468,6 +468,12 @@ impl App {
                     );
                     form = form.field(words.clone(), pick);
                 }
+                // KentOS's coordinate systems, each with its datum (panel_crs.rs, docs/adr/8057 §45).
+                Component::CrsPicker {
+                    id, label: words, ..
+                } => {
+                    form = form.field(words.clone(), super::panel_crs::crs_select(p, id, event));
+                }
                 // KentOS's chips, each an option that toggles.
                 Component::MultiSelect {
                     id,

@@ -1815,7 +1815,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | nesne seçici | var | `featurePicker` (çizimdeki seçimden) | haritada tıklatan kip bilinçli olarak yok (§24) |
 | | alan seçici | var | `fieldPicker` (bağlı katmanın alanları) | |
 | | koordinat/harita seçimi | host | `entrypoints.mapTools` (yakalama türleri) | panelden harita seçimi yok |
-| | CRS/birim | KentOS'ta | ayarların CRS seçimi (`crs_choice`) | |
+| | CRS/birim | var | `crsPicker` (KentOS'un sistemleri, değeri `EPSG:<kod>`, verilmezse çizimin sistemi; §45) | birim seçici yok |
 | | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
 | Kaynak ve çıktı | dosya/eser seçici, ek | var | `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41; `save` ile yazılacak dosyanın yeri, §44) | `files.userSelected` ister, kaydetme yeri `files.userSelectedWrite`; ek sonraki dilim |
 | | görsel önizleme | var | `image` (kodun verdiği PNG, `ctx.panel.set(id, image=…)`; oranı korunur, §40) | yalnız PNG, en çok 4096 piksel kenar; JPEG sonraki dilim |
@@ -2621,3 +2621,30 @@ kolu, `pick` kaydetme penceresiyle), `dialogs.rs` (`ctx.dialog`'da verilen izin)
 - **Sınamalar:** paylaşılan (Kapı 1: önerilen ad dosya adı ve yalnız kaydetmede, `save` evet/hayır, türün uzantısı;
   paket: kaydetme yeri yazma yeteneği ister), masaüstü 1 (uzantısız ada ilk uzantı, dosya olmasa da olur, klasörü
   yoksa, başka tür ve klasör söylenir).
+
+## §45. Koordinat sistemi seçici: `crsPicker` (`ADIM 22`, bileşen envanteri, CBS girdisi)
+
+**15 Kasım.** Kod: paylaşılan `ui_panel.rs` (`Component::CrsPicker`), `ui_panel/crs.rs` (`codes`, `code_of`, Kapı 1;
+kayıt `fixtures/crs/v1/registry.json`), `rules.rs` (metin girdisi); masaüstü `panel_crs.rs` (`default_crs`,
+`crs_select`), `panels.rs`, `dialogs.rs`, `panel_view.rs`, `panel_session.rs` (`ctx.panel.set(id, value=…)`).
+
+- **Değer `EPSG:<kod>`:** eklentinin kodu onu olduğu gibi okur (`pyproj.CRS(value)` de okur); KentOS'un
+  dönüşümüne kodu verir (`cad.crs.transform(..., from_=cad.CrsSide(srid=kod))`). Seçenekler KentOS'un kayıt
+  defterindeki sistemlerdir (web ve masaüstü aynı listeyi okur), datumlarına göre sıralı, her biri datumuyla; **yerel
+  sistem (0) seçenek değildir**: seçici bir sistem sorar, sistemsizliği değil.
+- **Varsayılan çizimin sistemi:** `value` verilmezse seçici açık çizimin kendi sistemiyle başlar (panelde de
+  `ctx.dialog`'da da); yerel sistemli çizimde boş kalır, zorunluysa "seçilmedi" diye sorulur. Eklentilerin çoğu "çizimin
+  sisteminde mi, başka birinde mi?" diye sorar.
+- **Kapı 1:** `value` KentOS'un tanıdığı bir sistemin `EPSG:<kod>`'u olmalı; kod kayıt defterinden okunur (paylaşılan
+  crate kayıt dosyasını içine alır, yerel çekirdeğe bağlanmaz). `ctx.panel.set(id, value=…)` aynı denetimden geçer.
+- **Pencerede de:** `ctx.dialog`'un alabildiği alanlara eklendi (14 tür). Gerçek pencere sınaması yakaladı: liste
+  eksikken Vitrin'in penceresi "“crsPicker” pencerede olamaz" diye reddediliyordu; SDK rehberinin pencere alanları da
+  eskimişti (dosya seçici ve bölüm yoktu), düzeltildi.
+- **Sınır:** birim seçici yok; sistem listesi süzülmez (bir eklentinin yalnız TM dilimlerini sunması sonraki dilim).
+- **Vitrin 1.0.37:** "CSV'den nokta ekle"nin Seçenekler sekmesinde dosyanın koordinat sistemi; seçilen sistemden
+  çizimin sistemine `cad.crs.transform`. `ornek-noktalar-turef.csv` aynı dört noktayı TUREF coğrafi koordinatlarla
+  (EPSG:5252, boylam ve enlem; Krüger serisiyle hesaplandı, ileri-geri farkı 1 nm altı) taşır: TUREF seçilince noktalar
+  TM36 dosyasındakilerin tam üstüne düşer (`42-crs`).
+- **Sınamalar:** paylaşılan 1 (kayıt yerel sistemsiz, değer `EPSG:<kod>`, bilinmeyen kod ve kodsuz yazım reddedilir),
+  masaüstü 1 (değersiz seçici çizimin sistemiyle başlar, kendi değeri kalır, yerel çizimde zorunlu sorulur, değer
+  komuta yazıldığı gibi gider).

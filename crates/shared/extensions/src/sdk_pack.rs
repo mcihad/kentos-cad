@@ -101,7 +101,9 @@ kullanıcı "Seçimi al"a basınca çizimdeki seçimden o katmanın ve türün n
 listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.entity(uid)` ile okur; katman değişince
 alan ve nesne seçimi temizlenir), `filePicker` (`id`, `label`, `filters`: `[{name, extensions}]`; okunacak dosyanın yolu
 yazılır ya da Seç… ile seçilir, değeri mutlak yol ya da None; manifest `files.userSelected` ister; `save: true` ile
-yazılacak dosyanın yeri, `defaultName` önerilen ad, uzantısız ada ilk uzantı eklenir, `files.userSelectedWrite`), `button` (`id`,
+yazılacak dosyanın yeri, `defaultName` önerilen ad, uzantısız ada ilk uzantı eklenir, `files.userSelectedWrite`),
+`crsPicker` (`id`, `label`, `value`: "EPSG:5256"; KentOS'un sistemlerinden biri, verilmezse çizimin sistemi; değeri
+`EPSG:<kod>`, `cad.crs.transform`'a `CrsSide(srid=kod)`), `button` (`id`,
 `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
 `primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
 göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak
@@ -149,7 +151,7 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 `ctx.is_stopped()`, `ctx.log(metin, level="info"|"warning"|"error")`, `ctx.report(satırlar, title=…, message=…)`,
 `ctx.message(metin)`, `ctx.cancelled()`; kullanıcıya sormak için `ctx.dialog(başlık, alanlar, ok=…, cancel=…)` (alanlar
 bir panelin girdileri: textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, checkbox,
-layerPicker, fieldPicker, text; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
+layerPicker, fieldPicker, filePicker, crsPicker, text, section; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
 bekler) ve `ctx.confirm(metin)` (evet: True). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
 as ui` ile yazın: bileşen başına bir işlev, gerekli anahtarlar sırayla, kalanı adıyla (`ui.text_field("onek", "Önek",
 value="Y-")`, `ui.number_field("ilk", "İlk numara", min=1, required=True)`, `ui.select("tur", "Tür", ["A", "B"])`,

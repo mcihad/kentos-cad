@@ -1163,8 +1163,8 @@ araçlarının denenmesi.
   panelde var / KentOS'ta bileşeni var ama bağlanmadı / yok / host yüzeyi; Kapı 1'in her türü raporda adıyla geçmeli
   (test); özel çizim bileşeni olmadığı sınır olarak yazılı. Bağlananlar (15 Kasım): tarih, saat, an, çoklu seçim,
   özet/ölçü, grafik (`dateField`, `timeField`, `dateTimeField`, `multiSelect`, `stats`, `chart`), katlanır bölüm
-  (`section`, §38), görsel (`image`, §40), dosya seçici (`filePicker`, §41), panel içi sekme (`tab`, §43), kaydetme yeri (`save`, §44). Kalan:
-  satır/ızgara, bölücü, adımlayıcı, CRS/birim, ilişki başvurusu ve listesi, panelden harita seçimi, ek,
+  (`section`, §38), görsel (`image`, §40), dosya seçici (`filePicker`, §41), panel içi sekme (`tab`, §43), kaydetme yeri (`save`, §44), koordinat sistemi seçici (`crsPicker`, §45). Kalan:
+  satır/ızgara, bölücü, adımlayıcı, birim seçici, ilişki başvurusu ve listesi, panelden harita seçimi, ek,
   özellik/olay/eylem/erişilebilirlik şeması.* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
   şemasına eşlenir: düzen (yığın/satır/ızgara, sekme, grup, akordeon, kaydırma, bölücü, adımlayıcı), basit girdi
   (metin, sayı, tarih/saat, mantıksal, seçim, çoklu seçim), CBS girdisi (katman/nesne/alan seçici, koordinat/harita
@@ -1183,7 +1183,7 @@ araçlarının denenmesi.
   Python'suz hesaplanır, `defaultExpr` panel açılırken (`bugün()`, `şimdi()`), döngü Kapı 1'de reddedilir; katlanır
   bölüm (ADR 8057 §38): `section` sonraki bileşenleri toplar, katlıyken değerleri gider, yanlış alan bölümünü açar;
   görsel (ADR 8057 §40): `image` kodun verdiği PNG'yi gösterir (`ctx.panel.set(id, image=…)`, okumadan denetlenir);
-  dosya seçici (ADR 8057 §41): `filePicker` okunacak dosyanın yolunu yazdırır ya da seçtirir, `files.userSelected` ister. Panel içi sekme (ADR 8057 §43): bileşenin `tab` anahtarı, sekmesiz bileşen her sayfada, yanlış alan sayfasını açar. Kaydetme yeri (ADR 8057 §44): `filePicker`'ın `save` kipi, ayrı yetenek `files.userSelectedWrite`. Katman menüsünün komutu tıklanan katmanı `ctx.params["layer"]`'da alıyor (Vitrin'in
+  dosya seçici (ADR 8057 §41): `filePicker` okunacak dosyanın yolunu yazdırır ya da seçtirir, `files.userSelected` ister. Panel içi sekme (ADR 8057 §43): bileşenin `tab` anahtarı, sekmesiz bileşen her sayfada, yanlış alan sayfasını açar. Kaydetme yeri (ADR 8057 §44): `filePicker`'ın `save` kipi, ayrı yetenek `files.userSelectedWrite`. Koordinat sistemi seçici (ADR 8057 §45): `crsPicker`, değeri `EPSG:<kod>`, varsayılan çizimin sistemi. Katman menüsünün komutu tıklanan katmanı `ctx.params["layer"]`'da alıyor (Vitrin'in
   Değerlerini say'ı).* Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
   düzen [PY-UI-01, 06]; `kentos.ui` Python cephesi şemadan üretilir [PY-UI-02]; aracı oluştur/yamala/kapat/odakla/bildir
   ve eylem kaydı [PY-UI-03]; yama geldiğinde kullanıcının odağı, taslağı ve kaydırması korunur [PY-UI-04]; bileşen değeri

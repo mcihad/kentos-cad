@@ -25,6 +25,7 @@ pub const MOST_COMPONENTS: usize = 100;
 
 /// The components' Python builders, `kentos.ui_panel` (docs/adr/8057 §34), made from [`json_schema`].
 #[cfg(feature = "schema")]
+pub mod crs;
 mod files;
 pub mod python;
 pub mod rules;
@@ -171,6 +172,20 @@ pub enum Component {
         /// The name the save window offers (`parseller.csv`).
         #[serde(default, rename = "defaultName")]
         default_name: Option<String>,
+    },
+    /// A coordinate system of KentOS's list (docs/adr/8057 §45): its value `EPSG:<code>`, `value` when given, else
+    /// the open drawing's own (none for a drawing without one). The code reads it as it is (`pyproj.CRS(value)` too);
+    /// KentOS's `cad.crs.transform` takes its code (`CrsSide(srid=…)`).
+    CrsPicker {
+        id: String,
+        label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
+        #[serde(default)]
+        value: Option<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
     },
     /// The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`
     /// holds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else
@@ -397,6 +412,7 @@ impl Component {
             | Component::FieldPicker { id, .. }
             | Component::FeaturePicker { id, .. }
             | Component::FilePicker { id, .. }
+            | Component::CrsPicker { id, .. }
             | Component::DateField { id, .. }
             | Component::TimeField { id, .. }
             | Component::DateTimeField { id, .. }
@@ -420,6 +436,7 @@ impl Component {
             | Component::FieldPicker { on_change, .. }
             | Component::FeaturePicker { on_change, .. }
             | Component::FilePicker { on_change, .. }
+            | Component::CrsPicker { on_change, .. }
             | Component::DateField { on_change, .. }
             | Component::TimeField { on_change, .. }
             | Component::DateTimeField { on_change, .. }
@@ -438,6 +455,7 @@ impl Component {
             | Component::FieldPicker { required, .. }
             | Component::FeaturePicker { required, .. }
             | Component::FilePicker { required, .. }
+            | Component::CrsPicker { required, .. }
             | Component::MultiSelect { required, .. }
             | Component::DateField { required, .. }
             | Component::TimeField { required, .. }
@@ -457,6 +475,7 @@ impl Component {
                 | Component::FieldPicker { .. }
                 | Component::FeaturePicker { .. }
                 | Component::FilePicker { .. }
+                | Component::CrsPicker { .. }
                 | Component::DateField { .. }
                 | Component::TimeField { .. }
                 | Component::DateTimeField { .. }
@@ -605,6 +624,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
             "save",
             "defaultName",
         ],
+        "crsPicker" => &["id", "label", "value", "onChange", "required"],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" | "timeField" | "dateTimeField" => {
             &["id", "label", "value", "min", "max", "onChange", "required"]
@@ -630,7 +650,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
 }
 
 const TYPES: &str = "text, section, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
-                     fieldPicker, featurePicker, filePicker, checkbox, button, table, tree, card, stats, chart, image";
+                     fieldPicker, featurePicker, filePicker, crsPicker, checkbox, button, table, tree, card, stats, chart, image";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -1275,6 +1295,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             }
             // Its kinds, and where a file is to be written (files.rs, docs/adr/8057 §41, §44).
             "filePicker" => files::check(c, &at, &mut add),
+            // Its value a system of KentOS's list (crs.rs, docs/adr/8057 §45).
+            "crsPicker" => crs::check(c, &at, &mut add),
             "image" => {
                 if let Some(height) = c.get("height")
                     && !height.as_f64().is_some_and(|h| (80.0..=600.0).contains(&h))

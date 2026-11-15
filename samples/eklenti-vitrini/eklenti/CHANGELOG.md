@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.0.37 — 15 Kasım 2026
+
+- "CSV'den nokta ekle"nin Seçenekler sekmesinde dosyanın koordinat sistemi (`crsPicker`): çizimin sistemiyle başlar;
+  başkası seçilirse noktalar KentOS'un dönüşümüyle (`cad.crs.transform`) çizimin sistemine taşınır. Örnek dosya
+  `samples/eklenti-vitrini/ornek-noktalar-turef.csv`: aynı dört nokta TUREF coğrafi koordinatlarla (EPSG:5252, boylam
+  ve enlem); TUREF seçilince TM36'daki noktaların tam üstüne düşer.
+
 ## 1.0.36 — 15 Kasım 2026
 
 - Katmanın sağ tık menüsünde "Katmanı CSV'ye yaz": KentOS'un penceresi kaydetme yerini sorar (`filePicker` `save`:
