@@ -8,17 +8,20 @@
 //!   drawing's order; the measure reads a copy whose objects stand in persistent-id order, so the same objects give the
 //!   same facts whatever order they were drawn or read in.
 //! - **A room's areas as the article measures them:** its net area between the walls' inner faces and its outline to
-//!   the walls' axes, each found again round its seed, else its drawn rings.
+//!   the walls' axes, each found again round its seed, else its drawn rings; its narrow side and its kind as Mimari
+//!   denetim reads them (`kentos_domain::room_width`, `room_names`; docs/adr/8057 §53).
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{Entity, SpaceFields, SpaceMethod, UnitKind};
 use kentos_domain::arch_values::core_areas;
 use kentos_domain::escape::{self, ExitRoute, Route, dwelling_nature, stair_name};
+use kentos_domain::room_names::{self, kind_of};
+use kentos_domain::room_width::{net_parts, width_of};
 use kentos_domain::space_follow::SpaceSearch;
 use kentos_domain::{Document, Slot};
 use kentos_extensions::audit_facts::architecture::{
-    ArchitectureFacts, DoorEscape, EscapeWalk, GroupKind, RoomEscape, RoomFacts, Storey,
+    ArchitectureFacts, DoorEscape, EscapeWalk, GroupKind, RoomEscape, RoomFacts, RoomKind, Storey,
     StoreyExits, UnitFacts, UnitLevel,
 };
 use kentos_geometry_core::geom::space::area;
@@ -48,6 +51,16 @@ pub(super) fn measure(
         let dwelling =
             group.is_some_and(|u| u.kind == UnitKind::Unit && dwelling_nature(u.nature.as_deref()));
         let drawn = area(&core_areas(&x.parts));
+        let broken = x.broken.is_some();
+        // Its narrow side as Mimari denetim measures it (docs/adr/8057 §53): the largest circle in its net outline.
+        let narrow = if broken {
+            None
+        } else {
+            match width_of(&net_parts(&mut search, x)) {
+                (w, Some(_)) => Some(w),
+                (_, None) => None,
+            }
+        };
         rooms.push((
             Slot(s.base.id),
             RoomFacts {
@@ -55,6 +68,7 @@ pub(super) fn measure(
                 number: x.number.clone(),
                 name: x.name.clone(),
                 usage: x.usage.clone(),
+                kind: kind_of(x.name.as_deref(), x.usage.as_deref()).map(facts_kind),
                 level: e.own_level().map(str::to_owned),
                 unit: x.unit.clone(),
                 void: x.void,
@@ -63,10 +77,11 @@ pub(super) fn measure(
                     .as_deref()
                     .and_then(|u| program.brief(u))
                     .is_some_and(|b| b.outdoor),
-                broken: x.broken.is_some(),
+                broken,
                 stair: !dwelling && stair_name(x.name.as_deref(), x.usage.as_deref()),
                 net: search.net_area(x).unwrap_or(drawn),
                 axis: outline(&mut search, x, SpaceMethod::Centerline),
+                narrow,
                 escape: None,
             },
         ));
@@ -108,6 +123,7 @@ pub(super) fn measure(
             level: d.level,
             at: [d.at.x, d.at.y],
             exit: d.exit.map(exit_walk),
+            into_stair: d.into_stair,
         })
         .collect();
     let levels = doc
@@ -134,13 +150,31 @@ pub(super) fn measure(
             count: count as u64,
         })
         .collect();
+    let sprinklers = doc
+        .settings()
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.has_sprinklers());
     Ok(Some(ArchitectureFacts {
         levels,
         exits,
         rooms,
         units,
         doors,
+        sprinklers,
     }))
+}
+
+/// A room's kind in the facts' words, from KentOS Mimari's reading.
+fn facts_kind(kind: room_names::RoomKind) -> RoomKind {
+    match kind {
+        room_names::RoomKind::Living => RoomKind::Living,
+        room_names::RoomKind::Bedroom => RoomKind::Bedroom,
+        room_names::RoomKind::Kitchen => RoomKind::Kitchen,
+        room_names::RoomKind::Bath => RoomKind::Bath,
+        room_names::RoomKind::Toilet => RoomKind::Toilet,
+        room_names::RoomKind::Corridor => RoomKind::Corridor,
+    }
 }
 
 /// A copy of `doc` with its objects in persistent-id order; none when the copy cannot be read back (the drawing's own

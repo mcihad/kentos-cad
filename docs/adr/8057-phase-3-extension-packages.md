@@ -2979,3 +2979,42 @@ pencereyle ortak), `panel_session.rs` (`set`, `rows`, `say`, `unknown_panel`, `n
   sonra 1 (harita aracının eklediği numarasız yapı); deneme 5,2 sn (ilk koşuda süreç açılışıyla 4,2 sn). Bir koşuda
   ajanın bir deneme çağrısı girdi denetiminde geri çevrildi (1 ms, hiçbir şey çalışmadan); ajan düzeltip yeniden
   denedi. Kullanıcının çizimi aynı kaldı.
+
+## §53. Mimari olgular, üçüncü dilim: mahalin türü ve dar kenarı, yağmurlama, merdivene açılan kapı (`ADIM 20`)
+
+**16 Kasım.** Kod: `kentos_domain::room_width` (dar kenar ölçüsü ve net dış hat; Mimari denetimden taşındı,
+`program_check::width_of` ve `regulation_audit::net_parts` artık onu dışa açar), `kentos_domain::escape`
+(`DoorEscape::into_stair`), sözleşme `kentos_extensions::audit_facts::architecture` (`RoomKind`, `RoomFacts.kind`,
+`RoomFacts.narrow`, `ArchitectureFacts.sprinklers`, `DoorEscape.into_stair`), üretici
+`kentos_processing::audit_facts::architecture`, SDK `python/kentos/ext.py`, şema `sdk/kentos-audit-facts.schema.json`,
+fikstür `fixtures/audit-facts/v1/mimari.json`; stub üreticisi ve paket `crates/shared/extensions/src/sdk_pack.rs`.
+
+- **Neden:** §51'in kuralları dört şeyi bilmediği için karar veremiyordu: mahalin türü ve dar kenarı (PAİY 29/1'in
+  yatak odası, mutfak, banyo ve tuvalet satırları ile bütün dar kenarlar; 29/3 hol ve koridor 1,20 m), binada yağmurlama
+  sistemi olup olmadığı (BYKHY 48/2 ve Ek-5/B'nin iki eşiği uyarı ve hata diye ikiye bölünüyordu) ve yürüyüşü olmayan
+  konut kapısının merdiven mahaline mi açıldığı, hiçbir çıkışa mı ulaşmadığı.
+- **Karar: Mimari denetimin okuması, aynı kodla.** Tür `kentos_domain::room_names::kind_of`: ad ya da kullanım; Salon
+  ve Oturma `living`, Yatak, Ebeveyn, Çocuk ve Oda `bedroom`, Mutfak `kitchen`, Banyo, Duş ve Yıkanma `bath`, WC ve
+  Tuvalet `toilet`, Hol, Koridor ve Antre `corridor`; başka bir mahalin türü yok (depo, çalışma odası, balkon). Dar
+  kenar net dış hattın içindeki en büyük dairenin çapıdır (`width_of`, 0,1 mm duyarlıkla); net dış hat tohumdan yeniden
+  bulunan iç yüzler, yoksa çizilen halkalar (`net_parts`). İkisi Mimari denetimden `kentos_domain`'e taşındı: denetim
+  aynı işlevi kullanmaya devam ediyor ve sonuçları değişmedi (Mevzuat, yangın, asansör, korkuluk ve otopark
+  sınamaları).
+- **Karar: sürüm 1'in isteğe bağlı alanları.** Yeni alanlar okunurken varsayılanlı: eski bir KentOS'un olguları türsüz,
+  dar kenarsız, yağmurlamasız ve `intoStair: false` okunur (Python sınıflarında aynı varsayılanlar). Olguların sürümü
+  değişmedi; mimarisi olmayan çizimin olguları bayt bayt aynı kaldı (`denetim.json` değişmedi), `mimari.json` yeni
+  alanlarla yeniden yazıldı. Sınırı bulunamayan mahalin dar kenarı yok: çizilen halka yanıltır.
+- **`sprinklers`** projenin mimari ayarından (`.kcad` 226, docs/adr/8035), binanın tamamı için.
+- **`intoStair`:** konut kapısı kaçış merdiveni mahaline açılıyor; kapı kat çıkışındadır ve yürüyüşü yoktur. Yürüyüşü
+  olmayan ve `intoStair` yanlış olan kapı hiçbir çıkışa ulaşmıyor demektir.
+- **SDK paketi sınırda:** yeni alanlarla stub büyüdü ve ajan paketi 48 000 baytlık sınırı (Asistan'ın araç sonucu
+  sınırı: "tokens are the user's money") 87 baytla aştı. Sınır yükseltilmedi; stub üreticisi açıklamalardan KentOS'un
+  iç tasarım belgelerine göndermeleri (`docs/adr/… §…`, `plan/eklenti.md ADIM …`) atar, paket stub'ın başındaki
+  bakımcı notunu (nasıl üretildiği, elle düzenlenmeyeceği) almaz. Eklenti yazarı API'yi okur, kayıtları değil.
+- **Dışarıda kalan:** bağımsız bölümün Ek-5/B kullanım sınıfı. Modelde yok (nitelik tapudaki serbest yazıdır); programa
+  bir sınıf alanı girince olgulara da girer.
+- **Sınamalar:** alan 1 (dikdörtgenin dar kenarı ve merkezi; halkasız ölçü), olgu sözleşmesi 3 (dar kenar 1 mm'ye,
+  `kind`, `narrow`, `intoStair` ve `sprinklers` anahtarları, okunup aynı geri gelmesi, şemaya uyması), üretici
+  (`mimari.json` bayt bayt: Salon `living` 3,85 m, Koridor `corridor` 1,40 m, Arşiv türsüz 3,35 m, kapılar merdivene
+  açılmıyor, yağmurlama yok), Python 1 (türler, dar kenarlar, yağmurlama ve eski olguların varsayılanları), SDK paketi 1
+  (iç belge göndermelerinin stub'dan atılması: yalnız, başka sözle birlikte, noktalı virgülden sonra).

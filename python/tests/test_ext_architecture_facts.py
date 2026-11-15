@@ -68,6 +68,20 @@ class ArchitectureFactsTest(unittest.TestCase):
         doors = {d.unit: d for d in self.a.doors}
         self.assertEqual(sorted(doors), ["d1", "d2"])
         self.assertEqual((doors["d2"].at, doors["d2"].exit.one_way), ((8.0, 4.0), 6.3))
+        self.assertFalse(doors["d2"].into_stair, "it opens into the corridor, not the stair's room")
+
+    def test_rooms_carry_their_kind_and_narrow_side(self) -> None:
+        """docs/adr/8057 §53: the kind Mimari denetim reads from the name or use, the net width (dar kenar) as it
+        measures it, and the project's sprinkler setting (none on this drawing)."""
+        living, corridor, archive = self.named("zemin", "Salon"), self.named("k1", "Koridor"), self.named("k1", "Arşiv")
+        self.assertEqual((living.kind, living.narrow), ("living", 3.85))
+        self.assertEqual((corridor.kind, corridor.narrow), ("corridor", 1.4))
+        self.assertEqual((self.named("k1", "Yatak odası 2").kind, archive.kind), ("bedroom", None))
+        self.assertEqual(archive.narrow, 3.35)
+        self.assertFalse(self.a.sprinklers)
+        older = ext.ArchitectureFacts({"rooms": [{"uid": "x", "net": 9.0}], "doors": [{"uid": "d", "unit": "u"}]})
+        self.assertEqual((older.rooms[0].kind, older.rooms[0].narrow, older.doors[0].into_stair), (None, None, False))
+        self.assertFalse(older.sprinklers, "facts of an older KentOS read with the fields' defaults")
 
     def test_a_rule_finds_what_the_fire_audit_finds(self) -> None:
         """A BYKHY 32/4 and 4/i rule written on the facts alone: an office's or a corridor's one-way walk over 15 m.

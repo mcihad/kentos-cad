@@ -58,7 +58,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use kentos_commands::{
     ArchAuditFinding, ArchLevel, Entity, LocalRules, OpeningForm, OpeningOperation, ProgramUnit,
-    Railings, SpaceFields, UnitKind, codes,
+    Railings, UnitKind, codes,
 };
 use kentos_domain::space_follow::SpaceSearch;
 use kentos_domain::{Document, Slot};
@@ -556,20 +556,7 @@ impl Place {
 }
 
 /// A room's net outline: its inner faces found again from its seed, else its own.
-pub(crate) fn net_parts(
-    search: &mut SpaceSearch<'_>,
-    s: &SpaceFields,
-) -> Vec<kentos_commands::SpacePart> {
-    if s.method != kentos_commands::SpaceMethod::Net && s.seed.is_some() {
-        let mut net = s.clone();
-        net.method = kentos_commands::SpaceMethod::Net;
-        let found = search.found_preserving_legacy(&net);
-        if found.broken.is_none() && !found.parts.is_empty() {
-            return found.parts;
-        }
-    }
-    s.parts.clone()
-}
+pub(crate) use kentos_domain::room_width::net_parts;
 
 /// The storeys 34/1 counts (as amended 1.7.2026): the levels at or above ±0.00 and each basement holding a room that is
 /// not a technical one; the basements among them apart.

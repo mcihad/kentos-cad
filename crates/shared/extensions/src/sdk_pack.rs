@@ -177,6 +177,16 @@ value="Y-")`, `ui.number_field("ilk", "İlk numara", min=1, required=True)`, `ui
 /// `python/kentos/ext.py` by this module's tests (`KENTOS_WRITE_SDK=1`), which fail when the two differ.
 pub const EXT_STUB: &str = include_str!("../sdk/kentos_ext.pyi");
 
+/// The stub as the pack gives it: without its first comment lines, the maintainers' note on how it is made (the
+/// module's name is the pack's `api.module`).
+fn agent_stub() -> &'static str {
+    let mut rest = EXT_STUB;
+    while rest.starts_with("# ") {
+        rest = rest.split_once('\n').map_or("", |(_, r)| r);
+    }
+    rest
+}
+
 /// `kentos.ui.panel` 1's JSON Schema, made from the panel's types (`ui_panel::json_schema`) and committed beside the stub:
 /// a part of its own, as the icons are (the pack stays under what the desktop's Asistan gives a tool's result).
 pub const PANEL_SCHEMA: &str = include_str!("../sdk/kentos-ui-panel.schema.json");
@@ -282,7 +292,7 @@ pub fn sdk_pack() -> Value {
         "format": "kentos.ai-kek-pack",
         "version": 1,
         "guide": GUIDE,
-        "api": { "module": "kentos.ext", "stub": EXT_STUB },
+        "api": { "module": "kentos.ext", "stub": agent_stub() },
         "capabilities": Capability::ALL.iter().map(|c| json!({
             "id": c.id(),
             "title": c.title(),
@@ -405,8 +415,65 @@ mod tests {
     use super::*;
 
     /// A docstring's first sentence, on one line, at most 400 characters.
+    /// `text` without what points into KentOS's own design records (an ADR's section, the plan's step): the stub is
+    /// an extension author's, who reads the API, not the records. A parenthesis holding only such a pointer goes with
+    /// the space before it; one holding more keeps the rest.
+    fn without_records(text: &str) -> String {
+        let mut out = text.to_owned();
+        for marker in ["docs/adr/", "plan/eklenti.md"] {
+            let mut from = 0;
+            while let Some(found) = out[from..].find(marker) {
+                let at = from + found;
+                let end = at + out[at..].find([')', ';']).unwrap_or(out.len() - at);
+                if out[..at].ends_with('(') && out[end..].starts_with(')') {
+                    let open = at - 1;
+                    let start = if out[..open].ends_with(' ') {
+                        open - 1
+                    } else {
+                        open
+                    };
+                    out.replace_range(start..=end, "");
+                    from = start;
+                } else if out[..at].ends_with("; ") {
+                    out.replace_range(at - 2..end, "");
+                    from = at - 2;
+                } else if out[..at].ends_with('(') && out[end..].starts_with("; ") {
+                    out.replace_range(at..end + 2, "");
+                    from = at;
+                } else {
+                    from = at + marker.len();
+                }
+            }
+        }
+        out
+    }
+
+    /// The stub keeps the API's words and drops the pointers into KentOS's design records, alone or beside other words.
+    #[test]
+    fn design_record_pointers_leave_the_stub() {
+        assert_eq!(
+            without_records("Asks the user (docs/adr/8057 §29): body"),
+            "Asks the user: body"
+        );
+        assert_eq!(
+            without_records(
+                "facts (``kentos.auditFacts`` 1, ``factsSchema``; docs/adr/8057 §36): each"
+            ),
+            "facts (``kentos.auditFacts`` 1, ``factsSchema``): each"
+        );
+        assert_eq!(
+            without_records("a map tool (plan/eklenti.md ADIM 19), as GeoJSON"),
+            "a map tool, as GeoJSON"
+        );
+        assert_eq!(
+            without_records("(docs/adr/8057 §17; its rows)"),
+            "(its rows)"
+        );
+        assert_eq!(without_records("no pointer here"), "no pointer here");
+    }
+
     fn first_sentence(doc: &str) -> String {
-        let text = doc.split_whitespace().collect::<Vec<_>>().join(" ");
+        let text = without_records(&doc.split_whitespace().collect::<Vec<_>>().join(" "));
         let end = text
             .match_indices(". ")
             .map(|(i, _)| i + 1)

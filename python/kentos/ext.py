@@ -1159,7 +1159,7 @@ class ArchitectureFacts:
     (BYKHY); empty when the drawing has no room. PAİY is Planlı Alanlar İmar Yönetmeliği, BYKHY Binaların Yangından
     Korunması Hakkında Yönetmelik; areas in m² to 4 decimals, lengths in metres to 3."""
 
-    __slots__ = ("levels", "rooms", "units", "doors", "_exits")
+    __slots__ = ("levels", "rooms", "units", "doors", "sprinklers", "_exits")
 
     def __init__(self, raw: dict[str, Any]) -> None:
         #: The project's storeys, lowest first.
@@ -1175,9 +1175,11 @@ class ArchitectureFacts:
         #: Each dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4).
         self.doors: list[DoorEscape] = [
             DoorEscape(str(d.get("uid", "")), str(d.get("unit", "")), _maybe_str(d.get("level")),
-                       _place(d.get("at")), _walk(d.get("exit")))
+                       _place(d.get("at")), _walk(d.get("exit")), bool(d.get("intoStair")))
             for d in raw.get("doors") or []
         ]
+        #: The project says the building has sprinklers: BYKHY's sprinklered distances hold.
+        self.sprinklers: bool = bool(raw.get("sprinklers"))
         self._exits = {_maybe_str(e.get("level")): int(e.get("count") or 0) for e in raw.get("exits") or []}
 
     def exits(self, level: str | None) -> int:
@@ -1218,7 +1220,8 @@ def _room(raw: dict[str, Any]) -> RoomFacts:
     text = {k: _maybe_str(raw.get(k)) for k in ("number", "name", "usage", "level", "unit")}
     return RoomFacts(str(raw.get("uid", "")), *text.values(), bool(raw.get("void")), bool(raw.get("outdoor")),
                      bool(raw.get("broken")), bool(raw.get("stair")), float(raw.get("net") or 0.0),
-                     float(raw.get("axis") or 0.0), escape)
+                     float(raw.get("axis") or 0.0), escape, _maybe_str(raw.get("kind")),
+                     _maybe_float(raw.get("narrow")))
 
 
 def _unit(raw: dict[str, Any]) -> UnitFacts:
@@ -1266,9 +1269,10 @@ class RoomEscape:
 
 @dataclass(frozen=True)
 class RoomFacts:
-    """A room: its persistent id, number, name, usage, storey and group; whether it is a void, outdoor, broken (its
-    boundary not found) or an escape stair's room; its net area and its outline to the walls' axes (m²); its walks
-    (None for a void, an outdoor, a broken or a stair's room)."""
+    """A room: its persistent id, number, name, usage, storey and group; void, outdoor, broken (boundary not found) or
+    an escape stair's room; net area and outline to the walls' axes (m²); walks (None for a void, outdoor, broken or
+    stair room); ``kind`` by name or use (``living``, ``bedroom``, ``kitchen``, ``bath``, ``toilet``, ``corridor``;
+    None for another); ``narrow``, its net width (m, dar kenar)."""
 
     uid: str
     number: str | None
@@ -1283,6 +1287,8 @@ class RoomFacts:
     net: float
     axis: float
     escape: RoomEscape | None
+    kind: str | None = None
+    narrow: float | None = None
 
 
 @dataclass(frozen=True)
@@ -1320,13 +1326,15 @@ class UnitFacts:
 @dataclass(frozen=True)
 class DoorEscape:
     """A dwelling unit's door: its persistent id, unit, storey and middle, and its walk from its outer side to the
-    nearest storey exit (BYKHY 48/4; None when it opens into an escape stair's room)."""
+    nearest storey exit (BYKHY 48/4; None when it opens into an escape stair's room, ``into_stair``, or reaches
+    none)."""
 
     uid: str
     unit: str
     level: str | None
     at: tuple[float, float]
     exit: EscapeWalk | None
+    into_stair: bool = False
 
 
 @dataclass

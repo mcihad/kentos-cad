@@ -31,6 +31,11 @@
           },
           "type": "array"
         },
+        "sprinklers": {
+          "default": false,
+          "description": "The building has an automatic sprinkler system, as the project's settings say (`.kcad` 226): the fire\nregulation's sprinklered distances are the ones read (BYKHY 48/2, Ek-5/B; docs/adr/8057 §53).",
+          "type": "boolean"
+        },
         "units": {
           "description": "The building program's groups that have rooms, with article 4's areas, in the program's order.",
           "items": {
@@ -71,6 +76,11 @@
             }
           ],
           "description": "From its outer side; none when it opens into an escape stair's room or reaches no exit."
+        },
+        "intoStair": {
+          "default": false,
+          "description": "It opens into an escape stair's room: it stands at its storey's exit (no walk, none needed).",
+          "type": "boolean"
         },
         "level": {
           "type": [
@@ -430,6 +440,18 @@
           ],
           "description": "Its walks; none for a void, an outdoor or a broken room and an escape stair's room."
         },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoomKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Its kind as the regulations read rooms, by its name or usage (KentOS Mimari's reading: Salon, Yatak odası,\nMutfak, Banyo, WC, Hol …); none for another room (a store, a study, a balcony)."
+        },
         "level": {
           "description": "Its storey's id.",
           "type": [
@@ -440,6 +462,15 @@
         "name": {
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "narrow": {
+          "default": null,
+          "description": "Its net width, m: the diameter of the largest circle inside its net outline, the regulations' narrow side\n(dar kenar, PAİY 29/1 and 29/3); none for a broken room.",
+          "format": "double",
+          "type": [
+            "number",
             "null"
           ]
         },
@@ -495,6 +526,41 @@
         "axis"
       ],
       "type": "object"
+    },
+    "RoomKind": {
+      "description": "A room's kind, as Planlı Alanlar İmar Yönetmeliği 29 names the rooms of a dwelling (the passages too).",
+      "oneOf": [
+        {
+          "const": "living",
+          "description": "Oturma odası (Salon).",
+          "type": "string"
+        },
+        {
+          "const": "bedroom",
+          "description": "Yatak odası (Ebeveyn, Çocuk, Oda).",
+          "type": "string"
+        },
+        {
+          "const": "kitchen",
+          "description": "Mutfak veya yemek pişirme yeri.",
+          "type": "string"
+        },
+        {
+          "const": "bath",
+          "description": "Banyo veya yıkanma yeri (Duş).",
+          "type": "string"
+        },
+        {
+          "const": "toilet",
+          "description": "Tuvalet (WC).",
+          "type": "string"
+        },
+        {
+          "const": "corridor",
+          "description": "Hol, koridor, antre.",
+          "type": "string"
+        }
+      ]
     },
     "Storey": {
       "description": "A storey of the project.",

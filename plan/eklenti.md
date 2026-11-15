@@ -1031,7 +1031,13 @@ kapıya 20/30 m (BYKHY 48/2), daire kapısından kat çıkışına Ek-5/B apartm
 çıkışı ve erişim (31/3, 33/6-b); 4 katı geçmeyen konut binası muaf (48/1); yağmurlama bilinmediği için iki eşik
 (uyarı/hata). Kalan: mahal türü ve dar kenarı, yağmurlama sistemi ve konut olmayan bölümün kullanım sınıfı olgulara
 girince PAİY 29/1'in tamamı, 29/3 ve konut olmayan bölümlerin Ek-5/B uzaklıkları; kurp/görüş hesapları; belediye
-plan notları.
+plan notları. **Mimari olgular, üçüncü dilim** (ADR 8057 §53, 16 Kasım): mahalin türü (`kind`, Mimari denetimin adından
+ya da kullanımından okuduğu oturma, yatak, mutfak, banyo, tuvalet, hol), dar kenarı (`narrow`, net dış hattın içindeki
+en büyük dairenin çapı; ölçü Mimari denetimden `kentos_domain::room_width`'e taşındı, ikisi aynı işlevi kullanır),
+binanın yağmurlama sistemi (`sprinklers`, projenin ayarı) ve merdiven mahaline açılan konut kapısı (`intoStair`);
+sürüm 1'in isteğe bağlı alanları, eski olgular varsayılanlarla okunur. Ajanın SDK paketi sınırda kaldı: stub'dan iç
+belge göndermeleri ve bakımcı notu çıktı, sınır yükseltilmedi. Kalan: bağımsız bölümün Ek-5/B kullanım sınıfı (modelde
+yok).
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 
