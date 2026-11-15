@@ -248,6 +248,13 @@ fn stable(code: &str) -> &'static str {
         "unknown_method",
         "unknown_command",
         "unknown_object",
+        // An extension audit's (the desktop's extensions/audit_agents.rs).
+        "unknown_rule",
+        "not_ready",
+        "not_in_front",
+        "stale_report",
+        "unknown_finding",
+        "not_written",
     ];
     KNOWN
         .iter()

@@ -1852,3 +1852,58 @@ yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
 
 **Sıradaki adaylar:** saat ve an (tarih seçicinin saatli hâli), grafik (CBS grafikleri). 15 Kasım'da bağlananlar: tarih
 (`dateField`), çoklu seçim (`multiSelect`), özet/ölçü (`stats`).
+
+## §27. Ajanın eklenti denetimi: `audit.run`, `audit.report`, `audit.apply_fix` (`ADIM 20`, AI/MCP `audit.run`)
+
+**15 Kasım.** Kod: `crates/native/headless/src/agent_tools.rs` ve `agent_tools/extension_audits.rs` (`audit_outcome`,
+`Host::audit_wait`), masaüstü `extensions/audit_agents.rs` (istekler: `audits`, `audit`, `audit_report`,
+`audit_fixed`), `extensions/audits.rs` (`ext_audit_start`: şeridin ve ajanın ortak başlatması), `python/agents.rs`
+(bağlantının istekleri), `assistant/mod.rs` (`Later`, `assistant_audit_ended`), `assistant/host.rs`, MCP `desktop.rs`.
+
+- **Karar: ajanın çalıştırması şeridin çalıştırmasıdır.** Planın "AI/MCP `audit.run` aynı yol" maddesi: ajan ikinci
+  bir denetim yolu açmaz. Kural şeritteki düğmesi gibi eklentinin sürecinde (havuz) arka planda, öndeki çizimde çalışır;
+  alt panelin Eklenti denetimi sekmesi açılır ve kullanıcı izler. Aynı anda tek denetim: biri sürerken ikincisi "Bir
+  denetim sürüyor (Eklenti Vitrini › Yapı numarası): bitince yeniden deneyin" ile geri çevrilir (şeritte bilgi notu,
+  ajana `busy`).
+- **Listede:** `audit.list_providers` yerleşik denetimlerin ardından kurulu, etkin ve `audit.provider` yeteneği
+  verilmiş kuralları verir: `ext.<eklenti>.<kural>`, başlık, eklenti (ad, sürüm), program, Python'u şimdi çalışıyor mu,
+  çalışmıyorsa şeridin söylediği neden. MCP'nin kendi çizimleri eklenti barındırmaz: kural listelenmez, `audit.run` ve
+  `audit.report` "Eklenti denetimleri KentOS masaüstünde çalışır: Asistan'da ya da masaüstünün ajan bağlantısında" der.
+- **Bekleme iki türlü.** Asistan çizimin bulunduğu arayüz iş parçacığındadır: orada beklemek pencereyi dondurur,
+  denetimin bitişi de duyulamazdı. Çağrı denetim başlayınca bekletilir (`Later`), bitince raporla cevaplanır; tur
+  bütün çağrıların cevabını zaten bekliyor (onay bekleyen çağrının yolu). Bağlantıdaki ajan (MCP) kendi iş
+  parçacığındadır: `audit_report`'u 250 ms'de bir, en çok 130 sn (masaüstünün 120 sn sınırı ve pay) sorar. Bulgu
+  vermeyen çalışma (kural düştü, durduruldu) çağrının hatasıdır, nedeniyle (`audit_failed: Denetim bulgu vermedi:
+  TypeError: …`). Sohbette Durdur ajanın beklediği denetimi de durdurur.
+- **Görev teslimi:** başlatma arka plan işini bir `Task` olarak verir; ajanın çağrısı görev döndüremez. Görev
+  `Extensions::audit_job`'da bekler, çağrıdan sonra çalışma zamanına verilir (Asistan'da `assistant_run`, bağlantıda
+  `Event::Agent`). Görev bırakılsaydı iş hiç başlamazdı: `Task::perform` iş parçacığını ancak çalıştırılınca açar.
+- **Rapor** (`audit.report`; çalıştırmanın cevabı da bu): durum (`running`, `done`, `failed`, `stopped`, `none`),
+  kural, eklenti (kimlik, ad, sürüm, paket özeti), okunan çizim revizyonu, sonradan değişen (§17'nin köken notu), süre,
+  önem sayıları, bulgular 100'er (`offset` ile devamı, kalanı `more`): numarası (sekmedeki sırası, 1'den), önemi,
+  iletisi, nesnesi, uygulanabilen düzeltmesi ya da neden uygulanamadığı (`fixRefused`). Numara 0'dan başlarken model
+  kullanıcıya "İlk bulgu (0)" diyordu (gerçek pencere); sohbetin araç satırı da "eklenti bulgusu 1" diyor. Kullanıcının şeritten çalıştırdığı denetim de okunur: "bu
+  bulguları düzelt" isteği önce rapordan başlar.
+- **Bulgular veridir.** İleti ve düzeltme eklentinin sözüdür: araçların açıklaması, her rapor ve Asistan'ın kuralları
+  bunları talimat olarak okumamayı söyler. Düzeltme ancak kullanıcının Düzelt'i şimdi uygulayabilecekse verilir (§17:
+  `document.write`, eklenti etkin, denetlenen çizim önde).
+- **Düzeltme sahibin koruyucusuyla.** `audit.apply_fix` `rule` + `finding` (numarası) alır; düzeltmenin komutu
+  katalogda ve programda sunulmalı. Önce `mode: plan` (planId), sonra aynı planla `execute`; Asistan'da `audit.apply_fix`'in her
+  execute'u kullanıcının Onayla'sını bekler. Yazılınca sekmede bulgu "✓" olur, eklentinin günlüğüne "ajan uyguladı"
+  düşer (`audit_fixed`); çizim denetimden beri değişmediyse işaretlenmez.
+- **Sınamalar:** başsız 2 (masaüstü yerine geçen host: listede kural; `audit.run` raporu bitene dek sorar; uygulanamayan
+  düzeltme nedeniyle, başka kuralın raporu, plansız execute reddedilir; planlı düzeltme yazılır ve işaretlenir; düşen
+  kural hatadır; sunucunun çizimi eklenti denetimi olmadığını söyler), masaüstü 1 (iskelet eklenti atölyeden kurulur;
+  Asistan'ın `audit.run` çağrısı denetim bitince raporla cevaplanır, sekme açılır, rapor sürüm ve paket özeti taşır;
+  düzeltme koruyucudan yazılır, öznitelik yazıldı, bulgu ✓, çizim notu; bağlantıdaki ajanın başlattığı denetim de
+  çalışma zamanına gider).
+- **Tanımı:** ajanlar komutu çalıştırmadan önce `catalog.describe` ile okuyor (Asistan'ın kuralı); eklenti kuralı
+  katalogda olmadığı için bu çağrı başarısız oluyordu (gerçek pencere). `catalog.describe` artık eklenti kuralını
+  tanır: başlığı, eklentisi, girdisi olmadığı, `audit.run` ile çalıştığı, Python'unun durumu.
+- **Gerçek pencere (Asistan, DeepSeek deneme anahtarı yalnız sürecin ortamında, sentetik Vitrin çizimi):** "Vitrin
+  eklentisinin Yapı numarası denetimini çalıştır" → Denetimler, Denetle · eklenti denetimi yapi-no (2,0 sn, çağrı
+  denetim bitince cevaplandı), sekme açıldı ("5 uyarı (1,9 sn)", köken satırı), cevap "5 bulgu çıktı (5 uyarı) … 5'inde
+  de düzeltme var"; 662 jeton, 12,4 sn. "…sonra ilk bulgunun düzeltmesini uygula" → plan, onay kartı ("Bulguları onar ·
+  eklenti bulgusu 1 · yazma — Onay gerekiyor"), Onayla → yapıya Y-01 yazıldı, sekmede "Y-01 yaz ✓" ve çizim notu, geri
+  alma etkin; 1276 jeton, 26 sn.
+- **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi.

@@ -65,7 +65,10 @@ gereği koşulmadı, derlemesi denetlendi.
   tek komutun tam şemasını ve üç örneğini. Modülün sunmadığı komut aramada ve kategorilerde görünmez.
 - **Denetim ve İşlemler.** `*.check`/`*.audit` komutları (20) denetim; ailesinin `*.repair`'i onarımı
   (`cad.topology.check` → `cad.topology.repair`); `audit.apply_fix` yalnız onarım komutu alır ve koruyucudan geçer.
-  `processing.*` İşlemler'in araçlarını listeler, tanımlar, çalıştırır (yazma, koruyucudan geçer).
+  `processing.*` İşlemler'in araçlarını listeler, tanımlar, çalıştırır (yazma, koruyucudan geçer). Masaüstünde kurulu
+  eklentilerin denetim kuralları da listededir (`ext.<eklenti>.<kural>`); `audit.run` onları şeridin yolundan
+  çalıştırır, `audit.report` son raporu okur, `audit.apply_fix` bir bulgunun düzeltmesini (`rule` + `finding`)
+  koruyucudan geçirir (15 Kasım, ADR 8057 §27).
 - **Profiller.** Program (`kentos-mcp`) varsayılan **kompakt** profille açılır; `--profile full` ya da
   `KENTOS_MCP_PROFILE=full` eski düz listeyi verir. `Server::new()` tam profildir: ~200 test dosyası katalog komutlarını
   doğrudan ve plansız çağırıyor; kural gereği koşulamıyorlar, kırılmasınlar diye. Kompakt listede eski

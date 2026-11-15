@@ -45,7 +45,7 @@ pub(crate) enum Severity {
 }
 
 impl Severity {
-    fn word(self) -> &'static str {
+    pub(crate) fn word(self) -> &'static str {
         match self {
             Severity::Error => "Hata",
             Severity::Warning => "Uyarı",
@@ -156,22 +156,59 @@ pub(crate) fn findings_of(done: &Value) -> Result<(Vec<Finding>, usize), (String
     Ok((findings, dropped))
 }
 
+/// Why a rule's run did not start: a stable code (an agent reads it) and the words.
+pub(crate) type Refusal = (&'static str, String);
+
 impl App {
     /// Runs an extension's audit rule on the drawing's layers in the background; the bottom panel's Eklenti
-    /// denetimi tab opens on it and its findings come as [`Event::AuditDone`].
+    /// denetimi tab opens on it and its findings come as [`Event::AuditDone`]. Why it did not start is said.
     pub(crate) fn ext_audit_run(&mut self, ext: &str, local: &str) -> Task<Message> {
         let name = self.extension_name(ext);
-        if self
+        match self.ext_audit_start(ext, local) {
+            Ok(task) => task,
+            Err(("busy", _)) => {
+                self.toast(
+                    Toast::info(format!("{name}: bir denetim sürüyor"))
+                        .body("Bitmesini bekleyin ya da Eklenti denetimi'nde Durdur'a basın."),
+                );
+                Task::none()
+            }
+            Err(("unknown_rule", why)) => {
+                self.toast(Toast::warning(format!("{name}: denetim bulunamadı")).body(why));
+                Task::none()
+            }
+            Err(("no_document", why)) => {
+                self.output(why);
+                Task::none()
+            }
+            Err((_, why)) => {
+                self.toast(Toast::warning(format!("{name}: denetlenemedi")).body(why));
+                Task::none()
+            }
+        }
+    }
+
+    /// Starts an extension's audit rule on the front drawing: the tab's state set and opened, its run's background
+    /// task, or why not. The ribbon's button and an agent's `audit.run` start it alike (audit_agents.rs).
+    pub(crate) fn ext_audit_start(
+        &mut self,
+        ext: &str,
+        local: &str,
+    ) -> Result<Task<Message>, Refusal> {
+        if let Some(running) = self
             .extensions
             .audit
             .as_ref()
-            .is_some_and(|a| a.running.is_some())
+            .filter(|a| a.running.is_some())
         {
-            self.toast(
-                Toast::info(format!("{name}: bir denetim sürüyor"))
-                    .body("Bitmesini bekleyin ya da Eklenti denetimi'nde Durdur'a basın."),
-            );
-            return Task::none();
+            return Err((
+                "busy",
+                format!(
+                    "Bir denetim sürüyor ({} › {}): bitince yeniden deneyin.",
+                    self.extension_name(&running.ext),
+                    running.title
+                ),
+            ));
         }
         let entry = self
             .extensions
@@ -180,21 +217,26 @@ impl App {
             .and_then(|r| r.manifest(ext))
             .and_then(|m| m.entrypoints.audits.iter().find(|a| a.id == local).cloned());
         let Some(entry) = entry else {
-            self.toast(
-                Toast::warning(format!("{name}: denetim bulunamadı"))
-                    .body(format!("“{local}” bu eklentinin bir denetimi değil.")),
-            );
-            return Task::none();
+            return Err((
+                "unknown_rule",
+                format!("“{local}” bu eklentinin bir denetimi değil."),
+            ));
         };
         let Some(doc) = &self.document else {
-            self.output("Açık çizim yok.");
-            return Task::none();
+            return Err(("no_document", "Açık çizim yok.".to_owned()));
         };
-        let job = match self.pool_job(ext, local, &entry.handler) {
-            Ok(job) => job,
-            Err(why) => {
-                self.toast(Toast::warning(format!("{name}: denetlenemedi")).body(why));
-                return Task::none();
+        #[cfg(test)]
+        let given = self.extensions.test_audit_answer.take();
+        #[cfg(not(test))]
+        let given: Option<Result<Value, String>> = None;
+        type Work = Box<dyn FnOnce(Value, &dyn Fn() -> bool) -> Result<Value, String> + Send>;
+        let work: Work = match given {
+            Some(answer) => Box::new(move |_, _| answer),
+            None => {
+                let job = self
+                    .pool_job(ext, local, &entry.handler)
+                    .map_err(|why| ("not_ready", why))?;
+                Box::new(move |invoke, stopped| job.run(invoke, TIMEOUT, stopped))
             }
         };
         let facts = kentos_processing::external::audit_facts(&doc.model, MOST_OBJECTS);
@@ -230,9 +272,9 @@ impl App {
         self.command_expanded = true;
         let (owner, rule) = (ext.to_owned(), local.to_owned());
         let began = Instant::now();
-        crate::python_setup::in_background(
+        Ok(crate::python_setup::in_background(
             move || {
-                let answer = job.run(json!({ "kind": "audit", "facts": facts }), TIMEOUT, &|| {
+                let answer = work(json!({ "kind": "audit", "facts": facts }), &|| {
                     stop.load(Ordering::Relaxed)
                 });
                 (answer, began.elapsed().as_millis() as u64)
@@ -246,7 +288,7 @@ impl App {
                     ms,
                 })))
             },
-        )
+        ))
     }
 
     /// A rule's run ended: its findings in the tab; a failure said with the extension's name and kept in its log.
@@ -294,6 +336,8 @@ impl App {
                 self.extension_failed(&done.ext, &part, "audit_failed", &words, detail.as_deref());
             }
         }
+        // An agent waiting for it hears its report (Asistan's call answered now, docs/adr/8057 §27).
+        self.assistant_audit_ended(&format!("ext.{}.{}", done.ext, done.local));
     }
 
     /// Durdur: the rule is asked to stop, then its process is ended.
@@ -629,7 +673,7 @@ impl App {
 }
 
 /// "2 hata, 1 uyarı" — the findings counted by severity.
-fn counts(findings: &[Finding]) -> String {
+pub(crate) fn counts(findings: &[Finding]) -> String {
     let n = |s: Severity| findings.iter().filter(|f| f.severity == s).count();
     let parts: Vec<String> = [
         (n(Severity::Error), "hata"),

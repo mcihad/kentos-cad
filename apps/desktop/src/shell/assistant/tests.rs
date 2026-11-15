@@ -620,3 +620,186 @@ fn the_assistants_workshop_opens_its_package_for_review() {
     assert_eq!(preview["name"], "Mezarlık bilgi");
     let _ = std::fs::remove_dir_all(&root);
 }
+
+/// docs/adr/8057 §27 (plan ADIM 20's AI/MCP audit.run): an installed extension's audit rule is among the agent's
+/// checks; the agent's run is the ribbon button's (the bottom panel's tab opens on it), the call answered when the run
+/// ends with its findings and provenance; a finding's fix goes through the owner's guard and the tab marks it fixed;
+/// an agent on the link starts a run the same way.
+#[test]
+fn the_agent_runs_an_extensions_audit_rule_and_applies_its_fix() {
+    use kentos_headless::agent_tools::{self, Guard};
+
+    const ID: &str = "tr.ornek.adsiz-denetim";
+    const RULE: &str = "ext.tr.ornek.adsiz-denetim.adsiz";
+    let provider = Provider::start(|n, _| match n {
+        0 => calls("call_1", "audit__run", &json!({ "command": RULE })),
+        _ => says("Bir adsız nesne buldum; düzeltmesi var."),
+    });
+    let mut app = chatting(&provider);
+    let root = crate::files_testing::scratch("asistan-denetim");
+    let extensions = root.join("eklentiler");
+    std::fs::create_dir_all(&extensions).unwrap();
+    app.extensions = crate::extensions::Extensions::open(&extensions, false).0;
+    app.extensions_changed();
+    // The extension made in the workshop and installed by the user (Kur), its audit and a map tool (it may write).
+    let mut guard = Guard::new();
+    let mut host = super::host::AppHost(&mut app);
+    let blueprint = agent_tools::call(
+        &mut host,
+        &mut guard,
+        "extension.blueprint",
+        &json!({ "id": ID, "name": "Adsız denetimi", "contributions": ["audit", "mapTool"] }),
+    )
+    .unwrap();
+    for (name, args) in [
+        (
+            "extension.workshop.write",
+            json!({ "id": ID, "files": blueprint["files"] }),
+        ),
+        ("extension.workshop.review", json!({ "id": ID })),
+    ] {
+        agent_tools::call(&mut host, &mut guard, name, &args).unwrap();
+    }
+    let _ = app.extensions_event(crate::extensions::Event::Install);
+    // Among the checks, its Python not ready here.
+    let providers = agent_tools::call(
+        &mut super::host::AppHost(&mut app),
+        &mut guard,
+        "audit.list_providers",
+        &json!({}),
+    )
+    .unwrap();
+    let rule = providers["providers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["command"] == RULE)
+        .unwrap_or_else(|| panic!("{providers:#}"))
+        .clone();
+    assert_eq!(rule["title"], "Adsız nesneler");
+    assert_eq!(rule["ready"], false, "{rule:#}");
+    // The run: its answer given here in place of the extension's process (no Python in tests).
+    let (slot, uid) = {
+        let doc = app.document.as_ref().unwrap();
+        let slot = doc
+            .model
+            .entities()
+            .next()
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .unwrap();
+        (slot, doc.model.uid(slot).unwrap().to_string())
+    };
+    let findings = json!({ "ok": true, "result": { "kind": "findings", "findings": [
+        { "severity": "warning", "message": "Nesnenin adı yok.", "featureId": uid,
+          "fix": { "title": "Ad yaz: Nesne-1", "command": "cad.entities.set",
+                   "args": { "uids": [uid], "operation": "attributes", "attrs": { "ad": "Nesne-1" } } } }
+    ] } });
+    app.extensions.test_audit_answer = Some(Ok(findings.clone()));
+    let (message, task) = send(&mut app, "Adsız nesneleri denetle.");
+    drive(&mut app, task);
+    let said = app.assistant.chat.message(message).expect("the answer");
+    assert_eq!(said.phase, Phase::Complete, "{:?}", said.failure);
+    assert_eq!(said.tools.len(), 1);
+    assert_eq!(
+        said.tools[0].phase,
+        ToolPhase::Complete,
+        "{:?}",
+        said.tools[0]
+    );
+    assert_eq!(said.tools[0].name, "Denetle · eklenti denetimi adsiz");
+    assert_eq!(
+        app.bottom_tab,
+        crate::bottom::BottomTab::ExtAudit,
+        "the user sees the run"
+    );
+    let report: Value = serde_json::from_str(&last_result(&provider.bodies()[1])).unwrap();
+    assert_eq!(report["status"], "done", "{report:#}");
+    assert_eq!(report["rule"], RULE);
+    assert_eq!(report["extension"]["version"], "0.1.0", "{report:#}");
+    assert!(
+        report["extension"]["digest"]
+            .as_str()
+            .is_some_and(|d| d.starts_with("sha256:"))
+    );
+    assert_eq!(
+        report["findings"][0]["fix"]["command"], "cad.entities.set",
+        "{report:#}"
+    );
+    assert!(
+        report["note"]
+            .as_str()
+            .is_some_and(|n| n.contains("talimat"))
+    );
+    // The fix through the guard: planned, executed as planned (Asistan waits for Onayla first), marked fixed.
+    let mut host = super::host::AppHost(&mut app);
+    let plan = agent_tools::call(
+        &mut host,
+        &mut guard,
+        "audit.apply_fix",
+        &json!({ "rule": RULE, "finding": 1, "mode": "plan" }),
+    )
+    .unwrap();
+    let plan_id = plan["planId"]
+        .as_str()
+        .unwrap_or_else(|| panic!("{plan:#}"))
+        .to_owned();
+    let execute = json!({ "rule": RULE, "finding": 1, "mode": "execute", "planId": plan_id });
+    assert!(needs_approval("audit.apply_fix", &execute));
+    let done = agent_tools::call(&mut host, &mut guard, "audit.apply_fix", &execute).unwrap();
+    assert_eq!(done["marked"], true, "{done:#}");
+    let named = app
+        .document
+        .as_ref()
+        .unwrap()
+        .model
+        .get(slot)
+        .unwrap()
+        .base()
+        .attrs
+        .get("ad")
+        .cloned();
+    assert_eq!(named.as_deref(), Some("Nesne-1"));
+    let again = agent_tools::call(
+        &mut super::host::AppHost(&mut app),
+        &mut guard,
+        "audit.apply_fix",
+        &json!({ "rule": RULE, "finding": 1, "mode": "plan" }),
+    );
+    assert!(
+        matches!(&again, Err(e) if e.code == "already_fixed"),
+        "{again:?}"
+    );
+    let report = app.ext_audit_report(0);
+    assert_eq!(report["findings"][0]["fixed"], true);
+    assert_eq!(report["findings"][0]["fix"], Value::Null, "applied once");
+    assert!(
+        report["changed"]
+            .as_str()
+            .is_some_and(|c| c.starts_with("Çizim denetimden sonra değişti")),
+        "{report:#}"
+    );
+    // An agent on the link starts a run the same way: its task goes to the runtime with the answer.
+    let dir = crate::files_testing::scratch("asistan-denetim-bag");
+    let (open, _task) = crate::python::link::Link::open(&dir.join("m.sock"), |heard| {
+        Message::Python(crate::python::Event::Agent(heard))
+    })
+    .expect("the link");
+    app.python.link = Some(open);
+    let (answerer, answers) = crate::python::link::Answerer::testing();
+    let _ = app.update(Message::Python(crate::python::Event::Agent(
+        crate::python::link::Heard::Connected(7, answerer),
+    )));
+    app.extensions.test_audit_answer = Some(Ok(findings));
+    let started = app.update(Message::Python(crate::python::Event::Agent(
+        crate::python::link::Heard::Request(
+            7,
+            json!({ "id": 1, "method": "audit", "params": { "rule": RULE } }),
+        ),
+    )));
+    let answer: Value = serde_json::from_str(&answers.try_recv().unwrap()).unwrap();
+    assert_eq!(answer["result"]["status"], "running", "{answer:#}");
+    drive(&mut app, started);
+    assert_eq!(app.ext_audit_report(0)["status"], "done");
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&dir);
+}

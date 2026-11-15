@@ -90,6 +90,13 @@ impl Host for AppHost<'_> {
             .ext_preview(id)
             .map_err(|why| HeadlessError::new("invalid_input", why))
     }
+
+    /// The chat runs on the interface thread, where the run's end is heard: the call is answered then
+    /// (`App::assistant_audit_ended`), not waited for here.
+    fn audit_wait(&mut self, rule: &str) -> Result<Value, HeadlessError> {
+        self.0.assistant.later = Some(rule.to_owned());
+        Ok(json!({ "status": "running", "rule": rule }))
+    }
 }
 
 /// A refusal's code as a host's stable one; another is the desktop's own (`desktop_refused`).
@@ -104,6 +111,13 @@ fn stable(code: &str) -> &'static str {
         "unknown_method",
         "unknown_command",
         "unknown_object",
+        // An extension audit's (extensions/audit_agents.rs).
+        "unknown_rule",
+        "not_ready",
+        "not_in_front",
+        "stale_report",
+        "unknown_finding",
+        "not_written",
     ];
     KNOWN
         .iter()

@@ -954,8 +954,11 @@ sürecinde katmanları veri olarak okur (`GisAuditFacts`, gizli alanlar maskeli,
 düzeltme döndürür; alt panelin Eklenti denetimi sekmesi listeler, Göster nesneye götürür, Düzelt KentOS komutunu tek
 geri alma adımıyla yürütür (yalnız `document.write` izinli eklentide). Vitrin 1.0.3'te "Yapı numarası". **Köken**
 (ADR 8057 §17, 15 Kasım): rapor kuralın sürümünü, paket özetini ve çizim revizyonunu taşır; sonradan eklenti ya da
-çizim değiştiyse söyler. Kalan: `ProjectAuditFacts` (Rust'ın çıkardığı ortak olgular), ulusal/belediye kurallarının
-Python betikleri, bulut işi ve bulutla ortak köken, AI/MCP `audit.run`.
+çizim değiştiyse söyler. **AI/MCP `audit.run`** (ADR 8057 §27, 15 Kasım): eklenti kuralları ajanın denetim
+listesinde; ajanın çalıştırması şeridin yolu (sekme açılır, Asistan'ın çağrısı denetim bitince cevaplanır, MCP
+bekler), `audit.report` son raporu okur, bulgunun düzeltmesi sahibin koruyucusundan geçer ve sekmede işaretlenir.
+Kalan: `ProjectAuditFacts` (Rust'ın çıkardığı ortak olgular), ulusal/belediye kurallarının Python betikleri, bulut
+işi ve bulutla ortak köken.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

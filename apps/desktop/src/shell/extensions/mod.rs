@@ -10,6 +10,7 @@
 //! real-window sessions never touch the user's own. A start without extensions (`--eklentisiz`, `KENTOS_EKLENTISIZ`, or
 //! "bir sonraki açılışta eklentisiz başlat" from this window) activates nothing.
 
+mod audit_agents;
 mod audits;
 mod tool_pins;
 mod bisect;
@@ -112,6 +113,12 @@ pub(crate) struct Extensions {
     pub(crate) python_reasons: std::collections::BTreeMap<String, Option<String>>,
     /// The last audit rule's run, its findings in Eklenti denetimi (audits.rs).
     pub(crate) audit: Option<audits::AuditState>,
+    /// The run an agent started (audit_agents.rs): its background task, handed to the runtime when the agent's call
+    /// returns; the call that started it cannot return a task.
+    pub(crate) audit_job: Option<iced::Task<crate::app::Message>>,
+    /// A test's answer for the next rule's run, in place of its extension's process.
+    #[cfg(test)]
+    pub(crate) test_audit_answer: Option<Result<serde_json::Value, String>>,
     /// The word the lists are filtered by (browse.rs).
     pub(crate) query: String,
     /// The program the lists are filtered by; none: every program.
@@ -170,6 +177,9 @@ impl Default for Extensions {
             icons: std::collections::BTreeMap::new(),
             python_reasons: std::collections::BTreeMap::new(),
             audit: None,
+            audit_job: None,
+            #[cfg(test)]
+            test_audit_answer: None,
             query: String::new(),
             program: None,
             envs: std::collections::BTreeMap::new(),

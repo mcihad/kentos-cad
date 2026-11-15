@@ -260,6 +260,36 @@ impl App {
                 doc.model.settings().plot_scale,
             ));
         }
+        // An extension's audit rules (extensions/audit_agents.rs, docs/adr/8057 §27): a run reads the front drawing.
+        match method {
+            "audits" => return Ok(self.ext_audit_rules()),
+            "audit_report" => {
+                let offset = params.get("offset").and_then(Value::as_u64).unwrap_or(0);
+                return Ok(self.ext_audit_report(usize::try_from(offset).unwrap_or(usize::MAX)));
+            }
+            "audit" | "audit_fixed" => {
+                if named.is_some() && named != front {
+                    return Err(refused(
+                        "not_in_front",
+                        "Eklenti denetimi öndeki çizimde çalışır: çizimi öne getirin.",
+                    ));
+                }
+                let rule = params.get("rule").and_then(Value::as_str).ok_or_else(|| {
+                    refused(
+                        "invalid_request",
+                        "rule gerekli: audit.list_providers'ın komutu.",
+                    )
+                })?;
+                let answer = if method == "audit" {
+                    self.ext_audit_start_rule(rule)
+                } else {
+                    let finding = params.get("finding").and_then(Value::as_u64).unwrap_or(0);
+                    self.ext_audit_fixed(rule, usize::try_from(finding).unwrap_or(0))
+                };
+                return answer.map_err(|(code, why)| (code.to_owned(), why));
+            }
+            _ => {}
+        }
         let doc = match named {
             None => self.document.as_mut(),
             Some(s) if Some(s) == front => self.document.as_mut(),

@@ -1011,3 +1011,211 @@ fn the_workshop_does_not_write_or_pack_through_a_link() {
     assert!(host.reviewed.is_empty());
     let _ = std::fs::remove_dir_all(&root);
 }
+
+/// A desktop with one extension audit rule, as its link answers (docs/adr/8057 §27): the run goes for two reports,
+/// then its two findings come, the first with a fix (an area drawn); a write is the drawing's own (a session's), the
+/// fix marked.
+struct AuditingDesktop {
+    drawing: Session,
+    reports: usize,
+    marked: Vec<u64>,
+}
+
+const RULE: &str = "ext.tr.ornek.vitrin.yapi-no";
+
+impl Host for AuditingDesktop {
+    fn request(&mut self, method: &str, params: &Value) -> Result<Value, HeadlessError> {
+        match method {
+            "audits" => Ok(json!({ "rules": [{ "rule": RULE, "title": "Yapı numarası",
+                "extension": { "id": "tr.ornek.vitrin", "name": "Eklenti Vitrini", "version": "1.0.19" },
+                "program": "cbs", "ready": true, "why": null }] })),
+            "audit" if params["rule"] == RULE => Ok(json!({ "status": "running", "rule": RULE })),
+            "audit" => Err(HeadlessError::new("unknown_rule", "Böyle bir denetim yok.")),
+            "audit_report" => {
+                self.reports += 1;
+                if self.reports <= 2 {
+                    return Ok(json!({ "status": "running", "rule": RULE }));
+                }
+                let findings = [
+                    json!({ "finding": 1, "severity": "warning", "message": "Yapının alanı çizilmemiş.",
+                            "featureId": null, "fixed": false, "fixRefused": null,
+                            "fix": { "title": "Yapı alanını çiz", "command": "cad.polygon.create",
+                                     "input": area(&self.drawing, 10.0) } }),
+                    json!({ "finding": 2, "severity": "info", "message": "İlk nesneler denetlendi.",
+                            "featureId": null, "fixed": false, "fix": null,
+                            "fixRefused": "Düzeltme çizime yazar; bu eklentiye yazma izni (document.write) verilmedi." }),
+                ];
+                let from = usize::try_from(params["offset"].as_u64().unwrap_or(0)).unwrap_or(0);
+                Ok(
+                    json!({ "status": "done", "rule": RULE, "title": "Yapı numarası",
+                    "extension": { "id": "tr.ornek.vitrin", "version": "1.0.19", "digest": "sha256:ab" },
+                    "revision": 3, "findings": findings.iter().skip(from).cloned().collect::<Vec<_>>(),
+                    "counts": { "error": 0, "warning": 1, "info": 1 } }),
+                )
+            }
+            "audit_fixed" => {
+                self.marked.push(params["finding"].as_u64().unwrap_or(99));
+                Ok(json!({ "fixed": true }))
+            }
+            _ => self.drawing.request(method, params),
+        }
+    }
+}
+
+#[test]
+fn an_extensions_audit_rule_runs_through_the_agents_checks() {
+    // docs/adr/8057 §27 (plan ADIM 20's AI/MCP audit.run): a desktop's extension rule is among the checks; audit.run
+    // starts it and, on the link, asks its report until the run ends; a finding's fix goes through the owner's guard
+    // and, written, is marked; a finding the user's Düzelt could not apply says why.
+    let mut desktop = AuditingDesktop {
+        drawing: drawing(),
+        reports: 0,
+        marked: Vec::new(),
+    };
+    let mut guard = Guard::new();
+    let providers =
+        agent_tools::call(&mut desktop, &mut guard, "audit.list_providers", &json!({})).unwrap();
+    let rule = providers["providers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["command"] == RULE)
+        .expect("the extension's rule among the checks");
+    assert_eq!(
+        (rule["door"].clone(), rule["ready"].clone()),
+        (json!("audit.run"), json!(true))
+    );
+    assert!(
+        providers["providers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|p| p["command"] == "cad.topology.check"),
+        "the built-in checks stay"
+    );
+    // Described as what it is: no input, run by audit.run (an agent describes before it runs).
+    let described = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "catalog.describe",
+        &json!({ "command": RULE }),
+    )
+    .unwrap();
+    assert_eq!(
+        (described["door"].clone(), described["title"].clone()),
+        (json!("audit.run"), json!("Yapı numarası"))
+    );
+    let report = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "audit.run",
+        &json!({ "command": RULE }),
+    )
+    .unwrap();
+    assert_eq!(report["status"], "done", "{report:#}");
+    assert_eq!(desktop.reports, 3, "asked until the run ended");
+    assert_eq!(
+        agent_tools::call_words("audit.run", &json!({ "command": RULE })),
+        "Denetle · eklenti denetimi yapi-no"
+    );
+    // A fix the user's Düzelt could not apply: why, nothing run.
+    let refused = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "audit.apply_fix",
+        &json!({ "rule": RULE, "finding": 2, "mode": "plan" }),
+    );
+    assert!(
+        matches!(&refused, Err(e) if e.code == "not_fixable" && e.message.contains("document.write")),
+        "{refused:?}"
+    );
+    // Another rule's finding: run that rule first.
+    let stale = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "audit.apply_fix",
+        &json!({ "rule": "ext.tr.ornek.baska.kural", "finding": 1 }),
+    );
+    assert_eq!(code(stale), "stale_report");
+    // The fix through the guard: planned, executed as planned, marked.
+    let before = objects(&desktop.drawing);
+    let unplanned = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "audit.apply_fix",
+        &json!({ "rule": RULE, "finding": 1, "mode": "execute" }),
+    );
+    assert_eq!(code(unplanned), "plan_required");
+    let zero = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "audit.apply_fix",
+        &json!({ "rule": RULE, "finding": 0, "mode": "plan" }),
+    );
+    assert_eq!(
+        code(zero),
+        "invalid_input",
+        "numbers start at 1, as the user counts"
+    );
+    let plan = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "audit.apply_fix",
+        &json!({ "rule": RULE, "finding": 1, "mode": "plan" }),
+    )
+    .unwrap();
+    let plan_id = plan["planId"].as_str().expect("a plan").to_owned();
+    assert_eq!(objects(&desktop.drawing), before, "a plan writes nothing");
+    let done = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "audit.apply_fix",
+        &json!({ "rule": RULE, "finding": 1, "mode": "execute", "planId": plan_id }),
+    )
+    .unwrap();
+    assert_eq!(
+        (done["status"].clone(), done["marked"].clone()),
+        (json!("completed"), json!(true)),
+        "{done:#}"
+    );
+    assert_eq!(objects(&desktop.drawing), before + 1);
+    assert_eq!(desktop.marked, [1]);
+    // A rule that failed is the call's failure, with why.
+    let failed = agent_tools::audit_outcome(
+        json!({ "status": "failed", "error": "TypeError: liste değil" }),
+    );
+    assert!(
+        matches!(&failed, Err(e) if e.code == "audit_failed" && e.message.contains("TypeError")),
+        "{failed:?}"
+    );
+}
+
+#[test]
+fn a_drawing_of_the_servers_own_has_no_extension_audits() {
+    // docs/adr/8057 §27: the server's drawings have no extensions; their checks are the built-in ones, and an
+    // extension rule or report says where they run.
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let providers = tool(&mut s, &mut guard, "audit.list_providers", json!({})).unwrap();
+    assert!(
+        providers["providers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|p| !p["command"]
+                .as_str()
+                .unwrap_or_default()
+                .starts_with("ext.")),
+        "no extension rule"
+    );
+    for (name, args) in [
+        ("audit.run", json!({ "command": RULE })),
+        ("audit.report", json!({})),
+    ] {
+        let refused = tool(&mut s, &mut guard, name, args);
+        assert!(
+            matches!(&refused, Err(e) if e.code == "not_offered" && e.message.contains("KentOS masaüstünde")),
+            "{name}: {refused:?}"
+        );
+    }
+}
