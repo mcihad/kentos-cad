@@ -74,3 +74,10 @@ türde ad ve her alanın satırı: Zorunlu, Varsayılan ve sunulan değerlerin �
 - Türe bağlı değer kuralları veride durur: form, tablo, Python ve ajan aynı kuralı uygular.
 - Açık: alt türe göre katman stili ve etiket (FORM-DATA-17'nin “style” kısmı), koşullu alan grupları (FORM-DATA-19), alt tür
   alanı tamsayı kodlu ArcGIS verisinin içe ve dışa aktarılması.
+
+## Ek (15 Kasım 2026): Öznitelikler'in zorunluluk işareti
+
+Öznitelikler paneli seçenekleri kaydın alt türüne göre daraltıyordu ama zorunluluğu katmanın alanından okuyordu:
+alt türün zorunlu kıldığı alan yıldızsız ve uyarısız kalıyor, boşaltan yazma ise reddediliyordu (Vitrin 1.0.16'nın
+Okul ve Kapasite'si, gerçek pencere). Panelin işareti ve uyarısı artık `field_for`'u okur, sözler yazmayı reddeden
+denetiminkiyle aynıdır (ADR 8057 §23; `cad/properties/rows/fields.rs`).

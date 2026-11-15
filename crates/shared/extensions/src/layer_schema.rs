@@ -37,7 +37,21 @@ const TOP: [&str; 6] = [
     "layers",
     "relations",
 ];
-const LAYER: [&str; 5] = ["name", "title", "geometry", "fields", "form"];
+const LAYER: [&str; 7] = [
+    "name",
+    "title",
+    "geometry",
+    "fields",
+    "form",
+    "subtypes",
+    "contingents",
+];
+/// A layer holds at most this many subtypes; value groups, a group's fields and rows (KentOS's own bounds,
+/// docs/adr/0422, 0423).
+const MOST_SUBTYPES: usize = 256;
+const MOST_GROUPS: usize = 50;
+const MOST_GROUP_FIELDS: usize = 8;
+const MOST_COMBINATIONS: usize = 10_000;
 const FIELD: [&str; 12] = [
     "name",
     "kind",
@@ -176,6 +190,273 @@ impl Check<'_> {
     }
 }
 
+/// A layer's field as its subtypes and value groups name it: one of its fields with a value list of this schema,
+/// taking one value; its codes. Otherwise why it cannot be.
+fn listed_field<'a>(
+    listed: &'a [(String, Option<BTreeSet<String>>, bool)],
+    field: &str,
+) -> Result<&'a BTreeSet<String>, &'static str> {
+    match listed.iter().find(|(n, ..)| n == field) {
+        None => Err("katmanın alanlarında yok"),
+        Some((_, None, _)) => {
+            Err("değer listeli bir alan değil (domain: bu şemanın değerli bir listesi)")
+        }
+        Some((_, Some(_), true)) => Err("çok değerli (multiple): tek değerli olmalı"),
+        Some((_, Some(codes), false)) => Ok(codes),
+    }
+}
+
+/// A layer's `subtypes` (KentOS's `LayerSubtypes`, docs/adr/0422): the field that sorts its records, a listed
+/// single-valued one, and its subtypes, each a code of that field's list narrowing the other fields (`values` of
+/// their lists, `default`, `required`). The subtypes' codes, for the value groups' rows.
+fn subtypes_check(
+    c: &mut Check<'_>,
+    at: &str,
+    layer: &Map<String, Value>,
+    listed: &[(String, Option<BTreeSet<String>>, bool)],
+) -> BTreeSet<String> {
+    let mut codes = BTreeSet::new();
+    let Some(given) = layer.get("subtypes") else {
+        return codes;
+    };
+    let sat = format!("{at}/subtypes");
+    let Some(st) = given.as_object() else {
+        c.add(
+            sat,
+            "Alt türler bir nesne ({\"field\", \"types\"}) olmalı.".to_owned(),
+        );
+        return codes;
+    };
+    c.keys(&sat, st, &["field", "types"]);
+    let sorter = c.text(&sat, st, "field").map(str::to_owned);
+    let sorter_codes = match sorter.as_deref().map(|f| (f, listed_field(listed, f))) {
+        Some((_, Ok(codes))) => Some(codes),
+        Some((f, Err(why))) => {
+            c.add(
+                format!("{sat}/field"),
+                format!("“{f}” alt tür alanı olamaz: {why}."),
+            );
+            None
+        }
+        None => None,
+    };
+    let types = c.objects(&format!("{sat}/types"), st.get("types"));
+    if types.is_empty() || types.len() > MOST_SUBTYPES {
+        c.add(
+            format!("{sat}/types"),
+            format!("1 ile {MOST_SUBTYPES} arasında alt tür (types) olmalı."),
+        );
+    }
+    for (tat, t) in types {
+        c.keys(&tat, t, &["code", "label", "fields"]);
+        if let Some(code) = c.text(&tat, t, "code") {
+            if !codes.insert(code.to_owned()) {
+                c.add(format!("{tat}/code"), format!("“{code}” iki alt türde."));
+            } else if let (Some(known), Some(f)) = (sorter_codes, &sorter)
+                && !known.contains(code)
+            {
+                c.add(
+                    format!("{tat}/code"),
+                    format!("“{code}” alt tür alanının (“{f}”) değer listesinde yok."),
+                );
+            }
+        }
+        c.optional_text(&tat, t, "label");
+        for (rat, r) in c.objects(&format!("{tat}/fields"), t.get("fields")) {
+            c.keys(&rat, r, &["field", "values", "default", "required"]);
+            if let Some(field) = c.text(&rat, r, "field") {
+                if sorter.as_deref() == Some(field) {
+                    c.add(
+                        format!("{rat}/field"),
+                        "Alt tür alanı kendini daraltamaz.".to_owned(),
+                    );
+                } else if !listed.iter().any(|(n, ..)| n == field) {
+                    c.add(
+                        format!("{rat}/field"),
+                        format!("“{field}” alanı katmanın alanlarında yok."),
+                    );
+                } else if let Some(values) = r.get("values") {
+                    match (values.as_array(), listed_field(listed, field)) {
+                        (None, _) => c.add(
+                            format!("{rat}/values"),
+                            "values kodların listesi olmalı.".to_owned(),
+                        ),
+                        (Some(_), Err(why)) => c.add(
+                            format!("{rat}/values"),
+                            format!("values yalnız değer listeli alanı daraltır: “{field}” {why}."),
+                        ),
+                        (Some(values), Ok(known)) => {
+                            for (j, v) in values.iter().enumerate() {
+                                if !v.as_str().is_some_and(|v| known.contains(v)) {
+                                    c.add(
+                                        format!("{rat}/values/{j}"),
+                                        format!("“{field}” alanının değer listesinde olan bir kod olmalı."),
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if r.get("default").is_some_and(|v| !v.is_string()) {
+                c.add(
+                    format!("{rat}/default"),
+                    "“default” metin olarak yazılır.".to_owned(),
+                );
+            }
+            c.boolean(&rat, r, "required");
+        }
+    }
+    codes
+}
+
+/// A layer's `contingents` (KentOS's value groups, docs/adr/0423): each 2–8 listed single-valued fields whose values go
+/// together, its rows the combinations allowed (a cell each: `code` of the field's list, `any`, `empty`; a row may be
+/// a subtype's).
+fn contingents_check(
+    c: &mut Check<'_>,
+    at: &str,
+    layer: &Map<String, Value>,
+    listed: &[(String, Option<BTreeSet<String>>, bool)],
+    subtypes: &BTreeSet<String>,
+) {
+    let groups = c.objects(&format!("{at}/contingents"), layer.get("contingents"));
+    if groups.len() > MOST_GROUPS {
+        c.add(
+            format!("{at}/contingents"),
+            format!("Katmanda en çok {MOST_GROUPS} değer grubu olur."),
+        );
+    }
+    let mut names = BTreeSet::new();
+    for (gat, g) in groups {
+        c.keys(&gat, g, &["name", "fields", "restrictive", "rows"]);
+        if let Some(name) = c.text(&gat, g, "name")
+            && !names.insert(name.to_owned())
+        {
+            c.add(
+                format!("{gat}/name"),
+                format!("“{name}” adlı iki değer grubu var."),
+            );
+        }
+        let given = g.get("fields").and_then(Value::as_array);
+        let fields: Vec<&str> = given
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .collect();
+        let distinct = fields.iter().collect::<BTreeSet<_>>().len() == fields.len();
+        if given.is_none_or(|g| g.len() != fields.len())
+            || !(2..=MOST_GROUP_FIELDS).contains(&fields.len())
+            || !distinct
+        {
+            c.add(
+                format!("{gat}/fields"),
+                format!(
+                    "Değer grubu 2 ile {MOST_GROUP_FIELDS} arasında farklı alan (fields) ister."
+                ),
+            );
+        }
+        let mut codes: Vec<Option<&BTreeSet<String>>> = Vec::new();
+        for (j, f) in fields.iter().enumerate() {
+            match listed_field(listed, f) {
+                Ok(known) => codes.push(Some(known)),
+                Err(why) => {
+                    c.add(
+                        format!("{gat}/fields/{j}"),
+                        format!("“{f}” değer grubunda olamaz: {why}."),
+                    );
+                    codes.push(None);
+                }
+            }
+        }
+        c.boolean(&gat, g, "restrictive");
+        let rows = c.objects(&format!("{gat}/rows"), g.get("rows"));
+        // Whether some field can be written first, the others empty: a row allowing it there and empty elsewhere.
+        let first = rows.iter().any(|(_, r)| {
+            let kinds: Vec<&str> = r
+                .get("cells")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .map(|cell| cell.get("kind").and_then(Value::as_str).unwrap_or_default())
+                .collect();
+            kinds.len() == fields.len()
+                && (0..kinds.len()).any(|j| {
+                    matches!(kinds[j], "code" | "any")
+                        && kinds
+                            .iter()
+                            .enumerate()
+                            .all(|(i, k)| i == j || matches!(*k, "empty" | "any"))
+                })
+        });
+        if g.get("restrictive").and_then(Value::as_bool) == Some(true) && !rows.is_empty() && !first
+        {
+            let name = g.get("name").and_then(Value::as_str).unwrap_or_default();
+            c.warnings.push(
+                Problem::new(
+                    "layer_schema_fill",
+                    format!(
+                        "“{name}” kısıtlayıcı ve hiçbir satırı alanlarını tek tek doldurmaya izin vermiyor: öznitelik \
+                         tablosunda bir alan yazılınca öbürleri boş olduğu için reddedilir. Boş hücreli satırlar ekleyin \
+                         (ör. [{{\"kind\": \"any\"}}, {{\"kind\": \"empty\"}}] ve tersi) ya da grubu uyarıcı yapın \
+                         (restrictive: false)."
+                    ),
+                )
+                .file(c.file.to_owned())
+                .at(gat.clone()),
+            );
+        }
+        if rows.is_empty() || rows.len() > MOST_COMBINATIONS {
+            c.add(
+                format!("{gat}/rows"),
+                format!("1 ile {MOST_COMBINATIONS} arasında bileşim (rows) olmalı."),
+            );
+        }
+        for (rat, r) in rows {
+            c.keys(&rat, r, &["cells", "subtype"]);
+            let cells = c.objects(&format!("{rat}/cells"), r.get("cells"));
+            if cells.len() != fields.len() {
+                c.add(
+                    format!("{rat}/cells"),
+                    format!(
+                        "Bileşim grubun her alanı için bir hücre ister ({}).",
+                        fields.len()
+                    ),
+                );
+            }
+            for (k, (cat, cell)) in cells.into_iter().enumerate() {
+                c.keys(&cat, cell, &["kind", "code"]);
+                match cell.get("kind").and_then(Value::as_str) {
+                    Some("any" | "empty") => {}
+                    Some("code") => {
+                        if let Some(code) = c.text(&cat, cell, "code")
+                            && let Some(Some(known)) = codes.get(k)
+                            && !known.contains(code)
+                        {
+                            c.add(
+                                format!("{cat}/code"),
+                                format!("“{code}” “{}” alanının değer listesinde yok.", fields[k]),
+                            );
+                        }
+                    }
+                    _ => c.add(
+                        format!("{cat}/kind"),
+                        "Hücrenin türü (kind) code, any ya da empty olmalı.".to_owned(),
+                    ),
+                }
+            }
+            if let Some(subtype) = r.get("subtype")
+                && !subtype.as_str().is_some_and(|s| subtypes.contains(s))
+            {
+                c.add(
+                    format!("{rat}/subtype"),
+                    "Bileşimin alt türü katmanın alt türlerinden biri olmalı.".to_owned(),
+                );
+            }
+        }
+    }
+}
+
 /// What is wrong with `value`, `schema.json` read as JSON (`file` its path in the package; `forms` the form packages
 /// the manifest declares, `entrypoints.forms`' definitions): problems, and warnings (a relation naming a layer the
 /// schema does not make, which the project must then have).
@@ -228,8 +509,9 @@ pub fn check(file: &str, value: &Value, forms: &[&str]) -> (Vec<Problem>, Vec<Pr
             ),
         }
     }
-    // The value lists, first: the fields link them.
+    // The value lists, first: the fields link them. A list's codes: what a subtype or a value group may name.
     let mut domains = BTreeSet::new();
+    let mut domain_codes: std::collections::BTreeMap<String, BTreeSet<String>> = Default::default();
     for (at, d) in c.objects("/domains", top.get("domains")) {
         c.keys(&at, d, &DOMAIN);
         if let Some(id) = c.text(&at, d, "id") {
@@ -276,6 +558,11 @@ pub fn check(file: &str, value: &Value, forms: &[&str]) -> (Vec<Problem>, Vec<Pr
                 );
             }
             c.text(&vat, v, "label");
+        }
+        if let Some(id) = d.get("id").and_then(Value::as_str)
+            && !codes.is_empty()
+        {
+            domain_codes.insert(id.to_owned(), codes);
         }
         for key in ["min", "max"] {
             if d.get(key).is_some_and(|v| !v.is_string()) {
@@ -351,8 +638,19 @@ pub fn check(file: &str, value: &Value, forms: &[&str]) -> (Vec<Problem>, Vec<Pr
             );
         }
         let mut fields = BTreeSet::new();
+        // Each field's name, its value list's codes (none: not a listed field) and whether it takes many values.
+        let mut listed: Vec<(String, Option<BTreeSet<String>>, bool)> = Vec::new();
         for (fat, f) in c.objects(&format!("{at}/fields"), l.get("fields")) {
             c.keys(&fat, f, &FIELD);
+            if let Some(field) = f.get("name").and_then(Value::as_str) {
+                let codes = f
+                    .get("domain")
+                    .and_then(Value::as_str)
+                    .and_then(|d| domain_codes.get(d))
+                    .cloned();
+                let many = f.get("multiple").and_then(Value::as_bool) == Some(true);
+                listed.push((field.to_owned(), codes, many));
+            }
             if let Some(field) = c.text(&fat, f, "name")
                 && !fields.insert(field.to_lowercase())
             {
@@ -404,6 +702,8 @@ pub fn check(file: &str, value: &Value, forms: &[&str]) -> (Vec<Problem>, Vec<Pr
                 );
             }
         }
+        let subtypes = subtypes_check(&mut c, &at, l, &listed);
+        contingents_check(&mut c, &at, l, &listed, &subtypes);
         if let Some(name) = name {
             layers.push((name, fields));
         }
@@ -484,6 +784,88 @@ mod tests {
         let (problems, warnings) = check("schema.json", &mebis(), &FORMS);
         assert!(problems.is_empty(), "{problems:#?}");
         assert!(warnings.is_empty(), "{warnings:#?}");
+    }
+
+    /// MEBİS's schema with a subtype field and a value group on its graves (docs/adr/0422, 0423).
+    fn with_subtypes() -> Value {
+        let mut s = mebis();
+        s["domains"].as_array_mut().unwrap().push(json!({
+            "id": "mezar_turu", "name": "Mezar türü", "kind": "text",
+            "values": [{ "code": "TEKLI", "label": "Tekli" }, { "code": "AILE", "label": "Aile" }]
+        }));
+        let yeri = &mut s["layers"][2];
+        yeri["fields"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!({ "name": "tur", "kind": "text", "domain": "mezar_turu" }));
+        yeri["subtypes"] = json!({ "field": "tur", "types": [
+            { "code": "TEKLI", "label": "Tekli mezar",
+              "fields": [{ "field": "durum", "values": ["BOS", "DOLU"], "default": "BOS", "required": true }] },
+            { "code": "AILE" }
+        ]});
+        yeri["contingents"] = json!([{ "name": "Tür ve durum", "fields": ["tur", "durum"], "restrictive": true,
+            "rows": [
+                { "cells": [{ "kind": "code", "code": "TEKLI" }, { "kind": "any" }] },
+                { "cells": [{ "kind": "code", "code": "AILE" }, { "kind": "code", "code": "AYRILMIS" }],
+                  "subtype": "AILE" }
+            ] }]);
+        s
+    }
+
+    #[test]
+    fn subtypes_and_value_groups_pass_in_kentos_words_and_each_mistake_is_said_where_it_is() {
+        let (problems, warnings) = check("schema.json", &with_subtypes(), &FORMS);
+        assert!(problems.is_empty(), "{problems:#?}");
+        assert!(
+            warnings.is_empty(),
+            "(TEKLI, any) lets the type be written first: {warnings:#?}"
+        );
+        // A restrictive group whose every row fills both fields cannot be filled a field at a time (the attribute
+        // table writes one): warned (real window, Vitrin 1.0.16's first schema).
+        let mut full = with_subtypes();
+        full["layers"][2]["contingents"][0]["rows"] = json!([
+            { "cells": [{ "kind": "code", "code": "TEKLI" }, { "kind": "code", "code": "BOS" }] },
+            { "cells": [{ "kind": "code", "code": "AILE" }, { "kind": "code", "code": "DOLU" }] }
+        ]);
+        let (problems, warnings) = check("schema.json", &full, &FORMS);
+        assert!(problems.is_empty(), "{problems:#?}");
+        assert_eq!(
+            warnings
+                .iter()
+                .map(|w| (w.code, w.at.as_deref()))
+                .collect::<Vec<_>>(),
+            [("layer_schema_fill", Some("/layers/2/contingents/0"))]
+        );
+        let mut s = with_subtypes();
+        let yeri = &mut s["layers"][2];
+        yeri["subtypes"]["field"] = json!("mezar_no");
+        yeri["subtypes"]["types"][1]["code"] = json!("TEKLI");
+        yeri["subtypes"]["types"][0]["fields"][0]["values"] = json!(["BOS", "YOK"]);
+        yeri["contingents"][0]["fields"] = json!(["tur", "ada_no"]);
+        yeri["contingents"][0]["rows"][0]["cells"] = json!([{ "kind": "code", "code": "UCLU" }]);
+        yeri["contingents"][0]["rows"][1]["cells"][1] = json!({ "kind": "hepsi" });
+        yeri["contingents"][0]["rows"][1]["subtype"] = json!("COCUK");
+        let (problems, _) = check("schema.json", &s, &FORMS);
+        let at: Vec<&str> = problems.iter().filter_map(|p| p.at.as_deref()).collect();
+        assert_eq!(
+            at,
+            [
+                "/layers/2/subtypes/field",
+                "/layers/2/subtypes/types/0/fields/0/values/1",
+                "/layers/2/subtypes/types/1/code",
+                "/layers/2/contingents/0/fields/1",
+                "/layers/2/contingents/0/rows/0/cells",
+                "/layers/2/contingents/0/rows/0/cells/0/code",
+                "/layers/2/contingents/0/rows/1/cells/1/kind",
+                "/layers/2/contingents/0/rows/1/subtype",
+            ],
+            "{problems:#?}"
+        );
+        assert!(
+            problems[0].message.contains("değer listeli bir alan değil"),
+            "{}",
+            problems[0].message
+        );
     }
 
     #[test]

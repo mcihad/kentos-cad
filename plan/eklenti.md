@@ -1107,10 +1107,10 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
   yakalama/kenetleme ve şablon önizleme kuralları (ör. 2,20 × 1,10 m mezar
   dikdörtgeni) Rust etkileşim oturumunda çizilir; kullanıcı noktaları onaylayınca `@ext.map_tool` çağrılır; sonuç tek
   geri alma adımı.
-- [ ] **Katman şeması kurulumu** — *ilk dilim yapıldı (ADR 8057 §23): `kentos.layerSchema` 1 (katmanlar ve alanları,
-  değer listeleri, ilişkiler, grup), Kapı 1 denetimi, `ctx.apply_declarative_schema` var olana dokunmadan eksiği tek
-  adımda kurar, katman kimliği şema adı (`cad.layers.edit` `id`), katmanın formu (`.kform`) aynı adımda bağlanır; kalan:
-  alt türler, değer bileşimleri.* `schema.json` (katmanlar, alt türler/domain'ler, `1:N` ilişkiler) ve formlar host'un tek
+- [x] **Katman şeması kurulumu** — *tamamlandı (ADR 8057 §23): `kentos.layerSchema` 1 (katmanlar ve alanları, değer
+  listeleri, ilişkiler, grup), Kapı 1 denetimi, `ctx.apply_declarative_schema` var olana dokunmadan eksiği tek adımda
+  kurar, katman kimliği şema adı (`cad.layers.edit` `id`), katmanın formu (`.kform`) aynı adımda bağlanır; 15 Kasım'da
+  alt türler (`subtypes`) ve değer bileşimleri (`contingents`) KentOS'un sözcükleriyle, gerçek pencerede Vitrin'le.* `schema.json` (katmanlar, alt türler/domain'ler, `1:N` ilişkiler) ve formlar host'un tek
   komutuyla projeye kurulur; biçim bu adımda ADR'yle sabitlenir, form planının şema/ilişki sözleşmesini yeniden yazmaz.
 - [x] **Referans eklenti** — *tamamlandı (ADR 8057 §24, 14–15 Kasım): MEBİS gerçek pencerede uçtan uca (kurum
   kataloğu, ortam, şema, Tekli mezar, iki İşlemler aracı, denetim, arama paneli); devre dışı bırakınca iz kalmaz,

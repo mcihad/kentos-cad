@@ -57,8 +57,15 @@ pub(super) fn field_rows(
     locked: bool,
     labels: &[(String, std::collections::BTreeMap<String, String>)],
 ) -> Vec<Row> {
-    use kentos_commands::{LayerFieldKind, MULTIPLE_JOIN, check_value, display_value};
+    use kentos_commands::{
+        LayerFieldKind, LayerSubtypes, MULTIPLE_JOIN, check_value, display_value,
+    };
     let mut rows = Vec::new();
+    // The record's subtype (docs/adr/0422): a field it makes required is marked and, empty, said as one. The panel
+    // read the layer's rule only: Vitrin's Okul made Kapasite required, the row showed neither the mark nor the
+    // words while a write refused emptying it (real window, 15 November 2026).
+    let subtype = subtypes.and_then(|s| s.of(fields, |n| base.attrs.get(n).cloned()));
+    let subtype_words = subtypes.zip(subtype).map(|(s, t)| s.label_of(fields, t));
     for f in fields {
         let raw = base.attrs.get(&f.name).cloned().unwrap_or_default();
         let checked = check_value(f, &raw);
@@ -130,8 +137,10 @@ pub(super) fn field_rows(
         } else {
             Some(Editor::Text(field))
         };
+        let required =
+            f.required || subtype.is_some_and(|t| LayerSubtypes::field_for(f, Some(t)).required);
         rows.push(Row {
-            label: Cow::Owned(if f.required {
+            label: Cow::Owned(if required {
                 format!("{} *", f.label())
             } else {
                 f.label().to_owned()
@@ -149,7 +158,83 @@ pub(super) fn field_rows(
                 warn: true,
                 ..Row::note(&refused.message)
             });
+        } else if required && !f.required && raw.trim().is_empty() {
+            // The words a write refusing it says (core/checks.rs).
+            rows.push(Row {
+                warn: true,
+                ..Row::note(&format!(
+                    "“{}” alanı “{}” alt türünde zorunlu; boş bırakılamaz.",
+                    f.label(),
+                    subtype_words.unwrap_or_default()
+                ))
+            });
         }
     }
     rows
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kentos_commands::{EntityBase, LayerField, LayerFieldKind, LayerSubtypes};
+    use serde_json::json;
+
+    /// docs/adr/0422: a field the record's subtype makes required is marked and, empty, said as one, in the words a
+    /// write refusing it says; another subtype's record keeps the layer's rule (real window, Vitrin 1.0.16's Okul and
+    /// Kapasite).
+    #[test]
+    fn a_field_its_records_subtype_makes_required_is_marked_and_said_when_empty() {
+        let mut tur = LayerField::new("tur", LayerFieldKind::Text);
+        tur.values = serde_json::from_value(
+            json!([{ "code": "OKUL", "label": "Okul" }, { "code": "PARK", "label": "Park" }]),
+        )
+        .unwrap();
+        let mut kapasite = LayerField::new("kapasite", LayerFieldKind::Integer);
+        kapasite.alias = Some("Kapasite".into());
+        let fields = vec![tur, kapasite];
+        let subtypes: LayerSubtypes = serde_json::from_value(json!({ "field": "tur", "types": [
+            { "code": "OKUL", "fields": [{ "field": "kapasite", "required": true }] },
+            { "code": "PARK" }
+        ]}))
+        .unwrap();
+        let rows = |attrs: serde_json::Value| -> Vec<(String, bool)> {
+            let base: EntityBase =
+                serde_json::from_value(json!({ "id": 1, "layerId": "tesis", "attrs": attrs }))
+                    .unwrap();
+            field_rows(Slot(0), &base, &fields, Some(&subtypes), &[], false, &[])
+                .into_iter()
+                .map(|r| {
+                    (
+                        if r.warn {
+                            r.value
+                        } else {
+                            r.label.into_owned()
+                        },
+                        r.warn,
+                    )
+                })
+                .collect()
+        };
+        assert_eq!(
+            rows(json!({ "tur": "OKUL" })),
+            [
+                ("tur".to_owned(), false),
+                ("Kapasite *".to_owned(), false),
+                (
+                    "“Kapasite” alanı “Okul” alt türünde zorunlu; boş bırakılamaz.".to_owned(),
+                    true
+                ),
+            ]
+        );
+        assert_eq!(
+            rows(json!({ "tur": "OKUL", "kapasite": "300" }))[1],
+            ("Kapasite *".to_owned(), false),
+            "given: marked, not said"
+        );
+        assert_eq!(
+            rows(json!({ "tur": "PARK" })),
+            [("tur".to_owned(), false), ("Kapasite".to_owned(), false)],
+            "another subtype: the layer's rule"
+        );
+    }
 }

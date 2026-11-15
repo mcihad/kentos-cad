@@ -1429,8 +1429,28 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   `cad.forms.import_` ile katmana katmanın adıyla (form kimliği) ve eksik alanları ekleyerek bağlar; tekrarda "vardı".
   MEBİS'in iki katmanı formlarına bağlandı (özet yeniden hesaplandı), Vitrin 1.0.6 Örnek tesis formunu taşır.
   Gerçek pencere: "Şema kuruldu: 1 grup, 1 değer listesi, 2 katman, 1 form, 1 ilişki."
-- **Kalan:** alt türler ve değer bileşimleri biçimde yok; geometrisiz tablo katmanı KentOS'ta henüz yok (kayıtlar
-  `mixed` katmana yazılır).
+- **Alt türler ve değer bileşimleri** (15 Kasım; Vitrin 1.0.16, `23-alt-tur`): katman isteğe bağlı `subtypes`
+  (KentOS'un `LayerSubtypes`'ı, ADR 0422: değer listeli tek değerli alan ve türleri; her tür öbür alanların kodlarını,
+  varsayılanını, zorunluluğunu daraltır) ve `contingents` (değer grupları, ADR 0423: 2–8 değer listeli alan, kısıtlayıcı
+  ya da uyarıcı, satır başına `code`/`any`/`empty` hücreleri, isteğe bağlı alt türü) alır; sözcükler KentOS'un, yeni
+  bir host komutu gerekmedi: kurulum alanlardan ve formlardan sonra `cad.layers.subtypes` ve `cad.layers.contingents`
+  ile, bunları taşıyan katmana dokunmadan. Kapı 1: anahtarlar, alanın katmanda ve değer listeli tek değerli olması,
+  kodların şemadaki listede olması, tekrarlanan kod/ad, hücre sayısı ve türü, satırın alt türü, KentOS'un sınırları
+  (256 tür, 50 grup, 8 alan, 10 000 satır). Rapor "1 katmana alt tür, 1 katmana değer bileşimi" der.
+  - **Gerçek pencere:** Katmanları kur "Şema kuruldu: 1 grup, 3 değer listesi, 2 katman, 1 form, 1 katmana alt tür, 1
+    katmana değer bileşimi, 1 ilişki"; Örnek tesis'e konan noktada Tür = Okul: Kademe yalnız İlkokul, Ortaokul, Lise;
+    Lise seçilince İşletme yalnız Bakanlık ve Özel. KentOS kuralları yazmada da uyguladı (Python, gerçek belge): Lise +
+    Belediye "değer grubunda bu bileşim yok", Okul'a Mahalle parkı "bu alt tür bu değeri sunmaz" diye reddedildi.
+  - **Bulgu (Kapı 1 uyarısı eklendi): her satırı bütün alanları dolduran kısıtlayıcı grup alan alan doldurulamaz.**
+    Vitrin'in ilk şemasında Kademe yazılınca İşletme boş olduğu için reddediliyordu (KentOS'un kuralı: grubun bir alanı
+    doluysa her hücre bir satırca karşılanmalı); öznitelik tablosu bir alanı yazar, kayıt hiç doldurulamıyordu. Kapı 1
+    artık hiçbir alanın ilk yazılamadığı kısıtlayıcı grubu uyarır (`layer_schema_fill`); Vitrin'e `[any, empty]` ve
+    `[empty, any]` satırları eklendi, rehber bunu söyler.
+  - **Bulgu (düzeltildi, Öznitelikler): alt türün zorunlu kıldığı alan işaretsizdi.** Panel seçenekleri alt türe ve
+    gruplara göre daraltıyordu ama zorunluluğu katmanın alanından okuyordu: Okul'da Kapasite'nin yıldızı ve uyarısı
+    yoktu, boşaltan yazma ise reddediliyordu. Artık işaret ve uyarı kaydın alt türünü okur, sözler yazmayı reddeden
+    denetiminkiyle aynı ("“Kapasite” alanı “Okul” alt türünde zorunlu; boş bırakılamaz.").
+- **Kalan:** geometrisiz tablo katmanı KentOS'ta henüz yok (kayıtlar `mixed` katmana yazılır).
 
 ## §24. Eklentinin paneli: `kentos.ui.panel` 1, düğmesi bir komut (`ADIM 22`, panel köprüsü, ilk dilim)
 

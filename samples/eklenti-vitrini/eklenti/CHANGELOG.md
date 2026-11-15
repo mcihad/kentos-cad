@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 1.0.16 — 15 Kasım 2026
+
+- Katman şemasında alt türler ve değer bileşimleri: Örnek tesis'in türü (Okul, Park, Sağlık ocağı) alt tür alanıdır ve
+  yeni Kademe alanını daraltır (Okul: İlkokul, Ortaokul, Lise; Park: Mahalle/Semt parkı; Sağlık: ASM, TSM; okulda
+  kapasite zorunlu); "Kademe ve işletme" kısıtlayıcı değer grubu kademeyi işletmeye bağlar (mahalle parkı belediyenin,
+  lise bakanlığın ya da özel); iki boş hücreli satır (herhangi kademe + boş işletme ve tersi) alanların öznitelik
+  tablosunda tek tek doldurulmasına izin verir. Formda Kademe ve İşletme alanları.
+
 ## 1.0.15 — 15 Kasım 2026
 
 - Panel: "Parsel kartı" (`ui/parsel-karti.panel.json`): nesne seçiciyle alınan her parsel bir kart (`card`): ada/parsel

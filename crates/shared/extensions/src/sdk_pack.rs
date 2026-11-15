@@ -59,6 +59,14 @@ Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "s
   annotation, mixed; verilmezse her tür), `fields`: `{name, kind, alias, required, default, length, min, max, domain}`
   (kind: text, integer, decimal, date, boolean, datetime, time, bigint, instant, uuid, json, binary); isteğe bağlı `form`:
   paketteki `.kform` (manifestin `entrypoints.forms`'unda bildirilir), kurulumda katmana katmanın adıyla bağlanır.
+- Katmanın isteğe bağlı `subtypes`'ı (alt türler): `{field, types: [{code, label, fields: [{field, values, default,
+  required}]}]}`: `field` değer listeli, tek değerli bir alan; her alt tür onun bir kodu ve öbür alanları o türün
+  kayıtları için daraltır (sunulan kodlar, yeni kaydın varsayılanı, zorunluluk). `contingents`'ı (değer bileşimleri):
+  `[{name, fields: [2–8 değer listeli alan], restrictive, rows: [{cells: [{kind: "code", code} | {kind: "any"} |
+  {kind: "empty"}], subtype}]}]`: birlikte geçerli değerler; kısıtlayıcı grupta başka bileşim reddedilir. KentOS
+  kuralları her yazmada uygular, formun ve tablonun seçenekleri daralır. Grubun bir alanı doluyken öbür hücreler de
+  bir satırca karşılanmalı: alanlar tek tek doldurulacaksa boş hücreli satırlar ekleyin (`[{kind: "any"}, {kind:
+  "empty"}]` ve tersi), yoksa öznitelik tablosunda ilk yazılan alan reddedilir (inceleme bunu uyarır).
 - `group` (isteğe bağlı): `{id, name}`, katmanlar altına girer. `domains`: `{id, name, kind, values: [{code, label}]}` ya
   da `min`/`max`. `relations`: `{id, name, parent, child, field, onDelete}`: çocuğun alanı ebeveynin kalıcı kimliğini
   tutar (onDelete: keep, unlink, cascade, restrict).

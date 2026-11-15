@@ -268,7 +268,7 @@ class CommandContext:
                 counts[r["Tür"]] = counts.get(r["Tür"], 0) + 1
         # Written out, not lowered: Python's lower() makes “İlişki” “i̇lişki” (a dotted i and a combining dot).
         words = {"Grup": "grup", "Değer listesi": "değer listesi", "Katman": "katman", "Form": "form",
-                 "İlişki": "ilişki"}
+                 "Alt türler": "katmana alt tür", "Değer bileşimleri": "katmana değer bileşimi", "İlişki": "ilişki"}
         said = ", ".join(f"{n} {words.get(kind, kind)}" for kind, n in counts.items())
         return CommandResult(title="Katman şeması", message=f"Şema kuruldu: {said}.", rows=rows)
 
@@ -317,9 +317,9 @@ def _schema_ids(doc: Any, kind: str) -> set[str]:
 
 def _install_schema(doc: Any, schema: Any, path: str, read: Callable[[str], Any]) -> list[dict[str, Any]]:
     """What ``apply_declarative_schema`` writes: the group, the value lists, the layers with their fields, their forms
-    (a package's ``.kform`` read by ``read``, bound to the layer under its name as the form's id), the relations, in
-    that order (a field links a list, a form a layer's fields, a relation its layers); what is there is kept. A row
-    each."""
+    (a package's ``.kform`` read by ``read``, bound to the layer under its name as the form's id), the layers' subtypes
+    and value groups, the relations, in that order (a field links a list, a form a layer's fields, a subtype the
+    fields, a relation its layers); what is there is kept. A row each."""
     from kentos import cad
 
     if not isinstance(schema, dict) or not isinstance(schema.get("layers"), list) or not schema["layers"]:
@@ -389,6 +389,27 @@ def _install_schema(doc: Any, schema: Any, path: str, read: Callable[[str], Any]
             if made:
                 cad.forms.import_(doc, layer=lid, package=cad.FormPackage.from_json(package), id=lid, add_fields=True)
             rows.append({"Tür": "Form", "Kimlik": lid, "Ad": str(package.get("name") or lid),
+                         "Sonuç": "eklendi" if made else "vardı"})
+    # A layer's subtypes and value groups (KentOS's, docs/adr/0422, 0423), after its fields and forms: a subtype
+    # narrows the fields, a group's row may be a subtype's. A layer that has them keeps its own.
+    for layer in schema["layers"]:
+        lid = str(layer["name"])
+        title = str(layer.get("title") or lid)
+        node = nodes.get(lid)
+        if layer.get("subtypes"):
+            made = node is None or not isinstance(getattr(node, "subtypes", None), cad.LayerSubtypes)
+            if made:
+                cad.layers.subtypes(doc, layer=lid, subtypes=cad.LayerSubtypes.from_json(layer["subtypes"]))
+            n = len(layer["subtypes"].get("types") or [])
+            rows.append({"Tür": "Alt türler", "Kimlik": lid, "Ad": f"{title}: {n} alt tür",
+                         "Sonuç": "eklendi" if made else "vardı"})
+        if layer.get("contingents"):
+            have = getattr(node, "contingents", None) if node is not None else None
+            made = not (isinstance(have, list) and have)
+            if made:
+                cad.layers.contingents(doc, layer=lid,
+                                       groups=[cad.FieldGroup.from_json(g) for g in layer["contingents"]])
+            rows.append({"Tür": "Değer bileşimleri", "Kimlik": lid, "Ad": f"{title}: {len(layer['contingents'])} grup",
                          "Sonuç": "eklendi" if made else "vardı"})
     if schema.get("relations"):
         have = _schema_ids(doc, "relations")

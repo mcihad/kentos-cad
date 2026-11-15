@@ -18,6 +18,16 @@
       },
       {
         "type": "field",
+        "id": "kademe",
+        "field": "kademe"
+      },
+      {
+        "type": "field",
+        "id": "isletme",
+        "field": "isletme"
+      },
+      {
+        "type": "field",
         "id": "kapasite",
         "field": "kapasite"
       }
@@ -48,6 +58,60 @@
       "domain": "tesis_turu"
     },
     {
+      "name": "kademe",
+      "kind": "text",
+      "values": [
+        {
+          "code": "ILK",
+          "label": "İlkokul"
+        },
+        {
+          "code": "ORTA",
+          "label": "Ortaokul"
+        },
+        {
+          "code": "LISE",
+          "label": "Lise"
+        },
+        {
+          "code": "MAHALLE",
+          "label": "Mahalle parkı"
+        },
+        {
+          "code": "SEMT",
+          "label": "Semt parkı"
+        },
+        {
+          "code": "ASM",
+          "label": "Aile sağlığı merkezi"
+        },
+        {
+          "code": "TSM",
+          "label": "Toplum sağlığı merkezi"
+        }
+      ],
+      "domain": "tesis_kademe"
+    },
+    {
+      "name": "isletme",
+      "kind": "text",
+      "values": [
+        {
+          "code": "BELEDIYE",
+          "label": "Belediye"
+        },
+        {
+          "code": "BAKANLIK",
+          "label": "Bakanlık"
+        },
+        {
+          "code": "OZEL",
+          "label": "Özel"
+        }
+      ],
+      "domain": "tesis_isletme"
+    },
+    {
       "name": "kapasite",
       "kind": "integer"
     }
@@ -69,6 +133,60 @@
         {
           "code": "SAGLIK",
           "label": "Sağlık ocağı"
+        }
+      ]
+    },
+    {
+      "id": "tesis_kademe",
+      "name": "Kademe",
+      "kind": "text",
+      "values": [
+        {
+          "code": "ILK",
+          "label": "İlkokul"
+        },
+        {
+          "code": "ORTA",
+          "label": "Ortaokul"
+        },
+        {
+          "code": "LISE",
+          "label": "Lise"
+        },
+        {
+          "code": "MAHALLE",
+          "label": "Mahalle parkı"
+        },
+        {
+          "code": "SEMT",
+          "label": "Semt parkı"
+        },
+        {
+          "code": "ASM",
+          "label": "Aile sağlığı merkezi"
+        },
+        {
+          "code": "TSM",
+          "label": "Toplum sağlığı merkezi"
+        }
+      ]
+    },
+    {
+      "id": "tesis_isletme",
+      "name": "İşletme",
+      "kind": "text",
+      "values": [
+        {
+          "code": "BELEDIYE",
+          "label": "Belediye"
+        },
+        {
+          "code": "BAKANLIK",
+          "label": "Bakanlık"
+        },
+        {
+          "code": "OZEL",
+          "label": "Özel"
         }
       ]
     }

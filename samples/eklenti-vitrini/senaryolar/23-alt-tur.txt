@@ -1,0 +1,50 @@
+# Alt türler ve değer bileşimleri (schema.json): Katmanları kur Örnek tesis'i türüne göre alt türleriyle ve "Kademe ve
+# işletme" değer grubuyla kurar. Örnek tesis'e bir nokta konur, Öznitelikler'de Tür = Okul: Kapasite zorunlu olur
+# (yıldız ve uyarı), Kademe yalnız İlkokul, Ortaokul, Lise sunar; Lise seçilince İşletme yalnız Bakanlık ve Özel.
+# (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 157 110   # Katmanları kur
+wait 6000
+shot 23-kur
+click 1270 220  # Katman ara
+wait 400
+type tesis
+wait 800
+dclick 1218 311 # Örnek tesis: etkin katman
+wait 1000
+key Escape
+wait 500
+click 410 20    # Düzenle
+wait 1200
+click 32 75     # Nokta
+wait 800
+click 600 300   # boş bir yere tesis
+wait 1500
+key Escape
+wait 600
+click 600 300   # noktayı seç
+wait 1200
+drag 1280 509 1280 200   # Öznitelikler'i yukarı doğru büyüt
+wait 1000
+wheel 1280 600 -10
+wait 800
+click 1343 708  # Tür
+wait 1000
+click 1285 771  # Okul
+wait 1500
+shot 23-okul
+click 1343 739  # Kademe
+wait 1000
+shot 23-kademe
+click 1285 857  # Lise
+wait 1500
+click 1343 768  # İşletme
+wait 1000
+shot 23-isletme

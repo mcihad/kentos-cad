@@ -24,6 +24,60 @@
           "label": "Sağlık ocağı"
         }
       ]
+    },
+    {
+      "id": "tesis_kademe",
+      "name": "Kademe",
+      "kind": "text",
+      "values": [
+        {
+          "code": "ILK",
+          "label": "İlkokul"
+        },
+        {
+          "code": "ORTA",
+          "label": "Ortaokul"
+        },
+        {
+          "code": "LISE",
+          "label": "Lise"
+        },
+        {
+          "code": "MAHALLE",
+          "label": "Mahalle parkı"
+        },
+        {
+          "code": "SEMT",
+          "label": "Semt parkı"
+        },
+        {
+          "code": "ASM",
+          "label": "Aile sağlığı merkezi"
+        },
+        {
+          "code": "TSM",
+          "label": "Toplum sağlığı merkezi"
+        }
+      ]
+    },
+    {
+      "id": "tesis_isletme",
+      "name": "İşletme",
+      "kind": "text",
+      "values": [
+        {
+          "code": "BELEDIYE",
+          "label": "Belediye"
+        },
+        {
+          "code": "BAKANLIK",
+          "label": "Bakanlık"
+        },
+        {
+          "code": "OZEL",
+          "label": "Özel"
+        }
+      ]
     }
   ],
   "layers": [
@@ -46,10 +100,226 @@
           "alias": "Tür"
         },
         {
+          "name": "kademe",
+          "kind": "text",
+          "domain": "tesis_kademe",
+          "alias": "Kademe"
+        },
+        {
+          "name": "isletme",
+          "kind": "text",
+          "domain": "tesis_isletme",
+          "alias": "İşletme"
+        },
+        {
           "name": "kapasite",
           "kind": "integer",
           "min": "0",
           "alias": "Kapasite"
+        }
+      ],
+      "subtypes": {
+        "field": "tur",
+        "types": [
+          {
+            "code": "OKUL",
+            "label": "Okul",
+            "fields": [
+              {
+                "field": "kademe",
+                "values": [
+                  "ILK",
+                  "ORTA",
+                  "LISE"
+                ],
+                "default": "ILK"
+              },
+              {
+                "field": "kapasite",
+                "required": true
+              }
+            ]
+          },
+          {
+            "code": "PARK",
+            "label": "Park",
+            "fields": [
+              {
+                "field": "kademe",
+                "values": [
+                  "MAHALLE",
+                  "SEMT"
+                ],
+                "default": "MAHALLE"
+              }
+            ]
+          },
+          {
+            "code": "SAGLIK",
+            "label": "Sağlık ocağı",
+            "fields": [
+              {
+                "field": "kademe",
+                "values": [
+                  "ASM",
+                  "TSM"
+                ],
+                "default": "ASM"
+              }
+            ]
+          }
+        ]
+      },
+      "contingents": [
+        {
+          "name": "Kademe ve işletme",
+          "fields": [
+            "kademe",
+            "isletme"
+          ],
+          "restrictive": true,
+          "rows": [
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "ILK"
+                },
+                {
+                  "kind": "code",
+                  "code": "BAKANLIK"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "ILK"
+                },
+                {
+                  "kind": "code",
+                  "code": "OZEL"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "ORTA"
+                },
+                {
+                  "kind": "code",
+                  "code": "BAKANLIK"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "ORTA"
+                },
+                {
+                  "kind": "code",
+                  "code": "OZEL"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "LISE"
+                },
+                {
+                  "kind": "code",
+                  "code": "BAKANLIK"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "LISE"
+                },
+                {
+                  "kind": "code",
+                  "code": "OZEL"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "MAHALLE"
+                },
+                {
+                  "kind": "code",
+                  "code": "BELEDIYE"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "SEMT"
+                },
+                {
+                  "kind": "code",
+                  "code": "BELEDIYE"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "ASM"
+                },
+                {
+                  "kind": "code",
+                  "code": "BAKANLIK"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "TSM"
+                },
+                {
+                  "kind": "code",
+                  "code": "BAKANLIK"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "any"
+                },
+                {
+                  "kind": "empty"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "empty"
+                },
+                {
+                  "kind": "any"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
