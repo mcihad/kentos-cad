@@ -15,6 +15,8 @@ mod audits;
 mod dialogs;
 mod panel_chart;
 mod panel_session;
+// A panel's sections: headings that fold what they gather (docs/adr/8057 §38).
+mod panel_sections;
 // A panel's worked-out values: defaults and calculations (docs/adr/8057 §35).
 mod panel_values;
 // Kapı 3's part that runs code: an agent's trial on a synthetic drawing (docs/adr/8057 §37).

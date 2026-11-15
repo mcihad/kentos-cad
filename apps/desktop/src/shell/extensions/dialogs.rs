@@ -25,8 +25,9 @@ use crate::app::{App, Message};
 use crate::exchange::words;
 
 /// What a dialog may hold: a panel's fields and words.
-const FIELDS: [&str; 11] = [
+const FIELDS: [&str; 12] = [
     "text",
+    "section",
     "textField",
     "numberField",
     "dateField",
@@ -158,6 +159,7 @@ impl App {
                     None => chosen.push(value),
                 }
             }
+            PanelEvent::Section(at) => panel.toggle_section(at),
             _ => {}
         }
         // Its calculations follow the values, as a panel's (panel_values.rs).
@@ -175,6 +177,7 @@ impl App {
                 Ok(values) => values,
                 Err((input, why)) => {
                     dialog.panel.said = Some((words::Kind::Error, why.clone()));
+                    dialog.panel.reveal(&input);
                     dialog.panel.invalid = Some((input, why));
                     return;
                 }

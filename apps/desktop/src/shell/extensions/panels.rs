@@ -110,6 +110,8 @@ pub(crate) struct OpenPanel {
     pub(crate) calc_order: Vec<usize>,
     /// What each calculated text shows now, by its place (none: its `text`).
     pub(crate) calculated: BTreeMap<usize, String>,
+    /// The sections folded now, by place (`section`: its `collapsed` at first, then the user's; panel_view.rs).
+    pub(crate) closed: std::collections::BTreeSet<usize>,
 }
 
 /// A component's rules, compiled against the panel's inputs (Kapı 1 passed them; one that does not compile is none).
@@ -162,6 +164,8 @@ pub(crate) enum PanelEvent {
     Fold(String),
     /// A table's or a card component's page of rows shown (its id, the page from 0).
     Page(String, usize),
+    /// A section opened or folded, by its place.
+    Section(usize),
     /// The open panel at this place in the tabs shown.
     Activate(usize),
     /// Its tab moved: from, to (where it goes once taken out).
@@ -204,7 +208,17 @@ impl OpenPanel {
             rules: Vec::new(),
             calc_order: Vec::new(),
             calculated: BTreeMap::new(),
+            closed: std::collections::BTreeSet::new(),
         };
+        // The sections folded when it opens.
+        for (at, c) in panel.definition.body.iter().enumerate() {
+            if let Component::Section {
+                collapsed: true, ..
+            } = c
+            {
+                panel.closed.insert(at);
+            }
+        }
         // Its rules, compiled once against its inputs (ui_panel::rules).
         let body: Vec<Value> = panel
             .definition
@@ -355,10 +369,15 @@ impl OpenPanel {
         }
     }
 
-    /// Whether component `at` is drawn: its `visibleWhen` holds (or it has none) and its code did not hide it.
+    /// Whether component `at` is shown: its `visibleWhen` holds (or it has none), its code did not hide it, and the
+    /// section it is in is shown (a section hidden hides what it gathers). A folded section's components are still
+    /// shown, only not drawn ([`OpenPanel::drawn`]): folding is a view, not a rule, and what they hold is still asked.
     pub(crate) fn shown(&self, at: usize, c: &Component) -> bool {
-        self.holds(at, |r| r.visible.as_ref()).unwrap_or(true)
-            && c.id().is_none_or(|id| !self.hidden.contains(id))
+        let own = self.holds(at, |r| r.visible.as_ref()).unwrap_or(true)
+            && c.id().is_none_or(|id| !self.hidden.contains(id));
+        own && self
+            .section_of(at)
+            .is_none_or(|s| self.shown(s, &self.definition.body[s]))
     }
 
     /// Whether component `at` can be used (a button pressed, a field typed in): its `enabledWhen` holds (or it has
@@ -1032,6 +1051,7 @@ impl App {
             PanelEvent::Page(id, page) => {
                 panel.pages.insert(id, page);
             }
+            PanelEvent::Section(at) => panel.toggle_section(at),
             PanelEvent::Fold(key) => {
                 if !panel.folded.remove(&key) {
                     panel.folded.insert(key);
@@ -1228,6 +1248,7 @@ impl App {
             Ok(params) => params,
             Err((input, why)) => {
                 panel.said = Some((words::Kind::Error, why.clone()));
+                panel.reveal(&input);
                 panel.invalid = Some((input, why));
                 return Task::none();
             }

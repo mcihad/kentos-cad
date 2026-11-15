@@ -1106,7 +1106,8 @@ araçlarının denenmesi, `kentos.ui`/`ProjectAuditFacts`/manifest şemaları.
   sayar; bileşen kuralları (ADR 8057 §33): `visibleWhen`, `requiredWhen`, `enabledWhen` formun ifade diliyle,
   Python'suz; Python cephesi şemadan üretilir (ADR 8057 §34): `kentos.ui_panel`, bileşen başına tipli bir işlev
   (Vitrin'in penceresi ve seçenekleri onunla); hesaplı değerler (ADR 8057 §35): `calculate` girdiler değiştikçe
-  Python'suz hesaplanır, `defaultExpr` panel açılırken (`bugün()`, `şimdi()`), döngü Kapı 1'de reddedilir. Katman menüsünün komutu tıklanan katmanı `ctx.params["layer"]`'da alıyor (Vitrin'in
+  Python'suz hesaplanır, `defaultExpr` panel açılırken (`bugün()`, `şimdi()`), döngü Kapı 1'de reddedilir; katlanır
+  bölüm (ADR 8057 §38): `section` sonraki bileşenleri toplar, katlıyken değerleri gider, yanlış alan bölümünü açar. Katman menüsünün komutu tıklanan katmanı `ctx.params["layer"]`'da alıyor (Vitrin'in
   Değerlerini say'ı).* Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
   düzen [PY-UI-01, 06]; `kentos.ui` Python cephesi şemadan üretilir [PY-UI-02]; aracı oluştur/yamala/kapat/odakla/bildir
   ve eylem kaydı [PY-UI-03]; yama geldiğinde kullanıcının odağı, taslağı ve kaydırması korunur [PY-UI-04]; bileşen değeri

@@ -1799,7 +1799,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | Düzen | yığın | var | gövde tek sütun (ortak `Form`) | dar yerde ad alanın üstüne geçer |
 | | satır, ızgara | yok | — | iki sütunluk form düzeni yeter; ızgara tek sütuna inecek (PY-UI-13) |
 | | sekme | KentOS'ta | `widget::tabs`, `segmented` | açık paneller sekmeli; panel içi sekme yok |
-| | grup, akordeon | KentOS'ta | `property_grid` bölümleri, `tree_view` | ağacın grupları açılıp kapanır, form grubu yok |
+| | grup, akordeon | var | `section` (katlanır başlık; sonraki bileşenleri bir sonraki bölüme dek toplar, §38) | katlıyken değerler komuta gider; yanlış bırakılan alan bölümünü açar |
 | | kaydırma | var | panel kendi kaydırır, yerini tutar | sekmeler üstte kalır |
 | | bölücü | KentOS'ta | `sash` | |
 | | adımlayıcı | KentOS'ta | `wizard` | |
@@ -2311,3 +2311,27 @@ anahtarlar), masaüstü `panels.rs` (`CompiledRules`, `shown`, `usable`, `asked`
 - **Sınamalar:** başsız 2 (çağrı masaüstüne olduğu gibi gider, raporla cevaplanır; nesnesiz ve masaüstüsüz çağrı
   söylenir; atölye araçlarının listesi), masaüstü 2 (sentetik çizim nesnelerden kurulur, katman adları ve öznitelikler,
   yanlış şekil yeriyle; bulgular nesnenin sırasıyla, hata veren kural nedeni ve iz kaydıyla).
+
+## §38. Katlanır bölüm: `section` (`ADIM 22`, bileşen envanteri, düzen)
+
+**15 Kasım.** Kod: `ui_panel.rs` (`Component::Section`, Kapı 1), ortak `kentos_ui::widget::Form::foldable_section`,
+masaüstü `panel_sections.rs` (`drawn`, `section_of`, `reveal`), `panels.rs` (`shown`, `closed`, `PanelEvent::Section`),
+`panel_view.rs`, `dialogs.rs`.
+
+- **Karar: düz gövde, başlık bileşeni.** Panelin gövdesi tek liste kaldı: `section` bir başlıktır, ardından gelen
+  bileşenleri bir sonraki bölüme dek toplar. İç içe bileşen listesi (grup içinde gövde) her denetimi, kuralı, oturumu ve
+  çizimi iki katmanlı yapardı; başlık modeli hepsini olduğu gibi bırakıyor. Anahtarlar: `label` (zorunlu), `id`
+  (isteğe bağlı; kod `set(id, visible=…)` ile gizler), `collapsed` (açılışta katlı), her bileşen gibi `visibleWhen`.
+- **Katlamak bir görünüştür, kural değil:** katlı bölümün bileşenleri çizilmez ama gösterilmiş sayılır: değerleri komuta
+  gider, zorunlu olanı yine sorulur ve yanlış bırakılan alan bölümünü açar (sözler alanın altında görülsün). Kuralı ya
+  da kodu bölümü gizlerse topladıkları da gizlenir (sorulmaz). Satırların görünüşleri (tablo, kart…) formun altında
+  çizilir; bölüm onları da katlar.
+- **Ortak bileşende:** katlanır başlık `Form`'un kendi satırı (adı, açıkken aşağı katlıyken sağa bakan ok, satır sonuna
+  çizgi; satırın tamamı basılır), panele özel çizim değil; başka formlar da kullanır. İletişim kutusunun alanları da
+  alır.
+- **Vitrin 1.0.31:** Yapı ara'nın sonunda kapalı "İpuçları". Gerçek pencerede (`36-bolum`): kapalı açıldı, başlığa
+  basınca kısayollar ve geri alma notu göründü, yeniden basınca kapandı; bölüm sonda olduğu için başka senaryonun
+  koordinatı kaymadı.
+- **Sınamalar:** paylaşılan 1 (başlık, isteğe bağlı kimlik, kural; adsız ve `collapsed`'ı yanlış olanın yerleri),
+  masaüstü 1 (katlıyken gösterilir ama çizilmez, zorunlu alan sorulur ve bölümünü açar, gizli bölüm topladıklarını
+  gizler, kullanıcı katlar); Python cephesi `ui.section(label, id=…, collapsed=…)`.

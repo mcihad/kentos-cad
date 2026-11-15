@@ -78,7 +78,9 @@ Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "s
 Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.panels` (`id`, `title`, `side`: right
 Katmanlar'ın yanında, left haritanın solunda, bottom altında; kullanıcının taşıdığı yer korunur, `definition`),
 şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title` ve `body`
-bileşenleri: `text` (`text`), `textField` (`id`, `label`, `placeholder`, `value`), `numberField` (`id`, `label`,
+bileşenleri: `text` (`text`), `section` (`label`, `collapsed`: katlanır başlık; sonraki bileşenleri bir sonraki bölüme
+dek toplar, katlıyken değerleri yine gider, yanlış bırakılan alanı bölümü açar), `textField` (`id`, `label`,
+`placeholder`, `value`), `numberField` (`id`, `label`,
 `min`, `max`, `unit`, `value`), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
 da YYYY-AA-GG yazar ya da takvimden seçer, değeri ISO tarih metni ya da boşsa None), `timeField` (`id`, `label`,
 `value`, `min`, `max`: SS:DD; kullanıcı 14:30, 14.30 ya da 9:05 yazar ya da saat seçicisinden seçer, değeri SS:DD ya da

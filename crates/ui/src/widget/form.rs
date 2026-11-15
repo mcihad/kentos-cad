@@ -63,6 +63,8 @@ pub struct Form<'a, Message> {
 
 enum Line<'a, Message> {
     Section(Fragment<'a>),
+    /// A heading the user folds, made by [`Form::foldable_section`]: a button the whole line wide.
+    Fold(Element<'a, Message>),
     Field {
         label: Fragment<'a>,
         control: Element<'a, Message>,
@@ -165,6 +167,39 @@ impl<'a, Message: 'a> Form<'a, Message> {
     }
 }
 
+impl<'a, Message: Clone + 'a> Form<'a, Message> {
+    /// Katlanır bölüm başlığı: adı, açıkken aşağı, katlıyken sağa bakan ok ve satırın sonuna kadar çizgi; satırın
+    /// tamamı basılır, basınca `toggle` gider. Katlıyken bölümün satırlarını koymamak çağıranın işidir.
+    pub fn foldable_section(
+        mut self,
+        title: impl IntoFragment<'a>,
+        open: bool,
+        toggle: Message,
+    ) -> Self {
+        let heading = iced::widget::button(
+            row![
+                icon(if open {
+                    Icon::ChevronDown
+                } else {
+                    Icon::ChevronRight
+                })
+                .size(12.0)
+                .tone(Tone::Muted),
+                label::strong(title),
+                container(rule::horizontal(1).style(style::field::hairline)).width(Fill)
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
+        )
+        .padding(Padding::ZERO)
+        .width(Fill)
+        .style(style::button::ghost)
+        .on_press(toggle);
+        self.rows.push(Line::Fold(heading.into()));
+        self
+    }
+}
+
 impl<'a, Message: 'a> From<Form<'a, Message>> for Element<'a, Message> {
     fn from(form: Form<'a, Message>) -> Self {
         let label_width = typography::scaled(form.label_width);
@@ -185,6 +220,12 @@ impl<'a, Message: 'a> From<Form<'a, Message>> for Element<'a, Message> {
                     ..Padding::ZERO
                 })
                 .into(),
+                Line::Fold(heading) => container(heading)
+                    .padding(Padding {
+                        top: if index == 0 { 0.0 } else { 8.0 },
+                        ..Padding::ZERO
+                    })
+                    .into(),
                 Line::Field {
                     label: name,
                     control,

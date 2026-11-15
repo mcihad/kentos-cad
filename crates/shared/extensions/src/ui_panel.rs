@@ -63,6 +63,16 @@ pub enum Component {
         id: Option<String>,
         text: String,
     },
+    /// A heading that gathers the components after it, up to the next section: the user folds it to hide them
+    /// (`collapsed`: folded when the panel opens). A folded section's values still go to the commands, and one of its
+    /// fields left wrong opens it.
+    Section {
+        #[serde(default)]
+        id: Option<String>,
+        label: String,
+        #[serde(default)]
+        collapsed: bool,
+    },
     /// A text the user types.
     TextField {
         id: String,
@@ -333,7 +343,7 @@ impl Component {
     /// Its id, when it has one.
     pub fn id(&self) -> Option<&str> {
         match self {
-            Component::Text { id, .. } => id.as_deref(),
+            Component::Text { id, .. } | Component::Section { id, .. } => id.as_deref(),
             Component::TextField { id, .. }
             | Component::NumberField { id, .. }
             | Component::Select { id, .. }
@@ -513,6 +523,7 @@ fn takes_rule(kind: &str, known: &[&str], key: &str) -> bool {
 fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     Some(match kind {
         "text" => &["id", "text"],
+        "section" => &["id", "label", "collapsed"],
         "textField" => &["id", "label", "placeholder", "value", "required"],
         "numberField" => &["id", "label", "value", "min", "max", "unit", "required"],
         "select" => &["id", "label", "options", "value", "onChange"],
@@ -544,7 +555,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
+const TYPES: &str = "text, section, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
                      fieldPicker, featurePicker, checkbox, button, table, tree, card, stats, chart";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
@@ -852,7 +863,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             );
         }
         match c.get("id") {
-            None if kind == "text" => {}
+            None if kind == "text" || kind == "section" => {}
             None => add(
                 at.clone(),
                 format!("{kind} bileşeni bir kimlik (id) ister."),
@@ -885,6 +896,12 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             add(
                 format!("{at}/required"),
                 "required true ya da false olmalı.".to_owned(),
+            );
+        }
+        if c.get("collapsed").is_some_and(|v| !v.is_boolean()) {
+            add(
+                format!("{at}/collapsed"),
+                "collapsed true ya da false olmalı: bölüm panel açılırken kapalı mı.".to_owned(),
             );
         }
         if !matches!(kind, "table" | "tree" | "card" | "stats" | "chart")
@@ -1642,5 +1659,59 @@ mod date_tests {
         );
         assert_eq!(typed_date_time("15.11.2026"), None, "a time too");
         assert_eq!(typed_date_time("31.04.2026 10:00"), None);
+    }
+}
+
+#[cfg(test)]
+mod section_tests {
+    use serde_json::json;
+
+    use super::*;
+
+    fn problems(body: Value) -> Vec<(String, String)> {
+        let panel = json!({ "format": FORMAT, "schemaVersion": VERSION, "title": "Bölümler", "body": body });
+        check("ui/b.panel.json", &panel, &[])
+            .into_iter()
+            .map(|p| (p.at.unwrap_or_default(), p.message))
+            .collect()
+    }
+
+    /// docs/adr/8057 §38: a section is a heading with a label, its id optional, folded at first when `collapsed`, shown
+    /// by a rule as any component; without a label, with a `collapsed` that is not yes or no, it is said where.
+    #[test]
+    fn a_section_is_a_labelled_heading_folded_when_asked() {
+        let body = json!([
+            { "type": "textField", "id": "ad", "label": "Ad" },
+            { "type": "section", "label": "Gelişmiş", "collapsed": true },
+            { "type": "numberField", "id": "adet", "label": "Adet" },
+            { "type": "section", "id": "yardim", "label": "Yardım", "visibleWhen": "adet > 0" },
+            { "type": "text", "text": "Bir yardım satırı." }
+        ]);
+        assert!(problems(body.clone()).is_empty(), "{:?}", problems(body.clone()));
+        let panel = read(&json!({ "format": FORMAT, "schemaVersion": VERSION, "title": "B", "body": body })).unwrap();
+        assert_eq!(
+            panel.body[1],
+            Component::Section {
+                id: None,
+                label: "Gelişmiş".into(),
+                collapsed: true
+            }
+        );
+        assert_eq!(panel.body[3].id(), Some("yardim"));
+        assert!(!panel.body[1].is_input());
+        let wrong = problems(json!([
+            { "type": "section", "label": " " },
+            { "type": "section", "label": "Bir", "collapsed": "evet" }
+        ]));
+        assert_eq!(
+            wrong,
+            [
+                ("/body/0".to_owned(), "section bileşeni boş olmayan bir ad (label) ister.".to_owned()),
+                (
+                    "/body/1/collapsed".to_owned(),
+                    "collapsed true ya da false olmalı: bölüm panel açılırken kapalı mı.".to_owned()
+                )
+            ]
+        );
     }
 }

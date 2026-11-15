@@ -63,6 +63,7 @@ fn component<'a>(panel: &'a OpenPanel, id: &str) -> Result<&'a Component, Headle
 fn kind_of(c: &Component) -> &'static str {
     match c {
         Component::Text { .. } => "text",
+        Component::Section { .. } => "section",
         Component::TextField { .. } => "textField",
         Component::NumberField { .. } => "numberField",
         Component::Select { .. } => "select",

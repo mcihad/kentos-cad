@@ -74,6 +74,38 @@
           "type": "object"
         },
         {
+          "description": "A heading that gathers the components after it, up to the next section: the user folds it to hide them\n(`collapsed`: folded when the panel opens). A folded section's values still go to the commands, and one of its\nfields left wrong opens it.",
+          "properties": {
+            "collapsed": {
+              "default": false,
+              "type": "boolean"
+            },
+            "id": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "label": {
+              "type": "string"
+            },
+            "type": {
+              "const": "section",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
           "description": "A text the user types.",
           "properties": {
             "calculate": {

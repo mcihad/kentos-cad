@@ -56,6 +56,26 @@ def text(
     return out
 
 
+def section(
+    label: str,
+    *,
+    id: str | None = None,
+    collapsed: bool = False,
+    visible_when: str | None = None,
+) -> dict[str, Any]:
+    """A heading that gathers the components after it, up to the next section: the user folds it to hide them
+    (`collapsed`: folded when the panel opens). A folded section's values still go to the commands, and one of its
+    fields left wrong opens it."""
+    out: dict[str, Any] = {"type": "section", "label": label}
+    if id is not None:
+        out["id"] = id
+    if collapsed:
+        out["collapsed"] = True
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    return out
+
+
 def text_field(
     id: str,
     label: str,
@@ -535,7 +555,7 @@ def card(
 
 
 __all__ = [
-    "Choice", "choice", "panel", "text", "text_field", "number_field", "select", "layer_picker", "field_picker",
-    "feature_picker", "multi_select", "date_field", "time_field", "date_time_field", "checkbox", "button", "table",
-    "tree", "stats", "chart", "card",
+    "Choice", "choice", "panel", "text", "section", "text_field", "number_field", "select", "layer_picker",
+    "field_picker", "feature_picker", "multi_select", "date_field", "time_field", "date_time_field", "checkbox",
+    "button", "table", "tree", "stats", "chart", "card",
 ]

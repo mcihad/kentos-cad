@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.31 — 15 Kasım 2026
+
+- "Yapı ara"nın sonunda katlanır bir bölüm (`section`): "İpuçları" kapalı açılır, başlığına basınca kısayollar ve
+  geri alma notu görünür.
+
 ## 1.0.30 — 15 Kasım 2026
 
 - Hesaplı değerler, Python'suz: "Yapıları numarala" penceresinin açıklaması yazılan önek ve ilk numarayla hesaplanır

@@ -196,8 +196,9 @@ impl App {
         let mut tables: Vec<Element<'_, Message>> = Vec::new();
         let field_id = |id: &str| super::panel_session::field_id(&p.ext, &p.local, id);
         for (at, c) in p.definition.body.iter().enumerate() {
-            // One its rule or its code hid is not drawn (panels.rs `shown`, docs/adr/8057 §32–33).
-            if !p.shown(at, c) {
+            // One its rule or its code hid is not drawn (panels.rs `shown`, docs/adr/8057 §32–33), nor one in a
+            // folded section (`drawn`, §38).
+            if !p.drawn(at, c) {
                 continue;
             }
             // One its rule or its code turned off is shown faded and takes no keys.
@@ -214,6 +215,14 @@ impl App {
                         .or_else(|| id.as_ref().and_then(|i| p.words.get(i)))
                         .unwrap_or(text);
                     form = form.wide(label::caption(text.clone()));
+                }
+                // A section's heading: pressed, what it gathers folds or opens (docs/adr/8057 §38).
+                Component::Section { label: words, .. } => {
+                    form = form.foldable_section(
+                        words.clone(),
+                        !p.closed.contains(&at),
+                        event(PanelEvent::Section(at)),
+                    );
                 }
                 Component::TextField {
                     id,
