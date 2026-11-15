@@ -5,7 +5,7 @@
   "body": [
     {
       "type": "text",
-      "text": "Numarasında yazılan geçen yapıları alanlarıyla listeler. Ara, eklentinin komutunu panelin değerleriyle çalıştırır; satıra tıklamak yapıyı gösterir. Yapıları numarala sırayla numara yazar: sürerken panel ilerlemesini ve Durdur'u gösterir."
+      "text": "Numarasında yazılan geçen yapıları alanlarıyla listeler. Ara, eklentinin komutunu panelin değerleriyle çalıştırır; satıra tıklamak yapıyı gösterir. Yapıları numarala sırayla numara yazar: sürerken panel ilerlemesini ve Durdur'u gösterir. Özetle, yapıların sayısını, taban alanlarını ve en büyüğünü gösterge kartlarıyla verir."
     },
     {
       "type": "textField",
@@ -39,9 +39,25 @@
       "command": "yapilari-numarala"
     },
     {
+      "type": "button",
+      "id": "ozetle",
+      "label": "Özetle",
+      "command": "yapi-ozeti",
+      "table": "ozet"
+    },
+    {
       "type": "table",
       "id": "sonuc",
       "label": "Bulunan yapılar"
+    },
+    {
+      "type": "stats",
+      "id": "ozet",
+      "label": "Özet",
+      "title": "ölçü",
+      "value": "değer",
+      "unit": "birim",
+      "note": "not"
     }
   ]
 }

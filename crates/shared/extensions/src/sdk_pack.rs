@@ -96,7 +96,9 @@ göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın
 tıklanınca nesneyi gösterir; düğmenin `table`'ı bir ağacı da gösterebilir), `card` (`id`, `label`, `title`, `tag`:
 sütun adları; her satır bir kart: `title` sütunu başlığında (yoksa ilk sütun), `tag` sütunu yanında, diğer sütunlar
 altında adlarıyla; dar yerde sığmayan çok sütunlu tablonun yerine; `uid`'li kart tıklanınca nesneyi gösterir;
-düğmenin `table`'ı bir kartı da gösterebilir). `select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField` (takvimden seçilince ya da Enter'la) ve `checkbox` isteğe
+düğmenin `table`'ı bir kartı da gösterebilir), `stats` (`id`, `label`, `title`, `value`, `unit`, `note`: sütun adları;
+her satır bir gösterge kartı: `title` sütunu adı (yoksa ilk sütun), `value` sütunu sayısı (yoksa ikinci), `unit` birimi,
+`note` altındaki notu; kartlar yan yana dizilir; özet sayıları için). `select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField` (takvimden seçilince ya da Enter'la) ve `checkbox` isteğe
 bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
 (çalışırken gelen değişiklik bitince bir kez yeniden çalıştırılır). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu

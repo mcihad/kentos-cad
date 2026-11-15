@@ -1672,6 +1672,13 @@ ulaşmıştı, sınır 2000), `runner.rs` (`PanelCall`, `ExtRun.origin`), `app.r
   (`onChange`); değeri seçilenlerin listesi, seçeneklerin sırasıyla, hiçbiri seçilmezse boş liste. Kapı 1: seçenekler
   seçimdeki gibi, `value` seçeneklerin değerlerinden her biri bir kez. Gerçek pencere: Alan ve Yapı sayısı bırakılınca
   kartlarda taban alanı, TAKS ve tarih kaldı; üç çalıştırma tek bildirimde "×3" diye birleşti.
+- **Gösterge kartları** (`stats`: `id`, `label`, `title`, `value`, `unit`, `note`: sütun adları; Vitrin 1.0.19, Yapı
+  ara'nın Özetle düğmesi; `26-ozet`): komutun her satırı KentOS'un gösterge kartı (`StatCard`): `title` sütunu adı
+  (yoksa ilk sütun), `value` sütunu sayısı (yoksa ikinci), `unit` birimi, `note` altındaki notu; satırın vermediği birim
+  ya da not "—" diye yazılmaz. Kartlar yan yana sığdıkça dizilir; `uid`'li kart tıklanınca nesneyi gösterir. Kapı 1:
+  sütun adları boş olmayan metin; düğmenin `table`'ı göstergeyi de gösterebilir. Gerçek pencere: Yapı 5 adet, Toplam
+  taban alanı 1119 m², Numarasız 5 adet, En büyük yapı 400 m² "numarasız"; kartına tıklanınca yapı seçilip yakınlaştı.
+  **Bulgu (düzeltildi):** 132 px'lik kartlar 300 px'lik yan panelde birer satıra düşüyordu; 124 px'te ikişer.
 - **Birden çok açık panel** (15 Kasım; Vitrin'in iki paneli, `21-paneller`): tek Eklenti dock sekmesi kalır, açık her
   panel onun üstünde bir sekmedir (KentOS'un belge sekmeleri: `kentos_ui::widget::tabs`; sürüklenerek sıralanır, ×'i
   ya da orta tık kapatır). Her eklenti panelini ayrı dock sekmesi yapmak dock'un sabit panel listesini (yerleşimin
@@ -1806,7 +1813,8 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | ağaç | var | `tree` (1–3 sütunla gruplar) | |
 | | kart | var | `card` (KentOS bilgi kartı) | dar yerde tablonun yerine |
 | | ilişki listesi | yok | — | |
-| | özet/ölçü, grafik | KentOS'ta | `stat_card`, CBS grafikleri | |
+| | özet/ölçü | var | `stats` (KentOS'un gösterge kartı, `StatCard`) | satır başına bir kart, yan yana |
+| | grafik | KentOS'ta | CBS grafikleri | |
 | İş denetimi | düğme | var | `button` (birincil) | bir komut çalıştırır |
 | | değer değişince | var | `onChange` (seçim, seçiciler, onay) | çalışırken gelen bir kez yeniden |
 | | ilerleme/günlük | var | `ctx.progress` panelde çubuk; `ctx.log` eklentinin günlüğünde | |
@@ -1818,13 +1826,12 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | iletişim kutusu | yok | — | panel dock'ta açılır |
 
 **Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `dateField`, `select`, `multiSelect`,
-`layerPicker`, `fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`.
+`layerPicker`, `fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`, `stats`.
 
 **Sınır: özel çizim ve düzenleyici bileşeni yok.** Eklentinin kodu bir arayüz nesnesi ya da tuval almaz (QGIS'in Qt
 dersi, D7): haritaya çizim harita aracının yakalamasıyla (KentOS çizer), panelde çizim hiç yok. Kayıtlı özel bileşen
 (tanım, değer kodlayıcı, platform çizicisi ve salt okunur yedek, PY-UI-15/16) ayrı bir maddedir; o gelene dek panel
 yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
 
-**Sıradaki aday** (KentOS'ta bileşeni olan, değeri `ctx.params`'a basit tiplerle giren): özet/ölçü (`stat_card`:
-komutun bir satırı). Vitrin'de gösterilmeden bağlanmaz. 15 Kasım'da bağlananlar: tarih (`dateField`), çoklu seçim
-(`multiSelect`).
+**Sıradaki adaylar:** saat ve an (tarih seçicinin saatli hâli), grafik (CBS grafikleri). 15 Kasım'da bağlananlar: tarih
+(`dateField`), çoklu seçim (`multiSelect`), özet/ölçü (`stats`).

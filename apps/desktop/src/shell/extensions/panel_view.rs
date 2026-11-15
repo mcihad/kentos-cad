@@ -265,6 +265,21 @@ impl App {
                 } => {
                     tables.push(panel_tree(p, id, words.as_deref(), group));
                 }
+                Component::Stats {
+                    id,
+                    label: words,
+                    title,
+                    value,
+                    unit,
+                    note,
+                } => {
+                    tables.push(panel_stats(
+                        p,
+                        id,
+                        words.as_deref(),
+                        [title, value, unit, note].map(|c| c.as_deref()),
+                    ));
+                }
                 Component::Card {
                     id,
                     label: words,
@@ -712,6 +727,71 @@ fn panel_cards<'a>(
         )));
     }
     out.into()
+}
+
+/// A stats component's rows, a figure each (KentOS's stat card), side by side as the panel's width allows: `columns`
+/// names its title (none: the first column), its figure (none: the second), its unit and its note; a row with a `uid`
+/// is a card pressed to show its object. The first [`SHOWN_CARDS`].
+fn panel_stats<'a>(
+    p: &'a OpenPanel,
+    id: &str,
+    words: Option<&'a str>,
+    columns: [Option<&'a str>; 4],
+) -> Element<'a, Message> {
+    use kentos_ui::widget::StatCard;
+    let heading = label::caption(words.unwrap_or("Sonuçlar").to_owned());
+    let Some((names, rows)) = p.tables.get(id) else {
+        return column![
+            heading,
+            label::muted(p.waiting_words(id, "gösterge kartı olur"))
+        ]
+        .spacing(4)
+        .into();
+    };
+    if rows.is_empty() {
+        return column![heading, label::muted("Gösterge yok.")]
+            .spacing(4)
+            .into();
+    }
+    let shown: Vec<&str> = names
+        .iter()
+        .map(String::as_str)
+        .filter(|c| *c != "uid")
+        .collect();
+    let [title, value, unit, note] = columns;
+    let title = title.or_else(|| shown.first().copied());
+    let value = value.or_else(|| shown.get(1).copied());
+    // A cell the row gives: a unit or a note it leaves out is not written as "—".
+    let given = |row: &'a Value, column: Option<&str>| {
+        column
+            .and_then(|c| row.get(c))
+            .filter(|v| !v.is_null())
+            .map(|v| cell_words(Some(v)))
+    };
+    let mut tiles = iced::widget::Row::new().spacing(8);
+    for row in rows.iter().take(SHOWN_CARDS) {
+        let mut card = StatCard::new(
+            given(row, title).unwrap_or_else(|| "—".to_owned()),
+            given(row, value).unwrap_or_else(|| "—".to_owned()),
+        )
+        // Two side by side in a side panel of 300 px (at 132 one card took each line, real window).
+        .width(iced::Length::Fixed(kentos_ui::theme::typography::scaled(
+            124.0,
+        )));
+        if let Some(unit) = given(row, unit) {
+            card = card.unit(unit);
+        }
+        if let Some(note) = given(row, note) {
+            card = card.note(note);
+        }
+        if let Some(uid) = row.get("uid").and_then(Value::as_str) {
+            card = card.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
+        }
+        tiles = tiles.push(card);
+    }
+    column![heading, tiles.wrap().vertical_spacing(8)]
+        .spacing(6)
+        .into()
 }
 
 #[cfg(test)]

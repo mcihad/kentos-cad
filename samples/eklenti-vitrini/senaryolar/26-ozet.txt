@@ -1,0 +1,20 @@
+# Gösterge kartları: Vitrin › Yapı ara'nın Özetle düğmesi (yapi-ozeti) satırlarını stats bileşenine verir: yapı sayısı,
+# toplam taban alanı, numarasız yapı sayısı ve en büyük yapı, ikişer yan yana. En büyük yapının kartına tıklamak onu
+# seçip yakınlaştırır. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1200
+click 417 75    # Yapı ara
+wait 2000
+click 1312 558  # Özetle
+wait 5000
+drag 1280 579 1280 845   # paneli aşağı doğru büyüt
+wait 1000
+wheel 1280 400 -10   # paneli aşağı kaydır
+wait 800
+click 1348 695  # En büyük yapı: kartına tıklamak onu gösterir
+wait 2500
+shot 26-ozet

@@ -388,7 +388,8 @@ impl OpenPanel {
             self.definition.body.iter().find_map(|c| match c {
                 Component::Table { id, .. }
                 | Component::Tree { id, .. }
-                | Component::Card { id, .. } => Some(id.clone()),
+                | Component::Card { id, .. }
+                | Component::Stats { id, .. } => Some(id.clone()),
                 _ => None,
             })
         })

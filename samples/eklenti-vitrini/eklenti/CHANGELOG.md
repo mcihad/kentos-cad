@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.19 — 15 Kasım 2026
+
+- "Yapı ara"ya Özetle düğmesi ve gösterge kartları (`stats`): yapı sayısı, toplam taban alanı, numarasız yapı sayısı
+  ve en büyük yapı (kartına tıklamak onu gösterir).
+
 ## 1.0.18 — 15 Kasım 2026
 
 - "Parsel kartı"na çoklu seçim (`multiSelect`): Bilgiler çipleriyle kartta hangi satırların (alan, yapı sayısı, taban

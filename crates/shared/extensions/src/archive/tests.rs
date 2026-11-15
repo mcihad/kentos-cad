@@ -73,8 +73,8 @@ fn the_demo_extension_packs_and_passes_its_check() {
             e.map_tools.len(),
             e.panels.len()
         ),
-        (7, 1, 1, 1, 3),
-        "commands (one sets up its layer schema, three answer its panels), an İşlemler tool, an expression function, \
+        (8, 1, 1, 1, 3),
+        "commands (one sets up its layer schema, four answer its panels), an İşlemler tool, an expression function, \
          a map tool and three panels"
     );
     let c = &manifest.contributions;

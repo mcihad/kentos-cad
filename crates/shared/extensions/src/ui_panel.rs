@@ -174,6 +174,22 @@ pub enum Component {
         label: Option<String>,
         group: Vec<String>,
     },
+    /// The rows a button's command answered, a figure each (KentOS's stat card): `title`'s column names it (none: the
+    /// first column), `value`'s is its figure (none: the second), `unit`'s and `note`'s beside and under it; the cards
+    /// side by side as the panel's width allows. A row with a `uid` is an object.
+    Stats {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        #[serde(default)]
+        title: Option<String>,
+        #[serde(default)]
+        value: Option<String>,
+        #[serde(default)]
+        unit: Option<String>,
+        #[serde(default)]
+        note: Option<String>,
+    },
     /// The rows a button's command answered, a card each: `title`'s column heads it (none: the first column), `tag`'s
     /// beside it, the other columns under it by name; a card with a `uid` is an object. Where a table's columns do not
     /// fit (a narrow dock), a card writes them one under the other.
@@ -210,6 +226,7 @@ impl Component {
             | Component::Button { id, .. }
             | Component::Table { id, .. }
             | Component::Tree { id, .. }
+            | Component::Stats { id, .. }
             | Component::Card { id, .. } => Some(id),
         }
     }
@@ -267,12 +284,13 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "table" => &["id", "label"],
         "tree" => &["id", "label", "group"],
         "card" => &["id", "label", "title", "tag"],
+        "stats" => &["id", "label", "title", "value", "unit", "note"],
         _ => return None,
     })
 }
 
 const TYPES: &str = "text, textField, numberField, dateField, select, multiSelect, layerPicker, fieldPicker, \
-                     featurePicker, checkbox, button, table, tree, card";
+                     featurePicker, checkbox, button, table, tree, card, stats";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -406,8 +424,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             .filter_map(|c| c.get("id").and_then(Value::as_str))
             .collect()
     };
-    // Where a button's rows may go: a table, a tree or a card.
-    let tables: BTreeSet<&str> = ["table", "tree", "card"]
+    // Where a button's rows may go: a table, a tree, cards or figures.
+    let tables: BTreeSet<&str> = ["table", "tree", "card", "stats"]
         .into_iter()
         .flat_map(of_type)
         .collect();
@@ -469,7 +487,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             }
             continue;
         }
-        if !matches!(kind, "table" | "tree" | "card") && text(c, "label").is_none() {
+        if !matches!(kind, "table" | "tree" | "card" | "stats") && text(c, "label").is_none() {
             add(
                 at.clone(),
                 format!("{kind} bileşeni boş olmayan bir ad (label) ister."),
@@ -687,7 +705,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                 {
                     add(
                         format!("{at}/table"),
-                        "Düğmenin tablosu (table) bu paneldeki bir tablonun, ağacın ya da kartın kimliği olmalı."
+                        "Düğmenin tablosu (table) bu paneldeki bir tablonun, ağacın, kartın ya da göstergenin kimliği \
+                         olmalı."
                             .to_owned(),
                     );
                 }
@@ -715,6 +734,18 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                         "Ağaç, satırlarını gruplayacağı 1–3 farklı sütun adı (group) ister: ör. [\"ada\"]."
                             .to_owned(),
                     );
+                }
+            }
+            "stats" => {
+                for key in ["title", "value", "unit", "note"] {
+                    if c.get(key).is_some() && text(c, key).is_none() {
+                        add(
+                            format!("{at}/{key}"),
+                            format!(
+                                "“{key}” gösterge kartında okunacak bir sütunun adı olmalı (boş olmayan metin)."
+                            ),
+                        );
+                    }
                 }
             }
             "card" => {
@@ -819,6 +850,19 @@ mod tests {
         to_card["body"][6]["table"] = json!("kartlar");
         to_card["body"][11] = json!({ "type": "card", "id": "kartlar" });
         assert!(check("ui/ara.panel.json", &to_card, &["yapi-ara"]).is_empty());
+        // And to figures: their columns named or the first two.
+        let mut to_stats = panel();
+        to_stats["body"][6]["table"] = json!("ozet");
+        to_stats["body"][11] =
+            json!({ "type": "stats", "id": "ozet", "label": "Özet", "unit": "birim" });
+        assert!(check("ui/ara.panel.json", &to_stats, &["yapi-ara"]).is_empty());
+        to_stats["body"][11]["value"] = json!(" ");
+        assert_eq!(
+            check("ui/ara.panel.json", &to_stats, &["yapi-ara"])[0]
+                .at
+                .as_deref(),
+            Some("/body/11/value")
+        );
     }
 
     /// ADR 8057 §25, the coverage report of the panel's components, names every type Kapı 1 knows: a new type is

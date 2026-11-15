@@ -12,6 +12,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``yapi_no``: denetim kuralı; numarasız yapıları bulur, her birine sıradaki numarayı yazan bir düzeltme önerir.
 - ``katmanlari_kur``: katman şeması; schema.json'daki grubu, katmanları, değer listesini ve ilişkiyi tek adımda kurar.
 - ``yapi_ara``: panelin düğmesi; "Yapı ara" panelinin değerleriyle çalışır, satırları panelin tablosuna gider.
+- ``yapi_ozeti``: göstergeli panel; "Yapı ara"nın Özetle düğmesi, satırları gösterge kartları olur.
 - ``deger_say``: seçicili panelin düğmesi; "Değer say"ın katmanı, alanı ve seçilen nesneleriyle değerleri sayar.
 - ``parsel_karti``: kartlı panel; "Parsel kartı"nda alınan her parselin alanı, yapıları ve TAKS'ı bir kartta.
 """
@@ -92,6 +93,31 @@ def yapi_ara(ctx: ext.CommandContext) -> ext.CommandResult:
         # The row's uid: clicking it in the panel shows the building (not shown as a column).
         satirlar.append({"uid": kayit.uid, "no": no or "—", "alan (m²)": round(Polygon(kayit.entity.pts).area, 1)})
     return ctx.report(satirlar, title="Yapı ara", message=f"{len(satirlar)} yapı bulundu.")
+
+
+@ext.command("yapi-ozeti")
+def yapi_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Yapı ara" panelinin Özetle düğmesi: yapıların sayısı, taban alanlarının toplamı, numarasızların sayısı ve en
+    büyük yapı, her biri bir satır; panel her satırı bir gösterge kartı yapar ("ölçü" adı, "değer" sayısı, "birim" ve
+    "not"). En büyük yapının satırı uid taşır: kartına tıklamak onu gösterir (docs/adr/8057 §24)."""
+    secilen = ctx.params.get("katman")
+    yapi = (secilen or _katman(ctx.doc, "yapi")) if ctx.doc is not None else None
+    if yapi is None:
+        return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
+    kayitlar = list(ctx.doc.entities(layer=yapi, kinds=["polygon"]))
+    if not kayitlar:
+        return ctx.report([], message="Katmanda yapı yok.")
+    alanlar = [(Polygon(k.entity.pts).area, k) for k in kayitlar]
+    numarasiz = sum(1 for _, k in alanlar if not (k.entity.attrs or {}).get("no"))
+    en_alan, en = max(alanlar, key=lambda a: a[0])
+    satirlar = [
+        {"ölçü": "Yapı", "değer": len(kayitlar), "birim": "adet"},
+        {"ölçü": "Toplam taban alanı", "değer": round(sum(a for a, _ in alanlar), 1), "birim": "m²"},
+        {"ölçü": "Numarasız", "değer": numarasiz, "birim": "adet"},
+        {"ölçü": "En büyük yapı", "değer": round(en_alan, 1), "birim": "m²", "uid": en.uid,
+         "not": (en.entity.attrs or {}).get("no") or "numarasız"},
+    ]
+    return ctx.report(satirlar, title="Yapı özeti", message=f"{len(kayitlar)} yapının özeti.")
 
 
 @ext.command("katmanlari-kur")
