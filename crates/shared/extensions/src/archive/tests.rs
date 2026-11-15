@@ -73,8 +73,8 @@ fn the_demo_extension_packs_and_passes_its_check() {
             e.map_tools.len(),
             e.panels.len()
         ),
-        (11, 1, 1, 1, 3),
-        "commands (one sets up its layer schema, five answer its panels, two run from a layer's menu), an İşlemler \
+        (12, 1, 1, 1, 3),
+        "commands (one sets up its layer schema, five answer its panels, three run from a layer's menu), an İşlemler \
          tool, an expression function, a map tool and three panels"
     );
     let c = &manifest.contributions;
@@ -84,8 +84,8 @@ fn the_demo_extension_packs_and_passes_its_check() {
             c.context_menus.len(),
             c.data_sources.len()
         ),
-        (1, 3, 1),
-        "a ribbon tab, three items on a layer's menu (summary, counting, CSV points) and a basemap"
+        (1, 4, 1),
+        "a ribbon tab, four items on a layer's menu (summary, counting, CSV points, CSV writing) and a basemap"
     );
 }
 
