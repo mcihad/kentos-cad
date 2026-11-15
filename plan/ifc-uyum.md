@@ -219,7 +219,8 @@ karşılaştırılır.
    raporda.
 2. **Normatif kurallar.** buildingSMART'ın açık kural takımı, açık ve sentetik örneklerde. Servisin sınırı 256 MB'tır; ülkeye
    ve kuruma özgü kuralı denetlemez. [Kılavuz](https://buildingsmart.github.io/validate/user/index.html)
-3. **Türkiye profili.** Katalogdan çalışan denetleyici (`kentos-ifc`), yazılmış dosyada. Aynı katalogdan **IDS 1.0**
+3. **Türkiye profili.** Katalogdan çalışan Python denetim betiği (ADIM 20'nin `catalog/standards/`'ı; bim-plan K10), yazılmış dosyanın
+   olgularıyla (`kentos-ifc`'in okuma yüzü çıkarır). Aynı katalogdan **IDS 1.0**
    üretilir (sınıf, öznitelik, özellik, malzeme, parçası olma); IDS'in ifade edemediği geometri, kapalılık ve dosyalar arası
    uyum ayrı denetimlerdedir. Örnekler ikinci bir bağımsız denetleyiciyle de okunur; ayrışan her satır "katalog yanlış",
    "öbür araç yanlış" ya da "yorum" diye kapanır.
@@ -389,14 +390,17 @@ açık IFC 4.3 örnekleri okunur; ölçeklenmiş modelde süre ve bellek tabanı
 **Kullanıcı sonucu:** Model kalite kontrol formunun her cevabı diske yazılmış dosyadan gelir; her "hayır" nesnesini seçer.
 Şeması temiz bir dosyanın Türkiye profilinden kaldığı görülebilir.
 
-- `kentos_ifc::quality` bellekteki modelden okunan dosyaya geçer; beş sonuç (§1) ayrı raporlanır.
+- EK-9'un cevapları ve Türkiye profili Python betiğidir (bim-plan K10). `kentos-ifc` yazılmış dosyanın olgularını
+  deterministik verir: nesne, sınıf, ad, ön tanımlı tip, setler, malzeme, mekânsal yapı. Betik kataloğu ve kararları
+  veri olarak okur. Bugünkü `kentos_ifc::quality` ve `digital_audit.rs` betiğe taşınır. Beş sonuç (§1) ayrı raporlanır.
 - Kaynak modelden beklenen nesne listesi (kimlik ve IFC sınıfı; bölünen ya da birleşen temsillerde eşlemesi): IFC-01'in
   başlangıç ölçümü sınıf ve satır düzeyinde yapıldı (ADR 8062 §10), nesne düzeyindeki beklenti bu pakette kurulur.
 - §9'un tablosundaki 21 kanıt; formun resmî cevabı ile kanıt durumu ayrı.
 - Katalogdan IDS üretimi; üretilen IDS bağımsız bir denetleyicide açılır. IFC-01’de kaynak modelden çıkarılan nesne
   listesi, okunan dosyanın kimlik ve sınıflarıyla karşılaştırılır. Kalan nesnelerin IDS sonucu olumlu olsa da
   tamamen eksik bir nesne EK-9/8 bulgusudur. [IDS kapsam ve kardinalite](https://github.com/buildingSMART/IDS/blob/development/Documentation/UserManual/specifications.md)
-- Mimari denetim'de "Model" grubu aynı denetimi son yazılan dosyada ya da geçici bir dışa aktarmada koşar.
+- Denetim sekmesi (ADR 8057 §17) aynı betiği son yazılan dosyada ya da geçici bir dışa aktarmada koşar; bulut işi de
+  aynı betiği çalıştırır.
 - Bağımsız okuyucular başvuru düzeneğindedir; ürünle dağıtılmaz. Ürünün okuma motoru (IFC-07) bağımsız başvuru sayılmaz.
 - Bulgular görüntüleyicide (IFC-12) nesnesini boyar ve seçer.
 

@@ -167,7 +167,9 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
   gibi bir değer varsayılanla doldurulmaz. Her performans değerinin kaynağı görünür: tip, örnek, türetim, müellif beyanı,
   belge.
 - **K4 — Doğrulama yazılmış dosyadan yapılır.** Formun cevabı bellekteki modelden değil, diske yazılan IFC ve PDF/A'dan
-  okunur. `kentos-ifc` bunun için bir okuyucu kazanır; aynı okuyucu dış disiplin modeline ve idare incelemesine hizmet eder.
+  okunur. `kentos-ifc` bunun için bir okuyucu kazanır. Okuyucu dosyanın olgularını çıkarır ve denetim olgularının bir
+  bölümü olarak verir: nesneler, sınıflar, adlar, ön tanımlı tipler, özellik ve miktar setleri, malzeme, mekânsal yapı.
+  Kuralları K10'un Python betikleri uygular. Aynı okuyucu dış disiplin modeline ve idare incelemesine hizmet eder.
   Okuyucunun motoru K9'da; ürünün motoru bağımsız başvuru sayılmaz, bağımsız okuyucular ürünle dağıtılmaz.
 - **K5 — Gerçek ruhsat modeli dış servise gönderilmez.** Doğrulama çevrimdışıdır; yalnız açık ve sentetik örnekler dış
   doğrulayıcıda sınanır.
@@ -186,6 +188,18 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
   (MPL-2.0): yalnız `kentos-ifc`'in içinde, sabit sürümle, denemeden geçerse. Üçgen ağ gösterimdir; ölçü kaynağı
   değildir. K7 değişmez: bu, okunan dosyanın gösterimi içindir, KentOS'un kendi gövdeleri için bir katı modelleme
   çekirdeği alınmamıştır.
+- **K10 — Denetim kuralları Python betikleridir: Rust ölçer, Python karar verir** (sahibin kararı, esneklik için; ADR 8057
+  §36, [eklenti planı](eklenti.md) ADIM 20, ADR 8062 §14).
+  - **Kapsam:** yönetmeliğin denetimleri uygulamaya gömülmez: EK-9 formunun kanıtı, Türkiye profili, EK-3 ve EK-4,
+    kapsam kararı, mevzuat kuralları. Hepsi ortak Python betiğidir (`@ext.audit`). Yeri eklenti planının ADIM 20'de
+    öngördüğü `catalog/standards/`; dizin henüz yok, ilk betikle kurulur. Masaüstünde ve bulut işinde aynı betik çalışır.
+  - **Rust yalnız ölçer ve okur:** çizimin olguları (`facts.project` ve mimari bölümü, ADR 8057 §36, §39), yazılmış
+    dosyanın olguları (K4), kural kataloğu ve kararlar betiğe veri olarak gider. Alan, çakışma, kapalılık, kot ve kaçış
+    Rust'ta bir kez, aynı kodla hesaplanır; betik geometriyi yeniden hesaplamaz.
+  - **İdarenin ek kuralı** bir betik ve bir profil katmanıdır; uygulama yeniden derlenmez.
+  - **Bugün Rust'ta olanlar taşınır:** dijital proje bulguları (ADR 8047 §9, `digital_audit.rs`) ve EK-9 cevapları
+    (`kentos_ifc::quality`) IFC-08'de betiğe geçer. ADR 8033–8035'in mevzuat kuralları BIM-13 dokundukça taşınır; yeni
+    kural Rust'a yazılmaz.
 
 ## 5. İş paketleri
 
@@ -233,7 +247,8 @@ söyler (PDF/A, IFC, e-PYS). Bilgi eksikse "teyit gerekli" der, tahmin etmez.
 - Geçici 1/1-b'nin son cümlesi (IFC başlayınca 4/2–3 uygulanmaz) ile Md. 9/1 (modelden üretilen çizimler PDF/A) ayrı
   satırlardır; tek bir bayrak PDF/A'yı kapatmaz.
 - Nüfus yönetmelikte bir yıla bağlanmamıştır: kullanıcı girer, kaynağı kaydolur.
-- Karar salt okuyan bir komuttur; Python ve MCP'de de vardır.
+- Karar bir Python kuralıdır (K10). Tarihler ve eşikler katalogda veridir, girdiler künyeden olgu olarak gelir. Ruhsat
+  takımı, Python ve MCP aynı kuralın sonucunu okur.
 
 **İlk kabul:** ≥ 20 bağımsız durum (her eşiğin tam eşiti, altı ve üstü; her tarihin önceki günü ve kendisi; müstakil 200 m²
 ve iki kat; karma kullanım; kamu ihalesi). Ülke geneli test verisi, ilk ve sonraki IFC gruplarını, kalan grubu, konut dışı
@@ -252,7 +267,9 @@ numarasını ve adını, nesnesini seçerek söyler. Dayanak Md. 7; Z8.
 - **EK-4:** katman adı kalıbı ve sözlüğü; nesne türünün doğru katmanda durduğu; çizgi tipi, ölçü ve yazı kuralları; blok
   katmanı ve profil (M9'un kalanı).
 - DXF ve DWG aynı katmanlarla gider (ADR 8046).
-- Bulgular Mimari denetim › Mevzuat'ın "Dijital Proje Yön." grubundadır; düzeltmesi tek adımdır.
+- Bulgular denetim sekmesinde "Dijital Proje Yön." grubundadır; düzeltmesi tek adımdır.
+- Kurallar Python betiğidir (K10). Rust çizimin katman, blok, yazı stili, çizgi tipi ve mahal numarası ile adı
+  listelerini olgu olarak verir.
 
 **İlk kabul:** 2+1 örneğinde her kural için bir geçen, bir kalan durum; bağımsız başvuru KentOS kodu olmadan sınar.
 
@@ -423,6 +440,8 @@ yazılıdır.
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
 
+- **Kurallar Python betiğidir (K10):** yeni kural Rust'a yazılmaz; bugünkü Rust kuralları (ADR 8033–8035) dokunuldukça
+  betiğe taşınır. Ölçüler (mimari olgular, ADR 8057 §39) Rust'ta kalır.
 - **Kural seti** başvuru tarihiyle seçilir (PAİY'nin 1.7.2026 değişikliğinden önce ve sonra gibi); bölge türü; plan notu
   katmanı (ulusal → belediye → parsel).
 - **Kalan kurallar:** iç yükseklik; kapı açılış yönü; emsalin 22. madde sınırları (%20, %50, 70 m² …) ve %30'u; kat ara
@@ -673,6 +692,7 @@ sahibin kısa listesi.
 - **Madde talimatı:** `architecture-advanced.md` §6. Araştırma her dilimde yenilenir; değer uydurulmaz, kaynak beklenir.
 - **IFC:** IFC'ye ait her şey `crates/shared/ifc`'tedir; uygulamada yalnız bağdaştırıcı kalır (kılavuz §14).
 - **Araç = komut:** çizimi değiştiren her iş komut, katalog, ≥ 20 bağımsız durum, Python, MCP ve manifestle biter.
+- **Denetim:** kararı Python betiği verir, Rust ölçer ve okur (K10). Kural uygulamaya gömülmez.
 - **Adlar:** arayüzde, kodda ve yorumlarda başka uygulama anılmaz; karşılaştırma yalnız ADR'de, planda ve araştırma notunda.
 - **İddia:** "yönetmeliğe uygun" denmez; beş kabulden hangisinin, hangi profil sürümüyle, hangi örnekte sağlandığı söylenir.
   İdarenin kabulü yazılı cevaptır.

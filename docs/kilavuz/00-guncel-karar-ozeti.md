@@ -31,7 +31,11 @@
     - Başlangıç ölçümü dosyadan, IfcOpenShell'le (`scripts/mevzuat/olcum.py`): künyeli bölüm binasında 121 zorunlu satırın
       81'i dolu; yangın dayanımı, acil çıkış ve "Ad_Dayanım" malzeme biçimi hiç yok.
     - Mimari › Proje ▾ › Dijital proje kuralları (`arch.digitalRules`) yalnız okur; Mimari denetim bulguları ek ve sayfayı
-      söyler. `scripts/ui/ribbon.py` depodaki `ribbon.json`'u üretmiyor (önceden beri): şerit elle düzenlenir.
+      söyler.
+    - **Denetim kuralları Python betikleridir (sahibin kararı; bim-plan K10, ADR 8062 §14, ADR 8057 §36):** Rust ölçer ve
+      okur (çizim ve yazılmış dosyanın olguları, katalog), kararı ortak betik verir (yeri ADIM 20'nin `catalog/standards/`'ı,
+      henüz kurulmadı).
+      Yeni kural uygulamaya gömülmez; bugünkü Rust denetimleri IFC-08 ve BIM-13'te taşınır. `scripts/ui/ribbon.py` depodaki `ribbon.json`'u üretmiyor (önceden beri): şerit elle düzenlenir.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

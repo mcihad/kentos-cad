@@ -4282,7 +4282,8 @@ Yalnız mesh listesi mimari model sayılmaz; model kimlikli yapı nesneleri, kat
 mimari disiplinin modelini yazar; statik ve tesisat modelleri altlık olarak okunur. Genel bir katı modelleme çekirdeği
 ölçülen bir ihtiyaç çıkmadan alınmaz (§23; plan K7).
 
-**Mimari BIM** ([plan/bim-plan.md §5](plan/bim-plan.md#5-iş-paketleri)):
+**Mimari BIM** ([plan/bim-plan.md §5](plan/bim-plan.md#5-iş-paketleri)). Denetimlerin kararını Python betiği verir, Rust
+ölçer ve okur (plan K10, ADR 8062 §14, ADR 8057 §36):
 
 - [x] `BIM-01` Yönetmeliğin ekleri (EK-1…EK-9) sayfasıyla sürümlü kural kataloğunda (`kentos-digital-project`, `kentos-ifc`); 17 nokta karara bağlı; bağımsız dökümle ve 20 rastgele satırla sayfadan karşılaştırıldı; bugünkü çıktı dosyadan ölçüldü (15 Kasım 2026, [ADR 8062](docs/adr/8062-digital-project-rule-catalog.md)). Kalan: 2+1 örneğinin ölçümü (model dosyası yok), Python/MCP sorgu komutu.
 - [ ] `BIM-02` Tarihli kapsam kararını kur: başvuru tarihi, il ve belediye nüfusu, kullanım ve alanla hangi yükümlülüğün (PDF/A, IFC, e-PYS) ne zaman başladığını maddesiyle söyle; eksik bilgide "teyit gerekli".

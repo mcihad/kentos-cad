@@ -105,8 +105,9 @@ kullanır. `scripts/arch/deps.mjs` yeni crate'i `crates/shared/` grubunda kendil
 wasm32, yalnız ortak kitaplıklara bağlanabilir.
 
 Kural motoruna (ADR 8033, `kentos-native-application`) konmadı. O motor çizimi ölçer; katalog ise çizimden bağımsız
-veridir ve saf kalmalıdır. Tarih ve kapsam kararı (BIM-02) da veriye dayanacağı için yeri `kentos-digital-project`
-olacak; plan K2'deki "mevcut kural motorunda" ifadesi bu ADR'yle değişti.
+veridir ve saf kalmalıdır. Tarih ve kapsam kararının (BIM-02) verisi de (tarihler, eşikler, maddeler)
+`kentos-digital-project`'tedir; kararı veren kural Python betiğidir (§14). Plan K2'deki "mevcut kural motorunda" ifadesi bu
+ADR'yle değişti.
 
 ## §4. Katalog
 
@@ -305,10 +306,40 @@ düzeltildi.
 - **2+1 ölçümü:** model dosyası yok. Örnek proje (BIM-20) gelince `olcum.py` ona da koşulur.
 - **Python ve MCP sorgusu:** bir sınıfın zorunlu satırlarını, bir kodun anlamını, bir kararın durumunu veren salt
   okuyan komut (katalog, ≥ 20 bağımsız durum, `kentos.cad`, MCP).
-- **Katalogdan beslenme:** yazıcı (IFC-02), 2B denetim (BIM-03) ve kapsam kararı (BIM-02) kendi sabitleri yerine
-  katalogdan okuyacak. Bu ADR katalog ile yazıcının adlarını yalnız testte eşledi (`every_class_kentos_writes_has_ek_5_s_code`).
+- **Katalogdan beslenme:** yazıcı (IFC-02) kendi sabitleri yerine katalogdan okuyacak; denetim betikleri (BIM-02,
+  BIM-03, IFC-08; §14) kataloğu Python'dan veri olarak okuyacak. Bu ADR katalog ile yazıcının adlarını yalnız testte
+  eşledi (`every_class_kentos_writes_has_ek_5_s_code`).
 - **EK-6 ve EK-7'nin uzun açıklamaları:** yalnız kurala dayanan satırlar sayfasıyla karşılaştırıldı (K07, K11, K14, ön
   tanımlı tipler ve §8'deki satırlar). Geri kalanı bilgi amaçlıdır.
 - **Şerit üreticisi:** `scripts/ui/ribbon.py` depodaki `catalog/v1/ribbon.json`'u üretmiyor. Yeniden çalıştırılınca
   sonradan elle eklenmiş 249 satırlık düğmeyi siliyor; bu işten önce de böyleydi. Yeni düğme `ribbon.json`'a elle,
   `ribbon.py`'ye de eklendi. Üreticinin onarımı ayrı bir iştir.
+
+## §14. Denetimin yeri: kuralları Python verir (sahibin kararı, 15 Kasım)
+
+Sahibin sözü: "Denetim ve kontroller python scriptleri tarafından mı yapılacak, esnek olması açısından da böyle bir yol
+tercih ettim uygulamaya gömmek yerine." Karar eklenti işinde zaten yazılıdır: ADR 8057 §36, "geometriyi Rust çıkarır,
+kararı Python verir"; plan/eklenti.md ADIM 20: ulusal ve belediye kuralları `catalog/standards/` altında ortak Python
+betikleri, masaüstünde ve bulutta aynı betik. Dizin henüz yok; ilk betikle kurulur. Bu ADR'yle BIM ve IFC denetimleri de
+bu yola bağlandı (bim-plan K10).
+
+| Rust'ta (ölçer, okur, veri tutar) | Python'da (karar verir) |
+|---|---|
+| Çizimin olguları: katman toplamları, çakışma ve boşluk, katlar, mahal alanları, PAİY alanları, kaçış yolları (ADR 8057 §36, §39) | EK-9 formunun 21 sorusunun kanıtı ve cevabı (IFC-08) |
+| Yazılmış IFC dosyasının olguları: `kentos-ifc`'in okuma yüzü (IFC-07; K4) | Türkiye profili: katalogdaki zorunlu satırlar dosyada mı (IFC-08) |
+| PDF/A'nın olguları (BIM-05) | EK-3 ve EK-4 2B kuralları (BIM-03) |
+| Kural kataloğu ve kararlar: bu ADR'nin verisi (`kentos-digital-project`, `kentos-ifc`) | Tarihli kapsam kararı (BIM-02) |
+| Geometri, IFC yazma ve okuma, kataloğun şemayla tutarlılık testi | Mevzuat kuralları; yeni kural Rust'a yazılmaz (BIM-13) |
+
+- **B1'in parçaları bu bölüşüme uyuyor:**
+  - Katalog veridir; betikler aynı JSON'u okuyacak. Python'a açılması (`kentos` paketinde ya da eklenti SDK'sının bir
+    parçası olarak) bir sonraki işin ilk adımıdır.
+  - `catalog_schema` kullanıcının çizimini denetlemez; KentOS'un kendi verisinin IFC 4.3 şemasıyla tutarlılık testidir.
+  - Ölçüm, karşılaştırma ve örnekleme zaten Python betikleridir; ürünle dağıtılmayan başvuru araçlarıdır.
+- **Taşınacaklar:** bugün Rust'ta duran dijital proje bulguları (`digital_audit.rs`, ADR 8047 §9; bu ADR onlara yalnız
+  kaynak sayfasını ekledi) ve EK-9 cevapları (`kentos_ifc::quality`) IFC-08'de betiğe geçer. ADR 8033–8035'in mevzuat
+  kuralları BIM-13 dokundukça taşınır.
+- **Bağımsız başvuru ayrı kalır:** ürünün Python betiği (`catalog/standards/`) ile testteki bağımsız okuyucu
+  (`scripts/fixtures/arch_ifc_check.py`, `scripts/mevzuat/olcum.py`) aynı şey değildir. Biri ürünün kararını verir; öbürü
+  onu KentOS kodu olmadan sınar ve ürünle dağıtılmaz.
+
