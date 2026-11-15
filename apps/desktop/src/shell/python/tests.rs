@@ -1517,3 +1517,64 @@ fn every_program_opens_a_link_of_its_own() {
     drop(open);
     let _ = std::fs::remove_dir_all(dir);
 }
+
+/// A job an agent starts writes when it is asked after (core/jobs.rs), not when it starts: its line in the log is said
+/// then, by the command its status names; a plan's job writes nothing and says nothing (docs/adr/8057 §27).
+#[test]
+fn an_agents_job_is_said_in_the_log_when_it_writes() {
+    let mut app = app_with_drawing();
+    let layer = app
+        .document
+        .as_ref()
+        .map(|d| d.model.layers().active().to_owned())
+        .expect("a layer");
+    let input: Value =
+        serde_json::from_str(&format!(r#"{{"layerId": "{layer}", "pts": {SQUARE}}}"#))
+            .expect("input");
+    let before = objects(&app);
+    let said = |app: &App| {
+        app.log
+            .lines()
+            .filter(|l| l.text == "Ajan: cad.polygon.create")
+            .count()
+    };
+    // The job asked after until it ends, as an agent asks.
+    let ended = |app: &mut App, id: &str| {
+        let began = Instant::now();
+        loop {
+            let status = app
+                .agent_request(&json!({ "method": "job", "params": { "id": id } }), "Ajan")
+                .expect("the job");
+            if !matches!(
+                status["phase"].as_str(),
+                Some("queued" | "computing" | "staged" | "committing")
+            ) {
+                return status;
+            }
+            assert!(began.elapsed() < Duration::from_secs(30), "{status:#}");
+            std::thread::sleep(Duration::from_millis(5));
+        }
+    };
+    for op in ["plan", "execute"] {
+        let started = app
+            .agent_request(
+                &json!({ "method": "start", "params": { "command": "cad.polygon.create", "op": op,
+                                                        "input": input } }),
+                "Ajan",
+            )
+            .expect("started");
+        assert_eq!(said(&app), 0, "{op}: nothing written when it starts");
+        let id = started["id"].as_str().expect("its id").to_owned();
+        let status = ended(&mut app, &id);
+        assert_eq!(status["phase"], "done", "{status:#}");
+        let wrote = usize::from(op == "execute");
+        assert_eq!(objects(&app), before + wrote, "{op}");
+        assert_eq!(said(&app), wrote, "{op}: said once it wrote");
+    }
+    // Asked again, the job says how it ended; nothing more is written or said.
+    let _ = app.agent_request(
+        &json!({ "method": "job", "params": { "id": "is-2" } }),
+        "Ajan",
+    );
+    assert_eq!(said(&app), 1);
+}

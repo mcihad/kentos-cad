@@ -18,7 +18,7 @@ use super::{Concluded, Note};
 use crate::app::App;
 
 const IMAR: &str = "tr.ornek.imar-denetim";
-const TAKS: &str = "ext.tr.ornek.imar-denetim.taks";
+pub(crate) const TAKS: &str = "ext.tr.ornek.imar-denetim.taks";
 
 fn temp(name: &str) -> std::path::PathBuf {
     let dir =
@@ -29,7 +29,7 @@ fn temp(name: &str) -> std::path::PathBuf {
 }
 
 /// İmar's package, its files changed by `edit`.
-fn imar(edit: impl Fn(&mut std::collections::BTreeMap<String, Vec<u8>>)) -> Vec<u8> {
+pub(crate) fn imar(edit: impl Fn(&mut std::collections::BTreeMap<String, Vec<u8>>)) -> Vec<u8> {
     let root =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/extensions/v1/ornek-imar");
     let mut files = kentos_extension_host::store::read_files(&root).unwrap();
@@ -40,7 +40,7 @@ fn imar(edit: impl Fn(&mut std::collections::BTreeMap<String, Vec<u8>>)) -> Vec<
 }
 
 /// A GIS window with a drawing, İmar installed (everything granted), Python on and its environment ready.
-fn with_imar(name: &str, bytes: Vec<u8>) -> App {
+pub(crate) fn with_imar(name: &str, bytes: Vec<u8>) -> App {
     use crate::python_setup::PythonEdit;
     use kentos_python_env::extension::{self, Ready};
     use kentos_python_env::python::Interpreter;

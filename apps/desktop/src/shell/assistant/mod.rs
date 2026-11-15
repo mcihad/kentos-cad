@@ -43,6 +43,8 @@ pub enum Event {
     Suggest(&'static str),
     /// Uygulama ayarları › Yapay zekâ.
     Settings,
+    /// A long command's job is asked after (its call waits for it).
+    JobLook,
 }
 
 pub(crate) fn msg(event: Event) -> Message {
@@ -67,8 +69,8 @@ pub(crate) struct Assistant {
     guard: Guard,
     /// Yeniden dene is on its way: the turn goes on from the history as it is.
     retrying: bool,
-    /// The extension audit a call started this moment (host.rs's `audit_wait`): the call waits for the run's end.
-    later: Option<String>,
+    /// What a call started this moment that ends later (host.rs's `audit_wait`, `job_wait`): the call waits for it.
+    later: Option<Pending>,
     /// The agent's name and its provider and model, as the chat's header shows them ([`Assistant::refresh`]).
     pub(crate) shown: (String, String),
 }
@@ -115,13 +117,38 @@ struct Call {
     input: Value,
 }
 
-/// A call answered when the extension audit it started ends: the run goes in the background, the interface thread
-/// does not wait for it.
+/// A call answered when what it started ends: the run goes in the background, the interface thread does not wait.
 struct Later {
     tool: u64,
     call: Call,
-    rule: String,
+    pending: Pending,
     started: Instant,
+}
+
+/// What a call started that ends later.
+#[derive(Clone, Debug)]
+pub(crate) enum Pending {
+    /// An extension audit's run, by its rule (docs/adr/8057 §27).
+    Audit(String),
+    /// A long command's job: an extension's Python tool's plan or execution, asked after until it ends (§27); with
+    /// the drawing it was started on (its session): the jobs are the desktop's, not a drawing's, and a job asked on
+    /// another drawing would write its result there when the user went to another tab meanwhile.
+    Job {
+        long: agent_tools::LongCall,
+        document: Option<u64>,
+    },
+}
+
+/// How often a long command's job is asked after.
+const JOB_LOOK: std::time::Duration = std::time::Duration::from_millis(250);
+
+/// The next look at a long command's job.
+fn job_look() -> Task<Message> {
+    crate::python_setup::in_background(
+        || std::thread::sleep(JOB_LOOK),
+        (),
+        |()| msg(Event::JobLook),
+    )
 }
 
 /// The most of a tool's result sent back to the model: tokens are the user's money.
@@ -330,6 +357,7 @@ impl App {
                 self.assistant.chat.prompt = ai::PromptState::with_text(text);
                 self.assistant_event(Event::Chat(AiEvent::Submit))
             }
+            Event::JobLook => self.assistant_job_look(),
             Event::Settings => {
                 self.open_settings_at(crate::settings_sections::Section::Ai);
                 // The first agent's form at once: there is nothing else to see.
@@ -420,14 +448,14 @@ impl App {
         Task::run(heard, move |event| msg(Event::Agent(message, event)))
     }
 
-    /// Durdur, Yeni sohbet: the turn stops; what it ran on the drawing stays in the history. An extension audit its
-    /// call waits for is asked to stop too: the user stopped the agent's work.
+    /// Durdur, Yeni sohbet: the turn stops; what it ran on the drawing stays in the history. An extension audit or a
+    /// job its call waits for is asked to stop too: the user stopped the agent's work.
     fn assistant_stop(&mut self) {
         if let Some(running) = self.assistant.running.take() {
             running.turn.cancel();
             self.assistant.history = Some(running.turn.conversation());
-            if running.later.is_some() {
-                self.ext_audit_stop();
+            if let Some(later) = running.later {
+                self.assistant_stop_pending(later.pending);
             }
         }
     }
@@ -560,21 +588,31 @@ impl App {
         );
         self.assistant.guard = guard;
         let job = self.take_audit_job();
-        if let Some(rule) = self.assistant.later.take()
+        if let Some(pending) = self.assistant.later.take()
             && result.is_ok()
-            && let Some(running) = self
+        {
+            let Some(running) = self
                 .assistant
                 .running
                 .as_mut()
                 .filter(|r| r.message == message)
-        {
+            else {
+                // No turn waits for it any more: what it started stops.
+                self.assistant_stop_pending(pending);
+                return job;
+            };
+            let looks = matches!(pending, Pending::Job { .. });
             running.later = Some(Later {
                 tool,
                 call,
-                rule,
+                pending,
                 started,
             });
-            return job;
+            return if looks {
+                Task::batch([job, job_look()])
+            } else {
+                job
+            };
         }
         let (phase, output, answer) = match result {
             Ok(value) => (ToolPhase::Complete, shown(&value), Ok(bounded(value))),
@@ -599,12 +637,88 @@ impl App {
     /// run that gave no findings as the call's failure.
     pub(crate) fn assistant_audit_ended(&mut self, rule: &str) {
         let Some((message, later)) = self.assistant.running.as_mut().and_then(|r| {
-            let later = r.later.take_if(|l| l.rule == rule)?;
+            let later = r
+                .later
+                .take_if(|l| matches!(&l.pending, Pending::Audit(r) if r == rule))?;
             Some((r.message, later))
         }) else {
             return;
         };
-        let (phase, output, answer) = match agent_tools::audit_outcome(self.ext_audit_report(0)) {
+        self.assistant_answer_later(
+            message,
+            later,
+            agent_tools::audit_outcome(self.ext_audit_report(0)),
+        );
+    }
+
+    /// What a call started stopped (Durdur, its turn gone): an audit's run, or a job (on its drawing; one already
+    /// written stays, the drawing's Geri al takes it back).
+    fn assistant_stop_pending(&mut self, pending: Pending) {
+        match pending {
+            Pending::Audit(_) => self.ext_audit_stop(),
+            Pending::Job { long, document } => {
+                let _ = self.agent_request(
+                    &json!({ "method": "cancel", "params": { "id": long.job, "document": document } }),
+                    "Asistan",
+                );
+            }
+        }
+    }
+
+    /// A long command's job asked after: when it ended, the call waiting for it answered (a plan remembered by the
+    /// guard first); else asked again a moment later. While the desktop is busy (console code, a drawing opening) it
+    /// is asked again.
+    fn assistant_job_look(&mut self) -> Task<Message> {
+        let Some((long, document)) = self
+            .assistant
+            .running
+            .as_ref()
+            .and_then(|r| match &r.later {
+                Some(Later {
+                    pending: Pending::Job { long, document },
+                    ..
+                }) => Some((long.clone(), *document)),
+                _ => None,
+            })
+        else {
+            return Task::none();
+        };
+        // Asked on the drawing it was started on, in front or not; a closed one is the call's error.
+        let status = self.agent_request(
+            &json!({ "method": "job", "params": { "id": long.job, "document": document } }),
+            "Asistan",
+        );
+        let outcome = match status {
+            Err((code, _)) if code == "busy" => None,
+            Err((code, why)) => Some(Err(kentos_headless::HeadlessError::new(
+                "job_failed",
+                format!("{code}: {why}"),
+            ))),
+            Ok(status) => agent_tools::job_answer(&status)
+                .map(|answer| agent_tools::finish_long(&mut self.assistant.guard, &long, answer)),
+        };
+        let Some(outcome) = outcome else {
+            return job_look();
+        };
+        if let Some((message, later)) = self
+            .assistant
+            .running
+            .as_mut()
+            .and_then(|r| r.later.take().map(|l| (r.message, l)))
+        {
+            self.assistant_answer_later(message, later, outcome);
+        }
+        Task::none()
+    }
+
+    /// A call that waited (an audit's run, a job) answered with what it ended with.
+    fn assistant_answer_later(
+        &mut self,
+        message: u64,
+        later: Later,
+        outcome: Result<Value, kentos_headless::HeadlessError>,
+    ) {
+        let (phase, output, answer) = match outcome {
             Ok(value) => (ToolPhase::Complete, shown(&value), Ok(bounded(value))),
             Err(e) => {
                 let why = format!("{}: {}", e.code, e.message);

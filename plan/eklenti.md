@@ -957,6 +957,8 @@ geri alma adımıyla yürütür (yalnız `document.write` izinli eklentide). Vit
 çizim değiştiyse söyler. **AI/MCP `audit.run`** (ADR 8057 §27, 15 Kasım): eklenti kuralları ajanın denetim
 listesinde; ajanın çalıştırması şeridin yolu (sekme açılır, Asistan'ın çağrısı denetim bitince cevaplanır, MCP
 bekler), `audit.report` son raporu okur, bulgunun düzeltmesi sahibin koruyucusundan geçer ve sekmede işaretlenir.
+Ajanın eklenti İşlemler aracı (Python) da pencereyi bekletmez (ADR 8057 §27, 15 Kasım): planı ve yürütmesi iş olarak
+okuma kopyasında hesaplanır, Asistan çağrıyı iş bitince cevaplar, iş başladığı çizime yazar.
 Kalan: `ProjectAuditFacts` (Rust'ın çıkardığı ortak olgular), ulusal/belediye kurallarının Python betikleri, bulut
 işi ve bulutla ortak köken.
 

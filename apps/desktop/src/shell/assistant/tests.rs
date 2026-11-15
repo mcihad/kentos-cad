@@ -129,7 +129,11 @@ fn last_result(body: &Value) -> String {
 
 /// The sample drawing, and the provider's agent the default with a key for this session only.
 fn chatting(provider: &Provider) -> App {
-    let mut app = app_with_drawing();
+    chatting_in(app_with_drawing(), provider)
+}
+
+/// `app` with the provider's agent the default, its key for this session only.
+fn chatting_in(mut app: App, provider: &Provider) -> App {
     let mut agent = AgentProfile::new(
         ProviderKind::OpenAiCompatible,
         "Deneme ajanı",
@@ -849,4 +853,75 @@ fn the_agent_runs_an_extensions_audit_rule_and_applies_its_fix() {
     assert_eq!(app.ext_audit_report(0)["status"], "done");
     let _ = std::fs::remove_dir_all(&root);
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_extensions_python_tool_runs_as_a_job_and_its_call_waits_for_it() {
+    // docs/adr/8057 §27: an extension's Python tool is not computed on the window's thread; its plan goes as a job and
+    // the chat answers the call when the job ends, with the job's answer: here the extension's tool reached on the
+    // job's thread, failing to start (no KentOS Python library in tests).
+    use crate::extensions::tools::tests::{TAKS, imar, with_imar};
+    let provider = Provider::start(|n, _| match n {
+        0 => calls(
+            "call_1",
+            "processing__run",
+            &json!({ "input": { "tool": TAKS, "parameters": {
+                "parseller": { "scope": "all" }, "yapilar": { "scope": "layer", "layerId": "cizim" } } },
+                "mode": "plan" }),
+        ),
+        _ => says("Aracın sonucu geldi."),
+    });
+    // İşlemler's tools as the desktop registers them when it starts (lib.rs).
+    kentos_processing::command::register_as("desktop");
+    let mut app = chatting_in(with_imar("asistan-is", imar(|_| {})), &provider);
+    let before = app.document.as_ref().unwrap().model.revision();
+    let (message, task) = send(&mut app, "Parsellerin TAKS hesabını planla.");
+    drive(&mut app, task);
+    let said = app.assistant.chat.message(message).expect("the answer");
+    assert_eq!(said.phase, Phase::Complete, "{:?}", said.failure);
+    assert_eq!(said.body, "Aracın sonucu geldi.");
+    assert_eq!(said.tools.len(), 1);
+    assert!(said.tools[0].elapsed.is_some(), "{:?}", said.tools[0]);
+    // It went as the desktop's job (its first), and ended; what the model got is its answer, not "running".
+    let job = app
+        .agent_request(
+            &json!({ "method": "job", "params": { "id": "is-1" } }),
+            "Deneme",
+        )
+        .expect("the job");
+    assert_eq!(job["command"], "cad.processing.run", "{job:#}");
+    assert_eq!(job["phase"], "failed", "{job:#}");
+    assert_eq!(job["answer"]["error"]["code"], "tool_failed", "{job:#}");
+    assert!(
+        job["answer"]["error"]["message"]
+            .as_str()
+            .is_some_and(|m| m.starts_with("“Parsel TAKS hesabı”")),
+        "the extension's tool ran on the job's thread: {job:#}"
+    );
+    let got: Value = serde_json::from_str(&last_result(&provider.bodies()[1])).unwrap();
+    assert_ne!(got["status"], "running", "{got:#}");
+    assert_eq!(got["status"], job["answer"]["status"], "{got:#}");
+    assert!(app.assistant.running.is_none(), "the turn ended");
+    assert_eq!(
+        app.document.as_ref().unwrap().model.revision(),
+        before,
+        "a plan writes nothing"
+    );
+    // A job is asked on the drawing it was started on, whichever is in front then.
+    let session = app.document.as_ref().map(|d| d.session);
+    let long = kentos_headless::agent_tools::LongCall {
+        job: "is-1".into(),
+        command: "cad.processing.run".into(),
+        input: json!({ "tool": TAKS }),
+        revision: before.to_string(),
+        plan: true,
+    };
+    let running =
+        kentos_headless::agent_tools::Host::job_wait(&mut super::host::AppHost(&mut app), &long);
+    assert_eq!(running.ok(), Some(None), "answered when it ends");
+    assert!(
+        matches!(&app.assistant.later, Some(super::Pending::Job { long: l, document }) if *l == long && *document == session),
+        "{:?}",
+        app.assistant.later
+    );
 }

@@ -34,6 +34,9 @@ use crate::HeadlessError;
 
 mod extension_audits;
 mod link_workshop;
+mod long_calls;
+
+pub use long_calls::{LongCall, finish as finish_long, job_answer};
 
 pub use link_workshop::{link_preview, link_reload, link_review_workshop};
 
@@ -109,6 +112,26 @@ pub trait Host {
     /// another thread than the desktop's (an agent on its link) asks `audit_report` until the run is not `running`,
     /// for at most [`AUDIT_WAIT`]; the desktop's own chat cannot wait on its interface thread, so it answers the call
     /// when the run ends instead.
+    /// A long command's job (an extension's Python tool, docs/adr/8057 §27) once it ended: its answer as a call's. A
+    /// host on another thread than the desktop's asks `job` until then (at most [`JOB_WAIT`]); the desktop's own chat
+    /// cannot wait on its interface thread: it answers none, and the call when the job ends ([`finish_long`]).
+    fn job_wait(&mut self, long: &LongCall) -> Result<Option<Value>, HeadlessError> {
+        let began = std::time::Instant::now();
+        loop {
+            let status = self.request("job", &json!({ "id": long.job }))?;
+            if let Some(answer) = job_answer(&status) {
+                return Ok(Some(answer));
+            }
+            if began.elapsed() > JOB_WAIT {
+                return Err(HeadlessError::new(
+                    "timeout",
+                    "Eklentinin aracı beklenenden uzun sürdü: iş arka planda sürüyor.",
+                ));
+            }
+            std::thread::sleep(std::time::Duration::from_millis(250));
+        }
+    }
+
     fn audit_wait(&mut self, rule: &str) -> Result<Value, HeadlessError> {
         let began = std::time::Instant::now();
         loop {
@@ -126,6 +149,10 @@ pub trait Host {
         }
     }
 }
+
+/// How long an agent on the link waits for a long command's job (an extension's Python tool): an extension tool's own
+/// limit (ten minutes by default) and a margin.
+pub const JOB_WAIT: std::time::Duration = std::time::Duration::from_secs(610);
 
 /// How long an agent on the link waits for an extension audit: the desktop's own limit (two minutes) and a margin.
 pub const AUDIT_WAIT: std::time::Duration = std::time::Duration::from_secs(130);
@@ -1011,6 +1038,8 @@ fn guarded(
 ) -> Result<Value, HeadlessError> {
     let mode = args.get("mode").and_then(Value::as_str).unwrap_or("plan");
     let call = |op: &str, input: &Value| json!({ "command": command, "op": op, "input": input });
+    // An extension's Python tool: its plan and execution compute it, as jobs off the host's thread (§27).
+    let long = long_calls::is_long(command, &input);
     match (mode, reads) {
         ("validate", _) => host.request("call", &call("validate", &input)),
         ("plan" | "execute", true) => host.request("call", &call("execute", &input)),
@@ -1019,6 +1048,10 @@ fn guarded(
                 .as_str()
                 .unwrap_or_default()
                 .to_owned();
+            if long {
+                let request = call("plan", &input);
+                return long_calls::send(host, guard, &request, command, &input, &revision, true);
+            }
             let mut answer = host.request("call", &call("plan", &input))?;
             if let Some(plan) = answer
                 .get("planId")
@@ -1026,10 +1059,7 @@ fn guarded(
                 .map(str::to_owned)
             {
                 guard.remember(&plan, command, &input, &revision);
-                answer["next"] = json!(format!(
-                    "Yazmak için aynı komut ve girdiyle mode: \"execute\", planId: \"{plan}\". Çizim bu arada \
-                     değişirse plan geçersizdir."
-                ));
+                answer["next"] = json!(long_calls::plan_next(&plan));
             }
             Ok(answer)
         }
@@ -1044,6 +1074,9 @@ fn guarded(
             let revision = guard.take(plan, command, &input)?;
             let mut request = call("execute", &input);
             request["expected"] = json!({ "plan": plan, "revision": revision });
+            if long {
+                return long_calls::send(host, guard, &request, command, &input, &revision, false);
+            }
             host.request("call", &request)
         }
         (other, _) => Err(HeadlessError::new(

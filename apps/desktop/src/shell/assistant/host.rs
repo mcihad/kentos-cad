@@ -85,8 +85,21 @@ impl Host for AppHost<'_> {
     /// The chat runs on the interface thread, where the run's end is heard: the call is answered then
     /// (`App::assistant_audit_ended`), not waited for here.
     fn audit_wait(&mut self, rule: &str) -> Result<Value, HeadlessError> {
-        self.0.assistant.later = Some(rule.to_owned());
+        self.0.assistant.later = Some(super::Pending::Audit(rule.to_owned()));
         Ok(json!({ "status": "running", "rule": rule }))
+    }
+
+    /// An extension's Python tool computes on another thread as a job (docs/adr/8057 §27); the chat asks after it
+    /// from its tick and answers the call when it ends (`App::assistant_job_look`), not waited for here.
+    fn job_wait(
+        &mut self,
+        long: &kentos_headless::agent_tools::LongCall,
+    ) -> Result<Option<Value>, HeadlessError> {
+        self.0.assistant.later = Some(super::Pending::Job {
+            long: long.clone(),
+            document: self.0.document.as_ref().map(|d| d.session),
+        });
+        Ok(None)
     }
 }
 

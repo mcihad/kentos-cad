@@ -1291,3 +1291,162 @@ fn an_agents_workshop_reaches_the_desktop_on_its_link() {
         "{refused:?}"
     );
 }
+
+/// A desktop whose jobs end at the second look (docs/adr/8057 §27): what it was asked, a plan's id from its plan job.
+struct JobDesktop {
+    asked: Vec<(String, Value)>,
+    looks: usize,
+    later: bool,
+}
+
+impl Host for JobDesktop {
+    fn request(&mut self, method: &str, params: &Value) -> Result<Value, HeadlessError> {
+        self.asked.push((method.to_owned(), params.clone()));
+        match method {
+            "summary" => Ok(json!({ "revision": "7" })),
+            "start" => Ok(
+                json!({ "id": format!("is-{}", self.asked.len()), "command": params["command"], "phase": "computing" }),
+            ),
+            "job" => {
+                self.looks += 1;
+                if self.looks % 2 == 1 {
+                    return Ok(
+                        json!({ "id": params["id"], "command": "cad.processing.run", "phase": "computing" }),
+                    );
+                }
+                let plan = self
+                    .asked
+                    .iter()
+                    .rev()
+                    .find(|(m, _)| m == "start")
+                    .is_some_and(|(_, p)| p["op"] == "plan");
+                let answer = if plan {
+                    json!({ "status": "completed", "planId": "plan-taks" })
+                } else {
+                    json!({ "status": "completed", "call": 12 })
+                };
+                Ok(
+                    json!({ "id": params["id"], "command": "cad.processing.run", "phase": "done", "answer": answer }),
+                )
+            }
+            _ => Err(HeadlessError::new("unknown_method", method.to_owned())),
+        }
+    }
+
+    fn job_wait(&mut self, long: &agent_tools::LongCall) -> Result<Option<Value>, HeadlessError> {
+        if self.later {
+            return Ok(None);
+        }
+        loop {
+            let status = self.request("job", &json!({ "id": long.job }))?;
+            if let Some(answer) = agent_tools::job_answer(&status) {
+                return Ok(Some(answer));
+            }
+        }
+    }
+}
+
+#[test]
+fn an_extensions_python_tool_is_planned_and_run_as_jobs() {
+    // docs/adr/8057 §27: a processing run of an extension's tool computes Python in its plan and its execution: both go
+    // as jobs (start, then job), the plan remembered by the guard and executed as planned; a host that answers later
+    // gets "running" and remembers the plan when the job ends (finish_long).
+    let input = json!({ "tool": "ext.tr.ornek.vitrin.taks", "parameters": {} });
+    let mut desktop = JobDesktop {
+        asked: Vec::new(),
+        looks: 0,
+        later: false,
+    };
+    let mut guard = Guard::new();
+    let plan = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "processing.run",
+        &json!({ "input": input, "mode": "plan" }),
+    )
+    .unwrap();
+    assert_eq!(plan["planId"], "plan-taks", "{plan:#}");
+    assert!(
+        plan["next"]
+            .as_str()
+            .is_some_and(|n| n.contains("plan-taks"))
+    );
+    let started: Vec<&Value> = desktop
+        .asked
+        .iter()
+        .filter(|(m, _)| m == "start")
+        .map(|(_, p)| p)
+        .collect();
+    assert_eq!(started[0]["op"], "plan");
+    assert!(
+        desktop.asked.iter().all(|(m, _)| m != "call"),
+        "nothing called on the host's thread"
+    );
+    let done = agent_tools::call(
+        &mut desktop,
+        &mut guard,
+        "processing.run",
+        &json!({ "input": input, "mode": "execute", "planId": "plan-taks" }),
+    )
+    .unwrap();
+    assert_eq!(done["call"], 12, "{done:#}");
+    let started: Vec<&Value> = desktop
+        .asked
+        .iter()
+        .filter(|(m, _)| m == "start")
+        .map(|(_, p)| p)
+        .collect();
+    assert_eq!(started[1]["op"], "execute");
+    assert_eq!(
+        started[1]["expected"],
+        json!({ "plan": "plan-taks", "revision": "7" })
+    );
+    // A host that answers when the job ends: "running" now, the plan remembered by finish_long.
+    let mut later = JobDesktop {
+        asked: Vec::new(),
+        looks: 0,
+        later: true,
+    };
+    let mut guard = Guard::new();
+    let running = agent_tools::call(
+        &mut later,
+        &mut guard,
+        "processing.run",
+        &json!({ "input": input, "mode": "plan" }),
+    )
+    .unwrap();
+    assert_eq!(running["status"], "running", "{running:#}");
+    let job = running["job"].as_str().unwrap().to_owned();
+    let long = agent_tools::LongCall {
+        job,
+        command: "cad.processing.run".into(),
+        input: input.clone(),
+        revision: "7".into(),
+        plan: true,
+    };
+    let answered = agent_tools::finish_long(
+        &mut guard,
+        &long,
+        json!({ "status": "completed", "planId": "plan-sonra" }),
+    )
+    .unwrap();
+    assert!(
+        answered["next"]
+            .as_str()
+            .is_some_and(|n| n.contains("plan-sonra"))
+    );
+    // The remembered plan executes (the guard would refuse an unknown one).
+    later.later = false;
+    let done = agent_tools::call(
+        &mut later,
+        &mut guard,
+        "processing.run",
+        &json!({ "input": input, "mode": "execute", "planId": "plan-sonra" }),
+    );
+    assert!(done.is_ok(), "{done:?}");
+    // A built-in tool is still called directly.
+    assert!(!agent_tools::LongCall::is_long_for_test(
+        "cad.processing.run",
+        &json!({ "tool": "convert.toPoints" })
+    ));
+}

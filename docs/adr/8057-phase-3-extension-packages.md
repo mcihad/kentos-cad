@@ -1929,22 +1929,39 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   de düzeltme var"; 662 jeton, 12,4 sn. "…sonra ilk bulgunun düzeltmesini uygula" → plan, onay kartı ("Bulguları onar ·
   eklenti bulgusu 1 · yazma — Onay gerekiyor"), Onayla → yapıya Y-01 yazıldı, sekmede "Y-01 yaz ✓" ve çizim notu, geri
   alma etkin; 1276 jeton, 26 sn.
-- **Bilinen sınır (15 Kasım, kod okunarak):** ajanın `processing.run`'ı bir eklenti aracını (`ext.…`) masaüstünde
-  rpc'nin `call`'u üzerinden **eşzamanlı** çalıştırır: masaüstünün sağlayıcısı (`extensions/tools.rs` `Bridge::run`)
-  havuzu bekler, Asistan'da ve bağlantıda bu arayüz iş parçacığıdır; Python aracı sürerken pencere bekler (aracın süre
-  sınırı kadar, varsayılan 600 sn). İşlemler penceresi aynı aracı arka planda çalıştırır (`gis/processing/background.rs`
-  `start_tool`: iş çizimde hazırlanır, okuma kopyasında hesaplanır, sonuç tek adımda uygulanır). Koruyucunun **plan**
-  adımı da aracı geçici bir kopyada hesaplar (`command.rs` `run_on`): plan da bekletir. Rpc'nin işleri (`start`/`job`,
-  `core/jobs.rs`) okuma kopyasında başka iş parçacığında hesaplayıp sonra yazar ama yalnız `execute` taşır (`Job::start`
-  çağrıyı `execute`'a çevirir); `expected` denetimi kopyada, işin başladığı revizyonda yapılır, yazarken çizim
-  değiştiyse kalıcı kimliklerle ya da `document_changed`. Yürütmede plan denetimi yazılan değişiklik kümesinden
-  hesaplanan kimliği beklenen planla karşılaştırır (`core/call.rs`): Python aracının planı aracı çalıştırmadan
-  verilemez, plan da hesaplamalıdır. Çözüm, ayrı iş: (1) işler `plan`'ı da taşır (kopyada hesaplanır, yazılacak bir şey
-  bırakmaz, cevabı plandır); (2) koruyucu uzun komutların (Python aracı) planını ve yürütmesini rpc işi olarak gönderir
-  (`start` → `job`); (3) Asistan'da çağrının cevabı iş bitince (`Later`, kısa aralıklı yoklama), bağlantıda MCP işi kendi
-  iş parçacığında yoklar; (4) işin yazdığı da Asistan'ın günlük satırı ve görünüm tazelemesiyle (bugün `start`'ta
-  "yazdı" sayılıyor, yazma `job`'da).
-- **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi.
+- **Ajanın eklenti aracı arayüz iş parçacığında hesaplanmaz (15 Kasım).** Önceki sınır: ajanın `processing.run`'ı bir
+  eklenti aracını (`ext.…`) masaüstünde rpc'nin `call`'u üzerinden eşzamanlı çalıştırıyordu (`extensions/tools.rs`
+  `Bridge::run` havuzu bekler; Asistan'da ve bağlantıda bu arayüz iş parçacığı): Python aracı sürerken pencere aracın süre
+  sınırı kadar (varsayılan 600 sn) bekliyordu; koruyucunun **plan** adımı da aracı hesapladığı için (`command.rs`
+  `run_on`; yürütmede plan kimliği yazılan değişiklik kümesinden hesaplanır, `core/call.rs`) plan da bekletiyordu.
+  Çözüm dört parça:
+  1. **İşler planı da taşır** (`core/jobs.rs` `Job::start`): plan okuma kopyasında hesaplanır, yazılacak bir şey bırakmaz,
+     cevabı plandır (`protocol::a_plan_as_a_job_writes_nothing_and_its_execution_matches_it`).
+  2. **Koruyucu uzun komutları iş olarak gönderir** (`agent_tools/long_calls.rs`): `cad.processing.run|batch` ve aracı
+     `ext.` ile başlıyorsa plan da yürütme de `start` → `job`. Plan kimliği iş bitince, çağrının yapıldığı revizyonla
+     hatırlanır (`finish`); yürütme `expected`'ı (plan + revizyon) taşır, çizim bu arada değiştiyse plan geçersizdir.
+  3. **Bekleyen, çağrının sahibidir.** MCP kendi iş parçacığında yoklar (`Host::job_wait` öntanımı: 250 ms'de bir
+     `job`, en çok `JOB_WAIT` = 610 sn; istekleri tutamacın çizimini taşır). Asistan arayüz iş parçacığında bekleyemez:
+     `AppHost::job_wait` işi `Pending::Job` olarak saklar ve "çalışıyor" der, `Event::JobLook` 250 ms'de bir sorar, iş
+     bitince çağrı işin cevabıyla cevaplanır (`assistant_job_look` → `finish_long`); masaüstü meşgulse (konsol kodu, çizim
+     açılışı) yeniden sorar. Durdur ve sahipsiz kalan çağrı işi durdurur (`cancel`; yazılmış olan kalır, Geri al alır).
+  4. **İş başladığı çizimde sorulur.** Masaüstünün işleri (`python.jobs`) bir çizimin değil uygulamanındır ve işin
+     sonucu `job` hangi çizimde sorulursa oraya yazılır; revizyon ve kuşak sayaçları her çizimde ayrı saydığı için başka
+     bir çizimde aynı tabana denk gelebilir. Asistan işi başlattığı çizimin oturum numarasını saklar ve `job`/`cancel`'ı
+     onunla sorar: kullanıcı bu arada başka sekmeye geçse de sonuç kendi çizimine yazılır, çizim kapandıysa
+     `document_closed` çağrının hatasıdır.
+  Bağlantının günlük satırı da yazmaya bağlandı: `start` artık "yazdı" sayılmaz, `job` çizimin revizyonu değiştiyse
+  "Ajan: <komut>" der (komutu işin durumundan okur). Ölçüm: Asistan sınamasında İmar'ın TAKS planı iş olarak gitti,
+  eklenti köprüsüne işin iş parçacığında ulaştı (sınamada KentOS Python kitaplığı yok: `tool_failed` "“Parsel TAKS
+  hesabı” çalıştırılamadı"), çağrı bir yoklamada (251 ms) işin cevabıyla cevaplandı, çizimin revizyonu değişmedi
+  (`assistant::tests::an_extensions_python_tool_runs_as_a_job_and_its_call_waits_for_it`); bağlantıda plan işi hiçbir
+  şey yazmadı ve söylemedi, yürütme işi yazınca satır bir kez düştü
+  (`python::tests::an_agents_job_is_said_in_the_log_when_it_writes`). Sınamada çıkan tuzak: `cad.processing.run`'ın
+  girdisi `parameters`'tır; `ProcessingRun` bilinmeyen anahtarı reddetmediği için `values` yazan çağrı sessizce
+  varsayılanlarla çalışıyordu (ilk sınama "Yapılar: seçilen katman artık yok" ile düştü).
+- **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi;
+  `ProcessingRun`'ın bilinmeyen anahtarı (`values`) sessizce yok sayması (reddetmek bütün çağıranların sözleşmesini
+  değiştirir, ayrı karar).
 
 ## §28. Manifestin, katman şemasının ve araç tanımının JSON Schema'ları (`ADIM 21`, kod üretimi)
 

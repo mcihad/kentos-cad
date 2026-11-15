@@ -369,6 +369,7 @@ impl App {
             | "journal" | "replay" | "start" | "job" | "wait" | "cancel" => {
                 // The desktop does not wait for a job on its interface thread: `wait` says how it is.
                 let method = if method == "wait" { "job" } else { method };
+                let before = doc.model.revision();
                 // An agent reads no value of a field the drawing hides (docs/adr/0738 §1).
                 let mut answer = kentos_headless::rpc::call_for_agent(
                     &mut doc.model,
@@ -401,15 +402,22 @@ impl App {
                             && answer.get("status").and_then(Value::as_str) == Some("completed")
                             && answer.get("replayed").and_then(Value::as_bool) != Some(true)
                     }
-                    "start" => true,
+                    // A job writes when it is asked after its computation ended (core/jobs.rs), not when it starts:
+                    // a plan's job writes nothing, a refused one neither. The drawing's revision says it.
+                    "job" => doc.model.revision() != before,
                     _ => false,
                 };
+                // A job's command is in its status, not in the request (its id).
+                let command = params
+                    .get("command")
+                    .or_else(|| answer.get("command"))
+                    .and_then(Value::as_str)
+                    .unwrap_or("?")
+                    .to_owned();
                 if wrote && !in_front {
                     // Its drawing waits in its tab: the store on screen is another drawing's.
-                    let command = params.get("command").and_then(Value::as_str).unwrap_or("?");
                     self.output(format!("{who}: {command} (arka sekmedeki çizimde)"));
                 } else if wrote {
-                    let command = params.get("command").and_then(Value::as_str).unwrap_or("?");
                     self.output(format!("{who}: {command}"));
                 } else if method == "replay" {
                     self.output(format!("{who}: kayıt yeniden oynatıldı"));
