@@ -33,6 +33,9 @@ use serde_json::{Map, Value, json};
 use crate::HeadlessError;
 
 mod extension_audits;
+mod link_workshop;
+
+pub use link_workshop::{link_preview, link_reload, link_review_workshop};
 
 pub use extension_audits::audit_outcome;
 use extension_audits::{

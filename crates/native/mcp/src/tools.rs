@@ -652,8 +652,9 @@ pub fn compact(catalog: &Value) -> Vec<Value> {
     tools
 }
 
-/// A drawing's host with the server's extension workshop (`extension.workshop.*`, docs/adr/8057 §22). A package
-/// made there is not opened for review here: the user opens it in KentOS (Eklentiler › Paket yükle…).
+/// A drawing's host with the server's extension workshop (`extension.workshop.*`, docs/adr/8057 §22). On a desktop's
+/// link a package made there opens in the user's review in KentOS, and what the user installed from it reloads
+/// (§30); on a drawing of the server's own the user opens it (Eklentiler › Paket yükle…).
 struct WithWorkshop<'a> {
     inner: &'a mut dyn kentos_headless::agent_tools::Host,
     workshop: Option<std::path::PathBuf>,
@@ -674,6 +675,27 @@ impl kentos_headless::agent_tools::Host for WithWorkshop<'_> {
 
     fn workshop(&self) -> Option<std::path::PathBuf> {
         self.workshop.clone()
+    }
+
+    /// On a desktop's link the package opens in the user's review there, its changes load and its look is read
+    /// (docs/adr/8057 §30); a drawing of the server's own says where to open it instead.
+    fn review_workshop(
+        &mut self,
+        package: &std::path::Path,
+        folder: &std::path::Path,
+    ) -> Result<Value, kentos_headless::HeadlessError> {
+        kentos_headless::agent_tools::link_review_workshop(&mut *self.inner, package, folder)
+    }
+
+    fn reload_extension(&mut self, id: &str) -> Result<Value, kentos_headless::HeadlessError> {
+        let folder = self.workshop.as_ref().map(|w| w.join(id)).ok_or_else(|| {
+            kentos_headless::HeadlessError::new("not_offered", "Bu sunucunun eklenti atölyesi yok.")
+        })?;
+        kentos_headless::agent_tools::link_reload(&mut *self.inner, id, &folder)
+    }
+
+    fn preview_extension(&mut self, id: &str) -> Result<Value, kentos_headless::HeadlessError> {
+        kentos_headless::agent_tools::link_preview(&mut *self.inner, id)
     }
 
     /// Kapı 3's part that runs no code, in a registry of its own: the policy of this computer, the package's own tool

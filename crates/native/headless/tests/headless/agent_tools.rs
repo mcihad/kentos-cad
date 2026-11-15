@@ -1228,3 +1228,66 @@ fn a_drawing_of_the_servers_own_has_no_extension_audits() {
         );
     }
 }
+
+/// A desktop on the link as its workshop requests reach it (docs/adr/8057 §30): what it was asked, by method.
+struct LinkedDesktop {
+    asked: Vec<(String, Value)>,
+}
+
+impl Host for LinkedDesktop {
+    fn request(&mut self, method: &str, params: &Value) -> Result<Value, HeadlessError> {
+        self.asked.push((method.to_owned(), params.clone()));
+        match method {
+            "review_workshop" => Ok(json!({ "opened": true, "installable": true })),
+            "reload_extension" => Ok(json!({ "id": params["id"], "changed": true })),
+            "preview_extension" => Ok(json!({ "id": params["id"], "name": "Mezarlık bilgi" })),
+            _ => Err(HeadlessError::new("unknown_method", method.to_owned())),
+        }
+    }
+}
+
+#[test]
+fn an_agents_workshop_reaches_the_desktop_on_its_link() {
+    // docs/adr/8057 §30: on a desktop's link the workshop's package opens in the user's review there, the changes of
+    // what the user installed from its folder load, and its look is read; a drawing of the server's own says where the
+    // package is opened instead.
+    let package = std::path::Path::new("/atolye/tr.ornek.mezarlik-0.1.0.kek");
+    let folder = std::path::Path::new("/atolye/tr.ornek.mezarlik");
+    let mut desktop = LinkedDesktop { asked: Vec::new() };
+    let opened = agent_tools::link_review_workshop(&mut desktop, package, folder).unwrap();
+    assert_eq!(opened["opened"], true);
+    agent_tools::link_reload(&mut desktop, "tr.ornek.mezarlik", folder).unwrap();
+    let look = agent_tools::link_preview(&mut desktop, "tr.ornek.mezarlik").unwrap();
+    assert_eq!(look["name"], "Mezarlık bilgi");
+    let asked: Vec<(&str, Value)> = desktop
+        .asked
+        .iter()
+        .map(|(m, p)| (m.as_str(), p.clone()))
+        .collect();
+    assert_eq!(
+        asked,
+        [
+            (
+                "review_workshop",
+                json!({ "package": package.display().to_string(), "folder": folder.display().to_string() })
+            ),
+            (
+                "reload_extension",
+                json!({ "id": "tr.ornek.mezarlik", "folder": folder.display().to_string() })
+            ),
+            ("preview_extension", json!({ "id": "tr.ornek.mezarlik" })),
+        ]
+    );
+    // A drawing of the server's own has no review to open: it says how the user opens the package.
+    let mut s = drawing();
+    let refused = agent_tools::link_review_workshop(&mut s, package, folder);
+    assert!(
+        matches!(&refused, Err(e) if e.code == "not_offered" && e.message.contains("Paket yükle")),
+        "{refused:?}"
+    );
+    let refused = agent_tools::link_reload(&mut s, "tr.ornek.mezarlik", folder);
+    assert!(
+        matches!(&refused, Err(e) if e.code == "not_offered"),
+        "{refused:?}"
+    );
+}

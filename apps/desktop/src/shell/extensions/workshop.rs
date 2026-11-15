@@ -25,8 +25,9 @@ use super::ribbon::Action;
 use crate::app::App;
 
 impl App {
-    /// A workshop's package for the user's review, installed (if the user says Kur) from `folder`: a reload source.
-    pub(crate) fn review_workshop_package(&mut self, package: &Path, folder: &Path) {
+    /// A workshop's package for the user's review, installed (if the user says Kur) from `folder`: a reload source;
+    /// `agent` is whose workshop it is (the review says who may load its changes).
+    pub(crate) fn review_workshop_package(&mut self, package: &Path, folder: &Path, agent: &str) {
         self.open_extensions();
         match std::fs::read(package) {
             Ok(bytes) => {
@@ -35,13 +36,38 @@ impl App {
                     location: folder.display().to_string(),
                 };
                 self.review_package(package.display().to_string(), bytes, source);
+                if let Some(review) = self.extensions.review.as_mut() {
+                    review.agent = Some(agent.to_owned());
+                }
             }
             Err(e) => self.extensions_say(true, format!("{} okunamadı: {e}.", package.display())),
         }
     }
 
-    /// Loads the workshop folder's changes over the extension the user installed from it, with the capabilities the
-    /// user granted (plan ADIM 21's `hot_reload`); or why not.
+    /// An agent's workshop package opened for the user's review (Asistan's, or an agent's on the link): whether the
+    /// window opened and the package installs; nothing is installed by it.
+    pub(crate) fn agent_review_workshop(
+        &mut self,
+        package: &Path,
+        folder: &Path,
+        agent: &str,
+    ) -> Result<Value, String> {
+        self.extensions.note = None;
+        self.review_workshop_package(package, folder, agent);
+        if let Some((true, words)) = &self.extensions.note {
+            return Err(words.clone());
+        }
+        let review = self.extensions.review.as_ref().map(|r| &r.review);
+        Ok(json!({
+            "opened": review.is_some(),
+            "installable": review.is_some_and(|r| r.installable),
+            "where": "Eklentiler › Gözden geçir ve kur",
+            "reloads": "Kurulduktan sonra extension.workshop.reload değişiklikleri uygulama kapanmadan yükler.",
+        }))
+    }
+
+    /// Loads Asistan's workshop folder's changes over the extension the user installed from it, with the capabilities
+    /// the user granted (plan ADIM 21's `hot_reload`); or why not.
     pub(crate) fn ext_workshop_reload(&mut self, id: &str) -> Result<Value, String> {
         let folder = self
             .extensions
@@ -50,6 +76,17 @@ impl App {
             .and_then(kentos_extension_host::places::workshop_for)
             .ok_or_else(|| "Bu oturumda eklenti atölyesi yok.".to_owned())?
             .join(id);
+        self.ext_workshop_reload_from(id, &folder, "Asistan")
+    }
+
+    /// Loads `folder`'s changes over the extension the user installed from it (its review's source): Asistan's
+    /// workshop, or an agent's on the link (`who` says which, in the notice and the log; docs/adr/8057 §30).
+    pub(crate) fn ext_workshop_reload_from(
+        &mut self,
+        id: &str,
+        folder: &Path,
+        who: &str,
+    ) -> Result<Value, String> {
         if let Some(run) = self
             .extensions
             .runners
@@ -72,13 +109,14 @@ impl App {
         };
         if view.source.kind != SourceKind::DeveloperFolder || Path::new(&view.source.location) != folder {
             return Err(format!(
-                "“{id}” atölyeden kurulmadı (kaynağı: {}): canlı yükleme yalnız atölyeden kurulana. Yeni sürümü \
-                 extension.workshop.review ile kullanıcıya açın.",
+                "“{id}” bu atölyeden kurulmadı (kaynağı: {}): canlı yükleme yalnız kullanıcının bu klasörden kurduğuna. \
+                 Yeni sürümü extension.workshop.review ile kullanıcıya açın.",
                 view.source.kind.words()
             ));
         }
         // What the folder asks for now, against what the user granted: more goes back to the user.
-        let files = kentos_extension_host::store::read_files(&folder).map_err(|p| p.message.clone())?;
+        let files =
+            kentos_extension_host::store::read_files(folder).map_err(|p| p.message.clone())?;
         let asked: BTreeSet<Capability> = kentos_extensions::verify(&files, &Limits::default())
             .manifest
             .map(|m| m.capabilities().into_iter().collect())
@@ -117,11 +155,13 @@ impl App {
             id,
             "workshop",
             "workshop_reloaded",
-            "Atölyeden yeniden yüklendi (Asistan).",
+            &format!("Atölyeden yeniden yüklendi ({who})."),
         );
         self.toast(
-            Toast::info(format!("{name}: atölyeden yeniden yüklendi"))
-                .body(format!("Asistan değişiklikleri yükledi ({}).", installed.version)),
+            Toast::info(format!("{name}: atölyeden yeniden yüklendi")).body(format!(
+                "{who} değişiklikleri yükledi ({}).",
+                installed.version
+            )),
         );
         Ok(json!({
             "id": id,

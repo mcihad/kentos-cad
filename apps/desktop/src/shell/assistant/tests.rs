@@ -618,6 +618,47 @@ fn the_assistants_workshop_opens_its_package_for_review() {
     .unwrap();
     assert_eq!(preview["source"], "geliştirici klasörü", "{preview:#}");
     assert_eq!(preview["name"], "Mezarlık bilgi");
+    // An agent on the link reaches the same workshop by request (docs/adr/8057 §30): its package opens in the user's
+    // review saying whose it is, the changes of what the user installed from its folder load, its look is read; a
+    // folder the user did not install from is refused.
+    let folder = root.join("eklenti-atolyesi").join(id);
+    let package = folder.with_file_name(format!("{id}-0.1.0.kek"));
+    let ask = |app: &mut App, method: &str, params: Value| {
+        app.agent_request(&json!({ "method": method, "params": params }), "Ajan")
+    };
+    let opened = ask(
+        &mut app,
+        "review_workshop",
+        json!({ "package": package.display().to_string(), "folder": folder.display().to_string() }),
+    )
+    .unwrap();
+    assert_eq!(opened["opened"], true, "{opened:#}");
+    assert_eq!(
+        app.extensions
+            .review
+            .as_ref()
+            .and_then(|r| r.agent.as_deref()),
+        Some("bağlı ajan")
+    );
+    let _ = app.extensions_event(crate::extensions::Event::CancelReview);
+    let reloaded = ask(
+        &mut app,
+        "reload_extension",
+        json!({ "id": id, "folder": folder.display().to_string() }),
+    )
+    .unwrap();
+    assert_eq!(reloaded["changed"], false, "{reloaded:#}");
+    let look = ask(&mut app, "preview_extension", json!({ "id": id })).unwrap();
+    assert_eq!(look["name"], "Mezarlık bilgi");
+    let elsewhere = ask(
+        &mut app,
+        "reload_extension",
+        json!({ "id": id, "folder": root.join("baska").display().to_string() }),
+    );
+    assert!(
+        matches!(&elsewhere, Err((code, why)) if code == "invalid_input" && why.contains("bu atölyeden kurulmadı")),
+        "{elsewhere:?}"
+    );
     let _ = std::fs::remove_dir_all(&root);
 }
 

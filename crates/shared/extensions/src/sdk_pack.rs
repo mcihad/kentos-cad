@@ -312,7 +312,7 @@ pub fn sdk_pack() -> Value {
             "Kullanıcı atölyeden kurduktan sonra: değişiklikleri extension.workshop.reload uygulama kapanmadan yükler \
              (aynı sürüm, kullanıcının verdiği yeteneklerle; yeni yetenek isteyen yeniden review'a gider); \
              extension.workshop.preview kullanıcının gördüğünü (sekme, paneller, araçlar, kapalı düğmenin nedeni) \
-             yazıyla verir. Masaüstünün Asistan'ında; MCP bağlantısında yok."
+             yazıyla verir. Masaüstünün Asistan'ında ve masaüstüne bağlı ajanda (MCP'de desktop.attach)."
         ],
         "example": example,
         "icons": {

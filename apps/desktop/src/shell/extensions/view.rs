@@ -642,11 +642,12 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
         }
         // What installing from the agents' workshop allows, said before the user decides (docs/adr/8057 §22).
         if p.source.kind == kentos_extension_host::store::SourceKind::DeveloperFolder {
-            form = form.wide(Banner::info(
-                "Atölyeden kuruluyor: kurulduktan sonra Asistan değişiklikleri bu klasörden uygulama kapanmadan \
+            form = form.wide(Banner::info(format!(
+                "Atölyeden kuruluyor: kurulduktan sonra {} değişiklikleri bu klasörden uygulama kapanmadan \
                  yükleyebilir; her yüklemede size bildirilir. Yeni bir yetenek isterse yeniden sizin incelemenize \
                  gelir.",
-            ));
+                p.agent.as_deref().unwrap_or("onu yazan ajan")
+            )));
         }
     }
     for refusal in [&r.incompatible, &r.policy, &r.revoked]

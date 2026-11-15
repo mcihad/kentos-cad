@@ -53,18 +53,9 @@ impl Host for AppHost<'_> {
         package: &std::path::Path,
         folder: &std::path::Path,
     ) -> Result<Value, HeadlessError> {
-        self.0.extensions.note = None;
-        self.0.review_workshop_package(package, folder);
-        if let Some((true, words)) = &self.0.extensions.note {
-            return Err(HeadlessError::new("invalid_input", words.clone()));
-        }
-        let review = self.0.extensions.review.as_ref().map(|r| &r.review);
-        Ok(json!({
-            "opened": review.is_some(),
-            "installable": review.is_some_and(|r| r.installable),
-            "where": "Eklentiler › Gözden geçir ve kur",
-            "reloads": "Kurulduktan sonra extension.workshop.reload değişiklikleri uygulama kapanmadan yükler.",
-        }))
+        self.0
+            .agent_review_workshop(package, folder, "Asistan")
+            .map_err(|why| HeadlessError::new("invalid_input", why))
     }
 
     /// Kapı 3's part that runs no code: bound with this app's policy and tool check, in a registry of its own.

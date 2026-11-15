@@ -1431,7 +1431,7 @@ fn a_workshop_extension_reloads_without_closing_and_its_preview_says_what_the_us
     };
     let package = workshop.join("tr.ornek.vitrin-paket.kek");
     std::fs::write(&package, pack(&folder)).unwrap();
-    gis.review_workshop_package(&package, &folder);
+    gis.review_workshop_package(&package, &folder, "Asistan");
     let _ = gis.extensions_event(Event::Install);
     assert!(gis.extensions.review.is_none(), "{:?}", gis.extensions.note);
     // The agent renames a panel and reloads: the same version, its new name on the ribbon.

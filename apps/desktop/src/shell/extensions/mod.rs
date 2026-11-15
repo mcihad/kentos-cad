@@ -75,6 +75,8 @@ pub(crate) struct Pending {
     /// The package has Python contributions at all.
     pub(crate) has_python: bool,
     pub(crate) replace_source: bool,
+    /// The agent whose workshop it comes from (Asistan, an agent on the link): its later changes are its own.
+    pub(crate) agent: Option<String>,
 }
 
 /// The extensions' state in the window.
@@ -1177,6 +1179,7 @@ impl App {
             python: has_python,
             has_python,
             replace_source: false,
+            agent: None,
         });
     }
 

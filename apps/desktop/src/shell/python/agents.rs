@@ -38,6 +38,15 @@ fn refused(code: &str, message: &str) -> (String, String) {
     (code.to_owned(), message.to_owned())
 }
 
+/// Whose workshop a link's request is, as the review and the notices say it: an agent on the link (MCP's), or Asistan.
+fn who_agent(who: &str) -> &'static str {
+    if who == "Asistan" {
+        "Asistan"
+    } else {
+        "bağlı ajan"
+    }
+}
+
 impl App {
     /// Where this program's link opens (docs/adr/0802): its own socket in the user's runtime folder, beside the
     /// other programs'.
@@ -259,6 +268,47 @@ impl App {
                 &self.viewport.camera,
                 doc.model.settings().plot_scale,
             ));
+        }
+        // An agent's extension workshop on the link (extensions/workshop.rs, docs/adr/8057 §30): its package opened
+        // for the user's review (Kur is the user's), the changes of what the user installed from its folder loaded,
+        // and what the user sees of it.
+        match method {
+            "review_workshop" | "reload_extension" => {
+                let path = |key: &str| {
+                    params
+                        .get(key)
+                        .and_then(Value::as_str)
+                        .map(std::path::PathBuf::from)
+                        .filter(|p| p.is_absolute())
+                        .ok_or_else(|| {
+                            refused(
+                                "invalid_request",
+                                &format!("{key} gerekli: mutlak bir yol."),
+                            )
+                        })
+                };
+                let answer = if method == "review_workshop" {
+                    let (package, folder) = (path("package")?, path("folder")?);
+                    self.agent_review_workshop(&package, &folder, who_agent(who))
+                } else {
+                    let id = params.get("id").and_then(Value::as_str).ok_or_else(|| {
+                        refused("invalid_request", "id gerekli: eklentinin kimliği.")
+                    })?;
+                    let folder = path("folder")?;
+                    self.ext_workshop_reload_from(id, &folder, who_agent(who))
+                };
+                return answer.map_err(|why| refused("invalid_input", &why));
+            }
+            "preview_extension" => {
+                let id = params
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| refused("invalid_request", "id gerekli: eklentinin kimliği."))?;
+                return self
+                    .ext_preview(id)
+                    .map_err(|why| refused("invalid_input", &why));
+            }
+            _ => {}
         }
         // An extension's audit rules (extensions/audit_agents.rs, docs/adr/8057 §27): a run reads the front drawing.
         match method {

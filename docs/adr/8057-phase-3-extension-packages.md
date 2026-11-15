@@ -1386,7 +1386,7 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   söyledi (katman şeması kurulumu ADIM 22). Oturum betiği sahibin ajan dosyasını kopyalamaz; yalnız oturuma verilen
   ayar klasöründekini.
 - **Uygularken verilen kararlar:** paket atölyede kalır (silinmez, kullanıcı yeniden açabilir); kaynak türü "dosya"
-  olarak görünür; MCP'nin masaüstü bağlantısında incelemeye açma sonraki iş.
+  olarak görünür; MCP'nin masaüstü bağlantısında incelemeye açma §30'da.
 - **Canlı yükleme ve görünüş** (15 Kasım; planın `hot_reload`/`preview_render`'ı, `extension.workshop.reload` ve
   `.preview`; masaüstü `extensions/workshop.rs`): atölyeden incelemeye açılan paket artık **geliştirici klasörü**
   kaynağıyla kurulur (kayıt defterinin D2 yolu: her yüklemede klasör yeniden paketlenir, aynı sürüm yeni kira ile
@@ -1413,7 +1413,8 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
     "Canlı Deneme sekmesi → Canlı Deneme grubu → büyük Nesne sayımı yap düğmesi; düğme şu an kapalı, sebebi Python
     ortamının hazırlanmamış olması: Eklentiler › Canlı Deneme › Python ortamı". (Ajan istenen adın sonuna "yap" ekledi:
     ajanın tercihi.)
-  - MCP bağlantısında ikisi de yok (paketi orada kullanıcı açar): araçlar "masaüstünün Asistan'ında çalışın" der.
+  - MCP'nin masaüstü bağlantısında da var (§30, 15 Kasım); MCP'nin kendi çizimlerinde yok: araçlar ajanı masaüstüne
+    bağlamayı ya da Asistan'ı söyler.
   - Test: başsız (doğrulanmayan klasör yüklenmez, host'a gitmez; geçen yüklenir; preview geçer) ve masaüstü (Vitrin
     atölyeden kuruldu, panel adı değişti, yeniden yüklendi: şeritte yeni ad, aynı sürüm; değişiklik yoksa söyler;
     preview sekmeyi, panelin düğmesini ve TAKS aracını yazar; `files.userSelected` isteyen yükleme reddedildi, şerit
@@ -2000,3 +2001,28 @@ bileşen çizimi panel ve pencere için ortak), `shell/view.rs` (pencere katman�
   onayın evet/hayırı), masaüstü 1 (girdisini dosyaya yazan sahte süreç: pencere açılır ve çizilir, yanlış sayı adıyla
   söylenir, Tamam'ın değerleri ve İptal'in boşu sürece yazılır, Esc yazan bir çalışma sürerken de İptal'dir, düğmeli
   pencere hemen hata, Durdur pencereyi kapatıp boş yanıt verir).
+
+## §30. Ajanın atölyesi masaüstü bağlantısında: incelemeye açma, canlı yükleme, görünüş (`ADIM 21`)
+
+**15 Kasım.** Kod: masaüstü `python/agents.rs` (bağlantının istekleri: `review_workshop`, `reload_extension`,
+`preview_extension`), `extensions/workshop.rs` (`agent_review_workshop`, `ext_workshop_reload_from`: klasör ve "kim"
+parametreli), `extensions/view.rs` (inceleme bandı kimin atölyesi olduğunu söyler), başsız
+`agent_tools/link_workshop.rs` (`link_review_workshop`, `link_reload`, `link_preview`), MCP `tools.rs` (`WithWorkshop`).
+
+- **Karar: dış ajan Asistan'ın yolundan.** Masaüstüne bağlı MCP ajanı (desktop.attach) kendi atölyesinde yazdığı
+  eklentiyi `extension.workshop.review` ile kullanıcının masaüstündeki Gözden geçir ve kur penceresine açar; kullanıcı
+  o klasörden kurduktan sonra `reload` değişiklikleri uygulama kapanmadan yükler, `preview` kullanıcının gördüğünü
+  yazıyla verir. Önce yalnız Asistan yapabiliyordu; MCP ajanı paketi kullanıcıya "Paket yükle… ile açın" diye bırakıyordu.
+  Kur ve yetenekler yine kullanıcının; yeni yetenek isteyen yükleme yine incelemeye döner.
+- **Yalnız kullanıcının kurduğu klasör:** yeniden yükleme isteği klasörü söyler; masaüstü onu eklentinin kayıtlı
+  kaynağıyla (geliştirici klasörü) karşılaştırır: başka bir klasör "bu atölyeden kurulmadı" ile reddedilir. Asistan'ın
+  atölyesi masaüstünün kendi klasörü, bağlı ajanınki MCP sunucusunun; ikisi de aynı kuralla.
+- **Kim olduğu söylenir:** inceleme bandı "kurulduktan sonra bağlı ajan değişiklikleri bu klasörden … yükleyebilir"
+  der (Asistan'ınki "Asistan"); her yüklemenin bildirimi ve günlük satırı da yükleyeni yazar ("Atölyeden yeniden
+  yüklendi (bağlı ajan)").
+- **Sınanabilir yerde:** MCP'nin sınamaları kural gereği koşulmadığından bağlantıya yönlendirme başsızda (`link_*`),
+  MCP yalnız çağırır. MCP'nin kendi çizimi bu istekleri tanımaz: araçlar paketi nasıl açacağını ya da ajanı masaüstüne
+  bağlamayı söyler.
+- **Sınamalar:** başsız 1 (bağlantının üç isteği yolları ve kimliğiyle gider; sunucunun çizimi "Paket yükle…" der),
+  masaüstü (Asistan'ın atölye sınaması: bağlantıdan inceleme "bağlı ajan" bandıyla açılır, yeniden yükleme ve görünüş
+  çalışır, kurulmadığı klasör reddedilir).
