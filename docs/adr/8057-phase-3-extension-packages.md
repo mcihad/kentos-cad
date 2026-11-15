@@ -1959,6 +1959,16 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   (`python::tests::an_agents_job_is_said_in_the_log_when_it_writes`). Sınamada çıkan tuzak: `cad.processing.run`'ın
   girdisi `parameters`'tır; `ProcessingRun` bilinmeyen anahtarı reddetmediği için `values` yazan çağrı sessizce
   varsayılanlarla çalışıyordu (ilk sınama "Yapılar: seçilen katman artık yok" ile düştü).
+- **Yeni katman açan çalıştırma planlandığı gibi yürütülemiyordu (15 Kasım, gerçek pencerede bulundu).** Asistan
+  Vitrin'in TAKS aracını planladı (plan işi arka planda, "İşlem aracını çalıştır · plan — Çalışıyor"), onay kartı geldi,
+  Onayla → `plan_changed` "Yazılacak olan onaylanan plana eşit değil"; ajan yeniden planladı, yine farklı bir plan
+  kimliği. Sebep iş değil, eskiden beri: aracın açtığı katmanın türetimi (`LayerDerivation.at`) aracın çalıştığı anı
+  milisaniyesiyle yazar, katman damgası bütün düğümü (türetimi dahil) özetler ve plan kimliği sonucun katman damgasını
+  taşıyordu; plan ile yürütme iki ayrı anda hesaplandığı için kimlik hiç tutmadı. Yerleşik araçta da aynı:
+  `annotation.edgeLengths` eşzamanlı yoldan planlanıp yürütülünce `plan_changed`
+  (`agent_tools::a_processing_run_that_makes_a_layer_executes_as_planned`, düzeltmeden önce kırmızı). Düzeltme: plan
+  kimliği katman ağacını türetimin anı olmadan özetler (`Document::layers_plan_stamp`, docs/adr/0253 §5); yazılan
+  katman anını korur, sonucun damgası (`stamps.layers`) da değişmedi. Türetimi olmayan ağaçta kimlik eskisiyle aynı.
 - **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi;
   `ProcessingRun`'ın bilinmeyen anahtarı (`values`) sessizce yok sayması (reddetmek bütün çağıranların sözleşmesini
   değiştirir, ayrı karar).

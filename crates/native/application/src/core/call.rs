@@ -704,7 +704,8 @@ fn summarize(
             "changed": changed,
             "removed": removed,
             "blocks": blocks_result,
-            "layers": summary.stamps.layers,
+            // The layers as written, but when a new layer's tool ran: the plan and its execution run at two moments.
+            "layers": summary.stamps.layers.as_ref().map(|_| doc.layers_plan_stamp()),
             "settings": summary.stamps.settings,
             "styles": summary.stamps.styles,
             "sheets": summary.stamps.sheets,

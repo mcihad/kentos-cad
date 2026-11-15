@@ -1450,3 +1450,61 @@ fn an_extensions_python_tool_is_planned_and_run_as_jobs() {
         &json!({ "tool": "convert.toPoints" })
     ));
 }
+
+#[test]
+fn a_processing_run_that_makes_a_layer_executes_as_planned() {
+    // An agent's İşlemler run that makes a new layer (docs/adr/8057 §27): planned, then executed as planned. The new
+    // layer's derivation says when the tool ran (to the millisecond); plan and execution compute the run at two
+    // moments, and the plan's id took that moment in: every such execution was refused (`plan_changed`), whatever the
+    // tool (found running Vitrin's TAKS tool from Asistan in a real window).
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let input = area(&s, 0.0);
+    let plan = tool(
+        &mut s,
+        &mut guard,
+        "cad.run",
+        json!({ "command": "cad.polygon.create", "input": input }),
+    )
+    .unwrap();
+    let plan = plan["planId"].as_str().unwrap().to_owned();
+    tool(
+        &mut s,
+        &mut guard,
+        "cad.run",
+        json!({ "command": "cad.polygon.create", "input": input, "mode": "execute", "planId": plan }),
+    )
+    .unwrap();
+    let run =
+        json!({ "tool": "annotation.edgeLengths", "parameters": { "input": { "scope": "all" } } });
+    let planned = tool(
+        &mut s,
+        &mut guard,
+        "processing.run",
+        json!({ "input": run, "mode": "plan" }),
+    )
+    .unwrap();
+    let plan = planned["planId"]
+        .as_str()
+        .unwrap_or_else(|| panic!("{planned:#}"))
+        .to_owned();
+    // The execution computes the run at another moment.
+    std::thread::sleep(std::time::Duration::from_millis(15));
+    let done = tool(
+        &mut s,
+        &mut guard,
+        "processing.run",
+        json!({ "input": run, "mode": "execute", "planId": plan }),
+    )
+    .unwrap();
+    assert_eq!(done["status"], "completed", "{done:#}");
+    assert_eq!(
+        done["output"]["layers"],
+        json!(["islem-kenar-olculeri"]),
+        "the new layer: {done:#}"
+    );
+    assert_eq!(
+        done["output"]["outputs"]["count"], 4,
+        "four edges written: {done:#}"
+    );
+}

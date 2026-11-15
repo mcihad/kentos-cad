@@ -166,6 +166,23 @@ impl Document {
         layers_stamp_of(&self.layers)
     }
 
+    /// The layer tree's stamp for a plan's id (docs/adr/0253 §5, docs/adr/8057 §27): [`Document::layers_stamp`]
+    /// without the moment a layer's derivation says its tool ran (`at`, to the millisecond). A plan and its execution
+    /// compute the same write at two moments: with that moment in, an İşlemler run that makes a layer never executed
+    /// as planned (`plan_changed`), whatever the tool. A tree without derivations stamps as `layers_stamp`.
+    pub fn layers_plan_stamp(&self) -> String {
+        let mut nodes = serde_json::to_value(self.layers.nodes()).unwrap_or(Value::Null);
+        if let Some(list) = nodes.as_array_mut() {
+            for node in list {
+                if let Some(derivation) = node.get_mut("derivation").and_then(Value::as_object_mut)
+                {
+                    derivation.remove("at");
+                }
+            }
+        }
+        stamp_of(&json!({ "nodes": nodes, "active": self.layers.active() }))
+    }
+
     /// The drawing's name and the project's settings' stamp.
     pub fn settings_stamp(&self) -> String {
         settings_stamp_of(&self.name, &self.settings)

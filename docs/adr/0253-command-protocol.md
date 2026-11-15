@@ -157,7 +157,10 @@ Plan bir **`planId`** verir: SHA-256 (32 hane) üzerinden şunların kanonik JSO
 - komut, sürüm, normalleştirilmiş girdi;
 - kaynakların damgaları;
 - sonucun özü: eklenenler kimliksiz içerikleriyle, değişenlerin sonraki içerikleri, silinenlerin kimlikleri, proje parçalarının
-  sonraki damgaları.
+  sonraki damgaları. Katman ağacının damgası burada bir katman türetiminin **anı** (`derivation.at`, aracın çalıştığı
+  milisaniye) olmadan alınır (`Document::layers_plan_stamp`, 15 Kasım): plan ile yürütme aynı yazmayı iki ayrı anda
+  hesaplar; an özde kaldıkça yeni katman açan hiçbir İşlemler çalıştırması planlandığı gibi yürütülemiyordu
+  (`plan_changed`, docs/adr/8057 §27). Türetimi olmayan ağacın damgası `layers_stamp` ile aynıdır.
 
 `execute`'a `expected.plan` verilirse:
 
