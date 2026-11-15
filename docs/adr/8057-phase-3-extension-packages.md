@@ -1937,10 +1937,13 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   adımı da aracı geçici bir kopyada hesaplar (`command.rs` `run_on`): plan da bekletir. Rpc'nin işleri (`start`/`job`,
   `core/jobs.rs`) okuma kopyasında başka iş parçacığında hesaplayıp sonra yazar ama yalnız `execute` taşır (`Job::start`
   çağrıyı `execute`'a çevirir); `expected` denetimi kopyada, işin başladığı revizyonda yapılır, yazarken çizim
-  değiştiyse kalıcı kimliklerle ya da `document_changed`. Çözüm üç parça, ayrı iş: (1) Python aracının planı aracı
-  çalıştırmadan, girdilerden ve tanımdan (ne okunacak, hangi katmana yazılacak); (2) yürütmesi rpc işi olarak
-  (`start` → `job`); (3) Asistan'da çağrının cevabı iş bitince (`Later`, kısa aralıklı yoklama), bağlantıda MCP işi
-  kendi iş parçacığında yoklar.
+  değiştiyse kalıcı kimliklerle ya da `document_changed`. Yürütmede plan denetimi yazılan değişiklik kümesinden
+  hesaplanan kimliği beklenen planla karşılaştırır (`core/call.rs`): Python aracının planı aracı çalıştırmadan
+  verilemez, plan da hesaplamalıdır. Çözüm, ayrı iş: (1) işler `plan`'ı da taşır (kopyada hesaplanır, yazılacak bir şey
+  bırakmaz, cevabı plandır); (2) koruyucu uzun komutların (Python aracı) planını ve yürütmesini rpc işi olarak gönderir
+  (`start` → `job`); (3) Asistan'da çağrının cevabı iş bitince (`Later`, kısa aralıklı yoklama), bağlantıda MCP işi kendi
+  iş parçacığında yoklar; (4) işin yazdığı da Asistan'ın günlük satırı ve görünüm tazelemesiyle (bugün `start`'ta
+  "yazdı" sayılıyor, yazma `job`'da).
 - **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi.
 
 ## §28. Manifestin, katman şemasının ve araç tanımının JSON Schema'ları (`ADIM 21`, kod üretimi)
