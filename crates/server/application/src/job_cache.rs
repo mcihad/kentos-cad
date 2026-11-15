@@ -4,7 +4,8 @@
 //!
 //! - **What is cached:** a `project.export`'s `.kcad`, a `project.atlas`'s PDF and a `project.processing` job's
 //!   GeoPackage (`mode: sink`). A checkpoint, an import and a tool committing its result change the project; they are
-//!   never cached.
+//!   never cached. A `project.audit`'s report is cached by its own key ([`audit_key`]), made once the worker knows
+//!   which release the job runs.
 //! - **The key:** the SHA-256 of a canonical JSON (docs/adr/0253 §2) of the kind, the input without what does not
 //!   change the result (`expectedRevision`, which only refuses; `cpuSeconds` and `memoryMb`, a budget; `label`, a
 //!   name), the project's data revision and event cursor (every write moves the cursor, so the state is the one the
@@ -26,7 +27,8 @@ use std::time::UNIX_EPOCH;
 
 use kentos_contracts::canonical::canonical_json;
 use kentos_contracts::{
-    PROJECT_ATLAS_JOB, PROJECT_EXPORT_JOB, PROJECT_PROCESSING_JOB, ProcessingJobMode,
+    PROJECT_ATLAS_JOB, PROJECT_AUDIT_JOB, PROJECT_EXPORT_JOB, PROJECT_PROCESSING_JOB,
+    ProcessingJobMode,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -138,6 +140,25 @@ pub fn key(kind: &str, input: &Value, state: &State) -> Option<String> {
     })
 }
 
+/// The key of a `project.audit` job (docs/adr/8057 §42): the release it runs and its rule (`input`: the extension,
+/// the version, the content digest, the rule), the project's state, the reach and the software; never the user or the
+/// day: a rule reads the drawing's facts, which hold neither, and a new version published gives a new digest.
+pub fn audit_key(input: &Value, state: &State) -> String {
+    let text = canonical_json(&json!({
+        "format": FORMAT,
+        "kind": PROJECT_AUDIT_JOB,
+        "input": result_input(input),
+        "revision": state.revision.to_string(),
+        "cursor": state.cursor.to_string(),
+        "reach": state.reach,
+        "software": state.software,
+    }));
+    Sha256::digest(text.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+
 /// The day of `moment` (UTC) as the key holds it.
 pub fn day_of(moment: time::OffsetDateTime) -> String {
     let d = moment.to_offset(time::UtcOffset::UTC).date();
@@ -147,6 +168,60 @@ pub fn day_of(moment: time::OffsetDateTime) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// An audit's key holds its release and rule, the project's state, the reach and the software; the user and the
+    /// day do not change it, a new digest or another rule does.
+    #[test]
+    fn an_audit_s_key_holds_its_release_its_rule_and_the_state() {
+        let input = json!({ "extension": "tr.ornek.denetim", "version": "1.0.0", "rule": "adsiz",
+                            "digest": "sha256:ab", "expectedRevision": "4" });
+        let mine = state(4, 9, Some("r"), "u1");
+        let key = audit_key(&input, &mine);
+        let other_user = State {
+            user: "u2",
+            day: "2026-11-30",
+            ..mine.clone()
+        };
+        assert_eq!(
+            audit_key(&input, &other_user),
+            key,
+            "not the user's nor the day's"
+        );
+        let mut without = input.clone();
+        without.as_object_mut().unwrap().remove("expectedRevision");
+        assert_eq!(
+            audit_key(&without, &mine),
+            key,
+            "a refusal's revision changes nothing"
+        );
+        let mut newer = input.clone();
+        newer["digest"] = json!("sha256:cd");
+        assert_ne!(audit_key(&newer, &mine), key);
+        let mut rule = input.clone();
+        rule["rule"] = json!("baska");
+        assert_ne!(audit_key(&rule, &mine), key);
+        for changed in [
+            state(5, 9, Some("r"), "u1"),
+            state(4, 10, Some("r"), "u1"),
+            state(4, 9, None, "u1"),
+        ] {
+            assert_ne!(audit_key(&input, &changed), key);
+        }
+        assert_ne!(
+            audit_key(
+                &input,
+                &State {
+                    software: "0.2.0",
+                    ..mine
+                }
+            ),
+            key
+        );
+        assert!(
+            !cached(PROJECT_AUDIT_JOB, &input),
+            "the generic lookup leaves it to its own key"
+        );
+    }
 
     fn state<'a>(revision: i64, cursor: i64, reach: Option<&'a str>, user: &'a str) -> State<'a> {
         State {

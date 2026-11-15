@@ -4,7 +4,8 @@
 //! access asked again. The kinds are the server's own: `project.export`, the project as one `.kcad` file, and
 //! `project.checkpoint`, a checkpoint made as a job (docs/adr/0547), and `project.processing`, an İşlemler tool run on
 //! the server, against the project at a pinned revision (docs/adr/0559), `project.import`, a staged file taken into the
-//! project by the worker, and `project.atlas`, the atlas of a sheet as one PDF (docs/adr/0561).
+//! project by the worker, and `project.atlas`, the atlas of a sheet as one PDF (docs/adr/0561), and `project.audit`, an
+//! extension's audit rule from the catalog run on the project (docs/adr/8057 §42).
 
 use std::collections::BTreeMap;
 
@@ -20,7 +21,12 @@ pub const SERVER_JOB_KINDS: &[&str] = &[
     PROJECT_PROCESSING_JOB,
     PROJECT_IMPORT_JOB,
     PROJECT_ATLAS_JOB,
+    PROJECT_AUDIT_JOB,
 ];
+/// An extension's audit rule, a published release of the catalog, run on a database project (docs/adr/8057 §42): the
+/// input is a [`ProjectAuditInput`](crate::project_audit::ProjectAuditInput), the result a
+/// [`ProjectAuditResult`](crate::project_audit::ProjectAuditResult), no artifact; nothing is written to the project.
+pub const PROJECT_AUDIT_JOB: &str = "project.audit";
 /// A staged file taken into a database project by the worker (docs/adr/0561 §1): the input is a [`ProjectImportInput`],
 /// the result a [`ProjectImportResult`], committed in the job's finish like a processing job's.
 pub const PROJECT_IMPORT_JOB: &str = "project.import";

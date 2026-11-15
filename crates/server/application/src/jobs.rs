@@ -22,6 +22,8 @@
 //!   beats; the tool has a CPU and memory budget. A result to commit is committed in the job's finish transaction,
 //!   with the project required to be at the revision the tool read, so a lost lease or a conflict leaves nothing
 //!   written; a result to a file is staged like an export's.
+//! - **Auditing (docs/adr/8057 §42):** `project.audit` runs an extension's audit rule, a published release of the
+//!   catalog, through the same processor ([`audit`]); its report is the job's result, nothing is written.
 //! - **Seeing:** the project's users list and read its jobs; the asker or `project.edit` cancels one; `project.download`
 //!   downloads a succeeded export.
 
@@ -30,12 +32,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use kentos_contracts::{
-    CheckpointCreate, CommandEnvelope, ImportFormat, PROJECT_ATLAS_JOB, PROJECT_CHANGES,
-    PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_CREATE_VERSION, PROJECT_CHECKPOINT_JOB,
-    PROJECT_EXPORT_JOB, PROJECT_IMPORT_JOB, PROJECT_META_KEY, PROJECT_PROCESSING_JOB,
-    ProcessingJobInput, ProcessingJobMode, ProcessingJobResult, ProjectAtlasInput,
-    ProjectAtlasResult, ProjectExportInput, ProjectImportInput, ProjectImportResult,
-    ProjectPermission, ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT,
+    CheckpointCreate, CommandEnvelope, ImportFormat, PROJECT_ATLAS_JOB, PROJECT_AUDIT_JOB,
+    PROJECT_CHANGES, PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_CREATE_VERSION,
+    PROJECT_CHECKPOINT_JOB, PROJECT_EXPORT_JOB, PROJECT_IMPORT_JOB, PROJECT_META_KEY,
+    PROJECT_PROCESSING_JOB, ProcessingJobInput, ProcessingJobMode, ProcessingJobResult,
+    ProjectAtlasInput, ProjectAtlasResult, ProjectExportInput, ProjectImportInput,
+    ProjectImportResult, ProjectPermission, ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT,
     SERVER_JOB_CPU_DEFAULT_SECONDS, SERVER_JOB_INPUT_MAX_DEFAULT, SERVER_JOB_KINDS,
     SERVER_JOB_LIST_MAX, SERVER_JOB_MEMORY_DEFAULT_MB, SERVER_JOB_TENANT_ACTIVE_DEFAULT,
     SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX, SERVER_JOB_USER_ACTIVE_DEFAULT, ServerJob,
@@ -55,6 +57,8 @@ use crate::processing_job::{
     RunRequest, StagedFile, budget_from, check_atlas_input, check_import_input, check_input,
 };
 use crate::projects::{rfc3339, storage_of};
+
+mod audit;
 
 /// What the server lets jobs take (docs/adr/0547): the server sets them (`KENTOS_JOB_LIMIT`,
 /// `KENTOS_JOB_USER_LIMIT`, `KENTOS_JOB_ARTIFACT_MAX_MB`), the defaults hold for tests and for a server that sets none.
@@ -308,6 +312,7 @@ fn checked_input(kind: &str, input: &Value) -> AppResult<Value> {
             }
             Ok(input.clone())
         }
+        PROJECT_AUDIT_JOB => audit::checked(input),
         other => Err(AppError::invalid_at(
             "kind",
             format!(
@@ -399,6 +404,12 @@ pub async fn create(
     {
         return Err(AppError::invalid(format!(
             "“{}” projesi dosya olarak saklanıyor; içe aktarma ve atlas işleri sunucuda yalnız veritabanı projesinde çalışır. Projeyi bilgisayarınızda açıp işi orada yapın.",
+            access.name
+        )));
+    }
+    if asked.kind == PROJECT_AUDIT_JOB && storage_of(&storage) == ProjectStorage::File {
+        return Err(AppError::invalid(format!(
+            "“{}” projesi dosya olarak saklanıyor; eklenti denetimi sunucuda yalnız veritabanı projesinde çalışır. Projeyi bilgisayarınızda açıp denetimi orada çalıştırın.",
             access.name
         )));
     }
@@ -796,7 +807,9 @@ where
     let secs = i32::try_from(lease.as_secs().clamp(1, 3600)).unwrap_or(30);
     let kinds: Vec<String> = SERVER_JOB_KINDS
         .iter()
-        .filter(|k| processor.is_some() || **k != PROJECT_PROCESSING_JOB)
+        .filter(|k| {
+            processor.is_some() || (**k != PROJECT_PROCESSING_JOB && **k != PROJECT_AUDIT_JOB)
+        })
         .map(|k| (*k).to_owned())
         .collect();
     let row: Option<Claimed> = sqlx::query_as(
@@ -890,7 +903,7 @@ async fn run(
     match claim.kind.as_str() {
         PROJECT_EXPORT_JOB => export(db, blobs, claim, &access, stop, limits).await,
         PROJECT_CHECKPOINT_JOB => checkpoint(db, blobs, claim, &access, stop).await,
-        PROJECT_PROCESSING_JOB | PROJECT_IMPORT_JOB | PROJECT_ATLAS_JOB => {
+        PROJECT_PROCESSING_JOB | PROJECT_IMPORT_JOB | PROJECT_ATLAS_JOB | PROJECT_AUDIT_JOB => {
             external(db, blobs, claim, &access, stop, limits, processor, progress).await
         }
         other => Outcome::Failed {
@@ -1115,8 +1128,8 @@ async fn stage(
     Ok((key, i64::try_from(size).unwrap_or(i64::MAX)))
 }
 
-/// What a worker-run job (`project.processing`, `project.import`, `project.atlas`) asks of the host's processor, read
-/// from the claim's input.
+/// What a worker-run job (`project.processing`, `project.import`, `project.atlas`, `project.audit`) asks of the host's
+/// processor, read from the claim's input.
 struct External {
     request: RunRequest,
     expected_revision: Option<String>,
@@ -1128,6 +1141,10 @@ struct External {
     downloads: bool,
     /// An import's staged file, as its row says.
     staged: Option<crate::job_inputs::Staged>,
+    /// An audit's extension package, put beside the request.
+    package: Option<Vec<u8>>,
+    /// An audit's release and rule, decided before the project is read.
+    audit: Option<audit::Planned>,
 }
 
 /// The job's request, with the staged file an import names read as the user who asked.
@@ -1135,6 +1152,7 @@ async fn external_of(
     db: &kentos_postgres::Db,
     claim: &Claim,
     access: &ProjectAccess,
+    processor: &Arc<dyn Processor>,
 ) -> Result<External, Outcome> {
     let invalid = |message: String| Outcome::Failed {
         code: "invalid",
@@ -1152,6 +1170,8 @@ async fn external_of(
                 memory_mb: input.memory_mb,
                 request: RunRequest::Processing(input),
                 staged: None,
+                package: None,
+                audit: None,
             })
         }
         PROJECT_IMPORT_JOB => {
@@ -1194,6 +1214,8 @@ async fn external_of(
                     options: input.options.clone(),
                 }),
                 staged: Some(staged),
+                package: None,
+                audit: None,
             })
         }
         PROJECT_ATLAS_JOB => {
@@ -1207,8 +1229,13 @@ async fn external_of(
                 memory_mb: input.memory_mb,
                 request: RunRequest::Atlas(input),
                 staged: None,
+                package: None,
+                audit: None,
             })
         }
+        PROJECT_AUDIT_JOB => audit::external(db, claim, access, processor)
+            .await
+            .map_err(|outcome| *outcome),
         other => Err(invalid(format!("“{other}” bu sunucunun bilmediği bir iş."))),
     }
 }
@@ -1245,7 +1272,7 @@ async fn external(
         );
     };
     let software = software_for(&claim.kind, Some(processor));
-    let work = match external_of(db, claim, access).await {
+    let work = match external_of(db, claim, access, processor).await {
         Ok(w) => w,
         Err(outcome) => return outcome,
     };
@@ -1291,6 +1318,12 @@ async fn external(
             ),
         );
     }
+    // An audit answers with an earlier job's report, or says the server prepared no interpreter for its release,
+    // before a budget is weighed or anything runs (docs/adr/8057 §42).
+    let audit_key = match audit::before_run(db, claim, access, &work, &snap, &software).await {
+        Ok(key) => key,
+        Err(outcome) => return *outcome,
+    };
     // A copy cut by the forms' marks is not the project: what is computed on it must not be written back.
     if work.writes && snap.cut {
         return failed(
@@ -1361,6 +1394,7 @@ async fn external(
         snapshot: snap.bytes,
         request: work.request.clone(),
         file,
+        package: work.package.clone(),
         budget,
     };
     let hooks = ProcessHooks {
@@ -1556,12 +1590,23 @@ async fn external(
                 commit: None,
             }
         }
-        // No job kind asks for an audit yet: the job runner answers it (docs/adr/8057 §42), the server's kind is the
-        // next slice.
-        RunRequest::Audit(_) => failed(
-            "invalid",
-            "Eklenti denetimi henüz bir sunucu işi değil.".into(),
-        ),
+        // The job runner's report, of the release and rule asked, kept as the job's result (docs/adr/8057 §42).
+        RunRequest::Audit(run) => {
+            let Some(planned) = &work.audit else {
+                return failed("failed", "Denetimin kaynağı bilinmiyor.".into());
+            };
+            progress.set(0.95, "Denetimin raporu saklanıyor");
+            match audit::result(&processed, run, planned, snap.revision) {
+                Ok(result) => Outcome::Done {
+                    result,
+                    artifact: None,
+                    cache: audit_key.map(|key| Cached { key, from: None }),
+                    reach: snap.reach,
+                    commit: None,
+                },
+                Err(message) => failed("failed", message),
+            }
+        }
     }
 }
 

@@ -1018,9 +1018,13 @@ denetlenir, `network` isteyen reddedilir) masaüstünün olgularıyla ve `kentos
 hazırladığı Python'da çalıştırır; `answer.json`'a bulgular ve köken (kural ve paket özeti, çizimin içerik damgası,
 olguların özeti); aynı çizim ve kuralla masaüstü ve iş baytı baytına aynı rapor. Masaüstünün Eklenti denetimi ve
 denemesi aynı işlevlerde: olgular, cevabın okunması ve özet ortak, `audit.report` içerik damgası ve olgu özetiyle
-(bulutla ortak köken). Kalan: sunucunun `project.audit` iş türü (katalogdan paket, sürüm başına hazırlanan ortam),
-kutunun işletim sistemi düzeyinde ağsız ve dosyasız kapatılması ve bütçenin Python'u da ölçmesi, kurp/görüş
-hesapları, ulusal/belediye kurallarının Python betikleri.
+(bulutla ortak köken). **Sunucunun denetim işi** (ADR 8057 §50, 15 Kasım): `project.audit` var olan iş yolundan istenir
+(eklenti, kural, isteğe bağlı sürüm); sürüm kurumun kataloğundan, yoksa genel katalogdan gelir (en yeni yayımlanmış ya
+da istenen çalışabilir sürüm, baytları onaylı içerik), yorumlayıcı sunucunun `eklenti@sürüm` eşlemesinden; rapor işin
+sonucudur, projeye yazılmaz; aynı sürüm, kural, proje durumu, görünürlük ve yazılım önbellekten döner (`fresh` yeniden
+çalıştırır). Kalan: kalıcı katalog ve işçiye bağlanması (üretimde iş bugün `tool_unavailable` ile biter), sürüm başına
+ortamı kuran adım, kutunun işletim sistemi düzeyinde ağsız ve dosyasız kapatılması ve bütçenin Python'u da ölçmesi,
+kurp/görüş hesapları, ulusal/belediye kurallarının Python betikleri.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

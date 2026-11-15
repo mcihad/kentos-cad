@@ -6,6 +6,9 @@
 
 #![allow(dead_code)]
 
+// `project.audit`: an extension's audit rule run in the child (docs/adr/8057 §42).
+#[path = "job_run/audit.rs"]
+mod audit;
 #[path = "../src/processing_job.rs"]
 mod processing_job;
 mod support;
@@ -52,6 +55,7 @@ fn task(input: ProcessingJobInput, budget: ProcessingBudget) -> ProcessingTask {
         snapshot: parcels(),
         request: RunRequest::Processing(input),
         file: None,
+        package: None,
         budget,
     }
 }
@@ -396,6 +400,7 @@ fn import_task(
             options,
         }),
         file: Some(staged(name, bytes)),
+        package: None,
         budget: budget(),
     }
 }
@@ -406,6 +411,7 @@ fn atlas_task(input: ProjectAtlasInput) -> ProcessingTask {
         snapshot: ATLAS.to_vec(),
         request: RunRequest::Atlas(input),
         file: None,
+        package: None,
         budget: budget(),
     }
 }

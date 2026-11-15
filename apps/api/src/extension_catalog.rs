@@ -24,6 +24,7 @@ use kentos_extensions::Limits;
 use kentos_extensions::release::{Actor, Refusal, Release, ReleaseFacts, Role, Timestamp};
 use kentos_extensions::version::Version;
 
+pub mod audits;
 #[cfg(test)]
 pub mod memory;
 mod model;

@@ -293,6 +293,8 @@ pub mod settings;
 pub mod processing_job;
 #[path = "gis/audit_job.rs"]
 pub mod audit_job;
+#[path = "gis/project_audit.rs"]
+pub mod project_audit;
 #[path = "core/server_jobs.rs"]
 pub mod server_jobs;
 #[path = "core/shape_resource.rs"]

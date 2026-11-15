@@ -8,14 +8,17 @@
 //! prints, and watches it: every sample it reads the child's CPU time and resident memory (`/proc` where there is
 //! one, `ps` elsewhere); past the task's budget it kills the child (`cpu_limit`, `memory_limit`); when the worker says
 //! stop it kills the child; when the child ends it reads what it wrote. The child has no database and no network of
-//! its own; it reads one folder and writes to it.
+//! its own; it reads one folder and writes to it. An audit's extension package goes into the folder beside the request
+//! (`extension.kek`); where its rules come from is the processor's audit source (docs/adr/8057 §42).
 
 use std::io::{BufRead, BufReader, Read};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
+use kentos_application::audit_catalog::AuditSource;
 use kentos_application::processing_job::RunRequest;
 use kentos_application::processing_job::{
     ProcessFailure, ProcessHooks, Processed, ProcessingBudget, ProcessingTask, Processor,
@@ -50,6 +53,7 @@ const ANSWER: &str = "answer.json";
 const FAILURE: &str = "failure.json";
 const SINK: &str = "sink.gpkg";
 const ATLAS: &str = "atlas.pdf";
+const PACKAGE: &str = "extension.kek";
 
 // ── What a process takes ────────────────────────────────────────────────────
 
@@ -166,6 +170,9 @@ fn usage_of(peak: &Taken, last: &Taken, own: &ProcessingUsage) -> ProcessingUsag
 pub struct ChildProcessor {
     exe: PathBuf,
     work: PathBuf,
+    /// Where `project.audit` jobs take their rules from (docs/adr/8057 §42): the catalog and its prepared
+    /// environments; none until the server keeps a catalog.
+    audits: Option<Arc<dyn AuditSource>>,
 }
 
 /// A work folder, removed when it goes out of scope.
@@ -198,7 +205,19 @@ impl ChildProcessor {
 
     /// A given program and work root (tests).
     pub fn with(exe: PathBuf, work: PathBuf) -> Self {
-        ChildProcessor { exe, work }
+        ChildProcessor {
+            exe,
+            work,
+            audits: None,
+        }
+    }
+
+    /// This processor, its audits' rules taken from `audits` (docs/adr/8057 §42). Unused by the server until it keeps
+    /// a catalog (docs/adr/8059 §10).
+    #[allow(dead_code)]
+    pub fn with_audits(mut self, audits: Arc<dyn AuditSource>) -> Self {
+        self.audits = Some(audits);
+        self
     }
 
     fn folder(&self, job: Uuid) -> Result<Folder, ProcessFailure> {
@@ -271,6 +290,10 @@ impl Processor for ChildProcessor {
         })
     }
 
+    fn audits(&self) -> Option<Arc<dyn AuditSource>> {
+        self.audits.clone()
+    }
+
     fn process(
         &self,
         task: &ProcessingTask,
@@ -287,6 +310,10 @@ impl Processor for ChildProcessor {
             REQUEST,
             &serde_json::to_vec(&task.request).unwrap_or_default(),
         )?;
+        // An audit's extension package, beside the request: the job runner checks it against the digest asked.
+        if let Some(package) = &task.package {
+            wrote(PACKAGE, package)?;
+        }
         // An import's file is read where the object store keeps it: linked into the folder, copied where a link cannot
         // be made (a staged file is gigabytes at most, never read into the server's memory).
         if let (RunRequest::Import(run), Some(file)) = (&task.request, &task.file) {

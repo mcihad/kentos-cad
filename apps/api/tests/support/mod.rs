@@ -23,20 +23,19 @@ pub fn shell_program(body: &str) -> PathBuf {
     path
 }
 
-/// The child program `kentos-jobrun`: `KENTOS_JOBRUN`, else beside the test's own binaries (`target/<profile>`), built
-/// first, once for the test process (`cargo build -p kentos-jobrun`: another package's program is not built by this
-/// one's tests, and one built before the sources changed would answer for the old ones).
+/// The child program `kentos-jobrun`: `KENTOS_JOBRUN`, else in `target/<profile>`, built first, once for the test
+/// process (`cargo build -p kentos-jobrun`: another package's program is not built by this one's tests, and one built
+/// before the sources changed would answer for the old ones). `target/<profile>` is the nearest folder above the
+/// test's own program that holds it: the test is in `deps/` below it in cargo's former layout, in
+/// `build/<package>/<hash>/out/` in the build directory's new one (cargo 1.100).
 pub fn child_exe() -> PathBuf {
     if let Some(path) = std::env::var_os("KENTOS_JOBRUN") {
         return path.into();
     }
     let me = std::env::current_exe().expect("the test's own program");
-    let profile = me
-        .parent()
-        .and_then(|deps| deps.parent())
-        .expect("target/<profile>/deps/<test>")
-        .to_path_buf();
-    let exe = profile.join("kentos-jobrun");
+    let release = me
+        .ancestors()
+        .any(|dir| dir.file_name().is_some_and(|n| n == "release"));
     static BUILT: std::sync::Once = std::sync::Once::new();
     BUILT.call_once(|| {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -45,12 +44,16 @@ pub fn child_exe() -> PathBuf {
             .args(["build", "-q", "-p", "kentos-jobrun"])
             .current_dir(root)
             .stdin(Stdio::null());
-        if profile.file_name().is_some_and(|n| n == "release") {
+        if release {
             build.arg("--release");
         }
         let status = build.status().expect("cargo builds kentos-jobrun");
         assert!(status.success(), "cargo build -p kentos-jobrun failed");
     });
-    assert!(exe.is_file(), "{} yok", exe.display());
-    exe
+    // A folder named so is the package's build folder, not the program: only a file will do.
+    me.ancestors()
+        .skip(1)
+        .map(|dir| dir.join("kentos-jobrun"))
+        .find(|exe| exe.is_file())
+        .unwrap_or_else(|| panic!("{} üstündeki klasörlerde kentos-jobrun yok", me.display()))
 }

@@ -10,6 +10,8 @@ pub mod checkpoints;
 pub mod job_inputs;
 pub mod jobs;
 #[cfg(test)]
+mod jobs_audit_tests;
+#[cfg(test)]
 mod jobs_tests;
 #[cfg(test)]
 mod checkpoints_tests;

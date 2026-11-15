@@ -2757,3 +2757,93 @@ Python `ProcessingContext.update`, `ext_host.outputs_of` (`update`); Vitrin 1.0.
 - **Sınamalar:** İşlemler 1 (yazan girdide öznitelik yazılır, `None` kaldırır, sayı metin olur, tek geri alma
   adımı; yazmayan girdide aynı değişiklik reddedilir, hiçbir şey yazılmaz) ve yanıtın denetimine iki durum (verilmeyen
   nesne, liste olmayan `update`).
+
+## §50. Sunucunun denetim işi: `project.audit` (`ADIM 20`, bulut işinin ikinci dilimi)
+
+**15 Kasım.** Kod: paylaşılan `crates/shared/contracts/src/gis/project_audit.rs` (`ProjectAuditInput`,
+`check_project_audit_input`, `ProjectAuditResult`) ve `core/server_jobs.rs` (`PROJECT_AUDIT_JOB`, `SERVER_JOB_KINDS`);
+sunucu uygulaması `crates/server/application/src/audit_catalog.rs` (`AuditSource`, `AuditPackage`, `AuditPythons`),
+`jobs/audit.rs` (`checked`, `external`, `before_run`, `result`), `job_cache.rs` (`audit_key`), `processing_job.rs`
+(`ProcessingTask.package`, `Processor::audits`) ve `jobs.rs` (yeni türün yolları); `kentosd`
+`apps/api/src/extension_catalog/audits.rs` (`Catalog::runnable`, `CatalogAudits`) ve `processing_job.rs` (paket
+klasöre, `with_audits`); göç `0041_server_job_audit.sql` (türün kısıtı); sınamaların ortak payı
+`apps/api/tests/support/mod.rs` (`child_exe`, aşağıda).
+
+- **Karar: denetim yeni bir iş türüdür, yeni bir yol değil.** İstek var olan iş yolundan gelir (`POST
+  /v1/tenants/{t}/projects/{p}/jobs`, `{"kind": "project.audit", "input": …, "requestId": …}`). Kuyruk, kurum ve
+  kullanıcı sınırları, iptal, süre, yeniden deneme, ilerleme, bitişte erişimin ve görünürlüğün yeniden sorulması ve
+  önbellek o işlerinkidir; yeni HTTP yolu yok. İşi yalnız işlemcisi olan işçi alır (araç işleri gibi).
+- **Girdi (`ProjectAuditInput`):** `extension`, `rule`, isteğe bağlı `version` (yoksa en yeni yayımlanmış sürüm) ve
+  `expectedRevision` (proje ilerlemişse `revision_conflict`). Bilinmeyen alan reddedilir: yorumlayıcı isteğin değil
+  sunucunun ayarıdır, istek bir yol taşıyamaz. Dosya olarak saklanan projede iş açılmaz: sunucuda çizim yoktur,
+  kullanıcıya denetimi masaüstünde çalıştırması söylenir.
+- **Sürüm katalogdan (`AuditSource` → `CatalogAudits`):** önce kurumun kataloğu (`tenant:{kısa ad}`), sonra genel
+  katalog. Verilen sürüm çalışabilir olmalı (`allows_run`: yayımlanmış ya da yayımlandıktan sonra emekliye ayrılmış);
+  sürüm verilmezse en yeni yayımlanmış sürüm alınır, askıya alınan atlanır ve ondan önceki yayımlanmış sürüm çalışır.
+  Taslak, incelemedeki ve askıdaki sürüm çalışmaz; sebebi işin hatasıdır (`invalid`). Paketin baytları depodan okunur
+  ve kurulumdaki gibi onaylı içerikle karşılaştırılır: tutmazsa iş çalışmaz.
+- **Karar: eklentiyi tanıyan kurum kataloğu tek başına karar verir.** Katalog bir eklentiyi, onun herkesin görebildiği
+  bir sürümü varsa tanır (yayımlanmış, askıya alınmış, geri çekilmiş ya da yayımlandıktan sonra emekliye ayrılmış;
+  rolü ve yayımcısı olmayan hesabın gördüğü, `visible_to`). Kurumun kataloğu eklentiyi tanıyorsa ama çalışabilir sürümü
+  yoksa iş düşer, genel kataloğa geçilmez ("… genel katalogdaki aynı kimliğe bakılmadı"): ad alanı doğrulanana dek
+  (ADR 8059 D13) iki katalogdaki aynı kimlik iki ayrı yayımcının olabilir ve kurumun askıya aldığı sürümün yerine
+  sessizce başka bir yayımcının paketi çalışmamalı. Kurum kataloğundaki taslak hiçbir şeyi sahiplenmez ve varlığı da
+  söylenmez: yayımlanana dek genel katalogdaki sürüm çalışır.
+- **Yorumlayıcı (`AuditPythons`):** sunucu ayarı, `{"eklenti@sürüm": "/mutlak/yol/bin/python"}` biçiminde bir JSON
+  nesnesi; anahtar `eklenti@sürüm` değilse ya da yol mutlak değilse ayar reddedilir. Sürümün hazırlanmış ortamı yoksa
+  iş, kural başlamadan `tool_unavailable` ile biter ("… için hazırlanmış bir Python ortamı yok"); kural başka bir
+  Python'la çalıştırılmaz.
+- **Çalışma:** işçi paketi işin klasörüne isteğin yanına koyar (`extension.kek`) ve `RunRequest::Audit` yazar; gerisi
+  §42'nin kutusudur (içerik özeti, kimlik ve sürüm denetimi, `network` isteyenin reddi, masaüstünün olguları ve
+  protokolü). Bütçe araç işlerininki (sunucunun varsayılan işlemci ve bellek sınırları); projeye bir şey yazılmaz,
+  bu yüzden görünürlükle kesilmiş kopya da denetlenebilir (kural kullanıcının görebildiğini okur).
+- **Sonuç (`ProjectAuditResult`):** sürümün geldiği katalog, okunan veri revizyonu, özet ("Adsız nesneler: 1 hata, 9
+  bilgi"), kutunun raporu (`AuditReport`; köken §42'deki gibi: kural ve paket özeti, çizimin içerik damgası, olguların
+  özeti, KentOS sürümü) ve kutunun harcadığı. Eser (artifact) yok. Kutunun raporu istenen sürümün (paket özeti) ya da
+  kuralın değilse saklanmaz, iş düşer.
+- **Önbellek (tasarımdan ayrılış):** §42 anahtarı "kural özeti, çizim damgası ve KentOS sürümü" diye tasarlamıştı;
+  çizim damgası ancak kutu çizimi açınca bilinir, anahtar ise kutu başlamadan gerekir. Anahtar (`audit_key`): eklenti,
+  sürüm, paket özeti ve kural; projenin veri revizyonu ve olay imleci (her yazım imleci ilerletir: aynı durum aynı
+  anahtar), görünürlük damgası ve sunucunun yazılım sürümü. Kullanıcı ve gün anahtarda değil: kural çizimin olgularını
+  okur, ikisini de görmez; yeni sürüm yeni paket özeti demektir. Aynı anahtarla daha önce başarılmış bir iş varsa yeni
+  iş kutuyu çalıştırmadan onun raporunu alır (`cachedFrom`); `fresh` istenen iş yeniden çalışır. Çizim damgası
+  raporda köken olarak kalır. Önbelleğe bakış ve yorumlayıcı denetimi proje okunduktan hemen sonra, bellek tahmininden
+  önce yapılır: önbellekten dönecek iş bütçeye takılmaz.
+- **Kabul (ölçüldü):** `kentosd`'nin gerçek işlemcisi ve `kentos-jobrun` ile, paketlenmiş bir eklentinin kuralı (ada
+  numarası olmayan nesneler) sunucunun parsel projesinde gerçek Python'da çalıştı; rapor istenen sürümün ve kuralın,
+  çizim damgası 16 hane, iki koşu baytı baytına aynı (hata ayıklama derlemesi: iki koşu 4,1 sn; her biri çocuk süreç,
+  çizimin açılması, olgular, yalıtık Python'un açılışı ve kural). Başka içerikte paket, paketsiz istek ve yorumlayıcısız
+  sürüm hiçbir kural başlamadan reddedildi. Katalog: iki sürüm yayımlanınca en yenisi, istenince eskisi; en yenisi
+  askıya alınınca öncekisi; askıdaki ve taslak sürüm istenince ret; paketin baytları onaylı içerik.
+- **Eksik kalanlar:**
+  - **Sunucu kataloğu henüz kurmuyor.** `kentosd` üretimde kataloğu kurmuyor (`extension_catalog: None`; ADIM 22A'nın
+    deposu şimdilik bellekte) ve işçinin işlemcisine denetim kaynağı verilmiyor (`ChildProcessor::with_audits` hazır,
+    bağlanmadı). Bugün üretimde her `project.audit` işi "Bu sunucuda eklenti kataloğu açık değil" diye
+    `tool_unavailable` ile biter. Kalıcı katalog deposu gelince `main.rs` işçiye `CatalogAudits::new(katalog,
+    yorumlayıcılar)` verir; yorumlayıcı eşlemesinin ortam değişkeni o adımda okunur.
+  - **Hazırlanmış ortamlar:** sürüm yayımlanınca kilit dosyasından bir kez, ağlı bir adımda kurulup eşlemeye
+    eklenmeli; bugün eşleme elle yazılan bir ayar ve ortamı kuran adım yok.
+  - **İşletim sistemi yalıtımı** (ağ ad alanı, salt okunur kök, sistem çağrısı süzgeci) ve **Python'u da ölçen bütçe**
+    (süreç grubu): §42'deki eksikler aynen; sunucu bütçesi yalnız `kentos-jobrun`'ı ölçüyor, Python onun çocuğu.
+  - **Önbellek kuralın belirlenimciliğine dayanır:** saati ya da rastgeleliği okuyan bir kural aynı anahtarla eski
+    raporu alır. Kutu bunu engellemiyor; kural yazarının sözleşmesi olarak SDK belgesine yazılmalı.
+  - **Önbellekten dönen iş de projeyi okur:** revizyon, imleç ve görünürlük damgası anlık görüntüyle birlikte
+    okunuyor; büyük projede bunlar anlık görüntüden önce okunarak önbellekten dönüş ucuzlatılabilir.
+  - **Yorumlayıcının yolu anahtarda değil:** ortam sürümün kilidinden kurulur, sürümün parçası sayıldı. Aynı sürümün
+    ortamı başka bir Python'la yeniden kurulursa eski raporlar önbellekten dönmeye devam eder; ortamı kuran adım
+    gelince ortamın özeti anahtara girmeli.
+  - Göç numarası `0041`: koşut bir işte aynı numara alındıysa yeniden numaralanmalı (`sqlx::migrate!` sırayla
+    uygular).
+- **Sınamalar:** paylaşılan 1 (girdi alan alan, yorumlayıcı girdide reddedilir); sunucu uygulaması 4 (iş açılırken
+  girdi denetimi, sonucun rapordan kurulması ve başka sürümün raporunun reddi, önbellek anahtarının içeriği, yorumlayıcı
+  eşlemesi); `kentosd` katalog 3 (en yeni yayımlanmış ya da istenen sürüm, askı ve taslak; kurumun kataloğu önce, sonra
+  genel katalog ve hazırlanan yorumlayıcı; eklentiyi tanıyan kurum kataloğu tek başına karar verir, taslak
+  sahiplenmez); iş çalıştırıcısı üzerinden uçtan uca 2 (kural başlamadan reddedilenler;
+  gerçek Python'da rapor iki kez aynı); veritabanlı HTTP 1 (iş raporu saklar, ikinci istek kutuyu çalıştırmadan
+  önbellekten, yorumlayıcısız sürüm `tool_unavailable`; veritabanı yoksa atlanır). Python yoksa (`KENTOS_TEST_PYTHON`
+  ya da `.run/py`) uçtan uca sınamalardan biri atlandığını söyler.
+- **Sınamaların ortak payı düzeltildi:** cargo 1.100'ün yeni derleme klasörü düzeninde sınama programı
+  `target/<profil>/deps/` yerine `target/<profil>/build/<paket>/<özet>/out/` altında; `child_exe` iki üst klasörü
+  `target/<profil>` sanıyordu ve `KENTOS_JOBRUN` verilmeden bütün `job_run` sınamaları "kentos-jobrun yok" ile
+  düşüyordu. Artık sınama programının üstündeki klasörlerde `kentos-jobrun` dosyasını arıyor (aynı adlı paket derleme
+  klasörü dosya değil, atlanır).

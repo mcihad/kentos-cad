@@ -21,6 +21,7 @@ use crate::extension_catalog::memory::{MemoryStore, Where};
 use crate::extension_catalog::{Accounts, Catalog, CatalogId, ReleaseKey};
 
 mod access;
+mod audits;
 mod flow;
 mod refusals;
 mod revocations;
