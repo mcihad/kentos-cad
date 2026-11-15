@@ -2130,6 +2130,11 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   değiştirmez (False).
 - **Vitrin 1.0.26:** "Yapıları numarala" şeritten çalışınca bitince Yapı ara panelini açar: Yapı no önekle dolar,
   numaralananlar tabloda (Ara'nın satır biçimiyle: tıklanan satır yapıyı gösterir), altında özet (`32-panel-ac`).
+  Gerçek pencerede: B- ve 10 ile Numarala → Eklenti sekmesi Asistan'ın yanında açıldı, Yapı no "B-", altında "5 yapı
+  numaralandı (B-10 … B-14).", tabloda B-10 400 … B-14 200; satıra tıklamak yapıya gitti ("1 seçili"). **Bulgu
+  (düzeltildi):** `rows` sütunları anahtarlardan çıkarıyordu ve JSON nesnesi sırayı taşımadığı için tablo "alan (m²) |
+  no" diziliyordu; SDK artık sütunları satırların verdiği sırayla gönderiyor (raporun yaptığı gibi). Senaryo notu:
+  sürecin ilk açılışı (SDK yenilenince) 3 sn'yi geçti, pencere gelmeden yazılanlar komut satırına gitti; bekleme 5 sn.
 - **Vitrin 1.0.24–25:** "Değer say" sayınca bulduğu değerleri yeni Seç kutusuna koyar (seçenekler veriden gelir:
   panelin JSON'u onları bilemez), sıklıklarıyla ("101 (3)"), en sık değeri formun altındaki satıra yazar; Seç'te bir
   değer o değerdeki nesneleri çizimde seçer (`deger-sec`, `onChange`). Gerçek pencerede (`31-oturum`): Parsel sınırı ve

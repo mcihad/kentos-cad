@@ -291,9 +291,15 @@ class PanelSession:
     def rows(self, id: str, rows: Iterable[dict[str, Any]], columns: Sequence[str] | None = None) -> bool:
         """Puts ``rows`` (each a dict of column → value) in table, tree, cards, figures or chart ``id`` now, as a
         command's report would at its end; ``columns`` in their order, else in the order the rows first give them."""
-        params: dict[str, Any] = {"id": str(id), "rows": [_json_value(dict(r)) for r in rows]}
-        if columns is not None:
-            params["columns"] = [str(c) for c in columns]
+        given = [dict(r) for r in rows]
+        # The columns in the order the rows first give them: a JSON object's keys have no order KentOS keeps ("no"
+        # came after "alan (m²)", real window, 15 November 2026).
+        order = list(columns) if columns is not None else list(dict.fromkeys(k for r in given for k in r))
+        params: dict[str, Any] = {
+            "id": str(id),
+            "rows": [_json_value(r) for r in given],
+            "columns": [str(c) for c in order],
+        }
         return self._ask("panel.rows", params)
 
     def say(self, text: str, kind: str = "info") -> bool:

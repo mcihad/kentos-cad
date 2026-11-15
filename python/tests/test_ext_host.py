@@ -475,7 +475,7 @@ class ExtHostTest(unittest.TestCase):
         self.assertEqual(calls[4][1], {"text": "Yüklendi.", "kind": "success", "panel": "arama"})
         # Another of its panels, opened by the code: its requests name it.
         self.assertEqual(calls[6][1], {"panel": "sonuc-paneli"})
-        self.assertEqual(calls[7][1], {"id": "tablo", "rows": [{"no": 1}], "panel": "sonuc-paneli"})
+        self.assertEqual(calls[7][1], {"id": "tablo", "rows": [{"no": 1}], "columns": ["no"], "panel": "sonuc-paneli"})
         done, _ = self.kentos.invoke("fill", "deneme.logic:fill")
         self.assertEqual(done["result"]["message"], "Panel yok.")
 
