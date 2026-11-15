@@ -45,6 +45,39 @@ impl Host for AppHost<'_> {
             "where": "Eklentiler › Gözden geçir ve kur",
         }))
     }
+
+    /// The review of a workshop's package, installed (if the user says Kur) from its folder, so that the agent's
+    /// later changes load without the app closing (extensions/workshop.rs).
+    fn review_workshop(
+        &mut self,
+        package: &std::path::Path,
+        folder: &std::path::Path,
+    ) -> Result<Value, HeadlessError> {
+        self.0.extensions.note = None;
+        self.0.review_workshop_package(package, folder);
+        if let Some((true, words)) = &self.0.extensions.note {
+            return Err(HeadlessError::new("invalid_input", words.clone()));
+        }
+        let review = self.0.extensions.review.as_ref().map(|r| &r.review);
+        Ok(json!({
+            "opened": review.is_some(),
+            "installable": review.is_some_and(|r| r.installable),
+            "where": "Eklentiler › Gözden geçir ve kur",
+            "reloads": "Kurulduktan sonra extension.workshop.reload değişiklikleri uygulama kapanmadan yükler.",
+        }))
+    }
+
+    fn reload_extension(&mut self, id: &str) -> Result<Value, HeadlessError> {
+        self.0
+            .ext_workshop_reload(id)
+            .map_err(|why| HeadlessError::new("invalid_input", why))
+    }
+
+    fn preview_extension(&mut self, id: &str) -> Result<Value, HeadlessError> {
+        self.0
+            .ext_preview(id)
+            .map_err(|why| HeadlessError::new("invalid_input", why))
+    }
 }
 
 /// A refusal's code as a host's stable one; another is the desktop's own (`desktop_refused`).

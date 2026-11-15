@@ -16,6 +16,7 @@ mod bisect;
 mod browse;
 pub(crate) mod environment;
 mod panels;
+mod workshop;
 mod problems;
 mod ribbon;
 pub(crate) mod runner;

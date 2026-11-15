@@ -244,7 +244,11 @@ pub fn sdk_pack() -> Value {
             "Kütüphane gerekiyorsa klasörde `uv add <paket>`; atölyede uv çalışmaz: Python'un kendi kitaplığıyla ve \
              kentos ile yazın, kütüphane gerekiyorsa kullanıcıya söyleyin.",
             "Paket: atölyede extension.workshop.review paketleyip kullanıcının Gözden geçir ve kur penceresine açar; \
-             klasörde `kentos kek pack <klasör>`. Kurulum, yetki ve yayın kullanıcının incelemesiyle olur."
+             klasörde `kentos kek pack <klasör>`. Kurulum, yetki ve yayın kullanıcının incelemesiyle olur.",
+            "Kullanıcı atölyeden kurduktan sonra: değişiklikleri extension.workshop.reload uygulama kapanmadan yükler \
+             (aynı sürüm, kullanıcının verdiği yeteneklerle; yeni yetenek isteyen yeniden review'a gider); \
+             extension.workshop.preview kullanıcının gördüğünü (sekme, paneller, araçlar, kapalı düğmenin nedeni) \
+             yazıyla verir. Masaüstünün Asistan'ında; MCP bağlantısında yok."
         ],
         "example": example,
         "icons": {

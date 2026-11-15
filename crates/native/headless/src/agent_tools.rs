@@ -52,6 +52,34 @@ pub trait Host {
             ),
         ))
     }
+
+    /// Opens a workshop's package for the user's review: installed, when the user says Kur, from its `folder`, so that
+    /// [`Host::reload_extension`] can load its changes later. A host without that reviews it as a file.
+    fn review_workshop(
+        &mut self,
+        package: &std::path::Path,
+        _folder: &std::path::Path,
+    ) -> Result<Value, HeadlessError> {
+        self.review_package(package)
+    }
+
+    /// Loads the changes of an extension the user installed from the workshop without closing the app (plan ADIM 21's
+    /// `hot_reload`): its folder packed again and installed over itself with the capabilities the user granted.
+    fn reload_extension(&mut self, _id: &str) -> Result<Value, HeadlessError> {
+        Err(HeadlessError::new(
+            "not_offered",
+            "Bu bağlantı eklentiyi canlı yükleyemez: KentOS masaüstünün Asistan'ında çalışın.",
+        ))
+    }
+
+    /// What the user sees of an installed extension (plan ADIM 21's `preview_render`): its ribbon tab, panels, tools
+    /// and menus as the app lays them out, in words.
+    fn preview_extension(&mut self, _id: &str) -> Result<Value, HeadlessError> {
+        Err(HeadlessError::new(
+            "not_offered",
+            "Bu bağlantı eklentinin görünüşünü veremez: KentOS masaüstünün Asistan'ında çalışın.",
+        ))
+    }
 }
 
 /// Commands that change or take away what is there (the MCP tools' `destructiveHint`); the rest add. Deleting, editing,
@@ -546,6 +574,37 @@ pub fn tools() -> Vec<Tool> {
         destructive: false,
     });
     list.push(Tool {
+        name: "extension.workshop.reload",
+        title: "Canlı yükle",
+        description: "Kullanıcının atölyeden kurduğu eklentinin değişikliklerini uygulama kapanmadan yükler: klasörü \
+                      doğrular, paketler ve aynı sürümün üstüne kurar; kullanıcının verdiği yeteneklerle (yeni yetenek \
+                      isteyen eklenti yeniden extension.workshop.review ile kullanıcıya açılır). Kurulmamış ya da \
+                      atölyeden kurulmamış eklentiyi yüklemez; kullanıcıya her yüklemede bildirilir. Sonra \
+                      extension.workshop.preview ile kullanıcının gördüğünü okuyun."
+            .into(),
+        input: object(
+            json!({ "id": { "type": "string", "description": "Eklentinin kimliği" } }),
+            &["id"],
+        ),
+        read_only: false,
+        destructive: false,
+    });
+    list.push(Tool {
+        name: "extension.workshop.preview",
+        title: "Görünüşünü oku",
+        description: "Kurulu eklentinin kullanıcının gördüğü hâli, yazıyla: şerit sekmesi (gruplar, düğmeler, kapalıysa \
+                      nedeni), panelleri (başlık, yer, bileşenleri ve düğmelerin komutları), İşlemler araçları, sağ tık \
+                      öğeleri ve durumu (etkin mi, Python ortamı hazır mı). Kanıt olarak: ekrana bakmadan neyin \
+                      çıktığını gösterir. Hiçbir şey çalıştırmaz."
+            .into(),
+        input: object(
+            json!({ "id": { "type": "string", "description": "Eklentinin kimliği" } }),
+            &["id"],
+        ),
+        read_only: true,
+        destructive: false,
+    });
+    list.push(Tool {
         name: "extension.verify",
         title: "Eklentiyi doğrula",
         description: "Bir eklentinin çalışma klasörünü (ya da .kek paketini) çalıştırmadan doğrular (kentos kek verify): \
@@ -753,6 +812,8 @@ pub fn call(
         "extension.workshop.write" => workshop_write(host, args),
         "extension.workshop.read" => workshop_read(host, args),
         "extension.workshop.review" => workshop_review(host, args),
+        "extension.workshop.reload" => workshop_reload(host, args),
+        "extension.workshop.preview" => host.preview_extension(text(args, "id")?),
         "extension.blueprint" => extension_blueprint(host, args),
         "extension.sdk" => extension_sdk(args),
         "processing.describe" => {
@@ -1513,7 +1574,7 @@ fn workshop_review(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessE
             format!("{} yazılamadı: {e}", file.display()),
         )
     })?;
-    let opened = host.review_package(&file)?;
+    let opened = host.review_workshop(&file, &folder)?;
     Ok(json!({
         "valid": true,
         "package": file.display().to_string(),
@@ -1521,7 +1582,36 @@ fn workshop_review(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessE
         "warnings": v.warnings,
         "review": opened,
         "next": "Kullanıcı istediği yetenekleri görüp kurmaya karar verir; kurulmadan önce eklenti çalışmaz. Python \
-                 katkıları kurulduktan sonra ortamı hazırlanınca çalışır.",
+                 katkıları kurulduktan sonra ortamı hazırlanınca çalışır. Kurulduktan sonraki değişiklikleri \
+                 extension.workshop.reload uygulama kapanmadan yükler.",
+    }))
+}
+
+/// `extension.workshop.reload` (plan/eklenti.md ADIM 21's `hot_reload`, docs/adr/8057 §22): the workshop's folder
+/// verified as the review verifies it, then the host loads it over the installed extension; nothing when it does not
+/// pass.
+fn workshop_reload(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessError> {
+    let id = text(args, "id")?;
+    let folder = workshop_folder(host, id)?;
+    let limits = kentos_extensions::Limits::default();
+    let files = read_folder(&folder, &limits)?;
+    let v = kentos_extensions::verify(&files, &limits);
+    let problems = with_tool_problems(v.manifest.as_ref(), &files, &v.problems);
+    if v.manifest.is_none() || !problems.is_empty() {
+        return Ok(json!({
+            "valid": false,
+            "problems": problems,
+            "warnings": v.warnings,
+            "next": "Doğrulamadan geçmeyen eklenti yüklenmez; kurulu hâli olduğu gibi çalışır. Sorunları düzeltip \
+                     yeniden deneyin.",
+        }));
+    }
+    let reloaded = host.reload_extension(id)?;
+    Ok(json!({
+        "valid": true,
+        "warnings": v.warnings,
+        "reloaded": reloaded,
+        "next": "extension.workshop.preview kullanıcının gördüğünü yazıyla verir.",
     }))
 }
 

@@ -725,6 +725,7 @@ struct WithWorkshop<'a> {
     inner: &'a mut Session,
     root: std::path::PathBuf,
     reviewed: Vec<std::path::PathBuf>,
+    reloaded: Vec<String>,
 }
 
 impl Host for WithWorkshop<'_> {
@@ -739,6 +740,15 @@ impl Host for WithWorkshop<'_> {
     fn review_package(&mut self, path: &std::path::Path) -> Result<Value, HeadlessError> {
         self.reviewed.push(path.to_owned());
         Ok(json!({ "opened": true }))
+    }
+
+    fn reload_extension(&mut self, id: &str) -> Result<Value, HeadlessError> {
+        self.reloaded.push(id.to_owned());
+        Ok(json!({ "id": id, "changed": true }))
+    }
+
+    fn preview_extension(&mut self, id: &str) -> Result<Value, HeadlessError> {
+        Ok(json!({ "id": id, "ribbonTab": { "label": "Mezarlık" } }))
     }
 }
 
@@ -770,13 +780,16 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
         inner: &mut s,
         root: root.clone(),
         reviewed: Vec::new(),
+        reloaded: Vec::new(),
     };
     assert_eq!(
         names(&host),
         [
             "extension.workshop.write",
             "extension.workshop.read",
-            "extension.workshop.review"
+            "extension.workshop.review",
+            "extension.workshop.reload",
+            "extension.workshop.preview"
         ]
     );
     let call = |host: &mut WithWorkshop, guard: &mut Guard, name: &str, args: Value| {
@@ -891,6 +904,47 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
     assert_eq!(review["valid"], false);
     assert_eq!(review["problems"][0]["code"], "python_decorator_missing");
     assert_eq!(host.reviewed.len(), 1, "not opened again");
+    // Nor loaded over the installed one (plan ADIM 21's hot_reload): verified as the review verifies.
+    let reload = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.reload",
+        json!({ "id": "tr.ornek.mezarlik" }),
+    )
+    .unwrap();
+    assert_eq!(reload["valid"], false);
+    assert!(host.reloaded.is_empty());
+    call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.write",
+        json!({ "id": "tr.ornek.mezarlik", "files": { "src/mezarlik/logic.py": logic["content"] } }),
+    )
+    .unwrap();
+    let reload = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.reload",
+        json!({ "id": "tr.ornek.mezarlik" }),
+    )
+    .unwrap();
+    assert_eq!(
+        (
+            reload["valid"].clone(),
+            reload["reloaded"]["changed"].clone()
+        ),
+        (json!(true), json!(true)),
+        "{reload:#}"
+    );
+    assert_eq!(host.reloaded, ["tr.ornek.mezarlik"]);
+    let preview = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.preview",
+        json!({ "id": "tr.ornek.mezarlik" }),
+    )
+    .unwrap();
+    assert_eq!(preview["ribbonTab"]["label"], "Mezarlık");
     // A file removed with null.
     call(
         &mut host,
@@ -920,6 +974,7 @@ fn the_workshop_does_not_write_or_pack_through_a_link() {
         inner: &mut s,
         root: root.clone(),
         reviewed: Vec::new(),
+        reloaded: Vec::new(),
     };
     for (id, path) in [
         ("tr.ornek.bag", "src/x.py"),

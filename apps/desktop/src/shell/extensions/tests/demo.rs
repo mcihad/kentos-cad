@@ -1367,3 +1367,127 @@ fn an_items_when_holds_it_back_until_its_layer_is_there() {
     assert_eq!(gis.item_when_why(&grave), None, "its layer is there");
     let _ = std::fs::remove_dir_all(&root);
 }
+
+/// docs/adr/8057 §22, plan/eklenti.md ADIM 21's hot_reload and preview_render: a workshop's extension, reviewed from
+/// its folder and installed by the user, takes the agent's changes without the app closing (the same version, a new
+/// lease) with the capabilities the user granted; one asking for more goes back to the review; one not installed is
+/// refused. The preview tells its tab, panels and tools as the app lays them out.
+#[test]
+fn a_workshop_extension_reloads_without_closing_and_its_preview_says_what_the_user_sees() {
+    use serde_json::{Value, json};
+
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let base = temp("atolye");
+    let root = base.join("eklentiler");
+    std::fs::create_dir_all(&root).unwrap();
+    let mut gis = app(&root, Some(Module::Gis));
+    let workshop = base.join("eklenti-atolyesi");
+    let folder = workshop.join(VITRIN);
+    // Vitrin's source, as the agent would have written it to its workshop.
+    let source =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/eklenti");
+    for (path, bytes) in kentos_extension_host::store::read_files(&source).unwrap() {
+        if path.contains("__pycache__") {
+            continue;
+        }
+        let to = folder.join(&path);
+        std::fs::create_dir_all(to.parent().unwrap()).unwrap();
+        std::fs::write(to, bytes).unwrap();
+    }
+    assert!(
+        gis.ext_workshop_reload(VITRIN)
+            .unwrap_err()
+            .contains("kurulu değil"),
+        "not installed: the user's review first"
+    );
+    // The user's review, from the folder; Kur.
+    let pack = |folder: &Path| {
+        let files = kentos_extension_host::store::read_files(folder).unwrap();
+        kentos_extensions::pack(&files, &Limits::default())
+            .unwrap_or_else(|p| panic!("{p:#?}"))
+            .bytes
+    };
+    let package = workshop.join("tr.ornek.vitrin-paket.kek");
+    std::fs::write(&package, pack(&folder)).unwrap();
+    gis.review_workshop_package(&package, &folder);
+    let _ = gis.extensions_event(Event::Install);
+    assert!(gis.extensions.review.is_none(), "{:?}", gis.extensions.note);
+    // The agent renames a panel and reloads: the same version, its new name on the ribbon.
+    let edit = |file: &str, change: &dyn Fn(&mut Value)| {
+        let path = folder.join(file);
+        let mut value: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        change(&mut value);
+        std::fs::write(&path, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    };
+    edit("manifest.json", &|m| {
+        m["entrypoints"]["panels"][0]["title"] = json!("Yapı bul");
+    });
+    edit("ui/yapi-ara.panel.json", &|p| {
+        p["title"] = json!("Yapı bul")
+    });
+    let said = gis.ext_workshop_reload(VITRIN).expect("reloaded");
+    assert_eq!(said["changed"], true, "{said:#}");
+    assert_eq!(said["version"], vitrin_version().as_str());
+    let labels: Vec<String> = gis
+        .extension_tabs()
+        .filter(|t| t.extension == VITRIN)
+        .flat_map(|t| {
+            t.panels
+                .iter()
+                .flat_map(|p| p.items.iter().map(|i| i.label.clone()))
+        })
+        .collect();
+    assert!(labels.iter().any(|l| l == "Yapı bul"), "{labels:?}");
+    assert_eq!(
+        gis.ext_workshop_reload(VITRIN).unwrap()["changed"],
+        false,
+        "nothing changed since: said so"
+    );
+    // What the user sees, in words.
+    let preview = gis.ext_preview(VITRIN).unwrap();
+    assert_eq!(preview["source"], "geliştirici klasörü");
+    let items: Vec<&Value> = preview["ribbonTab"]["groups"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|g| g["items"].as_array().unwrap())
+        .collect();
+    let bul = items
+        .iter()
+        .find(|i| i["label"] == "Yapı bul")
+        .expect("its button");
+    assert_eq!(bul["opens"]["panel"], "yapi-paneli");
+    let panel = &preview["panels"][0];
+    assert_eq!(panel["title"], "Yapı bul");
+    assert!(
+        panel["components"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["type"] == "button" && c["command"] == "yapi-ara"),
+        "{panel:#}"
+    );
+    assert!(
+        preview["contributions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["id"] == "ext.tr.ornek.vitrin.taks"),
+        "{preview:#}"
+    );
+    // A capability the user did not grant: not loaded, back to the review; the installed one as it was.
+    edit("manifest.json", &|m| {
+        m["requestedCapabilities"].as_array_mut().unwrap().push(json!({
+            "id": "files.userSelected", "scope": "plugin-owned", "reason": "Seçilen dosyayı okur."
+        }));
+        m["entrypoints"]["panels"][0]["title"] = json!("Yapı süz");
+    });
+    let refused = gis.ext_workshop_reload(VITRIN).unwrap_err();
+    assert!(refused.contains("vermediği yetenek"), "{refused}");
+    assert!(
+        gis.extension_tabs()
+            .flat_map(|t| t.panels.iter().flat_map(|p| p.items.iter()))
+            .all(|i| i.label != "Yapı süz")
+    );
+    let _ = std::fs::remove_dir_all(&base);
+}

@@ -1379,6 +1379,25 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   ayar klasöründekini.
 - **Uygularken verilen kararlar:** paket atölyede kalır (silinmez, kullanıcı yeniden açabilir); kaynak türü "dosya"
   olarak görünür; MCP'nin masaüstü bağlantısında incelemeye açma sonraki iş.
+- **Canlı yükleme ve görünüş** (15 Kasım; planın `hot_reload`/`preview_render`'ı, `extension.workshop.reload` ve
+  `.preview`; masaüstü `extensions/workshop.rs`): atölyeden incelemeye açılan paket artık **geliştirici klasörü**
+  kaynağıyla kurulur (kayıt defterinin D2 yolu: her yüklemede klasör yeniden paketlenir, aynı sürüm yeni kira ile
+  üstüne kurulur, eskisinden bir şey kalmaz, PY-RUN-09). Kaynak türü artık "geliştirici klasörü" görünür.
+  - **Kullanıcı bir kez karar verir, ajan yineler:** ilk kurulum kullanıcının Gözden geçir ve kur penceresi. Sonra
+    `reload` klasörü doğrular (review'un denetimi) ve yükler; yalnız atölyeden kurulana (dosyadan, katalogdan ya da
+    başka klasörden kurulan "atölyeden kurulmadı" der), yalnız kullanıcının verdiği yeteneklerle: yeni yetenek isteyen
+    eklenti yüklenmez, "yetenekleri kullanıcı verir: review ile açın" der. Her yükleme kullanıcıya bildirim ve
+    eklentinin günlüğüne kayıt; eklentinin süreci bırakılır (bir sürümün süreci çalıştırmalar arasında tutuluyordu,
+    eski kodu çalıştırırdı); çalışması sürerken yüklenmez. Değişiklik yoksa "kurulu hâli aynı" der.
+  - **`preview`:** kurulu eklentinin kullanıcının gördüğü hâli, uygulamanın kendi modelinden: şerit sekmesi (gruplar,
+    düğmeler, ne açtıkları, `when` ya da Python hazır değilse kapalı olma nedeni), paneller (başlık, yer, bileşenler,
+    düğmelerin komutları), kayıt defterinin katkıları (İşlemler araçları, denetimler…), sağ tık öğeleri, durum ve
+    Python ortamı. Görüntü yerine yazı: ajanın okuyacağı kanıt; ekran görüntüsü ayrı iş.
+  - MCP bağlantısında ikisi de yok (paketi orada kullanıcı açar): araçlar "masaüstünün Asistan'ında çalışın" der.
+  - Test: başsız (doğrulanmayan klasör yüklenmez, host'a gitmez; geçen yüklenir; preview geçer) ve masaüstü (Vitrin
+    atölyeden kuruldu, panel adı değişti, yeniden yüklendi: şeritte yeni ad, aynı sürüm; değişiklik yoksa söyler;
+    preview sekmeyi, panelin düğmesini ve TAKS aracını yazar; `files.userSelected` isteyen yükleme reddedildi, şerit
+    eski hâliyle kaldı).
 
 ## §23. Eklentinin katman şeması: `schema.json` ve `apply_declarative_schema` (`ADIM 22`, katman şeması kurulumu)
 

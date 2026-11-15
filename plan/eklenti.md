@@ -992,8 +992,9 @@ aynı kod. **İkinci dilim — `extension.blueprint` / `kek new`** (ADR 8057 §1
 **Yerleşik ikonlar** (ADR 8057 §21): 1346 adın listesi kümeden üretilir, tire biçimiyle hepsi yazılabilir (önce 1133'ü
 yazılamıyordu), bilinmeyen ad en yakın önerilerle uyarıdır. **Atölye** (ADR 8057 §22): Asistan ve MCP ajanı eklentiyi
 `extension.workshop.write` ile kendi klasörüne yazar, `verify` ile doğrular, `workshop.review` paketleyip kullanıcının
-Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 3 (sentetik çizimde kuru koşu),
-`hot_reload`/`preview_render`, `kentos.ui`/`ProjectAuditFacts`/manifest şemaları.
+Gözden geçir ve kur penceresine açar (kurulum kullanıcının). **Canlı yükleme ve görünüş** (ADR 8057 §22, 15 Kasım):
+`extension.workshop.reload`, `.preview`. Kalan: Kapı 3 (sentetik çizimde kuru koşu), `kentos.ui`/`ProjectAuditFacts`/
+manifest şemaları.
 
 - [ ] **Kod üretimi:** Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
   `kentos.ui` bileşen şeması, `ProjectAuditFacts` şeması ve manifest/araç/panel JSON Schema'ları üretilir; üretilmiş
@@ -1007,8 +1008,12 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
   kalıntı); Kapı 4 ajanın tek adımda düzelteceği yapısal rapor ("manifest.json satır 28: `icon: 'grave'` yok; en yakın
   geçerli ikonlar: `polygon`, `grid`, `layers`"). Uydurulmuş API, eksik bağımlılık, eski şema ve kapalı belge
   açıklanabilir biçimde reddedilir [EKL-06].
-- [ ] **`extension.hot_reload` ve `extension.preview_render`:** doğrulanan eklenti uygulama kapanmadan yüklenir; oluşan
-  sekmenin ve panelin görüntüsü/düzen özeti ajana kanıt olarak döner.
+- [x] **`extension.hot_reload` ve `extension.preview_render`** — *tamamlandı (ADR 8057 §22, 15 Kasım):
+  `extension.workshop.reload` atölyeden kullanıcının kurduğu eklentiyi kullanıcının verdiği yeteneklerle uygulama
+  kapanmadan yükler (yeni yetenek isteyen review'a döner, her yükleme kullanıcıya bildirilir); `extension.workshop.preview`
+  sekmenin, panellerin, araçların ve kapalı düğme nedenlerinin düzen özetini yazıyla verir (görüntü ayrı iş).*
+  Doğrulanan eklenti uygulama kapanmadan yüklenir; oluşan sekmenin ve panelin görüntüsü/düzen özeti ajana kanıt olarak
+  döner.
 - [ ] **Akış:** kurulu yetenek/API/belge keşfi → isteğin ve parametrelerin açıklığı → taslak → bağımlılık/izin planı →
   doğrulama/test → `.kek` → kullanıcı incelemesi ve yerel etkinleştirme → istenirse yayına gönderme [EKL-06]. Kullanıcı
   seçimi gerektiren aşama (bağımlılık kurma, izin, yayın) ajan tarafından sessizce geçilmez [PY-AI-05]; ajan kurulu

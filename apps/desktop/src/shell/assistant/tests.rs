@@ -574,5 +574,33 @@ fn the_assistants_workshop_opens_its_package_for_review() {
             .is_empty(),
         "nothing installed by it"
     );
+    // The user says Kur: installed from the workshop's folder. The agent's later changes load without the app closing
+    // (plan ADIM 21's hot_reload), and it reads what the user sees (preview_render).
+    let _ = app.extensions_event(crate::extensions::Event::Install);
+    let mut host = super::host::AppHost(&mut app);
+    let reload = agent_tools::call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.reload",
+        &json!({ "id": id }),
+    )
+    .unwrap();
+    assert_eq!(
+        (
+            reload["valid"].clone(),
+            reload["reloaded"]["changed"].clone()
+        ),
+        (json!(true), json!(false)),
+        "nothing changed since the review: {reload:#}"
+    );
+    let preview = agent_tools::call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.preview",
+        &json!({ "id": id }),
+    )
+    .unwrap();
+    assert_eq!(preview["source"], "geliştirici klasörü", "{preview:#}");
+    assert_eq!(preview["name"], "Mezarlık bilgi");
     let _ = std::fs::remove_dir_all(&root);
 }
