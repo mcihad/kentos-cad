@@ -1,0 +1,94 @@
+# İşlemler aracı ayrı pencerede (docs/adr/8060): yan yana iki ekranın yerini tutan geniş bir ekranda (her biri
+# 1440 × 900) ana pencere solda, araç penceresi sağda. KentOS GIS, yapay vitrin çizimi:
+#   KENTOS_REAL_DISPLAY=:95 KENTOS_REAL_SIZE=2880x900 scripts/usage/real/session.sh \
+#     fixtures/interaction/real/ayri-pencere-islem.txt ÇIKTI --modul cbs samples/eklenti-vitrini/vitrin.kcad
+# İşlemler › Tampon, girdisi Yapı katmanı; araç başlıktaki düğmeyle ayrı pencereye alınır, sağ ekrana konur ve oradan
+# çalıştırılır; sonuç ana penceredeki haritadadır. Bu sırada ana pencere fareyi alır, araç penceresinde basılan
+# tuşlar ana pencerenin kısayollarına ulaşmaz. Sonunda araç ana pencereye geri alınır ve kapatılır.
+# Noktalar sahibin ayarlarının kopyasıyla ölçüldü (15 Kasım 2026, açık tema ve yazı boyu); düzen değişirse yeniden ölçülür.
+fit KentOS GIS — Eklenti vitrini 0 0 1440 900
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1500
+click 1303 158  # İşlemler sekmesi
+wait 1500
+click 1260 228  # İşlem ara
+wait 400
+type tampon
+wait 1200
+click 1217 288  # araç: Tampon
+settle 15000
+click 542 294   # Nesneler: katman seçici
+wait 1200
+click 297 448   # Yapı
+settle 8000
+move 1151 121   # başlıktaki Ayrı pencerede aç
+wait 1500
+shot 01-cizim-ustunde-ayir-dugmesi
+cpu ayir
+click 1151 121  # Ayrı pencerede aç
+settle 30000
+cpu ayir end
+shot 02-ayrildi
+fit Tampon — KentOS GIS 1440 0 1440 900
+settle 15000
+move 700 700
+wait 600
+shot 03-sag-ekranda
+move 2818 867   # Çalıştır'ın üstüne, ayrı pencerede
+wait 800
+cpu calistir
+click 2818 867  # Çalıştır
+settle 30000
+cpu calistir end
+move 700 700
+wait 600
+shot 04-sonuc-haritada
+# Ana pencere fareyi alır: araç yanında açıkken uzaklaştırılır.
+fit KentOS GIS — Eklenti vitrini • 0 0 1440 900
+wait 800
+cpu uzaklas-iki-pencere
+wheel 560 500 -2
+settle 10000
+cpu uzaklas-iki-pencere end
+shot 05-ana-pencere-kullaniliyor
+# Araç penceresinde yazılan araç penceresinindir: L (ana pencerenin Çizgi'si) bir şey yapmaz, Ctrl+Enter çalıştırır.
+fit Tampon — KentOS GIS 1440 0 1440 900
+wait 800
+move 2236 348
+wait 500
+click 2236 348  # Uzaklık
+wait 400
+key ctrl+a
+type 8
+click 2560 500  # sağ sütunda boş bir yer
+wait 400
+key l
+wait 600
+key ctrl+Return
+settle 30000
+move 2600 700
+wait 600
+shot 06-klavye-ayri-pencerede
+move 2571 867
+wait 500
+click 2571 867  # Sonuçları seç: seçilir ve yakınlaşılır, pencere açık kalır
+settle 15000
+shot 07-sonuclari-sec
+move 2850 29    # Ana pencereye al
+wait 1500
+shot 08-geri-al-dugmesi
+click 2850 29
+settle 15000
+move 700 700
+wait 600
+shot 09-ana-pencereye-alindi
+click 1085 775  # Kapat
+settle 10000
+cpu uzaklas-tek-pencere
+wheel 560 500 -2
+settle 10000
+cpu uzaklas-tek-pencere end
+shot 10-kapatildi

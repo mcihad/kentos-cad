@@ -128,6 +128,7 @@ impl App {
             follow: crate::message_log::Follow::default(),
             layout: crate::layout::Keeper::memory(),
             dialog_sizes: crate::dialog_sizes::Keeper::default(),
+            windows: crate::windows::Windows::default(),
             bands: crate::band_ghosts::Bands::default(),
             window_size: iced::Size::new(1440.0, 900.0),
             command_input: String::new(),

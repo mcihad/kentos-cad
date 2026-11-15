@@ -2,7 +2,8 @@
 //!
 //! [`Dialog`] ve [`Confirm`] yalnızca kutunun kendisidir; ortalamak ve
 //! arkasını karartmak için [`overlay::modal`](crate::widget::overlay::modal)
-//! ile gösterilir.
+//! ile gösterilir. Kendi işletim sistemi penceresinde gösterilen kutu
+//! [`Dialog::window`] ile o pencereyi doldurur.
 
 use iced::widget::space::Space;
 use iced::widget::text::{Fragment, IntoFragment};
@@ -39,6 +40,10 @@ pub struct Dialog<'a, Message> {
     /// Başlıktaki kapatma düğmesinin mesajı; yoksa düğme yoktur.
     on_close: Option<Message>,
     close_hidden: bool,
+    /// Square buttons in the header, left of the full screen toggle and the × ([`Dialog::header_button`]).
+    header_buttons: Vec<(Icon, Tip, Message)>,
+    /// The whole of a window of its own ([`Dialog::window`]).
+    own_window: bool,
 }
 
 impl<'a, Message: 'a> Dialog<'a, Message> {
@@ -57,7 +62,28 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
             sizable: true,
             on_close: None,
             close_hidden: false,
+            header_buttons: Vec::new(),
+            own_window: false,
         }
+    }
+
+    /// A square button in the header, left of the full screen toggle and the ×: an action on the window itself
+    /// (İşlemler's “Ayrı pencerede aç”), not on what it holds. The icon alone says little; the tip names it.
+    pub fn header_button(mut self, glyph: Icon, tip: Tip, on_press: Message) -> Self {
+        self.header_buttons.push((glyph, tip, on_press));
+        self
+    }
+
+    /// The box as the whole of a window of its own: an operating-system window beside the main one, which the user
+    /// can put on another screen. The same header, body and footer fill the window on the box's ground; there is no
+    /// backdrop, no frame to drag and no full screen toggle, because the window itself is resized and maximised.
+    /// The × is shown only when [`on_close`](Dialog::on_close) asks for it.
+    pub fn window(mut self) -> Element<'a, Message>
+    where
+        Message: Clone,
+    {
+        self.own_window = true;
+        self.into()
     }
 
     /// Başlığın sağında kapatma düğmesi (×) gösterir; basılınca `message` gelir. Verilmezse düğme yoktur: kutu kendi
@@ -202,7 +228,9 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
 impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
     fn from(dialog: Dialog<'a, Message>) -> Self {
         let key = dialog.key.unwrap_or_else(|| dialog.title.to_string());
-        let kept = dialog.sizable && sizable::sizes::get(&key).is_some();
+        // A window of its own is sized by the operating system: never `Sizable`, always filled.
+        let sizable_box = dialog.sizable && !dialog.own_window;
+        let kept = dialog.own_window || (sizable_box && sizable::sizes::get(&key).is_some());
         let mut header = row![label::title(dialog.title), space::horizontal()]
             .spacing(6)
             .align_y(Center);
@@ -219,8 +247,21 @@ impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message>
         let mut tools = iced::widget::Row::new()
             .spacing(sizable::TOGGLE_GAP)
             .align_y(Center);
+        // Left of the toggle's square: `Sizable` places its toggle from the right edge, past the ×.
+        for (glyph, hint, message) in dialog.header_buttons {
+            tools = tools.push(tip(
+                button(container(icon(glyph).size(14.0)).center(Fill))
+                    .on_press(message)
+                    .padding(0)
+                    .width(side)
+                    .height(side)
+                    .style(style::button::flat),
+                hint,
+                iced::widget::tooltip::Position::Bottom,
+            ));
+        }
         // The full screen toggle's square, drawn by `Sizable` (docs/adr/0746).
-        if dialog.sizable {
+        if sizable_box {
             tools = tools.push(Space::new().width(side).height(side));
         }
         if let Some(message) = dialog.on_close {
@@ -282,9 +323,13 @@ impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message>
         let boxed = container(content)
             .id(crate::focus::scope_id())
             .padding(sizable::PAD)
-            .style(style::container::dialog);
+            .style(if dialog.own_window {
+                style::container::dialog_window
+            } else {
+                style::container::dialog
+            });
 
-        // A kept size: the box fills what `Sizable` gives it; else its own width and height.
+        // A kept size: the box fills what `Sizable` (or its own window) gives it; else its own width and height.
         let boxed = if kept {
             boxed.width(Fill).height(Fill)
         } else {
@@ -294,7 +339,7 @@ impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message>
                 None => boxed,
             }
         };
-        if dialog.sizable {
+        if sizable_box {
             sizable::Sizable::new(key, boxed).closable(closable).into()
         } else {
             boxed.into()

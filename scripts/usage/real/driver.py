@@ -3,6 +3,7 @@
 
 Scenario lines, one per line; a line starting with '#' and anything after ' #' is a comment:
   fit TITLE               the window of this title over the whole screen, keyboard given to it (no window manager)
+  fit TITLE X Y W H       the same window in that part of the screen (one "monitor" of a wide screen)
   wait MS                 time passes
   move X Y                the pointer goes there through the points between
   click X Y [right|middle], dclick X Y, drag X1 Y1 X2 Y2
@@ -111,10 +112,12 @@ def shot(name):
     raw = root.get_image(0, 0, g.width, g.height, X.ZPixmap, 0xffffffff)
     Image.frombytes("RGB", (g.width, g.height), raw.data, "raw", "BGRX").save(f"{out}/{name}.png")
 
-def fit(title):
-    # No window manager on the screen: the app's window put over the whole screen, as a maximized window is.
+def fit(title, region=None):
+    # No window manager on the screen: the app's window put over the whole screen, as a maximized window is, or over
+    # the region X Y W H of it (a wide screen standing for two monitors side by side).
     root = d.screen().root
     g = root.get_geometry()
+    x, y, width, height = region or (0, 0, g.width, g.height)
     def named(w):
         # WM_NAME comes as bytes python-xlib reads as Latin-1; the app writes UTF-8 ("KentOS Mimari — Konut").
         name = w.get_wm_name()
@@ -132,7 +135,7 @@ def fit(title):
             if name:
                 seen.append(name)
             if name == title:
-                w.configure(x=0, y=0, width=g.width, height=g.height)
+                w.configure(x=x, y=y, width=width, height=height)
                 # No window manager gives the keyboard to the window: give it as one would.
                 w.set_input_focus(X.RevertToParent, X.CurrentTime)
                 d.sync()
@@ -218,7 +221,13 @@ for raw in open(sys.argv[1], encoding="utf-8"):
     elif word == "shot":
         sync(300); shot(a[0])
     elif word == "fit":
-        fit(rest.strip()); sync(800)
+        # The last four words, when all numbers, are the region: "fit Tampon — KentOS GIS 1440 0 1440 900".
+        words = rest.split()
+        if len(words) > 4 and all(v.lstrip("-").isdigit() for v in words[-4:]):
+            fit(" ".join(words[:-4]), tuple(int(v) for v in words[-4:]))
+        else:
+            fit(rest.strip())
+        sync(800)
     elif word == "glide":
         x0, y0, x1, y1, n, ms = (int(v) for v in a)
         xtest.fake_input(d, X.MotionNotify, x=x0, y=y0)

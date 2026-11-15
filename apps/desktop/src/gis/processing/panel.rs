@@ -418,10 +418,19 @@ impl App {
                 }
             }
             Event::EditModel(id) => {
-                // The model's own window steps aside for the designer (the web's).
-                if self.dialog == Some(crate::app::Dialog::Gis(gis::GisDialogKind::Processing)) {
+                // The model's own window steps aside for the designer (the web's); in a window of its own it does when
+                // it is this model's, another tool there stays (apart.rs).
+                let this_model = self.gis.processing.dialog.as_ref().is_some_and(|w| {
+                    w.tool
+                        .id
+                        .strip_prefix(kentos_processing::model_runner::MODEL_PREFIX)
+                        == Some(id.as_str())
+                });
+                if self.dialog == Some(crate::app::Dialog::Gis(gis::GisDialogKind::Processing))
+                    || (self.processing_is_apart() && this_model)
+                {
                     self.gis.processing.dialog = None;
-                    self.dialog = None;
+                    self.processing_dialog_away();
                 }
                 self.open_model_designer(Some(&id));
             }

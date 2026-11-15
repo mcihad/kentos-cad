@@ -136,6 +136,18 @@ pub fn dialog(theme: &Theme) -> Style {
     }
 }
 
+/// Kendi penceresindeki iletişim kutusu (`Dialog::window`): kutunun zemini bütün pencereyi doldurur; kenarı,
+/// köşesi ve gölgesi yoktur, çerçeveyi işletim sistemi çizer.
+pub fn dialog_window(theme: &Theme) -> Style {
+    let t = Tokens::of(theme);
+
+    Style {
+        text_color: Some(t.text),
+        background: Some(Background::Color(t.surface)),
+        ..Style::default()
+    }
+}
+
 /// Bağlam menüsü satırı: vurgulanınca yumuşak vurgu zemini, yazı kendi
 /// renginde (DESIGN.md §3.3; web'in `.menu__item[data-active]`'i);
 /// tehlikeli komut kırmızıyla, devre dışı komut sönük yazılır.

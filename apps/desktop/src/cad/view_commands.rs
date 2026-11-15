@@ -116,7 +116,11 @@ impl App {
         } else {
             window::Mode::Windowed
         };
-        window::latest().and_then(move |id| window::set_mode(id, mode))
+        // The main window's, not the latest window's: a tool in a window of its own opens after it (docs/adr/8060).
+        match self.windows.main() {
+            Some(main) => window::set_mode(main, mode),
+            None => window::latest().and_then(move |id| window::set_mode(id, mode)),
+        }
     }
 
     /// Asks the server once at start, as the web does when it is idle after

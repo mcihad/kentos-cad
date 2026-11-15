@@ -15,13 +15,19 @@ impl App {
                 .document
                 .as_ref()
                 .is_some_and(|d| d.dirty() && !d.is_database());
+        // The main window's events go to the shell's listeners as with one window; a secondary window's keys to its
+        // own router, its close button, moves and resizes to the windows (windows/routing.rs, docs/adr/8060).
+        let main = self.windows.main();
         Subscription::batch([
-            event::listen_with(if self.drawing_menu.is_some() {
-                keys::drawing_menu_key_event
-            } else {
-                keys::key_event
-            }),
-            window::close_requests().map(Message::CloseRequested),
+            crate::windows::routing::keys(
+                main,
+                if self.drawing_menu.is_some() {
+                    keys::drawing_menu_key_event
+                } else {
+                    keys::key_event
+                },
+            ),
+            crate::windows::routing::window_events(main),
             if unsaved {
                 Subscription::run(recovery::ticks)
             } else {
@@ -54,11 +60,14 @@ impl App {
             },
             // A file dropped on the window goes to the SVG editor while it is open (style/svgedit/), else to
             // Kaynaklar, which adds it by its kind (sources/, docs/adr/0599 §8).
-            if self.styles.svg_editor.is_some() {
-                event::listen_with(crate::style::svgedit::dropped)
-            } else {
-                event::listen_with(crate::sources::dropped)
-            },
+            crate::windows::routing::main_only(
+                main,
+                if self.styles.svg_editor.is_some() {
+                    crate::style::svgedit::dropped
+                } else {
+                    crate::sources::dropped
+                },
+            ),
             // A Kaynaklar row being dragged: the pointer and the button let go, wherever they are.
             if self.gis.sources.drag.is_some() {
                 event::listen_with(crate::sources::dragging)
@@ -116,8 +125,6 @@ impl App {
             self.layout_subscription(),
             // Genel bakış's picture, drawn again a moment after a change (navigation_cards.rs).
             self.navigation_subscription(),
-            window::resize_events().map(|(_, size)| Message::WindowResized(size)),
-            iced::event::listen_with(device_scale),
             // A large import writes a slice of its objects each frame (exchange/drawing_import.rs).
             if self.importing.is_some() {
                 window::frames().map(|_| {
@@ -233,6 +240,8 @@ impl App {
             self.follow_python_echo(),
             // The sheet templates' library follows the sign-in and the connection (sheet_library.rs).
             self.follow_sheet_library(Instant::now()),
+            // The windows of their own follow what is open (windows/, docs/adr/8060).
+            self.follow_windows(),
         ]);
         self.follow_layout(Instant::now());
         self.follow_navigation(Instant::now());
@@ -315,6 +324,15 @@ impl App {
     }
 
     pub(super) fn handle(&mut self, message: Message) -> Task<Message> {
+        // The secondary windows' opening, closing, moves and resizes are taken whatever the app is doing, else the
+        // windows and their list would part; their keys go through the waits below (an open, an import) as the main
+        // window's do.
+        let message = match message {
+            Message::Windows(event) if !matches!(event, crate::windows::Event::Key(..)) => {
+                return self.windows_event(event);
+            }
+            message => message,
+        };
         if matches!(message, Message::InputFocusLost) {
             self.input_focus_lost();
             return Task::none();
@@ -778,6 +796,8 @@ impl App {
                 // not the open drawing's file, which keeps its path and its state.
                 _ => self.output(format!("Kaydedildi: {}.", written.path.display())),
             },
+            // A key of a secondary window, past the waits above (windows/routing.rs).
+            Message::Windows(event) => return self.windows_event(event),
             Message::CloseRequested(_) if self.block_editor.is_some() => {
                 self.warn(crate::block_editor::OPEN);
             }

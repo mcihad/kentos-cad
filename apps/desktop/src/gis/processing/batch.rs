@@ -481,11 +481,12 @@ impl App {
 }
 
 impl App {
-    /// The batch window: the tool's own window with the table in the form's place.
-    pub(crate) fn batch_view(&self) -> Element<'_, Message> {
+    /// The batch window: the tool's own window with the table in the form's place, and what a click beside it
+    /// does over the drawing (Forma dön). Shown over the drawing or in the tool's own window (window.rs, apart.rs).
+    pub(crate) fn batch_dialog(&self) -> Option<(Dialog<'_, Message>, Message)> {
         let (Some(b), Some(window)) = (&self.gis.processing.batch, &self.gis.processing.dialog)
         else {
-            return iced::widget::space().into();
+            return None;
         };
         let tool = &window.tool;
         let body = column![
@@ -499,7 +500,7 @@ impl App {
         ]
         .spacing(12)
         .padding([4, 8]);
-        Dialog::new(format!("Toplu çalıştır: {}", tool.label))
+        let dialog = Dialog::new(format!("Toplu çalıştır: {}", tool.label))
             .push(
                 scrollable(body)
                     .direction(style::field::body_scrollbar())
@@ -509,8 +510,8 @@ impl App {
             .push(horizontal_divider())
             .footer(footer(b))
             .width(WIDTH)
-            .max_height(HEIGHT)
-            .modal(ev(Event::Back))
+            .max_height(HEIGHT);
+        Some((dialog, ev(Event::Back)))
     }
 }
 
