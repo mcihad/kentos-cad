@@ -967,6 +967,8 @@ fn who_sees_a_release() {
     let private = upload(CatalogScope::Private, "1.1.0");
     assert!(private.visible_to(&author()));
     assert!(!private.visible_to(&reviewer()) && !private.visible_to(&admin()));
+    // The catalog's scanner, or a personal catalog's release would never pass its gates.
+    assert!(private.visible_to(&scanner()));
 }
 
 #[test]

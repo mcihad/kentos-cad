@@ -1171,7 +1171,12 @@ programlı çağrı incelemeyi atlayamaz), onay içeriğe bağlı (paket, kilit,
 değişince onay düşer, kurulum yalnız onaylı içerikle), kapılar açık kalmaz (taranmadı / hata verdi asla geçti
 değil), ret gerekçe koduyla, askı/geri çekme nedeniyle, her hareket denetim kaydında, kayıt okunurken kurallardan
 geçer; inceleme derinliği önceki onaylı sürüme göre farktan (yeni yetenek ya da bağımlılık derin, yalnız metin hızlı
-yol). 21 sınama. Kalan: sunucu/API, depo, imza ve OIDC, platform tekerlek deposu, geri çekme listesi, arayüz.
+yol). 21 sınama. **İkinci dilim — sunucu uçları** (ADR 8059 §10): `apps/api`'de yükleme, liste, kayıt, yeni içerik,
+hareket, kurulum bileti ve onaylı paket uçları, yalnız akış modülüyle; katalog yetkileri katalog başına ve varsayılan
+yok, karar yalnız web penceresinden (anahtar, masaüstü, Python, MCP program), göremeyene aynı 404, beklenen sürümle
+yazma; bellekteki depoyla 12 sınama, katalog çalışan sunucuda kapalı (kalıcı depo ve kararlar için taze kimlik
+doğrulama gelene dek). Kalan: kalıcı depo (tasarımı §11), taze kimlik doğrulama, imza ve OIDC, platform tekerlek
+deposu, geri çekme listesi, arayüz.
 
 - [ ] Durum makinesi: `taslak → gönderildi → denetleniyor → değişiklik isteniyor / onaylandı → yayımlandı → askıda /
   geri çekildi / arşivlendi`. Yüklenen taslağı yalnız yazarı ve yetkili inceleyenler görür; **yükleme yayın değildir**.

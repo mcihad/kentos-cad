@@ -1,7 +1,8 @@
 # ADR 8059: Eklenti kataloğunda sürüm akışı — onaylı yayının durum makinesi
 
-- **Durum:** uygulandı, ilk dilim (15 Kasım 2026). Yalnız saf Rust mantığı: `crates/shared/extensions/src/release.rs`
-  ve `release/`. Sunucu, depo, imza ve arayüz sonraki dilimlerin (§9).
+- **Durum:** uygulandı, iki dilim (15 Kasım 2026). İlki saf Rust mantığı: `crates/shared/extensions/src/release.rs`
+  ve `release/` (§1–§8). İkincisi sunucu uçları, bellekteki depoyla (`apps/api`, §10). Kalıcı depo bir sonraki dilim
+  (§11); imza, tekerlek deposu ve arayüz daha sonra (§9).
 - **Plan:** `plan/eklenti.md` ADIM 22A (PY-CLOUD-01…18; dersler D11, D12, D13).
 - **Bağlam belgeleri:** ADR 8057 §1 (paket, içerik özeti, saf crate) ve §2 (kurum kataloğu, geri çekme listesi);
   `docs/research/2026-11-13-eklenti-ekosistemleri.md` (Open VSX'in yük altında taranmamış paketi "PASSED" geçirmesi,
@@ -41,7 +42,8 @@ birebir doğrular. Yükleme (`Release::upload`) yeni kaydı Taslak olarak açar.
 | Arşivlendi, yayımlandıktan sonra | hayır | hayır | evet | herkes |
 | Arşivlendi, yayımlanmadan | hayır | hayır | hayır | yazar, yayımcı, katalog |
 
-Kişisel katalogdaki sürümü her durumda yalnız sahibi görür. Kataloğun (kiracının) üyeliğini sunucu önce denetler;
+Kişisel katalogdaki sürümü her durumda yalnız sahibi ve kataloğun denetim hizmeti görür (kapıları orada da taranır;
+hizmet karar vermez). Kataloğun (kiracının) üyeliğini sunucu önce denetler;
 sayılar ve aramalar bu süzgeçten sonra hesaplanır (PY-CLOUD-17).
 
 ### §2 Sürüm, içeriğidir (PY-CLOUD-04, 08, 10)
@@ -149,9 +151,12 @@ simge: CHANGELOG.md" oldu (`facts_come_from_the_package_and_a_version_bump_is_no
 
 ## §9 Bilerek sonraya bırakılanlar
 
-1. **Sunucu ve API:** uçlar, kayıtların PostgreSQL'de saklanması, eşzamanlı yazmada beklenen sürüm, inceleme kuyruğu
-   ve inceleyici kapasitesi; MCP ve Python yayın araçları.
-2. **Depolama:** paket ve SBOM baytları nesne deposunda; SBOM üretimi.
+1. **Sunucu ve API:** uçlar ve beklenen sürümle yazma ikinci dilimde, bellekteki depoyla (§10). Kalanı: kalıcı depo
+   (§11); kararlar için taze kimlik doğrulama (kurumun kimlik sağlayıcısında yeniden giriş ya da cihazda kullanıcı
+   doğrulaması), katalog çalışan sunucuda bundan önce açılmaz; inceleme kuyruğu ve inceleyici kapasitesi;
+   inceleyicinin ve tarayıcının taslağın paketini indirmesi (bugün yalnız onaylı paket iner); MCP ve Python yayın
+   araçları.
+2. **Depolama:** paket ve SBOM baytları nesne deposunda (§11); SBOM üretimi.
 3. **İmza ve kimlik:** onay kaydının ve geri çekme listesinin imzası; askıdaki ve geri çekilen sürümlerden ADIM 17'nin
    `kentos.extension-revocations` listesinin üretimi; kısa ömürlü yayın kimliği (OIDC), önekli ve süreli jetonlar, ad
    alanının doğrulanmış alan adına bağlanması (D13).
@@ -162,6 +167,107 @@ simge: CHANGELOG.md" oldu (`facts_come_from_the_package_and_a_version_bump_is_no
    kapalı, bulunan sorun askıya almayla ele alınır.
 7. Yazar ve yayımcı devri, yerine geçen eklenti (D9); itiraz yolu (D15); kurum ilkesiyle bağ (izin ve engel listesi,
    D14).
+
+## §10 İkinci dilim: sunucu uçları (`apps/api`)
+
+Sunucu akışı yalnız `kentos_extensions::release` ile yürütür: sürümü bulur, çağıranın `Actor`'ünü kataloğun
+yetkilerinden kurar, bir hareketin istediği paketleri okur, hareketin sonucunu yazar ve reddi akışın kendi koduyla
+iletir. Kod: `apps/api/src/extension_catalog.rs` (hizmet), `extension_catalog/model.rs` (katalog, sürüm anahtarı,
+hesap, hareket, hata), `extension_catalog/store.rs` (depo trait'i), `extension_catalog/memory.rs` (testlerin bellekteki
+deposu), `http/extension_catalog.rs` (uçlar), `http/extension_catalog/views.rs` (yanıtlar),
+`http/extension_catalog_tests.rs`.
+
+| Uç | İş |
+|---|---|
+| `GET /v1/extension-catalogs/{katalog}/releases` | çağıranın görebildiği sürümler; arama ve sayı yalnız onlar üstünde (PY-CLOUD-17) |
+| `POST …/releases` | `.kek` baytları yüklenir: taslak (201, `Location`) |
+| `GET …/releases/{eklenti}/{sürüm}` | içeridekilere bütün kayıt (hareketler dahil); ötekilere hesapsız, notsuz, bulgusuz görünüm |
+| `PUT …/releases/{eklenti}/{sürüm}` | taslağa ya da geri gönderilen sürüme yeni içerik |
+| `POST …/releases/{eklenti}/{sürüm}/moves` | bir hareket: `{"action": "approve", …}`; adlar `Action`'ınkiler |
+| `GET …/releases/{eklenti}/{sürüm}/install` | kurulabilecek olan: yayımlanmış sürümün onaylanan içeriği |
+| `GET …/releases/{eklenti}/{sürüm}/package` | onaylanan baytlar; çıkmadan önce onaya karşı yeniden denetlenir |
+
+`{katalog}`: `public`, `tenant:{kısa ad}` ya da `personal:{hesap}`. Kurum kısa adı `public` ya da `personal` olabildiği
+ve API'de "catalog" proje kataloğunun adı olduğu için yol `/v1/extension-catalogs/…`. Paket baytlarını taşıyan uçlar,
+paketin en büyük boyutu (128 MB) ve yükleme süresiyle ayrı katmandadır.
+
+**Kanal (PY-CLOUD-18).** Yalnız erişim anahtarı taşımayan ve `x-kentos-client: web` diyen istek, yani web uygulamasının
+tarayıcı oturumu, pencere sayılır. Erişim anahtarı (`Authorization: Bearer`), masaüstü, Python SDK, MCP ve başlık
+söylemeyen istek programdır: yükler, gönderir, tarama bildirir, onaylananı yayımlar; onay, değişiklik isteme, engel
+kaldırma ve askıdan alma ona `decision_by_program` (403) döner. **Sınır:** başlık uygulamanın beyanıdır, kanıt değil;
+bir kişinin tarayıcı oturumunu ele geçiren program onu taklit edebilir. Bu yüzden katalog bu dilimde çalışan sunucuda
+kapalıdır (`AppState::extension_catalog` boş, uçlar 404) ve açılmadan önce kararlar taze bir kimlik doğrulama ister (§9).
+
+**Yetkiler.** Varsayılan yok: rol katalog başına verilir (genel katalogda sunucu yöneticisi, kurum kataloğunda kurum
+yöneticisi verir; verme aracı kalıcı depoyla gelir) ve kurumun kendi rolleri (sahip, düzenleyen …) katalogda bir şey
+vermez. Yayımcı üyeliği hesaba bağlıdır; genel ve kurum kataloğunda yükleyen manifestin `publisherId`'sindeki
+yayımcının üyesi olmalıdır (yoksa `publisher_missing`). Kişisel katalogda sahibi yayımcı, inceleyici ve yönetici
+rollerini tutar; orada kataloğun hizmetlerinden başka kimse yoktur. Tarayıcı, her katalogda denetim hizmeti rolünü
+tutan hizmet hesabıdır; erişim anahtarıyla gelir, yani programdır ve karar vermez.
+
+**Görünürlük.** Katalogda olmayan hesap, göremediği sürüm ve olmayan sürüm aynı 404'ü aynı sözle alır. Liste önce
+görünürlükle süzülür, arama ve sayı ondan sonra. Başkasının taslağıyla çakışan sürüm numarası, o taslağın durumunu
+söylemeden reddedilir. Bir eklenti kimliğinin bir katalogdaki sürümleri tek yayımcınındır (`extension_owned`): ad alanı
+doğrulaması (D13) gelene dek başka bir yayımcı o kimlikte sürüm numarası kapatamaz.
+
+**Ret gövdesi.** API'nin `ApiError`'ı: `error` akışın kodu, `message` Türkçe neden ve çözüm, `requestId`. Durum kodu:
+yetki yok 403 (`permission_missing`, `not_owner`, `self_review`, `self_scan`, `decision_by_program`); istek yanlış 422
+(`reason_missing`, `changes_missing`, `package_invalid`, `identity_mismatch`, `publisher_mismatch`,
+`publisher_missing`, `scan_unexplained`, `waiver_not_allowed`); sunucunun kaydı bozuk 500 (`package_mismatch`,
+`baseline_invalid`, `record_invalid`, `record_inconsistent`); geri kalanı, sürümün durumu ya da başka bir hareket engel
+olduğu için 409. Yalnız `release_changed` aynen yeniden gönderilebilir (`retryable`). Paket reddi denetleyicinin
+sorunlarını (ilk 10'unu) dosyası ve yeriyle söyler.
+
+**Depo.** Küçük bir trait (`ReleaseStore`): kataloğun sürümleri, bir sürüm, yazma (yeni kayıt ya da yalnız okunan
+kaydın üstüne: hareket sayısı beklenen değilse `Changed`), içerik özetiyle bir kez yazılan paket baytları, hesabın
+yetkileri, güvenilen yayımcı. Hareket okunan kaydın üstüne yazılır; araya başka bir hareket girdiyse yeni kaydın
+üstünde yeniden yapılır (en çok 4 kez) ve akış onu yeniden denetler: yedi kapının aynı anda gelen raporları birbirini
+ezmez. İçerik yenileme önce denenir; reddedilecekse paket baytları hiç saklanmaz.
+
+**Ölçüm.** `cargo test -p kentos-api --bin kentosd extension_catalog`: 12 test, veritabanısız. Yüklemeden kuruluma uçtan
+uca; anahtarla, python, desktop ve mcp ile gelen kararın reddi; yazarın ve yayımcı üyesinin kendi sürümünü
+inceleyememesi; yeni içeriğin onayı düşürmesi ve eski içeriğin geç taramasının reddi; göremeyene 404 ve sayılmama;
+yalnız onaylı içeriğin kurulması ve askıdaki sürümün dürüst nedeni; farka göre odak ve güvenilir yayımcının hızlı yolu;
+ret gövdesi ve durum tablosu; kişisel katalog; yarışı kaybeden hareketin tek kayıtla yeniden yapılması; katalog
+kapalıyken 404, veritabanısız oturumda 503.
+
+**Bu dilimde verilen kararlar.**
+
+1. Kanal kuralı ve kataloğun çalışan sunucuda kapalı kalması (yukarıda).
+2. Katalog yetkileri varsayılan yok ve katalog başına; kurum rolleri katalog rolü değildir.
+3. Katalog adları `public`, `tenant:…`, `personal:…`; yol `/v1/extension-catalogs/…`.
+4. Ötekilere görünüm: hesap kimliği, not, bulgu ve değişiklik isteği yok; geçmiş yalnız durumu değiştiren hareketler.
+5. Eklenti kimliği sahipliği (`extension_owned`) ve başkasının taslağını ele vermeyen `version_taken` sözü.
+6. Testlerde hesap `x-kentos-test-account` başlığından gelir (`Accounts::Named`), yalnız test derlemesinde; sunucunun
+   derlemesinde bu yol yoktur.
+7. Kişisel katalogda tarayıcı: `Release::visible_to` kişisel kataloğun sürümünü önce yalnız sahibine gösteriyordu;
+   tarayıcı onu göremeyince kapıları hiç taranamaz, sürüm onaylanamazdı. Kural akış modülünde düzeltildi (sahibi ve
+   denetim hizmeti, `who_sees_a_release`); sunucu görünürlüğü yalnız modülden alır.
+
+## §11 Sonraki dilim: kalıcı depo (tasarım)
+
+`ReleaseStore`'un PostgreSQL ve nesne deposu uygulaması, `kentos` şemasında:
+
+| Tablo | Ne tutar |
+|---|---|
+| `extension_release` | anahtar (`catalog_kind`, `catalog_ref`, `extension_id`, `version`; tekil), `publisher`, `author`, `state`, içerik sütunları (`package_digest`, `lock_digest`, `sbom_digest`, `capabilities`), kaydın kendisi (`record jsonb`: akışın `Release` JSON'u), `moves` (hareket sayısı), oluşturma ve değişme zamanı |
+| `extension_release_move` | hareket kaydı, yalnız eklenir: (`release_id`, `seq`) birincil anahtar, `at`, `account`, `via`, `action`, `from_state`, `to_state`, `content`, `gate`, `reason` |
+| `extension_package` | `digest` birincil anahtar, `size`, nesne deposundaki anahtar (`extension-packages/{digest}`); bir kez yazılır |
+| `extension_catalog_grant` | (`catalog_kind`, `catalog_ref`, `account`, `role`); hizmet hesapları için `catalog_kind = every` |
+| `extension_publisher`, `extension_publisher_member` | yayımcı (kimlik, ad, doğrulanmış alan adı, güvenilir mi) ve üyeleri |
+
+- **Gönderilen içerik değişmez.** `extension_release` üstündeki bir tetikleyici, durum `draft` ya da `changesRequested`
+  değilken içerik sütunlarının değişmesini reddeder; akış da reddeder (`content_frozen`). Paket satırı ve nesnesi hiç
+  güncellenmez, yalnız eklenir: bir özet hep aynı içeriktir.
+- **Hareket kaydı yalnız eklenir.** Uygulama rolünün `extension_release_move` üstünde UPDATE ve DELETE izni yoktur; yeni
+  hareketler kayıtla aynı işlemde eklenir ve `moves` onların sayısıdır. Yazma `UPDATE … WHERE moves = $beklenen` ile
+  yapılır; satır değişmezse `Changed`.
+- **Okurken akışın kuralları.** Kayıt `Release::read` ile okunur, bozuk ya da akıştan geçmemiş kayıt yüklenmez; hareket
+  tablosu kaydın hareketleriyle aynı olmalıdır.
+- **Kurum kataloğu.** Üyelik var olan kiracı üyeliğinden ve kataloğun yetki tablosundan gelir; satır düzeyi güvenlik
+  projelerdeki gibi uygulanır.
+- **Verme.** `kentosd extension-catalog grant|revoke|trust` (sunucu yöneticisi), sonra yönetim uçları.
+- Göç bu dilimde yazılmadı; veritabanı testleri kalıcı depoyla gelir.
 
 ## Uygularken verilen kararlar (planda yazılı değildi)
 

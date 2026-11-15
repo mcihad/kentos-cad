@@ -16,6 +16,10 @@ mod checkpoints_tests;
 #[cfg(test)]
 mod compose_tests;
 pub mod error;
+// The extension catalog's release flow (docs/adr/8059 §10).
+pub mod extension_catalog;
+#[cfg(test)]
+mod extension_catalog_tests;
 pub mod files;
 #[cfg(test)]
 mod files_tests;
@@ -86,6 +90,9 @@ pub struct AppState {
     pub blobs: kentos_application::blobs::Blobs,
     /// The map services' proxy (docs/adr/0208 §13); `None`: off.
     pub proxy: Option<Arc<proxy::Proxy>>,
+    /// The extension catalog (docs/adr/8059 §10); `None`: off, as on every running server until its store is
+    /// persistent.
+    pub extension_catalog: Option<Arc<crate::extension_catalog::Catalog>>,
 }
 
 impl AppState {
@@ -243,6 +250,14 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/v1/ws", get(ws::upgrade))
         .route("/v1/proxy", get(proxy::forward).post(proxy::forward))
+        .route(
+            "/v1/extension-catalogs/{catalog}/releases/{extension}/{version}/moves",
+            post(extension_catalog::act),
+        )
+        .route(
+            "/v1/extension-catalogs/{catalog}/releases/{extension}/{version}/install",
+            get(extension_catalog::install),
+        )
         .layer(middleware);
     // An upload's bytes are larger and slower than any other request: their
     // route has its own limit (the largest file) and timeout.
@@ -282,5 +297,36 @@ pub fn router(state: AppState) -> Router {
             put(job_inputs::receive).get(job_inputs::get),
         )
         .layer(input_layers);
-    api.merge(uploads).merge(inputs).with_state(state)
+    // An extension package's bytes (docs/adr/8059 §10): uploaded, renewed and downloaded under the largest package the
+    // inspector opens; the list and a release's record share those paths, so their routes too.
+    let package_layers = ServiceBuilder::new()
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .layer(TraceLayer::new_for_http().make_span_with(|req: &axum::http::Request<_>| {
+            let rid = req.headers().get("x-request-id").and_then(|v| v.to_str().ok()).unwrap_or("-");
+            tracing::info_span!("eklenti paketi", method = %req.method(), path = %req.uri().path(), request_id = %rid)
+        }))
+        .layer(PropagateRequestIdLayer::x_request_id())
+        .layer(CatchPanicLayer::new())
+        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, UPLOAD_TIMEOUT))
+        .layer(RequestBodyLimitLayer::new(
+            usize::try_from(kentos_extensions::Limits::default().archive).unwrap_or(usize::MAX),
+        ));
+    let packages = Router::new()
+        .route(
+            "/v1/extension-catalogs/{catalog}/releases",
+            get(extension_catalog::list).post(extension_catalog::upload),
+        )
+        .route(
+            "/v1/extension-catalogs/{catalog}/releases/{extension}/{version}",
+            get(extension_catalog::read).put(extension_catalog::replace),
+        )
+        .route(
+            "/v1/extension-catalogs/{catalog}/releases/{extension}/{version}/package",
+            get(extension_catalog::package),
+        )
+        .layer(package_layers);
+    api.merge(uploads)
+        .merge(inputs)
+        .merge(packages)
+        .with_state(state)
 }

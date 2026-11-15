@@ -608,11 +608,12 @@ impl Release {
 
     /// Whether this account may see the release, inside its catalog (whose membership the server checks first): a
     /// published release and the notice of one taken back are seen by all, anything else by its author, its publisher
-    /// and the catalog's reviewers, moderators and scanners; a personal catalog's by its owner only. Counts, searches and
-    /// results are computed after this (PY-CLOUD-17).
+    /// and the catalog's reviewers, moderators and scanners; a personal catalog's by its owner and the catalog's
+    /// scanners only (its gates are scanned there too, by a service that decides nothing). Counts, searches and results
+    /// are computed after this (PY-CLOUD-17).
     pub fn visible_to(&self, actor: &Actor) -> bool {
         if self.scope == CatalogScope::Private {
-            return self.owned_by(actor);
+            return self.owned_by(actor) || actor.can(Permission::Scan);
         }
         let public = matches!(
             self.state,
