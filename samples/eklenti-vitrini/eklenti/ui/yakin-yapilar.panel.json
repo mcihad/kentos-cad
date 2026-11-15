@@ -8,6 +8,9 @@
       "text": "Haritadan seç'e basıp haritada bir nokta gösterin ya da x, y yazın: o noktaya verilen uzaklıktaki yapılar yakından uzağa listelenir; satıra tıklamak yapıyı gösterir."
     },
     {
+      "type": "divider"
+    },
+    {
       "type": "pointPicker",
       "id": "nokta",
       "label": "Nokta",
@@ -24,7 +27,8 @@
       "min": 1,
       "max": 1000,
       "required": true,
-      "row": "arama"
+      "row": "arama",
+      "step": 5
     },
     {
       "type": "button",

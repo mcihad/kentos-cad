@@ -1797,14 +1797,15 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | Grup | Bileşen | Durum | Panelde / KentOS'ta | Not |
 |---|---|---|---|---|
 | Düzen | yığın | var | gövde tek sütun (ortak `Form`) | dar yerde ad alanın üstüne geçer |
-| | satır, ızgara | yok | — | iki sütunluk form düzeni yeter; ızgara tek sütuna inecek (PY-UI-13) |
+| | satır, ızgara | var | bileşenin `row` anahtarı, ortak formun hücreleri (§55) | yer yoksa alt alta (PY-UI-13); aynı sayıda hücreli satırlar sütun gibi hizalanır |
 | | sekme | var | bileşenin `tab` anahtarı, KentOS'un sekme şeridi (§43) | sekmesiz bileşen her sayfada; yanlış alan sayfasını açar |
 | | grup, akordeon | var | `section` (katlanır başlık; sonraki bileşenleri bir sonraki bölüme dek toplar, §38) | katlıyken değerler komuta gider; yanlış bırakılan alan bölümünü açar |
 | | kaydırma | var | panel kendi kaydırır, yerini tutar | sekmeler üstte kalır |
+| | çizgi | var | `divider` (formun genişliğinde ince çizgi, §59) | |
 | | bölücü | KentOS'ta | `sash` | |
 | | adımlayıcı | KentOS'ta | `wizard` | |
 | Basit girdi | metin | var | `textField` | Enter birincil düğme |
-| | sayı | var | `numberField` (birim, sınır) | yazıldığı gibi tutulur, basınca okunur |
+| | sayı | var | `numberField` (birim, sınır; `step` ile − ve + düğmeleri, §59) | yazıldığı gibi tutulur, basınca okunur |
 | | tarih | var | `dateField` (KentOS'un takvimi; GG.AA.YYYY ya da YYYY-AA-GG yazılır, değeri ISO tarih) | |
 | | saat | var | `timeField` (KentOS'un saat seçicisi, `TimePicker`; 14:30, 14.30, 9:05 yazılır, değeri SS:DD) | 24 saat |
 | | an | var | `dateTimeField` (takvim ve saat yan yana, `DatePicker::date_time`; değeri `2026-11-15T14:30`) | yerel saat, saat dilimi yok |
@@ -3206,3 +3207,24 @@ tamamı, 43/1 ve Ek-5/B'nin çıkmaz koridor sütunu aynen; 22 alıntının heps
   türü anması (var olan sınamalar), Python kurucusu; masaüstü 2 (değer `[x, y]`, boş, zorunlu, nokta olmayan yazım,
   kodun `set`'i ve yanlışı; seçimin alana yazılması, Esc, soran alan yokken seçimin başkasına kalması, `onChange`'in
   güncellemeden sonra istenmesi); Vitrin'in sayıları (14 komut, 4 panel) ve şerit etiketleri.
+
+## §59. Çizgi ve sayı adımı: `divider`, `numberField`'ın `step`'i (`ADIM 22`, bileşen envanteri)
+
+**16 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/ui_panel.rs` (`Component::Divider`, `NumberField::step`,
+Kapı 1), şema ve Python kurucuları (`ui.divider()`, `ui.number_field(…, step=)`), masaüstü `panel_view.rs` (çizim),
+`panels.rs` (`OpenPanel::step`, `PanelEvent::Step`), `dialogs.rs` (pencerenin alanları 15 tür); Vitrin 1.0.44.
+
+- **Envanterin "bölücü"sü ve "adımlayıcı"sı bunlar değil:** kapsam raporunda bölücü sürüklenen ayraç (`sash`),
+  adımlayıcı sihirbazdır (`wizard`); ikisi de hâlâ "KentOS'ta, bağlanmadı". Bu dilimin ikisi küçük ve ayrı: rapora
+  "çizgi" satırı eklendi, sayı satırı `step`'i anıyor.
+- **`divider`:** formun genişliğinde ince çizgi (bölüm başlığının çizgisinin stili); adı, değeri yok, isteğe bağlı
+  `id` (kodun `visible` ile gizleyebilmesi için), `visibleWhen`, `tab`; satıra girmez. Pencerede de olur.
+- **`step`:** sayı alanının yanında − ve +; değer (yoksa ilk değeri, o da yoksa alt sınırı, o da yoksa 0) adım kadar
+  değişir, sınırların içinde kalır ve adımın ondalığına yuvarlanır (0,1'lik adımlar 0,30000000000000004'e kaymaz).
+  Yazmak gibi bir değişikliktir: sayı alanının `onChange`'i yok, komut çalışmaz. Kapı 1: sıfırdan büyük sayı.
+- **Vitrin 1.0.44:** Yakın yapılar'da açıklamanın altında çizgi, Uzaklık 5 m'lik adımlarla (1–1000 m). Gerçek pencere
+  (47-nokta): + ile 25 → 30, Bul: "30 m içinde 3 yapı"; nokta seçicinin alanı yazısız hedef düğmesiyle genişledi.
+- **SDK paketi:** rehber `divider`'ı ve `step`'i anar (her tür anılmalı); paket 48 000 baytın 21 bayt üstüne çıktı,
+  rehberin yeni sözleri kısaltılarak sınıra döndü.
+- **Sınamalar:** paylaşılan 1 (adsız ve kimliksiz çizgi; adımın sıfır olması yeriyle), masaüstü 1 (üst sınırda durma,
+  ondalığın kaymaması, boştan alt sınırla başlama); rehberin ve kapsam raporunun türleri anması (var olan sınamalar).

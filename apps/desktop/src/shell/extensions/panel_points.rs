@@ -186,6 +186,34 @@ mod tests {
         assert!(wrong.unwrap_err().message.contains("[x, y]"));
     }
 
+    /// A number field's − and +: by its step from its value (or its lower bound when empty), within its bounds, to
+    /// the step's decimals.
+    #[test]
+    fn a_number_fields_step_moves_it_within_its_bounds() {
+        let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Adım",
+            "body": [
+                { "type": "numberField", "id": "uzaklik", "label": "Uzaklık", "value": 25, "step": 5, "min": 5,
+                  "max": 30 },
+                { "type": "numberField", "id": "oran", "label": "Oran", "step": 0.1, "min": 0 }
+            ] });
+        let mut p = OpenPanel::new(
+            "tr.ornek.deneme",
+            "adim",
+            ui_panel::read(&value).expect("a panel"),
+        );
+        p.step("uzaklik", 1);
+        assert_eq!(p.texts["uzaklik"], "30");
+        p.step("uzaklik", 1);
+        assert_eq!(p.texts["uzaklik"], "30", "its upper bound");
+        for _ in 0..3 {
+            p.step("oran", 1);
+        }
+        assert_eq!(p.texts["oran"], "0,3", "no drift past the step's decimals");
+        p.texts.insert("oran".into(), String::new());
+        p.step("oran", -1);
+        assert_eq!(p.texts["oran"], "0", "from its lower bound, not below it");
+    }
+
     /// Haritadan seç: the pick is the window's tool; the point picked is the field's words, Esc leaves them.
     #[test]
     fn a_point_picked_on_the_map_is_the_fields() {

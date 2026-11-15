@@ -85,6 +85,11 @@ pub enum Component {
         #[serde(default)]
         collapsed: bool,
     },
+    /// A line across the panel between what it separates (docs/adr/8057 §59): no words, no value.
+    Divider {
+        #[serde(default)]
+        id: Option<String>,
+    },
     /// A text the user types.
     TextField {
         id: String,
@@ -112,6 +117,9 @@ pub enum Component {
         max: Option<f64>,
         #[serde(default)]
         unit: Option<String>,
+        /// − and + beside it change the value by this much, within `min` and `max` (docs/adr/8057 §59).
+        #[serde(default)]
+        step: Option<f64>,
     },
     /// One of its choices.
     Select {
@@ -418,7 +426,9 @@ impl Component {
     /// Its id, when it has one.
     pub fn id(&self) -> Option<&str> {
         match self {
-            Component::Text { id, .. } | Component::Section { id, .. } => id.as_deref(),
+            Component::Text { id, .. }
+            | Component::Section { id, .. }
+            | Component::Divider { id } => id.as_deref(),
             Component::TextField { id, .. }
             | Component::NumberField { id, .. }
             | Component::Select { id, .. }
@@ -632,8 +642,11 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     Some(match kind {
         "text" => &["id", "text"],
         "section" => &["id", "label", "collapsed"],
+        "divider" => &["id"],
         "textField" => &["id", "label", "placeholder", "value", "required"],
-        "numberField" => &["id", "label", "value", "min", "max", "unit", "required"],
+        "numberField" => &[
+            "id", "label", "value", "min", "max", "unit", "step", "required",
+        ],
         "select" => &["id", "label", "options", "value", "onChange"],
         "layerPicker" => &["id", "label", "geometry", "onChange", "required"],
         "fieldPicker" => &["id", "label", "layer", "kinds", "onChange", "required"],
@@ -675,7 +688,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, section, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
+const TYPES: &str = "text, section, divider, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
                      fieldPicker, featurePicker, filePicker, crsPicker, pointPicker, checkbox, button, table, tree, card, \
                      stats, chart, image";
 
@@ -1022,7 +1035,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             );
         }
         match c.get("id") {
-            None if kind == "text" || kind == "section" => {}
+            None if kind == "text" || kind == "section" || kind == "divider" => {}
             None => add(
                 at.clone(),
                 format!("{kind} bileşeni bir kimlik (id) ister."),
@@ -1065,7 +1078,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
         }
         if !matches!(
             kind,
-            "table" | "tree" | "card" | "stats" | "chart" | "image"
+            "table" | "tree" | "card" | "stats" | "chart" | "image" | "divider"
         ) && text(c, "label").is_none()
         {
             add(
@@ -1098,6 +1111,16 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     add(
                         format!("{at}/min"),
                         "En küçük değer (min) en büyükten (max) büyük.".to_owned(),
+                    );
+                }
+                // Its step (docs/adr/8057 §59): a positive number.
+                if let Some(step) = number("step")
+                    && !step.is_some_and(|s| s.is_finite() && s > 0.0)
+                {
+                    add(
+                        format!("{at}/step"),
+                        "“step” sıfırdan büyük bir sayı olmalı: − ve + değeri bu kadar değiştirir."
+                            .to_owned(),
                     );
                 }
             }
@@ -1555,6 +1578,33 @@ mod tests {
                   "category": "ada" }
             ]
         })
+    }
+
+    /// A divider needs no id; a number field's step is a positive number, said where it is written otherwise.
+    #[test]
+    fn a_divider_is_a_line_and_a_step_is_positive() {
+        let value = json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Adım",
+            "body": [
+                { "type": "divider" },
+                { "type": "numberField", "id": "a", "label": "A", "step": 0.5, "min": 0, "max": 10 },
+                { "type": "numberField", "id": "b", "label": "B", "step": 0 }
+            ] });
+        let said: Vec<String> = check("p.json", &value, &[])
+            .into_iter()
+            .filter_map(|p| p.at)
+            .collect();
+        assert_eq!(said, ["/body/2/step"], "{said:?}");
+        let panel = read(&json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Adım",
+            "body": [{ "type": "divider" }, { "type": "numberField", "id": "a", "label": "A", "step": 5 }] }))
+        .expect("a panel");
+        assert!(matches!(panel.body[0], Component::Divider { id: None }));
+        assert!(matches!(
+            panel.body[1],
+            Component::NumberField {
+                step: Some(5.0),
+                ..
+            }
+        ));
     }
 
     /// A point is two numbers: typed with a decimal point and a comma or a space between, or decimal commas with a

@@ -90,6 +90,18 @@ def section(
     return out
 
 
+def divider(*, id: str | None = None, visible_when: str | None = None, tab: str | None = None) -> dict[str, Any]:
+    """A line across the panel between what it separates (docs/adr/8057 §59): no words, no value."""
+    out: dict[str, Any] = {"type": "divider"}
+    if id is not None:
+        out["id"] = id
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
+    return out
+
+
 def text_field(
     id: str,
     label: str,
@@ -138,6 +150,7 @@ def number_field(
     min: float | None = None,
     max: float | None = None,
     unit: str | None = None,
+    step: float | None = None,
     required: bool = False,
     visible_when: str | None = None,
     required_when: str | None = None,
@@ -157,6 +170,8 @@ def number_field(
         out["max"] = max
     if unit is not None:
         out["unit"] = unit
+    if step is not None:
+        out["step"] = step
     if required:
         out["required"] = True
     if visible_when is not None:
@@ -802,7 +817,7 @@ def card(
 
 
 __all__ = [
-    "Choice", "choice", "file_filter", "panel", "text", "section", "text_field", "number_field", "select",
+    "Choice", "choice", "file_filter", "panel", "text", "section", "divider", "text_field", "number_field", "select",
     "layer_picker", "field_picker", "file_picker", "crs_picker", "point_picker", "feature_picker", "multi_select",
     "date_field", "time_field", "date_time_field", "checkbox", "button", "table", "tree", "stats", "chart", "image",
     "card",

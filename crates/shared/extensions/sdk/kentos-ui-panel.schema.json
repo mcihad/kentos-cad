@@ -121,6 +121,35 @@
           "type": "object"
         },
         {
+          "description": "A line across the panel between what it separates (docs/adr/8057 §59): no words, no value.",
+          "properties": {
+            "id": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "divider",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
           "description": "A text the user types.",
           "properties": {
             "calculate": {
@@ -240,6 +269,15 @@
               "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
               "maxLength": 40,
               "type": "string"
+            },
+            "step": {
+              "default": null,
+              "description": "− and + beside it change the value by this much, within `min` and `max` (docs/adr/8057 §59).",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",

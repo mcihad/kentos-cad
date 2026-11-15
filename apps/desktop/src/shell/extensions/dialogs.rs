@@ -25,9 +25,10 @@ use crate::app::{App, Message};
 use crate::exchange::words;
 
 /// What a dialog may hold: a panel's fields and words.
-const FIELDS: [&str; 14] = [
+const FIELDS: [&str; 15] = [
     "text",
     "section",
+    "divider",
     "filePicker",
     "crsPicker",
     "textField",

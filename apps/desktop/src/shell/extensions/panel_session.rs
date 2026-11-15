@@ -64,6 +64,7 @@ fn kind_of(c: &Component) -> &'static str {
     match c {
         Component::Text { .. } => "text",
         Component::Section { .. } => "section",
+        Component::Divider { .. } => "divider",
         Component::Image { .. } => "image",
         Component::FilePicker { .. } => "filePicker",
         Component::TextField { .. } => "textField",

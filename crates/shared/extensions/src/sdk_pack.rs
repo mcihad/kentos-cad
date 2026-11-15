@@ -83,9 +83,9 @@ Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.pa
 Katmanlar'ın yanında, left haritanın solunda, bottom altında; kullanıcının taşıdığı yer korunur, `definition`),
 şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title` ve `body`
 bileşenleri: `text` (`text`), `section` (`label`, `collapsed`: katlanır başlık; sonraki bileşenleri bir sonraki bölüme
-dek toplar, katlıyken değerleri yine gider, yanlış bırakılan alanı bölümü açar), `textField` (`id`, `label`,
-`placeholder`, `value`), `numberField` (`id`, `label`,
-`min`, `max`, `unit`, `value`), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
+dek toplar, katlıyken değerleri yine gider, yanlış bırakılan alanı bölümü açar), `divider`, `textField` (`id`,
+`label`, `placeholder`, `value`), `numberField` (`id`, `label`,
+`min`, `max`, `unit`, `value`, `step`), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
 da YYYY-AA-GG yazar ya da takvimden seçer, değeri ISO tarih metni ya da boşsa None), `timeField` (`id`, `label`,
 `value`, `min`, `max`: SS:DD; kullanıcı 14:30, 14.30 ya da 9:05 yazar ya da saat seçicisinden seçer, değeri SS:DD ya da
 None), `dateTimeField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GGTSS:DD, yerel saat; kullanıcı 15.11.2026 14:30
@@ -151,7 +151,7 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 `ctx.is_stopped()`, `ctx.log(metin, level="info"|"warning"|"error")`, `ctx.report(satırlar, title=…, message=…)`,
 `ctx.message(metin)`, `ctx.cancelled()`; kullanıcıya sormak için `ctx.dialog(başlık, alanlar, ok=…, cancel=…)` (alanlar
 bir panelin girdileri: textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, checkbox,
-layerPicker, fieldPicker, filePicker, crsPicker, text, section; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
+layerPicker, fieldPicker, filePicker, crsPicker, text, section, divider; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
 bekler), `ctx.confirm(metin)` (evet: True) ve `ctx.run_tool(araç, **parametreler)` (KentOS'un aracı; komutta komutun
 hakkıyla, `ext.layer_input("yapi")`, `ext.new_layer("Ad")`; araçta elindeki nesnelerle, sonuç `ToolAnswer`). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
 as ui` ile yazın: bileşen başına bir işlev, gerekli anahtarlar sırayla, kalanı adıyla (`ui.text_field("onek", "Önek",

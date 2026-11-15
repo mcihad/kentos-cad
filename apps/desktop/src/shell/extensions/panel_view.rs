@@ -236,6 +236,12 @@ impl App {
                         .unwrap_or(text);
                     form = form.wide(label::caption(text.clone()));
                 }
+                // A line across the form between what it separates (docs/adr/8057 §59).
+                Component::Divider { .. } => {
+                    form = form.wide(
+                        iced::widget::rule::horizontal(1).style(kentos_ui::style::field::hairline),
+                    );
+                }
                 // A section's heading: pressed, what it gathers folds or opens (docs/adr/8057 §38).
                 Component::Section { label: words, .. } => {
                     form = form.foldable_section(
@@ -300,6 +306,7 @@ impl App {
                     id,
                     label: words,
                     unit,
+                    step,
                     ..
                 } => {
                     let value = p.texts.get(id).map_or("", String::as_str);
@@ -315,7 +322,34 @@ impl App {
                     if let Some(unit) = unit {
                         field = field.suffix(unit.clone());
                     }
-                    form = form.field(words.clone(), field);
+                    // Its step: − and + beside it (docs/adr/8057 §59).
+                    if step.is_some() {
+                        let by = |glyph, sign: i8| {
+                            let mut b = iced::widget::button(
+                                kentos_ui::icon::icon(glyph)
+                                    .size(12.0)
+                                    .tone(kentos_ui::icon::Tone::Inherit),
+                            )
+                            .padding([6, 8])
+                            .style(kentos_ui::style::button::secondary);
+                            if on(id) {
+                                b = b.on_press(event(PanelEvent::Step(id.clone(), sign)));
+                            }
+                            b
+                        };
+                        form = form.field(
+                            words.clone(),
+                            iced::widget::row![
+                                field,
+                                by(kentos_ui::icon::Icon::Minus, -1),
+                                by(kentos_ui::icon::Icon::Plus, 1)
+                            ]
+                            .spacing(4)
+                            .align_y(iced::Alignment::Center),
+                        );
+                    } else {
+                        form = form.field(words.clone(), field);
+                    }
                 }
                 Component::DateField {
                     id,

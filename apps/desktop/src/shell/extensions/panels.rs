@@ -176,6 +176,8 @@ pub(crate) enum PanelEvent {
     PickFile(String),
     /// A point picker's Haritadan seç: a point picked on the map, the field's words then (panel_points.rs).
     PickPoint(String),
+    /// A number field's − (−1) or + (1): its value by its step.
+    Step(String, i8),
     /// The open panel at this place in the tabs shown.
     Activate(usize),
     /// Its tab moved: from, to (where it goes once taken out).
@@ -842,6 +844,39 @@ impl OpenPanel {
         filled
     }
 
+    /// Number field `id`'s − (`sign` −1) or + (1): its value (else its first, else its lower bound, else 0) moved by
+    /// its step and kept within its bounds, to the step's decimals (0.1 steps do not drift into 0.30000000000000004).
+    pub(crate) fn step(&mut self, id: &str, sign: i8) {
+        let Some(Component::NumberField {
+            step: Some(step),
+            min,
+            max,
+            value,
+            ..
+        }) = self.definition.body.iter().find(|c| c.id() == Some(id))
+        else {
+            return;
+        };
+        let (step, min, max) = (*step, *min, *max);
+        let now = self
+            .texts
+            .get(id)
+            .and_then(|t| number_of(t))
+            .or(*value)
+            .or(min)
+            .unwrap_or(0.0);
+        let decimals = step.to_string().split_once('.').map_or(0, |(_, d)| d.len()) as i32;
+        let scale = 10f64.powi(decimals);
+        let mut next = ((now + f64::from(sign) * step) * scale).round() / scale;
+        if let Some(min) = min {
+            next = next.max(min);
+        }
+        if let Some(max) = max {
+            next = next.min(max);
+        }
+        self.texts.insert(id.to_owned(), number_words(next));
+    }
+
     /// The output (a table, a tree, a card) a button's rows go to: its own, else the panel's first.
     pub(super) fn table_of(&self, table: Option<&String>) -> Option<String> {
         table.cloned().or_else(|| {
@@ -1183,6 +1218,10 @@ impl App {
             }
             PanelEvent::Pick(id) => return self.ext_panel_pick(at, &id),
             PanelEvent::PickPoint(id) => return self.ext_panel_pick_point(at, &id),
+            PanelEvent::Step(id, sign) => {
+                panel.step(&id, sign);
+                panel.recalculate();
+            }
             PanelEvent::Activate(to) => return self.ext_panel_activate(to),
             PanelEvent::Move(from, to) => self.ext_panel_move(from, to),
             PanelEvent::Close(which) => return self.ext_panel_close(which),

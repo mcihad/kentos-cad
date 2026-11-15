@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.44 — 16 Kasım 2026
+
+- Yakın yapılar panelinde açıklamanın altında ince bir çizgi (`divider`); Uzaklık'ın yanında − ve + düğmeleri değeri
+  5 m'lik adımlarla değiştirir (`numberField`'ın `step`'i, 1 ile 1000 m arasında kalır).
+
 ## 1.0.43 — 16 Kasım 2026
 
 - "Yakın yapılar" paneli (Vitrin › Panel): Nokta alanı bir nokta seçicisi (`pointPicker`): Haritadan seç'e basıp
