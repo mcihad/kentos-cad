@@ -134,5 +134,84 @@
       "gaps": []
     }
   ],
+  "cad": {
+    "layers": [
+      {
+        "id": "parsel",
+        "name": "Parsel",
+        "objects": 9,
+        "hatches": 0,
+        "first": [
+          "0192f5a1-2590-7000-8000-000000000001",
+          "0192f5a1-2590-7000-8000-000000000002",
+          "0192f5a1-2590-7000-8000-000000000003",
+          "0192f5a1-2590-7000-8000-000000000004",
+          "0192f5a1-2590-7000-8000-000000000005",
+          "0192f5a1-2590-7000-8000-000000000006",
+          "0192f5a1-2590-7000-8000-000000000007",
+          "0192f5a1-2590-7000-8000-000000000008",
+          "0192f5a1-2590-7000-8000-000000000009"
+        ],
+        "firstHatches": [],
+        "lineType": "continuous",
+        "linePattern": null
+      },
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "objects": 4,
+        "hatches": 0,
+        "first": [
+          "0192f5a1-2590-7000-8000-000000000010",
+          "0192f5a1-2590-7000-8000-000000000011",
+          "0192f5a1-2590-7000-8000-000000000012",
+          "0192f5a1-2590-7000-8000-000000000013"
+        ],
+        "firstHatches": [],
+        "lineType": "continuous",
+        "linePattern": null
+      },
+      {
+        "id": "nokta",
+        "name": "Noktalar",
+        "objects": 2,
+        "hatches": 0,
+        "first": [
+          "0192f5a1-2590-7000-8000-000000000014",
+          "0192f5a1-2590-7000-8000-000000000015"
+        ],
+        "firstHatches": [],
+        "lineType": "continuous",
+        "linePattern": null
+      },
+      {
+        "id": "yol",
+        "name": "Yol",
+        "objects": 2,
+        "hatches": 0,
+        "first": [
+          "0192f5a1-2590-7000-8000-000000000016",
+          "0192f5a1-2590-7000-8000-000000000017"
+        ],
+        "firstHatches": [],
+        "lineType": "continuous",
+        "linePattern": null
+      },
+      {
+        "id": "bos",
+        "name": "Boş katman",
+        "objects": 0,
+        "hatches": 0,
+        "first": [],
+        "firstHatches": [],
+        "lineType": "continuous",
+        "linePattern": null
+      }
+    ],
+    "blocks": [],
+    "dimensionFonts": [],
+    "grids": [],
+    "rooms": []
+  },
   "cut": false
 }

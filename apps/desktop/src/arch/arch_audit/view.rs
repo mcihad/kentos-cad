@@ -187,6 +187,21 @@ impl App {
                 }),
             );
         }
+        // The EK-3 and EK-4 rule not run (docs/adr/8064): said, with why, so a clean table is not taken for a pass.
+        if let Some(why) = &self.arch.arch_audit.standards_failed {
+            out = out.push(
+                container(
+                    row![
+                        icon(from_web(Some("warning"))).size(14.0).tone(Tone::Warning),
+                        label::body(format!("EK-3 ve EK-4 denetlenemedi: {why}")),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                )
+                .padding([4, 10])
+                .width(Fill),
+            );
+        }
         if let Some(note) = &self.arch.arch_audit.note {
             out = out.push(self.arch_audit_note_row(note));
         }

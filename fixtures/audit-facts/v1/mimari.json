@@ -955,5 +955,288 @@
       }
     ]
   },
+  "cad": {
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "objects": 48,
+        "hatches": 0,
+        "first": [
+          "01a1dfda-069a-74c1-969d-0168a1cc86c9",
+          "01a1dfda-069b-7333-8eb1-c34c62c094f1",
+          "01a1dfda-069b-7333-8eb1-c34d6c2f3cb1",
+          "01a1dfda-069b-7333-8eb1-c34e8d7f6c00",
+          "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
+          "01a1dfda-069b-7333-8eb1-c3504b9064c9",
+          "01a1dfda-06a7-7435-a23f-d8eabcad9c04",
+          "01a1dfda-06a7-7435-a23f-d8ebd7ba45f1",
+          "01a1dfda-06a7-7435-a23f-d8ec0fb0adb9",
+          "01a1dfda-06a7-7435-a23f-d8ed2c7b1e3d",
+          "01a1dfda-06a7-7435-a23f-d8ee6b4072a1",
+          "01a1dfda-06c5-7278-9486-e3989deaadbb",
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e39ad272edb3",
+          "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
+          "01a1dfda-06c5-7278-9486-e39cf0fe5491",
+          "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
+          "01a1dfda-06c5-7278-9486-e39ee6b0ea49",
+          "01a1dfda-06c5-7278-9486-e39f8e07d64b",
+          "01a1dfda-06e1-741c-8eb9-6ca333490465",
+          "01a1dfda-06e1-741c-8eb9-6ca4a1b3fd3c",
+          "01a1dfda-06e1-741c-8eb9-6ca56b114c83",
+          "01a1dfda-06e1-741c-8eb9-6ca6da25147a",
+          "01a1dfda-06e1-741c-8eb9-6ca7d264ae09",
+          "01a1dfda-06e1-741c-8eb9-6ca84ff93522",
+          "01a1dfda-06e1-741c-8eb9-6ca9ef8f9b89",
+          "01a1dfda-06f3-72a1-8e0e-a40020218328",
+          "01a1dfda-06f8-76a1-8694-154e564a0117",
+          "01a1dfda-06f8-76a1-8694-154f1bfb8d4f",
+          "01a1dfda-06f8-76a1-8694-15505f2d5b85",
+          "01a1dfda-06f8-76a1-8694-15513f57a37f",
+          "01a1dfda-06f8-76a1-8694-1552b94befba",
+          "01a1dfda-06f8-76a1-8694-15536ba1f48d",
+          "01a1dfda-06fd-70e4-a3f4-c759aeeb6785",
+          "01a1dfda-06fd-70e4-a3f4-c75adbd765e3",
+          "01a1dfda-06fd-70e4-a3f4-c75baedb94aa",
+          "01a1dfda-0704-70dd-a975-499e70342853",
+          "01a1dfda-0704-70dd-a975-499fcf59dea1",
+          "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
+          "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
+          "01a1dfda-0704-70dd-a975-49a2bb4d2324",
+          "01a1dfda-0704-70dd-a975-49a3b97636d7",
+          "01a1dfda-0704-70dd-a975-49a42be36102",
+          "01a1dfda-0709-75f9-b155-c59a25e94cf3",
+          "01a1dfda-0709-75f9-b155-c59bd5fb560f",
+          "01a1dfda-0709-75f9-b155-c59ca37f1c9c",
+          "01a1dfda-0709-75f9-b155-c59de0c23b39",
+          "01a1dfda-0709-75f9-b155-c59e206e0cd6"
+        ],
+        "firstHatches": [],
+        "lineType": "continuous",
+        "linePattern": null
+      },
+      {
+        "id": "olcu",
+        "name": "Ölçü",
+        "objects": 0,
+        "hatches": 0,
+        "first": [],
+        "firstHatches": [],
+        "lineType": "continuous",
+        "linePattern": null
+      },
+      {
+        "id": "yazi",
+        "name": "Yazı",
+        "objects": 0,
+        "hatches": 0,
+        "first": [],
+        "firstHatches": [],
+        "lineType": "continuous",
+        "linePattern": null
+      },
+      {
+        "id": "tarama",
+        "name": "Tarama",
+        "objects": 0,
+        "hatches": 0,
+        "first": [],
+        "firstHatches": [],
+        "lineType": "continuous",
+        "linePattern": null
+      },
+      {
+        "id": "yardimci",
+        "name": "Yardımcı",
+        "objects": 0,
+        "hatches": 0,
+        "first": [],
+        "firstHatches": [],
+        "lineType": "dashed",
+        "linePattern": null
+      },
+      {
+        "id": "eksen",
+        "name": "Eksen",
+        "objects": 0,
+        "hatches": 0,
+        "first": [],
+        "firstHatches": [],
+        "lineType": "dashdot",
+        "linePattern": null
+      }
+    ],
+    "blocks": [],
+    "dimensionFonts": [],
+    "grids": [],
+    "rooms": [
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e3989deaadbb",
+        "number": null,
+        "name": "Merdiven evi",
+        "level": "zemin",
+        "levelCode": "K00",
+        "at": [
+          2.025,
+          2.025
+        ]
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e3999a1cb813",
+        "number": null,
+        "name": "Koridor",
+        "level": "zemin",
+        "levelCode": "K00",
+        "at": [
+          12.0,
+          4.75
+        ]
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39ad272edb3",
+        "number": "Z01",
+        "name": "Dükkân",
+        "level": "zemin",
+        "levelCode": "K00",
+        "at": [
+          8.0,
+          2.025
+        ]
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
+        "number": "Z02",
+        "name": "Salon",
+        "level": "zemin",
+        "levelCode": "K00",
+        "at": [
+          15.0,
+          2.025
+        ]
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39cf0fe5491",
+        "number": "Z03",
+        "name": "Yatak odası",
+        "level": "zemin",
+        "levelCode": "K00",
+        "at": [
+          20.975,
+          2.025
+        ]
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
+        "number": "Z04",
+        "name": "Depo",
+        "level": "zemin",
+        "levelCode": "K00",
+        "at": [
+          3.025,
+          7.225
+        ]
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39ee6b0ea49",
+        "number": null,
+        "name": "Asansör boşluğu",
+        "level": "zemin",
+        "levelCode": "K00",
+        "at": [
+          7.0,
+          7.225
+        ]
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39f8e07d64b",
+        "number": "Z05",
+        "name": "Ofis",
+        "level": "zemin",
+        "levelCode": "K00",
+        "at": [
+          15.975,
+          7.225
+        ]
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-499e70342853",
+        "number": null,
+        "name": "Merdiven evi",
+        "level": "k1",
+        "levelCode": "K01",
+        "at": [
+          2.025,
+          2.025
+        ]
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-499fcf59dea1",
+        "number": null,
+        "name": "Koridor",
+        "level": "k1",
+        "levelCode": "K01",
+        "at": [
+          12.0,
+          4.75
+        ]
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
+        "number": "K01",
+        "name": "Salon",
+        "level": "k1",
+        "levelCode": "K01",
+        "at": [
+          8.0,
+          2.025
+        ]
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
+        "number": "K02",
+        "name": "Yatak odası 1",
+        "level": "k1",
+        "levelCode": "K01",
+        "at": [
+          15.0,
+          2.025
+        ]
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a2bb4d2324",
+        "number": "K03",
+        "name": "Yatak odası 2",
+        "level": "k1",
+        "levelCode": "K01",
+        "at": [
+          20.975,
+          2.025
+        ]
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a3b97636d7",
+        "number": "K04",
+        "name": "Arşiv",
+        "level": "k1",
+        "levelCode": "K01",
+        "at": [
+          12.0,
+          7.225
+        ]
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a42be36102",
+        "number": null,
+        "name": "Balkon",
+        "level": "k1",
+        "levelCode": "K01",
+        "at": [
+          8.0,
+          -0.8
+        ]
+      }
+    ]
+  },
   "cut": false
 }

@@ -17,6 +17,8 @@
 //!   layers' facts.
 //! - **The permit** where the drawing's variables give one of the dated scope decision's particulars (`permit`,
 //!   docs/adr/8063): those particulars, the building's yapı inşaat alanı and its storeys.
+//! - **The CAD drawing** (`cad`, docs/adr/8064): its layers' names, objects, hatches and line types, the blocks, the
+//!   dimensions' typefaces, the grids and the rooms' numbers, names, storey codes and centres, for EK-3 and EK-4.
 
 use std::collections::BTreeMap;
 use std::panic::AssertUnwindSafe;
@@ -134,6 +136,10 @@ pub fn project_facts(
         Ok(Some(found)) => facts.with_permit(found),
         Ok(None) | Err(_) => facts,
     };
+    let facts = match std::panic::catch_unwind(AssertUnwindSafe(|| cad::measure(doc))) {
+        Ok(found) => facts.with_cad(found),
+        Err(_) => facts,
+    };
     match std::panic::catch_unwind(AssertUnwindSafe(|| architecture::measure(doc, stopped))) {
         Ok(Err(architecture::Stopped)) => None,
         Ok(Ok(Some(found))) => Some(facts.with_architecture(found)),
@@ -197,6 +203,7 @@ impl Watch for Asked<'_> {
 }
 
 mod architecture;
+pub mod cad;
 pub mod permit;
 
 #[cfg(test)]

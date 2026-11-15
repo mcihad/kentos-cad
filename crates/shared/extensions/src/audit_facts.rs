@@ -17,7 +17,8 @@
 //! The drawing's architecture (storeys, rooms, the program's article 4 areas, the escape routes) is an optional section
 //! of the same version, [`architecture`] (docs/adr/8057 §39): absent when the drawing has no room. So is the permit's
 //! (the dated scope decision's particulars and the building's area and storeys), [`permit`] (docs/adr/8063): absent
-//! when none of its particulars has a value.
+//! when none of its particulars has a value. And the CAD drawing's names and styles EK-3 and EK-4 read, [`cad`]
+//! (docs/adr/8064): absent when the drawing has neither a layer holding objects nor a room.
 //!
 //! Pure, as the crate: the producer (`kentos_processing::audit_facts`) measures with the geometry core; this module
 //! holds the shape, its rules and its JSON Schema (`sdk/kentos-audit-facts.schema.json`, the SDK's `factsSchema`).
@@ -27,9 +28,11 @@ use std::cmp::Ordering;
 use serde::{Deserialize, Serialize};
 
 pub mod architecture;
+pub mod cad;
 pub mod permit;
 
 pub use architecture::ArchitectureFacts;
+pub use cad::CadFacts;
 pub use permit::PermitFacts;
 
 /// The facts' format name.
@@ -68,6 +71,10 @@ pub struct ProjectAuditFacts {
     /// the particulars has a value (or the producer was not asked for it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub permit: Option<PermitFacts>,
+    /// The CAD drawing's layers, blocks, dimension typefaces, grids and rooms' numbers, as EK-3 and EK-4 read them.
+    /// Absent when the drawing has neither a layer holding objects nor a room (or the producer was not asked for it).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cad: Option<CadFacts>,
     /// Whether objects were left out: past the producer's limit, those after it by persistent id (a room or a door
     /// past a list's bound too).
     pub cut: bool,
@@ -219,6 +226,7 @@ impl ProjectAuditFacts {
             layers: layers.into_iter().map(LayerFacts::normalized).collect(),
             architecture: None,
             permit: None,
+            cad: None,
             cut,
         }
     }
@@ -228,6 +236,18 @@ impl ProjectAuditFacts {
     pub fn with_architecture(mut self, architecture: ArchitectureFacts) -> ProjectAuditFacts {
         let (architecture, cut) = architecture.normalized();
         self.architecture = Some(architecture);
+        self.cut |= cut;
+        self
+    }
+
+    /// These facts with the CAD drawing's, in its section's order, rounding and bounds; a list it cuts makes the facts
+    /// `cut`. An empty section is left out.
+    pub fn with_cad(mut self, cad: CadFacts) -> ProjectAuditFacts {
+        if cad.is_empty() {
+            return self;
+        }
+        let (cad, cut) = cad.normalized();
+        self.cad = Some(cad);
         self.cut |= cut;
         self
     }

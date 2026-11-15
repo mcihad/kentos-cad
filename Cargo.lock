@@ -3155,6 +3155,7 @@ dependencies = [
  "kentos-project",
  "kentos-raster",
  "kentos-services",
+ "kentos-sheet",
  "kentos-style-core",
  "serde",
  "serde_json",

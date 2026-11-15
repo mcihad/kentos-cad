@@ -12,7 +12,9 @@ katalog IFC 4.3 şemasıyla, bağımsız dökümle ve 20 rastgele satırla sayfa
 ölçüldü; Mimari › Proje ▾ › Dijital proje kuralları penceresi. B2 tamamlandı: BIM-02 `[x]`
 ([ADR 8063](../docs/adr/8063-dated-digital-delivery-scope.md)): Ruhsat takımı her yükümlülüğün bu projede ne zaman, hangi
 maddeyle başladığını söyler; karar ilk standart kural paketinin Python kuralıdır (`catalog/standards/dijital-proje`), 43
-bağımsız durumla sınandı. Sıradaki B3 (BIM-03).
+bağımsız durumla sınandı. B3 tamamlandı: BIM-03 `[x]` ([ADR 8064](../docs/adr/8064-ek3-ek4-2d-checks-python.md)):
+EK-3 ve EK-4'ün 12 kuralı Python'da, çizimin `cad` olguları Rust'ta; bulgular Mimari denetimin Mevzuat grubunda, altısının
+tek adımlık düzeltmesi var; 2+1 dairede uçtan uca ve ezdxf'li bağımsız okumayla sınandı. Sıradaki B4 (BIM-04).
 
 Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. İlk taslağa göre değişenler: iki yönetmeliğin ana metni madde madde
 yeniden okundu; eklerin bağımsız bir dökümü depodaki sayfa okumalarıyla karşılaştırıldı; bugünkü kod yönetmeliğin sınıf
@@ -93,7 +95,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | R1 | Her pafta ayrı PDF/A dosyası; A serisi kâğıt | Md. 4/2, 8 | ✓ Ruhsat takımı, PDF/A-2b (ADR 8037); bağımsız doğrulama yok | BIM-05 |
 | R2 | Çizim dışı belgeler PDF/A | Md. 4/3 | ◐ hesap ve liste paftaları var; dış belge pakete girmiyor | BIM-05 |
 | R3 | Proje kodu ve dosya adları | Md. 6; EK-1, EK-2 | ✓ pafta ve model adı (ADR 8037, 8047 §7) | BIM-01 |
-| R4 | CAD katmanı, sembol, çizgi; mahal numarası ve adı | Md. 7; EK-3, EK-4 | ◐ katman anahtarı (ADR 8008) ve EK-3 numarası (ADR 8027) var; denetimi yok | BIM-03 |
+| R4 | CAD katmanı, sembol, çizgi; mahal numarası ve adı | Md. 7; EK-3, EK-4 | ✓ katman anahtarı (ADR 8008), EK-3 numarası (ADR 8027) ve 12 kurallı denetim (ADR 8064); sembolün içi (4.17.5), punto ve kesit hattı yok | BIM-03 |
 | R5 | Çizimler modelden üretilir; model ile PDF/A uyumlu | Md. 9/1; EK-9/21 | ◐ plan modelin kendisi, kesit ve görünüş türev (ADR 8042–8043); kanıtı yok | BIM-04, BIM-14 |
 | R6 | IFC teslimi | Md. 4/5; EK-5 §5.4 | ◐ IFC 4.3 dışa aktarma (ADR 8047) | IFC-02…06 |
 | R7 | Zorunlu sınıflar ve alanları; vekil sınıf kullanılmaz | Md. 12; EK-5, EK-6 | ◐ 29 sınıftan 15'i; yangın ve dayanım alanları yok | BIM-07…09; IFC-02, IFC-03 |
@@ -270,7 +272,17 @@ eksikse ilgili sonuç "teyit gerekli" olur.
 
 ### 5.2 2B teslim
 
-#### BIM-03 — 2B kuralların denetimi: EK-3 ve EK-4 [ ]
+#### BIM-03 — 2B kuralların denetimi: EK-3 ve EK-4 [x]
+
+**Yapıldı (16 Kasım 2026, [ADR 8064](../docs/adr/8064-ek3-ek4-2d-checks-python.md)):** `catalog/standards/dijital-proje`'nin
+`ek34` kuralı (paket 0.2.0): mahal numarasının kalıbı, kat kodu, sırası ve saat yönü; mahal adının Tablo 3.2'deki yazımı;
+katman adı, "0" katmanı, tarama katmanı, emsal katmanı, aks çizgisi, ölçü yazısı ve blok adı. Olgular `kentos.auditFacts`'ın
+yeni `cad` bölümünden; kural verisi katalogdan `scripts/mevzuat/ek34_veri.py` ile. Bulgular Mimari denetimin Mevzuat
+grubunda, "Dijital Proje Yön. 7" ve ekin maddesi ve sayfasıyla; kat kodu, sıra, saat yönü, mahal adı, katman adı ve aks
+çizgisinin Düzelt'i tek adım. 2+1 dairenin izinde 10 kural iki durumda, blok adı yalnız kalan, tarama yalnız geçen; 12
+kural paketin testinde iki durumda; ezdxf'li bağımsız okuma 9 kuralda aynı. Kararlar K29 (Arimo), K37 (tadilat eki), K38
+(kat kodu). **Kalan:** nesnenin kendi çizgi tipi, Python bulgusunun istisnası, kat kodunun iki kuralının birleşmesi (K38),
+blok adı düzeltmesi, 4.17.5, Tablo 4.7 ve 4.28.
 
 **Kullanıcı sonucu:** Denetim, paftaya girecek çizimde EK-4'e uymayan katmanı, çizgi tipini ve yazıyı, EK-3'e uymayan mahal
 numarasını ve adını, nesnesini seçerek söyler. Dayanak Md. 7; Z8.
@@ -591,7 +603,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| B3 | EK-3 ve EK-4 denetimi | BIM-03 | Uymayan katman ve mahal adı bulguda |
+| B3 ✓ | EK-3 ve EK-4 denetimi | BIM-03 | Uymayan katman ve mahal adı bulguda (ADR 8064) |
 | B4 | Paftanın modelden üretildiği kanıtı | BIM-04 | Eski türevle yayın durur |
 | B5 | 2B ruhsat paketi | BIM-05 | Bağımsız denetimden geçmiş PDF/A takımı ve teslim listesi |
 

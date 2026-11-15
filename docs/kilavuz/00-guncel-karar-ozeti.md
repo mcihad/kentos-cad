@@ -48,6 +48,13 @@
     - Eksik girdi her aday değeriyle denenir; sonucu değiştirebiliyorsa "teyit gerekli". Okuma kararları K23–K28: "geçen"
       kesin büyüktür; "tarihine kadar uygulanmaz" o gün başlar; başvuru ile ihalenin erkeni; konut dışında 4/2–3 kendi
       başına başlamaz; nüfusun belediyesi ve yılı idareye sorulur; tadilat kapsam dışı, ilave teyit.
+  - **B3 yapıldı (16 Kasım 2026; [ADR 8064](../adr/8064-ek3-ek4-2d-checks-python.md); BIM-03 `[x]`):**
+    - EK-3 ve EK-4'ün 12 kuralı aynı paketin `ek34` kuralında (Python); olgular `kentos.auditFacts`'ın `cad` bölümünde
+      (katman, tarama, çizgi tipi, blok, ölçü yazısı, aks, mahalin numarası, adı, paftalardaki kat kodu ve merkezi).
+    - Bulgular Mimari denetimin Mevzuat grubunda "Dijital Proje Yön. 7" ile; kat kodu, sıra, saat yönü, mahal adı, katman
+      adı ve aks çizgisinin Düzelt'i tek adım. Kural verisi katalogdan `scripts/mevzuat/ek34_veri.py` ile üretilir.
+    - Kararlar: Arimo ölçü yazısında idarenin teyidine bırakılır (K29); tadilat durumları katman adının sonunda (K37);
+      mahal numarasının kat kodu paftaların kodudur, Mahal numarala'nın kuralıyla birleşecek (K38).
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

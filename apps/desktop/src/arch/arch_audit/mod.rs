@@ -33,6 +33,7 @@ use crate::bottom::BottomTab;
 use crate::icons::from_web;
 
 mod preview;
+mod standards;
 mod view;
 mod write;
 
@@ -147,6 +148,15 @@ pub(crate) struct ArchAuditPanel {
     pub preview: RefCell<Option<KeptPreview>>,
     /// The table's columns as dragged wider or narrower (docs/adr/8034), by their place; none: their share.
     pub columns: [Option<f32>; 5],
+    /// The standards package's EK-3 and EK-4 findings (docs/adr/8064, standards.rs): the last answer, put back after
+    /// each check of the whole drawing until the next one comes.
+    pub standards: Vec<ArchAuditFinding>,
+    /// Why the last ask got no answer; none: it did.
+    pub standards_failed: Option<String>,
+    /// The ask's generation: an older answer is dropped.
+    pub standards_generation: u64,
+    /// A check made the ask due; the event's end asks.
+    pub standards_due: bool,
 }
 
 impl Default for ArchAuditPanel {
@@ -168,6 +178,10 @@ impl Default for ArchAuditPanel {
             note: None,
             preview: RefCell::new(None),
             columns: [None; 5],
+            standards: Vec::new(),
+            standards_failed: None,
+            standards_generation: 0,
+            standards_due: false,
         }
     }
 }
@@ -216,6 +230,8 @@ pub enum Event {
     Prune,
     /// A column dragged to a width (docs/adr/8034): the regulation's findings are long, their article at the end.
     Column(usize, f32),
+    /// The standards package's EK-3 and EK-4 answer to an ask, by its generation (docs/adr/8064).
+    Standards(u64, Result<serde_json::Value, String>),
 }
 
 fn msg(e: Event) -> Message {
@@ -331,7 +347,7 @@ impl App {
             );
         }
         self.arch_audit_check();
-        Task::none()
+        self.arch_audit_standards_task()
     }
 
     /// The bar's thresholds and profiles as the command's input: the findings `cad.arch.exceptions` names.
@@ -432,6 +448,7 @@ impl App {
                 for w in warnings {
                     self.warn(w.message);
                 }
+                self.arch_audit_standards_after_check();
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
@@ -629,8 +646,9 @@ impl App {
                     STAIR_PROFILES[i.min(STAIR_PROFILES.len() - 1)].0;
                 self.arch_audit_check();
             }
+            Event::Standards(generation, answer) => self.arch_audit_standards_answer(generation, answer),
         }
-        Task::none()
+        self.arch_audit_standards_task()
     }
 
     /// The chosen findings' objects selected together and the view fitted on them all.

@@ -952,7 +952,7 @@ class ProjectAuditFacts:
     a cloud job. Areas in m² to 4 decimals, lengths and places in metres to 3; a place is ``(x, y)`` in the project's
     plane, as the features' GeoJSON gives it."""
 
-    __slots__ = ("tolerance", "cut", "_layers", "architecture", "permit")
+    __slots__ = ("tolerance", "cut", "_layers", "architecture", "permit", "cad")
 
     def __init__(self, raw: dict[str, Any]) -> None:
         #: The project's topology tolerance (m): areas nearer than it touch, a piece no wider is no overlap or gap.
@@ -965,6 +965,11 @@ class ProjectAuditFacts:
         #: The permit's particulars the dated scope decision reads, the building's area and storeys (docs/adr/8063);
         #: empty when the drawing gives none of the particulars.
         self.permit: PermitFacts = PermitFacts(raw.get("permit") or {})
+        cad = raw.get("cad")
+        #: The CAD drawing's layers, blocks, dimension typefaces, grids and rooms' numbers, names, storey codes and
+        #: centres, as EK-3 and EK-4 read them (docs/adr/8064; the SDK's ``factsSchema`` gives its shape); empty when
+        #: the drawing has neither a layer holding objects nor a room.
+        self.cad: dict[str, Any] = cad if isinstance(cad, dict) else {}
 
     def layers(self) -> list[LayerFacts]:
         """The layers holding objects, in the layer tree's order."""

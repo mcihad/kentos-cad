@@ -49,6 +49,9 @@ mod keyboard;
 #[cfg(test)]
 #[path = "layer_keys_tests.rs"]
 mod layer_keys_tests;
+#[cfg(test)]
+#[path = "ek_rules_tests.rs"]
+mod ek_rules_tests;
 mod player;
 
 use std::path::{Path, PathBuf};

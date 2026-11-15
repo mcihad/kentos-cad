@@ -48,6 +48,210 @@
       ],
       "type": "object"
     },
+    "CadBlock": {
+      "description": "A block and its inserts.",
+      "properties": {
+        "inserts": {
+          "description": "How many times it is inserted.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "layers": {
+          "description": "The layers its inserts stand on, by name, each once, in order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "Its name, as the drawing's block library names it.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "inserts",
+        "layers"
+      ],
+      "type": "object"
+    },
+    "CadFacts": {
+      "description": "The drawing's CAD facts.",
+      "properties": {
+        "blocks": {
+          "description": "The blocks inserted, by name.",
+          "items": {
+            "$ref": "#/$defs/CadBlock"
+          },
+          "type": "array"
+        },
+        "dimensionFonts": {
+          "description": "The typefaces the dimensions write their values in, each with how many dimensions, by name.",
+          "items": {
+            "$ref": "#/$defs/FontUse"
+          },
+          "type": "array"
+        },
+        "grids": {
+          "description": "Every grid (aks ağı), by persistent id: its axes are drawn in its layer's line type.",
+          "items": {
+            "$ref": "#/$defs/CadGrid"
+          },
+          "type": "array"
+        },
+        "layers": {
+          "description": "Every layer of the tree (its leaves), in the tree's order, holding objects or not.",
+          "items": {
+            "$ref": "#/$defs/CadLayer"
+          },
+          "type": "array"
+        },
+        "rooms": {
+          "description": "Every room, by persistent id.",
+          "items": {
+            "$ref": "#/$defs/CadRoom"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "layers",
+        "blocks",
+        "dimensionFonts",
+        "grids",
+        "rooms"
+      ],
+      "type": "object"
+    },
+    "CadGrid": {
+      "description": "A grid.",
+      "properties": {
+        "layer": {
+          "description": "Its layer's id.",
+          "type": "string"
+        },
+        "uid": {
+          "description": "Its persistent id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "layer"
+      ],
+      "type": "object"
+    },
+    "CadLayer": {
+      "description": "A layer.",
+      "properties": {
+        "first": {
+          "description": "Its first objects by persistent id, at most [`MOST_SHOWN`]: what a finding about the layer selects.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "firstHatches": {
+          "description": "Its first hatches by persistent id, at most [`MOST_SHOWN`].",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "hatches": {
+          "description": "How many of them are hatches (a hatch object, not a wall's own fill).",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "description": "Its id, what its objects' `layerId` names.",
+          "type": "string"
+        },
+        "linePattern": {
+          "description": "The project line type it draws in, by name; none: its built-in one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lineType": {
+          "description": "Its built-in line type: `continuous`, `dashed`, `dashdot` or `dotted` (with a project line type, the nearest).",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name, as the layer tree shows it and a DXF writes it.",
+          "type": "string"
+        },
+        "objects": {
+          "description": "How many objects it holds.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "objects",
+        "hatches",
+        "first",
+        "firstHatches",
+        "lineType"
+      ],
+      "type": "object"
+    },
+    "CadRoom": {
+      "description": "A room as its number and name stand on the plan.",
+      "properties": {
+        "at": {
+          "description": "Its outline's centre, m.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "level": {
+          "description": "Its storey's id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "levelCode": {
+          "description": "Its storey's code as the sheets' file names write it (EK-2 Tablo 2.14: K00, K01 …, B01 …); none on no storey.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "description": "Its persistent id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "at"
+      ],
+      "type": "object"
+    },
     "DoorEscape": {
       "description": "A dwelling unit's door and its walk to the nearest storey exit.",
       "properties": {
@@ -136,6 +340,25 @@
       "required": [
         "length",
         "path"
+      ],
+      "type": "object"
+    },
+    "FontUse": {
+      "description": "A typeface and how many use it.",
+      "properties": {
+        "count": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "font": {
+          "description": "Its name as KentOS names it (`Barlow`, `Arimo` …), or an SHX file's (`romans.shx`).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "font",
+        "count"
       ],
       "type": "object"
     },
@@ -800,6 +1023,17 @@
         }
       ],
       "description": "The drawing's architecture: storeys, rooms, the program's groups, the escape routes. Absent when the drawing has\nno room (or the producer was not asked for it)."
+    },
+    "cad": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CadFacts"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The CAD drawing's layers, blocks, dimension typefaces, grids and rooms' numbers, as EK-3 and EK-4 read them.\nAbsent when the drawing has neither a layer holding objects nor a room (or the producer was not asked for it)."
     },
     "cut": {
       "description": "Whether objects were left out: past the producer's limit, those after it by persistent id (a room or a door\npast a list's bound too).",

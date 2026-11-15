@@ -152,6 +152,34 @@
    "asked": "İdare",
    "param": {"key": "scope.extension", "value": null},
    "rows": []
+  },
+  {
+   "id": "K29",
+   "title": "Ölçü yazısında Arimo, Arial'ın yerine",
+   "kind": "kentos",
+   "sources": [{"annex": 4, "clause": "4.21.2", "pages": [22]}],
+   "text": "4.21.2 ölçülendirmede Times New Roman, Arial, Calibri, Romans ve Tahoma'nın kullanılabileceğini söyler. KentOS'un yazı tipleri açık lisanslıdır; Arimo, Arial'ın harf genişlikleriyle aynıdır ve DXF'te arial.ttf olarak yazılır (ADR 8046 §2). EK-3 ve EK-4 denetimi Arimo ile yazılan ölçüyü uyarı saymaz, idarenin teyidini isteyen bir not olarak söyler; Barlow ve öbür yazı tipleri uyarıdır. İdare Arimo'yu kabul etmezse PDF'te de Arial gerekir.",
+   "asked": "İdare",
+   "param": {"key": "dimension.font", "value": null, "default": "Arimo (Arial ölçülerinde)"},
+   "rows": ["M4.21.2"]
+  },
+  {
+   "id": "K37",
+   "title": "Tadilat durumunun katman adındaki eki",
+   "kind": "kentos",
+   "sources": [{"annex": 4, "clause": "4.11", "pages": [20]}, {"annex": 4, "table": "4.1", "pages": [24]}, {"annex": 4, "clause": "4.14.3", "pages": [21]}],
+   "text": "Tablo 4.1 katman adını disiplin, öge ve malzemeyle kurar; 4.14.3 derinlik için sona 1–4 rakamının, 4.14.5 tarama için \"-T\"nin eklenmesine izin verir. Tadilat projesinin mevcut, iptal, ilave ve geçici durumlarını ek söylemez. KentOS bunları aynı yolla sona ekler (MM-DUVA-TUGLA-IPTAL; ADR 8039 §4) ve EK-4 denetimi bu dört eki kabul eder. İdare başka bir gösterim isterse kurum profilinin bir satırıdır.",
+   "asked": "İdare",
+   "param": {"key": "layer.renovationSuffix", "value": null, "default": "MEVCUT, IPTAL, ILAVE, GECICI"},
+   "rows": ["M4.11", "T4.1", "M4.14.3"]
+  },
+  {
+   "id": "K38",
+   "title": "Mahal numarasının kat kodu paftaların kodudur",
+   "kind": "kentos",
+   "sources": [{"annex": 3, "clause": "3.2.1", "pages": [14]}, {"annex": 2, "table": "2.14", "pages": [13]}],
+   "text": "3.2.1 mahal numarasının kat alanını EK-2 Tablo 2.14'ün kısaltmasına bağlar; paftaların dosya adları da aynı tabloyu kullanır. EK-3 denetimi numarayı paftaların kat koduyla karşılaştırır: ±0.00'daki kat (yoksa üstündeki en alçak kat) K00, üstündekiler K01, K02 …, altındakiler B01, B02 …. KentOS'un Mahal numarala aracı kat kodunu \"Zemin\" adlı kattan, yoksa kotu 0'a en yakın kattan sayar (ADR 8027); zemin kat ±0.00'da olduğunda ikisi aynıdır, olmadığında ayrışabilir. İki yol tek bir kurala bağlanacak.",
+   "rows": ["M3.2.1", "T2.14/K00", "T2.14/B01"]
   }
  ]
 }

@@ -2,10 +2,10 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.kentos.dijital-proje",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "Dijital proje denetimleri",
-  "summary": "Dijital proje yönetmeliğinin denetimleri: bu projede PDF/A, IFC ve e-PYS ne zaman, hangi maddeyle başlar.",
-  "description": "KentOS'un standart kural paketi (catalog/standards/dijital-proje; plan/bim-plan.md K10, docs/adr/8063). Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik ile e-PYS Yönetmeliğinin (RG 5.8.2026/33331) tarihli kapsamını projenin künyesinden ve çizimden ölçülen alan ve kat sayısından karara bağlar. Tarih ve eşikler veridir; eksik bilgi sonucu değiştirebiliyorsa \"teyit gerekli\" der, tahmin etmez.",
+  "summary": "Dijital proje yönetmeliğinin denetimleri: teslim kapsamı (PDF/A, IFC, e-PYS) ile EK-3 ve EK-4'ün 2B kuralları.",
+  "description": "KentOS'un standart kural paketi (catalog/standards/dijital-proje; plan/bim-plan.md K10, docs/adr/8063). Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik ile e-PYS Yönetmeliğinin (RG 5.8.2026/33331) tarihli kapsamını projenin künyesinden ve çizimden ölçülen alan ve kat sayısından karara bağlar. Tarih ve eşikler veridir; eksik bilgi sonucu değiştirebiliyorsa \"teyit gerekli\" der, tahmin etmez. EK-3 ve EK-4 denetimi mahal numarasını ve adını, katmanları, taramaları, aks çizgisini, ölçü yazısını ve blok adlarını KentOS'un ölçtüğü olgulardan denetler.",
   "authors": [
     "KentOS"
   ],
@@ -52,6 +52,12 @@
         "title": "Dijital teslim kapsamı",
         "domain": "mimari",
         "handler": "dijital_proje.denetim:kapsam_denetimi"
+      },
+      {
+        "id": "ek34",
+        "title": "EK-3 ve EK-4",
+        "domain": "mimari",
+        "handler": "dijital_proje.denetim:ek34_denetimi"
       }
     ]
   },
@@ -59,7 +65,7 @@
     {
       "id": "audit.provider",
       "scope": "plugin-owned",
-      "reason": "Projenin künyesinden ve ölçülen alan ile kat sayısından dijital teslim kapsamını söyler."
+      "reason": "Projenin künyesinden dijital teslim kapsamını, çizimin olgularından EK-3 ve EK-4'e uymayanları söyler."
     }
   ]
 }

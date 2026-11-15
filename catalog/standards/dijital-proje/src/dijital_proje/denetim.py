@@ -7,7 +7,7 @@ başlaması çizimde düzeltilecek bir kusur değildir.
 
 from kentos import ext
 
-from . import kapsam
+from . import ek34, kapsam
 
 
 @ext.audit("kapsam")
@@ -39,3 +39,17 @@ def kapsam_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 def _tarih(iso: str) -> str:
     yil, ay, gun = iso.split("-")
     return f"{int(gun)}.{int(ay)}.{yil}"
+
+
+@ext.audit("ek34")
+def ek34_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """EK-3 ve EK-4: mahal numarası ve adı, katman, tarama, aks çizgisi, ölçü yazısı ve blok adı (Md. 7)."""
+    bulgular = []
+    for b in ek34.denetle({"cad": facts.project.cad}):
+        fix = None
+        if b["fix"]:
+            fix = ext.SemanticFix(title=b["fix"]["label"], command=b["fix"]["command"], args=b["fix"]["input"])
+        nesne = b["uids"][0] if b["uids"] else None
+        bulgular.append(ext.AuditFinding(message=f"{b['message']} [{b['cite']}]", severity=b["severity"],
+                                         feature_id=nesne, fix=fix))
+    return bulgular

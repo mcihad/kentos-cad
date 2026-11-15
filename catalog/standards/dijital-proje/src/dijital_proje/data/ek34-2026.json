@@ -1,0 +1,943 @@
+{
+ "format": "kentos.digitalEk34",
+ "version": 1,
+ "from": "crates/shared/digital-project/data/temel-2026.json",
+ "disciplines": [
+  {
+   "code": "MM",
+   "name": "Mimari",
+   "layerTemplate": "T4.1"
+  },
+  {
+   "code": "IM",
+   "name": "İç Mimari",
+   "layerTemplate": "T4.1"
+  },
+  {
+   "code": "ST",
+   "name": "Statik",
+   "layerTemplate": "T4.2"
+  },
+  {
+   "code": "EE",
+   "name": "Elektrik",
+   "layerTemplate": "T4.2"
+  },
+  {
+   "code": "MK",
+   "name": "Mekanik",
+   "layerTemplate": "T4.2"
+  },
+  {
+   "code": "HR",
+   "name": "Harita",
+   "layerTemplate": "T4.1"
+  },
+  {
+   "code": "AL",
+   "name": "Altyapı",
+   "layerTemplate": "T4.2"
+  },
+  {
+   "code": "PY",
+   "name": "Peyzaj",
+   "layerTemplate": "T4.3"
+  },
+  {
+   "code": "ZE",
+   "name": "Zemin",
+   "layerTemplate": "T4.1"
+  },
+  {
+   "code": "YN",
+   "name": "Yangın",
+   "layerTemplate": null
+  },
+  {
+   "code": "GS",
+   "name": "Güneş Enerji Sistemi",
+   "layerTemplate": null
+  },
+  {
+   "code": "AK",
+   "name": "Akustik",
+   "layerTemplate": null
+  }
+ ],
+ "items": {
+  "HR": [
+   "PKBL",
+   "KORD",
+   "DOSB",
+   "LJNT",
+   "PLGN",
+   "ADPL",
+   "PZKT",
+   "BZKT",
+   "BLKA",
+   "KMPL",
+   "CKMS",
+   "XXXX",
+   "DIGR"
+  ],
+  "IM": [
+   "PANL",
+   "AKSR",
+   "ASAN",
+   "AKUS",
+   "ASTV",
+   "AYDN",
+   "BACA",
+   "BNYO",
+   "BITK",
+   "BORD",
+   "BOLP",
+   "CAMM",
+   "CMBL",
+   "CEPH",
+   "CATI",
+   "CKAP",
+   "CKTA",
+   "CTAS",
+   "CVRE",
+   "CORT",
+   "DENZ",
+   "DOGR",
+   "DOSM",
+   "DUVA",
+   "DUVK",
+   "EMSL",
+   "GIYC",
+   "GNKR",
+   "HARP",
+   "HATL",
+   "ISYA",
+   "ISLH",
+   "KALD",
+   "KPKN",
+   "KPKS",
+   "KARP",
+   "KLIM",
+   "KORK",
+   "LENT",
+   "MNFZ",
+   "MERD",
+   "MTFK",
+   "OLUK",
+   "PNKT",
+   "PNKS",
+   "PRDE",
+   "PRIZ",
+   "RAMP",
+   "SAPP",
+   "SMOB",
+   "SESY",
+   "SIVA",
+   "SUYA",
+   "SUPR",
+   "TASI",
+   "TAVN",
+   "TEML",
+   "TEFR",
+   "TSVY",
+   "TZGH",
+   "TRET",
+   "YIBO",
+   "YOLL",
+   "ZMNK",
+   "XXXX",
+   "DIGR"
+  ],
+  "MM": [
+   "AKSS",
+   "AKSR",
+   "ASAN",
+   "ASTV",
+   "BACA",
+   "BITK",
+   "BORD",
+   "CAMM",
+   "CEPH",
+   "CATI",
+   "CKAP",
+   "CKTA",
+   "CTAS",
+   "CVRE",
+   "CORT",
+   "DENZ",
+   "DOGR",
+   "DOSM",
+   "DUVA",
+   "DUVK",
+   "EMSL",
+   "GIYC",
+   "GNKR",
+   "HARP",
+   "HATL",
+   "ISYA",
+   "ISLH",
+   "KALD",
+   "KAPI",
+   "KARP",
+   "KOLN",
+   "KORK",
+   "LENT",
+   "MERD",
+   "OLUK",
+   "PENC",
+   "RAMP",
+   "SAPP",
+   "SESY",
+   "SIVA",
+   "SUYA",
+   "SUPR",
+   "TASI",
+   "TAVN",
+   "TEML",
+   "TEFR",
+   "TSVY",
+   "TRET",
+   "YIBO",
+   "YOLL",
+   "ZMNK",
+   "XXXX",
+   "DIGR"
+  ],
+  "ZE": [
+   "IKS",
+   "KZK",
+   "ZTE",
+   "XXXX",
+   "DIGR"
+  ]
+ },
+ "subdisciplines": {
+  "AL": [
+   "YAGS",
+   "ATIS",
+   "ICMS",
+   "XXXX",
+   "DIGR"
+  ],
+  "EE": [
+   "KUVA",
+   "ZAYA",
+   "AYDT",
+   "GUDT",
+   "DJGT",
+   "CAYT",
+   "TOST",
+   "OGET",
+   "TBIA",
+   "MYAS",
+   "YAVA",
+   "CTVS",
+   "XXXX",
+   "DIGR"
+  ],
+  "MK": [
+   "SHTT",
+   "ISTT",
+   "HVLT",
+   "SGTT",
+   "TMST",
+   "PIST",
+   "YAGT",
+   "BSHT",
+   "OTMT",
+   "MDGZ",
+   "MUTT",
+   "CMTT",
+   "DGTT",
+   "BHTT",
+   "ORTT",
+   "BSTT",
+   "HVZT",
+   "ASTT",
+   "DSDK",
+   "YNGT",
+   "ASNR",
+   "XXXX",
+   "DIGR"
+  ],
+  "PY": [
+   "YAPS",
+   "BITS",
+   "XXXX",
+   "DIGR"
+  ],
+  "ST": [
+   "BETO",
+   "CELK",
+   "YIGM",
+   "AHSP",
+   "KMPT",
+   "XXXX",
+   "DIGR"
+  ]
+ },
+ "rooms": [
+  {
+   "name": "Açık Mutfak",
+   "code": "ACM"
+  },
+  {
+   "name": "Antre",
+   "code": "ANT"
+  },
+  {
+   "name": "Arşiv",
+   "code": "ARS"
+  },
+  {
+   "name": "Asansör",
+   "code": "ASN"
+  },
+  {
+   "name": "Asansör Holü",
+   "code": "ASH"
+  },
+  {
+   "name": "Asansör Kuyusu",
+   "code": "ASK"
+  },
+  {
+   "name": "Asansör Makine Dairesi",
+   "code": "AMD"
+  },
+  {
+   "name": "Atık Ayrıştırma Odası",
+   "code": "AAO"
+  },
+  {
+   "name": "Atölye",
+   "code": "ATO"
+  },
+  {
+   "name": "Avlu",
+   "code": "AVU"
+  },
+  {
+   "name": "Bahçe",
+   "code": "BAH"
+  },
+  {
+   "name": "Balkon",
+   "code": "BLK"
+  },
+  {
+   "name": "Banyo",
+   "code": "BAN"
+  },
+  {
+   "name": "Bay Abdesthane",
+   "code": "BAA"
+  },
+  {
+   "name": "Bay Mescit",
+   "code": "BAM"
+  },
+  {
+   "name": "Bayan Abdesthane",
+   "code": "BYA"
+  },
+  {
+   "name": "Bayan Mescit",
+   "code": "BYM"
+  },
+  {
+   "name": "Bekçi Kulübesi / Odası",
+   "code": "BKO"
+  },
+  {
+   "name": "Bekleme Alanı",
+   "code": "BKA"
+  },
+  {
+   "name": "Bulaşıkhane",
+   "code": "BLS"
+  },
+  {
+   "name": "CCTV Odası",
+   "code": "CCT"
+  },
+  {
+   "name": "Çalışma Odası",
+   "code": "CAO"
+  },
+  {
+   "name": "Çamaşır Nişi",
+   "code": "CMN"
+  },
+  {
+   "name": "Çamaşır Odası",
+   "code": "CMR"
+  },
+  {
+   "name": "Çardak (Kameriye)",
+   "code": "CRD"
+  },
+  {
+   "name": "Çatı İçi",
+   "code": "CAT"
+  },
+  {
+   "name": "Çatı Piyesi",
+   "code": "CTP"
+  },
+  {
+   "name": "Çatı Terası",
+   "code": "CTT"
+  },
+  {
+   "name": "Çay Ocağı",
+   "code": "CYO"
+  },
+  {
+   "name": "Çiçeklik",
+   "code": "CIC"
+  },
+  {
+   "name": "Çocuk Odası",
+   "code": "COC"
+  },
+  {
+   "name": "Çocuk Oyun Alanı",
+   "code": "COA"
+  },
+  {
+   "name": "Çocuk Oyun Odası",
+   "code": "COO"
+  },
+  {
+   "name": "Çok Amaçlı Salon",
+   "code": "CAS"
+  },
+  {
+   "name": "Çöp Odası",
+   "code": "CPO"
+  },
+  {
+   "name": "Danışma-Karşılama",
+   "code": "DNK"
+  },
+  {
+   "name": "Depo",
+   "code": "DEP"
+  },
+  {
+   "name": "Derslik",
+   "code": "DRS"
+  },
+  {
+   "name": "Doktor Odası",
+   "code": "DKO"
+  },
+  {
+   "name": "Duş",
+   "code": "DUS"
+  },
+  {
+   "name": "Dükkan",
+   "code": "DKN"
+  },
+  {
+   "name": "Dükkan Depo",
+   "code": "DDP"
+  },
+  {
+   "name": "Dükkan WC",
+   "code": "DWC"
+  },
+  {
+   "name": "Ebeveyn Banyo",
+   "code": "EBB"
+  },
+  {
+   "name": "Ebeveyn Yatak Odası",
+   "code": "EBY"
+  },
+  {
+   "name": "Elektrik Odası",
+   "code": "ELO"
+  },
+  {
+   "name": "Elektrik Pano Odası",
+   "code": "EPO"
+  },
+  {
+   "name": "Enerji Odası",
+   "code": "ENJ"
+  },
+  {
+   "name": "Engelli WC",
+   "code": "EWC"
+  },
+  {
+   "name": "Eşanjör Odası",
+   "code": "ESO"
+  },
+  {
+   "name": "Fitness",
+   "code": "FIT"
+  },
+  {
+   "name": "Fotokopi Odası",
+   "code": "FOT"
+  },
+  {
+   "name": "Fuaye",
+   "code": "FUA"
+  },
+  {
+   "name": "Galeri",
+   "code": "GAL"
+  },
+  {
+   "name": "Garaj",
+   "code": "GRJ"
+  },
+  {
+   "name": "Gezilebilen Teras Çatı",
+   "code": "GTC"
+  },
+  {
+   "name": "Gezilemeyen Teras Çatı",
+   "code": "GTT"
+  },
+  {
+   "name": "Giriş Holü",
+   "code": "GIH"
+  },
+  {
+   "name": "Giyinme Odası",
+   "code": "GYO"
+  },
+  {
+   "name": "Güvenlik Kulübesi / Odası",
+   "code": "GVO"
+  },
+  {
+   "name": "Havuz",
+   "code": "HVZ"
+  },
+  {
+   "name": "Havuz Teknik Hacim",
+   "code": "HTH"
+  },
+  {
+   "name": "Havuz WC ve Duşları",
+   "code": "HWD"
+  },
+  {
+   "name": "Hidrofor Odası",
+   "code": "HFO"
+  },
+  {
+   "name": "Hizmetli Odası",
+   "code": "HZO"
+  },
+  {
+   "name": "Hobi Odası",
+   "code": "HOB"
+  },
+  {
+   "name": "Hol",
+   "code": "HOL"
+  },
+  {
+   "name": "Işıklık",
+   "code": "ISK"
+  },
+  {
+   "name": "İç Avlu",
+   "code": "IAV"
+  },
+  {
+   "name": "İdari Oda",
+   "code": "IDO"
+  },
+  {
+   "name": "Jeneratör Odası",
+   "code": "JNO"
+  },
+  {
+   "name": "Kaçış Koridorları",
+   "code": "KKR"
+  },
+  {
+   "name": "Kafeterya",
+   "code": "KAF"
+  },
+  {
+   "name": "Kalorifer Dairesi / Kazan Dairesi",
+   "code": "KZD"
+  },
+  {
+   "name": "Kapalı Havuz",
+   "code": "KHV"
+  },
+  {
+   "name": "Kapıcı Dairesi",
+   "code": "KCD"
+  },
+  {
+   "name": "Kat Elektrik Odaları",
+   "code": "KEO"
+  },
+  {
+   "name": "Kat Holü",
+   "code": "KHL"
+  },
+  {
+   "name": "Kiler",
+   "code": "KLR"
+  },
+  {
+   "name": "Klima Santral Odası",
+   "code": "KSO"
+  },
+  {
+   "name": "Konut Depo",
+   "code": "KDP"
+  },
+  {
+   "name": "Koridor",
+   "code": "KOR"
+  },
+  {
+   "name": "Kömürlük",
+   "code": "KML"
+  },
+  {
+   "name": "Kuranglez",
+   "code": "KUR"
+  },
+  {
+   "name": "Kuvvetli Akım Odası",
+   "code": "KAO"
+  },
+  {
+   "name": "Kütüphane",
+   "code": "KUT"
+  },
+  {
+   "name": "Lobi",
+   "code": "LOB"
+  },
+  {
+   "name": "Makine Dairesi",
+   "code": "MAK"
+  },
+  {
+   "name": "Makine Dairesi Asansör Platformu",
+   "code": "MAP"
+  },
+  {
+   "name": "Merdiven",
+   "code": "MRD"
+  },
+  {
+   "name": "Misafir Odası",
+   "code": "MSO"
+  },
+  {
+   "name": "Modüler Su Depoları",
+   "code": "MSD"
+  },
+  {
+   "name": "Mutfak",
+   "code": "MUT"
+  },
+  {
+   "name": "Müştemilat",
+   "code": "MST"
+  },
+  {
+   "name": "Oda",
+   "code": "ODA"
+  },
+  {
+   "name": "Odunluk",
+   "code": "ODL"
+  },
+  {
+   "name": "Ofis",
+   "code": "OFS"
+  },
+  {
+   "name": "Otopark",
+   "code": "OTP"
+  },
+  {
+   "name": "Otopark Giriş Holü",
+   "code": "OGH"
+  },
+  {
+   "name": "Otopark Rampası",
+   "code": "ORP"
+  },
+  {
+   "name": "Oturma Odası",
+   "code": "OTR"
+  },
+  {
+   "name": "Pano Odası",
+   "code": "PNO"
+  },
+  {
+   "name": "Park",
+   "code": "PRK"
+  },
+  {
+   "name": "Pompa Odası",
+   "code": "PMO"
+  },
+  {
+   "name": "Resepsiyon",
+   "code": "RSP"
+  },
+  {
+   "name": "Revir",
+   "code": "REV"
+  },
+  {
+   "name": "Rezerv Alan",
+   "code": "RZA"
+  },
+  {
+   "name": "Rezerv Oda",
+   "code": "RZO"
+  },
+  {
+   "name": "Rüzgarlık",
+   "code": "RZG"
+  },
+  {
+   "name": "Sahanlık",
+   "code": "SHL"
+  },
+  {
+   "name": "Salon",
+   "code": "SLN"
+  },
+  {
+   "name": "Salon ve Mutfak",
+   "code": "SVM"
+  },
+  {
+   "name": "Sandık Odası",
+   "code": "SDO"
+  },
+  {
+   "name": "Sayaç Odası",
+   "code": "SCO"
+  },
+  {
+   "name": "Servis Merdiveni",
+   "code": "SRM"
+  },
+  {
+   "name": "Sığınak",
+   "code": "SGN"
+  },
+  {
+   "name": "Sığınak Giriş Holü",
+   "code": "SGH"
+  },
+  {
+   "name": "Sistem Odası",
+   "code": "STO"
+  },
+  {
+   "name": "Sosyal Alan",
+   "code": "SSA"
+  },
+  {
+   "name": "Sosyal Tesis",
+   "code": "SST"
+  },
+  {
+   "name": "Soyunma Odası",
+   "code": "SYO"
+  },
+  {
+   "name": "Spor Salonu",
+   "code": "SPS"
+  },
+  {
+   "name": "Su Deposu",
+   "code": "SDP"
+  },
+  {
+   "name": "Su Sayaç Yeri",
+   "code": "SSY"
+  },
+  {
+   "name": "Sulama Deposu",
+   "code": "SLD"
+  },
+  {
+   "name": "Şaft",
+   "code": "SFT"
+  },
+  {
+   "name": "Teknik Oda",
+   "code": "TKO"
+  },
+  {
+   "name": "Televizyon Odası",
+   "code": "TVO"
+  },
+  {
+   "name": "Temizlik Odası",
+   "code": "TMZ"
+  },
+  {
+   "name": "Teras Çatı",
+   "code": "TRT"
+  },
+  {
+   "name": "Tesisat Odası",
+   "code": "TTO"
+  },
+  {
+   "name": "Toplantı Odası",
+   "code": "TPO"
+  },
+  {
+   "name": "Trafo Odası",
+   "code": "TRO"
+  },
+  {
+   "name": "Tuvalet",
+   "code": "TUV"
+  },
+  {
+   "name": "Ütü Odası",
+   "code": "UTO"
+  },
+  {
+   "name": "Vestiyer",
+   "code": "VES"
+  },
+  {
+   "name": "WC",
+   "code": "WCC"
+  },
+  {
+   "name": "Yağmur Suyu Deposu",
+   "code": "YSD"
+  },
+  {
+   "name": "Yakıt Deposu",
+   "code": "YDP"
+  },
+  {
+   "name": "Yakıt Tankı Odası",
+   "code": "YKO"
+  },
+  {
+   "name": "Yangın Güvenlik Holü",
+   "code": "YGH"
+  },
+  {
+   "name": "Yangın Merdiveni",
+   "code": "YMR"
+  },
+  {
+   "name": "Yangın Pompa Odası",
+   "code": "YPO"
+  },
+  {
+   "name": "Yangın Suyu Deposu",
+   "code": "YND"
+  },
+  {
+   "name": "Yatak Odası",
+   "code": "YTO"
+  },
+  {
+   "name": "Yatakhane",
+   "code": "YTH"
+  },
+  {
+   "name": "Yemek Servis Alanı",
+   "code": "YSA"
+  },
+  {
+   "name": "Yemekhane",
+   "code": "YMK"
+  },
+  {
+   "name": "Yönetim Odası",
+   "code": "YNO"
+  },
+  {
+   "name": "Yönetici Müdür Odası",
+   "code": "YMO"
+  },
+  {
+   "name": "Yönetici Müdür Yardımcısı Odası",
+   "code": "YYO"
+  },
+  {
+   "name": "Zayıf Akım Odası",
+   "code": "ZAO"
+  }
+ ],
+ "dimensionFonts": [
+  "Times New Roman",
+  "Arial",
+  "Calibri",
+  "Romans",
+  "Tahoma"
+ ],
+ "emsal": [
+  "DAHIL",
+  "HARIC",
+  "DIGER"
+ ],
+ "rules": {
+  "number_pattern": [
+   "EK-3 m. 3.1.1 · PDF s. 14",
+   "EK-3 Tablo 3.1 · PDF s. 14"
+  ],
+  "storey_code": [
+   "EK-3 m. 3.2.1 · PDF s. 14"
+  ],
+  "sequence": [
+   "EK-3 m. 3.2.3 · PDF s. 14"
+  ],
+  "clockwise": [
+   "EK-3 m. 3.2.3 · PDF s. 14"
+  ],
+  "room_name": [
+   "EK-3 m. 3.3 · PDF s. 14",
+   "EK-3 Tablo 3.2 · PDF s. 14–19"
+  ],
+  "layer_name": [
+   "EK-4 m. 4.11 · PDF s. 20",
+   "EK-4 Tablo 4.1 · PDF s. 24"
+  ],
+  "layer_zero": [
+   "EK-4 m. 4.12.1 · PDF s. 20"
+  ],
+  "hatch_layer": [
+   "EK-4 m. 4.14.5 · PDF s. 21"
+  ],
+  "emsal_layer": [
+   "EK-4 m. 4.14.2 · PDF s. 21"
+  ],
+  "axis_line": [
+   "EK-4 m. 4.29 · PDF s. 23"
+  ],
+  "dimension_font": [
+   "EK-4 m. 4.21.2 · PDF s. 22"
+  ],
+  "block_name": [
+   "EK-4 m. 4.18 · PDF s. 22",
+   "EK-4 Tablo 4.4 · PDF s. 24"
+  ]
+ }
+}

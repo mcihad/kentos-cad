@@ -16,6 +16,9 @@ kentos-commands = { path = "../../shared/commands", default-features = false }
 # The dated scope decision's particulars the audit facts' permit section reads (docs/adr/8063).
 kentos-digital-project = { path = "../../shared/digital-project" }
 kentos-domain = { path = "../domain" }
+# A storey's code as the sheets name it (EK-2 Tablo 2.14) for the audit facts' rooms (docs/adr/8064); already in the
+# tree through the application.
+kentos-sheet = { path = "../../shared/sheet" }
 kentos-expression = { path = "../../shared/expression" }
 # An audit rule's measured facts (`audit_facts`, docs/adr/8057 §36): their shape, order and rounding are the extension
 # contract's (`kentos_extensions::audit_facts`), this crate measures them. Pure, without its JSON Schema's derive.
