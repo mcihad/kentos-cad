@@ -1933,9 +1933,14 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   rpc'nin `call`'u üzerinden **eşzamanlı** çalıştırır: masaüstünün sağlayıcısı (`extensions/tools.rs` `Bridge::run`)
   havuzu bekler, Asistan'da ve bağlantıda bu arayüz iş parçacığıdır; Python aracı sürerken pencere bekler (aracın süre
   sınırı kadar, varsayılan 600 sn). İşlemler penceresi aynı aracı arka planda çalıştırır (`gis/processing/background.rs`
-  `start_tool`: iş çizimde hazırlanır, okuma kopyasında hesaplanır, sonuç tek adımda uygulanır). Çözüm: ajanın
-  yürütmesini de oraya almak, çağrıyı denetim gibi sonra cevaplamak (`Later`); sahibin koruyucusunun `expected.plan` ve
-  `expected.revision` denetimi rpc'den önce aynen yapılmalı, yoksa koruma delinir. Ayrı iş.
+  `start_tool`: iş çizimde hazırlanır, okuma kopyasında hesaplanır, sonuç tek adımda uygulanır). Koruyucunun **plan**
+  adımı da aracı geçici bir kopyada hesaplar (`command.rs` `run_on`): plan da bekletir. Rpc'nin işleri (`start`/`job`,
+  `core/jobs.rs`) okuma kopyasında başka iş parçacığında hesaplayıp sonra yazar ama yalnız `execute` taşır (`Job::start`
+  çağrıyı `execute`'a çevirir); `expected` denetimi kopyada, işin başladığı revizyonda yapılır, yazarken çizim
+  değiştiyse kalıcı kimliklerle ya da `document_changed`. Çözüm üç parça, ayrı iş: (1) Python aracının planı aracı
+  çalıştırmadan, girdilerden ve tanımdan (ne okunacak, hangi katmana yazılacak); (2) yürütmesi rpc işi olarak
+  (`start` → `job`); (3) Asistan'da çağrının cevabı iş bitince (`Later`, kısa aralıklı yoklama), bağlantıda MCP işi
+  kendi iş parçacığında yoklar.
 - **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi.
 
 ## §28. Manifestin, katman şemasının ve araç tanımının JSON Schema'ları (`ADIM 21`, kod üretimi)
