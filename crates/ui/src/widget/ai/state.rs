@@ -104,6 +104,8 @@ pub struct ToolCall {
     pub output: String,
     pub elapsed: Option<Duration>,
     pub expanded: bool,
+    /// How far a running call is, 0 to 1, when what it runs says (a long job's progress).
+    pub progress: Option<f32>,
 }
 
 #[derive(Debug, Clone)]
@@ -821,6 +823,7 @@ mod tests {
                 output: String::new(),
                 elapsed: None,
                 expanded: false,
+                progress: None,
             },
         );
         assert!(!state.finish(id, None));

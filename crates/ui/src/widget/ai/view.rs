@@ -559,13 +559,20 @@ impl<'a, Message: Clone + 'a> AiToolCall<'a, Message> {
     }
     fn view(self) -> Element<'a, Message> {
         let call = self.call;
-        let (label, state) = match call.phase {
-            ToolPhase::Pending => ("Bekliyor", Activity::Ready),
-            ToolPhase::Running => ("Çalışıyor", Activity::Running),
-            ToolPhase::Approval => ("Onay gerekiyor", Activity::Ready),
-            ToolPhase::Complete => ("Tamamlandı", Activity::Success),
-            ToolPhase::Stopped => ("Durduruldu", Activity::Ready),
-            ToolPhase::Error => ("Başarısız", Activity::Error),
+        let (label, state): (String, Activity) = match call.phase {
+            ToolPhase::Pending => ("Bekliyor".into(), Activity::Ready),
+            // How far, when it says: "Çalışıyor · %40".
+            ToolPhase::Running => (
+                call.progress.map_or_else(
+                    || "Çalışıyor".to_owned(),
+                    |share| format!("Çalışıyor · %{:.0}", share.clamp(0.0, 1.0) * 100.0),
+                ),
+                Activity::Running,
+            ),
+            ToolPhase::Approval => ("Onay gerekiyor".into(), Activity::Ready),
+            ToolPhase::Complete => ("Tamamlandı".into(), Activity::Success),
+            ToolPhase::Stopped => ("Durduruldu".into(), Activity::Ready),
+            ToolPhase::Error => ("Başarısız".into(), Activity::Error),
         };
         let mut header = row![
             AiActivity::new(call.phase == ToolPhase::Running).size(18.0),

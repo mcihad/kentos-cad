@@ -123,6 +123,8 @@ struct Later {
     call: Call,
     pending: Pending,
     started: Instant,
+    /// The progress its card shows, per cent (a long job's, as it says it).
+    shown: Option<u8>,
 }
 
 /// What a call started that ends later.
@@ -505,6 +507,7 @@ impl App {
                         output: String::new(),
                         elapsed: None,
                         expanded: ask,
+                        progress: None,
                     },
                 );
                 let call = Call { id, name, input };
@@ -607,6 +610,7 @@ impl App {
                 call,
                 pending,
                 started,
+                shown: None,
             });
             return if looks {
                 Task::batch([job, job_look()])
@@ -688,6 +692,13 @@ impl App {
             &json!({ "method": "job", "params": { "id": long.job, "document": document } }),
             "Asistan",
         );
+        // Still going and saying how far: its card shows it (when the per cent changed).
+        if let Ok(status) = &status
+            && agent_tools::job_answer(status).is_none()
+            && let Some(share) = status.get("progress").and_then(Value::as_f64)
+        {
+            self.assistant_job_progress(share);
+        }
         let outcome = match status {
             Err((code, _)) if code == "busy" => None,
             Err((code, why)) => Some(Err(kentos_headless::HeadlessError::new(
@@ -709,6 +720,36 @@ impl App {
             self.assistant_answer_later(message, later, outcome);
         }
         Task::none()
+    }
+
+    /// A long job's progress on its call's card, per cent, when it changed.
+    fn assistant_job_progress(&mut self, share: f64) {
+        let per_cent = (share.clamp(0.0, 1.0) * 100.0).round() as u8;
+        let Some((message, tool, name, detail)) = self.assistant.running.as_mut().and_then(|r| {
+            let later = r.later.as_mut().filter(|l| l.shown != Some(per_cent))?;
+            later.shown = Some(per_cent);
+            Some((
+                r.message,
+                later.tool,
+                call_title(&later.call.name, &later.call.input),
+                shown(&later.call.input),
+            ))
+        }) else {
+            return;
+        };
+        self.assistant.chat.tool(
+            message,
+            ai::ToolCall {
+                id: tool,
+                name,
+                detail,
+                phase: ToolPhase::Running,
+                output: String::new(),
+                elapsed: None,
+                expanded: false,
+                progress: Some(f32::from(per_cent) / 100.0),
+            },
+        );
     }
 
     /// A call that waited (an audit's run, a job) answered with what it ended with.
@@ -757,6 +798,7 @@ impl App {
                 output,
                 elapsed,
                 expanded: false,
+                progress: None,
             },
         );
     }

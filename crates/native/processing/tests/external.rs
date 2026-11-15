@@ -854,3 +854,31 @@ fn an_extensions_tool_runs_no_code_to_check_or_preview_its_values() {
     assert!(tool.tool.validate.is_none(), "no check of its own");
     assert!(tool.tool.preview.is_none(), "no preview of its own");
 }
+
+#[test]
+fn an_extensions_tools_progress_reaches_the_job_running_it() {
+    // docs/adr/8057 §27: the tool's own progress (here the provider's 0.5, "ölçülüyor") goes to the runner's sink, per
+    // thousand, as a job's counters take it: an agent asking `job` sees how far an extension's Python tool is. A
+    // runner without a sink drops it, as before.
+    let _turn = one_at_a_time();
+    let _tool = setup();
+    seen().answer = None;
+    let heard: Arc<Mutex<Vec<(u64, u64)>>> = Arc::default();
+    let kept = Arc::clone(&heard);
+    let mut host = Bare(drawing(false), Vec::new());
+    let tool = Registry::current().get("ext.tr.ornek.deneme.olc").unwrap();
+    let mut runner = Runner::new().with_progress(Arc::new(move |done, total| {
+        kept.lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .push((done, total));
+    }));
+    let mut log = Vec::new();
+    let outcome = runner.run(&mut host, &tool, &values(), false, &mut log);
+    assert!(matches!(outcome, Outcome::Ok { .. }), "{outcome:?}");
+    assert_eq!(
+        *heard
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner),
+        [(500, 1000)]
+    );
+}

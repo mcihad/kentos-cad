@@ -106,7 +106,14 @@ pub(crate) fn batch_to_sink(
                     warnings.push(w);
                 }
             }
-            let (mut ran, added) = run_on(&mut copy, ready, &registry, &mut digests, stop.clone())?;
+            let (mut ran, added) = run_on(
+                &mut copy,
+                ready,
+                &registry,
+                &mut digests,
+                stop.clone(),
+                None,
+            )?;
             let staged: Vec<&Staged> = read.iter().chain(&own).collect();
             for s in staged {
                 said(&mut ran, std::slice::from_ref(s));

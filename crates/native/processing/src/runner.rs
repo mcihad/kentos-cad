@@ -234,13 +234,21 @@ fn distinct(ids: impl IntoIterator<Item = Slot>) -> Vec<Slot> {
 struct Collect<'a> {
     log: &'a mut Vec<LogLine>,
     canceled: bool,
+    /// Where its progress goes, per thousand; none: dropped.
+    progress: Option<kentos_native_application::processing_host::ProgressSink>,
     /// The host's stop, asked while the tool runs (docs/adr/0551 §4).
     stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     files: Option<std::sync::Arc<dyn crate::files::Files>>,
 }
 
 impl Feedback for Collect<'_> {
-    fn progress(&mut self, _fraction: f64, _label: &str) {}
+    fn progress(&mut self, fraction: f64, _label: &str) {
+        if let Some(sink) = &self.progress
+            && fraction.is_finite()
+        {
+            sink((fraction.clamp(0.0, 1.0) * 1000.0).round() as u64, 1000);
+        }
+    }
 
     fn info(&mut self, message: String) {
         self.log.push(LogLine {
@@ -373,6 +381,8 @@ pub struct Runner {
     canceled: bool,
     /// The host's stop (a job's Durdur), read by the running tool as it goes (docs/adr/0551 §4).
     stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    /// Where the running tool's own progress goes (a job's counters, docs/adr/8057 §27): none, it is dropped.
+    progress: Option<kentos_native_application::processing_host::ProgressSink>,
     /// The host's files for the runs that read and write them (the headless server's, docs/adr/0515).
     files: Option<std::sync::Arc<dyn crate::files::Files>>,
     /// The raster tools' analysis environment its runs take (docs/adr/0643 §1); a model's steps too.
@@ -386,6 +396,7 @@ impl std::fmt::Debug for Runner {
             .field("seq", &self.seq)
             .field("canceled", &self.canceled)
             .field("stop", &self.stop.is_some())
+            .field("progress", &self.progress.is_some())
             .field("files", &self.files.is_some())
             .finish()
     }
@@ -408,6 +419,16 @@ impl Runner {
     /// the drawing is as it was and the run is recorded as canceled (a model stops between steps and inside one).
     pub fn with_stop(mut self, stop: std::sync::Arc<std::sync::atomic::AtomicBool>) -> Self {
         self.stop = Some(stop);
+        self
+    }
+
+    /// The running tool's own progress goes to `sink` (per thousand): a job's counters, so an agent asking `job` sees
+    /// how far an extension's Python tool is (docs/adr/8057 §27).
+    pub fn with_progress(
+        mut self,
+        sink: kentos_native_application::processing_host::ProgressSink,
+    ) -> Self {
+        self.progress = Some(sink);
         self
     }
 
@@ -627,6 +648,7 @@ impl Runner {
             let mut feedback = Collect {
                 log: &mut *log,
                 canceled: self.canceled,
+                progress: self.progress.clone(),
                 stop: self.stop.clone(),
                 files: self.files.clone(),
             };

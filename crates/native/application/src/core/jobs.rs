@@ -22,6 +22,31 @@ use kentos_commands::{
 };
 use kentos_domain::Document;
 
+/// `done` of `total` into a progress's counters, through its span when it is a phase of a job (`range`: offset, units,
+/// whole).
+fn store(
+    done_at: &AtomicU64,
+    total_at: &AtomicU64,
+    range: Option<(u64, u64, u64)>,
+    done: u64,
+    total: u64,
+) {
+    let (done, total) = if let Some((offset, units, whole)) = range {
+        (
+            offset.saturating_add(if total == 0 {
+                0
+            } else {
+                ((u128::from(done.min(total)) * u128::from(units)) / u128::from(total)) as u64
+            }),
+            whole,
+        )
+    } else {
+        (done.min(total), total)
+    };
+    total_at.store(total, Ordering::Relaxed);
+    done_at.store(done.min(total), Ordering::Relaxed);
+}
+
 /// A job's progress and its stop, shared with the thread that computes it.
 #[derive(Debug, Default)]
 pub struct Progress {
@@ -49,20 +74,14 @@ impl Progress {
 
     /// `done` of `total`.
     pub fn set(&self, done: u64, total: u64) {
-        let (done, total) = if let Some((offset, units, whole)) = self.range {
-            (
-                offset.saturating_add(if total == 0 {
-                    0
-                } else {
-                    ((u128::from(done.min(total)) * u128::from(units)) / u128::from(total)) as u64
-                }),
-                whole,
-            )
-        } else {
-            (done.min(total), total)
-        };
-        self.total.store(total, Ordering::Relaxed);
-        self.done.store(done.min(total), Ordering::Relaxed);
+        store(&self.done, &self.total, self.range, done, total);
+    }
+
+    /// The progress as a sink a running tool reports to from its own thread (an extension's Python tool's
+    /// `ctx.progress`, docs/adr/8057 §27): the same counters and span as [`Progress::set`].
+    pub fn sink(&self) -> crate::processing_host::ProgressSink {
+        let (done, total, range) = (Arc::clone(&self.done), Arc::clone(&self.total), self.range);
+        Arc::new(move |d, t| store(&done, &total, range, d, t))
     }
 
     /// A phase of the same job; cancellation and the public counter stay shared.
@@ -377,4 +396,22 @@ fn sheet_package_progress_phases_share_cancellation_and_count_without_jumping_ba
         .span(u64::MAX - 5, 5, u64::MAX)
         .set(u64::MAX, u64::MAX);
     assert_eq!(largest.fraction(), Some(1.));
+}
+
+#[cfg(test)]
+#[test]
+fn a_progress_sink_reports_from_another_thread_through_its_span() {
+    // docs/adr/8057 §27: a running tool's own progress, from its thread, lands in the job's counters (its phase's span
+    // included) as `set` would put it.
+    let progress = Progress::default();
+    let sink = progress.sink();
+    std::thread::spawn(move || sink(250, 1000)).join().unwrap();
+    assert!((progress.fraction().unwrap() - 0.25).abs() < 1e-12);
+    let half = progress.span(50, 50, 100);
+    let sink = half.sink();
+    sink(500, 1000);
+    assert!(
+        (progress.fraction().unwrap() - 0.75).abs() < 1e-12,
+        "the second half's middle"
+    );
 }

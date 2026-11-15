@@ -1967,6 +1967,15 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   plan → yürütme, `scene.measure`; `cad.polygon.create` ve `drawing.measure` artık araç değil). Sınamada çıkan tuzak: `cad.processing.run`'ın
   girdisi `parameters`'tır; `ProcessingRun` bilinmeyen anahtarı reddetmediği için `values` yazan çağrı sessizce
   varsayılanlarla çalışıyordu (ilk sınama "Yapılar: seçilen katman artık yok" ile düştü).
+- **İşin ilerlemesi ajana ulaşır (15 Kasım).** Tek bir İşlemler çalıştırmasında aracın kendi ilerlemesi (eklentinin
+  `ctx.progress`'i, yerleşik aracın adımları) Runner'ın geri bildiriminde düşüyordu (`Collect::progress` boştu): iş
+  çalışırken `job` hiç ilerleme söylemiyordu; yalnız toplu işin satırları ve dosyaya yazma söylüyordu. Artık işin sayaçları
+  başka iş parçacığından yazılabilen bir alıcı verir (`Progress::sink`, aşama payıyla), `BatchFlow::progress_sink` onu
+  tek çalıştırmaya geçirir, Runner aracın payını binde olarak ona iletir (`with_progress`); toplu işin satırları
+  eskisi gibi satır arasında söyler. Asistan'ın kartı "Çalışıyor · %40" der (`ToolCall.progress`, yüzde değişince
+  yeniden çizilir); MCP ajanı `job`'un `progress`'ini okur. Bekçiler: `jobs::a_progress_sink_reports_from_another_thread_through_its_span`,
+  `an_extensions_tools_progress_reaches_the_job_running_it` (sağlayıcının 0,5'i → 500/1000),
+  `assistant::tests::a_long_jobs_progress_shows_on_its_calls_card`.
 - **Yeni katman açan çalıştırma planlandığı gibi yürütülemiyordu (15 Kasım, gerçek pencerede bulundu).** Asistan
   Vitrin'in TAKS aracını planladı (plan işi arka planda, "İşlem aracını çalıştır · plan — Çalışıyor"), onay kartı geldi,
   Onayla → `plan_changed` "Yazılacak olan onaylanan plana eşit değil"; ajan yeniden planladı, yine farklı bir plan

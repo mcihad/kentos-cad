@@ -300,6 +300,7 @@ fn an_approval_says_its_call_once_and_asks() {
         output: String::new(),
         elapsed: None,
         expanded,
+        progress: None,
     };
     let count = |snapshot: &mut Snapshot, call: &ToolCall, label: &str| {
         let count = Arc::new(Mutex::new(0));
