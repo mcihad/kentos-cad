@@ -25,7 +25,7 @@ use crate::app::App;
 mod drawing;
 
 use drawing::written;
-pub(crate) use drawing::{Synthetic, synthetic};
+pub(crate) use drawing::{Synthetic, synthetic, synthetic_on};
 
 /// How long a rule may take in a trial: as on the drawing.
 const RULE_TIMEOUT: Duration = Duration::from_secs(120);

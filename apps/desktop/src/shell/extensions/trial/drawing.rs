@@ -16,12 +16,17 @@ pub(crate) struct Synthetic {
     pub(crate) layers: Vec<String>,
 }
 
-/// A drawing made of `features` (`{layer, geometry, attrs?}`, GeoJSON shapes): a new GIS project, each layer found by
-/// its name or id or added (its id the name when that is one), each object on it with its attributes as text. Why not,
-/// with the object's place.
+/// A drawing made of `features` (`{layer, geometry, attrs?}`, GeoJSON shapes): a new GIS project on TUREF / TM36, each
+/// layer found by its name or id or added (its id the name when that is one), each object on it with its attributes as
+/// text. Why not, with the object's place.
 pub(crate) fn synthetic(features: &[Value]) -> Result<Synthetic, String> {
+    synthetic_on(features, 5256)
+}
+
+/// [`synthetic`] in coordinate system `srid` (an extension tool's call runs in the user's drawing's, §47).
+pub(crate) fn synthetic_on(features: &[Value], srid: u32) -> Result<Synthetic, String> {
     let choices = kentos_headless::new_drawing(&json!({
-        "name": "Deneme çizimi", "workspace": "gis", "srid": 5256
+        "name": "Deneme çizimi", "workspace": "gis", "srid": srid
     }))
     .map_err(|e| e.message)?;
     let snapshot = kentos_project::new_project::new_project(&choices)?;

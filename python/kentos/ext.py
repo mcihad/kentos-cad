@@ -83,6 +83,7 @@ __all__ = [
     "Shape",
     "Stopped",
     "Storey",
+    "ToolAnswer",
     "UnitFacts",
     "UnitLevel",
     "audit",
@@ -443,12 +444,13 @@ class CommandContext:
         return CommandResult(cancelled=True)
 
     def run_tool(self, tool: str, /, **parameters: Any) -> Any:
-        """Runs a KentOS İşlemler tool from this command (docs/adr/8057 §46): a built-in one (``geometry.buffer``),
-        this extension's own (``ext.<eklenti>.<araç>``) or one of an extension its manifest depends on. ``parameters``
-        are the tool's, by name: a layer's objects ``ext.layer_input("yapi")``, a new layer ``ext.new_layer("Tampon")``,
-        numbers and choices as written. It runs with this command's rights (a tool that writes needs
-        ``document.write``) and its writes join this command's one undo step. Returns its answer (``summary``,
-        ``outputs``, ``record``). ``cad.processing.tools(ctx.doc)`` lists the tools and their parameters."""
+        """Runs a KentOS İşlemler tool from this command, with its rights and in its undo step (docs/adr/8057 §46).
+
+        A built-in one (``geometry.buffer``), this extension's own (``ext.<eklenti>.<araç>``) or one of an extension
+        its manifest depends on. ``parameters`` are the tool's, by name: a layer's objects ``ext.layer_input("yapi")``,
+        a new layer ``ext.new_layer("Tampon")``, numbers and choices as written. A tool that writes needs
+        ``document.write``. Returns its answer (``summary``, ``outputs``, ``record``). ``cad.processing.tools(ctx.doc)``
+        lists the tools and their parameters."""
         if self.doc is None:
             raise NotAvailable("Açık çizim yok ya da eklentiye çizimi okuma izni verilmedi: araç çalıştırılamaz.")
         from . import cad
@@ -845,6 +847,65 @@ class ProcessingContext(CommandContext):
     def select(self, features: Iterable[Feature | str]) -> None:
         """Leaves these inputs selected in the drawing when the run ends (a session result, not a change)."""
         self._select = [f.uid if isinstance(f, Feature) else str(f) for f in features]
+
+    def run_tool(self, tool: str, /, **parameters: Any) -> ToolAnswer:
+        """Runs a KentOS built-in tool on objects this tool holds, never the user's drawing (docs/adr/8057 §47).
+
+        A features parameter is given as objects (this tool's input, :class:`Feature`s, shapely shapes, GeoJSON
+        features); KentOS runs the tool on a drawing of its own made of them, in the drawing's coordinate system, and
+        gives back what it made (:class:`ToolAnswer`) for this tool to return in its result. Another extension's tool
+        does not run from a tool. ``cad.processing.tools`` lists the built-in tools and their parameters."""
+        given = {str(name): _tool_value(value) for name, value in parameters.items()}
+        return ToolAnswer(self._link.ask("processing.run", {"tool": str(tool), "parameters": given}))
+
+
+class ToolAnswer:
+    """What a tool's ``ctx.run_tool`` gave back (docs/adr/8057 §47): ``summary``, ``warnings``, ``layers``.
+
+    ``layers`` holds the objects it made by their layer's name, each a :class:`Feature` (shapely reads it:
+    ``shape(f)``; its attributes came from the objects given, where the tool keeps them)."""
+
+    __slots__ = ("summary", "warnings", "layers")
+
+    def __init__(self, raw: Any) -> None:
+        raw = raw if isinstance(raw, dict) else {}
+        self.summary: str = str(raw.get("summary") or "")
+        self.warnings: list[Any] = list(raw.get("warnings") or [])
+        self.layers: dict[str, list[Feature]] = {
+            str(layer.get("name", "")): [Feature(f) for f in layer.get("features") or []]
+            for layer in raw.get("layers") or []
+        }
+
+    def features(self) -> list[Feature]:
+        """Every object it made, its layers one after another."""
+        return [f for made in self.layers.values() for f in made]
+
+
+def _tool_value(value: Any) -> Any:
+    """A parameter of a tool's ``ctx.run_tool`` as KentOS takes it: objects (a :class:`FeatureInput`, :class:`Feature`s,
+    shapely shapes or anything with ``__geo_interface__``, GeoJSON features) as their shapes and attributes
+    (``{"features": [...]}``); anything else as it is."""
+
+    def one(item: Any) -> dict[str, Any]:
+        geo = item.__geo_interface__ if hasattr(item, "__geo_interface__") else item
+        if isinstance(geo, dict) and geo.get("type") == "Feature":
+            geometry, properties = geo.get("geometry"), geo.get("properties") or {}
+        else:
+            geometry, properties = geo, {}
+        if isinstance(item, Feature):
+            properties = item.attrs
+        return {"geometry": geometry, "attrs": {str(k): v for k, v in dict(properties).items()}}
+
+    def is_object(item: Any) -> bool:
+        return hasattr(item, "__geo_interface__") or (isinstance(item, dict) and item.get("type") == "Feature")
+
+    if isinstance(value, FeatureInput):
+        return {"features": [one(f) for f in value]}
+    if isinstance(value, (list, tuple)) and value and all(is_object(v) for v in value):
+        return {"features": [one(v) for v in value]}
+    if is_object(value):
+        return {"features": [one(value)]}
+    return value
 
 
 class Shape:

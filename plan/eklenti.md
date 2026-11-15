@@ -902,14 +902,14 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
   yayımcı gibi tanıtması reddedilir [PY-RUN-08].
   — *tamamlandı (ADR 8057 §6, §7): sürüm başına süreç ve protokol 1, tembel içe aktarma, aracı yalnız başladığı çizim,
   girdiler veri olarak, başka kimlikle işaretli kod çalışmaz.*
-- [ ] stdout/stderr, günlük/ilerleme, istisna/iz ve eser ayrı kanallarda, sınırlı ve UTF-8 [PY-RUN-11]. Durdur: önce iş
+- [x] stdout/stderr, günlük/ilerleme, istisna/iz ve eser ayrı kanallarda, sınırlı ve UTF-8 [PY-RUN-11]. Durdur: önce iş
   birlikli iptal, gerekirse süreç sonlandırma; işlenmemiş değişiklik ve geç sonuç iptal [PY-RUN-12]. Yerleşik analiz
   çağrıları üst iş/kullanan/kaynak kapsamını devralır; iç içe çağrı izni genişletemez [PY-RUN-14]. Eklentiden eklentiye
   çağrı açık bağımlılık/yetenek taşır; döngü, derinlik ve bütçe denetlenir [PY-RUN-15]. Aynı veride arayüz, eklenti ve
   AI birlikteyken kaynak revizyonu doğrulanır; başka etkin belgeye yazılmaz [PY-RUN-16].
-  — *kısmen (ADR 8057 §6, §16, §27, §46): ayrı ve sınırlı kanallar, iş birlikli Durdur ve sonlandırma, eklentiden
+  — *tamamlandı (ADR 8057 §6, §16, §27, §46, §47): ayrı ve sınırlı kanallar, iş birlikli Durdur ve sonlandırma, eklentiden
   eklentiye çağrı, yalnız başladığı çizime yazma ve planın damgası, komuttan yerleşik araç komutun hakkıyla
-  (`ctx.run_tool`); kalan: eklenti aracından (İşlemler) yerleşik araç çağrısı [PY-TOOL-18].*
+  (`ctx.run_tool`), eklenti aracından yerleşik araç kendi verisiyle (§47).*
 - [ ] Güvenilir yerel Python kipi ile işletim sistemi düzeyinde korumalı kip ayrıdır; **ayrı süreç tek başına korumalı
   alan değildir** [PY-RUN-19]. Aracı yalnız aracı erişimini sınırlar; güvenilir eklentinin doğrudan dosya/ağ işlemlerini
   engellediği iddia edilmez [PY-RUN-20]. Korumalı kip seçilirse gerçek OS yalıtımıyla uygulanır; destek yoksa açıkça
@@ -952,8 +952,8 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
   sürüm, ortam özeti, girdi anlık görüntüsü, parametre/birim/CRS/tohum, çıktı kimlikleri) [PY-TOOL-22]; genel araç
   üst verisinde örnek veri ve doğruluk testleri [PY-TOOL-23].
   — *kısmen (ADR 8057 §7, §13, §15): modelde yerleşiklerle zincir (P12), adım eklentiyi sabitler, her yüzeyde aynı
-  araç kimliği, çalışma kökeni, komuttan yerleşik araç (§46); kalan: eklenti aracından yerleşik araç çağrısı
-  [PY-TOOL-18], araç üst verisinde örnek veri ve doğruluk testleri [PY-TOOL-23].*
+  araç kimliği, çalışma kökeni, komuttan (§46) ve eklenti aracından (§47) yerleşik araç; kalan: araç üst verisinde
+  örnek veri ve doğruluk testleri [PY-TOOL-23].*
 - [x] **Bileşik `ToolHost`:** `crates/native/application/src/processing_host.rs`'in `ToolHost`'u yerleşik Rust
   algoritmalarıyla `ext.<id>.<araç>` Python algoritmalarını birleştirir; Python algoritması `uv run --locked --no-sync`
   ile ayrı süreçte, `BatchFlow` (`stopped()`, `progress(done, total)`, `stop_flag()`) üzerinden gerçekten durdurulabilir;

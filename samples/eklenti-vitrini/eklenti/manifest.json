@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.38",
+  "version": "1.0.39",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -145,6 +145,11 @@
         "id": "taks",
         "descriptor": "tools/taks.tool.json",
         "handler": "vitrin.logic:taks"
+      },
+      {
+        "id": "cekme",
+        "descriptor": "tools/cekme.tool.json",
+        "handler": "vitrin.logic:cekme"
       }
     ],
     "audits": [
@@ -226,6 +231,11 @@
               },
               {
                 "command": "yapi-tamponu",
+                "icon": "geo-buffer"
+              },
+              {
+                "processing": "cekme",
+                "label": "Çekme mesafesi",
                 "icon": "geo-buffer"
               }
             ]

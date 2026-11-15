@@ -271,6 +271,42 @@ def taks(ctx: ext.ProcessingContext, parseller: ext.FeatureInput, yapilar: ext.F
     return {"parseller": cikti, "tablo": tablo, "asan": asan}
 
 
+@ext.processing("cekme")
+def cekme(ctx: ext.ProcessingContext, yapilar: ext.FeatureInput, parseller: ext.FeatureInput, mesafe: float) -> dict:
+    """Çekme mesafesi denetimi: her yapının çevresine KentOS'un yerleşik Tampon aracıyla (geometry.buffer) mesafe
+    kadar alan çizilir; alan yapının oturduğu parselin dışına taşıyorsa yapı parsel sınırına bu mesafeden yakındır.
+    Tamponu eklenti çizmez, KentOS'un aracı eklentiye verilen yapılar üzerinde çalışır (ctx.run_tool), kullanıcının
+    çizimine dokunmadan; karşılaştırma shapely ile. Yapıyı tamponuna sırası (öznitelik "sira") bağlar."""
+    uzaklik = float(mesafe if mesafe is not None else 3)
+    ctx.progress(0, 3, "KentOS'un Tampon aracı çalışıyor")
+    verilen = [{"type": "Feature", "geometry": f.geometry, "properties": {"sira": n}} for n, f in enumerate(yapilar)]
+    cevap = ctx.run_tool("geometry.buffer", input=verilen, distance=uzaklik)
+    tampon = {int(t.attrs.get("sira", -1)): t for t in cevap.features()}
+    ctx.progress(1, 3, "Tamponlar parsellerle karşılaştırılıyor")
+    parsel = np.array([shape(f.geometry) for f in ctx.read_features(parseller)], dtype=object)
+    agac = shapely.STRtree(parsel) if len(parsel) else None
+    cikti, tasanlar = [], []
+    for n, yapi in enumerate(yapilar):
+        t = tampon.get(n)
+        if t is None:
+            continue
+        alan = shape(t.geometry)
+        oturdugu = shape(yapi.geometry).representative_point()
+        icinde = [int(i) for i in agac.query(oturdugu, predicate="within")] if agac is not None else []
+        tasan = round(float(alan.difference(parsel[icinde[0]]).area), 2) if icinde else round(float(alan.area), 2)
+        durum = "uygun" if tasan <= 1e-6 else "taşıyor"
+        if durum == "taşıyor":
+            tasanlar.append(yapi)
+        etiket = yapi.attrs.get("no") or f"{n + 1}. yapı"
+        cikti.append(ext.NewFeature(geometry=t.geometry, attrs={
+            "yapi": etiket, "mesafe_m": uzaklik, "durum": durum, "tasan_alan_m2": tasan}))
+    ctx.progress(2, 3, "Sonuç yazılıyor")
+    ctx.select(tasanlar)
+    m = f"{uzaklik:g}".replace(".", ",")
+    ctx.summary(f"{len(cikti)} yapının {m} m çekme mesafesi denetlendi; {len(tasanlar)} yapı parsel sınırına daha yakın.")
+    return {"tamponlar": cikti, "tasan": len(tasanlar)}
+
+
 @ext.expr("ada-parsel")
 def ada_parsel(ada, parsel) -> str | None:
     """Bir parselin "ada/parsel" yazımı (101/1); ikisinden biri boşsa boş. İfadelerde:

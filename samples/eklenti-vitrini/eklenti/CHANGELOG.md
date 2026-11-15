@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.0.39 — 15 Kasım 2026
+
+- İşlemler aracı "Çekme mesafesi denetimi" (Vitrin › Analiz › Çekme mesafesi): her yapının çevresine KentOS'un
+  yerleşik Tampon aracıyla mesafe kadar alan çizer (eklentinin aracı içinden `ctx.run_tool`: KentOS'un aracı
+  eklentiye verilen yapılar üzerinde, kullanıcının çizimine dokunmadan çalışır), tamponun yapının parselinden taşıp
+  taşmadığını shapely ile söyler; tamponlar yeni katmana `yapi`, `mesafe_m`, `durum`, `tasan_alan_m2` ile, taşanlar seçili.
+
 ## 1.0.38 — 15 Kasım 2026
 
 - Vitrin sekmesinin Analiz grubunda "Yapı tamponu": eklentinin komutu KentOS'un yerleşik Tampon aracını

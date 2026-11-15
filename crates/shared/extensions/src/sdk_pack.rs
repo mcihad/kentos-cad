@@ -152,9 +152,8 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 `ctx.message(metin)`, `ctx.cancelled()`; kullanıcıya sormak için `ctx.dialog(başlık, alanlar, ok=…, cancel=…)` (alanlar
 bir panelin girdileri: textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, checkbox,
 layerPicker, fieldPicker, filePicker, crsPicker, text, section; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
-bekler), `ctx.confirm(metin)` (evet: True) ve `ctx.run_tool(araç, **parametreler)` (KentOS'un yerleşik İşlemler
-aracı ya da bağımlı eklentininki, komutun hakkıyla ve geri alma adımında; `ext.layer_input("yapi")`,
-`ext.new_layer("Ad")`). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
+bekler), `ctx.confirm(metin)` (evet: True) ve `ctx.run_tool(araç, **parametreler)` (KentOS'un aracı; komutta komutun
+hakkıyla, `ext.layer_input("yapi")`, `ext.new_layer("Ad")`; araçta elindeki nesnelerle, sonuç `ToolAnswer`). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
 as ui` ile yazın: bileşen başına bir işlev, gerekli anahtarlar sırayla, kalanı adıyla (`ui.text_field("onek", "Önek",
 value="Y-")`, `ui.number_field("ilk", "İlk numara", min=1, required=True)`, `ui.select("tur", "Tür", ["A", "B"])`,
 `ui.choice("-", "Seçmeyin")`, bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir, yanlış anahtar

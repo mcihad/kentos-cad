@@ -105,6 +105,7 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "TAKS",
             "Yapı numarası",
             "Yapı tamponu",
+            "Çekme mesafesi",
             "Yapı ara",
             "Değer say",
             "Parsel kartı",

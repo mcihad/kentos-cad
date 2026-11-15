@@ -2671,3 +2671,32 @@ kayıt `fixtures/crs/v1/registry.json`), `rules.rs` (metin girdisi); masaüstü 
   tamponunu "Yapı tamponu 3 m" katmanına çizer (`43-arac`).
 - **Sınamalar:** masaüstü 1 (yazabilen koşuda aracın tamponları yeni katmanda, beş yapıya beş; yalnız okuyabilen koşuda
   araç `document.write` sözüyle reddedilir, katman yok).
+
+## §47. Eklentinin İşlemler aracından KentOS'un yerleşik aracı: kendi verisiyle (`ADIM 19`, PY-TOOL-18)
+
+**15 Kasım.** Kod: süreç havuzu `kentos_python_env::process` (`Pool::run_answering`, `Answer`, `refuse_calls`; `run`
+eskisi gibi reddeder), İşlemler `external.rs` (aracın girdisinde çizimin `srid`'i), masaüstü `tool_calls.rs`
+(`tool_call`, `made_objects`), `tools.rs` (aracın koşusu çağrıları yanıtlar), `trial/drawing.rs` (`synthetic_on`);
+Python `ProcessingContext.run_tool`, `ToolAnswer`, `_tool_value`; Vitrin 1.0.39 "Çekme mesafesi denetimi".
+
+- **Sorun:** eklentinin İşlemler aracı ayrı süreçte, girdileri veri olarak alarak çalışır (PY-TOOL-09) ve aracıya
+  istek yapamaz; havuz her çağrısını "çizime erişemez" diye reddediyordu. Bu yüzden bir araç KentOS'un Tampon'unu,
+  Kesiştir'ini kendi hesabının içinde kullanamıyordu; algoritmaların birbirini çağırması eklenti ekosistemlerinin
+  temel kalıbı.
+- **Karar: veri girer, veri çıkar.** Araç `ctx.run_tool("geometry.buffer", input=<elindeki nesneler>, distance=3)`
+  der; masaüstü bu nesnelerden kullanıcının çizimine dokunmayan bir çizim kurar (deneme koşusunun sentetik çizimi,
+  §37; kullanıcının çiziminin koordinat sisteminde), yerleşik aracı onda çalıştırır ve yaptığı nesneleri aracın
+  girdisinin biçiminde (`uid`, `layer`, `entity`, `geometry`) geri verir. Araç yalnız elindekini verebilir: verilmeyen
+  bir katmana ya da gizli bir alana bu yoldan ulaşamaz. Sonucu araç kendi çıktısında döndürür (`NewFeature`).
+- **Yalnız yerleşik araçlar:** başka bir eklentinin aracı bir aracın içinden çalışmaz (süreç zinciri yok, bağımlılık
+  denetimi delinmez); aracın kendi kodu kendi işlevlerini çağırır. Başka bir yöntem `unknown_method`.
+- **Sınır:** bir çağrıda en çok 50 000 nesne girer ve çıkar; boş girdi aracı çalıştırmaz ("Girdi boş"). Çağrı
+  sürerken aracın Durdur'u ve süresi bir sonraki iletide sorulur (çağrı uzunsa onun bitişini bekler).
+- **Havuzun yolu:** `Pool::run_answering` koşunun çağrılarını sahibinin `Answer`'ına verir; denetim kuralları ve
+  bulut işi eskisi gibi `run` ile, çağrıları reddederek çalışır.
+- **Vitrin 1.0.39:** "Çekme mesafesi denetimi" (Vitrin › Analiz): her yapının tamponu KentOS'un Tampon aracıyla, yapı
+  tamponuna sırasıyla bağlanır (öznitelik "sira", araç öznitelikleri taşır); tamponun yapının parselinden taşan alanı
+  shapely ile; taşanlar seçili, tamponlar yeni katmanda (`44-cekme`).
+- **Sınamalar:** süreç havuzu 1 (sahibi yanıtlayan koşuda çağrı yöntemi ve parametreleriyle ulaşır, cevabı koda
+  döner; yanıtlamayan koşu eskisi gibi reddeder), masaüstü 1 (yerleşik Tampon verilen iki karenin iki tamponunu
+  yeni katmanda verir; eklenti aracı, başka yöntem ve boş girdi söylenir).

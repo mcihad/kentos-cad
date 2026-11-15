@@ -730,7 +730,11 @@ fn input_of(
             }
         }
     }
-    Ok(json!({ "params": params, "inputs": inputs, "layers": layers }))
+    // The drawing's coordinate system: a built-in tool the extension's code asks for runs in it (docs/adr/8057 §47).
+    Ok(
+        json!({ "params": params, "inputs": inputs, "layers": layers,
+               "srid": ctx.doc.settings().srid }),
+    )
 }
 
 /// A value of an attribute as KentOS keeps it (text): a number as JavaScript writes it, a yes or no as `true` or

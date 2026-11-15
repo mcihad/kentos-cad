@@ -717,7 +717,12 @@ impl Provider for Bridge {
         let feedback = RefCell::new(feedback);
         let mut printed = 0usize;
         let mut output = String::new();
-        let ended = self.pool.run(
+        // A built-in tool its code asks for runs on its own objects, in the drawing's coordinate system (§47).
+        let srid = input["srid"]
+            .as_u64()
+            .and_then(|s| u32::try_from(s).ok())
+            .unwrap_or(0);
+        let ended = self.pool.run_answering(
             &key,
             &|| start_of(&plan, &python),
             invoke,
@@ -747,6 +752,7 @@ impl Provider for Bridge {
                     }
                 }
             },
+            &mut |method, params| super::tool_calls::tool_call(method, params, srid),
         );
         let canceled = feedback.borrow().canceled();
         // What its process holds now (measured where the system says it): its log line says it.
