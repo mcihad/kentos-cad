@@ -15,6 +15,8 @@ mod audits;
 mod dialogs;
 mod panel_chart;
 mod panel_session;
+// A panel's file picker: a file the user gives to be read (docs/adr/8057 §41).
+mod panel_files;
 // A panel's pictures: the PNG an extension's code gives (docs/adr/8057 §40).
 mod panel_image;
 // A panel's sections: headings that fold what they gather (docs/adr/8057 §38).
@@ -637,7 +639,7 @@ impl App {
             }
             Event::OpenPanel(ext, local) => return self.ext_panel_open(&ext, &local),
             Event::Panel(event) => return self.ext_panel_event(event),
-            Event::Dialog(event) => self.ext_dialog_event(event),
+            Event::Dialog(event) => return self.ext_dialog_event(event),
             Event::DialogAnswer(ok) => self.ext_dialog_answer(ok),
             Event::AuditDone(done) => self.ext_audit_done(*done),
             Event::TrialDone(report) => self.ext_trial_done(*report),

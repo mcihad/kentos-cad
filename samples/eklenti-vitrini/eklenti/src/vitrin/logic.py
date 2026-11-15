@@ -18,9 +18,11 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
   bulduklarını panelin Seç kutusuna koyar (``ctx.panel``: çalışan kod panelini değiştirir).
 - ``deger_sec``: Seç değişince çalışır; o değerdeki nesneleri çizimde seçer.
 - ``katman_degerleri``: katmanın sağ tık menüsünden; "Değer say"ı o katman seçili açar (``ctx.params["layer"]``).
+- ``csv_noktalar``: katmanın sağ tık menüsünden; pencerenin dosya seçicisiyle verilen CSV'deki noktaları ekler.
 - ``parsel_karti``: kartlı panel; "Parsel kartı"nda alınan her parselin alanı, yapıları ve TAKS'ı bir kartta.
 """
 
+import csv
 import struct
 import time
 import zlib
@@ -401,6 +403,39 @@ def katman_degerleri(ctx: ext.CommandContext) -> ext.CommandResult:
     panel.set("katman", value=katman)
     panel.say("Bir alan seçin: değerleri sayılır.")
     return ctx.message("Değer say katmanla açıldı.")
+
+
+@ext.command("csv-noktalar")
+def csv_noktalar(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Katmanın sağ tık menüsünden: seçilen CSV dosyasındaki noktaları o katmana ekler (x, y sütunları TM36 metre;
+    diğer sütunlar öznitelik olur). Dosyayı KentOS'un penceresi sorar (dosya seçici: yolu yazılır ya da Seç… ile
+    seçilir); eklenti yalnız kullanıcının verdiği dosyayı okur (files.userSelected). Tek geri alma adımıdır."""
+    katman = ctx.params.get("layer")
+    if not katman or ctx.doc is None:
+        return ctx.message("Bir katmanın sağ tık menüsünden çalışır: CSV'den nokta ekle.")
+    cevap = ctx.dialog(
+        "CSV'den nokta ekle",
+        [
+            ui.text("Her satır bir nokta: x ve y sütunları (TM36, metre); diğer sütunlar öznitelik olur."),
+            ui.file_picker("dosya", "CSV dosyası", filters=[ui.file_filter("CSV", "csv")], required=True),
+        ],
+        ok="Ekle",
+    )
+    if cevap is None:
+        return ctx.message("Vazgeçildi: nokta eklenmedi.")
+    eklenen, atlanan = 0, 0
+    with open(cevap["dosya"], newline="", encoding="utf-8-sig") as dosya:
+        for satir in csv.DictReader(dosya):
+            try:
+                x, y = float(satir.pop("x")), float(satir.pop("y"))
+            except (KeyError, TypeError, ValueError):
+                atlanan += 1
+                continue
+            oznitelikler = {k: v for k, v in satir.items() if k and v}
+            cad.point.create(ctx.doc, layer_id=katman, p=[x, y], attrs=oznitelikler)
+            eklenen += 1
+    ek = f"; {atlanan} satırın x ya da y'si okunamadı" if atlanan else ""
+    return ctx.message(f"{eklenen} nokta eklendi{ek}.")
 
 
 @ext.command("deger-sec")

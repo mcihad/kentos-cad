@@ -69,7 +69,7 @@ pub fn input_type(kind: &str) -> Option<FieldType> {
         // ISO text, which compares in time order (a form's dates and moments alike).
         "dateField" | "dateTimeField" => FieldType::Date,
         "textField" | "timeField" | "select" | "multiSelect" | "layerPicker" | "fieldPicker"
-        | "featurePicker" => FieldType::Text,
+        | "featurePicker" | "filePicker" => FieldType::Text,
         _ => return None,
     })
 }

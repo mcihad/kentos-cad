@@ -99,7 +99,9 @@ kimliği, `kinds`: alan türleri, ör. `["integer", "decimal"]`; orada seçilen 
 None), `featurePicker` (`id`, `label`, `layer`: bir `layerPicker`'ın kimliği, `geometry`, `multiple`: varsayılan true;
 kullanıcı "Seçimi al"a basınca çizimdeki seçimden o katmanın ve türün nesnelerini alır, değeri kalıcı kimliklerin
 listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.entity(uid)` ile okur; katman değişince
-alan ve nesne seçimi temizlenir), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
+alan ve nesne seçimi temizlenir), `filePicker` (`id`, `label`, `filters`: `[{name, extensions}]`; okunacak dosyanın yolu
+yazılır ya da Seç… ile seçilir, değeri mutlak yol ya da None; manifest `files.userSelected` ister), `button` (`id`,
+`label`, `command`: bir `entrypoints.commands` kimliği, `table`,
 `primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
 göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak
 tıklanınca nesneyi gösterir; düğmenin `table`'ı bir ağacı da gösterebilir), `card` (`id`, `label`, `title`, `tag`:

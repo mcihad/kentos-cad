@@ -1817,7 +1817,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | koordinat/harita seçimi | host | `entrypoints.mapTools` (yakalama türleri) | panelden harita seçimi yok |
 | | CRS/birim | KentOS'ta | ayarların CRS seçimi (`crs_choice`) | |
 | | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
-| Kaynak ve çıktı | dosya/eser seçici, ek | yok | — | dosya erişimi host servisi ister (PY-UI-10) |
+| Kaynak ve çıktı | dosya/eser seçici, ek | var | `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41) | `files.userSelected` ister; yazılacak dosya ve ek sonraki dilim |
 | | görsel önizleme | var | `image` (kodun verdiği PNG, `ctx.panel.set(id, image=…)`; oranı korunur, §40) | yalnız PNG, en çok 4096 piksel kenar; JPEG sonraki dilim |
 | | çıktı hedefi | host | İşlemler aracının çıktısı (`sinkParameter`) | panel komutu çizime yazar |
 | Veri görünüşü | tablo | var | `table` (500 satır) | `uid`'li satır nesneyi gösterir |
@@ -2477,3 +2477,29 @@ olguları `mimari.json`.
   base64 olmayan metin, sınırı aşan başlık çözülmeden ve bozuk PNG reddedilir; kod görseli verir, yanlışı öncekini
   bırakır, `None` kaldırır, başka bileşen almaz), Python 1 (bayt ve dosya base64 gider, `None` temizler).
 
+## §41. Dosya seçici: `filePicker` (`ADIM 22`, bileşen envanteri, kaynak)
+
+**15 Kasım.** Kod: `ui_panel.rs` (`Component::FilePicker`, `FileFilter`, Kapı 1), `archive.rs` (yetenek denetimi),
+masaüstü `panel_files.rs` (`file_value`, `pick`, `picker_of`), `panels.rs`, `panel_view.rs`, `dialogs.rs`,
+`panel_session.rs`; Python `ui.file_picker(...)`, `ui.file_filter(...)`.
+
+- **Karar: okunacak dosya, kullanıcının verdiği.** `filePicker` bir panelde ya da iletişim kutusunda kullanıcıya
+  dosya sorar: yolu yazılır ya da "Seç…" ile bilgisayarın dosya penceresinden seçilir (`filters`'ın türleriyle).
+  Değeri dosyanın mutlak yoludur, verilmeyince None; komut çalışmadan önce dosyanın var olduğu ve sunulan türlerden
+  olduğu denetlenir, yanlışı alanın adıyla söylenir. Okumak eklentinin işidir: manifest `files.userSelected` ister
+  ("Sizin seçtiğiniz dosyaları okur"). Yazılacak dosya (kaydet penceresi) ve ek, yeteneğin sözü okumak olduğu için
+  sonraki dilim.
+- **Yetenek iki yerde:** paketin paneli dosya seçici taşıyıp manifest `files.userSelected`'ı istemiyorsa Kapı 1 reddeder
+  (`ui_panel`); iletişim kutusunda kullanıcının kurarken vermediği yetenekle dosya seçici açılmaz.
+- **Pencere kapanırsa bir şey olmaz:** "Seç…"in dosya penceresi kapatılınca hiçbir mesaj gelmez (`Task::and_then`);
+  seçilen yol yazılmış gibi alana gelir (`onChange` çalışır).
+- **Alanın sözü onunla gider:** düğmeye basınca yanlış alanın sözü hem altında hem formun altında yazar; alan
+  düzeltilince formun altındaki aynı söz de kalkar (önce kalıyordu: yol yazıldığı hâlde "dosya verilmedi" duruyor ve
+  pencerenin düğmesini kaydırıyordu; gerçek pencere).
+- **Vitrin 1.0.34:** katmanın sağ tık menüsünün sonunda "CSV'den nokta ekle": pencere CSV dosyasını sorar, x ve y
+  sütunlarındaki noktalar o katmana öznitelikleriyle eklenir (tek geri alma adımı). Gerçek pencerede (`39-dosya`):
+  boşken Ekle "“CSV dosyası”: dosya verilmedi (yolunu yazın ya da Seç…'e basın).", `ornek-noktalar.csv` yazılınca
+  "4 nokta eklendi.", Taslak katmanında 4 nesne. Yeni yetenek güncellemenin incelemesinden geçti.
+- **Sınamalar:** paylaşılan (paket: dosya seçicili panel yeteneksiz reddedilir), masaüstü 2 (boş None, doğru tür
+  mutlak yol, olmayan dosya ve başka tür adıyla söylenir, zorunlu sorulur ve yol komuta gider; formun altındaki söz
+  alanla gider), Vitrin sınamalarının katkı listesi ve yeniden yükleme yeteneği güncellendi.

@@ -390,6 +390,65 @@
           "type": "object"
         },
         {
+          "description": "A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of\n`filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no\nfile, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`.",
+          "properties": {
+            "enabledWhen": {
+              "description": "Usable (pressed, typed in) only while this expression is true.",
+              "type": "string"
+            },
+            "filters": {
+              "default": [],
+              "items": {
+                "$ref": "#/$defs/FileFilter"
+              },
+              "type": "array"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "placeholder": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "type": {
+              "const": "filePicker",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
           "description": "The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`\nholds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else\none id or none.",
           "properties": {
             "geometry": {
@@ -1083,6 +1142,25 @@
           "type": "object"
         }
       ]
+    },
+    "FileFilter": {
+      "description": "One of the kinds of file a file picker offers: its name and its extensions, without the dot.",
+      "properties": {
+        "extensions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "extensions"
+      ],
+      "type": "object"
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",

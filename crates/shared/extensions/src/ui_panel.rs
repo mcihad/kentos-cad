@@ -44,6 +44,14 @@ pub struct PanelDefinition {
     pub rules: Vec<Rules>,
 }
 
+/// One of the kinds of file a file picker offers: its name and its extensions, without the dot.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+pub struct FileFilter {
+    pub name: String,
+    pub extensions: Vec<String>,
+}
+
 /// One of a select's choices.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -135,6 +143,22 @@ pub enum Component {
         layer: String,
         #[serde(default)]
         kinds: Vec<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
+    /// A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of
+    /// `filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no
+    /// file, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`.
+    FilePicker {
+        id: String,
+        label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
+        #[serde(default)]
+        filters: Vec<FileFilter>,
+        #[serde(default)]
+        placeholder: Option<String>,
         #[serde(default, rename = "onChange")]
         on_change: Option<String>,
     },
@@ -362,6 +386,7 @@ impl Component {
             | Component::LayerPicker { id, .. }
             | Component::FieldPicker { id, .. }
             | Component::FeaturePicker { id, .. }
+            | Component::FilePicker { id, .. }
             | Component::DateField { id, .. }
             | Component::TimeField { id, .. }
             | Component::DateTimeField { id, .. }
@@ -384,6 +409,7 @@ impl Component {
             | Component::LayerPicker { on_change, .. }
             | Component::FieldPicker { on_change, .. }
             | Component::FeaturePicker { on_change, .. }
+            | Component::FilePicker { on_change, .. }
             | Component::DateField { on_change, .. }
             | Component::TimeField { on_change, .. }
             | Component::DateTimeField { on_change, .. }
@@ -401,6 +427,7 @@ impl Component {
             | Component::LayerPicker { required, .. }
             | Component::FieldPicker { required, .. }
             | Component::FeaturePicker { required, .. }
+            | Component::FilePicker { required, .. }
             | Component::MultiSelect { required, .. }
             | Component::DateField { required, .. }
             | Component::TimeField { required, .. }
@@ -419,6 +446,7 @@ impl Component {
                 | Component::LayerPicker { .. }
                 | Component::FieldPicker { .. }
                 | Component::FeaturePicker { .. }
+                | Component::FilePicker { .. }
                 | Component::DateField { .. }
                 | Component::TimeField { .. }
                 | Component::DateTimeField { .. }
@@ -526,7 +554,13 @@ fn takes_rule(kind: &str, known: &[&str], key: &str) -> bool {
         "requiredWhen" => known.contains(&"required"),
         "enabledWhen" => matches!(
             kind,
-            "button" | "textField" | "numberField" | "dateField" | "timeField" | "dateTimeField"
+            "button"
+                | "textField"
+                | "numberField"
+                | "dateField"
+                | "timeField"
+                | "dateTimeField"
+                | "filePicker"
         ),
         _ => false,
     }
@@ -545,6 +579,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "featurePicker" => &[
             "id", "label", "layer", "geometry", "multiple", "onChange", "required",
         ],
+        "filePicker" => &["id", "label", "filters", "placeholder", "onChange", "required"],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" | "timeField" | "dateTimeField" => {
             &["id", "label", "value", "min", "max", "onChange", "required"]
@@ -570,7 +605,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
 }
 
 const TYPES: &str = "text, section, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
-                     fieldPicker, featurePicker, checkbox, button, table, tree, card, stats, chart, image";
+                     fieldPicker, featurePicker, filePicker, checkbox, button, table, tree, card, stats, chart, image";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -1209,6 +1244,40 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                             ),
                         );
                     }
+                }
+            }
+            "filePicker" => {
+                match c.get("filters") {
+                    None => {}
+                    Some(Value::Array(filters)) if filters.len() <= 10 => {
+                        for (j, f) in filters.iter().enumerate() {
+                            let name = f.get("name").and_then(Value::as_str).map(str::trim);
+                            let extensions = f.get("extensions").and_then(Value::as_array);
+                            let fits = name.is_some_and(|n| !n.is_empty() && n.chars().count() <= 40)
+                                && extensions.is_some_and(|e| {
+                                    !e.is_empty()
+                                        && e.iter().all(|x| {
+                                            x.as_str().is_some_and(|x| {
+                                                (1..=10).contains(&x.len())
+                                                    && x.bytes()
+                                                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit())
+                                            })
+                                        })
+                                });
+                            if !fits {
+                                add(
+                                    format!("{at}/filters/{j}"),
+                                    "Dosya türü bir ad (en çok 40 karakter) ve noktasız uzantılar ister, ör. \
+                                     {\"name\": \"CSV\", \"extensions\": [\"csv\"]}."
+                                        .to_owned(),
+                                );
+                            }
+                        }
+                    }
+                    Some(_) => add(
+                        format!("{at}/filters"),
+                        "filters en çok 10 dosya türünün listesi olmalı.".to_owned(),
+                    ),
                 }
             }
             "image" => {

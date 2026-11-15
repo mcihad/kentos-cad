@@ -243,6 +243,33 @@ impl App {
                     }
                     form = form.field(words.clone(), field);
                 }
+                // A file to be read: its path typed, or Seç… for the computer's file window (docs/adr/8057 §41).
+                Component::FilePicker {
+                    id,
+                    label: words,
+                    placeholder,
+                    ..
+                } => {
+                    let value = p.texts.get(id).map_or("", String::as_str);
+                    let mut field = kentos_ui::widget::text_field(
+                        placeholder.as_deref().unwrap_or("Dosyanın yolu"),
+                        value,
+                    )
+                    .id(field_id(id));
+                    let mut choose = iced::widget::button(label::body("Seç…"))
+                        .style(kentos_ui::style::button::secondary);
+                    if on(id) {
+                        let typing = id.clone();
+                        field = field.on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
+                        choose = choose.on_press(event(PanelEvent::PickFile(id.clone())));
+                    }
+                    form = form.field(
+                        words.clone(),
+                        iced::widget::row![field, choose]
+                            .spacing(6)
+                            .align_y(iced::Alignment::Center),
+                    );
+                }
                 Component::NumberField {
                     id,
                     label: words,

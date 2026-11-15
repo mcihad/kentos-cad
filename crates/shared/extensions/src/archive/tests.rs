@@ -73,9 +73,9 @@ fn the_demo_extension_packs_and_passes_its_check() {
             e.map_tools.len(),
             e.panels.len()
         ),
-        (10, 1, 1, 1, 3),
-        "commands (one sets up its layer schema, five answer its panels, one opens one from a layer's menu), an \
-         İşlemler tool, an expression function, a map tool and three panels"
+        (11, 1, 1, 1, 3),
+        "commands (one sets up its layer schema, five answer its panels, two run from a layer's menu), an İşlemler \
+         tool, an expression function, a map tool and three panels"
     );
     let c = &manifest.contributions;
     assert_eq!(
@@ -84,7 +84,8 @@ fn the_demo_extension_packs_and_passes_its_check() {
             c.context_menus.len(),
             c.data_sources.len()
         ),
-        (1, 2, 1)
+        (1, 3, 1),
+        "a ribbon tab, three items on a layer's menu (summary, counting, CSV points) and a basemap"
     );
 }
 
@@ -521,6 +522,15 @@ fn the_named_files_are_what_their_fields_say() {
     refused_with(&tool, "tool_descriptor");
     let panel = change("ui/search_dock.panel.json", &|t| t.replace('{', "["));
     refused_with(&panel, "reference_json");
+    // A file picker reads a file the user gives: the manifest must ask for files.userSelected (docs/adr/8057 §41).
+    let picker = change("ui/search_dock.panel.json", &|t| {
+        t.replacen(
+            "\"body\": [",
+            "\"body\": [{ \"type\": \"filePicker\", \"id\": \"dosya\", \"label\": \"Dosya\" },",
+            1,
+        )
+    });
+    refused_with(&picker, "ui_panel");
     let invisible = change("src/mebis/logic.py", &|t| {
         t.replace("return findings", "return findings\u{200B}")
     });

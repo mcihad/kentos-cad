@@ -65,6 +65,7 @@ fn kind_of(c: &Component) -> &'static str {
         Component::Text { .. } => "text",
         Component::Section { .. } => "section",
         Component::Image { .. } => "image",
+        Component::FilePicker { .. } => "filePicker",
         Component::TextField { .. } => "textField",
         Component::NumberField { .. } => "numberField",
         Component::Select { .. } => "select",
@@ -94,6 +95,7 @@ fn typed(c: &Component) -> bool {
             | Component::DateField { .. }
             | Component::TimeField { .. }
             | Component::DateTimeField { .. }
+            | Component::FilePicker { .. }
     )
 }
 
@@ -147,6 +149,11 @@ fn typed_words(c: &Component, value: &Value) -> Result<String, String> {
             .as_str()
             .map(str::to_owned)
             .ok_or_else(|| "bir metin olmalı".to_owned()),
+        // A file's path, as the user would type it: checked when a command reads it (panel_files.rs).
+        Component::FilePicker { .. } => value
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| "bir dosyanın yolu (metin) olmalı".to_owned()),
         Component::NumberField { min, max, .. } => {
             let n = value.as_f64().ok_or_else(|| "bir sayı olmalı".to_owned())?;
             if min.is_some_and(|m| n < m) || max.is_some_and(|m| n > m) {

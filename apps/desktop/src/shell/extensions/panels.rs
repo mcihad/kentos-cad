@@ -168,6 +168,8 @@ pub(crate) enum PanelEvent {
     Page(String, usize),
     /// A section opened or folded, by its place.
     Section(usize),
+    /// A file picker's Seç…: the computer's file window, its choice as `Picked`.
+    PickFile(String),
     /// The open panel at this place in the tabs shown.
     Activate(usize),
     /// Its tab moved: from, to (where it goes once taken out).
@@ -277,6 +279,10 @@ impl OpenPanel {
                         .texts
                         .insert(id.clone(), value.clone().unwrap_or_default());
                 }
+                // A file's path, typed or chosen: none at first.
+                Component::FilePicker { id, .. } => {
+                    panel.texts.insert(id.clone(), String::new());
+                }
                 Component::NumberField { id, value, .. } => {
                     panel
                         .texts
@@ -363,6 +369,13 @@ impl OpenPanel {
             _ => None,
         };
         if changed.is_some_and(|id| self.invalid.as_ref().is_some_and(|(at, _)| at == id)) {
+            // The words under the form were that field's: they go with it, not left saying what is no longer so
+            // (a dialog's "dosya verilmedi" stayed under a typed path, real window, 15 November 2026).
+            if let (Some((_, why)), Some((words::Kind::Error, said))) = (&self.invalid, &self.said)
+                && said == why
+            {
+                self.said = None;
+            }
             self.invalid = None;
         }
         if let Some(id) = changed
@@ -420,7 +433,9 @@ impl OpenPanel {
         let joined =
             |list: Option<&Vec<String>>| list.filter(|l| !l.is_empty()).map(|l| l.join(", "));
         match self.definition.body.iter().find(|c| c.id() == Some(id))? {
-            Component::TextField { .. } => typed().map(str::to_owned),
+            Component::TextField { .. } | Component::FilePicker { .. } => {
+                typed().map(str::to_owned)
+            }
             Component::NumberField { .. } => typed().and_then(number_of).map(|n| n.to_string()),
             Component::DateField { .. } => {
                 typed().and_then(kentos_extensions::ui_panel::typed_date)
@@ -473,7 +488,8 @@ impl OpenPanel {
             | Component::MultiSelect { label, .. }
             | Component::DateField { label, .. }
             | Component::TimeField { label, .. }
-            | Component::DateTimeField { label, .. } => label,
+            | Component::DateTimeField { label, .. }
+            | Component::FilePicker { label, .. } => label,
             _ => return None,
         };
         match c {
@@ -492,6 +508,11 @@ impl OpenPanel {
                 .get(id)
                 .is_none_or(Vec::is_empty)
                 .then(|| format!("“{label}”: en az biri seçilmeli.")),
+            Component::FilePicker { .. } => self
+                .texts
+                .get(id)
+                .is_none_or(|t| t.trim().is_empty())
+                .then(|| format!("“{label}”: dosya verilmedi (yolunu yazın ya da Seç…'e basın).")),
             _ => self
                 .texts
                 .get(id)
@@ -506,6 +527,16 @@ impl OpenPanel {
             Component::TextField { id, .. } => {
                 let text = self.texts.get(id).map_or("", |t| t.trim());
                 out.insert(id.clone(), json!(text));
+            }
+            // A file to be read: its absolute path, checked to be a file of the kinds offered (panel_files.rs).
+            Component::FilePicker {
+                id, label, filters, ..
+            } => {
+                let typed = self.texts.get(id).map_or("", String::as_str);
+                out.insert(
+                    id.clone(),
+                    super::panel_files::file_value(label, filters, typed)?,
+                );
             }
             Component::NumberField {
                 id,
@@ -1055,6 +1086,14 @@ impl App {
                 panel.pages.insert(id, page);
             }
             PanelEvent::Section(at) => panel.toggle_section(at),
+            PanelEvent::PickFile(id) => {
+                let Some((label, filters)) = super::panel_files::picker_of(panel, &id) else {
+                    return Task::none();
+                };
+                return super::panel_files::pick(&label, &filters, move |path| {
+                    super::msg(super::Event::Panel(PanelEvent::Picked(id.clone(), path)))
+                });
+            }
             PanelEvent::Fold(key) => {
                 if !panel.folded.remove(&key) {
                     panel.folded.insert(key);
@@ -1582,10 +1621,18 @@ mod tests {
         assert_eq!(values["not"], "", "an optional field left empty");
         // The wrong field's words stay until it is changed.
         p.invalid = Some(("onek".into(), "“Önek” boş bırakılamaz.".into()));
+        p.said = Some((words::Kind::Error, "“Önek” boş bırakılamaz.".into()));
         p.forget_invalid(&PanelEvent::Text("not".into(), "x".into()));
-        assert!(p.invalid.is_some(), "another field changed");
+        assert!(
+            p.invalid.is_some() && p.said.is_some(),
+            "another field changed"
+        );
         p.forget_invalid(&PanelEvent::Text("onek".into(), "B-".into()));
         assert!(p.invalid.is_none());
+        assert!(
+            p.said.is_none(),
+            "the field's words under the form go with it"
+        );
     }
 
     /// A multiple choice gives the chosen values in the options' order, an empty list when none is chosen.

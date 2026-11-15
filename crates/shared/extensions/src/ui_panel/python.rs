@@ -56,6 +56,8 @@ fn python_type(root: &Value, property: &Value) -> String {
         "boolean" => "bool".to_owned(),
         "array" => match property.pointer("/items/$ref").and_then(Value::as_str) {
             Some(r) if r.ends_with("/Choice") => "Sequence[Choice | str]".to_owned(),
+            // Another object (a file picker's kinds): as the schema writes it.
+            Some(_) => "Sequence[dict[str, Any]]".to_owned(),
             _ => "Sequence[str]".to_owned(),
         },
         _ => "str".to_owned(),
@@ -121,6 +123,9 @@ pub fn python_builders() -> String {
          def choice(value: str, label: str | None = None) -> Choice:\n    \
          \"\"\"One option of a ``select`` or a ``multiSelect``, its label the value when none is given.\"\"\"\n    \
          return {\"value\": str(value), \"label\": str(value if label is None else label)}\n\n\n\
+         def file_filter(name: str, *extensions: str) -> dict[str, Any]:\n    \
+         \"\"\"A kind of file a ``filePicker`` offers: a name, extensions without dots (``file_filter(\"CSV\", \"csv\")``).\"\"\"\n    \
+         return {\"name\": str(name), \"extensions\": [str(e).lstrip(\".\").lower() for e in extensions]}\n\n\n\
          def panel(title: str, body: Sequence[dict[str, Any]]) -> dict[str, Any]:\n    \
          \"\"\"A whole panel (``ui/<id>.panel.json``): its title and components.\"\"\"\n    \
          return {\"format\": FORMAT, \"schemaVersion\": SCHEMA_VERSION, \"title\": str(title), \"body\": list(body)}\n",
@@ -238,7 +243,12 @@ pub fn python_builders() -> String {
         }
         out.push_str("    return out\n");
     }
-    let mut all = vec!["Choice".to_owned(), "choice".to_owned(), "panel".to_owned()];
+    let mut all = vec![
+        "Choice".to_owned(),
+        "choice".to_owned(),
+        "file_filter".to_owned(),
+        "panel".to_owned(),
+    ];
     all.extend(names);
     // `__all__`, its names packed into lines of the module's width.
     out.push_str("\n\n__all__ = [\n");

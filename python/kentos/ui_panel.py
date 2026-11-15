@@ -33,6 +33,11 @@ def choice(value: str, label: str | None = None) -> Choice:
     return {"value": str(value), "label": str(value if label is None else label)}
 
 
+def file_filter(name: str, *extensions: str) -> dict[str, Any]:
+    """A kind of file a ``filePicker`` offers: a name, extensions without dots (``file_filter("CSV", "csv")``)."""
+    return {"name": str(name), "extensions": [str(e).lstrip(".").lower() for e in extensions]}
+
+
 def panel(title: str, body: Sequence[dict[str, Any]]) -> dict[str, Any]:
     """A whole panel (``ui/<id>.panel.json``): its title and components."""
     return {"format": FORMAT, "schemaVersion": SCHEMA_VERSION, "title": str(title), "body": list(body)}
@@ -219,6 +224,39 @@ def field_picker(
         out["visibleWhen"] = visible_when
     if required_when is not None:
         out["requiredWhen"] = required_when
+    return out
+
+
+def file_picker(
+    id: str,
+    label: str,
+    *,
+    filters: Sequence[dict[str, Any]] | None = None,
+    placeholder: str | None = None,
+    on_change: str | None = None,
+    required: bool = False,
+    visible_when: str | None = None,
+    required_when: str | None = None,
+    enabled_when: str | None = None,
+) -> dict[str, Any]:
+    """A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of
+    `filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no
+    file, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`."""
+    out: dict[str, Any] = {"type": "filePicker", "id": id, "label": label}
+    if filters is not None:
+        out["filters"] = list(filters)
+    if placeholder is not None:
+        out["placeholder"] = placeholder
+    if on_change is not None:
+        out["onChange"] = on_change
+    if required:
+        out["required"] = True
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    if required_when is not None:
+        out["requiredWhen"] = required_when
+    if enabled_when is not None:
+        out["enabledWhen"] = enabled_when
     return out
 
 
@@ -578,7 +616,7 @@ def card(
 
 
 __all__ = [
-    "Choice", "choice", "panel", "text", "section", "text_field", "number_field", "select", "layer_picker",
-    "field_picker", "feature_picker", "multi_select", "date_field", "time_field", "date_time_field", "checkbox",
-    "button", "table", "tree", "stats", "chart", "image", "card",
+    "Choice", "choice", "file_filter", "panel", "text", "section", "text_field", "number_field", "select",
+    "layer_picker", "field_picker", "file_picker", "feature_picker", "multi_select", "date_field", "time_field",
+    "date_time_field", "checkbox", "button", "table", "tree", "stats", "chart", "image", "card",
 ]

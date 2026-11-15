@@ -11,8 +11,8 @@
 //! - **One at a time, the run's own:** the run's Durdur and its end close it; the code is answered none and hears
 //!   Durdur after. A run without a window to ask in (no drawing, another dialog open) is answered at once.
 
-use iced::Element;
 use iced::widget::column;
+use iced::{Element, Task};
 use kentos_extensions::ui_panel;
 use kentos_headless::HeadlessError;
 use kentos_ui::label;
@@ -25,9 +25,10 @@ use crate::app::{App, Message};
 use crate::exchange::words;
 
 /// What a dialog may hold: a panel's fields and words.
-const FIELDS: [&str; 12] = [
+const FIELDS: [&str; 13] = [
     "text",
     "section",
+    "filePicker",
     "textField",
     "numberField",
     "dateField",
@@ -117,6 +118,23 @@ impl App {
                 ));
             }
         }
+        // A file picker reads a file the user gives: only for an extension the user granted that (docs/adr/8057 §41).
+        let granted = self
+            .extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.grant(ext))
+            .is_some_and(|g| {
+                g.capabilities
+                    .contains(&kentos_extensions::manifest::Capability::FilesUserSelected)
+            });
+        if !granted && body.iter().any(|c| c["type"] == "filePicker") {
+            return Err(refused(
+                "invalid_input",
+                "Pencerenin dosya seçicisi (filePicker) kullanıcının seçtiği dosyayı okur: eklenti \
+                 files.userSelected yeteneğini istemeli, kullanıcı da kurarken vermiş olmalı.",
+            ));
+        }
         // The fields as a panel's, through Kapı 1's check (its words, its places).
         let panel = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": title,
                             "body": body });
@@ -136,11 +154,21 @@ impl App {
         Ok(())
     }
 
-    /// What the user does in the dialog's fields, as in a panel's (no command runs).
-    pub(crate) fn ext_dialog_event(&mut self, event: PanelEvent) {
+    /// What the user does in the dialog's fields, as in a panel's (no command runs); a file picker's Seç… opens the
+    /// computer's file window.
+    pub(crate) fn ext_dialog_event(&mut self, event: PanelEvent) -> Task<Message> {
         let Some(panel) = self.extensions.dialog.as_mut().map(|d| &mut d.panel) else {
-            return;
+            return Task::none();
         };
+        if let PanelEvent::PickFile(id) = &event {
+            let Some((label, filters)) = super::panel_files::picker_of(panel, id) else {
+                return Task::none();
+            };
+            let id = id.clone();
+            return super::panel_files::pick(&label, &filters, move |path| {
+                msg(Event::Dialog(PanelEvent::Picked(id.clone(), path)))
+            });
+        }
         panel.forget_invalid(&event);
         match event {
             PanelEvent::Text(id, text) | PanelEvent::Picked(id, text) => {
@@ -164,6 +192,7 @@ impl App {
         }
         // Its calculations follow the values, as a panel's (panel_values.rs).
         panel.recalculate();
+        Task::none()
     }
 
     /// Tamam (`ok`): the values by id when they are right, else why under the fields, the window open; İptal, Esc, ✕:

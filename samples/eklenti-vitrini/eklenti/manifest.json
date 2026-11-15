@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.33",
+  "version": "1.0.34",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -103,6 +103,11 @@
         "id": "parsel-karti",
         "title": "Parsel kartı",
         "handler": "vitrin.logic:parsel_karti"
+      },
+      {
+        "id": "csv-noktalar",
+        "title": "CSV'den nokta ekle",
+        "handler": "vitrin.logic:csv_noktalar"
       }
     ],
     "panels": [
@@ -268,6 +273,14 @@
         "when": {
           "documentOpen": true
         }
+      },
+      {
+        "command": "csv-noktalar",
+        "target": "layer",
+        "icon": "import-csv",
+        "when": {
+          "documentOpen": true
+        }
       }
     ],
     "dataSources": [
@@ -334,6 +347,11 @@
         "tiles.ornek.bel.tr"
       ],
       "sendsDataToAi": false
+    },
+    {
+      "id": "files.userSelected",
+      "scope": "user-selected",
+      "reason": "Katmanın menüsünden seçtiğiniz CSV dosyasındaki noktaları okur."
     }
   ]
 }

@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.0.34 — 15 Kasım 2026
+
+- Katmanın sağ tık menüsünde "CSV'den nokta ekle": KentOS'un penceresi dosyayı sorar (dosya seçici `filePicker`: yolu
+  yazılır ya da Seç… ile seçilir, yalnız CSV), x ve y sütunlarındaki noktalar o katmana eklenir, diğer sütunlar
+  öznitelik olur; tek geri alma adımı. Eklenti yalnız kullanıcının verdiği dosyayı okur (`files.userSelected`).
+  Örnek dosya: `samples/eklenti-vitrini/ornek-noktalar.csv`.
+
 ## 1.0.33 — 15 Kasım 2026
 
 - "Yapı ara"nın Özetle'si göstergelerin altında taban alanlarını çubuk grafik olarak da çizer (`image`): kod grafiği

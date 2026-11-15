@@ -107,7 +107,8 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "Yapı ara",
             "Değer say",
             "Parsel kartı",
-            "Yapı yerleştir"
+            "Yapı yerleştir",
+            "Parsel çakışması"
         ]
     );
 }
@@ -1500,7 +1501,7 @@ fn a_workshop_extension_reloads_without_closing_and_its_preview_says_what_the_us
     // A capability the user did not grant: not loaded, back to the review; the installed one as it was.
     edit("manifest.json", &|m| {
         m["requestedCapabilities"].as_array_mut().unwrap().push(json!({
-            "id": "files.userSelected", "scope": "plugin-owned", "reason": "Seçilen dosyayı okur."
+            "id": "datasets.read", "scope": "plugin-owned", "reason": "Kendi veri kümelerini okur."
         }));
         m["entrypoints"]["panels"][0]["title"] = json!("Yapı süz");
     });
