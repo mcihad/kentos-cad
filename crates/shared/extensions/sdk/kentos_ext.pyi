@@ -63,6 +63,14 @@ class PanelSession:
         """Closes the panel (its values with it)."""
 
 
+def layer_input(layer: str, kinds: Sequence[str] | None = None) -> dict[str, Any]:
+    """An İşlemler tool's objects (``ctx.run_tool``): all of ``layer`` (its id), of ``kinds`` when given (``["polygon"]``)."""
+
+
+def new_layer(name: str) -> dict[str, Any]:
+    """An İşlemler tool's output (``ctx.run_tool``): a new layer named ``name``."""
+
+
 class CommandContext:
     """What a command is given: the drawing, its settings and parameters, and its run's controls."""
     #: The drawing open in KentOS (kentos.cad.Document); none when no drawing is open.
@@ -91,6 +99,8 @@ class CommandContext:
         """Opens the extension's panel ``id`` (``entrypoints.panels[].id``; brought in front when it is open) and gives it to change as the run goes (:class:`PanelSession`): a command run from the ribbon shows what it did in its panel."""
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""
+    def run_tool(self, tool: str, /, **parameters: Any) -> Any:
+        """Runs a KentOS İşlemler tool from this command (docs/adr/8057 §46): a built-in one (``geometry.buffer``), this extension's own (``ext.<eklenti>.<araç>``) or one of an extension its manifest depends on."""
     def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:
         """Sets up the layers, value lists and relations the package's ``schema.json`` declares (docs/adr/8057 §23), in the run's one undo step, and says what it did, a row each."""
 

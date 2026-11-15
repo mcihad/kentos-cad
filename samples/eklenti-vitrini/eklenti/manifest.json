@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -113,6 +113,11 @@
         "id": "katman-csv",
         "title": "Katmanı CSV'ye yaz",
         "handler": "vitrin.logic:katman_csv"
+      },
+      {
+        "id": "yapi-tamponu",
+        "title": "Yapı tamponu",
+        "handler": "vitrin.logic:yapi_tamponu"
       }
     ],
     "panels": [
@@ -218,6 +223,10 @@
                 "audit": "yapi-no",
                 "size": "large",
                 "icon": "assets/denetim.svg"
+              },
+              {
+                "command": "yapi-tamponu",
+                "icon": "geo-buffer"
               }
             ]
           },

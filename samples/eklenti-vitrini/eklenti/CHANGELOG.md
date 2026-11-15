@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.38 — 15 Kasım 2026
+
+- Vitrin sekmesinin Analiz grubunda "Yapı tamponu": eklentinin komutu KentOS'un yerleşik Tampon aracını
+  (`geometry.buffer`) çağırır (`ctx.run_tool`, `ext.layer_input`, `ext.new_layer`): uzaklığı sorar, yapıların
+  tamponlarını yeni bir katmana çizer; araç komutun hakkıyla çalışır, yazdıkları komutun tek geri alma adımına girer.
+
 ## 1.0.37 — 15 Kasım 2026
 
 - "CSV'den nokta ekle"nin Seçenekler sekmesinde dosyanın koordinat sistemi (`crsPicker`): çizimin sistemiyle başlar;

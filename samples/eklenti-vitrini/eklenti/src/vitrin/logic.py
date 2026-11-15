@@ -515,6 +515,33 @@ def _merkez(nesne) -> tuple[float, float] | None:
     return (float(noktalar[0][0]), float(noktalar[0][1])) if noktalar else None
 
 
+@ext.command("yapi-tamponu")
+def yapi_tamponu(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Vitrin sekmesinden: yapıların çevresine KentOS'un yerleşik Tampon aracıyla (geometry.buffer) sorulan uzaklıkta
+    alan çizer, yeni bir katmana. Eklenti aracı kendisi yazmaz, KentOS'unkini çağırır (ctx.run_tool): araç bu komutun
+    hakkıyla çalışır, yazdıkları komutun tek geri alma adımına girer."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    cevap = ctx.dialog(
+        "Yapı tamponu",
+        [
+            ui.text("KentOS'un Tampon aracı yapıların çevresine bu uzaklıkta alan çizer; sonuç yeni katmanda."),
+            ui.number_field("uzaklik", "Uzaklık", value=3, min=0.5, max=50, unit="m", required=True),
+        ],
+        ok="Çiz",
+    )
+    if cevap is None:
+        return ctx.message("Vazgeçildi: tampon çizilmedi.")
+    uzaklik = float(cevap["uzaklik"])
+    sonuc = ctx.run_tool(
+        "geometry.buffer",
+        input=ext.layer_input("yapi"),
+        distance=uzaklik,
+        layer=ext.new_layer(f"Yapı tamponu {uzaklik:g} m"),
+    )
+    return ctx.message(f"{sonuc.summary} (KentOS'un Tampon aracı, {uzaklik:g} m).")
+
+
 @ext.command("deger-sec")
 def deger_sec(ctx: ext.CommandContext) -> ext.CommandResult:
     """"Değer say"ın Seç kutusu değişince çalışır: seçilen değerdeki nesneleri (alındıysa yalnız alınanlardan) çizimde

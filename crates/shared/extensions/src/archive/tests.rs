@@ -73,9 +73,9 @@ fn the_demo_extension_packs_and_passes_its_check() {
             e.map_tools.len(),
             e.panels.len()
         ),
-        (12, 1, 1, 1, 3),
-        "commands (one sets up its layer schema, five answer its panels, three run from a layer's menu), an İşlemler \
-         tool, an expression function, a map tool and three panels"
+        (13, 1, 1, 1, 3),
+        "commands (one sets up its layer schema, five answer its panels, three run from a layer's menu, one runs \
+         KentOS's Tampon), an İşlemler tool, an expression function, a map tool and three panels"
     );
     let c = &manifest.contributions;
     assert_eq!(

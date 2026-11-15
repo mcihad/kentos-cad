@@ -104,6 +104,7 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "Katmanları kur",
             "TAKS",
             "Yapı numarası",
+            "Yapı tamponu",
             "Yapı ara",
             "Değer say",
             "Parsel kartı",
@@ -1810,5 +1811,84 @@ fn a_layer_menus_command_gets_the_layer_it_was_run_on() {
     ));
     let sent = gis.extensions.test_last_invoke.clone().expect("its call");
     assert_eq!(sent["params"], json!({}), "{sent:#}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/8057 §46 (PY-RUN-14): Vitrin's Yapı tamponu runs KentOS's built-in Tampon through the broker, with the
+/// command's own rights: in a run that may write, the five buildings' buffers land on a new layer in the run's undo
+/// step; a run that may only read is refused the tool's write.
+#[test]
+fn an_extensions_command_runs_a_builtin_tool_with_its_own_rights() {
+    use serde_json::json;
+
+    // The desktop registers İşlemler's tools when it starts (lib.rs); a test does it itself.
+    kentos_processing::command::register_as("desktop");
+    const VITRIN: &str = "tr.ornek.vitrin";
+    fn find<'a>(
+        nodes: &'a [kentos_commands::LayerNode],
+        name: &str,
+    ) -> Option<&'a kentos_commands::LayerNode> {
+        nodes.iter().find_map(|n| {
+            (n.name == name)
+                .then_some(n)
+                .or_else(|| find(&n.children, name))
+        })
+    }
+    let buffer = json!({ "command": "cad.processing.run", "op": "execute", "input": {
+        "tool": "geometry.buffer",
+        "parameters": { "input": { "scope": "layer", "layerId": "yapi" }, "distance": 3,
+                        "layer": { "newName": "Yapı tamponu 3 m" } } } });
+    let open = |name: &str, write: bool| {
+        let dir = temp(name);
+        let mut gis = app(&dir, Some(Module::Gis));
+        install(&mut gis, "vitrin.kek", vitrin_package());
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/vitrin.kcad");
+        let snapshot =
+            kentos_kcad::decode(&std::fs::read(path).unwrap()).expect("the demo drawing");
+        gis.document = Some(crate::document::Document::from_v2(snapshot, None).expect("opens"));
+        let package = gis
+            .extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.package_dir(VITRIN))
+            .unwrap();
+        let _ = gis.extensions_event(Event::Launch(
+            VITRIN.into(),
+            "command".into(),
+            "yapi-tamponu".into(),
+            Ok(super::runner::Launch::for_test(
+                "/bin/sh".into(),
+                package,
+                "vitrin.logic:yapi_tamponu",
+                "Yapı tamponu",
+                write,
+            )),
+        ));
+        (dir, gis)
+    };
+    // May write: the buffers on a new layer, in the run's step (named after the command).
+    let (dir, mut gis) = open("yerlesik-arac", true);
+    let answer = gis
+        .ext_answer_for_test(VITRIN, "run", &buffer)
+        .expect("the tool ran");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let model = &gis.document.as_ref().unwrap().model;
+    let layer = find(model.layers().nodes(), "Yapı tamponu 3 m").expect("its new layer");
+    assert_eq!(
+        model.count(&layer.id),
+        5,
+        "a buffer for each of the five buildings"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+    // May only read: the tool's write is refused, nothing is written.
+    let (dir, mut gis) = open("yerlesik-arac-okur", false);
+    let refused = gis.ext_answer_for_test(VITRIN, "run", &buffer);
+    assert!(
+        matches!(&refused, Err(e) if e.code == "capability" && e.message.contains("document.write")),
+        "{refused:?}"
+    );
+    let model = &gis.document.as_ref().unwrap().model;
+    assert!(find(model.layers().nodes(), "Yapı tamponu 3 m").is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }

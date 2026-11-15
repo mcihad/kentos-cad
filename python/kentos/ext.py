@@ -88,8 +88,10 @@ __all__ = [
     "audit",
     "command",
     "expr",
+    "layer_input",
     "map_tool",
     "marked",
+    "new_layer",
     "point",
     "polygon",
     "polyline",
@@ -343,6 +345,20 @@ class PanelSession:
         return self._ask("panel.close", {})
 
 
+def layer_input(layer: str, kinds: Sequence[str] | None = None) -> dict[str, Any]:
+    """An İşlemler tool's objects (``ctx.run_tool``): all of ``layer`` (its id), of ``kinds`` when given
+    (``["polygon"]``)."""
+    given: dict[str, Any] = {"scope": "layer", "layerId": str(layer)}
+    if kinds is not None:
+        given["kinds"] = [str(k) for k in kinds]
+    return given
+
+
+def new_layer(name: str) -> dict[str, Any]:
+    """An İşlemler tool's output (``ctx.run_tool``): a new layer named ``name``."""
+    return {"newName": str(name)}
+
+
 class CommandContext:
     """What a command is given: the drawing, its settings and parameters, and its run's controls."""
 
@@ -425,6 +441,19 @@ class CommandContext:
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""
         return CommandResult(cancelled=True)
+
+    def run_tool(self, tool: str, /, **parameters: Any) -> Any:
+        """Runs a KentOS İşlemler tool from this command (docs/adr/8057 §46): a built-in one (``geometry.buffer``),
+        this extension's own (``ext.<eklenti>.<araç>``) or one of an extension its manifest depends on. ``parameters``
+        are the tool's, by name: a layer's objects ``ext.layer_input("yapi")``, a new layer ``ext.new_layer("Tampon")``,
+        numbers and choices as written. It runs with this command's rights (a tool that writes needs
+        ``document.write``) and its writes join this command's one undo step. Returns its answer (``summary``,
+        ``outputs``, ``record``). ``cad.processing.tools(ctx.doc)`` lists the tools and their parameters."""
+        if self.doc is None:
+            raise NotAvailable("Açık çizim yok ya da eklentiye çizimi okuma izni verilmedi: araç çalıştırılamaz.")
+        from . import cad
+
+        return cad.processing.run(self.doc, tool=tool, parameters=parameters)
 
     def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:
         """Sets up the layers, value lists and relations the package's ``schema.json`` declares (docs/adr/8057 §23), in

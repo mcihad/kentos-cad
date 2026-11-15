@@ -2648,3 +2648,26 @@ kayıt `fixtures/crs/v1/registry.json`), `rules.rs` (metin girdisi); masaüstü 
 - **Sınamalar:** paylaşılan 1 (kayıt yerel sistemsiz, değer `EPSG:<kod>`, bilinmeyen kod ve kodsuz yazım reddedilir),
   masaüstü 1 (değersiz seçici çizimin sistemiyle başlar, kendi değeri kalır, yerel çizimde zorunlu sorulur, değer
   komuta yazıldığı gibi gider).
+
+## §46. Eklentinin komutundan KentOS'un yerleşik aracı: `ctx.run_tool` (`ADIM 19`, PY-RUN-14, PY-TOOL-18'in komut payı)
+
+**15 Kasım.** Kod: Python `kentos/ext.py` (`CommandContext.run_tool`, `layer_input`, `new_layer`; stub yeniden
+üretildi), SDK rehberi; masaüstü sınaması `tests/demo.rs`; Vitrin 1.0.38 "Yapı tamponu".
+
+- **Bulgu: yol vardı, adı yoktu.** Eklentinin komutu aracı üzerinden her KentOS komutunu çalıştırabiliyordu;
+  `cad.processing.run` da onlardan biri. Yani yerleşik İşlemler aracı (Tampon, Kesiştir, alan hesabı …) eklentiden
+  zaten çağrılabiliyordu, ama SDK söylemiyor, Vitrin göstermiyordu; plan da bu yüzden onu "kalan" sanıyordu.
+- **Karar: ayrı bir mekanizma değil, adlı bir yardımcı.** `ctx.run_tool(araç, **parametreler)` `cad.processing.run`'ı
+  komutun çizimiyle çağırır; `ext.layer_input("yapi")` katmanın nesnelerini (`{"scope": "layer", "layerId": …}`,
+  isteğe bağlı türler), `ext.new_layer("Ad")` yeni katmanı (`{"newName": …}`) yazar. Cevap aracın cevabıdır (`summary`,
+  `outputs`, `record`); araçların listesi ve parametreleri `cad.processing.tools(ctx.doc)`.
+- **Kapsamın devri (PY-RUN-14):** araç komutun hakkıyla çalışır: yazan araç `document.write` ister, yoksa aracı
+  `capability` ile reddeder ve hiçbir şey yazılmaz; yazdıkları komutun tek geri alma adımına girer (adımı komutun
+  adını taşır); yalnız komutun başladığı çizime. Başka bir eklentinin aracı yalnız bağımlılıkla (§16). İç içe çağrı
+  izni genişletemez: araç komutun yapamadığını yapamaz.
+- **Kalan (PY-TOOL-18'in araç payı):** eklentinin İşlemler aracı (ayrı süreçte, aracıya istek yapamayan) yerleşik bir
+  aracı çağıramaz; onun için çizime dokunmayan, verilen nesnelerle çalışan bir yol gerekir (sonraki dilim).
+- **Vitrin 1.0.38:** Vitrin › Analiz › Yapı tamponu: uzaklığı sorar (3 m), KentOS'un Tampon aracı beş yapının
+  tamponunu "Yapı tamponu 3 m" katmanına çizer (`43-arac`).
+- **Sınamalar:** masaüstü 1 (yazabilen koşuda aracın tamponları yeni katmanda, beş yapıya beş; yalnız okuyabilen koşuda
+  araç `document.write` sözüyle reddedilir, katman yok).
