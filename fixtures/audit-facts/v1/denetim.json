@@ -1,0 +1,138 @@
+{
+  "format": "kentos.auditFacts",
+  "schemaVersion": 1,
+  "tolerance": 0.001,
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "objects": {
+        "points": 0,
+        "lines": 0,
+        "areas": 8,
+        "other": 1
+      },
+      "area": 1140.0,
+      "length": 0.0,
+      "totals": {
+        "invalid": 0,
+        "overlaps": 1,
+        "gaps": 1
+      },
+      "invalid": [],
+      "overlaps": [
+        {
+          "a": "0192f5a1-2590-7000-8000-000000000002",
+          "b": "0192f5a1-2590-7000-8000-000000000003",
+          "area": 50.0,
+          "at": [
+            17.5,
+            5.0
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "area": 60.0,
+          "at": [
+            15.0,
+            33.0
+          ],
+          "around": [
+            "0192f5a1-2590-7000-8000-000000000006",
+            "0192f5a1-2590-7000-8000-000000000004",
+            "0192f5a1-2590-7000-8000-000000000005",
+            "0192f5a1-2590-7000-8000-000000000008",
+            "0192f5a1-2590-7000-8000-000000000007"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "yapi",
+      "name": "Yapı",
+      "objects": {
+        "points": 0,
+        "lines": 0,
+        "areas": 4,
+        "other": 0
+      },
+      "area": 200.0,
+      "length": 0.0,
+      "totals": {
+        "invalid": 3,
+        "overlaps": 0,
+        "gaps": 0
+      },
+      "invalid": [
+        {
+          "uid": "0192f5a1-2590-7000-8000-000000000010",
+          "problem": "ringCrossing",
+          "at": [
+            105.0,
+            5.0
+          ]
+        },
+        {
+          "uid": "0192f5a1-2590-7000-8000-000000000011",
+          "problem": "repeated",
+          "at": [
+            130.0,
+            0.0
+          ]
+        },
+        {
+          "uid": "0192f5a1-2590-7000-8000-000000000012",
+          "problem": "zeroArea",
+          "at": [
+            140.0,
+            0.0
+          ]
+        }
+      ],
+      "overlaps": [],
+      "gaps": []
+    },
+    {
+      "id": "nokta",
+      "name": "Noktalar",
+      "objects": {
+        "points": 2,
+        "lines": 0,
+        "areas": 0,
+        "other": 0
+      },
+      "area": 0.0,
+      "length": 0.0,
+      "totals": {
+        "invalid": 0,
+        "overlaps": 0,
+        "gaps": 0
+      },
+      "invalid": [],
+      "overlaps": [],
+      "gaps": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "objects": {
+        "points": 0,
+        "lines": 2,
+        "areas": 0,
+        "other": 0
+      },
+      "area": 0.0,
+      "length": 45.708,
+      "totals": {
+        "invalid": 0,
+        "overlaps": 0,
+        "gaps": 0
+      },
+      "invalid": [],
+      "overlaps": [],
+      "gaps": []
+    }
+  ],
+  "cut": false
+}

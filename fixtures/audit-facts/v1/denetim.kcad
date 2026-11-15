@@ -1,0 +1,511 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Denetim olguları",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "hybrid"
+  },
+  "origin": {
+    "x": 0,
+    "y": 0
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "nokta",
+      "name": "Noktalar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#30A46C",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F76B15",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "bos",
+      "name": "Boş katman",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8B8D98",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "1"
+      },
+      "pts": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 10
+        },
+        {
+          "x": 0,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "2"
+      },
+      "pts": [
+        {
+          "x": 10,
+          "y": 0
+        },
+        {
+          "x": 20,
+          "y": 0
+        },
+        {
+          "x": 20,
+          "y": 10
+        },
+        {
+          "x": 10,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "3"
+      },
+      "pts": [
+        {
+          "x": 15,
+          "y": 0
+        },
+        {
+          "x": 25,
+          "y": 0
+        },
+        {
+          "x": 25,
+          "y": 10
+        },
+        {
+          "x": 15,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "1"
+      },
+      "pts": [
+        {
+          "x": 0,
+          "y": 20
+        },
+        {
+          "x": 10,
+          "y": 20
+        },
+        {
+          "x": 10,
+          "y": 50
+        },
+        {
+          "x": 0,
+          "y": 50
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "2"
+      },
+      "pts": [
+        {
+          "x": 20,
+          "y": 20
+        },
+        {
+          "x": 30,
+          "y": 20
+        },
+        {
+          "x": 30,
+          "y": 50
+        },
+        {
+          "x": 20,
+          "y": 50
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "3"
+      },
+      "pts": [
+        {
+          "x": 10,
+          "y": 20
+        },
+        {
+          "x": 20,
+          "y": 20
+        },
+        {
+          "x": 20,
+          "y": 30
+        },
+        {
+          "x": 10,
+          "y": 30
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "4"
+      },
+      "pts": [
+        {
+          "x": 10,
+          "y": 36
+        },
+        {
+          "x": 14,
+          "y": 36
+        },
+        {
+          "x": 14,
+          "y": 50
+        },
+        {
+          "x": 10,
+          "y": 50
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "5"
+      },
+      "pts": [
+        {
+          "x": 14,
+          "y": 36
+        },
+        {
+          "x": 20,
+          "y": 36
+        },
+        {
+          "x": 20,
+          "y": 50
+        },
+        {
+          "x": 14,
+          "y": 50
+        }
+      ]
+    },
+    {
+      "kind": "text",
+      "id": 9,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+        "x": 5,
+        "y": 5
+      },
+      "text": "101/1",
+      "height": 2,
+      "rotation": 0
+    },
+    {
+      "kind": "polygon",
+      "id": 10,
+      "layerId": "yapi",
+      "attrs": {
+        "No": "Y-1"
+      },
+      "pts": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 110,
+          "y": 10
+        },
+        {
+          "x": 110,
+          "y": 0
+        },
+        {
+          "x": 100,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 11,
+      "layerId": "yapi",
+      "attrs": {
+        "No": "Y-2"
+      },
+      "pts": [
+        {
+          "x": 120,
+          "y": 0
+        },
+        {
+          "x": 130,
+          "y": 0
+        },
+        {
+          "x": 130,
+          "y": 0
+        },
+        {
+          "x": 130,
+          "y": 10
+        },
+        {
+          "x": 120,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 12,
+      "layerId": "yapi",
+      "attrs": {
+        "No": "Y-3"
+      },
+      "pts": [
+        {
+          "x": 140,
+          "y": 0
+        },
+        {
+          "x": 150,
+          "y": 0
+        },
+        {
+          "x": 145,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 13,
+      "layerId": "yapi",
+      "attrs": {
+        "No": "Y-4"
+      },
+      "pts": [
+        {
+          "x": 160,
+          "y": 0
+        },
+        {
+          "x": 170,
+          "y": 0
+        },
+        {
+          "x": 170,
+          "y": 10
+        },
+        {
+          "x": 160,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 14,
+      "layerId": "nokta",
+      "attrs": {
+        "Nokta": "P1"
+      },
+      "p": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "kind": "point",
+      "id": 15,
+      "layerId": "nokta",
+      "attrs": {
+        "Nokta": "P2"
+      },
+      "p": {
+        "x": 30,
+        "y": 50
+      }
+    },
+    {
+      "kind": "line",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "Okul Sk."
+      },
+      "a": {
+        "x": 0,
+        "y": -10
+      },
+      "b": {
+        "x": 30,
+        "y": -10
+      }
+    },
+    {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "Çember Sk."
+      },
+      "pts": [
+        {
+          "x": 0,
+          "y": -20
+        },
+        {
+          "x": 10,
+          "y": -20
+        }
+      ],
+      "bulges": [
+        1,
+        0
+      ]
+    }
+  ],
+  "uids": [
+    "0192f5a1-2590-7000-8000-000000000001",
+    "0192f5a1-2590-7000-8000-000000000002",
+    "0192f5a1-2590-7000-8000-000000000003",
+    "0192f5a1-2590-7000-8000-000000000004",
+    "0192f5a1-2590-7000-8000-000000000005",
+    "0192f5a1-2590-7000-8000-000000000006",
+    "0192f5a1-2590-7000-8000-000000000007",
+    "0192f5a1-2590-7000-8000-000000000008",
+    "0192f5a1-2590-7000-8000-000000000009",
+    "0192f5a1-2590-7000-8000-000000000010",
+    "0192f5a1-2590-7000-8000-000000000011",
+    "0192f5a1-2590-7000-8000-000000000012",
+    "0192f5a1-2590-7000-8000-000000000013",
+    "0192f5a1-2590-7000-8000-000000000014",
+    "0192f5a1-2590-7000-8000-000000000015",
+    "0192f5a1-2590-7000-8000-000000000016",
+    "0192f5a1-2590-7000-8000-000000000017"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

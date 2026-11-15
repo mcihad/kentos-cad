@@ -15,6 +15,9 @@ publish.workspace = true
 kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-domain = { path = "../domain" }
 kentos-expression = { path = "../../shared/expression" }
+# An audit rule's measured facts (`audit_facts`, docs/adr/8057 §36): their shape, order and rounding are the extension
+# contract's (`kentos_extensions::audit_facts`), this crate measures them. Pure, without its JSON Schema's derive.
+kentos-extensions = { path = "../../shared/extensions", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 # A run's result written to a GeoPackage carries its lineage in the metadata extension (docs/adr/0511).
 kentos-geopackage = { path = "../geopackage" }

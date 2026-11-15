@@ -1,12 +1,15 @@
 //! An extension's audit rules (`entrypoints.audits`, `@ext.audit`; docs/adr/8057 §17, plan/eklenti.md ADIM 20).
 //!
 //! Pressed on the ribbon, a rule runs in its extension version's process on the drawing's layers as data
-//! (`kentos_processing::external::audit_facts`: what a tool's inputs give, hidden fields masked). It has no drawing:
+//! (`kentos_processing::external::audit_facts`: what a tool's inputs give, hidden fields masked) and on what KentOS
+//! measured in it (`facts.project`, `kentos_processing::audit_facts`, docs/adr/8057 §36: invalid geometries, overlaps,
+//! gaps), worked out on a reading copy on the run's own thread before the rule is asked. It has no drawing:
 //! the pool refuses its requests, so it reads and answers, never writes. Its findings go to the bottom panel's
 //! Eklenti denetimi tab, each with its severity, words and object: Göster selects the object and brings it into view;
 //! Düzelt applies the rule's fix, a KentOS command, as one undo step named by the fix, and only for an extension
 //! allowed to write (`document.write`): the fix is the extension's words, the press is the user's.
 
+use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
@@ -240,6 +243,8 @@ impl App {
             }
         };
         let facts = kentos_processing::external::audit_facts(&doc.model, MOST_OBJECTS);
+        // The measured facts are worked out on the run's thread, from the drawing as it is now (ADR 8057 §36).
+        let copy = doc.model.reading_copy();
         let (version, digest) = self.extensions.registry.as_ref().map_or_else(
             || (String::new(), None),
             |r| {
@@ -274,9 +279,25 @@ impl App {
         let began = Instant::now();
         Ok(crate::python_setup::in_background(
             move || {
-                let answer = work(json!({ "kind": "audit", "facts": facts }), &|| {
-                    stop.load(Ordering::Relaxed)
-                });
+                let stopped = || stop.load(Ordering::Relaxed);
+                // A measure that breaks on some drawing must not take the rules that never read it along: the rule
+                // runs on the layers and `facts.project` says it is missing (ext.NotAvailable).
+                let measured = std::panic::catch_unwind(AssertUnwindSafe(|| {
+                    kentos_processing::audit_facts::project_facts(
+                        &copy,
+                        kentos_processing::audit_facts::MOST_OBJECTS,
+                        &stopped,
+                    )
+                }));
+                let mut facts = facts;
+                let answer = match measured {
+                    Ok(None) => Err("Durduruldu.".to_owned()),
+                    Ok(Some(project)) => {
+                        facts["project"] = serde_json::to_value(&project).unwrap_or_default();
+                        work(json!({ "kind": "audit", "facts": facts }), &stopped)
+                    }
+                    Err(_) => work(json!({ "kind": "audit", "facts": facts }), &stopped),
+                };
                 (answer, began.elapsed().as_millis() as u64)
             },
             (Err("Denetim cevapsız kaldı.".to_owned()), 0),

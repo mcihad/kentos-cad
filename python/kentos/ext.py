@@ -62,12 +62,17 @@ __all__ = [
     "CommandResult",
     "Feature",
     "FeatureInput",
+    "Gap",
     "GisAuditFacts",
+    "InvalidGeometry",
+    "LayerFacts",
     "MapToolContext",
     "NewFeature",
     "NotAvailable",
+    "Overlap",
     "PanelSession",
     "ProcessingContext",
+    "ProjectAuditFacts",
     "SemanticFix",
     "Shape",
     "Stopped",
@@ -865,10 +870,11 @@ class MapToolContext(CommandContext):
 
 class GisAuditFacts:
     """What an audit rule reads (docs/adr/8057 §17): the drawing's layers holding objects, each object a
-    :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began. A rule
-    writes nothing: it answers :class:`AuditFinding` s, each with an optional fix the user chooses to apply."""
+    :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began, and what
+    KentOS measured in it (:attr:`project`). A rule writes nothing: it answers :class:`AuditFinding` s, each with an
+    optional fix the user chooses to apply."""
 
-    __slots__ = ("_layers", "cut")
+    __slots__ = ("_layers", "cut", "_project")
 
     def __init__(self, raw: dict[str, Any]) -> None:
         self._layers: list[tuple[str, str, list[Feature]]] = [
@@ -878,6 +884,18 @@ class GisAuditFacts:
         ]
         #: KentOS gave only the first objects of a very large drawing (its limit): a rule may say so.
         self.cut: bool = bool(raw.get("cut"))
+        project = raw.get("project")
+        self._project: ProjectAuditFacts | None = ProjectAuditFacts(project) if isinstance(project, dict) else None
+
+    @property
+    def project(self) -> ProjectAuditFacts:
+        """What KentOS measured in the drawing, once and in Rust (:class:`ProjectAuditFacts`): read it rather than
+        working the geometry out again. :class:`NotAvailable` when they are missing (a KentOS that does not measure
+        them, or could not on this drawing)."""
+        if self._project is None:
+            raise NotAvailable("Çizimin ölçülmüş olguları (facts.project) bu denetimde yok: bu KentOS onları vermiyor "
+                               "ya da bu çizimde ölçemedi.")
+        return self._project
 
     def layers(self) -> list[tuple[str, str]]:
         """The layers holding objects, ``(id, name)``, in the layer tree's order."""
@@ -904,6 +922,112 @@ class GisAuditFacts:
             if key:
                 out.setdefault(key, []).append(f)
         return out
+
+
+class ProjectAuditFacts:
+    """What KentOS measured in the drawing for an audit (``kentos.auditFacts`` 1, the SDK's ``factsSchema``;
+    docs/adr/8057 §36): each layer's objects by geometry, its invalid geometries, the overlaps of its areas and the gaps
+    their union closes in, worked out once in Rust at the project's topology tolerance, the same on the desktop and in
+    a cloud job. Areas in m² to 4 decimals, lengths and places in metres to 3; a place is ``(x, y)`` in the project's
+    plane, as the features' GeoJSON gives it."""
+
+    __slots__ = ("tolerance", "cut", "_layers")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        #: The project's topology tolerance (m): areas nearer than it touch, a piece no wider is no overlap or gap.
+        self.tolerance: float = float(raw.get("tolerance") or 0.0)
+        #: KentOS measured only the first objects of a very large drawing (by persistent id): a rule may say so.
+        self.cut: bool = bool(raw.get("cut"))
+        self._layers = [LayerFacts(layer) for layer in raw.get("layers") or [] if isinstance(layer, dict)]
+
+    def layers(self) -> list[LayerFacts]:
+        """The layers holding objects, in the layer tree's order."""
+        return list(self._layers)
+
+    def layer(self, layer: str) -> LayerFacts:
+        """A layer's facts, by its id or its name (``parsel``, ``Parsel``); an empty one when no layer holding objects
+        has it."""
+        for found in self._layers:
+            if layer in (found.id, found.name):
+                return found
+        return LayerFacts({"id": layer, "name": layer})
+
+
+class LayerFacts:
+    """One layer's measured facts (:class:`ProjectAuditFacts`); a list holds at most 10 000 items, the first in its
+    order (invalid by object, overlaps by their pair, gaps north to south), and :attr:`totals` counts all of them."""
+
+    __slots__ = ("id", "name", "points", "lines", "areas", "other", "area", "length", "invalid", "overlaps", "gaps",
+                 "totals")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        counts = raw.get("objects") or {}
+        totals = raw.get("totals") or {}
+        self.id: str = str(raw.get("id", ""))
+        self.name: str = str(raw.get("name", ""))
+        #: Its objects by geometry: points, lines (a closed polyline too), areas and the rest (texts, blocks …).
+        self.points: int = int(counts.get("points") or 0)
+        self.lines: int = int(counts.get("lines") or 0)
+        self.areas: int = int(counts.get("areas") or 0)
+        self.other: int = int(counts.get("other") or 0)
+        #: Its areas' area summed, m²: holes out, arcs exact (not the tessellated GeoJSON's).
+        self.area: float = float(raw.get("area") or 0.0)
+        #: Its lines' length summed, m, arcs exact.
+        self.length: float = float(raw.get("length") or 0.0)
+        self.invalid: list[InvalidGeometry] = [
+            InvalidGeometry(str(x.get("uid", "")), str(x.get("problem", "")), _place(x.get("at")))
+            for x in raw.get("invalid") or []
+        ]
+        self.overlaps: list[Overlap] = [
+            Overlap(str(x.get("a", "")), str(x.get("b", "")), float(x.get("area") or 0.0), _place(x.get("at")))
+            for x in raw.get("overlaps") or []
+        ]
+        self.gaps: list[Gap] = [
+            Gap(float(x.get("area") or 0.0), _place(x.get("at")), tuple(str(u) for u in x.get("around") or []))
+            for x in raw.get("gaps") or []
+        ]
+        #: How many it has in all: ``{"invalid": …, "overlaps": …, "gaps": …}``.
+        self.totals: dict[str, int] = {k: int(totals.get(k) or 0) for k in ("invalid", "overlaps", "gaps")}
+
+    def __repr__(self) -> str:
+        return (f"LayerFacts({self.name!r}: {self.areas} alan, {self.totals['invalid']} geçersiz, "
+                f"{self.totals['overlaps']} çakışma, {self.totals['gaps']} boşluk)")
+
+
+def _place(at: Any) -> tuple[float, float]:
+    x, y = (list(at) + [0.0, 0.0])[:2] if isinstance(at, (list, tuple)) else (0.0, 0.0)
+    return (float(x), float(y))
+
+
+@dataclass(frozen=True)
+class InvalidGeometry:
+    """An object whose shape is not valid: its id, the problem (``repeated``, ``zeroArea``, ``ringCrossing``,
+    ``pathCrossing``, ``holeOutside``, ``holesOverlap``) and where it first shows."""
+
+    uid: str
+    problem: str
+    at: tuple[float, float]
+
+
+@dataclass(frozen=True)
+class Overlap:
+    """Two areas of one layer covering each other: their ids (``a`` the smaller), the area both cover (m²) and the
+    centroid of its largest piece."""
+
+    a: str
+    b: str
+    area: float
+    at: tuple[float, float]
+
+
+@dataclass(frozen=True)
+class Gap:
+    """What a layer's areas close in and none covers (a gap between parcels, an area's hole): its area (m²), its
+    centroid and the areas around it, the one sharing the longest boundary first."""
+
+    area: float
+    at: tuple[float, float]
+    around: tuple[str, ...]
 
 
 @dataclass

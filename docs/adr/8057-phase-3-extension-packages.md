@@ -2276,6 +2276,54 @@ anahtarlar), masaüstü `panels.rs` (`CompiledRules`, `shown`, `usable`, `asked`
   döngü), masaüstü 2 (açılışta varsayılan, hesap değerleri izler, alan yazılmaz, değerler komuta; kod hesaplanana
   yazamaz, okuduğunu değiştirince hesap izler).
 
+## §36. Rust'ın ölçtüğü denetim olguları: `ProjectAuditFacts` (`ADIM 20`, olguların ilk dilimi)
+
+**15 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/audit_facts.rs` (`ProjectAuditFacts`, `LayerFacts`,
+`ValidityProblem`, `MOST_ITEMS`, `json_schema`) ve şeması `sdk/kentos-audit-facts.schema.json` (SDK'nın `factsSchema`
+bölümü), İşlemler `crates/native/processing/src/audit_facts.rs` (`project_facts`, `MOST_OBJECTS`), masaüstü
+`extensions/audits.rs`, `python/kentos/ext.py` (`GisAuditFacts.project`, `ProjectAuditFacts`, `LayerFacts`,
+`InvalidGeometry`, `Overlap`, `Gap`); örnek çizim ve olguları `fixtures/audit-facts/v1/denetim.kcad`, `denetim.json`.
+
+- **Karar: geometriyi Rust çıkarır, kararı Python verir.** Kural katmanları nesne nesne okumayı sürdürür (§17);
+  yanında `facts.project`, KentOS'un çizimde bir kez ve geometri çekirdeğiyle ölçtüğü özettir: her katmanın nesneleri
+  geometriye göre (nokta, çizgi, alan, diğer), alanlarının toplam alanı ve çizgilerinin toplam uzunluğu (yaylar
+  kesin, deliklerin alanı düşülmüş), ve Topoloji sekmesinin üç kuralının bulduğu: geçersiz geometriler (nesne, sorun,
+  yer), aynı katmandaki alanların çakışmaları (iki kalıcı kimlik, ortak alan, en büyük parçanın ağırlık merkezi),
+  alanların birleşiminin kapattığı boşluklar (parseller arası boşluk ya da alanın deliği: alanı, yeri, çevresindeki
+  alanlar, en uzun sınırı paylaşan önce). Projenin topoloji toleransıyla ve istisnaları uygulanmadan: olgular
+  çizimindir, ne anlama geldiklerini kural söyler. Kural shapely istemez, geometriyi yeniden hesaplamaz.
+- **Neden ayrı bir özet:** `GisAuditFacts`'in GeoJSON'u yayları parçalanmış verir (alan biraz eksik çıkar); çakışma ve
+  boşluk Python'da paket ister ve yavaştır; aynı ölçü masaüstü ile bulut işinde başka kütüphanelerle başka çıkabilirdi.
+  Özet iki yerde aynı Rust kodudur.
+- **Aynı baytlar:** sıra, yuvarlama ve sınır paylaşılan modülde yazılıdır ve her üretici olguları
+  `ProjectAuditFacts::new` ile kurar. Katmanlar ağacın sırasıyla; geçersizler nesne, sorun, yer; çakışmalar kimlik
+  çifti (küçüğü önce), yer; boşluklar kuzeyden güneye, batıdan doğuya, alan. Alan 0,0001 m², uzunluk ve yer 1 mm'ye
+  yuvarlanır (değer × 10ⁿ sıfırdan uzağa, geri bölünür); −0 ve sayı olmayan değer 0 yazılır; tolerans projenindir.
+  Nesneler çekirdeğe çizimin sırasıyla değil kalıcı kimlik sırasıyla gider: aynı nesneler hangi sırayla çizilmiş ya da
+  okunmuş olursa olsun aynı baytları verir. Harita sırası, saat ya da iş parçacığı sayısı girmez.
+- **Sınırlar:** bir liste en çok 10 000 öğe tutar (sırasındaki ilkleri), `totals` hepsini sayar; en çok 200 000 nesne
+  (kalıcı kimlik sırasıyla ilkleri) ölçülür, ötesi kalınca `cut`. Masaüstü ile bulut aynı sınırı (`MOST_OBJECTS`)
+  verir. Halkanın kapanmaması yazılamaz (alanın halkası kendiliğinden kapanır): hiçbir alana varmayan halka `zeroArea`,
+  alan katmanındaki açık çizgi `lines` sayısında görünür.
+- **Masaüstü:** olgular kuralın arka plan görevinde, denetimin başladığı anki çizimin okuma kopyasında ölçülür; arayüz
+  beklemez, Durdur ölçümü de keser. Kuralın sürecine `facts` içinde `project` olarak gider; ajanın `audit.run`'ı aynı
+  yoldur (§27). Hiçbir öznitelik okunmaz: gizli alan olgulara girmez.
+- **Python cephesi:** `facts.project.layer("parsel")` → `LayerFacts` (`points`, `lines`, `areas`, `other`, `area`,
+  `length`, `invalid`, `overlaps`, `gaps`, `totals`); öğeler değiştirilemez veri sınıfları (`InvalidGeometry`,
+  `Overlap`, `Gap`), yerler `(x, y)`; nesnesi olmayan katman boş olgular verir. Olguları vermeyen KentOS'ta
+  `facts.project` `NotAvailable` atar: yetenek eksiktir, kural bozuk değil. Stub ve rehber güncellendi; şema
+  türlerden üretilir, bekçisi kayıtlı şemanın üretilenle aynı olduğunu ve KentOS'un yazdığı olguları aldığını sınar.
+- **Kabulün payı:** sabit örnek çizimin olguları baytı baytına `denetim.json`'dur ve Python sınamaları aynı dosyayı
+  okur; bulut işi aynı çizimi aynı kodla ölçünce aynı dosyayı vermelidir.
+- **Sonraki dilim:** mimari olgular (`paiy_areas`: bağımsız bölümlerin brüt ve net alanları; `kentos_domain::escape`:
+  kaçış yolları ve uzunlukları) aynı belgede ayrı bir bölüm olarak; ikisi de `Document` üzerinde hazır ve okuma
+  kopyasında hesaplanabilir, ama biçimleri ve sınamaları ayrı bir iş. Bulutta `RunRequest::Audit` ve ortak köken
+  (olguların özeti rapora). Denemede (§37) kurallar olguları henüz almaz.
+- **Sınamalar:** paylaşılan 4 (yuvarlama ve sıra; liste sınırı ve toplam; JSON biçimi ve geri okuma; şemanın bekçisi),
+  İşlemler 8 (katmanların olguları; örneğin baytları; her sırada aynı baytlar; sınır kalıcı kimlikle; Durdur; tolerans
+  projenin; alanın deliği boşluk; sorun adları çekirdeğin), Python 5 ve eklenti süreci 1 (Rust'ın olgularını tipli
+  okur; kural yalnız olgulardan bulgu verir; olgusuz KentOS'ta yetenek eksik).
+
 ## §37. Kapı 3'ün kodu çalıştıran payı: sentetik çizimde deneme (`ADIM 21`)
 
 **15 Kasım.** Kod: başsız `agent_tools/workshop_trial.rs` (`extension.workshop.trial`, `trial_outcome`,

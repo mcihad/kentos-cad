@@ -17,6 +17,9 @@ from typing import Any
 
 import kentos.cad as cad
 
+#: What KentOS's Rust measured in fixtures/audit-facts/v1/denetim.kcad (`kentos_processing::audit_facts`).
+FACTS = os.path.join(os.path.dirname(__file__), "..", "..", "fixtures", "audit-facts", "v1", "denetim.json")
+
 LOGIC = '''
 """A stand-in extension's functions."""
 import os
@@ -66,6 +69,14 @@ def no_number(facts):
 @ext.audit("not-findings")
 def not_findings(facts):
     return ["bir bulgu değil"]
+
+
+@ext.audit("overlaps")
+def overlaps(facts):
+    # What KentOS measured: the rule does no geometry of its own (docs/adr/8057 §36).
+    parcels = facts.project.layer("Parsel")
+    return [ext.AuditFinding(message=f"{o.area:g} m² çakışma", severity="error", feature_id=o.a)
+            for o in parcels.overlaps]
 
 
 @ext.command("ordered")
@@ -675,6 +686,21 @@ class ExtHostTest(unittest.TestCase):
         self.assertFalse(done["ok"])
         self.assertEqual(done["exception"], "TypeError")
         self.assertIn("ext.AuditFinding listesi", done["message"])
+
+    def test_an_audit_rule_reads_what_kentos_measured(self) -> None:
+        self.kentos.hello()
+        # The facts KentOS's Rust measured on fixtures/audit-facts/v1/denetim.kcad, byte for byte.
+        with open(FACTS, encoding="utf-8") as f:
+            project = json.load(f)
+        done = self.audit("overlaps", "deneme.logic:overlaps", {"layers": [], "cut": False, "project": project})
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["findings"], [
+            {"severity": "error", "message": "50 m² çakışma", "featureId": "0192f5a1-2590-7000-8000-000000000002"}])
+        # A KentOS that does not measure them: the ability is missing, not the rule broken.
+        done = self.audit("overlaps", "deneme.logic:overlaps", {"layers": [], "cut": False})
+        self.assertFalse(done["ok"])
+        self.assertTrue(done.get("unavailable"), done)
+        self.assertIn("facts.project", done["message"])
 
     def test_a_processing_tool_is_stopped_while_it_computes(self) -> None:
         self.kentos.hello()

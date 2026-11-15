@@ -959,8 +959,13 @@ listesinde; ajanın çalıştırması şeridin yolu (sekme açılır, Asistan'ı
 bekler), `audit.report` son raporu okur, bulgunun düzeltmesi sahibin koruyucusundan geçer ve sekmede işaretlenir.
 Ajanın eklenti İşlemler aracı (Python) da pencereyi bekletmez (ADR 8057 §27, 15 Kasım): planı ve yürütmesi iş olarak
 okuma kopyasında hesaplanır, Asistan çağrıyı iş bitince cevaplar, iş başladığı çizime yazar.
-Kalan: `ProjectAuditFacts` (Rust'ın çıkardığı ortak olgular), ulusal/belediye kurallarının Python betikleri, bulut
-işi ve bulutla ortak köken.
+**`ProjectAuditFacts`, ilk dilim** (ADR 8057 §36, 15 Kasım): geometriyi Rust çıkarır; kural `facts.project` ile
+katman başına geometriye göre sayıları, alan ve uzunluk toplamlarını, geçersiz geometrileri, alanların çakışmalarını
+ve boşlukları okur (projenin toleransıyla; `kentos.auditFacts` 1, SDK'nın `factsSchema`'sı). Sıra, yuvarlama ve sınır
+paylaşılan modülde yazılı: aynı nesneler her sırada aynı baytları verir (`fixtures/audit-facts/v1`); masaüstünde
+okuma kopyasında arka planda ölçülür. Kalan: mimari olgular (`paiy_areas`, `kentos_domain::escape`) ve kurp/görüş
+hesapları, ulusal/belediye kurallarının Python betikleri, bulut işi (`RunRequest::Audit`, aynı olguları aynı kodla) ve
+bulutla ortak köken.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 
@@ -1004,13 +1009,13 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). **Canlı yük
 **Kapı 3'ün kodu çalıştıran payı** (ADR 8057 §37): `extension.workshop.trial` kullanıcının kurduğu eklentinin denetim
 kurallarını ve İşlemler araçlarını ajanın verdiği nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin
 sırasıyla, aracın yazdıkları, hata ve iz kaydı; kullanıcının çizimine dokunmaz). Kalan: komutların ve harita
-araçlarının denenmesi, `kentos.ui`/`ProjectAuditFacts`/manifest şemaları.
+araçlarının denenmesi.
 
 - [ ] **Kod üretimi** — *kısmen: `kentos_ext.pyi` (ADR 8057 §20), ikon listesi (§21), panel tanımının JSON Schema'sı
   (§25, 15 Kasım: tiplerden üretilir, depoda durur, sapınca test kırmızı), manifestin, katman şemasının ve araç
   tanımının JSON Schema'ları (§28, 15 Kasım: aynı yol; katman şeması denetleyicinin anahtar listelerinden, araç tanımı
   okuyucunun sözlüklerinden; KentOS'un gönderdiği manifestler, katman şemaları, araç tanımları ve Vitrin'in panelleri
-  şemalara karşı sınanır); kalan: `ProjectAuditFacts` şeması (olgular ADIM 20'de).* Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
+  şemalara karşı sınanır); denetim olgularının şeması da (ADR 8057 §36, `factsSchema`).* Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
   `kentos.ui` bileşen şeması, `ProjectAuditFacts` şeması ve manifest/araç/panel JSON Schema'ları üretilir; üretilmiş
   dosya elle düzeltilmez, kaynak ve üretici aynı commit'te güncellenir; sapma derleme hattında hatadır [ECO-API-01, 05].
 - [ ] **`extension.blueprint(kind, module, prompt)`:** hedef modüle uygun hazır klasör iskeleti, kullanılabilir ikonlar,

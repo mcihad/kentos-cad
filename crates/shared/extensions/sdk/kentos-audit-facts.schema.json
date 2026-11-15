@@ -1,0 +1,296 @@
+{
+  "$defs": {
+    "Gap": {
+      "description": "A gap the layer's areas close in.",
+      "properties": {
+        "area": {
+          "description": "Its area, m².",
+          "format": "double",
+          "type": "number"
+        },
+        "around": {
+          "description": "The areas around it by persistent id, the one sharing the longest boundary with it first.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "at": {
+          "description": "Its centroid.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "area",
+        "at",
+        "around"
+      ],
+      "type": "object"
+    },
+    "InvalidGeometry": {
+      "description": "An object whose shape is not valid.",
+      "properties": {
+        "at": {
+          "description": "Where the problem first shows.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "problem": {
+          "$ref": "#/$defs/ValidityProblem"
+        },
+        "uid": {
+          "description": "The object's persistent id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "problem",
+        "at"
+      ],
+      "type": "object"
+    },
+    "LayerFacts": {
+      "description": "One layer's facts. Places are `[x, y]` in the project's plane (m), as the objects' GeoJSON shapes give them.",
+      "properties": {
+        "area": {
+          "description": "Its areas' area summed, m²: holes out, arcs exact (not the tessellated GeoJSON's).",
+          "format": "double",
+          "type": "number"
+        },
+        "gaps": {
+          "description": "What the union of its areas closes in and none of them covers: a gap between parcels, an area's hole.",
+          "items": {
+            "$ref": "#/$defs/Gap"
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "The layer's id, what its objects' `layerId` names.",
+          "type": "string"
+        },
+        "invalid": {
+          "description": "Its objects whose shape is not valid, each problem once per ring (or line) at its first place.",
+          "items": {
+            "$ref": "#/$defs/InvalidGeometry"
+          },
+          "type": "array"
+        },
+        "length": {
+          "description": "Its lines' length summed, m, arcs exact.",
+          "format": "double",
+          "type": "number"
+        },
+        "name": {
+          "description": "Its name, as the layer tree shows it.",
+          "type": "string"
+        },
+        "objects": {
+          "$ref": "#/$defs/ObjectCounts",
+          "description": "Its objects counted by their geometry."
+        },
+        "overlaps": {
+          "description": "The pairs of its areas that cover each other wider than the tolerance.",
+          "items": {
+            "$ref": "#/$defs/Overlap"
+          },
+          "type": "array"
+        },
+        "totals": {
+          "$ref": "#/$defs/Totals",
+          "description": "How many invalid geometries, overlaps and gaps it has in all: a list holds at most 10 000, the first in its\norder."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "objects",
+        "area",
+        "length",
+        "totals",
+        "invalid",
+        "overlaps",
+        "gaps"
+      ],
+      "type": "object"
+    },
+    "ObjectCounts": {
+      "description": "A layer's objects by their geometry.",
+      "properties": {
+        "areas": {
+          "description": "Areas: polygons (with holes, of several parts), circles, whole ellipses, closed curves.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "lines": {
+          "description": "Lines: lines, polylines (a closed one too), arcs, open curves.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "other": {
+          "description": "The rest, not measured: texts, dimensions, blocks, hatches, architectural objects.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "points": {
+          "description": "Points (a multi-point object once).",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "points",
+        "lines",
+        "areas",
+        "other"
+      ],
+      "type": "object"
+    },
+    "Overlap": {
+      "description": "Two areas of one layer covering each other.",
+      "properties": {
+        "a": {
+          "description": "The first area's persistent id: the smaller of the two.",
+          "type": "string"
+        },
+        "area": {
+          "description": "The area both cover, m²: its pieces wider than the tolerance.",
+          "format": "double",
+          "type": "number"
+        },
+        "at": {
+          "description": "The centroid of its largest piece.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "b": {
+          "description": "The second area's.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "area",
+        "at"
+      ],
+      "type": "object"
+    },
+    "Totals": {
+      "description": "How many of each a layer has in all.",
+      "properties": {
+        "gaps": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "invalid": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "overlaps": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "invalid",
+        "overlaps",
+        "gaps"
+      ],
+      "type": "object"
+    },
+    "ValidityProblem": {
+      "description": "What is wrong with a shape, as the geometry core's Geçerliliği denetle says it. An area's ring closes on itself by\nconstruction; a ring that comes to nothing is `zeroArea`.",
+      "oneOf": [
+        {
+          "const": "repeated",
+          "description": "Two vertices one after another at the same place (an edge of no length).",
+          "type": "string"
+        },
+        {
+          "const": "zeroArea",
+          "description": "A ring whose area is nothing (its vertices on one line).",
+          "type": "string"
+        },
+        {
+          "const": "ringCrossing",
+          "description": "A ring that crosses, touches or runs back over itself.",
+          "type": "string"
+        },
+        {
+          "const": "pathCrossing",
+          "description": "A line that crosses, touches or runs back over itself.",
+          "type": "string"
+        },
+        {
+          "const": "holeOutside",
+          "description": "A hole reaching out of its outer ring.",
+          "type": "string"
+        },
+        {
+          "const": "holesOverlap",
+          "description": "Two holes over each other.",
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "A drawing's facts, as an audit rule reads them (`facts.project`).",
+  "properties": {
+    "cut": {
+      "description": "Whether objects were left out: past the producer's limit, those after it by persistent id.",
+      "type": "boolean"
+    },
+    "format": {
+      "const": "kentos.auditFacts"
+    },
+    "layers": {
+      "description": "The layers holding objects, in the layer tree's order.",
+      "items": {
+        "$ref": "#/$defs/LayerFacts"
+      },
+      "type": "array"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "tolerance": {
+      "description": "The project's topology tolerance, m (its Topoloji settings): areas nearer than it touch, and a piece no wider\nthan it is neither an overlap nor a gap.",
+      "format": "double",
+      "type": "number"
+    }
+  },
+  "required": [
+    "format",
+    "schemaVersion",
+    "tolerance",
+    "layers",
+    "cut"
+  ],
+  "title": "KentOS audit facts (kentos.auditFacts 1)",
+  "type": "object"
+}

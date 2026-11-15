@@ -3131,6 +3131,7 @@ dependencies = [
  "kentos-commands",
  "kentos-domain",
  "kentos-expression",
+ "kentos-extensions",
  "kentos-formats",
  "kentos-geometry-core",
  "kentos-geopackage",

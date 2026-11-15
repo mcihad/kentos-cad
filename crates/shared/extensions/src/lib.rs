@@ -15,12 +15,15 @@
 //! - [`catalog`]: an organisation's or an offline folder's index of packages, written from the packages themselves.
 //! - [`release`]: the cloud catalog's release flow (plan/eklenti.md ADIM 22A, docs/adr/8059): who moves a release from
 //!   draft to published, its approval bound to its content, gates that never pass unfinished, every move audited.
+//! - [`audit_facts`]: what KentOS measures in a drawing for an audit rule (`kentos.auditFacts`, plan/eklenti.md
+//!   ADIM 20, docs/adr/8057 §36): its shape, its order, rounding and bounds, the same on the desktop and in a cloud job.
 //! - [`verify`], [`blueprint`], [`sdk_pack`]: what an agent writing an extension is given: the folder's check, a
 //!   starting folder that passes it, and the SDK in one read (`kentos://sdk/ai-kek-pack`).
 //!
 //! Pure: no file system and no network. A host reads the file and hands the bytes over.
 
 pub mod archive;
+pub mod audit_facts;
 pub mod blueprint;
 pub mod catalog;
 pub mod compat;

@@ -180,9 +180,12 @@ class MapToolContext(CommandContext):
 
 
 class GisAuditFacts:
-    """What an audit rule reads (docs/adr/8057 §17): the drawing's layers holding objects, each object a :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began."""
+    """What an audit rule reads (docs/adr/8057 §17): the drawing's layers holding objects, each object a :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began, and what KentOS measured in it (:attr:`project`)."""
     #: KentOS gave only the first objects of a very large drawing (its limit): a rule may say so.
     cut: bool
+    @property
+    def project(self) -> ProjectAuditFacts:
+        """What KentOS measured in the drawing, once and in Rust (:class:`ProjectAuditFacts`): read it rather than working the geometry out again."""
     def layers(self) -> list[tuple[str, str]]:
         """The layers holding objects, ``(id, name)``, in the layer tree's order."""
     def features(self, layer: str) -> list[Feature]:
@@ -191,6 +194,63 @@ class GisAuditFacts:
         """Every object given, layer by layer."""
     def group_related(self, layer: str, foreign_key: str) -> dict[str, list[Feature]]:
         """A layer's objects grouped by their ``foreign_key`` attribute's value (a related table's key); objects without it are left out."""
+
+
+class ProjectAuditFacts:
+    """What KentOS measured in the drawing for an audit (``kentos.auditFacts`` 1, the SDK's ``factsSchema``; docs/adr/8057 §36): each layer's objects by geometry, its invalid geometries, the overlaps of its areas and the gaps their union closes in, worked out once in Rust at the project's topology tolerance, the same on the desktop and in a cloud job."""
+    #: The project's topology tolerance (m): areas nearer than it touch, a piece no wider is no overlap or gap.
+    tolerance: float
+    #: KentOS measured only the first objects of a very large drawing (by persistent id): a rule may say so.
+    cut: bool
+    def layers(self) -> list[LayerFacts]:
+        """The layers holding objects, in the layer tree's order."""
+    def layer(self, layer: str) -> LayerFacts:
+        """A layer's facts, by its id or its name (``parsel``, ``Parsel``); an empty one when no layer holding objects has it."""
+
+
+class LayerFacts:
+    """One layer's measured facts (:class:`ProjectAuditFacts`); a list holds at most 10 000 items, the first in its order (invalid by object, overlaps by their pair, gaps north to south), and :attr:`totals` counts all of them."""
+    id: str
+    name: str
+    #: Its objects by geometry: points, lines (a closed polyline too), areas and the rest (texts, blocks …).
+    points: int
+    lines: int
+    areas: int
+    other: int
+    #: Its areas' area summed, m²: holes out, arcs exact (not the tessellated GeoJSON's).
+    area: float
+    #: Its lines' length summed, m, arcs exact.
+    length: float
+    invalid: list[InvalidGeometry]
+    overlaps: list[Overlap]
+    gaps: list[Gap]
+    #: How many it has in all: ``{"invalid": …, "overlaps": …, "gaps": …}``.
+    totals: dict[str, int]
+
+
+@dataclass(frozen=True)
+class InvalidGeometry:
+    """An object whose shape is not valid: its id, the problem (``repeated``, ``zeroArea``, ``ringCrossing``, ``pathCrossing``, ``holeOutside``, ``holesOverlap``) and where it first shows."""
+    uid: str
+    problem: str
+    at: tuple[float, float]
+
+
+@dataclass(frozen=True)
+class Overlap:
+    """Two areas of one layer covering each other: their ids (``a`` the smaller), the area both cover (m²) and the centroid of its largest piece."""
+    a: str
+    b: str
+    area: float
+    at: tuple[float, float]
+
+
+@dataclass(frozen=True)
+class Gap:
+    """What a layer's areas close in and none covers (a gap between parcels, an area's hole): its area (m²), its centroid and the areas around it, the one sharing the longest boundary first."""
+    area: float
+    at: tuple[float, float]
+    around: tuple[str, ...]
 
 
 @dataclass
