@@ -9,12 +9,19 @@
 //! - [`naming`]: the regulation's names (EK-5 §5.5) and its classes' category codes (EK-5 Tablo 5.1).
 //! - [`arch`]: KentOS Mimari's model as a [`building::Building`]: classes, names and the properties EK-6 asks.
 //! - [`quality`]: EK-9's model quality control form, answered from the model (Md. 15).
+//! - [`catalog`]: the base profile's IFC annexes as data (EK-5, EK-6, EK-7, EK-9), every row with its table and page
+//!   (docs/adr/8062), and KentOS's IFC decisions.
+//! - [`catalog_schema`]: the catalog compared with the IFC 4.3 schema and its official templates.
+//! - [`rules`]: every rule of the base profile, the 2D annexes' and the IFC annexes', as one list a window reads.
 
 pub mod alignment;
 pub mod arch;
 pub mod building;
+pub mod catalog;
+pub mod catalog_schema;
 pub mod crs;
 mod math;
 pub mod naming;
 pub mod quality;
+pub mod rules;
 pub mod step;

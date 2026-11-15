@@ -258,6 +258,20 @@
    "tests": 0
   },
   {
+   "id": "arch.digitalRules",
+   "kind": "command",
+   "title": "Dijital proje kuralları",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Dijital proje kuralları penceresi yönetmeliğin kural kataloğunu (kentos-digital-project, kentos-ifc) okur; çizime ve projeye dokunmaz. Python ve MCP için salt okuyan sorgu komutu sonraki iştir (ADR 8062 §9).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.ifcExport",
    "kind": "command",
    "title": "IFC dışa aktar (bina)…",

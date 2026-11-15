@@ -181,8 +181,8 @@
 | iI / Kasaba | Town | `Pset_Address` | Metin | Bir kasaba veya şehrin adıdır. |
 | Bölge / İlçe | Region | `Pset_Address` | Metin | Bir bölgenin adıdır. |
 | Yükseklik | Height | `Qto_BuildingBaseQuantities` | Sayı | Karakteristik yükseklik. Bu binanın standart brüt yüksekliği; inşaat döşemesinin üst yüzeyinden bir üst döşemenin veya çatının üst yüzeyine kadar olan yükseklik. Sadece yüksekliğin sabit olduğu durumda belirtilir. |
-| Saçak Yüksekliği | `EavesHeight` | `Qto_BuildingBaseQuantity` | Sayı | Bu katın standart net yüksekliği: inşaat döşemesinin üst yüzeyinden bir üst döşemenin veya çatının alt yüzeyine kadar olan yükseklik. Sadece yüksekliğin sabit olduğu durumda belirtilir. |
-| Taban Alanı | `FootPrintArea` | `Qto_BuildingBaseQuantity` | Sayı | Binanın veya binaların kapladığı arsanın brüt alanı. |
+| Saçak Yüksekliği | `EavesHeight` | `Qto_BuildingBaseQuantities` | Sayı | Bu katın standart net yüksekliği: inşaat döşemesinin üst yüzeyinden bir üst döşemenin veya çatının alt yüzeyine kadar olan yükseklik. Sadece yüksekliğin sabit olduğu durumda belirtilir. |
+| Taban Alanı | `FootPrintArea` | `Qto_BuildingBaseQuantities` | Sayı | Binanın veya binaların kapladığı arsanın brüt alanı. |
 
 *[PDF sayfa 44]*
 
@@ -353,7 +353,7 @@ Listesi
 
 Ön Tanımlı Tip Listesi
 
-### USERDEFINED, NOTDEFINED
+USERDEFINED, NOTDEFINED
 
 Açıklama
 
@@ -570,7 +570,7 @@ Zorunlu Öznitelik ve Özellik Listesi
 | Ön Tanımlı Tip | `PredefinedType` | - | Metin | Ön Tanımlı Tip. |
 | İsim | Attribute: Name | - | Metin | IFC uyumlu yazılım sistemleri veya kullanıcılar tarafından kullanılmak üzere isteğe bağlı bir ad. [[`IfcRoot`]] sınıfının bazı alt tipleri için İsim niteliğinin eklenmesi gerekebilir. Bu, bir "where" kuralı ile zorunlu hale getirilecektir. (EK-5'e göre isimlendirilecektir) |
 | Etiket | Attribute: Tag | - | Sayı veya Metin | Bir ürünün belirli bir örneğindeki etiket tanımlayıcısı, örneğin seri numarası veya konum numarasıdır. Bu, yerleştirilmiş örnek düzeyindeki tanımlayıcıdır. |
-| Sistem | `IfcSystem` | `IfcReiAssignsToGroup>IfcSystem` | Metin | Bir sistem, Mimarlık, Mühendislik ve Yapın ürünü içerisinde, ortak bir amaç, işlev ya da hizmet sunmak üzere bir araya getirilmiş ilişkili parçalardan oluşan düzenli bir kombinasyondur. Sistem esasen, işlevsel olarak ilişkili ürünler grubudur. Bir veya birden fazla `IfcProduct` örneğinin (sistem üyelerinin) gruplandırma ilişkisi, `IfcRelAssignsToGroup` aracılığıyla yönetilir. |
+| Sistem | `IfcSystem` | `IfcRelAssignsToGroup>IfcSystem` | Metin | Bir sistem, Mimarlık, Mühendislik ve Yapın ürünü içerisinde, ortak bir amaç, işlev ya da hizmet sunmak üzere bir araya getirilmiş ilişkili parçalardan oluşan düzenli bir kombinasyondur. Sistem esasen, işlevsel olarak ilişkili ürünler grubudur. Bir veya birden fazla `IfcProduct` örneğinin (sistem üyelerinin) gruplandırma ilişkisi, `IfcRelAssignsToGroup` aracılığıyla yönetilir. |
 
 | Türkçe Tanım (Bilgi Amaçlı) | Özellik | Özellik Seti / İlişki | Veri Tipi (Bilgi Amaçlı) | Açıklama |
 |---|---|---|---|---|

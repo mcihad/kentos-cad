@@ -2440,6 +2440,10 @@
       "operation": "table",
       "note": "Model kalite kontrol formu (EK-9 Tablo 9.1): cevapları cad.arch.ifc'nin modelinden (kentos_ifc::quality); Ruhsat takımı yeniden yazar ve FR/MKF paftasına koyar (ADR 8047 §10)."
     },
+    "arch.digitalRules": {
+      "level": "host",
+      "note": "Dijital proje kuralları penceresi yönetmeliğin kural kataloğunu (kentos-digital-project, kentos-ifc) okur; çizime ve projeye dokunmaz. Python ve MCP için salt okuyan sorgu komutu sonraki iştir (ADR 8062 §9)."
+    },
     "arch.zoningTable": {
       "level": "semantic",
       "via": [

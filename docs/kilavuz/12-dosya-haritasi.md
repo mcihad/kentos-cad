@@ -15,7 +15,8 @@ crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
 crates/native/         native belge (domain), ürün komutları (application), araç oturumu (interaction), işlem araçları (processing), proje modeli (project), başsız komut sunucusu (headless), Python eklentisi (python), MCP sunucusu (mcp) ve bulut istemcisi (cloud); web'e derlenmez
 crates/render/wgpu/    native wgpu çizim hattı (Iced bilmez)
 shaders/wgsl/          paylaşılabilir WGSL ve sürümlü düzen sözleşmesi
-crates/shared/         contracts, commands (komut türleri ve katalog), geometry-core, expression, style-core, svg-core, formats, kcad, raster
+crates/shared/         contracts, commands (komut türleri ve katalog), geometry-core, expression, style-core, svg-core, formats, kcad, raster;
+                       digital-project (Dijital Proje Yönetmeliği'nin kural kataloğu, kararları ve profil katmanları; ADR 8062), ifc
 crates/wasm/           yalnız hesap/codec bağlayıcıları
 crates/server/         application ve postgres
 fixtures/              sürümlü ortak test verisi

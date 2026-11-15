@@ -10,6 +10,10 @@ publish.workspace = true
 # (the section model's solids, its openings, the drawing's objects and settings) and writes the text it returns.
 [dependencies]
 kentos-contracts = { path = "../contracts", default-features = false }
+# The regulation's data model (sources, levels, decisions, the profile's layers) and its 2D annexes (docs/adr/8062).
+kentos-digital-project = { path = "../digital-project" }
 kentos-geometry-core = { path = "../geometry-core" }
 kentos-road = { path = "../road" }
 libm = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -106,6 +106,8 @@ mod recover_file;
 mod import_decision_scenes;
 #[path = "arch/viewmark_refs.rs"]
 mod viewmark_refs;
+#[path = "arch/digital_rules.rs"]
+mod digital_rules;
 #[path = "cad/sheet_set.rs"]
 mod sheet_set;
 #[path = "cad/xrefs_window.rs"]
@@ -1024,6 +1026,9 @@ mod road_views_window_tests;
 #[cfg(test)]
 #[path = "tests/road_exchange_tests.rs"]
 mod road_exchange_tests;
+#[cfg(test)]
+#[path = "tests/digital_rules_tests.rs"]
+mod digital_rules_tests;
 #[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;

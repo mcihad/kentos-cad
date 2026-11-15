@@ -14,6 +14,10 @@
 //! - **21, PDF ve IFC uyumu (Md. 9):** objects of the drawing the model does not hold (no body, no wall, no area, a
 //!   ramp): `digital_model_loss`, those objects its own.
 //!
+//! Each finding's rule names, after the article, where it was read in the annexes: the annex's table or clause and the
+//! form's question, with their PDF pages, from the rule catalog (docs/adr/8062): “… · EK-3 Tablo 3.1 · PDF s. 14 ·
+//! EK-9 Tablo 9.1 satır 4 · PDF s. 238”.
+//!
 //! The form's other questions the model answers by how it is made, or the architect answers (`kentos_ifc::quality`).
 //! Question 9 (EK-6's fire ratings, fire exits, concrete classes) is no finding: the drawing cannot hold them yet. A
 //! drawing without walls is no building: nothing is said.
@@ -26,6 +30,26 @@ use kentos_ifc::quality::{self, Answer};
 use crate::regulation_audit::{Article, Said, Source};
 
 const GAZETTE: &str = "5.8.2026/33331";
+
+/// A catalog row's source, the IFC annexes' or the 2D annexes' (“T3.1”, “T9.1/4”, “M1.1.1”).
+fn source_of(id: &str) -> Option<kentos_digital_project::Source> {
+    kentos_ifc::catalog::base()
+        .row(id)
+        .map(|r| r.source())
+        .or_else(|| kentos_digital_project::catalog::base().row(id).map(|r| r.source()))
+}
+
+/// The article as a finding's rule names it, and the annex rows it was read from with their pages.
+fn cited(article: Article, rows: &[&str]) -> String {
+    let mut out = article.named();
+    for id in rows {
+        if let Some(s) = source_of(id) {
+            out.push_str(" · ");
+            out.push_str(&s.cite());
+        }
+    }
+    out
+}
 /// Md. 13: the project's attributes (EK-7).
 pub const INFO_ARTICLE: Article = Article {
     source: Source::Dijital,
@@ -73,11 +97,11 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V)
             .filter_map(|u| doc.slot_of(u))
             .collect()
     };
-    let said = |code: &'static str, message: String, repair: &str, article: Article| Said {
+    let said = |code: &'static str, message: String, repair: &str, article: Article, rows: &[&str]| Said {
         code,
         message,
         repair: repair.to_owned(),
-        rule: article.named(),
+        rule: cited(article, rows),
         binding: None,
     };
     for row in &rows {
@@ -97,6 +121,7 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V)
                     "Mimari › Proje › Ruhsat takımı'nın künyesinde doldurun: mimar ve Mimarlar Odası sicil no, büronun \
                      adı, vergi kimlik no ve adresi, il, ilçe, mahalle, ada ve parsel.",
                     INFO_ARTICLE,
+                    &["T7.1", "T9.1/2"],
                 ),
                 Vec::new(),
                 building,
@@ -112,6 +137,7 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V)
                     "Proje kodunu idareden alın (EK-1: başvuru yılının iki hanesi ve dört haneli sıra no) ve Ruhsat \
                      takımı'nın künyesinde Proje kodu'na yazın.",
                     NAMING_ARTICLE,
+                    &["M1.1.1", "T9.1/3"],
                 ),
                 Vec::new(),
                 building,
@@ -138,6 +164,7 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V)
                         "Mahalleri seçip Öznitelikler'de numarasını ve adını verin; seçili mahalin sekmesindeki Mahal numarala \
                          sırayla numaralar.",
                         ROOMS_ARTICLE,
+                        &["T3.1", "T9.1/4"],
                     ),
                     slots,
                     at,
@@ -155,6 +182,7 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V)
                      Sivas TM33, EPSG:5255) seçin; ±0.00'ın mutlak kotunu Mimari › Parsel ve bahçe mesafeleri'nde \
                      (Vaziyet planı) verin.",
                     INFO_ARTICLE,
+                    &["T7.6", "T9.1/6"],
                 ),
                 Vec::new(),
                 building,
@@ -169,6 +197,7 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V)
                     ),
                     "Mimari › Mahal ile odaları mahal olarak çizin; IFC'de her biri bir IfcSpace olur.",
                     FORM_ARTICLE,
+                    &["T9.1/12"],
                 ),
                 Vec::new(),
                 building,
@@ -188,6 +217,7 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V)
                         "Gövdesi kurulamayan nesneyi (yüksekliği olmayan duvar …) düzeltin, açıklığı bir duvara bağlayın; \
                          rampa henüz IFC'ye aktarılmıyor, paftada kalır.",
                         CONSISTENCY_ARTICLE,
+                        &["T9.1/21"],
                     ),
                     slots,
                     building,

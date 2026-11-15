@@ -6,6 +6,11 @@
 [araştırma notu](../docs/research/2026-11-15-bim-ifc-yonetmelik.md) · **Önceki işler:** [Mimari](architecture.md),
 [İleri mimari](architecture-advanced.md) (M1…M51), [mevzuat araştırması](../docs/research/2026-11-07-mimari/W4-mevzuat-standart.md).
 
+**İlerleme (15 Kasım 2026):** B1 tamamlandı: BIM-01 ve IFC-01 `[x]`
+([ADR 8062](../docs/adr/8062-digital-project-rule-catalog.md)). Ekler sayfa sayfa kural kataloğunda; 17 nokta karara bağlı;
+katalog IFC 4.3 şemasıyla, bağımsız dökümle ve 20 rastgele satırla sayfadan karşılaştırıldı; bugünkü çıktı dosyadan
+ölçüldü; Mimari › Proje ▾ › Dijital proje kuralları penceresi. Sıradaki B2 (BIM-02).
+
 Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. İlk taslağa göre değişenler: iki yönetmeliğin ana metni madde madde
 yeniden okundu; eklerin bağımsız bir dökümü depodaki sayfa okumalarıyla karşılaştırıldı; bugünkü kod yönetmeliğin sınıf
 ve alan listesine karşı ölçüldü (§3); mimari modülün zayıf yanları kanıtıyla sayıldı (§3.2); iş paketleri yasal takvime ve
@@ -138,6 +143,8 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 |---|---|---|
 | IFC'ye yazılan zorunlu sınıf (mimari modelde karşılaşılan 29'dan) | 15 | `crates/shared/ifc/src/arch.rs`; araştırma notu §5 |
 | EK-9'un sorularından yazılmış dosyadan kanıtlanan | 0 / 21 | `quality.rs` bellekteki modeli okur |
+| EK-6 ve EK-7'nin zorunlu satırlarından dosyada değeri olan | künyeli bölüm binası 81 / 121; künyesiz 46 / 95 | ADR 8062 §10, `fixtures/arch/v1/ifc/katalog-olcum.json` |
+| Kural kataloğu | 1 870 satır, her biri sayfasıyla; 27 karar (6 açık); IFC 4.3 şemasıyla 235 fark, hepsi kararlı | ADR 8062 |
 | EK-9'da bugün ek kanıt gerekenler | 9 "hayır" (zorunlu özellikler); 10 elle (emsal zonu yazılmıyor); 19 "evet" deniyor ama çatı ve merdivenin tipi `NOTDEFINED` | ADR 8047 §9; araştırma notu §4–§5 |
 | Şema kuralları, bağımsız okuyucu | bölüm binasında 0 bulgu | ADR 8047 |
 | Türkiye profilini sınayan bağımsız okuyucu | yok | — |
@@ -153,8 +160,9 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
   (BIM-14).
 - **K2 — Kural veridir.** Sınıf, alan, ad kalıbı, sözlük, eşik ve tarih kodda sabit durmaz; kaynak sayfasıyla sürümlü
   katalogdadır. İdarenin ek tanımları (Md. 11/3, 12/2, 13) ve Bakanlığın sonraki kararları (e-PYS Md. 4/4) veri
-  değişikliğidir. IFC'ye ait katalog `kentos-ifc`'tedir; tarih, kapsam ve mevzuat kuralları mevcut kural motorundadır (ADR
-  8033).
+  değişikliğidir. IFC'ye ait katalog `kentos-ifc`'tedir. 2B ekler, ortak veri modeli (kaynak, zorunluluk, karar, profil
+  katmanı) ile tarih ve kapsam kuralları ayrı crate'tedir: `kentos-digital-project` (ADR 8062 §3). Çizimi ölçen mevzuat
+  kuralları mevcut kural motorundadır (ADR 8033).
 - **K3 — Bilinmeyen, yanlış değildir.** Bilinmiyor, uygulanmaz, hayır, sıfır ve eksik ayrı durumlardır. Yangın dayanımı
   gibi bir değer varsayılanla doldurulmaz. Her performans değerinin kaynağı görünür: tip, örnek, türetim, müellif beyanı,
   belge.
@@ -185,7 +193,16 @@ Her paket bir bütündür; alt maddeleri aynı dilimde biter. `[ ]` başlanmadı
 
 ### 5.1 Kaynak ve kapsam
 
-#### BIM-01 — Birincil kaynak ve kural kataloğu [ ]
+#### BIM-01 — Birincil kaynak ve kural kataloğu [x]
+
+**Yapıldı (15 Kasım 2026, [ADR 8062](../docs/adr/8062-digital-project-rule-catalog.md)):** 1 870 kural satırı (EK-1…4 ve 8
+`kentos-digital-project`'te; EK-5…7 ve 9 `kentos-ifc`'te), her biri ek, tablo, satır ve PDF sayfasıyla;
+`scripts/mevzuat/katalog.py` transkripsiyondan üretir (`--check`). 27 karar (17 nokta, 2B ve şema kararları; 6'sı açık).
+Profil katmanları (temel → kurum → proje) çekirdekte. Bağımsız dökümle 244 satır/tablo karşılaştırıldı, 16 fark sayfadan
+kapandı. Rastgele 20 satır 20'si birebir. Şema ve döküm karşılaştırması transkripsiyonda 14 okuma hatası buldu; düzeltildi.
+Başlangıç ölçümü künyeli bölüm binasında: 121 zorunlu satırın 81'inde değer var (§3.3). Pencere: Mimari › Proje ▾ › Dijital
+proje kuralları; Mimari denetim bulguları ek ve sayfayı söyler. **Kalan:** 2+1 örneğinin ölçümü (depoda model dosyası
+yok; örnek proje BIM-20), Python ve MCP için salt okuyan sorgu komutu.
 
 **Kullanıcı sonucu:** Her denetim bulgusu ve dışa aktarılan her alan, yönetmeliğin hangi ekinin hangi sayfasından geldiğini
 söyler. İki okumanın ayrıştığı yerler kapanmıştır. [IFC-01](ifc-uyum.md#10-iş-paketleri) ile aynı dilimdir.
@@ -535,7 +552,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| B1 | Ekler sayfa sayfa kataloğa; başlangıç ölçümü | BIM-01, IFC-01 | Her kural sayfasıyla; ölçüm raporu |
+| B1 ✓ | Ekler sayfa sayfa kataloğa; başlangıç ölçümü (yapıldı, ADR 8062) | BIM-01, IFC-01 | Her kural sayfasıyla; ölçüm raporu |
 | B2 | Tarihli kapsam kararı | BIM-02 | Ruhsat takımında "bu projede ne, ne zaman" |
 
 ### Faz 1 — 2B teslim tam (ilk yasal grup 1.9.2027)
@@ -603,7 +620,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Model ile paftaların revizyonu | kayıtlı değil | aynı ve kayıtlı | 1, 3 |
 | Yazılan zorunlu sınıf (29'dan; temel ve tabela dışında 27) | 15 | 27 | 2 |
 | Modele girmeyen nesne (rampalı, giydirme cepheli, asansörlü örnek) | rampa ve sınıfsız bloklar | 0 | 2 |
-| EK-6 ve EK-7'nin zorunlu satırlarından dosyada bulunan | B1'de ölçülecek | hepsi dolu ya da gerekçesiyle "eksik" | 2 |
+| EK-6 ve EK-7'nin zorunlu satırlarından dosyada bulunan | 81 / 121 (künyeli bölüm binası, ADR 8062) | hepsi dolu ya da gerekçesiyle "eksik" | 2 |
 | 3B'de görülen gövde / dosyadaki gövde | 0 / 68 | eşit | 2 |
 | Şema kuralları, bağımsız okuyucu | 0 bulgu (bölüm binası) | 0 bulgu, her örnekte | 2, 3 |
 | Türkiye profili, bağımsız ikinci okuyucu | ölçülmedi | 0 hata | 3 |
@@ -638,7 +655,9 @@ sahibin kısa listesi.
 | Pilot büro ve idare | Sahip | BIM-16 |
 | İdare tarafı öne alınsın mı | Sahip | §6 |
 
-- **Ekler yanlış okunursa profil yanlış olur.** Önlem: B1 her şeyden önce; iki bağımsız okuma; her satırın sayfası.
+- **Ekler yanlış okunursa profil yanlış olur.** Önlem: B1 her şeyden önce; iki bağımsız okuma; her satırın sayfası. B1'de
+  şema ve döküm karşılaştırması 14 okuma hatası buldu (ADR 8062 §2.3); kurala dayanan her yeni satır sayfasıyla
+  karşılaştırılır.
 - **Bakanlık biçimi ve tarihi değiştirebilir** (e-PYS Md. 4/4). Önlem: K2.
 - **Başka yazılımların dosyaları profile uymayabilir** (Estonya'nın dersi; bağımsız aracın açık örneklerdeki ölçümü,
   araştırma notu §6 ve §8). Önlem: idare tarafında hoşgörülü okuyucu, açık bulgu.

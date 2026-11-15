@@ -7,6 +7,10 @@
 · **Görüntüleyici ve okuma motoru:** [ADR 8061](../docs/adr/8061-ifc-viewer-and-reading-engine.md) (karar; deneme
 bekliyor), [notu](../docs/research/2026-11-15-ifc-goruntuleyici.md).
 
+**İlerleme (15 Kasım 2026):** IFC-01 `[x]` ([ADR 8062](../docs/adr/8062-digital-project-rule-catalog.md)): EK-5…7 ve 9
+`kentos-ifc`'te veri; IFC 4.3 sözlüğüyle karşılaştırma (`catalog_schema`), her farkın kararı var; başlangıç ölçümü dosyadan
+(§5'in bugün sütunu ona göre düzeltildi).
+
 Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. İlk taslağa göre değişenler: bugünkü çıktı yönetmeliğin sınıf ve
 alan listesine karşı kodda ölçüldü (§4, §5); kontrol formunun 21 sorusu için bugünkü ve hedef kanıt yazıldı (§9); okuyucu
 ayrı bir paket oldu ve doğrulamanın önüne alındı (IFC-07); "69 sınıf, 68 tablo" sorusu kapandı (69. sınıf `IfcProject`,
@@ -111,7 +115,8 @@ başvuruyla bağlanır. Dışa aktarılamayan her nesne kimliği, sınıfı, seb
 
 ## 5. Alan kapsamı (EK-6, EK-7)
 
-Bugün sütunu koddan okundu (`crates/shared/ifc/src/arch.rs`); kesin sayım B1'de dosyadan yapılır.
+Bugün sütunu önce koddan okundu; B1'de künyeli bölüm binasının dosyasından ölçüldü (ADR 8062 §10) ve ayrışan satırlar
+düzeltildi. Bir alan "verisi çizimde olduğunda" yazılıyorsa örnekte yoksa ◐ sayıldı.
 
 | Sınıf | Zorunlu alan | Bugün | KentOS'taki kaynağı | Paket |
 |---|---|---|---|---|
@@ -128,7 +133,9 @@ Bugün sütunu koddan okundu (`crates/shared/ifc/src/arch.rs`); kesin sayım B1'
 | | türü | ◐ | kullanımı (BIM-08) | IFC-02 |
 | Kat | net alan | ✓ | mahallerinin toplamı | — |
 | | taşıyıcı döşemenin kotu | ✗ | katın kotu ve döşeme katmanları (ADR 8040) | IFC-02 |
-| Bina | kimlik, kalıcı kimlik değil, kullanım, planlanan brüt alan, kat sayısı, adres, taban alanı, brüt ve net kat alanı | ✓ | künye, imar durumu | — |
+| Bina | kimlik, kalıcı kimlik değil, kat sayısı, adres, net kat alanı | ✓ | künye | — |
+| | kullanım, planlanan brüt alan, taban alanı, brüt kat alanı | ◐ verisi çizimde olduğunda; künyeli bölüm binasında yazılmadı | program, imar durumu | IFC-02 |
+| | `Pset_Address.PostalBox` | ✗ | künye | IFC-02 |
 | | yapım yöntemi, yangın koruma sınıfı, planlanan net alan | ✗ | künye (BIM-07) | IFC-02 |
 | | yükseklik | ◐ yalnız katlar eşitken | bina yüksekliği | IFC-02 |
 | | saçak yüksekliği | ✗ | çatının saçak kotu (ADR 8044) | IFC-02 |
@@ -138,6 +145,8 @@ Bugün sütunu koddan okundu (`crates/shared/ifc/src/arch.rs`); kesin sayım B1'
 | Proje | adı (proje kodu) | ✓ | künye | — |
 | | açıklama; `Pset_ProjectCommon.ProjectType` | ✗ | künye | IFC-02 |
 | Kişi, kuruluş, rol | sicil, ad, soyad, vergi no, adres, rol | ✓ (ADR 8047 §7) | ad ve soyad ayrı alanlardan (bugün son kelimeden ayrılıyor) | IFC-02 |
+| | `IfcPerson.Roles`, `IfcOrganization.Roles`, `IfcActorRole.UserDefinedRole` | ✗ (rol yalnız kişi-kuruluşta) | künye | IFC-02 |
+| Gösterim bağlamı (EK-7 7.8) | `TrueNorth` | ✗ | kuzey oku, projenin kuzeyi | IFC-02 |
 | Ölçüm anotasyonu (EK-7 7.9) | `IfcAnnotation`: `Name`, `Description`, `PredefinedType = SURVEY` | ✗ | Ölçüm ve vaziyet bilgisi. Uygulanabilirlik B1’de kaynak ve kurum profiliyle belirlenir | IFC-02 |
 | Koordinat sistemi | TUREF dilimi, datum, projeksiyon, dönüşüm | ✓ (ADR 8047 §8) | yerel orijin ve kontrol noktaları | IFC-05 |
 
@@ -152,7 +161,7 @@ KentOS'un çalışma bilgisi ayrı ad alanlarındadır; aynı bilgi için dosyad
 | Model dosyası | `ProjeKodu_BinaKodu_MM_AltDisiplin_MD_Tip_Kat_Sıra_Revizyon.ifc` (EK-2) | ✓ `naming::model_file` | Bina kodu çok binada (IFC-05); alt disiplin ve tip sözlükleri katalogdan |
 | Proje | `IfcProject.Name` = proje kodu (EK-1) | ✓ | — |
 | Varlık | `Disiplin-KategoriKodu-Açıklama` (EK-5 §5.5) | ✓ `MM-DVR-Dış_duvar_25` | Ayırıcı kuralı kalıbın verisi olur: Md. 11/2 "orta tire", EK-5 "alt çizgi". İdarenin yazılı yorumu profile girer |
-| Mahal | Md. 10/2: EK-5'e göre | `MM-MHL-<no>_<ad>`; uzun ad mahalin adı | İki okuma var: EK-5 §5.5.4'ün kalıbı ya da yalın EK-3 numarası (`K00_SLN_001`). B1'de sayfadan okunur; kalıp veri olduğundan değişiklik koda dokunmaz |
+| Mahal | Md. 10/2: EK-5'e göre | `MM-MHL-<no>_<ad>`; uzun ad mahalin adı | Kapandı (ADR 8062 K02): EK-5 5.5.4 numarayı ve adı açıklamada ayrı ya da birlikte kullandırır; KentOS ikisini birlikte yazar |
 | İdarenin alt disiplini | Dört karakter, EK-2 ile çakışmaz (Md. 11/3) | — | Kurum profili |
 
 Sınıf adı, kategori kodu, Türkçe harfler ve açıklama ayırıcıları ayrı ayrı sınanır. Bayt olarak yazılan ad geri okunup
@@ -256,7 +265,14 @@ Formun resmî Evet/Hayır'ı ile KentOS'un kanıt durumu ayrı saklanır; eksik 
 Sıra ve kapılar [BIM planında](bim-plan.md#6-uygulama-sırası-b1b23). `[ ]` başlanmadı, `[~]` sürüyor, `[x]` bütün kabulü
 sağlandı.
 
-#### IFC-01 — Kaynak kataloğu ve başlangıç ölçümü [ ]
+#### IFC-01 — Kaynak kataloğu ve başlangıç ölçümü [x]
+
+**Yapıldı (15 Kasım 2026, [ADR 8062](../docs/adr/8062-digital-project-rule-catalog.md)):** katalog `kentos-ifc`'te
+(`data/temel-2026.json`: 136 sınıf, 147 tablo, 1 146 satır, 37 soru; `data/kararlar-2026.json`); temel ve kurum profili
+katmanları `kentos-digital-project`'te. IFC 4.3 sözlüğü (`data/ifc4x3-sozluk.json`, IfcOpenShell 0.9.0.post1'den) ile
+karşılaştırma: 235 fark, her biri kararlı; bilerek yanlış yazılan `FireRatng` tek yeni bulgu olarak düşer. Başlangıç
+ölçümü IfcOpenShell'le dosyadan: künyeli bölüm binasında 81 / 121. Kaynak–IFC kimlik eşlemesi (IFC-08'in beklentisi) bu
+dilimde yok; IFC-08 ile gelir.
 
 **Kullanıcı sonucu:** Dışa aktarılan her alan ve her denetim, yönetmeliğin sayfasını gösterir. [BIM-01](bim-plan.md#5-iş-paketleri)
 ile aynı dilimdir.
@@ -374,6 +390,8 @@ açık IFC 4.3 örnekleri okunur; ölçeklenmiş modelde süre ve bellek tabanı
 Şeması temiz bir dosyanın Türkiye profilinden kaldığı görülebilir.
 
 - `kentos_ifc::quality` bellekteki modelden okunan dosyaya geçer; beş sonuç (§1) ayrı raporlanır.
+- Kaynak modelden beklenen nesne listesi (kimlik ve IFC sınıfı; bölünen ya da birleşen temsillerde eşlemesi): IFC-01'in
+  başlangıç ölçümü sınıf ve satır düzeyinde yapıldı (ADR 8062 §10), nesne düzeyindeki beklenti bu pakette kurulur.
 - §9'un tablosundaki 21 kanıt; formun resmî cevabı ile kanıt durumu ayrı.
 - Katalogdan IDS üretimi; üretilen IDS bağımsız bir denetleyicide açılır. IFC-01’de kaynak modelden çıkarılan nesne
   listesi, okunan dosyanın kimlik ve sınıflarıyla karşılaştırılır. Kalan nesnelerin IDS sonucu olumlu olsa da

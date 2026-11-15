@@ -50,6 +50,8 @@ pub(crate) struct ArchUiState {
     pub(crate) view_refs: Option<crate::viewmark_refs::Window>,
     /// Metraj's window (quantities.rs, docs/adr/0342 §5).
     pub(crate) quantities: Option<crate::quantities::Window>,
+    /// Dijital proje kuralları' window (digital_rules.rs, docs/adr/8062).
+    pub(crate) digital_rules: Option<crate::digital_rules::Window>,
 }
 
 /// The architecture (Mimari) module's messages, `Message::Arch`.
@@ -79,6 +81,8 @@ pub(crate) enum Event {
     Schedule(crate::schedule_window::Event),
     ViewRefs(crate::viewmark_refs::Event),
     Quantities(crate::quantities::Event),
+    /// Dijital proje kuralları (digital_rules.rs, docs/adr/8062).
+    DigitalRules(crate::digital_rules::Event),
 }
 
 /// The architecture (Mimari) module's windows, `Dialog::Arch`.
@@ -118,6 +122,8 @@ pub(crate) enum ArchDialogKind {
     ViewRefs,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `ArchUiState::quantities`.
     Quantities,
+    /// Dijital proje kuralları (digital_rules.rs, docs/adr/8062); the window is `ArchUiState::digital_rules`.
+    DigitalRules,
 }
 
 impl App {
@@ -141,6 +147,7 @@ impl App {
             Event::Schedule(event) => return self.schedule_event(event),
             Event::ViewRefs(event) => return self.view_refs_event(event),
             Event::Quantities(event) => return self.quantities_event(event),
+            Event::DigitalRules(event) => return self.digital_rules_event(event),
             Event::ArchTemplate(event) => self.architecture_template_event(event),
         }
         Task::none()
@@ -165,6 +172,7 @@ impl App {
             ArchDialogKind::Schedule | ArchDialogKind::ScheduleExport => self.schedule_view(),
             ArchDialogKind::ViewRefs => self.view_refs_view(),
             ArchDialogKind::Quantities => self.quantities_view(),
+            ArchDialogKind::DigitalRules => self.digital_rules_view(),
         }
     }
 }

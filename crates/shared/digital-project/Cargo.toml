@@ -1,0 +1,14 @@
+[package]
+name = "kentos-digital-project"
+description = "The 2026 digital project regulation (RG 5.8.2026/33331) as versioned data: its annexes' rules, each with the annex, table, row and PDF page it was read from; the base profile, an administration's and a project's layers over it, and KentOS's decisions on the regulation's open points. EK-1…EK-4 and EK-8 here; the IFC annexes (EK-5…EK-7, EK-9) are kentos-ifc's"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure, like the other shared cores (CLAUDE.md §14): no file system, network or UI; built for the host and wasm32
+# (scripts/arch/deps.mjs). The catalog is data (data/*.json, written by scripts/mevzuat/katalog.py from mevzuat/bim);
+# the decisions are hand-written data beside it.
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

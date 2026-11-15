@@ -1,0 +1,103 @@
+{
+ "format": 1,
+ "decisions": [
+  {
+   "id": "K03",
+   "point": 3,
+   "title": "Gelişim seviyesi",
+   "kind": "page",
+   "sources": [{"annex": 8, "clause": "8.1", "pages": [237]}, {"annex": 8, "clause": "8.2", "pages": [237]}],
+   "text": "EK-8 nesne tablosu içermez. Ruhsat eki modellerdeki varlıklar “Detaylı Modelleme” seviyesindedir: şekli, boyutu, konumu ve yönelimi net, doğrudan ölçülebilir; bu LOD 300'e karşılık gelir (8.1). Alfanümerik bilgi EK-6 ve EK-7'den gelir; farklı proje aşamaları için bilgi gereksinimini idare tanımlayabilir (8.2); ekte olmayan konuda yönetmeliğin 5/1'i uygulanır (8.3).",
+   "param": {"key": "model.lod", "value": "LOD 300"},
+   "rows": ["M8.1", "M8.2", "M8.3"]
+  },
+  {
+   "id": "K11",
+   "point": 11,
+   "title": "Yükseklik sistemi",
+   "kind": "administration",
+   "sources": [{"annex": 7, "table": "7.6", "row": 4, "pages": [227]}, {"annex": 4, "clause": "4.31.4", "pages": [23]}, {"annex": 4, "clause": "4.31.5", "pages": [24]}],
+   "text": "İki ek farklı yükseklik söylüyor: EK-7 Tablo 7.6 (VerticalDatum) modelin yükseklik referansı olarak ITRF96 der ve gerektiğinde TUDKA99'a dönüşüm parametresini ister; EK-4 4.31.4 yapı aplikasyon projesindeki kotları Türkiye Jeoit Modeli'ne dayalı Helmert ortometrik yükseklikle ister, 4.31.5 parselin resmî referans yüksekliğini. KentOS projenin düşey datumunu, yerel röperi ve dönüşüm parametresini ayrı alanlarda tutar; bilinmeyen datum sıfır sayılmaz. Hangisinin modelde yazılacağını idare söyler.",
+   "asked": "İdare",
+   "param": {"key": "height.datum", "value": null},
+   "rows": ["M4.31.4", "M4.31.5"]
+  },
+  {
+   "id": "K12",
+   "point": 12,
+   "title": "Dosya boyutu sınırı",
+   "kind": "administration",
+   "sources": [{"annex": 9, "table": "9.1", "row": 1, "pages": [238]}],
+   "text": "Formun 1. sorusu Bakanlıkça belirlenen dosya boyutu kısıtlamasını sorar; Bakanlık bir sınır yayımlamadı (15 Kasım 2026). Sınır yokken soru incelemeye kalır; dosyanın boyutu rapora yazılır, bir sınır uydurulmaz.",
+   "asked": "Bakanlık",
+   "param": {"key": "file.limit", "value": null},
+   "rows": []
+  },
+  {
+   "id": "K13",
+   "point": 13,
+   "title": "PDF/A'nın bölümü ve düzeyi",
+   "kind": "administration",
+   "sources": [{"annex": 0, "article": "4/2"}, {"annex": 0, "article": "4/3"}],
+   "text": "Yönetmelik yalnız “PDF/A” der; bölüm ve düzey söylemez. KentOS'un Ruhsat takımı bugün PDF/A-2b yazar: bu KentOS'un seçimidir, idarenin ya da Bakanlığın kılavuzu başka bir bölüm isterse kurum profilinin bir satırı olarak değişir.",
+   "asked": "Bakanlık ya da idare",
+   "param": {"key": "pdfa.part", "value": null, "default": "PDF/A-2b"},
+   "rows": []
+  },
+  {
+   "id": "K16",
+   "point": 16,
+   "title": "e-PYS'nin arayüzü, imza yöntemi ve yükleme biçimi",
+   "kind": "administration",
+   "sources": [{"annex": 0, "act": "e-PYS", "article": "4/4"}, {"annex": 0, "act": "e-PYS", "article": "5/4"}, {"annex": 0, "act": "e-PYS", "article": "5/6"}],
+   "text": "Hangi bina türlerinin, hangi ölçütlerle, hangi yükleme biçimiyle ve hangi tarihten e-PYS'ye yükleneceğini, kimlik doğrulama yöntemini ve kılavuzları Bakanlık belirler (e-PYS Md. 4/4, 5/4, 5/6); 15 Kasım 2026'da yayımlanmış bir kılavuz yok. O güne kadar KentOS, müellifin yetkili kanaldan yükleyeceği paketi hazırlar.",
+   "asked": "Bakanlık",
+   "param": {"key": "epys.interface", "value": null},
+   "rows": []
+  },
+  {
+   "id": "K17",
+   "point": 17,
+   "title": "Taslak metin kullanılmaz",
+   "kind": "kentos",
+   "sources": [{"annex": 0, "act": "RG 5.8.2026/33331"}],
+   "text": "Bakanlığın Kasım 2025 taslağı nihai metinden farklıdır (tablo numaraları, ayırıcılar, zorunlu ve isteğe bağlı ayrımı). Katalog yalnız Resmî Gazete'nin 5.8.2026/33331 sayılı yayımındaki metne ve eklerine dayanır.",
+   "rows": []
+  },
+  {
+   "id": "K18",
+   "title": "Zemin disiplininin üç harfli kodları",
+   "kind": "kentos",
+   "sources": [{"annex": 2, "clause": "2.5", "pages": [2]}, {"annex": 2, "table": "2.11", "pages": [11]}],
+   "text": "EK-2 2.5 öge ve alt disiplin kodunu dört karakter sayar; Tablo 2.11'in zemin kodları üç harflidir (IKS, KZK, ZTE). KentOS tablonun kodlarını basıldığı gibi geçerli sayar; idarenin ya da müellifin yeni tanımladığı kod 2.5'e göre dört harflidir. İdarenin yazılı yorumu kurum profiline girer.",
+   "rows": ["M2.5", "T2.11/IKS", "T2.11/KZK", "T2.11/ZTE"]
+  },
+  {
+   "id": "K19",
+   "title": "Blok adında alt disiplin üç, katman adında dört karakter",
+   "kind": "page",
+   "sources": [{"annex": 4, "table": "4.2", "pages": [24]}, {"annex": 4, "table": "4.5", "pages": [25]}],
+   "text": "Tablo 4.2 statik, mekanik, elektrik ve altyapı katman adlarında alt disiplin alanını dört, Tablo 4.5 aynı disiplinlerin blok, obje ve sembol adlarında üç karakter sayar. Her şablon kendi uzunluğuyla denetlenir.",
+   "rows": ["T4.2", "T4.5"]
+  },
+  {
+   "id": "K21",
+   "title": "Proje kodunun biçimi",
+   "kind": "kentos",
+   "sources": [{"annex": 1, "clause": "1.1.1", "pages": [1]}, {"annex": 2, "table": "2.1", "pages": [3]}],
+   "text": "EK-1 1.1.1 proje kodunu başvuru yılının iki hanesi ile aynı yıl içindeki dört haneli sıra numarasından oluşan altı haneli bir sayı sayar; aynı paragraf bilgi alanlarının alt tireyle ayrıldığını da söyler. Tablo 2.1 proje kodu alanına altı karakter verir. KentOS kodu alt tiresiz altı rakam okur (260123); alt tire dosya adının alanları arasındadır. Kodu idare ya da e-PYS üretir (1.1.1, 1.1.2); “000000” ve boş kod kimlik sayılmaz.",
+   "asked": "İdare",
+   "param": {"key": "project.code.pattern", "value": "^[0-9]{6}$"},
+   "rows": ["M1.1.1", "M1.1.2", "T2.1"]
+  },
+  {
+   "id": "K22",
+   "title": "Kat kodlarının sürmesi",
+   "kind": "page",
+   "sources": [{"annex": 2, "table": "2.14", "pages": [13]}, {"annex": 2, "clause": "2.9.2", "pages": [2]}, {"annex": 2, "clause": "2.9.3", "pages": [2]}],
+   "text": "Tablo 2.14'ün noktalı satırları dizinin sürdüğünü gösterir: bodrum katları B01, B02 …, normal katlar K01, K02 … diye artar; zemin kat K00, kattan bağımsız dosya NNN'dir. Tabloda olmayan asma kat, çatı piyesi ve tesisat katı gibi katlar müellifin belirlediği iki karakterle KXX (2.9.2); kesit ve görünüş gibi gösterimler kat yerine konumla, müellifin belirlediği XXX koduyla adlanır (2.9.3).",
+   "param": {"key": "storey.pattern", "value": "^(B[0-9]{2}|K[0-9A-Z]{2}|NNN)$"},
+   "rows": ["T2.14/B01", "T2.14/K00", "T2.14/K01", "T2.14/NNN", "M2.9.2", "M2.9.3"]
+  }
+ ]
+}

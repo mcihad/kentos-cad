@@ -123,7 +123,7 @@
 | Ön Tanımlı Tip | `PredefinedType` | - | Metin | Ön Tanımlı Tip. |
 | İsim | Attribute: Name | - | Metin | IFC uyumlu yazılım sistemleri veya kullanıcılar tarafından kullanılmak üzere isteğe bağlı bir ad. [[`IfcRoot`]] sınıfının bazı alt tipleri için İsim niteliğinin eklenmesi gerekebilir. Bu, bir "where" kuralı ile zorunlu hale getirilecektir. |
 | Etiket | Attribute: Tag | - | Sayı veya Metin | Bir ürünün belirli bir örneğindeki etiket tanımlayıcısı, örneğin seri numarası veya konum numarasıdır. Bu, yerleştirilmiş örnek düzeyindeki tanımlayıcıdır. |
-| Malzeme | Attribute(IfcRe)AssociatesMaterial>IfcMaterial): Name\* | - | Metin | [`IfcMaterial`], yapı elemanlarını (fiziksel ürünler veya bileşenleri) oluşturmak için kullanılabilecek homojen veya heterojen maddelerdir. |
+| Malzeme | Attribute(IfcRelAssociatesMaterial>IfcMaterial): Name\* | - | Metin | [`IfcMaterial`], yapı elemanlarını (fiziksel ürünler veya bileşenleri) oluşturmak için kullanılabilecek homojen veya heterojen maddelerdir. |
 
 | Türkçe Tanım (Bilgi Amaçlı) | Özellik | İlişki | Veri Tipi (Bilgi Amaçlı) | Açıklama |
 |---|---|---|---|---|
@@ -302,7 +302,7 @@
 
 | Rampa (`IfcRamp`) | Ön Tanımlı Tip Listesi |
 |---|---|
-| Tanım: Rampa, farklı kotlardaki iki döşeme seviyesini birbirine bağlayan dikey bir geçiş yoludur ve insan dolaşımını sağlar. Ara bir döşeme plağı olarak bir sahanlık içerebilir. Bir rampa normalde basamak içermez. | STRAIGHT RUN RAMP, TWO STRAIGHT RUN RAMP, QUARTER TURN RAMP, TWO QUARTER TURN RAMP: HALF TURN RAMP, SPIRAL RAMP, USERDEFINED, NOTDEFINED |
+| Tanım: Rampa, farklı kotlardaki iki döşeme seviyesini birbirine bağlayan dikey bir geçiş yoludur ve insan dolaşımını sağlar. Ara bir döşeme plağı olarak bir sahanlık içerebilir. Bir rampa normalde basamak içermez. | STRAIGHT RUN RAMP, TWO STRAIGHT RUN RAMP, QUARTER TURN RAMP, TWO QUARTER TURN RAMP, HALF TURN RAMP, SPIRAL RAMP, USERDEFINED, NOTDEFINED |
 
 | Türkçe Tanım (Bilgi Amaçlı) | Öznitelik | İlişki | Veri Tipi (Bilgi Amaçlı) | Açıklama |
 |---|---|---|---|---|

@@ -1156,6 +1156,7 @@ impl App {
             }
             Some(Dialog::Arch(arch::ArchDialogKind::TagsCheck)) => self.arch.tags_check = None,
             Some(Dialog::Arch(arch::ArchDialogKind::ViewRefs)) => self.arch.view_refs = None,
+            Some(Dialog::Arch(arch::ArchDialogKind::DigitalRules)) => self.arch.digital_rules = None,
             Some(Dialog::SheetSet) => self.sheet_set = None,
             Some(Dialog::Xrefs | Dialog::XrefAttach) => self.xrefs = Default::default(),
             Some(Dialog::Arch(arch::ArchDialogKind::Quantities)) => self.arch.quantities = None,

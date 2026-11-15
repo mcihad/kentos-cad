@@ -2673,6 +2673,7 @@ dependencies = [
  "kentos-agent",
  "kentos-cloud",
  "kentos-commands",
+ "kentos-digital-project",
  "kentos-domain",
  "kentos-dwg",
  "kentos-expression",
@@ -2715,6 +2716,14 @@ dependencies = [
  "tiny-skia",
  "unicode-segmentation",
  "zune-jpeg 0.5.15",
+]
+
+[[package]]
+name = "kentos-digital-project"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2892,9 +2901,12 @@ name = "kentos-ifc"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-digital-project",
  "kentos-geometry-core",
  "kentos-road",
  "libm",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2985,6 +2997,7 @@ name = "kentos-native-application"
 version = "0.1.0"
 dependencies = [
  "kentos-commands",
+ "kentos-digital-project",
  "kentos-domain",
  "kentos-dwg",
  "kentos-expression",

@@ -413,6 +413,7 @@ impl App {
                 tags_check: None,
                 schedule: None,
                 view_refs: None,
+                digital_rules: None,
                 quantities: None,
             },
         };

@@ -20,6 +20,18 @@
 - **BIM yönetmeliği ve IFC uyum planı (15 Kasım 2026; [plan/bim-plan.md](../../plan/bim-plan.md), [plan/ifc-uyum.md](../../plan/ifc-uyum.md), dal `codex/bim-ifc-uyum`).**
   - **Bu tur plandır;** uygulama kodu değişmedi. Paket numaraları (BIM-01…20, IFC-01…12) TODOS.md §18 ile aynıdır; o bölümün
     eski on maddesi yeni paketlere eşlendi.
+  - **B1 yapıldı (15 Kasım 2026; [ADR 8062](../adr/8062-digital-project-rule-catalog.md); BIM-01, IFC-01 `[x]`):**
+    - Kural kataloğu iki crate'te: 2B ekler, kaynak, karar ve profil katmanı yeni `kentos-digital-project`'te (saf, wasm32);
+      EK-5…7 ve 9, IFC 4.3 sözlüğü ve karşılaştırması `kentos-ifc`'te. 1 870 satır, her biri ek, tablo, satır ve PDF sayfasıyla;
+      `scripts/mevzuat/katalog.py` `mevzuat/bim`'den üretir (`--check`), elle yazılmaz.
+    - 27 karar (`kararlar-2026.json`; K01…K36): sayfadan okunan, şemadan çözülen, idareye sorulan (6 açık: görünüm tanımı,
+      giydirme cephe paneli, düşey datum, dosya sınırı, PDF/A bölümü, e-PYS). Açık parametrenin değeri boştur.
+    - Şema farkı kararsız kalamaz (`catalog_schema` testi); bağımsız dökümle ve 20 rastgele satırla sayfadan karşılaştırıldı;
+      transkripsiyonda 14 okuma hatası düzeltildi.
+    - Başlangıç ölçümü dosyadan, IfcOpenShell'le (`scripts/mevzuat/olcum.py`): künyeli bölüm binasında 121 zorunlu satırın
+      81'i dolu; yangın dayanımı, acil çıkış ve "Ad_Dayanım" malzeme biçimi hiç yok.
+    - Mimari › Proje ▾ › Dijital proje kuralları (`arch.digitalRules`) yalnız okur; Mimari denetim bulguları ek ve sayfayı
+      söyler. `scripts/ui/ribbon.py` depodaki `ribbon.json`'u üretmiyor (önceden beri): şerit elle düzenlenir.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

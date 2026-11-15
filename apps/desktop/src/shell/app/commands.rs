@@ -295,7 +295,7 @@ impl App {
             "xref.attach" => return self.start_xref_attach(),
             "arch.template" => self.apply_arch_template(),
             id if id.starts_with("arch.phase.") => self.set_phase_view(&id["arch.phase.".len()..]),
-            // Üst kat, Alt kat (docs/adr/0720 §5; Archicad's Go Up/Down a Story).
+            // Üst kat, Alt kat (docs/adr/0720 §5).
             "view.levels.up" => self.step_level(true),
             "view.levels.down" => self.step_level(false),
             // Kat görünümü (docs/adr/0715).
@@ -312,6 +312,8 @@ impl App {
             "arch.zoningTable" => self.place_zoning_table(),
             // Model kalite kontrol formu (EK-9, docs/adr/8047 §10).
             "arch.qualityForm" => self.place_quality_form(),
+            // Dijital proje kuralları (digital_rules.rs, docs/adr/8062).
+            "arch.digitalRules" => self.open_digital_rules(),
             // Otopark and Sığınak hesabı (docs/adr/8036).
             "arch.parkingTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Parking {})

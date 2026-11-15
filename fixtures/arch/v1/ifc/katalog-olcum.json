@@ -1,0 +1,1592 @@
+{
+ "format": 1,
+ "ifcopenshell": "0.9.0.post1",
+ "files": [
+  {
+   "file": "fixtures/arch/v1/ifc/kesit-binasi.ifc",
+   "bytes": 123125,
+   "sha256": "9a5bacaa4890443f549aa7429fc6b6148eca80823d9f92bf535c8896abe1c95f",
+   "schema": "IFC4X3_ADD2",
+   "classes": {
+    "IfcBeam": 8,
+    "IfcBuilding": 1,
+    "IfcBuildingStorey": 2,
+    "IfcColumn": 16,
+    "IfcDoor": 5,
+    "IfcGeometricRepresentationContext": 1,
+    "IfcOpeningElement": 14,
+    "IfcProject": 1,
+    "IfcSite": 1,
+    "IfcSlab": 3,
+    "IfcSpace": 10,
+    "IfcStair": 1,
+    "IfcWall": 16,
+    "IfcWindow": 9
+   },
+   "rows": {
+    "T6.3/PredefinedType": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 8,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.3/Name": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 8,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.3/Tag": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 8,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.3/IfcMaterial.Name": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 8,
+     "status": "var",
+     "notes": {
+      "biçim: Betonarme": 8
+     }
+    },
+    "T6.3/Pset_BeamCommon.FireRating": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/LongName": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Name": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.BuildingID": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.IsPermanentID": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.ConstructionMethod": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.FireProtectionClass": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.OccupancyType": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.GrossPlannedArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.NetPlannedArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.NumberOfStoreys": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_Address.AddressLines": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_Address.Town": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_Address.Region": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.Height": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.EavesHeight": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.FootPrintArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.GrossFloorArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.NetFloorArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_Address.PostalBox": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.8/Name": {
+     "class": "IfcBuildingStorey",
+     "n": 2,
+     "have": 2,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.8/Qto_BuildingStoreyBaseQuantities.NetFloorArea": {
+     "class": "IfcBuildingStorey",
+     "n": 2,
+     "have": 2,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.8/Pset_BuildingStoreyCommon.ElevationOfSSLRelative": {
+     "class": "IfcBuildingStorey",
+     "n": 2,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.16/PredefinedType": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.16/Name": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.16/Tag": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.16/IfcMaterial.Name": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {
+      "biçim: Betonarme": 16
+     }
+    },
+    "T6.16/Pset_ColumnCommon.FireRating": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.16/Pset_ColumnCommon.LoadBearing": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/PredefinedType": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 5,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/Name": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 5,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/Tag": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 5,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/Pset_DoorCommon.IsExternal": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 5,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/Pset_DoorCommon.FireRating": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.25/Pset_DoorCommon.FireExit": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.41/PredefinedType": {
+     "class": "IfcOpeningElement",
+     "n": 14,
+     "have": 14,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.41/Name": {
+     "class": "IfcOpeningElement",
+     "n": 14,
+     "have": 14,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/ObjectType": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/LongName": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Name": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/RefElevation": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_SiteCommon.FloorAreaRatio": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_SiteCommon.SiteCoverageRatio": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_SiteCommon.TotalArea": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_Address.AddressLines": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_Address.Town": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_Address.Region": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_LandRegistration.LandID": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_LandRegistration.LandTitleID": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.TAKS": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.KAKS": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.CekmeOn": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.CekmeYan": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.CekmeArka": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.56/PredefinedType": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.56/Name": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.56/Tag": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.56/IfcMaterial.Name": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {
+      "biçim: Betonarme": 3
+     }
+    },
+    "T6.56/Pset_SlabCommon.IsExternal": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.56/Pset_SlabCommon.FireRating": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/PredefinedType": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 10,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.58/Name": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 10,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.FloorCovering": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.FloorCoveringThickness": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.WallCovering": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.WallCoveringThickness": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.CeilingCovering": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.CeilingCoveringThickness": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.61/PredefinedType": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {
+      "NOTDEFINED": 1
+     }
+    },
+    "T6.61/Name": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.61/Tag": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.61/IfcMaterial.Name": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.61/Pset_StairCommon.FireRating": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.61/Pset_StairCommon.FireExit": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.66/PredefinedType": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.66/Name": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.66/Tag": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.66/IfcMaterial.Name": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {
+      "biçim: Tuğla": 16
+     }
+    },
+    "T6.66/Pset_WallCommon.IsExternal": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.66/Pset_WallCommon.FireRating": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.67/PredefinedType": {
+     "class": "IfcWindow",
+     "n": 9,
+     "have": 9,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.67/Name": {
+     "class": "IfcWindow",
+     "n": 9,
+     "have": 9,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.67/Tag": {
+     "class": "IfcWindow",
+     "n": 9,
+     "have": 9,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.67/Pset_WindowCommon.IsExternal": {
+     "class": "IfcWindow",
+     "n": 9,
+     "have": 9,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.1/Description": {
+     "class": "IfcProject",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T7.1/Name": {
+     "class": "IfcProject",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.1/Pset_ProjectCommon.ProjectType": {
+     "class": "IfcProject",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T7.8/CoordinateSpaceDimension": {
+     "class": "IfcGeometricRepresentationContext",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.8/Precision": {
+     "class": "IfcGeometricRepresentationContext",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.8/WorldCoordinateSystem": {
+     "class": "IfcGeometricRepresentationContext",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.8/TrueNorth": {
+     "class": "IfcGeometricRepresentationContext",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    }
+   }
+  },
+  {
+   "file": "fixtures/arch/v1/ifc/kesit-binasi-kunye.ifc",
+   "bytes": 125184,
+   "sha256": "1e0c454301de484b06330ff6c5aa8f0a3b40ef30b657e9d293b531c2162f19c0",
+   "schema": "IFC4X3_ADD2",
+   "classes": {
+    "IfcActorRole": 1,
+    "IfcBeam": 8,
+    "IfcBuilding": 1,
+    "IfcBuildingStorey": 2,
+    "IfcColumn": 16,
+    "IfcDoor": 5,
+    "IfcGeometricRepresentationContext": 1,
+    "IfcMapConversion": 1,
+    "IfcOpeningElement": 14,
+    "IfcOrganization": 1,
+    "IfcPerson": 1,
+    "IfcPersonAndOrganization": 1,
+    "IfcProject": 1,
+    "IfcProjectedCRS": 1,
+    "IfcSite": 1,
+    "IfcSlab": 3,
+    "IfcSpace": 10,
+    "IfcStair": 1,
+    "IfcWall": 16,
+    "IfcWindow": 9
+   },
+   "rows": {
+    "T6.3/PredefinedType": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 8,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.3/Name": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 8,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.3/Tag": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 8,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.3/IfcMaterial.Name": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 8,
+     "status": "var",
+     "notes": {
+      "biçim: Betonarme": 8
+     }
+    },
+    "T6.3/Pset_BeamCommon.FireRating": {
+     "class": "IfcBeam",
+     "n": 8,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/LongName": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Name": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.BuildingID": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.IsPermanentID": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.ConstructionMethod": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.FireProtectionClass": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.OccupancyType": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.GrossPlannedArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.NetPlannedArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Pset_BuildingCommon.NumberOfStoreys": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_Address.AddressLines": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_Address.Town": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_Address.Region": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.Height": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.EavesHeight": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.FootPrintArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.GrossFloorArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.7/Qto_BuildingBaseQuantities.NetFloorArea": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.7/Pset_Address.PostalBox": {
+     "class": "IfcBuilding",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.8/Name": {
+     "class": "IfcBuildingStorey",
+     "n": 2,
+     "have": 2,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.8/Qto_BuildingStoreyBaseQuantities.NetFloorArea": {
+     "class": "IfcBuildingStorey",
+     "n": 2,
+     "have": 2,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.8/Pset_BuildingStoreyCommon.ElevationOfSSLRelative": {
+     "class": "IfcBuildingStorey",
+     "n": 2,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.16/PredefinedType": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.16/Name": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.16/Tag": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.16/IfcMaterial.Name": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {
+      "biçim: Betonarme": 16
+     }
+    },
+    "T6.16/Pset_ColumnCommon.FireRating": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.16/Pset_ColumnCommon.LoadBearing": {
+     "class": "IfcColumn",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/PredefinedType": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 5,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/Name": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 5,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/Tag": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 5,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/Pset_DoorCommon.IsExternal": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 5,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.25/Pset_DoorCommon.FireRating": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.25/Pset_DoorCommon.FireExit": {
+     "class": "IfcDoor",
+     "n": 5,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.41/PredefinedType": {
+     "class": "IfcOpeningElement",
+     "n": 14,
+     "have": 14,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.41/Name": {
+     "class": "IfcOpeningElement",
+     "n": 14,
+     "have": 14,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/ObjectType": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/LongName": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/Name": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/RefElevation": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/Pset_SiteCommon.FloorAreaRatio": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_SiteCommon.SiteCoverageRatio": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_SiteCommon.TotalArea": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/Pset_Address.AddressLines": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/Pset_Address.Town": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/Pset_Address.Region": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/Pset_LandRegistration.LandID": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/Pset_LandRegistration.LandTitleID": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.TAKS": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.KAKS": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.CekmeOn": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.CekmeYan": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.55/TREpys_ParselOzellikSeti.CekmeArka": {
+     "class": "IfcSite",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.56/PredefinedType": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.56/Name": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.56/Tag": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.56/IfcMaterial.Name": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {
+      "biçim: Betonarme": 3
+     }
+    },
+    "T6.56/Pset_SlabCommon.IsExternal": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 3,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.56/Pset_SlabCommon.FireRating": {
+     "class": "IfcSlab",
+     "n": 3,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/PredefinedType": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 10,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.58/Name": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 10,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.FloorCovering": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.FloorCoveringThickness": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.WallCovering": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.WallCoveringThickness": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.CeilingCovering": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.58/Pset_SpaceCoveringRequirements.CeilingCoveringThickness": {
+     "class": "IfcSpace",
+     "n": 10,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.61/PredefinedType": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {
+      "NOTDEFINED": 1
+     }
+    },
+    "T6.61/Name": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.61/Tag": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.61/IfcMaterial.Name": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.61/Pset_StairCommon.FireRating": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.61/Pset_StairCommon.FireExit": {
+     "class": "IfcStair",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.66/PredefinedType": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.66/Name": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.66/Tag": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.66/IfcMaterial.Name": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {
+      "biçim: Tuğla": 16
+     }
+    },
+    "T6.66/Pset_WallCommon.IsExternal": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 16,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.66/Pset_WallCommon.FireRating": {
+     "class": "IfcWall",
+     "n": 16,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T6.67/PredefinedType": {
+     "class": "IfcWindow",
+     "n": 9,
+     "have": 9,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.67/Name": {
+     "class": "IfcWindow",
+     "n": 9,
+     "have": 9,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.67/Tag": {
+     "class": "IfcWindow",
+     "n": 9,
+     "have": 9,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.67/Pset_WindowCommon.IsExternal": {
+     "class": "IfcWindow",
+     "n": 9,
+     "have": 9,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.1/Description": {
+     "class": "IfcProject",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T7.1/Name": {
+     "class": "IfcProject",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.1/Pset_ProjectCommon.ProjectType": {
+     "class": "IfcProject",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T7.2/Identification": {
+     "class": "IfcPerson",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.2/FamilyName": {
+     "class": "IfcPerson",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.2/GivenName": {
+     "class": "IfcPerson",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.2/Roles": {
+     "class": "IfcPerson",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T7.3/ThePerson": {
+     "class": "IfcPersonAndOrganization",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.3/TheOrganization": {
+     "class": "IfcPersonAndOrganization",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.4/Identification": {
+     "class": "IfcOrganization",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.4/Name": {
+     "class": "IfcOrganization",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.4/Roles": {
+     "class": "IfcOrganization",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T7.4/Addresses": {
+     "class": "IfcOrganization",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.5/Role": {
+     "class": "IfcActorRole",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.5/UserDefinedRole": {
+     "class": "IfcActorRole",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    },
+    "T7.5/Description": {
+     "class": "IfcActorRole",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.6/Name": {
+     "class": "IfcProjectedCRS",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.6/Description": {
+     "class": "IfcProjectedCRS",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.6/GeodeticDatum": {
+     "class": "IfcProjectedCRS",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.6/VerticalDatum": {
+     "class": "IfcProjectedCRS",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.6/MapProjection": {
+     "class": "IfcProjectedCRS",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.6/MapZone": {
+     "class": "IfcProjectedCRS",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.6/MapUnit": {
+     "class": "IfcProjectedCRS",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.7/Eastings": {
+     "class": "IfcMapConversion",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.7/Northings": {
+     "class": "IfcMapConversion",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.7/OrthogonalHeight": {
+     "class": "IfcMapConversion",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.7/XAxisAbscissa": {
+     "class": "IfcMapConversion",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.7/XAxisOrdinate": {
+     "class": "IfcMapConversion",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.7/Scale": {
+     "class": "IfcMapConversion",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.8/CoordinateSpaceDimension": {
+     "class": "IfcGeometricRepresentationContext",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.8/Precision": {
+     "class": "IfcGeometricRepresentationContext",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.8/WorldCoordinateSystem": {
+     "class": "IfcGeometricRepresentationContext",
+     "n": 1,
+     "have": 1,
+     "status": "var",
+     "notes": {}
+    },
+    "T7.8/TrueNorth": {
+     "class": "IfcGeometricRepresentationContext",
+     "n": 1,
+     "have": 0,
+     "status": "yok",
+     "notes": {}
+    }
+   }
+  }
+ ]
+}

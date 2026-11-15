@@ -81,9 +81,9 @@ MAP_ROAD = ["map", "road"]
 # offer, and CBS's analysis (mekânsal istatistik, uygunluk, uzaktan algılama) no CAD work offers.
 IN_CAD = ["cad"]
 IN_GIS = ["gis"]
-# Mesafe ölç, Alan hesapla, Koordinat oku, Açı ölç and Bilgi: any drawing's queries (AutoCAD's MEASUREGEOM, ID and
-# LIST). A map's Ölçme starts with them. A building has no surveying (docs/adr/0802): KentOS Mimari keeps them in
-# Görünüm › Sorgu as one button, the last used on it, as AutoCAD's Home › Utilities › Measure. Giriş is full: at
+# Mesafe ölç, Alan hesapla, Koordinat oku, Açı ölç and Bilgi: any drawing's queries. A map's Ölçme starts with them.
+# A building has no surveying (docs/adr/0802): KentOS Mimari keeps them in Görünüm › Sorgu as one button, the last
+# used on it. Giriş is full: at
 # 1440 px even one more panel leaves buttons without their names (ADR 0622 §3), Görünüm has room for one button.
 QUERY = [S("tool.measure"), S("tool.area"), S("crs.query"), S("tool.measureAngle"), S("tool.identify")]
 QUERY_SPLIT = {"key": "archQuery", "size": "large", "split": [
@@ -393,8 +393,8 @@ CAD = [
           overflow=["tool.drawOrderAbove", "tool.drawOrderUnder", "edit.textsToFront", "edit.hatchesToBack"]),
     ]),
     T("arch", "Mimari", [
-        # M15 (docs/adr/8015): a plan's six main tools large, each family one button with its ways under ▾, as
-        # Revit's Wall ▾ and Room ▾: Duvar ▾, Oda (docs/adr/8021), Kapı, Pencere, Mahal ▾ and Donatı ▾. At most 30
+        # M15 (docs/adr/8015): a plan's six main tools large, each family one button with its ways under ▾: Duvar ▾,
+        # Oda (docs/adr/8021), Kapı, Pencere, Mahal ▾ and Donatı ▾. At most 30
         # buttons show (DESIGN.md §7.3.1); the seldom used wait under their panel's ▾.
         # Oda (docs/adr/8021) large beside Duvar ▾: the walls, the room and its tag in one step.
         P("Duvar", "wall", [{"key": "archWalls", "size": "large", "split": [
@@ -411,7 +411,7 @@ CAD = [
             {"key": "archGrids", "size": "small", "split": [
                 {"command": "tool.grid", "title": "Aks", "label": "Aks"},
                 {"command": "tool.gridSystem", "title": "Aks", "label": "Aks ağı"},
-            # Rampa under Merdiven ▾ (docs/adr/8044 §4): the way up, as Revit's Circulation panel, one family in the code
+            # Rampa under Merdiven ▾ (docs/adr/8044 §4): the ways up together, one family in the code
             # too (FlightTool); its button went to Çatı, the tab's 30th.
             ]}, {"key": "archStairs", "size": "small", "split": [
                 {"command": "tool.stair", "title": "Merdiven", "label": "Merdiven"},
@@ -435,8 +435,8 @@ CAD = [
           overflow=["tool.spaceRebound", "tool.spaceSources", "tool.openingArray", "tool.wallShift", "tool.spaceNumber",
             "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
-        # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split; Etiket ▾ holds Hepsini etiketle (as
-        # Revit's Tag panel holds Tag All), İşaret ▾ (docs/adr/0721) is a small split, Malzeme lejandı with the schedules.
+        # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split; Etiket ▾ holds Hepsini etiketle,
+        # İşaret ▾ (docs/adr/0721) is a small split, Malzeme lejandı with the schedules.
         # Ölçü ▾ small since Oda took the sixth large place (docs/adr/8021; ADV-09's Duvar, Oda, Kapı, Pencere, Mahal,
         # Donatı).
         P("Belgele", "wallDimensions", [{"key": "archDimensions", "size": "small", "split": [
@@ -508,8 +508,9 @@ CAD = [
           # Kaçış yolları (docs/adr/8035 §2) beside them: the fire rules' walks drawn on the storey.
           # Ruhsat takımı (docs/adr/8037) shown beside Denetim: the set the audit's drawing is delivered as.
           # Model kalite kontrol formu (docs/adr/8047 §10) beside Ruhsat takımı: the digital submission's form.
+          # Dijital proje kuralları (docs/adr/8062) after it: the regulation's rules the form and the set are held to.
           overflow=["arch.program", "tool.siteParcel", "tool.escapeRoutes", "arch.template", "arch.sheetSet",
-                    "arch.qualityForm", "arch.navigator", "tool.viewCrop",
+                    "arch.qualityForm", "arch.digitalRules", "arch.navigator", "tool.viewCrop",
                     "arch.openingTypes", "arch.materials", "arch.modules", "tool.modulePlace", "arch.options"]),
     ], works=ARCHITECTURE),
     view_tab(True),

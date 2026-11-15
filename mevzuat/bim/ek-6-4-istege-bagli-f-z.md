@@ -675,7 +675,7 @@
 
 | Türkçe Tanım (Bilgi Amaçlı) | Özellik | Özellik Seti / İlişki | Veri Tipi (Bilgi Amaçlı) | Açıklama |
 |---|---|---|---|---|
-|  | `CSBPoZNo` | `TREpys_PozOzellikSeti` | Metin | Çevre, Şehircilik ve İklim Değişikliği Bakanlığı İnşaat ve Tesisat Birim Fiyat Poz No'su. |
+|  | `CSBPozNo` | `TREpys_PozOzellikSeti` | Metin | Çevre, Şehircilik ve İklim Değişikliği Bakanlığı İnşaat ve Tesisat Birim Fiyat Poz No'su. |
 | Uzunluk | Length | `Qto_SpaceHeaterBaseQuantities` | Sayı | Nesnenin uzunluğu. |
 | Brüt Ağırlık | `GrossWeight` | `Qto_SpaceHeaterBaseQuantities` | Sayı | Nesnenin toplam brüt ağırlığı, ek parçalar olmaksızın ve olası imalat detayları (kesit boşluğu vb.) veya açıklıklar ve girintiler dikkate alınmadan hesaplanır. |
 | Net Ağırlık | `NetWeight` | `Qto_SpaceHeaterBaseQuantities` | Sayı | Nesnenin toplam net ağırlığı, ek parçalar olmaksızın ve olası imalatl detayları (kesit boşluğu vb.) veya açıklıklar ve girintiler dikkate alınmadan hesaplanır. Tasarlandığı şekilde içerdiği sıvı dahil olmak üzere yapı elemanın ağırlığı. |
@@ -898,7 +898,7 @@ Depolanması amaçlanan genel malzeme kategorisini tanımlar. Tankın toplam efe
 
 | Türkçe Tanım (Bilgi Amaçlı) | Özellik | Özellik Seti / İlişki | Veri Tipi (Bilgi Amaçlı) | Açıklama |
 |---|---|---|---|---|
-| Vana Düzeni | `ValvePatter` | `Pset_ValveTypeCommon` | Metin | Vana potlarının, akışkanın vana içindeki doğrusal akış yönüne veya port sayısına göre düzeni: Tek Portlu: Hizmet ettiği sistemden tek giriş portuna sahip, çıkış portu çevre ortamına olan vana.<br>Açılı İki Portlu: Akış yönünün 90 derece değiştiği vana.<br>Doğrusal İki Portlu: Akışın doğrusal olarak geçtiği vana.<br>Doğrusal Üç Portlu: Üç ayrı porta sahip vana.<br>Çapraz Dört Portlu: Dört ayrı porta sahip vana. |
+| Vana Düzeni | `ValvePattern` | `Pset_ValveTypeCommon` | Metin | Vana potlarının, akışkanın vana içindeki doğrusal akış yönüne veya port sayısına göre düzeni: Tek Portlu: Hizmet ettiği sistemden tek giriş portuna sahip, çıkış portu çevre ortamına olan vana.<br>Açılı İki Portlu: Akış yönünün 90 derece değiştiği vana.<br>Doğrusal İki Portlu: Akışın doğrusal olarak geçtiği vana.<br>Doğrusal Üç Portlu: Üç ayrı porta sahip vana.<br>Çapraz Dört Portlu: Dört ayrı porta sahip vana. |
 | Brüt Ağırlık | `GrossWeight` | `Qto_ValveBaseQuantities` | Sayı | Nesnenin toplam brüt ağırlığı, ek parçalar olmaksızın ve olası imalat detayları (kesit boşluğu vb.) veya açıklıklar ve girintiler dikkate alınmadan hesaplanır. |
 
 *[PDF sayfa 215]*
@@ -954,7 +954,7 @@ Depolanması amaçlanan genel malzeme kategorisini tanımlar. Tankın toplam efe
 
 | Türkçe Tanım (Bilgi Amaçlı) | Özellik | Özellik Seti / İlişki | Veri Tipi (Bilgi Amaçlı) | Açıklama |
 |---|---|---|---|---|
-|  | `CSBPoZNo` | `TREpys_PozOzellikSeti` | Metin | Çevre, Şehircilik ve İklim Değişikliği Bakanlığı İnşaat ve Tesisat Birim Fiyat Poz No'su. |
+|  | `CSBPozNo` | `TREpys_PozOzellikSeti` | Metin | Çevre, Şehircilik ve İklim Değişikliği Bakanlığı İnşaat ve Tesisat Birim Fiyat Poz No'su. |
 | Isıl İletkenlik Katsayısı | `ThermalTransmittance` | `Pset_WindowCommon` | Sayı | Bir bileşenin, 1sı akışı yönünde (tüm malzemeleri içeren) ısı iletkenlik katsayısı (U-Value). |
 | Acil Çıkış | `FireExit` | `Pset_WindowCommon` | Mantıksal | Bu nesnenin yangın durumunda çıkış olarak kullanılmak üzere tasarlandığını (DOĞRU) veya tasarlanmadığını (YANLIŞ) belirtir. Burada, ulusal bina yönetmeliğine uygun olarak bir çıkış penceresini tanımlanmaktadır. |
 | Genişlik | Width | `Qto_WindowBaseQuantities` | Sayı | Nesnenin genişliği. Sadece, nesne sabit kalınlığa (prizmatik) sahipse verilir. |

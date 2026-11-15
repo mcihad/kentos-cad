@@ -174,3 +174,34 @@ fn a_drawing_without_walls_is_no_building() {
     let mut doc = Document::from_snapshot_v2(snap).unwrap();
     assert_eq!(digital(&mut doc), Vec::new());
 }
+
+/// Each finding's rule says where it was read (docs/adr/8062): the article, then the annex's row and the form's question
+/// with their PDF pages, from the rule catalog.
+#[test]
+fn every_finding_s_rule_says_its_annex_and_page() {
+    let mut doc = Document::from_snapshot_v2(snapshot()).unwrap();
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.arch.audit",
+        CallOp::Execute,
+        json!({"checks": ["regulation"]}),
+    )
+    .unwrap();
+    let rule_of = |code: &str| -> String {
+        answer["output"]["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|f| f["code"] == code)
+            .and_then(|f| f["rule"].as_str())
+            .unwrap_or_else(|| panic!("no {code}"))
+            .to_owned()
+    };
+    let code = rule_of("digital_project_code_missing");
+    assert!(code.starts_with("Dijital Proje Yön. 6"), "{code}");
+    assert!(code.contains(" · EK-1 m. 1.1.1 · PDF s. 1 · EK-9 Tablo 9.1 satır 3 · PDF s. 238"), "{code}");
+    let system = rule_of("digital_system_wrong");
+    assert!(system.contains(" · EK-7 Tablo 7.6 · PDF s. 227–228 · EK-9 Tablo 9.1 satır 6 · PDF s. 238"), "{system}");
+    let info = rule_of("digital_project_info_missing");
+    assert!(info.contains("EK-7 Tablo 7.1 · PDF s. "), "{info}");
+}

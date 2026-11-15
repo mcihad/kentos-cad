@@ -1,0 +1,5889 @@
+{
+ "format": 1,
+ "profile": {
+  "id": "temel-2026",
+  "name": "Temel profil",
+  "version": "2026.1",
+  "act": "Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik",
+  "gazette": "5.8.2026/33331",
+  "annexesPdf": {
+   "pages": 241,
+   "bytes": 22801668,
+   "sha256": "7dc88971d3a7a8ae837ef148169fa5bf6c9ce7a01cc8fcd560ae3d342bb0ecb3"
+  },
+  "transcription": "mevzuat/bim"
+ },
+ "clauses": [
+  {
+   "id": "M1.1",
+   "annex": 1,
+   "clause": "1.1",
+   "pages": [
+    1
+   ],
+   "text": "Projeler, yapı ruhsatı eki dijital dosyaların ilgili idaresine teslim usulüne bağlı olarak 1.1.1 ve 1.1.2'de verilen iki farklı yönteme göre proje kodu alır."
+  },
+  {
+   "id": "M1.1.1",
+   "annex": 1,
+   "clause": "1.1.1",
+   "pages": [
+    1
+   ],
+   "text": "Projeler, ilgili idareye sunulmadan önce, proje müellifi tarafından idaresine başvurularak proje numarası alınır. Proje müellifi, Tablo 1.1'de belirtilen proje bilgilerini içerecek şekilde ilgili idareye başvuruda bulunur. Proje bilgilerinde yıl, ruhsat başvurusunun yapıldığı yılı, il ve ilçe ruhsat başvurusunun yapıldığı il ve ilçeyi temsil eder. Diğer alanlar ise sırasıyla başvurunun yapıldığı mahalleyi, ada numarasını, parsel numarasını ve projenin durumunu temsil eder. Projenin durumu bilgisinde, projenin yeni başvuru niteliğinde olup olmadığı veya tadilat başvurusu ise kaçıncı tadilat olduğu açıkça belirtilir. İlgili idare, başvuruya esas bilgileri meta-veri olarak saklar ve her bir proje için özgün bir proje kodu oluşturur. Bu kod; başvurunun yapıldığı yılı gösteren iki haneli tarih bilgisi ile aynı yıl içerisinde verilen dört haneli sıra numarasından oluşan toplam altı haneli bir sayıdır. Bilgi alanları boşluk bırakılmaksızın alt tire \"_\" ile ayrılır. Sıra numarası her takvim yılı başında birden başlatılır ve yıl boyunca müteselsil olarak devam eder."
+  },
+  {
+   "id": "M1.1.2",
+   "annex": 1,
+   "clause": "1.1.2",
+   "pages": [
+    1
+   ],
+   "text": "Dosyaların bir dijital sistem üzerinden teslim edilmesi ve güvenli elektronik imza kullanılması halinde, proje ile ilgili Tablo 1.1'de verilen bilgiler, dosyanın yüklenmesi sırasında proje müellifi tarafından sisteme girilir ve sistem üzerinde meta-veri olarak saklanır. Sistem tarafından özgün bir proje kodu üretilir."
+  },
+  {
+   "id": "M2.1",
+   "annex": 2,
+   "clause": "2.1",
+   "pages": [
+    2
+   ],
+   "text": "Proje dosyaları Tablo 2.1'de verilen şablona göre isimlendirilir. Dosyaların bir dijital sistem üzerinden yüklenmediği durumda dosya isimlendirmesi proje müellifi tarafından yapılır."
+  },
+  {
+   "id": "M2.1.1",
+   "annex": 2,
+   "clause": "2.1.1",
+   "pages": [
+    2
+   ],
+   "text": "Dosya ismini oluşturan her bir bilgi alanı boşluk bırakılmaksızın alt tire \"_\" ile ayrılır."
+  },
+  {
+   "id": "M2.2",
+   "annex": 2,
+   "clause": "2.2",
+   "pages": [
+    2
+   ],
+   "text": "\"Proje kodu\" EK-1'de tanımlanan esaslara göre düzenlenir."
+  },
+  {
+   "id": "M2.3",
+   "annex": 2,
+   "clause": "2.3",
+   "pages": [
+    2
+   ],
+   "text": "\"Bina kodu\" aynı vaziyet planı içerisinde birden fazla yapının (bina/blok) yer alması ve projelerin bina/bloklar için ayrı hazırlanması durumda kullanılan bina kodunu temsil eder. İki karakterli alfanümerik kısaltma ile ifade edilir. Projenin tek bir binadan oluştuğu durumda \"00\" kısaltması kullanılır."
+  },
+  {
+   "id": "M2.4",
+   "annex": 2,
+   "clause": "2.4",
+   "pages": [
+    2
+   ],
+   "text": "\"Disiplin\" bir dosyanın 3/7/2017 tarihli ve 30113 sayılı Resmî Gazete'de yayımlanan Planlı Alanlar İmar Yönetmeliği uyarınca tasarım hizmetini yürüten disiplini temsil eder. İki karakterli alfabetik kısaltma ile ifade edilir. Kullanılabilecek \"Disiplin\" listeleri Tablo 2.2'de verilmiştir."
+  },
+  {
+   "id": "M2.5",
+   "annex": 2,
+   "clause": "2.5",
+   "pages": [
+    2
+   ],
+   "text": "\"Öge/Alt Disiplin\" bir dosyanın ait olduğu alt disiplini veya ögeyi temsil eder. Dört karakterli alfabetik kısaltma ile ifade edilir. Kullanılabilecek \"Öge/Alt Disiplin\" listeleri Tablo 2.3, Tablo 2.4, Tablo 2.5, Tablo 2.6, Tablo 2.7, Tablo 2.8, Tablo 2.9, Tablo 2.10 ve Tablo 2.11'de verilmiştir."
+  },
+  {
+   "id": "M2.6",
+   "annex": 2,
+   "clause": "2.6",
+   "pages": [
+    2
+   ],
+   "text": "Proje ihtiyacına yönelik olarak, Tablo 2.3 ile Tablo 2.11 arasındaki tablolarda yer almayan alt disiplinler/ögeler tanımlanabilir veya bunlar için \"DIGR\" kodu kullanılır. Aynı proje içerisinde birden çok DIGR kodlu dosya teslim edilmesi durumunda dosya adındaki ayrışma Tablo 2.1'de yer alan \"Sıra No\" nun artırılması ile sağlanır."
+  },
+  {
+   "id": "M2.7",
+   "annex": 2,
+   "clause": "2.7",
+   "pages": [
+    2
+   ],
+   "text": "\"Dosya Türü\" bir dosyanın ait olduğu dosya grubunu belirtmek için kullanılır. İki karakterli alfabetik kısaltma ile ifade edilir. \"Dosya Türü\" listesi Tablo 2.12'de verilmiştir."
+  },
+  {
+   "id": "M2.8",
+   "annex": 2,
+   "clause": "2.8",
+   "pages": [
+    2
+   ],
+   "text": "\"Dosya Tipi\" bir dosyayı tipine göre sınıflandırmak için kullanılır. Üç karakterli alfanümerik kısaltma ile ifade edilir. \"Dosya Tipi\" listesi Tablo 2.13'de verilmiştir."
+  },
+  {
+   "id": "M2.8.1",
+   "annex": 2,
+   "clause": "2.8.1",
+   "pages": [
+    2
+   ],
+   "text": "Mimari Hesap Raporunda, TAKS hesabı, emsal hesabı, otopark hesabı, ağaç hesabı, toprak kazı hesabı, sığınak hesabı ve yapının niteliğine bağlı olarak gerekli olabilecek diğer hesaplar yer alır."
+  },
+  {
+   "id": "M2.9",
+   "annex": 2,
+   "clause": "2.9",
+   "pages": [
+    2
+   ],
+   "text": "\"Kat/Konum\" dosyanın ilişkili olduğu kat veya konumu temsil eder. Üç karakterli alfanümerik kısaltma ile ifade edilir."
+  },
+  {
+   "id": "M2.9.1",
+   "annex": 2,
+   "clause": "2.9.1",
+   "pages": [
+    2
+   ],
+   "text": "Bir dosyanın belirli bir kat ile ilişkilendirilebilmesi halinde \"Kat/Konum\" bilgi alanına uygun olan kat kısaltması Tablo 2.14'deki liste kullanılarak eklenir."
+  },
+  {
+   "id": "M2.9.2",
+   "annex": 2,
+   "clause": "2.9.2",
+   "pages": [
+    2
+   ],
+   "text": "Kat isimlendirmesi yapılırken Tablo 2.14'de yer almayan asma katlar, çatı piyesleri ve tesisat katı ve benzeri katlar için proje müellifi tarafından belirlenen \"XX\" alfanümerik kodu ile \"KXX\" kısaltması kullanılır."
+  },
+  {
+   "id": "M2.9.3",
+   "annex": 2,
+   "clause": "2.9.3",
+   "pages": [
+    2
+   ],
+   "text": "2B çizim dosyalarında kesit, görünüş gibi gösterimlerde \"Kat\" yerine \"Konum' kullanılır ve proje müellifi tarafından belirlenen \"XXX\" alfanümerik kodu ile \"XXX\" kısaltması kullanılır."
+  },
+  {
+   "id": "M2.10",
+   "annex": 2,
+   "clause": "2.10",
+   "pages": [
+    2
+   ],
+   "text": "\"Sıra No\" her bir dosya türü ve tipi birleşimi için sıra numarasını temsil eder. İki karakterli sayısal bilgi alanı ile ifade edilir ve \"01\"den başlar. \"Sıra No\", kendinden önce gelen tüm bilgi alanları aynı olduğunda artırılır. Ölçekten dolayı tek bir dosyada temsil edilemeyen birden fazla çizim olduğu durumlarda, sıralı çizimler gerektiği durumlarda veya birden fazla belge oluşturulduğu durumlarda kullanılır."
+  },
+  {
+   "id": "M2.11",
+   "annex": 2,
+   "clause": "2.11",
+   "pages": [
+    3
+   ],
+   "text": "\"Revizyon No\" bir dosyanın revizyon sayısını ifade eder. Üç karakterli sayısal kısaltma ile ifade edilir. Revizyon yapılmamış dosyalar için \"000\" olan bu bilgi alanı, ilgili idaresinin dosya revizyonu talep etmesi halinde, revizyon numarası \"001\"den başlayarak artar."
+  },
+  {
+   "id": "M3.1",
+   "annex": 3,
+   "clause": "3.1",
+   "pages": [
+    14
+   ],
+   "text": "2B CAD çizimlerinde mahal isimlendirmesinde \"Mahal Numarası\" ve \"Mahal İsmi\" kullanılır. Mahal isminin yazılamadığı alanlarda kısaltması kullanılır."
+  },
+  {
+   "id": "M3.1.1",
+   "annex": 3,
+   "clause": "3.1.1",
+   "pages": [
+    14
+   ],
+   "text": "Mahal numarasını oluşturan her bir bilgi alanı boşluk bırakılmaksızın alt tire \"_\" ile ayrılır."
+  },
+  {
+   "id": "M3.2",
+   "annex": 3,
+   "clause": "3.2",
+   "pages": [
+    14
+   ],
+   "text": "Mahal numarası Tablo 3.1'de verilen şablona göre isimlendirilir."
+  },
+  {
+   "id": "M3.2.1",
+   "annex": 3,
+   "clause": "3.2.1",
+   "pages": [
+    14
+   ],
+   "text": "\"Kat\" mahalin yer aldığı katı temsil eder. Üç karakterli alfanümerik kısaltma ile ifade edilir. Kat isimleri ve kısaltmaları EK-2 Tablo 2.14'de verilmiştir."
+  },
+  {
+   "id": "M3.2.2",
+   "annex": 3,
+   "clause": "3.2.2",
+   "pages": [
+    14
+   ],
+   "text": "\"Bölüm/Fonksiyon\" mahalin kullanım amacını temsil eder. Üç karakterli sayısal, alfabetik veya alfanümerik kısaltma ile ifade edilir. \"Bölüm/Fonksiyon\" alanı için proje müellifi tarafından belirlenecek üç karakterli kısaltmalar kullanılır."
+  },
+  {
+   "id": "M3.2.3",
+   "annex": 3,
+   "clause": "3.2.3",
+   "pages": [
+    14
+   ],
+   "text": "\"Sıra Numarası\" mahalin numarasını temsil eder. Üç karakterli sayısal kısaltma ile ifade edilir. Numara alanı, her kat ve bölüm/fonksiyon birleşimi için \"001\"den başlar ve saat yönünde arttırılır."
+  },
+  {
+   "id": "M3.3",
+   "annex": 3,
+   "clause": "3.3",
+   "pages": [
+    14
+   ],
+   "text": "Mahal isimleri ve kısaltmaları Tablo 3.2'de verilmiştir. Projenin niteliğine bağlı olarak Tablo 3.2'de yer almayan mahaller de tanımlanabilir. Mahal isminin kısaltması üç karakterli ve alfabetik olarak Tablo 3.2 deki kısaltmalarla çakışmayacak şekilde tanımlanır."
+  },
+  {
+   "id": "M4.1",
+   "annex": 4,
+   "clause": "4.1",
+   "pages": [
+    20
+   ],
+   "text": "Bu ekte, CAD ortamında hazırlanacak çizimlerde proje isimlendirme, dosya isimlendirme, mahal isimlendirme, katman kullanımı ve isimlendirmesi, kullanılacak semboller ve isimlendirmeleri, yazı, ölçü ve çizgi tipleri, taramalar ve yapı aplikasyon projesine ait esaslar verilmiştir."
+  },
+  {
+   "id": "M4.2",
+   "annex": 4,
+   "clause": "4.2",
+   "pages": [
+    20
+   ],
+   "text": "Proje isimlendirme esasları EK-1, dosya isimlendirme esasları EK-2, mahal isimlendirme esasları EK-3'te verilmiştir."
+  },
+  {
+   "id": "M4.3",
+   "annex": 4,
+   "clause": "4.3",
+   "pages": [
+    20
+   ],
+   "text": "Katman ve sembol isimlendirilmesinde kullanılan isimlendirme şablonları, her disiplin için zorunlu ve isteğe bağlı bilgi alanlarından oluşur. İlgili disiplin için ortak olarak kullanımı zorunlu kılınmış olan bilgi alanları 'zorunlu', kullanımı ihtiyaca göre belirlenecek olan bilgi alanları ise, 'isteğe bağlı' olarak ifade edilmiştir."
+  },
+  {
+   "id": "M4.4",
+   "annex": 4,
+   "clause": "4.4",
+   "pages": [
+    20
+   ],
+   "text": "Katman ve sembol isimlendirilmesinde kullanılan disiplin kodları EK-2 Madde 2.4'te tanımlanmıştır. Disiplin kodları EK-2 Tablo 2.2'de verilmiştir. İki harfli kısaltma ile temsil edilir."
+  },
+  {
+   "id": "M4.5",
+   "annex": 4,
+   "clause": "4.5",
+   "pages": [
+    20
+   ],
+   "text": "Katman ve sembol isimlendirilmesinde kullanılan öge kodları EK-2 Madde 2.5'te tanımlanmıştır. Öge kodları mimari disiplin için EK-2 Tablo 2.3'te, iç mimari disiplini için EK-2 Tablo 2.4'te, harita disiplini için EK-2 Tablo 2.8'te ve zemin disiplini için Tablo 2.11'de verilmiştir. Dört harfli kısaltma ile temsil edilir."
+  },
+  {
+   "id": "M4.6",
+   "annex": 4,
+   "clause": "4.6",
+   "pages": [
+    20
+   ],
+   "text": "Peyzaj disiplini için ögeler, katman isimlendirme şablonuna uygun olarak oluşturulur."
+  },
+  {
+   "id": "M4.7",
+   "annex": 4,
+   "clause": "4.7",
+   "pages": [
+    20
+   ],
+   "text": "EK-2 Tablo 2.3, Tablo 2.4ve Tablo 2.8'te yer alan öge isimleri ve kısaltmalarının dışında öge isimleri ve kısaltmaları gerekmesi durumunda, öge kısaltmaları katman isimlendirme şablonuna uygun ve ilgili disiplinin tablolarında yer almayan kodlar üretilerek oluşturulur."
+  },
+  {
+   "id": "M4.8",
+   "annex": 4,
+   "clause": "4.8",
+   "pages": [
+    20
+   ],
+   "text": "Katman ve sembol isimlendirilmesinde kullanılan alt disiplin kodları statik disiplini için EK-2 Tablo 2.5'ten, mekanik disiplini için EK-2 Tablo 2.6'dan, elektrik disiplini için EK-2 Tablo 2.7'den, altyapı disiplini için EK-2 Tablo 2.9'dan ve peyzaj disiplini için Tablo 2.10'dan alınır. Dört harfli kısaltma ile temsil edilir."
+  },
+  {
+   "id": "M4.9",
+   "annex": 4,
+   "clause": "4.9",
+   "pages": [
+    20
+   ],
+   "text": "Alt disiplin için verilen tablolarda yer alanların dışında alt disiplin isimleri ve kısaltmalarının gerekmesi durumunda, katman ve sembol isimlendirme şablonuna uygun ve ilgili disiplinin tablolarında yer almayan yeni kodlar üretilerek kullanılır."
+  },
+  {
+   "id": "M4.10",
+   "annex": 4,
+   "clause": "4.10",
+   "pages": [
+    20
+   ],
+   "text": "Katman ve sembol isimlendirilmesinde kullanılan \"Malzeme/Malzeme Tipi/Gösterim\" bölümünde, CAD çiziminde kullanılan malzeme ya da malzeme tipi veya proje genelinde geçerli gösterim ögelerini içeren bilgi temsil edilir. Malzeme/Malzeme Tipi/Gösterim on beş karakteri geçmeyecek şekilde isimlendirilir. Tarama katmanı da bu alan içinde temsil edilir."
+  },
+  {
+   "id": "M4.11",
+   "annex": 4,
+   "clause": "4.11",
+   "pages": [
+    20
+   ],
+   "text": "Katman ve sembol isimlendirmesinde büyük harf kullanılır ve \"Ç, Ğ, İ, Ö, Ş, Ü\" harfleri kullanılmaz. Her yeni bilgi alanı arasında boşluk bırakılmaksızın orta tire işareti '-' kullanılır."
+  },
+  {
+   "id": "M4.12",
+   "annex": 4,
+   "clause": "4.12",
+   "pages": [
+    20
+   ],
+   "text": "Tüm CAD çizimlerinde farklı çizim elemanlarını gruplamak için katmanlar kullanılır."
+  },
+  {
+   "id": "M4.12.1",
+   "annex": 4,
+   "clause": "4.12.1",
+   "pages": [
+    20
+   ],
+   "text": "CAD çizimlerinde kullanılan yazılımın özelliğine bağlı olarak silinemeyen ve ismi düzenlenemeyen sıfır \"0\" katmanı gibi katmanlarda çizim yapılmaz."
+  },
+  {
+   "id": "M4.12.2",
+   "annex": 4,
+   "clause": "4.12.2",
+   "pages": [
+    20
+   ],
+   "text": "Mimari proje paftalarında emsal hesabında kullanılmak amacıyla hazırlanmış ayrı katmanlar bulunur. Bu katmanlar, Planlı Alanlar İmar Yönetmeliği ile yapı ruhsatı için başvurulacak idarenin uygulamakta olduğu imar düzenlemelerine göre emsal hesabında kullanılan alanları \"emsale dahil alanlar\", \"emsalden hariç tutulan alanlar\" ve \"emsale esas alanın %30'una kadar yapılabilen alanlar\" olarak farklı renklerle taranmış ayrı katmanlar olarak göstermek için kullanılır."
+  },
+  {
+   "id": "M4.12.3",
+   "annex": 4,
+   "clause": "4.12.3",
+   "pages": [
+    20,
+    21
+   ],
+   "text": "Bu katmanlara ait alanları her kat için ayrı ayrı gösteren tablolar hem kat planlarının yanına yerleştirilir hem de ayrı bir tablo olarak idaresine sunulur. Alan verileri için projeye eklenen hesap katmanlarındaki alan çizgileri değiştirildiğinde söz konusu tabloların da güncellenmesi esastır. İlgili idare, emsal hesabında kullanılacak bu alanları gösteren katmanları, mimari projelerin üzerinde talep edebileceği gibi kat planlarının yanına yerleştirilmiş ayrı plan krokileri üzerinde de talep edebilir."
+  },
+  {
+   "id": "M4.12.4",
+   "annex": 4,
+   "clause": "4.12.4",
+   "pages": [
+    21
+   ],
+   "text": "Diğer disiplinlerden gelen ve altlık olarak kullanılacak çizimler, disiplin bazında blok halinde ve katmanları kilitli olarak kullanılır. Diğer disiplinlerden gelen projeler blok yapılmadan önce gerekli olmayan bilgilerin katmanları kapatılır."
+  },
+  {
+   "id": "M4.13",
+   "annex": 4,
+   "clause": "4.13",
+   "pages": [
+    21
+   ],
+   "text": "Tüm CAD çizimlerinde katmanlar proje disiplinine uygun şekilde isimlendirilir."
+  },
+  {
+   "id": "M4.13.1",
+   "annex": 4,
+   "clause": "4.13.1",
+   "pages": [
+    21
+   ],
+   "text": "Disiplinden bağımsız olarak proje genelinde geçerli olan çizim elemanlarının gösterilmesi durumunda ilgili katmanda \"Genel\" kısaltması yerine \"GENL\" alt disiplin kısaltması kullanılır."
+  },
+  {
+   "id": "M4.14",
+   "annex": 4,
+   "clause": "4.14",
+   "pages": [
+    21
+   ],
+   "text": "Mimarlık, iç mimarlık, harita ve zemin disiplinleri için uygulanacak katman isimlendirme şablonu Tablo 4.1'de verilmiştir."
+  },
+  {
+   "id": "M4.14.1",
+   "annex": 4,
+   "clause": "4.14.1",
+   "pages": [
+    21
+   ],
+   "text": "Katman isimleri oluşturulurken zorunlu olan disiplin ve öge bilgi alanlarının yanı sıra gereken durumlarda zorunluluğa bağlı olarak \"Malzeme/Tip\" alanı gerekli açıklamaları içerecek şekilde eklenir."
+  },
+  {
+   "id": "M4.14.2",
+   "annex": 4,
+   "clause": "4.14.2",
+   "pages": [
+    21
+   ],
+   "text": "Emsal hesabında kullanılacak katmanlar EK-2 Tablo 2.3'te yer alan EMSL öge kısaltması kullanarak hazırlanır. Emsal ile ilgili katman isimlerinin temsili için Malzeme/Tip alanında yalnızca emsale dair kısaltmalar kullanılır. Bu kısaltmalar, emsale dahil alanların temsil edildiği katmanların isimlendirmesi için \"DAHIL\", emsal dışı alanların temsil edildiği katmanların isimlendirmesi için \"HARIC\" ve ilgili idarenin özel imar düzenlemelerine bağlı olarak, emsale esas alanın artış yapılabilen alanlarının temsil edildiği katmanların isimlendirmesi için \"DIGER\" kullanılır."
+  },
+  {
+   "id": "M4.14.3",
+   "annex": 4,
+   "clause": "4.14.3",
+   "pages": [
+    21
+   ],
+   "text": "Plan ve kesit çizimlerinde, kesit ve görünüşe giren yerlerde, katman listesinde ismi verilen malzemeyi ifade eden katman isimleri kullanılır. Aynı malzeme için görünüşe giren ögenin uzaklığına bağlı olarak, malzeme tanımlı katman isminin sonuna orta tire işareti \"-\" ile birlikte farklı derinlikte konumlanmayı ifade eden sıra numarası eklenebilir. 1-4 arası yakınlık ölçeğiyle, en yakındaki görünüşe giren öge, malzeme isminin sonuna \"1\", en uzaktakinin sonuna ise \"4\" rakamı konularak ifade edilir."
+  },
+  {
+   "id": "M4.14.4",
+   "annex": 4,
+   "clause": "4.14.4",
+   "pages": [
+    21
+   ],
+   "text": "Cephe çizimlerinde, malzeme tanımını içeren katman isimleri kullanılır. Farklı derinlikte görünüşe giren aynı türden malzemeler için 1-4 arası yakınlık ölçeğiyle, en yakındaki görünüşe giren öge, malzeme isminin sonuna \"1\", en uzaktakinin sonuna ise \"4\" rakamı konularak ifade edilir."
+  },
+  {
+   "id": "M4.14.5",
+   "annex": 4,
+   "clause": "4.14.5",
+   "pages": [
+    21
+   ],
+   "text": "Tarama yapılmak istenen öge ilgili katman adının sonuna orta tire işareti \"-\" ve \"T\" harfi eklenerek oluşturulan ayrı bir katmanda taranır."
+  },
+  {
+   "id": "M4.15",
+   "annex": 4,
+   "clause": "4.15",
+   "pages": [
+    21
+   ],
+   "text": "Statik, mekanik, elektrik ve altyapı projeleri için uygulanacak katman isimlendirme şablonu Tablo 4.2'de verilmiştir."
+  },
+  {
+   "id": "M4.15.1",
+   "annex": 4,
+   "clause": "4.15.1",
+   "pages": [
+    21
+   ],
+   "text": "Katman isimleri oluşturulurken zorunlu olan disiplin ve alt disiplin bilgi alanlarının yanı sıra zorunlu olarak \"Malzeme/Tip/Gösterim\" bilgi alanı eklenir."
+  },
+  {
+   "id": "M4.16",
+   "annex": 4,
+   "clause": "4.16",
+   "pages": [
+    21
+   ],
+   "text": "Peyzaj disiplini için uygulanacak \"Peyzaj Katman İsimlendirme Şablonu\" Tablo 4.3'te verilmiştir."
+  },
+  {
+   "id": "M4.16.1",
+   "annex": 4,
+   "clause": "4.16.1",
+   "pages": [
+    21
+   ],
+   "text": "Katman isimleri oluşturulurken zorunlu olan disiplin, alt disiplin ve öge bilgi alanlarının yanı sıra isteğe bağlı olarak \"Malzeme/Tip/Gösterim\" bilgi alanı eklenir."
+  },
+  {
+   "id": "M4.17",
+   "annex": 4,
+   "clause": "4.17",
+   "pages": [
+    21
+   ],
+   "text": "Semboller çizilirken katman isimleri aynı kalmak koşulu ile farklı çizgi rengi kullanılabilir. Sembol rengi katman renginden farklı olabilir, katman renginde yapılacak değişikliklerin sembolleri etkilememesi için semboller çizilirken çizgi rengini katman adına bağlayan komutlar kullanılmaz."
+  },
+  {
+   "id": "M4.17.1",
+   "annex": 4,
+   "clause": "4.17.1",
+   "pages": [
+    21
+   ],
+   "text": "Proje genelinde kullanılabilecek başlıca semboller (bilgi için) açıklamaları ile Şekil 4.1, Şekil 4.2, Şekil 4.3, Şekil 4.4, Şekil 4.5 ve Şekil 4.6'da verilmiştir. Bu bölümde gösterilen kuzey oku, kot işaretleri, kesit hattı ve aks gösterimleri proje disiplinlerinden bağımsız olarak tüm disiplinlerin ilgili paftalarında kullanılır."
+  },
+  {
+   "id": "M4.17.2",
+   "annex": 4,
+   "clause": "4.17.2",
+   "pages": [
+    22
+   ],
+   "text": "Elektrik projesi sistem kolon şeması çizimlerinde ana besleme hatları, şebeke kolon hatları, UPS kolon hatları ve benzeri sistem farklılıklarında renk ayrımı yapılır. Paftalarda sembol lejantı bulunur ve blok isimleri ile açıklamaları burada belirtilir."
+  },
+  {
+   "id": "M4.17.3",
+   "annex": 4,
+   "clause": "4.17.3",
+   "pages": [
+    22
+   ],
+   "text": "Farklı disiplinlere ait projelerde ihtiyaç duyulan diğer semboller lejantta gösterilir. Tefriş amaçlı sembol kullanımları lejantta yer almaz."
+  },
+  {
+   "id": "M4.17.4",
+   "annex": 4,
+   "clause": "4.17.4",
+   "pages": [
+    22
+   ],
+   "text": "Sayılabilir ögeler blok olarak oluşturulur. Blok isimleri blokun içeriğine ait temel özelliklerini ifade eder."
+  },
+  {
+   "id": "M4.17.5",
+   "annex": 4,
+   "clause": "4.17.5",
+   "pages": [
+    22
+   ],
+   "text": "Semboller çizilirken blok içindeki çizgiler ve sembolün kendisi aynı katmanda çizilir."
+  },
+  {
+   "id": "M4.17.6",
+   "annex": 4,
+   "clause": "4.17.6",
+   "pages": [
+    22
+   ],
+   "text": "Projelerde kullanılan sembollere ilişkin açıklamalar paftada yer alan lejantta verilir."
+  },
+  {
+   "id": "M4.18",
+   "annex": 4,
+   "clause": "4.18",
+   "pages": [
+    22
+   ],
+   "text": "Mimarlık, iç mimarlık, harita ve zemin projelerinde blok, obje, sembol isimleri için kullanılacak şablon Tablo 4.4'te verilmiştir."
+  },
+  {
+   "id": "M4.18.1",
+   "annex": 4,
+   "clause": "4.18.1",
+   "pages": [
+    22
+   ],
+   "text": "Zorunlu olan \"Disiplin\" ve \"Öge\" tanımlarına ek olarak, isteğe bağlı \"Malzeme/ Tip/Gösterim\" tanımlaması ve isteğe bağlı \"Ebat/Adet/Özellik\" tanımlaması da yapılır ve kullanılan semboller lejantta gösterilerek açıklanır."
+  },
+  {
+   "id": "M4.18.2",
+   "annex": 4,
+   "clause": "4.18.2",
+   "pages": [
+    22
+   ],
+   "text": "Mimari projelerde pencere, kapı, tefriş elemanları gibi ögeler blok olarak gösterilir."
+  },
+  {
+   "id": "M4.18.3",
+   "annex": 4,
+   "clause": "4.18.3",
+   "pages": [
+    22
+   ],
+   "text": "Peyzaj projesinde kullanılacak sembol, obje ve blok isimlendirmesi Tablo 4.4'te verilen isimlendirme şablonuna göre genişletilir. Mimari sembol listesindeki kuzey yönü, kot gösterimleri, kesit hattı gibi teknik resim ifadeleri peyzaj projelerinde de belirtilen şekilde kullanılır. Verilen modele göre \"Malzeme/ Tip\" bölümünde bitkilerin isimleri detaylandırılabilir."
+  },
+  {
+   "id": "M4.18.4",
+   "annex": 4,
+   "clause": "4.18.4",
+   "pages": [
+    22
+   ],
+   "text": "Peyzaj projesinde her sembol, projede tek bir bitki türü için kullanılır. Kullanılan bitki sembolü gibi, bitki bilgisi de adet ve isim bilgisini içerecek şekilde açıkça ifade edilir. Aynı bitki sembolleri, merkezlerinden geçirilen çizgi ile işaretlenerek, bitkinin dışında uygun bir boşluğa adet ve isim bilgisi girilir."
+  },
+  {
+   "id": "M4.18.5",
+   "annex": 4,
+   "clause": "4.18.5",
+   "pages": [
+    22
+   ],
+   "text": "Peyzaj projesinde bitki ismi yazılırken, bilimsel ismi tam olarak yazılır veya uluslararası kısaltma terminolojisine uygun şekilde kısaltma yapılarak kullanılır. Ağaç ve ağaççıklar için büyük harflerle Latince cins ve tür isminin ilk üç harfi, çalılarda baş harfi büyük olacak şekilde cins isminin ilk üç harfi, tür isminin ilk iki harfi yazılır. Sarılıcı, yer örtücü, çiçek gibi diğer bitki türlerinin kısaltması da çalılarda olduğu gibi yazılır."
+  },
+  {
+   "id": "M4.19",
+   "annex": 4,
+   "clause": "4.19",
+   "pages": [
+    22
+   ],
+   "text": "Statik, mekanik ve elektrik projeleri blok, obje ve sembol isimleri için kullanılacak şablon Tablo 4.5'te verilmiştir."
+  },
+  {
+   "id": "M4.19.1",
+   "annex": 4,
+   "clause": "4.19.1",
+   "pages": [
+    22
+   ],
+   "text": "Zorunlu olan \"Disiplin\" ve \"Alt Disiplin\" in yanı sıra, isteğe bağlı \"Tip/Malzeme/Gösterim\" tanımlaması ve isteğe bağlı \"Ebat/Adet/Özellik\" tanımlaması da yapılır ve kullanılan semboller lejantta gösterilerek açıklanır."
+  },
+  {
+   "id": "M4.19.2",
+   "annex": 4,
+   "clause": "4.19.2",
+   "pages": [
+    22
+   ],
+   "text": "Statik projelerde grafik sembol kullanımı yerine markalama yapılır."
+  },
+  {
+   "id": "M4.20",
+   "annex": 4,
+   "clause": "4.20",
+   "pages": [
+    22
+   ],
+   "text": "Altyapı projesi blok, obje ve sembol isimleri için kullanılacak şablon Tablo 4.6'da verilmiştir."
+  },
+  {
+   "id": "M4.20.1",
+   "annex": 4,
+   "clause": "4.20.1",
+   "pages": [
+    22
+   ],
+   "text": "Sembol isimleri, zorunlu olan \"Disiplin\" in yanı sıra isteğe bağlı olarak kullanılan \"Tip/Malzeme/Gösterim\" ve \"Ebat\" alanları kullanılarak üretilir ve kullanılan semboller lejantta gösterilerek açıklanır."
+  },
+  {
+   "id": "M4.21",
+   "annex": 4,
+   "clause": "4.21",
+   "pages": [
+    22
+   ],
+   "text": "1/5 ile 1/5000 arası ölçeklerde uygulanacak yazı tipleri ve punto büyüklükleri bilgi için Tablo 4.7'de verilmiştir."
+  },
+  {
+   "id": "M4.21.1",
+   "annex": 4,
+   "clause": "4.21.1",
+   "pages": [
+    22
+   ],
+   "text": "Projelerde kullanılacak yazı tipleri için \"TS EN ISO 3098-1 Teknik mamûl dokümantasyonu- Yazılar-Bölüm 1: Genel kurallar\" ve \"TS EN ISO 128-2 Teknik ürün belgeleri (TPD) - Genel gösterim ilkeleri - Bölüm 2: Çizgiler için temel kurallar\" standartları esas alınır."
+  },
+  {
+   "id": "M4.21.2",
+   "annex": 4,
+   "clause": "4.21.2",
+   "pages": [
+    22
+   ],
+   "text": "Ölçülendirmede yazı karakterleri olarak \"Times New Roman\", \"Arial\", \"Calibri\", \"Romans\" ve \"Tahoma\" fontları kullanılabilir."
+  },
+  {
+   "id": "M4.22",
+   "annex": 4,
+   "clause": "4.22",
+   "pages": [
+    23
+   ],
+   "text": "Çizgi tiplerinin kullanımında \"TS EN ISO 128-2 Teknik ürün belgeleri (TPD) - Genel gösterim ilkeleri - Bölüm 2: Çizgiler için temel kurallar\" standardı esas alınır."
+  },
+  {
+   "id": "M4.22.1",
+   "annex": 4,
+   "clause": "4.22.1",
+   "pages": [
+    23
+   ],
+   "text": "Farklı disiplinlere ait projelerden getirilen çizimlere ait çizgi renkleri katman ismi değiştirilmeden katmana bağlı renk seçimi ayarı yapılarak kullanılır."
+  },
+  {
+   "id": "M4.23",
+   "annex": 4,
+   "clause": "4.23",
+   "pages": [
+    23
+   ],
+   "text": "Tarama tiplerinin kullanımında \"TS EN ISO 128-3 Teknik ürün dokümantasyonu (TPD)- Genel sunum ilkeleri- Bölüm 3: Görünümler, enkesitleri ve kesimler\" standartları esas alınır."
+  },
+  {
+   "id": "M4.23.1",
+   "annex": 4,
+   "clause": "4.23.1",
+   "pages": [
+    23
+   ],
+   "text": "Tüm farklı malzemeler farklı tarama tipi ile ifade edilir. Aynı tarama türü, farklı ölçeklerde kullanılmaz. Proje setlerinde kullanılan tarama türleri lejant olarak projede verilir."
+  },
+  {
+   "id": "M4.24",
+   "annex": 4,
+   "clause": "4.24",
+   "pages": [
+    23
+   ],
+   "text": "Planlarda kullanılabilecek kot, mekan kod numarası etiketi, merdiven çıkış çizgisi ve kapı pencere pozlarına ait işaretlerin gösterim biçimleri bilgi için Şekil 4.7'de verilmiştir."
+  },
+  {
+   "id": "M4.25",
+   "annex": 4,
+   "clause": "4.25",
+   "pages": [
+    23
+   ],
+   "text": "Planlarda Kuzey Oku İşareti gösterimi bilgi için Şekil 4.1'de verilmiştir. Planlarda kuzey oku işareti gösterimleri tüm disiplinlerin ilgili paftalarında kullanılacaktır. Harita ölçümlerinden belirlenen hedef harita koordinat referans sisteminin doğu ekseniyle, yerel X ekseninin Kuzey ve Doğu bileşeniyle uyumlu bir şekilde tanımlanır."
+  },
+  {
+   "id": "M4.26",
+   "annex": 4,
+   "clause": "4.26",
+   "pages": [
+    23
+   ],
+   "text": "Planlarda Kot İşareti gösterimi bilgi için Şekil 4.2'de verilmiştir. Planlarda kot işareti gösterimi tüm disiplinlerin ilgili paftalarında kullanılacaktır."
+  },
+  {
+   "id": "M4.27",
+   "annex": 4,
+   "clause": "4.27",
+   "pages": [
+    23
+   ],
+   "text": "Kesit ve Görünüşlerde Kullanılan Kot İşareti Gösterimi bilgi için Şekil 4.3'te verilmiştir. Planlarda kot işareti gösterimi tüm disiplinlerin ilgili paftalarında kullanılacaktır."
+  },
+  {
+   "id": "M4.28",
+   "annex": 4,
+   "clause": "4.28",
+   "pages": [
+    23
+   ],
+   "text": "Kesit Hattı Yerinin Gösterim Çizgisi çeşitleri bilgi için Şekil 4.4'te verilmiştir. Kesit hattını gösteren çizgi, noktalı kesikli çizgi ile çizilir. Bakış yönünü gösteren okun ucu bakış tarafına bakar. Kesit hattı gösteriminde bakış yönü belirtilir. Kesit hattı gösterimi tüm disiplinlerin ilgili paftalarında kullanılır."
+  },
+  {
+   "id": "M4.29",
+   "annex": 4,
+   "clause": "4.29",
+   "pages": [
+    23
+   ],
+   "text": "Aks çizgilerinin gösterimi (bilgi için) Şekil 4.5'te verilmiştir. Aks çizgileri noktalı kesikli çizgi ile çizilir. Aks numarasını çevreleyen yuvarlaklar sürekli çizgi ile çizilir. Aks çizgilerinin gösterimi tüm disiplinlerin ilgili paftalarında kullanılır."
+  },
+  {
+   "id": "M4.30",
+   "annex": 4,
+   "clause": "4.30",
+   "pages": [
+    23
+   ],
+   "text": "Tabii Zemin Kotu ve Tesviye Kotu Gösterimi bilgi için Şekil 4.6'da verilmiştir ve gösterimi tüm disiplinlerin ilgili paftalarında kullanılır."
+  },
+  {
+   "id": "M4.31",
+   "annex": 4,
+   "clause": "4.31",
+   "pages": [
+    23
+   ],
+   "text": "Yapı aplikasyon projesi bu ekte verilen teknik esaslara uygun olarak hazırlanır:"
+  },
+  {
+   "id": "M4.31.1",
+   "annex": 4,
+   "clause": "4.31.1",
+   "pages": [
+    23
+   ],
+   "text": "Yapı aplikasyon projesinde tüm ölçü, nokta ve koordinatlar TUREF (Türkiye Ulusal Temel GPS Ağı - ITRF96) 3° koordinat sisteminde hazırlanır. Modelin bulunduğu 3° dilime karşılık gelen EPSG kodu (EPSG: 5253-5259 arası) açıkça belirtilir ve sayısal model içerisinde tanımlanır. İdareler tarafından başka bir koordinat sistemine dönüşüm istenmesi halinde dönüşüm parametreleri ayrıca belirtilir."
+  },
+  {
+   "id": "M4.31.2",
+   "annex": 4,
+   "clause": "4.31.2",
+   "pages": [
+    23
+   ],
+   "text": "Parsel üzerinde birden çok yapı bulunması halinde, her yapı bloku için ayrı bir aplikasyon projesi düzenlenir. Blokların birbirleriyle mesafe, çekme mesafesi, kot farkı gibi konumsal ilişkisi \"Genel Vaziyet Aplikasyon Planı\" başlığıyla ayrıca gösterilir."
+  },
+  {
+   "id": "M4.31.3",
+   "annex": 4,
+   "clause": "4.31.3",
+   "pages": [
+    23
+   ],
+   "text": "Parsel köşe noktalarının numaralandırılması parselin, LİHKAB'tan alınan aplikasyon krokisine uygun olarak yapılır. Yapıya ait aplikasyon noktaları için Y1, Y2, Y3, ... formatında standardize edilmiş kodlama kullanılır. Aynı parselde birden fazla yapı bulunması halinde her yapı için A-Y1, A-Y2; B-Y1, B-Y2 şeklinde blok kodu ön eki kullanılması zorunludur."
+  },
+  {
+   "id": "M4.31.4",
+   "annex": 4,
+   "clause": "4.31.4",
+   "pages": [
+    23
+   ],
+   "text": "Yapı ve parsele ilişkin tüm kotlar, Türkiye Jeoit Modeli'ne dayalı Helmert Ortometrik Yükseklik Sisteminde gösterilir. Yapı köşe noktalarının Z (yükseklik) değerleri, giriş kotu, temel kotu, ±0.00 kotu ve gabari kotları zorunlu olarak belirtilir."
+  },
+  {
+   "id": "M4.31.5",
+   "annex": 4,
+   "clause": "4.31.5",
+   "pages": [
+    24
+   ],
+   "text": "Yapı ile ilişkili tüm kotlar, parselin resmi referans yüksekliği sistemine göre gösterilir. Yapı köşe noktalarının Z (yükseklik) değerleri, giriş kotu, temel kotu, ±0.00 kotunun hangi referansa göre tanımlandığı ve gabari kotları zorunlu olarak belirtilir."
+  },
+  {
+   "id": "M4.31.6",
+   "annex": 4,
+   "clause": "4.31.6",
+   "pages": [
+    24
+   ],
+   "text": "Koordinat sistemi, referans yüksekliği, numaralandırma esasları, ölçek, kullanılan semboller ve açıklamalar yapı aplikasyon projesi üzerinde yer alan lejant kısmında belirtilir."
+  },
+  {
+   "id": "M4.31.7",
+   "annex": 4,
+   "clause": "4.31.7",
+   "pages": [
+    24
+   ],
+   "text": "Yapı aplikasyon projesinin boyutu, dosya isimlendirme ve dijital dosya tesliminde diğer projeler için geçerli esaslar dikkate alınır."
+  },
+  {
+   "id": "M8.1",
+   "annex": 8,
+   "clause": "8.1",
+   "pages": [
+    237
+   ],
+   "text": "Yapı ruhsatı eki projelerin tesliminde, ilgili disiplin modellerinde yer alan varlıklar \"Detaylı Modelleme\" seviyesinde modellenir ve şekil, boyut, konum ve yönelimi açısından net olarak tanımlanır. Bu temsilden doğrudan ölçüm yapılabilir ve elde edilen bilgiler net olarak değerlendirilir. Bu seviye BIM terminolojisinde LOD 300 seviyesine karşılık gelir."
+  },
+  {
+   "id": "M8.2",
+   "annex": 8,
+   "clause": "8.2",
+   "pages": [
+    237
+   ],
+   "text": "Ruhsat eki projeler kapsamında, bu seviyede modellenmesi öngörülen varlıklarda yer alması gereken alfanümerik bilgiler, EK-6 ve EK-7'de belirtilen esaslara uygun olarak düzenlenir. Planlı Alanlar İmar Yönetmeliğine göre proje tesliminin farklı proje aşamalarında talep edildiği durumda ilgili idaresi bilgi gereksinim seviyesini tanımlayabilir."
+  },
+  {
+   "id": "M8.3",
+   "annex": 8,
+   "clause": "8.3",
+   "pages": [
+    237
+   ],
+   "text": "Proje aşamalarında yapı elemanlarının sahip olması beklenen model gelişim seviyesi ile ilgili bu ekte yer almayan hususlarla ilgili olarak bu Yönetmeliğin 5 inci maddesinin birinci fıkrası uygulanabilir."
+  }
+ ],
+ "projectInformation": {
+  "id": "T1.1",
+  "table": "1.1",
+  "title": "Proje Bilgileri",
+  "page": 1,
+  "fields": [
+   "Yıl",
+   "İl",
+   "İlçe",
+   "Mahalle",
+   "Ada No",
+   "Parsel No",
+   "Durum"
+  ]
+ },
+ "templates": [
+  {
+   "id": "T2.1",
+   "table": "2.1",
+   "title": "Dosya İsimlendirme Şablonu",
+   "page": 3,
+   "fields": [
+    {
+     "no": 1,
+     "name": "Proje Kodu",
+     "length": "6",
+     "kind": "Alfanümerik",
+     "required": null
+    },
+    {
+     "no": 2,
+     "name": "Bina Kodu",
+     "length": "2",
+     "kind": "Alfanümerik",
+     "required": null
+    },
+    {
+     "no": 3,
+     "name": "Disiplin",
+     "length": "2",
+     "kind": "Alfabetik",
+     "required": null
+    },
+    {
+     "no": 4,
+     "name": "Alt Disiplin / Öge",
+     "length": "4",
+     "kind": "Alfabetik",
+     "required": null
+    },
+    {
+     "no": 5,
+     "name": "Dosya Türü",
+     "length": "2",
+     "kind": "Alfabetik",
+     "required": null
+    },
+    {
+     "no": 6,
+     "name": "Dosya Tipi",
+     "length": "3",
+     "kind": "Alfabetik",
+     "required": null
+    },
+    {
+     "no": 7,
+     "name": "Kat / Konum",
+     "length": "3",
+     "kind": "Alfanümerik",
+     "required": null
+    },
+    {
+     "no": 8,
+     "name": "Sıra No",
+     "length": "2",
+     "kind": "Sayısal",
+     "required": null
+    },
+    {
+     "no": 9,
+     "name": "Revizyon No",
+     "length": "3",
+     "kind": "Sayısal",
+     "required": null
+    }
+   ]
+  },
+  {
+   "id": "T3.1",
+   "table": "3.1",
+   "title": "Mahal Numarası Şablonu",
+   "page": 14,
+   "fields": [
+    {
+     "no": 1,
+     "name": "Kat",
+     "length": "3",
+     "kind": "Alfanümerik",
+     "required": null
+    },
+    {
+     "no": 2,
+     "name": "Bölüm/Fonksiyon",
+     "length": "3",
+     "kind": "Alfanümerik",
+     "required": null
+    },
+    {
+     "no": 3,
+     "name": "Sıra Numarası",
+     "length": "3",
+     "kind": "Sayısal",
+     "required": null
+    }
+   ]
+  },
+  {
+   "id": "T4.1",
+   "table": "4.1",
+   "title": "Mimarlık, İç Mimarlık, Harita ve Zemin Projeleri Katman İsimlendirme Şablonu",
+   "page": 24,
+   "fields": [
+    {
+     "no": 1,
+     "name": "Disiplin",
+     "length": "2",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 2,
+     "name": "Öge",
+     "length": "4",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 3,
+     "name": "Malzeme / Tip / Gösterim",
+     "length": "En fazla 15 karakter",
+     "kind": "Alfanümerik",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "T4.2",
+   "table": "4.2",
+   "title": "Statik, Mekanik, Elektrik ve Altyapı Projeleri Katman İsimlendirme Şablonu",
+   "page": 24,
+   "fields": [
+    {
+     "no": 1,
+     "name": "Disiplin",
+     "length": "2",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 2,
+     "name": "Alt Disiplin",
+     "length": "4",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 3,
+     "name": "Malzeme / Tip / Gösterim",
+     "length": "En fazla 15 karakter",
+     "kind": "Alfanümerik",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "T4.3",
+   "table": "4.3",
+   "title": "Peyzaj Projesi Katman İsimlendirme Şablonu",
+   "page": 24,
+   "fields": [
+    {
+     "no": 1,
+     "name": "Disiplin",
+     "length": "2",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 2,
+     "name": "Alt Disiplin",
+     "length": "4",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 3,
+     "name": "Öge",
+     "length": "4",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 4,
+     "name": "Malzeme / Tip / Gösterim",
+     "length": "En fazla 15 karakter",
+     "kind": "Alfanümerik",
+     "required": false
+    }
+   ]
+  },
+  {
+   "id": "T4.4",
+   "table": "4.4",
+   "title": "Mimarlık, İç Mimarlık, Harita ve Zemin Projeleri Blok, Obje ve Sembol İsimlendirme Şablonu",
+   "page": 24,
+   "fields": [
+    {
+     "no": 1,
+     "name": "Disiplin",
+     "length": "2",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 2,
+     "name": "Öge",
+     "length": "4",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 3,
+     "name": "Malzeme / Tip / Gösterim",
+     "length": "En fazla 15 karakter",
+     "kind": "Alfanümerik",
+     "required": false
+    },
+    {
+     "no": 4,
+     "name": "Ebat / Adet / Özellik",
+     "length": "En fazla 10 karakter",
+     "kind": "Alfanümerik",
+     "required": false
+    }
+   ]
+  },
+  {
+   "id": "T4.5",
+   "table": "4.5",
+   "title": "Statik, Mekanik ve Elektrik Projeleri Blok, Obje ve Sembol İsimlendirme Şablonu",
+   "page": 25,
+   "fields": [
+    {
+     "no": 1,
+     "name": "Disiplin",
+     "length": "2",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 2,
+     "name": "Alt Disiplin",
+     "length": "3",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 3,
+     "name": "Tip / Malzeme / Gösterim",
+     "length": "En fazla 15 karakter",
+     "kind": "Alfanümerik",
+     "required": false
+    },
+    {
+     "no": 4,
+     "name": "Ebat / Adet / Özellik",
+     "length": "En fazla 10 karakter",
+     "kind": "Alfanümerik",
+     "required": false
+    }
+   ]
+  },
+  {
+   "id": "T4.6",
+   "table": "4.6",
+   "title": "Altyapı Projesi Blok, Obje ve Sembol İsimlendirme Modeli",
+   "page": 25,
+   "fields": [
+    {
+     "no": 1,
+     "name": "Disiplin",
+     "length": "2",
+     "kind": "Alfabetik",
+     "required": true
+    },
+    {
+     "no": 2,
+     "name": "Tip / Malzeme / Gösterim",
+     "length": "En fazla 15 karakter",
+     "kind": "Alfanümerik",
+     "required": false
+    },
+    {
+     "no": 3,
+     "name": "Ebat",
+     "length": "En fazla 10 karakter",
+     "kind": "Alfanümerik",
+     "required": false
+    }
+   ]
+  }
+ ],
+ "codes": [
+  {
+   "id": "T2.2/MM",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 1,
+   "page": 3,
+   "name": "Mimari",
+   "code": "MM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/IM",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 2,
+   "page": 3,
+   "name": "İç Mimari",
+   "code": "IM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/ST",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 3,
+   "page": 3,
+   "name": "Statik",
+   "code": "ST",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/EE",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 4,
+   "page": 3,
+   "name": "Elektrik",
+   "code": "EE",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/MK",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 5,
+   "page": 3,
+   "name": "Mekanik",
+   "code": "MK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/HR",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 6,
+   "page": 3,
+   "name": "Harita",
+   "code": "HR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/AL",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 7,
+   "page": 3,
+   "name": "Altyapı",
+   "code": "AL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/PY",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 8,
+   "page": 3,
+   "name": "Peyzaj",
+   "code": "PY",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/ZE",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 9,
+   "page": 3,
+   "name": "Zemin",
+   "code": "ZE",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/YN",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 10,
+   "page": 3,
+   "name": "Yangın",
+   "code": "YN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/GS",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 11,
+   "page": 3,
+   "name": "Güneş Enerji Sistemi",
+   "code": "GS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.2/AK",
+   "list": "discipline",
+   "table": "2.2",
+   "row": 12,
+   "page": 3,
+   "name": "Akustik",
+   "code": "AK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/AKSS",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 1,
+   "page": 3,
+   "name": "Aks",
+   "code": "AKSS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/AKSR",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 2,
+   "page": 3,
+   "name": "Aksesuar",
+   "code": "AKSR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/ASAN",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 3,
+   "page": 3,
+   "name": "Asansör",
+   "code": "ASAN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/ASTV",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 4,
+   "page": 4,
+   "name": "Asma Tavan",
+   "code": "ASTV",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/BACA",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 5,
+   "page": 4,
+   "name": "Baca",
+   "code": "BACA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/BITK",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 6,
+   "page": 4,
+   "name": "Bitki",
+   "code": "BITK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/BORD",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 7,
+   "page": 4,
+   "name": "Bordür",
+   "code": "BORD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/CAMM",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 8,
+   "page": 4,
+   "name": "Cam",
+   "code": "CAMM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/CEPH",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 9,
+   "page": 4,
+   "name": "Cephe",
+   "code": "CEPH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/CATI",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 10,
+   "page": 4,
+   "name": "Çatı",
+   "code": "CATI",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/CKAP",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 11,
+   "page": 4,
+   "name": "Çatı Kaplama",
+   "code": "CKAP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/CKTA",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 12,
+   "page": 4,
+   "name": "Çatı Kaplama Tahtası",
+   "code": "CKTA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/CTAS",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 13,
+   "page": 4,
+   "name": "Çatı Taşıyıcı",
+   "code": "CTAS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/CVRE",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 14,
+   "page": 4,
+   "name": "Çevre",
+   "code": "CVRE",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/CORT",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 15,
+   "page": 4,
+   "name": "Çörten",
+   "code": "CORT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/DENZ",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 16,
+   "page": 4,
+   "name": "Denizlik",
+   "code": "DENZ",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/DOGR",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 17,
+   "page": 4,
+   "name": "Doğrama",
+   "code": "DOGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/DOSM",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 18,
+   "page": 4,
+   "name": "Döşeme",
+   "code": "DOSM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/DUVA",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 19,
+   "page": 4,
+   "name": "Duvar",
+   "code": "DUVA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/DUVK",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 20,
+   "page": 4,
+   "name": "Duvar Kaplama",
+   "code": "DUVK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/EMSL",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 21,
+   "page": 4,
+   "name": "Emsal",
+   "code": "EMSL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/GIYC",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 22,
+   "page": 4,
+   "name": "Giydirme Cephe",
+   "code": "GIYC",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/GNKR",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 23,
+   "page": 4,
+   "name": "Güneş Kırıcı",
+   "code": "GNKR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/HARP",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 24,
+   "page": 4,
+   "name": "Harpuşta",
+   "code": "HARP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/HATL",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 25,
+   "page": 4,
+   "name": "Hatıl",
+   "code": "HATL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/ISYA",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 26,
+   "page": 4,
+   "name": "Isı Yalıtımı",
+   "code": "ISYA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/ISLH",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 27,
+   "page": 4,
+   "name": "Islak Hacim",
+   "code": "ISLH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/KALD",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 28,
+   "page": 4,
+   "name": "Kaldırım",
+   "code": "KALD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/KAPI",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 29,
+   "page": 4,
+   "name": "Kapı",
+   "code": "KAPI",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/KARP",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 30,
+   "page": 4,
+   "name": "Kartonpiyer",
+   "code": "KARP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/KOLN",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 31,
+   "page": 4,
+   "name": "Kolon",
+   "code": "KOLN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/KORK",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 32,
+   "page": 4,
+   "name": "Korkuluk",
+   "code": "KORK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/LENT",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 33,
+   "page": 4,
+   "name": "Lento",
+   "code": "LENT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/MERD",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 34,
+   "page": 4,
+   "name": "Merdiven",
+   "code": "MERD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/OLUK",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 35,
+   "page": 4,
+   "name": "Oluk",
+   "code": "OLUK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/PENC",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 36,
+   "page": 4,
+   "name": "Pencere",
+   "code": "PENC",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/RAMP",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 37,
+   "page": 4,
+   "name": "Rampa",
+   "code": "RAMP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/SAPP",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 38,
+   "page": 5,
+   "name": "Şap",
+   "code": "SAPP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/SESY",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 39,
+   "page": 5,
+   "name": "Ses Yalıtımı",
+   "code": "SESY",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/SIVA",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 40,
+   "page": 5,
+   "name": "Sıva",
+   "code": "SIVA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/SUYA",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 41,
+   "page": 5,
+   "name": "Su Yalıtımı",
+   "code": "SUYA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/SUPR",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 42,
+   "page": 5,
+   "name": "Süpürgelik",
+   "code": "SUPR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/TASI",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 43,
+   "page": 5,
+   "name": "Taşıyıcı",
+   "code": "TASI",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/TAVN",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 44,
+   "page": 5,
+   "name": "Tavan",
+   "code": "TAVN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/TEML",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 45,
+   "page": 5,
+   "name": "Temel",
+   "code": "TEML",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/TEFR",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 46,
+   "page": 5,
+   "name": "Tefriş",
+   "code": "TEFR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/TSVY",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 47,
+   "page": 5,
+   "name": "Tesviye Betonu",
+   "code": "TSVY",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/TRET",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 48,
+   "page": 5,
+   "name": "Tretuvar",
+   "code": "TRET",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/YIBO",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 49,
+   "page": 5,
+   "name": "Yağmur İniş Borusu",
+   "code": "YIBO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/YOLL",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 50,
+   "page": 5,
+   "name": "Yol",
+   "code": "YOLL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/ZMNK",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 51,
+   "page": 5,
+   "name": "Zemin Kaplama",
+   "code": "ZMNK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/XXXX",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 52,
+   "page": 5,
+   "name": "Genel (Öge kullanılmaması durumunda)",
+   "code": "XXXX",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.3/DIGR",
+   "list": "item:MM",
+   "table": "2.3",
+   "row": 53,
+   "page": 5,
+   "name": "Diğer (Diğer ögeler için)",
+   "code": "DIGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/PANL",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 1,
+   "page": 5,
+   "name": "Ahşap Panel",
+   "code": "PANL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/AKSR",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 2,
+   "page": 5,
+   "name": "Aksesuar",
+   "code": "AKSR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/ASAN",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 3,
+   "page": 5,
+   "name": "Asansör",
+   "code": "ASAN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/AKUS",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 4,
+   "page": 5,
+   "name": "Akustik Panel",
+   "code": "AKUS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/ASTV",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 5,
+   "page": 5,
+   "name": "Asma Tavan",
+   "code": "ASTV",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/AYDN",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 6,
+   "page": 5,
+   "name": "Aydınlatma Elemanı",
+   "code": "AYDN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/BACA",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 7,
+   "page": 5,
+   "name": "Baca",
+   "code": "BACA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/BNYO",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 8,
+   "page": 5,
+   "name": "Banyo Elemanı",
+   "code": "BNYO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/BITK",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 9,
+   "page": 5,
+   "name": "Bitki",
+   "code": "BITK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/BORD",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 10,
+   "page": 5,
+   "name": "Bordür",
+   "code": "BORD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/BOLP",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 11,
+   "page": 5,
+   "name": "Bölücü Panel",
+   "code": "BOLP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/CAMM",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 12,
+   "page": 5,
+   "name": "Cam",
+   "code": "CAMM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/CMBL",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 13,
+   "page": 5,
+   "name": "Cam İç Bölme",
+   "code": "CMBL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/CEPH",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 14,
+   "page": 6,
+   "name": "Cephe",
+   "code": "CEPH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/CATI",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 15,
+   "page": 6,
+   "name": "Çatı",
+   "code": "CATI",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/CKAP",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 16,
+   "page": 6,
+   "name": "Çatı Kaplama",
+   "code": "CKAP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/CKTA",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 17,
+   "page": 6,
+   "name": "Çatı Kaplama Tahtası",
+   "code": "CKTA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/CTAS",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 18,
+   "page": 6,
+   "name": "Çatı Taşıyıcı",
+   "code": "CTAS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/CVRE",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 19,
+   "page": 6,
+   "name": "Çevre",
+   "code": "CVRE",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/CORT",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 20,
+   "page": 6,
+   "name": "Çörten",
+   "code": "CORT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/DENZ",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 21,
+   "page": 6,
+   "name": "Denizlik",
+   "code": "DENZ",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/DOGR",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 22,
+   "page": 6,
+   "name": "Doğrama",
+   "code": "DOGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/DOSM",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 23,
+   "page": 6,
+   "name": "Döşeme",
+   "code": "DOSM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/DUVA",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 24,
+   "page": 6,
+   "name": "Duvar",
+   "code": "DUVA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/DUVK",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 25,
+   "page": 6,
+   "name": "Duvar Kaplama",
+   "code": "DUVK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/EMSL",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 26,
+   "page": 6,
+   "name": "Emsal",
+   "code": "EMSL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/GIYC",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 27,
+   "page": 6,
+   "name": "Giydirme Cephe",
+   "code": "GIYC",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/GNKR",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 28,
+   "page": 6,
+   "name": "Güneş Kırıcı",
+   "code": "GNKR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/HARP",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 29,
+   "page": 6,
+   "name": "Harpuşta",
+   "code": "HARP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/HATL",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 30,
+   "page": 6,
+   "name": "Hatıl",
+   "code": "HATL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/ISYA",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 31,
+   "page": 6,
+   "name": "Isı Yalıtımı",
+   "code": "ISYA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/ISLH",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 32,
+   "page": 6,
+   "name": "Islak Hacim",
+   "code": "ISLH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/KALD",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 33,
+   "page": 6,
+   "name": "Kaldırım",
+   "code": "KALD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/KPKN",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 34,
+   "page": 6,
+   "name": "Kapı Kanat",
+   "code": "KPKN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/KPKS",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 35,
+   "page": 6,
+   "name": "Kapı Kasa",
+   "code": "KPKS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/KARP",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 36,
+   "page": 6,
+   "name": "Kartonpiyer",
+   "code": "KARP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/KLIM",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 37,
+   "page": 6,
+   "name": "Klima İç Ünite",
+   "code": "KLIM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/KORK",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 38,
+   "page": 6,
+   "name": "Korkuluk",
+   "code": "KORK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/LENT",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 39,
+   "page": 6,
+   "name": "Lento",
+   "code": "LENT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/MNFZ",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 40,
+   "page": 6,
+   "name": "Menfez",
+   "code": "MNFZ",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/MERD",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 41,
+   "page": 6,
+   "name": "Merdiven",
+   "code": "MERD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/MTFK",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 42,
+   "page": 6,
+   "name": "Mutfak Elemanı",
+   "code": "MTFK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/OLUK",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 43,
+   "page": 6,
+   "name": "Oluk",
+   "code": "OLUK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/PNKT",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 44,
+   "page": 6,
+   "name": "Pencere Kanat",
+   "code": "PNKT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/PNKS",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 45,
+   "page": 6,
+   "name": "Pencere Kasa",
+   "code": "PNKS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/PRDE",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 46,
+   "page": 7,
+   "name": "Perde",
+   "code": "PRDE",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/PRIZ",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 47,
+   "page": 7,
+   "name": "Priz/Anahtar",
+   "code": "PRIZ",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/RAMP",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 48,
+   "page": 7,
+   "name": "Rampa",
+   "code": "RAMP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/SAPP",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 49,
+   "page": 7,
+   "name": "Şap",
+   "code": "SAPP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/SMOB",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 50,
+   "page": 7,
+   "name": "Sabit Mobilya",
+   "code": "SMOB",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/SESY",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 51,
+   "page": 7,
+   "name": "Ses Yalıtımı",
+   "code": "SESY",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/SIVA",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 52,
+   "page": 7,
+   "name": "Sıva",
+   "code": "SIVA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/SUYA",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 53,
+   "page": 7,
+   "name": "Su Yalıtımı",
+   "code": "SUYA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/SUPR",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 54,
+   "page": 7,
+   "name": "Süpürgelik",
+   "code": "SUPR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/TASI",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 55,
+   "page": 7,
+   "name": "Taşıyıcı",
+   "code": "TASI",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/TAVN",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 56,
+   "page": 7,
+   "name": "Tavan",
+   "code": "TAVN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/TEML",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 57,
+   "page": 7,
+   "name": "Temel",
+   "code": "TEML",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/TEFR",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 58,
+   "page": 7,
+   "name": "Tefriş",
+   "code": "TEFR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/TSVY",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 59,
+   "page": 7,
+   "name": "Tesviye Betonu",
+   "code": "TSVY",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/TZGH",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 60,
+   "page": 7,
+   "name": "Tezgah",
+   "code": "TZGH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/TRET",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 61,
+   "page": 7,
+   "name": "Tretuvar",
+   "code": "TRET",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/YIBO",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 62,
+   "page": 7,
+   "name": "Yağmur İniş Borusu",
+   "code": "YIBO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/YOLL",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 63,
+   "page": 7,
+   "name": "Yol",
+   "code": "YOLL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/ZMNK",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 64,
+   "page": 7,
+   "name": "Zemin Kaplama",
+   "code": "ZMNK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/XXXX",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 65,
+   "page": 7,
+   "name": "Genel (Öge kullanılmaması durumunda)",
+   "code": "XXXX",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.4/DIGR",
+   "list": "item:IM",
+   "table": "2.4",
+   "row": 66,
+   "page": 7,
+   "name": "Diğer (Diğer ögeler için)",
+   "code": "DIGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.5/BETO",
+   "list": "subdiscipline:ST",
+   "table": "2.5",
+   "row": 1,
+   "page": 7,
+   "name": "Betonarme",
+   "code": "BETO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.5/CELK",
+   "list": "subdiscipline:ST",
+   "table": "2.5",
+   "row": 2,
+   "page": 7,
+   "name": "Çelik",
+   "code": "CELK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.5/YIGM",
+   "list": "subdiscipline:ST",
+   "table": "2.5",
+   "row": 3,
+   "page": 7,
+   "name": "Yığma",
+   "code": "YIGM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.5/AHSP",
+   "list": "subdiscipline:ST",
+   "table": "2.5",
+   "row": 4,
+   "page": 7,
+   "name": "Ahşap",
+   "code": "AHSP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.5/KMPT",
+   "list": "subdiscipline:ST",
+   "table": "2.5",
+   "row": 5,
+   "page": 7,
+   "name": "Kompozit",
+   "code": "KMPT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.5/XXXX",
+   "list": "subdiscipline:ST",
+   "table": "2.5",
+   "row": 6,
+   "page": 7,
+   "name": "Genel (Alt disiplin kullanılmaması durumunda)",
+   "code": "XXXX",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.5/DIGR",
+   "list": "subdiscipline:ST",
+   "table": "2.5",
+   "row": 7,
+   "page": 7,
+   "name": "Diğer",
+   "code": "DIGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/SHTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 1,
+   "page": 8,
+   "name": "Sıhhi Tesisat",
+   "code": "SHTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/ISTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 2,
+   "page": 8,
+   "name": "Isıtma Tesisat",
+   "code": "ISTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/HVLT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 3,
+   "page": 8,
+   "name": "Havalandırma Tesisat",
+   "code": "HVLT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/SGTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 4,
+   "page": 8,
+   "name": "Soğutma Tesisatı",
+   "code": "SGTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/TMST",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 5,
+   "page": 8,
+   "name": "Temiz Su Tesisatı",
+   "code": "TMST",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/PIST",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 6,
+   "page": 8,
+   "name": "Pissu Tesisatı",
+   "code": "PIST",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/YAGT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 7,
+   "page": 8,
+   "name": "Yağmur Tesisatı",
+   "code": "YAGT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/BSHT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 8,
+   "page": 8,
+   "name": "Basınçlı Hava Tesisatı",
+   "code": "BSHT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/OTMT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 9,
+   "page": 8,
+   "name": "Otomatik Kontrol Tesisatı",
+   "code": "OTMT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/MDGZ",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 10,
+   "page": 8,
+   "name": "Medikal Gaz",
+   "code": "MDGZ",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/MUTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 11,
+   "page": 8,
+   "name": "Mutfak Tesisatı",
+   "code": "MUTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/CMTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 12,
+   "page": 8,
+   "name": "Çamaşırhane Tesisatı",
+   "code": "CMTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/DGTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 13,
+   "page": 8,
+   "name": "Doğalgaz Tesisatı",
+   "code": "DGTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/BHTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 14,
+   "page": 8,
+   "name": "Buhar Tesisatı",
+   "code": "BHTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/ORTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 15,
+   "page": 8,
+   "name": "Müşterek Tesisat",
+   "code": "ORTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/BSTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 16,
+   "page": 8,
+   "name": "Bahçe Sulama Tesisatı",
+   "code": "BSTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/HVZT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 17,
+   "page": 8,
+   "name": "Havuz Tesisatı",
+   "code": "HVZT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/ASTT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 18,
+   "page": 8,
+   "name": "Atık Su Arıtma Tesisatı",
+   "code": "ASTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/DSDK",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 19,
+   "page": 8,
+   "name": "Klima Tesisatı",
+   "code": "DSDK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/YNGT",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 20,
+   "page": 8,
+   "name": "Yangın Tesisatı",
+   "code": "YNGT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/ASNR",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 21,
+   "page": 8,
+   "name": "Asansör",
+   "code": "ASNR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/XXXX",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 22,
+   "page": 8,
+   "name": "Genel (Alt disiplin kullanılmaması durumunda)",
+   "code": "XXXX",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.6/DIGR",
+   "list": "subdiscipline:MK",
+   "table": "2.6",
+   "row": 23,
+   "page": 8,
+   "name": "Diğer",
+   "code": "DIGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/KUVA",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 1,
+   "page": 9,
+   "name": "Kuvvetli Akım Tesisatı",
+   "code": "KUVA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/ZAYA",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 2,
+   "page": 9,
+   "name": "Zayıf Akım Tesisatı",
+   "code": "ZAYA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/AYDT",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 3,
+   "page": 9,
+   "name": "Aydınlatma Tesisatı",
+   "code": "AYDT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/GUDT",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 4,
+   "page": 9,
+   "name": "Güç Dağıtım Tesisatı-Mekanik Tesisat İçin Güç Dağıtımı Tesisatı-Reaktif Güç Kompanzasyonu",
+   "code": "GUDT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/DJGT",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 5,
+   "page": 9,
+   "name": "Dizel Jeneratör Grubu Tesisatı",
+   "code": "DJGT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/CAYT",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 6,
+   "page": 9,
+   "name": "Çevre Aydınlatma Tesisatı",
+   "code": "CAYT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/TOST",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 7,
+   "page": 9,
+   "name": "Topraklama Sistemleri Tesisatı -Yıldırımdan Korunma Sistemi",
+   "code": "TOST",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/OGET",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 8,
+   "page": 9,
+   "name": "Orta Gerilim Enerji Temini (Trafo)",
+   "code": "OGET",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/TBIA",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 9,
+   "page": 9,
+   "name": "Telefon-Bilgi İletişim Ağı-TV Sistemleri Tesisatı",
+   "code": "TBIA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/MYAS",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 10,
+   "page": 9,
+   "name": "Müzik Yayın, Anons Sistemi-Merkezi Saat Sistemi-Intercom Sistemi",
+   "code": "MYAS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/YAVA",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 11,
+   "page": 9,
+   "name": "Yangın Algılama ve Alarm Tesisatı-Acil Anons Sistemleri -Acil Durum Aydınlatma ve Yönlendirme Tesisatı",
+   "code": "YAVA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/CTVS",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 12,
+   "page": 9,
+   "name": "Kapalı Devre TV Sistemleri (CCTV)-Kartlı Geçiş ve Güvenlik Sistemleri",
+   "code": "CTVS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/XXXX",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 13,
+   "page": 9,
+   "name": "Genel (Alt disiplin kullanılmaması durumunda)",
+   "code": "XXXX",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.7/DIGR",
+   "list": "subdiscipline:EE",
+   "table": "2.7",
+   "row": 14,
+   "page": 9,
+   "name": "Diğer",
+   "code": "DIGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/PKBL",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 1,
+   "page": 10,
+   "name": "Proje Koordinat Bilgisi",
+   "code": "PKBL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/KORD",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 2,
+   "page": 10,
+   "name": "Koordinatlar",
+   "code": "KORD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/DOSB",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 3,
+   "page": 10,
+   "name": "Dönüşüm Bilgisi",
+   "code": "DOSB",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/LJNT",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 4,
+   "page": 10,
+   "name": "Lejant",
+   "code": "LJNT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/PLGN",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 5,
+   "page": 10,
+   "name": "Poligon",
+   "code": "PLGN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/ADPL",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 6,
+   "page": 10,
+   "name": "Ada Parsel",
+   "code": "ADPL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/PZKT",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 7,
+   "page": 10,
+   "name": "Parsel Zemin Kotu",
+   "code": "PZKT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/BZKT",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 8,
+   "page": 10,
+   "name": "Bina Zemin Kotu",
+   "code": "BZKT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/BLKA",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 9,
+   "page": 10,
+   "name": "Blok Adı",
+   "code": "BLKA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/KMPL",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 10,
+   "page": 10,
+   "name": "Komşu Parseller",
+   "code": "KMPL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/CKMS",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 11,
+   "page": 10,
+   "name": "Çekme Mesafesi",
+   "code": "CKMS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/XXXX",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 12,
+   "page": 10,
+   "name": "Genel (Öge kullanılmaması durumunda)",
+   "code": "XXXX",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.8/DIGR",
+   "list": "item:HR",
+   "table": "2.8",
+   "row": 13,
+   "page": 10,
+   "name": "Diğer",
+   "code": "DIGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.9/YAGS",
+   "list": "subdiscipline:AL",
+   "table": "2.9",
+   "row": 1,
+   "page": 10,
+   "name": "Yağmur Suyu",
+   "code": "YAGS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.9/ATIS",
+   "list": "subdiscipline:AL",
+   "table": "2.9",
+   "row": 2,
+   "page": 10,
+   "name": "Atık Su",
+   "code": "ATIS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.9/ICMS",
+   "list": "subdiscipline:AL",
+   "table": "2.9",
+   "row": 3,
+   "page": 10,
+   "name": "İçme Suyu",
+   "code": "ICMS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.9/XXXX",
+   "list": "subdiscipline:AL",
+   "table": "2.9",
+   "row": 4,
+   "page": 10,
+   "name": "Genel (Alt disiplin kullanılmaması durumunda)",
+   "code": "XXXX",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.9/DIGR",
+   "list": "subdiscipline:AL",
+   "table": "2.9",
+   "row": 5,
+   "page": 10,
+   "name": "Diğer",
+   "code": "DIGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.10/YAPS",
+   "list": "subdiscipline:PY",
+   "table": "2.10",
+   "row": 1,
+   "page": 10,
+   "name": "Yapısal",
+   "code": "YAPS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.10/BITS",
+   "list": "subdiscipline:PY",
+   "table": "2.10",
+   "row": 2,
+   "page": 10,
+   "name": "Bitkisel",
+   "code": "BITS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.10/XXXX",
+   "list": "subdiscipline:PY",
+   "table": "2.10",
+   "row": 3,
+   "page": 10,
+   "name": "Genel (Alt Disiplin kullanılmaması durumunda)",
+   "code": "XXXX",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.10/DIGR",
+   "list": "subdiscipline:PY",
+   "table": "2.10",
+   "row": 4,
+   "page": 10,
+   "name": "Diğer",
+   "code": "DIGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.11/IKS",
+   "list": "item:ZE",
+   "table": "2.11",
+   "row": 1,
+   "page": 11,
+   "name": "İksa",
+   "code": "IKS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.11/KZK",
+   "list": "item:ZE",
+   "table": "2.11",
+   "row": 2,
+   "page": 11,
+   "name": "Kazık",
+   "code": "KZK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.11/ZTE",
+   "list": "item:ZE",
+   "table": "2.11",
+   "row": 3,
+   "page": 11,
+   "name": "Zemin ve Temel",
+   "code": "ZTE",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.11/XXXX",
+   "list": "item:ZE",
+   "table": "2.11",
+   "row": 4,
+   "page": 11,
+   "name": "Genel (Öge kullanılmaması durumunda)",
+   "code": "XXXX",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.11/DIGR",
+   "list": "item:ZE",
+   "table": "2.11",
+   "row": 5,
+   "page": 11,
+   "name": "Diğer",
+   "code": "DIGR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/PL",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 1,
+   "page": 11,
+   "name": "Plan",
+   "code": "PL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/KS",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 2,
+   "page": 11,
+   "name": "Kesit",
+   "code": "KS",
+   "note": "Tip kesitler de dahil",
+   "group": null
+  },
+  {
+   "id": "T2.12/GR",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 3,
+   "page": 11,
+   "name": "Görünüş",
+   "code": "GR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/DT",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 4,
+   "page": 11,
+   "name": "Detay",
+   "code": "DT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/SM",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 5,
+   "page": 11,
+   "name": "Şema",
+   "code": "SM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/MD",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 6,
+   "page": 11,
+   "name": "Model",
+   "code": "MD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/FR",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 7,
+   "page": 11,
+   "name": "Form",
+   "code": "FR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/LS",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 8,
+   "page": 11,
+   "name": "Liste",
+   "code": "LS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/DK",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 9,
+   "page": 11,
+   "name": "Doküman",
+   "code": "DK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/RP",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 10,
+   "page": 11,
+   "name": "Rapor",
+   "code": "RP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/HS",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 11,
+   "page": 11,
+   "name": "Hesap",
+   "code": "HS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.12/GN",
+   "list": "fileKind",
+   "table": "2.12",
+   "row": 12,
+   "page": 11,
+   "name": "Genel",
+   "code": "GN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.13/MMC",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 1,
+   "page": 11,
+   "name": "Mimari Çizim",
+   "code": "MMC",
+   "note": null,
+   "group": "MİMARİ DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/MAP",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 2,
+   "page": 11,
+   "name": "Mimari Açıklama Raporu",
+   "code": "MAP",
+   "note": null,
+   "group": "MİMARİ DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/ERP",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 3,
+   "page": 11,
+   "name": "Erişilebilirlik Çizimi",
+   "code": "ERP",
+   "note": null,
+   "group": "MİMARİ DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/YKG",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 4,
+   "page": 11,
+   "name": "Yangın Kaçış ve Güvenlik Planları",
+   "code": "YKG",
+   "note": null,
+   "group": "MİMARİ DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/CAT",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 5,
+   "page": 11,
+   "name": "Çatı Planı ve Detaylar",
+   "code": "CAT",
+   "note": null,
+   "group": "MİMARİ DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/VAZ",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 6,
+   "page": 11,
+   "name": "Vaziyet Planı",
+   "code": "VAZ",
+   "note": null,
+   "group": "MİMARİ DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/MIR",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 7,
+   "page": 11,
+   "name": "Mimari Hesap Raporu",
+   "code": "MIR",
+   "note": null,
+   "group": "MİMARİ DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/STC",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 8,
+   "page": 12,
+   "name": "Statik Çizim",
+   "code": "STC",
+   "note": null,
+   "group": "STATİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/SHR",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 9,
+   "page": 12,
+   "name": "Statik Hesap Raporu",
+   "code": "SHR",
+   "note": null,
+   "group": "STATİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/ISC",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 10,
+   "page": 12,
+   "name": "İskele Çizimi",
+   "code": "ISC",
+   "note": null,
+   "group": "STATİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/IHR",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 11,
+   "page": 12,
+   "name": "İskele Hesap Raporu",
+   "code": "IHR",
+   "note": null,
+   "group": "STATİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/MKC",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 12,
+   "page": 12,
+   "name": "Mekanik Çizim",
+   "code": "MKC",
+   "note": null,
+   "group": "MEKANİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/ITH",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 13,
+   "page": 12,
+   "name": "Isıtma Tesisatı Hesap Raporu",
+   "code": "ITH",
+   "note": null,
+   "group": "MEKANİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/IYP",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 14,
+   "page": 12,
+   "name": "Isı Yalıtım Projesi Hesap Raporu",
+   "code": "IYP",
+   "note": null,
+   "group": "MEKANİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/IKR",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 15,
+   "page": 12,
+   "name": "Isı Kaybı Isı Kazanç Hesapları Raporu",
+   "code": "IKR",
+   "note": null,
+   "group": "MEKANİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/EKB",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 16,
+   "page": 12,
+   "name": "Enerji Kimlik Belgesi Ön Hesap Raporu",
+   "code": "EKB",
+   "note": null,
+   "group": "MEKANİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/ASN",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 17,
+   "page": 12,
+   "name": "Asansör Trafik Hesabı",
+   "code": "ASN",
+   "note": null,
+   "group": "MEKANİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/MTS",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 18,
+   "page": 12,
+   "name": "Mekanik Özel Teknik Şartname",
+   "code": "MTS",
+   "note": null,
+   "group": "MEKANİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/ELC",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 19,
+   "page": 12,
+   "name": "Elektrik Çizim",
+   "code": "ELC",
+   "note": null,
+   "group": "ELEKTRİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/AGH",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 20,
+   "page": 12,
+   "name": "Akim Kontrolü Ve Gerilim Düşümü Hesabi",
+   "code": "AGH",
+   "note": null,
+   "group": "ELEKTRİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/TGH",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 21,
+   "page": 12,
+   "name": "Trafo Güç Hesabı",
+   "code": "TGH",
+   "note": null,
+   "group": "ELEKTRİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/AHR",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 22,
+   "page": 12,
+   "name": "Aydınlatma Hesap Raporu",
+   "code": "AHR",
+   "note": null,
+   "group": "ELEKTRİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/ETS",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 23,
+   "page": 12,
+   "name": "Elektrik Özel Teknik Şartname",
+   "code": "ETS",
+   "note": null,
+   "group": "ELEKTRİK DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/YAP",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 24,
+   "page": 12,
+   "name": "Yapı Aplikasyon Projesi",
+   "code": "YAP",
+   "note": null,
+   "group": "HARİTA DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/DIC",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 25,
+   "page": 12,
+   "name": "Diğer Çizim",
+   "code": "DIC",
+   "note": null,
+   "group": "DİĞER DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/DGR",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 26,
+   "page": 12,
+   "name": "Diğer Raporlar",
+   "code": "DGR",
+   "note": null,
+   "group": "DİĞER DOSYA TİPLERİ"
+  },
+  {
+   "id": "T2.13/MLZ",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 27,
+   "page": 13,
+   "name": "Malzeme Listesi",
+   "code": "MLZ",
+   "note": null,
+   "group": "TÜM DİSİPLİNLERDE OLABİLECEK DOSYALAR"
+  },
+  {
+   "id": "T2.13/MHL",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 28,
+   "page": 13,
+   "name": "Mahal Listesi",
+   "code": "MHL",
+   "note": null,
+   "group": "TÜM DİSİPLİNLERDE OLABİLECEK DOSYALAR"
+  },
+  {
+   "id": "T2.13/XXX",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 29,
+   "page": 13,
+   "name": "Tip yok",
+   "code": "XXX",
+   "note": null,
+   "group": "TÜM DİSİPLİNLERDE OLABİLECEK DOSYALAR"
+  },
+  {
+   "id": "T2.13/MKF",
+   "list": "fileType",
+   "table": "2.13",
+   "row": 30,
+   "page": 13,
+   "name": "Model Kontrol Formu",
+   "code": "MKF",
+   "note": null,
+   "group": "TÜM DİSİPLİNLERDE OLABİLECEK DOSYALAR"
+  },
+  {
+   "id": "T2.14/B03",
+   "list": "storey",
+   "table": "2.14",
+   "row": 1,
+   "page": 13,
+   "name": "3. Bodrum Kat",
+   "code": "B03",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.14/B02",
+   "list": "storey",
+   "table": "2.14",
+   "row": 2,
+   "page": 13,
+   "name": "2. Bodrum Kat",
+   "code": "B02",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.14/B01",
+   "list": "storey",
+   "table": "2.14",
+   "row": 3,
+   "page": 13,
+   "name": "1. Bodrum Kat",
+   "code": "B01",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.14/K00",
+   "list": "storey",
+   "table": "2.14",
+   "row": 4,
+   "page": 13,
+   "name": "Zemin Kat",
+   "code": "K00",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.14/K01",
+   "list": "storey",
+   "table": "2.14",
+   "row": 5,
+   "page": 13,
+   "name": "Kat 1",
+   "code": "K01",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.14/K02",
+   "list": "storey",
+   "table": "2.14",
+   "row": 6,
+   "page": 13,
+   "name": "Kat 2",
+   "code": "K02",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.14/K03",
+   "list": "storey",
+   "table": "2.14",
+   "row": 7,
+   "page": 13,
+   "name": "Kat 3",
+   "code": "K03",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.14/K04",
+   "list": "storey",
+   "table": "2.14",
+   "row": 8,
+   "page": 13,
+   "name": "Kat 4",
+   "code": "K04",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T2.14/NNN",
+   "list": "storey",
+   "table": "2.14",
+   "row": 9,
+   "page": 13,
+   "name": "Kattan Bağımsız",
+   "code": "NNN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ACM",
+   "list": "room",
+   "table": "3.2",
+   "row": 1,
+   "page": 14,
+   "name": "Açık Mutfak",
+   "code": "ACM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ANT",
+   "list": "room",
+   "table": "3.2",
+   "row": 2,
+   "page": 14,
+   "name": "Antre",
+   "code": "ANT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ARS",
+   "list": "room",
+   "table": "3.2",
+   "row": 3,
+   "page": 14,
+   "name": "Arşiv",
+   "code": "ARS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ASN",
+   "list": "room",
+   "table": "3.2",
+   "row": 4,
+   "page": 14,
+   "name": "Asansör",
+   "code": "ASN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ASH",
+   "list": "room",
+   "table": "3.2",
+   "row": 5,
+   "page": 14,
+   "name": "Asansör Holü",
+   "code": "ASH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ASK",
+   "list": "room",
+   "table": "3.2",
+   "row": 6,
+   "page": 14,
+   "name": "Asansör Kuyusu",
+   "code": "ASK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/AMD",
+   "list": "room",
+   "table": "3.2",
+   "row": 7,
+   "page": 14,
+   "name": "Asansör Makine Dairesi",
+   "code": "AMD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/AAO",
+   "list": "room",
+   "table": "3.2",
+   "row": 8,
+   "page": 15,
+   "name": "Atık Ayrıştırma Odası",
+   "code": "AAO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ATO",
+   "list": "room",
+   "table": "3.2",
+   "row": 9,
+   "page": 15,
+   "name": "Atölye",
+   "code": "ATO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/AVU",
+   "list": "room",
+   "table": "3.2",
+   "row": 10,
+   "page": 15,
+   "name": "Avlu",
+   "code": "AVU",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BAH",
+   "list": "room",
+   "table": "3.2",
+   "row": 11,
+   "page": 15,
+   "name": "Bahçe",
+   "code": "BAH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BLK",
+   "list": "room",
+   "table": "3.2",
+   "row": 12,
+   "page": 15,
+   "name": "Balkon",
+   "code": "BLK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BAN",
+   "list": "room",
+   "table": "3.2",
+   "row": 13,
+   "page": 15,
+   "name": "Banyo",
+   "code": "BAN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BAA",
+   "list": "room",
+   "table": "3.2",
+   "row": 14,
+   "page": 15,
+   "name": "Bay Abdesthane",
+   "code": "BAA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BAM",
+   "list": "room",
+   "table": "3.2",
+   "row": 15,
+   "page": 15,
+   "name": "Bay Mescit",
+   "code": "BAM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BYA",
+   "list": "room",
+   "table": "3.2",
+   "row": 16,
+   "page": 15,
+   "name": "Bayan Abdesthane",
+   "code": "BYA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BYM",
+   "list": "room",
+   "table": "3.2",
+   "row": 17,
+   "page": 15,
+   "name": "Bayan Mescit",
+   "code": "BYM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BKO",
+   "list": "room",
+   "table": "3.2",
+   "row": 18,
+   "page": 15,
+   "name": "Bekçi Kulübesi / Odası",
+   "code": "BKO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BKA",
+   "list": "room",
+   "table": "3.2",
+   "row": 19,
+   "page": 15,
+   "name": "Bekleme Alanı",
+   "code": "BKA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/BLS",
+   "list": "room",
+   "table": "3.2",
+   "row": 20,
+   "page": 15,
+   "name": "Bulaşıkhane",
+   "code": "BLS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CCT",
+   "list": "room",
+   "table": "3.2",
+   "row": 21,
+   "page": 15,
+   "name": "CCTV Odası",
+   "code": "CCT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CAO",
+   "list": "room",
+   "table": "3.2",
+   "row": 22,
+   "page": 15,
+   "name": "Çalışma Odası",
+   "code": "CAO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CMN",
+   "list": "room",
+   "table": "3.2",
+   "row": 23,
+   "page": 15,
+   "name": "Çamaşır Nişi",
+   "code": "CMN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CMR",
+   "list": "room",
+   "table": "3.2",
+   "row": 24,
+   "page": 15,
+   "name": "Çamaşır Odası",
+   "code": "CMR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CRD",
+   "list": "room",
+   "table": "3.2",
+   "row": 25,
+   "page": 15,
+   "name": "Çardak (Kameriye)",
+   "code": "CRD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CAT",
+   "list": "room",
+   "table": "3.2",
+   "row": 26,
+   "page": 15,
+   "name": "Çatı İçi",
+   "code": "CAT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CTP",
+   "list": "room",
+   "table": "3.2",
+   "row": 27,
+   "page": 15,
+   "name": "Çatı Piyesi",
+   "code": "CTP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CTT",
+   "list": "room",
+   "table": "3.2",
+   "row": 28,
+   "page": 15,
+   "name": "Çatı Terası",
+   "code": "CTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CYO",
+   "list": "room",
+   "table": "3.2",
+   "row": 29,
+   "page": 15,
+   "name": "Çay Ocağı",
+   "code": "CYO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CIC",
+   "list": "room",
+   "table": "3.2",
+   "row": 30,
+   "page": 15,
+   "name": "Çiçeklik",
+   "code": "CIC",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/COC",
+   "list": "room",
+   "table": "3.2",
+   "row": 31,
+   "page": 15,
+   "name": "Çocuk Odası",
+   "code": "COC",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/COA",
+   "list": "room",
+   "table": "3.2",
+   "row": 32,
+   "page": 15,
+   "name": "Çocuk Oyun Alanı",
+   "code": "COA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/COO",
+   "list": "room",
+   "table": "3.2",
+   "row": 33,
+   "page": 15,
+   "name": "Çocuk Oyun Odası",
+   "code": "COO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CAS",
+   "list": "room",
+   "table": "3.2",
+   "row": 34,
+   "page": 15,
+   "name": "Çok Amaçlı Salon",
+   "code": "CAS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/CPO",
+   "list": "room",
+   "table": "3.2",
+   "row": 35,
+   "page": 15,
+   "name": "Çöp Odası",
+   "code": "CPO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/DNK",
+   "list": "room",
+   "table": "3.2",
+   "row": 36,
+   "page": 15,
+   "name": "Danışma-Karşılama",
+   "code": "DNK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/DEP",
+   "list": "room",
+   "table": "3.2",
+   "row": 37,
+   "page": 15,
+   "name": "Depo",
+   "code": "DEP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/DRS",
+   "list": "room",
+   "table": "3.2",
+   "row": 38,
+   "page": 15,
+   "name": "Derslik",
+   "code": "DRS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/DKO",
+   "list": "room",
+   "table": "3.2",
+   "row": 39,
+   "page": 15,
+   "name": "Doktor Odası",
+   "code": "DKO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/DUS",
+   "list": "room",
+   "table": "3.2",
+   "row": 40,
+   "page": 16,
+   "name": "Duş",
+   "code": "DUS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/DKN",
+   "list": "room",
+   "table": "3.2",
+   "row": 41,
+   "page": 16,
+   "name": "Dükkan",
+   "code": "DKN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/DDP",
+   "list": "room",
+   "table": "3.2",
+   "row": 42,
+   "page": 16,
+   "name": "Dükkan Depo",
+   "code": "DDP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/DWC",
+   "list": "room",
+   "table": "3.2",
+   "row": 43,
+   "page": 16,
+   "name": "Dükkan WC",
+   "code": "DWC",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/EBB",
+   "list": "room",
+   "table": "3.2",
+   "row": 44,
+   "page": 16,
+   "name": "Ebeveyn Banyo",
+   "code": "EBB",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/EBY",
+   "list": "room",
+   "table": "3.2",
+   "row": 45,
+   "page": 16,
+   "name": "Ebeveyn Yatak Odası",
+   "code": "EBY",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ELO",
+   "list": "room",
+   "table": "3.2",
+   "row": 46,
+   "page": 16,
+   "name": "Elektrik Odası",
+   "code": "ELO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/EPO",
+   "list": "room",
+   "table": "3.2",
+   "row": 47,
+   "page": 16,
+   "name": "Elektrik Pano Odası",
+   "code": "EPO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ENJ",
+   "list": "room",
+   "table": "3.2",
+   "row": 48,
+   "page": 16,
+   "name": "Enerji Odası",
+   "code": "ENJ",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/EWC",
+   "list": "room",
+   "table": "3.2",
+   "row": 49,
+   "page": 16,
+   "name": "Engelli WC",
+   "code": "EWC",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ESO",
+   "list": "room",
+   "table": "3.2",
+   "row": 50,
+   "page": 16,
+   "name": "Eşanjör Odası",
+   "code": "ESO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/FIT",
+   "list": "room",
+   "table": "3.2",
+   "row": 51,
+   "page": 16,
+   "name": "Fitness",
+   "code": "FIT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/FOT",
+   "list": "room",
+   "table": "3.2",
+   "row": 52,
+   "page": 16,
+   "name": "Fotokopi Odası",
+   "code": "FOT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/FUA",
+   "list": "room",
+   "table": "3.2",
+   "row": 53,
+   "page": 16,
+   "name": "Fuaye",
+   "code": "FUA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/GAL",
+   "list": "room",
+   "table": "3.2",
+   "row": 54,
+   "page": 16,
+   "name": "Galeri",
+   "code": "GAL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/GRJ",
+   "list": "room",
+   "table": "3.2",
+   "row": 55,
+   "page": 16,
+   "name": "Garaj",
+   "code": "GRJ",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/GTC",
+   "list": "room",
+   "table": "3.2",
+   "row": 56,
+   "page": 16,
+   "name": "Gezilebilen Teras Çatı",
+   "code": "GTC",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/GTT",
+   "list": "room",
+   "table": "3.2",
+   "row": 57,
+   "page": 16,
+   "name": "Gezilemeyen Teras Çatı",
+   "code": "GTT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/GIH",
+   "list": "room",
+   "table": "3.2",
+   "row": 58,
+   "page": 16,
+   "name": "Giriş Holü",
+   "code": "GIH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/GYO",
+   "list": "room",
+   "table": "3.2",
+   "row": 59,
+   "page": 16,
+   "name": "Giyinme Odası",
+   "code": "GYO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/GVO",
+   "list": "room",
+   "table": "3.2",
+   "row": 60,
+   "page": 16,
+   "name": "Güvenlik Kulübesi / Odası",
+   "code": "GVO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/HVZ",
+   "list": "room",
+   "table": "3.2",
+   "row": 61,
+   "page": 16,
+   "name": "Havuz",
+   "code": "HVZ",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/HTH",
+   "list": "room",
+   "table": "3.2",
+   "row": 62,
+   "page": 16,
+   "name": "Havuz Teknik Hacim",
+   "code": "HTH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/HWD",
+   "list": "room",
+   "table": "3.2",
+   "row": 63,
+   "page": 16,
+   "name": "Havuz WC ve Duşları",
+   "code": "HWD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/HFO",
+   "list": "room",
+   "table": "3.2",
+   "row": 64,
+   "page": 16,
+   "name": "Hidrofor Odası",
+   "code": "HFO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/HZO",
+   "list": "room",
+   "table": "3.2",
+   "row": 65,
+   "page": 16,
+   "name": "Hizmetli Odası",
+   "code": "HZO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/HOB",
+   "list": "room",
+   "table": "3.2",
+   "row": 66,
+   "page": 16,
+   "name": "Hobi Odası",
+   "code": "HOB",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/HOL",
+   "list": "room",
+   "table": "3.2",
+   "row": 67,
+   "page": 16,
+   "name": "Hol",
+   "code": "HOL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ISK",
+   "list": "room",
+   "table": "3.2",
+   "row": 68,
+   "page": 16,
+   "name": "Işıklık",
+   "code": "ISK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/IAV",
+   "list": "room",
+   "table": "3.2",
+   "row": 69,
+   "page": 16,
+   "name": "İç Avlu",
+   "code": "IAV",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/IDO",
+   "list": "room",
+   "table": "3.2",
+   "row": 70,
+   "page": 16,
+   "name": "İdari Oda",
+   "code": "IDO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/JNO",
+   "list": "room",
+   "table": "3.2",
+   "row": 71,
+   "page": 16,
+   "name": "Jeneratör Odası",
+   "code": "JNO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KKR",
+   "list": "room",
+   "table": "3.2",
+   "row": 72,
+   "page": 17,
+   "name": "Kaçış Koridorları",
+   "code": "KKR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KAF",
+   "list": "room",
+   "table": "3.2",
+   "row": 73,
+   "page": 17,
+   "name": "Kafeterya",
+   "code": "KAF",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KZD",
+   "list": "room",
+   "table": "3.2",
+   "row": 74,
+   "page": 17,
+   "name": "Kalorifer Dairesi / Kazan Dairesi",
+   "code": "KZD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KHV",
+   "list": "room",
+   "table": "3.2",
+   "row": 75,
+   "page": 17,
+   "name": "Kapalı Havuz",
+   "code": "KHV",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KCD",
+   "list": "room",
+   "table": "3.2",
+   "row": 76,
+   "page": 17,
+   "name": "Kapıcı Dairesi",
+   "code": "KCD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KEO",
+   "list": "room",
+   "table": "3.2",
+   "row": 77,
+   "page": 17,
+   "name": "Kat Elektrik Odaları",
+   "code": "KEO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KHL",
+   "list": "room",
+   "table": "3.2",
+   "row": 78,
+   "page": 17,
+   "name": "Kat Holü",
+   "code": "KHL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KLR",
+   "list": "room",
+   "table": "3.2",
+   "row": 79,
+   "page": 17,
+   "name": "Kiler",
+   "code": "KLR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KSO",
+   "list": "room",
+   "table": "3.2",
+   "row": 80,
+   "page": 17,
+   "name": "Klima Santral Odası",
+   "code": "KSO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KDP",
+   "list": "room",
+   "table": "3.2",
+   "row": 81,
+   "page": 17,
+   "name": "Konut Depo",
+   "code": "KDP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KOR",
+   "list": "room",
+   "table": "3.2",
+   "row": 82,
+   "page": 17,
+   "name": "Koridor",
+   "code": "KOR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KML",
+   "list": "room",
+   "table": "3.2",
+   "row": 83,
+   "page": 17,
+   "name": "Kömürlük",
+   "code": "KML",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KUR",
+   "list": "room",
+   "table": "3.2",
+   "row": 84,
+   "page": 17,
+   "name": "Kuranglez",
+   "code": "KUR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KAO",
+   "list": "room",
+   "table": "3.2",
+   "row": 85,
+   "page": 17,
+   "name": "Kuvvetli Akım Odası",
+   "code": "KAO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/KUT",
+   "list": "room",
+   "table": "3.2",
+   "row": 86,
+   "page": 17,
+   "name": "Kütüphane",
+   "code": "KUT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/LOB",
+   "list": "room",
+   "table": "3.2",
+   "row": 87,
+   "page": 17,
+   "name": "Lobi",
+   "code": "LOB",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/MAK",
+   "list": "room",
+   "table": "3.2",
+   "row": 88,
+   "page": 17,
+   "name": "Makine Dairesi",
+   "code": "MAK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/MAP",
+   "list": "room",
+   "table": "3.2",
+   "row": 89,
+   "page": 17,
+   "name": "Makine Dairesi Asansör Platformu",
+   "code": "MAP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/MRD",
+   "list": "room",
+   "table": "3.2",
+   "row": 90,
+   "page": 17,
+   "name": "Merdiven",
+   "code": "MRD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/MSO",
+   "list": "room",
+   "table": "3.2",
+   "row": 91,
+   "page": 17,
+   "name": "Misafir Odası",
+   "code": "MSO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/MSD",
+   "list": "room",
+   "table": "3.2",
+   "row": 92,
+   "page": 17,
+   "name": "Modüler Su Depoları",
+   "code": "MSD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/MUT",
+   "list": "room",
+   "table": "3.2",
+   "row": 93,
+   "page": 17,
+   "name": "Mutfak",
+   "code": "MUT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/MST",
+   "list": "room",
+   "table": "3.2",
+   "row": 94,
+   "page": 17,
+   "name": "Müştemilat",
+   "code": "MST",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ODA",
+   "list": "room",
+   "table": "3.2",
+   "row": 95,
+   "page": 17,
+   "name": "Oda",
+   "code": "ODA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ODL",
+   "list": "room",
+   "table": "3.2",
+   "row": 96,
+   "page": 17,
+   "name": "Odunluk",
+   "code": "ODL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/OFS",
+   "list": "room",
+   "table": "3.2",
+   "row": 97,
+   "page": 17,
+   "name": "Ofis",
+   "code": "OFS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/OTP",
+   "list": "room",
+   "table": "3.2",
+   "row": 98,
+   "page": 17,
+   "name": "Otopark",
+   "code": "OTP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/OGH",
+   "list": "room",
+   "table": "3.2",
+   "row": 99,
+   "page": 17,
+   "name": "Otopark Giriş Holü",
+   "code": "OGH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ORP",
+   "list": "room",
+   "table": "3.2",
+   "row": 100,
+   "page": 17,
+   "name": "Otopark Rampası",
+   "code": "ORP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/OTR",
+   "list": "room",
+   "table": "3.2",
+   "row": 101,
+   "page": 17,
+   "name": "Oturma Odası",
+   "code": "OTR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/PNO",
+   "list": "room",
+   "table": "3.2",
+   "row": 102,
+   "page": 17,
+   "name": "Pano Odası",
+   "code": "PNO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/PRK",
+   "list": "room",
+   "table": "3.2",
+   "row": 103,
+   "page": 17,
+   "name": "Park",
+   "code": "PRK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/PMO",
+   "list": "room",
+   "table": "3.2",
+   "row": 104,
+   "page": 18,
+   "name": "Pompa Odası",
+   "code": "PMO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/RSP",
+   "list": "room",
+   "table": "3.2",
+   "row": 105,
+   "page": 18,
+   "name": "Resepsiyon",
+   "code": "RSP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/REV",
+   "list": "room",
+   "table": "3.2",
+   "row": 106,
+   "page": 18,
+   "name": "Revir",
+   "code": "REV",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/RZA",
+   "list": "room",
+   "table": "3.2",
+   "row": 107,
+   "page": 18,
+   "name": "Rezerv Alan",
+   "code": "RZA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/RZO",
+   "list": "room",
+   "table": "3.2",
+   "row": 108,
+   "page": 18,
+   "name": "Rezerv Oda",
+   "code": "RZO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/RZG",
+   "list": "room",
+   "table": "3.2",
+   "row": 109,
+   "page": 18,
+   "name": "Rüzgarlık",
+   "code": "RZG",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SHL",
+   "list": "room",
+   "table": "3.2",
+   "row": 110,
+   "page": 18,
+   "name": "Sahanlık",
+   "code": "SHL",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SLN",
+   "list": "room",
+   "table": "3.2",
+   "row": 111,
+   "page": 18,
+   "name": "Salon",
+   "code": "SLN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SVM",
+   "list": "room",
+   "table": "3.2",
+   "row": 112,
+   "page": 18,
+   "name": "Salon ve Mutfak",
+   "code": "SVM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SDO",
+   "list": "room",
+   "table": "3.2",
+   "row": 113,
+   "page": 18,
+   "name": "Sandık Odası",
+   "code": "SDO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SCO",
+   "list": "room",
+   "table": "3.2",
+   "row": 114,
+   "page": 18,
+   "name": "Sayaç Odası",
+   "code": "SCO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SRM",
+   "list": "room",
+   "table": "3.2",
+   "row": 115,
+   "page": 18,
+   "name": "Servis Merdiveni",
+   "code": "SRM",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SGN",
+   "list": "room",
+   "table": "3.2",
+   "row": 116,
+   "page": 18,
+   "name": "Sığınak",
+   "code": "SGN",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SGH",
+   "list": "room",
+   "table": "3.2",
+   "row": 117,
+   "page": 18,
+   "name": "Sığınak Giriş Holü",
+   "code": "SGH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/STO",
+   "list": "room",
+   "table": "3.2",
+   "row": 118,
+   "page": 18,
+   "name": "Sistem Odası",
+   "code": "STO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SSA",
+   "list": "room",
+   "table": "3.2",
+   "row": 119,
+   "page": 18,
+   "name": "Sosyal Alan",
+   "code": "SSA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SST",
+   "list": "room",
+   "table": "3.2",
+   "row": 120,
+   "page": 18,
+   "name": "Sosyal Tesis",
+   "code": "SST",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SYO",
+   "list": "room",
+   "table": "3.2",
+   "row": 121,
+   "page": 18,
+   "name": "Soyunma Odası",
+   "code": "SYO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SPS",
+   "list": "room",
+   "table": "3.2",
+   "row": 122,
+   "page": 18,
+   "name": "Spor Salonu",
+   "code": "SPS",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SDP",
+   "list": "room",
+   "table": "3.2",
+   "row": 123,
+   "page": 18,
+   "name": "Su Deposu",
+   "code": "SDP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SSY",
+   "list": "room",
+   "table": "3.2",
+   "row": 124,
+   "page": 18,
+   "name": "Su Sayaç Yeri",
+   "code": "SSY",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SLD",
+   "list": "room",
+   "table": "3.2",
+   "row": 125,
+   "page": 18,
+   "name": "Sulama Deposu",
+   "code": "SLD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/SFT",
+   "list": "room",
+   "table": "3.2",
+   "row": 126,
+   "page": 18,
+   "name": "Şaft",
+   "code": "SFT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/TKO",
+   "list": "room",
+   "table": "3.2",
+   "row": 127,
+   "page": 18,
+   "name": "Teknik Oda",
+   "code": "TKO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/TVO",
+   "list": "room",
+   "table": "3.2",
+   "row": 128,
+   "page": 18,
+   "name": "Televizyon Odası",
+   "code": "TVO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/TMZ",
+   "list": "room",
+   "table": "3.2",
+   "row": 129,
+   "page": 18,
+   "name": "Temizlik Odası",
+   "code": "TMZ",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/TRT",
+   "list": "room",
+   "table": "3.2",
+   "row": 130,
+   "page": 18,
+   "name": "Teras Çatı",
+   "code": "TRT",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/TTO",
+   "list": "room",
+   "table": "3.2",
+   "row": 131,
+   "page": 18,
+   "name": "Tesisat Odası",
+   "code": "TTO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/TPO",
+   "list": "room",
+   "table": "3.2",
+   "row": 132,
+   "page": 18,
+   "name": "Toplantı Odası",
+   "code": "TPO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/TRO",
+   "list": "room",
+   "table": "3.2",
+   "row": 133,
+   "page": 18,
+   "name": "Trafo Odası",
+   "code": "TRO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/TUV",
+   "list": "room",
+   "table": "3.2",
+   "row": 134,
+   "page": 18,
+   "name": "Tuvalet",
+   "code": "TUV",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/UTO",
+   "list": "room",
+   "table": "3.2",
+   "row": 135,
+   "page": 18,
+   "name": "Ütü Odası",
+   "code": "UTO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/VES",
+   "list": "room",
+   "table": "3.2",
+   "row": 136,
+   "page": 19,
+   "name": "Vestiyer",
+   "code": "VES",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/WCC",
+   "list": "room",
+   "table": "3.2",
+   "row": 137,
+   "page": 19,
+   "name": "WC",
+   "code": "WCC",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YSD",
+   "list": "room",
+   "table": "3.2",
+   "row": 138,
+   "page": 19,
+   "name": "Yağmur Suyu Deposu",
+   "code": "YSD",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YDP",
+   "list": "room",
+   "table": "3.2",
+   "row": 139,
+   "page": 19,
+   "name": "Yakıt Deposu",
+   "code": "YDP",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YKO",
+   "list": "room",
+   "table": "3.2",
+   "row": 140,
+   "page": 19,
+   "name": "Yakıt Tankı Odası",
+   "code": "YKO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YGH",
+   "list": "room",
+   "table": "3.2",
+   "row": 141,
+   "page": 19,
+   "name": "Yangın Güvenlik Holü",
+   "code": "YGH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YMR",
+   "list": "room",
+   "table": "3.2",
+   "row": 142,
+   "page": 19,
+   "name": "Yangın Merdiveni",
+   "code": "YMR",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YPO",
+   "list": "room",
+   "table": "3.2",
+   "row": 143,
+   "page": 19,
+   "name": "Yangın Pompa Odası",
+   "code": "YPO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YND",
+   "list": "room",
+   "table": "3.2",
+   "row": 144,
+   "page": 19,
+   "name": "Yangın Suyu Deposu",
+   "code": "YND",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YTO",
+   "list": "room",
+   "table": "3.2",
+   "row": 145,
+   "page": 19,
+   "name": "Yatak Odası",
+   "code": "YTO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YTH",
+   "list": "room",
+   "table": "3.2",
+   "row": 146,
+   "page": 19,
+   "name": "Yatakhane",
+   "code": "YTH",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YSA",
+   "list": "room",
+   "table": "3.2",
+   "row": 147,
+   "page": 19,
+   "name": "Yemek Servis Alanı",
+   "code": "YSA",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YMK",
+   "list": "room",
+   "table": "3.2",
+   "row": 148,
+   "page": 19,
+   "name": "Yemekhane",
+   "code": "YMK",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YNO",
+   "list": "room",
+   "table": "3.2",
+   "row": 149,
+   "page": 19,
+   "name": "Yönetim Odası",
+   "code": "YNO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YMO",
+   "list": "room",
+   "table": "3.2",
+   "row": 150,
+   "page": 19,
+   "name": "Yönetici Müdür Odası",
+   "code": "YMO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/YYO",
+   "list": "room",
+   "table": "3.2",
+   "row": 151,
+   "page": 19,
+   "name": "Yönetici Müdür Yardımcısı Odası",
+   "code": "YYO",
+   "note": null,
+   "group": null
+  },
+  {
+   "id": "T3.2/ZAO",
+   "list": "room",
+   "table": "3.2",
+   "row": 152,
+   "page": 19,
+   "name": "Zayıf Akım Odası",
+   "code": "ZAO",
+   "note": null,
+   "group": null
+  }
+ ],
+ "series": [
+  {
+   "series": true,
+   "table": "2.14",
+   "page": 13,
+   "after": null
+  },
+  {
+   "series": true,
+   "table": "2.14",
+   "page": 13,
+   "after": "K04"
+  }
+ ],
+ "fonts": [
+  {
+   "id": "T4.7/1",
+   "table": "4.7",
+   "row": 1,
+   "page": 25,
+   "font": "ARIAL",
+   "points": "8-15"
+  },
+  {
+   "id": "T4.7/2",
+   "table": "4.7",
+   "row": 2,
+   "page": 25,
+   "font": "TIMES NEW ROMAN",
+   "points": "9-16"
+  },
+  {
+   "id": "T4.7/3",
+   "table": "4.7",
+   "row": 3,
+   "page": 25,
+   "font": "CALIBRI",
+   "points": "8-16"
+  },
+  {
+   "id": "T4.7/4",
+   "table": "4.7",
+   "row": 4,
+   "page": 25,
+   "font": "CENTURY",
+   "points": "10-15"
+  },
+  {
+   "id": "T4.7/5",
+   "table": "4.7",
+   "row": 5,
+   "page": 25,
+   "font": "ISO SHX",
+   "points": "9-16"
+  }
+ ],
+ "marks": [
+  {
+   "id": "S4.7/1",
+   "figure": "4.7",
+   "row": 1,
+   "page": 28,
+   "mark": "Planda kot",
+   "measure": "Øa",
+   "sizes": {
+    "1/200": "3",
+    "1/100": "3",
+    "1/50": "5",
+    "1/20": "7"
+   }
+  },
+  {
+   "id": "S4.7/2",
+   "figure": "4.7",
+   "row": 2,
+   "page": 28,
+   "mark": "Planda kot",
+   "measure": "b",
+   "sizes": {
+    "1/200": "1",
+    "1/100": "1",
+    "1/50": "1",
+    "1/20": "1"
+   }
+  },
+  {
+   "id": "S4.7/3",
+   "figure": "4.7",
+   "row": 3,
+   "page": 28,
+   "mark": "Mekânların kod numaraları",
+   "measure": "a",
+   "sizes": {
+    "1/200": "-",
+    "1/100": "5",
+    "1/50": "5",
+    "1/20": "7"
+   }
+  },
+  {
+   "id": "S4.7/4",
+   "figure": "4.7",
+   "row": 4,
+   "page": 28,
+   "mark": "Mekânların kod numaraları",
+   "measure": "b",
+   "sizes": {
+    "1/200": "-",
+    "1/100": "10",
+    "1/50": "10",
+    "1/20": "14"
+   }
+  },
+  {
+   "id": "S4.7/5",
+   "figure": "4.7",
+   "row": 5,
+   "page": 28,
+   "mark": "Merdiven çıkış çizgisi bitimi",
+   "measure": "a",
+   "sizes": {
+    "1/200": "1",
+    "1/100": "1.5",
+    "1/50": "2",
+    "1/20": "4"
+   }
+  },
+  {
+   "id": "S4.7/6",
+   "figure": "4.7",
+   "row": 6,
+   "page": 28,
+   "mark": "Merdiven çıkış çizgisi başlangıcı",
+   "measure": "Øa",
+   "sizes": {
+    "1/200": "1",
+    "1/100": "1",
+    "1/50": "2",
+    "1/20": "2.5"
+   }
+  },
+  {
+   "id": "S4.7/7",
+   "figure": "4.7",
+   "row": 7,
+   "page": 28,
+   "mark": "Kapı ve pencere pozu",
+   "measure": "Øa",
+   "sizes": {
+    "1/200": "-",
+    "1/100": "5",
+    "1/50": "5",
+    "1/20": "7"
+   }
+  },
+  {
+   "id": "S4.7/8",
+   "figure": "4.7",
+   "row": 8,
+   "page": 28,
+   "mark": "Kapı ve pencere pozu",
+   "measure": "a",
+   "sizes": {
+    "1/200": "-",
+    "1/100": "7",
+    "1/50": "7",
+    "1/20": "9"
+   }
+  },
+  {
+   "id": "S4.7/9",
+   "figure": "4.7",
+   "row": 9,
+   "page": 28,
+   "mark": "Kapı ve pencere pozu",
+   "measure": "b",
+   "sizes": {
+    "1/200": "-",
+    "1/100": "4",
+    "1/50": "4",
+    "1/20": "5"
+   }
+  }
+ ],
+ "figures": [
+  {
+   "id": "S4.1",
+   "figure": "4.1",
+   "page": 26,
+   "title": "Örnek Kuzey Oku İşareti Gösterim Çeşitleri (bilgi için)"
+  },
+  {
+   "id": "S4.2",
+   "figure": "4.2",
+   "page": 26,
+   "title": "Örnek Kot İşareti Gösterimi (Planlar) (bilgi için)"
+  },
+  {
+   "id": "S4.3",
+   "figure": "4.3",
+   "page": 26,
+   "title": "Kot İşareti Gösterimi (Kesitler ve Görünüşler) (bilgi için)"
+  },
+  {
+   "id": "S4.4",
+   "figure": "4.4",
+   "page": 27,
+   "title": "Kesit Hattı Gösterim Çeşitleri (bilgi için)"
+  },
+  {
+   "id": "S4.5",
+   "figure": "4.5",
+   "page": 27,
+   "title": "Aks Gösterimi (bilgi için)"
+  },
+  {
+   "id": "S4.6",
+   "figure": "4.6",
+   "page": 27,
+   "title": "Tabii Zemin Kotu ve Tesviye Kotu Gösterimi (bilgi için)"
+  },
+  {
+   "id": "S4.7",
+   "figure": "4.7",
+   "page": 28,
+   "title": "Planda Ölçülendirme ve Kodlama İşaretleri (bilgi için)"
+  }
+ ]
+}

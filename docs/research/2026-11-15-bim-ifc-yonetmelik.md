@@ -211,6 +211,9 @@ Yukarıdaki tablonun şu satırları sayfadan okundu:
 - **15 (IfcZone) yarı açık.** Tablo 6.68 yalnız genel tanımı verir (mekanların, kısmi mekanların ya da başka zonların
   gruplanması) ve `LongName`, `Name`, `ObjectType` ister; neyi temsil edeceğini söylemez.
 
+**17 noktanın hepsi karara bağlandı (15 Kasım 2026):** [ADR 8062](../adr/8062-digital-project-rule-catalog.md) §6.1,
+K01…K17. Altısı idarenin ya da Bakanlığın cevabını bekliyor (4, 9, 11, 12, 13, 16); parametreleri boş tutulur.
+
 Eklerden yeni çıkan ve plana girecek ayrıntılar: Tablo 2.11'deki zemin öge kodları üç harflidir (IKS, KZK, ZTE) oysa EK-2
 2.5 dört karakter der; Tablo 4.5'te statik, mekanik ve elektrik blok adlarının alt disiplin alanı 3 karakterdir (Tablo
 4.2'de katman adlarında 4); EK-4 4.13.1 proje geneli katmanlar için "GENL" alt disiplin kısaltmasını, 4.14.2 emsal

@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- Dijital proje kuralları ([ADR 8062](docs/adr/8062-digital-project-rule-catalog.md), `arch.digitalRules`): web'e dönüşte
+  `kentos-digital-project` ve `kentos-ifc`'in `rules` listesi (ikisi de wasm32'de derleniyor) `crates/wasm/` altında
+  bağlanır; pencere web'in arayüz çatısıyla; Mimari denetim bulgularının kuralı ek ve sayfayı söylesin (`cited`).
 - IFC görüntüleyici (IFC-12, [ADR 8061](docs/adr/8061-ifc-viewer-and-reading-engine.md) §6.2): web'e dönüşte `crates/wasm/`
   altında `kentos-ifc` (`mesh`) ile görüntüleyici çekirdeğinin bağlaması; çizim web'in WebGPU arka ucunda, ortak
   `shaders/wgsl/scene3d` sözleşmesiyle; paneller web'in arayüz çatısıyla; okuma işçide; wasm32'nin 4 GB sınırını aşan
@@ -4281,7 +4284,7 @@ mimari disiplinin modelini yazar; statik ve tesisat modelleri altlık olarak oku
 
 **Mimari BIM** ([plan/bim-plan.md §5](plan/bim-plan.md#5-iş-paketleri)):
 
-- [ ] `BIM-01` Yönetmeliğin eklerini (EK-1…EK-9) sayfa görüntülerinden kaynak sayfasıyla sürümlü kural kataloğuna geçir; yoruma açık 17 noktayı karara bağla; bugünkü çıktıyı kataloğa karşı ölç.
+- [x] `BIM-01` Yönetmeliğin ekleri (EK-1…EK-9) sayfasıyla sürümlü kural kataloğunda (`kentos-digital-project`, `kentos-ifc`); 17 nokta karara bağlı; bağımsız dökümle ve 20 rastgele satırla sayfadan karşılaştırıldı; bugünkü çıktı dosyadan ölçüldü (15 Kasım 2026, [ADR 8062](docs/adr/8062-digital-project-rule-catalog.md)). Kalan: 2+1 örneğinin ölçümü (model dosyası yok), Python/MCP sorgu komutu.
 - [ ] `BIM-02` Tarihli kapsam kararını kur: başvuru tarihi, il ve belediye nüfusu, kullanım ve alanla hangi yükümlülüğün (PDF/A, IFC, e-PYS) ne zaman başladığını maddesiyle söyle; eksik bilgide "teyit gerekli".
 - [ ] `BIM-03` 2B kuralların denetimi: EK-4 katmanı, çizgi tipi ve yazısı; EK-3 mahal numarası biçimi ve ad sözlüğü; bulgu nesnesini seçer.
 - [ ] `BIM-04` Paftanın modelden üretildiğinin kanıtı: türevlerin üretildiği revizyon, modelden gelmeyen çizimin listesi, eski türevle yayını durduran kapı (Md. 9/1; EK-9/21).
@@ -4304,7 +4307,7 @@ mimari disiplinin modelini yazar; statik ve tesisat modelleri altlık olarak oku
 
 **IFC** ([plan/ifc-uyum.md §10](plan/ifc-uyum.md#10-iş-paketleri)):
 
-- [ ] `IFC-01` Kural kataloğu `kentos-ifc`'te veri olarak; şemaya ve resmî şablonlara karşı sınanır; başlangıç ölçümü.
+- [x] `IFC-01` Kural kataloğu `kentos-ifc`'te veri olarak; IFC 4.3 şemasına ve resmî set şablonlarına karşı sınanıyor, her farkın kararı var; başlangıç ölçümü dosyadan (15 Kasım 2026, [ADR 8062](docs/adr/8062-digital-project-rule-catalog.md)).
 - [ ] `IFC-02` Yazılan sınıflarda zorunlu alanların tamamlanması; girilmemiş değer yazılmaz, eksik sayılır.
 - [ ] `IFC-03` Eksik sınıflar ve zonlar: mekânsal zon (emsal), grup (bağımsız bölüm), rampa, giydirme cephe, kaplama, baca, aks, asansör, vitrifiye, mobilya; vekil sınıf yok.
 - [ ] `IFC-04` Tip nesneleri, katmanlı malzeme takımı, çok katlı elemanın başvuruları.

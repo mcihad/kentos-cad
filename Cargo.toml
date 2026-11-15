@@ -23,7 +23,7 @@ members = [
     # Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and
     # operations; a crate of its own so the formats worker does not carry LAZ.
     "crates/shared/pointcloud",
-    # Netcad NCZ drawings (docs/adr/0138): a port of the NCZ Reader plugin, GPL-2.0-or-later
+    # NCZ drawings (docs/adr/0138): a port of a GPL-2.0-or-later NCZ reader
     # (crates/shared/ncz/README.md: not distributed before the author's permission).
     "crates/shared/ncz",
     # The project file, .kcad v2 (docs/specs/kcad-v2.md, docs/adr/0025).
@@ -42,6 +42,9 @@ members = [
     "crates/shared/scene3d",
     # The forms core (docs/adr/0401): a form's preflight, rules and a record's validation.
     "crates/shared/forms",
+    # The 2026 digital project regulation as data (docs/adr/8062): its annexes' rules with their pages, the profile's
+    # layers and KentOS's decisions; kentos-ifc keeps the IFC annexes over it.
+    "crates/shared/digital-project",
     # IFC (docs/adr/8047, 0908 §8): writing the road's alignments and the building as IFC 4.3, the digital project
     # regulation's classes, names and properties; later reading IFC and checking a model. A crate of its own: the IFC
     # work grows here.
@@ -55,7 +58,7 @@ members = [
     "crates/wasm/formats-wasm",
     # Point clouds in a module of their own, loaded when a point cloud is added or drawn.
     "crates/wasm/pointcloud-wasm",
-    # DXF and Netcad NCZ in modules of their own, loaded only when such a file is imported.
+    # DXF and NCZ in modules of their own, loaded only when such a file is imported.
     "crates/wasm/dxf-wasm",
     "crates/wasm/ncz-wasm",
     # The sheet core in a module of its own, loaded when the sheet mode opens.
@@ -141,6 +144,7 @@ default-members = [
     "crates/shared/road",
     "crates/shared/scene3d",
     "crates/shared/forms",
+    "crates/shared/digital-project",
     "crates/shared/sheet",
     "crates/shared/style-core",
     "crates/shared/svg-core",

@@ -37,7 +37,7 @@
 | Hava Atış Mesafesi | `ThrowLength` | `Pset_AirTerminalTypeCommon` | Sayı | akımının, Hava Menfezi'nden çıktıktan `AirFlowRateRange` in üst değerinde ve izotermal koşullar altında, maksimum akış hızının belirli bir menfez hızına düşmesine kadar yatay veya düşey eksende kat ettiği mesafe. Verilen koşullar altında, bir cismin iki noktası arasındaki mesafenin (1). termodinamik sıcaklık (T) ile değişimini karakterize eden büyüklük (IEC 113-04-27). Bu oran Kelvin başına tanımlanır. |
 | Hava Dağılım Performans İndeksi | `AirDiffusionPerformanceIndex` | `Pset_AirTerminalTypeCommon` | Sayı | Hava Dağılımı Performans İndeksi (ADPI), soğutma modu koşullarında kullanılır. Bir mekanın kullanılan zonunda hava hızı ve hava sıcaklığına ilişkin birden fazla ölçüm yapıldığında ADPI, bu ölçüm noktalarının efektif cereyan sıcaklığı ve hava hızı şartlarını karşılama yüzdesini ifade eder. |
 | Kaplama Tipi | `FinishType` | `Pset_AirTerminalTypeCommon` | Metin | Havalandırma menfezinin kaplama tipi. |
-| Kaplama Rengi | `FinishColor` | `Pset_AirTerminalTypeCommon` | Metin | Nesnenin kaplama rengi. |
+| Kaplama Rengi | `FinishColour` | `Pset_AirTerminalTypeCommon` | Metin | Nesnenin kaplama rengi. |
 | Havalandırma Menfezi Montaj Tipi | `AirTerminalMountingType` | `Pset_AirTerminalTypeCommon` | Metin | Havalandırma menfezinin tavana, duvara vb. nasıl monte edildiği. Yüzey: Bir yüzeye (ör. duvar. kanal) monte edilir. Düz ve gömme: Yüzeye düz ve gömme monte edilir. Asma tavan montajı: Asma tavan sistemine monte edilir (Asma tavan taşıyıcı sistemi). |
 | Çekirdek Tipi | `CoreType` | `Pset_AirTerminalTypeCommon` | Metin | Havalandırma menfezinin iç çekirdeğinin nasıl imal edildiğini belirtir. |
 | Kanat Yatay Açısı | `CoreSetHorizontal` | `Pset_AirTerminalTypeCommon` | Sayı | Yatay (`LocalPlacement` X ekseninde) kanat açısı. |
@@ -712,7 +712,7 @@ i
 | Sıcaklık Sınıflandırması | `TemperatureRating` | `Pset_DamperTypeCommon` | Sayı | Sıcaklık sınıflandırması. |
 | Açık Konumda Basınç Düşümü | `OpenPressureDrop` | `Pset_DamperTypeCommon` | Sayı | Damper boyunca toplam basınç düşümü. |
 | Tam Kapalı Durumda Sızıntı | `LeakageFullyClosed` | `Pset_DamperTypeCommon` | Sayı | Tamamen kapalıyken sızıntı. |
-| Kayıp Katsayısı Eğrisi | `LossCoefficientCurve` | `Pset_DamperTypeCommon` | Sayı | Kayıp katsayısı - kanat pozisyon açısı eğrisi; basınç düşümünün hız basıncına oranı, kanat açısına göre; C = f (kanat açısı). |
+| Kayıp Katsayısı Eğrisi | `LossCoefficentCurve` | `Pset_DamperTypeCommon` | Sayı | Kayıp katsayısı - kanat pozisyon açısı eğrisi; basınç düşümünün hız basıncına oranı, kanat açısına göre; C = f (kanat açısı). |
 | Sızıntı Eğrisi | `LeakageCurve` | `Pset_DamperTypeCommon` | Sayı | Sızıntı - basınç düşümü ilişkisi; Sızıntı = f (basınç). |
 | Yeniden Üretilen Ses Eğrisi | `RegeneratedSoundCurve` | `Pset_DamperTypeCommon` | Sayı | Yeniden üretilen ses - hava debisi ilişkisi. |
 | Çerçeve Tipi | `FrameType` | `Pset_DamperTypeCommon` | Metin | Damperin kullandığı çerçeve tipi (ör. Standart, Tek Flanş, Tek Ters Flanş, Çift Flanş, vb.). |
@@ -754,7 +754,7 @@ i
 |  |  |  |  | Topraklama (Protective Earth) bazen CPC veya ortak koruyucu iletken olarak da adlandırılır. Elektriksel bir cihaz için bir grup hat iletken işlevi uygulanabilir. |
 | Hat Sayısı | `NumberOfPoles` | `Pset_ElectricalDeviceCommon` | Sayı | Nesnenin etkileyeceği kutup sayısı.<br>Cihazın işlemeye/iletmeye yönelik tasarlandığı enerjili hat (faz) sayısı. |
 | Koruyucu Topraklama Bağlantısı Mevcut | `HasProtectiveEarth` | `Pset_ElectricalDeviceCommon` | Mantıksal | Nesnenin koruyucu topraklama bağlantısına sahip olduğunu (=DOĞRU) veya olmadığını (-YALIŞ) gösterir. |
-| Yalıtım Standardı Yalıtım Standardı Sınıfı | `InsulationStandardCIInsulationStandardClass` | `Pset_ElectricalDeviceCommon` | Metin | Yalıtım standart sınıfları, elektrik çarpmasına karşı temel koruma bilgileri sağlar. Yalıtım seviyelerini, yapısal gereksinimler (yüzeysel mesafe ve boşluk mesafeleri) ve elektriksel gereksinimler (elektrik dayanıklılık testlerine uygunluk) açısından tanımlar. Temel yalıtım, tek arıza koşulları altında kısa devre yapmış olarak kabul edilir. Gereken gerçek değerler, yalıtımın maruz kaldığı çalışma voltajına ve diğer faktörlere bağlıdır. Ayrıca, elektrikli cihazın koruyucu toprak bağlantısına sahip olup olmadığını da belirtir. |
+| Yalıtım Standardı Sınıfı | `InsulationStandardClass` | `Pset_ElectricalDeviceCommon` | Metin | Yalıtım standart sınıfları, elektrik çarpmasına karşı temel koruma bilgileri sağlar. Yalıtım seviyelerini, yapısal gereksinimler (yüzeysel mesafe ve boşluk mesafeleri) ve elektriksel gereksinimler (elektrik dayanıklılık testlerine uygunluk) açısından tanımlar. Temel yalıtım, tek arıza koşulları altında kısa devre yapmış olarak kabul edilir. Gereken gerçek değerler, yalıtımın maruz kaldığı çalışma voltajına ve diğer faktörlere bağlıdır. Ayrıca, elektrikli cihazın koruyucu toprak bağlantısına sahip olup olmadığını da belirtir. |
 | IP Kodu | IP\_Code | `Pset_ElectricalDeviceCommon` | Metin | IP Kodu (Uluslararası Koruma Sınıflandırması, IEC 60529), dış etkilere karşı sağlanan koruma derecesini sınıflandırır ve derecelendirir. |
 | IK Kodu | IK\_Code | `Pset_ElectricalDeviceCommon` | Metin | IEC 62262 (2002)'ye göre IK Kodu, elektrikli ekipman muhafazalarının dış mekanik darbelere karşı sağladığı koruma derecesi için sayısal bir sınıflandırmadır.<br>Not: Daha önceki etiketlemede, ilgili IP Koduna (dış etkilere karşı koruma) üçüncü bir rakam (1..) eklenerek darbe koruma seviyesi gösterilmişti. |
 | Topraklama Tipi | `EarthingStyle` | `Pset_ElectricalDeviceCommon` | Metin | Elektrikli cihazın topraklama tipini gösterir. |
@@ -795,7 +795,7 @@ i
 | Kanal Boyutlandırma Yöntemi | `DuctSizingMethod` | `Pset_DistributionSystemTypeVentilation` | Metin | Sistem bileşenlerinin boyutlandırılmasında kullanılacak yöntemi tanımlayan liste. |
 | Basınç Sınıfı | `PressureClass` | `Pset_DistributionSystemTypeVentilation` | Sayı | Nesnenin nominal basınç sınıfı. Sistem bileşenlerinin nominal basınç değerini belirtir. |
 | Sızdırmazlık Sınıfı | `LeakageClass` | `Pset_DistributionSystemTypeVentilation` | Sayı | Sistem bileşenleri için nominal sızdırmazlık sınıfı. |
-| Sürtünme Kaybı | `FrictionLossI` | `Pset_DistributionSystemTypeVentilation` | Sayı | Birim uzunluk başına sürtünmeden kaynaklanan basınç kaybı. (Veri tipi = Basınç/Uzunluk ölçüsü) |
+| Sürtünme Kaybı | `FrictionLoss` | `Pset_DistributionSystemTypeVentilation` | Sayı | Birim uzunluk başına sürtünmeden kaynaklanan basınç kaybı. (Veri tipi = Basınç/Uzunluk ölçüsü) |
 | Fire Oranı | `ScrapFactor` | `Pset_DistributionSystemTypeVentilation` | Sayı | Sac malzeme fire orani. |
 | Kanal Sızdırmazlık Malzemesi | `DuctSealant` | `Pset_DistributionSystemTypeVentilation` | Metin | Kanal ve bağlantı parçalarında kullanılan sızdırmazlık malzemesinin türü. |
 | Maksimum Hava Hızı | `MaximumVelocity` | `Pset_DistributionSystemTypeVentilation` | Sayı | Kanal veya bağlantı parçasındaki maksimum tasarım hava hızı. |
@@ -856,7 +856,7 @@ i
 
 | Türkçe Tanım (Bilgi Amaçlı) | Özellik | Özellik Seti / İlişki | Veri Tipi (Bilgi Amaçlı) | Açıklama |
 |---|---|---|---|---|
-|  | `CSBPoZNo` | `TREpys_PozOzellikSeti` | Metin | Çevre, Şehircilik ve İklim Değişikliği Bakanlığı İnşaat ve Tesisat Birim Fiyat Poz No'su. |
+|  | `CSBPozNo` | `TREpys_PozOzellikSeti` | Metin | Çevre, Şehircilik ve İklim Değişikliği Bakanlığı İnşaat ve Tesisat Birim Fiyat Poz No'su. |
 |  | Debi | `TREpys_PozOzellikSeti` | Sayı | Kanal bağlantı parçasından geçen hava akış miktarını ifade eder. Belirli işletme koşullarında kanal içindeki akışkanın hacimsel debisini gösterir. |
 | Basınç Sınıfı | `PressureClass` | `Pset_DuctFittingTypeCommon` | Sayı | Nesnenin nominal basınç sınıfı.<br>Yetkili kurum tarafından tanımlanan basınç sınıflandırması (ör.<br>SMACNA, vb.). |
 | Basınç Aralığı | `PressureRange` | `Pset_DuctFittingTypeCommon` | Sayı | İzin verilen maksimum ve minimum çalışma basıncı (ortam basıncına göre). |

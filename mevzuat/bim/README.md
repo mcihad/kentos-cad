@@ -95,6 +95,29 @@ isteğe bağlı listelerinde 6.69–6.135 sırası zorunlu listeyle aynıdır; I
 - **Görüntüyle tek tek karşılaştırılmayan bölüm:** EK-6 ve EK-7 tablolarındaki uzun açıklama metinleri. Buralarda harf ya da
   noktalama hatası kalmış olabilir. Bir kural bu açıklamalara dayanacaksa PDF sayfasına bakın.
 
+## Düzeltmeler (15 Kasım 2026, kural kataloğu)
+
+Kural kataloğu ([ADR 8062](../../docs/adr/8062-digital-project-rule-catalog.md)) bu metinden üretilir. IFC 4.3 şemasıyla
+ve bağımsız bir dökümle karşılaştırılınca 14 satırda okuma hatası çıktı. Her biri PDF'in kendi sayfasının görüntüsüyle
+(300–400 dpi) doğrulanıp düzeltildi:
+
+- `CSBPoZNo` → `CSBPozNo` (s. 154, 202, 217);
+- "### USERDEFINED" → "USERDEFINED" (s. 51);
+- "TWO QUARTER TURN RAMP: HALF TURN RAMP" → virgülle (s. 88);
+- `IfcReiAssignsToGroup` → `IfcRelAssignsToGroup` (s. 62);
+- `IfcRe)AssociatesMaterial` → `IfcRelAssociatesMaterial` (s. 79);
+- `InsulationStandardCIInsulationStandardClass` ve iki kez yazılmış Türkçe adı → `InsulationStandardClass`, "Yalıtım
+  Standardı Sınıfı" (s. 149);
+- `FrictionLossI` → `FrictionLoss` (s. 151);
+- `ValvePatter` → `ValvePattern` (s. 214);
+- `Qto_BuildingBaseQuantity` → `Qto_BuildingBaseQuantities` (s. 43, iki satır; hücrede sarmış);
+- `FinishColor` → `FinishColour` (s. 111) ve `LossCoefficientCurve` → `LossCoefficentCurve` (s. 147).
+
+Son ikisini sözlük adımı "düzeltmişti". Basılı yazım böyledir; `LossCoefficentCurve` IFC 4.3'ün kendi yazımıyla aynıdır.
+
+Kaynağın kendi yazım hataları düzeltilmez; katalogdaki kararlar onları çözer: `IfcDistrubitionSystem` (s. 150),
+`TREpys_PozOzellikScti` (s. 113), `NumberofCells` (s. 141).
+
 ## Okurken dikkat: kaynağın kendi tutarsızlıkları
 
 - **Varlık adı ayırıcıları (EK-5 5.5, 5.5.3):** varlık adının bilgi alanları orta tire "-" ile ayrılır; "Açıklama" alanının

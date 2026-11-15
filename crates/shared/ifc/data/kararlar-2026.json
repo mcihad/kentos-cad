@@ -1,0 +1,451 @@
+{
+ "format": 1,
+ "decisions": [
+  {
+   "id": "K01",
+   "point": 1,
+   "title": "Varlık adındaki ayırıcılar",
+   "kind": "page",
+   "sources": [
+    {
+     "annex": 5,
+     "clause": "5.5",
+     "pages": [
+      29
+     ]
+    },
+    {
+     "annex": 5,
+     "clause": "5.5.3",
+     "pages": [
+      29
+     ]
+    },
+    {
+     "annex": 0,
+     "article": "11/2"
+    }
+   ],
+   "text": "Md. 11/2 açıklamadaki bilgilerin orta tireyle ayrıldığını söyler; EK-5 daha ayrıntılıdır: varlık adının bilgi alanları orta tire “-” ile ayrılır (5.5), açıklamanın içindeki bilgiler boşluksuz alt tire “_” ile ayrılır ve açıklamada orta tire kullanılmaz (5.5.3). KentOS EK-5'i uygular: MM-DVR-Dış_duvar_25. İdarenin yazılı yorumu kurum profiline girer.",
+   "param": {
+    "key": "name.description.separator",
+    "value": "_"
+   },
+   "rows": [
+    "M5.5",
+    "M5.5.3",
+    "T5.3"
+   ]
+  },
+  {
+   "id": "K02",
+   "point": 2,
+   "title": "Mahalin modeldeki adı",
+   "kind": "page",
+   "sources": [
+    {
+     "annex": 5,
+     "clause": "5.5.4",
+     "pages": [
+      29
+     ]
+    },
+    {
+     "annex": 6,
+     "table": "6.58",
+     "row": 2,
+     "pages": [
+      98
+     ]
+    }
+   ],
+   "text": "Mahal de varlık şablonuyla adlandırılır; EK-3'teki mahal numarası ve mahal ismi şablonun açıklama bölümünde ayrı ayrı ya da birlikte kullanılabilir (5.5.4). Tablo 6.58 adı “EK-5'e göre” ister. KentOS numarayı ve adı birlikte yazar: MM-MHL-K01_SLN_001_Salon.",
+   "param": {
+    "key": "space.name",
+    "value": "MM-MHL-<numara>_<ad>"
+   },
+   "rows": [
+    "M5.5.4",
+    "T6.58/Name"
+   ]
+  },
+  {
+   "id": "K04",
+   "point": 4,
+   "title": "Görünüm tanımı",
+   "kind": "administration",
+   "sources": [
+    {
+     "annex": 5,
+     "clause": "5.4",
+     "pages": [
+      29
+     ]
+    }
+   ],
+   "text": "Ekler yalnız IFC 4.3'ü esas alır (5.4); bir görünüm tanımı (Reference View, Design Transfer View) anmaz. KentOS bugün tasarım aktarımı düzeninde yazar: duvarın gövdesi bütün, açıklığı okuyucu çıkarır. Kesilmiş gövde düzeni ikinci çıktı olarak gelir; ruhsat profilinin hangisi olacağını idarenin ya da Bakanlığın kılavuzu söyler. Başlıkta yazan ad dosyanın gerçek içeriğini söyler.",
+   "asked": "Bakanlık ya da idare",
+   "param": {
+    "key": "ifc.view",
+    "value": null,
+    "default": "DesignTransferView"
+   },
+   "rows": [
+    "M5.4"
+   ]
+  },
+  {
+   "id": "K05",
+   "point": 5,
+   "title": "Ön tanımlı tipin doğruluğu",
+   "kind": "kentos",
+   "sources": [
+    {
+     "annex": 9,
+     "table": "9.1",
+     "row": 19,
+     "pages": [
+      239
+     ]
+    },
+    {
+     "annex": 5,
+     "clause": "5.5.3",
+     "pages": [
+      29
+     ]
+    }
+   ],
+   "text": "EK-9'un 19. sorusu yalnız “doğru Ön Tanımlı Tip” ister; NOTDEFINED'ı açıkça yasaklamaz. KentOS'un kuralı: nesnenin türünden belirlenebilen bir tip varken NOTDEFINED bulgudur; gerekçeli belirsizlik incelemeye gider; USERDEFINED için şemanın istediği tip adı (ObjectType) aranır. Tiplerin Türkçe karşılığı verilmez; gerekirse açıklamaya yazılır (5.5.3).",
+   "rows": [
+    "T9.1/19",
+    "M5.5.3"
+   ]
+  },
+  {
+   "id": "K06",
+   "point": 6,
+   "title": "IfcGroup'un etiketi",
+   "kind": "schema",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.37",
+     "row": 2,
+     "pages": [
+      76
+     ]
+    }
+   ],
+   "text": "Tablo 6.37 IfcGroup için “Etiket (Attribute: Tag)” ister; IFC 4.3'te IfcGroup'un Tag özniteliği yoktur (Tag, IfcElement'indir). Şema üstündür: alan yazılmaz, fark listesinde durur. İdare grubun bir kodunu isterse yeri ObjectType ya da bir özellik setidir; karar idareyle.",
+   "rows": [
+    "T6.37/Tag"
+   ],
+   "settles": [
+    "attribute:IfcGroup.Tag"
+   ]
+  },
+  {
+   "id": "K07",
+   "point": 7,
+   "title": "Firma vergi numarasının türü",
+   "kind": "schema",
+   "sources": [
+    {
+     "annex": 7,
+     "table": "7.4",
+     "row": 1,
+     "pages": [
+      225
+     ]
+    }
+   ],
+   "text": "Tablo 7.4 IfcOrganization.Identification'ı “Firma Vergi No”, veri tipini “Sayı” yazar; şemada tür IfcIdentifier'dır (metin). KentOS rakamlardan oluşan metin yazar; baştaki sıfır kaybolmaz.",
+   "rows": [
+    "T7.4/Identification"
+   ],
+   "settles": [
+    "datatype:T7.4/Identification"
+   ]
+  },
+  {
+   "id": "K08",
+   "point": 8,
+   "title": "Ön tanımlı tiplerin yazımı",
+   "kind": "schema",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.66",
+     "pages": [
+      107
+     ]
+    }
+   ],
+   "text": "EK-6 tablolarının ön tanımlı tip listeleri bazı değerleri boşlukla yazar (ELEMENTED WALL, SKIRTING BOARD, PAD FOOTING); şemanın sayımında boşluk yoktur (ELEMENTEDWALL). KentOS şemanın yazımını kullanır; katalog ekin yazımını saklar, karşılaştırma ikisini eşler.",
+   "rows": [
+    "T6.66"
+   ],
+   "settles": [
+    "predefined-spelling:*"
+   ]
+  },
+  {
+   "id": "K09",
+   "point": 9,
+   "title": "Giydirme cephe paneli",
+   "kind": "administration",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.21",
+     "pages": [
+      60
+     ]
+    }
+   ],
+   "text": "Giydirme cephenin paneli (IfcPlate) zorunlu ve isteğe bağlı sınıf listelerinde yoktur. Vekil sınıfa ya da üst sınıfa sessizce düşülmez (EK-6 6.1.3). Panelin nasıl yazılacağı idareyle teyit edilir; o güne kadar karşılığı olmayan nesne kayıp listesinde söylenir.",
+   "asked": "İdare",
+   "rows": [
+    "T6.21"
+   ]
+  },
+  {
+   "id": "K10",
+   "point": 10,
+   "title": "Aks: IfcGrid ve eksenleri",
+   "kind": "schema",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.36",
+     "row": 1,
+     "pages": [
+      75
+     ]
+    }
+   ],
+   "text": "Liste aksı IfcGridAxis diye anar ve AxisTag ister. Şemada IfcGridAxis bir kök nesne değildir (kimliği yoktur), bir IfcGrid'in eksenidir. KentOS aksları bir IfcGrid (adı EK-5 kalıbıyla, AKS koduyla) ve onun eksenleri olarak yazar; her eksenin AxisTag'i aksın etiketidir.",
+   "rows": [
+    "T6.36/AxisTag"
+   ]
+  },
+  {
+   "id": "K14",
+   "point": 14,
+   "title": "Mahalin net alanı",
+   "kind": "page",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.58",
+     "pages": [
+      98,
+      99
+     ]
+    },
+    {
+     "annex": 6,
+     "table": "6.125",
+     "row": 13,
+     "pages": [
+      200
+     ]
+    }
+   ],
+   "text": "Zorunlu Tablo 6.58 mahal için ad, ön tanımlı tip, zemin, duvar ve tavan kaplaması ile kalınlıklarını ister; net alan ve hacim isteğe bağlı Tablo 6.125'tedir (Qto_SpaceBaseQuantities). KentOS net alanı yazar; formun 10. sorusunun kanıtı bu miktardan ya da gövdeden hesapla gelir.",
+   "rows": [
+    "T6.125/Qto_SpaceBaseQuantities.NetFloorArea"
+   ]
+  },
+  {
+   "id": "K15",
+   "point": 15,
+   "title": "IfcZone neyi gruplar",
+   "kind": "kentos",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.68",
+     "pages": [
+      109
+     ]
+    }
+   ],
+   "text": "Tablo 6.68 zonu yalnız genel olarak tanımlar (mekânların, kısmi mekânların ya da başka zonların gruplanması) ve LongName, Name, ObjectType ister; neyi temsil edeceğini söylemez. KentOS zonla bağımsız bölümü, eklentiyi ve ortak alanı gruplar: adı numarası, uzun adı adı, nesne tipi türü. Yangın kompartımanı ayrı bir zon türüdür. İdarenin teyidi beklenir.",
+   "asked": "İdare",
+   "rows": [
+    "T6.68/LongName",
+    "T6.68/ObjectType"
+   ]
+  },
+  {
+   "id": "K30",
+   "title": "Tablo 6.92'nin başlığındaki sınıf adı",
+   "kind": "schema",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.92",
+     "pages": [
+      150
+     ]
+    }
+   ],
+   "text": "Tablo 6.92'nin başlığı sınıfı IfcDistrubitionSystem diye basar; IFC 4.3'teki ad IfcDistributionSystem'dir (dağıtım sistemi). KentOS şemanın adını kullanır; katalog basılı adı saklar.",
+   "rows": [
+    "T6.92"
+   ],
+   "settles": [
+    "class:IfcDistrubitionSystem"
+   ],
+   "replaces": [
+    {
+     "printed": "IfcDistrubitionSystem",
+     "used": "IfcDistributionSystem"
+    }
+   ]
+  },
+  {
+   "id": "K32",
+   "title": "Poz numarası setinin yazımı",
+   "kind": "kentos",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.70",
+     "row": 3,
+     "pages": [
+      113
+     ]
+    }
+   ],
+   "text": "Tablo 6.70 Bakanlığın birim fiyat poz numarasını TREpys_PozOzellikScti setinde basar; öbür bütün tablolar TREpys_PozOzellikSeti yazar. Ulusal set şemanın değildir; KentOS çoğunluğun yazımını kullanır ve farkı idareye bildirir.",
+   "rows": [
+    "T6.70/TREpys_PozOzellikScti.CSBPozNo"
+   ],
+   "settles": [
+    "national:TREpys_PozOzellikScti"
+   ],
+   "replaces": [
+    {
+     "printed": "TREpys_PozOzellikScti",
+     "used": "TREpys_PozOzellikSeti"
+    }
+   ]
+  },
+  {
+   "id": "K33",
+   "title": "Soğutma kulesinin hücre sayısı",
+   "kind": "schema",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.87",
+     "row": 15,
+     "pages": [
+      141
+     ]
+    }
+   ],
+   "text": "Tablo 6.87 özelliği NumberofCells diye basar; IFC 4.3'ün Pset_CoolingTowerTypeCommon şablonunda ad NumberOfCells'tir. KentOS şablonun adını kullanır.",
+   "rows": [
+    "T6.87/Pset_CoolingTowerTypeCommon.NumberofCells"
+   ],
+   "settles": [
+    "item:Pset_CoolingTowerTypeCommon.NumberofCells"
+   ],
+   "replaces": [
+    {
+     "printed": "NumberofCells",
+     "used": "NumberOfCells"
+    }
+   ]
+  },
+  {
+   "id": "K34",
+   "title": "Yolun ön tanımlı tipleri",
+   "kind": "schema",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.50",
+     "pages": [
+      89
+     ]
+    },
+    {
+     "annex": 6,
+     "table": "6.117",
+     "pages": [
+      189
+     ]
+    }
+   ],
+   "text": "Tablo 6.50 ve 6.117 IfcRoad'un ön tanımlı tipi olarak yol parçalarının tiplerini sayar (CARRIAGEWAY, ROUNDABOUT, SIDEWALK …). IFC 4.3'te IfcRoad'un tipi yalnız USERDEFINED ve NOTDEFINED'dır; bu değerler IfcRoadPart'ın (IfcRoadPartTypeEnum) tipleridir. KentOS Yol, yolu IfcRoad ve parçalarını IfcRoadPart olarak yazdığında tipleri parçalara verir; fark idareye bildirilir.",
+   "rows": [
+    "T6.50",
+    "T6.117"
+   ],
+   "settles": [
+    "predefined:IfcRoad:*"
+   ]
+  },
+  {
+   "id": "K35",
+   "title": "Veri tipi sütunu bilgi içindir",
+   "kind": "schema",
+   "sources": [
+    {
+     "annex": 6,
+     "clause": "6.1",
+     "pages": [
+      35
+     ]
+    }
+   ],
+   "text": "EK-6 ve EK-7 tablolarının veri tipi sütunu “Bilgi Amaçlı”dır (Metin, Sayı, Mantıksal). Bir satırın sütunu şemadaki türle ayrışırsa (sıcaklık aralığının “Metin”, yapım yılının “Mantıksal” yazılması gibi) şemanın türü geçerlidir: değer şemanın türüyle yazılır ve denetlenir. Ayrışan satırlar fark listesindedir.",
+   "rows": [],
+   "settles": [
+    "datatype:*"
+   ]
+  },
+  {
+   "id": "K36",
+   "title": "Sınıfa uygulanmayan şablonlar",
+   "kind": "schema",
+   "sources": [
+    {
+     "annex": 6,
+     "table": "6.127",
+     "pages": [
+      204
+     ]
+    },
+    {
+     "annex": 6,
+     "table": "6.113",
+     "pages": [
+      183
+     ]
+    },
+    {
+     "annex": 6,
+     "table": "6.91",
+     "pages": [
+      148
+     ]
+    }
+   ],
+   "text": "Bazı isteğe bağlı satırlar setini, IFC 4.3 şablonunun uygulanmadığı bir sınıfa verir: mekânsal zona Pset_ZoneCommon (şablon yalnız IfcZone'a uygulanır; mekânsal zonun resmî setleri Pset_SpatialZoneCommon ve Qto_SpatialZoneBaseQuantities), boru parçasına bağlantı parçasının seti (Pset_PipeFittingTypeCommon), köprüye ve köprü parçasına betonarme elemanın seti, dağıtım panosuna şablonun eski adla andığı set. KentOS bir şablonu uygulanmadığı sınıfa yazmaz; isteğe bağlı olan bu satırlar idare isteyene kadar yazılmaz, istendiğinde resmî karşılığı idareyle seçilir.",
+   "asked": "İdare",
+   "rows": [
+    "T6.127/Pset_ZoneCommon.GrossPlannedArea",
+    "T6.127/Pset_ZoneCommon.NetPlannedArea"
+   ],
+   "settles": [
+    "applies:*"
+   ]
+  }
+ ]
+}
