@@ -1003,8 +1003,9 @@ Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çi
 şemaları.
 
 - [ ] **Kod üretimi** — *kısmen: `kentos_ext.pyi` (ADR 8057 §20), ikon listesi (§21), panel tanımının JSON Schema'sı
-  (§25, 15 Kasım: tiplerden üretilir, depoda durur, sapınca test kırmızı); kalan: manifest, araç tanımı, katman şeması ve
-  `ProjectAuditFacts` şemaları.* Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
+  (§25, 15 Kasım: tiplerden üretilir, depoda durur, sapınca test kırmızı), manifestin JSON Schema'sı (§28, 15 Kasım:
+  aynı yol; KentOS'un gönderdiği manifestler ve Vitrin'in panelleri şemalara karşı sınanır); kalan: araç tanımı, katman
+  şeması ve `ProjectAuditFacts` şemaları.* Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
   `kentos.ui` bileşen şeması, `ProjectAuditFacts` şeması ve manifest/araç/panel JSON Schema'ları üretilir; üretilmiş
   dosya elle düzeltilmez, kaynak ve üretici aynı commit'te güncellenir; sapma derleme hattında hatadır [ECO-API-01, 05].
 - [ ] **`extension.blueprint(kind, module, prompt)`:** hedef modüle uygun hazır klasör iskeleti, kullanılabilir ikonlar,

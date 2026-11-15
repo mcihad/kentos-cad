@@ -31,6 +31,8 @@ mod paths;
 mod pointer;
 mod problem;
 mod python;
+#[cfg(all(test, feature = "schema"))]
+mod schema_check;
 pub mod sdk_pack;
 mod text;
 pub mod ui_panel;

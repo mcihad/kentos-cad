@@ -1,0 +1,1113 @@
+{
+  "$defs": {
+    "AuditEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "$ref": "#/$defs/Module",
+          "description": "The program whose audit it joins."
+        },
+        "handler": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "domain",
+        "handler"
+      ],
+      "type": "object"
+    },
+    "Capability": {
+      "description": "The capability vocabulary v1, fixed in ADIM 16; widening it is a new version.",
+      "enum": [
+        "document.read",
+        "document.write",
+        "datasets.read",
+        "datasets.create",
+        "datasets.manage",
+        "ui.ribbonTab",
+        "ui.panel",
+        "ui.contextMenu",
+        "processing.provider",
+        "audit.provider",
+        "expression.provider",
+        "mapTool",
+        "dataSource",
+        "files.userSelected",
+        "network"
+      ],
+      "type": "string"
+    },
+    "Capture": {
+      "description": "What a map tool asks the user to draw.",
+      "enum": [
+        "point",
+        "line",
+        "polygon",
+        "rectangle",
+        "orientedRectangle",
+        "circle"
+      ],
+      "type": "string"
+    },
+    "CommandEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "handler": {
+          "description": "`module.path:function`, known without importing it.",
+          "type": "string"
+        },
+        "icon": {
+          "description": "A built-in icon's name or a 20×20 SVG in the package.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "handler"
+      ],
+      "type": "object"
+    },
+    "Compatibility": {
+      "additionalProperties": false,
+      "description": "Where a package runs: [`crate::compatible`] reads it.",
+      "properties": {
+        "kentos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/KentosRange"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operatingSystems": {
+          "description": "None written: every system.",
+          "items": {
+            "$ref": "#/$defs/Os"
+          },
+          "type": "array"
+        },
+        "sdkProtocol": {
+          "$ref": "#/$defs/ProtocolRange"
+        }
+      },
+      "required": [
+        "sdkProtocol"
+      ],
+      "type": "object"
+    },
+    "ContextMenuItem": {
+      "additionalProperties": false,
+      "description": "A right-click menu's item: exactly one of the targets, and where.",
+      "properties": {
+        "audit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "builtin": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataSource": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "form": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mapTool": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "panel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "processing": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target": {
+          "$ref": "#/$defs/MenuTarget"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/When"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "target"
+      ],
+      "type": "object"
+    },
+    "Contributions": {
+      "additionalProperties": false,
+      "description": "What the extension adds to the window and the sources, read without its code (D6, D10).",
+      "properties": {
+        "contextMenus": {
+          "items": {
+            "$ref": "#/$defs/ContextMenuItem"
+          },
+          "type": "array"
+        },
+        "dataSources": {
+          "items": {
+            "$ref": "#/$defs/DataSource"
+          },
+          "type": "array"
+        },
+        "ribbonTabs": {
+          "items": {
+            "$ref": "#/$defs/RibbonTab"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "DataSource": {
+      "additionalProperties": false,
+      "description": "A source the extension brings without code: a service, tiles or a GeoPackage in the package (D10). It opens\nthrough KentOS's own service and base-map path.",
+      "properties": {
+        "attribution": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "crs": {
+          "description": "`EPSG:5254`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "description": "A GeoPackage in the package.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DataSourceKind"
+        },
+        "layers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "licenseNote": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "description": "A service's address; its server is in the `network` capability's `hosts`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "DataSourceKind": {
+      "enum": [
+        "wms",
+        "wmts",
+        "xyz",
+        "wfs",
+        "ogcapiFeatures",
+        "vectorTiles",
+        "geopackage"
+      ],
+      "type": "string"
+    },
+    "Dependencies": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "description": "Extensions that must be installed and enabled; no code is imported across (each runs in its own process).",
+          "items": {
+            "$ref": "#/$defs/ExtensionDependency"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "Deprecation": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "replacedBy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "Entrypoints": {
+      "additionalProperties": false,
+      "description": "What the extension's code answers. Ids are the package's own (`init-schema`); the host names them\n`ext.<extension>.<id>`. The process starts when one is first called; v1 has no \"run at start-up\" (D6).",
+      "properties": {
+        "audits": {
+          "items": {
+            "$ref": "#/$defs/AuditEntry"
+          },
+          "type": "array"
+        },
+        "commands": {
+          "items": {
+            "$ref": "#/$defs/CommandEntry"
+          },
+          "type": "array"
+        },
+        "expressions": {
+          "items": {
+            "$ref": "#/$defs/ExpressionEntry"
+          },
+          "type": "array"
+        },
+        "forms": {
+          "items": {
+            "$ref": "#/$defs/FormEntry"
+          },
+          "type": "array"
+        },
+        "mapTools": {
+          "items": {
+            "$ref": "#/$defs/MapToolEntry"
+          },
+          "type": "array"
+        },
+        "panels": {
+          "items": {
+            "$ref": "#/$defs/PanelEntry"
+          },
+          "type": "array"
+        },
+        "processing": {
+          "items": {
+            "$ref": "#/$defs/ProcessingEntry"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ExpressionEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "handler": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "handler"
+      ],
+      "type": "object"
+    },
+    "ExtensionDependency": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "description": "A range: `>=1.2, <2`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "type": "object"
+    },
+    "ExtensionKind": {
+      "description": "A vertical extension is a system of its own (a ribbon tab, layers, forms); a utility adds tools to the existing ones\nand opens no tab (EKL-02).",
+      "enum": [
+        "vertical",
+        "utility"
+      ],
+      "type": "string"
+    },
+    "FormEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "definition": {
+          "description": "`forms/<id>.kform`, a `kentos.form-package` v1.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "definition"
+      ],
+      "type": "object"
+    },
+    "ItemSize": {
+      "enum": [
+        "small",
+        "large"
+      ],
+      "type": "string"
+    },
+    "KentosRange": {
+      "additionalProperties": false,
+      "description": "KentOS's versions: `min` inclusive, `maxExclusive` exclusive; an end not written is open.",
+      "properties": {
+        "maxExclusive": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "min": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "L10n": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "description": "The language the manifest is written in.",
+          "type": "string"
+        },
+        "files": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The translations: language → file.",
+          "type": "object"
+        }
+      },
+      "required": [
+        "default"
+      ],
+      "type": "object"
+    },
+    "Links": {
+      "additionalProperties": false,
+      "properties": {
+        "homepage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "issues": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "MapToolEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "capture": {
+          "$ref": "#/$defs/Capture"
+        },
+        "handler": {
+          "type": "string"
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "snapLayers": {
+          "description": "The layers (by schema name) the tool snaps to.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "templateLengthM": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "templateWidthM": {
+          "description": "A rectangle's template, in metres: both or neither.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "capture",
+        "handler"
+      ],
+      "type": "object"
+    },
+    "MenuTarget": {
+      "description": "Which right-click menu: the drawing's (what is going on there, the selection's edits) or a layer's in Katmanlar.",
+      "enum": [
+        "drawing",
+        "layer"
+      ],
+      "type": "string"
+    },
+    "Module": {
+      "description": "A KentOS program an extension adds to.",
+      "enum": [
+        "mimari",
+        "harita",
+        "cbs",
+        "yol"
+      ],
+      "type": "string"
+    },
+    "OptionalFeature": {
+      "additionalProperties": false,
+      "properties": {
+        "extra": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "extra",
+        "label"
+      ],
+      "type": "object"
+    },
+    "Os": {
+      "description": "An operating system a package says it runs on.",
+      "enum": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "type": "string"
+    },
+    "PanelEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "definition": {
+          "description": "`ui/<id>.panel.json`, a `kentos.ui` panel.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "side": {
+          "$ref": "#/$defs/PanelSide"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "side",
+        "definition"
+      ],
+      "type": "object"
+    },
+    "PanelSide": {
+      "enum": [
+        "left",
+        "right",
+        "bottom"
+      ],
+      "type": "string"
+    },
+    "ProcessingEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "descriptor": {
+          "description": "`tools/<id>.tool.json`, a `kentos.processingTool` v1.",
+          "type": "string"
+        },
+        "handler": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "descriptor",
+        "handler"
+      ],
+      "type": "object"
+    },
+    "ProtocolRange": {
+      "additionalProperties": false,
+      "description": "The extension protocol's versions a package was written for, both ends inclusive.",
+      "properties": {
+        "max": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "min": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "min",
+        "max"
+      ],
+      "type": "object"
+    },
+    "PythonProject": {
+      "additionalProperties": false,
+      "description": "The Python project: `requires-python` and the packages are in its files, never repeated here (PY-UV-13).",
+      "properties": {
+        "lockFile": {
+          "type": "string"
+        },
+        "optionalFeatures": {
+          "additionalProperties": {
+            "$ref": "#/$defs/OptionalFeature"
+          },
+          "description": "What a user may turn on: the key is local, `extra` the project's optional dependency group.",
+          "type": "object"
+        },
+        "projectFile": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectFile",
+        "lockFile"
+      ],
+      "type": "object"
+    },
+    "RequestedCapability": {
+      "additionalProperties": false,
+      "description": "A capability the extension asks for: not a permission granted; the organisation's policy and the user decide, the\nbroker enforces (D5).",
+      "properties": {
+        "hosts": {
+          "description": "`network` only: the servers it talks to.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "$ref": "#/$defs/Capability"
+        },
+        "reason": {
+          "description": "Why, in a short Turkish sentence (120 characters at most): shown at install and, changed, at every update.",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "sendsDataToAi": {
+          "description": "`network` only: whether it sends data to an outside AI service.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "scope",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "RibbonItem": {
+      "additionalProperties": false,
+      "description": "A ribbon button: exactly one of the targets.",
+      "properties": {
+        "audit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "builtin": {
+          "description": "A KentOS command by its id (`cad.layers.service`): a button with no code of the extension's.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataSource": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "form": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "description": "The target's own title and icon unless given.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mapTool": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "panel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "processing": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "size": {
+          "$ref": "#/$defs/ItemSize",
+          "default": "small"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/When"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RibbonPanel": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/RibbonItem"
+          },
+          "type": "array"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "items"
+      ],
+      "type": "object"
+    },
+    "RibbonTab": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "module": {
+          "$ref": "#/$defs/Module",
+          "description": "The program whose ribbon shows it."
+        },
+        "panels": {
+          "items": {
+            "$ref": "#/$defs/RibbonPanel"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "module",
+        "panels"
+      ],
+      "type": "object"
+    },
+    "Runtime": {
+      "enum": [
+        "desktop",
+        "headless",
+        "cloud"
+      ],
+      "type": "string"
+    },
+    "Scope": {
+      "enum": [
+        "user-selected",
+        "current-project",
+        "plugin-owned"
+      ],
+      "type": "string"
+    },
+    "SelectionWhen": {
+      "enum": [
+        "none",
+        "feature",
+        "layer",
+        "many"
+      ],
+      "type": "string"
+    },
+    "When": {
+      "additionalProperties": false,
+      "description": "When an item shows: a closed vocabulary, judged without loading the extension's code (D6), so the ribbon is right\nfor a user without Python too. Every condition given holds.",
+      "properties": {
+        "capabilityGranted": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Capability"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "documentOpen": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "layerSchema": {
+          "description": "A layer of this schema name is in the project.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "module": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Module"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "selection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SelectionWhen"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The manifest v1.",
+  "properties": {
+    "authors": {
+      "description": "Display names; no e-mail (personal data, the catalog account vouches for contact).",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "changelogFile": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "compatibility": {
+      "$ref": "#/$defs/Compatibility"
+    },
+    "contributions": {
+      "$ref": "#/$defs/Contributions"
+    },
+    "dependencies": {
+      "$ref": "#/$defs/Dependencies"
+    },
+    "deprecation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Deprecation"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "description": {
+      "description": "Plain text (no HTML), shown before installing.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "entrypoints": {
+      "$ref": "#/$defs/Entrypoints"
+    },
+    "format": {
+      "const": "kentos.extension"
+    },
+    "icon": {
+      "description": "A 20×20 SVG in the package.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id": {
+      "description": "Reverse domain, lower case, two parts at least: `tr.ornek.mebis`.",
+      "type": "string"
+    },
+    "keywords": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "kind": {
+      "$ref": "#/$defs/ExtensionKind"
+    },
+    "l10n": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/L10n"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "license": {
+      "description": "An SPDX expression.",
+      "type": "string"
+    },
+    "licenseFile": {
+      "type": "string"
+    },
+    "links": {
+      "$ref": "#/$defs/Links"
+    },
+    "modules": {
+      "items": {
+        "$ref": "#/$defs/Module"
+      },
+      "type": "array"
+    },
+    "name": {
+      "type": "string"
+    },
+    "publisherId": {
+      "description": "A claim in the package; the catalog verifies the ownership.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "python": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PythonProject"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "requestedCapabilities": {
+      "items": {
+        "$ref": "#/$defs/RequestedCapability"
+      },
+      "type": "array"
+    },
+    "runtimes": {
+      "description": "The catalog's summary of where it runs; each tool says its own.",
+      "items": {
+        "$ref": "#/$defs/Runtime"
+      },
+      "type": "array"
+    },
+    "schemaFile": {
+      "description": "The vertical extension's layers, domains and relations.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "summary": {
+      "description": "One line.",
+      "type": "string"
+    },
+    "version": {
+      "description": "A semantic version; a pre-release (`1.2.0-beta.1`) puts it on the preview channel.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "format",
+    "schemaVersion",
+    "id",
+    "version",
+    "name",
+    "summary",
+    "authors",
+    "license",
+    "licenseFile",
+    "kind",
+    "modules",
+    "runtimes",
+    "compatibility"
+  ],
+  "title": "KentOS extension manifest (kentos.extension 1)",
+  "type": "object"
+}

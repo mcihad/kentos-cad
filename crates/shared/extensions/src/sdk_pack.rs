@@ -142,8 +142,12 @@ pub const EXT_STUB: &str = include_str!("../sdk/kentos_ext.pyi");
 /// a part of its own, as the icons are (the pack stays under what the desktop's Asistan gives a tool's result).
 pub const PANEL_SCHEMA: &str = include_str!("../sdk/kentos-ui-panel.schema.json");
 
+/// The manifest v1's JSON Schema, made from the manifest's types (`manifest::json_schema`) and committed beside the
+/// stub: a part of its own (docs/adr/8057 §28).
+pub const MANIFEST_SCHEMA: &str = include_str!("../sdk/kentos-extension-manifest.schema.json");
+
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 11] = [
+pub const PARTS: [&str; 12] = [
     "guide",
     "api",
     "capabilities",
@@ -155,6 +159,7 @@ pub const PARTS: [&str; 11] = [
     "example",
     "icons",
     "panelSchema",
+    "manifestSchema",
 ];
 
 /// One part of the pack; none for a name the pack has not. `icons` is the whole list, which the pack only counts: its
@@ -165,6 +170,9 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     }
     if part == "panelSchema" {
         return serde_json::from_str(PANEL_SCHEMA).ok();
+    }
+    if part == "manifestSchema" {
+        return serde_json::from_str(MANIFEST_SCHEMA).ok();
     }
     if !PARTS.contains(&part) {
         return None;
@@ -276,6 +284,11 @@ pub fn sdk_pack() -> Value {
             "how": "kentos.ui.panel 1'in JSON Schema'sı (bileşenler, anahtarları ve türleri): extension.sdk \
                     part=panelSchema ya da kentos kek sdk --part panelSchema. Kesin denetim yine extension.verify'da \
                     (düğmenin komutu, seçicinin katman seçicisi, kimliklerin tekliği şemada söylenemez).",
+        },
+        "manifestSchema": {
+            "how": "manifest.json'un (kentos.extension 1) JSON Schema'sı: anahtarlar, türleri, kapalı sözlükler (yetenekler, \
+                    kapsamlar, programlar, katkılar): extension.sdk part=manifestSchema ya da kentos kek sdk --part \
+                    manifestSchema. Kesin denetim extension.verify'da (yeteneğin kapsamı, paketteki dosyalar, işleyici).",
         },
     })
 }
@@ -503,6 +516,105 @@ mod tests {
             sdk_part("panelSchema")
                 .is_some_and(|s| s["properties"]["format"]["const"] == "kentos.ui.panel")
         );
+    }
+
+    /// The committed manifest schema is the one the manifest's types make (a key added is written there by
+    /// `KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- sdk_pack`), and it takes the manifests KentOS ships:
+    /// the fixtures, the Vitrin's and a blueprint's with every contribution; a key the reader refuses, it refuses.
+    #[test]
+    fn the_manifest_schema_is_the_manifest_types_and_takes_real_manifests() {
+        use crate::schema_check::errors;
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let made = serde_json::to_string_pretty(&crate::manifest::json_schema()).unwrap() + "\n";
+        if std::env::var_os("KENTOS_WRITE_SDK").is_some() {
+            std::fs::write(
+                root.join("sdk/kentos-extension-manifest.schema.json"),
+                &made,
+            )
+            .expect("the schema");
+            return;
+        }
+        assert!(
+            MANIFEST_SCHEMA == made,
+            "the manifest's types changed: KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- sdk_pack"
+        );
+        for capability in crate::manifest::Capability::ALL {
+            assert!(
+                MANIFEST_SCHEMA.contains(&format!("\"{}\"", capability.id())),
+                "{}",
+                capability.id()
+            );
+        }
+        let schema = sdk_part("manifestSchema").expect("the part");
+        assert_eq!(schema["properties"]["format"]["const"], "kentos.extension");
+        let repo = root.join("../../..");
+        let mut manifests: Vec<(String, Value)> = [
+            "fixtures/extensions/v1/ornek-altlik",
+            "fixtures/extensions/v1/ornek-imar",
+            "fixtures/extensions/v1/ornek-kent",
+            "fixtures/extensions/v1/mebis",
+            "samples/eklenti-vitrini/eklenti",
+        ]
+        .iter()
+        .map(|dir| {
+            let text = std::fs::read_to_string(repo.join(dir).join("manifest.json")).expect(dir);
+            ((*dir).to_owned(), serde_json::from_str(&text).expect(dir))
+        })
+        .collect();
+        let files = crate::blueprint::blueprint(&crate::blueprint::Ask {
+            id: "tr.ornek.sema".into(),
+            name: "Şema".into(),
+            summary: "Bütün katkılarıyla bir iskelet.".into(),
+            vertical: true,
+            module: crate::manifest::Module::Cbs,
+            contributions: crate::blueprint::Contribution::ALL.to_vec(),
+        })
+        .expect("a blueprint");
+        manifests.push((
+            "blueprint".into(),
+            serde_json::from_str(&files["manifest.json"]).expect("its manifest"),
+        ));
+        for (name, manifest) in &manifests {
+            let found = errors(&schema, manifest);
+            assert!(found.is_empty(), "{name}: {found:#?}");
+        }
+        // As strict as the reader: a key it does not know, a capability not in the vocabulary.
+        let vitrin = &manifests[4].1;
+        let mut unknown = vitrin.clone();
+        unknown["entrypoints"]["commands"][0]["hanlder"] = json!("vitrin.logic:x");
+        assert!(
+            errors(&schema, &unknown)
+                .iter()
+                .any(|e| e.ends_with("/hanlder: bilinmeyen anahtar")),
+            "{:?}",
+            errors(&schema, &unknown)
+        );
+        let mut invented = vitrin.clone();
+        invented["requestedCapabilities"][0]["id"] = json!("filesystem.write");
+        assert!(!errors(&schema, &invented).is_empty());
+    }
+
+    /// The panel schema takes the Vitrin's panels; a component of a type KentOS does not draw, it refuses.
+    #[test]
+    fn the_panel_schema_takes_the_vitrins_panels() {
+        use crate::schema_check::errors;
+        let schema = sdk_part("panelSchema").expect("the part");
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../samples/eklenti-vitrini/eklenti/ui");
+        let mut read = 0;
+        for entry in std::fs::read_dir(&dir).expect("the Vitrin's panels") {
+            let path = entry.expect("an entry").path();
+            let panel: Value =
+                serde_json::from_str(&std::fs::read_to_string(&path).expect("a panel"))
+                    .expect("JSON");
+            let found = errors(&schema, &panel);
+            assert!(found.is_empty(), "{}: {found:#?}", path.display());
+            read += 1;
+            let mut odd = panel.clone();
+            odd["body"][0]["type"] = json!("saat");
+            assert!(!errors(&schema, &odd).is_empty(), "{}", path.display());
+        }
+        assert_eq!(read, 3, "the Vitrin's three panels");
     }
 
     #[test]

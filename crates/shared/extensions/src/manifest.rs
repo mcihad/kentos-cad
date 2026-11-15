@@ -24,6 +24,7 @@ pub const SCHEMA_VERSION: u32 = 1;
 
 /// The manifest v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Manifest {
     /// `kentos.extension`.
@@ -80,9 +81,34 @@ pub struct Manifest {
     pub requested_capabilities: Vec<RequestedCapability>,
 }
 
+/// The manifest v1 as a JSON Schema, made from the types KentOS reads a manifest into (an editor's checking and
+/// completion, an agent's reference; docs/adr/8057 §28): every key with its kind, the closed vocabularies (capabilities,
+/// scopes, programs, contributions) and `format` and `schemaVersion` as constants. What a schema cannot say (a
+/// capability's scope among its own, the files it names in the package, ids once, a handler's function in the code) is
+/// the inspector's: [`crate::verify`] stays the judge.
+#[cfg(feature = "schema")]
+pub fn json_schema() -> serde_json::Value {
+    let mut schema = schemars::schema_for!(Manifest).to_value();
+    if let Some(o) = schema.as_object_mut() {
+        o.insert(
+            "title".into(),
+            serde_json::Value::from("KentOS extension manifest (kentos.extension 1)"),
+        );
+        if let Some(serde_json::Value::Object(props)) = o.get_mut("properties") {
+            props.insert("format".into(), serde_json::json!({ "const": FORMAT }));
+            props.insert(
+                "schemaVersion".into(),
+                serde_json::json!({ "const": SCHEMA_VERSION }),
+            );
+        }
+    }
+    schema
+}
+
 /// A vertical extension is a system of its own (a ribbon tab, layers, forms); a utility adds tools to the existing ones
 /// and opens no tab (EKL-02).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum ExtensionKind {
     Vertical,
@@ -91,6 +117,7 @@ pub enum ExtensionKind {
 
 /// A KentOS program an extension adds to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum Module {
     Mimari,
@@ -111,6 +138,7 @@ impl Module {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum Runtime {
     Desktop,
@@ -119,6 +147,7 @@ pub enum Runtime {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Links {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -137,6 +166,7 @@ impl Links {
 
 /// Where a package runs: [`crate::compatible`] reads it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Compatibility {
     pub sdk_protocol: ProtocolRange,
@@ -149,6 +179,7 @@ pub struct Compatibility {
 
 /// The extension protocol's versions a package was written for, both ends inclusive.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProtocolRange {
     pub min: u32,
@@ -157,6 +188,7 @@ pub struct ProtocolRange {
 
 /// KentOS's versions: `min` inclusive, `maxExclusive` exclusive; an end not written is open.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct KentosRange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -166,6 +198,7 @@ pub struct KentosRange {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Dependencies {
     /// Extensions that must be installed and enabled; no code is imported across (each runs in its own process).
@@ -180,6 +213,7 @@ impl Dependencies {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ExtensionDependency {
     pub id: String,
@@ -189,6 +223,7 @@ pub struct ExtensionDependency {
 
 /// The Python project: `requires-python` and the packages are in its files, never repeated here (PY-UV-13).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PythonProject {
     pub project_file: String,
@@ -199,6 +234,7 @@ pub struct PythonProject {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct OptionalFeature {
     pub extra: String,
@@ -206,6 +242,7 @@ pub struct OptionalFeature {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct L10n {
     /// The language the manifest is written in.
@@ -216,6 +253,7 @@ pub struct L10n {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Deprecation {
     pub message: String,
@@ -226,6 +264,7 @@ pub struct Deprecation {
 /// What the extension's code answers. Ids are the package's own (`init-schema`); the host names them
 /// `ext.<extension>.<id>`. The process starts when one is first called; v1 has no "run at start-up" (D6).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Entrypoints {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -257,6 +296,7 @@ impl Entrypoints {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CommandEntry {
     pub id: String,
@@ -269,6 +309,7 @@ pub struct CommandEntry {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MapToolEntry {
     pub id: String,
@@ -289,6 +330,7 @@ pub struct MapToolEntry {
 
 /// What a map tool asks the user to draw.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum Capture {
     Point,
@@ -300,6 +342,7 @@ pub enum Capture {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProcessingEntry {
     pub id: String,
@@ -309,6 +352,7 @@ pub struct ProcessingEntry {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AuditEntry {
     pub id: String,
@@ -319,6 +363,7 @@ pub struct AuditEntry {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ExpressionEntry {
     pub id: String,
@@ -328,6 +373,7 @@ pub struct ExpressionEntry {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PanelEntry {
     pub id: String,
@@ -338,6 +384,7 @@ pub struct PanelEntry {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum PanelSide {
     Left,
@@ -346,6 +393,7 @@ pub enum PanelSide {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FormEntry {
     pub id: String,
@@ -355,6 +403,7 @@ pub struct FormEntry {
 
 /// What the extension adds to the window and the sources, read without its code (D6, D10).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Contributions {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -372,6 +421,7 @@ impl Contributions {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RibbonTab {
     pub id: String,
@@ -382,6 +432,7 @@ pub struct RibbonTab {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RibbonPanel {
     pub label: String,
@@ -390,6 +441,7 @@ pub struct RibbonPanel {
 
 /// A ribbon button: exactly one of the targets.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RibbonItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -421,6 +473,7 @@ pub struct RibbonItem {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum ItemSize {
     #[default]
@@ -430,6 +483,7 @@ pub enum ItemSize {
 
 /// A right-click menu's item: exactly one of the targets, and where.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ContextMenuItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -459,6 +513,7 @@ pub struct ContextMenuItem {
 
 /// Which right-click menu: the drawing's (what is going on there, the selection's edits) or a layer's in Katmanlar.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum MenuTarget {
     Drawing,
@@ -468,6 +523,7 @@ pub enum MenuTarget {
 /// When an item shows: a closed vocabulary, judged without loading the extension's code (D6), so the ribbon is right
 /// for a user without Python too. Every condition given holds.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct When {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -484,6 +540,7 @@ pub struct When {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionWhen {
     None,
@@ -495,6 +552,7 @@ pub enum SelectionWhen {
 /// A source the extension brings without code: a service, tiles or a GeoPackage in the package (D10). It opens
 /// through KentOS's own service and base-map path.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DataSource {
     pub id: String,
@@ -518,6 +576,7 @@ pub struct DataSource {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum DataSourceKind {
     Wms,
@@ -544,6 +603,7 @@ impl DataSourceKind {
 
 /// The capability vocabulary v1, fixed in ADIM 16; widening it is a new version.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 pub enum Capability {
     #[serde(rename = "document.read")]
     DocumentRead,
@@ -682,6 +742,7 @@ impl Capability {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum Scope {
     UserSelected,
@@ -702,6 +763,7 @@ impl Scope {
 /// A capability the extension asks for: not a permission granted; the organisation's policy and the user decide, the
 /// broker enforces (D5).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RequestedCapability {
     pub id: Capability,

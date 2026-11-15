@@ -21,6 +21,7 @@ pub const SDK_PROTOCOL: u32 = 1;
 
 /// An operating system a package says it runs on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum Os {
     Windows,

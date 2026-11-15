@@ -1907,3 +1907,25 @@ yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
   eklenti bulgusu 1 · yazma — Onay gerekiyor"), Onayla → yapıya Y-01 yazıldı, sekmede "Y-01 yaz ✓" ve çizim notu, geri
   alma etkin; 1276 jeton, 26 sn.
 - **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi.
+
+## §28. Manifestin JSON Schema'sı: tiplerinden üretilir (`ADIM 21`, kod üretimi)
+
+**15 Kasım.** Kod: `crates/shared/extensions/src/manifest.rs` (`json_schema`; manifestin 38 tipi ve `compat::Os`
+şemayı türetir, `schema` özelliğiyle), `sdk/kentos-extension-manifest.schema.json` (24,5 KB), `sdk_pack.rs`
+(`MANIFEST_SCHEMA`, `manifestSchema` bölümü), `schema_check.rs` (yalnız sınamada).
+
+- **Karar: panel şemasının yolu (§25).** Şema KentOS'un manifesti okuduğu tiplerden üretilir (schemars), depoda SDK'nın
+  yanında durur; tipler değişip şema yazılmazsa test kırmızıdır (`KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions
+  --lib -- sdk_pack` yazar). Elle yazılmış bir şema okuyucuyla ayrışırdı: okuyucu bilinmeyen anahtarı reddediyor
+  (`deny_unknown_fields`), şema da `additionalProperties: false` diyor; kapalı sözlükler (15 yetenek, 3 kapsam, 4
+  program, katkı türleri, menü hedefleri, veri kaynağı türleri) enum olarak, `format` ve `schemaVersion` sabit.
+- **Yüzeyler:** `extension.sdk part=manifestSchema`, `kentos kek sdk --part manifestSchema`; paket yalnız nasıl
+  alınacağını söyler (Asistan'ın araç sonucu sınırının altında kalır). Şemanın söyleyemediği (yeteneğin kendi kapsamları,
+  paketteki dosyalar, kimliklerin tekliği, işleyicinin koddaki işlevi) Kapı 1'indir: `extension.verify` yargıç kalır.
+- **Şema yalan söylemesin diye:** sınamalarda schemars'ın kullandığı alt kümeyi denetleyen küçük bir denetleyici
+  (`$ref`, `type`, `properties`, `required`, `additionalProperties`, `items`, `enum`, `const`, `oneOf`/`anyOf`/`allOf`,
+  `minimum`/`maximum`). KentOS'un gönderdiği beş manifest (fixture'lar: ornek-altlik, ornek-imar, ornek-kent, MEBİS;
+  Vitrin) ve bütün katkılarıyla bir iskelet şemaya uyar; uydurma bir anahtar ("hanlder") ve sözlükte olmayan bir yetenek
+  reddedilir. Aynı denetleyiciyle Vitrin'in üç paneli panel şemasına uyar, çizilmeyen bir bileşen türü ("saat")
+  reddedilir. Depoda JSON Schema doğrulayıcısı yok; bağımlılık eklenmedi.
+- **Kalan:** araç tanımının (`kentos.processingTool`), katman şemasının ve `ProjectAuditFacts`'in şemaları.
