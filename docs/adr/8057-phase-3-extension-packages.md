@@ -1486,7 +1486,8 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 ## §24. Eklentinin paneli: `kentos.ui.panel` 1, düğmesi bir komut (`ADIM 22`, panel köprüsü, ilk dilim)
 
 **14 Kasım.** Kod: `crates/shared/extensions/src/ui_panel.rs` (tipler, Kapı 1), masaüstü
-`extensions/panels.rs` (durum, görünüm, düğme), `runner.rs` (`PanelCall`, `ExtRun.origin`), `app.rs`
+`extensions/panels.rs` (durum, olaylar, düğme; görünüm 15 Kasım'da `panel_view.rs`'e ayrıldı: dosya 1855 satıra
+ulaşmıştı, sınır 2000), `runner.rs` (`PanelCall`, `ExtRun.origin`), `app.rs`
 (`Panel::Extension`), Vitrin 1.0.7, MEBİS'in arama paneli.
 
 - **Karar: panel veridir, düğmesi bir komuttur.** `kentos.ui.panel` 1'in yedi bileşeni KentOS'un kendi

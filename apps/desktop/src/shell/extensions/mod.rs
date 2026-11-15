@@ -15,6 +15,7 @@ mod tool_pins;
 mod bisect;
 mod browse;
 pub(crate) mod environment;
+mod panel_view;
 mod panels;
 mod workshop;
 mod problems;
