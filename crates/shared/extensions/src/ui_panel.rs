@@ -1779,7 +1779,8 @@ mod image_tests {
             &panel(json!({ "type": "image", "id": "grafik", "alt": " ", "height": 900 })),
             &[],
         );
-        let at: Vec<&str> = wrong.iter().filter_map(|p| p.at.as_deref()).collect();
+        let mut at: Vec<&str> = wrong.iter().filter_map(|p| p.at.as_deref()).collect();
+        at.sort_unstable();
         assert_eq!(at, ["/body/0/alt", "/body/0/height"], "{wrong:?}");
     }
 }
