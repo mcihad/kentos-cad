@@ -126,6 +126,9 @@ pub struct Console {
     /// The commands the agents run as jobs (docs/adr/0253 §9): computed on
     /// a copy of the drawing, written when an agent asks how they are.
     pub(crate) jobs: kentos_headless::rpc::Jobs,
+    /// The jobs started as an execution, by id, until they end: a job's status does not say its call's op, and only
+    /// an execution's chosen objects are chosen on the screen (agents.rs).
+    pub(crate) executing: std::collections::BTreeSet<String>,
     /// What the operations' echo has passed (echo.rs, docs/adr/0622 §7).
     pub(crate) echo: echo::Echo,
 }
@@ -148,6 +151,7 @@ impl Default for Console {
             link_folder: None,
             agents: std::collections::BTreeMap::new(),
             jobs: kentos_headless::rpc::Jobs::default(),
+            executing: std::collections::BTreeSet::new(),
             echo: echo::Echo::default(),
         }
     }

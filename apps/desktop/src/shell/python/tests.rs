@@ -1578,3 +1578,61 @@ fn an_agents_job_is_said_in_the_log_when_it_writes() {
     );
     assert_eq!(said(&app), 1);
 }
+
+/// A processing run an agent executes chooses its tool's chosen objects on the screen, as the İşlemler window keeps
+/// them, a run that only chooses too; its plan chooses nothing. A call's from its answer, a job's once it is done
+/// (docs/adr/8057 §27: Vitrin's TAKS chose the parcels over the limit and the window showed none).
+#[test]
+fn an_agents_processing_run_chooses_its_tools_objects() {
+    kentos_processing::command::register_as("desktop");
+    let mut app = app_with_drawing();
+    let input = json!({ "tool": "selection.byExpression",
+                        "parameters": { "input": { "scope": "all" }, "condition": "$alan > 0" } });
+    let ask = |app: &mut App, method: &str, params: Value| {
+        app.agent_request(&json!({ "method": method, "params": params }), "Ajan")
+            .unwrap_or_else(|e| panic!("{method}: {e:?}"))
+    };
+    let call = |op: &str| json!({ "command": "cad.processing.run", "op": op, "input": input });
+    let chosen = |app: &App, answer: &Value| {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let uids = answer
+            .pointer("/output/selected")
+            .and_then(Value::as_array)
+            .unwrap_or_else(|| panic!("its chosen objects: {answer:#}"));
+        let slots: Vec<_> = uids
+            .iter()
+            .filter_map(Value::as_str)
+            .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+            .filter_map(|u| doc.slot_of(u))
+            .collect();
+        assert!(!slots.is_empty(), "{answer:#}");
+        slots
+    };
+    let planned = ask(&mut app, "call", call("plan"));
+    assert_eq!(planned["status"], "completed", "{planned:#}");
+    assert!(app.selection.is_empty(), "a plan chooses nothing");
+    let ran = ask(&mut app, "call", call("execute"));
+    assert_eq!(app.selection.ids(), chosen(&app, &ran).as_slice());
+    // As jobs: the plan's chooses nothing, the execution's chooses once it is done.
+    for op in ["plan", "execute"] {
+        app.selection.clear();
+        let started = ask(&mut app, "start", call(op));
+        let id = started["id"].as_str().expect("its id").to_owned();
+        let began = Instant::now();
+        let status = loop {
+            let status = ask(&mut app, "job", json!({ "id": id }));
+            if status["phase"] == "done" {
+                break status;
+            }
+            assert!(began.elapsed() < Duration::from_secs(30), "{status:#}");
+            std::thread::sleep(Duration::from_millis(5));
+        };
+        if op == "plan" {
+            assert!(app.selection.is_empty(), "a plan's job chooses nothing");
+        } else {
+            let answer = &status["answer"];
+            assert_eq!(app.selection.ids(), chosen(&app, answer).as_slice());
+        }
+    }
+    assert!(app.python.executing.is_empty(), "an ended job is forgotten");
+}

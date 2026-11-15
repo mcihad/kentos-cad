@@ -392,6 +392,32 @@ impl App {
                     .get("op")
                     .and_then(Value::as_str)
                     .is_none_or(|o| o == "execute");
+                // Whether it ran a call's execution to its end: a call's answer says it; a job's, by the op it was
+                // started with (kept until it ends).
+                let job = answer.get("id").and_then(Value::as_str).map(str::to_owned);
+                let executed = match method {
+                    "call" => {
+                        execute
+                            && answer.get("status").and_then(Value::as_str) == Some("completed")
+                            && answer.get("replayed").and_then(Value::as_bool) != Some(true)
+                    }
+                    "start" | "job" | "cancel" => job.as_deref().is_some_and(|id| {
+                        let phase = answer.get("phase").and_then(Value::as_str).unwrap_or("");
+                        let going =
+                            matches!(phase, "queued" | "computing" | "staged" | "committing");
+                        if method == "start" && execute && going {
+                            self.python.executing.insert(id.to_owned());
+                        }
+                        let executed = phase == "done"
+                            && (self.python.executing.contains(id)
+                                || (method == "start" && execute));
+                        if !going {
+                            self.python.executing.remove(id);
+                        }
+                        executed
+                    }),
+                    _ => false,
+                };
                 let wrote = match method {
                     "run" => {
                         params.get("op").and_then(Value::as_str) == Some("execute")
@@ -414,6 +440,29 @@ impl App {
                     .and_then(Value::as_str)
                     .unwrap_or("?")
                     .to_owned();
+                // A processing run's chosen objects (its tool's selection: Vitrin's and İmar's TAKS choose the parcels
+                // over the limit) are chosen on the screen once it executed, as the İşlemler window keeps them, a run
+                // that only chooses too; a call's in its answer, a job's in its status's.
+                if executed
+                    && in_front
+                    && matches!(
+                        command.as_str(),
+                        "cad.processing.run" | "cad.processing.batch"
+                    )
+                    && let Some(chosen) = answer
+                        .pointer("/output/selected")
+                        .or_else(|| answer.pointer("/answer/output/selected"))
+                        .and_then(Value::as_array)
+                    && !chosen.is_empty()
+                {
+                    let slots: Vec<_> = chosen
+                        .iter()
+                        .filter_map(Value::as_str)
+                        .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+                        .filter_map(|u| doc.model.slot_of(u))
+                        .collect();
+                    self.selection.set(slots);
+                }
                 if wrote && !in_front {
                     // Its drawing waits in its tab: the store on screen is another drawing's.
                     self.output(format!("{who}: {command} (arka sekmedeki çizimde)"));

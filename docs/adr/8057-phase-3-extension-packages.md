@@ -1969,6 +1969,15 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   (`agent_tools::a_processing_run_that_makes_a_layer_executes_as_planned`, düzeltmeden önce kırmızı). Düzeltme: plan
   kimliği katman ağacını türetimin anı olmadan özetler (`Document::layers_plan_stamp`, docs/adr/0253 §5); yazılan
   katman anını korur, sonucun damgası (`stamps.layers`) da değişmedi. Türetimi olmayan ağaçta kimlik eskisiyle aynı.
+- **Ajanın çalıştırdığı aracın seçimi ekranda (15 Kasım).** Aynı koşuda ajan "Sınırı aşan 1 parsel (101/1) seçildi"
+  dedi, pencere "Seçili nesne yok" gösteriyordu: aracın seçimi (`ctx.select`) çalıştırmanın cevabında
+  (`output.selected`) duruyor ama yalnız İşlemler penceresi onu seçime çeviriyordu. Masaüstü bağlantısı artık yürütülmüş
+  bir `cad.processing.run|batch`'in seçtiklerini öndeki çizimde seçer: `call`'da cevaptan, işte durumu `done` olunca
+  (yalnız seçen, hiçbir şey yazmayan araç da). İşin durumu çağrının op'unu söylemediği için bağlantı `start` anında
+  yürütme olarak başlayan işleri bitene dek hatırlar (`python.executing`); planın seçimi uygulanmaz. Bekçi:
+  `python::tests::an_agents_processing_run_chooses_its_tools_objects` (`selection.byExpression`: plan hiçbir şey seçmez,
+  `call` ve iş yürütmesi seçer, biten iş unutulur). Gerçek pencerede: Onayla → TAKS katmanı, 101/1 seçili ("1 seçili",
+  Alan sekmesi, Öznitelikler "Kapalı alan (1)"); 2242 jeton, 68,3 sn.
 - **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi;
   `ProcessingRun`'ın bilinmeyen anahtarı (`values`) sessizce yok sayması (reddetmek bütün çağıranların sözleşmesini
   değiştirir, ayrı karar).
