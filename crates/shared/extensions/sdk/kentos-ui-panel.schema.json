@@ -1,0 +1,631 @@
+{
+  "$defs": {
+    "Choice": {
+      "description": "One of a select's choices.",
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "label"
+      ],
+      "type": "object"
+    },
+    "Component": {
+      "description": "A panel's component, in KentOS's words.",
+      "oneOf": [
+        {
+          "description": "A line of text.",
+          "properties": {
+            "id": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "text": {
+              "type": "string"
+            },
+            "type": {
+              "const": "text",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A text the user types.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "placeholder": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "textField",
+              "type": "string"
+            },
+            "value": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A number the user types, in its bounds.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "max": {
+              "default": null,
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "min": {
+              "default": null,
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "numberField",
+              "type": "string"
+            },
+            "unit": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "value": {
+              "default": null,
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "One of its choices.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "description": "A command run with the panel's values when the user changes it (its rows to the panel's first table).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "options": {
+              "items": {
+                "$ref": "#/$defs/Choice"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "select",
+              "type": "string"
+            },
+            "value": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label",
+            "options"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "One of the open drawing's layers, of `geometry`'s type (and the untyped ones) when given: its id.",
+          "properties": {
+            "geometry": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "layerPicker",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "One of the fields of the layer the panel's layer picker `layer` holds, of `kinds` only when given (the layer\nschema's words): its name, none when none is chosen.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "kinds": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "label": {
+              "type": "string"
+            },
+            "layer": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "fieldPicker",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label",
+            "layer"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`\nholds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else\none id or none.",
+          "properties": {
+            "geometry": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "layer": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "multiple": {
+              "default": true,
+              "type": "boolean"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "featurePicker",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Several of its options the user picks, each a chip that toggles: its value is the chosen options' values in the\noptions' order, an empty list when none is chosen.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "options": {
+              "items": {
+                "$ref": "#/$defs/Choice"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "multiSelect",
+              "type": "string"
+            },
+            "value": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label",
+            "options"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A date the user types (GG.AA.YYYY or YYYY-AA-GG) or picks from KentOS's calendar; its value is the ISO date\n(`2026-11-15`), none when empty. `value`, `min` and `max` are ISO dates.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "max": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "min": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "dateField",
+              "type": "string"
+            },
+            "value": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Yes or no.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "checkbox",
+              "type": "string"
+            },
+            "value": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Runs `command` with the panel's values; its rows fill `table` (none: the panel's first table).",
+          "properties": {
+            "command": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "primary": {
+              "default": false,
+              "type": "boolean"
+            },
+            "table": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "button",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label",
+            "command"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The rows a button's command answered.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "table",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The rows a button's command answered, grouped by `group`'s columns (one to three) into nodes that open and\nclose, each with its count; a row with a `uid` is an object.",
+          "properties": {
+            "group": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "tree",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "group"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The rows a button's command answered, a figure each (KentOS's stat card): `title`'s column names it (none: the\nfirst column), `value`'s is its figure (none: the second), `unit`'s and `note`'s beside and under it; the cards\nside by side as the panel's width allows. A row with a `uid` is an object.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "note": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "stats",
+              "type": "string"
+            },
+            "unit": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "value": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The rows a button's command answered, a card each: `title`'s column heads it (none: the first column), `tag`'s\nbeside it, the other columns under it by name; a card with a `uid` is an object. Where a table's columns do not\nfit (a narrow dock), a card writes them one under the other.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tag": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "card",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A panel as KentOS draws it, read after [`check`] passed.",
+  "properties": {
+    "body": {
+      "items": {
+        "$ref": "#/$defs/Component"
+      },
+      "type": "array"
+    },
+    "format": {
+      "const": "kentos.ui.panel"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "title": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "format",
+    "schemaVersion",
+    "title",
+    "body"
+  ],
+  "title": "KentOS panel (kentos.ui.panel 1)",
+  "type": "object"
+}

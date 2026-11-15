@@ -20,3 +20,10 @@ roxmltree = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
+# The panel definition's JSON Schema, made from its types (`ui_panel::json_schema`, docs/adr/8057 §25): pure, as the
+# rest; on by default, the SDK's committed schema is checked against it.
+schemars = { workspace = true, optional = true }
+
+[features]
+default = ["schema"]
+schema = ["dep:schemars"]

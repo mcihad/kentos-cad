@@ -1828,6 +1828,15 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 **Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `dateField`, `select`, `multiSelect`,
 `layerPicker`, `fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`, `stats`.
 
+**JSON Schema** (15 Kasım; planın "kod üretimi" maddesinin panel payı): `kentos.ui.panel` 1'in şeması panelin Rust
+tiplerinden üretilir (`ui_panel::json_schema`, `schemars`; `format` ve `schemaVersion` sabitleriyle) ve SDK'nın yanında
+durur (`crates/shared/extensions/sdk/kentos-ui-panel.schema.json`, 15,8 KB); tipler değişip dosya güncellenmezse test
+kırmızıdır (`sdk_pack::tests::the_panel_schema_is_the_panel_types`, `KENTOS_WRITE_SDK=1` yazar). Ajan ve komut satırı
+ayrı bölüm olarak alır (`extension.sdk part=panelSchema`, `kentos kek sdk --part panelSchema`); pakette yalnız nasıl
+alınacağı yazar. Kesin denetim Kapı 1'dir: düğmenin komutu, seçicinin katman seçicisi, kimliklerin tekliği şemayla
+söylenemez. **Paket boyutu:** SDK paketi sıkıştırılmış 46,1 KB, Asistan'ın araç sonucu sınırı 48 KB (bekçi testi var);
+en büyükleri örnek 16,9, rehber 11,3, imzalar 9,9 KB. Sonraki eklemelerde örnek ayrı bölüme alınmalı.
+
 **Sınır: özel çizim ve düzenleyici bileşeni yok.** Eklentinin kodu bir arayüz nesnesi ya da tuval almaz (QGIS'in Qt
 dersi, D7): haritaya çizim harita aracının yakalamasıyla (KentOS çizer), panelde çizim hiç yok. Kayıtlı özel bileşen
 (tanım, değer kodlayıcı, platform çizicisi ve salt okunur yedek, PY-UI-15/16) ayrı bir maddedir; o gelene dek panel

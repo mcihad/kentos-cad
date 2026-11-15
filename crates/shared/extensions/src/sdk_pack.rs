@@ -138,8 +138,12 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 /// `python/kentos/ext.py` by this module's tests (`KENTOS_WRITE_SDK=1`), which fail when the two differ.
 pub const EXT_STUB: &str = include_str!("../sdk/kentos_ext.pyi");
 
+/// `kentos.ui.panel` 1's JSON Schema, made from the panel's types (`ui_panel::json_schema`) and committed beside the stub:
+/// a part of its own, as the icons are (the pack stays under what the desktop's Asistan gives a tool's result).
+pub const PANEL_SCHEMA: &str = include_str!("../sdk/kentos-ui-panel.schema.json");
+
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 10] = [
+pub const PARTS: [&str; 11] = [
     "guide",
     "api",
     "capabilities",
@@ -150,6 +154,7 @@ pub const PARTS: [&str; 10] = [
     "workflow",
     "example",
     "icons",
+    "panelSchema",
 ];
 
 /// One part of the pack; none for a name the pack has not. `icons` is the whole list, which the pack only counts: its
@@ -157,6 +162,9 @@ pub const PARTS: [&str; 10] = [
 pub fn sdk_part(part: &str) -> Option<Value> {
     if part == "icons" {
         return Some(json!(crate::icon_names::names().collect::<Vec<_>>()));
+    }
+    if part == "panelSchema" {
+        return serde_json::from_str(PANEL_SCHEMA).ok();
     }
     if !PARTS.contains(&part) {
         return None;
@@ -263,6 +271,11 @@ pub fn sdk_pack() -> Value {
             "count": crate::icon_names::names().count(),
             "how": "Yerleşik ikonlar tire biçiminde yazılır (zoom-extents, space-number, layer-fields). Tamamı: \
                     extension.sdk part=icons ya da kentos kek sdk --part icons. Yoksa paketteki 20×20 çizgi .svg.",
+        },
+        "panelSchema": {
+            "how": "kentos.ui.panel 1'in JSON Schema'sı (bileşenler, anahtarları ve türleri): extension.sdk \
+                    part=panelSchema ya da kentos kek sdk --part panelSchema. Kesin denetim yine extension.verify'da \
+                    (düğmenin komutu, seçicinin katman seçicisi, kimliklerin tekliği şemada söylenemez).",
         },
     })
 }
@@ -465,6 +478,31 @@ mod tests {
                 "the guide's Panel section does not name `{kind}`"
             );
         }
+    }
+
+    /// The committed panel schema is the one the panel's types make: a component added is written there by
+    /// `KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- sdk_pack`.
+    #[test]
+    fn the_panel_schema_is_the_panel_types() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let made = serde_json::to_string_pretty(&crate::ui_panel::json_schema()).unwrap() + "\n";
+        if std::env::var_os("KENTOS_WRITE_SDK").is_some() {
+            std::fs::write(root.join("sdk/kentos-ui-panel.schema.json"), &made)
+                .expect("the schema");
+            return;
+        }
+        assert!(
+            PANEL_SCHEMA == made,
+            "the panel's types changed: KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- sdk_pack"
+        );
+        // Every component type is in it, as the guide and ADR 8057 §25 name them.
+        for kind in crate::ui_panel::component_types() {
+            assert!(PANEL_SCHEMA.contains(&format!("\"{kind}\"")), "{kind}");
+        }
+        assert!(
+            sdk_part("panelSchema")
+                .is_some_and(|s| s["properties"]["format"]["const"] == "kentos.ui.panel")
+        );
     }
 
     #[test]

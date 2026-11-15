@@ -25,6 +25,7 @@ pub const MOST_COMPONENTS: usize = 100;
 
 /// A panel as KentOS draws it, read after [`check`] passed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PanelDefinition {
     pub title: String,
@@ -33,6 +34,7 @@ pub struct PanelDefinition {
 
 /// One of a select's choices.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 pub struct Choice {
     pub value: String,
     pub label: String,
@@ -40,6 +42,7 @@ pub struct Choice {
 
 /// A panel's component, in KentOS's words.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Component {
     /// A line of text.
@@ -260,6 +263,34 @@ impl Component {
                 | Component::Checkbox { .. }
         )
     }
+}
+
+/// `kentos.ui.panel` 1 as a JSON Schema, made from the types KentOS reads a panel into (an editor's checking and
+/// completion, an agent's reference): the components, their keys and kinds, with `format` and `schemaVersion`. What a
+/// schema cannot say (a button's command among the extension's, a picker's layer picker in the panel, ids once) is
+/// Kapı 1's: [`check`] stays the judge.
+#[cfg(feature = "schema")]
+pub fn json_schema() -> Value {
+    let mut schema = schemars::schema_for!(PanelDefinition).to_value();
+    if let Some(o) = schema.as_object_mut() {
+        o.insert(
+            "title".into(),
+            Value::from("KentOS panel (kentos.ui.panel 1)"),
+        );
+        if let Some(Value::Object(props)) = o.get_mut("properties") {
+            props.insert("format".into(), serde_json::json!({ "const": FORMAT }));
+            props.insert(
+                "schemaVersion".into(),
+                serde_json::json!({ "const": VERSION }),
+            );
+        }
+        o.insert(
+            "required".into(),
+            serde_json::json!(["format", "schemaVersion", "title", "body"]),
+        );
+        o.insert("additionalProperties".into(), Value::from(false));
+    }
+    schema
 }
 
 /// The panel, when `value` passed [`check`]; none otherwise.
