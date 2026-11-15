@@ -832,8 +832,9 @@ fn area(at: &str, v: &Value) -> Result<(Vec<Value>, Vec<Value>), String> {
 }
 
 /// A shape the tool made, GeoJSON (RFC 7946: what `ext.polygon`, shapely's and GeoPandas' `__geo_interface__` give),
-/// as an object on `layer`: a point, a line or an area, each of one part or several, an area with its holes.
-fn shape(
+/// as an object on `layer`: a point, a line or an area, each of one part or several, an area with its holes. Also the
+/// objects of the synthetic drawing an agent's trial of an extension runs on (docs/adr/8057 §37).
+pub fn shape(
     at: &str,
     g: &Value,
     layer: &str,

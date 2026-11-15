@@ -17,6 +17,8 @@ mod panel_chart;
 mod panel_session;
 // A panel's worked-out values: defaults and calculations (docs/adr/8057 §35).
 mod panel_values;
+// Kapı 3's part that runs code: an agent's trial on a synthetic drawing (docs/adr/8057 §37).
+mod trial;
 mod tool_pins;
 mod bisect;
 mod browse;
@@ -123,6 +125,10 @@ pub(crate) struct Extensions {
     /// The run an agent started (audit_agents.rs): its background task, handed to the runtime when the agent's call
     /// returns; the call that started it cannot return a task.
     pub(crate) audit_job: Option<iced::Task<crate::app::Message>>,
+    /// The last agent's trial of an extension on a synthetic drawing (trial.rs), and its background task waiting for
+    /// the runtime as an audit's does.
+    pub(crate) trial: Option<trial::TrialState>,
+    pub(crate) trial_job: Option<iced::Task<crate::app::Message>>,
     /// A test's answer for the next rule's run, in place of its extension's process.
     #[cfg(test)]
     pub(crate) test_audit_answer: Option<Result<serde_json::Value, String>>,
@@ -199,6 +205,8 @@ impl Default for Extensions {
             python_reasons: std::collections::BTreeMap::new(),
             audit: None,
             audit_job: None,
+            trial: None,
+            trial_job: None,
             #[cfg(test)]
             test_audit_answer: None,
             #[cfg(test)]
@@ -272,6 +280,8 @@ pub(crate) enum Event {
     RunOn(String, String, String, serde_json::Value),
     /// An audit rule's run ended (audits.rs).
     AuditDone(Box<audits::AuditDone>),
+    /// An agent's trial ended: its report (trial.rs).
+    TrialDone(Box<serde_json::Value>),
     /// Eklenti denetimi's Göster, Düzelt and Durdur, by the finding's place (audits.rs).
     AuditShow(usize),
     AuditFix(usize),
@@ -626,6 +636,7 @@ impl App {
             Event::Dialog(event) => self.ext_dialog_event(event),
             Event::DialogAnswer(ok) => self.ext_dialog_answer(ok),
             Event::AuditDone(done) => self.ext_audit_done(*done),
+            Event::TrialDone(report) => self.ext_trial_done(*report),
             Event::AuditShow(i) => return self.ext_audit_show(i),
             Event::AuditFix(i) => self.ext_audit_fix(i),
             Event::AuditStop => self.ext_audit_stop(),

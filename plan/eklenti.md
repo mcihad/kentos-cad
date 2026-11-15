@@ -1000,9 +1000,11 @@ yazılamıyordu), bilinmeyen ad en yakın önerilerle uyarıdır. **Atölye** (A
 `extension.workshop.write` ile kendi klasörüne yazar, `verify` ile doğrular, `workshop.review` paketleyip kullanıcının
 Gözden geçir ve kur penceresine açar (kurulum kullanıcının). **Canlı yükleme ve görünüş** (ADR 8057 §22, 15 Kasım):
 `extension.workshop.reload`, `.preview`; masaüstüne bağlı MCP ajanında da (ADR 8057 §30). **Kapı 3'ün kod çalıştırmayan payı** (ADR 8057 §26): `kek verify` ve
-`extension.verify` paketi geçici kayıt defterinde bağlar, katkılarını, atlananları ve kaldırınca kalıntıyı söyler. Kalan:
-Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çizim), `kentos.ui`/`ProjectAuditFacts`/manifest
-şemaları.
+`extension.verify` paketi geçici kayıt defterinde bağlar, katkılarını, atlananları ve kaldırınca kalıntıyı söyler.
+**Kapı 3'ün kodu çalıştıran payı** (ADR 8057 §37): `extension.workshop.trial` kullanıcının kurduğu eklentinin denetim
+kurallarını ve İşlemler araçlarını ajanın verdiği nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin
+sırasıyla, aracın yazdıkları, hata ve iz kaydı; kullanıcının çizimine dokunmaz). Kalan: komutların ve harita
+araçlarının denenmesi, `kentos.ui`/`ProjectAuditFacts`/manifest şemaları.
 
 - [ ] **Kod üretimi** — *kısmen: `kentos_ext.pyi` (ADR 8057 §20), ikon listesi (§21), panel tanımının JSON Schema'sı
   (§25, 15 Kasım: tiplerden üretilir, depoda durur, sapınca test kırmızı), manifestin, katman şemasının ve araç

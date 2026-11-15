@@ -132,6 +132,8 @@ struct Later {
 pub(crate) enum Pending {
     /// An extension audit's run, by its rule (docs/adr/8057 §27).
     Audit(String),
+    /// An extension's trial on a synthetic drawing (docs/adr/8057 §37).
+    Trial,
     /// A long command's job: an extension's Python tool's plan or execution, asked after until it ends (§27); with
     /// the drawing it was started on (its session): the jobs are the desktop's, not a drawing's, and a job asked on
     /// another drawing would write its result there when the user went to another tab meanwhile.
@@ -590,7 +592,7 @@ impl App {
             &call.input,
         );
         self.assistant.guard = guard;
-        let job = self.take_audit_job();
+        let job = self.take_agent_runs();
         if let Some(pending) = self.assistant.later.take()
             && result.is_ok()
         {
@@ -655,11 +657,27 @@ impl App {
         );
     }
 
-    /// What a call started stopped (Durdur, its turn gone): an audit's run, or a job (on its drawing; one already
-    /// written stays, the drawing's Geri al takes it back).
+    /// An extension's trial ended (extensions/trial.rs): the call waiting for it is answered with its report.
+    pub(crate) fn assistant_trial_ended(&mut self) {
+        let Some((message, later)) = self.assistant.running.as_mut().and_then(|r| {
+            let later = r.later.take_if(|l| matches!(l.pending, Pending::Trial))?;
+            Some((r.message, later))
+        }) else {
+            return;
+        };
+        self.assistant_answer_later(
+            message,
+            later,
+            agent_tools::trial_outcome(self.ext_trial_report()),
+        );
+    }
+
+    /// What a call started stopped (Durdur, its turn gone): an audit's run, a trial, or a job (on its drawing; one
+    /// already written stays, the drawing's Geri al takes it back).
     fn assistant_stop_pending(&mut self, pending: Pending) {
         match pending {
             Pending::Audit(_) => self.ext_audit_stop(),
+            Pending::Trial => self.ext_trial_stop(),
             Pending::Job { long, document } => {
                 let _ = self.agent_request(
                     &json!({ "method": "cancel", "params": { "id": long.job, "document": document } }),

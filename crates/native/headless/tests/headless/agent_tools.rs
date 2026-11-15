@@ -802,7 +802,8 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
             "extension.workshop.read",
             "extension.workshop.review",
             "extension.workshop.reload",
-            "extension.workshop.preview"
+            "extension.workshop.preview",
+            "extension.workshop.trial"
         ]
     );
     let call = |host: &mut WithWorkshop, guard: &mut Guard, name: &str, args: Value| {

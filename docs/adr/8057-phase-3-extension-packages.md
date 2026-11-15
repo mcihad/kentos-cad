@@ -2276,3 +2276,38 @@ anahtarlar), masaüstü `panels.rs` (`CompiledRules`, `shown`, `usable`, `asked`
   döngü), masaüstü 2 (açılışta varsayılan, hesap değerleri izler, alan yazılmaz, değerler komuta; kod hesaplanana
   yazamaz, okuduğunu değiştirince hesap izler).
 
+## §37. Kapı 3'ün kodu çalıştıran payı: sentetik çizimde deneme (`ADIM 21`)
+
+**15 Kasım.** Kod: başsız `agent_tools/workshop_trial.rs` (`extension.workshop.trial`, `trial_outcome`,
+`Host::trial_wait`), masaüstü `extensions/trial.rs` (`ext_trial_start`, `ext_trial_report`, `run`) ve
+`trial/drawing.rs` (`synthetic`, `written`),
+`python/agents.rs` (`trial`, `trial_report` istekleri), Asistan `host.rs` ve `mod.rs` (`Pending::Trial`),
+`kentos_processing::external::shape` (GeoJSON'dan nesne, artık açık).
+
+- **Karar: kullanıcının kurduğu eklenti, ajanın verdiği sentetik çizimde.** §26'nın ayırdığı pay: eklentinin kodu
+  ancak kullanıcı kurduktan sonra ve ortamı hazırken çalışır; ajan ona kullanıcının çizimini değil, kendi verdiği örnek
+  nesnelerden kurulan bir çizimi verir (yeni CBS projesi, TUREF / TM36; her nesne katman adı, GeoJSON şekli ve
+  öznitelikleriyle; basit ad katmanın kimliği de olur, projenin var olan katmanı kullanılır). Çizim arka plan görevinde
+  yaşar, deneme bitince gider; kullanıcının çizimine, geri alma geçmişine ve dosyalarına dokunulmaz.
+- **Ne çalışır:** eklentinin denetim kuralları (verilenler, yoksa hepsi) çizimin olgularını okur, masaüstündeki
+  denetim gibi (`audit_facts`, aynı süre sınırı); istenen İşlemler araçları (`cad.processing.run` girdisiyle,
+  yalnız bu eklentininkiler) çizimde yürütülür. Adımlar sırayla, eklentinin kendi sürecinde; Durdur (ajanın turu
+  durunca) adımlar arasında ve çalışan kuralın sürecinde durdurur. Aynı anda bir deneme.
+- **Rapor:** her kuralın bulguları nesnenin ajanın listesindeki sırasıyla (`feature`), önemi, sözleri ve düzeltmesinin
+  başlığı ve komutu; hata veren kural istisnası ve iz kaydıyla (denemenin bulgusu, çağrının hatası değil); her aracın
+  özeti, uyarıları ve yazdıkları (katman başına sayı ve ilk 5 nesne GeoJSON ve öznitelikleriyle); bir satırlık özet.
+  Bulgular eklentinin sözleridir: ajan veri olarak okur (§31).
+- **Yüzeyler:** Asistan çağrıyı deneme bitince cevaplar (arayüz iş parçacığında beklenmez, denetimin yolu); masaüstüne
+  bağlı MCP ajanı `trial_report`'u sorar. Masaüstü olmayan bağlantı nerede çalıştığını söyler (`not_offered`).
+  SDK'nın iş akışı aracı anar.
+- **Gerçek pencerede** (Asistan, DeepSeek, yalnız sentetik veri): "Vitrin'in Yapı numarası denetimini sentetik bir
+  çizimde dene: yapi katmanında iki kare yapı, birinin no'su Y-01, diğerinin yok" → ajan `extension.workshop.trial`
+  çağırdı; 1 uyarı (numarasız yapı, sıradaki numara Y-02, düzeltmesi `cad.entities.set`), Y-01'e bulgu yok. TAKS aracı
+  20×20 m parsel ve içinde 10×10 m yapıyla: taban alanı 100 m², TAKS 0,25, uygun; kural verilmediği için eklentinin
+  denetimi de koştu (numarasız yapı, Y-01). İki koşuda da kullanıcının çizimi aynı kaldı.
+- **Sınırlar:** komutlar (`@ext.command`) ve harita araçları denenmez: aracı üzerinden canlı çizimle konuşurlar ve
+  kullanıcıya sorabilirler (bir sonraki dilim); şerit ve panelin kurulması ile kaldırmada kalıntı §26'nın kuru
+  bağlamasında.
+- **Sınamalar:** başsız 2 (çağrı masaüstüne olduğu gibi gider, raporla cevaplanır; nesnesiz ve masaüstüsüz çağrı
+  söylenir; atölye araçlarının listesi), masaüstü 2 (sentetik çizim nesnelerden kurulur, katman adları ve öznitelikler,
+  yanlış şekil yeriyle; bulgular nesnenin sırasıyla, hata veren kural nedeni ve iz kaydıyla).
