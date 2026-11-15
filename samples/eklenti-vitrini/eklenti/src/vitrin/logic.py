@@ -97,8 +97,9 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
                         "|| ' yazılır.')"
                     ),
                 ),
-                ui.text_field("onek", "Önek", value="Y-"),
-                ui.number_field("ilk", "İlk numara", value=1, min=1, required=True),
+                # Önek ve İlk numara bir satırda yan yana (row): yer yoksa KentOS alt alta dizer.
+                ui.text_field("onek", "Önek", value="Y-", row="numara"),
+                ui.number_field("ilk", "İlk numara", value=1, min=1, required=True, row="numara"),
             ],
             ok="Numarala",
         )

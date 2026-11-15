@@ -50,6 +50,7 @@ def text(
     visible_when: str | None = None,
     calculate: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """A line of text."""
     out: dict[str, Any] = {"type": "text", "text": text}
@@ -61,6 +62,8 @@ def text(
         out["calculate"] = calculate
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -100,6 +103,7 @@ def text_field(
     calculate: str | None = None,
     default_expr: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """A text the user types."""
     out: dict[str, Any] = {"type": "textField", "id": id, "label": label}
@@ -121,6 +125,8 @@ def text_field(
         out["defaultExpr"] = default_expr
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -139,6 +145,7 @@ def number_field(
     calculate: str | None = None,
     default_expr: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """A number the user types, in its bounds."""
     out: dict[str, Any] = {"type": "numberField", "id": id, "label": label}
@@ -164,6 +171,8 @@ def number_field(
         out["defaultExpr"] = default_expr
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -176,6 +185,7 @@ def select(
     on_change: str | None = None,
     visible_when: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """One of its choices."""
     out: dict[str, Any] = {"type": "select", "id": id, "label": label, "options": _choices(options)}
@@ -187,6 +197,8 @@ def select(
         out["visibleWhen"] = visible_when
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -200,6 +212,7 @@ def layer_picker(
     visible_when: str | None = None,
     required_when: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """One of the open drawing's layers, of `geometry`'s type (and the untyped ones) when given: its id."""
     out: dict[str, Any] = {"type": "layerPicker", "id": id, "label": label}
@@ -215,6 +228,8 @@ def layer_picker(
         out["requiredWhen"] = required_when
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -229,6 +244,7 @@ def field_picker(
     visible_when: str | None = None,
     required_when: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """One of the fields of the layer the panel's layer picker `layer` holds, of `kinds` only when given (the layer
     schema's words): its name, none when none is chosen."""
@@ -245,6 +261,8 @@ def field_picker(
         out["requiredWhen"] = required_when
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -262,6 +280,7 @@ def file_picker(
     required_when: str | None = None,
     enabled_when: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of
     `filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no
@@ -289,6 +308,8 @@ def file_picker(
         out["enabledWhen"] = enabled_when
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -302,6 +323,7 @@ def crs_picker(
     visible_when: str | None = None,
     required_when: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """A coordinate system of KentOS's list (docs/adr/8057 §45): its value `EPSG:<code>`, `value` when given, else
     the open drawing's own (none for a drawing without one). The code reads it as it is (`pyproj.CRS(value)` too);
@@ -319,6 +341,8 @@ def crs_picker(
         out["requiredWhen"] = required_when
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -369,6 +393,7 @@ def multi_select(
     visible_when: str | None = None,
     required_when: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """Several of its options the user picks, each a chip that toggles: its value is the chosen options' values in
     the options' order, an empty list when none is chosen."""
@@ -385,6 +410,8 @@ def multi_select(
         out["requiredWhen"] = required_when
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -403,6 +430,7 @@ def date_field(
     calculate: str | None = None,
     default_expr: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """A date the user types (GG.AA.YYYY or YYYY-AA-GG) or picks from KentOS's calendar; its value is the ISO date
     (`2026-11-15`), none when empty. `value`, `min` and `max` are ISO dates."""
@@ -429,6 +457,8 @@ def date_field(
         out["defaultExpr"] = default_expr
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -447,6 +477,7 @@ def time_field(
     calculate: str | None = None,
     default_expr: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """A time of day the user types (14:30, 14.30, 9:05) or picks from KentOS's time picker; its value is `HH:MM` (24
     hours), none when empty. `value`, `min` and `max` are `HH:MM`."""
@@ -473,6 +504,8 @@ def time_field(
         out["defaultExpr"] = default_expr
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -491,6 +524,7 @@ def date_time_field(
     calculate: str | None = None,
     default_expr: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """A day and a time the user types (`15.11.2026 14:30`, `2026-11-15 14:30`) or picks from KentOS's calendar and
     clock; its value is the local ISO date and time, `2026-11-15T14:30` (no zone: the user's own clock), none when
@@ -518,6 +552,8 @@ def date_time_field(
         out["defaultExpr"] = default_expr
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -529,6 +565,7 @@ def checkbox(
     on_change: str | None = None,
     visible_when: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """Yes or no."""
     out: dict[str, Any] = {"type": "checkbox", "id": id, "label": label}
@@ -540,6 +577,8 @@ def checkbox(
         out["visibleWhen"] = visible_when
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 
@@ -553,6 +592,7 @@ def button(
     visible_when: str | None = None,
     enabled_when: str | None = None,
     tab: str | None = None,
+    row: str | None = None,
 ) -> dict[str, Any]:
     """Runs `command` with the panel's values; its rows fill `table` (none: the panel's first table)."""
     out: dict[str, Any] = {"type": "button", "id": id, "label": label, "command": command}
@@ -566,6 +606,8 @@ def button(
         out["enabledWhen"] = enabled_when
     if tab is not None:
         out["tab"] = tab
+    if row is not None:
+        out["row"] = row
     return out
 
 

@@ -1191,8 +1191,8 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   panelde var / KentOS'ta bileşeni var ama bağlanmadı / yok / host yüzeyi; Kapı 1'in her türü raporda adıyla geçmeli
   (test); özel çizim bileşeni olmadığı sınır olarak yazılı. Bağlananlar (15 Kasım): tarih, saat, an, çoklu seçim,
   özet/ölçü, grafik (`dateField`, `timeField`, `dateTimeField`, `multiSelect`, `stats`, `chart`), katlanır bölüm
-  (`section`, §38), görsel (`image`, §40), dosya seçici (`filePicker`, §41), panel içi sekme (`tab`, §43), kaydetme yeri (`save`, §44), koordinat sistemi seçici (`crsPicker`, §45). Kalan:
-  satır/ızgara, bölücü, adımlayıcı, birim seçici, ilişki başvurusu ve listesi, panelden harita seçimi, ek,
+  (`section`, §38), görsel (`image`, §40), dosya seçici (`filePicker`, §41), panel içi sekme (`tab`, §43), kaydetme yeri (`save`, §44), koordinat sistemi seçici (`crsPicker`, §45), satır ve ızgara (`row`, §55: komşu bileşenler yan yana, yer yoksa alt alta; aynı sayıda hücreli satırlar sütun gibi hizalanır). Kalan:
+  bölücü, adımlayıcı, birim seçici, ilişki başvurusu ve listesi, panelden harita seçimi, ek,
   özellik/olay/eylem/erişilebilirlik şeması.* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
   şemasına eşlenir: düzen (yığın/satır/ızgara, sekme, grup, akordeon, kaydırma, bölücü, adımlayıcı), basit girdi
   (metin, sayı, tarih/saat, mantıksal, seçim, çoklu seçim), CBS girdisi (katman/nesne/alan seçici, koordinat/harita

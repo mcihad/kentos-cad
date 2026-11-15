@@ -32,6 +32,8 @@ pub struct Rules {
     pub default_expr: Option<String>,
     /// The tab whose page it is on (tabs.rs); none for every page.
     pub tab: Option<String>,
+    /// The row whose line it shares (rows.rs); none for a line of its own.
+    pub row: Option<String>,
 }
 
 impl Rules {
@@ -52,6 +54,7 @@ impl Rules {
             calculate: text("calculate"),
             default_expr: text("defaultExpr"),
             tab: super::tabs::tab_of(component),
+            row: super::rows::row_of(component),
         }
     }
 

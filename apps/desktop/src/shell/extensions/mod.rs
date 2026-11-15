@@ -20,6 +20,8 @@ mod panel_crs;
 mod panel_files;
 // A panel's pictures: the PNG an extension's code gives (docs/adr/8057 §40).
 mod panel_image;
+// A panel's rows: components side by side, the cells of one line (docs/adr/8057 §55).
+mod panel_rows;
 // A panel's sections: headings that fold what they gather (docs/adr/8057 §38).
 mod panel_sections;
 mod panel_tabs;

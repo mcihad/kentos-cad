@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.42 — 16 Kasım 2026
+
+- Yapıları numarala'nın penceresinde Önek ve İlk numara bir satırda yan yana (`row`): bileşenin `row` anahtarı aynı
+  satır adını taşıyan komşu bileşenleri tek satırda dizer; yer yetmezse KentOS onları formun öbür alanları gibi alt alta
+  koyar. Değerler, zorunluluk ve hesaplı açıklama eskisi gibi.
+
 ## 1.0.41 — 15 Kasım 2026
 
 - Çekme mesafesi denetimi her yapının kendi `cekme` özniteliğine durumu (uygun / taşıyor) yazar: aracın girdisi

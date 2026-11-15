@@ -3086,3 +3086,33 @@ Kasım'da yeniden indirildi, SHA-256'ları §51'inkiyle aynı).
   merdivene açılan kapı uygun, çıkışa ulaşmayan kapı iki katlı binada da hata (48/3, 33/6-b), eski olgularda karar
   yok. Çıkış erişimi değişmedi. Beş kural ayrıca örnek çizimde bulut işinin yoluyla (`run_audit`). `kentos kek verify`
   0 uyarı (yeniden derlenmiş komut satırıyla); paket 16 999 bayt, 12 dosya.
+
+## §55. Panelde satır: `row` ve ortak formun hücreleri (`ADIM 22`, bileşen envanterinin düzen payı)
+
+**16 Kasım.** Kod: ortak form `crates/ui/src/widget/form.rs` (`Form::cells`, `Form::line_count`, `Line::Cells`,
+`Cells`), paylaşılan `crates/shared/extensions/src/ui_panel/rows.rs` (`row` anahtarı, Kapı 1), şema
+`sdk/kentos-ui-panel.schema.json`, Python kurucuları `python/kentos/ui_panel.py` (`row=`), masaüstü
+`apps/desktop/src/shell/extensions/panel_rows.rs` ve `panel_view.rs`; Vitrin 1.0.42.
+
+- **Karar: satır bileşenin anahtarıdır, kap bileşeni değil.** `"row": "Konum"` taşıyan komşu bileşenler bir satırın
+  hücreleridir (Ada | Parsel, Önek | İlk numara, Ara | Temizle). Sekmenin yolu (§43): gövde düz liste kalır, var olan
+  bileşenler değişmez, Python'da tek parametredir; iç içe gövdeli bir kap bileşeni tanım biçimini, denetimi ve kural
+  okumasını değiştirirdi.
+- **Karar: düzeni KentOS kurar, ortak formda.** Geniş yerde hücreler eşit genişlikte yan yana, her hücrede alanın adı
+  üstünde; her hücreye en az 140 piksel (gövde yazısıyla büyür) kalmıyorsa hücreler formun öbür alanları gibi alt alta
+  iner (PY-UI-13: ekran boyu sunum profili, kimlik ve doğrulama aynı). Dock'taki panelde ve `ctx.dialog`'un penceresinde
+  aynı bileşen çizer. Aynı sayıda hücreli ardışık satırlar sütun gibi hizalanır: ızgara ayrı bir bileşen istemiyor.
+- **Görünüş, kural değil:** hücredeki alan sorulur, denetlenir, değeri komuta gider; zorunluluk yıldızı ve yanlışın
+  sözü hücrenin içinde. Gizlenen bileşen satırını öbürlerine bırakır; satır başka satırın ya da satırsız çizilen ilk
+  bileşende ve sekme çubuğundan önce biter. Tek hücresi çizilen satır sıradan bir alandır.
+- **Kapı 1:** satırın adı tek satır, en çok 40 karakter; satırın bileşenleri gövdede art arda, aynı sekmede, en çok 4;
+  yalnız küçük türler (metin, metin/sayı/tarih/saat/an alanları, seçim, çoklu seçim, onay kutusu, katman/alan/koordinat
+  sistemi seçicisi, dosya seçici, düğme). Tablo, ağaç, kart, özet, grafik, görsel ve bölüm panelin genişliğini alır,
+  satıra girmez. Her yanlış yeriyle söylenir (`/body/2/row`).
+- **Vitrin 1.0.42:** Yapıları numarala'nın penceresinde Önek ve İlk numara bir satırda; hesaplı açıklama, zorunluluk ve
+  değerler eskisi gibi (gerçek pencere: B- ve 10 yazıldı, 5 yapı B-10 … B-14 oldu). Alanların yeri değiştiği için
+  senaryolar 29, 30 ve 35'in tıklama noktaları güncellendi.
+- **Bu dilimde yok:** bölücü (düz çizgi; başlıklı bölüm `section` var), adımlayıcı, birim seçici ve envanterin kalanı.
+- **Sınamalar:** ortak form 1 (400 pikselde iki hücre yan yana, 240 pikselde alt alta), paylaşılan 1 (adın kırpılması;
+  art arda olmayan, satıra girmeyen türde, yanlış adlı, başka sekmede ve beşinci hücre yerleriyle), Python
+  kurucularının imzası (`row`), masaüstü 1 (satırın hücre sınırları: başka satırda, satırsızda ve formun sonunda biter).

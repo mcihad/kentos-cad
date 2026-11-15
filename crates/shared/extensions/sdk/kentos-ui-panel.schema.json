@@ -55,6 +55,11 @@
                 "null"
               ]
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
               "maxLength": 40,
@@ -152,6 +157,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
               "maxLength": 40,
@@ -226,6 +236,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
               "maxLength": 40,
@@ -284,6 +299,11 @@
                 "$ref": "#/$defs/Choice"
               },
               "type": "array"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
             },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
@@ -346,6 +366,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
               "maxLength": 40,
@@ -400,6 +425,11 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
               "type": "string"
             },
             "tab": {
@@ -475,6 +505,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "save": {
               "default": false,
               "description": "Where a file is to be written, not one to be read.",
@@ -524,6 +559,11 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
               "type": "string"
             },
             "tab": {
@@ -649,6 +689,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
               "maxLength": 40,
@@ -727,6 +772,11 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
               "type": "string"
             },
             "tab": {
@@ -808,6 +858,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
               "maxLength": 40,
@@ -887,6 +942,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
               "maxLength": 40,
@@ -930,6 +990,11 @@
                 "string",
                 "null"
               ]
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
             },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
@@ -975,6 +1040,11 @@
             "primary": {
               "default": false,
               "type": "boolean"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
             },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",

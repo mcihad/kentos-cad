@@ -200,16 +200,27 @@ impl App {
         let tabs = p.tabs();
         let page = p.active_tab(&tabs);
         let mut bar = !tabs.is_empty();
+        // Its rows (docs/adr/8057 §55): the drawn components next to each other with the same row, one line of cells.
+        let mut rows = super::panel_rows::Rows::default();
         for (at, c) in p.definition.body.iter().enumerate() {
+            // One its rule or its code hid is not drawn (panels.rs `shown`, docs/adr/8057 §32–33), nor one in a
+            // folded section (`drawn`, §38), nor one on another tab's page (§43).
+            let drawn = p.drawn(at, c) && p.on_page(at, page);
+            let row = if drawn { p.row_at(at) } else { None };
+            if drawn && let Some(bounds) = rows.end_unless(row, form.line_count()) {
+                form = form.cells(&bounds);
+            }
             if bar && p.tab_at(at).is_some_and(|t| tabs.contains(&t)) {
+                if let Some(bounds) = rows.end(form.line_count()) {
+                    form = form.cells(&bounds);
+                }
                 form = form.wide(super::panel_tabs::tab_bar(&tabs, page, event));
                 bar = false;
             }
-            // One its rule or its code hid is not drawn (panels.rs `shown`, docs/adr/8057 §32–33), nor one in a
-            // folded section (`drawn`, §38), nor one on another tab's page (§43).
-            if !p.drawn(at, c) || !p.on_page(at, page) {
+            if !drawn {
                 continue;
             }
+            rows.go_on(row, form.line_count());
             // One its rule or its code turned off is shown faded and takes no keys.
             let usable = p.usable(at, c);
             let on = |_: &str| usable;
@@ -660,6 +671,9 @@ impl App {
                     .map(|(_, why)| why.clone());
                 form = form.error(wrong);
             }
+        }
+        if let Some(bounds) = rows.end(form.line_count()) {
+            form = form.cells(&bounds);
         }
         (form, tables)
     }

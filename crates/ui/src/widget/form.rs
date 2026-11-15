@@ -20,6 +20,10 @@
 //! alır; adsız satır (onay kutusu, düğmeler) girintisiz durur. Geniş yerde
 //! görünüm aynıdır.
 //!
+//! Hücreler ([`Form::cells`]): birkaç alan bir satırda yan yana (Ada | Parsel);
+//! her hücreye en az [`LEAST_CELL`] kalmıyorsa hücreler formun öbür alanları
+//! gibi alt alta iner.
+//!
 //! ```ignore
 //! Form::new()
 //!     .section("Genel")
@@ -55,6 +59,13 @@ const LEAST: f32 = 120.0;
 /// Etiket sütunuyla alan arası (piksel; yazı boyuyla büyümez, eskisi gibi).
 const GAP: f32 = 12.0;
 
+/// Yan yana hücrelerin her birine kalması gereken en az genişlik (12 piksellik
+/// gövde metnine göre); kalmıyorsa hücreler alt alta iner.
+const LEAST_CELL: f32 = 140.0;
+
+/// Satırlar arası (piksel).
+const SPACING: f32 = 10.0;
+
 /// Form.
 pub struct Form<'a, Message> {
     rows: Vec<Line<'a, Message>>,
@@ -76,6 +87,8 @@ enum Line<'a, Message> {
     Full(Element<'a, Message>),
     /// The whole width, the label column included: a table of several columns.
     Wide(Element<'a, Message>),
+    /// Fields side by side, each cell its lines (a field and its words): made by [`Form::cells`].
+    Cells(Vec<Vec<Line<'a, Message>>>),
 }
 
 impl<'a, Message: 'a> Default for Form<'a, Message> {
@@ -130,6 +143,34 @@ impl<'a, Message: 'a> Form<'a, Message> {
     /// Etiket sütunu dahil bütün genişlikte satır: birkaç sütunlu bir tablo (bileşenler, tabakalar, katsayılar).
     pub fn wide(mut self, content: impl Into<Element<'a, Message>>) -> Self {
         self.rows.push(Line::Wide(content.into()));
+        self
+    }
+
+    /// How many lines the form has so far: where a cell begins and ends for [`Form::cells`].
+    pub fn line_count(&self) -> usize {
+        self.rows.len()
+    }
+
+    /// The lines from `bounds[0]` on as one line of cells side by side, the lines between two bounds a cell (a field
+    /// and its words, a check box, a button): each cell narrow, its name above its control; one under another as the
+    /// form's other fields when a cell would get less than [`LEAST_CELL`]. One cell is left as its lines.
+    pub fn cells(mut self, bounds: &[usize]) -> Self {
+        let Some(&start) = bounds.first() else {
+            return self;
+        };
+        if bounds.len() < 3 || start >= self.rows.len() {
+            return self;
+        }
+        let mut tail = self.rows.split_off(start).into_iter();
+        let mut cells: Vec<Vec<Line<'a, Message>>> = bounds
+            .windows(2)
+            .map(|w| tail.by_ref().take(w[1].saturating_sub(w[0])).collect())
+            .filter(|cell: &Vec<Line<'a, Message>>| !cell.is_empty())
+            .collect();
+        if let Some(last) = cells.last_mut() {
+            last.extend(tail);
+        }
+        self.rows.push(Line::Cells(cells));
         self
     }
 
@@ -203,90 +244,270 @@ impl<'a, Message: Clone + 'a> Form<'a, Message> {
 impl<'a, Message: 'a> From<Form<'a, Message>> for Element<'a, Message> {
     fn from(form: Form<'a, Message>) -> Self {
         let label_width = typography::scaled(form.label_width);
-        let mut column = Column::new().spacing(10);
+        lines(form.rows, label_width)
+    }
+}
 
-        for (index, line) in form.rows.into_iter().enumerate() {
-            let line: Element<'a, Message> = match line {
-                Line::Section(title) => container(
+/// Lines one under another, `SPACING` apart.
+fn lines<'a, Message: 'a>(rows: Vec<Line<'a, Message>>, label_width: f32) -> Element<'a, Message> {
+    let mut column = Column::new().spacing(SPACING);
+    for (index, line) in rows.into_iter().enumerate() {
+        column = column.push(line_element(line, index, label_width));
+    }
+    column.into()
+}
+
+fn line_element<'a, Message: 'a>(
+    line: Line<'a, Message>,
+    index: usize,
+    label_width: f32,
+) -> Element<'a, Message> {
+    match line {
+        Line::Section(title) => container(
+            row![
+                label::strong(title),
+                container(rule::horizontal(1).style(style::field::hairline)).width(Fill)
+            ]
+            .spacing(10)
+            .align_y(Alignment::Center),
+        )
+        .padding(Padding {
+            top: if index == 0 { 0.0 } else { 8.0 },
+            ..Padding::ZERO
+        })
+        .into(),
+        Line::Fold(heading) => container(heading)
+            .padding(Padding {
+                top: if index == 0 { 0.0 } else { 8.0 },
+                ..Padding::ZERO
+            })
+            .into(),
+        Line::Field {
+            label: name,
+            control,
+            required,
+            help,
+            warning,
+            error,
+        } => {
+            let mut name_row = row![label::body(name)].spacing(3);
+
+            if required {
+                name_row = name_row.push(label::body("*").style(style::text::danger));
+            }
+
+            let mut body = column![control].spacing(4);
+
+            body = match (error, warning, help) {
+                (Some(error), _, _) => body.push(
                     row![
-                        label::strong(title),
-                        container(rule::horizontal(1).style(style::field::hairline)).width(Fill)
+                        icon(Icon::Warning).size(12.0).tone(Tone::Danger),
+                        label::caption(error).style(style::text::danger),
                     ]
-                    .spacing(10)
+                    .spacing(5)
                     .align_y(Alignment::Center),
-                )
-                .padding(Padding {
-                    top: if index == 0 { 0.0 } else { 8.0 },
-                    ..Padding::ZERO
-                })
-                .into(),
-                Line::Fold(heading) => container(heading)
-                    .padding(Padding {
-                        top: if index == 0 { 0.0 } else { 8.0 },
-                        ..Padding::ZERO
-                    })
-                    .into(),
-                Line::Field {
-                    label: name,
-                    control,
-                    required,
-                    help,
-                    warning,
-                    error,
-                } => {
-                    let mut name_row = row![label::body(name)].spacing(3);
-
-                    if required {
-                        name_row = name_row.push(label::body("*").style(style::text::danger));
-                    }
-
-                    let mut body = column![control].spacing(4);
-
-                    body = match (error, warning, help) {
-                        (Some(error), _, _) => body.push(
-                            row![
-                                icon(Icon::Warning).size(12.0).tone(Tone::Danger),
-                                label::caption(error).style(style::text::danger),
-                            ]
-                            .spacing(5)
-                            .align_y(Alignment::Center),
-                        ),
-                        (None, Some(warning), _) => body.push(
-                            row![
-                                icon(Icon::Warning).size(12.0).tone(Tone::Warning),
-                                label::caption(warning).style(style::text::warning),
-                            ]
-                            .spacing(5)
-                            .align_y(Alignment::Center),
-                        ),
-                        (None, None, Some(help)) => body.push(label::caption(help)),
-                        (None, None, None) => body,
-                    };
-
-                    // Ad, alanın ilk satırıyla aynı yükseklikte başlar.
-                    Pair::new(
-                        container(name_row).padding(Padding {
-                            top: 4.0,
-                            ..Padding::ZERO
-                        }),
-                        body.width(Fill),
-                        label_width,
-                    )
-                    .into()
-                }
-                Line::Full(content) => Pair::new(
-                    space::horizontal().width(0),
-                    container(content).width(Fill),
-                    label_width,
-                )
-                .into(),
-                Line::Wide(content) => container(content).width(Fill).into(),
+                ),
+                (None, Some(warning), _) => body.push(
+                    row![
+                        icon(Icon::Warning).size(12.0).tone(Tone::Warning),
+                        label::caption(warning).style(style::text::warning),
+                    ]
+                    .spacing(5)
+                    .align_y(Alignment::Center),
+                ),
+                (None, None, Some(help)) => body.push(label::caption(help)),
+                (None, None, None) => body,
             };
 
-            column = column.push(line);
+            // Ad, alanın ilk satırıyla aynı yükseklikte başlar.
+            Pair::new(
+                container(name_row).padding(Padding {
+                    top: 4.0,
+                    ..Padding::ZERO
+                }),
+                body.width(Fill),
+                label_width,
+            )
+            .into()
         }
+        Line::Full(content) => Pair::new(
+            space::horizontal().width(0),
+            container(content).width(Fill),
+            label_width,
+        )
+        .into(),
+        Line::Wide(content) => container(content).width(Fill).into(),
+        Line::Cells(cells) => Cells {
+            children: cells
+                .into_iter()
+                .map(|cell| lines(cell, label_width))
+                .collect(),
+        }
+        .into(),
+    }
+}
 
-        column.into()
+/// Cells side by side, each the same width, when each gets [`LEAST_CELL`]; else one under another, the whole width,
+/// [`SPACING`] apart (as the form's own lines).
+struct Cells<'a, Message> {
+    children: Vec<Element<'a, Message>>,
+}
+
+impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Cells<'a, Message> {
+    fn children(&self) -> Vec<Tree> {
+        self.children.iter().map(Tree::new).collect()
+    }
+
+    fn diff(&self, tree: &mut Tree) {
+        tree.diff_children(&self.children);
+    }
+
+    fn size(&self) -> Size<Length> {
+        Size::new(Length::Fill, Length::Shrink)
+    }
+
+    fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) -> Node {
+        let limits = limits.width(Length::Fill).height(Length::Shrink);
+        let width = limits.max().width;
+        let n = self.children.len().max(1) as f32;
+        let beside = width >= n * typography::scaled(LEAST_CELL) + (n - 1.0) * GAP;
+        let cell = if beside {
+            (width - (n - 1.0) * GAP) / n
+        } else {
+            width
+        };
+        let room = layout::Limits::new(Size::ZERO, Size::new(cell.max(0.0), f32::INFINITY));
+        let mut nodes = Vec::with_capacity(self.children.len());
+        let (mut x, mut y, mut height) = (0.0_f32, 0.0_f32, 0.0_f32);
+        for (child, state) in self.children.iter_mut().zip(&mut tree.children) {
+            let mut node = child.as_widget_mut().layout(state, renderer, &room);
+            node.move_to_mut((x, y));
+            if beside {
+                x += cell + GAP;
+                height = height.max(node.size().height);
+            } else {
+                y += node.size().height + SPACING;
+                height = y - SPACING;
+            }
+            nodes.push(node);
+        }
+        let size = limits.resolve(
+            Length::Fill,
+            Length::Shrink,
+            Size::new(width, height.max(0.0)),
+        );
+        Node::with_children(size, nodes)
+    }
+
+    fn operate(
+        &mut self,
+        tree: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn Operation,
+    ) {
+        operation.container(None, layout.bounds());
+        operation.traverse(&mut |operation| {
+            self.children
+                .iter_mut()
+                .zip(&mut tree.children)
+                .zip(layout.children())
+                .for_each(|((child, state), layout)| {
+                    child
+                        .as_widget_mut()
+                        .operate(state, layout, renderer, operation);
+                });
+        });
+    }
+
+    fn update(
+        &mut self,
+        tree: &mut Tree,
+        event: &Event,
+        layout: Layout<'_>,
+        cursor: mouse::Cursor,
+        renderer: &Renderer,
+        clipboard: &mut dyn Clipboard,
+        shell: &mut Shell<'_, Message>,
+        viewport: &Rectangle,
+    ) {
+        for ((child, tree), layout) in self
+            .children
+            .iter_mut()
+            .zip(&mut tree.children)
+            .zip(layout.children())
+        {
+            child.as_widget_mut().update(
+                tree, event, layout, cursor, renderer, clipboard, shell, viewport,
+            );
+        }
+    }
+
+    fn mouse_interaction(
+        &self,
+        tree: &Tree,
+        layout: Layout<'_>,
+        cursor: mouse::Cursor,
+        viewport: &Rectangle,
+        renderer: &Renderer,
+    ) -> mouse::Interaction {
+        self.children
+            .iter()
+            .zip(&tree.children)
+            .zip(layout.children())
+            .map(|((child, tree), layout)| {
+                child
+                    .as_widget()
+                    .mouse_interaction(tree, layout, cursor, viewport, renderer)
+            })
+            .max()
+            .unwrap_or_default()
+    }
+
+    fn draw(
+        &self,
+        tree: &Tree,
+        renderer: &mut Renderer,
+        theme: &Theme,
+        style: &renderer::Style,
+        layout: Layout<'_>,
+        cursor: mouse::Cursor,
+        viewport: &Rectangle,
+    ) {
+        for ((child, tree), layout) in self
+            .children
+            .iter()
+            .zip(&tree.children)
+            .zip(layout.children())
+        {
+            child
+                .as_widget()
+                .draw(tree, renderer, theme, style, layout, cursor, viewport);
+        }
+    }
+
+    fn overlay<'b>(
+        &'b mut self,
+        tree: &'b mut Tree,
+        layout: Layout<'b>,
+        renderer: &Renderer,
+        viewport: &Rectangle,
+        translation: Vector,
+    ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
+        overlay::from_children(
+            &mut self.children,
+            tree,
+            layout,
+            renderer,
+            viewport,
+            translation,
+        )
+    }
+}
+
+impl<'a, Message: 'a> From<Cells<'a, Message>> for Element<'a, Message> {
+    fn from(cells: Cells<'a, Message>) -> Self {
+        Element::new(cells)
     }
 }
 
@@ -520,6 +741,48 @@ mod tests {
             rows[1][1],
             (beside, 0.0),
             "an unnamed row indented as the controls"
+        );
+    }
+
+    /// Two fields in a row of cells, laid out in `width`: each cell's place (x, y) in the line.
+    fn cells(width: f32) -> Vec<(f32, f32)> {
+        let snapshot = Snapshot::new(Size::new(width, 400.0)).expect("çizici kurulamadı");
+        let control = || {
+            space::horizontal()
+                .width(Length::Fill)
+                .height(Length::Fixed(28.0))
+        };
+        let form: Form<'_, ()> = Form::new()
+            .field("Ada", control())
+            .field("Parsel", control());
+        let form = form.cells(&[0, 1, 2]);
+        assert_eq!(form.line_count(), 1, "one line of two cells");
+        let mut element: Element<'_, ()> = form.into();
+        let mut tree = Tree::new(&element);
+        let limits = Limits::new(Size::ZERO, Size::new(width, 400.0));
+        let node = element
+            .as_widget_mut()
+            .layout(&mut tree, snapshot.renderer(), &limits);
+        node.children()[0]
+            .children()
+            .iter()
+            .map(|c| (c.bounds().x, c.bounds().y))
+            .collect()
+    }
+
+    #[test]
+    fn cells_stand_side_by_side_where_they_fit_and_one_under_another_where_not() {
+        let wide = cells(400.0);
+        assert_eq!(wide[0], (0.0, 0.0));
+        assert!(
+            wide[1].0 > 150.0 && wide[1].1 == 0.0,
+            "the second beside the first: {wide:?}"
+        );
+        let narrow = cells(240.0);
+        assert_eq!(narrow[0], (0.0, 0.0));
+        assert!(
+            narrow[1].0 == 0.0 && narrow[1].1 > 20.0,
+            "the second under the first: {narrow:?}"
         );
     }
 

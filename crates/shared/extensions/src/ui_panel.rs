@@ -28,6 +28,7 @@ mod files;
 /// The components' Python builders, `kentos.ui_panel` (docs/adr/8057 §34), made from [`json_schema`].
 #[cfg(feature = "schema")]
 pub mod python;
+pub mod rows;
 pub mod rules;
 pub mod tabs;
 pub mod values;
@@ -563,6 +564,14 @@ pub fn json_schema() -> Value {
                         "The tab (its words) whose page this component is on: the components with the same tab share \
                          a page, the bar lists the tabs in the order they first appear; without one, on every page." }),
                 );
+                if rows::takes_row(&name) {
+                    props.insert(
+                        rows::ROW_KEY.to_owned(),
+                        serde_json::json!({ "type": "string", "maxLength": 40, "description":
+                            "The row (its name) whose line this component shares: the components next to each other \
+                             with the same row stand side by side where each has room, one under another where not." }),
+                    );
+                }
             }
         }
     }
@@ -862,6 +871,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
         for key in c.keys().filter(|k| {
             k.as_str() != "type"
                 && k.as_str() != tabs::TAB_KEY
+                && k.as_str() != rows::ROW_KEY
                 && !known.contains(&k.as_str())
                 && !takes_rule(kind, known, k.as_str())
                 && !values::takes_value(kind, k.as_str())
@@ -880,6 +890,9 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     .filter(|k| values::takes_value(kind, k)),
             );
             takes.push(tabs::TAB_KEY);
+            if rows::takes_row(kind) {
+                takes.push(rows::ROW_KEY);
+            }
             add(
                 format!("{at}/{key}"),
                 format!(
@@ -1436,6 +1449,10 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
     }
     // Its tabs: each a tab's words, at most `tabs::MOST_TABS` (docs/adr/8057 §43).
     for (at, why) in tabs::check(body) {
+        add(at, why);
+    }
+    // Its rows: each a row's name, its cells next to each other, small, on one tab (docs/adr/8057 §55).
+    for (at, why) in rows::check(body) {
         add(at, why);
     }
     out
