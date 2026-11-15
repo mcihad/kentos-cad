@@ -1090,13 +1090,13 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
   kaydedilmemiş taslak tanımlı; pencere kapanması, kaldırma ve belge değişimi geç geri çağırmayı etkisiz kılar, bir
   taslak başka belgeye uygulanmaz [PY-UI-17, EKL-03]; aynı tanımın masaüstü/web/mobil önizlemesi ve başsız durum testleri
   ortak fikstürlerde [PY-UI-18]. Tablo ve listede büyük veri sayfalama ve sanallaştırmayla.
-- [ ] **Panel köprüsü** — *ilk dilim yapıldı (ADR 8057 §24): `kentos.ui.panel` 1'in yedi bileşeni (metin, metin/sayı
+- [x] **Panel köprüsü** — *tamamlandı (ADR 8057 §24): `kentos.ui.panel` 1'in yedi bileşeni (metin, metin/sayı
   alanı, seçim, onay, düğme, tablo) dock'un Eklenti sekmesinde; düğme bir komutu panelin değerleriyle (`ctx.params`)
   çalıştırır, satırları tabloya; Kapı 1 denetimi; katman, alan ve nesne seçicileri (alan seçici bağlı katmanın
   alanlarını, nesne seçici çizimdeki seçimi alır); düğmenin komutu ilerlemesini panelde ve bildiriminde gösterir
   (çubuk, Durdur); `side` sol/sağ/alt (kullanıcının taşıdığı yer korunur); değer değişince komut (`onChange`);
-  ağaç (satırları sütunlara göre gruplar); birden çok açık panel (Eklenti sekmesinde birer sekme); kalan: kart
-  bileşeni.* Eklentinin
+  ağaç (satırları sütunlara göre gruplar); birden çok açık panel (Eklenti sekmesinde birer sekme); kart (satır başına
+  KentOS bilgi kartı, dar dock'ta tablonun yerine); kalıcı pencere: Eklenti sekmesi "Paneli yüzdür" ile.* Eklentinin
   JSON'la bildirdiği `Table`, `Tree`, `Form`, `LayerPicker`, `FeaturePicker`, `Progress` bileşenleri sağ/alt dock ya da
   kalıcı pencere olarak açılır.
 - [x] **MapTool köprüsü** — *tamamlandı (ADR 8057 §9): yakalama türleri, yönlü dikdörtgen şablonu, tek geri alma

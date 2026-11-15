@@ -1626,4 +1626,23 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
     numaralanıyor"); değişikliğin komutunda düğme yoktur, satır eskisi gibi.
   - Eklenti kapatılınca yalnız onun panelleri gider; diğer eklentinin paneli ve dock sekmesi kalır, son panelle sekme
     de gider. Test: üç panel (Vitrin'in ikisi, MEBİS'in Mezar sorgulama'sı) ekransız.
-- **Kalan (ADIM 22):** kart bileşeni.
+- **Kart** (`card`: `id`, `label`, `title`, `tag`; Vitrin 1.0.15, Parsel kartı; `22-kart`): düğmenin (ya da
+  `onChange`'in) komutunun her satırı bir kart: `title` sütunu başlığında (verilmezse ilk sütun), `tag` sütunu
+  yanında, diğer sütunlar altında adlarıyla; sayı rakam yazısıyla sağa dayalı. KentOS'un bilgi kartıdır
+  (`kentos_ui::widget::InfoCard` + `Pairs`, çizimdeki nesnenin üzerine gelince açılan kartla aynı), kart yüzeyinde
+  (`style::container::bordered`); `uid`'li satırın kartı tıklanır, nesneyi seçip yakınlaştırır (tablonun satırı
+  gibi), üzerine gelince kenarı belirginleşir. Tıklanan kartın stili gösterge kartından ortak stile taşındı
+  (`style::button::card`). **Neden:** dar dock'ta çok sütunlu tablo okunmuyor; kart sütunları alt alta yazar.
+  **Python API'sine bir şey eklenmedi:** kart, tablonun aldığı satırları alır. İlk 100 kart, gerisi sayılır. Kapı 1:
+  `title`/`tag` boş olmayan sütun adları ve birbirinden farklı; düğmenin `table`'ı bir kartı da gösterebilir.
+  - **Gerçek pencere:** iki parsel pencereyle seçilip Seçimi al'a basılınca 101/1 "TAKS aşıyor" (900 m², 2 yapı,
+    450 m², 0,5) ve 101/2 "uygun" (244 m², 0,27); 101/2'nin kartına tıklanınca parsel seçilip yakınlaştı. Koyu tema,
+    16 px yazı, 1100 × 650'de: dar panelde etiketler alanın üstünde, kart okunur; Eklenti sekmesi "Paneli yüzdür" ile
+    ayrı pencereye alınınca kartlar orada da (planın "kalıcı pencere"si: panel tanımı değil, kullanıcının dock'u).
+  - **Bulgu (düzeltildi):** düğmesi olmayan panelin boş sonuç alanı "Düğmeye basınca komutun satırları burada …"
+    diyordu (Parsel kartı'nı nesne seçicinin `onChange`'i doldurur). Tablo, ağaç ve kartın bekleme sözü artık onu
+    dolduran şeye göre: bir düğme ise "Düğmeye basınca", değilse "Değer değişince".
+  - Dar pencerede sağ yığın kısa ve Katmanlar sekmesi şeritten taşmış: etkin katmanı seçmek için yığının ⋯ menüsünden
+    Katmanlar açıldı (yukarıdaki kısa pencere bulgusunun parçası, ayrı iş).
+- **Kalan (ADIM 22):** panel köprüsü tamamlandı; bileşen envanteri ve tanım/oturum maddeleri (PY-UI §8.1, PY-UI-01…18)
+  ayrı maddeler.

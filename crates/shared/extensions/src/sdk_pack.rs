@@ -81,7 +81,10 @@ listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.en
 alan ve nesne seçimi temizlenir), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
 `primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
 göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak
-tıklanınca nesneyi gösterir; düğmenin `table`'ı bir ağacı da gösterebilir). `select`, `layerPicker`, `fieldPicker`, `featurePicker` ve `checkbox` isteğe
+tıklanınca nesneyi gösterir; düğmenin `table`'ı bir ağacı da gösterebilir), `card` (`id`, `label`, `title`, `tag`:
+sütun adları; her satır bir kart: `title` sütunu başlığında (yoksa ilk sütun), `tag` sütunu yanında, diğer sütunlar
+altında adlarıyla; dar yerde sığmayan çok sütunlu tablonun yerine; `uid`'li kart tıklanınca nesneyi gösterir;
+düğmenin `table`'ı bir kartı da gösterebilir). `select`, `layerPicker`, `fieldPicker`, `featurePicker` ve `checkbox` isteğe
 bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
 (çalışırken gelen değişiklik bitince bir kez yeniden çalıştırılır). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu

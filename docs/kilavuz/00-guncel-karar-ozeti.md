@@ -2566,7 +2566,7 @@
     `ctx.apply_declarative_schema` ile kurar: var olana dokunmaz, eksiği tek geri alma adımıyla ekler; katmanın kimliği
     şema adıdır (`cad.layers.edit` `add` `id` alır); katmanın formu aynı adımda bağlanır.
   - Eklentinin paneli veridir (`kentos.ui.panel` 1: metin, metin/sayı alanı, seçim, onay, katman/alan/nesne seçici,
-    düğme, tablo), dock'un Eklenti sekmesinde KentOS'un bileşenleriyle çizilir; düğmesi eklentinin bir komutunu
+    düğme, tablo, ağaç, kart), dock'un Eklenti sekmesinde KentOS'un bileşenleriyle çizilir; düğmesi eklentinin bir komutunu
     panelin değerleriyle (`ctx.params`) çalıştırır, satırları panelin tablosuna gelir; nesne seçici çizimdeki seçimi
     alır. Kodu arayüz nesnesi almaz. Komutun `ctx.progress`'i çalışma bildiriminde ve başladığı panelde çubukla
     görünür. Birden çok panel açık kalır: Eklenti sekmesinin üstünde birer sekme; yanıt, gösterilmese de başladığı

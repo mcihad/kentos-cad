@@ -13,6 +13,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``katmanlari_kur``: katman şeması; schema.json'daki grubu, katmanları, değer listesini ve ilişkiyi tek adımda kurar.
 - ``yapi_ara``: panelin düğmesi; "Yapı ara" panelinin değerleriyle çalışır, satırları panelin tablosuna gider.
 - ``deger_say``: seçicili panelin düğmesi; "Değer say"ın katmanı, alanı ve seçilen nesneleriyle değerleri sayar.
+- ``parsel_karti``: kartlı panel; "Parsel kartı"nda alınan her parselin alanı, yapıları ve TAKS'ı bir kartta.
 """
 
 import time
@@ -238,3 +239,50 @@ def deger_say(ctx: ext.CommandContext) -> ext.CommandResult:
     satirlar.sort(key=lambda s: (-sayilar[s["Değer"]], s["Değer"]))
     nerede = f"seçilen {len(satirlar)} nesnede" if secilen else f"katmanın {len(satirlar)} nesnesinde"
     return ctx.report(satirlar, title="Değer say", message=f"{nerede} {len(sayilar)} farklı “{alan}” değeri.")
+
+
+# Planlı Alanlar İmar Yönetmeliği'nin taban alanı katsayısı için örnek plan notu (TAKS aracının varsayılanı).
+TAKS_SINIRI = 0.4
+
+
+@ext.command("parsel-karti")
+def parsel_karti(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Parsel kartı" panelinin nesne seçicisi değişince çalışır: alınan her parsel bir satır, panel her satırı bir
+    kart olarak gösterir (docs/adr/8057 §24): "parsel" sütunu kartın başlığı, "durum" yanında, diğerleri altında
+    adlarıyla; satırın uid'si kartı tıklanınca parseli gösterir. Parsel katmanında olmayan nesneler atlanır."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    secilen = ctx.params.get("parseller") or []
+    parsel_katmani, yapi_katmani = _katman(ctx.doc, "parsel"), _katman(ctx.doc, "yapi")
+    yapilar = []
+    if yapi_katmani:
+        yapilar = [Polygon(r.entity.pts) for r in ctx.doc.entities(layer=yapi_katmani, kinds=["polygon"])]
+    satirlar, atlanan = [], 0
+    for uid in secilen:
+        kayit = ctx.doc.entity(uid)
+        if kayit is None or kayit.entity.kind != "polygon" or kayit.entity.layer_id != parsel_katmani:
+            atlanan += 1
+            continue
+        parsel = Polygon(kayit.entity.pts)
+        # Bir yapının parselden taşan kısmı o parsele sayılmaz (TAKS aracı gibi).
+        tabanlar = [a for a in (parsel.intersection(y).area for y in yapilar) if a > 1e-6]
+        oran = sum(tabanlar) / parsel.area if parsel.area > 0 else 0.0
+        oznitelikler = {k.casefold(): v for k, v in (kayit.entity.attrs or {}).items() if v}
+        ada, no = oznitelikler.get("ada"), oznitelikler.get("parsel")
+        satirlar.append({
+            "uid": kayit.uid,
+            "parsel": f"{ada}/{no}" if ada and no else f"{len(satirlar) + 1}. parsel",
+            "durum": "TAKS aşıyor" if oran > TAKS_SINIRI + 1e-9 else "uygun",
+            "alan (m²)": round(parsel.area, 1),
+            "yapı": len(tabanlar),
+            "taban alanı (m²)": round(sum(tabanlar), 1),
+            "TAKS": round(oran, 2),
+        })
+    if not secilen:
+        mesaj = "Parselleri çizimde seçip Seçimi al'a basın."
+    else:
+        mesaj = f"{len(satirlar)} parselin kartı."
+        if atlanan:
+            mesaj += f" {atlanan} nesne parsel katmanında değil, atlandı."
+    # Satırsız da tablo verir: alınanlar temizlenince kartlar da gider (ileti verilseydi eski kartlar kalırdı).
+    return ctx.report(satirlar, title="Parsel kartı", message=mesaj)

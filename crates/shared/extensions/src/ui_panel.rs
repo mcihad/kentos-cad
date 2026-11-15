@@ -149,6 +149,18 @@ pub enum Component {
         label: Option<String>,
         group: Vec<String>,
     },
+    /// The rows a button's command answered, a card each: `title`'s column heads it (none: the first column), `tag`'s
+    /// beside it, the other columns under it by name; a card with a `uid` is an object. Where a table's columns do not
+    /// fit (a narrow dock), a card writes them one under the other.
+    Card {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        #[serde(default)]
+        title: Option<String>,
+        #[serde(default)]
+        tag: Option<String>,
+    },
 }
 
 /// A feature picker takes many objects unless it says otherwise.
@@ -170,7 +182,8 @@ impl Component {
             | Component::Checkbox { id, .. }
             | Component::Button { id, .. }
             | Component::Table { id, .. }
-            | Component::Tree { id, .. } => Some(id),
+            | Component::Tree { id, .. }
+            | Component::Card { id, .. } => Some(id),
         }
     }
 
@@ -220,12 +233,13 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "button" => &["id", "label", "command", "table", "primary"],
         "table" => &["id", "label"],
         "tree" => &["id", "label", "group"],
+        "card" => &["id", "label", "title", "tag"],
         _ => return None,
     })
 }
 
 const TYPES: &str = "text, textField, numberField, select, layerPicker, fieldPicker, featurePicker, checkbox, button, \
-                     table, tree";
+                     table, tree, card";
 
 /// A component's id: lowercase letters, digits, `_` and `-`, a letter first, at most 63: the key its value is given to
 /// the command under (`ctx.params["sorgu"]`).
@@ -316,8 +330,11 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             .filter_map(|c| c.get("id").and_then(Value::as_str))
             .collect()
     };
-    // Where a button's rows may go: a table or a tree.
-    let tables: BTreeSet<&str> = of_type("table").union(&of_type("tree")).copied().collect();
+    // Where a button's rows may go: a table, a tree or a card.
+    let tables: BTreeSet<&str> = ["table", "tree", "card"]
+        .into_iter()
+        .flat_map(of_type)
+        .collect();
     let layer_pickers = of_type("layerPicker");
     let mut ids = BTreeSet::new();
     for (i, component) in body.iter().enumerate() {
@@ -376,7 +393,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             }
             continue;
         }
-        if !matches!(kind, "table" | "tree") && text(c, "label").is_none() {
+        if !matches!(kind, "table" | "tree" | "card") && text(c, "label").is_none() {
             add(
                 at.clone(),
                 format!("{kind} bileşeni boş olmayan bir ad (label) ister."),
@@ -551,7 +568,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                 {
                     add(
                         format!("{at}/table"),
-                        "Düğmenin tablosu (table) bu paneldeki bir tablonun ya da ağacın kimliği olmalı."
+                        "Düğmenin tablosu (table) bu paneldeki bir tablonun, ağacın ya da kartın kimliği olmalı."
                             .to_owned(),
                     );
                 }
@@ -578,6 +595,26 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                         format!("{at}/group"),
                         "Ağaç, satırlarını gruplayacağı 1–3 farklı sütun adı (group) ister: ör. [\"ada\"]."
                             .to_owned(),
+                    );
+                }
+            }
+            "card" => {
+                for key in ["title", "tag"] {
+                    if c.get(key).is_some() && text(c, key).is_none() {
+                        add(
+                            format!("{at}/{key}"),
+                            format!(
+                                "“{key}” kartta gösterilecek bir sütunun adı olmalı (boş olmayan metin)."
+                            ),
+                        );
+                    }
+                }
+                if let (Some(title), Some(tag)) = (text(c, "title"), text(c, "tag"))
+                    && title == tag
+                {
+                    add(
+                        format!("{at}/tag"),
+                        "Kartın etiketi (tag) başlığıyla (title) aynı sütun: başka bir sütun seçin.".to_owned(),
                     );
                 }
             }
@@ -616,7 +653,8 @@ mod tests {
                 { "type": "fieldPicker", "id": "alan", "label": "Alan", "layer": "katman", "kinds": ["integer", "decimal"],
                   "onChange": "yapi-ara" },
                 { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman", "geometry": "area" },
-                { "type": "tree", "id": "agac", "label": "Adalara göre", "group": ["ada"] }
+                { "type": "tree", "id": "agac", "label": "Adalara göre", "group": ["ada"] },
+                { "type": "card", "id": "kartlar", "label": "Yapılar", "title": "no", "tag": "durum" }
             ]
         })
     }
@@ -627,7 +665,7 @@ mod tests {
         assert!(check("ui/ara.panel.json", &value, &["yapi-ara"]).is_empty());
         let read = read(&value).expect("read");
         assert_eq!(read.title, "Yapı ara");
-        assert_eq!(read.body.len(), 11);
+        assert_eq!(read.body.len(), 12);
         assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 7);
         assert!(
             matches!(&read.body[5], Component::LayerPicker { geometry: Some(g), .. } if g == "area")
@@ -647,6 +685,15 @@ mod tests {
         assert_eq!(read.body[8].on_change(), Some("yapi-ara"));
         assert_eq!(read.body[9].on_change(), None);
         assert!(matches!(&read.body[10], Component::Tree { group, .. } if group == &["ada"]));
+        assert!(
+            matches!(&read.body[11], Component::Card { title: Some(t), tag: Some(g), .. }
+            if t == "no" && g == "durum")
+        );
+        // A button's rows may go to a card; a card needs no title or tag.
+        let mut to_card = panel();
+        to_card["body"][6]["table"] = json!("kartlar");
+        to_card["body"][11] = json!({ "type": "card", "id": "kartlar" });
+        assert!(check("ui/ara.panel.json", &to_card, &["yapi-ara"]).is_empty());
     }
 
     #[test]
@@ -663,6 +710,7 @@ mod tests {
         p["body"][9]["multiple"] = json!("evet");
         p["body"][9]["onChange"] = json!("say");
         p["body"][10]["group"] = json!(["ada", "ada"]);
+        p["body"][11]["tag"] = json!("no");
         p["body"]
             .as_array_mut()
             .unwrap()
@@ -691,8 +739,9 @@ mod tests {
                 "/body/9/onChange",
                 "/body/9/multiple",
                 "/body/10/group",
-                "/body/11/type",
-                "/body/12"
+                "/body/11/tag",
+                "/body/12/type",
+                "/body/13"
             ]
         );
     }

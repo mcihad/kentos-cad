@@ -315,7 +315,7 @@ impl<'a, Message: Clone + 'a> From<StatCard<'a, Message>> for Element<'a, Messag
                 .padding(0)
                 .width(width)
                 .height(height)
-                .style(card_button(selected))
+                .style(style::button::card(selected))
                 .into(),
             None => container(body)
                 .width(width)
@@ -325,29 +325,6 @@ impl<'a, Message: Clone + 'a> From<StatCard<'a, Message>> for Element<'a, Messag
         };
 
         card
-    }
-}
-
-/// Tıklanabilen kart: kart kenarı, üzerine gelince belirgin, seçiliyken vurgu.
-fn card_button(selected: bool) -> impl Fn(&Theme, button::Status) -> button::Style {
-    move |theme, status| {
-        let t = Tokens::of(theme);
-        let hovered = matches!(status, button::Status::Hovered | button::Status::Pressed);
-
-        button::Style {
-            background: Some(if selected { t.selection() } else { t.surface }.into()),
-            text_color: t.text,
-            border: iced::Border {
-                color: match (selected, hovered) {
-                    (true, _) => t.accent_line(),
-                    (false, true) => t.border_strong(),
-                    (false, false) => t.border,
-                },
-                width: 1.0,
-                radius: crate::theme::shape::md().into(),
-            },
-            ..button::Style::default()
-        }
     }
 }
 

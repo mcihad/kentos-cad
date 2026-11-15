@@ -24,6 +24,31 @@ fn style(background: Color, text_color: Color, border: Border) -> Style {
     }
 }
 
+/// Tıklanabilen kart: kart kenarı ([`super::container::bordered`] gibi), üzerine
+/// gelince belirgin, seçiliyken vurgu (gösterge kartı, eklenti panelinin
+/// nesne kartı).
+pub fn card(selected: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+        let hovered = is_hovered(status);
+
+        Style {
+            background: Some(if selected { t.selection() } else { t.surface }.into()),
+            text_color: t.text,
+            border: Border {
+                color: match (selected, hovered) {
+                    (true, _) => t.accent_line(),
+                    (false, true) => t.border_strong(),
+                    (false, false) => t.border,
+                },
+                width: 1.0,
+                radius: crate::theme::shape::md().into(),
+            },
+            ..Style::default()
+        }
+    }
+}
+
 /// Çerçevesiz düğme: şerit, gezinme çubuğu ve küçük eylemler.
 ///
 /// Üzerine gelince yüzey rengi ve kenar, basılıyken vurgu kenarı alır;

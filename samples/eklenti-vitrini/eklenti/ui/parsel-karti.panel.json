@@ -1,0 +1,25 @@
+{
+  "format": "kentos.ui.panel",
+  "schemaVersion": 1,
+  "title": "Parsel kartı",
+  "body": [
+    {
+      "type": "text",
+      "text": "Seçilen her parselin kartı: adası ve parseli başlığında, TAKS durumu yanında; alanı, üzerindeki yapılar, taban alanı ve TAKS altında. Parselleri çizimde seçip Seçimi al'a basın; karta tıklamak parseli gösterir."
+    },
+    {
+      "type": "featurePicker",
+      "id": "parseller",
+      "label": "Parseller",
+      "geometry": "area",
+      "onChange": "parsel-karti"
+    },
+    {
+      "type": "card",
+      "id": "kartlar",
+      "label": "Kartlar",
+      "title": "parsel",
+      "tag": "durum"
+    }
+  ]
+}

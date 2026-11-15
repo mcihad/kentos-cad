@@ -16,6 +16,9 @@
 //!   table as it was.
 //! - **A tree groups a command's rows** by the columns its definition names, each group with its count and open
 //!   unless the user closed it; a leaf with a `uid` is an object.
+//! - **A card writes a row's columns one under the other** (KentOS's info card: its title column heading it, its tag
+//!   column beside, the others by name), where a table's columns do not fit; a card with a `uid` is pressed to show
+//!   its object.
 //! - **Enter presses the primary button** in a text or number field (else the panel's first button).
 //! - **A value changed can run a command:** an input's `onChange` runs it with the panel's values (its rows to the
 //!   first table); a change while a command runs waits for it, one rerun with the values then.
@@ -43,6 +46,8 @@ use crate::exchange::words;
 
 /// Rows a table shows; the rest are counted.
 const SHOWN_ROWS: usize = 500;
+/// Cards a card component shows (each is a few rows tall); the rest are counted.
+const SHOWN_CARDS: usize = 100;
 
 /// A panel open in the dock.
 #[derive(Clone, Debug)]
@@ -288,11 +293,29 @@ impl OpenPanel {
             .filter(|l| !l.is_empty())
     }
 
-    /// The table (or tree) a button's rows go to: its own, else the panel's first.
+    /// What an output (a table, a tree, a card) says before its first rows, by what fills it: a button, else a change
+    /// (a panel without a button said "Düğmeye basınca", real window, 15 November 2026).
+    fn waiting_words(&self, output: &str, done: &str) -> String {
+        let first = self.table_of(None);
+        let by_button = self.definition.body.iter().any(|c| {
+            matches!(c, Component::Button { table, .. }
+                if table.as_deref().map_or(first.as_deref() == Some(output), |t| t == output))
+        });
+        let by = if by_button {
+            "Düğmeye basınca"
+        } else {
+            "Değer değişince"
+        };
+        format!("{by} komutun satırları burada {done}.")
+    }
+
+    /// The output (a table, a tree, a card) a button's rows go to: its own, else the panel's first.
     fn table_of(&self, table: Option<&String>) -> Option<String> {
         table.cloned().or_else(|| {
             self.definition.body.iter().find_map(|c| match c {
-                Component::Table { id, .. } | Component::Tree { id, .. } => Some(id.clone()),
+                Component::Table { id, .. }
+                | Component::Tree { id, .. }
+                | Component::Card { id, .. } => Some(id.clone()),
                 _ => None,
             })
         })
@@ -1037,6 +1060,20 @@ impl App {
                 } => {
                     tables.push(panel_tree(p, id, words.as_deref(), group));
                 }
+                Component::Card {
+                    id,
+                    label: words,
+                    title,
+                    tag,
+                } => {
+                    tables.push(panel_cards(
+                        p,
+                        id,
+                        words.as_deref(),
+                        title.as_deref(),
+                        tag.as_deref(),
+                    ));
+                }
             }
         }
         let header = row![
@@ -1201,7 +1238,7 @@ impl App {
         let Some((columns, rows)) = p.tables.get(id) else {
             return column![
                 label::caption(words.unwrap_or("Sonuçlar").to_owned()),
-                label::muted("Düğmeye basınca komutun satırları burada listelenir."),
+                label::muted(p.waiting_words(id, "listelenir")),
             ]
             .spacing(4)
             .into();
@@ -1270,12 +1307,9 @@ fn panel_tree<'a>(
     use kentos_ui::widget::tree_view::{Column as Col, Node, TreeView};
     let title = label::caption(words.unwrap_or("Sonuçlar").to_owned());
     let Some((columns, rows)) = p.tables.get(id) else {
-        return column![
-            title,
-            label::muted("Düğmeye basınca komutun satırları burada gruplanır."),
-        ]
-        .spacing(4)
-        .into();
+        return column![title, label::muted(p.waiting_words(id, "gruplanır")),]
+            .spacing(4)
+            .into();
     };
     if rows.is_empty() {
         return column![title, label::muted("Satır yok.")].spacing(4).into();
@@ -1364,6 +1398,102 @@ fn panel_tree<'a>(
     out.into()
 }
 
+/// A card component's rows, a card each, the first [`SHOWN_CARDS`] (KentOS's info card, on the card surface):
+/// `title`'s column heads it (none: the first column), `tag`'s beside it, the other columns under it by name, a
+/// number in figures; a row with a `uid` is a card pressed to show its object, as a table's row.
+fn panel_cards<'a>(
+    p: &'a OpenPanel,
+    id: &str,
+    words: Option<&'a str>,
+    title: Option<&'a str>,
+    tag: Option<&'a str>,
+) -> Element<'a, Message> {
+    use iced::widget::button;
+    use iced::widget::text::Wrapping;
+    use kentos_ui::style;
+    use kentos_ui::theme::typography;
+    use kentos_ui::widget::{InfoCard, Pairs};
+    let heading = label::caption(words.unwrap_or("Sonuçlar").to_owned());
+    let Some((columns, rows)) = p.tables.get(id) else {
+        return column![
+            heading,
+            label::muted(p.waiting_words(id, "kart kart listelenir")),
+        ]
+        .spacing(4)
+        .into();
+    };
+    if rows.is_empty() {
+        return column![heading, label::muted("Satır yok.")]
+            .spacing(4)
+            .into();
+    }
+    let shown: Vec<&str> = columns
+        .iter()
+        .map(String::as_str)
+        .filter(|c| *c != "uid")
+        .collect();
+    let head = title.or_else(|| shown.first().copied());
+    let lines: Vec<&str> = shown
+        .iter()
+        .copied()
+        .filter(|c| Some(*c) != head && Some(*c) != tag)
+        .collect();
+    let size = typography::caption();
+    let mut out = column![heading].spacing(6);
+    for row in rows.iter().take(SHOWN_CARDS) {
+        let name = head.map_or_else(|| "—".to_owned(), |c| cell_words(row.get(c)));
+        // As wide as the panel, every card the same.
+        let mut card = InfoCard::new(label::strong(name).wrapping(Wrapping::WordOrGlyph))
+            .min_width(f32::INFINITY);
+        if let Some(tag) = tag {
+            card =
+                card.tag(label::caption(cell_words(row.get(tag))).wrapping(Wrapping::WordOrGlyph));
+        }
+        if !lines.is_empty() {
+            card = card.body(
+                lines.iter().fold(
+                    Pairs::new()
+                        .spacing_x(12.0)
+                        .spacing_y(2.0)
+                        .align_values(iced::Right),
+                    |pairs, c| {
+                        let value = row.get(*c);
+                        let text = if value.is_some_and(Value::is_number) {
+                            label::mono(cell_words(value))
+                        } else {
+                            label::body(cell_words(value))
+                        };
+                        pairs.push(
+                            label::caption((*c).to_owned()).wrapping(Wrapping::None),
+                            text.size(size)
+                                .align_x(iced::Right)
+                                .wrapping(Wrapping::WordOrGlyph),
+                        )
+                    },
+                ),
+            );
+        }
+        let inside = container(card).padding([8, 10]).width(Fill);
+        out = out.push(match row.get("uid").and_then(Value::as_str) {
+            Some(uid) => Element::from(
+                button(inside)
+                    .on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))))
+                    .padding(0)
+                    .width(Fill)
+                    .style(style::button::card(false)),
+            ),
+            None => inside.style(style::container::bordered).into(),
+        });
+    }
+    if rows.len() > SHOWN_CARDS {
+        out = out.push(label::muted(format!(
+            "… {} kart daha",
+            rows.len() - SHOWN_CARDS
+        )));
+    }
+    out.into()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1386,6 +1516,37 @@ mod tests {
             "yapi-ara",
             kentos_extensions::ui_panel::read(&value).unwrap(),
         )
+    }
+
+    #[test]
+    fn a_card_takes_a_commands_rows_where_a_table_would() {
+        let value = json!({
+            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Parsel kartı",
+            "body": [
+                { "type": "featurePicker", "id": "parseller", "label": "Parseller", "onChange": "parsel-karti" },
+                { "type": "card", "id": "kartlar", "title": "parsel", "tag": "durum" }
+            ]
+        });
+        let p = OpenPanel::new(
+            "tr.ornek.vitrin",
+            "parsel-paneli",
+            kentos_extensions::ui_panel::read(&value).unwrap(),
+        );
+        assert_eq!(
+            p.table_of(None).as_deref(),
+            Some("kartlar"),
+            "the panel's first output"
+        );
+        assert_eq!(panel().table_of(None).as_deref(), Some("sonuc"));
+        // Before its first rows it says what fills it: no button here, a change.
+        assert_eq!(
+            p.waiting_words("kartlar", "kart kart listelenir"),
+            "Değer değişince komutun satırları burada kart kart listelenir."
+        );
+        assert_eq!(
+            panel().waiting_words("sonuc", "listelenir"),
+            "Düğmeye basınca komutun satırları burada listelenir."
+        );
     }
 
     #[test]

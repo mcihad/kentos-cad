@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -83,6 +83,11 @@
         "id": "deger-say",
         "title": "Değer say",
         "handler": "vitrin.logic:deger_say"
+      },
+      {
+        "id": "parsel-karti",
+        "title": "Parsel kartı",
+        "handler": "vitrin.logic:parsel_karti"
       }
     ],
     "panels": [
@@ -97,6 +102,12 @@
         "title": "Değer say",
         "side": "left",
         "definition": "ui/deger-say.panel.json"
+      },
+      {
+        "id": "parsel-paneli",
+        "title": "Parsel kartı",
+        "side": "right",
+        "definition": "ui/parsel-karti.panel.json"
       }
     ],
     "processing": [
@@ -190,6 +201,10 @@
               {
                 "panel": "deger-paneli",
                 "icon": "field-statistics"
+              },
+              {
+                "panel": "parsel-paneli",
+                "icon": "parcel-report"
               }
             ]
           },

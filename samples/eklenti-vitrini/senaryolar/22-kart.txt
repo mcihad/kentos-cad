@@ -1,0 +1,29 @@
+# Kart: Vitrin › Parsel kartı (sağda). İki parsel pencereyle seçilip Seçimi al'a basılınca nesne seçicinin onChange'i
+# parsel-karti komutunu çalıştırır; her parsel bir kart: ada/parsel başlığında, TAKS durumu yanında; alanı, yapı
+# sayısı, taban alanı ve TAKS altında. Karta tıklamak parseli seçip yakınlaştırır. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 843 20    # Vitrin
+wait 1200
+click 505 84    # Parsel kartı (şeritte, Panel grubunda)
+wait 2000
+shot 22-bos
+drag 1280 509 1280 845   # paneli aşağı doğru büyüt
+wait 1000
+drag 160 480 705 770     # pencereyle 101/1 ve 101/2 (yalnız etkin katman seçilir)
+wait 1000
+click 1321 351  # Seçimi al: onChange, kartlar
+wait 6000
+shot 22-kartlar
+move 1280 620   # 101/2'nin kartı: üzerine gelince kenarı belirginleşir
+wait 600
+shot 22-uzerinde
+click 1280 620  # karta tıklamak parseli seçip yakınlaştırır
+wait 2500
+shot 22-goster

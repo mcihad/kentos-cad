@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.15 — 15 Kasım 2026
+
+- Panel: "Parsel kartı" (`ui/parsel-karti.panel.json`): nesne seçiciyle alınan her parsel bir kart (`card`): ada/parsel
+  başlığında, TAKS durumu yanında; alanı, üzerindeki yapı sayısı, taban alanı ve TAKS altında. Karta tıklamak parseli
+  gösterir; parsel katmanında olmayan nesneler atlanır.
+
 ## 1.0.14 — 15 Kasım 2026
 
 - "Değer say" sonucu ağaçta (`tree`, `group: ["Değer"]`): her değer bir grup, yanında sayısı, altında nesneleri;

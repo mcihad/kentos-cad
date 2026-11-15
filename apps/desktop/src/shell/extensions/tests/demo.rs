@@ -106,6 +106,7 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "Yapı numarası",
             "Yapı ara",
             "Değer say",
+            "Parsel kartı",
             "Yapı yerleştir"
         ]
     );
@@ -907,6 +908,64 @@ fn a_panel_opens_on_its_side_and_a_moved_tab_stays() {
     assert_eq!(side(&gis), Some(Side::Bottom));
     open(&mut gis, "deger-paneli");
     assert_eq!(side(&gis), Some(Side::Bottom), "the user's move is kept");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/8057 §24: Vitrin's Parsel kartı: its feature picker's command answers a row per parcel, the panel's card
+/// shows a card each (the panel has no table: a change's rows go to its card); a message keeps the cards, empty rows
+/// clear them.
+#[test]
+fn a_panels_card_shows_a_card_per_row() {
+    use super::panels::PanelOrigin;
+    use serde_json::json;
+
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let dir = temp("kart");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let _ = gis.extensions_event(Event::OpenPanel(VITRIN.into(), "parsel-paneli".into()));
+    assert_eq!(
+        gis.extensions.panel().map(|p| p.definition.title.as_str()),
+        Some("Parsel kartı")
+    );
+    let _ = gis.extension_panel_view();
+    let origin = PanelOrigin {
+        ext: VITRIN.into(),
+        panel: "parsel-paneli".into(),
+        button: "parseller".into(),
+        table: Some("kartlar".into()),
+    };
+    gis.ext_panel_answer(
+        &origin,
+        Ok(json!({ "rows": [
+            { "uid": "6f1c2a52-0000-4000-8000-000000000001", "parsel": "101/1", "durum": "uygun", "alan (m²)": 400.0,
+              "yapı": 2, "taban alanı (m²)": 112.0, "TAKS": 0.28 },
+            { "parsel": "101/2", "durum": "TAKS aşıyor", "alan (m²)": 400.0, "yapı": 1, "taban alanı (m²)": 180.0,
+              "TAKS": 0.45 }
+        ], "message": "2 parselin kartı." })),
+    );
+    assert_eq!(gis.extensions.panel().unwrap().tables["kartlar"].1.len(), 2);
+    let _ = gis.extension_panel_view();
+    gis.ext_panel_answer(
+        &origin,
+        Ok(json!({ "kind": "message", "message": "Açık çizim yok." })),
+    );
+    assert_eq!(
+        gis.extensions.panel().unwrap().tables["kartlar"].1.len(),
+        2,
+        "a message keeps them"
+    );
+    gis.ext_panel_answer(
+        &origin,
+        Ok(json!({ "rows": [], "message": "Parselleri çizimde seçip Seçimi al'a basın." })),
+    );
+    assert!(
+        gis.extensions.panel().unwrap().tables["kartlar"]
+            .1
+            .is_empty(),
+        "empty rows clear them"
+    );
+    let _ = gis.extension_panel_view();
     let _ = std::fs::remove_dir_all(&dir);
 }
 
