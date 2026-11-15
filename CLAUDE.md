@@ -30,7 +30,8 @@ bölümler (3, 5–8, 11, 13–15, 18–20, 23) aşağıdadır.
 
 Öbür başvurular: bir maddeyi baştan sona yapma sırası [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.md); Yol modülünün planı
 [plan/road.md](plan/road.md), mimarininki [plan/architecture.md](plan/architecture.md) ve
-[plan/architecture-advanced.md](plan/architecture-advanced.md) (iş sırası §5, madde talimatı §6); GUI resimlerinin kuralı
+[plan/architecture-advanced.md](plan/architecture-advanced.md) (iş sırası §5, madde talimatı §6); BIM yönetmeliği ve IFC
+uyumu [plan/bim-plan.md](plan/bim-plan.md) (sıra §6) ve [plan/ifc-uyum.md](plan/ifc-uyum.md); GUI resimlerinin kuralı
 [docs/baseline/README.md](docs/baseline/README.md).
 
 **Bu dosyaya ne yazılır:** yalnız her oturumda gereken kural ve haritanın satırı. Bir özelliğin kararı, ölçümü ve

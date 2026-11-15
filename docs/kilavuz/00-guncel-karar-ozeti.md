@@ -17,6 +17,29 @@
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **BIM yönetmeliği ve IFC uyum planı (15 Kasım 2026; [plan/bim-plan.md](../../plan/bim-plan.md), [plan/ifc-uyum.md](../../plan/ifc-uyum.md), dal `codex/bim-ifc-uyum`).**
+  - **Bu tur plandır;** uygulama kodu değişmedi. Paket numaraları (BIM-01…20, IFC-01…11) TODOS.md §18 ile aynıdır; o bölümün
+    eski on maddesi yeni paketlere eşlendi.
+  - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
+    8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
+    Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.
+  - **Takvim:** PDF/A paftalar 1.9.2027'den, IFC modeli 1.9.2029'dan kademeli (Sivas 1.3.2029 ve 1.9.2032; çıkarım); e-PYS
+    1.9.2028; konut dışı binalar 1.9.2033. Yasal tarih en geç sınırdır; süre tahmini verilmez.
+  - **Ölçüm:** mimari modelde karşılaşılan 29 zorunlu sınıfın 15'i yazılıyor; yangın dayanımı, acil çıkış ve emsal zonu yok;
+    kontrol formu bellekteki modelden cevaplanıyor; binanın 3B görünümü ve IFC okuyucusu yok.
+  - **Kararlar:**
+    - Model tek kaynaktır; paftanın modelden üretildiği kayıtla kanıtlanır (Md. 9/1).
+    - Kural veridir: sınıf, alan, ad kalıbı, eşik ve tarih kaynak sayfasıyla sürümlü katalogdadır; IFC'ye ait olan `kentos-ifc`'te.
+    - Bilinmeyen değer varsayılanla doldurulmaz; yazılmaz ve "eksik" sayılır.
+    - Doğrulama yazılmış dosyadan yapılır; `kentos-ifc` bunun için bir okuyucu kazanır.
+    - Gerçek ruhsat modeli dış doğrulama servisine gönderilmez.
+    - Genel bir katı modelleme çekirdeği ölçülen bir ihtiyaç çıkmadan alınmaz.
+    - "Yönetmeliğe uygun" denmez; beş kabulden (dosya okunuyor, şema geçerli, Türkiye profili, model ile pafta uyumu, idare
+      kabulü) hangisinin sağlandığı söylenir.
+  - **Sıra:** ekler kataloğa (B1) → 2B teslim (B3–B5) → ruhsat düzeyinde model: 3B görünüm, yangın bilgisi, zonlar, eksik
+    elemanlar, geometri, çok bina (B6–B11) → dosyadan doğrulama ve tek paket (B12–B17) → dış disiplin ve belediyenin inceleme
+    tarafı (B18–B20).
+
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.
   - **Araştırma:** üç kod denetimi, beş kabul senaryosunun güncel ikiliyle oynatılması ve dört internet araştırması

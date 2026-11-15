@@ -11,6 +11,10 @@ Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. ADV-01…07'nin d
 (ADV-08…ADV-26, §4) ve iş sırası (M1…M51, §5) eklendi. Uygulama, plan sahiple görüşüldükten sonra başlar. Her madde §6'daki
 talimatla yapılır.
 
+**15 Kasım 2026:** M51'den sonraki sıra [plan/bim-plan.md](bim-plan.md)'dedir (B1…B23): yönetmelik uyumu, ruhsat düzeyinde
+model ve mimari modülün ölçülen zayıflıkları (o planın §3.2'si). IFC'nin ayrıntısı [plan/ifc-uyum.md](ifc-uyum.md)'dedir. Bu
+belgenin kalanları orada BIM-20 ile izlenir; §6'nın madde talimatı ve §7'nin faz kapısı o plan için de geçerlidir.
+
 ## 0. Bu turun yöntemi
 
 - **Kod:** üç okuma denetimi yapıldı:
@@ -1210,6 +1214,12 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M49 | Ölçülü bölmede kalıcı bağ; bağ kapsamı | ADV-01 | Yay kenar, kolon, aks bağı **(yapıldı, ADR 8049. 1. bölüm yapıldı, ADR 8049 §1: ölçülü bölmenin Bu ölçüyü koru'su (K, `keep`) — net ya da eksen mesafesi aynı adımda kalıcı bağ ve parametresi; kaynak kayınca bölme izler (0,5 m dışa: 3 m korunur); yay kaynakta ret. 2. bölüm yapıldı, ADR 8049 §2: aks bağı — `grid` parçası, aks taşınınca duvar, duvar kayınca aks ve aks kesişimindeki kolon tek adımda izler; Mesafe'nin aksa ölçüsü korunur, geçici ölçünün aks kilidi; `.kcad` şema 243. 3. bölüm yapıldı, ADR 8049 §3: kolon yanı bağı — `columnSide` parçası, serbest kolon yanına dik kayar, akslara bağlı kolon aksıyla gider; kolonun Mesafe'sinde Bu ölçüyü koru ve geçici ölçü kilidi; `.kcad` şema 244. 4. bölüm (temel) yapıldı, ADR 8049 §4: yay kenarın Kaydır'ı — yay merkezinde büyür/küçülür, uçları komşu doğrular boyunca, saplanan duvarlar izler; yayın yanındaki düz kenar da kayar. Döşeme kenarı bağı yazılmadı (Kaynağa bağlı sınır zaten izliyor, §5). Yay kenarın geçici ölçüsü ve Mesafe'si (eş merkezli yaya radyal) ve yay kenar bağı (eş merkezli yay çizgileri; eğri koridor 1,20 m korunur) de yapıldı)** |
 | M50 | Modül kapsamı | ADV-05 | Kolon, merdiven, döşeme, mutfak, eğri duvar modülde **(yapıldı, ADR 8050. 1. bölüm yapıldı, ADR 8050 §1–3: modüle kolon, merdiven, rampa, döşeme ve eğri duvar girer — aynalı/döndürülmüş örnekte Aynala'nın kuralı (L kolonun kolları takas, merdivenin yayı ters), aynalı örnekten de kaynağı güncelleme; akslara bağlı kolon reddedilir; bağlı döşemenin iç noktası taşınınca gider (önce taşınan döşeme kopuyor, örneğin döşemesi kaynak odaya dönüyordu); rıht yüksekliği ve rampa kotu örneğin katından (3,24 m'lik katta 18 cm); gerçek pencerede Merdiven evi aynalı örnekle kabul edildi. 2. bölüm yapıldı, ADR 8050 §4: mahal ayırıcı modülde — katı örneğin, mahaller örneğin ayırıcısına bağlı (açık plan aynalı 1. katta 38,22 + 38,22 m²; kaynakta ayırıcı 1 m kayınca örnekte 46,02 / 30,42 m²). 3. bölüm yapıldı, ADR 8050 §5: mutfak dizisi modülde tarifiyle — her örnek kendi duvarlarına yeniden döşer, aynada yanı ve tek kapakların menteşesi ters; kaynaktan ve aynalı örnekten güncelleme, istisna, ayırma, çıkarma, ekleme; `.kcad` şema 245 (eski okuyucu kolonlu modülü "geçersiz" diyordu, artık "yeni sürüm" der). Mutfaklı modül gerçek pencerede kabul edildi; Oda modülleri penceresi liste ve ayrıntı düzeninde (ADR 8050 §6, ortak `ListDetails` bileşeni))** |
 | M51 | Büyük projede akıcılık | ADV-07 | 163 → < 100 ms **(yapıldı, ADR 8051: 100 daire ve 200 çizelgede tasarım değişikliğinin karesi 562 → 85 ms bu makinede (i5-13500), komut 479 → 34 ms, Planı 530 → 3 ms, Kapı önizlemesi 450 → 1,9 ms. Sebep M40'ın mahal yüksekliğiydi: mahal çizelgesinin her hücresi için çizimin bütün nesnelerine iki kez bakılıyordu (500 mahalde 197 ms). Değer yalnız onu soran sütun için hesaplanır; döşeme ve kiriş dizini; deneme adımı ve önizleme çizelge yazmaz; 1 024–8 191 nesnelik yoğun katman sahnede 512'lik parçalarda, yalnız yazısı değişen tablo parçasını kirletmez. Etiket motorunun yerleşimi karenin 3 ms'si: artımlı yerleşim gerekmedi. Gerçek pencerede fare gezdirilirken Duvarı kaydır önizlemesi 16 s → 0,3 s, Kapı 10 s → 0,8 s geriden geliyordu)** |
+
+### Faz 6 — BIM ve teslim
+
+M51'den sonraki işler [plan/bim-plan.md §6](bim-plan.md#6-uygulama-sırası-b1b23)'da B1…B23 olarak sıralıdır: kaynak ve
+kapsam, 2B teslim, ruhsat düzeyinde model, doğrulama ve teslim, disiplinler ve idare. M47'nin açık kalan görünüm tanımı
+IFC-06'da, ADV-22 ve ADV-23'ün kalanları BIM-13'te, öbür kalanlar BIM-20'dedir.
 
 ## 6. Bir maddeyi baştan sona yapma talimatı (mimari)
 

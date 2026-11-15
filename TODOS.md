@@ -25,7 +25,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - `P0`: veri doğruluğu, ortak sözleşme ve mimari bağımlılıklar. İlk ürün dilimlerinin önkoşulu.
 - `P1`: kullanılabilir desktop, binary dosya, kişisel/kurumsal proje bulutu, yetki/paylaşım, CAD/GIS PostGIS kaydı ve Python/AI'ın ilk üretim kapsamı.
 - `P2`: profesyonel CAD/GIS derinliği, yaygın dış formatlar, operasyon ve büyük veri.
-- `P3`: yol/altyapı, mimari/BIM ve 3D şehir tasarımının ileri kapsamı. Temel veri modeli bunları engellemeyecek; hepsi ilk sürüme sıkıştırılmayacak.
+- `P3`: yol/altyapı, mimari/BIM ve 3D şehir tasarımının ileri kapsamı. Temel veri modeli bunları engellemeyecek; hepsi ilk sürüme sıkıştırılmayacak. Mimari BIM'in ruhsat teslimi 15 Kasım 2026'da yönetmelik takvimine bağlandı (§18).
 - Bölüm sonlarındaki kabul koşulları sağlanmadan ilgili iş grubu tamamlandı sayılmaz. Kütüphane eklemek, ekran göstermek veya test fixture'ını yeniden üretmek tek başına kabul değildir.
 - Önerilen yollar, şemalar ve API örnekleri hedef tasarımdır; mevcut API diye kullanılmamalıdır. Yeni crate, bağımsız sorumluluğu ve ilk gerçek tüketicisi oluştuğunda açılır.
 - Kullanıcının kesin hedefleri ile teknik öneriler ayrıdır: ayrı web uygulaması, Rust hesaplama paylaşımı, uyumlu sözleşmeler, KentOS UI, saf wgpu desktop viewport, Python, AI, yalnız kayıt/yükleme yapan binary `.kcad`, kişisel/kurumsal proje bulutu ve hem CAD hem GIS için PostGIS desteği kesindir. Martin benzeri rol kesin teslim değildir. Binary encoding seçimi, crate ayrıntıları ve aşama içi seçenekler bu incelemenin önerisidir; prototip ve ADR ile kesinleştirilir.
@@ -4256,20 +4256,83 @@ Bu modül çizilmiş bir polyline'ı yol tasarımı saymayacak. Aks, boykesit, e
 
 Kabul: küçük bir yol projesi yüzey + aks + profil + enkesitten hesaplanır; parametre değişince bağlı sonuçlar yenilenir; metraj, pafta ve Python/AI komutları aynı kaynak/revision'ı kullanır.
 
-## 18. Mimari, parametrik yapı ve BIM — P3
+## 18. Mimari, parametrik yapı ve BIM — P1/P2 (yönetmelik takvimine bağlı)
 
-- [ ] `BIM-01` Site, building, storey, space, element, material ve ilişki modelini proje/dataset kimlikleriyle tasarla; yalnız mesh listesi mimari model olarak yeterli sayılmasın.
-- [ ] `BIM-02` Workplane/sketch, constraint, extrusion/sweep/revolve ve parametrik feature history için çekirdek sınırını çiz; B-rep/kernel seçimini doğruluk, lisans, Rust/native/browser erişimi ve bakım açısından prototiple değerlendir.
-- [ ] `BIM-03` Duvar, döşeme, kolon, kiriş, kapı/pencere/açıklık, çatı ve merdiven gibi elemanların tip/instance parametrelerini ve bağımlılıklarını kur.
-- [ ] `BIM-04` Yerel bina koordinatı ↔ survey/project CRS ↔ global konum dönüşümünü açık metadata ile bağla; render origin'ini IFC gerçek yerleşiminin yerine koyma.
-- [ ] `BIM-05` Plan/kesit/görünüş, ölçü/etiket, detail level, section box ve sheet set üretimini CAD layout ile bütünleştir.
-- [ ] `BIM-06` Quantities, schedule/metraj, material assignment, clash/clearance ve model kontrol raporlarını tipli sorgu/processing yüzeyinde sun.
-- [ ] `BIM-07` IFC import/export için entity/type/property set, GUID, ilişki, unit, georeferencing ve round-trip support matrisi oluştur; tanınmayan property'leri sessiz silme.
-- [ ] `BIM-08` BuildingSMART schema/model view hedefini sürümle; görsel viewer uyumu ile semantik BIM uyumluluğunu farklı kabul koşulları yap.
-- [ ] `BIM-09` Disiplinler arası linked model, issue/BCF benzeri referans, revision compare ve approval akışını planla; model dosyası ile çalışma koordinasyonunu ayır.
-- [ ] `BIM-10` Native kernel gerektiren işlemlerde web'i server hesap servisiyle destekle; web UI/render hâlâ ayrı kalır. Basit ortak hesapları WASM üzerinden kullan.
+**Durum (15 Kasım 2026):** Mimari modülü [plan/architecture-advanced.md](plan/architecture-advanced.md)'nin M1…M51 sırasıyla
+ilerledi (ADR 8000–8052): kimlikli yapı nesneleri, düşey model, kesit ve görünüş türetimi, çatı, Türkiye'ye uygun alan ve
+mevzuat denetimleri, Ruhsat takımı (PDF/A-2b) ve IFC 4.3 bina modeli (`kentos-ifc`, [ADR 8047](docs/adr/8047-ifc-building-export.md)).
+Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik (RG 5.8.2026/33331) bu bölümün
+önceliğini değiştirdi: PDF/A paftalar 1.9.2027'den, IFC modeli 1.9.2029'dan kademeli zorunlu (Sivas'ta 1.3.2029 ve 1.9.2032;
+çıkarım), e-PYS 1.9.2028'de, konut dışı binalar 1.9.2033'te. Plan, sıra ve kapılar: [plan/bim-plan.md](plan/bim-plan.md)
+(BIM-01…20; B1…B23) ve [plan/ifc-uyum.md](plan/ifc-uyum.md) (IFC-01…11); dayanak
+[araştırma notu](docs/research/2026-11-15-bim-ifc-yonetmelik.md). Web'de yok (ADR 0228, §0.2).
 
-Kabul: parametrik küçük bina örneğinde plan/kesit/3D/öznitelik birlikte güncellenir; dış BIM değişiminde GUID, konum, birim ve desteklenen semantik korunur.
+**Ölçüm (15 Kasım 2026, kodda):** mimari modelde karşılaşılan 29 zorunlu IFC sınıfının 15'i yazılıyor; yangın dayanımı ve acil
+çıkış çizimde tutulmuyor; emsal alanları modelde nesne değil; model kalite kontrol formu yazılmış dosyadan değil bellekteki
+modelden cevaplanıyor; binanın 3B görünümü ve IFC okuyucusu yok.
+
+Yalnız mesh listesi mimari model sayılmaz; model kimlikli yapı nesneleri, katlar ve ilişkileridir. KentOS Mimari yalnız
+mimari disiplinin modelini yazar; statik ve tesisat modelleri altlık olarak okunur. Genel bir katı modelleme çekirdeği
+ölçülen bir ihtiyaç çıkmadan alınmaz (§23; plan K7).
+
+**Mimari BIM** ([plan/bim-plan.md §5](plan/bim-plan.md#5-iş-paketleri)):
+
+- [ ] `BIM-01` Yönetmeliğin eklerini (EK-1…EK-9) sayfa görüntülerinden kaynak sayfasıyla sürümlü kural kataloğuna geçir; yoruma açık 17 noktayı karara bağla; bugünkü çıktıyı kataloğa karşı ölç.
+- [ ] `BIM-02` Tarihli kapsam kararını kur: başvuru tarihi, il ve belediye nüfusu, kullanım ve alanla hangi yükümlülüğün (PDF/A, IFC, e-PYS) ne zaman başladığını maddesiyle söyle; eksik bilgide "teyit gerekli".
+- [ ] `BIM-03` 2B kuralların denetimi: EK-4 katmanı, çizgi tipi ve yazısı; EK-3 mahal numarası biçimi ve ad sözlüğü; bulgu nesnesini seçer.
+- [ ] `BIM-04` Paftanın modelden üretildiğinin kanıtı: türevlerin üretildiği revizyon, modelden gelmeyen çizimin listesi, eski türevle yayını durduran kapı (Md. 9/1; EK-9/21).
+- [ ] `BIM-05` 2B ruhsat paketi: bağımsız PDF/A doğrulaması, taranmış içerik reddi, teslim listesi, atomik yayın.
+- [ ] `BIM-06` Binanın 3B görünümü: kesit modelinin gövdeleri ortak 3B sahnede; tıkla ve planda seç; kat süzgeci, kesit kutusu, bulgu rengi.
+- [ ] `BIM-07` Yangın, performans ve malzeme bilgisi: yangın dayanım sınıfı, acil çıkış, dayanım, yapım yöntemi; kaynağıyla; varsayılanla dolmaz.
+- [ ] `BIM-08` Mahal, zon ve emsal modeli: emsal alanları maddesiyle işaretli çokgenler; mahalin türü ve kapalı hacmi; bağımsız bölüm grupları; çizimde örtüşme ve kapalılık denetimi.
+- [ ] `BIM-09` Eksik yapı elemanları: rampa gövdesi, giydirme cephe, kaplama ve asma tavan, baca, dikme; asansör, vitrifiye ve mobilyanın yapı sınıfı.
+- [ ] `BIM-10` Geometri doğruluğu: gerçek yay, kesilmiş açıklık, döşeme boşluğu, kapalı gövde; hacim ve alan kaynaktan.
+- [ ] `BIM-11` Çok bina, ortak bodrum ve vaziyet: bina kodu ve kat takımı; bina başına model dosyası; ortak saha; onaylı plan kararlarının kaynağıyla kullanımı.
+- [ ] `BIM-12` Tipler ve katmanlı yapı: bütün eleman türlerinde tip ve örnek; değerin tipten ya da örnekten geldiği görünür.
+- [ ] `BIM-13` Mevzuat denetimlerinin tamamlanması: başvuru tarihine göre kural seti, plan notu katmanı, yangın ve erişilebilirlik; "eksik veri" ve "uzman incelemesi" durumları; konut dışı kullanımlar.
+- [ ] `BIM-14` BIM ruhsat paketi: aynı revizyondan IFC, PDF/A paftalar, çizelgeler ve kontrol formu; yazıldıktan sonra dosyadan denetim; biri kalırsa yayın yok.
+- [ ] `BIM-15` Bilgi yönetimi ve teslim kaydı: çalışma, paylaşım, yayın, arşiv; teslim, kabul ve iade kaydı; nesneye bağlı iade gerekçesi; role göre görünürlük.
+- [ ] `BIM-16` Büro ve belediye pilotu: bir konut ve bir ticaret+konut projesi; hedef idarenin yazılı cevabı.
+- [ ] `BIM-17` Dış disiplin modeli ve çakışma: statik ve tesisat modeli altlık; aks, kot ve koordinat hizası; çakışma bulguları.
+- [ ] `BIM-18` İdare inceleme çalışma alanı: gelen paketi aç, kendiliğinden denetle, belediyenin plan ve parsel verisiyle karşılaştır, iade notu üret; e-PYS arayüzü yayımlanınca bağlan.
+- [ ] `BIM-19` Kat irtifakı için 3B yapı modeli: önce birincil kaynak araştırması, sonra ADR ile karar.
+- [ ] `BIM-20` Mimari kullanım borcu: `plan/architecture-advanced.md`'nin kalanları ve hız hedefi (2+1'de ≤ 80 etkileşim, ≤ 100 s).
+
+**IFC** ([plan/ifc-uyum.md §10](plan/ifc-uyum.md#10-iş-paketleri)):
+
+- [ ] `IFC-01` Kural kataloğu `kentos-ifc`'te veri olarak; şemaya ve resmî şablonlara karşı sınanır; başlangıç ölçümü.
+- [ ] `IFC-02` Yazılan sınıflarda zorunlu alanların tamamlanması; girilmemiş değer yazılmaz, eksik sayılır.
+- [ ] `IFC-03` Eksik sınıflar ve zonlar: mekânsal zon (emsal), grup (bağımsız bölüm), rampa, giydirme cephe, kaplama, baca, aks, asansör, vitrifiye, mobilya; vekil sınıf yok.
+- [ ] `IFC-04` Tip nesneleri, katmanlı malzeme takımı, çok katlı elemanın başvuruları.
+- [ ] `IFC-05` Konum, kot, çok bina ve projenin ortak alanları: yerel orijin ve harita dönüşümü, kontrol noktaları, düşey datum; sıfır varsayımı yok.
+- [ ] `IFC-06` Geometri ve görünüm tanımı: kesilmiş gövde ve tasarım aktarımı profilleri; gelişim seviyesi kanıtı.
+- [ ] `IFC-07` STEP okuyucu çekirdeği: şema sözlüğü, sınırlar, bozuk dosyada panik yok.
+- [ ] `IFC-08` Yazılmış dosyadan doğrulama, katalogdan IDS, kontrol formunun 21 sorusunun kanıtı.
+- [ ] `IFC-09` Altlık model: IFC 4.3 dosyasını salt okunur açma, planda ve 3B'de gösterme.
+- [ ] `IFC-10` Federasyon, revizyon karşılaştırma ve açık sorun biçimi.
+- [ ] `IFC-11` Pilot paket, eski sürümleri okuma, sürüm takibi ve sertifika kararı.
+
+**Eski maddelerin karşılığı.** Bu bölümün 25 Eylül 2026 tarihli on maddesi (o günkü `BIM-01`…`BIM-10`) yeni paketlere dağıldı;
+numaralar 15 Kasım 2026'dan itibaren yukarıdaki anlamı taşır.
+
+| Eski madde | Konusu | Yeni karşılığı |
+|---|---|---|
+| eski BIM-01 | Saha, bina, kat, mahal, eleman, malzeme ve ilişki modeli | BIM-08, BIM-09, BIM-11; IFC-03, IFC-05 |
+| eski BIM-02 | Çalışma düzlemi, kısıt, katı işlemleri; çekirdek seçimi | BIM-10; çekirdek kararı §23'te açık (plan K7) |
+| eski BIM-03 | Elemanların tip ve örnek parametreleri | BIM-12; IFC-04 |
+| eski BIM-04 | Yerel bina koordinatı ile proje sistemi arasındaki dönüşüm | IFC-05 |
+| eski BIM-05 | Plan, kesit, görünüş ve pafta takımı | Büyük ölçüde yapıldı (ADR 8037–8044); kanıtı BIM-04 |
+| eski BIM-06 | Metraj, çizelge, çakışma ve model denetimi | BIM-13, BIM-17; IFC-08 |
+| eski BIM-07 | IFC içe ve dışa aktarma kapsamı | IFC-02…IFC-09 |
+| eski BIM-08 | Şema ve görünüm tanımı hedefi | IFC-06, IFC-11 |
+| eski BIM-09 | Bağlı model, sorun kaydı, revizyon karşılaştırma, onay akışı | BIM-15, BIM-17; IFC-10 |
+| eski BIM-10 | Web için sunucu hesap servisi | Web'e ertelendi (ADR 0228, §0.2) |
+
+Kabul: parametrik küçük bina örneğinde plan, kesit, 3B ve öznitelik birlikte güncellenir; dış BIM değişiminde kimlik, konum,
+birim ve desteklenen anlam korunur. Bir konut ve bir ticaret+konut projesinin ruhsat paketi (IFC + PDF/A + kontrol formu)
+aynı model revizyonundan üretilir, yazılmış dosyadan doğrulanır ve hedef idarenin yazılı cevabını alır. "Yönetmeliğe uygun"
+denmez; beş kabulden (dosya okunuyor, şema geçerli, Türkiye profili, model ile pafta uyumu, idare kabulü) hangisinin
+sağlandığı söylenir.
 
 ## 19. 3D şehir tasarımı ve dijital ikiz yayın — P2 temel / P3 ürün
 
@@ -4411,7 +4474,7 @@ Takvim ve ekip büyüklüğü bilinmediği için sahte süre tahmini verilmez. H
 | F6 — Python + AI ilk tam dikey dilim | F1/F3; server işlemleri F4/F5 | Embedded Python, SDK, web scripting adapter, AI/MCP katalog | Aynı polygon/query/save/share akışının UI/Python/AI eşdeğerliği |
 | F7 — Üretim sertleştirme + CAD/GIS derinliği | F2–F6 | Büyük veri performansı, worker, provider/format/pafta kapsamı | Belirlenen performans ve restore/security kapıları |
 | F8 — Arazi ve yol | F7'nin gerekli modülleri | TIN, aks, profil, kesit, corridor, metraj | Bağımsız mühendislik referansları ve incremental rebuild |
-| F9 — Parametrik mimari/BIM | F7 + kernel prototipi | Temel bina modeli, plan/kesit, IFC eşleme | Geometri ve semantik aktarım kabulü |
+| F9 — Mimari BIM ve ruhsat teslimi | F7; çekirdek kararı ölçülen ihtiyaçla (§18, [plan/bim-plan.md](plan/bim-plan.md) K7) | 2B ruhsat paketi → ruhsat düzeyinde model → dosyadan doğrulanan IFC + PDF/A paketi → dış disiplin ve idare incelemesi (plan §6, B1…B23) | Beş kabul ayrı raporlanır; pilot idarenin yazılı cevabı; yasal en geç tarihler plan §2.1'de |
 | F10 — Şehir tasarımı/dijital ikiz | F4/F7; gereken civil/BIM modülleri | Native 3D tasarım + server 3D asset üretimi/dağıtımı + ayrı web 3D renderer | LOD/streaming/ID/CRS/yetki uyumu ve 2D startup izolasyonu; Martin eşdeğerliği önkoşul değil |
 
 F5'in proje kataloğu/yetki temeli mevcut API üzerinde erken başlayabilir; bütün desktop araçlarının bitmesini beklemez. F4'teki hiçbir cloud verisi “yetkiler F5'te gelecek” denerek korumasız açılmaz: asgari sahiplik, tenant/proje izolasyonu ve server denetimi F1/F4 kapılarıdır; F5 kullanıcıya dönük paylaşım kapsamını tamamlar. Python/AI tasarımı F1'de başlar; F6'ya kadar command yüzeyi UI'a özel kapatılmaz. F8–F10 kapsamı birbirinin bütün özelliklerinin tamamlanmasını beklemek yerine somut hesap/veri bağımlılıklarıyla ilerler. Martin benzeri 2D yayın rolü bu fazların bağımlılığı değildir; §12.5 ayrı gelecek değerlendirmesidir.
