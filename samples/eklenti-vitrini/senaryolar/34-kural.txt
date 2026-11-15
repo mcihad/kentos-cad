@@ -1,0 +1,22 @@
+# Kural: Parsel kartı'nın Kart tarihi ve Saat alanları yalnız Bilgiler'de Tarih seçiliyken görünür (visibleWhen,
+# Python'suz bileşen kuralı, formların ifade diliyle). Tarih çipi bırakılınca iki alan kalkar, yeniden seçilince döner.
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 505 84    # Parsel kartı (şeritte, Panel grubunda)
+wait 2500
+shot 34-tarihli
+drag 1280 579 1280 845   # paneli aşağı doğru büyüt: Tarih çipi görünür
+wait 1000
+shot 34-buyuk
+click 1305 589  # Tarih çipini bırak: Kart tarihi ve Saat kalkar
+wait 2500
+shot 34-tarihsiz
+click 1305 513  # Tarih çipini yeniden seç (iki satır yukarıda): alanlar döner
+wait 2500
+shot 34-geri

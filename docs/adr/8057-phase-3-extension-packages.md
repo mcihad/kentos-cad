@@ -2208,6 +2208,8 @@ anahtarlar), masaüstü `panels.rs` (`CompiledRules`, `shown`, `usable`, `asked`
   kullanılır; zorunluluk `required` ya da `requiredWhen`. Gizli girdi (kuralla ya da kodla) sorulmaz ama değeri komuta
   gider; yıldız `requiredWhen` tutunca çıkar.
 - **Vitrin 1.0.28:** Parsel kartı'nın Kart tarihi ve Saat alanları yalnız Bilgiler'de Tarih seçiliyken görünür.
+  Gerçek pencerede (`34-kural`): Tarih çipi bırakılınca iki satır kalktı, Geçerlilik sonu ve çipler yukarı kaydı (çipin
+  `onChange` komutu da ayrıca çalıştı); yeniden seçilince satırlar döndü.
 - **Sınamalar:** paylaşılan 3 (değerleri türleriyle okur; girdi olmayan ad, `@`, derlenmeyen ifade, köşeli parantez;
   Kapı 1'in yerleri), masaüstü 1 (onay kapalıyken alan gizli ve sorulmaz, açılınca görünür ve zorunlu, `2,5 > 0` ile düğme
   kullanılır, kodun kapatması kuralı geçer).
