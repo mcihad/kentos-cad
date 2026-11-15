@@ -487,6 +487,7 @@ fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, HeadlessError> 
         }
     }
     panel.tables.insert(id.clone(), (columns, list.clone()));
+    panel.pages.remove(&id);
     Ok(id)
 }
 

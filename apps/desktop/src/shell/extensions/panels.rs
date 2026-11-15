@@ -100,6 +100,8 @@ pub(crate) struct OpenPanel {
     /// A running code of its extension opened it (`ctx.open_panel`) and may change it until the run ends: the inputs
     /// the user changes meanwhile are the user's, as while its own command runs.
     pub(crate) held: bool,
+    /// Each table's and card component's page shown (panel_view.rs `pager`); its first when its rows come again.
+    pub(crate) pages: BTreeMap<String, usize>,
 }
 
 /// A panel's button pressed: what the next launch of its command gives its code, and where its answer goes.
@@ -140,6 +142,8 @@ pub(crate) enum PanelEvent {
     Show(String),
     /// A tree's group opened or closed (its key: the tree's id and the group's values).
     Fold(String),
+    /// A table's or a card component's page of rows shown (its id, the page from 0).
+    Page(String, usize),
     /// The open panel at this place in the tabs shown.
     Activate(usize),
     /// Its tab moved: from, to (where it goes once taken out).
@@ -178,6 +182,7 @@ impl OpenPanel {
             touched: std::collections::BTreeSet::new(),
             spoke: false,
             held: false,
+            pages: BTreeMap::new(),
         };
         for c in &panel.definition.body {
             match c {
@@ -878,6 +883,9 @@ impl App {
             PanelEvent::Close(which) => return self.ext_panel_close(which),
             PanelEvent::Scrolled(y) => panel.scroll = y,
             PanelEvent::Press(button) => return self.ext_panel_press(at, &button),
+            PanelEvent::Page(id, page) => {
+                panel.pages.insert(id, page);
+            }
             PanelEvent::Fold(key) => {
                 if !panel.folded.remove(&key) {
                     panel.folded.insert(key);
@@ -1167,6 +1175,8 @@ impl App {
                     .cloned();
                 if let Some(table) = &filled {
                     panel.tables.insert(table.clone(), (columns, rows.clone()));
+                    // New rows from their first page.
+                    panel.pages.remove(table);
                 }
                 // Words its code said as it ran stay when its answer says none of its own (panel_session.rs).
                 match result.get("message").and_then(Value::as_str) {

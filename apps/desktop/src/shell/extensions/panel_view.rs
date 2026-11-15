@@ -16,10 +16,61 @@ use super::{Event, msg};
 use crate::app::{App, Message};
 use crate::exchange::words;
 
-/// Rows a table shows; the rest are counted.
-const SHOWN_ROWS: usize = 500;
-/// Cards a card component shows (each is a few rows tall); the rest are counted.
+/// Rows a table shows a page; its pager goes through the rest (plan/eklenti.md ADIM 22: an extension's table may hold
+/// tens of thousands of rows, and the 500 it drew before left the others out of reach).
+const PAGE_ROWS: usize = 200;
+/// Cards a card component shows a page (each is a few rows tall), and figures a stats component shows.
 const SHOWN_CARDS: usize = 100;
+/// A tree's groups drawn and the leaves a group draws; the rest are counted. Its counts are all its rows': it grouped
+/// only the first 500 before, and a group past them was counted short.
+const TREE_GROUPS: usize = 300;
+const TREE_LEAVES: usize = 100;
+
+/// Page `page` of `total` rows, `per` a page: its rows' range and the page, clamped (rows may have become fewer).
+fn page_range(total: usize, per: usize, page: usize) -> (usize, usize, usize) {
+    let pages = total.div_ceil(per).max(1);
+    let page = page.min(pages - 1);
+    let start = page * per;
+    (start, (start + per).min(total), page)
+}
+
+/// A count with a dot every three figures, as Turkish writes it (12.340).
+fn thousands(n: usize) -> String {
+    let digits = n.to_string();
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3);
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            out.push('.');
+        }
+        out.push(c);
+    }
+    out
+}
+
+/// Under a table or cards with more rows than a page: the rows shown of how many, and the pages before and after.
+fn pager<'a>(
+    id: &str,
+    page: usize,
+    start: usize,
+    end: usize,
+    total: usize,
+) -> Element<'a, Message> {
+    let to = |page: usize| msg(Event::Panel(PanelEvent::Page(id.to_owned(), page)));
+    let range = format!(
+        "{}–{} / {}",
+        thousands(start + 1),
+        thousands(end),
+        thousands(total)
+    );
+    row![
+        words::ghost("‹ Önceki", (page > 0).then(|| to(page - 1))),
+        container(label::caption(range)).center_x(Fill),
+        words::ghost("Sonraki ›", (end < total).then(|| to(page + 1))),
+    ]
+    .spacing(8)
+    .align_y(iced::Center)
+    .into()
+}
 
 impl App {
     /// The dock's Eklenti tab: the panel shown, its components as KentOS draws them; the open panels' tabs above it
@@ -602,7 +653,7 @@ impl App {
         out
     }
 
-    /// A table's rows, the first [`SHOWN_ROWS`]; empty until its button's command answered.
+    /// A table's rows, a page of [`PAGE_ROWS`] with its pager; empty until its button's command answered.
     fn panel_table<'a>(
         &self,
         p: &'a OpenPanel,
@@ -631,7 +682,9 @@ impl App {
         let shown: Vec<&String> = columns.iter().filter(|c| c.as_str() != "uid").collect();
         let mut table = Table::new(shown.iter().map(|c| Col::new((*c).clone()).width(Fill)))
             .empty("Satır yok.");
-        for row in rows.iter().take(SHOWN_ROWS) {
+        let (start, end, page) =
+            page_range(rows.len(), PAGE_ROWS, p.pages.get(id).copied().unwrap_or(0));
+        for row in &rows[start..end] {
             let mut line = Row::new(
                 shown
                     .iter()
@@ -647,11 +700,8 @@ impl App {
             table
         ]
         .spacing(4);
-        if rows.len() > SHOWN_ROWS {
-            out = out.push(label::muted(format!(
-                "… {} satır daha",
-                rows.len() - SHOWN_ROWS
-            )));
+        if rows.len() > PAGE_ROWS {
+            out = out.push(pager(id, page, start, end, rows.len()));
         }
         out.into()
     }
@@ -670,12 +720,18 @@ fn cell_words(value: Option<&Value>) -> String {
 
 /// Rows grouped by a column's words, each group in the order its first row came.
 fn group_rows<'a>(rows: &[&'a Value], column: &str) -> Vec<(String, Vec<&'a Value>)> {
+    // Found by a map, not a search of the groups so far: the view groups every frame, and thousands of rows of
+    // thousands of values made that a row times the groups.
     let mut out: Vec<(String, Vec<&'a Value>)> = Vec::new();
+    let mut at: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
     for row in rows {
         let value = cell_words(row.get(column));
-        match out.iter_mut().find(|(v, _)| *v == value) {
-            Some((_, members)) => members.push(*row),
-            None => out.push((value, vec![*row])),
+        match at.get(&value) {
+            Some(&i) => out[i].1.push(*row),
+            None => {
+                at.insert(value.clone(), out.len());
+                out.push((value, vec![*row]));
+            }
         }
     }
     out
@@ -683,7 +739,8 @@ fn group_rows<'a>(rows: &[&'a Value], column: &str) -> Vec<(String, Vec<&'a Valu
 
 /// A tree's rows grouped by `group`'s columns (KentOS's tree view): each group in the order its first row came, its
 /// count beside it, open unless the user closed it; a leaf the row's first other column, its object shown when
-/// clicked. Rows past [`SHOWN_ROWS`] are counted.
+/// clicked. Its counts are all its rows'; groups past [`TREE_GROUPS`] and a group's leaves past [`TREE_LEAVES`] are
+/// counted, not drawn.
 fn panel_tree<'a>(
     p: &'a OpenPanel,
     id: &str,
@@ -712,7 +769,7 @@ fn panel_tree<'a>(
             .map(|c| Col::new((*c).clone()).width(Fill)),
     );
     cols.push(Col::new("Sayı").width(40).align_right());
-    let shown: Vec<&Value> = rows.iter().take(SHOWN_ROWS).collect();
+    let all: Vec<&Value> = rows.iter().collect();
     fn nodes<'a>(
         tree: &str,
         rows: &[&'a Value],
@@ -723,8 +780,10 @@ fn panel_tree<'a>(
         folded: &std::collections::BTreeSet<String>,
     ) -> Vec<Node<'a, Message>> {
         if depth == group.len() {
-            return rows
+            let more = rows.len().saturating_sub(TREE_LEAVES);
+            let mut leaves: Vec<Node<'a, Message>> = rows
                 .iter()
+                .take(TREE_LEAVES)
                 .map(|row| {
                     let name = leaf
                         .first()
@@ -742,9 +801,14 @@ fn panel_tree<'a>(
                     node
                 })
                 .collect();
+            if more > 0 {
+                leaves.push(Node::new(format!("… {} daha", thousands(more))));
+            }
+            return leaves;
         }
         group_rows(rows, group[depth].as_str())
             .into_iter()
+            .take(TREE_GROUPS)
             .map(|(value, members)| {
                 let key = format!("{tree}/{path}{value}");
                 let open = !folded.contains(&key);
@@ -773,18 +837,19 @@ fn panel_tree<'a>(
     }
     let tree = TreeView::new(cols)
         .header(leaf.len() > 1)
-        .extend(nodes(id, &shown, group, &leaf, 0, "", &p.folded));
+        .extend(nodes(id, &all, group, &leaf, 0, "", &p.folded));
     let mut out = column![title, tree].spacing(4);
-    if rows.len() > SHOWN_ROWS {
+    let groups = group_rows(&all, group[0].as_str()).len();
+    if groups > TREE_GROUPS {
         out = out.push(label::muted(format!(
-            "… {} satır daha",
-            rows.len() - SHOWN_ROWS
+            "… {} grup daha",
+            thousands(groups - TREE_GROUPS)
         )));
     }
     out.into()
 }
 
-/// A card component's rows, a card each, the first [`SHOWN_CARDS`] (KentOS's info card, on the card surface):
+/// A card component's rows, a card each, a page of [`SHOWN_CARDS`] (KentOS's info card, on the card surface):
 /// `title`'s column heads it (none: the first column), `tag`'s beside it, the other columns under it by name, a
 /// number in figures; a row with a `uid` is a card pressed to show its object, as a table's row.
 fn panel_cards<'a>(
@@ -826,7 +891,12 @@ fn panel_cards<'a>(
         .collect();
     let size = typography::caption();
     let mut out = column![heading].spacing(6);
-    for row in rows.iter().take(SHOWN_CARDS) {
+    let (start, end, page) = page_range(
+        rows.len(),
+        SHOWN_CARDS,
+        p.pages.get(id).copied().unwrap_or(0),
+    );
+    for row in &rows[start..end] {
         let name = head.map_or_else(|| "—".to_owned(), |c| cell_words(row.get(c)));
         // As wide as the panel, every card the same.
         let mut card = InfoCard::new(label::strong(name).wrapping(Wrapping::WordOrGlyph))
@@ -872,10 +942,7 @@ fn panel_cards<'a>(
         });
     }
     if rows.len() > SHOWN_CARDS {
-        out = out.push(label::muted(format!(
-            "… {} kart daha",
-            rows.len() - SHOWN_CARDS
-        )));
+        out = out.push(pager(id, page, start, end, rows.len()));
     }
     out.into()
 }
@@ -949,6 +1016,91 @@ fn panel_stats<'a>(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// plan/eklenti.md ADIM 22's paging: a page's rows and the page clamped when the rows became fewer; counts written
+    /// as Turkish writes them.
+    #[test]
+    fn pages_go_through_every_row_and_counts_read_as_turkish() {
+        assert_eq!(page_range(1234, 200, 0), (0, 200, 0));
+        assert_eq!(
+            page_range(1234, 200, 6),
+            (1200, 1234, 6),
+            "the last page, short"
+        );
+        assert_eq!(
+            page_range(1234, 200, 99),
+            (1200, 1234, 6),
+            "past the end: the last"
+        );
+        assert_eq!(page_range(0, 200, 3), (0, 0, 0));
+        assert_eq!(
+            [0, 999, 1000, 12_340, 1_234_567].map(thousands),
+            ["0", "999", "1.000", "12.340", "1.234.567"]
+        );
+    }
+
+    /// A tree counts all its rows, not the first ones drawn: 700 rows of 7 values, each 100.
+    #[test]
+    fn a_trees_counts_are_all_its_rows() {
+        let rows: Vec<Value> = (0..700)
+            .map(|i| json!({ "uid": format!("u{i}"), "Değer": format!("{}", i % 7), "Nesne": i }))
+            .collect();
+        let refs: Vec<&Value> = rows.iter().collect();
+        let groups = group_rows(&refs, "Değer");
+        assert_eq!(groups.len(), 7);
+        assert!(
+            groups.iter().all(|(_, m)| m.len() == 100),
+            "{:?}",
+            groups.iter().map(|(v, m)| (v, m.len())).collect::<Vec<_>>()
+        );
+    }
+
+    /// The pager moves a table's page; new rows from a command show from their first page.
+    #[test]
+    fn a_tables_pager_moves_and_new_rows_start_at_its_first_page() {
+        use super::super::panels::{OpenPanel, PanelEvent, PanelOrigin};
+        let value = json!({
+            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Liste",
+            "body": [
+                { "type": "button", "id": "ara", "label": "Ara", "command": "ara", "table": "liste" },
+                { "type": "table", "id": "liste" },
+                { "type": "card", "id": "kartlar" }
+            ]
+        });
+        let mut app = crate::files_testing::app_with_drawing();
+        let definition = kentos_extensions::ui_panel::read(&value).expect("a panel");
+        let mut panel = OpenPanel::new("tr.ornek.deneme", "liste", definition);
+        let rows: Vec<Value> = (0..1234).map(|i| json!({ "no": i })).collect();
+        panel
+            .tables
+            .insert("liste".into(), (vec!["no".into()], rows.clone()));
+        panel
+            .tables
+            .insert("kartlar".into(), (vec!["no".into()], rows));
+        app.extensions.panels.push(panel);
+        let _ = app.extension_panel_view();
+        let _ = app.ext_panel_event(PanelEvent::Page("liste".into(), 6));
+        let _ = app.ext_panel_event(PanelEvent::Page("kartlar".into(), 12));
+        assert_eq!(app.extensions.panels[0].pages["liste"], 6);
+        let _ = app.extension_panel_view();
+        let origin = PanelOrigin {
+            ext: "tr.ornek.deneme".into(),
+            panel: "liste".into(),
+            button: "ara".into(),
+            table: Some("liste".into()),
+        };
+        app.extensions.panels[0].running = Some("ara".into());
+        app.ext_panel_answer(
+            &origin,
+            Ok(json!({ "rows": [{ "no": 1 }], "columns": ["no"] })),
+        );
+        let panel = &app.extensions.panels[0];
+        assert!(
+            !panel.pages.contains_key("liste"),
+            "its new rows from their first page"
+        );
+        assert_eq!(panel.pages["kartlar"], 12, "another component's page stays");
+    }
 
     #[test]
     fn a_trees_groups_keep_the_order_of_their_first_row_and_count_them() {

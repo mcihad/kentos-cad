@@ -2146,6 +2146,14 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   pencerede (`33-katman-menusu`): etkin katman Taslak iken Parsel sınırı'nın menüsünde eklentinin iki öğesi (Katman
   özeti, Değerlerini say); tıklanınca Değer say "Kadastro › Parsel sınırı" seçili açıldı (etkin katman değil, tıklanan),
   altında kodun satırı; Alan › ada ile sayım "En sık değer: “101” (3 nesne)."
+- **Büyük veri: sayfalar (15 Kasım).** Panel tablosu ilk 500 satırı çizip "… N satır daha" diyordu: kalanlara
+  ulaşılamıyordu; ağaç da yalnız ilk 500 satırı gruplayıp grup sayılarını eksik söylüyordu (501. satırdan sonraki
+  değerler sayılmıyordu). Artık tablo sayfa sayfa (200 satır), kartlar 100'er; altında "‹ Önceki · 201–400 / 12.340 ·
+  Sonraki ›" (Türkçe binlik ayraç), sayfa bileşen başına tutulur ve komutun ya da `rows`'un yeni satırlarıyla başa döner.
+  Ağaç bütün satırları sayar, ilk 300 grubu ve grup başına 100 yaprağı çizer ("… N daha", "… N grup daha"); gruplama
+  her karede çalıştığı için gruplar haritayla bulunur (önce satır × grup aramaydı). Bekçiler:
+  `panel_view::tests::pages_go_through_every_row_and_counts_read_as_turkish`, `a_trees_counts_are_all_its_rows` (700
+  satır, 7 değer, her biri 100), `a_tables_pager_moves_and_new_rows_start_at_its_first_page`.
 - **Vitrin 1.0.26:** "Yapıları numarala" şeritten çalışınca bitince Yapı ara panelini açar: Yapı no önekle dolar,
   numaralananlar tabloda (Ara'nın satır biçimiyle: tıklanan satır yapıyı gösterir), altında özet (`32-panel-ac`).
   Gerçek pencerede: B- ve 10 ile Numarala → Eklenti sekmesi Asistan'ın yanında açıldı, Yapı no "B-", altında "5 yapı
