@@ -34,6 +34,7 @@ mod pointer;
 mod problem;
 mod python;
 pub mod release;
+pub mod revocations;
 #[cfg(all(test, feature = "schema"))]
 mod schema_check;
 pub mod sdk_pack;

@@ -18,6 +18,7 @@
 //!   skipped a step does not load.
 //! - [`facts`]: what a package says, which the release's identity is computed from; [`review`]: how deep a person
 //!   reads a version, from its difference with the version approved before it (D12).
+//! - [`revocation_list`]: the catalog's revocation list, made from its suspended and withdrawn releases (D15).
 //!
 //! Pure: no clock (every move is given its time), no storage, no network. The server keeps the records and resolves
 //! who is calling; the scanners run the gates in their isolated workers.
@@ -37,6 +38,7 @@ pub mod facts;
 pub mod gate;
 mod record;
 pub mod review;
+mod revoked;
 mod state;
 mod stored;
 
@@ -47,10 +49,14 @@ pub use record::{
     Approval, AuditRecord, ChangeCode, ChangeRequest, Notice, Reason, RequestedChange,
 };
 pub use review::{Difference, DifferenceKind, ReviewDepth, ReviewFocus, classify};
+pub use revoked::revocation_list;
 pub use state::{Action, ReleaseState};
 
 #[cfg(test)]
 mod tests;
+
+/// What may come of a suspension, as its notice and its revocation entry both say it.
+const UNDER_REVIEW: &str = "inceleme bitince askıdan alınabilir ya da geri çekilir";
 
 /// A moment, given by the caller: milliseconds since 1970-01-01 00:00 UTC. The flow reads no clock: the server's time
 /// is the record's.
@@ -635,17 +641,15 @@ impl Release {
     /// downloaded cannot be taken back (PY-CLOUD-15).
     pub fn notice_text(&self) -> Option<String> {
         let notice = self.notice.as_ref()?;
-        let why = notice
-            .reason
-            .as_deref()
-            .map(|r| format!(": {}", r.trim_end_matches('.')))
+        let why = self
+            .notice_reason()
+            .map(|r| format!(": {r}"))
             .unwrap_or_default();
         const DOWNLOADED: &str = "İndirilmiş kopyalar silinemez ve geri alınamaz; KentOS geri çekme listesini \
                                   eşitlediğinde onları durdurur (verileri kalır), eşitlemeyen bilgisayar bunu bilmez.";
         Some(match notice.state {
             ReleaseState::Suspended => format!(
-                "{} {} askıya alındı{why}. Yeni kurulum ve çalıştırma durdu; inceleme bitince askıdan alınabilir ya da \
-                 geri çekilir. {DOWNLOADED}",
+                "{} {} askıya alındı{why}. Yeni kurulum ve çalıştırma durdu; {UNDER_REVIEW}. {DOWNLOADED}",
                 self.extension_id, self.version
             ),
             ReleaseState::Withdrawn => format!(
@@ -661,6 +665,17 @@ impl Release {
                 self.extension_id, self.version
             ),
         })
+    }
+
+    /// The reason the notice gives, without its closing full stop: every sentence that says it (the notice, the
+    /// revocation list's entry, the host's message) closes it itself.
+    fn notice_reason(&self) -> Option<&str> {
+        self.notice
+            .as_ref()?
+            .reason
+            .as_deref()
+            .map(|r| r.trim().trim_end_matches('.'))
+            .filter(|r| !r.is_empty())
     }
 
     /// The release a new version's review is compared with (D12): of `releases` (the same catalog's), the highest

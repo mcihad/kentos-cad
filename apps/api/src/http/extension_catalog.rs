@@ -9,6 +9,7 @@
 //! | `POST …/releases/{extension}/{version}/moves` | a move of the flow: `{"action": "approve", "note": …}` |
 //! | `GET  …/releases/{extension}/{version}/install` | what may be installed: a published release's approved content |
 //! | `GET  …/releases/{extension}/{version}/package` | its approved bytes, checked against the approval before they leave |
+//! | `GET  /v1/extension-catalogs/{catalog}/revocations` | the catalog's revocation list, the same for every member (§12) |
 //!
 //! `{catalog}` is `public`, `tenant:{slug}` or `personal:{account}`. A refused move answers in the API's error body
 //! with the flow's own code and Turkish reason; a catalog the caller is not in, a release it may not see and one that
@@ -34,8 +35,10 @@ use crate::extension_catalog::{
     Account, Accounts, Catalog, CatalogError, CatalogId, Filter, Move, ReleaseKey,
 };
 
+mod revocations;
 mod views;
 
+pub use revocations::list_revocations;
 use views::view;
 pub use views::{InstallTicket, ReleaseList, ReleaseView};
 

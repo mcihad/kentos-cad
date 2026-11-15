@@ -1,8 +1,9 @@
 # ADR 8059: Eklenti kataloğunda sürüm akışı — onaylı yayının durum makinesi
 
-- **Durum:** uygulandı, iki dilim (15 Kasım 2026). İlki saf Rust mantığı: `crates/shared/extensions/src/release.rs`
-  ve `release/` (§1–§8). İkincisi sunucu uçları, bellekteki depoyla (`apps/api`, §10). Kalıcı depo bir sonraki dilim
-  (§11); imza, tekerlek deposu ve arayüz daha sonra (§9).
+- **Durum:** uygulandı, üç dilim (15 Kasım 2026). İlki saf Rust mantığı: `crates/shared/extensions/src/release.rs`
+  ve `release/` (§1–§8). İkincisi sunucu uçları, bellekteki depoyla (`apps/api`, §10). Üçüncüsü geri çekme listesi:
+  paylaşılan biçim, akıştan üretim ve uç (§12). Kalıcı depo bir sonraki dilim (§11); imza, tekerlek deposu ve arayüz
+  daha sonra (§9).
 - **Plan:** `plan/eklenti.md` ADIM 22A (PY-CLOUD-01…18; dersler D11, D12, D13).
 - **Bağlam belgeleri:** ADR 8057 §1 (paket, içerik özeti, saf crate) ve §2 (kurum kataloğu, geri çekme listesi);
   `docs/research/2026-11-13-eklenti-ekosistemleri.md` (Open VSX'in yük altında taranmamış paketi "PASSED" geçirmesi,
@@ -157,9 +158,9 @@ simge: CHANGELOG.md" oldu (`facts_come_from_the_package_and_a_version_bump_is_no
    inceleyicinin ve tarayıcının taslağın paketini indirmesi (bugün yalnız onaylı paket iner); MCP ve Python yayın
    araçları.
 2. **Depolama:** paket ve SBOM baytları nesne deposunda (§11); SBOM üretimi.
-3. **İmza ve kimlik:** onay kaydının ve geri çekme listesinin imzası; askıdaki ve geri çekilen sürümlerden ADIM 17'nin
-   `kentos.extension-revocations` listesinin üretimi; kısa ömürlü yayın kimliği (OIDC), önekli ve süreli jetonlar, ad
-   alanının doğrulanmış alan adına bağlanması (D13).
+3. **İmza ve kimlik:** onay kaydının ve geri çekme listesinin imzası (liste üçüncü dilimde üretiliyor, §12; imzalanana
+   dek masaüstü onu uygulamaz); kısa ömürlü yayın kimliği (OIDC), önekli ve süreli jetonlar, ad alanının doğrulanmış
+   alan adına bağlanması (D13).
 4. **Platform tekerlek deposu:** onaylı kilitten platform başına tekerlek üretimi, ikili taraması, özetlerin onay
    kaydına bağlanması (D3).
 5. **Arayüz:** katalog penceresi, inceleyicinin fark görünümü, karne (D17).
@@ -268,6 +269,67 @@ kapalıyken 404, veritabanısız oturumda 503.
   projelerdeki gibi uygulanır.
 - **Verme.** `kentosd extension-catalog grant|revoke|trust` (sunucu yöneticisi), sonra yönetim uçları.
 - Göç bu dilimde yazılmadı; veritabanı testleri kalıcı depoyla gelir.
+
+## §12 Üçüncü dilim: geri çekme listesi
+
+Katalog, ADIM 17'de masaüstünün eklenti barındırıcısının okuduğu listeyi (`kentos.extension-revocations` v1) kendi
+sürümlerinden üretir.
+
+- **Tek biçim.** `Revoked`, `Revocations`, `REVOCATIONS_FORMAT`, `Revocations::read` ve `Revocations::reason`
+  barındırıcının `policy.rs`'inden paylaşılan crate'e taşındı (`crates/shared/extensions/src/revocations.rs`). Kodlar
+  ve Türkçe sözler aynı (`revocations_invalid`). Barındırıcı aynı adları `policy`'den yeniden verir; çağıranları ve
+  testleri değişmedi. Yazan ve okuyan aynı tipleri kullandığı için birbirinden ayrılamaz.
+- **Üretici** (`release::revocation_list`, `release/revoked.rs`). Katalogun bütün sürümleri verilir. Yayımlanmış ve
+  şimdi askıda ya da geri çekilmiş her sürüm bir girdidir: `id`, `versions: "=X.Y.Z"` (anlamsal biçimde: önsürüm eki
+  kalır, yapı üst verisi atılır) ve `reason`.
+  - Askıdan alınan sürüm, durumuyla birlikte listeden düşer.
+  - Arşivlenen sürüm listelenmez: yayımlanmışsa çalışmaya devam eder (§1).
+  - Yayımlanmamış hiçbir sürüm listelenmez. Durum yetmez; kayıtta yayımlama hareketi aranır.
+  - Sıra önce kimliğe, sonra anlamsal sürüme göredir (1.2.0, 1.10.0'dan önce); aynı sürümler hep aynı baytları verir.
+- **Gerekçe.** Duyurunun gerekçesi, `notice_text`'in sözleriyle ve sondaki noktası olmadan yazılır, çünkü barındırıcı
+  onu kendi cümlesine koyar: "1.0.0 sürümü geri çekildi: {gerekçe}.". Barındırıcı her girdiye "geri çekildi" der;
+  askıdaki sürümün geri dönebileceğini bu yüzden gerekçe söyler: "… (askıya alındı; inceleme bitince askıdan
+  alınabilir ya da geri çekilir)". Duyuru ve girdi bu sözü aynı sabitten (`UNDER_REVIEW`), gerekçeyi aynı yardımcıdan
+  alır.
+- **Yeni alan yok.** v1 okuyucusu bilinmeyen alanı reddeder; `generatedAt` gibi tek bir anahtar, bütün kurulu
+  KentOS'ların listeyi reddetmesi demektir. Liste yalnız `format`, `schemaVersion`, `entries`, girdi yalnız `id`,
+  `versions`, `reason` yazar. Bir test bunu ve fazla anahtarın reddedildiğini kilitler. İmza da alan olmayacak:
+  kataloğun güven kökü listeyi okumadan önce dışarıdan denetler.
+- **Uç** (`GET /v1/extension-catalogs/{katalog}/revocations`). Katalogun her üyesine aynı liste gider; kişisel
+  katalogda yalnız sahibine, kataloğun tarayıcısına bile gitmez. Ötekiler öteki uçlardaki 404'ü aynı sözle alır.
+  Liste bütün sürümlerden yapılır, ama içinde yalnız herkesin zaten gördüğü geri alınmış yayınlar ve gerekçeleri
+  vardır: hesap kimliği, not, bulgu, içerik özeti ve taslak yoktur. İçeriden ve dışarıdan bakan aynı listeyi alır.
+- **Önbellek.** `Cache-Control: private, no-cache` ve gövdenin SHA-256'sı `ETag` olarak gider. Geri çekme bir sonraki
+  eşitlemede görülmeli; bu yüzden hiçbir kopya sorulmadan kullanılmaz (`max-age` yok). Değişmeyen liste
+  `If-None-Match` ile 304 döner, sormak ucuz kalır. `private`, çünkü yanıt oturum açmış bir üyenindir; paylaşılan bir
+  önbellek kurum ya da kişisel kataloğun listesini başkasına vermemeli.
+- **İmzasız.** Bu dilimde liste imzasızdır ve **masaüstü onu imzalanana dek uygulamamalıdır**: barındırıcı listeyi
+  ancak kataloğun güven kökünün imzası denetlendikten sonra uygular (§9.3).
+
+**Ölçüm.**
+
+- `cargo test -p kentos-extensions --lib -- release:: revocations::`: 28 test geçti; 5'i üreticinin (askı ve
+  askıdan alma, geri çekme, arşiv ve yayımlanmamışlar, sıra, fazla alan yok), 2'si biçimin.
+- `cargo test -p kentos-extension-host`: 30 + 1. Yenisi sözleşme testidir: barındırıcının `Revocations::read`'i
+  üreticinin JSON'unu okur ve `reason` gerekçeyi verir. Barındırıcının cümlesi şöyle çıkar: "1.0.0 sürümü geri çekildi:
+  Kullanıcı verisini dışarı gönderiyor.".
+- `cargo test -p kentos-api --bin kentosd extension_catalog`: 15 test; 3'ü yeni (üyeye aynı liste ve içeriden ve
+  dışarıdan aynı olması, dışarıdakine 404, 304 ile yeni geri çekmede yeni etiket). 976 satırlık test dosyası dört
+  gruba ayrıldı: akış, erişim, retler, geri çekme listesi.
+
+**Bu dilimde verilen kararlar.**
+
+1. Askıdaki sürüm de listelenir, çünkü yeni kurulumu ve çalıştırmayı durdurur (§6); gerekçesine askı sözü eklenir,
+   askıdan alınınca listeden düşer.
+2. Arşivlenen sürüm listelenmez; yayımlanmamış hiçbir sürüm listelenmez (kayıtta yayımlama hareketi aranır).
+3. Sürüm aralığı tam sürümdür (`=X.Y.Z`) ve anlamsal biçimde yazılır.
+4. Kişisel katalogun listesini yalnız sahibi alır.
+5. Önbellek `private, no-cache` ve `ETag`'dir.
+6. Listede yeni alan yoktur; imza listenin dışından gelecek.
+
+**Kalan.** Listenin imzası ve masaüstünün imzalı listeyi eşitlemesi (§9.3). D15'in kalanı: kamuya açık kaldırma kaydı,
+"şüpheli" ile "kesin" ayrımının biçimde gösterilmesi (v1 tek tür girdi bilir; ayrım bugün gerekçenin sözünde) ve itiraz
+yolu. Kalıcı depo (§11) geldiğinde liste aynı üreticiden çıkar.
 
 ## Uygularken verilen kararlar (planda yazılı değildi)
 

@@ -27,6 +27,7 @@ use kentos_extensions::version::Version;
 #[cfg(test)]
 pub mod memory;
 mod model;
+mod revocations;
 pub mod store;
 
 pub use model::{Account, Accounts, CatalogError, CatalogId, Filter, Listing, Move, ReleaseKey};

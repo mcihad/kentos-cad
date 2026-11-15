@@ -7,17 +7,18 @@
 //!
 //! The **revocation list** (`kentos.extension-revocations` v1) names versions withdrawn for a reason (malware, a
 //! dangerous bug); syncing it stops them, never deletes the user's data. Its signature is checked by the catalog's
-//! trust root before it gets here (ADIM 22A); offline, the last list applied holds.
+//! trust root before it gets here (ADIM 22A); offline, the last list applied holds. Its format is the shared crate's,
+//! the same the catalog writes the list with (`kentos_extensions::revocations`); it is named here as before.
 
 use kentos_extensions::Problem;
 use kentos_extensions::manifest::{Capability, Manifest};
-use kentos_extensions::version::{Version, VersionReq};
+pub use kentos_extensions::revocations::{REVOCATIONS_FORMAT, Revocations, Revoked};
+use kentos_extensions::version::Version;
 use serde::{Deserialize, Serialize};
 
 use crate::store::{SourceKind, problem};
 
 pub const POLICY_FORMAT: &str = "kentos.extension-policy";
-pub const REVOCATIONS_FORMAT: &str = "kentos.extension-revocations";
 
 /// The organisation's extension policy. Every list not written allows all.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -149,63 +150,5 @@ impl Policy {
             )),
             ..Policy::default()
         }
-    }
-}
-
-/// A withdrawn range of an extension's versions.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Revoked {
-    pub id: String,
-    /// A range: `<1.4.2`, `=1.4.0`.
-    pub versions: String,
-    pub reason: String,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Revocations {
-    pub format: String,
-    pub schema_version: u32,
-    #[serde(default)]
-    pub entries: Vec<Revoked>,
-}
-
-impl Revocations {
-    pub fn read(text: &str) -> Result<Revocations, Problem> {
-        let list: Revocations = serde_json::from_str(text).map_err(|e| {
-            problem(
-                "revocations_invalid",
-                format!("Geri çekme listesi okunamadı ({e})."),
-            )
-        })?;
-        if list.format != REVOCATIONS_FORMAT || list.schema_version != 1 {
-            return Err(problem(
-                "revocations_invalid",
-                format!("Geri çekme listesi “{REVOCATIONS_FORMAT}” sürüm 1 değil."),
-            ));
-        }
-        for entry in &list.entries {
-            if VersionReq::parse(&entry.versions).is_none() {
-                return Err(problem(
-                    "revocations_invalid",
-                    format!(
-                        "Geri çekme listesinde “{}” için sürüm aralığı okunamadı: {}.",
-                        entry.id, entry.versions
-                    ),
-                ));
-            }
-        }
-        Ok(list)
-    }
-
-    /// Why this version is withdrawn; none when it is not. A preview inside a withdrawn range is withdrawn too.
-    pub fn reason(&self, id: &str, version: &str) -> Option<&str> {
-        let version = Version::parse(version)?;
-        self.entries
-            .iter()
-            .filter(|e| e.id == id)
-            .find(|e| VersionReq::parse(&e.versions).is_some_and(|req| req.contains(&version)))
-            .map(|e| e.reason.as_str())
     }
 }

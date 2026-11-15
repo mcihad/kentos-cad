@@ -258,6 +258,10 @@ pub fn router(state: AppState) -> Router {
             "/v1/extension-catalogs/{catalog}/releases/{extension}/{version}/install",
             get(extension_catalog::install),
         )
+        .route(
+            "/v1/extension-catalogs/{catalog}/revocations",
+            get(extension_catalog::list_revocations),
+        )
         .layer(middleware);
     // An upload's bytes are larger and slower than any other request: their
     // route has its own limit (the largest file) and timeout.
