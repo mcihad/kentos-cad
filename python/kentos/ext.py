@@ -952,7 +952,7 @@ class ProjectAuditFacts:
     a cloud job. Areas in m² to 4 decimals, lengths and places in metres to 3; a place is ``(x, y)`` in the project's
     plane, as the features' GeoJSON gives it."""
 
-    __slots__ = ("tolerance", "cut", "_layers", "architecture")
+    __slots__ = ("tolerance", "cut", "_layers", "architecture", "permit")
 
     def __init__(self, raw: dict[str, Any]) -> None:
         #: The project's topology tolerance (m): areas nearer than it touch, a piece no wider is no overlap or gap.
@@ -962,6 +962,9 @@ class ProjectAuditFacts:
         self._layers = [LayerFacts(layer) for layer in raw.get("layers") or [] if isinstance(layer, dict)]
         #: The drawing's storeys, rooms, program groups and escape routes (docs/adr/8057 §39); empty without rooms.
         self.architecture: ArchitectureFacts = ArchitectureFacts(raw.get("architecture") or {})
+        #: The permit's particulars the dated scope decision reads, the building's area and storeys (docs/adr/8063);
+        #: empty when the drawing gives none of the particulars.
+        self.permit: PermitFacts = PermitFacts(raw.get("permit") or {})
 
     def layers(self) -> list[LayerFacts]:
         """The layers holding objects, in the layer tree's order."""
@@ -1051,6 +1054,38 @@ class Gap:
     area: float
     at: tuple[float, float]
     around: tuple[str, ...]
+
+
+class PermitFacts:
+    """The permit's particulars as the drawing's variables hold them and the drawing's measures for the dated scope
+    decision (docs/adr/8063): ``particulars`` by the variable's name (``basvuru_tarihi``, ``il_nufusu``, ``kullanim`` …),
+    the text as the user wrote it; the building's yapı inşaat alanı (PAİY 4/oooo) in m² to 4 decimals and its storeys
+    holding rooms at or above ±0.00 and below it, each None when the drawing does not measure it."""
+
+    __slots__ = ("particulars", "construction_area", "storeys_above", "storeys_below")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        values = raw.get("particulars")
+        #: The particulars that have a value.
+        self.particulars: dict[str, str] = (
+            {str(k): str(v) for k, v in values.items() if isinstance(v, str)} if isinstance(values, dict) else {}
+        )
+        #: Every room's gross area on every storey (m²); None without a room.
+        self.construction_area: float | None = _maybe_float(raw.get("constructionArea"))
+        storeys = raw.get("storeys")
+        storeys = storeys if isinstance(storeys, dict) else None
+        #: The storeys holding rooms at or above ±0.00 (K00, K01 …); None when no room stands on a storey.
+        self.storeys_above: int | None = int(storeys.get("above") or 0) if storeys else None
+        #: Those below it, the basements (B01, B02 …).
+        self.storeys_below: int | None = int(storeys.get("below") or 0) if storeys else None
+
+    def to_json(self) -> dict[str, Any]:
+        """As the facts write it: what a rule that takes plain data (``dijital_proje.kapsam.karar``) reads."""
+        out: dict[str, Any] = {"particulars": dict(self.particulars), "constructionArea": self.construction_area}
+        out["storeys"] = (
+            None if self.storeys_above is None else {"above": self.storeys_above, "below": self.storeys_below or 0}
+        )
+        return out
 
 
 class ArchitectureFacts:

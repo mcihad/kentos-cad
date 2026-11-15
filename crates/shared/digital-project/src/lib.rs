@@ -11,6 +11,8 @@
 //!   for the administration or KentOS's own reading.
 //! - [`profile`]: the layers over the base profile — an administration's (its own sub-disciplines, the optional fields
 //!   it asks, its readings) and a project's — and the parameters they settle.
+//! - [`scope`]: the dated scope decision's inputs (BIM-02, docs/adr/8063): the particulars a window asks, the facts give
+//!   and the Python rule reads.
 //!
 //! The IFC annexes (EK-5…EK-7) and the model quality control form (EK-9) are `kentos-ifc`'s, over these types
 //! (CLAUDE.md §14: everything IFC is there).
@@ -18,6 +20,7 @@
 pub mod catalog;
 pub mod decision;
 pub mod profile;
+pub mod scope;
 pub mod source;
 
 pub use source::{Level, Source};

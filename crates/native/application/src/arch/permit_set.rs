@@ -205,7 +205,8 @@ pub struct ListSheet {
 }
 
 /// `variables` with the particulars it lacks added (their defaults; the work's name the drawing's) and `values`
-/// written over them.
+/// written over them. The dated scope decision's particulars (`kentos_digital_project::scope`, docs/adr/8063) are
+/// added only when given: a drawing that never asked keeps its list.
 pub fn with_particulars(
     variables: &[ProjectVariable],
     drawing: &str,
@@ -227,6 +228,19 @@ pub fn with_particulars(
             kind: VariableKind::Text,
             value: default.map_or(VariableValue::Null, |d| VariableValue::Text(d.to_owned())),
         });
+    }
+    for input in kentos_digital_project::scope::inputs() {
+        let given = values
+            .iter()
+            .any(|(name, text)| fold(name) == fold(&input.name) && !text.trim().is_empty());
+        if given && !out.iter().any(|v| fold(&v.name) == fold(&input.name)) {
+            out.push(ProjectVariable {
+                name: input.name.clone(),
+                label: input.label.clone(),
+                kind: VariableKind::Text,
+                value: VariableValue::Null,
+            });
+        }
     }
     if !out.iter().any(|v| fold(&v.name) == fold("notlar")) {
         out.push(ProjectVariable {
@@ -810,6 +824,23 @@ mod tests {
         assert_eq!(get("mimar"), Some(VariableValue::Null), "must be given");
         assert!(matches!(get("notlar"), Some(VariableValue::Text(_))));
         assert_eq!(out.len(), permit::PARTICULARS.len() + 1);
+    }
+
+    /// The scope decision's particulars (docs/adr/8063) join the variables only when given; a given one is written,
+    /// one emptied later is cleared, not removed.
+    #[test]
+    fn scope_particulars_are_added_only_when_given() {
+        let out = with_particulars(
+            &[],
+            "Daire",
+            &[("kullanim".into(), " konut ".into()), ("il_nufusu".into(), String::new())],
+        );
+        let get = |out: &[ProjectVariable], n: &str| out.iter().find(|v| v.name == n).map(|v| v.value.clone());
+        assert_eq!(get(&out, "kullanim"), Some(VariableValue::Text("konut".into())));
+        assert_eq!(get(&out, "il_nufusu"), None, "not asked, not added");
+        assert_eq!(out.len(), permit::PARTICULARS.len() + 2);
+        let again = with_particulars(&out, "Daire", &[("kullanim".into(), String::new())]);
+        assert_eq!(get(&again, "kullanim"), Some(VariableValue::Null));
     }
 
     /// A tadilat set made again (docs/adr/8039 §6) renews its views in place: their box, tadilat view and scale; the

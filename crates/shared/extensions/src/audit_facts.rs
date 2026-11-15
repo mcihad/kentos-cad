@@ -15,7 +15,9 @@
 //! - **Bounds:** a list holds at most [`MOST_ITEMS`] items, the first in its order; `totals` counts them all.
 //!
 //! The drawing's architecture (storeys, rooms, the program's article 4 areas, the escape routes) is an optional section
-//! of the same version, [`architecture`] (docs/adr/8057 §39): absent when the drawing has no room.
+//! of the same version, [`architecture`] (docs/adr/8057 §39): absent when the drawing has no room. So is the permit's
+//! (the dated scope decision's particulars and the building's area and storeys), [`permit`] (docs/adr/8063): absent
+//! when none of its particulars has a value.
 //!
 //! Pure, as the crate: the producer (`kentos_processing::audit_facts`) measures with the geometry core; this module
 //! holds the shape, its rules and its JSON Schema (`sdk/kentos-audit-facts.schema.json`, the SDK's `factsSchema`).
@@ -25,8 +27,10 @@ use std::cmp::Ordering;
 use serde::{Deserialize, Serialize};
 
 pub mod architecture;
+pub mod permit;
 
 pub use architecture::ArchitectureFacts;
+pub use permit::PermitFacts;
 
 /// The facts' format name.
 pub const FORMAT: &str = "kentos.auditFacts";
@@ -60,6 +64,10 @@ pub struct ProjectAuditFacts {
     /// no room (or the producer was not asked for it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub architecture: Option<ArchitectureFacts>,
+    /// The permit's particulars the dated scope decision reads and the building's area and storeys. Absent when none of
+    /// the particulars has a value (or the producer was not asked for it).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub permit: Option<PermitFacts>,
     /// Whether objects were left out: past the producer's limit, those after it by persistent id (a room or a door
     /// past a list's bound too).
     pub cut: bool,
@@ -210,6 +218,7 @@ impl ProjectAuditFacts {
             tolerance: finite(tolerance),
             layers: layers.into_iter().map(LayerFacts::normalized).collect(),
             architecture: None,
+            permit: None,
             cut,
         }
     }
@@ -220,6 +229,12 @@ impl ProjectAuditFacts {
         let (architecture, cut) = architecture.normalized();
         self.architecture = Some(architecture);
         self.cut |= cut;
+        self
+    }
+
+    /// These facts with the permit's, trimmed, bounded and rounded as its section says.
+    pub fn with_permit(mut self, permit: PermitFacts) -> ProjectAuditFacts {
+        self.permit = Some(permit.normalized());
         self
     }
 

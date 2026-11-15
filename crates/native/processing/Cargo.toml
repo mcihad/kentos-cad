@@ -13,6 +13,8 @@ publish.workspace = true
 # language from the style core: the same code the web reaches through WASM.
 [dependencies]
 kentos-commands = { path = "../../shared/commands", default-features = false }
+# The dated scope decision's particulars the audit facts' permit section reads (docs/adr/8063).
+kentos-digital-project = { path = "../../shared/digital-project" }
 kentos-domain = { path = "../domain" }
 kentos-expression = { path = "../../shared/expression" }
 # An audit rule's measured facts (`audit_facts`, docs/adr/8057 §36): their shape, order and rounding are the extension

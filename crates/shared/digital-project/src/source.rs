@@ -43,7 +43,7 @@ pub struct Source {
     /// A figure: “4.7”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub figure: Option<String>,
-    /// The regulation's article: “11/3”; with `act` the e-PYS regulation's.
+    /// The regulation's article: “11/3”, a transitional one “Geçici 1/1-a”; with `act` the e-PYS regulation's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub article: Option<String>,
     /// Another act's short name for an article not of this regulation (“e-PYS”).
@@ -80,7 +80,7 @@ impl Source {
     }
 
     /// As a finding or the rules window says it: “EK-6 Tablo 6.66 satır 6 · PDF s. 107”, “EK-4 m. 4.11 · PDF s. 20”,
-    /// “EK-4 Şekil 4.7 · PDF s. 28”, “Md. 11/3”, “e-PYS Md. 4/4”.
+    /// “EK-4 Şekil 4.7 · PDF s. 28”, “Md. 11/3”, “e-PYS Md. 4/4”, “Geçici Md. 1/1-a”.
     pub fn cite(&self) -> String {
         let mut out = String::new();
         if self.annex == 0 {
@@ -89,7 +89,11 @@ impl Source {
                 parts.push(act.clone());
             }
             if let Some(a) = &self.article {
-                parts.push(format!("Md. {a}"));
+                // A transitional article: “Geçici Md. 1/1-a”.
+                parts.push(match a.strip_prefix("Geçici ") {
+                    Some(rest) => format!("Geçici Md. {rest}"),
+                    None => format!("Md. {a}"),
+                });
             }
             out.push_str(&parts.join(" "));
         } else {
@@ -146,6 +150,11 @@ mod tests {
             ..Source::default()
         };
         assert_eq!(article.cite(), "e-PYS Md. 4/4");
+        let transitional = Source {
+            article: Some("Geçici 1/1-a".into()),
+            ..Source::default()
+        };
+        assert_eq!(transitional.cite(), "Geçici Md. 1/1-a");
         let figure = Source {
             annex: 4,
             figure: Some("4.7".into()),

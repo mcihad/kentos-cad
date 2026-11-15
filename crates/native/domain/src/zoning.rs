@@ -163,6 +163,14 @@ impl Document {
         Some(self.zoning_measured(Some(zoning)))
     }
 
+    /// The building's yapı inşaat alanı (4/oooo), whether or not the parcel's zoning is given: every room's, as the
+    /// report counts it (docs/adr/8063, the dated scope decision's area); none without a room.
+    pub fn construction_area(&self) -> Option<f64> {
+        self.entities()
+            .any(|e| matches!(e, Entity::Space(_)))
+            .then(|| self.zoning_measured(None).construction())
+    }
+
     /// The rooms counted against `zoning`; with none, a parcel of 0 (its ratios are not numbers).
     fn zoning_measured(&self, zoning: Option<Zoning>) -> ZoningReport {
         let empty = kentos_contracts::ArchSettings::default();

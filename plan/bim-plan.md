@@ -9,7 +9,10 @@
 **İlerleme (15 Kasım 2026):** B1 tamamlandı: BIM-01 ve IFC-01 `[x]`
 ([ADR 8062](../docs/adr/8062-digital-project-rule-catalog.md)). Ekler sayfa sayfa kural kataloğunda; 17 nokta karara bağlı;
 katalog IFC 4.3 şemasıyla, bağımsız dökümle ve 20 rastgele satırla sayfadan karşılaştırıldı; bugünkü çıktı dosyadan
-ölçüldü; Mimari › Proje ▾ › Dijital proje kuralları penceresi. Sıradaki B2 (BIM-02).
+ölçüldü; Mimari › Proje ▾ › Dijital proje kuralları penceresi. B2 tamamlandı: BIM-02 `[x]`
+([ADR 8063](../docs/adr/8063-dated-digital-delivery-scope.md)): Ruhsat takımı her yükümlülüğün bu projede ne zaman, hangi
+maddeyle başladığını söyler; karar ilk standart kural paketinin Python kuralıdır (`catalog/standards/dijital-proje`), 43
+bağımsız durumla sınandı. Sıradaki B3 (BIM-03).
 
 Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. İlk taslağa göre değişenler: iki yönetmeliğin ana metni madde madde
 yeniden okundu; eklerin bağımsız bir dökümü depodaki sayfa okumalarıyla karşılaştırıldı; bugünkü kod yönetmeliğin sınıf
@@ -99,7 +102,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | R10 | Gelişim seviyesi | Md. 14; EK-8 | ✗ ölçülmüyor, görülemiyor | BIM-06, BIM-10, IFC-06 |
 | R11 | Model kalite kontrol formu | Md. 15; EK-9 | ◐ 21 soru bellekteki modelden | IFC-08, BIM-14 |
 | R12 | Bilgi yönetimi | Md. 4/4; TS EN ISO 19650-1/2 | ✗ | BIM-15 |
-| R13 | Tarihe ve koşula bağlı kapsam | Md. 1; Geçici 1–2 | ✗ | BIM-02 |
+| R13 | Tarihe ve koşula bağlı kapsam | Md. 1; Geçici 1–2 | ✓ Ruhsat takımının Dijital teslim kapsamı, Python kuralı (ADR 8063); MCP yok | BIM-02 |
 | R14 | e-PYS: müellif yükler, idare inceler; e-imza ya da basılı; taranmış PDF kullanılmaz | e-PYS Md. 4–7 | ◐ vektör PDF/A var; paket, kayıt ve inceleme yok | BIM-14, 15, 18 |
 
 ## 3. Bugünkü durum (15 Kasım 2026)
@@ -233,7 +236,17 @@ söyler. İki okumanın ayrıştığı yerler kapanmıştır. [IFC-01](ifc-uyum.
 
 **İlk kabul:** katalogdaki her satırın sayfası var; rastgele seçilen 20 satır sayfa görüntüsüyle birebir; ölçüm raporu ADR'de.
 
-#### BIM-02 — Tarihli kapsam kararı ve proje bağlamı [ ]
+#### BIM-02 — Tarihli kapsam kararı ve proje bağlamı [x]
+
+**Yapıldı (15 Kasım 2026, [ADR 8063](../docs/adr/8063-dated-digital-delivery-scope.md)):** tarih, eşik ve 15 girdi
+`kentos-digital-project`'in `data/kapsam-2026.json`'unda, her biri maddesiyle. Karar `catalog/standards/dijital-proje`
+paketinin Python kuralı (`dijital_proje.kapsam.karar`; KentOS'un ilk standart kural paketi, `kentos kek verify` temiz).
+Olguların yeni `permit` bölümü künyeyi, çizimden ölçülen toplam yapı inşaat alanını ve katları verir. Eksik girdi her aday
+değeriyle denenir: sonucu değiştirebiliyorsa "teyit gerekli". Ruhsat takımında "Dijital teslim kapsamı" bölümü ve tablosu;
+denetimde `kapsam` kuralı; Python'da `kentos.standards.kapsam`. 43 bağımsız durum (metinden elle) geçiyor. Okuma kararları
+K23–K28 katalogda. B1'in penceresinin masaüstüne yalnız test bağımlılığıyla bağlandığı hata düzeltildi. **Kalan:** MCP
+aracı (çağırıcı `kentos-python-env`'e taşınacak), bulut işi (eklenti planı ADIM 20), nüfusun kaynağı ve hangi belediye
+(K27, idare).
 
 **Kullanıcı sonucu:** Ruhsat takımı penceresi, bu proje için hangi yükümlülüğün hangi tarihten başladığını maddesiyle
 söyler (PDF/A, IFC, e-PYS). Bilgi eksikse "teyit gerekli" der, tahmin etmez.
@@ -572,7 +585,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | B1 ✓ | Ekler sayfa sayfa kataloğa; başlangıç ölçümü (yapıldı, ADR 8062) | BIM-01, IFC-01 | Her kural sayfasıyla; ölçüm raporu |
-| B2 | Tarihli kapsam kararı | BIM-02 | Ruhsat takımında "bu projede ne, ne zaman" |
+| B2 ✓ | Tarihli kapsam kararı | BIM-02 | Ruhsat takımında "bu projede ne, ne zaman" (ADR 8063) |
 
 ### Faz 1 — 2B teslim tam (ilk yasal grup 1.9.2027)
 

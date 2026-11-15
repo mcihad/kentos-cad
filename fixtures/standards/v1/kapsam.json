@@ -1,0 +1,1242 @@
+{
+ "format": "kentos.digitalScopeCases",
+ "version": 1,
+ "about": "Dijital teslim kapsamının bağımsız durumları (docs/adr/8063, plan/bim-plan.md BIM-02): beklenen her sonuç yönetmeliklerin metninden elle çıkarıldı, kuralın kodundan üretilmedi. Hazırlama Yönetmeliği Md. 1, 16, Geçici 1–2; e-PYS Yönetmeliği Md. 1, 4/4, 8 (RG 5.8.2026/33331). Bir durumun 'expect'i yalnız yazdığı satırları ve alanları sınar.",
+ "cases": [
+  {
+   "id": "il-esit-2m",
+   "neden": "Geçici 1/1: il nüfusu 2.000.000'u geçmeli; tam eşiti geçmez (K23). IFC 3. gruba (il > 1.000.000) düşer.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2.000.000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "12000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2031-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2031-09-01"
+    }
+   }
+  },
+  {
+   "id": "il-ustu-2m",
+   "neden": "İl 2.000.001, belediye 700.000, alan 12.000: PDF/A yürürlükte (Geçici 1/1-a istisnası), IFC 1. grup.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2000001",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "12000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2027-09-01",
+     "until": "2029-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2029-09-01"
+    }
+   }
+  },
+  {
+   "id": "il-esit-1m",
+   "neden": "İl tam 1.000.000: 3. grubun eşiğini geçmez; IFC kalan grupla 1.9.2032.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "1000000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "12000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2032-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "il-ustu-1m",
+   "neden": "İl 1.000.001, belediye 300.001, alan 10.000,5: 3. grubun üç eşiği de kesin geçilir.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "1000001",
+     "belediye_nufusu": "300001",
+     "yapi_insaat_alani": "10000.5"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2031-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2031-09-01"
+    }
+   }
+  },
+  {
+   "id": "bel-esit-600k",
+   "neden": "Belediye tam 600.000: PDF/A istisnası ve IFC 1. grup dışı; 2. grup (belediye > 400.000) 1.9.2030.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "600000",
+     "yapi_insaat_alani": "12000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2030-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2030-09-01"
+    }
+   }
+  },
+  {
+   "id": "bel-ustu-600k",
+   "neden": "Belediye 600.001, alan 5.000,01: PDF/A yürürlükte başlar; alan 10.000'i geçmediği için IFC 1.9.2032.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "600001",
+     "yapi_insaat_alani": "5000.01"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2027-09-01",
+     "until": "2032-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "bel-esit-400k",
+   "neden": "Belediye tam 400.000: 2. grup dışı; 3. grup (il > 1.000.000, belediye > 300.000) 1.9.2031.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "20000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2031-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2031-09-01"
+    }
+   }
+  },
+  {
+   "id": "bel-esit-300k",
+   "neden": "Belediye tam 300.000: 3. grup dışı; IFC 1.9.2032.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "1500000",
+     "belediye_nufusu": "300000",
+     "yapi_insaat_alani": "20000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2032-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "alan-esit-5000",
+   "neden": "Toplam yapı inşaat alanı tam 5.000 m²: Geçici 1/1-a'nın istisnasına girmez; PDF/A 1.3.2029.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "5000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2032-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "alan-esit-10000",
+   "neden": "Alan tam 10.000 m²: PDF/A istisnasına girer (> 5.000), IFC gruplarına girmez (> 10.000 değil).",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "10000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2027-09-01",
+     "until": "2032-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "alan-ustu-10000",
+   "neden": "Alan 10.001 m²: IFC 1. grup; PDF/A 1.9.2027'den 1.9.2029'a kadarki başvurularda.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "10001"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2027-09-01",
+     "until": "2029-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2029-09-01"
+    }
+   }
+  },
+  {
+   "id": "pdfa-oncesi-gun",
+   "neden": "Başvuru 28.2.2029: PDF/A'nın başladığı günden bir gün önce; Geçici 2 gereği uygulanmaz.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000",
+     "basvuru_tarihi": "28.02.2029"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "applies",
+     "from": "2027-09-01"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    },
+    "modelden-pdfa": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "pdfa-gunu",
+   "neden": "Başvuru 1.3.2029: \"1/3/2029 tarihine kadar uygulanmaz\" hükmü o gün başlar (K24).",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000",
+     "basvuru_tarihi": "01.03.2029"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "applies",
+     "from": "2029-03-01"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "ifc-oncesi-gun",
+   "neden": "Başvuru 31.8.2029, IFC 1. grup: IFC'ye bir gün kala yapılan başvuruya IFC uygulanmaz, PDF/A uygulanır.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "12000",
+     "basvuru_tarihi": "31.08.2029"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "applies",
+     "from": "2027-09-01"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    },
+    "modelden-pdfa": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "ifc-gunu",
+   "neden": "Başvuru 1.9.2029, IFC 1. grup: IFC ve Md. 9/1 uygulanır; 4/2–3 uygulanmaz (Geçici 1/1-b son cümle).",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "12000",
+     "basvuru_tarihi": "1.9.2029"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "applies",
+     "from": "2029-09-01"
+    },
+    "modelden-pdfa": {
+     "state": "applies",
+     "from": "2029-09-01"
+    }
+   }
+  },
+  {
+   "id": "yururluk-oncesi",
+   "neden": "Başvuru 31.8.2027: yönetmelik 1.9.2027'de yürürlüğe girer, Md. 1/1 \"yapılacak müracaatlar\" (K25); e-PYS 1.9.2028.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "6000",
+     "basvuru_tarihi": "31.08.2027"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_applicable"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    },
+    "epys": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "yururluk-gunu",
+   "neden": "Başvuru 1.9.2027, büyük ilde 6.000 m²: yönetmelik ve PDF/A o gün başlar.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "6000",
+     "basvuru_tarihi": "2027-09-01"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "applies",
+     "from": "2027-09-01"
+    },
+    "pdfa": {
+     "state": "applies",
+     "from": "2027-09-01"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "bugun-onceki-gun",
+   "neden": "Başvurulmamış proje, karar günü 28.2.2029: PDF/A henüz başlamadı.",
+   "today": "2029-02-28",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "bugun-gunu",
+   "neden": "Başvurulmamış proje, karar günü 1.3.2029: PDF/A başladı; 1.9.2032'den sonraki başvuruda yerini IFC alır.",
+   "today": "2029-03-01",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "applies",
+     "from": "2029-03-01",
+     "until": "2032-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "bugun-ifc-gunu",
+   "neden": "Başvurulmamış proje, karar günü 1.9.2032: IFC ve Md. 9/1 başladı, 4/2–3 artık uygulanmaz.",
+   "today": "2032-09-01",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "applies",
+     "from": "2032-09-01"
+    },
+    "modelden-pdfa": {
+     "state": "applies",
+     "from": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "kamu-ihalesi",
+   "neden": "Kamu yapısı: ihale 15.8.2029, ruhsat başvurusu 10.10.2029; Geçici 2 ihale tarihini de sayar, erkeni esastır (K25).",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "15000",
+     "ihale_tarihi": "15.08.2029",
+     "basvuru_tarihi": "10.10.2029"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "applies",
+     "from": "2027-09-01"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "mustakil-200-iki-kat",
+   "neden": "Müstakil, bodrum dışında 2 kat, tam 200 m²: Md. 1/2 gereği kapsam dışı (\"geçmeyen\").",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "evet",
+     "kanun_istisnasi": "yok",
+     "yapi_insaat_alani": "200",
+     "kat_adedi": "2"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_applicable"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    },
+    "modelden-pdfa": {
+     "state": "not_applicable"
+    },
+    "epys": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "mustakil-alan-ustu",
+   "neden": "Müstakil, 2 kat, 200,01 m²: alan sınırı geçildi, kapsam içi.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "evet",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "200.01",
+     "kat_adedi": "2"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_yet",
+     "from": "2027-09-01"
+    },
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "mustakil-uc-kat",
+   "neden": "Müstakil, 180 m² ama bodrum dışında 3 kat: \"en çok iki katlı\" değil, kapsam içi.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "evet",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "180",
+     "kat_adedi": "3"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "mustakil-cizimden",
+   "neden": "Müstakil; alan ve kat künyede boş: çizimden ölçülen 150 m² ve zemin üstü 2 kat (bodrum sayılmaz).",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "evet",
+     "kanun_istisnasi": "yok"
+    },
+    "constructionArea": 150.0,
+    "storeys": {
+     "above": 2,
+     "below": 1
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_applicable"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    },
+    "modelden-pdfa": {
+     "state": "not_applicable"
+    },
+    "epys": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "karma",
+   "neden": "Ticaret+konut karma kullanım: konut gibi Geçici 1/1'e bağlı, Geçici 1/2 ertelemesi yok.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "ticaret + konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "12000"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_yet",
+     "from": "2027-09-01"
+    },
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2027-09-01",
+     "until": "2029-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2029-09-01"
+    }
+   }
+  },
+  {
+   "id": "konut-disi",
+   "neden": "Konut dışı bina: yönetmelik 1.9.2033'e kadar uygulanmaz (Geçici 1/2); 4/2–3 IFC ile aynı gün başlayacağından hiç uygulanmaz (K26).",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "diğer",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "tarim_hayvancilik": "hayır",
+     "yapi_insaat_alani": "12000"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_yet",
+     "from": "2033-09-01"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2033-09-01"
+    },
+    "modelden-pdfa": {
+     "state": "not_yet",
+     "from": "2033-09-01"
+    }
+   }
+  },
+  {
+   "id": "konut-disi-oncesi-gun",
+   "neden": "Konut dışı, başvuru 31.8.2033: Geçici 2 gereği uygulanmaz.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "diğer",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "tarim_hayvancilik": "hayır",
+     "yapi_insaat_alani": "12000",
+     "basvuru_tarihi": "31.08.2033"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_applicable"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "konut-disi-gunu",
+   "neden": "Konut dışı, başvuru 1.9.2033: yönetmelik, IFC ve Md. 9/1 uygulanır; 4/2–3 uygulanmaz.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "diğer",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "tarim_hayvancilik": "hayır",
+     "yapi_insaat_alani": "12000",
+     "basvuru_tarihi": "01.09.2033"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "applies",
+     "from": "2033-09-01"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "applies",
+     "from": "2033-09-01"
+    },
+    "modelden-pdfa": {
+     "state": "applies",
+     "from": "2033-09-01"
+    }
+   }
+  },
+  {
+   "id": "tarim",
+   "neden": "Entegre tesis niteliğinde olmayan tarım yapısı: Md. 1/2 ve e-PYS Md. 1 gereği kapsam dışı.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "diğer",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "tarim_hayvancilik": "evet",
+     "yapi_insaat_alani": "3000"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_applicable"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    },
+    "modelden-pdfa": {
+     "state": "not_applicable"
+    },
+    "epys": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "tarim-entegre",
+   "neden": "Entegre tesis niteliğindeki tarım yapısı kapsam içidir; konut dışı olduğundan 1.9.2033.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "diğer",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "tarim_hayvancilik": "entegre tesis",
+     "yapi_insaat_alani": "3000"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_yet",
+     "from": "2033-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2033-09-01"
+    }
+   }
+  },
+  {
+   "id": "plan-disi",
+   "neden": "Uygulama imar planı bulunmayan alan: Md. 1/2 gereği kapsam dışı.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "hayır",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "3000"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_applicable"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    },
+    "modelden-pdfa": {
+     "state": "not_applicable"
+    },
+    "epys": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "tadilat",
+   "neden": "Tadilat projesi: Md. 1/2 yeni yapılacak binaları kapsar (K28).",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "tadilat",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "3000"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "not_applicable"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "ilave",
+   "neden": "İlave: yeni bina sayılıp sayılmayacağını idare söyler (K28); teyit gerekli.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "ilave",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "3000"
+    }
+   },
+   "expect": {
+    "kapsam": {
+     "state": "confirm"
+    },
+    "pdfa": {
+     "state": "confirm"
+    },
+    "ifc": {
+     "state": "confirm"
+    }
+   }
+  },
+  {
+   "id": "nufus-eksik-kucuk",
+   "neden": "Nüfus girilmemiş, alan 3.000 m²: alan iki eşiğin de altında, nüfus sonucu değiştirmez.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "yapi_insaat_alani": "3000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2032-09-01"
+    },
+    "ifc": {
+     "state": "not_yet",
+     "from": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "nufus-eksik-buyuk",
+   "neden": "Nüfus girilmemiş, alan 12.000 m²: PDF/A ve IFC'nin günü nüfusa bağlı, teyit gerekli.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "yapi_insaat_alani": "12000"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "confirm"
+    },
+    "ifc": {
+     "state": "confirm"
+    }
+   }
+  },
+  {
+   "id": "nufus-eksik-gec-basvuru",
+   "neden": "Nüfus girilmemiş ama başvuru 1.10.2032: her grupta IFC uygulanır, 4/2–3 uygulanmaz.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "yapi_insaat_alani": "12000",
+     "basvuru_tarihi": "01.10.2032"
+    }
+   },
+   "expect": {
+    "pdfa": {
+     "state": "not_applicable"
+    },
+    "ifc": {
+     "state": "applies",
+     "from": null
+    }
+   }
+  },
+  {
+   "id": "epys-karar",
+   "neden": "e-PYS: Bakanlığın kararı 1.1.2029'dan; yürürlük (1.9.2028) ile kararın geç olanı.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000",
+     "epys_karar_tarihi": "01.01.2029"
+    }
+   },
+   "expect": {
+    "epys": {
+     "state": "not_yet",
+     "from": "2029-01-01"
+    }
+   }
+  },
+  {
+   "id": "epys-karar-erken",
+   "neden": "e-PYS kararı yürürlükten önceki bir gün (1.1.2028): başlangıç yürürlük günüdür (e-PYS Md. 8).",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000",
+     "epys_karar_tarihi": "01.01.2028"
+    }
+   },
+   "expect": {
+    "epys": {
+     "state": "not_yet",
+     "from": "2028-09-01"
+    }
+   }
+  },
+  {
+   "id": "epys-karar-oncesi-basvuru",
+   "neden": "Başvuru 15.12.2028, e-PYS kararı 1.1.2029: başvuru e-PYS'den geçmez.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000",
+     "basvuru_tarihi": "15.12.2028",
+     "epys_karar_tarihi": "01.01.2029"
+    }
+   },
+   "expect": {
+    "epys": {
+     "state": "not_applicable"
+    },
+    "pdfa": {
+     "state": "not_applicable"
+    }
+   }
+  },
+  {
+   "id": "epys-kanun-26",
+   "neden": "İmar Kanunu'nun 26. maddesindeki yapı: e-PYS Md. 1/2 gereği e-PYS dışı; hazırlama yönetmeliği değişmez.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "26. madde",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000"
+    }
+   },
+   "expect": {
+    "epys": {
+     "state": "not_applicable"
+    },
+    "pdfa": {
+     "state": "not_yet",
+     "from": "2029-03-01",
+     "until": "2032-09-01"
+    }
+   }
+  },
+  {
+   "id": "epys-karar-eksik",
+   "neden": "e-PYS'nin fiilî başlangıcı Bakanlığın kararıyla (e-PYS Md. 4/4); karar girilmemiş: teyit gerekli.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "650000",
+     "belediye_nufusu": "400000",
+     "yapi_insaat_alani": "2000"
+    }
+   },
+   "expect": {
+    "epys": {
+     "state": "confirm",
+     "missing": [
+      "epys_karar_tarihi"
+     ]
+    }
+   }
+  },
+  {
+   "id": "okunamayan-alan",
+   "neden": "\"5.000\" belirsiz (5 mi 5.000 mi): okunmaz, çizimdeki alan da kullanılmaz; PDF/A teyit gerekli.",
+   "today": "2026-11-15",
+   "permit": {
+    "particulars": {
+     "plan_alani": "evet",
+     "yapi_turu": "yeni bina",
+     "kullanim": "konut",
+     "mustakil": "hayır",
+     "kanun_istisnasi": "yok",
+     "il_nufusu": "2500000",
+     "belediye_nufusu": "700000",
+     "yapi_insaat_alani": "5.000"
+    },
+    "constructionArea": 12000.0
+   },
+   "expect": {
+    "pdfa": {
+     "state": "confirm"
+    }
+   }
+  }
+ ]
+}

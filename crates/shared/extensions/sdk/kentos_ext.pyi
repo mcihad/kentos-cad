@@ -204,6 +204,8 @@ class ProjectAuditFacts:
     cut: bool
     #: The drawing's storeys, rooms, program groups and escape routes (docs/adr/8057 §39); empty without rooms.
     architecture: ArchitectureFacts
+    #: The permit's particulars the dated scope decision reads, the building's area and storeys (docs/adr/8063); empty when the drawing gives none of the particulars.
+    permit: PermitFacts
     def layers(self) -> list[LayerFacts]:
         """The layers holding objects, in the layer tree's order."""
     def layer(self, layer: str) -> LayerFacts:

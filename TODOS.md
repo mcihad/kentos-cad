@@ -54,6 +54,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - Dijital proje kuralları ([ADR 8062](docs/adr/8062-digital-project-rule-catalog.md), `arch.digitalRules`): web'e dönüşte
   `kentos-digital-project` ve `kentos-ifc`'in `rules` listesi (ikisi de wasm32'de derleniyor) `crates/wasm/` altında
   bağlanır; pencere web'in arayüz çatısıyla; Mimari denetim bulgularının kuralı ek ve sayfayı söylesin (`cited`).
+- Dijital teslim kapsamı ([ADR 8063](docs/adr/8063-dated-digital-delivery-scope.md)): web'e dönüşte Ruhsat takımının bölümü;
+  kural Python'da kaldığı için web'de bulut işi ya da sunucu üstünden çağrılır, veri (`kapsam-2026.json`) wasm32'de okunur.
 - IFC görüntüleyici (IFC-12, [ADR 8061](docs/adr/8061-ifc-viewer-and-reading-engine.md) §6.2): web'e dönüşte `crates/wasm/`
   altında `kentos-ifc` (`mesh`) ile görüntüleyici çekirdeğinin bağlaması; çizim web'in WebGPU arka ucunda, ortak
   `shaders/wgsl/scene3d` sözleşmesiyle; paneller web'in arayüz çatısıyla; okuma işçide; wasm32'nin 4 GB sınırını aşan
@@ -4286,7 +4288,7 @@ mimari disiplinin modelini yazar; statik ve tesisat modelleri altlık olarak oku
 ölçer ve okur (plan K10, ADR 8062 §14, ADR 8057 §36):
 
 - [x] `BIM-01` Yönetmeliğin ekleri (EK-1…EK-9) sayfasıyla sürümlü kural kataloğunda (`kentos-digital-project`, `kentos-ifc`); 17 nokta karara bağlı; bağımsız dökümle ve 20 rastgele satırla sayfadan karşılaştırıldı; bugünkü çıktı dosyadan ölçüldü (15 Kasım 2026, [ADR 8062](docs/adr/8062-digital-project-rule-catalog.md)). Kalan: 2+1 örneğinin ölçümü (model dosyası yok), Python/MCP sorgu komutu.
-- [ ] `BIM-02` Tarihli kapsam kararını kur: başvuru tarihi, il ve belediye nüfusu, kullanım ve alanla hangi yükümlülüğün (PDF/A, IFC, e-PYS) ne zaman başladığını maddesiyle söyle; eksik bilgide "teyit gerekli".
+- [x] `BIM-02` Tarihli kapsam kararı: Ruhsat takımının "Dijital teslim kapsamı" bölümü her yükümlülüğün (yönetmelik, PDF/A, IFC, modelden PDF/A, e-PYS) bu projede ne zaman, hangi maddeyle başladığını söyler; eksik bilgi sonucu değiştirebiliyorsa "teyit gerekli". Karar ilk standart kural paketinin Python kuralı (`catalog/standards/dijital-proje`, `dijital_proje.kapsam`), tarih ve eşikler `kentos-digital-project`'te veri, künye ve çizimin alanı olguların `permit` bölümünde; 43 bağımsız durum (15 Kasım 2026, [ADR 8063](docs/adr/8063-dated-digital-delivery-scope.md)). Kalan: MCP aracı, bulut işi (eklenti ADIM 20), nüfusun kaynağı ve hangi belediye (K27, idare).
 - [ ] `BIM-03` 2B kuralların denetimi: EK-4 katmanı, çizgi tipi ve yazısı; EK-3 mahal numarası biçimi ve ad sözlüğü; bulgu nesnesini seçer.
 - [ ] `BIM-04` Paftanın modelden üretildiğinin kanıtı: türevlerin üretildiği revizyon, modelden gelmeyen çizimin listesi, eski türevle yayını durduran kapı (Md. 9/1; EK-9/21).
 - [ ] `BIM-05` 2B ruhsat paketi: bağımsız PDF/A doğrulaması, taranmış içerik reddi, teslim listesi, atomik yayın.

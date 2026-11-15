@@ -1,0 +1,179 @@
+{
+  "format": "kentos.digitalScope",
+  "version": 1,
+  "inputs": [
+    { "name": "basvuru_tarihi", "label": "Ruhsat başvuru tarihi (başvurulmadıysa boş)", "kind": "date" },
+    { "name": "ihale_tarihi", "label": "Kamu yapısında ihale kararı ya da ihale tarihi", "kind": "date" },
+    {
+      "name": "plan_alani",
+      "label": "Uygulama imar planı bulunan alanda",
+      "kind": "choice",
+      "choices": ["evet", "hayır"]
+    },
+    {
+      "name": "yapi_turu",
+      "label": "Yapı",
+      "kind": "choice",
+      "choices": ["yeni bina", "tadilat", "ilave"]
+    },
+    {
+      "name": "kullanim",
+      "label": "Kullanım",
+      "kind": "choice",
+      "choices": ["konut", "ticaret+konut", "diğer"]
+    },
+    {
+      "name": "mustakil",
+      "label": "Müstakil yapı",
+      "kind": "choice",
+      "choices": ["evet", "hayır"]
+    },
+    {
+      "name": "tarim_hayvancilik",
+      "label": "Tarım ya da hayvancılık yapısı",
+      "kind": "choice",
+      "choices": ["hayır", "evet", "entegre tesis"]
+    },
+    { "name": "belediye", "label": "İşlemi yapan belediye", "kind": "text" },
+    { "name": "il_nufusu", "label": "İl nüfusu", "kind": "number" },
+    { "name": "belediye_nufusu", "label": "Belediye nüfusu", "kind": "number" },
+    { "name": "nufus_kaynagi", "label": "Nüfusun kaynağı ve yılı", "kind": "text" },
+    { "name": "yapi_insaat_alani", "label": "Toplam yapı inşaat alanı, m² (boşsa çizimden)", "kind": "number" },
+    { "name": "kat_adedi", "label": "Bodrum dışındaki kat adedi (boşsa çizimden)", "kind": "number" },
+    {
+      "name": "kanun_istisnasi",
+      "label": "İmar Kanunu'nun 4, 26 ya da 27. maddesindeki yapı",
+      "kind": "choice",
+      "choices": ["yok", "4", "26", "27"]
+    },
+    { "name": "epys_karar_tarihi", "label": "Bakanlığın e-PYS'yi bu yapıya başlattığı tarih", "kind": "date" }
+  ],
+  "acts": [
+    {
+      "id": "hazirlama",
+      "name": "Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik",
+      "gazette": "RG 5.8.2026/33331",
+      "inForce": "2027-09-01",
+      "source": { "annex": 0, "article": "16" }
+    },
+    {
+      "id": "epys",
+      "name": "Mimarlık ve Mühendislik Projelerinin Elektronik Ortamda Teslimi ve Yönetilmesi Hakkında Yönetmelik",
+      "short": "e-PYS",
+      "gazette": "RG 5.8.2026/33331",
+      "inForce": "2028-09-01",
+      "source": { "annex": 0, "act": "e-PYS", "article": "8" }
+    }
+  ],
+  "scope": {
+    "plan": {
+      "source": { "annex": 0, "article": "1/2" }
+    },
+    "newBuilding": {
+      "source": { "annex": 0, "article": "1/2" }
+    },
+    "detached": {
+      "mostStoreys": 2,
+      "mostArea": 200,
+      "source": { "annex": 0, "article": "1/2" }
+    },
+    "farm": {
+      "source": { "annex": 0, "article": "1/2" }
+    },
+    "applications": {
+      "source": { "annex": 0, "article": "1/1" }
+    },
+    "lawArticles": {
+      "articles": ["4", "26", "27"],
+      "source": { "annex": 0, "act": "e-PYS", "article": "1/2" }
+    }
+  },
+  "uses": {
+    "residential": ["konut", "ticaret+konut"],
+    "from": "2033-09-01",
+    "source": { "annex": 0, "article": "Geçici 1/2" }
+  },
+  "earlier": {
+    "source": { "annex": 0, "article": "Geçici 2" }
+  },
+  "obligations": [
+    {
+      "id": "pdfa",
+      "title": "2B çizimler ve belgeler PDF/A",
+      "sources": [
+        { "annex": 0, "article": "4/2" },
+        { "annex": 0, "article": "4/3" }
+      ],
+      "stages": [
+        {
+          "from": "2027-09-01",
+          "province": 2000000,
+          "municipality": 600000,
+          "area": 5000,
+          "source": { "annex": 0, "article": "Geçici 1/1-a" }
+        },
+        {
+          "from": "2029-03-01",
+          "source": { "annex": 0, "article": "Geçici 1/1-a" }
+        }
+      ],
+      "endsWith": {
+        "obligation": "ifc",
+        "source": { "annex": 0, "article": "Geçici 1/1-b" }
+      }
+    },
+    {
+      "id": "ifc",
+      "title": "BIM modeli IFC biçiminde",
+      "sources": [
+        { "annex": 0, "article": "4/5" }
+      ],
+      "stages": [
+        {
+          "from": "2029-09-01",
+          "province": 2000000,
+          "municipality": 600000,
+          "area": 10000,
+          "source": { "annex": 0, "article": "Geçici 1/1-b-1" }
+        },
+        {
+          "from": "2030-09-01",
+          "province": 2000000,
+          "municipality": 400000,
+          "area": 10000,
+          "source": { "annex": 0, "article": "Geçici 1/1-b-2" }
+        },
+        {
+          "from": "2031-09-01",
+          "province": 1000000,
+          "municipality": 300000,
+          "area": 10000,
+          "source": { "annex": 0, "article": "Geçici 1/1-b-3" }
+        },
+        {
+          "from": "2032-09-01",
+          "source": { "annex": 0, "article": "Geçici 1/1-b-4" }
+        }
+      ]
+    },
+    {
+      "id": "modelden-pdfa",
+      "title": "Modelden üretilen çizimler PDF/A",
+      "sources": [
+        { "annex": 0, "article": "9/1" }
+      ],
+      "follows": "ifc"
+    },
+    {
+      "id": "epys",
+      "title": "Projelerin e-PYS'de teslimi",
+      "act": "epys",
+      "sources": [
+        { "annex": 0, "act": "e-PYS", "article": "4/1" }
+      ],
+      "decision": {
+        "source": { "annex": 0, "act": "e-PYS", "article": "4/4" }
+      }
+    }
+  ]
+}

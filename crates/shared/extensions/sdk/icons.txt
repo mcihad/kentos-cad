@@ -242,6 +242,7 @@ densify
 deselect
 design-check
 design-options
+digital-rules
 dim-aligned
 dim-angular
 dim-arc-length

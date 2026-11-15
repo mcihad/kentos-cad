@@ -360,6 +360,41 @@
       ],
       "type": "object"
     },
+    "PermitFacts": {
+      "description": "The permit's particulars and the drawing's measures for them.",
+      "properties": {
+        "constructionArea": {
+          "description": "The building's yapı inşaat alanı, m²: every room's gross area on every storey; none without a room.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "particulars": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The scope decision's particulars that have a value, by their variable's name (`basvuru_tarihi`, `il_nufusu`,\n`kullanim` …, kentos_digital_project::scope): the text as the user wrote it.",
+          "type": "object"
+        },
+        "storeys": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StoreyCount"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The storeys holding rooms; none when no room stands on a storey of the project."
+        }
+      },
+      "required": [
+        "particulars"
+      ],
+      "type": "object"
+    },
     "RoomEscape": {
       "description": "A room's walks, from its farthest point: 40 cm in front of its walls (BYKHY 32/6).",
       "properties": {
@@ -523,6 +558,26 @@
         "id",
         "name",
         "elevation"
+      ],
+      "type": "object"
+    },
+    "StoreyCount": {
+      "description": "The storeys holding rooms, by their place as the sheets' storey codes read it (EK-2 Tablo 2.14): at or above ±0.00\n(K00, K01 …) and below it (B01, B02 …, the basements).",
+      "properties": {
+        "above": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "below": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "above",
+        "below"
       ],
       "type": "object"
     },
@@ -759,6 +814,17 @@
         "$ref": "#/$defs/LayerFacts"
       },
       "type": "array"
+    },
+    "permit": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PermitFacts"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The permit's particulars the dated scope decision reads and the building's area and storeys. Absent when none of\nthe particulars has a value (or the producer was not asked for it)."
     },
     "schemaVersion": {
       "const": 1

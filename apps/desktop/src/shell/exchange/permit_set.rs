@@ -2,7 +2,8 @@
 //! sheet's title block and PAİY 57(10)'s table read them), then the phase's set made in one undo step and Paftaları
 //! toplu yayınla opened on it, checked, one PDF/A-2 file a sheet named by the digital project regulation's EK-2: the
 //! user presses Yayınla. A tadilat (docs/adr/8039 §6) gets each storey's plan three times: Mevcut durum, Tadilat
-//! projesi and Yeni durum; the box is ticked when the drawing has İptal or İlave beside what stands.
+//! projesi and Yeni durum; the box is ticked when the drawing has İptal or İlave beside what stands. Its Dijital teslim
+//! kapsamı section (permit_scope.rs, docs/adr/8063) says which digital obligation starts when for the project.
 use super::{Event as Exchange, Window, message};
 use crate::app::{App, Message};
 use iced::widget::{button, column, row};
@@ -29,6 +30,8 @@ pub struct State {
     /// The rooms the tadilat changes but that do not say so (docs/adr/8039 §6), said under the box before the set is
     /// made: on its sheets they would keep a wall that is not there.
     pub restate: Vec<String>,
+    /// Dijital teslim kapsamı: its particulars and the decision (docs/adr/8063).
+    pub scope: super::permit_scope::Scope,
 }
 
 impl std::fmt::Debug for State {
@@ -45,6 +48,12 @@ pub enum Event {
     Phase(Phase),
     Renovation(bool),
     Field(usize, String),
+    /// Dijital teslim kapsamı (permit_scope.rs): a box's text, a choice (none to leave it empty), a row chosen, the
+    /// rule's answer to a generation.
+    ScopeField(usize, String),
+    ScopeChoice(usize, Option<usize>),
+    ScopeChoose(usize),
+    ScopeGiven(u64, Result<serde_json::Value, String>),
     Make,
     Close,
 }
@@ -132,6 +141,7 @@ impl App {
             .collect();
         let renovation = kentos_native_application::permit_set::renovates(&doc.model);
         let restate = kentos_native_application::permit_set::rooms_to_restate(&doc.model);
+        let scope = super::permit_scope::Scope::of(&doc.model);
         self.close_exchange();
         self.exchange = Some(Window::PermitSet(Box::new(State {
             phase: Phase::Permit,
@@ -139,15 +149,22 @@ impl App {
             status: String::new(),
             renovation,
             restate,
+            scope,
         })));
         self.dialog = Some(crate::app::Dialog::Exchange);
-        Task::none()
+        self.permit_scope_ask()
     }
 
     pub(crate) fn permit_set_event(&mut self, e: Event) -> Task<Message> {
         if matches!(e, Event::Close) {
             self.close_exchange();
             return Task::none();
+        }
+        if matches!(
+            e,
+            Event::ScopeField(..) | Event::ScopeChoice(..) | Event::ScopeChoose(_) | Event::ScopeGiven(..)
+        ) {
+            return self.permit_scope_event(e);
         }
         let Some(Window::PermitSet(s)) = &mut self.exchange else {
             return Task::none();
@@ -167,6 +184,7 @@ impl App {
                         .fields
                         .iter()
                         .map(|f| (f.name.to_owned(), f.value.clone()))
+                        .chain(s.scope.values())
                         .collect(),
                     tables: Vec::new(),
                     lists: Vec::new(),
@@ -283,7 +301,11 @@ impl App {
                     }
                 }
             }
-            Event::Close => {}
+            Event::Close
+            | Event::ScopeField(..)
+            | Event::ScopeChoice(..)
+            | Event::ScopeChoose(_)
+            | Event::ScopeGiven(..) => {}
         }
         Task::none()
     }
@@ -377,13 +399,18 @@ impl App {
                 pair.push(iced::widget::space().width(Fill).into());
                 body = body.push(row(pair).spacing(10));
             }
+            // The scope decision beside the digital delivery's codes (docs/adr/8063).
+            if title.starts_with("Dijital teslim") {
+                body = body.push(self.permit_scope_view(&s.scope));
+            }
         }
         if !s.status.is_empty() {
             body = body.push(label::body(&s.status).style(style::text::warning));
         }
+        // Wide enough for Dijital teslim kapsamı's table to say its articles whole (docs/adr/8063).
         Dialog::new("Ruhsat takımı")
             .scroll(body)
-            .width(680.)
+            .width(860.)
             .max_height(720.)
             .aside(
                 button(label::body("Vazgeç"))

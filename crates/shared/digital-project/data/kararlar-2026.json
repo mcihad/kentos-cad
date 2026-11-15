@@ -98,6 +98,60 @@
    "text": "Tablo 2.14'ün noktalı satırları dizinin sürdüğünü gösterir: bodrum katları B01, B02 …, normal katlar K01, K02 … diye artar; zemin kat K00, kattan bağımsız dosya NNN'dir. Tabloda olmayan asma kat, çatı piyesi ve tesisat katı gibi katlar müellifin belirlediği iki karakterle KXX (2.9.2); kesit ve görünüş gibi gösterimler kat yerine konumla, müellifin belirlediği XXX koduyla adlanır (2.9.3).",
    "param": {"key": "storey.pattern", "value": "^(B[0-9]{2}|K[0-9A-Z]{2}|NNN)$"},
    "rows": ["T2.14/B01", "T2.14/K00", "T2.14/K01", "T2.14/NNN", "M2.9.2", "M2.9.3"]
+  },
+  {
+   "id": "K23",
+   "title": "“Geçen” ve “fazla olan” kesin büyüktür",
+   "kind": "page",
+   "sources": [{"annex": 0, "article": "Geçici 1/1-a"}, {"annex": 0, "article": "Geçici 1/1-b"}, {"annex": 0, "article": "1/2"}],
+   "text": "Geçici 1. madde nüfusu “2.000.000'u geçen” illeri, nüfusu “600.000'den fazla olan” belediyeleri ve toplam yapı inşaat alanı “5.000 metrekareyi geçen” binaları sayar; Md. 1/2 “200 metrekareyi geçmeyen” müstakil yapıyı kapsam dışı bırakır. Eşiğin tam eşiti eşiği geçmez: 2.000.000 nüfuslu il ilk gruba girmez, tam 200 m²'lik müstakil yapı kapsam dışıdır. Dijital teslim kapsamı kuralı (dijital_proje.kapsam) her eşiği böyle okur; bağımsız durumlar her eşiğin tam eşitini, altını ve üstünü sınar (fixtures/standards/v1/kapsam.json).",
+   "rows": []
+  },
+  {
+   "id": "K24",
+   "title": "“… tarihine kadar uygulanmaz” hükmü o gün başlar",
+   "kind": "kentos",
+   "sources": [{"annex": 0, "article": "Geçici 1/1-a"}, {"annex": 0, "article": "Geçici 1/1-b"}, {"annex": 0, "article": "Geçici 1/2"}],
+   "text": "Geçici 1. madde hükümleri “1/3/2029 tarihine kadar uygulanmaz” gibi yazar. KentOS bunu hükmün o gün uygulanmaya başladığı diye okur: 1.3.2029'da yapılan başvuruya uygulanır, 28.2.2029'dakine uygulanmaz. Hukuk dilinin olağan okumasıdır; idare başka okursa kurum profilinin bir satırı olarak değişir.",
+   "asked": "İdare",
+   "param": {"key": "scope.firstDay", "value": null, "default": "tarihin kendisi"},
+   "rows": []
+  },
+  {
+   "id": "K25",
+   "title": "Esas alınan gün: başvuru ile ihale tarihinin erkeni; yürürlükten önceki başvuru",
+   "kind": "kentos",
+   "sources": [{"annex": 0, "article": "Geçici 2"}, {"annex": 0, "article": "1/1"}, {"annex": 0, "article": "16"}],
+   "text": "Geçici 2. madde, uygulama tarihinden önce yapı ruhsatı başvurusu yapılmış yapılar ile kamu kurum ve kuruluşlarınca ihale kararı ya da ihale tarihi alınmış yapılara o tarihle başlayan hükmün uygulanmayacağını söyler. KentOS ikisinden erken olanı esas alır. Yönetmelik 1.9.2027'de yürürlüğe girer (Md. 16) ve “yapılacak müracaatları” düzenler (Md. 1/1): o günden önceki başvuruya uygulanmaz. Başvuru tarihi boşsa başvuru henüz yapılmamıştır: bugün ya da sonra yapılacak sayılır ve hükmün başlayacağı gün “henüz başlamadı” diye yazılır. e-PYS için Hazırlama Yönetmeliğinin geçici maddeleri uygulanmaz; e-PYS'nin bu yapıya başladığı günden önceki başvuru e-PYS'den geçmez.",
+   "rows": []
+  },
+  {
+   "id": "K26",
+   "title": "Konut dışı binada 4/2–3 kendi başına başlamaz; Md. 9/1 IFC ile başlar",
+   "kind": "kentos",
+   "sources": [{"annex": 0, "article": "Geçici 1/2"}, {"annex": 0, "article": "Geçici 1/1-b"}, {"annex": 0, "article": "9/1"}],
+   "text": "Geçici 1/2: konut ve ticaret+konut dışındaki binalara yönetmelik 1.9.2033'e kadar uygulanmaz. O gün IFC hükmünün bütün grupları (son grup 1.9.2032) başlamıştır; Geçici 1/1-b'nin son cümlesi IFC başlayınca 4/2–3'ün uygulanmayacağını söyler. Bu yüzden konut dışı binada 4/2–3 kendi başına hiç uygulanmaz; IFC (Md. 4/5) ve modelden üretilen çizimlerin PDF/A'sı (Md. 9/1) 1.9.2033'te başlar. Md. 9/1'in kendi geçiş tarihi yazılmamıştır: KentOS onu IFC teslimiyle birlikte başlatır, çünkü modelden üretilen çizim teslim edilen bir modeli varsayar. Dijital teslim kapsamı 4/2–3'ü ve 9/1'i ayrı satırlarda gösterir; tek bir bayrak PDF/A'yı kapatmaz.",
+   "rows": []
+  },
+  {
+   "id": "K27",
+   "title": "Hangi belediyenin nüfusu, hangi yılın nüfusu",
+   "kind": "administration",
+   "sources": [{"annex": 0, "article": "Geçici 1/1-a"}, {"annex": 0, "article": "Geçici 1/1-b"}],
+   "text": "Yönetmelik ilin ve belediyenin nüfusunu sayar, ama nüfusu bir yıla ya da kaynağa bağlamaz; büyükşehirde ilçe belediyesinin mi büyükşehir belediyesinin mi sayılacağını da söylemez. KentOS ikisini girdi olarak sorar: işlemi yapan belediyeyi, il ve belediye nüfusunu, nüfusun kaynağını ve yılını. Nüfus girilmemişse ve sonucu değiştirebiliyorsa dijital teslim kapsamı “teyit gerekli” der.",
+   "asked": "Bakanlık ya da idare",
+   "param": {"key": "scope.population", "value": null, "default": "işlemi yapan belediye; kullanıcının yazdığı kaynak ve yıl"},
+   "rows": []
+  },
+  {
+   "id": "K28",
+   "title": "Tadilat kapsam dışı, ilave teyit ister",
+   "kind": "kentos",
+   "sources": [{"annex": 0, "article": "1/2"}],
+   "text": "Md. 1/2 yönetmeliği “uygulama imar planı bulunan alanlarda yeni yapılacak binalara” uygular. Var olan bir binanın tadilat projesi yeni yapılacak bina değildir: kapsam dışı sayılır. Var olan binaya yapılan ilavenin yeni bina sayılıp sayılmayacağını metin söylemez: dijital teslim kapsamı “teyit gerekli” der ve idarenin okumasını bekler.",
+   "asked": "İdare",
+   "param": {"key": "scope.extension", "value": null},
+   "rows": []
   }
  ]
 }

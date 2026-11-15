@@ -15,6 +15,8 @@
 //! - **The architecture** where the drawing has rooms (`architecture`, docs/adr/8057 §39): its storeys, rooms,
 //!   article 4 areas and escape routes. A measure of it that breaks on some plan leaves the section out, never the
 //!   layers' facts.
+//! - **The permit** where the drawing's variables give one of the dated scope decision's particulars (`permit`,
+//!   docs/adr/8063): those particulars, the building's yapı inşaat alanı and its storeys.
 
 use std::collections::BTreeMap;
 use std::panic::AssertUnwindSafe;
@@ -128,6 +130,10 @@ pub fn project_facts(
         }
     }
     let facts = ProjectAuditFacts::new(tolerance, facts.into_iter().flatten().collect(), cut);
+    let facts = match std::panic::catch_unwind(AssertUnwindSafe(|| permit::measure(doc))) {
+        Ok(Some(found)) => facts.with_permit(found),
+        Ok(None) | Err(_) => facts,
+    };
     match std::panic::catch_unwind(AssertUnwindSafe(|| architecture::measure(doc, stopped))) {
         Ok(Err(architecture::Stopped)) => None,
         Ok(Ok(Some(found))) => Some(facts.with_architecture(found)),
@@ -191,6 +197,7 @@ impl Watch for Asked<'_> {
 }
 
 mod architecture;
+pub mod permit;
 
 #[cfg(test)]
 mod tests;

@@ -1217,6 +1217,8 @@ mod python;
 mod python_personal;
 #[path = "shell/python_setup.rs"]
 mod python_setup;
+#[path = "shell/standards.rs"]
+mod standards;
 #[cfg(test)]
 #[path = "tests/query_tests.rs"]
 mod query_tests;
@@ -1530,6 +1532,9 @@ mod renovation_legend_tests;
 #[cfg(test)]
 #[path = "tests/renovation_set_tests.rs"]
 mod renovation_set_tests;
+#[cfg(test)]
+#[path = "tests/permit_scope_tests.rs"]
+mod permit_scope_tests;
 #[cfg(test)]
 #[path = "tests/wall_height_tests.rs"]
 mod wall_height_tests;

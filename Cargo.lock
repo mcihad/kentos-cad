@@ -3142,6 +3142,7 @@ name = "kentos-processing"
 version = "0.1.0"
 dependencies = [
  "kentos-commands",
+ "kentos-digital-project",
  "kentos-domain",
  "kentos-expression",
  "kentos-extensions",

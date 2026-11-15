@@ -1,0 +1,65 @@
+{
+  "format": "kentos.extension",
+  "schemaVersion": 1,
+  "id": "tr.kentos.dijital-proje",
+  "version": "0.1.0",
+  "name": "Dijital proje denetimleri",
+  "summary": "Dijital proje yönetmeliğinin denetimleri: bu projede PDF/A, IFC ve e-PYS ne zaman, hangi maddeyle başlar.",
+  "description": "KentOS'un standart kural paketi (catalog/standards/dijital-proje; plan/bim-plan.md K10, docs/adr/8063). Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik ile e-PYS Yönetmeliğinin (RG 5.8.2026/33331) tarihli kapsamını projenin künyesinden ve çizimden ölçülen alan ve kat sayısından karara bağlar. Tarih ve eşikler veridir; eksik bilgi sonucu değiştirebiliyorsa \"teyit gerekli\" der, tahmin etmez.",
+  "authors": [
+    "KentOS"
+  ],
+  "publisherId": "kentos",
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "changelogFile": "CHANGELOG.md",
+  "keywords": [
+    "dijital proje",
+    "PDF/A",
+    "IFC",
+    "e-PYS",
+    "ruhsat"
+  ],
+  "kind": "vertical",
+  "modules": [
+    "mimari"
+  ],
+  "runtimes": [
+    "desktop"
+  ],
+  "compatibility": {
+    "sdkProtocol": {
+      "min": 1,
+      "max": 1
+    },
+    "kentos": {
+      "min": "0.1.0"
+    },
+    "operatingSystems": [
+      "windows",
+      "macos",
+      "linux"
+    ]
+  },
+  "python": {
+    "projectFile": "pyproject.toml",
+    "lockFile": "uv.lock"
+  },
+  "entrypoints": {
+    "audits": [
+      {
+        "id": "kapsam",
+        "title": "Dijital teslim kapsamı",
+        "domain": "mimari",
+        "handler": "dijital_proje.denetim:kapsam_denetimi"
+      }
+    ]
+  },
+  "requestedCapabilities": [
+    {
+      "id": "audit.provider",
+      "scope": "plugin-owned",
+      "reason": "Projenin künyesinden ve ölçülen alan ile kat sayısından dijital teslim kapsamını söyler."
+    }
+  ]
+}

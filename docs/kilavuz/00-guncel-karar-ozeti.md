@@ -33,9 +33,21 @@
     - Mimari › Proje ▾ › Dijital proje kuralları (`arch.digitalRules`) yalnız okur; Mimari denetim bulguları ek ve sayfayı
       söyler.
     - **Denetim kuralları Python betikleridir (sahibin kararı; bim-plan K10, ADR 8062 §14, ADR 8057 §36):** Rust ölçer ve
-      okur (çizim ve yazılmış dosyanın olguları, katalog), kararı ortak betik verir (yeri ADIM 20'nin `catalog/standards/`'ı,
-      henüz kurulmadı).
+      okur (çizim ve yazılmış dosyanın olguları, katalog), kararı ortak betik verir (yeri ADIM 20'nin `catalog/standards/`'ı;
+      ilk paketi B2 kurdu).
       Yeni kural uygulamaya gömülmez; bugünkü Rust denetimleri IFC-08 ve BIM-13'te taşınır. `scripts/ui/ribbon.py` depodaki `ribbon.json`'u üretmiyor (önceden beri): şerit elle düzenlenir.
+  - **B2 yapıldı (15 Kasım 2026; [ADR 8063](../adr/8063-dated-digital-delivery-scope.md); BIM-02 `[x]`):**
+    - Dijital teslim kapsamı: Ruhsat takımı yönetmeliğin, PDF/A'nın (4/2–3), IFC'nin (4/5), modelden PDF/A'nın (9/1) ve
+      e-PYS'nin bu projede ne zaman, hangi maddeyle başladığını söyler; dört durum: uygulanır, uygulanmaz, henüz başlamadı,
+      teyit gerekli.
+    - Karar `catalog/standards/dijital-proje` paketinin Python kuralıdır (ilk standart kural paketi; `kentos kek verify`
+      temiz); masaüstü, denetim (`kapsam`) ve Python (`kentos.standards.kapsam`) aynı işlevi çağırır. MCP aracı ve bulut işi
+      kalan.
+    - Tarih, eşik ve girdi listesi `kentos-digital-project`'in `kapsam-2026.json`'unda (pakette kopyası, Rust testi bir
+      tutar). Olguların `permit` bölümü künyeyi, çizimin toplam yapı inşaat alanını ve katlarını taşır.
+    - Eksik girdi her aday değeriyle denenir; sonucu değiştirebiliyorsa "teyit gerekli". Okuma kararları K23–K28: "geçen"
+      kesin büyüktür; "tarihine kadar uygulanmaz" o gün başlar; başvuru ile ihalenin erkeni; konut dışında 4/2–3 kendi
+      başına başlamaz; nüfusun belediyesi ve yılı idareye sorulur; tadilat kapsam dışı, ilave teyit.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.
