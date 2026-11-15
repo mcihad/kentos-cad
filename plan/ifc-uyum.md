@@ -66,7 +66,7 @@ kimliği; test bağlantısı.
 |---|---|---|---|---|---|
 | IfcProject | — | Künye | ◐ | açıklama, proje tipi | IFC-02 |
 | IfcSite | SAH | Parsel, imar durumu, vaziyet planı | ◐ | nesne tipi, parsel alanının seti | IFC-02 |
-| IfcBuilding | BNA | Çizim (tek bina) | ◐ | bina başına dosya; eksik alanlar | IFC-02, IFC-05 |
+| IfcBuilding | BNA | Çizim (tek bina) | ◐ | pilotta bina başına dosya; eksik alanlar | IFC-02, IFC-05 |
 | IfcBuildingStorey | BNK | Katlar | ◐ | taşıyıcı döşemenin kotu | IFC-02 |
 | IfcSpace | MHL | Mahal | ◐ hep `INTERNAL`, düz prizma | türü, kapalı hacmi, kaplama kalınlıkları | IFC-02, IFC-06 |
 | IfcSpatialZone | MZN | Emsal alanı (BIM-08) | ✗ | emsal durumu ve alanıyla | IFC-03 |
@@ -109,7 +109,7 @@ Bugün sütunu koddan okundu (`crates/shared/ifc/src/arch.rs`); kesin sayım B1'
 |---|---|---|---|---|
 | Bütün yapı elemanları | `Name` (EK-5 kalıbı) | ✓ | — | — |
 | | `Tag` | ◐ kapı ve pencerede numarası; ötekilerde nesnenin kimliği | elemanın numarası ya da tip kodu (S1, K101); yoksa kimliği | IFC-02 |
-| | `PredefinedType` | ◐ çatı ve merdivende `NOTDEFINED`; duvar, döşeme, mahal tek değer | nesnenin türünden; karşılığı yoksa `USERDEFINED` ve `ObjectType` | IFC-02 |
+| | `PredefinedType` | ◐ çatı ve merdivende `NOTDEFINED`; duvar, döşeme, mahal tek değer | nesnenin türünden; tanımlı özel tipte şemanın izin verdiği `USERDEFINED` ve tip adı | IFC-02 |
 | | Malzeme, "Ad_Dayanım" | ◐ ad var, dayanım yok; çatı, merdiven, korkuluk malzemesiz | malzeme ve dayanımı (BIM-07) | IFC-02 |
 | Duvar, döşeme, kolon, kiriş, çatı, kapı, merdiven, kaplama, giydirme cephe | `FireRating` | ✗ | tipin ya da örneğin beyanı (BIM-07) | IFC-02 |
 | Kapı, merdiven | `FireExit` | ✗ | müellifin onayladığı çıkış rolü (BIM-07) | IFC-02 |
@@ -130,6 +130,7 @@ Bugün sütunu koddan okundu (`crates/shared/ifc/src/arch.rs`); kesin sayım B1'
 | Proje | adı (proje kodu) | ✓ | künye | — |
 | | açıklama; `Pset_ProjectCommon.ProjectType` | ✗ | künye | IFC-02 |
 | Kişi, kuruluş, rol | sicil, ad, soyad, vergi no, adres, rol | ✓ (ADR 8047 §7) | ad ve soyad ayrı alanlardan (bugün son kelimeden ayrılıyor) | IFC-02 |
+| Ölçüm anotasyonu (EK-7 7.9) | `IfcAnnotation`: `Name`, `Description`, `PredefinedType = SURVEY` | ✗ | Ölçüm ve vaziyet bilgisi. Uygulanabilirlik B1’de kaynak ve kurum profiliyle belirlenir | IFC-02 |
 | Koordinat sistemi | TUREF dilimi, datum, projeksiyon, dönüşüm | ✓ (ADR 8047 §8) | yerel orijin ve kontrol noktaları | IFC-05 |
 
 **Değer durumları.** Bilinmiyor, uygulanmaz, hayır, sıfır ve eksik ayrıdır. Boş metinle yazılmış bir özellik gerekli bilgiyi
@@ -180,9 +181,11 @@ karşılaştırılır.
   idarenin cevabıyla seçilir; o güne kadar ikisi de sınanır.
 - **Gövdeler** kesit modelinden gelir (plan, kesit, 3B ve IFC aynı gövde; ADR 8042, 8047). Eğri duvar ve döner merdiven
   gerçek yayla; rampa eğik gövdeyle; mahal kapalı hacimle (BIM-10). Her gövde kapalı ve kendini kesmeyen bir katıdır.
-- **Gelişim seviyesi (Md. 14, EK-8).** İkincil kaynak ruhsat modeli için LOD 300 diyor; nesne bazlı tablo sayfadan okunur
-  (B1). Dosyada bir gövdenin bulunması, yüzey sayısı ya da bir LOD yazısı yeterlik kanıtı değildir. Kanıt, makine
-  denetimleri ile müellifin 3B ve ölçekli kesit incelemesinin birleşimidir:
+- **Gelişim seviyesi (Md. 14, EK-8 §8.1–8.3).** Ruhsat modeli için LOD 300, şekil, boyut, konum ve yönelimin
+  doğrudan ölçülebilir olmasını gerektirir. Alfanümerik bilgi EK-6 ve EK-7'den gelir. İdarenin farklı proje aşamaları
+  için belirlediği bilgi gereksinimi, kaynağı ve aşamasıyla kurum profiline girer. Aşağıdaki tablo KentOS'un kabul
+  örnekleridir. Makine denetimleri, müellifin 3B ve ölçekli kesit incelemesiyle tamamlanır.
+  [EK-8, PDF s. 237](../mevzuat/bim/ek-8-gelisim-seviyesi.md)
 
 | Nesne | Geometri kanıtı | Bilgi kanıtı |
 |---|---|---|
@@ -221,9 +224,9 @@ Gerçek ruhsat modeli dış doğrulayıcıya yüklenmez; 1–4 çevrimdışı ç
 | 5 Varlık adları | Yapılışıyla evet | Her kök nesnenin adı kalıpta; disiplin ve kategori kodu sınıfıyla uyumlu |
 | 6 Koordinat sistemi | Projenin ayarından | Sistem ve dönüşüm dosyada; kontrol noktası kanıtı |
 | 7 Gelişim seviyesi | Elle | Makine denetimleri + müellifin 3B incelemesi (kayıtlı) |
-| 8 Zorunlu sınıflar | Yapılışıyla evet | Katalogdaki sınıflar; vekil sınıf yok; kayıp listesi boş |
+| 8 Zorunlu sınıflar | Yapılışıyla evet | Kaynakta beklenen nesneler, IFC kimliği ve sınıfı üzerinden dosyada karşılanıyor; vekil sınıf yok |
 | 9 Zorunlu alanlar | Hayır | Katalog satırları dolu; eksikler nesnesiyle |
-| 10 Emsal | Elle | Zonların alan toplamı tablonun değerine eşit, aynı revizyonda |
+| 10 Emsal | Elle | Aynı revizyonda mahal ve zon alanlarıyla tablo, kat ve `DAHIL` / `HARIC` / `DIGER` bazında eşleşir |
 | 11 Proje, saha, bina, kat | Yapılışıyla evet | Tek proje; saha, bina, en az bir kat |
 | 12 Mahal var | Modelden | Dosyada |
 | 13 Örtüşme, doğru kat | Elle | Gerçek çokgenle örtüşme; katın kot aralığı |
@@ -232,7 +235,7 @@ Gerçek ruhsat modeli dış doğrulayıcıya yüklenmez; 1–4 çevrimdışı ç
 | 16 Yinelenen varlık | Elle | Yinelenen `GlobalId`; aynı sınıf, ad ve yerleşim |
 | 17 Sınıflar doğru | Yapılışıyla evet | Sınıf ile kaynağın eşlemesi; vekil yok |
 | 18 Sürüm ve uzantı | Müellife bırakılıyor | Başlıktaki şema adı ve dosya uzantısı |
-| 19 Ön tanımlı tip | Yapılışıyla evet (çatı ve merdiven `NOTDEFINED`) | Boş ve `NOTDEFINED` yok; `USERDEFINED`'de `ObjectType` |
+| 19 Ön tanımlı tip | Yapılışıyla evet (çatı ve merdiven `NOTDEFINED`) | Tip, kaynak nesneye ve IFC şemasına uygun. Belirlenebilen tip yerine `NOTDEFINED` kullanılırsa bulgu; gerekçeli belirsizlik incelemeye gider. `USERDEFINED` için şemanın istediği tip adı aranır |
 | 20 Özellik setleri | Yapılışıyla evet | Her özellik katalogdaki setinde |
 | 21 PDF ile model | Modele girmeyen nesne yoksa evet | BIM-04'ün kaydı: aynı revizyon, güncel türevler, modelden gelmeyen çizim listesi |
 
@@ -252,7 +255,9 @@ ile aynı dilimdir.
 - Katalog `kentos-ifc`'te veri olarak durur (§3'ün satır alanları); temel profil ve kurum profili katmanları.
 - Şema karşılaştırması: katalogdaki her sınıf, öznitelik ve özellik adı IFC 4.3 şemasına ve resmî şablonlara karşı sınanır;
   fark listesi üretilir.
-- Başlangıç ölçümü: bölüm binasının ve 2+1'in bugünkü dosyası katalog satırlarına karşı ölçülür.
+- Başlangıç ölçümü: bölüm binasının ve 2+1’in bugünkü dosyası katalog satırlarına karşı ölçülür. Kaynak modelden,
+  seçilen bina/evre ve teslim profiline göre beklenen nesnelerin IFC kimliği ve sınıfı çıkarılır. Bölünen veya birleşen
+  temsillerde kaynak–IFC eşlemesi açık kaydedilir. IFC-08 bu beklentiyi yazıcıdan bağımsız olarak dosyayla karşılaştırır.
 
 **İlk kabul:** her satırın sayfası var; bilerek yanlış yazılan bir özellik adı şema karşılaştırmasında düşer; ölçüm raporu
 ADR'de.
@@ -267,6 +272,9 @@ söyler. Verisi BIM-07 ve BIM-08'den gelir.
 - Değer durumları (§5): girilmemiş değer yazılmaz ve eksik sayılır; varsayılan doldurulmaz.
 - `Tag` politikası: elemanın numarası ya da tip kodu; yoksa kimliği.
 - Kişide ad ve soyad ayrı alanlardan.
+- EK-7 Tablo 7.9’daki `IfcAnnotation` / `SURVEY` için uygulanabilirlik, kaynak ölçüm verisi ve zorunlu alanlar
+  katalogda ayrı satırdır. Uygulanan durumda anotasyon gerçek ölçüm kaynağına bağlanır.
+  [EK-7, PDF s. 221 ve 233](../mevzuat/bim/ek-7-proje-siniflari.md)
 
 **İlk kabul:** künyeli bölüm binasında katalogdaki zorunlu satırların hepsi dolu; bilerek boş bırakılan her alan bulguda
 nesnesiyle; bağımsız okuyucu şema kurallarında 0 bulgu; çatının ve merdivenin tipi dolu.
@@ -277,14 +285,17 @@ nesnesiyle; bağımsız okuyucu şema kurallarında 0 bulgu; çatının ve merdi
 Nesneleri BIM-08 ve BIM-09'dan gelir.
 
 - **Emsal:** `IfcSpatialZone`, `TREpys_EmsalOzellikSeti.EmsalDurumu` (DAHIL, HARIC, DIGER), açıklaması (dayandığı madde) ve
-  alanı; katına ve binasına şemanın izin verdiği ilişkiyle bağlı.
+  alanı; katına ve binasına şemanın izin verdiği ilişkiyle bağlı. EK-9/10 için mahal ve zon alanları kat ve emsal
+  sınıfı bazında tabloyla doğrulanır. `IfcSpace` net alanı EK-6 Tablo 6.125’te isteğe bağlıdır. EK-9/10 kanıtı,
+  uygun miktar kaydı veya IFC geometrisinden doğrulanabilir hesapla sağlanır.
 - **Gruplar:** `IfcZone` (bağımsız bölüm, eklenti, ortak alan), mahallerini gruplar; adı numarası, uzun adı adı, nesne tipi
   türü.
 - **Elemanlar:** rampa, giydirme cephe ve dikmeleri, kaplama, baca, aks ızgarası ve eksenleri, asansör, vitrifiye, mobilya.
 - Vekil sınıf hiçbir durumda yazılmaz (EK-6 §6.1.3); karşılığı olmayan nesne kayıp listesindedir.
 
 **İlk kabul:** rampalı, giydirme cepheli, asansörlü örnekte her yeni sınıf dosyada ve sayıları çizimle eşit; emsale dahil
-zonların alan toplamı Emsal ve TAKS tablosuna eşit; bağımsız okuyucu 0 bulgu; kayıp listesi boş.
+zonların alanı kat ve sınıf bazında Emsal ve TAKS tablosuyla uyumlu. İki katta birbirini dengeleyen alan farkı genel
+toplam eşit kalsa da bulgu verir. Bağımsız okuyucu 0 bulgu verir ve kayıp listesi boştur.
 
 #### IFC-04 — Tipler, katmanlı malzeme ve ilişkiler [ ]
 
@@ -300,15 +311,18 @@ bağımsız okuyucuda okunur.
 
 #### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [ ]
 
-**Kullanıcı sonucu:** Model, karşı programda doğru yerde ve doğru kotta açılır; iki blok iki dosya olur ve proje bilgileri
+**Kullanıcı sonucu:** Model, karşı programda doğru yerde ve doğru kotta açılır; pilotta iki blok iki dosya olur ve ortak proje bilgileri
 ikisinde aynıdır. Nesneleri BIM-11'den gelir.
 
 - §7'nin hedefleri: yerel orijin ve harita dönüşümü; kontrol noktaları; düşey datum; sıfır varsayımı yok.
-- Bina başına model dosyası (EK-2'nin bina kodu); saha ve proje alanları dosyalar arasında birebir aynı.
+- İlk çok bloklu pilotta bina başına model dosyası kullanılır (EK-2 §2.3: ayrı hazırlanan bloklarda bina kodu).
+  Ortak proje ve saha alanları eşleşir. Her bloğun ±0.00’ı ortak saha röperine ayrı bağlanır. Teslim kapsamı kurum
+  profilinden gelir. [EK-2 §2.3](../mevzuat/bim/ek-2-dosya-isimlendirme.md)
 - Yerleşim zinciri: saha → bina → kat → eleman; döngü ve çift öteleme denetimi.
 
 **İlk kabul:** döndürülmüş yerel modelde üç kontrol noktası bağımsız okuyucuda harita koordinatını yazılı tolerans içinde
-verir; iki bloklu örnekte iki dosya; kotu bilinmeyen ±0.00'da dönüşüme 0 yazılmaz, eksik denir.
+verir. Giriş kotları farklı iki blok ve ortak bodrum pilot dosyalarında doğru açılır; ortak bodrum alanı bir kez
+sayılır. Kotu bilinmeyen ±0.00 eksik olarak bildirilir.
 
 #### IFC-06 — Geometri ve görünüm tanımı [ ]
 
@@ -345,11 +359,14 @@ tabanı yazılır.
 
 - `kentos_ifc::quality` bellekteki modelden okunan dosyaya geçer; beş sonuç (§1) ayrı raporlanır.
 - §9'un tablosundaki 21 kanıt; formun resmî cevabı ile kanıt durumu ayrı.
-- Katalogdan IDS üretimi; üretilen IDS bağımsız bir denetleyicide açılır.
+- Katalogdan IDS üretimi; üretilen IDS bağımsız bir denetleyicide açılır. IFC-01’de kaynak modelden çıkarılan nesne
+  listesi, okunan dosyanın kimlik ve sınıflarıyla karşılaştırılır. Kalan nesnelerin IDS sonucu olumlu olsa da
+  tamamen eksik bir nesne EK-9/8 bulgusudur. [IDS kapsam ve kardinalite](https://github.com/buildingSMART/IDS/blob/development/Documentation/UserManual/specifications.md)
 - Mimari denetim'de "Model" grubu aynı denetimi son yazılan dosyada ya da geçici bir dışa aktarmada koşar.
 - Bağımsız okuyucular başvuru düzeneğindedir; ürünle dağıtılmaz.
 
-**İlk kabul:** 21 sorunun her biri için geçen ve kalan birer dosya; şema kurallarından geçip profilden kalan bir dosya; bulgu
+**İlk kabul:** 21 sorunun her biri için geçen ve kalan kanıt örneği. Üç kapıdan biri ve ilgili başvurular IFC’den
+çıkarılır. Geçerli şemaya ve kalan kapıların olumlu IDS sonucuna rağmen EK-9/8 eksik kapıyı kaynak kimliğiyle bulur. Bulgu
 planda ve 3B'de nesneyi seçer; ikinci bağımsız denetleyiciyle ayrışan satır kalmaz.
 
 #### IFC-09 — Altlık model: içe alma ve görüntüleme [ ]
@@ -384,6 +401,8 @@ bağımsız bir görüntüleyicide aynı nesneyi gösterir.
 **Kullanıcı sonucu:** Bir konut ve bir karma kullanım projesinin paketi idarenin yazılı cevabını alır; KentOS eski sürüm
 dosyaları kaybını söyleyerek okur. [BIM-16](bim-plan.md#5-iş-paketleri) ile ortak pilot.
 
+- Türkiye genelindeki kapsam grupları için aynı çekirdek ve farklı idare profilleri sınanır. IFC teknik ön kontrolü
+  yasal geçiş tarihinden önce pilotlanabilir. Resmî e-PYS aktarımı yayımlanan uygulama kararına bağlıdır.
 - Paket raporu: KentOS commit'i; şema, katalog ve kurum profili sürümleri; kullanılan okuyucuların sürümleri; dosya özetleri;
   inceleme kayıtları.
 - IFC4 ve IFC2x3 okuma: kaldırılan sınıflar, harf kodlaması, birim ve gövde farkları; kayıp listesi.
@@ -399,7 +418,7 @@ cevabındaki her madde kataloğa ya da bir pakete bağlanır.
 |---|---|
 | Bölüm binası (`section_building.py`), 2+1 daire, `arch_ifc_cases.py` | Bağımsız beklenen sınıf, ilişki, ölçü, kat, proje kodu ve özellikler; iki bağımsız okuyucu |
 | Rampalı, giydirme cepheli, asansörlü bina; eğri cephe; kırma çatı altında mahal; farklı kot | Kayıp listesi boş; hacim ve alan bağımsız başvuruya eşit; gövdeler kapalı |
-| Karma kullanım, iki blok, ortak bodrum | Bina başına dosya; ortak proje alanları; alan tekrarsız; kimlikler tek |
+| Karma kullanım, giriş kotları farklı iki blok, ortak bodrum | Pilot profilde bina başına dosya; ortak saha röperi ve ayrı blok kotları; alan tekrarsız; kimlikler tek |
 | Kapsam içinde ve dışında kalan binalar | Kapsam kararı doğru madde ve tarihle (BIM-02) |
 | Bilerek bozuk dosyalar: yanlış şema, eksik yangın alanı, bozuk kimlik, farklı datum, farklı revizyonlu pafta | Bulgu doğru katmanda ve nesnesinde; şeması temiz dosya profilden kalabiliyor |
 | Yeniden dışa aktarma, yeniden adlandırma, sil ve geri al, kopya, tip değişikliği | Kimlik korunur ya da yenisi üretilir; fark öngörülebilir; zaman damgası sabitlenmiş karşılaştırma |

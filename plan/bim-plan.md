@@ -14,7 +14,8 @@ bağımlılığa göre yeniden kuruldu (§5, §6). Paket numaraları [TODOS.md �
 ## 0. Özet
 
 - **Yönetmelik ne istiyor:** ruhsat projesinin 2B paftaları pafta başına PDF/A (1.9.2027'den kademeli), mimari modeli IFC 4.3
-  (1.9.2029'dan kademeli; Sivas'ta 1.9.2032), teslimi e-PYS üzerinden (1.9.2028). Çizimler **modelden üretilir**; model ile
+  (1.9.2029'dan kademeli). e-PYS Yönetmeliği 1.9.2028'de yürürlüğe girer; fiilî elektronik teslim takvimini ve biçimini
+  Bakanlık belirler. Çizimler **modelden üretilir**; model ile
   pafta uyumlu olmak zorundadır; her teslimde 21 soruluk model kalite kontrol formu düzenlenir.
 - **KentOS nerede:** 2B teslim büyük ölçüde hazır (Ruhsat takımı, PDF/A-2b, EK-2 adları, EK-3 numarası, EK-4 katmanları).
   IFC dışa aktarma çalışıyor ve şema kurallarından hatasız geçiyor, ama mimari modelde karşılaşılan 29 zorunlu sınıfın
@@ -59,16 +60,18 @@ Metinler ve ekler [araştırma notunda](../docs/research/2026-11-15-bim-ifc-yone
 | Tarih | Ne başlar | Kimde | KentOS'ta hazır olması gereken |
 |---|---|---|---|
 | 1.9.2027 | PDF/A paftalar (Hazırlama Md. 4/2–3) | İl > 2.000.000, belediye > 600.000, toplam yapı inşaat alanı > 5.000 m² | Kapı 1: BIM-01…05 |
-| 1.9.2028 | e-PYS Yönetmeliği | Kanal, biçim ve tarih Bakanlığın kararıyla (e-PYS Md. 4/4) | BIM-14, BIM-15; idare için BIM-18 |
-| 1.3.2029 | PDF/A paftalar | Kapsamdaki öbür bütün binalar (Sivas dahil) | Kapı 1 |
+| 1.9.2028 | e-PYS Yönetmeliği yürürlüğe girer (Md. 8) | Fiilî yükleme kapsamı, biçimi ve tarihi Bakanlığın kararıyla (Md. 4/4) | Paket ve teslim kaydı erken hazır; resmî aktarım bu karara bağlı |
+| 1.3.2029 | PDF/A paftalar | Kapsamdaki öbür binalar | Kapı 1 |
 | 1.9.2029 | IFC modeli (Md. 4/5), 1. grup | İl > 2.000.000, belediye > 600.000, alan > 10.000 m² | Kapı 2 ve 3 |
 | 1.9.2030 | IFC, 2. grup | İl > 2.000.000, belediye > 400.000, alan > 10.000 m² | — |
 | 1.9.2031 | IFC, 3. grup | İl > 1.000.000, belediye > 300.000, alan > 10.000 m² | — |
-| 1.9.2032 | IFC | Kalan bütün binalar (Sivas dahil) | — |
+| 1.9.2032 | IFC | Önceki IFC gruplarına girmeyen kapsam içi binalar | — |
 | 1.9.2033 | Yönetmeliğin tamamı | Konut ve ticaret+konut dışındaki binalar | Kapı 5 |
 
-Sivas satırları bir çıkarımdır (il nüfusu 1 milyonun altında; TÜİK'ten doğrulanmadı). Yasal tarihler ürün hedefinin en geç
-sınırıdır; süre tahmini verilmez (TODOS.md §22), sıra bağımlılıkla kurulur (§6).
+Ürün hedefi Türkiye genelinde erken hazırlıktır. Önce ilk zorunlu grupları kapsayan PDF/A ve IFC teslimi hazırlanır. Aynı
+işlevler, geçiş takvimi daha sonra başlayan idare ve projelerde teknik ön kontrol ve pilot için daha erken kullanılabilir.
+Kapsam motoru kanuni başlangıcı proje bazında ayrı gösterir. Proje türü ve kurum profili ile ülke genelinde aynı çekirdek
+kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla kurulur (§6).
 
 ### 2.2 Yönetmeliğin yazılımdan istedikleri
 
@@ -132,7 +135,7 @@ sınırıdır; süre tahmini verilmez (TODOS.md §22), sıra bağımlılıkla ku
 |---|---|---|
 | IFC'ye yazılan zorunlu sınıf (mimari modelde karşılaşılan 29'dan) | 15 | `crates/shared/ifc/src/arch.rs`; araştırma notu §5 |
 | EK-9'un sorularından yazılmış dosyadan kanıtlanan | 0 / 21 | `quality.rs` bellekteki modeli okur |
-| EK-9'da bugün "evet" olamayanlar | 9 "hayır" (zorunlu özellikler); 10 elle (emsal zonu yazılmıyor); 19 "evet" deniyor ama çatı ve merdivenin tipi `NOTDEFINED` | ADR 8047 §9; araştırma notu §4–§5 |
+| EK-9'da bugün ek kanıt gerekenler | 9 "hayır" (zorunlu özellikler); 10 elle (emsal zonu yazılmıyor); 19 "evet" deniyor ama çatı ve merdivenin tipi `NOTDEFINED` | ADR 8047 §9; araştırma notu §4–§5 |
 | Şema kuralları, bağımsız okuyucu | bölüm binasında 0 bulgu | ADR 8047 |
 | Türkiye profilini sınayan bağımsız okuyucu | yok | — |
 | 3B'de görülebilen bina gövdesi | 0 (IFC'de 68) | Z1 |
@@ -196,7 +199,8 @@ söyler (PDF/A, IFC, e-PYS). Bilgi eksikse "teyit gerekli" der, tahmin etmez.
 - **Girdiler (künyede):** başvuru tarihi ya da kamuda ihale kararı/tarihi; il ve işlemi yapan belediye; ikisinin nüfusu,
   nüfusun kaynağı ve yılı; kullanım (konut, ticaret+konut, öbürü); toplam yapı inşaat alanı ve kat adedi (çizimden);
   müstakil olup olmadığı; tarım/hayvancılık ve 3194'ün 4, 26 ve 27. maddeleri.
-- **Kural:** Hazırlama Md. 1/2, Geçici 1–2; e-PYS Md. 1/2, 8. Sonuç dört durumdur: uygulanır, uygulanmaz (maddesiyle),
+- **Kural:** Hazırlama Md. 1/2, Geçici 1–2; e-PYS Md. 1/2, 4/4, 8. Yürürlük ve yetkili makamın fiilî yükleme kararı
+  ayrı girdilerdir. Sonuç dört durumdur: uygulanır, uygulanmaz (maddesiyle),
   henüz başlamadı (tarihiyle), teyit gerekli.
 - Geçici 1/1-b'nin son cümlesi (IFC başlayınca 4/2–3 uygulanmaz) ile Md. 9/1 (modelden üretilen çizimler PDF/A) ayrı
   satırlardır; tek bir bayrak PDF/A'yı kapatmaz.
@@ -204,8 +208,9 @@ söyler (PDF/A, IFC, e-PYS). Bilgi eksikse "teyit gerekli" der, tahmin etmez.
 - Karar salt okuyan bir komuttur; Python ve MCP'de de vardır.
 
 **İlk kabul:** ≥ 20 bağımsız durum (her eşiğin tam eşiti, altı ve üstü; her tarihin önceki günü ve kendisi; müstakil 200 m²
-ve iki kat; karma kullanım; kamu ihalesi). Sivas'ta konut örneği PDF/A için 1.3.2029, IFC için 1.9.2032 verir; nüfus
-girilmemişse "teyit gerekli".
+ve iki kat; karma kullanım; kamu ihalesi). Ülke geneli test verisi, ilk ve sonraki IFC gruplarını, kalan grubu, konut dışı
+ertelemeyi ve bir e-PYS uygulama kararının farklı başlangıç tarihini kapsar. Nüfus veya fiilî uygulama için gereken karar
+eksikse ilgili sonuç "teyit gerekli" olur.
 
 ### 5.2 2B teslim
 
@@ -300,7 +305,8 @@ da öbürü diye maddesiyle işaretlidir. Bağımsız bölüm ve ortak alan mode
 yerde biter. Dayanak EK-6 6.58, 6.60, 6.68; EK-9/10, 12–14; PAİY 4, 5/8, 20–22; Z3.
 
 - **Emsal alanı:** kat kat kapalı çokgen; emsal durumu (dahil, hariç, öbürü) ve dayandığı madde. Bugünkü mahal
-  sınıflamasından (ADR 8030) türer, elle düzeltilir. Tablo bu çokgenlerden kurulur.
+  sınıflamasından (ADR 8030) türer, elle düzeltilir. Tablo bu çokgenlerden kurulur. IFC karşılaştırması kat ve emsal
+  sınıfı bazında yapılır. Dahil, hariç ve diğer alanlar birbirini telafi edemez (IFC-03, EK-9/10).
 - **Mahalin türü:** iç, dış (balkon, teras, açık alan), otopark; kullanımından.
 - **Mahalin hacmi:** tabanı döşemenin üstü; üstü tavan, döşeme altı ya da çatı yüzü. Eğik çatı altında kesilir. Galeri ve
   dubleks tek mahaldir.
@@ -309,7 +315,8 @@ yerde biter. Dayanak EK-6 6.58, 6.60, 6.68; EK-9/10, 12–14; PAİY 4, 5/8, 20�
 - **Gruplar:** bağımsız bölüm, eklenti, ortak alan (bina programı, ADR 0773 ve 8031); yangın kompartımanı (BIM-13).
 
 **İlk kabul:** iki bağımsız bölümlü örnekte emsale dahil alanların toplamı tablonun emsale esas alanına eşit (bağımsız
-başvuru). Balkonun %20 sınırını aşan kısmı dahil alana geçer. Kırma çatı altındaki mahalin hacmi prizmadan küçük ve kapalı.
+başvuru). Genel toplam eşit kaldığı hâlde iki kat arasında yer değiştiren alan veya yanlış emsal sınıfı denetimden kalır.
+Balkonun %20 sınırını aşan kısmı dahil alana geçer. Kırma çatı altındaki mahalin hacmi prizmadan küçük ve kapalı.
 
 #### BIM-09 — Eksik yapı elemanları [ ]
 
@@ -348,19 +355,21 @@ Açıklıklı duvarın hacmi, dolu hacim eksi açıklıklardır. Bütün gövdel
 #### BIM-11 — Çok bina, ortak bodrum ve vaziyet [ ]
 
 **Kullanıcı sonucu:** Bir parselde birden çok blok ve ortak bodrum tek projede durur. Her bina kendi kodu, katları ve
-künyesiyle ayrı model dosyası verir; saha ve parsel bilgileri hepsinde aynıdır. Dayanak EK-2 Tablo 2.1; EK-6 6.7, 6.55;
+künyesiyle pilotta ayrı model dosyası verir; saha ve parsel bilgileri hepsinde aynıdır. Dayanak EK-2 §2.3 ve Tablo 2.1; EK-6 6.7, 6.55;
 EK-7'nin "ortak öznitelikler aynı" notu; Z7.
 
 - **Bina:** kodu, adı, kullanım amacı, kat takımı, ±0.00'ı. Her yapı nesnesinin binası bellidir.
 - **Ortak bodrum:** hangi binanın katı sayılacağı açık bir seçimdir; alanı iki kez sayılmaz.
-- Ruhsat takımı ve dışa aktarma bina seçer; pafta ve dosya adlarında bina kodu.
-- **Saha:** parsel, çekmeler, ±0.00 ve röper (ADR 8032) bütün binalara ortaktır.
+- Ruhsat takımı ve dışa aktarma bina seçer. İlk pilotta bloklar ayrı hazırlanır ve dosya adlarına bina kodu girer
+  (EK-2 §2.3). Nihai dosya kapsamı ilgili idarenin teslim profiline bağlanır.
+- **Saha:** parsel, çekmeler ve saha röperi (ADR 8032) ortaktır. Her bloğun ±0.00 kotu ayrı tutulur ve ortak düşey
+  referansa bağlanır.
 - **Onaylı plan:** parseli etkileyen plan kararları (fonksiyon, nizam, yaklaşma sınırı, emsal, TAKS, yükseklik) CBS
   tarafından kaynağı, onay tarihi ve plan notuyla gelir. Plan gösterimi ya da bir kesişim tek başına hukuki hesap kuralı
   olmaz; çelişen iki karar kullanıcıya gösterilir.
 
-**İlk kabul:** iki bloklu, ortak bodrumlu örnekte iki model dosyası; aynı adı taşıyan iki "1. kat" karışmaz; proje ve saha
-bilgileri iki dosyada birebir aynı; toplam alan tekrarsız.
+**İlk kabul:** ortak bodrumlu ve giriş kotları farklı iki blok için pilot profilde iki model dosyası. Aynı adlı katlar
+karışmaz, ortak proje ve saha bilgileri eşleşir, blok kotları doğru kalır ve bodrum alanı bir kez sayılır.
 
 #### BIM-12 — Tipler ve katmanlı yapı [ ]
 
@@ -442,7 +451,9 @@ paket öncekiyle karşılaştırılır. Yetkisiz kullanıcı künyeyi göremez.
 **Kullanıcı sonucu:** Bir konut ve bir ticaret+konut projesi gerçek bir büroda baştan sona KentOS'ta hazırlanır ve hedef
 idarenin yazılı kabul ya da iade cevabını alır.
 
-- Sıra: tek parsel konut → ticaret+konut ve ortak bodrum → çok bloklu parsel.
+- Sıra: tek parsel konut → ticaret+konut ve ortak bodrum → çok bloklu parsel. İlk zorunlu nüfus/alan grubunu temsil eden
+  bir idareyle birlikte farklı büyüklükte bir idare profili sınanır. Fiilî başvuru tarihi gelmeden teknik ön kontrol ve
+  kontrollü pilot yapılır.
 - Yetkili müellif incelemesi; gerçek pencerede akış (ADR 8000); aynı dosyayı yeniden üretebilen sürüm kaydı.
 - İdarenin yorumları (ad kalıbı, mahal adı, görünüm tanımı, dosya sınırı) kurum profiline kaynağıyla girer.
 
@@ -512,7 +523,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B1 | Ekler sayfa sayfa kataloğa; başlangıç ölçümü | BIM-01, IFC-01 | Her kural sayfasıyla; ölçüm raporu |
 | B2 | Tarihli kapsam kararı | BIM-02 | Ruhsat takımında "bu projede ne, ne zaman" |
 
-### Faz 1 — 2B teslim tam (yasal en geç 1.9.2027; Sivas 1.3.2029)
+### Faz 1 — 2B teslim tam (ilk yasal grup 1.9.2027)
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
@@ -531,7 +542,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B10 | Geometri doğruluğu; geometri ve görünüm tanımı | BIM-10, IFC-06 | Eğri eğri, açıklık kesik |
 | B11 | Çok bina; konum, kot ve çok bina | BIM-11, IFC-05 | İki blok, iki model dosyası |
 
-### Faz 3 — Doğrulama ve teslim (yasal en geç 1.9.2028 e-PYS; 1.9.2029 ilk IFC)
+### Faz 3 — Doğrulama ve erken teslim hazırlığı
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
@@ -542,7 +553,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |
 
-### Faz 4 — Disiplinler ve idare (yasal en geç 1.9.2029)
+### Faz 4 — Disiplinler ve idare pilotu
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
@@ -559,7 +570,8 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B23 | Kat irtifakı için 3B yapı modeli araştırması | BIM-19 | Karar ADR'de |
 
 - **Sürekli:** BIM-20 her fazda bir dilimle ilerler.
-- **Bağımsız olanlar:** B15 hiçbir model paketine bağlı değildir, istenen fazda araya girer. B12 yalnız B1'e bağlıdır.
+- **Erken hazırlık:** B12 yalnız B1’e bağlıdır ve model geliştirmesiyle paralel başlayabilir. B15 model paketlerinden
+  bağımsızdır. B14–B17’nin teknik ön kontrolü, zorunlu IFC teslimi ve e-PYS aktarımı devreye girmeden pilotlanabilir.
 - **Sahibin seçimi:** öncelik belediyenin inceleme tarafıysa B12 → B18 → B20 öne alınır; müellif tarafının sırası
   değişmez.
 
@@ -582,10 +594,10 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 
 | Kapı | Yasal en geç | Koşul |
 |---|---|---|
-| 1 — 2B teslim | 1.9.2027 (Sivas 1.3.2029) | B1–B5; paket bağımsız doğrulayıcıdan hatasız |
+| 1 — 2B teslim | 1.9.2027 (ilk grup) | B1–B5; paket bağımsız doğrulayıcıdan hatasız |
 | 2 — Ruhsat düzeyinde model | IFC'nin ön koşulu | B6–B11; kayıp listesi boş; zorunlu alanlar dolu ya da "eksik" diye listeli |
-| 3 — BIM teslim | 1.9.2029 (Sivas 1.9.2032) | B12–B17; beş kabulün ilk dördü dosyadan; pilot idarenin yazılı cevabı |
-| 4 — Disiplinler ve idare | 1.9.2028 – 1.9.2029 | B18–B20 |
+| 3 — BIM teslim | 1.9.2029 (ilk grup) | B12–B17; beş kabulün ilk dördü dosyadan; pilot idarenin yazılı cevabı |
+| 4 — Disiplinler ve idare | Erken pilot; e-PYS aktarımı Bakanlık kararına bağlı | B18–B20 |
 | 5 — Bütün binalar | 1.9.2033 | B22 |
 
 Her kapıda `architecture-advanced.md` §7'nin faz kapısı da koşulur: kabul izleri gerçek pencerede, resim matrisi sahibe,
@@ -634,7 +646,7 @@ yeri, geçiş hükümleri ve değişiklikleriyle yeniden değerlendirilir.
 |---|---|---|
 | 3194 İmar Kanunu (4, 8, 21–23, 26–27) | Parsel, plan, ruhsat türü, yetkili idare, proje evrakı | Resmî imar durumu ve başvuru türüyle izlenebilir karar. [Kanun](https://www.mevzuat.gov.tr/mevzuatmetin/1.5.3194.pdf) |
 | Mekânsal Planlar Yapım Yönetmeliği | Onaylı uygulama imar planı, plan notları ve raporundan fonksiyon ve yapılaşma zarfı; planın numarası, onayı, kaynağı | Birden çok plan değişikliği olan parselde onay tarihi ve not maddesiyle yeniden üretilebilir sonuç. [Konsolide metin](https://www.lexpera.com.tr/mevzuat/yonetmelikler/YR801Y2014N29030P1/3) · [Plan gösterimleri](https://mpgm.csb.gov.tr/plan-gosterimleri-4926) |
-| Planlı Alanlar İmar Yönetmeliği (4–5, 19–23, 26–42, 57–58) | Alan tanımları, TAKS ve emsal, çekmeler, kot, piyes, merdiven, asansör, rampa, çatı, çıkma, ışıklık, ruhsat çizimleri; 1.7.2026 değişikliği ayrı profil | Bağımsız alan hesabı; istisna kalemleri maddesiyle. [Konsolide metin](https://www.lexpera.com.tr/mevzuat/yonetmelikler/planli-alanlar-imar-yonetmeligi-4) · [1.7.2026 değişikliği](https://www.resmigazete.gov.tr/eskiler/2026/07/20260701-7.htm) · [Sivas](https://www.resmigazete.gov.tr/eskiler/2022/11/20221110-3.htm) |
+| Planlı Alanlar İmar Yönetmeliği (4–5, 19–23, 26–42, 57–58) | Alan tanımları, TAKS ve emsal, çekmeler, kot, piyes, merdiven, asansör, rampa, çatı, çıkma, ışıklık, ruhsat çizimleri; 1.7.2026 değişikliği ayrı profil | Bağımsız alan hesabı; istisna kalemleri maddesiyle. [Konsolide metin](https://www.lexpera.com.tr/mevzuat/yonetmelikler/planli-alanlar-imar-yonetmeligi-4) · [1.7.2026 değişikliği](https://www.resmigazete.gov.tr/eskiler/2026/07/20260701-7.htm) |
 | Binaların Yangından Korunması Hakkında Yönetmelik | Kullanım ve kullanıcı yükü, kompartıman, malzeme ve eleman dayanımı, kaçış yolu, korunumlu merdiven, çıkış kapısı | En uzak nokta, net geçiş, kapasite, rota ve istisnanın görsel kanıtı; yangın uzmanı örnekleri. [Bakanlık kılavuzu](https://webdosya.csb.gov.tr/v2/meslekihizmetler/2026/05/Binalar-n-Yang-n-Korunmas-Hakk-nda-Y-netmelik-K-lavuzu-20260507112134.pdf) |
 | 5378 ve erişilebilirlik hükümleri; TS 9111 | Parselden erişilebilir girişe ve mahallere güzergâh, rampa, sahanlık, net kapı, dönüş alanı, asansör, tuvalet | Standardın baskısı ve maddesi; bağımsız boyut örnekleri. [5378](https://www.mevzuat.gov.tr/mevzuatmetin/1.5.5378.pdf) |
 | Otopark ve Sığınak Yönetmelikleri | İhtiyaç, erişilebilir park, geometri, araç rampası; sığınak alanı ve kapasitesi | Karma kullanım, bodrum ve istisnayı içeren elle hesap. [Otopark](https://www.mevzuat.gov.tr/anasayfa/MevzuatFihristDetayIframe?MevzuatTur=7&MevzuatNo=24408&MevzuatTertip=5) · [Sığınak 2025](https://www.resmigazete.gov.tr/eskiler/2025/11/20251107-2.htm) |
