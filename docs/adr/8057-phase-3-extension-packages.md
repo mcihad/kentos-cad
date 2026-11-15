@@ -2129,7 +2129,9 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   almadığı özellik ("“liste” (table) enabled almaz: düğmeler ile metin, sayı, tarih ve saat alanları kapatılır"),
   yanlış türde ya da sınırı dışında değer ("“adet” (numberField): 0 ile 10 arasında olmalı"), seçeneklerde olmayan seçim,
   Kapı 1'in seçenek kuralı (boş olmayan değer ve ad, tekrarsız) kodun hatasıdır: `kentos.HostError`, çağrının hiçbir
-  parçası uygulanmaz. Kapanmış panel hata değildir: `applied: false, closed: true` (kullanıcı kapattı).
+  parçası uygulanmaz; eklentinin günlüğüne de uyarı olarak yazılır (`panel_refused`, bölüm `panel:<kimlik>`): kod hatayı
+  yakalayıp sürebilir, yazarı izi günlükte bulur. Kapanmış panel hata değildir: `applied: false, closed: true`
+  (kullanıcı kapattı).
 - **Ne nasıl değişir:** değer alanın kullanıcı yazımıyla saklanır (sayı "4,5", tarih "15.11.2026"; kod ISO verir ya da
   `datetime.date`); yeni seçeneklerde olmayan seçim bırakılır (seçimde ilk seçenek); gizlenen zorunlu alan kullanıcıya
   sorulmaz ama değeri komuta gider; `say`'in sözü çalıştırma kendi sözünü söylemeden biterse kalır (`spoke`), satır

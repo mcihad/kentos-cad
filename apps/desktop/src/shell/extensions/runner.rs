@@ -937,9 +937,22 @@ impl App {
             }
             return;
         }
-        // Its panel changed as it runs (panel_session.rs): not the drawing's, no grant needed.
+        // Its panel changed as it runs (panel_session.rs): not the drawing's, no grant needed. A refused request is
+        // the code's mistake (an id its panel has not, a wrong value): written in its log too, where its author looks,
+        // for the code may catch the error and go on.
         let answer = if method.starts_with("panel.") {
-            self.ext_panel_session(ext, &method, &params)
+            let answer = self.ext_panel_session(ext, &method, &params);
+            if let Err(e) = &answer
+                && let Some(registry) = self.extensions.registry.as_mut()
+            {
+                let panel = params.get("panel").and_then(Value::as_str).unwrap_or("?");
+                registry.write_log(
+                    Record::warning("panel_refused", format!("{method}: {}", e.message))
+                        .of(ext, None)
+                        .part(format!("panel:{panel}")),
+                );
+            }
+            answer
         } else {
             self.ext_answer(ext, &method, &params)
         };

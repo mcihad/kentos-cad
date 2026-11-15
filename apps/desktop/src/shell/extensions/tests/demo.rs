@@ -1612,11 +1612,33 @@ fn a_panels_command_changes_its_panel_as_it_runs() {
     );
     assert_eq!(kept.ok(), Some(json!({ "applied": false })));
     assert_eq!(gis.extensions.panel().unwrap().texts["sorgu"], "Y-1");
-    // A wrong id is the code's mistake.
+    // A wrong id is the code's mistake: refused, and said in its log (the code may catch the error and go on).
     let wrong = gis.ext_panel_session(VITRIN, "panel.set", &json!({ "id": "yok", "value": 1 }));
     assert!(
         matches!(&wrong, Err(e) if e.code == "unknown_component"),
         "{wrong:?}"
+    );
+    call(
+        &mut gis,
+        5,
+        "panel.set",
+        json!({ "panel": "yapi-paneli", "id": "yok", "value": 1 }),
+    );
+    let logged = gis
+        .extensions
+        .registry
+        .as_ref()
+        .unwrap()
+        .log_of(VITRIN)
+        .iter()
+        .find(|r| r.code == "panel_refused")
+        .cloned()
+        .expect("its log line");
+    assert_eq!(logged.part.as_deref(), Some("panel:yapi-paneli"));
+    assert!(
+        logged.message.starts_with("panel.set: “yok” panelde yok"),
+        "{}",
+        logged.message
     );
     // Its answer has rows and no words: they go to the table, the code's words stay.
     let _ = gis.extensions_event(Event::Runner(
