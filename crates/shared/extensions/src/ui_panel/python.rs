@@ -158,12 +158,13 @@ pub fn python_builders() -> String {
                     .collect()
             })
             .unwrap_or_default();
-        // Its keys in the order KentOS lists them, then its rules and its worked-out values.
+        // Its keys in the order KentOS lists them, then its rules, its worked-out values and its tab.
         let mut order: Vec<&str> = keys.to_vec();
         order.extend(
             super::rules::RULE_KEYS
                 .iter()
                 .chain(super::values::VALUE_KEYS.iter())
+                .chain([super::tabs::TAB_KEY].iter())
                 .copied()
                 .filter(|r| props.get(*r).is_some()),
         );
@@ -289,11 +290,11 @@ mod tests {
             "the panel's schema changed: KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- python_builders"
         );
         for function in [
-            "def text_field(\n    id: str,\n    label: str,\n    *,\n    placeholder: str | None = None,\n    value: str | None = None,\n    required: bool = False,\n    visible_when: str | None = None,\n    required_when: str | None = None,\n    enabled_when: str | None = None,\n    calculate: str | None = None,\n    default_expr: str | None = None,\n) -> dict[str, Any]:",
+            "def text_field(\n    id: str,\n    label: str,\n    *,\n    placeholder: str | None = None,\n    value: str | None = None,\n    required: bool = False,\n    visible_when: str | None = None,\n    required_when: str | None = None,\n    enabled_when: str | None = None,\n    calculate: str | None = None,\n    default_expr: str | None = None,\n    tab: str | None = None,\n) -> dict[str, Any]:",
             "    layer: str | None = None,\n    geometry: str | None = None,\n    multiple: bool = True,\n",
             "def select(\n    id: str,\n    label: str,\n    options: Sequence[Choice | str],\n    *,\n    value: str | None = None,\n",
             "    kind: Literal[\"bar\", \"pie\", \"histogram\", \"line\"] | None = None,\n",
-            "def text(\n    text: str,\n    *,\n    id: str | None = None,\n    visible_when: str | None = None,\n    calculate: str | None = None,\n) -> dict[str, Any]:\n    \"\"\"A line of text.\"\"\"",
+            "def text(\n    text: str,\n    *,\n    id: str | None = None,\n    visible_when: str | None = None,\n    calculate: str | None = None,\n    tab: str | None = None,\n) -> dict[str, Any]:\n    \"\"\"A line of text.\"\"\"",
         ] {
             assert!(made.contains(function), "{function}\n{made}");
         }

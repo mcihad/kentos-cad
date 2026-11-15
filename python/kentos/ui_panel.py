@@ -49,6 +49,7 @@ def text(
     id: str | None = None,
     visible_when: str | None = None,
     calculate: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A line of text."""
     out: dict[str, Any] = {"type": "text", "text": text}
@@ -58,6 +59,8 @@ def text(
         out["visibleWhen"] = visible_when
     if calculate is not None:
         out["calculate"] = calculate
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -67,6 +70,7 @@ def section(
     id: str | None = None,
     collapsed: bool = False,
     visible_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A heading that gathers the components after it, up to the next section: the user folds it to hide them
     (`collapsed`: folded when the panel opens). A folded section's values still go to the commands, and one of its
@@ -78,6 +82,8 @@ def section(
         out["collapsed"] = True
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -93,6 +99,7 @@ def text_field(
     enabled_when: str | None = None,
     calculate: str | None = None,
     default_expr: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A text the user types."""
     out: dict[str, Any] = {"type": "textField", "id": id, "label": label}
@@ -112,6 +119,8 @@ def text_field(
         out["calculate"] = calculate
     if default_expr is not None:
         out["defaultExpr"] = default_expr
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -129,6 +138,7 @@ def number_field(
     enabled_when: str | None = None,
     calculate: str | None = None,
     default_expr: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A number the user types, in its bounds."""
     out: dict[str, Any] = {"type": "numberField", "id": id, "label": label}
@@ -152,6 +162,8 @@ def number_field(
         out["calculate"] = calculate
     if default_expr is not None:
         out["defaultExpr"] = default_expr
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -163,6 +175,7 @@ def select(
     value: str | None = None,
     on_change: str | None = None,
     visible_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """One of its choices."""
     out: dict[str, Any] = {"type": "select", "id": id, "label": label, "options": _choices(options)}
@@ -172,6 +185,8 @@ def select(
         out["onChange"] = on_change
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -184,6 +199,7 @@ def layer_picker(
     required: bool = False,
     visible_when: str | None = None,
     required_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """One of the open drawing's layers, of `geometry`'s type (and the untyped ones) when given: its id."""
     out: dict[str, Any] = {"type": "layerPicker", "id": id, "label": label}
@@ -197,6 +213,8 @@ def layer_picker(
         out["visibleWhen"] = visible_when
     if required_when is not None:
         out["requiredWhen"] = required_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -210,6 +228,7 @@ def field_picker(
     required: bool = False,
     visible_when: str | None = None,
     required_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """One of the fields of the layer the panel's layer picker `layer` holds, of `kinds` only when given (the layer
     schema's words): its name, none when none is chosen."""
@@ -224,6 +243,8 @@ def field_picker(
         out["visibleWhen"] = visible_when
     if required_when is not None:
         out["requiredWhen"] = required_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -238,6 +259,7 @@ def file_picker(
     visible_when: str | None = None,
     required_when: str | None = None,
     enabled_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of
     `filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no
@@ -257,6 +279,8 @@ def file_picker(
         out["requiredWhen"] = required_when
     if enabled_when is not None:
         out["enabledWhen"] = enabled_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -271,6 +295,7 @@ def feature_picker(
     required: bool = False,
     visible_when: str | None = None,
     required_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`
     holds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else one
@@ -290,6 +315,8 @@ def feature_picker(
         out["visibleWhen"] = visible_when
     if required_when is not None:
         out["requiredWhen"] = required_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -303,6 +330,7 @@ def multi_select(
     required: bool = False,
     visible_when: str | None = None,
     required_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """Several of its options the user picks, each a chip that toggles: its value is the chosen options' values in
     the options' order, an empty list when none is chosen."""
@@ -317,6 +345,8 @@ def multi_select(
         out["visibleWhen"] = visible_when
     if required_when is not None:
         out["requiredWhen"] = required_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -334,6 +364,7 @@ def date_field(
     enabled_when: str | None = None,
     calculate: str | None = None,
     default_expr: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A date the user types (GG.AA.YYYY or YYYY-AA-GG) or picks from KentOS's calendar; its value is the ISO date
     (`2026-11-15`), none when empty. `value`, `min` and `max` are ISO dates."""
@@ -358,6 +389,8 @@ def date_field(
         out["calculate"] = calculate
     if default_expr is not None:
         out["defaultExpr"] = default_expr
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -375,6 +408,7 @@ def time_field(
     enabled_when: str | None = None,
     calculate: str | None = None,
     default_expr: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A time of day the user types (14:30, 14.30, 9:05) or picks from KentOS's time picker; its value is `HH:MM` (24
     hours), none when empty. `value`, `min` and `max` are `HH:MM`."""
@@ -399,6 +433,8 @@ def time_field(
         out["calculate"] = calculate
     if default_expr is not None:
         out["defaultExpr"] = default_expr
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -416,6 +452,7 @@ def date_time_field(
     enabled_when: str | None = None,
     calculate: str | None = None,
     default_expr: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A day and a time the user types (`15.11.2026 14:30`, `2026-11-15 14:30`) or picks from KentOS's calendar and
     clock; its value is the local ISO date and time, `2026-11-15T14:30` (no zone: the user's own clock), none when
@@ -441,6 +478,8 @@ def date_time_field(
         out["calculate"] = calculate
     if default_expr is not None:
         out["defaultExpr"] = default_expr
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -451,6 +490,7 @@ def checkbox(
     value: bool = False,
     on_change: str | None = None,
     visible_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """Yes or no."""
     out: dict[str, Any] = {"type": "checkbox", "id": id, "label": label}
@@ -460,6 +500,8 @@ def checkbox(
         out["onChange"] = on_change
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -472,6 +514,7 @@ def button(
     primary: bool = False,
     visible_when: str | None = None,
     enabled_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """Runs `command` with the panel's values; its rows fill `table` (none: the panel's first table)."""
     out: dict[str, Any] = {"type": "button", "id": id, "label": label, "command": command}
@@ -483,20 +526,37 @@ def button(
         out["visibleWhen"] = visible_when
     if enabled_when is not None:
         out["enabledWhen"] = enabled_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
-def table(id: str, *, label: str | None = None, visible_when: str | None = None) -> dict[str, Any]:
+def table(
+    id: str,
+    *,
+    label: str | None = None,
+    visible_when: str | None = None,
+    tab: str | None = None,
+) -> dict[str, Any]:
     """The rows a button's command answered."""
     out: dict[str, Any] = {"type": "table", "id": id}
     if label is not None:
         out["label"] = label
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
-def tree(id: str, group: Sequence[str], *, label: str | None = None, visible_when: str | None = None) -> dict[str, Any]:
+def tree(
+    id: str,
+    group: Sequence[str],
+    *,
+    label: str | None = None,
+    visible_when: str | None = None,
+    tab: str | None = None,
+) -> dict[str, Any]:
     """The rows a button's command answered, grouped by `group`'s columns (one to three) into nodes that open and
     close, each with its count; a row with a `uid` is an object."""
     out: dict[str, Any] = {"type": "tree", "id": id, "group": list(group)}
@@ -504,6 +564,8 @@ def tree(id: str, group: Sequence[str], *, label: str | None = None, visible_whe
         out["label"] = label
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -516,6 +578,7 @@ def stats(
     unit: str | None = None,
     note: str | None = None,
     visible_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """The rows a button's command answered, a figure each (KentOS's stat card): `title`'s column names it (none: the
     first column), `value`'s is its figure (none: the second), `unit`'s and `note`'s beside and under it; the cards
@@ -533,6 +596,8 @@ def stats(
         out["note"] = note
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -546,6 +611,7 @@ def chart(
     value: str | None = None,
     aggregate: Literal["count", "sum", "mean", "min", "max", "median"] | None = None,
     visible_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A chart of rows, drawn by KentOS's charts (the Grafik tab's engine): bars or a pie of `category`'s values,
     counted or with `value`'s column summed, averaged … (`aggregate`); a histogram of `value`'s numbers; a line of
@@ -566,6 +632,8 @@ def chart(
         out["aggregate"] = aggregate
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -576,6 +644,7 @@ def image(
     alt: str | None = None,
     height: float | None = None,
     visible_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG): a chart drawn in Python, a preview. `alt` says
     what it shows and stands in its place until the code gives one; `height` in pixels (80–600, none: 200), the
@@ -589,6 +658,8 @@ def image(
         out["height"] = height
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 
@@ -599,6 +670,7 @@ def card(
     title: str | None = None,
     tag: str | None = None,
     visible_when: str | None = None,
+    tab: str | None = None,
 ) -> dict[str, Any]:
     """The rows a button's command answered, a card each: `title`'s column heads it (none: the first column), `tag`'s
     beside it, the other columns under it by name; a card with a `uid` is an object. Where a table's columns do not
@@ -612,6 +684,8 @@ def card(
         out["tag"] = tag
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
     return out
 
 

@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.35 — 15 Kasım 2026
+
+- "CSV'den nokta ekle" penceresinin iki sekmesi var (bileşenin `tab` anahtarı): Dosya (dosya seçici) ve Seçenekler
+  (ayırıcı: virgül, noktalı virgül ya da sekme; diğer sütunlar öznitelik olsun mu). Sekmesiz açıklama her sayfada;
+  dosya verilmeden Ekle'ye basılınca Dosya sekmesi açılır ve alanın altında söylenir.
+
 ## 1.0.34 — 15 Kasım 2026
 
 - Katmanın sağ tık menüsünde "CSV'den nokta ekle": KentOS'un penceresi dosyayı sorar (dosya seçici `filePicker`: yolu

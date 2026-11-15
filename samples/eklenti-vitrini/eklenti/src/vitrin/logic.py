@@ -408,30 +408,43 @@ def katman_degerleri(ctx: ext.CommandContext) -> ext.CommandResult:
 @ext.command("csv-noktalar")
 def csv_noktalar(ctx: ext.CommandContext) -> ext.CommandResult:
     """Katmanın sağ tık menüsünden: seçilen CSV dosyasındaki noktaları o katmana ekler (x, y sütunları TM36 metre;
-    diğer sütunlar öznitelik olur). Dosyayı KentOS'un penceresi sorar (dosya seçici: yolu yazılır ya da Seç… ile
-    seçilir); eklenti yalnız kullanıcının verdiği dosyayı okur (files.userSelected). Tek geri alma adımıdır."""
+    diğer sütunlar istenirse öznitelik olur). Dosyayı KentOS'un penceresi sorar (dosya seçici: yolu yazılır ya da Seç…
+    ile seçilir); eklenti yalnız kullanıcının verdiği dosyayı okur (files.userSelected). Pencerenin iki sekmesi var:
+    Dosya ve Seçenekler (ayırıcı, öznitelikler); sekmesiz açıklama her sayfada. Tek geri alma adımıdır."""
     katman = ctx.params.get("layer")
     if not katman or ctx.doc is None:
         return ctx.message("Bir katmanın sağ tık menüsünden çalışır: CSV'den nokta ekle.")
     cevap = ctx.dialog(
         "CSV'den nokta ekle",
         [
-            ui.text("Her satır bir nokta: x ve y sütunları (TM36, metre); diğer sütunlar öznitelik olur."),
-            ui.file_picker("dosya", "CSV dosyası", filters=[ui.file_filter("CSV", "csv")], required=True),
+            ui.text("Her satır bir nokta: x ve y sütunları (TM36, metre)."),
+            ui.file_picker(
+                "dosya", "CSV dosyası", filters=[ui.file_filter("CSV", "csv")], required=True, tab="Dosya"
+            ),
+            ui.select(
+                "ayirici",
+                "Ayırıcı",
+                [ui.choice(",", "Virgül (,)"), ui.choice(";", "Noktalı virgül (;)"), ui.choice("sekme", "Sekme")],
+                value=",",
+                tab="Seçenekler",
+            ),
+            ui.checkbox("oznitelik", "Diğer sütunlar öznitelik olsun", value=True, tab="Seçenekler"),
         ],
         ok="Ekle",
     )
     if cevap is None:
         return ctx.message("Vazgeçildi: nokta eklenmedi.")
     eklenen, atlanan = 0, 0
+    secilen = cevap.get("ayirici") or ","
+    ayirici = "\t" if secilen == "sekme" else secilen
     with open(cevap["dosya"], newline="", encoding="utf-8-sig") as dosya:
-        for satir in csv.DictReader(dosya):
+        for satir in csv.DictReader(dosya, delimiter=ayirici):
             try:
                 x, y = float(satir.pop("x")), float(satir.pop("y"))
             except (KeyError, TypeError, ValueError):
                 atlanan += 1
                 continue
-            oznitelikler = {k: v for k, v in satir.items() if k and v}
+            oznitelikler = {k: v for k, v in satir.items() if k and v} if cevap.get("oznitelik") else {}
             cad.point.create(ctx.doc, layer_id=katman, p=[x, y], attrs=oznitelikler)
             eklenen += 1
     ek = f"; {atlanan} satırın x ya da y'si okunamadı" if atlanan else ""

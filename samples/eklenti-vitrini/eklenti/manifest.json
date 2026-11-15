@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.34",
+  "version": "1.0.35",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",

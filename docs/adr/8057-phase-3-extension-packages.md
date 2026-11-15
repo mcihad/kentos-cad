@@ -1798,7 +1798,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 |---|---|---|---|---|
 | Düzen | yığın | var | gövde tek sütun (ortak `Form`) | dar yerde ad alanın üstüne geçer |
 | | satır, ızgara | yok | — | iki sütunluk form düzeni yeter; ızgara tek sütuna inecek (PY-UI-13) |
-| | sekme | KentOS'ta | `widget::tabs`, `segmented` | açık paneller sekmeli; panel içi sekme yok |
+| | sekme | var | bileşenin `tab` anahtarı, KentOS'un sekme şeridi (§43) | sekmesiz bileşen her sayfada; yanlış alan sayfasını açar |
 | | grup, akordeon | var | `section` (katlanır başlık; sonraki bileşenleri bir sonraki bölüme dek toplar, §38) | katlıyken değerler komuta gider; yanlış bırakılan alan bölümünü açar |
 | | kaydırma | var | panel kendi kaydırır, yerini tutar | sekmeler üstte kalır |
 | | bölücü | KentOS'ta | `sash` | |
@@ -2567,3 +2567,31 @@ karşılığı (`jobs.rs`, `jobs_tests.rs`); `scripts/arch/deps.mjs` (`jobrun` �
   içerikten), iş çalıştırıcısı 4 (kural Rust yerine geçenle uçtan uca, reddedilenler, masaüstü ve iş aynı rapor gerçek
   Python'da, düşen kural iz kaydıyla), masaüstü (Vitrin'in denetimi: raporun `drawing` ve `facts`'i ortak işlevlerin
   verdiği). Python yoksa (`KENTOS_TEST_PYTHON` ya da `.run/py`) iki sınama atlandığını söyler.
+
+## §43. Panel içi sekme: `tab` (`ADIM 22`, bileşen envanteri, düzen)
+
+**15 Kasım.** Kod: paylaşılan `ui_panel/tabs.rs` (`TAB_KEY`, `MOST_TABS`, `tab_of`, Kapı 1), `Rules::tab`, panelin
+JSON Schema'sı ve `kentos.ui_panel`'in işlevleri (`tab=`); masaüstü `panel_tabs.rs` (`tabs`, `active_tab`, `on_page`,
+`show_tab`, `tab_bar`), `panel_view.rs` (şerit), `panel_sections.rs` (bölüm ve yanlış alan), `panels.rs`/`dialogs.rs`
+(`PanelEvent::Tab`).
+
+- **Karar: sekme bir bileşen değil, bileşenin anahtarı.** Panelin gövdesi düz bir liste; kurallar, hesaplar, oturum ve
+  doğrulama kimlikle ve sırayla çalışır. İç içe sayfalar bunların hepsini değiştirirdi. Her bileşen isteğe bağlı
+  `"tab": "Seçenekler"` taşır: aynı sözü taşıyanlar aynı sayfadadır, şerit sekmeleri gövdede ilk göründükleri sırayla
+  dizer ve ilk sekmeli bileşenin yerinde durur. **Sekmesiz bileşen her sayfada**, kendi yerinde çizilir: gövdenin
+  sonundaki düğme sayfaların altında kalır, bitiş işareti yazılmaz. Panelde de, `ctx.dialog`'un penceresinde de aynı.
+- **Görünüş, kural değil:** başka sayfadaki alan çizilmez ama gösterilir: değeri komuta gider, zorunluysa sorulur,
+  kurallar okur (katlanır bölümün yolu, §38). Yanlış bırakılan alan kendi sayfasını açar (bölümünü de); aynı yol
+  `ctx.panel.focus`'ta. Bütün bileşenleri gizli sekme (kuralı ya da kodu) şeritte yoktur; seçili sekme böyle gizlenirse
+  ilk sekme açılır. Seçim panel açık kaldıkça kullanıcınındır.
+- **Bölümle birlikte:** bölüm sonraki bileşenleri bir sonraki bölüme ya da **başka sekmedeki ilk bileşene** dek toplar.
+  Sekmeli bölümün ardından gelen sekmesiz düğme her sayfada kalır, bölümle katlanmaz; ayrı bir kural yazılmadı.
+- **Kapı 1:** sekme boş olmayan, tek satır, en çok 40 karakterlik bir söz; panelde en çok 8 sekme. Her bileşen alır.
+- **Şerit KentOS'un sekme şeridi** (`widget::tabs`): sığmayınca kayar ve bütün sekmelerin listesi açılır; panelde
+  sekmeler kapatılmaz, sürüklenmez.
+- **Vitrin 1.0.35:** "CSV'den nokta ekle" penceresi Dosya (dosya seçici) ve Seçenekler (ayırıcı: virgül, noktalı virgül,
+  sekme; diğer sütunlar öznitelik olsun mu) sekmeleriyle; açıklama sekmesiz (`40-sekme`).
+- **Sınamalar:** paylaşılan 1 (sekme kırpılarak okunur; söz olmayan ve dokuzuncu sekme yerinde söylenir), Python
+  işlevlerinin imzası (`tab`), masaüstü 1 (sıra, gizli sekme listede yok, ilk sekme, sekmesiz bileşen her sayfada,
+  başka sayfadaki zorunlu alan sorulur ve sayfası açılır, bölüm başka sekmede durur, gizlenen seçili sekmenin yerine
+  ilki).

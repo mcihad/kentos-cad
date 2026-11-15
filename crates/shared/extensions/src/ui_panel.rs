@@ -27,6 +27,7 @@ pub const MOST_COMPONENTS: usize = 100;
 #[cfg(feature = "schema")]
 pub mod python;
 pub mod rules;
+pub mod tabs;
 pub mod values;
 
 pub use rules::Rules;
@@ -528,6 +529,12 @@ pub fn json_schema() -> Value {
                         serde_json::json!({ "type": "string", "description": words }),
                     );
                 }
+                props.insert(
+                    tabs::TAB_KEY.to_owned(),
+                    serde_json::json!({ "type": "string", "maxLength": 40, "description":
+                        "The tab (its words) whose page this component is on: the components with the same tab share \
+                         a page, the bar lists the tabs in the order they first appear; without one, on every page." }),
+                );
             }
         }
     }
@@ -816,6 +823,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
         };
         for key in c.keys().filter(|k| {
             k.as_str() != "type"
+                && k.as_str() != tabs::TAB_KEY
                 && !known.contains(&k.as_str())
                 && !takes_rule(kind, known, k.as_str())
                 && !values::takes_value(kind, k.as_str())
@@ -833,6 +841,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     .copied()
                     .filter(|k| values::takes_value(kind, k)),
             );
+            takes.push(tabs::TAB_KEY);
             add(
                 format!("{at}/{key}"),
                 format!(
@@ -1416,6 +1425,10 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
         .collect();
     if let Err((at, why)) = values::calc_order(&reads) {
         add(format!("/body/{}/calculate", calculated[at].0), why);
+    }
+    // Its tabs: each a tab's words, at most `tabs::MOST_TABS` (docs/adr/8057 §43).
+    for (at, why) in tabs::check(body) {
+        add(at, why);
     }
     out
 }

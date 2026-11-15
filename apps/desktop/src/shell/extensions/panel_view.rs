@@ -195,10 +195,19 @@ impl App {
         let mut form = Form::new().label_width(kentos_ui::theme::typography::scaled(110.0));
         let mut tables: Vec<Element<'_, Message>> = Vec::new();
         let field_id = |id: &str| super::panel_session::field_id(&p.ext, &p.local, id);
+        // Its tabs (docs/adr/8057 §43): the bar where the first component of a listed tab is; the drawn page's
+        // components and those without a tab.
+        let tabs = p.tabs();
+        let page = p.active_tab(&tabs);
+        let mut bar = !tabs.is_empty();
         for (at, c) in p.definition.body.iter().enumerate() {
+            if bar && p.tab_at(at).is_some_and(|t| tabs.contains(&t)) {
+                form = form.wide(super::panel_tabs::tab_bar(&tabs, page, event));
+                bar = false;
+            }
             // One its rule or its code hid is not drawn (panels.rs `shown`, docs/adr/8057 §32–33), nor one in a
-            // folded section (`drawn`, §38).
-            if !p.drawn(at, c) {
+            // folded section (`drawn`, §38), nor one on another tab's page (§43).
+            if !p.drawn(at, c) || !p.on_page(at, page) {
                 continue;
             }
             // One its rule or its code turned off is shown faded and takes no keys.

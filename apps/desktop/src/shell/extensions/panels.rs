@@ -112,6 +112,8 @@ pub(crate) struct OpenPanel {
     pub(crate) calculated: BTreeMap<usize, String>,
     /// The sections folded now, by place (`section`: its `collapsed` at first, then the user's; panel_view.rs).
     pub(crate) closed: std::collections::BTreeSet<usize>,
+    /// The tab the user chose (panel_tabs.rs, docs/adr/8057 §43); none: the first.
+    pub(crate) tab: Option<String>,
     /// Each `image` component's picture its code gave (panel_image.rs), checked and decoded.
     pub(crate) images: BTreeMap<String, iced::widget::image::Handle>,
 }
@@ -168,6 +170,8 @@ pub(crate) enum PanelEvent {
     Page(String, usize),
     /// A section opened or folded, by its place.
     Section(usize),
+    /// A tab's page shown, by its words.
+    Tab(String),
     /// A file picker's Seç…: the computer's file window, its choice as `Picked`.
     PickFile(String),
     /// The open panel at this place in the tabs shown.
@@ -213,6 +217,7 @@ impl OpenPanel {
             calc_order: Vec::new(),
             calculated: BTreeMap::new(),
             closed: std::collections::BTreeSet::new(),
+            tab: None,
             images: BTreeMap::new(),
         };
         // The sections folded when it opens.
@@ -1086,6 +1091,7 @@ impl App {
                 panel.pages.insert(id, page);
             }
             PanelEvent::Section(at) => panel.toggle_section(at),
+            PanelEvent::Tab(name) => panel.show_tab(&name),
             PanelEvent::PickFile(id) => {
                 let Some((label, filters)) = super::panel_files::picker_of(panel, &id) else {
                     return Task::none();

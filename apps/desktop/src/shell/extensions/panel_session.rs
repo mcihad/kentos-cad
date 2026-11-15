@@ -686,6 +686,9 @@ impl App {
                 {
                     return Ok(json!({ "applied": false }));
                 }
+                // Its page and its section brought up first: a field on another tab or in a folded section is not
+                // drawn and takes no cursor (docs/adr/8057 §38, §43).
+                self.extensions.panels[at].reveal(id);
                 self.extensions
                     .later
                     .push(iced::widget::operation::focus(field_id(

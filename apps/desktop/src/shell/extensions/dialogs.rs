@@ -188,6 +188,7 @@ impl App {
                 }
             }
             PanelEvent::Section(at) => panel.toggle_section(at),
+            PanelEvent::Tab(name) => panel.show_tab(&name),
             _ => {}
         }
         // Its calculations follow the values, as a panel's (panel_values.rs).

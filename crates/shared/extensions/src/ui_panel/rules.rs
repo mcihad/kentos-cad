@@ -30,6 +30,8 @@ pub struct Rules {
     pub calculate: Option<String>,
     /// Its first value, worked out when the panel opens (`defaultExpr`).
     pub default_expr: Option<String>,
+    /// The tab whose page it is on (tabs.rs); none for every page.
+    pub tab: Option<String>,
 }
 
 impl Rules {
@@ -49,6 +51,7 @@ impl Rules {
             enabled_when: text("enabledWhen"),
             calculate: text("calculate"),
             default_expr: text("defaultExpr"),
+            tab: super::tabs::tab_of(component),
         }
     }
 
@@ -58,6 +61,7 @@ impl Rules {
             && self.enabled_when.is_none()
             && self.calculate.is_none()
             && self.default_expr.is_none()
+            && self.tab.is_none()
     }
 }
 

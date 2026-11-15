@@ -55,6 +55,11 @@
                 "null"
               ]
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "text": {
               "type": "string"
             },
@@ -88,6 +93,11 @@
               ]
             },
             "label": {
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
               "type": "string"
             },
             "type": {
@@ -140,6 +150,11 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
               "type": "string"
             },
             "type": {
@@ -211,6 +226,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "numberField",
               "type": "string"
@@ -264,6 +284,11 @@
                 "$ref": "#/$defs/Choice"
               },
               "type": "array"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "type": {
               "const": "select",
@@ -321,6 +346,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "layerPicker",
               "type": "string"
@@ -370,6 +400,11 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
               "type": "string"
             },
             "type": {
@@ -432,6 +467,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "filePicker",
               "type": "string"
@@ -491,6 +531,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "featurePicker",
               "type": "string"
@@ -536,6 +581,11 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
               "type": "string"
             },
             "type": {
@@ -613,6 +663,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "dateField",
               "type": "string"
@@ -685,6 +740,11 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
               "type": "string"
             },
             "type": {
@@ -761,6 +821,11 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "dateTimeField",
               "type": "string"
@@ -799,6 +864,11 @@
                 "string",
                 "null"
               ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "type": {
               "const": "checkbox",
@@ -840,6 +910,11 @@
               "default": false,
               "type": "boolean"
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "table": {
               "default": null,
               "type": [
@@ -877,6 +952,11 @@
                 "null"
               ]
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "table",
               "type": "string"
@@ -910,6 +990,11 @@
                 "string",
                 "null"
               ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "type": {
               "const": "tree",
@@ -946,6 +1031,11 @@
                 "string",
                 "null"
               ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "title": {
               "default": null,
@@ -1034,6 +1124,11 @@
                 "null"
               ]
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "chart",
               "type": "string"
@@ -1084,6 +1179,11 @@
                 "null"
               ]
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "image",
               "type": "string"
@@ -1111,6 +1211,11 @@
                 "string",
                 "null"
               ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "tag": {
               "default": null,
