@@ -254,4 +254,6 @@ pub fn run_audit(
 }
 
 #[cfg(test)]
+mod mevzuat_tests;
+#[cfg(test)]
 mod tests;

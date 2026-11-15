@@ -204,7 +204,7 @@ fn a_job_refuses_what_it_cannot_run() {
 
 /// The interpreter the tests run real rules with: `KENTOS_TEST_PYTHON`, else the repository's (`.run/py`); none
 /// when neither is there (the tests then say so and pass).
-fn python() -> Option<String> {
+pub(super) fn python() -> Option<String> {
     let path = std::env::var_os("KENTOS_TEST_PYTHON")
         .map(PathBuf::from)
         .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/py/bin/python"));

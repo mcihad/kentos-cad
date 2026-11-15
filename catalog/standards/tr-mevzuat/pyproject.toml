@@ -1,0 +1,19 @@
+# Türkiye mevzuatı eklentisinin Python tarafı: yalnız `kentos.ext`'i kullanır, başka kütüphane istemez.
+[project]
+name = "tr-mevzuat"
+version = "0.1.0"
+description = "İmar ve yangın yönetmeliklerinin denetim kuralları"
+requires-python = ">=3.12,<3.14"
+dependencies = []
+
+[tool.uv]
+environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+required-environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]

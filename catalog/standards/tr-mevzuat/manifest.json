@@ -1,0 +1,85 @@
+{
+  "format": "kentos.extension",
+  "schemaVersion": 1,
+  "id": "tr.kentos.mevzuat",
+  "version": "0.1.0",
+  "name": "Türkiye mevzuatı",
+  "summary": "İmar ve yangın yönetmeliklerinin mimari çizimin ölçülmüş olgularıyla karar verilen kuralları.",
+  "description": "KentOS'un mimari çizimde ölçtüğü olgular (katlar, kat çıkışları, mahallerin net alanları, bağımsız bölümler, kaçış yürüyüşleri) üzerinde Planlı Alanlar İmar Yönetmeliği (RG 3.7.2017/30113) ile Binaların Yangından Korunması Hakkında Yönetmelik'in (RG 19.12.2007/26735) olgularla karar verilebilen kuralları. Her bulgu yönetmeliğin maddesini ve fıkrasını söyler. Mahallerin türü (oturma odası, yatak odası) ve binada yağmurlama sistemi olup olmadığı olgularda yok: kurallar yalnız olguların kesin söylediğine karar verir, yağmurlama sistemine bağlı sınırı uyarı olarak söyler. Bulgu çizimin ölçüsüdür, onay değildir.",
+  "authors": [
+    "KentOS"
+  ],
+  "publisherId": "kentos",
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "changelogFile": "CHANGELOG.md",
+  "icon": "assets/mevzuat.svg",
+  "keywords": [
+    "mevzuat",
+    "imar",
+    "yangın",
+    "PAİY",
+    "BYKHY"
+  ],
+  "kind": "utility",
+  "modules": [
+    "mimari"
+  ],
+  "runtimes": [
+    "desktop",
+    "cloud"
+  ],
+  "compatibility": {
+    "kentos": {
+      "min": "0.1.0"
+    },
+    "operatingSystems": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "sdkProtocol": {
+      "max": 1,
+      "min": 1
+    }
+  },
+  "python": {
+    "lockFile": "uv.lock",
+    "projectFile": "pyproject.toml"
+  },
+  "requestedCapabilities": [
+    {
+      "id": "audit.provider",
+      "reason": "Mimari çizimin ölçülmüş olgularından imar ve yangın yönetmeliklerine aykırılıkları maddesiyle söyler; çizime yazmaz.",
+      "scope": "plugin-owned"
+    }
+  ],
+  "entrypoints": {
+    "audits": [
+      {
+        "id": "oturma-odasi",
+        "title": "Oturma odasının alanı (PAİY 29/1)",
+        "domain": "mimari",
+        "handler": "tr_mevzuat.paiy:oturma_odasi"
+      },
+      {
+        "id": "daire-ici",
+        "title": "Daire içinde kapıya uzaklık (BYKHY 48/2)",
+        "domain": "mimari",
+        "handler": "tr_mevzuat.bykhy:daire_ici"
+      },
+      {
+        "id": "daire-kapisi",
+        "title": "Daire kapısından kat çıkışına (BYKHY 48/4)",
+        "domain": "mimari",
+        "handler": "tr_mevzuat.bykhy:daire_kapisi"
+      },
+      {
+        "id": "cikis-erisimi",
+        "title": "Kat çıkışına erişim (BYKHY 33/6-b)",
+        "domain": "mimari",
+        "handler": "tr_mevzuat.bykhy:cikis_erisimi"
+      }
+    ]
+  }
+}

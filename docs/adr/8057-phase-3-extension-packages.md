@@ -2847,3 +2847,68 @@ klasöre, `with_audits`); göç `0041_server_job_audit.sql` (türün kısıtı);
   `target/<profil>` sanıyordu ve `KENTOS_JOBRUN` verilmeden bütün `job_run` sınamaları "kentos-jobrun yok" ile
   düşüyordu. Artık sınama programının üstündeki klasörlerde `kentos-jobrun` dosyasını arıyor (aynı adlı paket derleme
   klasörü dosya değil, atlanır).
+
+## §51. Türkiye mevzuatının ilk kuralları: `tr.kentos.mevzuat` (`ADIM 20`, ulusal kuralların ilk dilimi)
+
+**16 Kasım.** Kod: birinci taraf paket `catalog/standards/tr-mevzuat/` (`tr.kentos.mevzuat` 0.1.0; `manifest.json`,
+`src/tr_mevzuat/paiy.py`, `bykhy.py`, `bina.py`); sınamalar `apps/jobrun/src/audit/mevzuat_tests.rs`; araştırma notu
+`docs/research/2026-11-16-tr-mevzuat-denetim-kurallari.md` (hükümlerin aynen alıntısı, indirilen resmî metinlerin
+adresi ve SHA-256'sı).
+
+- **Karar: ulusal kurallar sıradan bir `.kek`'tir.** Plan kuralların yerini `catalog/standards/` diye yazıyor (ADIM 20:
+  "`catalog/standards/*.py` ve `.kek` içindeki `@ext.audit`"); paket orada kaynak klasör olarak durur. Paket olduğu için
+  masaüstünün Eklenti denetimi, ajanın `audit.run`'ı ve bulut işi (§42, §50) onu aynı yoldan, kökeniyle (paket özeti,
+  çizim damgası, olgu özeti) çalıştırır; ayrı bir "yerleşik kural" yolu açılmadı. Yayımcı `kentos`, MIT, `utility`
+  (sekme açmaz), `runtimes` masaüstü ve bulut; yalnız `audit.provider` ister: ağ yok, çizime yazma yok, Python
+  bağımlılığı yok. `kentos kek verify` 0 uyarı; paket 10 983 bayt, 11 dosya.
+- **Karar: kural yalnız olguların kesin söylediğine karar verir.** Olgular (§39) mahalin türünü (oturma odası, yatak
+  odası), dar kenarını, binada yağmurlama sistemi olup olmadığını ve konut olmayan bölümün yangın yönetmeliğindeki
+  kullanım sınıfını vermiyor; mahalin ve bölümün adı serbest yazıdır ve addan tür çıkarılmadı. Bu yüzden kurallar ya
+  türden bağımsız kesin bir sonuca bakar (12 m²'lik piyesi olmayan konut), ya olguların verdiği türle çalışır (konut:
+  `dwelling`), ya da bilinmeyeni bulguda söyler (yağmurlama: iki eşik).
+- **Kaynaklar (16 Kasım'da mevzuat.gov.tr'den indirilen resmî metin, tablolar sayfa görüntüsüyle karşılaştırıldı):**
+  Planlı Alanlar İmar Yönetmeliği (PAİY, RG 3.7.2017/30113; RG 14.1.2026/33137 değişikliği işlenmiş) ve Binaların
+  Yangından Korunması Hakkında Yönetmelik (BYKHY, BKK 2007/12937, RG 19.12.2007/26735; son değişiklik RG
+  1.7.2025/32943). Değerler KentOS Mimari'nin yerel denetimiyle (`fire_audit.rs`, `regulation_audit.rs`) aynı.
+- **Kurallar:**
+  - `oturma-odasi` — **PAİY 29/1** ("Her müstakil konutta en az aşağıdaki piyesler bulunur": oturma odası dar kenarı
+    3.00 metre, net alanı 12.0 m²) ve **5/25**: konut bölümünde net alanı 12.0 m²'ye ulaşan piyes yoksa oturma odası
+    hangi mahal olursa olsun sağlanamaz → hata, nesnesi en büyük piyes. 5/25'in yatak nişi istisnası (RG 13.8.2025)
+    oturma odasını kaldırmaz; 29/4'e göre mutfak nişiyle birleşen oda daha da büyük olur. Sınırı bulunamayan mahali
+    olan bölümde karar verilmez (bilgi).
+  - `daire-ici` — **BYKHY 48/2** ("konut içindeki herhangi bir noktadan konut çıkış kapısına kadar olan uzaklığın 20
+    m’yi, yağmurlama sistemi olan konutlarda 30 m’yi geçmemesi gerekir"): konutun her katında mahallerin en uzak
+    noktasından (32/6: duvarlardan 40 cm önde) kapıya en uzun yürüyüş 20 m'yi aşarsa uyarı, 30 m'yi de aşarsa hata;
+    kapısı o katta olan konutun kapıya yol bulamayan mahali hata.
+  - `daire-kapisi` — **BYKHY 48/4** ("Kaçış uzaklığı, apartman dairelerinin kapısından başlanarak ölçülür"), **32/3**
+    ve **Ek-5/B apartmanlar** (tek yön 15 m, yağmurlamalı 30 m; iki yön 30 m, yağmurlamalı 75 m): tek çıkışta bütün
+    yol tek yöndür, iki çıkışta önce yolun tek yönlü kısmı (4/kk) tek yön sınırına, o aşılmıyorsa bütün yol iki yön
+    sınırına; yağmurlamasız sınırı aşan uyarı, yağmurlamalıyı da aşan hata.
+  - `cikis-erisimi` — **BYKHY 31/3** ("Her katta … çıkış imkânları sağlanır") ve **33/6-b** (her kullanıcı başka
+    kullanıcıların odalarından geçmeden bir çıkışa doğrudan erişir): mahali olup kat çıkışı olmayan kat hata (kat başına
+    bir), çıkışı olan katta kendi bölümünün mahallerinden ve ortak alanlardan hiçbir kat çıkışına ulaşmayan mahal hata.
+- **48/1'in muafiyeti** ("Bodrum katlar dâhil 4 katı geçmeyen konutlar ile tek evler … kaçış mesafesi aranmaksızın"):
+  `daire-ici` ve `daire-kapisi` bu binalarda bir şey söylemez. Kat sayımı KentOS Mimari'ninki: ±0.00 ve üstündeki
+  katlar ile mahali olan alt katlar; tek konut bölümlü bina tek ev.
+- **Bulgunun sözü maddeyi söyler:** "— PAİY md. 29/1 (RG 3.7.2017/30113)", "— BYKHY md. 48/2 (2009/15316 sayılı BKK
+  ile değişik)", "— BYKHY md. 32/3, 48/4 ve Ek-5/B (apartmanlar)", "— BYKHY md. 31/3", "— BYKHY md. 33/6-b"; ölçü
+  iki basamakla ("24.00 m", "11.50 m²"); yağmurlamaya bağlı bulgu "binada yağmurlama sistemi yoksa sınır aşılıyor"
+  der. Nesne mahal ya da konut kapısıdır (Göster seçer); katın bulgusunun nesnesi yoktur.
+- **Dışarıda kalanlar (neden):** PAİY 29/1'in öbür satırları ve bütün dar kenarlar (mahal türü ve dar kenar olgu
+  değil; ikinci 9 m²'lik piyesi aramak da karar veremez: 5/25'in yatak nişi istisnası parseldeki bölümlerin %20'sine
+  kadar ayrı yatak odasını kaldırıyor); PAİY 29/3 (genişlik yok); konut olmayan bölümlerin Ek-5/B uzaklıkları
+  (kullanım sınıfı yok; sınıftan bağımsız eşik de dürüst değil: yağmurlamasız tek yön yüksek tehlikeli yerlerde 10 m,
+  Ek-5/B (1) dipnotuyla bazı endüstri yapılarında 22.5 m); 4/i çıkmaz koridor (koridor türü yok); 48/2'nin ara katlı
+  daire cümleleri (sonraki aday); kapısı yürüyüşsüz konut kapısı (merdivene mi açılıyor, çıkışa mı ulaşmıyor, olgu
+  ayırmıyor); 33/1-2, 39/2, 48/5, Ek-5/A (genişlik, sınıf, korunumluluk yok).
+- **SDK'ya öneriler:** `ArchitectureFacts.sprinklers` (projenin mimari ayarı, KCAD 226; uyarılar karara döner);
+  bağımsız bölümün Ek-5/B kullanım sınıfı (sabit kod listesi); mahalin türü ve dar kenarı (KentOS Mimari `width_of`
+  ile zaten ölçüyor; PAİY 29/1'in tamamı ve 29/3); `DoorEscape`'te "merdivene açılıyor" ile "çıkışa ulaşmıyor" ayrımı.
+- **Sınamalar (gerçek Python, `KENTOS_TEST_PYTHON` ya da `.run/py`; yoksa atlandığını söyler):** paket klasöründen
+  `kentos kek pack`'in okuduğu gibi paketlenir; kurallar `kentos.ext_host` üzerinden masaüstünün yoluyla çalışır. Her
+  kuralın uygun ve aykırı hâli, örnek binanın (`fixtures/audit-facts/v1/mimari.json`, KentOS'un `mimari.kcad`'de
+  ölçtüğü; iki katlı, iki daire, dükkân, büro) olgularında tek ölçü değiştirilerek: oturma odası (uygun; 11.50 m² →
+  hata), daire içi (iki katta muaf; beş katta uygun; 24 m uyarı, 31 m hata, kapıya yol yok hata), daire kapısı (uygun;
+  tek çıkışta 18 m uyarı, 32 m hata; iki çıkışta 40 m uyarı), erişim (uygun; çıkışa ulaşmayan arşiv hata; çıkışsız kat
+  tek hata). Dört kural ayrıca çizimin kendisinde bulut işinin yoluyla (`run_audit`) çalışır: raporlar paketin
+  sürümünün, örnek bina hepsine uygun. 5 sınama, 7,2 sn (hata ayıklama derlemesi, 18 Python süreci).

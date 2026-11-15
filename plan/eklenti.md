@@ -1023,8 +1023,15 @@ denemesi aynı işlevlerde: olgular, cevabın okunması ve özet ortak, `audit.r
 da istenen çalışabilir sürüm, baytları onaylı içerik), yorumlayıcı sunucunun `eklenti@sürüm` eşlemesinden; rapor işin
 sonucudur, projeye yazılmaz; aynı sürüm, kural, proje durumu, görünürlük ve yazılım önbellekten döner (`fresh` yeniden
 çalıştırır). Kalan: kalıcı katalog ve işçiye bağlanması (üretimde iş bugün `tool_unavailable` ile biter), sürüm başına
-ortamı kuran adım, kutunun işletim sistemi düzeyinde ağsız ve dosyasız kapatılması ve bütçenin Python'u da ölçmesi,
-kurp/görüş hesapları, ulusal/belediye kurallarının Python betikleri.
+ortamı kuran adım, kutunun işletim sistemi düzeyinde ağsız ve dosyasız kapatılması ve bütçenin Python'u da ölçmesi.
+**Ulusal kuralların ilk dilimi** (ADR 8057 §51, 16 Kasım): `catalog/standards/tr-mevzuat` (`tr.kentos.mevzuat`
+0.1.0) sıradan bir `.kek`: masaüstünün Eklenti denetimi ve bulut işi aynı yoldan çalıştırır. Dört kural yalnız
+olgularla karar verir ve maddeyi söyler: konutta 12 m²'lik piyes yoksa oturma odası (PAİY 29/1, 5/25), daire içinde
+kapıya 20/30 m (BYKHY 48/2), daire kapısından kat çıkışına Ek-5/B apartmanlar 15/30 ve 30/75 m (32/3, 48/4), kat
+çıkışı ve erişim (31/3, 33/6-b); 4 katı geçmeyen konut binası muaf (48/1); yağmurlama bilinmediği için iki eşik
+(uyarı/hata). Kalan: mahal türü ve dar kenarı, yağmurlama sistemi ve konut olmayan bölümün kullanım sınıfı olgulara
+girince PAİY 29/1'in tamamı, 29/3 ve konut olmayan bölümlerin Ek-5/B uzaklıkları; kurp/görüş hesapları; belediye
+plan notları.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 
