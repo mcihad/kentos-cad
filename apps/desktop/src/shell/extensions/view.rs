@@ -626,10 +626,27 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
             .field("Lisans", label::body(m.license.clone()))
             .field(
                 "Kaynak",
-                label::body(format!("{} — {}", p.source.kind.words(), p.file)),
+                label::body(format!(
+                    "{} — {}",
+                    p.source.kind.words(),
+                    // A working folder is where its reloads come from; the package made of it is a passing file.
+                    if p.source.kind == kentos_extension_host::store::SourceKind::DeveloperFolder {
+                        &p.source.location
+                    } else {
+                        &p.file
+                    }
+                )),
             );
         if let Some((version, _)) = &r.installed {
             form = form.field("Kurulu sürüm", label::body(version.clone()));
+        }
+        // What installing from the agents' workshop allows, said before the user decides (docs/adr/8057 §22).
+        if p.source.kind == kentos_extension_host::store::SourceKind::DeveloperFolder {
+            form = form.wide(Banner::info(
+                "Atölyeden kuruluyor: kurulduktan sonra Asistan değişiklikleri bu klasörden uygulama kapanmadan \
+                 yükleyebilir; her yüklemede size bildirilir. Yeni bir yetenek isterse yeniden sizin incelemenize \
+                 gelir.",
+            ));
         }
     }
     for refusal in [&r.incompatible, &r.policy, &r.revoked]

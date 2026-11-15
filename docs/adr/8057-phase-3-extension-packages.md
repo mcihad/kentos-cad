@@ -1393,6 +1393,18 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
     düğmeler, ne açtıkları, `when` ya da Python hazır değilse kapalı olma nedeni), paneller (başlık, yer, bileşenler,
     düğmelerin komutları), kayıt defterinin katkıları (İşlemler araçları, denetimler…), sağ tık öğeleri, durum ve
     Python ortamı. Görüntü yerine yazı: ajanın okuyacağı kanıt; ekran görüntüsü ayrı iş.
+  - **Kullanıcı bilerek karar verir:** inceleme penceresi atölye paketinde kaynağı klasörüyle yazar (".kek" yolu değil:
+    yüklemeler oradan gelir) ve kurulmadan önce söyler: "Atölyeden kuruluyor: kurulduktan sonra Asistan değişiklikleri
+    bu klasörden uygulama kapanmadan yükleyebilir; her yüklemede size bildirilir. Yeni bir yetenek isterse yeniden
+    sizin incelemenize gelir."
+  - **Gerçek pencere (Asistan, DeepSeek test anahtarı yalnız sürecin ortamında, sentetik istek, Vitrin çizimi):** ajan
+    "Canlı Deneme"yi (katmanları nesne sayılarıyla raporlayan komut, kendi sekmesi) yazdı ve incelemeye açtı; Kur
+    kullanıcıda: "Canlı Deneme 0.1.0 kuruldu". İkinci istekte ("düğmenin adını Nesne sayımı yap, canlı yükle, kullanıcının
+    ne gördüğünü kontrol et") manifesti değiştirip `reload` ve `preview` çağırdı; günlükte "0.1.0 yeniden kuruldu
+    (geliştirici klasörü)" ve "Atölyeden yeniden yüklendi (Asistan)", şeritte yeni ad. Ajanın yanıtı görünüşten okundu:
+    "Canlı Deneme sekmesi → Canlı Deneme grubu → büyük Nesne sayımı yap düğmesi; düğme şu an kapalı, sebebi Python
+    ortamının hazırlanmamış olması: Eklentiler › Canlı Deneme › Python ortamı". (Ajan istenen adın sonuna "yap" ekledi:
+    ajanın tercihi.)
   - MCP bağlantısında ikisi de yok (paketi orada kullanıcı açar): araçlar "masaüstünün Asistan'ında çalışın" der.
   - Test: başsız (doğrulanmayan klasör yüklenmez, host'a gitmez; geçen yüklenir; preview geçer) ve masaüstü (Vitrin
     atölyeden kuruldu, panel adı değişti, yeniden yüklendi: şeritte yeni ad, aynı sürüm; değişiklik yoksa söyler;

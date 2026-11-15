@@ -1193,7 +1193,7 @@ fn a_disabled_extensions_panel_and_audit_fixes_go_with_it() {
     use crate::app::Panel;
 
     const VITRIN: &str = "tr.ornek.vitrin";
-    let dir = temp("hayalet");
+    let dir = temp("hayalet-panel");
     let mut gis = crate::files_testing::app_with_drawing();
     gis.program = Some(Module::Gis);
     gis.extensions = Extensions::open(&dir, false).0;
