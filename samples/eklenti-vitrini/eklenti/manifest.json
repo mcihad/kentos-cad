@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.35",
+  "version": "1.0.36",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -108,6 +108,11 @@
         "id": "csv-noktalar",
         "title": "CSV'den nokta ekle",
         "handler": "vitrin.logic:csv_noktalar"
+      },
+      {
+        "id": "katman-csv",
+        "title": "Katmanı CSV'ye yaz",
+        "handler": "vitrin.logic:katman_csv"
       }
     ],
     "panels": [
@@ -281,6 +286,14 @@
         "when": {
           "documentOpen": true
         }
+      },
+      {
+        "command": "katman-csv",
+        "target": "layer",
+        "icon": "export-csv",
+        "when": {
+          "documentOpen": true
+        }
       }
     ],
     "dataSources": [
@@ -352,6 +365,11 @@
       "id": "files.userSelected",
       "scope": "user-selected",
       "reason": "Katmanın menüsünden seçtiğiniz CSV dosyasındaki noktaları okur."
+    },
+    {
+      "id": "files.userSelectedWrite",
+      "scope": "user-selected",
+      "reason": "Katmanın menüsünden seçtiğiniz yere katmanın nesnelerini CSV olarak yazar."
     }
   ]
 }

@@ -1,0 +1,23 @@
+# Kaydetme yeri: katmanın sağ tık menüsündeki "Katmanı CSV'ye yaz" KentOS'un penceresiyle yazılacak dosyanın yerini
+# sorar (filePicker save: yolu yazılır ya da Seç… ile kaydetme penceresinden seçilir; önerilen ad katmanın adı,
+# uzantısız ada .csv eklenir). Parsel sınırı'nın dört parseli merkezleri ve öznitelikleriyle yazılır. Eklenti
+# files.userSelectedWrite ister. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 1222 367 right # Parsel sınırı: sağ tık
+wait 1000
+shot 41-menu
+click 1061 619  # Katmanı CSV'ye yaz
+wait 3500
+shot 41-pencere
+click 760 479   # kaydedilecek dosyanın yolu: uzantısız (.csv eklenir)
+type /tmp/kentos-vitrin-parseller
+wait 400
+shot 41-yazildi
+click 938 519   # Yaz
+wait 4000
+shot 41-yazdi

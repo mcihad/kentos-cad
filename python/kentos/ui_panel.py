@@ -256,6 +256,8 @@ def file_picker(
     placeholder: str | None = None,
     on_change: str | None = None,
     required: bool = False,
+    save: bool = False,
+    default_name: str | None = None,
     visible_when: str | None = None,
     required_when: str | None = None,
     enabled_when: str | None = None,
@@ -263,7 +265,9 @@ def file_picker(
 ) -> dict[str, Any]:
     """A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of
     `filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no
-    file, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`."""
+    file, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`.
+    With `save`, where a file is to be written (docs/adr/8057 §44): the file need not be there, its folder must; a
+    name without an extension takes the first kind's; its extension asks for `files.userSelectedWrite`."""
     out: dict[str, Any] = {"type": "filePicker", "id": id, "label": label}
     if filters is not None:
         out["filters"] = list(filters)
@@ -273,6 +277,10 @@ def file_picker(
         out["onChange"] = on_change
     if required:
         out["required"] = True
+    if save:
+        out["save"] = True
+    if default_name is not None:
+        out["defaultName"] = default_name
     if visible_when is not None:
         out["visibleWhen"] = visible_when
     if required_when is not None:

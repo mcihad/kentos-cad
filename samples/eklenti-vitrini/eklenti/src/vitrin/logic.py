@@ -451,6 +451,55 @@ def csv_noktalar(ctx: ext.CommandContext) -> ext.CommandResult:
     return ctx.message(f"{eklenen} nokta eklendi{ek}.")
 
 
+@ext.command("katman-csv")
+def katman_csv(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Katmanın sağ tık menüsünden: katmanın nesnelerini seçilen yere CSV olarak yazar (x, y: nesnenin merkezi, TM36
+    metre; öznitelikler sütun olur). Yeri KentOS'un penceresi sorar (kaydetme yeri: filePicker save; yolu yazılır ya da
+    Seç… ile seçilir, uzantısız ada .csv eklenir); eklenti yalnız kullanıcının seçtiği yere yazar
+    (files.userSelectedWrite). Çizime dokunmaz."""
+    katman = ctx.params.get("layer")
+    if not katman or ctx.doc is None:
+        return ctx.message("Bir katmanın sağ tık menüsünden çalışır: Katmanı CSV'ye yaz.")
+    cevap = ctx.dialog(
+        "Katmanı CSV'ye yaz",
+        [
+            ui.text("Her nesne bir satır: x ve y nesnenin merkezi (TM36, metre); öznitelikler sütun olur."),
+            ui.file_picker(
+                "yer",
+                "Kaydedilecek dosya",
+                filters=[ui.file_filter("CSV", "csv")],
+                save=True,
+                default_name=f"{katman}.csv",
+                required=True,
+            ),
+        ],
+        ok="Yaz",
+    )
+    if cevap is None:
+        return ctx.message("Vazgeçildi: dosya yazılmadı.")
+    satirlar = [
+        (merkez, k.entity.attrs or {}) for k in ctx.doc.entities(layer=katman) if (merkez := _merkez(k.entity))
+    ]
+    sutunlar = sorted({ad for _, oznitelikler in satirlar for ad in oznitelikler})
+    with open(cevap["yer"], "w", newline="", encoding="utf-8") as dosya:
+        yazici = csv.writer(dosya)
+        yazici.writerow(["x", "y", *sutunlar])
+        for (x, y), oznitelikler in satirlar:
+            yazici.writerow([f"{x:.3f}", f"{y:.3f}", *(oznitelikler.get(ad, "") for ad in sutunlar)])
+    return ctx.message(f"{len(satirlar)} nesne yazıldı: {cevap['yer']}")
+
+
+def _merkez(nesne) -> tuple[float, float] | None:
+    """Nesnenin merkezi: noktanın kendisi, alanın ağırlık merkezi, çizginin ilk noktası; şekli olmayanda yok."""
+    if (p := getattr(nesne, "p", None)) is not None:
+        return float(p.x), float(p.y)
+    noktalar = getattr(nesne, "pts", None) or []
+    if len(noktalar) > 2 and getattr(nesne, "kind", "") == "polygon":
+        merkez = Polygon(noktalar).centroid
+        return merkez.x, merkez.y
+    return (float(noktalar[0][0]), float(noktalar[0][1])) if noktalar else None
+
+
 @ext.command("deger-sec")
 def deger_sec(ctx: ext.CommandContext) -> ext.CommandResult:
     """"Değer say"ın Seç kutusu değişince çalışır: seçilen değerdeki nesneleri (alındıysa yalnız alınanlardan) çizimde

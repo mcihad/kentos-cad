@@ -531,6 +531,22 @@ fn the_named_files_are_what_their_fields_say() {
         )
     });
     refused_with(&picker, "ui_panel");
+    // A save picker writes where the user chose: files.userSelectedWrite, apart from reading (docs/adr/8057 §44).
+    let saver = change("ui/search_dock.panel.json", &|t| {
+        t.replacen(
+            "\"body\": [",
+            "\"body\": [{ \"type\": \"filePicker\", \"id\": \"yer\", \"label\": \"Yer\", \"save\": true },",
+            1,
+        )
+    });
+    let said = inspect(&saver, &limits());
+    assert!(
+        said.problems
+            .iter()
+            .any(|p| p.code == "ui_panel" && p.message.contains("files.userSelectedWrite")),
+        "{:?}",
+        said.problems
+    );
     let invisible = change("src/mebis/logic.py", &|t| {
         t.replace("return findings", "return findings\u{200B}")
     });

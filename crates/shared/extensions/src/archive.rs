@@ -634,20 +634,36 @@ fn check_references(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>, out:
                         .collect();
                     out.problems
                         .extend(crate::ui_panel::check(path, &value, &commands));
-                    // A file picker reads a file the user gives: its extension says so (docs/adr/8057 §41).
-                    let picks_files = value
+                    // A file picker reads a file the user gives, a save picker writes one where the user chose: its
+                    // extension says so (docs/adr/8057 §41, §44).
+                    let pickers: Vec<&serde_json::Value> = value
                         .get("body")
                         .and_then(serde_json::Value::as_array)
-                        .is_some_and(|b| b.iter().any(|c| c["type"] == "filePicker"));
-                    let asks = manifest
-                        .requested_capabilities
-                        .iter()
-                        .any(|c| c.id == crate::manifest::Capability::FilesUserSelected);
-                    if picks_files && !asks {
+                        .map(|b| b.iter().filter(|c| c["type"] == "filePicker").collect())
+                        .unwrap_or_default();
+                    let asks = |capability| {
+                        manifest
+                            .requested_capabilities
+                            .iter()
+                            .any(|c| c.id == capability)
+                    };
+                    if pickers.iter().any(|c| c["save"] != true)
+                        && !asks(crate::manifest::Capability::FilesUserSelected)
+                    {
                         out.problems.push(problem(
                             "ui_panel",
                             "Paneldeki dosya seçici (filePicker) kullanıcının seçtiği dosyayı okur: manifest \
                              files.userSelected yeteneğini istemeli (scope: user-selected)."
+                                .to_owned(),
+                        ));
+                    }
+                    if pickers.iter().any(|c| c["save"] == true)
+                        && !asks(crate::manifest::Capability::FilesUserSelectedWrite)
+                    {
+                        out.problems.push(problem(
+                            "ui_panel",
+                            "Paneldeki kaydetme yeri (filePicker, save) kullanıcının seçtiği yere dosya yazar: \
+                             manifest files.userSelectedWrite yeteneğini istemeli (scope: user-selected)."
                                 .to_owned(),
                         ));
                     }

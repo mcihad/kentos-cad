@@ -535,12 +535,16 @@ impl OpenPanel {
             }
             // A file to be read: its absolute path, checked to be a file of the kinds offered (panel_files.rs).
             Component::FilePicker {
-                id, label, filters, ..
+                id,
+                label,
+                filters,
+                save,
+                ..
             } => {
                 let typed = self.texts.get(id).map_or("", String::as_str);
                 out.insert(
                     id.clone(),
-                    super::panel_files::file_value(label, filters, typed)?,
+                    super::panel_files::file_value(label, filters, *save, typed)?,
                 );
             }
             Component::NumberField {
@@ -1093,10 +1097,10 @@ impl App {
             PanelEvent::Section(at) => panel.toggle_section(at),
             PanelEvent::Tab(name) => panel.show_tab(&name),
             PanelEvent::PickFile(id) => {
-                let Some((label, filters)) = super::panel_files::picker_of(panel, &id) else {
+                let Some(picker) = super::panel_files::picker_of(panel, &id) else {
                     return Task::none();
                 };
-                return super::panel_files::pick(&label, &filters, move |path| {
+                return super::panel_files::pick(&picker, move |path| {
                     super::msg(super::Event::Panel(PanelEvent::Picked(id.clone(), path)))
                 });
             }

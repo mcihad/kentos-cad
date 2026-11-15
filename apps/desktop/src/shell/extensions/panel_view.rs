@@ -257,11 +257,17 @@ impl App {
                     id,
                     label: words,
                     placeholder,
+                    save,
                     ..
                 } => {
                     let value = p.texts.get(id).map_or("", String::as_str);
+                    let hint = if *save {
+                        "Kaydedilecek dosyanın yolu"
+                    } else {
+                        "Dosyanın yolu"
+                    };
                     let mut field = kentos_ui::widget::text_field(
-                        placeholder.as_deref().unwrap_or("Dosyanın yolu"),
+                        placeholder.as_deref().unwrap_or(hint),
                         value,
                     )
                     .id(field_id(id));

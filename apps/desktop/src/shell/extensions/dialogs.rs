@@ -118,21 +118,32 @@ impl App {
                 ));
             }
         }
-        // A file picker reads a file the user gives: only for an extension the user granted that (docs/adr/8057 §41).
-        let granted = self
-            .extensions
-            .registry
-            .as_ref()
-            .and_then(|r| r.grant(ext))
-            .is_some_and(|g| {
-                g.capabilities
-                    .contains(&kentos_extensions::manifest::Capability::FilesUserSelected)
-            });
-        if !granted && body.iter().any(|c| c["type"] == "filePicker") {
+        // A file picker reads a file the user gives, a save picker writes one where the user chose: only for an
+        // extension the user granted that (docs/adr/8057 §41, §44).
+        let granted = |capability| {
+            self.extensions
+                .registry
+                .as_ref()
+                .and_then(|r| r.grant(ext))
+                .is_some_and(|g| g.capabilities.contains(&capability))
+        };
+        let pickers = || body.iter().filter(|c| c["type"] == "filePicker");
+        if pickers().any(|c| c["save"] != true)
+            && !granted(kentos_extensions::manifest::Capability::FilesUserSelected)
+        {
             return Err(refused(
                 "invalid_input",
                 "Pencerenin dosya seçicisi (filePicker) kullanıcının seçtiği dosyayı okur: eklenti \
                  files.userSelected yeteneğini istemeli, kullanıcı da kurarken vermiş olmalı.",
+            ));
+        }
+        if pickers().any(|c| c["save"] == true)
+            && !granted(kentos_extensions::manifest::Capability::FilesUserSelectedWrite)
+        {
+            return Err(refused(
+                "invalid_input",
+                "Pencerenin kaydetme yeri (filePicker, save) kullanıcının seçtiği yere dosya yazar: eklenti \
+                 files.userSelectedWrite yeteneğini istemeli, kullanıcı da kurarken vermiş olmalı.",
             ));
         }
         // The fields as a panel's, through Kapı 1's check (its words, its places).
@@ -161,11 +172,11 @@ impl App {
             return Task::none();
         };
         if let PanelEvent::PickFile(id) = &event {
-            let Some((label, filters)) = super::panel_files::picker_of(panel, id) else {
+            let Some(picker) = super::panel_files::picker_of(panel, id) else {
                 return Task::none();
             };
             let id = id.clone();
-            return super::panel_files::pick(&label, &filters, move |path| {
+            return super::panel_files::pick(&picker, move |path| {
                 msg(Event::Dialog(PanelEvent::Picked(id.clone(), path)))
             });
         }

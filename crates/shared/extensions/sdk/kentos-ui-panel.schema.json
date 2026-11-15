@@ -425,8 +425,16 @@
           "type": "object"
         },
         {
-          "description": "A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of\n`filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no\nfile, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`.",
+          "description": "A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of\n`filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no\nfile, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`.\nWith `save`, where a file is to be written (docs/adr/8057 §44): the file need not be there, its folder must; a\nname without an extension takes the first kind's; its extension asks for `files.userSelectedWrite`.",
           "properties": {
+            "defaultName": {
+              "default": null,
+              "description": "The name the save window offers (`parseller.csv`).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "enabledWhen": {
               "description": "Usable (pressed, typed in) only while this expression is true.",
               "type": "string"
@@ -466,6 +474,11 @@
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
               "type": "string"
+            },
+            "save": {
+              "default": false,
+              "description": "Where a file is to be written, not one to be read.",
+              "type": "boolean"
             },
             "tab": {
               "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",

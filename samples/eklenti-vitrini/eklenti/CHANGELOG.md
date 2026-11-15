@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.0.36 — 15 Kasım 2026
+
+- Katmanın sağ tık menüsünde "Katmanı CSV'ye yaz": KentOS'un penceresi kaydetme yerini sorar (`filePicker` `save`:
+  yolu yazılır ya da Seç… ile kaydetme penceresinden seçilir, önerilen ad katmanın adı, uzantısız ada `.csv` eklenir);
+  her nesne bir satır (x, y: merkezi, TM36 metre; öznitelikler sütun). Eklenti yalnız kullanıcının seçtiği yere yazar:
+  yeni yetenek `files.userSelectedWrite` ("Sizin seçtiğiniz yere dosya yazar"); güncellemede yeni yetenek olarak sorulur.
+
 ## 1.0.35 — 15 Kasım 2026
 
 - "CSV'den nokta ekle" penceresinin iki sekmesi var (bileşenin `tab` anahtarı): Dosya (dosya seçici) ve Seçenekler

@@ -1817,7 +1817,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | koordinat/harita seçimi | host | `entrypoints.mapTools` (yakalama türleri) | panelden harita seçimi yok |
 | | CRS/birim | KentOS'ta | ayarların CRS seçimi (`crs_choice`) | |
 | | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
-| Kaynak ve çıktı | dosya/eser seçici, ek | var | `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41) | `files.userSelected` ister; yazılacak dosya ve ek sonraki dilim |
+| Kaynak ve çıktı | dosya/eser seçici, ek | var | `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41; `save` ile yazılacak dosyanın yeri, §44) | `files.userSelected` ister, kaydetme yeri `files.userSelectedWrite`; ek sonraki dilim |
 | | görsel önizleme | var | `image` (kodun verdiği PNG, `ctx.panel.set(id, image=…)`; oranı korunur, §40) | yalnız PNG, en çok 4096 piksel kenar; JPEG sonraki dilim |
 | | çıktı hedefi | host | İşlemler aracının çıktısı (`sinkParameter`) | panel komutu çizime yazar |
 | Veri görünüşü | tablo | var | `table` (500 satır) | `uid`'li satır nesneyi gösterir |
@@ -2595,3 +2595,29 @@ JSON Schema'sı ve `kentos.ui_panel`'in işlevleri (`tab=`); masaüstü `panel_t
   işlevlerinin imzası (`tab`), masaüstü 1 (sıra, gizli sekme listede yok, ilk sekme, sekmesiz bileşen her sayfada,
   başka sayfadaki zorunlu alan sorulur ve sayfası açılır, bölüm başka sekmede durur, gizlenen seçili sekmenin yerine
   ilki).
+
+## §44. Kaydetme yeri: `filePicker`'ın `save` kipi ve `files.userSelectedWrite` (`ADIM 22`, kaynak ve çıktı)
+
+**15 Kasım.** Kod: paylaşılan `ui_panel.rs` (`FilePicker::save`, `default_name`), `ui_panel/files.rs` (dosya
+seçicinin Kapı 1 denetimi, `ui_panel.rs`'ten taşındı), `manifest.rs` (`Capability::FilesUserSelectedWrite`),
+`archive.rs` (paketteki panelin yetenek denetimi); masaüstü `panel_files.rs` (`Picker`, `file_value`'nun kaydetme
+kolu, `pick` kaydetme penceresiyle), `dialogs.rs` (`ctx.dialog`'da verilen izin), `panel_view.rs` (ipucu).
+
+- **Karar: okumak ile yazmak ayrı yetenek.** `files.userSelected` kurulum penceresinde "Sizin seçtiğiniz dosyaları
+  okur" der; anlamını yazmaya genişletmek, okumaya izin vermiş kullanıcıya sormadan yazma izni vermek olurdu. Yeni
+  yetenek `files.userSelectedWrite`: "Sizin seçtiğiniz yere dosya yazar", yalnız `user-selected` kapsamı. Kaydetme
+  kipindeki seçici onu ister: paketin panelinde Kapı 1, `ctx.dialog`'un penceresinde masaüstü kullanıcının verdiği
+  izne bakar. Var olan kurulum güncellenirken yeni yetenek kurulum incelemesinde "eklendi" diye sorulur.
+- **Değer:** yazılacak dosyanın mutlak yolu. Dosyanın var olması gerekmez, klasörünün gerekir. Uzantısız yazılan ada
+  süzgecin ilk uzantısı eklenir (bilgisayarın kaydetme penceresi her sistemde eklemiyor); başka uzantı süzgecin
+  sözüyle, klasör yolu "dosyanın adı da yazılmalı" diye söylenir. Var olan dosyanın üzerine yazmayı kaydetme penceresi
+  sorar; elle yazılan yol kullanıcının kararıdır.
+- **`defaultName`:** kaydetme penceresinin önerdiği ad (ör. `parseller.csv`); yalnız `save: true` ile, klasörsüz,
+  en çok 120 karakter (Kapı 1). Okunacak dosyanın önerilen adı olmaz.
+- **Yazmak eklentinin:** KentOS dosyayı açmaz, yazmaz; yolu kodun parametrelerine verir. Aracı dosya erişimini
+  denetlemez (ayrı süreç korumalı alan değildir, PY-RUN-19): yetenek kullanıcıya söylenen sözdür.
+- **Vitrin 1.0.36:** katmanın sağ tık menüsünde "Katmanı CSV'ye yaz": önerilen ad katmanın adı; her nesne bir satır
+  (x, y: noktanın kendisi, alanın ağırlık merkezi, çizginin ilk noktası; öznitelikler sütun). `41-kaydet`.
+- **Sınamalar:** paylaşılan (Kapı 1: önerilen ad dosya adı ve yalnız kaydetmede, `save` evet/hayır, türün uzantısı;
+  paket: kaydetme yeri yazma yeteneği ister), masaüstü 1 (uzantısız ada ilk uzantı, dosya olmasa da olur, klasörü
+  yoksa, başka tür ve klasör söylenir).

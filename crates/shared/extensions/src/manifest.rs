@@ -633,12 +633,16 @@ pub enum Capability {
     DataSource,
     #[serde(rename = "files.userSelected")]
     FilesUserSelected,
+    /// A file written where the user chose (a panel's save picker, docs/adr/8057 §44): apart from reading, so a user
+    /// who let an extension read the files they choose is asked again before it writes.
+    #[serde(rename = "files.userSelectedWrite")]
+    FilesUserSelectedWrite,
     #[serde(rename = "network")]
     Network,
 }
 
 impl Capability {
-    pub const ALL: [Capability; 15] = [
+    pub const ALL: [Capability; 16] = [
         Capability::DocumentRead,
         Capability::DocumentWrite,
         Capability::DatasetsRead,
@@ -653,6 +657,7 @@ impl Capability {
         Capability::MapTool,
         Capability::DataSource,
         Capability::FilesUserSelected,
+        Capability::FilesUserSelectedWrite,
         Capability::Network,
     ];
 
@@ -673,6 +678,7 @@ impl Capability {
             Capability::MapTool => "mapTool",
             Capability::DataSource => "dataSource",
             Capability::FilesUserSelected => "files.userSelected",
+            Capability::FilesUserSelectedWrite => "files.userSelectedWrite",
             Capability::Network => "network",
         }
     }
@@ -694,6 +700,7 @@ impl Capability {
             Capability::MapTool => "Harita aracı ekler",
             Capability::DataSource => "Veri kaynağı ekler",
             Capability::FilesUserSelected => "Sizin seçtiğiniz dosyaları okur",
+            Capability::FilesUserSelectedWrite => "Sizin seçtiğiniz yere dosya yazar",
             Capability::Network => "İnternete bağlanır",
         }
     }
@@ -712,7 +719,9 @@ impl Capability {
                     Scope::PluginOwned,
                 ]
             }
-            Capability::FilesUserSelected => &[Scope::UserSelected],
+            Capability::FilesUserSelected | Capability::FilesUserSelectedWrite => {
+                &[Scope::UserSelected]
+            }
             Capability::UiRibbonTab
             | Capability::UiPanel
             | Capability::UiContextMenu

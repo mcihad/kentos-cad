@@ -25,6 +25,7 @@ pub const MOST_COMPONENTS: usize = 100;
 
 /// The components' Python builders, `kentos.ui_panel` (docs/adr/8057 §34), made from [`json_schema`].
 #[cfg(feature = "schema")]
+mod files;
 pub mod python;
 pub mod rules;
 pub mod tabs;
@@ -150,6 +151,8 @@ pub enum Component {
     /// A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of
     /// `filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no
     /// file, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`.
+    /// With `save`, where a file is to be written (docs/adr/8057 §44): the file need not be there, its folder must; a
+    /// name without an extension takes the first kind's; its extension asks for `files.userSelectedWrite`.
     FilePicker {
         id: String,
         label: String,
@@ -162,6 +165,12 @@ pub enum Component {
         placeholder: Option<String>,
         #[serde(default, rename = "onChange")]
         on_change: Option<String>,
+        /// Where a file is to be written, not one to be read.
+        #[serde(default)]
+        save: bool,
+        /// The name the save window offers (`parseller.csv`).
+        #[serde(default, rename = "defaultName")]
+        default_name: Option<String>,
     },
     /// The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`
     /// holds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else
@@ -586,7 +595,16 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "featurePicker" => &[
             "id", "label", "layer", "geometry", "multiple", "onChange", "required",
         ],
-        "filePicker" => &["id", "label", "filters", "placeholder", "onChange", "required"],
+        "filePicker" => &[
+            "id",
+            "label",
+            "filters",
+            "placeholder",
+            "onChange",
+            "required",
+            "save",
+            "defaultName",
+        ],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" | "timeField" | "dateTimeField" => {
             &["id", "label", "value", "min", "max", "onChange", "required"]
@@ -1255,40 +1273,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     }
                 }
             }
-            "filePicker" => {
-                match c.get("filters") {
-                    None => {}
-                    Some(Value::Array(filters)) if filters.len() <= 10 => {
-                        for (j, f) in filters.iter().enumerate() {
-                            let name = f.get("name").and_then(Value::as_str).map(str::trim);
-                            let extensions = f.get("extensions").and_then(Value::as_array);
-                            let fits = name.is_some_and(|n| !n.is_empty() && n.chars().count() <= 40)
-                                && extensions.is_some_and(|e| {
-                                    !e.is_empty()
-                                        && e.iter().all(|x| {
-                                            x.as_str().is_some_and(|x| {
-                                                (1..=10).contains(&x.len())
-                                                    && x.bytes()
-                                                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit())
-                                            })
-                                        })
-                                });
-                            if !fits {
-                                add(
-                                    format!("{at}/filters/{j}"),
-                                    "Dosya türü bir ad (en çok 40 karakter) ve noktasız uzantılar ister, ör. \
-                                     {\"name\": \"CSV\", \"extensions\": [\"csv\"]}."
-                                        .to_owned(),
-                                );
-                            }
-                        }
-                    }
-                    Some(_) => add(
-                        format!("{at}/filters"),
-                        "filters en çok 10 dosya türünün listesi olmalı.".to_owned(),
-                    ),
-                }
-            }
+            // Its kinds, and where a file is to be written (files.rs, docs/adr/8057 §41, §44).
+            "filePicker" => files::check(c, &at, &mut add),
             "image" => {
                 if let Some(height) = c.get("height")
                     && !height.as_f64().is_some_and(|h| (80.0..=600.0).contains(&h))
