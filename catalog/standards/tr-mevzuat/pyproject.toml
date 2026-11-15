@@ -1,7 +1,7 @@
 # Türkiye mevzuatı eklentisinin Python tarafı: yalnız `kentos.ext`'i kullanır, başka kütüphane istemez.
 [project]
 name = "tr-mevzuat"
-version = "0.2.0"
+version = "0.3.0"
 description = "İmar ve yangın yönetmeliklerinin denetim kuralları"
 requires-python = ">=3.12,<3.14"
 dependencies = []

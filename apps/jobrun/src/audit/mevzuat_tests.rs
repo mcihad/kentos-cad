@@ -200,12 +200,15 @@ macro_rules! need_python {
     };
 }
 
+mod ara_kat;
 mod bykhy;
+mod cikmaz;
 mod paiy;
 
 /// The cloud job's way: the drawing as the server writes it and the package beside the request; each rule gives its
 /// report, of this package's release. The synthetic building has living rooms and bedrooms only: its two flats lack a
-/// bathroom and a toilet (errors) and may have a kitchen niche (cannot decide); every other rule finds nothing.
+/// bathroom and a toilet (errors) and may have a kitchen niche (cannot decide); the first storey's corridor ends in a
+/// dead end of 21.82 m (an error, as KentOS Mimari's own fire audit finds); every other rule finds nothing.
 #[test]
 fn the_rules_run_on_the_drawing_as_a_cloud_job_runs_them() {
     let python = need_python!();
@@ -233,11 +236,11 @@ fn the_rules_run_on_the_drawing_as_a_cloud_job_runs_them() {
             (entry.id.as_str(), p.digest.as_str())
         );
         let severities: Vec<Severity> = report.findings.iter().map(|f| f.severity).collect();
-        let expected: &[Severity] = if entry.id == "piyesler" {
-            use Severity::{Error, Info};
-            &[Info, Error, Error, Info, Error, Error]
-        } else {
-            &[]
+        use Severity::{Error, Info};
+        let expected: &[Severity] = match entry.id.as_str() {
+            "piyesler" => &[Info, Error, Error, Info, Error, Error],
+            "cikmaz-koridor" => &[Error],
+            _ => &[],
         };
         assert_eq!(severities, expected, "{}: {:?}", entry.id, report.findings);
         ran.push(entry.id.clone());
@@ -247,7 +250,9 @@ fn the_rules_run_on_the_drawing_as_a_cloud_job_runs_them() {
         [
             "piyesler",
             "koridor",
+            "cikmaz-koridor",
             "daire-ici",
+            "ara-katli-daire",
             "daire-kapisi",
             "cikis-erisimi"
         ]

@@ -3116,3 +3116,59 @@ Kasım'da yeniden indirildi, SHA-256'ları §51'inkiyle aynı).
 - **Sınamalar:** ortak form 1 (400 pikselde iki hücre yan yana, 240 pikselde alt alta), paylaşılan 1 (adın kırpılması;
   art arda olmayan, satıra girmeyen türde, yanlış adlı, başka sekmede ve beşinci hücre yerleriyle), Python
   kurucularının imzası (`row`), masaüstü 1 (satırın hücre sınırları: başka satırda, satırsızda ve formun sonunda biter).
+
+## §56. Türkiye mevzuatı 0.3.0: çıkmaz koridor ve ara katlı daire (`ADIM 20`, ulusal kuralların üçüncü dilimi)
+
+**16 Kasım.** Kod: `catalog/standards/tr-mevzuat/` (`tr.kentos.mevzuat` 0.3.0; yeni `src/tr_mevzuat/cikmaz.py`,
+`ara_kat.py`; `bina.py`'ye taşınan `karar`; `manifest.json`, `CHANGELOG.md`); sınamalar
+`apps/jobrun/src/audit/mevzuat_tests/cikmaz.rs`, `ara_kat.rs` ve `mevzuat_tests.rs` (bulut işinin yolu); araştırma
+notu `docs/research/2026-11-16-tr-mevzuat-denetim-kurallari.md` (BYKHY 4/i, 30/5'in çıkmaz alan cümlesi, 48/2'nin
+tamamı, 43/1 ve Ek-5/B'nin çıkmaz koridor sütunu aynen; 22 alıntının hepsi resmî metinde aynen geçiyor).
+
+- **Kaynak (aynen):** 4/i (2009/15316 BKK ile değişik): “Çıkmaz koridor mesafesi: Mekân içerisinden mekânın koridora
+  bağlanan kapısına kadar olan mesafe göz önüne alınmaksızın, kaçışta, mekânların bağlı olduğu koridorun en uzak
+  noktasından koridor boyunca bir çıkışa veya iki yönde kaçış imkânına sahip olunan noktaya kadar olan mesafeyi”.
+  Ek-5/B'nin "Çıkmaz koridor en çok uzaklık" sütunu (yağmurlama sistemi yok / var): yüksek tehlikeli yerler 10/20,
+  öbür bütün satırlar, apartmanlar dahil, 15/20 m; dipnot (1) yalnız tek ve iki yönlü uzaklığı artırır. Çıkmaz alandan
+  söz eden öbür hüküm 30/5 sayısal sınır vermez.
+- **`cikmaz-koridor` (BYKHY 4/i, Ek-5/B):** türü `corridor` olan mahalin kendi yürüyüşünün tek yön payı (en uzak
+  noktasından bir kat çıkışına ya da iki yönün ayrıldığı noktaya; tek çıkışta bütün yol) projenin yağmurlama ayarının
+  sınırına: 15 m, yağmurlama sistemiyle 20 m; aşarsa hata. Bulgu ölçüyü, sınırı, ayarı ve maddeyi söyler ("çıkmaz
+  koridor 21.82 m …; projenin ayarında yağmurlama sistemi işaretli değil, sınır 15.00 m — BYKHY md. 4/i ve Ek-5/B").
+  Ayarı vermeyen eski bir KentOS'un olgularında koridor türü de yok: kural bir şey söylemez (yağmurlama ayarı 0.2.0'daki
+  `bina.yagmurlama`/`karar` ile, iki eşik dahil, aynı yoldan okunur).
+- **Karar: ölçü KentOS Mimari'nin.** Yerel yangın denetimi (`fire_audit.rs`) çıkmaz koridoru koridorun kendi
+  yürüyüşünün tek yön payı sayar ve `Use::dead_end` ile 15/20 m'ye (yüksek tehlikeli yerde 10/20) bakar; olgularda aynı
+  yürüyüş var. Örnek binanın 1. kat koridoru (21.82 m) iki denetimde de hata.
+- **Karar: konut olmayan sınıflar da okunur, çünkü sütun sınıftan bağımsız.** Görevde konut olmayan kullanım
+  sınıflarının (olgularda yok) atlanması istenmişti; ama çıkmaz koridor sütunu yüksek tehlikeli yerler dışında her
+  satırda 15/20 m. Konut olmayan bölümün ya da karma binanın koridorunda bu sınırı aşan çıkmaz her sınıf için
+  aykırıdır: karar verilir ve bulgu "kullanım sınıfı olgularda yok; yüksek tehlikeli yerler dışında her sınıfın sınırı"
+  der. Sınıfa bağlı tek değer yüksek tehlikeli yerin yağmurlamasız 10 m'si; yüksek tehlikeli yer olgularda tanınmaz,
+  10-15 m arası söylenmez.
+- **Yalnız konut bölümleri olan bina:** ortak koridoru Ek-5/B'nin apartmanlar satırıyla (15/20 m) okunur ve 48/1'in
+  muafiyeti uygulanır (çıkmaz koridor mesafesi bir kaçış mesafesidir). **Yerel denetimden ayrılış:** KentOS Mimari bu
+  koridoru hiç okumuyor (kullanımı `None` kalıyor, kural geçiyor). Karma binada 48/1 uygulanmaz: ortak koridor konut
+  olmayan bölümlere de hizmet eder (31/5, en sıkı kullanım). Konutun ve konutun eklentisinin kendi holü 48/2'nindir,
+  okunmaz (yerel denetim de konutun mahallerini bu kurala sokmaz).
+- **`ara-katli-daire` (BYKHY 48/2'nin ikinci ve üçüncü cümleleri, karar verilebildi):** “İkiden çok ara kat bulunmayan
+  apartman dairelerinde tek kapı bulunması hâlinde, bu kapı üst katta düzenlenemez. Üstteki katın döşeme alanı, bu kat
+  için ayrı bir çıkış sağlanmadıkça 70 m2’yi aşamaz.” Olgularla karar verilen hâl iki katlı konut bölümüdür
+  (`UnitFacts.levels`'ta iki kat): "ara kat" yönetmelikte tanımlı değil ve 43/1 onu kattan ayrı sayar, ama iki katlı
+  daire her okuyuşta bu cümlelerin içindedir ve "üst kat" yüksek olandır. Dairenin tek kapısı (olguların konut
+  kapıları, katlarıyla) üst kattaysa hata. Üst katta kapı yoksa üst katın döşeme alanı 70 m²'yi aşamaz: "döşeme alanı"
+  net mi brüt mü yazılı değil, net alan aşıyorsa hata, yalnız brüt aşıyorsa "karar verilemedi" (bilgi). Üst katta kapı
+  varsa o katın ayrı çıkışıdır. Fıkra "Birinci fıkrada belirtilenler dışındaki konutlarda" diye başladığı için 48/1'in
+  muaf tuttuğu binalarda okunmaz. **Karar verilmeyen:** üç ve daha çok katlı daire (kaç ara katı olduğu ve hangisinin
+  "üstteki kat" olduğu belli değil). Yerel denetimde bu cümlelerin karşılığı yok.
+- **Örnek binada (mimari.kcad, bulut işinin yoluyla):** `cikmaz-koridor` 1. kat koridorunda 21.82 m (hata);
+  `ara-katli-daire` iki katlı binada (48/1) bir şey söylemez; öbür kurallar §54'teki gibi.
+- **Sınamalar (gerçek Python; yoksa atlandığını söyler):** `cargo test -p kentos-jobrun --bin kentos-jobrun --
+  audit` 16/16 (4 eski, 12 mevzuat), 14.2 sn; her durum örnek binanın olgularında birkaç ölçü değiştirilerek. Çıkmaz
+  koridor: çizildiği gibi 21.82 m ayarsız hata ("sınır 15.00 m", sınıfsız söz), 12 m uygun; ayarla 19 m uygun, 21.82 m
+  hata ("sınır 20.00 m"); yalnız konutlu binada iki katta muaf (48/1), beş katta apartmanlar satırıyla hata; konutun
+  kendi holü okunmaz, büronun koridoru (22.52 m) hata; eski olgularda bir şey söylenmez. Ara katlı daire: iki katlı
+  binada muaf; beş katta 60/68 m²'lik kapısız üst kat uygun, 75/80 m² hata, 66/74 m² "karar verilemedi"; tek kapı üst
+  katta hata; her katta kapı varsa 90 m²'lik üst kat uygun; üç katlı dairede karar yok. Yedi kural ayrıca örnek çizimde
+  bulut işinin yoluyla (`run_audit`): `piyesler` 4 hata 2 bilgi, `cikmaz-koridor` 1 hata, öbürleri uygun. `kentos kek
+  verify` 0 uyarı (yeniden derlenmiş komut satırıyla); paket 21 257 bayt, 14 dosya.

@@ -73,6 +73,20 @@ def yagmurlama(a: ext.ArchitectureFacts) -> Yagmurlama:
     return Yagmurlama(0, "projenin ayarında yağmurlama sistemi işaretli değil")
 
 
+def karar(measure: float, limits: tuple[float, float], y: Yagmurlama) -> tuple[str, float, str] | None:
+    """Bir ölçünün iki sütunlu sınıra (yağmurlama sistemi yok, var) göre kararı: önemi, aştığı sınır ve söz; aşmıyorsa
+    yok. Ayar biliniyorsa yalnız onun sınırı (aşarsa hata); bilinmiyorsa yağmurlamasız sınırı aşan uyarı, yağmurlamalıyı
+    da aşan hata."""
+    if y.sutun is not None:
+        limit = limits[y.sutun]
+        return ("error", limit, f"{y.soz}, sınır {metre(limit)}") if measure > limit + PAY else None
+    if measure > limits[1] + PAY:
+        return ("error", limits[1], f"{y.soz}; yağmurlama sistemi olsa da sınır ({metre(limits[1])}) aşılıyor")
+    if measure > limits[0] + PAY:
+        return ("warning", limits[0], f"{y.soz}; binada yağmurlama sistemi yoksa sınır ({metre(limits[0])}) aşılıyor")
+    return None
+
+
 @dataclass(frozen=True)
 class Bina:
     """BYKHY 48/1'in okuduğu: katların sayısı (zemin ve üstü, mahali olan bodrumlar) ve konut bağımsız bölümleri."""

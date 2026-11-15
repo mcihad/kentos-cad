@@ -2,10 +2,10 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.kentos.mevzuat",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "name": "Türkiye mevzuatı",
   "summary": "İmar ve yangın yönetmeliklerinin mimari çizimin ölçülmüş olgularıyla karar verilen kuralları.",
-  "description": "KentOS'un mimari çizimde ölçtüğü olgular (katlar, kat çıkışları, mahallerin türü, net alanı ve dar kenarı, bağımsız bölümler, kaçış yürüyüşleri, projenin yağmurlama ayarı) üzerinde Planlı Alanlar İmar Yönetmeliği (RG 3.7.2017/30113) ile Binaların Yangından Korunması Hakkında Yönetmelik'in (RG 19.12.2007/26735) olgularla karar verilebilen kuralları. Her bulgu yönetmeliğin maddesini ve fıkrasını söyler. Yönetmeliğin istisnası olguların göremediği bir şeye bağlıysa (mutfak ya da yatak nişi, mahalin donanımı) bulgu karar verilemediğini söyler. Konut olmayan bölümün yangın yönetmeliğindeki kullanım sınıfı olgularda yok; o bölümlerin kaçış uzaklığına karar verilmez. Bulgu çizimin ölçüsüdür, onay değildir.",
+  "description": "KentOS'un mimari çizimde ölçtüğü olgular (katlar, kat çıkışları, mahallerin türü, net alanı ve dar kenarı, bağımsız bölümler, kaçış yürüyüşleri, projenin yağmurlama ayarı) üzerinde Planlı Alanlar İmar Yönetmeliği (RG 3.7.2017/30113) ile Binaların Yangından Korunması Hakkında Yönetmelik'in (RG 19.12.2007/26735) olgularla karar verilebilen kuralları. Her bulgu yönetmeliğin maddesini ve fıkrasını söyler. Yönetmeliğin istisnası olguların göremediği bir şeye bağlıysa (mutfak ya da yatak nişi, mahalin donanımı) bulgu karar verilemediğini söyler. Konut olmayan bölümün yangın yönetmeliğindeki kullanım sınıfı olgularda yok; o bölümlerin tek ve iki yönlü kaçış uzaklığına karar verilmez (çıkmaz koridorun sınırı sınıftan bağımsızdır, ona karar verilir). Bulgu çizimin ölçüsüdür, onay değildir.",
   "authors": [
     "KentOS"
   ],
@@ -69,10 +69,22 @@
         "handler": "tr_mevzuat.paiy:koridor"
       },
       {
+        "id": "cikmaz-koridor",
+        "title": "Çıkmaz koridor (BYKHY 4/i)",
+        "domain": "mimari",
+        "handler": "tr_mevzuat.cikmaz:cikmaz_koridor"
+      },
+      {
         "id": "daire-ici",
         "title": "Daire içinde kapıya uzaklık (BYKHY 48/2)",
         "domain": "mimari",
         "handler": "tr_mevzuat.bykhy:daire_ici"
+      },
+      {
+        "id": "ara-katli-daire",
+        "title": "Ara katlı dairenin kapısı ve üst katı (BYKHY 48/2)",
+        "domain": "mimari",
+        "handler": "tr_mevzuat.ara_kat:ara_katli_daire"
       },
       {
         "id": "daire-kapisi",

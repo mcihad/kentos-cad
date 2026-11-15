@@ -1,6 +1,6 @@
 # Türkiye mevzuatının ilk denetim kuralları: PAİY 29 ve BYKHY'nin kaçış uzaklıkları
 
-Tarih: 16 Kasım 2026. Konu: `catalog/standards/tr-mevzuat` paketi (`tr.kentos.mevzuat` 0.1.0 ve 0.2.0), plan/eklenti.md
+Tarih: 16 Kasım 2026. Konu: `catalog/standards/tr-mevzuat` paketi (`tr.kentos.mevzuat` 0.1.0–0.3.0), plan/eklenti.md
 ADIM 20'nin "ulusal/belediye kurallarının Python betikleri" maddesi. Kurallar yalnız KentOS'un Rust'ta ölçtüğü mimari
 olguları (`facts.project.architecture`, ADR 8057 §39; 0.2.0'dan beri §53'ün mahal türü, dar kenar, yağmurlama ayarı ve
 merdivene açılan kapı) okur; bu not hangi hükmün aynen ne dediğini, olguların hangisine karar verebildiğini ve neyin
@@ -72,6 +72,14 @@ Madde 4 (tanımlar):
 
 > Tek yönlü kaçış mesafesi: Bir mekân içindeki kişilerin sadece tek bir yönde hareket ederek bir çıkışa veya alternatifli iki yönde kaçış imkânına sahip olduğu noktaya kadar olan mesafeyi,
 
+4/i (2009/15316 sayılı BKK ile değişik), 0.3.0'ın çıkmaz koridoru:
+
+> i) (Değişik: 10/8/2009-2009/15316 K.) Çıkmaz koridor mesafesi: Mekân içerisinden mekânın koridora bağlanan kapısına kadar olan mesafe göz önüne alınmaksızın, kaçışta, mekânların bağlı olduğu koridorun en uzak noktasından koridor boyunca bir çıkışa veya iki yönde kaçış imkânına sahip olunan noktaya kadar olan mesafeyi,
+
+Madde 30 (beşinci fıkranın son cümlesi), çıkmaz alanlardan söz eden tek öbür hüküm (sayısal sınır vermez):
+
+> Bir yangın hâlinde veya herhangi bir acil durumda, kullanıcıların yanlışlıkla çıkmaz alanlara girmemeleri ve kullanılan odalardan ve mekânlardan geçmek zorunda kalmaksızın bir çıkışa veya çıkışlara doğrudan erişmeleri için gerekli tedbirler alınır.
+
 Madde 31 (Kaçış Yolları), üçüncü fıkra:
 
 > Her katta, o katın kullanıcı yüküne ve en uzun kaçış uzaklığına göre çıkış imkânları sağlanır.
@@ -90,7 +98,7 @@ Madde 48 (Konutlar; 2009/15316 sayılı BKK ile değişik):
 
 > (1) Bodrum katlar dâhil 4 katı geçmeyen konutlar ile tek evler, ikiz evler ve sıra evler gibi konutlarda, tek bir kullanıma hizmet veren binalarda veya böyle bir binanın ayrılmış bir bölümünde kaçışlar, kaçış mesafesi aranmaksızın normal merdivenlerle sağlanabilir.
 
-> (2) Birinci fıkrada belirtilenler dışındaki konutlarda, konut içindeki herhangi bir noktadan konut çıkış kapısına kadar olan uzaklığın 20 m’yi, yağmurlama sistemi olan konutlarda 30 m’yi geçmemesi gerekir.
+> (2) Birinci fıkrada belirtilenler dışındaki konutlarda, konut içindeki herhangi bir noktadan konut çıkış kapısına kadar olan uzaklığın 20 m’yi, yağmurlama sistemi olan konutlarda 30 m’yi geçmemesi gerekir. İkiden çok ara kat bulunmayan apartman dairelerinde tek kapı bulunması hâlinde, bu kapı üst katta düzenlenemez. Üstteki katın döşeme alanı, bu kat için ayrı bir çıkış sağlanmadıkça 70 m2’yi aşamaz.
 
 > (3) Konut birimlerinden bütün çıkışların, kaçış merdivenlerine veya güvenli bir açık alana doğrudan erişim imkânı sağlayacak şekilde olması gerekir.
 
@@ -113,6 +121,15 @@ Ek-5/B (Çıkışlara Götüren En Uzun Kaçış Uzaklıkları ve Birim Genişli
 | **Apartmanlar** | **15** | **30** | **30** | **75** |
 
 > Kolay alevlenici malzeme üretimi yapmayan endüstriyel amaçlı yapılarda tek ve iki yönlü uzaklık ½ oranında artırılabilir.
+
+Aynı tablonun "Çıkmaz koridor en çok uzaklık(m)" sütunu ("Koridorlar"; yağmurlama sistemi yok, yağmurlama sistemli):
+yüksek tehlikeli yerler 10 ve 20; endüstri amaçlı yapılar, yurtlar, mağazalar, büro binaları, otoparklar ve depolar,
+okul ve eğitim yapıları, toplanma amaçlı binalar, hastaneler, oteller ve **apartmanlar 15 ve 20**. Dipnot (1) yalnız
+"tek ve iki yönlü uzaklık"ı artırır, çıkmaz koridoru değil.
+
+Madde 43/1, "ara kat"ı kattan ayrı sayan hüküm (yönetmelik "ara kat"ı tanımlamaz):
+
+> MADDE 43- (1) Dairesel merdivenler; yanmaz malzemeden yapılmaları ve en az 100 cm genişlikte olmaları hâlinde, kullanıcı yükü 25 kişiyi aşmayan herhangi bir kattan, ara kattan, veya balkonlardan zorunlu çıkış olarak hizmet verebilir.
 
 ## Olgular neye karar verebiliyor
 
@@ -138,7 +155,7 @@ Hâlâ vermedikleri:
   yok" ile "ayar verilmedi" Python'da ayırt edilmez. Paket olguların yeni olduğunu sınırı bulunan bir mahalin dar
   kenarından tanır (yeni KentOS bunu her zaman yazar).
 
-## Kurallar (0.2.0)
+## Kurallar (0.2.0 ve 0.3.0)
 
 | Kimlik | Hüküm | Karar | Önem |
 |---|---|---|---|
@@ -147,6 +164,39 @@ Hâlâ vermedikleri:
 | `daire-ici` | BYKHY 48/1, 48/2 | Konutun her katında kapıya en uzun yürüyüş projenin ayarının sınırına (20 m, yağmurlama sistemiyle 30 m): aşarsa hata ve hangi sınırın okunduğunu söyler. Kapıya yol bulamayan mahal hata. | hata |
 | `daire-kapisi` | BYKHY 32/3, 48/1, 48/3, 48/4, 33/6-b, Ek-5/B apartmanlar | Merdivene açılan kapı uygun; hiçbir kat çıkışına ulaşmayan kapı her binada hata (48/3, 33/6-b). Yürüyüş apartmanlar satırına, ayarın sütunuyla (15/30 m, yağmurlamalı 30/75 m): aşarsa hata. | hata |
 | `cikis-erisimi` | BYKHY 31/3, 33/6-b | Değişmedi: kat çıkışı olmayan kat, kendi bölümünden ve ortak alanlardan çıkışa ulaşmayan mahal. | hata |
+| `cikmaz-koridor` (0.3.0) | BYKHY 4/i, Ek-5/B | Türü koridor olan mahalin yürüyüşünün tek yön payı ayarın sınırına (15 m, yağmurlamalı 20 m): aşarsa hata. Yalnız konut bölümleri olan binada apartmanlar satırı ve 48/1; öbürlerinde her sınıfın ortak sınırı. | hata |
+| `ara-katli-daire` (0.3.0) | BYKHY 48/2 (ikinci ve üçüncü cümleler) | İki katlı konut bölümünde tek kapı üst katta olamaz; üst katta kapı yoksa üst kat 70 m²'yi aşamaz (net aşıyorsa hata, yalnız brüt aşıyorsa bilgi). | hata; karar verilemeyende bilgi |
+
+### Çıkmaz koridor (0.3.0)
+
+- **Ölçü KentOS Mimari'nin:** yerel yangın denetimi (`fire_audit.rs`) koridorun kendi yürüyüşünün tek yön payını
+  çıkmaz koridor sayar ("from its farthest point to an exit or to where two ways part") ve `Use::dead_end` ile 15/20 m'ye
+  (yüksek tehlikeli yerde 10/20) bakar. Olgularda aynı yürüyüş var (`escape.exit.one_way`, tek çıkışta bütün yol).
+  Başlangıç noktası mahallerdeki gibi duvarlardan 40 cm öndedir (32/6); 4/i "koridorun en uzak noktası" der, fark
+  yerel denetimdekiyle aynıdır.
+- **Kullanım sınıfı gerekmiyor:** çıkmaz koridor sütunu yüksek tehlikeli yerler dışında her satırda 15/20'dir. Konut
+  olmayan bölümün ya da karma binanın koridorunda bu sınırı aşan çıkmaz her sınıf için aykırıdır, karar verilir. Yalnız
+  yüksek tehlikeli yerin yağmurlamasız 10 m'si sınıfa bağlıdır; yüksek tehlikeli yer olgularda tanınmaz, 10-15 m arası
+  söylenmez. (Görevde konut olmayan sınıfların atlanması istenmişti; sütun sınıftan bağımsız olduğu için karar
+  verilebildi.)
+- **Yerel denetimden ayrıldığı yer:** yerel denetim yalnız konut bölümleri olan binanın ortak koridorunu okumuyor
+  (kullanımı `None` kalıyor, kural geçiyor); paket onu apartmanlar satırıyla okur ve 48/1'i uygular (çıkmaz koridor
+  mesafesi bir kaçış mesafesidir). Karma binada 48/1 uygulanmaz: ortak koridor konut olmayan bölümlere de hizmet eder
+  (31/5'in en sıkı kullanıma göre okuyuşu). Konutun (ve konutun eklentisinin) kendi holü 48/2'nindir, okunmaz.
+- **Eski olgular:** türü vermeyen bir KentOS'un olgularında koridor tanınmaz, kural bir şey söylemez; yağmurlama
+  ayarı 0.2.0'daki gibi okunur.
+
+### Ara katlı daire (0.3.0)
+
+- **Karar verilebilen:** iki katlı konut bölümü (`UnitFacts.levels`'ta iki kat). "Ara kat" yönetmelikte tanımlı değil
+  ve 43/1 onu kattan ayrı sayar; ama iki katlı daire her okuyuşta "ikiden çok ara kat bulunmayan" dairedir ve "üst kat"
+  yüksek olan kattır. Kapılar olguların konut kapılarıdır (`doors`, katlarıyla): üst katta kapı varsa o katın ayrı
+  çıkışıdır.
+- **Tek kapı üst katta:** hata. **Üst katta kapı yok:** "döşeme alanı"nın net mi brüt mü olduğu yazılı değil; net alan
+  70 m²'yi aşıyorsa her okuyuşta aykırıdır (hata), yalnız brüt aşıyorsa karar verilemez (bilgi), brüt aşmıyorsa uygun.
+- **Kapsam:** fıkra "Birinci fıkrada belirtilenler dışındaki konutlarda" diye başlar; aynı fıkranın cümleleri olduğu
+  için 48/1'in muaf tuttuğu binalarda okunmaz (yanlış bulgu yerine eksik bulgu yönünde).
+- **Karar verilmeyen:** üç ve daha çok katlı daire (kaç ara katı olduğu ve hangisinin "üstteki kat" olduğu belli değil).
 
 ### Karar: PAİY 29/1 tek kural
 
@@ -205,11 +255,9 @@ KentOS'un olgularında iki durum ayırt edilmez, karar verilmez.
   dürüst değil (yağmurlamasız tek yön 15 m bütün sınıflarda ortak değil: yüksek tehlikeli yerlerde 10 m, Ek-5/B'nin (1)
   dipnotuyla kolay alevlenici malzeme üretmeyen endüstri yapılarında 22.5 m).
 - **5/25'in %20 sınırı:** parseldeki bağımsız bölüm sayısı olgu değil; yatak nişi olan bölümlerin payı sayılamaz.
-- **BYKHY 4/i ve Ek-5/B'nin çıkmaz koridor sütunu:** koridor artık tür olarak biliniyor, ama çıkmaz koridor mesafesi
-  koridorun en uzak noktasından ölçülür ve sınırı kullanım sınıfına bağlıdır (apartmanlarda 15/20 m); konut binasında
-  ortak koridorun hangi kullanıma hizmet ettiği kararı bu dilime alınmadı, sonraki aday.
-- **BYKHY 48/2'nin ikinci ve üçüncü cümleleri** (ara katlı dairede tek kapı üst katta olamaz; üst kat ayrı çıkışsız
-  70 m²'yi aşamaz): dubleks dairenin hangi katının "üst kat" olduğu ve döşeme alanının neti mi brütü mü olduğu çözülmedi.
+- **Çıkmaz koridorda yüksek tehlikeli yerin yağmurlamasız 10 m'si:** yüksek tehlikeli yer olgularda tanınmaz (0.3.0).
+- **48/2'nin ara katlı daire cümleleri, üç ve daha çok katlı dairede** ve brütü aşıp neti aşmayan üst kat (0.3.0:
+  karar verilmez ya da "karar verilemedi").
 - **BYKHY 33/1-2 (genişlikler), 39/2 (çıkış sayısı), 48/5 (yüksekliğe göre merdivenler), Ek-5/A (kişi yükü):**
   kullanım sınıfı ve korunumluluk olgularda yok.
 

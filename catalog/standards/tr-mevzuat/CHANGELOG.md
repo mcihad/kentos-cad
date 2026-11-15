@@ -1,5 +1,15 @@
 # Değişiklikler
 
+## 0.3.0
+
+- **`cikmaz-koridor`** (yeni): çıkmaz koridor (BYKHY 4/i, Ek-5/B). Türü koridor olan mahalin yürüyüşünün tek yön payı
+  (en uzak noktasından bir çıkışa ya da iki yönün ayrıldığı noktaya) projenin yağmurlama ayarının sınırına: 15 m,
+  yağmurlama sistemiyle 20 m; aşarsa hata. Yalnız konut bölümleri olan binada apartmanlar satırı ve 48/1'in muafiyeti;
+  öbür binalarda Ek-5/B'nin yüksek tehlikeli yerler dışında her sınıfta aynı olan sınırı. Konutun kendi holü okunmaz.
+- **`ara-katli-daire`** (yeni): BYKHY 48/2'nin ikinci ve üçüncü cümleleri. İki katlı konut bölümünde tek kapı üst
+  katta olamaz; üst katta kapı yoksa üst katın döşeme alanı 70 m²'yi aşamaz (net alanı aşıyorsa hata, yalnız brütü
+  aşıyorsa "karar verilemedi"). Üç ve daha çok katlı dairede karar verilmez.
+
 ## 0.2.0
 
 Olgular artık mahalin türünü ve dar kenarını, projenin yağmurlama ayarını ve konut kapısının kaçış merdiveni mahaline

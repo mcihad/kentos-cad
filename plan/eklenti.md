@@ -1044,6 +1044,12 @@ verir: konut piyesleri PAİY 29/1'in tablosuna (alan ve dar kenar), eksik piyes 
 projenin yağmurlama ayarının (ayarsız proje yağmurlamasız, eski olgularda iki eşik); merdivene açılan konut kapısı
 uygun, çıkışa ulaşmayan kapı her binada hata (48/3, 33/6-b). Kalan: konut olmayan bölümlerin kullanım sınıfı ve Ek-5/B
 uzaklıkları, çıkmaz koridor, 48/2'nin dubleks cümleleri, kurp/görüş hesapları, belediye plan notları.
+**Ulusal kuralların üçüncü dilimi** (ADR 8057 §56, 16 Kasım): `tr.kentos.mevzuat` 0.3.0'a iki kural: çıkmaz koridor
+(BYKHY 4/i, Ek-5/B: koridorun yürüyüşünün tek yön payı 15 m, yağmurlama ayarıyla 20 m; sütun yüksek tehlikeli yerler
+dışında her sınıfta aynı olduğu için konut olmayan binalarda da karar verilir, yalnız konutlu binada apartmanlar satırı
+ve 48/1) ve ara katlı daire (48/2: iki katlı dairenin tek kapısı üst katta olamaz, kapısız üst kat 70 m²'yi aşamaz;
+net aşarsa hata, yalnız brüt aşarsa karar verilemedi; üç katlı dairede karar yok). Kalan: konut olmayan bölümlerin
+kullanım sınıfı ve tek/iki yönlü Ek-5/B uzaklıkları, yüksek tehlikeli yer, kurp/görüş hesapları, belediye plan notları.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

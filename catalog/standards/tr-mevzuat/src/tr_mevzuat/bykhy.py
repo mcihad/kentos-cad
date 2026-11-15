@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from kentos import ext
 
-from .bina import PAY, Yagmurlama, bina, bolum, kat_adlari, konutlar, mahal, metre, yagmurlama, yeni_olgular
+from .bina import PAY, bina, bolum, karar, kat_adlari, konutlar, mahal, metre, yagmurlama, yeni_olgular
 
 #: BYKHY 48/2: konutun içinde konut çıkış kapısına en çok uzaklık, m: yağmurlama sistemi yok, var.
 DAIRE_ICI = (20.0, 30.0)
@@ -43,19 +43,6 @@ MADDE_DAIRE_KAPISI = "BYKHY md. 32/3, 48/4 ve Ek-5/B (apartmanlar)"
 MADDE_KAPI_CIKISSIZ = "BYKHY md. 48/3 ve 33/6-b"
 MADDE_KAT_CIKISI = "BYKHY md. 31/3"
 MADDE_ERISIM = "BYKHY md. 33/6-b"
-
-
-def _karar(measure: float, limits: tuple[float, float], y: Yagmurlama) -> tuple[str, float, str] | None:
-    """Bir ölçünün iki sütunlu sınıra göre kararı: önemi, aştığı sınır ve söz; aşmıyorsa yok. Ayar biliniyorsa yalnız
-    onun sınırı (aşarsa hata); bilinmiyorsa yağmurlamasız sınırı aşan uyarı, yağmurlamalıyı da aşan hata."""
-    if y.sutun is not None:
-        limit = limits[y.sutun]
-        return ("error", limit, f"{y.soz}, sınır {metre(limit)}") if measure > limit + PAY else None
-    if measure > limits[1] + PAY:
-        return ("error", limits[1], f"{y.soz}; yağmurlama sistemi olsa da sınır ({metre(limits[1])}) aşılıyor")
-    if measure > limits[0] + PAY:
-        return ("warning", limits[0], f"{y.soz}; binada yağmurlama sistemi yoksa sınır ({metre(limits[0])}) aşılıyor")
-    return None
 
 
 @ext.audit("daire-ici")
@@ -93,7 +80,7 @@ def daire_ici(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
         if key not in farthest or entrance.length > farthest[key][0]:
             farthest[key] = (entrance.length, room)
     for (unit_id, level), (length, room) in farthest.items():
-        decided = _karar(length, DAIRE_ICI, wet)
+        decided = karar(length, DAIRE_ICI, wet)
         if decided is None:
             continue
         severity, _, verdict = decided
