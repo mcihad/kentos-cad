@@ -1,6 +1,6 @@
 //! An extension's panel, `ui/<id>.panel.json` (docs/adr/8057 §24): what a dock shows of it, declared in the package,
-//! drawn by KentOS with its own components. The extension's code never gets a widget or a toolkit type (QGIS's
-//! lesson: 58 % of its plugins were left behind when Qt changed, docs/research/2026-11-13-qgis-eklenti-sistemi.md).
+//! drawn by KentOS with its own components. The extension's code never gets a widget or a toolkit type (a plugin
+//! ecosystem's lesson in plan/eklenti.md: 58 % of its plugins were left behind when its toolkit changed).
 //!
 //! A button runs one of the extension's commands (`entrypoints.commands`) with the panel's values as its parameters
 //! (`ctx.params`, by each input's id); the rows the command answers fill the panel's table. The command runs as any
