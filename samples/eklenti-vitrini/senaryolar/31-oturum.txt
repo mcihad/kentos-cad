@@ -1,0 +1,30 @@
+# Panel oturumu: Değer say'ın komutu çalışırken panelini değiştirir (ctx.panel). Parsel sınırı ve ada seçilince
+# (onChange) sayım, bulduğu değerleri Seç kutusuna sıklıklarıyla koyar ("101 (3)", "102 (1)") ve en sık değeri
+# formun altındaki satıra yazar; Seç › 101 o değerdeki üç parseli çizimde seçer. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 843 20    # Vitrin
+wait 1200
+click 501 57    # Değer say
+wait 2000
+click 140 388   # Katman
+wait 1000
+click 111 541   # Kadastro › Parsel sınırı
+wait 800
+click 140 450   # Alan
+wait 1000
+click 60 514    # ada: onChange, sayım Seç'i doldurur
+wait 6000
+shot 31-secenekler
+click 140 660   # Seç: seçenekleri sayımdan
+wait 1000
+shot 31-acik
+click 90 725    # 101 (3): onChange, deger-sec üç parseli seçer
+wait 5000
+shot 31-secildi

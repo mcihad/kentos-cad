@@ -22,9 +22,9 @@ wait 1000
 click 60 514    # ada: onChange, ağaç dolar
 wait 6000
 shot 20-agac
-click 78 758    # 101 › parsel 3
+click 78 847    # 101 › parsel 3
 wait 2500
 shot 20-yaprak
-click 30 674    # 101 grubunun oku: kapat
+click 30 763    # 101 grubunun oku: kapat
 wait 1200
 shot 20-kapali

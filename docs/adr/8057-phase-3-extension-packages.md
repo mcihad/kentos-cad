@@ -2124,9 +2124,14 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   sayısıyla ezilmez; `rows` grafiğini yeniden hesaplatır; başka sekmedeki panelin değişmesi sekmesinde nokta
   (`unseen`). `focus` yalnız gösterilen panelde, görünür ve açık yazı alanında: kod kullanıcının baktığı sekmeyi
   değiştirmez (False).
-- **Vitrin 1.0.24:** "Değer say" sayınca bulduğu değerleri yeni Seç kutusuna koyar (seçenekler veriden gelir: panelin
-  JSON'u onları bilemez), sıklıklarıyla ("101 (3)"), en sık değeri formun altındaki satıra yazar; Seç'te bir değer o
-  değerdeki nesneleri çizimde seçer (`deger-sec`, `onChange`).
+- **Vitrin 1.0.24–25:** "Değer say" sayınca bulduğu değerleri yeni Seç kutusuna koyar (seçenekler veriden gelir:
+  panelin JSON'u onları bilemez), sıklıklarıyla ("101 (3)"), en sık değeri formun altındaki satıra yazar; Seç'te bir
+  değer o değerdeki nesneleri çizimde seçer (`deger-sec`, `onChange`). Gerçek pencerede (`31-oturum`): Parsel sınırı ve
+  ada seçilince satır "En sık değer: “101” (3 nesne).", Seç "Seçmeyin / 101 (3) / 102 (1)"; 101 (3) seçilince üç parsel
+  seçili ("3 seçili", Öznitelikler "Kapalı alan (3)", panelde "“ada” = “101”: 3 nesne seçildi."). 1.0.24'te
+  açıklamayı uzatmak Katman ve Alan kutularını 30 px kaydırıp eski senaryoların tıklamalarını boşa düşürdü; 1.0.25
+  açıklamayı eski boyuna döndürdü, Seç'in yönergesi sayımdan önce altındaki satırda. Yeni iki form satırı ağacı 89 px
+  indirdiği için `20-agac`'ın tıklamaları yeni yere alındı (gerçek pencerede yeniden koşuldu).
 - **Sınamalar:** masaüstü 4 (değerler, seçenekler, yazı, etkinlik ve görünürlük tanımın izin verdiği gibi, yanlış parça
   hiçbir şey uygulamaz; kullanıcının yazdığı kazanır; satırlar tabloya, düğmeye değil; Vitrin'in Yapı ara paneli
   aracıdan uçtan uca: değer, söz, imleç, çalışma sırasında yazılan alan korunur, yanıtın sözsüz satırları tabloya,

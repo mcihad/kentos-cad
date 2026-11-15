@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.25 — 15 Kasım 2026
+
+- "Değer say"ın açıklaması eski boyuna döndü (uzayınca Katman ve Alan kutuları kayıyordu); Seç'in ne yaptığını sayımdan
+  önce altındaki satır söyler, sayımdan sonra aynı satır en sık değeri yazar.
+
 ## 1.0.24 — 15 Kasım 2026
 
 - "Değer say" sayınca bulduğu değerleri yeni Seç kutusuna koyar (`ctx.panel.set(..., options=...)`: çalışan kod
