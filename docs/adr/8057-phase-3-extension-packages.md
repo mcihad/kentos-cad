@@ -1929,6 +1929,13 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   de düzeltme var"; 662 jeton, 12,4 sn. "…sonra ilk bulgunun düzeltmesini uygula" → plan, onay kartı ("Bulguları onar ·
   eklenti bulgusu 1 · yazma — Onay gerekiyor"), Onayla → yapıya Y-01 yazıldı, sekmede "Y-01 yaz ✓" ve çizim notu, geri
   alma etkin; 1276 jeton, 26 sn.
+- **Bilinen sınır (15 Kasım, kod okunarak):** ajanın `processing.run`'ı bir eklenti aracını (`ext.…`) masaüstünde
+  rpc'nin `call`'u üzerinden **eşzamanlı** çalıştırır: masaüstünün sağlayıcısı (`extensions/tools.rs` `Bridge::run`)
+  havuzu bekler, Asistan'da ve bağlantıda bu arayüz iş parçacığıdır; Python aracı sürerken pencere bekler (aracın süre
+  sınırı kadar, varsayılan 600 sn). İşlemler penceresi aynı aracı arka planda çalıştırır (`gis/processing/background.rs`
+  `start_tool`: iş çizimde hazırlanır, okuma kopyasında hesaplanır, sonuç tek adımda uygulanır). Çözüm: ajanın
+  yürütmesini de oraya almak, çağrıyı denetim gibi sonra cevaplamak (`Later`); sahibin koruyucusunun `expected.plan` ve
+  `expected.revision` denetimi rpc'den önce aynen yapılmalı, yoksa koruma delinir. Ayrı iş.
 - **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi.
 
 ## §28. Manifestin, katman şemasının ve araç tanımının JSON Schema'ları (`ADIM 21`, kod üretimi)
