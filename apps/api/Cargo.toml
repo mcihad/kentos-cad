@@ -34,6 +34,10 @@ jsonwebtoken = { workspace = true }
 reqwest = { workspace = true }
 time = { workspace = true }
 
+# The job's process group ended at its budget, the rule's Python with it (docs/adr/8057 §58).
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
+
 [dev-dependencies]
 tokio = { workspace = true, features = ["io-util"] }
 # The SHA-256 of an uploaded file in the file routes' tests (docs/adr/0031).

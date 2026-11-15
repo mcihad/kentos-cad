@@ -9,6 +9,9 @@
 // `project.audit`: an extension's audit rule run in the child (docs/adr/8057 §42).
 #[path = "job_run/audit.rs"]
 mod audit;
+// The job's budget over the rule's Python too (docs/adr/8057 §58).
+#[path = "job_run/audit_budget.rs"]
+mod audit_budget;
 #[path = "../src/processing_job.rs"]
 mod processing_job;
 mod support;

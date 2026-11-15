@@ -241,6 +241,9 @@ sqlx = { version = "=0.9.0", default-features = false, features = ["runtime-toki
 tower = { version = "=0.5.3", features = ["util"] }
 tower-http = { version = "=0.7.1", features = ["request-id", "timeout", "limit", "trace", "catch-panic", "util"] }
 uuid = { version = "=1.26.1", features = ["v4", "v7", "serde"] }
+# The server job's process group and its end (docs/adr/8057 §58): kill(2) of the group and waitid(2) without reaping;
+# std has neither. Unix only.
+libc = "=0.2.189"
 # GeoPackage is SQLite (docs/adr/0502): SQLite compiled in, no system library; only crates/native/geopackage.
 rusqlite = { version = "=0.39.0", features = ["bundled", "functions"] }
 jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["rust_crypto", "use_pem"] }

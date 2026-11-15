@@ -284,6 +284,14 @@ fn the_desktop_and_the_job_give_the_same_report() {
         reports.push(serde_json::to_string(&done.details).unwrap());
     }
     assert_eq!(reports[0], reports[1], "the job twice");
+    // The rule's process was measured before it closed (docs/adr/8057 §58): its peak counts in the job's own usage.
+    if Path::new("/proc/self/status").exists() {
+        assert!(rule_peak_kb() > 0);
+        eprintln!(
+            "kuralın Python süreci en çok {:.1} MB",
+            rule_peak_kb() as f64 / 1024.0
+        );
+    }
     assert_eq!(
         reports[0],
         serde_json::to_string(&serde_json::to_value(&on_desktop).unwrap()).unwrap(),

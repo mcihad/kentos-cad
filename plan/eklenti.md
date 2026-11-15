@@ -1050,6 +1050,11 @@ dışında her sınıfta aynı olduğu için konut olmayan binalarda da karar ve
 ve 48/1) ve ara katlı daire (48/2: iki katlı dairenin tek kapısı üst katta olamaz, kapısız üst kat 70 m²'yi aşamaz;
 net aşarsa hata, yalnız brüt aşarsa karar verilemedi; üç katlı dairede karar yok). Kalan: konut olmayan bölümlerin
 kullanım sınıfı ve tek/iki yönlü Ek-5/B uzaklıkları, yüksek tehlikeli yer, kurp/görüş hesapları, belediye plan notları.
+**Bütçe kuralın Python'unu da ölçer** (ADR 8057 §58, 16 Kasım): sunucunun gözcüsü iş çalıştırıcısını ve altındaki her
+süreci (kuralın Python'u) birlikte ölçer (Linux'ta `/proc`, öbür Unix'lerde tek `ps`; işlemci bitip beklenen çocuklarla,
+bellek toplam RSS) ve bütçe aşılınca ya da Durdur'da iş çalıştırıcısının süreç grubunu bitirir; sonuç yerleşik
+araçlarınkiyle aynı (`cpu_limit`, `memory_limit`), işin `usage`'ı Python'u da söyler. Kalan: Windows'ta iş nesnesi,
+cgroup ile kaçamaz sınır, sunucu ölünce sahipsiz kalan Python, işletim sistemi yalıtımı.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

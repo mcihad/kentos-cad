@@ -349,10 +349,12 @@ fn run_atlas(dir: &Path, input: ProjectAtlasInput) -> Result<Processed, ProcessF
     })
 }
 
-/// What this process has taken so far (docs/adr/0561 §5): where the system keeps it, the peak resident memory
-/// (`VmHWM` of `/proc/self/status`) and the CPU time of `/proc/self/stat`; elsewhere what `ps` says of this process
-/// (its resident memory now, which a run that does not give memory back has at its peak). The parent samples the child
-/// while it runs; a run over between two samples is still told here, by the child itself, at its end.
+/// What this process and the processes it ran have taken so far (docs/adr/0561 §5, docs/adr/8057 §58): where the
+/// system keeps it, the CPU time of `/proc/self/stat` with its waited-for children's (an audit rule's Python, ended and
+/// reaped before this is read) and the peak resident memory (`VmHWM` of `/proc/self/status`) with the rule process's
+/// peak added (an upper bound: the two need not peak together); elsewhere what `ps` says of this process with its ended
+/// children's time (its resident memory now, which a run that does not give memory back has at its peak). The parent
+/// samples the child's process tree while it runs; a run over between two samples is still told here, at its end.
 fn own_usage() -> ProcessingUsage {
     let pid = std::process::id();
     if let (Ok(stat), Ok(status)) = (
@@ -361,9 +363,9 @@ fn own_usage() -> ProcessingUsage {
     ) {
         let cpu = stat.rfind(')').and_then(|i| {
             let fields: Vec<&str> = stat.get(i + 1..)?.split_whitespace().collect();
-            let user: f64 = fields.get(11)?.parse().ok()?;
-            let system: f64 = fields.get(12)?.parse().ok()?;
-            Some((user + system) / 100.0)
+            let tick = |i: usize| fields.get(i)?.parse::<f64>().ok();
+            // utime, stime, cutime and cstime: this process's and its waited-for children's.
+            Some((tick(11)? + tick(12)? + tick(13)? + tick(14)?) / 100.0)
         });
         let peak = status
             .lines()
@@ -371,11 +373,11 @@ fn own_usage() -> ProcessingUsage {
             .and_then(|l| l.split_whitespace().nth(1)?.parse::<f64>().ok());
         return ProcessingUsage {
             cpu_seconds: cpu.unwrap_or(0.0),
-            peak_memory_mb: peak.map_or(0.0, |kb| kb / 1024.0),
+            peak_memory_mb: (peak.unwrap_or(0.0) + audit::rule_peak_kb() as f64) / 1024.0,
         };
     }
     let out = std::process::Command::new("ps")
-        .args(["-o", "rss=,time=", "-p", &pid.to_string()])
+        .args(["-S", "-o", "rss=,time=", "-p", &pid.to_string()])
         .stdin(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .output();

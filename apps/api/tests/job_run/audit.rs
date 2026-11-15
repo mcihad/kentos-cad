@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use kentos_application::processing_job::{ProcessingTask, Processor, RunRequest};
+use kentos_application::processing_job::{ProcessingBudget, ProcessingTask, Processor, RunRequest};
 use kentos_contracts::audit_job::{AuditReport, AuditRun};
 use kentos_extensions::blueprint::{Ask, Contribution, blueprint};
 use kentos_extensions::manifest::Module;
@@ -24,7 +24,12 @@ def adsiz(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 "#;
 
 /// A published release as the catalog hands it over: its package's bytes, its content digest and its manifest.
-fn release() -> (Vec<u8>, String, kentos_extensions::Manifest) {
+pub(super) fn release() -> (Vec<u8>, String, kentos_extensions::Manifest) {
+    release_with(RULE)
+}
+
+/// … whose rule `adsiz` is `rule` (its Python, from the decorator on).
+pub(super) fn release_with(rule: &str) -> (Vec<u8>, String, kentos_extensions::Manifest) {
     let mut files = blueprint(&Ask {
         id: "tr.ornek.denetim".into(),
         name: "Denetim örneği".into(),
@@ -41,7 +46,7 @@ fn release() -> (Vec<u8>, String, kentos_extensions::Manifest) {
         .expect("the rule's module");
     let text = files[&logic].clone();
     let at = text.find(r#"@ext.audit("adsiz")"#).unwrap();
-    files.insert(logic, format!("{}{RULE}", &text[..at]));
+    files.insert(logic, format!("{}{rule}", &text[..at]));
     let bytes: BTreeMap<String, Vec<u8>> = files
         .into_iter()
         .map(|(k, v)| (k, v.into_bytes()))
@@ -59,6 +64,17 @@ fn audit_task(
     python: Option<String>,
     package: Option<Vec<u8>>,
 ) -> ProcessingTask {
+    audit_task_with(digest, manifest, python, package, budget())
+}
+
+/// … within `budget`.
+pub(super) fn audit_task_with(
+    digest: &str,
+    manifest: &kentos_extensions::Manifest,
+    python: Option<String>,
+    package: Option<Vec<u8>>,
+    budget: ProcessingBudget,
+) -> ProcessingTask {
     ProcessingTask {
         job: Uuid::now_v7(),
         snapshot: support::PARCELS.to_vec(),
@@ -72,12 +88,12 @@ fn audit_task(
         }),
         file: None,
         package,
-        budget: budget(),
+        budget,
     }
 }
 
 /// The interpreter the tests run real rules with: `KENTOS_TEST_PYTHON`, else the repository's (`.run/py`).
-fn python() -> Option<String> {
+pub(super) fn python() -> Option<String> {
     let path = std::env::var_os("KENTOS_TEST_PYTHON")
         .map(PathBuf::from)
         .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/py/bin/python"));

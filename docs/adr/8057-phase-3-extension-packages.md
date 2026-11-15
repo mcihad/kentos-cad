@@ -3208,6 +3208,69 @@ tamamı, 43/1 ve Ek-5/B'nin çıkmaz koridor sütunu aynen; 22 alıntının heps
   kodun `set`'i ve yanlışı; seçimin alana yazılması, Esc, soran alan yokken seçimin başkasına kalması, `onChange`'in
   güncellemeden sonra istenmesi); Vitrin'in sayıları (14 komut, 4 panel) ve şerit etiketleri.
 
+
+## §58. İşin bütçesi kuralın Python'unu da ölçer (`ADIM 20`, "bütçenin Python'u da ölçmesi")
+
+**16 Kasım.** Kod: `kentosd` `apps/api/src/processing_job.rs` ve yeni `apps/api/src/processing_job/tree.rs` (`measure`,
+`own_group`, `end`, `ended`, `parse_proc_line`, `parse_ps_rows`, `tree_taken`); iş çalıştırıcısı `apps/jobrun/src/main.rs`
+(`own_usage`) ve `audit.rs` (`rule_peak_kb`, `note_peaks`); bağımlılık `libc` (yalnız Unix, `kentosd`'de); sınamalar
+`apps/api/tests/job_run/audit_budget.rs` ve `apps/api/src/processing_job.rs`'in birim sınamaları.
+
+- **Bugünkü uygulama (okundu):** bütçe `ChildProcessor`'ın gözcüsüdür. Örnek başına (ilk 2 sn 25 ms'de, sonra 100 ms'de
+  bir) `kentos-jobrun`'ın kendi `/proc/<pid>/stat`'ının utime+stime'ını ve `VmRSS`'ini okuyordu, bütçeyi aşınca yalnız o
+  süreci `kill` ediyordu; rlimit, getrusage ya da süreç grubu yoktu. Kuralın Python'u iş çalıştırıcısının çocuğudur:
+  işlemci süresi ve belleği bütçenin dışında kalıyor, iş çalıştırıcısı öldürülünce de Python sahipsiz yaşamaya devam
+  ediyordu. Döngüye giren bir kuralı yalnız kuralın kendi zamanı (120 sn) durduruyordu.
+- **Karar: aynı gözcü sürecin ağacını ölçer ve ağacı birlikte bitirir.** En küçük dürüst değişiklik: yeni bir sınır, yeni
+  bir kod ya da yeni bir söz yok. Bütçeyi aşan iş yerleşik bir aracın aldığı sonucu alır: `cpu_limit` ve `memory_limit`,
+  `over_budget`'ın aynı sözleriyle ("… sn işlemci süresi kullandı; bu işin işlemci bütçesi … sn. İş durduruldu, hiçbir
+  şey yazılmadı …").
+- **Ölçü (Linux, `/proc`):** ağaç her görevin `children` dosyasından (çekirdek tutmuyorsa her sürecin `stat`'ındaki
+  ebeveynden) kurulur. İşlemci = ağaçtaki her sürecin utime + stime + cutime + cstime'ı: bitip beklenen çocuğun süresi
+  bekleyeninkine geçer (iş çalıştırıcısı kuralın Python'unu kapatıp beklediğinde onun süresi cutime'dadır), iki kez
+  sayılmaz. Bellek = ağaçtaki süreçlerin `VmRSS` toplamı; tepe değeri örnekler arasında en büyük toplamdır. Öbür Unix'lerde
+  aynısı örnek başına tek bir `ps -A -S -o pid=,ppid=,rss=,time=` ile (önceden de örnek başına bir `ps` vardı).
+- **Bitirme:** iş çalıştırıcısı kendi süreç grubunda başlatılır (`process_group(0)`). Bütçe aşılınca ya da Durdur'da grup
+  `SIGKILL` alır, sonra çocuk beklenir: grup kimliği çocuk beklenmeden kimsenin olamaz, başka bir sürece dokunulmaz.
+  Linux'ta çocuk kendi bittiğinde de beklenmeden önce grup bitirilir (`waitid` + `WNOWAIT`): geride kalan bir Python
+  ondan uzun yaşamaz.
+- **Rapor:** işin `usage`'ı (`ProjectAuditResult.usage`, `Processed.usage`) artık iş çalıştırıcısı ile kuralın Python'unu
+  birlikte söyler: gözcünün ağaç örnekleri ve iş çalıştırıcısının sonda kendisinin söylediğinin büyüğü. İş çalıştırıcısı
+  kendi işlemci süresine beklediği çocuklarınkini katar (cutime, cstime) ve tepe belleğine kuralın sürecinin tepesini
+  ekler (havuz onu kapatmadan hemen önce `/proc/<pid>/status`'tan `VmHWM` okunur). İki tepe aynı anda olmayabileceği için
+  bu toplam bir üst sınırdır.
+- **Ölçümler (hata ayıklama derlemesi, 16 Kasım, sınamalar tek başına, iki koşu):** olağan bir kural (parsellerde ada
+  numarası olmayanlar) işin tamamında 1.89-1.90 sn işlemci, en çok 506.5-506.8 MB (iş çalıştırıcısının ve Python'un
+  tepeleri toplamı), 1.91-1.96 sn; kuralın Python süreci tek başına en çok 412.4 MB, çoğu SDK'nın hata ayıklama
+  derlemesindeki yerel modülünün (789 MB'lık `_native`) sayfaları: yayın derlemesinde çok daha küçük. İşlemciyi yakan
+  kural 3 sn'lik işlemci bütçesinde 3.07 sn'de durdu (iş çalıştırıcısının açılışı ve Python'un yüklenmesi dahil; aşıldıktan
+  sonra en geç bir örnek aralığı, 25-100 ms). Belleği 16 MB'lık parçalarla dolduran kural, olağan kuralın tepesi + 300 MB
+  olan 807 MB'lık bütçede 2.06-2.07 sn'de durdu; durduğu örnekte 902-962 MB ölçülmüştü (bir örnek aralığında 95-155 MB
+  aşım). İkisinde de işin hiçbir süreci (iş çalıştırıcısı ya da Python) geride kalmadı. Değişiklikten önce (kod okunarak, koşulmadı)
+  yakan kural bütçeye takılmazdı: bütçe yalnız iş çalıştırıcısının kendi işlemcisini görüyordu; kuralın 120 sn'lik
+  zamanı onu durdururdu.
+- **Neden rlimit değil:** `RLIMIT_AS` sanal belleği sayar (Python ve SDK'nın yerel modülü çok sanal alan ayırır, yanlış
+  bulgu verir), `RLIMIT_CPU` süreç başınadır (iş çalıştırıcısı ile Python'un toplamı olan işin bütçesine eklenmez) ve
+  sınırı aşan süreç sinyal ya da `MemoryError` ile biter, yerleşik araçların sonucu ve sözüyle değil. Gözcü zaten vardı ve
+  bütçenin tek sahibi o.
+- **Windows:** `/proc` ve `ps` yok: bugün de hiçbir şey ölçülmüyor (değişiklikten önce de öyleydi, yerleşik araçlar
+  için de) ve yalnız iş çalıştırıcısı bitiriliyor. Doğru karşılığı iş nesnesidir (job object: çocuklar kendiliğinden
+  girer, toplam işlemci süresi ve tepe bellek sorulur, kapanınca hepsi biter); ayrı iş.
+- **Sınırlar ve kalan:** (1) Gruptan ve ağaçtan çıkan bir süreç (oturum açıp iki kez çatallanan) ölçüden de bitirmeden de
+  kaçar; tam karşılığı Linux'ta işin cgroup'u, Windows'ta iş nesnesidir ve işletim sistemi yalıtımı işiyle gelir. (2)
+  Sunucunun kendisi ölürse iş çalıştırıcısı standart girişinden bunu anlayıp çıkar; o an çalışan kuralın Python'u sahipsiz
+  kalır ve kuralın zamanını da artık kimse saymaz. İş çalıştırıcısı güvensiz kod içermez (`forbid(unsafe_code)`), grubunu
+  bitirmek için bir sistem çağrısı gerekir: ayrı iş. (3) Paylaşılan sayfalar (kütüphaneler) iki süreçte iki kez sayılır.
+  (4) Hızlı bir ayırma bir örnek aralığında (25-100 ms) ne alabiliyorsa bütçeyi o kadar aşabilir. (5) macOS ve öbür
+  Unix'lerde kendiliğinden biten çocuğun geride bıraktığı süreç bitirilmez (yalnız bütçede ve Durdur'da).
+- **Sınamalar:** `kentosd`'nin birim sınamaları 8/8 (`/proc/<pid>/stat`'ın cutime/cstime'ıyla okunması, `ps`
+  satırlarından ağacın toplamı, bu sürecin ölçülmesi, bütçe sözleri); işlemcinin gerçek iş çalıştırıcısıyla sınamaları
+  26/26 (yerleşik araçların bütçe, Durdur ve çökme sınamaları değişmeden; yeni ikisi gerçek Python'la: yakan kural
+  `cpu_limit` ile, belleği dolduran kural `memory_limit` ile duruyor ve `/proc`'ta işin klasörünü anan süreç kalmıyor;
+  olağan kural aynı bellek bütçesine sığıyor); iş çalıştırıcısının denetim sınamaları 16/16 (kuralın Python sürecinin
+  tepesi kapanmadan önce okunuyor). Python yoksa iki yeni sınama atlandığını söyler. Clippy temiz, `scripts/arch/deps.mjs`
+  temiz (`libc` yalnız `kentosd`'de, Unix'te).
+
 ## §59. Çizgi ve sayı adımı: `divider`, `numberField`'ın `step`'i (`ADIM 22`, bileşen envanteri)
 
 **16 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/ui_panel.rs` (`Component::Divider`, `NumberField::step`,

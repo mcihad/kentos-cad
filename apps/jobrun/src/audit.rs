@@ -14,6 +14,7 @@
 
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use kentos_contracts::audit_job::{
@@ -31,6 +32,29 @@ pub const PACKAGE: &str = "extension.kek";
 const UNPACKED: &str = "extension";
 /// The rule's bytecode, in the folder.
 const BYTECODE: &str = "pyc";
+
+/// The peak resident memory of the rule's processes, kilobytes: read from `/proc/<pid>/status` (`VmHWM`) just before
+/// they are closed, for the job's own usage (docs/adr/8057 §58); 0 where the system does not say it.
+static RULE_PEAK_KB: AtomicU64 = AtomicU64::new(0);
+
+/// What the rule's processes took at their peak, kilobytes.
+pub fn rule_peak_kb() -> u64 {
+    RULE_PEAK_KB.load(Ordering::Relaxed)
+}
+
+fn note_peaks(pool: &Pool) {
+    for process in pool.running() {
+        let peak = std::fs::read_to_string(format!("/proc/{}/status", process.pid))
+            .ok()
+            .and_then(|status| {
+                let line = status.lines().find(|l| l.starts_with("VmHWM:"))?;
+                line.split_whitespace().nth(1)?.parse::<u64>().ok()
+            });
+        if let Some(kb) = peak {
+            RULE_PEAK_KB.fetch_max(kb, Ordering::Relaxed);
+        }
+    }
+}
 
 /// Runs a rule's `audit` invoke in the process `start` makes and gives its answer (`done`), or why there is none.
 pub trait RuleRunner {
@@ -72,6 +96,7 @@ impl RuleRunner for ExtHost {
             stopped,
             &mut |_| {},
         );
+        note_peaks(&self.pool);
         self.pool.close_all();
         match ended {
             Ended::Answered(done) => Ok(done),
