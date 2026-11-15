@@ -966,9 +966,15 @@ paylaşılan modülde yazılı: aynı nesneler her sırada aynı baytları verir
 okuma kopyasında arka planda ölçülür. **Mimari olgular, ikinci dilim** (ADR 8057 §39, 15 Kasım): mahali olan çizimde
 aynı sürümün isteğe bağlı `architecture` bölümü (`facts.project.architecture`): katlar ve kat çıkışları, her mahalin
 net ve eksen alanı, programın gruplarının PAİY 4/ğ alanları (`paiy_areas`), kaçış yolları (`kentos_domain::escape`:
-kat çıkışına ve daire kapısına yürüyüş, tek yön payı); 152 mahalli planda 76 ms. Kalan: kurp/görüş hesapları,
-ulusal/belediye kurallarının Python betikleri, bulut işi (`RunRequest::Audit`, aynı olguları aynı kodla) ve bulutla
-ortak köken.
+kat çıkışına ve daire kapısına yürüyüş, tek yön payı); 152 mahalli planda 76 ms. **Bulut işi, ilk dilim** (ADR 8057
+§42, 15 Kasım): `kentos-jobrun` `RunRequest::Audit` ile isteğin yanındaki paketin kuralını (içerik özeti
+denetlenir, `network` isteyen reddedilir) masaüstünün olgularıyla ve `kentos.ext_host` protokolüyle sunucunun
+hazırladığı Python'da çalıştırır; `answer.json`'a bulgular ve köken (kural ve paket özeti, çizimin içerik damgası,
+olguların özeti); aynı çizim ve kuralla masaüstü ve iş baytı baytına aynı rapor. Masaüstünün Eklenti denetimi ve
+denemesi aynı işlevlerde: olgular, cevabın okunması ve özet ortak, `audit.report` içerik damgası ve olgu özetiyle
+(bulutla ortak köken). Kalan: sunucunun `project.audit` iş türü (katalogdan paket, sürüm başına hazırlanan ortam),
+kutunun işletim sistemi düzeyinde ağsız ve dosyasız kapatılması ve bütçenin Python'u da ölçmesi, kurp/görüş
+hesapları, ulusal/belediye kurallarının Python betikleri.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

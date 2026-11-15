@@ -124,7 +124,8 @@ const GROUPS = [
   // kentos, the command line (plan/eklenti.md ADIM 16): the extension packages' inspector and packer over the file
   // system and the user's registry; nothing of a server, a window or Python.
   { name: 'cli', path: 'apps/cli/', targets: [HOST], uses: ['shared', 'extension-host'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
-  { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // An extension's audit rule runs in the Python the server prepared, through `kentos.ext_host` (`python-env`, docs/adr/8057 §42).
+  { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage', 'python-env'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
   // Sheet layouts on the desktop (docs/sheet/design.md §11): the UI components over the shared

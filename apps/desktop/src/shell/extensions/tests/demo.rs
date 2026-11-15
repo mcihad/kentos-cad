@@ -418,7 +418,7 @@ fn an_extension_runs_another_extensions_tool_only_when_it_depends_on_it() {
 fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
     // docs/adr/8057 §17 (plan ADIM 20): the rule's answer read into Eklenti denetimi; Göster selects the object, Düzelt
     // writes the rule's fix as one undo step named by it; a fix of an extension not allowed to write is refused.
-    use super::audits::{AuditDone, AuditState, Severity, findings_of};
+    use super::audits::{AuditDone, AuditRead, AuditState, Severity, findings_of};
     const VITRIN: &str = "tr.ornek.vitrin";
     let dir = temp("denetim");
     let mut gis = crate::processing::tests::app_with_parcels();
@@ -474,16 +474,33 @@ fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
         version: vitrin_version(),
         digest: gis.extensions.registry.as_ref().unwrap().digest(VITRIN),
         revision: gis.document.as_ref().unwrap().model.revision(),
+        drawing: None,
+        facts: None,
     });
+    let model = &gis.document.as_ref().unwrap().model;
+    let facts = kentos_processing::audit_job::facts_of(model, &|| false).expect("the facts");
+    let read = AuditRead {
+        cut: false,
+        drawing: kentos_processing::audit_job::drawing_stamp(model),
+        facts: kentos_commands::audit_job::digest_of(&facts),
+    };
     gis.ext_audit_done(AuditDone {
         ext: VITRIN.into(),
         local: "yapi-no".into(),
         answer: Ok(done),
         ms: 12,
+        read: Some(read.clone()),
     });
     let state = gis.extensions.audit.as_ref().unwrap();
     assert!(state.running.is_none() && state.error.is_none());
     assert_eq!(state.findings.len(), 2);
+    // What the rule read, as a cloud job's report says it (docs/adr/8057 §42).
+    let report = gis.ext_audit_report(0);
+    assert_eq!(
+        (report["drawing"].as_str(), report["facts"].as_str()),
+        (Some(read.drawing.as_str()), Some(read.facts.as_str()))
+    );
+    assert!(read.facts.starts_with("sha256:") && read.drawing.len() == 16);
     let _ = gis.ext_audit_tab();
     // Its provenance (plan ADIM 20's köken): the rule's version and package, the drawing's revision; nothing changed.
     let (words, changed) = gis.ext_audit_provenance().unwrap();
@@ -1246,6 +1263,8 @@ fn a_disabled_extensions_panel_and_audit_fixes_go_with_it() {
         version: vitrin_version(),
         digest: None,
         revision: 0,
+        drawing: None,
+        facts: None,
     });
     assert_eq!(
         gis.ext_audit_fix_refused(0),

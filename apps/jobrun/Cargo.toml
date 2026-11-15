@@ -15,4 +15,13 @@ kentos-contracts = { path = "../../crates/shared/contracts", default-features = 
 # The tool runs through the headless host as `cad.processing.run` does for Python and MCP.
 kentos-headless = { path = "../../crates/native/headless" }
 kentos-processing = { path = "../../crates/native/processing" }
+# An extension's audit rule (docs/adr/8057 §42): its package opened and checked by the package inspector, its Python
+# run through `kentos.ext_host` in the environment the server prepared, offline, as the desktop runs it.
+kentos-extensions = { path = "../../crates/shared/extensions", default-features = false }
+kentos-python-env = { path = "../../crates/native/python-env" }
 serde_json = { workspace = true }
+
+# The audit job's tests: the fixture drawing written as the server's `.kcad` and opened as the desktop opens it.
+[dev-dependencies]
+kentos-domain = { path = "../../crates/native/domain" }
+kentos-kcad = { path = "../../crates/shared/kcad" }

@@ -2503,3 +2503,67 @@ masaüstü `panel_files.rs` (`file_value`, `pick`, `picker_of`), `panels.rs`, `p
 - **Sınamalar:** paylaşılan (paket: dosya seçicili panel yeteneksiz reddedilir), masaüstü 2 (boş None, doğru tür
   mutlak yol, olmayan dosya ve başka tür adıyla söylenir, zorunlu sorulur ve yol komuta gider; formun altındaki söz
   alanla gider), Vitrin sınamalarının katkı listesi ve yeniden yükleme yeteneği güncellendi.
+
+## §42. Bulut denetim işi: iş çalıştırıcısında aynı olgular, aynı kural, aynı rapor (`ADIM 20`, bulut işinin ilk dilimi)
+
+**15 Kasım.** Kod: paylaşılan `crates/shared/contracts/src/gis/audit_job.rs` (`AuditRun`, `check_audit_run`,
+`AuditReport`, `RuleRef`, `Finding`, `Fix`, `findings_of`, `counts`, `digest_of`; `RunRequest::Audit`), İşlemler
+`crates/native/processing/src/audit_job.rs` (`facts_of`, `message`, `drawing_stamp`, `MOST_FEATURES`), iş
+çalıştırıcısı `apps/jobrun/src/audit.rs` (`run_audit`, `RuleRunner`, `ExtHost`); sunucunun iki eşleşmesine yeni kolun
+karşılığı (`jobs.rs`, `jobs_tests.rs`); `scripts/arch/deps.mjs` (`jobrun` → `python-env`).
+
+- **Karar: en küçük dürüst dilim iş çalıştırıcısında biter.** Sunucunun iş kuyruğu, eklenti kataloğunun yayımlanmış
+  sürümü ve sunucuda hazırlanan Python ortamı veritabanı ve kurulum işi; bu dilim onları tasarlar (aşağıda), çalışan
+  payı `kentos-jobrun`'dadır: klasöre `request.json` (`{"kind": "audit", "input": AuditRun}`), `snapshot.kcad` ve
+  `extension.kek` konunca kuralı uçtan uca çalıştırıp `answer.json`'a raporu yazar.
+- **İstek (`AuditRun`):** eklentinin kimliği, sürümü ve paketin içerik özeti (`sha256:…`), kuralın yerel kimliği,
+  sunucunun o sürüm için hazırladığı Python'un yorumlayıcısı (mutlak yol; yoksa kural çalışmaz), süre (varsayılan
+  masaüstününki gibi 120 sn, en çok 3600). İstekte kullanıcının yazdığı bir yol yoktur: istek sunucunundur, kutu yine
+  de her alanı denetler (`check_audit_run`).
+- **Kutunun yaptıkları:** paketi paket denetleyicisiyle açar; içerik özeti, kimliği ya da sürümü istenen değilse hiçbir
+  şey çalışmaz. Kuralı manifestin denetimlerinde bulur; `network` yeteneğini isteyen eklentinin kuralını reddeder
+  (kutu ağ vermez); Python yoksa `tool_unavailable` der. Paketi klasöre açar, çizimi başsız oturumla açıp
+  **masaüstünün koduyla** ölçer (`facts_of`: katmanların nesneleri en çok 50 000, ölçülmüş olgular en çok 200 000;
+  ölçü kırılırsa kural katmanlarla çalışır, masaüstünde olduğu gibi), kuralı **masaüstünün protokolüyle**
+  çalıştırır (`kentos.ext_host`, `kentos_python_env::process::Pool`; yorumlayıcı `-I` ile yalıtık, bayt kodu klasörde,
+  süreç sunucunun boşalttığı ortamla) ve cevabı **masaüstünün okuduğu gibi** okur (`findings_of`: bilinen önem, söz
+  2000, düzeltme başlığı 120 karakter, en çok 10 000 bulgu). Kural hata verirse iş `tool_failed` ile, kuralın sözü ve
+  iz kaydının son 4000 karakteriyle biter.
+- **Rapor ve köken (`AuditReport`):** kural (eklenti, sürüm, paket özeti, yerel kimlik, işleyici, başlık), çizimin
+  içerik damgası (`drawing_stamp`: nesnelerin damgaları kalıcı kimlik sırasında, blok tanımları, katman ağacı,
+  ayarlar, stiller, kısıtlar, ölçü takımları ve pafta kitabı; 16 hane, ADR 0253 §2'nin damgaları), kurala verilen
+  olguların özeti (`sha256:` ve kanonik JSON'unun SHA-256'sı), olguları ölçen KentOS'un sürümü, bulgular, sayılmayan
+  bulgular, olgular kesildi mi. Saat ve yer yok: aynı girdi aynı baytları verir. Planın `snapshot_etag`'i içerik
+  damgasıdır: sunucunun revizyon numarası masaüstünde yok, içerik damgası her ikisinde aynı.
+- **Kabul (ölçüldü):** `fixtures/audit-facts/v1/denetim.kcad` ve aynı kural (paketlenmiş bir eklentinin `@ext.audit`'i:
+  parsellerin ölçülmüş çakışması ve boşluğu, ada numarası olmayan nesneler, düzeltmesiyle) gerçek Python'da:
+  masaüstünün yolu (anlık görüntüden açılan belge, kurulu paketin klasörü, aynı protokol) ile işin yolu (sunucunun
+  `.kcad`'i, isteğin yanındaki paket) baytı baytına aynı raporu verdi (1 hata, 1 uyarı, 9 bilgi; çakışma "50.00 m²"
+  ölçülmüş olgulardan); iş iki kez aynı. Paketi değiştirilmiş kural `KeyError` ile ve iz kaydıyla düştü.
+- **Kabulün eksik payı:** "bulut kutusu ağa ve yerel dosyalara erişemez": KentOS tarafında ağ isteyen kural
+  reddedilir, kutu kurala dosya vermez, süreç boş ortamla ve yalıtık başlar; ama Python bir işletim sistemi süreci,
+  ağı ve dosyaları işletim sistemi düzeyinde kapatılmadı (ağ ad alanı, salt okunur kök, sistem çağrısı süzgeci): bu
+  sunucu dağıtımının işi ve sonraki dilim. Python süreci `kentos-jobrun`'ın çocuğu: sunucunun işlemci ve bellek bütçesi
+  yalnız `kentos-jobrun`'ı ölçüyor; bütçe süreç grubunu (cgroup) ölçmeli.
+- **Sunucunun payı (tasarım, sonraki dilim):** `project.audit` iş türü: istek eklentinin kimliği, kuralı ve isteğe
+  bağlı sürümü; sunucu yayımlanmış sürümü katalogdan alır (ADIM 22A, şimdilik bellek deposu), paketi nesne deposundan
+  klasöre koyar, sürümün hazırlanmış ortamını bulur (yayımlanınca kilitten bir kez, ağlı bir adımda kurulur; denetim
+  kutusu onu ağsız kullanır) ve `RunRequest::Audit` yazar. Sonuç projeye yazılmaz, işin sonucu olarak saklanır
+  (`AuditReport`); önbellek anahtarı kural özeti, çizim damgası ve KentOS sürümü. Kayıt, onay noktası ya da istemci
+  isteğinde çalıştırma ve "geçen/kalan kurallar", "delta" bu iş türünün üstüne gelir.
+- **Masaüstü aynı işlevlerde (bu dilimde):** Eklenti denetimi ve deneme koşusu (§37) olguları `audit_job::facts_of`
+  ile kurar ve `message` ile gönderir, kuralın cevabını `findings_of` ile okur, özeti `counts` ile söyler; önem
+  paylaşılan `Severity`'dir (`code`: kuralın ve ajanın yazdığı, `word`: kullanıcının okuduğu). Katmanların olguları
+  artık arayüz iş parçacığında değil, ölçülmüş olgularla birlikte okuma kopyasında koşunun iş parçacığında kurulur.
+  `audit.report` `drawing` (içerik damgası) ve `facts` (olguların özeti) taşır: aynı çizim ve kural için masaüstünün
+  raporu ile işin raporu aynı damgaları verir; masaüstünün yolu bu sınamadaki yolun ta kendisidir.
+- **Kökenin bedeli (ölçüldü, hata ayıklama derlemesi, 50 000 parsel, `provenance_cost`):** olgular 4,96 sn, kurala
+  giden 18 MB'ın yazılması 1,35 sn; içerik damgası 1,12 sn, olguların özeti 0,83 sn. Köken, kural başlamadan önceki
+  süreye yaklaşık %30 ekler; ikisi de koşunun iş parçacığında, arayüz beklemez. Yayın derlemesi bunların hepsini
+  birkaç kat kısaltır; büyük çizimde gerekirse damga ve özet kuralla eşzamanlı hesaplanır (kuralın süresi altında
+  kalır).
+- **Sınamalar:** paylaşılan 5 (istek biçimi, alan alan denetim, cevabın masaüstündeki gibi okunması, sınır, özetin
+  kanonikliği, önemin kodu ve sözü), İşlemler 2 ve elle çalıştırılan ölçüm (olgular masaüstününkiler, çizim damgası
+  içerikten), iş çalıştırıcısı 4 (kural Rust yerine geçenle uçtan uca, reddedilenler, masaüstü ve iş aynı rapor gerçek
+  Python'da, düşen kural iz kaydıyla), masaüstü (Vitrin'in denetimi: raporun `drawing` ve `facts`'i ortak işlevlerin
+  verdiği). Python yoksa (`KENTOS_TEST_PYTHON` ya da `.run/py`) iki sınama atlandığını söyler.

@@ -18,7 +18,7 @@ use std::time::{Duration, Instant};
 use kentos_domain::Uuid;
 use serde_json::{Value, json};
 
-use super::audits::{MOST_OBJECTS, Refusal, Severity, findings_of};
+use super::audits::{Refusal, findings_of};
 use super::{Event, msg};
 use crate::app::App;
 
@@ -46,13 +46,8 @@ fn findings_report(done: &Value, places: &BTreeMap<String, usize>) -> Value {
             let list: Vec<Value> = findings
                 .iter()
                 .map(|f| {
-                    let severity = match f.severity {
-                        Severity::Error => "error",
-                        Severity::Warning => "warning",
-                        Severity::Info => "info",
-                    };
                     json!({
-                        "severity": severity,
+                        "severity": f.severity.code(),
                         "message": f.message,
                         "feature": f.feature.as_ref().and_then(|u| places.get(u)),
                         "fix": f.fix.as_ref().map(|x| json!({ "title": x.title, "command": x.command })),
@@ -258,26 +253,17 @@ fn run(
         .enumerate()
         .map(|(i, u)| (u.to_string(), i))
         .collect();
-    let mut facts = kentos_processing::external::audit_facts(&doc, MOST_OBJECTS);
     let stopped = || stop.load(Ordering::Relaxed);
-    // What KentOS measures in the drawing (`facts.project`, docs/adr/8057 §36), as the drawing's own audit gives it; a
-    // measure that breaks leaves the rules the layers (`facts.project` then says it is missing).
-    if !rules.is_empty() {
-        let measured = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            kentos_processing::audit_facts::project_facts(
-                &doc,
-                kentos_processing::audit_facts::MOST_OBJECTS,
-                &stopped,
-            )
-        }));
-        match measured {
-            Ok(Some(project)) => {
-                facts["project"] = serde_json::to_value(&project).unwrap_or_default();
-            }
-            Ok(None) => return json!({ "status": "stopped" }),
-            Err(_) => {}
+    // The rules' facts as the drawing's own audit and a cloud job give them (`audit_job::facts_of`, docs/adr/8057 §36,
+    // §42): the layers' objects and what KentOS measured; a measure that breaks leaves the rules the layers.
+    let facts = if rules.is_empty() {
+        Value::Null
+    } else {
+        match kentos_processing::audit_job::facts_of(&doc, &stopped) {
+            Some(facts) => facts,
+            None => return json!({ "status": "stopped" }),
         }
-    }
+    };
     let mut audits = Vec::new();
     for (rule, title, job) in rules {
         if stopped() {
@@ -285,7 +271,7 @@ fn run(
         }
         let began = Instant::now();
         let mut out = match job.run(
-            json!({ "kind": "audit", "facts": facts }),
+            kentos_processing::audit_job::message(facts.clone()),
             RULE_TIMEOUT,
             &stopped,
         ) {

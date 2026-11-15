@@ -1556,6 +1556,12 @@ async fn external(
                 commit: None,
             }
         }
+        // No job kind asks for an audit yet: the job runner answers it (docs/adr/8057 §42), the server's kind is the
+        // next slice.
+        RunRequest::Audit(_) => failed(
+            "invalid",
+            "Eklenti denetimi henüz bir sunucu işi değil.".into(),
+        ),
     }
 }
 

@@ -2917,8 +2917,12 @@ name = "kentos-jobrun"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-domain",
+ "kentos-extensions",
  "kentos-headless",
+ "kentos-kcad",
  "kentos-processing",
+ "kentos-python-env",
  "serde_json",
 ]
 

@@ -2,10 +2,12 @@
 //! server's worker (`kentosd`'s processor) with an empty environment. It carries the headless host, the tools and the
 //! file commands so the server does not; it has no database and no network of its own, and reads and writes one folder:
 //!
-//! - in: `request.json` (a `RunRequest`: an İşlemler tool, an import of the file `import.<ext>` beside it, or an atlas)
-//!   and `snapshot.kcad` (the project at the revision the worker read);
+//! - in: `request.json` (a `RunRequest`: an İşlemler tool, an import of the file `import.<ext>` beside it, an atlas, or
+//!   an extension's audit rule from the package `extension.kek` beside it, docs/adr/8057 §42) and `snapshot.kcad` (the
+//!   project at the revision the worker read);
 //! - out: `answer.json` (what was done: a summary, notes, the delta to commit or the rows of the file, what the command
-//!   answered), `sink.gpkg` (a tool's file) or `atlas.pdf`; or `failure.json` (why it did not finish) with exit code 2;
+//!   answered, an audit's report), `sink.gpkg` (a tool's file) or `atlas.pdf`; or `failure.json` (why it did not finish)
+//!   with exit code 2;
 //! - while it works it prints its progress on standard output, one line at a time (`KENTOS-PROGRESS 0.4000 words`).
 //!
 //! A tool is run as `cad.processing.run` would run it, no local file readable (`forbid_local_files`) and no path of the
@@ -14,6 +16,8 @@
 //! closes) it ends itself with 3.
 
 #![forbid(unsafe_code)]
+
+mod audit;
 
 use std::io::{Read, Write};
 use std::path::Path;
@@ -407,6 +411,7 @@ fn run_task(dir: &Path) -> Result<Processed, ProcessFailure> {
         RunRequest::Processing(input) => run_tool(dir, input),
         RunRequest::Import(run) => run_import(dir, run),
         RunRequest::Atlas(input) => run_atlas(dir, input),
+        RunRequest::Audit(run) => audit::run_audit(dir, run, &audit::ExtHost::default()),
     }?;
     processed.usage = own_usage();
     Ok(processed)
