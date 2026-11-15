@@ -2541,7 +2541,7 @@
     görünümü kâğıt ölçeğinde ortasından sayıp söyler, seçilen ölçeği hatırlar.
   - Görünüm ölçeği ajanlara açık: bağlantının ve konsolun `view`'u, Python `Document.view()`, MCP `drawing.view`.
   - Ertelenen: katmanın kendi ölçek aralığı (Katman çizimi), ifadede görünüm ölçeği değişkeni.
-- **Eklentiler: `.kek` paketleri, kendi Python ortamı ve süreci (13–14 Kasım 2026; [ADR 8057](../../docs/adr/8057-phase-3-extension-packages.md)).**
+- **Eklentiler: `.kek` paketleri, kendi Python ortamı ve süreci (13–15 Kasım 2026; [ADR 8057](../../docs/adr/8057-phase-3-extension-packages.md)).**
   - Paket `.kek` v1: manifest, onaylanan yetenekler, içerik özeti; kurum kataloğu ve ilkesi; kaldırılır, önceki sürüme
     dönülür.
   - Her eklenti sürümünün kendi Python ortamı (uv, kilitten; önce kurulacak paketler gösterilir) ve kendi süreci;
@@ -2570,7 +2570,19 @@
     panelin değerleriyle (`ctx.params`) çalıştırır, satırları panelin tablosuna gelir; nesne seçici çizimdeki seçimi
     alır. Kodu arayüz nesnesi almaz. Komutun `ctx.progress`'i çalışma bildiriminde ve başladığı panelde çubukla
     görünür. Birden çok panel açık kalır: Eklenti sekmesinin üstünde birer sekme; yanıt, gösterilmese de başladığı
-    panele gider ve sekmesi işaretlenir.
+    panele gider ve sekmesi işaretlenir. Tarih, saat, an alanları, çoklu seçim, gösterge ve grafik (KentOS'un grafik
+    motoru), zorunlu alan (`required`: boşsa altında söylenir); büyük veri sayfa sayfa (tablo 200, kart 100 satır;
+    ağaç bütün satırları sayar).
+  - Kod kullanıcıyla ve paneliyle konuşur: `ctx.dialog` / `ctx.confirm` KentOS'un penceresinde bir panelin alanlarıyla
+    sorar; panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel.set/rows/say/focus/close`: değer, veriden
+    seçenek, yazı, etkin/görünür; kullanıcının o sırada değiştirdiği alan onun kalır, yanlış istek kodun hatasıdır ve
+    günlüğe de yazılır), `ctx.open_panel` komutun kendi panelini açar. Katmanın sağ tık menüsündeki komut tıklanan
+    katmanı `ctx.params["layer"]`'da alır.
+  - Ajanlar eklentiyle aynı kapılardan: eklenti denetimi `audit.run/report/apply_fix` (düzeltme sahibin koruyucusundan
+    ve kullanıcının Onayla'sından), eklentinin İşlemler aracı iş olarak okuma kopyasında (pencere beklemez; iş başladığı
+    çizime yazar), çalıştırmanın seçimi ekranda; eklentinin sözleri ajana veridir, talimat değildir. Plan kimliği yeni
+    katmanın türetim anını dışarıda bırakır (önce yeni katman açan hiçbir İşlemler çalıştırması planlandığı gibi
+    yürütülemiyordu). Manifest, katman şeması, araç tanımı ve panelin JSON Schema'ları SDK'da (`extension.sdk`).
   - Örnek ve bütün gösterimler `samples/eklenti-vitrini` (Vitrin) ile; yeni yetenek aynı değişiklikte oraya girer.
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](../../docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
   - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.
