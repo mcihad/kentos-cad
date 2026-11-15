@@ -1236,6 +1236,14 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **Uygularken verilen kararlar:** olgular bütün katmanlar (manifest katman adı istemiyor); sınır 50 000 nesne, 10 000
   bulgu, 500 satır, 120 sn; düzeltme `document.write` ister; sekme alt panelde ve her programda; ADIM 20'nin ortak
   kural motoru (`ProjectAuditFacts`, bulut işi, PAİY kuralları Python'da) sonraki dilimlerde.
+- **Köken** (15 Kasım; ADIM 20'nin "köken" maddesinin eklenti payı): her denetim çalışması kuralın geldiği eklentinin
+  sürümünü, paket özetini ve okuduğu çizim revizyonunu taşır; Eklenti denetimi sekmesi yazar ("Köken: Eklenti Vitrini
+  1.0.19 · yapi-no · paket cbfbe7b8845d · çizim revizyonu 0"). Sonradan değişen söylenir: eklentinin paketi
+  değiştiyse "Eklenti denetimden sonra değişti (1.0.19 → 1.0.20): bulgular eski kural sürümüyle üretildi; yeniden
+  denetleyin" (aynı sürümde paket değiştiyse onu söyler), çizim değiştiyse "Çizim denetimden sonra değişti
+  (düzeltmeler dahil): yeniden denetlemek bulguları tazeler". Planın dersi (QEP 425 §2.4.1): sürüm değişince eski
+  raporun hangi kural sürümüyle üretildiği okunur. Gerçek pencere: Yapı numarası 5 uyarı, köken satırı; Düzelt: Y-01
+  yaz'dan sonra çizim notu. Bulutla ortak rapor biçimi ve betik özeti ADIM 20'nin kalanı.
 
 ## §18. `kek verify` ve `extension.verify`: pencere açmadan doğrulama (`ADIM 21`, birinci dilim; EKL-06)
 

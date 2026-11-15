@@ -952,9 +952,10 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
 **Durum (14 Kasım): birinci dilim — eklentinin denetim kuralı** (ADR 8057 §17): `@ext.audit` kuralı eklentinin
 sürecinde katmanları veri olarak okur (`GisAuditFacts`, gizli alanlar maskeli, en çok 50 000 nesne), bulgu ve
 düzeltme döndürür; alt panelin Eklenti denetimi sekmesi listeler, Göster nesneye götürür, Düzelt KentOS komutunu tek
-geri alma adımıyla yürütür (yalnız `document.write` izinli eklentide). Vitrin 1.0.3'te "Yapı numarası". Kalan:
-`ProjectAuditFacts` (Rust'ın çıkardığı ortak olgular), ulusal/belediye kurallarının Python betikleri, bulut işi, köken
-ve AI/MCP `audit.run`.
+geri alma adımıyla yürütür (yalnız `document.write` izinli eklentide). Vitrin 1.0.3'te "Yapı numarası". **Köken**
+(ADR 8057 §17, 15 Kasım): rapor kuralın sürümünü, paket özetini ve çizim revizyonunu taşır; sonradan eklenti ya da
+çizim değiştiyse söyler. Kalan: `ProjectAuditFacts` (Rust'ın çıkardığı ortak olgular), ulusal/belediye kurallarının
+Python betikleri, bulut işi ve bulutla ortak köken, AI/MCP `audit.run`.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

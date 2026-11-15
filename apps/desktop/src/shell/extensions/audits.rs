@@ -92,6 +92,11 @@ pub(crate) struct AuditState {
     pub(crate) error: Option<String>,
     /// The drawing it read: a fix writes only to it.
     pub(crate) session: u64,
+    /// Its provenance (plan ADIM 20's köken): the extension's version and package digest the rule ran from, and the
+    /// drawing's revision it read; a report says by which rule's version it was made.
+    pub(crate) version: String,
+    pub(crate) digest: Option<String>,
+    pub(crate) revision: u64,
 }
 
 /// A rule's run, ended in the background.
@@ -193,6 +198,18 @@ impl App {
             }
         };
         let facts = kentos_processing::external::audit_facts(&doc.model, MOST_OBJECTS);
+        let (version, digest) = self.extensions.registry.as_ref().map_or_else(
+            || (String::new(), None),
+            |r| {
+                (
+                    r.manifest(ext)
+                        .map(|m| m.version.to_string())
+                        .unwrap_or_default(),
+                    r.digest(ext),
+                )
+            },
+        );
+        let revision = doc.model.revision();
         let stop = Arc::new(AtomicBool::new(false));
         self.extensions.audit = Some(AuditState {
             ext: ext.to_owned(),
@@ -205,6 +222,9 @@ impl App {
             ms: 0,
             error: None,
             session: doc.session,
+            version,
+            digest,
+            revision,
         });
         self.bottom_tab = crate::bottom::BottomTab::ExtAudit;
         self.command_expanded = true;
@@ -427,6 +447,62 @@ impl App {
         }
     }
 
+    /// The last run's provenance in words (the extension's version, the rule, the package's digest, the drawing's
+    /// revision), and what changed since when something did: the extension (its findings are an older rule's) or the
+    /// drawing (fixes included).
+    pub(crate) fn ext_audit_provenance(&self) -> Option<(String, Option<String>)> {
+        let state = self.extensions.audit.as_ref()?;
+        let name = self.extension_name(&state.ext);
+        let short = state
+            .digest
+            .as_deref()
+            .map(|d| {
+                d.trim_start_matches("sha256:")
+                    .chars()
+                    .take(12)
+                    .collect::<String>()
+            })
+            .map_or_else(String::new, |d| format!(" · paket {d}"));
+        let words = format!(
+            "Köken: {name} {} · {}{short} · çizim revizyonu {}",
+            state.version, state.local, state.revision
+        );
+        let now = self.extensions.registry.as_ref().map(|r| {
+            (
+                r.manifest(&state.ext)
+                    .map(|m| m.version.to_string())
+                    .unwrap_or_default(),
+                r.digest(&state.ext),
+            )
+        });
+        let changed = match now {
+            Some((version, digest)) if digest != state.digest => Some(if version != state.version {
+                format!(
+                    "Eklenti denetimden sonra değişti ({} → {version}): bulgular eski kural sürümüyle üretildi; \
+                     yeniden denetleyin.",
+                    state.version
+                )
+            } else {
+                "Eklentinin paketi denetimden sonra değişti (aynı sürüm): bulgular eski kuralla üretildi; yeniden \
+                 denetleyin."
+                    .to_owned()
+            }),
+            _ => self
+                .document
+                .as_ref()
+                .filter(|d| {
+                    state.running.is_none()
+                        && d.session == state.session
+                        && d.model.revision() != state.revision
+                })
+                .map(|_| {
+                    "Çizim denetimden sonra değişti (düzeltmeler dahil): yeniden denetlemek bulguları tazeler."
+                        .to_owned()
+                }),
+        };
+        Some((words, changed))
+    }
+
     /// Eklenti denetimi: the last rule's findings with Göster and Düzelt, or what to do first.
     pub(crate) fn ext_audit_tab(&self) -> Element<'_, Message> {
         let Some(state) = &self.extensions.audit else {
@@ -475,6 +551,12 @@ impl App {
         .spacing(10)
         .align_y(Center);
         let mut notes = Column::new().spacing(2);
+        if let Some((words, changed)) = self.ext_audit_provenance() {
+            notes = notes.push(label::muted(words));
+            if let Some(changed) = changed {
+                notes = notes.push(label::caption(changed));
+            }
+        }
         if state.cut {
             notes = notes.push(label::muted(format!(
                 "Çizim büyük: kurala ilk {MOST_OBJECTS} nesne verildi."

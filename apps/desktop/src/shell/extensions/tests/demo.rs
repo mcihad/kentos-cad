@@ -470,6 +470,9 @@ fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
         ms: 0,
         error: None,
         session,
+        version: vitrin_version(),
+        digest: gis.extensions.registry.as_ref().unwrap().digest(VITRIN),
+        revision: gis.document.as_ref().unwrap().model.revision(),
     });
     gis.ext_audit_done(AuditDone {
         ext: VITRIN.into(),
@@ -481,6 +484,16 @@ fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
     assert!(state.running.is_none() && state.error.is_none());
     assert_eq!(state.findings.len(), 2);
     let _ = gis.ext_audit_tab();
+    // Its provenance (plan ADIM 20's köken): the rule's version and package, the drawing's revision; nothing changed.
+    let (words, changed) = gis.ext_audit_provenance().unwrap();
+    assert!(
+        words.starts_with(&format!(
+            "Köken: Eklenti Vitrini {} · yapi-no · paket ",
+            vitrin_version()
+        )) && words.contains(" · çizim revizyonu "),
+        "{words}"
+    );
+    assert_eq!(changed, None);
     // Göster: the object selected.
     let _ = gis.ext_audit_show(0);
     assert_eq!(gis.selection.ids(), [slot]);
@@ -501,6 +514,12 @@ fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
     };
     assert_eq!(attr(&gis).as_deref(), Some("Y-01"));
     assert!(gis.extensions.audit.as_ref().unwrap().findings[0].fixed);
+    assert!(
+        gis.ext_audit_provenance()
+            .and_then(|(_, c)| c)
+            .is_some_and(|c| c.starts_with("Çizim denetimden sonra değişti")),
+        "a fix changed the drawing: said"
+    );
     assert_eq!(gis.ext_audit_fix_refused(0).as_deref(), Some("Düzeltildi."));
     let undone = gis.document.as_mut().unwrap().model.undo();
     assert_eq!(undone.as_deref(), Some("Y-01 yaz"));
@@ -1223,6 +1242,9 @@ fn a_disabled_extensions_panel_and_audit_fixes_go_with_it() {
         ms: 1,
         error: None,
         session,
+        version: vitrin_version(),
+        digest: None,
+        revision: 0,
     });
     assert_eq!(
         gis.ext_audit_fix_refused(0),
