@@ -406,8 +406,9 @@ cevabındaki her madde kataloğa ya da bir pakete bağlanır.
 | Yolun IFC'si (`road_ifc_cases.py`) | `IfcAlignment` şeması, yerler ve kotlar; ortak koordinat ve STEP değişikliği yolu bozmaz |
 | Komut ve masaüstü akışı | Menü, komut, Python ve MCP aynı sonucu verir; geçersiz yol, üzerine yazma, iptal, karşılanmayan profil; gerçek pencerede kabul |
 
-**Araştırma sınırı.** Bu turda iki yönetmeliğin ana metni tam okundu. Ekler indirilmedi: depodaki sayfa okumaları ve
-bağımsız bir açık kaynak dökümü kullanıldı; ikisinin ayrıştığı yerler araştırma notunun §4'ündedir. EK-8'in nesne tablosu,
-EK-5 §5.5.4'ün mahal kuralı, EK-7'nin düşey datum notu, TSE metinleri ve e-PYS'nin uygulama kuralları üretim iddiasından
-önce birincil belgeyle doğrulanır (B1). ADR'lerdeki test sonuçları geçmiş kanıttır; bu plan çalışmasında ürün testleri
+**Araştırma sınırı.** İki yönetmeliğin ana metni tam okundu. Ekler ilk turda indirilmemişti; 15 Kasım 2026'da OCR ile
+okunup [mevzuat/bim/](../mevzuat/bim/README.md) altına yazıldı. EK-8 (nesne tablosu yok, LOD 300), EK-5 5.5.4'ün mahal
+kuralı ve EK-7'nin düşey datum notu sayfadan okundu (araştırma notu §4.1). TSE metinleri ve e-PYS'nin uygulama kuralları
+hâlâ okunmadı; EK-6 ve EK-7'nin uzun açıklamalarına dayanan kurallar üretim iddiasından önce PDF sayfasıyla
+karşılaştırılır (B1). ADR'lerdeki test sonuçları geçmiş kanıttır; bu plan çalışmasında ürün testleri
 yeniden çalıştırılmadı.

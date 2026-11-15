@@ -176,10 +176,11 @@ Her paket bir bütündür; alt maddeleri aynı dilimde biter. `[ ]` başlanmadı
 **Kullanıcı sonucu:** Her denetim bulgusu ve dışa aktarılan her alan, yönetmeliğin hangi ekinin hangi sayfasından geldiğini
 söyler. İki okumanın ayrıştığı yerler kapanmıştır. [IFC-01](ifc-uyum.md#10-iş-paketleri) ile aynı dilimdir.
 
-- Eklerin PDF'si bir kez indirilir (`.run/` altında, Git'e girmez) ve EK-1…EK-9 sayfa görüntülerinden okunur. Okunan her
-  satır kataloğa sayfası, tablosu ve satırıyla girer: EK-2'nin sözlükleri (2.2–2.14), EK-3 (3.1 ve 3.2'nin yaklaşık 150
-  adı), EK-4'ün katman ve çizgi kuralları, EK-5 (5.1, 5.2, 5.3), EK-6'nın mimariye düşen tabloları, EK-7, EK-8'in nesne
-  tablosu, EK-9.
+- Eklerin okunabilir metni [mevzuat/bim/](../mevzuat/bim/README.md) altındadır (15 Kasım 2026, OCR; EK-1…5, 8, 9 ve
+  bütün kod tabloları sayfa görüntüsüyle karşılaştırıldı). Katalog bu metinden kurulur; okunan her satır kataloğa
+  sayfası, tablosu ve satırıyla girer: EK-2'nin sözlükleri (2.2–2.14), EK-3 (3.1 ve 3.2'nin yaklaşık 150 adı), EK-4'ün
+  katman ve çizgi kuralları, EK-5 (5.1, 5.2, 5.3), EK-6'nın mimariye düşen tabloları, EK-7, EK-8 (LOD 300 hükmü; nesne
+  tablosu yok), EK-9. EK-6 ve EK-7'nin uzun açıklamalarına dayanan satır PDF sayfasıyla bir kez daha karşılaştırılır.
 - Araştırma notu §4'teki 17 nokta tek tek karara bağlanır: sayfadan okunan, şemadan çözülen, idareye sorulan.
 - Katalog bağımsız dökümle satır satır karşılaştırılır; fark listesi ADR'ye yazılır.
 - **Başlangıç ölçümü:** bölüm binasının ve 2+1 örneğinin bugünkü çıktıları katalog satırlarına karşı dosyadan ölçülür
@@ -594,7 +595,8 @@ sahibin kısa listesi.
 
 | Soru | Kim cevaplar | Etkilediği |
 |---|---|---|
-| Mahalin modeldeki adı: EK-5 §5.5.4 mü, yalın EK-3 numarası mı | Ek sayfası (B1); gerekirse idare | IFC-02 |
+| ~~Mahalin modeldeki adı: EK-5 §5.5.4 mü, yalın EK-3 numarası mı~~ Cevaplandı: EK-5 5.5.4, şablonun açıklamasında EK-3 numarası ve ismi (araştırma notu §4.1) | Ek sayfası | IFC-02 |
+| Yükseklik: EK-7 Tablo 7.6 ITRF96 (gerekirse TUDKA99 dönüşümü), EK-4 4.31.4 Helmert ortometrik | İdare | IFC-05 |
 | Görünüm tanımı; PDF/A'nın bölümü ve düzeyi; dosya boyutu sınırı | Bakanlığın kılavuzu ya da idare | IFC-06, BIM-05 |
 | e-PYS'nin arayüzü, imza yöntemi, yükleme biçimi ve tarihleri | Bakanlık (e-PYS Md. 4/4, 5/4, 5/6) | BIM-15, BIM-18 |
 | Ortak bodrum hangi binanın; bir parselde kaç model dosyası | İdare | BIM-11, IFC-05 |

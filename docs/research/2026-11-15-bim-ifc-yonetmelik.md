@@ -18,7 +18,7 @@ her iddianın nereden, nasıl okunduğu burada yazılıdır. Önceki notlar: [W4
 | Dijital Hazırlama Yönetmeliği, ana metin (RG 5.8.2026/33331) | Yayımlanmış tam metin kopyası (alomaliye.com); W4'ün ve iki plan dosyasının okuduğu kopyalarla (lexpera) madde madde aynı | ✔ |
 | e-PYS Yönetmeliği, ana metin (RG 5.8.2026/33331) | Aynı yolla | ✔ |
 | Resmî Gazete'nin kendi sitesi | Bu bilgisayarın tarayıcısı sitenin sertifikasını tanımıyor (`ERR_CERT_AUTHORITY_INVALID`); denetim kapatılmadı, site okunmadı. Önceki oturumlardaki "alan adı çözülemedi" ve "zaman aşımı" notlarının olası sebebi budur | ✖ |
-| Yönetmeliğin ekleri (EK-1…9; 241 sayfa, taranmış görüntü, metin katmanı yok, yaklaşık 22,8 MB) | Bu oturumda indirilmedi. Depodaki sayfa okumaları (ADR 8008, 8027, 8037, 8047) + bağımsız bir açık kaynak dökümü ([ifc-ruhsat](https://github.com/BerkantACUN/ifc-ruhsat), MIT; tabloları sayfa numarasıyla JSON'a geçirmiş) | ◐ |
+| Yönetmeliğin ekleri (EK-1…9; 241 sayfa, taranmış görüntü, metin katmanı yok, yaklaşık 22,8 MB) | İlk turda indirilmedi; depodaki sayfa okumaları (ADR 8008, 8027, 8037, 8047) + bağımsız bir açık kaynak dökümü ([ifc-ruhsat](https://github.com/BerkantACUN/ifc-ruhsat), MIT) kullanıldı. **15 Kasım 2026'da** sahip PDF'i indirdi; ekler OCR ile okunup [mevzuat/bim/](../../mevzuat/bim/README.md) altına yazıldı. Kapanan noktalar §4.1'de | ✔ EK-1…5, 8, 9 ve kod tabloları görüntüyle karşılaştırıldı; EK-6/7'nin uzun açıklamaları ◐ |
 | IFC 4.3 şeması ve belgeleri, doğrulama servisi kılavuzu | buildingSMART'ın kendi sayfaları | ✔ |
 | Finlandiya'nın model tabanlı ruhsatı | Bir belediyenin resmî sayfası (Tuusula) tam okundu; bakanlık kararnamesi arama özetinden | ✔ / ◐ |
 | Estonya, Singapur | Arama özetleri (konferans sunumu, kurum genelgesi) | ◐ |
@@ -105,7 +105,7 @@ kataloğuna giren her satır sayfa görüntüsünden bir kez daha okunur (plan: 
 | EK-5 | §5.4: sınıflar IFC 4.3 esas alınarak; Tablo 5.1 **69 zorunlu sınıf** ve üç harfli kategori kodu; Tablo 5.2 **67 isteğe bağlı sınıf**; §5.5 ve Tablo 5.3 ad kalıbı | s. 29–34 | ADR 8047; bağımsız döküm ◐ |
 | EK-6 | Tablo 6.1–6.68: zorunlu sınıfların zorunlu öznitelik, özellik seti ve miktarları (sıra Tablo 5.1 ile aynı); Tablo 6.69–6.135 isteğe bağlılar. §6.1.2 üst sınıf yerine alt sınıf; **§6.1.3 vekil sınıf (IfcProxy, IfcBuildingElementProxy) kullanılmaz**; §6.5 `TREpys_` önekli Türkiye setleri | s. 36–109 (zorunlu) | ADR 8047; bağımsız döküm ◐ |
 | EK-7 | Tablo 7.1 IfcProject, 7.2 IfcPerson, 7.3 IfcPersonAndOrganization, 7.4 IfcOrganization, 7.5 IfcActorRole, 7.6 IfcProjectedCRS, 7.7 IfcMapConversion, 7.8 gösterim bağlamı, 7.9–7.12 isteğe bağlı. "Her bir disiplin modelinin IfcProject sınıfının ortak öznitelikleri aynı olmalıdır" | s. 221–230 | ADR 8047; bağımsız döküm ◐ |
-| EK-8 | Model gelişim seviyesi; bağımsız döküm ruhsat modeli için **LOD 300** diyor | — | ◐ ⚠ nesne bazlı tablo okunmadı |
+| EK-8 | Model gelişim seviyesi: ruhsat eki modeller "Detaylı Modelleme" seviyesinde; bu **LOD 300**'e karşılık gelir. Nesne bazlı tablo yok, ek yalnız üç maddelik metin | s. 237 | ✔ (15 Kasım OCR) |
 | EK-9 | Tablo 9.1: mimari model kalite kontrol formu, 21 Evet/Hayır sorusu | s. 238–239 | ADR 8047; bağımsız döküm ◐ |
 
 69. zorunlu sınıf `IfcProject`'tir; tablosu EK-6'da değil EK-7'dedir (7.1). "69 sınıf, 68 tablo" bir sayım farkı değildir.
@@ -183,6 +183,39 @@ doğru katta · 14 mahaller kapalı, üst sınırı doğru · 15 varlıklar doğ
 | 15 | `IfcZone`'un neyi temsil edeceği (bağımsız bölüm, yangın kompartımanı …) ✖ | Sayfadan okunacak | Yazılmıyor |
 | 16 | e-PYS'nin teknik arayüzü, imza yöntemi, yükleme biçimi ✖ | Bakanlık (e-PYS 4/4, 5/4, 5/6) | — |
 | 17 | Bakanlığın Kasım 2025 taslağı nihai metinden farklı (tablo numaraları, ayırıcılar, zorunlu/isteğe bağlı) | Taslak kullanılmaz | — |
+
+### 4.1 Eklerin okunmasıyla kapanan ve değişen noktalar (15 Kasım 2026)
+
+Ekler OCR ile okundu ([mevzuat/bim/](../../mevzuat/bim/README.md); okuma yöntemi ve doğrulama kapsamı oradaki README'de).
+Yukarıdaki tablonun şu satırları sayfadan okundu:
+
+- **1 (ayırıcı) kapandı.** EK-5 5.5: varlık adının bilgi alanları orta tire "-" ile ayrılır; 5.5.3: açıklamanın içindeki
+  bilgiler alt tire "_" ile ayrılır, açıklamada orta tire kullanılmaz. KentOS'un bugünkü kalıbı (`MM-DVR-Dış_duvar_25`)
+  buna uyuyor.
+- **2 (mahalin IFC adı) kapandı.** EK-5 5.5.4: mahal de varlık şablonuyla adlandırılır; EK-3'teki mahal numarası ve mahal
+  ismi şablonun açıklama bölümünde ayrı ayrı ya da birlikte kullanılabilir. ADR 8047'nin okuması doğru; Tablo 6.58'de ad
+  "EK-5'e göre isimlendirilecektir" der.
+- **3 (EK-8) kapandı.** EK-8 nesne tablosu içermez: ruhsat eki modeller "Detaylı Modelleme" seviyesindedir ve bu LOD 300'e
+  karşılık gelir; proje aşamalarına göre bilgi gereksinimini idare tanımlayabilir (8.2), ekte olmayan konularda
+  yönetmeliğin 5/1'i uygulanır (8.3).
+- **5 (ön tanımlı tip):** EK-9/19 yalnız "doğru Ön Tanımlı Tip (Predefined Type)" ister; `NOTDEFINED`'ı açıkça yasaklamaz.
+  Uygunluk kararı katalogda kalır.
+- **6 ve 7 doğrulandı:** Tablo 6.37 `IfcGroup` için gerçekten "Etiket (Attribute: Tag)" ister (şemayla çelişki sürer);
+  Tablo 7.4'te `IfcOrganization.Identification` "Firma Vergi No", veri tipi "Sayı".
+- **11 (düşey datum) değişti ⚠.** EK-7 Tablo 7.6 (`VerticalDatum`): yükseklik referansı ITRF96, gerektiğinde TUDKA99'a
+  dönüşüm parametresi ayrıca belirtilir (bağımsız dökümün "TUDKA99" okuması yanlış). Ama EK-4 4.31.4, yapı aplikasyon
+  projesindeki kotları Türkiye Jeoit Modeli'ne dayalı Helmert ortometrik yükseklikle ister. İki ek farklı yükseklik
+  söylüyor; idareyle teyit edilecek.
+- **14 (mahalde net alan) kapandı.** Zorunlu Tablo 6.58'de alan yok (ad, ön tanımlı tip, zemin, duvar ve tavan kaplaması
+  ile kalınlıkları); net alan ve hacim isteğe bağlı Tablo 6.125'te (`Qto_SpaceBaseQuantities`). İki okuma da yarı doğruydu.
+- **15 (IfcZone) yarı açık.** Tablo 6.68 yalnız genel tanımı verir (mekanların, kısmi mekanların ya da başka zonların
+  gruplanması) ve `LongName`, `Name`, `ObjectType` ister; neyi temsil edeceğini söylemez.
+
+Eklerden yeni çıkan ve plana girecek ayrıntılar: Tablo 2.11'deki zemin öge kodları üç harflidir (IKS, KZK, ZTE) oysa EK-2
+2.5 dört karakter der; Tablo 4.5'te statik, mekanik ve elektrik blok adlarının alt disiplin alanı 3 karakterdir (Tablo
+4.2'de katman adlarında 4); EK-4 4.13.1 proje geneli katmanlar için "GENL" alt disiplin kısaltmasını, 4.14.2 emsal
+katmanları için `EMSL` ögesiyle "DAHIL", "HARIC", "DIGER" kısaltmalarını ister; EK-4 4.31.1 yapı aplikasyon projesini
+TUREF (ITRF96) 3° dilimde, EPSG 5253–5259 ile ister.
 
 ## 5. KentOS'un bugünkü IFC çıktısı (kodda ölçüldü, `crates/shared/ifc`)
 
