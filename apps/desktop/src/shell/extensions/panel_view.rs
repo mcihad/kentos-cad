@@ -479,6 +479,15 @@ impl App {
                     );
                     form = form.field(words.clone(), pick);
                 }
+                // A point typed as `x, y` or picked on the map (panel_points.rs, docs/adr/8057 §57).
+                Component::PointPicker {
+                    id, label: words, ..
+                } => {
+                    form = form.field(
+                        words.clone(),
+                        super::panel_points::point_field(p, id, on(id), event, enter.clone()),
+                    );
+                }
                 // KentOS's coordinate systems, each with its datum (panel_crs.rs, docs/adr/8057 §45).
                 Component::CrsPicker {
                     id, label: words, ..

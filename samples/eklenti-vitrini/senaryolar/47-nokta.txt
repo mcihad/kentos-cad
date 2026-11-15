@@ -1,0 +1,20 @@
+# Panelden harita seçimi: Vitrin › Yakın yapılar'ın Nokta alanı bir nokta seçicisi (pointPicker). Hedef düğmesine
+# (Haritadan seç) basılıp haritada yapıların arasına tıklanınca nokta alana yazılır; nokta değiştiği için komut çalışır
+# ve 25 m içindeki yapılar yakından uzağa tabloda listelenir. Dar dock'ta Nokta ve Uzaklık alt alta (row). (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 638 111   # Yakın yapılar (şeritte, Panel grubunda)
+wait 2500
+shot 47-panel
+click 1413 315  # Haritadan seç (hedef düğmesi)
+wait 800
+shot 47-seciliyor
+click 700 600   # haritada bir nokta: yapıların arasında
+wait 9000
+shot 47-sonuc

@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.42",
+  "version": "1.0.43",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -118,6 +118,11 @@
         "id": "yapi-tamponu",
         "title": "Yapı tamponu",
         "handler": "vitrin.logic:yapi_tamponu"
+      },
+      {
+        "id": "yakin-yapilar",
+        "title": "Yakın yapılar",
+        "handler": "vitrin.logic:yakin_yapilar"
       }
     ],
     "panels": [
@@ -138,6 +143,12 @@
         "title": "Parsel kartı",
         "side": "right",
         "definition": "ui/parsel-karti.panel.json"
+      },
+      {
+        "id": "yakin-paneli",
+        "title": "Yakın yapılar",
+        "side": "right",
+        "definition": "ui/yakin-yapilar.panel.json"
       }
     ],
     "processing": [
@@ -255,6 +266,10 @@
               {
                 "panel": "parsel-paneli",
                 "icon": "parcel-report"
+              },
+              {
+                "panel": "yakin-paneli",
+                "icon": "nearest-feature"
               }
             ]
           },

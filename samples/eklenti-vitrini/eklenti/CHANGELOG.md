@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.0.43 — 16 Kasım 2026
+
+- "Yakın yapılar" paneli (Vitrin › Panel): Nokta alanı bir nokta seçicisi (`pointPicker`): Haritadan seç'e basıp
+  haritada gösterilir (kenetlenir) ya da x, y yazılır; nokta değişince ve Bul'a basınca `yakin-yapilar` komutu o
+  noktaya Uzaklık içindeki yapıları yakından uzağa listeler (shapely ile uzaklık; satıra tıklamak yapıyı gösterir).
+  Nokta ile Uzaklık bir satırda (`row`).
+
 ## 1.0.42 — 16 Kasım 2026
 
 - Yapıları numarala'nın penceresinde Önek ve İlk numara bir satırda yan yana (`row`): bileşenin `row` anahtarı aynı

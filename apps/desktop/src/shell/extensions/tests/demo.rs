@@ -109,6 +109,7 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "Yapı ara",
             "Değer say",
             "Parsel kartı",
+            "Yakın yapılar",
             "Yapı yerleştir",
             "Parsel çakışması"
         ]

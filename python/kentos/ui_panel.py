@@ -346,6 +346,38 @@ def crs_picker(
     return out
 
 
+def point_picker(
+    id: str,
+    label: str,
+    *,
+    value: Sequence[float] | None = None,
+    on_change: str | None = None,
+    required: bool = False,
+    visible_when: str | None = None,
+    required_when: str | None = None,
+    tab: str | None = None,
+    row: str | None = None,
+) -> dict[str, Any]:
+    """A point of the drawing (docs/adr/8057 §57): typed as `x, y` or picked on the map with "Haritadan seç" (snaps
+    apply); its value `[x, y]` in the drawing's plane, metres, none when empty."""
+    out: dict[str, Any] = {"type": "pointPicker", "id": id, "label": label}
+    if value is not None:
+        out["value"] = list(value)
+    if on_change is not None:
+        out["onChange"] = on_change
+    if required:
+        out["required"] = True
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    if required_when is not None:
+        out["requiredWhen"] = required_when
+    if tab is not None:
+        out["tab"] = tab
+    if row is not None:
+        out["row"] = row
+    return out
+
+
 def feature_picker(
     id: str,
     label: str,
@@ -771,6 +803,7 @@ def card(
 
 __all__ = [
     "Choice", "choice", "file_filter", "panel", "text", "section", "text_field", "number_field", "select",
-    "layer_picker", "field_picker", "file_picker", "crs_picker", "feature_picker", "multi_select", "date_field",
-    "time_field", "date_time_field", "checkbox", "button", "table", "tree", "stats", "chart", "image", "card",
+    "layer_picker", "field_picker", "file_picker", "crs_picker", "point_picker", "feature_picker", "multi_select",
+    "date_field", "time_field", "date_time_field", "checkbox", "button", "table", "tree", "stats", "chart", "image",
+    "card",
 ]

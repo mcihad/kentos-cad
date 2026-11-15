@@ -188,6 +188,19 @@ pub enum Component {
         #[serde(default, rename = "onChange")]
         on_change: Option<String>,
     },
+    /// A point of the drawing (docs/adr/8057 §57): typed as `x, y` or picked on the map with "Haritadan seç" (snaps
+    /// apply); its value `[x, y]` in the drawing's plane, metres, none when empty.
+    PointPicker {
+        id: String,
+        label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
+        #[serde(default)]
+        value: Option<[f64; 2]>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
     /// The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`
     /// holds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else
     /// one id or none.
@@ -414,6 +427,7 @@ impl Component {
             | Component::FeaturePicker { id, .. }
             | Component::FilePicker { id, .. }
             | Component::CrsPicker { id, .. }
+            | Component::PointPicker { id, .. }
             | Component::DateField { id, .. }
             | Component::TimeField { id, .. }
             | Component::DateTimeField { id, .. }
@@ -438,6 +452,7 @@ impl Component {
             | Component::FeaturePicker { on_change, .. }
             | Component::FilePicker { on_change, .. }
             | Component::CrsPicker { on_change, .. }
+            | Component::PointPicker { on_change, .. }
             | Component::DateField { on_change, .. }
             | Component::TimeField { on_change, .. }
             | Component::DateTimeField { on_change, .. }
@@ -457,6 +472,7 @@ impl Component {
             | Component::FeaturePicker { required, .. }
             | Component::FilePicker { required, .. }
             | Component::CrsPicker { required, .. }
+            | Component::PointPicker { required, .. }
             | Component::MultiSelect { required, .. }
             | Component::DateField { required, .. }
             | Component::TimeField { required, .. }
@@ -477,6 +493,7 @@ impl Component {
                 | Component::FeaturePicker { .. }
                 | Component::FilePicker { .. }
                 | Component::CrsPicker { .. }
+                | Component::PointPicker { .. }
                 | Component::DateField { .. }
                 | Component::TimeField { .. }
                 | Component::DateTimeField { .. }
@@ -633,7 +650,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
             "save",
             "defaultName",
         ],
-        "crsPicker" => &["id", "label", "value", "onChange", "required"],
+        "crsPicker" | "pointPicker" => &["id", "label", "value", "onChange", "required"],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" | "timeField" | "dateTimeField" => {
             &["id", "label", "value", "min", "max", "onChange", "required"]
@@ -659,7 +676,40 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
 }
 
 const TYPES: &str = "text, section, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
-                     fieldPicker, featurePicker, filePicker, crsPicker, checkbox, button, table, tree, card, stats, chart, image";
+                     fieldPicker, featurePicker, filePicker, crsPicker, pointPicker, checkbox, button, table, tree, card, \
+                     stats, chart, image";
+
+/// A point given as JSON (`[x, y]`, two finite numbers); none otherwise.
+pub fn point_value(value: &Value) -> Option<[f64; 2]> {
+    let xy = value.as_array().filter(|a| a.len() == 2)?;
+    let (x, y) = (xy[0].as_f64()?, xy[1].as_f64()?);
+    (x.is_finite() && y.is_finite()).then_some([x, y])
+}
+
+/// A point as a field shows it: `x, y` to the millimetre.
+pub fn point_words([x, y]: [f64; 2]) -> String {
+    format!("{x:.3}, {y:.3}")
+}
+
+/// A point as the user types it: `x, y` or `x y` with decimal points, or `x; y` with decimal commas too; none for
+/// anything else.
+pub fn typed_point(text: &str) -> Option<[f64; 2]> {
+    let text = text.trim();
+    let parts: Vec<String> = if text.contains(';') {
+        text.split(';')
+            .map(|p| p.trim().replace(',', "."))
+            .collect()
+    } else if text.split_whitespace().count() == 2 && !text.contains(", ") {
+        text.split_whitespace().map(str::to_owned).collect()
+    } else {
+        text.split(',').map(|p| p.trim().to_owned()).collect()
+    };
+    let [x, y] = parts.as_slice() else {
+        return None;
+    };
+    let (x, y) = (x.parse::<f64>().ok()?, y.parse::<f64>().ok()?);
+    (x.is_finite() && y.is_finite()).then_some([x, y])
+}
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -1310,6 +1360,17 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             "filePicker" => files::check(c, &at, &mut add),
             // Its value a system of KentOS's list (crs.rs, docs/adr/8057 §45).
             "crsPicker" => crs::check(c, &at, &mut add),
+            // Its value a point: two finite numbers (docs/adr/8057 §57).
+            "pointPicker" => {
+                if let Some(value) = c.get("value").filter(|v| !v.is_null())
+                    && point_value(value).is_none()
+                {
+                    add(
+                        format!("{at}/value"),
+                        "value bir nokta olmalı: iki sayılık liste [x, y] (çizimin düzleminde, metre).".to_owned(),
+                    );
+                }
+            }
             "image" => {
                 if let Some(height) = c.get("height")
                     && !height.as_f64().is_some_and(|h| (80.0..=600.0).contains(&h))
@@ -1494,6 +1555,25 @@ mod tests {
                   "category": "ada" }
             ]
         })
+    }
+
+    /// A point is two numbers: typed with a decimal point and a comma or a space between, or decimal commas with a
+    /// semicolon; given as JSON `[x, y]`; shown to the millimetre.
+    #[test]
+    fn a_point_is_typed_as_two_numbers() {
+        assert_eq!(
+            typed_point("500123.45, 4401234.5"),
+            Some([500123.45, 4401234.5])
+        );
+        assert_eq!(typed_point(" 10 20 "), Some([10.0, 20.0]));
+        assert_eq!(typed_point("10,5; 20,25"), Some([10.5, 20.25]));
+        assert_eq!(typed_point("10.5,20"), Some([10.5, 20.0]));
+        for wrong in ["", "10", "a, b", "1, 2, 3", "10,5 20,5"] {
+            assert_eq!(typed_point(wrong), None, "{wrong:?}");
+        }
+        assert_eq!(point_value(&serde_json::json!([1.0, 2])), Some([1.0, 2.0]));
+        assert_eq!(point_value(&serde_json::json!([1.0])), None);
+        assert_eq!(point_words([500123.456_78, 2.0]), "500123.457, 2.000");
     }
 
     #[test]

@@ -1,0 +1,216 @@
+//! A panel's point picker (docs/adr/8057 §57, plan/eklenti.md ADIM 22's "panelden harita seçimi"): its field takes a
+//! point typed as `x, y`, or Haritadan seç picks one on the map as the processing window's point parameters do
+//! (`PickPoint`: snaps apply, the command line says for which field, Esc leaves the field as it was). The point
+//! picked is the field's words to the millimetre and a change: its `onChange` command runs.
+//!
+//! - **The panel stays:** a dock panel stands beside the map, so it is not put aside while the point is picked; the
+//!   pick is the window's tool until a point or Esc.
+//! - **Not in a dialog:** `ctx.dialog`'s window holds the window until it is answered, so no point is picked from it.
+
+use iced::Task;
+use iced::widget::{button, row};
+use kentos_extensions::ui_panel::{Component, point_words};
+use kentos_interaction::pick::PickPoint;
+use kentos_interaction::{Level, Vec2};
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::widget::{Tip, tip};
+
+use super::panels::{OpenPanel, PanelEvent};
+use crate::app::{App, Message};
+
+/// A point being picked for a panel's field: whose panel and which field.
+#[derive(Clone, Debug)]
+pub(crate) struct PointPick {
+    pub(crate) ext: String,
+    pub(crate) panel: String,
+    pub(crate) field: String,
+}
+
+/// A point picker's field and its Haritadan seç, as the form draws them: the processing window's pick (its target
+/// icon), the words on hover. A captioned button left the field a few pixels in a narrow dock (real window, 16 November
+/// 2026: "x, y" cut to its first letter in a 300-pixel dock).
+pub(super) fn point_field<'a>(
+    p: &'a OpenPanel,
+    id: &'a str,
+    usable: bool,
+    event: fn(PanelEvent) -> Message,
+    enter: Option<Message>,
+) -> iced::Element<'a, Message> {
+    let value = p.texts.get(id).map_or("", String::as_str);
+    let mut field = kentos_ui::widget::text_field("x, y", value)
+        .id(super::panel_session::field_id(&p.ext, &p.local, id));
+    let mut pick = button(icon(Icon::Target).size(14.0).tone(Tone::Inherit))
+        .padding([5, 8])
+        .style(kentos_ui::style::button::secondary);
+    if usable {
+        let typing = id.to_owned();
+        field = field.on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
+        if let Some(press) = enter {
+            field = field.on_submit(press);
+        }
+        pick = pick.on_press(event(PanelEvent::PickPoint(id.to_owned())));
+    }
+    let pick = tip(
+        pick,
+        Tip::new("Haritadan seç").body("Noktayı haritada gösterin (kenetlenir); Esc vazgeçer."),
+        iced::widget::tooltip::Position::Top,
+    );
+    row![field, pick]
+        .spacing(6)
+        .align_y(iced::Alignment::Center)
+        .into()
+}
+
+impl App {
+    /// Haritadan seç on panel `at`'s point picker `id`: a point is picked on the map, snaps applying; the command line
+    /// names the panel and the field.
+    pub(super) fn ext_panel_pick_point(&mut self, at: usize, id: &str) -> Task<Message> {
+        let Some(panel) = self.extensions.panels.get(at) else {
+            return Task::none();
+        };
+        let label = panel
+            .definition
+            .body
+            .iter()
+            .find_map(|c| match c {
+                Component::PointPicker { id: own, label, .. } if own == id => Some(label.clone()),
+                _ => None,
+            })
+            .unwrap_or_else(|| id.to_owned());
+        let said = format!("{}: {label}", panel.definition.title);
+        let pick = PointPick {
+            ext: panel.ext.clone(),
+            panel: panel.local.clone(),
+            field: id.to_owned(),
+        };
+        self.say(Level::Command, said);
+        self.extensions.point_pick = Some(pick);
+        self.field = None;
+        self.snap = None;
+        self.session.run(Box::new(PickPoint::new("", label)));
+        self.with_tool(|s, cx| s.activate(cx));
+        Task::none()
+    }
+
+    /// A point picked (or Esc) while a panel's field asked for one: the field's words and its `onChange` command;
+    /// false when no panel asked.
+    pub(crate) fn ext_panel_point_picked(&mut self, p: Option<Vec2>) -> bool {
+        let Some(pick) = self.extensions.point_pick.take() else {
+            return false;
+        };
+        let Some(p) = p else {
+            return true;
+        };
+        let Some(at) = self
+            .extensions
+            .panels
+            .iter()
+            .position(|x| x.ext == pick.ext && x.local == pick.panel)
+        else {
+            return true;
+        };
+        let words = point_words([p.x, p.y]);
+        let panel = &mut self.extensions.panels[at];
+        panel.forget_invalid(&PanelEvent::Picked(pick.field.clone(), words.clone()));
+        panel.texts.insert(pick.field.clone(), words);
+        panel.recalculate();
+        // Its command after the update (`ext_point_tasks`): a view's change gives no task of its own.
+        self.extensions.point_changed = Some((at, pick.field));
+        true
+    }
+
+    /// After the update: the `onChange` command of the field a point was picked for (the window's update asks, as
+    /// for a map tool's shape). A pick held in `later` waited for the extension's process to speak and never ran
+    /// (real window, 16 November 2026: the button stayed pressed, nothing listed).
+    pub(crate) fn ext_point_tasks(&mut self) -> Task<Message> {
+        match self.extensions.point_changed.take() {
+            Some((at, field)) => self.ext_panel_changed(at, &field),
+            None => Task::none(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use kentos_extensions::ui_panel;
+    use kentos_interaction::Vec2;
+    use serde_json::json;
+
+    use super::super::panels::OpenPanel;
+
+    fn panel() -> OpenPanel {
+        let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Yakın yapılar",
+            "body": [
+                { "type": "pointPicker", "id": "nokta", "label": "Nokta", "required": true, "onChange": "bul" },
+                { "type": "pointPicker", "id": "ikinci", "label": "İkinci", "value": [1.5, 2.0] }
+            ] });
+        OpenPanel::new(
+            "tr.ornek.deneme",
+            "yakin",
+            ui_panel::read(&value).expect("a panel"),
+        )
+    }
+
+    /// A point picker's value: `[x, y]` from what was typed or given, none when empty; a required one left empty and
+    /// one that is not a point are said by its label.
+    #[test]
+    fn a_point_pickers_value_is_x_and_y() {
+        let mut p = panel();
+        assert_eq!(
+            p.texts["ikinci"], "1.500, 2.000",
+            "its own value shown to the millimetre"
+        );
+        let (id, why) = p.check_params().unwrap_err();
+        assert_eq!(id, "nokta");
+        assert!(why.contains("nokta verilmedi"), "{why}");
+        p.texts
+            .insert("nokta".into(), "500123,45; 4401234,5".into());
+        let values = p.check_params().expect("its values");
+        assert_eq!(values["nokta"], json!([500123.45, 4401234.5]));
+        assert_eq!(values["ikinci"], json!([1.5, 2.0]));
+        p.texts.insert("nokta".into(), "kuzey".into());
+        assert!(p.check_params().unwrap_err().1.contains("bir nokta olmalı"));
+        // Its code gives it a point; not a point is the code's mistake.
+        let given = super::super::panel_session::set(
+            &mut p,
+            &json!({ "id": "ikinci", "value": [3, 4] }),
+            None,
+        );
+        assert_eq!(given.map_err(|e| e.message), Ok(true));
+        assert_eq!(p.texts["ikinci"], "3.000, 4.000");
+        let wrong = super::super::panel_session::set(
+            &mut p,
+            &json!({ "id": "ikinci", "value": "3, 4" }),
+            None,
+        );
+        assert!(wrong.unwrap_err().message.contains("[x, y]"));
+    }
+
+    /// Haritadan seç: the pick is the window's tool; the point picked is the field's words, Esc leaves them.
+    #[test]
+    fn a_point_picked_on_the_map_is_the_fields() {
+        let mut app = crate::files_testing::app_with_drawing();
+        app.extensions.panels.push(panel());
+        let _ = app.ext_panel_pick_point(0, "nokta");
+        assert!(app.extensions.point_pick.is_some(), "picking");
+        assert!(app.ext_panel_point_picked(Some(Vec2::new(10.0, 20.5))));
+        assert_eq!(app.extensions.panels[0].texts["nokta"], "10.000, 20.500");
+        assert!(app.extensions.point_pick.is_none());
+        // Its onChange runs after the update, not when the extension's process next speaks.
+        assert_eq!(app.extensions.point_changed, Some((0, "nokta".to_owned())));
+        let _ = app.ext_point_tasks();
+        assert!(app.extensions.point_changed.is_none());
+        let panel = &app.extensions.panels[0];
+        assert!(
+            panel.running.is_some() || panel.said.is_some(),
+            "its command was asked (here no extension is installed to run it: said on the panel)"
+        );
+        let _ = app.ext_panel_pick_point(0, "nokta");
+        assert!(app.ext_panel_point_picked(None), "Esc");
+        assert_eq!(app.extensions.panels[0].texts["nokta"], "10.000, 20.500");
+        assert!(
+            !app.ext_panel_point_picked(Some(Vec2::new(1.0, 1.0))),
+            "no field asked"
+        );
+    }
+}

@@ -30,7 +30,7 @@ from datetime import date, datetime
 
 import numpy as np
 import shapely
-from shapely.geometry import Polygon, shape
+from shapely.geometry import Point, Polygon, shape
 
 from kentos import cad, ext
 from kentos import ui_panel as ui
@@ -126,6 +126,32 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
         )
         panel.say(ozet, "success")
     return ctx.message(ozet)
+
+
+@ext.command("yakin-yapilar")
+def yakin_yapilar(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Yakın yapılar" panelinin Bul düğmesi ve noktası değişince: panelin nokta seçicisindeki noktaya (ctx.params
+    ["nokta"]: [x, y], haritadan seçilir ya da yazılır) verilen uzaklıktaki yapılar, yakından uzağa; yapının içindeki
+    noktanın uzaklığı 0'dır. Satırlar Ara'nınki gibi: tıklanan satır yapıyı gösterir."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    nokta = ctx.params.get("nokta")
+    if not nokta:
+        return ctx.message("Önce bir nokta verin: Haritadan seç ya da x, y.")
+    uzaklik = float(ctx.params.get("uzaklik") or 25)
+    yapi = _katman(ctx.doc, "yapi")
+    if yapi is None:
+        return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
+    merkez = Point(nokta)
+    satirlar = []
+    for kayit in ctx.doc.entities(layer=yapi, kinds=["polygon"]):
+        mesafe = Polygon(kayit.entity.pts).distance(merkez)
+        if mesafe <= uzaklik:
+            satirlar.append(
+                {"uid": kayit.uid, "no": kayit.entity.attrs.get("no") or "—", "uzaklık (m)": round(mesafe, 1)}
+            )
+    satirlar.sort(key=lambda s: s["uzaklık (m)"])
+    return ctx.report(satirlar, title="Yakın yapılar", message=f"{uzaklik:g} m içinde {len(satirlar)} yapı.")
 
 
 @ext.command("yapi-ara")

@@ -361,6 +361,7 @@ impl App {
                         && !self.grade_picked(p)
                         && !self.pdf_import_picked(p)
                         && !self.service_info_picked(p)
+                        && !self.ext_panel_point_picked(p)
                     {
                         self.calc_picked(p);
                     }

@@ -174,6 +174,8 @@ pub(crate) enum PanelEvent {
     Tab(String),
     /// A file picker's Seç…: the computer's file window, its choice as `Picked`.
     PickFile(String),
+    /// A point picker's Haritadan seç: a point picked on the map, the field's words then (panel_points.rs).
+    PickPoint(String),
     /// The open panel at this place in the tabs shown.
     Activate(usize),
     /// Its tab moved: from, to (where it goes once taken out).
@@ -337,6 +339,15 @@ impl OpenPanel {
                         .choices
                         .insert(id.clone(), value.clone().unwrap_or_default());
                 }
+                // A point as typed, to the millimetre (panel_points.rs, docs/adr/8057 §57).
+                Component::PointPicker { id, value, .. } => {
+                    panel.texts.insert(
+                        id.clone(),
+                        value
+                            .map(kentos_extensions::ui_panel::point_words)
+                            .unwrap_or_default(),
+                    );
+                }
                 _ => {}
             }
         }
@@ -447,6 +458,9 @@ impl OpenPanel {
             Component::TextField { .. } | Component::FilePicker { .. } => {
                 typed().map(str::to_owned)
             }
+            Component::PointPicker { .. } => typed()
+                .and_then(kentos_extensions::ui_panel::typed_point)
+                .map(kentos_extensions::ui_panel::point_words),
             Component::NumberField { .. } => typed().and_then(number_of).map(|n| n.to_string()),
             Component::DateField { .. } => {
                 typed().and_then(kentos_extensions::ui_panel::typed_date)
@@ -502,7 +516,8 @@ impl OpenPanel {
             | Component::TimeField { label, .. }
             | Component::DateTimeField { label, .. }
             | Component::FilePicker { label, .. }
-            | Component::CrsPicker { label, .. } => label,
+            | Component::CrsPicker { label, .. }
+            | Component::PointPicker { label, .. } => label,
             _ => return None,
         };
         match c {
@@ -528,6 +543,13 @@ impl OpenPanel {
                 .get(id)
                 .is_none_or(|t| t.trim().is_empty())
                 .then(|| format!("“{label}”: dosya verilmedi (yolunu yazın ya da Seç…'e basın).")),
+            Component::PointPicker { .. } => self
+                .texts
+                .get(id)
+                .is_none_or(|t| t.trim().is_empty())
+                .then(|| {
+                    format!("“{label}”: nokta verilmedi (x, y yazın ya da Haritadan seç'e basın).")
+                }),
             _ => self
                 .texts
                 .get(id)
@@ -542,6 +564,20 @@ impl OpenPanel {
             Component::TextField { id, .. } => {
                 let text = self.texts.get(id).map_or("", |t| t.trim());
                 out.insert(id.clone(), json!(text));
+            }
+            // A point: `[x, y]`, none when empty (docs/adr/8057 §57).
+            Component::PointPicker { id, label, .. } => {
+                let typed = self.texts.get(id).map_or("", |t| t.trim());
+                let value = if typed.is_empty() {
+                    Value::Null
+                } else {
+                    let [x, y] =
+                        kentos_extensions::ui_panel::typed_point(typed).ok_or_else(|| {
+                            format!("“{label}” bir nokta olmalı: x, y (ör. 500123.45, 4401234.50).")
+                        })?;
+                    json!([x, y])
+                };
+                out.insert(id.clone(), value);
             }
             // A file to be read: its absolute path, checked to be a file of the kinds offered (panel_files.rs).
             Component::FilePicker {
@@ -1146,6 +1182,7 @@ impl App {
                 return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Pick(id) => return self.ext_panel_pick(at, &id),
+            PanelEvent::PickPoint(id) => return self.ext_panel_pick_point(at, &id),
             PanelEvent::Activate(to) => return self.ext_panel_activate(to),
             PanelEvent::Move(from, to) => self.ext_panel_move(from, to),
             PanelEvent::Close(which) => return self.ext_panel_close(which),
@@ -1280,7 +1317,7 @@ impl App {
 
     /// An input changed: its `onChange` command runs with the panel's values, its rows to the panel's first table. A
     /// change while a command runs waits for it: one rerun, with the values then.
-    fn ext_panel_changed(&mut self, at: usize, input: &str) -> Task<Message> {
+    pub(super) fn ext_panel_changed(&mut self, at: usize, input: &str) -> Task<Message> {
         let Some(panel) = self.extensions.panels.get_mut(at) else {
             return Task::none();
         };

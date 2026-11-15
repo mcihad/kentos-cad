@@ -20,6 +20,8 @@ mod panel_crs;
 mod panel_files;
 // A panel's pictures: the PNG an extension's code gives (docs/adr/8057 §40).
 mod panel_image;
+// A panel's point picker: a point typed or picked on the map (docs/adr/8057 §57).
+mod panel_points;
 // A panel's rows: components side by side, the cells of one line (docs/adr/8057 §55).
 mod panel_rows;
 // A panel's sections: headings that fold what they gather (docs/adr/8057 §38).
@@ -165,6 +167,10 @@ pub(crate) struct Extensions {
     /// A map tool drawing (runner.rs, plan/eklenti.md ADIM 19): its extension, local id, title and what it captures;
     /// started again after each placement until Esc or a failure.
     pub(crate) capturing: Option<runner::Capturing>,
+    /// A point being picked on the map for a panel's point picker (panel_points.rs).
+    pub(crate) point_pick: Option<panel_points::PointPick>,
+    /// The panel (by place) and the field a point was just picked for: its onChange command after the update.
+    pub(crate) point_changed: Option<(usize, String)>,
     /// The shape just drawn, waiting for its run after the update; none: Esc.
     pub(crate) captured: Option<Option<kentos_interaction::capture::Shape>>,
     /// The drawn shape the next map tool run gives its code (GeoJSON).
@@ -232,6 +238,8 @@ impl Default for Extensions {
             result: None,
             tools: tools::ExtTools::default(),
             capturing: None,
+            point_pick: None,
+            point_changed: None,
             captured: None,
             capture_shape: None,
             target_params: None,

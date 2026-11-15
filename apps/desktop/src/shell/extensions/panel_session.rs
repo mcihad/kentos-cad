@@ -70,6 +70,7 @@ fn kind_of(c: &Component) -> &'static str {
         Component::NumberField { .. } => "numberField",
         Component::Select { .. } => "select",
         Component::CrsPicker { .. } => "crsPicker",
+        Component::PointPicker { .. } => "pointPicker",
         Component::LayerPicker { .. } => "layerPicker",
         Component::FieldPicker { .. } => "fieldPicker",
         Component::FeaturePicker { .. } => "featurePicker",
@@ -97,6 +98,7 @@ fn typed(c: &Component) -> bool {
             | Component::TimeField { .. }
             | Component::DateTimeField { .. }
             | Component::FilePicker { .. }
+            | Component::PointPicker { .. }
     )
 }
 
@@ -155,6 +157,10 @@ fn typed_words(c: &Component, value: &Value) -> Result<String, String> {
             .as_str()
             .map(str::to_owned)
             .ok_or_else(|| "bir dosyanın yolu (metin) olmalı".to_owned()),
+        // A point, `[x, y]` (docs/adr/8057 §57).
+        Component::PointPicker { .. } => kentos_extensions::ui_panel::point_value(value)
+            .map(kentos_extensions::ui_panel::point_words)
+            .ok_or_else(|| "bir nokta olmalı: [x, y]".to_owned()),
         Component::NumberField { min, max, .. } => {
             let n = value.as_f64().ok_or_else(|| "bir sayı olmalı".to_owned())?;
             if min.is_some_and(|m| n < m) || max.is_some_and(|m| n > m) {

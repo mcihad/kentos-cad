@@ -595,6 +595,70 @@
           "type": "object"
         },
         {
+          "description": "A point of the drawing (docs/adr/8057 §57): typed as `x, y` or picked on the map with \"Haritadan seç\" (snaps\napply); its value `[x, y]` in the drawing's plane, metres, none when empty.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "pointPicker",
+              "type": "string"
+            },
+            "value": {
+              "default": null,
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": [
+                "array",
+                "null"
+              ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
           "description": "The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`\nholds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else\none id or none.",
           "properties": {
             "geometry": {

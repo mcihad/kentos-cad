@@ -102,7 +102,8 @@ listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.en
 alan ve nesne seçimi temizlenir), `filePicker` (`id`, `label`, `filters`: `[{name, extensions}]`; okunacak dosyanın yolu
 yazılır ya da Seç… ile seçilir, değeri mutlak yol ya da None; manifest `files.userSelected` ister; `save: true`
 yazılacak yeri sorar: `defaultName`, `files.userSelectedWrite`),
-`crsPicker` (`id`, `label`, `value`; KentOS'un sistemlerinden, verilmezse çizimin; değeri `EPSG:<kod>`), `button` (`id`,
+`crsPicker` (`id`, `label`, `value`; KentOS'un sistemlerinden, verilmezse çizimin; değeri `EPSG:<kod>`), `pointPicker`
+(`id`, `label`, `value`; "x, y" yazılır ya da Haritadan seç, değeri [x, y]), `button` (`id`,
 `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
 `primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
 göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak
@@ -946,7 +947,7 @@ mod tests {
             odd["body"][0]["type"] = json!("saat");
             assert!(!errors(&schema, &odd).is_empty(), "{}", path.display());
         }
-        assert_eq!(read, 3, "the Vitrin's three panels");
+        assert_eq!(read, 4, "the Vitrin's four panels");
     }
 
     #[test]

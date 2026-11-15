@@ -1814,7 +1814,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | CBS girdisi | katman seçici | var | `layerPicker` (tür süzgeci) | |
 | | nesne seçici | var | `featurePicker` (çizimdeki seçimden) | haritada tıklatan kip bilinçli olarak yok (§24) |
 | | alan seçici | var | `fieldPicker` (bağlı katmanın alanları) | |
-| | koordinat/harita seçimi | host | `entrypoints.mapTools` (yakalama türleri) | panelden harita seçimi yok |
+| | koordinat/harita seçimi | var | `pointPicker` (`x, y` yazılır ya da Haritadan seç ile haritada gösterilir, kenetlenir; değeri `[x, y]`, §57); harita aracı `entrypoints.mapTools` (yakalama türleri) | panelden çizgi/alan seçimi yok; pencerede (`ctx.dialog`) yok |
 | | CRS/birim | var | `crsPicker` (KentOS'un sistemleri, değeri `EPSG:<kod>`, verilmezse çizimin sistemi; §45) | birim seçici yok |
 | | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
 | Kaynak ve çıktı | dosya/eser seçici, ek | var | `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41; `save` ile yazılacak dosyanın yeri, §44) | `files.userSelected` ister, kaydetme yeri `files.userSelectedWrite`; ek sonraki dilim |
@@ -3172,3 +3172,37 @@ tamamı, 43/1 ve Ek-5/B'nin çıkmaz koridor sütunu aynen; 22 alıntının heps
   katta hata; her katta kapı varsa 90 m²'lik üst kat uygun; üç katlı dairede karar yok. Yedi kural ayrıca örnek çizimde
   bulut işinin yoluyla (`run_audit`): `piyesler` 4 hata 2 bilgi, `cikmaz-koridor` 1 hata, öbürleri uygun. `kentos kek
   verify` 0 uyarı (yeniden derlenmiş komut satırıyla); paket 21 257 bayt, 14 dosya.
+
+## §57. Panelden harita seçimi: `pointPicker` (`ADIM 22`, bileşen envanteri, CBS girdisi)
+
+**16 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/ui_panel.rs` (`Component::PointPicker`, `point_value`,
+`point_words`, `typed_point`, Kapı 1), şema ve Python kurucusu (`ui.point_picker`, `value: Sequence[float]`), masaüstü
+`apps/desktop/src/shell/extensions/panel_points.rs` (alan, seçim, komut), `panels.rs` (değer, zorunluluk),
+`panel_session.rs` (`ctx.panel.set(id, value=[x, y])`), `panel_view.rs`, `shell/input.rs` (seçilen noktanın zinciri),
+`shell/app/update.rs` (`ext_point_tasks`); Vitrin 1.0.43.
+
+- **Karar: değer `[x, y]`, çizimin düzleminde, metre.** Alanda `x, y` milimetreye yazılı durur; kullanıcı yazabilir
+  (`x, y`, `x y` ondalık noktayla; ondalık virgülle `x; y`) ya da Haritadan seç'e basar. Kod `ctx.params["nokta"]`'yı
+  `[x, y]` (boşsa None) alır; `ctx.panel.set(id, value=[x, y])` yazar. Nokta olmayan yazım "“Nokta” bir nokta olmalı"
+  diye alanın altında söylenir, komut çalışmaz.
+- **Karar: İşlemler penceresinin seçimi.** Haritadan seç, İşlemler aracının nokta parametresinin `PickPoint`'idir:
+  kenetlenme uygulanır, komut satırı hangi panelin hangi alanı için seçildiğini söyler, Esc alanı olduğu gibi bırakır.
+  Dock'taki panel haritanın yanında durduğu için (İşlemler penceresi gibi) kenara çekilmez. Düğme hedef ikonlu ve
+  yazısız, adı ve ne yaptığı üzerine gelince: yazılı "Haritadan seç" düğmesi 300 piksellik dock'ta alanı birkaç piksele
+  indiriyordu (gerçek pencere).
+- **Seçilen nokta bir değişikliktir:** alanın `onChange` komutu çalışır (takvimden seçilen günün yolu). Komut
+  güncellemenin sonunda başlar (`ext_point_tasks`, harita aracının şeklinin yolu): ilk sürümde görev panel oturumunun
+  `later` kuyruğuna konmuştu, kuyruk yalnız eklentinin süreci konuşunca boşaldığı için komut hiç başlamıyor, düğme
+  basılı kalıyordu (gerçek pencere).
+- **Pencerede yok:** `ctx.dialog`'un penceresi cevaplanana dek pencereyi tutar; noktayı oradan seçmek pencereyi kapatıp
+  açmayı ister. Pencerenin alanları (14 tür) değişmedi.
+- **Kapı 1:** `pointPicker` `id`, `label`, `value`, `onChange`, `required` alır; `value` iki sonlu sayı. Satıra girer
+  (`row`, §55). Kural dili alanı metin olarak okur (`visibleWhen: "boş(nokta)"`).
+- **Vitrin 1.0.43:** "Yakın yapılar" paneli (Vitrin › Panel): Nokta (`pointPicker`, `onChange`) ve Uzaklık bir satırda,
+  Bul, tablo; `yakin-yapilar` komutu noktaya uzaklıktaki yapıları shapely ile ölçüp yakından uzağa listeler, satıra
+  tıklamak yapıyı gösterir. Gerçek pencerede (47-nokta): yapıların arasına tıklandı, nokta alana yazıldı, komut çalıştı:
+  "25 m içinde 3 yapı" (6,4, 6,6, 20,6 m). Dar dock'ta Nokta ile Uzaklık alt alta.
+- **Sınamalar:** paylaşılan 1 (yazımın üç biçimi ve yanlışları, JSON değeri, milimetre yazımı), rehberin ve ADR §25'in
+  türü anması (var olan sınamalar), Python kurucusu; masaüstü 2 (değer `[x, y]`, boş, zorunlu, nokta olmayan yazım,
+  kodun `set`'i ve yanlışı; seçimin alana yazılması, Esc, soran alan yokken seçimin başkasına kalması, `onChange`'in
+  güncellemeden sonra istenmesi); Vitrin'in sayıları (14 komut, 4 panel) ve şerit etiketleri.

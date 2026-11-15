@@ -58,6 +58,10 @@ fn python_type(root: &Value, property: &Value) -> String {
             Some(r) if r.ends_with("/Choice") => "Sequence[Choice | str]".to_owned(),
             // Another object (a file picker's kinds): as the schema writes it.
             Some(_) => "Sequence[dict[str, Any]]".to_owned(),
+            // Numbers (a point's x and y).
+            None if property.pointer("/items/type").and_then(Value::as_str) == Some("number") => {
+                "Sequence[float]".to_owned()
+            }
             _ => "Sequence[str]".to_owned(),
         },
         _ => "str".to_owned(),
