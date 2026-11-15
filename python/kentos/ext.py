@@ -146,16 +146,19 @@ class CommandResult:
 
     title: str | None = None
     message: str | None = None
-    rows: list[dict[str, Any]] = field(default_factory=list)
+    rows: list[dict[str, Any]] | None = None
+    """None: a line only (a message). A list, even an empty one, is a report: what it found, none too. A search that
+    found nothing went as a message, and a panel's table kept the rows of the search before under "0 yapı bulundu"
+    (real window, 15 November 2026)."""
     cancelled: bool = False
 
     def to_json(self) -> dict[str, Any]:
-        out: dict[str, Any] = {"kind": "report" if self.rows else "message"}
+        out: dict[str, Any] = {"kind": "report" if self.rows is not None else "message"}
         if self.title is not None:
             out["title"] = self.title
         if self.message is not None:
             out["message"] = self.message
-        if self.rows:
+        if self.rows is not None:
             out["rows"] = self.rows
             # The columns in the order the rows first give them: a JSON object's keys have no order KentOS keeps.
             columns: dict[str, None] = {}
@@ -232,7 +235,7 @@ class CommandContext:
         self._link.log(level if level in ("info", "warning", "error") else "info", text)
 
     def report(self, rows: list[dict[str, Any]], title: str | None = None, message: str | None = None) -> CommandResult:
-        """Rows to show the user, each a dict of column → value."""
+        """Rows to show the user, each a dict of column → value; none is an answer too (a panel's table empties)."""
         return CommandResult(title=title, message=message, rows=[dict(r) for r in rows])
 
     def message(self, text: str, title: str | None = None) -> CommandResult:

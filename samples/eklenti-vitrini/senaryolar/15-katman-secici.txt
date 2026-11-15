@@ -9,7 +9,7 @@ click 843 20    # Vitrin
 wait 1200
 click 417 75    # Yapı ara
 wait 2000
-drag 1280 508 1280 845
+drag 1280 579 1280 845
 wait 1000
 click 1354 353  # Katman seçici
 wait 1200

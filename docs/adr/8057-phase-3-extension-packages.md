@@ -1591,7 +1591,7 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   2. **Enter:** panelin metin ve sayı alanında Enter birincil düğmeye (yoksa ilk düğmeye) basar; Yapı no'da Enter
      aramayı çalıştırdı (5 satır).
   Kalan: kısa pencerede Eklenti yığını yüksekliğin küçük bir payını alıyor (Öznitelikler altında), panel kaydırılarak
-  kullanılıyor; alanlar arası Tab uygulamada genel olarak yok (ayrı iş).
+  kullanılıyor (aşağıda *Yığın payı*'yla azaldı); alanlar arası Tab uygulamada genel olarak yok (ayrı iş).
 - **Ağaç** (`tree`: `id`, `label`, `group`; Vitrin 1.0.14, Değer say; `20-agac`): düğmenin (ya da `onChange`'in) komutu
   düz satır verir, KentOS onları `group`'un 1–3 sütununa göre iç içe gruplara dizer (KentOS'un ağaç görünümü): her grup
   ilk satırının sırasıyla, yanında sayısı, kullanıcı kapatmadıkça açık; yaprağın adı satırın gruplanmayan ilk sütunu,
@@ -1644,5 +1644,16 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
     dolduran şeye göre: bir düğme ise "Düğmeye basınca", değilse "Değer değişince".
   - Dar pencerede sağ yığın kısa ve Katmanlar sekmesi şeritten taşmış: etkin katmanı seçmek için yığının ⋯ menüsünden
     Katmanlar açıldı (yukarıdaki kısa pencere bulgusunun parçası, ayrı iş).
+- **Yığın payı:** panel açılınca onu gösteren yığın kenarının açık yığınlarının en az beşte üçünü alır (`PANEL_SHARE`;
+  yalnız artırır: kullanıcının büyüttüğü yığın payını korur, sekmeler arasında geçmek dokunmaz). Ölçüm: 1440 × 900'de
+  Eklenti yığını ~365 → ~435 px (Öznitelikler'in tutamağı y 508 → 579), 1100 × 650 / 16 px'te ~220 → ~260 px. Kısa
+  pencerede uzun açıklamalı panel yine kaydırılır. Vitrin senaryolarının tutamak sürüklemesi yeni yere alındı; 14-panel
+  ayrıca eskimişti (form sonradan büyüyünce Ara tıklaması onay kutusuna düşüyordu), güncel yerleşime göre düzeltildi.
+- **Bulgu (düzeltildi, SDK): hiçbir şey bulmayan arama ileti olarak gidiyordu.** `ctx.report([])` satır yokken
+  `{"kind": "message"}` gönderiyordu; panel bunu "satır vermeyen ileti" sayıp önceki aramanın satırlarını tutuyordu:
+  Yapı ara'da Y-9 ile "0 yapı bulundu" yazarken eski 5 satır duruyordu (gerçek pencere). Artık `CommandResult.rows`
+  None ise ileti, liste ise (boş da olsa) rapor: tablo boşalır ("Satır yok."), kart "Kart yok." der; Parsel kartı'nda
+  Temizle kartları kaldırır. SDK masaüstüyle gelir (ortamın kitaplığı her başlatmada tazelenir): bütün eklentiler
+  güncellemesiz düzelir. Test: MEBİS'in gerçek süreçteki araması "yok" için `("report", [])`.
 - **Kalan (ADIM 22):** panel köprüsü tamamlandı; bileşen envanteri ve tanım/oturum maddeleri (PY-UI §8.1, PY-UI-01…18)
   ayrı maddeler.

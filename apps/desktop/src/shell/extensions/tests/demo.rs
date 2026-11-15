@@ -1128,6 +1128,56 @@ fn several_panels_stay_open_in_tabs_each_with_its_own() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// docs/adr/8057 §24: a panel opened gets room: its stack takes at least three fifths of its side (it had a third
+/// under Öznitelikler in a short window and was used by scrolling); a stack the user made taller keeps its share.
+#[test]
+fn an_opened_panels_stack_takes_three_fifths_of_its_side() {
+    use crate::app::Panel;
+    use kentos_ui::widget::docking::{Event as Dock, Slot};
+
+    let dir = temp("pay");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let share = |gis: &App| -> (usize, f32) {
+        let Some(Slot::Docked(side, index)) = gis.docks.slot(Panel::Extension) else {
+            panic!("docked");
+        };
+        let stacks = gis.docks.stacks(side);
+        let total: f32 = stacks
+            .iter()
+            .filter(|s| !s.collapsed)
+            .map(|s| s.weight)
+            .sum();
+        (stacks.len(), stacks[index].weight / total)
+    };
+    let open = |gis: &mut App| {
+        let _ = gis.extensions_event(Event::OpenPanel(
+            "tr.ornek.vitrin".into(),
+            "yapi-paneli".into(),
+        ));
+    };
+    open(&mut gis);
+    let (stacks, at) = share(&gis);
+    assert!(stacks > 1, "beside Katmanlar, above Öznitelikler");
+    assert!((at - 0.6).abs() < 1e-3, "{at}");
+    // The user makes it taller (the sash between the stacks): opening a panel again keeps that.
+    let Some(Slot::Docked(side, index)) = gis.docks.slot(Panel::Extension) else {
+        unreachable!()
+    };
+    let mut weights: Vec<f32> = gis.docks.stacks(side).iter().map(|s| s.weight).collect();
+    let others: f32 = weights
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| *i != index)
+        .map(|(_, w)| w)
+        .sum();
+    weights[index] = 4.0 * others;
+    gis.docks.update(Dock::Shared(side, weights));
+    open(&mut gis);
+    assert!((share(&gis).1 - 0.8).abs() < 1e-3, "kept");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 /// plan/eklenti.md, Referans eklenti: an extension disabled leaves nothing behind: its open panel and its dock tab go,
 /// a fix its audit offered is refused (both stayed: the panel's buttons pressable, Düzelt writing for a stopped
 /// extension).

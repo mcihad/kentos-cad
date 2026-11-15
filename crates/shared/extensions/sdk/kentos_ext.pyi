@@ -43,7 +43,7 @@ class CommandResult:
     """What a command says when it ends: a line, and rows to show (a report)."""
     title: str | None = None
     message: str | None = None
-    rows: list[dict[str, Any]] = field(default_factory=list)
+    rows: list[dict[str, Any]] | None = None
     cancelled: bool = False
 
 
@@ -62,7 +62,7 @@ class CommandContext:
     def log(self, text: str, level: str = "info") -> None:
         """A line in the extension's log as the run goes (``info``, ``warning``, ``error``)."""
     def report(self, rows: list[dict[str, Any]], title: str | None = None, message: str | None = None) -> CommandResult:
-        """Rows to show the user, each a dict of column → value."""
+        """Rows to show the user, each a dict of column → value; none is an answer too (a panel's table empties)."""
     def message(self, text: str, title: str | None = None) -> CommandResult:
         """A line to show the user."""
     def cancelled(self) -> CommandResult:

@@ -12,7 +12,7 @@ click 843 20    # Vitrin
 wait 1200
 click 417 75    # Yapı ara
 wait 2000
-drag 1280 508 1280 845   # paneli aşağı doğru büyüt
+drag 1280 579 1280 845   # paneli aşağı doğru büyüt
 wait 1000
 click 1346 488  # Yapıları numarala
 wait 2700

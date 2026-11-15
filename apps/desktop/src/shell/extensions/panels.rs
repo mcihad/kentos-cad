@@ -48,6 +48,8 @@ use crate::exchange::words;
 const SHOWN_ROWS: usize = 500;
 /// Cards a card component shows (each is a few rows tall); the rest are counted.
 const SHOWN_CARDS: usize = 100;
+/// The least share of its side's open stacks the stack showing an opened panel has.
+const PANEL_SHARE: f32 = 0.6;
 
 /// A panel open in the dock.
 #[derive(Clone, Debug)]
@@ -497,8 +499,9 @@ impl App {
 
     /// The dock shows the Eklenti tab on the side the panel shown asks for in its manifest, the one opened last (right:
     /// beside Katmanlar, the side panels shown if F4 hid them; left: beside the map, Katmanlar staying in sight;
-    /// bottom: under the map). A tab KentOS docked moves when a panel opened asks for another side; one the user moved
-    /// stays where it is. Choosing among the open panels' tabs moves nothing.
+    /// bottom: under the map), its stack at least [`PANEL_SHARE`] of the side. A tab KentOS docked moves when a panel
+    /// opened asks for another side; one the user moved stays where it is. Choosing among the open panels' tabs moves
+    /// nothing.
     pub(crate) fn show_extension_panel(&mut self) -> Task<Message> {
         use crate::app::Panel;
         use kentos_ui::widget::docking::{Event as Dock, Side, Slot, Target};
@@ -541,6 +544,24 @@ impl App {
             self.extensions.panel_placed = Some(wanted);
         }
         self.docks.update(Dock::Selected(Panel::Extension));
+        // Room to work in: the stack showing the panel takes at least three fifths of its side (with a form and its
+        // cards it had a third under Öznitelikler and was used by scrolling, real window, 15 November 2026). Only more:
+        // a stack the user made taller keeps its share.
+        if let Some(Slot::Docked(side, index)) = self.docks.slot(Panel::Extension) {
+            let stacks = self.docks.stacks(side);
+            let others: f32 = stacks
+                .iter()
+                .enumerate()
+                .filter(|(i, s)| *i != index && !s.collapsed)
+                .map(|(_, s)| s.weight)
+                .sum();
+            let wanted = PANEL_SHARE / (1.0 - PANEL_SHARE) * others;
+            if others > 0.0 && stacks.get(index).is_some_and(|s| s.weight < wanted) {
+                let mut weights: Vec<f32> = stacks.iter().map(|s| s.weight).collect();
+                weights[index] = wanted;
+                self.docks.update(Dock::Shared(side, weights));
+            }
+        }
         Task::none()
     }
 
@@ -1423,7 +1444,7 @@ fn panel_cards<'a>(
         .into();
     };
     if rows.is_empty() {
-        return column![heading, label::muted("Satır yok.")]
+        return column![heading, label::muted("Kart yok.")]
             .spacing(4)
             .into();
     }

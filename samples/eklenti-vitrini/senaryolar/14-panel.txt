@@ -10,19 +10,19 @@ click 843 20    # Vitrin
 wait 1200
 click 417 75    # Yapı ara
 wait 2000
-drag 1280 508 1280 845
+drag 1280 579 1280 845
 wait 1000
-click 1304 397  # Ara
+click 1304 450  # Ara
 wait 7000
 shot 14-sonuc
-click 1200 515  # 400 m² yapı
+click 1200 606  # 400 m² yapı
 wait 2500
 shot 14-goster
-click 1288 356  # Yalnız numarasız yapılar
+click 1288 409  # Yalnız numarasız yapılar
 wait 500
-click 1350 315  # Yapı no
+click 1350 331  # Yapı no
 type Y-9
 wait 500
-click 1304 397  # Ara
+click 1304 450  # Ara
 wait 5000
 shot 14-yok

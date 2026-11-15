@@ -15,7 +15,7 @@ click 501 57    # Değer say
 wait 2000
 click 417 75    # Yapı ara
 wait 2500
-drag 1280 509 1280 845
+drag 1280 579 1280 845
 wait 1000
 click 1304 478  # Ara
 wait 7000

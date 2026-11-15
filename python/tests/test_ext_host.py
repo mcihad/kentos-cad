@@ -659,6 +659,9 @@ class ReferenceExtensionTest(unittest.TestCase):
             self.assertEqual(result["rows"], [{"uid": empty.uid, "Mezar no": "M-12", "Ada no": "—", "Durum": "Boş"}])
         done, _ = self.kentos.invoke("search", "mebis.logic:search", params={"query": ""})
         self.assertEqual([r["Mezar no"] for r in done["result"]["rows"]], ["M-12", "M-13"])
+        # Nothing found is a report of no rows, not a message: the panel's table empties (it kept the rows before).
+        done, _ = self.kentos.invoke("search", "mebis.logic:search", params={"query": "yok"})
+        self.assertEqual((done["result"]["kind"], done["result"]["rows"]), ("report", []))
 
     def test_its_second_tool_writes_the_empty_graves_to_a_layer(self) -> None:
         # The reference extension's two İşlemler tools: the first answers a table, this one a layer and a number.
