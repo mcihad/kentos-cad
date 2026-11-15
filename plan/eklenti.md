@@ -1086,8 +1086,8 @@ Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çi
 - [ ] **Bileşen envanteri ve şeması** — *ilk dilim (ADR 8057 §25): kapsam raporu: aşağıdaki listenin her maddesi
   panelde var / KentOS'ta bileşeni var ama bağlanmadı / yok / host yüzeyi; Kapı 1'in her türü raporda adıyla geçmeli
   (test); özel çizim bileşeni olmadığı sınır olarak yazılı; kalan: özellik/olay/eylem/erişilebilirlik şeması ve
-  tarih, çoklu seçim ve özet/ölçü bağlandı (`dateField`, `multiSelect`, `stats`, 15 Kasım); sıradaki adaylar saat ve
-  grafik.* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
+  tarih, çoklu seçim, özet/ölçü, saat ve an bağlandı (`dateField`, `multiSelect`, `stats`, `timeField`,
+  `dateTimeField`, 15 Kasım); sıradaki aday grafik.* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
   şemasına eşlenir: düzen (yığın/satır/ızgara, sekme, grup, akordeon, kaydırma, bölücü, adımlayıcı), basit girdi
   (metin, sayı, tarih/saat, mantıksal, seçim, çoklu seçim), CBS girdisi (katman/nesne/alan seçici, koordinat/harita
   seçimi, CRS/birim, ilişki başvurusu), kaynak ve çıktı (dosya/eser seçici, ek, görsel önizleme, çıktı hedefi), veri

@@ -18,15 +18,15 @@ drag 1280 579 1280 845   # paneli aşağı doğru büyüt
 wait 1000
 drag 160 480 705 770     # pencereyle 101/1 ve 101/2 (yalnız etkin katman seçilir)
 wait 1000
-click 1321 351  # Seçimi al: onChange, kartlar
+click 1321 383  # Seçimi al: onChange, kartlar
 wait 6000
 shot 22-kartlar
 move 1280 620   # 101/2'nin kartı: üzerine gelince kenarı belirginleşir
 wait 600
 shot 22-uzerinde
-click 1280 620  # karta tıklamak parseli seçip yakınlaştırır
+click 1280 720  # karta tıklamak parseli seçip yakınlaştırır
 wait 2500
 shot 22-goster
-click 1371 331  # Temizle: onChange, boş rapor kartları kaldırır
+click 1371 362  # Temizle: onChange, boş rapor kartları kaldırır
 wait 4000
 shot 22-temiz

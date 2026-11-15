@@ -118,12 +118,94 @@ impl App {
                         })
                         .anchor(field)
                         .clearable(true)
-                        // Today as this computer's clock has it (the forms' Şimdi too).
-                        .now(kentos_ui::attribute::DateTime::now(
-                            kentos_interaction::time_version::LOCAL_OFFSET
-                                .load(std::sync::atomic::Ordering::Relaxed)
-                                / 60,
-                        ));
+                        .now(local_now());
+                    form = form.field(words.clone(), picker);
+                }
+                // A time of day: typed (14:30, 14.30, 9:05) or chosen from KentOS's time picker, an hour then minutes.
+                Component::TimeField {
+                    id,
+                    label: words,
+                    on_change,
+                    ..
+                } => {
+                    use kentos_ui::attribute::Time;
+                    let typed = p.texts.get(id).map_or("", String::as_str);
+                    let time = kentos_extensions::ui_panel::typed_time(typed)
+                        .and_then(|t| kentos_extensions::ui_panel::iso_time(&t))
+                        .and_then(|(h, m)| Time::new(h as u8, m as u8, 0));
+                    let (typing, picking) = (id.clone(), id.clone());
+                    let mut field = kentos_ui::widget::text_field("SS:DD", typed)
+                        .on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
+                    // Enter as a date field's.
+                    let submit = match on_change {
+                        Some(_) => Some(event(PanelEvent::Picked(id.clone(), typed.to_owned()))),
+                        None => enter.clone(),
+                    };
+                    if let Some(message) = submit {
+                        field = field.on_submit(message);
+                    }
+                    let picker =
+                        kentos_ui::widget::TimePicker::new(time, move |t: Option<Time>| {
+                            event(PanelEvent::Picked(
+                                picking.clone(),
+                                t.map_or_else(String::new, |t| {
+                                    format!("{:02}:{:02}", t.hour(), t.minute())
+                                }),
+                            ))
+                        })
+                        .anchor(field)
+                        .clearable(true)
+                        .now(local_now());
+                    form = form.field(words.clone(), picker);
+                }
+                // A day and a time: typed (15.11.2026 14:30) or chosen from the calendar and the clock side by side.
+                Component::DateTimeField {
+                    id,
+                    label: words,
+                    on_change,
+                    ..
+                } => {
+                    use kentos_ui::attribute::{Date, DateTime, Time};
+                    let typed = p.texts.get(id).map_or("", String::as_str);
+                    let moment = kentos_extensions::ui_panel::typed_date_time(typed)
+                        .and_then(|v| kentos_extensions::ui_panel::iso_date_time(&v))
+                        .and_then(|((y, mo, d), (h, mi))| {
+                            Some(DateTime::new(
+                                Date::new(y as i32, mo as u8, d as u8)?,
+                                Time::new(h as u8, mi as u8, 0)?,
+                            ))
+                        });
+                    let (typing, picking) = (id.clone(), id.clone());
+                    let mut field = kentos_ui::widget::text_field("GG.AA.YYYY SS:DD", typed)
+                        .on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
+                    let submit = match on_change {
+                        Some(_) => Some(event(PanelEvent::Picked(id.clone(), typed.to_owned()))),
+                        None => enter.clone(),
+                    };
+                    if let Some(message) = submit {
+                        field = field.on_submit(message);
+                    }
+                    let picker = kentos_ui::widget::DatePicker::date_time(
+                        moment,
+                        move |v: Option<DateTime>| {
+                            event(PanelEvent::Picked(
+                                picking.clone(),
+                                v.map_or_else(String::new, |v| {
+                                    format!(
+                                        "{:02}.{:02}.{:04} {:02}:{:02}",
+                                        v.date.day(),
+                                        v.date.month(),
+                                        v.date.year(),
+                                        v.time.hour(),
+                                        v.time.minute()
+                                    )
+                                }),
+                            ))
+                        },
+                    )
+                    .anchor(field)
+                    .clearable(true)
+                    .now(local_now());
                     form = form.field(words.clone(), picker);
                 }
                 Component::Select {
@@ -831,4 +913,12 @@ mod tests {
             "a button's rows go to the tree"
         );
     }
+}
+
+/// Now as this computer's clock has it: the pickers' today and Şimdi (the forms' too).
+fn local_now() -> kentos_ui::attribute::DateTime {
+    kentos_ui::attribute::DateTime::now(
+        kentos_interaction::time_version::LOCAL_OFFSET.load(std::sync::atomic::Ordering::Relaxed)
+            / 60,
+    )
 }

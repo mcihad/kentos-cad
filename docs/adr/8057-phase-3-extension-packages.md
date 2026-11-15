@@ -1804,7 +1804,9 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | adımlayıcı | KentOS'ta | `wizard` | |
 | Basit girdi | metin | var | `textField` | Enter birincil düğme |
 | | sayı | var | `numberField` (birim, sınır) | yazıldığı gibi tutulur, basınca okunur |
-| | tarih | var | `dateField` (KentOS'un takvimi; GG.AA.YYYY ya da YYYY-AA-GG yazılır, değeri ISO tarih) | saat ve an henüz yok (`date_picker`'ın saatli hâli) |
+| | tarih | var | `dateField` (KentOS'un takvimi; GG.AA.YYYY ya da YYYY-AA-GG yazılır, değeri ISO tarih) | |
+| | saat | var | `timeField` (KentOS'un saat seçicisi, `TimePicker`; 14:30, 14.30, 9:05 yazılır, değeri SS:DD) | 24 saat |
+| | an | var | `dateTimeField` (takvim ve saat yan yana, `DatePicker::date_time`; değeri `2026-11-15T14:30`) | yerel saat, saat dilimi yok |
 | | mantıksal | var | `checkbox` | `widget::switch` bağlanmadı |
 | | seçim | var | `select` | |
 | | çoklu seçim | var | `multiSelect` (KentOS'un seçilebilir çipleri, `chips::toggles`) | değeri seçilenlerin listesi |
@@ -1833,8 +1835,9 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | komut/şerit/menü, bağlam eylemi | host | `contributions.ribbonTabs`, sağ tık menüleri | |
 | | iletişim kutusu | yok | — | panel dock'ta açılır |
 
-**Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `dateField`, `select`, `multiSelect`,
-`layerPicker`, `fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`, `stats`.
+**Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `dateField`, `timeField`, `dateTimeField`,
+`select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`,
+`stats`.
 
 **JSON Schema** (15 Kasım; planın "kod üretimi" maddesinin panel payı): `kentos.ui.panel` 1'in şeması panelin Rust
 tiplerinden üretilir (`ui_panel::json_schema`, `schemars`; `format` ve `schemaVersion` sabitleriyle) ve SDK'nın yanında
@@ -1850,8 +1853,8 @@ dersi, D7): haritaya çizim harita aracının yakalamasıyla (KentOS çizer), pa
 (tanım, değer kodlayıcı, platform çizicisi ve salt okunur yedek, PY-UI-15/16) ayrı bir maddedir; o gelene dek panel
 yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
 
-**Sıradaki adaylar:** saat ve an (tarih seçicinin saatli hâli), grafik (CBS grafikleri). 15 Kasım'da bağlananlar: tarih
-(`dateField`), çoklu seçim (`multiSelect`), özet/ölçü (`stats`).
+**Sıradaki aday:** grafik (CBS grafikleri). 15 Kasım'da bağlananlar: tarih (`dateField`), çoklu seçim (`multiSelect`),
+özet/ölçü (`stats`), saat (`timeField`) ve an (`dateTimeField`).
 
 ## §27. Ajanın eklenti denetimi: `audit.run`, `audit.report`, `audit.apply_fix` (`ADIM 20`, AI/MCP `audit.run`)
 

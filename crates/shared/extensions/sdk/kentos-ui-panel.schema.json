@@ -385,6 +385,104 @@
           "type": "object"
         },
         {
+          "description": "A time of day the user types (14:30, 14.30, 9:05) or picks from KentOS's time picker; its value is `HH:MM`\n(24 hours), none when empty. `value`, `min` and `max` are `HH:MM`.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "max": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "min": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "timeField",
+              "type": "string"
+            },
+            "value": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A day and a time the user types (`15.11.2026 14:30`, `2026-11-15 14:30`) or picks from KentOS's calendar and\nclock; its value is the local ISO date and time, `2026-11-15T14:30` (no zone: the user's own clock), none when\nempty. `value`, `min` and `max` are written so.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "max": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "min": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "dateTimeField",
+              "type": "string"
+            },
+            "value": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
           "description": "Yes or no.",
           "properties": {
             "id": {

@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.20 — 15 Kasım 2026
+
+- "Parsel kartı"na saat (`timeField`) ve an (`dateTimeField`) alanları: Saat 14:30 ya da 14.30 yazılır ya da saat
+  seçicisinden seçilir, kartın tarihine eklenir; Geçerlilik sonu 20.11.2026 17:00 yazılır ya da takvim ve saatten
+  seçilir, her kartta "geçerli" satırı olur. Seçilince ya da Enter'la kartlar yenilenir.
+
 ## 1.0.19 — 15 Kasım 2026
 
 - "Yapı ara"ya Özetle düğmesi ve gösterge kartları (`stats`): yapı sayısı, toplam taban alanı, numarasız yapı sayısı

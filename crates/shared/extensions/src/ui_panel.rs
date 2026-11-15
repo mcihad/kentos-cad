@@ -144,6 +144,35 @@ pub enum Component {
         #[serde(default, rename = "onChange")]
         on_change: Option<String>,
     },
+    /// A time of day the user types (14:30, 14.30, 9:05) or picks from KentOS's time picker; its value is `HH:MM`
+    /// (24 hours), none when empty. `value`, `min` and `max` are `HH:MM`.
+    TimeField {
+        id: String,
+        label: String,
+        #[serde(default)]
+        value: Option<String>,
+        #[serde(default)]
+        min: Option<String>,
+        #[serde(default)]
+        max: Option<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
+    /// A day and a time the user types (`15.11.2026 14:30`, `2026-11-15 14:30`) or picks from KentOS's calendar and
+    /// clock; its value is the local ISO date and time, `2026-11-15T14:30` (no zone: the user's own clock), none when
+    /// empty. `value`, `min` and `max` are written so.
+    DateTimeField {
+        id: String,
+        label: String,
+        #[serde(default)]
+        value: Option<String>,
+        #[serde(default)]
+        min: Option<String>,
+        #[serde(default)]
+        max: Option<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
     /// Yes or no.
     Checkbox {
         id: String,
@@ -224,6 +253,8 @@ impl Component {
             | Component::FieldPicker { id, .. }
             | Component::FeaturePicker { id, .. }
             | Component::DateField { id, .. }
+            | Component::TimeField { id, .. }
+            | Component::DateTimeField { id, .. }
             | Component::MultiSelect { id, .. }
             | Component::Checkbox { id, .. }
             | Component::Button { id, .. }
@@ -242,6 +273,8 @@ impl Component {
             | Component::FieldPicker { on_change, .. }
             | Component::FeaturePicker { on_change, .. }
             | Component::DateField { on_change, .. }
+            | Component::TimeField { on_change, .. }
+            | Component::DateTimeField { on_change, .. }
             | Component::MultiSelect { on_change, .. }
             | Component::Checkbox { on_change, .. } => on_change.as_deref(),
             _ => None,
@@ -259,6 +292,8 @@ impl Component {
                 | Component::FieldPicker { .. }
                 | Component::FeaturePicker { .. }
                 | Component::DateField { .. }
+                | Component::TimeField { .. }
+                | Component::DateTimeField { .. }
                 | Component::MultiSelect { .. }
                 | Component::Checkbox { .. }
         )
@@ -309,7 +344,9 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "fieldPicker" => &["id", "label", "layer", "kinds", "onChange"],
         "featurePicker" => &["id", "label", "layer", "geometry", "multiple", "onChange"],
         "checkbox" => &["id", "label", "value", "onChange"],
-        "dateField" => &["id", "label", "value", "min", "max", "onChange"],
+        "dateField" | "timeField" | "dateTimeField" => {
+            &["id", "label", "value", "min", "max", "onChange"]
+        }
         "multiSelect" => &["id", "label", "options", "value", "onChange"],
         "button" => &["id", "label", "command", "table", "primary"],
         "table" => &["id", "label"],
@@ -320,8 +357,8 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, textField, numberField, dateField, select, multiSelect, layerPicker, fieldPicker, \
-                     featurePicker, checkbox, button, table, tree, card, stats";
+const TYPES: &str = "text, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
+                     fieldPicker, featurePicker, checkbox, button, table, tree, card, stats";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -364,6 +401,53 @@ pub fn typed_date(text: &str) -> Option<String> {
     }
     let iso = format!("{y}-{m:0>2}-{d:0>2}");
     iso_date(&iso).map(|_| iso)
+}
+
+/// A time of day as a value is written, `14:30` (24 hours, two digits each), as (hour, minute); none otherwise.
+pub fn iso_time(text: &str) -> Option<(u32, u32)> {
+    let (h, m) = text.split_once(':')?;
+    if h.len() != 2 || m.len() != 2 || !h.bytes().chain(m.bytes()).all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let (h, m): (u32, u32) = (h.parse().ok()?, m.parse().ok()?);
+    (h < 24 && m < 60).then_some((h, m))
+}
+
+/// A time as a user writes it, `14:30`, `14.30` or `9:05` (a one-digit hour too): its `HH:MM` form.
+pub fn typed_time(text: &str) -> Option<String> {
+    let text = text.trim();
+    let (h, m) = text.split_once(':').or_else(|| text.split_once('.'))?;
+    if !(1..=2).contains(&h.len()) || m.len() != 2 {
+        return None;
+    }
+    let iso = format!("{h:0>2}:{m}");
+    iso_time(&iso).map(|_| iso)
+}
+
+/// A day of the calendar: (year, month, day).
+pub type Ymd = (u32, u32, u32);
+
+/// A time of day: (hour, minute).
+pub type Hm = (u32, u32);
+
+/// A local date and time as a value is written, `2026-11-15T14:30`: its date and time; none otherwise.
+pub fn iso_date_time(text: &str) -> Option<(Ymd, Hm)> {
+    let (date, time) = text.split_once('T')?;
+    Some((iso_date(date)?, iso_time(time)?))
+}
+
+/// A date and time as a user writes them, `15.11.2026 14:30`, `2026-11-15 14:30` or `2026-11-15T14:30` (the date's
+/// and the time's own spellings): the value's form, `2026-11-15T14:30`.
+pub fn typed_date_time(text: &str) -> Option<String> {
+    let text = text.trim();
+    let (date, time) = text
+        .split_once('T')
+        .or_else(|| text.split_once(char::is_whitespace))?;
+    Some(format!(
+        "{}T{}",
+        typed_date(date)?,
+        typed_time(time.trim())?
+    ))
 }
 
 /// A component's id: lowercase letters, digits, `_` and `-`, a letter first, at most 63: the key its value is given to
@@ -708,6 +792,34 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     );
                 }
             }
+            "timeField" | "dateTimeField" => {
+                let (valid, words): (fn(&str) -> bool, &str) = if kind == "timeField" {
+                    (
+                        |t| iso_time(t).is_some(),
+                        "bir saat olmalı, SS:DD biçiminde (ör. 14:30)",
+                    )
+                } else {
+                    (
+                        |t| iso_date_time(t).is_some(),
+                        "bir tarih ve saat olmalı, YYYY-AA-GGTSS:DD biçiminde (ör. 2026-11-15T14:30)",
+                    )
+                };
+                let given = |key: &str| c.get(key).map(|v| v.as_str().filter(|t| valid(t)));
+                for key in ["value", "min", "max"] {
+                    if let Some(None) = given(key) {
+                        add(format!("{at}/{key}"), format!("“{key}” {words}."));
+                    }
+                }
+                // Both written alike, so text order is time order.
+                if let (Some(Some(min)), Some(Some(max))) = (given("min"), given("max"))
+                    && min > max
+                {
+                    add(
+                        format!("{at}/min"),
+                        "En erken değer (min) en geç değerden (max) sonra.".to_owned(),
+                    );
+                }
+            }
             "checkbox" => {
                 if c.get("value").is_some_and(|v| !v.is_boolean()) {
                     add(
@@ -839,7 +951,11 @@ mod tests {
                 { "type": "dateField", "id": "tarih", "label": "Ruhsat tarihi", "min": "2020-01-01",
                   "onChange": "yapi-ara" },
                 { "type": "multiSelect", "id": "katlar", "label": "Katlar", "value": ["1"],
-                  "options": [{ "value": "1", "label": "Bir" }, { "value": "2", "label": "İki" }] }
+                  "options": [{ "value": "1", "label": "Bir" }, { "value": "2", "label": "İki" }] },
+                { "type": "timeField", "id": "saat", "label": "Saat", "value": "09:00", "min": "08:00", "max": "17:30",
+                  "onChange": "yapi-ara" },
+                { "type": "dateTimeField", "id": "gecerli", "label": "Geçerlilik sonu",
+                  "min": "2026-01-01T00:00" }
             ]
         })
     }
@@ -850,8 +966,16 @@ mod tests {
         assert!(check("ui/ara.panel.json", &value, &["yapi-ara"]).is_empty());
         let read = read(&value).expect("read");
         assert_eq!(read.title, "Yapı ara");
-        assert_eq!(read.body.len(), 14);
-        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 9);
+        assert_eq!(read.body.len(), 16);
+        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 11);
+        assert!(
+            matches!(&read.body[14], Component::TimeField { value: Some(v), max: Some(m), .. }
+            if v == "09:00" && m == "17:30")
+        );
+        assert_eq!(read.body[14].on_change(), Some("yapi-ara"));
+        assert!(
+            matches!(&read.body[15], Component::DateTimeField { min: Some(m), .. } if m == "2026-01-01T00:00")
+        );
         assert!(matches!(&read.body[13], Component::MultiSelect { value, .. } if value == &["1"]));
         assert_eq!(read.body[12].on_change(), Some("yapi-ara"));
         assert!(
@@ -933,6 +1057,8 @@ mod tests {
         p["body"][11]["tag"] = json!("no");
         p["body"][12]["max"] = json!("2019-02-30");
         p["body"][13]["value"] = json!(["1", "1"]);
+        p["body"][14]["value"] = json!("25:00");
+        p["body"][15]["max"] = json!("2025-12-31T23:59");
         p["body"]
             .as_array_mut()
             .unwrap()
@@ -964,8 +1090,10 @@ mod tests {
                 "/body/11/tag",
                 "/body/12/max",
                 "/body/13/value",
-                "/body/14/type",
-                "/body/15"
+                "/body/14/value",
+                "/body/15/min",
+                "/body/16/type",
+                "/body/17"
             ]
         );
     }
@@ -986,5 +1114,35 @@ mod date_tests {
         assert_eq!(typed_date("2026-11-15").as_deref(), Some("2026-11-15"));
         assert_eq!(typed_date("31.04.2026"), None, "April has thirty days");
         assert_eq!(typed_date("15/11/2026"), None);
+    }
+
+    #[test]
+    fn a_time_and_a_moment_are_written_either_way() {
+        assert_eq!(iso_time("14:30"), Some((14, 30)));
+        assert_eq!(iso_time("24:00"), None);
+        assert_eq!(iso_time("9:05"), None, "a value writes two digits");
+        assert_eq!(typed_time("9:05").as_deref(), Some("09:05"));
+        assert_eq!(typed_time(" 14.30 ").as_deref(), Some("14:30"));
+        assert_eq!(typed_time("14:3"), None);
+        assert_eq!(typed_time("1430"), None);
+        assert_eq!(
+            iso_date_time("2026-11-15T14:30"),
+            Some(((2026, 11, 15), (14, 30)))
+        );
+        assert_eq!(iso_date_time("2026-11-15 14:30"), None, "a value writes T");
+        for typed in [
+            "15.11.2026 14:30",
+            "2026-11-15 14:30",
+            "2026-11-15T14:30",
+            "15.11.2026  9.05",
+        ] {
+            assert!(typed_date_time(typed).is_some(), "{typed}");
+        }
+        assert_eq!(
+            typed_date_time("15.11.2026 9.05").as_deref(),
+            Some("2026-11-15T09:05")
+        );
+        assert_eq!(typed_date_time("15.11.2026"), None, "a time too");
+        assert_eq!(typed_date_time("31.04.2026 10:00"), None);
     }
 }

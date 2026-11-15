@@ -1,0 +1,44 @@
+# Saat ve an: Vitrin › Parsel kartı'nın Saat (timeField) ve Geçerlilik sonu (dateTimeField) alanları. İki parsel
+# pencereyle seçilip Seçimi al'a basılır; Saat'e 14:30 yazılıp Enter'a basılınca kartların tarihi saatini taşır;
+# Geçerlilik sonu'na 20.11.2026 17:00 yazılıp Enter'a basılınca her kartta "geçerli" satırı olur. Seçicilerin düğmeleri
+# aynı alanları doldurur. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 843 20    # Vitrin
+wait 1200
+click 505 84    # Parsel kartı (şeritte, Panel grubunda)
+wait 2000
+shot 27-bos
+drag 160 480 705 770     # pencereyle 101/1 ve 101/2 (yalnız etkin katman seçilir)
+wait 1000
+click 1321 383  # Seçimi al: kartlar
+wait 5000
+click 1340 459  # Saat
+wait 400
+type 14:30
+key Return      # Enter: onChange, kartlar yenilenir
+wait 5000
+shot 27-saat
+click 1340 497  # Geçerlilik sonu
+wait 400
+type 20.11.2026 17:00
+key Return
+wait 5000
+drag 1280 579 1280 845   # paneli aşağı doğru büyüt
+wait 1000
+shot 27-an
+wheel 1280 700 -6        # paneli kaydır: kartların tarih ve geçerli satırları
+wait 1000
+shot 27-kartlar
+wheel 1280 500 6
+wait 800
+click 1416 470  # Saat'in seçicisi: önce saat, sonra dakika
+wait 1000
+shot 27-secici
+key Escape

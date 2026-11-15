@@ -115,7 +115,8 @@ pub(crate) enum PanelEvent {
     Pick(String),
     /// A feature picker lets its objects go.
     Unpick(String),
-    /// A date field's day chosen from the calendar (its words, GG.AA.YYYY; empty: cleared).
+    /// A date, time or date-time field's value chosen from its picker, or typed and applied with Enter (its words,
+    /// as the field shows them; empty: cleared).
     Picked(String, String),
     /// A multiple choice's option chosen or let go: (its id, the option's value).
     Toggle(String, String),
@@ -174,6 +175,17 @@ impl OpenPanel {
                     panel.texts.insert(
                         id.clone(),
                         value.as_deref().map(date_words).unwrap_or_default(),
+                    );
+                }
+                Component::TimeField { id, value, .. } => {
+                    panel
+                        .texts
+                        .insert(id.clone(), value.clone().unwrap_or_default());
+                }
+                Component::DateTimeField { id, value, .. } => {
+                    panel.texts.insert(
+                        id.clone(),
+                        value.as_deref().map(date_time_words).unwrap_or_default(),
                     );
                 }
                 Component::MultiSelect { id, value, .. } => {
@@ -268,22 +280,50 @@ impl OpenPanel {
                             "“{label}”: “{text}” bir tarih değil (GG.AA.YYYY ya da YYYY-AA-GG yazın)."
                         ));
                     };
-                    let early = min.as_deref().is_some_and(|m| iso.as_str() < m);
-                    let late = max.as_deref().is_some_and(|m| iso.as_str() > m);
-                    if early || late {
-                        return Err(match (min, max) {
-                            (Some(a), Some(b)) => format!(
-                                "“{label}” {} ile {} arasında olmalı.",
-                                date_words(a),
-                                date_words(b)
-                            ),
-                            (Some(a), None) => {
-                                format!("“{label}” en erken {} olabilir.", date_words(a))
-                            }
-                            (_, Some(b)) => format!("“{label}” en geç {} olabilir.", date_words(b)),
-                            (None, None) => unreachable!(),
-                        });
+                    bounded(label, &iso, min.as_deref(), max.as_deref(), date_words)?;
+                    out.insert(id.clone(), json!(iso));
+                }
+                // A time of day, HH:MM; as a date's.
+                Component::TimeField {
+                    id,
+                    label,
+                    min,
+                    max,
+                    ..
+                } => {
+                    let text = self.texts.get(id).map_or("", |t| t.trim());
+                    if text.is_empty() {
+                        out.insert(id.clone(), Value::Null);
+                        continue;
                     }
+                    let Some(iso) = kentos_extensions::ui_panel::typed_time(text) else {
+                        return Err(format!(
+                            "“{label}”: “{text}” bir saat değil (SS:DD yazın, ör. 14:30)."
+                        ));
+                    };
+                    bounded(label, &iso, min.as_deref(), max.as_deref(), str::to_owned)?;
+                    out.insert(id.clone(), json!(iso));
+                }
+                // A local date and time, 2026-11-15T14:30; as a date's.
+                Component::DateTimeField {
+                    id,
+                    label,
+                    min,
+                    max,
+                    ..
+                } => {
+                    let text = self.texts.get(id).map_or("", |t| t.trim());
+                    if text.is_empty() {
+                        out.insert(id.clone(), Value::Null);
+                        continue;
+                    }
+                    let Some(iso) = kentos_extensions::ui_panel::typed_date_time(text) else {
+                        return Err(format!(
+                            "“{label}”: “{text}” bir tarih ve saat değil (GG.AA.YYYY SS:DD yazın, ör. 15.11.2026 \
+                             14:30)."
+                        ));
+                    };
+                    bounded(label, &iso, min.as_deref(), max.as_deref(), date_time_words)?;
                     out.insert(id.clone(), json!(iso));
                 }
                 // A layer's id, a field's name; none when none is chosen.
@@ -402,6 +442,36 @@ fn date_words(iso: &str) -> String {
         Some((y, m, d)) => format!("{d:02}.{m:02}.{y:04}"),
         None => iso.to_owned(),
     }
+}
+
+/// A local date and time as a field shows it, GG.AA.YYYY SS:DD; another text as it is.
+pub(super) fn date_time_words(iso: &str) -> String {
+    match kentos_extensions::ui_panel::iso_date_time(iso) {
+        Some(((y, mo, d), (h, mi))) => format!("{d:02}.{mo:02}.{y:04} {h:02}:{mi:02}"),
+        None => iso.to_owned(),
+    }
+}
+
+/// A value inside its field's bounds, or why not by its label: written alike (ISO), text order is time order; the
+/// bounds said in the field's own words.
+fn bounded(
+    label: &str,
+    iso: &str,
+    min: Option<&str>,
+    max: Option<&str>,
+    words: fn(&str) -> String,
+) -> Result<(), String> {
+    let early = min.is_some_and(|m| iso < m);
+    let late = max.is_some_and(|m| iso > m);
+    if !(early || late) {
+        return Ok(());
+    }
+    Err(match (min, max) {
+        (Some(a), Some(b)) => format!("“{label}” {} ile {} arasında olmalı.", words(a), words(b)),
+        (Some(a), None) => format!("“{label}” en erken {} olabilir.", words(a)),
+        (_, Some(b)) => format!("“{label}” en geç {} olabilir.", words(b)),
+        (None, None) => unreachable!(),
+    })
 }
 
 /// A number as a field shows it: a whole one without decimals, a decimal with a comma.
@@ -1048,6 +1118,67 @@ mod tests {
         );
         p.texts.insert("tarih".into(), " ".into());
         assert_eq!(p.params().unwrap(), json!({ "tarih": null }));
+    }
+
+    /// A time field gives HH:MM and a date-time field the local ISO date and time, either way they were written; a
+    /// text that is neither, and one out of bounds, said by the label (the bounds in the field's own words).
+    #[test]
+    fn a_time_and_a_moment_field_give_their_values_however_written() {
+        let value = json!({
+            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Saat",
+            "body": [
+                { "type": "timeField", "id": "saat", "label": "Saat", "value": "09:00", "min": "08:00",
+                  "max": "17:30" },
+                { "type": "dateTimeField", "id": "gecerli", "label": "Geçerlilik sonu",
+                  "value": "2026-11-20T17:00", "min": "2026-11-15T00:00" }
+            ]
+        });
+        let mut p = OpenPanel::new(
+            "tr.ornek.vitrin",
+            "saat",
+            kentos_extensions::ui_panel::read(&value).unwrap(),
+        );
+        assert_eq!(
+            (p.texts["saat"].as_str(), p.texts["gecerli"].as_str()),
+            ("09:00", "20.11.2026 17:00"),
+            "their values as the fields show them"
+        );
+        assert_eq!(
+            p.params().unwrap(),
+            json!({ "saat": "09:00", "gecerli": "2026-11-20T17:00" })
+        );
+        p.texts.insert("saat".into(), "9.05".into());
+        p.texts.insert("gecerli".into(), "2026-11-21 8:30".into());
+        assert_eq!(
+            p.params().unwrap(),
+            json!({ "saat": "09:05", "gecerli": "2026-11-21T08:30" })
+        );
+        p.texts.insert("saat".into(), "25:00".into());
+        assert_eq!(
+            p.params().unwrap_err(),
+            "“Saat”: “25:00” bir saat değil (SS:DD yazın, ör. 14:30)."
+        );
+        p.texts.insert("saat".into(), "18:00".into());
+        assert_eq!(
+            p.params().unwrap_err(),
+            "“Saat” 08:00 ile 17:30 arasında olmalı."
+        );
+        p.texts.insert("saat".into(), String::new());
+        p.texts.insert("gecerli".into(), "14.11.2026 23:59".into());
+        assert_eq!(
+            p.params().unwrap_err(),
+            "“Geçerlilik sonu” en erken 15.11.2026 00:00 olabilir."
+        );
+        p.texts.insert("gecerli".into(), "15.11.2026".into());
+        assert!(
+            p.params().unwrap_err().contains("bir tarih ve saat değil"),
+            "a moment needs its time"
+        );
+        p.texts.insert("gecerli".into(), String::new());
+        assert_eq!(
+            p.params().unwrap(),
+            json!({ "saat": null, "gecerli": null })
+        );
     }
 
     /// A multiple choice gives the chosen values in the options' order, an empty list when none is chosen.

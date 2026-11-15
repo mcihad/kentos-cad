@@ -18,7 +18,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 """
 
 import time
-from datetime import date
+from datetime import date, datetime
 
 import numpy as np
 import shapely
@@ -282,6 +282,11 @@ def parsel_karti(ctx: ext.CommandContext) -> ext.CommandResult:
     secilen = ctx.params.get("parseller") or []
     # Panelin tarih alanı ISO tarih verir (2026-11-15) ya da boşsa None: kartta Türkçe yazılır.
     gun = date.fromisoformat(ctx.params["tarih"]) if ctx.params.get("tarih") else date.today()
+    # Saat alanı SS:DD verir (14:30); an alanı yerel ISO tarih ve saat (2026-11-20T17:00), boşsa None.
+    zaman = gun.strftime("%d.%m.%Y") + (f" {ctx.params['saat']}" if ctx.params.get("saat") else "")
+    gecerli = None
+    if ctx.params.get("gecerli"):
+        gecerli = datetime.fromisoformat(ctx.params["gecerli"]).strftime("%d.%m.%Y %H:%M") + "'e dek"
     parsel_katmani, yapi_katmani = _katman(ctx.doc, "parsel"), _katman(ctx.doc, "yapi")
     yapilar = []
     if yapi_katmani:
@@ -303,7 +308,7 @@ def parsel_karti(ctx: ext.CommandContext) -> ext.CommandResult:
             "yapi": ("yapı", len(tabanlar)),
             "taban": ("taban alanı (m²)", round(sum(tabanlar), 1)),
             "taks": ("TAKS", round(oran, 2)),
-            "tarih": ("tarih", gun.strftime("%d.%m.%Y")),
+            "tarih": ("tarih", zaman),
         }
         satir = {
             "uid": kayit.uid,
@@ -315,6 +320,8 @@ def parsel_karti(ctx: ext.CommandContext) -> ext.CommandResult:
             if anahtar in bilgi:
                 ad, deger = bilgi[anahtar]
                 satir[ad] = deger
+        if gecerli:
+            satir["geçerli"] = gecerli
         satirlar.append(satir)
     if not secilen:
         mesaj = "Parselleri çizimde seçip Seçimi al'a basın."
