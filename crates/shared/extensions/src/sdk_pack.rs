@@ -146,8 +146,12 @@ pub const PANEL_SCHEMA: &str = include_str!("../sdk/kentos-ui-panel.schema.json"
 /// stub: a part of its own (docs/adr/8057 §28).
 pub const MANIFEST_SCHEMA: &str = include_str!("../sdk/kentos-extension-manifest.schema.json");
 
+/// `schema.json`'s (`kentos.layerSchema` 1) JSON Schema, built from the check's own key lists
+/// (`layer_schema::json_schema`) and committed beside the stub: a part of its own (docs/adr/8057 §28).
+pub const LAYER_SCHEMA: &str = include_str!("../sdk/kentos-layer-schema.schema.json");
+
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 12] = [
+pub const PARTS: [&str; 13] = [
     "guide",
     "api",
     "capabilities",
@@ -160,6 +164,7 @@ pub const PARTS: [&str; 12] = [
     "icons",
     "panelSchema",
     "manifestSchema",
+    "layerSchema",
 ];
 
 /// One part of the pack; none for a name the pack has not. `icons` is the whole list, which the pack only counts: its
@@ -173,6 +178,9 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     }
     if part == "manifestSchema" {
         return serde_json::from_str(MANIFEST_SCHEMA).ok();
+    }
+    if part == "layerSchema" {
+        return serde_json::from_str(LAYER_SCHEMA).ok();
     }
     if !PARTS.contains(&part) {
         return None;
@@ -289,6 +297,11 @@ pub fn sdk_pack() -> Value {
             "how": "manifest.json'un (kentos.extension 1) JSON Schema'sı: anahtarlar, türleri, kapalı sözlükler (yetenekler, \
                     kapsamlar, programlar, katkılar): extension.sdk part=manifestSchema ya da kentos kek sdk --part \
                     manifestSchema. Kesin denetim extension.verify'da (yeteneğin kapsamı, paketteki dosyalar, işleyici).",
+        },
+        "layerSchema": {
+            "how": "Dikey eklentinin schema.json'u (kentos.layerSchema 1: katmanlar, alanları, değer listeleri, alt türler, \
+                    değer grupları, ilişkiler) için JSON Schema: extension.sdk part=layerSchema ya da kentos kek sdk \
+                    --part layerSchema. Alanın listesi, alt türün kodu, ilişkinin katmanları extension.verify'da.",
         },
     })
 }
@@ -592,6 +605,82 @@ mod tests {
         let mut invented = vitrin.clone();
         invented["requestedCapabilities"][0]["id"] = json!("filesystem.write");
         assert!(!errors(&schema, &invented).is_empty());
+    }
+
+    /// The committed layer schema is the one the check's key lists make, and it takes the layer schemas KentOS ships
+    /// (the Vitrin's, the fixtures' and a blueprint's); a key the check refuses, it refuses.
+    #[test]
+    fn the_layer_schema_is_the_checks_and_takes_real_schemas() {
+        use crate::schema_check::errors;
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let made =
+            serde_json::to_string_pretty(&crate::layer_schema::json_schema()).unwrap() + "\n";
+        if std::env::var_os("KENTOS_WRITE_SDK").is_some() {
+            std::fs::write(root.join("sdk/kentos-layer-schema.schema.json"), &made)
+                .expect("the schema");
+            return;
+        }
+        assert!(
+            LAYER_SCHEMA == made,
+            "the layer schema's keys changed: KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- sdk_pack"
+        );
+        let schema = sdk_part("layerSchema").expect("the part");
+        let repo = root.join("../../..");
+        let mut schemas: Vec<(String, Value)> = [
+            "samples/eklenti-vitrini/eklenti",
+            "fixtures/extensions/v1/ornek-kent",
+            "fixtures/extensions/v1/mebis",
+        ]
+        .iter()
+        .map(|dir| {
+            let text = std::fs::read_to_string(repo.join(dir).join("schema.json")).expect(dir);
+            ((*dir).to_owned(), serde_json::from_str(&text).expect(dir))
+        })
+        .collect();
+        let files = crate::blueprint::blueprint(&crate::blueprint::Ask {
+            id: "tr.ornek.katman".into(),
+            name: "Katman".into(),
+            summary: "Katman şemalı bir iskelet.".into(),
+            vertical: true,
+            module: crate::manifest::Module::Cbs,
+            contributions: crate::blueprint::Contribution::ALL.to_vec(),
+        })
+        .expect("a blueprint");
+        if let Some(text) = files.get("schema.json") {
+            schemas.push((
+                "blueprint".into(),
+                serde_json::from_str(text).expect("its schema"),
+            ));
+        }
+        assert_eq!(schemas.len(), 4, "the blueprint makes a layer schema too");
+        for (name, value) in &schemas {
+            let found = errors(&schema, value);
+            assert!(found.is_empty(), "{name}: {found:#?}");
+            // The check agrees: these are files KentOS installs.
+            let (problems, _) = crate::layer_schema::check("schema.json", value, &[]);
+            assert!(
+                problems
+                    .iter()
+                    .all(|p| p.message.contains("entrypoints.forms")),
+                "{name}: {problems:#?}"
+            );
+        }
+        let vitrin = &schemas[0].1;
+        let mut unknown = vitrin.clone();
+        unknown["layers"][0]["fields"][0]["tip"] = json!("text");
+        assert!(
+            errors(&schema, &unknown)
+                .iter()
+                .any(|e| e.ends_with("/tip: bilinmeyen anahtar")),
+            "{:?}",
+            errors(&schema, &unknown)
+        );
+        let mut kind = vitrin.clone();
+        kind["layers"][0]["fields"][0]["kind"] = json!("string");
+        assert!(!errors(&schema, &kind).is_empty(), "a kind KentOS has not");
+        let mut empty = vitrin.clone();
+        empty["layers"] = json!([]);
+        assert!(!errors(&schema, &empty).is_empty(), "at least one layer");
     }
 
     /// The panel schema takes the Vitrin's panels; a component of a type KentOS does not draw, it refuses.

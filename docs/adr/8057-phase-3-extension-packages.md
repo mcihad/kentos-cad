@@ -1908,7 +1908,7 @@ yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
   alma etkin; 1276 jeton, 26 sn.
 - **Kalan:** Kapı 3'ün çalıştıran payı (kuralı sentetik bir çizimin kopyasında koşturmak), bulutla ortak rapor biçimi.
 
-## §28. Manifestin JSON Schema'sı: tiplerinden üretilir (`ADIM 21`, kod üretimi)
+## §28. Manifestin ve katman şemasının JSON Schema'ları (`ADIM 21`, kod üretimi)
 
 **15 Kasım.** Kod: `crates/shared/extensions/src/manifest.rs` (`json_schema`; manifestin 38 tipi ve `compat::Os`
 şemayı türetir, `schema` özelliğiyle), `sdk/kentos-extension-manifest.schema.json` (24,5 KB), `sdk_pack.rs`
@@ -1928,4 +1928,11 @@ yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
   Vitrin) ve bütün katkılarıyla bir iskelet şemaya uyar; uydurma bir anahtar ("hanlder") ve sözlükte olmayan bir yetenek
   reddedilir. Aynı denetleyiciyle Vitrin'in üç paneli panel şemasına uyar, çizilmeyen bir bileşen türü ("saat")
   reddedilir. Depoda JSON Schema doğrulayıcısı yok; bağımlılık eklenmedi.
-- **Kalan:** araç tanımının (`kentos.processingTool`), katman şemasının ve `ProjectAuditFacts`'in şemaları.
+- **Katman şeması (`schema.json`, `kentos.layerSchema` 1):** serde tipleri yok, denetleyici değeri sabit anahtar
+  listeleriyle okuyor (`TOP`, `LAYER`, `FIELD`, `DOMAIN`, `CHOICE`, `RELATION`). Şema elle ama **aynı listelerden**
+  kurulur (`layer_schema::json_schema`): bir listeye eklenen anahtar şemanın da anahtarıdır, türü verilmemişse sınama
+  düşer; sözlükler (`GEOMETRIES`, `FIELD_KINDS`, `ON_DELETE`) ve sınırlar (256 alt tür, 50 değer grubu, 2–8 alan,
+  10 000 bileşim) da oradan. `sdk/kentos-layer-schema.schema.json` (12,2 KB), `extension.sdk part=layerSchema`.
+  Vitrin, ornek-kent, MEBİS ve iskeletin katman şemaları şemaya uyar ve denetleyiciden geçer; uydurma anahtar, KentOS'ta
+  olmayan alan türü ("string") ve boş katman listesi reddedilir. Denetleyici `minItems`/`maxItems`'ı da okur.
+- **Kalan:** araç tanımının (`kentos.processingTool`) ve `ProjectAuditFacts`'in şemaları.

@@ -1,8 +1,9 @@
 //! A JSON Schema checker for the part of the language the SDK's schemas use (made by schemars from KentOS's types,
 //! docs/adr/8057 §25 and §28), for tests: a manifest or a panel KentOS ships that its schema refused would make the
 //! schema a lie told to every editor and agent that reads it. `$ref` into the schema, `type`, `properties`, `required`,
-//! `additionalProperties`, `items`, `enum`, `const`, `oneOf`, `anyOf`, `allOf`, `minimum`, `maximum`; the rest
-//! (`format`, `description`, `default`, `title`) says nothing to check.
+//! `additionalProperties`, `items`, `minItems`, `maxItems`, `enum`, `const`, `oneOf`, `anyOf`, `allOf`, `minimum`,
+//! `maximum`; the rest (`format`, `pattern`, `uniqueItems`, `description`, `default`, `title`) is left to the files'
+//! own checks.
 
 use serde_json::Value;
 
@@ -122,6 +123,18 @@ fn check(root: &Value, schema: &Value, value: &Value, at: &str, out: &mut Vec<St
                     _ => {}
                 },
             }
+        }
+    }
+    if let Value::Array(items) = value {
+        if let Some(min) = schema.get("minItems").and_then(Value::as_u64)
+            && (items.len() as u64) < min
+        {
+            out.push(format!("{at}: en az {min} öğe"));
+        }
+        if let Some(max) = schema.get("maxItems").and_then(Value::as_u64)
+            && (items.len() as u64) > max
+        {
+            out.push(format!("{at}: en çok {max} öğe"));
         }
     }
     if let (Value::Array(items), Some(each)) = (value, schema.get("items")) {

@@ -457,6 +457,135 @@ fn contingents_check(
     }
 }
 
+/// `schema.json` (`kentos.layerSchema` 1) as a JSON Schema (docs/adr/8057 §28): an editor's checking and completion,
+/// an agent's reference. Built from the same key lists and vocabularies [`check`] reads by, so a key added to one is
+/// a key of the other (each key's kind is given here; a key without one is a test's failure). What a schema cannot
+/// say (a field's value list among this schema's, a subtype's code in its field's list, a relation's layers, names
+/// once) is [`check`]'s: it stays the judge.
+pub fn json_schema() -> Value {
+    use serde_json::json;
+    let text = json!({ "type": "string", "pattern": "\\S" });
+    let written =
+        json!({ "type": "string", "description": "Metin olarak yazılır (\"0\", \"10.5\")." });
+    let boolean = json!({ "type": "boolean" });
+    let layer_name = json!({ "type": "string", "pattern": "^[a-z][a-z0-9_]{0,62}$" });
+    let id = json!({ "type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$" });
+    let kind = json!({ "enum": FIELD_KINDS });
+    // An object of `keys`, each key's schema from `kind_of`, closed as the check is (an unknown key refused).
+    let object = |keys: &[&str], required: &[&str], kind_of: &dyn Fn(&str) -> Option<Value>| {
+        let properties: Map<String, Value> = keys
+            .iter()
+            .map(|k| {
+                let schema = kind_of(k).unwrap_or_else(|| panic!("“{k}”: its kind is not given"));
+                ((*k).to_owned(), schema)
+            })
+            .collect();
+        json!({ "type": "object", "properties": properties, "required": required,
+                "additionalProperties": false })
+    };
+    let choice = object(&CHOICE, &["code", "label"], &|k| match k {
+        "code" | "label" => Some(text.clone()),
+        "description" => Some(json!({ "type": "string" })),
+        _ => None,
+    });
+    let mut domain = object(&DOMAIN, &["id"], &|k| match k {
+        "id" => Some(id.clone()),
+        "name" => Some(text.clone()),
+        "kind" => Some(kind.clone()),
+        "values" => Some(json!({ "type": "array", "items": choice.clone() })),
+        "min" | "max" => Some(written.clone()),
+        "minExclusive" | "maxExclusive" => Some(boolean.clone()),
+        "unit" | "description" => Some(json!({ "type": "string" })),
+        _ => None,
+    });
+    // Values or a range.
+    domain["anyOf"] = json!([
+        { "required": ["values"], "properties": { "values": { "minItems": 1 } } },
+        { "required": ["min"] },
+        { "required": ["max"] }
+    ]);
+    let field = object(&FIELD, &["name", "kind"], &|k| match k {
+        "name" | "alias" => Some(text.clone()),
+        "kind" => Some(kind.clone()),
+        "required" | "multiple" | "minExclusive" | "maxExclusive" => Some(boolean.clone()),
+        "default" | "min" | "max" => Some(written.clone()),
+        "length" => Some(json!({ "type": "integer", "minimum": 1, "maximum": 10_000 })),
+        "domain" => Some(
+            json!({ "type": "string", "description": "Bu şemanın domains listesindeki bir kimlik." }),
+        ),
+        _ => None,
+    });
+    let narrowing = json!({ "type": "object", "required": ["field"], "additionalProperties": false, "properties": {
+        "field": text, "values": { "type": "array", "items": { "type": "string" } },
+        "default": written, "required": boolean } });
+    let subtypes = json!({ "type": "object", "required": ["field", "types"], "additionalProperties": false,
+        "properties": { "field": text, "types": { "type": "array", "minItems": 1, "maxItems": MOST_SUBTYPES,
+            "items": { "type": "object", "required": ["code"], "additionalProperties": false, "properties": {
+                "code": text, "label": text, "fields": { "type": "array", "items": narrowing } } } } } });
+    let cell = json!({ "type": "object", "additionalProperties": false,
+        "properties": { "kind": { "enum": ["code", "any", "empty"] }, "code": text },
+        "required": ["kind"],
+        "oneOf": [
+            { "properties": { "kind": { "const": "code" } }, "required": ["code"] },
+            { "properties": { "kind": { "enum": ["any", "empty"] } } }
+        ] });
+    let contingents = json!({ "type": "array", "maxItems": MOST_GROUPS, "items": {
+        "type": "object", "required": ["name", "fields", "rows"], "additionalProperties": false, "properties": {
+            "name": text,
+            "fields": { "type": "array", "minItems": 2, "maxItems": MOST_GROUP_FIELDS, "uniqueItems": true,
+                        "items": { "type": "string" } },
+            "restrictive": boolean,
+            "rows": { "type": "array", "minItems": 1, "maxItems": MOST_COMBINATIONS, "items": {
+                "type": "object", "required": ["cells"], "additionalProperties": false, "properties": {
+                    "cells": { "type": "array", "items": cell }, "subtype": { "type": "string" } } } } } } });
+    let layer = object(&LAYER, &["name"], &|k| match k {
+        "name" => Some(layer_name.clone()),
+        "title" => Some(text.clone()),
+        "geometry" => Some(json!({ "enum": GEOMETRIES })),
+        "fields" => Some(json!({ "type": "array", "items": field.clone() })),
+        "form" => Some(
+            json!({ "type": "string", "description": "Manifestin entrypoints.forms listesinde bildirilmiş bir .kform." }),
+        ),
+        "subtypes" => Some(subtypes.clone()),
+        "contingents" => Some(contingents.clone()),
+        _ => None,
+    });
+    let relation = object(
+        &RELATION,
+        &["id", "parent", "child", "field"],
+        &|k| match k {
+            "id" => Some(id.clone()),
+            "name" | "field" => Some(text.clone()),
+            "parent" | "child" => Some(layer_name.clone()),
+            "onDelete" => Some(json!({ "enum": ON_DELETE })),
+            _ => None,
+        },
+    );
+    let mut schema = object(&TOP, &["layers"], &|k| match k {
+        "format" => Some(json!({ "const": FORMAT })),
+        "version" => Some(json!({ "type": "integer", "minimum": 1, "maximum": VERSION })),
+        "group" => Some(
+            json!({ "type": "object", "required": ["id"], "additionalProperties": false,
+                                "properties": { "id": layer_name.clone(), "name": text.clone() } }),
+        ),
+        "domains" => Some(json!({ "type": "array", "items": domain.clone() })),
+        "layers" => Some(json!({ "type": "array", "minItems": 1, "items": layer.clone() })),
+        "relations" => Some(json!({ "type": "array", "items": relation.clone() })),
+        _ => None,
+    });
+    if let Some(o) = schema.as_object_mut() {
+        o.insert(
+            "$schema".into(),
+            json!("https://json-schema.org/draft/2020-12/schema"),
+        );
+        o.insert(
+            "title".into(),
+            json!("KentOS extension layer schema (kentos.layerSchema 1)"),
+        );
+    }
+    schema
+}
+
 /// What is wrong with `value`, `schema.json` read as JSON (`file` its path in the package; `forms` the form packages
 /// the manifest declares, `entrypoints.forms`' definitions): problems, and warnings (a relation naming a layer the
 /// schema does not make, which the project must then have).

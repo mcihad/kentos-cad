@@ -1,0 +1,443 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "domains": {
+      "items": {
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "properties": {
+              "values": {
+                "minItems": 1
+              }
+            },
+            "required": [
+              "values"
+            ]
+          },
+          {
+            "required": [
+              "min"
+            ]
+          },
+          {
+            "required": [
+              "max"
+            ]
+          }
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[A-Za-z0-9._-]{1,64}$",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "text",
+              "integer",
+              "decimal",
+              "date",
+              "boolean",
+              "datetime",
+              "time",
+              "bigint",
+              "instant",
+              "uuid",
+              "json",
+              "binary"
+            ]
+          },
+          "max": {
+            "description": "Metin olarak yazılır (\"0\", \"10.5\").",
+            "type": "string"
+          },
+          "maxExclusive": {
+            "type": "boolean"
+          },
+          "min": {
+            "description": "Metin olarak yazılır (\"0\", \"10.5\").",
+            "type": "string"
+          },
+          "minExclusive": {
+            "type": "boolean"
+          },
+          "name": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "label": {
+                  "pattern": "\\S",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "label"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "format": {
+      "const": "kentos.layerSchema"
+    },
+    "group": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,62}$",
+          "type": "string"
+        },
+        "name": {
+          "pattern": "\\S",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "layers": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "contingents": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "fields": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 8,
+                  "minItems": 2,
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "name": {
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "restrictive": {
+                  "type": "boolean"
+                },
+                "rows": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "cells": {
+                        "items": {
+                          "additionalProperties": false,
+                          "oneOf": [
+                            {
+                              "properties": {
+                                "kind": {
+                                  "const": "code"
+                                }
+                              },
+                              "required": [
+                                "code"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "kind": {
+                                  "enum": [
+                                    "any",
+                                    "empty"
+                                  ]
+                                }
+                              }
+                            }
+                          ],
+                          "properties": {
+                            "code": {
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "kind": {
+                              "enum": [
+                                "code",
+                                "any",
+                                "empty"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "subtype": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "cells"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 10000,
+                  "minItems": 1,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "name",
+                "fields",
+                "rows"
+              ],
+              "type": "object"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
+          "fields": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "alias": {
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "default": {
+                  "description": "Metin olarak yazılır (\"0\", \"10.5\").",
+                  "type": "string"
+                },
+                "domain": {
+                  "description": "Bu şemanın domains listesindeki bir kimlik.",
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "text",
+                    "integer",
+                    "decimal",
+                    "date",
+                    "boolean",
+                    "datetime",
+                    "time",
+                    "bigint",
+                    "instant",
+                    "uuid",
+                    "json",
+                    "binary"
+                  ]
+                },
+                "length": {
+                  "maximum": 10000,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "max": {
+                  "description": "Metin olarak yazılır (\"0\", \"10.5\").",
+                  "type": "string"
+                },
+                "maxExclusive": {
+                  "type": "boolean"
+                },
+                "min": {
+                  "description": "Metin olarak yazılır (\"0\", \"10.5\").",
+                  "type": "string"
+                },
+                "minExclusive": {
+                  "type": "boolean"
+                },
+                "multiple": {
+                  "type": "boolean"
+                },
+                "name": {
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "name",
+                "kind"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "form": {
+            "description": "Manifestin entrypoints.forms listesinde bildirilmiş bir .kform.",
+            "type": "string"
+          },
+          "geometry": {
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation",
+              "mixed"
+            ]
+          },
+          "name": {
+            "pattern": "^[a-z][a-z0-9_]{0,62}$",
+            "type": "string"
+          },
+          "subtypes": {
+            "additionalProperties": false,
+            "properties": {
+              "field": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "types": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "fields": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "default": {
+                            "description": "Metin olarak yazılır (\"0\", \"10.5\").",
+                            "type": "string"
+                          },
+                          "field": {
+                            "pattern": "\\S",
+                            "type": "string"
+                          },
+                          "required": {
+                            "type": "boolean"
+                          },
+                          "values": {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "field"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "label": {
+                      "pattern": "\\S",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 256,
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "field",
+              "types"
+            ],
+            "type": "object"
+          },
+          "title": {
+            "pattern": "\\S",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "relations": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "child": {
+            "pattern": "^[a-z][a-z0-9_]{0,62}$",
+            "type": "string"
+          },
+          "field": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[A-Za-z0-9._-]{1,64}$",
+            "type": "string"
+          },
+          "name": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "onDelete": {
+            "enum": [
+              "keep",
+              "unlink",
+              "cascade",
+              "restrict"
+            ]
+          },
+          "parent": {
+            "pattern": "^[a-z][a-z0-9_]{0,62}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "parent",
+          "child",
+          "field"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "version": {
+      "maximum": 1,
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "layers"
+  ],
+  "title": "KentOS extension layer schema (kentos.layerSchema 1)",
+  "type": "object"
+}
