@@ -1068,7 +1068,10 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). Kalan: Kapı 
 
 [argon ADIM 22; EKL-03; PY-UI-01…18]
 
-- [ ] **Bileşen envanteri ve şeması:** KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
+- [ ] **Bileşen envanteri ve şeması** — *ilk dilim (ADR 8057 §25): kapsam raporu: aşağıdaki listenin her maddesi
+  panelde var / KentOS'ta bileşeni var ama bağlanmadı / yok / host yüzeyi; Kapı 1'in her türü raporda adıyla geçmeli
+  (test); özel çizim bileşeni olmadığı sınır olarak yazılı; kalan: özellik/olay/eylem/erişilebilirlik şeması ve
+  sıradaki adaylar (tarih, çoklu seçim, özet).* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
   şemasına eşlenir: düzen (yığın/satır/ızgara, sekme, grup, akordeon, kaydırma, bölücü, adımlayıcı), basit girdi
   (metin, sayı, tarih/saat, mantıksal, seçim, çoklu seçim), CBS girdisi (katman/nesne/alan seçici, koordinat/harita
   seçimi, CRS/birim, ilişki başvurusu), kaynak ve çıktı (dosya/eser seçici, ek, görsel önizleme, çıktı hedefi), veri

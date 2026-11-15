@@ -696,6 +696,26 @@ mod tests {
         assert!(check("ui/ara.panel.json", &to_card, &["yapi-ara"]).is_empty());
     }
 
+    /// ADR 8057 §25, the coverage report of the panel's components, names every type Kapı 1 knows: a new type is
+    /// written there with what it covers.
+    #[test]
+    fn every_component_type_is_in_the_coverage_report() {
+        let adr = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../../docs/adr/8057-phase-3-extension-packages.md"),
+        )
+        .expect("ADR 8057");
+        let report = adr.split("\n## §25.").nth(1).expect("its §25");
+        let report = report.split("\n## §").next().unwrap_or(report);
+        for kind in TYPES.split(", ") {
+            assert!(keys_of(kind).is_some(), "{kind}");
+            assert!(
+                report.contains(&format!("`{kind}`")),
+                "ADR 8057 §25 does not name `{kind}`: add it to the coverage report"
+            );
+        }
+    }
+
     #[test]
     fn each_mistake_is_said_where_it_is() {
         let mut p = panel();

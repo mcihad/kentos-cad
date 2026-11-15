@@ -1670,3 +1670,65 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   Yapı ara'ya dönünce bırakıldığı yerden gösterilir (tek kaydırıcı, `scroll_to` ile geri verilir).
 - **Kalan (ADIM 22):** panel köprüsü tamamlandı; bileşen envanteri ve tanım/oturum maddeleri (PY-UI §8.1, PY-UI-01…18)
   ayrı maddeler.
+
+## §25. Panel bileşenlerinin kapsamı: PY-UI §8.1'in envanteri (`ADIM 22`, bileşen envanteri, ilk dilim)
+
+**15 Kasım.** Planın bileşen listesi (PY-UI §8.1) madde madde: panelde var mı, KentOS'ta bileşeni olup panele
+bağlanmamış mı, yoksa hiç mi yok. Plan "birkaç basit bileşen bağlayıp tam UI API denmez" diyor; bu tablo neyin
+bağlandığını ve neyin bağlanmadığını açıkça söyler. Yeni bir panel bileşeni eklenince bu bölüm güncellenir: Kapı 1'in
+bildiği her tür (`kentos_extensions::ui_panel` `TYPES`) burada adıyla geçmezse test kırmızıdır
+(`ui_panel::tests::every_component_type_is_in_the_coverage_report`).
+
+**Durum:** *var*: `kentos.ui.panel` 1'de, Vitrin'de gösterilir · *KentOS'ta*: uygulamanın kendi bileşeni var, panele
+bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifestin başka bir yüzeyi.
+
+| Grup | Bileşen | Durum | Panelde / KentOS'ta | Not |
+|---|---|---|---|---|
+| Düzen | yığın | var | gövde tek sütun (ortak `Form`) | dar yerde ad alanın üstüne geçer |
+| | satır, ızgara | yok | — | iki sütunluk form düzeni yeter; ızgara tek sütuna inecek (PY-UI-13) |
+| | sekme | KentOS'ta | `widget::tabs`, `segmented` | açık paneller sekmeli; panel içi sekme yok |
+| | grup, akordeon | KentOS'ta | `property_grid` bölümleri, `tree_view` | ağacın grupları açılıp kapanır, form grubu yok |
+| | kaydırma | var | panel kendi kaydırır, yerini tutar | sekmeler üstte kalır |
+| | bölücü | KentOS'ta | `sash` | |
+| | adımlayıcı | KentOS'ta | `wizard` | |
+| Basit girdi | metin | var | `textField` | Enter birincil düğme |
+| | sayı | var | `numberField` (birim, sınır) | yazıldığı gibi tutulur, basınca okunur |
+| | tarih/saat | KentOS'ta | `date_picker` | |
+| | mantıksal | var | `checkbox` | `widget::switch` bağlanmadı |
+| | seçim | var | `select` | |
+| | çoklu seçim | KentOS'ta | `chips` | nesne seçici çoklu nesne alır |
+| CBS girdisi | katman seçici | var | `layerPicker` (tür süzgeci) | |
+| | nesne seçici | var | `featurePicker` (çizimdeki seçimden) | haritada tıklatan kip bilinçli olarak yok (§24) |
+| | alan seçici | var | `fieldPicker` (bağlı katmanın alanları) | |
+| | koordinat/harita seçimi | host | `entrypoints.mapTools` (yakalama türleri) | panelden harita seçimi yok |
+| | CRS/birim | KentOS'ta | ayarların CRS seçimi (`crs_choice`) | |
+| | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
+| Kaynak ve çıktı | dosya/eser seçici, ek | yok | — | dosya erişimi host servisi ister (PY-UI-10) |
+| | görsel önizleme | KentOS'ta | `picture` | |
+| | çıktı hedefi | host | İşlemler aracının çıktısı (`sinkParameter`) | panel komutu çizime yazar |
+| Veri görünüşü | tablo | var | `table` (500 satır) | `uid`'li satır nesneyi gösterir |
+| | ağaç | var | `tree` (1–3 sütunla gruplar) | |
+| | kart | var | `card` (KentOS bilgi kartı) | dar yerde tablonun yerine |
+| | ilişki listesi | yok | — | |
+| | özet/ölçü, grafik | KentOS'ta | `stat_card`, CBS grafikleri | |
+| İş denetimi | düğme | var | `button` (birincil) | bir komut çalıştırır |
+| | değer değişince | var | `onChange` (seçim, seçiciler, onay) | çalışırken gelen bir kez yeniden |
+| | ilerleme/günlük | var | `ctx.progress` panelde çubuk; `ctx.log` eklentinin günlüğünde | |
+| | iptal/yeniden dene | var | Durdur (çizime yazdıkları geri alınır); düğmeye yeniden basmak | |
+| | doğrulama özeti | kısmen | sayı ve sınır hatası panelde; tanım Kapı 1'de | alan başına zorunlu/geçerli kuralı yok (PY-UI-08) |
+| Host yüzeyi | dock/panel | host | `entrypoints.panels` (`side`), birden çok açık panel | |
+| | kalıcı pencere | host | Eklenti sekmesi "Paneli yüzdür" | |
+| | komut/şerit/menü, bağlam eylemi | host | `contributions.ribbonTabs`, sağ tık menüleri | |
+| | iletişim kutusu | yok | — | panel dock'ta açılır |
+
+**Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `select`, `layerPicker`, `fieldPicker`,
+`featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`.
+
+**Sınır: özel çizim ve düzenleyici bileşeni yok.** Eklentinin kodu bir arayüz nesnesi ya da tuval almaz (QGIS'in Qt
+dersi, D7): haritaya çizim harita aracının yakalamasıyla (KentOS çizer), panelde çizim hiç yok. Kayıtlı özel bileşen
+(tanım, değer kodlayıcı, platform çizicisi ve salt okunur yedek, PY-UI-15/16) ayrı bir maddedir; o gelene dek panel
+yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
+
+**Sıradaki adaylar** (KentOS'ta bileşeni olanlar, değerleri `ctx.params`'a basit tiplerle girer): tarih (`date_picker`:
+ISO tarih metni), çoklu seçim (`chips`: değer listesi), özet/ölçü (`stat_card`: komutun bir satırı). Her biri Vitrin'de
+gösterilmeden bağlanmaz.
