@@ -1956,7 +1956,15 @@ söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilme
   hesabı” çalıştırılamadı"), çağrı bir yoklamada (251 ms) işin cevabıyla cevaplandı, çizimin revizyonu değişmedi
   (`assistant::tests::an_extensions_python_tool_runs_as_a_job_and_its_call_waits_for_it`); bağlantıda plan işi hiçbir
   şey yazmadı ve söylemedi, yürütme işi yazınca satır bir kez düştü
-  (`python::tests::an_agents_job_is_said_in_the_log_when_it_writes`). Sınamada çıkan tuzak: `cad.processing.run`'ın
+  (`python::tests::an_agents_job_is_said_in_the_log_when_it_writes`). MCP tarafı uçtan uca: gerçek `kentos-mcp`
+  masaüstüne bağlanıp İmar'ın TAKS planını istedi, iş bağlantı üzerinden kendi iş parçacığında yoklandı, işin cevabı
+  ajana döndü, masaüstünde `is-1` işi kaldı (`a_real_agents_extension_tool_runs_as_a_job_through_mcp`, yok sayılan;
+  `cargo build -p kentos-mcp` sonra `--ignored`, 3,3 sn). Aynı sırada eski "gerçek ajan çizer" sınamasının hiç
+  koşmadığı ortaya çıktı: ikiliyi yalnız üç üst klasörde arıyordu (cargo'nun derleme dizininde sınama ikilisi
+  `target/<profil>/build/<crate>/<özet>/out/` altında) ve bulamayınca hemen düşüyordu; arama genişleyince
+  `target/debug/build/kentos-mcp` klasörünü ikili sandı ("Permission denied"), ajan bağlanmadan öldü, sınama sonsuza dek
+  bağlantının kapanmasını bekledi. Artık dosya aranıyor (`is_file`) ve sınama MCP v2'nin araçlarıyla yazıyor (`cad.run`
+  plan → yürütme, `scene.measure`; `cad.polygon.create` ve `drawing.measure` artık araç değil). Sınamada çıkan tuzak: `cad.processing.run`'ın
   girdisi `parameters`'tır; `ProcessingRun` bilinmeyen anahtarı reddetmediği için `values` yazan çağrı sessizce
   varsayılanlarla çalışıyordu (ilk sınama "Yapılar: seçilen katman artık yok" ile düştü).
 - **Yeni katman açan çalıştırma planlandığı gibi yürütülemiyordu (15 Kasım, gerçek pencerede bulundu).** Asistan
