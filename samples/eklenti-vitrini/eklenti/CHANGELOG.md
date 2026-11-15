@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.23 — 15 Kasım 2026
+
+- "Yapıları numarala"nın penceresinde İlk numara zorunlu (`required: true`): boş bırakılıp Numarala'ya basılınca
+  alanın altında "“İlk numara” boş bırakılamaz" yazar, adının yanında yıldız; pencere açık kalır.
+
 ## 1.0.22 — 15 Kasım 2026
 
 - "Yapıları numarala" şeritten çalışınca önce öneki ve ilk numarayı sorar (`ctx.dialog`, KentOS'un penceresi: Önek,

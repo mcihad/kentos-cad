@@ -1830,7 +1830,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | değer değişince | var | `onChange` (seçim, seçiciler, onay) | çalışırken gelen bir kez yeniden |
 | | ilerleme/günlük | var | `ctx.progress` panelde çubuk; `ctx.log` eklentinin günlüğünde | |
 | | iptal/yeniden dene | var | Durdur (çizime yazdıkları geri alınır); düğmeye yeniden basmak | |
-| | doğrulama özeti | kısmen | sayı ve sınır hatası panelde; tanım Kapı 1'de | alan başına zorunlu/geçerli kuralı yok (PY-UI-08) |
+| | doğrulama özeti | var | `required` (alan başına zorunlu), sayı ve sınır hatası: sözler alanın altında (ortak `Form`'un hatası), adının yanında yıldız; tanım Kapı 1'de | hesaplı/koşullu kurallar yok (PY-UI-08'in kalanı) |
 | Host yüzeyi | dock/panel | host | `entrypoints.panels` (`side`), birden çok açık panel | |
 | | kalıcı pencere | host | Eklenti sekmesi "Paneli yüzdür" | |
 | | komut/şerit/menü, bağlam eylemi | host | `contributions.ribbonTabs`, sağ tık menüleri | |
@@ -1856,6 +1856,14 @@ yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
 
 15 Kasım'da bağlananlar: tarih (`dateField`), çoklu seçim (`multiSelect`), özet/ölçü (`stats`), saat (`timeField`), an
 (`dateTimeField`) ve grafik (`chart`). Planın listesinde bağlanmamış kalanlar yukarıda "KentOS'ta" ve "yok" diye yazılı.
+
+**Zorunlu alan** (`required`, 15 Kasım): metin, sayı, tarih, saat, an, çoklu seçim, katman/alan/nesne seçicisi
+`required: true` alır. Boş bırakılan komut çalışmadan adıyla söylenir ("“Önek” boş bırakılamaz", seçicide "seçilmedi",
+nesne seçicide "nesne alınmadı", çoklu seçimde "en az biri seçilmeli"); yanlış sayı ve sınır dışı değer gibi bu söz de
+artık **alanın altında** (`Form::error`, değerlerin denetimi hangi alanın yanlış olduğunu da verir), alan değişince
+kalkar; zorunlu alanın adının yanında yıldız (`Form::required`). Panelde söz ayrıca alttaki durum satırında da durur
+(uzun panelde alan görünmeyebilir), pencerede yalnız alanın altında. Vitrin 1.0.23: Yapıları numarala'nın İlk
+numarası zorunlu (`30-zorunlu`, gerçek pencere).
 
 **Grafik** (`chart`, 15 Kasım): KentOS'un grafik motoru (`geometry-core` `ops::charts`, Grafik sekmesinin) çizer; ayrı
 bir çizici yazılmadı. Satırlar bir İşlemler tablosu gibi okunur (`table_columns`: sütunun türü hücrelerinden), model

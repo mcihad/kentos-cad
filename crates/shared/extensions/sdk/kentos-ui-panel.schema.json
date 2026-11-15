@@ -81,6 +81,11 @@
                 "null"
               ]
             },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
             "type": {
               "const": "textField",
               "type": "string"
@@ -124,6 +129,11 @@
                 "number",
                 "null"
               ]
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
             },
             "type": {
               "const": "numberField",
@@ -218,6 +228,11 @@
                 "null"
               ]
             },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
             "type": {
               "const": "layerPicker",
               "type": "string"
@@ -255,6 +270,11 @@
                 "string",
                 "null"
               ]
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
             },
             "type": {
               "const": "fieldPicker",
@@ -303,6 +323,11 @@
                 "null"
               ]
             },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
             "type": {
               "const": "featurePicker",
               "type": "string"
@@ -336,6 +361,11 @@
                 "$ref": "#/$defs/Choice"
               },
               "type": "array"
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
             },
             "type": {
               "const": "multiSelect",
@@ -387,6 +417,11 @@
                 "null"
               ]
             },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
             "type": {
               "const": "dateField",
               "type": "string"
@@ -436,6 +471,11 @@
                 "null"
               ]
             },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
             "type": {
               "const": "timeField",
               "type": "string"
@@ -484,6 +524,11 @@
                 "string",
                 "null"
               ]
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
             },
             "type": {
               "const": "dateTimeField",

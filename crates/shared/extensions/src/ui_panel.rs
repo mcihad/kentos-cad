@@ -55,6 +55,9 @@ pub enum Component {
     TextField {
         id: String,
         label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         #[serde(default)]
         placeholder: Option<String>,
         #[serde(default)]
@@ -64,6 +67,9 @@ pub enum Component {
     NumberField {
         id: String,
         label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         #[serde(default)]
         value: Option<f64>,
         #[serde(default)]
@@ -88,6 +94,9 @@ pub enum Component {
     LayerPicker {
         id: String,
         label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         #[serde(default)]
         geometry: Option<String>,
         #[serde(default, rename = "onChange")]
@@ -98,6 +107,9 @@ pub enum Component {
     FieldPicker {
         id: String,
         label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         layer: String,
         #[serde(default)]
         kinds: Vec<String>,
@@ -110,6 +122,9 @@ pub enum Component {
     FeaturePicker {
         id: String,
         label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         #[serde(default)]
         layer: Option<String>,
         #[serde(default)]
@@ -124,6 +139,9 @@ pub enum Component {
     MultiSelect {
         id: String,
         label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         options: Vec<Choice>,
         #[serde(default)]
         value: Vec<String>,
@@ -135,6 +153,9 @@ pub enum Component {
     DateField {
         id: String,
         label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         #[serde(default)]
         value: Option<String>,
         #[serde(default)]
@@ -149,6 +170,9 @@ pub enum Component {
     TimeField {
         id: String,
         label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         #[serde(default)]
         value: Option<String>,
         #[serde(default)]
@@ -164,6 +188,9 @@ pub enum Component {
     DateTimeField {
         id: String,
         label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         #[serde(default)]
         value: Option<String>,
         #[serde(default)]
@@ -331,6 +358,22 @@ impl Component {
         }
     }
 
+    /// Whether the user must give it a value (its `required`).
+    pub fn required(&self) -> bool {
+        match self {
+            Component::TextField { required, .. }
+            | Component::NumberField { required, .. }
+            | Component::LayerPicker { required, .. }
+            | Component::FieldPicker { required, .. }
+            | Component::FeaturePicker { required, .. }
+            | Component::MultiSelect { required, .. }
+            | Component::DateField { required, .. }
+            | Component::TimeField { required, .. }
+            | Component::DateTimeField { required, .. } => *required,
+            _ => false,
+        }
+    }
+
     /// Whether the user gives it a value (a command's parameter).
     pub fn is_input(&self) -> bool {
         matches!(
@@ -387,17 +430,19 @@ pub fn read(value: &Value) -> Option<PanelDefinition> {
 fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     Some(match kind {
         "text" => &["id", "text"],
-        "textField" => &["id", "label", "placeholder", "value"],
-        "numberField" => &["id", "label", "value", "min", "max", "unit"],
+        "textField" => &["id", "label", "placeholder", "value", "required"],
+        "numberField" => &["id", "label", "value", "min", "max", "unit", "required"],
         "select" => &["id", "label", "options", "value", "onChange"],
-        "layerPicker" => &["id", "label", "geometry", "onChange"],
-        "fieldPicker" => &["id", "label", "layer", "kinds", "onChange"],
-        "featurePicker" => &["id", "label", "layer", "geometry", "multiple", "onChange"],
+        "layerPicker" => &["id", "label", "geometry", "onChange", "required"],
+        "fieldPicker" => &["id", "label", "layer", "kinds", "onChange", "required"],
+        "featurePicker" => &[
+            "id", "label", "layer", "geometry", "multiple", "onChange", "required",
+        ],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" | "timeField" | "dateTimeField" => {
-            &["id", "label", "value", "min", "max", "onChange"]
+            &["id", "label", "value", "min", "max", "onChange", "required"]
         }
-        "multiSelect" => &["id", "label", "options", "value", "onChange"],
+        "multiSelect" => &["id", "label", "options", "value", "onChange", "required"],
         "button" => &["id", "label", "command", "table", "primary"],
         "table" => &["id", "label"],
         "tree" => &["id", "label", "group"],
@@ -663,6 +708,12 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                 );
             }
             continue;
+        }
+        if c.get("required").is_some_and(|v| !v.is_boolean()) {
+            add(
+                format!("{at}/required"),
+                "required true ya da false olmalı.".to_owned(),
+            );
         }
         if !matches!(kind, "table" | "tree" | "card" | "stats" | "chart")
             && text(c, "label").is_none()
@@ -1210,6 +1261,7 @@ mod tests {
         p["body"][13]["value"] = json!(["1", "1"]);
         p["body"][14]["value"] = json!("25:00");
         p["body"][15]["max"] = json!("2025-12-31T23:59");
+        p["body"][1]["required"] = json!("evet");
         p["body"][16]["kind"] = json!("radar");
         p["body"][16]["aggregate"] = json!("sum");
         p["body"][16]["of"] = json!("sorgu");
@@ -1231,6 +1283,7 @@ mod tests {
             [
                 "/renk",
                 "/body/1/id",
+                "/body/1/required",
                 "/body/2/min",
                 "/body/3/value",
                 "/body/5/geometry",

@@ -85,6 +85,8 @@ pub(crate) struct OpenPanel {
     pub(crate) unseen: bool,
     /// How far down it was scrolled: given back when it is shown again.
     pub(crate) scroll: f32,
+    /// The input that was wrong when a command was asked for, and why: said under it until it is changed.
+    pub(crate) invalid: Option<(String, String)>,
 }
 
 /// A panel's button pressed: what the next launch of its command gives its code, and where its answer goes.
@@ -155,6 +157,7 @@ impl OpenPanel {
             rerun: None,
             unseen: false,
             scroll: 0.0,
+            invalid: None,
         };
         for c in &panel.definition.body {
             match c {
@@ -213,144 +216,221 @@ impl OpenPanel {
     }
 
     /// The command's parameters: each input's value by its id (a text trimmed, a number read with a decimal comma or
-    /// point, none when empty); or which number is not one, said in its label.
-    pub(crate) fn params(&self) -> Result<Value, String> {
+    /// point, none when empty); or which input is wrong and why, said by its label: one the user must give left empty
+    /// (`required`), a number that is not one, a value out of bounds. The field's id goes with the words: the form
+    /// says them under it.
+    pub(crate) fn check_params(&self) -> Result<Value, (String, String)> {
         let mut out = Map::new();
         for c in &self.definition.body {
-            match c {
-                Component::TextField { id, .. } => {
-                    let text = self.texts.get(id).map_or("", |t| t.trim());
-                    out.insert(id.clone(), json!(text));
-                }
-                Component::NumberField {
-                    id,
-                    label,
-                    min,
-                    max,
-                    ..
-                } => {
-                    let text = self.texts.get(id).map_or("", |t| t.trim());
-                    if text.is_empty() {
-                        out.insert(id.clone(), Value::Null);
-                        continue;
-                    }
-                    let Some(n) = number_of(text) else {
-                        return Err(format!("“{label}”: “{text}” bir sayı değil."));
-                    };
-                    if min.is_some_and(|m| n < m) || max.is_some_and(|m| n > m) {
-                        return Err(format!(
-                            "“{label}” {} ile {} arasında olmalı.",
-                            min.map_or_else(|| "−∞".to_owned(), number_words),
-                            max.map_or_else(|| "∞".to_owned(), number_words)
-                        ));
-                    }
-                    out.insert(id.clone(), json!(n));
-                }
-                Component::Select { id, .. } => {
-                    out.insert(
-                        id.clone(),
-                        json!(self.choices.get(id).cloned().unwrap_or_default()),
-                    );
-                }
-                // The chosen values, in the options' order.
-                Component::MultiSelect { id, options, .. } => {
-                    let chosen = self.multi.get(id);
-                    let values: Vec<&str> = options
-                        .iter()
-                        .filter(|o| chosen.is_some_and(|c| c.contains(&o.value)))
-                        .map(|o| o.value.as_str())
-                        .collect();
-                    out.insert(id.clone(), json!(values));
-                }
-                // An ISO date; none when empty; a text that is no day, or a day out of its bounds, said by its label.
-                Component::DateField {
-                    id,
-                    label,
-                    min,
-                    max,
-                    ..
-                } => {
-                    let text = self.texts.get(id).map_or("", |t| t.trim());
-                    if text.is_empty() {
-                        out.insert(id.clone(), Value::Null);
-                        continue;
-                    }
-                    let Some(iso) = kentos_extensions::ui_panel::typed_date(text) else {
-                        return Err(format!(
-                            "“{label}”: “{text}” bir tarih değil (GG.AA.YYYY ya da YYYY-AA-GG yazın)."
-                        ));
-                    };
-                    bounded(label, &iso, min.as_deref(), max.as_deref(), date_words)?;
-                    out.insert(id.clone(), json!(iso));
-                }
-                // A time of day, HH:MM; as a date's.
-                Component::TimeField {
-                    id,
-                    label,
-                    min,
-                    max,
-                    ..
-                } => {
-                    let text = self.texts.get(id).map_or("", |t| t.trim());
-                    if text.is_empty() {
-                        out.insert(id.clone(), Value::Null);
-                        continue;
-                    }
-                    let Some(iso) = kentos_extensions::ui_panel::typed_time(text) else {
-                        return Err(format!(
-                            "“{label}”: “{text}” bir saat değil (SS:DD yazın, ör. 14:30)."
-                        ));
-                    };
-                    bounded(label, &iso, min.as_deref(), max.as_deref(), str::to_owned)?;
-                    out.insert(id.clone(), json!(iso));
-                }
-                // A local date and time, 2026-11-15T14:30; as a date's.
-                Component::DateTimeField {
-                    id,
-                    label,
-                    min,
-                    max,
-                    ..
-                } => {
-                    let text = self.texts.get(id).map_or("", |t| t.trim());
-                    if text.is_empty() {
-                        out.insert(id.clone(), Value::Null);
-                        continue;
-                    }
-                    let Some(iso) = kentos_extensions::ui_panel::typed_date_time(text) else {
-                        return Err(format!(
-                            "“{label}”: “{text}” bir tarih ve saat değil (GG.AA.YYYY SS:DD yazın, ör. 15.11.2026 \
-                             14:30)."
-                        ));
-                    };
-                    bounded(label, &iso, min.as_deref(), max.as_deref(), date_time_words)?;
-                    out.insert(id.clone(), json!(iso));
-                }
-                // A layer's id, a field's name; none when none is chosen.
-                Component::LayerPicker { id, .. } | Component::FieldPicker { id, .. } => {
-                    let chosen = self.choices.get(id).filter(|l| !l.is_empty());
-                    out.insert(id.clone(), chosen.map_or(Value::Null, |l| json!(l)));
-                }
-                // The objects' persistent ids; one or none when it takes one.
-                Component::FeaturePicker { id, multiple, .. } => {
-                    let picked = self.picks.get(id).cloned().unwrap_or_default();
-                    let value = if *multiple {
-                        json!(picked)
-                    } else {
-                        picked.first().map_or(Value::Null, |u| json!(u))
-                    };
-                    out.insert(id.clone(), value);
-                }
-                Component::Checkbox { id, .. } => {
-                    out.insert(
-                        id.clone(),
-                        json!(self.checks.get(id).copied().unwrap_or(false)),
-                    );
-                }
-                _ => {}
+            let id = c.id().unwrap_or_default().to_owned();
+            if let Some(why) = self.missing(c) {
+                return Err((id, why));
             }
+            self.read_into(c, &mut out).map_err(|why| (id, why))?;
         }
         Ok(Value::Object(out))
+    }
+
+    /// The wrong input changed by `event`: its words under it go (the next ask checks it again).
+    pub(crate) fn forget_invalid(&mut self, event: &PanelEvent) {
+        let changed = match event {
+            PanelEvent::Text(id, _)
+            | PanelEvent::Check(id, _)
+            | PanelEvent::Choose(id, _)
+            | PanelEvent::Picked(id, _)
+            | PanelEvent::Toggle(id, _)
+            | PanelEvent::Pick(id)
+            | PanelEvent::Unpick(id) => Some(id),
+            _ => None,
+        };
+        if changed.is_some_and(|id| self.invalid.as_ref().is_some_and(|(at, _)| at == id)) {
+            self.invalid = None;
+        }
+    }
+
+    /// The command's parameters, or why not in words ([`OpenPanel::check_params`]).
+    #[cfg(test)]
+    pub(crate) fn params(&self) -> Result<Value, String> {
+        self.check_params().map_err(|(_, why)| why)
+    }
+
+    /// Why a `required` input is not given, in its label's words; none when it is (or need not be).
+    fn missing(&self, c: &Component) -> Option<String> {
+        if !c.required() {
+            return None;
+        }
+        let id = c.id()?;
+        let label = match c {
+            Component::TextField { label, .. }
+            | Component::NumberField { label, .. }
+            | Component::LayerPicker { label, .. }
+            | Component::FieldPicker { label, .. }
+            | Component::FeaturePicker { label, .. }
+            | Component::MultiSelect { label, .. }
+            | Component::DateField { label, .. }
+            | Component::TimeField { label, .. }
+            | Component::DateTimeField { label, .. } => label,
+            _ => return None,
+        };
+        match c {
+            Component::LayerPicker { .. } | Component::FieldPicker { .. } => self
+                .choices
+                .get(id)
+                .is_none_or(String::is_empty)
+                .then(|| format!("“{label}” seçilmedi.")),
+            Component::FeaturePicker { .. } => {
+                self.picks.get(id).is_none_or(Vec::is_empty).then(|| {
+                    format!("“{label}”: nesne alınmadı (çizimde seçip Seçimi al'a basın).")
+                })
+            }
+            Component::MultiSelect { .. } => self
+                .multi
+                .get(id)
+                .is_none_or(Vec::is_empty)
+                .then(|| format!("“{label}”: en az biri seçilmeli.")),
+            _ => self
+                .texts
+                .get(id)
+                .is_none_or(|t| t.trim().is_empty())
+                .then(|| format!("“{label}” boş bırakılamaz.")),
+        }
+    }
+
+    /// Input `c`'s value into `out` by its id, or why it is wrong.
+    fn read_into(&self, c: &Component, out: &mut Map<String, Value>) -> Result<(), String> {
+        match c {
+            Component::TextField { id, .. } => {
+                let text = self.texts.get(id).map_or("", |t| t.trim());
+                out.insert(id.clone(), json!(text));
+            }
+            Component::NumberField {
+                id,
+                label,
+                min,
+                max,
+                ..
+            } => {
+                let text = self.texts.get(id).map_or("", |t| t.trim());
+                if text.is_empty() {
+                    out.insert(id.clone(), Value::Null);
+                    return Ok(());
+                }
+                let Some(n) = number_of(text) else {
+                    return Err(format!("“{label}”: “{text}” bir sayı değil."));
+                };
+                if min.is_some_and(|m| n < m) || max.is_some_and(|m| n > m) {
+                    return Err(format!(
+                        "“{label}” {} ile {} arasında olmalı.",
+                        min.map_or_else(|| "−∞".to_owned(), number_words),
+                        max.map_or_else(|| "∞".to_owned(), number_words)
+                    ));
+                }
+                out.insert(id.clone(), json!(n));
+            }
+            Component::Select { id, .. } => {
+                out.insert(
+                    id.clone(),
+                    json!(self.choices.get(id).cloned().unwrap_or_default()),
+                );
+            }
+            // The chosen values, in the options' order.
+            Component::MultiSelect { id, options, .. } => {
+                let chosen = self.multi.get(id);
+                let values: Vec<&str> = options
+                    .iter()
+                    .filter(|o| chosen.is_some_and(|c| c.contains(&o.value)))
+                    .map(|o| o.value.as_str())
+                    .collect();
+                out.insert(id.clone(), json!(values));
+            }
+            // An ISO date; none when empty; a text that is no day, or a day out of its bounds, said by its label.
+            Component::DateField {
+                id,
+                label,
+                min,
+                max,
+                ..
+            } => {
+                let text = self.texts.get(id).map_or("", |t| t.trim());
+                if text.is_empty() {
+                    out.insert(id.clone(), Value::Null);
+                    return Ok(());
+                }
+                let Some(iso) = kentos_extensions::ui_panel::typed_date(text) else {
+                    return Err(format!(
+                        "“{label}”: “{text}” bir tarih değil (GG.AA.YYYY ya da YYYY-AA-GG yazın)."
+                    ));
+                };
+                bounded(label, &iso, min.as_deref(), max.as_deref(), date_words)?;
+                out.insert(id.clone(), json!(iso));
+            }
+            // A time of day, HH:MM; as a date's.
+            Component::TimeField {
+                id,
+                label,
+                min,
+                max,
+                ..
+            } => {
+                let text = self.texts.get(id).map_or("", |t| t.trim());
+                if text.is_empty() {
+                    out.insert(id.clone(), Value::Null);
+                    return Ok(());
+                }
+                let Some(iso) = kentos_extensions::ui_panel::typed_time(text) else {
+                    return Err(format!(
+                        "“{label}”: “{text}” bir saat değil (SS:DD yazın, ör. 14:30)."
+                    ));
+                };
+                bounded(label, &iso, min.as_deref(), max.as_deref(), str::to_owned)?;
+                out.insert(id.clone(), json!(iso));
+            }
+            // A local date and time, 2026-11-15T14:30; as a date's.
+            Component::DateTimeField {
+                id,
+                label,
+                min,
+                max,
+                ..
+            } => {
+                let text = self.texts.get(id).map_or("", |t| t.trim());
+                if text.is_empty() {
+                    out.insert(id.clone(), Value::Null);
+                    return Ok(());
+                }
+                let Some(iso) = kentos_extensions::ui_panel::typed_date_time(text) else {
+                    return Err(format!(
+                        "“{label}”: “{text}” bir tarih ve saat değil (GG.AA.YYYY SS:DD yazın, ör. 15.11.2026 \
+                             14:30)."
+                    ));
+                };
+                bounded(label, &iso, min.as_deref(), max.as_deref(), date_time_words)?;
+                out.insert(id.clone(), json!(iso));
+            }
+            // A layer's id, a field's name; none when none is chosen.
+            Component::LayerPicker { id, .. } | Component::FieldPicker { id, .. } => {
+                let chosen = self.choices.get(id).filter(|l| !l.is_empty());
+                out.insert(id.clone(), chosen.map_or(Value::Null, |l| json!(l)));
+            }
+            // The objects' persistent ids; one or none when it takes one.
+            Component::FeaturePicker { id, multiple, .. } => {
+                let picked = self.picks.get(id).cloned().unwrap_or_default();
+                let value = if *multiple {
+                    json!(picked)
+                } else {
+                    picked.first().map_or(Value::Null, |u| json!(u))
+                };
+                out.insert(id.clone(), value);
+            }
+            Component::Checkbox { id, .. } => {
+                out.insert(
+                    id.clone(),
+                    json!(self.checks.get(id).copied().unwrap_or(false)),
+                );
+            }
+            _ => {}
+        }
+        Ok(())
     }
 
     /// A choice made: another layer in a layer picker clears the field and the objects chosen from the one before.
@@ -721,6 +801,7 @@ impl App {
         let Some(panel) = self.extensions.panels.get_mut(at) else {
             return Task::none();
         };
+        panel.forget_invalid(&event);
         match event {
             PanelEvent::Text(id, text) => {
                 panel.texts.insert(id, text);
@@ -949,13 +1030,15 @@ impl App {
                 });
             }
         }
-        let params = match panel.params() {
+        let params = match panel.check_params() {
             Ok(params) => params,
-            Err(why) => {
-                panel.said = Some((words::Kind::Error, why));
+            Err((input, why)) => {
+                panel.said = Some((words::Kind::Error, why.clone()));
+                panel.invalid = Some((input, why));
                 return Task::none();
             }
         };
+        panel.invalid = None;
         let origin = PanelOrigin {
             ext: ext.clone(),
             panel: panel.local.clone(),
@@ -1189,6 +1272,55 @@ mod tests {
         );
     }
 
+    /// A field the user must give (`required`) left empty is said by its label, with its id for the form to say it
+    /// under the field; changing the field takes the words away.
+    #[test]
+    fn a_required_field_left_empty_is_said_under_it() {
+        let value = json!({
+            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Zorunlu",
+            "body": [
+                { "type": "textField", "id": "onek", "label": "Önek", "required": true },
+                { "type": "numberField", "id": "ilk", "label": "İlk numara", "value": 1, "required": true },
+                { "type": "layerPicker", "id": "katman", "label": "Katman", "required": true },
+                { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman", "required": true },
+                { "type": "multiSelect", "id": "bilgi", "label": "Bilgiler", "required": true,
+                  "options": [{ "value": "a", "label": "A" }] },
+                { "type": "textField", "id": "not", "label": "Not" }
+            ]
+        });
+        let mut p = OpenPanel::new(
+            "tr.ornek.vitrin",
+            "zorunlu",
+            kentos_extensions::ui_panel::read(&value).unwrap(),
+        );
+        let wrong = |p: &OpenPanel| p.check_params().unwrap_err();
+        assert_eq!(
+            wrong(&p),
+            ("onek".to_owned(), "“Önek” boş bırakılamaz.".to_owned())
+        );
+        p.texts.insert("onek".into(), "Y-".into());
+        p.texts.insert("ilk".into(), "  ".into());
+        assert_eq!(wrong(&p).1, "“İlk numara” boş bırakılamaz.");
+        p.texts.insert("ilk".into(), "3".into());
+        assert_eq!(
+            wrong(&p),
+            ("katman".to_owned(), "“Katman” seçilmedi.".to_owned())
+        );
+        p.choices.insert("katman".into(), "yapi".into());
+        assert!(wrong(&p).1.contains("nesne alınmadı"));
+        p.picks.insert("nesneler".into(), vec!["u-1".into()]);
+        assert_eq!(wrong(&p).1, "“Bilgiler”: en az biri seçilmeli.");
+        p.multi.insert("bilgi".into(), vec!["a".into()]);
+        let values = p.check_params().expect("all given; Not need not be");
+        assert_eq!(values["not"], "", "an optional field left empty");
+        // The wrong field's words stay until it is changed.
+        p.invalid = Some(("onek".into(), "“Önek” boş bırakılamaz.".into()));
+        p.forget_invalid(&PanelEvent::Text("not".into(), "x".into()));
+        assert!(p.invalid.is_some(), "another field changed");
+        p.forget_invalid(&PanelEvent::Text("onek".into(), "B-".into()));
+        assert!(p.invalid.is_none());
+    }
+
     /// A multiple choice gives the chosen values in the options' order, an empty list when none is chosen.
     #[test]
     fn a_multiple_choice_gives_the_chosen_values_in_the_options_order() {
@@ -1279,7 +1411,6 @@ mod tests {
             json!({ "katman": "yapi", "alan": null, "nesneler": [], "bir": "c" })
         );
     }
-
 
     #[test]
     fn enter_presses_the_primary_button_else_the_first() {

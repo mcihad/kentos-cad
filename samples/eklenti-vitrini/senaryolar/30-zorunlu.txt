@@ -1,0 +1,22 @@
+# Zorunlu alan: Yapıları numarala'nın penceresinde İlk numara zorunlu (required). Boşaltılıp Numarala'ya basılınca
+# alanın altında "“İlk numara” boş bırakılamaz" yazar, adının yanında yıldız; pencere açık kalır, Esc İptal'dir.
+# (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 155 56    # Yapıları numarala: önce pencere
+wait 3000
+click 790 498   # İlk numara
+key ctrl+a
+key BackSpace
+click 920 538   # Numarala
+wait 1200
+shot 30-zorunlu
+key Escape
+wait 2000
+shot 30-iptal

@@ -20,7 +20,7 @@ ekran görüntüleri bununla yapılır (plan/eklenti.md, docs/adr/8057).
 | Haritada şekil isteyen araç | `mapTools` (yönlü dikdörtgen, 10 × 12 m şablon) | Vitrin › Yapı yerleştir: ortası, sonra uzun kenarın yönü; Esc'e kadar sürer (`02-harita-araci`) |
 | Çizimi okuyan komut, rapor | `commands` › Katman özeti | Vitrin › Katman özeti; katmanın sağ tık menüsünde de (`03-komutlar`) |
 | Çizime yazan komut, ilerleme, Durdur | Yapıları numarala (`ctx.progress`) | Çalışma bildiriminde ilerleme çubuğu ("%40 · 3. yapı numaralanıyor") ve Durdur: yazdıkları geri alınır; bitince tek geri alma adımı (`03-komutlar`) |
-| Kullanıcıya soran komut | Yapıları numarala (`ctx.dialog`) | Şeritten çalışınca KentOS'un penceresi önek ve ilk numarayı sorar: B- ve 10 yazılıp Numarala'ya basılınca yapılar B-10 … B-14 olur; İptal'de bir şey yazılmaz (`29-pencere`) |
+| Kullanıcıya soran komut | Yapıları numarala (`ctx.dialog`) | Şeritten çalışınca KentOS'un penceresi önek ve ilk numarayı sorar: B- ve 10 yazılıp Numarala'ya basılınca yapılar B-10 … B-14 olur; İptal'de bir şey yazılmaz (`29-pencere`); İlk numara zorunlu (`required`): boş bırakılınca alanın altında söylenir (`30-zorunlu`) |
 | Hata veren komut | Hata örneği | Bildirim, Ayrıntı (Python iz kaydı) ve eklentinin günlüğü; çizim değişmez (`03-komutlar`) |
 | İşlemler aracı (shapely, NumPy) | `processing` › TAKS | Vitrin › TAKS: yeni katman, tablo ve sayı; Durdur (`04-taks`) |
 | Formdan eklenti aracı | Parsel formunun "TAKS hesapla" düğmesi → `ext.tr.ornek.vitrin.taks`, eklentinin sürümü ve özetiyle sabitli | Bir parseli Formla düzenle: düğme aracı o kayıtla açar; ortam hazır değilse "Bekliyor", eklenti yoksa ya da kapalıysa "Kullanılamaz" der; Formlar'da başka sürüm uyarılır (`08-form-eylemi`) |

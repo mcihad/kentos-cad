@@ -105,7 +105,9 @@ her satır bir gösterge kartı: `title` sütunu adı (yoksa ilk sütun), `value
 pie, histogram, line; `category`: gruplanacak ya da yatay eksendeki sütun, `value`: sayı sütunu, `aggregate`: count
 (varsayılan; `value` verilirse sum), sum, mean, min, max, median; çubuk ve pasta `category` ister, histogram `value`,
 çizgi ikisini; satırları düğmenin `table`'ından ya da `of` ile bu paneldeki bir tablonun, ağacın, kartın ya da
-göstergenin satırlarından; KentOS'un grafik motoru çizer). `select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField`, `timeField`, `dateTimeField` (seçiciden seçilince ya da Enter'la) ve `checkbox` isteğe
+göstergenin satırlarından; KentOS'un grafik motoru çizer). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve katman/alan/nesne seçicileri `required: true` alır: boş
+bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında ("“Önek” boş bırakılamaz"), adının yanında yıldız.
+`select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField`, `timeField`, `dateTimeField` (seçiciden seçilince ya da Enter'la) ve `checkbox` isteğe
 bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
 (çalışırken gelen değişiklik bitince bir kez yeniden çalıştırılır). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu

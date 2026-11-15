@@ -482,6 +482,18 @@ impl App {
                     ));
                 }
             }
+            // A field the user must give: its star; the words of what was wrong with it, under it.
+            if c.is_input() {
+                if c.required() {
+                    form = form.required();
+                }
+                let wrong = p
+                    .invalid
+                    .as_ref()
+                    .filter(|(at, _)| c.id() == Some(at.as_str()))
+                    .map(|(_, why)| why.clone());
+                form = form.error(wrong);
+            }
         }
         (form, tables)
     }

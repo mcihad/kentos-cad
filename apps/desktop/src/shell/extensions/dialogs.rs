@@ -140,6 +140,7 @@ impl App {
         let Some(panel) = self.extensions.dialog.as_mut().map(|d| &mut d.panel) else {
             return;
         };
+        panel.forget_invalid(&event);
         match event {
             PanelEvent::Text(id, text) | PanelEvent::Picked(id, text) => {
                 panel.texts.insert(id, text);
@@ -168,10 +169,11 @@ impl App {
             return;
         };
         let answer = if ok {
-            match dialog.panel.params() {
+            match dialog.panel.check_params() {
                 Ok(values) => values,
-                Err(why) => {
-                    dialog.panel.said = Some((words::Kind::Error, why));
+                Err((input, why)) => {
+                    dialog.panel.said = Some((words::Kind::Error, why.clone()));
+                    dialog.panel.invalid = Some((input, why));
                     return;
                 }
             }
@@ -213,7 +215,8 @@ impl App {
             form
         ]
         .spacing(12);
-        if let Some((kind, said)) = &p.said {
+        // A wrong field's words are under it (the window is short); others under the fields.
+        if let Some((kind, said)) = p.said.as_ref().filter(|_| p.invalid.is_none()) {
             body = body.push(words::line(*kind, label::caption(said.clone())));
         }
         Some(

@@ -77,7 +77,7 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
             [
                 {"type": "text", "text": f"'yapi' katmanındaki {len(kayitlar)} yapıya sırayla numara yazılır."},
                 {"type": "textField", "id": "onek", "label": "Önek", "value": "Y-"},
-                {"type": "numberField", "id": "ilk", "label": "İlk numara", "value": 1, "min": 1},
+                {"type": "numberField", "id": "ilk", "label": "İlk numara", "value": 1, "min": 1, "required": True},
             ],
             ok="Numarala",
         )
