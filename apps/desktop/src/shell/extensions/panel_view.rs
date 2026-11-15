@@ -362,6 +362,14 @@ impl App {
                         [title, value, unit, note].map(|c| c.as_deref()),
                     ));
                 }
+                Component::Chart {
+                    id,
+                    label: words,
+                    of,
+                    ..
+                } => {
+                    tables.push(self.panel_chart(p, id, words.as_deref(), of.as_deref()));
+                }
                 Component::Card {
                     id,
                     label: words,

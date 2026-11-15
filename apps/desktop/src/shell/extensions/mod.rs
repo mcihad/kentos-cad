@@ -12,6 +12,7 @@
 
 mod audit_agents;
 mod audits;
+mod panel_chart;
 mod tool_pins;
 mod bisect;
 mod browse;
@@ -154,6 +155,9 @@ pub(crate) struct Extensions {
     /// Where KentOS last docked the Eklenti tab for a panel's `side`: moved for another side only while it is still
     /// there (the user's own move is kept).
     pub(crate) panel_placed: Option<kentos_ui::widget::docking::Side>,
+    /// The open panels' charts, by extension, panel and chart, worked out when their rows came (panel_chart.rs).
+    pub(crate) panel_charts:
+        std::collections::BTreeMap<(String, String, String), panel_chart::PanelChart>,
 }
 
 impl Default for Extensions {
@@ -196,6 +200,7 @@ impl Default for Extensions {
             active_panel: 0,
             panel_calls: Vec::new(),
             panel_placed: None,
+            panel_charts: std::collections::BTreeMap::new(),
         }
     }
 }

@@ -222,6 +222,27 @@ pub enum Component {
         #[serde(default)]
         note: Option<String>,
     },
+    /// A chart of rows, drawn by KentOS's charts (the Grafik tab's engine): bars or a pie of `category`'s values,
+    /// counted or with `value`'s column summed, averaged … (`aggregate`); a histogram of `value`'s numbers; a line of
+    /// `value` over `category`. Its rows are the ones a button's `table` sends it or, with `of`, another component's (a
+    /// table's, a tree's, a card's, a figure's): the same rows drawn twice, each its own way.
+    Chart {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        /// None: bars.
+        #[serde(default)]
+        kind: Option<ChartKind>,
+        #[serde(default)]
+        of: Option<String>,
+        #[serde(default)]
+        category: Option<String>,
+        #[serde(default)]
+        value: Option<String>,
+        /// None: a count, or a sum when `value` is given (bars and a pie).
+        #[serde(default)]
+        aggregate: Option<ChartAggregate>,
+    },
     /// The rows a button's command answered, a card each: `title`'s column heads it (none: the first column), `tag`'s
     /// beside it, the other columns under it by name; a card with a `uid` is an object. Where a table's columns do not
     /// fit (a narrow dock), a card writes them one under the other.
@@ -240,6 +261,34 @@ pub enum Component {
 fn many() -> bool {
     true
 }
+
+/// What a chart draws.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub enum ChartKind {
+    Bar,
+    Pie,
+    Histogram,
+    Line,
+}
+
+/// How a category's rows give one number on a chart.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub enum ChartAggregate {
+    Count,
+    Sum,
+    Mean,
+    Min,
+    Max,
+    Median,
+}
+
+/// A chart's kinds and aggregates as a panel writes them.
+const CHART_KINDS: [&str; 4] = ["bar", "pie", "histogram", "line"];
+const CHART_AGGREGATES: [&str; 6] = ["count", "sum", "mean", "min", "max", "median"];
 
 impl Component {
     /// Its id, when it has one.
@@ -261,6 +310,7 @@ impl Component {
             | Component::Table { id, .. }
             | Component::Tree { id, .. }
             | Component::Stats { id, .. }
+            | Component::Chart { id, .. }
             | Component::Card { id, .. } => Some(id),
         }
     }
@@ -353,12 +403,21 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "tree" => &["id", "label", "group"],
         "card" => &["id", "label", "title", "tag"],
         "stats" => &["id", "label", "title", "value", "unit", "note"],
+        "chart" => &[
+            "id",
+            "label",
+            "kind",
+            "of",
+            "category",
+            "value",
+            "aggregate",
+        ],
         _ => return None,
     })
 }
 
 const TYPES: &str = "text, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
-                     fieldPicker, featurePicker, checkbox, button, table, tree, card, stats";
+                     fieldPicker, featurePicker, checkbox, button, table, tree, card, stats, chart";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -540,10 +599,13 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             .collect()
     };
     // Where a button's rows may go: a table, a tree, cards or figures.
-    let tables: BTreeSet<&str> = ["table", "tree", "card", "stats"]
+    // What shows a command's rows: a button's `table` names one; a chart's `of`, one of the others.
+    let shows: BTreeSet<&str> = ["table", "tree", "card", "stats"]
         .into_iter()
         .flat_map(of_type)
         .collect();
+    let mut tables = shows.clone();
+    tables.extend(of_type("chart"));
     let layer_pickers = of_type("layerPicker");
     let mut ids = BTreeSet::new();
     for (i, component) in body.iter().enumerate() {
@@ -602,7 +664,9 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             }
             continue;
         }
-        if !matches!(kind, "table" | "tree" | "card" | "stats") && text(c, "label").is_none() {
+        if !matches!(kind, "table" | "tree" | "card" | "stats" | "chart")
+            && text(c, "label").is_none()
+        {
             add(
                 at.clone(),
                 format!("{kind} bileşeni boş olmayan bir ad (label) ister."),
@@ -848,8 +912,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                 {
                     add(
                         format!("{at}/table"),
-                        "Düğmenin tablosu (table) bu paneldeki bir tablonun, ağacın, kartın ya da göstergenin kimliği \
-                         olmalı."
+                        "Düğmenin tablosu (table) bu paneldeki bir tablonun, ağacın, kartın, göstergenin ya da grafiğin \
+                         kimliği olmalı."
                             .to_owned(),
                     );
                 }
@@ -889,6 +953,87 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                             ),
                         );
                     }
+                }
+            }
+            "chart" => {
+                let kind = match c.get("kind") {
+                    None => "bar",
+                    Some(v) => match v.as_str().filter(|k| CHART_KINDS.contains(k)) {
+                        Some(k) => k,
+                        None => {
+                            add(
+                                format!("{at}/kind"),
+                                format!(
+                                    "Grafiğin türü şunlardan biri olmalı: {}.",
+                                    CHART_KINDS.join(", ")
+                                ),
+                            );
+                            "bar"
+                        }
+                    },
+                };
+                for key in ["category", "value"] {
+                    if c.get(key).is_some() && text(c, key).is_none() {
+                        add(
+                            format!("{at}/{key}"),
+                            format!(
+                                "“{key}” grafikte okunacak bir sütunun adı olmalı (boş olmayan metin)."
+                            ),
+                        );
+                    }
+                }
+                let aggregate = c
+                    .get("aggregate")
+                    .map(|v| v.as_str().filter(|a| CHART_AGGREGATES.contains(a)));
+                if let Some(None) = aggregate {
+                    add(
+                        format!("{at}/aggregate"),
+                        format!(
+                            "Toplama şunlardan biri olmalı: {}.",
+                            CHART_AGGREGATES.join(", ")
+                        ),
+                    );
+                }
+                // What each kind reads: a category for bars and a pie, numbers for a histogram, both for a line.
+                let needs: &[&str] = match kind {
+                    "histogram" => &["value"],
+                    "line" => &["category", "value"],
+                    _ => &["category"],
+                };
+                for key in needs {
+                    if c.get(*key).is_none() {
+                        add(
+                            at.clone(),
+                            format!(
+                                "“{kind}” grafiği “{key}” ister: {}.",
+                                if *key == "category" {
+                                    "gruplanacak ya da yatay eksene konacak sütun"
+                                } else {
+                                    "sayıları okunacak sütun"
+                                }
+                            ),
+                        );
+                    }
+                }
+                if matches!(kind, "bar" | "pie")
+                    && aggregate.flatten().is_some_and(|a| a != "count")
+                    && c.get("value").is_none()
+                {
+                    add(
+                        format!("{at}/aggregate"),
+                        "Sayımdan başka bir toplama (sum, mean …) bir değer sütunu (value) ister."
+                            .to_owned(),
+                    );
+                }
+                if let Some(of) = c.get("of")
+                    && !of.as_str().is_some_and(|o| shows.contains(o))
+                {
+                    add(
+                        format!("{at}/of"),
+                        "Grafiğin kaynağı (of) bu paneldeki bir tablonun, ağacın, kartın ya da göstergenin kimliği \
+                         olmalı."
+                            .to_owned(),
+                    );
                 }
             }
             "card" => {
@@ -955,7 +1100,9 @@ mod tests {
                 { "type": "timeField", "id": "saat", "label": "Saat", "value": "09:00", "min": "08:00", "max": "17:30",
                   "onChange": "yapi-ara" },
                 { "type": "dateTimeField", "id": "gecerli", "label": "Geçerlilik sonu",
-                  "min": "2026-01-01T00:00" }
+                  "min": "2026-01-01T00:00" },
+                { "type": "chart", "id": "grafik", "label": "Adalara göre", "kind": "bar", "of": "agac",
+                  "category": "ada" }
             ]
         })
     }
@@ -966,8 +1113,12 @@ mod tests {
         assert!(check("ui/ara.panel.json", &value, &["yapi-ara"]).is_empty());
         let read = read(&value).expect("read");
         assert_eq!(read.title, "Yapı ara");
-        assert_eq!(read.body.len(), 16);
+        assert_eq!(read.body.len(), 17);
         assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 11);
+        assert!(
+            matches!(&read.body[16], Component::Chart { kind: Some(ChartKind::Bar), of: Some(o), category: Some(c),
+                                                        aggregate: None, .. } if o == "agac" && c == "ada")
+        );
         assert!(
             matches!(&read.body[14], Component::TimeField { value: Some(v), max: Some(m), .. }
             if v == "09:00" && m == "17:30")
@@ -1059,6 +1210,9 @@ mod tests {
         p["body"][13]["value"] = json!(["1", "1"]);
         p["body"][14]["value"] = json!("25:00");
         p["body"][15]["max"] = json!("2025-12-31T23:59");
+        p["body"][16]["kind"] = json!("radar");
+        p["body"][16]["aggregate"] = json!("sum");
+        p["body"][16]["of"] = json!("sorgu");
         p["body"]
             .as_array_mut()
             .unwrap()
@@ -1092,9 +1246,64 @@ mod tests {
                 "/body/13/value",
                 "/body/14/value",
                 "/body/15/min",
-                "/body/16/type",
-                "/body/17"
+                "/body/16/kind",
+                "/body/16/aggregate",
+                "/body/16/of",
+                "/body/17/type",
+                "/body/18"
             ]
+        );
+    }
+}
+
+#[cfg(test)]
+mod chart_tests {
+    use serde_json::json;
+
+    use super::*;
+
+    /// A chart reads what its kind draws: a category for bars and a pie, numbers for a histogram, both for a line; a
+    /// button may send its rows to it, and its `of` names another component's rows, not a chart's.
+    #[test]
+    fn a_chart_asks_for_the_columns_its_kind_draws() {
+        let panel = |chart: serde_json::Value| {
+            json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Grafik", "body": [
+                { "type": "button", "id": "say", "label": "Say", "command": "say", "table": "grafik" },
+                { "type": "table", "id": "liste" },
+                chart
+            ] })
+        };
+        let problems = |chart: serde_json::Value| -> Vec<String> {
+            check("ui/g.panel.json", &panel(chart), &["say"])
+                .into_iter()
+                .map(|p| p.message)
+                .collect()
+        };
+        let bars = problems(json!({ "type": "chart", "id": "grafik", "category": "Değer" }));
+        assert!(
+            bars.is_empty(),
+            "bars counting a category, the button's rows: {bars:?}"
+        );
+        assert!(
+            problems(
+                json!({ "type": "chart", "id": "grafik", "kind": "pie", "category": "mahalle",
+                             "value": "alan", "aggregate": "sum", "of": "liste" })
+            )
+            .is_empty()
+        );
+        assert!(
+            problems(json!({ "type": "chart", "id": "grafik", "kind": "histogram" }))[0]
+                .contains("“value” ister")
+        );
+        let line =
+            problems(json!({ "type": "chart", "id": "grafik", "kind": "line", "value": "nufus" }));
+        assert_eq!(line.len(), 1, "{line:?}");
+        assert!(line[0].contains("“category” ister"));
+        assert!(
+            problems(json!({ "type": "chart", "id": "grafik", "category": "x", "of": "grafik" }))
+                [0]
+            .contains("kaynağı (of)"),
+            "not a chart's rows, not its own"
         );
     }
 }

@@ -429,7 +429,8 @@ impl OpenPanel {
                 Component::Table { id, .. }
                 | Component::Tree { id, .. }
                 | Component::Card { id, .. }
-                | Component::Stats { id, .. } => Some(id.clone()),
+                | Component::Stats { id, .. }
+                | Component::Chart { id, .. } => Some(id.clone()),
                 _ => None,
             })
         })
@@ -609,7 +610,9 @@ impl App {
         if at >= x.panels.len() {
             return Task::none();
         }
-        x.panels.remove(at);
+        let closed = x.panels.remove(at);
+        x.panel_charts
+            .retain(|(ext, local, _), _| !(*ext == closed.ext && *local == closed.local));
         if at < x.active_panel || (x.active_panel >= x.panels.len() && x.active_panel > 0) {
             x.active_panel -= 1;
         }
@@ -1028,11 +1031,12 @@ impl App {
                 }
                 // A message answers no rows: the table keeps what it showed (a button that writes, as Yapıları
                 // numarala, does not empty the search's results).
-                if let Some(table) = origin
+                let filled = origin
                     .table
                     .as_ref()
                     .filter(|_| result.get("rows").is_some())
-                {
+                    .cloned();
+                if let Some(table) = &filled {
                     panel.tables.insert(table.clone(), (columns, rows.clone()));
                 }
                 let words = result
@@ -1041,6 +1045,10 @@ impl App {
                     .map(str::to_owned)
                     .unwrap_or_else(|| format!("{} satır.", rows.len()));
                 panel.said = Some((words::Kind::Ok, words));
+                // The charts drawing those rows, worked out again (panel_chart.rs).
+                if let Some(table) = filled {
+                    self.ext_panel_charts(&origin.ext, &origin.panel, &table);
+                }
             }
             Err(why) => panel.said = Some((words::Kind::Error, why)),
         }

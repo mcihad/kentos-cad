@@ -1,5 +1,27 @@
 {
   "$defs": {
+    "ChartAggregate": {
+      "description": "How a category's rows give one number on a chart.",
+      "enum": [
+        "count",
+        "sum",
+        "mean",
+        "min",
+        "max",
+        "median"
+      ],
+      "type": "string"
+    },
+    "ChartKind": {
+      "description": "What a chart draws.",
+      "enum": [
+        "bar",
+        "pie",
+        "histogram",
+        "line"
+      ],
+      "type": "string"
+    },
     "Choice": {
       "description": "One of a select's choices.",
       "properties": {
@@ -642,6 +664,75 @@
                 "string",
                 "null"
               ]
+            },
+            "value": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A chart of rows, drawn by KentOS's charts (the Grafik tab's engine): bars or a pie of `category`'s values,\ncounted or with `value`'s column summed, averaged … (`aggregate`); a histogram of `value`'s numbers; a line of\n`value` over `category`. Its rows are the ones a button's `table` sends it or, with `of`, another component's (a\ntable's, a tree's, a card's, a figure's): the same rows drawn twice, each its own way.",
+          "properties": {
+            "aggregate": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ChartAggregate"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "None: a count, or a sum when `value` is given (bars and a pie)."
+            },
+            "category": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ChartKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "None: bars."
+            },
+            "label": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "of": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "chart",
+              "type": "string"
             },
             "value": {
               "default": null,

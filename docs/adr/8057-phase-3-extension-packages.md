@@ -1824,7 +1824,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | kart | var | `card` (KentOS bilgi kartı) | dar yerde tablonun yerine |
 | | ilişki listesi | yok | — | |
 | | özet/ölçü | var | `stats` (KentOS'un gösterge kartı, `StatCard`) | satır başına bir kart, yan yana |
-| | grafik | KentOS'ta | CBS grafikleri | |
+| | grafik | var | `chart` (KentOS'un grafik motoru, Grafik sekmesinin çizimi: çubuk, pasta, histogram, çizgi) | satırları düğmenin `table`'ından ya da `of` ile başka bir bileşenden |
 | İş denetimi | düğme | var | `button` (birincil) | bir komut çalıştırır |
 | | değer değişince | var | `onChange` (seçim, seçiciler, onay) | çalışırken gelen bir kez yeniden |
 | | ilerleme/günlük | var | `ctx.progress` panelde çubuk; `ctx.log` eklentinin günlüğünde | |
@@ -1837,7 +1837,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 
 **Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `dateField`, `timeField`, `dateTimeField`,
 `select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`,
-`stats`.
+`stats`, `chart`.
 
 **JSON Schema** (15 Kasım; planın "kod üretimi" maddesinin panel payı): `kentos.ui.panel` 1'in şeması panelin Rust
 tiplerinden üretilir (`ui_panel::json_schema`, `schemars`; `format` ve `schemaVersion` sabitleriyle) ve SDK'nın yanında
@@ -1853,8 +1853,19 @@ dersi, D7): haritaya çizim harita aracının yakalamasıyla (KentOS çizer), pa
 (tanım, değer kodlayıcı, platform çizicisi ve salt okunur yedek, PY-UI-15/16) ayrı bir maddedir; o gelene dek panel
 yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
 
-**Sıradaki aday:** grafik (CBS grafikleri). 15 Kasım'da bağlananlar: tarih (`dateField`), çoklu seçim (`multiSelect`),
-özet/ölçü (`stats`), saat (`timeField`) ve an (`dateTimeField`).
+15 Kasım'da bağlananlar: tarih (`dateField`), çoklu seçim (`multiSelect`), özet/ölçü (`stats`), saat (`timeField`), an
+(`dateTimeField`) ve grafik (`chart`). Planın listesinde bağlanmamış kalanlar yukarıda "KentOS'ta" ve "yok" diye yazılı.
+
+**Grafik** (`chart`, 15 Kasım): KentOS'un grafik motoru (`geometry-core` `ops::charts`, Grafik sekmesinin) çizer; ayrı
+bir çizici yazılmadı. Satırlar bir İşlemler tablosu gibi okunur (`table_columns`: sütunun türü hücrelerinden), model
+satırlar gelince bir kez kurulur, yalnız yerleşim panelin genişliğini izler; Grafik sekmesinin boyaması
+(`charts::canvas::Still`, şekiller tek resim, yazılar arayüzün yazı tipiyle) paylaşıldı, panel grafiği seçim yapmaz.
+Türler çubuk (varsayılan), pasta, histogram, çizgi; çubuk ve pasta `category` ister (sayım; `value` verilirse toplam,
+`aggregate` başkası), histogram `value`, çizgi ikisini (Kapı 1). Satırlar bir düğmenin `table`'ından ya da `of` ile
+başka bir bileşenden (tablo, ağaç, kart, gösterge) gelir: aynı satırlar iki biçimde. Satırlarda olmayan bir sütun adıyla
+söylenir ("“Mahalle” sütunu komutun satırlarında yok"; motorun "seçilmedi" iletisi Grafik sekmesinin sözüydü). Önbellek
+(boyama önbelleği kopyalanamaz) açık panellerin yanında, eklenti/panel/grafik kimliğiyle; panel kapanınca gider. Yükseklik
+220 px. Vitrin 1.0.21: Değer say'ın ağacının altında "Dağılım" (101 boyu 3, 102 boyu 1; `28-grafik`).
 
 ## §27. Ajanın eklenti denetimi: `audit.run`, `audit.report`, `audit.apply_fix` (`ADIM 20`, AI/MCP `audit.run`)
 

@@ -41,6 +41,13 @@
       "group": [
         "Değer"
       ]
+    },
+    {
+      "type": "chart",
+      "id": "grafik",
+      "label": "Dağılım",
+      "of": "dagilim",
+      "category": "Değer"
     }
   ]
 }

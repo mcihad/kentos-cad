@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.21 — 15 Kasım 2026
+
+- "Değer say"a grafik (`chart`): ağacın satırları aynı zamanda çubuk grafik olarak çizilir (`of: dagilim`, her değer
+  bir çubuk, boyu nesne sayısı); KentOS'un grafik motoru çizer, sayım yenilenince grafik de yenilenir.
+
 ## 1.0.20 — 15 Kasım 2026
 
 - "Parsel kartı"na saat (`timeField`) ve an (`dateTimeField`) alanları: Saat 14:30 ya da 14.30 yazılır ya da saat

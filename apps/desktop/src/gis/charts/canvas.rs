@@ -113,23 +113,69 @@ impl canvas::Program<Message> for Chart<'_> {
                 return;
             }
             let laid = with_work(self.panel, |w| w.lay_out(&room(size)).cloned()).flatten();
-            let Some(layout) = laid else {
-                return;
-            };
-            let k = self.scale.max(0.5);
-            let (pw, ph) = (
-                (size.width * k).ceil() as u32,
-                (size.height * k).ceil() as u32,
-            );
-            if let Some(pixels) = picture(&layout, &t, pw, ph, k) {
-                frame.draw_image(
-                    Rectangle::new(Point::ORIGIN, Size::new(pw as f32 / k, ph as f32 / k)),
-                    canvas::Image::new(Handle::from_rgba(pw, ph, pixels))
-                        .filter_method(FilterMethod::Linear)
-                        .snap(true),
-                );
+            if let Some(layout) = laid {
+                paint(frame, &layout, &t, size, self.scale);
             }
-            texts(frame, &layout, &t);
+        });
+        vec![geometry]
+    }
+}
+
+/// A laid-out chart painted in a frame of `size`: its shapes one picture in the screen's pixels (`scale` of them a
+/// chart pixel), its texts over it in the interface's typeface.
+fn paint(frame: &mut Frame, layout: &Layout, t: &Tokens, size: Size, scale: f32) {
+    let k = scale.max(0.5);
+    let (pw, ph) = (
+        (size.width * k).ceil() as u32,
+        (size.height * k).ceil() as u32,
+    );
+    if let Some(pixels) = picture(layout, t, pw, ph, k) {
+        frame.draw_image(
+            Rectangle::new(Point::ORIGIN, Size::new(pw as f32 / k, ph as f32 / k)),
+            canvas::Image::new(Handle::from_rgba(pw, ph, pixels))
+                .filter_method(FilterMethod::Linear)
+                .snap(true),
+        );
+    }
+    texts(frame, layout, t);
+}
+
+/// An extension panel's chart (docs/adr/8057 §25): its work laid out in its room and painted as the Grafik tab paints
+/// its own, without the tab's pointer (a panel's chart selects nothing).
+pub(crate) struct Still<'a> {
+    pub work: &'a std::cell::RefCell<Work>,
+    pub painted: &'a Painted,
+    /// The chart's rows' stamp: painted again when they change.
+    pub stamp: u64,
+    pub scale: f32,
+}
+
+impl canvas::Program<Message> for Still<'_> {
+    type State = ();
+
+    fn draw(
+        &self,
+        _state: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _cursor: mouse::Cursor,
+    ) -> Vec<Geometry> {
+        let t = Tokens::of(theme);
+        let key = (self.stamp, theme_key(&t), self.scale.to_bits());
+        if self.painted.key.get() != Some(key) {
+            self.painted.cache.clear();
+            self.painted.key.set(Some(key));
+        }
+        let geometry = self.painted.cache.draw(renderer, bounds.size(), |frame| {
+            let size = bounds.size();
+            if size.width < 10.0 || size.height < 10.0 {
+                return;
+            }
+            let laid = self.work.borrow_mut().lay_out(&room(size)).cloned();
+            if let Some(layout) = laid {
+                paint(frame, &layout, &t, size, self.scale);
+            }
         });
         vec![geometry]
     }
