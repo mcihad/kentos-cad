@@ -87,6 +87,16 @@ pub(crate) struct OpenPanel {
     pub(crate) scroll: f32,
     /// The input that was wrong when a command was asked for, and why: said under it until it is changed.
     pub(crate) invalid: Option<(String, String)>,
+    /// What its running code changed of it (panel_session.rs, docs/adr/8057 §32): a choice's or a multiple choice's
+    /// options, a text's words, the components it hid or turned off.
+    pub(crate) options: BTreeMap<String, Vec<kentos_extensions::ui_panel::Choice>>,
+    pub(crate) words: BTreeMap<String, String>,
+    pub(crate) hidden: std::collections::BTreeSet<String>,
+    pub(crate) disabled: std::collections::BTreeSet<String>,
+    /// The inputs the user changed while its command ran: a value the code sets there does not go over the user's.
+    pub(crate) touched: std::collections::BTreeSet<String>,
+    /// Its running code said something under it: kept when the run ends without words of its own.
+    pub(crate) spoke: bool,
 }
 
 /// A panel's button pressed: what the next launch of its command gives its code, and where its answer goes.
@@ -158,6 +168,12 @@ impl OpenPanel {
             unseen: false,
             scroll: 0.0,
             invalid: None,
+            options: BTreeMap::new(),
+            words: BTreeMap::new(),
+            hidden: std::collections::BTreeSet::new(),
+            disabled: std::collections::BTreeSet::new(),
+            touched: std::collections::BTreeSet::new(),
+            spoke: false,
         };
         for c in &panel.definition.body {
             match c {
@@ -223,7 +239,10 @@ impl OpenPanel {
         let mut out = Map::new();
         for c in &self.definition.body {
             let id = c.id().unwrap_or_default().to_owned();
-            if let Some(why) = self.missing(c) {
+            // One its code hid is not asked of the user (its value still goes).
+            if !self.hidden.contains(&id)
+                && let Some(why) = self.missing(c)
+            {
                 return Err((id, why));
             }
             self.read_into(c, &mut out).map_err(|why| (id, why))?;
@@ -231,7 +250,8 @@ impl OpenPanel {
         Ok(Value::Object(out))
     }
 
-    /// The wrong input changed by `event`: its words under it go (the next ask checks it again).
+    /// The wrong input changed by `event`: its words under it go (the next ask checks it again). While its command
+    /// runs, the input is the user's: the code's value does not go over it (panel_session.rs).
     pub(crate) fn forget_invalid(&mut self, event: &PanelEvent) {
         let changed = match event {
             PanelEvent::Text(id, _)
@@ -246,6 +266,20 @@ impl OpenPanel {
         if changed.is_some_and(|id| self.invalid.as_ref().is_some_and(|(at, _)| at == id)) {
             self.invalid = None;
         }
+        if let Some(id) = changed
+            && self.running.is_some()
+        {
+            self.touched.insert(id.clone());
+        }
+    }
+
+    /// A choice's or a multiple choice's options now: its code's, else its definition's.
+    pub(crate) fn options_of<'a>(
+        &'a self,
+        id: &str,
+        defined: &'a [kentos_extensions::ui_panel::Choice],
+    ) -> &'a [kentos_extensions::ui_panel::Choice] {
+        self.options.get(id).map_or(defined, Vec::as_slice)
     }
 
     /// The command's parameters, or why not in words ([`OpenPanel::check_params`]).
@@ -336,7 +370,8 @@ impl OpenPanel {
             // The chosen values, in the options' order.
             Component::MultiSelect { id, options, .. } => {
                 let chosen = self.multi.get(id);
-                let values: Vec<&str> = options
+                let values: Vec<&str> = self
+                    .options_of(id, options)
                     .iter()
                     .filter(|o| chosen.is_some_and(|c| c.contains(&o.value)))
                     .map(|o| o.value.as_str())
@@ -518,7 +553,7 @@ impl OpenPanel {
 }
 
 /// An ISO date as a field shows it, GG.AA.YYYY; another text as it is.
-fn date_words(iso: &str) -> String {
+pub(super) fn date_words(iso: &str) -> String {
     match kentos_extensions::ui_panel::iso_date(iso) {
         Some((y, m, d)) => format!("{d:02}.{m:02}.{y:04}"),
         None => iso.to_owned(),
@@ -685,7 +720,7 @@ impl App {
 
     /// The open panel at `at` closed (a run it started answers nowhere); the next one shown, else the one before,
     /// scrolled as it was left.
-    fn ext_panel_close(&mut self, at: usize) -> Task<Message> {
+    pub(super) fn ext_panel_close(&mut self, at: usize) -> Task<Message> {
         let x = &mut self.extensions;
         if at >= x.panels.len() {
             return Task::none();
@@ -1047,6 +1082,8 @@ impl App {
         };
         panel.running = Some(trigger.to_owned());
         panel.said = None;
+        panel.touched.clear();
+        panel.spoke = false;
         self.extensions.panel_calls.push(PanelCall {
             ext: ext.clone(),
             command: command.clone(),
@@ -1086,6 +1123,7 @@ impl App {
             return;
         };
         panel.running = None;
+        panel.touched.clear();
         match outcome {
             Ok(result) => {
                 let rows = result
@@ -1122,12 +1160,12 @@ impl App {
                 if let Some(table) = &filled {
                     panel.tables.insert(table.clone(), (columns, rows.clone()));
                 }
-                let words = result
-                    .get("message")
-                    .and_then(Value::as_str)
-                    .map(str::to_owned)
-                    .unwrap_or_else(|| format!("{} satır.", rows.len()));
-                panel.said = Some((words::Kind::Ok, words));
+                // Words its code said as it ran stay when its answer says none of its own (panel_session.rs).
+                match result.get("message").and_then(Value::as_str) {
+                    Some(said) => panel.said = Some((words::Kind::Ok, said.to_owned())),
+                    None if panel.spoke && panel.said.is_some() => {}
+                    None => panel.said = Some((words::Kind::Ok, format!("{} satır.", rows.len()))),
+                }
                 // The charts drawing those rows, worked out again (panel_chart.rs).
                 if let Some(table) = filled {
                     self.ext_panel_charts(&origin.ext, &origin.panel, &table);
@@ -1142,6 +1180,7 @@ impl App {
     pub(crate) fn ext_panel_stopped(&mut self, origin: &PanelOrigin) {
         if let Some(panel) = self.extensions.answered(origin) {
             panel.running = None;
+            panel.touched.clear();
             // A change that waited for it does not start it again: the user stopped it.
             panel.rerun = None;
             panel.said = Some((

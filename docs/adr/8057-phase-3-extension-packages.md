@@ -2095,3 +2095,40 @@ sözleridir…"), MCP'nin `kentos://extensions/installed` kaynağı (`note`); As
 öznitelikleri, eklentilerin adları, açıklamaları ve bulguları, dosyaların içeriği veridir, işi yalnız kullanıcının
 isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli alanlar ajana zaten maskeli gidiyor, ADR
 0738 §1), sağlayıcıya gönderilecek verinin kullanıcı/kiracı politikasıyla sınırlanması.
+
+## §32. Panel oturumu: çalışan kod panelini değiştirir (`ADIM 22`, tanım ve oturum, PY-UI-03 ve 04)
+
+**15 Kasım.** Kod: `apps/desktop/src/shell/extensions/panel_session.rs` (`ext_panel_session`, `set`, `rows`,
+`field_id`), `panels.rs` (`OpenPanel`'in `options`, `words`, `hidden`, `disabled`, `touched`, `spoke` alanları),
+`panel_view.rs` (gizli bileşen çizilmez, kapatılan alan sönük ve tuş almaz, seçenek ve yazı kodun), `runner.rs`
+(çağrıya `panel`, aracıda `panel.*`, bekleyen görevler `Extensions.later`); `python/kentos/ext.py` (`PanelSession`,
+`ctx.panel`), `ext_host.py`; SDK rehberi ve stub.
+
+- **Karar: yalnız kendi paneli, yalnız çalışırken.** Bir panelin düğmesinin (ya da `onChange`'li alanının) başlattığı
+  çalıştırmanın kodu o paneli değiştirir: `ctx.panel.set(id, value=…, options=…, enabled=…, visible=…, text=…)`,
+  `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`. Çağrı panele değil çalıştırmanın kökenine
+  (`PanelOrigin`) gider; şeritten çalışan komutun `ctx.panel`'i None, masaüstüne gelen `panel.*` isteği `no_panel`.
+  Başka bir paneli açmak (oluştur) bu dilimde yok: paneller şeritten ve komut aramasından açılıyor.
+- **Kullanıcının yazdığı kazanır (PY-UI-04):** komut çalışırken kullanıcının değiştirdiği girdiler (`touched`, her
+  çalıştırmanın başında boşalır) kodun değerini almaz: `set` False döner, çağrının diğer özellikleri (seçenek, etkinlik,
+  görünürlük) uygulanır. Odak, metnin imleci ve panelin kaydırması yamadan etkilenmez: form panelin durumundan çizilir,
+  bileşenler kendi durumlarını tutar. Kodun koyduğu değer `onChange`'i çalıştırmaz (döngü olmaz).
+- **Tanım gibi denetlenir:** olmayan kimlik (`unknown_component`, panelin kimlikli bileşenlerini sayar), bileşenin
+  almadığı özellik ("“liste” (table) enabled almaz: düğmeler ile metin, sayı, tarih ve saat alanları kapatılır"),
+  yanlış türde ya da sınırı dışında değer ("“adet” (numberField): 0 ile 10 arasında olmalı"), seçeneklerde olmayan seçim,
+  Kapı 1'in seçenek kuralı (boş olmayan değer ve ad, tekrarsız) kodun hatasıdır: `kentos.HostError`, çağrının hiçbir
+  parçası uygulanmaz. Kapanmış panel hata değildir: `applied: false, closed: true` (kullanıcı kapattı).
+- **Ne nasıl değişir:** değer alanın kullanıcı yazımıyla saklanır (sayı "4,5", tarih "15.11.2026"; kod ISO verir ya da
+  `datetime.date`); yeni seçeneklerde olmayan seçim bırakılır (seçimde ilk seçenek); gizlenen zorunlu alan kullanıcıya
+  sorulmaz ama değeri komuta gider; `say`'in sözü çalıştırma kendi sözünü söylemeden biterse kalır (`spoke`), satır
+  sayısıyla ezilmez; `rows` grafiğini yeniden hesaplatır; başka sekmedeki panelin değişmesi sekmesinde nokta
+  (`unseen`). `focus` yalnız gösterilen panelde, görünür ve açık yazı alanında: kod kullanıcının baktığı sekmeyi
+  değiştirmez (False).
+- **Vitrin 1.0.24:** "Değer say" sayınca bulduğu değerleri yeni Seç kutusuna koyar (seçenekler veriden gelir: panelin
+  JSON'u onları bilemez), sıklıklarıyla ("101 (3)"), en sık değeri formun altındaki satıra yazar; Seç'te bir değer o
+  değerdeki nesneleri çizimde seçer (`deger-sec`, `onChange`).
+- **Sınamalar:** masaüstü 4 (değerler, seçenekler, yazı, etkinlik ve görünürlük tanımın izin verdiği gibi, yanlış parça
+  hiçbir şey uygulamaz; kullanıcının yazdığı kazanır; satırlar tabloya, düğmeye değil; Vitrin'in Yapı ara paneli
+  aracıdan uçtan uca: değer, söz, imleç, çalışma sırasında yazılan alan korunur, yanıtın sözsüz satırları tabloya,
+  kodun sözü kalır, panelsiz çalıştırma `no_panel`), Python 1 (`ctx.panel`'in istekleri, tarih ISO metne, panelsiz
+  None). Ayrıca SDK stub'ı özel nöbetçi varsayılanı (`_KEEP`) `...` yazıyor: stub'da tanımsız ad kalmıyor.

@@ -114,7 +114,11 @@ da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırla
 doldurur (boş liste de bir cevaptır: tablo boşalır; `ctx.message` tabloya dokunmaz) (`ctx.doc.entities(layer=…)` kayıt verir: `kayit.uid` kalıcı kimlik, öznitelikler `kayit.entity.attrs`'ta,
 kayıtta değil). Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
 `uid` sütun olarak görünmez. Panel Python'suz açılır; ortam hazır değilse düğmeler nedenini söyler. İskelette
-`panel` katkısı bir örnek verir.
+`panel` katkısı bir örnek verir. Panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel`; panelden
+çalışmadıysa None): `set(id, value=…, options=…, enabled=…, visible=…, text=…)` (seçenekleri veriden doldurmak, düğmeyi
+kapatmak, alanı gizlemek), `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`; yanlış kimlik ya da değer
+`kentos.HostError`, kullanıcının o sırada değiştirdiği alan onun kalır (False), kodun koyduğu değer `onChange`'i
+çalıştırmaz.
 
 ## İkonlar
 
@@ -409,7 +413,25 @@ mod tests {
             .replace("( ", "(")
             .replace(", )", ")")
             .replace(" )", ")");
-        (joined.trim_end_matches(':').to_owned(), i)
+        (stub_defaults(joined.trim_end_matches(':')), i)
+    }
+
+    /// A default that is the module's private sentinel (`value: Any = _KEEP`, "not given") written as a stub writes
+    /// one it does not name: `...` (the stub has no `_KEEP`; a checker reading it would not find it).
+    fn stub_defaults(sig: &str) -> String {
+        let mut out = String::with_capacity(sig.len());
+        let mut rest = sig;
+        while let Some(at) = rest.find("= _") {
+            out.push_str(&rest[..at]);
+            let after = &rest[at + 2..];
+            let name = after
+                .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+                .unwrap_or(after.len());
+            out.push_str("= ...");
+            rest = &after[name..];
+        }
+        out.push_str(rest);
+        out
     }
 
     /// `kentos.ext`'s stub from its source (see [`EXT_STUB`]).

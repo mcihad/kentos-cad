@@ -441,7 +441,14 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
             result = result_of(fn(mctx, shape))
         else:
             doc = cad.Document(DesktopSession(channel)) if message.get("document") else None  # type: ignore[arg-type]
-            ctx = ext.CommandContext(link, doc, message.get("settings"), message.get("params"), source=channel.source)
+            ctx = ext.CommandContext(
+                link,
+                doc,
+                message.get("settings"),
+                message.get("params"),
+                source=channel.source,
+                panel=message.get("panel"),
+            )
             if stop.is_set():
                 raise ext.Stopped()
             result = result_of(fn(ctx))

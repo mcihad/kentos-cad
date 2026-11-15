@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.24 — 15 Kasım 2026
+
+- "Değer say" sayınca bulduğu değerleri yeni Seç kutusuna koyar (`ctx.panel.set(..., options=...)`: çalışan kod
+  panelini değiştirir), sıklıklarıyla ("101 (3)"), ve en sık değeri formun altındaki satıra yazar (`text`). Seç'te bir
+  değer seçmek o değerdeki nesneleri çizimde seçer (yeni `deger-sec` komutu, `onChange`).
+
 ## 1.0.23 — 15 Kasım 2026
 
 - "Yapıları numarala"nın penceresinde İlk numara zorunlu (`required: true`): boş bırakılıp Numarala'ya basılınca

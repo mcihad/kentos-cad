@@ -5,7 +5,7 @@
   "body": [
     {
       "type": "text",
-      "text": "Bir alanın değerlerini sayar: seçilen nesnelerde, seçilmediyse katmanın bütün nesnelerinde. Alanlar katman seçilince gelir; alan seçilince ya da nesneler alınınca sayım kendiliğinden yenilenir. Her değer bir grup: yanında sayısı, altında nesneleri (tıklayınca gösterir)."
+      "text": "Bir alanın değerlerini sayar: seçilen nesnelerde, seçilmediyse katmanın bütün nesnelerinde. Alanlar katman seçilince gelir; alan seçilince ya da nesneler alınınca sayım kendiliğinden yenilenir. Her değer bir grup: yanında sayısı, altında nesneleri (tıklayınca gösterir). Sayım, bulunan değerleri Seç'e koyar: bir değer seçmek o değerdeki nesneleri çizimde seçer."
     },
     {
       "type": "layerPicker",
@@ -33,6 +33,23 @@
       "command": "deger-say",
       "table": "dagilim",
       "primary": true
+    },
+    {
+      "type": "text",
+      "id": "en-sik",
+      "text": "Sayınca en sık değer burada yazılır."
+    },
+    {
+      "type": "select",
+      "id": "vurgula",
+      "label": "Seç",
+      "options": [
+        {
+          "value": "-",
+          "label": "Önce sayın"
+        }
+      ],
+      "onChange": "deger-sec"
     },
     {
       "type": "tree",

@@ -587,7 +587,7 @@ impl App {
                 .as_ref()
                 .map_or_else(|| json!({}), |p| p.params.clone()),
         };
-        runner.host.send(&json!({
+        let mut invoke = json!({
             "type": "invoke",
             "id": id,
             "kind": call.kind,
@@ -596,7 +596,12 @@ impl App {
             "params": params,
             "settings": {},
             "document": session.is_some() && call.read,
-        }));
+        });
+        // Started from a panel: its code may change that panel as it runs (`ctx.panel`, panel_session.rs).
+        if let Some(p) = &panel {
+            invoke["panel"] = json!(p.origin.panel);
+        }
+        runner.host.send(&invoke);
         runner.run = Some(ExtRun {
             id,
             kind: call.kind,
@@ -767,8 +772,10 @@ impl App {
         match said {
             Said::Message(m) => {
                 self.ext_message(ext, &m);
-                // A panel's input changed while it ran: its command again, with the values now (panels.rs).
-                let rerun = self.ext_panel_rerun();
+                // What its panel requests left to do (the cursor in a field, a panel closed), and a panel's input
+                // changed while it ran: its command again, with the values now (panels.rs).
+                let later = std::mem::take(&mut self.extensions.later);
+                let rerun = Task::batch(later.into_iter().chain([self.ext_panel_rerun()]));
                 // A run ended: the process is closed if nothing runs in it for a while.
                 if m.get("type").and_then(Value::as_str) == Some("done")
                     && let Some(runner) = self.extensions.runners.get_mut(ext)
@@ -918,7 +925,13 @@ impl App {
             }
             return;
         }
-        let reply = match self.ext_answer(ext, &method, &params) {
+        // Its panel changed as it runs (panel_session.rs): not the drawing's, no grant needed.
+        let answer = if method.starts_with("panel.") {
+            self.ext_panel_session(ext, &method, &params)
+        } else {
+            self.ext_answer(ext, &method, &params)
+        };
+        let reply = match answer {
             Ok(result) => json!({"type": "reply", "id": id, "ok": true, "result": result}),
             Err(e) => {
                 json!({"type": "reply", "id": id, "ok": false, "code": e.code, "message": e.message})

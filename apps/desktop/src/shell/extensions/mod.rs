@@ -14,6 +14,7 @@ mod audit_agents;
 mod audits;
 mod dialogs;
 mod panel_chart;
+mod panel_session;
 mod tool_pins;
 mod bisect;
 mod browse;
@@ -163,6 +164,9 @@ pub(crate) struct Extensions {
     /// The open panels' charts, by extension, panel and chart, worked out when their rows came (panel_chart.rs).
     pub(crate) panel_charts:
         std::collections::BTreeMap<(String, String, String), panel_chart::PanelChart>,
+    /// What a running code's panel request leaves to do once its message is handled (panel_session.rs): the cursor
+    /// put in a field, a panel closed.
+    pub(crate) later: Vec<iced::Task<crate::app::Message>>,
 }
 
 impl Default for Extensions {
@@ -207,6 +211,7 @@ impl Default for Extensions {
             panel_placed: None,
             dialog: None,
             panel_charts: std::collections::BTreeMap::new(),
+            later: Vec::new(),
         }
     }
 }

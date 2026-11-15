@@ -88,6 +88,21 @@ def ask(ctx):
     return ctx.report([values])
 
 
+@ext.command("fill")
+def fill(ctx):
+    # docs/adr/8057 §32: a panel's command changes its panel as it runs.
+    if ctx.panel is None:
+        return ctx.message("Panel yok.")
+    import datetime
+    kept = ctx.panel.set("mahalle", options=[{"value": "m1", "label": "Merkez"}, "Yeni"], value="Yeni")
+    ctx.panel.set("ara", enabled=False)
+    ctx.panel.set("gun", value=datetime.date(2026, 11, 15))
+    ctx.panel.rows("liste", [{"ad": "A", "alan": 12.5}], columns=["ad", "alan"])
+    ctx.panel.say("Yüklendi.", "success")
+    ctx.panel.focus("ad")
+    return ctx.report([{"panel": ctx.panel.id, "kept": kept}])
+
+
 @ext.command("schema")
 def schema(ctx):
     return ctx.apply_declarative_schema("schema.json")
@@ -246,6 +261,8 @@ class Kentos:
         #: What the user answers each dialog, in turn (None: İptal); the dialogs asked, as they came.
         self.dialog_answers: list[Any] = []
         self.dialogs: list[dict[str, Any]] = []
+        self.panel_calls: list[tuple[str, dict[str, Any]]] = []
+        self.touched: set[str] = set()
 
     def receive(self) -> dict[str, Any]:
         assert self.process.stdout is not None
@@ -283,6 +300,7 @@ class Kentos:
         inputs: dict[str, Any] | None = None,
         document: bool | None = None,
         layers: dict[str, Any] | None = None,
+        panel: str | None = None,
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         """(done, what came before it)."""
         self.runs += 1
@@ -300,6 +318,8 @@ class Kentos:
             message["inputs"] = inputs
         if layers is not None:
             message["layers"] = layers
+        if panel is not None:
+            message["panel"] = panel
         self.send(message)
         if cancel_after is not None:
             time.sleep(cancel_after)
@@ -338,6 +358,12 @@ class Kentos:
             self.dialogs.append(params)
             answer = self.dialog_answers.pop(0) if self.dialog_answers else None
             self.send({"type": "reply", "id": call["id"], "ok": True, "result": answer})
+        elif method.startswith("panel."):
+            # The panel the run started from, changed as KentOS's panel session would: applied, else not (the user
+            # changed that input).
+            self.panel_calls.append((method, params))
+            applied = not (method == "panel.set" and params.get("id") in self.touched)
+            self.send({"type": "reply", "id": call["id"], "ok": True, "result": {"applied": applied}})
         elif method == "run":
             # A write, as KentOS's broker runs it on its drawing (the map tool's add_feature).
             result = json.loads(
@@ -421,6 +447,30 @@ class ExtHostTest(unittest.TestCase):
         self.kentos.dialog_answers = [{"onek": "Y-", "ilk": 1}, None]
         done, _ = self.kentos.invoke("ask", "deneme.logic:ask")
         self.assertEqual(done["result"]["message"], "Onaylanmadı.")
+
+    def test_a_panels_command_changes_its_panel_as_it_runs(self) -> None:
+        # docs/adr/8057 §32: ctx.panel is the panel the run started from; its changes go to KentOS as calls, values
+        # made plain (a date as ISO text); a value the user typed meanwhile is kept (False). Without a panel, None.
+        self.kentos.hello()
+        self.kentos.touched = {"mahalle"}
+        done, _ = self.kentos.invoke("fill", "deneme.logic:fill", panel="arama")
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["rows"], [{"panel": "arama", "kept": False}])
+        calls = self.kentos.panel_calls
+        self.assertEqual(
+            [m for m, _ in calls],
+            ["panel.set", "panel.set", "panel.set", "panel.rows", "panel.say", "panel.focus"],
+        )
+        self.assertEqual(
+            calls[0][1],
+            {"id": "mahalle", "value": "Yeni", "options": [{"value": "m1", "label": "Merkez"}, "Yeni"]},
+        )
+        self.assertEqual(calls[1][1], {"id": "ara", "enabled": False})
+        self.assertEqual(calls[2][1], {"id": "gun", "value": "2026-11-15"})
+        self.assertEqual(calls[3][1], {"id": "liste", "rows": [{"ad": "A", "alan": 12.5}], "columns": ["ad", "alan"]})
+        self.assertEqual(calls[4][1], {"text": "Yüklendi.", "kind": "success"})
+        done, _ = self.kentos.invoke("fill", "deneme.logic:fill")
+        self.assertEqual(done["result"]["message"], "Panel yok.")
 
     def test_what_this_kentos_cannot_do_is_said_as_unavailable(self) -> None:
         # A schema without a drawing it may write to: a missing ability, not the extension's failure.

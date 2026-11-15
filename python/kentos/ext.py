@@ -66,6 +66,7 @@ __all__ = [
     "MapToolContext",
     "NewFeature",
     "NotAvailable",
+    "PanelSession",
     "ProcessingContext",
     "SemanticFix",
     "Shape",
@@ -209,6 +210,106 @@ class _Link:
         self._send({"type": "log", "id": self.run, "level": level, "text": str(text)[:4000]})
 
 
+_KEEP: Any = object()
+
+
+def _json_value(value: Any) -> Any:
+    """A value as a panel takes it: a library's number as a plain one (``item()``: NumPy …), a date as ISO text
+    (``2026-11-15``, ``14:30``, ``2026-11-15T14:30``), a NaN or an infinity as nothing."""
+    import datetime
+
+    if value is None or isinstance(value, (bool, str, int)):
+        return value
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, datetime.datetime):
+        return value.strftime("%Y-%m-%dT%H:%M")
+    if isinstance(value, datetime.date):
+        return value.isoformat()
+    if isinstance(value, datetime.time):
+        return value.strftime("%H:%M")
+    if isinstance(value, dict):
+        return {str(k): _json_value(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_json_value(v) for v in value]
+    item = getattr(value, "item", None)
+    if callable(item):
+        return _json_value(item())
+    raise TypeError(f"{type(value).__name__} panele verilemez: metin, sayı, tarih, liste ya da sözlük olmalı.")
+
+
+class PanelSession:
+    """The panel whose button (or changed input) started this run, changed as the run goes (docs/adr/8057 §32):
+    ``ctx.panel``; None when the run did not start from a panel.
+
+    Each change is checked as the panel's definition is: an id the panel does not have, a property its component does
+    not take, a value of the wrong kind or out of its bounds, a choice not among the options raise
+    :class:`kentos.HostError` (``unknown_component``, ``invalid_input``) and apply nothing. A change returns False when
+    it was not applied: the user closed the panel, or changed that input while the command ran (the user's value
+    stays; the other properties of the call are applied). The focus, the text's cursor and the panel's scroll stay
+    where the user left them."""
+
+    def __init__(self, link: _Link, local: str) -> None:
+        self._link = link
+        #: The panel's id in the manifest (``entrypoints.panels[].id``).
+        self.id: str = local
+
+    def _ask(self, method: str, params: dict[str, Any]) -> bool:
+        answer = self._link.ask(method, params)
+        return bool(isinstance(answer, dict) and answer.get("applied"))
+
+    def set(
+        self,
+        id: str,
+        *,
+        value: Any = _KEEP,
+        options: Iterable[Any] | None = None,
+        enabled: bool | None = None,
+        visible: bool | None = None,
+        text: str | None = None,
+    ) -> bool:
+        """Changes component ``id``: ``value`` (a field's text or number, a date as ``datetime.date`` or ISO text, a
+        choice's value, a multiple choice's values, a check's True or False, a layer picker's layer id, a feature
+        picker's persistent ids; None empties it), ``options`` (a choice's or a multiple choice's: values, or dicts
+        with ``value`` and ``label``; a chosen value no longer among them is let go), ``enabled`` (buttons and typed
+        fields), ``visible`` (any component with an id; a hidden required field is not asked of the user) and
+        ``text`` (a ``text`` component's words)."""
+        params: dict[str, Any] = {"id": str(id)}
+        if value is not _KEEP:
+            params["value"] = _json_value(value)
+        if options is not None:
+            params["options"] = _json_value(list(options))
+        if enabled is not None:
+            params["enabled"] = bool(enabled)
+        if visible is not None:
+            params["visible"] = bool(visible)
+        if text is not None:
+            params["text"] = str(text)
+        return self._ask("panel.set", params)
+
+    def rows(self, id: str, rows: Iterable[dict[str, Any]], columns: Sequence[str] | None = None) -> bool:
+        """Puts ``rows`` (each a dict of column → value) in table, tree, cards, figures or chart ``id`` now, as a
+        command's report would at its end; ``columns`` in their order, else in the order the rows first give them."""
+        params: dict[str, Any] = {"id": str(id), "rows": [_json_value(dict(r)) for r in rows]}
+        if columns is not None:
+            params["columns"] = [str(c) for c in columns]
+        return self._ask("panel.rows", params)
+
+    def say(self, text: str, kind: str = "info") -> bool:
+        """A line under the panel's form (``info``, ``success``, ``warning``, ``error``); kept when the run ends
+        without words of its own."""
+        return self._ask("panel.say", {"text": str(text), "kind": str(kind)})
+
+    def focus(self, id: str) -> bool:
+        """Puts the cursor in typed field ``id``; only in the panel shown (False otherwise: the code does not bring its
+        tab in front of what the user looks at)."""
+        return self._ask("panel.focus", {"id": str(id)})
+
+    def close(self) -> bool:
+        """Closes the panel (its values with it)."""
+        return self._ask("panel.close", {})
+
+
 class CommandContext:
     """What a command is given: the drawing, its settings and parameters, and its run's controls."""
 
@@ -220,12 +321,16 @@ class CommandContext:
         params: dict[str, Any] | None = None,
         *,
         source: str | None = None,
+        panel: str | None = None,
     ) -> None:
         self._link = link
         #: The drawing open in KentOS (kentos.cad.Document); none when no drawing is open.
         self.doc = doc
         self.settings: dict[str, Any] = dict(settings or {})
         self.params: dict[str, Any] = dict(params or {})
+        #: The panel whose button (or changed input) started the run, to change as it goes (:class:`PanelSession`);
+        #: None when it did not start from a panel.
+        self.panel: PanelSession | None = PanelSession(link, panel) if panel else None
         # The package's folder, as installed: where its own files (schema.json) are read from.
         self._source = source
 

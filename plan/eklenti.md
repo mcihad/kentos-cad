@@ -1096,7 +1096,11 @@ Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çi
   görünüşü (tablo/ızgara, ilişki listesi, ağaç, kart, özet/ölçü/grafik), iş denetimi (düğme, ilerleme/günlük, doğrulama
   özeti, iptal/yeniden dene), host yüzeyi (dialog, dock/panel, komut/şerit/menü, bağlam eylemi) [PY-UI §8.1, EKL-03].
   Birkaç basit bileşen bağlayıp "tam UI API" denmez; özel çizim/düzenleyici bileşenlerinin sınırı ayrıca gösterilir.
-- [ ] **Tanım ve oturum:** kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
+- [ ] **Tanım ve oturum** — *ilk dilim (ADR 8057 §32, 15 Kasım): panel oturumu: panelden çalışan kod panelini
+  değiştirir (`ctx.panel.set/rows/say/focus/close`: değer, veriden seçenek, yazı, etkin, görünür), kullanıcının o
+  sırada yazdığı alan onun kalır, yama odağı ve kaydırmayı korur, tanım gibi denetlenir; Vitrin'in Değer say'ı
+  seçenekleri sayımdan doldurur. Kalan: oluştur (koddan panel açmak), Python cephesinin şemadan üretimi, ifade profiliyle
+  kurallar, büyük veride sayfalama.* Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
   düzen [PY-UI-01, 06]; `kentos.ui` Python cephesi şemadan üretilir [PY-UI-02]; aracı oluştur/yamala/kapat/odakla/bildir
   ve eylem kaydı [PY-UI-03]; yama geldiğinde kullanıcının odağı, taslağı ve kaydırması korunur [PY-UI-04]; bileşen değeri
   ile kalıcı nesne değeri ayrıdır, her tuş belge değişikliği değildir [PY-UI-05]; varsayılan/görünür/etkin/zorunlu/hesaplı

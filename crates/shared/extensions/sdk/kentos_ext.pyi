@@ -47,12 +47,30 @@ class CommandResult:
     cancelled: bool = False
 
 
+class PanelSession:
+    """The panel whose button (or changed input) started this run, changed as the run goes (docs/adr/8057 §32): ``ctx.panel``; None when the run did not start from a panel."""
+    #: The panel's id in the manifest (``entrypoints.panels[].id``).
+    id: str
+    def set(self, id: str, *, value: Any = ..., options: Iterable[Any] | None = None, enabled: bool | None = None, visible: bool | None = None, text: str | None = None) -> bool:
+        """Changes component ``id``: ``value`` (a field's text or number, a date as ``datetime.date`` or ISO text, a choice's value, a multiple choice's values, a check's True or False, a layer picker's layer id, a feature picker's persistent ids; None empties it), ``options`` (a choice's or a multiple choice's: values, or dicts with ``value`` and ``label``; a chosen value no longer among them is let go), ``…"""
+    def rows(self, id: str, rows: Iterable[dict[str, Any]], columns: Sequence[str] | None = None) -> bool:
+        """Puts ``rows`` (each a dict of column → value) in table, tree, cards, figures or chart ``id`` now, as a command's report would at its end; ``columns`` in their order, else in the order the rows first give them."""
+    def say(self, text: str, kind: str = "info") -> bool:
+        """A line under the panel's form (``info``, ``success``, ``warning``, ``error``); kept when the run ends without words of its own."""
+    def focus(self, id: str) -> bool:
+        """Puts the cursor in typed field ``id``; only in the panel shown (False otherwise: the code does not bring its tab in front of what the user looks at)."""
+    def close(self) -> bool:
+        """Closes the panel (its values with it)."""
+
+
 class CommandContext:
     """What a command is given: the drawing, its settings and parameters, and its run's controls."""
     #: The drawing open in KentOS (kentos.cad.Document); none when no drawing is open.
     doc: Any
     settings: dict[str, Any]
     params: dict[str, Any]
+    #: The panel whose button (or changed input) started the run, to change as it goes (:class:`PanelSession`); None when it did not start from a panel.
+    panel: PanelSession | None
     def is_stopped(self) -> bool:
         """The user pressed Durdur."""
     def check(self) -> None:

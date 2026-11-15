@@ -13,7 +13,9 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``katmanlari_kur``: katman şeması; schema.json'daki grubu, katmanları, değer listesini ve ilişkiyi tek adımda kurar.
 - ``yapi_ara``: panelin düğmesi; "Yapı ara" panelinin değerleriyle çalışır, satırları panelin tablosuna gider.
 - ``yapi_ozeti``: göstergeli panel; "Yapı ara"nın Özetle düğmesi, satırları gösterge kartları olur.
-- ``deger_say``: seçicili panelin düğmesi; "Değer say"ın katmanı, alanı ve seçilen nesneleriyle değerleri sayar.
+- ``deger_say``: seçicili panelin düğmesi; "Değer say"ın katmanı, alanı ve seçilen nesneleriyle değerleri sayar,
+  bulduklarını panelin Seç kutusuna koyar (``ctx.panel``: çalışan kod panelini değiştirir).
+- ``deger_sec``: Seç değişince çalışır; o değerdeki nesneleri çizimde seçer.
 - ``parsel_karti``: kartlı panel; "Parsel kartı"nda alınan her parselin alanı, yapıları ve TAKS'ı bir kartta.
 """
 
@@ -283,7 +285,32 @@ def deger_say(ctx: ext.CommandContext) -> ext.CommandResult:
     # Çoktan aza; eşitlerde değerin sırasıyla (ağaç grupları ilk satırlarının sırasıyla dizer).
     satirlar.sort(key=lambda s: (-sayilar[s["Değer"]], s["Değer"]))
     nerede = f"seçilen {len(satirlar)} nesnede" if secilen else f"katmanın {len(satirlar)} nesnesinde"
+    if ctx.panel is not None:
+        # Panelden çalıştı: bulunan değerler Seç kutusunun seçenekleri olur, çoktan aza ve sayılarıyla (docs/adr/8057
+        # §32). Seçenekler veriden gelir: panelin JSON'u bunları bilemez. Kodun koyduğu değer onChange'i çalıştırmaz.
+        sirali = sorted(sayilar, key=lambda d: (-sayilar[d], d))
+        secenekler = [{"value": "-", "label": "Seçmeyin"}]
+        secenekler += [{"value": d, "label": f"{d} ({sayilar[d]})"} for d in sirali]
+        ctx.panel.set("vurgula", options=secenekler, value="-")
+        if sirali:
+            ctx.panel.set("en-sik", text=f"En sık değer: “{sirali[0]}” ({sayilar[sirali[0]]} nesne).")
+        else:
+            ctx.panel.set("en-sik", text="Sayılacak nesne yok.")
     return ctx.report(satirlar, title="Değer say", message=f"{nerede} {len(sayilar)} farklı “{alan}” değeri.")
+
+
+@ext.command("deger-sec")
+def deger_sec(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Değer say"ın Seç kutusu değişince çalışır: seçilen değerdeki nesneleri (alındıysa yalnız alınanlardan) çizimde
+    seçer. Değer, sayımın Seç'e koyduğu seçeneklerden biridir; "-" hiçbirini seçmez."""
+    katman, alan, deger = ctx.params.get("katman"), ctx.params.get("alan"), ctx.params.get("vurgula")
+    if ctx.doc is None or not katman or not alan or deger in (None, "", "-"):
+        return ctx.message("Seçim değişmedi.")
+    secilen = ctx.params.get("nesneler") or []
+    kayitlar = [ctx.doc.entity(uid) for uid in secilen] if secilen else list(ctx.doc.entities(layer=katman))
+    uyanlar = [k.uid for k in kayitlar if str((k.entity.attrs or {}).get(alan) or "—") == deger]
+    ctx.doc.select(uyanlar)
+    return ctx.message(f"“{alan}” = “{deger}”: {len(uyanlar)} nesne seçildi.")
 
 
 # Planlı Alanlar İmar Yönetmeliği'nin taban alanı katsayısı için örnek plan notu (TAKS aracının varsayılanı).

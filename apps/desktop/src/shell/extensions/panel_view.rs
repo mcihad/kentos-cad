@@ -143,23 +143,36 @@ impl App {
     ) -> (Form<'a, Message>, Vec<Element<'a, Message>>) {
         let mut form = Form::new().label_width(kentos_ui::theme::typography::scaled(110.0));
         let mut tables: Vec<Element<'_, Message>> = Vec::new();
+        // Its code's changes (panel_session.rs): a field turned off is shown faded and takes no keys.
+        let on = |id: &str| !p.disabled.contains(id);
+        let field_id = |id: &str| super::panel_session::field_id(&p.ext, &p.local, id);
         for c in &p.definition.body {
+            // One its code hid is not drawn.
+            if c.id().is_some_and(|id| p.hidden.contains(id)) {
+                continue;
+            }
             match c {
                 // A text the panel's whole width: in the field column it wrapped every few words in a narrow dock.
-                Component::Text { text, .. } => form = form.wide(label::caption(text.clone())),
+                Component::Text { id, text } => {
+                    let text = id.as_ref().and_then(|i| p.words.get(i)).unwrap_or(text);
+                    form = form.wide(label::caption(text.clone()));
+                }
                 Component::TextField {
                     id,
                     label: words,
                     placeholder,
                     ..
                 } => {
-                    let id = id.clone();
-                    let value = p.texts.get(&id).map_or("", String::as_str);
+                    let value = p.texts.get(id).map_or("", String::as_str);
                     let mut field =
                         kentos_ui::widget::text_field(placeholder.as_deref().unwrap_or(""), value)
-                            .on_input(move |t| event(PanelEvent::Text(id.clone(), t)));
-                    if let Some(press) = enter.clone() {
-                        field = field.on_submit(press);
+                            .id(field_id(id));
+                    if on(id) {
+                        let id = id.clone();
+                        field = field.on_input(move |t| event(PanelEvent::Text(id.clone(), t)));
+                        if let Some(press) = enter.clone() {
+                            field = field.on_submit(press);
+                        }
                     }
                     form = form.field(words.clone(), field);
                 }
@@ -169,15 +182,18 @@ impl App {
                     unit,
                     ..
                 } => {
-                    let id = id.clone();
-                    let value = p.texts.get(&id).map_or("", String::as_str);
-                    let mut field = kentos_ui::widget::input_field::InputField::new("", value)
-                        .on_input(move |t| event(PanelEvent::Text(id.clone(), t)));
+                    let value = p.texts.get(id).map_or("", String::as_str);
+                    let mut field =
+                        kentos_ui::widget::input_field::InputField::new("", value).id(field_id(id));
+                    if on(id) {
+                        let id = id.clone();
+                        field = field.on_input(move |t| event(PanelEvent::Text(id.clone(), t)));
+                        if let Some(press) = enter.clone() {
+                            field = field.on_submit(press);
+                        }
+                    }
                     if let Some(unit) = unit {
                         field = field.suffix(unit.clone());
-                    }
-                    if let Some(press) = enter.clone() {
-                        field = field.on_submit(press);
                     }
                     form = form.field(words.clone(), field);
                 }
@@ -193,8 +209,14 @@ impl App {
                         .and_then(|iso| kentos_extensions::ui_panel::iso_date(&iso))
                         .and_then(|(y, m, d)| Date::new(y as i32, m as u8, d as u8));
                     let (typing, picking) = (id.clone(), id.clone());
-                    let mut field = kentos_ui::widget::text_field("GG.AA.YYYY", typed)
-                        .on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
+                    let mut field =
+                        kentos_ui::widget::text_field("GG.AA.YYYY", typed).id(field_id(id));
+                    if !on(id) {
+                        // Turned off by its code: faded, no keys, no picker.
+                        form = form.field(words.clone(), field);
+                        continue;
+                    }
+                    field = field.on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
                     // Enter applies a typed date when it runs a command on change (a panel may have no button to
                     // press: Parsel kartı's cards came only from the calendar), else presses the primary button.
                     let submit = match on_change {
@@ -231,8 +253,13 @@ impl App {
                         .and_then(|t| kentos_extensions::ui_panel::iso_time(&t))
                         .and_then(|(h, m)| Time::new(h as u8, m as u8, 0));
                     let (typing, picking) = (id.clone(), id.clone());
-                    let mut field = kentos_ui::widget::text_field("SS:DD", typed)
-                        .on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
+                    let mut field = kentos_ui::widget::text_field("SS:DD", typed).id(field_id(id));
+                    if !on(id) {
+                        // Turned off by its code: faded, no keys, no picker.
+                        form = form.field(words.clone(), field);
+                        continue;
+                    }
+                    field = field.on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
                     // Enter as a date field's.
                     let submit = match on_change {
                         Some(_) => Some(event(PanelEvent::Picked(id.clone(), typed.to_owned()))),
@@ -273,8 +300,14 @@ impl App {
                             ))
                         });
                     let (typing, picking) = (id.clone(), id.clone());
-                    let mut field = kentos_ui::widget::text_field("GG.AA.YYYY SS:DD", typed)
-                        .on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
+                    let mut field =
+                        kentos_ui::widget::text_field("GG.AA.YYYY SS:DD", typed).id(field_id(id));
+                    if !on(id) {
+                        // Turned off by its code: faded, no keys, no picker.
+                        form = form.field(words.clone(), field);
+                        continue;
+                    }
+                    field = field.on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
                     let submit = match on_change {
                         Some(_) => Some(event(PanelEvent::Picked(id.clone(), typed.to_owned()))),
                         None => enter.clone(),
@@ -311,6 +344,7 @@ impl App {
                     options,
                     ..
                 } => {
+                    let options = p.options_of(id, options);
                     let at = options
                         .iter()
                         .position(|o| p.choices.get(id) == Some(&o.value));
@@ -333,6 +367,7 @@ impl App {
                     ..
                 } => {
                     let chosen = p.multi.get(id);
+                    let options = p.options_of(id, options);
                     let chips = kentos_ui::widget::chips::toggles(options.iter().map(|o| {
                         (
                             o.label.clone(),
@@ -424,7 +459,7 @@ impl App {
                 } => {
                     // Its caption stays while it runs: with "…" it broke onto two lines in a narrow dock and the form
                     // jumped (real window, 15 November 2026); the run's line under the form names it.
-                    let on = (p.running.is_none() && why.is_none())
+                    let on = (p.running.is_none() && why.is_none() && on(id))
                         .then(|| event(PanelEvent::Press(id.clone())));
                     form = form.row(if *primary {
                         words::primary(words.clone(), on)

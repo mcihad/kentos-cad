@@ -747,7 +747,7 @@ fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
     let panel = gis.extensions.panel().unwrap();
     assert_eq!(
         panel.params().unwrap(),
-        serde_json::json!({ "katman": "parsel", "alan": "ada", "nesneler": uids })
+        serde_json::json!({ "katman": "parsel", "alan": "ada", "nesneler": uids, "vurgula": "-" })
     );
     // Taking them runs its onChange command (Vitrin 1.0.13): Python is off in a test, so the panel says why.
     assert!(
@@ -770,7 +770,7 @@ fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
     say(&mut gis, PanelEvent::Choose("katman".into(), "yapi".into()));
     assert_eq!(
         gis.extensions.panel().unwrap().params().unwrap(),
-        serde_json::json!({ "katman": "yapi", "alan": null, "nesneler": [] })
+        serde_json::json!({ "katman": "yapi", "alan": null, "nesneler": [], "vurgula": "-" })
     );
     let _ = gis.extension_panel_view();
     let _ = std::fs::remove_dir_all(&dir);
@@ -1512,4 +1512,136 @@ fn a_workshop_extension_reloads_without_closing_and_its_preview_says_what_the_us
             .all(|i| i.label != "Yapı süz")
     );
     let _ = std::fs::remove_dir_all(&base);
+}
+
+/// docs/adr/8057 §32: a panel's command changes its own panel as it runs, through the broker: a value, a line under the
+/// form, the cursor; a value the user typed meanwhile stays; words it said stay when its answer says none of its own.
+/// A run not started from a panel has none; a closed panel takes nothing and is no mistake.
+#[test]
+fn a_panels_command_changes_its_panel_as_it_runs() {
+    use super::panels::PanelEvent;
+    use crate::python::host::Said;
+    use serde_json::json;
+
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let dir = temp("panel-oturumu");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let _ = gis.extensions_event(Event::OpenPanel(VITRIN.into(), "yapi-paneli".into()));
+    // Ara pressed (Python is off in tests: the state its press leaves): its call waits for its launch.
+    gis.extensions.panel_calls.push(super::panels::PanelCall {
+        ext: VITRIN.into(),
+        command: "yapi-ara".into(),
+        params: json!({ "sorgu": "", "katman": null, "numarasiz": false }),
+        origin: super::panels::PanelOrigin {
+            ext: VITRIN.into(),
+            panel: "yapi-paneli".into(),
+            button: "ara".into(),
+            table: Some("sonuc".into()),
+        },
+    });
+    gis.extensions.panels[0].running = Some("ara".into());
+    let package = gis
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.package_dir(VITRIN))
+        .unwrap();
+    let launch = |handler: &str| {
+        super::runner::Launch::for_test(
+            "/bin/sh".into(),
+            package.clone(),
+            handler,
+            "Yapı ara",
+            false,
+        )
+    };
+    let _ = gis.extensions_event(Event::Launch(
+        VITRIN.into(),
+        "command".into(),
+        "yapi-ara".into(),
+        Ok(launch("vitrin.logic:yapi_ara")),
+    ));
+    let runner = &gis.extensions.runners[VITRIN];
+    let (generation, run) = (runner.generation, runner.run.as_ref().expect("running").id);
+    let call = |gis: &mut App, id: u64, method: &str, params: serde_json::Value| {
+        let _ = gis.extensions_event(Event::Runner(
+            VITRIN.into(),
+            generation,
+            Said::Message(json!({ "type": "call", "id": id, "method": method, "params": params })),
+        ));
+    };
+    // Through the broker: a value, words under the form, the cursor (left to do once the message is handled).
+    call(
+        &mut gis,
+        1,
+        "panel.set",
+        json!({ "id": "sorgu", "value": "Y-02" }),
+    );
+    call(
+        &mut gis,
+        2,
+        "panel.set",
+        json!({ "id": "numarala", "enabled": false }),
+    );
+    call(
+        &mut gis,
+        3,
+        "panel.say",
+        json!({ "text": "Aranıyor…", "kind": "info" }),
+    );
+    call(&mut gis, 4, "panel.focus", json!({ "id": "sorgu" }));
+    assert!(
+        gis.extensions.later.is_empty(),
+        "the focus went with the message's task"
+    );
+    let panel = gis.extensions.panel().unwrap();
+    assert_eq!(panel.texts["sorgu"], "Y-02");
+    assert!(panel.disabled.contains("numarala"));
+    assert_eq!(
+        panel.said,
+        Some((crate::exchange::words::Kind::Info, "Aranıyor…".to_owned()))
+    );
+    let _ = gis.extension_panel_view();
+    // The user types meanwhile: the code's value does not go over it.
+    let _ = gis.extensions_event(Event::Panel(PanelEvent::Text("sorgu".into(), "Y-1".into())));
+    let kept = gis.ext_panel_session(
+        VITRIN,
+        "panel.set",
+        &json!({ "id": "sorgu", "value": "Y-03" }),
+    );
+    assert_eq!(kept.ok(), Some(json!({ "applied": false })));
+    assert_eq!(gis.extensions.panel().unwrap().texts["sorgu"], "Y-1");
+    // A wrong id is the code's mistake.
+    let wrong = gis.ext_panel_session(VITRIN, "panel.set", &json!({ "id": "yok", "value": 1 }));
+    assert!(
+        matches!(&wrong, Err(e) if e.code == "unknown_component"),
+        "{wrong:?}"
+    );
+    // Its answer has rows and no words: they go to the table, the code's words stay.
+    let _ = gis.extensions_event(Event::Runner(
+        VITRIN.into(),
+        generation,
+        Said::Message(json!({ "type": "done", "id": run, "ok": true,
+            "result": { "kind": "report", "rows": [{ "no": "Y-02" }], "columns": ["no"] } })),
+    ));
+    let panel = gis.extensions.panel().unwrap();
+    assert_eq!(panel.tables["sonuc"].1.len(), 1);
+    assert_eq!(
+        panel.said,
+        Some((crate::exchange::words::Kind::Info, "Aranıyor…".to_owned())),
+        "its words stay"
+    );
+    assert!(panel.touched.is_empty() && panel.running.is_none());
+    // A run not started from a panel: no panel to change.
+    let _ = gis.extensions_event(Event::Launch(
+        VITRIN.into(),
+        "command".into(),
+        "yapilari-numarala".into(),
+        Ok(launch("vitrin.logic:yapilari_numarala")),
+    ));
+    let none = gis.ext_panel_session(VITRIN, "panel.say", &json!({ "text": "x" }));
+    assert!(matches!(&none, Err(e) if e.code == "no_panel"), "{none:?}");
+    let _ = gis.ext_stop(VITRIN);
+    let _ = std::fs::remove_dir_all(&dir);
 }
