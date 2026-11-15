@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 0.4.0 — 16 Kasım 2026
+
+- Yeni kural: 2B ruhsat paketi (`paket`, docs/adr/8066; Md. 4/2, 6, 8). PDF/A seçilmemiş, bir dosyada birden çok pafta,
+  A4 ve katları dışında kâğıt (K39), EK-2 Tablo 2.1'e uymayan dosya adı; hepsi hata. `ruhsat.denetle` ruhsat yayınının
+  kapısı için `turetim` ile birlikte verir.
+
 ## 0.3.0 — 16 Kasım 2026
 
 - Yeni kural: paftalar modelden (`turetim`, docs/adr/8065; Md. 9/1, EK-9 satır 21). Eski kesit ve görünüş (Yeniden çiz tek

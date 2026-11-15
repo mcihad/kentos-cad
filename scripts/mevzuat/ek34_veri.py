@@ -43,6 +43,11 @@ RULES = {
     "derived_gone": ["T9.1/21"],
     "free_on_model_layer": ["T9.1/21"],
     "annotation_broken": ["T9.1/21"],
+    # The permit package (Md. 4/2, 8; EK-2; docs/adr/8066): the regulation's own articles are cited by the rule.
+    "package_name": ["M2.1", "M2.1.1", "T2.1"],
+    "package_one_sheet": [],
+    "package_paper": [],
+    "package_pdfa": [],
 }
 
 
@@ -103,6 +108,13 @@ def build(catalog, ifc):
         "rooms": [{"name": c["name"], "code": c["code"]} for c in codes if c["list"] == "room"],
         "dimensionFonts": fonts,
         "emsal": ["DAHIL", "HARIC", "DIGER"],
+        # EK-2's file names (Tablo 2.1; 2.1.1: fields joined by "_"): the fields, the file kinds (2.12) and types (2.13).
+        "fileTemplate": [
+            {"name": f["name"], "length": int(f["length"]), "kind": f["kind"]}
+            for f in next(t for t in catalog["templates"] if t["id"] == "T2.1")["fields"]
+        ],
+        "fileKinds": [c["code"] for c in codes if c["list"] == "fileKind"],
+        "fileTypes": [c["code"] for c in codes if c["list"] == "fileType"],
         "rules": {rule: [cite(catalog, r, ifc) for r in rows] for rule, rows in RULES.items()},
     }
 

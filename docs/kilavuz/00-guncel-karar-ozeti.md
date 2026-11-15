@@ -61,6 +61,12 @@
       `dijital_proje.turetim` (Python); olgular `cad` bölümünde (nesnenin sınıfı, türevin durumu, kopmuş bağ).
     - Hesap tabloları ve listeler canlıdır, eskimez; eskiyebilen türev kesit ve görünüştür. Kaynağın revizyonu
       `yayin.json`'da. Python bulgusunun istisnası henüz yok.
+  - **B5 yapıldı (16 Kasım 2026; [ADR 8066](../adr/8066-2d-permit-package-pdfa.md); BIM-05 `[x]`):**
+    - Ruhsat yayınının kapısı paket kuralını da sorar (`dijital_proje.ruhsat` = `turetim` + `paket`): PDF/A, bir dosya bir
+      pafta, A4 ve katları (K39: her kenar 210 ya da 297 mm'nin katı), EK-2 Tablo 2.1'in dokuz alanı.
+    - PDF/A yayını `teslim-listesi.csv` yazar; bağımsız okuma qpdf ve Poppler'la (`scripts/mevzuat/pdfa_bagimsiz.py`).
+    - Kesit paftasının EK-2 konumu "B-B" değil "BBX" (tire alfanümerik değil). Çizim dışı belgeler sözleşme
+      değişikliğiyle ayrı adım.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

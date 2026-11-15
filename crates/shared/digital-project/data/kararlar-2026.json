@@ -180,6 +180,16 @@
    "sources": [{"annex": 3, "clause": "3.2.1", "pages": [14]}, {"annex": 2, "table": "2.14", "pages": [13]}],
    "text": "3.2.1 mahal numarasının kat alanını EK-2 Tablo 2.14'ün kısaltmasına bağlar; paftaların dosya adları da aynı tabloyu kullanır. EK-3 denetimi numarayı paftaların kat koduyla karşılaştırır: ±0.00'daki kat (yoksa üstündeki en alçak kat) K00, üstündekiler K01, K02 …, altındakiler B01, B02 …. KentOS'un Mahal numarala aracı kat kodunu \"Zemin\" adlı kattan, yoksa kotu 0'a en yakın kattan sayar (ADR 8027); zemin kat ±0.00'da olduğunda ikisi aynıdır, olmadığında ayrışabilir. İki yol tek bir kurala bağlanacak.",
    "rows": ["M3.2.1", "T2.14/K00", "T2.14/B01"]
+  },
+  {
+   "id": "K39",
+   "title": "“A4 ve katları”: her kenar 210 ya da 297 mm'nin katı",
+   "kind": "kentos",
+   "sources": [{"annex": 0, "article": "8"}],
+   "text": "Md. 8 çizim ve belgelerin A4 ve katları boyutlarında hazırlanmasını ister. KentOS bunu her kenarın 210 ya da 297 mm'nin bir katı olması (basılı ölçünün 1,5 mm payıyla) ve kâğıdın en az A4 olması diye okur: A4, A3, A2, A1, A0 ve A4'ün katı uzun boylar (A3×3 = 420×891 mm gibi) geçer; 500×300 mm ya da A5 geçmez. Ruhsat paketinin kuralı (dijital_proje.paket) ve bağımsız okuma (scripts/mevzuat/pdfa_bagimsiz.py) aynı okumayı yazar.",
+   "asked": "İdare",
+   "param": {"key": "paper.series", "value": null, "default": "A4'ün katları"},
+   "rows": []
   }
  ]
 }

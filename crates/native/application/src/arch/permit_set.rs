@@ -646,13 +646,15 @@ pub fn section_layers(doc: &Document) -> Vec<String> {
     layers.into_iter().collect()
 }
 
-/// A section's place in its sheet's EK-2 name (2.9.3: for a section the author's three characters): "B-B" for a mark
-/// "B"; a longer mark's first three letters or digits (EK-4 4.11's folding), filled with X; "NNN" without one.
+/// A section's place in its sheet's EK-2 name (2.9.3: for a section the author's three characters; Tablo 2.1: three
+/// letters or digits): "BBX" for a mark "B" (its letter twice, as the section's name says B-B, filled with X; a hyphen is
+/// no letter or digit, docs/adr/8066); a longer mark's first three letters or digits (EK-4 4.11's folding), filled with
+/// X; "NNN" without one.
 pub fn section_place(words: &str) -> String {
     let w = kentos_commands::ek4_word(words, 3);
     match w.chars().count() {
         0 => "NNN".into(),
-        1 => format!("{w}-{w}"),
+        1 => format!("{w}{w}X"),
         _ => format!("{w:X<3}"),
     }
 }
@@ -784,8 +786,8 @@ mod tests {
 
     #[test]
     fn section_places_follow_ek_2() {
-        assert_eq!(section_place("B"), "B-B");
-        assert_eq!(section_place(" a "), "A-A");
+        assert_eq!(section_place("B"), "BBX");
+        assert_eq!(section_place(" a "), "AAX");
         assert_eq!(section_place("A1"), "A1X");
         assert_eq!(section_place("Çık"), "CIK");
         assert_eq!(section_place(""), "NNN");

@@ -136,7 +136,9 @@ tabanı ve tepesi, döşemenin katmanları, kiriş, lento, kolonun malzemesi. Bu
 - **Kesit paftası:** Proje › Ruhsat takımı, çıkarılmış ve yerleştirilmiş her kesite planlardan sonra kendi paftasını
   kurar (MO sunuş sırası: planlar, kesitler, cepheler; ADR 8037). Pafta adı "B-B kesiti"; EK-2 Tablo 2.12 türü KS, Tablo
   2.13 tipi MMC, konumu (2.9.3: kesitte müellifin verdiği üç karakter) varsayılan "B-B" (iki ve üç harfli işarette harfler
-  X ile üçe tamamlanır, işaretsizde NNN), paftada değiştirilebilir. Kesitin kutusu kilitli bir görünüm penceresinde,
+  X ile üçe tamamlanır, işaretsizde NNN), paftada değiştirilebilir. **16 Kasım 2026 eki:** EK-2 Tablo 2.1 bu alanı üç
+  harf ya da rakam ister; tire ikisi de değildir. Tek harfli işaretin konumu artık "BBX"tir (ADR 8066'nın ruhsat paketi
+  kuralı yakaladı). Kesitin kutusu kilitli bir görünüm penceresinde,
   kesitin çizildiği ölçekte, sığdığı en küçük A kâğıdında; kuzey oku yok (hesap tablosu ve doğrama listesi gibi).
 - **Ölçek farkı söylenir:** kesit çizimin ölçeğinde basılır (yazıları ancak o ölçekte doğru boydadır); takımın planları
   başka ölçekteyse (Ruhsat 1/100) takım notu söyler ve çizim ölçeğini değiştirip yeniden çizmeyi önerir: Mimarlar Odası

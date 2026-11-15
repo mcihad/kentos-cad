@@ -1,11 +1,12 @@
 //! Ruhsat yayınının kapısı (docs/adr/8065; plan/bim-plan.md BIM-04; Md. 9/1, EK-9 Tablo 9.1 satır 21): Paftaları toplu
 //! yayınla, Ruhsat takımından açıldığında, paftaların modelden üretildiğini denetletir ve kapı kapalıyken Yayınla'yı
-//! açmaz. Karar standart kural paketinin Python kuralıdır (`dijital_proje.turetim.denetle`, bim-plan K10): eski kesit ve
-//! görünüş, işareti silinmiş kesit, model katmanında serbest çizim, kopmuş etiket ve ölçü. Olgular çizimin `cad`
-//! bölümüdür (`kentos_processing::audit_facts::cad`).
+//! açmaz. Karar standart kural paketinin Python kuralıdır (`dijital_proje.ruhsat.denetle`, bim-plan K10): eski kesit ve
+//! görünüş, işareti silinmiş kesit, model katmanında serbest çizim, kopmuş etiket ve ölçü (ADR 8065); PDF/A seçilmemiş,
+//! bir dosyada birden çok pafta, A4 ve katları dışında kâğıt, EK-2'ye uymayan dosya adı (ADR 8066). Olgular çizimin `cad`
+//! bölümü ve denetimin raporundan paket bölümüdür.
 //!
-//! - **Her Denetle'de sorulur;** cevap sorulduğu andaki çizimin kuşağını taşır: çizim değiştiyse kapı yeniden sorulana
-//!   dek kapalıdır.
+//! - **Her Denetle'nin raporu gelince sorulur;** cevap sorulduğu andaki çizimin kuşağını taşır: çizim değiştiyse kapı
+//!   yeniden sorulana dek kapalıdır.
 //! - **Kural çalışamazsa kapı kapalıdır** ve nedeni yazılır: ruhsat paftasının modelden geldiği denetlenmeden yayın olmaz.
 //! - **Bulgunun yeri Denetim'dir:** "Denetim'de göster" pencereyi kapatıp Mimari denetimi açar; düzeltmeler oradadır.
 
@@ -19,7 +20,7 @@ use super::{Event as Exchange, Window, message};
 use crate::app::{App, Message};
 
 const PACKAGE: &str = "dijital-proje";
-const MODULE: &str = "dijital_proje.turetim";
+const MODULE: &str = "dijital_proje.ruhsat";
 const FUNCTION: &str = "denetle";
 
 /// The gate's state in a permit publication's window.
@@ -33,6 +34,8 @@ pub struct Gate {
     pub findings: Vec<Shut>,
     /// Why the rule could not run.
     pub failed: Option<String>,
+    /// A check was asked: the gate asks the rule when its report comes.
+    due: bool,
 }
 
 /// A finding that keeps the gate shut.
@@ -54,6 +57,49 @@ fn event(e: Event) -> Message {
 }
 
 impl App {
+    /// A check asked: the gate shut until its report comes and the rule answers.
+    pub(crate) fn permit_gate_wait(&mut self) {
+        if let Some(gate) = self.permit_gate_mut() {
+            gate.asked_on = None;
+            gate.answered = false;
+            gate.due = true;
+        }
+    }
+
+    /// Whether the check's report came and the gate has yet to ask; asking takes it.
+    pub(crate) fn permit_gate_due(&mut self) -> bool {
+        let ready = matches!(&self.exchange, Some(Window::SheetPublish(s)) if s.planned().is_some());
+        match self.permit_gate_mut() {
+            Some(gate) if gate.due && ready => {
+                gate.due = false;
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// The facts the rule reads: the drawing's `cad` section and, from the check's report, the package — the files it
+    /// would write, the sheets with their papers, PDF/A or not, one file a sheet or one for all (docs/adr/8066).
+    fn permit_gate_facts(&self) -> Option<Value> {
+        let mut facts = self.arch_audit_standards_facts()?;
+        if let Some(Window::SheetPublish(s)) = &self.exchange
+            && let Some(report) = s.planned()
+        {
+            facts["package"] = serde_json::json!({
+                "pdfa": s.input.pdfa,
+                "mode": match s.input.mode {
+                    kentos_commands::SheetPublishMode::Separate => "separate",
+                    kentos_commands::SheetPublishMode::Single => "single",
+                },
+                "files": report.files.iter().map(|f| serde_json::json!({"name": f.name, "sheets": f.sheets})).collect::<Vec<_>>(),
+                "sheets": report.scope.iter().map(|sc| serde_json::json!({
+                    "id": sc.sheet, "number": sc.number, "name": sc.name, "revision": sc.revision, "paper": sc.paper,
+                })).collect::<Vec<_>>(),
+            });
+        }
+        Some(facts)
+    }
+
     fn permit_gate_mut(&mut self) -> Option<&mut Gate> {
         match &mut self.exchange {
             Some(Window::SheetPublish(s)) => s.permit.as_mut(),
@@ -64,7 +110,7 @@ impl App {
     /// The rule asked for the drawing as it is; its answer comes as [`Event::Gate`].
     pub(crate) fn permit_gate_ask(&mut self) -> Task<Message> {
         let generation = self.document.as_ref().map(|d| d.model.generation());
-        let facts = self.arch_audit_standards_facts();
+        let facts = self.permit_gate_facts();
         let (Some(generation), Some(facts)) = (generation, facts) else {
             return Task::none();
         };
@@ -119,7 +165,7 @@ impl App {
     #[cfg(test)]
     pub(crate) fn permit_gate_settle(&mut self) {
         let generation = self.document.as_ref().map(|d| d.model.generation()).unwrap_or_default();
-        let Some(facts) = self.arch_audit_standards_facts() else {
+        let Some(facts) = self.permit_gate_facts() else {
             return;
         };
         if let Some(gate) = self.permit_gate_mut() {
@@ -131,7 +177,7 @@ impl App {
 
     /// The gate's part of the window: what keeps it shut, or that it is open.
     pub(crate) fn permit_gate_view<'a>(&'a self, gate: &'a Gate, generation: u64) -> Element<'a, Message> {
-        let mut out = column![label::body("Ruhsat kapısı: paftalar modelden (Md. 9/1)")
+        let mut out = column![label::body("Ruhsat kapısı: paftalar modelden, paket yönetmelikte (Md. 4/2, 6, 8, 9/1)")
             .font(kentos_ui::theme::typography::ui_strong())]
         .spacing(4);
         if gate.asked_on != Some(generation) || !gate.answered {
@@ -145,7 +191,8 @@ impl App {
         if gate.findings.is_empty() {
             return out
                 .push(label::caption(
-                    "Açık: kesitler ve görünüşler güncel, model katmanlarında serbest çizim ve kopmuş bağ yok.",
+                    "Açık: kesitler ve görünüşler güncel, model katmanlarında serbest çizim ve kopmuş bağ yok; dosyalar \
+                     PDF/A, her pafta ayrı dosyada, kâğıtlar A4 ve katları, adlar EK-2'ye uygun.",
                 ))
                 .into();
         }

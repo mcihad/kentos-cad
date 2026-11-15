@@ -344,7 +344,7 @@ fn the_building_with_its_sections_is_written_when_asked() {
 }
 
 /// Ruhsat takımı (docs/adr/8042 §6): B-B drawn and placed gets a sheet of its own after the plans, EK-2's KS and MMC
-/// with its place "B-B", at the scale it is drawn for; its mark then points at the sheet's map and writes the sheet's
+/// with its place "BBX", at the scale it is drawn for; its mark then points at the sheet's map and writes the sheet's
 /// number below its letter. A section stale when the set is made, and drawn for 1/50 in a 1/100 set, is said.
 #[test]
 fn the_permit_set_gives_the_drawn_section_a_sheet_and_its_mark_the_sheet_s_number() {
@@ -393,7 +393,8 @@ fn the_permit_set_gives_the_drawn_section_a_sheet_and_its_mark_the_sheet_s_numbe
     let text = |t: &str| Some(kentos_sheet::model::VarValue::Text(t.into()));
     assert_eq!(var("dosya_turu"), text("KS"));
     assert_eq!(var("dosya_tipi"), text("MMC"));
-    assert_eq!(var("kat_konum"), text("B-B"));
+    // Three letters or digits (EK-2 Tablo 2.1; docs/adr/8066): its letter twice, filled with X.
+    assert_eq!(var("kat_konum"), text("BBX"));
     // The site plan's and the plans' maps leave the sections placed beside the building out (they printed on the site
     // plan at 1/500).
     let plans: Vec<&kentos_sheet::Sheet> = book

@@ -16,8 +16,10 @@ bağımsız durumla sınandı. B3 tamamlandı: BIM-03 `[x]` ([ADR 8064](../docs/
 EK-3 ve EK-4'ün 12 kuralı Python'da, çizimin `cad` olguları Rust'ta; bulgular Mimari denetimin Mevzuat grubunda, altısının
 tek adımlık düzeltmesi var; 2+1 dairede uçtan uca ve ezdxf'li bağımsız okumayla sınandı. B4 tamamlandı: BIM-04 `[x]`
 ([ADR 8065](../docs/adr/8065-sheets-from-the-model-gate.md)): ruhsat yayınının kapısı eski kesit ve görünüşte, model
-katmanındaki serbest çizimde ve kopmuş bağda Yayınla'yı kapatır; kural Python'da, türevin durumu olguda. Sıradaki B5
-(BIM-05).
+katmanındaki serbest çizimde ve kopmuş bağda Yayınla'yı kapatır; kural Python'da, türevin durumu olguda. B5 tamamlandı:
+BIM-05 `[x]` ([ADR 8066](../docs/adr/8066-2d-permit-package-pdfa.md)): paket kuralı (PDF/A, bir dosya bir pafta, A4 ve
+katları, EK-2 adı) kapıda, teslim listesi klasörde; kesit binasının ve 2+1'in paketi qpdf ve Poppler'ın bağımsız okumasından
+hatasız geçti. Sıradaki B6 (BIM-06).
 
 Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. İlk taslağa göre değişenler: iki yönetmeliğin ana metni madde madde
 yeniden okundu; eklerin bağımsız bir dökümü depodaki sayfa okumalarıyla karşılaştırıldı; bugünkü kod yönetmeliğin sınıf
@@ -95,7 +97,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 
 | # | İstenen | Dayanak | KentOS'ta bugün | Paket |
 |---|---|---|---|---|
-| R1 | Her pafta ayrı PDF/A dosyası; A serisi kâğıt | Md. 4/2, 8 | ✓ Ruhsat takımı, PDF/A-2b (ADR 8037); bağımsız doğrulama yok | BIM-05 |
+| R1 | Her pafta ayrı PDF/A dosyası; A serisi kâğıt | Md. 4/2, 8 | ✓ Ruhsat takımı, PDF/A-2b (ADR 8037); paket kuralı, teslim listesi ve qpdf/Poppler ile bağımsız doğrulama (ADR 8066); veraPDF yok | BIM-05 |
 | R2 | Çizim dışı belgeler PDF/A | Md. 4/3 | ◐ hesap ve liste paftaları var; dış belge pakete girmiyor | BIM-05 |
 | R3 | Proje kodu ve dosya adları | Md. 6; EK-1, EK-2 | ✓ pafta ve model adı (ADR 8037, 8047 §7) | BIM-01 |
 | R4 | CAD katmanı, sembol, çizgi; mahal numarası ve adı | Md. 7; EK-3, EK-4 | ✓ katman anahtarı (ADR 8008), EK-3 numarası (ADR 8027) ve 12 kurallı denetim (ADR 8064); sembolün içi (4.17.5), punto ve kesit hattı yok | BIM-03 |
@@ -326,7 +328,16 @@ listelenir. Eski kesit, görünüş ya da çizelgeyle ruhsat yayını yapılamaz
 **İlk kabul:** bir kapı değişince kesit, görünüş, doğrama listesi ve mahal listesi "eski" olur ve paket durur; yeniden
 üretimden sonra geçer. Duvar katmanına çizilen serbest çizgi raporda nesnesiyle görünür.
 
-#### BIM-05 — 2B ruhsat paketi (PDF/A) [ ]
+#### BIM-05 — 2B ruhsat paketi (PDF/A) [x]
+
+**Yapıldı (16 Kasım 2026, [ADR 8066](../docs/adr/8066-2d-permit-package-pdfa.md)):** Python kuralı `dijital_proje.paket`
+(paket 0.4.0): PDF/A seçilmemiş, bir dosyada birden çok pafta, A4 ve katları dışında kâğıt (K39), EK-2'ye uymayan ad;
+ruhsat yayınının kapısı `ruhsat` (= `turetim` + `paket`) ile Denetle'nin raporu gelince sorulur. PDF/A yayını
+`teslim-listesi.csv` yazar (dosya, SHA-256, pafta numarası ve adı, revizyon, model revizyonu ve özeti). Bağımsız okuma
+`scripts/mevzuat/pdfa_bagimsiz.py` (qpdf, Poppler): kesit binasının 7 ve 2+1'in 5 dosyası geçer; yanlış ad, iki sayfa ve
+gömülmemiş yazı tipi sebebiyle reddedilir. Kural KentOS'un kendi çıktısında kesit paftasının "B-B" konumunu yakaladı:
+artık "BBX". **Kalan:** çizim dışı belgeler (yayının girdisine belge listesi: sözleşme değişikliği), veraPDF, kapıda
+taranmış sayfa, PDF/A bölümünün kurum profilinden okunması.
 
 **Kullanıcı sonucu:** Ruhsat takımı tek adımda, bağımsız denetimden geçmiş, adları EK-2'ye uyan PDF/A dosyaları ve bir teslim
 listesi üretir. IFC zorunluluğu başlamamış proje için teslim budur. Dayanak Md. 4/2–3, 8; e-PYS Md. 6.
@@ -617,7 +628,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 |---|---|---|---|
 | B3 ✓ | EK-3 ve EK-4 denetimi | BIM-03 | Uymayan katman ve mahal adı bulguda (ADR 8064) |
 | B4 ✓ | Paftanın modelden üretildiği kanıtı | BIM-04 | Eski türevle yayın durur (ADR 8065) |
-| B5 | 2B ruhsat paketi | BIM-05 | Bağımsız denetimden geçmiş PDF/A takımı ve teslim listesi |
+| B5 ✓ | 2B ruhsat paketi | BIM-05 | Bağımsız denetimden geçmiş PDF/A takımı ve teslim listesi (ADR 8066) |
 
 ### Faz 2 — Ruhsat düzeyinde model
 

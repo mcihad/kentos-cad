@@ -1539,6 +1539,9 @@ mod permit_scope_tests;
 #[path = "tests/permit_gate_tests.rs"]
 mod permit_gate_tests;
 #[cfg(test)]
+#[path = "tests/permit_package_tests.rs"]
+mod permit_package_tests;
+#[cfg(test)]
 #[path = "tests/wall_height_tests.rs"]
 mod wall_height_tests;
 #[path = "gis/topology/mod.rs"]

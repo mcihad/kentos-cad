@@ -17,6 +17,9 @@ use kentos_sheet::{
 };
 use crate::file_commands::Refused;
 const MANIFEST: &str = "yayin.json";
+/// A PDF/A publication's delivery list (docs/adr/8066): each file with its digest, its sheet's number, name and revision,
+/// and the drawing's revision and digest it was made from.
+const DELIVERY: &str = "teslim-listesi.csv";
 pub(crate) fn refuse(code: &str, message: impl Into<String>, path: &str) -> Refused {
     Box::new(CommandError {
         code: code.into(),
@@ -813,7 +816,13 @@ fn work(
         return Err(e);
     }
     let ready = !issues.iter().any(|i| i.error);
-    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","snapshot":captured.metadata().map_err(|e|refuse(&e.code,e.message,"pin"))?,"drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"user":user,"options":published_options(input),"sheets":chosen,"files":files,"pages":pages,"scope":scope,"resources":resources,"issues":issues,"previous":previous.as_ref().map(|p|&p.report),"carried":carried,"sources":if matches!(op,CallOp::Execute){crate::publish_update::source_record(doc,&kept_book,&chosen)}else{serde_json::Value::Null}})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
+    let mut manifest = serde_json::json!({"format":"kentos.publish/1","snapshot":captured.metadata().map_err(|e|refuse(&e.code,e.message,"pin"))?,"drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"user":user,"options":published_options(input),"sheets":chosen,"files":files,"pages":pages,"scope":scope,"resources":resources,"issues":issues,"previous":previous.as_ref().map(|p|&p.report),"carried":carried,"sources":if matches!(op,CallOp::Execute){crate::publish_update::source_record(doc,&kept_book,&chosen)}else{serde_json::Value::Null}});
+    // A PDF/A publication carries its delivery list beside the files (docs/adr/8066).
+    let delivery = input.pdfa.then(|| delivery_list(&files, &scope, &source));
+    if delivery.is_some() {
+        manifest["deliveryList"] = serde_json::json!(DELIVERY);
+    }
+    let bytes=serde_json::to_vec_pretty(&manifest).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
     let report = SheetsPublished {
         resources,
         path: input.path.clone(),
@@ -865,6 +874,10 @@ fn work(
         let _ = fs::remove_file(stage.path.join(JOURNAL));
         crate::files::write_bytes(&bytes, &stage.path.join(MANIFEST))
             .map_err(|e| refuse("file_unwritable", e.message, "path"))?;
+        if let Some(list) = &delivery {
+            crate::files::write_bytes(list.as_bytes(), &stage.path.join(DELIVERY))
+                .map_err(|e| refuse("file_unwritable", e.message, "path"))?;
+        }
         stopped(progress)?;
         crate::package::target(&input.path)?; // A concurrent writer must not lose its published folder.
         if target.exists() {
@@ -913,6 +926,44 @@ pub(crate) fn run(
 
 /// The stale sections and elevations the chosen sheets print (docs/adr/8042 §6, 8043): the sheet and the mark's name.
 /// A build without Mimari draws no section again, so it finds none stale (docs/adr/8054 §11).
+/// The delivery list (docs/adr/8066): UTF-8 with its byte order mark, `;` between fields (a spreadsheet in Turkish
+/// reads `,` as the decimal comma), one line a file in the publication's order.
+fn delivery_list(files: &[SheetPublishedFile], scope: &[kentos_commands::SheetPublishScope], source: &SheetPublishPin) -> String {
+    let cell = |t: &str| {
+        if t.contains([';', '"', '\n']) {
+            format!("\"{}\"", t.replace('"', "\"\""))
+        } else {
+            t.to_owned()
+        }
+    };
+    let mut out = String::from("\u{feff}Sıra;Dosya;SHA-256;Bayt;Pafta no;Pafta adı;Revizyon;Model revizyonu;Model özeti\n");
+    let digest = source.sha256.get(..16).unwrap_or(&source.sha256);
+    for (i, f) in files.iter().enumerate() {
+        let of = |pick: fn(&kentos_commands::SheetPublishScope) -> &str| {
+            f.sheets
+                .iter()
+                .filter_map(|id| scope.iter().find(|s| &s.sheet == id))
+                .map(pick)
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let row = [
+            format!("{:03}", i + 1),
+            f.name.clone(),
+            f.sha256.clone(),
+            f.bytes.to_string(),
+            of(|s| s.number.as_str()),
+            of(|s| s.name.as_str()),
+            of(|s| s.revision.as_str()),
+            source.revision.clone(),
+            digest.to_owned(),
+        ];
+        out.push_str(&row.iter().map(|c| cell(c)).collect::<Vec<_>>().join(";"));
+        out.push('\n');
+    }
+    out
+}
+
 #[cfg(feature = "mod-arch")]
 fn stale_sections(
     doc: &Document,

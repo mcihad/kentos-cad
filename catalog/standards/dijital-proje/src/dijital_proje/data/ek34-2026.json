@@ -898,6 +898,99 @@
   "HARIC",
   "DIGER"
  ],
+ "fileTemplate": [
+  {
+   "name": "Proje Kodu",
+   "length": 6,
+   "kind": "Alfanümerik"
+  },
+  {
+   "name": "Bina Kodu",
+   "length": 2,
+   "kind": "Alfanümerik"
+  },
+  {
+   "name": "Disiplin",
+   "length": 2,
+   "kind": "Alfabetik"
+  },
+  {
+   "name": "Alt Disiplin / Öge",
+   "length": 4,
+   "kind": "Alfabetik"
+  },
+  {
+   "name": "Dosya Türü",
+   "length": 2,
+   "kind": "Alfabetik"
+  },
+  {
+   "name": "Dosya Tipi",
+   "length": 3,
+   "kind": "Alfabetik"
+  },
+  {
+   "name": "Kat / Konum",
+   "length": 3,
+   "kind": "Alfanümerik"
+  },
+  {
+   "name": "Sıra No",
+   "length": 2,
+   "kind": "Sayısal"
+  },
+  {
+   "name": "Revizyon No",
+   "length": 3,
+   "kind": "Sayısal"
+  }
+ ],
+ "fileKinds": [
+  "PL",
+  "KS",
+  "GR",
+  "DT",
+  "SM",
+  "MD",
+  "FR",
+  "LS",
+  "DK",
+  "RP",
+  "HS",
+  "GN"
+ ],
+ "fileTypes": [
+  "MMC",
+  "MAP",
+  "ERP",
+  "YKG",
+  "CAT",
+  "VAZ",
+  "MIR",
+  "STC",
+  "SHR",
+  "ISC",
+  "IHR",
+  "MKC",
+  "ITH",
+  "IYP",
+  "IKR",
+  "EKB",
+  "ASN",
+  "MTS",
+  "ELC",
+  "AGH",
+  "TGH",
+  "AHR",
+  "ETS",
+  "YAP",
+  "DIC",
+  "DGR",
+  "MLZ",
+  "MHL",
+  "XXX",
+  "MKF"
+ ],
  "rules": {
   "number_pattern": [
    "EK-3 m. 3.1.1 · PDF s. 14",
@@ -950,6 +1043,14 @@
   ],
   "annotation_broken": [
    "EK-9 Tablo 9.1 satır 21 · PDF s. 239"
-  ]
+  ],
+  "package_name": [
+   "EK-2 m. 2.1 · PDF s. 2",
+   "EK-2 m. 2.1.1 · PDF s. 2",
+   "EK-2 Tablo 2.1 · PDF s. 3"
+  ],
+  "package_one_sheet": [],
+  "package_paper": [],
+  "package_pdfa": []
  }
 }

@@ -60,6 +60,12 @@ impl State {
     pub fn running(&self) -> bool {
         self.job.is_some()
     }
+    /// The finished check's report: the files and sheets a publication would write (the permit gate reads it).
+    pub(crate) fn planned(&self) -> Option<&SheetsPublished> {
+        (matches!(self.op, CallOp::Plan) && self.job.is_none() && !self.asking && !self.check_only)
+            .then_some(())
+            .and(self.report.as_ref())
+    }
 }
 #[derive(Clone, Debug)]
 pub enum Event {
@@ -231,14 +237,15 @@ impl App {
                 return self.update(Message::Run("arch.audit"));
             }
             Event::Publish if permit && !self.permit_gate_open() => return Task::none(),
-            Event::Plan if permit => {
-                let gate = self.permit_gate_ask();
-                let plan = self.sheet_publish_step(Event::Plan);
-                return Task::batch([gate, plan]);
-            }
+            Event::Plan if permit => self.permit_gate_wait(),
             _ => {}
         }
-        self.sheet_publish_step(e)
+        let task = self.sheet_publish_step(e);
+        // The check's report came: the gate asked with the files it would write (docs/adr/8066).
+        if self.permit_gate_due() {
+            return Task::batch([task, self.permit_gate_ask()]);
+        }
+        task
     }
 
     /// Whether the permit gate is open for the drawing as it is.
