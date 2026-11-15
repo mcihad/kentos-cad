@@ -1656,6 +1656,15 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   satırları kendisi gruplar, komut bir tabloya yazar gibi yazar. Değersiz satır "—" grubuna düşer. Kapı 1: `group` 1–3
   farklı sütun adı; düğmenin `table`'ı bir tabloyu ya da ağacı gösterir. Vitrin'in Değer say'ı artık nesne başına satır
   verir; ağaç dağılımı başlık sayılarıyla gösterir, nesneler altında.
+- **Tarih alanı** (`dateField`: `id`, `label`, `value`, `min`, `max`, `onChange`; Vitrin 1.0.17, Parsel kartı'nın Kart
+  tarihi; `24-tarih`): kullanıcı GG.AA.YYYY ya da YYYY-AA-GG yazar (tek haneli gün ve ay da) ya da KentOS'un takvimini
+  (formların tarih seçicisi) açar; değeri `ctx.params`'ta ISO tarih metni (`2026-11-20`), boşsa None. Yazılan metin
+  basınca okunur: gün olmayan ("30.02.2026") ve sınır dışı tarih adıyla söylenir, hiçbir şey çalışmaz. Takvimden seçilen
+  gün bir değişikliktir (`onChange`); yazmak değildir (her tuşta süreç çağrısı olurdu), ama **Enter yazılan tarihi
+  uygular** `onChange`'i varsa: Parsel kartı'nın düğmesi yok, kartlar yalnız takvimden yenilenebiliyordu (gerçek
+  pencere); `onChange`'siz alanda Enter eskisi gibi birincil düğmeye basar. Kapı 1: `value`/`min`/`max` takvimde var
+  olan gün, YYYY-AA-GG; min ≤ max. Gerçek pencere: takvimden 20 Kasım seçilince ve "20.11.2026" yazılıp Enter'a
+  basılınca kartlar "tarih 20.11.2026" ile yenilendi.
 - **Birden çok açık panel** (15 Kasım; Vitrin'in iki paneli, `21-paneller`): tek Eklenti dock sekmesi kalır, açık her
   panel onun üstünde bir sekmedir (KentOS'un belge sekmeleri: `kentos_ui::widget::tabs`; sürüklenerek sıralanır, ×'i
   ya da orta tık kapatır). Her eklenti panelini ayrı dock sekmesi yapmak dock'un sabit panel listesini (yerleşimin
@@ -1773,7 +1782,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | adımlayıcı | KentOS'ta | `wizard` | |
 | Basit girdi | metin | var | `textField` | Enter birincil düğme |
 | | sayı | var | `numberField` (birim, sınır) | yazıldığı gibi tutulur, basınca okunur |
-| | tarih/saat | KentOS'ta | `date_picker` | |
+| | tarih | var | `dateField` (KentOS'un takvimi; GG.AA.YYYY ya da YYYY-AA-GG yazılır, değeri ISO tarih) | saat ve an henüz yok (`date_picker`'ın saatli hâli) |
 | | mantıksal | var | `checkbox` | `widget::switch` bağlanmadı |
 | | seçim | var | `select` | |
 | | çoklu seçim | KentOS'ta | `chips` | nesne seçici çoklu nesne alır |
@@ -1801,14 +1810,14 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | komut/şerit/menü, bağlam eylemi | host | `contributions.ribbonTabs`, sağ tık menüleri | |
 | | iletişim kutusu | yok | — | panel dock'ta açılır |
 
-**Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `select`, `layerPicker`, `fieldPicker`,
-`featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`.
+**Bileşen türleri** (Kapı 1, `type`): `text`, `textField`, `numberField`, `dateField`, `select`, `layerPicker`,
+`fieldPicker`, `featurePicker`, `checkbox`, `button`, `table`, `tree`, `card`.
 
 **Sınır: özel çizim ve düzenleyici bileşeni yok.** Eklentinin kodu bir arayüz nesnesi ya da tuval almaz (QGIS'in Qt
 dersi, D7): haritaya çizim harita aracının yakalamasıyla (KentOS çizer), panelde çizim hiç yok. Kayıtlı özel bileşen
 (tanım, değer kodlayıcı, platform çizicisi ve salt okunur yedek, PY-UI-15/16) ayrı bir maddedir; o gelene dek panel
 yalnız bu türleri çizer, bilinmeyen tür kurulumda reddedilir.
 
-**Sıradaki adaylar** (KentOS'ta bileşeni olanlar, değerleri `ctx.params`'a basit tiplerle girer): tarih (`date_picker`:
-ISO tarih metni), çoklu seçim (`chips`: değer listesi), özet/ölçü (`stat_card`: komutun bir satırı). Her biri Vitrin'de
-gösterilmeden bağlanmaz.
+**Sıradaki adaylar** (KentOS'ta bileşeni olanlar, değerleri `ctx.params`'a basit tiplerle girer): çoklu seçim (`chips`:
+değer listesi), özet/ölçü (`stat_card`: komutun bir satırı). Her biri Vitrin'de gösterilmeden bağlanmaz. Tarih
+15 Kasım'da bağlandı (`dateField`).

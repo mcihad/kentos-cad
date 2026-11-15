@@ -79,7 +79,9 @@ Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.pa
 Katmanlar'ın yanında, left haritanın solunda, bottom altında; kullanıcının taşıdığı yer korunur, `definition`),
 şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title` ve `body`
 bileşenleri: `text` (`text`), `textField` (`id`, `label`, `placeholder`, `value`), `numberField` (`id`, `label`,
-`min`, `max`, `unit`, `value`), `select` (`id`, `label`, `options: [{value, label}]`, `value`), `checkbox` (`id`,
+`min`, `max`, `unit`, `value`), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
+da YYYY-AA-GG yazar ya da takvimden seçer, değeri ISO tarih metni ya da boşsa None), `select` (`id`, `label`,
+`options: [{value, label}]`, `value`), `checkbox` (`id`,
 `label`, `value`), `layerPicker` (`id`, `label`, `geometry`: point, line, area, annotation; açık çizimin katmanları,
 değeri katmanın kimliği ya da seçilmezse None), `fieldPicker` (`id`, `label`, `layer`: bu paneldeki bir `layerPicker`'ın
 kimliği, `kinds`: alan türleri, ör. `["integer", "decimal"]`; orada seçilen katmanın alanları, değeri alanın adı ya da
@@ -92,7 +94,7 @@ göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın
 tıklanınca nesneyi gösterir; düğmenin `table`'ı bir ağacı da gösterebilir), `card` (`id`, `label`, `title`, `tag`:
 sütun adları; her satır bir kart: `title` sütunu başlığında (yoksa ilk sütun), `tag` sütunu yanında, diğer sütunlar
 altında adlarıyla; dar yerde sığmayan çok sütunlu tablonun yerine; `uid`'li kart tıklanınca nesneyi gösterir;
-düğmenin `table`'ı bir kartı da gösterebilir). `select`, `layerPicker`, `fieldPicker`, `featurePicker` ve `checkbox` isteğe
+düğmenin `table`'ı bir kartı da gösterebilir). `select`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField` (takvimden seçilince) ve `checkbox` isteğe
 bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
 (çalışırken gelen değişiklik bitince bir kez yeniden çalıştırılır). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu

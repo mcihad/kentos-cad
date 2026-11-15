@@ -1,0 +1,28 @@
+# Tarih alanı: Vitrin › Parsel kartı'nın Kart tarihi (dateField). İki parsel pencereyle seçilip Seçimi al'a basılır;
+# Kart tarihi'ne 20.11.2026 yazılıp Enter'a basılınca onChange kartları yeniler ve her kart tarihi taşır; takvim
+# düğmesi aynı alanı doldurur (seçilen gün de bir değişikliktir). (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 843 20    # Vitrin
+wait 1200
+click 505 84    # Parsel kartı (şeritte, Panel grubunda)
+wait 2000
+shot 24-bos
+drag 160 480 705 770     # pencereyle 101/1 ve 101/2 (yalnız etkin katman seçilir)
+wait 1000
+click 1321 368  # Seçimi al: kartlar
+wait 5000
+click 1340 405  # Kart tarihi
+wait 400
+type 20.11.2026
+key Return      # Enter: onChange, kartlar yenilenir
+wait 5000
+drag 1280 579 1280 845   # paneli aşağı doğru büyüt
+wait 1000
+shot 24-tarih

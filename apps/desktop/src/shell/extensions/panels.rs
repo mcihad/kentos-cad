@@ -123,6 +123,8 @@ pub(crate) enum PanelEvent {
     Pick(String),
     /// A feature picker lets its objects go.
     Unpick(String),
+    /// A date field's day chosen from the calendar (its words, GG.AA.YYYY; empty: cleared).
+    Picked(String, String),
     Press(String),
     /// A table's row with a `uid`: its object selected and zoomed to.
     Show(String),
@@ -172,6 +174,12 @@ impl OpenPanel {
                 }
                 Component::Checkbox { id, value, .. } => {
                     panel.checks.insert(id.clone(), *value);
+                }
+                Component::DateField { id, value, .. } => {
+                    panel.texts.insert(
+                        id.clone(),
+                        value.as_deref().map(date_words).unwrap_or_default(),
+                    );
                 }
                 // A layer, a field and objects are chosen by the user: none at first.
                 Component::LayerPicker { id, .. } | Component::FieldPicker { id, .. } => {
@@ -233,6 +241,42 @@ impl OpenPanel {
                         id.clone(),
                         json!(self.choices.get(id).cloned().unwrap_or_default()),
                     );
+                }
+                // An ISO date; none when empty; a text that is no day, or a day out of its bounds, said by its label.
+                Component::DateField {
+                    id,
+                    label,
+                    min,
+                    max,
+                    ..
+                } => {
+                    let text = self.texts.get(id).map_or("", |t| t.trim());
+                    if text.is_empty() {
+                        out.insert(id.clone(), Value::Null);
+                        continue;
+                    }
+                    let Some(iso) = kentos_extensions::ui_panel::typed_date(text) else {
+                        return Err(format!(
+                            "“{label}”: “{text}” bir tarih değil (GG.AA.YYYY ya da YYYY-AA-GG yazın)."
+                        ));
+                    };
+                    let early = min.as_deref().is_some_and(|m| iso.as_str() < m);
+                    let late = max.as_deref().is_some_and(|m| iso.as_str() > m);
+                    if early || late {
+                        return Err(match (min, max) {
+                            (Some(a), Some(b)) => format!(
+                                "“{label}” {} ile {} arasında olmalı.",
+                                date_words(a),
+                                date_words(b)
+                            ),
+                            (Some(a), None) => {
+                                format!("“{label}” en erken {} olabilir.", date_words(a))
+                            }
+                            (_, Some(b)) => format!("“{label}” en geç {} olabilir.", date_words(b)),
+                            (None, None) => unreachable!(),
+                        });
+                    }
+                    out.insert(id.clone(), json!(iso));
                 }
                 // A layer's id, a field's name; none when none is chosen.
                 Component::LayerPicker { id, .. } | Component::FieldPicker { id, .. } => {
@@ -340,6 +384,14 @@ impl OpenPanel {
                 _ => None,
             })
         })
+    }
+}
+
+/// An ISO date as a field shows it, GG.AA.YYYY; another text as it is.
+fn date_words(iso: &str) -> String {
+    match kentos_extensions::ui_panel::iso_date(iso) {
+        Some((y, m, d)) => format!("{d:02}.{m:02}.{y:04}"),
+        None => iso.to_owned(),
     }
 }
 
@@ -612,6 +664,11 @@ impl App {
             }
             PanelEvent::Unpick(id) => {
                 panel.picks.insert(id.clone(), Vec::new());
+                return self.ext_panel_changed(at, &id);
+            }
+            // A day chosen from the calendar is a change (typing is not: a process each key, as a text field's).
+            PanelEvent::Picked(id, words) => {
+                panel.texts.insert(id.clone(), words);
                 return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Pick(id) => return self.ext_panel_pick(at, &id),
@@ -986,6 +1043,48 @@ impl App {
                         field = field.on_submit(press);
                     }
                     form = form.field(words.clone(), field);
+                }
+                Component::DateField {
+                    id,
+                    label: words,
+                    on_change,
+                    ..
+                } => {
+                    use kentos_ui::attribute::Date;
+                    let typed = p.texts.get(id).map_or("", String::as_str);
+                    let day = kentos_extensions::ui_panel::typed_date(typed)
+                        .and_then(|iso| kentos_extensions::ui_panel::iso_date(&iso))
+                        .and_then(|(y, m, d)| Date::new(y as i32, m as u8, d as u8));
+                    let (typing, picking) = (id.clone(), id.clone());
+                    let mut field = kentos_ui::widget::text_field("GG.AA.YYYY", typed)
+                        .on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
+                    // Enter applies a typed date when it runs a command on change (a panel may have no button to
+                    // press: Parsel kartı's cards came only from the calendar), else presses the primary button.
+                    let submit = match on_change {
+                        Some(_) => Some(event(PanelEvent::Picked(id.clone(), typed.to_owned()))),
+                        None => enter.clone(),
+                    };
+                    if let Some(message) = submit {
+                        field = field.on_submit(message);
+                    }
+                    let picker =
+                        kentos_ui::widget::DatePicker::date(day, move |d: Option<Date>| {
+                            event(PanelEvent::Picked(
+                                picking.clone(),
+                                d.map_or_else(String::new, |d| {
+                                    format!("{:02}.{:02}.{:04}", d.day(), d.month(), d.year())
+                                }),
+                            ))
+                        })
+                        .anchor(field)
+                        .clearable(true)
+                        // Today as this computer's clock has it (the forms' Şimdi too).
+                        .now(kentos_ui::attribute::DateTime::now(
+                            kentos_interaction::time_version::LOCAL_OFFSET
+                                .load(std::sync::atomic::Ordering::Relaxed)
+                                / 60,
+                        ));
+                    form = form.field(words.clone(), picker);
                 }
                 Component::Select {
                     id,
@@ -1569,6 +1668,41 @@ mod tests {
             "yapi-ara",
             kentos_extensions::ui_panel::read(&value).unwrap(),
         )
+    }
+
+    /// A date field's value is the ISO date of what was typed, either way it was written; a text that is no day, and
+    /// a day out of its bounds, are said by its label; empty is none.
+    #[test]
+    fn a_date_field_gives_the_iso_date_of_what_was_typed() {
+        let value = json!({
+            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Tarih",
+            "body": [{ "type": "dateField", "id": "tarih", "label": "Kart tarihi", "value": "2026-11-15",
+                       "min": "2026-01-01", "max": "2026-12-31" }]
+        });
+        let mut p = OpenPanel::new(
+            "tr.ornek.vitrin",
+            "tarih",
+            kentos_extensions::ui_panel::read(&value).unwrap(),
+        );
+        assert_eq!(
+            p.texts["tarih"], "15.11.2026",
+            "its value as the field shows it"
+        );
+        assert_eq!(p.params().unwrap(), json!({ "tarih": "2026-11-15" }));
+        p.texts.insert("tarih".into(), "3.2.2026".into());
+        assert_eq!(p.params().unwrap(), json!({ "tarih": "2026-02-03" }));
+        p.texts.insert("tarih".into(), "30.02.2026".into());
+        assert_eq!(
+            p.params().unwrap_err(),
+            "“Kart tarihi”: “30.02.2026” bir tarih değil (GG.AA.YYYY ya da YYYY-AA-GG yazın)."
+        );
+        p.texts.insert("tarih".into(), "2025-12-31".into());
+        assert_eq!(
+            p.params().unwrap_err(),
+            "“Kart tarihi” 01.01.2026 ile 31.12.2026 arasında olmalı."
+        );
+        p.texts.insert("tarih".into(), " ".into());
+        assert_eq!(p.params().unwrap(), json!({ "tarih": null }));
     }
 
     #[test]

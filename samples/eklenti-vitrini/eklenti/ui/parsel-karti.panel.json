@@ -5,13 +5,19 @@
   "body": [
     {
       "type": "text",
-      "text": "Seçilen her parselin kartı: adası ve parseli başlığında, TAKS durumu yanında; alanı, üzerindeki yapılar, taban alanı ve TAKS altında. Parselleri çizimde seçip Seçimi al'a basın; karta tıklamak parseli gösterir."
+      "text": "Seçilen her parselin kartı: adası ve parseli başlığında, TAKS durumu yanında; alanı, üzerindeki yapılar, taban alanı ve TAKS altında, kartın tarihiyle (boşsa bugün). Parselleri çizimde seçip Seçimi al'a basın; karta tıklamak parseli gösterir."
     },
     {
       "type": "featurePicker",
       "id": "parseller",
       "label": "Parseller",
       "geometry": "area",
+      "onChange": "parsel-karti"
+    },
+    {
+      "type": "dateField",
+      "id": "tarih",
+      "label": "Kart tarihi",
       "onChange": "parsel-karti"
     },
     {

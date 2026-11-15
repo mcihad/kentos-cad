@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.17 — 15 Kasım 2026
+
+- "Parsel kartı"na tarih alanı (`dateField`): GG.AA.YYYY yazılır ya da takvimden seçilir; seçilince kartlar yenilenir,
+  her kart tarihini taşır (boşsa bugün).
+
 ## 1.0.16 — 15 Kasım 2026
 
 - Katman şemasında alt türler ve değer bileşimleri: Örnek tesis'in türü (Okul, Park, Sağlık ocağı) alt tür alanıdır ve

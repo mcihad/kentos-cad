@@ -17,6 +17,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 """
 
 import time
+from datetime import date
 
 import numpy as np
 import shapely
@@ -253,6 +254,8 @@ def parsel_karti(ctx: ext.CommandContext) -> ext.CommandResult:
     if ctx.doc is None:
         return ctx.message("Açık çizim yok.")
     secilen = ctx.params.get("parseller") or []
+    # Panelin tarih alanı ISO tarih verir (2026-11-15) ya da boşsa None: kartta Türkçe yazılır.
+    gun = date.fromisoformat(ctx.params["tarih"]) if ctx.params.get("tarih") else date.today()
     parsel_katmani, yapi_katmani = _katman(ctx.doc, "parsel"), _katman(ctx.doc, "yapi")
     yapilar = []
     if yapi_katmani:
@@ -277,6 +280,7 @@ def parsel_karti(ctx: ext.CommandContext) -> ext.CommandResult:
             "yapı": len(tabanlar),
             "taban alanı (m²)": round(sum(tabanlar), 1),
             "TAKS": round(oran, 2),
+            "tarih": gun.strftime("%d.%m.%Y"),
         })
     if not secilen:
         mesaj = "Parselleri çizimde seçip Seçimi al'a basın."

@@ -116,6 +116,20 @@ pub enum Component {
         #[serde(default, rename = "onChange")]
         on_change: Option<String>,
     },
+    /// A date the user types (GG.AA.YYYY or YYYY-AA-GG) or picks from KentOS's calendar; its value is the ISO date
+    /// (`2026-11-15`), none when empty. `value`, `min` and `max` are ISO dates.
+    DateField {
+        id: String,
+        label: String,
+        #[serde(default)]
+        value: Option<String>,
+        #[serde(default)]
+        min: Option<String>,
+        #[serde(default)]
+        max: Option<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
     /// Yes or no.
     Checkbox {
         id: String,
@@ -179,6 +193,7 @@ impl Component {
             | Component::LayerPicker { id, .. }
             | Component::FieldPicker { id, .. }
             | Component::FeaturePicker { id, .. }
+            | Component::DateField { id, .. }
             | Component::Checkbox { id, .. }
             | Component::Button { id, .. }
             | Component::Table { id, .. }
@@ -194,6 +209,7 @@ impl Component {
             | Component::LayerPicker { on_change, .. }
             | Component::FieldPicker { on_change, .. }
             | Component::FeaturePicker { on_change, .. }
+            | Component::DateField { on_change, .. }
             | Component::Checkbox { on_change, .. } => on_change.as_deref(),
             _ => None,
         }
@@ -209,6 +225,7 @@ impl Component {
                 | Component::LayerPicker { .. }
                 | Component::FieldPicker { .. }
                 | Component::FeaturePicker { .. }
+                | Component::DateField { .. }
                 | Component::Checkbox { .. }
         )
     }
@@ -230,6 +247,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "fieldPicker" => &["id", "label", "layer", "kinds", "onChange"],
         "featurePicker" => &["id", "label", "layer", "geometry", "multiple", "onChange"],
         "checkbox" => &["id", "label", "value", "onChange"],
+        "dateField" => &["id", "label", "value", "min", "max", "onChange"],
         "button" => &["id", "label", "command", "table", "primary"],
         "table" => &["id", "label"],
         "tree" => &["id", "label", "group"],
@@ -238,12 +256,50 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, textField, numberField, select, layerPicker, fieldPicker, featurePicker, checkbox, button, \
-                     table, tree, card";
+const TYPES: &str = "text, textField, numberField, dateField, select, layerPicker, fieldPicker, featurePicker, checkbox, \
+                     button, table, tree, card";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
     TYPES.split(", ")
+}
+
+/// An ISO date (`2026-11-15`), a real day of the calendar, as (year, month, day); none otherwise.
+pub fn iso_date(text: &str) -> Option<(u32, u32, u32)> {
+    let mut parts = text.split('-');
+    let (y, m, d) = (parts.next()?, parts.next()?, parts.next()?);
+    if parts.next().is_some() || y.len() != 4 || m.len() != 2 || d.len() != 2 {
+        return None;
+    }
+    let (y, m, d): (u32, u32, u32) = (y.parse().ok()?, m.parse().ok()?, d.parse().ok()?);
+    let leap = y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
+    let days = match m {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if leap => 29,
+        2 => 28,
+        _ => return None,
+    };
+    (y >= 1 && (1..=days).contains(&d)).then_some((y, m, d))
+}
+
+/// A date as a user writes it, `15.11.2026` or `2026-11-15` (one-digit day and month too): its ISO form.
+pub fn typed_date(text: &str) -> Option<String> {
+    let text = text.trim();
+    if let Some((y, m, d)) = iso_date(text) {
+        return Some(format!("{y:04}-{m:02}-{d:02}"));
+    }
+    let mut parts = text.split('.');
+    let (d, m, y) = (parts.next()?, parts.next()?, parts.next()?);
+    if parts.next().is_some()
+        || y.len() != 4
+        || !(1..=2).contains(&d.len())
+        || !(1..=2).contains(&m.len())
+    {
+        return None;
+    }
+    let iso = format!("{y}-{m:0>2}-{d:0>2}");
+    iso_date(&iso).map(|_| iso)
 }
 
 /// A component's id: lowercase letters, digits, `_` and `-`, a letter first, at most 63: the key its value is given to
@@ -545,6 +601,27 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     ),
                 }
             }
+            "dateField" => {
+                let date = |key: &str| c.get(key).map(|v| v.as_str().and_then(iso_date));
+                for key in ["value", "min", "max"] {
+                    if let Some(None) = date(key) {
+                        add(
+                            format!("{at}/{key}"),
+                            format!(
+                                "“{key}” bir tarih olmalı, YYYY-AA-GG biçiminde (ör. 2026-11-15)."
+                            ),
+                        );
+                    }
+                }
+                if let (Some(Some(min)), Some(Some(max))) = (date("min"), date("max"))
+                    && min > max
+                {
+                    add(
+                        format!("{at}/min"),
+                        "En erken tarih (min) en geç tarihten (max) sonra.".to_owned(),
+                    );
+                }
+            }
             "checkbox" => {
                 if c.get("value").is_some_and(|v| !v.is_boolean()) {
                     add(
@@ -659,7 +736,9 @@ mod tests {
                   "onChange": "yapi-ara" },
                 { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman", "geometry": "area" },
                 { "type": "tree", "id": "agac", "label": "Adalara göre", "group": ["ada"] },
-                { "type": "card", "id": "kartlar", "label": "Yapılar", "title": "no", "tag": "durum" }
+                { "type": "card", "id": "kartlar", "label": "Yapılar", "title": "no", "tag": "durum" },
+                { "type": "dateField", "id": "tarih", "label": "Ruhsat tarihi", "min": "2020-01-01",
+                  "onChange": "yapi-ara" }
             ]
         })
     }
@@ -670,8 +749,9 @@ mod tests {
         assert!(check("ui/ara.panel.json", &value, &["yapi-ara"]).is_empty());
         let read = read(&value).expect("read");
         assert_eq!(read.title, "Yapı ara");
-        assert_eq!(read.body.len(), 12);
-        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 7);
+        assert_eq!(read.body.len(), 13);
+        assert_eq!(read.body.iter().filter(|c| c.is_input()).count(), 8);
+        assert_eq!(read.body[12].on_change(), Some("yapi-ara"));
         assert!(
             matches!(&read.body[5], Component::LayerPicker { geometry: Some(g), .. } if g == "area")
         );
@@ -736,6 +816,7 @@ mod tests {
         p["body"][9]["onChange"] = json!("say");
         p["body"][10]["group"] = json!(["ada", "ada"]);
         p["body"][11]["tag"] = json!("no");
+        p["body"][12]["max"] = json!("2019-02-30");
         p["body"]
             .as_array_mut()
             .unwrap()
@@ -765,9 +846,28 @@ mod tests {
                 "/body/9/multiple",
                 "/body/10/group",
                 "/body/11/tag",
-                "/body/12/type",
-                "/body/13"
+                "/body/12/max",
+                "/body/13/type",
+                "/body/14"
             ]
         );
+    }
+}
+
+#[cfg(test)]
+mod date_tests {
+    use super::*;
+
+    #[test]
+    fn a_date_is_a_real_day_written_either_way() {
+        assert_eq!(iso_date("2024-02-29"), Some((2024, 2, 29)));
+        assert_eq!(iso_date("2023-02-29"), None, "not a leap year");
+        assert_eq!(iso_date("2026-13-01"), None);
+        assert_eq!(iso_date("2026-1-01"), None, "ISO writes two digits");
+        assert_eq!(typed_date("15.11.2026").as_deref(), Some("2026-11-15"));
+        assert_eq!(typed_date(" 5.1.2026 ").as_deref(), Some("2026-01-05"));
+        assert_eq!(typed_date("2026-11-15").as_deref(), Some("2026-11-15"));
+        assert_eq!(typed_date("31.04.2026"), None, "April has thirty days");
+        assert_eq!(typed_date("15/11/2026"), None);
     }
 }
