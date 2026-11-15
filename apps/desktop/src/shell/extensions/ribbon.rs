@@ -448,7 +448,7 @@ impl App {
         };
         items.into_iter().fold(menu.separator(), |menu, m| {
             let pressed = match (&m.item.action, &params) {
-                // A command learns what it was run on (a layer's menu: the layer, as QGIS's layer actions do).
+                // A command learns what it was run on (a layer's menu: the layer).
                 (Action::Python(ext, kind, local), Some(params))
                     if kind == "command" && self.item_when_why(&m.item).is_none() =>
                 {

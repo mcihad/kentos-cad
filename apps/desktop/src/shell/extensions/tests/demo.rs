@@ -1710,8 +1710,8 @@ fn a_panels_command_changes_its_panel_as_it_runs() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// docs/adr/8057 §32: a layer menu's command is given the layer it was run on (`ctx.params["layer"]`, as QGIS's
-/// layer actions are); the same command from elsewhere is not; a run that did not start leaves nothing for the next.
+/// docs/adr/8057 §32: a layer menu's command is given the layer it was run on (`ctx.params["layer"]`); the same
+/// command from elsewhere is not; a run that did not start leaves nothing for the next.
 #[test]
 fn a_layer_menus_command_gets_the_layer_it_was_run_on() {
     use serde_json::json;

@@ -384,7 +384,7 @@ impl App {
             )
             .icon(icon("layerLabels"))
             .separator();
-        // The style files of QGIS, GeoServer and MapLibre: a map's programs' (module_surfaces.rs).
+        // The style files other map programs and servers read and write: a map's programs' (module_surfaces.rs).
         // Stil yükle / kaydet (docs/adr/0635 §9): one file, its extension the format.
         if self.shows_layer_entry(LayerEntry::StyleFiles) {
             menu = menu
@@ -394,7 +394,7 @@ impl App {
                 .icon(icon("styleSave"))
                 .separator();
         }
-        // SLD (docs/adr/0516): the look out to QGIS, GeoServer, MapServer, and theirs in.
+        // SLD (docs/adr/0516): the look out to map servers and desktop GIS, and theirs in.
         if self.shows_layer_entry(LayerEntry::Sld) {
             menu = menu
                 .item(
@@ -405,7 +405,7 @@ impl App {
                 .item("SLD'den görünüş al…", event(Event::SldImport(id.clone())))
                 .icon(icon("sldImport"));
         }
-        // QML (docs/adr/0555): QGIS's own style file, out and in.
+        // QML (docs/adr/0555): a desktop GIS's own style file, out and in.
         if self.shows_layer_entry(LayerEntry::Qml) {
             menu = menu
                 .item(

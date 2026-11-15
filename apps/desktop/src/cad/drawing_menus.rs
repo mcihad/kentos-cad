@@ -1,5 +1,5 @@
-//! The right button over the drawing, as AutoCAD's by default (the owner's
-//! word, 23 October 2026; docs/adr/0622 §6): it opens the menu of what is
+//! The right button over the drawing, as CAD programs give it by default (the
+//! owner's word, 23 October 2026; docs/adr/0622 §6): it opens the menu of what is
 //! going on and never places a point where the pointer is:
 //!
 //! - a grip being moved: the grip's menu (its modes, Taban noktası,
@@ -10,8 +10,8 @@
 //!   something is selected;
 //! - Shift and the right button open the one-shot snap menu at once.
 //!
-//! With `drafting.rightClickEnter` on (AutoCAD's time-sensitive right
-//! click), a quick click is Enter for a running command that takes a
+//! With `drafting.rightClickEnter` on (the time-sensitive right click), a
+//! quick click is Enter for a running command that takes a
 //! confirm and the menu waits for the button held 300 ms; a grip being
 //! moved still opens its menu.
 //!
@@ -124,7 +124,7 @@ pub enum Kind {
     Snap,
 }
 
-/// The user's choice that a quick right click is Enter (AutoCAD's time-sensitive right click).
+/// The user's choice that a quick right click is Enter (the time-sensitive right click).
 pub const RIGHT_CLICK_ENTER: &str = "drafting.rightClickEnter";
 
 /// An open menu and where (logical pixels from the drawing area's top-left).
@@ -370,7 +370,7 @@ impl App {
                 .item(format!("Yinele: {title}"), Message::Run("tool.repeat"))
                 .shortcut("Enter");
         }
-        // AutoCAD's edit menu with a selection, its default menu without one (docs/adr/0622 §6).
+        // The edit menu with a selection, the default menu without one (docs/adr/0622 §6).
         let items: &[&'static str] = if self.selection.is_empty() {
             &[
                 "-",
@@ -512,7 +512,7 @@ impl App {
         Some(menu)
     }
 
-    /// A grip being moved (docs/adr/0622 §6; AutoCAD's grip menu): its
+    /// A grip being moved (docs/adr/0622 §6; the grip menu): its
     /// modes and their options as the prompt offers them, then Bırak (the
     /// grip goes back, Esc) and the one-shot snaps; never the grip dropped
     /// at the pointer.
@@ -697,8 +697,8 @@ impl App {
             .icon(crate::icons::from_web(Some("settings")))
     }
 
-    /// The one-shot menu's points that are not snaps (docs/adr/0270 §3, AutoCAD's Shift+right menu): Geçici
-    /// izleme noktası, Referans noktası (AutoCAD's From) and İki nokta ortası (the point calculator's), while a
+    /// The one-shot menu's points that are not snaps (docs/adr/0270 §3, the Shift+right menu): Geçici
+    /// izleme noktası, Referans noktası (a point given from a base) and İki nokta ortası (the point calculator's), while a
     /// command takes points.
     fn snap_menu_points(&self, menu: Menu<Message>) -> Menu<Message> {
         if !self.session.takes_points() {
@@ -883,7 +883,7 @@ mod tests {
             "{menu}"
         );
         let _ = app.update(Message::DrawingMenu(Event::Closed));
-        // AutoCAD's time-sensitive right click, chosen: a quick click is Enter.
+        // The time-sensitive right click, chosen: a quick click is Enter.
         let _ = app
             .settings
             .choose(&[(super::RIGHT_CLICK_ENTER, serde_json::Value::Bool(true))]);

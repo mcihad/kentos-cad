@@ -1162,6 +1162,15 @@ Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çi
 
 [EKL-07 (bulut); PY-CLOUD-01…18]
 
+**Durum (15 Kasım): birinci dilim — sürüm akışının durum makinesi** (ADR 8059): saf Rust
+(`kentos-extensions::release`): durumlar ve hareket tablosu, yetkiler veri olarak (onaylamak ile yayımlamak ayrı;
+genel katalogda yayımcının hiçbir üyesi kendi sürümünü onaylayamaz; karar hareketleri yalnız katalog penceresinden,
+programlı çağrı incelemeyi atlayamaz), onay içeriğe bağlı (paket, kilit, SBOM özeti ve istenen yetenekler; içerik
+değişince onay düşer, kurulum yalnız onaylı içerikle), kapılar açık kalmaz (taranmadı / hata verdi asla geçti
+değil), ret gerekçe koduyla, askı/geri çekme nedeniyle, her hareket denetim kaydında, kayıt okunurken kurallardan
+geçer; inceleme derinliği önceki onaylı sürüme göre farktan (yeni yetenek ya da bağımlılık derin, yalnız metin hızlı
+yol). 21 sınama. Kalan: sunucu/API, depo, imza ve OIDC, platform tekerlek deposu, geri çekme listesi, arayüz.
+
 - [ ] Durum makinesi: `taslak → gönderildi → denetleniyor → değişiklik isteniyor / onaylandı → yayımlandı → askıda /
   geri çekildi / arşivlendi`. Yüklenen taslağı yalnız yazarı ve yetkili inceleyenler görür; **yükleme yayın değildir**.
 - [ ] Yerel kullanım bulut hesabı gerektirmez; yayın açık kullanıcı eylemidir [PY-CLOUD-01]. Kişisel/özel, kiracı ve genel
