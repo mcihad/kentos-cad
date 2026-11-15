@@ -495,6 +495,38 @@ fn the_journal_says_what_was_written_in_order() {
     );
 }
 
+/// docs/adr/8057 §27: a plan as a job is computed on the copy, writes nothing and answers the plan; executed as a job
+/// with that plan expected, it is written as planned.
+#[test]
+fn a_plan_as_a_job_writes_nothing_and_its_execution_matches_it() {
+    let mut doc = drawing();
+    let line = uid(&doc, 1);
+    let before = doc.revision();
+    let mut job = Job::start(
+        "p1".into(),
+        &doc,
+        envelope("cad.entities.transform", CallOp::Plan, shift(&line, 5.0)),
+    );
+    let status = job.wait(&mut doc);
+    assert_eq!(status.phase, JobPhase::Done, "{:?}", status.answer);
+    let answer = status.answer.expect("the plan");
+    let plan = answer.plan_id.clone().expect("a plan id");
+    assert!(answer.call.is_none(), "nothing written");
+    assert_eq!(doc.revision(), before);
+    // Executed as a job with the plan expected: written as planned.
+    let mut execute = envelope("cad.entities.transform", CallOp::Execute, shift(&line, 5.0));
+    execute.expected = Some(kentos_commands::CallExpectations {
+        plan: Some(plan),
+        revision: Some(before.to_string()),
+        ..Default::default()
+    });
+    let mut job = Job::start("p2".into(), &doc, execute);
+    let status = job.wait(&mut doc);
+    assert_eq!(status.phase, JobPhase::Done, "{:?}", status.answer);
+    assert!(status.answer.and_then(|a| a.call).is_some(), "written");
+    assert_ne!(doc.revision(), before);
+}
+
 #[test]
 fn a_job_computes_on_a_copy_and_its_write_comes_in_whole() {
     let mut doc = drawing();

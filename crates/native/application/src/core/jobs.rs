@@ -150,20 +150,24 @@ fn refused(code: &str, message: impl Into<String>) -> CallAnswer {
 }
 
 impl Job {
-    /// Starts `envelope` (its `execute`) as job `id` on a reading copy of
-    /// `doc`; the document is free again at once.
+    /// Starts `envelope` (its `execute`, or its `plan`) as job `id` on a
+    /// reading copy of `doc`; the document is free again at once. A plan is
+    /// computed on the copy as well and writes nothing: its answer is the plan
+    /// (a long command's, a Python tool's, whose plan computes it too:
+    /// docs/adr/8057 §27).
     pub fn start(id: String, doc: &Document, envelope: CallEnvelope) -> Job {
         let command = envelope.command.clone();
         let request_id = envelope.request_id.clone();
+        let plan = envelope.op == CallOp::Plan;
         Job::start_with(id, command, request_id, doc, move |mut copy, progress| {
             let envelope = CallEnvelope {
-                op: CallOp::Execute,
+                op: if plan { CallOp::Plan } else { CallOp::Execute },
                 ..envelope
             };
             let answer = crate::call::call_in_job(&mut copy, envelope, progress);
             JobOutcome {
                 answer,
-                copy: Some(copy),
+                copy: (!plan).then_some(copy),
                 effect: None,
             }
         })
