@@ -1,0 +1,54 @@
+# Birden çok panel: Değer say (solda açılır) ve Yapı ara (sağ ister) birlikte açık, Eklenti sekmesinin üstünde birer
+# sekme. Yapı ara'da Ara; Değer say'a geçip Parsel sınırı ve ada (onChange, ağaç); Yapı ara'ya dönünce satırlar durur.
+# Yapıları numarala sürerken Değer say'a geçilir: Yapı ara'nın sekmesinde nokta (çalışıyor, sonra görülmedi); Yapı ara
+# açılınca nokta gider. Şeritten yeniden açılan panel ikinci kez açılmaz; sekmenin ×'i paneli kapatır, kalan gösterilir.
+# (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 501 57    # Değer say
+wait 2000
+click 417 75    # Yapı ara
+wait 2500
+drag 1280 509 1280 845
+wait 1000
+click 1304 478  # Ara
+wait 7000
+shot 21-iki
+click 1172 187  # Değer say sekmesi
+wait 1500
+click 1354 374  # Katman
+wait 1000
+click 1293 528  # Kadastro › Parsel sınırı
+wait 1000
+click 1354 412  # Alan
+wait 1000
+click 1308 476  # ada: onChange, ağaç dolar
+wait 5000
+shot 21-deger
+click 1266 187  # Yapı ara sekmesi
+wait 1500
+click 1346 516  # Yapıları numarala (5 × 0,5 sn)
+wait 1200
+shot 21-calisiyor
+click 1172 187  # Değer say sekmesi
+wait 800
+shot 21-arka
+wait 4500
+shot 21-bitti
+click 1266 187  # Yapı ara sekmesi
+wait 1200
+shot 21-goruldu
+click 1172 187  # Değer say sekmesi
+wait 1000
+click 417 75    # şeritten Yapı ara: açık olan gösterilir
+wait 1500
+shot 21-yeniden
+click 1305 187  # Yapı ara'nın ×'i
+wait 1500
+shot 21-kapat

@@ -11,8 +11,9 @@
 //! - **A late answer goes nowhere:** a run's rows are written only to the panel it started from, while it is open.
 //! - **A row with a `uid` is an object:** clicking it selects and zooms to it, as an audit's Göster; the `uid` is not
 //!   shown as a column.
-//! - **A running button shows how far it is:** its command's `ctx.progress` as a bar and words under the form, with
-//!   Durdur; a command that answers a message, not rows, leaves the table as it was.
+//! - **A running button shows how far it is:** its command's `ctx.progress` as a bar and words under the form, the
+//!   button named, with Durdur (its caption stays as it is); a command that answers a message, not rows, leaves the
+//!   table as it was.
 //! - **A tree groups a command's rows** by the columns its definition names, each group with its count and open
 //!   unless the user closed it; a leaf with a `uid` is an object.
 //! - **Enter presses the primary button** in a text or number field (else the panel's first button).
@@ -20,6 +21,9 @@
 //!   first table); a change while a command runs waits for it, one rerun with the values then.
 //! - **Pickers follow their layer picker:** a field picker lists the fields of the layer chosen there, a feature picker
 //!   takes the selected objects of that layer when the user asks ("Seçimi al"); choosing another layer clears both.
+//! - **Several panels stay open:** each in its own tab at the top of the Eklenti tab (of any extensions), what was
+//!   typed in each kept; a panel opened again is shown, not opened twice. A panel's run answers it while another is
+//!   shown; its tab marks it (running, or words not yet seen). Closing the shown panel shows the next.
 
 use std::collections::BTreeMap;
 
@@ -30,6 +34,7 @@ use kentos_extensions::ui_panel::{Component, PanelDefinition};
 use kentos_ui::label;
 use kentos_ui::widget::Form;
 use kentos_ui::widget::select::{Choice, Select};
+use kentos_ui::widget::tabs::{Tab, Tabs};
 use serde_json::{Map, Value, json};
 
 use super::{Event, msg};
@@ -63,6 +68,8 @@ pub(crate) struct OpenPanel {
     pub(crate) running: Option<String>,
     /// An input with `onChange` changed while a command ran: its command runs again when that one ends.
     pub(crate) rerun: Option<String>,
+    /// Its run answered while another panel was shown: its tab marks it until it is shown.
+    pub(crate) unseen: bool,
 }
 
 /// A panel's button pressed: what the next launch of its command gives its code, and where its answer goes.
@@ -98,7 +105,12 @@ pub(crate) enum PanelEvent {
     Show(String),
     /// A tree's group opened or closed (its key: the tree's id and the group's values).
     Fold(String),
-    Close,
+    /// The open panel at this place in the tabs shown.
+    Activate(usize),
+    /// Its tab moved: from, to (where it goes once taken out).
+    Move(usize, usize),
+    /// The open panel at this place closed.
+    Close(usize),
 }
 
 impl OpenPanel {
@@ -118,6 +130,7 @@ impl OpenPanel {
             said: None,
             running: None,
             rerun: None,
+            unseen: false,
         };
         for c in &panel.definition.body {
             match c {
@@ -315,16 +328,42 @@ fn cell_words(value: Option<&Value>) -> String {
     }
 }
 
+impl super::Extensions {
+    /// The panel the Eklenti tab shows.
+    pub(crate) fn panel(&self) -> Option<&OpenPanel> {
+        self.panels.get(self.active_panel)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn panel_mut(&mut self) -> Option<&mut OpenPanel> {
+        self.panels.get_mut(self.active_panel)
+    }
+
+    /// The open panel a run started from; its tab marks the answer when another panel is shown.
+    fn answered(&mut self, origin: &PanelOrigin) -> Option<&mut OpenPanel> {
+        let shown = self.active_panel;
+        let (at, panel) = self
+            .panels
+            .iter_mut()
+            .enumerate()
+            .find(|(_, p)| p.ext == origin.ext && p.local == origin.panel)?;
+        panel.unseen = at != shown;
+        Some(panel)
+    }
+}
+
 impl App {
     /// An extension's panel from its tab: its definition read from the package (checked when it was installed) and
-    /// shown in the dock's Eklenti tab. The same panel again keeps what was typed in it.
+    /// shown in the dock's Eklenti tab, in a tab of its own beside the panels open there. A panel open already is
+    /// shown, what was typed in it kept.
     pub(crate) fn ext_panel_open(&mut self, ext: &str, local: &str) -> Task<Message> {
-        if self
+        if let Some(at) = self
             .extensions
-            .panel
-            .as_ref()
-            .is_some_and(|p| p.ext == ext && p.local == local)
+            .panels
+            .iter()
+            .position(|p| p.ext == ext && p.local == local)
         {
+            self.ext_panel_activate(at);
             return self.show_extension_panel();
         }
         let Some(registry) = self.extensions.registry.as_ref() else {
@@ -363,25 +402,87 @@ impl App {
         };
         let mut panel = OpenPanel::new(ext, local, definition);
         panel.side = entry.side;
-        self.extensions.panel = Some(panel);
+        self.extensions.panels.push(panel);
+        self.extensions.active_panel = self.extensions.panels.len() - 1;
         self.show_extension_panel()
     }
 
-    /// The dock shows the Eklenti tab on the side the open panel's manifest asks for (right: beside Katmanlar, the side
-    /// panels shown if F4 hid them; left: beside the map, Katmanlar staying in sight; bottom: under the map). A tab
-    /// KentOS docked moves when another panel asks for another side; one the user moved stays where it is.
+    /// The open panel at `at` shown; its answer seen.
+    fn ext_panel_activate(&mut self, at: usize) {
+        if let Some(panel) = self.extensions.panels.get_mut(at) {
+            panel.unseen = false;
+            self.extensions.active_panel = at;
+        }
+    }
+
+    /// A panel's tab moved among the others; the panel shown stays shown.
+    fn ext_panel_move(&mut self, from: usize, to: usize) {
+        let x = &mut self.extensions;
+        if from >= x.panels.len() || to >= x.panels.len() {
+            return;
+        }
+        let panel = x.panels.remove(from);
+        x.panels.insert(to, panel);
+        let shown = x.active_panel;
+        x.active_panel = if shown == from {
+            to
+        } else if from < shown && shown <= to {
+            shown - 1
+        } else if to <= shown && shown < from {
+            shown + 1
+        } else {
+            shown
+        };
+    }
+
+    /// The open panel at `at` closed (a run it started answers nowhere); the next one shown, else the one before.
+    fn ext_panel_close(&mut self, at: usize) {
+        let x = &mut self.extensions;
+        if at >= x.panels.len() {
+            return;
+        }
+        x.panels.remove(at);
+        if at < x.active_panel || (x.active_panel >= x.panels.len() && x.active_panel > 0) {
+            x.active_panel -= 1;
+        }
+        if let Some(panel) = x.panels.get_mut(x.active_panel) {
+            panel.unseen = false;
+        }
+    }
+
+    /// The panels of extensions stopped since (disabled, removed, the registry gone) closed, with the calls their
+    /// buttons left; the dock's tab too when none is left.
+    pub(crate) fn ext_panels_of_stopped_go(&mut self) {
+        let x = &mut self.extensions;
+        let before = x.panels.len();
+        let shown = x.panel().map(|p| (p.ext.clone(), p.local.clone()));
+        let registry = x.registry.as_ref();
+        let live = |ext: &str| registry.is_some_and(|r| r.lease(ext).is_some());
+        x.panels.retain(|p| live(&p.ext));
+        x.panel_calls.retain(|c| live(&c.ext));
+        if x.panels.len() == before {
+            return;
+        }
+        x.active_panel = shown
+            .and_then(|(e, l)| x.panels.iter().position(|p| p.ext == e && p.local == l))
+            .unwrap_or_else(|| x.active_panel.min(x.panels.len().saturating_sub(1)));
+        if x.panels.is_empty() {
+            x.panel_placed = None;
+            self.docks.close(crate::app::Panel::Extension);
+        }
+    }
+
+    /// The dock shows the Eklenti tab on the side the panel shown asks for in its manifest, the one opened last (right:
+    /// beside Katmanlar, the side panels shown if F4 hid them; left: beside the map, Katmanlar staying in sight;
+    /// bottom: under the map). A tab KentOS docked moves when a panel opened asks for another side; one the user moved
+    /// stays where it is. Choosing among the open panels' tabs moves nothing.
     pub(crate) fn show_extension_panel(&mut self) -> Task<Message> {
         use crate::app::Panel;
         use kentos_ui::widget::docking::{Event as Dock, Side, Slot, Target};
         if !self.open_panel(Panel::Extension) {
             return Task::none();
         }
-        let wanted = match self
-            .extensions
-            .panel
-            .as_ref()
-            .map_or(PanelSide::Right, |p| p.side)
-        {
+        let wanted = match self.extensions.panel().map_or(PanelSide::Right, |p| p.side) {
             PanelSide::Left => Side::Left,
             PanelSide::Right => Side::Right,
             PanelSide::Bottom => Side::Bottom,
@@ -420,8 +521,10 @@ impl App {
         Task::none()
     }
 
+    /// What the user does in the panel shown, or with the open panels' tabs.
     pub(crate) fn ext_panel_event(&mut self, event: PanelEvent) -> Task<Message> {
-        let Some(panel) = self.extensions.panel.as_mut() else {
+        let at = self.extensions.active_panel;
+        let Some(panel) = self.extensions.panels.get_mut(at) else {
             return Task::none();
         };
         match event {
@@ -430,19 +533,21 @@ impl App {
             }
             PanelEvent::Check(id, on) => {
                 panel.checks.insert(id.clone(), on);
-                return self.ext_panel_changed(&id);
+                return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Choose(id, value) => {
                 panel.choose(id.clone(), value);
-                return self.ext_panel_changed(&id);
+                return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Unpick(id) => {
                 panel.picks.insert(id.clone(), Vec::new());
-                return self.ext_panel_changed(&id);
+                return self.ext_panel_changed(at, &id);
             }
-            PanelEvent::Pick(id) => return self.ext_panel_pick(&id),
-            PanelEvent::Close => self.extensions.panel = None,
-            PanelEvent::Press(button) => return self.ext_panel_press(&button),
+            PanelEvent::Pick(id) => return self.ext_panel_pick(at, &id),
+            PanelEvent::Activate(to) => self.ext_panel_activate(to),
+            PanelEvent::Move(from, to) => self.ext_panel_move(from, to),
+            PanelEvent::Close(which) => self.ext_panel_close(which),
+            PanelEvent::Press(button) => return self.ext_panel_press(at, &button),
             PanelEvent::Fold(key) => {
                 if !panel.folded.remove(&key) {
                     panel.folded.insert(key);
@@ -460,8 +565,8 @@ impl App {
 
     /// A feature picker takes the drawing's selection: the selected objects of the layer its layer picker holds and of
     /// its type (the first only when it takes one); or the panel says why none fit, and what it held stays.
-    fn ext_panel_pick(&mut self, picker: &str) -> Task<Message> {
-        let Some(panel) = self.extensions.panel.as_ref() else {
+    fn ext_panel_pick(&mut self, at: usize, picker: &str) -> Task<Message> {
+        let Some(panel) = self.extensions.panels.get(at) else {
             return Task::none();
         };
         let Some(Component::FeaturePicker {
@@ -503,7 +608,7 @@ impl App {
                 .map(|n| n.name.clone());
         }
         let count = selected.len();
-        let Some(panel) = self.extensions.panel.as_mut() else {
+        let Some(panel) = self.extensions.panels.get_mut(at) else {
             return Task::none();
         };
         if picked.is_empty() {
@@ -532,15 +637,15 @@ impl App {
         }
         panel.picks.insert(picker.to_owned(), picked);
         panel.said = None;
-        self.ext_panel_changed(picker)
+        self.ext_panel_changed(at, picker)
     }
 
     /// A button: its command run with the panel's values, its rows to its table.
-    fn ext_panel_press(&mut self, button: &str) -> Task<Message> {
+    fn ext_panel_press(&mut self, at: usize, button: &str) -> Task<Message> {
         let found = self
             .extensions
-            .panel
-            .as_ref()
+            .panels
+            .get(at)
             .filter(|p| p.running.is_none())
             .and_then(
                 |p| match p.definition.body.iter().find(|c| c.id() == Some(button)) {
@@ -551,15 +656,15 @@ impl App {
                 },
             );
         match found {
-            Some((command, table)) => self.ext_panel_start(button, command, table),
+            Some((command, table)) => self.ext_panel_start(at, button, command, table),
             None => Task::none(),
         }
     }
 
     /// An input changed: its `onChange` command runs with the panel's values, its rows to the panel's first table. A
     /// change while a command runs waits for it: one rerun, with the values then.
-    fn ext_panel_changed(&mut self, input: &str) -> Task<Message> {
-        let Some(panel) = self.extensions.panel.as_mut() else {
+    fn ext_panel_changed(&mut self, at: usize, input: &str) -> Task<Message> {
+        let Some(panel) = self.extensions.panels.get_mut(at) else {
             return Task::none();
         };
         let Some(command) = panel
@@ -576,31 +681,37 @@ impl App {
             panel.rerun = Some(input.to_owned());
             return Task::none();
         }
-        self.ext_panel_start(input, command, None)
+        self.ext_panel_start(at, input, command, None)
     }
 
-    /// A change that came while the panel's command ran: its command now, with the values now (runner.rs, when a run
-    /// ends).
+    /// The changes that came while their panels' commands ran: each command now, with the values now (runner.rs, when
+    /// a run ends).
     pub(crate) fn ext_panel_rerun(&mut self) -> Task<Message> {
-        let input = match self.extensions.panel.as_mut() {
-            Some(p) if p.running.is_none() => p.rerun.take(),
-            _ => None,
-        };
-        match input {
-            Some(input) => self.ext_panel_changed(&input),
-            None => Task::none(),
+        let waiting: Vec<(usize, String)> = self
+            .extensions
+            .panels
+            .iter_mut()
+            .enumerate()
+            .filter(|(_, p)| p.running.is_none())
+            .filter_map(|(at, p)| p.rerun.take().map(|input| (at, input)))
+            .collect();
+        let mut tasks = Vec::new();
+        for (at, input) in waiting {
+            tasks.push(self.ext_panel_changed(at, &input));
         }
+        Task::batch(tasks)
     }
 
     /// The panel's `command` started by `trigger` (a button, a changed input) with the panel's values; a number that is
     /// not one, or Python not ready, said in the panel and nothing run.
     fn ext_panel_start(
         &mut self,
+        at: usize,
         trigger: &str,
         command: String,
         table: Option<String>,
     ) -> Task<Message> {
-        let ext = match self.extensions.panel.as_ref() {
+        let ext = match self.extensions.panels.get(at) {
             Some(p) if p.running.is_none() => p.ext.clone(),
             _ => return Task::none(),
         };
@@ -610,7 +721,7 @@ impl App {
             .get(&ext)
             .and_then(Option::as_deref)
             .map(str::to_owned);
-        let Some(panel) = self.extensions.panel.as_mut() else {
+        let Some(panel) = self.extensions.panels.get_mut(at) else {
             return Task::none();
         };
         if let Some(why) = why {
@@ -643,7 +754,7 @@ impl App {
         };
         panel.running = Some(trigger.to_owned());
         panel.said = None;
-        self.extensions.panel_call = Some(PanelCall {
+        self.extensions.panel_calls.push(PanelCall {
             ext: ext.clone(),
             command: command.clone(),
             params,
@@ -652,11 +763,16 @@ impl App {
         self.ext_run(&ext, "command", &command)
     }
 
-    /// The panel call of `ext`'s `command`, taken for its launch (runner.rs); none for another command's.
+    /// The first panel call of `ext`'s `command`, taken for its launch (runner.rs); none for another command's. A
+    /// call carries its values and its panel, so two panels' calls of one command are answered right whichever launch
+    /// takes which.
     pub(crate) fn ext_panel_take(&mut self, ext: &str, command: &str) -> Option<PanelCall> {
-        self.extensions
-            .panel_call
-            .take_if(|c| c.ext == ext && c.command == command)
+        let at = self
+            .extensions
+            .panel_calls
+            .iter()
+            .position(|c| c.ext == ext && c.command == command)?;
+        Some(self.extensions.panel_calls.remove(at))
     }
 
     /// A panel call that did not start: the panel says why and its button can be pressed again.
@@ -667,18 +783,13 @@ impl App {
     }
 
     /// A run started from a panel ended (runner.rs): its rows into its table and its words under the panel, or why
-    /// it failed; nothing when the panel it started from is closed or another.
+    /// it failed, whether it is shown or not; nothing when the panel it started from is closed.
     pub(crate) fn ext_panel_answer(
         &mut self,
         origin: &PanelOrigin,
         outcome: Result<Value, String>,
     ) {
-        let Some(panel) = self
-            .extensions
-            .panel
-            .as_mut()
-            .filter(|p| p.ext == origin.ext && p.local == origin.panel)
-        else {
+        let Some(panel) = self.extensions.answered(origin) else {
             return;
         };
         panel.running = None;
@@ -731,12 +842,7 @@ impl App {
     /// A run started from a panel stopped with Durdur: said as the user's choice, not a failure (it was shown in red,
     /// real window, 14 November 2026); its table keeps what it showed.
     pub(crate) fn ext_panel_stopped(&mut self, origin: &PanelOrigin) {
-        if let Some(panel) = self
-            .extensions
-            .panel
-            .as_mut()
-            .filter(|p| p.ext == origin.ext && p.local == origin.panel)
-        {
+        if let Some(panel) = self.extensions.answered(origin) {
             panel.running = None;
             // A change that waited for it does not start it again: the user stopped it.
             panel.rerun = None;
@@ -747,9 +853,10 @@ impl App {
         }
     }
 
-    /// The dock's Eklenti tab: the open panel, its components as KentOS draws them.
+    /// The dock's Eklenti tab: the panel shown, its components as KentOS draws them; the open panels' tabs above it
+    /// when there are several.
     pub(crate) fn extension_panel_view(&self) -> Element<'_, Message> {
-        let Some(p) = &self.extensions.panel else {
+        let Some(p) = self.extensions.panel() else {
             return container(label::muted(
                 "Açık eklenti paneli yok: bir eklentinin sekmesindeki panel düğmesiyle açılır.",
             ))
@@ -908,18 +1015,14 @@ impl App {
                     primary,
                     ..
                 } => {
-                    let running = p.running.as_deref() == Some(id.as_str());
-                    let caption = if running {
-                        format!("{words}…")
-                    } else {
-                        words.clone()
-                    };
+                    // Its caption stays while it runs: with "…" it broke onto two lines in a narrow dock and the form
+                    // jumped (real window, 15 November 2026); the run's line under the form names it.
                     let on = (p.running.is_none() && why.is_none())
                         .then(|| event(PanelEvent::Press(id.clone())));
                     form = form.row(if *primary {
-                        words::primary(caption, on)
+                        words::primary(words.clone(), on)
                     } else {
-                        words::secondary(caption, on)
+                        words::secondary(words.clone(), on)
                     });
                 }
                 Component::Table {
@@ -942,11 +1045,15 @@ impl App {
                 label::caption(name)
             ]
             .width(Fill),
-            words::ghost("Kapat", Some(event(PanelEvent::Close))),
+            words::ghost(
+                "Kapat",
+                Some(event(PanelEvent::Close(self.extensions.active_panel))),
+            ),
         ]
         .spacing(8);
         let mut body = column![header, form].spacing(12).padding(12).width(Fill);
-        // Its button's command running: how far it is, from its ctx.progress (moving until it says), and Durdur.
+        // Its button's command running: the button, how far it is from its ctx.progress (moving until it says), and
+        // Durdur. A change's command runs without a button.
         if let Some(run) = self
             .extensions
             .runners
@@ -954,10 +1061,22 @@ impl App {
             .and_then(|r| r.run.as_ref())
             .filter(|run| run.origin.as_ref().is_some_and(|o| o.panel == p.local))
         {
-            let (share, text) = run.progress.as_ref().map_or(
-                (None, "Çalışıyor…".to_owned()),
-                super::runner::progress_words,
-            );
+            let button = p.definition.body.iter().find_map(|c| match c {
+                Component::Button { id, label, .. } if p.running.as_deref() == Some(id) => {
+                    Some(label.as_str())
+                }
+                _ => None,
+            });
+            let (share, said) = run.progress.as_ref().map_or((None, None), |progress| {
+                let (share, said) = super::runner::progress_words(progress);
+                (share, Some(said))
+            });
+            let text = match (button, said) {
+                (Some(button), Some(said)) => format!("{button} · {said}"),
+                (Some(button), None) => format!("“{button}” çalışıyor…"),
+                (None, Some(said)) => said,
+                (None, None) => "Çalışıyor…".to_owned(),
+            };
             let stop: Element<'_, Message> = if run.stopping.is_some() {
                 label::muted("Durduruluyor…").into()
             } else {
@@ -985,7 +1104,21 @@ impl App {
         for table in tables {
             body = body.push(table);
         }
-        scrollable(body).height(Fill).into()
+        let content = scrollable(body).height(Fill);
+        if self.extensions.panels.len() < 2 {
+            return content.into();
+        }
+        // Several open: a tab each, as the drawings' (a dot: its command runs, or it answered while another was shown).
+        let tabs = Tabs::new(
+            self.extensions.panels.iter().map(|p| {
+                Tab::new(p.definition.title.as_str()).note(p.running.is_some() || p.unseen)
+            }),
+            self.extensions.active_panel,
+            move |at| event(PanelEvent::Activate(at)),
+        )
+        .on_close(move |at| event(PanelEvent::Close(at)))
+        .on_reorder(move |from, to| event(PanelEvent::Move(from, to)));
+        column![tabs, content].into()
     }
 
     /// The open drawing's layers a layer picker offers: none ("—") first, then each layer (groups give their names to

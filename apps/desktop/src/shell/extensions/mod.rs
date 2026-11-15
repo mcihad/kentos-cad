@@ -135,10 +135,13 @@ pub(crate) struct Extensions {
     /// An extension chosen without a click (the window opened, its part changed): its Python environment is looked
     /// for after the update. Only a click looked for it, so the details said "Ortam aranıyor…" until one.
     pub(crate) look_wanted: Option<String>,
-    /// The extension panel open in the dock's Eklenti tab (panels.rs, docs/adr/8057 §24).
-    pub(crate) panel: Option<panels::OpenPanel>,
-    /// A panel's button pressed: what its command's next launch gives the code, and where the rows go.
-    pub(crate) panel_call: Option<panels::PanelCall>,
+    /// The extension panels open in the dock's Eklenti tab, in the order of their tabs (panels.rs, docs/adr/8057 §24);
+    /// the tab shows `active_panel`.
+    pub(crate) panels: Vec<panels::OpenPanel>,
+    pub(crate) active_panel: usize,
+    /// Panels' buttons pressed: what their commands' next launches give the code, and where the rows go; taken in
+    /// the order pressed, by extension and command.
+    pub(crate) panel_calls: Vec<panels::PanelCall>,
     /// Where KentOS last docked the Eklenti tab for a panel's `side`: moved for another side only while it is still
     /// there (the user's own move is kept).
     pub(crate) panel_placed: Option<kentos_ui::widget::docking::Side>,
@@ -177,8 +180,9 @@ impl Default for Extensions {
             captured: None,
             capture_shape: None,
             look_wanted: None,
-            panel: None,
-            panel_call: None,
+            panels: Vec::new(),
+            active_panel: 0,
+            panel_calls: Vec::new(),
             panel_placed: None,
         }
     }
@@ -508,20 +512,10 @@ impl App {
     pub(crate) fn extensions_changed(&mut self) {
         self.extension_tabs_changed();
         self.ext_tools_changed();
-        // What a stopped extension showed goes with it (plan/eklenti.md, Referans eklenti: no ghost): its open panel,
-        // the call its button left and its dock tab. Both stayed, the panel's buttons pressable (14 November 2026).
-        let stopped = self.extensions.panel.as_ref().is_some_and(|p| {
-            self.extensions
-                .registry
-                .as_ref()
-                .is_none_or(|r| r.lease(&p.ext).is_none())
-        });
-        if stopped {
-            self.extensions.panel = None;
-            self.extensions.panel_call = None;
-            self.extensions.panel_placed = None;
-            self.docks.close(crate::app::Panel::Extension);
-        }
+        // What a stopped extension showed goes with it (plan/eklenti.md, Referans eklenti: no ghost): its open panels,
+        // the calls their buttons left and, with the last panel, the dock tab. Both stayed, the panel's buttons
+        // pressable (14 November 2026).
+        self.ext_panels_of_stopped_go();
         self.extensions.troubles = problems::troubles(&self.extensions);
         self.extensions.icons = self
             .extensions

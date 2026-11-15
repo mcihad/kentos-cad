@@ -1599,4 +1599,31 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   satırları kendisi gruplar, komut bir tabloya yazar gibi yazar. Değersiz satır "—" grubuna düşer. Kapı 1: `group` 1–3
   farklı sütun adı; düğmenin `table`'ı bir tabloyu ya da ağacı gösterir. Vitrin'in Değer say'ı artık nesne başına satır
   verir; ağaç dağılımı başlık sayılarıyla gösterir, nesneler altında.
-- **Kalan (ADIM 22):** kart bileşeni; birden çok açık panel.
+- **Birden çok açık panel** (15 Kasım; Vitrin'in iki paneli, `21-paneller`): tek Eklenti dock sekmesi kalır, açık her
+  panel onun üstünde bir sekmedir (KentOS'un belge sekmeleri: `kentos_ui::widget::tabs`; sürüklenerek sıralanır, ×'i
+  ya da orta tık kapatır). Her eklenti panelini ayrı dock sekmesi yapmak dock'un sabit panel listesini (yerleşimin
+  kaydı) dinamik kılmayı gerektirirdi; alt sekmeler tek yerde kalır ve dar dock'ta kayar.
+  - Her panelin değerleri, tabloları ve ağacının kapalı grupları kendinde durur; şeritten yeniden açılan panel
+    gösterilir, ikinci kez açılmaz. Yeni panel sona eklenir ve gösterilir; gösterilen kapanınca sağındaki, yoksa
+    solundaki gösterilir; tek panel kalınca sekme şeridi gider.
+  - **Çalışma başladığı panele yanıt verir, gösterilmese de:** komutu sürerken panelin sekmesinde nokta durur, başka
+    panel gösterilirken yanıt gelince nokta panel gösterilene dek kalır (`unseen`). Değer say gösterilirken Yapıları
+    numarala sürdü: nokta, bitince de nokta, Yapı ara açılınca "5 yapı numaralandı" ve nokta gitti.
+  - **Yer:** sekme, paneli **en son açılanın** `side`'ına gider (KentOS yerleştirdiyse); sekmeler arasında geçmek
+    dock'u taşımaz: alt sekmeye tıklayınca bütün dock'un pencerenin öbür yanına atlaması kullanıcıyı yerinden ederdi.
+    Değer say solda açıldı, Yapı ara açılınca ikisi sağda.
+  - **Çağrılar sıralı liste** (`panel_calls`): tek çağrı yuvası iki panelin aynı anda basılan düğmelerinde (biri
+    ortamı aranırken) birinin çağrısını ezerdi: o komut panel değerleri olmadan koşar, panelin düğmesi "…"da kalırdı.
+    Çağrı değerlerini ve panelini taşıdığından, aynı komutu çağıran iki panelin çağrısını hangi başlatma alırsa alsın
+    yanıt doğru panele gider.
+  - **Bulgu (düzeltildi): ikinci başlatma çağrıyı askıda bırakıyordu.** Aynı eklentinin iki paneli art arda basınca
+    ikinci başlatma eklentinin çalışmasını görüp sessizce dönüyordu (çağrı listede, düğme basılmış kalıyordu);
+    süreç başlatılamadığında da aynısı. Artık ikisi de paneline nedenini söyler ("“Yapıları numarala” sürüyor:
+    bitmesini bekleyin ya da Durdur'a basın"), düğme yeniden basılabilir. Tek panelde de geçerli bir açıktı.
+  - **Bulgu (düzeltildi): çalışan düğmenin adına "…" eklenince** dar dock'ta "Yapıları numarala…" iki satıra
+    kırılıyor, form çalışma başlarken aşağı zıplıyordu. Düğmenin adı artık değişmez; formun altındaki ilerleme satırı
+    düğmeyi adlandırır ("“Yapıları numarala” çalışıyor…", ilerleme gelince "Yapıları numarala · %40 · 3. yapı
+    numaralanıyor"); değişikliğin komutunda düğme yoktur, satır eskisi gibi.
+  - Eklenti kapatılınca yalnız onun panelleri gider; diğer eklentinin paneli ve dock sekmesi kalır, son panelle sekme
+    de gider. Test: üç panel (Vitrin'in ikisi, MEBİS'in Mezar sorgulama'sı) ekransız.
+- **Kalan (ADIM 22):** kart bileşeni.

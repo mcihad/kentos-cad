@@ -598,10 +598,7 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
         "yapi-paneli".into(),
     ));
     assert_eq!(
-        gis.extensions
-            .panel
-            .as_ref()
-            .map(|p| p.definition.title.as_str()),
+        gis.extensions.panel().map(|p| p.definition.title.as_str()),
         Some("Yapı ara")
     );
     assert!(
@@ -610,7 +607,7 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
     );
     let _ = gis.extensions_event(Event::Panel(PanelEvent::Text("sorgu".into(), "Y-0".into())));
     let _ = gis.extensions_event(Event::Panel(PanelEvent::Check("numarasiz".into(), true)));
-    let panel = gis.extensions.panel.as_ref().unwrap();
+    let panel = gis.extensions.panel().unwrap();
     assert_eq!(
         panel.params().unwrap(),
         serde_json::json!({ "sorgu": "Y-0", "katman": null, "numarasiz": true }),
@@ -621,7 +618,7 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
         .python_reasons
         .insert("tr.ornek.vitrin".into(), Some("Ortam hazırlanmadı.".into()));
     let _ = gis.extensions_event(Event::Panel(PanelEvent::Press("ara".into())));
-    let panel = gis.extensions.panel.as_ref().unwrap();
+    let panel = gis.extensions.panel().unwrap();
     assert_eq!(
         panel.said,
         Some((
@@ -629,7 +626,7 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
             "Ortam hazırlanmadı.".to_owned()
         ))
     );
-    assert!(panel.running.is_none() && gis.extensions.panel_call.is_none());
+    assert!(panel.running.is_none() && gis.extensions.panel_calls.is_empty());
     // A run's answer: its rows into the table, its words under the panel; a panel since closed takes none.
     let origin = PanelOrigin {
         ext: "tr.ornek.vitrin".into(),
@@ -642,7 +639,7 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
         Ok(serde_json::json!({ "rows": [{ "no": "Y-01", "alan (m²)": 120.0 }], "columns": ["no", "alan (m²)"],
                                "message": "1 yapı bulundu." })),
     );
-    let panel = gis.extensions.panel.as_ref().unwrap();
+    let panel = gis.extensions.panel().unwrap();
     assert_eq!(panel.tables["sonuc"].1.len(), 1);
     assert_eq!(
         panel.said,
@@ -652,10 +649,13 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
         ))
     );
     let _ = gis.extension_panel_view();
-    let _ = gis.extensions_event(Event::Panel(PanelEvent::Close));
-    assert!(gis.extensions.panel.is_none());
+    let _ = gis.extensions_event(Event::Panel(PanelEvent::Close(0)));
+    assert!(gis.extensions.panel().is_none());
     gis.ext_panel_answer(&origin, Err("geç".into()));
-    assert!(gis.extensions.panel.is_none(), "a late answer goes nowhere");
+    assert!(
+        gis.extensions.panel().is_none(),
+        "a late answer goes nowhere"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -701,7 +701,7 @@ fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
     say(&mut gis, PanelEvent::Choose("alan".into(), "ada".into()));
     // Nothing selected: said, nothing taken.
     say(&mut gis, PanelEvent::Pick("nesneler".into()));
-    let said = |gis: &App| gis.extensions.panel.as_ref().unwrap().said.clone();
+    let said = |gis: &App| gis.extensions.panel().unwrap().said.clone();
     assert_eq!(
         said(&gis),
         Some((
@@ -724,7 +724,7 @@ fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
         .collect();
     gis.selection.set([parcels[0], parcels[1], buildings[0]]);
     say(&mut gis, PanelEvent::Pick("nesneler".into()));
-    let panel = gis.extensions.panel.as_ref().unwrap();
+    let panel = gis.extensions.panel().unwrap();
     assert_eq!(
         panel.params().unwrap(),
         serde_json::json!({ "katman": "parsel", "alan": "ada", "nesneler": uids })
@@ -745,14 +745,11 @@ fn a_panels_pickers_list_the_layers_fields_and_take_the_selection() {
             "“Nesneler”: seçili 1 nesneden hiçbiri “Parsel sınırı” katmanından değil.".to_owned()
         ))
     );
-    assert_eq!(
-        gis.extensions.panel.as_ref().unwrap().picks["nesneler"].len(),
-        2
-    );
+    assert_eq!(gis.extensions.panel().unwrap().picks["nesneler"].len(), 2);
     // Another layer: the field and the objects chosen from the one before go.
     say(&mut gis, PanelEvent::Choose("katman".into(), "yapi".into()));
     assert_eq!(
-        gis.extensions.panel.as_ref().unwrap().params().unwrap(),
+        gis.extensions.panel().unwrap().params().unwrap(),
         serde_json::json!({ "katman": "yapi", "alan": null, "nesneler": [] })
     );
     let _ = gis.extension_panel_view();
@@ -796,8 +793,8 @@ fn a_commands_progress_shows_in_its_notice_and_its_panel() {
         &origin,
         Ok(json!({ "rows": [{ "no": "—" }], "columns": ["no"], "message": "1 yapı bulundu." })),
     );
-    gis.extensions.panel.as_mut().unwrap().running = Some("numarala".into());
-    gis.extensions.panel_call = Some(PanelCall {
+    gis.extensions.panel_mut().unwrap().running = Some("numarala".into());
+    gis.extensions.panel_calls.push(PanelCall {
         ext: VITRIN.into(),
         command: "yapilari-numarala".into(),
         params: json!({}),
@@ -849,7 +846,7 @@ fn a_commands_progress_shows_in_its_notice_and_its_panel() {
         Said::Message(json!({ "type": "done", "id": id, "ok": true,
                              "result": { "kind": "message", "message": "5 yapı numaralandı." } })),
     ));
-    let panel = gis.extensions.panel.as_ref().unwrap();
+    let panel = gis.extensions.panel().unwrap();
     assert_eq!(
         panel.said,
         Some((
@@ -866,7 +863,7 @@ fn a_commands_progress_shows_in_its_notice_and_its_panel() {
     // Durdur: said as the user's choice, not in red.
     gis.ext_panel_stopped(&origin);
     assert_eq!(
-        gis.extensions.panel.as_ref().unwrap().said,
+        gis.extensions.panel().unwrap().said,
         Some((
             crate::exchange::words::Kind::Info,
             "Durduruldu; çizime yazdıkları geri alındı.".to_owned()
@@ -913,6 +910,165 @@ fn a_panel_opens_on_its_side_and_a_moved_tab_stays() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// docs/adr/8057 §24: several panels stay open in the Eklenti tab, a tab each, of one extension or more: a panel opened
+/// again is shown, what was typed in each kept; a run answers its panel while another is shown, its tab marking it
+/// until shown; a second panel's call that finds its extension running says so (its button stayed pressed); closing
+/// the panel shown shows the next; a disabled extension's panels go, the others' stay.
+#[test]
+fn several_panels_stay_open_in_tabs_each_with_its_own() {
+    use super::panels::{PanelCall, PanelEvent, PanelOrigin};
+    use crate::app::Panel;
+    use serde_json::json;
+
+    const VITRIN: &str = "tr.ornek.vitrin";
+    const MEBIS: &str = "tr.ornek.mebis";
+    let dir = temp("paneller");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    install(
+        &mut gis,
+        "mebis.kek",
+        package("mebis", |m| {
+            m["dependencies"]["extensions"] = json!([]);
+        }),
+    );
+    let open = |gis: &mut App, ext: &str, local: &str| {
+        let _ = gis.extensions_event(Event::OpenPanel(ext.into(), local.into()));
+    };
+    let say = |gis: &mut App, e: PanelEvent| {
+        let _ = gis.extensions_event(Event::Panel(e));
+    };
+    let shown = |gis: &App| gis.extensions.panel().map(|p| p.local.clone());
+    let origin = |ext: &str, panel: &str, button: &str| PanelOrigin {
+        ext: ext.into(),
+        panel: panel.into(),
+        button: button.into(),
+        table: None,
+    };
+    open(&mut gis, VITRIN, "yapi-paneli");
+    say(&mut gis, PanelEvent::Text("sorgu".into(), "Y-0".into()));
+    open(&mut gis, VITRIN, "deger-paneli");
+    open(&mut gis, MEBIS, "search-dock");
+    assert_eq!(
+        gis.extensions
+            .panels
+            .iter()
+            .map(|p| p.definition.title.as_str())
+            .collect::<Vec<_>>(),
+        ["Yapı ara", "Değer say", "Mezar sorgulama"]
+    );
+    assert_eq!(
+        shown(&gis).as_deref(),
+        Some("search-dock"),
+        "the one opened last"
+    );
+    let _ = gis.extension_panel_view();
+    // Yapı ara opened again: shown, not opened twice, what was typed in it kept.
+    open(&mut gis, VITRIN, "yapi-paneli");
+    assert_eq!(gis.extensions.panels.len(), 3);
+    assert_eq!(gis.extensions.panel().unwrap().texts["sorgu"], "Y-0");
+    // Its search answers while MEBİS's panel is shown: its rows go to it, its tab marks it until it is shown.
+    say(&mut gis, PanelEvent::Activate(2));
+    gis.ext_panel_answer(
+        &PanelOrigin {
+            table: Some("sonuc".into()),
+            ..origin(VITRIN, "yapi-paneli", "ara")
+        },
+        Ok(json!({ "rows": [{ "no": "Y-01" }], "columns": ["no"] })),
+    );
+    let yapi = &gis.extensions.panels[0];
+    assert!(yapi.unseen && yapi.tables["sonuc"].1.len() == 1);
+    assert_eq!(shown(&gis).as_deref(), Some("search-dock"), "nothing jumps");
+    let _ = gis.extension_panel_view();
+    say(&mut gis, PanelEvent::Activate(0));
+    assert!(!gis.extensions.panels[0].unseen, "seen once shown");
+    // A run of Vitrin's going (Yapıları numarala) when Değer say's call is launched: Değer say says so, not stuck.
+    gis.extensions.panels[0].running = Some("numarala".into());
+    gis.extensions.panel_calls.push(PanelCall {
+        ext: VITRIN.into(),
+        command: "yapilari-numarala".into(),
+        params: json!({}),
+        origin: origin(VITRIN, "yapi-paneli", "numarala"),
+    });
+    gis.extensions.panels[1].running = Some("say".into());
+    gis.extensions.panel_calls.push(PanelCall {
+        ext: VITRIN.into(),
+        command: "deger-say".into(),
+        params: json!({}),
+        origin: origin(VITRIN, "deger-paneli", "say"),
+    });
+    let package = gis
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.package_dir(VITRIN))
+        .unwrap();
+    for (command, handler, title) in [
+        (
+            "yapilari-numarala",
+            "vitrin.logic:yapilari_numarala",
+            "Yapıları numarala",
+        ),
+        ("deger-say", "vitrin.logic:deger_say", "Değer say"),
+    ] {
+        let launch = super::runner::Launch::for_test(
+            "/bin/sh".into(),
+            package.clone(),
+            handler,
+            title,
+            false,
+        );
+        let _ = gis.extensions_event(Event::Launch(
+            VITRIN.into(),
+            "command".into(),
+            command.into(),
+            Ok(launch),
+        ));
+    }
+    let run = gis.extensions.runners[VITRIN]
+        .run
+        .as_ref()
+        .expect("running");
+    assert_eq!(
+        run.origin.as_ref().map(|o| o.panel.as_str()),
+        Some("yapi-paneli")
+    );
+    let deger = &gis.extensions.panels[1];
+    assert!(deger.running.is_none(), "its button pressable again");
+    assert_eq!(
+        deger.said,
+        Some((
+            crate::exchange::words::Kind::Error,
+            "“Yapıları numarala” sürüyor: bitmesini bekleyin ya da Durdur'a basın.".to_owned()
+        ))
+    );
+    assert!(gis.extensions.panel_calls.is_empty());
+    let _ = gis.extension_panel_view();
+    // Tabs moved: the panel shown stays shown. Closing it shows the next, else the one before.
+    say(&mut gis, PanelEvent::Move(0, 2));
+    assert_eq!(gis.extensions.active_panel, 2);
+    assert_eq!(shown(&gis).as_deref(), Some("yapi-paneli"));
+    say(&mut gis, PanelEvent::Activate(0));
+    say(&mut gis, PanelEvent::Close(0));
+    assert_eq!(shown(&gis).as_deref(), Some("search-dock"), "the next");
+    say(&mut gis, PanelEvent::Activate(1));
+    say(&mut gis, PanelEvent::Close(1));
+    assert_eq!(
+        shown(&gis).as_deref(),
+        Some("search-dock"),
+        "the one before"
+    );
+    // Vitrin disabled: its panels go, MEBİS's stays, with the dock's tab; MEBİS's too: the tab goes.
+    open(&mut gis, VITRIN, "deger-paneli");
+    let _ = gis.extensions_event(Event::Disable(VITRIN.into()));
+    assert_eq!(shown(&gis).as_deref(), Some("search-dock"));
+    assert_eq!(gis.extensions.panels.len(), 1);
+    assert!(gis.docks.contains(Panel::Extension));
+    let _ = gis.extensions_event(Event::Disable(MEBIS.into()));
+    assert!(gis.extensions.panels.is_empty() && !gis.docks.contains(Panel::Extension));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 /// plan/eklenti.md, Referans eklenti: an extension disabled leaves nothing behind: its open panel and its dock tab go,
 /// a fix its audit offered is refused (both stayed: the panel's buttons pressable, Düzelt writing for a stopped
 /// extension).
@@ -929,7 +1085,7 @@ fn a_disabled_extensions_panel_and_audit_fixes_go_with_it() {
     gis.extensions_changed();
     install(&mut gis, "vitrin.kek", vitrin_package());
     let _ = gis.extensions_event(Event::OpenPanel(VITRIN.into(), "yapi-paneli".into()));
-    assert!(gis.extensions.panel.is_some() && gis.docks.contains(Panel::Extension));
+    assert!(gis.extensions.panel().is_some() && gis.docks.contains(Panel::Extension));
     let session = gis.document.as_ref().unwrap().session;
     gis.extensions.audit = Some(AuditState {
         ext: VITRIN.into(),
@@ -959,8 +1115,8 @@ fn a_disabled_extensions_panel_and_audit_fixes_go_with_it() {
         "running: its fix applies"
     );
     let _ = gis.extensions_event(Event::Disable(VITRIN.into()));
-    assert!(gis.extensions.panel.is_none(), "its panel went with it");
-    assert!(gis.extensions.panel_call.is_none());
+    assert!(gis.extensions.panel().is_none(), "its panel went with it");
+    assert!(gis.extensions.panel_calls.is_empty());
     assert!(!gis.docks.contains(Panel::Extension), "its tab too");
     assert_eq!(
         gis.ext_audit_fix_refused(0).as_deref(),
@@ -1002,20 +1158,20 @@ fn an_inputs_change_runs_its_command_and_waits_for_a_running_one() {
     );
     assert_eq!(tried(&gis), 0);
     // A command running: the field's change waits, and runs once when it ends.
-    gis.extensions.panel.as_mut().unwrap().running = Some("say".into());
+    gis.extensions.panel_mut().unwrap().running = Some("say".into());
     say(&mut gis, PanelEvent::Choose("alan".into(), "ada".into()));
     assert_eq!(
-        gis.extensions.panel.as_ref().unwrap().rerun.as_deref(),
+        gis.extensions.panel().unwrap().rerun.as_deref(),
         Some("alan")
     );
     assert_eq!(tried(&gis), 0, "nothing started meanwhile");
     let _ = gis.ext_panel_rerun();
     assert_eq!(tried(&gis), 0, "still running: it waits");
-    gis.extensions.panel.as_mut().unwrap().running = None;
+    gis.extensions.panel_mut().unwrap().running = None;
     let _ = gis.ext_panel_rerun();
     // Its command started (no environment in a test: it says it cannot run, in the panel and a notice).
     assert_eq!(tried(&gis), 1, "the rerun started its command");
-    let panel = gis.extensions.panel.as_ref().unwrap();
+    let panel = gis.extensions.panel().unwrap();
     assert!(panel.rerun.is_none() && panel.running.is_none());
     assert!(matches!(
         panel.said,
@@ -1031,7 +1187,7 @@ fn an_inputs_change_runs_its_command_and_waits_for_a_running_one() {
         "tried again"
     );
     // Durdur drops a change that waited: the user stopped it.
-    gis.extensions.panel.as_mut().unwrap().running = Some("say".into());
+    gis.extensions.panel_mut().unwrap().running = Some("say".into());
     say(&mut gis, PanelEvent::Choose("alan".into(), "ada".into()));
     let origin = super::panels::PanelOrigin {
         ext: VITRIN.into(),
@@ -1040,7 +1196,7 @@ fn an_inputs_change_runs_its_command_and_waits_for_a_running_one() {
         table: Some("dagilim".into()),
     };
     gis.ext_panel_stopped(&origin);
-    assert!(gis.extensions.panel.as_ref().unwrap().rerun.is_none());
+    assert!(gis.extensions.panel().unwrap().rerun.is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }
 

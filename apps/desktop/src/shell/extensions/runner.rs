@@ -471,12 +471,19 @@ impl App {
                 return Task::none();
             }
         };
-        if self
+        // Another run started while this one's environment was looked for (two panels' buttons, one extension): a
+        // panel's call says so, its button pressable again (it stayed pressed, "…", forever).
+        if let Some(run) = self
             .extensions
             .runners
             .get(ext)
-            .is_some_and(|r| r.run.is_some())
+            .and_then(|r| r.run.as_ref())
         {
+            let busy = format!(
+                "“{}” sürüyor: bitmesini bekleyin ya da Durdur'a basın.",
+                run.title
+            );
+            self.ext_panel_dropped(ext, local, &busy);
             return Task::none();
         }
         // One code writes the drawing at a time (the console's, an agent's, another extension's).
@@ -539,6 +546,7 @@ impl App {
                     task = heard;
                 }
                 Err(why) => {
+                    self.ext_panel_dropped(ext, local, &why);
                     self.extension_failed(
                         ext,
                         &format!("{kind}:{local}"),
