@@ -6,8 +6,12 @@ use super::player::AREA;
 use super::{Player, Trace, VARIANTS, scratch_file};
 use crate::app::{App, Message};
 
+/// One replay at a time: the trace's scratch file is shared by the tests that play it.
+static REPLAY: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 /// The 2+1 flat as KentOS Mimari draws it (the layer key on, Dış duvar 25).
 pub(crate) fn flat() -> App {
+    let _one = REPLAY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let traces = Trace::all().expect("the traces read");
     let trace = traces.iter().find(|t| t.id == "acceptance-flat").expect("the 2+1 trace");
     let variant = VARIANTS[0];
@@ -315,5 +319,13 @@ fn print_the_flat_s_findings() {
         println!("{} | {} | {} | fix: {:?}", f.code, f.message, f.uids.len(), f.fix.as_ref().map(|x| &x.label));
     }
     let facts = app.arch_audit_standards_facts().expect("facts");
+    let doc = &app.document.as_ref().unwrap().model;
+    for l in facts["cad"]["layers"].as_array().unwrap() {
+        for u in l["firstFree"].as_array().unwrap() {
+            let uid = u.as_str().unwrap().parse().unwrap();
+            let e = doc.slot_of(uid).and_then(|s| doc.get(s));
+            println!("free {} {:?}", l["name"], e.map(|e| (e.kind(), e.base().attrs.clone(), e.base().label.clone())));
+        }
+    }
     println!("{}", serde_json::to_string_pretty(&facts["cad"]).unwrap());
 }

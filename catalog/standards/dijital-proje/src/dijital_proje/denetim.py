@@ -7,7 +7,7 @@ başlaması çizimde düzeltilecek bir kusur değildir.
 
 from kentos import ext
 
-from . import ek34, kapsam
+from . import ek34, kapsam, turetim
 
 
 @ext.audit("kapsam")
@@ -46,6 +46,21 @@ def ek34_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """EK-3 ve EK-4: mahal numarası ve adı, katman, tarama, aks çizgisi, ölçü yazısı ve blok adı (Md. 7)."""
     bulgular = []
     for b in ek34.denetle({"cad": facts.project.cad}):
+        fix = None
+        if b["fix"]:
+            fix = ext.SemanticFix(title=b["fix"]["label"], command=b["fix"]["command"], args=b["fix"]["input"])
+        nesne = b["uids"][0] if b["uids"] else None
+        bulgular.append(ext.AuditFinding(message=f"{b['message']} [{b['cite']}]", severity=b["severity"],
+                                         feature_id=nesne, fix=fix))
+    return bulgular
+
+
+@ext.audit("turetim")
+def turetim_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Paftalar modelden (Md. 9/1): eski kesit ve görünüş, kaynağı silinmiş çizim, model katmanında serbest çizim, kopmuş
+    etiket ve ölçü."""
+    bulgular = []
+    for b in turetim.denetle({"cad": facts.project.cad}):
         fix = None
         if b["fix"]:
             fix = ext.SemanticFix(title=b["fix"]["label"], command=b["fix"]["command"], args=b["fix"]["input"])

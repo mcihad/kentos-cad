@@ -278,6 +278,8 @@ impl App {
                         // Paftaları toplu yayınla on the set: a file a sheet, PDF/A-2, named by EK-2, checked.
                         let _ = self.sheet_publish_open();
                         if let Some(Window::SheetPublish(p)) = &mut self.exchange {
+                            // A permit publication: its gate checks the sheets come from the model (docs/adr/8065).
+                            p.permit = Some(super::permit_gate::Gate::default());
                             let ids: Vec<&str> = made.iter().map(|m| m.sheet.as_str()).collect();
                             for r in &mut p.rows {
                                 r.selected = ids.contains(&r.id.as_str());

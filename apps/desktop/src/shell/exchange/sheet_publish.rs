@@ -40,6 +40,9 @@ pub struct State {
     pub folder: Option<PublishStatusReport>,
     /// The job asks the folder's state, not for a publication.
     asking: bool,
+    /// A permit set's publication (Ruhsat takımı): its gate, the sheets drawn from the model (docs/adr/8065,
+    /// permit_gate.rs); none for another publication.
+    pub permit: Option<super::permit_gate::Gate>,
 }
 impl std::fmt::Debug for State {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -87,6 +90,10 @@ pub enum Event {
     Tick,
     /// A check's row: close the window, open that sheet and its Ön denetim, where each finding has its item.
     Go(String),
+    /// The permit gate's answer for the drawing's generation (docs/adr/8065).
+    Gate(u64, Result<serde_json::Value, String>),
+    /// The permit gate's Denetim'de göster: the window closed, the Mimari audit opened.
+    GateShow,
     Close,
 }
 fn event(e: Event) -> Message {
@@ -195,6 +202,7 @@ impl App {
             close_after: false,
             folder: None,
             asking: false,
+            permit: None,
         })));
         self.dialog = Some(crate::app::Dialog::Exchange);
         Task::none()
@@ -209,7 +217,40 @@ impl App {
         }
         self.sheet_publish_event(Event::Plan)
     }
+    /// The window's events; a permit publication's gate is asked with each check and keeps Yayınla shut while it is
+    /// (docs/adr/8065).
     pub(crate) fn sheet_publish_event(&mut self, e: Event) -> Task<Message> {
+        let permit = matches!(&self.exchange, Some(Window::SheetPublish(s)) if s.permit.is_some());
+        match e {
+            Event::Gate(generation, answer) => {
+                self.permit_gate_answer(generation, answer);
+                return Task::none();
+            }
+            Event::GateShow => {
+                self.close_exchange();
+                return self.update(Message::Run("arch.audit"));
+            }
+            Event::Publish if permit && !self.permit_gate_open() => return Task::none(),
+            Event::Plan if permit => {
+                let gate = self.permit_gate_ask();
+                let plan = self.sheet_publish_step(Event::Plan);
+                return Task::batch([gate, plan]);
+            }
+            _ => {}
+        }
+        self.sheet_publish_step(e)
+    }
+
+    /// Whether the permit gate is open for the drawing as it is.
+    fn permit_gate_open(&self) -> bool {
+        let generation = self.document.as_ref().map(|d| d.model.generation());
+        match (&self.exchange, generation) {
+            (Some(Window::SheetPublish(s)), Some(g)) => s.permit.as_ref().is_none_or(|p| p.open(g)),
+            _ => false,
+        }
+    }
+
+    fn sheet_publish_step(&mut self, e: Event) -> Task<Message> {
         if matches!(e, Event::Close) {
             self.close_exchange();
             return Task::none();
@@ -567,7 +608,7 @@ impl App {
                     }
                 }
             }
-            Event::Go(_) | Event::Close => {}
+            Event::Go(_) | Event::Close | Event::Gate(..) | Event::GateShow => {}
         }
         Task::none()
     }
@@ -898,6 +939,10 @@ impl App {
             }
             body = body.push(results);
         }
+        // A permit publication's gate (docs/adr/8065).
+        if let (Some(gate), Some(doc)) = (&s.permit, &self.document) {
+            body = body.push(self.permit_gate_view(gate, doc.model.generation()));
+        }
 
         let ready = !busy
             && matches!(s.op, CallOp::Plan)
@@ -905,7 +950,8 @@ impl App {
                 .document
                 .as_ref()
                 .is_some_and(|d| d.model.generation() == s.generation)
-            && s.report.as_ref().is_some_and(|r| r.ready);
+            && s.report.as_ref().is_some_and(|r| r.ready)
+            && self.permit_gate_open();
         let mut window = Dialog::new(if s.check_only {
             "Baskı öncesi tam denetim"
         } else {

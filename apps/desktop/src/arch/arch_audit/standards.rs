@@ -1,5 +1,5 @@
-//! The Denetim tab's EK-3 and EK-4 findings (docs/adr/8064; plan/bim-plan.md BIM-03): the standards package's Python rule
-//! (`dijital_proje.ek34.denetle`, bim-plan K10) on the drawing's CAD facts (`kentos_processing::audit_facts::cad`),
+//! The Denetim tab's EK-3 and EK-4 findings (docs/adr/8064; plan/bim-plan.md BIM-03) and the sheets-from-the-model ones
+//! (docs/adr/8065, BIM-04): the standards package's Python rules (`dijital_proje.mimari.denetle`, bim-plan K10) on the drawing's CAD facts (`kentos_processing::audit_facts::cad`),
 //! asked after each check of the whole drawing and listed in the Mevzuat group beside the regulation's other findings,
 //! each naming Dijital Proje Yön. 7 and the annex's clause and page. A fix is the rule's KentOS command, run as any
 //! finding's: one undo step.
@@ -19,11 +19,17 @@ use crate::app::{App, Message};
 
 /// The standards package and its function.
 const PACKAGE: &str = "dijital-proje";
-const MODULE: &str = "dijital_proje.ek34";
+const MODULE: &str = "dijital_proje.mimari";
 const FUNCTION: &str = "denetle";
 
-/// The findings this module adds, by their codes' start.
-pub(super) const CODES: &str = "digital_ek";
+/// The findings this module adds, by their codes' starts: EK-3 and EK-4's, and the sheets-from-the-model rule's
+/// (docs/adr/8065).
+const CODES: [&str; 3] = ["digital_ek", "digital_derived", "digital_free"];
+
+/// Whether a finding is this module's.
+fn ours(code: &str) -> bool {
+    CODES.iter().any(|c| code.starts_with(c))
+}
 
 impl App {
     /// The facts the rule reads: the CAD drawing's section alone (the rule reads nothing else).
@@ -39,7 +45,7 @@ impl App {
         let panel = &mut self.arch.arch_audit;
         let whole = matches!(panel.scope, AuditScope::All);
         if let Some(a) = panel.audited.as_mut() {
-            a.findings.retain(|f| !f.code.starts_with(CODES));
+            a.findings.retain(|f| !ours(&f.code));
             if whole {
                 a.findings.extend(panel.standards.iter().cloned());
             }
@@ -89,7 +95,7 @@ impl App {
             && matches!(panel.scope, AuditScope::All)
         {
             let kept = panel.selected.and_then(|i| a.findings.get(i)).map(|f| f.key.clone());
-            a.findings.retain(|f| !f.code.starts_with(CODES));
+            a.findings.retain(|f| !ours(&f.code));
             a.findings.extend(panel.standards.iter().cloned());
             panel.selected = kept.and_then(|k| a.findings.iter().position(|f| f.key == k));
             panel.chosen.retain(|i| *i < a.findings.len());
@@ -117,7 +123,8 @@ fn findings(answer: &Value) -> Vec<ArchAuditFinding> {
     for f in answer.as_array().into_iter().flatten() {
         let text = |k: &str| f.get(k).and_then(Value::as_str).unwrap_or_default().to_owned();
         let code = text("code");
-        if !code.starts_with(CODES) {
+        // A broken tag or dimension is the audit's own Etiketler or Ölçüler finding already.
+        if !ours(&code) {
             continue;
         }
         let uids: Vec<String> =

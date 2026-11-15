@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 0.3.0 — 16 Kasım 2026
+
+- Yeni kural: paftalar modelden (`turetim`, docs/adr/8065; Md. 9/1, EK-9 satır 21). Eski kesit ve görünüş (Yeniden çiz tek
+  adım), işareti silinmiş kesit, model katmanında serbest çizim, kopmuş etiket ve ölçü; hepsi hata: ruhsat yayını onlar
+  kapanmadan yapılmaz. `mimari.denetle` iki kuralı birlikte verir.
+
 ## 0.2.0 — 16 Kasım 2026
 
 - Yeni kural: EK-3 ve EK-4 (`ek34`, docs/adr/8064). Mahal numarasının kalıbı, kat kodu, sırası ve saat yönü; mahal adının

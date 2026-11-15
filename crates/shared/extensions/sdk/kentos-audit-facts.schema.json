@@ -76,6 +76,61 @@
       ],
       "type": "object"
     },
+    "CadBroken": {
+      "description": "An annotation whose tie broke.",
+      "properties": {
+        "kind": {
+          "description": "`tag` or `dimension`.",
+          "type": "string"
+        },
+        "uid": {
+          "description": "Its persistent id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "uid"
+      ],
+      "type": "object"
+    },
+    "CadDerived": {
+      "description": "A section or an elevation drawn from its mark (docs/adr/8042, 8043).",
+      "properties": {
+        "inserts": {
+          "description": "How many times it is placed.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "description": "`section` or `elevation`.",
+          "type": "string"
+        },
+        "mark": {
+          "description": "Its mark's persistent id; none when the mark is gone.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "\"B-B kesiti\", \"Kuzey görünüşü\".",
+          "type": "string"
+        },
+        "state": {
+          "description": "`current`: what drawing it again gives; `stale`: the model changed since; `notDrawn`: its mark has no drawing\nyet; `gone`: its drawing's mark is no longer in the drawing.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "state",
+        "inserts"
+      ],
+      "type": "object"
+    },
     "CadFacts": {
       "description": "The drawing's CAD facts.",
       "properties": {
@@ -83,6 +138,22 @@
           "description": "The blocks inserted, by name.",
           "items": {
             "$ref": "#/$defs/CadBlock"
+          },
+          "type": "array"
+        },
+        "broken": {
+          "default": [],
+          "description": "The tags whose object is gone and the dimensions whose tie to an object broke, by persistent id.",
+          "items": {
+            "$ref": "#/$defs/CadBroken"
+          },
+          "type": "array"
+        },
+        "derived": {
+          "default": [],
+          "description": "The sections and elevations drawn from their marks, with whether each is what the model would draw now\n(docs/adr/8065), by name.",
+          "items": {
+            "$ref": "#/$defs/CadDerived"
           },
           "type": "array"
         },
@@ -145,8 +216,23 @@
     "CadLayer": {
       "description": "A layer.",
       "properties": {
+        "annotations": {
+          "default": 0,
+          "description": "How many are annotations tied to the drawing (dimensions, tags, texts, leaders, tables, marks).",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
         "first": {
           "description": "Its first objects by persistent id, at most [`MOST_SHOWN`]: what a finding about the layer selects.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "firstFree": {
+          "default": [],
+          "description": "Its first free objects by persistent id, at most [`MOST_SHOWN`].",
           "items": {
             "type": "string"
           },
@@ -158,6 +244,13 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "free": {
+          "default": 0,
+          "description": "How many are free drawing: lines, polylines, arcs, circles, curves, points, hatches.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
         },
         "hatches": {
           "description": "How many of them are hatches (a hatch object, not a wall's own fill).",
@@ -179,6 +272,13 @@
         "lineType": {
           "description": "Its built-in line type: `continuous`, `dashed`, `dashdot` or `dotted` (with a project line type, the nearest).",
           "type": "string"
+        },
+        "model": {
+          "default": 0,
+          "description": "How many of its objects are the model's (walls, openings, rooms, slabs, columns, stairs …, blocks placed).",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
         },
         "name": {
           "description": "Its name, as the layer tree shows it and a DXF writes it.",

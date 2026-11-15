@@ -5,7 +5,9 @@ karar verir. Masaüstünde ve bulut işinde aynı betik çalışır.
 
 - ``kapsam``: dijital teslim kapsamı; bu projede PDF/A, IFC, modelden PDF/A ve e-PYS ne zaman, hangi maddeyle.
 - ``ek34``: EK-3 ve EK-4 denetimi; mahal numarası ve adı, katman, tarama, aks çizgisi, ölçü yazısı, blok adı.
+- ``turetim``: paftaların modelden üretildiği; eski kesit ve görünüş, model katmanında serbest çizim, kopmuş bağ.
+- ``mimari``: Mimari denetimin standart kuralları bir arada.
 - ``denetim``: KentOS'un denetimine katılan kurallar (``@ext.audit``).
 """
 
-__all__ = ["ek34", "kapsam"]
+__all__ = ["ek34", "kapsam", "mimari", "turetim"]

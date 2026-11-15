@@ -938,6 +938,18 @@
   "block_name": [
    "EK-4 m. 4.18 · PDF s. 22",
    "EK-4 Tablo 4.4 · PDF s. 24"
+  ],
+  "derived_stale": [
+   "EK-9 Tablo 9.1 satır 21 · PDF s. 239"
+  ],
+  "derived_gone": [
+   "EK-9 Tablo 9.1 satır 21 · PDF s. 239"
+  ],
+  "free_on_model_layer": [
+   "EK-9 Tablo 9.1 satır 21 · PDF s. 239"
+  ],
+  "annotation_broken": [
+   "EK-9 Tablo 9.1 satır 21 · PDF s. 239"
   ]
  }
 }

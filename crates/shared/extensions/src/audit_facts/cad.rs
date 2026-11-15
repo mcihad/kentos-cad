@@ -2,7 +2,8 @@
 //! regulation's EK-3 and EK-4 rules read of a 2D drawing (Md. 7; plan/bim-plan.md BIM-03): every layer's name, its
 //! objects, hatches and line type; the blocks inserted and the layers they stand on; the typefaces the dimensions write
 //! in; the grids' layers; every room's number, name, storey code (EK-2 Tablo 2.14, as the sheets name storeys) and
-//! centre. The rules are Python's (bim-plan K10): the facts say what is drawn, never whether it is right.
+//! centre; each layer's objects as model, annotation and free drawing, the sections and elevations with whether they are
+//! still what the model draws, and the annotations whose tie broke (docs/adr/8065, Md. 9/1). The rules are Python's (bim-plan K10): the facts say what is drawn, never whether it is right.
 //!
 //! An optional section of version 1, as [`super::architecture`]: absent when the drawing has neither a layer holding
 //! objects nor a room, so an empty drawing's facts stay what they were. The layers in the layer tree's order; the
@@ -31,6 +32,40 @@ pub struct CadFacts {
     pub grids: Vec<CadGrid>,
     /// Every room, by persistent id.
     pub rooms: Vec<CadRoom>,
+    /// The sections and elevations drawn from their marks, with whether each is what the model would draw now
+    /// (docs/adr/8065), by name.
+    #[serde(default)]
+    pub derived: Vec<CadDerived>,
+    /// The tags whose object is gone and the dimensions whose tie to an object broke, by persistent id.
+    #[serde(default)]
+    pub broken: Vec<CadBroken>,
+}
+
+/// A section or an elevation drawn from its mark (docs/adr/8042, 8043).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+pub struct CadDerived {
+    /// `section` or `elevation`.
+    pub kind: String,
+    /// "B-B kesiti", "Kuzey görünüşü".
+    pub name: String,
+    /// Its mark's persistent id; none when the mark is gone.
+    pub mark: Option<String>,
+    /// `current`: what drawing it again gives; `stale`: the model changed since; `notDrawn`: its mark has no drawing
+    /// yet; `gone`: its drawing's mark is no longer in the drawing.
+    pub state: String,
+    /// How many times it is placed.
+    pub inserts: u64,
+}
+
+/// An annotation whose tie broke.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+pub struct CadBroken {
+    /// `tag` or `dimension`.
+    pub kind: String,
+    /// Its persistent id.
+    pub uid: String,
 }
 
 /// A layer.
@@ -50,6 +85,18 @@ pub struct CadLayer {
     pub first: Vec<String>,
     /// Its first hatches by persistent id, at most [`MOST_SHOWN`].
     pub first_hatches: Vec<String>,
+    /// How many of its objects are the model's (walls, openings, rooms, slabs, columns, stairs …, blocks placed).
+    #[serde(default)]
+    pub model: u64,
+    /// How many are annotations tied to the drawing (dimensions, tags, texts, leaders, tables, marks).
+    #[serde(default)]
+    pub annotations: u64,
+    /// How many are free drawing: lines, polylines, arcs, circles, curves, points, hatches.
+    #[serde(default)]
+    pub free: u64,
+    /// Its first free objects by persistent id, at most [`MOST_SHOWN`].
+    #[serde(default)]
+    pub first_free: Vec<String>,
     /// Its built-in line type: `continuous`, `dashed`, `dashdot` or `dotted` (with a project line type, the nearest).
     pub line_type: String,
     /// The project line type it draws in, by name; none: its built-in one.
@@ -105,16 +152,16 @@ pub struct CadRoom {
 }
 
 impl CadFacts {
-    /// Whether it says anything: a layer holding objects or a room.
+    /// Whether it says anything: a layer holding objects, a room or a section drawn.
     pub fn is_empty(&self) -> bool {
-        self.rooms.is_empty() && self.layers.iter().all(|l| l.objects == 0)
+        self.rooms.is_empty() && self.derived.is_empty() && self.layers.iter().all(|l| l.objects == 0)
     }
 
     /// These facts in the module's order, rounding and bounds, and whether a list was cut. Doing it again changes
     /// nothing.
     pub fn normalized(mut self) -> (CadFacts, bool) {
         for l in &mut self.layers {
-            for list in [&mut l.first, &mut l.first_hatches] {
+            for list in [&mut l.first, &mut l.first_hatches, &mut l.first_free] {
                 list.sort();
                 list.dedup();
                 list.truncate(MOST_SHOWN);
@@ -131,13 +178,24 @@ impl CadFacts {
             r.at = place(r.at);
         }
         self.rooms.sort_by(|a, b| a.uid.cmp(&b.uid));
-        let cut = [self.layers.len(), self.blocks.len(), self.grids.len(), self.rooms.len()]
-            .iter()
-            .any(|n| *n > MOST_ITEMS);
+        self.derived.sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.mark.cmp(&b.mark)));
+        self.broken.sort_by(|a, b| a.uid.cmp(&b.uid).then_with(|| a.kind.cmp(&b.kind)));
+        let cut = [
+            self.layers.len(),
+            self.blocks.len(),
+            self.grids.len(),
+            self.rooms.len(),
+            self.derived.len(),
+            self.broken.len(),
+        ]
+        .iter()
+        .any(|n| *n > MOST_ITEMS);
         self.layers.truncate(MOST_ITEMS);
         self.blocks.truncate(MOST_ITEMS);
         self.grids.truncate(MOST_ITEMS);
         self.rooms.truncate(MOST_ITEMS);
+        self.derived.truncate(MOST_ITEMS);
+        self.broken.truncate(MOST_ITEMS);
         (self, cut)
     }
 }
@@ -164,6 +222,8 @@ mod tests {
                 level_code: Some("K00".into()),
                 at: [1.000_49, -0.0001],
             }],
+            derived: vec![],
+            broken: vec![],
         };
         let (n, cut) = facts.normalized();
         assert!(!cut);

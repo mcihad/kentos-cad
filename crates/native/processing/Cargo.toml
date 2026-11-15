@@ -54,3 +54,9 @@ serde_json = { workspace = true }
 # architecture fixtures are.
 [dev-dependencies]
 kentos-kcad = { path = "../../shared/kcad" }
+
+[features]
+default = ["mod-arch"]
+# The CAD facts' sections and elevations with their states (docs/adr/8065): the architecture's section query. A cloud
+# job's facts are the desktop's, so every build that gives facts has it.
+mod-arch = ["kentos-native-application/mod-arch"]

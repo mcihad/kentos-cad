@@ -14,7 +14,10 @@ katalog IFC 4.3 şemasıyla, bağımsız dökümle ve 20 rastgele satırla sayfa
 maddeyle başladığını söyler; karar ilk standart kural paketinin Python kuralıdır (`catalog/standards/dijital-proje`), 43
 bağımsız durumla sınandı. B3 tamamlandı: BIM-03 `[x]` ([ADR 8064](../docs/adr/8064-ek3-ek4-2d-checks-python.md)):
 EK-3 ve EK-4'ün 12 kuralı Python'da, çizimin `cad` olguları Rust'ta; bulgular Mimari denetimin Mevzuat grubunda, altısının
-tek adımlık düzeltmesi var; 2+1 dairede uçtan uca ve ezdxf'li bağımsız okumayla sınandı. Sıradaki B4 (BIM-04).
+tek adımlık düzeltmesi var; 2+1 dairede uçtan uca ve ezdxf'li bağımsız okumayla sınandı. B4 tamamlandı: BIM-04 `[x]`
+([ADR 8065](../docs/adr/8065-sheets-from-the-model-gate.md)): ruhsat yayınının kapısı eski kesit ve görünüşte, model
+katmanındaki serbest çizimde ve kopmuş bağda Yayınla'yı kapatır; kural Python'da, türevin durumu olguda. Sıradaki B5
+(BIM-05).
 
 Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. İlk taslağa göre değişenler: iki yönetmeliğin ana metni madde madde
 yeniden okundu; eklerin bağımsız bir dökümü depodaki sayfa okumalarıyla karşılaştırıldı; bugünkü kod yönetmeliğin sınıf
@@ -96,7 +99,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | R2 | Çizim dışı belgeler PDF/A | Md. 4/3 | ◐ hesap ve liste paftaları var; dış belge pakete girmiyor | BIM-05 |
 | R3 | Proje kodu ve dosya adları | Md. 6; EK-1, EK-2 | ✓ pafta ve model adı (ADR 8037, 8047 §7) | BIM-01 |
 | R4 | CAD katmanı, sembol, çizgi; mahal numarası ve adı | Md. 7; EK-3, EK-4 | ✓ katman anahtarı (ADR 8008), EK-3 numarası (ADR 8027) ve 12 kurallı denetim (ADR 8064); sembolün içi (4.17.5), punto ve kesit hattı yok | BIM-03 |
-| R5 | Çizimler modelden üretilir; model ile PDF/A uyumlu | Md. 9/1; EK-9/21 | ◐ plan modelin kendisi, kesit ve görünüş türev (ADR 8042–8043); kanıtı yok | BIM-04, BIM-14 |
+| R5 | Çizimler modelden üretilir; model ile PDF/A uyumlu | Md. 9/1; EK-9/21 | ✓ kesit ve görünüş türev (ADR 8042–8043), ruhsat yayınının kapısı (ADR 8065); EK-9/21'in cevabı formda (IFC-08) | BIM-04, BIM-14 |
 | R6 | IFC teslimi | Md. 4/5; EK-5 §5.4 | ◐ IFC 4.3 dışa aktarma (ADR 8047) | IFC-02…06 |
 | R7 | Zorunlu sınıflar ve alanları; vekil sınıf kullanılmaz | Md. 12; EK-5, EK-6 | ◐ 29 sınıftan 15'i; yangın ve dayanım alanları yok | BIM-07…09; IFC-02, IFC-03 |
 | R8 | Proje bilgileri, kişiler, koordinat sistemi | Md. 13; EK-7 | ◐ künye, mimar, büro, TUREF dilimi var; proje tipi ve açıklaması yok | IFC-02, IFC-05 |
@@ -298,7 +301,16 @@ numarasını ve adını, nesnesini seçerek söyler. Dayanak Md. 7; Z8.
 
 **İlk kabul:** 2+1 örneğinde her kural için bir geçen, bir kalan durum; bağımsız başvuru KentOS kodu olmadan sınar.
 
-#### BIM-04 — Paftanın modelden üretildiğinin kanıtı [ ]
+#### BIM-04 — Paftanın modelden üretildiğinin kanıtı [x]
+
+**Yapıldı (16 Kasım 2026, [ADR 8065](../docs/adr/8065-sheets-from-the-model-gate.md)):** `cad` olgusuna katmanın nesneleri
+sınıfıyla (model, açıklama, serbest), kesit ve görünüşlerin durumu, kopmuş etiket ve ölçü; Python kuralı `dijital_proje.turetim`
+(paket 0.3.0): eski türev, kaynağı silinmiş türev, model katmanında serbest çizim, kopmuş bağ; hepsi hata. Ruhsat takımından
+açılan yayında kapı: bulgu varken Yayınla kapalı, pencerede "Ruhsat kapısı" bölümü ve Denetim'de göster. Aynı bulgular
+Mimari denetimin Mevzuat grubunda; eski kesitin Düzelt'i Yeniden çiz. Listeler canlıdır, eskimez (ADR 8038); kaynağın
+revizyonu `yayin.json`'da. Kesit binasında: kapı değişince kapalı, Yeniden çiz'le açık; duvar katmanındaki çizgi
+kimliğiyle. **Kalan:** Python bulgusunun istisnası, EK-9/21'in bu kayıttan cevabı (IFC-08), pafta düzeyinde sınıflama,
+büyük çizimde ölçüm, PDF'in kendi metaverisinde revizyon.
 
 **Kullanıcı sonucu:** Her ruhsat paftası hangi model revizyonundan üretildiğini taşır. Modelden gelmeyen çizim paftada ayrı
 listelenir. Eski kesit, görünüş ya da çizelgeyle ruhsat yayını yapılamaz. Dayanak Md. 9/1; EK-9/21; Z4.
@@ -604,7 +616,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | B3 ✓ | EK-3 ve EK-4 denetimi | BIM-03 | Uymayan katman ve mahal adı bulguda (ADR 8064) |
-| B4 | Paftanın modelden üretildiği kanıtı | BIM-04 | Eski türevle yayın durur |
+| B4 ✓ | Paftanın modelden üretildiği kanıtı | BIM-04 | Eski türevle yayın durur (ADR 8065) |
 | B5 | 2B ruhsat paketi | BIM-05 | Bağımsız denetimden geçmiş PDF/A takımı ve teslim listesi |
 
 ### Faz 2 — Ruhsat düzeyinde model

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""The EK-3 and EK-4 rules' data for the standards package (docs/adr/8064, plan/bim-plan.md BIM-03), taken from KentOS's
+"""The EK-3 and EK-4 rules' data for the standards package (docs/adr/8064, plan/bim-plan.md BIM-03; the sheets-from-the-model
+rules' sources too, docs/adr/8065), taken from KentOS's
 rule catalog (crates/shared/digital-project/data/temel-2026.json, docs/adr/8062): the disciplines and each one's layer
 template, the items and sub-disciplines, EK-3 Tablo 3.2's room names and abbreviations, the dimension typefaces of
 4.21.2, and each rule's sources cited as the catalog cites them. The package's rule reads this file; it is never edited
@@ -16,6 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CATALOG = ROOT / "crates" / "shared" / "digital-project" / "data" / "temel-2026.json"
+IFC_CATALOG = ROOT / "crates" / "shared" / "ifc" / "data" / "temel-2026.json"
 OUT = ROOT / "catalog" / "standards" / "dijital-proje" / "src" / "dijital_proje" / "data" / "ek34-2026.json"
 
 # Each discipline's layer template (EK-4 4.14–4.16): Tablo 4.1 for architecture, interior, survey and soil; 4.2 for
@@ -36,6 +38,11 @@ RULES = {
     "axis_line": ["M4.29"],
     "dimension_font": ["M4.21.2"],
     "block_name": ["M4.18", "T4.4"],
+    # The sheets drawn from the model (Md. 9/1; EK-9 Tablo 9.1 satır 21, docs/adr/8065).
+    "derived_stale": ["T9.1/21"],
+    "derived_gone": ["T9.1/21"],
+    "free_on_model_layer": ["T9.1/21"],
+    "annotation_broken": ["T9.1/21"],
 }
 
 
@@ -50,8 +57,12 @@ def pages(ps):
     return ", ".join(map(str, ps))
 
 
-def cite(catalog, row_id):
-    """As `kentos_digital_project::Source::cite` says it: “EK-3 m. 3.2.3 · PDF s. 14”, “EK-3 Tablo 3.1 · PDF s. 14”."""
+def cite(catalog, row_id, ifc=None):
+    """As `kentos_digital_project::Source::cite` says it: “EK-3 m. 3.2.3 · PDF s. 14”, “EK-3 Tablo 3.1 · PDF s. 14”,
+    “EK-9 Tablo 9.1 satır 21 · PDF s. 239”."""
+    for q in (ifc or {}).get("questions", []):
+        if q["id"] == row_id:
+            return f"EK-9 Tablo {q['form']} satır {q['no']} · PDF s. {pages(q['pages'])}"
     for c in catalog["clauses"]:
         if c["id"] == row_id:
             return f"EK-{c['annex']} m. {c['clause']} · PDF s. {pages(c['pages'])}"
@@ -64,7 +75,7 @@ def cite(catalog, row_id):
     raise SystemExit(f"{row_id}: no such row in the catalog")
 
 
-def build(catalog):
+def build(catalog, ifc):
     codes = catalog["codes"]
     clause = next(c for c in catalog["clauses"] if c["id"] == "M4.21.2")
     # 4.21.2 names the typefaces in quotes: “"Times New Roman", "Arial", "Calibri", "Romans" ve "Tahoma"”.
@@ -92,13 +103,14 @@ def build(catalog):
         "rooms": [{"name": c["name"], "code": c["code"]} for c in codes if c["list"] == "room"],
         "dimensionFonts": fonts,
         "emsal": ["DAHIL", "HARIC", "DIGER"],
-        "rules": {rule: [cite(catalog, r) for r in rows] for rule, rows in RULES.items()},
+        "rules": {rule: [cite(catalog, r, ifc) for r in rows] for rule, rows in RULES.items()},
     }
 
 
 def main():
     catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
-    text = json.dumps(build(catalog), ensure_ascii=False, indent=1) + "\n"
+    ifc = json.loads(IFC_CATALOG.read_text(encoding="utf-8"))
+    text = json.dumps(build(catalog, ifc), ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
             sys.exit(f"{OUT.relative_to(ROOT)} is not the catalog's: run python3 scripts/mevzuat/ek34_veri.py")

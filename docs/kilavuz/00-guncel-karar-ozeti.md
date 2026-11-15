@@ -55,6 +55,12 @@
       adı ve aks çizgisinin Düzelt'i tek adım. Kural verisi katalogdan `scripts/mevzuat/ek34_veri.py` ile üretilir.
     - Kararlar: Arimo ölçü yazısında idarenin teyidine bırakılır (K29); tadilat durumları katman adının sonunda (K37);
       mahal numarasının kat kodu paftaların kodudur, Mahal numarala'nın kuralıyla birleşecek (K38).
+  - **B4 yapıldı (16 Kasım 2026; [ADR 8065](../adr/8065-sheets-from-the-model-gate.md); BIM-04 `[x]`):**
+    - Ruhsat takımından açılan Paftaları toplu yayınla'da kapı: eski kesit ve görünüş, kaynağı silinmiş türev, model
+      katmanında serbest çizim, kopmuş etiket ve ölçü varken Yayınla kapalı (Md. 9/1, EK-9 satır 21). Kural
+      `dijital_proje.turetim` (Python); olgular `cad` bölümünde (nesnenin sınıfı, türevin durumu, kopmuş bağ).
+    - Hesap tabloları ve listeler canlıdır, eskimez; eskiyebilen türev kesit ve görünüştür. Kaynağın revizyonu
+      `yayin.json`'da. Python bulgusunun istisnası henüz yok.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

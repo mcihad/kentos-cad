@@ -8,20 +8,33 @@
 //! - **A dimension's typeface** is its own, else its dimension style's, else the project's drawing typeface, else
 //!   Barlow (what draws it).
 //! - **A room's centre** is its drawn outline's (the area-weighted centroid of its rings, holes out).
+//! - **What an object is to a sheet** (docs/adr/8065): the model's (walls, openings, rooms, slabs, columns, stairs,
+//!   blocks placed …, and what a model object draws as its own: a kitchen run's countertop and lines), an annotation tied
+//!   to the drawing (dimensions, tags, texts, leaders, tables, marks), or free drawing (lines, polylines, arcs, circles,
+//!   curves, points, hatches); a section's state is the section query's.
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{DrawingFont, Entity};
 use kentos_domain::Document;
 use kentos_domain::arch_values::core_areas;
-use kentos_extensions::audit_facts::cad::{CadBlock, CadFacts, CadGrid, CadLayer, CadRoom, FontUse};
+use kentos_extensions::audit_facts::cad::{
+    CadBlock, CadBroken, CadDerived, CadFacts, CadGrid, CadLayer, CadRoom, FontUse,
+};
 use kentos_geometry_core::Vec2;
 
 /// The drawing's CAD facts.
 pub fn measure(doc: &Document) -> CadFacts {
     let leaves = doc.layers().leaves();
-    // Per layer: objects, hatches, their persistent ids.
-    let mut objects: BTreeMap<&str, (u64, u64, Vec<String>, Vec<String>)> = BTreeMap::new();
+    // Per layer: objects, hatches, their persistent ids, and the objects by class.
+    let mut objects: BTreeMap<&str, Counts> = BTreeMap::new();
+    // A kitchen run's countertop and lines are its own, as its cabinets are (docs/adr/0727 §5): the model's.
+    let generated: std::collections::BTreeSet<String> = doc
+        .casework()
+        .iter()
+        .flat_map(|r| r.members.iter().map(|m| m.uid.to_string()))
+        .collect();
+    let mut broken = Vec::new();
     let mut blocks: BTreeMap<String, CadBlock> = BTreeMap::new();
     let mut fonts: BTreeMap<String, u64> = BTreeMap::new();
     let mut grids = Vec::new();
@@ -39,12 +52,25 @@ pub fn measure(doc: &Document) -> CadFacts {
     for (uid, e) in doc.entities_with_uids() {
         let layer = e.base().layer_id.as_str();
         let count = objects.entry(layer).or_default();
-        count.0 += 1;
-        count.2.push(uid.to_string());
+        count.objects += 1;
+        count.first.push(uid.to_string());
+        let class = if generated.contains(&uid.to_string()) { Class::Model } else { class(e) };
+        match class {
+            Class::Model => count.model += 1,
+            Class::Annotation => count.annotations += 1,
+            Class::Free => {
+                count.free += 1;
+                count.first_free.push(uid.to_string());
+            }
+            Class::Other => {}
+        }
         match e {
             Entity::Hatch(_) => {
-                count.1 += 1;
-                count.3.push(uid.to_string());
+                count.hatches += 1;
+                count.first_hatches.push(uid.to_string());
+            }
+            Entity::Tag(t) if doc.tag_target(&t.tag.of).is_none() => {
+                broken.push(CadBroken { kind: "tag".into(), uid: uid.to_string() });
             }
             Entity::Insert(x) => {
                 let name = doc.block(x.block).map_or_else(|| x.block.to_string(), |b| b.name.clone());
@@ -53,6 +79,12 @@ pub fn measure(doc: &Document) -> CadFacts {
                 block.layers.push(name_of(layer).unwrap_or_else(|| layer.to_owned()));
             }
             Entity::Dimension(d) => {
+                let tied = d.refs.as_deref().is_some_and(|r| {
+                    [&r.a, &r.b, &r.c].into_iter().any(|x| x.as_ref().is_some_and(|x| x.broken.is_some()))
+                });
+                if tied {
+                    broken.push(CadBroken { kind: "dimension".into(), uid: uid.to_string() });
+                }
                 let settings = doc.settings();
                 let styled = d.look.dim_style.as_deref().and_then(|id| {
                     settings.dimension_styles.iter().find(|s| s.id == id).and_then(|s| s.font)
@@ -78,14 +110,18 @@ pub fn measure(doc: &Document) -> CadFacts {
     let layers: Vec<CadLayer> = leaves
         .iter()
         .map(|l| {
-            let (objects, hatches, first, first_hatches) = objects.remove(l.id.as_str()).unwrap_or_default();
+            let c = objects.remove(l.id.as_str()).unwrap_or_default();
             CadLayer {
                 id: l.id.clone(),
                 name: l.name.clone(),
-                objects,
-                hatches,
-                first,
-                first_hatches,
+                objects: c.objects,
+                hatches: c.hatches,
+                first: c.first,
+                first_hatches: c.first_hatches,
+                model: c.model,
+                annotations: c.annotations,
+                free: c.free,
+                first_free: c.first_free,
                 line_type: l.style.line_type.name().to_owned(),
                 line_pattern: l.style.line_pattern.clone(),
             }
@@ -97,7 +133,93 @@ pub fn measure(doc: &Document) -> CadFacts {
         dimension_fonts: fonts.into_iter().map(|(font, count)| FontUse { font, count }).collect(),
         grids,
         rooms,
+        derived: derived(doc),
+        broken,
     }
+}
+
+/// A layer's objects counted.
+#[derive(Default)]
+struct Counts {
+    objects: u64,
+    hatches: u64,
+    model: u64,
+    annotations: u64,
+    free: u64,
+    first: Vec<String>,
+    first_hatches: Vec<String>,
+    first_free: Vec<String>,
+}
+
+/// What an object is to a sheet (docs/adr/8065): the model's, an annotation tied to the drawing, free drawing, or else.
+enum Class {
+    Model,
+    Annotation,
+    Free,
+    Other,
+}
+
+fn class(e: &Entity) -> Class {
+    match e {
+        Entity::Wall(_)
+        | Entity::Opening(_)
+        | Entity::Space(_)
+        | Entity::Slab(_)
+        | Entity::Grid(_)
+        | Entity::Column(_)
+        | Entity::Beam(_)
+        | Entity::Roof(_)
+        | Entity::Railing(_)
+        | Entity::Stair(_)
+        | Entity::Ramp(_)
+        | Entity::Insert(_) => Class::Model,
+        Entity::Text(_)
+        | Entity::Dimension(_)
+        | Entity::Leader(_)
+        | Entity::Table(_)
+        | Entity::Tag(_)
+        | Entity::ViewMark(_) => Class::Annotation,
+        Entity::Point(_)
+        | Entity::Line(_)
+        | Entity::Polyline(_)
+        | Entity::Polygon(_)
+        | Entity::Circle(_)
+        | Entity::Arc(_)
+        | Entity::Ellipse(_)
+        | Entity::Spline(_)
+        | Entity::Nurbs(_)
+        | Entity::Xline(_)
+        | Entity::Ray(_)
+        | Entity::Hatch(_) => Class::Free,
+        _ => Class::Other,
+    }
+}
+
+/// The sections and elevations with their states (`kentos_native_application::sections_query`, docs/adr/8042 §5).
+#[cfg(feature = "mod-arch")]
+fn derived(doc: &Document) -> Vec<CadDerived> {
+    use kentos_commands::BuildingSectionState as S;
+    kentos_native_application::sections_query::rows(doc)
+        .into_iter()
+        .map(|r| CadDerived {
+            kind: if r.name.ends_with("görünüşü") { "elevation" } else { "section" }.into(),
+            state: match r.state {
+                S::Current => "current",
+                S::Stale => "stale",
+                S::NotDrawn => "notDrawn",
+                S::Gone => "gone",
+            }
+            .into(),
+            name: r.name,
+            mark: r.mark,
+            inserts: u64::from(r.inserts),
+        })
+        .collect()
+}
+
+#[cfg(not(feature = "mod-arch"))]
+fn derived(_: &Document) -> Vec<CadDerived> {
+    Vec::new()
 }
 
 /// A typeface's name as a person says it.
