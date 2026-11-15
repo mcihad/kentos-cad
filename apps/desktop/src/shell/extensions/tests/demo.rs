@@ -1687,3 +1687,86 @@ fn a_panels_command_changes_its_panel_as_it_runs() {
     let _ = gis.extension_panel_view();
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// docs/adr/8057 §32: a layer menu's command is given the layer it was run on (`ctx.params["layer"]`, as QGIS's
+/// layer actions are); the same command from elsewhere is not; a run that did not start leaves nothing for the next.
+#[test]
+fn a_layer_menus_command_gets_the_layer_it_was_run_on() {
+    use serde_json::json;
+
+    const VITRIN: &str = "tr.ornek.vitrin";
+    let dir = temp("katman-menusu");
+    let mut gis = app(&dir, Some(Module::Gis));
+    install(&mut gis, "vitrin.kek", vitrin_package());
+    let item = gis
+        .extensions
+        .menus
+        .iter()
+        .find(|m| m.item.label == "Değerlerini say")
+        .expect("its layer menu item");
+    assert_eq!(item.target, kentos_extensions::manifest::MenuTarget::Layer);
+    // Python off in tests: the item says why it cannot run (with Python on it is the command's).
+    assert!(
+        matches!(&item.item.action, Action::Unavailable(why) if why.contains("Python kapalı")),
+        "{:?}",
+        item.item.action
+    );
+    let _ = gis.extension_menu(
+        kentos_extensions::manifest::MenuTarget::Layer,
+        Some("parsel"),
+        kentos_ui::widget::Menu::new(),
+    );
+    // Run from a layer's menu; it did not start (no Python in tests): what it was run on goes with it.
+    let _ = gis.extensions_event(Event::RunOn(
+        VITRIN.into(),
+        "command".into(),
+        "katman-degerleri".into(),
+        json!({ "layer": "parsel" }),
+    ));
+    assert!(
+        gis.extensions.target_params.is_none(),
+        "dropped with its run"
+    );
+    // Its launch takes it (the state the menu leaves while the environment is found).
+    gis.extensions.target_params = Some((
+        VITRIN.into(),
+        "katman-degerleri".into(),
+        json!({ "layer": "parsel" }),
+    ));
+    let package = gis
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.package_dir(VITRIN))
+        .unwrap();
+    let launch = || {
+        super::runner::Launch::for_test(
+            "/bin/sh".into(),
+            package.clone(),
+            "vitrin.logic:katman_degerleri",
+            "Değerlerini say",
+            false,
+        )
+    };
+    let _ = gis.extensions_event(Event::Launch(
+        VITRIN.into(),
+        "command".into(),
+        "katman-degerleri".into(),
+        Ok(launch()),
+    ));
+    let sent = gis.extensions.test_last_invoke.clone().expect("its call");
+    assert_eq!(sent["params"], json!({ "layer": "parsel" }), "{sent:#}");
+    assert!(gis.extensions.target_params.is_none(), "taken");
+    let _ = gis.ext_stop(VITRIN);
+    gis.extensions.runners.clear();
+    // From elsewhere (its ribbon or command search): no layer.
+    let _ = gis.extensions_event(Event::Launch(
+        VITRIN.into(),
+        "command".into(),
+        "katman-degerleri".into(),
+        Ok(launch()),
+    ));
+    let sent = gis.extensions.test_last_invoke.clone().expect("its call");
+    assert_eq!(sent["params"], json!({}), "{sent:#}");
+    let _ = std::fs::remove_dir_all(&dir);
+}

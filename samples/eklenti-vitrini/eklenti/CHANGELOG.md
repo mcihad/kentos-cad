@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.27 — 15 Kasım 2026
+
+- Katmanın sağ tık menüsünde "Değerlerini say": "Değer say" panelini o katman seçili açar (menüden çalışan komut
+  tıklanan katmanı `ctx.params["layer"]`'da alır, `ctx.open_panel` ile panelini açar); alan seçilince sayım başlar.
+
 ## 1.0.26 — 15 Kasım 2026
 
 - "Yapıları numarala" şeritten çalışınca bitince "Yapı ara" panelini açar (`ctx.open_panel`: komut kendi panelini

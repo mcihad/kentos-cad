@@ -1101,7 +1101,8 @@ Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çi
   sırada yazdığı alan onun kalır, yama odağı ve kaydırmayı korur, tanım gibi denetlenir; Vitrin'in Değer say'ı
   seçenekleri sayımdan doldurur; oluştur: `ctx.open_panel(id)` komutun kendi panelini açıp değiştirmesi (Vitrin'in
   Yapıları numarala'sı sonucu Yapı ara'da gösterir). Kalan: Python cephesinin şemadan üretimi, ifade profiliyle
-  kurallar, büyük veride sayfalama; bağlam menüsü komutu tıklanan katmanı almıyor.* Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
+  kurallar, büyük veride sayfalama. Katman menüsünün komutu tıklanan katmanı `ctx.params["layer"]`'da alıyor (Vitrin'in
+  Değerlerini say'ı).* Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
   düzen [PY-UI-01, 06]; `kentos.ui` Python cephesi şemadan üretilir [PY-UI-02]; aracı oluştur/yamala/kapat/odakla/bildir
   ve eylem kaydı [PY-UI-03]; yama geldiğinde kullanıcının odağı, taslağı ve kaydırması korunur [PY-UI-04]; bileşen değeri
   ile kalıcı nesne değeri ayrıdır, her tuş belge değişikliği değildir [PY-UI-05]; varsayılan/görünür/etkin/zorunlu/hesaplı

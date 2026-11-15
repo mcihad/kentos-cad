@@ -420,8 +420,14 @@ impl App {
         self.extensions.menus = menus;
     }
 
-    /// The extensions' items of a right-click menu, after a line, where this program shows their extension.
-    pub(crate) fn extension_menu(&self, target: MenuTarget, menu: Menu<Message>) -> Menu<Message> {
+    /// The extensions' items of a right-click menu, after a line, where this program shows their extension. `on` is what
+    /// the menu was opened on (a layer's id): a command run from it gets it in its `ctx.params` (`layer`).
+    pub(crate) fn extension_menu(
+        &self,
+        target: MenuTarget,
+        on: Option<&str>,
+        menu: Menu<Message>,
+    ) -> Menu<Message> {
         let items: Vec<&ExtMenuItem> = self
             .extensions
             .menus
@@ -436,9 +442,26 @@ impl App {
         if items.is_empty() {
             return menu;
         }
+        let params = match (target, on) {
+            (MenuTarget::Layer, Some(layer)) => Some(serde_json::json!({ "layer": layer })),
+            _ => None,
+        };
         items.into_iter().fold(menu.separator(), |menu, m| {
-            let on = self.item_on(&m.item);
-            menu.item(m.item.label.clone(), on).icon(m.item.icon)
+            let pressed = match (&m.item.action, &params) {
+                // A command learns what it was run on (a layer's menu: the layer, as QGIS's layer actions do).
+                (Action::Python(ext, kind, local), Some(params))
+                    if kind == "command" && self.item_when_why(&m.item).is_none() =>
+                {
+                    Some(msg(Event::RunOn(
+                        ext.clone(),
+                        kind.clone(),
+                        local.clone(),
+                        params.clone(),
+                    )))
+                }
+                _ => self.item_on(&m.item),
+            };
+            menu.item(m.item.label.clone(), pressed).icon(m.item.icon)
         })
     }
 

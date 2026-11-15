@@ -114,8 +114,9 @@ da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırla
 doldurur (boş liste de bir cevaptır: tablo boşalır; `ctx.message` tabloya dokunmaz) (`ctx.doc.entities(layer=…)` kayıt verir: `kayit.uid` kalıcı kimlik, öznitelikler `kayit.entity.attrs`'ta,
 kayıtta değil). Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
 `uid` sütun olarak görünmez. Panel Python'suz açılır; ortam hazır değilse düğmeler nedenini söyler. İskelette
-`panel` katkısı bir örnek verir. Panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel`; panelden
-çalışmadıysa None; başka bir panelini `ctx.open_panel(id)` açıp verir): `set(id, value=…, options=…, enabled=…, visible=…, text=…)` (seçenekleri veriden doldurmak, düğmeyi
+`panel` katkısı bir örnek verir. Katmanın sağ tık menüsünden (`contextMenus`, `target: "layer"`) çalışan komut tıklanan
+katmanın kimliğini `ctx.params["layer"]`'da alır. Panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel`;
+panelden çalışmadıysa None; başka bir panelini `ctx.open_panel(id)` açıp verir): `set(id, value=…, options=…, enabled=…, visible=…, text=…)` (seçenekleri veriden doldurmak, düğmeyi
 kapatmak, alanı gizlemek), `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`; yanlış kimlik ya da değer
 `kentos.HostError`, kullanıcının o sırada değiştirdiği alan onun kalır (False), kodun koyduğu değer `onChange`'i
 çalıştırmaz.

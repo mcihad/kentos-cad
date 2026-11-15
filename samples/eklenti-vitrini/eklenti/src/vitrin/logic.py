@@ -16,6 +16,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``deger_say``: seçicili panelin düğmesi; "Değer say"ın katmanı, alanı ve seçilen nesneleriyle değerleri sayar,
   bulduklarını panelin Seç kutusuna koyar (``ctx.panel``: çalışan kod panelini değiştirir).
 - ``deger_sec``: Seç değişince çalışır; o değerdeki nesneleri çizimde seçer.
+- ``katman_degerleri``: katmanın sağ tık menüsünden; "Değer say"ı o katman seçili açar (``ctx.params["layer"]``).
 - ``parsel_karti``: kartlı panel; "Parsel kartı"nda alınan her parselin alanı, yapıları ve TAKS'ı bir kartta.
 """
 
@@ -311,6 +312,20 @@ def deger_say(ctx: ext.CommandContext) -> ext.CommandResult:
         else:
             ctx.panel.set("en-sik", text="Sayılacak nesne yok.")
     return ctx.report(satirlar, title="Değer say", message=f"{nerede} {len(sayilar)} farklı “{alan}” değeri.")
+
+
+@ext.command("katman-degerleri")
+def katman_degerleri(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Katmanın sağ tık menüsünden çalışır: "Değer say" panelini o katman seçili açar; alan seçilince değerler
+    sayılır. Menüden çalışan komutun ctx.params'ında tıklanan katmanın kimliği vardır (``layer``; şeritten çalışınca
+    yoktur, docs/adr/8057 §32)."""
+    katman = ctx.params.get("layer")
+    if not katman:
+        return ctx.message("Bir katmanın sağ tık menüsünden çalışır: Değerlerini say.")
+    panel = ctx.open_panel("deger-paneli")
+    panel.set("katman", value=katman)
+    panel.say("Bir alan seçin: değerleri sayılır.")
+    return ctx.message("Değer say katmanla açıldı.")
 
 
 @ext.command("deger-sec")

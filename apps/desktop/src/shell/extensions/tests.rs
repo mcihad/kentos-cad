@@ -221,6 +221,7 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
     );
     let _ = gis.extension_menu(
         kentos_extensions::manifest::MenuTarget::Layer,
+        Some("cizim"),
         kentos_ui::widget::Menu::new(),
     );
     // Back to 1.0.0 from the manager.

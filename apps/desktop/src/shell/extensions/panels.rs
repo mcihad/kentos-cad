@@ -1111,6 +1111,10 @@ impl App {
 
     /// A panel call that did not start: the panel says why and its button can be pressed again.
     pub(crate) fn ext_panel_dropped(&mut self, ext: &str, command: &str, why: &str) {
+        // What a right-click menu's run was opened on goes with it: a later run from the ribbon is not given it.
+        self.extensions
+            .target_params
+            .take_if(|(e, l, _)| e == ext && l == command);
         if let Some(call) = self.ext_panel_take(ext, command) {
             self.ext_panel_answer(&call.origin, Err(why.to_owned()));
         }

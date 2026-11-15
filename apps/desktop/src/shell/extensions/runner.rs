@@ -581,11 +581,19 @@ impl App {
         let Some(runner) = self.extensions.runners.get_mut(ext) else {
             return task;
         };
+        // A right-click menu's command: what the menu was opened on (a layer's id, `ctx.params["layer"]`).
+        let target = self
+            .extensions
+            .target_params
+            .take_if(|(e, l, _)| e == ext && l == local)
+            .map(|(_, _, params)| params);
         let params = match (call.kind, self.extensions.capture_shape.take()) {
             ("mapTool", Some(shape)) => json!({ "shape": shape }),
             _ => panel
                 .as_ref()
-                .map_or_else(|| json!({}), |p| p.params.clone()),
+                .map(|p| p.params.clone())
+                .or(target)
+                .unwrap_or_else(|| json!({})),
         };
         let mut invoke = json!({
             "type": "invoke",
@@ -602,6 +610,10 @@ impl App {
             invoke["panel"] = json!(p.origin.panel);
         }
         runner.host.send(&invoke);
+        #[cfg(test)]
+        {
+            self.extensions.test_last_invoke = Some(invoke.clone());
+        }
         runner.run = Some(ExtRun {
             id,
             kind: call.kind,

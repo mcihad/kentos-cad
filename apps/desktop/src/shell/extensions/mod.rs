@@ -124,6 +124,9 @@ pub(crate) struct Extensions {
     /// A test's answer for the next rule's run, in place of its extension's process.
     #[cfg(test)]
     pub(crate) test_audit_answer: Option<Result<serde_json::Value, String>>,
+    /// The last call a run's process was sent (tests read its parameters).
+    #[cfg(test)]
+    pub(crate) test_last_invoke: Option<serde_json::Value>,
     /// The word the lists are filtered by (browse.rs).
     pub(crate) query: String,
     /// The program the lists are filtered by; none: every program.
@@ -146,6 +149,9 @@ pub(crate) struct Extensions {
     pub(crate) captured: Option<Option<kentos_interaction::capture::Shape>>,
     /// The drawn shape the next map tool run gives its code (GeoJSON).
     pub(crate) capture_shape: Option<serde_json::Value>,
+    /// What a right-click menu's item was opened on, for the next run of its command: (extension, command,
+    /// `ctx.params`): a layer's menu gives `{"layer": <its id>}` (ribbon.rs `extension_menu`).
+    pub(crate) target_params: Option<(String, String, serde_json::Value)>,
     /// An extension chosen without a click (the window opened, its part changed): its Python environment is looked
     /// for after the update. Only a click looked for it, so the details said "Ortam aranıyor…" until one.
     pub(crate) look_wanted: Option<String>,
@@ -193,6 +199,8 @@ impl Default for Extensions {
             audit_job: None,
             #[cfg(test)]
             test_audit_answer: None,
+            #[cfg(test)]
+            test_last_invoke: None,
             query: String::new(),
             program: None,
             envs: std::collections::BTreeMap::new(),
@@ -204,6 +212,7 @@ impl Default for Extensions {
             capturing: None,
             captured: None,
             capture_shape: None,
+            target_params: None,
             look_wanted: None,
             panels: Vec::new(),
             active_panel: 0,
@@ -257,6 +266,8 @@ pub(crate) enum Event {
     Env(environment::EnvEvent),
     /// An extension's contribution run in its process: extension, kind (`command`), local id (runner.rs).
     Run(String, String, String),
+    /// A right-click menu's command run on what the menu was opened on: its `ctx.params` (`{"layer": …}`).
+    RunOn(String, String, String, serde_json::Value),
     /// An audit rule's run ended (audits.rs).
     AuditDone(Box<audits::AuditDone>),
     /// Eklenti denetimi's Göster, Düzelt and Durdur, by the finding's place (audits.rs).
@@ -604,6 +615,10 @@ impl App {
             }
             Event::Env(event) => return self.env_event(event),
             Event::Run(ext, kind, local) => return self.ext_run(&ext, &kind, &local),
+            Event::RunOn(ext, kind, local, params) => {
+                self.extensions.target_params = Some((ext.clone(), local.clone(), params));
+                return self.ext_run(&ext, &kind, &local);
+            }
             Event::OpenPanel(ext, local) => return self.ext_panel_open(&ext, &local),
             Event::Panel(event) => return self.ext_panel_event(event),
             Event::Dialog(event) => self.ext_dialog_event(event),

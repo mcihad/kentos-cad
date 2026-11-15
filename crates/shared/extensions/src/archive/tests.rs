@@ -73,9 +73,9 @@ fn the_demo_extension_packs_and_passes_its_check() {
             e.map_tools.len(),
             e.panels.len()
         ),
-        (9, 1, 1, 1, 3),
-        "commands (one sets up its layer schema, five answer its panels), an İşlemler tool, an expression function, \
-         a map tool and three panels"
+        (10, 1, 1, 1, 3),
+        "commands (one sets up its layer schema, five answer its panels, one opens one from a layer's menu), an \
+         İşlemler tool, an expression function, a map tool and three panels"
     );
     let c = &manifest.contributions;
     assert_eq!(
@@ -84,7 +84,7 @@ fn the_demo_extension_packs_and_passes_its_check() {
             c.context_menus.len(),
             c.data_sources.len()
         ),
-        (1, 1, 1)
+        (1, 2, 1)
     );
 }
 

@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -93,6 +93,11 @@
         "id": "deger-sec",
         "title": "Değeri seç",
         "handler": "vitrin.logic:deger_sec"
+      },
+      {
+        "id": "katman-degerleri",
+        "title": "Değerlerini say",
+        "handler": "vitrin.logic:katman_degerleri"
       },
       {
         "id": "parsel-karti",
@@ -234,6 +239,14 @@
     "contextMenus": [
       {
         "command": "katman-ozeti",
+        "target": "layer",
+        "icon": "layer-fields",
+        "when": {
+          "documentOpen": true
+        }
+      },
+      {
+        "command": "katman-degerleri",
         "target": "layer",
         "icon": "layer-fields",
         "when": {

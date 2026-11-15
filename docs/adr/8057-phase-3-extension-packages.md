@@ -2128,6 +2128,13 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   sayısıyla ezilmez; `rows` grafiğini yeniden hesaplatır; başka sekmedeki panelin değişmesi sekmesinde nokta
   (`unseen`). `focus` yalnız gösterilen panelde, görünür ve açık yazı alanında: kod kullanıcının baktığı sekmeyi
   değiştirmez (False).
+- **Katman menüsünün komutu katmanı alır.** Eklentinin `contextMenus` öğesi (`target: "layer"`) şerit düğmesi gibi
+  çalışıyordu: komut sağ tıklanan katmanı bilmiyordu (QGIS'in katman eylemleri katmanı alır). Artık menü katmanın
+  kimliğini verir (`extension_menu`'nün `on`'u, `Event::RunOn`), çalıştırmanın çağrısında `params: {"layer": …}` olur
+  (`ctx.params["layer"]`); grubun menüsü katman vermez. Bekleyen hedef çalıştırmanın başlatılmasında alınır
+  (`target_params`, harita aracının şekli gibi), başlamayan çalıştırmayla gider: sonra şeritten çalışan aynı komut onu
+  almaz. Bekçi: `a_layer_menus_command_gets_the_layer_it_was_run_on` (sürece giden çağrının parametreleri). Vitrin
+  1.0.27: katmanın menüsünde "Değerlerini say", Değer say'ı o katman seçili açar (`ctx.open_panel` + `set`).
 - **Vitrin 1.0.26:** "Yapıları numarala" şeritten çalışınca bitince Yapı ara panelini açar: Yapı no önekle dolar,
   numaralananlar tabloda (Ara'nın satır biçimiyle: tıklanan satır yapıyı gösterir), altında özet (`32-panel-ac`).
   Gerçek pencerede: B- ve 10 ile Numarala → Eklenti sekmesi Asistan'ın yanında açıldı, Yapı no "B-", altında "5 yapı
