@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.31",
+  "version": "1.0.32",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -138,6 +138,12 @@
         "title": "Yapı numarası",
         "domain": "cbs",
         "handler": "vitrin.logic:yapi_no"
+      },
+      {
+        "id": "parsel-cakisma",
+        "title": "Parsel çakışması",
+        "domain": "cbs",
+        "handler": "vitrin.logic:parsel_cakisma"
       }
     ],
     "expressions": [
@@ -232,6 +238,16 @@
                 "icon": "assets/yapi.svg"
               }
             ]
+          },
+          {
+            "label": "Denetim",
+            "items": [
+              {
+                "audit": "parsel-cakisma",
+                "size": "large",
+                "icon": "overlap"
+              }
+            ]
           }
         ]
       }
@@ -278,7 +294,7 @@
     {
       "id": "audit.provider",
       "scope": "plugin-owned",
-      "reason": "Numarasız yapıları bulur ve sıradaki numarayı yazan bir düzeltme önerir."
+      "reason": "Numarasız yapılara sıradaki numarayı önerir; çakışan ve arasında boşluk kalan parselleri söyler."
     },
     {
       "id": "expression.provider",

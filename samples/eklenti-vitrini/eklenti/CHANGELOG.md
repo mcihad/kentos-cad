@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.32 — 15 Kasım 2026
+
+- Yeni denetim "Parsel çakışması" (şeridin yeni Denetim grubunda): geometriyi KentOS ölçer (`facts.project`: Rust'ın
+  çakışma ve boşluk denetimi), kural yalnız karar verip bulguyu parselin adıyla yazar; çakışma hata, boşluk uyarı.
+
 ## 1.0.31 — 15 Kasım 2026
 
 - "Yapı ara"nın sonunda katlanır bir bölüm (`section`): "İpuçları" kapalı açılır, başlığına basınca kısayollar ve

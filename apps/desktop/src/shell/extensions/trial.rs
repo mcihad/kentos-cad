@@ -258,8 +258,26 @@ fn run(
         .enumerate()
         .map(|(i, u)| (u.to_string(), i))
         .collect();
-    let facts = kentos_processing::external::audit_facts(&doc, MOST_OBJECTS);
+    let mut facts = kentos_processing::external::audit_facts(&doc, MOST_OBJECTS);
     let stopped = || stop.load(Ordering::Relaxed);
+    // What KentOS measures in the drawing (`facts.project`, docs/adr/8057 §36), as the drawing's own audit gives it; a
+    // measure that breaks leaves the rules the layers (`facts.project` then says it is missing).
+    if !rules.is_empty() {
+        let measured = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            kentos_processing::audit_facts::project_facts(
+                &doc,
+                kentos_processing::audit_facts::MOST_OBJECTS,
+                &stopped,
+            )
+        }));
+        match measured {
+            Ok(Some(project)) => {
+                facts["project"] = serde_json::to_value(&project).unwrap_or_default();
+            }
+            Ok(None) => return json!({ "status": "stopped" }),
+            Err(_) => {}
+        }
+    }
     let mut audits = Vec::new();
     for (rule, title, job) in rules {
         if stopped() {

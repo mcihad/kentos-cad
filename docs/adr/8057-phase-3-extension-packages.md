@@ -2323,6 +2323,9 @@ bölümü), İşlemler `crates/native/processing/src/audit_facts.rs` (`project_f
   İşlemler 8 (katmanların olguları; örneğin baytları; her sırada aynı baytlar; sınır kalıcı kimlikle; Durdur; tolerans
   projenin; alanın deliği boşluk; sorun adları çekirdeğin), Python 5 ve eklenti süreci 1 (Rust'ın olgularını tipli
   okur; kural yalnız olgulardan bulgu verir; olgusuz KentOS'ta yetenek eksik).
+- **Vitrin 1.0.32:** şeridin yeni Denetim grubunda "Parsel çakışması": çakışmayı ve boşluğu KentOS ölçer, kural
+  bulguyu parselin ada/parsel adıyla yazar (çakışma hata, boşluk uyarı; düzeltme önermez). Gerçek pencerede
+  (`37-olgular`) örnek çizimin parselleri temiz: "Bulgu yok" (1,6 sn), köken 1.0.32.
 
 ## §37. Kapı 3'ün kodu çalıştıran payı: sentetik çizimde deneme (`ADIM 21`)
 
@@ -2345,6 +2348,9 @@ bölümü), İşlemler `crates/native/processing/src/audit_facts.rs` (`project_f
   başlığı ve komutu; hata veren kural istisnası ve iz kaydıyla (denemenin bulgusu, çağrının hatası değil); her aracın
   özeti, uyarıları ve yazdıkları (katman başına sayı ve ilk 5 nesne GeoJSON ve öznitelikleriyle); bir satırlık özet.
   Bulgular eklentinin sözleridir: ajan veri olarak okur (§31).
+- **Olgular:** denemenin kuralları KentOS'un ölçtüklerini de okur (`facts.project`, §36), çizimin denetimindeki gibi;
+  ölçüm kırılırsa kurallar katmanlarla çalışır. Gerçek pencerede Vitrin 1.0.32'nin Parsel çakışması, 2 m iç içe iki
+  20×20 m sentetik parselle: "101/1 ile 101/2 40.00 m² çakışıyor." (hata).
 - **Yüzeyler:** Asistan çağrıyı deneme bitince cevaplar (arayüz iş parçacığında beklenmez, denetimin yolu); masaüstüne
   bağlı MCP ajanı `trial_report`'u sorar. Masaüstü olmayan bağlantı nerede çalıştığını söyler (`not_offered`).
   SDK'nın iş akışı aracı anar.

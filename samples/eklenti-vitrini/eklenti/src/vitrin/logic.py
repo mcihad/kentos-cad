@@ -10,6 +10,7 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``ada_parsel``: ifade işlevi; etiket metni, stil kuralı, katman süzgeci, İşlemler ve form hesabı çağırır.
 - ``yapi_yerlestir``: harita aracı; manifestteki 10 × 12 m şablonu kullanıcının gösterdiği yere yazar.
 - ``yapi_no``: denetim kuralı; numarasız yapıları bulur, her birine sıradaki numarayı yazan bir düzeltme önerir.
+- ``parsel_cakisma``: KentOS'un ölçtüğü olgularla denetim (``facts.project``); çakışan ve arası boş parseller.
 - ``katmanlari_kur``: katman şeması; schema.json'daki grubu, katmanları, değer listesini ve ilişkiyi tek adımda kurar.
 - ``yapi_ara``: panelin düğmesi; "Yapı ara" panelinin değerleriyle çalışır, satırları panelin tablosuna gider.
 - ``yapi_ozeti``: göstergeli panel; "Yapı ara"nın Özetle düğmesi, satırları gösterge kartları olur.
@@ -255,6 +256,34 @@ def yapi_yerlestir(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResu
     """Kullanıcının gösterdiği yere 10 × 12 m bir yapı yazar (manifestteki şablon). Her yerleştirme tek geri alma
     adımıdır; araç Esc'e kadar sürer."""
     return ctx.add_feature("yapi", sekil, {"kaynak": "Vitrin", "kat": "2"})
+
+
+@ext.audit("parsel-cakisma")
+def parsel_cakisma(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """'parsel' katmanında birbirinin üstüne binen parseller (hata) ve aralarında boşluk kalanlar (uyarı). Geometriyi
+    KentOS ölçer (facts.project: Rust'ın çakışma ve boşluk denetimi, projenin toleransıyla); kural yalnız karar verir
+    ve bulguyu parselin ada/parsel adıyla yazar. Düzeltme önermez: hangi parselin sınırı yanlış, ölçen karar verir."""
+    katman = facts.project.layer("parsel")
+    adlar = {f.id: f"{f.attrs.get('ada', '?')}/{f.attrs.get('parsel', '?')}" for f in facts.features("parsel")}
+    bulgular = []
+    for c in katman.overlaps:
+        bulgular.append(
+            ext.AuditFinding(
+                message=f"{adlar.get(c.a, 'Bir parsel')} ile {adlar.get(c.b, 'bir parsel')} {c.area:.2f} m² çakışıyor.",
+                severity="error",
+                feature_id=c.a,
+            )
+        )
+    for b in katman.gaps:
+        cevre = ", ".join(adlar.get(u, "?") for u in b.around[:3]) or "parseller"
+        bulgular.append(
+            ext.AuditFinding(
+                message=f"{cevre} arasında {b.area:.2f} m² boşluk kalıyor.",
+                severity="warning",
+                feature_id=b.around[0] if b.around else None,
+            )
+        )
+    return bulgular
 
 
 @ext.audit("yapi-no")

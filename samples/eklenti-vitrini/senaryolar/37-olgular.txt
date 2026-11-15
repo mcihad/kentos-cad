@@ -1,0 +1,13 @@
+# Ölçülmüş olgular: Vitrin › Denetim › Parsel çakışması. Geometriyi KentOS ölçer (facts.project: çakışma ve boşluk,
+# projenin toleransıyla), kural parselin adıyla söyler; örnek çizimin parselleri temiz: bulgu yok. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 702 75    # Parsel çakışması
+wait 6000
+shot 37-olgular
