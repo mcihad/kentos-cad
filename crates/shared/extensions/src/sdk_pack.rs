@@ -435,6 +435,18 @@ mod tests {
         out
     }
 
+    /// The guide, the SDK's reference, names every panel component type Kapı 1 knows, as ADR 8057 §25's coverage
+    /// report does: the two show the same version (plan/eklenti.md ADIM 22's acceptance).
+    #[test]
+    fn the_guide_names_every_panel_component() {
+        for kind in crate::ui_panel::component_types() {
+            assert!(
+                GUIDE.contains(&format!("`{kind}`")),
+                "the guide's Panel section does not name `{kind}`"
+            );
+        }
+    }
+
     #[test]
     fn the_stub_is_the_sdk_s() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));

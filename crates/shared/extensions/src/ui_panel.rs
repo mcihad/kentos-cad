@@ -241,6 +241,11 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
 const TYPES: &str = "text, textField, numberField, select, layerPicker, fieldPicker, featurePicker, checkbox, button, \
                      table, tree, card";
 
+/// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
+pub fn component_types() -> impl Iterator<Item = &'static str> {
+    TYPES.split(", ")
+}
+
 /// A component's id: lowercase letters, digits, `_` and `-`, a letter first, at most 63: the key its value is given to
 /// the command under (`ctx.params["sorgu"]`).
 fn is_component_id(id: &str) -> bool {
@@ -707,7 +712,7 @@ mod tests {
         .expect("ADR 8057");
         let report = adr.split("\n## §25.").nth(1).expect("its §25");
         let report = report.split("\n## §").next().unwrap_or(report);
-        for kind in TYPES.split(", ") {
+        for kind in component_types() {
             assert!(keys_of(kind).is_some(), "{kind}");
             assert!(
                 report.contains(&format!("`{kind}`")),

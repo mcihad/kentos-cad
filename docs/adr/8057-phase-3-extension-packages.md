@@ -1596,7 +1596,8 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
   0400'ün ortak odak geçişini kullanır: Yapı no'da Tab → Katman → onay kutusu (Boşluk işaretler), Shift+Tab geri,
   Enter metin alanında Ara'ya basar ("0 yapı bulundu"). Düğmeler odak almaz (Enter onların yerine); son alandan sonra
   Tab pencerenin sıradaki kutusuna (Öznitelikler'in seçimi) geçer: dock bir odak kapsamı değildir, iletişim kutusu
-  gibi kendi içinde döndürmez.
+  gibi kendi içinde döndürmez. Esc alandan çıkar, yazılan kalır ("Y-0"); sonraki tuş komut satırına gider (hiçbir kutu
+  odakta değilken yazılan komut satırınındır, uygulamanın genel davranışı).
 - **Ağaç** (`tree`: `id`, `label`, `group`; Vitrin 1.0.14, Değer say; `20-agac`): düğmenin (ya da `onChange`'in) komutu
   düz satır verir, KentOS onları `group`'un 1–3 sütununa göre iç içe gruplara dizer (KentOS'un ağaç görünümü): her grup
   ilk satırının sırasıyla, yanında sayısı, kullanıcı kapatmadıkça açık; yaprağın adı satırın gruplanmayan ilk sütunu,
