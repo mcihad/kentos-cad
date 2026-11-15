@@ -134,7 +134,9 @@ onunla sohbet ederek çizdirir; Anthropic, OpenAI, DeepSeek, Gemini, Kimi, GLM v
   ve "daha dar sorun" denir: belirteçler kullanıcının parası.
 - **Onay:** silen ya da var olanı değiştiren bir yazma (MCP'nin yıkıcı listesi, adımlarından biri öyle olan küme, onarım
   ve İşlemler) panelde "Onay gerekiyor" kartıyla bekler; reddedilirse çalışmaz ve ajana söylenir. Ekleyen yazma hemen
-  çalışır.
+  çalışır. Kart çağrının girdisini bir kez, açık ayrıntıda gösterir; Reddet ve Onayla'nın satırı "Bu adım
+  çalıştırılsın mı?" diye sorar (15 Kasım: satır girdiyi bir daha yazıyordu, kart aynı JSON'u alt alta iki kez
+  gösteriyordu; ayrıntı kapalıyken girdiyi yine satır söyler; `kentos_ui` `AiToolCall`, bileşen sınaması).
 - **Sistem talimatı** Türkçe: önce `drawing.summary`, katalogda arama ve şema, kapılar, önce plan sonra aynı girdiyle
   execute, birim ve eksenler, hatayı okumak, kısa yanıt; kullanıcıya iç kimlik, sürüm ya da plan numarası yazılmaz
   (ilk denemede yanıt "id 7, revision 2" diyordu).

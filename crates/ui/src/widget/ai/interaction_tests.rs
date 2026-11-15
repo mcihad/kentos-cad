@@ -269,3 +269,77 @@ fn growing_content_follows_the_end_and_manual_scrolling_preserves_the_reading_po
     let (_, offset, end) = scroll_position(&mut snapshot, &state);
     assert!((offset - end).abs() < 1.0);
 }
+
+/// How many texts read `label` in a view.
+struct CountText {
+    label: String,
+    count: Arc<Mutex<usize>>,
+}
+impl Operation for CountText {
+    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+        operate(self);
+    }
+    fn text(&mut self, _: Option<&Id>, _: Rectangle, text: &str) {
+        if text == self.label {
+            *self.count.lock().unwrap() += 1;
+        }
+    }
+}
+
+#[test]
+fn an_approval_says_its_call_once_and_asks() {
+    // 15 November 2026: an approval's details, open above its row, showed again beside Reddet and Onayla. Open, the
+    // row asks; closed, the row is where the details are said.
+    let mut snapshot = Snapshot::software(Size::new(520.0, 420.0)).unwrap();
+    let detail = "{\n  \"finding\": 1,\n  \"mode\": \"execute\"\n}";
+    let call = |expanded: bool| ToolCall {
+        id: 1,
+        name: "Bulguları onar · eklenti bulgusu 1 · yazma".into(),
+        detail: detail.into(),
+        phase: ToolPhase::Approval,
+        output: String::new(),
+        elapsed: None,
+        expanded,
+    };
+    let count = |snapshot: &mut Snapshot, call: &ToolCall, label: &str| {
+        let count = Arc::new(Mutex::new(0));
+        let view: Element<'_, AiEvent> = AiToolCall::new(call)
+            .on_toggle(AiEvent::ToggleTool {
+                message: 1,
+                tool: 1,
+            })
+            .on_approve(AiEvent::ApproveTool {
+                message: 1,
+                tool: 1,
+                approved: true,
+            })
+            .on_reject(AiEvent::ApproveTool {
+                message: 1,
+                tool: 1,
+                approved: false,
+            })
+            .into();
+        snapshot.operate(
+            view,
+            Box::new(CountText {
+                label: label.to_owned(),
+                count: count.clone(),
+            }),
+        );
+        let n = *count.lock().unwrap();
+        n
+    };
+    let open = call(true);
+    assert_eq!(count(&mut snapshot, &open, detail), 1, "said once, above");
+    assert_eq!(
+        count(&mut snapshot, &open, super::view::APPROVAL_QUESTION),
+        1,
+        "the row asks"
+    );
+    let closed = call(false);
+    assert_eq!(
+        count(&mut snapshot, &closed, super::view::APPROVAL_QUESTION),
+        0,
+        "closed, the row says what runs"
+    );
+}

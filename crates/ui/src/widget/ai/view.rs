@@ -525,6 +525,9 @@ impl<'a, Message: Clone + 'a> From<AiThinking<'a, Message>> for Element<'a, Mess
     }
 }
 
+/// What an approval's row asks while its call's details are open above it.
+pub const APPROVAL_QUESTION: &str = "Bu adım çalıştırılsın mı?";
+
 /// Tool progress, input/output details and explicit approval actions. The host
 /// receives events and owns the actual tool execution and permissions.
 pub struct AiToolCall<'a, Message> {
@@ -635,12 +638,17 @@ impl<'a, Message: Clone + 'a> AiToolCall<'a, Message> {
             body = body.push(Disclosure::new(details, call.expanded));
         }
         if call.phase == ToolPhase::Approval && (self.approve.is_some() || self.reject.is_some()) {
+            // The details open above say what runs: the row asks, it does not say them again (they showed twice, one
+            // under the other, 15 November 2026). Closed, the row is the only place that says them.
+            let asked = if call.expanded || call.detail.is_empty() {
+                APPROVAL_QUESTION
+            } else {
+                call.detail.as_str()
+            };
             body = body.push(
                 container(
                     row![
-                        text(call.detail.as_str())
-                            .size(typography::body())
-                            .width(Fill),
+                        text(asked).size(typography::body()).width(Fill),
                         button(text("Reddet").size(typography::body()))
                             .on_press_maybe(self.reject)
                             .padding(crate::theme::metrics::action())
