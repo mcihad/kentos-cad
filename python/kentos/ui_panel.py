@@ -38,13 +38,21 @@ def panel(title: str, body: Sequence[dict[str, Any]]) -> dict[str, Any]:
     return {"format": FORMAT, "schemaVersion": SCHEMA_VERSION, "title": str(title), "body": list(body)}
 
 
-def text(text: str, *, id: str | None = None, visible_when: str | None = None) -> dict[str, Any]:
+def text(
+    text: str,
+    *,
+    id: str | None = None,
+    visible_when: str | None = None,
+    calculate: str | None = None,
+) -> dict[str, Any]:
     """A line of text."""
     out: dict[str, Any] = {"type": "text", "text": text}
     if id is not None:
         out["id"] = id
     if visible_when is not None:
         out["visibleWhen"] = visible_when
+    if calculate is not None:
+        out["calculate"] = calculate
     return out
 
 
@@ -58,6 +66,8 @@ def text_field(
     visible_when: str | None = None,
     required_when: str | None = None,
     enabled_when: str | None = None,
+    calculate: str | None = None,
+    default_expr: str | None = None,
 ) -> dict[str, Any]:
     """A text the user types."""
     out: dict[str, Any] = {"type": "textField", "id": id, "label": label}
@@ -73,6 +83,10 @@ def text_field(
         out["requiredWhen"] = required_when
     if enabled_when is not None:
         out["enabledWhen"] = enabled_when
+    if calculate is not None:
+        out["calculate"] = calculate
+    if default_expr is not None:
+        out["defaultExpr"] = default_expr
     return out
 
 
@@ -88,6 +102,8 @@ def number_field(
     visible_when: str | None = None,
     required_when: str | None = None,
     enabled_when: str | None = None,
+    calculate: str | None = None,
+    default_expr: str | None = None,
 ) -> dict[str, Any]:
     """A number the user types, in its bounds."""
     out: dict[str, Any] = {"type": "numberField", "id": id, "label": label}
@@ -107,6 +123,10 @@ def number_field(
         out["requiredWhen"] = required_when
     if enabled_when is not None:
         out["enabledWhen"] = enabled_when
+    if calculate is not None:
+        out["calculate"] = calculate
+    if default_expr is not None:
+        out["defaultExpr"] = default_expr
     return out
 
 
@@ -254,6 +274,8 @@ def date_field(
     visible_when: str | None = None,
     required_when: str | None = None,
     enabled_when: str | None = None,
+    calculate: str | None = None,
+    default_expr: str | None = None,
 ) -> dict[str, Any]:
     """A date the user types (GG.AA.YYYY or YYYY-AA-GG) or picks from KentOS's calendar; its value is the ISO date
     (`2026-11-15`), none when empty. `value`, `min` and `max` are ISO dates."""
@@ -274,6 +296,10 @@ def date_field(
         out["requiredWhen"] = required_when
     if enabled_when is not None:
         out["enabledWhen"] = enabled_when
+    if calculate is not None:
+        out["calculate"] = calculate
+    if default_expr is not None:
+        out["defaultExpr"] = default_expr
     return out
 
 
@@ -289,6 +315,8 @@ def time_field(
     visible_when: str | None = None,
     required_when: str | None = None,
     enabled_when: str | None = None,
+    calculate: str | None = None,
+    default_expr: str | None = None,
 ) -> dict[str, Any]:
     """A time of day the user types (14:30, 14.30, 9:05) or picks from KentOS's time picker; its value is `HH:MM` (24
     hours), none when empty. `value`, `min` and `max` are `HH:MM`."""
@@ -309,6 +337,10 @@ def time_field(
         out["requiredWhen"] = required_when
     if enabled_when is not None:
         out["enabledWhen"] = enabled_when
+    if calculate is not None:
+        out["calculate"] = calculate
+    if default_expr is not None:
+        out["defaultExpr"] = default_expr
     return out
 
 
@@ -324,6 +356,8 @@ def date_time_field(
     visible_when: str | None = None,
     required_when: str | None = None,
     enabled_when: str | None = None,
+    calculate: str | None = None,
+    default_expr: str | None = None,
 ) -> dict[str, Any]:
     """A day and a time the user types (`15.11.2026 14:30`, `2026-11-15 14:30`) or picks from KentOS's calendar and
     clock; its value is the local ISO date and time, `2026-11-15T14:30` (no zone: the user's own clock), none when
@@ -345,6 +379,10 @@ def date_time_field(
         out["requiredWhen"] = required_when
     if enabled_when is not None:
         out["enabledWhen"] = enabled_when
+    if calculate is not None:
+        out["calculate"] = calculate
+    if default_expr is not None:
+        out["defaultExpr"] = default_expr
     return out
 
 

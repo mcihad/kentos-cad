@@ -18,6 +18,7 @@
       "type": "dateField",
       "id": "tarih",
       "label": "Kart tarihi",
+      "defaultExpr": "bugün()",
       "onChange": "parsel-karti",
       "visibleWhen": "içerir(bilgiler, 'tarih')"
     },

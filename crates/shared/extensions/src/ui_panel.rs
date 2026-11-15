@@ -27,6 +27,7 @@ pub const MOST_COMPONENTS: usize = 100;
 #[cfg(feature = "schema")]
 pub mod python;
 pub mod rules;
+pub mod values;
 
 pub use rules::Rules;
 
@@ -458,6 +459,24 @@ pub fn json_schema() -> Value {
                         serde_json::json!({ "type": "string", "description": words }),
                     );
                 }
+                for key in values::VALUE_KEYS
+                    .iter()
+                    .filter(|k| values::takes_value(&name, k))
+                {
+                    let words = match *key {
+                        "calculate" => {
+                            "Its value, worked out from the panel's inputs (by id) as they change: not typed, not set by \
+                             code (a text's words; its text shows while this gives nothing)."
+                        }
+                        _ => {
+                            "Its first value, worked out when the panel opens (bugün(), şimdi() and the inputs above it)."
+                        }
+                    };
+                    props.insert(
+                        (*key).to_owned(),
+                        serde_json::json!({ "type": "string", "description": words }),
+                    );
+                }
             }
         }
     }
@@ -719,6 +738,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
     // What the components' rules read: the inputs by id, typed (rules.rs).
     let inputs = rules::inputs_of(body);
     let mut ids = BTreeSet::new();
+    // The calculations: each one's place, id and what it reads, ordered after the loop (a round is refused).
+    let mut calculated: Vec<(usize, Option<String>, Vec<String>)> = Vec::new();
     for (i, component) in body.iter().enumerate() {
         let at = format!("/body/{i}");
         let Some(c) = component.as_object() else {
@@ -737,6 +758,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             k.as_str() != "type"
                 && !known.contains(&k.as_str())
                 && !takes_rule(kind, known, k.as_str())
+                && !values::takes_value(kind, k.as_str())
         }) {
             let mut takes: Vec<&str> = known.to_vec();
             takes.extend(
@@ -744,6 +766,12 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     .iter()
                     .copied()
                     .filter(|r| takes_rule(kind, known, r)),
+            );
+            takes.extend(
+                values::VALUE_KEYS
+                    .iter()
+                    .copied()
+                    .filter(|k| values::takes_value(kind, k)),
             );
             add(
                 format!("{at}/{key}"),
@@ -770,6 +798,58 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     format!("{key} bir ifade (metin) olmalı, ör. \"tur = 'Okul'\"."),
                 ),
             }
+        }
+        // Its worked-out values compile against the inputs and the moment; a calculation is not typed, set or asked.
+        for key in values::VALUE_KEYS
+            .iter()
+            .filter(|k| values::takes_value(kind, k))
+        {
+            match c.get(*key) {
+                None => {}
+                Some(Value::String(source)) if !source.trim().is_empty() => {
+                    match values::compile(source, &inputs, &values::Moment::checking()) {
+                        Ok(expr) if *key == "calculate" => calculated.push((
+                            i,
+                            c.get("id").and_then(Value::as_str).map(str::to_owned),
+                            expr.fields.clone(),
+                        )),
+                        Ok(_) => {}
+                        Err(why) => add(format!("{at}/{key}"), why),
+                    }
+                }
+                Some(_) => add(
+                    format!("{at}/{key}"),
+                    format!("{key} bir ifade (metin) olmalı, ör. \"ilk + adet - 1\"."),
+                ),
+            }
+        }
+        if c.contains_key("calculate") {
+            for (other, why) in [
+                ("value", "değerini hesabı yazar"),
+                ("defaultExpr", "değerini hesabı yazar"),
+                ("required", "kullanıcıya sorulmaz"),
+                ("requiredWhen", "kullanıcıya sorulmaz"),
+                ("enabledWhen", "yazılmaz, hep kapalıdır"),
+                ("onChange", "kullanıcı değiştirmez, onChange çalışmaz"),
+            ] {
+                let given = match c.get(other) {
+                    None | Some(Value::Null) | Some(Value::Bool(false)) => false,
+                    Some(_) => true,
+                };
+                if given {
+                    add(
+                        format!("{at}/{other}"),
+                        format!(
+                            "calculate ile “{other}” birlikte olmaz: hesaplanan bileşen {why}."
+                        ),
+                    );
+                }
+            }
+        } else if c.contains_key("defaultExpr") && c.get("value").is_some_and(|v| !v.is_null()) {
+            add(
+                format!("{at}/value"),
+                "defaultExpr ile “value” birlikte olmaz: ilk değeri biri verir.".to_owned(),
+            );
         }
         match c.get("id") {
             None if kind == "text" => {}
@@ -1208,6 +1288,14 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             }
             _ => {}
         }
+    }
+    // The calculations in an order each after those it reads: a round of them has none.
+    let reads: Vec<(Option<String>, Vec<String>)> = calculated
+        .iter()
+        .map(|(_, id, fields)| (id.clone(), fields.clone()))
+        .collect();
+    if let Err((at, why)) = values::calc_order(&reads) {
+        add(format!("/body/{}/calculate", calculated[at].0), why);
     }
     out
 }

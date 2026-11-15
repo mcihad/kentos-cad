@@ -160,6 +160,8 @@ impl App {
             }
             _ => {}
         }
+        // Its calculations follow the values, as a panel's (panel_values.rs).
+        panel.recalculate();
     }
 
     /// Tamam (`ok`): the values by id when they are right, else why under the fields, the window open; İptal, Esc, ✕:

@@ -117,7 +117,10 @@ kayıtta değil). Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) v
 `panel` katkısı bir örnek verir. Bileşen kuralı Python'suz çalışır, formun kurallarının ifade diliyle panelin
 girdilerini kimlikleriyle okur: `visibleWhen` (her bileşen), `requiredWhen` (zorunlu olabilen girdi), `enabledWhen`
 (düğme ve metin, sayı, tarih, saat alanları), ör. `"visibleWhen": "içerir(bilgiler, 'tarih')"`; tireli kimlik köşeli
-parantezle (`[en-sik]`). Katmanın sağ tık menüsünden (`contextMenus`, `target: "layer"`) çalışan komut tıklanan
+parantezle (`[en-sik]`). Hesaplı değer de Python'suz: `calculate` (metin; metin, sayı, tarih, saat, an alanı) değeri
+okuduğu girdiler değiştikçe yeniden hesaplar, alan yazılmaz ve kod onu değiştiremez, metinde `text` hesap boşken görünür;
+`defaultExpr` (alanlar) ilk değeri panel açılırken hesaplar (`"defaultExpr": "bugün()"`); ikisi `bugün()` ve `şimdi()`'yi
+okur, birbirini döngüyle okuyan hesaplar Kapı 1'de reddedilir. Katmanın sağ tık menüsünden (`contextMenus`, `target: "layer"`) çalışan komut tıklanan
 katmanın kimliğini `ctx.params["layer"]`'da alır. Panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel`;
 panelden çalışmadıysa None; başka bir panelini `ctx.open_panel(id)` açıp verir): `set(id, value=…, options=…, enabled=…, visible=…, text=…)` (seçenekleri veriden doldurmak, düğmeyi
 kapatmak, alanı gizlemek), `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`; yanlış kimlik ya da değer

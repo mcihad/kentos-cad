@@ -66,10 +66,10 @@ def katman_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
 @ext.command("yapilari-numarala")
 def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
     """'yapi' katmanındaki yapılara sırayla "no" yazar (Y-01, Y-02 …). Şeritten çalışınca önce öneki ve ilk numarayı
-    sorar (ctx.dialog: KentOS'un penceresi, alanları kentos.ui_panel'in işlevleriyle; İptal'de bir şey yazılmaz),
-    bitince "Yapı ara" panelini açıp numaralananları listeler (ctx.open_panel); panelin düğmesinden çalışınca Y-01'den
-    başlar. İlerleme çubuğunu ve Durdur'u göstermek için her yapıda yarım saniye bekler: Durdur'a basılırsa yazdıkları
-    geri alınır."""
+    sorar (ctx.dialog: KentOS'un penceresi, alanları kentos.ui_panel'in işlevleriyle, açıklaması yazılanla hesaplanır;
+    İptal'de bir şey yazılmaz), bitince "Yapı ara" panelini açıp numaralananları listeler (ctx.open_panel); panelin
+    düğmesinden çalışınca Y-01'den başlar. İlerleme çubuğunu ve Durdur'u göstermek için her yapıda yarım saniye bekler:
+    Durdur'a basılırsa yazdıkları geri alınır."""
     yapi = _katman(ctx.doc, "yapi") if ctx.doc is not None else None
     if yapi is None:
         return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
@@ -80,9 +80,18 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
         cevap = ctx.dialog(
             "Yapıları numarala",
             # Alanlar kentos.ui_panel'in işlevleriyle: her biri bileşenin JSON'unu yazar, anahtarları adıyla ve tipiyle
-            # (panelin JSON şemasından üretilir; yanlış yazılan bir anahtar Python'da TypeError olur).
+            # (panelin JSON şemasından üretilir; yanlış yazılan bir anahtar Python'da TypeError olur). Açıklama hesaplıdır
+            # (calculate): yazılan önek ve ilk numarayla "… B-10 … B-14 yazılır." olur, Python'suz; İlk numara boşken
+            # kendi metni görünür.
             [
-                ui.text(f"'yapi' katmanındaki {len(kayitlar)} yapıya sırayla numara yazılır."),
+                ui.text(
+                    f"'yapi' katmanındaki {len(kayitlar)} yapıya sırayla numara yazılır.",
+                    calculate=(
+                        f"eğer(boş(ilk), boş, '“yapi” katmanındaki {len(kayitlar)} yapıya ' || varsayılan(onek, '') "
+                        f"|| doldur(ilk, 2) || ' … ' || varsayılan(onek, '') || doldur(ilk + {len(kayitlar) - 1}, 2) "
+                        "|| ' yazılır.')"
+                    ),
+                ),
                 ui.text_field("onek", "Önek", value="Y-"),
                 ui.number_field("ilk", "İlk numara", value=1, min=1, required=True),
             ],

@@ -105,6 +105,11 @@ pub(crate) struct OpenPanel {
     /// Each component's rules compiled (`visibleWhen`, `requiredWhen`, `enabledWhen`; docs/adr/8057 §33), in the
     /// body's order: worked out from the panel's values as they change, no Python.
     pub(crate) rules: Vec<CompiledRules>,
+    /// The calculated components' places in the order they are worked out, each after those it reads
+    /// (panel_values.rs, docs/adr/8057 §35).
+    pub(crate) calc_order: Vec<usize>,
+    /// What each calculated text shows now, by its place (none: its `text`).
+    pub(crate) calculated: BTreeMap<usize, String>,
 }
 
 /// A component's rules, compiled against the panel's inputs (Kapı 1 passed them; one that does not compile is none).
@@ -113,6 +118,8 @@ pub(crate) struct CompiledRules {
     pub(crate) visible: Option<kentos_expression::Expr>,
     pub(crate) required: Option<kentos_expression::Expr>,
     pub(crate) enabled: Option<kentos_expression::Expr>,
+    /// Its value worked out from the inputs (`calculate`, panel_values.rs).
+    pub(crate) calculate: Option<kentos_expression::Expr>,
 }
 
 /// A panel's button pressed: what the next launch of its command gives its code, and where its answer goes.
@@ -195,6 +202,8 @@ impl OpenPanel {
             held: false,
             pages: BTreeMap::new(),
             rules: Vec::new(),
+            calc_order: Vec::new(),
+            calculated: BTreeMap::new(),
         };
         // Its rules, compiled once against its inputs (ui_panel::rules).
         let body: Vec<Value> = panel
@@ -209,6 +218,13 @@ impl OpenPanel {
                 .as_deref()
                 .and_then(|s| kentos_extensions::ui_panel::rules::compile(s, &inputs).ok())
         };
+        // Its worked-out values read the moment it opened (`bugün()`, `şimdi()`).
+        let moment = super::panel_values::moment_now();
+        let worked = |source: &Option<String>| {
+            source.as_deref().and_then(|s| {
+                kentos_extensions::ui_panel::values::compile(s, &inputs, &moment).ok()
+            })
+        };
         panel.rules = panel
             .definition
             .rules
@@ -217,8 +233,26 @@ impl OpenPanel {
                 visible: compile(&r.visible_when),
                 required: compile(&r.required_when),
                 enabled: compile(&r.enabled_when),
+                calculate: worked(&r.calculate),
             })
             .collect();
+        let reads: Vec<(Option<String>, Vec<String>)> = panel
+            .rules
+            .iter()
+            .zip(&panel.definition.body)
+            .filter_map(|(r, c)| {
+                Some((
+                    c.id().map(str::to_owned),
+                    r.calculate.as_ref()?.fields.clone(),
+                ))
+            })
+            .collect();
+        let places: Vec<usize> = (0..panel.rules.len())
+            .filter(|at| panel.rules[*at].calculate.is_some())
+            .collect();
+        panel.calc_order = kentos_extensions::ui_panel::values::calc_order(&reads)
+            .map(|order| order.into_iter().map(|i| places[i]).collect())
+            .unwrap_or_default();
         for c in &panel.definition.body {
             match c {
                 Component::TextField { id, value, .. } => {
@@ -272,6 +306,9 @@ impl OpenPanel {
                 _ => {}
             }
         }
+        // Its defaults on the values it starts with, then its calculations on those.
+        panel.apply_defaults(&moment);
+        panel.recalculate();
         panel
     }
 
@@ -329,6 +366,7 @@ impl OpenPanel {
     pub(crate) fn usable(&self, at: usize, c: &Component) -> bool {
         self.holds(at, |r| r.enabled.as_ref()).unwrap_or(true)
             && c.id().is_none_or(|id| !self.disabled.contains(id))
+            && !self.calculated_at(at)
     }
 
     /// Whether input `at` is asked of the user: `required`, or its `requiredWhen` holding.
@@ -350,7 +388,7 @@ impl OpenPanel {
 
     /// Input `id`'s value as a rule reads it (ui_panel::rules): a number as `4.5`, a check `true` or `false`, a date
     /// or moment ISO, a multiple choice's chosen values joined; none when empty.
-    fn rule_value(&self, id: &str) -> Option<String> {
+    pub(super) fn rule_value(&self, id: &str) -> Option<String> {
         let typed = || {
             self.texts
                 .get(id)
@@ -948,24 +986,30 @@ impl App {
         };
         panel.forget_invalid(&event);
         match event {
+            // Each value changed works the calculations out again (panel_values.rs), before a command reads them.
             PanelEvent::Text(id, text) => {
                 panel.texts.insert(id, text);
+                panel.recalculate();
             }
             PanelEvent::Check(id, on) => {
                 panel.checks.insert(id.clone(), on);
+                panel.recalculate();
                 return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Choose(id, value) => {
                 panel.choose(id.clone(), value);
+                panel.recalculate();
                 return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Unpick(id) => {
                 panel.picks.insert(id.clone(), Vec::new());
+                panel.recalculate();
                 return self.ext_panel_changed(at, &id);
             }
             // A day chosen from the calendar is a change (typing is not: a process each key, as a text field's).
             PanelEvent::Picked(id, words) => {
                 panel.texts.insert(id.clone(), words);
+                panel.recalculate();
                 return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Toggle(id, value) => {
@@ -976,6 +1020,7 @@ impl App {
                     }
                     None => chosen.push(value),
                 }
+                panel.recalculate();
                 return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Pick(id) => return self.ext_panel_pick(at, &id),
@@ -1076,6 +1121,7 @@ impl App {
         }
         panel.picks.insert(picker.to_owned(), picked);
         panel.said = None;
+        panel.recalculate();
         self.ext_panel_changed(at, picker)
     }
 

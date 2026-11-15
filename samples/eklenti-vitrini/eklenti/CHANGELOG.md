@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.0.30 — 15 Kasım 2026
+
+- Hesaplı değerler, Python'suz: "Yapıları numarala" penceresinin açıklaması yazılan önek ve ilk numarayla hesaplanır
+  (`calculate`): açılınca "“yapi” katmanındaki 5 yapıya Y-01 … Y-05 yazılır.", B- ve 10 yazılınca "… B-10 … B-14
+  yazılır."; İlk numara boşken kendi metni görünür. "Parsel kartı"nın Kart tarihi bugünle açılır (`defaultExpr:
+  "bugün()"`).
+
 ## 1.0.29 — 15 Kasım 2026
 
 - "Yapıları numarala"nın penceresi ve "Değer say"ın Seç seçenekleri `kentos.ui_panel`'in işlevleriyle yazılır

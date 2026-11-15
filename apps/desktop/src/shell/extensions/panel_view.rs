@@ -205,8 +205,14 @@ impl App {
             let on = |_: &str| usable;
             match c {
                 // A text the panel's whole width: in the field column it wrapped every few words in a narrow dock.
+                // A calculated text shows its calculation's words, its `text` while that gives nothing (docs/adr/8057
+                // §35); else its code's words, else its own.
                 Component::Text { id, text } => {
-                    let text = id.as_ref().and_then(|i| p.words.get(i)).unwrap_or(text);
+                    let text = p
+                        .calculated
+                        .get(&at)
+                        .or_else(|| id.as_ref().and_then(|i| p.words.get(i)))
+                        .unwrap_or(text);
                     form = form.wide(label::caption(text.clone()));
                 }
                 Component::TextField {

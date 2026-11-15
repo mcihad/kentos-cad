@@ -1,0 +1,27 @@
+# Hesaplı değer: Vitrin › Yapıları numarala'nın penceresinde açıklama yazılanla hesaplanır (calculate, Python'suz):
+# açılınca "… Y-01 … Y-05 yazılır.", B- ve 10 yazılınca "… B-10 … B-14 yazılır."; İptal bir şey yazmaz. Parsel kartı'nın
+# Kart tarihi bugünle açılır (defaultExpr: bugün()). (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 155 56    # Yapıları numarala: önce pencere
+wait 3000
+shot 35-acilis
+click 790 461   # Önek
+key ctrl+a
+type B-
+click 790 498   # İlk numara
+key ctrl+a
+type 10
+wait 600
+shot 35-hesap
+click 848 538   # İptal: bir şey yazılmaz
+wait 1500
+click 505 84    # Parsel kartı (şeritte, Panel grubunda)
+wait 2500
+shot 35-tarih

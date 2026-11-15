@@ -17,7 +17,7 @@ use serde_json::Value as Json;
 /// The keys a component's rules are written under.
 pub const RULE_KEYS: [&str; 3] = ["visibleWhen", "requiredWhen", "enabledWhen"];
 
-/// A component's rules, as written.
+/// A component's rules and worked-out values (values.rs), as written: the expressions read beside its keys.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Rules {
     /// Shown only while this holds.
@@ -26,6 +26,10 @@ pub struct Rules {
     pub required_when: Option<String>,
     /// Usable (a button pressed, a field typed in) only while this holds.
     pub enabled_when: Option<String>,
+    /// Its value, worked out again as the inputs it reads change (`calculate`).
+    pub calculate: Option<String>,
+    /// Its first value, worked out when the panel opens (`defaultExpr`).
+    pub default_expr: Option<String>,
 }
 
 impl Rules {
@@ -43,11 +47,17 @@ impl Rules {
             visible_when: text("visibleWhen"),
             required_when: text("requiredWhen"),
             enabled_when: text("enabledWhen"),
+            calculate: text("calculate"),
+            default_expr: text("defaultExpr"),
         }
     }
 
     pub fn is_empty(&self) -> bool {
-        self.visible_when.is_none() && self.required_when.is_none() && self.enabled_when.is_none()
+        self.visible_when.is_none()
+            && self.required_when.is_none()
+            && self.enabled_when.is_none()
+            && self.calculate.is_none()
+            && self.default_expr.is_none()
     }
 }
 
@@ -124,8 +134,9 @@ pub fn holds(expr: &Expr, value: impl Fn(&str) -> Option<String>) -> bool {
     kentos_expression::value::truthy(&expr.evaluate(&Values(&texts)))
 }
 
-/// The panel's values as one object an expression reads: its inputs only, no geometry.
-struct Values<'a>(&'a [Option<String>]);
+/// The panel's values as one object an expression reads: its inputs only, no geometry (a worked-out value too,
+/// values.rs).
+pub(super) struct Values<'a>(pub(super) &'a [Option<String>]);
 
 impl Scope for Values<'_> {
     fn field(&self, i: usize) -> Option<&str> {
@@ -229,8 +240,7 @@ mod tests {
             Rules::of(&json!({ "visibleWhen": " tamam ", "enabledWhen": "" })),
             Rules {
                 visible_when: Some("tamam".into()),
-                required_when: None,
-                enabled_when: None,
+                ..Rules::default()
             }
         );
     }

@@ -15,6 +15,8 @@ mod audits;
 mod dialogs;
 mod panel_chart;
 mod panel_session;
+// A panel's worked-out values: defaults and calculations (docs/adr/8057 §35).
+mod panel_values;
 mod tool_pins;
 mod bisect;
 mod browse;

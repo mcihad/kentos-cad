@@ -44,6 +44,10 @@
         {
           "description": "A line of text.",
           "properties": {
+            "calculate": {
+              "description": "Its value, worked out from the panel's inputs (by id) as they change: not typed, not set by code (a text's words; its text shows while this gives nothing).",
+              "type": "string"
+            },
             "id": {
               "default": null,
               "type": [
@@ -72,6 +76,14 @@
         {
           "description": "A text the user types.",
           "properties": {
+            "calculate": {
+              "description": "Its value, worked out from the panel's inputs (by id) as they change: not typed, not set by code (a text's words; its text shows while this gives nothing).",
+              "type": "string"
+            },
+            "defaultExpr": {
+              "description": "Its first value, worked out when the panel opens (bugün(), şimdi() and the inputs above it).",
+              "type": "string"
+            },
             "enabledWhen": {
               "description": "Usable (pressed, typed in) only while this expression is true.",
               "type": "string"
@@ -124,6 +136,14 @@
         {
           "description": "A number the user types, in its bounds.",
           "properties": {
+            "calculate": {
+              "description": "Its value, worked out from the panel's inputs (by id) as they change: not typed, not set by code (a text's words; its text shows while this gives nothing).",
+              "type": "string"
+            },
+            "defaultExpr": {
+              "description": "Its first value, worked out when the panel opens (bugün(), şimdi() and the inputs above it).",
+              "type": "string"
+            },
             "enabledWhen": {
               "description": "Usable (pressed, typed in) only while this expression is true.",
               "type": "string"
@@ -454,6 +474,14 @@
         {
           "description": "A date the user types (GG.AA.YYYY or YYYY-AA-GG) or picks from KentOS's calendar; its value is the ISO date\n(`2026-11-15`), none when empty. `value`, `min` and `max` are ISO dates.",
           "properties": {
+            "calculate": {
+              "description": "Its value, worked out from the panel's inputs (by id) as they change: not typed, not set by code (a text's words; its text shows while this gives nothing).",
+              "type": "string"
+            },
+            "defaultExpr": {
+              "description": "Its first value, worked out when the panel opens (bugün(), şimdi() and the inputs above it).",
+              "type": "string"
+            },
             "enabledWhen": {
               "description": "Usable (pressed, typed in) only while this expression is true.",
               "type": "string"
@@ -520,6 +548,14 @@
         {
           "description": "A time of day the user types (14:30, 14.30, 9:05) or picks from KentOS's time picker; its value is `HH:MM`\n(24 hours), none when empty. `value`, `min` and `max` are `HH:MM`.",
           "properties": {
+            "calculate": {
+              "description": "Its value, worked out from the panel's inputs (by id) as they change: not typed, not set by code (a text's words; its text shows while this gives nothing).",
+              "type": "string"
+            },
+            "defaultExpr": {
+              "description": "Its first value, worked out when the panel opens (bugün(), şimdi() and the inputs above it).",
+              "type": "string"
+            },
             "enabledWhen": {
               "description": "Usable (pressed, typed in) only while this expression is true.",
               "type": "string"
@@ -586,6 +622,14 @@
         {
           "description": "A day and a time the user types (`15.11.2026 14:30`, `2026-11-15 14:30`) or picks from KentOS's calendar and\nclock; its value is the local ISO date and time, `2026-11-15T14:30` (no zone: the user's own clock), none when\nempty. `value`, `min` and `max` are written so.",
           "properties": {
+            "calculate": {
+              "description": "Its value, worked out from the panel's inputs (by id) as they change: not typed, not set by code (a text's words; its text shows while this gives nothing).",
+              "type": "string"
+            },
+            "defaultExpr": {
+              "description": "Its first value, worked out when the panel opens (bugün(), şimdi() and the inputs above it).",
+              "type": "string"
+            },
             "enabledWhen": {
               "description": "Usable (pressed, typed in) only while this expression is true.",
               "type": "string"

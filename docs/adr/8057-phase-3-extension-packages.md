@@ -2240,3 +2240,39 @@ anahtarlar), masaüstü `panels.rs` (`CompiledRules`, `shown`, `usable`, `asked`
 - **Sınamalar:** paylaşılan 1 (modül şemanınki; imzalar; satır en çok 120 karakter), Python 5 (yalnız verilen yazılır;
   seçenekler yalnız değerle; yanlış anahtar `TypeError`; örnek panellerin her bileşeni işleviyle aynı yazılır;
   parametreler bileşenin anahtarları, gerekliler konumsal).
+
+## §35. Hesaplı değerler: `calculate` ve `defaultExpr` (`ADIM 22`, PY-UI-08'in kalanı)
+
+**15 Kasım.** Kod: `crates/shared/extensions/src/ui_panel/values.rs` (`VALUE_KEYS`, `takes_value`, `Moment`,
+`compile`, `value_of`, `calc_order`), `ui_panel.rs` (Kapı 1 ve JSON Schema), masaüstü `panel_values.rs`
+(`moment_now`, `apply_defaults`, `recalculate`), `panels.rs` (`CompiledRules::calculate`, `calc_order`,
+`calculated`, `usable`), `panel_session.rs` (ret), `dialogs.rs`, `panel_view.rs`.
+
+- **Karar: formun sözcükleri, Python'suz.** `calculate` bileşenin değerini panelin girdilerinden hesaplar ve okuduğu bir
+  değer (kullanıcının, kodun ya da başka bir hesabın) değiştikçe yeniden hesaplar; `defaultExpr` alanın ilk değerini panel
+  açılırken bir kez hesaplar (üstündeki alanlar değerlerini aldıktan sonra), sonra değer kullanıcınındır. İkisi formun
+  ifade diliyle ve girdileri kural gibi okur (§33); ayrıca `bugün()` ve `şimdi()` (`@tarih`, `@simdi`): panelin
+  açıldığı an, saatle ilerlemez. Başka `@` değeri yoktur.
+- **Kim alır:** `calculate` metin ile metin, sayı, tarih, saat ve an alanları; `defaultExpr` bu alanlar. Metinde hesap
+  yazıyı verir, `text` hesap boşken görünür (`eğer(boş(ilk), boş, …)`).
+- **Hesaplanan bileşen yazılmaz, sorulmaz, kodla değişmez:** alan soluk ve tuş almaz (`usable`), değeri komuta her
+  girdi gibi gider; `ctx.panel.set` değerini ya da yazısını reddeder (`invalid_input`, "hesaplanan bir bileşen:
+  değerini kendi hesabı (calculate) yazar"); kod okuduğu bir girdiyi değiştirirse hesap onu izler.
+- **Sonuç alanın sözleriyle:** sayı alanın yazdığı gibi (`2,5`), tarih `GG.AA.YYYY`, saat `SS:DD`, an
+  `GG.AA.YYYY SS:DD`; o tür değilse boş. `şimdi()` tarih alanına günü, saat alanına saati verir.
+- **Kapı 1:** derlenmeyen ifade, girdi olmayan ad, başka `@` değeri yerinde söylenir; `calculate` ile `value`,
+  `defaultExpr`, `required`, `requiredWhen`, `enabledWhen` ve `onChange` birlikte olmaz (her biri kendi işaretçisinde,
+  nedeniyle); `defaultExpr` ile `value` birlikte olmaz. Hesaplar okuduklarından sonra hesaplanır (`calc_order`):
+  kendini ya da birbirini döngüyle okuyan hesap reddedilir ("Hesaplar birbirini okuyor: b → c → b"). İletişim
+  kutusunun alanları aynı denetimden geçer.
+- **Python cephesi:** üretilen işlevler iki anahtarı da alır (`ui.text(…, calculate=…)`, `default_expr=`); JSON
+  Schema bileşen başına tanır.
+- **Vitrin 1.0.30:** "Yapıları numarala" penceresinin açıklaması hesaplı (yerleşim kaymasın diye yeni satır değil, var
+  olan açıklama); Parsel kartı'nın Kart tarihi `defaultExpr: "bugün()"`. Gerçek pencerede (`35-hesap`): açılınca
+  "“yapi” katmanındaki 5 yapıya Y-01 … Y-05 yazılır.", B- ve 10 yazılınca "… B-10 … B-14 yazılır.", İptal "Vazgeçildi";
+  Parsel kartı Kart tarihi "15.11.2026" ile açıldı. `24-tarih` artık yazmadan önce alanı seçer (ctrl+a), kartlar
+  20.11.2026 ile yenilendi.
+- **Sınamalar:** paylaşılan 4 (değer girdilerden ve andan; Kapı 1'in sözleri; bütün panelde yerler ve döngü; sıra ve
+  döngü), masaüstü 2 (açılışta varsayılan, hesap değerleri izler, alan yazılmaz, değerler komuta; kod hesaplanana
+  yazamaz, okuduğunu değiştirince hesap izler).
+

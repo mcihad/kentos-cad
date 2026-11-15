@@ -209,6 +209,18 @@ fn set(
         )
     };
     let wrong = |why: String| refused("invalid_input", format!("“{id}” ({}): {why}.", kind_of(&c)));
+    // A calculated component's value is its calculation's (docs/adr/8057 §35): the code does not write it.
+    if panel.calculated_id(&id)
+        && (props.contains_key("value") || props.get("text").is_some_and(|v| !v.is_null()))
+    {
+        return Err(refused(
+            "invalid_input",
+            format!(
+                "“{id}” ({}) hesaplanan bir bileşen: değerini kendi hesabı (calculate) yazar.",
+                kind_of(&c)
+            ),
+        ));
+    }
     // Checked whole first: a wrong part applies nothing.
     let options = match props.get("options").filter(|v| !v.is_null()) {
         None => None,
@@ -404,6 +416,8 @@ fn set(
         }
     }
     let Some(value) = value else {
+        // New options may let a chosen value go: the calculations follow.
+        panel.recalculate();
         return Ok(true);
     };
     // The user's own value stays.
@@ -429,6 +443,7 @@ fn set(
     if panel.invalid.as_ref().is_some_and(|(at, _)| *at == id) {
         panel.invalid = None;
     }
+    panel.recalculate();
     Ok(true)
 }
 
@@ -715,6 +730,47 @@ mod tests {
             Ok(applied) => format!("ok {applied}"),
             Err(e) => format!("{}: {}", e.code, e.message),
         }
+    }
+
+    /// docs/adr/8057 §35: a calculated component's value is its calculation's: the code's value and words for it are
+    /// refused, and a value the code sets on what it reads is followed by the calculation.
+    #[test]
+    fn the_code_does_not_set_a_calculated_value_but_the_calculation_follows_its_values() {
+        let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Hesap",
+            "body": [
+                { "type": "numberField", "id": "adet", "label": "Adet", "value": 2 },
+                { "type": "numberField", "id": "iki-kat", "label": "İki katı", "calculate": "adet * 2" },
+                { "type": "text", "id": "ozet", "text": "—", "calculate": "'Toplam ' || (adet * 2)" }
+            ] });
+        let mut p = OpenPanel::new(
+            "tr.ornek.deneme",
+            "hesap",
+            ui_panel::read(&value).expect("a panel"),
+        );
+        assert_eq!(p.texts["iki-kat"], "4");
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "iki-kat", "value": 9 }), None)),
+            "invalid_input: “iki-kat” (numberField) hesaplanan bir bileşen: değerini kendi hesabı (calculate) yazar."
+        );
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "ozet", "text": "başka" }), None)),
+            "invalid_input: “ozet” (text) hesaplanan bir bileşen: değerini kendi hesabı (calculate) yazar."
+        );
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "adet", "value": 5 }), None)),
+            "ok true"
+        );
+        assert_eq!(p.texts["iki-kat"], "10");
+        assert_eq!(p.calculated[&2], "Toplam 10");
+        assert_eq!(
+            code(set(
+                &mut p,
+                &json!({ "id": "ozet", "visible": false }),
+                None
+            )),
+            "ok true",
+            "shown or hidden it may be"
+        );
     }
 
     /// docs/adr/8057 §32: values, options, words, what is shown and in use, set as the definition allows; a wrong part
