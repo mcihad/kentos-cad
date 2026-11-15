@@ -47,6 +47,7 @@ A separate process is not a sandbox: an extension runs with the user's rights (P
 
 from __future__ import annotations
 
+import base64
 import json
 import math
 import os
@@ -243,6 +244,14 @@ def _json_value(value: Any) -> Any:
     raise TypeError(f"{type(value).__name__} panele verilemez: metin, sayı, tarih, liste ya da sözlük olmalı.")
 
 
+def _png_bytes(image: Any) -> bytes:
+    """A picture given to a panel: bytes as they are, else a file's (a path or a path-like)."""
+    if isinstance(image, (bytes, bytearray, memoryview)):
+        return bytes(image)
+    with open(os.fspath(image), "rb") as f:
+        return f.read()
+
+
 class PanelSession:
     """One of the extension's panels, changed as the run goes (docs/adr/8057 §32): ``ctx.panel`` (the panel whose
     button or changed input started the run; None when it did not start from a panel) or what
@@ -273,13 +282,15 @@ class PanelSession:
         enabled: bool | None = None,
         visible: bool | None = None,
         text: str | None = None,
+        image: Any = _KEEP,
     ) -> bool:
         """Changes component ``id``: ``value`` (a field's text or number, a date as ``datetime.date`` or ISO text, a
         choice's value, a multiple choice's values, a check's True or False, a layer picker's layer id, a feature
         picker's persistent ids; None empties it), ``options`` (a choice's or a multiple choice's: values, or dicts
         with ``value`` and ``label``; a chosen value no longer among them is let go), ``enabled`` (buttons and typed
-        fields), ``visible`` (any component with an id; a hidden required field is not asked of the user) and
-        ``text`` (a ``text`` component's words)."""
+        fields), ``visible`` (any component with an id; a hidden required field is not asked of the user),
+        ``text`` (a ``text`` component's words) and ``image`` (an ``image`` component's picture: a PNG's bytes, e.g.
+        ``fig.savefig(buf, format="png")``, or the path of a PNG file; None takes it away; at most 4096 pixels a side)."""
         params: dict[str, Any] = {"id": str(id)}
         if value is not _KEEP:
             params["value"] = _json_value(value)
@@ -291,6 +302,8 @@ class PanelSession:
             params["visible"] = bool(visible)
         if text is not None:
             params["text"] = str(text)
+        if image is not _KEEP:
+            params["image"] = None if image is None else base64.b64encode(_png_bytes(image)).decode("ascii")
         return self._ask("panel.set", params)
 
     def rows(self, id: str, rows: Iterable[dict[str, Any]], columns: Sequence[str] | None = None) -> bool:

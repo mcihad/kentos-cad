@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.33 — 15 Kasım 2026
+
+- "Yapı ara"nın Özetle'si göstergelerin altında taban alanlarını çubuk grafik olarak da çizer (`image`): kod grafiği
+  NumPy ile çizip PNG'ye çevirir (`ctx.panel.set("alanlar", image=...)`), ek kitaplık gerekmez.
+
 ## 1.0.32 — 15 Kasım 2026
 
 - Yeni denetim "Parsel çakışması" (şeridin yeni Denetim grubunda): geometriyi KentOS ölçer (`facts.project`: Rust'ın

@@ -21,7 +21,9 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
 - ``parsel_karti``: kartlı panel; "Parsel kartı"nda alınan her parselin alanı, yapıları ve TAKS'ı bir kartta.
 """
 
+import struct
 import time
+import zlib
 from datetime import date, datetime
 
 import numpy as np
@@ -148,7 +150,8 @@ def yapi_ara(ctx: ext.CommandContext) -> ext.CommandResult:
 def yapi_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
     """"Yapı ara" panelinin Özetle düğmesi: yapıların sayısı, taban alanlarının toplamı, numarasızların sayısı ve en
     büyük yapı, her biri bir satır; panel her satırı bir gösterge kartı yapar ("ölçü" adı, "değer" sayısı, "birim" ve
-    "not"). En büyük yapının satırı uid taşır: kartına tıklamak onu gösterir (docs/adr/8057 §24)."""
+    "not"). En büyük yapının satırı uid taşır: kartına tıklamak onu gösterir (docs/adr/8057 §24). Panelden çalışınca
+    taban alanlarını çubuk grafik olarak da çizer (``image``: NumPy ile çizilir, PNG'ye çevrilir; docs/adr/8057 §40)."""
     secilen = ctx.params.get("katman")
     yapi = (secilen or _katman(ctx.doc, "yapi")) if ctx.doc is not None else None
     if yapi is None:
@@ -166,7 +169,38 @@ def yapi_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
         {"ölçü": "En büyük yapı", "değer": round(en_alan, 1), "birim": "m²", "uid": en.uid,
          "not": (en.entity.attrs or {}).get("no") or "numarasız"},
     ]
+    if ctx.panel is not None:
+        # Göstergelerin altında taban alanları, büyükten küçüğe çubuklar: kodun çizdiği görsel (panelin image'ı).
+        ctx.panel.set("alanlar", image=_cubuklar(sorted((a for a, _ in alanlar), reverse=True)))
     return ctx.report(satirlar, title="Yapı özeti", message=f"{len(kayitlar)} yapının özeti.")
+
+
+def _cubuklar(degerler: list[float]) -> bytes:
+    """Değerler için çubuk grafik (480 × 140 piksel): en büyüğü tam boy, mavi çubuklar beyaz zeminde, gri taban çizgisi.
+    NumPy dizisine çizilir ve PNG'ye çevrilir; çizim kitaplığı gerekmez (matplotlib'in ``savefig`` baytları da olur)."""
+    genislik, yukseklik, pay = 480, 140, 12
+    resim = np.full((yukseklik, genislik, 3), 255, dtype=np.uint8)
+    if degerler:
+        en = max(degerler) or 1.0
+        cubuk = max(4, (genislik - pay * (len(degerler) + 1)) // len(degerler))
+        for i, deger in enumerate(degerler):
+            boy = max(2, int((yukseklik - 2 * pay) * deger / en))
+            x = pay + i * (cubuk + pay)
+            resim[yukseklik - pay - boy : yukseklik - pay, x : x + cubuk] = (59, 130, 246)
+    resim[yukseklik - pay, pay : genislik - pay] = (140, 140, 140)
+    return _png(resim)
+
+
+def _png(rgb: np.ndarray) -> bytes:
+    """Bir RGB dizisini (yükseklik × genişlik × 3, uint8) PNG baytlarına çevirir: zlib ve struct, ek kitaplıksız."""
+    yukseklik, genislik, _ = rgb.shape
+    ham = b"".join(b"\x00" + rgb[y].tobytes() for y in range(yukseklik))
+
+    def parca(tur: bytes, veri: bytes) -> bytes:
+        return struct.pack(">I", len(veri)) + tur + veri + struct.pack(">I", zlib.crc32(tur + veri) & 0xFFFFFFFF)
+
+    baslik = struct.pack(">IIBBBBB", genislik, yukseklik, 8, 2, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + parca(b"IHDR", baslik) + parca(b"IDAT", zlib.compress(ham, 9)) + parca(b"IEND", b"")
 
 
 @ext.command("katmanlari-kur")

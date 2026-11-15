@@ -569,6 +569,21 @@ impl App {
                 } => {
                     tables.push(self.panel_chart(p, id, words.as_deref(), of.as_deref()));
                 }
+                // The picture its code gave, under the form with the other views (docs/adr/8057 §40).
+                Component::Image {
+                    id,
+                    label: words,
+                    alt,
+                    height,
+                } => {
+                    tables.push(super::panel_image::panel_image(
+                        p,
+                        id,
+                        words.as_deref(),
+                        alt.as_deref(),
+                        *height,
+                    ));
+                }
                 Component::Card {
                     id,
                     label: words,

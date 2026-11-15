@@ -531,6 +531,29 @@ def chart(
     return out
 
 
+def image(
+    id: str,
+    *,
+    label: str | None = None,
+    alt: str | None = None,
+    height: float | None = None,
+    visible_when: str | None = None,
+) -> dict[str, Any]:
+    """A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG): a chart drawn in Python, a preview. `alt` says
+    what it shows and stands in its place until the code gives one; `height` in pixels (80–600, none: 200), the
+    picture fitted inside it."""
+    out: dict[str, Any] = {"type": "image", "id": id}
+    if label is not None:
+        out["label"] = label
+    if alt is not None:
+        out["alt"] = alt
+    if height is not None:
+        out["height"] = height
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    return out
+
+
 def card(
     id: str,
     *,
@@ -557,5 +580,5 @@ def card(
 __all__ = [
     "Choice", "choice", "panel", "text", "section", "text_field", "number_field", "select", "layer_picker",
     "field_picker", "feature_picker", "multi_select", "date_field", "time_field", "date_time_field", "checkbox",
-    "button", "table", "tree", "stats", "chart", "card",
+    "button", "table", "tree", "stats", "chart", "image", "card",
 ]

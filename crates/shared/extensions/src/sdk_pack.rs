@@ -109,7 +109,8 @@ her satır bir gösterge kartı: `title` sütunu adı (yoksa ilk sütun), `value
 pie, histogram, line; `category`: gruplanacak ya da yatay eksendeki sütun, `value`: sayı sütunu, `aggregate`: count
 (varsayılan; `value` verilirse sum), sum, mean, min, max, median; çubuk ve pasta `category` ister, histogram `value`,
 çizgi ikisini; satırları düğmenin `table`'ından ya da `of` ile bu paneldeki bir tablonun, ağacın, kartın ya da
-göstergenin satırlarından; KentOS'un grafik motoru çizer). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve katman/alan/nesne seçicileri `required: true` alır: boş
+göstergenin satırlarından; KentOS'un grafik motoru çizer), `image` (`id`, `label`, `alt`, `height`: 80–600 px; kodun
+verdiği PNG'yi oranını koruyarak gösterir, verilene dek `alt` yazar; ör. matplotlib ya da NumPy ile çizilen grafik). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve katman/alan/nesne seçicileri `required: true` alır: boş
 bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında ("“Önek” boş bırakılamaz"), adının yanında yıldız.
 `select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField`, `timeField`, `dateTimeField` (seçiciden seçilince ya da Enter'la) ve `checkbox` isteğe
 bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
@@ -126,7 +127,7 @@ okuduğu girdiler değiştikçe yeniden hesaplar, alan yazılmaz ve kod onu değ
 `defaultExpr` (alanlar) ilk değeri panel açılırken hesaplar (`"defaultExpr": "bugün()"`); ikisi `bugün()` ve `şimdi()`'yi
 okur, birbirini döngüyle okuyan hesaplar Kapı 1'de reddedilir. Katmanın sağ tık menüsünden (`contextMenus`, `target: "layer"`) çalışan komut tıklanan
 katmanın kimliğini `ctx.params["layer"]`'da alır. Panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel`;
-panelden çalışmadıysa None; başka bir panelini `ctx.open_panel(id)` açıp verir): `set(id, value=…, options=…, enabled=…, visible=…, text=…)` (seçenekleri veriden doldurmak, düğmeyi
+panelden çalışmadıysa None; başka bir panelini `ctx.open_panel(id)` açıp verir): `set(id, value=…, options=…, enabled=…, visible=…, text=…, image=…)` (`image`: PNG baytları ya da PNG dosyasının yolu, en çok 4096 piksel; seçenekleri veriden doldurmak, düğmeyi
 kapatmak, alanı gizlemek), `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`; yanlış kimlik ya da değer
 `kentos.HostError`, kullanıcının o sırada değiştirdiği alan onun kalır (False), kodun koyduğu değer `onChange`'i
 çalıştırmaz.

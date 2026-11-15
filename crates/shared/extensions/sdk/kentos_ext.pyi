@@ -51,7 +51,7 @@ class PanelSession:
     """One of the extension's panels, changed as the run goes (docs/adr/8057 §32): ``ctx.panel`` (the panel whose button or changed input started the run; None when it did not start from a panel) or what :meth:`CommandContext.open_panel` gives."""
     #: The panel's id in the manifest (``entrypoints.panels[].id``).
     id: str
-    def set(self, id: str, *, value: Any = ..., options: Iterable[Any] | None = None, enabled: bool | None = None, visible: bool | None = None, text: str | None = None) -> bool:
+    def set(self, id: str, *, value: Any = ..., options: Iterable[Any] | None = None, enabled: bool | None = None, visible: bool | None = None, text: str | None = None, image: Any = ...) -> bool:
         """Changes component ``id``: ``value`` (a field's text or number, a date as ``datetime.date`` or ISO text, a choice's value, a multiple choice's values, a check's True or False, a layer picker's layer id, a feature picker's persistent ids; None empties it), ``options`` (a choice's or a multiple choice's: values, or dicts with ``value`` and ``label``; a chosen value no longer among them is let go), ``…"""
     def rows(self, id: str, rows: Iterable[dict[str, Any]], columns: Sequence[str] | None = None) -> bool:
         """Puts ``rows`` (each a dict of column → value) in table, tree, cards, figures or chart ``id`` now, as a command's report would at its end; ``columns`` in their order, else in the order the rows first give them."""

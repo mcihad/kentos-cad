@@ -116,6 +116,20 @@ def fill(ctx):
     return ctx.report([{"panel": ctx.panel.id, "kept": kept}])
 
 
+@ext.command("picture")
+def picture(ctx):
+    # docs/adr/8057 §40: a picture its code made, as PNG bytes or a PNG file; None takes it away.
+    import pathlib
+    import tempfile
+    png = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) + "-kucuk".encode()
+    ctx.panel.set("grafik", image=png)
+    path = pathlib.Path(tempfile.mkdtemp()) / "grafik.png"
+    path.write_bytes(png)
+    ctx.panel.set("grafik", image=path)
+    ctx.panel.set("grafik", image=None)
+    return ctx.message("Çizildi.")
+
+
 @ext.command("schema")
 def schema(ctx):
     return ctx.apply_declarative_schema("schema.json")
@@ -489,6 +503,22 @@ class ExtHostTest(unittest.TestCase):
         self.assertEqual(calls[7][1], {"id": "tablo", "rows": [{"no": 1}], "columns": ["no"], "panel": "sonuc-paneli"})
         done, _ = self.kentos.invoke("fill", "deneme.logic:fill")
         self.assertEqual(done["result"]["message"], "Panel yok.")
+
+    def test_a_panels_picture_goes_as_base64_png(self) -> None:
+        # docs/adr/8057 §40: bytes or a file's, as base64; None clears it; KentOS checks the PNG.
+        import base64
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("picture", "deneme.logic:picture", panel="arama")
+        self.assertTrue(done["ok"], done)
+        sent = base64.b64encode(bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) + b"-kucuk").decode("ascii")
+        self.assertEqual(
+            [p for _, p in self.kentos.panel_calls],
+            [
+                {"id": "grafik", "image": sent, "panel": "arama"},
+                {"id": "grafik", "image": sent, "panel": "arama"},
+                {"id": "grafik", "image": None, "panel": "arama"},
+            ],
+        )
 
     def test_what_this_kentos_cannot_do_is_said_as_unavailable(self) -> None:
         # A schema without a drawing it may write to: a missing ability, not the extension's failure.

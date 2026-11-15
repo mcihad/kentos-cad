@@ -1818,7 +1818,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | CRS/birim | KentOS'ta | ayarların CRS seçimi (`crs_choice`) | |
 | | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
 | Kaynak ve çıktı | dosya/eser seçici, ek | yok | — | dosya erişimi host servisi ister (PY-UI-10) |
-| | görsel önizleme | KentOS'ta | `picture` | |
+| | görsel önizleme | var | `image` (kodun verdiği PNG, `ctx.panel.set(id, image=…)`; oranı korunur, §40) | yalnız PNG, en çok 4096 piksel kenar; JPEG sonraki dilim |
 | | çıktı hedefi | host | İşlemler aracının çıktısı (`sinkParameter`) | panel komutu çizime yazar |
 | Veri görünüşü | tablo | var | `table` (500 satır) | `uid`'li satır nesneyi gösterir |
 | | ağaç | var | `tree` (1–3 sütunla gruplar) | |
@@ -2389,3 +2389,25 @@ masaüstü `panel_sections.rs` (`drawn`, `section_of`, `reveal`), `panels.rs` (`
 - **Sınamalar:** paylaşılan 1 (başlık, isteğe bağlı kimlik, kural; adsız ve `collapsed`'ı yanlış olanın yerleri),
   masaüstü 1 (katlıyken gösterilir ama çizilmez, zorunlu alan sorulur ve bölümünü açar, gizli bölüm topladıklarını
   gizler, kullanıcı katlar); Python cephesi `ui.section(label, id=…, collapsed=…)`.
+
+## §40. Görsel: `image` (`ADIM 22`, bileşen envanteri, görsel önizleme)
+
+**15 Kasım.** Kod: `ui_panel.rs` (`Component::Image`, Kapı 1), masaüstü `panel_image.rs` (`decode`, `panel_image`),
+`panel_session.rs` (`set(id, image=…)`), `panel_view.rs`; Python `PanelSession.set(..., image=…)`.
+
+- **Karar: görseli kod verir, KentOS denetleyip çizer.** `image` bileşeni bir yer tutar (`label`, `alt`, `height`
+  80–600 px, yoksa 200); görsel eklentinin kodundan gelir: `ctx.panel.set(id, image=…)` PNG baytlarını ya da bir PNG
+  dosyasının yolunu alır, aracıdan base64 geçer; `None` görseli kaldırır. Python'da grafik kitaplığı serbest:
+  matplotlib'in `savefig(format="png")` baytları da, NumPy dizisinden yazılan PNG de olur.
+- **Yalnız PNG, okumadan önce denetlenir:** grafik ve çizim kayıpsız ister; boyutu başlığından (IHDR) okunur, kenarı
+  4096 pikseli ya da toplamı 8 milyon pikseli aşan görsel çözülmeden reddedilir (düşmanca bir dosya sınırsız bellek
+  isteyemez); metin en çok yaklaşık 6 MB. Yanlışı kodun sözleriyle (`invalid_input`) ve hiçbir şey değişmeden söylenir;
+  önceki görsel kalır. Fotoğraf (JPEG) sonraki dilim.
+- **Oranı korunur:** panel genişliğinde, oranının verdiği yükseklikte, en çok `height` kadar; üstünde ve altında bant
+  kalmaz. Verilene dek `alt` görselin yerinde yazar. Tablo ve kartlar gibi formun altında çizilir.
+- **Vitrin 1.0.33:** Yapı ara'nın Özetle'si gösterge kartlarının altında taban alanlarını büyükten küçüğe çubuk grafik
+  olarak çizer: NumPy dizisine çizilip `zlib` ve `struct` ile PNG'ye çevrilir, ek kitaplık yok. Gerçek pencerede
+  (`38-gorsel`): beş yapının çubukları (400 m² en büyüğü) "Taban alanları"nın altında.
+- **Sınamalar:** paylaşılan 1 (alanlar, `alt` ve `height` sınırı yerinde), masaüstü 2 (PNG çizilir; başka biçim,
+  base64 olmayan metin, sınırı aşan başlık çözülmeden ve bozuk PNG reddedilir; kod görseli verir, yanlışı öncekini
+  bırakır, `None` kaldırır, başka bileşen almaz), Python 1 (bayt ve dosya base64 gider, `None` temizler).

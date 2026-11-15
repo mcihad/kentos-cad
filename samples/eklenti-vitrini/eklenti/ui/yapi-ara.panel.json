@@ -60,6 +60,13 @@
       "note": "not"
     },
     {
+      "type": "image",
+      "id": "alanlar",
+      "label": "Taban alanları",
+      "height": 140,
+      "alt": "Özetle'ye basınca yapıların taban alanları büyükten küçüğe çubuk olarak çizilir."
+    },
+    {
       "type": "section",
       "id": "ipuclari",
       "label": "İpuçları",

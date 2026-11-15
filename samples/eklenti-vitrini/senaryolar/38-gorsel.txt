@@ -1,0 +1,16 @@
+# Görsel: Vitrin › Yapı ara'nın Özetle'si gösterge kartlarının altında taban alanlarını çubuk grafik olarak çizer
+# (image): kod grafiği NumPy ile çizip PNG'ye çevirir, KentOS oranını koruyarak gösterir. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1200
+click 417 70    # Yapı ara
+wait 2500
+shot 38-once
+click 1313 558  # Özetle
+wait 5000
+wheel 1280 450 -10
+wait 800
+shot 38-gorsel

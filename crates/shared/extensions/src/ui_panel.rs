@@ -292,6 +292,18 @@ pub enum Component {
         #[serde(default)]
         aggregate: Option<ChartAggregate>,
     },
+    /// A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG): a chart drawn in Python, a preview. `alt` says
+    /// what it shows and stands in its place until the code gives one; `height` in pixels (80–600, none: 200), the
+    /// picture fitted inside it.
+    Image {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        #[serde(default)]
+        alt: Option<String>,
+        #[serde(default)]
+        height: Option<f64>,
+    },
     /// The rows a button's command answered, a card each: `title`'s column heads it (none: the first column), `tag`'s
     /// beside it, the other columns under it by name; a card with a `uid` is an object. Where a table's columns do not
     /// fit (a narrow dock), a card writes them one under the other.
@@ -360,6 +372,7 @@ impl Component {
             | Component::Tree { id, .. }
             | Component::Stats { id, .. }
             | Component::Chart { id, .. }
+            | Component::Image { id, .. }
             | Component::Card { id, .. } => Some(id),
         }
     }
@@ -541,6 +554,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "table" => &["id", "label"],
         "tree" => &["id", "label", "group"],
         "card" => &["id", "label", "title", "tag"],
+        "image" => &["id", "label", "alt", "height"],
         "stats" => &["id", "label", "title", "value", "unit", "note"],
         "chart" => &[
             "id",
@@ -556,7 +570,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
 }
 
 const TYPES: &str = "text, section, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
-                     fieldPicker, featurePicker, checkbox, button, table, tree, card, stats, chart";
+                     fieldPicker, featurePicker, checkbox, button, table, tree, card, stats, chart, image";
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -904,8 +918,10 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                 "collapsed true ya da false olmalı: bölüm panel açılırken kapalı mı.".to_owned(),
             );
         }
-        if !matches!(kind, "table" | "tree" | "card" | "stats" | "chart")
-            && text(c, "label").is_none()
+        if !matches!(
+            kind,
+            "table" | "tree" | "card" | "stats" | "chart" | "image"
+        ) && text(c, "label").is_none()
         {
             add(
                 at.clone(),
@@ -1193,6 +1209,24 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                             ),
                         );
                     }
+                }
+            }
+            "image" => {
+                if let Some(height) = c.get("height")
+                    && !height.as_f64().is_some_and(|h| (80.0..=600.0).contains(&h))
+                {
+                    add(
+                        format!("{at}/height"),
+                        "Görselin yüksekliği (height) 80 ile 600 piksel arasında bir sayı olmalı."
+                            .to_owned(),
+                    );
+                }
+                if c.get("alt").is_some() && text(c, "alt").is_none() {
+                    add(
+                        format!("{at}/alt"),
+                        "alt görselin ne gösterdiğini söyleyen boş olmayan bir metin olmalı."
+                            .to_owned(),
+                    );
                 }
             }
             "chart" => {
@@ -1713,5 +1747,39 @@ mod section_tests {
                 )
             ]
         );
+    }
+}
+
+#[cfg(test)]
+mod image_tests {
+    use serde_json::json;
+
+    use super::*;
+
+    /// docs/adr/8057 §40: an image takes an id, and optionally its label, `alt` and `height` (80–600 px); a height out
+    /// of bounds and an empty `alt` are said where they are written.
+    #[test]
+    fn an_image_has_its_alt_and_height_in_bounds() {
+        let panel = |image: Value| json!({ "format": FORMAT, "schemaVersion": VERSION, "title": "Görsel", "body": [image] });
+        let fits = panel(
+            json!({ "type": "image", "id": "grafik", "label": "Alanlar", "alt": "Çubuklar", "height": 140 }),
+        );
+        assert!(check("ui/g.panel.json", &fits, &[]).is_empty());
+        assert_eq!(
+            read(&fits).unwrap().body[0],
+            Component::Image {
+                id: "grafik".into(),
+                label: Some("Alanlar".into()),
+                alt: Some("Çubuklar".into()),
+                height: Some(140.0)
+            }
+        );
+        let wrong = check(
+            "ui/g.panel.json",
+            &panel(json!({ "type": "image", "id": "grafik", "alt": " ", "height": 900 })),
+            &[],
+        );
+        let at: Vec<&str> = wrong.iter().filter_map(|p| p.at.as_deref()).collect();
+        assert_eq!(at, ["/body/0/alt", "/body/0/height"], "{wrong:?}");
     }
 }

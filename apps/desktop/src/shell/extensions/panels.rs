@@ -112,6 +112,8 @@ pub(crate) struct OpenPanel {
     pub(crate) calculated: BTreeMap<usize, String>,
     /// The sections folded now, by place (`section`: its `collapsed` at first, then the user's; panel_view.rs).
     pub(crate) closed: std::collections::BTreeSet<usize>,
+    /// Each `image` component's picture its code gave (panel_image.rs), checked and decoded.
+    pub(crate) images: BTreeMap<String, iced::widget::image::Handle>,
 }
 
 /// A component's rules, compiled against the panel's inputs (Kapı 1 passed them; one that does not compile is none).
@@ -209,6 +211,7 @@ impl OpenPanel {
             calc_order: Vec::new(),
             calculated: BTreeMap::new(),
             closed: std::collections::BTreeSet::new(),
+            images: BTreeMap::new(),
         };
         // The sections folded when it opens.
         for (at, c) in panel.definition.body.iter().enumerate() {

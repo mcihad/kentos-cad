@@ -64,6 +64,7 @@ fn kind_of(c: &Component) -> &'static str {
     match c {
         Component::Text { .. } => "text",
         Component::Section { .. } => "section",
+        Component::Image { .. } => "image",
         Component::TextField { .. } => "textField",
         Component::NumberField { .. } => "numberField",
         Component::Select { .. } => "select",
@@ -251,6 +252,22 @@ fn set(
             _ => return Err(not_taken("text", "yalnız text bileşeninin yazısı değişir")),
         },
     };
+    // A picture (docs/adr/8057 §40): a PNG as base64, checked and decoded before anything changes; null takes it away.
+    let picture = match props.get("image") {
+        None => None,
+        Some(given) => match &c {
+            Component::Image { .. } => Some(match given {
+                Value::Null => None,
+                Value::String(text) => Some(super::panel_image::decode(text).map_err(wrong)?),
+                _ => {
+                    return Err(wrong(
+                        "image base64 kodlanmış PNG baytları olmalı".to_owned(),
+                    ));
+                }
+            }),
+            _ => return Err(not_taken("image", "yalnız image bileşeni görsel alır")),
+        },
+    };
     let enabled = match props.get("enabled").filter(|v| !v.is_null()) {
         None => None,
         Some(given) => {
@@ -401,6 +418,15 @@ fn set(
     }
     if let Some(words) = words {
         panel.words.insert(id.clone(), words);
+    }
+    match picture {
+        Some(Some(handle)) => {
+            panel.images.insert(id.clone(), handle);
+        }
+        Some(None) => {
+            panel.images.remove(&id);
+        }
+        None => {}
     }
     if let Some(on) = enabled {
         if on {
@@ -731,6 +757,50 @@ mod tests {
             Ok(applied) => format!("ok {applied}"),
             Err(e) => format!("{}: {}", e.code, e.message),
         }
+    }
+
+    /// docs/adr/8057 §40: the code gives an `image` component a PNG (base64), checked before it is kept; null takes
+    /// it away; another component does not take one.
+    #[test]
+    fn the_code_gives_an_image_component_its_picture() {
+        let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Görsel",
+            "body": [
+                { "type": "image", "id": "grafik", "label": "Taban alanları", "height": 140 },
+                { "type": "textField", "id": "ad", "label": "Ad" }
+            ] });
+        let mut p = OpenPanel::new(
+            "tr.ornek.deneme",
+            "gorsel",
+            ui_panel::read(&value).expect("a panel"),
+        );
+        let png = super::super::panel_image::test_png(40, 20);
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "grafik", "image": png }), None)),
+            "ok true"
+        );
+        assert!(p.images.contains_key("grafik"));
+        assert!(
+            code(set(
+                &mut p,
+                &json!({ "id": "grafik", "image": "eA==" }),
+                None
+            ))
+            .contains("PNG olmalı"),
+            "not a PNG"
+        );
+        assert!(
+            p.images.contains_key("grafik"),
+            "a wrong picture leaves the one before"
+        );
+        assert_eq!(
+            code(set(&mut p, &json!({ "id": "grafik", "image": null }), None)),
+            "ok true"
+        );
+        assert!(!p.images.contains_key("grafik"));
+        assert!(
+            code(set(&mut p, &json!({ "id": "ad", "image": png }), None))
+                .starts_with("invalid_input: “ad” (textField) image almaz")
+        );
     }
 
     /// docs/adr/8057 §35: a calculated component's value is its calculation's: the code's value and words for it are
