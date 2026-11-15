@@ -2776,6 +2776,7 @@ name = "kentos-extensions"
 version = "0.1.0"
 dependencies = [
  "kentos-commands",
+ "kentos-expression",
  "kentos-forms",
  "kentos-zip",
  "roxmltree",

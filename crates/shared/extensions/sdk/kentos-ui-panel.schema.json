@@ -57,6 +57,10 @@
             "type": {
               "const": "text",
               "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -68,6 +72,10 @@
         {
           "description": "A text the user types.",
           "properties": {
+            "enabledWhen": {
+              "description": "Usable (pressed, typed in) only while this expression is true.",
+              "type": "string"
+            },
             "id": {
               "type": "string"
             },
@@ -86,6 +94,10 @@
               "description": "The user must give it: left empty, it is said by its label and nothing runs.",
               "type": "boolean"
             },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
             "type": {
               "const": "textField",
               "type": "string"
@@ -96,6 +108,10 @@
                 "string",
                 "null"
               ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -108,6 +124,10 @@
         {
           "description": "A number the user types, in its bounds.",
           "properties": {
+            "enabledWhen": {
+              "description": "Usable (pressed, typed in) only while this expression is true.",
+              "type": "string"
+            },
             "id": {
               "type": "string"
             },
@@ -135,6 +155,10 @@
               "description": "The user must give it: left empty, it is said by its label and nothing runs.",
               "type": "boolean"
             },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
             "type": {
               "const": "numberField",
               "type": "string"
@@ -153,6 +177,10 @@
                 "number",
                 "null"
               ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -195,6 +223,10 @@
                 "string",
                 "null"
               ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -233,8 +265,16 @@
               "description": "The user must give it: left empty, it is said by its label and nothing runs.",
               "type": "boolean"
             },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
             "type": {
               "const": "layerPicker",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
               "type": "string"
             }
           },
@@ -276,8 +316,16 @@
               "description": "The user must give it: left empty, it is said by its label and nothing runs.",
               "type": "boolean"
             },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
             "type": {
               "const": "fieldPicker",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
               "type": "string"
             }
           },
@@ -328,8 +376,16 @@
               "description": "The user must give it: left empty, it is said by its label and nothing runs.",
               "type": "boolean"
             },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
             "type": {
               "const": "featurePicker",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
               "type": "string"
             }
           },
@@ -367,6 +423,10 @@
               "description": "The user must give it: left empty, it is said by its label and nothing runs.",
               "type": "boolean"
             },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
             "type": {
               "const": "multiSelect",
               "type": "string"
@@ -377,6 +437,10 @@
                 "type": "string"
               },
               "type": "array"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -390,6 +454,10 @@
         {
           "description": "A date the user types (GG.AA.YYYY or YYYY-AA-GG) or picks from KentOS's calendar; its value is the ISO date\n(`2026-11-15`), none when empty. `value`, `min` and `max` are ISO dates.",
           "properties": {
+            "enabledWhen": {
+              "description": "Usable (pressed, typed in) only while this expression is true.",
+              "type": "string"
+            },
             "id": {
               "type": "string"
             },
@@ -422,6 +490,10 @@
               "description": "The user must give it: left empty, it is said by its label and nothing runs.",
               "type": "boolean"
             },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
             "type": {
               "const": "dateField",
               "type": "string"
@@ -432,6 +504,10 @@
                 "string",
                 "null"
               ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -444,6 +520,10 @@
         {
           "description": "A time of day the user types (14:30, 14.30, 9:05) or picks from KentOS's time picker; its value is `HH:MM`\n(24 hours), none when empty. `value`, `min` and `max` are `HH:MM`.",
           "properties": {
+            "enabledWhen": {
+              "description": "Usable (pressed, typed in) only while this expression is true.",
+              "type": "string"
+            },
             "id": {
               "type": "string"
             },
@@ -476,6 +556,10 @@
               "description": "The user must give it: left empty, it is said by its label and nothing runs.",
               "type": "boolean"
             },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
             "type": {
               "const": "timeField",
               "type": "string"
@@ -486,6 +570,10 @@
                 "string",
                 "null"
               ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -498,6 +586,10 @@
         {
           "description": "A day and a time the user types (`15.11.2026 14:30`, `2026-11-15 14:30`) or picks from KentOS's calendar and\nclock; its value is the local ISO date and time, `2026-11-15T14:30` (no zone: the user's own clock), none when\nempty. `value`, `min` and `max` are written so.",
           "properties": {
+            "enabledWhen": {
+              "description": "Usable (pressed, typed in) only while this expression is true.",
+              "type": "string"
+            },
             "id": {
               "type": "string"
             },
@@ -530,6 +622,10 @@
               "description": "The user must give it: left empty, it is said by its label and nothing runs.",
               "type": "boolean"
             },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
             "type": {
               "const": "dateTimeField",
               "type": "string"
@@ -540,6 +636,10 @@
                 "string",
                 "null"
               ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -572,6 +672,10 @@
             "value": {
               "default": false,
               "type": "boolean"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -585,6 +689,10 @@
           "description": "Runs `command` with the panel's values; its rows fill `table` (none: the panel's first table).",
           "properties": {
             "command": {
+              "type": "string"
+            },
+            "enabledWhen": {
+              "description": "Usable (pressed, typed in) only while this expression is true.",
               "type": "string"
             },
             "id": {
@@ -606,6 +714,10 @@
             },
             "type": {
               "const": "button",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
               "type": "string"
             }
           },
@@ -632,6 +744,10 @@
             },
             "type": {
               "const": "table",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
               "type": "string"
             }
           },
@@ -662,6 +778,10 @@
             },
             "type": {
               "const": "tree",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
               "type": "string"
             }
           },
@@ -716,6 +836,10 @@
                 "string",
                 "null"
               ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -785,6 +909,10 @@
                 "string",
                 "null"
               ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
             }
           },
           "required": [
@@ -822,6 +950,10 @@
             },
             "type": {
               "const": "card",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
               "type": "string"
             }
           },

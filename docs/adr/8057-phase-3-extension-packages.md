@@ -2185,3 +2185,29 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   aracıdan uçtan uca: değer, söz, imleç, çalışma sırasında yazılan alan korunur, yanıtın sözsüz satırları tabloya,
   kodun sözü kalır, panelsiz çalıştırma `no_panel`), Python 1 (`ctx.panel`'in istekleri, tarih ISO metne, panelsiz
   None). Ayrıca SDK stub'ı özel nöbetçi varsayılanı (`_KEEP`) `...` yazıyor: stub'da tanımsız ad kalmıyor.
+
+## §33. Bileşen kuralları: `visibleWhen`, `requiredWhen`, `enabledWhen` (`ADIM 22`, PY-UI-08)
+
+**15 Kasım.** Kod: `crates/shared/extensions/src/ui_panel/rules.rs` (`Rules`, `inputs_of`, `compile`, `holds`),
+`ui_panel.rs` (`read` kuralları bileşenin anahtarlarından okur, Kapı 1'de `takes_rule` ve derleme, JSON Schema'da
+anahtarlar), masaüstü `panels.rs` (`CompiledRules`, `shown`, `usable`, `asked`, `rule_value`), `panel_view.rs`.
+
+- **Karar: formun ifade dili, Python'suz.** Bileşen kuralı KentOS'un ifade diliyle panelin girdilerini kimlikleriyle
+  okur; formun kurallarıyla aynı sözcükler (`visibleWhen`, `requiredWhen`) ve aynı doğruluk (`truthy`: boş doğru
+  değildir). Masaüstü kuralı kullanıcı değer değiştirdikçe hesaplar: süreç başlamaz, ortamı hazırlanmamış eklentinin
+  paneli de kurallarıyla çalışır. `enabledWhen` düğmede ve metin, sayı, tarih, saat, an alanlarında; `requiredWhen`
+  zorunlu olabilen girdide; `visibleWhen` her bileşende.
+- **Girdiler türleriyle:** sayı alanı sayı (`2,5` yazılsa da `adet > 0` doğru), onay evet/hayır (`tamam`), tarih ve an
+  ISO (sırayla karşılaştırılır), çoklu seçim seçilenler birleşik metin (`içerir(bilgiler, 'tarih')`), gerisi yazıldığı
+  gibi. Tireli kimlik köşeli parantezle yazılır (`[en-sik]`; çıplak yazılınca çıkarma okunur).
+- **Kapı 1:** kural, bileşenin alamadığı anahtar ("“requiredWhen” table bileşeninde bilinmeyen bir alan; olanlar: …,
+  visibleWhen"), girdi kimliği olmayan ad ("“mahalle” paneldeki bir girdinin kimliği değil; girdiler: …"), `@` değeri,
+  derlenmeyen ifade ve metin olmayan değer yerinde söylenir. Panelin JSON Schema'sı kuralları bileşen başına tanır
+  (editör tamamlaması); karar Kapı 1'indir.
+- **Oturumla birlikte (§32):** bileşen kural tutuyorsa ve kod gizlemediyse görünür, kural tutuyorsa ve kod kapatmadıysa
+  kullanılır; zorunluluk `required` ya da `requiredWhen`. Gizli girdi (kuralla ya da kodla) sorulmaz ama değeri komuta
+  gider; yıldız `requiredWhen` tutunca çıkar.
+- **Vitrin 1.0.28:** Parsel kartı'nın Kart tarihi ve Saat alanları yalnız Bilgiler'de Tarih seçiliyken görünür.
+- **Sınamalar:** paylaşılan 3 (değerleri türleriyle okur; girdi olmayan ad, `@`, derlenmeyen ifade, köşeli parantez;
+  Kapı 1'in yerleri), masaüstü 1 (onay kapalıyken alan gizli ve sorulmaz, açılınca görünür ve zorunlu, `2,5 > 0` ile düğme
+  kullanılır, kodun kapatması kuralı geçer).

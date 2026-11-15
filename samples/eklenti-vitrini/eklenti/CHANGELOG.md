@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.28 — 15 Kasım 2026
+
+- "Parsel kartı"nda Kart tarihi ve Saat yalnız Bilgiler'de Tarih seçiliyken görünür (`visibleWhen:
+  "içerir(bilgiler, 'tarih')"`): Python'suz bileşen kuralı, formların ifade diliyle; Tarih çipi bırakılınca iki alan
+  kalkar, yeniden seçilince yazılanlarla döner.
+
 ## 1.0.27 — 15 Kasım 2026
 
 - Katmanın sağ tık menüsünde "Değerlerini say": "Değer say" panelini o katman seçili açar (menüden çalışan komut

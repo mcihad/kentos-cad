@@ -23,6 +23,10 @@ pub const VERSION: u64 = 1;
 /// Components a panel may have.
 pub const MOST_COMPONENTS: usize = 100;
 
+pub mod rules;
+
+pub use rules::Rules;
+
 /// A panel as KentOS draws it, read after [`check`] passed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -30,6 +34,10 @@ pub const MOST_COMPONENTS: usize = 100;
 pub struct PanelDefinition {
     pub title: String,
     pub body: Vec<Component>,
+    /// Each component's rules, in the body's order ([`rules`]): written beside its keys, read by [`read`].
+    #[serde(skip)]
+    #[cfg_attr(feature = "schema", schemars(skip))]
+    pub rules: Vec<Rules>,
 }
 
 /// One of a select's choices.
@@ -418,12 +426,65 @@ pub fn json_schema() -> Value {
         );
         o.insert("additionalProperties".into(), Value::from(false));
     }
+    // The rules (rules.rs) are read beside a component's keys, not into its type: each component's schema says the
+    // ones it takes, for an editor's completion.
+    if let Some(Value::Array(kinds)) = schema.pointer_mut("/$defs/Component/oneOf") {
+        for kind in kinds {
+            let name = kind
+                .pointer("/properties/type/const")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_owned();
+            let Some(known) = keys_of(&name) else {
+                continue;
+            };
+            if let Some(Value::Object(props)) = kind.get_mut("properties") {
+                for key in rules::RULE_KEYS
+                    .iter()
+                    .filter(|r| takes_rule(&name, known, r))
+                {
+                    let words = match *key {
+                        "visibleWhen" => {
+                            "Shown only while this expression over the panel's inputs (by id) is true."
+                        }
+                        "requiredWhen" => "Asked of the user while this expression is true.",
+                        _ => "Usable (pressed, typed in) only while this expression is true.",
+                    };
+                    props.insert(
+                        (*key).to_owned(),
+                        serde_json::json!({ "type": "string", "description": words }),
+                    );
+                }
+            }
+        }
+    }
     schema
 }
 
 /// The panel, when `value` passed [`check`]; none otherwise.
 pub fn read(value: &Value) -> Option<PanelDefinition> {
-    serde_json::from_value(value.clone()).ok()
+    let mut panel: PanelDefinition = serde_json::from_value(value.clone()).ok()?;
+    panel.rules = value
+        .get("body")
+        .and_then(Value::as_array)
+        .map(|body| body.iter().map(Rules::of).collect())
+        .unwrap_or_default();
+    panel.rules.resize(panel.body.len(), Rules::default());
+    Some(panel)
+}
+
+/// Whether component `kind` (its keys `known`) takes rule `key`: every component is shown by a rule, an input that
+/// can be asked for is asked by one, a button or a typed field is usable by one.
+fn takes_rule(kind: &str, known: &[&str], key: &str) -> bool {
+    match key {
+        "visibleWhen" => true,
+        "requiredWhen" => known.contains(&"required"),
+        "enabledWhen" => matches!(
+            kind,
+            "button" | "textField" | "numberField" | "dateField" | "timeField" | "dateTimeField"
+        ),
+        _ => false,
+    }
 }
 
 /// The component types and the keys each takes besides `type`.
@@ -652,6 +713,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
     let mut tables = shows.clone();
     tables.extend(of_type("chart"));
     let layer_pickers = of_type("layerPicker");
+    // What the components' rules read: the inputs by id, typed (rules.rs).
+    let inputs = rules::inputs_of(body);
     let mut ids = BTreeSet::new();
     for (i, component) in body.iter().enumerate() {
         let at = format!("/body/{i}");
@@ -667,17 +730,43 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             );
             continue;
         };
-        for key in c
-            .keys()
-            .filter(|k| k.as_str() != "type" && !known.contains(&k.as_str()))
-        {
+        for key in c.keys().filter(|k| {
+            k.as_str() != "type"
+                && !known.contains(&k.as_str())
+                && !takes_rule(kind, known, k.as_str())
+        }) {
+            let mut takes: Vec<&str> = known.to_vec();
+            takes.extend(
+                rules::RULE_KEYS
+                    .iter()
+                    .copied()
+                    .filter(|r| takes_rule(kind, known, r)),
+            );
             add(
                 format!("{at}/{key}"),
                 format!(
                     "“{key}” {kind} bileşeninde bilinmeyen bir alan; olanlar: {}.",
-                    known.join(", ")
+                    takes.join(", ")
                 ),
             );
+        }
+        // Its rules compile against the panel's inputs.
+        for key in rules::RULE_KEYS
+            .iter()
+            .filter(|r| takes_rule(kind, known, r))
+        {
+            match c.get(*key) {
+                None => {}
+                Some(Value::String(source)) if !source.trim().is_empty() => {
+                    if let Err(why) = rules::compile(source, &inputs) {
+                        add(format!("{at}/{key}"), why);
+                    }
+                }
+                Some(_) => add(
+                    format!("{at}/{key}"),
+                    format!("{key} bir ifade (metin) olmalı, ör. \"tur = 'Okul'\"."),
+                ),
+            }
         }
         match c.get("id") {
             None if kind == "text" => {}
@@ -1240,6 +1329,62 @@ mod tests {
                 "ADR 8057 §25 does not name `{kind}`: add it to the coverage report"
             );
         }
+    }
+
+    #[test]
+    fn a_components_rules_are_checked_where_they_are_written() {
+        // docs/adr/8057 §33: every component may be shown by a rule, an input that can be asked for asked by one, a
+        // button or a typed field usable by one; a rule compiles against the panel's inputs; read, the definition
+        // carries them in the body's order.
+        let mut p = panel();
+        p["body"][0]["visibleWhen"] = json!("secili");
+        p["body"][1]["requiredWhen"] = json!("durum = 'hepsi'");
+        p["body"][6]["enabledWhen"] = json!("[en-az] > 0 or sorgu <> ''");
+        assert!(
+            check("ui/ara.panel.json", &p, &["yapi-ara"]).is_empty(),
+            "{:?}",
+            check("ui/ara.panel.json", &p, &["yapi-ara"])
+        );
+        let read = read(&p).expect("read");
+        assert_eq!(read.rules.len(), read.body.len());
+        assert_eq!(read.rules[0].visible_when.as_deref(), Some("secili"));
+        assert_eq!(
+            read.rules[6].enabled_when.as_deref(),
+            Some("[en-az] > 0 or sorgu <> ''")
+        );
+        assert!(read.rules[2].is_empty());
+        // A rule a component does not take, one that names no input, one that is not text.
+        p["body"][7]["requiredWhen"] = json!("secili");
+        p["body"][3]["enabledWhen"] = json!("secili");
+        p["body"][5]["visibleWhen"] = json!("mahalle = 'Merkez'");
+        p["body"][4]["visibleWhen"] = json!(true);
+        let said: Vec<(String, String)> = check("ui/ara.panel.json", &p, &["yapi-ara"])
+            .into_iter()
+            .map(|pr| (pr.at.unwrap_or_default(), pr.message))
+            .collect();
+        let at: Vec<&str> = said.iter().map(|(a, _)| a.as_str()).collect();
+        assert_eq!(
+            at,
+            [
+                "/body/3/enabledWhen",
+                "/body/4/visibleWhen",
+                "/body/5/visibleWhen",
+                "/body/7/requiredWhen"
+            ],
+            "{said:#?}"
+        );
+        assert!(
+            said[0].1.contains("bilinmeyen bir alan") && said[0].1.contains("visibleWhen"),
+            "{}",
+            said[0].1
+        );
+        assert!(
+            said[2]
+                .1
+                .starts_with("“mahalle” paneldeki bir girdinin kimliği değil"),
+            "{}",
+            said[2].1
+        );
     }
 
     #[test]

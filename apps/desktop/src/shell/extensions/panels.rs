@@ -102,6 +102,17 @@ pub(crate) struct OpenPanel {
     pub(crate) held: bool,
     /// Each table's and card component's page shown (panel_view.rs `pager`); its first when its rows come again.
     pub(crate) pages: BTreeMap<String, usize>,
+    /// Each component's rules compiled (`visibleWhen`, `requiredWhen`, `enabledWhen`; docs/adr/8057 §33), in the
+    /// body's order: worked out from the panel's values as they change, no Python.
+    pub(crate) rules: Vec<CompiledRules>,
+}
+
+/// A component's rules, compiled against the panel's inputs (Kapı 1 passed them; one that does not compile is none).
+#[derive(Clone, Debug, Default)]
+pub(crate) struct CompiledRules {
+    pub(crate) visible: Option<kentos_expression::Expr>,
+    pub(crate) required: Option<kentos_expression::Expr>,
+    pub(crate) enabled: Option<kentos_expression::Expr>,
 }
 
 /// A panel's button pressed: what the next launch of its command gives its code, and where its answer goes.
@@ -183,7 +194,31 @@ impl OpenPanel {
             spoke: false,
             held: false,
             pages: BTreeMap::new(),
+            rules: Vec::new(),
         };
+        // Its rules, compiled once against its inputs (ui_panel::rules).
+        let body: Vec<Value> = panel
+            .definition
+            .body
+            .iter()
+            .filter_map(|c| serde_json::to_value(c).ok())
+            .collect();
+        let inputs = kentos_extensions::ui_panel::rules::inputs_of(&body);
+        let compile = |source: &Option<String>| {
+            source
+                .as_deref()
+                .and_then(|s| kentos_extensions::ui_panel::rules::compile(s, &inputs).ok())
+        };
+        panel.rules = panel
+            .definition
+            .rules
+            .iter()
+            .map(|r| CompiledRules {
+                visible: compile(&r.visible_when),
+                required: compile(&r.required_when),
+                enabled: compile(&r.enabled_when),
+            })
+            .collect();
         for c in &panel.definition.body {
             match c {
                 Component::TextField { id, value, .. } => {
@@ -246,10 +281,11 @@ impl OpenPanel {
     /// says them under it.
     pub(crate) fn check_params(&self) -> Result<Value, (String, String)> {
         let mut out = Map::new();
-        for c in &self.definition.body {
+        for (at, c) in self.definition.body.iter().enumerate() {
             let id = c.id().unwrap_or_default().to_owned();
-            // One its code hid is not asked of the user (its value still goes).
-            if !self.hidden.contains(&id)
+            // One its code or its rule hid is not asked of the user (its value still goes).
+            if self.shown(at, c)
+                && self.asked(at, c)
                 && let Some(why) = self.missing(c)
             {
                 return Err((id, why));
@@ -282,6 +318,73 @@ impl OpenPanel {
         }
     }
 
+    /// Whether component `at` is drawn: its `visibleWhen` holds (or it has none) and its code did not hide it.
+    pub(crate) fn shown(&self, at: usize, c: &Component) -> bool {
+        self.holds(at, |r| r.visible.as_ref()).unwrap_or(true)
+            && c.id().is_none_or(|id| !self.hidden.contains(id))
+    }
+
+    /// Whether component `at` can be used (a button pressed, a field typed in): its `enabledWhen` holds (or it has
+    /// none) and its code did not turn it off.
+    pub(crate) fn usable(&self, at: usize, c: &Component) -> bool {
+        self.holds(at, |r| r.enabled.as_ref()).unwrap_or(true)
+            && c.id().is_none_or(|id| !self.disabled.contains(id))
+    }
+
+    /// Whether input `at` is asked of the user: `required`, or its `requiredWhen` holding.
+    pub(crate) fn asked(&self, at: usize, c: &Component) -> bool {
+        c.required() || self.holds(at, |r| r.required.as_ref()) == Some(true)
+    }
+
+    /// A rule of component `at` worked out from the panel's values; none when it has no such rule.
+    fn holds(
+        &self,
+        at: usize,
+        which: impl Fn(&CompiledRules) -> Option<&kentos_expression::Expr>,
+    ) -> Option<bool> {
+        let expr = self.rules.get(at).and_then(which)?;
+        Some(kentos_extensions::ui_panel::rules::holds(expr, |id| {
+            self.rule_value(id)
+        }))
+    }
+
+    /// Input `id`'s value as a rule reads it (ui_panel::rules): a number as `4.5`, a check `true` or `false`, a date
+    /// or moment ISO, a multiple choice's chosen values joined; none when empty.
+    fn rule_value(&self, id: &str) -> Option<String> {
+        let typed = || {
+            self.texts
+                .get(id)
+                .map(|t| t.trim())
+                .filter(|t| !t.is_empty())
+        };
+        let joined =
+            |list: Option<&Vec<String>>| list.filter(|l| !l.is_empty()).map(|l| l.join(", "));
+        match self.definition.body.iter().find(|c| c.id() == Some(id))? {
+            Component::TextField { .. } => typed().map(str::to_owned),
+            Component::NumberField { .. } => typed().and_then(number_of).map(|n| n.to_string()),
+            Component::DateField { .. } => {
+                typed().and_then(kentos_extensions::ui_panel::typed_date)
+            }
+            Component::TimeField { .. } => {
+                typed().and_then(kentos_extensions::ui_panel::typed_time)
+            }
+            Component::DateTimeField { .. } => {
+                typed().and_then(kentos_extensions::ui_panel::typed_date_time)
+            }
+            Component::Checkbox { .. } => {
+                Some(self.checks.get(id).copied().unwrap_or(false).to_string())
+            }
+            Component::Select { .. }
+            | Component::LayerPicker { .. }
+            | Component::FieldPicker { .. } => {
+                self.choices.get(id).filter(|v| !v.is_empty()).cloned()
+            }
+            Component::MultiSelect { .. } => joined(self.multi.get(id)),
+            Component::FeaturePicker { .. } => joined(self.picks.get(id)),
+            _ => None,
+        }
+    }
+
     /// A choice's or a multiple choice's options now: its code's, else its definition's.
     pub(crate) fn options_of<'a>(
         &'a self,
@@ -297,11 +400,9 @@ impl OpenPanel {
         self.check_params().map_err(|(_, why)| why)
     }
 
-    /// Why a `required` input is not given, in its label's words; none when it is (or need not be).
+    /// Why an input asked for (`required`, or its `requiredWhen` holding) is not given, in its label's words; none
+    /// when it is.
     fn missing(&self, c: &Component) -> Option<String> {
-        if !c.required() {
-            return None;
-        }
         let id = c.id()?;
         let label = match c {
             Component::TextField { label, .. }
@@ -1235,6 +1336,45 @@ mod tests {
 
     /// A date field's value is the ISO date of what was typed, either way it was written; a text that is no day, and
     /// a day out of its bounds, are said by its label; empty is none.
+    #[test]
+    fn a_components_rules_follow_the_panels_values() {
+        // docs/adr/8057 §33: a rule is worked out from the panel's values as they change: a field shown and asked
+        // while a check is on, a button usable once a number is above 0 (typed with a comma), no Python.
+        let value = json!({ "format": kentos_extensions::ui_panel::FORMAT, "schemaVersion": kentos_extensions::ui_panel::VERSION,
+            "title": "Kart",
+            "body": [
+                { "type": "checkbox", "id": "sureli", "label": "Süreli" },
+                { "type": "dateTimeField", "id": "gecerli", "label": "Geçerlilik sonu",
+                  "visibleWhen": "sureli", "requiredWhen": "sureli" },
+                { "type": "numberField", "id": "adet", "label": "Adet" },
+                { "type": "button", "id": "kaydet", "label": "Kaydet", "command": "kaydet",
+                  "enabledWhen": "adet > 0" }
+            ] });
+        let mut p = OpenPanel::new(
+            "tr.ornek.deneme",
+            "kart",
+            kentos_extensions::ui_panel::read(&value).expect("a panel"),
+        );
+        let body = p.definition.body.clone();
+        assert!(!p.shown(1, &body[1]), "hidden while the check is off");
+        assert!(p.check_params().is_ok(), "hidden: not asked");
+        assert!(!p.usable(3, &body[3]), "no number yet");
+        p.checks.insert("sureli".into(), true);
+        assert!(p.shown(1, &body[1]) && p.asked(1, &body[1]));
+        assert_eq!(
+            p.check_params().unwrap_err().0,
+            "gecerli",
+            "shown and asked: left empty"
+        );
+        p.texts.insert("gecerli".into(), "20.11.2026 17:00".into());
+        p.texts.insert("adet".into(), "2,5".into());
+        assert!(p.check_params().is_ok());
+        assert!(p.usable(3, &body[3]), "2,5 > 0");
+        // The code's own switches still win over a rule that holds.
+        p.disabled.insert("kaydet".into());
+        assert!(!p.usable(3, &body[3]));
+    }
+
     #[test]
     fn a_date_field_gives_the_iso_date_of_what_was_typed() {
         let value = json!({

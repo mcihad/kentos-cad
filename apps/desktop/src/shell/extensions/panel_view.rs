@@ -194,14 +194,15 @@ impl App {
     ) -> (Form<'a, Message>, Vec<Element<'a, Message>>) {
         let mut form = Form::new().label_width(kentos_ui::theme::typography::scaled(110.0));
         let mut tables: Vec<Element<'_, Message>> = Vec::new();
-        // Its code's changes (panel_session.rs): a field turned off is shown faded and takes no keys.
-        let on = |id: &str| !p.disabled.contains(id);
         let field_id = |id: &str| super::panel_session::field_id(&p.ext, &p.local, id);
-        for c in &p.definition.body {
-            // One its code hid is not drawn.
-            if c.id().is_some_and(|id| p.hidden.contains(id)) {
+        for (at, c) in p.definition.body.iter().enumerate() {
+            // One its rule or its code hid is not drawn (panels.rs `shown`, docs/adr/8057 §32–33).
+            if !p.shown(at, c) {
                 continue;
             }
+            // One its rule or its code turned off is shown faded and takes no keys.
+            let usable = p.usable(at, c);
+            let on = |_: &str| usable;
             match c {
                 // A text the panel's whole width: in the field column it wrapped every few words in a narrow dock.
                 Component::Text { id, text } => {
@@ -568,9 +569,10 @@ impl App {
                     ));
                 }
             }
-            // A field the user must give: its star; the words of what was wrong with it, under it.
+            // A field the user must give (`required`, or its `requiredWhen` holding): its star; the words of what was
+            // wrong with it, under it.
             if c.is_input() {
-                if c.required() {
+                if p.asked(at, c) {
                     form = form.required();
                 }
                 let wrong = p
