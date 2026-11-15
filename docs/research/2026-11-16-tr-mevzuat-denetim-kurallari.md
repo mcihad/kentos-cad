@@ -1,9 +1,10 @@
 # Türkiye mevzuatının ilk denetim kuralları: PAİY 29 ve BYKHY'nin kaçış uzaklıkları
 
-Tarih: 16 Kasım 2026. Konu: `catalog/standards/tr-mevzuat` paketi (`tr.kentos.mevzuat` 0.1.0), plan/eklenti.md ADIM
-20'nin "ulusal/belediye kurallarının Python betikleri" maddesinin ilk dilimi. Kurallar yalnız KentOS'un Rust'ta ölçtüğü
-mimari olguları (`facts.project.architecture`, ADR 8057 §39) okur; bu not hangi hükmün aynen ne dediğini, olguların
-hangisine karar verebildiğini ve neyin neden dışarıda kaldığını yazar.
+Tarih: 16 Kasım 2026. Konu: `catalog/standards/tr-mevzuat` paketi (`tr.kentos.mevzuat` 0.1.0 ve 0.2.0), plan/eklenti.md
+ADIM 20'nin "ulusal/belediye kurallarının Python betikleri" maddesi. Kurallar yalnız KentOS'un Rust'ta ölçtüğü mimari
+olguları (`facts.project.architecture`, ADR 8057 §39; 0.2.0'dan beri §53'ün mahal türü, dar kenar, yağmurlama ayarı ve
+merdivene açılan kapı) okur; bu not hangi hükmün aynen ne dediğini, olguların hangisine karar verebildiğini ve neyin
+neden dışarıda kaldığını yazar.
 
 ## Yöntem ve kaynaklar
 
@@ -20,6 +21,8 @@ hangisine karar verebildiğini ve neyin neden dışarıda kaldığını yazar.
     1.7.2025/32943, Geçici Madde 4). Ek-5/B sayfa 96'da. Metnin değişiklik tablosuna göre Madde 48 ve Ek-5/B
     2009/15316 sayılı BKK ile (yürürlük 9.9.2009), Ek-5/B ayrıca 2015/7401 sayılı BKK ile (yürürlük 9.7.2015)
     değişti; Madde 32 ve 33/6 ilk metindir.
+- 0.2.0 için iki metin aynı gün (16 Kasım 2026, 01:31) yeniden indirildi: SHA-256'ları aynı, metin değişmemiş. 29/2,
+  29/3, 29/4 ve BYKHY 48/3 bu metinden aynen alındı.
 - Değerler KentOS Mimari'nin yerel denetimiyle karşılaştırıldı: `crates/native/application/src/arch/fire_audit.rs`
   (`Use::walks`, apartmanlar `[[15, 30], [30, 75]]`, 48/2'nin 20/30 m'si, 48/1'in kat sayımı) ve
   `regulation_audit.rs` (29/1'in 3.00 m ve 12.0 m²'si). Hepsi aynı.
@@ -54,7 +57,7 @@ Madde 29 (Yapı piyesleri ve ölçüleri):
 
 > (2) 3 veya daha az odalı konutlarda banyo/yıkanma yeri ile tuvalet aynı yerde düzenlenebilir.
 
-> (3) Hol ve koridor genişlikleri 1.20 metreden az olamaz.
+> (3) Hol ve koridor genişlikleri 1.20 metreden az olamaz. (Ek cümle:RG-13/8/2025-32985) Yaşlı bakım kuruluşlarında hol ve koridorlarda yerden 80 cm yüksekliğinde küpeşte yapılır.
 
 > (4) Mutfak nişi ve oda ile banyo ve tuvaletin aynı mekânda düzenlenmesi halinde her mekân için öngörülen en az alanların toplamı kadar alan düzenlenmek zorundadır.
 
@@ -89,6 +92,8 @@ Madde 48 (Konutlar; 2009/15316 sayılı BKK ile değişik):
 
 > (2) Birinci fıkrada belirtilenler dışındaki konutlarda, konut içindeki herhangi bir noktadan konut çıkış kapısına kadar olan uzaklığın 20 m’yi, yağmurlama sistemi olan konutlarda 30 m’yi geçmemesi gerekir.
 
+> (3) Konut birimlerinden bütün çıkışların, kaçış merdivenlerine veya güvenli bir açık alana doğrudan erişim imkânı sağlayacak şekilde olması gerekir.
+
 > (4) Kaçış uzaklığı, apartman dairelerinin kapısından başlanarak ölçülür.
 
 Ek-5/B (Çıkışlara Götüren En Uzun Kaçış Uzaklıkları ve Birim Genişlikleri), kaçış uzaklığı sütunları (m):
@@ -114,60 +119,105 @@ Ek-5/B (Çıkışlara Götüren En Uzun Kaçış Uzaklıkları ve Birim Genişli
 `ext.ArchitectureFacts` (ADR 8057 §39) katları (kotlarıyla), kat başına kat çıkışı sayısını, her mahalin net ve eksen
 alanını, bağımsız bölümleri (`kind`: unit, common, outdoor, annex; `dwelling`), mahalin en uzak noktasından (duvarlardan
 40 cm önde) en yakın kat çıkışına yürüyüşü (uzunluk, tek yön payı, ulaşılan çıkış sayısı), konutun mahalinden kapısına
-ve konut kapısından kat çıkışına yürüyüşü verir.
+ve konut kapısından kat çıkışına yürüyüşü verir. §53 (0.2.0'ın okuduğu) bunlara ekledi:
 
-Vermedikleri, kuralların sınırını çizen:
+- `RoomFacts.kind`: `living`, `bedroom`, `kitchen`, `bath`, `toilet`, `corridor` ya da yok: KentOS Mimari'nin mahali
+  adından ya da kullanımından okuyuşu (Salon/Oturma, Yatak/Ebeveyn/Çocuk/Oda, Mutfak, Banyo/Duş/Yıkanma, WC/Tuvalet,
+  Hol/Koridor/Antre). Kural bu okuyuşu kullanır, kendisi addan tür çıkarmaz.
+- `RoomFacts.narrow`: net genişlik (net sınırın içine sığan en büyük dairenin çapı, KentOS Mimari'nin dar kenarı);
+  sınırı bulunamayan mahalde yok.
+- `ArchitectureFacts.sprinklers`: projenin yağmurlama ayarı (KCAD 226; ayarın varsayılanı "yok").
+- `DoorEscape.into_stair`: konut kapısı kaçış merdiveni mahaline açılıyor (yürüyüşü yok, kapı kat çıkışında).
 
-- **Mahalin türü yok.** `usage` programın serbest yazısıdır ve örnek binada yalnız balkonda dolu; `name` ("Salon",
-  "Yatak odası 1") serbest yazıdır. Görev gereği addan tür çıkarılmadı.
-- **Mahalin dar kenarı (genişliği) yok.**
-- **Binada yağmurlama sistemi olup olmadığı yok** (projenin mimari ayarında var, KCAD 226; olgulara girmiyor).
-- **Konut olmayan bölümün Ek-5/B'deki kullanım sınıfı yok:** `nature` tapudaki serbest yazıdır ("Dükkân", "Büro").
-- **Konut kapısının yürüyüşü yoksa nedeni yok:** kapı kaçış merdiveni mahaline mi açılıyor (uygun), hiçbir çıkışa mı
-  ulaşmıyor (aykırı), olgular ayırmıyor.
+Hâlâ vermedikleri:
 
-## Kurallar
+- **Konut olmayan bölümün Ek-5/B'deki kullanım sınıfı** (`nature` tapudaki serbest yazıdır: "Dükkân", "Büro").
+- **Niş ve donanım:** bir odanın içindeki mutfak ya da yatak nişi, bir mahalde hem banyo hem tuvalet donanımı olduğu.
+- **Parseldeki bağımsız bölüm sayısı** (5/25'in %20'si): çizim parselin tamamı olmayabilir.
+- **Olguların sürümü:** §53'ün alanları eski bir KentOS'un olgularında okununca boş ya da `False` gelir; "yağmurlama
+  yok" ile "ayar verilmedi" Python'da ayırt edilmez. Paket olguların yeni olduğunu sınırı bulunan bir mahalin dar
+  kenarından tanır (yeni KentOS bunu her zaman yazar).
+
+## Kurallar (0.2.0)
 
 | Kimlik | Hüküm | Karar | Önem |
 |---|---|---|---|
-| `oturma-odasi` | PAİY 29/1 (5/25) | Konut bölümünde (`dwelling`) net alanı 12.0 m²'ye ulaşan piyes yoksa oturma odası hangi mahal olursa olsun sağlanamaz. Boşluk, dış mahal ve kaçış merdiveni piyes sayılmaz; sınırı bulunamayan mahal varsa ve ölçülenlerin hiçbiri yetmiyorsa karar verilmez. | hata; ölçülemeyende bilgi |
-| `daire-ici` | BYKHY 48/1, 48/2 | Konutun her katında mahallerin en uzak noktasından konut kapısına en uzun yürüyüş: 20 m'yi aşarsa uyarı (yağmurlama sistemi yoksa aşılıyor), 30 m'yi de aşarsa hata. Kapısı o katta olan konutun kapıya yol bulamayan mahali hata. | uyarı / hata |
-| `daire-kapisi` | BYKHY 32/3, 48/1, 48/4, Ek-5/B apartmanlar | Konut kapısından en yakın kat çıkışına: tek çıkışta bütün yol tek yöndür; iki çıkışta önce yolun tek yönlü kısmı tek yön sınırına, o aşılmıyorsa bütün yol iki yön sınırına. Yağmurlama sistemsiz sınırı (15/30 m) aşarsa uyarı, yağmurlamalı sınırı da (30/75 m) aşarsa hata. | uyarı / hata |
-| `cikis-erisimi` | BYKHY 31/3, 33/6-b | Mahali olup kat çıkışı olmayan kat hata (kat başına bir bulgu); çıkışı olan katta kendi bölümünün mahallerinden ve ortak alanlardan geçerek hiçbir kat çıkışına ulaşmayan mahal hata. | hata |
+| `piyesler` | PAİY 29/1, 29/2, 29/4, 5/25 | Konut bölümünde türü bilinen her piyesin net alanı ve dar kenarı tablonun en azına: biri yetmiyorsa iki ölçüyü de söyleyen hata. Eksik piyes istisnalarıyla (aşağıda). Piyeslerinin hiçbirinin türü okunamayan konutta yalnız 12.0 m²'lik piyesin varlığı (0.1.0'ın kuralı). | hata; karar verilemeyende bilgi |
+| `koridor` | PAİY 29/3 | Türü `corridor` olan mahalin dar kenarı 1.20 m'den azsa hata; bulgu fıkrayı aynen söyler. Konutun ve ortak alanın holleri ile bir bölüme ait olmayanlar okunur. | hata |
+| `daire-ici` | BYKHY 48/1, 48/2 | Konutun her katında kapıya en uzun yürüyüş projenin ayarının sınırına (20 m, yağmurlama sistemiyle 30 m): aşarsa hata ve hangi sınırın okunduğunu söyler. Kapıya yol bulamayan mahal hata. | hata |
+| `daire-kapisi` | BYKHY 32/3, 48/1, 48/3, 48/4, 33/6-b, Ek-5/B apartmanlar | Merdivene açılan kapı uygun; hiçbir kat çıkışına ulaşmayan kapı her binada hata (48/3, 33/6-b). Yürüyüş apartmanlar satırına, ayarın sütunuyla (15/30 m, yağmurlamalı 30/75 m): aşarsa hata. | hata |
+| `cikis-erisimi` | BYKHY 31/3, 33/6-b | Değişmedi: kat çıkışı olmayan kat, kendi bölümünden ve ortak alanlardan çıkışa ulaşmayan mahal. | hata |
+
+### Karar: PAİY 29/1 tek kural
+
+29/1'in beş piyesi, 29/2, 29/4 ve 5/25 tek bir kuraldır (`piyesler`; 0.1.0'ın `oturma-odasi`'nın yerine). Eksik
+piyesin kararı konutun bütün piyeslerine bakar: 29/2 oda sayar, 29/4 nişi taşıyacak odanın alanını toplamla
+karşılaştırır, türü okunamayan konutta 12 m²'lik denetim tür denetiminin yerini alır. Ayrı kurallar aynı konutu ayrı ayrı
+çözer ve birbiriyle çelişen ("oturma odası yok" ile "12 m²'lik piyes yok") ya da yinelenen bulgular verirdi. 29/3 ayrı
+kuraldır (`koridor`): başka bir fıkra, başka bir alan (ortak alanın holleri de).
+
+### Ölçüler her piyese
+
+Tablo piyesin en az ölçüsü olarak okundu ve türü bilinen her piyese uygulanır (ikinci yatak odası da 9.00 m²'yi
+karşılar); KentOS Mimari'nin yerel denetimi de böyle okur. Sınırı bulunamayan piyesin ölçüsü denetlenemez (bilgi).
+
+### Eksik piyesin istisnaları (aynen okunan fıkralardan)
+
+- **Oturma odası:** istisnası yok, eksikse hata.
+- **Yatak odası (5/25):** oturma odası yatak nişini (dar kenarı 2.50 m, alanı 9 m²) taşıyabiliyorsa karar verilemez
+  (bilgi): olgular nişi ve parseldeki %20'yi görmez. Oturma odası yoksa ya da nişi taşıyamıyorsa hata.
+- **Mutfak (29/4):** mutfak nişi bir odada olabilir, o oda kendi en az alanı ile mutfağın 3.30 m²'sinin toplamı kadar
+  olur (oturma odasında 15.30 m², yatak odasında 12.30 m²). Böyle bir oda varsa karar verilemez (bilgi), yoksa hata.
+- **Banyo ve tuvalet (29/2, 29/4):** oda sayısı oturma ve yatak odalarıdır (KentOS Mimari'nin yerel denetimi de böyle
+  sayar). 3 veya daha az odalı konutta tuvalet banyoyla aynı yerde olabilir; o banyo iki piyesin toplamı kadar, en az
+  4.20 m² olur: böyle bir banyo varsa tuvaletin yokluğu bulgu değildir, banyolar daha küçükse hata. 4 ve daha çok
+  odalı konutta tuvalet ayrıdır, yoksa hata. Banyo yoksa ve 3 veya daha az odalı konutta 4.20 m²'lik bir tuvalet varsa
+  o yer ikisini birlikte karşılıyor olabilir: karar verilemez (bilgi).
+- **Adı türünü söylemeyen mahal:** eksik türün en az ölçüsünü karşılıyorsa o tür olabilir; karar verilemez, bulgu
+  mahalin adının düzeltilmesini söyler (bilgi). Karşılamıyorsa piyes ya yoktur ya ölçüsü yetmez, ikisi de aykırıdır.
+
+### Yağmurlama ayarı ve eski olgular
+
+Yeni olgularda sınır projenin ayarınındır: ayar işaretliyse yağmurlamalı sütun, değilse yağmurlamasız sütun okunur ve
+aşan ölçü hatadır; bulgu hangi sınırın okunduğunu ve ayarı söyler. Ayarın varsayılanı "yok"tur (`.kcad` 226: "Absent:
+none"); KentOS Mimari'nin yangın denetimi de ayar verilmemiş projeyi yağmurlamasız okur (`fire_audit.rs`:
+`arch.sprinklers`, ayarsız projede `false`). Ayarı vermeyen eski bir KentOS'un olgularında ise ayar bilinmez: 0.1.0'ın
+iki eşiği sürer (yağmurlamasız sınırı aşan uyarı, ikisini de aşan hata) ve bulgu olguların eski olduğunu söyler.
+
+### Merdivene açılan kapı ve çıkışa ulaşmayan kapı
+
+`into_stair` olan kapı kat çıkışındadır: uygundur. Yürüyüşü olmayan ve merdivene de açılmayan kapı hatadır; dayanağı
+48/3 ("Konut birimlerinden bütün çıkışların, kaçış merdivenlerine veya güvenli bir açık alana doğrudan erişim imkânı
+sağlayacak şekilde olması gerekir") ve 33/6-b'dir. 48/4 yalnız uzaklığın nereden ölçüleceğini söylediği için ulaşılmayan
+çıkışın dayanağı olarak 48/3 seçildi. 48/1 uzaklığı muaf tutar, çıkışı değil: bu bulgu her binada verilir. Eski bir
+KentOS'un olgularında iki durum ayırt edilmez, karar verilmez.
 
 - **48/1'in okunuşu** KentOS Mimari'nin yangın denetimiyle aynı: kat sayısı ±0.00 ve üstündeki katlar ile mahali olan
-  alt katlardır; konut binası en az bir konut bölümü olan binadır; tek konut bölümü olan bina tek ev sayılır. Bu
-  binalarda `daire-ici` ve `daire-kapisi` bir şey söylemez.
-- **Yağmurlama bilinmediği için iki eşik:** yağmurlama sistemi olmayan binanın sınırını aşan ölçü uyarıdır ve bulgu
-  bunu söyler; yağmurlamalı binanın sınırını da aşan ölçü her durumda aykırıdır.
-- Bulgular maddeyi ve fıkrayı sözün sonunda söyler ("— PAİY md. 29/1 (RG 3.7.2017/30113)", "— BYKHY md. 48/2
-  (2009/15316 sayılı BKK ile değişik)"); nesnesi mahal ya da kapıdır (Göster onu seçer), katın bulgusunun nesnesi
-  yoktur.
+  alt katlardır; konut binası en az bir konut bölümü olan binadır; tek konut bölümü olan bina tek ev sayılır.
+- **29/3'ün alanı** KentOS Mimari'ninki gibi: konutun ve ortak alanın holleri ile bir bölüme ait olmayanlar; dükkânın,
+  büronun ya da eklentinin kendi holü okunmaz.
+- Bulgular maddeyi ve fıkrayı sözün sonunda söyler ("— PAİY md. 29/2, 29/4 (RG 3.7.2017/30113)", "— BYKHY md. 48/3 ve
+  33/6-b"); nesnesi mahal ya da kapıdır, konutun eksik piyesinin ve katın bulgusunun nesnesi yoktur.
 
 ## Dışarıda kalanlar ve nedenleri
 
-- **PAİY 29/1'in öbür satırları (yatak odası 9.00 m², mutfak 3.30 m², banyo 3.00 m², tuvalet 1.20 m²) ve bütün dar
-  kenarlar:** mahalin türü ve dar kenarı olgularda yok. İkinci bir 9 m²'lik piyesin aranması da karar veremez: 5/25'in
-  yatak nişi istisnası parseldeki bölümlerin %20'sine kadar ayrı yatak odasını kaldırıyor ve hangi bölümün istisnayı
-  kullandığı olgularda yok.
-- **PAİY 29/3 (hol ve koridor 1.20 m):** genişlik ve koridor türü yok.
-- **BYKHY 32/3-4 ve Ek-5/B'nin konut olmayan bölümleri:** kullanım sınıfı yok; sınıftan bağımsız bir eşik de dürüst
-  değil (yağmurlamasız tek yön 15 m bütün sınıflarda ortak değil: yüksek tehlikeli yerlerde 10 m, Ek-5/B'nin (1)
+- **BYKHY 32/3-4 ve Ek-5/B'nin konut olmayan bölümleri:** kullanım sınıfı olgularda yok; sınıftan bağımsız bir eşik de
+  dürüst değil (yağmurlamasız tek yön 15 m bütün sınıflarda ortak değil: yüksek tehlikeli yerlerde 10 m, Ek-5/B'nin (1)
   dipnotuyla kolay alevlenici malzeme üretmeyen endüstri yapılarında 22.5 m).
-- **BYKHY 4/i ve Ek-5/B'nin çıkmaz koridor sütunu:** hangi mahalin koridor olduğu olgu değil (adı).
+- **5/25'in %20 sınırı:** parseldeki bağımsız bölüm sayısı olgu değil; yatak nişi olan bölümlerin payı sayılamaz.
+- **BYKHY 4/i ve Ek-5/B'nin çıkmaz koridor sütunu:** koridor artık tür olarak biliniyor, ama çıkmaz koridor mesafesi
+  koridorun en uzak noktasından ölçülür ve sınırı kullanım sınıfına bağlıdır (apartmanlarda 15/20 m); konut binasında
+  ortak koridorun hangi kullanıma hizmet ettiği kararı bu dilime alınmadı, sonraki aday.
 - **BYKHY 48/2'nin ikinci ve üçüncü cümleleri** (ara katlı dairede tek kapı üst katta olamaz; üst kat ayrı çıkışsız
-  70 m²'yi aşamaz): dubleks dairenin hangi katının "üst kat" olduğu ve döşeme alanının neti mi brütü mü olduğu bu
-  dilimde çözülmedi; olgular (`has_entrance`, `UnitLevel`) buna yaklaşıyor, sonraki kural adayı.
-- **Kapısı yürüyüşsüz konut kapısı:** yukarıdaki belirsizlik yüzünden karar verilmez.
+  70 m²'yi aşamaz): dubleks dairenin hangi katının "üst kat" olduğu ve döşeme alanının neti mi brütü mü olduğu çözülmedi.
 - **BYKHY 33/1-2 (genişlikler), 39/2 (çıkış sayısı), 48/5 (yüksekliğe göre merdivenler), Ek-5/A (kişi yükü):**
-  genişlik, kullanım sınıfı ve korunumluluk olgularda yok.
+  kullanım sınıfı ve korunumluluk olgularda yok.
 
 ## KentOS'a öneriler (SDK)
 
-1. `ArchitectureFacts.sprinklers`: projenin mimari ayarındaki yağmurlama sistemi (KCAD 226). Gelince `daire-ici` ve
-   `daire-kapisi` uyarıyı karara çevirir.
+1. ~~`ArchitectureFacts.sprinklers`~~, ~~mahalin türü ve dar kenarı~~, ~~`DoorEscape.into_stair`~~: §53 ile geldi, 0.2.0
+   onlarla karar veriyor.
 2. Bağımsız bölümün Ek-5/B kullanım sınıfı (sabit bir kod listesi, programda bildirilen): konut olmayan bölümlerin kaçış
-   uzaklığı bir tablo okuması olur.
-3. Mahalin türü (programın tarifinden: oturma odası, yatak odası, mutfak, banyo, tuvalet, hol/koridor) ve dar kenarı
-   (KentOS Mimari'nin `width_of`'u zaten ölçüyor): PAİY 29/1'in tamamı ve 29/3.
-4. `DoorEscape`'te "kaçış merdiveni mahaline açılıyor" ile "hiçbir çıkışa ulaşmıyor" ayrımı.
+   uzaklığı bir tablo okuması olur. Modelde yok.
+3. Olguların hangi alanları taşıdığını söyleyen bir işaret (ör. bölümde bir sürüm ya da `sprinklers`'ın verilip
+   verilmediği): paket bugün bunu dar kenarın varlığından çıkarıyor.

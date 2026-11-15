@@ -3018,3 +3018,71 @@ fikstür `fixtures/audit-facts/v1/mimari.json`; stub üreticisi ve paket `crates
   (`mimari.json` bayt bayt: Salon `living` 3,85 m, Koridor `corridor` 1,40 m, Arşiv türsüz 3,35 m, kapılar merdivene
   açılmıyor, yağmurlama yok), Python 1 (türler, dar kenarlar, yağmurlama ve eski olguların varsayılanları), SDK paketi 1
   (iç belge göndermelerinin stub'dan atılması: yalnız, başka sözle birlikte, noktalı virgülden sonra).
+
+## §54. Türkiye mevzuatı 0.2.0: piyesler, hol ve koridor, yağmurlama ayarı, merdivene açılan kapı (`ADIM 20`, ulusal kuralların ikinci dilimi)
+
+**16 Kasım.** Kod: `catalog/standards/tr-mevzuat/` (`tr.kentos.mevzuat` 0.2.0; `src/tr_mevzuat/paiy.py`,
+`piyes_eksik.py`, `bykhy.py`, `bina.py`, `manifest.json`, `CHANGELOG.md`); sınamalar
+`apps/jobrun/src/audit/mevzuat_tests.rs` ile `mevzuat_tests/paiy.rs`, `mevzuat_tests/bykhy.rs`; araştırma notu
+`docs/research/2026-11-16-tr-mevzuat-denetim-kurallari.md` (29/2, 29/3, 29/4 ve BYKHY 48/3 aynen; resmî metinler 16
+Kasım'da yeniden indirildi, SHA-256'ları §51'inkiyle aynı).
+
+- **Karar: §53'ün olgularıyla karar, eksik bilgide "karar verilemedi".** Mahalin türü ve dar kenarı KentOS Mimari'nin
+  okuyuşudur; kural addan tür çıkarmaz. Yönetmeliğin istisnası olguların göremediği bir şeye bağlıysa (bir odanın içindeki
+  niş, mahalin donanımı, parseldeki pay) bulgu bilgidir ve karar verilemediğini söyler; istisna mümkün değilse hatadır.
+- **Karar: PAİY 29/1 tek kural (`piyesler`, 0.1.0'ın `oturma-odasi`'nın yerine), 29/3 ayrı (`koridor`).** Eksik piyesin
+  kararı konutun bütün piyeslerine bakar (29/2 oda sayar, 29/4 nişi taşıyacak odanın alanını toplamla karşılaştırır,
+  türü okunamayan konutta 12 m²'lik denetim tür denetiminin yerini alır); ayrı kurallar aynı konutu ayrı ayrı çözer,
+  çelişen ya da yinelenen bulgu verirdi. 29/3 başka bir fıkra ve başka bir alan (ortak alanın holleri de).
+- **`piyesler` (PAİY 29/1, 29/2, 29/4, 5/25):**
+  - Türü bilinen her piyes tablonun en azına: oturma odası 3.00 m / 12.0 m², yatak odası 2.50 m / 9.00 m², mutfak 1.50
+    m / 3.30 m², banyo 1.50 m / 3.00 m², tuvalet 1.00 m / 1.20 m². Biri yetmiyorsa hata, bulgu iki ölçüyü de sınırıyla
+    söyler ("net alanı 8.50 m² (en az 9.00 m²), dar kenarı 3.85 m (en az 2.50 m); alanı yetmiyor"). Tablo her piyese
+    uygulanır (ikinci yatak odası da); KentOS Mimari'nin yerel denetimi de böyle okur.
+  - Eksik piyes: oturma odasının istisnası yok (hata). Yatak odası: oturma odası 5/25'in yatak nişini (2.50 m, 9 m²)
+    taşıyabiliyorsa karar verilemez, taşıyamıyorsa ya da oturma odası yoksa hata. Mutfak: 29/4'e göre nişi taşıyan oda
+    kendi en azı ile 3.30 m²'nin toplamı kadardır (oturma odasında 15.30, yatak odasında 12.30 m²); böyle oda varsa karar
+    verilemez, yoksa hata. Tuvalet: 3 veya daha az odalı (oturma ve yatak odaları) konutta banyo tuvaleti de
+    karşılayabilir (29/2) ve o zaman en az 4.20 m² olur (29/4): böyle banyo varsa bulgu yok, banyolar küçükse hata; 4 ve
+    daha çok odada tuvalet ayrıdır, yoksa hata. Banyo: 3 veya daha az odalı konutta 4.20 m²'lik bir tuvalet ikisini
+    birlikte karşılıyor olabilir: karar verilemez, değilse hata. Adı türünü söylemeyen bir mahal eksik türün en az
+    ölçüsünü karşılıyorsa o tür olabilir: karar verilemez, bulgu adının düzeltilmesini söyler.
+  - Piyeslerinin hiçbirinin türü okunamayan konutta (adlar türü söylemiyor ya da olgular eski bir KentOS'tan) yalnız
+    0.1.0'ın kesin sonucu: 12.0 m²'ye ulaşan piyes yoksa hata.
+- **`koridor` (PAİY 29/3):** türü `corridor` olan mahalin dar kenarı 1.20 m'den azsa hata; bulgu fıkrayı aynen söyler
+  (“Hol ve koridor genişlikleri 1.20 metreden az olamaz.”). Alan KentOS Mimari'ninki: konutun ve ortak alanın holleri
+  ile bir bölüme ait olmayanlar; dükkânın, büronun, eklentinin kendi holü okunmaz.
+- **Yağmurlama ayarı (BYKHY 48/2, Ek-5/B):** sınır projenin ayarınındır: işaretliyse yağmurlamalı sütun (48/2'de 30
+  m; apartmanlarda tek yön 30, iki yön 75 m), değilse yağmurlamasız sütun (20 m; 15 ve 30 m); aşan ölçü hatadır ve
+  bulgu hangi sınırın, hangi ayarla okunduğunu söyler ("projenin ayarında yağmurlama sistemi işaretli değil, sınır
+  20.00 m"). Ayarın varsayılanı "yok"tur (`.kcad` 226: "Absent: none") ve KentOS Mimari'nin yangın denetimi de
+  ayarsız projeyi yağmurlamasız okur (`fire_audit.rs`: `arch.sprinklers`, ayar yoksa `false`): kural da öyle okur.
+  **Eski olgular:** ayarı vermeyen bir KentOS'un olgularında `sprinklers` okununca `False` gelir ve "yok" ile "ayar
+  verilmedi" ayırt edilmez. Paket olguların yeni olduğunu sınırı bulunan bir mahalin dar kenarından tanır (§53'ün
+  KentOS'u onu her zaman yazar): yeni olgularda ayar kesindir; eski olgularda 0.1.0'ın iki eşiği sürer (yağmurlamasız
+  sınırı aşan uyarı, ikisini de aşan hata) ve bulgu olguların eski olduğunu söyler.
+- **Konut kapısı (BYKHY 48/3, 48/4, 33/6-b):** `into_stair` olan kapı kat çıkışındadır, uygundur. Yürüyüşü olmayan ve
+  merdivene de açılmayan kapı hatadır: dayanağı 48/3 (“Konut birimlerinden bütün çıkışların, kaçış merdivenlerine veya
+  güvenli bir açık alana doğrudan erişim imkânı sağlayacak şekilde olması gerekir.”) ve 33/6-b. 48/4 yalnız uzaklığın
+  kapıdan ölçüleceğini söylediği için ulaşılmayan çıkışın dayanağı 48/3 seçildi; uzaklık bulgusu 32/3, 48/4 ve Ek-5/B
+  der. 48/1 uzaklığı muaf tutar, çıkışı değil: bu hata her binada verilir. Eski olgularda iki durum ayırt edilmez,
+  karar verilmez.
+- **Karar verilemeyenler:** 5/25'in yatak nişi ve %20 sınırı (niş ve parseldeki bölüm sayısı olgu değil); 29/4'ün
+  mutfak nişi (niş görünmez); 29/2'nin birleşik banyo-tuvaleti tuvalet adıyla çizildiğinde (donanım görünmez). Konut
+  olmayan bölümün Ek-5/B kullanım sınıfı modelde yok: o bölümlerin kaçış uzaklığı bu sürümde de yok. Çıkmaz koridor
+  (4/i) ve 48/2'nin dubleks cümleleri sonraki adaylar.
+- **Örnek binada (mimari.kcad, bulut işinin yoluyla):** iki dairede oturma ve yatak odaları var, mutfak, banyo, tuvalet
+  yok: `piyesler` her daire için mutfakta "karar verilemedi" (salon nişe yetiyor), banyo ve tuvalette hata verir (4 hata,
+  2 bilgi); öbür dört kural uygun.
+- **Sınamalar (gerçek Python; yoksa atlandığını söyler):** `cargo test -p kentos-jobrun --bin kentos-jobrun --
+  audit` 13/13 (4 eski, 9 mevzuat), 11.2 sn; her durum örnek binanın olgularında birkaç ölçü değiştirilerek. Piyesler:
+  tam daireler uygun; 8.50 m²'lik yatak odası ve 2.80 m dar kenarlı salon hata, bulgu iki ölçüyü söyler; çizildiği
+  gibi 4 hata 2 bilgi; nişe yer yokken mutfak hata; 2 odada 4.50 m²'lik banyo tuvaleti karşılar, 3.50 m²'lik hata;
+  4 odada tuvalet hata; yatak odası yokken yatak nişi "karar verilemedi"; oturma odası yok hata; adı türsüz ama mutfak
+  boyunda mahal "karar verilemedi"; türü okunamayan ve eski olgularda 12 m² denetimi. Koridor: 1.10 m hata, fıkra
+  aynen; büronun kendi holü okunmaz. Daire içi: iki katta muaf; beş katta ayarsız 24 m hata ("sınır 20.00 m"), ayarla
+  uygun, 31 m ayarla hata ("sınır 30.00 m"); eski olgularda uyarı; kapıya yolu olmayan mahal hata. Daire kapısı: ayarsız
+  tek yönde 18 m hata, ayarla uygun, 32 m ayarla hata; iki yönde 40 m ayarsız hata, ayarla uygun; eski olgularda uyarı;
+  merdivene açılan kapı uygun, çıkışa ulaşmayan kapı iki katlı binada da hata (48/3, 33/6-b), eski olgularda karar
+  yok. Çıkış erişimi değişmedi. Beş kural ayrıca örnek çizimde bulut işinin yoluyla (`run_audit`). `kentos kek verify`
+  0 uyarı (yeniden derlenmiş komut satırıyla); paket 16 999 bayt, 12 dosya.

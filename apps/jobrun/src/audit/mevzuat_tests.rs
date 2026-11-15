@@ -1,9 +1,9 @@
 //! The national rules (`catalog/standards/tr-mevzuat`, plan/eklenti.md ADIM 20) as the desktop and the cloud job run
 //! them: the package packed from its folder as `kentos kek pack` packs it, each rule through `kentos.ext_host` in real
 //! Python. A rule's compliant and violating cases are the facts KentOS measured on the synthetic two-storey building
-//! (`fixtures/audit-facts/v1/mimari.json`, of `mimari.kcad`) with one measure changed; the four rules also run on that
-//! drawing as a cloud job runs them (`run_audit`). Without a Python (`KENTOS_TEST_PYTHON` or `.run/py`) the tests say
-//! so and pass.
+//! (`fixtures/audit-facts/v1/mimari.json`, of `mimari.kcad`) with a few measures changed ([`paiy`], [`bykhy`]); the
+//! rules also run on that drawing as a cloud job runs them (`run_audit`). Without a Python (`KENTOS_TEST_PYTHON` or
+//! `.run/py`) the tests say so and pass.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -112,13 +112,23 @@ fn findings(python: &str, rule: &str, facts: Value) -> Vec<Finding> {
     findings_of(&done).expect("its findings").0
 }
 
+fn rooms(a: &mut Value) -> &mut Vec<Value> {
+    a["rooms"].as_array_mut().unwrap()
+}
+
 /// A room's facts by its number.
 fn room<'a>(a: &'a mut Value, number: &str) -> &'a mut Value {
-    a["rooms"]
-        .as_array_mut()
-        .unwrap()
+    rooms(a)
         .iter_mut()
         .find(|r| r["number"] == number)
+        .expect("the room")
+}
+
+/// A room's facts by its name and storey (the common rooms have no number).
+fn named<'a>(a: &'a mut Value, name: &str, level: &str) -> &'a mut Value {
+    rooms(a)
+        .iter_mut()
+        .find(|r| r["name"] == name && r["level"] == level)
         .expect("the room")
 }
 
@@ -132,7 +142,7 @@ fn door<'a>(a: &'a mut Value, unit: &str) -> &'a mut Value {
         .expect("the door")
 }
 
-/// The persistent id of a room by its number, or of a unit's door, in the unedited facts.
+/// The persistent id of a room or a door, in the unedited facts.
 fn uid(of: impl FnOnce(&mut Value) -> &mut Value) -> String {
     let mut project = facts(|_| {});
     of(&mut project["project"]["architecture"])["uid"]
@@ -152,12 +162,30 @@ fn five_storeys(a: &mut Value) {
     }
 }
 
+/// The facts as a KentOS before the room's kind and narrow side, the sprinklers and the door into the stair gave them.
+fn older_kentos(a: &mut Value) {
+    for r in rooms(a) {
+        let r = r.as_object_mut().unwrap();
+        r.remove("kind");
+        r.remove("narrow");
+    }
+    for d in a["doors"].as_array_mut().unwrap() {
+        d.as_object_mut().unwrap().remove("intoStair");
+    }
+    a.as_object_mut().unwrap().remove("sprinklers");
+}
+
 /// The findings' severities and objects.
 fn said(found: &[Finding]) -> Vec<(Severity, Option<&str>)> {
     found
         .iter()
         .map(|f| (f.severity, f.feature_id.as_deref()))
         .collect()
+}
+
+/// Whether the one finding's words hold every one of `words`.
+fn says(found: &Finding, words: &[&str]) -> bool {
+    words.iter().all(|w| found.message.contains(w))
 }
 
 macro_rules! need_python {
@@ -172,19 +200,23 @@ macro_rules! need_python {
     };
 }
 
-/// The cloud job's way: the drawing as the server writes it and the package beside the request; each of the four rules
-/// gives its report, of this package's release, and the synthetic building complies with all of them.
+mod bykhy;
+mod paiy;
+
+/// The cloud job's way: the drawing as the server writes it and the package beside the request; each rule gives its
+/// report, of this package's release. The synthetic building has living rooms and bedrooms only: its two flats lack a
+/// bathroom and a toilet (errors) and may have a kitchen niche (cannot decide); every other rule finds nothing.
 #[test]
-fn the_four_rules_run_on_the_drawing_as_a_cloud_job_runs_them() {
+fn the_rules_run_on_the_drawing_as_a_cloud_job_runs_them() {
     let python = need_python!();
     let p = package();
-    assert_eq!(p.manifest.entrypoints.audits.len(), 4);
     let dir = std::env::temp_dir().join(format!("kentos-mevzuat-job-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let drawing = std::fs::read(root().join("fixtures/audit-facts/v1/mimari.kcad")).unwrap();
     std::fs::write(dir.join("snapshot.kcad"), drawing).unwrap();
     std::fs::write(dir.join(PACKAGE), &p.bytes).unwrap();
+    let mut ran = Vec::new();
     for entry in &p.manifest.entrypoints.audits {
         let run = AuditRun {
             extension: p.manifest.id.clone(),
@@ -200,166 +232,25 @@ fn the_four_rules_run_on_the_drawing_as_a_cloud_job_runs_them() {
             (report.rule.rule.as_str(), report.rule.digest.as_str()),
             (entry.id.as_str(), p.digest.as_str())
         );
-        assert!(
-            report.findings.is_empty(),
-            "{}: {:?}",
-            entry.id,
-            report.findings
-        );
+        let severities: Vec<Severity> = report.findings.iter().map(|f| f.severity).collect();
+        let expected: &[Severity] = if entry.id == "piyesler" {
+            use Severity::{Error, Info};
+            &[Info, Error, Error, Info, Error, Error]
+        } else {
+            &[]
+        };
+        assert_eq!(severities, expected, "{}: {:?}", entry.id, report.findings);
+        ran.push(entry.id.clone());
     }
+    assert_eq!(
+        ran,
+        [
+            "piyesler",
+            "koridor",
+            "daire-ici",
+            "daire-kapisi",
+            "cikis-erisimi"
+        ]
+    );
     let _ = std::fs::remove_dir_all(&dir);
-}
-
-/// PAİY 29/1: a dwelling unit without a room of 12.0 m² net cannot have its living room, whichever room it is; the
-/// largest room is the finding's object.
-#[test]
-fn a_dwelling_without_a_room_of_twelve_square_metres_has_no_living_room() {
-    let python = need_python!();
-    assert!(findings(&python, "oturma-odasi", facts(|_| {})).is_empty());
-    let small = facts(|a| {
-        room(a, "Z02")["net"] = json!(11.5);
-        room(a, "Z03")["net"] = json!(10.0);
-    });
-    let found = findings(&python, "oturma-odasi", small);
-    let salon = uid(|a| room(a, "Z02"));
-    assert_eq!(said(&found), [(Severity::Error, Some(salon.as_str()))]);
-    assert!(
-        found[0].message.contains("PAİY md. 29/1"),
-        "{}",
-        found[0].message
-    );
-    assert!(
-        found[0].message.contains("11.50 m²"),
-        "{}",
-        found[0].message
-    );
-}
-
-/// BYKHY 48/2: inside a dwelling the door is 20 m away at most, 30 m with a sprinkler system; a building of four
-/// storeys or fewer is spared (48/1); a room that cannot reach its unit's door is an error.
-#[test]
-fn inside_a_dwelling_its_door_is_twenty_metres_away_at_most() {
-    let python = need_python!();
-    let rule = "daire-ici";
-    let far = |length: f64| {
-        facts(move |a| {
-            five_storeys(a);
-            room(a, "K03")["escape"]["entrance"]["length"] = json!(length);
-        })
-    };
-    assert!(
-        findings(
-            &python,
-            rule,
-            facts(|a| room(a, "K03")["escape"]["entrance"]["length"] = json!(24.0))
-        )
-        .is_empty(),
-        "two storeys: 48/1 asks no distance"
-    );
-    assert!(findings(&python, rule, facts(five_storeys)).is_empty());
-    let bedroom = uid(|a| room(a, "K03"));
-    let warned = findings(&python, rule, far(24.0));
-    assert_eq!(said(&warned), [(Severity::Warning, Some(bedroom.as_str()))]);
-    assert!(
-        warned[0].message.contains("BYKHY md. 48/2"),
-        "{}",
-        warned[0].message
-    );
-    assert!(warned[0].message.contains("yağmurlama sistemi yoksa"));
-    let refused = findings(&python, rule, far(31.0));
-    assert_eq!(said(&refused), [(Severity::Error, Some(bedroom.as_str()))]);
-    let cut_off = facts(|a| {
-        five_storeys(a);
-        room(a, "K03")["escape"]["entrance"] = Value::Null;
-    });
-    let found = findings(&python, rule, cut_off);
-    assert_eq!(said(&found), [(Severity::Error, Some(bedroom.as_str()))]);
-    assert!(
-        found[0].message.contains("yürüyüş yolu yok"),
-        "{}",
-        found[0].message
-    );
-}
-
-/// BYKHY 48/4, 32/3, Ek-5/B: from a dwelling's door the nearest storey exit as the apartments' row: one way 15 m
-/// (30 m with a sprinkler system), two ways 30 m (75 m).
-#[test]
-fn from_a_dwelling_s_door_the_exit_is_as_ek_5b_says_for_apartments() {
-    let python = need_python!();
-    let rule = "daire-kapisi";
-    assert!(findings(&python, rule, facts(five_storeys)).is_empty());
-    let one_exit = |length: f64| {
-        facts(move |a| {
-            five_storeys(a);
-            let walk = &mut door(a, "d2")["exit"];
-            walk["length"] = json!(length);
-            walk["oneWay"] = json!(length);
-        })
-    };
-    let entrance = uid(|a| door(a, "d2"));
-    let warned = findings(&python, rule, one_exit(18.0));
-    assert_eq!(
-        said(&warned),
-        [(Severity::Warning, Some(entrance.as_str()))]
-    );
-    assert!(
-        warned[0].message.contains("tek yönde 18.00 m"),
-        "{}",
-        warned[0].message
-    );
-    assert!(warned[0].message.contains("BYKHY md. 32/3, 48/4 ve Ek-5/B"));
-    let refused = findings(&python, rule, one_exit(32.0));
-    assert_eq!(said(&refused), [(Severity::Error, Some(entrance.as_str()))]);
-    // Two exits: a short shared part, a long whole walk.
-    let two_ways = facts(|a| {
-        five_storeys(a);
-        let walk = &mut door(a, "d1")["exit"];
-        walk["length"] = json!(40.0);
-        walk["oneWay"] = json!(5.0);
-    });
-    let found = findings(&python, rule, two_ways);
-    let first = uid(|a| door(a, "d1"));
-    assert_eq!(said(&found), [(Severity::Warning, Some(first.as_str()))]);
-    assert!(
-        found[0].message.contains("iki yönde 40.00 m"),
-        "{}",
-        found[0].message
-    );
-}
-
-/// BYKHY 31/3 and 33/6-b: every storey with rooms has a storey exit; every room reaches one through its own unit's
-/// rooms and the common ones.
-#[test]
-fn every_storey_has_an_exit_and_every_room_reaches_one() {
-    let python = need_python!();
-    let rule = "cikis-erisimi";
-    assert!(findings(&python, rule, facts(|_| {})).is_empty());
-    let archive = uid(|a| room(a, "K04"));
-    let cut_off = facts(|a| room(a, "K04")["escape"]["exit"] = Value::Null);
-    let found = findings(&python, rule, cut_off);
-    assert_eq!(said(&found), [(Severity::Error, Some(archive.as_str()))]);
-    assert!(
-        found[0].message.contains("BYKHY md. 33/6-b"),
-        "{}",
-        found[0].message
-    );
-    let no_exit = facts(|a| {
-        for e in a["exits"].as_array_mut().unwrap() {
-            if e["level"] == "k1" {
-                e["count"] = json!(0);
-            }
-        }
-    });
-    let found = findings(&python, rule, no_exit);
-    assert_eq!(
-        said(&found),
-        [(Severity::Error, None)],
-        "one for the storey"
-    );
-    assert!(
-        found[0].message.starts_with("1. kat: katta kat çıkışı yok"),
-        "{}",
-        found[0].message
-    );
-    assert!(found[0].message.contains("BYKHY md. 31/3"));
 }

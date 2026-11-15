@@ -1038,6 +1038,12 @@ binanın yağmurlama sistemi (`sprinklers`, projenin ayarı) ve merdiven mahalin
 sürüm 1'in isteğe bağlı alanları, eski olgular varsayılanlarla okunur. Ajanın SDK paketi sınırda kaldı: stub'dan iç
 belge göndermeleri ve bakımcı notu çıktı, sınır yükseltilmedi. Kalan: bağımsız bölümün Ek-5/B kullanım sınıfı (modelde
 yok).
+**Ulusal kuralların ikinci dilimi** (ADR 8057 §54, 16 Kasım): `tr.kentos.mevzuat` 0.2.0 §53'ün olgularıyla karar
+verir: konut piyesleri PAİY 29/1'in tablosuna (alan ve dar kenar), eksik piyes 29/2, 29/4 ve 5/25'in istisnalarıyla
+(istisna nişe ya da donanıma bağlıysa "karar verilemedi"), hol ve koridor 1.20 m (29/3); 48/2 ve Ek-5/B'nin sınırı
+projenin yağmurlama ayarının (ayarsız proje yağmurlamasız, eski olgularda iki eşik); merdivene açılan konut kapısı
+uygun, çıkışa ulaşmayan kapı her binada hata (48/3, 33/6-b). Kalan: konut olmayan bölümlerin kullanım sınıfı ve Ek-5/B
+uzaklıkları, çıkmaz koridor, 48/2'nin dubleks cümleleri, kurp/görüş hesapları, belediye plan notları.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

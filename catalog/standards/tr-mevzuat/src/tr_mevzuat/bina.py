@@ -1,4 +1,5 @@
-"""Kuralların ortak okuduğu: binanın katları ve konutları (BYKHY 48/1'in muafiyeti), adların ve ölçülerin yazımı."""
+"""Kuralların ortak okuduğu: binanın katları ve konutları (BYKHY 48/1'in muafiyeti), olguların hangi KentOS'tan geldiği,
+yağmurlama ayarı, adların ve ölçülerin yazımı."""
 
 from __future__ import annotations
 
@@ -42,6 +43,34 @@ def kat_adlari(a: ext.ArchitectureFacts) -> dict[str | None, str]:
 def konutlar(a: ext.ArchitectureFacts) -> dict[str, ext.UnitFacts]:
     """Konut olan bağımsız bölümler, kimlikleriyle (olguların ``dwelling``'i; eklenti ve ortak alan değil)."""
     return {u.id: u for u in a.units if u.kind == "unit" and u.dwelling}
+
+
+def yeni_olgular(a: ext.ArchitectureFacts) -> bool:
+    """Olgular mahalin türünü, dar kenarını, yağmurlama ayarını ve merdivene açılan kapıyı veren bir KentOS'tan mı
+    (ADR 8057 §53): o KentOS sınırı bulunan her mahalin dar kenarını yazar. Eskisinin olgularında bu alanlar boş ya da
+    ``False`` okunur; projenin yağmurlama ayarı ve kapının merdivene açıldığı o zaman bilinmez."""
+    return any(r.narrow is not None for r in a.rooms)
+
+
+@dataclass(frozen=True)
+class Yagmurlama:
+    """BYKHY 48/2'nin ve Ek-5/B'nin hangi sütunu okunur: projenin ayarı biliniyorsa onunki (``sutun`` 0: yağmurlama
+    sistemi yok, 1: var), bilinmiyorsa ikisi de (``sutun`` None: yağmurlamasız sınırı aşan uyarı, iki sınırı da aşan
+    hata); ``soz`` bulgunun söylediği."""
+
+    sutun: int | None
+    soz: str
+
+
+def yagmurlama(a: ext.ArchitectureFacts) -> Yagmurlama:
+    """Projenin yağmurlama ayarı (KCAD 226). Ayar verilmemiş proje yağmurlama sistemsiz sayılır: ayarın varsayılanı
+    budur, KentOS Mimari'nin yangın denetimi de böyle okur ve olgular ayarı yalnız işaretliyse ``True`` yazar. Olgular
+    ayarı vermeyen eski bir KentOS'tansa ayar bilinmez."""
+    if not yeni_olgular(a):
+        return Yagmurlama(None, "olgularda projenin yağmurlama ayarı yok (eski KentOS)")
+    if a.sprinklers:
+        return Yagmurlama(1, "projenin ayarına göre binada yağmurlama sistemi var")
+    return Yagmurlama(0, "projenin ayarında yağmurlama sistemi işaretli değil")
 
 
 @dataclass(frozen=True)

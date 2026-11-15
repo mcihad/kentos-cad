@@ -2,12 +2,15 @@
 
 Olgular kaçış yürüyüşlerini yönetmeliğin ölçtüğü gibi verir: mahalin en uzak noktası duvarlardan 40 cm önde (32/6),
 en yakın kat çıkışına yürüyüş (4/u, 32/4), başka çıkışa giden yolla ortak kalan tek yön payı (4/kk) ve ulaşılan
-çıkış sayısı; konutun mahalinden konut kapısına (48/2) ve konut kapısından en yakın kat çıkışına (48/4) yürüyüş.
+çıkış sayısı; konutun mahalinden konut kapısına (48/2) ve konut kapısından en yakın kat çıkışına (48/4) yürüyüş; konut
+kapısının kaçış merdiveni mahaline açılıp açılmadığı; projenin yağmurlama ayarı.
 
 - Madde 48/1 (değişik 2009/15316 BKK): “Bodrum katlar dâhil 4 katı geçmeyen konutlar ile tek evler, ikiz evler ve
   sıra evler gibi konutlarda … kaçışlar, kaçış mesafesi aranmaksızın normal merdivenlerle sağlanabilir.”
 - Madde 48/2: “Birinci fıkrada belirtilenler dışındaki konutlarda, konut içindeki herhangi bir noktadan konut çıkış
   kapısına kadar olan uzaklığın 20 m’yi, yağmurlama sistemi olan konutlarda 30 m’yi geçmemesi gerekir.”
+- Madde 48/3: “Konut birimlerinden bütün çıkışların, kaçış merdivenlerine veya güvenli bir açık alana doğrudan erişim
+  imkânı sağlayacak şekilde olması gerekir.”
 - Madde 48/4: “Kaçış uzaklığı, apartman dairelerinin kapısından başlanarak ölçülür.” Madde 32/3: “Kaçış uzaklığı,
   kullanım sınıfına göre Ek-5/B’de belirtilen değerlerden daha büyük olamaz.” Ek-5/B (değişik 2009/15316 ve
   2015/7401 BKK), Apartmanlar: tek yön en çok 15 m (yağmurlama sistemi yok) ve 30 m (yağmurlama sistemli); iki yön
@@ -17,16 +20,17 @@ en yakın kat çıkışına yürüyüş (4/u, 32/4), başka çıkışa giden yol
   odalardan veya mekânlardan geçmek zorunda kalınmaksızın, bir çıkışa veya çıkışlara doğrudan erişim sağlanması
   gerekir.”
 
-Olgular binada yağmurlama sistemi olup olmadığını söylemez: yalnız yağmurlama sistemi olmayan binanın sınırını aşan
-ölçü uyarıdır, iki sınırı da aşan hatadır. Konut olmayan bölümün Ek-5/B'deki kullanım sınıfı da olgularda yok
-(niteliği tapudaki serbest yazıdır): o bölümlerin kaçış uzaklığına bu sürümde karar verilmez.
+Yağmurlama: sınır projenin ayarınındır (``bina.yagmurlama``); ayarı işaretli olmayan proje yağmurlama sistemsiz
+okunur. Olgular ayarı vermeyen eski bir KentOS'tansa iki sınır da söylenir: yağmurlamasız sınırı aşan uyarı, ikisini
+de aşan hata. Konut olmayan bölümün Ek-5/B'deki kullanım sınıfı olgularda yok: o bölümlerin kaçış uzaklığına karar
+verilmez.
 """
 
 from __future__ import annotations
 
 from kentos import ext
 
-from .bina import PAY, bina, bolum, kat_adlari, konutlar, mahal, metre
+from .bina import PAY, Yagmurlama, bina, bolum, kat_adlari, konutlar, mahal, metre, yagmurlama, yeni_olgular
 
 #: BYKHY 48/2: konutun içinde konut çıkış kapısına en çok uzaklık, m: yağmurlama sistemi yok, var.
 DAIRE_ICI = (20.0, 30.0)
@@ -36,20 +40,35 @@ IKI_YON = (30.0, 75.0)
 
 MADDE_DAIRE_ICI = "BYKHY md. 48/2 (2009/15316 sayılı BKK ile değişik)"
 MADDE_DAIRE_KAPISI = "BYKHY md. 32/3, 48/4 ve Ek-5/B (apartmanlar)"
+MADDE_KAPI_CIKISSIZ = "BYKHY md. 48/3 ve 33/6-b"
 MADDE_KAT_CIKISI = "BYKHY md. 31/3"
 MADDE_ERISIM = "BYKHY md. 33/6-b"
 
 
+def _karar(measure: float, limits: tuple[float, float], y: Yagmurlama) -> tuple[str, float, str] | None:
+    """Bir ölçünün iki sütunlu sınıra göre kararı: önemi, aştığı sınır ve söz; aşmıyorsa yok. Ayar biliniyorsa yalnız
+    onun sınırı (aşarsa hata); bilinmiyorsa yağmurlamasız sınırı aşan uyarı, yağmurlamalıyı da aşan hata."""
+    if y.sutun is not None:
+        limit = limits[y.sutun]
+        return ("error", limit, f"{y.soz}, sınır {metre(limit)}") if measure > limit + PAY else None
+    if measure > limits[1] + PAY:
+        return ("error", limits[1], f"{y.soz}; yağmurlama sistemi olsa da sınır ({metre(limits[1])}) aşılıyor")
+    if measure > limits[0] + PAY:
+        return ("warning", limits[0], f"{y.soz}; binada yağmurlama sistemi yoksa sınır ({metre(limits[0])}) aşılıyor")
+    return None
+
+
 @ext.audit("daire-ici")
 def daire_ici(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
-    """Konutun her katında, mahallerin en uzak noktasından konut kapısına en uzun yürüyüş 20 m'yi aşarsa uyarı
-    (yağmurlama sistemi yoksa sınır aşılıyor), 30 m'yi de aşarsa hata. Konutun o katta kapısı olduğu hâlde kapıya yol
-    bulunmayan mahal hata. Bodrum dahil 4 katı geçmeyen konut binasında ve tek evde (48/1) bir şey söylenmez."""
+    """Konutun her katında, mahallerin en uzak noktasından konut kapısına en uzun yürüyüş projenin yağmurlama ayarının
+    sınırını (20 m, yağmurlama sistemiyle 30 m) aşarsa hata. Konutun o katta kapısı olduğu hâlde kapıya yol bulunmayan
+    mahal hata. Bodrum dahil 4 katı geçmeyen konut binasında ve tek evde (48/1) bir şey söylenmez."""
     a = facts.project.architecture
     if bina(a).kacis_mesafesi_aranmaz:
         return []
     dwellings = konutlar(a)
     levels = kat_adlari(a)
+    wet = yagmurlama(a)
     findings: list[ext.AuditFinding] = []
     farthest: dict[tuple[str, str | None], tuple[float, ext.RoomFacts]] = {}
     for room in a.rooms:
@@ -62,8 +81,8 @@ def daire_ici(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
                     ext.AuditFinding(
                         message=(
                             f"{mahal(room)} ({levels.get(room.level, room.level)}): konutun kapısına mahalden "
-                            f"yürüyüş yolu yok; konut içindeki her noktadan konut çıkış kapısına uzaklık "
-                            f"{metre(DAIRE_ICI[0])}'yi geçemez — {MADDE_DAIRE_ICI}."
+                            f"yürüyüş yolu yok; konut içindeki her noktadan konut çıkış kapısına uzaklık ölçülür ve "
+                            f"sınırlıdır — {MADDE_DAIRE_ICI}."
                         ),
                         severity="error",
                         feature_id=room.uid,
@@ -74,78 +93,96 @@ def daire_ici(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
         if key not in farthest or entrance.length > farthest[key][0]:
             farthest[key] = (entrance.length, room)
     for (unit_id, level), (length, room) in farthest.items():
-        if length <= DAIRE_ICI[0] + PAY:
+        decided = _karar(length, DAIRE_ICI, wet)
+        if decided is None:
             continue
-        wet = length > DAIRE_ICI[1] + PAY
-        where = f"{bolum(dwellings[unit_id])}, {levels.get(level, level)}"
-        rule = (
-            f"konut içindeki herhangi bir noktadan konut çıkış kapısına uzaklık {metre(DAIRE_ICI[0])}'yi, yağmurlama "
-            f"sistemi olan konutlarda {metre(DAIRE_ICI[1])}'yi geçemez"
-        )
-        verdict = (
-            "yağmurlama sistemi olsa da sınır aşılıyor"
-            if wet
-            else "binada yağmurlama sistemi yoksa sınır aşılıyor"
-        )
+        severity, _, verdict = decided
         findings.append(
             ext.AuditFinding(
                 message=(
-                    f"{where}: {mahal(room)} mahalinin en uzak noktasından konutun kapısına {metre(length)}; {rule}; "
-                    f"{verdict} — {MADDE_DAIRE_ICI}."
+                    f"{bolum(dwellings[unit_id])}, {levels.get(level, level)}: {mahal(room)} mahalinin en uzak "
+                    f"noktasından konutun kapısına {metre(length)}; konut içindeki herhangi bir noktadan konut çıkış "
+                    f"kapısına uzaklık {metre(DAIRE_ICI[0])}'yi, yağmurlama sistemi olan konutlarda "
+                    f"{metre(DAIRE_ICI[1])}'yi geçemez; {verdict} — {MADDE_DAIRE_ICI}."
                 ),
-                severity="error" if wet else "warning",
+                severity=severity,
                 feature_id=room.uid,
             )
         )
     return findings
 
 
-def _olcu(walk: ext.EscapeWalk, column: int) -> tuple[str, float, float]:
-    """Ek-5/B'nin bir sütununa göre yürüyüşün ölçülen yanı, ölçüsü ve sınırı: tek çıkışta bütün yol tek yöndür; iki
-    çıkışta önce yolun tek yönlü kısmı tek yön sınırına, o aşılmıyorsa bütün yol iki yön sınırına."""
-    one, two = TEK_YON[column], IKI_YON[column]
+def _olcu(walk: ext.EscapeWalk, column: int) -> tuple[str, float, tuple[float, float]]:
+    """Ek-5/B'nin bir sütununa göre yürüyüşün ölçülen yanı, ölçüsü ve iki sütunlu sınırı: tek çıkışta bütün yol tek
+    yöndür; iki çıkışta önce yolun tek yönlü kısmı tek yön sınırına, o aşılmıyorsa bütün yol iki yön sınırına."""
     if (walk.exits or 0) <= 1:
-        return ("tek yönde", walk.length, one)
+        return ("tek yönde", walk.length, TEK_YON)
     one_way = walk.one_way or 0.0
-    if one_way > one + PAY:
-        return ("yolun tek yönlü kısmı", one_way, one)
-    return ("iki yönde", walk.length, two)
+    if one_way > TEK_YON[column] + PAY:
+        return ("yolun tek yönlü kısmı", one_way, TEK_YON)
+    return ("iki yönde", walk.length, IKI_YON)
 
 
 @ext.audit("daire-kapisi")
 def daire_kapisi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
-    """Her konut kapısından en yakın kat çıkışına yürüyüş Ek-5/B'nin apartmanlar satırına göre: yalnız yağmurlama
-    sistemi olmayan binanın sınırını aşarsa uyarı, yağmurlama sistemli binanınkini de aşarsa hata. Kaçış merdiveni
-    mahaline açılan ya da hiçbir çıkışa ulaşmayan kapının yürüyüşü olgularda yok; ona karar verilmez. Bodrum dahil 4
-    katı geçmeyen konut binasında ve tek evde (48/1) bir şey söylenmez."""
+    """Her konut kapısından en yakın kat çıkışına (BYKHY 48/3, 48/4): kaçış merdiveni mahaline açılan kapı kat
+    çıkışındadır, uygundur; hiçbir kat çıkışına ulaşmayan kapı hata (48/3, 33/6-b; her binada). Yürüyüş Ek-5/B'nin
+    apartmanlar satırına göre, projenin yağmurlama ayarının sütunuyla: aşarsa hata. Bodrum dahil 4 katı geçmeyen konut
+    binasında ve tek evde (48/1) uzaklık söylenmez. Olgular eski bir KentOS'tansa kapının merdivene açıldığı bilinmez:
+    yürüyüşü olmayan kapıya karar verilmez."""
     a = facts.project.architecture
-    if bina(a).kacis_mesafesi_aranmaz:
-        return []
+    spared = bina(a).kacis_mesafesi_aranmaz
     dwellings = konutlar(a)
     levels = kat_adlari(a)
+    wet = yagmurlama(a)
     findings: list[ext.AuditFinding] = []
     for door in a.doors:
-        walk = door.exit
         unit = dwellings.get(door.unit)
-        if walk is None or unit is None:
+        if unit is None:
             continue
-        dry = _olcu(walk, 0)
-        wet = _olcu(walk, 1)
-        if wet[1] > wet[2] + PAY:
-            (words, measure, limit), severity = wet, "error"
-            verdict = f"yağmurlama sistemi olsa da sınır ({metre(limit)}) aşılıyor"
-        elif dry[1] > dry[2] + PAY:
-            (words, measure, limit), severity = dry, "warning"
-            verdict = f"binada yağmurlama sistemi yoksa sınır ({metre(limit)}) aşılıyor"
+        where = f"{bolum(unit)}, {levels.get(door.level, door.level)}"
+        walk = door.exit
+        if walk is None:
+            if door.into_stair or not yeni_olgular(a):
+                continue
+            findings.append(
+                ext.AuditFinding(
+                    message=(
+                        f"{where}: kapısından hiçbir kat çıkışına ulaşılmıyor ve kapı kaçış merdiveni mahaline de "
+                        f"açılmıyor; konut birimlerinden bütün çıkışlar kaçış merdivenlerine veya güvenli bir açık "
+                        f"alana doğrudan erişim sağlar — {MADDE_KAPI_CIKISSIZ}."
+                    ),
+                    severity="error",
+                    feature_id=door.uid,
+                )
+            )
+            continue
+        if spared:
+            continue
+        if wet.sutun is not None:
+            words, measure, limits = _olcu(walk, wet.sutun)
+            limit = limits[wet.sutun]
+            if measure <= limit + PAY:
+                continue
+            severity, verdict = "error", f"{wet.soz}, sınır {metre(limit)}"
         else:
-            continue
+            # Ayar bilinmiyor: her sütun kendi yargısıyla (tek yönlü kısım yağmurlamalı sütunda iki yöne düşebilir).
+            sprinkled, dry = _olcu(walk, 1), _olcu(walk, 0)
+            if sprinkled[1] > sprinkled[2][1] + PAY:
+                (words, measure, limits), severity = sprinkled, "error"
+                verdict = f"{wet.soz}; yağmurlama sistemi olsa da sınır ({metre(limits[1])}) aşılıyor"
+            elif dry[1] > dry[2][0] + PAY:
+                (words, measure, limits), severity = dry, "warning"
+                verdict = f"{wet.soz}; binada yağmurlama sistemi yoksa sınır ({metre(limits[0])}) aşılıyor"
+            else:
+                continue
         findings.append(
             ext.AuditFinding(
                 message=(
-                    f"{bolum(unit)}, {levels.get(door.level, door.level)}: kapısından en yakın kat çıkışına "
-                    f"{words} {metre(measure)}; apartmanlarda kaçış uzaklığı kapıdan ölçülür, tek yönde en çok "
-                    f"{metre(TEK_YON[0])} (yağmurlama sistemiyle {metre(TEK_YON[1])}), iki yönde "
-                    f"{metre(IKI_YON[0])} ({metre(IKI_YON[1])}); {verdict} — {MADDE_DAIRE_KAPISI}."
+                    f"{where}: kapısından en yakın kat çıkışına {words} {metre(measure)}; apartmanlarda kaçış uzaklığı "
+                    f"kapıdan ölçülür, tek yönde en çok {metre(TEK_YON[0])} (yağmurlama sistemiyle "
+                    f"{metre(TEK_YON[1])}), iki yönde {metre(IKI_YON[0])} ({metre(IKI_YON[1])}); {verdict} — "
+                    f"{MADDE_DAIRE_KAPISI}."
                 ),
                 severity=severity,
                 feature_id=door.uid,
