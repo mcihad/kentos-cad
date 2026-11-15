@@ -2134,7 +2134,10 @@ isteği verir. Kalan: form alan maskesi ve satır ACL'si AI bağlamında (gizli 
   (`ctx.params["layer"]`); grubun menüsü katman vermez. Bekleyen hedef çalıştırmanın başlatılmasında alınır
   (`target_params`, harita aracının şekli gibi), başlamayan çalıştırmayla gider: sonra şeritten çalışan aynı komut onu
   almaz. Bekçi: `a_layer_menus_command_gets_the_layer_it_was_run_on` (sürece giden çağrının parametreleri). Vitrin
-  1.0.27: katmanın menüsünde "Değerlerini say", Değer say'ı o katman seçili açar (`ctx.open_panel` + `set`).
+  1.0.27: katmanın menüsünde "Değerlerini say", Değer say'ı o katman seçili açar (`ctx.open_panel` + `set`). Gerçek
+  pencerede (`33-katman-menusu`): etkin katman Taslak iken Parsel sınırı'nın menüsünde eklentinin iki öğesi (Katman
+  özeti, Değerlerini say); tıklanınca Değer say "Kadastro › Parsel sınırı" seçili açıldı (etkin katman değil, tıklanan),
+  altında kodun satırı; Alan › ada ile sayım "En sık değer: “101” (3 nesne)."
 - **Vitrin 1.0.26:** "Yapıları numarala" şeritten çalışınca bitince Yapı ara panelini açar: Yapı no önekle dolar,
   numaralananlar tabloda (Ara'nın satır biçimiyle: tıklanan satır yapıyı gösterir), altında özet (`32-panel-ac`).
   Gerçek pencerede: B- ve 10 ile Numarala → Eklenti sekmesi Asistan'ın yanında açıldı, Yapı no "B-", altında "5 yapı
