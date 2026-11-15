@@ -2390,6 +2390,71 @@ masaüstü `panel_sections.rs` (`drawn`, `section_of`, `reveal`), `panels.rs` (`
   masaüstü 1 (katlıyken gösterilir ama çizilmez, zorunlu alan sorulur ve bölümünü açar, gizli bölüm topladıklarını
   gizler, kullanıcı katlar); Python cephesi `ui.section(label, id=…, collapsed=…)`.
 
+## §39. Mimari olgular: katlar, mahaller, PAİY alanları ve kaçış yolları (`ADIM 20`, olguların ikinci dilimi)
+
+**15 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/audit_facts/architecture.rs` (`ArchitectureFacts`,
+`Storey`, `StoreyExits`, `RoomFacts`, `RoomEscape`, `EscapeWalk`, `UnitFacts`, `GroupKind`, `UnitLevel`,
+`DoorEscape`; `ProjectAuditFacts::with_architecture`), İşlemler
+`crates/native/processing/src/audit_facts/architecture.rs` (`measure`), `python/kentos/ext.py`
+(`ProjectAuditFacts.architecture` ve sınıfları); örnek bina
+`fixtures/audit-facts/v1/mimari.kcad` (KentOS'un komutlarıyla `scripts/fixtures/audit_facts_mimari.py` çizer) ve
+olguları `mimari.json`.
+
+- **Karar: sürüm 1'in isteğe bağlı bölümü, sürüm 2 değil.** §36 yazılı: okuyucu bilmediği alanı yok sayar, yeni olgu
+  aynı sürümde gelir, anlam değişirse sürüm değişir. Burada anlam değişmedi, olgu eklendi: `architecture` bölümü mahali
+  olan çizimde yazılır, olmayanda hiç yazılmaz. Bu yüzden §36'nın `denetim.json`'u baytı baytına aynı kaldı (sınaması
+  değişmeden geçiyor) ve sürüm 1 okuyucusu (masaüstü, eski Python) bölümü görmeden çalışır.
+- **Ne var:**
+  - `levels`: projenin katları (kimlik, ad, kot, yükseklik), alttan üste; `exits`: mahali olan her katın kat çıkışı
+    sayısı (BYKHY 4/u: kaçış merdiveninin mahali, açık merdivenin ayağı ya da başı, ±0.00 ve altındaki katta dışarı
+    açılan kapı).
+  - `rooms`: her mahal (boşluk ve dış mahal da): kalıcı kimlik, numara, ad, kullanım, kat, grup; `void`, `outdoor`
+    (kullanımının programdaki tarifi dış mahal), `broken` (sınırı tohumundan bulunamadı), `stair` (kaçış merdiveni
+    mahali); `net` (duvarların iç yüzleri arası, PAİY 4/ğ-3'ün ölçtüğü), `axis` (duvar eksenlerine göre çevre: Ek-5/A
+    kişi yükünün çoğu kullanımda okuduğu); `escape`: en uzak noktasından (duvarlardan 40 cm, 32/6) en yakın kat
+    çıkışına yürüyüş (uzunluk, başka çıkışa giden yolla ortak kalan tek yön payı, ulaşılan çıkış sayısı, kırılma
+    noktaları; 32/4, 4/i), konut bölümünün mahalinde daire kapısına yürüyüş (48/2), katında çıkışa ulaşıp ulaşmadığı
+    (33/6-b), kapı ve eşiksiz geçit sayısı (39/2).
+  - `units`: programın mahali olan grupları PAİY 4/ğ alanlarıyla (BB brüt, net, eklentilerin brüt ve neti, toplam
+    brüt, ortak alan payı, genel brüt, kat kat brüt ve net), türü, numarası, niteliği, eklentinin bölümü, konut olup
+    olmadığı.
+  - `doors`: her konut bağımsız bölümünün kapısından en yakın kat çıkışına yürüyüş (48/4).
+- **Brüt alan mahal başına verilmez:** BB brüt alanı bölümün dış çevresidir, başka bölümle paylaşılan duvar ekseninden
+  kesilir (4/ğ-1); mahal başına brüt paylaşılan duvarı iki kez sayardı. Mahal başına net ve eksen alanı, grup ve kat
+  başına brüt ve net. Hesaplar KentOS Mimari'nin (`Document::paiy_areas`, `kentos_domain::escape`): metrekare cetveli
+  ve Mimari denetim'in yangın kuralları neyi ölçüyorsa kural da onu okur.
+- **Aynı baytlar her sırada:** kaçış yolları eşit yürüyüşlerden birini, PAİY toplamları da toplananları çizimin
+  sırasıyla seçiyor. Ölçüldü: nesnelerin sırası ters çevrilince bir daire kapısının yolu aynı uzunlukta ama yinelenen
+  bir noktayla çıktı. Ölçü bu yüzden nesneleri kalıcı kimlik sırasına dizilmiş bir kopyada okur (yalnız mahali olan
+  çizimde); aynı nesneler ters ve karışık sırada aynı baytları verir (sınaması kopya kaldırılınca kırılıyor).
+- **Sıra ve yuvarlama:** katlar kota, sonra kimliğe göre; kat çıkışları ve grubun katları o sırayla (katsız mahaller
+  önce, projenin adlandırmadığı kat sonda); mahaller ve kapılar kalıcı kimliğe göre; gruplar programın sırasıyla;
+  yürüyüşün noktaları yüründüğü gibi. Alan 0,0001 m², uzunluk, yer, kot ve yükseklik 1 mm. Liste başına en çok 10 000
+  mahal ya da kapı; aşınca olgular `cut` der.
+- **Yalnız mimarisi olan çizimde:** mahal yoksa bölüm yok; Python'da `facts.project.architecture` boş olgular verir
+  (katlar, mahaller, gruplar, kapılar boş; `exits(kat)` 0). Bölümün ölçüsü bir planda kırılırsa bölüm yazılmaz,
+  katmanların olguları kalır.
+- **Maliyet (ölçüldü):** orta boy plan (`audit_facts_mimari.py --mid`: 8 kat, 152 mahal, 192 duvar, 144 kapı, 7
+  merdiven; olgular 77,6 KB) release derlemede 76 ms (bütün olgular 78 ms), debug derlemede 482 ms; mahal başına
+  yaklaşık 0,5 ms. **Karar: alana bağlanmadı**, mahali olan her çizimde ölçülür: kuralın süreci ve Python'u bundan
+  uzun sürüyor, ölçü masaüstünde arka planda ve okuma kopyasında. Durdur adımlar arasında sorulur (mahaller, PAİY
+  alanları, kaçış yolları); bir adımın içi durmaz. Binlerce mahalli bir planda (1 000 mahalde yarım saniye civarı
+  beklenir, ölçülmedi) yalnız `domain: "mimari"` denetimlerde ölçmek bir bayrakla eklenir.
+- **Python cephesi:** `facts.project.architecture` → `ext.ArchitectureFacts` (`levels`, `rooms`, `units`, `doors`;
+  `exits(kat)`, `room(uid)`, `unit(kimlik_ya_da_numara)`); öğeler değiştirilemez veri sınıfları (`Storey`,
+  `RoomFacts`, `RoomEscape`, `EscapeWalk`, `UnitFacts`, `UnitLevel`, `DoorEscape`). Stub, rehber ve `factsSchema`
+  güncellendi. Örnek: yalnız olgularla yazılmış bir BYKHY 32/4 ve 4/i kuralı (konut olmayan mahalde tek yön payı 15
+  m'yi aşarsa) örnek binada Mimari denetim'in yangın kurallarının bulduğu ikisini bulur: Arşiv 22,52 m, 1. katın
+  koridoru 21,82 m çıkmaz.
+- **Gösterim önerisi (Vitrin değil, mimari tarafta):** örnek bina gerçek pencerede açılır; bir mimari denetim
+  eklentisinin iki kuralı şeritten çalışır: tek yön payı (yukarıdaki kural) ve PAİY metrekare cetveli raporu
+  (`units`: her bölümün brüt, net, toplam ve genel brüt alanı). Göster bulgunun mahalini seçer; sonuçlar Mimari
+  denetim'in kendi bulgularıyla yan yana karşılaştırılır.
+- **Sınamalar:** paylaşılan 4 (yuvarlama ve sıra, katların sırası; sınır ve `cut`; bölümsüz olguların baytları ve
+  geri okuma; şema), İşlemler 5 (örnek binanın katları, mahalleri, grupları ve yürüyüşleri; örneğin baytları; her
+  sırada aynı baytlar; mahalsiz çizimde bölüm yok; Durdur), Python 6 (katlar ve çıkışlar, mahaller, gruplar, kapılar,
+  olgularla yazılan kural, mahalsiz çizimde boş bölüm).
+
 ## §40. Görsel: `image` (`ADIM 22`, bileşen envanteri, görsel önizleme)
 
 **15 Kasım.** Kod: `ui_panel.rs` (`Component::Image`, Kapı 1), masaüstü `panel_image.rs` (`decode`, `panel_image`),
@@ -2411,3 +2476,4 @@ masaüstü `panel_sections.rs` (`drawn`, `section_of`, `reveal`), `panels.rs` (`
 - **Sınamalar:** paylaşılan 1 (alanlar, `alt` ve `height` sınırı yerinde), masaüstü 2 (PNG çizilir; başka biçim,
   base64 olmayan metin, sınırı aşan başlık çözülmeden ve bozuk PNG reddedilir; kod görseli verir, yanlışı öncekini
   bırakır, `None` kaldırır, başka bileşen almaz), Python 1 (bayt ve dosya base64 gider, `None` temizler).
+

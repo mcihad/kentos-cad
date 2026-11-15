@@ -58,9 +58,12 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, TypeVar, overload
 
 __all__ = [
+    "ArchitectureFacts",
     "AuditFinding",
     "CommandContext",
     "CommandResult",
+    "DoorEscape",
+    "EscapeWalk",
     "Feature",
     "FeatureInput",
     "Gap",
@@ -74,9 +77,14 @@ __all__ = [
     "PanelSession",
     "ProcessingContext",
     "ProjectAuditFacts",
+    "RoomEscape",
+    "RoomFacts",
     "SemanticFix",
     "Shape",
     "Stopped",
+    "Storey",
+    "UnitFacts",
+    "UnitLevel",
     "audit",
     "command",
     "expr",
@@ -944,7 +952,7 @@ class ProjectAuditFacts:
     a cloud job. Areas in m² to 4 decimals, lengths and places in metres to 3; a place is ``(x, y)`` in the project's
     plane, as the features' GeoJSON gives it."""
 
-    __slots__ = ("tolerance", "cut", "_layers")
+    __slots__ = ("tolerance", "cut", "_layers", "architecture")
 
     def __init__(self, raw: dict[str, Any]) -> None:
         #: The project's topology tolerance (m): areas nearer than it touch, a piece no wider is no overlap or gap.
@@ -952,6 +960,8 @@ class ProjectAuditFacts:
         #: KentOS measured only the first objects of a very large drawing (by persistent id): a rule may say so.
         self.cut: bool = bool(raw.get("cut"))
         self._layers = [LayerFacts(layer) for layer in raw.get("layers") or [] if isinstance(layer, dict)]
+        #: The drawing's storeys, rooms, program groups and escape routes (docs/adr/8057 §39); empty without rooms.
+        self.architecture: ArchitectureFacts = ArchitectureFacts(raw.get("architecture") or {})
 
     def layers(self) -> list[LayerFacts]:
         """The layers holding objects, in the layer tree's order."""
@@ -1041,6 +1051,182 @@ class Gap:
     area: float
     at: tuple[float, float]
     around: tuple[str, ...]
+
+
+class ArchitectureFacts:
+    """The drawing's architecture as KentOS Mimari measured it (docs/adr/8057 §39): its storeys, every room with its
+    net area and its outline to the walls' axes, the program's groups with PAİY 4/ğ's areas and the escape routes
+    (BYKHY); empty when the drawing has no room. PAİY is Planlı Alanlar İmar Yönetmeliği, BYKHY Binaların Yangından
+    Korunması Hakkında Yönetmelik; areas in m² to 4 decimals, lengths in metres to 3."""
+
+    __slots__ = ("levels", "rooms", "units", "doors", "_exits")
+
+    def __init__(self, raw: dict[str, Any]) -> None:
+        #: The project's storeys, lowest first.
+        self.levels: list[Storey] = [
+            Storey(str(s.get("id", "")), str(s.get("name", "")), float(s.get("elevation") or 0.0),
+                   _maybe_float(s.get("height")))
+            for s in raw.get("levels") or []
+        ]
+        #: Every room, a void and an outdoor one too, by persistent id.
+        self.rooms: list[RoomFacts] = [_room(r) for r in raw.get("rooms") or []]
+        #: The program's groups that have rooms, in the program's order.
+        self.units: list[UnitFacts] = [_unit(u) for u in raw.get("units") or []]
+        #: Each dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4).
+        self.doors: list[DoorEscape] = [
+            DoorEscape(str(d.get("uid", "")), str(d.get("unit", "")), _maybe_str(d.get("level")),
+                       _place(d.get("at")), _walk(d.get("exit")))
+            for d in raw.get("doors") or []
+        ]
+        self._exits = {_maybe_str(e.get("level")): int(e.get("count") or 0) for e in raw.get("exits") or []}
+
+    def exits(self, level: str | None) -> int:
+        """How many storey exits a storey has (BYKHY 4/u: an escape stair's room, an open stair, a door out on the
+        ground storey), by its id; 0 for a storey without rooms."""
+        return self._exits.get(level, 0)
+
+    def room(self, uid: str) -> RoomFacts | None:
+        """A room by its persistent id; none when the drawing has no such room."""
+        return next((r for r in self.rooms if r.uid == uid), None)
+
+    def unit(self, unit: str) -> UnitFacts | None:
+        """A program group by its id or its number; none when no group with rooms has it."""
+        return next((u for u in self.units if unit in (u.id, u.number)), None)
+
+
+def _maybe_str(v: Any) -> str | None:
+    return None if v is None else str(v)
+
+
+def _maybe_float(v: Any) -> float | None:
+    return None if v is None else float(v)
+
+
+def _walk(raw: Any) -> EscapeWalk | None:
+    if not isinstance(raw, dict):
+        return None
+    exits = raw.get("exits")
+    return EscapeWalk(float(raw.get("length") or 0.0), tuple(_place(p) for p in raw.get("path") or []),
+                      _maybe_float(raw.get("oneWay")), None if exits is None else int(exits))
+
+
+def _room(raw: dict[str, Any]) -> RoomFacts:
+    e = raw.get("escape")
+    escape = None if not isinstance(e, dict) else RoomEscape(
+        _walk(e.get("exit")), bool(e.get("storeyExits")), _walk(e.get("entrance")), bool(e.get("hasEntrance")),
+        int(e.get("passages") or 0))
+    text = {k: _maybe_str(raw.get(k)) for k in ("number", "name", "usage", "level", "unit")}
+    return RoomFacts(str(raw.get("uid", "")), *text.values(), bool(raw.get("void")), bool(raw.get("outdoor")),
+                     bool(raw.get("broken")), bool(raw.get("stair")), float(raw.get("net") or 0.0),
+                     float(raw.get("axis") or 0.0), escape)
+
+
+def _unit(raw: dict[str, Any]) -> UnitFacts:
+    area = {k: float(raw.get(k) or 0.0) for k in ("gross", "net", "annexGross", "annexNet", "total")}
+    return UnitFacts(
+        str(raw.get("id", "")), str(raw.get("number", "")), _maybe_str(raw.get("name")), str(raw.get("kind", "")),
+        _maybe_str(raw.get("nature")), _maybe_str(raw.get("annexOf")), bool(raw.get("dwelling")), *area.values(),
+        _maybe_float(raw.get("share")), _maybe_float(raw.get("general")),
+        tuple(UnitLevel(_maybe_str(x.get("level")), float(x.get("gross") or 0.0), float(x.get("net") or 0.0))
+              for x in raw.get("levels") or []))
+
+
+@dataclass(frozen=True)
+class Storey:
+    """A storey of the project: its id, its name, its floor's elevation (m) and its height (m; None when not given)."""
+
+    id: str
+    name: str
+    elevation: float
+    height: float | None
+
+
+@dataclass(frozen=True)
+class EscapeWalk:
+    """A walk along the points it turns at, its length in metres; a walk to an exit also says the part it shares with
+    the walk to the nearest other exit (``one_way``, tek yön: a dead end's) and how many exits its start reaches."""
+
+    length: float
+    path: tuple[tuple[float, float], ...]
+    one_way: float | None = None
+    exits: int | None = None
+
+
+@dataclass(frozen=True)
+class RoomEscape:
+    """A room's walks from its farthest point, 40 cm in front of its walls (BYKHY 32/6): to the nearest storey exit
+    (32/4; None when it reaches none) and, a dwelling unit's room, to its unit's door (48/2)."""
+
+    exit: EscapeWalk | None
+    storey_exits: bool
+    entrance: EscapeWalk | None
+    has_entrance: bool
+    passages: int
+
+
+@dataclass(frozen=True)
+class RoomFacts:
+    """A room: its persistent id, number, name, usage, storey and group; whether it is a void, outdoor, broken (its
+    boundary not found) or an escape stair's room; its net area and its outline to the walls' axes (m²); its walks
+    (None for a void, an outdoor, a broken or a stair's room)."""
+
+    uid: str
+    number: str | None
+    name: str | None
+    usage: str | None
+    level: str | None
+    unit: str | None
+    void: bool
+    outdoor: bool
+    broken: bool
+    stair: bool
+    net: float
+    axis: float
+    escape: RoomEscape | None
+
+
+@dataclass(frozen=True)
+class UnitLevel:
+    """A group's gross and net area on one storey (m²)."""
+
+    level: str | None
+    gross: float
+    net: float
+
+
+@dataclass(frozen=True)
+class UnitFacts:
+    """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross``
+    (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None
+    without a share)."""
+
+    id: str
+    number: str
+    name: str | None
+    kind: str
+    nature: str | None
+    annex_of: str | None
+    dwelling: bool
+    gross: float
+    net: float
+    annex_gross: float
+    annex_net: float
+    total: float
+    share: float | None
+    general: float | None
+    levels: tuple[UnitLevel, ...]
+
+
+@dataclass(frozen=True)
+class DoorEscape:
+    """A dwelling unit's door: its persistent id, unit, storey and middle, and its walk from its outer side to the
+    nearest storey exit (BYKHY 48/4; None when it opens into an escape stair's room)."""
+
+    uid: str
+    unit: str
+    level: str | None
+    at: tuple[float, float]
+    exit: EscapeWalk | None
 
 
 @dataclass

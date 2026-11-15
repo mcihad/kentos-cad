@@ -14,12 +14,19 @@
 //!   zero, divided back. −0 is written 0, a value that is not a finite number 0. The tolerance is the project's own.
 //! - **Bounds:** a list holds at most [`MOST_ITEMS`] items, the first in its order; `totals` counts them all.
 //!
+//! The drawing's architecture (storeys, rooms, the program's article 4 areas, the escape routes) is an optional section
+//! of the same version, [`architecture`] (docs/adr/8057 §39): absent when the drawing has no room.
+//!
 //! Pure, as the crate: the producer (`kentos_processing::audit_facts`) measures with the geometry core; this module
 //! holds the shape, its rules and its JSON Schema (`sdk/kentos-audit-facts.schema.json`, the SDK's `factsSchema`).
 
 use std::cmp::Ordering;
 
 use serde::{Deserialize, Serialize};
+
+pub mod architecture;
+
+pub use architecture::ArchitectureFacts;
 
 /// The facts' format name.
 pub const FORMAT: &str = "kentos.auditFacts";
@@ -49,7 +56,12 @@ pub struct ProjectAuditFacts {
     pub tolerance: f64,
     /// The layers holding objects, in the layer tree's order.
     pub layers: Vec<LayerFacts>,
-    /// Whether objects were left out: past the producer's limit, those after it by persistent id.
+    /// The drawing's architecture: storeys, rooms, the program's groups, the escape routes. Absent when the drawing has
+    /// no room (or the producer was not asked for it).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub architecture: Option<ArchitectureFacts>,
+    /// Whether objects were left out: past the producer's limit, those after it by persistent id (a room or a door
+    /// past a list's bound too).
     pub cut: bool,
 }
 
@@ -197,8 +209,18 @@ impl ProjectAuditFacts {
             schema_version: VERSION,
             tolerance: finite(tolerance),
             layers: layers.into_iter().map(LayerFacts::normalized).collect(),
+            architecture: None,
             cut,
         }
+    }
+
+    /// These facts with the drawing's architecture, in its section's order, rounding and bounds; a list it cuts makes
+    /// the facts `cut`.
+    pub fn with_architecture(mut self, architecture: ArchitectureFacts) -> ProjectAuditFacts {
+        let (architecture, cut) = architecture.normalized();
+        self.architecture = Some(architecture);
+        self.cut |= cut;
+        self
     }
 
     /// The facts as JSON text, the bytes every computer gives for the same drawing.

@@ -1,5 +1,144 @@
 {
   "$defs": {
+    "ArchitectureFacts": {
+      "description": "The drawing's architecture.",
+      "properties": {
+        "doors": {
+          "description": "Each dwelling unit's door: the walk from its outer side to the nearest storey exit (BYKHY 48/4).",
+          "items": {
+            "$ref": "#/$defs/DoorEscape"
+          },
+          "type": "array"
+        },
+        "exits": {
+          "description": "Each storey holding rooms and how many storey exits it has (BYKHY 4/u): an escape stair's room, an open\nstair's foot or head, a door to the outside on a storey at or below ±0.00.",
+          "items": {
+            "$ref": "#/$defs/StoreyExits"
+          },
+          "type": "array"
+        },
+        "levels": {
+          "description": "The project's storeys, lowest first.",
+          "items": {
+            "$ref": "#/$defs/Storey"
+          },
+          "type": "array"
+        },
+        "rooms": {
+          "description": "Every room (space), a void and an outdoor one too.",
+          "items": {
+            "$ref": "#/$defs/RoomFacts"
+          },
+          "type": "array"
+        },
+        "units": {
+          "description": "The building program's groups that have rooms, with article 4's areas, in the program's order.",
+          "items": {
+            "$ref": "#/$defs/UnitFacts"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "levels",
+        "exits",
+        "rooms",
+        "units",
+        "doors"
+      ],
+      "type": "object"
+    },
+    "DoorEscape": {
+      "description": "A dwelling unit's door and its walk to the nearest storey exit.",
+      "properties": {
+        "at": {
+          "description": "The door's middle.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "exit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EscapeWalk"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "From its outer side; none when it opens into an escape stair's room or reaches no exit."
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "description": "The door's persistent id.",
+          "type": "string"
+        },
+        "unit": {
+          "description": "Its unit's id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "unit",
+        "at"
+      ],
+      "type": "object"
+    },
+    "EscapeWalk": {
+      "description": "A walk, along the points it turns at.",
+      "properties": {
+        "exits": {
+          "description": "A walk to an exit: how many exits its start reaches. None for a walk to a unit's door.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "length": {
+          "description": "Its length, m.",
+          "format": "double",
+          "type": "number"
+        },
+        "oneWay": {
+          "description": "A walk to an exit: the part it shares with the walk to the nearest other exit, m (tek yön; a dead end's); all\nof it with one exit. None for a walk to a unit's door.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Its points, from its start to its end.",
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "length",
+        "path"
+      ],
+      "type": "object"
+    },
     "Gap": {
       "description": "A gap the layer's areas close in.",
       "properties": {
@@ -32,6 +171,31 @@
         "around"
       ],
       "type": "object"
+    },
+    "GroupKind": {
+      "description": "What a program group is.",
+      "oneOf": [
+        {
+          "const": "unit",
+          "description": "Bağımsız bölüm: a flat, a shop, an office.",
+          "type": "string"
+        },
+        {
+          "const": "common",
+          "description": "Ortak alan: a shared corridor, the stairs, a shaft.",
+          "type": "string"
+        },
+        {
+          "const": "outdoor",
+          "description": "Dış alan: a garden, a car park.",
+          "type": "string"
+        },
+        {
+          "const": "annex",
+          "description": "Eklenti: a place allocated to an independent unit (its `annexOf`).",
+          "type": "string"
+        }
+      ]
     },
     "InvalidGeometry": {
       "description": "An object whose shape is not valid.",
@@ -196,6 +360,193 @@
       ],
       "type": "object"
     },
+    "RoomEscape": {
+      "description": "A room's walks, from its farthest point: 40 cm in front of its walls (BYKHY 32/6).",
+      "properties": {
+        "entrance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EscapeWalk"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A dwelling unit's room: to its unit's door, through its own rooms (48/2); none for another room."
+        },
+        "exit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EscapeWalk"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "To the nearest storey exit (BYKHY 32/4); none when it reaches none."
+        },
+        "hasEntrance": {
+          "description": "Whether its unit has a door on its storey (a dwelling unit's room only).",
+          "type": "boolean"
+        },
+        "passages": {
+          "description": "Its doors and gaps without a sill: its exits for BYKHY 39/2.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "storeyExits": {
+          "description": "Whether its storey has an exit it may walk to: through its own unit's rooms and the common ones (33/6-b).",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "storeyExits",
+        "hasEntrance",
+        "passages"
+      ],
+      "type": "object"
+    },
+    "RoomFacts": {
+      "description": "A room.",
+      "properties": {
+        "axis": {
+          "description": "Its outline to the walls' axes, m²: what most uses' person loads read (BYKHY Ek-5/A).",
+          "format": "double",
+          "type": "number"
+        },
+        "broken": {
+          "description": "Its boundary could not be found round its seed: its areas are its drawn rings', and it has no walks.",
+          "type": "boolean"
+        },
+        "escape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoomEscape"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its walks; none for a void, an outdoor or a broken room and an escape stair's room."
+        },
+        "level": {
+          "description": "Its storey's id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "net": {
+          "description": "Its net area, m²: between the walls' inner faces, as article 4 measures it.",
+          "format": "double",
+          "type": "number"
+        },
+        "number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "outdoor": {
+          "description": "Its usage's brief is an outdoor one (a balcony, a terrace).",
+          "type": "boolean"
+        },
+        "stair": {
+          "description": "An escape stair's room (named or used so, no dwelling unit's own): reaching it is reaching the storey's exit.",
+          "type": "boolean"
+        },
+        "uid": {
+          "description": "Its persistent id.",
+          "type": "string"
+        },
+        "unit": {
+          "description": "Its program group's id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "usage": {
+          "description": "Its usage, as the program's briefs name it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "void": {
+          "description": "A void: a shaft, a lift shaft, an opening in the floor.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "uid",
+        "void",
+        "outdoor",
+        "broken",
+        "stair",
+        "net",
+        "axis"
+      ],
+      "type": "object"
+    },
+    "Storey": {
+      "description": "A storey of the project.",
+      "properties": {
+        "elevation": {
+          "description": "Its floor's elevation, m.",
+          "format": "double",
+          "type": "number"
+        },
+        "height": {
+          "description": "Its height, m; none when the project gives none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "elevation"
+      ],
+      "type": "object"
+    },
+    "StoreyExits": {
+      "description": "A storey's exits counted.",
+      "properties": {
+        "count": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "level": {
+          "description": "The storey's id; none for the rooms on no storey.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "type": "object"
+    },
     "Totals": {
       "description": "How many of each a layer has in all.",
       "properties": {
@@ -219,6 +570,129 @@
         "invalid",
         "overlaps",
         "gaps"
+      ],
+      "type": "object"
+    },
+    "UnitFacts": {
+      "description": "A program group's article 4 areas (Planlı Alanlar İmar Yönetmeliği 4/ğ), m².",
+      "properties": {
+        "annexGross": {
+          "description": "Its annexes' gross and net areas summed (an independent unit's; 0 for another group).",
+          "format": "double",
+          "type": "number"
+        },
+        "annexNet": {
+          "format": "double",
+          "type": "number"
+        },
+        "annexOf": {
+          "description": "An annex's independent unit, by its id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dwelling": {
+          "description": "An independent unit that is a dwelling (BYKHY 48 reads its rooms).",
+          "type": "boolean"
+        },
+        "general": {
+          "description": "BB genel brüt alanı (4/ğ-2): its total and its part; none without a part.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "gross": {
+          "description": "BB brüt alanı (4/ğ-1): its rooms' outer contour, a wall it shares cut at its axis.",
+          "format": "double",
+          "type": "number"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/GroupKind"
+        },
+        "levels": {
+          "description": "Each storey's part of its gross and net.",
+          "items": {
+            "$ref": "#/$defs/UnitLevel"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nature": {
+          "description": "What the deed calls it (Daire, Dükkân, Büro, Depo).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "net": {
+          "description": "BB net alanı (4/ğ-3): its rooms' net areas, voids and outdoor rooms out.",
+          "format": "double",
+          "type": "number"
+        },
+        "number": {
+          "description": "Its number, as the project writes it.",
+          "type": "string"
+        },
+        "share": {
+          "description": "Its part of the common areas' gross, by the program's rule; none when the program shares nothing.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "BB toplam brüt alanı (4/ğ-4): its gross and its annexes'.",
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "number",
+        "kind",
+        "dwelling",
+        "gross",
+        "net",
+        "annexGross",
+        "annexNet",
+        "total",
+        "levels"
+      ],
+      "type": "object"
+    },
+    "UnitLevel": {
+      "description": "A group's areas on one storey, m².",
+      "properties": {
+        "gross": {
+          "format": "double",
+          "type": "number"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "net": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "gross",
+        "net"
       ],
       "type": "object"
     },
@@ -261,8 +735,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "A drawing's facts, as an audit rule reads them (`facts.project`).",
   "properties": {
+    "architecture": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArchitectureFacts"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The drawing's architecture: storeys, rooms, the program's groups, the escape routes. Absent when the drawing has\nno room (or the producer was not asked for it)."
+    },
     "cut": {
-      "description": "Whether objects were left out: past the producer's limit, those after it by persistent id.",
+      "description": "Whether objects were left out: past the producer's limit, those after it by persistent id (a room or a door\npast a list's bound too).",
       "type": "boolean"
     },
     "format": {

@@ -44,3 +44,8 @@ serde_json = { workspace = true }
 # The shared cases' file values (fixtures/processing/v1/queries.json) are read
 # as the dialog reads a chosen file: Tablo ekle's reader (docs/adr/0200 §7),
 # the formats core above.
+
+# The audit facts' architecture drawing is a .kcad v2 file (fixtures/audit-facts/v1/mimari.kcad), read as the other
+# architecture fixtures are.
+[dev-dependencies]
+kentos-kcad = { path = "../../shared/kcad" }

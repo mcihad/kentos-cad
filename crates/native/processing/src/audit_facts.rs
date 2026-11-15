@@ -12,8 +12,12 @@
 //!   left out and `cut` says so. The desktop and a cloud job pass the same [`MOST_OBJECTS`].
 //! - **Stoppable:** the check asks `stopped` as it goes (the audit's Durdur) and, stopped, gives nothing.
 //! - **No attribute is read:** the facts are shapes and counts, so a field the drawing hides is never in them.
+//! - **The architecture** where the drawing has rooms (`architecture`, docs/adr/8057 §39): its storeys, rooms,
+//!   article 4 areas and escape routes. A measure of it that breaks on some plan leaves the section out, never the
+//!   layers' facts.
 
 use std::collections::BTreeMap;
+use std::panic::AssertUnwindSafe;
 
 use kentos_commands::{Entity, LayerNode, TOPOLOGY_TOLERANCE};
 use kentos_domain::Document;
@@ -123,11 +127,12 @@ pub fn project_facts(
             _ => {}
         }
     }
-    Some(ProjectAuditFacts::new(
-        tolerance,
-        facts.into_iter().flatten().collect(),
-        cut,
-    ))
+    let facts = ProjectAuditFacts::new(tolerance, facts.into_iter().flatten().collect(), cut);
+    match std::panic::catch_unwind(AssertUnwindSafe(|| architecture::measure(doc, stopped))) {
+        Ok(Err(architecture::Stopped)) => None,
+        Ok(Ok(Some(found))) => Some(facts.with_architecture(found)),
+        Ok(Ok(None)) | Err(_) => Some(facts),
+    }
 }
 
 /// The rules each layer is measured with, and each rule's layer (its place among the leaves): Geçerli olmalı where it
@@ -184,6 +189,8 @@ impl Watch for Asked<'_> {
         (self.0)()
     }
 }
+
+mod architecture;
 
 #[cfg(test)]
 mod tests;

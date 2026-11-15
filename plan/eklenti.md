@@ -963,9 +963,12 @@ okuma kopyasında hesaplanır, Asistan çağrıyı iş bitince cevaplar, iş ba�
 katman başına geometriye göre sayıları, alan ve uzunluk toplamlarını, geçersiz geometrileri, alanların çakışmalarını
 ve boşlukları okur (projenin toleransıyla; `kentos.auditFacts` 1, SDK'nın `factsSchema`'sı). Sıra, yuvarlama ve sınır
 paylaşılan modülde yazılı: aynı nesneler her sırada aynı baytları verir (`fixtures/audit-facts/v1`); masaüstünde
-okuma kopyasında arka planda ölçülür. Kalan: mimari olgular (`paiy_areas`, `kentos_domain::escape`) ve kurp/görüş
-hesapları, ulusal/belediye kurallarının Python betikleri, bulut işi (`RunRequest::Audit`, aynı olguları aynı kodla) ve
-bulutla ortak köken.
+okuma kopyasında arka planda ölçülür. **Mimari olgular, ikinci dilim** (ADR 8057 §39, 15 Kasım): mahali olan çizimde
+aynı sürümün isteğe bağlı `architecture` bölümü (`facts.project.architecture`): katlar ve kat çıkışları, her mahalin
+net ve eksen alanı, programın gruplarının PAİY 4/ğ alanları (`paiy_areas`), kaçış yolları (`kentos_domain::escape`:
+kat çıkışına ve daire kapısına yürüyüş, tek yön payı); 152 mahalli planda 76 ms. Kalan: kurp/görüş hesapları,
+ulusal/belediye kurallarının Python betikleri, bulut işi (`RunRequest::Audit`, aynı olguları aynı kodla) ve bulutla
+ortak köken.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 
