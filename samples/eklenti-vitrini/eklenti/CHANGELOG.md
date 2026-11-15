@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.29 — 15 Kasım 2026
+
+- "Yapıları numarala"nın penceresi ve "Değer say"ın Seç seçenekleri `kentos.ui_panel`'in işlevleriyle yazılır
+  (`ui.text_field("onek", "Önek", value="Y-")`, `ui.choice("-", "Seçmeyin")`): panelin JSON şemasından üretilen
+  tipli işlevler; elle yazılan JSON'daki gibi bir anahtar yanlış yazılamaz. Davranış aynı.
+
 ## 1.0.28 — 15 Kasım 2026
 
 - "Parsel kartı"nda Kart tarihi ve Saat yalnız Bilgiler'de Tarih seçiliyken görünür (`visibleWhen:

@@ -28,6 +28,7 @@ import shapely
 from shapely.geometry import Polygon, shape
 
 from kentos import cad, ext
+from kentos import ui_panel as ui
 
 
 def _yapraklar(nodes):
@@ -65,9 +66,10 @@ def katman_ozeti(ctx: ext.CommandContext) -> ext.CommandResult:
 @ext.command("yapilari-numarala")
 def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
     """'yapi' katmanındaki yapılara sırayla "no" yazar (Y-01, Y-02 …). Şeritten çalışınca önce öneki ve ilk numarayı
-    sorar (ctx.dialog: KentOS'un penceresi; İptal'de bir şey yazılmaz), bitince "Yapı ara" panelini açıp numaralananları
-    listeler (ctx.open_panel); panelin düğmesinden çalışınca Y-01'den başlar. İlerleme çubuğunu ve Durdur'u göstermek
-    için her yapıda yarım saniye bekler: Durdur'a basılırsa yazdıkları geri alınır."""
+    sorar (ctx.dialog: KentOS'un penceresi, alanları kentos.ui_panel'in işlevleriyle; İptal'de bir şey yazılmaz),
+    bitince "Yapı ara" panelini açıp numaralananları listeler (ctx.open_panel); panelin düğmesinden çalışınca Y-01'den
+    başlar. İlerleme çubuğunu ve Durdur'u göstermek için her yapıda yarım saniye bekler: Durdur'a basılırsa yazdıkları
+    geri alınır."""
     yapi = _katman(ctx.doc, "yapi") if ctx.doc is not None else None
     if yapi is None:
         return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
@@ -77,10 +79,12 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
     if not ctx.params:
         cevap = ctx.dialog(
             "Yapıları numarala",
+            # Alanlar kentos.ui_panel'in işlevleriyle: her biri bileşenin JSON'unu yazar, anahtarları adıyla ve tipiyle
+            # (panelin JSON şemasından üretilir; yanlış yazılan bir anahtar Python'da TypeError olur).
             [
-                {"type": "text", "text": f"'yapi' katmanındaki {len(kayitlar)} yapıya sırayla numara yazılır."},
-                {"type": "textField", "id": "onek", "label": "Önek", "value": "Y-"},
-                {"type": "numberField", "id": "ilk", "label": "İlk numara", "value": 1, "min": 1, "required": True},
+                ui.text(f"'yapi' katmanındaki {len(kayitlar)} yapıya sırayla numara yazılır."),
+                ui.text_field("onek", "Önek", value="Y-"),
+                ui.number_field("ilk", "İlk numara", value=1, min=1, required=True),
             ],
             ok="Numarala",
         )
@@ -304,8 +308,7 @@ def deger_say(ctx: ext.CommandContext) -> ext.CommandResult:
         # Panelden çalıştı: bulunan değerler Seç kutusunun seçenekleri olur, çoktan aza ve sayılarıyla (docs/adr/8057
         # §32). Seçenekler veriden gelir: panelin JSON'u bunları bilemez. Kodun koyduğu değer onChange'i çalıştırmaz.
         sirali = sorted(sayilar, key=lambda d: (-sayilar[d], d))
-        secenekler = [{"value": "-", "label": "Seçmeyin"}]
-        secenekler += [{"value": d, "label": f"{d} ({sayilar[d]})"} for d in sirali]
+        secenekler = [ui.choice("-", "Seçmeyin")] + [ui.choice(d, f"{d} ({sayilar[d]})") for d in sirali]
         ctx.panel.set("vurgula", options=secenekler, value="-")
         if sirali:
             ctx.panel.set("en-sik", text=f"En sık değer: “{sirali[0]}” ({sayilar[sirali[0]]} nesne).")

@@ -2213,3 +2213,30 @@ anahtarlar), masaüstü `panels.rs` (`CompiledRules`, `shown`, `usable`, `asked`
 - **Sınamalar:** paylaşılan 3 (değerleri türleriyle okur; girdi olmayan ad, `@`, derlenmeyen ifade, köşeli parantez;
   Kapı 1'in yerleri), masaüstü 1 (onay kapalıyken alan gizli ve sorulmaz, açılınca görünür ve zorunlu, `2,5 > 0` ile düğme
   kullanılır, kodun kapatması kuralı geçer).
+
+## §34. Panel bileşenlerinin Python işlevleri: `kentos.ui_panel` (`ADIM 22`, PY-UI-02)
+
+**15 Kasım.** Kod: `crates/shared/extensions/src/ui_panel/python.rs` (`python_builders`), üretilen
+`python/kentos/ui_panel.py`, SDK bölümü `panelBuilders` (`sdk_pack.rs`).
+
+- **Karar: şemadan üretilir, elle yazılmaz.** Bileşen başına bir işlev (`text_field`, `number_field`, `select`,
+  `feature_picker`, `chart`, …), panelin JSON Schema'sından (§25, `json_schema`) üretilir: gerekli anahtarlar sırayla
+  konumsal, kalanı yalnız adıyla (`on_change`, `visible_when`), dönen değer bileşenin JSON'u. Verilmeyen anahtar
+  yazılmaz; evet/hayır anahtarı yalnız varsayılanından farklıysa yazılır (`multiple=False`, `required=True`).
+  Seçenekler yalnız değerle verilebilir (`["A", "B"]`), `choice(value, label)` bir seçenek, `panel(title, body)` bütün
+  panel. Türler şemadan: sayı `float`, seçenek listesi `Sequence[Choice | str]`, grafiğin türü ve toplamı `Literal`.
+  Şema değişince (yeni bileşen, anahtar, kural) modül yeniden üretilir; sınama ikisi ayrışınca kırılır
+  (`KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- python_builders`).
+- **Neden:** `ctx.dialog`'un alanları, `set(options=…)` ve Python'dan yazılan paneller elle JSON'du: yanlış yazılan bir
+  anahtar (`"requred"`) Kapı 1'e ya da çalıştırmaya kadar görünmüyordu. İşlevde yanlış anahtar Python'da `TypeError`;
+  editör ve ajan imzayı görür. Karar yine Kapı 1'in ve oturumun: düğmenin komutu, kimliklerin tekliği, kuralın
+  adları şemada söylenemez.
+- **Ajanlar:** SDK kılavuzunda bir paragraf (paket 48 KB'nin altında kalır); kaynağın tamamı ayrı bölüm
+  (`extension.sdk part=panelBuilders`, `kentos kek sdk --part panelBuilders`, 16 KB), her istekte şemadan üretilir.
+- **Vitrin 1.0.29:** "Yapıları numarala"nın penceresi (`ui.text`, `ui.text_field`, `ui.number_field`) ve "Değer
+  say"ın Seç seçenekleri (`ui.choice`) işlevlerle; davranış aynı. Gerçek pencerede: güncelleme "1.0.28 → 1.0.29
+  güncellendi", ortam yeni KentOS kitaplığıyla kuruldu; `29-pencere` aynı pencere (açıklama, Önek, zorunlu İlk numara),
+  B- ve 10 ile "5 yapı numaralandı (B-10 … B-14)."; `31-oturum` Seç "Seçmeyin / 101 (3) / 102 (1)".
+- **Sınamalar:** paylaşılan 1 (modül şemanınki; imzalar; satır en çok 120 karakter), Python 5 (yalnız verilen yazılır;
+  seçenekler yalnız değerle; yanlış anahtar `TypeError`; örnek panellerin her bileşeni işleviyle aynı yazılır;
+  parametreler bileşenin anahtarları, gerekliler konumsal).

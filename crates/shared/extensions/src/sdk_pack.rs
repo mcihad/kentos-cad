@@ -137,7 +137,11 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 `ctx.message(metin)`, `ctx.cancelled()`; kullanıcıya sormak için `ctx.dialog(başlık, alanlar, ok=…, cancel=…)` (alanlar
 bir panelin girdileri: textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, checkbox,
 layerPicker, fieldPicker, text; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
-bekler) ve `ctx.confirm(metin)` (evet: True); `ctx.params` ve `ctx.settings` sözlüklerdir. Bu KentOS'un yapamadığı bir şey
+bekler) ve `ctx.confirm(metin)` (evet: True). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
+as ui` ile yazın: bileşen başına bir işlev, gerekli anahtarlar sırayla, kalanı adıyla (`ui.text_field("onek", "Önek",
+value="Y-")`, `ui.number_field("ilk", "İlk numara", min=1, required=True)`, `ui.select("tur", "Tür", ["A", "B"])`,
+`ui.choice("-", "Seçmeyin")`, bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir, yanlış anahtar
+`TypeError`. `ctx.params` ve `ctx.settings` sözlüklerdir. Bu KentOS'un yapamadığı bir şey
 `ext.NotAvailable` atar: KentOS onu eklentinin hatası değil eksik bir yetenek olarak söyler.
 
 ## Kurallar
@@ -175,7 +179,7 @@ pub const LAYER_SCHEMA: &str = include_str!("../sdk/kentos-layer-schema.schema.j
 pub const TOOL_SCHEMA: &str = include_str!("../sdk/kentos-processing-tool.schema.json");
 
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 14] = [
+pub const PARTS: [&str; 15] = [
     "guide",
     "api",
     "capabilities",
@@ -187,6 +191,7 @@ pub const PARTS: [&str; 14] = [
     "example",
     "icons",
     "panelSchema",
+    "panelBuilders",
     "manifestSchema",
     "layerSchema",
     "toolSchema",
@@ -200,6 +205,11 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     }
     if part == "panelSchema" {
         return serde_json::from_str(PANEL_SCHEMA).ok();
+    }
+    // `kentos.ui_panel`'s source, made from the schema as the SDK's module is (16 KB, a part of its own).
+    #[cfg(feature = "schema")]
+    if part == "panelBuilders" {
+        return Some(Value::String(crate::ui_panel::python::python_builders()));
     }
     if part == "manifestSchema" {
         return serde_json::from_str(MANIFEST_SCHEMA).ok();
@@ -334,6 +344,11 @@ pub fn sdk_pack() -> Value {
             "how": "kentos.ui.panel 1'in JSON Schema'sı (bileşenler, anahtarları ve türleri): extension.sdk \
                     part=panelSchema ya da kentos kek sdk --part panelSchema. Kesin denetim yine extension.verify'da \
                     (düğmenin komutu, seçicinin katman seçicisi, kimliklerin tekliği şemada söylenemez).",
+        },
+        "panelBuilders": {
+            "how": "kentos.ui_panel'in kaynağı: panel bileşenlerinin Python işlevleri (ctx.dialog alanları, \
+                    set(options=…), ui.panel ile bütün panel), panelin şemasından üretilir: extension.sdk \
+                    part=panelBuilders ya da kentos kek sdk --part panelBuilders.",
         },
         "manifestSchema": {
             "how": "manifest.json'un (kentos.extension 1) JSON Schema'sı: anahtarlar, türleri, kapalı sözlükler (yetenekler, \
