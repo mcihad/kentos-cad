@@ -1205,6 +1205,31 @@ fn an_extensions_dialog_asks_the_user_and_answers_its_code() {
     );
     let _ = gis.extensions_event(Event::DialogAnswer(false));
     assert_eq!(reply(6)["result"], serde_json::Value::Null);
+    // Esc is İptal, even while an extension that writes runs (its keys were held then: real window).
+    say(
+        &mut gis,
+        json!({"type": "call", "id": 9, "method": "dialog", "params": {"title": "Soru",
+               "body": [{ "type": "text", "text": "Sürsün mü?" }]}}),
+    );
+    if let Some(run) = gis
+        .extensions
+        .runners
+        .get_mut(MEBIS)
+        .and_then(|r| r.run.as_mut())
+    {
+        run.write = true;
+    }
+    let _ = gis.update(crate::app::Message::Key(crate::keys::KeyPress {
+        key: iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape),
+        physical: iced::keyboard::key::Physical::Unidentified(
+            iced::keyboard::key::NativeCode::Unidentified,
+        ),
+        modifiers: iced::keyboard::Modifiers::default(),
+        text: None,
+        repeat: false,
+    }));
+    assert!(gis.extensions.dialog.is_none(), "Esc closed it");
+    assert_eq!(reply(9)["result"], serde_json::Value::Null);
     // A button in a dialog: the call's error at once, no window.
     say(
         &mut gis,

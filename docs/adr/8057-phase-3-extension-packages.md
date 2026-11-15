@@ -1991,7 +1991,12 @@ bileşen çizimi panel ve pencere için ortak), `shell/view.rs` (pencere katman�
   ("Eklenti Vitrini soruyor", Önek Y-, İlk numara 1, İptal/Numarala), B- ve 10 yazıldı, Numarala: "5 yapı numaralandı
   (B-10 … B-14)"; `03-komutlar` pencerede Numarala'ya basıp Durdur'la geri aldı (bildirim başlığı iki satıra kayınca
   Durdur 12 px yukarı çıkmıştı: koordinat ölçülüp düzeltildi).
+- **Klavye** (gerçek pencere, koyu tema, 16 px, 1100×650): Tab alandan alana geçmiyor, Esc pencereyi kapatmıyordu.
+  Neden: yazan bir eklenti çalışırken çizim korunuyor ve tuş iletileri sessizce tutuluyor; pencere de o çalışmanın
+  içinde açık. Pencere açıkken tuşlar artık ona gider: Tab ve Shift+Tab alanlarında döner (`kentos_ui::focus`, pencere
+  kapsam), Esc İptal, Enter Tamam (metin alanının Enter'ı kendisinin); arkadaki çizime bir tuş ulaşmaz. Ölçüm: C- ve
+  Tab, 20 ve Enter → "5 yapı numaralandı (C-20 … C-24)"; Esc → "Vazgeçildi: numara yazılmadı".
 - **Sınamalar:** Python 1 (sahte KentOS: pencerenin başlığı, düğmeleri, alanları; Tamam'ın değerleri, İptal'in `None`,
   onayın evet/hayırı), masaüstü 1 (girdisini dosyaya yazan sahte süreç: pencere açılır ve çizilir, yanlış sayı adıyla
-  söylenir, Tamam'ın değerleri ve İptal'in boşu sürece yazılır, düğmeli pencere hemen hata, Durdur pencereyi kapatıp
-  boş yanıt verir).
+  söylenir, Tamam'ın değerleri ve İptal'in boşu sürece yazılır, Esc yazan bir çalışma sürerken de İptal'dir, düğmeli
+  pencere hemen hata, Durdur pencereyi kapatıp boş yanıt verir).

@@ -726,6 +726,11 @@ impl App {
     /// While a run that may write goes the drawing takes no other edit; the first refusal is said once.
     pub(crate) fn while_extension_writes(&mut self, message: &Message) -> Option<Task<Message>> {
         let quiet = crate::python::held(message)?;
+        // Its dialog takes the keys (Tab round its fields, Esc its İptal): the run waits for the user there, and
+        // holding them left the window without Tab and Esc (real window, 15 November 2026; dialogs.rs).
+        if self.extensions.dialog.is_some() && matches!(message, Message::Key(_)) {
+            return None;
+        }
         let writer = self.extension_writing()?;
         let session = self.document.as_ref().map(|d| d.session);
         let run = self

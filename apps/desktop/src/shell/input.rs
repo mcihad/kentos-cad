@@ -779,6 +779,19 @@ impl App {
         if self.app_menu.is_some() {
             return self.app_menu_key(&press);
         }
+        // 1. An extension's dialog (extensions/dialogs.rs): Tab goes round its fields, Esc is İptal, Enter Tamam
+        // (a text field's Enter is its own); nothing reaches the drawing behind it.
+        if self.extensions.dialog.is_some() {
+            match press.named() {
+                Some(Named::Tab) if !press.modifiers.control() && !press.modifiers.alt() => {
+                    return kentos_ui::focus::next(press.modifiers.shift());
+                }
+                Some(Named::Escape) => self.ext_dialog_answer(false),
+                Some(Named::Enter) => self.ext_dialog_answer(true),
+                _ => {}
+            }
+            return Task::none();
+        }
         // 1. A dialog: Esc closes it; its own buttons do the rest.
         if self.dialog.is_some() {
             // Tabloyu düzenle's grid takes its keys, Esc too: the bar's words back first (tables/editor.rs).
