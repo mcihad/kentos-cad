@@ -1133,3 +1133,65 @@ fn finding_the_culprit_holds_extensions_off_without_changing_the_users_choices()
     }
     assert_eq!(r.start_bisection().unwrap_err().code, "bisect_nothing");
 }
+
+/// Kapı 3's part that runs no code (docs/adr/8057 §26): a package bound in a throwaway registry and taken away again:
+/// what it adds, what was left out and why, and nothing left behind; a dependency missing and a broken package said.
+#[test]
+fn a_dry_run_binds_a_package_and_leaves_nothing_behind() {
+    let run = dry_run(
+        &package("tr.ornek.kuru", "1.0.0", &[]),
+        host(),
+        Options::default(),
+    );
+    assert!(run.is_clean(), "{run:#?}");
+    assert_eq!(
+        run.registered
+            .iter()
+            .map(|r| r.id.as_str())
+            .collect::<Vec<_>>(),
+        ["ext.tr.ornek.kuru.altlik"]
+    );
+    let run = dry_run(
+        &package("tr.ornek.bagli", "1.0.0", &[("tr.ornek.yok", ">=1.0")]),
+        host(),
+        Options::default(),
+    );
+    assert!(
+        run.activation
+            .as_deref()
+            .is_some_and(|w| w.contains("tr.ornek.yok")),
+        "{run:#?}"
+    );
+    assert!(
+        run.registered.is_empty() && run.residue.is_empty(),
+        "{run:#?}"
+    );
+    let run = dry_run(b"bozuk", host(), Options::default());
+    assert!(!run.problems.is_empty() && !run.is_clean());
+}
+
+/// The demo extension (samples/eklenti-vitrini) binds whole: every contribution of it registered, none left out.
+#[test]
+fn the_demo_extension_binds_whole_in_a_dry_run() {
+    let root =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../samples/eklenti-vitrini/eklenti");
+    let files: BTreeMap<String, Vec<u8>> = store::read_files(&root)
+        .unwrap()
+        .into_iter()
+        .filter(|(p, _)| !p.contains("__pycache__"))
+        .collect();
+    let bytes = kentos_extensions::pack(&files, &Limits::default())
+        .unwrap_or_else(|p| panic!("{p:#?}"))
+        .bytes;
+    let run = dry_run(&bytes, host(), Options::default());
+    assert!(run.is_clean(), "{run:#?}");
+    let ids: Vec<&str> = run.registered.iter().map(|r| r.id.as_str()).collect();
+    for want in [
+        "ext.tr.ornek.vitrin.taks",
+        "ext.tr.ornek.vitrin.yapi-no",
+        "ext.tr.ornek.vitrin.yapi-yerlestir",
+        "ext.tr.ornek.vitrin.yapi-paneli",
+    ] {
+        assert!(ids.contains(&want), "{want}: {ids:?}");
+    }
+}

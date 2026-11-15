@@ -993,8 +993,10 @@ aynı kod. **İkinci dilim — `extension.blueprint` / `kek new`** (ADR 8057 §1
 yazılamıyordu), bilinmeyen ad en yakın önerilerle uyarıdır. **Atölye** (ADR 8057 §22): Asistan ve MCP ajanı eklentiyi
 `extension.workshop.write` ile kendi klasörüne yazar, `verify` ile doğrular, `workshop.review` paketleyip kullanıcının
 Gözden geçir ve kur penceresine açar (kurulum kullanıcının). **Canlı yükleme ve görünüş** (ADR 8057 §22, 15 Kasım):
-`extension.workshop.reload`, `.preview`. Kalan: Kapı 3 (sentetik çizimde kuru koşu), `kentos.ui`/`ProjectAuditFacts`/
-manifest şemaları.
+`extension.workshop.reload`, `.preview`. **Kapı 3'ün kod çalıştırmayan payı** (ADR 8057 §26): `kek verify` ve
+`extension.verify` paketi geçici kayıt defterinde bağlar, katkılarını, atlananları ve kaldırınca kalıntıyı söyler. Kalan:
+Kapı 3'ün kodu çalıştıran payı (kurulmuş atölye eklentisi, sentetik çizim), `kentos.ui`/`ProjectAuditFacts`/manifest
+şemaları.
 
 - [ ] **Kod üretimi:** Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
   `kentos.ui` bileşen şeması, `ProjectAuditFacts` şeması ve manifest/araç/panel JSON Schema'ları üretilir; üretilmiş

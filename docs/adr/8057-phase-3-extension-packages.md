@@ -1723,6 +1723,34 @@ alt panelin **Eklenti denetimi** sekmesi (`bottom.rs`, üç programda).
 - **Kalan (ADIM 22):** panel köprüsü tamamlandı; bileşen envanteri ve tanım/oturum maddeleri (PY-UI §8.1, PY-UI-01…18)
   ayrı maddeler.
 
+## §26. Kapı 3'ün kod çalıştırmayan payı: kuru bağlama (`ADIM 21`)
+
+**15 Kasım.** Kod: `crates/native/extension-host/src/dry_run.rs` (`dry_run`, `DryRun`), `apps/cli/src/main.rs`
+(`kek verify`), `crates/native/headless/src/agent_tools.rs` (`extension.verify`'ın `dryRun`'ı, `Host::dry_run`),
+masaüstü `assistant/host.rs`, MCP `tools.rs`.
+
+- **Karar: Kapı 3 ikiye ayrıldı.** Planın kuru koşusu (bağlama, şerit ve panelin kurulması, algoritmanın ve denetimin
+  örnek girdiyle sonucu, kaldırmada sıfır kalıntı) iki ayrı şeydir: **kod çalıştırmayan pay** kurulumdan önce
+  güvenlidir; **kodu çalıştıran pay** ise kullanıcının onayını (kurulum: "kurulmadan önce eklenti çalışmaz") ve
+  eklentinin Python ortamını ister. Eklentinin süreci kullanıcının hesabıyla çalışır: aracı KentOS'a erişimi sınırlar,
+  işletim sistemine erişimi sınırlamaz; incelenmemiş kodu kuruluma karar verilmeden çalıştırmak bu ilkeyi delerdi.
+  Çalıştıran pay kurulmuş atölye eklentisi için ayrı bir dilimdir.
+- **Kuru bağlama:** paket geçici klasördeki boş bir kayıt defterine, istediği her yetenek verilerek (Python katkıları
+  da: etkinleştirme süreç başlatmaz, D6) kurulur ve etkinleştirilir; eklediği katkılar (kimlik, tür, ad), atlananlar
+  nedenleriyle, kurulamadıysa sorunları, etkinleşmediyse nedeni toplanır; sonra verisiyle kaldırılır ve paket ya da
+  veri klasörü, kayıt defteri girdisi, kirasıyla kalan katkı ya da hazırlık klasöründe dosya kalırsa **kalıntı** sayılır.
+  Kullanıcının eklentilerine dokunulmaz; klasör koşudan sonra silinir. Masaüstünde kurum ilkesi ve KentOS'un İşlemler
+  araç denetimiyle, MCP'de ve komut satırında ilkeyle.
+- **Yüzeyler:** `kentos kek verify` doğrulanan klasörün paketini bağlar ("Kuru koşu: 18 katkı bağlandı (…). Kaldırınca
+  kalıntı yok."; `--json`'da `dryRun`), ajanın `extension.verify`'ı aynısını `dryRun` olarak verir (masaüstü ve MCP
+  host'u). Bağımlılığı olan pakette boş kayıt defteri bağımlılığı bulamaz: etkinleşmediği söylenir ve not düşülür
+  ("Kuru koşunun kayıt defteri boş: bağımlı olduğu eklentiler (tr.ornek.kent-temel) orada kurulu değil"; MEBİS).
+- **Sınamalar:** extension-host 2 (kaynaklı küçük paket temiz bağlanır, eksik bağımlılık söylenir ve kalıntı kalmaz,
+  bozuk paket sorunlarıyla; Vitrin bütün katkılarıyla, hiçbiri atlanmadan), başsız ajan aracı (doğrulanan klasörün paketi
+  host'a gider), Asistan (iskelet eklenti masaüstünün ilke ve araç denetimiyle temiz bağlanır, harita aracı kayıtlı).
+- **Kalan (Kapı 3'ün çalıştıran payı):** kullanıcının kurduğu atölye eklentisinin denetim kurallarını ve komutlarını
+  sentetik bir çizimin kopyasında çalıştırıp bulguları ve değişiklik kümesini ajana vermek.
+
 ## §25. Panel bileşenlerinin kapsamı: PY-UI §8.1'in envanteri (`ADIM 22`, bileşen envanteri, ilk dilim)
 
 **15 Kasım.** Planın bileşen listesi (PY-UI §8.1) madde madde: panelde var mı, KentOS'ta bileşeni olup panele

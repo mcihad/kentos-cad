@@ -67,6 +67,18 @@ impl Host for AppHost<'_> {
         }))
     }
 
+    /// Kapı 3's part that runs no code: bound with this app's policy and tool check, in a registry of its own.
+    fn dry_run(&self, package: &[u8]) -> Option<Value> {
+        Some(
+            kentos_extension_host::dry_run(
+                package,
+                crate::extensions::host(),
+                crate::extensions::registry_options(false),
+            )
+            .to_json(),
+        )
+    }
+
     fn reload_extension(&mut self, id: &str) -> Result<Value, HeadlessError> {
         self.0
             .ext_workshop_reload(id)

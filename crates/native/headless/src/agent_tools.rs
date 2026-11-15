@@ -72,6 +72,13 @@ pub trait Host {
         ))
     }
 
+    /// A package bound as this host binds it, in a throwaway registry, and taken away (plan ADIM 21's Kapı 3, the part
+    /// that runs no code): what it adds, what was left out and why, what stayed behind. None from a host without an
+    /// extension registry.
+    fn dry_run(&self, _package: &[u8]) -> Option<Value> {
+        None
+    }
+
     /// What the user sees of an installed extension (plan ADIM 21's `preview_render`): its ribbon tab, panels, tools
     /// and menus as the app lays them out, in words.
     fn preview_extension(&mut self, _id: &str) -> Result<Value, HeadlessError> {
@@ -1226,12 +1233,14 @@ fn extension_verify(host: &dyn Host, args: &Value) -> Result<Value, HeadlessErro
         let opened = kentos_extensions::open(&bytes, &limits);
         let i = opened.inspection;
         let problems = with_tool_problems(i.manifest.as_ref(), &opened.files, &i.problems);
+        let dry = problems.is_empty().then(|| host.dry_run(&bytes)).flatten();
         return Ok(json!({
             "valid": problems.is_empty(),
             "extension": i.manifest.as_ref().map(|m| json!({ "id": m.id, "version": m.version.to_string(), "name": m.name })),
             "digest": i.digest,
             "problems": problems,
             "warnings": i.warnings,
+            "dryRun": dry,
             "next": "Paketin kaynağını doğrulamak için klasörünü verin: Python işaretleri de denetlenir.",
         }));
     }
@@ -1239,12 +1248,18 @@ fn extension_verify(host: &dyn Host, args: &Value) -> Result<Value, HeadlessErro
     let v = kentos_extensions::verify(&files, &limits);
     let problems = with_tool_problems(v.manifest.as_ref(), &files, &v.problems);
     let valid = problems.is_empty();
+    // Kapı 3's part that runs no code: bound as the host binds it, in a registry of its own, and taken away.
+    let dry = valid
+        .then(|| kentos_extensions::pack(&files, &limits).ok())
+        .flatten()
+        .and_then(|packed| host.dry_run(&packed.bytes));
     Ok(json!({
         "valid": valid,
         "extension": v.manifest.as_ref().map(|m| json!({ "id": m.id, "version": m.version.to_string(), "name": m.name })),
         "digest": v.digest,
         "problems": problems,
         "warnings": v.warnings,
+        "dryRun": dry,
         "next": match (valid, args.get("id").is_some()) {
             (true, true) => "Doğrulandı: extension.workshop.review paketler ve kullanıcının incelemesine açar.",
             (true, false) => "Doğrulandı: `kentos kek pack` paketler; kurulum kullanıcının incelemesiyle olur.",

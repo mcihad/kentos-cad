@@ -551,6 +551,22 @@ fn the_assistants_workshop_opens_its_package_for_review() {
         &json!({ "id": id, "files": blueprint["files"] }),
     )
     .unwrap();
+    // Kapı 3's part that runs no code: bound with this app's policy and tool check in a registry of its own, nothing
+    // left behind, the user's registry untouched (docs/adr/8057 §26).
+    let verified = agent_tools::call(
+        &mut host,
+        &mut guard,
+        "extension.verify",
+        &json!({ "id": id }),
+    )
+    .unwrap();
+    assert_eq!(verified["dryRun"]["clean"], true, "{verified:#}");
+    assert!(
+        verified["dryRun"]["registered"]
+            .as_array()
+            .is_some_and(|r| r.iter().any(|c| c["kind"] == "mapTool")),
+        "{verified:#}"
+    );
     let review = agent_tools::call(
         &mut host,
         &mut guard,

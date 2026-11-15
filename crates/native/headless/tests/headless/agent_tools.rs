@@ -750,6 +750,10 @@ impl Host for WithWorkshop<'_> {
     fn preview_extension(&mut self, id: &str) -> Result<Value, HeadlessError> {
         Ok(json!({ "id": id, "ribbonTab": { "label": "Mezarlık" } }))
     }
+
+    fn dry_run(&self, package: &[u8]) -> Option<Value> {
+        Some(json!({ "clean": true, "bytes": package.len() }))
+    }
 }
 
 #[test]
@@ -836,6 +840,9 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
     )
     .unwrap();
     assert_eq!(verified["valid"], true, "{verified:#}");
+    // Kapı 3's part that runs no code: the host bound the folder's package (docs/adr/8057 §26).
+    assert_eq!(verified["dryRun"]["clean"], true, "{verified:#}");
+    assert!(verified["dryRun"]["bytes"].as_u64().unwrap() > 0);
     let listed = call(&mut host, &mut guard, "extension.workshop.read", json!({})).unwrap();
     assert_eq!(listed["extensions"][0]["id"], "tr.ornek.mezarlik");
     assert_eq!(listed["extensions"][0]["name"], "Mezarlık bilgi");

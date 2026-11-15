@@ -319,10 +319,34 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         .is_some_and(|m| !m.entrypoints.processing.is_empty());
     let note = "İşlemler araçlarının tanımları burada yalnız biçimiyle denetlendi; tam denetimi KentOS'un kurulum \
                 incelemesi ve ajanların extension.verify'ı yapar.";
+    // Kapı 3's part that runs no code (docs/adr/8057 §26): bound as KentOS binds it, in a registry of its own under the
+    // temporary folder, and taken away; the user's extensions are not touched.
+    let dry = v
+        .is_valid()
+        .then(|| pack(&files, &Limits::default()).ok())
+        .flatten()
+        .map(|packed| {
+            let host = kentos_extensions::Host::this(
+                kentos_extensions::version::Version::parse(env!("CARGO_PKG_VERSION"))
+                    .unwrap_or_else(|| kentos_extensions::version::Version::new(0, 1, 0)),
+            );
+            let options = kentos_extension_host::Options {
+                policy: kentos_extension_host::places::load_policy(
+                    &kentos_extension_host::places::policy_path(),
+                ),
+                ..kentos_extension_host::Options::default()
+            };
+            kentos_extension_host::dry_run(&packed.bytes, host, options)
+        });
     if json {
         let mut value = serde_json::to_value(&v).unwrap_or_default();
-        if tools && let Some(o) = value.as_object_mut() {
-            o.insert("note".to_owned(), serde_json::json!(note));
+        if let Some(o) = value.as_object_mut() {
+            if tools {
+                o.insert("note".to_owned(), serde_json::json!(note));
+            }
+            if let Some(dry) = &dry {
+                o.insert("dryRun".to_owned(), dry.to_json());
+            }
         }
         println!(
             "{}",
@@ -361,6 +385,9 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         } else {
             println!("Doğrulanmadı: {} sorun.", v.problems.len());
         }
+        if let Some(dry) = &dry {
+            print_dry_run(dry);
+        }
         if tools {
             println!("Not: {note}");
         }
@@ -369,6 +396,46 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(1)
+    }
+}
+
+/// The dry run in lines: what was bound, what was left out and why, what stayed behind.
+fn print_dry_run(dry: &kentos_extension_host::DryRun) {
+    if !dry.problems.is_empty() {
+        println!("Kuru koşu: kurulamadı.");
+        for p in &dry.problems {
+            println!("  • {} ({})", p.message, p.code);
+        }
+        return;
+    }
+    if dry.registered.is_empty() {
+        println!("Kuru koşu: katkı bağlanmadı.");
+    } else {
+        println!(
+            "Kuru koşu: {} katkı bağlandı ({}).",
+            dry.registered.len(),
+            dry.registered
+                .iter()
+                .map(|r| r.title.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
+    if let Some(why) = &dry.activation {
+        println!("  • Etkinleşmedi: {why}");
+    }
+    if let Some(note) = &dry.note {
+        println!("  Not: {note}");
+    }
+    for s in &dry.skipped {
+        println!("  • Atlandı: {} — {}", s.id, s.reason);
+    }
+    if dry.residue.is_empty() {
+        println!("  Kaldırınca kalıntı yok.");
+    } else {
+        for r in &dry.residue {
+            println!("  • Kalıntı: {r}");
+        }
     }
 }
 

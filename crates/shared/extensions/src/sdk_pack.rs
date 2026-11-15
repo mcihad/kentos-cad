@@ -240,7 +240,9 @@ pub fn sdk_pack() -> Value {
             "extension.blueprint ile iskeleti alın.",
             "Dosyaları yazın: atölyesi olan ajan (KentOS'un Asistan'ı, MCP) extension.workshop.write ile kendi atölyesine; \
              kendi dosya araçları olan ajan boş bir klasöre. Kullanıcıya dosya yazdırmayın.",
-            "Örnekleri isteğe göre değiştirin; her adımda extension.verify (atölyede id, klasörde path ile).",
+            "Örnekleri isteğe göre değiştirin; her adımda extension.verify (atölyede id, klasörde path ile); \
+             doğrulanınca yanıtının dryRun'ı paketi geçici bir kayıt defterinde bağlar: eklenen katkılar, atlananlar \
+             ve nedenleri, kaldırınca kalıntı (kod çalışmaz).",
             "Kütüphane gerekiyorsa klasörde `uv add <paket>`; atölyede uv çalışmaz: Python'un kendi kitaplığıyla ve \
              kentos ile yazın, kütüphane gerekiyorsa kullanıcıya söyleyin.",
             "Paket: atölyede extension.workshop.review paketleyip kullanıcının Gözden geçir ve kur penceresine açar; \

@@ -12,6 +12,7 @@
 //! The registry reads and writes the user's extension folder only (`<veri>/kentos-cad/eklentiler` on the desktop);
 //! it runs no extension code: Python is ADIM 18A/19's.
 
+mod dry_run;
 pub mod journal;
 mod lease;
 pub mod places;
@@ -21,6 +22,7 @@ pub mod store;
 mod view;
 pub mod watchdog;
 
+pub use dry_run::{DryRun, dry_run};
 pub use journal::{Journal, Level, Record};
 pub use lease::{ContributionKind, ExtensionLease, Registered, Skipped};
 pub use policy::{Policy, Revocations, Revoked};

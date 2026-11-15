@@ -675,6 +675,22 @@ impl kentos_headless::agent_tools::Host for WithWorkshop<'_> {
     fn workshop(&self) -> Option<std::path::PathBuf> {
         self.workshop.clone()
     }
+
+    /// Kapı 3's part that runs no code, in a registry of its own: the policy of this computer, the package's own tool
+    /// check (the desktop's install review makes the whole one).
+    fn dry_run(&self, package: &[u8]) -> Option<Value> {
+        let host = kentos_extensions::Host::this(
+            kentos_extensions::version::Version::parse(env!("CARGO_PKG_VERSION"))
+                .unwrap_or_else(|| kentos_extensions::version::Version::new(0, 1, 0)),
+        );
+        let options = kentos_extension_host::Options {
+            policy: kentos_extension_host::places::load_policy(
+                &kentos_extension_host::places::policy_path(),
+            ),
+            ..kentos_extension_host::Options::default()
+        };
+        Some(kentos_extension_host::dry_run(package, host, options).to_json())
+    }
 }
 
 /// An agents' tool on a drawing (docs/adr/8056 §2): the server's own or a desktop's, the drawing's guard keeping

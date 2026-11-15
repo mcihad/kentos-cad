@@ -189,6 +189,30 @@ impl Default for Extensions {
     }
 }
 
+/// The registry's options here: the organisation's policy and this KentOS's check of the İşlemler tools (a tool this
+/// host would not make is refused before Kur, not found out when it is first listed). The dry run binds with them
+/// too.
+pub(crate) fn registry_options(safe_mode: bool) -> Options {
+    let policy_file = kentos_extension_host::places::policy_path();
+    Options {
+        safe_mode,
+        policy: kentos_extension_host::places::load_policy(&policy_file),
+        tools: Some(kentos_extension_host::ToolCheck(std::sync::Arc::new(
+            |m: &kentos_extensions::Manifest, local: &str, value: &serde_json::Value| {
+                kentos_processing::external::from_descriptor(
+                    &m.id,
+                    &m.name,
+                    &m.version.to_string(),
+                    local,
+                    value,
+                )
+                .map(|_| ())
+            },
+        ))),
+        ..Options::default()
+    }
+}
+
 /// This KentOS as a host for packages.
 pub(crate) fn host() -> Host {
     Host::this(Version::parse(env!("CARGO_PKG_VERSION")).unwrap_or_else(|| Version::new(0, 1, 0)))
@@ -280,25 +304,7 @@ impl Extensions {
     /// The registry under `root`, with the organisation's policy; started unless `safe_mode`. The notes say what the
     /// start did, for the message log.
     pub(crate) fn open(root: &Path, safe_mode: bool) -> (Extensions, Vec<(Level, String)>) {
-        let policy_file = kentos_extension_host::places::policy_path();
-        let options = Options {
-            safe_mode,
-            policy: kentos_extension_host::places::load_policy(&policy_file),
-            // A tool this host would not make is refused before Kur, not found out when it is first listed.
-            tools: Some(kentos_extension_host::ToolCheck(std::sync::Arc::new(
-                |m: &kentos_extensions::Manifest, local: &str, value: &serde_json::Value| {
-                    kentos_processing::external::from_descriptor(
-                        &m.id,
-                        &m.name,
-                        &m.version.to_string(),
-                        local,
-                        value,
-                    )
-                    .map(|_| ())
-                },
-            ))),
-            ..Options::default()
-        };
+        let options = registry_options(safe_mode);
         let mut notes = Vec::new();
         let mut extensions = Extensions {
             root: Some(root.to_path_buf()),
