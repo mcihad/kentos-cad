@@ -1,5 +1,5 @@
-//! The Denetim tab's EK-3 and EK-4 findings (docs/adr/8064; plan/bim-plan.md BIM-03) and the sheets-from-the-model ones
-//! (docs/adr/8065, BIM-04): the standards package's Python rules (`dijital_proje.mimari.denetle`, bim-plan K10) on the drawing's CAD facts (`kentos_processing::audit_facts::cad`),
+//! The Denetim tab's EK-3 and EK-4 findings (docs/adr/8064; plan/bim-plan.md BIM-03), the sheets-from-the-model ones
+//! (docs/adr/8065, BIM-04) and EK-9's measured on the model (docs/adr/8067, BIM-06): the standards package's Python rules (`dijital_proje.mimari.denetle`, bim-plan K10) on the drawing's CAD facts (`kentos_processing::audit_facts::cad`),
 //! asked after each check of the whole drawing and listed in the Mevzuat group beside the regulation's other findings,
 //! each naming Dijital Proje Yön. 7 and the annex's clause and page. A fix is the rule's KentOS command, run as any
 //! finding's: one undo step.
@@ -22,9 +22,9 @@ const PACKAGE: &str = "dijital-proje";
 const MODULE: &str = "dijital_proje.mimari";
 const FUNCTION: &str = "denetle";
 
-/// The findings this module adds, by their codes' starts: EK-3 and EK-4's, and the sheets-from-the-model rule's
-/// (docs/adr/8065).
-const CODES: [&str; 3] = ["digital_ek", "digital_derived", "digital_free"];
+/// The findings this module adds, by their codes' starts: EK-3 and EK-4's, the sheets-from-the-model rule's
+/// (docs/adr/8065) and EK-9's measured on the model (docs/adr/8067: rooms that overlap).
+const CODES: [&str; 4] = ["digital_ek", "digital_derived", "digital_free", "digital_quality"];
 
 /// Whether a finding is this module's.
 fn ours(code: &str) -> bool {

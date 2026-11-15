@@ -293,7 +293,7 @@ pub struct Building {
 
 /// Which of `rings` are outer rings and which holes (even-odd: a ring inside an odd number of others is a hole), each
 /// hole with the nearest outer ring holding it: (outer, holes).
-fn nest(rings: &[Vec<[f64; 2]>]) -> Vec<(usize, Vec<usize>)> {
+pub(crate) fn nest(rings: &[Vec<[f64; 2]>]) -> Vec<(usize, Vec<usize>)> {
     let inside = |p: [f64; 2], r: &[[f64; 2]]| {
         let mut odd = false;
         let n = r.len();
@@ -928,7 +928,7 @@ mod tests {
             ..Building::default()
         };
         let f = write(&b);
-        // `KENTOS_IFC_BUILDING_SAMPLE=path` keeps it for IfcOpenShell's validator.
+        // `KENTOS_IFC_BUILDING_SAMPLE=path` keeps it for an independent validator (scripts/fixtures/arch_ifc_check.py).
         if let Ok(path) = std::env::var("KENTOS_IFC_BUILDING_SAMPLE") {
             std::fs::write(path, &f).expect("the sample kept");
         }

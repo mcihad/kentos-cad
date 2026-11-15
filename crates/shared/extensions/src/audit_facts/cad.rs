@@ -12,7 +12,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{MOST_ITEMS, place};
+use super::{AREA, MOST_ITEMS, place, round};
 
 /// The most objects a layer names (`first`, `firstHatches`).
 pub const MOST_SHOWN: usize = 100;
@@ -39,6 +39,21 @@ pub struct CadFacts {
     /// The tags whose object is gone and the dimensions whose tie to an object broke, by persistent id.
     #[serde(default)]
     pub broken: Vec<CadBroken>,
+    /// The rooms of one storey that cover the same ground, a pair each (docs/adr/8067; EK-9 Tablo 9.1/13), by their
+    /// ids; written only when there is one.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub room_overlaps: Vec<CadRoomOverlap>,
+}
+
+/// Two rooms of one storey (or both on none) that cover the same ground: their persistent ids, the smaller first, the
+/// ground they share (m², to 0.0001) and its centre. The facts say how much; whether it is too much is the rule's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+pub struct CadRoomOverlap {
+    pub a: String,
+    pub b: String,
+    pub area: f64,
+    pub at: [f64; 2],
 }
 
 /// A section or an elevation drawn from its mark (docs/adr/8042, 8043).
@@ -180,6 +195,15 @@ impl CadFacts {
         self.rooms.sort_by(|a, b| a.uid.cmp(&b.uid));
         self.derived.sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.mark.cmp(&b.mark)));
         self.broken.sort_by(|a, b| a.uid.cmp(&b.uid).then_with(|| a.kind.cmp(&b.kind)));
+        for o in &mut self.room_overlaps {
+            if o.b < o.a {
+                std::mem::swap(&mut o.a, &mut o.b);
+            }
+            o.area = round(o.area, AREA);
+            o.at = place(o.at);
+        }
+        self.room_overlaps.retain(|o| o.area > 0.0);
+        self.room_overlaps.sort_by(|x, y| x.a.cmp(&y.a).then_with(|| x.b.cmp(&y.b)));
         let cut = [
             self.layers.len(),
             self.blocks.len(),
@@ -187,6 +211,7 @@ impl CadFacts {
             self.rooms.len(),
             self.derived.len(),
             self.broken.len(),
+            self.room_overlaps.len(),
         ]
         .iter()
         .any(|n| *n > MOST_ITEMS);
@@ -196,6 +221,7 @@ impl CadFacts {
         self.rooms.truncate(MOST_ITEMS);
         self.derived.truncate(MOST_ITEMS);
         self.broken.truncate(MOST_ITEMS);
+        self.room_overlaps.truncate(MOST_ITEMS);
         (self, cut)
     }
 }
@@ -224,9 +250,15 @@ mod tests {
             }],
             derived: vec![],
             broken: vec![],
+            room_overlaps: vec![
+                CadRoomOverlap { a: "r2".into(), b: "r1".into(), area: 0.360_04, at: [2.000_4, 1.0] },
+                CadRoomOverlap { a: "r3".into(), b: "r4".into(), area: 0.000_04, at: [0.0, 0.0] },
+            ],
         };
         let (n, cut) = facts.normalized();
         assert!(!cut);
+        // A pair by its ids in order, its area to 0.0001 m²; one under that is no overlap.
+        assert_eq!(n.room_overlaps, [CadRoomOverlap { a: "r1".into(), b: "r2".into(), area: 0.36, at: [2.0, 1.0] }]);
         assert_eq!(n.blocks[0].name, "MM-KAPI-90");
         assert_eq!(n.blocks[1].layers, ["A", "B"]);
         assert_eq!(n.dimension_fonts[0].font, "Arimo");

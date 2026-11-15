@@ -7,7 +7,7 @@ başlaması çizimde düzeltilecek bir kusur değildir.
 
 from kentos import ext
 
-from . import ek34, kapsam, turetim
+from . import ek34, kalite, kapsam, turetim
 
 
 @ext.audit("kapsam")
@@ -67,4 +67,14 @@ def turetim_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
         nesne = b["uids"][0] if b["uids"] else None
         bulgular.append(ext.AuditFinding(message=f"{b['message']} [{b['cite']}]", severity=b["severity"],
                                          feature_id=nesne, fix=fix))
+    return bulgular
+
+
+@ext.audit("kalite")
+def kalite_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """EK-9 model kalite formunun modelde ölçülen soruları: aynı kattaki mahaller örtüşmez (satır 13)."""
+    bulgular = []
+    for b in kalite.denetle({"cad": facts.project.cad}):
+        nesne = b["uids"][0] if b["uids"] else None
+        bulgular.append(ext.AuditFinding(message=f"{b['message']} [{b['cite']}]", severity=b["severity"], feature_id=nesne))
     return bulgular

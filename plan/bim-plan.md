@@ -19,7 +19,10 @@ tek adımlık düzeltmesi var; 2+1 dairede uçtan uca ve ezdxf'li bağımsız ok
 katmanındaki serbest çizimde ve kopmuş bağda Yayınla'yı kapatır; kural Python'da, türevin durumu olguda. B5 tamamlandı:
 BIM-05 `[x]` ([ADR 8066](../docs/adr/8066-2d-permit-package-pdfa.md)): paket kuralı (PDF/A, bir dosya bir pafta, A4 ve
 katları, EK-2 adı) kapıda, teslim listesi klasörde; kesit binasının ve 2+1'in paketi qpdf ve Poppler'ın bağımsız okumasından
-hatasız geçti. Sıradaki B6 (BIM-06).
+hatasız geçti. B6 büyük ölçüde tamamlandı: BIM-06 `[~]` ([ADR 8067](../docs/adr/8067-building-3d-view-and-room-overlaps.md)):
+3B görünüm binanın IFC'ye yazılan gövdelerini yolun ortak sahne çekirdeği ve çizicisiyle gösterir (kesit binası 58 eleman ve
+10 mahal, dosyadaki 68 ile eşit); 3B'de tıklanan nesne planda seçilir; örtüşen mahaller EK-9/13'ün Python kuralıyla
+bulgudur ve 3B'de kırmızıdır. Kalan: gerçek pencerede kabul, kesit kutusu, tadilat rengi. Sıradaki B7 (BIM-07).
 
 Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. İlk taslağa göre değişenler: iki yönetmeliğin ana metni madde madde
 yeniden okundu; eklerin bağımsız bir dökümü depodaki sayfa okumalarıyla karşılaştırıldı; bugünkü kod yönetmeliğin sınıf
@@ -132,7 +135,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 
 | # | Zayıflık | Kanıt | Önem | Paket |
 |---|---|---|---|---|
-| Z1 | **Binanın 3B görünümü yok.** Model yalnız planda, kesitte ve dışa aktarılan dosyada görülüyor; gövde hatası, mahal örtüşmesi, yanlış kot karşı programda fark ediliyor | 3B pencere yalnız yol sahnesini açıyor (`apps/desktop/src/shell/scene3d_window.rs`); bina gövdelerini kesit modeli kuruyor, gösteren yok | K | BIM-06 |
+| Z1 | **Binanın 3B görünümü yok.** Model yalnız planda, kesitte ve dışa aktarılan dosyada görülüyor; gövde hatası, mahal örtüşmesi, yanlış kot karşı programda fark ediliyor | 3B pencere yalnız yol sahnesini açıyor (`apps/desktop/src/shell/scene3d_window.rs`); bina gövdelerini kesit modeli kuruyor, gösteren yok. **16 Kasım 2026:** büyük ölçüde giderildi (ADR 8067): bina 3B'de, örtüşen mahal bulgu; kesit kutusu yok | K | BIM-06 |
 | Z2 | **Yangın ve performans bilgisi tutulmuyor:** yangın dayanım sınıfı, acil çıkış, malzeme dayanımı, yapım yöntemi, yangın koruma sınıfı | Sözleşmelerde alan yok (`crates/shared/contracts/src/arch`); EK-9'un 9. sorusu "hayır" (ADR 8047 §9) | K | BIM-07 |
 | Z3 | **Emsal alanları modelde nesne değil;** bağımsız bölüm modelde grup olarak durmuyor | EK-9/10 ve EK-6 6.60 mekânsal zon istiyor; yazılmıyor | K | BIM-08 |
 | Z4 | **Paftanın modelden üretildiği kanıtlanamıyor:** plan paftasındaki serbest çizim ayırt edilmiyor; IFC ile PDF/A'nın aynı revizyondan çıktığı kayıtlı değil | EK-9/21 "modele girmeyen nesne yoksa evet" (`quality.rs`); Ruhsat takımı ile `cad.arch.ifc` ayrı komutlar | K | BIM-04, BIM-14 |
@@ -357,7 +360,17 @@ yazı tipi, yanlış ad, iki paftalı dosya) paketi durdurur ve sebebini söyler
 
 ### 5.3 Ruhsat düzeyinde model
 
-#### BIM-06 — Binanın 3B görünümü [ ]
+#### BIM-06 — Binanın 3B görünümü [~]
+
+**Yapıldı (16 Kasım 2026, [ADR 8067](../docs/adr/8067-building-3d-view-and-room-overlaps.md)):** `scene3d.view` yol
+projesi dışında binayı açar: IFC dışa aktarımının modeli (`arch_ifc::model`) `kentos_ifc::mesh` ile üçgenlenir (açıklıklar
+duvardan oyulur, mahaller hacim), yolun penceresi `Source` girdisiyle genelleşti (ikinci motor yok). Sınıf rengi, yarı
+saydam mahal, planda seçili turuncu, Denetim'de seçili bulgunun nesnesi kırmızı; kat süzgeci, mahaller aç ve kapa; tıklama
+mahalin içinden geçer, nesneyi planda seçer; model değişince sahne yenilenir. Örtüşen mahal: Rust `cad.roomOverlaps`'ı
+ölçer, `dijital_proje.kalite` 0,01 m² ve üstünü hata sayar (EK-9/13). Kesit binası: 58 eleman ve 10 mahal, IFC dosyasında
+68 gövde. Şeritte Mimari › Proje › 3B görünüm. **Kalan:** gerçek pencerede (işletim sisteminin faresiyle) kabul, kesit
+kutusu (çizicide kırpma, IFC-12 ile ortak), tadilat durumuna göre renk, gizle ve yalnız bırak, katlar arası örtüşme,
+büyük modelde ölçüm.
 
 **Kullanıcı sonucu:** Mimar, modelin gövdelerini (dışa aktarılacak olanların aynısını) 3B'de görür. Bir nesneye tıklayınca
 planda seçilir. Katları ayırır, kesit kutusuyla içine bakar. Denetim bulguları 3B'de boyanır. Dayanak Md. 14; EK-9/13–15; Z1.
@@ -634,7 +647,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| B6 | Binanın 3B görünümü | BIM-06 | Bina 3B'de; tıkla, planda seç |
+| B6 ◐ | Binanın 3B görünümü | BIM-06 | Bina 3B'de; tıkla, planda seç; örtüşen mahal kırmızı (ADR 8067; gerçek pencere ve kesit kutusu kaldı) |
 | B7 | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Formun 9. sorusu evet olabilir |
 | B8 | Mahal, zon ve emsal; mekânsal zonlar ve gruplar | BIM-08, IFC-03 | Emsal tablosu ile model aynı alanlardan |
 | B9 | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş |

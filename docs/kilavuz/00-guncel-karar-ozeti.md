@@ -67,6 +67,14 @@
     - PDF/A yayını `teslim-listesi.csv` yazar; bağımsız okuma qpdf ve Poppler'la (`scripts/mevzuat/pdfa_bagimsiz.py`).
     - Kesit paftasının EK-2 konumu "B-B" değil "BBX" (tire alfanümerik değil). Çizim dışı belgeler sözleşme
       değişikliğiyle ayrı adım.
+  - **B6 büyük ölçüde yapıldı (16 Kasım 2026; [ADR 8067](../adr/8067-building-3d-view-and-room-overlaps.md); BIM-06 `[~]`):**
+    - 3B görünüm (`scene3d.view`) yol projesi dışında binayı açar: IFC dışa aktarımının modeli `kentos_ifc::mesh` ile
+      üçgenlenir; yolun penceresi `Source` girdisiyle genelleşti, ikinci 3B motoru yok. Gösterilen dosyanın tuttuğudur.
+    - Tıklama mahal hacminin içinden geçer, nesneyi planda seçer; bulgu rengi Denetim'de seçili satırlardan (çizim
+      kuralları neredeyse her nesneyi anar). Sahne her kurulduğunda içerik kimlikleri yeni bloktan: çizicinin önbelleği
+      eski karoyu çizmez.
+    - Örtüşen mahal EK-9/13: ortak alan Rust olgusu (`cad.roomOverlaps`), eşik Python kuralında (`kalite`, 0,01 m²).
+      Kalan: gerçek pencerede kabul, kesit kutusu, tadilat rengi.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

@@ -2,9 +2,9 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.kentos.dijital-proje",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "name": "Dijital proje denetimleri",
-  "summary": "Dijital proje yönetmeliğinin denetimleri: teslim kapsamı, EK-3 ve EK-4, paftaların modelden üretildiği, 2B ruhsat paketi.",
+  "summary": "Dijital proje yönetmeliğinin denetimleri: teslim kapsamı, EK-3 ve EK-4, paftaların modelden üretildiği, 2B ruhsat paketi, EK-9'un modelde ölçülen soruları.",
   "description": "KentOS'un standart kural paketi (catalog/standards/dijital-proje; plan/bim-plan.md K10, docs/adr/8063). Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik ile e-PYS Yönetmeliğinin (RG 5.8.2026/33331) tarihli kapsamını projenin künyesinden ve çizimden ölçülen alan ve kat sayısından karara bağlar. Tarih ve eşikler veridir; eksik bilgi sonucu değiştirebiliyorsa \"teyit gerekli\" der, tahmin etmez. EK-3 ve EK-4 denetimi mahal numarasını ve adını, katmanları, taramaları, aks çizgisini, ölçü yazısını ve blok adlarını KentOS'un ölçtüğü olgulardan denetler.",
   "authors": [
     "KentOS"
@@ -64,6 +64,12 @@
         "title": "Paftalar modelden",
         "domain": "mimari",
         "handler": "dijital_proje.denetim:turetim_denetimi"
+      },
+      {
+        "id": "kalite",
+        "title": "EK-9 model kalitesi",
+        "domain": "mimari",
+        "handler": "dijital_proje.denetim:kalite_denetimi"
       }
     ]
   },

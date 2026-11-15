@@ -1,7 +1,7 @@
 //! Denetim, the bottom panel's tab of the architectural audit (docs/adr/0703; `arch.audit`): `cad.arch.audit`'s
-//! findings in a table, by group; a row selects its objects and fits the view on them (Archicad's “Seçili bölgelere
-//! yakınlaştır”); Düzelt runs the chosen finding's fix — its command call, one undo step — and checks again. The
-//! thresholds are the bar's choices. The drawing changes only by a fix.
+//! findings in a table, by group; a row selects its objects and fits the view on them (3B görünüm paints the chosen
+//! rows' objects, docs/adr/8067); Düzelt runs the chosen finding's fix — its command call, one undo step — and checks
+//! again. The thresholds are the bar's choices. The drawing changes only by a fix.
 //!
 //! Since docs/adr/0732: Kapsam (the whole drawing, Etkin kat, the objects selected), İstisnalar (hidden, shown, only
 //! they), rows chosen with Ctrl/⌘ and Shift, Düzelt (n) as one `cad.changeset.apply` step, İstisna yap… with a note
@@ -458,7 +458,7 @@ impl App {
     }
 
     /// The chosen findings, in the findings' order: those chosen with Ctrl/⌘ and Shift, else the one pressed.
-    fn arch_audit_chosen(&self) -> Vec<&ArchAuditFinding> {
+    pub(crate) fn arch_audit_chosen(&self) -> Vec<&ArchAuditFinding> {
         let Some(a) = self.arch.arch_audit.audited.as_ref() else {
             return Vec::new();
         };

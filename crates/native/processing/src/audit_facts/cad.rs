@@ -12,6 +12,9 @@
 //!   blocks placed …, and what a model object draws as its own: a kitchen run's countertop and lines), an annotation tied
 //!   to the drawing (dimensions, tags, texts, leaders, tables, marks), or free drawing (lines, polylines, arcs, circles,
 //!   curves, points, hatches); a section's state is the section query's.
+//! - **Rooms that overlap** (docs/adr/8067, EK-9 Tablo 9.1/13): two rooms of one storey (or both on none) whose drawn
+//!   areas share ground, with how much (the geometry core's overlay of the two areas) and where. The rule decides how
+//!   much is too much; rooms on other storeys are not compared (a room through two storeys is one storey's).
 
 use std::collections::BTreeMap;
 
@@ -19,9 +22,11 @@ use kentos_commands::{DrawingFont, Entity};
 use kentos_domain::Document;
 use kentos_domain::arch_values::core_areas;
 use kentos_extensions::audit_facts::cad::{
-    CadBlock, CadBroken, CadDerived, CadFacts, CadGrid, CadLayer, CadRoom, FontUse,
+    CadBlock, CadBroken, CadDerived, CadFacts, CadGrid, CadLayer, CadRoom, CadRoomOverlap, FontUse,
 };
 use kentos_geometry_core::Vec2;
+use kentos_geometry_core::geom::arrangement::Area;
+use kentos_geometry_core::geom::region::{intersect_area_sets, net_area};
 
 /// The drawing's CAD facts.
 pub fn measure(doc: &Document) -> CadFacts {
@@ -39,6 +44,7 @@ pub fn measure(doc: &Document) -> CadFacts {
     let mut fonts: BTreeMap<String, u64> = BTreeMap::new();
     let mut grids = Vec::new();
     let mut rooms = Vec::new();
+    let mut grounds: Vec<(String, Option<String>, Vec<Area>)> = Vec::new();
     let name_of = |id: &str| leaves.iter().find(|l| l.id == id).map(|l| l.name.clone());
     let codes: BTreeMap<String, String> = doc
         .settings()
@@ -95,14 +101,16 @@ pub fn measure(doc: &Document) -> CadFacts {
             Entity::Grid(_) => grids.push(CadGrid { uid: uid.to_string(), layer: layer.to_owned() }),
             Entity::Space(s) => {
                 let level = e.own_level().map(str::to_owned);
+                let areas = core_areas(&s.space.parts);
                 rooms.push(CadRoom {
                     uid: uid.to_string(),
                     number: s.space.number.clone(),
                     name: s.space.name.clone(),
                     level_code: level.as_ref().and_then(|l| codes.get(l).cloned()),
-                    level,
-                    at: centre(&core_areas(&s.space.parts)),
+                    level: level.clone(),
+                    at: centre(&areas),
                 });
+                grounds.push((uid.to_string(), level, areas));
             }
             _ => {}
         }
@@ -135,7 +143,37 @@ pub fn measure(doc: &Document) -> CadFacts {
         rooms,
         derived: derived(doc),
         broken,
+        room_overlaps: overlaps(&grounds),
     }
+}
+
+/// Each pair of rooms of one storey (or both on none) whose areas share ground: what they share and its centre. Only
+/// the pairs whose boxes meet are overlaid.
+fn overlaps(grounds: &[(String, Option<String>, Vec<Area>)]) -> Vec<CadRoomOverlap> {
+    let boxes: Vec<Option<[f64; 4]>> = grounds
+        .iter()
+        .map(|(_, _, areas)| {
+            areas.iter().flat_map(|a| a.outer.pts.iter()).fold(None, |b: Option<[f64; 4]>, p| {
+                Some(b.map_or([p.x, p.y, p.x, p.y], |b| [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]))
+            })
+        })
+        .collect();
+    let mut out = Vec::new();
+    for i in 0..grounds.len() {
+        for j in i + 1..grounds.len() {
+            let ((ua, la, aa), (ub, lb, ab)) = (&grounds[i], &grounds[j]);
+            let (Some(p), Some(q)) = (boxes[i], boxes[j]) else { continue };
+            if la != lb || p[2] <= q[0] || q[2] <= p[0] || p[3] <= q[1] || q[3] <= p[1] {
+                continue;
+            }
+            let shared = intersect_area_sets(&[aa.clone(), ab.clone()]);
+            let area: f64 = shared.iter().map(net_area).sum();
+            if area > 0.0 {
+                out.push(CadRoomOverlap { a: ua.clone(), b: ub.clone(), area, at: centre(&shared) });
+            }
+        }
+    }
+    out
 }
 
 /// A layer's objects counted.

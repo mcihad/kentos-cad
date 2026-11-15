@@ -316,7 +316,7 @@ fn screens() {
         permit_publication(&mut app, &folder);
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let middle = iced::Point::new(size.width / 2.0, size.height / 2.0);
-        let mut shot = |snapshot: &mut Snapshot, app: &mut App, file: &str| {
+        let shot = |snapshot: &mut Snapshot, app: &mut App, file: &str| {
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };

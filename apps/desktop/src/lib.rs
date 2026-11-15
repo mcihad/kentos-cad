@@ -672,12 +672,17 @@ mod route_window;
 mod junction_window;
 #[path = "shell/scene3d_window.rs"]
 mod scene3d_window;
+#[path = "shell/scene3d_building.rs"]
+mod scene3d_building;
 #[cfg(test)]
 #[path = "tests/junction_window_tests.rs"]
 mod junction_window_tests;
 #[cfg(test)]
 #[path = "tests/scene3d_window_tests.rs"]
 mod scene3d_window_tests;
+#[cfg(test)]
+#[path = "tests/scene3d_building_tests.rs"]
+mod scene3d_building_tests;
 #[cfg(test)]
 #[path = "tests/road_project_panel_tests.rs"]
 mod road_project_panel_tests;

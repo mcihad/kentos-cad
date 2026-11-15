@@ -206,7 +206,7 @@ class ProjectAuditFacts:
     architecture: ArchitectureFacts
     #: The permit's particulars the dated scope decision reads, the building's area and storeys (docs/adr/8063); empty when the drawing gives none of the particulars.
     permit: PermitFacts
-    #: The CAD drawing's layers, blocks, dimension typefaces, grids and rooms' numbers, names, storey codes and centres, as EK-3 and EK-4 read them (docs/adr/8064; the SDK's ``factsSchema`` gives its shape); empty when the drawing has neither a layer holding objects nor a room.
+    #: The CAD drawing's layers, blocks, dimension typefaces, grids and rooms' numbers, names, storey codes and centres, as EK-3 and EK-4 read them (docs/adr/8064; the SDK's ``factsSchema`` gives its shape), and the rooms of one storey that share ground with how much (``roomOverlaps``, docs/adr/8067); empty when the drawing has neither a layer holding objects nor a room.
     cad: dict[str, Any]
     def layers(self) -> list[LayerFacts]:
         """The layers holding objects, in the layer tree's order."""

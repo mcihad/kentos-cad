@@ -33,3 +33,17 @@ Python'dan:
 from dijital_proje import kapsam
 sonuc = kapsam.karar({"particulars": {"kullanim": "konut", "il_nufusu": "650000", ...}}, "2026-11-15")
 ```
+
+## Çizimin ve modelin kuralları
+
+Olgular KentOS'un `cad` bölümündendir (`kentos.auditFacts` 1); kural yalnız karar verir.
+
+| Modül | Ne | Dayanak | ADR |
+|---|---|---|---|
+| `ek34` | Mahal numarası ve adı, katman, tarama, aks çizgisi, ölçü yazısı, blok adı | Md. 7; EK-3, EK-4 | 8064 |
+| `turetim` | Eski kesit ve görünüş, kaynağı silinmiş çizim, model katmanında serbest çizim, kopmuş etiket ve ölçü | Md. 9/1; EK-9 satır 21 | 8065 |
+| `paket` | PDF/A, bir dosyada bir pafta, A4 ve katları, EK-2 dosya adı | Md. 4/2, 6, 8 | 8066 |
+| `kalite` | Aynı kattaki mahaller örtüşmez (ortak alan 0,01 m²'den küçükse yuvarlama sayılır) | EK-9 Tablo 9.1 satır 13 | 8067 |
+
+`mimari.denetle` masaüstünün Denetim sekmesi için `ek34`, `turetim` ve `kalite`'yi; `ruhsat.denetle` ruhsat yayınının
+kapısı için `turetim` ve `paket`'i birlikte verir.

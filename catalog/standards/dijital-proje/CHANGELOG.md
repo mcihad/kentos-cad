@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 0.5.0 — 16 Kasım 2026
+
+- Yeni kural: EK-9'un modelde ölçülen soruları (`kalite`, docs/adr/8067). Satır 13: aynı kattaki iki mahal aynı zemini
+  kaplıyorsa hata, ikisi de nesnesiyle; ortak alan KentOS'un ölçtüğü (`cad.roomOverlaps`), 0,01 m²'nin altı çizimin
+  yuvarlaması sayılır. `mimari.denetle` üç kuralı birlikte verir; masaüstünün 3B görünümü bulguları kırmızıya boyar.
+
 ## 0.4.0 — 16 Kasım 2026
 
 - Yeni kural: 2B ruhsat paketi (`paket`, docs/adr/8066; Md. 4/2, 6, 8). PDF/A seçilmemiş, bir dosyada birden çok pafta,

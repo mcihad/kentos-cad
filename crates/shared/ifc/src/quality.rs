@@ -354,7 +354,7 @@ pub fn ek9(b: &Building, written: &Written, k: &Particulars) -> Vec<Row> {
                 11 => Answer::Yes(format!("proje, saha, bina ve {} kat.", b.storeys.len())),
                 12 if b.spaces.is_empty() => Answer::No("modelde mahal yok".into()),
                 12 => Answer::Yes(format!("{} mahal.", b.spaces.len())),
-                13 => Answer::Ask("Mimari denetim › Mahaller ve Kat gruplarına bakın.".into()),
+                13 => Answer::Ask("Mimari denetim › Mevzuat grubundaki mahal örtüşmesi bulgularına ve Kat grubuna bakın; 3B görünüm örtüşen mahalleri kırmızı gösterir.".into()),
                 14 => Answer::Yes("mahal kapalı sınırından katının ya da kendi yüksekliğine.".into()),
                 15 => Answer::Ask("Mimari denetim › Kat grubuna bakın.".into()),
                 16 => Answer::Ask("Mimari denetim › Duvarlar grubuna (üst üste duvar) bakın.".into()),

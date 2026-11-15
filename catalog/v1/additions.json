@@ -2307,7 +2307,7 @@
       "id": "tool.interiorDimensions",
       "title": "İç ölçü zinciri",
       "icon": "interiorDimensions",
-      "description": "Kesen çizgiyle iç ölçü zinciri (Archicad'in iç ölçülendirmesi): duvarların ve kolonların içinden geçen bir çizgi çizin, kestiği yüzler sırayla ölçülür; zincirin yerini tıklayın ya da Enter ile kesen çizginin üstüne koyun. Ölçüler yüzlere bağlıdır: duvar kayınca değer değişir, duvar uzayıp kısalınca zincir yerinde kalır. Duvarlarda dış yüzler ya da bütün katmanlar, kolonlarda kenarlar ya da merkezler, toplam ve kat ayarlardan seçilir. Yaylı yüz ölçülmez, söylenir.",
+      "description": "Kesen çizgiyle iç ölçü zinciri: duvarların ve kolonların içinden geçen bir çizgi çizin, kestiği yüzler sırayla ölçülür; zincirin yerini tıklayın ya da Enter ile kesen çizginin üstüne koyun. Ölçüler yüzlere bağlıdır: duvar kayınca değer değişir, duvar uzayıp kısalınca zincir yerinde kalır. Duvarlarda dış yüzler ya da bütün katmanlar, kolonlarda kenarlar ya da merkezler, toplam ve kat ayarlardan seçilir. Yaylı yüz ölçülmez, söylenir.",
       "aliases": [
         "ICOLCU",
         "İÇÖLÇÜ",
@@ -3681,7 +3681,7 @@
       "id": "view.levels.up",
       "title": "Üst kat",
       "icon": "levelUp",
-      "description": "Etkin kat, kotça bir üstteki kat olur (Archicad'in Go Up a Story'si gibi); çalışan aracın ayarları ve önizlemesi hemen izler. En üst katta değişmez.",
+      "description": "Etkin kat, kotça bir üstteki kat olur; çalışan aracın ayarları ve önizlemesi hemen izler. En üst katta değişmez.",
       "aliases": [
         "USTKAT"
       ],
@@ -3695,7 +3695,7 @@
       "id": "view.levels.down",
       "title": "Alt kat",
       "icon": "levelDown",
-      "description": "Etkin kat, kotça bir alttaki kat olur (Archicad'in Go Down a Story'si gibi); çalışan aracın ayarları ve önizlemesi hemen izler. En alt katta değişmez.",
+      "description": "Etkin kat, kotça bir alttaki kat olur; çalışan aracın ayarları ve önizlemesi hemen izler. En alt katta değişmez.",
       "aliases": [
         "ALTKAT"
       ],
@@ -4467,7 +4467,7 @@
       "title": "3B görünüm…",
       "short": "3B görünüm",
       "icon": "scene3dView",
-      "description": "Yol projesinin arazi yüzeylerini ve koridorlarını 3B gösterir: koridor şerit, banket, yarma ve dolgu şevi olarak renklenir; sürükleyerek döndürülür, sağ tuşla kaydırılır, tekerlekle yaklaşılır; düşey abartma yalnız görünüştür. Çizim değişmez.",
+      "description": "Yol projesinde arazi yüzeylerini ve koridorları, öbür çizimlerde binanın IFC dosyasına yazılan gövdelerini 3B gösterir. Koridor şerit, banket, yarma ve dolgu şevi olarak, bina sınıfına göre renklenir; mahaller yarı saydamdır, Denetim bulgularının nesneleri kırmızı, planda seçili olanlar turuncudur. Binada bir nesneye tıklamak onu planda seçer; katlar ve mahaller ayrı ayrı gizlenir. Sürükleyerek döndürülür, sağ tuşla kaydırılır, tekerlekle yaklaşılır. Çizim değişmez.",
       "aliases": [
         "YOL3B",
         "3BGORUNUM"

@@ -21,6 +21,7 @@ pub mod catalog;
 pub mod catalog_schema;
 pub mod crs;
 mod math;
+pub mod mesh;
 pub mod naming;
 pub mod quality;
 pub mod rules;

@@ -178,6 +178,13 @@
           },
           "type": "array"
         },
+        "roomOverlaps": {
+          "description": "The rooms of one storey that cover the same ground, a pair each (docs/adr/8067; EK-9 Tablo 9.1/13), by their\nids; written only when there is one.",
+          "items": {
+            "$ref": "#/$defs/CadRoomOverlap"
+          },
+          "type": "array"
+        },
         "rooms": {
           "description": "Every room, by persistent id.",
           "items": {
@@ -348,6 +355,37 @@
       },
       "required": [
         "uid",
+        "at"
+      ],
+      "type": "object"
+    },
+    "CadRoomOverlap": {
+      "description": "Two rooms of one storey (or both on none) that cover the same ground: their persistent ids, the smaller first, the\nground they share (m², to 0.0001) and its centre. The facts say how much; whether it is too much is the rule's.",
+      "properties": {
+        "a": {
+          "type": "string"
+        },
+        "area": {
+          "format": "double",
+          "type": "number"
+        },
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "b": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "area",
         "at"
       ],
       "type": "object"

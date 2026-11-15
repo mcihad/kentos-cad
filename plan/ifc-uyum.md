@@ -476,7 +476,10 @@ tıkla görür. Karar ve kurallar [ADR 8061](../docs/adr/8061-ifc-viewer-and-rea
 - **Komutlar:** `ifc.view` (görünüm) ve salt okunur `ifc.inspect` (katalog, ≥ 20 bağımsız durum, Python, MCP). Şeritteki
   yer resimle sahibe gönderilir; yeni tuşlar kısayol listesine girer.
 - **Ortak parçalar:** binanın 3B görünümü ([BIM-06](bim-plan.md#5-iş-paketleri)) aynı çekirdeği ve pencere parçalarını
-  kullanır; hangisi önce yapılırsa parçaları o kurar.
+  kullanır; hangisi önce yapılırsa parçaları o kurar. **BIM-06 kurdu (16 Kasım 2026, ADR 8067):** `kentos_ifc::mesh`
+  (binadan nesne başına f64 köşe ve üçgen), 3B penceresinin `Source` girdisi (parça, ad, nesne kimliği), kat süzgeci,
+  mahalleri aç ve kapa, tıkla ve planda seç, bulgunun nesnesini boyamak. Görüntüleyici okunan dosyayı aynı girdiye
+  dolduracak; kesit kutusu ikisinin ortak yeni işi.
 - **Eski sürümler:** motorun okuduğu IFC4 ve IFC2x3 dosyaları şema adı gösterilerek açılır; kayıp listesi ve denetimi
   IFC-11'dedir.
 - Üçgen ağdan ölçü, alan ya da hacim gösterilmez; miktarlar dosyadaki setlerden okunur (kılavuz §23.3).

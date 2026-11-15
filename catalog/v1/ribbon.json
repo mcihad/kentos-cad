@@ -2446,6 +2446,10 @@
         "size": "small"
        },
        {
+        "command": "scene3d.view",
+        "size": "small"
+       },
+       {
         "command": "arch.settings",
         "size": "small"
        },

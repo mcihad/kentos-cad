@@ -967,8 +967,9 @@ class ProjectAuditFacts:
         self.permit: PermitFacts = PermitFacts(raw.get("permit") or {})
         cad = raw.get("cad")
         #: The CAD drawing's layers, blocks, dimension typefaces, grids and rooms' numbers, names, storey codes and
-        #: centres, as EK-3 and EK-4 read them (docs/adr/8064; the SDK's ``factsSchema`` gives its shape); empty when
-        #: the drawing has neither a layer holding objects nor a room.
+        #: centres, as EK-3 and EK-4 read them (docs/adr/8064; the SDK's ``factsSchema`` gives its shape), and the rooms of
+        #: one storey that share ground with how much (``roomOverlaps``, docs/adr/8067); empty when the drawing has
+        #: neither a layer holding objects nor a room.
         self.cad: dict[str, Any] = cad if isinstance(cad, dict) else {}
 
     def layers(self) -> list[LayerFacts]:

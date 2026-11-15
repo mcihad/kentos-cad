@@ -1,0 +1,330 @@
+//! 3B görünüm of a building (scene3d_building.rs, docs/adr/8067; plan/bim-plan.md BIM-06): on the section building
+//! (fixtures/arch/v1/section-building.kcad, written without KentOS code) the window shows the bodies the IFC file holds,
+//! as many as it holds; a click on a wall selects it in the plan and the plan's selection shows in 3D; the storeys and
+//! the rooms hide; two rooms of one storey that share ground are the Mimari audit's finding and red in 3D.
+
+use kentos_commands::Entity;
+use kentos_scene3d::Viewport;
+
+use crate::app::{App, Dialog, Message};
+use crate::scene3d_window::Event as W;
+
+/// The parts (scene3d_building::PARTS): a wall, a room, the selected, a room found something about.
+const WALL: u32 = 0;
+const ROOM: u32 = 9;
+const SELECTED: u32 = 11;
+const FOUND: u32 = 12;
+const FOUND_ROOM: u32 = 14;
+
+fn open(snapshot: kentos_commands::DocumentSnapshotV2) -> App {
+    let (mut app, _) = App::boot(None);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+fn building() -> kentos_commands::DocumentSnapshotV2 {
+    kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/section-building.kcad")).expect("decodes")
+}
+
+fn send(app: &mut App, e: W) {
+    let _ = app.update(Message::Scene3d(e));
+}
+
+/// The STEP record's arguments at the top level (strings with their quotes, lists with their parentheses).
+fn arguments(record: &str) -> Vec<String> {
+    let inner = record.split_once('(').map_or("", |(_, r)| r);
+    let inner = inner.trim_end().trim_end_matches(';').trim_end_matches(')');
+    let (mut out, mut cur, mut depth, mut quoted) = (Vec::new(), String::new(), 0, false);
+    for ch in inner.chars() {
+        match ch {
+            '\'' => quoted = !quoted,
+            '(' if !quoted => depth += 1,
+            ')' if !quoted => depth -= 1,
+            ',' if !quoted && depth == 0 => {
+                out.push(std::mem::take(&mut cur));
+                continue;
+            }
+            _ => {}
+        }
+        cur.push(ch);
+    }
+    out.push(cur);
+    out
+}
+
+/// How many building elements and spaces the IFC file `cad.arch.ifc` writes has with a body (an `IfcProduct`'s seventh
+/// argument, its representation, given), read from the file's text: the bodies another reader shows (an opening is a
+/// cut, not a body).
+fn bodies_in_the_file(app: &mut App) -> usize {
+    const CLASSES: [&str; 17] = [
+        "IFCWALL", "IFCSLAB", "IFCCOLUMN", "IFCBEAM", "IFCROOF", "IFCRAILING", "IFCSTAIR", "IFCCOVERING", "IFCDOOR",
+        "IFCWINDOW", "IFCTRANSPORTELEMENT", "IFCFURNITURE", "IFCSANITARYTERMINAL", "IFCMEMBER", "IFCCHIMNEY", "IFCRAMP",
+        "IFCSPACE",
+    ];
+    let dir = std::env::temp_dir().join(format!("kentos-bina-3b-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let path = dir.join("bina.ifc");
+    let doc = &mut app.document.as_mut().expect("the building").model;
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        "cad.arch.ifc",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"path": path.to_string_lossy(), "overwrite": true}),
+    )
+    .expect("writes the file");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let text = std::fs::read_to_string(&path).expect("reads the file");
+    let _ = std::fs::remove_dir_all(&dir);
+    text.lines()
+        .filter_map(|l| l.split_once('=').map(|(_, r)| r.trim()))
+        .filter(|r| CLASSES.iter().any(|c| r.starts_with(&format!("{c}("))))
+        .filter(|r| arguments(r).get(6).is_some_and(|a| a.trim() != "$"))
+        .count()
+}
+
+/// A click on the `k`th mesh of `part` seen from the window's camera: the first of its triangles' middles the click
+/// meets it at; the object's id.
+fn click_on(app: &mut App, part: u32) -> Option<String> {
+    let vp = Viewport { width: 1240.0, height: 560.0 };
+    for k in 0..40 {
+        for n in 0..24 {
+            let w = app.scene3d_window.as_ref().expect("the window");
+            let (cam, ex) = (w.camera(), w.exaggeration());
+            let Some((p, owner)) = w.owner_on(part, k, n) else { break };
+            let Some((x, y, _)) = cam.project(ex.shown(p), &vp) else { continue };
+            send(app, W::Pick(x as f32, y as f32, 1240.0, 560.0));
+            let picked = app.scene3d_window.as_ref().expect("the window").picked.clone();
+            if picked.is_some_and(|q| q.owner.as_deref() == Some(owner.as_str())) {
+                return Some(owner);
+            }
+        }
+    }
+    None
+}
+
+#[test]
+fn the_section_building_shows_the_bodies_its_ifc_file_holds() {
+    let mut app = open(building());
+    let _ = app.update(Message::Run("scene3d.view"));
+    assert_eq!(app.dialog, Some(Dialog::Scene3d));
+    let w = app.scene3d_window.as_ref().expect("the window");
+    let b = w.building.as_ref().expect("a building");
+    let (bodies, rooms, storeys) = (b.bodies(), b.rooms_count(), b.storeys.len());
+    assert_eq!(w.scene_sources(), bodies + rooms, "every body and room in the scene");
+    assert!(w.scene_parts().contains(&WALL) && w.scene_parts().contains(&ROOM), "{:?}", w.scene_parts());
+    assert_eq!(bodies + rooms, bodies_in_the_file(&mut app), "as many bodies as the IFC file holds");
+    // 16 walls, 5 doors, 9 windows, 3 slabs, 16 columns, 8 beams, a stair and 10 rooms: the 68 bodies an independent
+    // reader shows of the file.
+    assert_eq!((bodies, rooms), (58, 10), "the section building's elements and rooms");
+    assert_eq!(storeys, 2);
+    // A storey hidden takes its bodies away; the rooms hidden take the pale volumes away; both come back.
+    send(&mut app, W::Storey(storeys - 1));
+    let w = app.scene3d_window.as_ref().expect("the window");
+    assert!(w.scene_sources() < bodies + rooms);
+    send(&mut app, W::Storey(storeys - 1));
+    send(&mut app, W::Rooms);
+    let w = app.scene3d_window.as_ref().expect("the window");
+    assert_eq!(w.scene_sources(), bodies);
+    assert!(!w.scene_parts().contains(&ROOM));
+    send(&mut app, W::Rooms);
+    assert_eq!(app.scene3d_window.as_ref().expect("the window").scene_sources(), bodies + rooms);
+    // The building is seen as it is: no vertical exaggeration.
+    assert_eq!(app.scene3d_window.as_ref().expect("the window").exaggeration().factor, 1.0);
+}
+
+#[test]
+fn a_click_on_a_wall_selects_it_in_the_plan_and_the_plan_s_selection_shows_in_3d() {
+    let mut app = open(building());
+    let _ = app.update(Message::Run("scene3d.view"));
+    let wall = click_on(&mut app, WALL).expect("a wall seen and clicked");
+    let doc = &app.document.as_ref().expect("the building").model;
+    let slot = doc.slot_of(kentos_domain::Uuid::parse_str(&wall).expect("an id")).expect("the wall's object");
+    assert!(matches!(doc.get(slot), Some(Entity::Wall(_))), "a wall in the plan");
+    assert_eq!(app.selection.ids().to_vec(), vec![slot], "the wall selected in the plan");
+    let w = app.scene3d_window.as_ref().expect("the window");
+    assert_eq!(w.parts_of(&wall), vec![SELECTED], "the wall drawn selected");
+    assert!(w.picked.as_ref().is_some_and(|p| p.what.starts_with("Duvar")), "{:?}", w.picked);
+    // The sky empties the selection, as a click on nothing in the plan does.
+    send(&mut app, W::Pick(2.0, 2.0, 1240.0, 560.0));
+    assert!(app.selection.ids().is_empty());
+    assert!(!app.scene3d_window.as_ref().expect("the window").scene_parts().contains(&SELECTED));
+    // Selected in the plan, shown selected when the window opens.
+    send(&mut app, W::Close);
+    app.selection.set(vec![slot]);
+    let _ = app.update(Message::Run("scene3d.view"));
+    assert_eq!(app.scene3d_window.as_ref().expect("the window").parts_of(&wall), vec![SELECTED]);
+    // The model changes (the wall deleted, as an undo would while the window is open): the scene is made again.
+    let before = app.scene3d_window.as_ref().expect("the window").building.as_ref().expect("a building").bodies();
+    let doc = &mut app.document.as_mut().expect("the building").model;
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        "cad.entities.delete",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"uids": [wall]}),
+    )
+    .expect("deletes the wall");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    send(&mut app, W::Fit);
+    let w = app.scene3d_window.as_ref().expect("the window");
+    assert_eq!(w.building.as_ref().expect("a building").bodies(), before - 1);
+    assert!(w.parts_of(&wall).is_empty(), "the wall is gone from 3D");
+}
+
+/// The section building with a 1 m square room drawn about the centre of its first rectangular room, on that room's
+/// storey.
+fn with_an_overlapping_room() -> (kentos_commands::DocumentSnapshotV2, String, String) {
+    let mut snapshot = building();
+    let at = snapshot
+        .entities
+        .iter()
+        .position(|e| matches!(e, Entity::Space(s) if s.space.parts.first().is_some_and(|p| p.outer.pts.len() == 4)))
+        .expect("a room");
+    let first = kentos_domain::Uuid::from_bytes(snapshot.uids[at].0).to_string();
+    let Entity::Space(room) = snapshot.entities[at].clone() else { unreachable!() };
+    let pts = &room.space.parts[0].outer.pts;
+    let (x, y) = (pts.iter().map(|p| p.x).sum::<f64>() / pts.len() as f64, pts.iter().map(|p| p.y).sum::<f64>() / pts.len() as f64);
+    let mut square = room.clone();
+    square.base.id = snapshot.entities.iter().map(|e| e.base().id).max().unwrap_or(0) + 1;
+    // Drawn, not found round from the walls: its boundary is the square.
+    square.space.sources = None;
+    square.space.seed = None;
+    square.space.number = None;
+    square.space.name = Some("Örtüşen".into());
+    square.space.parts = vec![kentos_commands::SpacePart {
+        outer: kentos_commands::SpaceRing {
+            pts: vec![
+                kentos_commands::Vec2 { x: x - 0.5, y: y - 0.5 },
+                kentos_commands::Vec2 { x: x + 0.5, y: y - 0.5 },
+                kentos_commands::Vec2 { x: x + 0.5, y: y + 0.5 },
+                kentos_commands::Vec2 { x: x - 0.5, y: y + 0.5 },
+            ],
+            bulges: None,
+        },
+        holes: Vec::new(),
+    }];
+    let id = kentos_domain::Uuid::from_u128(0x8067_0000_0000_0000_0000_0000_0000_0001);
+    snapshot.entities.push(Entity::Space(square));
+    snapshot.uids.push(kentos_commands::EntityId(id.into_bytes()));
+    (snapshot, first, id.to_string())
+}
+
+#[test]
+fn two_rooms_of_one_storey_that_share_ground_are_found_and_red_in_3d() {
+    // As drawn, the building's rooms do not overlap.
+    let mut app = open(building());
+    let _ = app.update(Message::Run("arch.audit"));
+    app.arch_audit_standards_settle();
+    let found = |app: &App| {
+        app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter().filter(|f| f.code == "digital_quality_room_overlap").cloned().collect::<Vec<_>>()
+    };
+    assert!(found(&app).is_empty(), "{:?}", found(&app));
+    let (snapshot, first, square) = with_an_overlapping_room();
+    let mut app = open(snapshot);
+    let _ = app.update(Message::Run("arch.audit"));
+    app.arch_audit_standards_settle();
+    let f = found(&app);
+    assert_eq!(f.len(), 1, "{f:?}");
+    let mut uids = f[0].uids.clone();
+    uids.sort();
+    let mut want = vec![first.clone(), square.clone()];
+    want.sort();
+    assert_eq!(uids, want);
+    assert!(f[0].message.contains("1.00 m² örtüşüyor"), "{}", f[0].message);
+    // The finding's row chosen in Denetim: 3B görünüm paints its two rooms, nothing else.
+    choose_the_overlap(&mut app);
+    let _ = app.update(Message::Run("scene3d.view"));
+    let w = app.scene3d_window.as_ref().expect("the window");
+    assert_eq!(w.parts_of(&first), vec![FOUND_ROOM]);
+    assert_eq!(w.parts_of(&square), vec![FOUND_ROOM]);
+    let b = w.building.as_ref().expect("a building");
+    assert!(b.legend().iter().any(|(name, _)| *name == "Bulgulu mahal"));
+    assert!(!w.scene_parts().contains(&FOUND), "only the rooms found: {:?}", w.scene_parts());
+    assert!(b.counted().contains("2 nesnede Denetim bulgusu"), "{}", b.counted());
+}
+
+/// The overlap's row chosen in Denetim, as a click on it chooses it.
+fn choose_the_overlap(app: &mut App) {
+    let at = app
+        .arch
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked")
+        .findings
+        .iter()
+        .position(|f| f.code == "digital_quality_room_overlap")
+        .expect("the overlap");
+    app.arch.arch_audit.chosen.clear();
+    app.arch.arch_audit.selected = Some(at);
+}
+
+/// The building in 3D, wide and light, narrow and dark: the ribbon's place of 3B görünüm, the bodies from two sides, a
+/// wall clicked and selected in the plan, the ground storey alone, the overlapping rooms red after Denetle and the
+/// finding in Denetim; the pictures are the renderer's own (KENTOS_SNAPSHOT_BACKEND=wgpu);
+/// `.run/gui-evidence/bina-3b-8067/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/bina-3b-8067");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let (doc, _, _) = with_an_overlapping_room();
+        let mut app = open(doc);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            // A second frame: the first uploads, the second draws what is resident (the same frame selects again).
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("arch"));
+        shot(&mut app, "1-serit");
+        let _ = app.update(Message::Run("scene3d.view"));
+        shot(&mut app, "2-kuzeydogu");
+        let seen = *app.scene3d_window.as_ref().expect("the window").seen.lock().expect("seen");
+        assert!(seen.tiles > 0 && seen.triangles > 0 && seen.waiting == 0, "{seen:?}");
+        if name == "acik" {
+            send(&mut app, W::View(1));
+            shot(&mut app, "3-guneybati");
+            send(&mut app, W::View(0));
+        }
+        let wall = click_on(&mut app, WALL).expect("a wall clicked");
+        shot(&mut app, "4-duvar-secili");
+        send(&mut app, W::Close);
+        shot(&mut app, "5-plan-secili");
+        let _ = app.update(Message::Run("scene3d.view"));
+        send(&mut app, W::Storey(1));
+        if name == "acik" {
+            shot(&mut app, "6-zemin-kat");
+        }
+        send(&mut app, W::Close);
+        // Denetle: the overlapping rooms are a finding; 3B görünüm paints them red.
+        let _ = app.update(Message::Run("arch.audit"));
+        app.arch_audit_standards_settle();
+        choose_the_overlap(&mut app);
+        let _ = app.update(Message::Run("scene3d.view"));
+        send(&mut app, W::Storey(1));
+        send(&mut app, W::Dolly(2.0));
+        shot(&mut app, "7-ortusen-mahaller");
+        assert!(app.scene3d_window.as_ref().expect("the window").scene_parts().contains(&FOUND_ROOM));
+        send(&mut app, W::Close);
+        shot(&mut app, "8-denetim");
+        let _ = wall;
+    }
+}
