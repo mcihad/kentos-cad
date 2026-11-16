@@ -6,12 +6,11 @@
 //! the legend folds at the bottom left. Under it, a status bar: the point clicked and what it is on, how much the
 //! scene shows (its triangles and tiles in the tip), the objects the check found something about, the mouse's help.
 //!
-//! Beside the plan it is the whole of an operating-system window (shell/windows/, docs/adr/8060); over the drawing
-//! it is a window like the others, its header carrying Ayrı pencerede aç. The strip, the scene and the bar are the
-//! same in both. The sky is the drawing area's own ground (Görünüm › Çizim zemini) a little bluer at the zenith, so
+//! Beside the plan it is the whole of an operating-system window, through the windows' contract ([`View3d`],
+//! shell/windows/surface.rs, docs/adr/8060 §10); over the drawing it is a window like the others, its header carrying
+//! Ayrı pencerede aç. The strip, the scene and the bar are the same in both. The sky is the drawing area's own ground (Görünüm › Çizim zemini) a little bluer at the zenith, so
 //! the model reads as the plan's and its walls stand out from the ground.
 
-use iced::keyboard::key::Named;
 use iced::widget::{Row, canvas, column, container, mouse_area, row, shader, space, stack, tooltip};
 use iced::{Background, Border, Center, Color, Element, Fill, Gradient, Radians, Task, Theme, gradient, mouse};
 use kentos_ui::icon::Icon;
@@ -22,78 +21,81 @@ use kentos_ui::widget::status_bar::Readout;
 use kentos_ui::widget::{Compass, Dialog as Frame, Legend, Menu, StatusBar, Tip, tip};
 
 use super::{
-    APART, CUT, EXAGGERATION, EXPORT, Event, FIT, FLAT, LEGEND, Marker, NORTH, PARTS, Program, RETURN, SEE_THROUGH,
-    TITLE, VIEWS, Window, msg,
+    CUT, EXAGGERATION, EXPORT, Event, FIT, FLAT, LEGEND, Marker, NORTH, PARTS, Program, SEE_THROUGH, TITLE, VIEWS,
+    Window, msg,
 };
 use crate::app::{App, Dialog, Message};
-use crate::keys::KeyPress;
 use crate::style::strip;
+use crate::traces::Control;
 use crate::viewport::Canvas;
-use crate::windows::{Focus, Surface};
+use crate::windows::{OwnWindow, Surface};
 
 /// The surface this window is (shell/windows/).
 const SURFACE: Surface = Surface::Scene3d;
 /// The legend's width, at 12 px text: its longest name (Bulgulu mahal) and its symbol.
 const LEGEND_WIDTH: f32 = 150.0;
 
-impl App {
-    /// Whether 3B görünüm opens in a window of its own: the user's last choice, else beside the plan.
-    pub(crate) fn scene3d_is_apart(&self) -> bool {
-        self.windows.memory.apart(SURFACE)
+/// 3B görünüm as a window of its own (shell/windows/surface.rs): it opens beside the plan until the user brings it
+/// over the drawing; Esc and its close button close it, Tab goes round its fields.
+pub(crate) struct View3d;
+
+impl OwnWindow for View3d {
+    fn kept_as(&self) -> &'static str {
+        "3b-gorunum"
     }
 
-    /// Whether its own window has something to show: apart, and open.
-    pub(crate) fn scene3d_window_wanted(&self) -> bool {
-        self.scene3d_is_apart() && self.scene3d_window.is_some()
+    /// The in-canvas window's width and the scene's room under its tool strip.
+    fn sizes(&self) -> (iced::Size, iced::Size) {
+        (iced::Size::new(1180.0, 760.0), iced::Size::new(720.0, 460.0))
     }
 
-    /// Its own window's title, before the program's name.
-    pub(crate) fn scene3d_window_title(&self) -> String {
+    /// The model is looked at beside the plan, often on another screen.
+    fn opens_apart(&self) -> bool {
+        true
+    }
+
+    fn what(&self) -> &'static str {
+        "3B görünümü"
+    }
+
+    fn apart_tip(&self) -> &'static str {
+        "3B görünümü kendi penceresinde açar: pencereyi başka bir ekrana taşıyıp çizerken modeli izleyebilirsiniz. Sonraki açılışlar da ayrı pencerede olur."
+    }
+
+    fn return_tip(&self) -> &'static str {
+        "3B görünümü yeniden ana pencerede, çizimin üstünde açar. Sonraki açılışlar da orada olur."
+    }
+
+    fn dialog(&self) -> Dialog {
+        Dialog::Scene3d
+    }
+
+    fn is_open(&self, app: &App) -> bool {
+        app.scene3d_window.is_some()
+    }
+
+    fn title(&self, _app: &App) -> String {
         TITLE.to_owned()
     }
 
-    /// The window just made, shown: in its own window (brought to the front when it is open already, made by the
-    /// windows following the state otherwise), or over the drawing.
-    pub(crate) fn show_scene3d(&mut self) {
-        if self.scene3d_is_apart() {
-            if self.dialog == Some(Dialog::Scene3d) {
-                self.dialog = None;
-            }
-            self.windows.ask_focus(Focus::Surface(SURFACE));
-        } else {
-            self.dialog = Some(Dialog::Scene3d);
-        }
+    fn view<'a>(&self, app: &'a App) -> Element<'a, Message> {
+        app.scene3d_window_view()
     }
 
-    /// Into a window of its own, or back over the drawing; the choice is kept for its next opening, in the next run
-    /// too. Back over the drawing waits while another window is open there.
-    pub(super) fn scene3d_set_apart(&mut self, apart: bool) {
-        if !apart && self.dialog.is_some_and(|d| d != Dialog::Scene3d) {
-            self.warn("Ana pencerede açık bir pencere var: önce onu kapatın, sonra 3B görünümü ana pencereye alın.");
-            return;
-        }
-        self.windows.memory.set_apart(SURFACE, apart);
-        if apart {
-            if self.dialog == Some(Dialog::Scene3d) {
-                self.dialog = None;
-            }
-        } else if self.scene3d_window.is_some() {
-            self.dialog = Some(Dialog::Scene3d);
-            self.windows.ask_focus(Focus::Main);
-        }
+    fn close(&self, app: &mut App) -> Task<Message> {
+        app.scene3d_event(Event::Close)
     }
 
-    /// A key its own window's widgets did not take: Esc closes it, Tab goes round its fields.
-    pub(crate) fn scene3d_window_key(&mut self, press: &KeyPress) -> Task<Message> {
-        match press.named() {
-            Some(Named::Tab) if !press.modifiers.control() && !press.modifiers.alt() => {
-                kentos_ui::focus::next(press.modifiers.shift())
-            }
-            Some(Named::Escape) => self.scene3d_event(Event::Close),
-            _ => Task::none(),
-        }
+    fn trace_title(&self, _app: &App) -> Option<String> {
+        Some(TITLE.to_owned())
     }
 
+    fn trace_control(&self, app: &App, control: Control<'_>) -> Option<Result<Option<Message>, String>> {
+        Some(app.scene3d_control(control))
+    }
+}
+
+impl App {
     /// Over the drawing: a window like the others, its strip, scene and bar framed as one viewer. The scene takes
     /// what the application window leaves (between 300 and 640 scaled pixels), all of the window's room when it was
     /// given a size or made full screen (docs/adr/0746).
@@ -111,17 +113,7 @@ impl App {
                 border: Border { color: Tokens::of(t).border, width: 1.0, radius: 0.0.into() },
                 ..container::Style::default()
             });
-        Frame::new(TITLE)
-            .header_button(
-                crate::icons::from_web(Some("externalOpen")),
-                Tip::new(APART).body(
-                    "3B görünümü kendi penceresinde açar: pencereyi başka bir ekrana taşıyıp çizerken modeli izleyebilirsiniz. Sonraki açılışlar da ayrı pencerede olur.",
-                ),
-                msg(Event::Apart(true)),
-            )
-            .fill(viewer)
-            .width(1180.0)
-            .modal(msg(Event::Close))
+        crate::windows::placed(Frame::new(TITLE).fill(viewer).width(1180.0), SURFACE, false, msg(Event::Close))
     }
 
     /// Beside the plan: the whole of its own window, the strip at the top, the bar at the bottom, the scene between.
@@ -215,11 +207,7 @@ impl App {
             if w.building.is_none() {
                 end = end.push(strip::divider());
             }
-            end = end.push(strip::icon_button(
-                crate::icons::from_web(Some("windowReturn")),
-                &format!("{RETURN}: 3B görünümü yeniden ana pencerede, çizimin üstünde açar. Sonraki açılışlar da orada olur."),
-                Some(msg(Event::Apart(false))),
-            ));
+            end = end.push(crate::windows::return_button(SURFACE));
         }
         strip::surface(
             row![Row::with_children(left).spacing(1).align_y(Center).width(Fill).wrap().vertical_spacing(4), end]
@@ -355,7 +343,7 @@ impl App {
     /// What a picture of 3B görünüm shows: its own window while it is open beside the plan, else the main window.
     pub(crate) fn scene3d_shown(&self) -> Element<'_, Message> {
         match self.windows.of(SURFACE) {
-            Some(w) if self.scene3d_window.is_some() => self.window_view(w.id),
+            Some(w) if self.surface_wanted(SURFACE) => self.window_view(w.id),
             _ => self.view(),
         }
     }

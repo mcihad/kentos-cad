@@ -207,3 +207,27 @@ fn the_3d_view_opens_apart_until_the_user_chooses_otherwise() {
     assert!(!Memory::open(&dir).apart(Surface::Scene3d));
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn every_surface_fulfils_the_contract_with_a_name_of_its_own() {
+    let mut names = std::collections::BTreeSet::new();
+    for s in Surface::ALL {
+        let spec = s.spec();
+        assert!(
+            !spec.kept_as().is_empty() && names.insert(spec.kept_as()),
+            "{s:?}: its choices need a name of their own"
+        );
+        let (first, least) = spec.sizes();
+        assert!(
+            least.width <= first.width && least.height <= first.height,
+            "{s:?}: the smallest size is not larger than the first"
+        );
+        assert!(
+            !spec.what().is_empty() && !spec.apart_tip().is_empty() && !spec.return_tip().is_empty(),
+            "{s:?}: its button's tips say what they do"
+        );
+    }
+    // The names released stay as they are: the users' choices on their disks are kept by them.
+    assert_eq!(Surface::ProcessingTool.key(), "islem-araci");
+    assert_eq!(Surface::Scene3d.key(), "3b-gorunum");
+}

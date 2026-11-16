@@ -1,6 +1,6 @@
 //! The windows in the app (docs/adr/8060): each window's view, title and theme by its id, the windows' events, the
-//! windows following the state, and the program's end with the main window. Besides its own module, a new surface
-//! adds code only to the `match`es on [`Surface`] here.
+//! windows following the state, and the program's end with the main window. Every surface is asked through its
+//! [`OwnWindow`](super::OwnWindow) contract: a new surface changes nothing here.
 
 use iced::widget::space;
 use iced::{Element, Size, Task, Theme, window};
@@ -8,7 +8,6 @@ use kentos_ui::theme::typography;
 
 use super::{Event, Focus, Surface};
 use crate::app::{App, Message};
-use crate::keys::KeyPress;
 
 impl App {
     /// A window's view: the main window's ([`App::view`]), or its surface's. A window not known any more (it is
@@ -18,8 +17,7 @@ impl App {
             return self.view();
         }
         let content = match self.windows.surface_of(id) {
-            Some(Surface::ProcessingTool) => self.processing_window_view(),
-            Some(Surface::Scene3d) => self.scene3d_window_view(),
+            Some(surface) => surface.spec().view(self),
             None => space().into(),
         };
         kentos_ui::widget::presented(content).into()
@@ -35,10 +33,7 @@ impl App {
             .program
             .map_or("KentOS CAD", kentos_launch::Module::title);
         match self.windows.surface_of(id) {
-            Some(Surface::ProcessingTool) => {
-                format!("{} — {program}", self.processing_window_title())
-            }
-            Some(Surface::Scene3d) => format!("{} — {program}", self.scene3d_window_title()),
+            Some(surface) => format!("{} — {program}", surface.spec().title(self)),
             None => program.to_owned(),
         }
     }
@@ -84,9 +79,10 @@ impl App {
             Event::Placed(_, None) => {}
             Event::Key(id, press) => {
                 if let Some(surface) = self.windows.surface_of(id) {
-                    return self.surface_key(surface, &press);
+                    return surface.spec().on_key(self, &press);
                 }
             }
+            Event::Apart(surface, apart) => self.set_apart(surface, apart),
         }
         Task::none()
     }
@@ -102,7 +98,7 @@ impl App {
         let mut tasks = Vec::new();
         for surface in Surface::ALL {
             let wanted = self.surface_wanted(surface);
-            let away = wanted && self.surface_work_in_main(surface);
+            let away = wanted && surface.spec().work_in_main(self);
             let moved = self.windows.set_away(surface, away);
             match self.windows.of(surface) {
                 None if wanted => tasks.push(self.open_surface_window(surface)),
@@ -172,37 +168,9 @@ impl App {
         }
     }
 
-    /// Whether a surface has something to show in a window of its own.
-    fn surface_wanted(&self, surface: Surface) -> bool {
-        match surface {
-            Surface::ProcessingTool => self.processing_window_wanted(),
-            Surface::Scene3d => self.scene3d_window_wanted(),
-        }
-    }
-
-    /// Whether a surface's work is in the main window for now.
-    fn surface_work_in_main(&self, surface: Surface) -> bool {
-        match surface {
-            Surface::ProcessingTool => self.processing_work_in_main(),
-            // Its clicks select in the plan, but nothing of its work moves there.
-            Surface::Scene3d => false,
-        }
-    }
-
     /// A surface's window closed by its close button: its Kapat.
     fn surface_closed(&mut self, surface: Surface) -> Task<Message> {
-        match surface {
-            Surface::ProcessingTool => self.processing_window_closed(),
-            Surface::Scene3d => self.scene3d_event(crate::scene3d_window::Event::Close),
-        }
-    }
-
-    /// A key no widget of a surface's window took.
-    fn surface_key(&mut self, surface: Surface, press: &KeyPress) -> Task<Message> {
-        match surface {
-            Surface::ProcessingTool => self.processing_window_key(press),
-            Surface::Scene3d => self.scene3d_window_key(press),
-        }
+        surface.spec().close(self)
     }
 }
 

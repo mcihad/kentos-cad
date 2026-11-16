@@ -19,7 +19,7 @@ bölümler (3, 5–8, 11, 13–15, 18–20, 23) aşağıdadır.
 | 1 | [Ürün ve mevcut durum](docs/kilavuz/01-urun-ve-durum.md) | Ürünün kapsamı, modüller, neyin var neyin hedef olduğu |
 | 2 | [Çalıştırma](docs/kilavuz/02-calistirma.md) | Bir komutun, testin, ortak durum betiğinin, resim testinin tam satırı |
 | 4 | [Web mimarisi](docs/kilavuz/04-web-mimarisi.md) | Web'e dönüşte (web duruyor, ADR 0228); katmanlar, AppContext, durum kapsamları, komut, araç, çizim hattı |
-| 9 | [Yeni iş ekleme tarifleri](docs/kilavuz/09-yeni-is-tarifleri.md) | Komut, araç (§9.2: araç = komut), ayar, test, render, processing aracı, dosya biçimi eklerken |
+| 9 | [Yeni iş ekleme tarifleri](docs/kilavuz/09-yeni-is-tarifleri.md) | Komut, araç (§9.2: araç = komut), ayar, test, render, processing aracı, dosya biçimi, ayrı işletim sistemi penceresi (§9.8) eklerken |
 | 10 | [Yol haritası](docs/kilavuz/10-yol-haritasi.md) | Devir notu ve faz geçmişi |
 | 12 | [Dosya haritası](docs/kilavuz/12-dosya-haritasi.md) | Hangi iş hangi dizinde |
 | 16 | [Tenant, proje yetkisi ve paylaşım](docs/kilavuz/16-tenant-yetki-paylasim.md) | Yetki, rol, paylaşım |

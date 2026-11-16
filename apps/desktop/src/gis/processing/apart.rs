@@ -4,6 +4,10 @@
 //! the panels) while the tool runs from its own window with its progress, Durdur and results as over the drawing.
 //! The choice is kept (shell/windows/memory.rs): the next tool opens the same way, in the next run too.
 //!
+//! It is a window of its own through the windows' contract ([`ToolWindow`], shell/windows/surface.rs): moving it, its
+//! header button, its framing and the choice are the windows'; this module gives what is the tool window's own (its
+//! title, its view, its close, its keys, a pick in the main window).
+//!
 //! While one of its fields is picked on the drawing (Sahneden seç) the window says what the main window asks and the
 //! main window gets the keyboard; the form comes back when the pick ends. İfade oluşturucu, larger than the tool
 //! window, opens over the main window, which takes the keyboard for it.
@@ -13,54 +17,87 @@ use iced::widget::{Row, button, column, row, space};
 use iced::{Center, Element, Task};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{metrics, typography};
-use kentos_ui::widget::{Dialog, Tip};
+use kentos_ui::widget::Dialog;
 use kentos_ui::{label, style};
 
 use super::{Event, Picking, ToolDialog};
 use crate::app::{App, Dialog as Asking, Message};
-use crate::gis::{self, GisDialogKind};
+use crate::gis::GisDialogKind;
 use crate::keys::KeyPress;
-use crate::windows::{Focus, Surface};
+use crate::windows::{OwnWindow, Surface};
 
 /// The surface this module shows (shell/windows/).
 const SURFACE: Surface = Surface::ProcessingTool;
 
-fn ev(e: Event) -> Message {
-    Message::Gis(gis::Event::Processing(e))
-}
-
 /// The header's button: out of the main window into a window of its own, or back into it.
 pub(super) fn placed<'a>(dialog: Dialog<'a, Message>, apart: bool) -> Dialog<'a, Message> {
-    if apart {
-        dialog.header_button(
-            crate::icons::from_web(Some("windowReturn")),
-            Tip::new("Ana pencereye al").body(
-                "Aracı yeniden ana pencerede, çizimin üstünde açar. Sonraki araçlar da orada açılır.",
-            ),
-            ev(Event::Apart(false)),
-        )
-    } else {
-        dialog.header_button(
-            crate::icons::from_web(Some("externalOpen")),
-            Tip::new("Ayrı pencerede aç").body(
-                "Aracı kendi penceresinde açar: pencereyi başka bir ekrana taşıyıp aracı çalıştırırken haritayı izleyebilirsiniz. Sonraki araçlar da ayrı pencerede açılır.",
-            ),
-            ev(Event::Apart(true)),
-        )
+    crate::windows::apart_button(dialog, SURFACE, apart)
+}
+
+/// İşlemler's tool window as a window of its own (shell/windows/surface.rs).
+pub(crate) struct ToolWindow;
+
+impl OwnWindow for ToolWindow {
+    fn kept_as(&self) -> &'static str {
+        "islem-araci"
+    }
+
+    /// The in-canvas window's 940 × 660.
+    fn sizes(&self) -> (iced::Size, iced::Size) {
+        (iced::Size::new(940.0, 660.0), iced::Size::new(640.0, 420.0))
+    }
+
+    fn what(&self) -> &'static str {
+        "aracı"
+    }
+
+    fn apart_tip(&self) -> &'static str {
+        "Aracı kendi penceresinde açar: pencereyi başka bir ekrana taşıyıp aracı çalıştırırken haritayı izleyebilirsiniz. Sonraki araçlar da ayrı pencerede açılır."
+    }
+
+    fn return_tip(&self) -> &'static str {
+        "Aracı yeniden ana pencerede, çizimin üstünde açar. Sonraki araçlar da orada açılır."
+    }
+
+    fn dialog(&self) -> Asking {
+        Asking::Gis(GisDialogKind::Processing)
+    }
+
+    /// A tool open, or one of its fields picked on the drawing.
+    fn is_open(&self, app: &App) -> bool {
+        app.gis.processing.dialog.is_some() || app.processing_picking().is_some()
+    }
+
+    /// Over the drawing only with its form: a pick on the drawing waits in its own window.
+    fn has_dialog(&self, app: &App) -> bool {
+        app.gis.processing.dialog.is_some()
+    }
+
+    fn work_in_main(&self, app: &App) -> bool {
+        app.processing_work_in_main()
+    }
+
+    fn title(&self, app: &App) -> String {
+        app.processing_window_title()
+    }
+
+    fn view<'a>(&self, app: &'a App) -> Element<'a, Message> {
+        app.processing_window_view()
+    }
+
+    fn close(&self, app: &mut App) -> Task<Message> {
+        app.processing_window_closed()
+    }
+
+    fn on_key(&self, app: &mut App, press: &KeyPress) -> Task<Message> {
+        app.processing_window_key(press)
     }
 }
 
 impl App {
     /// Whether the tool windows open in a window of their own: the user's last choice, kept between runs.
     pub(crate) fn processing_is_apart(&self) -> bool {
-        self.windows.memory.apart(SURFACE)
-    }
-
-    /// Whether the tool's own window has something to show: apart, with a tool open or one of its fields picked on
-    /// the drawing.
-    pub(crate) fn processing_window_wanted(&self) -> bool {
-        self.processing_is_apart()
-            && (self.gis.processing.dialog.is_some() || self.processing_picking().is_some())
+        self.is_apart(SURFACE)
     }
 
     /// Whether the tool's work is in the main window now: a field picked on the drawing, or İfade oluşturucu open
@@ -102,39 +139,12 @@ impl App {
 
     /// The tool shows: in its own window when apart (given the keyboard), else over the drawing.
     pub(crate) fn show_processing(&mut self) {
-        if self.processing_is_apart() {
-            self.windows.ask_focus(Focus::Surface(SURFACE));
-        } else {
-            self.dialog = Some(Asking::Gis(GisDialogKind::Processing));
-        }
+        self.show_surface(SURFACE);
     }
 
     /// The tool window's place over the drawing let go; another window of the main window stays open.
     pub(crate) fn processing_dialog_away(&mut self) {
-        if self.dialog == Some(Asking::Gis(GisDialogKind::Processing)) {
-            self.dialog = None;
-        }
-    }
-
-    /// Ayrı pencerede aç (`true`) and Ana pencereye al. The window itself follows (shell/windows/app.rs).
-    pub(crate) fn processing_set_apart(&mut self, apart: bool) {
-        if !apart
-            && self
-                .dialog
-                .is_some_and(|d| d != Asking::Gis(GisDialogKind::Processing))
-        {
-            self.warn(
-                "Ana pencerede açık bir pencere var: önce onu kapatın, sonra aracı ana pencereye alın.",
-            );
-            return;
-        }
-        self.windows.memory.set_apart(SURFACE, apart);
-        if apart {
-            self.processing_dialog_away();
-        } else if self.gis.processing.dialog.is_some() {
-            self.dialog = Some(Asking::Gis(GisDialogKind::Processing));
-            self.windows.ask_focus(Focus::Main);
-        }
+        self.surface_away(SURFACE);
     }
 
     /// The tool's own window: its form or Toplu çalıştır's table with Ana pencereye al in the header; while a field

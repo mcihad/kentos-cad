@@ -1,7 +1,8 @@
-# ADR 8060: Ayrı işletim sistemi pencereleri — İşlemler aracı ikinci ekranda
+# ADR 8060: Ayrı işletim sistemi pencereleri — uygulama geneli destek; ilk yüzeyler İşlemler aracı ve 3B görünüm
 
 - **Durum:** uygulandı (15 Kasım 2026). İşlemler araç penceresi (araç formu ve Toplu çalıştır tablosu) ayrı pencereye
-  alınabilir; 16 Kasım'dan beri 3B görünüm de, kendiliğinden ayrı açılarak (§9). Düzenek öbür pencereler için hazır (§2). Gerçek pencerede, yan yana iki ekranın yerini tutan geniş
+  alınabilir. 16 Kasım'dan beri 3B görünüm de ayrı pencereye alınabilir ve kendiliğinden ayrı açılır (§9). Aynı gün
+  destek uygulama geneline çıktı (§10): bir pencere, ortak bir sözleşmeyi yazarak katılır; tarif kılavuz §9.8'dedir. Gerçek pencerede, yan yana iki ekranın yerini tutan geniş
   bir X ekranında sınandı (§7).
 - **Sahibin isteği (15 Kasım, özet):** pencerelerimiz ana pencerenin içinde, tuvalin üstünde çiziliyor ve bu iyi; ama bazı
   pencerelerde kullanıcı çalışırken ana ekranın değiştiğini görmeli, örneğin İşlemler'in araç pencerelerinde. Böyle bir
@@ -159,7 +160,7 @@ bekliyor; neden kesin bulunmadı (§8).
 ## §8. Kalanlar
 
 - Öbür pencereler (Öznitelik tablosu, Katman stili, Model tasarımcısı, İfade oluşturucu…): her biri bir `Surface`
-  değişkeni ve kendi `apart.rs`'i.
+  değişkeni ve kendi `OwnWindow`'u (§10, kılavuz §9.8).
 - İfade oluşturucu ayrı pencerenin içinde değil, ana pencerede açılıyor (araç penceresinden büyük); kendi yüzeyi olabilir.
 - Sahiplenilmiş pencere yok: iced 0.14 ana pencerenin üstünde kalıp başka programların üstüne çıkmayan bir pencereyi her
   platformda vermiyor. Ayrı pencere sıradan penceredir; aynı ekranda ana pencereye tıklanınca arkasında kalabilir.
@@ -204,6 +205,44 @@ bekliyor; neden kesin bulunmadı (§8).
   `.run/gui-evidence/3b-pencere/`, `.run/gui-evidence/bina-3b-8067/`.
 - **Kalanlar:** büyük binada her düzenlemede yeniden kurulum ölçülmedi (ADR 8067 §8). Gerçek pencerede, fareyle iki ekranda
   kabul yapılmadı. Yolda arazinin ve koridorların her revizyonda yeniden kurulması da ölçülmedi.
+
+## §10. Uygulama geneli destek (16 Kasım 2026)
+
+- **Sahibin isteği (16 Kasım):** “İşlemler penceresi açmayacak onun gibi işletim sistemi penceresi desteği olacak, bu
+  pencere yapısı modüler olsun ki ileride başka işlerde de kullanabiliriz. Yani uygulama genelinde desteği olacak os
+  penceresi desteği.”
+- **Önce:** her yüzey ayırma ve geri getirmeyi kendi kodunda yazıyordu. Başlık düğmesi, Esc/Tab, iz yanıtları ve
+  `windows/app.rs`'teki altı `match` kolu da yüzeye özeldi. İşlemler ile 3B görünüm aynı kodu iki kez taşıyordu.
+- **Sözleşme:** `OwnWindow` (`apps/desktop/src/shell/windows/surface.rs`). Her yüzey bunu kendi modülünde, bir birim
+  yapı için yazar: İşlemler'de `gis/processing/apart.rs::ToolWindow`, 3B görünümde `shell/scene3d_view.rs::View3d`.
+  Sözleşmenin parçaları:
+  - Zorunlu: seçimin anahtarı (`kept_as`), boylar, iletideki adı (`what`), iki düğmenin açıklaması, çizimin üstündeki
+    `Dialog` türü, açık olup olmadığı, başlığı, görünümü ve kapanışı.
+  - Seçimli: kendiliğinden ayrı açılması, çizimin üstünde gösterilebilmesi (`has_dialog`; İşlemler'de sahneden seçim
+    sürerken değil), işin ana pencerede olması (`work_in_main`), tuşları (öntanımlı: Tab alanlarda dolaşır, Esc
+    kapatır) ve iz yanıtları.
+  - `Surface` yüzeyin adıdır; `Surface::spec` onu sözleşmesine bağlar. `windows/app.rs` yalnız sözleşmeyi sorar ve
+    yeni yüzeyle değişmez.
+- **Ortak işler, bir kez:**
+  - `App::{is_apart, surface_wanted, show_surface, surface_away, set_apart}`: ayırma, geri getirme, açılışta doğru
+    yerde gösterme ve seçimin hatırlanması. Ana pencerede başka bir pencere varken geri getirme, yüzeyin adıyla
+    reddedilir.
+  - Tek ileti: `windows::Event::Apart(Surface, bool)`. Yüzeylerin kendi `Apart` iletileri kalktı.
+  - Başlık düğmesi `apart_button`. Yerleşim `placed`: ayrıysa pencerenin tamamı, değilse çizimin üstünde. Başlığı
+    olmayan pencere için `return_button`.
+  - İz oynatıcıda iki düğmenin sözcükleri (“Ayrı pencerede aç”, “Ana pencereye al”) her yüzeyde geçerlidir
+    (`apart_control`). Ana pencerede pencere yokken ayrı yüzey, kendi yanıtlarıyla izi karşılar
+    (`apart_trace_title`, `apart_trace_control`).
+- **Neden ayrı paket değil:** sözleşmenin türleri (`App`, `Message`, `Dialog`, tuş basışı) uygulamanındır.
+  Uygulamadan bağımsız parçalar zaten kitin içindedir: `Dialog::window`, `Dialog::header_button`. Pencere kaydı, bellek
+  ve yönlendirme ise uygulamanın tek durumuna bağlıdır (§1). Ayrı bir program bu düzeneği isterse (Launcher), o gün kaydı
+  ve belleği türden bağımsız bir pakete taşımak ayrı bir adımdır.
+- **Sınamalar:**
+  - `windows::tests::every_surface_fulfils_the_contract_with_a_name_of_its_own`: her yüzeyin adı tek, boyu tutarlı,
+    ipuçları dolu; yayımlanmış anahtarlar değişmemiş.
+  - `scene3d_window_tests`: izin düğmenin sözcükleriyle taşıması; başka bir pencere varken geri getirmenin reddi.
+  - İşlemler'in eski sınamaları ortak iletiyle geçiyor.
+- **Tarif:** [kılavuz §9.8](../kilavuz/09-yeni-is-tarifleri.md).
 
 ## Uygularken verilen kararlar (sahibin söylemediği)
 

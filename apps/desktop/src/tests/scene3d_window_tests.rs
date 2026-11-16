@@ -31,7 +31,7 @@ fn the_window_opens_on_the_scene_and_its_camera_follows() {
     let _ = app.update(Message::Run("scene3d.view"));
     // Beside the plan, in a window of its own: nothing over the drawing.
     assert_eq!(app.dialog, None);
-    assert!(app.scene3d_window_wanted() && app.windows.of(Surface::Scene3d).is_some());
+    assert!(app.surface_wanted(Surface::Scene3d) && app.windows.of(Surface::Scene3d).is_some());
     let w = app.scene3d_window.as_ref().expect("the window");
     // The terrain cut by the two corridors (610 + 97 triangles).
     assert!(w.scene_triangles() > 707);
@@ -114,11 +114,22 @@ fn the_window_opens_beside_the_plan_and_comes_over_the_drawing_and_back() {
     let settings = app.window_settings(Surface::Scene3d);
     assert!(!settings.exit_on_close_request, "its close is the window's Kapat");
     let _ = app.window_view(id);
+    // A trace moves it with the button's own words.
+    assert!(matches!(
+        app.dialog_control(crate::traces::Control::Press("Ana pencereye al")),
+        Ok(Some(Message::Windows(Windows::Apart(Surface::Scene3d, false))))
+    ));
+    // Back over the drawing waits while another window is open there: it stays apart.
+    app.dialog = Some(Dialog::Settings);
+    let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, false)));
+    assert!(app.is_apart(Surface::Scene3d) && app.windows.of(Surface::Scene3d).is_some());
+    assert_eq!(app.dialog, Some(Dialog::Settings));
+    app.dialog = None;
     // Ana pencereye al: over the drawing, its own window gone, the choice kept.
-    send(&mut app, W::Apart(false));
+    let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, false)));
     assert_eq!(app.dialog, Some(Dialog::Scene3d));
     assert!(app.windows.of(Surface::Scene3d).is_none());
-    assert!(!app.scene3d_is_apart());
+    assert!(!app.is_apart(Surface::Scene3d));
     let _ = app.view();
     // Esc over the drawing closes it, its scene with it.
     let _ = app.update(Message::Key(escape()));
@@ -127,7 +138,7 @@ fn the_window_opens_beside_the_plan_and_comes_over_the_drawing_and_back() {
     // Opened again over the drawing, then Ayrı pencerede aç: beside the plan again.
     let _ = app.update(Message::Run("scene3d.view"));
     assert_eq!(app.dialog, Some(Dialog::Scene3d));
-    send(&mut app, W::Apart(true));
+    let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, true)));
     assert_eq!(app.dialog, None);
     let id = opened(&mut app);
     // Esc in its own window closes it; so does its close button.
@@ -233,7 +244,7 @@ fn screens() {
         assert!(on_lane, "a lane is seen and picked to the millimetre");
         shot(&mut app, "6-secilen-nokta");
         // Over the drawing: the main window's picture, the same strip, scene and bar in a window of the main one.
-        send(&mut app, W::Apart(false));
+        let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, false)));
         let mut whole = Snapshot::new(main).expect("a renderer");
         whole.settle(&mut app, App::view, &mut update);
         whole.settle(&mut app, App::view, &mut update);

@@ -21,7 +21,7 @@
 //! - Ayrı pencerede aç ([`apart`], docs/adr/8060): the window in an operating-system
 //!   window of its own, beside the main one, the drawing free while it runs.
 
-mod apart;
+pub(crate) mod apart;
 #[cfg(test)]
 mod apart_tests;
 mod background;
@@ -286,8 +286,6 @@ pub enum Event {
     Sink(sink::SinkEvent),
     /// Analiz ortamı (environment.rs, docs/adr/0643 §5).
     Environment(environment::EnvironmentEvent),
-    /// Ayrı pencerede aç (true) or Ana pencereye al (apart.rs, docs/adr/8060).
-    Apart(bool),
 }
 
 /// The app as the window reads it: the live descriptions and previews.
@@ -469,10 +467,6 @@ impl App {
                 {
                     self.gis.builder = None;
                 }
-                return Task::none();
-            }
-            Event::Apart(apart) => {
-                self.processing_set_apart(apart);
                 return Task::none();
             }
             Event::Batch(e) => return self.processing_batch_event(e),

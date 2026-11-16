@@ -91,3 +91,42 @@ dönüşüm yoktur. Proje dosyası değişim biçimi değildir: kodek `crates/sh
 spesifikasyon `docs/specs/kcad-v2.md`, karar ADR 0025; değişiklik spesifikasyon,
 `fixtures/kcad/v2` (bağımsız Python yazıcısıyla), Rust kodeği ve `tools/kcad/kcad.py`
 ile birlikte yapılır.
+
+### 9.8 Ayrı işletim sistemi penceresi
+
+Uygulamadaki her pencere, işletim sisteminin ayrı penceresine alınabilir. Kullanıcı onu başka bir ekrana taşır ve
+çalışırken çizimin değiştiğini görür. Destek uygulama genelidir
+([ADR 8060](../adr/8060-secondary-os-windows.md) §10, `apps/desktop/src/shell/windows/`). Ortak işler bir kez yazılmıştır:
+
+- pencereyi ayırıp geri getirmek, seçimi hatırlamak (`ayri-pencereler.json`);
+- ana pencerede başka bir pencere açıkken geri getirmeyi nedeniyle reddetmek;
+- başlıktaki düğme ve ipuçları;
+- yerleşim: pencereyi doldurmak ya da çizimin üstünde durmak;
+- Esc ve Tab;
+- izin yanıtları ve tuşların ana pencereye sızmaması.
+
+Bir pencereyi katmak:
+
+1. **Sözleşme:** pencerenin kendi modülünde bir birim yapı (`pub(crate) struct …Window;`) için
+   `crate::windows::OwnWindow` yazılır:
+   - `kept_as`: seçimin anahtarı; bir kez yayımlandıktan sonra değişmez.
+   - `sizes`: ilk ve en küçük boy, 12 px yazıda.
+   - `what`: iletideki adı, belirtme hâlinde (“3B görünümü”).
+   - `apart_tip` ve `return_tip`: iki düğmenin açıklaması.
+   - `dialog`: çizimin üstündeki `Dialog` türü.
+   - `is_open`, `title`, `view` ve `close`.
+   - Gerekirse: `opens_apart` (kendiliğinden ayrı açılması), `has_dialog`, `work_in_main` (çizimden seçerken klavye
+     ana pencereye geçer), `on_key`, `trace_title` ve `trace_control`.
+2. **Ad:** `windows::Surface`'a bir değişken eklenir ve `Surface::spec` onu sözleşmeye bağlar. `windows/app.rs`
+   değişmez.
+3. **Açılış ve kapanış:** pencerenin durumu kurulunca `self.show_surface(Surface::…)` çağrılır. Kapanınca
+   `self.surface_away(Surface::…)` çağrılır. `self.dialog` elle yazılmaz.
+4. **Çizim:** pencerenin `Dialog` kutusu `crate::windows::placed(kutu, Surface::…, ayrı_mı, kapat_iletisi)` ile
+   verilir. Böylece başlıktaki düğme ve iki yerleşim birlikte gelir. Başlığı olmayan bir pencere
+   `windows::return_button` kullanır.
+5. **Durum:** pencere ayrıyken ana pencere serbesttir. Pencerenin gösterdiği şey çizimle birlikte değişiyorsa her
+   mesajdan sonra izlenir (örnek: `App::follow_scene3d`).
+6. **Sınama:** pencerenin ayrılması ve geri gelmesi sınanır. Başka bir pencere açıkken geri gelmenin reddi, ayrı
+   penceredeki Esc ve kapatma düğmesi, izin yanıtı ve seçimin hatırlanması da sınanır. Örnekler
+   `gis/processing/apart_tests.rs` ve `tests/scene3d_window_tests.rs`'tedir. Sözleşmenin kendi sınaması
+   (`windows::tests::every_surface_fulfils_the_contract_with_a_name_of_its_own`) yeni pencereyi kendiliğinden kapsar.

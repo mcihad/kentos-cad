@@ -49,9 +49,11 @@ impl App {
     /// The open window's title, as it shows it; a window no trace answers
     /// yet goes by its name in the code.
     pub fn dialog_title(&self) -> Option<String> {
-        // 3B görünüm in its own window answers while nothing is open over the drawing (scene3d_view.rs).
-        if self.dialog.is_none() && self.scene3d_window.is_some() {
-            return Some(crate::scene3d_window::TITLE.to_owned());
+        // A window of its own answers while nothing is open over the drawing (shell/windows/surface.rs).
+        if self.dialog.is_none()
+            && let Some(title) = self.apart_trace_title()
+        {
+            return Some(title);
         }
         self.dialog.map(|d| match d {
             Dialog::Exchange => self.exchange_trace_title(),
@@ -320,6 +322,10 @@ impl App {
     /// The message `control` of the open window sends; `None` when it sends
     /// nothing (a button that is off, a box already so).
     pub fn dialog_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+        // The button that moves a window to its own or back is the windows', in every such window.
+        if let Some(moved) = self.apart_control(control) {
+            return Ok(Some(moved));
+        }
         match self.dialog {
             Some(Dialog::Exchange) => self.exchange_trace_control(control),
             Some(Dialog::BlockDefine) => self.block_define_control(control),
@@ -540,8 +546,9 @@ impl App {
             Some(Dialog::Project) if self.asking_type() => self.project_type_control(control),
             Some(Dialog::LayerStyle) => self.layer_style_control(control),
             Some(other) => Err(format!("{other:?} penceresi izden yanıtlanamıyor")),
-            None if self.scene3d_window.is_some() => self.scene3d_control(control),
-            None => Err("açık pencere yok".to_owned()),
+            None => self
+                .apart_trace_control(control)
+                .unwrap_or_else(|| Err("açık pencere yok".to_owned())),
         }
     }
 }

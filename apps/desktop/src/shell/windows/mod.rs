@@ -1,12 +1,15 @@
-//! Windows of their own beside the main one (docs/adr/8060): a dialog the user takes out of the main window into an
-//! operating-system window, to put it on another screen and watch the drawing change while working in it.
+//! Windows of their own beside the main one, for the whole application (docs/adr/8060): a window the user takes out of
+//! the main window into an operating-system window, to put it on another screen and watch the drawing change while
+//! working in it.
 //!
 //! The program is one iced daemon with one state. Every window's messages go through the one `App::update`; each
 //! window's view, title and theme are asked by its id (`app.rs`).
 //!
-//! - [`Surface`] is what a secondary window shows. İşlemler's tool window is the first, 3B görünüm the second.
-//!   Another dialog becomes a window of its own by adding a variant: its view, title, close and keys in `app.rs`,
-//!   its state where it lives.
+//! - [`Surface`] names what a secondary window shows; [`OwnWindow`] (`surface.rs`) is the contract each surface
+//!   fulfils in its own module: its name, sizes, dialog, view, title, close and keys. What every surface shares is
+//!   written once in `surface.rs`: taking it out and bringing it back, the header button, the framing, the default keys
+//!   and the trace's answers. A window joins by implementing the contract and naming it in [`Surface::spec`]
+//!   (docs/kilavuz/09-yeni-is-tarifleri.md §9.8). İşlemler's tool window and 3B görünüm are the first two.
 //! - [`Windows`] holds the main window's id and the open secondary windows, each with its surface, and what each
 //!   surface remembers ([`memory`]).
 //! - The windows follow the state (`App::follow_windows`): a surface that is apart and has something to show gets
@@ -16,6 +19,7 @@
 mod app;
 pub(crate) mod memory;
 pub(crate) mod routing;
+mod surface;
 #[cfg(test)]
 mod tests;
 
@@ -23,44 +27,42 @@ use iced::window;
 use iced::{Point, Size};
 
 pub(crate) use memory::Memory;
+pub(crate) use surface::{OwnWindow, apart_button, placed, return_button};
 
-/// What a secondary window shows.
+/// What a secondary window shows: one name per window that can be taken out of the main window.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) enum Surface {
     /// İşlemler's tool window (gis/processing/apart.rs), its Toplu çalıştır table too.
     ProcessingTool,
-    /// 3B görünüm (scene3d_window.rs): the building or the road project in 3D, beside the plan.
+    /// 3B görünüm (scene3d_view.rs): the building or the road project in 3D, beside the plan.
     Scene3d,
 }
 
 impl Surface {
     pub(crate) const ALL: [Surface; 2] = [Surface::ProcessingTool, Surface::Scene3d];
 
-    /// The name its choices are kept by (`ayri-pencereler.json`).
-    pub(crate) fn key(self) -> &'static str {
+    /// What the surface is: its own module's [`OwnWindow`].
+    pub(crate) fn spec(self) -> &'static dyn OwnWindow {
         match self {
-            Surface::ProcessingTool => "islem-araci",
-            Surface::Scene3d => "3b-gorunum",
+            Surface::ProcessingTool => &crate::processing::apart::ToolWindow,
+            Surface::Scene3d => &crate::scene3d_window::View3d,
         }
     }
 
-    /// Whether it opens in a window of its own until the user says otherwise. A tool is run over the drawing it
-    /// changes; the model in 3D is looked at beside the plan, often on another screen.
+    /// The name its choices are kept by (`ayri-pencereler.json`).
+    pub(crate) fn key(self) -> &'static str {
+        self.spec().kept_as()
+    }
+
+    /// Whether it opens in a window of its own until the user says otherwise.
     pub(crate) fn opens_apart(self) -> bool {
-        match self {
-            Surface::ProcessingTool => false,
-            Surface::Scene3d => true,
-        }
+        self.spec().opens_apart()
     }
 
     /// The window's size at its first opening and the smallest it may be made, in logical pixels at 12 px text
-    /// (`app.rs` grows them with the text size). The tool window's are the in-canvas window's 940 × 660; the 3D
-    /// view's are the in-canvas window's width and the scene's room under its tool strip.
+    /// (`app.rs` grows them with the text size).
     pub(crate) fn sizes(self) -> (Size, Size) {
-        match self {
-            Surface::ProcessingTool => (Size::new(940.0, 660.0), Size::new(640.0, 420.0)),
-            Surface::Scene3d => (Size::new(1180.0, 760.0), Size::new(720.0, 460.0)),
-        }
+        self.spec().sizes()
     }
 }
 
@@ -114,6 +116,8 @@ pub(crate) enum Event {
     Placed(Surface, Option<Point>),
     /// A key no widget of a secondary window took (routing.rs).
     Key(window::Id, crate::keys::KeyPress),
+    /// Its header's “Ayrı pencerede aç” (true) or “Ana pencereye al” (surface.rs).
+    Apart(Surface, bool),
 }
 
 impl Windows {

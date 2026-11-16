@@ -300,7 +300,7 @@ impl App {
         if let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) {
             b.taken = taken;
         }
-        self.show_scene3d();
+        self.show_surface(crate::windows::Surface::Scene3d);
     }
 
     /// A click's object selected in the plan (a click on nothing, or on what the drawing has no object for, empties

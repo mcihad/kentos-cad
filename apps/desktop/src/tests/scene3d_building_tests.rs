@@ -108,7 +108,7 @@ fn the_section_building_shows_the_bodies_its_ifc_file_holds() {
     let mut app = open(building());
     let _ = app.update(Message::Run("scene3d.view"));
     // Beside the plan, in a window of its own (scene3d_view.rs): nothing over the drawing.
-    assert!(app.dialog.is_none() && app.scene3d_window_wanted());
+    assert!(app.dialog.is_none() && app.surface_wanted(crate::windows::Surface::Scene3d));
     let w = app.scene3d_window.as_ref().expect("the window");
     let b = w.building.as_ref().expect("a building");
     let (bodies, rooms, storeys) = (b.bodies(), b.rooms_count(), b.storeys.len());

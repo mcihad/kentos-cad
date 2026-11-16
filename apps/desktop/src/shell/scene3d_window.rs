@@ -41,12 +41,14 @@ use kentos_render_wgpu::scene3d::{DEPTH_CLEAR, DepthTarget, Frame as Scene3dFram
 use kentos_scene3d::{Aabb, Camera, Chunked, Content, Exaggeration, Limits, Projection, Settings, SourceMesh, Viewport, chunk, select};
 use kentos_ui::theme::Tokens;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::scene3d_building::{self, Building3d};
 use crate::traces::Control;
 
 #[path = "scene3d_view.rs"]
 mod view;
+
+pub(crate) use view::View3d;
 
 /// The window's title, which a trace names it by.
 pub const TITLE: &str = "3B görünüm";
@@ -59,8 +61,6 @@ const CUT: &str = "Araziyi kes";
 const FLAT: &str = "Düz yüzler";
 const LEGEND: &str = "Lejant";
 const NORTH: &str = "Kuzeye bak";
-const APART: &str = "Ayrı pencerede aç";
-const RETURN: &str = "Ana pencereye al";
 /// The view presets: the camera's azimuth (degrees from east, counterclockwise) and elevation.
 pub(crate) const VIEWS: [(&str, f64, f64); 4] =
     [("Kuzeydoğu", 45.0, 30.0), ("Güneybatı", 225.0, 30.0), ("Kuzeybatı", 135.0, 30.0), ("Üst", -90.0, 89.0)];
@@ -271,8 +271,6 @@ pub enum Event {
     North,
     /// The legend over the scene folded or opened.
     Legend,
-    /// Into a window of its own (true) or back over the drawing.
-    Apart(bool),
     Export,
     Close,
 }
@@ -422,15 +420,13 @@ impl App {
         let made = (doc.model.generation(), doc.model.revision());
         let scene = Scene::road(&road_scene::with_terrain_cut(&parts), true);
         self.scene3d_window = Some(Box::new(Window::new(scene, parts, None, made)));
-        self.show_scene3d();
+        self.show_surface(crate::windows::Surface::Scene3d);
     }
 
     /// The window closes: its scene goes, and the main window's dialog when the window was over the drawing.
     pub(crate) fn scene3d_gone(&mut self) {
         self.scene3d_window = None;
-        if self.dialog == Some(Dialog::Scene3d) {
-            self.dialog = None;
-        }
+        self.surface_away(crate::windows::Surface::Scene3d);
     }
 
     /// 3B görünüm follows the drawing while it is open (shell/app/update.rs, after every message): beside the plan
@@ -512,7 +508,6 @@ impl App {
             // From the south, looking north: north is up on the screen.
             Event::North => w.azimuth = -90.0,
             Event::Legend => w.legend = !w.legend,
-            Event::Apart(apart) => self.scene3d_set_apart(apart),
             Event::View(i) => {
                 let (_, a, e) = VIEWS[i.min(VIEWS.len() - 1)];
                 w.fit(a, e);
@@ -560,8 +555,6 @@ impl App {
             Control::Press(FLAT) => Some(msg(Event::Flat)),
             Control::Press(LEGEND) => Some(msg(Event::Legend)),
             Control::Press(NORTH) => Some(msg(Event::North)),
-            Control::Press(APART) => Some(msg(Event::Apart(true))),
-            Control::Press(RETURN) => Some(msg(Event::Apart(false))),
             Control::Press(name) if VIEWS.iter().any(|v| v.0 == name) => {
                 Some(msg(Event::View(VIEWS.iter().position(|v| v.0 == name).unwrap_or(0))))
             }
