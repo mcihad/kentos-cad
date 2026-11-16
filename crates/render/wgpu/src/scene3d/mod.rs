@@ -10,7 +10,8 @@
 //!   the camera and only then made float32 (SCENE-PREC-05, 08). The view block holds the projection times the
 //!   rotation (no translation), the light and the exaggeration.
 //! - Opaque ranges first, nearest tile first (early depth rejection), writing depth; the see-through ranges (a part
-//!   whose style has alpha below 1) after, farthest first, testing depth without writing it, premultiplied.
+//!   whose style has alpha below 1) after, farthest first, testing depth without writing it, premultiplied, biased a
+//!   hair nearer so that one lying on an opaque face covers it evenly.
 //! - Depth is reversed, `Depth32Float`, cleared to [`DEPTH_CLEAR`] (0), compared `Greater` (plan/3d.md SCENE-CAM-05, 06).
 
 pub mod residency;
@@ -239,7 +240,13 @@ impl Scene3dRenderer {
                     depth_write_enabled: !see_through,
                     depth_compare: wgpu::CompareFunction::Greater,
                     stencil: wgpu::StencilState::default(),
-                    bias: wgpu::DepthBiasState::default(),
+                    // A see-through face lying on an opaque one (a room's side on its wall's inner face, its floor on
+                    // the slab) a hair nearer: drawn over it evenly, not in patches as their depths' last bits fall.
+                    bias: if see_through {
+                        wgpu::DepthBiasState { constant: 4, slope_scale: 2.0, clamp: 0.0 }
+                    } else {
+                        wgpu::DepthBiasState::default()
+                    },
                 }),
                 multisample: wgpu::MultisampleState::default(),
                 fragment: Some(wgpu::FragmentState {

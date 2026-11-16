@@ -742,8 +742,9 @@ fn beam_and_covering_schedules_list_their_own_and_round_trip_under_arch_data_6()
 /// (fixtures/arch/v1/curved-building.kcad, scripts/fixtures/curved_building.py): its north wall an arc, two storeys of
 /// different heights at different levels. Against the closed forms the fixture works out without KentOS code
 /// (curved-building.json): every wall's and slab's base quantities, its body's bottom and top over ±0.00, each room's
-/// net floor area. The curved wall's and the slabs' arcs are written as arcs (no chords: nothing said about them), the
-/// window through the curved wall runs along its faces' arcs, and every body is closed.
+/// net floor area, the spiral stair's treads and post. The curved wall's, the slabs' and the stair's arcs are written as
+/// arcs (no chords: nothing said about them), the window through the curved wall runs along its faces' arcs, and every
+/// body is closed.
 /// The cut body of every wall (its Reference View's) is its net volume. `KENTOS_WRITE_IFC_CURVED=1` writes
 /// fixtures/arch/v1/ifc/egri-bina.ifc (Design Transfer) and egri-bina-referans.ifc (Reference View), which
 /// `scripts/fixtures/curved_ifc_check.py` reads with IfcOpenShell against the same closed forms.
@@ -802,6 +803,37 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
         assert!(near(s.top - s.bottom, want["Height"].as_f64().unwrap()), "{}: {} → {}", s.name, s.bottom, s.top);
         assert!(s.bulges.iter().any(|r| r.iter().any(|x| *x != 0.0)), "{}: its arc written as an arc", s.name);
     }
+    // The spiral stair (docs/adr/0709, 8071): its treads pieces of a ring and its centre post a cylinder, their arcs
+    // true; each one's bottom, top and plan area what the fixture works out, in the order it climbs, the post last.
+    for (u, want) in expected["stairs"].as_object().unwrap() {
+        let e = element(u);
+        assert_eq!((e.class, e.predefined), (Class::Stair, "SPIRAL_STAIR"), "{}", e.name);
+        let floor = b.storeys[e.storey].elevation;
+        let got: Vec<[f64; 3]> = e
+            .shapes
+            .iter()
+            .map(|s| match s {
+                Shape::Prism { rings, bulges, bottom, top } => {
+                    assert!(bulges.iter().flatten().any(|x| *x != 0.0), "{}: its arcs as arcs", e.name);
+                    [floor + bottom, floor + top, kentos_ifc::quantities::area(rings, bulges)]
+                }
+                Shape::Faces { .. } => panic!("{}: a prism", e.name),
+            })
+            .collect();
+        let mut wanted: Vec<[f64; 3]> = want["treads"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|t| [0, 1, 2].map(|k| t[k].as_f64().unwrap()))
+            .collect();
+        wanted.push([0, 1, 2].map(|k| want["post"][k].as_f64().unwrap()));
+        assert_eq!(got.len(), wanted.len(), "{}: its treads and its post", e.name);
+        for (g, w) in got.iter().zip(&wanted) {
+            assert!((0..3).all(|k| near(g[k], w[k])), "{}: {g:?}, the closed form {w:?}", e.name);
+        }
+        let v: f64 = e.shapes.iter().map(kentos_ifc::quantities::volume).sum();
+        assert!(near(v, want["volume"].as_f64().unwrap()), "{}: {v}", e.name);
+    }
     // Every body closed; the curved walls' and the slabs' with their arcs, the curved walls' windows too.
     for e in &b.elements {
         for s in &e.shapes {
@@ -816,6 +848,7 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
     let classes: Vec<Class> = curved.iter().map(|&k| b.elements[k].class).collect();
     assert_eq!(classes.iter().filter(|c| **c == Class::Wall).count(), 2, "the two curved walls: {classes:?}");
     assert_eq!(classes.iter().filter(|c| **c == Class::Slab).count(), 3, "the three slabs: {classes:?}");
+    assert_eq!(classes.iter().filter(|c| **c == Class::Stair).count(), 1, "the spiral stair: {classes:?}");
     let arched = b.openings.iter().filter(|o| o.bulges.iter().any(|x| *x != 0.0)).count();
     assert_eq!(arched, 2, "a window through each curved wall along its faces' arcs");
     let text = kentos_ifc::building::write(&b);

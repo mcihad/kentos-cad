@@ -13,9 +13,11 @@ It checks fixtures/arch/v1/ifc/egri-bina.ifc (Design Transfer: bodies whole, ope
 - the schema is IFC 4.3 and IfcOpenShell's validator (attributes, EXPRESS rules) finds nothing;
 - every wall's Qto_WallBaseQuantities and every slab's Qto_SlabBaseQuantities is its closed form (1e-9 relative);
 - each room's Qto_SpaceBaseQuantities.NetFloorArea is its closed form;
+- the spiral stair is an IfcStair SPIRAL_STAIR whose every tread's profile has its two arcs and its post's its two half
+  circles;
 - the curved walls' and the slabs' profiles are indexed curves with arc segments (IfcArcIndex), the window through each
   curved wall too: arcs written as arcs (a Reference View's cut wall has them in every band);
-- IfcOpenShell's own geometry of every wall, slab and room is a closed, oriented surface (each edge of its triangles
+- IfcOpenShell's own geometry of every wall, slab, room and the stair is a closed, oriented surface (each edge of its triangles
   met as often one way as the other), standing where the closed form puts it (its lowest and highest point over ±0.00), and encloses the closed
   form's volume less what its triangles leave of its arcs (IfcOpenShell meshes them at a 0.005 rad step; within
   0.05 %): a wall's its net volume, the openings taken out by IfcOpenShell's own booleans in a Design Transfer View and
@@ -289,6 +291,14 @@ def check(path: Path) -> int:
         ensure(arcs(by_id[u]) >= 1, f"{by_id[u].Name}: its arc edge not an arc")
     for u in want["spaces"]:
         ensure(arcs(by_id[u]) == 1, f"{by_id[u].Name}: its arc edge not an arc")
+    # The spiral stair (docs/adr/0709, 8071): its type, and each tread's two arcs and the post's two half circles arcs.
+    for u, q in want["stairs"].items():
+        o = by_id.get(u)
+        ensure(o is not None and o.is_a("IfcStair") and o.PredefinedType == "SPIRAL_STAIR",
+               f"{u}: {o.is_a() if o else None} {getattr(o, 'PredefinedType', None)}")
+        if o is not None:
+            n = arcs(o)
+            ensure(n == 2 * len(q["treads"]) + 2, f"{o.Name}: {n} arc segments, each tread's two and the post's two")
 
     # IfcOpenShell's own geometry.
     settings = ifcopenshell.geom.settings()
@@ -334,7 +344,7 @@ def check(path: Path) -> int:
 
     checked = 0
     worst = 0.0
-    for group, of in (("walls", "NetVolume"), ("slabs", "NetVolume"), ("spaces", None)):
+    for group, of in (("walls", "NetVolume"), ("slabs", "NetVolume"), ("spaces", None), ("stairs", "volume")):
         for u, q in want[group].items():
             o = by_id[u]
             try:
@@ -366,8 +376,8 @@ def check(path: Path) -> int:
         return 1
     shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
     print(f"✓ {shown} ({'Reference View' if reference else 'Design Transfer View'}): IFC4X3_ADD2, 0 validator findings; "
-          f"{len(want['walls'])} walls, {len(want['slabs'])} slabs and "
-          f"{len(want['spaces'])} rooms their closed forms; {checked} closed surfaces of IfcOpenShell's own, their "
+          f"{len(want['walls'])} walls, {len(want['slabs'])} slabs, {len(want['spaces'])} rooms and "
+          f"{len(want['stairs'])} spiral stair their closed forms; {checked} closed surfaces of IfcOpenShell's own, their "
           f"volumes the closed forms' within {worst:.2e}.")
     return 0
 

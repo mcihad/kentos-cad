@@ -1605,6 +1605,64 @@ fn area(ring: &[P]) -> f64 {
         / 2.0
 }
 
+/// A curved stair (docs/adr/0709, 8071): each tread between its two risers a piece of the ring round its walking line's
+/// centre, its arcs true (`Model::exact`), standing as a balanced stair's winders do (docs/adr/8045 §2): its top its
+/// height, its bottom a riser and its waist under it, never under its floor (down to its floor without a waist); its
+/// centre post (docs/adr/0724 §3) a cylinder from its floor to where it arrives. The section draws the arcs' chords.
+fn curved_stair(
+    pts: &[P],
+    spec: &kentos_geometry_core::geom::arch::StairSpec,
+    (base, rh, n): (f64, f64, usize),
+    waist: Option<f64>,
+    look: &Look,
+    owner: Option<String>,
+    m: &mut Model,
+) {
+    use kentos_geometry_core::entity::polygon_ring;
+    use kentos_geometry_core::geom::arch::{Walk, riser_stations};
+    use kentos_geometry_core::geom::bulge::{bulge_of_sweep, bulge_ring_area};
+    m.left.insert((Left::Curved, owner.clone()));
+    let walk = Walk::curved(pts, spec.bulge);
+    let Some(arc) = walk.arc else {
+        return;
+    };
+    let (stations, _) = riser_stations(&walk, spec);
+    let half = spec.width / 2.0;
+    let turn = if arc.sweep < 0.0 { -1.0 } else { 1.0 };
+    // A point `k` half widths left of the walking line `s` along it.
+    let side = |s: f64, k: f64| {
+        let (p, d) = walk.point(s);
+        P::new(p.x - d.y * half * k, p.y + d.x * half * k)
+    };
+    let solid = |ring: &[P], bulges: &[f64], bottom: f64, top: f64| Solid {
+        rings: vec![polygon_ring(ring, Some(bulges))],
+        height: Height::Prism { bottom, top },
+        voids: Vec::new(),
+        marks: Vec::new(),
+        finish: None,
+    };
+    for (i, w) in stations.windows(2).enumerate() {
+        let (s0, s1) = (w[0], w[1]);
+        let b = bulge_of_sweep(turn * (s1 - s0) / arc.r);
+        // Counter-clockwise: from the side whose arc runs it so.
+        let ring_of = |k: f64| vec![side(s0, k), side(s1, k), side(s1, -k), side(s0, -k)];
+        let bulges = vec![b, 0.0, -b, 0.0];
+        let mut ring = ring_of(1.0);
+        if bulge_ring_area(&ring, Some(&bulges)) < 0.0 {
+            ring = ring_of(-1.0);
+        }
+        let top = base + rh * (i + 1) as f64;
+        let bottom = waist.map_or(base, |wst| (top - rh - wst).max(base));
+        push_exact(m, solid(&ring, &bulges, bottom, top), look.clone(), owner.clone(), vec![(ring, bulges)]);
+    }
+    if let Some(d) = spec.post.filter(|d| *d > 0.0) {
+        let ring = vec![P::new(arc.c.x + d / 2.0, arc.c.y), P::new(arc.c.x - d / 2.0, arc.c.y)];
+        let bulges = vec![1.0, 1.0];
+        let top = base + rh * n as f64;
+        push_exact(m, solid(&ring, &bulges, base, top), look.clone(), owner, vec![(ring, bulges)]);
+    }
+}
+
 /// A stair: each straight leg a flight, each landing a slab, as thick as the slab it arrives at (docs/adr/8042 §3).
 fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<String>, m: &mut Model) {
     use kentos_geometry_core::entity::Shape;
@@ -1614,13 +1672,34 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
     let Shape::Stair { pts, stair: spec } = kentos_formats::arch_elements::core_stair(s) else {
         return;
     };
-    if spec.bulge != 0.0 || pts.len() < 2 {
+    if pts.len() < 2 {
         m.left.insert((Left::Curved, owner));
         return;
     }
     let (base, _) = floor_of(&m.levels, s.arch.level.as_deref());
     let rh = s.riser_height;
     let n = s.risers as usize;
+    let end = *pts.last().unwrap_or(&pts[0]);
+    let start = pts[0];
+    // Its waist: the structure of the slab it arrives at, else of the one it starts from.
+    let arrive = base + rh * n as f64;
+    let waist = slabs
+        .iter()
+        .find(|sl| sl.holds(end) && (sl.top - arrive).abs() <= 0.5)
+        .or_else(|| {
+            slabs
+                .iter()
+                .find(|sl| sl.holds(start) && (sl.top - base).abs() <= 0.5)
+        })
+        .map(|sl| sl.thickness);
+    if waist.is_none() {
+        m.left.insert((Left::StairWaist, owner.clone()));
+    }
+    let look = concrete_look();
+    if spec.bulge != 0.0 {
+        curved_stair(&pts, &spec, (base, rh, n), waist, &look, owner, m);
+        return;
+    }
     let walk = Walk::of(&pts);
     let (stations, _) = riser_stations(&walk, &spec);
     let landings = stair_landings(&walk, &spec);
@@ -1646,23 +1725,6 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
     } else {
         &winding
     };
-    let end = *pts.last().unwrap_or(&pts[0]);
-    let start = pts[0];
-    // Its waist: the structure of the slab it arrives at, else of the one it starts from.
-    let arrive = base + rh * n as f64;
-    let waist = slabs
-        .iter()
-        .find(|sl| sl.holds(end) && (sl.top - arrive).abs() <= 0.5)
-        .or_else(|| {
-            slabs
-                .iter()
-                .find(|sl| sl.holds(start) && (sl.top - base).abs() <= 0.5)
-        })
-        .map(|sl| sl.thickness);
-    if waist.is_none() {
-        m.left.insert((Left::StairWaist, owner.clone()));
-    }
-    let look = concrete_look();
     let half = s.width / 2.0;
     let slope = rh / s.tread;
     let upright = waist.map_or(f64::INFINITY, |w| w * (1.0 + slope * slope).sqrt());

@@ -487,6 +487,10 @@ fn curved_screens() {
         send(&mut app, W::Storey(1));
         send(&mut app, W::View(3));
         shot(&mut app, "4-3b-zemin-kat-ustten");
+        // The spiral stair (docs/adr/8071 §9) from 60° over the ground, nearer: its treads climbing round the post.
+        send(&mut app, W::Orbit(0.0, -97.0));
+        send(&mut app, W::Dolly(3.0));
+        shot(&mut app, "5-3b-doner-merdiven");
         send(&mut app, W::Close);
     }
 }

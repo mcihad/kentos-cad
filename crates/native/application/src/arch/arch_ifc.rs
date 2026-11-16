@@ -114,8 +114,8 @@ fn unit_groups(doc: &Document) -> Vec<kentos_ifc::arch::UnitGroup> {
         .collect()
 }
 
-/// The building and what was written, with the curved objects written as chords: a curved stair (a wall's and a slab's
-/// arcs are written as arcs, docs/adr/8071 §1; one whose arcs the model could not take back still counts).
+/// The building and what was written, with the curved objects written as chords: one whose arcs the model could not
+/// take back (a wall's, a slab's and a curved stair's are written as arcs, docs/adr/8071 §1, §9).
 fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, usize) {
     let model = sections::model(doc);
     let curved = model
@@ -503,7 +503,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
     }
     if curved > 0 {
         warnings.push(losses(format!(
-            "{curved} eğri merdiven ya da yayı alınamayan eğri nesne IFC'ye düz parçalarla yazıldı."
+            "{curved} yayı alınamayan eğri nesne IFC'ye düz parçalarla yazıldı."
         )));
     }
     // Every body a closed, simple solid (docs/adr/8071 §3): a body that is not one is said, with the first thing wrong.

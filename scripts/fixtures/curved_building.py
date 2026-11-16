@@ -5,14 +5,15 @@ different levels (Zemin ±0.00, 3.20 m; 1. kat +3.35, 2.90 m): the ground's wall
 (−0.05, under its finish) to the 1. kat slab's underside (+3.20), the 1. kat's from +3.35 to the roof slab's (+6.25). Walls 30 cm, no layers, on their centre lines, joined at
 the four corners; a window through the south wall, a door through the east wall and a window through the curved wall,
 its jambs square to the arc; slabs along the walls' outer faces, the arc's edge an arc (the ground's with a 5 cm finish
-over it, the 1. kat's with a 2 × 1 m hole, the roof's at the top); a room inside each storey's inner faces.
+over it, the 1. kat's with a 2.4 × 2.4 m hole, the roof's at the top); a room inside each storey's inner faces; a spiral
+stair with a centre post up through the hole, each tread a piece of a ring.
 
 Writes fixtures/arch/v1/curved-building.kcad with the independent reference writer, without KentOS code, and
 fixtures/arch/v1/curved-building.json: what the bodies are by closed forms of their own, worked out here (a corner's
 mitre through the two faces' meeting points, a ring's piece between two radii (r₁² − r₂²)/2 · θ, a circle's segment
 r²/2 · (θ − sin θ)): each wall's and slab's volume gross and net (IFC 4.3's: a wall's gross its own body's without its
 joins, its net the joined body's less its openings; a slab's gross its outline's, its net less its hole), its lengths
-and areas, each room's floor area, each body's bottom and top over ±0.00. The application's test and `curved_ifc_check.py` compare against it; `--check`
+and areas, each room's floor area, the stair's treads and post, each body's bottom and top over ±0.00. The application's test and `curved_ifc_check.py` compare against it; `--check`
 compares both files.
 
     python3 scripts/fixtures/curved_building.py [--check]"""
@@ -116,7 +117,7 @@ d = {"format": "kentos.document", "version": 2, "name": "Eğri cepheli bina",
                   "plotScale": 50.0, "workspace": "cad", "cadWork": "architecture", "arch": {"levels": LEVELS}},
      "origin": {"x": 0.0, "y": 0.0},
      "layers": [layer("0", "0"), layer("cizim", "Çizim"), layer("kapi", "Kapı ve pencere"),
-                layer("doseme", "Döşeme")],
+                layer("doseme", "Döşeme"), layer("merdiven", "Merdiven")],
      "activeLayer": "cizim", "styles": {"items": [], "categories": []}}
 ents, uids = [], []
 
@@ -164,7 +165,7 @@ def arc_opening(host, middle, width, form, sill, head, number):
                 "form": form, "frame": 0.05, "number": number, "place": place, "sill": sill, "head": head})
 
 
-expected = {"walls": {}, "slabs": {}, "spaces": {}, "bodies": {}}
+expected = {"walls": {}, "slabs": {}, "spaces": {}, "stairs": {}, "bodies": {}}
 for lv in LEVELS:
     level = lv["id"]
     foot, top = WALLS[level]
@@ -227,7 +228,7 @@ outline = {"pts": [P(*A_OUT), P(*B_OUT), P(*C_OUT), P(*D_OUT)], "bulges": [0.0, 
 ground = add({"kind": "slab", "layerId": "doseme", "parts": [{"outer": outline}], "thickness": SLAB,
               "material": "Betonarme", "arch": {"level": "zemin"},
               "layers": {"over": [{"kind": "finish", "thickness": FINISH}]}})
-hole = [(2.0, 2.0), (4.0, 2.0), (4.0, 3.0), (2.0, 3.0)]
+hole = [(1.8, 1.4), (4.2, 1.4), (4.2, 3.8), (1.8, 3.8)]
 k1 = add({"kind": "slab", "layerId": "doseme", "parts": [{"outer": outline, "holes": [{"pts": [P(*p) for p in hole]}]}],
           "thickness": SLAB, "material": "Betonarme", "arch": {"level": "k1"}})
 roof = add({"kind": "slab", "layerId": "doseme", "parts": [{"outer": outline}], "thickness": SLAB,
@@ -237,6 +238,27 @@ for u, depth, holes, top in ((ground, SLAB + FINISH, 0.0, 0.0), (k1, SLAB, abs(s
     expected["slabs"][u] = {"Width": depth, "GrossArea": OUTER_LOOP, "NetArea": OUTER_LOOP - holes,
                             "GrossVolume": OUTER_LOOP * depth, "NetVolume": (OUTER_LOOP - holes) * depth}
     expected["bodies"][u] = [top - depth, top]
+
+# A spiral stair through the 1. kat slab's hole (docs/adr/0709, 0724 §3, 8071): its walking line an arc of 0.70 m round
+# (3.0, 2.6) from due south, counter-clockwise, 19 risers of 3.35/19 up to the 1. kat, treads 22 cm along it, 80 cm wide,
+# a 20 cm centre post. Each tread between its risers is a piece of the ring between radii 0.30 and 1.10 whose angle is its
+# tread over the radius: its plan area (r₁² − r₂²)/2 · θ = θ · r · w, its tread by its width. It stands as a balanced
+# stair's winders do (ADR 8045 §2): its top its height, its bottom a riser and the waist under it — the structure (15 cm)
+# of the slab it starts from, its end being in the hole the 1. kat's slab does not hold — never under ±0.00; the post a
+# cylinder from ±0.00 to +3.35.
+STAIR_C, STAIR_R, STAIR_W, TREAD, RISERS, POST = (3.0, 2.6), 0.70, 0.80, 0.22, 19, 0.20
+RISE = 3.35 / RISERS
+TURN = (RISERS - 1) * TREAD / STAIR_R
+start = (STAIR_C[0], STAIR_C[1] - STAIR_R)
+end = (STAIR_C[0] + STAIR_R * math.cos(-math.pi / 2 + TURN), STAIR_C[1] + STAIR_R * math.sin(-math.pi / 2 + TURN))
+stair = add({"kind": "stair", "layerId": "merdiven", "pts": [P(*start), P(*end)], "bulges": [math.tan(TURN / 4), 0.0],
+             "width": STAIR_W, "risers": RISERS, "riserHeight": RISE, "tread": TREAD, "post": POST,
+             "arch": {"level": "zemin"}})
+treads = [[max(RISE * (k + 1) - RISE - SLAB, 0.0), RISE * (k + 1), TREAD * STAIR_W] for k in range(RISERS - 1)]
+post = [0.0, 3.35, math.pi * (POST / 2) ** 2]
+expected["stairs"][stair] = {"treads": treads, "post": post,
+                             "volume": sum((top - bottom) * area for bottom, top, area in treads + [post])}
+expected["bodies"][stair] = [0.0, 3.35]
 
 d["entities"], d["uids"] = ents, uids
 

@@ -4,7 +4,8 @@
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-06'nın gövde kısmı (§8 "Gövdeler"); uygulama sırasında B10. Bu ADR maddenin
   bütün adımlarını tutar; koddaki "docs/adr/8071 §N" atıfları bölümleri gösterir: §1 gerçek yay, §2 kaynaktan miktar,
   §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06), §5 döşemede boşluk ve şaft, §6 eğimli
-  döşeme, §7 kapalı mahal hacmi, §8 çatının katmanları. Kararların numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
+  döşeme, §7 kapalı mahal hacmi, §8 çatının katmanları, §9 döner merdiven gerçek yayla. Kararların numarası bölümler
+  boyunca sürer. Ortak sınamalar ve sıradaki adımlar
   numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0340](0340-wall-joins-and-edits.md) (duvar birleşimleri), [8040](8040-vertical-model.md) (duvarın
@@ -340,6 +341,39 @@ bölümü `katmanli-cati.ifc`'yi IfcOpenShell'le okur: 0 bulgu, takım beş katm
 (`.run/gui-evidence/cati-katmanlari-8071/`: B-B, saçağın yakını, 3B; açık ve koyu) ve `roof_properties_screens`
 (`cati-katmanlari.png`).
 
+## §9. Döner merdiven gerçek yayla
+
+**Araştırma.**
+
+- **ADR 0709** (döner merdiven): yürüme çizgisi iki noktalı bir yay, basamak derinliği onun yayı boyunca, rıhtlar
+  radyal; **ADR 0724 §3** merkez direği (çapı); **ADR 8045 §2** dengeli merdivenin balansman basamağı kendi gövdesi,
+  alt yüzü kademeli (betonun eğik alt yüzü modellenmez). Kesit modeli döner merdiveni hiç kurmuyordu ("düz parçalarla"
+  notuyla bırakıyordu); IFC'ye gövdesiz gidiyordu.
+- **IFC 4.3 `IfcStairTypeEnum`** (`IfcStairTypeEnum.md`): SPIRAL_STAIR "dairesel bir göbek çevresinde balansmanlı,
+  çoğu kez sahanlıksız", yürüme çizgisi dönüşü belirler; CURVED_RUN_STAIR "dönüşsüz, tek eğri kol". KentOS'ta direkli
+  döner merdiven ilki, direksiz ikincisidir (B9, `turns::of_stair`).
+- **BIM-10:** "parça sayısı görüntünün işidir, kaynağın değil".
+
+**Karar.**
+
+29. **Basamak bir halka parçası** (`sections::curved_stair`): iki rıhtı arasında, yürüme çizgisinin merkezine göre iç ve
+    dış kenarı gerçek yay (`Model::exact`; IFC'de `IfcArcIndex`), yanları radyal; plan alanı yayın boyu × genişlik.
+    Balansman basamağı gibi durur: üstü kendi kotu, altı bir rıht ve merdiven plağı aşağısı (plak, vardığı ya da
+    çıktığı döşemenin taşıyıcısı), katın tabanının altına inmez; plak yoksa tabana kadar dolu. Merkez direği katın
+    tabanından merdivenin vardığı kota silindir. Hepsi merdivenin tek gövdesidir (`IfcStair` SPIRAL_STAIR; direksiz
+    CURVED_RUN_STAIR). Kesit yayların kirişlerini çizer (eğri duvar gibi "düz parçalarla" notu kalır); IFC dışa
+    aktarımı eğri merdiven için artık "düz parçalarla yazıldı" demez.
+30. **3B görünümde yarı saydam yüz** (mahal) üzerinde durduğu opak yüzün (duvarın iç yüzü, döşemenin üstü) kılı kadar
+    önünde çizilir (`DepthBiasState`, yalnız yarı saydam çizimde): iki yüzün derinliklerinin son bitleri yüzünden
+    beliren benekler kalkar, mahalin rengi yüze düzgün biner.
+
+**Sınama.** Eğri cepheli örnek binaya 1. katın 2,4 × 2,4 m boşluğundan çıkan döner merdiven eklendi (`curved_building.py`:
+yürüme çizgisi 0,70 m, 19 rıht × 3,35/19, basamak 22 cm, genişlik 80 cm, direk 20 cm; kapalı formlar KentOS kodu
+olmadan): `arch_ifc::the_curved_building_s_bodies_are_their_closed_forms` 18 basamağın ve direğin altını, üstünü ve plan
+alanını (0,22 · 0,80 ve π · 0,1²) 10⁻⁹ içinde, hacim toplamını, yayların yay olduğunu, gövdelerin kapalılığını sınar;
+`curved_ifc_check.py` iki dosyada `IfcStair` SPIRAL_STAIR, 38 yay parçası, IfcOpenShell'in yüzeyi kapalı, hacmi kapalı
+formla 1,04·10⁻⁶ içinde. Resim: `curved_screens`'in `5-3b-doner-merdiven-*`'i (zemin kat, 60°'den).
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-ifc --lib` (45), `-p kentos-geometry-core` (1 117), `-p kentos-interaction wall` (81),
@@ -362,7 +396,7 @@ bölümü `katmanli-cati.ifc`'yi IfcOpenShell'le okur: 0 bulgu, takım beş katm
 - Kiremit kaplamanın TS 5319 SN53 "seramik" taraması (kitaplığa girince); çatının tek kalınlığının da yüze dik ölçülmesi
   (ADR 8044 düşey ölçüyor; örnek çizimler değişir: sahibin kararı).
 - Eğimli döşemenin planda eğim oku simgesi; delikli eğimli döşeme (kesitin eğik yüz çizimi deliği tutarsa).
+- Döner merdivenin helis alt yüzü (şimdi ADR 8045 §2'nin kademeli alt yüzü) ve kesitte yayının kendi çizimi.
 - Çatıyla kesilmiş mahal hacmi; mahalin Net Çevre'si (kapı ve sanal sınırlar düşülmüş) ve duvar ve tavan alanları.
-- **Döner merdiven gerçek yayla:** eğri merdivenin basamakları ve kolu.
 - Kapının açıklığı bitmiş döşemeden (±0,00) başlar, duvar yapısal döşemeden; kapının altında kaplama kalınlığında duvar
   kalır (zemin katta 5 cm). Açıklığın alt kotu duvarın ayağına mı inmeli, ayrı karar.

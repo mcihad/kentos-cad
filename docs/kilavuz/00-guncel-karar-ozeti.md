@@ -125,7 +125,10 @@
       kalınlık çatı yüzüne dik; katmanlı çatının kalınlığı katmanlarının toplamıdır (katmansız çatınınki düşey, ADR
       8044). Kesitte ayrı plaklar (EK-2 öğeleri, ısı yalıtımı SN55, mertek SN23), IFC'de `IfcMaterialLayerSet`
       (malzemesi verilmeyen katman boş, Category IFC 4.3'ün sözcükleri). Hazır katman takımı yok: değerler yazılır.
-      Kalan: içe dönen saçak, döner merdiven, çatıyla kesilmiş mahal hacmi, çatının yüz başına `IfcSlab`'e ayrılması.
+    - Kesitte kesilen yalıtım katmana oturan tek zikzaktır (`geom::zigzag::fitted`, ADR 8014'ün duvar kuralı).
+    - Döner merdivenin basamağı gerçek yaylı halka parçası (balansman basamağı gibi kademeli alt yüz), merkez direği
+      silindir; IFC'de SPIRAL_STAIR / CURVED_RUN_STAIR. 3B'de yarı saydam yüz opak yüzün kılı kadar önünde çizilir.
+      Kalan: içe dönen saçak, çatıyla kesilmiş mahal hacmi, çatının yüz başına `IfcSlab`'e ayrılması.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.
