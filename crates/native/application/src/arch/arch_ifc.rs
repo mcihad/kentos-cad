@@ -114,9 +114,75 @@ fn unit_groups(doc: &Document) -> Vec<kentos_ifc::arch::UnitGroup> {
         .collect()
 }
 
+/// What a file of one of the program's buildings holds (docs/adr/8072 §2): its storeys (a shared level where it counts)
+/// and the objects on them; an opening whose wall it holds; a grid on no level (every building's).
+struct Scope {
+    building: kentos_commands::ProgramBuilding,
+    levels: Vec<String>,
+    several: bool,
+}
+
+impl Scope {
+    fn of(doc: &Document, id: &str) -> Option<Scope> {
+        let program = &doc.settings().arch.as_ref()?.program;
+        let building = program.buildings.iter().find(|b| b.id == id)?.clone();
+        let levels = doc
+            .settings()
+            .arch
+            .as_ref()
+            .map(|a| a.levels.iter().map(|l| l.id.clone()).collect::<Vec<_>>())
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|l| program.building_of_level(l).is_some_and(|b| b.id == building.id))
+            .collect();
+        Some(Scope { building, levels, several: program.buildings.len() > 1 })
+    }
+
+    /// Whether the file holds the object: an architectural one on one of its storeys; a grid on no level; an opening
+    /// whose wall it holds; anything else (no IFC element) as it is.
+    fn holds(&self, doc: &Document, e: &kentos_commands::Entity) -> Option<bool> {
+        use kentos_commands::Entity;
+        match e {
+            Entity::Opening(o) => {
+                let host = kentos_domain::Uuid::parse_str(&o.opening.host).ok()?;
+                let wall = doc.get(doc.slot_of(host)?)?;
+                Some(kentos_ifc::arch::level_of(wall).is_some_and(|l| self.levels.iter().any(|x| x == l)))
+            }
+            Entity::Grid(g) => Some(g.grid.arch.level.as_deref().is_none_or(|l| self.levels.iter().any(|x| x == l))),
+            _ => match kentos_ifc::arch::level_of(e) {
+                Some(l) => Some(self.levels.iter().any(|x| x == l)),
+                None if matches!(
+                    e,
+                    Entity::Wall(_)
+                        | Entity::Slab(_)
+                        | Entity::Column(_)
+                        | Entity::Beam(_)
+                        | Entity::Roof(_)
+                        | Entity::Railing(_)
+                        | Entity::Stair(_)
+                        | Entity::Ramp(_)
+                        | Entity::Space(_)
+                ) =>
+                {
+                    // On no storey: the only building's, no one's beside others.
+                    Some(!self.several)
+                }
+                None => None,
+            },
+        }
+    }
+}
+
 /// The building and what was written, with the curved objects written as chords: one whose arcs the model could not
 /// take back (a wall's, a slab's and a curved stair's are written as arcs, docs/adr/8071 §1, §9).
 fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, usize) {
+    let (b, w, c, _) = made_for(doc, stamp, application, None);
+    (b, w, c)
+}
+
+/// [`made`] of one of the program's buildings (docs/adr/8072 §2), and how many architectural objects of the project's
+/// no building holds (on no storey, or a shared one no building is chosen for) when it has several.
+fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope>) -> (Building, Written, usize, usize) {
     let model = sections::model(doc);
     let curved = model
         .left
@@ -132,13 +198,37 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
                 })
         })
         .count();
+    // One building's file: its storeys' objects only (docs/adr/8072 §2).
+    let mut unplaced = 0;
+    let mut kept: Vec<String> = Vec::new();
     let entities: Vec<(u128, String, &kentos_commands::Entity)> = doc
         .entities_with_uids()
+        .filter(|(u, e)| match scope.map(|s| s.holds(doc, e)) {
+            None | Some(None) | Some(Some(true)) => {
+                kept.push(u.to_string());
+                true
+            }
+            Some(Some(false)) => {
+                let program = doc.settings().arch.as_ref().map(|a| &a.program);
+                let level = kentos_ifc::arch::level_of(e);
+                let no_one = match (program, level) {
+                    (Some(p), Some(l)) => p.building_of_level(l).is_none(),
+                    (_, None) => !matches!(e, kentos_commands::Entity::Opening(_) | kentos_commands::Entity::Grid(_)),
+                    _ => false,
+                };
+                if no_one {
+                    unplaced += 1;
+                }
+                false
+            }
+        })
         .map(|(u, e)| (u.as_u128(), u.to_string(), e))
         .collect();
+    let in_scope = |owner: &Option<String>| scope.is_none() || owner.as_ref().is_some_and(|o| kept.contains(o));
     let gaps: Vec<Gap> = model
         .gaps
         .iter()
+        .filter(|g| in_scope(&g.owner))
         .map(|g| Gap {
             ring: g.ring.clone(),
             bulges: g.bulges.clone(),
@@ -168,7 +258,12 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         title: doc.name(),
         stamp,
         application,
-        levels: model.levels.clone(),
+        levels: model
+            .levels
+            .iter()
+            .filter(|(id, ..)| scope.is_none_or(|s| s.levels.contains(id)))
+            .cloned()
+            .collect(),
         solids: &model.solids,
         owners: &model.owners,
         parts: &parts,
@@ -177,6 +272,7 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         slab_cuts: model
             .slab_cuts
             .iter()
+            .filter(|c| in_scope(&c.owner))
             .filter_map(|c| {
                 Some(kentos_ifc::arch::SlabCut {
                     owner: c.owner.clone()?,
@@ -193,9 +289,18 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         arch: doc.settings().arch.as_ref(),
         particulars: particulars(doc),
         crs: crs(doc),
-        emsal: emsal_areas(doc),
-        groups: unit_groups(doc),
-        fixtures: fixtures(doc),
+        emsal: emsal_areas(doc)
+            .into_iter()
+            .filter(|z| scope.is_none_or(|s| z.level.as_ref().is_some_and(|l| s.levels.contains(l))))
+            .collect(),
+        groups: unit_groups(doc)
+            .into_iter()
+            .filter(|g| scope.is_none_or(|s| unit_building(doc, &g.number).as_deref() == Some(s.building.id.as_str())))
+            .collect(),
+        fixtures: fixtures(doc)
+            .into_iter()
+            .filter(|f| scope.is_none_or(|s| f.level.as_ref().is_some_and(|l| s.levels.contains(l))))
+            .collect(),
         coverings: doc
             .entities_with_uids()
             .filter_map(|(u, e)| match e {
@@ -227,8 +332,21 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
                 _ => None,
             })
             .collect(),
+        building: scope.map(|s| kentos_ifc::arch::BuildingOf {
+            id: s.building.id.clone(),
+            name: s.building.name.clone(),
+            code: s.building.code.clone(),
+            usage: s.building.usage.clone(),
+            zero: s.building.zero.unwrap_or(0.0),
+            several: s.several,
+        }),
     });
-    (b, written, curved)
+    (b, written, curved, unplaced)
+}
+
+/// The program's building a unit belongs to, by the unit's number.
+fn unit_building(doc: &Document, number: &str) -> Option<String> {
+    doc.settings().arch.as_ref()?.program.units.iter().find(|u| u.number == number)?.building.clone()
 }
 
 /// The faces of the roofs standing on a storey (docs/adr/8071 §11), each its outline in plan and its underside's plane
@@ -403,6 +521,33 @@ pub fn building(doc: &Document, stamp: &str, application: &str) -> (Building, Wr
     (b, written)
 }
 
+/// One of the program's buildings to write (docs/adr/8072 §2): its storeys and their objects, at its ±0.00; with how
+/// many of the project's architectural objects no building holds. None for a building the program does not have.
+pub fn building_of(doc: &Document, id: &str, stamp: &str, application: &str) -> Option<(Building, Written, usize)> {
+    let scope = Scope::of(doc, id)?;
+    let (b, written, _, unplaced) = made_for(doc, stamp, application, Some(&scope));
+    Some((b, written, unplaced))
+}
+
+/// The model file's name of one of the program's buildings (EK-2 Tablo 2.1): its code in the building code's place;
+/// without the künye's project code the drawing's name with the building's code (else its id) after it.
+pub fn file_name_of(doc: &Document, id: &str) -> String {
+    let mut k = particulars(doc);
+    let code = doc
+        .settings()
+        .arch
+        .as_ref()
+        .and_then(|a| a.program.buildings.iter().find(|b| b.id == id))
+        .and_then(|b| b.code.clone());
+    if k.project_code.is_none() {
+        return format!("{}_{}.ifc", doc.name(), code.unwrap_or_else(|| id.to_owned()));
+    }
+    if code.is_some() {
+        k.building_code = code;
+    }
+    format!("{}.ifc", k.file_stem(doc.name()))
+}
+
 fn bad(path: &str, words: String) -> Stop {
     fail(codes::INVALID_IFC, words, path)
 }
@@ -506,11 +651,15 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
             format!("{d}T{t}")
         }
     };
-    let (mut b, written, curved) = made(
-        doc,
-        &stamp,
-        &format!("KentOS Mimari {}", env!("CARGO_PKG_VERSION")),
-    );
+    let application = format!("KentOS Mimari {}", env!("CARGO_PKG_VERSION"));
+    // One of the program's buildings (docs/adr/8072 §2), else the project as one.
+    let scope = match input.building.as_deref() {
+        Some(id) => Some(Scope::of(doc, id).ok_or_else(|| {
+            bad("building", format!("“{id}” binası bina programında yok; programdaki bir binanın kimliğini verin."))
+        })?),
+        None => None,
+    };
+    let (mut b, written, curved, unplaced) = made_for(doc, &stamp, &application, scope.as_ref());
     // Its bodies whole, or already cut (docs/adr/8071 §4).
     b.view = match input.view {
         IfcView::DesignTransfer => kentos_ifc::building::View::DesignTransfer,
@@ -551,6 +700,12 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
     if curved > 0 {
         warnings.push(losses(format!(
             "{curved} yayı alınamayan eğri nesne IFC'ye düz parçalarla yazıldı."
+        )));
+    }
+    if unplaced > 0 {
+        warnings.push(losses(format!(
+            "{unplaced} nesnenin binası belli değil (katı yok ya da ortak katın sayıldığı bina seçilmedi); hiçbir binanın \
+             dosyasına yazılmadı. Nesneye kat verin ya da Bina programı › Binalar'da ortak katın binasını seçin."
         )));
     }
     // Every body a closed, simple solid (docs/adr/8071 §3): a body that is not one is said, with the first thing wrong.

@@ -14,4 +14,9 @@ import type { IfcView } from "./IfcView";
  * object whose arcs the model could not take back); `ifc_open_body` (a body written that is not a closed, simple
  * solid, with the object's name and why).
  */
-export type ExportIfcBuilding = { path: string, stamp?: string, overwrite?: boolean, view?: IfcView, };
+export type ExportIfcBuilding = { path: string, stamp?: string, overwrite?: boolean, view?: IfcView, 
+/**
+ * One of the building program's buildings, by its id (docs/adr/8072 §2): its storeys (a shared level where it
+ * counts) and the objects on them, at its ±0.00, its code in the building's id; none: the project as one building.
+ */
+building?: string, };

@@ -842,24 +842,29 @@ exceptions = _ArchExceptions()
 class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingExported]):
     """``cad.arch.ifc`` v1. Binayı IFC'ye aktar: Çizimin binasını IFC 4.3 (IFC4X3_ADD2)
     dosyasına yazar (Dijital Proje Yönetmeliği EK-5 §5.4): proje, saha, bina ve her kat
-    bir IfcBuildingStorey; duvarlar, döşemeler, kolonlar, kirişler (lento), çatılar,
-    korkuluklar ve merdivenler kesit modelinin gövdeleriyle (duvar katman katman,
-    kolonun yüzünde ve kirişin altında biter); her açıklık duvarını oyan bir
-    IfcOpeningElement ve onu dolduran IfcDoor ya da IfcWindow (etiketi çizimdeki
-    numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in Disiplin-KategoriKodu-Açıklama
-    kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan çizimin bildikleri:
-    IsExternal, LoadBearing, malzeme, mahal kaplamaları, net alanlar, emsal ve TAKS;
-    duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri (Qto_…BaseQuantities)
-    kaynaktan, IFC 4.3'ün tanımlarıyla (duvarın brüt hacmi birleşimsiz kendi gövdesi,
-    neti açıklık ve girintiler çıkmış yazılan gövde). Eğri duvarın, döşemenin, mahalin
-    ve eğri duvardaki açıklığın yayları yay olarak yazılır (IfcIndexedPolyCurve,
-    IfcArcIndex). view: designTransfer (varsayılan; gövdeler bütün, açıklığın gövdesini
-    okuyucu duvardan çıkarır; başlıkta DesignTransferView) ya da reference (gövdeler
-    açıklıkları çıkarılmış, açıklık Reference gösterimiyle; başlıkta ReferenceView).
-    GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp tarih ve saat. Gövdesi
-    olmayan nesne yazılmaz ve söylenir (export_losses); gövdesi kapalı bir katı olmayan
-    nesne adı ve nedeniyle söylenir (ifc_open_body). Bütün yazılır ya da hiç; çizimi
-    değiştirmez. Retler: invalid_file_path, file_exists, invalid_ifc.
+    bir IfcBuildingStorey; building ile bina programının bir binası: yalnız katları
+    (ortak kat sayıldığı binada) ve onlardaki nesneler, bina ±0.00'ında, katların kotu
+    ona göre; adı, kodu (BuildingID'de) ve kullanım türü binanın; proje ve saha her
+    binanın dosyasında aynı kimlikle, öbür kimlikler binanın; binası belli olmayan nesne
+    export_losses ile söylenir, programda olmayan bina invalid_ifc (building). duvarlar,
+    döşemeler, kolonlar, kirişler (lento), çatılar, korkuluklar ve merdivenler kesit
+    modelinin gövdeleriyle (duvar katman katman, kolonun yüzünde ve kirişin altında
+    biter); her açıklık duvarını oyan bir IfcOpeningElement ve onu dolduran IfcDoor ya
+    da IfcWindow (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in
+    Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan
+    çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları, net
+    alanlar, emsal ve TAKS; duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri
+    (Qto_…BaseQuantities) kaynaktan, IFC 4.3'ün tanımlarıyla (duvarın brüt hacmi
+    birleşimsiz kendi gövdesi, neti açıklık ve girintiler çıkmış yazılan gövde). Eğri
+    duvarın, döşemenin, mahalin ve eğri duvardaki açıklığın yayları yay olarak yazılır
+    (IfcIndexedPolyCurve, IfcArcIndex). view: designTransfer (varsayılan; gövdeler
+    bütün, açıklığın gövdesini okuyucu duvardan çıkarır; başlıkta DesignTransferView) ya
+    da reference (gövdeler açıklıkları çıkarılmış, açıklık Reference gösterimiyle;
+    başlıkta ReferenceView). GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp
+    tarih ve saat. Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses); gövdesi
+    kapalı bir katı olmayan nesne adı ve nedeniyle söylenir (ifc_open_body). Bütün
+    yazılır ya da hiç; çizimi değiştirmez. Retler: invalid_file_path, file_exists,
+    invalid_ifc.
     """
     __slots__ = ()
     id = "cad.arch.ifc"
@@ -876,6 +881,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         /,
         *,
         path: str,
+        building: str | None | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         view: IfcView | IfcViewName | Unset = UNSET,
@@ -884,13 +890,18 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
     ) -> IfcBuildingExported:
         """Binayı IFC'ye aktar: Çizimin binasını IFC 4.3 (IFC4X3_ADD2) dosyasına yazar (Dijital
         Proje Yönetmeliği EK-5 §5.4): proje, saha, bina ve her kat bir IfcBuildingStorey;
-        duvarlar, döşemeler, kolonlar, kirişler (lento), çatılar, korkuluklar ve merdivenler
-        kesit modelinin gövdeleriyle (duvar katman katman, kolonun yüzünde ve kirişin
-        altında biter); her açıklık duvarını oyan bir IfcOpeningElement ve onu dolduran
-        IfcDoor ya da IfcWindow (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5
-        §5.5'in Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01);
-        EK-6'dan çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları,
-        net alanlar, emsal ve TAKS; duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri
+        building ile bina programının bir binası: yalnız katları (ortak kat sayıldığı
+        binada) ve onlardaki nesneler, bina ±0.00'ında, katların kotu ona göre; adı, kodu
+        (BuildingID'de) ve kullanım türü binanın; proje ve saha her binanın dosyasında aynı
+        kimlikle, öbür kimlikler binanın; binası belli olmayan nesne export_losses ile
+        söylenir, programda olmayan bina invalid_ifc (building). duvarlar, döşemeler,
+        kolonlar, kirişler (lento), çatılar, korkuluklar ve merdivenler kesit modelinin
+        gövdeleriyle (duvar katman katman, kolonun yüzünde ve kirişin altında biter); her
+        açıklık duvarını oyan bir IfcOpeningElement ve onu dolduran IfcDoor ya da IfcWindow
+        (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in
+        Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan
+        çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları, net
+        alanlar, emsal ve TAKS; duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri
         (Qto_…BaseQuantities) kaynaktan, IFC 4.3'ün tanımlarıyla (duvarın brüt hacmi
         birleşimsiz kendi gövdesi, neti açıklık ve girintiler çıkmış yazılan gövde). Eğri
         duvarın, döşemenin, mahalin ve eğri duvardaki açıklığın yayları yay olarak yazılır
@@ -906,6 +917,8 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         Args:
             doc: The drawing it works on.
             path:
+            building: One of the building program's buildings, by its id (docs/adr/8072 §2): its storeys (a shared level where it
+                counts) and the objects on them, at its ±0.00, its code in the building's id; none: the project as one building.
             overwrite:
             stamp:
             view:
@@ -923,6 +936,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         """
         return self.execute_input(doc, ExportIfcBuilding(
             path=path,
+            building=building,
             overwrite=overwrite,
             stamp=stamp,
             view=view,
@@ -934,6 +948,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         /,
         *,
         path: str,
+        building: str | None | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         view: IfcView | IfcViewName | Unset = UNSET,
@@ -943,6 +958,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         """
         return self.plan_input(doc, ExportIfcBuilding(
             path=path,
+            building=building,
             overwrite=overwrite,
             stamp=stamp,
             view=view,
@@ -954,6 +970,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         /,
         *,
         path: str,
+        building: str | None | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         view: IfcView | IfcViewName | Unset = UNSET,
@@ -963,6 +980,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         """
         return self.validate_input(doc, ExportIfcBuilding(
             path=path,
+            building=building,
             overwrite=overwrite,
             stamp=stamp,
             view=view,
@@ -974,6 +992,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         /,
         *,
         path: str,
+        building: str | None | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         view: IfcView | IfcViewName | Unset = UNSET,
@@ -988,6 +1007,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         """
         return self.answer_input(doc, ExportIfcBuilding(
             path=path,
+            building=building,
             overwrite=overwrite,
             stamp=stamp,
             view=view,

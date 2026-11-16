@@ -39222,8 +39222,12 @@ class ExportIfcBuilding(_Model):
     an area, grid axes all in one direction on their storey; a curved stair written as straight pieces, or a curved
     object whose arcs the model could not take back); `ifc_open_body` (a body written that is not a closed, simple
     solid, with the object's name and why).
+    Attributes:
+        building: One of the building program's buildings, by its id (docs/adr/8072 §2): its storeys (a shared level where it
+            counts) and the objects on them, at its ±0.00, its code in the building's id; none: the project as one building.
     """
     path: str
+    building: str | None | Unset = UNSET
     overwrite: bool | Unset = UNSET
     stamp: str | None | Unset = UNSET
     view: IfcView | IfcViewName | Unset = UNSET
@@ -39231,6 +39235,8 @@ class ExportIfcBuilding(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.building is not UNSET:
+            out["building"] = self.building
         if self.overwrite is not UNSET:
             out["overwrite"] = self.overwrite
         if self.stamp is not UNSET:
@@ -39243,6 +39249,7 @@ class ExportIfcBuilding(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ExportIfcBuilding:
         return cls(
             path=data["path"],
+            building=data.get("building", UNSET),
             overwrite=data.get("overwrite", UNSET),
             stamp=data.get("stamp", UNSET),
             view=_enum_in(IfcView, data["view"]) if "view" in data else UNSET,

@@ -10,7 +10,7 @@
 //!   it (the geometry core's overlay, arcs kept), so a window is a hole, its sill and head faces drawn.
 //! - **Faces** (a roof's face): each face as the file has it, outward; a face not seen edge-on from above triangulated
 //!   by its plan, a vertical one as a fan.
-//! - **Heights** are over ±0.00: an element's storey's elevation added to its shapes' own.
+//! - **Heights** are over ±0.00: the building's ±0.00 and an element's storey's elevation added to its shapes' own.
 
 use std::ops::Range;
 
@@ -60,7 +60,7 @@ impl Mesh {
 pub fn meshes(b: &Building) -> Vec<Mesh> {
     let mut out = Vec::new();
     for (i, e) in b.elements.iter().enumerate() {
-        let floor = b.storeys.get(e.storey).map_or(0.0, |s| s.elevation);
+        let floor = b.zero + b.storeys.get(e.storey).map_or(0.0, |s| s.elevation);
         let cuts: Vec<&Opening> = b.openings.iter().filter(|o| o.host == i && o.ring.len() >= 3).collect();
         let mut m = Mesh::new(e.object.or(e.id), Kind::Element(e.class), e.storey, &e.name);
         // Its cut body (docs/adr/8071 §4): the Reference View's and the net volume's, each band's arcs flattened here.
@@ -77,7 +77,7 @@ pub fn meshes(b: &Building) -> Vec<Mesh> {
         }
     }
     for s in &b.spaces {
-        let floor = b.storeys.get(s.storey).map_or(0.0, |x| x.elevation);
+        let floor = b.zero + b.storeys.get(s.storey).map_or(0.0, |x| x.elevation);
         let mut m = Mesh::new(s.id, Kind::Space, s.storey, s.long_name.as_deref().unwrap_or(&s.name));
         // Under a roof its pieces (docs/adr/8071 §11), else its prism.
         if s.body.is_empty() {

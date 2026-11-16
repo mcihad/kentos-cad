@@ -46,6 +46,7 @@ FILES = [ROOT / "fixtures/arch/v1/ifc/egri-bina.ifc", ROOT / "fixtures/arch/v1/i
 SLOPED = ROOT / "fixtures/arch/v1/ifc/egimli-doseme.ifc"
 ROOF_LAYERS = ROOT / "fixtures/arch/v1/ifc/katmanli-cati.ifc"
 UNDER_ROOF = ROOT / "fixtures/arch/v1/ifc/cati-alti-mahal.ifc"
+BLOCKS = (ROOT / "fixtures/arch/v1/ifc/blok-a.ifc", ROOT / "fixtures/arch/v1/ifc/blok-b.ifc")
 EXPECTED = ROOT / "fixtures/arch/v1/curved-building.json"
 
 
@@ -56,9 +57,12 @@ def main() -> int:
             return check_sloped(path)
         if path.name == UNDER_ROOF.name:
             return check_under_roof(path)
+        if path.name in (BLOCKS[0].name, BLOCKS[1].name):
+            return check_blocks(*BLOCKS)
         return check_roof_layers(path) if path.name == ROOF_LAYERS.name else check(path)
     return max([check(p) for p in FILES]
-               + [check_sloped(SLOPED), check_roof_layers(ROOF_LAYERS), check_under_roof(UNDER_ROOF)])
+               + [check_sloped(SLOPED), check_roof_layers(ROOF_LAYERS), check_under_roof(UNDER_ROOF),
+                  check_blocks(*BLOCKS)])
 
 
 def surface(f, product):
@@ -94,6 +98,63 @@ def closed_volume(place, tris):
                    + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
                   for a, b, c in ((place[x], place[y], place[z]) for x, y, z in tris)))
     return closed, vol
+
+
+def check_blocks(a_path: Path, b_path: Path) -> int:
+    """Two blocks, one model each (docs/adr/8072 §2): A Blok over a basement both share, B Blok 20 m east entered 1.20 m
+    higher. Read by IfcOpenShell: both valid; one site and one project (the same GlobalIds and names) in both and no
+    other GlobalId shared; each its own building; the storeys' heights over ±0.00 by their placements' chain: A's −3.00, ±0.00, +3.00, B's +1.20 (its
+    Elevation 0 over its own ±0.00); the basement's slab in A's file only; B's walls standing at +1.20."""
+    import ifcopenshell
+    import ifcopenshell.util.placement as up
+    import ifcopenshell.validate
+
+    bad: list[str] = []
+    files = {}
+    for tag, path in (("A", a_path), ("B", b_path)):
+        f = ifcopenshell.open(str(path))
+        log = ifcopenshell.validate.json_logger()
+        ifcopenshell.validate.validate(f, log, express_rules=True)
+        if log.statements:
+            bad.append(f"{tag}: validator: {[s.get('message', s) for s in log.statements[:5]]}")
+        files[tag] = f
+    one = lambda f, cls: f.by_type(cls)[0]
+    for cls in ("IfcSite", "IfcProject"):
+        a, b = one(files["A"], cls), one(files["B"], cls)
+        if (a.GlobalId, a.Name) != (b.GlobalId, b.Name):
+            bad.append(f"{cls} differs: {a.GlobalId} {a.Name} / {b.GlobalId} {b.Name}")
+    # Read together, the two files share their project and their site, nothing else (a federated model).
+    ids = {tag: {e.GlobalId for e in f.by_type("IfcRoot")} for tag, f in files.items()}
+    shared = ids["A"] & ids["B"]
+    want = {one(files["A"], "IfcProject").GlobalId, one(files["A"], "IfcSite").GlobalId}
+    if shared != want:
+        bad.append(f"{len(shared)} GlobalIds in both files, not the project's and the site's alone")
+    ba, bb = one(files["A"], "IfcBuilding"), one(files["B"], "IfcBuilding")
+    if ba.GlobalId == bb.GlobalId or ba.Name == bb.Name:
+        bad.append(f"the buildings are not their own: {ba.Name} / {bb.Name}")
+    near = lambda x, y: abs(x - y) <= 1e-9
+    heights = {tag: sorted(round(up.get_local_placement(s.ObjectPlacement)[2][3], 9) for s in f.by_type("IfcBuildingStorey"))
+               for tag, f in files.items()}
+    if heights["A"] != [-3.0, 0.0, 3.0] or heights["B"] != [1.2]:
+        bad.append(f"storeys over ±0.00: {heights}")
+    b_storey = one(files["B"], "IfcBuildingStorey")
+    if not near(b_storey.Elevation, 0.0):
+        bad.append(f"B's storey Elevation {b_storey.Elevation}, not 0 over its own ±0.00")
+    slabs = {tag: len(f.by_type("IfcSlab")) for tag, f in files.items()}
+    if slabs != {"A": 4, "B": 0}:
+        bad.append(f"slabs {slabs}: the basement's once, in A")
+    for wall in files["B"].by_type("IfcWall"):
+        pts, _, _ = surface(files["B"], wall)
+        low = min(p[2] for p in pts)
+        if not near(low, 1.2):
+            bad.append(f"{wall.Name} stands at {low}, not +1.20")
+    if bad:
+        for b in bad:
+            print("✗", b)
+        return 1
+    print(f"✓ {a_path.name} + {b_path.name}: IFC4X3_ADD2, 0 validator findings; one site and one project, two buildings, "
+          "storeys at −3.00/±0.00/+3.00 and +1.20 by their placements, the basement once, B's walls at +1.20.")
+    return 0
 
 
 def check_under_roof(path: Path) -> int:

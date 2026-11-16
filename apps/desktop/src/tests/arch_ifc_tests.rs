@@ -72,3 +72,36 @@ fn the_cut_bodies_go_out_as_a_reference_view() {
     assert!(said.text.starts_with("IFC 4.3 yazıldı (gövdeler açıklıkları kesilmiş): 2 kat, 16 duvar"), "{}", said.text);
     let _ = std::fs::remove_file(out);
 }
+
+/// Bina başına model (docs/adr/8072 §2): the program's two blocks (the section building's storeys split between them,
+/// each its code) go out as two files from one choice: the first where the user said, the second beside it named by
+/// EK-2 with its code; the message names both.
+#[test]
+fn two_blocks_go_out_as_two_files() {
+    let mut app = app();
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let mut settings = doc.settings().clone();
+    let arch = settings.arch.as_mut().expect("its levels");
+    arch.program.buildings = serde_json::from_value(serde_json::json!([
+        {"id": "a", "name": "A Blok", "levels": ["zemin"], "code": "A1"},
+        {"id": "b", "name": "B Blok", "levels": ["k1"], "code": "B1", "zero": 3.0}
+    ]))
+    .unwrap();
+    doc.set_settings(settings);
+    let dir = std::env::temp_dir().join(format!("kentos-desktop-bloklar-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let first = dir.join("a.ifc");
+    let _ = app.update(Message::IfcBuildingExport(Some(first.clone())));
+    let a = std::fs::read_to_string(&first).expect("A written");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let second = dir.join(kentos_native_application::arch_ifc::file_name_of(doc, "b"));
+    let b = std::fs::read_to_string(&second).expect("B written beside it");
+    assert_eq!(a.matches("=IFCBUILDINGSTOREY(").count(), 1);
+    assert_eq!(b.matches("=IFCBUILDINGSTOREY(").count(), 1);
+    assert!(a.contains("'MM-BNA-A_Blok'") && b.contains("'MM-BNA-B_Blok'"));
+    assert!(second.display().to_string().contains("B1"), "{}", second.display());
+    let said = app.log.last().expect("said");
+    assert_eq!(said.level, Level::Success);
+    assert!(said.text.starts_with("IFC 4.3, 2 bina ayrı dosyalara yazıldı: A Blok: 1 kat"), "{}", said.text);
+    let _ = std::fs::remove_dir_all(dir);
+}

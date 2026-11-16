@@ -1092,3 +1092,98 @@ fn a_room_is_closed_from_its_floor_to_its_ceiling() {
         assert_eq!(kentos_ifc::closed::faults(&body), Vec::<String>::new(), "{}", s.name);
     }
 }
+
+/// Bina başına model (docs/adr/8072 §2): the section building as A Blok over a basement both blocks share, and a B Blok
+/// 20 m east entered 1.20 m higher (its own ground level at +1.20): its four walls and a room. The program: A Blok (A1)
+/// spans the basement, the ground floor and the 1. kat; B Blok (B1, its ±0.00 1.20 over A's) the basement and its own
+/// ground level; the basement counts in A Blok. A's file holds its three storeys (−3.00, ±0.00, +3.00 over its ±0.00)
+/// and the basement's slab; B's its one storey at ±0.00 over its own ±0.00, the building placed 1.20 up (its walls
+/// standing at +1.20 over the project's, no second offset), no basement; the site and the project the same in both.
+/// `KENTOS_WRITE_IFC_BLOCKS=1` writes fixtures/arch/v1/ifc/blok-a.ifc and blok-b.ifc for
+/// scripts/fixtures/curved_ifc_check.py's blocks part.
+#[test]
+fn two_blocks_are_two_models_with_their_own_zero_and_the_basement_once() {
+    use kentos_commands::CallOp;
+    use kentos_ifc::building::{Shape, write};
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let mut settings = doc.settings().clone();
+    let arch = settings.arch.as_mut().expect("its levels");
+    for (id, name, elevation) in [("bodrum", "Bodrum kat", -3.0), ("b-zemin", "B zemin kat", 1.2)] {
+        arch.levels.push(serde_json::from_value(serde_json::json!({"id": id, "name": name, "elevation": elevation, "height": 3.0})).unwrap());
+    }
+    arch.program.buildings = serde_json::from_value(serde_json::json!([
+        {"id": "a", "name": "A Blok", "levels": ["bodrum", "zemin", "k1"], "code": "A1", "usage": "Konut", "zero": 0.0},
+        {"id": "b", "name": "B Blok", "levels": ["bodrum", "b-zemin"], "code": "B1", "usage": "Ticaret", "zero": 1.2}
+    ]))
+    .unwrap();
+    arch.program.shared = vec![kentos_commands::SharedLevel { level: "bodrum".into(), building: "a".into() }];
+    doc.set_settings(settings);
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+    };
+    run(&mut doc, "cad.slabs.create", serde_json::json!({"layerId": "0", "slabs": [{
+        "parts": [{"outer": {"pts": rect(-0.125, -0.125, 26.125, 9.125)}}], "thickness": 0.3, "arch": {"level": "bodrum"}
+    }]}));
+    let corners = [(20.0, 0.0), (26.0, 0.0), (26.0, 5.0), (20.0, 5.0)];
+    let walls: Vec<serde_json::Value> = (0..4)
+        .map(|k| {
+            let (a, b) = (corners[k], corners[(k + 1) % 4]);
+            serde_json::json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": 0.25, "arch": {"level": "b-zemin"}})
+        })
+        .collect();
+    run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": walls}));
+    run(&mut doc, "cad.spaces.create", serde_json::json!({"layerId": "0", "spaces": [{
+        "parts": [{"outer": {"pts": rect(20.125, 0.125, 25.875, 4.875)}}], "number": "B01", "name": "Dükkân",
+        "arch": {"level": "b-zemin"}
+    }]}));
+    let stamp = "2026-11-16T12:00:00";
+    let (a, written_a, unplaced) = arch_ifc::building_of(&doc, "a", stamp, "KentOS Mimari").expect("A Blok");
+    assert_eq!((unplaced, written_a.left.len()), (0, 0));
+    let (b, written_b, _) = arch_ifc::building_of(&doc, "b", stamp, "KentOS Mimari").expect("B Blok");
+    assert_eq!(written_b.left, Vec::new());
+    assert!(arch_ifc::building_of(&doc, "c", stamp, "KentOS Mimari").is_none());
+    let storeys = |x: &kentos_ifc::building::Building| {
+        let mut v: Vec<(String, f64)> = x.storeys.iter().map(|s| (s.long_name.clone().unwrap(), s.elevation)).collect();
+        v.sort_by(|p, q| p.1.total_cmp(&q.1));
+        v
+    };
+    assert_eq!(
+        storeys(&a),
+        vec![("Bodrum kat".into(), -3.0), ("Zemin kat".into(), 0.0), ("1. kat".into(), 3.0)]
+    );
+    assert_eq!(storeys(&b), vec![("B zemin kat".to_owned(), 0.0)]);
+    assert_eq!((a.zero, b.zero), (0.0, 1.2));
+    let count = |x: &kentos_ifc::building::Building, c: Class| x.elements.iter().filter(|e| e.class == c).count();
+    assert_eq!(count(&b, Class::Wall), 4);
+    assert_eq!(count(&b, Class::Slab), 0, "the basement is A Blok's");
+    assert_eq!(b.spaces.len(), 1);
+    assert_eq!(count(&a, Class::Slab), 4, "the ground, the 1. kat's, the terrace and the basement");
+    assert!(a.spaces.len() > 1 && a.spaces.iter().all(|s| s.long_name.as_deref() != Some("Dükkân")));
+    // B's walls stand at +1.20 over the project's ±0.00: its zero, its storey's elevation over it, their own foot.
+    for e in b.elements.iter().filter(|e| e.class == Class::Wall) {
+        let low = e
+            .shapes
+            .iter()
+            .filter_map(|s| match s {
+                Shape::Prism { bottom, .. } => Some(*bottom),
+                Shape::Faces { .. } => None,
+            })
+            .fold(f64::MAX, f64::min);
+        assert!((b.zero + b.storeys[e.storey].elevation + low - 1.2).abs() < 1e-9, "{}: {low}", e.name);
+    }
+    // One site and one project in both files; each building its own name.
+    let (fa, fb) = (write(&a), write(&b));
+    let line = |f: &str, what: &str| f.lines().find(|l| l.contains(what)).map(|l| l.split_once('=').unwrap().1.to_owned());
+    assert_eq!(line(&fa, "IFCSITE("), line(&fb, "IFCSITE("));
+    assert_eq!(line(&fa, "IFCPROJECT("), line(&fb, "IFCPROJECT("));
+    assert!(fa.contains("'MM-BNA-A_Blok'") && fb.contains("'MM-BNA-B_Blok'"), "{}", line(&fb, "IFCBUILDING(").unwrap_or_default());
+    if std::env::var_os("KENTOS_WRITE_IFC_BLOCKS").is_some() {
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc");
+        std::fs::write(dir.join("blok-a.ifc"), fa).expect("the file kept");
+        std::fs::write(dir.join("blok-b.ifc"), fb).expect("the file kept");
+    }
+}

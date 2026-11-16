@@ -527,8 +527,10 @@ Açıklıklı duvarın hacmi, dolu hacim eksi açıklıklardır. Bütün gövdel
 kodu (EK-2 §2.3: iki büyük harf ya da rakam, tek binada "00"), kullanım türü ve projenin ±0.00'ına göre ±0.00'ıyla;
 birden çok binanın kapladığı kat (ortak bodrum) seçilen binanın katı sayılır, alanı bir kez; her nesnenin binası
 katından okunur (`building_of_level`); `.kcad` mimari verisi 9; Bina programı › Binalar'da alanlar ve "Ortak katlar".
-**Kalan:** bina başına model ve dosya adı (§2), konum ve kot (IFC-05, §3), ortak bodrum alanının emsal ve metrajda bir
-kez sayılması ve ruhsat takımında bina seçimi (§4), onaylı plan kararları (§5).
+Bina başına model (§2): `cad.arch.ifc`'nin `building`'i; bina kendi ±0.00'ında, katları ona göre; bodrum sayıldığı
+binada; proje ve saha her dosyada aynı kimlikle; IFC dışa aktar her binaya EK-2 adlı bir dosya. **Kalan:** konum ve kot
+(IFC-05 kontrol noktaları, §3), ortak bodrum alanının emsal ve metrajda bir kez sayılması ve ruhsat takımında bina
+seçimi (§4), onaylı plan kararları (§5).
 
 **Kullanıcı sonucu:** Bir parselde birden çok blok ve ortak bodrum tek projede durur. Her bina kendi kodu, katları ve
 künyesiyle pilotta ayrı model dosyası verir; saha ve parsel bilgileri hepsinde aynıdır. Dayanak EK-2 §2.3 ve Tablo 2.1; EK-6 6.7, 6.55;

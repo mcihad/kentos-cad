@@ -60,6 +60,11 @@ pub struct ExportIfcBuilding {
     #[serde(default, skip_serializing_if = "IfcView::is_design_transfer")]
     #[cfg_attr(feature = "ts", ts(as = "Option<IfcView>", optional))]
     pub view: IfcView,
+    /// One of the building program's buildings, by its id (docs/adr/8072 §2): its storeys (a shared level where it
+    /// counts) and the objects on them, at its ±0.00, its code in the building's id; none: the project as one building.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub building: Option<String>,
 }
 
 /// Output of `cad.arch.ifc` v1, and its plan: the file, its schema, what its bodies are (`view`), how many of each

@@ -109,7 +109,11 @@
   - **B11 sürüyor (16 Kasım 2026; [ADR 8072](../adr/8072-buildings-shared-basement-location.md); BIM-11 `[~]`):**
     - Programın binası kod (EK-2 §2.3), kullanım türü ve projenin ±0.00'ına göre ±0.00 taşır; birden çok binanın
       kapladığı kat seçilen binada sayılır (`BuildingProgram::shared`), nesnenin binası katından okunur
-      (`building_of_level`); `.kcad` mimari verisi 9. Kalan: bina başına model, konum ve kot, alanlar, plan kararları.
+      (`building_of_level`); `.kcad` mimari verisi 9.
+    - Bina başına model: `cad.arch.ifc` `building`; bina sahada kendi ±0.00'ında (`Building::zero`), katların kotu ona
+      göre, nesneler katlarına göre (çift öteleme yok); proje ve saha her dosyada aynı GlobalId'yle, öbür kimlikler
+      binanın dosya adından. IFC dışa aktar birden çok binada her binaya EK-2 adlı bir dosya yazar. Kalan: kontrol
+      noktalarıyla konum, ortak bodrum alanı, plan kararları.
   - **B10 yapıldı (16 Kasım 2026; [ADR 8071](../adr/8071-geometry-accuracy.md); BIM-10 `[x]`):**
     - Yayın kaynağı kesit modelidir (`Model::exact`): döşeme ve mahal parçalarından, duvar düz parçalı gövdesinden geri
       alınarak (`arc_recover`); IFC profili `IfcIndexedPolyCurve` + `IfcArcIndex`; parça sayısı görüntünün işidir.

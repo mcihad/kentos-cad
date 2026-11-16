@@ -365,6 +365,9 @@ pub struct Building {
     /// layers top down, in place of a single material.
     pub layer_sets: Vec<(usize, String, Vec<Layer>)>,
     pub crs: Option<Crs>,
+    /// The building's ±0.00 over the site's (the project's ±0.00), metres (docs/adr/8072 §2): its placement there, its
+    /// storeys' elevations over it.
+    pub zero: f64,
 }
 
 /// A layer of an element's material layer set (docs/adr/8071 §8; IFC 4.3 `IfcMaterialLayer`).
@@ -884,7 +887,7 @@ pub fn write(b: &Building) -> String {
         b.site_elevation.map_or("$".into(), real)
     ));
     w.psets(site, &b.site.psets, &b.site.qtos);
-    let building_place = w.placement(Some(site_place), 0.0);
+    let building_place = w.placement(Some(site_place), b.zero);
     let g = w.id(b.building.id);
     let building_address = w.address(&b.building.address);
     let building = w.st.add(format!(

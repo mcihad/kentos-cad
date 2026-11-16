@@ -74,6 +74,21 @@ pub struct Input<'a> {
     /// A room's floor and ceiling as the vertical model finds them (docs/adr/8040 §3, 8071 §7), by its persistent id;
     /// a room not here stands on its own offset up its own height or its storey's.
     pub rooms: BTreeMap<String, RoomLevels>,
+    /// The program's building the file holds (docs/adr/8072 §2); none: the project as one building.
+    pub building: Option<BuildingOf>,
+}
+
+/// The program's building a file holds (docs/adr/8072 §2): its name, code, use and ±0.00 over the project's, and whether
+/// the project has others (the künye's areas are then the project's, not this building's).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct BuildingOf {
+    /// Its id in the program: its GlobalId's seed.
+    pub id: String,
+    pub name: String,
+    pub code: Option<String>,
+    pub usage: Option<String>,
+    pub zero: f64,
+    pub several: bool,
 }
 
 /// A room's floor and ceiling, metres over ±0.00 (docs/adr/8040 §3): its finished floor; its ceiling (its asma tavan,
@@ -623,7 +638,8 @@ fn shapes(solid: &Solid, exact: Option<&Option<Vec<(Vec<P>, Vec<f64>)>>>, floor:
     }
 }
 
-fn level_of(e: &Entity) -> Option<&str> {
+/// The level an architectural object stands on: its own `arch.level`; none for one without, or another kind.
+pub fn level_of(e: &Entity) -> Option<&str> {
     match e {
         Entity::Wall(w) => w.wall.arch.level.as_deref(),
         Entity::Slab(s) => s.slab.arch.level.as_deref(),
@@ -773,7 +789,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         fixtures,
         coverings,
         rooms,
+        building: scope,
     } = input;
+    // Its ±0.00 over the project's (docs/adr/8072 §2): the building stands there, its storeys' elevations over it; the
+    // objects keep their places over their storeys (no second offset).
+    let zero = scope.as_ref().map_or(0.0, |b| b.zero);
     let mut written = Written::default();
     // The storeys, by their level id; a drawing without levels has one, Zemin kat at ±0.00.
     let mut levels = levels;
@@ -791,7 +811,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             id: None,
             name: name("BNK", n),
             long_name: Some(n.clone()),
-            elevation: *floor,
+            elevation: *floor - zero,
             psets: Vec::new(),
             qtos: height
                 .map(|h| {
@@ -1788,14 +1808,17 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .as_ref()
         .filter(|c| c.chars().any(|ch| ch != '0'))
     {
-        let id = format!("{code}_{}", k.building_code.as_deref().unwrap_or("00"));
+        let building_code = scope.as_ref().and_then(|b| b.code.as_deref()).or(k.building_code.as_deref());
+        let id = format!("{code}_{}", building_code.unwrap_or("00"));
         common.push(("BuildingID".to_owned(), Value::Id(id)));
         common.push(("IsPermanentID".to_owned(), Value::Bool(false)));
     }
-    if let Some(u) = &k.occupancy {
+    // A building of several: its own use; the künye's areas are the project's, not written as this building's.
+    let several = scope.as_ref().is_some_and(|b| b.several);
+    if let Some(u) = scope.as_ref().and_then(|b| b.usage.as_ref()).or(k.occupancy.as_ref()) {
         common.push(("OccupancyType".to_owned(), label(u)));
     }
-    if let Some(a) = k.gross_area {
+    if let Some(a) = k.gross_area.filter(|_| !several) {
         common.push(("GrossPlannedArea".to_owned(), Value::Area(a)));
     }
     // The rooms' net areas together (EK-6 Tablo 6.7 `NetPlannedArea`; docs/adr/8068), as the model's spaces carry them.
@@ -1820,14 +1843,16 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         name: "Pset_BuildingCommon".into(),
         props: common,
     });
-    if let Some(a) = k.footprint {
+    if let Some(a) = k.footprint.filter(|_| !several) {
         building_quantities.push(("FootprintArea".to_owned(), Value::Area(a)));
     }
-    if let Some(a) = k.gross_area {
+    if let Some(a) = k.gross_area.filter(|_| !several) {
         building_quantities.push(("GrossFloorArea".to_owned(), Value::Area(a)));
     }
     let title = title.to_owned();
     let work = k.work.clone().unwrap_or_else(|| title.clone());
+    // The project's own seed, whichever building a file holds: its code, else its title.
+    let project_seed = k.project_code.clone().unwrap_or_else(|| title.clone());
     // EK-7 Tablo 7.1: the project's name is its code (EK-1), its long name the work's.
     let project_name = k.project_code.clone().unwrap_or_else(|| title.clone());
     let actors = k.architect().into_iter().collect();
@@ -1914,7 +1939,14 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         })
         .filter(|g| !g.spaces.is_empty())
         .collect();
-    let grids = grids_of(&entities, &storey_of, &mut written);
+    let mut grids = grids_of(&entities, &storey_of, &mut written);
+    // In one building's file its axes are its own (docs/adr/8072 §2): the project's axes on no storey stand with each
+    // building, at its ±0.00, so each copy takes its building's GlobalId.
+    if let Some(b) = &scope {
+        for g in &mut grids {
+            g.id = g.id.map(|x| crate::step::fnv(&format!("kentos-aks:{}:{x}", b.id), 0));
+        }
+    }
     // A layered roof's material layer set (docs/adr/8071 §8): top down, each layer its kind's word, its material (the
     // covering's, not given, the roof's covering; another's not given unsaid), its thickness across the roof's face and
     // its role in IFC 4.3's words (`IfcMaterialLayer.Category`): the covering the outer finish, the insulation
@@ -1951,17 +1983,32 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .collect();
     let building = Building {
         view: Default::default(),
-        file: k.file_stem(&title),
+        // One building's file (docs/adr/8072 §2): its stem its own (EK-2: its code), so its own GlobalIds; the project's
+        // and the site's the same in every building's file, from the project's seed.
+        file: match &scope {
+            Some(b) => {
+                let mut own = k.clone();
+                own.building_code = b.code.clone().or(own.building_code);
+                // Without a project code the stem is the drawing's name: the building's code (else its id) after it.
+                match own.project_code {
+                    Some(_) => own.file_stem(&title),
+                    None => format!("{title}_{}", b.code.clone().unwrap_or_else(|| b.id.clone())),
+                }
+            }
+            None => k.file_stem(&title),
+        },
         stamp: stamp.to_owned(),
         application: application.to_owned(),
         phase: None,
         project: Place {
+            id: scope.as_ref().map(|_| crate::step::fnv(&format!("kentos-proje:{project_seed}"), 0)),
             name: project_name,
             long_name: Some(work.clone()),
             ..Place::default()
         },
         actors,
         site: Place {
+            id: scope.as_ref().map(|_| crate::step::fnv(&format!("kentos-saha:{project_seed}"), 0)),
             name: name("SAH", "Parsel"),
             long_name: k.land_id(),
             psets: site_psets,
@@ -1971,8 +2018,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         },
         site_elevation: arch.and_then(|a| a.site.as_ref()).and_then(|s| s.datum),
         building: Place {
-            name: name("BNA", &work),
-            long_name: Some(work),
+            // One of the program's buildings its own GlobalId, the same from file to file (docs/adr/8072 §2); the site and
+            // the project the same in every building's file.
+            id: scope.as_ref().map(|b| crate::step::fnv(&format!("kentos-bina:{project_seed}:{}", b.id), 0)),
+            name: name("BNA", scope.as_ref().map_or(&work, |b| &b.name)),
+            long_name: Some(scope.as_ref().map_or(work.clone(), |b| b.name.clone())),
             psets: building_psets,
             qtos: if building_quantities.is_empty() {
                 Vec::new()
@@ -1994,6 +2044,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         grids,
         crs,
         layer_sets,
+        zero,
     };
     (building, written)
 }

@@ -240,6 +240,11 @@ def cases():
                                           "ister."}]))],
              setup=lone),
         case("Boş yol", [step("execute", {"path": ""}, failed("invalid_file_path", path_words, "path"))]),
+        # One of the program's buildings (ADR 8072 §2): one the program does not have is refused.
+        case("Programda olmayan bina reddedilir",
+             [step("execute", {"path": "$tmp:bina-30.ifc", "stamp": STAMP, "building": "z"},
+                   failed("invalid_ifc", "“z” binası bina programında yok; programdaki bir binanın kimliğini verin.",
+                          "building"))]),
         case("Göreli yol", [step("execute", {"path": "bina.ifc"}, failed("invalid_file_path", path_words, "path"))]),
         case("IFC değil", [step("execute", {"path": "$tmp:bina.dxf"},
                                 failed("invalid_file_path", "“$tmp:bina.dxf” bir .ifc dosyası değil.", "path"))]),

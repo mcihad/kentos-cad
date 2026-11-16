@@ -351,7 +351,14 @@ uyum için şart değildir.
 **İlk kabul:** bir duvar stili tek tip olarak yazılır ve bütün duvarları ona bağlıdır; katmanlar sırasıyla ve kalınlığıyla
 bağımsız okuyucuda okunur.
 
-#### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [ ]
+#### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [~]
+
+**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§2, BIM-11 ile):** bina
+başına model dosyası (`cad.arch.ifc` `building`; masaüstünde her bina EK-2 adlı ayrı dosya); proje ve saha her dosyada
+aynı kimlikle, başka ortak kimlik yok; her bina kendi ±0.00'ında, katları ona göre, nesneler katlarına göre (çift
+öteleme yok); ortak bodrum sayıldığı binada; IfcOpenShell iki dosyada katların mutlak kotlarını yerleşim zincirinden doğru
+okur. **Kalan:** yerel orijin ve harita dönüşümü kontrol noktalarıyla (dönüş, ölçek), kotu bilinmeyen ±0.00'ın eksik
+olarak söylenmesi, yerleşim zincirinde döngü denetimi.
 
 **Kullanıcı sonucu:** Model, karşı programda doğru yerde ve doğru kotta açılır; pilotta iki blok iki dosya olur ve ortak proje bilgileri
 ikisinde aynıdır. Nesneleri BIM-11'den gelir.

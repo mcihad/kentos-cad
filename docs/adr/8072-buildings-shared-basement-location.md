@@ -2,7 +2,7 @@
 
 - **Durum:** kısmen uygulandı (16 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-11,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-05; uygulama sırasında B11. Bu ADR maddenin bütün adımlarını tutar; koddaki
-  "docs/adr/8072 §N" atıfları bölümleri gösterir: §1 binalar (kod, kullanım, ±0.00, ortak kat). Kararların numarası
+  "docs/adr/8072 §N" atıfları bölümleri gösterir: §1 binalar (kod, kullanım, ±0.00, ortak kat), §2 bina başına model. Kararların numarası
   bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar numarasız son bölümlerdedir.
 - **Bağlam:** ADR [0773](0773-building-program-units-and-design-brief.md) (bina programı), [0784](0784-building-wing-window-and-common-area-shares.md) §1
   (binaların ve kanatların katları), [8032](8032-site-plan-parcel-setbacks-and-datum.md) (vaziyet planı, saha röperi),
@@ -58,6 +58,44 @@ kodun biçimi, tekrarı, "00", seçimin katı ve binası, ±0.00'ın sınırı);
 kabul, sekiz ret); masaüstünde `two_blocks_get_codes_zeros_and_a_shared_level_through_the_window` (pencereden yazılır,
 "00" reddedilir, hiçbir şey yazılmaz). Resim: `bina-ortak-kat` (`.run/shots/arac-bina-ortak-kat-*`).
 
+## §2. Bina başına model
+
+**Araştırma.**
+
+- **EK-2 §2.3:** projeler bina/bloklar için ayrı hazırlanınca dosya adında bina kodu; **BIM-11 ve IFC-05:** "İlk çok bloklu
+  pilotta bina başına model dosyası … Ortak proje ve saha alanları eşleşir. Her bloğun ±0.00'ı ortak saha röperine ayrı
+  bağlanır"; "Yerleşim zinciri: saha → bina → kat → eleman; döngü ve çift öteleme denetimi".
+- **IFC 4.3** (`IfcSite.md`, `IfcBuildingStorey.md`): her binanın referans kotu sahanın datumuna göre, katların kotu
+  binanın referans kotuna göre; katın yerleşimi `ObjectPlacement`'tır, Elevation bilgi içindir.
+- **Archicad** (help.graphisoft.com, "IFC Data Types"): bir sahayı paylaşan ayrı projelerde aynı Project ID ve Site ID,
+  farklı Building ID (karşılaştırma için).
+
+**Karar.**
+
+5. **`cad.arch.ifc`'nin `building`'i** programın bir binasını yazar: katları (ortak kat sayıldığı binada) ve onlardaki
+   nesneler; duvarı yazılan açıklık; katı olmayan aks ızgarası her binada. Katı olmayan ya da ortak katının binası
+   seçilmemiş yapı nesnesi hiçbir binanın dosyasına girmez, `export_losses` ile söylenir; programda olmayan bina
+   `invalid_ifc` (`building`).
+6. **Kot:** bina sahada kendi ±0.00'ında durur (`Building::zero`, yerleşimin z'si); katların Elevation'ı ve yerleşimi
+   binanın ±0.00'ına göre (kat kotu eksi bina farkı); nesneler katlarına göre eskisi gibi: çift öteleme yok. 3B ağı
+   binanın farkını ekler.
+7. **Kimlik ve ad:** bina adı ve uzun adı programdaki ad (EK-5: MM-BNA-…); BuildingID künyenin proje kodu ve binanın
+   kodu; OccupancyType binanınki (yoksa künyeninki); künyenin proje toplamı olan alanları (GrossPlannedArea,
+   FootprintArea, GrossFloorArea) birden çok binada yazılmaz. Proje ve sahanın GlobalId'si projenin tohumundan, her
+   binanın dosyasında aynı; binanınki ve öbür bütün kimlikler binanın dosya adından (EK-2 adı; proje kodu yoksa çizimin
+   adı ve bina kodu): iki dosya birlikte okunduğunda yalnız proje ve saha ortaktır; katı olmayan akslar her binada
+   kendi kimliğiyle.
+8. **Masaüstü:** programında birden çok bina olan projede IFC dışa aktar (bina) her bina için bir dosya yazar: ilki
+   kullanıcının seçtiği yere, öbürleri yanına EK-2 adlarıyla; ileti her binanın kat ve duvar sayısını söyler.
+
+**Sınama.** `arch_ifc::two_blocks_are_two_models_with_their_own_zero_and_the_basement_once` (kesit binası A Blok, 20 m
+doğusunda 1,20 m yukarıdan girilen B Blok, ortak bodrum A'da: A'nın katları −3,00/±0,00/+3,00, B'ninki kendi ±0,00'ında
+0 ve bina 1,20 yukarıda, B'nin duvarları +1,20'den, bodrum döşemesi yalnız A'da, saha ve proje aynı, adlar ayrı);
+`curved_ifc_check.py`'nin bloklar bölümü `blok-a.ifc` ve `blok-b.ifc`'yi IfcOpenShell'le okur: 0 bulgu, aynı saha ve
+proje, başka ortak kimlik yok, katların yerleşim zincirinden mutlak kotları −3,00/±0,00/+3,00 ve +1,20, B'nin katının
+Elevation'ı 0, döşemeler A'da 4 B'de 0, B'nin duvarları +1,20'de; masaüstünde `two_blocks_go_out_as_two_files`; ortak
+durum (`cad.arch.ifc` 27: programda olmayan bina reddi).
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-contracts --lib program`, `-p kentos-kcad --test all -- arch_elements`,
@@ -65,9 +103,6 @@ kabul, sekiz ret); masaüstünde `two_blocks_get_codes_zeros_and_a_shared_level_
 
 ## Sıradaki adımlar
 
-- **§2 Bina başına model:** `cad.arch.ifc`'nin `building`'i: o binanın katları (sayıldığı ortak kat dahil) ve nesneleri;
-  proje ve saha bilgileri her dosyada aynı; dosya adında bina kodu (EK-2 Tablo 2.1); `IfcBuilding`'in adı, BuildingID'si,
-  OccupancyType'ı, NumberOfStoreys'i; katların kotu binanın ±0.00'ına göre, saha RefElevation'ı röper.
 - **§3 Konum (IFC-05):** yerel modelin harita dönüşümü kontrol noktalarından (dönüş ve ölçek); bağımsız okuyucuda üç
   kontrol noktası; kotu bilinmeyen ±0.00 sıfır sayılmaz, eksik olarak söylenir; yerleşim zincirinde döngü ve çift öteleme
   denetimi.

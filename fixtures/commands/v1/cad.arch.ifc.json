@@ -11550,6 +11550,33 @@
    ]
   },
   {
+   "name": "Programda olmayan bina reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp:bina-30.ifc",
+      "stamp": "2026-11-11T12:00:00",
+      "building": "z"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_ifc",
+       "message": "“z” binası bina programında yok; programdaki bir binanın kimliğini verin.",
+       "path": "building"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "Göreli yol",
    "steps": [
     {
