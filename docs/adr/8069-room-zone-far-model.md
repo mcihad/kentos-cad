@@ -50,4 +50,4 @@ tarihli derlemesinden (alomaliye.com, `planli-alanlar-01-07-2026.pdf`, pdftotext
 - Gruplar: bağımsız bölüm, eklenti, ortak alan `IfcZone`; mahalin türü (iç, dış, otopark).
 - Mahalin hacmi: eğik çatı altında kesilmiş, kapalı hacim.
 - Çizimde denetim: kapanmayan mahal, katının kot aralığında olmayan mahal; bölümü verilmemiş balkon.
-- Tablo satırı: Emsal ve TAKS tablosunda balkonların %20'yi aşan kısmı.
+- (Yapıldı) Tablo satırı: Emsal ve TAKS tablosunda "Balkonların %20'yi aşan kısmı, emsale eklenen", yalnız aşan kısım varken.

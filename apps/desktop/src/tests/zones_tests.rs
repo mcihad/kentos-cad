@@ -85,8 +85,13 @@ fn a_unit_s_balconies_past_20_percent_of_its_net_area_count_in() {
     // Katlar alanı: the two units' and the hall's gross (3 × 30) and the balcony's part past the 20 %.
     assert!((r.included - (90.0 + 2.3575)).abs() < 1e-6, "{r:?}");
     assert!((r.exempt - (7.5 - 2.3575 + 4.0)).abs() < 1e-6, "{r:?}");
-    // A balcony within its share stays out.
+    // Emsal ve TAKS tablosu says the part past the 20 % on its own row.
+    let t = app.document.as_ref().expect("a drawing").model.zoning_table();
+    let row = t.rows.iter().find(|r| r[0].starts_with("Balkonların %20'yi aşan kısmı")).expect("the balconies' row");
+    assert_eq!(row[2], "2.36", "{row:?}");
+    // A balcony within its share stays out, and the table has no such row.
     let small = building(1.0);
+    assert!(!small.document.as_ref().expect("a drawing").model.zoning_table().rows.iter().any(|r| r[0].starts_with("Balkonların")));
     let r = report(&small);
     assert!(r.balcony_over.abs() < 1e-9, "5 m² is within 5.1425: {r:?}");
     assert!((r.included - 90.0).abs() < 1e-6, "{r:?}");

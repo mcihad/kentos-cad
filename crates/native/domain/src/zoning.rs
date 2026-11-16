@@ -513,6 +513,15 @@ impl Document {
             true,
             &area,
         );
+        // The units' balconies past 20 % of their net areas, counted into Emsale konu alan (22/1-l, docs/adr/8069).
+        if r.balcony_over > 0.0 {
+            rows.push(vec![
+                named("Balkonların %20'yi aşan kısmı, emsale eklenen"),
+                String::new(),
+                area(r.balcony_over),
+                String::new(),
+            ]);
+        }
         if r.over > 0.0 {
             rows.push(vec![
                 named("%30'u aşan, emsale eklenen"),
