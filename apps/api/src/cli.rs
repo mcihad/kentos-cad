@@ -395,6 +395,50 @@ pub async fn run(config: &Config, args: &Args) -> Result<(), String> {
                 return Err("Denetim geçmedi: eksik ya da farklı nesne var.".into());
             }
         }
+        ["audit-env", "prepare"] => {
+            let (extension, version) = crate::audit_env::release_of(args.required("release")?)?;
+            let path = args.required("package")?;
+            let bytes = std::fs::read(path).map_err(|e| format!("{path} okunamadı: {e}"))?;
+            let digest = args.value("digest").map(str::to_owned);
+            let settings = config.audit_envs.clone();
+            let p = tokio::task::spawn_blocking(move || {
+                crate::audit_env::prepare_release(
+                    &settings,
+                    &extension,
+                    &version,
+                    digest.as_deref(),
+                    &bytes,
+                )
+            })
+            .await
+            .map_err(|e| format!("Ortam hazırlanırken iş durdu: {e}"))??;
+            println!(
+                "{} {}: {} ({}, {} paket, {:.1} sn)",
+                p.release,
+                if p.made {
+                    "hazırlandı"
+                } else {
+                    "zaten hazır"
+                },
+                p.python.display(),
+                p.digest,
+                p.packages.len(),
+                p.took.as_secs_f64()
+            );
+        }
+        ["audit-env", "remove"] => {
+            let (extension, version) = crate::audit_env::release_of(args.required("release")?)?;
+            let gone = crate::audit_env::remove_release(&config.audit_envs, &extension, &version)?;
+            println!("{extension}@{version}: {gone} ortam silindi, eşlemeden çıkarıldı");
+        }
+        ["audit-env", "list"] => {
+            for (release, python, there) in crate::audit_env::listing(&config.audit_envs)? {
+                println!(
+                    "{release}\t{python}\t{}",
+                    if there { "hazır" } else { "yorumlayıcı yok" }
+                );
+            }
+        }
         ["dev-seed"] => dev_seed(config).await?,
         _ => return Err(USAGE.into()),
     }
@@ -534,6 +578,10 @@ pub const USAGE: &str = "kullanım:
   kentosd backup --into KÖK [--keep 7]        KÖK altında yeni bir yedek (değişmeyen nesneler öncekinden bağlanır), eskileri döndürür
   kentosd backup list --into KÖK              KÖK altındaki yedekler: tam ya da yarım, ne zaman, kaç nesne
   kentosd backup check [--dir KLASÖR]         yedeğin klasörünü ya da çalışan sunucunun nesnelerini SHA-256'yla denetler
+  kentosd audit-env prepare --release KİMLİK@SÜRÜM --package PAKET.kek [--digest sha256:…]
+                                              bulut denetimi için sürümün Python ortamı, kilidin tekerlekleriyle
+  kentosd audit-env remove --release KİMLİK@SÜRÜM   sürümün ortamı ve eşlemedeki yeri
+  kentosd audit-env list                      hazırlanmış ortamların yorumlayıcıları
   kentosd dev-seed                            geliştirme kurumu ve üç hesap (ayse, mehmet, zeynep)";
 
 #[cfg(test)]

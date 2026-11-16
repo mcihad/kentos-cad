@@ -1,6 +1,7 @@
 //! The catalog's side of `project.audit` jobs (docs/adr/8057 §42; docs/adr/8059 §10): the release a cloud job runs and
 //! its approved package's bytes ([`Catalog::runnable`]), and the worker's audit source over it ([`CatalogAudits`]): the
-//! organisation's catalog first, then the public one, and the server's prepared environments.
+//! organisation's catalog first, then the public one, and the server's prepared environments ([`PythonSource`]: the
+//! setting's map, or the map the server keeps, read again at every job: docs/adr/8057 §66).
 //!
 //! A catalog knows an extension when anyone may see one of its releases there (published, suspended, withdrawn, or
 //! retired after it was published). The organisation's catalog that knows it decides alone: the same id in the public
@@ -74,15 +75,37 @@ impl Catalog {
     }
 }
 
+/// Where the audit source finds the interpreter prepared for a version.
+pub trait PythonSource: Send + Sync {
+    fn python(&self, extension: &str, version: &str) -> Option<String>;
+}
+
+impl PythonSource for AuditPythons {
+    fn python(&self, extension: &str, version: &str) -> Option<String> {
+        self.get(extension, version)
+    }
+}
+
+/// The map the server keeps over the setting's: read again at every job, so a version prepared while the server runs
+/// is found.
+impl PythonSource for crate::audit_env::AuditMap {
+    fn python(&self, extension: &str, version: &str) -> Option<String> {
+        self.get(extension, version)
+    }
+}
+
 /// The worker's audit source over the catalog and the server's prepared environments.
 pub struct CatalogAudits {
     catalog: Arc<Catalog>,
-    pythons: AuditPythons,
+    pythons: Box<dyn PythonSource>,
 }
 
 impl CatalogAudits {
-    pub fn new(catalog: Arc<Catalog>, pythons: AuditPythons) -> CatalogAudits {
-        CatalogAudits { catalog, pythons }
+    pub fn new(catalog: Arc<Catalog>, pythons: impl PythonSource + 'static) -> CatalogAudits {
+        CatalogAudits {
+            catalog,
+            pythons: Box::new(pythons),
+        }
     }
 }
 
@@ -130,6 +153,6 @@ impl AuditSource for CatalogAudits {
     }
 
     fn python(&self, extension: &str, version: &str) -> Option<String> {
-        self.pythons.get(extension, version)
+        self.pythons.python(extension, version)
     }
 }

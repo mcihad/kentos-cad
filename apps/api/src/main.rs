@@ -7,6 +7,7 @@
 //! a database configured, `serve` answers `/v1/health` only, so the drawing
 //! app keeps working as before.
 
+mod audit_env;
 mod cli;
 mod config;
 mod extension_catalog;

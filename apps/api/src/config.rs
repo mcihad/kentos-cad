@@ -56,6 +56,20 @@ pub struct Config {
     pub job_limits: kentos_application::jobs::JobLimits,
     /// How long a finished job and its artifact are kept (`KENTOS_JOB_RETENTION_DAYS`, 1–3650 days, default 14).
     pub job_retention: Duration,
+    /// The audit rules' Python environments (docs/adr/8057 §66), read by [`audit_envs`]:
+    /// - `KENTOS_AUDIT_ENV_DIR`: the environments, uv's cache, the wheel folder and the interpreter map; absent:
+    ///   `.run/denetim-ortamlari` beside the env file, for development.
+    /// - `KENTOS_AUDIT_BASE_PYTHON`: KentOS's Python they are made from, a CPython in KentOS's range; absent: the one
+    ///   uv installed in that folder.
+    /// - `KENTOS_AUDIT_WHEELS`: the wheel folder the administrator fills; absent: `tekerlekler` in that folder.
+    /// - `KENTOS_AUDIT_INDEX_URL`: an index, http or https: the network while preparing, where the administrator
+    ///   allows it; absent: offline.
+    /// - `KENTOS_AUDIT_UV`: uv; absent: the installation's own, else `PATH`.
+    /// - `KENTOS_AUDIT_SDK_DIR`: where KentOS's library's wheel is; absent: the installation's beside the program.
+    /// - `KENTOS_AUDIT_PYTHONS`: a JSON object `{"eklenti@sürüm": "/…/bin/python"}`, under the file the server writes.
+    ///
+    /// Paths are absolute.
+    pub audit_envs: crate::audit_env::EnvSettings,
 }
 
 /// Days of event log kept unless `KENTOS_EVENT_RETENTION_DAYS` says otherwise.
@@ -148,6 +162,55 @@ pub fn job_user_limit(value: Option<&str>) -> Result<u32, String> {
                 format!("KENTOS_JOB_USER_LIMIT 1 ile 10000 arasında bir sayı olmalı: {v}")
             }),
     }
+}
+
+/// The audit environments' settings ([`Config::audit_envs`]) from `get`, the env file at `env_file`.
+pub fn audit_envs(
+    get: impl Fn(&str) -> Option<String>,
+    env_file: &std::path::Path,
+) -> Result<crate::audit_env::EnvSettings, String> {
+    let path = |name: &str| -> Result<Option<PathBuf>, String> {
+        match get(name) {
+            None => Ok(None),
+            Some(v) if std::path::Path::new(v.trim()).is_absolute() => {
+                Ok(Some(PathBuf::from(v.trim())))
+            }
+            Some(v) => Err(format!("{name} mutlak bir yol olmalı: {v}")),
+        }
+    };
+    let index_url = match get("KENTOS_AUDIT_INDEX_URL") {
+        None => None,
+        Some(v) if v.trim().starts_with("https://") || v.trim().starts_with("http://") => {
+            Some(v.trim().to_owned())
+        }
+        Some(v) => {
+            return Err(format!(
+                "KENTOS_AUDIT_INDEX_URL http ya da https adresi olmalı: {v}"
+            ));
+        }
+    };
+    let pythons = match get("KENTOS_AUDIT_PYTHONS") {
+        None => kentos_application::audit_catalog::AuditPythons::default(),
+        Some(v) => kentos_application::audit_catalog::AuditPythons::parse(&v)
+            .map_err(|e| format!("KENTOS_AUDIT_PYTHONS: {e}"))?,
+    };
+    Ok(crate::audit_env::EnvSettings {
+        dir: path("KENTOS_AUDIT_ENV_DIR")?.unwrap_or_else(|| {
+            env_file
+                .parent()
+                .unwrap_or_else(|| std::path::Path::new("."))
+                .join(".run/denetim-ortamlari")
+        }),
+        base_python: path("KENTOS_AUDIT_BASE_PYTHON")?,
+        wheels: path("KENTOS_AUDIT_WHEELS")?,
+        index_url,
+        uv: path("KENTOS_AUDIT_UV")?,
+        sdk_dirs: match path("KENTOS_AUDIT_SDK_DIR")? {
+            Some(dir) => vec![dir],
+            None => kentos_python_env::sdk::dirs(),
+        },
+        pythons,
+    })
 }
 
 /// `KENTOS_EVENT_RETENTION_DAYS`: whole days, at least one (a client away longer reopens the project).
@@ -255,6 +318,7 @@ impl Config {
                 )?
             },
             job_retention: job_retention(get("KENTOS_JOB_RETENTION_DAYS").as_deref())?,
+            audit_envs: audit_envs(get, &env_file)?,
             env_file,
             vars,
         })
@@ -282,6 +346,72 @@ mod tests {
                 .unwrap_err()
                 .contains("KENTOS_TRASH_RETENTION_DAYS")
         );
+    }
+
+    /// The audit environments' settings: absolute paths, an http(s) index, the setting's map read; the folder beside
+    /// the env file when none is named; every wrong one names itself.
+    #[test]
+    fn the_audit_environment_settings_are_read_and_name_themselves() {
+        let env_file = std::path::Path::new("/srv/kentos/.env.local");
+        let none = audit_envs(|_| None, env_file).unwrap();
+        assert_eq!(
+            none.dir,
+            PathBuf::from("/srv/kentos/.run/denetim-ortamlari")
+        );
+        assert_eq!(
+            none.wheels_dir(),
+            PathBuf::from("/srv/kentos/.run/denetim-ortamlari/tekerlekler")
+        );
+        assert_eq!(
+            (none.base_python, none.index_url, none.uv),
+            (None, None, None)
+        );
+        let set = |name: &'static str, value: &'static str| {
+            move |k: &str| (k == name).then(|| value.to_owned())
+        };
+        let given = audit_envs(set("KENTOS_AUDIT_ENV_DIR", "/veri/ortamlar"), env_file).unwrap();
+        assert_eq!(given.dir, PathBuf::from("/veri/ortamlar"));
+        assert_eq!(
+            audit_envs(
+                set(
+                    "KENTOS_AUDIT_INDEX_URL",
+                    "https://paketler.kurum.example/simple"
+                ),
+                env_file
+            )
+            .unwrap()
+            .index_url
+            .as_deref(),
+            Some("https://paketler.kurum.example/simple")
+        );
+        assert_eq!(
+            audit_envs(set("KENTOS_AUDIT_SDK_DIR", "/opt/kentos/tools"), env_file)
+                .unwrap()
+                .sdk_dirs,
+            [PathBuf::from("/opt/kentos/tools")]
+        );
+        let mapped = audit_envs(
+            set("KENTOS_AUDIT_PYTHONS", r#"{"a@1": "/a/bin/python"}"#),
+            env_file,
+        )
+        .unwrap();
+        assert_eq!(mapped.map().get("a", "1").as_deref(), Some("/a/bin/python"));
+        for (name, value) in [
+            ("KENTOS_AUDIT_ENV_DIR", "goreli/yol"),
+            ("KENTOS_AUDIT_BASE_PYTHON", "python3"),
+            ("KENTOS_AUDIT_WHEELS", "tekerlekler"),
+            ("KENTOS_AUDIT_UV", "uv"),
+            ("KENTOS_AUDIT_SDK_DIR", "tools"),
+            ("KENTOS_AUDIT_INDEX_URL", "ftp://paketler"),
+            ("KENTOS_AUDIT_PYTHONS", "[]"),
+        ] {
+            assert!(
+                audit_envs(set(name, value), env_file)
+                    .unwrap_err()
+                    .contains(name),
+                "{name}"
+            );
+        }
     }
 
     #[test]

@@ -2573,6 +2573,7 @@ dependencies = [
  "kentos-kcad",
  "kentos-postgres",
  "kentos-project",
+ "kentos-python-env",
  "kentos-sheet",
  "libc",
  "reqwest",

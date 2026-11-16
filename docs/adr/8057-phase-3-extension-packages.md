@@ -3688,3 +3688,101 @@ yalnız sınamaların `--abi`'si; kutu kipi ABI 6'nın altında sinyal kurallar�
     çalıştırırsa çekirdek başlatmayı reddeder (`ETXTBSY`; hata sözü kaydedilmedi). Düzeltildi: yardımcı her çağrıya
     ayrı ad verir (`program-<n>.sh`); ardından iki koşu 26/26.
   - Clippy (sınamalı ve sınamasız derleme, `--no-deps`), rustfmt ve `scripts/arch/deps.mjs` temiz.
+
+## §66. Sunucu denetim sürümünün Python ortamını hazırlar: kilidin tekerlekleri, özetleriyle (`ADIM 20`)
+
+**16 Kasım.** Kod: `kentos_python_env` `crates/native/python-env/src/extension.rs` (`Key::digest`, `make`'in
+`start`/`sync`/`finish`'e ayrılması, `remove_version`) ve yeni `extension/wheels.rs` (`Wheels`, `prepare_wheels`,
+`wheel_words`); `kentos-application` `audit_catalog.rs` (`AuditPythons::overlaid`, `insert`, `remove`, `entries`,
+`to_json`); `kentosd` yeni `apps/api/src/audit_env.rs` (`EnvSettings`, `prepare_release`, `remove_release`,
+`listing`, `release_of`), `audit_env/map.rs` (`AuditMap`), `audit_env/python.rs` (KentOS'un Python'u, `in_range`,
+hata sözleri), `config.rs` (`audit_envs`), `cli.rs` (`audit-env prepare`,
+`remove`, `list`), `extension_catalog/audits.rs` (`PythonSource`); bağımlılık yönü `scripts/arch/deps.mjs` (`api` →
+`python-env`); sınamalar `extension/wheels/tests.rs`, `audit_env/tests.rs`, `config.rs`'in, `audit_catalog.rs`'in ve
+yeni `apps/api/tests/job_run/audit_env.rs`.
+
+- **Bugünkü uygulama (okundu):** §50'de yorumlayıcı eşlemesi elle yazılacak bir ayardı ve hiçbir yerde okunmuyordu
+  (`AuditPythons::parse` yalnız sınamalarda); ortamı kuran bir adım yoktu.
+- **Karar: masaüstünün makinesi, sunucunun yeri.** Ortamın anahtarı, yeri, kurulumun kendi tekerleğinden KentOS
+  kitaplığı, `uv pip check`, bayt kodu derlemesi ve kitaplığın açılması, paket listesi ve en son yazılan kayıt
+  masaüstünün kodudur (`extension::finish`). Masaüstünün yolu değişmedi: `make` yalnız üç parçaya ayrıldı (`start`,
+  `sync`, `finish`), argümanlar, ortam, sıra ve hata sözleri aynı; crate'in sahte uv'li sınaması
+  (`an_extensions_environment_is_its_own_previewed_made_and_used_offline`, uv'nin aldığı her söz) ve masaüstünün ortam
+  sınamaları geçti. Anahtara sunucuya özgü bir alan eklendi (`digest`, paketin içerik özeti): masaüstünde boş, JSON'a
+  yazılmaz ve klasör adının özetine girmez; masaüstünün anahtarı ve klasörü baytı baytına aynı (sınama eski biçimin
+  özetini hesaplayıp karşılaştırır).
+- **Neden `uv sync` değil (ölçüldü, uv 0.11.26):** kilit, yazarın dizinine bağlı. Bir dizinden kilitlenmiş projeye
+  `uv sync --locked` ile `--find-links` ya da `--no-index` verilince uv "The lockfile at `uv.lock` needs to be updated,
+  but `--locked` was provided" der; `--frozen --offline --find-links` kilitteki adresi önbellekte arar, klasöre hiç
+  bakmaz. Sunucunun yolu (`prepare_wheels`): (1) `uv export --locked --offline` kilidin listesini, her dosyanın
+  SHA-256'sı ve ortam işaretleriyle verir (kilidin projeyle uyuşması denetlenir, ağ istenmez; bayraksız ve çevrimdışı
+  ölçüldü); (2) `uv venv` KentOS'un Python'undan, indirmesiz; (3) `uv pip install --require-hashes --no-build --no-deps
+  -r liste`.
+- **Yalnız tekerlek, özet zorunlu:** `--no-build` hiçbir kaynak paketinin derleme arka ucunu sunucuda çalıştırmaz;
+  `--require-hashes` kilitteki özeti olmayan isteği ve özeti tutmayan dosyayı reddeder; `--no-deps` listenin dışında
+  hiçbir şey kurmaz (liste zaten kilidin tamamı). Bir dizinden değil yerel klasörden kilitlenmiş paketin kilidinde özet
+  yoktur (uv yerel tekerleğe özet yazmıyor, ölçüldü): sunucu onu da reddeder. uv'nin sözleri Türkçeye, paketin adıyla
+  çevrilir (`wheel_words`): tekerleği olmayan (yalnız kaynak paketi ya da başka bir sistemin tekerleği), klasörde
+  olmayan, dosyası kilittekinin olmayan, kilidi özetsiz bağımlılık; evrensel kilidin isteğindeki ortam işaretleri
+  (`tasli{…}==1.0`) addan ayıklanır. Ör.: "“tasli” 1.0: bu sunucunun sistemi (linux-x86_64) için tekerleği yok ve sunucu
+  kaynak paketinden derlemez. …". KentOS'un kitaplığı kurulumun kendi tekerleğinden, masaüstündeki gibi.
+- **Ağ yalnız bu adımda ve yöneticinin izniyle:** varsayılan çevrimdışı (`--offline --no-index --find-links`):
+  yöneticinin doldurduğu tekerlek klasöründen (`KENTOS_AUDIT_WHEELS`, yoksa ortamların klasöründe `tekerlekler`). İzin
+  verilen sunucuda `KENTOS_AUDIT_INDEX_URL` bir paket dizinidir (http/https): yalnız `pip install` adımı ona çıkar,
+  klasör de bakılır. Dışa aktarma, venv, kitaplık, denetim ve derleme her zaman çevrimdışı. İşler eskisi gibi ağsız
+  (kutu).
+- **Yer ve anahtar:** `KENTOS_AUDIT_ENV_DIR/ortamlar/<16 hane>`; anahtar eklenti, sürüm, içerik özeti, kilidin
+  SHA-256'sı, KentOS'un Python sürümü ve sistem. Kayıt en son yazılır: yarım ortam eşlenmez, hata yarım klasörü siler.
+  Hazır ortam için yeniden hazırlama uv'yi hiç çalıştırmaz (anahtar Python'un sürümüyle kilidin özetinden kurulur,
+  kitaplığın tekerleği ancak gerekince özetlenir), eşlemeyi yeniden yazar. Aynı sunucuda hazırlama ve silme tek tek
+  yürür (klasörün kilidi, `hazirlama.kilit`): yönetici komutu ve yayımlama aynı anda aynı ortamı ya da eşlemeyi yazmaz.
+- **KentOS'un Python'u:** `KENTOS_AUDIT_BASE_PYTHON` (mutlak yol); sürümü sorulur ve KentOS kitaplığının aralığında
+  (`>=3.10,<3.15`, compat.json) olmalı. Ayar yoksa uv'nin ortamların klasörüne kurduğu KentOS Python'u aranır; o da
+  yoksa ret ve ne yapılacağı.
+- **Eşleme dosyası (`AuditMap`):** ortamların klasöründe `yorumlayicilar.json`, `{"eklenti@sürüm": "/…/bin/python"}`;
+  yanına geçici bir dosya yazılıp üstüne taşınır (yarım dosya okunmaz). `KENTOS_AUDIT_PYTHONS` ayarı (§50'nin JSON'u,
+  artık okunuyor) altındadır, aynı sürümde dosya üstün; dosya okunamazsa yalnız ayar geçerli. Kaynak (`CatalogAudits`,
+  `PythonSource`) eşlemeyi her işte yeniden okur: sunucu çalışırken hazırlanan sürüm yeniden başlatmadan bulunur. Bir
+  sürümün ortamı silinince (`remove_release`) eşlemedeki yeri de gider.
+- **Yönetici komutu:** `kentosd audit-env prepare --release KİMLİK@SÜRÜM --package PAKET.kek [--digest sha256:…]`
+  paketi işin denetlediği gibi denetler (açılış, verilirse içerik özeti, kimlik ve sürüm), `network` isteyeni, denetimi
+  ya da Python projesi olmayanı reddeder; `audit-env remove --release …` ve `audit-env list`. Komut satırı ve
+  ayarlar `kentosd`'nin öteki komutları ve ayarları gibi `cli.rs`'in `USAGE`'ında ve `config.rs`'te belgeli.
+- **Yayımlama kancası:** `prepare_release(ayarlar, eklenti, sürüm, özet, baytlar)` katalogun `AuditPackage`'ıyla
+  çağrılacak biçimde; kalıcı katalog deposu (ADIM 22A) gelince yayımlama onu çağırır ve `main.rs` işçiye
+  `CatalogAudits::new(katalog, config.audit_envs.map())` verir. Bugün üretimde katalog kurulmadığı için kanca bağlı
+  değil (§50).
+- **Bağımlılık yönü:** `kentosd` (`apps/api`) artık `python-env`'i kullanır (`scripts/arch/deps.mjs`'in `api` öbeği);
+  `python-env`'in yeni bağımlılığı yok, uv bir program olarak çalışır.
+- **Ölçüm (hata ayıklama derlemesi, 16 Kasım; uv 0.11.26, Python 3.14.4):** bir tekerlekli kilitten ortamı çevrimdışı
+  hazırlamak 3,73-5,77 sn (dört koşu): dışa aktarma, venv, tekerlek, KentOS kitaplığının 91 MB'lık hata ayıklama
+  tekerleği, `uv pip check`, bayt kodunun derlenmesi ve kitaplığın (789 MB'lık yerel modülüyle) açılması, liste. Hazır
+  ortamı yeniden hazırlamak 0,024-0,079 sn (uv hiç çalışmıyor; ilk denemede uv'yi bulmak ve kitaplığın tekerleğini
+  özetlemek hazır denetiminden önceydi: 0,71 sn, sıra düzeltildi). Sınamanın klasörü (ortam, uv'nin
+  önbelleği, tekerlekler) kitaplığın hata ayıklama derlemesiyle 342 MB tuttu; bu yüzden geçici bellek klasöründe değil,
+  derlemenin yanında açılır.
+- **Sınamalar:**
+  - `kentos-python-env` 27/27: masaüstünün sahte uv'li ortam sınaması değişmeden geçiyor; yeni ikisi sunucunun yolunu
+    (uv'ye giden her söz, hazırken hiçbir şey çalışmaması, dizinle çevrimiçi sözler, kaynak paketi yalnız bağımlılıkta
+    ret ve yarım klasörün gitmesi, masaüstü anahtarının eski özeti) ve uv'nin 0.11 sözlerinin Türkçesini (ortam
+    işaretli evrensel kilit isteği dahil) sınıyor.
+  - `kentos-application` eşleme 2/2; `kentosd` birim sınamaları (`audit_env`, `config`, katalog) 24/24: dosyanın ayarın
+    üstünde olması, bütün yazılması ve yanında bir şey kalmaması, okunamayan dosyada ayara dönüş; içerik özeti, kimlik,
+    sürüm, `network`, denetimsiz paket ve açılmayan paketin hiçbir şey çalışmadan reddi; ayarların okunması ve
+    yanlışının kendini adlandırması.
+  - Gerçek uçtan uca (`job_run`, 30/30): sınama bir tekerlek yazar, uv onu klasörden kilitler, kilit dizinin yazdığı
+    biçime (adres ve özet) çevrilir, paket onunla paketlenir; ortam çevrimdışı hazırlanır, eşleme yorumlayıcıyı verir,
+    ikinci hazırlama hiçbir şey çalıştırmaz; `kentosd`'nin gerçek işlemcisi ve `kentos-jobrun` ile bütün kutuda
+    (Landlock ve süzgeç) gerçek bir `project.audit` işi o Python'da koşar ve kural tekerleğin modülünü içe aktarır
+    (bulguların hepsi "kucuk 1.0: …"); başka içerikte paket reddedilir; yalnız kaynak paketi olan bağımlılık “tasli” 1.0
+    adıyla reddedilir, eşlenmez, yarım ortam kalmaz; sürüm silinince ortamı ve eşlemedeki yeri gider. Ağ hiç açılmaz:
+    kilitteki dizin adresi hiç sorulmaz. uv, aralıkta bir Python ya da kitaplığın tekerleği yoksa sınama atlandığını
+    söyler.
+  - Masaüstünün ortam ve süreç sınamaları (`extensions::tests::python`, `extensions::tools::tests`) 12/12.
+  - Clippy (sınamalı ve sınamasız, `--no-deps`; kalan iki not `kentos-application`'ın bu işin dokunmadığı
+    `jobs.rs`'inde), rustfmt ve `scripts/arch/deps.mjs` temiz.
+- **Kalan:** (1) Yayımlamaya bağlanması (ADIM 22A). (2) İş, ortamın derlenmiş bayt kodunu okumuyor: kutu yalnız
+  `.venv`'i açıyor, işin bayt kodu her işte yeniden derleniyor (§58'deki gibi); ortamın `pyc`'si kutuya salt okunur
+  açılabilir. (3) İsteğe bağlı özellikler (extras) sunucuda seçilmiyor. (4) Sunucunun KentOS Python'unu kuran bir komut
+  yok: yönetici bir CPython gösterir. (5) Windows ve macOS sunucuda kutu yok (§61), ortam hazırlanır ama kural `require`
+  altında çalışmaz.

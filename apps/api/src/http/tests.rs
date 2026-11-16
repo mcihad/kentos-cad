@@ -31,6 +31,7 @@ pub(super) fn config() -> Config {
         workers: 0,
         job_limits: Default::default(),
         job_retention: std::time::Duration::from_secs(14 * 24 * 3600),
+        audit_envs: Default::default(),
     }
 }
 

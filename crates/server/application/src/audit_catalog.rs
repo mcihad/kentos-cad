@@ -6,9 +6,10 @@
 //!   organisation's does not know the extension (the same id there may be another publisher's); the version asked when
 //!   it may run (published, or retired after it was), else the newest published one. Its package bytes are the
 //!   approved content's, checked by the catalog before they leave.
-//! - **The interpreter** ([`AuditPythons`]): a server setting mapping an extension's version to the interpreter of the
-//!   environment prepared for it (`extension@version` → an absolute path). A version without one cannot run: the job
-//!   says so (`tool_unavailable`) rather than running the rule with some other Python.
+//! - **The interpreter** ([`AuditPythons`]): a mapping of an extension's version to the interpreter of the environment
+//!   prepared for it (`extension@version` → an absolute path): the server setting's, under the file the server writes
+//!   when it prepares one (docs/adr/8057 §66), the file winning. A version without one cannot run: the job says so
+//!   (`tool_unavailable`) rather than running the rule with some other Python.
 
 use std::collections::BTreeMap;
 use std::future::Future;
@@ -75,6 +76,36 @@ impl AuditPythons {
     pub fn get(&self, extension: &str, version: &str) -> Option<String> {
         self.0.get(&format!("{extension}@{version}")).cloned()
     }
+
+    /// These with `over`'s in their place where both name a version: the file the server writes over the setting.
+    pub fn overlaid(mut self, over: &AuditPythons) -> AuditPythons {
+        self.0
+            .extend(over.0.iter().map(|(k, v)| (k.clone(), v.clone())));
+        self
+    }
+
+    /// `extension` at `version` mapped to `python` (an absolute path), in place of what it was.
+    pub fn insert(&mut self, extension: &str, version: &str, python: &str) {
+        self.0
+            .insert(format!("{extension}@{version}"), python.to_owned());
+    }
+
+    /// `extension` at `version` no longer mapped; whether it was.
+    pub fn remove(&mut self, extension: &str, version: &str) -> bool {
+        self.0.remove(&format!("{extension}@{version}")).is_some()
+    }
+
+    /// Every mapping, `extension@version` and its interpreter, in order.
+    pub fn entries(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.0.iter().map(|(k, v)| (k.as_str(), v.as_str()))
+    }
+
+    /// As the setting and the file write it: a JSON object, in order, one mapping a line.
+    pub fn to_json(&self) -> String {
+        let mut text = serde_json::to_string_pretty(&self.0).unwrap_or_else(|_| "{}".to_owned());
+        text.push('\n');
+        text
+    }
 }
 
 #[cfg(test)]
@@ -97,5 +128,25 @@ mod tests {
         assert!(AuditPythons::parse(r#"{"a@1": "python3"}"#).is_err());
         assert!(AuditPythons::parse("[]").is_err());
         assert_eq!(AuditPythons::parse("{}").unwrap(), AuditPythons::default());
+    }
+
+    /// The file over the setting: the file's mapping wins for the same version, the setting's others stay; what is
+    /// written reads back the same.
+    #[test]
+    fn the_file_s_interpreters_win_over_the_setting_s() {
+        let setting =
+            AuditPythons::parse(r#"{"a@1": "/eski/bin/python", "b@1": "/b/bin/python"}"#).unwrap();
+        let mut file = AuditPythons::default();
+        file.insert("a", "1", "/yeni/bin/python");
+        file.insert("c", "2", "/c/bin/python");
+        let merged = setting.overlaid(&file);
+        assert_eq!(merged.get("a", "1").as_deref(), Some("/yeni/bin/python"));
+        assert_eq!(merged.get("b", "1").as_deref(), Some("/b/bin/python"));
+        assert_eq!(merged.get("c", "2").as_deref(), Some("/c/bin/python"));
+        assert_eq!(AuditPythons::parse(&merged.to_json()).unwrap(), merged);
+        assert_eq!(merged.entries().count(), 3);
+        file.remove("c", "2");
+        assert!(!file.remove("c", "2"));
+        assert_eq!(file.get("c", "2"), None);
     }
 }

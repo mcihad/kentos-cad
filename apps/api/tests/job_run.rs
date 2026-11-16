@@ -12,6 +12,11 @@ mod audit;
 // The job's budget over the rule's Python too (docs/adr/8057 §58).
 #[path = "job_run/audit_budget.rs"]
 mod audit_budget;
+// A release's environment prepared as the server prepares it, and a real audit in it (docs/adr/8057 §66).
+#[path = "../src/audit_env.rs"]
+mod audit_env;
+#[path = "job_run/audit_env.rs"]
+mod audit_env_job;
 #[path = "../src/processing_job.rs"]
 mod processing_job;
 mod support;

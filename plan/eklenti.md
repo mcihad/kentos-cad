@@ -1068,6 +1068,10 @@ böylece UDP ve yol adlı UNIX soketleri de kapandı. Süzgeç kurulamayan kutu 
 çekirdekte (5.15, 6.1, 6.6 LTS dahil) bütün kapanır; eski çekirdeğin bıraktığını süzgeç kapatır (yol adıyla kısaltma,
 ABI 6'nın altında sinyaller) ve Landlock'un hiç denetlemediği dosya üst verisini ve öteki süreçlerin sınır, öncelik ve
 zamanlamasını her çekirdekte reddeder; sınama aynı kuralı çekirdeğin ABI'siyle ve ABI 1'le koşturup aynı retleri görür.
+**Sunucu sürümün ortamını hazırlar** (ADR 8057 §66, 16 Kasım): `kentosd audit-env prepare` paketi işin denetlediği gibi
+denetleyip masaüstünün ortam makinesiyle, ama yalnız kilidin tekerlekleriyle ve her dosya kilitteki özetine karşı
+(hiçbir şey derlenmeden), varsayılan çevrimdışı tekerlek klasöründen, izin varsa bir paket dizininden ortamı kurar ve
+yorumlayıcısını işlerin her seferinde okuduğu eşleme dosyasına yazar; yayımlamaya bağlanması kalıcı katalogla gelir.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

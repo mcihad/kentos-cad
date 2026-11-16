@@ -118,7 +118,8 @@ const GROUPS = [
   // project model (`project`, over shared and domain) is the server's to use too.
   { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   // The tool of a processing job runs in `jobrun`, a program of its own, so the server carries none of it (docs/adr/0559 §3).
-  { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
+  // An audit release's Python environment is made with the desktop's machinery (`python-env`, docs/adr/8057 §66).
+  { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server', 'python-env'], forbid: [...BROWSER, ...DESKTOP] },
   // The process that runs one İşlemler tool for a server job (docs/adr/0559 §3): the headless host and the tools over
   // one project file; no database, no server framework. Listed before `native`'s catch-all like the headless host.
   // kentos, the command line (plan/eklenti.md ADIM 16): the extension packages' inspector and packer over the file
