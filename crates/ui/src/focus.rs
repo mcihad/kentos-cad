@@ -10,11 +10,17 @@
 //!
 //! iced'in kendi `focus_next`'i bütün ağacı dolaşır ve kapsam bilmez; burada iki geçiş vardır: önce
 //! odaklanabilirler ve kapsamlar sayılır, sonra yalnız seçilen öğe odak alır, öbürleri bırakır.
+//!
+//! **Odak görünür kalır** (WCAG 2.4.7, 2.4.11): odak alan öğe kaydırılabilir bir alanın içindeyse ve görünmüyorsa, o
+//! alan öğeyi gösterecek kadar kaydırılır (kenarda 8 px pay). Dar bir panelde Tab görünür yerin altındaki düğmeye
+//! geçiyor, panel yerinde durduğu için odak görünmüyordu (gerçek pencere, 16 Kasım 2026). Kapsam denetimi de
+//! kaydırılan içerikte öğenin kendi yerine değil kaydırılabilir alanın görünür penceresine bakar: kaydırılan bir
+//! iletişim kutusunda kenarın altında kalan alanlar Tab'ın adayı bile sayılmıyordu.
 
-use iced::Rectangle;
-use iced::Task;
+use iced::advanced::widget::operation::scrollable::{AbsoluteOffset, Scrollable};
 use iced::advanced::widget::operation::{self, Focusable, Operation, Outcome};
 use iced::advanced::widget::{Id, operate};
+use iced::{Rectangle, Task, Vector};
 
 /// Kendini odak kapsamı sayan kabın kimliği (iletişim kutusu).
 pub const SCOPE: &str = "kentos-focus-scope";
@@ -46,36 +52,105 @@ pub fn step_operation(back: bool, only_if_focused: bool) -> impl Operation<()> +
     let survey = Survey {
         items: Vec::new(),
         scopes: Vec::new(),
+        scrollers: Vec::new(),
+        open: Vec::new(),
+        pending: None,
         back,
         only_if_focused,
     };
-    operation::then::<Plan, (), Apply>(survey, |plan| Apply { plan, current: 0 })
+    operation::then::<Plan, (), Apply>(survey, |plan| Apply {
+        plan,
+        current: 0,
+        scrollers: 0,
+    })
 }
 
-/// Bir odaklanabilir öğe: yeri ve odakta olup olmadığı, ziyaret sırasıyla.
+/// Bir odaklanabilir öğe: yeri, kapsam için durduğu yer (kaydırılan içerikteyse en dıştaki kaydırılabilir alanın
+/// görünür penceresi), içinde bulunduğu en içteki kaydırılabilir alan ve odakta olup olmadığı, ziyaret sırasıyla.
 #[derive(Clone, Copy)]
 struct Item {
     bounds: Rectangle,
+    place: Rectangle,
+    scroller: Option<usize>,
     focused: bool,
 }
 
-/// Odak alacak öğenin ziyaret sırasındaki yeri.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// Bir kaydırılabilir alan: görünür penceresi, içeriği ve ne kadar kaydırıldığı.
+#[derive(Clone, Copy)]
+struct Scroller {
+    bounds: Rectangle,
+    content: Rectangle,
+    translation: Vector,
+}
+
+/// Odak alan öğenin kaydırılabilir alanda görünmesi için kenarda bırakılan pay (odak halesi dahil).
+const MARGIN: f32 = 8.0;
+
+/// `item`'i göstermek için `scroller`'ın dikey kaydırması: zaten görünüyorsa hiçbiri.
+fn reveal(scroller: &Scroller, item: Rectangle) -> Option<f32> {
+    let view = scroller.bounds.height;
+    let most = (scroller.content.height - view).max(0.0);
+    let offset = scroller.translation.y;
+    let top = item.y - scroller.content.y;
+    let bottom = top + item.height;
+    let wanted = if top - MARGIN < offset {
+        top - MARGIN
+    } else if bottom + MARGIN > offset + view {
+        bottom + MARGIN - view
+    } else {
+        return None;
+    };
+    let wanted = wanted.clamp(0.0, most);
+    ((wanted - offset).abs() > 0.5).then_some(wanted)
+}
+
+/// Odak alacak öğenin ziyaret sırasındaki yeri; görünmesi için kaydırılacak alanın ziyaret sırası ve kaydırması.
+#[derive(Clone, Copy, Debug, PartialEq)]
 struct Plan {
     target: usize,
+    reveal: Option<(usize, f32)>,
 }
 
 struct Survey {
     items: Vec<Item>,
     /// Kapsamlar: başladıkları öğe sırası ve sınırları, ziyaret sırasıyla (sonuncusu en üstteki).
     scopes: Vec<(usize, Rectangle)>,
+    /// Kaydırılabilir alanlar, ziyaret sırasıyla; açık olanlar (şu an içinde olunanlar, dıştan içe) ve içeriği bir
+    /// sonraki geçişte dolaşılacak olan.
+    scrollers: Vec<Scroller>,
+    open: Vec<usize>,
+    pending: Option<usize>,
     back: bool,
     only_if_focused: bool,
 }
 
 impl Operation<Plan> for Survey {
     fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation<Plan>)) {
-        operate(self);
+        // A scrollable's content is the traversal right after it: the scrollable is open while its children are met.
+        match self.pending.take() {
+            Some(at) => {
+                self.open.push(at);
+                operate(self);
+                self.open.pop();
+            }
+            None => operate(self),
+        }
+    }
+
+    fn scrollable(
+        &mut self,
+        _id: Option<&Id>,
+        bounds: Rectangle,
+        content_bounds: Rectangle,
+        translation: Vector,
+        _state: &mut dyn Scrollable,
+    ) {
+        self.pending = Some(self.scrollers.len());
+        self.scrollers.push(Scroller {
+            bounds,
+            content: content_bounds,
+            translation,
+        });
     }
 
     fn container(&mut self, id: Option<&Id>, bounds: Rectangle) {
@@ -85,15 +160,27 @@ impl Operation<Plan> for Survey {
     }
 
     fn focusable(&mut self, _id: Option<&Id>, bounds: Rectangle, state: &mut dyn Focusable) {
+        let place = self
+            .open
+            .first()
+            .map_or(bounds, |&at| self.scrollers[at].bounds);
         self.items.push(Item {
             bounds,
+            place,
+            scroller: self.open.last().copied(),
             focused: state.is_focused(),
         });
     }
 
     fn finish(&self) -> Outcome<Plan> {
         match choose(&self.items, &self.scopes, self.back, self.only_if_focused) {
-            Some(target) => Outcome::Some(Plan { target }),
+            Some(target) => {
+                let item = &self.items[target];
+                let reveal = item.scroller.and_then(|at| {
+                    reveal(&self.scrollers[at], item.bounds).map(|offset| (at, offset))
+                });
+                Outcome::Some(Plan { target, reveal })
+            }
             None => Outcome::None,
         }
     }
@@ -111,7 +198,7 @@ fn choose(
         let shown = item.bounds.width > 0.5 && item.bounds.height > 0.5;
         shown
             && match scopes.last() {
-                Some((start, bounds)) => i >= *start && bounds.contains(item.bounds.center()),
+                Some((start, bounds)) => i >= *start && bounds.contains(item.place.center()),
                 None => true,
             }
     };
@@ -137,15 +224,36 @@ fn choose(
     }
 }
 
-/// İkinci geçiş: seçilen öğe odak alır, odaktaki başka her öğe (kapsamın dışındakiler de) bırakır.
+/// İkinci geçiş: seçilen öğe odak alır, odaktaki başka her öğe (kapsamın dışındakiler de) bırakır; görünmüyorsa
+/// içinde bulunduğu kaydırılabilir alan onu gösterecek kadar kayar.
 struct Apply {
     plan: Plan,
     current: usize,
+    scrollers: usize,
 }
 
 impl<T> Operation<T> for Apply {
     fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation<T>)) {
         operate(self);
+    }
+
+    fn scrollable(
+        &mut self,
+        _id: Option<&Id>,
+        _bounds: Rectangle,
+        _content_bounds: Rectangle,
+        _translation: Vector,
+        state: &mut dyn Scrollable,
+    ) {
+        if let Some((at, offset)) = self.plan.reveal
+            && at == self.scrollers
+        {
+            state.scroll_to(AbsoluteOffset {
+                x: None,
+                y: Some(offset),
+            });
+        }
+        self.scrollers += 1;
     }
 
     fn focusable(&mut self, _id: Option<&Id>, _bounds: Rectangle, state: &mut dyn Focusable) {
@@ -163,8 +271,11 @@ mod tests {
     use super::*;
 
     fn item(x: f32, focused: bool) -> Item {
+        let bounds = Rectangle::new(iced::Point::new(x, 10.0), iced::Size::new(20.0, 10.0));
         Item {
-            bounds: Rectangle::new(iced::Point::new(x, 10.0), iced::Size::new(20.0, 10.0)),
+            bounds,
+            place: bounds,
+            scroller: None,
             focused,
         }
     }
@@ -353,5 +464,74 @@ mod window_tests {
             Input::Key(iced::keyboard::key::Named::ArrowDown),
         );
         assert_eq!(form.kind, Some(1), "{:?}", form.said);
+    }
+    /// Twelve fields in a scrolled column 100 px high, in a dialog that scrolls: Tab reaches the fields below the
+    /// dialog's edge (their place is the scrollable's window, not their own), and the column scrolls each focused one
+    /// into view; Shift+Tab from the first goes round to the last and scrolls down to it.
+    #[test]
+    fn tab_scrolls_the_focused_field_into_view() {
+        fn long(_: &()) -> Element<'_, Message> {
+            let fields = (0..12).map(|i| {
+                text_input("Alan", "")
+                    .id(format!("alan-{i}"))
+                    .on_input(Message::Typed)
+                    .into()
+            });
+            let dialog = Dialog::new("Uzun").push(
+                iced::widget::scrollable(iced::widget::Column::with_children(fields).spacing(6))
+                    .height(100.0),
+            );
+            iced::widget::container(dialog).center(iced::Fill).into()
+        }
+        /// The focused field's index and whether it is inside the scrolled window.
+        struct Seen(Arc<Mutex<Option<(usize, bool)>>>, usize, Option<Rectangle>);
+        impl Operation for Seen {
+            fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+                operate(self);
+            }
+            fn scrollable(
+                &mut self,
+                _id: Option<&iced::advanced::widget::Id>,
+                bounds: Rectangle,
+                _content: Rectangle,
+                translation: iced::Vector,
+                _state: &mut dyn iced::advanced::widget::operation::Scrollable,
+            ) {
+                self.2 = Some(Rectangle {
+                    y: bounds.y + translation.y,
+                    ..bounds
+                });
+            }
+            fn focusable(
+                &mut self,
+                _id: Option<&iced::advanced::widget::Id>,
+                bounds: Rectangle,
+                state: &mut dyn Focusable,
+            ) {
+                if state.is_focused() {
+                    let window = self.2.expect("in the scrollable");
+                    let inside = bounds.y >= window.y
+                        && bounds.y + bounds.height <= window.y + window.height;
+                    *self.0.lock().unwrap() = Some((self.1, inside));
+                }
+                self.1 += 1;
+            }
+        }
+        let mut snapshot = Snapshot::software(Size::new(640.0, 400.0)).expect("a renderer");
+        let seen = |snapshot: &mut Snapshot| {
+            let found = Arc::new(Mutex::new(None));
+            snapshot.operate(long(&()), Box::new(Seen(found.clone(), 0, None)));
+            *found.lock().unwrap()
+        };
+        snapshot.render(long(&()), &iced::Theme::Light);
+        for want in 0..12 {
+            snapshot.operate(long(&()), Box::new(super::step_operation(false, false)));
+            assert_eq!(seen(&mut snapshot), Some((want, true)), "Tab {}", want + 1);
+        }
+        // Round to the first: back up to the top.
+        snapshot.operate(long(&()), Box::new(super::step_operation(false, false)));
+        assert_eq!(seen(&mut snapshot), Some((0, true)));
+        snapshot.operate(long(&()), Box::new(super::step_operation(true, false)));
+        assert_eq!(seen(&mut snapshot), Some((11, true)));
     }
 }

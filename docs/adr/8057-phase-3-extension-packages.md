@@ -4023,5 +4023,13 @@ aldığı yalnız ret iletilerinden öğreniliyordu.
     Özetle; Boşluk Özetle'yi çalıştırdı ("5 yapının özeti"), odak düğmede kaldı; Tab İpuçları başlığına, Boşluk açtı;
     Shift+Tab geri. Shift+Tab Kart tarihi'nden Seçimi al'a; Tab çiplerde, Boşluk çipi kaldırdı, komut sürerken basılan
     Tab sonraki çipe geçti.
+  - **Odak görünür kalır** (kitte, `focus.rs`; WCAG 2.4.7, 2.4.11): açık temada, 16 px yazıda, 1100×650 pencerede dar
+    panelde Tab görünür yerin altındaki Ara'ya, Yapıları numarala'ya, Özetle'ye geçiyor ama panel kaymıyordu: odak
+    görünmüyordu. Tab'ın sayımı her öğenin içinde durduğu kaydırılabilir alanları ata zinciriyle izler (iced'in
+    `scrollable`'ından hemen sonraki dolaşma onun içeriğidir); uygulama geçişi en içtekini öğe 8 px payla görünene dek
+    kaydırır. Aynı yerde eski bir hata: iletişim kutusunun kapsamı öğenin kendi yerine bakıyordu, kaydırılan kutuda
+    kenarın altında kalan alanlar Tab'ın adayı bile değildi; artık en dıştaki kaydırılabilir alanın görünür penceresine
+    bakar. Kit sınaması: 100 px'lik kaydırılan sütunda 12 alan, her Tab'da odaktaki alan görünür (kaydırma kapatılınca
+    3. Tab'da kırmızı). Gerçek pencerede panel her düğmeye kaydı.
 - **Erişilebilirlik sınırı:** iced'de ekran okuyucu ağacı yok; tablonun "erişilebilirlik" payı klavye ve ad. Ad, KentOS'un
   bileşeni andığı yerdeki adıdır (hata iletisi, alanın yanındaki yazı).
