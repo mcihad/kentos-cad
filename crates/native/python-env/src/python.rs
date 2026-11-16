@@ -502,6 +502,28 @@ pub fn build_words(stderr: &str) -> Option<String> {
     Some(words)
 }
 
+/// A package uv refused to build because it was not listed as built here (docs/adr/8057 §98): uv says “Distribution
+/// `kirik==0.1 @ …` can't be installed because it is marked as `--no-build` but has no binary distribution”. In a
+/// sentence with the package, or none for another failure.
+pub fn no_build_words(stderr: &str) -> Option<String> {
+    let flat = stderr.split_whitespace().collect::<Vec<_>>().join(" ");
+    if !flat.contains("is marked as `--no-build`") {
+        return None;
+    }
+    let (_, rest) = flat.split_once("Distribution `")?;
+    let (pinned, _) = rest.split_once('`')?;
+    let pinned = pinned.split(" @ ").next().unwrap_or(pinned).trim();
+    let package = match pinned.split_once("==") {
+        Some((name, version)) => format!("“{}” {}", name.trim(), version.trim()),
+        None => format!("“{pinned}”"),
+    };
+    Some(format!(
+        "{package} bu bilgisayarda kaynağından derlenmek zorunda, ama kurulum incelemesinde burada derlenecekler \
+         arasında değildi: KentOS onu derlemez. Eklentinin kilidinde bu sistemin hazır kurulum dosyası (wheel) \
+         bulunamadı; yayımcıya bildirin."
+    ))
+}
+
 /// uv's own words: its first `error:` line and the last cause under it, at most 300 characters.
 pub fn said(stderr: &str) -> Option<String> {
     let lines: Vec<&str> = stderr.lines().map(str::trim).collect();

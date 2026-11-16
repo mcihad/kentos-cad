@@ -337,7 +337,13 @@ pub fn cooling_args(lock: &str) -> Vec<OsString> {
     out
 }
 
-fn sync_args(interpreter: &Interpreter, key: &Key, dry: bool, lock: &str) -> Vec<OsString> {
+fn sync_args(
+    interpreter: &Interpreter,
+    key: &Key,
+    dry: bool,
+    lock: &str,
+    no_build: &[String],
+) -> Vec<OsString> {
     let mut args: Vec<OsString> = [
         "sync",
         "--locked",
@@ -361,6 +367,11 @@ fn sync_args(interpreter: &Interpreter, key: &Key, dry: bool, lock: &str) -> Vec
         args.push(OsString::from(extra));
     }
     args.extend(cooling_args(lock));
+    // Only the packages the install review listed as built here are built from source (docs/adr/8057 §98).
+    for name in no_build {
+        args.push(OsString::from("--no-build-package"));
+        args.push(OsString::from(name));
+    }
     args.push(OsString::from("--python"));
     args.push(interpreter.path.clone().into_os_string());
     args
@@ -401,6 +412,7 @@ pub fn preview(
     package: &Path,
     files: (&str, &str),
     key: &Key,
+    no_build: &[String],
 ) -> Result<Vec<Listed>, String> {
     let aside = folder(root).join(format!(".onizleme-{}", key.hash()));
     let _ = std::fs::remove_dir_all(&aside);
@@ -411,7 +423,7 @@ pub fn preview(
         return Err(SHADOWS.to_owned());
     }
     let env = env_for(root, &aside.join(".venv"));
-    let args = sync_args(interpreter, key, true, &lock);
+    let args = sync_args(interpreter, key, true, &lock, no_build);
     let ran = uv::run(
         uv_path,
         &uv::os_args(&args),
@@ -422,6 +434,9 @@ pub fn preview(
     let _ = std::fs::remove_dir_all(&aside);
     let ran = ran?;
     if ran.status != Some(0) {
+        if let Some(words) = python::no_build_words(&ran.stderr) {
+            return Err(words);
+        }
         return Err(lock_words(
             &python::said(&ran.stderr).unwrap_or_else(|| ran.stderr.trim().to_owned()),
         ));
@@ -501,6 +516,7 @@ pub fn prepare(
     package: &Path,
     files: (&str, &str),
     key: &Key,
+    no_build: &[String],
     cancel: &AtomicBool,
     told: &mut dyn FnMut(Progress),
 ) -> Result<Ready, InstallError> {
@@ -517,6 +533,7 @@ pub fn prepare(
         files,
         key,
         &dir,
+        no_build,
         cancel,
         told,
     );
@@ -536,6 +553,7 @@ fn make(
     files: (&str, &str),
     key: &Key,
     dir: &Path,
+    no_build: &[String],
     cancel: &AtomicBool,
     told: &mut dyn FnMut(Progress),
 ) -> Result<Ready, InstallError> {
@@ -549,6 +567,7 @@ fn make(
         key,
         &project,
         &env,
+        no_build,
         cancel,
         told,
     )?;
@@ -587,11 +606,12 @@ fn sync(
     key: &Key,
     project: &Path,
     env: &[(&'static str, OsString)],
+    no_build: &[String],
     cancel: &AtomicBool,
     told: &mut dyn FnMut(Progress),
 ) -> Result<(), InstallError> {
     let lock = std::fs::read_to_string(project.join("uv.lock")).unwrap_or_default();
-    let args = sync_args(interpreter, key, false, &lock);
+    let args = sync_args(interpreter, key, false, &lock, no_build);
     let heard = Arc::new(Mutex::new(String::new()));
     let cache = places::cache(root);
     let mut last = Progress::Starting;
@@ -628,6 +648,13 @@ fn sync(
         return Err(InstallError::TimedOut);
     }
     if ran.status != Some(0) {
+        // A package the review did not list as built here, refused by uv (docs/adr/8057 §98).
+        if let Some(words) = python::no_build_words(&ran.stderr) {
+            return Err(InstallError::Failed {
+                cause: Cause::Unavailable,
+                said: words,
+            });
+        }
         let said = python::said(&ran.stderr).unwrap_or_default();
         return Err(match python::cause_of(&ran.stderr) {
             // A package's build, not the extension's environment (PY-UV-20).

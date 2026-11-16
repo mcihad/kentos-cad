@@ -141,6 +141,28 @@ pub(super) fn environment(
         kentos_python_env::sdk::find(&kentos_python_env::sdk::dirs(), env!("CARGO_PKG_VERSION"))
             .map_err(Stop::CouldNot)?;
     let made = extension::ready(&python.root, &key).is_none();
+    // Only what the install review would list as built here is built from source (docs/adr/8057 §98).
+    let mut files = std::collections::BTreeMap::new();
+    for path in [project_file, lock_file] {
+        if let Ok(bytes) = std::fs::read(package.join(path)) {
+            files.insert(path.to_owned(), bytes);
+        }
+    }
+    let mut parts = python
+        .interpreter
+        .version
+        .split('.')
+        .map(|p| p.parse::<u64>().ok());
+    let minor = parts.next().flatten().zip(parts.next().flatten());
+    let not_to_build = match (
+        &manifest.python,
+        kentos_extensions::python_builds::Target::here(minor),
+    ) {
+        (Some(project), Some(here)) => {
+            kentos_extensions::python_builds::wheeled_on(project, &files, here)
+        }
+        _ => Vec::new(),
+    };
     extension::prepare(
         &python.uv,
         &python.root,
@@ -149,6 +171,7 @@ pub(super) fn environment(
         package,
         (project_file, lock_file),
         &key,
+        &not_to_build,
         &AtomicBool::new(false),
         &mut |_| {},
     )

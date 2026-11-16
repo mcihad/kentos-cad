@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{Toml, normalized, parse_toml, py_holds, py_version};
 use crate::compat::Os;
-use crate::manifest::Manifest;
+use crate::manifest::{Manifest, PythonProject};
 
 /// The Python KentOS installs when the user asks (`crates/native/python-env/compat.json`'s `install`).
 pub const KENTOS_PYTHON: (u64, u64) = (3, 12);
@@ -212,13 +212,12 @@ pub fn said(u: &Unwheeled) -> Vec<(&'static str, String)> {
     out
 }
 
-/// The project's name and `requires-python` in a package's files, with its lock's text; none without Python or when
-/// they do not read (the lint says that).
+/// The project's name and `requires-python` in a package's files, with its lock's text; none when they do not read
+/// (the lint says that).
 fn project_of<'f>(
-    manifest: &Manifest,
+    python: &PythonProject,
     files: &'f BTreeMap<String, Vec<u8>>,
 ) -> Option<(String, Option<String>, &'f str)> {
-    let python = manifest.python.as_ref()?;
     let text = |path: &str| files.get(path).and_then(|b| std::str::from_utf8(b).ok());
     let project = parse_toml(text(&python.project_file)?).ok()?;
     let name = project
@@ -235,7 +234,8 @@ fn project_of<'f>(
 /// The packages a package's lock installs without a wheel on the computers it says it runs on ([`Target::declared`]):
 /// the public catalog's dependency gate. Empty without Python or when its files do not read.
 pub fn of_package(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>) -> Vec<Unwheeled> {
-    let Some((name, requires, lock)) = project_of(manifest, files) else {
+    let Some((name, requires, lock)) = manifest.python.as_ref().and_then(|p| project_of(p, files))
+    else {
         return Vec::new();
     };
     let targets = Target::declared(
@@ -243,6 +243,29 @@ pub fn of_package(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>) -> Vec
         requires.as_deref(),
     );
     unwheeled(lock, &name, &targets)
+}
+
+/// The locked packages `target` must not build from source: every one a wheel of fits it there, so that only the
+/// packages the install review listed as built here are (docs/adr/8057 §98, PY-UV-21): uv's `--no-build-package` for
+/// each. Empty without Python or when its files do not read.
+pub fn wheeled_on(
+    python: &PythonProject,
+    files: &BTreeMap<String, Vec<u8>>,
+    target: Target,
+) -> Vec<String> {
+    let Some((name, _, lock)) = project_of(python, files) else {
+        return Vec::new();
+    };
+    let built: BTreeSet<String> = unwheeled(lock, &name, &[target])
+        .into_iter()
+        .filter(|u| u.needs.iter().any(|(_, n)| *n == Need::Source))
+        .map(|u| u.name)
+        .collect();
+    crate::release::locked_packages(python, files)
+        .unwrap_or_default()
+        .into_keys()
+        .filter(|n| !built.contains(n))
+        .collect()
 }
 
 /// What a package's lock means on one computer: the install review's (docs/adr/8057 §94).
@@ -261,7 +284,7 @@ pub fn on_computer(
     files: &BTreeMap<String, Vec<u8>>,
     target: Target,
 ) -> Option<OnComputer> {
-    let (name, _, lock) = project_of(manifest, files)?;
+    let (name, _, lock) = project_of(manifest.python.as_ref()?, files)?;
     let parsed = parse_toml(lock).ok()?;
     Some(OnComputer {
         target,

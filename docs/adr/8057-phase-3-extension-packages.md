@@ -4913,3 +4913,28 @@ masaüstü `extensions/environment.rs`, `runner.rs`.
   işaret yok; geliştirme eşitlemesi `--no-dev`'siz; `find` iki türü ayırır), kayıt defteri 1 (klasörden kurulan
   geliştirilir, dosyadan kurulan değil), eklenti araçlarının sınamaları (12; atölye kurulumu artık geliştirme
   ortamıyla), masaüstünün eklenti, Asistan, Python ve İşlemler sınamaları (271).
+
+## §98. Derleme yalnız incelemede listelenen paketlere açık (`ADIM 18A`, PY-UV-21; §94'ün kalanı)
+
+**16 Kasım.** Kod: paylaşılan `python/builds.rs` (`wheeled_on`; `project_of` artık Python projesini alır); python-env
+`extension.rs` (`prepare`, `preview` ve eşitleme `no_build` alır, `sync_args`), `python.rs` (`no_build_words`);
+masaüstü `extensions/environment.rs` (`Context::not_to_build`); komut satırı `kek_test/setup.rs`.
+
+- **Sorun.** §94 kaynaktan derlenecek paketi kurulumdan önce söylüyordu, ama ortam hazırlanırken uv tekerleği uymayan
+  başka bir paketi de sessizce derleyebilirdi (uv'nin platform eşlemesi bizimkinden ayrılırsa, ya da kilit
+  incelemeden sonra değişirse). PY-UV-21: "derleme kancaları kod yürütür, açık kapsamla yönetilir". §94'te "uv'de izin
+  listesi yok" diye bırakılmıştı; uv'nin paket başına `--no-build-package`'ı ters yönden aynı işi görür.
+- **Karar.** Ortam hazırlanırken ve önizlenirken bu bilgisayarda tekerleği uyan her kilitli paket (`wheeled_on`:
+  kilidin bütün paketleri, incelemenin burada derlenecek dediği paketler hariç) uv'ye `--no-build-package` ile verilir.
+  Yalnız incelemede listelenen paketler derlenebilir; uv bir başkasını derlemek isterse reddeder ve söz paketin adıyla
+  Türkçe söylenir: "“numpy” 2.5.4 bu bilgisayarda kaynağından derlenmek zorunda, ama kurulum incelemesinde burada
+  derlenecekler arasında değildi: KentOS onu derlemez. …" Önizleme de aynı bayraklarla koşar: ret indirmeden önce
+  görülür. Masaüstü ve `kentos kek test` listeyi KentOS'un buradaki Python'uyla aynı yoldan hesaplar; sunucu zaten
+  hiç derlemez (§66).
+- **Ölçüm (gerçek uv 0.11.26, ağsız, KentOS'un önbelleği):** Vitrin'in kilidi `--no-build-package numpy
+  --no-build-package shapely` ile eşitlenir (iki paket kurulacak). Linux tekerlekleri çıkarılınca aynı bayraklarla:
+  "error: Distribution `numpy==2.5.4 @ registry+https://pypi.org/simple` can't be installed because it is marked as
+  `--no-build` but has no binary distribution" (sözün ayrıştırıcısı bu metinle sınanır).
+- **Sınamalar:** paylaşılan 1 (`wheeled_on`: tekerlekli, işaretiyle bu bilgisayarda kurulmayan ve depodan gelen
+  paketler; projenin kendisi yok; okunamayan kilit), python-env 2 (önizlemede bayraklar; uv'nin reddinin sözü),
+  komut satırı, eklenti araçları ve masaüstünün sınamaları.

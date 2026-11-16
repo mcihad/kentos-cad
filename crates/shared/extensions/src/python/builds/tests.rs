@@ -397,3 +397,41 @@ fn the_demo_extensions_lock_needs_no_build() {
     );
     assert!(found.is_empty(), "{found:?}");
 }
+
+/// The packages a computer must not build: every locked one but those the review listed as built there (§98).
+#[test]
+fn the_packages_not_to_build_are_the_wheeled_ones() {
+    let python = crate::manifest::PythonProject {
+        project_file: "pyproject.toml".into(),
+        lock_file: "uv.lock".into(),
+        optional_features: Default::default(),
+    };
+    let files: BTreeMap<String, Vec<u8>> = [
+        (
+            "pyproject.toml".to_owned(),
+            b"[project]\nname = \"ornek\"\nversion = \"1.0.0\"\nrequires-python = \">=3.10\"\n"
+                .to_vec(),
+        ),
+        ("uv.lock".to_owned(), LOCK.as_bytes().to_vec()),
+    ]
+    .into();
+    let linux = wheeled_on(&python, &files, LINUX);
+    // Built on Linux x86_64: tasli, depodan, corap (sources only); the others' wheels fit there, they do not build.
+    for not in ["numpy", "saf", "istekler", "cizim", "pywin32", "catal"] {
+        assert!(linux.contains(&not.to_owned()), "{not}: {linux:?}");
+    }
+    for built in ["tasli", "depodan", "corap"] {
+        assert!(!linux.contains(&built.to_owned()), "{built}: {linux:?}");
+    }
+    assert!(!linux.contains(&"ornek".to_owned()), "the project itself");
+    let arm = wheeled_on(&python, &files, LINUX_ARM);
+    assert!(!arm.contains(&"numpy".to_owned()), "built there: {arm:?}");
+    let missing = crate::manifest::PythonProject {
+        lock_file: "yok.lock".into(),
+        ..python.clone()
+    };
+    assert!(
+        wheeled_on(&missing, &files, LINUX).is_empty(),
+        "a lock that is not there"
+    );
+}

@@ -765,14 +765,15 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   denetimi atlar, `--no-sync` eşitlemeyi atlar: birbirinin eşi değildir; hazırlamada `uv sync --locked`, çalıştırmada
   `uv run --locked --no-sync`.
   — *tamamlandı (ADR 8057 §5): hazırlık kullanıcının kararıyla, çalışırken eşitleme ya da indirme yok.*
-- [ ] Mevcut yayın venv'i yerinde bozulmaz; hazırlık ortamı kurulur, eşitleme/denetim/içe aktarma duman testi geçince
+- [x] Mevcut yayın venv'i yerinde bozulmaz; hazırlık ortamı kurulur, eşitleme/denetim/içe aktarma duman testi geçince
   atomik etkinleşir [PY-UV-18]. Geliştirme bağımlılıkları yayına kurulmaz [PY-UV-19]. Yerel tekerlek, kaynaktan derleme
   ve işletim sistemi kütüphanesi ayrılır; başarısız derleme eklenti hatası gibi gösterilmez [PY-UV-20]; derleme kancaları
   kod yürütür, açık kapsamla yönetilir, genel yayında tekerlek önceliklidir [PY-UV-21].
-  — *kısmen (ADR 8057 §5): kur, denetle, "hazır" en son yazılır. 16 Kasım (ADR 8057 §94): kaynaktan derlenecek
+  — *tamamlandı (ADR 8057 §5, §94, §98): kur, denetle, "hazır" en son yazılır. 16 Kasım (§94): kaynaktan derlenecek
   paket kilitten okunur ve `kek verify`'da, kurulum incelemesinde (bu bilgisayar ve Python'u için) ve genel katalogda
   (Bağımlılık denetiminin engeli, gerekçeli istisna) söylenir; düşen derleme paketin hatası olarak, derlemenin son
-  sözüyle söylenir. Kalan: derlemeyi yalnız incelemede listelenen paketlere açmak (uv'de izin listesi yok).*
+  sözüyle söylenir. 16 Kasım (ADR 8057 §98): derleme yalnız incelemede listelenen paketlere açık: bu bilgisayarda
+  tekerleği uyan her kilitli paket `--no-build-package` ile uv'ye verilir; uv'nin reddi paketin adıyla söylenir.*
 - [x] uv argv ile çağrılır, kabuk dizgisi birleştirilmez; zaman aşımı, çıktı sınırı, istek/iş kimliği [PY-UV-22].
   Sistem Python'una yazma, genel `pip`, `--system` normal akışta yok [PY-UV-23]. Ortam yolu, yorumlayıcı ve çalışma
   klasörü açıkça seçilir; çevredeki `.python-version`, uv yapılandırması ya da etkin venv hedefi belirlemez [PY-UV-24].

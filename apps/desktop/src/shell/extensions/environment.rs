@@ -97,6 +97,33 @@ struct Context {
     development: bool,
 }
 
+impl Context {
+    /// The locked packages this computer must not build from source (docs/adr/8057 §98): all but those the install
+    /// review listed as built here, read from the installed package's project with KentOS's Python here.
+    fn not_to_build(&self) -> Vec<String> {
+        let mut files = BTreeMap::new();
+        for path in [&self.project_file, &self.lock_file] {
+            if let Ok(bytes) = std::fs::read(self.package.join(path)) {
+                files.insert(path.clone(), bytes);
+            }
+        }
+        let project = kentos_extensions::manifest::PythonProject {
+            project_file: self.project_file.clone(),
+            lock_file: self.lock_file.clone(),
+            optional_features: BTreeMap::new(),
+        };
+        let mut parts = self
+            .python
+            .version
+            .split('.')
+            .map(|p| p.parse::<u64>().ok());
+        let python = parts.next().flatten().zip(parts.next().flatten());
+        kentos_extensions::python_builds::Target::here(python)
+            .map(|here| kentos_extensions::python_builds::wheeled_on(&project, &files, here))
+            .unwrap_or_default()
+    }
+}
+
 /// What preparing it would install, in a line: what the lock gives on this computer.
 pub(crate) fn listed_words(listed: &[Listed]) -> String {
     if listed.is_empty() {
@@ -275,6 +302,7 @@ impl App {
                         &c.package,
                         (&c.project_file, &c.lock_file),
                         &key,
+                        &c.not_to_build(),
                         &stop,
                         &mut |at| {
                             let _ = told.unbounded_send(EnvEvent::Progressed(told_id.clone(), at));
@@ -354,6 +382,7 @@ impl App {
                             &c.package,
                             (&c.project_file, &c.lock_file),
                             &key,
+                            &c.not_to_build(),
                         )
                     },
                     Err("önizleme yarıda kaldı".to_owned()),

@@ -645,6 +645,16 @@ fn a_failed_build_is_said_as_the_packages() {
         "{words}"
     );
     assert_eq!(python::build_words("error: something else entirely"), None);
+    // A build the review did not list, refused by uv (docs/adr/8057 §98): said with the package.
+    let refused = "error: Distribution `kirik==0.1 @ path+/tmp/derleme/kirik-0.1.tar.gz` can't be installed because \
+                   it is marked as `--no-build` but has no binary distribution";
+    let words = python::no_build_words(refused).unwrap();
+    assert!(
+        words.starts_with("“kirik” 0.1 bu bilgisayarda kaynağından derlenmek zorunda")
+            && words.contains("KentOS onu derlemez"),
+        "{words}"
+    );
+    assert_eq!(python::no_build_words(wrapped), None);
     let failed = InstallError::Failed {
         cause: Cause::Build,
         said: words.clone(),
@@ -1295,6 +1305,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         &package,
         ("pyproject.toml", "uv.lock"),
         &key,
+        &[],
     )
     .unwrap();
     assert_eq!(
@@ -1332,6 +1343,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         &package,
         ("pyproject.toml", "uv.lock"),
         &key,
+        &[],
         &stop,
         &mut |p| seen.push(p),
     )
@@ -1366,6 +1378,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         &package,
         ("pyproject.toml", "uv.lock"),
         &key,
+        &[],
         &stop,
         &mut |_| {},
     )
@@ -1395,6 +1408,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         &package,
         ("pyproject.toml", "uv.lock"),
         &developing,
+        &[],
         &stop,
         &mut |_| {},
     )
@@ -1403,8 +1417,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
     let last_sync = std::fs::read_to_string(&log)
         .unwrap()
         .lines()
-        .filter(|l| l.contains("|sync --locked"))
-        .last()
+        .rfind(|l| l.contains("|sync --locked"))
         .unwrap()
         .to_owned();
     assert!(
@@ -1426,6 +1439,26 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
     assert_eq!(find(false), Some(made.clone()));
     assert_eq!(find(true), Some(developed));
     extension::remove(&root, &developing).unwrap();
+    // Only the packages the review listed as built here build (docs/adr/8057 §98): the others are named not to.
+    let _ = extension::preview(
+        &fake,
+        &root,
+        &python,
+        &package,
+        ("pyproject.toml", "uv.lock"),
+        &key,
+        &["numpy".to_owned(), "shapely".to_owned()],
+    );
+    let last_sync = std::fs::read_to_string(&log)
+        .unwrap()
+        .lines()
+        .rfind(|l| l.contains("|sync --locked"))
+        .unwrap()
+        .to_owned();
+    assert!(
+        last_sync.contains("--no-build-package numpy --no-build-package shapely --python"),
+        "{last_sync}"
+    );
     // A sync that fails leaves nothing half-made.
     std::fs::write(temp.0.join("uv").join("bozuk"), b"").unwrap();
     let failed = extension::prepare(
@@ -1436,6 +1469,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         &package,
         ("pyproject.toml", "uv.lock"),
         &other,
+        &[],
         &stop,
         &mut |_| {},
     )
@@ -1469,7 +1503,8 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
             &python,
             &package,
             ("pyproject.toml", "uv.lock"),
-            &other
+            &other,
+            &[]
         )
         .unwrap_err()
         .contains("KentOS'un kendi kitaplığının")
