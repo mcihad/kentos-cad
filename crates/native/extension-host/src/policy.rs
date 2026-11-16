@@ -63,9 +63,22 @@ impl Policy {
     /// Reads the policy file.
     pub fn read(text: &str) -> Result<Policy, Problem> {
         let policy: Policy = serde_json::from_str(text).map_err(|e| {
+            let said = e.to_string();
+            // A field this KentOS does not know: the policy was written for a newer one (a rule added later, such as
+            // the Python packages', docs/adr/8057 §84). Said so in Turkish, not in the reader's English; still closed.
+            let unknown = said
+                .strip_prefix("unknown field `")
+                .and_then(|rest| rest.split('`').next());
+            let why = match unknown {
+                Some(field) => format!(
+                    "bu KentOS'un tanımadığı “{field}” alanı var; ilke daha yeni bir KentOS sürümü için yazılmış \
+                     olabilir"
+                ),
+                None => format!("satır {}, sütun {}: JSON olarak okunamadı", e.line(), e.column()),
+            };
             problem(
                 "policy_invalid",
-                format!("Kurum eklenti ilkesi okunamadı ({e}); bilgi işlem birimine bildirin. Eklenti kurulmaz."),
+                format!("Kurum eklenti ilkesi okunamadı ({why}); bilgi işlem birimine bildirin. Eklenti kurulmaz."),
             )
         })?;
         if policy.format != POLICY_FORMAT || policy.schema_version != 1 {

@@ -4498,4 +4498,11 @@ inceleme, kurulum ve çalıştırma aynı kurala bakar); paylaşılan `python_na
   farkı da (§81) artık bunu kullanır.
 - **Sınamalar:** kayıt defteri 33 (yeni: engelli paket, izinli liste, izinli depo; incelemenin sözü ve Kur'un reddi
   aynı cümle; sondaki eğik çizgiyle izinli depo; sonradan engellenen paketle kurulu eklentinin durması).
+- **Gerçek pencere (KentOS GIS, yalıtılmış profil):** `blockedPythonPackages: ["reqeusts"]` ilkesiyle deneme Vitrin
+  1.0.54'ün güncelleme incelemesi "Kurum ilkesi “reqeusts” Python paketini engelliyor." dedi, Güncelle kapalı kaldı,
+  kurulu 1.0.53 çalışmayı sürdürdü. İlk koşu eski ikiliyle yapıldı ve bir şey gösterdi: daha yeni bir KentOS için
+  yazılmış ilke (tanınmayan alan) her şeyi doğru biçimde kapalı tuttu ama nedeni okuyucunun İngilizcesiyle yazdı
+  ("unknown field … expected one of …"). Artık Türkçe: "bu KentOS'un tanımadığı “…” alanı var; ilke daha yeni bir
+  KentOS sürümü için yazılmış olabilir"; bozuk JSON satır ve sütunuyla. Kurumda ilke dosyası KentOS'tan önce
+  güncellenebileceği için bu gerçek bir durum.
 - **Kalan:** ilkede soğuma süresi (§83'ün kurum için zorunlu hâli); paket sürümü düzeyinde kural (bugün ad düzeyinde).
