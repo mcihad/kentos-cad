@@ -4,8 +4,14 @@ import type { ArchPhase } from "./ArchPhase";
 /**
  * Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, with its slabs,
  * ramps and stairs (docs/adr/0722 §5, 0723 §3, 0724 §5), those of the levels, phases, usages and layers given (each
- * absent: every one; a usage filter leaves out all but the spaces).
+ * absent: every one; a usage filter leaves out all but the spaces). `building`: one of the program's buildings, the
+ * storeys it counts (a shared level only in the building chosen for it, docs/adr/8072 §4), so the buildings' quantities
+ * together are the project's; with `levels`, the levels of both.
  *
- * Refusals: `level_not_found`, `layer_not_found`.
+ * Refusals: `level_not_found`, `layer_not_found`, `building_not_found`.
  */
-export type SpacesQuantities = { levels?: Array<string>, phases?: Array<ArchPhase>, usages?: Array<string>, layers?: Array<string>, };
+export type SpacesQuantities = { levels?: Array<string>, 
+/**
+ * One of the program's buildings by its id: the storeys it counts (docs/adr/8072 §4).
+ */
+building?: string, phases?: Array<ArchPhase>, usages?: Array<string>, layers?: Array<string>, };

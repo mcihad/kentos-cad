@@ -1093,18 +1093,12 @@ fn a_room_is_closed_from_its_floor_to_its_ceiling() {
     }
 }
 
-/// Bina başına model (docs/adr/8072 §2): the section building as A Blok over a basement both blocks share, and a B Blok
-/// 20 m east entered 1.20 m higher (its own ground level at +1.20): its four walls and a room. The program: A Blok (A1)
-/// spans the basement, the ground floor and the 1. kat; B Blok (B1, its ±0.00 1.20 over A's) the basement and its own
-/// ground level; the basement counts in A Blok. A's file holds its three storeys (−3.00, ±0.00, +3.00 over its ±0.00)
-/// and the basement's slab; B's its one storey at ±0.00 over its own ±0.00, the building placed 1.20 up (its walls
-/// standing at +1.20 over the project's, no second offset), no basement; the site and the project the same in both.
-/// `KENTOS_WRITE_IFC_BLOCKS=1` writes fixtures/arch/v1/ifc/blok-a.ifc and blok-b.ifc for
-/// scripts/fixtures/curved_ifc_check.py's blocks part.
-#[test]
-fn two_blocks_are_two_models_with_their_own_zero_and_the_basement_once() {
+/// The section building as A Blok over a basement both blocks share, and B Blok 20 m east entered 1.20 m higher (its own
+/// ground level at +1.20): its four walls and a room (docs/adr/8072 §2, §4). A Blok (A1) spans the basement, the ground
+/// floor and the 1. kat; B Blok (B1, its ±0.00 1.20 over A's) the basement and its own ground level; the basement counts
+/// in A Blok; a slab under both on the basement.
+pub(crate) fn two_blocks() -> Document {
     use kentos_commands::CallOp;
-    use kentos_ifc::building::{Shape, write};
     use kentos_native_application::{ExecutionContext, registry};
     let mut doc = building();
     let mut settings = doc.settings().clone();
@@ -1140,6 +1134,18 @@ fn two_blocks_are_two_models_with_their_own_zero_and_the_basement_once() {
         "parts": [{"outer": {"pts": rect(20.125, 0.125, 25.875, 4.875)}}], "number": "B01", "name": "Dükkân",
         "arch": {"level": "b-zemin"}
     }]}));
+    doc
+}
+
+/// Bina başına model (docs/adr/8072 §2) on `two_blocks`: A's file holds its three storeys (−3.00, ±0.00, +3.00 over its
+/// ±0.00) and the basement's slab; B's its one storey at ±0.00 over its own ±0.00, the building placed 1.20 up (its walls
+/// standing at +1.20 over the project's, no second offset), no basement; the site and the project the same in both.
+/// `KENTOS_WRITE_IFC_BLOCKS=1` writes fixtures/arch/v1/ifc/blok-a.ifc and blok-b.ifc for
+/// scripts/fixtures/curved_ifc_check.py's blocks part.
+#[test]
+fn two_blocks_are_two_models_with_their_own_zero_and_the_basement_once() {
+    use kentos_ifc::building::{Shape, write};
+    let doc = two_blocks();
     let stamp = "2026-11-16T12:00:00";
     let (a, written_a, unplaced) = arch_ifc::building_of(&doc, "a", stamp, "KentOS Mimari").expect("A Blok");
     assert_eq!((unplaced, written_a.left.len()), (0, 0));

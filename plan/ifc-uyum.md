@@ -78,7 +78,7 @@ kimliği; test bağlantısı.
 |---|---|---|---|---|---|
 | IfcProject | — | Künye | ◐ | açıklama, proje tipi | IFC-02 |
 | IfcSite | SAH | Parsel, imar durumu, vaziyet planı | ◐ | nesne tipi, parsel alanının seti | IFC-02 |
-| IfcBuilding | BNA | Çizim (tek bina) | ◐ | pilotta bina başına dosya; eksik alanlar | IFC-02, IFC-05 |
+| IfcBuilding | BNA | Çizim; programın binaları (ADR 8072) | ✓ bina başına dosya, kendi ±0.00'ı ve alanlarıyla | eksik alanlar | IFC-02 |
 | IfcBuildingStorey | BNK | Katlar | ◐ | taşıyıcı döşemenin kotu | IFC-02 |
 | IfcSpace | MHL | Mahal | ◐ hep `INTERNAL`, düz prizma | türü, kapalı hacmi, kaplama kalınlıkları | IFC-02, IFC-06 |
 | IfcSpatialZone | MZN | Emsal alanı (BIM-08) | ✓ (ADR 8069) | DIGER | IFC-03 |
@@ -158,7 +158,7 @@ KentOS'un çalışma bilgisi ayrı ad alanlarındadır; aynı bilgi için dosyad
 
 | Ne | Kalıp | Bugün | Kalan |
 |---|---|---|---|
-| Model dosyası | `ProjeKodu_BinaKodu_MM_AltDisiplin_MD_Tip_Kat_Sıra_Revizyon.ifc` (EK-2) | ✓ `naming::model_file` | Bina kodu çok binada (IFC-05); alt disiplin ve tip sözlükleri katalogdan |
+| Model dosyası | `ProjeKodu_BinaKodu_MM_AltDisiplin_MD_Tip_Kat_Sıra_Revizyon.ifc` (EK-2) | ✓ `naming::model_file`; çok binada bina kodu (ADR 8072 §2) | Alt disiplin ve tip sözlükleri katalogdan |
 | Proje | `IfcProject.Name` = proje kodu (EK-1) | ✓ | — |
 | Varlık | `Disiplin-KategoriKodu-Açıklama` (EK-5 §5.5) | ✓ `MM-DVR-Dış_duvar_25` | Ayırıcı kuralı kalıbın verisi olur: Md. 11/2 "orta tire", EK-5 "alt çizgi". İdarenin yazılı yorumu profile girer |
 | Mahal | Md. 10/2: EK-5'e göre | `MM-MHL-<no>_<ad>`; uzun ad mahalin adı | Kapandı (ADR 8062 K02): EK-5 5.5.4 numarayı ve adı açıklamada ayrı ya da birlikte kullandırır; KentOS ikisini birlikte yazar |
@@ -352,9 +352,9 @@ uyum için şart değildir.
 **İlk kabul:** bir duvar stili tek tip olarak yazılır ve bütün duvarları ona bağlıdır; katmanlar sırasıyla ve kalınlığıyla
 bağımsız okuyucuda okunur.
 
-#### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [~]
+#### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [x]
 
-**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§3, BIM-11 ile):** bina
+**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§4, BIM-11 ile):** bina
 başına model dosyası (`cad.arch.ifc` `building`; masaüstünde her bina EK-2 adlı ayrı dosya); proje ve saha her dosyada
 aynı kimlikle, başka ortak kimlik yok; her bina kendi ±0.00'ında, katları ona göre, nesneler katlarına göre (çift
 öteleme yok); ortak bodrum sayıldığı binada; IfcOpenShell iki dosyada katların mutlak kotlarını yerleşim zincirinden doğru
@@ -365,9 +365,11 @@ sıfırın harita koordinatı (proje baz noktası ile ölçüm noktası çakış
 yüksekliğe yazılmaz: konum yazılmaz, `export_losses` ve EK-9'un 6. sorusu nedenini söyler. **İlk kabul:** döndürülmüş
 yerel modelde (23,5°, ölçek 0,99989, gürültülü anket) üç kontrol noktası IfcOpenShell'de anketteki yerine oturtmanın
 kendi artığı içinde (1e-6 m; en çok 0,45 mm) düşer ve geri döner; katlar haritada ±0.00'ın kotunda ve 3 m üstünde;
-yerleşim zinciri (döngü, yabancı yerleşim) bütün örnek dosyalarda denetlenir, çift öteleme mutlak kotlardan. **Kalan:**
-ortak bodrum alanının bir kez sayılması (BIM-11 §4); `TrueNorth`; kontrol noktalarının projede saklanması; idarenin
-ölçüm toleransı kurum profiliyle.
+yerleşim zinciri (döngü, yabancı yerleşim) bütün örnek dosyalarda denetlenir, çift öteleme mutlak kotlardan. Ortak
+bodrum (§4): her binanın dosyasında binanın kendi alanları (GrossPlannedArea, GrossFloorArea, FootprintArea), iki
+dosyanınki toplamı projeninki, bodrum yalnız A'da; taban alanı iki bloğun zemin katından. İlk kabulün dört koşulu
+sağlandı. **İyileştirmeler:** `TrueNorth`; kontrol noktalarının projede saklanması; idarenin ölçüm toleransı kurum
+profiliyle; gelen IFC'nin zinciri okuyucuyla (IFC-07).
 
 **Kullanıcı sonucu:** Model, karşı programda doğru yerde ve doğru kotta açılır; pilotta iki blok iki dosya olur ve ortak proje bilgileri
 ikisinde aynıdır. Nesneleri BIM-11'den gelir.

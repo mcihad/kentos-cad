@@ -18,6 +18,13 @@
 //! KENTOS_SHOTS_ONLY=bolum-cizelgesi-plan,bolum-cizelgesi-arac,bolum-cizelgesi-ayarlar,bolum-cizelgesi-duzenle cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
+//! docs/adr/8072 §1, §4 (two blocks over a shared ground floor): Binalar with each block's code, use and ±0.00 and the
+//! shared level's building; Metraj on A Blok's storeys; Ruhsat takımı with B Blok chosen:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=bina-ortak-kat,bina-metraj,bina-ruhsat cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use crate::arch;
@@ -362,6 +369,23 @@ fn blocks(app: &mut App) {
     window(app, Tab::Buildings);
 }
 
+/// Metraj on A Blok (docs/adr/8072 §4): the storeys it counts, the shared ground floor among them; its choice in the
+/// list beside the levels.
+fn blocks_quantities(app: &mut App) {
+    blocks(app);
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::Close)));
+    app.open_quantities();
+    let _ = app.update(Message::Arch(arch::Event::Quantities(crate::quantities::Event::Level(1))));
+}
+
+/// Ruhsat takımı on a two-block project (docs/adr/8072 §4): B Blok chosen, its storeys alone with its code.
+fn blocks_permit(app: &mut App) {
+    blocks(app);
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::Close)));
+    let _ = app.permit_set_open();
+    let _ = app.permit_set_event(crate::exchange::permit_set::Event::Building(Some(1)));
+}
+
 fn share_units(app: &mut App) {
     share_house(app, "weight");
     fit(app, -0.5, -0.5, UP + 5.5, 10.0);
@@ -461,6 +485,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("bina-programi-birlestir", merge),
         ("bina-pay-binalar", share_buildings),
         ("bina-ortak-kat", blocks),
+        ("bina-metraj", blocks_quantities),
+        ("bina-ruhsat", blocks_permit),
         ("bina-pay-bolumler", share_units),
         ("bina-pay-durum", share_status),
         ("bina-pay-plan", share_plan),

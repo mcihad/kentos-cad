@@ -145,6 +145,7 @@ fn the_form_in_the_drawing_is_the_set_s_fr_mkf_sheet_with_its_answers_now() {
             })
             .collect(),
         renovation: false,
+        building: None,
     };
     let (_, made, notes) = kentos_native_application::permit_set::execute(
         &mut kentos_native_application::ExecutionContext::new(doc),

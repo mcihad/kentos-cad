@@ -3,13 +3,16 @@
 //! toplu yayınla opened on it, checked, one PDF/A-2 file a sheet named by the digital project regulation's EK-2: the
 //! user presses Yayınla. A tadilat (docs/adr/8039 §6) gets each storey's plan three times: Mevcut durum, Tadilat
 //! projesi and Yeni durum; the box is ticked when the drawing has İptal or İlave beside what stands. Its Dijital teslim
-//! kapsamı section (permit_scope.rs, docs/adr/8063) says which digital obligation starts when for the project.
+//! kapsamı section (permit_scope.rs, docs/adr/8063) says which digital obligation starts when for the project. A project
+//! whose program has several buildings chooses one (docs/adr/8072 §4): its storeys only, its EK-2 building code on
+//! every sheet and in every file name.
 use super::{Event as Exchange, Window, message};
 use crate::app::{App, Message};
-use iced::widget::{button, column, row};
+use iced::widget::{button, column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_sheet::permit::{self, Phase};
-use kentos_ui::{label, style, widget::Dialog};
+use kentos_ui::widget::{Choice, Dialog, Select};
+use kentos_ui::{label, style};
 
 /// One particular in the window.
 #[derive(Clone, Debug)]
@@ -32,6 +35,10 @@ pub struct State {
     pub restate: Vec<String>,
     /// Dijital teslim kapsamı: its particulars and the decision (docs/adr/8063).
     pub scope: super::permit_scope::Scope,
+    /// The program's buildings when it has several (docs/adr/8072 §4): each one's id and words; empty: one building.
+    pub buildings: Vec<(String, String)>,
+    /// The building the set is made for, by its place in `buildings`; none: the whole project.
+    pub building: Option<usize>,
 }
 
 impl std::fmt::Debug for State {
@@ -47,6 +54,8 @@ impl std::fmt::Debug for State {
 pub enum Event {
     Phase(Phase),
     Renovation(bool),
+    /// The building chosen, by its place among the program's (none: the whole project).
+    Building(Option<usize>),
     Field(usize, String),
     /// Dijital teslim kapsamı (permit_scope.rs): a box's text, a choice (none to leave it empty), a row chosen, the
     /// rule's answer to a generation.
@@ -142,6 +151,28 @@ impl App {
         let renovation = kentos_native_application::permit_set::renovates(&doc.model);
         let restate = kentos_native_application::permit_set::rooms_to_restate(&doc.model);
         let scope = super::permit_scope::Scope::of(&doc.model);
+        // Several buildings (docs/adr/8072 §4; EK-2 §2.3): a set for each, the first chosen.
+        let buildings: Vec<(String, String)> = doc
+            .model
+            .settings()
+            .arch
+            .as_ref()
+            .map(|a| {
+                a.program
+                    .buildings
+                    .iter()
+                    .map(|b| {
+                        let words = match &b.code {
+                            Some(c) => format!("{} ({c})", b.name),
+                            None => b.name.clone(),
+                        };
+                        (b.id.clone(), words)
+                    })
+                    .collect()
+            })
+            .filter(|b: &Vec<(String, String)>| b.len() > 1)
+            .unwrap_or_default();
+        let building = (!buildings.is_empty()).then_some(0);
         self.close_exchange();
         self.exchange = Some(Window::PermitSet(Box::new(State {
             phase: Phase::Permit,
@@ -150,6 +181,8 @@ impl App {
             renovation,
             restate,
             scope,
+            buildings,
+            building,
         })));
         self.dialog = Some(crate::app::Dialog::Exchange);
         self.permit_scope_ask()
@@ -172,6 +205,7 @@ impl App {
         match e {
             Event::Phase(p) => s.phase = p,
             Event::Renovation(on) => s.renovation = on,
+            Event::Building(k) => s.building = k,
             Event::Field(i, v) => {
                 if let Some(f) = s.fields.get_mut(i) {
                     f.value = v;
@@ -189,7 +223,14 @@ impl App {
                     tables: Vec::new(),
                     lists: Vec::new(),
                     renovation: s.renovation,
+                    building: s.building.and_then(|k| s.buildings.get(k)).map(|(id, _)| id.clone()),
                 };
+                // A building's set goes to its own folder, by its code (EK-2 §2.3).
+                let code_of_set = input.building.as_deref().and_then(|id| {
+                    self.document
+                        .as_ref()
+                        .and_then(|d| d.model.program().building(id).and_then(|b| b.code.clone()))
+                });
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
@@ -288,11 +329,14 @@ impl App {
                             p.input.pdfa = true;
                             p.input.naming = permit::FILE_NAMING.into();
                             if let Some(dir) = std::path::Path::new(&p.input.path).parent() {
-                                let set = if input.renovation {
+                                let mut set = if input.renovation {
                                     format!("{}-tadilat", phase.name())
                                 } else {
                                     phase.name().to_owned()
                                 };
+                                if let Some(code) = &code_of_set {
+                                    set = format!("{set}-{code}");
+                                }
                                 p.input.path = dir
                                     .join(format!("{set}-{}", kentos_plot::book::today()))
                                     .display()
@@ -336,6 +380,31 @@ impl App {
             phases,
         ]
         .spacing(8);
+        // Several buildings (docs/adr/8072 §4): the set of one of them, or of the whole project.
+        if !s.buildings.is_empty() {
+            let mut names = vec!["Bütün proje".to_owned()];
+            names.extend(s.buildings.iter().map(|(_, w)| w.clone()));
+            let chosen = s.building.map_or(0, |k| k + 1);
+            body = body.push(
+                row![
+                    container(label::body("Bina")).width(iced::Length::Fixed(80.0)),
+                    container(
+                        Select::new(names.into_iter().map(Choice::new), Some(chosen), |i| {
+                            event(Event::Building(i.checked_sub(1)))
+                        })
+                        .searchable(false)
+                    )
+                    .width(iced::Length::Fixed(260.0)),
+                ]
+                .spacing(8)
+                .align_y(Center),
+            );
+            body = body.push(label::caption(
+                "Bir binanın takımı yalnız onun katlarını çizer (ortak kat sayıldığı binada); kat kodları binanın \
+                 ±0,00'ından. Paftaların antetinde ve dosya adında bina kodu ve blok no seçilen binanınkidir (EK-2 \
+                 §2.3); aşağıdaki alanlar bütün proje içindir.",
+            ));
+        }
         // A tadilat set (docs/adr/8039 §6; PAİY 4(1)(dddd), 58; Mimarlar Odası: mevcut, iptal and ilave each its way).
         let check = if s.renovation {
             kentos_ui::widget::tree_view::Check::Checked

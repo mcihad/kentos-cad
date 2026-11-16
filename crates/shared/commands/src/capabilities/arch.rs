@@ -448,7 +448,7 @@ pub(super) const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.spaces.quantities",
-        refusals: &[&["level_not_found", "layer_not_found"]],
+        refusals: &[&["level_not_found", "layer_not_found", "building_not_found"]],
         warnings: &[],
         targets: none,
     },

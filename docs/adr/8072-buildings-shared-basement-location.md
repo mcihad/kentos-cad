@@ -1,9 +1,9 @@
 # ADR 8072: Çok bina, ortak bodrum, konum ve kot
 
-- **Durum:** kısmen uygulandı (16 Kasım 2026; §1–§3). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-11,
+- **Durum:** kısmen uygulandı (16 Kasım 2026; §1–§4). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-11,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-05; uygulama sırasında B11. Bu ADR maddenin bütün adımlarını tutar; koddaki
   "docs/adr/8072 §N" atıfları bölümleri gösterir: §1 binalar (kod, kullanım, ±0.00, ortak kat), §2 bina başına model, §3 konum
-  (yerel sistem, harita dönüşümü, kot, yerleşim zinciri). Kararların numarası
+  (yerel sistem, harita dönüşümü, kot, yerleşim zinciri), §4 alanlar ve bina başına çıktılar. Kararların numarası
   bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar numarasız son bölümlerdedir.
 - **Bağlam:** ADR [0773](0773-building-program-units-and-design-brief.md) (bina programı), [0784](0784-building-wing-window-and-common-area-shares.md) §1
   (binaların ve kanatların katları), [8032](8032-site-plan-parcel-setbacks-and-datum.md) (vaziyet planı, saha röperi),
@@ -174,11 +174,57 @@ sağlam. Zincir denetimi bozulmuş bir kopyada döngüyü ve duvara göre yerle�
 (modül, şerit, geçmiş, katalog, ayarlar, IFC, özel sistem). Resim: `ozel-crs-konum-*` (Şantiye, TM36 tabanı, üç kontrol
 noktası, m0 ±0,5 mm).
 
+## §4. Ortak bodrum bir kez: emsal, TAKS, metraj, ruhsat takımı
+
+**Araştırma.**
+
+- **PAİY** (Planlı Alanlar İmar Yönetmeliği, 1 Temmuz 2026 tarihli birleştirilmiş metin) 4/1-bbbb: "Taban alanı: Bahçede
+  yapılan eklenti ve müştemilatı dâhil **yapıların** tabii zemin veya tesviye edilmiş zemin üzerinde kalan kısmının …
+  parseldeki izdüşümünün kapladığı alanı"; 4/1-cccc TAKS taban alanının imar parseline oranı; 20/4: kısmen ya da tamamen
+  açığa çıkan bodrumların oturumu taban alanını geçemez. Taban alanı parseldeki bütün yapılarındır.
+- **KentOS'ta olan:** emsal ve yapı inşaat alanı mahal mahal, katlarıyla sayılır (ADR 8030): ortak bodrum tek kattır,
+  bir kez sayılır. Ama taban alanı adında "zemin" geçen ilk katın (yoksa ±0.00'a en yakın katın) mahallerinden okunuyordu:
+  iki blokta B'nin zemini sayılmıyordu. Metrajın kat süzgeci vardı, bina süzgeci yoktu: bir binanın katlarını elle seçen
+  ortak bodrumu iki binada sayabilirdi. Ruhsat takımı projenin bütün katlarını çiziyor, bina kodunu künyeden ("00")
+  okuyordu. Bina başına IFC'ye (§2) projenin alanları yazılmıyordu, binanınkiler de yazılmıyordu.
+- **EK-2 §2.3:** bloklar için ayrı hazırlanan projelerde dosya adında bina kodu.
+
+**Karar.**
+
+13. **Binanın katları** (`BuildingProgram::counted_levels`): binanın kendi katları; birden çok binanın kapladığı kat
+    yalnız seçildiği binada. **Binanın zemin katı** (`ground_of`): saydığı katlardan adında "Zemin" geçen, yoksa kendi
+    ±0.00'ına en yakın olan.
+14. **TAKS:** programda bina varsa taban alanı her binanın zemin katının sayılan mahallerinden; birden çok zemin katta
+    oturumların birleşiminin alanı (üst üste binen bir kez), tek zemin katta eskisi gibi mahallerin toplamı.
+    `ZoningReport::grounds` her zemin katın kendi alanını tutar.
+15. **Binanın payı** (`ZoningReport::of_building`): saydığı katların yapı inşaat alanı ve zemin katının taban alanı;
+    binalarınki birlikte projeninkidir, ortak bodrum bir kez. Bina başına IFC'de (§2) GrossPlannedArea,
+    GrossFloorArea ve FootprintArea binanın kendi değerleridir (imar durumu verilmişse).
+16. **Metraj** (`cad.spaces.quantities` `building`): binanın saydığı katlar; `levels` ile ikisinin kesişimi;
+    programda olmayan bina `building_not_found`. Masaüstünde Metraj'ın listesinde, birden çok binada, katlardan önce
+    "A Blok (binanın katları)".
+17. **Ruhsat takımı** (`PermitSet::building`): birden çok binalı projede pencerede Bina (ilk bina seçili; "Bütün proje"
+    de olur): takım binanın saydığı katlarını çizer, kat kodları (EK-2 Tablo 2.14) binanın ±0.00'ından, her pafta kendi
+    `bina_kodu`'nu ve `blok_no`'sunu taşır (pafta değişkeni çizimin değişkeninden önce okunur: antet ve dosya adı); yayın
+    klasörü bina koduyla ayrı. Bilgi paftası, vaziyet planı ve hesap tabloları parselindir; vaziyet planının haritası
+    binanın zemin katını çizer.
+
+**Sınama.** `program::tests::a_building_counts_its_levels_and_stands_on_its_ground` (ortak katın binası, adla ve ±0.00'la
+zemin); uygulamada `blocks_areas` (iki blok, ortak bodrumda 11 × 8 m otopark, 2 000 m² parsel):
+`the_ratios_count_both_blocks_and_the_basement_once` (zemin katlar A'nınki ve B'nin +1,20'deki katı; taban alanı ikisinin
+toplamı; binaların yapı inşaat alanları toplamı projeninki, bodrum yalnız A'da), `each_block_s_model_carries_its_own_areas`
+(iki IFC'nin GrossFloorArea ve FootprintArea toplamları projeninki), `metraj_by_building_partitions_the_project_s_rooms`
+(her mahal tek binanın metrajında; otopark A'da, B'de yalnız dükkân; `building_not_found`),
+`a_block_s_permit_set_is_its_own_storeys_with_its_code` (B'nin takımında yalnız B zemin kat planı, K00, her paftada B1;
+programda olmayan bina reddi). Ortak durumlar: `cad.spaces.quantities` 30 (bina süzgeci dört durum, programsız ret;
+`space_command_cases.py`'nin başvurusu programın binasının katlarını kendisi sayar). Resimler: `bina-metraj`,
+`bina-ruhsat`.
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-contracts --lib program`, `-p kentos-kcad --test all -- arch_elements`,
   `KENTOS_CASES_ONLY=cad.program … every_command_case`, `-p kentos-desktop --lib -- program_scenes`.
-- `cargo test -p kentos-ifc --lib`, `-p kentos-native-application --test all -- ifc_place arch_ifc`,
+- `cargo test -p kentos-ifc --lib`, `-p kentos-native-application --test all -- ifc_place arch_ifc blocks_areas`,
   `KENTOS_CASES_ONLY=cad.arch.ifc,cad.arch.audit,file.export.ifc … every_command_case`; `uv run --offline --no-project
   --with mpmath python3 scripts/fixtures/location_cases.py --check`; `curved_ifc_check.py` (IfcOpenShell 0.9.0).
 
@@ -187,6 +233,8 @@ noktası, m0 ±0,5 mm).
 - **Konumun kalanı:** `TrueNorth` (EK-7 7.8; dönüşüm varken bilgi içindir, meridyen yakınsamasını projeksiyondan ister);
   kontrol noktalarının projede saklanması (pencere düzlemi hesaplar, noktalar yazıldıkları sürece durur) ve dışa
   aktarmada yeniden denetlenmesi; idarenin ölçüm toleransı kurum profiliyle; gelen IFC'nin zinciri okuyucuyla (IFC-07).
-- **§4 Alanlar:** ortak bodrumun alanı emsalde ve metrajda bir kez; ruhsat takımında bina seçimi.
+- **Alanların kalanı:** vaziyet planının haritası birden çok binanın zemin katını birlikte çizmez (harita tek kat
+  çizer); bilgi paftasındaki PAİY 57/10 tablosu binanın değil parselin; açığa çıkan bodrumun taban alanına katılması
+  (TAKS'ın notu, 20/4) arazi kotunu ister.
 - **§5 Onaylı plan kararları:** CBS'den kaynağı, onay tarihi ve plan notuyla; çelişen iki karar gösterilir.
 - Denetim bulguları: seçilmeyen ortak kat, birden çok binada kodsuz ya da ±0.00'ı verilmeyen bina.

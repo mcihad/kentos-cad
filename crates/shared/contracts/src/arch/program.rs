@@ -124,6 +124,12 @@ pub struct ProgramBuilding {
     pub zero: Option<f64>,
 }
 
+/// Whether a storey's name says it is the ground storey: “Zemin” in any case (Turkish İ lower-cases to i and a dot; the
+/// dot is dropped for the comparison).
+pub fn is_ground_name(name: &str) -> bool {
+    name.to_lowercase().replace('\u{307}', "").contains("zemin")
+}
+
 /// A level two or more buildings span (a common basement, docs/adr/8072 §1): the building it counts as a storey of, its
 /// area once.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -378,6 +384,34 @@ impl BuildingProgram {
         }
         let chosen = self.shared.iter().find(|s| s.level == level)?;
         self.buildings.iter().find(|b| b.id == chosen.building)
+    }
+
+    /// The levels a building counts as its storeys (docs/adr/8072 §4), in its order: its own, a shared one only in the
+    /// building chosen for it; none for a building the program does not have.
+    pub fn counted_levels(&self, building: &str) -> Vec<&str> {
+        let Some(b) = self.building(building) else {
+            return Vec::new();
+        };
+        b.levels
+            .iter()
+            .filter(|l| self.building_of_level(l).is_some_and(|x| x.id == b.id))
+            .map(String::as_str)
+            .collect()
+    }
+
+    /// A building's ground storey (PAİY 4/1-bbbb, docs/adr/8072 §4): among the levels it counts the one named Zemin,
+    /// else the one nearest its own ±0.00; `levels` the project's.
+    pub fn ground_of(&self, building: &str, levels: &[crate::ArchLevel]) -> Option<String> {
+        let zero = self.building(building)?.zero.unwrap_or(0.0);
+        let mine: Vec<&crate::ArchLevel> = self
+            .counted_levels(building)
+            .into_iter()
+            .filter_map(|id| levels.iter().find(|l| l.id == id))
+            .collect();
+        mine.iter()
+            .find(|l| is_ground_name(&l.name))
+            .or_else(|| mine.iter().min_by(|a, b| (a.elevation - zero).abs().total_cmp(&(b.elevation - zero).abs())))
+            .map(|l| l.id.clone())
     }
 
     /// The levels two or more buildings span with no building chosen for them, in the buildings' order.
@@ -838,5 +872,49 @@ mod tests {
         assert_eq!(refused(&q), Some("buildings[0].zero".into()));
         let one = BuildingProgram { buildings: vec![b("A", &[], "00")], ..Default::default() };
         assert_eq!(one.problem(), None, "a single building's 00");
+    }
+
+    /// Each building counts its own levels and the shared one where it is chosen (docs/adr/8072 §4); its ground storey
+    /// is the one named Zemin, else the one nearest its own ±0.00.
+    #[test]
+    fn a_building_counts_its_levels_and_stands_on_its_ground() {
+        let level = |id: &str, name: &str, elevation: f64| crate::ArchLevel {
+            id: id.into(),
+            name: name.into(),
+            elevation,
+            height: None,
+        };
+        let levels = [
+            level("bodrum", "Bodrum kat", -3.0),
+            level("zemin-a", "ZEMİN KAT", 0.0),
+            level("giris-b", "Giriş", 1.2),
+            level("k1-b", "1. kat", 4.2),
+        ];
+        let p = BuildingProgram {
+            buildings: vec![
+                ProgramBuilding {
+                    id: "A".into(),
+                    name: "A Blok".into(),
+                    levels: vec!["bodrum".into(), "zemin-a".into()],
+                    ..Default::default()
+                },
+                ProgramBuilding {
+                    id: "B".into(),
+                    name: "B Blok".into(),
+                    levels: vec!["bodrum".into(), "giris-b".into(), "k1-b".into()],
+                    zero: Some(1.2),
+                    ..Default::default()
+                },
+            ],
+            shared: vec![SharedLevel { level: "bodrum".into(), building: "A".into() }],
+            ..Default::default()
+        };
+        assert_eq!(p.counted_levels("A"), vec!["bodrum", "zemin-a"]);
+        assert_eq!(p.counted_levels("B"), vec!["giris-b", "k1-b"]);
+        assert!(p.counted_levels("C").is_empty());
+        // A's by its name (the dotted İ folded), B's by its ±0.00 at +1.20.
+        assert_eq!(p.ground_of("A", &levels).as_deref(), Some("zemin-a"));
+        assert_eq!(p.ground_of("B", &levels).as_deref(), Some("giris-b"));
+        assert!(is_ground_name("Zemin kat") && is_ground_name("ZEMİN") && !is_ground_name("Bodrum"));
     }
 }

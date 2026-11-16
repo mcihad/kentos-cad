@@ -115,8 +115,10 @@
       binanın dosya adından. IFC dışa aktar birden çok binada her binaya EK-2 adlı bir dosya yazar.
     - Konum (§3): IFC'nin sistemi ve harita dönüşümü bina ile yol için tek yerden (`ifc_system::of`); yerel sistemde
       taban sistem ve yerel düzlem döndürülüp ölçeklenerek (`IfcMapConversionScaled`; `Scale` birim içindir, yükseklik
-      ölçeklenmez); ±0.00'ın kotu bilinmiyorsa konum yazılmaz ve söylenir, 0 sayılmaz; kaydıran afin yazılmaz. Kalan:
-      ortak bodrum alanı, ruhsat takımında bina seçimi, plan kararları.
+      ölçeklenmez); ±0.00'ın kotu bilinmiyorsa konum yazılmaz ve söylenir, 0 sayılmaz; kaydıran afin yazılmaz.
+    - Alanlar (§4): binanın katları `counted_levels`, zemin katı `ground_of`; TAKS her binanın zemin katından; binanın
+      payı `ZoningReport::of_building` (binalarınki birlikte projeninki, ortak bodrum bir kez); metraj `building`;
+      Ruhsat takımı bina seçer (`PermitSet::building`; paftanın `bina_kodu` ve `blok_no`'su). Kalan: plan kararları.
   - **B10 yapıldı (16 Kasım 2026; [ADR 8071](../adr/8071-geometry-accuracy.md); BIM-10 `[x]`):**
     - Yayın kaynağı kesit modelidir (`Model::exact`): döşeme ve mahal parçalarından, duvar düz parçalı gövdesinden geri
       alınarak (`arc_recover`); IFC profili `IfcIndexedPolyCurve` + `IfcArcIndex`; parça sayısı görüntünün işidir.

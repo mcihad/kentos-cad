@@ -332,13 +332,22 @@ fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope
                 _ => None,
             })
             .collect(),
-        building: scope.map(|s| kentos_ifc::arch::BuildingOf {
-            id: s.building.id.clone(),
-            name: s.building.name.clone(),
-            code: s.building.code.clone(),
-            usage: s.building.usage.clone(),
-            zero: s.building.zero.unwrap_or(0.0),
-            several: s.several,
+        building: scope.map(|s| {
+            // Its own areas (docs/adr/8072 §4), measured against the parcel's zoning as the künye's are.
+            let own = doc.zoning_report().and_then(|r| {
+                let arch = doc.settings().arch.as_ref()?;
+                Some(r.of_building(&arch.program, &arch.levels, &s.building.id))
+            });
+            kentos_ifc::arch::BuildingOf {
+                id: s.building.id.clone(),
+                name: s.building.name.clone(),
+                code: s.building.code.clone(),
+                usage: s.building.usage.clone(),
+                zero: s.building.zero.unwrap_or(0.0),
+                several: s.several,
+                gross_area: own.map(|o| o.0),
+                footprint: own.map(|o| o.1),
+            }
         }),
     });
     (b, written, curved, unplaced)

@@ -7,8 +7,10 @@
 //!   room (a balcony, a terrace) is out within the 30 % (22/1-l); a void (shaft, gallery) is no room.
 //! - **Katlar alanı** (4/şş, 21): the rooms counted in; **emsal harici** (22/1) together at most 30 % of the parcel's
 //!   emsal area (parcel × emsal, 5/8), what passes goes in; 5/8's own rooms (fire stairs …) out apart.
-//! - **Taban alanı** (4/bbbb): the ground storey's rooms' gross (the storey named Zemin, else the one nearest ±0.00),
-//!   5/8's rooms and outdoor rooms out (20/8: fire stairs, open car parks).
+//! - **Taban alanı** (4/bbbb: "yapıların … parseldeki izdüşümünün kapladığı alan"): the ground storey's rooms' gross
+//!   (the storey named Zemin, else the one nearest ±0.00), 5/8's rooms and outdoor rooms out (20/8: fire stairs, open car
+//!   parks). With the program's buildings (docs/adr/8072 §4), each building's ground storey (named Zemin among the
+//!   levels it counts, else the one nearest its own ±0.00); with several, the area of their rooms' contours together.
 //!
 //! - **Yapı inşaat alanı** (4/oooo): every room's, balconies, terraces and common areas in, voids out.
 //!
@@ -23,7 +25,7 @@
 //! storage's 50 %, the caretaker's 70 m²) are the next step.
 
 use kentos_contracts::{
-    AreaUnit, CellRange, CellStyle, EmsalCount, Entity, SpaceMethod, TableAlign, Zoning,
+    ArchLevel, AreaUnit, BuildingProgram, CellRange, CellStyle, EmsalCount, Entity, SpaceMethod, TableAlign, Zoning,
 };
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::region;
@@ -52,6 +54,8 @@ pub struct ZoningReport {
     pub floors: f64,
     /// Taban alanı.
     pub footprint: f64,
+    /// Each ground storey the footprint counts (docs/adr/8072 §4) with its rooms' gross there, in the buildings' order.
+    pub grounds: Vec<(String, f64)>,
     /// Each storey's rooms, in the project's order of its storeys; the rooms on none last.
     pub levels: Vec<ZoningLevel>,
     /// The footprint's outline: the ground storey's rooms it counts, their contours together (the site plan's oturum,
@@ -109,6 +113,26 @@ pub struct ZoningTable {
 pub const OVER_COLOR: &str = "#d32f2f";
 
 impl ZoningReport {
+    /// One of the program's buildings' share (docs/adr/8072 §4): its yapı inşaat alanı (the storeys it counts, a shared
+    /// one only where it is chosen) and its taban alanı (its ground storey's rooms); the buildings' together are the
+    /// project's, a shared basement once. `levels` are the project's.
+    pub fn of_building(&self, program: &BuildingProgram, levels: &[ArchLevel], building: &str) -> (f64, f64) {
+        let mine = program.counted_levels(building);
+        let construction = self
+            .levels
+            .iter()
+            .filter(|l| l.level.as_deref().is_some_and(|id| mine.contains(&id)))
+            .map(ZoningLevel::all)
+            .sum();
+        let ground = program.ground_of(building, levels);
+        let footprint = self
+            .grounds
+            .iter()
+            .find(|(g, _)| Some(g) == ground.as_ref())
+            .map_or(0.0, |(_, a)| *a);
+        (construction, footprint)
+    }
+
     /// Emsal: the floors' area over the parcel's.
     pub fn far(&self) -> f64 {
         self.floors / self.parcel
@@ -397,32 +421,43 @@ impl Document {
         out.cap = out.far_limit.map(|f| 0.30 * f * parcel);
         out.over = out.cap.map_or(0.0, |c| (out.exempt - c).max(0.0));
         out.floors = out.included + out.over;
-        // The ground storey: named Zemin, else the one nearest ±0.00; with no storeys, every room.
-        let ground = {
-            // Turkish İ lower-cases to i and a dot; the dot is dropped for the comparison.
-            let fold = |t: &str| t.to_lowercase().replace('\u{307}', "");
-            arch.levels
+        // The ground storeys: each of the program's buildings' (docs/adr/8072 §4), else the storey named Zemin, else the
+        // one nearest ±0.00; with no storeys, every room.
+        let mut grounds: Vec<String> = Vec::new();
+        for b in &program.buildings {
+            if let Some(g) = program.ground_of(&b.id, &arch.levels)
+                && !grounds.contains(&g)
+            {
+                grounds.push(g);
+            }
+        }
+        if grounds.is_empty()
+            && let Some(l) = arch
+                .levels
                 .iter()
-                .find(|l| fold(&l.name).contains("zemin"))
-                .or_else(|| {
-                    arch.levels
-                        .iter()
-                        .min_by(|a, b| a.elevation.abs().total_cmp(&b.elevation.abs()))
-                })
-                .map(|l| l.id.clone())
-        };
+                .find(|l| kentos_contracts::is_ground_name(&l.name))
+                .or_else(|| arch.levels.iter().min_by(|a, b| a.elevation.abs().total_cmp(&b.elevation.abs())))
+        {
+            grounds.push(l.id.clone());
+        }
         let counted = |r: &Room| {
             !r.void
                 && !r.outdoor
                 && r.count != EmsalCount::Outside
-                && (ground.is_none() || r.level == ground)
+                && (grounds.is_empty() || r.level.as_ref().is_some_and(|l| grounds.contains(l)))
         };
-        out.footprint = rooms
+        out.grounds = grounds
             .iter()
-            .zip(&gross)
-            .filter(|(r, _)| counted(r))
-            .map(|(_, g)| g)
-            .sum();
+            .map(|g| {
+                let on: f64 = rooms
+                    .iter()
+                    .zip(&gross)
+                    .filter(|(r, _)| counted(r) && r.level.as_ref() == Some(g))
+                    .map(|(_, a)| a)
+                    .sum();
+                (g.clone(), on)
+            })
+            .collect();
         let outline: Vec<Area> = rooms
             .iter()
             .zip(&shapes)
@@ -433,6 +468,13 @@ impl Document {
             Vec::new()
         } else {
             region::union_areas(&outline)
+        };
+        // One ground storey: its rooms' gross, as before; several (blocks, a podium and a tower): the area their
+        // contours cover on the parcel together, an overlap once.
+        out.footprint = if grounds.len() > 1 {
+            out.footprint_shape.iter().map(region::net_area).sum()
+        } else {
+            rooms.iter().zip(&gross).filter(|(r, _)| counted(r)).map(|(_, g)| g).sum()
         };
         out
     }

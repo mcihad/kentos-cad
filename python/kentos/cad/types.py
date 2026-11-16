@@ -99304,10 +99304,15 @@ class SpacesQuantified(_Model):
 class SpacesQuantities(_Model):
     """Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, with its slabs,
     ramps and stairs (docs/adr/0722 §5, 0723 §3, 0724 §5), those of the levels, phases, usages and layers given (each
-    absent: every one; a usage filter leaves out all but the spaces).
+    absent: every one; a usage filter leaves out all but the spaces). `building`: one of the program's buildings, the
+    storeys it counts (a shared level only in the building chosen for it, docs/adr/8072 §4), so the buildings' quantities
+    together are the project's; with `levels`, the levels of both.
 
-    Refusals: `level_not_found`, `layer_not_found`.
+    Refusals: `level_not_found`, `layer_not_found`, `building_not_found`.
+    Attributes:
+        building: One of the program's buildings by its id: the storeys it counts (docs/adr/8072 §4).
     """
+    building: str | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
     levels: list[str] | None | Unset = UNSET
     phases: list[ArchPhase | ArchPhaseName] | None | Unset = UNSET
@@ -99315,6 +99320,8 @@ class SpacesQuantities(_Model):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.building is not UNSET:
+            out["building"] = self.building
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
         if self.levels is not UNSET:
@@ -99328,6 +99335,7 @@ class SpacesQuantities(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SpacesQuantities:
         return cls(
+            building=data.get("building", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
             phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],

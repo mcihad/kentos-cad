@@ -905,35 +905,37 @@ number = _SpacesNumber()
 
 class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQuantified]):
     """``cad.spaces.quantities`` v1. Metraj: Çizimin mahallerini, duvarlarını ve
-    açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. Mahal: numara, ad,
-    kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik
-    (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı
-    (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır. Her kopuk sınırda,
-    kolon düşümü kapalı ve kaynak listesi olmayan eski mahaller dahil, boundaryBreak
-    nedenini ve rule son geçerli sınır olduğunu söyler; alan/çevre/hacim ve toplamlar
-    son geçerli geometriyi içerir. Geçerli satırlarda boundaryBreak yoktur. Duvar: stil,
-    kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik),
-    açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının
-    kimlikleri. Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento −
-    denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla
-    toplanır. Oda (boşluk olmayan mahal): süpürgelik (baseboard), halkalarının
-    uzunluğundan kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk; düz
-    kenarda) genişlikleri düşülerek. Döşeme (slabs): tür, kat, malzeme, kalınlık, kot
-    farkı, üst kot (katın kotu + fark), alan (delikler düşülür), aynı kattaki boşluk
-    mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık),
-    kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler
-    (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler,
-    genişlikleri ve kaplamalarıyla. Rampa (ramps): kat, genişlik, kot farkı, çizildiği
-    eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu yoksa yok), eğimli
-    uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık sayısı, plan
-    alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata bağlıysa farkı
-    (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve
-    rampRailingLength. Kiriş (beams): numara, tür (kiriş, lento, hatıl), kat, genişlik,
-    yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab) ve beton hacmi:
-    kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik − döşeme) × boy;
-    döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın tamamı; toplamı
-    beamVolume. levels, phases, usages ve layers verilen kat, tadilat durumu, kullanım
-    ve katmanlarla süzer (usages verilince yalnız mahaller).
+    açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. building ile bina
+    programının bir binası: saydığı katlar (birden çok binanın kapladığı kat yalnız
+    seçildiği binada), binaların metrajı birlikte projeninki; programda olmayan bina
+    building_not_found. Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların
+    alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan
+    bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem
+    hesabına uygulanır. Her kopuk sınırda, kolon düşümü kapalı ve kaynak listesi olmayan
+    eski mahaller dahil, boundaryBreak nedenini ve rule son geçerli sınır olduğunu
+    söyler; alan/çevre/hacim ve toplamlar son geçerli geometriyi içerir. Geçerli
+    satırlarda boundaryBreak yoktur. Duvar: stil, kat, uzunluk (taban çizgisi),
+    kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net
+    yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. Açıklık: biçim, tür,
+    numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını
+    (rule) söyler; toplamlar satırların sırasıyla toplanır. Oda (boşluk olmayan mahal):
+    süpürgelik (baseboard), halkalarının uzunluğundan kenarları boyunca duran geçişlerin
+    (kapı, döşemeye inen boşluk; düz kenarda) genişlikleri düşülerek. Döşeme (slabs):
+    tür, kat, malzeme, kalınlık, kot farkı, üst kot (katın kotu + fark), alan (delikler
+    düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre,
+    hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir,
+    toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı
+    iki oda olan geçişler, genişlikleri ve kaplamalarıyla. Rampa (ramps): kat, genişlik,
+    kot farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu
+    yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu,
+    sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu,
+    kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda
+    rampArea ve rampRailingLength. Kiriş (beams): numara, tür (kiriş, lento, hatıl),
+    kat, genişlik, yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab) ve
+    beton hacmi: kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik − döşeme)
+    × boy; döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın tamamı;
+    toplamı beamVolume. levels, phases, usages ve layers verilen kat, tadilat durumu,
+    kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
     """
     __slots__ = ()
     id = "cad.spaces.quantities"
@@ -949,6 +951,7 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         doc: Document,
         /,
         *,
+        building: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         levels: Sequence[str] | None | Unset = UNSET,
         phases: Sequence[ArchPhase | ArchPhaseName] | None | Unset = UNSET,
@@ -957,37 +960,41 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         expected: Expected | None = None,
     ) -> SpacesQuantified:
         """Metraj: Çizimin mahallerini, duvarlarını ve açıklıklarını kaynak geometriden ölçer;
-        çizimi değiştirmez. Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların
-        alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan
-        bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem
-        hesabına uygulanır. Her kopuk sınırda, kolon düşümü kapalı ve kaynak listesi olmayan
-        eski mahaller dahil, boundaryBreak nedenini ve rule son geçerli sınır olduğunu
-        söyler; alan/çevre/hacim ve toplamlar son geçerli geometriyi içerir. Geçerli
-        satırlarda boundaryBreak yoktur. Duvar: stil, kat, uzunluk (taban çizgisi),
-        kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net
-        yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. Açıklık: biçim, tür,
-        numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını
-        (rule) söyler; toplamlar satırların sırasıyla toplanır. Oda (boşluk olmayan mahal):
-        süpürgelik (baseboard), halkalarının uzunluğundan kenarları boyunca duran geçişlerin
-        (kapı, döşemeye inen boşluk; düz kenarda) genişlikleri düşülerek. Döşeme (slabs):
-        tür, kat, malzeme, kalınlık, kot farkı, üst kot (katın kotu + fark), alan (delikler
-        düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre,
-        hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir,
-        toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı
-        iki oda olan geçişler, genişlikleri ve kaplamalarıyla. Rampa (ramps): kat, genişlik,
-        kot farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu
-        yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu,
-        sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu,
-        kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda
-        rampArea ve rampRailingLength. Kiriş (beams): numara, tür (kiriş, lento, hatıl),
-        kat, genişlik, yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab) ve
-        beton hacmi: kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik − döşeme)
-        × boy; döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın tamamı;
-        toplamı beamVolume. levels, phases, usages ve layers verilen kat, tadilat durumu,
-        kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
+        çizimi değiştirmez. building ile bina programının bir binası: saydığı katlar (birden
+        çok binanın kapladığı kat yalnız seçildiği binada), binaların metrajı birlikte
+        projeninki; programda olmayan bina building_not_found. Mahal: numara, ad, kullanım,
+        kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi,
+        yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). Etkin
+        columns tercihi her yöntem hesabına uygulanır. Her kopuk sınırda, kolon düşümü
+        kapalı ve kaynak listesi olmayan eski mahaller dahil, boundaryBreak nedenini ve rule
+        son geçerli sınır olduğunu söyler; alan/çevre/hacim ve toplamlar son geçerli
+        geometriyi içerir. Geçerli satırlarda boundaryBreak yoktur. Duvar: stil, kat,
+        uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik),
+        açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının
+        kimlikleri. Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento −
+        denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla
+        toplanır. Oda (boşluk olmayan mahal): süpürgelik (baseboard), halkalarının
+        uzunluğundan kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk; düz
+        kenarda) genişlikleri düşülerek. Döşeme (slabs): tür, kat, malzeme, kalınlık, kot
+        farkı, üst kot (katın kotu + fark), alan (delikler düşülür), aynı kattaki boşluk
+        mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık),
+        kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler
+        (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler,
+        genişlikleri ve kaplamalarıyla. Rampa (ramps): kat, genişlik, kot farkı, çizildiği
+        eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu yoksa yok), eğimli
+        uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık sayısı, plan
+        alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata bağlıysa farkı
+        (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve
+        rampRailingLength. Kiriş (beams): numara, tür (kiriş, lento, hatıl), kat, genişlik,
+        yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab) ve beton hacmi:
+        kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik − döşeme) × boy;
+        döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın tamamı; toplamı
+        beamVolume. levels, phases, usages ve layers verilen kat, tadilat durumu, kullanım
+        ve katmanlarla süzer (usages verilince yalnız mahaller).
 
         Args:
             doc: The drawing it works on.
+            building: One of the program's buildings by its id: the storeys it counts (docs/adr/8072 §4).
             layers:
             levels:
             phases:
@@ -1005,6 +1012,7 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
                 nothing was written. Warnings go to :mod:`warnings` as CommandWarning.
         """
         return self.execute_input(doc, SpacesQuantities(
+            building=building,
             layers=_opt(layers, lambda x: list(x)),
             levels=_opt(levels, lambda x: list(x)),
             phases=_opt(phases, lambda x: list(x)),
@@ -1016,6 +1024,7 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         doc: Document,
         /,
         *,
+        building: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         levels: Sequence[str] | None | Unset = UNSET,
         phases: Sequence[ArchPhase | ArchPhaseName] | None | Unset = UNSET,
@@ -1025,6 +1034,7 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, SpacesQuantities(
+            building=building,
             layers=_opt(layers, lambda x: list(x)),
             levels=_opt(levels, lambda x: list(x)),
             phases=_opt(phases, lambda x: list(x)),
@@ -1036,6 +1046,7 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         doc: Document,
         /,
         *,
+        building: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         levels: Sequence[str] | None | Unset = UNSET,
         phases: Sequence[ArchPhase | ArchPhaseName] | None | Unset = UNSET,
@@ -1045,6 +1056,7 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         A refusal raises as for the call.
         """
         return self.validate_input(doc, SpacesQuantities(
+            building=building,
             layers=_opt(layers, lambda x: list(x)),
             levels=_opt(levels, lambda x: list(x)),
             phases=_opt(phases, lambda x: list(x)),
@@ -1056,6 +1068,7 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         doc: Document,
         /,
         *,
+        building: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         levels: Sequence[str] | None | Unset = UNSET,
         phases: Sequence[ArchPhase | ArchPhaseName] | None | Unset = UNSET,
@@ -1070,6 +1083,7 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         before (``replayed``) and its journal row (``call``).
         """
         return self.answer_input(doc, SpacesQuantities(
+            building=building,
             layers=_opt(layers, lambda x: list(x)),
             levels=_opt(levels, lambda x: list(x)),
             phases=_opt(phases, lambda x: list(x)),

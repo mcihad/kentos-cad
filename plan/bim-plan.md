@@ -523,7 +523,7 @@ Açıklıklı duvarın hacmi, dolu hacim eksi açıklıklardır. Bütün gövdel
 
 #### BIM-11 — Çok bina, ortak bodrum ve vaziyet [~]
 
-**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§3):** programın binası
+**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§4):** programın binası
 kodu (EK-2 §2.3: iki büyük harf ya da rakam, tek binada "00"), kullanım türü ve projenin ±0.00'ına göre ±0.00'ıyla;
 birden çok binanın kapladığı kat (ortak bodrum) seçilen binanın katı sayılır, alanı bir kez; her nesnenin binası
 katından okunur (`building_of_level`); `.kcad` mimari verisi 9; Bina programı › Binalar'da alanlar ve "Ortak katlar".
@@ -532,8 +532,12 @@ binada; proje ve saha her dosyada aynı kimlikle; IFC dışa aktar her binaya EK
 sistemde çizilen model IFC'ye taban sistemiyle (TUREF dilimi) ve yerel düzlem döndürülüp ölçeklenerek yazılır
 (`IfcMapConversionScaled`; yükseklik ölçeksiz); bina ve yolun dosyası aynı yerden; ±0.00'ın kotu bilinmiyorsa konum
 yazılmaz ve söylenir (0 sayılmaz); IfcOpenShell üç kontrol noktasını anketteki yerine oturtmanın artığı içinde (en çok
-0,45 mm) düşürür; yerleşim zinciri bütün örnek dosyalarda bağımsız denetlenir. **Kalan:** ortak bodrum alanının emsal
-ve metrajda bir kez sayılması ve ruhsat takımında bina seçimi (§4), onaylı plan kararları (§5).
+0,45 mm) düşürür; yerleşim zinciri bütün örnek dosyalarda bağımsız denetlenir. Alanlar (§4): taban alanı (TAKS) her
+binanın zemin katından (PAİY 4/1-bbbb "yapıların … izdüşümü"; önce yalnız bir zemin kat sayılıyordu); binanın payı
+(saydığı katlar, ortak bodrum yalnız seçildiği binada) ve binalarınki birlikte projeninki; bina başına IFC binanın kendi
+alanlarıyla; Metraj ve `cad.spaces.quantities` bina seçer; Ruhsat takımı bina seçer (katları, ±0.00'ından kat kodları,
+paftalarda bina kodu). **Kalan:** onaylı plan kararları (§5); vaziyet planında bütün binalar birlikte (harita tek kat
+çizer).
 
 **Kullanıcı sonucu:** Bir parselde birden çok blok ve ortak bodrum tek projede durur. Her bina kendi kodu, katları ve
 künyesiyle pilotta ayrı model dosyası verir; saha ve parsel bilgileri hepsinde aynıdır. Dayanak EK-2 §2.3 ve Tablo 2.1; EK-6 6.7, 6.55;

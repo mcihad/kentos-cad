@@ -117,6 +117,9 @@ pub struct Page {
     pub freeze: Vec<String>,
     /// The roof plan's map (docs/adr/8044 §7): the roofs whole, the storeys' other objects out.
     pub roof: bool,
+    /// Variables its sheet holds of its own (name, text), read before the drawing's: a building's set's EK-2 building
+    /// code and block (docs/adr/8072 §4).
+    pub values: Vec<(String, String)>,
 }
 
 impl Page {
@@ -138,6 +141,7 @@ impl Page {
             source: None,
             freeze: Vec::new(),
             roof: false,
+            values: Vec::new(),
         }
     }
 
@@ -159,6 +163,7 @@ impl Page {
             source: None,
             freeze: Vec::new(),
             roof: false,
+            values: Vec::new(),
         }
     }
 
@@ -186,6 +191,7 @@ impl Page {
             source: None,
             freeze: Vec::new(),
             roof: false,
+            values: Vec::new(),
         }
     }
 
@@ -210,6 +216,7 @@ impl Page {
             source: None,
             freeze: Vec::new(),
             roof: true,
+            values: Vec::new(),
         }
     }
 
@@ -241,6 +248,7 @@ impl Page {
             source: None,
             freeze: Vec::new(),
             roof: false,
+            values: Vec::new(),
         }
     }
 
@@ -273,6 +281,7 @@ impl Page {
             source: None,
             freeze: Vec::new(),
             roof: false,
+            values: Vec::new(),
         }
     }
 }
@@ -307,6 +316,7 @@ impl Page {
             source: Some(source.to_owned()),
             freeze: Vec::new(),
             roof: false,
+            values: Vec::new(),
         }
     }
 }
@@ -671,7 +681,13 @@ pub fn permit_sheets(
                     name: "notlar".into(),
                     value: VarValue::Null,
                 },
-            ],
+            ]
+            .into_iter()
+            .chain(page.values.iter().map(|(name, value)| VariableValue {
+                name: name.clone(),
+                value: text(value),
+            }))
+            .collect(),
         };
         let mut instance = crate::template::instantiate(template, &ids, &options)?;
         let sheet = &mut instance.sheet;

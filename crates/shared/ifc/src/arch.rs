@@ -80,7 +80,7 @@ pub struct Input<'a> {
 }
 
 /// The program's building a file holds (docs/adr/8072 §2): its name, code, use and ±0.00 over the project's, and whether
-/// the project has others (the künye's areas are then the project's, not this building's).
+/// the project has others (its own areas are then written, not the künye's, which are the project's; §4).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct BuildingOf {
     /// Its id in the program: its GlobalId's seed.
@@ -90,6 +90,11 @@ pub struct BuildingOf {
     pub usage: Option<String>,
     pub zero: f64,
     pub several: bool,
+    /// Its own yapı inşaat alanı and taban alanı (docs/adr/8072 §4): the levels it counts, a shared one only where it is
+    /// chosen, and its ground storey's rooms; the buildings' together are the project's. None without the parcel's
+    /// zoning (the künye's areas are measured against it).
+    pub gross_area: Option<f64>,
+    pub footprint: Option<f64>,
 }
 
 /// A room's floor and ceiling, metres over ±0.00 (docs/adr/8040 §3): its finished floor; its ceiling (its asma tavan,
@@ -1818,12 +1823,16 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         common.push(("BuildingID".to_owned(), Value::Id(id)));
         common.push(("IsPermanentID".to_owned(), Value::Bool(false)));
     }
-    // A building of several: its own use; the künye's areas are the project's, not written as this building's.
-    let several = scope.as_ref().is_some_and(|b| b.several);
+    // A building of several: its own use and its own areas (docs/adr/8072 §4), never the künye's, which are the
+    // project's.
+    let (gross_area, footprint) = match scope.as_ref().filter(|b| b.several) {
+        Some(b) => (b.gross_area, b.footprint),
+        None => (k.gross_area, k.footprint),
+    };
     if let Some(u) = scope.as_ref().and_then(|b| b.usage.as_ref()).or(k.occupancy.as_ref()) {
         common.push(("OccupancyType".to_owned(), label(u)));
     }
-    if let Some(a) = k.gross_area.filter(|_| !several) {
+    if let Some(a) = gross_area {
         common.push(("GrossPlannedArea".to_owned(), Value::Area(a)));
     }
     // The rooms' net areas together (EK-6 Tablo 6.7 `NetPlannedArea`; docs/adr/8068), as the model's spaces carry them.
@@ -1848,10 +1857,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         name: "Pset_BuildingCommon".into(),
         props: common,
     });
-    if let Some(a) = k.footprint.filter(|_| !several) {
+    if let Some(a) = footprint {
         building_quantities.push(("FootprintArea".to_owned(), Value::Area(a)));
     }
-    if let Some(a) = k.gross_area.filter(|_| !several) {
+    if let Some(a) = gross_area {
         building_quantities.push(("GrossFloorArea".to_owned(), Value::Area(a)));
     }
     let title = title.to_owned();

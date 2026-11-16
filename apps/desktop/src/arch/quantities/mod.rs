@@ -1,9 +1,9 @@
 //! Metraj (docs/adr/0342 §4, §5; `arch.quantities`): the drawing's spaces, walls, openings, slabs, the floor finishes'
 //! changes at the passages (docs/adr/0722 §5), ramps (docs/adr/0723 §3) and stairs (docs/adr/0724 §5) measured by
-//! `cad.spaces.quantities`, a level's or all, each row with the rule its numbers come from, and the totals; a room's
-//! baseboard in its own column. Panoya kopyala copies the table shown as tab-separated text; Dışa aktar ▾ writes the
-//! shown table as CSV or every table as a workbook's
-//! sheets (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
+//! `cad.spaces.quantities`, a level's, a program building's (the storeys it counts, docs/adr/8072 §4) or all, each row
+//! with the rule its numbers come from, and the totals; a room's baseboard in its own column. Panoya kopyala copies the
+//! table shown as tab-separated text; Dışa aktar ▾ writes the shown table as CSV or every table as a workbook's sheets
+//! (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
 //! `cad.spaces.edit`.
 
 use crate::arch;
@@ -75,6 +75,8 @@ pub struct Window {
     pub tab: Tab,
     /// The level shown; none: all.
     pub level: Option<String>,
+    /// The program's building shown (docs/adr/8072 §4): the storeys it counts; none: all.
+    pub building: Option<String>,
     pub answer: Result<SpacesQuantified, String>,
     /// Sayılar: the worked-out numbers to 15 significant digits (Tam) rather than as shown (docs/adr/0733 §7).
     pub exact: bool,
@@ -83,7 +85,7 @@ pub struct Window {
 #[derive(Debug, Clone)]
 pub enum Event {
     Tab(Tab),
-    /// The level's index in the list (0: all).
+    /// The choice's index in the list (0: all, then the program's buildings when it has several, then the levels).
     Level(usize),
     Copy,
     Export(WorkbookFormat),
@@ -147,12 +149,13 @@ fn short(m: kentos_commands::SpaceMethod) -> &'static str {
 }
 
 impl App {
-    fn quantities_read(&self, level: Option<&String>) -> Result<SpacesQuantified, String> {
+    fn quantities_read(&self, level: Option<&String>, building: Option<&String>) -> Result<SpacesQuantified, String> {
         let Some(doc) = self.document.as_ref() else {
             return Err("Açık çizim yok.".into());
         };
         let input = SpacesQuantities {
             levels: level.map(|l| vec![l.clone()]),
+            building: building.cloned(),
             ..Default::default()
         };
         match spaces_quantities::plan_in(&doc.model, &input) {
@@ -162,6 +165,18 @@ impl App {
             | CommandResult::NeedsInput { error } => Err(error.message),
             _ => Err(String::new()),
         }
+    }
+
+    /// The program's buildings, by id and name, when it has several (docs/adr/8072 §4): each one's quantities are the
+    /// storeys it counts, a shared one only in its building.
+    fn quantities_buildings(&self) -> Vec<(String, String)> {
+        let buildings: Vec<(String, String)> = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.settings().arch.as_ref())
+            .map(|a| a.program.buildings.iter().map(|b| (b.id.clone(), b.name.clone())).collect())
+            .unwrap_or_default();
+        if buildings.len() > 1 { buildings } else { Vec::new() }
     }
 
     /// The project's levels, by id and name.
@@ -179,10 +194,11 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        let answer = self.quantities_read(None);
+        let answer = self.quantities_read(None, None);
         self.arch.quantities = Some(Window {
             tab: Tab::Spaces,
             level: None,
+            building: None,
             answer,
             exact: false,
         });
@@ -998,12 +1014,19 @@ impl App {
                 }
             }
             Event::Level(i) => {
-                let level = i
-                    .checked_sub(1)
-                    .and_then(|k| self.quantities_levels().get(k).map(|(id, _)| id.clone()));
-                let answer = self.quantities_read(level.as_ref());
+                let buildings = self.quantities_buildings();
+                let (building, level) = match i.checked_sub(1) {
+                    None => (None, None),
+                    Some(k) if k < buildings.len() => (Some(buildings[k].0.clone()), None),
+                    Some(k) => (
+                        None,
+                        self.quantities_levels().get(k - buildings.len()).map(|(id, _)| id.clone()),
+                    ),
+                };
+                let answer = self.quantities_read(level.as_ref(), building.as_ref());
                 if let Some(w) = self.arch.quantities.as_mut() {
                     w.level = level;
+                    w.building = building;
                     w.answer = answer;
                 }
             }
@@ -1048,13 +1071,16 @@ impl App {
             return text("").into();
         };
         let levels = self.quantities_levels();
+        let buildings = self.quantities_buildings();
         let mut names = vec!["Bütün katlar".to_owned()];
+        // A building's own storeys (docs/adr/8072 §4), before the levels.
+        names.extend(buildings.iter().map(|(_, n)| format!("{n} (binanın katları)")));
         names.extend(levels.iter().map(|(_, n)| n.clone()));
-        let chosen = w
-            .level
-            .as_ref()
-            .and_then(|l| levels.iter().position(|(id, _)| id == l))
-            .map_or(0, |k| k + 1);
+        let chosen = match (&w.building, &w.level) {
+            (Some(b), _) => buildings.iter().position(|(id, _)| id == b).map_or(0, |k| k + 1),
+            (None, Some(l)) => levels.iter().position(|(id, _)| id == l).map_or(0, |k| k + 1 + buildings.len()),
+            (None, None) => 0,
+        };
         let level: Element<'_, Message> =
             Select::new(names.into_iter().map(Choice::new), Some(chosen), |i| {
                 msg(Event::Level(i))
@@ -1081,7 +1107,11 @@ impl App {
         );
         let head = row![
             words::field("Gösterilen", tabs, None),
-            words::field("Kat", container(level).width(200), None),
+            words::field(
+                if buildings.is_empty() { "Kat" } else { "Kat ya da bina" },
+                container(level).width(220),
+                None,
+            ),
         ]
         .spacing(16)
         .align_y(iced::Bottom);

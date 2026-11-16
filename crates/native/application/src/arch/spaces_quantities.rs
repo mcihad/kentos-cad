@@ -1,6 +1,6 @@
 //! `cad.spaces.quantities` v1 (docs/adr/0342 §4, plan/cad.md `CAD-ARCH-28`, `29`), read-only: the drawing's spaces,
-//! walls and openings measured from their source, those of the levels, phases, usages and layers given; each row says
-//! the rule its numbers come from. Nothing is written; the plan answers the same. The shared cases are
+//! walls and openings measured from their source, those of the levels, phases, usages and layers given (a building's:
+//! the storeys it counts, docs/adr/8072 §4); each row says the rule its numbers come from. Nothing is written; the plan answers the same. The shared cases are
 //! `fixtures/commands/v1/cad.spaces.quantities.json`.
 //!
 //! - A space: its rings' area and length; its height its own, else its level's; its volume area × height; a space
@@ -45,6 +45,19 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
             ));
         }
     }
+    // One of the program's buildings: the storeys it counts, a shared level only in its building (docs/adr/8072 §4).
+    let program = doc.program();
+    let counted: Option<Vec<&str>> = match input.building.as_deref() {
+        Some(b) if program.building(b).is_none() => {
+            return Err(fail(
+                codes::BUILDING_NOT_FOUND,
+                format!("Bina programında “{b}” kimlikli bina yok. Var olan bir binanın kimliğini verin."),
+                "building",
+            ));
+        }
+        Some(b) => Some(program.counted_levels(b)),
+        None => None,
+    };
     for (k, l) in input.layers.iter().flatten().enumerate() {
         if doc.layers().get(l).is_none() {
             return Err(fail(
@@ -65,6 +78,9 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                 .levels
                 .as_ref()
                 .is_none_or(|ls| arch.level.as_ref().is_some_and(|l| ls.contains(l)))
+            && counted
+                .as_ref()
+                .is_none_or(|ls| arch.level.as_deref().is_some_and(|l| ls.contains(&l)))
             && input
                 .phases
                 .as_ref()

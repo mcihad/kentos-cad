@@ -13,7 +13,8 @@ perimeter and the area by each method, exact fractions as floats. The rules, as 
   from the walls again), Birleştir makes the spaces one drawn space (the first keeps its id; they must touch), Böl
   cuts each along a line (the largest keeps its id), Duvarlardan bul finds the boundary from the walls round the seed
   given, else its own, else its label's point; the revision; a locked layer refuses all;
-- `cad.spaces.quantities`: spaces, walls and openings measured as the ADR says (§4), filtered by levels, phases,
+- `cad.spaces.quantities`: spaces, walls and openings measured as the ADR says (§4), filtered by levels, a program
+  building's counted storeys (ADR 8072 §4: a shared storey only in its chosen building), phases,
   usages, layers; totals summed in the rows' order; a room's baseboard, the slabs and the floor finishes' changes at
   the passages as ADR 0722 §5 says (`baseboard`, `slab_row`, `transitions` below);
 - the document finds a space from its walls again when they change (a wall moved), and breaks it (`lostEnclosure`)
@@ -114,6 +115,7 @@ class Drawing:
         self.slabs = {}       # id → (layer, fields with "parts" as exact rings, entity extras) (ADR 0722)
         self.next = NEW
         self.locked = set()
+        self.program = None   # the building program a step gave (ADR 8072 §4)
 
     def ids(self):
         kept = [i for i in IDS if BY_ID[i]["kind"] != "wall" or i in self.walls]
@@ -629,10 +631,29 @@ def slab_row(d, i, s):
     return {k: v for k, v in row.items() if v is not None}
 
 
+def counted_levels(program, building):
+    """The storeys a program's building counts (ADR 8072 §4): its own levels, a level two or more buildings span only
+    in the building its shared entry chooses."""
+    b = next(x for x in program["buildings"] if x["id"] == building)
+    out = []
+    for lv in b.get("levels", []):
+        spanning = [x for x in program["buildings"] if lv in x.get("levels", [])]
+        chosen = next((sh["building"] for sh in program.get("shared", []) if sh["level"] == lv), None)
+        if len(spanning) == 1 or chosen == building:
+            out.append(lv)
+    return out
+
+
 def quantities(d, inp):
     for k, lv in enumerate(inp.get("levels", []) or []):
         if not any(x["id"] == lv for x in LEVELS):
             return refusal("level_not_found", f"Projede “{lv}” kimlikli kat yok. Var olan bir katın kimliğini verin.", f"levels[{k}]")
+    counted = None
+    if inp.get("building") is not None:
+        b = inp["building"]
+        if d.program is None or not any(x["id"] == b for x in d.program["buildings"]):
+            return refusal("building_not_found", f"Bina programında “{b}” kimlikli bina yok. Var olan bir binanın kimliğini verin.", "building")
+        counted = counted_levels(d.program, b)
     for k, ly in enumerate(inp.get("layers", []) or []):
         if ly not in LAYERS and ly != "pafta":
             return refusal("layer_not_found", f"“{ly}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", f"layers[{k}]")
@@ -640,6 +661,7 @@ def quantities(d, inp):
     def takes(layer_id, arch):
         return ((inp.get("layers") is None or layer_id in inp["layers"])
                 and (inp.get("levels") is None or arch.get("level") in inp["levels"])
+                and (counted is None or arch.get("level") in counted)
                 and (inp.get("phases") is None or arch.get("phase") in inp["phases"]))
     on_wall, openings = {}, []
     recess = ("niche", "flue")
@@ -1245,6 +1267,26 @@ def quantities_cases():
     ]:
         d, made = drawn()
         c.add(name, [made, quant_step(d, inp)])
+    # Two buildings sharing the ground storey, counted in A (ADR 8072 §4): A's quantities the ground's, B's the 1. kat's;
+    # the two together the project's levels, the shared storey once.
+    blocks = {"buildings": [{"id": "a", "name": "A Blok", "levels": ["zemin"], "code": "A1"},
+                            {"id": "b", "name": "B Blok", "levels": ["zemin", "kat-1"], "code": "B1"}],
+              "shared": [{"level": "zemin", "building": "a"}]}
+
+    def program_step(d):
+        d.program = blocks
+        return {"op": "execute", "command": "cad.program.edit", "input": {"program": blocks},
+                "result": {"status": "completed", "output": "$any", "warnings": "$any"}, "expect": {"revision": "changed"}}
+    for name, inp in [
+        ("bina süzgeci: ortak kat seçildiği binada (A)", {"building": "a"}),
+        ("bina süzgeci: öbür bina yalnız kendi katını sayar (B)", {"building": "b"}),
+        ("bina ve kat birlikte: ikisinin katları", {"building": "b", "levels": ["zemin", "kat-1"]}),
+        ("programda olmayan bina reddedilir", {"building": "c"}),
+    ]:
+        d, made = drawn()
+        c.add(name, [made, program_step(d), quant_step(d, inp)])
+    d, made = drawn()
+    c.add("programsız projede bina reddedilir", [made, quant_step(d, {"building": "a"})])
     return c.cases
 
 

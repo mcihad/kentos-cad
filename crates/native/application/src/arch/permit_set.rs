@@ -8,6 +8,9 @@
 //! - The site plan draws the ground storey (with the objects on no storey, the parcel among them) at 1/500, 1/1000
 //!   when 1/500 does not fit A0, around the parcel (docs/adr/8032), else the ground storey.
 //! - The storeys' EK-2 codes from their elevations: K00 at ±0.00, K01 … above, B01 … below.
+//! - A building's set (docs/adr/8072 §4; EK-2 §2.3: the blocks' projects prepared apart, the building code in the file
+//!   name): the storeys it counts, their codes from its own ±0.00, each sheet its code (`bina_kodu`) and block
+//!   (`blok_no`) of its own; the information sheet, the site plan and the tables are the parcel's as they are.
 //! - A tadilat set (docs/adr/8039 §6; PAİY 4(1)(dddd), 58; the Mimarlar Odası's three techniques): each storey's plan
 //!   three times, as it stands (Mevcut durum), with mevcut, iptal and ilave each drawn its own way (Tadilat projesi)
 //!   and as it will stand (Yeni durum), each map linked to the set's named view of that state; the site plan to its own
@@ -40,6 +43,10 @@ pub struct PermitSet {
     pub lists: Vec<ListSheet>,
     /// A tadilat set (docs/adr/8039 §6): each storey's plan as Mevcut durum, Tadilat projesi and Yeni durum show it.
     pub renovation: bool,
+    /// One of the program's buildings by its id (docs/adr/8072 §4): the storeys it counts (a shared one only in the
+    /// building chosen for it), their EK-2 codes from its own ±0.00, its ground storey on the site plan, each sheet its
+    /// building code and block; none: the project's storeys.
+    pub building: Option<String>,
 }
 
 /// A tadilat set's plans of a storey (docs/adr/8039 §6), in their order: the view each is linked to and the words its
@@ -323,13 +330,34 @@ pub(crate) fn pages(
     tables: &[(String, [f64; 4])],
     lists: &[ListSheet],
     renovation: bool,
+    building: Option<&str>,
 ) -> Result<Planned, Stop> {
-    let levels = doc
+    let mut levels = doc
         .settings()
         .arch
         .as_ref()
         .map(|a| a.levels.clone())
         .unwrap_or_default();
+    // One of the program's buildings (docs/adr/8072 §4): the storeys it counts, their codes from its own ±0.00, each
+    // sheet its EK-2 building code and block.
+    let program = doc.program();
+    let mut zero = 0.0;
+    let mut values: Vec<(String, String)> = Vec::new();
+    if let Some(id) = building {
+        let Some(b) = program.building(id) else {
+            return Err(Stop::failed(error(
+                crate::codes::BUILDING_NOT_FOUND,
+                format!("Bina programında “{id}” kimlikli bina yok. Var olan bir binanın kimliğini verin."),
+                Some("building".into()),
+            )));
+        };
+        let counted = program.counted_levels(id);
+        levels.retain(|l| counted.contains(&l.id.as_str()));
+        zero = b.zero.unwrap_or(0.0);
+        let code = b.code.clone().unwrap_or_else(|| "00".to_owned());
+        values.push(("bina_kodu".to_owned(), code.clone()));
+        values.push(("blok_no".to_owned(), b.code.clone().unwrap_or_else(|| b.name.clone())));
+    }
     if levels.is_empty() {
         return Err(Stop::failed(error(
             crate::codes::LEVEL_NOT_FOUND,
@@ -340,7 +368,7 @@ pub(crate) fn pages(
     let codes = permit::level_codes(
         &levels
             .iter()
-            .map(|l| (l.id.clone(), l.elevation))
+            .map(|l| (l.id.clone(), l.elevation - zero))
             .collect::<Vec<_>>(),
     );
     let code_of = |id: &str| {
@@ -616,6 +644,10 @@ pub(crate) fn pages(
     if !tables.is_empty() && fits_tables(paper.paper) {
         out.push(Page::tables(tables.to_vec(), plot));
     }
+    // A building's set: every sheet its building code and block (docs/adr/8072 §4).
+    for page in &mut out {
+        page.values = values.clone();
+    }
     Ok(Planned {
         pages: out,
         paper,
@@ -730,6 +762,7 @@ pub fn execute(
         &input.tables,
         &input.lists,
         input.renovation,
+        input.building.as_deref(),
     )
     .map_err(|s| s.into_error().message)?;
     if let Some(views) = &planned.views {
