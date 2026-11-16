@@ -4,9 +4,9 @@ code.
 
 The drawing is section_building.py's: two storeys, 16 walls, 14 openings (5 doors, 9 windows), 10 rooms, 3 slabs,
 16 columns, 8 beams and a stair. A case says what the file holds (bytes and digest aside): the schema EK-5 §5.4 asks
-(IFC 4.3, `IFC4X3_ADD2`) and how many of each class, counted from the definition. A ramp is not written yet and is
-said; a drawing without a building writes nothing. The file's content is arch_ifc_check.py's: IfcOpenShell against the
-same definition.
+(IFC 4.3, `IFC4X3_ADD2`) and how many of each class, counted from the definition. A ramp is written (docs/adr/8070
+§1) and nothing is said of it; grids all in one direction are no IfcGrid and are said (§4); a drawing without a
+building writes nothing. The file's content is arch_ifc_check.py's: IfcOpenShell against the same definition.
 
     python3 scripts/fixtures/arch_ifc_cases.py [--check]
 """
@@ -73,7 +73,7 @@ def output(path, d=SETUP):
 
 
 def with_ramp():
-    """The building with a ramp at the entrance: the file is written, the ramp is not, and that is said."""
+    """The building with a ramp at the entrance: the file is written with it, nothing said."""
     d = copy.deepcopy(SETUP)
     n = max(e["id"] for e in d["entities"]) + 1
     d["entities"].append({"kind": "ramp", "id": n, "layerId": "merdiven", "attrs": {},
@@ -81,6 +81,15 @@ def with_ramp():
                           "slope": 5.0, "arch": {"level": "zemin"}})
     d["uids"].append(sb.uid(n))
     return d
+
+
+def one_way():
+    """The building with its grids A–D alone (1–3 taken away): all in one direction, they make no IfcGrid."""
+    d = copy.deepcopy(SETUP)
+    keep = [i for i, e in enumerate(d["entities"]) if not (e["kind"] == "grid" and e["name"].isdigit())]
+    d["entities"] = [d["entities"][i] for i in keep]
+    d["uids"] = [d["uids"][i] for i in keep]
+    return numbered(d)
 
 
 def numbered(d):
@@ -116,6 +125,7 @@ def cases():
     path_words = "IFC'nin yolu boş ya da göreli; mutlak bir .ifc yolu verin."
     there = "$fixture:arch/v1/ifc/var.ifc"
     ramp = with_ramp()
+    lone = one_way()
     ground = ground_only()
     nothing = without_building()
     return [
@@ -130,12 +140,18 @@ def cases():
                    failed("file_exists", "$tmp:bina-4.ifc var; üzerine yazmak için overwrite verin.", "path")),
               step("execute", {"path": "$tmp:bina-4.ifc", "stamp": STAMP, "overwrite": True},
                    completed(output("$tmp:bina-4.ifc")))]),
-        case("Rampa henüz yazılmaz ve söylenir",
+        case("Rampa yazılır, bir şey söylenmez",
              [step("execute", {"path": "$tmp:bina-5.ifc", "stamp": STAMP},
-                   completed(output("$tmp:bina-5.ifc", ramp),
-                             [{"code": "export_losses",
-                               "message": "1 rampa IFC'ye yazılmadı: henüz IFC'ye aktarılmıyor."}]))],
+                   completed(output("$tmp:bina-5.ifc", ramp)))],
              setup=ramp),
+        case("Tek yönde akslar ızgara olmaz ve söylenir",
+             [step("execute", {"path": "$tmp:bina-20.ifc", "stamp": STAMP},
+                   completed(output("$tmp:bina-20.ifc", lone),
+                             [{"code": "export_losses",
+                               "message": f"{sum(1 for e in lone['entities'] if e['kind'] == 'grid')} aks IFC'ye "
+                                          "yazılmadı: katında hep bir yönde; IFC'nin aks ızgarası iki yönde aks "
+                                          "ister."}]))],
+             setup=lone),
         case("Boş yol", [step("execute", {"path": ""}, failed("invalid_file_path", path_words, "path"))]),
         case("Göreli yol", [step("execute", {"path": "bina.ifc"}, failed("invalid_file_path", path_words, "path"))]),
         case("IFC değil", [step("execute", {"path": "$tmp:bina.dxf"},
@@ -151,23 +167,19 @@ def cases():
         case("Bina yok: yalnız akslar ve kesit işaretleri",
              [step("execute", {"path": "$tmp:bina-7.ifc", "stamp": STAMP},
                    failed("invalid_ifc", "Yazılacak bina yok: çizimde gövdesi olan duvar, döşeme, kolon, kiriş, çatı, "
-                          "korkuluk, merdiven ya da mahal yok."))],
+                          "korkuluk, merdiven, rampa ya da mahal yok."))],
              setup=nothing),
-        case("Planı: rampa uyarısıyla",
+        case("Planı: rampalı bina, uyarısız",
              [step("plan", {"path": "$tmp:bina-8.ifc", "stamp": STAMP},
-                   completed(output("$tmp:bina-8.ifc", ramp),
-                             [{"code": "export_losses",
-                               "message": "1 rampa IFC'ye yazılmadı: henüz IFC'ye aktarılmıyor."}]))],
+                   completed(output("$tmp:bina-8.ifc", ramp)))],
              setup=ramp),
-        case("Doğrulama: rampa uyarısıyla",
-             [step("validate", {"path": "$tmp:bina-9.ifc"},
-                   completed(None, [{"code": "export_losses",
-                                     "message": "1 rampa IFC'ye yazılmadı: henüz IFC'ye aktarılmıyor."}]))],
+        case("Doğrulama: rampalı bina, uyarısız",
+             [step("validate", {"path": "$tmp:bina-9.ifc"}, completed(None))],
              setup=ramp),
         case("Doğrulama: bina yok",
              [step("validate", {"path": "$tmp:bina-10.ifc"},
                    failed("invalid_ifc", "Yazılacak bina yok: çizimde gövdesi olan duvar, döşeme, kolon, kiriş, çatı, "
-                          "korkuluk, merdiven ya da mahal yok."))],
+                          "korkuluk, merdiven, rampa ya da mahal yok."))],
              setup=nothing),
         case("Planı: göreli yol", [step("plan", {"path": "bina.ifc"}, failed("invalid_file_path", path_words, "path"))]),
         case("Doğrulama: dosya var",

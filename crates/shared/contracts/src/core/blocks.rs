@@ -215,6 +215,9 @@ pub fn card_problem(card: &crate::entity::BlockCard) -> Option<String> {
     if card.version == 0 {
         return Some("sürüm en az 1 olmalı.".into());
     }
+    if let Some(problem) = card.element.as_ref().and_then(crate::entity::BlockElement::problem) {
+        return Some(format!("yapı elemanı: {problem}"));
+    }
     if let Some(c) = &card.category
         && (c.trim().is_empty() || c.trim() != c)
     {

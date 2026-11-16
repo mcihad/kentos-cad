@@ -296,3 +296,98 @@ fn the_grids_are_one_rectangular_ifc_grid_and_one_direction_alone_is_left_out() 
     assert_eq!(left.len(), 4, "{:?}", written.left);
     assert!(left.iter().all(|l| l.why == kentos_ifc::arch::Why::OneWay));
 }
+
+/// Kitaplık blokları yapı elemanı olarak (docs/adr/8070 §5): KentOS's library's Asansör, Lavabo, Masa and Dolap placed
+/// on the section building are an IfcTransportElement ELEVATOR (its rated capacity from its KISI and YUK attributes), an
+/// IfcSanitaryTerminal WASHHANDBASIN, an IfcFurniture TABLE and an IfcFurniture USERDEFINED named for its block; each a
+/// box over its drawn outline from its floor up its card's height (the lift's 1.20 × 1.50 m cabin drawn with its walls,
+/// doors and counterweight: x 0.17 to 1.43, y 0.015 (the landing door's face) to 1.96 (the counterweight's back)); the Kot işareti, no building element, is none. The section model has their
+/// boxes on Tefriş's and Asansör's layers. The file writes the kilogram and the lift's capacity.
+#[test]
+fn the_library_s_fixtures_are_their_ifc_classes_with_their_bodies() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer
+    };
+    let library = include_str!("../../../../../catalog/v1/blocks/kentos-temel.kblok");
+    run(&mut doc, "cad.blocks.edit", serde_json::json!({"operation": "import", "library": library}));
+    let place = |doc: &mut Document, name: &str, x: f64, y: f64, extra: serde_json::Value| -> String {
+        let mut input = serde_json::json!({"name": name, "at": {"x": x, "y": y}, "layerId": "0",
+                                           "arch": {"level": "zemin"}});
+        for (k, v) in extra.as_object().into_iter().flatten() {
+            input[k] = v.clone();
+        }
+        let made = run(doc, "cad.blocks.insert", input);
+        made["output"]["uid"]
+            .as_str()
+            .or_else(|| made["output"]["uids"][0].as_str())
+            .unwrap()
+            .to_owned()
+    };
+    let lift = place(&mut doc, "Asansör", 5.0, 6.0, serde_json::json!({"attributes": {"KISI": "8", "YUK": "630"}}));
+    let basin = place(&mut doc, "Lavabo", 8.5, 0.2, serde_json::Value::Null);
+    let table = place(&mut doc, "Masa", 2.0, 6.5, serde_json::Value::Null);
+    let wardrobe = place(&mut doc, "Dolap", 0.2, 2.0, serde_json::Value::Null);
+    let mark = place(&mut doc, "Kot işareti", 1.0, 1.0, serde_json::Value::Null);
+    let (b, written) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    let of = |uid: &str| {
+        let id = kentos_domain::Uuid::parse_str(uid).unwrap().as_u128();
+        b.elements.iter().find(|e| e.id == Some(id))
+    };
+    assert!(of(&mark).is_none(), "a level mark is no building element");
+    assert_eq!(written.fixtures, 4);
+    let lift_el = of(&lift).expect("the lift");
+    assert_eq!((lift_el.class, lift_el.predefined), (Class::TransportElement, "ELEVATOR"));
+    assert_eq!(lift_el.name, "MM-TSM-Asansör");
+    let capacity = lift_el
+        .psets
+        .iter()
+        .find(|p| p.name == "Pset_TransportElementCommon")
+        .expect("its capacity");
+    assert!(capacity.props.contains(&("CapacityPeople".into(), Value::Count(8))));
+    assert!(capacity.props.contains(&("CapacityWeight".into(), Value::Mass(630.0))));
+    let span = |e: &kentos_ifc::building::Element| match &e.shapes[..] {
+        [kentos_ifc::building::Shape::Prism { rings, bottom, top }] => {
+            let xs: Vec<f64> = rings[0].iter().map(|p| p[0]).collect();
+            let ys: Vec<f64> = rings[0].iter().map(|p| p[1]).collect();
+            let w = xs.iter().cloned().fold(f64::MIN, f64::max) - xs.iter().cloned().fold(f64::MAX, f64::min);
+            let d = ys.iter().cloned().fold(f64::MIN, f64::max) - ys.iter().cloned().fold(f64::MAX, f64::min);
+            (w, d, *bottom, *top)
+        }
+        other => panic!("{other:?}"),
+    };
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-6;
+    let (w, d, bottom, top) = span(lift_el);
+    assert!(near(w, 1.26) && near(d, 1.945) && near(bottom, 0.0) && near(top, 2.2), "{w} {d} {bottom} {top}");
+    let basin_el = of(&basin).expect("the basin");
+    assert_eq!((basin_el.class, basin_el.predefined), (Class::SanitaryTerminal, "WASHHANDBASIN"));
+    assert!(near(span(basin_el).3, 0.85));
+    let table_el = of(&table).expect("the table");
+    assert_eq!((table_el.class, table_el.predefined, table_el.object_type.as_deref()), (Class::Furniture, "TABLE", None));
+    assert!(near(span(table_el).3, 0.75));
+    let wardrobe_el = of(&wardrobe).expect("the wardrobe");
+    assert_eq!(
+        (wardrobe_el.predefined, wardrobe_el.object_type.as_deref()),
+        ("USERDEFINED", Some("Dolap"))
+    );
+    // The section model holds their boxes.
+    let m = kentos_native_application::sections::model(&doc);
+    let layer_of = |uid: &str| {
+        m.owners
+            .iter()
+            .position(|o| o.as_deref() == Some(uid))
+            .map(|i| m.looks[i].layer.clone())
+    };
+    assert_eq!(layer_of(&lift).as_deref(), Some("MM-ASAN-GENEL"));
+    assert_eq!(layer_of(&basin).as_deref(), Some("MM-TEFR-VITRIFIYE"));
+    assert_eq!(layer_of(&table).as_deref(), Some("MM-TEFR-MOBILYA"));
+    assert_eq!(layer_of(&mark), None);
+    let text = kentos_ifc::building::write(&b);
+    assert!(text.contains("IFCSIUNIT(*,.MASSUNIT.,.KILO.,.GRAM.)"));
+    assert!(text.contains("IFCMASSMEASURE(630.)") && text.contains("IFCCOUNTMEASURE(8)"));
+    assert!(text.contains("IFCTRANSPORTELEMENT(") && text.contains("IFCSANITARYTERMINAL(") && text.contains("IFCFURNITURE("));
+}

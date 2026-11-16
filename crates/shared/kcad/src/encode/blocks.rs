@@ -107,14 +107,15 @@ impl<'d> Encoder<'d> {
         Ok(())
     }
 
-    /// A block's card: tags (4), version (7), category (8); a version of 0, an empty category or an empty, folded
-    /// twice or untrimmed tag is refused, as the reader refuses it.
+    /// A block's card: tags (4), element (7), version (7), category (8); a version of 0, an empty category or an empty,
+    /// folded twice or untrimmed tag is refused, as the reader refuses it.
     fn card(&mut self, card: &'d kentos_contracts::BlockCard) -> Result<(), KcadError> {
         if let Some(problem) = kentos_contracts::blocks::card_problem(card) {
             return Err(self.fail(Code::BadValue, &problem));
         }
         let n = 1 + usize::from(!card.tags.is_empty()) + usize::from(card.category.is_some())
-            + usize::from(card.publication.is_some());
+            + usize::from(card.publication.is_some())
+            + usize::from(card.element.is_some());
         self.open(n, true)?;
         if !card.tags.is_empty() {
             self.key("tags");
@@ -126,6 +127,11 @@ impl<'d> Encoder<'d> {
                 e.close();
                 Ok(())
             })?;
+        }
+        // Its building element (architecture data 2, docs/adr/8070 §5).
+        if let Some(el) = &card.element {
+            self.key("element");
+            self.at(Seg::Name("element"), |e| e.block_element(el))?;
         }
         self.key("version");
         self.at(Seg::Name("version"), |e| {
@@ -151,6 +157,31 @@ impl<'d> Encoder<'d> {
                 e.close();
                 Ok(())
             })?;
+        }
+        self.close();
+        Ok(())
+    }
+
+    /// A card's building element: class (5), height (6), elevation (9), predefined (10).
+    fn block_element(&mut self, el: &'d kentos_contracts::BlockElement) -> Result<(), KcadError> {
+        let n = 1
+            + usize::from(el.height.is_some())
+            + usize::from(el.elevation.is_some())
+            + usize::from(el.predefined.is_some());
+        self.open(n, true)?;
+        self.key("class");
+        self.at(Seg::Name("class"), |e| e.text(el.class.name()))?;
+        if let Some(h) = el.height {
+            self.key("height");
+            self.at(Seg::Name("height"), |e| e.float(h))?;
+        }
+        if let Some(z) = el.elevation {
+            self.key("elevation");
+            self.at(Seg::Name("elevation"), |e| e.float(z))?;
+        }
+        if let Some(t) = &el.predefined {
+            self.key("predefined");
+            self.at(Seg::Name("predefined"), |e| e.text(t))?;
         }
         self.close();
         Ok(())

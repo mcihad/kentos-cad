@@ -7,7 +7,7 @@
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    BLOCKS_FORMAT, BLOCKS_PUBLICATION_VERSION, BLOCKS_TYPE_VALUES_VERSION, BLOCKS_VERSION,
+    BLOCKS_ELEMENT_VERSION, BLOCKS_FORMAT, BLOCKS_VERSION,
     BlockDefinition, BlockEditOperation, BlockId, BlocksEdit, BlocksEditPlan, BlocksEdited,
     CommandResult, Entity,
 };
@@ -168,10 +168,10 @@ fn check(
                 return Err(invalid("biçimi kentos.blocks değil".into()));
             }
             let version = match file.get("version").and_then(serde_json::Value::as_u64) {
-                Some(v) if v == u64::from(BLOCKS_VERSION) || v == u64::from(BLOCKS_PUBLICATION_VERSION) || v == u64::from(BLOCKS_TYPE_VALUES_VERSION) => v,
+                Some(v) if (u64::from(BLOCKS_VERSION)..=u64::from(BLOCKS_ELEMENT_VERSION)).contains(&v) => v,
                 Some(v) => {
                     return Err(invalid(format!(
-                        "sürümü {v}; bu KentOS {BLOCKS_VERSION}, {BLOCKS_PUBLICATION_VERSION} ve {BLOCKS_TYPE_VALUES_VERSION}. sürümleri okur"
+                        "sürümü {v}; bu KentOS {BLOCKS_VERSION}–{BLOCKS_ELEMENT_VERSION}. sürümleri okur"
                     )));
                 }
                 None => return Err(invalid("sürümü yok".into())),
@@ -187,8 +187,13 @@ fn check(
             {
                 return Err(invalid("bileşen yayın kimliği içeren kitaplık 2. sürüm olmalı".into()));
             }
-            if version < u64::from(kentos_commands::block_library_version(&blocks)) {
-                return Err(invalid("ortak tip değeri içeren kitaplık 3. sürüm olmalı; eski okuyucular boyutları yanlış yorumlamamalı".into()));
+            let needed = kentos_commands::block_library_version(&blocks);
+            if version < u64::from(needed) {
+                return Err(invalid(if needed == BLOCKS_ELEMENT_VERSION {
+                    "yapı elemanı sınıfı taşıyan kitaplık 4. sürüm olmalı; eski okuyucular sınıfı düşürmemeli".into()
+                } else {
+                    "ortak tip değeri içeren kitaplık 3. sürüm olmalı; eski okuyucular boyutları yanlış yorumlamamalı".into()
+                }));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             take(

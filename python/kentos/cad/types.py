@@ -983,7 +983,7 @@ class BlockEditOperation(_StrEnum):
     - ``sync``: Its inserts' attribute values made to fit its definition (“Öznitelikleri eşitle”, ATTSYNC; docs/adr/0317 §2):
     - ``fields``: Its inserts' fields filled again (“Alanları güncelle”, UPDATEFIELD; docs/adr/0317 §1); every block's when no
     - ``place``: Where inserts (`uids`) show a movable attribute (`tag`): at `at`, a point of the drawing; absent, where the
-    - ``card``: Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags` and `description`; its version is
+    - ``card``: Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags`, `description` and its building element
     - ``dynamic``: Its parameters and actions (“Dinamik blok”, docs/adr/0318 §1): `dynamic`, or none to make it a plain block;
     """
     RENAME = "rename"
@@ -1006,6 +1006,22 @@ class BlockEditOperation(_StrEnum):
 
 BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import", "units", "update", "sync", "fields", "place", "card", "dynamic"]
 """The names of :class:`BlockEditOperation`, for a plain string."""
+
+
+class BlockElementClass(_StrEnum):
+    """A block's building element class (EK-5 Tablo 5.1).
+
+    - ``furniture``: Mobilya (`IfcFurniture`, MBL): a table, a chair, a bed, a wardrobe, a kitchen unit.
+    - ``sanitaryTerminal``: Sıhhi tesisat ucu (`IfcSanitaryTerminal`, STT): a basin, a toilet, a shower, a bath, a sink.
+    - ``transportElement``: Taşıma elemanı (`IfcTransportElement`, TSM): a lift.
+    """
+    FURNITURE = "furniture"
+    SANITARY_TERMINAL = "sanitaryTerminal"
+    TRANSPORT_ELEMENT = "transportElement"
+
+
+BlockElementClassName = Literal["furniture", "sanitaryTerminal", "transportElement"]
+"""The names of :class:`BlockElementClass`, for a plain string."""
 
 
 class BlockFileMode(_StrEnum):
@@ -20364,11 +20380,14 @@ class BlockCard(_Model):
         version: How many times its definition has changed since it was made: 1 when made; each change of its objects, base,
             attributes or unit adds one. Unit: version.
         category: A path of categories by `/` (`Mimari/Kapılar`); absent: none.
+        element: What it is as a building element (docs/adr/8070 §5): its class, its type and its body. Absent: no building
+            element (a mark, a title block, a symbol), which the building's model does not hold.
         publication: Stable library identity, independent of the drawing's local edit counter.
         tags: Words it is found by, each once, Turkish case folded.
     """
     version: int
     category: str | None | Unset = UNSET
+    element: BlockElement | None | Unset = UNSET
     publication: BlockPublication | None | Unset = UNSET
     tags: list[str] | Unset = UNSET
 
@@ -20377,6 +20396,8 @@ class BlockCard(_Model):
         out["version"] = self.version
         if self.category is not UNSET:
             out["category"] = self.category
+        if self.element is not UNSET:
+            out["element"] = None if self.element is None else self.element.to_json()
         if self.publication is not UNSET:
             out["publication"] = None if self.publication is None else self.publication.to_json()
         if self.tags is not UNSET:
@@ -20388,6 +20409,7 @@ class BlockCard(_Model):
         return cls(
             version=data["version"],
             category=data.get("category", UNSET),
+            element=UNSET if "element" not in data else None if data["element"] is None else BlockElement.from_json(data["element"]),
             publication=UNSET if "publication" not in data else None if data["publication"] is None else BlockPublication.from_json(data["publication"]),
             tags=list(data["tags"]) if "tags" in data else UNSET,
         )
@@ -20531,6 +20553,42 @@ class BlockDefinition(_Model):
             dynamic=UNSET if "dynamic" not in data else None if data["dynamic"] is None else DynamicBlock.from_json(data["dynamic"]),
             units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
             xref=UNSET if "xref" not in data else None if data["xref"] is None else XrefSource.from_json(data["xref"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockElement(_Model):
+    """A block as a building element (docs/adr/8070 §5; EK-5 Tablo 5.1, EK-6 Tablo 6.35, 6.53, 6.64): its class and type,
+    and its body: the block's drawn outline in plan from its underside, `elevation` over its floor, `height` up.
+    Attributes:
+        elevation: Its underside over its floor, metres (a wall unit's, a wall-hung basin's); absent: 0. Unit: length.
+        height: Its body's height, metres; absent: no body, its outline in plan only. Unit: length.
+        predefined: Its type as IFC 4.3 spells it (`TABLE`, `WASHHANDBASIN`, `ELEVATOR`; [`BlockElementClass::types`]);
+            `USERDEFINED` takes the block's name as its object type. Absent: none, which EK-6 counts as missing.
+    """
+    class_: BlockElementClass | BlockElementClassName
+    elevation: float | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    predefined: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = _enum_out(self.class_)
+        if self.elevation is not UNSET:
+            out["elevation"] = None if self.elevation is None else float(self.elevation)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.predefined is not UNSET:
+            out["predefined"] = self.predefined
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockElement:
+        return cls(
+            class_=_enum_in(BlockElementClass, data["class"]),
+            elevation=UNSET if "elevation" not in data else None if data["elevation"] is None else float(data["elevation"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            predefined=data.get("predefined", UNSET),
         )
 
 
@@ -21155,6 +21213,8 @@ class BlocksEdit(_Model):
         clear_publication: `card`: explicitly detach the publication identity; incompatible with `publication`.
         description: `card`: its description (empty: none).
         dynamic: `dynamic`: the parameters and actions (absent: none, a plain block).
+        element: `card`: what it is as a building element (docs/adr/8070 §5): its class, type and body; absent keeps it, null
+            takes it away.
         entities: `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
             docs/adr/0316 §1).
         expected_revision: The document revision the input was prepared against, as decimal text.
@@ -21188,6 +21248,7 @@ class BlocksEdit(_Model):
     clear_publication: bool | None | Unset = UNSET
     description: str | None | Unset = UNSET
     dynamic: DynamicBlock | None | Unset = UNSET
+    element: BlockElement | None | Unset = UNSET
     entities: list[Entity] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
@@ -21226,6 +21287,8 @@ class BlocksEdit(_Model):
             out["description"] = self.description
         if self.dynamic is not UNSET:
             out["dynamic"] = None if self.dynamic is None else self.dynamic.to_json()
+        if self.element is not UNSET:
+            out["element"] = None if self.element is None else self.element.to_json()
         if self.entities is not UNSET:
             out["entities"] = None if self.entities is None else [e0.to_json() for e0 in self.entities]
         if self.expected_revision is not UNSET:
@@ -21273,6 +21336,7 @@ class BlocksEdit(_Model):
             clear_publication=data.get("clearPublication", UNSET),
             description=data.get("description", UNSET),
             dynamic=UNSET if "dynamic" not in data else None if data["dynamic"] is None else DynamicBlock.from_json(data["dynamic"]),
+            element=UNSET if "element" not in data else None if data["element"] is None else BlockElement.from_json(data["element"]),
             entities=UNSET if "entities" not in data else None if data["entities"] is None else [Entity.from_json(e0) for e0 in data["entities"]],
             expected_revision=data.get("expectedRevision", UNSET),
             layer_id=data.get("layerId", UNSET),
@@ -141542,6 +141606,9 @@ __all__ = [
     "BlockDefinition",
     "BlockEditOperation",
     "BlockEditOperationName",
+    "BlockElement",
+    "BlockElementClass",
+    "BlockElementClassName",
     "BlockExtractValue",
     "BlockFileExported",
     "BlockFileImported",

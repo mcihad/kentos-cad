@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod addresses;
+mod arch_elements;
 mod arch_performance;
 mod annotation;
 mod arrays;

@@ -73,6 +73,14 @@ class Block:
     def dynamic(self, parameters, actions):
         self.data["dynamic"] = {"parameters": parameters, "actions": actions}
 
+    def element(self, cls, predefined, height, elevation=None):
+        """What the block is as a building element (docs/adr/8070 §5): its class (furniture, sanitaryTerminal,
+        transportElement), its IFC 4.3 type and its body's height (and underside over the floor)."""
+        e = {"class": cls, "predefined": predefined, "height": float(height)}
+        if elevation is not None:
+            e["elevation"] = float(elevation)
+        self.data["card"]["element"] = e
+
 
 Q = math.pi / 2
 blocks = []
@@ -457,6 +465,10 @@ lift.dynamic(
       "min": P(-0.2, 0.88), "max": P(4.5, 2.5)},
      {"kind": "stretch", "parameter": "Kapı genişliği", "pieces": [landing_door, cabin_door],
       "min": P(1.05, -0.1), "max": P(1.2, 0.1)}])
+# Its rated capacity (EK-6 Tablo 6.64: CapacityPeople, CapacityWeight), the lift's own: hidden attributes each insert
+# fills; empty, the model says it is missing (docs/adr/8070 §5).
+lift.attribute("KISI", (0.2, -0.3), 0.1, prompt="Kişi kapasitesi", invisible=True)
+lift.attribute("YUK", (0.2, -0.45), 0.1, prompt="Yük kapasitesi (kg)", invisible=True)
 blocks.append(lift)
 
 # ── A parking place (docs/adr/8045 §6): Otopark Yönetmeliği 5/1-h-8, 9's stall, the manoeuvring room in front of
@@ -494,7 +506,38 @@ stall.dynamic(
      {"kind": "stretch", "parameter": "Boy", "pieces": [outline], "min": P(-0.5, 2.45), "max": P(5.0, 8.0)}])
 blocks.append(stall)
 
-LIBRARY = {"format": "kentos.blocks", "version": 1, "blocks": [b.data for b in blocks]}
+# ── What each block is as a building element (docs/adr/8070 §5; EK-5 Tablo 5.1, EK-6 Tablo 6.35, 6.53, 6.64): its IFC
+# class and type, its body a box over its drawn outline from the floor up to its top. The tops of the basin (85 cm),
+# the toilet (42 cm, its bowl's rim without the seat) and the urinal (70 cm, its front edge) are the installation
+# heights a fixture maker's guide gives (Geberit, "The perfect installation height"); the others are KentOS's own
+# common sizes, as the plan sizes are (docs/adr/0702): no regulation is said to ask them. A wall unit hangs from 1.45 m
+# over the worktop (0.90 m). The marks, the title block, the door and window symbols, the parking place and the
+# appliances (no class of EK-5's) are no building elements. A body stands on the floor: the room under a wall-hung
+# basin or toilet is not modelled. ──
+ELEMENTS = {
+    "Masa": ("furniture", "TABLE", 0.75), "Sandalye": ("furniture", "CHAIR", 0.85),
+    "Kanepe": ("furniture", "SOFA", 0.85), "Çift kişilik yatak": ("furniture", "BED", 0.5),
+    "Dolap": ("furniture", "USERDEFINED", 2.2), "Tek kişilik yatak": ("furniture", "BED", 0.5),
+    "Komodin": ("furniture", "USERDEFINED", 0.55), "Koltuk": ("furniture", "CHAIR", 0.85),
+    "İkili kanepe": ("furniture", "SOFA", 0.85), "Yuvarlak masa": ("furniture", "TABLE", 0.75),
+    "Çalışma masası": ("furniture", "DESK", 0.75), "TV ünitesi": ("furniture", "USERDEFINED", 0.5),
+    "Kitaplık": ("furniture", "SHELF", 2.0), "Alt dolap": ("furniture", "USERDEFINED", 0.9),
+    "Üst dolap": ("furniture", "USERDEFINED", 0.7, 1.45),
+    "Lavabo": ("sanitaryTerminal", "WASHHANDBASIN", 0.85), "Dolaplı lavabo": ("sanitaryTerminal", "WASHHANDBASIN", 0.85),
+    "Klozet": ("sanitaryTerminal", "TOILETPAN", 0.42), "Asma klozet": ("sanitaryTerminal", "TOILETPAN", 0.42),
+    "Pisuvar": ("sanitaryTerminal", "URINAL", 0.7), "Duş teknesi": ("sanitaryTerminal", "SHOWER", 0.1),
+    "Köşe duş": ("sanitaryTerminal", "SHOWER", 0.1), "Küvet": ("sanitaryTerminal", "BATH", 0.55),
+    "Evye": ("sanitaryTerminal", "SINK", 0.9),
+    "Asansör": ("transportElement", "ELEVATOR", 2.2),
+}
+for b in blocks:
+    if b.data["name"] in ELEMENTS:
+        b.element(*ELEMENTS[b.data["name"]])
+assert set(ELEMENTS) <= {b.data["name"] for b in blocks}
+
+# Version 4 (docs/adr/8070 §5): the cards carry their building element; an older reader refuses the file rather than
+# drop the classes.
+LIBRARY = {"format": "kentos.blocks", "version": 4, "blocks": [b.data for b in blocks]}
 TEXT = json.dumps(LIBRARY, ensure_ascii=False, indent=1) + "\n"
 
 

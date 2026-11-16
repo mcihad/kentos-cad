@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_PERFORMANCE),
+    ("arch", "mimari", ARCH_WITH_ELEMENTS),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1014,6 +1014,30 @@ pub fn uses_performance(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
             || a.materials.iter().any(|m| m.strength.is_some())
     });
     objects || styles || arch
+}
+
+/// Architecture data version 2 (docs/adr/8070 §5): a block card's building element (`card.element`: its class, type and
+/// body). Version 2 holds version 1's data too. The document schema stays as it is.
+pub const ARCH_WITH_ELEMENTS: u16 = 2;
+
+/// Whether `doc` holds architecture data 2 ([`ARCH_WITH_ELEMENTS`]): a block whose card says what building element it
+/// is.
+pub fn uses_elements(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.blocks
+        .iter()
+        .any(|b| b.card.as_ref().is_some_and(|c| c.element.is_some()))
+}
+
+/// The architecture data version `doc` needs: 2 for a block's building element, 1 for the performance declarations,
+/// else 0 (not raised).
+pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
+    if uses_elements(doc) {
+        ARCH_WITH_ELEMENTS
+    } else if uses_performance(doc) {
+        ARCH_WITH_PERFORMANCE
+    } else {
+        0
+    }
 }
 
 /// GIS data version 1 (docs/adr/8057 §15): a layer's derivation names the extension whose tool made it and where its

@@ -456,12 +456,19 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<Document
         requests: requests_.unwrap_or_default(),
         arrays,
     };
-    // Architecture data 1 (docs/adr/8068): a file that does not name it holds none of it.
+    // Architecture data 1 (docs/adr/8068) and 2 (docs/adr/8070 §5): a file that does not name them holds none of them.
     if arch < crate::ARCH_WITH_PERFORMANCE && crate::uses_performance(&doc) {
         return Err(r.fail_at(
             Code::UnknownField,
             body_at,
             "yangın dayanım sınıfı, acil çıkış, malzeme dayanımı ve binanın yangın koruma sınıfı mimari verisi sürüm 1'den önce yok",
+        ));
+    }
+    if arch < crate::ARCH_WITH_ELEMENTS && crate::uses_elements(&doc) {
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "blok kartının yapı elemanı (sınıfı, tipi, gövdesi) mimari verisi sürüm 2'den önce yok",
         ));
     }
     Ok(doc)

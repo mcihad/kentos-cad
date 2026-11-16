@@ -28,6 +28,8 @@ pub enum Value {
     Ratio(f64),
     Count(i64),
     Real(f64),
+    /// A mass, kilograms (`IfcMassMeasure`: a lift's rated load).
+    Mass(f64),
     /// Several short names (`IfcPropertyListValue` of `IfcLabel`s: Pset_Address's AddressLines).
     Labels(Vec<String>),
 }
@@ -45,6 +47,7 @@ impl Value {
             Value::Ratio(v) => format!("IFCRATIOMEASURE({})", real(*v)),
             Value::Count(v) => format!("IFCCOUNTMEASURE({v})"),
             Value::Real(v) => format!("IFCREAL({})", real(*v)),
+            Value::Mass(v) => format!("IFCMASSMEASURE({})", real(*v)),
             Value::Labels(list) => format!(
                 "({})",
                 list.iter()
@@ -638,9 +641,20 @@ pub fn write(b: &Building) -> String {
     let area = st.add("IFCSIUNIT(*,.AREAUNIT.,$,.SQUARE_METRE.)");
     let volume = st.add("IFCSIUNIT(*,.VOLUMEUNIT.,$,.CUBIC_METRE.)");
     let angle = st.add("IFCSIUNIT(*,.PLANEANGLEUNIT.,$,.RADIAN.)");
-    let units = st.add(format!(
-        "IFCUNITASSIGNMENT((#{length},#{area},#{volume},#{angle}))"
-    ));
+    // The kilogram only where a mass is written (a lift's rated load): a file without one stays as it was.
+    let massive = b.elements.iter().any(|e| {
+        e.psets.iter().any(|p| p.props.iter().any(|(_, v)| matches!(v, Value::Mass(_))))
+    });
+    let units = if massive {
+        let mass = st.add("IFCSIUNIT(*,.MASSUNIT.,.KILO.,.GRAM.)");
+        st.add(format!(
+            "IFCUNITASSIGNMENT((#{length},#{area},#{volume},#{angle},#{mass}))"
+        ))
+    } else {
+        st.add(format!(
+            "IFCUNITASSIGNMENT((#{length},#{area},#{volume},#{angle}))"
+        ))
+    };
     let origin = st.add("IFCCARTESIANPOINT((0.,0.,0.))");
     let axis_up = st.add("IFCDIRECTION((0.,0.,1.))");
     let axis_x = st.add("IFCDIRECTION((1.,0.,0.))");

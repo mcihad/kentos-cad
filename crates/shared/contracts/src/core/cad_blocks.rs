@@ -192,8 +192,8 @@ pub enum BlockEditOperation {
     /// Where inserts (`uids`) show a movable attribute (`tag`): at `at`, a point of the drawing; absent, where the
     /// definition puts it (“Öznitelik konumu”, docs/adr/0317 §1).
     Place,
-    /// Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags` and `description`; its version is
-    /// counted by the drawing.
+    /// Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags`, `description` and its building element
+    /// (`element`, docs/adr/8070 §5); its version is counted by the drawing.
     Card,
     /// Its parameters and actions (“Dinamik blok”, docs/adr/0318 §1): `dynamic`, or none to make it a plain block;
     /// its inserts' values that no longer fit are dropped and counted.
@@ -208,6 +208,8 @@ pub const BLOCKS_VERSION: u32 = 1;
 pub const BLOCKS_PUBLICATION_VERSION: u32 = 2;
 /// Shared type values affect geometry; older library readers must refuse rather than ignore them.
 pub const BLOCKS_TYPE_VALUES_VERSION: u32 = 3;
+/// A card's building element (docs/adr/8070 §5): an older reader would drop the class, so it refuses the library.
+pub const BLOCKS_ELEMENT_VERSION: u32 = 4;
 /// Minimum readable library format, including every definition in the supplied dependency graph.
 pub fn block_library_version<'a>(blocks: impl IntoIterator<Item = &'a BlockDefinition>) -> u32 {
     blocks.into_iter().fold(BLOCKS_VERSION, |version, b| {
@@ -222,7 +224,12 @@ pub fn block_library_version<'a>(blocks: impl IntoIterator<Item = &'a BlockDefin
         } else {
             BLOCKS_VERSION
         };
-        version.max(needed)
+        let element = if b.card.as_ref().is_some_and(|c| c.element.is_some()) {
+            BLOCKS_ELEMENT_VERSION
+        } else {
+            BLOCKS_VERSION
+        };
+        version.max(needed).max(element)
     })
 }
 
@@ -371,6 +378,16 @@ pub struct BlocksEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
+    /// `card`: what it is as a building element (docs/adr/8070 §5): its class, type and body; absent keeps it, null
+    /// takes it away.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::entity::BlockElement>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::entity::BlockElement>"))]
+    pub element: Option<Option<crate::entity::BlockElement>>,
     /// `dynamic`: the parameters and actions (absent: none, a plain block).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

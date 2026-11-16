@@ -245,9 +245,41 @@ fn definition(
 /// A block's card (docs/adr/0317 §4); its rules are the definitions' (`blocks::card_problem`).
 fn block_card(r: &mut Reader<'_>, publications: bool) -> Result<kentos_contracts::BlockCard, KcadError> {
     let (mut category, mut tags, mut version) = (None, None, None);
-    let mut publication = None;
+    let (mut publication, mut element) = (None, None);
     map(r, |r, key| {
         match key {
+            // Its building element (architecture data 2, docs/adr/8070 §5): the reader of the document refuses it in a
+            // file that does not name that version.
+            "element" => {
+                let (mut class, mut predefined, mut height, mut elevation) = (None, None, None, None);
+                map(r, |r, key| {
+                    match key {
+                        "class" => {
+                            let at = r.position();
+                            let t = text(r)?;
+                            class = Some(
+                                kentos_contracts::BlockElementClass::ALL
+                                    .into_iter()
+                                    .find(|c| c.name() == t)
+                                    .ok_or_else(|| {
+                                        r.fail_at(Code::BadValue, at, &format!("“{t}” bir yapı elemanı sınıfı değil"))
+                                    })?,
+                            );
+                        }
+                        "predefined" => predefined = Some(text(r)?),
+                        "height" => height = Some(r.float()?),
+                        "elevation" => elevation = Some(r.float()?),
+                        _ => return Err(unknown(r)),
+                    }
+                    Ok(())
+                })?;
+                element = Some(kentos_contracts::BlockElement {
+                    class: required(r, class, "class")?,
+                    predefined,
+                    height,
+                    elevation,
+                });
+            }
             "publication" if publications => {
                 let (mut family_id, mut type_id, mut type_name, mut release) = (None, None, None, None);
                 map(r, |r, key| {
@@ -289,6 +321,7 @@ fn block_card(r: &mut Reader<'_>, publications: bool) -> Result<kentos_contracts
         category,
         tags: tags.unwrap_or_default(),
         version: required(r, version, "version")?,
+        element,
     })
 }
 

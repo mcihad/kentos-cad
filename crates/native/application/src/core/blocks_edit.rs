@@ -511,11 +511,17 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                 .tags
                 .clone()
                 .unwrap_or_else(|| old.card.as_ref().map(|c| c.tags.clone()).unwrap_or_default());
+            // Its building element (docs/adr/8070 §5): absent keeps it, null takes it away.
+            let element = match &input.element {
+                Some(given) => given.clone(),
+                None => old.card.as_ref().and_then(|c| c.element.clone()),
+            };
             next.card = Some(kentos_commands::BlockCard {
                 publication,
                 category: category.filter(|c| !checks::is_blank(c)),
                 tags,
                 version,
+                element,
             });
             if let Some(d) = &input.description {
                 next.description = (!checks::is_blank(d)).then(|| d.clone());
@@ -524,7 +530,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                 return Err(Stop::failed(error(
                     codes::INVALID_BLOCK_CARD,
                     format!("“{}” bloğunun kartı: {problem}", old.name),
-                    Some(if input.publication.is_some() { "publication" } else if input.tags.is_some() { "tags" } else { "category" }.into()),
+                    Some(if input.publication.is_some() { "publication" } else if input.element.is_some() { "element" } else if input.tags.is_some() { "tags" } else { "category" }.into()),
                 )));
             }
         }

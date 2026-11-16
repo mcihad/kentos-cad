@@ -3,7 +3,7 @@
 //! `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=blok-oznitelik-secenekleri,blok-oznitelik-degerleri,blok-karti,blok-cizelgesi,blok-kartlar cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=blok-oznitelik-secenekleri,blok-oznitelik-degerleri,blok-karti,blok-karti-yapi-elemani,blok-cizelgesi,blok-kartlar cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -149,6 +149,21 @@ fn card(app: &mut App) {
     app.open_block_card(door());
 }
 
+/// The table's card as a building element (docs/adr/8070 §5): Mobilya, its type TABLE, its body 0.75 m high.
+fn card_element(app: &mut App) {
+    use crate::block_card::{ClassChoice, Event};
+    drawn(app);
+    run(app, "block.panel");
+    app.open_block_card(serde_json::from_value(json!(MASA)).expect("an id"));
+    for e in [
+        Event::Class(ClassChoice(Some(kentos_commands::BlockElementClass::Furniture))),
+        Event::Type("TABLE".to_owned()),
+        Event::Height("0.75".to_owned()),
+    ] {
+        let _ = app.update(Message::BlockCard(e));
+    }
+}
+
 /// Blok çizelgesi of every block, the inserts whose kind is İç kapı scheduled.
 fn schedule(app: &mut App) {
     use crate::block_schedule::Event;
@@ -177,6 +192,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("blok-oznitelik-secenekleri", options),
         ("blok-oznitelik-degerleri", values),
         ("blok-karti", card),
+        ("blok-karti-yapi-elemani", card_element),
         ("blok-cizelgesi", schedule),
         ("blok-kartlar", cards),
     ]

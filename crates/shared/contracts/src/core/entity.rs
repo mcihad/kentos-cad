@@ -1213,6 +1213,125 @@ pub struct BlockCard {
     #[cfg_attr(feature = "schema", schemars(range(min = 1)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: u32,
+    /// What it is as a building element (docs/adr/8070 §5): its class, its type and its body. Absent: no building
+    /// element (a mark, a title block, a symbol), which the building's model does not hold.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub element: Option<BlockElement>,
+}
+
+/// A block as a building element (docs/adr/8070 §5; EK-5 Tablo 5.1, EK-6 Tablo 6.35, 6.53, 6.64): its class and type,
+/// and its body: the block's drawn outline in plan from its underside, `elevation` over its floor, `height` up.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockElement {
+    pub class: BlockElementClass,
+    /// Its type as IFC 4.3 spells it (`TABLE`, `WASHHANDBASIN`, `ELEVATOR`; [`BlockElementClass::types`]);
+    /// `USERDEFINED` takes the block's name as its object type. Absent: none, which EK-6 counts as missing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub predefined: Option<String>,
+    /// Its body's height, metres; absent: no body, its outline in plan only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: Option<f64>,
+    /// Its underside over its floor, metres (a wall unit's, a wall-hung basin's); absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub elevation: Option<f64>,
+}
+
+/// A block's building element class (EK-5 Tablo 5.1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BlockElementClass {
+    /// Mobilya (`IfcFurniture`, MBL): a table, a chair, a bed, a wardrobe, a kitchen unit.
+    Furniture,
+    /// Sıhhi tesisat ucu (`IfcSanitaryTerminal`, STT): a basin, a toilet, a shower, a bath, a sink.
+    SanitaryTerminal,
+    /// Taşıma elemanı (`IfcTransportElement`, TSM): a lift.
+    TransportElement,
+}
+
+impl BlockElementClass {
+    pub const ALL: [BlockElementClass; 3] = [
+        BlockElementClass::Furniture,
+        BlockElementClass::SanitaryTerminal,
+        BlockElementClass::TransportElement,
+    ];
+
+    /// Its name in Turkish.
+    pub fn label(self) -> &'static str {
+        match self {
+            BlockElementClass::Furniture => "Mobilya",
+            BlockElementClass::SanitaryTerminal => "Sıhhi tesisat ucu",
+            BlockElementClass::TransportElement => "Taşıma elemanı",
+        }
+    }
+
+    /// Its wire name.
+    pub fn name(self) -> &'static str {
+        match self {
+            BlockElementClass::Furniture => "furniture",
+            BlockElementClass::SanitaryTerminal => "sanitaryTerminal",
+            BlockElementClass::TransportElement => "transportElement",
+        }
+    }
+
+    /// Its class's IFC 4.3 types (IFC4X3_ADD2; EK-6's lists, spelt as the schema spells them), `USERDEFINED` last;
+    /// `NOTDEFINED` is no type.
+    pub fn types(self) -> &'static [&'static str] {
+        match self {
+            BlockElementClass::Furniture => &[
+                "BED", "CHAIR", "DESK", "FILECABINET", "SHELF", "SOFA", "TABLE", "TECHNICALCABINET", "USERDEFINED",
+            ],
+            BlockElementClass::SanitaryTerminal => &[
+                "BATH", "BIDET", "CISTERN", "SANITARYFOUNTAIN", "SHOWER", "SINK", "TOILETPAN", "URINAL",
+                "WASHHANDBASIN", "WCSEAT", "USERDEFINED",
+            ],
+            BlockElementClass::TransportElement => &[
+                "CRANEWAY", "ELEVATOR", "ESCALATOR", "HAULINGGEAR", "LIFTINGGEAR", "MOVINGWALKWAY", "USERDEFINED",
+            ],
+        }
+    }
+}
+
+impl BlockElement {
+    /// The largest height or elevation, metres.
+    pub const MAX: f64 = 20.0;
+
+    /// What is wrong with it, or none: its type one of its class's, its height above 0, its elevation not below 0,
+    /// each at most [`BlockElement::MAX`].
+    pub fn problem(&self) -> Option<String> {
+        if let Some(t) = &self.predefined
+            && !self.class.types().contains(&t.as_str())
+        {
+            return Some(format!(
+                "“{t}” {} tiplerinden biri değil ({}).",
+                self.class.label().to_lowercase(),
+                self.class.types().join(", ")
+            ));
+        }
+        if let Some(h) = self.height
+            && !(h.is_finite() && h > 0.0 && h <= Self::MAX)
+        {
+            return Some(format!("gövdenin yüksekliği {h}; sıfırdan büyük, en çok {} m olmalı.", Self::MAX));
+        }
+        if let Some(z) = self.elevation
+            && !(z.is_finite() && (0.0..=Self::MAX).contains(&z))
+        {
+            return Some(format!("gövdenin alt kotu {z}; 0 ile {} m arasında olmalı.", Self::MAX));
+        }
+        None
+    }
 }
 
 /// The publisher-assigned identity of a 2D component type and its release.

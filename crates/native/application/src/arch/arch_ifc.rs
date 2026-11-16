@@ -19,6 +19,42 @@ use crate::codes;
 use crate::exchange_files::{fail, now, stamp_of, write_file};
 use crate::sections::{self, Left};
 
+/// The drawing's blocks that are building elements (docs/adr/8070 §5): each insert whose block's card says what element it
+/// is, with its outline in plan: the box of what its block draws with the insert's values, placed as the insert is
+/// (moved, turned, scaled, mirrored); a lift's rated capacity from its `KISI` and `YUK` attributes, a number each.
+fn fixtures(doc: &Document) -> Vec<kentos_ifc::arch::Fixture> {
+    let mut out = Vec::new();
+    for (uid, e) in doc.entities_with_uids() {
+        let kentos_commands::Entity::Insert(i) = e else { continue };
+        let Some(def) = doc.block(i.block) else { continue };
+        let Some(element) = def.card.as_ref().and_then(|c| c.element.clone()) else {
+            continue;
+        };
+        let Some(outline) = sections::fixture_outline(doc, i) else {
+            continue;
+        };
+        let ring: Vec<[f64; 2]> = outline.iter().map(|q| [q.x, q.y]).collect();
+        let number = |tag: &str| -> Option<f64> {
+            def.attribute_value(i, tag)
+                .map(str::trim)
+                .filter(|v| !v.is_empty())
+                .and_then(|v| v.replace(',', ".").parse::<f64>().ok())
+                .filter(|v| v.is_finite() && *v > 0.0)
+        };
+        out.push(kentos_ifc::arch::Fixture {
+            id: uid.as_u128(),
+            uid: uid.to_string(),
+            name: def.name.clone(),
+            element,
+            level: i.arch.level.clone(),
+            ring,
+            people: number("KISI").filter(|v| v.fract() == 0.0).map(|v| v as i64),
+            weight: number("YUK"),
+        });
+    }
+    out
+}
+
 /// Each storey's emsal areas (docs/adr/8069): the rooms as the ratios count them (`zoning_rooms`), by storey and by how
 /// they count, their contours together; an arc of a contour as its chord. The part of a storey's balconies past their
 /// units' 20 % goes with its counted-in area.
@@ -122,6 +158,7 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         crs: crs(doc),
         emsal: emsal_areas(doc),
         groups: unit_groups(doc),
+        fixtures: fixtures(doc),
     });
     (b, written, curved)
 }
@@ -374,6 +411,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         + written.stairs
         + written.ramps
         + written.chimneys
+        + written.fixtures
         + written.spaces;
     if held == 0 {
         return Err(bad(

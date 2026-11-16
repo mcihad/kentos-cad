@@ -17,6 +17,7 @@ from .types import (  # noqa: F401
     BlockDefined,
     BlockEditOperation,
     BlockEditOperationName,
+    BlockElement,
     BlockInserted,
     BlockPublication,
     BlockReport,
@@ -492,6 +493,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         clear_publication: bool | None | Unset = UNSET,
         description: str | None | Unset = UNSET,
         dynamic: DynamicBlock | None | Unset = UNSET,
+        element: BlockElement | None | Unset = UNSET,
         entities: Sequence[Entity] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
@@ -542,6 +544,8 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             clear_publication: `card`: explicitly detach the publication identity; incompatible with `publication`.
             description: `card`: its description (empty: none).
             dynamic: `dynamic`: the parameters and actions (absent: none, a plain block).
+            element: `card`: what it is as a building element (docs/adr/8070 §5): its class, type and body; absent keeps it, null
+                takes it away.
             entities: `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
                 docs/adr/0316 §1).
             expected_revision: The document revision the input was prepared against, as decimal text.
@@ -587,6 +591,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             clear_publication=clear_publication,
             description=description,
             dynamic=dynamic,
+            element=element,
             entities=_opt(entities, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
@@ -620,6 +625,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         clear_publication: bool | None | Unset = UNSET,
         description: str | None | Unset = UNSET,
         dynamic: DynamicBlock | None | Unset = UNSET,
+        element: BlockElement | None | Unset = UNSET,
         entities: Sequence[Entity] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
@@ -651,6 +657,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             clear_publication=clear_publication,
             description=description,
             dynamic=dynamic,
+            element=element,
             entities=_opt(entities, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
@@ -684,6 +691,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         clear_publication: bool | None | Unset = UNSET,
         description: str | None | Unset = UNSET,
         dynamic: DynamicBlock | None | Unset = UNSET,
+        element: BlockElement | None | Unset = UNSET,
         entities: Sequence[Entity] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
@@ -715,6 +723,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             clear_publication=clear_publication,
             description=description,
             dynamic=dynamic,
+            element=element,
             entities=_opt(entities, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
@@ -748,6 +757,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         clear_publication: bool | None | Unset = UNSET,
         description: str | None | Unset = UNSET,
         dynamic: DynamicBlock | None | Unset = UNSET,
+        element: BlockElement | None | Unset = UNSET,
         entities: Sequence[Entity] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
@@ -784,6 +794,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             clear_publication=clear_publication,
             description=description,
             dynamic=dynamic,
+            element=element,
             entities=_opt(entities, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,

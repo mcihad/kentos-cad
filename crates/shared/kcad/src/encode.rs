@@ -98,9 +98,11 @@ fn modules_of(doc: &DocumentSnapshotV2) -> ModuleVersions {
         })
     }
     let mut out = ModuleVersions::default();
-    // Architecture 1 (docs/adr/8068): fire resistance, exit roles, strengths, the building's performance.
-    if crate::uses_performance(doc) {
-        out.modules.push(("arch".to_owned(), crate::ARCH_WITH_PERFORMANCE));
+    // Architecture 1 (docs/adr/8068): fire resistance, exit roles, strengths, the building's performance; 2
+    // (docs/adr/8070 §5): a block card's building element.
+    let arch = crate::arch_version(doc);
+    if arch > 0 {
+        out.modules.push(("arch".to_owned(), arch));
     }
     if extended(&doc.layers) {
         out.modules
@@ -1545,6 +1547,37 @@ mod tests {
             modules: Vec::new(),
             extensions: vec![("mezarlik-bs".into(), 1)],
         };
+        // Architecture data 2 (docs/adr/8070 §5): a block card's building element in a file that names version 1 only.
+        let mut furnished = doc.clone();
+        furnished.blocks.push(
+            serde_json::from_value(serde_json::json!({
+                "id": "0192f5b0-0000-7000-8000-0000000000aa", "name": "Masa", "base": {"x": 0.0, "y": 0.0},
+                "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {},
+                              "a": {"x": 0.0, "y": 0.0}, "b": {"x": 1.0, "y": 0.0}}],
+                "card": {"version": 1, "element": {"class": "furniture", "predefined": "TABLE", "height": 0.75}}
+            }))
+            .expect("a block"),
+        );
+        let written = crate::encode(&furnished).expect("encoded");
+        assert_eq!(crate::decode(&written).expect("read back"), furnished);
+        let one = ModuleVersions {
+            modules: vec![("arch".into(), 1)],
+            extensions: Vec::new(),
+        };
+        let file = {
+            let mut quiet = crate::watch::Quiet;
+            let mut e = Encoder {
+                w: Writer::default(),
+                path: Vec::new(),
+                depth: 0,
+                watch: &mut quiet,
+                objs: Objs::Plain(&furnished.entities),
+            };
+            e.root_with(&furnished, &one).expect("written");
+            crate::header::write(&e.w.out).expect("a file")
+        };
+        let refused = crate::decode(&file).expect_err("architecture data 2 named 1");
+        assert!(refused.message.contains("sürüm 2"), "{}", refused.message);
         let refused = crate::decode(&write(&ext)).expect_err("an extension's data");
         assert_eq!(refused.code, Code::SchemaVersion);
         assert!(

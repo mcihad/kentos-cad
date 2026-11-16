@@ -111,6 +111,7 @@ fn input_checks(input: &ImportBlock) -> Result<(), Stop> {
             category: Some(c.clone()),
             tags: Vec::new(),
             version: 1,
+            element: None,
         };
         let bad_part = c.split('/').any(|part| part.trim().is_empty());
         if let Some(why) = kentos_commands::blocks::card_problem(&card)
@@ -229,6 +230,7 @@ fn categorised(ours: &DocumentSnapshotV2, drawing: &mut DocumentSnapshotV2, cate
             category: None,
             tags: Vec::new(),
             version: 1,
+            element: None,
         });
         if card.category.is_none() {
             card.category = Some(category.to_owned());

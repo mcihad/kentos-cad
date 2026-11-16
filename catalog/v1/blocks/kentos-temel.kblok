@@ -1,6 +1,6 @@
 {
  "format": "kentos.blocks",
- "version": 1,
+ "version": 4,
  "blocks": [
   {
    "id": "0192f5b0-0000-7000-8000-000000000001",
@@ -485,7 +485,12 @@
      "masa",
      "yemek"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "TABLE",
+     "height": 0.75
+    }
    },
    "dynamic": {
     "parameters": [
@@ -581,7 +586,12 @@
     "tags": [
      "sandalye"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "CHAIR",
+     "height": 0.85
+    }
    }
   },
   {
@@ -668,7 +678,12 @@
      "kanepe",
      "üçlü"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "SOFA",
+     "height": 0.85
+    }
    }
   },
   {
@@ -763,7 +778,12 @@
      "yatak",
      "çift"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "BED",
+     "height": 0.5
+    }
    }
   },
   {
@@ -836,7 +856,12 @@
      "dolap",
      "gardırop"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "USERDEFINED",
+     "height": 2.2
+    }
    },
    "dynamic": {
     "parameters": [
@@ -956,7 +981,12 @@
      "lavabo",
      "banyo"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "sanitaryTerminal",
+     "predefined": "WASHHANDBASIN",
+     "height": 0.85
+    }
    }
   },
   {
@@ -1019,7 +1049,12 @@
      "wc",
      "banyo"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "sanitaryTerminal",
+     "predefined": "TOILETPAN",
+     "height": 0.42
+    }
    }
   },
   {
@@ -1103,7 +1138,12 @@
      "duş",
      "banyo"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "sanitaryTerminal",
+     "predefined": "SHOWER",
+     "height": 0.1
+    }
    }
   },
   {
@@ -1184,7 +1224,12 @@
      "küvet",
      "banyo"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "sanitaryTerminal",
+     "predefined": "BATH",
+     "height": 0.55
+    }
    }
   },
   {
@@ -1742,7 +1787,12 @@
      "tek",
      "genç"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "BED",
+     "height": 0.5
+    }
    },
    "dynamic": {
     "parameters": [
@@ -1862,7 +1912,12 @@
      "komodin",
      "başucu"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "USERDEFINED",
+     "height": 0.55
+    }
    }
   },
   {
@@ -1972,7 +2027,12 @@
      "berjer",
      "tekli"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "CHAIR",
+     "height": 0.85
+    }
    }
   },
   {
@@ -2073,7 +2133,12 @@
      "kanepe",
      "ikili"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "SOFA",
+     "height": 0.85
+    }
    }
   },
   {
@@ -2205,7 +2270,12 @@
      "yuvarlak",
      "yemek"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "TABLE",
+     "height": 0.75
+    }
    },
    "dynamic": {
     "parameters": [
@@ -2274,7 +2344,12 @@
      "çalışma",
      "ofis"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "DESK",
+     "height": 0.75
+    }
    },
    "dynamic": {
     "parameters": [
@@ -2372,7 +2447,12 @@
      "ünite",
      "salon"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "USERDEFINED",
+     "height": 0.5
+    }
    },
    "dynamic": {
     "parameters": [
@@ -2470,7 +2550,12 @@
      "kitaplık",
      "raf"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "SHELF",
+     "height": 2.0
+    }
    },
    "dynamic": {
     "parameters": [
@@ -2599,7 +2684,12 @@
      "wc",
      "banyo"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "sanitaryTerminal",
+     "predefined": "TOILETPAN",
+     "height": 0.42
+    }
    },
    "dynamic": {
     "parameters": [
@@ -2709,7 +2799,12 @@
      "pisuvar",
      "wc"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "sanitaryTerminal",
+     "predefined": "URINAL",
+     "height": 0.7
+    }
    },
    "dynamic": {
     "parameters": [
@@ -2841,7 +2936,12 @@
      "oval",
      "banyo"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "sanitaryTerminal",
+     "predefined": "SHOWER",
+     "height": 0.1
+    }
    },
    "dynamic": {
     "parameters": [
@@ -2961,7 +3061,12 @@
      "dolap",
      "banyo"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "sanitaryTerminal",
+     "predefined": "WASHHANDBASIN",
+     "height": 0.85
+    }
    },
    "dynamic": {
     "parameters": [
@@ -3301,7 +3406,12 @@
      "eviye",
      "mutfak"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "sanitaryTerminal",
+     "predefined": "SINK",
+     "height": 0.9
+    }
    },
    "dynamic": {
     "parameters": [
@@ -3715,7 +3825,12 @@
      "tezgâh",
      "mutfak"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "USERDEFINED",
+     "height": 0.9
+    }
    },
    "dynamic": {
     "parameters": [
@@ -3816,7 +3931,13 @@
      "üst",
      "mutfak"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "furniture",
+     "predefined": "USERDEFINED",
+     "height": 0.7,
+     "elevation": 1.45
+    }
    },
    "dynamic": {
     "parameters": [
@@ -4147,7 +4268,12 @@
      "kuyu",
      "lift"
     ],
-    "version": 1
+    "version": 1,
+    "element": {
+     "class": "transportElement",
+     "predefined": "ELEVATOR",
+     "height": 2.2
+    }
    },
    "dynamic": {
     "parameters": [
@@ -4306,7 +4432,31 @@
       }
      }
     ]
-   }
+   },
+   "attributes": [
+    {
+     "tag": "KISI",
+     "prompt": "Kişi kapasitesi",
+     "p": {
+      "x": 0.2,
+      "y": -0.3
+     },
+     "height": 0.1,
+     "rotation": 0.0,
+     "invisible": true
+    },
+    {
+     "tag": "YUK",
+     "prompt": "Yük kapasitesi (kg)",
+     "p": {
+      "x": 0.2,
+      "y": -0.45
+     },
+     "height": 0.1,
+     "rotation": 0.0,
+     "invisible": true
+    }
+   ]
   },
   {
    "id": "0192f5b0-0000-7000-8000-000000000028",

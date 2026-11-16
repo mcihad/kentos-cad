@@ -38,6 +38,7 @@ pub fn input(operation: BlockEditOperation, block: Option<BlockId>) -> BlocksEdi
         category: None,
         tags: None,
         description: None,
+        element: None,
         blocks: None,
         library: None,
         units: None,

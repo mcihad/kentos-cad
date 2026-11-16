@@ -863,7 +863,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -1064,7 +1069,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -1628,7 +1638,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -1829,7 +1844,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -2383,7 +2403,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -2584,7 +2609,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -3000,7 +3030,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -3430,7 +3465,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -4085,7 +4125,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -4286,7 +4331,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -4467,7 +4517,13 @@
                     "üst",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.7,
+                    "elevation": 1.45
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -4932,7 +4988,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -5133,7 +5194,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -5679,7 +5745,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -5880,7 +5951,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -6428,7 +6504,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -6629,7 +6710,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -7161,7 +7247,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -7778,7 +7869,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -7979,7 +8075,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -8545,7 +8646,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -8746,7 +8852,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -9114,7 +9225,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -9315,7 +9431,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -9774,7 +9895,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -9975,7 +10101,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -10596,7 +10727,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -10797,7 +10933,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -11444,7 +11585,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -11645,7 +11791,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -12305,7 +12456,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -12506,7 +12662,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -13163,7 +13324,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -13364,7 +13530,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -13922,7 +14093,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -14123,7 +14299,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -14859,7 +15040,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -15060,7 +15246,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -15241,7 +15432,13 @@
                     "üst",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.7,
+                    "elevation": 1.45
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -16262,7 +16459,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -16463,7 +16665,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -17299,7 +17506,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -17500,7 +17712,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -18726,7 +18943,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -18927,7 +19149,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -19108,7 +19335,13 @@
                     "üst",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.7,
+                    "elevation": 1.45
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -20077,7 +20310,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -20278,7 +20516,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -21612,7 +21855,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -21813,7 +22061,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -22763,7 +23016,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -22964,7 +23222,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -23843,7 +24106,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -24044,7 +24312,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -24953,7 +25226,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -25154,7 +25432,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -26283,7 +26566,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -26484,7 +26772,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -27463,7 +27756,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -27664,7 +27962,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -28573,7 +28876,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -28774,7 +29082,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -29677,7 +29990,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -29878,7 +30196,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -35431,7 +35754,12 @@
                     "tezgâh",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "furniture",
+                    "predefined": "USERDEFINED",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [
@@ -35632,7 +35960,12 @@
                     "eviye",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "sanitaryTerminal",
+                    "predefined": "SINK",
+                    "height": 0.9
+                  }
                 },
                 "dynamic": {
                   "parameters": [

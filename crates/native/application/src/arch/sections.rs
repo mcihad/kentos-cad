@@ -332,6 +332,7 @@ pub fn model(doc: &Document) -> Model {
             Entity::Railing(r) => railing(&r.railing, owner, &mut m),
             Entity::Stair(s) => stair(&s.stair, &slabs, owner, &mut m),
             Entity::Ramp(r) => ramp(&r.ramp, &slabs, owner, &mut m),
+            Entity::Insert(i) => fixture(doc, i, owner, &mut m),
             _ => {}
         }
     }
@@ -1413,6 +1414,71 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
             owner.clone(),
         );
     }
+}
+
+/// A placed block's outline in plan (docs/adr/8070 §5): the box of what its block draws with the insert's values,
+/// placed as the insert is (moved, turned, scaled, mirrored); none for a block that draws nothing.
+pub fn fixture_outline(doc: &Document, i: &kentos_commands::InsertEntity) -> Option<Vec<P>> {
+    let [x0, y0, x1, y1] = crate::blocks::definition_box(doc, i.block, Some(&i.parameters))?;
+    let m = kentos_geometry_core::block::placement_xy(
+        P::new(i.p.x, i.p.y),
+        i.scale,
+        i.y_scale.unwrap_or(i.scale),
+        i.rotation,
+        i.mirror,
+    );
+    Some(
+        [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+            .iter()
+            .map(|(x, y)| P::new(m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]))
+            .collect(),
+    )
+}
+
+/// A block that is a building element with a body (docs/adr/8070 §5): a box over its outline from its underside over its
+/// storey's floor up its height, outlined light on its class's EK-2 element (Tefriş's Mobilya and Vitrifiye, Asansör);
+/// cut where the line crosses it, seen past it. A block that is no building element, or has no height, is not in the
+/// model.
+fn fixture(doc: &Document, i: &kentos_commands::InsertEntity, owner: Option<String>, m: &mut Model) {
+    use kentos_commands::BlockElementClass as C;
+    let Some(el) = doc
+        .block(i.block)
+        .and_then(|d| d.card.as_ref())
+        .and_then(|c| c.element.as_ref())
+    else {
+        return;
+    };
+    let Some(height) = el.height else { return };
+    let Some(ring) = fixture_outline(doc, i) else {
+        return;
+    };
+    let (floor, _) = floor_of(&m.levels, i.arch.level.as_deref());
+    let bottom = floor + el.elevation.unwrap_or(0.0);
+    let (element, word) = match el.class {
+        C::Furniture => ("TEFR", "Mobilya"),
+        C::SanitaryTerminal => ("TEFR", "Vitrifiye"),
+        C::TransportElement => ("ASAN", "Genel"),
+    };
+    push(
+        m,
+        Solid {
+            rings: vec![ring],
+            height: Height::Prism {
+                bottom,
+                top: bottom + height,
+            },
+            voids: Vec::new(),
+            marks: Vec::new(),
+            finish: None,
+        },
+        Look {
+            key: format!("{element}:{}", fold(word)),
+            layer: kentos_commands::ek4_layer(element, word),
+            heavy: false,
+            fill: None,
+        },
+        owner,
+    );
 }
 
 /// The index a ramp's run takes as its sloped slab's roof (docs/adr/8070 §1): far past any roof's, so a section never

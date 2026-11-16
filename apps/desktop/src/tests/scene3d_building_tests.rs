@@ -328,3 +328,118 @@ fn screens() {
         let _ = wall;
     }
 }
+
+/// The section building with B9's elements (docs/adr/8070): a hip roof over its 1. kat with a chimney over the flues
+/// of the hall's west wall on both storeys, an L ramp rising along its east side to ±0.00, and KentOS's library lift,
+/// basin and table on the ground floor. Its snapshot after the commands that draw them.
+fn with_the_missing_elements() -> kentos_commands::DocumentSnapshotV2 {
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = kentos_domain::Document::from_snapshot_v2(building()).expect("opens");
+    let run = |doc: &mut kentos_domain::Document, name: &str, input: serde_json::Value| -> serde_json::Value {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, kentos_commands::CallOp::Execute, input)
+            .expect("runs");
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer
+    };
+    let eaves = kentos_native_application::roofs::eaves_from_walls(
+        &doc,
+        kentos_commands::Vec2 { x: 6.0, y: 4.5 },
+        Some("k1"),
+        0.5,
+    )
+    .expect("the walls enclose the point");
+    let slopes = vec![33.0; eaves.len()];
+    run(
+        &mut doc,
+        "cad.roofs.create",
+        serde_json::json!({"layerId": "0", "roofs": [{"pts": eaves, "slopes": slopes, "overhang": 0.5,
+            "arch": {"level": "k1"},
+            "parts": [{"kind": "chimney", "at": {"x": 4.5, "y": 8.0}, "width": 0.4, "depth": 0.4}]}]}),
+    );
+    let halls: Vec<String> = doc
+        .entities_with_uids()
+        .filter_map(|(u, e)| match e {
+            Entity::Wall(w)
+                if w.wall.pts.len() == 2 && w.wall.pts.iter().all(|q| (q.x - 4.5).abs() < 1e-9) =>
+            {
+                Some(u.to_string())
+            }
+            _ => None,
+        })
+        .collect();
+    for wall in &halls {
+        run(
+            &mut doc,
+            "cad.openings.create",
+            serde_json::json!({"layerId": "0", "openings": [
+                {"host": wall, "at": 8.0, "width": 0.2, "form": "flue", "operation": "fixed", "depth": 0.07}]}),
+        );
+    }
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    run(
+        &mut doc,
+        "cad.ramps.create",
+        serde_json::json!({"layerId": "0", "ramps": [{"pts": [p(13.8, 7.0), p(13.8, 1.5), p(16.0, 1.5)],
+            "width": 1.2, "rise": 0.45, "base": -0.45, "arch": {"level": "zemin"}}]}),
+    );
+    let library = include_str!("../../../../catalog/v1/blocks/kentos-temel.kblok");
+    run(&mut doc, "cad.blocks.edit", serde_json::json!({"operation": "import", "library": library}));
+    for (name, x, y, extra) in [
+        ("Asansör", 5.0, 6.5, serde_json::json!({"attributes": {"KISI": "8", "YUK": "630"}})),
+        ("Lavabo", 9.0, 0.2, serde_json::json!({})),
+        ("Masa", 2.2, 6.6, serde_json::json!({})),
+    ] {
+        let mut input = serde_json::json!({"name": name, "at": p(x, y), "layerId": "0", "arch": {"level": "zemin"}});
+        for (k, v) in extra.as_object().into_iter().flatten() {
+            input[k] = v.clone();
+        }
+        run(&mut doc, "cad.blocks.insert", input);
+    }
+    doc.to_snapshot_v2()
+}
+
+/// B9's elements in 3D (docs/adr/8070): the building from the north-east with its roof, its chimney and the ramp; then
+/// the ground floor alone, its rooms hidden, with the lift, the basin and the table, from the north-east and the
+/// south-west. `.run/gui-evidence/eksik-elemanlar-8070/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::missing_elements_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn missing_elements_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/eksik-elemanlar-8070");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(with_the_missing_elements());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::Run("scene3d.view"));
+        shot(&mut app, "1-cati-baca-rampa");
+        send(&mut app, W::Storey(1));
+        send(&mut app, W::Rooms);
+        send(&mut app, W::Dolly(1.5));
+        shot(&mut app, "2-zemin-kat-donati");
+        send(&mut app, W::View(1));
+        send(&mut app, W::Dolly(1.5));
+        shot(&mut app, "3-zemin-kat-guneybati");
+        send(&mut app, W::View(3));
+        shot(&mut app, "4-zemin-kat-ustten");
+        send(&mut app, W::Close);
+    }
+}

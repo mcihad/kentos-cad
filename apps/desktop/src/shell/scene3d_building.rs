@@ -44,7 +44,9 @@ pub(crate) const PARTS: [(&str, [f32; 4]); 15] = [
     ("Kapı", [0.52, 0.35, 0.20, 1.0]),
     ("Pencere", [0.55, 0.74, 0.88, 0.55]),
     ("Mahal", [0.30, 0.56, 0.86, 0.16]),
-    ("Diğer", [0.62, 0.62, 0.62, 1.0]),
+    // The blocks that are building elements (docs/adr/8070 §5): a lift, furniture, a sanitary fixture; a colour of
+    // their own, the floor's grey would hide them.
+    ("Donatı", [0.27, 0.56, 0.52, 1.0]),
     ("Seçili", [1.0, 0.62, 0.05, 1.0]),
     ("Bulgu", [0.86, 0.10, 0.08, 1.0]),
     ("Seçili mahal", [1.0, 0.62, 0.05, 0.38]),

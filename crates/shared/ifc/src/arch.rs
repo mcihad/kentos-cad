@@ -60,6 +60,23 @@ pub struct Input<'a> {
     pub emsal: Vec<EmsalArea>,
     /// The building program's units with their rooms (docs/adr/8069): the groups of spaces.
     pub groups: Vec<UnitGroup>,
+    /// The blocks that are building elements (docs/adr/8070 §5): furniture, sanitary fixtures, lifts.
+    pub fixtures: Vec<Fixture>,
+}
+
+/// A block placed in the drawing that is a building element (docs/adr/8070 §5): its insert's id bits and persistent id,
+/// its block's name, what its card says it is, its storey's level and its outline in plan (the box of what it draws,
+/// placed); a lift's rated capacity in persons and kilograms, as its insert gives them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Fixture {
+    pub id: u128,
+    pub uid: String,
+    pub name: String,
+    pub element: kentos_contracts::BlockElement,
+    pub level: Option<String>,
+    pub ring: Vec<[f64; 2]>,
+    pub people: Option<i64>,
+    pub weight: Option<f64>,
 }
 
 /// An emsal area of a storey (docs/adr/8069; EK-6 Tablo 6.60): its storey's level id, how its rooms count, its rings
@@ -276,6 +293,8 @@ pub struct Written {
     pub stairs: usize,
     pub ramps: usize,
     pub chimneys: usize,
+    /// The blocks written as building elements (docs/adr/8070 §5).
+    pub fixtures: usize,
     /// The grids' axes written (docs/adr/8070 §4).
     pub grid_axes: usize,
     pub left: Vec<Left>,
@@ -683,6 +702,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         crs,
         emsal,
         groups,
+        fixtures,
     } = input;
     let mut written = Written::default();
     // The storeys, by their level id; a drawing without levels has one, Zemin kat at ±0.00.
@@ -1117,6 +1137,65 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 openings[o].filler = Some(k);
             }
         }
+    }
+    // The blocks that are building elements (docs/adr/8070 §5; EK-6 Tablo 6.35, 6.53, 6.64): each its class and type
+    // (USERDEFINED: its block's name its object type), named for its block, its body a box over its outline from its
+    // underside up its height; with no height it has no body. A lift carries its rated capacity.
+    for f in &fixtures {
+        let class = match f.element.class {
+            kentos_contracts::BlockElementClass::Furniture => Class::Furniture,
+            kentos_contracts::BlockElementClass::SanitaryTerminal => Class::SanitaryTerminal,
+            kentos_contracts::BlockElementClass::TransportElement => Class::TransportElement,
+        };
+        let predefined = match f.element.predefined.as_deref() {
+            Some(t) => f
+                .element
+                .class
+                .types()
+                .iter()
+                .copied()
+                .find(|x| *x == t)
+                .unwrap_or("NOTDEFINED"),
+            None => "NOTDEFINED",
+        };
+        let bottom = f.element.elevation.unwrap_or(0.0);
+        let shapes = f
+            .element
+            .height
+            .filter(|_| f.ring.len() >= 3)
+            .map(|h| Shape::Prism {
+                rings: vec![f.ring.clone()],
+                bottom,
+                top: bottom + h,
+            })
+            .into_iter()
+            .collect();
+        let mut psets = Vec::new();
+        if class == Class::TransportElement {
+            if let Some(n) = f.people {
+                give(&mut psets, "Pset_TransportElementCommon", "CapacityPeople", Value::Count(n));
+            }
+            if let Some(kg) = f.weight {
+                give(&mut psets, "Pset_TransportElementCommon", "CapacityWeight", Value::Mass(kg));
+            }
+        }
+        elements.push(Element {
+            class,
+            id: Some(f.id),
+            object: None,
+            name: name(class.code(), &f.name),
+            description: None,
+            tag: Some(f.uid.clone()),
+            predefined,
+            object_type: (predefined == "USERDEFINED").then(|| f.name.clone()),
+            storey: storey_of(f.level.as_deref()),
+            shapes,
+            overall: None,
+            material: None,
+            psets,
+            qtos: Vec::new(),
+        });
+        written.fixtures += 1;
     }
     // The spaces (EK-6 Tablo 6.58): their numbers and names, their finishes as the room list's.
     let mut spaces = Vec::new();

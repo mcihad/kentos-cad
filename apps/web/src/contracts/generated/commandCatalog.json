@@ -36155,6 +36155,17 @@
             ],
             "description": "`dynamic`: the parameters and actions (absent: none, a plain block)."
           },
+          "element": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BlockElement"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`card`: what it is as a building element (docs/adr/8070 §5): its class, type and body; absent keeps it, null\ntakes it away."
+          },
           "entities": {
             "description": "`update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;\ndocs/adr/0316 §1).",
             "items": {
@@ -126543,6 +126554,17 @@
             "null"
           ]
         },
+        "element": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockElement"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What it is as a building element (docs/adr/8070 §5): its class, its type and its body. Absent: no building\nelement (a mark, a title block, a symbol), which the building's model does not hold."
+        },
         "publication": {
           "anyOf": [
             {
@@ -126833,12 +126855,70 @@
         },
         {
           "const": "card",
-          "description": "Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags` and `description`; its version is\ncounted by the drawing.",
+          "description": "Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags`, `description` and its building element\n(`element`, docs/adr/8070 §5); its version is counted by the drawing.",
           "type": "string"
         },
         {
           "const": "dynamic",
           "description": "Its parameters and actions (“Dinamik blok”, docs/adr/0318 §1): `dynamic`, or none to make it a plain block;\nits inserts' values that no longer fit are dropped and counted.",
+          "type": "string"
+        }
+      ]
+    },
+    "BlockElement": {
+      "additionalProperties": false,
+      "description": "A block as a building element (docs/adr/8070 §5; EK-5 Tablo 5.1, EK-6 Tablo 6.35, 6.53, 6.64): its class and type,\nand its body: the block's drawn outline in plan from its underside, `elevation` over its floor, `height` up.",
+      "properties": {
+        "class": {
+          "$ref": "#/$defs/BlockElementClass"
+        },
+        "elevation": {
+          "description": "Its underside over its floor, metres (a wall unit's, a wall-hung basin's); absent: 0.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "height": {
+          "description": "Its body's height, metres; absent: no body, its outline in plan only.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "predefined": {
+          "description": "Its type as IFC 4.3 spells it (`TABLE`, `WASHHANDBASIN`, `ELEVATOR`; [`BlockElementClass::types`]);\n`USERDEFINED` takes the block's name as its object type. Absent: none, which EK-6 counts as missing.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "class"
+      ],
+      "type": "object"
+    },
+    "BlockElementClass": {
+      "description": "A block's building element class (EK-5 Tablo 5.1).",
+      "oneOf": [
+        {
+          "const": "furniture",
+          "description": "Mobilya (`IfcFurniture`, MBL): a table, a chair, a bed, a wardrobe, a kitchen unit.",
+          "type": "string"
+        },
+        {
+          "const": "sanitaryTerminal",
+          "description": "Sıhhi tesisat ucu (`IfcSanitaryTerminal`, STT): a basin, a toilet, a shower, a bath, a sink.",
+          "type": "string"
+        },
+        {
+          "const": "transportElement",
+          "description": "Taşıma elemanı (`IfcTransportElement`, TSM): a lift.",
           "type": "string"
         }
       ]

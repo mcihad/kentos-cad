@@ -31,6 +31,7 @@ pub(crate) fn input(operation: BlockEditOperation) -> BlocksEdit {
         category: None,
         tags: None,
         description: None,
+        element: None,
         operation,
         block: None,
         name: None,

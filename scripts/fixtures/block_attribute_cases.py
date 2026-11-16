@@ -480,6 +480,47 @@ edit.append({"name": "kart: aynı etiket iki kez, boşluklu kategori", "steps": 
     {"op": "execute", "input": {"operation": "card", "block": KAPI, "category": " Mimari"},
      "result": failed("invalid_block_card", "“Kapı” bloğunun kartı: “ Mimari” kategorisi boş ya da başında, sonunda boşluk var.", "category"), "expect": NOTHING},
 ]})
+# The card's building element (docs/adr/8070 §5): its class, its IFC 4.3 type (one of its class's: EK-6 Tablo 6.35's
+# furniture list here) and its body; absent keeps it, null takes it away; a type of another class, or a height not above
+# 0, is refused with the card's own words.
+TABLE = {"class": "furniture", "predefined": "TABLE", "height": 0.75}
+elemented = B(KAPI)
+elemented["card"] = {"category": "Mimari/Kapılar", "tags": ["kapı"], "version": 2, "element": TABLE}
+tagged = copy.deepcopy(elemented)
+tagged["card"]["tags"] = ["kapı", "masa"]
+edit.append({"name": "kart: yapı elemanı verilir, başka alan değişince kalır, null kaldırır", "steps": [
+    {"op": "execute", "input": {"operation": "card", "block": KAPI, "element": TABLE},
+     "result": done(edited([KAPI])), "expect": {"blocks": blocks_with((KAPI, elemented)), "canUndo": True}},
+    {"op": "execute", "input": {"operation": "card", "block": KAPI, "tags": ["kapı", "masa"]},
+     "result": done(edited([KAPI])), "expect": {"blocks": blocks_with((KAPI, tagged))}},
+    {"op": "execute", "input": {"operation": "card", "block": KAPI, "element": None},
+     "result": done(edited([KAPI])), "expect": {"blocks": blocks_with((KAPI, {**B(KAPI), "card": {
+         "category": "Mimari/Kapılar", "tags": ["kapı", "masa"], "version": 2}}))}},
+]})
+edit.append({"name": "kart: sınıfının tipi olmayan tip, sıfır yükseklik, eksi alt kot", "steps": [
+    {"op": "execute", "input": {"operation": "card", "block": KAPI,
+                                "element": {"class": "furniture", "predefined": "WASHHANDBASIN", "height": 0.85}},
+     "result": failed("invalid_block_card", "“Kapı” bloğunun kartı: yapı elemanı: “WASHHANDBASIN” mobilya tiplerinden "
+                      "biri değil (BED, CHAIR, DESK, FILECABINET, SHELF, SOFA, TABLE, TECHNICALCABINET, USERDEFINED).",
+                      "element"), "expect": NOTHING},
+    {"op": "execute", "input": {"operation": "card", "block": KAPI,
+                                "element": {"class": "sanitaryTerminal", "predefined": "WASHHANDBASIN", "height": 0}},
+     "result": failed("invalid_block_card", "“Kapı” bloğunun kartı: yapı elemanı: gövdenin yüksekliği 0; sıfırdan büyük, "
+                      "en çok 20 m olmalı.", "element"), "expect": NOTHING},
+    {"op": "execute", "input": {"operation": "card", "block": KAPI,
+                                "element": {"class": "furniture", "predefined": "USERDEFINED", "height": 0.7,
+                                            "elevation": -0.1}},
+     "result": failed("invalid_block_card", "“Kapı” bloğunun kartı: yapı elemanı: gövdenin alt kotu -0.1; 0 ile 20 m "
+                      "arasında olmalı.", "element"), "expect": NOTHING},
+]})
+lift = {"class": "transportElement", "predefined": "ELEVATOR", "height": 2.2}
+lifted = B(PENCERE)
+lifted["card"] = {"version": 1, "element": lift}
+edit.append({"name": "kart: kartı olmayan bloğa yalnız yapı elemanı; ilk kartın sürümü 1", "steps": [
+    {"op": "execute", "input": {"operation": "card", "block": PENCERE, "element": lift},
+     "result": done(edited([PENCERE])), "expect": {"blocks": blocks_with((PENCERE, lifted)), "canUndo": True}},
+    {"op": "undo", "returns": "Blok değiştir", "expect": {"blocks": without_ids(BLOCKS)}},
+]})
 rebased = B(KAPI)
 rebased["base"] = P(0.1, 0)
 rebased["card"]["version"] = 3
