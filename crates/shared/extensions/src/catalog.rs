@@ -24,9 +24,11 @@ pub const FILE: &str = "index.json";
 /// Characters of change notes kept in the index per package.
 const CHANGELOG_CHARS: usize = 16_000;
 
-/// A package as the catalog lists it.
+/// A package as the catalog lists it. Read without refusing a field it does not know: an index a newer `kentos kek
+/// index` wrote (a report card's field added, docs/adr/8057 §86) still lists its packages in an older KentOS, which
+/// checks each package's bytes before it installs anything.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct CatalogEntry {
     pub id: String,
     pub version: String,
@@ -66,6 +68,18 @@ pub struct CatalogEntry {
     pub sha256: String,
     /// The package's content digest (`sha256:…`).
     pub digest: String,
+    /// The Python packages its lock installs, `name version` each, its own project left out: the report card's line
+    /// (docs/adr/8057 §86).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub python_packages: Vec<String>,
+    /// How many examples it gives, its İşlemler tools', audit rules' and expression functions': what Örnekleri
+    /// çalıştır and `kentos kek test` run.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub examples: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 impl CatalogEntry {
@@ -204,7 +218,10 @@ pub fn index(
         let changelog =
             text(&manifest.changelog_file).map(|t| t.chars().take(CHANGELOG_CHARS).collect());
         let icon = text(&manifest.icon);
-        entries.push(entry(manifest, changelog, icon, file, bytes, digest));
+        let card = card_of(&manifest, &opened.files);
+        let mut listed = entry(manifest, changelog, icon, file, bytes, digest);
+        (listed.python_packages, listed.examples) = card;
+        entries.push(listed);
     }
     if !problems.is_empty() {
         return Err(problems);
@@ -233,6 +250,52 @@ pub fn index(
         name: name.to_owned(),
         packages: entries,
     })
+}
+
+/// A package's report card lines from its files (docs/adr/8057 §86): its lock's packages and how many examples it gives.
+fn card_of(
+    m: &Manifest,
+    files: &std::collections::BTreeMap<String, Vec<u8>>,
+) -> (Vec<String>, u32) {
+    let packages = m
+        .python
+        .as_ref()
+        .and_then(|project| crate::release::locked_packages(project, files))
+        .map(|locked| {
+            locked
+                .iter()
+                .map(|(name, p)| format!("{name} {}", p.version))
+                .collect()
+        })
+        .unwrap_or_default();
+    let array_len = |path: &str, key: &str| -> usize {
+        files
+            .get(path)
+            .and_then(|b| serde_json::from_slice::<serde_json::Value>(b).ok())
+            .and_then(|v| {
+                v.get(key)
+                    .and_then(serde_json::Value::as_array)
+                    .map(Vec::len)
+            })
+            .unwrap_or(0)
+    };
+    let e = &m.entrypoints;
+    let tools: usize = e
+        .processing
+        .iter()
+        .map(|t| array_len(&t.descriptor, "examples"))
+        .sum();
+    let rules: usize = e
+        .audits
+        .iter()
+        .filter_map(|a| a.examples.as_deref())
+        .map(|path| array_len(path, "examples"))
+        .sum();
+    let expressions: usize = e.expressions.iter().map(|x| x.examples.len()).sum();
+    (
+        packages,
+        u32::try_from(tools + rules + expressions).unwrap_or(u32::MAX),
+    )
 }
 
 fn entry(
@@ -266,6 +329,8 @@ fn entry(
         size: bytes.len() as u64,
         sha256: sha256_hex(bytes),
         digest,
+        python_packages: Vec::new(),
+        examples: 0,
     }
 }
 
@@ -346,7 +411,34 @@ mod tests {
             mebis.digest,
             "sha256:4761924ff6428198c016ec3cb78d1c2929e1bf70b0a7dbabc09fc650e78bbe5b"
         );
+        // The report card's lines (docs/adr/8057 §86): the lock's packages, its own project left out; the altlık has
+        // no Python and no examples.
+        assert_eq!(
+            mebis.python_packages,
+            [
+                "importlib-metadata 10.2.0",
+                "lazy-importer 0.1.0",
+                "numpy 2.5.4",
+                "pygal 3.1.3",
+                "shapely 2.2.0",
+                "zipp 4.1.2"
+            ]
+        );
+        assert!(
+            catalog.packages[0].python_packages.is_empty() && catalog.packages[0].examples == 0
+        );
+        assert!(
+            !catalog.to_json().contains("\"examples\": 0"),
+            "nothing written when none"
+        );
         assert_eq!(Catalog::read(&catalog.to_json()).unwrap(), catalog);
+        // A field an older KentOS does not know (a newer `kek index`'s) leaves the package listed.
+        let newer = catalog.to_json().replacen(
+            "\"id\": \"tr.ornek.altlik\"",
+            "\"gelecekAlani\": 1, \"id\": \"tr.ornek.altlik\"",
+            1,
+        );
+        assert_eq!(Catalog::read(&newer).unwrap().packages.len(), 2);
         // An icon changed in the share after indexing, to one the installer refuses, is not drawn.
         let mut changed = catalog.clone();
         changed.packages[1].icon = Some(

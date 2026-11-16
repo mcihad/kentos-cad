@@ -561,6 +561,7 @@ impl App {
                 "Kurulu",
                 label::body(installed.clone().unwrap_or_else(|| "Hayır".to_owned())),
             );
+        form = report_card(form, entry, self.extensions.registry.as_ref());
         if !entry.requested_capabilities.is_empty() {
             form = form.section("Yetenekler");
             for r in &entry.requested_capabilities {
@@ -644,6 +645,100 @@ impl App {
                 .modal(msg(Event::CancelReview)),
         )
     }
+}
+
+/// A catalog entry's report card (docs/adr/8057 §86, D17): honest signals, read before choosing, no stars. Whether it
+/// runs on this KentOS, what it reads as among the installed extensions, the Python packages it brings, whether it
+/// goes on the internet or sends data to an AI service, who wrote it, how many examples it gives.
+fn report_card<'a>(
+    mut form: Form<'a, Message>,
+    entry: &CatalogEntry,
+    registry: Option<&kentos_extension_host::Registry>,
+) -> Form<'a, Message> {
+    use kentos_extensions::resemblance::{Known, resemblances, sentences};
+    form = form.section("Karne");
+    let runs = kentos_extensions::compat::compatible(&entry.compatibility, &super::host());
+    form = form.field(
+        "Bu KentOS'ta",
+        label::body(match &runs {
+            Ok(()) => "Çalışır".to_owned(),
+            Err(p) => format!("Çalışmaz: {}", p.message),
+        }),
+    );
+    // What it reads as among the installed extensions (docs/adr/8059 §14): before the review, while browsing.
+    if let Some(r) = registry {
+        let installed: Vec<Known> = r
+            .extensions()
+            .iter()
+            .filter(|e| e.id != entry.id)
+            .map(|e| Known {
+                id: e.id.clone(),
+                name: e.name.clone(),
+                ..Known::default()
+            })
+            .collect();
+        let found = resemblances(
+            &kentos_extension_host::imitation::of_entry(entry),
+            &installed,
+        );
+        let (same, near): (Vec<_>, Vec<_>) = found.into_iter().partition(|x| x.exact);
+        if !same.is_empty() {
+            form = form.wide(Banner::warning(format!(
+                "Kurulu bir eklentiyi taklit ediyor olabilir. {}",
+                sentences(&same).join(" ")
+            )));
+        }
+        if !near.is_empty() {
+            form = form.wide(Banner::info(sentences(&near).join(" ")));
+        }
+    }
+    form = form.field(
+        "Python",
+        label::body(if entry.python_packages.is_empty() {
+            "Paket kurmaz".to_owned()
+        } else {
+            format!(
+                "{} paket: {}",
+                entry.python_packages.len(),
+                entry.python_packages.join(", ")
+            )
+        }),
+    );
+    let hosts: Vec<&str> = entry
+        .requested_capabilities
+        .iter()
+        .filter(|r| r.id == kentos_extensions::manifest::Capability::Network)
+        .flat_map(|r| r.hosts.iter().map(String::as_str))
+        .collect();
+    let network = entry
+        .requested_capabilities
+        .iter()
+        .any(|r| r.id == kentos_extensions::manifest::Capability::Network);
+    form = form.field(
+        "İnternet",
+        label::body(match (network, hosts.is_empty()) {
+            (false, _) => "Bağlanmaz".to_owned(),
+            (true, true) => "Bağlanır".to_owned(),
+            (true, false) => format!("Bağlanır: {}", hosts.join(", ")),
+        }),
+    );
+    if entry
+        .requested_capabilities
+        .iter()
+        .any(|r| r.sends_data_to_ai == Some(true))
+    {
+        form = form.field(
+            "Yapay zekâ",
+            label::body("Verinizi dış bir yapay zekâ servisine gönderir"),
+        );
+    }
+    form.field(
+        "Örnekler",
+        label::body(match entry.examples {
+            0 => "Örneği yok".to_owned(),
+            n => format!("{n} örnek (Örnekleri çalıştır ve kentos kek test çalıştırır)"),
+        }),
+    )
 }
 
 /// The Python packages the package installs (docs/adr/8057 §81): on a first install one line of them all; on an update

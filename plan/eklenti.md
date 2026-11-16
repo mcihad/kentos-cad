@@ -1417,6 +1417,8 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   - **Emeklilik ve devir:** "yerine geçen" eklenti, bakıcı devri, terk edilmiş paketin işaretlenmesi [D9].
   - **Karne ve dürüst sinyaller:** geçen kapılar, yetenekler ve gerekçeleri, tespit edilen kullanım, bakım ve uyumluluk;
     **yıldız oyu yok**; AI üretim kökeni; istemci telemetrisi yasak; protokol göç oranı ve sağlık ölçütleri izlenir [D17].
+    — *kısmen (16 Kasım, ADR 8057 §86): masaüstünde katalog girdisinin karnesi (bu KentOS'ta çalışır mı, taklit/benzerlik,
+    Python paketleri, internet, yapay zekâya veri, örnek sayısı); kalan: sunucu kataloğunun geçen kapıları.*
 - **Kabul:** P14–P15 (§5). Onaysız sürüm genel/kiracı yayın ucundan görülmez ve kurulmaz; onaylı paketin tek baytı ya da
   kilidi değişirse yeniden inceleme gerekir; kullanıcı buluta yayımlamadan `.kek` ile yerelde çalışır; yerel
   yükle–çalıştır–durdur–devre dışı–etkinleştir–güncelle–geri dön–kaldır akışı gerçek arayüzde geçer [EKL-07].

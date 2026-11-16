@@ -4526,3 +4526,27 @@ inceleme, kurulum ve çalıştırma aynı kurala bakar); paylaşılan `python_na
   (`43.45Z`, `43.4Z`), metin sırası yanlış olurdu.
 - **Sınamalar:** paylaşılan akış 28 (RFC 3339 okuması, kesirli üç dosyadan en yenisi), kayıt defteri 33 (100 000 gün
   incelemede ve kurulumda reddedilir, 0 gün geçer).
+
+## §86. Katalog girdisinin karnesi: dürüst sinyaller, yıldız yok (`ADIM 22A`, D17)
+
+**16 Kasım.** Kod: paylaşılan `catalog.rs` (`CatalogEntry::python_packages`, `examples`, `card_of`; girdi tanımadığı
+alanı reddetmeden okunur), masaüstü `view.rs` (`report_card`).
+
+- **Sorun.** Katalogdaki bir eklentiyi seçerken kişi yayımcıyı, lisansı ve yetenekleri görüyordu; çalışıp
+  çalışmayacağını, ortamına ne kuracağını, internete çıkıp çıkmadığını, sınanabilir olup olmadığını ancak incelemeyi
+  açınca ya da hiç göremiyordu. D17: karne geçen kapıları, yetenekleri, bakım ve uyumluluğu söyler; yıldız oyu yok.
+- **Karar: ayrıntının "Karne" bölümü.** Bu KentOS'ta çalışır mı (çalışmıyorsa neden), kurulu bir eklentiyi taklit
+  ediyor mu ya da ona benziyor mu (ad ve kimlik; ADR 8059 §14, inceleme açılmadan, göz atarken), kuracağı Python
+  paketleri (`numpy 2.5.4, shapely 2.0.7`), internete bağlanır mı ve nereye, verisini dış bir yapay zekâya gönderir mi,
+  kaç örnek verir (Örnekleri çalıştır ve `kek test` koşturur). Yazanı (yapay zekâ ise, §76) bölümün üstünde zaten yazılı.
+- **Dizin:** `kek index` paketin kilidinden paket listesini, araç tanımlarından, kural örnek dosyalarından ve ifade
+  işlevlerinden örnek sayısını yazar; ikisi de boşsa hiç yazılmaz.
+- **İleri uyum:** katalog girdisi tanımadığı alanı artık reddetmez: daha yeni bir `kek index`'in yazdığı dizin eski
+  KentOS'ta da listelenir (her paket kurulmadan önce baytlarından yine denetlenir). Önce reddediyordu: karneye eklenen
+  her alan eski masaüstlerine kataloğu bütünüyle kapatırdı.
+- **Gerçek pencere (KentOS GIS, yalıtılmış profil, Vitrin kurulu):** taklit kopyanın (`tr.ornek.vltrin`) katalog
+  ayrıntısı: "Bu KentOS'ta: Çalışır", taklit uyarısı, "Python: 2 paket: numpy 2.5.4, shapely 2.0.7", "İnternet:
+  Bağlanır: tiles.ornek.bel.tr", "Örnekler: 9 örnek".
+- **Sınamalar:** paylaşılan katalog sınamaları 4 (paketler, örneksiz ve Python'suz pakette alanların yazılmaması,
+  tanınmayan alanla okuma).
+- **Kalan:** sunucu kataloğunun karnesi: geçen kapılar ve inceleme derinliği (ADR 8059; masaüstüne bağlandığında).
