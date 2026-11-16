@@ -82,6 +82,19 @@
     - EK-6 Tablo 6.7'nin `ConstructionMethod`'u inşaat eyleminin türüdür (yeni, ilave, tadilat): künyeden yazılır.
     - Modelin eksik zorunlu alanları `kentos_ifc::required` ile ölçülür, `zorunlu` kuralı nesneleriyle bildirir; EK-9/9
       modelden. Kalan: IFC-02'nin saha, kat, kaplama, merdiven, proje satırları; pencere alanları; acil çıkış önerisi.
+  - **B8 kısmen yapıldı (16 Kasım 2026; [ADR 8069](../adr/8069-room-zone-far-model.md); BIM-08 ve IFC-03 `[~]`):**
+    - Balkonların bağımsız bölüm net alanının %20'sini aşan kısmı emsale girer (PAİY 22/1-l; ADR 8030'un "katlar alanının
+      %20'si" okuması düzeltildi); tabloda kendi satırı.
+    - Kat ve sayılış biçimi başına emsal zonu (`IfcSpatialZone`, DAHIL/HARIC, dayanağı açıklamada), bölümler `IfcZone`.
+      Kalan: katlar arasında yer değiştiren alan (olgusu eklenti sistemiyle birlikte), çatı altı mahal hacmi.
+  - **B9 kısmen yapıldı (16 Kasım 2026; [ADR 8070](../adr/8070-missing-building-elements.md); BIM-09 ve IFC-03 `[~]`):**
+    - Rampa kesit modelinde eğik plak ve sahanlık; merdiven ve rampanın IFC tipi kollarından (listede yoksa USERDEFINED);
+      ikisi de kesitin çizdiği gibi Betonarme (K42).
+    - Duvar bacası ile üstündeki çatı bacası tek `IfcChimney` (K43 malzemesi); niş RECESS; aks ızgarası `IfcGrid`.
+    - Blok kartı yapı elemanını söyler (sınıf, tip, gövde); kitaplığın 25 bloğu sınıflı, asansör kapasitesi
+      öznitelikten; `.kcad` mimari verisi 2, kitaplık sürüm 4.
+    - Kaplama EK-6 Tablo 6.20'nin birinci yolundan: mahal setine döşeme ve tavan kalınlıkları (K44); `IfcCovering`
+      yazılmaz. Kalan: giydirme cephe, `IfcMember`, elle çizilen kaplama.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

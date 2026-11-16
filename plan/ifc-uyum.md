@@ -81,8 +81,8 @@ kimliği; test bağlantısı.
 | IfcBuilding | BNA | Çizim (tek bina) | ◐ | pilotta bina başına dosya; eksik alanlar | IFC-02, IFC-05 |
 | IfcBuildingStorey | BNK | Katlar | ◐ | taşıyıcı döşemenin kotu | IFC-02 |
 | IfcSpace | MHL | Mahal | ◐ hep `INTERNAL`, düz prizma | türü, kapalı hacmi, kaplama kalınlıkları | IFC-02, IFC-06 |
-| IfcSpatialZone | MZN | Emsal alanı (BIM-08) | ✗ | emsal durumu ve alanıyla | IFC-03 |
-| IfcZone | ZON | Bağımsız bölüm, eklenti, ortak alan | ✗ | mahallerini gruplar | IFC-03 |
+| IfcSpatialZone | MZN | Emsal alanı (BIM-08) | ✓ (ADR 8069) | DIGER | IFC-03 |
+| IfcZone | ZON | Bağımsız bölüm, eklenti, ortak alan | ✓ (ADR 8069) | — | IFC-03 |
 | IfcWall | DVR | Duvar | ◐ hep `STANDARD` | türü; yangın; katmanları | IFC-02, IFC-04 |
 | IfcCurtainWall | GDC | Giydirme cephe (BIM-09) | ✗ nesnesi yok | — | IFC-03 |
 | IfcSlab | DSM | Döşeme, balkon, teras | ◐ hep `FLOOR` | türü; yangın | IFC-02 |
@@ -93,21 +93,21 @@ kimliği; test bağlantısı.
 | IfcDoor | KAP | Kapı | ◐ | yangın; acil çıkış | IFC-02 |
 | IfcWindow | PNC | Pencere | ✓ | — | — |
 | IfcOpeningElement | ACL | Açıklık, niş | ✓ | döşeme boşluğu | IFC-06 |
-| IfcStair | MRD | Merdiven | ◐ tipi `NOTDEFINED`, malzemesiz | türü; malzeme; yangın; acil çıkış | IFC-02 |
-| IfcRamp | RMP | Rampa | ✗ "henüz aktarılmıyor" | gövdesi (BIM-09) | IFC-03 |
+| IfcStair | MRD | Merdiven | ✓ tipi kollarından, Betonarme (ADR 8070) | yangın; acil çıkış beyanla (ADR 8068) | IFC-02 |
+| IfcRamp | RMP | Rampa | ✓ eğik kollar ve sahanlıklar, tipi kollarından (ADR 8070) | korkulukları | IFC-03 |
 | IfcRailing | KRK | Korkuluk | ✓ | — | — |
-| IfcCovering | KPL | Kaplama, asma tavan (BIM-09) | ✗ (mahalin kaplama seti yazılıyor) | nesne ya da mahal seti; ikisinden biri yeter | IFC-03 |
-| IfcChimney | BAC | Çatı bacası, duvardaki baca | ✗ | — | IFC-03 |
-| IfcGridAxis | AKS | Aks | ✗ | ızgara ve eksenleri | IFC-03 |
+| IfcCovering | KPL | Kaplama, asma tavan (BIM-09) | — mahalin seti adları ve döşeme/tavan kalınlıklarıyla (K44, ADR 8070) | duvar kalınlığı; elle çizilen kaplama | IFC-03 |
+| IfcChimney | BAC | Çatı bacası, duvardaki baca | ✓ tek eleman, duvarın boşluğunu doldurur (ADR 8070) | — | IFC-03 |
+| IfcGridAxis | AKS | Aks | ✓ `IfcGrid` U/V (ADR 8070); tek yönlü takım kayıpta | RADIAL | IFC-03 |
 | IfcGroup | GRP | — | ✗ | kataloğun ne için istediği belli olunca | IFC-03 |
-| IfcFurniture | MBL | Kitaplık bloğu (mobilya) | ✗ | sınıfı ve gövdesi olan blok | IFC-03 |
-| IfcSanitaryTerminal | STT | Kitaplık bloğu (vitrifiye) | ✗ | aynı | IFC-03 |
-| IfcTransportElement | TSM | Asansör bloğu | ✗ | kişi ve yük kapasitesiyle | IFC-03 |
+| IfcFurniture | MBL | Kitaplık bloğu (mobilya) | ✓ kartındaki sınıf ve gövdeyle (ADR 8070) | gerçek biçim | IFC-03 |
+| IfcSanitaryTerminal | STT | Kitaplık bloğu (vitrifiye) | ✓ aynı | gerçek biçim | IFC-03 |
+| IfcTransportElement | TSM | Asansör bloğu | ✓ kapasitesi KISI/YUK özniteliklerinden (ADR 8070) | — | IFC-03 |
 | IfcFooting | TML | — (statik disiplininin) | ✗ | yazılmaz; statik modelden altlık | — |
 | IfcSign | TBL | — | ✗ | gerek çıkınca | — |
 
-`building.rs`'in `Class` listesi bu sınıflardan yedisinin adını ve kodunu şimdiden taşıyor (kaplama, taşıma elemanı, mobilya,
-sıhhi tesisat ucu, eleman, baca, rampa); `arch.rs` hiçbirini kurmuyor.
+`building.rs`'in `Class` listesindeki taşıma elemanı, mobilya, sıhhi tesisat ucu, baca ve rampa artık kuruluyor (ADR 8070);
+kaplama ve eleman (dikme, kayıt) henüz kurulmuyor.
 
 **Mekânsal yapı.** `IfcProject` → `IfcSite` → `IfcBuilding` → `IfcBuildingStorey` (`IfcRelAggregates`); eleman katında
 (`IfcRelContainedInSpatialStructure`); mahal katının parçası. Çok kata uzanan elemanın birincil katı bellidir, öbür katlar
@@ -316,8 +316,10 @@ nesnesiyle; bağımsız okuyucu şema kurallarında 0 bulgu; çatının ve merdi
 
 **Yapıldı (16 Kasım 2026, [ADR 8069](../docs/adr/8069-room-zone-far-model.md)):** emsal zonları (`IfcSpatialZone`,
 `TREpys_EmsalOzellikSeti.EmsalDurumu`, katına `IfcRelReferencedInSpatialStructure` ile) ve bina programının bölümleri
-(`IfcZone`, mahalleri `IfcRelAssignsToGroup` ile). **Kalan:** rampa, giydirme cephe, kaplama, baca, aks ızgarası, asansör,
-vitrifiye ve mobilya sınıfları; DIGER durumu; kayıp listesinin boşalması.
+(`IfcZone`, mahalleri `IfcRelAssignsToGroup` ile). **Yapıldı ([ADR 8070](../docs/adr/8070-missing-building-elements.md)):**
+rampa, baca, niş, aks ızgarası, asansör, vitrifiye ve mobilya sınıfları; merdivenin tipi; kaplama mahal setiyle (K44);
+bağımsız okuyucu (IfcOpenShell) bölüm binasının dosyasında 0 bulgu. **Kalan:** giydirme cephe ve dikmeleri (`IfcCurtainWall`,
+`IfcMember`); DIGER durumu; kayıp listesinin örnek binada boşalması.
 
 **Kullanıcı sonucu:** Modeldeki her yapı nesnesi kendi sınıfıyla dışa gider; emsal alanları ve bağımsız bölümler dosyadadır.
 Nesneleri BIM-08 ve BIM-09'dan gelir.
