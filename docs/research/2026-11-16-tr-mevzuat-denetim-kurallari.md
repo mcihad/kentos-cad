@@ -297,6 +297,28 @@ katta). Karma binada ortak mahal binanın en ağır sınıfıyla okunur (18 ve 3
 bölmesiyle ayrılmışsa 18'e göre ayrı korunur ama bölme olgularda yok, bulgu bunu söylemez, sınıfın nereden okunduğunu
 söyler.
 
+## İmar durumu: emsal ve TAKS (0.6.0, ADR 8057 §92)
+
+PAİY'in aynı resmî metninden (SHA-256 `4e94897c…6cfd0`, yukarıdakiyle aynı), aynen:
+
+- Madde 4/1-tt: "Katlar alanı katsayısı (KAKS) (Emsal): Yapının inşa edilen tüm kat alanlarının toplamının imar
+  parseli alanına oranını,"
+- Madde 4/1-cccc: "Taban alanı kat sayısı (TAKS): Taban alanının imar parseli alanına oranını (Taban alanı kat sayısı,
+  arazi eğimi nedeniyle tabii veya tesviye edilmiş zeminin üzerinde kalan tüm bodrum katlar ile zemin kat izdüşümü
+  birlikte değerlendirilerek hesaplanır.),"
+- Madde 5/5 (RG 25.7.2019/30842 ile değişik): "Taban alanı ve emsal hesabı; net imar parseli alanı üzerinden yapılır."
+- Madde 5/6 (RG 1.7.2026/33297 ile değişik): "Ayrık veya blok nizam olan yerlerde, uygulama imar planında açıkça
+  belirlenmemiş ise TAKS %40’ı geçemez." … "Yapı yaklaşma mesafeleri ile KAKS verilip TAKS verilmeyen parsellerde de,
+  TAKS %60’ı geçmemek şartıyla, yapı yaklaşma mesafelerine göre uygulama yapılır."
+- Madde 5/8 (RG 30.9.2017/30196 ile değişik): "… emsal harici tüm alanların toplamı; parselin toplam emsale esas
+  alanının % 30’unu aşamaz."
+- Madde 21/4: "Uygulama imar planında emsal verilmeyen parsellerde katlar alanı, planla veya bu Yönetmelikle belirlenen;
+  taban alanı katsayısı ile kat adedinin çarpılmasıyla hesaplanır."
+
+**Karar.** Ölçü KentOS Mimari'nin Emsal ve TAKS tablosununkidir (ADR 8030; olguların `zoning`'i). Plan değerini aşan
+hata. TAKS verilmemişse 5/6: %60'ı aşan hata; %40-%60 arası uyarı (ayrık/blok nizamın %40'ı; yapı nizamı olgularda yok).
+%30'u aşan emsal harici kısım katlar alanına eklendi diye bilgi. 21/4 karar verilmez: kat adedi İmar durumunda yok.
+
 ## KentOS'a öneriler (SDK)
 
 1. ~~`ArchitectureFacts.sprinklers`~~, ~~mahalin türü ve dar kenarı~~, ~~`DoorEscape.into_stair`~~: §53 ile geldi, 0.2.0

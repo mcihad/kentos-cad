@@ -86,6 +86,7 @@ __all__ = [
     "ToolAnswer",
     "UnitFacts",
     "UnitLevel",
+    "ZoningFacts",
     "audit",
     "command",
     "expr",
@@ -1156,12 +1157,10 @@ class Gap:
 
 
 class ArchitectureFacts:
-    """The drawing's architecture as KentOS Mimari measured it (docs/adr/8057 §39): its storeys, every room with its
-    net area and its outline to the walls' axes, the program's groups with PAİY 4/ğ's areas and the escape routes
-    (BYKHY); empty when the drawing has no room. PAİY is Planlı Alanlar İmar Yönetmeliği, BYKHY Binaların Yangından
-    Korunması Hakkında Yönetmelik; areas in m² to 4 decimals, lengths in metres to 3."""
+    """The drawing's architecture as KentOS Mimari measured it (docs/adr/8057 §39); each field in factsSchema. Areas in
+    m² to 4 decimals, lengths in metres to 3."""
 
-    __slots__ = ("levels", "rooms", "units", "doors", "sprinklers", "_exits")
+    __slots__ = ("levels", "rooms", "units", "doors", "sprinklers", "zoning", "_exits")
 
     def __init__(self, raw: dict[str, Any]) -> None:
         #: The project's storeys, lowest first.
@@ -1182,6 +1181,8 @@ class ArchitectureFacts:
         ]
         #: The project says the building has sprinklers: BYKHY's sprinklered distances hold.
         self.sprinklers: bool = bool(raw.get("sprinklers"))
+        #: İmar durumu and the areas against it; None without one.
+        self.zoning: ZoningFacts | None = _zoning(raw.get("zoning"))
         self._exits = {_maybe_str(e.get("level")): int(e.get("count") or 0) for e in raw.get("exits") or []}
 
     def exits(self, level: str | None) -> int:
@@ -1248,8 +1249,7 @@ class Storey:
 
 @dataclass(frozen=True)
 class EscapeWalk:
-    """A walk along the points it turns at, its length in metres; a walk to an exit also says the part it shares with
-    the walk to the nearest other exit (``one_way``, tek yön: a dead end's) and how many exits its start reaches."""
+    """A walk (m) along its points; ``one_way`` its dead end's part (tek yön), ``exits`` the exits its start reaches."""
 
     length: float
     path: tuple[tuple[float, float], ...]
@@ -1259,8 +1259,7 @@ class EscapeWalk:
 
 @dataclass(frozen=True)
 class RoomEscape:
-    """A room's walks from its farthest point, 40 cm in front of its walls (BYKHY 32/6): to the nearest storey exit
-    (32/4; None when it reaches none) and, a dwelling unit's room, to its unit's door (48/2)."""
+    """A room's walks from its farthest point (BYKHY 32/6) to the nearest storey exit and its dwelling's door."""
 
     exit: EscapeWalk | None
     storey_exits: bool
@@ -1271,10 +1270,8 @@ class RoomEscape:
 
 @dataclass(frozen=True)
 class RoomFacts:
-    """A room: its persistent id, number, name, usage, storey and group; void, outdoor, broken (boundary not found) or
-    an escape stair's room; net area and outline to the walls' axes (m²); walks (None for a void, outdoor, broken or
-    stair room); ``kind`` by name or use (``living``, ``bedroom``, ``kitchen``, ``bath``, ``toilet``, ``corridor``;
-    None for another); ``narrow``, its net width (m, dar kenar); ``occupancy``, the Ek-5/B row its name says."""
+    """A room (persistent id, storey, group, net and axis areas in m², walks); ``kind``, ``narrow`` and ``occupancy`` as
+    factsSchema says."""
 
     uid: str
     number: str | None
@@ -1305,9 +1302,7 @@ class UnitLevel:
 
 @dataclass(frozen=True)
 class UnitFacts:
-    """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross``
-    (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None
-    without a share); ``occupancy`` its Ek-5/B row."""
+    """A program group with PAİY 4/ğ's areas (m²) and its Ek-5/B ``occupancy``; each field in factsSchema."""
 
     id: str
     number: str
@@ -1328,10 +1323,35 @@ class UnitFacts:
 
 
 @dataclass(frozen=True)
+class ZoningFacts:
+    """İmar durumu (``far`` emsal, ``coverage`` TAKS; None: not given) and the areas against it, m²; see factsSchema."""
+
+    parcel: float
+    far: float | None
+    coverage: float | None
+    floors: float
+    included: float
+    exempt: float
+    outside: float
+    cap: float | None
+    over: float
+    footprint: float
+
+
+def _zoning(raw: Any) -> ZoningFacts | None:
+    if not isinstance(raw, dict):
+        return None
+    return ZoningFacts(
+        float(raw.get("parcel") or 0.0), _maybe_float(raw.get("far")), _maybe_float(raw.get("coverage")),
+        float(raw.get("floors") or 0.0), float(raw.get("included") or 0.0), float(raw.get("exempt") or 0.0),
+        float(raw.get("outside") or 0.0), _maybe_float(raw.get("cap")), float(raw.get("over") or 0.0),
+        float(raw.get("footprint") or 0.0),
+    )
+
+
+@dataclass(frozen=True)
 class DoorEscape:
-    """A dwelling unit's door: its persistent id, unit, storey and middle, and its walk from its outer side to the
-    nearest storey exit (BYKHY 48/4; None when it opens into an escape stair's room, ``into_stair``, or reaches
-    none)."""
+    """A dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4); see factsSchema."""
 
     uid: str
     unit: str

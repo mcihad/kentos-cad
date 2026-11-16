@@ -22,7 +22,7 @@ use kentos_domain::space_follow::SpaceSearch;
 use kentos_domain::{Document, Slot};
 use kentos_extensions::audit_facts::architecture::{
     ArchitectureFacts, DoorEscape, EscapeWalk, GroupKind, Occupancy, RoomEscape, RoomFacts,
-    RoomKind, Storey, StoreyExits, UnitFacts, UnitLevel,
+    RoomKind, Storey, StoreyExits, UnitFacts, UnitLevel, ZoningFacts,
 };
 use kentos_geometry_core::geom::space::area;
 
@@ -158,6 +158,19 @@ pub(super) fn measure(
         .arch
         .as_ref()
         .is_some_and(|a| a.has_sprinklers());
+    // The parcel's zoning and the areas the Emsal ve TAKS table reads (docs/adr/8030, 8057 §92).
+    let zoning = doc.zoning_report().map(|z| ZoningFacts {
+        parcel: z.parcel,
+        far: z.far_limit,
+        coverage: z.coverage_limit,
+        floors: z.floors,
+        included: z.included,
+        exempt: z.exempt,
+        outside: z.outside,
+        cap: z.cap,
+        over: z.over,
+        footprint: z.footprint,
+    });
     Ok(Some(ArchitectureFacts {
         levels,
         exits,
@@ -165,6 +178,7 @@ pub(super) fn measure(
         units,
         doors,
         sprinklers,
+        zoning,
     }))
 }
 

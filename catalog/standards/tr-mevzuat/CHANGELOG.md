@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.6.0
+
+- **`imar-durumu`** (yeni): projenin İmar durumu varsa emsal (KAKS: katlar alanı / net parsel) ve TAKS (taban alanı /
+  net parsel) planın verdiği değerlerle karşılaştırılır, aşan hata (PAİY 4/1-tt, 4/1-cccc, 5/5). TAKS verilmemişse
+  5/6 (RG 1.7.2026/33297): %60'ı aşan hata; %40 ile %60 arası uyarı (ayrık ya da blok nizamda %40; yapı nizamı
+  olgularda yok). Emsal harici alanların %30'u aştığı kısım katlar alanına eklendi diye bilgi (5/8). Ölçü KentOS
+  Mimari'nin Emsal ve TAKS tablosununkidir (olguların yeni `zoning`'i). Yedi örnekle.
+
 ## 0.5.0
 
 - **Yüksek tehlikeli yerler** (BYKHY md. 8/1-ğ ve 17): KentOS olgularında bölümün niteliğinden ya da mahalin adından

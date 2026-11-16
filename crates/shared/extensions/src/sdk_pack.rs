@@ -40,10 +40,10 @@ sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı a
   foreign_key=…)`, `facts.cut`. KentOS'un Rust'ta ölçtüğü olgular `facts.project` (`ext.ProjectAuditFacts`;
   `.layer("parsel")` → `ext.LayerFacts`: geometriye göre sayılar, `area`, `length`, `invalid`, `overlaps`, `gaps`,
   `totals`; mimari çizimde `.architecture` → `ext.ArchitectureFacts`: katlar, `exits(kat)`, mahaller (`net`, `axis`,
-  `escape`: kat çıkışına ve daire kapısına yürüyüş), `units` (PAİY 4/ğ alanları), `doors`; şeması `factsSchema`):
-  geometriyi yeniden hesaplamayın. Kural yazamaz; bulgu `ext.AuditFinding(message, severity="error"|"warning"|"info",
-  feature_id, fix=ext.SemanticFix(title, command, args))`. Düzeltmeyi kullanıcı uygular (tek geri alma adımı; yalnız
-  `document.write` izinli eklentide).
+  `escape`: kat çıkışına ve daire kapısına yürüyüş), `units` (PAİY 4/ğ alanları), `doors`, `zoning` (imar durumu);
+  şeması `factsSchema`): geometriyi yeniden hesaplamayın. Kural yazamaz; bulgu `ext.AuditFinding(message,
+  severity="error"|"warning"|"info", feature_id, fix=ext.SemanticFix(title, command, args))`. Düzeltmeyi kullanıcı
+  uygular (tek geri alma adımı; yalnız `document.write` izinli eklentide).
 - `@ext.expr("kimlik")` → `entrypoints.expressions`: düz işlev, değer alır değer döndürür. İfadelerde eklenti
   kimliği ve yerel kimlikle çağrılır: `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` (etiket, stil kuralı, süzgeç, form
   hesabı, İşlemler). Çizim beklemez: yanıt gelince yeniden çizilir. MCP ve Python'da `runtimes`: `headless` ister.

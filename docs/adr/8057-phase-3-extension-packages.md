@@ -4709,3 +4709,36 @@ masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
   kullanıldı: "SBOM'u kaydet…", açıklaması "Python bağımlılıklarının listesi: sürümler, kaynaklar ve dosya özetleri
   (CycloneDX)."; iletiler "SBOM kaydedildi", "SBOM'da listelenecek bağımlılık yok".
 - **Kalan:** komut satırında ve katalogda lisanslar (ikisinde de hazırlanmış ortam yok).
+
+## §92. İmar durumu olgularda; emsal ve TAKS kuralı (`ADIM 20`, ulusal kuralların altıncı dilimi, plan notlarının temeli)
+
+**16 Kasım.** Kod: paylaşılan `audit_facts/architecture/zoning.rs` (`ZoningFacts`), `ArchitectureFacts.zoning`; üretici
+`crates/native/processing/src/audit_facts/architecture.rs` (`Document::zoning_report`'tan); Python `ext.ZoningFacts`,
+`ArchitectureFacts.zoning`; şemalar, stub, `llms.txt`; `tr.kentos.mevzuat` 0.6.0 (`src/tr_mevzuat/imar.py`, 7 örnek).
+Kaynaklar `docs/research/2026-11-16-tr-mevzuat-denetim-kurallari.md` › *İmar durumu*.
+
+- **Durum.** KentOS Mimari emsali ve TAKS'ı durum çubuğundaki rozette ve Emsal ve TAKS tablosunda hesaplıyordu (ADR
+  8030), ama denetimde bulgusu yoktu, bulut işi göremiyordu ve olgularda imar durumu olmadığı için bir belediyenin plan
+  notu kuralı yazılamıyordu.
+- **Olgular.** `zoning` yalnız projenin İmar durumu varken: net parsel, planın emsali ve TAKS'ı (verilmeyen yok), katlar
+  alanı (%30'u aşan emsal harici eklenmiş), emsale dahil, emsal harici (%30 içinde), %30'a sayılmayan, %30 sınırı ve
+  aşan, taban alanı. Mimari'nin tablosuyla aynı işlevden ve aynı sayılar (sınama); İmar durumu olmayan projenin
+  olguları bayt bayt eskisi gibi (alan yazılmaz). Sürüm 1'in isteğe bağlı alanı.
+- **Kural `imar-durumu`** (PAİY 4/1-tt, 4/1-cccc, 5/5): emsal = katlar alanı / net parsel, TAKS = taban alanı / net
+  parsel; planın verdiği değeri aşan hata ("Emsal 1.62 > 1.50: katlar alanı 486.00 m², imar durumuna göre en çok 450.00
+  m² (net parsel 300.00 m²) — PAİY md. 4/1-tt ve 5/5; imar durumu"). TAKS verilmemişse 5/6 (RG 1.7.2026/33297): %60'ı
+  aşan hata; %40 ile %60 arası uyarı, çünkü ayrık ya da blok nizamda plan belirlemediyse %40'tır ve yapı nizamı olgularda
+  yok. Emsal harici alanların %30'u aşan kısmı katlar alanına eklendi diye bilgi (5/8). Bulgu nesneye değil binaya
+  aittir (`feature_id` yok).
+- **SDK paketi sınırda kaldı.** Stub'a yeni sınıf girince paket 48 830 bayta çıktı (sınır 48 000, yükseltilmez). Olgu
+  sınıflarının (`ArchitectureFacts`, `RoomFacts`, `UnitFacts`, `DoorEscape`, `EscapeWalk`, `RoomEscape`, yeni
+  `ZoningFacts`) belge dizgileri birer cümleye indi: alanların anlamı zaten ayrı `factsSchema` parçasında alan alan
+  yazılı. Paket 47 565 bayt.
+- **Belediye plan notları için temel.** Bir belediyenin kendi eklentisi aynı olgularla kendi plan notunu yazabilir
+  (ör. planın emsale eklediği bir artış, belirli bir kullanımda daha düşük TAKS). Planın öbür değerleri (kat adedi,
+  Hmax, yapı nizamı, çekme mesafeleri) KentOS'un İmar durumunda henüz yok: onlar girince 21/4 (emsal verilmeyen parselde
+  TAKS × kat adedi) ve 5/6'nın %40'ı da karar verilebilir olur.
+- **Sınamalar:** paylaşılan 1 (yuvarlama, İmar durumu olmayanda alan yok), üretici 1 (Mimari'nin raporuyla aynı
+  sayılar; fikstür değişmedi), `kek test` 37 örneğin hepsi (7 yeni), bulut işi `mevzuat_tests::imar` (emsal ve TAKS
+  aşımı, %60 hata, %40-%60 uyarı, İmar durumu yokken sessiz) ve paketin bütün kuralları (14), SDK sınamaları (165).
+- **Kalan:** İmar durumunda kat adedi, Hmax, yapı nizamı ve çekme mesafeleri; kurp/görüş hesapları.

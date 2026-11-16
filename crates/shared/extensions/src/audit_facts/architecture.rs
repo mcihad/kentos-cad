@@ -15,6 +15,9 @@ use serde::{Deserialize, Serialize};
 
 use super::{AREA, LENGTH, MOST_ITEMS, place, round};
 
+mod zoning;
+pub use zoning::ZoningFacts;
+
 /// The drawing's architecture.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -34,6 +37,10 @@ pub struct ArchitectureFacts {
     /// regulation's sprinklered distances are the ones read (BYKHY 48/2, Ek-5/B; docs/adr/8057 §53).
     #[serde(default)]
     pub sprinklers: bool,
+    /// The parcel's zoning (İmar durumu) and the building's areas against it, when the project writes one
+    /// (docs/adr/8057 §92).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zoning: Option<ZoningFacts>,
 }
 
 /// A storey of the project.
@@ -324,6 +331,7 @@ impl ArchitectureFacts {
                 .then_with(|| a.unit.cmp(&b.unit))
                 .then_with(|| a.level.cmp(&b.level))
         });
+        self.zoning = self.zoning.take().map(ZoningFacts::normalized);
         let cut = self.rooms.len() > MOST_ITEMS || self.doors.len() > MOST_ITEMS;
         self.rooms.truncate(MOST_ITEMS);
         self.doors.truncate(MOST_ITEMS);

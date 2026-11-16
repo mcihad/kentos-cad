@@ -117,6 +117,18 @@ fn facts() -> ArchitectureFacts {
             into_stair: false,
         }],
         sprinklers: true,
+        zoning: Some(ZoningFacts {
+            parcel: 300.0,
+            far: Some(1.5),
+            coverage: Some(0.4),
+            floors: 486.123_456,
+            included: 450.0,
+            exempt: 171.123_456,
+            outside: 12.0,
+            cap: Some(135.0),
+            over: 36.123_456,
+            footprint: 125.000_04,
+        }),
     }
 }
 
@@ -167,6 +179,15 @@ fn the_architecture_is_rounded_and_ordered_as_written_down() {
         "the project's storeys in their order, one it does not name last"
     );
     assert_eq!(a.doors[0].at, [15.0, 4.0]);
+    let z = a.zoning.as_ref().expect("the zoning");
+    assert_eq!(
+        (z.floors, z.over, z.footprint, z.far, z.cap),
+        (486.1235, 36.1235, 125.0, Some(1.5), Some(135.0))
+    );
+    // A project without İmar durumu writes no zoning: its facts are what they were.
+    let mut bare = facts();
+    bare.zoning = None;
+    assert!(!serde_json::to_string(&bare).unwrap().contains("zoning"));
     let (again, _) = a.clone().normalized();
     assert_eq!(again, a);
 }

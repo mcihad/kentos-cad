@@ -1075,7 +1075,11 @@ belediye plan notları.
 niteliğinden ya da mahalin adından, yalnız açık sözlerle okunur (LPG, tüp bayii, akaryakıt istasyonu, doğalgaz dolumu,
 parlayıcı/patlayıcı madde, barut, yanıcı sıvı; binanın kendi yakıt deposu değil); yerel denetim Ek-5/B'nin satırını ve
 39/2'nin 25 kişide iki çıkışını uygular, `tr.kentos.mevzuat` 0.5.0'ın çıkmaz koridoru yağmurlamasız 10 m'ye bakar.
-Kalan: kurp/görüş hesapları, belediye plan notları.
+**Ulusal kuralların altıncı dilimi** (ADR 8057 §92, 16 Kasım): imar durumu olgularda (`ArchitectureFacts.zoning`:
+net parsel, planın emsali ve TAKS'ı, katlar alanı, %30 hesabı, taban alanı; Mimari'nin Emsal ve TAKS tablosuyla aynı
+sayılar); `tr.kentos.mevzuat` 0.6.0'ın `imar-durumu` kuralı emsal ve TAKS'ı plana, TAKS verilmemişse 5/6'nın %60'ına
+bakar. Belediyenin plan notu kuralı aynı olgularla yazılabilir. Kalan: İmar durumunda kat adedi, Hmax, yapı nizamı ve
+çekme mesafeleri (21/4 ve 5/6'nın %40'ı onlarla); kurp/görüş hesapları.
 **Bütçe kuralın Python'unu da ölçer** (ADR 8057 §58, 16 Kasım): sunucunun gözcüsü iş çalıştırıcısını ve altındaki her
 süreci (kuralın Python'u) birlikte ölçer (Linux'ta `/proc`, öbür Unix'lerde tek `ps`; işlemci bitip beklenen çocuklarla,
 bellek toplam RSS) ve bütçe aşılınca ya da Durdur'da iş çalıştırıcısının süreç grubunu bitirir; sonuç yerleşik

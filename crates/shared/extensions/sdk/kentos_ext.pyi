@@ -279,7 +279,7 @@ class Gap:
 
 
 class ArchitectureFacts:
-    """The drawing's architecture as KentOS Mimari measured it: its storeys, every room with its net area and its outline to the walls' axes, the program's groups with PAİY 4/ğ's areas and the escape routes (BYKHY); empty when the drawing has no room."""
+    """The drawing's architecture as KentOS Mimari measured it; each field in factsSchema."""
     #: The project's storeys, lowest first.
     levels: list[Storey]
     #: Every room, a void and an outdoor one too, by persistent id.
@@ -290,6 +290,8 @@ class ArchitectureFacts:
     doors: list[DoorEscape]
     #: The project says the building has sprinklers: BYKHY's sprinklered distances hold.
     sprinklers: bool
+    #: İmar durumu and the areas against it; None without one.
+    zoning: ZoningFacts | None
     def exits(self, level: str | None) -> int:
         """How many storey exits a storey has (BYKHY 4/u: an escape stair's room, an open stair, a door out on the ground storey), by its id; 0 for a storey without rooms."""
     def room(self, uid: str) -> RoomFacts | None:
@@ -309,7 +311,7 @@ class Storey:
 
 @dataclass(frozen=True)
 class EscapeWalk:
-    """A walk along the points it turns at, its length in metres; a walk to an exit also says the part it shares with the walk to the nearest other exit (``one_way``, tek yön: a dead end's) and how many exits its start reaches."""
+    """A walk (m) along its points; ``one_way`` its dead end's part (tek yön), ``exits`` the exits its start reaches."""
     length: float
     path: tuple[tuple[float, float], ...]
     one_way: float | None = None
@@ -318,7 +320,7 @@ class EscapeWalk:
 
 @dataclass(frozen=True)
 class RoomEscape:
-    """A room's walks from its farthest point, 40 cm in front of its walls (BYKHY 32/6): to the nearest storey exit (32/4; None when it reaches none) and, a dwelling unit's room, to its unit's door (48/2)."""
+    """A room's walks from its farthest point (BYKHY 32/6) to the nearest storey exit and its dwelling's door."""
     exit: EscapeWalk | None
     storey_exits: bool
     entrance: EscapeWalk | None
@@ -328,7 +330,7 @@ class RoomEscape:
 
 @dataclass(frozen=True)
 class RoomFacts:
-    """A room: its persistent id, number, name, usage, storey and group; void, outdoor, broken (boundary not found) or an escape stair's room; net area and outline to the walls' axes (m²); walks (None for a void, outdoor, broken or stair room); ``kind`` by name or use (``living``, ``bedroom``, ``kitchen``, ``bath``, ``toilet``, ``corridor``; None for another); ``narrow``, its net width (m, dar kenar); ``…"""
+    """A room (persistent id, storey, group, net and axis areas in m², walks); ``kind``, ``narrow`` and ``occupancy`` as factsSchema says."""
     uid: str
     number: str | None
     name: str | None
@@ -357,7 +359,7 @@ class UnitLevel:
 
 @dataclass(frozen=True)
 class UnitFacts:
-    """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross`` (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None without a share); ``occupancy`` its Ek-5/B row."""
+    """A program group with PAİY 4/ğ's areas (m²) and its Ek-5/B ``occupancy``; each field in factsSchema."""
     id: str
     number: str
     name: str | None
@@ -377,8 +379,23 @@ class UnitFacts:
 
 
 @dataclass(frozen=True)
+class ZoningFacts:
+    """İmar durumu (``far`` emsal, ``coverage`` TAKS; None: not given) and the areas against it, m²; see factsSchema."""
+    parcel: float
+    far: float | None
+    coverage: float | None
+    floors: float
+    included: float
+    exempt: float
+    outside: float
+    cap: float | None
+    over: float
+    footprint: float
+
+
+@dataclass(frozen=True)
 class DoorEscape:
-    """A dwelling unit's door: its persistent id, unit, storey and middle, and its walk from its outer side to the nearest storey exit (BYKHY 48/4; None when it opens into an escape stair's room, ``into_stair``, or reaches none)."""
+    """A dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4); see factsSchema."""
     uid: str
     unit: str
     level: str | None

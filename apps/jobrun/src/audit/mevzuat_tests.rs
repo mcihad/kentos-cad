@@ -203,6 +203,7 @@ macro_rules! need_python {
 mod ara_kat;
 mod bykhy;
 mod cikmaz;
+mod imar;
 mod paiy;
 
 /// The cloud job's way: the drawing as the server writes it and the package beside the request; each rule gives its
@@ -257,7 +258,8 @@ fn the_rules_run_on_the_drawing_as_a_cloud_job_runs_them() {
             "ara-katli-daire",
             "daire-kapisi",
             "cikis-erisimi",
-            "kacis-uzakligi"
+            "kacis-uzakligi",
+            "imar-durumu"
         ]
     );
     let _ = std::fs::remove_dir_all(&dir);
