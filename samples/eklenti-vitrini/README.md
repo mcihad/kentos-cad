@@ -100,9 +100,10 @@ sonraki çalıştırmada onu alır.
 - Paketlemeden önce `kentos kek verify samples/eklenti-vitrini/eklenti` (ajanlarda `extension.verify`): paket, Python
   işlevlerinin `@ext` işaretleri ve tehlikeli çağrılar; her bulgu dosyası, satırı ve ne yazılacağıyla.
 - Araçların ve kuralların örnekleri pencere açmadan: `kentos kek test samples/eklenti-vitrini/eklenti` doğrular, geçici
-  bir kayıt defterine kurar, Python ortamını kilidinden hazırlar ve iki aracın ve iki kuralın örneklerini çalıştırır
-  ("6 örneğin hepsi geçti.", çıkış 0; kalan örnek nedeni ve kodun iz kaydıyla, çıkış 1). Kuralın örnekleri kendi
-  dosyasındadır (`eklenti/audits/yapi-no.examples.json`): nesneler ya da mimari olgular ve beklenen bulgular. Sürekli
+  bir kayıt defterine kurar, Python ortamını kilidinden hazırlar ve iki aracın, iki kuralın ve ifade işlevinin
+  örneklerini çalıştırır ("9 örneğin hepsi geçti.", çıkış 0; kalan örnek nedeni ve kodun iz kaydıyla, çıkış 1).
+  Kuralın örnekleri kendi dosyasındadır (`eklenti/audits/yapi-no.examples.json`): nesneler ya da mimari olgular ve
+  beklenen bulgular; ifadeninkiler manifestte (`entrypoints.expressions[].examples`: argümanlar ve değer). Sürekli
   tümleştirmede `--install-python` KentOS'un Python'unu uv ile kurar.
 - Yeni bir eklentiye Vitrin'i kopyalayarak değil iskeletle başlayın: `kentos kek new KLASÖR --id … --name … --with
   command,processing,audit,expression,mapTool` (ajanlarda `extension.blueprint`): doğrulamadan sorunsuz geçer.

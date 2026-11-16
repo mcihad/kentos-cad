@@ -25,6 +25,14 @@ fn an_expected_value_is_met_as_a_number_or_as_text() {
     assert_eq!(said(2, 0), "2 örneğin hiçbiri geçmedi.");
 }
 
+/// One rule's examples to run.
+fn of_rules(rule: Rule) -> Examples {
+    Examples {
+        rules: vec![rule],
+        ..Examples::default()
+    }
+}
+
 fn square(x: f64) -> Value {
     json!({ "type": "Polygon",
             "coordinates": [[[x, 0.0], [x + 10.0, 0.0], [x + 10.0, 10.0], [x, 10.0], [x, 0.0]]] })
@@ -66,10 +74,10 @@ fn a_rules_example_is_checked_against_its_findings() {
         }),
     };
     let stop = AtomicBool::new(false);
-    let passed = run(&[], &[rule("error")], json!({}), &stop);
+    let passed = run(&of_rules(rule("error")), json!({}), &stop);
     assert_eq!(passed["summary"], "Örnek geçti.", "{passed}");
     assert_eq!(passed["examples"][0]["findings"], 1);
-    let failed = run(&[], &[rule("warning")], json!({}), &stop);
+    let failed = run(&of_rules(rule("warning")), json!({}), &stop);
     let problems = failed["examples"][0]["problems"].to_string();
     assert!(
         problems.contains(
@@ -87,11 +95,71 @@ fn a_rules_example_is_checked_against_its_findings() {
         }),
         ..rule("error")
     };
-    let report = run(&[], &[broken], json!({}), &stop);
+    let report = run(&of_rules(broken), json!({}), &stop);
     let row = &report["examples"][0];
     assert_eq!(
         row["problems"][0], "kural hata verdi: KeyError: 'alan'",
         "{row}"
     );
     assert!(row["detail"].as_str().unwrap().contains("Traceback"));
+}
+
+/// An expression function's example: each call runs as a label calls it (a row of arguments) and its value is the one
+/// expected; a call that gives another says both, a call whose code fails says why. A call without a title is named
+/// as an expression writes it.
+#[test]
+fn an_expressions_example_is_checked_against_its_value() {
+    use kentos_extensions::manifest::ExpressionExample;
+    let example = |args: Value, expect: Value| -> ExpressionExample {
+        serde_json::from_value(json!({ "args": args, "expect": expect })).expect("an example")
+    };
+    // The stand-in function: "ada/parsel", none when either is missing; "0" fails as its code would.
+    let function = Expression {
+        id: "ext.tr.ornek.x.ada-parsel".into(),
+        title: "Ada/parsel".into(),
+        examples: vec![
+            example(json!(["101", "1"]), json!("101/1")),
+            example(json!([null, "1"]), json!(null)),
+            example(json!(["1", "2"]), json!("9/9")),
+            example(json!(["0", "0"]), json!("0/0")),
+        ],
+        run: Box::new(|invoke: Value| {
+            assert_eq!(invoke["kind"], "expression");
+            let row = &invoke["rows"][0];
+            if row[0] == "0" {
+                return Ok(
+                    json!({ "ok": true, "result": { "kind": "values", "values": [null],
+                                  "failed": 1, "error": "ValueError: sıfır" } }),
+                );
+            }
+            let value = match (row[0].as_str(), row[1].as_str()) {
+                (Some(a), Some(p)) => json!(format!("{a}/{p}")),
+                _ => Value::Null,
+            };
+            Ok(json!({ "ok": true, "result": { "kind": "values", "values": [value] } }))
+        }),
+    };
+    let report = run(
+        &Examples {
+            expressions: vec![function],
+            ..Examples::default()
+        },
+        json!({}),
+        &AtomicBool::new(false),
+    );
+    assert_eq!(
+        report["summary"], "4 örnekten 2 tanesi geçti, 2 tanesi kaldı.",
+        "{report}"
+    );
+    let rows = report["examples"].as_array().unwrap();
+    assert_eq!(
+        rows[0]["title"],
+        "ext.tr.ornek.x.ada-parsel(\"101\", \"1\")"
+    );
+    assert_eq!(rows[1]["status"], "passed", "null as expected");
+    assert_eq!(rows[2]["problems"][0], "\"9/9\" beklendi, \"1/2\" geldi");
+    assert_eq!(
+        rows[3]["problems"][0],
+        "işlev hata verdi: ValueError: sıfır"
+    );
 }

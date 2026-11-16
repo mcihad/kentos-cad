@@ -378,7 +378,27 @@ pub struct ExpressionEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     pub handler: String,
+    /// Its examples (docs/adr/8057 §78): a call's arguments and the value it must give, at most 10; run by Örnekleri
+    /// çalıştır and `kentos kek test`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub examples: Vec<ExpressionExample>,
 }
+
+/// An expression function's example: the arguments of one call (text, number, true/false or null, at most 10) and the
+/// value it must give (a number within a billionth, the rest as written).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ExpressionExample {
+    /// What it shows, in a few words; none: the call as written (`ada-parsel("101", "1")`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    pub args: Vec<serde_json::Value>,
+    pub expect: serde_json::Value,
+}
+
+/// The most examples an expression function gives, and the most arguments one call has.
+pub const MOST_EXPRESSION_EXAMPLES: usize = 10;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1394,6 +1414,51 @@ impl Checker<'_> {
     }
 }
 
+/// An expression function's examples (docs/adr/8057 §78): at most ten; each call's arguments at most ten, every one and
+/// the value expected a plain value (text, number, true/false or null), as an expression gives and takes.
+fn expression_examples(c: &mut Checker<'_>, at: &str, examples: &[ExpressionExample]) {
+    let plain = |v: &serde_json::Value| !(v.is_array() || v.is_object());
+    if examples.len() > MOST_EXPRESSION_EXAMPLES {
+        c.add(
+            "manifest_expression_example",
+            &format!("{at}/examples"),
+            format!(
+                "En çok {MOST_EXPRESSION_EXAMPLES} örnek ({} var).",
+                examples.len()
+            ),
+        );
+    }
+    for (j, example) in examples.iter().enumerate() {
+        let here = format!("{at}/examples/{j}");
+        if let Some(title) = &example.title {
+            c.line(&format!("{here}/title"), "Örneğin adı", title, 80);
+        }
+        if example.args.len() > MOST_EXPRESSION_EXAMPLES {
+            c.add(
+                "manifest_expression_example",
+                &format!("{here}/args"),
+                format!("Bir çağrı en çok {MOST_EXPRESSION_EXAMPLES} argüman alır."),
+            );
+        }
+        for (k, arg) in example.args.iter().enumerate() {
+            if !plain(arg) {
+                c.add(
+                    "manifest_expression_example",
+                    &format!("{here}/args/{k}"),
+                    "Argüman düz bir değer olmalı: metin, sayı, true/false ya da null.".to_owned(),
+                );
+            }
+        }
+        if !plain(&example.expect) {
+            c.add(
+                "manifest_expression_example",
+                &format!("{here}/expect"),
+                "Beklenen düz bir değer olmalı: metin, sayı, true/false ya da null.".to_owned(),
+            );
+        }
+    }
+}
+
 impl Manifest {
     /// Reads `manifest.json` and checks it: every rule's problem at once, or the one that keeps it from being read.
     pub fn parse(text: &str) -> Result<Manifest, Vec<Problem>> {
@@ -1913,6 +1978,7 @@ impl Manifest {
                 c.line(&format!("{at}/title"), "Başlık", title, 80);
             }
             c.handler(&format!("{at}/handler"), &entry.handler);
+            expression_examples(c, &at, &entry.examples);
         }
         for (i, entry) in e.panels.iter().enumerate() {
             let at = format!("/entrypoints/panels/{i}");

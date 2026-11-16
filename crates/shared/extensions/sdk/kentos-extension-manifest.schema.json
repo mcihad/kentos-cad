@@ -395,6 +395,13 @@
     "ExpressionEntry": {
       "additionalProperties": false,
       "properties": {
+        "examples": {
+          "description": "Its examples (docs/adr/8057 §78): a call's arguments and the value it must give, at most 10; run by Örnekleri\nçalıştır and `kentos kek test`.",
+          "items": {
+            "$ref": "#/$defs/ExpressionExample"
+          },
+          "type": "array"
+        },
         "handler": {
           "type": "string"
         },
@@ -411,6 +418,29 @@
       "required": [
         "id",
         "handler"
+      ],
+      "type": "object"
+    },
+    "ExpressionExample": {
+      "additionalProperties": false,
+      "description": "An expression function's example: the arguments of one call (text, number, true/false or null, at most 10) and the\nvalue it must give (a number within a billionth, the rest as written).",
+      "properties": {
+        "args": {
+          "items": true,
+          "type": "array"
+        },
+        "expect": true,
+        "title": {
+          "description": "What it shows, in a few words; none: the call as written (`ada-parsel(\"101\", \"1\")`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "args",
+        "expect"
       ],
       "type": "object"
     },

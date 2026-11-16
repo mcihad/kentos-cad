@@ -206,7 +206,11 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
     if has(Contribution::Expression) {
         entrypoints.insert(
             "expressions".into(),
-            json!([{ "id": "buyuk-harf", "title": "Türkçe büyük harf", "handler": format!("{package}.logic:buyuk_harf") }]),
+            json!([{ "id": "buyuk-harf", "title": "Türkçe büyük harf", "handler": format!("{package}.logic:buyuk_harf"),
+                     // A call and its value (docs/adr/8057 §78): kentos kek test runs them.
+                     "examples": [{ "args": ["istanbul"], "expect": "İSTANBUL" },
+                                  { "args": ["ılık"], "expect": "ILIK" },
+                                  { "args": [null], "expect": null }] }]),
         );
         capabilities.push(
             json!({ "id": "expression.provider", "scope": "plugin-owned",

@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.52",
+  "version": "1.0.53",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -206,7 +206,32 @@
       {
         "id": "ada-parsel",
         "title": "Ada/parsel yazımı",
-        "handler": "vitrin.logic:ada_parsel"
+        "handler": "vitrin.logic:ada_parsel",
+        "examples": [
+          {
+            "args": [
+              "101",
+              "1"
+            ],
+            "expect": "101/1"
+          },
+          {
+            "title": "Sayı olarak gelen ada: 101.0 yerine 101",
+            "args": [
+              101.0,
+              "4"
+            ],
+            "expect": "101/4"
+          },
+          {
+            "title": "Parseli boş: değer yok",
+            "args": [
+              "101",
+              null
+            ],
+            "expect": null
+          }
+        ]
       }
     ],
     "mapTools": [

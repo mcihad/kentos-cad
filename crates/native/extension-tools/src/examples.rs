@@ -32,12 +32,38 @@ pub fn of(ext: &str) -> Vec<ExternalTool> {
         .collect()
 }
 
-/// Each tool's examples in turn, then each rule's, the report (`head` and `status`, `summary`, `passed`, `failed`,
-/// `examples`: one row each); Durdur between examples. Deep: a tool's code may ask for a built-in tool (§47), a command
-/// inside the command.
-pub fn run(tools: &[ExternalTool], rules: &[Rule], head: Value, stop: &AtomicBool) -> Value {
+/// What an extension gives examples of: its İşlemler tools', its audit rules' and its expression functions', each with
+/// how its host runs it.
+#[derive(Default)]
+pub struct Examples {
+    pub tools: Vec<ExternalTool>,
+    pub rules: Vec<Rule>,
+    pub expressions: Vec<Expression>,
+}
+
+impl Examples {
+    /// How many examples there are.
+    pub fn count(&self) -> usize {
+        self.tools.iter().map(|t| t.examples.len()).sum::<usize>()
+            + self.rules.iter().map(|r| r.examples.len()).sum::<usize>()
+            + self
+                .expressions
+                .iter()
+                .map(|e| e.examples.len())
+                .sum::<usize>()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.count() == 0
+    }
+}
+
+/// Each tool's examples in turn, then each rule's, then each expression function's: the report (`head` and `status`,
+/// `summary`, `passed`, `failed`, `examples`: one row each); Durdur between examples. Deep: a tool's code may ask for
+/// a built-in tool (§47), a command inside the command.
+pub fn run(examples: &Examples, head: Value, stop: &AtomicBool) -> Value {
     let mut out = Vec::new();
-    for tool in tools {
+    for tool in &examples.tools {
         for example in &tool.examples {
             if stop.load(Ordering::Relaxed) {
                 return json!({ "status": "stopped" });
@@ -48,13 +74,24 @@ pub fn run(tools: &[ExternalTool], rules: &[Rule], head: Value, stop: &AtomicBoo
             out.push(row);
         }
     }
-    for rule in rules {
+    for rule in &examples.rules {
         for example in &rule.examples {
             if stop.load(Ordering::Relaxed) {
                 return json!({ "status": "stopped" });
             }
             let began = Instant::now();
             let mut row = rules::one_rule(rule, example);
+            row["ms"] = json!(began.elapsed().as_millis() as u64);
+            out.push(row);
+        }
+    }
+    for function in &examples.expressions {
+        for example in &function.examples {
+            if stop.load(Ordering::Relaxed) {
+                return json!({ "status": "stopped" });
+            }
+            let began = Instant::now();
+            let mut row = expressions::one_expression(function, example);
             row["ms"] = json!(began.elapsed().as_millis() as u64);
             out.push(row);
         }
@@ -242,8 +279,10 @@ fn same(got: &Value, want: &Value) -> bool {
     }
 }
 
+mod expressions;
 mod rules;
 
+pub use expressions::{Expression, expression_examples};
 pub use rules::{Rule, RunRule, rule_examples};
 
 #[cfg(test)]

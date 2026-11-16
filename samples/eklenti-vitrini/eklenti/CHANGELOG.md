@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.53 — 16 Kasım 2026
+
+- "Ada/parsel yazımı" ifade işlevinin örnekleri (manifestte `examples`): `("101", "1")` → `"101/1"`, sayı olarak gelen
+  ada (`101.0`) `"101/4"` yazar, boş parsel değer vermez. Eklentiler › Örnekleri çalıştır ve `kentos kek test`
+  çalıştırır.
+
 ## 1.0.52 — 16 Kasım 2026
 
 - İki denetim kuralının örnekleri (`audits/yapi-no.examples.json`, `audits/parsel-cakisma.examples.json`): numarasız

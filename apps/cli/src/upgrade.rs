@@ -19,14 +19,14 @@ pub(super) fn run(folder: &Path, check: bool, json: bool) -> ExitCode {
             .map(|r| serde_json::json!({ "file": r.file, "line": r.line, "from": r.from, "to": r.to }))
             .collect();
         let out = serde_json::json!({ "check": check, "files": changed.keys().collect::<Vec<_>>(), "rewrites": list });
-        println!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
+        say!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
     } else if rewrites.is_empty() {
-        println!(
+        say!(
             "Yükseltilecek bir şey yok: klasörün Python'u bu KentOS'un eskittiği bir adı kullanmıyor."
         );
     } else {
         for r in &rewrites {
-            println!("{} satır {}: {} → {}", r.file, r.line, r.from, r.to);
+            say!("{} satır {}: {} → {}", r.file, r.line, r.from, r.to);
         }
     }
     if check {
@@ -43,7 +43,7 @@ pub(super) fn run(folder: &Path, check: bool, json: bool) -> ExitCode {
         }
     }
     if !changed.is_empty() && !json {
-        println!(
+        say!(
             "{} dosya yazıldı; kentos kek verify {} ile doğrulayın.",
             changed.len(),
             folder.display()

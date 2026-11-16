@@ -21,7 +21,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use kentos_extension_tools::examples::Rule;
+use kentos_extension_tools::examples::{Examples, Expression, Rule, RunRule};
 use kentos_extension_tools::headless::{Headless, offer_with};
 use kentos_extension_tools::{Library, Note, Plan, Python, run_in_pool, start_of};
 use kentos_python_env::process::Pool;
@@ -78,7 +78,7 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
     });
     if !json {
         if let Some(m) = &v.manifest {
-            println!("{} {} — {}", m.id, m.version, m.name);
+            say!("{} {} — {}", m.id, m.version, m.name);
         }
         super::print_placed(&v);
     }
@@ -91,7 +91,7 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
     };
     report["extension"] = json!({ "id": manifest.id, "version": manifest.version.to_string() });
     if !json {
-        println!("Doğrulandı: {} uyarı.", v.warnings.len());
+        say!("Doğrulandı: {} uyarı.", v.warnings.len());
     }
     let Some(project) = &manifest.python else {
         let said = "Eklentinin Python kodu yok: doğrulandı, çalıştırılacak örnek yok.";
@@ -103,7 +103,7 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
     };
     let tell = |line: String| {
         if !json {
-            println!("{line}");
+            say!("{line}");
         }
     };
     let prepared = install_into(&temp.0, folder, &files, &manifest).and_then(|package| {
@@ -158,9 +158,10 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
         .unwrap_or_default();
     report["notes"] = json!(notes);
     let Some(mut examples) = examples else {
-        let said = "Araçlarda ve denetim kurallarında örnek yok: eklenti doğrulandı ve ortamı hazırlandı, \
-                    çalıştırılacak örnek yok. Aracın örneği tanımında (examples), kuralınki kendi dosyasında \
-                    (entrypoints.audits[].examples; kentos kek sdk --part auditExamplesSchema).";
+        let said = "Araçlarda, denetim kurallarında ve ifade işlevlerinde örnek yok: eklenti doğrulandı ve ortamı \
+                    hazırlandı, çalıştırılacak örnek yok. Aracın örneği tanımında (examples), kuralınki kendi \
+                    dosyasında (entrypoints.audits[].examples), ifadeninki manifestte \
+                    (entrypoints.expressions[].examples).";
         return end(report, json, "passed", said, 0);
     };
     for row in examples["examples"].as_array_mut().into_iter().flatten() {
@@ -169,14 +170,14 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
         }
     }
     if !json {
-        println!("Örnekler:");
+        say!("Örnekler:");
         for e in examples["examples"]
             .as_array()
             .map(Vec::as_slice)
             .unwrap_or_default()
         {
             let passed = e["status"] == "passed";
-            println!(
+            say!(
                 "  {} {} › {} ({})",
                 if passed { "✓" } else { "✗" },
                 e["label"].as_str().unwrap_or_default(),
@@ -188,17 +189,17 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
                 .map(Vec::as_slice)
                 .unwrap_or_default()
             {
-                println!("      • {}", p.as_str().unwrap_or_default());
+                say!("      • {}", p.as_str().unwrap_or_default());
             }
             // A rule's code failed: its traceback, the files named where the author edits them.
             if let Some(detail) = e["detail"].as_str() {
-                println!("        {}", detail.trim_end().replace('\n', "\n        "));
+                say!("        {}", detail.trim_end().replace('\n', "\n        "));
             }
         }
         if !notes.is_empty() {
-            println!("Eklentinin söyledikleri:");
+            say!("Eklentinin söyledikleri:");
             for n in &notes {
-                println!("  • {}", n.replace('\n', "\n    "));
+                say!("  • {}", n.replace('\n', "\n    "));
             }
         }
     }
@@ -217,12 +218,12 @@ fn end(mut report: Value, json: bool, status: &str, said: &str, code: u8) -> Exi
     report["status"] = json!(status);
     report["summary"] = json!(said);
     if json {
-        println!(
+        say!(
             "{}",
             serde_json::to_string_pretty(&report).unwrap_or_default()
         );
     } else {
-        println!("Sonuç: {said}");
+        say!("Sonuç: {said}");
     }
     ExitCode::from(code)
 }
@@ -253,15 +254,20 @@ fn examples_of(
     });
     let tools = kentos_extension_tools::examples::of(ext);
     let pool = Arc::new(Pool::default());
-    let rules = match rules_of(root, python, ext, &pool) {
-        Ok(rules) => rules,
+    let (rules, expressions) = match coded_of(root, python, ext, &pool) {
+        Ok(coded) => coded,
         Err(why) => {
             return Some(
                 json!({ "status": "failed", "failed": 1, "summary": why, "examples": [] }),
             );
         }
     };
-    if tools.is_empty() && rules.is_empty() {
+    let all = Examples {
+        tools,
+        rules,
+        expressions,
+    };
+    if all.is_empty() {
         return None;
     }
     let head = json!({ "kind": "examples", "extension": { "id": ext } });
@@ -269,9 +275,7 @@ fn examples_of(
     let report = std::thread::Builder::new()
         .name("kentos-kek-test".into())
         .stack_size(kentos_extension_tools::calls::STACK)
-        .spawn(move || {
-            kentos_extension_tools::examples::run(&tools, &rules, head, &AtomicBool::new(false))
-        })
+        .spawn(move || kentos_extension_tools::examples::run(&all, head, &AtomicBool::new(false)))
         .ok()
         .and_then(|t| t.join().ok());
     kentos_extension_tools::headless::close();
@@ -284,43 +288,57 @@ fn examples_of(
 /// How long a rule's example may take, as a rule on the desktop.
 const RULE_TIMEOUT: Duration = Duration::from_secs(120);
 
-/// The audit rules of `ext` installed in the test's registry `root` that give examples (docs/adr/8057 §75), each run
-/// in its version's process in `pool` as the desktop runs it; why not, when a rule's examples cannot be read.
-fn rules_of(
+/// What `ext` installed in the test's registry `root` gives examples of besides its tools: its audit rules' (§75) and
+/// its expression functions' (§78), each run in its version's process in `pool` as the desktop runs it; why not, when
+/// a rule's examples cannot be read.
+fn coded_of(
     root: &Path,
     python: &Python,
     ext: &str,
     pool: &Arc<Pool>,
-) -> Result<Vec<Rule>, String> {
+) -> Result<(Vec<Rule>, Vec<Expression>), String> {
     let registry = kentos_extension_host::places::open_to_read(root, env!("CARGO_PKG_VERSION"))
         .map_err(|p| format!("Sınamanın kayıt defteri okunamadı: {p}"))?;
+    // A contribution's run in its version's process: its plan found now, its process started at the first call.
+    let runner = |local: &str, handler: &str| -> Result<RunRule, String> {
+        let plan = Plan::of(&registry, ext, local, handler)
+            .ok_or_else(|| format!("“{local}” kurulu değil."))?;
+        let (pool, python) = (Arc::clone(pool), python.clone());
+        Ok(Box::new(move |invoke| {
+            let start = || {
+                kentos_extension_host::verify_installed(&plan.source, &plan.digest)?;
+                start_of(&plan, &python, Library::IfFound)
+            };
+            run_in_pool(
+                &pool,
+                &plan.key(),
+                &plan,
+                &start,
+                invoke,
+                RULE_TIMEOUT,
+                &|| false,
+            )
+        }))
+    };
     let mut rules = Vec::new();
     for (audit, read) in kentos_extension_tools::examples::rule_examples(&registry, ext) {
         let examples =
             read.map_err(|why| format!("“{}” kuralının örnekleri okunamadı: {why}", audit.id))?;
-        let plan = Plan::of(&registry, ext, &audit.id, &audit.handler)
-            .ok_or_else(|| format!("“{}” kuralı kurulu değil.", audit.id))?;
-        let (pool, python) = (Arc::clone(pool), python.clone());
         rules.push(Rule {
             id: format!("ext.{ext}.{}", audit.id),
             title: audit.title.clone(),
             examples,
-            run: Box::new(move |invoke| {
-                let start = || {
-                    kentos_extension_host::verify_installed(&plan.source, &plan.digest)?;
-                    start_of(&plan, &python, Library::IfFound)
-                };
-                run_in_pool(
-                    &pool,
-                    &plan.key(),
-                    &plan,
-                    &start,
-                    invoke,
-                    RULE_TIMEOUT,
-                    &|| false,
-                )
-            }),
+            run: runner(&audit.id, &audit.handler)?,
         });
     }
-    Ok(rules)
+    let mut expressions = Vec::new();
+    for entry in kentos_extension_tools::examples::expression_examples(&registry, ext) {
+        expressions.push(Expression {
+            id: format!("ext.{ext}.{}", entry.id),
+            title: entry.title.clone().unwrap_or_else(|| entry.id.clone()),
+            run: runner(&entry.id, &entry.handler)?,
+            examples: entry.examples,
+        });
+    }
+    Ok((rules, expressions))
 }

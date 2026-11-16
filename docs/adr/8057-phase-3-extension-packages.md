@@ -4290,3 +4290,29 @@ MCP `server.rs` (`clientInfo`, `client_of`), `tools.rs` (`WithWorkshop::author`)
 - **Gerçek okuma:** MCP'nin `resources/list`'i iki SDK kaynağını verdi (`application/json`, `text/markdown`),
   `resources/read` metni 45.047 karakter olarak.
 - **Kalan:** sürekli tümleştirme şablonu, `kek serve`.
+
+## §78. İfade işlevinin örnekleri: çağrı ve değeri (`ADIM 19`–`21`, §48 ve §75'in ifadeye uzanması)
+
+**16 Kasım.** Kod: paylaşılan `manifest.rs` (`ExpressionEntry::examples`, `ExpressionExample`, denetimi), manifestin
+JSON Schema'sı, `blueprint.rs`; `kentos-extension-tools` `examples.rs` (`Examples`: araçlar, kurallar, ifadeler; tek
+`run`), `examples/expressions.rs` (yeni: `Expression`, `expression_examples`, `one_expression`); masaüstü
+`examples.rs` (`ext_examples_of`), `view.rs`; komut satırı `kek_test.rs` (`coded_of`); Vitrin 1.0.53.
+
+- **Karar: örnek manifestte, satır içi.** İfadenin örneği küçüktür: bir çağrının argümanları (metin, sayı, true/false
+  ya da null; en çok 10) ve vermesi gereken değer: `"examples": [{"args": ["101", "1"], "expect": "101/1"}]`, en çok
+  10 örnek, adı (`title`) isteğe bağlı: yoksa çağrı ifadenin yazdığı gibi okunur (`ext.tr.ornek.vitrin.ada-parsel("101",
+  "1")`). Kuralın örneği büyük olduğu için ayrı dosyadaydı (§75); bunun için dosya gerekmedi.
+- **Koşu etiketin çağırdığı gibi:** sürümün sürecinde `kind: expression`, bir satır argüman; değer §48'in
+  karşılaştırmasıyla (sayı milyarda bir payla, kalanı yazıldığı gibi; null null'a eşit). Başka değer verirse ikisi de
+  söylenir ("\"9/9\" beklendi, \"1/2\" geldi"), kodu hata verirse nedeni ("işlev hata verdi: ValueError: …").
+- **Tek koşucu:** araçların, kuralların ve ifadelerin örnekleri `Examples` yapısında birlikte, aynı `run`'la; masaüstünün
+  Örnekleri çalıştır'ı (düğme ifadenin örneği varsa da görünür), ajanın denemesi ve `kek test`.
+- **Kapı 1:** örnek sayısı, argüman sayısı, argümanın ve beklenenin düz değer olması, adın uzunluğu, yeriyle
+  (`manifest_expression_example`).
+- **Vitrin 1.0.53:** "Ada/parsel yazımı" üç örnekle: `("101", "1")` → `"101/1"`, sayı olarak gelen ada (`101.0`) →
+  `"101/4"`, boş parsel → değer yok. İskeletin "Türkçe büyük harf"i: `"istanbul"` → `"İSTANBUL"`, `"ılık"` → `"ILIK"`,
+  `null` → `null`.
+- **Gerçek koşu:** `kek test` Vitrin "9 örneğin hepsi geçti." (iki araç, iki kuralın dört, ifadenin üç örneği); iskelet
+  3/3.
+- **Sınamalar:** extension-tools 1 (stand-in işlevle: değer, null, başka değer, kodun hatası, çağrının adı), paylaşılan
+  crate'in manifest sınamaları, masaüstü örnek ve deneme sınamaları.

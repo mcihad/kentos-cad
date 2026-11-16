@@ -24,6 +24,19 @@ use std::process::ExitCode;
 
 use kentos_extensions::{Limits, Manifest, Problem, catalog, inspect, pack};
 
+/// A line to standard output. A reader that closed it (`kentos kek sdk --text | head`) ends the program quietly, as a
+/// command line tool does; `println!` panicked there ("failed printing to stdout: Broken pipe").
+macro_rules! say {
+    ($($arg:tt)*) => {{
+        use std::io::Write as _;
+        if let Err(e) = writeln!(std::io::stdout(), $($arg)*)
+            && e.kind() == std::io::ErrorKind::BrokenPipe
+        {
+            std::process::exit(0);
+        }
+    }};
+}
+
 mod kek_test;
 mod upgrade;
 
@@ -86,7 +99,7 @@ fn main() -> ExitCode {
         ["kek", "new", folder, rest @ ..] => new_folder(Path::new(folder), rest),
         ["kek", "sdk"] => sdk(None, json),
         ["kek", "sdk", "--text"] => {
-            print!("{}", kentos_extensions::sdk_text::llms_txt());
+            say!("{}", kentos_extensions::sdk_text::llms_txt().trim_end());
             ExitCode::SUCCESS
         }
         ["kek", "sdk", "--part", part] => sdk(Some(part), json),
@@ -114,9 +127,9 @@ fn fail(message: String) -> ExitCode {
 
 fn print_list(title: &str, problems: &[Problem]) {
     if !problems.is_empty() {
-        println!("{title}:");
+        say!("{title}:");
         for problem in problems {
-            println!("  • {problem}");
+            say!("  • {problem}");
         }
     }
 }
@@ -128,26 +141,26 @@ fn inspect_file(file: &Path, json: bool) -> ExitCode {
     };
     let inspection = inspect(&bytes, &Limits::default());
     if json {
-        println!(
+        say!(
             "{}",
             serde_json::to_string_pretty(&inspection).unwrap_or_default()
         );
     } else {
         if let Some(m) = &inspection.manifest {
-            println!("{} {} — {}", m.id, m.version, m.name);
+            say!("{} {} — {}", m.id, m.version, m.name);
             if let Some(g) = &m.generated {
-                println!("Yazan: {}", g.words());
+                say!("Yazan: {}", g.words());
             }
         }
         if let Some(digest) = &inspection.digest {
-            println!("İçerik özeti: {digest}");
+            say!("İçerik özeti: {digest}");
         }
         print_list("Sorunlar", &inspection.problems);
         print_list("Uyarılar", &inspection.warnings);
         if inspection.is_valid() {
-            println!("{} dosya; paket geçerli.", inspection.files.len());
+            say!("{} dosya; paket geçerli.", inspection.files.len());
         } else {
-            println!("Paket geçersiz: {} sorun.", inspection.problems.len());
+            say!("Paket geçersiz: {} sorun.", inspection.problems.len());
         }
     }
     if inspection.is_valid() {
@@ -239,7 +252,7 @@ fn sdk(part: Option<&str>, json: bool) -> ExitCode {
             }
         },
     };
-    println!("{text}");
+    say!("{text}");
     ExitCode::SUCCESS
 }
 
@@ -320,7 +333,7 @@ fn new_folder(folder: &Path, args: &[&str]) -> ExitCode {
             return fail(format!("{} yazılamadı: {e}", to.display()));
         }
     }
-    println!(
+    say!(
         "{} dosya yazıldı: {}. Sıradaki: örnekleri değiştirin, `kentos kek verify {}` ile doğrulayın, `kentos kek pack` \
          ile paketleyin.",
         files.len(),
@@ -355,9 +368,9 @@ fn print_placed(v: &kentos_extensions::Verification) {
     };
     for (title, list) in [("Sorunlar", &v.problems), ("Uyarılar", &v.warnings)] {
         if !list.is_empty() {
-            println!("{title}:");
+            say!("{title}:");
             for p in list {
-                println!("{}", line(p));
+                say!("{}", line(p));
             }
         }
     }
@@ -397,26 +410,26 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         {
             o.insert("dryRun".to_owned(), dry.to_json());
         }
-        println!(
+        say!(
             "{}",
             serde_json::to_string_pretty(&value).unwrap_or_default()
         );
     } else {
         if let Some(m) = &v.manifest {
-            println!("{} {} — {}", m.id, m.version, m.name);
+            say!("{} {} — {}", m.id, m.version, m.name);
             if let Some(g) = &m.generated {
-                println!("Yazan: {}", g.words());
+                say!("Yazan: {}", g.words());
             }
         }
         print_placed(&v);
         if v.is_valid() {
-            println!(
+            say!(
                 "Doğrulandı: {} uyarı. İçerik özeti {}.",
                 v.warnings.len(),
                 v.digest.as_deref().unwrap_or("-")
             );
         } else {
-            println!("Doğrulanmadı: {} sorun.", v.problems.len());
+            say!("Doğrulanmadı: {} sorun.", v.problems.len());
         }
         if let Some(dry) = &dry {
             print_dry_run(dry);
@@ -432,16 +445,16 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
 /// The dry run in lines: what was bound, what was left out and why, what stayed behind.
 fn print_dry_run(dry: &kentos_extension_host::DryRun) {
     if !dry.problems.is_empty() {
-        println!("Kuru koşu: kurulamadı.");
+        say!("Kuru koşu: kurulamadı.");
         for p in &dry.problems {
-            println!("  • {} ({})", p.message, p.code);
+            say!("  • {} ({})", p.message, p.code);
         }
         return;
     }
     if dry.registered.is_empty() {
-        println!("Kuru koşu: katkı bağlanmadı.");
+        say!("Kuru koşu: katkı bağlanmadı.");
     } else {
-        println!(
+        say!(
             "Kuru koşu: {} katkı bağlandı ({}).",
             dry.registered.len(),
             dry.registered
@@ -452,19 +465,19 @@ fn print_dry_run(dry: &kentos_extension_host::DryRun) {
         );
     }
     if let Some(why) = &dry.activation {
-        println!("  • Etkinleşmedi: {why}");
+        say!("  • Etkinleşmedi: {why}");
     }
     if let Some(note) = &dry.note {
-        println!("  Not: {note}");
+        say!("  Not: {note}");
     }
     for s in &dry.skipped {
-        println!("  • Atlandı: {} — {}", s.id, s.reason);
+        say!("  • Atlandı: {} — {}", s.id, s.reason);
     }
     if dry.residue.is_empty() {
-        println!("  Kaldırınca kalıntı yok.");
+        say!("  Kaldırınca kalıntı yok.");
     } else {
         for r in &dry.residue {
-            println!("  • Kalıntı: {r}");
+            say!("  • Kalıntı: {r}");
         }
     }
 }
@@ -479,13 +492,13 @@ fn pack_folder(folder: &Path, out: Option<PathBuf>, json: bool) -> ExitCode {
         Err(problems) => {
             if json {
                 let value = serde_json::json!({ "problems": problems });
-                println!(
+                say!(
                     "{}",
                     serde_json::to_string_pretty(&value).unwrap_or_default()
                 );
             } else {
                 print_list("Sorunlar", &problems);
-                println!("Paketlenmedi: {} sorun.", problems.len());
+                say!("Paketlenmedi: {} sorun.", problems.len());
             }
             return ExitCode::from(1);
         }
@@ -513,19 +526,19 @@ fn pack_folder(folder: &Path, out: Option<PathBuf>, json: bool) -> ExitCode {
             "leftOut": left_out,
             "warnings": packed.warnings,
         });
-        println!(
+        say!(
             "{}",
             serde_json::to_string_pretty(&value).unwrap_or_default()
         );
     } else {
-        println!(
+        say!(
             "Paketlendi: {} ({} bayt, {count} dosya)",
             out.display(),
             packed.bytes.len()
         );
-        println!("İçerik özeti: {}", packed.digest);
+        say!("İçerik özeti: {}", packed.digest);
         if !left_out.is_empty() {
-            println!("Pakete girmeyenler: {}", left_out.join(", "));
+            say!("Pakete girmeyenler: {}", left_out.join(", "));
         }
         print_list("Uyarılar", &packed.warnings);
     }
@@ -570,7 +583,7 @@ fn index_folder(folder: &Path, name: Option<&str>) -> ExitCode {
             if let Err(e) = std::fs::write(&out, index.to_json()) {
                 return fail(format!("{} yazılamadı: {e}", out.display()));
             }
-            println!(
+            say!(
                 "Katalog yazıldı: {} ({} paket)",
                 out.display(),
                 index.packages.len()
@@ -579,7 +592,7 @@ fn index_folder(folder: &Path, name: Option<&str>) -> ExitCode {
         }
         Err(problems) => {
             print_list("Sorunlar", &problems);
-            println!("Katalog yazılmadı: {} sorun.", problems.len());
+            say!("Katalog yazılmadı: {} sorun.", problems.len());
             ExitCode::from(1)
         }
     }
@@ -599,7 +612,7 @@ fn dump(root: Option<PathBuf>) -> ExitCode {
             Ok(registry) => registry,
             Err(problem) => return fail(problem.to_string()),
         };
-    println!(
+    say!(
         "{}",
         serde_json::to_string_pretty(&registry.dump()).unwrap_or_default()
     );
@@ -647,12 +660,12 @@ fn log(args: &[&str], json: bool) -> ExitCode {
     let records = journal.tail(id, count);
     if json {
         for r in &records {
-            println!("{}", serde_json::to_string(r).unwrap_or_default());
+            say!("{}", serde_json::to_string(r).unwrap_or_default());
         }
         return ExitCode::SUCCESS;
     }
     if records.is_empty() {
-        println!("Günlükte kayıt yok ({}).", journal.file(id).display());
+        say!("Günlükte kayıt yok ({}).", journal.file(id).display());
         return ExitCode::SUCCESS;
     }
     for r in &records {
@@ -666,7 +679,7 @@ fn log(args: &[&str], json: bool) -> ExitCode {
             .as_ref()
             .map(|v| format!(" · {v}"))
             .unwrap_or_default();
-        println!(
+        say!(
             "{} {:<5} {}{part}{version} — {}",
             utc(r.at),
             r.level.label(),
@@ -675,14 +688,14 @@ fn log(args: &[&str], json: bool) -> ExitCode {
         );
         if let Some(detail) = &r.detail {
             for line in detail.lines() {
-                println!("    {line}");
+                say!("    {line}");
             }
         }
     }
     if let Some(id) = id
         && let Some(p) = kentos_extension_host::journal::problem_in(&records)
     {
-        println!("\nDuran hata ({id}): {} — {}", utc(p.at), p.message);
+        say!("\nDuran hata ({id}): {} — {}", utc(p.at), p.message);
     }
     ExitCode::SUCCESS
 }
