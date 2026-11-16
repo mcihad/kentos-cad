@@ -57,6 +57,7 @@ impl Catalog {
         if matches!(request, Move::Submit { .. }) {
             release = self.imitation_gate(key, release).await?;
             release = self.secrets_gate(key, release).await?;
+            release = self.experimental_gate(key, release).await?;
         }
         if release.state() == ReleaseState::Published && before != Some(ReleaseState::Published) {
             self.published(&key.catalog, &release).await;
@@ -125,6 +126,50 @@ impl Catalog {
             r.record_scan(
                 &scanner,
                 GateKind::Secrets,
+                &content,
+                ScanOutcome::Blocked(found.clone()),
+                now,
+            )
+        })
+        .await
+    }
+
+    /// The package gate's rule for the SDK's experimental names, run by the catalog itself when a version is sent to a
+    /// public or tenant catalog (ADR 8061 §5): a package whose Python uses one goes back with each file and line; a
+    /// personal catalog publishes it, as the workshop and a local install run it. Finding none proves nothing of the
+    /// gate, so nothing is reported then; a release another gate sent back is left.
+    async fn experimental_gate(
+        &self,
+        key: &ReleaseKey,
+        release: Release,
+    ) -> Result<Release, CatalogError> {
+        if release.state() != ReleaseState::Submitted
+            || matches!(key.catalog, CatalogId::Personal(_))
+            || self.experimental.is_empty()
+        {
+            return Ok(release);
+        }
+        let content = release.content().package.clone();
+        let bytes = self.stored(&content).await?;
+        let opened = kentos_extensions::open(&bytes, &self.limits);
+        let found: Vec<Reason> =
+            kentos_extensions::sdk_surface::experimental_in(&opened.files, self.experimental)
+                .into_iter()
+                .map(|p| Reason {
+                    file: p.file,
+                    at: p.at,
+                    ..Reason::new(p.code, p.message)
+                })
+                .collect();
+        if found.is_empty() {
+            return Ok(release);
+        }
+        let scanner = Actor::new(CATALOG_SCANNER, &[Role::Scanner], Channel::Program);
+        let now = now();
+        self.moved(key, &scanner, |r| {
+            r.record_scan(
+                &scanner,
+                GateKind::Package,
                 &content,
                 ScanOutcome::Blocked(found.clone()),
                 now,

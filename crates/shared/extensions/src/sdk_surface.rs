@@ -1,7 +1,8 @@
 //! What leaves the SDK's stable surface (docs/adr/8061): a name the SDK deprecates, with what replaces it and since
 //! which KentOS, and a name still experimental. A package's Python is read for them as text where its other rules are
 //! (python_rules.rs, gate 1: packing, installing, `verify`): `sdk_deprecated` and `sdk_experimental` are warnings;
-//! the catalog's package gate refuses experimental use (ADR 8061 §5). `kentos kek upgrade` writes a deprecated name's
+//! the catalog's package gate refuses experimental use in a public or tenant catalog (ADR 8061 §5; the catalog runs
+//! [`experimental_in`] itself when a version is sent). `kentos kek upgrade` writes a deprecated name's
 //! replacement when it is a plain rename.
 //!
 //! Today nothing is deprecated or experimental: both lists are empty, and the tests give their own. A deprecation is
@@ -110,6 +111,26 @@ pub(crate) fn scan_with(
             );
         }
     }
+}
+
+/// Where a package's Python uses an experimental name of `experimental` (the SDK's, or a test's): the warnings
+/// `sdk_experimental` with file and line, every one. The catalog's package gate blocks a version on them in a public or
+/// tenant catalog (ADR 8061 §5).
+pub fn experimental_in(
+    files: &BTreeMap<String, Vec<u8>>,
+    experimental: &[Experimental],
+) -> Vec<Problem> {
+    let mut out = Vec::new();
+    for (path, data) in files {
+        if let Some(text) = path
+            .ends_with(".py")
+            .then(|| std::str::from_utf8(data).ok())
+            .flatten()
+        {
+            scan_with(path, text, &[], experimental, &mut out);
+        }
+    }
+    out
 }
 
 /// The surface's warnings on Python file `path` against the SDK's lists.

@@ -66,6 +66,8 @@ pub struct Catalog {
     accounts: Accounts,
     limits: Limits,
     on_publish: Option<Arc<dyn OnPublish>>,
+    /// The SDK's experimental names, which a public or tenant catalog does not publish (ADR 8061 §5).
+    experimental: &'static [kentos_extensions::sdk_surface::Experimental],
 }
 
 impl Catalog {
@@ -75,7 +77,18 @@ impl Catalog {
             accounts,
             limits: Limits::default(),
             on_publish: None,
+            experimental: kentos_extensions::sdk_surface::EXPERIMENTAL,
         }
+    }
+
+    /// This catalog, with `names` for the SDK's experimental names (a test's: the SDK's list is empty today).
+    #[cfg(test)]
+    pub fn experimental(
+        mut self,
+        names: &'static [kentos_extensions::sdk_surface::Experimental],
+    ) -> Catalog {
+        self.experimental = names;
+        self
     }
 
     /// This catalog, handing every release that becomes published to `hook`.

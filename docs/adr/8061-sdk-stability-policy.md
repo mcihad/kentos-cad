@@ -63,9 +63,11 @@ Paketin Python'u eskiyen adı kullanırsa `sdk_deprecated` uyarısı, satırıyl
 ## §5. Deneysel yüzey
 
 Bir ad deneysel çıkabilir (`sdk_surface::EXPERIMENTAL`): yeri ve biçimi oturmamış bir yetenek. Atölyede ve yerel
-kurulumda çalışır; `sdk_experimental` uyarısı verir; **genel ve kiracı kataloğu onu kullanan paketi yayımlamaz**: paket
-kapısının (ADR 8059, `GateKind::Package`) tarayıcısı bu kodu engelleyen bulgu sayar (tarayıcı işçisi ADIM 22A'nın
-kalanıdır). Deneysel ad ya kararlılığa geçer (kayıttan çıkar) ya da bir protokol artışında kalkar.
+kurulumda çalışır; `sdk_experimental` uyarısı verir; **genel ve kiracı kataloğu onu kullanan paketi yayımlamaz**:
+gönderilen sürümün Python'unda deneysel bir ad varsa katalog kendisi paket kapısını (ADR 8059, `GateKind::Package`)
+dosyası ve satırıyla engeller ve sürüm yazarına döner (`experimental_gate`, 16 Kasım; taklit ve sır kapısının yolu).
+Kişisel katalog yayımlar: atölye ve yerel kurulum da çalıştırıyor. Deneysel ad ya kararlılığa geçer (kayıttan çıkar) ya
+da bir protokol artışında kalkar.
 
 ## §6. Davranışın kararlılığı
 
@@ -104,7 +106,9 @@ geride kaldığını söylüyor [H2]. (Ölçümün yeri ADIM 22A'nın katalog y�
   deneysel ad yayımlanamaz diye; belge dizgisi, yorum ve `offset_rows` gibi içinde geçen ad kullanım değil;
   `upgrade` kodu yazar, belge dizgisini, yorumu ve yerine geçeni olmayanı olduğu gibi bırakır; SDK'nın boş kaydında
   uyarı ve yükseltme yok).
-- **Kalan:** paket kapısı tarayıcısının `sdk_experimental`'ı engelleyen bulgu sayması (ADIM 22A), göç oranı ölçümü,
+- **Kalan:** ~~paket kapısının `sdk_experimental`'ı engellemesi~~ (16 Kasım, §5: katalog gönderimde kendisi engeller;
+  katalog API sınaması `an_experimental_name_keeps_a_version_out_of_the_public_catalog`, sınamanın kendi kaydıyla:
+  bulgu `sdk_experimental` · `src/yardimci.py` · `satır 2`, kararlı adla sürüm incelemeye gider), göç oranı ölçümü,
   JSON biçimlerinde `schemaVersion` 2 göçleri (`kek upgrade`'in biçim kuralları, ilk ikinci sürümle).
 
 ## §10. Eskiyen ve deneysel adlar

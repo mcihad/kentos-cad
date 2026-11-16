@@ -1229,8 +1229,8 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
     — *kısmen (ADR 8061, 16 Kasım): ilke yazılı (güvencedeki yüzey, kırılma yalnız protokol artışında, en az bir sürüm
     eskime, deneysel yayımlanamaz, davranış kararlılığı, göç oranı ölçümü); eskiyen/deneysel ad kaydı ve Kapı 1
     uyarıları (`sdk_deprecated`, `sdk_experimental`; bugün kayıt boş); `kentos kek upgrade` (düz yeniden adlandırmalar,
-    `--check`). Kalan: paket kapısı tarayıcısının deneysel kullanımı engellemesi (22A), JSON biçimlerinin `schemaVersion`
-    2 göçleri, göç oranı ölçümü.*
+    `--check`). 16 Kasım: genel ve kiracı kataloğu deneysel ad kullanan sürümü gönderimde paket kapısında engeller
+    (ADR 8061 §5). Kalan: JSON biçimlerinin `schemaVersion` 2 göçleri, göç oranı ölçümü.*
   - **AST kuralları:** çalışma anında paket kurma/indirme, kendi kendini güncelleme, `sys.path` oynama yasak; beyan
     edilmemiş yetenek kullanımı (ağ, dosya, alt süreç, pano) ret; görünmez Unicode ret [D5, D11, Ö·41].
     — *kısmen (ADR 8057 §72, 16 Kasım): çalışırken kurma, `sys.path` ve beyansız ağ ret, paketlemede ve kurulumda
