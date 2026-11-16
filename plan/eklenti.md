@@ -1209,8 +1209,11 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   eklenti/araç/form/ortam keşfi, yetenekler, şemalar, bağımlılıklar, örnekler ve hata kodları ortak katalogda [PY-AI-01];
   AI'nin form/sorgu/gönderisi etkin alan/satır politikasına uyar, tasarım/yayın/kurulum/onay ayrı ve doğru kullanıcıyla
   [ECO-API-12].
-  — *kısmen (ADR 8057 §22, §24, §37): Asistan iskelet, panel ve İşlemler aracı üretir (MEBİS), kod ayrı denemede
-  çalışır; kalan: form/domain taslaklarının politikası, doğal dilden zincir, ortak keşif kataloğu.*
+  — *kısmen (ADR 8057 §22, §24, §37, §108): Asistan iskelet, panel ve İşlemler aracı üretir (MEBİS), kod ayrı
+  denemede çalışır; doğal dilden zincir: ajan yerleşik ve eklenti araçlarını `cad.processing.run`'a yazdığı satır içi
+  modelle zincirler (tek plan, tek onay, tek geri alma adımı), araç dizini kısa (274 957 → 35 102 bayt), tanımlar çıktı
+  adlarını verir, modelin adımları gizli alan denetiminden geçer (17 Kasım); kalan: form/domain taslaklarının
+  politikası, ortak keşif kataloğu.*
 - [x] **Güvenlik:** eklenti açıklaması, README, veri öznitelikleri ve form yardım metni güvenilmeyen veridir; içindeki
   talimatlar uç/kullanan/yetki/yayın kapsamını değiştiremez [PY-AI-09, A02]; form alan maskesi, satır ACL'si ve hassas
   izdüşüm AI bağlamında da uygulanır [PY-AI-10]; ajanın kişisel güvenilir Python yürütmesi ile kapsamlı araç çağrısı ayrı

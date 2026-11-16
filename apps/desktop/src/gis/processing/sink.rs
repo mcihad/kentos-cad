@@ -483,6 +483,7 @@ impl App {
         let v = self.viewport.camera.visible_bounds();
         Some(ProcessingRun {
             environment: self.processing_environment().ok().flatten(),
+            model: None,
             tool: window.tool.id.clone(),
             parameters,
             selection,

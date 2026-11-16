@@ -13,10 +13,11 @@ use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
 use kentos_commands::{
-    BatchOnError, BatchRowFailed, BatchRowRan, CommandError, CommandWarning, GpkgExported, GpkgTableExported, ProcessingBatch,
-    ProcessingBatched, ProcessingRan, ProcessingRecord, ProcessingRun, ProcessingTool,
-    ProcessingTools, ProcessingToolsListed, RecordFailure, RecordStep, RecordTotal, RunInput,
-    RunSink, SinkColumn, SinkDimension, SinkMode, SinkReport, SinkTable, ToolNote, ToolParameter, codes,
+    BatchOnError, BatchRowFailed, BatchRowRan, CommandError, CommandWarning, GpkgExported,
+    GpkgTableExported, ProcessingBatch, ProcessingBatched, ProcessingRan, ProcessingRecord,
+    ProcessingRun, ProcessingTool, ProcessingToolOutput, ProcessingTools, ProcessingToolsListed,
+    RecordFailure, RecordStep, RecordTotal, RunInput, RunSink, SinkColumn, SinkDimension, SinkMode,
+    SinkReport, SinkTable, ToolNote, ToolParameter, codes,
 };
 use kentos_domain::{ChangeMark, Document, Slot, Uuid};
 use kentos_geometry_core::geometry::Bounds;
@@ -134,6 +135,17 @@ fn described(registry: &Registry, tool: &Tool, doc: &Document) -> ProcessingTool
                     }
                     _ => Vec::new(),
                 },
+            })
+            .collect(),
+        // What a model's later step is wired to (docs/adr/8057 §108): without them an agent writing a model guessed
+        // the names and its chain did not hold.
+        outputs: tool
+            .outputs
+            .iter()
+            .map(|o| ProcessingToolOutput {
+                name: o.name.clone(),
+                label: o.label.clone(),
+                kind: o.kind.type_name().to_owned(),
             })
             .collect(),
     }
@@ -272,18 +284,30 @@ pub(crate) fn ready(
     doc: &Document,
     input: &ProcessingRun,
 ) -> Result<Ready, Box<CommandError>> {
-    let Some(tool) = registry.get(&input.tool) else {
-        return Err(refused(
-            codes::UNKNOWN_TOOL,
-            unknown_tool(&input.tool),
-            Some("tool".into()),
-        ));
+    // A model written for the run (docs/adr/8057 §108): read and checked as the library's, run as a saved one is.
+    let inline = input
+        .model
+        .as_ref()
+        .map(|value| inline_model(registry, value))
+        .transpose()?;
+    let (tool, model) = match inline {
+        Some(model) => (model_as_tool(&model, &|id| registry.tool(id)), Some(model)),
+        None => {
+            let Some(tool) = registry.get(&input.tool) else {
+                return Err(refused(
+                    codes::UNKNOWN_TOOL,
+                    unknown_tool(&input.tool),
+                    Some("tool".into()),
+                ));
+            };
+            let model = input
+                .tool
+                .strip_prefix(MODEL_PREFIX)
+                .and_then(|id| registry.model(id))
+                .cloned();
+            (tool, model)
+        }
     };
-    let model = input
-        .tool
-        .strip_prefix(MODEL_PREFIX)
-        .and_then(|id| registry.model(id))
-        .cloned();
     let selection = slots_of(doc, &input.selection, "selection")?;
     let view = input.view.map(|[min_x, min_y, max_x, max_y]| Bounds {
         min_x,
@@ -375,6 +399,68 @@ pub(crate) fn ready(
         folder,
         environment,
     })
+}
+
+/// A model written for a run (docs/adr/8057 §108): read as the library reads one, each step's tool this host's, its
+/// wiring checked as the designer checks it; why not, where.
+fn inline_model(registry: &Registry, value: &Value) -> Result<Model, Box<CommandError>> {
+    // An empty list written as an empty object (`"inputs": {}`) is read as the list: an agent wrote it so on the real
+    // window and gave the chain up for two runs (two undo steps).
+    let mut value = value.clone();
+    for key in ["inputs", "outputs"] {
+        if let Some(slot) = value.get_mut(key)
+            && slot.as_object().is_some_and(serde_json::Map::is_empty)
+        {
+            *slot = Value::Array(Vec::new());
+        }
+    }
+    let model: Model = serde_json::from_value(value).map_err(|e| {
+        refused(
+            codes::INVALID_PARAMETERS,
+            format!(
+                "model bir İşlemler modeli olarak okunmadı ({e}): id, label, inputs, steps (her adımın id'si, \
+                 tool'u ve values'u) ve outputs."
+            ),
+            Some("model".into()),
+        )
+    })?;
+    if model.steps.is_empty() {
+        return Err(refused(
+            codes::INVALID_PARAMETERS,
+            "Modelin adımı yok: en az bir araç adımı verin.".to_owned(),
+            Some("model.steps".into()),
+        ));
+    }
+    for (i, step) in model.steps.iter().enumerate() {
+        if registry.get(&step.tool).is_none() {
+            return Err(refused(
+                codes::UNKNOWN_TOOL,
+                unknown_tool(&step.tool),
+                Some(format!("model.steps[{i}].tool")),
+            ));
+        }
+    }
+    let lookup = |id: &str| registry.get(id);
+    if let Some(issue) = crate::model::check_model(&model, &lookup)
+        .into_iter()
+        .next()
+    {
+        let at = issue
+            .step
+            .as_ref()
+            .and_then(|s| model.steps.iter().position(|x| &x.id == s));
+        let step = issue
+            .step
+            .as_ref()
+            .map(|s| format!(" (adım “{s}”)"))
+            .unwrap_or_default();
+        return Err(refused(
+            codes::INVALID_PARAMETERS,
+            format!("Modelin bağlantısı tutmuyor{step}: {}", issue.message),
+            Some(at.map_or_else(|| "model".to_owned(), |i| format!("model.steps[{i}]"))),
+        ));
+    }
+    Ok(model)
 }
 
 /// The drawing as a run sees it: no screen, the input's selection and box.
@@ -856,6 +942,7 @@ pub(crate) fn row_run(input: &ProcessingBatch, row: &kentos_commands::BatchRow) 
     }
     ProcessingRun {
         environment: input.environment.clone(),
+        model: None,
         tool: input.tool.clone(),
         parameters,
         selection: input.selection.clone(),

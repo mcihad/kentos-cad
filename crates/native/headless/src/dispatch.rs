@@ -182,6 +182,11 @@ pub fn agent_refusal(
     if let Some(error) = veil.refusal(input) {
         return Some(error);
     }
+    // An İşlemler tool's expression and field parameters, wherever they stand (docs/adr/8057 §108).
+    #[cfg(feature = "mod-gis")]
+    if let Some((at, field)) = crate::veil::reads::processing_read(veil, command, input) {
+        return Some(veil.refusal_at(&at, &field));
+    }
     let sink = matches!(command, "cad.processing.run" | "cad.processing.batch")
         && input.get("sink").is_some_and(|s| !s.is_null());
     sink.then(|| kentos_commands::CommandError {

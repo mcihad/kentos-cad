@@ -13,6 +13,8 @@ use serde_json::{Value, json};
 mod dwg;
 #[path = "headless/agent_tools.rs"]
 mod agent_tools;
+#[path = "headless/processing_model.rs"]
+mod processing_model;
 #[path = "headless/pens.rs"]
 mod pens;
 #[path = "headless/scales.rs"]

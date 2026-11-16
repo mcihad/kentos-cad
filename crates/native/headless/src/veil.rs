@@ -29,6 +29,15 @@ pub const WRITTEN: [&str; 9] = [
     "attrs", "values", "value", "text", "content", "note", "notes", "comment", "path",
 ];
 
+/// The keys under which a call's texts name a thing of the drawing or of the call (an object, a layer, a tool, a
+/// model and its steps), never a field or an expression (docs/adr/8057 §108). A layer's id is often a field's name
+/// (`parsel`, `ada`): a run on the parcels' layer was refused for naming the field; a model an agent named
+/// `parsel-tampon-birlesik` read as the expression `parsel - tampon - birlesik` and was refused too (the real window).
+pub const NAMING: [&str; 18] = [
+    "id", "uid", "uids", "layerId", "layer", "kind", "type", "scope", "command", "tool", "step",
+    "output", "code", "rule", "version", "revision", "planId", "newName",
+];
+
 /// The drawing's hidden fields and the values they hold.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Veil {
@@ -105,10 +114,20 @@ impl Veil {
                 path.push_str(k);
                 // Every field hidden, its value may still be written: writing sends nothing out (§103).
                 let writing = content && self.everything;
+                // A model step's values are its tool's parameters, each given (`{"kind": "value", "value": …}`) as
+                // the parameter's own would be, not written values (docs/adr/8057 §108).
+                let step_values = k == "values" && map.contains_key("tool");
+                let given =
+                    k == "value" && map.get("kind").and_then(Value::as_str) == Some("value");
+                let inner = if step_values || given {
+                    content
+                } else {
+                    content || WRITTEN.contains(&k.as_str()) || NAMING.contains(&k.as_str())
+                };
                 let found = if self.hides(k) && !writing {
                     Some((path.clone(), k.clone()))
                 } else {
-                    self.named_at(item, path, content || WRITTEN.contains(&k.as_str()))
+                    self.named_at(item, path, inner)
                 };
                 path.truncate(len);
                 found
@@ -133,9 +152,29 @@ impl Veil {
         self.names.iter().find(|n| fields.contains(n)).cloned()
     }
 
+    /// The hidden field `text` reads: it is the field's name, an expression or a template that reads it (an
+    /// İşlemler tool's expression parameter, docs/adr/8057 §108).
+    pub fn read_by(&self, text: &str) -> Option<String> {
+        self.named_by(text)
+    }
+
+    /// The hidden field among `names`, written with commas between them (an İşlemler tool's field parameter).
+    pub fn among(&self, names: &str) -> Option<String> {
+        names
+            .split(',')
+            .map(str::trim)
+            .find(|n| self.hides(n))
+            .map(str::to_owned)
+    }
+
     /// An agent's call refused because it names a hidden field ([`Veil::named_in`]), as the protocol answers.
     pub fn refusal(&self, input: &Value) -> Option<kentos_commands::CommandError> {
         let (at, field) = self.named_in(input)?;
+        Some(self.refusal_at(&at, &field))
+    }
+
+    /// The refusal of a call that names hidden `field` at `at` (a place in its input, `a.b[2]`).
+    pub fn refusal_at(&self, at: &str, field: &str) -> kentos_commands::CommandError {
         let message = if self.everything {
             format!(
                 "Bu ajana öznitelik değerleri gönderilmiyor (kullanıcının ya da kurumun seçimi): “{field}” alanıyla \
@@ -147,7 +186,7 @@ impl Veil {
                  sahibinindir. Çağrıyı bu alanı anmadan yeniden yapın."
             )
         };
-        Some(kentos_commands::CommandError {
+        kentos_commands::CommandError {
             code: kentos_commands::codes::HIDDEN_FIELD.into(),
             message,
             path: Some(if at.is_empty() {
@@ -156,7 +195,7 @@ impl Veil {
                 format!("input.{at}")
             }),
             ..kentos_commands::CommandError::default()
-        })
+        }
     }
 
     /// `answer` as an agent may read it.
@@ -347,5 +386,7 @@ fn hide(map: &mut Map<String, Value>, key: &str) {
 }
 
 mod every;
+#[cfg(feature = "mod-gis")]
+pub(crate) mod reads;
 #[cfg(test)]
 mod tests;

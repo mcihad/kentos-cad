@@ -92,6 +92,24 @@ pub struct ProcessingTool {
     #[serde(default)]
     pub aliases: Vec<String>,
     pub parameters: Vec<ToolParameter>,
+    /// What it gives: a model's later step reads an earlier step's output by its name (docs/adr/8057 §108).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProcessingToolOutput>>", optional))]
+    pub outputs: Vec<ProcessingToolOutput>,
+}
+
+/// A tool's output, as a model's step is wired to it: `{"kind": "output", "step": …, "output": name}`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProcessingToolOutput {
+    pub name: String,
+    pub label: String,
+    /// What it holds: `features` (the objects the step wrote, a features input of a later step), `number`, `string`
+    /// or `table`.
+    pub kind: String,
 }
 
 /// What `cad.processing.tools` lists.
@@ -159,6 +177,16 @@ pub struct ProcessingRun {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub environment: Option<RasterEnvironment>,
+    /// A model written for this run, as the library keeps one (`id`, `label`, `inputs`, `steps` with each step's
+    /// `tool` and `values` wired by `{"kind": "input" | "output" | "value", …}`, `outputs`): run as a saved model is,
+    /// one plan and one undo step, without being saved (docs/adr/8057 §108, PY-AI-08: an agent chains built-in and
+    /// extension tools from a request in words). `parameters` are its inputs; `tool` is not read (`"model:"` by
+    /// custom). Refused when it does not read (`invalid_parameters`, path `model`), names a tool this host has not
+    /// (`unknown_tool`, path `model.steps[i].tool`) or its wiring does not hold (`invalid_parameters`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(type = "unknown", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<serde_json::Value>"))]
+    pub model: Option<Value>,
 }
 
 /// A raster run's analysis environment (docs/adr/0643 §1), as a GIS's environment settings: each part optional.

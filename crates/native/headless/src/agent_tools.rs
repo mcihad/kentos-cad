@@ -35,6 +35,7 @@ use crate::HeadlessError;
 mod extension_audits;
 mod link_workshop;
 mod long_calls;
+mod processing_list;
 mod workshop_trial;
 
 pub use long_calls::{LongCall, finish as finish_long, job_answer};
@@ -408,9 +409,31 @@ pub fn call_words(name: &str, args: &Value) -> String {
                 .map_or(0, Vec::len);
             words.push(format!("{steps} adım"));
         }
-        "processing.describe" | "processing.run" | "processing.batch" => {
+        "processing.describe" => {
             words.push(title.to_owned());
             words.extend(text(args, "tool").ok().map(str::to_owned));
+        }
+        "processing.list" => {
+            words.push(title.to_owned());
+            words.extend(text(args, "query").ok().map(|q| format!("“{q}”")));
+        }
+        // The tool it runs, or a model written for the run by its name and steps (docs/adr/8057 §108).
+        "processing.run" | "processing.batch" => {
+            words.push(title.to_owned());
+            let input = args.get("input").unwrap_or(args);
+            if let Some(model) = input.get("model").filter(|m| m.is_object()) {
+                let name = ["label", "id"]
+                    .iter()
+                    .find_map(|k| model.get(*k).and_then(Value::as_str))
+                    .unwrap_or("adsız");
+                let steps = model
+                    .get("steps")
+                    .and_then(Value::as_array)
+                    .map_or(0, Vec::len);
+                words.push(format!("model “{name}”, {steps} adım"));
+            } else {
+                words.extend(text(input, "tool").ok().map(str::to_owned));
+            }
         }
         // An extension's rule by its own id (its title is the desktop's), a finding by its place.
         "audit.run" if text(args, "command").is_ok_and(is_extension_rule) => {
@@ -833,16 +856,30 @@ pub fn tools() -> Vec<Tool> {
     list.push(Tool {
         name: "processing.list",
         title: "İşlem araçları",
-        description: "İşlemler'in araçları (tampon, kesişim, birleştirme …), parametreleriyle (cad.processing.tools)."
+        description: "İşlemler'in araçlarının dizini (tampon, kesişim, birleştirme …, kurulu eklentilerinkiler de): \
+                      kimlik, ad, kategori ve ne yaptığı. query Türkçe sözcükle süzer (tampon, birleştir), category \
+                      bir kategoriyi verir, models kayıtlı modelleri de ekler. Bir aracın parametrelerini \
+                      processing.describe verir."
             .into(),
-        input: object(json!({}), &[]),
+        input: object(
+            json!({
+                "query": { "type": "string", "description": "Aracın adında, kimliğinde ya da anahtar sözcüklerinde \
+                           geçen sözcük (tampon, kesişim, birleştir …)." },
+                "category": { "type": "string", "description": "Kategorinin kimliği." },
+                "models": { "type": "boolean", "description": "Kayıtlı modeller de listelensin." }
+            }),
+            &[],
+        ),
         read_only: true,
         destructive: false,
     });
     list.push(Tool {
         name: "processing.describe",
         title: "İşlem aracının tanımı",
-        description: "Bir İşlemler aracının parametreleri ve çıktıları.".into(),
+        description:
+            "Bir İşlemler aracının parametreleri ve çıktıları (outputs: bir modelde sonraki adımın \
+                      bağlandığı adlar)."
+                .into(),
         input: object(
             json!({ "tool": { "type": "string", "description": "Aracın kimliği." } }),
             &["tool"],
@@ -854,7 +891,13 @@ pub fn tools() -> Vec<Tool> {
         name: "processing.run",
         title: "İşlem aracını çalıştır",
         description: "Bir İşlemler aracını çalıştırır (cad.processing.run'ın girdisiyle); sonucunu çizime yazar: önce \
-                      mode: plan, sonra planId ile execute."
+                      mode: plan, sonra planId ile execute. Birkaç aracı zincirlemek için kayıtlı bir model gerekmez: \
+                      input.model'e adımları yazılmış bir model verin (id, label, inputs: [] ya da [{name, label, \
+                      type}], steps: [{id, tool, values}], outputs: []; her değer {kind: input, name} | {kind: output, \
+                      step, output} | {kind: value, value}). \
+                      Bir adımın çıktılarının adlarını processing.describe'ın outputs'u verir. Hazır ve eklenti \
+                      araçları aynı modelde zincirlenir, tek geri alma adımıdır, kaydedilmez; tool alanına \"model:\" \
+                      yazın, parameters modelin girdileridir."
             .into(),
         input: guarded_input("cad.processing.run'ın girdisi."),
         read_only: false,
@@ -1029,7 +1072,7 @@ pub fn call(
             args.get("offset").and_then(Value::as_u64).unwrap_or(0),
         ),
         "audit.apply_fix" => audit(host, guard, args, true),
-        "processing.list" => processing_tools(host),
+        "processing.list" => processing_list::list(host, args),
         "extension.verify" => extension_verify(host, args),
         "extension.workshop.write" => workshop_write(host, args),
         "extension.workshop.read" => workshop_read(host, args),
@@ -1407,13 +1450,18 @@ fn audit(
 
 /// İşlemler's tools as `cad.processing.tools` gives them.
 fn processing_tools(host: &mut dyn Host) -> Result<Value, HeadlessError> {
+    processing_tools_with(host, json!({}))
+}
+
+/// `cad.processing.tools` with its `input` (`query`, `category`, `models`).
+fn processing_tools_with(host: &mut dyn Host, input: Value) -> Result<Value, HeadlessError> {
     let command = "cad.processing.tools";
     if let Some(why) = host.not_offered(command) {
         return Err(HeadlessError::new("not_offered", why));
     }
     host.request(
         "call",
-        &json!({ "command": command, "op": "execute", "input": {} }),
+        &json!({ "command": command, "op": "execute", "input": input }),
     )
 }
 

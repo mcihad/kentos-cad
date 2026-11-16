@@ -5234,3 +5234,70 @@ incelemesi, panel, form, atölye ön izlemesi).
   sözüyle); masaüstü 2 (oturumsuz uyarı; kurum kataloğuna notla gönderim: paketin kimliği, iki istek, günlük kaydı,
   pencere kapanır; dosyadan kurulmuş eklentide ajanın isteği nedeniyle reddedilir); headless 1 (araç atölyeyle sunulur,
   pencere açamayan host yerini söyler).
+
+## §108. Ajan isteği bir modelle zincirler: satır içi model, kısa araç dizini, çıktı adları (Üretim, PY-AI-08)
+
+**17 Kasım.** Kod: komut `gis/cad_processing.rs` (`ProcessingRun.model`, yeni `ProcessingToolOutput`,
+`ProcessingTool.outputs`); İşlemler `command.rs` (`inline_model`, `described` çıktılarla), `tests/inline_model.rs`
+(yeni); çekirdek `core/call.rs` (`fresh_layers`), alan `etag.rs` (`layers_plan_stamp(fresh)`, `plan_plain`); headless
+`agent_tools.rs` (`processing.list` girdisi, `processing.run` açıklaması, çağrı sözleri),
+`agent_tools/processing_list.rs` (yeni), `veil.rs` (`NAMING`, modelin verilen değeri, `refusal_at`, `read_by`, `among`),
+`veil/reads.rs` (yeni), `dispatch.rs`, `tests/headless/processing_model.rs` (yeni); masaüstü Asistan yönergesi,
+`assistant/model_tests.rs` (yeni); TS bağları, komut kataloğu, Python SDK katmanı ve `cad.processing.tools` durumları
+(`scripts/fixtures/processing_command_cases.py`, araçlar çıktılarıyla) yeniden üretildi.
+
+- **Sorun.** "Doğal dil analizleri yerleşik ve eklenti araçlarını aynı plan/model üzerinden zincirler" maddesinde ajanın
+  elinde yalnız tek araç çalıştırmak vardı: "parselleri tamponla, sonra birleştir" iki ayrı çalıştırma, iki onay, iki
+  geri alma adımıydı. Kayıtlı bir modeli ajan yazamıyordu (modeller kitaplıktadır, kaydetmek kullanıcınındır).
+- **Karar: satır içi model.** `cad.processing.run`'a `model` alanı: kitaplığın modeliyle aynı biçim (`id`, `label`,
+  `inputs`, `steps[{id, tool, values}]`, `outputs`; değerler `{kind: input|output|value}`), kaydedilmeden kayıtlı model
+  gibi çalışır: tek plan, tek onay, tek geri alma adımı (adı modelin adı). Okunmayan model `invalid_parameters`
+  (`model`), bu ortamda olmayan araç `unknown_tool` (`model.steps[i].tool`), tutmayan bağlantı `invalid_parameters`
+  (`model.steps[i]`, "adım “…”"); hiçbir şey yazılmadan. `tool` okunmaz (`"model:"` yazılır). Boş liste yerine boş nesne
+  (`"inputs": {}`) liste okunur: ajan öyle yazdı ve zinciri bırakıp iki ayrı çalıştırmaya döndü.
+- **Gerçek pencerede bulunan dört engel** (DeepSeek, sentetik Vitrin çizimi; istek "Parsel sınırı katmanındaki
+  parsellerin 3 metrelik tamponlarını çiz, sonra tamponları birleştirip tek alan yap"):
+  1. **Liste bütçeyi yiyordu.** `processing.list` her aracı bütün parametreleriyle veriyordu: 157 araç, **274 957
+     bayt**; ajan listeyi okuyup iki aracı tanımladıktan sonra 80 000 tokenlık sohbet sınırında (90 900) hiçbir şey
+     çalıştıramadan durdu. Liste artık dizin: kimlik, ad, kategori, açıklamanın ilk cümlesi, eklenti aracının modele
+     sözü ve eklentisi; **35 102 bayt** (7,8 kat küçük). `query`/`category`/`models` süzer; birden çok sözcük tek araçta
+     buluşmazsa ("tampon birleştir") her sözcüğün araçları birleşik verilir. Parametreleri `processing.describe` verir.
+  2. **Çıktı adları yoktu.** `processing.describe` "parametreleri ve çıktıları" diyordu ama çıktı vermiyordu; ajan
+     bağlantı adını tahmin etti ("buffer çıktısının türü yüzünden tutmadı") ve iki adıma döndü. `ProcessingTool.outputs`
+     (`name`, `label`, `kind`: features/number/string/table) eklendi.
+  3. **Plan hiç yürütülmüyordu (`plan_changed`).** İki ayrı eski hata, ikisi de modelden bağımsız: (a) aracın yeni
+     katmanı bir grubun içindeyse (Vitrin'de "Kadastro") plan damgası yalnız ağacın ilk düzeyini temizliyordu,
+     türetmenin çalışma anı (`at`) plan kimliğine giriyordu: **gruplu bir çizimde tek bir tampon bile planlandığı gibi
+     yazılmıyordu** (sınamada özyinelemesiz sürüm bu yüzden kırmızı); (b) zincirde sonraki adımın katmanı önceki adımın
+     yeni nesnelerinin özetini (digest) taşıyor, nesneler her an yeni kimlikle doğduğu için özet değişiyordu. Damga
+     artık grupların içine iner; bu yazmanın nesne eklediği ya da eklediği katmanı okuyan türetme girdisinin özeti
+     damgaya girmez (o nesneler planın sonucunda sırayla durur, kaynakları planın revizyonudur).
+  4. **Gizli alan denetimi kimlikleri alan sanıyordu.** Ajan değerleri göndermeyen ajanda (§103) her öznitelik adı
+     gizlidir; model kimliği `parsel-tampon-birlesik` ifade olarak "parsel eksi tampon eksi birlesik" okunup `parsel`
+     alanını andığı için reddedildi; aynı yüzden `"layerId": "parsel"` (katman kimliği alan adıyla aynı) her çağrıda
+     reddedilirdi. Bir şeyi adlandıran anahtarların (`id`, `layerId`, `layer`, `kind`, `type`, `scope`, `command`,
+     `tool`, `step`, `output`, `code`, `rule`, `version`, `revision`, `planId`, `newName`: `NAMING`) metni alan okuması
+     sayılmaz; anahtarın kendisi yine denetlenir.
+- **Modelden gizli alan kaçmaz.** Modelin adım değerleri `values` altında durur ve her değer `{kind: value, value: …}`
+  biçimindedir; ikisi de "yazılan değer" (`WRITTEN`) sayıldığı için zincir gizli alan denetiminin dışında kalırdı
+  (`group: "parsel"` ile gruplamak, süzgeçle okumak). Bir adımın değerleri artık parametresinin doğrudan verilmiş hâli
+  gibi denetlenir. Ayrıca İşlemler araçlarının **ifade ve alan parametreleri türlerine göre** okunur (`veil/reads.rs`):
+  Hesapla'nın ifadesi `value` adıyla durduğu için doğrudan çağrıda da denetlenmiyordu (`value: "upper(Malik)"` gizli
+  alanı başka bir alana kopyalayabilirdi); toplanacak alanlar virgüllü yazılınca (`"alan, Malik"`) eşitlik denetimi
+  kaçırıyordu. Çalıştırma, toplu çalıştırmanın satırları ve yazılan modelin adımları aynı kuralla reddedilir. Kayıtlı
+  bir modelin adımları sahibinindir, ajanın değil; denetlenmez.
+- **Ajana söylenen:** `processing.run` açıklaması modelin biçimini (listeler `[]`), çıktı adlarının yerini ve `"model:"`
+  yazılacağını söyler; Asistan yönergesine "Birkaç aracı zincirlemek için adımlarını input.model'e yazdığın bir model
+  ver" eklendi. Onay kartı modeli adıyla ve adım sayısıyla yazar ("İşlem aracını çalıştır · model “Tampon ve birleştir”,
+  2 adım · plan").
+- **Gerçek pencere (son koşu):** ajan dizinden iki aracı buldu, tanımlarından çıktı adını okudu, modeli yazıp planladı;
+  tek onayla 4 tampon ve birleşik alan tek geri alma adımında yazıldı ("Parsel tamponu ve birleştir"). Sohbet 164 832
+  token. Aynı istek bir koşuda zincir yerine iki ayrı çalıştırmayla da bitti (sonuç 4 343,38 m²): ajanın seçimi.
+- **Kalan:** ajan sonuç katmanlarını kimlikleriyle anıyor (`islem-tampon`; çalıştırmanın çıktısı katman adı taşımıyor);
+  her istekte gönderilen araç tanımları sohbetin tokenını hızla büyütüyor (ölçülmedi). Yeni katman kimliği kurucusu
+  sonda tire bırakabiliyor (`islem-parsel-tamponu-birlesik-`); web'le eşdeğerlik gereği dokunulmadı.
+- **Sınamalar:** İşlemler 2 (zincir tek geri alma adımında; reddedilen modeller yerleriyle, hiçbir şey yazılmadan; boş
+  nesne liste okunur); headless 4 (tek araç ve model plan → yürütme; gruplu Vitrin çiziminde tek araç ve ajanın yazdığı
+  model; dizin < 48 000 bayt, `query`, iki sözcüğün araçları, eşleşmeyenin notu; tanım çıktıları); örtü 2 (kimlikler
+  alan sayılmaz, süzgeç ve adım değeri sayılır; ifade ve alan parametreleri, satırlar, adımlar); masaüstü 1 (Asistan'ın
+  kapısından plan → yürütme); çağrı sözleri.

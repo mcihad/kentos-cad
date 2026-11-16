@@ -10,6 +10,7 @@
 //! - the styles: the project's style library;
 //! - the sheets: the book and its pictures' SHA-256s (`null` without a book).
 
+use std::collections::BTreeSet;
 use std::sync::{Arc, OnceLock};
 
 use kentos_contracts::canonical::stamp_of;
@@ -170,15 +171,16 @@ impl Document {
     /// without the moment a layer's derivation says its tool ran (`at`, to the millisecond). A plan and its execution
     /// compute the same write at two moments: with that moment in, an İşlemler run that makes a layer never executed
     /// as planned (`plan_changed`), whatever the tool. A tree without derivations stamps as `layers_stamp`.
-    pub fn layers_plan_stamp(&self) -> String {
+    ///
+    /// An input read from a layer this same write adds objects to (`fresh`: a model's step reading an earlier step's
+    /// result) is stamped without its digest (docs/adr/8057 §108): those objects are new at each moment, their ids with
+    /// them, so the digest differed and a chained model never executed as planned; the plan's result carries them by
+    /// their order, and what they were made from is the plan's revision. A layer in a group is a group's child: the
+    /// tool puts its layer beside its input's, and a run on a layer in a group never executed as planned either.
+    pub fn layers_plan_stamp(&self, fresh: &BTreeSet<String>) -> String {
         let mut nodes = serde_json::to_value(self.layers.nodes()).unwrap_or(Value::Null);
-        if let Some(list) = nodes.as_array_mut() {
-            for node in list {
-                if let Some(derivation) = node.get_mut("derivation").and_then(Value::as_object_mut)
-                {
-                    derivation.remove("at");
-                }
-            }
+        for node in nodes.as_array_mut().into_iter().flatten() {
+            plan_plain(node, fresh);
         }
         stamp_of(&json!({ "nodes": nodes, "active": self.layers.active() }))
     }
@@ -206,5 +208,31 @@ impl Document {
     /// The sheet book's stamp.
     pub fn sheets_stamp(&self) -> String {
         sheets_stamp_of(self.sheets.as_deref())
+    }
+}
+
+/// A layer node as a plan's id reads it ([`Document::layers_plan_stamp`]), its group's children with it: its
+/// derivation without the moment it ran, an input read from a `fresh` layer without its digest.
+fn plan_plain(node: &mut Value, fresh: &BTreeSet<String>) {
+    if let Some(derivation) = node.get_mut("derivation").and_then(Value::as_object_mut) {
+        derivation.remove("at");
+        let inputs = derivation.get_mut("inputs").and_then(Value::as_array_mut);
+        for input in inputs.into_iter().flatten() {
+            let read_fresh = input
+                .get("layer")
+                .and_then(Value::as_str)
+                .is_some_and(|layer| fresh.contains(layer));
+            if read_fresh && let Some(input) = input.as_object_mut() {
+                input.remove("digest");
+            }
+        }
+    }
+    for child in node
+        .get_mut("children")
+        .and_then(Value::as_array_mut)
+        .into_iter()
+        .flatten()
+    {
+        plan_plain(child, fresh);
     }
 }

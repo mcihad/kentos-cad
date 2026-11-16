@@ -88004,6 +88004,9 @@
             ],
             "description": "The raster tools' analysis environment (docs/adr/0643 §1): every raster tool of the run (a model's steps too)\ntakes it. A tool's own area (Kapsam) comes before the environment's."
           },
+          "model": {
+            "description": "A model written for this run, as the library keeps one (`id`, `label`, `inputs`, `steps` with each step's\n`tool` and `values` wired by `{\"kind\": \"input\" | \"output\" | \"value\", …}`, `outputs`): run as a saved model is,\none plan and one undo step, without being saved (docs/adr/8057 §108, PY-AI-08: an agent chains built-in and\nextension tools from a request in words). `parameters` are its inputs; `tool` is not read (`\"model:\"` by\ncustom). Refused when it does not read (`invalid_parameters`, path `model`), names a tool this host has not\n(`unknown_tool`, path `model.steps[i].tool`) or its wiring does not hold (`invalid_parameters`)."
+          },
           "parameters": {
             "additionalProperties": true,
             "type": [
@@ -187357,6 +187360,13 @@
             "null"
           ]
         },
+        "outputs": {
+          "description": "What it gives: a model's later step reads an earlier step's output by its name (docs/adr/8057 §108).",
+          "items": {
+            "$ref": "#/$defs/ProcessingToolOutput"
+          },
+          "type": "array"
+        },
         "parameters": {
           "items": {
             "$ref": "#/$defs/ToolParameter"
@@ -187370,6 +187380,27 @@
         "category",
         "description",
         "parameters"
+      ],
+      "type": "object"
+    },
+    "ProcessingToolOutput": {
+      "description": "A tool's output, as a model's step is wired to it: `{\"kind\": \"output\", \"step\": …, \"output\": name}`.",
+      "properties": {
+        "kind": {
+          "description": "What it holds: `features` (the objects the step wrote, a features input of a later step), `number`, `string`\nor `table`.",
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "label",
+        "kind"
       ],
       "type": "object"
     },

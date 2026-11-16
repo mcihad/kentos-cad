@@ -28,6 +28,7 @@ use crate::types::Tool;
 pub(crate) fn common_run(input: &ProcessingBatch) -> ProcessingRun {
     ProcessingRun {
         environment: input.environment.clone(),
+        model: None,
         tool: input.tool.clone(),
         parameters: input.parameters.clone(),
         selection: input.selection.clone(),

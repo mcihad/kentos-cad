@@ -2845,6 +2845,7 @@ __all__ = [
     "ProcessingRecord",
     "ProcessingRun",
     "ProcessingTool",
+    "ProcessingToolOutput",
     "ProcessingTools",
     "ProcessingToolsListed",
     "ProfileAddress",

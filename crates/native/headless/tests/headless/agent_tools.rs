@@ -470,6 +470,22 @@ fn a_tool_call_reads_in_words() {
         "Toplu yazma · 3 adım · plan"
     );
     assert_eq!(words("scene.entities", json!({})), "Nesneler");
+    // An İşlemler run by its tool, a model written for the run by its name and steps (docs/adr/8057 §108).
+    assert_eq!(
+        words(
+            "processing.run",
+            json!({ "input": { "tool": "geometry.buffer" }, "mode": "plan" })
+        ),
+        "İşlem aracını çalıştır · geometry.buffer · plan"
+    );
+    assert_eq!(
+        words(
+            "processing.run",
+            json!({ "input": { "tool": "model:", "model": { "id": "tb", "label": "Tampon ve birleştir",
+                "steps": [{}, {}] } }, "mode": "execute", "planId": "p" })
+        ),
+        "İşlem aracını çalıştır · model “Tampon ve birleştir”, 2 adım · yazma"
+    );
 }
 
 #[test]
@@ -549,6 +565,103 @@ fn the_checks_and_the_processing_tools_have_doors_of_their_own() {
         code(unplanned),
         "plan_required",
         "a processing run writes: planned first"
+    );
+}
+
+/// İşlemler's list as an agent reads it first (docs/adr/8057 §108): an index of ids, names, categories and first
+/// sentences, without parameters (`processing.describe` gives a tool's); `query` narrows it. The whole list with every
+/// parameter stopped a real agent at 90 900 of its 80 000 tokens before it ran anything.
+#[test]
+fn the_processing_list_is_an_index_an_agent_can_afford() {
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let all = tool(&mut s, &mut guard, "processing.list", json!({})).expect("the index");
+    let tools = all
+        .pointer("/output/tools")
+        .and_then(Value::as_array)
+        .expect("tools");
+    let size = all.to_string().len();
+    assert!(
+        tools.iter().all(|t| t.get("parameters").is_none()
+            && t["id"].is_string()
+            && t["label"].is_string())
+    );
+    // 157 tools: 35 102 bytes, the whole list 274 957 (17 Nov).
+    assert!(size < 48_000, "{size} bytes for {} tools", tools.len());
+    let narrowed = tool(
+        &mut s,
+        &mut guard,
+        "processing.list",
+        json!({ "query": "tampon" }),
+    )
+    .expect("narrowed");
+    let ids: Vec<&str> = narrowed
+        .pointer("/output/tools")
+        .and_then(Value::as_array)
+        .expect("tools")
+        .iter()
+        .filter_map(|t| t["id"].as_str())
+        .collect();
+    assert!(ids.contains(&"geometry.buffer"), "{ids:?}");
+    assert!(ids.len() < tools.len());
+    // Its parameters come with processing.describe.
+    let described = tool(
+        &mut s,
+        &mut guard,
+        "processing.describe",
+        json!({ "tool": "geometry.buffer" }),
+    )
+    .expect("described");
+    assert!(
+        described["parameters"]
+            .as_array()
+            .is_some_and(|p| !p.is_empty())
+    );
+    // And its outputs, which a model's later step is wired to by name.
+    assert_eq!(described["outputs"][0]["name"], "buffers", "{described:#}");
+    assert_eq!(described["outputs"][0]["kind"], "features");
+    // Words of two tools: each word's tools.
+    let both = tool(
+        &mut s,
+        &mut guard,
+        "processing.list",
+        json!({ "query": "tampon birleştir" }),
+    )
+    .expect("both");
+    let ids: Vec<&str> = both
+        .pointer("/output/tools")
+        .and_then(Value::as_array)
+        .expect("tools")
+        .iter()
+        .filter_map(|t| t["id"].as_str())
+        .collect();
+    assert!(
+        ids.contains(&"geometry.buffer") && ids.contains(&"geometry.dissolve"),
+        "{ids:?}"
+    );
+    assert!(
+        both["note"]
+            .as_str()
+            .is_some_and(|n| n.contains("her sözcüğün")),
+        "{both}"
+    );
+    // Nothing found says what to do.
+    let none = tool(
+        &mut s,
+        &mut guard,
+        "processing.list",
+        json!({ "query": "zzqx" }),
+    )
+    .expect("an answer");
+    assert!(
+        none["note"]
+            .as_str()
+            .is_some_and(|n| n.contains("başka bir sözcükle")),
+        "{none}"
+    );
+    assert_eq!(
+        agent_tools::call_words("processing.list", &json!({ "query": "tampon" })),
+        "İşlem araçları · “tampon”"
     );
 }
 

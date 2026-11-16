@@ -177,3 +177,73 @@ fn every_field_hides_every_value_and_the_agent_may_write_one() {
         "Ayşe Yılmaz iki parselde"
     );
 }
+
+/// A text under a key that names a thing (a layer's id, a model's) is no field read, however it reads as an expression
+/// (docs/adr/8057 §108); a model step's given value is read as its parameter's own.
+#[test]
+fn an_identifier_names_a_thing_not_a_field() {
+    let v = Veil::new(vec!["parsel".into()], ["12".to_owned()]);
+    let layer = json!({ "parameters": { "input": { "scope": "layer", "layerId": "parsel" } } });
+    assert_eq!(v.named_in(&layer), None, "the parcels' layer");
+    let model =
+        json!({ "tool": "model:", "model": { "id": "parsel-tampon-birlesik", "steps": [] } });
+    assert_eq!(v.named_in(&model), None, "a model named after the parcels");
+    // A filter that reads the field still does.
+    let filtered = json!({ "parameters": { "input": { "scope": "layer", "layerId": "parsel",
+        "filter": "parsel = '12'" } } });
+    assert_eq!(
+        v.named_in(&filtered),
+        Some(("parameters.input.filter".into(), "parsel".into()))
+    );
+    // A step grouping by the field, its value given in the model.
+    let grouped = json!({ "model": { "steps": [{ "id": "b", "tool": "geometry.dissolve", "values": {
+        "group": { "kind": "value", "value": "parsel" } } }] } });
+    assert_eq!(
+        v.named_in(&grouped),
+        Some(("model.steps[0].values.group.value".into(), "parsel".into()))
+    );
+    // A step's features input given in the model, filtered by the field.
+    let input = json!({ "model": { "steps": [{ "id": "t", "tool": "geometry.buffer", "values": {
+        "input": { "kind": "value",
+            "value": { "scope": "layer", "layerId": "parsel", "filter": "parsel > 3" } } } }] } });
+    assert!(v.named_in(&input).is_some());
+}
+
+/// An İşlemler tool's expression and field parameters read by their kind, wherever they stand: Hesapla's expression
+/// under `value`, a dissolve's sums with commas, a model's step, a batch's row (docs/adr/8057 §108).
+#[cfg(feature = "mod-gis")]
+#[test]
+fn a_tools_expression_and_fields_read_wherever_they_stand() {
+    let v = Veil::new(vec!["Malik".into()], ["Ali Yılmaz".to_owned()]);
+    let read = |input: Value| super::reads::processing_read(&v, "cad.processing.run", &input);
+    let calculate = json!({ "tool": "attributes.calculate",
+        "parameters": { "field": "kopya", "value": "upper(Malik)" } });
+    assert_eq!(
+        read(calculate),
+        Some(("parameters.value".into(), "Malik".into()))
+    );
+    let sums = json!({ "tool": "geometry.dissolve", "parameters": { "sums": "alan, Malik" } });
+    assert_eq!(read(sums).map(|(at, _)| at), Some("parameters.sums".into()));
+    let model = json!({ "tool": "model:", "model": { "steps": [{ "id": "h", "tool": "attributes.calculate",
+        "values": { "field": { "kind": "value", "value": "kopya" },
+            "value": { "kind": "value", "value": "Malik" } } }] } });
+    assert_eq!(
+        read(model).map(|(at, _)| at),
+        Some("model.steps[0].values.value.value".into())
+    );
+    let batch = json!({ "tool": "attributes.calculate", "parameters": { "field": "kopya" },
+        "rows": [{ "parameters": { "value": "'sabit'" } }, { "parameters": { "value": "Malik || ''" } }] });
+    assert_eq!(
+        super::reads::processing_read(&v, "cad.processing.batch", &batch).map(|(at, _)| at),
+        Some("rows[1].parameters.value".into())
+    );
+    // An expression that reads no hidden field, and another command, pass.
+    let fixed = json!({ "tool": "attributes.calculate",
+        "parameters": { "field": "kopya", "value": "yuvarla($alan, 2)" } });
+    assert_eq!(read(fixed), None);
+    let other = json!({ "tool": "attributes.calculate", "parameters": { "value": "Malik" } });
+    assert_eq!(
+        super::reads::processing_read(&v, "cad.entities.set", &other),
+        None
+    );
+}
