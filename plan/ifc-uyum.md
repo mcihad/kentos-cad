@@ -384,7 +384,7 @@ ikisinde aynıdır. Nesneleri BIM-11'den gelir.
 verir. Giriş kotları farklı iki blok ve ortak bodrum pilot dosyalarında doğru açılır; ortak bodrum alanı bir kez
 sayılır. Kotu bilinmeyen ±0.00 eksik olarak bildirilir.
 
-#### IFC-06 — Geometri ve görünüm tanımı [ ]
+#### IFC-06 — Geometri ve görünüm tanımı [~]
 
 **Yapılan (16 Kasım 2026, [ADR 8071](../docs/adr/8071-geometry-accuracy.md), BIM-10 ile):** yay profilde gerçek yay
 (`IfcIndexedPolyCurve`, `IfcArcIndex`); duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri kaynaktan; kapalılık
