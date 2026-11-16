@@ -215,6 +215,8 @@ impl SlabTool {
             layers: None,
             // A covering is Kaplama's (docs/adr/8070 §10).
             covering: None,
+            // A slope is given in Öznitelikler (docs/adr/8071 §6).
+            slope: None,
         }
     }
 

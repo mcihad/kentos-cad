@@ -36,6 +36,8 @@ pub enum Value {
     Real(f64),
     /// A mass, kilograms (`IfcMassMeasure`: a lift's rated load).
     Mass(f64),
+    /// An angle, radians (`IfcPlaneAngleMeasure`: a sloped slab's pitch, docs/adr/8071 §6).
+    PlaneAngle(f64),
     /// Several short names (`IfcPropertyListValue` of `IfcLabel`s: Pset_Address's AddressLines).
     Labels(Vec<String>),
 }
@@ -55,6 +57,7 @@ impl Value {
             Value::Count(v) => format!("IFCCOUNTMEASURE({v})"),
             Value::Real(v) => format!("IFCREAL({})", real(*v)),
             Value::Mass(v) => format!("IFCMASSMEASURE({})", real(*v)),
+            Value::PlaneAngle(v) => format!("IFCPLANEANGLEMEASURE({})", real(*v)),
             Value::Labels(list) => format!(
                 "({})",
                 list.iter()

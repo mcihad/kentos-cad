@@ -3,8 +3,8 @@
 - **Durum:** kısmen uygulandı (16 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-10,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-06'nın gövde kısmı (§8 "Gövdeler"); uygulama sırasında B10. Bu ADR maddenin
   bütün adımlarını tutar; koddaki "docs/adr/8071 §N" atıfları bölümleri gösterir: §1 gerçek yay, §2 kaynaktan miktar,
-  §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06), §5 döşemede boşluk ve şaft. Kararların
-  numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
+  §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06), §5 döşemede boşluk ve şaft, §6 eğimli
+  döşeme. Kararların numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
   numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0340](0340-wall-joins-and-edits.md) (duvar birleşimleri), [8040](8040-vertical-model.md) (duvarın
@@ -195,20 +195,56 @@ Resim: `scene3d_building_tests::ifc_export_menu_screens` (`5-disa-aktar-*.png`).
 
 **Karar.**
 
-16. **Boşluk kendi katının döşemesini keser** (kesit modeli, `sections::slab`): bir katın boşluk mahalleri, o katın
-    taban döşemesinden (kaplama değil) çekirdeğin örtüşme işlemiyle çıkarılır (yaylar korunur); kesit, görünüş ve 3B
-    boşluğu boş görür. Boşluğun döşemeye düşen parçası `Model::slab_cuts`'ta durur. Teras ve çatı döşemesi (tabanı katın
-    tabanında olmayan) kesilmez: şaft üstte kapanır. Üst üste katlarda şaft her katın kendi boşluğudur (ADR 0708).
+16. **Boşluk katının döşemelerini keser** (kesit modeli, `sections::slab`), metrajın okuduğu gibi (ADR 0722 §5: bir
+    döşeme kendi katının boşluk mahallerini, katsız döşeme hepsini okur): çekirdeğin örtüşme işlemiyle çıkarılır (yaylar
+    korunur); metraj, kesit, görünüş, 3B ve IFC aynı döşemeyi gösterir. Boşluğun döşemeye düşen parçası
+    `Model::slab_cuts`'ta durur. Kaplama ve eğimli döşeme kesilmez. Üst üste katlarda şaft her katın kendi boşluğudur
+    (ADR 0708); katın üstündeki teras da o katın döşemesi olduğundan ışıklık gibi açılır. Üstü kapalı bir şaftın çatısı
+    ayrı bir katta çizilir (kat arası şaft ADR 0708'in dışında kaldı).
 17. **IFC:** döşemenin gövdesi kendi dış çizgisidir (çizilmiş delikleri ve boşluk kesikleri olmadan); her çizilmiş delik
     "MM-ACL-Döşeme_boşluğu", her boşluğun parçası boşluğun numarası ve adıyla ("MM-ACL-1S1_Şaft") döşemenin açıklığıdır,
     döşemenin bütün kalınlığınca. Tasarım aktarımında okuyucu çıkarır, Reference View'da gövde kesiktir. Dışa aktarmanın
     `openings` sayısı bunları da sayar.
 
-**Sınama.** `arch_ifc::a_shaft_takes_its_floor_out_of_its_storey_s_slab` (kesit binasının 1. katında 1 × 1 m şaft:
-yalnız o katın döşemesi kesilir; gövdesi tek halka; iki açıklığı; net alan 12,25 × 9,25 − 2,85 × 3,94 − 1; kesik gövde
-kapalı ve net hacmi; iki görünümde de kapalı). Kesit binasının IFC'sinde 15 açıklık (14 duvarda, 1 döşemede),
+**Sınama.** `arch_ifc::a_shaft_takes_its_floor_out_of_its_storey_s_slab` (kesit binasının 1. katında 1 × 1 m şaft: o katın
+döşemesi ve üstündeki teras kesilir, zemininki kesilmez; gövdeleri tek halka; açıklıkları; net alanlar
+12,25 × 9,25 − 2,85 × 3,94 − 1 ve 12,25 × 9,25 − 1; kesik gövdeler kapalı ve net hacimleri; iki görünümde de kapalı). Kesit binasının IFC'sinde 15 açıklık (14 duvarda, 1 döşemede),
 `arch_ifc_check.py` döşeme açıklıklarını çizimin delik sayısıyla karşılaştırır. Resim: `shaft_screens`
 (`6-saft-*.png`, terası çıkarılmış 1. kat üstten).
+
+## §6. Eğimli döşeme
+
+**Araştırma.**
+
+- **EK-6 Tablo 6.123:** Pset_SlabCommon.PitchAngle "Döşeme, çatı bileşeni olarak kullanıldığında yataya göre eğim açısı
+  (… kullanılmayan durumlarda 0 derece olarak belirtilir veya belirtilmez)"; Qto'da Genişlik "Sadece, nesne sabit
+  kalınlığa (prizmatik) sahipse".
+- **Üreticiler (karşılaştırma için):** Revit'in döşeme eğim oku: kuyruğu sınırın üstünde, "Height Offset at Tail" ve
+  "Height Offset at Head" ya da eğim (help.autodesk.com, "Create a Sloped Surface Using a Slope Arrow"); Archicad'in
+  döşeme aracı eğim almaz, yardım merkezi eğik üst yüz için çatı, değişken eğim için arazi aracını önerir. KentOS'un
+  kararı: döşemenin kendi eğim oku.
+
+**Karar.**
+
+18. **Eğim oku** (`SlabFields::slope`, `SlabSlope { from, to, rise }`): üst yüz ok boyunca eşit yükselir; kuyrukta
+    döşemenin kot farkı, başta `rise` kadar fazlası; aynı düzlem okun dışına da sürer. Kalınlıklar (yapı ve katmanlar)
+    üst yüze dik ölçülür, düşeyde √(1 + eğim²) katı; yanlar düşey. Eğim en çok %100 (45°: daha diki duvar ya da
+    çatıdır), yükseliş en çok ±100 m, ok en az 1 mm; delikli döşemeye eğim verilmez (kesitin görünen yüz çizimi eğik
+    yüzün deliğini tutmuyor; delik ayrı döşeme parçalarıyla çizilir). `.kcad` mimari verisi 7.
+19. **Modelin her yerinde:** kesit modeli her katmanı eğik plak (`Sloped`, yüz kümesi kendinin) olarak kurar; IFC kapalı
+    yüz kümesi yazar (`IfcPolygonalFaceSet`), PitchAngle'ı (radyan) ve miktarlarını kaynaktan (Genişlik dik kalınlık,
+    alanlar plan alanı × √(1 + eğim²), hacim plan alanı × dik kalınlık × √(1 + eğim²)); metraj alanları eğim boyunca
+    okur; altındaki duvar duvarın ortasındaki yapısal alt yüzde biter (ADR 8040 §1'in kuralı, noktasında okunur).
+20. **Arayüz:** Öznitelikler'de "Eğim" (yüzde; 0 yatay) ve eğimliyse "Eğim yönü" (projenin açı biriminde, yükseldiği
+    yön): ok, döşemenin o yöndeki en alçak noktasından en yükseğine kurulur. `cad.slabs.create` ve `cad.slabs.edit`
+    `slope` alır (null: yatay).
+
+**Sınama.** `arch_ifc::a_sloped_slab_is_a_sloped_plate_of_its_closed_forms` (4 × 3 m, 20 cm, 3 m'de 30 cm: eğik plak 3,00
+→ 3,30; altındaki duvar 3,00 + 0,15 − 0,2 · √1,01'de biter; kapalı yüz kümesi, hacmi 12 · 0,2 · √1,01; Qto ve PitchAngle;
+3B ağı aynı hacim), `curved_ifc_check.py`'nin eğimli bölümü `egimli-doseme.ifc`'yi IfcOpenShell'le okur (0 bulgu, yüzey
+kapalı, hacim 10⁻⁹, kotlar), `.kcad`'ın `a_sloped_slab_round_trips_under_arch_data_7`'si, masaüstünde
+`a_slab_s_slope_is_typed_in_percent_and_turned_by_its_direction`, ortak durumlar (`cad.slabs.create` 70, `cad.slabs.edit`
+53; eğimli olanlar ve retleri). Resimler: `sloped_slab_screens` (`7-…`, `8-…`).
 
 ## Ortak sınamalar
 
@@ -226,7 +262,8 @@ kapalı ve net hacmi; iki görünümde de kapalı). Kesit binasının IFC'sinde 
 - **IFC-06'nın kalanı:** gelişim seviyesi kanıtının müellif incelemesi kaydı (EK-9 formuyla, IFC-08 ve BIM-14);
   "sentetik örnek açık kural takımından uyarısız geçer" kabulü buildingSMART'ın doğrulama servisini ya da açık kural
   takımını ister: dosyayı servise yüklemek ya da kural takımını indirmek sahibin onayıyla.
-- **Eğimli döşeme; çatının katmanları ve içe dönen saçak** (ADR 8044'ün kalanı).
+- **Çatının katmanları ve içe dönen saçak** (ADR 8044'ün kalanı).
+- Eğimli döşemenin planda eğim oku simgesi; delikli eğimli döşeme (kesitin eğik yüz çizimi deliği tutarsa).
 - **Döner merdiven gerçek yayla:** eğri merdivenin basamakları ve kolu.
 - **Mahalin kapalı hacmi** (EK-9 satır 14, Z6): altındaki ve üstündeki döşemeyle sınırlanan hacim ve miktarları.
 - Kapının açıklığı bitmiş döşemeden (±0,00) başlar, duvar yapısal döşemeden; kapının altında kaplama kalınlığında duvar

@@ -5,6 +5,7 @@ import type { NewSlabEdge } from "./NewSlabEdge";
 import type { SlabBoundary } from "./SlabBoundary";
 import type { SlabLayers } from "./SlabLayers";
 import type { SlabRole } from "./SlabRole";
+import type { SlabSlope } from "./SlabSlope";
 import type { SpacePart } from "./SpacePart";
 import type { Vec2 } from "./Vec2";
 
@@ -62,4 +63,8 @@ layers?: SlabLayers,
 /**
  * A covering (docs/adr/8070 §10): its IFC type and name; absent: a slab.
  */
-covering?: Covering, };
+covering?: Covering, 
+/**
+ * Its slope (docs/adr/8071 §6): its top rises along the arrow; absent: level.
+ */
+slope?: SlabSlope, };

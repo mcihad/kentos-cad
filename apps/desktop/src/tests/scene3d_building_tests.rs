@@ -593,6 +593,65 @@ fn shaft_screens() {
     }
 }
 
+/// Eğimli döşeme (docs/adr/8071 §6): the section building with a 4 × 3 m slab east of it rising 10 % northward from
+/// 3.00 m over the ground, selected: its Öznitelikler's Eğim and Eğim yönü, and in 3D from the south west.
+/// `.run/gui-evidence/egri-bina-8071/7-egimli-doseme-*.png`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::sloped_slab_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn sloped_slab_screens() {
+    use iced::Size;
+    use kentos_native_application::{ExecutionContext, registry};
+    use kentos_ui::snapshot::Snapshot;
+
+    let mut doc = kentos_domain::Document::from_snapshot_v2(building()).expect("opens");
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.slabs.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "slabs": [{
+            "parts": [{"outer": {"pts": [p(13.0, 0.0), p(17.0, 0.0), p(17.0, 3.0), p(13.0, 3.0)]}}],
+            "thickness": 0.2, "offset": 3.0, "arch": {"level": "zemin"},
+            "slope": {"from": p(13.0, 0.0), "to": p(13.0, 3.0), "rise": 0.3}
+        }]}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let uid = kentos_domain::Uuid::parse_str(answer["output"]["uids"][0].as_str().expect("its id")).expect("an id");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/egri-bina-8071");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    // Tall enough for Öznitelikler's Eğim rows under the slab's others.
+    for (theme, size, name) in [("light", Size::new(1440.0, 1250.0), "acik"), ("dark", Size::new(1280.0, 1150.0), "koyu")] {
+        let mut app = open(doc.to_snapshot_v2());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let slot = app.document.as_ref().and_then(|d| d.model.slot_of(uid)).expect("the sloped slab");
+        app.selection.set(vec![slot]);
+        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -1.0, max_x: 18.0, max_y: 10.0 }, 24.0);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        shot(&mut app, "7-egimli-doseme-oznitelikler");
+        let _ = app.update(Message::Run("scene3d.view"));
+        send(&mut app, W::View(1));
+        shot(&mut app, "8-egimli-doseme-3b");
+        send(&mut app, W::Close);
+    }
+}
+
 /// The facade building (fixtures/arch/v1/facade-building.kcad) with a curtain wall 1.5 m east of its east facade
 /// (docs/adr/8070 §7): 9 m long, 6 m high from the ground floor, at most 1.50 m between mullions and transoms (6 bays,
 /// 4 rows), and its east elevation (mark 3, looking west) drawn at (20, 0).

@@ -166,6 +166,7 @@ impl CoveringTool {
             arch,
             material: self.material.clone(),
             covering: Some(self.covering.clone()),
+            slope: None,
             ..NewSlab::default()
         })
     }

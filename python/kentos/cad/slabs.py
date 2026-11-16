@@ -39,7 +39,10 @@ class _SlabsCreate(LocalCommand[SlabsCreate, SlabsCreated, SlabsPlan]):
     öznitelikler. edge serbest kenarlar boyunca korkuluk (railing, iki ince çizgi) ya da
     parapet (dolu bant) çizer; en verilmezse türünün (5 cm, 15 cm). Serbest kenar,
     ortasından aynı katın hiçbir duvar yüzü geçmeyen kenardır; belge her adımda
-    duvarlara göre yeniden yazar. excluded metrajda listeler ama toplamaz. Katman açıkça
+    duvarlara göre yeniden yazar. slope eğim okudur (from kuyruk: üst yüz orada offset;
+    to baş; rise baştaki yükseliş, negatif iner): üst yüz ok boyunca eşit yükselir,
+    kalınlıklar ona dik, yanlar düşey; en çok %100, delikli döşemeye verilmez; metrajda
+    alanlar eğim boyuncadır. excluded metrajda listeler ama toplamaz. Katman açıkça
     verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan
     döşemeleri sınırları ve kenarlarıyla gösterir.
     """
@@ -79,7 +82,10 @@ class _SlabsCreate(LocalCommand[SlabsCreate, SlabsCreated, SlabsPlan]):
         serbest kenarlar boyunca korkuluk (railing, iki ince çizgi) ya da parapet (dolu
         bant) çizer; en verilmezse türünün (5 cm, 15 cm). Serbest kenar, ortasından aynı
         katın hiçbir duvar yüzü geçmeyen kenardır; belge her adımda duvarlara göre yeniden
-        yazar. excluded metrajda listeler ama toplamaz. Katman açıkça verilir; kilitli
+        yazar. slope eğim okudur (from kuyruk: üst yüz orada offset; to baş; rise baştaki
+        yükseliş, negatif iner): üst yüz ok boyunca eşit yükselir, kalınlıklar ona dik,
+        yanlar düşey; en çok %100, delikli döşemeye verilmez; metrajda alanlar eğim
+        boyuncadır. excluded metrajda listeler ama toplamaz. Katman açıkça verilir; kilitli
         katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan döşemeleri sınırları
         ve kenarlarıyla gösterir.
 
@@ -189,13 +195,14 @@ create = _SlabsCreate()
 class _SlabsEdit(LocalCommand[SlabsEdit, SlabsEdited, SlabsEdited]):
     """``cad.slabs.edit`` v1. Döşemeyi düzenle: Kalıcı kimlikleri verilen döşemeleri
     değiştirir; tek geri alma adımı “Döşemeyi düzenle”, hepsi ya da hiçbiri. operation:
-    set (tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, metraj dışı;
-    null alanı kaldırır, edge null kenarı kaldırır), offset (distance: bütün kenarlar
-    ötelenir, artı dışa), subtract (parts ya da seed/boundary ile bulunan alan döşemeden
-    çıkarılır: delik, girinti; döşemeye değmeyen ya da hepsini götüren alan
-    slab_cut_missed), add (aynı alan döşemeye eklenir). Kenarın parçaları belgede
-    duvarlara göre yeniden yazılır. Kilitli katmandaki döşeme bütün değişikliği
-    reddeder. Plan yazmadan döşemeleri olacakları gibi gösterir.
+    set (tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, eğim, metraj
+    dışı; null alanı kaldırır, edge null kenarı kaldırır, slope null döşemeyi yatay
+    yapar), offset (distance: bütün kenarlar ötelenir, artı dışa), subtract (parts ya da
+    seed/boundary ile bulunan alan döşemeden çıkarılır: delik, girinti; döşemeye
+    değmeyen ya da hepsini götüren alan slab_cut_missed), add (aynı alan döşemeye
+    eklenir). Kenarın parçaları belgede duvarlara göre yeniden yazılır. Kilitli
+    katmandaki döşeme bütün değişikliği reddeder. Plan yazmadan döşemeleri olacakları
+    gibi gösterir.
     """
     __slots__ = ()
     id = "cad.slabs.edit"
@@ -219,13 +226,13 @@ class _SlabsEdit(LocalCommand[SlabsEdit, SlabsEdited, SlabsEdited]):
     ) -> SlabsEdited:
         """Döşemeyi düzenle: Kalıcı kimlikleri verilen döşemeleri değiştirir; tek geri alma
         adımı “Döşemeyi düzenle”, hepsi ya da hiçbiri. operation: set (tür, kalınlık, kot
-        farkı, kat, tadilat durumu, malzeme, kenar, metraj dışı; null alanı kaldırır, edge
-        null kenarı kaldırır), offset (distance: bütün kenarlar ötelenir, artı dışa),
-        subtract (parts ya da seed/boundary ile bulunan alan döşemeden çıkarılır: delik,
-        girinti; döşemeye değmeyen ya da hepsini götüren alan slab_cut_missed), add (aynı
-        alan döşemeye eklenir). Kenarın parçaları belgede duvarlara göre yeniden yazılır.
-        Kilitli katmandaki döşeme bütün değişikliği reddeder. Plan yazmadan döşemeleri
-        olacakları gibi gösterir.
+        farkı, kat, tadilat durumu, malzeme, kenar, eğim, metraj dışı; null alanı kaldırır,
+        edge null kenarı kaldırır, slope null döşemeyi yatay yapar), offset (distance: bütün
+        kenarlar ötelenir, artı dışa), subtract (parts ya da seed/boundary ile bulunan alan
+        döşemeden çıkarılır: delik, girinti; döşemeye değmeyen ya da hepsini götüren alan
+        slab_cut_missed), add (aynı alan döşemeye eklenir). Kenarın parçaları belgede
+        duvarlara göre yeniden yazılır. Kilitli katmandaki döşeme bütün değişikliği
+        reddeder. Plan yazmadan döşemeleri olacakları gibi gösterir.
 
         Args:
             doc: The drawing it works on.

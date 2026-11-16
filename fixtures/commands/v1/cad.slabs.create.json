@@ -6119,6 +6119,697 @@
       ]
     },
     {
+      "name": "eğim okunun başı kuyruğunda olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "rise": 0.1
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Eğim okunun başı kuyruğundan en az 1 mm uzakta olmalı.",
+              "path": "slabs[0].slope.to"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "%100'den dik döşeme reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 4
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Döşemenin eğimi en çok %100 olur (45°); %133.3 verildi. Daha dik bir yüzey duvar ya da çatıdır.",
+              "path": "slabs[0].slope.rise"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğimin yükselişi 100 m'yi aşamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "slope": {
+                  "from": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 200.0,
+                    "y": 0.0
+                  },
+                  "rise": 150
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Eğimin yükselişi en çok ±100 m olur; 150 verildi.",
+              "path": "slabs[0].slope.rise"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "delikli döşemeye eğim verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 21.0,
+                            "y": 1.0
+                          },
+                          {
+                            "x": 21.0,
+                            "y": 2.0
+                          },
+                          {
+                            "x": 22.0,
+                            "y": 2.0
+                          },
+                          {
+                            "x": 22.0,
+                            "y": 1.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 0.1
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Delikli döşemeye eğim verilmez: deliği kaldırın ya da döşemeyi deliğin çevresinde parçalara bölün.",
+              "path": "slabs[0].slope"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğimli döşeme: kuzeye %5 yükselir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.2,
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 0.15
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.2,
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 0.15
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğimli döşeme: ok döşemenin dışına uzanır, aşağı iner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "arch": {
+                  "level": "zemin"
+                },
+                "slope": {
+                  "from": {
+                    "x": 18.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 26.0,
+                    "y": 0.0
+                  },
+                  "rise": -0.4
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                },
+                "slope": {
+                  "from": {
+                    "x": 18.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 26.0,
+                    "y": 0.0
+                  },
+                  "rise": -0.4
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğimli döşeme katmanlarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "rise": 0.2
+                },
+                "layers": {
+                  "over": [
+                    {
+                      "kind": "finish",
+                      "thickness": 0.02
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "layers": {
+                  "over": [
+                    {
+                      "kind": "finish",
+                      "thickness": 0.02
+                    }
+                  ]
+                },
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "rise": 0.2
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "asma tavan: CEILING, kalınlığı, kotu ve malzemesiyle; metrajda döşeme sayılmaz",
       "steps": [
         {

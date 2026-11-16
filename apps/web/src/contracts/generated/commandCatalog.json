@@ -12161,7 +12161,7 @@
       "id": "cad.slabs.create",
       "version": 1,
       "title": "Döşeme oluştur",
-      "summary": "Döşeme, balkon ya da teras ekler; tek geri alma adımı “Döşeme”. Her döşemenin sınırı ya çizilir (parts: dış halka ve delikler, birden çok parça olabilir: L kontur, avlu, ıslak hacim deliği) ya da duvarlardan bulunur (seed: bir iç nokta; boundary outline duvarların dış yüzlerine kadar yapının konturu, room noktayı çevreleyen odanın iç yüzleri). Kat verilmişse yalnız o katın duvarları, verilmemişse bütün duvarlar kullanılır; bulunan sınır duvarlara bağlı kalmaz. edgeOffset bütün kenarları aynı mesafede öteler (artı dışa: duvarların altına ya da çıkma, eksi içe); halka ters döner, kendini ya da başka halkayı keserse yazılmaz (slab_offset_failed). role (floor döşeme, balcony balkon, terrace teras), thickness (yoksa 15 cm), offset (üst yüzün katın kotuna göre farkı; ıslak hacimde eksi), arch (kat, tadilat durumu), material ve katmanın tipli alanlarıyla öznitelikler. edge serbest kenarlar boyunca korkuluk (railing, iki ince çizgi) ya da parapet (dolu bant) çizer; en verilmezse türünün (5 cm, 15 cm). Serbest kenar, ortasından aynı katın hiçbir duvar yüzü geçmeyen kenardır; belge her adımda duvarlara göre yeniden yazar. excluded metrajda listeler ama toplamaz. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan döşemeleri sınırları ve kenarlarıyla gösterir.",
+      "summary": "Döşeme, balkon ya da teras ekler; tek geri alma adımı “Döşeme”. Her döşemenin sınırı ya çizilir (parts: dış halka ve delikler, birden çok parça olabilir: L kontur, avlu, ıslak hacim deliği) ya da duvarlardan bulunur (seed: bir iç nokta; boundary outline duvarların dış yüzlerine kadar yapının konturu, room noktayı çevreleyen odanın iç yüzleri). Kat verilmişse yalnız o katın duvarları, verilmemişse bütün duvarlar kullanılır; bulunan sınır duvarlara bağlı kalmaz. edgeOffset bütün kenarları aynı mesafede öteler (artı dışa: duvarların altına ya da çıkma, eksi içe); halka ters döner, kendini ya da başka halkayı keserse yazılmaz (slab_offset_failed). role (floor döşeme, balcony balkon, terrace teras), thickness (yoksa 15 cm), offset (üst yüzün katın kotuna göre farkı; ıslak hacimde eksi), arch (kat, tadilat durumu), material ve katmanın tipli alanlarıyla öznitelikler. edge serbest kenarlar boyunca korkuluk (railing, iki ince çizgi) ya da parapet (dolu bant) çizer; en verilmezse türünün (5 cm, 15 cm). Serbest kenar, ortasından aynı katın hiçbir duvar yüzü geçmeyen kenardır; belge her adımda duvarlara göre yeniden yazar. slope eğim okudur (from kuyruk: üst yüz orada offset; to baş; rise baştaki yükseliş, negatif iner): üst yüz ok boyunca eşit yükselir, kalınlıklar ona dik, yanlar düşey; en çok %100, delikli döşemeye verilmez; metrajda alanlar eğim boyuncadır. excluded metrajda listeler ama toplamaz. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan döşemeleri sınırları ve kenarlarıyla gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -12369,7 +12369,7 @@
       "id": "cad.slabs.edit",
       "version": 1,
       "title": "Döşemeyi düzenle",
-      "summary": "Kalıcı kimlikleri verilen döşemeleri değiştirir; tek geri alma adımı “Döşemeyi düzenle”, hepsi ya da hiçbiri. operation: set (tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, metraj dışı; null alanı kaldırır, edge null kenarı kaldırır), offset (distance: bütün kenarlar ötelenir, artı dışa), subtract (parts ya da seed/boundary ile bulunan alan döşemeden çıkarılır: delik, girinti; döşemeye değmeyen ya da hepsini götüren alan slab_cut_missed), add (aynı alan döşemeye eklenir). Kenarın parçaları belgede duvarlara göre yeniden yazılır. Kilitli katmandaki döşeme bütün değişikliği reddeder. Plan yazmadan döşemeleri olacakları gibi gösterir.",
+      "summary": "Kalıcı kimlikleri verilen döşemeleri değiştirir; tek geri alma adımı “Döşemeyi düzenle”, hepsi ya da hiçbiri. operation: set (tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, eğim, metraj dışı; null alanı kaldırır, edge null kenarı kaldırır, slope null döşemeyi yatay yapar), offset (distance: bütün kenarlar ötelenir, artı dışa), subtract (parts ya da seed/boundary ile bulunan alan döşemeden çıkarılır: delik, girinti; döşemeye değmeyen ya da hepsini götüren alan slab_cut_missed), add (aynı alan döşemeye eklenir). Kenarın parçaları belgede duvarlara göre yeniden yazılır. Kilitli katmandaki döşeme bütün değişikliği reddeder. Plan yazmadan döşemeleri olacakları gibi gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -169705,6 +169705,17 @@
           "description": "A point: its outline found from the walls round it, those of its level (every wall when it has none).",
           "x-unit": "length"
         },
+        "slope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SlabSlope"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its slope (docs/adr/8071 §6): its top rises along the arrow; absent: level."
+        },
         "space": {
           "description": "A space by its persistent id: the slab's outline is the space's rings (moved by `edgeOffset`), bound to it; not\nwith `parts` or `seed`.",
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -204811,6 +204822,17 @@
         "role": {
           "$ref": "#/$defs/SlabRole"
         },
+        "slope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SlabSlope"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its slope (docs/adr/8071 §6): a sloped slab rises along its arrow; absent: level."
+        },
         "symbol": {
           "description": "Library symbol overriding the layer's style.",
           "type": [
@@ -205146,6 +205168,31 @@
       ],
       "type": "object"
     },
+    "SlabSlope": {
+      "additionalProperties": false,
+      "description": "A sloped slab's slope arrow (docs/adr/8071 §6): its top rises evenly along the arrow, from its tail `from` (where\nthe top is the slab's `offset` over its level) to its head `to`, by `rise` metres there (negative: down); the same\nplane runs on past both ends. Its thicknesses are measured square to its top; its sides stand upright on its outline.",
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "rise": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "to": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "rise"
+      ],
+      "type": "object"
+    },
     "SlabSourceKind": {
       "description": "What a bound slab's outline comes from (docs/adr/0771 §4): the walls round a point (their outer faces, a storey's\nfloor; or a room's inner faces), or a space's rings (a floor finish, a wet room's slab).",
       "oneOf": [
@@ -205250,6 +205297,17 @@
                   "type": "null"
                 }
               ]
+            },
+            "slope": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SlabSlope"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Its slope arrow (docs/adr/8071 §6); null: level again."
             },
             "thickness": {
               "format": "double",

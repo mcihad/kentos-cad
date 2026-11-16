@@ -1204,6 +1204,39 @@ pub(super) fn commit(
             };
             return properties::edit_slab(model, *slot, SlabsOperation::Set(change));
         }
+        // A slab's slope (docs/adr/8071 §6): its percent, or the direction it rises in; written as its arrow across it.
+        Field::SlabSlope(slot) | Field::SlabSlopeDirection(slot) => {
+            use kentos_commands::{SlabChange, SlabsOperation};
+            let Some(Entity::Slab(s)) = model.get(*slot) else {
+                return Vec::new();
+            };
+            let t = kentos_interaction::js_trim(text).trim_start_matches('%').trim_end_matches('%').replace(',', ".");
+            let Ok(n) = t.trim().parse::<f64>() else {
+                return vec![match field {
+                    Field::SlabSlope(_) => "Bir yüzde girin; örneğin 2 ya da %2 (0: yatay).".into(),
+                    _ => "Bir yön girin; örneğin 90 (kuzeye doğru yükselir).".into(),
+                }];
+            };
+            if !n.is_finite() {
+                return Vec::new();
+            }
+            let old = s.slab.slope;
+            let dir_now = old.map_or(0.0, |sl| (sl.to.y - sl.from.y).atan2(sl.to.x - sl.from.x));
+            let (dir, grade) = match field {
+                Field::SlabSlope(_) => (dir_now, n / 100.0),
+                _ => (f.angle_from_typed(n), old.map_or(0.0, |sl| sl.grade())),
+            };
+            let slope = if grade.abs() < 1e-12 {
+                None
+            } else {
+                match kentos_native_application::slabs::slope_across(&s.slab.parts, dir, grade) {
+                    Some(sl) => Some(sl),
+                    None => return vec!["Döşemenin bu yönde boyu yok.".into()],
+                }
+            };
+            let change = SlabChange { slope: Some(slope), ..Default::default() };
+            return properties::edit_slab(model, *slot, SlabsOperation::Set(change));
+        }
         Field::SlabThickness(slot)
         | Field::SlabOffset(slot)
         | Field::SlabEdgeWidth(slot)
@@ -1482,6 +1515,8 @@ pub(super) fn commit(
         | Field::SlabEdgeWidth(_)
         | Field::SlabLayer(..)
         | Field::SlabMaterial(_)
+        | Field::SlabSlope(_)
+        | Field::SlabSlopeDirection(_)
         | Field::SlabCoveringName(_)
         | Field::Arch(..)
         | Field::Elevation(..)

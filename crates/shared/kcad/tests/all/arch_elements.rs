@@ -202,3 +202,41 @@ fn a_covering_round_trips_under_arch_data_5() {
     let refused = kentos_kcad::encode(&layered).expect_err("a covering has no layers");
     assert!(refused.message.contains("Kaplamanın katmanları"), "{}", refused.message);
 }
+
+/// Architecture data 7 (docs/adr/8071 §6): a sloped slab (a slab's `slope`) is written with `modules.arch = 7` and read
+/// back as it was; one too steep is refused when written, with its words.
+#[test]
+fn a_sloped_slab_round_trips_under_arch_data_7() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_slab_slopes(&doc));
+    let slab = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Slab(s) => Some(s),
+            _ => None,
+        })
+        .expect("a slab");
+    for part in &mut slab.slab.parts {
+        part.holes.clear();
+    }
+    let from = slab.slab.parts[0].outer.pts[0];
+    slab.slab.slope = Some(kentos_contracts::SlabSlope {
+        from,
+        to: kentos_contracts::Vec2 { x: from.x, y: from.y + 4.0 },
+        rise: 0.2,
+    });
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_SLAB_SLOPES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the slope read back");
+    let mut steep = doc.clone();
+    if let Some(kentos_contracts::Entity::Slab(s)) =
+        steep.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.slope.is_some()))
+    {
+        if let Some(sl) = s.slab.slope.as_mut() {
+            sl.rise = 5.0;
+        }
+    }
+    let refused = kentos_kcad::encode(&steep).expect_err("steeper than 100 %");
+    assert!(refused.message.contains("en çok %100"), "{}", refused.message);
+}

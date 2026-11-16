@@ -165,6 +165,7 @@ fn check(doc: &Document, input: &SlabsCreate) -> Result<Checked, Stop> {
             bound,
             layers: n.layers.clone().unwrap_or_default(),
             covering: n.covering.clone(),
+            slope: n.slope,
         };
         slabs::valid(&s, &at)?;
         let s = slabs::with_bound_uids(doc, s);

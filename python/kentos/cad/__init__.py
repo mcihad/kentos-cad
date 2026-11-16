@@ -3665,6 +3665,7 @@ __all__ = [
     "SlabRoleName",
     "SlabRow",
     "SlabRun",
+    "SlabSlope",
     "SlabSourceKind",
     "SlabSourceKindName",
     "SlabsCreate",

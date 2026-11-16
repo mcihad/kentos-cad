@@ -266,6 +266,28 @@ def covering_problem(s, prefix):
     return None
 
 
+def slope_problem(s, prefix):
+    """A sloped slab's rule and words (ADR 8071 §6): its arrow at least a millimetre long, its rise at most ±100 m and
+    its grade at most 100 %; no hole in it."""
+    sl = s.get("slope")
+    if sl is None:
+        return None
+    run = math.hypot(sl["to"]["x"] - sl["from"]["x"], sl["to"]["y"] - sl["from"]["y"])
+    if run < 0.001:
+        return refusal("invalid_slab", "Eğim okunun başı kuyruğundan en az 1 mm uzakta olmalı.", f"{prefix}.slope.to")
+    if abs(sl["rise"]) > 100:
+        return refusal("invalid_slab", f"Eğimin yükselişi en çok ±100 m olur; {num(sl['rise'])} verildi.",
+                       f"{prefix}.slope.rise")
+    grade = abs(sl["rise"]) / run
+    if grade > 1:
+        return refusal("invalid_slab", f"Döşemenin eğimi en çok %100 olur (45°); %{grade * 100:.1f} verildi. Daha dik bir "
+                                       "yüzey duvar ya da çatıdır.", f"{prefix}.slope.rise")
+    if any(hs for _, hs in s.get("parts", [])):
+        return refusal("invalid_slab", "Delikli döşemeye eğim verilmez: deliği kaldırın ya da döşemeyi deliğin çevresinde "
+                                       "parçalara bölün.", f"{prefix}.slope")
+    return None
+
+
 def problem(s, prefix):
     if "parts" in s:
         for i, (o, hs) in enumerate(s["parts"]):
@@ -291,6 +313,9 @@ def problem(s, prefix):
             if not (math.isfinite(t) and 0 < t <= 1):
                 return refusal("invalid_slab", f"{LAYER[lay['kind']]} katmanının kalınlığı sıfırdan büyük, en çok 1 m olmalı; {num(t)} verildi.",
                                f"{prefix}.layers.{side}[{i}].thickness")
+    r = slope_problem(s, prefix)
+    if r:
+        return r
     r = covering_problem(s, prefix)
     if r:
         return r
@@ -328,6 +353,8 @@ def stored(d, s):
         out["layers"] = s["layers"]
     if s.get("covering"):
         out["covering"] = s["covering"]
+    if s.get("slope"):
+        out["slope"] = s["slope"]
     return out
 
 
@@ -403,7 +430,8 @@ def create(d, inp, conflict=False):
             js = None
         s = {"parts": parts, "json": js, "role": n.get("role", "floor"), "thickness": n.get("thickness", 0.15),
              "offset": n.get("offset", 0.0), "arch": arch, "material": n.get("material"), "excluded": n.get("excluded", False),
-             "attrs": n.get("attrs", {}), "layers": layers_of(n.get("layers")), "covering": n.get("covering")}
+             "attrs": n.get("attrs", {}), "layers": layers_of(n.get("layers")), "covering": n.get("covering"),
+             "slope": n.get("slope")}
         if "edge" in n:
             s["edge"] = {"kind": n["edge"]["kind"], "width": n["edge"].get("width", WIDTH[n["edge"]["kind"]])}
         r = problem(s, at)
@@ -482,7 +510,7 @@ def edit(d, inp, conflict=False):
     if kind == "set":
         ch = {k: v for k, v in op.items() if k != "kind"}
         if not ch:
-            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar, kaplama ya da metraj dışı seçimlerinden birini verin.", "operation"), None
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar, kaplama, eğim ya da metraj dışı seçimlerinden birini verin.", "operation"), None
         for key, name in (("thickness", "Kalınlık"), ("offset", "Kot farkı")):
             if key in ch and not math.isfinite(ch[key]):
                 return not_finite(name, f"operation.{key}"), None
@@ -498,6 +526,9 @@ def edit(d, inp, conflict=False):
             # A covering or a slab again (ADR 8070 §10).
             if "covering" in ch:
                 s["covering"] = ch["covering"]
+            # A slope, or level again (ADR 8071 §6).
+            if "slope" in ch:
+                s["slope"] = ch["slope"]
             arch = dict(s.get("arch", {}))
             for k in ("level", "phase"):
                 if k in ch:
@@ -685,9 +716,30 @@ def create_cases():
         ("korkuluklu kaplama reddedilir", one(parts=[BALCONY], covering={"predefined": "FLOORING"}, edge={"kind": "railing"}), {}),
         ("balkon kaplama olamaz", one(parts=[BALCONY], role="balcony", covering={"predefined": "FLOORING"}), {}),
         ("teras kaplama olamaz", one(parts=[box_json(20, 10, 26, 14)], role="terrace", covering={"predefined": "ROOFING"}), {}),
+        # A sloped slab's refusals (ADR 8071 §6).
+        ("eğim okunun başı kuyruğunda olamaz",
+         one(parts=[box_json(20, 0, 24, 3)], slope={"from": P(20, 0), "to": P(20, 0), "rise": 0.1}), {}),
+        ("%100'den dik döşeme reddedilir",
+         one(parts=[box_json(20, 0, 24, 3)], slope={"from": P(20, 0), "to": P(20, 3), "rise": 4}), {}),
+        ("eğimin yükselişi 100 m'yi aşamaz",
+         one(parts=[box_json(20, 0, 24, 3)], slope={"from": P(0, 0), "to": P(200, 0), "rise": 150}), {}),
+        ("delikli döşemeye eğim verilmez",
+         one(parts=[box_json(20, 0, 24, 3, holes=[(21, 1, 22, 2)])], slope={"from": P(20, 0), "to": P(20, 3), "rise": 0.1}),
+         {}),
     ]:
         d = sc.Drawing()
         c.add(name, [create_step(d, "execute", inp, **kw)])
+    # Eğimli döşeme (ADR 8071 §6): its arrow kept as given, its arrow past the slab's edges too.
+    for name, n in [
+        ("eğimli döşeme: kuzeye %5 yükselir", {"parts": [box_json(20, 0, 24, 3)], "thickness": 0.2,
+                                               "slope": {"from": P(20, 0), "to": P(20, 3), "rise": 0.15}}),
+        ("eğimli döşeme: ok döşemenin dışına uzanır, aşağı iner", {"parts": [box_json(20, 0, 24, 3)], "arch": {"level": "zemin"},
+                                                                   "slope": {"from": P(18, 0), "to": P(26, 0), "rise": -0.4}}),
+        ("eğimli döşeme katmanlarıyla", {"parts": [box_json(20, 0, 24, 3)], "slope": {"from": P(20, 0), "to": P(24, 0), "rise": 0.2},
+                                         "layers": {"over": [{"kind": "finish", "thickness": 0.02}]}}),
+    ]:
+        d = sc.Drawing()
+        c.add(name, [create_step(d, "execute", one(**n))])
     # Kaplama (ADR 8070 §10): a covering written as given; no floor of the building, not counted as a slab.
     for name, n in [
         ("asma tavan: CEILING, kalınlığı, kotu ve malzemesiyle; metrajda döşeme sayılmaz",
@@ -768,6 +820,21 @@ def edit_cases():
     ]:
         d, made = fresh(**n)
         c.add(name, [made, ed(d, op), quant(d)])
+    # Eğim (ADR 8071 §6): given, changed and taken away; a hole keeps it off.
+    for name, n, op in [
+        ("döşemeye eğim verilir", {"parts": [box_json(20, 0, 24, 3)]},
+         {"kind": "set", "slope": {"from": P(20, 0), "to": P(20, 3), "rise": 0.06}}),
+        ("eğim değişir", {"parts": [box_json(20, 0, 24, 3)], "slope": {"from": P(20, 0), "to": P(20, 3), "rise": 0.06}},
+         {"kind": "set", "slope": {"from": P(24, 0), "to": P(20, 0), "rise": 0.08}}),
+        ("eğim kaldırılır: döşeme yatay", {"parts": [box_json(20, 0, 24, 3)], "slope": {"from": P(20, 0), "to": P(20, 3), "rise": 0.06}},
+         {"kind": "set", "slope": None}),
+        ("delikli döşemeye eğim verilmez", {"parts": [box_json(20, 0, 24, 3, holes=[(21, 1, 22, 2)])]},
+         {"kind": "set", "slope": {"from": P(20, 0), "to": P(20, 3), "rise": 0.06}}),
+        ("%100'den dik eğim verilmez", {"parts": [box_json(20, 0, 24, 3)]},
+         {"kind": "set", "slope": {"from": P(20, 0), "to": P(20, 3), "rise": 3.5}}),
+    ]:
+        d, made = fresh(**n)
+        c.add(name, [made, ed(d, op)])
     d, made = fresh(parts=[box_json(20, 0, 24, 3)])
     c.add("plan yazmadan döşemeyi gösterir", [made, edit_step(d, "plan", {"uids": [uid_of(first)], "operation": {"kind": "set", "thickness": 0.3}})])
     d, made = fresh(parts=[box_json(20, 0, 24, 3)])

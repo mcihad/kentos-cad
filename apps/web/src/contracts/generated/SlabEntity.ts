@@ -9,6 +9,7 @@ import type { SlabBound } from "./SlabBound";
 import type { SlabEdge } from "./SlabEdge";
 import type { SlabLayers } from "./SlabLayers";
 import type { SlabRole } from "./SlabRole";
+import type { SlabSlope } from "./SlabSlope";
 import type { SpacePart } from "./SpacePart";
 import type { Wipeout } from "./Wipeout";
 
@@ -117,4 +118,8 @@ layers?: SlabLayers,
  * A covering (docs/adr/8070 §10): a plate covering another element (a suspended ceiling, a floor covering drawn by
  * hand), written as an `IfcCovering` of its type; no floor of the building. Absent: a slab.
  */
-covering?: Covering, };
+covering?: Covering, 
+/**
+ * Its slope (docs/adr/8071 §6): a sloped slab rises along its arrow; absent: level.
+ */
+slope?: SlabSlope, };

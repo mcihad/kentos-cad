@@ -6756,6 +6756,1049 @@
       ]
     },
     {
+      "name": "döşemeye eğim verilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "slope": {
+                "from": {
+                  "x": 20.0,
+                  "y": 0.0
+                },
+                "to": {
+                  "x": 20.0,
+                  "y": 3.0
+                },
+                "rise": 0.06
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": [
+                    {
+                      "outer": {
+                        "pts": [
+                          {
+                            "x": 20.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 3.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 3.0
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "thickness": 0.15,
+                  "slope": {
+                    "from": {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    "to": {
+                      "x": 20.0,
+                      "y": 3.0
+                    },
+                    "rise": 0.06
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 0.06
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğim değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 0.06
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 0.06
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "slope": {
+                "from": {
+                  "x": 24.0,
+                  "y": 0.0
+                },
+                "to": {
+                  "x": 20.0,
+                  "y": 0.0
+                },
+                "rise": 0.08
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": [
+                    {
+                      "outer": {
+                        "pts": [
+                          {
+                            "x": 20.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 3.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 3.0
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "thickness": 0.15,
+                  "slope": {
+                    "from": {
+                      "x": 24.0,
+                      "y": 0.0
+                    },
+                    "to": {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    "rise": 0.08
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "slope": {
+                  "from": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "rise": 0.08
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğim kaldırılır: döşeme yatay",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 0.06
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "slope": {
+                  "from": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "to": {
+                    "x": 20.0,
+                    "y": 3.0
+                  },
+                  "rise": 0.06
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "slope": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": [
+                    {
+                      "outer": {
+                        "pts": [
+                          {
+                            "x": 20.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 3.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 3.0
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "thickness": 0.15
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "delikli döşemeye eğim verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 21.0,
+                            "y": 1.0
+                          },
+                          {
+                            "x": 21.0,
+                            "y": 2.0
+                          },
+                          {
+                            "x": 22.0,
+                            "y": 2.0
+                          },
+                          {
+                            "x": 22.0,
+                            "y": 1.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    },
+                    "holes": [
+                      {
+                        "pts": [
+                          {
+                            "x": 21.0,
+                            "y": 1.0
+                          },
+                          {
+                            "x": 21.0,
+                            "y": 2.0
+                          },
+                          {
+                            "x": 22.0,
+                            "y": 2.0
+                          },
+                          {
+                            "x": 22.0,
+                            "y": 1.0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "slope": {
+                "from": {
+                  "x": 20.0,
+                  "y": 0.0
+                },
+                "to": {
+                  "x": 20.0,
+                  "y": 3.0
+                },
+                "rise": 0.06
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Delikli döşemeye eğim verilmez: deliği kaldırın ya da döşemeyi deliğin çevresinde parçalara bölün.",
+              "path": "uids[0].slope"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "%100'den dik eğim verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "slope": {
+                "from": {
+                  "x": 20.0,
+                  "y": 0.0
+                },
+                "to": {
+                  "x": 20.0,
+                  "y": 3.0
+                },
+                "rise": 3.5
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Döşemenin eğimi en çok %100 olur (45°); %116.7 verildi. Daha dik bir yüzey duvar ya da çatıdır.",
+              "path": "uids[0].slope.rise"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "plan yazmadan döşemeyi gösterir",
       "steps": [
         {
@@ -7374,7 +8417,7 @@
             "status": "failed",
             "error": {
               "code": "nothing_to_set",
-              "message": "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar, kaplama ya da metraj dışı seçimlerinden birini verin.",
+              "message": "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar, kaplama, eğim ya da metraj dışı seçimlerinden birini verin.",
               "path": "operation"
             }
           },

@@ -57,6 +57,10 @@ fn changed(s: &SlabFields, c: &SlabChange) -> SlabFields {
     if let Some(v) = c.excluded {
         f.excluded = v;
     }
+    // Its slope, or level again (docs/adr/8071 §6).
+    if let Some(v) = c.slope {
+        f.slope = v;
+    }
     // A covering or a slab again (docs/adr/8070 §10).
     if let Some(v) = &c.covering {
         f.covering.clone_from(v);
@@ -97,7 +101,7 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
             if c == &SlabChange::default() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar, kaplama ya da metraj dışı seçimlerinden birini verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar, kaplama, eğim ya da metraj dışı seçimlerinden birini verin.".into(),
                     "operation",
                 ));
             }

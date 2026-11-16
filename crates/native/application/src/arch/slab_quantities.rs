@@ -10,6 +10,7 @@
 //! - A slab: its rings' area, holes off; the area the voids it reads (rooms marked void, docs/adr/0708: those of its
 //!   level, every one when it has none) take out of it, the voids united first; its net area the difference; its perimeter; its volume net area × thickness; its
 //!   top its level's elevation and its offset; its edge's runs' length. One left out (`excluded`) is listed, not summed.
+//!   A sloped slab's areas lie along its slope (docs/adr/8071 §6): its plan's by √(1 + grade²).
 
 use kentos_commands::{ArchInfo, SlabFields, SlabRow, SpacePart, TransitionRow};
 use kentos_domain::Document;
@@ -73,6 +74,9 @@ pub(crate) fn slab_row(doc: &Document, uid: String, s: &SlabFields, voids: &[(Op
     } else {
         intersect_area_sets(&[mine, union_areas(&theirs)]).iter().map(net_area).sum::<f64>()
     };
+    // A sloped slab's areas lie along its slope (docs/adr/8071 §6): its plan's by √(1 + grade²).
+    let k = s.upright();
+    let (area, void_area) = (area * k, void_area * k);
     let net = area - void_area;
     let edge_length = s.edge.as_ref().map_or(0.0, |e| {
         e.runs
@@ -89,6 +93,9 @@ pub(crate) fn slab_row(doc: &Document, uid: String, s: &SlabFields, voids: &[(Op
     }
     if s.excluded {
         rule.push_str("; metraj dışı: toplamlara katılmaz");
+    }
+    if s.slope.is_some() {
+        rule.push_str("; eğimli: alanlar eğim boyunca, planınkinin √(1 + eğim²) katı");
     }
     SlabRow {
         uid,

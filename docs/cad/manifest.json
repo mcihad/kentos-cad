@@ -288,6 +288,22 @@
    "tests": 0
   },
   {
+   "id": "arch.ifcExportCut",
+   "kind": "command",
+   "title": "IFC dışa aktar (bina, kesilmiş gövde)…",
+   "level": "semantic",
+   "via": [
+    "cad.arch.ifc"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arch.ifc",
+   "mcp": "cad.arch.ifc",
+   "note": "IFC dışa aktar (bina, kesilmiş gövde) dosyanın yerini sorar ve cad.arch.ifc'yi view: reference ile çalıştırır; çizim değişmez (plan/bim-plan.md BIM-10, ADR 8071 §4).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.materials",
    "kind": "command",
    "title": "Malzemeler",

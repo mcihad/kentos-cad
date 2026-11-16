@@ -845,3 +845,41 @@ fn a_slab_becomes_a_covering_and_back() {
     let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
     assert_eq!(s.slab.covering, None);
 }
+
+/// Eğim in Öznitelikler (docs/adr/8071 §6): a level slab says Yatay; %5 typed makes its arrow across it rising east
+/// (from its westmost corner, 4 m, 20 cm up) and shows its Eğim yönü; 90 typed turns it north (3 m, 15 cm up); 0 makes
+/// it level again. A slab with a hole has no slope row.
+#[test]
+fn a_slab_s_slope_is_typed_in_percent_and_turned_by_its_direction() {
+    use kentos_commands::Workspace;
+    use serde_json::json;
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    // Directions typed in degrees (the project's angle unit).
+    settings.angle_unit = kentos_commands::AngleUnit::Deg;
+    doc.set_settings(settings);
+    let slab = add(&mut app, serde_json::from_value(json!({
+        "kind":"slab", "id":0, "layerId":"parsel", "attrs":{},
+        "parts":[{"outer":{"pts":[{"x":0.,"y":0.},{"x":4.,"y":0.},{"x":4.,"y":3.},{"x":0.,"y":3.}]}}],
+        "thickness":0.2
+    })).unwrap());
+    select(&mut app, &[slab]);
+    assert_eq!(noted(&app, "Eğim").0, "Yatay");
+    event(&mut app, Event::Commit(Field::SlabSlope(Slot(slab)), "%5".into()));
+    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    let sl = s.slab.slope.expect("sloped");
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    assert!(near(sl.from.x, 0.0) && near(sl.to.x, 4.0) && near(sl.to.y, sl.from.y) && near(sl.rise, 0.2), "{sl:?}");
+    assert_eq!(noted(&app, "Eğim").0, "%5");
+    event(&mut app, Event::Commit(Field::SlabSlopeDirection(Slot(slab)), "90".into()));
+    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    let sl = s.slab.slope.expect("sloped");
+    assert!(near(sl.from.y, 0.0) && near(sl.to.y, 3.0) && near(sl.rise, 0.15), "{sl:?}");
+    event(&mut app, Event::Commit(Field::SlabSlope(Slot(slab)), "0".into()));
+    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    assert_eq!(s.slab.slope, None);
+    assert_eq!(noted(&app, "Eğim").0, "Yatay");
+}

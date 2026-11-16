@@ -377,6 +377,10 @@ pub enum Field {
     SlabOffset(Slot),
     SlabEdgeWidth(Slot),
     SlabMaterial(Slot),
+    /// A slab's slope in percent (0: level) and the direction it rises in, in the project's angle unit (docs/adr/8071
+    /// §6): its arrow runs across its outline from its lowest point that way.
+    SlabSlope(Slot),
+    SlabSlopeDirection(Slot),
     /// A covering's name (docs/adr/8070 §10): its IFC name's words, a user-defined one's object type; empty: its type's
     /// word.
     SlabCoveringName(Slot),

@@ -172,3 +172,27 @@ pub(crate) fn with_bound_uids(doc: &Document, mut s: SlabFields) -> SlabFields {
     }
     s
 }
+
+/// A slope arrow across `parts` rising along `dir` (radians counter-clockwise from east) at `grade` (rise over run;
+/// docs/adr/8071 §6): its tail at the outline's lowest point along it, straight along it to its highest; none for an
+/// outline with no length that way. The slab's top at its tail is its offset.
+pub fn slope_across(parts: &[kentos_commands::SpacePart], dir: f64, grade: f64) -> Option<kentos_commands::SlabSlope> {
+    let u = (dir.cos(), dir.sin());
+    let pts: Vec<kentos_commands::Vec2> = parts
+        .iter()
+        .flat_map(|part| {
+            let pts: Vec<kentos_geometry_core::Vec2> =
+                part.outer.pts.iter().map(|q| kentos_geometry_core::Vec2::new(q.x, q.y)).collect();
+            kentos_geometry_core::entity::polygon_ring(&pts, part.outer.bulges.as_deref())
+        })
+        .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
+        .collect();
+    let along = |p: &kentos_commands::Vec2| p.x * u.0 + p.y * u.1;
+    let low = pts.iter().min_by(|a, b| along(a).total_cmp(&along(b)))?;
+    let run = pts.iter().map(along).fold(f64::MIN, f64::max) - along(low);
+    (run >= 0.001).then(|| kentos_commands::SlabSlope {
+        from: *low,
+        to: kentos_commands::Vec2 { x: low.x + u.0 * run, y: low.y + u.1 * run },
+        rise: grade * run,
+    })
+}

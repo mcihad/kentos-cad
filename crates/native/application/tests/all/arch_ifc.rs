@@ -852,10 +852,11 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
 }
 
 /// Döşemede boşluk ve şaft (docs/adr/8071 §5): on the section building a 1 × 1 m shaft (a void, docs/adr/0708) on the
-/// 1. kat, clear of the stair's hole. Worked out here: the 1. kat's floor slab (12.25 × 9.25 m less the stair's
-/// 2.85 × 3.94 m hole) loses the shaft's square too; the ground's slab and the terrace over the 1. kat do not (the
-/// shaft is no floor of theirs). In the IFC model that slab's body is its own outline and both the hole and the shaft
-/// are its openings; its net area and volume take both out, in either view; every body closed.
+/// 1. kat, clear of the stair's hole. Worked out here, as the quantities read voids (docs/adr/0722 §5: the slabs of the
+/// void's storey): the 1. kat's floor slab (12.25 × 9.25 m less the stair's 2.85 × 3.94 m hole) and the terrace over
+/// it (12.25 × 9.25 m) lose the shaft's square; the ground's slab does not. In the IFC model each slab's body is its own
+/// outline and the hole and the shaft are its openings; their net areas and volumes take them out, in either view;
+/// every body closed.
 #[test]
 fn a_shaft_takes_its_floor_out_of_its_storey_s_slab() {
     use kentos_commands::CallOp;
@@ -877,8 +878,8 @@ fn a_shaft_takes_its_floor_out_of_its_storey_s_slab() {
     let shaft = answer["output"]["uids"][0].as_str().unwrap().to_owned();
     // The section model: the 1. kat's slab cut, the others not.
     let m = sections::model(&doc);
-    assert_eq!(m.slab_cuts.len(), 1, "{:?}", m.slab_cuts);
-    assert_eq!(m.slab_cuts[0].source, shaft);
+    assert_eq!(m.slab_cuts.len(), 2, "{:?}", m.slab_cuts);
+    assert!(m.slab_cuts.iter().all(|c| c.source == shaft));
     let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new());
     let slabs: Vec<(usize, &kentos_ifc::building::Element)> =
@@ -896,15 +897,15 @@ fn a_shaft_takes_its_floor_out_of_its_storey_s_slab() {
         // Its body its own outline: one ring each layer.
         assert!(e.shapes.iter().all(|s| matches!(s, Shape::Prism { rings, .. } if rings.len() == 1)), "{}", e.name);
         assert!(near(get("GrossArea"), whole), "{} {}", e.name, get("GrossArea"));
+        let holes = if hosted.iter().any(|o| o.name == "MM-ACL-Döşeme_boşluğu") { hole } else { 0.0 };
         match hosted.len() {
             0 => assert!(near(get("NetArea"), whole), "{}", e.name),
-            2 => {
+            1 | 2 => {
                 cut_slabs += 1;
-                assert!(hosted.iter().any(|o| o.name == "MM-ACL-Döşeme_boşluğu"), "{:?}", hosted);
                 assert!(hosted.iter().any(|o| o.name == "MM-ACL-1S1_Şaft"), "{:?}", hosted);
-                assert!(near(get("NetArea"), whole - hole - square), "{} {}", e.name, get("NetArea"));
+                assert!(near(get("NetArea"), whole - holes - square), "{} {}", e.name, get("NetArea"));
                 let depth = get("Width");
-                assert!(near(get("NetVolume"), (whole - hole - square) * depth), "{}", e.name);
+                assert!(near(get("NetVolume"), (whole - holes - square) * depth), "{}", e.name);
                 let body = kentos_ifc::quantities::cut(&e.shapes, &hosted);
                 let v: f64 = body.iter().map(kentos_ifc::quantities::volume).sum();
                 assert!(near(v, get("NetVolume")), "{v}");
@@ -915,11 +916,91 @@ fn a_shaft_takes_its_floor_out_of_its_storey_s_slab() {
             n => panic!("{}: {n} openings", e.name),
         }
     }
-    assert_eq!(cut_slabs, 1, "the 1. kat's floor slab alone");
+    assert_eq!(cut_slabs, 2, "the 1. kat's floor slab and the terrace over it");
     // Both views write it closed; the Reference View's slab is cut.
     for view in [View::DesignTransfer, View::Reference] {
         let mut v = b.clone();
         v.view = view;
         assert_eq!(kentos_ifc::closed::open_bodies(&v), Vec::<(String, String)>::new());
+    }
+}
+
+/// Eğimli döşeme (docs/adr/8071 §6): on the section building a 4 × 3 m slab east of it at (20, 0)–(24, 3), 20 cm thick,
+/// rising 30 cm northward over its 3 m (10 %), its top at its tail 3.00 over the ground (offset 3.0 on Zemin kat), and
+/// a wall under it from (20, 1.5) to (24, 1.5). Worked out here: its plate's upright thickness 0.2 · √1.01, its
+/// volume 12 · 0.2 · √1.01 m³, its area as it lies 12 · √1.01 m², its pitch atan 0.1; the wall stops under its
+/// structure at its middle (22, 1.5): 3.00 + 0.15 − 0.2 · √1.01 over the ground. In the IFC model a closed face set,
+/// whose volume IfcOpenShell measures the same (`KENTOS_WRITE_IFC_SLOPED=1` writes fixtures/arch/v1/ifc/egimli-doseme.ifc
+/// for scripts/fixtures/curved_ifc_check.py's sloped part).
+#[test]
+fn a_sloped_slab_is_a_sloped_plate_of_its_closed_forms() {
+    use kentos_commands::CallOp;
+    use kentos_geometry_core::geom::section::Height;
+    use kentos_ifc::building::Shape;
+    use kentos_native_application::{ExecutionContext, registry, sections};
+    let mut doc = building();
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> String {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer["output"]["uids"][0].as_str().unwrap().to_owned()
+    };
+    let slab = run(&mut doc, "cad.slabs.create", serde_json::json!({"layerId": "0", "slabs": [{
+        "parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 3.0), p(20.0, 3.0)]}}],
+        "thickness": 0.2, "offset": 3.0, "arch": {"level": "zemin"},
+        "slope": {"from": p(20.0, 0.0), "to": p(20.0, 3.0), "rise": 0.3}
+    }]}));
+    let wall = run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": [{
+        "pts": [p(20.0, 1.5), p(24.0, 1.5)], "width": 0.2, "arch": {"level": "zemin"}
+    }]}));
+    let k = (1.0_f64 + 0.01).sqrt();
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    // The section model: a sloped plate, its top 3.00 at y 0 and 3.30 at y 3.
+    let m = sections::model(&doc);
+    let i = m.owners.iter().position(|o| o.as_deref() == Some(slab.as_str())).expect("its plate");
+    let Height::Sloped(s) = &m.solids[i].height else { panic!("{:?}", m.solids[i].height) };
+    let z = |x: f64, y: f64| s.z(kentos_geometry_core::Vec2::new(x, y));
+    assert!(near(z(20.0, 0.0), 3.0) && near(z(24.0, 3.0), 3.3), "{} {}", z(20.0, 0.0), z(24.0, 3.0));
+    assert!(near(s.thickness, 0.2 * k), "{}", s.thickness);
+    // The wall under it stops under its structure at the wall's middle.
+    let Some(Entity::Wall(w)) = doc.entities_with_uids().find_map(|(u, e)| (u.to_string() == wall).then_some(e)) else {
+        panic!("the wall")
+    };
+    let top = doc.wall_foot(&w.wall) + doc.wall_height(&w.wall).expect("a height");
+    assert!(near(top, 3.0 + 0.15 - 0.2 * k), "{top}");
+    // The IFC model.
+    let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new());
+    let id = kentos_domain::Uuid::parse_str(&slab).unwrap().as_u128();
+    let e = b.elements.iter().find(|e| e.id == Some(id)).expect("written");
+    assert_eq!(e.class, Class::Slab);
+    assert!(e.shapes.iter().all(|s| matches!(s, Shape::Faces { .. })), "{:?}", e.shapes);
+    for s in &e.shapes {
+        assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new());
+    }
+    let v: f64 = e.shapes.iter().map(kentos_ifc::quantities::volume).sum();
+    assert!(near(v, 12.0 * 0.2 * k), "{v}");
+    let q = e.qtos.iter().find(|q| q.name == "Qto_SlabBaseQuantities").expect("its quantities");
+    let get = |n: &str| match q.quantities.iter().find(|(k, _)| k == n).map(|(_, v)| v) {
+        Some(Value::Area(x) | Value::Volume(x) | Value::Length(x)) => *x,
+        other => panic!("{n}: {other:?}"),
+    };
+    assert!(near(get("Width"), 0.2) && near(get("GrossArea"), 12.0 * k) && near(get("NetVolume"), 12.0 * 0.2 * k));
+    let pitch = e.psets.iter().flat_map(|p| &p.props).find(|(n, _)| n == "PitchAngle").map(|(_, v)| v.clone());
+    assert!(matches!(pitch, Some(Value::PlaneAngle(a)) if near(a, 0.1_f64.atan())), "{pitch:?}");
+    // The 3D view's triangles close the same volume.
+    let mesh = kentos_ifc::mesh::meshes(&b).into_iter().find(|m| m.id == Some(id)).expect("its mesh");
+    let mv: f64 = mesh
+        .triangles
+        .iter()
+        .map(|t| {
+            let [a, b, c] = t.map(|k| mesh.vertices[k as usize]);
+            (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
+        })
+        .sum();
+    assert!(near(mv.abs(), 12.0 * 0.2 * k), "{mv}");
+    if std::env::var_os("KENTOS_WRITE_IFC_SLOPED").is_some() {
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/egimli-doseme.ifc");
+        std::fs::write(out, kentos_ifc::building::write(&b)).expect("the file kept");
     }
 }

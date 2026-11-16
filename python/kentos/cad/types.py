@@ -63010,6 +63010,7 @@ class NewSlab(_Model):
         offset: Its top above its level's elevation (negative: below); absent: 0. Unit: elevation.
         parts: Its outline drawn: one part or more, each an outer ring and its holes.
         seed: A point: its outline found from the walls round it, those of its level (every wall when it has none). Unit: length.
+        slope: Its slope (docs/adr/8071 §6): its top rises along the arrow; absent: level.
         space: A space by its persistent id: the slab's outline is the space's rings (moved by `edgeOffset`), bound to it; not
             with `parts` or `seed`.
         thickness: Absent: 15 cm. Unit: length.
@@ -63028,6 +63029,7 @@ class NewSlab(_Model):
     parts: list[SpacePart] | None | Unset = UNSET
     role: SlabRole | SlabRoleName | None | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
+    slope: SlabSlope | None | Unset = UNSET
     space: str | None | Unset = UNSET
     thickness: float | None | Unset = UNSET
 
@@ -63061,6 +63063,8 @@ class NewSlab(_Model):
             out["role"] = None if self.role is None else _enum_out(self.role)
         if self.seed is not UNSET:
             out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else self.slope.to_json()
         if self.space is not UNSET:
             out["space"] = self.space
         if self.thickness is not UNSET:
@@ -63084,6 +63088,7 @@ class NewSlab(_Model):
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [SpacePart.from_json(e0) for e0 in data["parts"]],
             role=UNSET if "role" not in data else None if data["role"] is None else _enum_in(SlabRole, data["role"]),
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else SlabSlope.from_json(data["slope"]),
             space=data.get("space", UNSET),
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
         )
@@ -96345,6 +96350,7 @@ class SlabEntity(Entity):
         offset: Its top above its level's elevation, metres (negative: below it); at most 100 either way. Absent: 0. Unit: elevation.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        slope: Its slope (docs/adr/8071 §6): a sloped slab rises along its arrow; absent: level.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
@@ -96376,6 +96382,7 @@ class SlabEntity(Entity):
     offset: float | Unset = UNSET
     order: int | None | Unset = UNSET
     role: SlabRole | SlabRoleName | Unset = UNSET
+    slope: SlabSlope | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
@@ -96427,6 +96434,8 @@ class SlabEntity(Entity):
             out["order"] = self.order
         if self.role is not UNSET:
             out["role"] = _enum_out(self.role)
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else self.slope.to_json()
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
@@ -96463,6 +96472,7 @@ class SlabEntity(Entity):
             offset=float(data["offset"]) if "offset" in data else UNSET,
             order=data.get("order", UNSET),
             role=_enum_in(SlabRole, data["role"]) if "role" in data else UNSET,
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else SlabSlope.from_json(data["slope"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
@@ -96667,6 +96677,36 @@ class SlabRun(_Model):
         return cls(
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabSlope(_Model):
+    """A sloped slab's slope arrow (docs/adr/8071 §6): its top rises evenly along the arrow, from its tail `from` (where
+    the top is the slab's `offset` over its level) to its head `to`, by `rise` metres there (negative: down); the same
+    plane runs on past both ends. Its thicknesses are measured square to its top; its sides stand upright on its outline.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        rise: Unit: length.
+    """
+    from_: Vec2
+    to: Vec2
+    rise: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["rise"] = float(self.rise)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabSlope:
+        return cls(
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            rise=float(data["rise"]),
         )
 
 
@@ -137230,6 +137270,7 @@ class SetSlabsOperation(SlabsOperation):
         edge: Its edge's kind and width; null: no edge.
         layers: Its layers besides its structure, all of them (docs/adr/8040 §2); empty lists take them away.
         offset: Unit: elevation.
+        slope: Its slope arrow (docs/adr/8071 §6); null: level again.
         thickness: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "set"
@@ -137242,6 +137283,7 @@ class SetSlabsOperation(SlabsOperation):
     offset: float | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     role: SlabRole | SlabRoleName | None | Unset = UNSET
+    slope: SlabSlope | None | Unset = UNSET
     thickness: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -137264,6 +137306,8 @@ class SetSlabsOperation(SlabsOperation):
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.role is not UNSET:
             out["role"] = None if self.role is None else _enum_out(self.role)
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else self.slope.to_json()
         if self.thickness is not UNSET:
             out["thickness"] = None if self.thickness is None else float(self.thickness)
         return out
@@ -137280,6 +137324,7 @@ class SetSlabsOperation(SlabsOperation):
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             role=UNSET if "role" not in data else None if data["role"] is None else _enum_in(SlabRole, data["role"]),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else SlabSlope.from_json(data["slope"]),
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
         )
 
@@ -145030,6 +145075,7 @@ __all__ = [
     "SlabRoleName",
     "SlabRow",
     "SlabRun",
+    "SlabSlope",
     "SlabSourceKind",
     "SlabSourceKindName",
     "SlabsCreate",

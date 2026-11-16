@@ -916,13 +916,14 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         // EK-6's properties the drawing knows: a balcony's or a terrace's slab is outside (Tablo 6.56), a roof is
         // (Tablo 6.52), a column carries (Tablo 6.16: KentOS's column is the frame's, Betonarme unless said).
         let psets = match e {
-            Entity::Slab(s) if s.slab.covering.is_none() => vec![Pset {
-                name: "Pset_SlabCommon".into(),
-                props: vec![(
-                    "IsExternal".into(),
-                    Value::Bool(s.slab.role != SlabRole::Floor),
-                )],
-            }],
+            Entity::Slab(s) if s.slab.covering.is_none() => {
+                let mut props = vec![("IsExternal".into(), Value::Bool(s.slab.role != SlabRole::Floor))];
+                // A sloped slab's pitch (EK-6 Tablo 6.123's PitchAngle; docs/adr/8071 §6), radians.
+                if let Some(sl) = s.slab.slope {
+                    props.push(("PitchAngle".into(), Value::PlaneAngle(sl.grade().abs().atan())));
+                }
+                vec![Pset { name: "Pset_SlabCommon".into(), props }]
+            }
             // A post carries nothing of the frame's that the drawing knows: no LoadBearing (docs/adr/8070 §8).
             Entity::Column(_) if member.is_none() => vec![Pset {
                 name: "Pset_ColumnCommon".into(),
@@ -1336,6 +1337,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let el = &elements[k];
         let qto = match (el.class, e) {
             (Class::Wall, Entity::Wall(w)) => Some(crate::quantities::wall(&w.wall, &el.shapes, &cuts)),
+            (Class::Slab, Entity::Slab(sl)) if sl.slab.slope.is_some() => crate::quantities::sloped_slab(&sl.slab),
             (Class::Slab, Entity::Slab(_)) => crate::quantities::slab(&el.shapes, &cuts),
             (Class::Covering, _) => crate::quantities::covering(&el.shapes),
             (Class::Column, Entity::Column(_)) => crate::quantities::column(&el.shapes, &cuts),

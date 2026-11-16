@@ -342,6 +342,34 @@ pub fn slab(shapes: &[Shape], cuts: &[&Opening]) -> Option<Qto> {
     })
 }
 
+/// A sloped slab's base quantities (docs/adr/8071 §6; `Qto_SlabBaseQuantities`): its thickness square to its top (its
+/// layers' together); its area as it lies, its plan's (exact on its arcs) by √(1 + grade²); its volume its plan's area by
+/// its upright thickness. A sloped slab has no hole.
+pub fn sloped_slab(fields: &kentos_contracts::SlabFields) -> Option<Qto> {
+    let slope = fields.slope?;
+    let k = slope.upright();
+    let plan: f64 = fields
+        .parts
+        .iter()
+        .map(|part| {
+            let pts: Vec<[f64; 2]> = part.outer.pts.iter().map(|q| [q.x, q.y]).collect();
+            let bulges = part.outer.bulges.clone().unwrap_or_default();
+            area(&[pts], &[bulges])
+        })
+        .sum();
+    let width = fields.whole_thickness();
+    Some(Qto {
+        name: "Qto_SlabBaseQuantities".into(),
+        quantities: vec![
+            ("Width".into(), Value::Length(width)),
+            ("GrossArea".into(), Value::Area(plan * k)),
+            ("NetArea".into(), Value::Area(plan * k)),
+            ("GrossVolume".into(), Value::Volume(plan * width * k)),
+            ("NetVolume".into(), Value::Volume(plan * width * k)),
+        ],
+    })
+}
+
 /// A covering's base quantities (EK-6 Tablo 6.88; `Qto_CoveringBaseQuantities`): its area with its holes in (gross) and
 /// taken out (net).
 pub fn covering(shapes: &[Shape]) -> Option<Qto> {

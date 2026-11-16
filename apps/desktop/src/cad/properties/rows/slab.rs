@@ -122,6 +122,19 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
             .unit(f.length_unit_label())
             .editor(number(Field::SlabOffset(slot))),
     );
+    // Its slope (docs/adr/8071 §6): level, or a percent and the direction it rises in; a slab with a hole has none.
+    if x.parts.iter().all(|p| p.holes.is_empty()) {
+        let shown = x.slope.map_or_else(
+            || "Yatay".to_owned(),
+            |sl| kentos_domain::arch_values::percent_text(sl.grade() * 100.0),
+        );
+        geo.push(Row::text("Eğim", shown).editor(number(Field::SlabSlope(slot))));
+        if let Some(sl) = x.slope {
+            let dir = (sl.to.y - sl.from.y).atan2(sl.to.x - sl.from.x);
+            // Its words carry the angle's mark (° or g): no unit column beside it.
+            geo.push(Row::figure("Eğim yönü", f.angle(dir)).editor(number(Field::SlabSlopeDirection(slot))));
+        }
+    }
     let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
     let level = x.arch.level.as_deref().and_then(|id| levels.iter().find(|l| l.id == id));
     if let Some(l) = level {

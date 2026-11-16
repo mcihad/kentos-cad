@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_ELEMENT_SCHEDULES),
+    ("arch", "mimari", ARCH_WITH_SLAB_SLOPES),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1078,11 +1078,23 @@ pub fn uses_element_schedules(doc: &kentos_contracts::DocumentSnapshotV2) -> boo
     doc.entities.iter().any(schedule) || doc.blocks.iter().any(|b| b.entities.iter().any(schedule))
 }
 
-/// The architecture data version `doc` needs: 6 for a beams' or coverings' schedule, 5 for a covering, 4 for a post, a
-/// rail or a column's own height, 3 for a curtain wall, 2 for a block's building element, 1 for the performance
-/// declarations, else 0 (not raised).
+/// Architecture data version 7 (docs/adr/8071 §6): a sloped slab (a slab's `slope`). Version 7 holds versions 1–6's
+/// data too. The document schema stays as it is.
+pub const ARCH_WITH_SLAB_SLOPES: u16 = 7;
+
+/// Whether `doc` holds architecture data 7 ([`ARCH_WITH_SLAB_SLOPES`]): a sloped slab, in the drawing or a block.
+pub fn uses_slab_slopes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    let sloped = |e: &kentos_contracts::Entity| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.slope.is_some());
+    doc.entities.iter().any(sloped) || doc.blocks.iter().any(|b| b.entities.iter().any(sloped))
+}
+
+/// The architecture data version `doc` needs: 7 for a sloped slab, 6 for a beams' or coverings' schedule, 5 for a
+/// covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's building element, 1
+/// for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_element_schedules(doc) {
+    if uses_slab_slopes(doc) {
+        ARCH_WITH_SLAB_SLOPES
+    } else if uses_element_schedules(doc) {
         ARCH_WITH_ELEMENT_SCHEDULES
     } else if uses_coverings(doc) {
         ARCH_WITH_COVERINGS

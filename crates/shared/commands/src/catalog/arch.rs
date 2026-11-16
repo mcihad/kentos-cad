@@ -476,7 +476,7 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                       edgeOffset bütün kenarları aynı mesafede öteler (artı dışa: duvarların altına ya da çıkma, eksi içe); halka ters döner, kendini ya da başka halkayı keserse yazılmaz (slab_offset_failed). \
                       role (floor döşeme, balcony balkon, terrace teras), thickness (yoksa 15 cm), offset (üst yüzün katın kotuna göre farkı; ıslak hacimde eksi), arch (kat, tadilat durumu), material ve katmanın tipli alanlarıyla öznitelikler. \
                       edge serbest kenarlar boyunca korkuluk (railing, iki ince çizgi) ya da parapet (dolu bant) çizer; en verilmezse türünün (5 cm, 15 cm). Serbest kenar, ortasından aynı katın hiçbir duvar yüzü geçmeyen kenardır; belge her adımda duvarlara göre yeniden yazar. \
-                      excluded metrajda listeler ama toplamaz. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan döşemeleri sınırları ve kenarlarıyla gösterir."
+                      slope eğim okudur (from kuyruk: üst yüz orada offset; to baş; rise baştaki yükseliş, negatif iner): üst yüz ok boyunca eşit yükselir, kalınlıklar ona dik, yanlar düşey; en çok %100, delikli döşemeye verilmez; metrajda alanlar eğim boyuncadır. excluded metrajda listeler ama toplamaz. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan döşemeleri sınırları ve kenarlarıyla gösterir."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -517,7 +517,7 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
             version: crate::CAD_SLABS_EDIT_VERSION,
             title: "Döşemeyi düzenle".into(),
             summary: "Kalıcı kimlikleri verilen döşemeleri değiştirir; tek geri alma adımı “Döşemeyi düzenle”, hepsi ya da hiçbiri. \
-                      operation: set (tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, metraj dışı; null alanı kaldırır, edge null kenarı kaldırır), offset (distance: bütün kenarlar ötelenir, artı dışa), subtract (parts ya da seed/boundary ile bulunan alan döşemeden çıkarılır: delik, girinti; döşemeye değmeyen ya da hepsini götüren alan slab_cut_missed), add (aynı alan döşemeye eklenir). \
+                      operation: set (tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, eğim, metraj dışı; null alanı kaldırır, edge null kenarı kaldırır, slope null döşemeyi yatay yapar), offset (distance: bütün kenarlar ötelenir, artı dışa), subtract (parts ya da seed/boundary ile bulunan alan döşemeden çıkarılır: delik, girinti; döşemeye değmeyen ya da hepsini götüren alan slab_cut_missed), add (aynı alan döşemeye eklenir). \
                       Kenarın parçaları belgede duvarlara göre yeniden yazılır. Kilitli katmandaki döşeme bütün değişikliği reddeder. Plan yazmadan döşemeleri olacakları gibi gösterir."
                 .into(),
             aliases: vec![],

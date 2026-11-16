@@ -900,13 +900,14 @@ fn slab(
     };
     let mut exact: Vec<ExactRing> =
         s.parts.iter().flat_map(|part| std::iter::once(&part.outer).chain(&part.holes)).map(ring).collect();
-    // The voids on its storey take their outlines out of its floor slab (docs/adr/8071 §5; docs/adr/0708 "no floor in
-    // it"): the slab whose top is the storey's floor, half a metre under it to 10 cm over, as the walls' foot reads it.
-    // A covering is no floor. Each void's part over it is kept for the IFC's opening.
-    let top0 = floor + s.offset;
-    let is_floor = s.covering.is_none() && top0 >= floor - 0.5 && top0 <= floor + 0.1;
-    let on: Vec<&(String, &kentos_commands::SpaceFields)> =
-        voids.iter().filter(|(_, v)| is_floor && v.arch.level == s.arch.level).collect();
+    // The voids it reads take their outlines out of it (docs/adr/8071 §5; docs/adr/0708 "no floor in it"), as the
+    // quantities read them (docs/adr/0722 §5): those of its storey, every one when it has none. A covering is no floor;
+    // a sloped slab has no hole. Each void's part over it is kept for the IFC's opening.
+    let reads = |v: &kentos_commands::SpaceFields| s.arch.level.is_none() || v.arch.level == s.arch.level;
+    let on: Vec<&(String, &kentos_commands::SpaceFields)> = voids
+        .iter()
+        .filter(|(_, v)| s.covering.is_none() && s.slope.is_none() && reads(v))
+        .collect();
     if !on.is_empty() {
         let own: Vec<Area> = s.parts.iter().map(area).collect();
         let mut cut_any = false;
@@ -945,35 +946,62 @@ fn slab(
         .map(|(pts, b)| kentos_geometry_core::entity::polygon_ring(pts, Some(b)))
         .collect();
     let exact = arcs.then_some(exact);
+    // A sloped slab (docs/adr/8071 §6): each layer a sloped plate under the plane its arrow gives, its thicknesses
+    // (square to it) standing √(1 + grade²) upright; its sides upright on its outline, every edge one.
+    let k = s.upright();
+    let plane = s.slope.map(|sl| {
+        let (dx, dy) = (sl.to.x - sl.from.x, sl.to.y - sl.from.y);
+        let l2 = dx * dx + dy * dy;
+        let (a, b) = (sl.rise * dx / l2, sl.rise * dy / l2);
+        (a, b, -(a * sl.from.x + b * sl.from.y))
+    });
     let mut z = floor + s.offset;
     let solid = |bottom: f64, top: f64| Solid {
         rings: rings.clone(),
-        height: Height::Prism { bottom, top },
+        height: match plane {
+            Some((a, b, c)) => Height::Sloped(sec::Sloped {
+                top: top + c,
+                dx: a,
+                dy: b,
+                thickness: top - bottom,
+                eaves: rings.first().cloned().unwrap_or_default(),
+                roof: 0,
+            }),
+            None => Height::Prism { bottom, top },
+        },
         voids: Vec::new(),
         marks: Vec::new(),
         finish: None,
     };
-    // Each of its solids with its arcs (docs/adr/8071 §1).
-    let put = |m: &mut Model, solid: Solid, look: Look| match &exact {
-        Some(e) => push_exact(m, solid, look, owner.clone(), e.clone()),
-        None => push(m, solid, look, owner.clone()),
+    // Each of its solids with its arcs (docs/adr/8071 §1); a sloped plate's faces drawn as its own.
+    let put = |m: &mut Model, mut solid: Solid, look: Look| {
+        if let Height::Sloped(sl) = &mut solid.height {
+            sl.roof = SLAB_FACES + m.solids.len();
+        }
+        match &exact {
+            Some(e) => push_exact(m, solid, look, owner.clone(), e.clone()),
+            None => push(m, solid, look, owner.clone()),
+        }
     };
     for l in &s.layers.over {
-        put(m, solid(z - l.thickness, z), slab_layer_look(l.kind, l.material.as_deref()));
-        z -= l.thickness;
+        put(m, solid(z - l.thickness * k, z), slab_layer_look(l.kind, l.material.as_deref()));
+        z -= l.thickness * k;
     }
     // A covering's plate on its type's EK-2 element (docs/adr/8070 §10).
     let look = match &s.covering {
         Some(c) => covering_look(c, s.material.as_deref()),
         None => material_look("DOSM", s.material.as_deref(), None),
     };
-    put(m, solid(z - s.thickness, z), look);
-    z -= s.thickness;
+    put(m, solid(z - s.thickness * k, z), look);
+    z -= s.thickness * k;
     for l in &s.layers.under {
-        put(m, solid(z - l.thickness, z), slab_layer_look(l.kind, l.material.as_deref()));
-        z -= l.thickness;
+        put(m, solid(z - l.thickness * k, z), slab_layer_look(l.kind, l.material.as_deref()));
+        z -= l.thickness * k;
     }
 }
+
+/// The face group of a sloped slab's plate (docs/adr/8071 §6): its own, apart from the roofs' and the ramps'.
+const SLAB_FACES: usize = usize::MAX / 8;
 
 /// A column between the structure under it and the structure over its storey.
 fn column(

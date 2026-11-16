@@ -19,7 +19,13 @@ It checks fixtures/arch/v1/ifc/egri-bina.ifc (Design Transfer: bodies whole, ope
   met as often one way as the other), standing where the closed form puts it (its lowest and highest point over ±0.00), and encloses the closed
   form's volume less what its triangles leave of its arcs (IfcOpenShell meshes them at a 0.005 rad step; within
   0.05 %): a wall's its net volume, the openings taken out by IfcOpenShell's own booleans in a Design Transfer View and
-  by KentOS's cut in a Reference View."""
+  by KentOS's cut in a Reference View.
+
+And fixtures/arch/v1/ifc/egimli-doseme.ifc (docs/adr/8071 §6; KENTOS_WRITE_IFC_SLOPED=1 cargo test … a_sloped_slab): the
+section building with a 4 × 3 m slab 20 cm thick rising 30 cm over 3 m northward from 3.00 m: validator 0 findings; its
+Pset_SlabCommon.PitchAngle atan 0.1; its Qto 0.2 m wide, 12 · √1.01 m² as it lies, 12 · 0.2 · √1.01 m³; IfcOpenShell's
+own surface of it closed, its volume the same (its faces plane: 1e-9), its lowest point 3.00 − 0.2 · √1.01 (its
+underside at its tail), its highest 3.30."""
 import json
 import sys
 import uuid
@@ -27,12 +33,82 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 FILES = [ROOT / "fixtures/arch/v1/ifc/egri-bina.ifc", ROOT / "fixtures/arch/v1/ifc/egri-bina-referans.ifc"]
+SLOPED = ROOT / "fixtures/arch/v1/ifc/egimli-doseme.ifc"
 EXPECTED = ROOT / "fixtures/arch/v1/curved-building.json"
 
 
 def main() -> int:
-    paths = [Path(sys.argv[1]).resolve()] if len(sys.argv) > 1 else FILES
-    return max(check(p) for p in paths)
+    if len(sys.argv) > 1:
+        path = Path(sys.argv[1]).resolve()
+        return check_sloped(path) if path.name == SLOPED.name else check(path)
+    return max([check(p) for p in FILES] + [check_sloped(SLOPED)])
+
+
+def check_sloped(path: Path) -> int:
+    import math
+
+    import ifcopenshell
+    import ifcopenshell.geom
+    import ifcopenshell.util.element as ue
+    import ifcopenshell.validate
+
+    f = ifcopenshell.open(str(path))
+    bad: list[str] = []
+    log = ifcopenshell.validate.json_logger()
+    ifcopenshell.validate.validate(f, log, express_rules=True)
+    if log.statements:
+        bad.append(f"validator: {[s.get('message', s) for s in log.statements[:5]]}")
+    sloped = [s for s in f.by_type("IfcSlab") if (ue.get_pset(s, "Pset_SlabCommon") or {}).get("PitchAngle")]
+    if len(sloped) != 1:
+        bad.append(f"{len(sloped)} sloped slabs")
+    k = math.sqrt(1.01)
+    for s in sloped:
+        near = lambda a, b: a is not None and abs(a - b) <= 1e-9 * max(abs(b), 1.0)
+        pitch = ue.get_pset(s, "Pset_SlabCommon")["PitchAngle"]
+        if not near(pitch, math.atan(0.1)):
+            bad.append(f"PitchAngle {pitch}")
+        q = ue.get_pset(s, "Qto_SlabBaseQuantities") or {}
+        for key, want in (("Width", 0.2), ("GrossArea", 12 * k), ("NetArea", 12 * k), ("GrossVolume", 12 * 0.2 * k),
+                          ("NetVolume", 12 * 0.2 * k)):
+            if not near(q.get(key), want):
+                bad.append(f"{key} {q.get(key)}, the closed form {want}")
+        settings = ifcopenshell.geom.settings()
+        for key, value in (("use-world-coords", True), ("weld-vertices", True)):
+            try:
+                settings.set(key, value)
+            except Exception:  # noqa: BLE001
+                pass
+        g = ifcopenshell.geom.create_shape(settings, s).geometry
+        v = g.verts
+        pts = [(v[i], v[i + 1], v[i + 2]) for i in range(0, len(v), 3)]
+        key = {}
+        index = [key.setdefault(tuple(round(c, 9) for c in p), len(key)) for p in pts]
+        tris = [(index[g.faces[i]], index[g.faces[i + 1]], index[g.faces[i + 2]]) for i in range(0, len(g.faces), 3)]
+        edges = {}
+        for t in tris:
+            for a, b in ((t[0], t[1]), (t[1], t[2]), (t[2], t[0])):
+                edges[(a, b)] = edges.get((a, b), 0) + 1
+        if not all(edges.get((b, a), 0) == n for (a, b), n in edges.items()):
+            bad.append("IfcOpenShell's surface of it is not closed")
+        place = {}
+        for p, i in zip(pts, index):
+            place.setdefault(i, p)
+        vol = abs(sum((a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0])
+                       + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
+                      for a, b, c in ((place[x], place[y], place[z]) for x, y, z in tris)))
+        if not near(vol, 12 * 0.2 * k):
+            bad.append(f"IfcOpenShell's volume {vol}, the closed form {12 * 0.2 * k}")
+        zs = [p[2] for p in pts]
+        if not (near(min(zs), 3.0 - 0.2 * k) and near(max(zs), 3.3)):
+            bad.append(f"{min(zs)} → {max(zs)}")
+    if bad:
+        for b in bad:
+            print("✗", b)
+        return 1
+    shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
+    print(f"✓ {shown}: IFC4X3_ADD2, 0 validator findings; the sloped slab its closed forms, IfcOpenShell's surface "
+          "closed and its volume the same.")
+    return 0
 
 
 def check(path: Path) -> int:

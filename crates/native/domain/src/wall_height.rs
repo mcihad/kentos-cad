@@ -139,8 +139,9 @@ impl Document {
 
     /// The structure's top of the floor slab under `at` on the storey whose floor is `floor`.
     fn slab_structure_top_under(&self, at: Vec2, floor: f64) -> Option<f64> {
+        // A sloped slab's there (docs/adr/8071 §6).
         self.floor_slab_under(at, floor)
-            .map(|(s, f)| s.structure_top(f))
+            .map(|(s, f)| s.structure_top_at(f, at))
     }
 
     /// The floor slab under `at` on the storey whose floor is `floor`, with its level's floor: of the slabs whose outline
@@ -149,10 +150,10 @@ impl Document {
     pub(crate) fn floor_slab_under(&self, at: Vec2, floor: f64) -> Option<(&SlabFields, f64)> {
         self.slabs_holding(at)
             .filter(|(s, f)| {
-                let top = f + s.offset;
+                let top = s.top_at(*f, at);
                 top >= floor - 0.5 && top <= floor + OVER
             })
-            .max_by(|a, b| (a.1 + a.0.offset).total_cmp(&(b.1 + b.0.offset)))
+            .max_by(|a, b| a.0.top_at(a.1, at).total_cmp(&b.0.top_at(b.1, at)))
     }
 
     /// The slabs whose outline holds `at`, each with its level's floor (0 without a level).
@@ -182,7 +183,7 @@ impl Document {
     /// The lowest structure's underside, of the slabs whose outline holds `at`, more than [`OVER`] above `foot`.
     fn slab_underside_over(&self, at: Vec2, foot: f64) -> Option<f64> {
         self.slabs_holding(at)
-            .map(|(s, f)| s.structure_underside(f))
+            .map(|(s, f)| s.structure_underside_at(f, at))
             .filter(|u| *u > foot + OVER)
             .min_by(f64::total_cmp)
     }

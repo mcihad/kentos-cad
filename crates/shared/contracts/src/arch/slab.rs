@@ -29,6 +29,79 @@ pub const MAX_SLAB_MATERIAL: usize = 120;
 pub const MAX_SLAB_LAYER: f64 = 1.0;
 /// The most layers over or under a slab's structure.
 pub const MAX_SLAB_LAYERS: usize = 8;
+/// The steepest slab, rise over run (docs/adr/8071 §6): 100 %, 45°; steeper is a wall's or a roof's.
+pub const MAX_SLAB_GRADE: f64 = 1.0;
+
+/// A sloped slab's slope arrow (docs/adr/8071 §6): its top rises evenly along the arrow, from its tail `from` (where
+/// the top is the slab's `offset` over its level) to its head `to`, by `rise` metres there (negative: down); the same
+/// plane runs on past both ends. Its thicknesses are measured square to its top; its sides stand upright on its outline.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SlabSlope {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub from: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub to: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub rise: f64,
+}
+
+impl SlabSlope {
+    /// Its arrow's length in plan, metres.
+    pub fn run(&self) -> f64 {
+        ((self.to.x - self.from.x).powi(2) + (self.to.y - self.from.y).powi(2)).sqrt()
+    }
+
+    /// Its grade, rise over run (0 for an arrow of no length).
+    pub fn grade(&self) -> f64 {
+        let run = self.run();
+        if run > 0.0 { self.rise / run } else { 0.0 }
+    }
+
+    /// Its top's height over its tail's at plan point `p`, metres.
+    pub fn over(&self, p: Vec2) -> f64 {
+        let (dx, dy) = (self.to.x - self.from.x, self.to.y - self.from.y);
+        let l2 = dx * dx + dy * dy;
+        if l2 > 0.0 { self.rise * ((p.x - self.from.x) * dx + (p.y - self.from.y) * dy) / l2 } else { 0.0 }
+    }
+
+    /// How tall upright a thickness square to its top stands: √(1 + grade²).
+    pub fn upright(&self) -> f64 {
+        let g = self.grade();
+        (1.0 + g * g).sqrt()
+    }
+
+    /// What is wrong with it, said so a reader can fix it: the field (under `slope`) and the words; none: it holds.
+    pub fn problem(&self) -> Option<(String, String)> {
+        let finite = |p: Vec2| p.x.is_finite() && p.y.is_finite();
+        if !finite(self.from) || !finite(self.to) || !self.rise.is_finite() {
+            return Some(("slope".into(), "Eğim okunun noktaları ve yükselişi sonlu olmalı.".into()));
+        }
+        if self.run() < 0.001 {
+            return Some(("slope.to".into(), "Eğim okunun başı kuyruğundan en az 1 mm uzakta olmalı.".into()));
+        }
+        if self.rise.abs() > MAX_SLAB_OFFSET {
+            return Some((
+                "slope.rise".into(),
+                format!("Eğimin yükselişi en çok ±{MAX_SLAB_OFFSET} m olur; {} verildi.", self.rise),
+            ));
+        }
+        if self.grade().abs() > MAX_SLAB_GRADE {
+            return Some((
+                "slope.rise".into(),
+                format!(
+                    "Döşemenin eğimi en çok %{:.0} olur (45°); %{:.1} verildi. Daha dik bir yüzey duvar ya da çatıdır.",
+                    MAX_SLAB_GRADE * 100.0,
+                    self.grade().abs() * 100.0
+                ),
+            ));
+        }
+        None
+    }
+}
 
 /// What a layer of a slab besides its structure is (docs/adr/8040 §2): TS 825's floor build-up (a storey's floor: its
 /// finish, screed, insulation; a terrace's waterproofing too) and the ceiling's plaster under it. The finish is PAİY
@@ -514,6 +587,10 @@ pub struct SlabFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub covering: Option<crate::Covering>,
+    /// Its slope (docs/adr/8071 §6): a sloped slab rises along its arrow; absent: level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub slope: Option<SlabSlope>,
 }
 
 /// A slab (docs/adr/0722).
@@ -550,6 +627,26 @@ impl SlabFields {
     /// Its structure's top over `floor` (its level's elevation), metres: its top less the layers over it.
     pub fn structure_top(&self, floor: f64) -> f64 {
         floor + self.offset - self.layers.over_thickness()
+    }
+
+    /// How tall upright its thicknesses stand (docs/adr/8071 §6): √(1 + grade²) on a sloped slab, 1 on a level one.
+    pub fn upright(&self) -> f64 {
+        self.slope.map_or(1.0, |s| s.upright())
+    }
+
+    /// Its top over `floor` at plan point `p`, metres: its offset, and its slope's rise there.
+    pub fn top_at(&self, floor: f64, p: Vec2) -> f64 {
+        floor + self.offset + self.slope.map_or(0.0, |s| s.over(p))
+    }
+
+    /// Its structure's top over `floor` at plan point `p`, metres: its top there less the layers over it, upright.
+    pub fn structure_top_at(&self, floor: f64, p: Vec2) -> f64 {
+        self.top_at(floor, p) - self.layers.over_thickness() * self.upright()
+    }
+
+    /// Its structure's underside over `floor` at plan point `p`, metres: where a wall under it stops there.
+    pub fn structure_underside_at(&self, floor: f64, p: Vec2) -> f64 {
+        self.structure_top_at(floor, p) - self.thickness * self.upright()
     }
 
     /// Its structure's underside over `floor`, metres: where a wall under it stops (docs/adr/8040 §1, §2).
@@ -613,6 +710,19 @@ impl SlabFields {
         }
         if let Some(problem) = self.layers.problem() {
             return Some(problem);
+        }
+        // A sloped slab (docs/adr/8071 §6): its arrow holds, and no hole (the section draws a sloped face whole).
+        if let Some(s) = &self.slope {
+            if let Some(problem) = s.problem() {
+                return Some(problem);
+            }
+            if self.parts.iter().any(|p| !p.holes.is_empty()) {
+                return Some((
+                    "slope".into(),
+                    "Delikli döşemeye eğim verilmez: deliği kaldırın ya da döşemeyi deliğin çevresinde parçalara bölün."
+                        .into(),
+                ));
+            }
         }
         // A covering is a plate of its own (docs/adr/8070 §10): no layers, no edge, no balcony or terrace.
         if let Some(c) = &self.covering {

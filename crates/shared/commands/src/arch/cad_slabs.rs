@@ -143,6 +143,10 @@ pub struct NewSlab {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub covering: Option<crate::Covering>,
+    /// Its slope (docs/adr/8071 §6): its top rises along the arrow; absent: level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub slope: Option<crate::SlabSlope>,
 }
 
 /// Input of `cad.slabs.create` v1: slabs on a named layer, written as one undo step “Döşeme”.
@@ -246,6 +250,11 @@ pub struct SlabChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::Covering>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::Covering>"))]
     pub covering: Option<Option<crate::Covering>>,
+    /// Its slope arrow (docs/adr/8071 §6); null: level again.
+    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::SlabSlope>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::SlabSlope>"))]
+    pub slope: Option<Option<crate::SlabSlope>>,
 }
 
 /// What `cad.slabs.edit` does to the slabs (docs/adr/0722 §4).

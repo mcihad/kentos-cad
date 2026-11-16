@@ -497,8 +497,9 @@ formlara 10⁻⁹ içinde eşit, açıklıklı duvarın neti dolu eksi açıklı
 geometrisiyle hacimler 5,8·10⁻⁷ içinde. Açıklığı kesilmiş gövde (ADR 8071 §4): tek kesme işlevi net hacmi, 3B'yi ve
 IFC'nin Reference View çıktısını verir (Dosya › Dışa aktar › IFC dışa aktar (bina, kesilmiş gövde)…; `cad.arch.ifc`
 `view: reference`). Döşemede boşluk ve şaft (ADR 8071 §5): boşluk mahali kendi katının döşemesini keser; IFC'de döşemenin
-deliği ve boşluğun parçası döşemenin açıklığı. **Kalan:** eğimli döşeme, çatının katmanları ve içe dönen saçak, döner
-merdivenin yayı, mahalin kapalı hacmi.
+deliği ve boşluğun parçası döşemenin açıklığı. Eğimli döşeme (§6): eğim oku, Öznitelikler'de Eğim ve Eğim yönü; kesit,
+3B, IFC (PitchAngle) ve metraj eğimi okur, altındaki duvar ona göre biter. **Kalan:** çatının katmanları ve içe dönen
+saçak, döner merdivenin yayı, mahalin kapalı hacmi.
 
 **Kullanıcı sonucu:** Kesit, görünüş, 3B ve dışa aktarılan model aynı gövdeyi gösterir ve o gövde çizilen yapıyla aynıdır:
 eğri duvar eğridir, açıklık duvardan kesilmiştir, döşemenin boşluğu boştur. Dayanak Md. 14; EK-8; EK-9/14; Z6.

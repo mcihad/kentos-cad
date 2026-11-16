@@ -4,6 +4,7 @@ import type { Covering } from "./Covering";
 import type { NewSlabEdge } from "./NewSlabEdge";
 import type { SlabLayers } from "./SlabLayers";
 import type { SlabRole } from "./SlabRole";
+import type { SlabSlope } from "./SlabSlope";
 
 /**
  * A slab's own fields to change; absent ones stay, a nullable one's null takes it away.
@@ -20,4 +21,8 @@ layers?: SlabLayers,
 /**
  * A covering's type and name (docs/adr/8070 §10); null: a slab again.
  */
-covering?: Covering | null, };
+covering?: Covering | null, 
+/**
+ * Its slope arrow (docs/adr/8071 §6); null: level again.
+ */
+slope?: SlabSlope | null, };
