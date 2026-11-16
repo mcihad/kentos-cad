@@ -1096,7 +1096,7 @@ impl App {
         let ok = m.get("ok").and_then(Value::as_bool) == Some(true);
         let keep = ok && !run.poisoned;
         let wrote = self.ext_close(&mut run, keep);
-        let seconds = run.started.elapsed().as_secs_f64();
+        let seconds = kentos_ui::attribute::number::real(run.started.elapsed().as_secs_f64(), 1);
         // A panel's button: its rows and words go to the panel it started from (panels.rs, docs/adr/8057 §24).
         if let Some(origin) = run.origin.clone() {
             if ok {
@@ -1150,7 +1150,7 @@ impl App {
             if run.poisoned && wrote {
                 body.push_str(" Bir grubu başarısız oldu: çizime yazdıkları geri alındı.");
             }
-            self.extension_worked(ext, &part, "run_done", &format!("{said} ({seconds:.1} sn)"));
+            self.extension_worked(ext, &part, "run_done", &format!("{said} ({seconds} sn)"));
             self.toast(Toast::success(format!("{name}: {title}")).body(body));
             self.extensions.result = Some((ext.to_owned(), title, result));
         } else if m.get("stopped").and_then(Value::as_bool) == Some(true) {

@@ -11,6 +11,7 @@
 //! "bir sonraki açılışta eklentisiz başlat" from this window) activates nothing.
 
 mod audit_agents;
+mod audit_picker;
 mod audits;
 mod dialogs;
 mod panel_chart;
@@ -146,6 +147,8 @@ pub(crate) struct Extensions {
     pub(crate) python_reasons: std::collections::BTreeMap<String, Option<String>>,
     /// The last audit rule's run, its findings in Eklenti denetimi (audits.rs).
     pub(crate) audit: Option<audits::AuditState>,
+    /// Eklenti denetimi's rule picker's choice: extension and local id (audit_picker.rs).
+    pub(crate) audit_pick: Option<(String, String)>,
     /// The run an agent started (audit_agents.rs): its background task, handed to the runtime when the agent's call
     /// returns; the call that started it cannot return a task.
     pub(crate) audit_job: Option<iced::Task<crate::app::Message>>,
@@ -236,6 +239,7 @@ impl Default for Extensions {
             icons: std::collections::BTreeMap::new(),
             python_reasons: std::collections::BTreeMap::new(),
             audit: None,
+            audit_pick: None,
             audit_job: None,
             trial: None,
             trial_job: None,
@@ -318,6 +322,8 @@ pub(crate) enum Event {
     AuditDone(Box<audits::AuditDone>),
     /// An agent's trial ended: its report (trial.rs).
     TrialDone(Box<serde_json::Value>),
+    /// Eklenti denetimi's rule picker: the rule by its place in the list (audit_picker.rs).
+    AuditPick(usize),
     /// Eklenti denetimi's Göster, Düzelt and Durdur, by the finding's place (audits.rs).
     AuditShow(usize),
     AuditFix(usize),
@@ -691,6 +697,7 @@ impl App {
             Event::DialogStep(sign) => self.ext_dialog_step(sign),
             Event::AuditDone(done) => self.ext_audit_done(*done),
             Event::TrialDone(report) => self.ext_trial_done(*report),
+            Event::AuditPick(i) => self.ext_audit_pick(i),
             Event::AuditShow(i) => return self.ext_audit_show(i),
             Event::AuditFix(i) => self.ext_audit_fix(i),
             Event::AuditStop => self.ext_audit_stop(),

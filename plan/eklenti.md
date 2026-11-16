@@ -1080,6 +1080,10 @@ net parsel, planın emsali ve TAKS'ı, katlar alanı, %30 hesabı, taban alanı;
 sayılar); `tr.kentos.mevzuat` 0.6.0'ın `imar-durumu` kuralı emsal ve TAKS'ı plana, TAKS verilmemişse 5/6'nın %60'ına
 bakar. Belediyenin plan notu kuralı aynı olgularla yazılabilir. Kalan: İmar durumunda kat adedi, Hmax, yapı nizamı ve
 çekme mesafeleri (21/4 ve 5/6'nın %40'ı onlarla); kurp/görüş hesapları.
+**Araç eklentisinin kuralları masaüstünde** (ADR 8057 §93, 16 Kasım): Eklenti denetimi sekmesinin üstünde "Kural
+[seçim] Denetle": bu programın denetimine katılan etkin her eklentinin kuralı, şeritte düğmesi olmasa da (Türkiye
+mevzuatı sekme açmaz). Yeni çalıştırma seçiciyi gösterilen kurala getirir; seçici o kuralı sunuyorsa başlıkta ikinci
+düğme yok; süre Türkçe ondalıkla ("2,3 sn").
 **Bütçe kuralın Python'unu da ölçer** (ADR 8057 §58, 16 Kasım): sunucunun gözcüsü iş çalıştırıcısını ve altındaki her
 süreci (kuralın Python'u) birlikte ölçer (Linux'ta `/proc`, öbür Unix'lerde tek `ps`; işlemci bitip beklenen çocuklarla,
 bellek toplam RSS) ve bütçe aşılınca ya da Durdur'da iş çalıştırıcısının süreç grubunu bitirir; sonuç yerleşik

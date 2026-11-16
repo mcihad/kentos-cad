@@ -4742,3 +4742,31 @@ Kaynaklar `docs/research/2026-11-16-tr-mevzuat-denetim-kurallari.md` › *İmar 
   sayılar; fikstür değişmedi), `kek test` 37 örneğin hepsi (7 yeni), bulut işi `mevzuat_tests::imar` (emsal ve TAKS
   aşımı, %60 hata, %40-%60 uyarı, İmar durumu yokken sessiz) ve paketin bütün kuralları (14), SDK sınamaları (165).
 - **Kalan:** İmar durumunda kat adedi, Hmax, yapı nizamı ve çekme mesafeleri; kurp/görüş hesapları.
+
+## §93. Eklenti denetiminde kural seçici: araç eklentisinin kuralları da masaüstünde çalışır (`ADIM 20`, `ADIM 22`)
+
+**16 Kasım.** Kod: masaüstü `shell/extensions/audit_picker.rs` (yeni: `RuleChoice`, `ext_audit_choices`,
+`ext_audit_picker`, `ext_audit_pick`), `audits.rs` (`ext_audit_tab`, `seconds_words`), `runner.rs` (günlükte süre).
+
+- **Sorun.** Eklenti denetimi sekmesi yalnız son kuralın bulgularını gösteriyordu; kural eklentinin şeritteki
+  düğmesinden, bir ajandan (`audit.run`) ya da bulut işinden başlıyordu. Türkiye mevzuatı gibi bir araç eklentisi sekme
+  açmaz, şeride düğme koymaz: kullanıcı ulusal kuralları önündeki çizimde çalıştıramıyordu, §92'nin İmar durumu kuralı
+  masaüstünde yalnız Asistan'dan çalışıyordu.
+- **Karar.** Sekmenin üstünde "Kural [seçim] Denetle": bu programın denetimine katılan (`entrypoints.audits[].domain`
+  programın kimliği) etkin her eklentinin kuralı, kayıt defterinin sırasıyla, "Eklenti › Kuralın başlığı" diye. Liste
+  ajanın `audits` listesiyle aynı yerden gelir: kayıtlı katkılar (eklenti çalışıyor, `audit.provider` verilmiş). Başka
+  programın kuralı listelenmez (Mimari kuralının CBS'de olguları yok). Seçim bir sonraki çalıştırmaya dek tutulur;
+  nereden başlarsa başlasın (şerit, seçici, ajan) yeni çalıştırma seçiciyi gösterilen kurala getirir.
+- **Bir iş, bir düğme.** Seçici gösterilen kuralı sunuyorsa başlıktaki "Yeniden denetle" kalkar: gerçek pencerede
+  seçicinin Denetle'siyle alt alta iki düğme aynı işi yapıyordu. Seçicinin sunmadığı kuralın bulgularında düğme kalır;
+  çalışırken başlıkta Durdur vardır, Denetle kapalıdır.
+- **Kural yokken** sekme ne yapılacağını söyler: "Bu programda denetim kuralı olan etkin bir eklenti yok. Eklentiler'den
+  bir denetim eklentisi kurun (ör. Türkiye mevzuatı)."
+- **Süre (aynı gün):** "2 hata (2.3 sn)" → "2 hata (2,3 sn)", eklenti günlüğündeki çalıştırma satırı da. Süre ölçü
+  değildir, ADR 0149'un ondalık noktası onu kapsamaz (§17'nin örneği de "1,6 sn" diyordu). Bulgu metnindeki ölçüler
+  ADR 0149'a göre noktalı kalır.
+- **Gerçek pencere (İmar durumu çizimi, mevzuat 0.6.0 Eklentiler'den kurulmuş):** Mimari'de seçicide 9 kural; İmar
+  durumu seçilip Denetle → 2 hata (Emsal 2.92 > 1.00, TAKS 1.44 > 0.40), köken "Türkiye mevzuatı 0.6.0 · imar-durumu ·
+  paket 50e5a757e12e · çizim revizyonu 0".
+- **Sınamalar:** masaüstü 1 (`audit_picker`: Mimari'de mevzuatın kuralları; seçim tutulur; başka yerden başlayan
+  çalıştırma seçiciyi gösterilen kurala getirir; CBS'de hiçbiri), masaüstünün eklenti sınamaları (103), Asistan (17).

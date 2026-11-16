@@ -230,6 +230,8 @@ impl App {
         );
         let revision = doc.model.revision();
         let stop = Arc::new(AtomicBool::new(false));
+        // The picker stands on the rule now shown, wherever the run came from (ribbon, picker, agent).
+        self.extensions.audit_pick = None;
         self.extensions.audit = Some(AuditState {
             ext: ext.to_owned(),
             local: local.to_owned(),
@@ -543,51 +545,67 @@ impl App {
 
     /// Eklenti denetimi: the last rule's findings with Göster and Düzelt, or what to do first.
     pub(crate) fn ext_audit_tab(&self) -> Element<'_, Message> {
+        // The rules this program's extensions offer, a ribbon button or not (audit_picker.rs).
+        let rules = self.ext_audit_choices();
+        let picker = self.ext_audit_picker(&rules);
         let Some(state) = &self.extensions.audit else {
-            return container(label::muted(
-                "Bir eklentinin denetimini şeritteki düğmesinden çalıştırın: bulguları burada listelenir.",
-            ))
-            .padding(12)
-            .into();
+            let said = label::muted(if picker.is_some() {
+                "Bir kural seçip Denetle'ye basın ya da eklentinin şeritteki düğmesini kullanın: bulguları burada \
+                 listelenir."
+            } else {
+                "Bu programda denetim kuralı olan etkin bir eklenti yok. Eklentiler'den bir denetim eklentisi kurun \
+                 (ör. Türkiye mevzuatı)."
+            });
+            let mut body = Column::new().spacing(10);
+            if let Some(picker) = picker {
+                body = body.push(picker);
+            }
+            return container(body.push(said)).padding(12).into();
         };
         let name = self.extension_name(&state.ext);
+        let seconds = seconds_words(state.ms);
         let status = if state.running.is_some() {
             "Denetleniyor…".to_owned()
         } else if let Some(error) = &state.error {
             format!("Bulgu yok: {error}")
         } else if state.findings.is_empty() {
-            format!(
-                "Bulgu yok: kural her şeyi uygun buldu ({:.1} sn).",
-                state.ms as f64 / 1000.0
-            )
+            format!("Bulgu yok: kural her şeyi uygun buldu ({seconds} sn).")
         } else {
-            format!(
-                "{} ({:.1} sn)",
-                counts(&state.findings),
-                state.ms as f64 / 1000.0
-            )
+            format!("{} ({seconds} sn)", counts(&state.findings))
         };
         let action = if state.running.is_some() {
-            button(label::body("Durdur"))
-                .style(style::button::secondary)
-                .on_press(msg(Event::AuditStop))
+            Some(
+                button(label::body("Durdur"))
+                    .style(style::button::secondary)
+                    .on_press(msg(Event::AuditStop)),
+            )
+        } else if rules
+            .iter()
+            .any(|r| r.ext == state.ext && r.local == state.local)
+        {
+            // The picker above stands on this rule and its Denetle runs it again: one button for one action.
+            None
         } else {
-            button(label::body("Yeniden denetle"))
-                .style(style::button::secondary)
-                .on_press(msg(Event::Run(
-                    state.ext.clone(),
-                    "audit".to_owned(),
-                    state.local.clone(),
-                )))
+            Some(
+                button(label::body("Yeniden denetle"))
+                    .style(style::button::secondary)
+                    .on_press(msg(Event::Run(
+                        state.ext.clone(),
+                        "audit".to_owned(),
+                        state.local.clone(),
+                    ))),
+            )
         };
-        let head = row![
+        let mut head = row![
             icon(from_web(Some("standardsCheck"))).size(16.0),
             label::strong(format!("{name} › {}", state.title)),
             label::muted(status).width(Fill),
-            action,
         ]
         .spacing(10)
         .align_y(Center);
+        if let Some(action) = action {
+            head = head.push(action);
+        }
         let mut notes = Column::new().spacing(2);
         if let Some((words, changed)) = self.ext_audit_provenance() {
             notes = notes.push(label::muted(words));
@@ -648,8 +666,12 @@ impl App {
             }
             list = list.push(line);
         }
+        let mut top = Column::new().spacing(8);
+        if let Some(picker) = picker {
+            top = top.push(picker);
+        }
         container(
-            Column::new().spacing(8).push(head).push(notes).push(
+            top.push(head).push(notes).push(
                 // The bar beside the rows, not over their buttons.
                 scrollable(container(list).padding(iced::Padding::new(0.0).right(14.0)))
                     .direction(style::field::body_scrollbar())
@@ -666,4 +688,10 @@ impl App {
 /// "2 hata, 1 uyarı" — the findings counted by severity, as a cloud job's summary says them.
 pub(crate) fn counts(findings: &[Finding]) -> String {
     kentos_commands::audit_job::counts(findings.iter().map(|f| f.severity))
+}
+
+/// A run's time in seconds as Turkish writes it, one decimal after a comma: “2,3”. A time is not a measure: ADR 0149
+/// writes measures with a point and leaves times as they were.
+pub(crate) fn seconds_words(ms: u64) -> String {
+    kentos_ui::attribute::number::real(ms as f64 / 1000.0, 1)
 }
