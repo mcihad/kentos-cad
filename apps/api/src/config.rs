@@ -70,6 +70,22 @@ pub struct Config {
     ///
     /// Paths are absolute.
     pub audit_envs: crate::audit_env::EnvSettings,
+    /// The extension catalog (docs/adr/8059 §13): `KENTOS_EXTENSION_CATALOG=on` opens it on its persistent store
+    /// (the database and the object store); absent or `off`, its routes answer 404 and `project.audit` jobs say the
+    /// catalog is off. Open, it takes uploads and every move but a person's decision, which needs a fresh sign-in the
+    /// server does not ask for yet.
+    pub extension_catalog: bool,
+}
+
+/// `KENTOS_EXTENSION_CATALOG`: `on` or `off` (the default); anything else is a mistake, not a silent `off`.
+pub fn extension_catalog(value: Option<&str>) -> Result<bool, String> {
+    match value.map(str::trim) {
+        None | Some("off") => Ok(false),
+        Some("on") => Ok(true),
+        Some(other) => Err(format!(
+            "KENTOS_EXTENSION_CATALOG on ya da off olmalı: {other}"
+        )),
+    }
 }
 
 /// Days of event log kept unless `KENTOS_EVENT_RETENTION_DAYS` says otherwise.
@@ -319,6 +335,7 @@ impl Config {
             },
             job_retention: job_retention(get("KENTOS_JOB_RETENTION_DAYS").as_deref())?,
             audit_envs: audit_envs(get, &env_file)?,
+            extension_catalog: extension_catalog(get("KENTOS_EXTENSION_CATALOG").as_deref())?,
             env_file,
             vars,
         })
@@ -480,6 +497,21 @@ mod tests {
                 job_limits(None, None, None, None, Some(bad))
                     .unwrap_err()
                     .contains("KENTOS_JOB_INPUT_MAX_MB"),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_extension_catalog_opens_only_when_the_setting_says_on() {
+        assert_eq!(extension_catalog(None), Ok(false));
+        assert_eq!(extension_catalog(Some("off")), Ok(false));
+        assert_eq!(extension_catalog(Some(" on ")), Ok(true));
+        for bad in ["1", "true", "acik", ""] {
+            assert!(
+                extension_catalog(Some(bad))
+                    .unwrap_err()
+                    .contains("KENTOS_EXTENSION_CATALOG"),
                 "{bad}"
             );
         }

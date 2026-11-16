@@ -92,8 +92,8 @@ pub struct AppState {
     pub blobs: kentos_application::blobs::Blobs,
     /// The map services' proxy (docs/adr/0208 §13); `None`: off.
     pub proxy: Option<Arc<proxy::Proxy>>,
-    /// The extension catalog (docs/adr/8059 §10); `None`: off, as on every running server until its store is
-    /// persistent.
+    /// The extension catalog (docs/adr/8059 §10); `None`: off, unless `KENTOS_EXTENSION_CATALOG=on` opens it on its
+    /// persistent store (§13).
     pub extension_catalog: Option<Arc<crate::extension_catalog::Catalog>>,
 }
 

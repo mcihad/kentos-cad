@@ -12,6 +12,8 @@ use kentos_postgres::{Db, env, migrate};
 
 use crate::config::Config;
 
+mod extension_catalog;
+
 /// Words and `--flag value` / `--switch` options.
 pub struct Args {
     pub words: Vec<String>,
@@ -439,6 +441,7 @@ pub async fn run(config: &Config, args: &Args) -> Result<(), String> {
                 );
             }
         }
+        ["extension-catalog", command] => extension_catalog::run(config, args, command).await?,
         ["dev-seed"] => dev_seed(config).await?,
         _ => return Err(USAGE.into()),
     }
@@ -582,6 +585,13 @@ pub const USAGE: &str = "kullanım:
                                               bulut denetimi için sürümün Python ortamı, kilidin tekerlekleriyle
   kentosd audit-env remove --release KİMLİK@SÜRÜM   sürümün ortamı ve eşlemedeki yeri
   kentosd audit-env list                      hazırlanmış ortamların yorumlayıcıları
+  kentosd extension-catalog grant --catalog every|public|tenant:KISA --user GİRİŞ|KİMLİK
+                                              --role publisher|reviewer|catalogAdmin|scanner   eklenti kataloğunda rol
+  kentosd extension-catalog revoke --catalog every|public|tenant:KISA --user GİRİŞ|KİMLİK --role ROL
+  kentosd extension-catalog publisher --publisher KİMLİK [--name AD] [--user GİRİŞ|KİMLİK [--member on|off]]
+                                              yayımcıyı açar ya da adlandırır; hesabı üye yapar ya da çıkarır
+  kentosd extension-catalog trust --catalog public|tenant:KISA --publisher KİMLİK [--trusted on|off]
+  kentosd extension-catalog list              katalog rolleri, yayımcılar ve üyeleri, güvenilen yayımcılar
   kentosd dev-seed                            geliştirme kurumu ve üç hesap (ayse, mehmet, zeynep)";
 
 #[cfg(test)]

@@ -1022,8 +1022,9 @@ denemesi aynı işlevlerde: olgular, cevabın okunması ve özet ortak, `audit.r
 (eklenti, kural, isteğe bağlı sürüm); sürüm kurumun kataloğundan, yoksa genel katalogdan gelir (en yeni yayımlanmış ya
 da istenen çalışabilir sürüm, baytları onaylı içerik), yorumlayıcı sunucunun `eklenti@sürüm` eşlemesinden; rapor işin
 sonucudur, projeye yazılmaz; aynı sürüm, kural, proje durumu, görünürlük ve yazılım önbellekten döner (`fresh` yeniden
-çalıştırır). Kalan: kalıcı katalog ve işçiye bağlanması (üretimde iş bugün `tool_unavailable` ile biter), sürüm başına
-ortamı kuran adım, kutunun işletim sistemi düzeyinde ağsız ve dosyasız kapatılması ve bütçenin Python'u da ölçmesi.
+çalıştırır). O gün sayılan kalanlar 16 Kasım'da kapandı: bütçe Python'u da ölçer (ADR 8057 §58), kutu işletim sistemi
+düzeyinde ağsız ve dosyasız (§61, §63, §65), sürümün ortamı sunucuda hazırlanır (§66), katalog kalıcı ve işçiye bağlı
+(ADR 8059 §13); yayının kararları taze kimlik doğrulamasını bekliyor.
 **Ulusal kuralların ilk dilimi** (ADR 8057 §51, 16 Kasım): `catalog/standards/tr-mevzuat` (`tr.kentos.mevzuat`
 0.1.0) sıradan bir `.kek`: masaüstünün Eklenti denetimi ve bulut işi aynı yoldan çalıştırır. Dört kural yalnız
 olgularla karar verir ve maddeyi söyler: konutta 12 m²'lik piyes yoksa oturma odası (PAİY 29/1, 5/25), daire içinde
@@ -1314,8 +1315,12 @@ doğrulama gelene dek). **Üçüncü dilim — geri çekme listesi** (ADR 8059 �
 (`kentos.extension-revocations` v1) masaüstünün barındırıcısıyla paylaşılan crate'e taşındı, liste akıştan üretilir
 (yayımlanmış ve şimdi askıda ya da geri çekilmiş sürümler, `=X.Y.Z` ve duyurunun gerekçesiyle, yeni alan olmadan) ve
 `GET /v1/extension-catalogs/{katalog}/revocations` ile her üyeye aynı gelir; imzasızdır, masaüstü onu imzalanana dek
-uygulamaz. Kalan: kalıcı depo (tasarımı §11), taze kimlik doğrulama, imza (onay kaydı ve geri çekme listesi) ve OIDC,
+uygulamaz. Kalan: taze kimlik doğrulama, imza (onay kaydı ve geri çekme listesi) ve OIDC,
 platform tekerlek deposu, arayüz.
+**Dördüncü dilim** (ADR 8059 §13): katalog kalıcı depoda (PostgreSQL ve nesne deposu, göç 0042) ve
+`KENTOS_EXTENSION_CATALOG=on` ile çalışan sunucuda açık; kişinin kararları taze kimlik doğrulaması gelene dek kapalı,
+yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümün denetim ortamı yayımlamada hazırlanır ve
+`project.audit` işleri aynı katalogdan okur.
 
 - [x] Durum makinesi: `taslak → gönderildi → denetleniyor → değişiklik isteniyor / onaylandı → yayımlandı → askıda /
   geri çekildi / arşivlendi`. Yüklenen taslağı yalnız yazarı ve yetkili inceleyenler görür; **yükleme yayın değildir**.

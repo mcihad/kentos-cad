@@ -10,11 +10,14 @@
 //!   came ([`Account::via`]) is the HTTP layer's word.
 //! - **Store** ([`store::ReleaseStore`]): a small trait. A move is written only over the record it was made on, and made
 //!   again on the newer record when another came first, so two scanners' reports or two reviewers never overwrite each
-//!   other.
+//!   other. The server's is persistent ([`postgres::PgStore`], §13), the tests' also in memory.
+//! - **Decisions** need a fresh sign-in ([`Account::fresh_sign_in`]): the server's sessions carry none yet, so on a
+//!   running server approving, sending back, lifting a block and reinstating are refused (`fresh_sign_in_required`)
+//!   after the flow would have allowed them; everything else is open where the server opens the catalog (§13).
+//! - **Publishing** ([`OnPublish`]): a release that becomes published is handed to the server, which prepares its
+//!   audit's Python environment (docs/adr/8057 §66) without holding the request.
 //!
-//! Until the store is persistent a running server leaves the catalog off (`AppState::extension_catalog` is none):
-//! outside the tests nothing builds a [`Catalog`] yet, hence the allowance below.
-#![cfg_attr(not(test), allow(dead_code))]
+//! The submodules are named by path: the job tests build this module into their own program (docs/adr/8059 §13).
 
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -24,35 +27,45 @@ use kentos_extensions::Limits;
 use kentos_extensions::release::{Actor, Refusal, Release, ReleaseFacts, Role, Timestamp};
 use kentos_extensions::version::Version;
 
+#[path = "extension_catalog/acting.rs"]
+mod acting;
+#[path = "extension_catalog/audits.rs"]
 pub mod audits;
+#[path = "extension_catalog/grants.rs"]
+pub mod grants;
 #[cfg(test)]
+#[path = "extension_catalog/memory.rs"]
 pub mod memory;
+#[path = "extension_catalog/model.rs"]
 mod model;
+#[path = "extension_catalog/postgres.rs"]
+pub mod postgres;
+#[path = "extension_catalog/revocations.rs"]
 mod revocations;
+#[path = "extension_catalog/store.rs"]
 pub mod store;
 
+use model::taken;
 pub use model::{Account, Accounts, CatalogError, CatalogId, Filter, Listing, Move, ReleaseKey};
-use model::{changed, taken};
-use store::{ReleaseStore, StoreError};
+use store::ReleaseStore;
 
-/// How many times a move is made again on the newer record when another move was written first.
-const ATTEMPTS: usize = 4;
 /// The inspector's problems a refused upload lists; the rest are counted.
 const SHOWN_PROBLEMS: usize = 10;
 
-/// What a review starts with (D12): the release's package, the version approved before it with its package, and
-/// whether the catalog trusts the publisher.
-struct ReviewInputs {
-    current: ReleaseFacts,
-    baseline: Option<(Release, ReleaseFacts)>,
-    trusted: bool,
+/// What the server does with a release that became published (docs/adr/8057 §66): it is given the release and its
+/// approved package's bytes once the move is kept, and must not hold the request (a Python environment takes seconds
+/// to prepare, minutes with an index).
+pub trait OnPublish: Send + Sync {
+    fn published(&self, catalog: &CatalogId, release: &Release, bytes: Bytes);
 }
 
-/// The extension catalog: its store, how it learns who calls, the limits it inspects packages with.
+/// The extension catalog: its store, how it learns who calls, the limits it inspects packages with, what is done when
+/// a release is published.
 pub struct Catalog {
     store: Arc<dyn ReleaseStore>,
     accounts: Accounts,
     limits: Limits,
+    on_publish: Option<Arc<dyn OnPublish>>,
 }
 
 impl Catalog {
@@ -61,7 +74,14 @@ impl Catalog {
             store,
             accounts,
             limits: Limits::default(),
+            on_publish: None,
         }
+    }
+
+    /// This catalog, handing every release that becomes published to `hook`.
+    pub fn on_publish(mut self, hook: Arc<dyn OnPublish>) -> Catalog {
+        self.on_publish = Some(hook);
+        self
     }
 
     pub fn accounts(&self) -> &Accounts {
@@ -240,27 +260,6 @@ impl Catalog {
         Ok((release, actor))
     }
 
-    /// A move of the flow.
-    pub async fn act(
-        &self,
-        key: &ReleaseKey,
-        account: &Account,
-        request: &Move,
-    ) -> Result<(Release, Actor), CatalogError> {
-        let actor = self.actor(&key.catalog, account).await?;
-        let review = match request {
-            Move::StartReview => Some(self.review_inputs(key, &actor).await?),
-            _ => None,
-        };
-        let now = now();
-        let release = self
-            .moved(key, &actor, |r| {
-                apply(r, &actor, request, review.as_ref(), now)
-            })
-            .await?;
-        Ok((release, actor))
-    }
-
     /// The release a caller may install: published, its approval of its content (PY-CLOUD-10, 15).
     pub async fn installable(
         &self,
@@ -304,56 +303,6 @@ impl Catalog {
         }
     }
 
-    /// Makes a move on the stored record and writes it over that record only; when another move came first, the move
-    /// is made again on the newer record, where the flow checks it anew.
-    async fn moved<F>(
-        &self,
-        key: &ReleaseKey,
-        actor: &Actor,
-        change: F,
-    ) -> Result<Release, CatalogError>
-    where
-        F: Fn(&mut Release) -> Result<(), Refusal> + Send,
-    {
-        for _ in 0..ATTEMPTS {
-            let mut release = self.visible(key, actor).await?;
-            let moves = release.audit().len();
-            change(&mut release).map_err(CatalogError::Refused)?;
-            match self.store.write(key, Some(moves), &release).await {
-                Ok(()) => return Ok(release),
-                Err(StoreError::Changed) => continue,
-                Err(e) => return Err(e.into()),
-            }
-        }
-        Err(CatalogError::Refused(changed()))
-    }
-
-    async fn review_inputs(
-        &self,
-        key: &ReleaseKey,
-        actor: &Actor,
-    ) -> Result<ReviewInputs, CatalogError> {
-        let release = self.visible(key, actor).await?;
-        let current = self.stored_facts(&release.content().package).await?;
-        let all = self.store.releases(&key.catalog).await?;
-        let baseline = match release.baseline(&all) {
-            Some(before) => {
-                let facts = self.stored_facts(&before.content().package).await?;
-                Some((before.clone(), facts))
-            }
-            None => None,
-        };
-        let trusted = self
-            .store
-            .trusted(&key.catalog, release.publisher())
-            .await?;
-        Ok(ReviewInputs {
-            current,
-            baseline,
-            trusted,
-        })
-    }
-
     async fn stored(&self, digest: &str) -> Result<Bytes, CatalogError> {
         self.store
             .package(digest)
@@ -390,45 +339,6 @@ impl Catalog {
             )));
         }
         ReleaseFacts::of(&opened).map_err(CatalogError::Refused)
-    }
-}
-
-/// The move a request asks for, made on a release.
-fn apply(
-    release: &mut Release,
-    actor: &Actor,
-    request: &Move,
-    review: Option<&ReviewInputs>,
-    now: Timestamp,
-) -> Result<(), Refusal> {
-    match request {
-        Move::Submit { note } => release.submit(actor, note.as_deref(), now),
-        Move::Scan {
-            gate,
-            content,
-            outcome,
-        } => release.record_scan(actor, *gate, content, outcome.clone(), now),
-        Move::StartReview => match review {
-            Some(inputs) => {
-                let baseline = inputs
-                    .baseline
-                    .as_ref()
-                    .map(|(before, facts)| (before, facts));
-                release.start_review(actor, &inputs.current, baseline, inputs.trusted, now)
-            }
-            None => Err(Refusal::new(
-                "package_mismatch",
-                "İncelemenin paketleri okunamadı; isteği yeniden gönderin.",
-            )),
-        },
-        Move::RequestChanges { changes } => release.request_changes(actor, changes, now),
-        Move::Waive { gate, reason } => release.waive(actor, *gate, reason, now),
-        Move::Approve { note } => release.approve(actor, note.as_deref(), now),
-        Move::Publish => release.publish(actor, now),
-        Move::Suspend { reason } => release.suspend(actor, reason, now),
-        Move::Reinstate { reason } => release.reinstate(actor, reason, now),
-        Move::Withdraw { reason } => release.withdraw(actor, reason, now),
-        Move::Archive { reason } => release.archive(actor, reason.as_deref(), now),
     }
 }
 

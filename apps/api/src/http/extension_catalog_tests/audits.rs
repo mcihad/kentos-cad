@@ -1,7 +1,7 @@
 //! The catalog's side of `project.audit` jobs (docs/adr/8057 §42): the release a cloud job runs is a published one (the
 //! newest, or the version asked when it may run) and its bytes are the approved content; the worker's audit source
 //! looks in the organisation's catalog, then in the public one, and gives the interpreter the server prepared; an
-//! organisation's catalog that knows the extension decides alone.
+//! organisation's catalog that knows the extension decides alone. On both stores.
 
 use std::sync::Arc;
 
@@ -13,39 +13,32 @@ use kentos_extensions::release::Role;
 use serde_json::json;
 
 use super::{
-    AppState, PUBLIC, PUBLISHER, Via, act, config, grants, in_review, kek, package_of, release,
-    router, scan_all, state_of, upload, uri,
+    Bench, PUBLIC, PUBLISHER, Via, act, app_of, grants, in_review, kek, package_of, release,
+    scan_all, state_of, upload, uri,
 };
 use crate::extension_catalog::audits::CatalogAudits;
-use crate::extension_catalog::memory::{MemoryStore, Where};
+use crate::extension_catalog::store::Where;
 use crate::extension_catalog::{Accounts, Catalog, CatalogError, CatalogId};
 
 const EXTENSION: &str = "tr.ornek.altlik";
 const BURO: &str = "/v1/extension-catalogs/tenant:buro/releases";
 
+on_both_stores!(
+    a_cloud_job_runs_the_newest_published_release_or_the_one_asked,
+    the_audit_source_takes_the_organisation_s_catalog_then_the_public_one,
+    the_organisation_s_catalog_decides_for_an_extension_it_knows,
+);
+
 /// The routes and the catalog behind them, shared: the routes move the releases, the job reads the catalog. In the
 /// organisation Büro's catalog Ayşe publishes, Selin reviews and Yusuf administers too.
-fn shared() -> (Router, Arc<Catalog>) {
-    let store = Arc::new(MemoryStore::default());
-    grants(&store);
+async fn shared(bench: &Bench) -> (Router, Arc<Catalog>) {
+    grants(bench).await;
     let buro = || Where::In(CatalogId::Tenant("buro".into()));
-    store.grant(buro(), "ayse", Role::Publisher);
-    store.grant(buro(), "selin", Role::Reviewer);
-    store.grant(buro(), "yusuf", Role::CatalogAdmin);
-    let catalog = Arc::new(Catalog::new(store, Accounts::Named));
-    let app = router(AppState {
-        config: Arc::new(config()),
-        database: None,
-        oidc: None,
-        hub: crate::hub::Hub::default(),
-        logins: Default::default(),
-        blobs: kentos_application::blobs::Blobs::new(
-            std::env::temp_dir().join(format!("kentos-api-blobs-{}", uuid::Uuid::now_v7())),
-        ),
-        proxy: None,
-        extension_catalog: Some(catalog.clone()),
-    });
-    (app, catalog)
+    bench.grant(buro(), "ayse", Role::Publisher).await;
+    bench.grant(buro(), "selin", Role::Reviewer).await;
+    bench.grant(buro(), "yusuf", Role::CatalogAdmin).await;
+    let catalog = Arc::new(Catalog::new(bench.store(), Accounts::Named));
+    (app_of(Some(catalog.clone())), catalog)
 }
 
 /// Uploaded, reviewed, approved by Selin and published by Ayşe; its content's digest.
@@ -61,9 +54,8 @@ async fn published(app: &Router, version: &str) -> String {
 /// The newest published version, or the one asked when it may run; its bytes the approved content. A suspended
 /// version does not run and the newest published before it does; a draft runs nowhere; an extension the catalog has
 /// not is not found.
-#[tokio::test]
-async fn a_cloud_job_runs_the_newest_published_release_or_the_one_asked() {
-    let (app, catalog) = shared();
+async fn a_cloud_job_runs_the_newest_published_release_or_the_one_asked(bench: Bench) {
+    let (app, catalog) = shared(&bench).await;
     let first = published(&app, "1.0.0").await;
     let second = published(&app, "1.1.0").await;
     let public = CatalogId::Public;
@@ -102,9 +94,8 @@ async fn a_cloud_job_runs_the_newest_published_release_or_the_one_asked() {
 
 /// The worker's source: the organisation's catalog has no such extension, so the public one's release is taken, with
 /// where it came from; the interpreter is the one the server prepared for that version; what cannot run is said.
-#[tokio::test]
-async fn the_audit_source_takes_the_organisation_s_catalog_then_the_public_one() {
-    let (app, catalog) = shared();
+async fn the_audit_source_takes_the_organisation_s_catalog_then_the_public_one(bench: Bench) {
+    let (app, catalog) = shared(&bench).await;
     let content = published(&app, "1.0.0").await;
     let pythons = AuditPythons::parse(
         r#"{"tr.ornek.altlik@1.0.0": "/srv/kentos/python/altlik-1.0.0/bin/python"}"#,
@@ -150,9 +141,8 @@ fn origin(package: AuditPackage) -> (String, String) {
 /// same id, and once it is suspended there the job is refused rather than given the public one (which may be another
 /// publisher's). A draft there claims nothing: until it is published the public release runs; another organisation's
 /// jobs take the public one.
-#[tokio::test]
-async fn the_organisation_s_catalog_decides_for_an_extension_it_knows() {
-    let (app, catalog) = shared();
+async fn the_organisation_s_catalog_decides_for_an_extension_it_knows(bench: Bench) {
+    let (app, catalog) = shared(&bench).await;
     let public = published(&app, "1.0.0").await;
     let source = CatalogAudits::new(catalog, AuditPythons::default());
     let ours = kek(Some(PUBLISHER), "1.0.0", "Büronun kendi altlık servisleri.");

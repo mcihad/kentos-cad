@@ -331,6 +331,116 @@ sürümlerinden üretir.
 "şüpheli" ile "kesin" ayrımının biçimde gösterilmesi (v1 tek tür girdi bilir; ayrım bugün gerekçenin sözünde) ve itiraz
 yolu. Kalıcı depo (§11) geldiğinde liste aynı üreticiden çıkar.
 
+## §13 Dördüncü dilim: kalıcı depo ve çalışan sunucuda katalog
+
+`ReleaseStore`'un PostgreSQL ve nesne deposu uygulaması (`extension_catalog/postgres.rs` ve `postgres/` altında
+`moves`, `packages`, `access`), göç `0042_extension_catalog.sql`, yönetici komutları (`extension_catalog/grants.rs`,
+`cli/extension_catalog.rs`) ve sunucunun bağlantısı (`main.rs`). Hareket yapma `extension_catalog/acting.rs`'e taşındı.
+Katalog yalnız `KENTOS_EXTENSION_CATALOG=on` ile açılır; varsayılan `off`, `on|off` dışındaki değer hatadır. Açıkken
+veritabanı ister, yoksa sunucu başlamaz.
+
+- **Tablolar (§11'deki gibi).** `extension_release` (yer, yayımcı, yazar, durum, içerik sütunları, `record jsonb`,
+  `moves`, zamanlar), `extension_release_move` (yalnız eklenir), `extension_package`, `extension_catalog_grant`,
+  `extension_publisher`, `extension_publisher_member`. Sütunlar kaydın kendisidir: bir `check` kısıtı kimliği,
+  durumu, içerik özetlerini, yetenekleri ve hareket sayısını `record` ile karşılaştırır; kaydından başka bir şey
+  söyleyen satır yazılamaz.
+- **Veritabanının kendi bekçisi.** Tetikleyici (`extension_release_kept`) gönderilmiş içeriği (`content_frozen`),
+  sürümün kimliğini (yer, eklenti, sürüm, yayımcı, yazar) ve kayıttaki hareketleri korur: hareket azalmaz, eski
+  hareket değişmez. Uygulama rolünün `extension_release_move` ve `extension_package` üstünde yalnız SELECT ve INSERT'ü
+  vardır, `extension_release` üstünde DELETE'i yoktur; yetkileri, yayımcıları ve güvenleri yalnız okur.
+- **Yazma.** Yeni sürüm `insert … on conflict do nothing` (satır yoksa `Exists`); hareket `update … where moves =
+  <okunan>` (satır değişmezse `Changed`). Yeni hareket satırları aynı işlemde, tablodaki eski hareketlerin kayıtla aynı
+  olduğu denetlendikten sonra eklenir.
+- **Okuma.** Kayıt `Release::read` ile okunur ve hareket tablosu kaydın hareketleriyle satır satır aynı olmalıdır.
+  Tutmayan kayıt depo hatasıdır (500, ayrıntı günlükte); sürüm hiç yüklenmez.
+- **Kapsam ve satır düzeyi güvenlik.** Her çağrı, sorulan kataloğun kapsamında bir işlemdir: kurum kataloğu kurumun
+  kimliğiyle (`app.tenant_id`), kişisel katalog hesabın kimliğiyle (`app.user_id`), genel katalog kapsamsız.
+  Politika projelerdeki gibidir: bir kurumun sürümleri ve hareketleri yalnız onun kapsamında görünür ve yazılır. Kimin
+  hangi sürümü gördüğü yine akışın kararıdır (`visible_to`); satır düzeyi güvenlik, kataloğu süzmeyi unutan bir
+  sorguyu başka kurumun satırlarından korur.
+- **Paketler.** Baytlar nesne deposunda içerik özetinin anahtarıyla bir kez yazılır: özet üstünde kilit, kendi
+  anahtarına yazma, diske indirme, yerine taşıma, sonra satır. Var olan pakete ikinci yazma bir şey değiştirmez.
+  Okurken boyut satırla karşılaştırılır; içerik yine akışın onay denetiminden geçer (§10).
+- **Yedek.** Paket nesneleri yedeğin adlandırdığı nesnelerdendir (`backup::named`): dökümle birlikte alınır, geri
+  yüklemede denetlenir.
+
+**§11'den sapmalar (kanıt neyi söylediyse).**
+
+1. Güven katalog başınadır: `extension_publisher` üstünde "güvenilir mi" sütunu yerine `extension_catalog_trust`
+   tablosu. Depo "bu katalog bu yayımcıya güveniyor mu" diye sorar; tek bir sütun, bir kurumun güvendiği yayımcıyı
+   genel katalogda da güvenilir yapardı.
+2. Nesne anahtarı `extension-packages/sha256-<hex>`: nesne deposu anahtar parçasında yalnız harf, rakam ve tire kabul
+   eder, `sha256:` içindeki iki nokta kabul edilmez. Yazılırken `extension-packages/staging/<kimlik>`.
+3. `extension_package` baytların SHA-256'sını da tutar: yedek nesneleri baytlarının özetiyle denetler, içerik özeti
+   ise dosyaların yolunun, boyutunun ve özetinin özetidir.
+4. Kurum kataloğunun `catalog_ref`'i kısa ad değil kurumun kimliğidir: kapsam kurumu kimliğiyle taşır, politika onu
+   projelerdeki gibi `kentos.current_tenant()` ile karşılaştırır. Kısa addan kimliğe `kentos.extension_catalog_tenant`
+   (security definer) çevirir: kurum satırı yalnız üyelerine görünür, tarayıcı ve denetim işçisi üye değildir.
+5. Kişisel katalogda yetki yazılmaz (`catalog_kind` `every`, `public` ya da `tenant`): sahibi rollerini zaten tutar.
+6. Komutlar `grant|revoke|trust` ile bitmedi, `publisher` (yayımcı açma ve üyelik) ve `list` de var. Genel ve kurum
+   kataloğuna yükleyen yayımcının üyesi olmalıdır (§10, `publisher_missing`); üyelik veremeyen bir araçla o kataloglar
+   kullanılamazdı.
+7. Var olmayan kurumun kataloğu kimse için yoktur (bellekteki depoda her kısa adın kataloğu vardı); hizmet hesabı da
+   orada üye sayılmaz. Kurum kataloğunun üyesi, etkin kurumda etkin üyeliği olan hesaptır (koltuk gerekmez).
+
+**Çalışan sunucuda ne açık.** §9.1 "taze kimlik doğrulama gelmeden katalog çalışan sunucuda açılmaz" diyordu;
+gerekçesi (§10) pencere başlığının taklit edilebilmesi, yani bir kişinin kararının bir programca verilebilmesiydi.
+Gerekçe kararlarla ilgili; bu yüzden kararlar kapalı, geri kalanı açık:
+
+- **Kapalı:** onay, değişiklik isteme, engel kaldırma ve askıdan alma (`Action::needs_person`). Sunucunun
+  oturumlarından gelen hesapta `Account::fresh_sign_in` hep `false`; pencereden gelen karar, akış izin verseydi bile
+  `fresh_sign_in_required` (403, `retryable: false`) alır ve hiçbir şey yazılmaz. Akışın kendi reddi önce gelir:
+  program `decision_by_program`, yetkisiz `permission_missing`, görünmeyen sürüm 404. Gerçek oturumla sınandı.
+- **Açık:** yükleme ve içerik yenileme (taslak), liste ve okuma, incelemeye gönderme, tarama raporu, incelemeye alma,
+  askıya alma (karar değil, güvenlik hareketi), geri çekme, arşivleme, yayımlama, kurulum bileti, onaylı paket, geri
+  çekme listesi. `project.audit` işleri aynı katalogdan okur (`CatalogAudits`, §66'nın eşlemesiyle).
+- **Sonuç:** yeni bir sunucuda onaylanan, dolayısıyla yayımlanan sürüm olmaz. Kurulum bileti, onaylı paket ve denetim
+  işi taze kimlik doğrulama gelene dek bir şey bulamaz (denetim işi "yayımlanmış bir sürümü yok" der); yayımcı yükler
+  ve gönderir, tarayıcı raporlar, inceleyici incelemeye alır.
+- **Sınır:** her oturum açmış hesap kendi kataloğuna paket yükleyebilir (en çok 128 MB) ve yüklenen her paket kalır;
+  kota yok. Kataloğu açan yönetici bunu bilmeli (Kalan).
+
+**Yayımlamada ortam (§66'nın çağrı yeri).** Bir hareket sürümü başka bir durumdan yayımlanmışa geçirince (yayımlama ya
+da askıdan alma) katalog sürümü ve onaylı baytlarını `OnPublish`'e verir. Sunucununki (`PrepareEnvironments`) ortamı
+ayrı bir iş parçacığında `prepare_release` ile hazırlar, sonucu günlüğe yazar ve isteği bekletmez. Denetimi ya da
+Python projesi olmayan sürümde hazırlanacak bir şey yoktur; ağ isteyen denetimin reddi günlüğe yazılır. Çalışan
+sunucuda bu yola kararlar açılınca girilir; testler ve uçtan uca sınama onu kullanır.
+
+**Ölçüm.**
+
+- `KENTOS_TEST_DB=required cargo test -p kentos-api --bin kentosd extension_catalog`: 48 test geçti (47'si katalogun,
+  1'i ayarın). 18 durum iki depoda birden koşar (`on_both_stores!`: bellekte ve kendi test veritabanında, kopya yok);
+  9'u yalnız kalıcı deponun: içeriği, kimliği ve hareketleri veritabanı korur; uygulama rolü hareket ve paketi
+  değiştiremez, silemez; eski kayıt üstüne yazma `Changed`, ikinci ilk yazma `Exists`; kurumlar arası satır düzeyi
+  güvenlik ve aynı 404; paket bir kez yazılır; hareketleri tutmayan ya da adım atlamış kayıt yüklenmez; yönetici
+  yetkileri; çalışan sunucuda oturumla karar reddi; süre. 2'si depodan bağımsız.
+- Depo süreleri (yerel PostgreSQL 18.4, hata ayıklama derlemesi; 10 sürüm × 12 hareket): yazma ortanca 3,53 ms, %95
+  4,73 ms; okuma ortanca 0,41 ms, %95 0,75 ms; en çok 10 sürümlü katalog listesi ortanca 1,43 ms, %95 2,22 ms.
+- Uçtan uca (`cargo test -p kentos-api --test job_run_db audit_catalog`): kurum kataloğunda yükleme, 7 kapı,
+  gönderme, inceleme, onay, yayımlama; yayımlamadan ortamın hazır olmasına 4,67 sn (çevrimdışı, tekerlek klasöründen);
+  `project.audit` işi gerçek `kentos-jobrun` ile 2,04 sn, kural tekerleğin modülünü içe aktarıp 5 bulgu verdi.
+- `cargo test -p kentos-application --test backup`: paketli yedek alınır, geri yüklenir, denetlenir (5 nesne).
+- Komutlar geçici bir test veritabanında elle sınandı: yetki, yayımcı ve üyelik, güven, liste, geri alma ve hatalı
+  girdilerin Türkçe sözleri; katalog açık ama veritabanı yokken sunucu başlamaz.
+
+**Bu dilimde verilen kararlar.**
+
+1. Katalog `KENTOS_EXTENSION_CATALOG=on` ile açılır, varsayılan kapalı.
+2. Çalışan sunucuda kişinin kararları taze kimlik doğrulaması gelene dek kapalı (`fresh_sign_in_required`, 403),
+   gerisi açık; ret, akışın kendi reddinden sonra gelir.
+3. Kapsam çağrının sorduğu katalogdan kurulur: depo trait'i çağıranı bilmez, görünürlük akışındır.
+4. Güven katalog başına, ayrı tabloda.
+5. Paket anahtarı `sha256-<hex>`; baytların SHA-256'sı ayrıca tutulur; paketler yedektedir.
+6. Yönetim komutlarına `publisher` ve `list` eklendi.
+7. Sürüm satırı silinmez: uygulama rolünün DELETE izni yok.
+8. Yayımlanan (ya da askıdan alınıp yeniden yayımlanan) sürümün ortamı yayımlamada hazırlanır; hazırlık isteği
+   bekletmez.
+
+**Kalan.** Taze kimlik doğrulama (kurumun kimlik sağlayıcısında yeniden giriş ya da cihazda doğrulama) ve kararların
+açılması; yetki ve yayımcı yönetim uçları (bugün yalnız komut); paket kotası, hiçbir sürümün göstermediği paketlerin ve
+yarım kalmış `staging` nesnelerinin temizliği; S3 uyumlu nesne deposu; tarayıcının hizmet kimliği; liste ve aramanın
+veritabanında yapılması (bugün kataloğun bütün kayıtları okunup süzülür); geri çekilen sürümün ortamının kaldırılması.
+
 ## Uygularken verilen kararlar (planda yazılı değildi)
 
 1. Kişisel katalogda sahibi kendi sürümünü inceleyip onaylar; kurum kataloğunda yazar onaylayamaz, yayımcının başka bir

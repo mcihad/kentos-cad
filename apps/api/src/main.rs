@@ -20,10 +20,15 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
+use kentos_application::audit_catalog::AuditSource;
+use kentos_application::blobs::Blobs;
 use kentos_application::{events, lifecycle};
 use kentos_postgres::Db;
 
 use crate::config::Config;
+use crate::extension_catalog::audits::{CatalogAudits, PrepareEnvironments};
+use crate::extension_catalog::postgres::PgStore;
+use crate::extension_catalog::{Accounts, Catalog};
 use crate::http::AppState;
 
 /// The event log is pruned a minute after the start, then every hour, in batches of this many events.
@@ -68,7 +73,7 @@ async fn prune_events(db: Db, keep: Duration) {
 const CLEAN_FIRST: Duration = Duration::from_secs(120);
 const CLEAN_EVERY: Duration = Duration::from_secs(3600);
 
-async fn clean_store(db: Db, blobs: kentos_application::blobs::Blobs, job_retention: Duration) {
+async fn clean_store(db: Db, blobs: Blobs, job_retention: Duration) {
     let mut every =
         tokio::time::interval_at(tokio::time::Instant::now() + CLEAN_FIRST, CLEAN_EVERY);
     every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
@@ -188,13 +193,15 @@ async fn serve(config: Config) -> Result<(), String> {
         )?)),
         None => None,
     };
-    let blobs = kentos_application::blobs::Blobs::new(&config.blob_dir);
+    let blobs = Blobs::new(&config.blob_dir);
     let proxy = http::proxy::Proxy::new(http::proxy::Reach::parse(config.proxy_allow.as_deref())?)?;
+    let catalog = extension_catalog(&config, database.as_ref(), &blobs)?;
     if let Some(db) = &database {
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
         tokio::spawn(clean_store(db.clone(), blobs.clone(), config.job_retention));
-        spawn_workers(db, &blobs, config.workers, config.job_limits);
+        let audits = audit_source(&config, catalog.as_ref());
+        spawn_workers(db, &blobs, config.workers, config.job_limits, audits);
     }
     let state = AppState {
         config: Arc::new(config),
@@ -204,9 +211,8 @@ async fn serve(config: Config) -> Result<(), String> {
         logins: Default::default(),
         blobs,
         proxy: Some(Arc::new(proxy)),
-        // The extension catalog stays off until its store is persistent and its decisions ask for a fresh sign-in
-        // (docs/adr/8059 §10): its routes answer 404 meanwhile.
-        extension_catalog: None,
+        // Off unless the setting opens it (docs/adr/8059 §13): its routes answer 404 then.
+        extension_catalog: catalog,
     };
     let listener = tokio::net::TcpListener::bind(addr)
         .await
@@ -218,22 +224,59 @@ async fn serve(config: Config) -> Result<(), String> {
         .map_err(|e| format!("KentOS API durdu: {e}"))
 }
 
+/// The extension catalog on its persistent store when `KENTOS_EXTENSION_CATALOG=on` (docs/adr/8059 §13): the routes
+/// and the workers' audit source read the same one, and a release published there gets its audit's environment
+/// (docs/adr/8057 §66). Its accounts are the server's sessions, so it takes no person's decision until it asks for a
+/// fresh sign-in.
+fn extension_catalog(
+    config: &Config,
+    database: Option<&Db>,
+    blobs: &Blobs,
+) -> Result<Option<Arc<Catalog>>, String> {
+    if !config.extension_catalog {
+        return Ok(None);
+    }
+    let db = database.ok_or(
+        "KENTOS_EXTENSION_CATALOG=on veritabanı ister: KENTOS_DATABASE_URL yok (`kentosd db-setup`).",
+    )?;
+    let store = Arc::new(PgStore::new(db.clone(), blobs.clone()));
+    let hook = Arc::new(PrepareEnvironments::new(config.audit_envs.clone()));
+    tracing::info!(
+        "eklenti kataloğu açık (kalıcı depo); kişinin kararları taze kimlik doğrulaması gelene dek verilmez"
+    );
+    Ok(Some(Arc::new(
+        Catalog::new(store, Accounts::Sessions).on_publish(hook),
+    )))
+}
+
+/// Where `project.audit` jobs take their rules from: the catalog and the environments' map, read again at every job.
+fn audit_source(config: &Config, catalog: Option<&Arc<Catalog>>) -> Option<Arc<dyn AuditSource>> {
+    catalog.map(|c| {
+        Arc::new(CatalogAudits::new(c.clone(), config.audit_envs.map())) as Arc<dyn AuditSource>
+    })
+}
+
 /// How long a worker's claim lasts without a beat, and how long an idle worker waits before looking again.
 const WORKER_LEASE: Duration = Duration::from_secs(60);
 const WORKER_IDLE: Duration = Duration::from_secs(2);
 
-/// Server-job workers (docs/adr/0542): each claims, runs and finishes one job at a time.
+/// Server-job workers (docs/adr/0542): each claims, runs and finishes one job at a time; `project.audit` jobs take
+/// their rules from `audits` (none: the catalog is off, and they say so).
 fn spawn_workers(
     db: &Db,
-    blobs: &kentos_application::blobs::Blobs,
+    blobs: &Blobs,
     count: u32,
     limits: kentos_application::jobs::JobLimits,
+    audits: Option<Arc<dyn AuditSource>>,
 ) -> Vec<tokio::task::JoinHandle<()>> {
     // The tools of `project.processing` jobs run in a child of this program (docs/adr/0559 §3); without it the
     // workers leave those jobs to another that has it.
     let processor: Option<Arc<dyn kentos_application::processing_job::Processor>> =
         match processing_job::ChildProcessor::new() {
-            Ok(p) => Some(Arc::new(p)),
+            Ok(p) => Some(Arc::new(match audits {
+                Some(source) => p.with_audits(source),
+                None => p,
+            })),
             Err(e) => {
                 tracing::warn!(error = %e, "araç işlemi yok; işçiler project.processing işi almayacak");
                 None
@@ -272,8 +315,16 @@ async fn worker(config: Config) -> Result<(), String> {
     if !db.schema_ready().await.map_err(|e| e.to_string())? {
         return Err("Veritabanının şeması bu sürümün değil: `kentosd migrate` çalıştırın.".into());
     }
-    let blobs = kentos_application::blobs::Blobs::new(&config.blob_dir);
-    let handles = spawn_workers(&db, &blobs, config.workers.max(1), config.job_limits);
+    let blobs = Blobs::new(&config.blob_dir);
+    let catalog = extension_catalog(&config, Some(&db), &blobs)?;
+    let audits = audit_source(&config, catalog.as_ref());
+    let handles = spawn_workers(
+        &db,
+        &blobs,
+        config.workers.max(1),
+        config.job_limits,
+        audits,
+    );
     println!("KentOS sunucu işleri: {} çalışan", handles.len());
     shutdown().await;
     Ok(())

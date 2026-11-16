@@ -32,6 +32,7 @@ pub(super) fn config() -> Config {
         job_limits: Default::default(),
         job_retention: std::time::Duration::from_secs(14 * 24 * 3600),
         audit_envs: Default::default(),
+        extension_catalog: false,
     }
 }
 

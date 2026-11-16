@@ -3,6 +3,8 @@
 
 #![allow(dead_code)]
 
+pub mod audit_package;
+
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 

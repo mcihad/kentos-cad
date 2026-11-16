@@ -52,7 +52,8 @@ const NOT_FOUND: &str = "Böyle bir katalog ya da sürüm yok, ya da onu görme 
 /// `x-kentos-client: web`, is the catalog's window, where a person decides. An access token, the desktop, the Python
 /// SDK, the MCP server and a request that does not say are programs: they upload, send for review, report scans and
 /// publish what a person approved, but never approve, send back, lift a block or take a release out of suspension.
-/// The header is the app's word, not a proof; docs/adr/8059 §10 says what closes that before the catalog opens.
+/// The header is the app's word, not a proof: a person's decision also needs a fresh sign-in, which no session of the
+/// server carries yet (docs/adr/8059 §13), so a running server takes none.
 pub fn channel(headers: &HeaderMap) -> Channel {
     let web = headers.get(CLIENT_HEADER).and_then(|v| v.to_str().ok()) == Some("web");
     if web && !headers.contains_key(header::AUTHORIZATION) {
@@ -79,18 +80,22 @@ impl FromRequestParts<AppState> for CatalogCaller {
             )
         })?;
         let via = channel(&parts.headers);
-        let id = match catalog.accounts() {
-            Accounts::Sessions => Caller::from_request_parts(parts, state)
-                .await?
-                .0
-                .user_id
-                .to_string(),
+        // No session is a fresh sign-in yet: a running server takes no decision (docs/adr/8059 §13).
+        let (id, fresh_sign_in) = match catalog.accounts() {
+            Accounts::Sessions => {
+                let caller = Caller::from_request_parts(parts, state).await?;
+                (caller.0.user_id.to_string(), false)
+            }
             #[cfg(test)]
-            Accounts::Named => named(parts)?,
+            Accounts::Named => (named(parts)?, true),
         };
         Ok(CatalogCaller {
             catalog,
-            account: Account { id, via },
+            account: Account {
+                id,
+                via,
+                fresh_sign_in,
+            },
         })
     }
 }
@@ -192,7 +197,8 @@ pub fn status_of(code: &str) -> StatusCode {
         | "not_owner"
         | "self_review"
         | "self_scan"
-        | "decision_by_program" => StatusCode::FORBIDDEN,
+        | "decision_by_program"
+        | "fresh_sign_in_required" => StatusCode::FORBIDDEN,
         "reason_missing" | "changes_missing" | "package_invalid" | "identity_mismatch"
         | "publisher_mismatch" | "publisher_missing" | "scan_unexplained"
         | "waiver_not_allowed" => StatusCode::UNPROCESSABLE_ENTITY,

@@ -5,7 +5,6 @@
 //! else the repository's `.run/py`); without one that test says so and passes.
 
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
 
 use kentos_application::processing_job::{ProcessingBudget, ProcessingTask, Processor, RunRequest};
 use kentos_contracts::audit_job::{AuditReport, AuditRun};
@@ -14,6 +13,7 @@ use kentos_extensions::manifest::Module;
 use uuid::Uuid;
 
 use super::{budget, hooks, processor, support};
+pub(super) use crate::support::audit_package::python;
 
 /// Every object without an island number (`Ada`), from the facts KentOS measured.
 const RULE: &str = r#"@ext.audit("adsiz")
@@ -90,16 +90,6 @@ pub(super) fn audit_task_with(
         package,
         budget,
     }
-}
-
-/// The interpreter the tests run real rules with: `KENTOS_TEST_PYTHON`, else the repository's (`.run/py`).
-pub(super) fn python() -> Option<String> {
-    let path = std::env::var_os("KENTOS_TEST_PYTHON")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/py/bin/python"));
-    // Absolute, not resolved: an environment's interpreter is a link whose own place makes it the environment's.
-    let path = std::path::absolute(path).ok().filter(|p| p.exists())?;
-    Some(path.display().to_string())
 }
 
 /// What is refused before any rule runs, by the child, in its codes: a package of another content than the digest

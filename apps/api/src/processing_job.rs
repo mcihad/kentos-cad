@@ -145,7 +145,7 @@ pub struct ChildProcessor {
     exe: PathBuf,
     work: PathBuf,
     /// Where `project.audit` jobs take their rules from (docs/adr/8057 §42): the catalog and its prepared
-    /// environments; none until the server keeps a catalog.
+    /// environments; none while the server's catalog is off.
     audits: Option<Arc<dyn AuditSource>>,
 }
 
@@ -186,9 +186,8 @@ impl ChildProcessor {
         }
     }
 
-    /// This processor, its audits' rules taken from `audits` (docs/adr/8057 §42). Unused by the server until it keeps
-    /// a catalog (docs/adr/8059 §10).
-    #[allow(dead_code)]
+    /// This processor, its audits' rules taken from `audits` (docs/adr/8057 §42): the catalog the server opened
+    /// (docs/adr/8059 §13).
     pub fn with_audits(mut self, audits: Arc<dyn AuditSource>) -> Self {
         self.audits = Some(audits);
         self

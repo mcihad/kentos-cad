@@ -1,5 +1,5 @@
-//! The catalog's store in memory, the tests' (docs/adr/8059 §10). A test grants the roles, as the catalog's
-//! administrator will on a running server.
+//! The catalog's store in memory, the tests' (docs/adr/8059 §10). A test grants the roles, as the server's
+//! administrator does with `kentosd extension-catalog` (§13).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Mutex, MutexGuard, PoisonError};
@@ -7,16 +7,9 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 use axum::body::Bytes;
 use kentos_extensions::release::{Release, Role};
 
+pub use super::store::Where;
 use super::store::{Access, ReleaseStore, StoreError, StoreFuture};
 use super::{CatalogId, ReleaseKey};
-
-/// Which catalogs a role is granted in.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Where {
-    /// Every catalog: the catalog's own services.
-    Every,
-    In(CatalogId),
-}
 
 #[derive(Default)]
 pub struct MemoryStore {
@@ -64,11 +57,6 @@ impl MemoryStore {
     /// Lets a catalog trust a publisher.
     pub fn trust(&self, catalog: CatalogId, publisher: &str) {
         self.lock().trusted.insert((catalog, publisher.to_owned()));
-    }
-
-    /// The stored record, as a test reads it behind the API's back.
-    pub fn stored(&self, key: &ReleaseKey) -> Option<Release> {
-        self.lock().releases.get(key).cloned()
     }
 
     /// How many packages are kept.

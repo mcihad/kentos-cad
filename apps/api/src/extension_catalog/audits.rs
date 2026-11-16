@@ -7,15 +7,20 @@
 //! retired after it was published). The organisation's catalog that knows it decides alone: the same id in the public
 //! catalog may be another publisher's, and a release the organisation suspended must not be stood in for by it. A
 //! draft there claims nothing, and its being there is not said.
+//!
+//! The server's publishing hook ([`PrepareEnvironments`]) prepares a published release's environment, so the jobs find
+//! its interpreter in the map without the administrator's command.
 
 use std::sync::Arc;
 
 use axum::body::Bytes;
 use kentos_application::audit_catalog::{AuditFuture, AuditPackage, AuditPythons, AuditSource};
+use kentos_extensions::Limits;
 use kentos_extensions::release::{Actor, Channel, Refusal, Release, ReleaseState};
 use kentos_extensions::version::Version;
 
-use super::{Catalog, CatalogError, CatalogId};
+use super::{Catalog, CatalogError, CatalogId, OnPublish};
+use crate::audit_env::{EnvSettings, prepare_release};
 
 impl Catalog {
     /// The release of `extension` a cloud job runs from `catalog`: `version` when given and it may run (published, or
@@ -154,5 +159,61 @@ impl AuditSource for CatalogAudits {
 
     fn python(&self, extension: &str, version: &str) -> Option<String> {
         self.pythons.python(extension, version)
+    }
+}
+
+/// The server's publishing hook (docs/adr/8057 §66): a release published with an audit and a Python project gets its
+/// environment, prepared on a blocking thread of its own (the request has its answer by then) as the administrator's
+/// command prepares it; the outcome goes to the log. A release with nothing to run in the cloud has nothing to prepare;
+/// one the cloud box refuses (it asks for the network) is logged with why.
+pub struct PrepareEnvironments {
+    settings: EnvSettings,
+}
+
+impl PrepareEnvironments {
+    pub fn new(settings: EnvSettings) -> PrepareEnvironments {
+        PrepareEnvironments { settings }
+    }
+}
+
+/// Whether a package has an audit the cloud runs: an audit entry point and its Python project.
+fn cloud_audit(bytes: &[u8]) -> bool {
+    let opened = kentos_extensions::open(bytes, &Limits::default());
+    opened
+        .inspection
+        .manifest
+        .as_ref()
+        .is_some_and(|m| !m.entrypoints.audits.is_empty() && m.python.is_some())
+}
+
+impl OnPublish for PrepareEnvironments {
+    fn published(&self, catalog: &CatalogId, release: &Release, bytes: Bytes) {
+        let settings = self.settings.clone();
+        let catalog = catalog.to_string();
+        let extension = release.extension_id().to_owned();
+        let version = release.version().to_owned();
+        let digest = release.content().package.clone();
+        tokio::task::spawn_blocking(move || {
+            if !cloud_audit(&bytes) {
+                return;
+            }
+            match prepare_release(&settings, &extension, &version, Some(&digest), &bytes) {
+                Ok(done) => tracing::info!(
+                    katalog = %catalog,
+                    eklenti = %extension,
+                    surum = %version,
+                    sure_sn = done.took.as_secs_f64(),
+                    yeni = done.made,
+                    "yayımlanan sürümün denetim ortamı hazır"
+                ),
+                Err(why) => tracing::warn!(
+                    katalog = %catalog,
+                    eklenti = %extension,
+                    surum = %version,
+                    neden = %why,
+                    "yayımlanan sürümün denetim ortamı hazırlanamadı; bulut denetim işi bu sürümü çalıştıramaz"
+                ),
+            }
+        });
     }
 }
