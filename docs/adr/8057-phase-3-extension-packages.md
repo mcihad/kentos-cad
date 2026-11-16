@@ -1803,7 +1803,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | kaydırma | var | panel kendi kaydırır, yerini tutar | sekmeler üstte kalır |
 | | çizgi | var | `divider` (formun genişliğinde ince çizgi, §59) | |
 | | bölücü | KentOS'ta | `sash` | |
-| | adımlayıcı | KentOS'ta | `wizard` | |
+| | adımlayıcı | var | KentOS'un `wizard`'ı, eklentinin penceresinde: `ctx.dialog(…, steps=True)`, alanların sekmeleri adımlar (§60) | dock'taki panelde sekme |
 | Basit girdi | metin | var | `textField` | Enter birincil düğme |
 | | sayı | var | `numberField` (birim, sınır; `step` ile − ve + düğmeleri, §59) | yazıldığı gibi tutulur, basınca okunur |
 | | tarih | var | `dateField` (KentOS'un takvimi; GG.AA.YYYY ya da YYYY-AA-GG yazılır, değeri ISO tarih) | |
@@ -3291,3 +3291,29 @@ Kapı 1), şema ve Python kurucuları (`ui.divider()`, `ui.number_field(…, ste
   rehberin yeni sözleri kısaltılarak sınıra döndü.
 - **Sınamalar:** paylaşılan 1 (adsız ve kimliksiz çizgi; adımın sıfır olması yeriyle), masaüstü 1 (üst sınırda durma,
   ondalığın kaymaması, boştan alt sınırla başlama); rehberin ve kapsam raporunun türleri anması (var olan sınamalar).
+
+## §60. Eklenti penceresinde sihirbaz: `ctx.dialog(…, steps=True)` (`ADIM 22`, envanterin "adımlayıcı"sı)
+
+**16 Kasım.** Kod: `python/kentos/ext.py` (`CommandContext.dialog`'un `steps`'i), masaüstü
+`apps/desktop/src/shell/extensions/dialogs.rs` (`dialog_panel`'in denetimi, `ext_dialog_step`, `ext_wizard_view`),
+`panels.rs` (`OpenPanel::steps`, `OpenPanel::check_page`), `panel_view.rs` (sihirbazda sekme şeridi yok); stub ve SDK
+rehberi; Vitrin 1.0.45.
+
+- **Karar: KentOS'un `Wizard`'ı, eklentinin penceresinde.** Kapsam raporunun "adımlayıcı"sı KentOS'ta duran ama
+  bağlanmamış `wizard` idi. Sihirbaz bir iletişim kutusudur (başlık, adımlar, Geri/İleri, bitirme düğmesi): eklentinin
+  sorduğu pencereye (`ctx.dialog`) oturur. Dock'taki panelde sekmeler sürer; orada adım adım ilerlemek istenirse ayrı karar.
+- **Karar: adımlar alanların sekmeleri.** `steps=True` ile alanların `tab`'ları (§43) ilk göründükleri sırayla adımlardır;
+  sekmesiz alan her adımda görünür (açıklama gibi). Yeni bir tanım biçimi yok: aynı gövde `steps` olmadan sekmeli bir
+  pencere olarak açılır. En az iki adım; tek sekme ya da sekmesiz gövde Kapı 1'in sözüyle reddedilir (kodun hatası).
+- **İleri adımın alanlarını denetler** (`check_page`: zorunlu, sayı, sınır, dosya, nokta; Tamam'ın denetiminin o adıma
+  düşen payı): yanlış alanın sözü altında, adım kalır. **Geri** denetlemez. Son adımda İleri'nin yerini pencerenin kendi
+  düğmesi (`ok`, ör. "Yaz") alır ve bütün alanları Tamam gibi denetler; Vazgeç ve Esc İptal'dir (kod None alır).
+- **Denemede de aynı:** ajanın denemesindeki pencere cevaplayıcısı (§52) `dialog_panel`'i kullandığı için sihirbazın
+  kuralı orada da geçerli; cevap bütün alanların değerleridir.
+- **Vitrin 1.0.45:** "Katmanı CSV'ye yaz" iki adımlı: Sütunlar (yazılacak öznitelikler, hepsi seçili gelir; ayırıcı) ve
+  Dosya (kaydetme yeri). Gerçek pencere (41-kaydet): "Adım 1 / 2", parsel sütunu çıkarıldı, İleri; yol yokken Yaz
+  zorunluluğu alanın altında söyledi, adım kaldı; yol yazılıp Yaz: dosyanın başlığı `x,y,ada`, dört parsel.
+- **SDK paketi:** `ctx.dialog`'un imzasına `steps` girdi, rehber onu anar; yer açmak için rehberden bir örnek
+  (`ui.choice`) ve bir yan not ("çalışırken gelen değişiklik…") çıktı. Paket 48 000 baytın altında.
+- **Sınamalar:** masaüstü 1 (boş zorunlu alanla İleri adımı tutar ve alanı söyler, dolunca sonraki adım, Geri, sihirbaz
+  çizimi, tek sekmenin reddi), Python 1 (`steps` pencereyle gider, verilmezse gönderilmez), gerçek pencere 41-kaydet.

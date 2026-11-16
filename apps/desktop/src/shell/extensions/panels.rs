@@ -116,6 +116,8 @@ pub(crate) struct OpenPanel {
     pub(crate) tab: Option<String>,
     /// Each `image` component's picture its code gave (panel_image.rs), checked and decoded.
     pub(crate) images: BTreeMap<String, iced::widget::image::Handle>,
+    /// A dialog shown as a wizard (`ctx.dialog(…, steps=True)`, dialogs.rs): its tabs are the steps, no tab bar.
+    pub(crate) steps: bool,
 }
 
 /// A component's rules, compiled against the panel's inputs (Kapı 1 passed them; one that does not compile is none).
@@ -223,6 +225,7 @@ impl OpenPanel {
             closed: std::collections::BTreeSet::new(),
             tab: None,
             images: BTreeMap::new(),
+            steps: false,
         };
         // The sections folded when it opens.
         for (at, c) in panel.definition.body.iter().enumerate() {
@@ -377,6 +380,26 @@ impl OpenPanel {
             self.read_into(c, &mut out).map_err(|why| (id, why))?;
         }
         Ok(Value::Object(out))
+    }
+
+    /// Like [`OpenPanel::check_params`], for the inputs on page `page` alone (a wizard's step and the components on
+    /// every page): which is wrong and why, said by its label; none when they are right.
+    pub(crate) fn check_page(&self, page: &str) -> Result<(), (String, String)> {
+        let mut out = Map::new();
+        for (at, c) in self.definition.body.iter().enumerate() {
+            if !self.on_page(at, Some(page)) {
+                continue;
+            }
+            let id = c.id().unwrap_or_default().to_owned();
+            if self.shown(at, c)
+                && self.asked(at, c)
+                && let Some(why) = self.missing(c)
+            {
+                return Err((id, why));
+            }
+            self.read_into(c, &mut out).map_err(|why| (id, why))?;
+        }
+        Ok(())
     }
 
     /// The wrong input changed by `event`: its words under it go (the next ask checks it again). While its command

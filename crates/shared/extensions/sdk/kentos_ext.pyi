@@ -91,7 +91,7 @@ class CommandContext:
         """Rows to show the user, each a dict of column → value; none is an answer too (a panel's table empties)."""
     def message(self, text: str, title: str | None = None) -> CommandResult:
         """A line to show the user."""
-    def dialog(self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal") -> dict[str, Any] | None:
+    def dialog(self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal", steps: bool = False) -> dict[str, Any] | None:
         """Asks the user in a KentOS window over the drawing and waits for the answer: ``body`` is a panel's fields (``kentos.ui.panel`` components: ``text``, ``textField``, ``numberField``, ``dateField``, ``timeField``, ``dateTimeField``, ``select``, ``multiSelect``, ``checkbox``, ``layerPicker``, ``fieldPicker``), no buttons or commands."""
     def confirm(self, text: str, title: str = "Onay", ok: str = "Evet", cancel: str = "Hayır") -> bool:
         """Asks the user yes or no in a KentOS window (:meth:`dialog` with ``text``): True for ``ok``."""

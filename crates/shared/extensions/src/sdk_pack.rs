@@ -120,8 +120,7 @@ göstergenin satırlarından; KentOS'un grafik motoru çizer), `image` (`id`, `l
 verdiği PNG'yi oranını koruyarak gösterir, verilene dek `alt` yazar; ör. matplotlib ya da NumPy ile çizilen grafik). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve katman/alan/nesne seçicileri `required: true` alır: boş
 bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında ("“Önek” boş bırakılamaz"), adının yanında yıldız.
 `select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField`, `timeField`, `dateTimeField` (seçiciden seçilince ya da Enter'la) ve `checkbox` isteğe
-bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
-(çalışırken gelen değişiklik bitince bir kez yeniden çalıştırılır). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
+bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir. Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
 doldurur (boş liste de bir cevaptır: tablo boşalır; `ctx.message` tabloya dokunmaz) (`ctx.doc.entities(layer=…)` kayıt verir: `kayit.uid` kalıcı kimlik, öznitelikler `kayit.entity.attrs`'ta,
 kayıtta değil). Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
@@ -152,11 +151,11 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 `ctx.message(metin)`, `ctx.cancelled()`; kullanıcıya sormak için `ctx.dialog(başlık, alanlar, ok=…, cancel=…)` (alanlar
 bir panelin girdileri: textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, checkbox,
 layerPicker, fieldPicker, filePicker, crsPicker, text, section, divider; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
-bekler), `ctx.confirm(metin)` (evet: True) ve `ctx.run_tool(araç, **parametreler)` (KentOS'un aracı; komutta komutun
+bekler; `steps=True`: sekmeler sihirbazın adımları), `ctx.confirm(metin)` (evet: True) ve `ctx.run_tool(araç, **parametreler)` (KentOS'un aracı; komutta komutun
 hakkıyla, `ext.layer_input("yapi")`, `ext.new_layer("Ad")`; araçta elindeki nesnelerle, sonuç `ToolAnswer`). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
 as ui` ile yazın: bileşen başına bir işlev, gerekli anahtarlar sırayla, kalanı adıyla (`ui.text_field("onek", "Önek",
 value="Y-")`, `ui.number_field("ilk", "İlk numara", min=1, required=True)`, `ui.select("tur", "Tür", ["A", "B"])`,
-`ui.choice("-", "Seçmeyin")`, bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir, yanlış anahtar
+bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir, yanlış anahtar
 `TypeError`. `ctx.params` ve `ctx.settings` sözlüklerdir. Bu KentOS'un yapamadığı bir şey
 `ext.NotAvailable` atar: KentOS onu eklentinin hatası değil eksik bir yetenek olarak söyler.
 

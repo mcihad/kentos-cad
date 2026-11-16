@@ -535,16 +535,32 @@ def csv_noktalar(ctx: ext.CommandContext) -> ext.CommandResult:
 @ext.command("katman-csv")
 def katman_csv(ctx: ext.CommandContext) -> ext.CommandResult:
     """Katmanın sağ tık menüsünden: katmanın nesnelerini seçilen yere CSV olarak yazar (x, y: nesnenin merkezi, TM36
-    metre; öznitelikler sütun olur). Yeri KentOS'un penceresi sorar (kaydetme yeri: filePicker save; yolu yazılır ya da
-    Seç… ile seçilir, uzantısız ada .csv eklenir); eklenti yalnız kullanıcının seçtiği yere yazar
-    (files.userSelectedWrite). Çizime dokunmaz."""
+    metre; seçilen öznitelikler sütun olur). KentOS'un iki adımlı sihirbazıyla sorar (ctx.dialog(…, steps=True):
+    alanların sekmeleri adımlar): Sütunlar (hangi öznitelikler, ayırıcı) ve Dosya (kaydetme yeri: filePicker save; yolu
+    yazılır ya da Seç… ile seçilir, uzantısız ada .csv eklenir); İleri adımın alanlarını denetler. Eklenti yalnız
+    kullanıcının seçtiği yere yazar (files.userSelectedWrite). Çizime dokunmaz."""
     katman = ctx.params.get("layer")
     if not katman or ctx.doc is None:
         return ctx.message("Bir katmanın sağ tık menüsünden çalışır: Katmanı CSV'ye yaz.")
+    kayitlar = list(ctx.doc.entities(layer=katman))
+    adlar = sorted({ad for k in kayitlar for ad in (k.entity.attrs or {})})
+    sutun_alani = (
+        ui.multi_select("sutunlar", "Sütunlar", adlar, value=adlar, tab="Sütunlar")
+        if adlar
+        else ui.text("Katmanın nesnelerinde öznitelik yok: yalnız x ve y yazılır.", tab="Sütunlar")
+    )
     cevap = ctx.dialog(
         "Katmanı CSV'ye yaz",
         [
-            ui.text("Her nesne bir satır: x ve y nesnenin merkezi (TM36, metre); öznitelikler sütun olur."),
+            ui.text("Her nesne bir satır: x ve y nesnenin merkezi (TM36, metre); seçilen öznitelikler sütun olur."),
+            sutun_alani,
+            ui.select(
+                "ayirici",
+                "Ayırıcı",
+                [ui.choice(",", "Virgül (,)"), ui.choice(";", "Noktalı virgül (;)")],
+                value=",",
+                tab="Sütunlar",
+            ),
             ui.file_picker(
                 "yer",
                 "Kaydedilecek dosya",
@@ -552,22 +568,22 @@ def katman_csv(ctx: ext.CommandContext) -> ext.CommandResult:
                 save=True,
                 default_name=f"{katman}.csv",
                 required=True,
+                tab="Dosya",
             ),
         ],
         ok="Yaz",
+        steps=True,
     )
     if cevap is None:
         return ctx.message("Vazgeçildi: dosya yazılmadı.")
-    satirlar = [
-        (merkez, k.entity.attrs or {}) for k in ctx.doc.entities(layer=katman) if (merkez := _merkez(k.entity))
-    ]
-    sutunlar = sorted({ad for _, oznitelikler in satirlar for ad in oznitelikler})
+    sutunlar = [ad for ad in adlar if ad in (cevap.get("sutunlar") or [])]
+    satirlar = [(merkez, k.entity.attrs or {}) for k in kayitlar if (merkez := _merkez(k.entity))]
     with open(cevap["yer"], "w", newline="", encoding="utf-8") as dosya:
-        yazici = csv.writer(dosya)
+        yazici = csv.writer(dosya, delimiter=cevap.get("ayirici") or ",")
         yazici.writerow(["x", "y", *sutunlar])
         for (x, y), oznitelikler in satirlar:
             yazici.writerow([f"{x:.3f}", f"{y:.3f}", *(oznitelikler.get(ad, "") for ad in sutunlar)])
-    return ctx.message(f"{len(satirlar)} nesne yazıldı: {cevap['yer']}")
+    return ctx.message(f"{len(satirlar)} nesne, {len(sutunlar)} öznitelik sütunuyla yazıldı: {cevap['yer']}")
 
 
 def _merkez(nesne) -> tuple[float, float] | None:

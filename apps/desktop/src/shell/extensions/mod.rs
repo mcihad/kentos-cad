@@ -353,6 +353,8 @@ pub(crate) enum Event {
     Dialog(panels::PanelEvent),
     /// The dialog answered: Tamam (true), İptal / Esc (false).
     DialogAnswer(bool),
+    /// A wizard dialog's İleri (1) or Geri (−1) (dialogs.rs).
+    DialogStep(i8),
     /// The chosen extension's report onto the clipboard, for its publisher or an agent.
     CopyReport(String),
     /// Its whole log, or its newest lines.
@@ -657,6 +659,7 @@ impl App {
             Event::Panel(event) => return self.ext_panel_event(event),
             Event::Dialog(event) => return self.ext_dialog_event(event),
             Event::DialogAnswer(ok) => self.ext_dialog_answer(ok),
+            Event::DialogStep(sign) => self.ext_dialog_step(sign),
             Event::AuditDone(done) => self.ext_audit_done(*done),
             Event::TrialDone(report) => self.ext_trial_done(*report),
             Event::AuditShow(i) => return self.ext_audit_show(i),

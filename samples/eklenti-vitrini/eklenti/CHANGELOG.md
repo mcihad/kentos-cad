@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.45 — 16 Kasım 2026
+
+- "Katmanı CSV'ye yaz" iki adımlı bir sihirbaz (`ctx.dialog(…, steps=True)`): Sütunlar adımında hangi özniteliklerin
+  yazılacağı (hepsi seçili gelir) ve ayırıcı (virgül, noktalı virgül), Dosya adımında kaydetme yeri; İleri adımın
+  alanlarını denetler, Yaz son adımın düğmesi. Alanların sekmeleri adımlardır.
+
 ## 1.0.44 — 16 Kasım 2026
 
 - Yakın yapılar panelinde açıklamanın altında ince bir çizgi (`divider`); Uzaklık'ın yanında − ve + düğmeleri değeri

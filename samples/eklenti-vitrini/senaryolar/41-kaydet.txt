@@ -1,7 +1,7 @@
-# Kaydetme yeri: katmanın sağ tık menüsündeki "Katmanı CSV'ye yaz" KentOS'un penceresiyle yazılacak dosyanın yerini
-# sorar (filePicker save: yolu yazılır ya da Seç… ile kaydetme penceresinden seçilir; önerilen ad katmanın adı,
-# uzantısız ada .csv eklenir). Parsel sınırı'nın dört parseli merkezleri ve öznitelikleriyle yazılır. Eklenti
-# files.userSelectedWrite ister. (Önce 01.)
+# Kaydetme yeri ve sihirbaz: katmanın sağ tık menüsündeki "Katmanı CSV'ye yaz" KentOS'un iki adımlı sihirbazıyla sorar
+# (ctx.dialog(…, steps=True)): Sütunlar adımında parsel sütunu çıkarılır, İleri; Dosya adımında yol yokken Yaz zorunluluğu
+# söyler, adım kalır; yol yazılınca (filePicker save; uzantısız ada .csv eklenir) Parsel sınırı'nın dört parseli
+# merkezleri ve ada sütunuyla yazılır. Eklenti files.userSelectedWrite ister. (Önce 01.)
 fit KentOS GIS — Eklenti vitrini
 wait 2500
 key Escape
@@ -11,13 +11,20 @@ wait 1200
 click 1222 367 right # Parsel sınırı: sağ tık
 wait 1000
 shot 41-menu
-click 1061 619  # Katmanı CSV'ye yaz
+click 1061 619  # Katmanı CSV'ye yaz: iki adımlı sihirbaz
 wait 3500
 shot 41-pencere
-click 760 479   # kaydedilecek dosyanın yolu: uzantısız (.csv eklenir)
+click 647 326   # parsel sütununu çıkar: yalnız ada yazılır
+wait 400
+click 982 714   # İleri
+wait 1000
+shot 41-dosya
+click 982 714   # Yaz, yol yokken: zorunlu, adım kalır
+wait 800
+shot 41-zorunlu
+click 760 328   # kaydedilecek dosyanın yolu: uzantısız (.csv eklenir)
 type /tmp/kentos-vitrin-parseller
 wait 400
-shot 41-yazildi
-click 938 519   # Yaz
+click 982 714   # Yaz
 wait 4000
 shot 41-yazdi

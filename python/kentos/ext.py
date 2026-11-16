@@ -410,19 +410,21 @@ class CommandContext:
         return CommandResult(title=title, message=text)
 
     def dialog(
-        self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal"
+        self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal", steps: bool = False
     ) -> dict[str, Any] | None:
         """Asks the user in a KentOS window over the drawing and waits for the answer (docs/adr/8057 §29): ``body`` is
         a panel's fields (``kentos.ui.panel`` components: ``text``, ``textField``, ``numberField``, ``dateField``,
         ``timeField``, ``dateTimeField``, ``select``, ``multiSelect``, ``checkbox``, ``layerPicker``, ``fieldPicker``),
         no buttons or commands. Tamam gives the values by id, as a panel's command gets them; İptal, Esc and Durdur give
-        None (after Durdur the run stops: :class:`Stopped`)."""
+        None (after Durdur the run stops: :class:`Stopped`). With ``steps=True`` it is a wizard (docs/adr/8057 §60):
+        the fields' ``tab``s are its steps, İleri checks a step's fields, the last step's button is ``ok``."""
         self.check()
         if not isinstance(body, list) or not all(isinstance(c, dict) for c in body):
             raise TypeError("dialog: body bir alan listesi olmalı (her biri bir dict, ör. {'type': 'textField', …}).")
-        answer = self._link.ask(
-            "dialog", {"title": str(title), "body": list(body), "ok": str(ok), "cancel": str(cancel)}
-        )
+        asked: dict[str, Any] = {"title": str(title), "body": list(body), "ok": str(ok), "cancel": str(cancel)}
+        if steps:
+            asked["steps"] = True
+        answer = self._link.ask("dialog", asked)
         self.check()
         return answer if isinstance(answer, dict) else None
 

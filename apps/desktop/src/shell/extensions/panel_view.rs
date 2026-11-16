@@ -199,7 +199,8 @@ impl App {
         // components and those without a tab.
         let tabs = p.tabs();
         let page = p.active_tab(&tabs);
-        let mut bar = !tabs.is_empty();
+        // A wizard's steps are its tabs: the wizard's own head shows them (dialogs.rs).
+        let mut bar = !tabs.is_empty() && !p.steps;
         // Its rows (docs/adr/8057 §55): the drawn components next to each other with the same row, one line of cells.
         let mut rows = super::panel_rows::Rows::default();
         for (at, c) in p.definition.body.iter().enumerate() {

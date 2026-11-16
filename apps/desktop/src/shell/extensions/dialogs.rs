@@ -10,6 +10,10 @@
 //!   (the extension's mistake, said to its code and its log, not put to the user).
 //! - **One at a time, the run's own:** the run's Durdur and its end close it; the code is answered none and hears
 //!   Durdur after. A run without a window to ask in (no drawing, another dialog open) is answered at once.
+//! - **A wizard when asked** (`steps=True`, docs/adr/8057 §60): its fields' tabs are the steps of KentOS's wizard, in
+//!   the order they first appear; İleri checks the step's fields (a wrong one is said under it and the step stays),
+//!   Geri goes back unchecked, the last step's button is the dialog's own (`ok`) and checks them all. At least two
+//!   steps; the fields without a tab are on every step.
 
 use iced::widget::column;
 use iced::{Element, Task};
@@ -50,7 +54,7 @@ pub(crate) struct ExtDialog {
     pub(crate) call: Value,
     pub(crate) ok: String,
     pub(crate) cancel: String,
-    /// Its fields and what the user wrote in them, as a panel's.
+    /// Its fields and what the user wrote in them, as a panel's; a wizard's step is its tab.
     pub(crate) panel: OpenPanel,
 }
 
@@ -148,6 +152,16 @@ pub(crate) fn dialog_panel(
         .ok_or_else(|| refused("invalid_input", "Pencerenin alanları okunamadı."))?;
     let mut panel = OpenPanel::new(ext, "dialog", definition);
     panel.default_crs(srid);
+    // A wizard: its tabs are its steps, two at least (docs/adr/8057 §60).
+    if params.get("steps") == Some(&Value::Bool(true)) {
+        if panel.tabs().len() < 2 {
+            return Err(refused(
+                "invalid_input",
+                "steps=True bir sihirbaz ister: alanların en az iki sekmesi (tab) olmalı, her sekme bir adım.",
+            ));
+        }
+        panel.steps = true;
+    }
     Ok((
         panel,
         words_of(params, "ok", "Tamam"),
@@ -264,6 +278,37 @@ impl App {
         }
     }
 
+    /// A wizard's İleri (`sign` 1): its step's fields checked, then the next step; Geri (−1): the step before,
+    /// unchecked.
+    pub(crate) fn ext_dialog_step(&mut self, sign: i8) {
+        let Some(dialog) = self.extensions.dialog.as_mut() else {
+            return;
+        };
+        let p = &mut dialog.panel;
+        let steps: Vec<String> = p.tabs().into_iter().map(str::to_owned).collect();
+        let Some(now) = p
+            .active_tab(&steps.iter().map(String::as_str).collect::<Vec<_>>())
+            .map(str::to_owned)
+        else {
+            return;
+        };
+        let at = steps.iter().position(|s| *s == now).unwrap_or(0);
+        if sign > 0 {
+            if let Err((input, why)) = p.check_page(&now) {
+                p.said = Some((words::Kind::Error, why.clone()));
+                p.invalid = Some((input, why));
+                return;
+            }
+            p.invalid = None;
+            p.said = None;
+            if let Some(next) = steps.get(at + 1) {
+                p.show_tab(next);
+            }
+        } else if at > 0 {
+            p.show_tab(&steps[at - 1]);
+        }
+    }
+
     /// The run of `ext` ended or was stopped: its dialog closed, its code answered none (it hears Durdur after).
     pub(crate) fn ext_dialog_close_for(&mut self, ext: &str) {
         if self.extensions.dialog.as_ref().is_some_and(|d| d.ext == ext)
@@ -279,10 +324,42 @@ impl App {
         }
     }
 
+    /// A wizard dialog over the window (docs/adr/8057 §60): KentOS's wizard, its steps the tabs, the step's fields as
+    /// a panel's; the problem with İleri or with the last step's button beside the buttons.
+    fn ext_wizard_view<'a>(&'a self, dialog: &'a ExtDialog) -> Element<'a, Message> {
+        let p = &dialog.panel;
+        let steps = p.tabs();
+        let at = p
+            .active_tab(&steps)
+            .and_then(|t| steps.iter().position(|s| *s == t))
+            .unwrap_or(0);
+        let (form, _) = self.panel_form(p, |e| msg(Event::Dialog(e)), None, None);
+        let body = column![
+            label::caption(format!("{} soruyor", self.extension_name(&dialog.ext))),
+            form
+        ]
+        .spacing(12);
+        let mut wizard = kentos_ui::widget::Wizard::new(p.definition.title.clone(), steps.clone())
+            .current(at)
+            .body(iced::widget::scrollable(body))
+            .back(msg(Event::DialogStep(-1)))
+            .next(Some(msg(Event::DialogStep(1))))
+            .finish(dialog.ok.clone(), Some(msg(Event::DialogAnswer(true))))
+            .on_cancel(msg(Event::DialogAnswer(false)))
+            .size(560.0, 380.0);
+        if let Some((words::Kind::Error, said)) = p.said.as_ref() {
+            wizard = wizard.problem(said.clone());
+        }
+        kentos_ui::widget::overlay::blocking(iced::widget::container(wizard).padding(24))
+    }
+
     /// The dialog over the window: whose it is, its fields as a panel's, what was wrong with Tamam, its two buttons.
     pub(crate) fn ext_dialog_view(&self) -> Option<Element<'_, Message>> {
         let dialog = self.extensions.dialog.as_ref()?;
         let p = &dialog.panel;
+        if p.steps {
+            return Some(self.ext_wizard_view(dialog));
+        }
         let (form, _) = self.panel_form(
             p,
             |e| msg(Event::Dialog(e)),
@@ -314,5 +391,61 @@ impl App {
                 .max_height(600.0)
                 .modal(msg(Event::DialogAnswer(false))),
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::{ExtDialog, dialog_panel};
+
+    /// A wizard (docs/adr/8057 §60): its tabs are its steps; İleri checks the step's fields and stays on a wrong one,
+    /// Geri goes back unchecked; one tab is no wizard.
+    #[test]
+    fn a_wizard_goes_step_by_step_checking_each() {
+        let params = json!({ "title": "Katmanı CSV'ye yaz", "steps": true, "ok": "Yaz", "body": [
+            { "type": "text", "text": "Her nesne bir satır." },
+            { "type": "textField", "id": "ayirici", "label": "Ayırıcı", "required": true, "tab": "Sütunlar" },
+            { "type": "textField", "id": "yer", "label": "Dosya", "required": true, "tab": "Dosya" }
+        ] });
+        let (panel, ok, cancel) =
+            dialog_panel("tr.ornek.x", &params, &|_| true, None).expect("a wizard");
+        assert!(panel.steps);
+        let mut app = crate::files_testing::app_with_drawing();
+        app.extensions.dialog = Some(ExtDialog {
+            ext: "tr.ornek.x".into(),
+            call: json!(1),
+            ok,
+            cancel,
+            panel,
+        });
+        let step = |app: &crate::app::App| {
+            let p = &app.extensions.dialog.as_ref().expect("open").panel;
+            p.active_tab(&p.tabs()).map(str::to_owned)
+        };
+        app.ext_dialog_step(1);
+        let p = &app.extensions.dialog.as_ref().expect("open").panel;
+        assert_eq!(
+            p.invalid.as_ref().map(|(id, _)| id.as_str()),
+            Some("ayirici")
+        );
+        assert_eq!(step(&app).as_deref(), Some("Sütunlar"), "the step stays");
+        let p = &mut app.extensions.dialog.as_mut().expect("open").panel;
+        p.texts.insert("ayirici".into(), ";".into());
+        app.ext_dialog_step(1);
+        assert_eq!(step(&app).as_deref(), Some("Dosya"));
+        assert!(app.ext_dialog_view().is_some(), "drawn as KentOS's wizard");
+        app.ext_dialog_step(-1);
+        assert_eq!(step(&app).as_deref(), Some("Sütunlar"));
+        let one = json!({ "title": "Tek", "steps": true, "body": [
+            { "type": "textField", "id": "a", "label": "A", "tab": "Bir" }
+        ] });
+        let refused = dialog_panel("tr.ornek.x", &one, &|_| true, None).expect_err("refused");
+        assert!(
+            refused.message.contains("en az iki sekmesi"),
+            "{}",
+            refused.message
+        );
     }
 }
