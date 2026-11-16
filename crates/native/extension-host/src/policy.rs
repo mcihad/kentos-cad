@@ -50,6 +50,11 @@ pub struct Policy {
     /// server, `https://yz.ornek.bel.tr/v1`; a provider's): each one with what follows it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allowed_ai_addresses: Option<Vec<String>>,
+    /// Whether a drawing's attribute values (an owner's name, an identity number, an address) may go to an AI service
+    /// outside this computer that the policy otherwise allows (docs/adr/8057 §103, PY-AI-13); not written: yes. When
+    /// not, the desktop's AI agent outside this computer reads the drawing as if every field were hidden.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allow_attribute_values_to_ai: Option<bool>,
     /// Python packages no extension may install, by name (compared as PEP 503 normalises them), or one version of
     /// one (`ultralytics==8.3.41`: a release taken over and withdrawn, the others allowed).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -232,6 +237,13 @@ impl Policy {
         None
     }
 
+    /// Whether the policy keeps a drawing's attribute values from the desktop's AI agent (docs/adr/8057 §103): one
+    /// outside this computer when `allowAttributeValuesToAi` is false; a policy that cannot be read keeps them too (it
+    /// keeps that agent out altogether: [`Policy::agent_refusal`]).
+    pub fn withholds_attribute_values(&self, local: bool) -> bool {
+        !local && (self.broken.is_some() || self.allow_attribute_values_to_ai == Some(false))
+    }
+
     /// Why the policy refuses a package that installs these Python packages (its lock's, by normalised name; docs/adr/
     /// 8057 §84); none when it allows them all. `installing`: the moment a package is reviewed or installed, when the
     /// packages' age is judged too (§85); an installed extension is not stopped by its packages' age.
@@ -359,6 +371,29 @@ mod tests {
 
     fn policy(text: &str) -> Policy {
         Policy::read(text).expect("a policy")
+    }
+
+    /// `allowAttributeValuesToAi: false` keeps the attribute values from an agent outside this computer, not from one
+    /// on it; not written, they go; an unreadable policy keeps them (docs/adr/8057 §103).
+    #[test]
+    fn the_policy_says_whether_attribute_values_go_to_an_agent() {
+        let open = policy(r#"{"format": "kentos.extension-policy", "schemaVersion": 1}"#);
+        assert!(!open.withholds_attribute_values(false));
+        let kept = policy(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "allowAttributeValuesToAi": false}"#,
+        );
+        assert!(kept.withholds_attribute_values(false));
+        assert!(!kept.withholds_attribute_values(true), "on this computer");
+        assert_eq!(
+            kept.agent_refusal("DeepSeek", "https://api.deepseek.com", false),
+            None,
+            "the agent itself still goes"
+        );
+        let broken = Policy {
+            broken: Some("okunamadı".into()),
+            ..Policy::default()
+        };
+        assert!(broken.withholds_attribute_values(false));
     }
 
     /// The agent on this computer always goes; outside, `allowDataToAi: false` keeps the drawing in, the addresses the

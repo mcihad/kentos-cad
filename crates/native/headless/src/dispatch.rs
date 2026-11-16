@@ -149,10 +149,21 @@ pub fn call_envelope_for_agent(
     store: Option<&Store>,
     envelope: CallEnvelope,
 ) -> CallAnswer {
-    let Some(veil) = crate::Veil::of(doc) else {
+    let veil = crate::Veil::of(doc);
+    call_envelope_veiled(doc, store, envelope, veil.as_ref())
+}
+
+/// [`call_envelope_for_agent`] through `veil` (every field's, docs/adr/8057 §103; none: the call as the owner's).
+pub fn call_envelope_veiled(
+    doc: &mut Document,
+    store: Option<&Store>,
+    envelope: CallEnvelope,
+    veil: Option<&crate::Veil>,
+) -> CallAnswer {
+    let Some(veil) = veil else {
         return call_envelope(doc, store, envelope);
     };
-    if let Some(error) = agent_refusal(&veil, &envelope.command, &envelope.input) {
+    if let Some(error) = agent_refusal(veil, &envelope.command, &envelope.input) {
         return CallAnswer::of(kentos_commands::CommandResult::Failed { error });
     }
     if file_commands::is_file_command(&envelope.command) {

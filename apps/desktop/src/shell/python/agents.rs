@@ -212,6 +212,9 @@ impl App {
                     })?,
             ),
         };
+        // Asistan's agent sent no attribute value (its setting or the organisation's policy): the drawing read as if
+        // every field were hidden (docs/adr/8057 §103, PY-AI-13). An agent on the link is its own program.
+        let everything = who == "Asistan" && self.assistant.withholds_values();
         // A module's program runs only the product commands it offers (docs/adr/8056 §1), as its interface does.
         if let Some(why) = self.offered_to_agent(method, &params) {
             return Err(refused("not_offered", &why));
@@ -330,7 +333,17 @@ impl App {
             "audits" => return Ok(self.ext_audit_rules()),
             "audit_report" => {
                 let offset = params.get("offset").and_then(Value::as_u64).unwrap_or(0);
-                return Ok(self.ext_audit_report(usize::try_from(offset).unwrap_or(usize::MAX)));
+                let report = self.ext_audit_report(usize::try_from(offset).unwrap_or(usize::MAX));
+                // An extension's findings are its own words about the drawing: they go through the agent's veil as an
+                // answer of the drawing's does (docs/adr/8057 §103).
+                let veil = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| kentos_headless::Veil::for_agent(&d.model, everything));
+                return Ok(match veil {
+                    Some(veil) => veil.cut(report),
+                    None => report,
+                });
             }
             "audit" | "audit_fixed" => {
                 if named.is_some() && named != front {
@@ -392,12 +405,13 @@ impl App {
                 let method = if method == "wait" { "job" } else { method };
                 let before = doc.model.revision();
                 // An agent reads no value of a field the drawing hides (docs/adr/0738 §1).
-                let mut answer = kentos_headless::rpc::call_for_agent(
+                let mut answer = kentos_headless::rpc::call_for_agent_with(
                     &mut doc.model,
                     Some(&mut self.python.jobs),
                     doc.path.as_deref(),
                     method,
                     &params,
+                    everything,
                 )
                 .map_err(|e| (e.code.to_owned(), e.message))?;
                 if method == "summary"

@@ -14,6 +14,8 @@ mod host;
 mod settings;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod values_tests;
 mod view;
 
 use std::collections::HashMap;
@@ -214,6 +216,23 @@ impl Assistant {
         )
     }
 
+    /// Whether no attribute value of the drawing is sent to the agent answering (the turn's, else the chosen one): its
+    /// own setting, or the organisation's policy for one outside this computer (docs/adr/8057 §103, PY-AI-13).
+    pub(crate) fn withholds_values(&self) -> bool {
+        let agent = self
+            .running
+            .as_ref()
+            .and_then(|r| self.store.get(&r.agent))
+            .or_else(|| self.agent());
+        agent.is_some_and(|a| {
+            a.withhold_values
+                || self
+                    .policy
+                    .as_ref()
+                    .is_some_and(|p| p.withholds_attribute_values(a.on_this_computer()))
+        })
+    }
+
     #[cfg(test)]
     pub(crate) fn busy(&self) -> bool {
         self.running.is_some()
@@ -254,6 +273,8 @@ fn instructions(program: Option<kentos_launch::Module>) -> String {
          - Silen ya da var olanı değiştiren bir yazma kullanıcının onayını bekler. Reddedilirse yazma; ne istediğini sor.\n\
          - Koordinatlar çizim biriminde (çoğunlukla metre); x doğuya, y kuzeye artar. Nokta: {{\"x\": 0, \"y\": 0}}.\n\
          - Bir araç hata verirse kodunu ve iletisini oku, girdiyi düzelt; aynı çağrıyı değiştirmeden yineleme.\n\
+         - ‹gizli› yazan bir değer sana gönderilmiyor (çizimin gizli alanı ya da kullanıcının, kurumun seçimi): \
+         tahmin etme, o alanla süzme ya da hesap isteme; değer gerektiren işi kullanıcıya bırak.\n\
          - Eklenti yazman istenirse: önce extension.sdk'yı oku; extension.blueprint ile iskeleti al, \
          extension.workshop.write ile atölyeye yaz, isteğe göre değiştir, extension.verify (id ile) doğrula; sorun \
          kalmayınca extension.workshop.review kullanıcının incelemesine açar. Kurmak ve yetki vermek kullanıcınındır. \

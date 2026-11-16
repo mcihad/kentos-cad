@@ -82,6 +82,18 @@ impl App {
             .searchable(false);
             body = body.push(container(picker).padding([6, 8]).width(Fill));
         }
+        // Said where the chat is: the agent's answers about the drawing leave its values out (docs/adr/8057 §103).
+        if a.withholds_values() {
+            body = body.push(
+                container(
+                    label::caption(
+                        "Öznitelik değerleri bu ajana gönderilmiyor; yanıtlarında ‹gizli› yazar.",
+                    )
+                    .style(style::text::muted),
+                )
+                .padding([4, 10]),
+            );
+        }
         let mut chat = AiConversation::new(&a.chat, |e| msg(Event::Chat(e)))
             .title(&a.shown.0)
             .model(&a.shown.1)

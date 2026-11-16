@@ -55,10 +55,21 @@ impl Jobs {
         doc: &Document,
         envelope: CallEnvelope,
     ) -> Result<JobStatus, HeadlessError> {
-        let Some(veil) = crate::Veil::of(doc) else {
+        let veil = crate::Veil::of(doc);
+        self.start_veiled(doc, envelope, veil.as_ref())
+    }
+
+    /// [`Jobs::start_for_agent`] through `veil` (every field's, docs/adr/8057 §103; none: the job as the owner's).
+    pub fn start_veiled(
+        &mut self,
+        doc: &Document,
+        envelope: CallEnvelope,
+        veil: Option<&crate::Veil>,
+    ) -> Result<JobStatus, HeadlessError> {
+        let Some(veil) = veil else {
             return Ok(self.start(doc, envelope));
         };
-        if let Some(e) = crate::dispatch::agent_refusal(&veil, &envelope.command, &envelope.input) {
+        if let Some(e) = crate::dispatch::agent_refusal(veil, &envelope.command, &envelope.input) {
             return Err(HeadlessError::new(
                 kentos_commands::codes::info(&e.code).map_or("invalid_input", |c| c.code),
                 e.message,
@@ -160,7 +171,20 @@ pub fn call_for_agent(
     method: &str,
     params: &Value,
 ) -> Result<Value, HeadlessError> {
-    let Some(veil) = crate::Veil::of(doc) else {
+    call_for_agent_with(doc, jobs, drawing, method, params, false)
+}
+
+/// [`call_for_agent`] for an agent that is sent no attribute value at all when `everything` (the user's or the
+/// organisation's choice, docs/adr/8057 §103, PY-AI-13): the drawing read as if every field were hidden.
+pub fn call_for_agent_with(
+    doc: &mut Document,
+    jobs: Option<&mut Jobs>,
+    drawing: Option<&std::path::Path>,
+    method: &str,
+    params: &Value,
+    everything: bool,
+) -> Result<Value, HeadlessError> {
+    let Some(veil) = crate::Veil::for_agent(doc, everything) else {
         return call_from(doc, jobs, drawing, method, params);
     };
     // A call that reads a hidden field is refused, a file it writes holds none (docs/adr/0743).
@@ -168,7 +192,12 @@ pub fn call_for_agent(
         "call" => {
             let mut e = envelope(params)?;
             crate::dispatch::with_own_file(&e.command, &mut e.input, drawing);
-            to_value(&crate::dispatch::call_envelope_for_agent(doc, None, e))
+            to_value(&crate::dispatch::call_envelope_veiled(
+                doc,
+                None,
+                e,
+                Some(&veil),
+            ))
         }
         "start" => {
             let jobs = jobs.ok_or_else(|| {
@@ -179,7 +208,7 @@ pub fn call_for_agent(
             })?;
             let mut e = envelope(params)?;
             crate::dispatch::with_own_file(&e.command, &mut e.input, drawing);
-            jobs.start_for_agent(doc, e)
+            jobs.start_veiled(doc, e, Some(&veil))
                 .and_then(|status| to_value(&status))
         }
         "run" => {

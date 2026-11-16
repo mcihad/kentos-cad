@@ -58,6 +58,10 @@ pub struct AgentProfile {
     /// The most tokens this agent may spend a day on this computer; none: no limit.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub daily_tokens: Option<u64>,
+    /// No attribute value of the drawing is sent to this agent: it reads the drawing as if every field were hidden
+    /// (docs/adr/8057 §103, PY-AI-13); its geometry, layers, field names and texts go.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub withhold_values: bool,
 }
 
 /// A field of the agent window, for where a problem is said.
@@ -91,6 +95,7 @@ impl AgentProfile {
             default: false,
             conversation_tokens: None,
             daily_tokens: None,
+            withhold_values: false,
         }
     }
 

@@ -5056,3 +5056,47 @@ deneme koşusu (`audits.rs`, `trial.rs`, `examples.rs`); headless `rpc.rs` (`Job
   ajanın ayrımı, hücrenin sayımı, sorulan işin listeden çıkması, Göster; Python kurulumunun, kişisel ortamın ve eklenti
   ortamının kendi Durdur'u, Durdur'u olmayan işte düğme olmaması; hücre ve sekme); her programın sekmelerinde "Çalışan
   işler" (`module_surface_tests`).
+
+## §103. Öznitelik değerleri yapay zekâya gitmez: ajan başına seçenek ve kurum ilkesi (`ADIM 21`, [PY-AI-13])
+
+**16 Kasım.** Kod: headless `veil.rs`, `veil/every.rs` (yeni), `veil/tests.rs` (`veil.rs`'den taşındı), `rpc.rs`
+(`call_for_agent_with`, `Jobs::start_veiled`), `dispatch.rs` (`call_envelope_veiled`); ajan `profiles.rs`
+(`withholdValues`); eklenti ilkesi `policy.rs` (`allowAttributeValuesToAi`); masaüstü `assistant/` (`withholds_values`,
+ajan formu, panel notu, yönergeler, `values_tests.rs`), `python/agents.rs`.
+
+- **Sorun.** [PY-AI-13] "sağlayıcıya gönderilecek veri kullanıcı/kiracı politikasıyla sınırlanır" der. ADR 8056 §7 kuruma
+  çizimi dışarıdaki yapay zekâya hiç göndermeme yolunu verdi; izin verilen sağlayıcıya ise çizim bütünüyle gidiyordu.
+  Belediye çiziminin öznitelikleri kişisel veri taşır (malik adı, kimlik numarası, adres) ve ne kurum ne kullanıcı
+  "çizimle çalışsın ama değerleri görmesin" diyebiliyordu. ADR 8056 §7 bu adımı tarif etmişti: bütün alanlara çizimin
+  gizli alan perdesi.
+- **Karar: bütün alanlara perde.** Seçenek açıkken ajan çizimi her alanı gizliymiş gibi okur (`Veil::everything`):
+  nesnelerin özniteliklerinde geçen bütün alan adları, formların ve katmanların gizledikleriyle. Değerler `‹gizli›`
+  yazılır (öznitelik haritaları, birleştirme hücreleri, istatistikler, uzlaştırma); bir alanı anan sorgu, süzgeç, ifade ve
+  hesap reddedilir, ret nedenini söyler. Geometri, katman ve alan adları, yazılar gider.
+- **Serbest metin:** eklentinin bulgu sözü gibi metinlerde değer tırnaksız da sözcük olarak gizlenir (en az üç harf, en
+  çok dört sözcük, en uzunu önce): bir eklenti `Malik Ayşe Yılmaz` diye yazabilir. Yanıtın parçalarını adlandıran yerlere
+  (`id`, `layerId`, `kind`, `command` …) dokunulmaz; üç harften kısa değer yalnız öznitelik haritasında gizlenir (`1`, `A`
+  her sayıyı keserdi). Gizlilikte fazla kesmek eksik kesmekten iyidir.
+- **Yazmak serbest:** ajan bir alana değer yazabilir, dışarı veri gitmez. Çizimin gizli alanlarında yazmak eskisi gibi
+  sahibinindir.
+- **Kim karar verir:** ajan formunda "Gönderilen veri › Öznitelik değerleri › Gönderilmesin" (ajan başına; bu
+  bilgisayardaki bir sunucuda gerekmez) ve kurum ilkesinde yeni `allowAttributeValuesToAi: false` (bu bilgisayarın
+  dışındaki ajanlar için; form kutuyu işaretli ve kilitli gösterir, nedenini yazar). Eski KentOS bilinmeyen alanı görünce
+  ilkeyi kapalı okur (§84'teki yol).
+- **Ajana neden söylenir:** özet `valuesWithheld` taşır; yönergeler `‹gizli›`nin ne demek olduğunu söyler. **Ölçüm
+  (gerçek pencere, DeepSeek):** neden söylenmezken ajan alanların çizimde gizli işaretli olduğunu sandı ve kullanıcıya
+  alanların gizliliğini açmasını önerdi; `valuesWithheld` ile değerleri kullanıcının yazmasını ya da ayardan izin
+  vermesini önerdi.
+- **Panel:** Asistan panelinde sohbetin üstünde "Öznitelik değerleri bu ajana gönderilmiyor; yanıtlarında ‹gizli› yazar."
+- **Eklenti denetim raporu da perdeden geçer:** `audit_report` bulguları eklentinin çizim hakkındaki sözleridir ve
+  perdesiz gidiyordu, çizimin gizli alanlarında da (eski bir açık). Artık ajanın perdesi uygulanır (gizli alanlar ya da
+  bütün alanlar).
+- **Kapsam dışı:** bağlantıdaki ajanlar (MCP). KentOS verinin nereye gittiğini bilemez ve bağlantı ayrı bir izindir (ADR
+  8056 §7); onlar çizimi eskisi gibi okur (sınamada denetlenir).
+- **Sınamalar:** headless perde 1 (bütün değerler, serbest metin, yapısal anahtarlar, ret ve nedeni, yazmak serbest,
+  gizli alanın kuralı aynı, özetin notu); ilke 1 (dışarıdakinde değer yok, bu bilgisayardakinde var, okunamayan ilke
+  kapalı, ajan yine bağlanır); masaüstü 2 (sahte yerel sağlayıcı: ayar kapalıyken sağlayıcı değerleri alır; formdan
+  "Gönderilmesin" kaydedilince aynı yanıtta alan adları ve ‹gizli› gider, değer gitmez; bağlantıdaki ajan değerleri
+  okur; ilke dışarıdaki ajanda değerleri tutar, bu bilgisayardakinde tutmaz).
+- **Gerçek pencere:** Vitrin çizimi (sentetik), DeepSeek deneme ajanı "Gönderilmesin" ile "parsellerin ada ve parsel
+  numaralarını listele" isteğini aldı: değerleri göremediğini söyledi, listeyi uydurmadı (33.468 token).

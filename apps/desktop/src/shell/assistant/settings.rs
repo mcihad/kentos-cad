@@ -40,6 +40,8 @@ pub enum AgentsEdit {
     Key(String),
     Keep(usize),
     Default,
+    /// Öznitelik değerleri gönderilmesin (docs/adr/8057 §103).
+    Withhold,
     /// The token limits, as typed (docs/adr/8056 §6).
     ConversationTokens(String),
     DailyTokens(String),
@@ -91,6 +93,8 @@ pub struct Editor {
     /// The token limits as typed; empty: none.
     conversation_tokens: String,
     daily_tokens: String,
+    /// No attribute value is sent to it (docs/adr/8057 §103).
+    withhold: bool,
     /// The provider's models, once fetched.
     models: Vec<String>,
     fetching: bool,
@@ -121,6 +125,7 @@ impl Editor {
             default,
             conversation_tokens: String::new(),
             daily_tokens: String::new(),
+            withhold: false,
             models: Vec::new(),
             fetching: false,
             checking: false,
@@ -150,6 +155,7 @@ impl Editor {
                 .map(tokens_words)
                 .unwrap_or_default(),
             daily_tokens: profile.daily_tokens.map(tokens_words).unwrap_or_default(),
+            withhold: profile.withhold_values,
             models: Vec::new(),
             fetching: false,
             checking: false,
@@ -172,6 +178,7 @@ impl Editor {
         p.default = self.default;
         p.conversation_tokens = read_tokens(&self.conversation_tokens).unwrap_or(None);
         p.daily_tokens = read_tokens(&self.daily_tokens).unwrap_or(None);
+        p.withhold_values = self.withhold;
         p
     }
 
@@ -313,6 +320,7 @@ impl App {
                         }
                     }
                     AgentsEdit::Default => e.default = !e.default,
+                    AgentsEdit::Withhold => e.withhold = !e.withhold,
                     AgentsEdit::FetchModels | AgentsEdit::Check => {
                         let profile = e.profile();
                         let typed = e.key.trim().to_owned();
@@ -704,6 +712,33 @@ impl App {
                 tokens_words(today)
             ))
             .error(e.problem(ProfileField::DailyTokens));
+        // What goes to the provider (docs/adr/8057 §103, PY-AI-13): the organisation's policy may decide it for an
+        // agent outside this computer; the box then says so and stays ticked.
+        let local = e.profile().on_this_computer();
+        let forced = self
+            .assistant
+            .policy
+            .as_ref()
+            .is_some_and(|p| p.withholds_attribute_values(local));
+        form = form
+            .section("Gönderilen veri")
+            .field(
+                "Öznitelik değerleri",
+                words::check(
+                    e.withhold || forced,
+                    "Gönderilmesin",
+                    (!forced).then(|| msg(AgentsEdit::Withhold)),
+                ),
+            )
+            .help(
+                "İşaretliyken ajan çizimin öznitelik değerlerini (malik adı, kimlik numarası, adres gibi) görmez, \
+                 onlara göre seçemez, süzemez ve hesap yapamaz; değer yazabilir. Geometri, katman ve alan adları, \
+                 yazılar gider. Bu bilgisayarda çalışan bir sunucuda veri bu bilgisayardan çıkmaz.",
+            )
+            .warning(forced.then_some(
+                "Kurum ilkesi öznitelik değerlerinin bu bilgisayarın dışındaki yapay zekâ hizmetlerine gitmesine izin \
+                 vermiyor: bu ajan onları göremez.",
+            ));
         form.section("Kullanım")
             .row(words::check(
                 e.default,
