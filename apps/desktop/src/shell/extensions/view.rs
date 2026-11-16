@@ -89,27 +89,6 @@ fn capability_words(title: &str, reason: &str, hosts: &[String], ai: bool) -> St
     words
 }
 
-/// Change notes as the window shows them: a package writes them in Markdown; headings and list items are read as
-/// such, the file's own title left out (the section has one).
-fn notes<'a>(text: &str) -> Element<'a, Message> {
-    let mut lines = Column::new().spacing(4);
-    for line in text.lines().map(str::trim).filter(|l| !l.is_empty()) {
-        if line.starts_with("# ") {
-            continue;
-        }
-        lines = if let Some(heading) = line.strip_prefix('#') {
-            lines.push(label::body(
-                heading.trim_start_matches('#').trim().to_owned(),
-            ))
-        } else if let Some(item) = line.strip_prefix("- ").or_else(|| line.strip_prefix("* ")) {
-            lines.push(label::caption(format!("• {item}")))
-        } else {
-            lines.push(label::caption(line.to_owned()))
-        };
-    }
-    lines.into()
-}
-
 impl App {
     /// The Eklentiler window.
     pub(crate) fn extensions_view(&self) -> Element<'_, Message> {
@@ -580,7 +559,9 @@ impl App {
             }
         }
         if let Some(text) = &entry.changelog {
-            form = form.section("Değişiklik notu").wide(notes(text));
+            form = form
+                .section("Değişiklik notu")
+                .wide(kentos_ui::widget::notes(text));
         }
         let verb = match &installed {
             None => "Gözden geçir ve kur…",
@@ -788,7 +769,9 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
         }
     }
     if let Some(text) = &p.changelog {
-        form = form.section("Değişiklik notu").wide(notes(text));
+        form = form
+            .section("Değişiklik notu")
+            .wide(kentos_ui::widget::notes(text));
     }
     form.into()
 }
