@@ -731,3 +731,66 @@ fn covering_screens() {
         send(&mut app, W::Close);
     }
 }
+
+/// Kiriş çizelgesi and Kaplama çizelgesi (docs/adr/8070 §11): the pergola's building with an asma tavan in its first
+/// ground storey room, the two schedules placed south of it. `.run/gui-evidence/eleman-cizelgeleri-8070/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::element_schedule_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn element_schedule_screens() {
+    use iced::Size;
+    use kentos_native_application::{ExecutionContext, registry};
+    use kentos_ui::snapshot::Snapshot;
+
+    let mut doc = kentos_domain::Document::from_snapshot_v2(with_a_pergola()).expect("opens");
+    let room = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::Space(s) if !s.space.void && s.space.arch.level.as_deref() == Some("zemin") => Some(u.to_string()),
+            _ => None,
+        })
+        .expect("a room");
+    for (name, input) in [
+        (
+            "cad.slabs.create",
+            serde_json::json!({"layerId": "0", "slabs": [{"space": room, "thickness": 0.0125, "offset": 2.6125,
+                "material": "Alçıpan", "arch": {"level": "zemin"},
+                "covering": {"predefined": "CEILING", "name": "Asma tavan"}}]}),
+        ),
+        ("cad.schedules.create", serde_json::json!({"layerId": "0", "at": {"x": 0.0, "y": -4.0}, "of": "beams"})),
+        ("cad.schedules.create", serde_json::json!({"layerId": "0", "at": {"x": 0.0, "y": -10.0}, "of": "coverings"})),
+    ] {
+        let answer = registry::run(&mut ExecutionContext::new(&mut doc), name, kentos_commands::CallOp::Execute, input)
+            .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+    }
+    let snap = doc.to_snapshot_v2();
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/eleman-cizelgeleri-8070");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(snap.clone());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        shot(&mut app, "0-acilis");
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -13.0, max_x: 9.0, max_y: -3.0 },
+            24.0,
+        );
+        shot(&mut app, "1-cizelgeler");
+    }
+}

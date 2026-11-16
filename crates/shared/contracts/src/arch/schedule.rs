@@ -33,16 +33,22 @@ pub enum ScheduleOf {
     Fixtures,
     /// The building program's groups (docs/adr/0795): independent units, common and outdoor areas, a row each.
     Units,
+    /// The beams, lintels, bond beams and rails (docs/adr/8070 §11).
+    Beams,
+    /// The coverings: the slabs that are one (docs/adr/8070 §11).
+    Coverings,
 }
 
 impl ScheduleOf {
-    pub const ALL: [ScheduleOf; 6] = [
+    pub const ALL: [ScheduleOf; 8] = [
         ScheduleOf::Openings,
         ScheduleOf::Spaces,
         ScheduleOf::Columns,
         ScheduleOf::Walls,
         ScheduleOf::Fixtures,
         ScheduleOf::Units,
+        ScheduleOf::Beams,
+        ScheduleOf::Coverings,
     ];
 
     pub fn label(self) -> &'static str {
@@ -53,6 +59,8 @@ impl ScheduleOf {
             ScheduleOf::Walls => "Duvar çizelgesi",
             ScheduleOf::Fixtures => "Donatı çizelgesi",
             ScheduleOf::Units => "Bölüm çizelgesi",
+            ScheduleOf::Beams => "Kiriş çizelgesi",
+            ScheduleOf::Coverings => "Kaplama çizelgesi",
         }
     }
 
@@ -66,6 +74,8 @@ impl ScheduleOf {
             ScheduleOf::Walls => "wall",
             ScheduleOf::Fixtures => "insert",
             ScheduleOf::Units => "space",
+            ScheduleOf::Beams => "beam",
+            ScheduleOf::Coverings => "slab",
         }
     }
 
@@ -79,6 +89,8 @@ impl ScheduleOf {
             ScheduleOf::Walls => &[Type, Thickness, Length, Height, Area, Volume],
             ScheduleOf::Fixtures => &[Type, Category, Space, Level, Count],
             ScheduleOf::Units => &[Number, Name, UnitKind, Building, Level, Area, Share, Gross, RecordedArea],
+            ScheduleOf::Beams => &[Tag, Type, Width, Height, Length, Level],
+            ScheduleOf::Coverings => &[Type, Thickness, Area, Level],
         };
         fields
             .iter()
@@ -443,25 +455,35 @@ impl ScheduleField {
             Number => matches!(of, ScheduleOf::Openings | ScheduleOf::Spaces),
             Type => matches!(
                 of,
-                ScheduleOf::Openings | ScheduleOf::Columns | ScheduleOf::Walls | ScheduleOf::Fixtures
+                ScheduleOf::Openings
+                    | ScheduleOf::Columns
+                    | ScheduleOf::Walls
+                    | ScheduleOf::Fixtures
+                    | ScheduleOf::Beams
+                    | ScheduleOf::Coverings
             ),
-            Width => matches!(of, ScheduleOf::Openings | ScheduleOf::Columns),
+            Width => matches!(of, ScheduleOf::Openings | ScheduleOf::Columns | ScheduleOf::Beams),
             Height => matches!(
                 of,
-                ScheduleOf::Openings | ScheduleOf::Spaces | ScheduleOf::Walls
+                ScheduleOf::Openings | ScheduleOf::Spaces | ScheduleOf::Walls | ScheduleOf::Beams
             ),
+            // A beam's volume, a covering's area (docs/adr/8070 §11).
             Area | Volume => {
-                matches!(
+                (matches!(
                     of,
                     ScheduleOf::Openings | ScheduleOf::Spaces | ScheduleOf::Walls
-                ) && !(self == Volume && of == ScheduleOf::Openings)
+                ) && !(self == Volume && of == ScheduleOf::Openings))
+                    || (self == Volume && of == ScheduleOf::Beams)
+                    || of == ScheduleOf::Coverings
             }
             Form | Sill | Head | Wall | Code => of == ScheduleOf::Openings,
             Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish
             | Baseboard | Unit | Target | TargetDiff | Share | Gross => of == ScheduleOf::Spaces,
             SillFinish | StairFinish | RailingFinish | Doors | Windows => of == ScheduleOf::Spaces,
-            Tag | Place => of == ScheduleOf::Columns,
-            Length | Thickness => of == ScheduleOf::Walls,
+            Tag => matches!(of, ScheduleOf::Columns | ScheduleOf::Beams),
+            Place => of == ScheduleOf::Columns,
+            Length => matches!(of, ScheduleOf::Walls | ScheduleOf::Beams),
+            Thickness => matches!(of, ScheduleOf::Walls | ScheduleOf::Coverings),
             Category | Space => of == ScheduleOf::Fixtures,
             RoughWidth | UnitWidth | LeafWidth | ClearWidth => of == ScheduleOf::Openings,
             Operation | Leaves | Drum | Pocket | Tracks | Panels => of == ScheduleOf::Openings,
@@ -504,6 +526,10 @@ impl ScheduleField {
             ScheduleOf::Units => {
                 matches!(self, Number | Name | RecordedArea | ShareWeight | Nature)
             }
+            // A beam's number is its own; its type (its role, a rail's member) and sizes are not written from here; a
+            // covering's cells are worked out (docs/adr/8070 §11).
+            ScheduleOf::Beams => matches!(self, Tag | Attr),
+            ScheduleOf::Coverings => self == Attr,
             _ => self.editable() && !(of == ScheduleOf::Fixtures && self == Type),
         }
     }

@@ -462,9 +462,9 @@ ve kirişin eleman rolü, kolonun kendi yüksekliği; `IfcMember` POST ve USERDE
 dikme Kolon çizelgesinde; dışa aktarmanın rampa, baca, giydirme cephe, eleman, donatı ve aks sayıları; **ilk kabul:**
 rampalı, giydirme cepheli, asansörlü, dikmeli örnek binada kayıp listesi boş (ADR 8070 §9); kaplama ve asma tavan
 (döşemenin kaplama rolü: mahale bağlı türer ya da elle çizilir; yapı değildir; `IfcCovering`; Kaplama aracı KM, `.kcad`
-mimari verisi 5: K47, §10). **Kalan:** kiriş ve kaplama çizelgesi (kayıt, kaplama), giydirme cephenin panel yerine
-kapısı, eğimli eleman, duvar kaplamasının kalınlığı, kaplamanın mahale bağı (`IfcRelCoversSpaces`), rampa korkuluğunun
-kesit gövdesi.
+mimari verisi 5: K47, §10); Kiriş ve Kaplama çizelgesi (kayıt ve kaplama da bir çizelgede; `.kcad` mimari verisi 6,
+§11). **Kalan:** giydirme cephenin panel yerine kapısı, eğimli eleman, duvar kaplamasının kalınlığı, kaplamanın mahale
+bağı (`IfcRelCoversSpaces`), rampa korkuluğunun kesit gövdesi.
 
 **Kullanıcı sonucu:** Konut ve karma kullanımlı bir binada karşılaşılan her eleman modelde kendi nesnesidir ve kendi
 sınıfıyla dışa gider. "Modele girmeyen nesne" listesi boşalır. Dayanak EK-5 Tablo 5.1; EK-6 §6.1.3 ve 6.14, 6.20, 6.21,

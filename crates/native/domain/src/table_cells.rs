@@ -34,6 +34,9 @@ fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
         ScheduleOf::Fixtures => &["insert", "space"],
         // The program's groups (docs/adr/0795): their spaces; the program itself and the levels are settings.
         ScheduleOf::Units => &["space"],
+        // A beam's top and a covering's level read nothing else (docs/adr/8070 §11).
+        ScheduleOf::Beams => &["beam"],
+        ScheduleOf::Coverings => &["slab"],
     }
 }
 

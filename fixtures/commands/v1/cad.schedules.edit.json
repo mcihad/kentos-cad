@@ -440,6 +440,1423 @@
   },
   "cases": [
     {
+      "name": "kiriş çizelgesinde kirişin numarası yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.beams.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "kolon",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "tag": "K101",
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.beams.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "kolon",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 32.0
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 32.0
+                  }
+                ],
+                "width": 0.2,
+                "height": 0.2,
+                "role": "lintel",
+                "baseOffset": 2.1,
+                "tag": "L101"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.beams.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "kolon",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 34.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 34.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.1,
+                "baseOffset": 1.0,
+                "member": {
+                  "predefined": "USERDEFINED",
+                  "name": "Kayıt"
+                },
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "mahal",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 34.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 34.0,
+                          "y": 33.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 33.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "mahal",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 34.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 34.0,
+                          "y": 33.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 33.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.0125,
+                "offset": 2.6,
+                "arch": {
+                  "level": "zemin"
+                },
+                "covering": {
+                  "predefined": "CEILING",
+                  "name": "Asma tavan"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "mahal",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 36.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 38.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 38.0,
+                          "y": 32.0
+                        },
+                        {
+                          "x": 36.0,
+                          "y": 32.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.02,
+                "offset": 0.02,
+                "covering": {
+                  "predefined": "FLOORING"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -50.0
+            },
+            "of": "beams"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 23,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23
+            ],
+            "entities": {
+              "23": {
+                "kind": "table",
+                "id": 23,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -50.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Etiket",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Uzunluk (m)",
+                    "Kat"
+                  ],
+                  [
+                    "K101",
+                    "Kiriş",
+                    "0.250",
+                    "0.500",
+                    "6.000",
+                    "Zemin kat"
+                  ],
+                  [
+                    "L101",
+                    "Lento",
+                    "0.200",
+                    "0.200",
+                    "2.000",
+                    ""
+                  ],
+                  [
+                    "",
+                    "Kayıt",
+                    "0.050",
+                    "0.100",
+                    "4.000",
+                    "Zemin kat"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "beams",
+                  "columns": [
+                    {
+                      "field": "tag"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "length"
+                    },
+                    {
+                      "field": "level"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:17"
+                    ],
+                    [
+                      "$uidOf:18"
+                    ],
+                    [
+                      "$uidOf:19"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 5,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.edit",
+          "input": {
+            "uid": "$uidOf:23",
+            "operation": {
+              "kind": "cell",
+              "row": 1,
+              "column": 0,
+              "value": "K201"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 23,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -50.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Etiket",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Uzunluk (m)",
+                    "Kat"
+                  ],
+                  [
+                    "K201",
+                    "Kiriş",
+                    "0.250",
+                    "0.500",
+                    "6.000",
+                    "Zemin kat"
+                  ],
+                  [
+                    "L101",
+                    "Lento",
+                    "0.200",
+                    "0.200",
+                    "2.000",
+                    ""
+                  ],
+                  [
+                    "",
+                    "Kayıt",
+                    "0.050",
+                    "0.100",
+                    "4.000",
+                    "Zemin kat"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "beams",
+                  "columns": [
+                    {
+                      "field": "tag"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "length"
+                    },
+                    {
+                      "field": "level"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:17"
+                    ],
+                    [
+                      "$uidOf:18"
+                    ],
+                    [
+                      "$uidOf:19"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 5,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "edited": [
+                "$uidOf:17"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23
+            ],
+            "entities": {
+              "17": {
+                "kind": "beam",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "tag": "K201",
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "23": {
+                "kind": "table",
+                "id": 23,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -50.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Etiket",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Uzunluk (m)",
+                    "Kat"
+                  ],
+                  [
+                    "K201",
+                    "Kiriş",
+                    "0.250",
+                    "0.500",
+                    "6.000",
+                    "Zemin kat"
+                  ],
+                  [
+                    "L101",
+                    "Lento",
+                    "0.200",
+                    "0.200",
+                    "2.000",
+                    ""
+                  ],
+                  [
+                    "",
+                    "Kayıt",
+                    "0.050",
+                    "0.100",
+                    "4.000",
+                    "Zemin kat"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "beams",
+                  "columns": [
+                    {
+                      "field": "tag"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "length"
+                    },
+                    {
+                      "field": "level"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:17"
+                    ],
+                    [
+                      "$uidOf:18"
+                    ],
+                    [
+                      "$uidOf:19"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 5,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kiriş çizelgesinde tür yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.beams.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "kolon",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "tag": "K101",
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.beams.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "kolon",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 32.0
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 32.0
+                  }
+                ],
+                "width": 0.2,
+                "height": 0.2,
+                "role": "lintel",
+                "baseOffset": 2.1,
+                "tag": "L101"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.beams.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "kolon",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 34.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 34.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.1,
+                "baseOffset": 1.0,
+                "member": {
+                  "predefined": "USERDEFINED",
+                  "name": "Kayıt"
+                },
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "mahal",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 34.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 34.0,
+                          "y": 33.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 33.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "mahal",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 34.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 34.0,
+                          "y": 33.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 33.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.0125,
+                "offset": 2.6,
+                "arch": {
+                  "level": "zemin"
+                },
+                "covering": {
+                  "predefined": "CEILING",
+                  "name": "Asma tavan"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "mahal",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 36.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 38.0,
+                          "y": 30.0
+                        },
+                        {
+                          "x": 38.0,
+                          "y": 32.0
+                        },
+                        {
+                          "x": 36.0,
+                          "y": 32.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.02,
+                "offset": 0.02,
+                "covering": {
+                  "predefined": "FLOORING"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -50.0
+            },
+            "of": "beams"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 23,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23
+            ],
+            "entities": {
+              "23": {
+                "kind": "table",
+                "id": 23,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -50.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Etiket",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Uzunluk (m)",
+                    "Kat"
+                  ],
+                  [
+                    "K101",
+                    "Kiriş",
+                    "0.250",
+                    "0.500",
+                    "6.000",
+                    "Zemin kat"
+                  ],
+                  [
+                    "L101",
+                    "Lento",
+                    "0.200",
+                    "0.200",
+                    "2.000",
+                    ""
+                  ],
+                  [
+                    "",
+                    "Kayıt",
+                    "0.050",
+                    "0.100",
+                    "4.000",
+                    "Zemin kat"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "beams",
+                  "columns": [
+                    {
+                      "field": "tag"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "length"
+                    },
+                    {
+                      "field": "level"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:17"
+                    ],
+                    [
+                      "$uidOf:18"
+                    ],
+                    [
+                      "$uidOf:19"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 5,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.edit",
+          "input": {
+            "uid": "$uidOf:23",
+            "operation": {
+              "kind": "cell",
+              "row": 1,
+              "column": 1,
+              "value": "Lento"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "cell_computed",
+              "message": "“Tür” sütunu çizimden hesaplanır; düzenlenmez. Kaynağın kendi alanını değiştirin.",
+              "path": "operation.column"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "giydirme cephe satırının genişliği yazılmaz",
       "steps": [
         {

@@ -4,8 +4,8 @@
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-03; uygulama sırasında B9. Bu ADR maddenin bütün adımlarını tutar; her adım
   kendi bölümüdür ve koddaki "docs/adr/8070 §N" atıfları bu bölümleri gösterir: §1 rampanın gövdesi, §2 merdiven ve
   rampanın tipi ve malzemesi, §3 baca ve niş, §4 aks ızgarası, §5 kitaplık blokları, §6 kaplama, §7 giydirme cephe,
-  §8 dikme ve kayıt, §9 çizelgeler, dışa aktarmanın sayıları ve ilk kabul, §10 kaplama ve asma tavan nesnesi. Kararların
-  numarası bölümler boyunca sürer (1–37). Birden çok adımın ortak sınamaları ve sıradaki
+  §8 dikme ve kayıt, §9 çizelgeler, dışa aktarmanın sayıları ve ilk kabul, §10 kaplama ve asma tavan nesnesi, §11 kiriş
+  ve kaplama çizelgesi. Kararların numarası bölümler boyunca sürer (1–40). Birden çok adımın ortak sınamaları ve sıradaki
   adımlar numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0705](0705-ramps-by-slope-and-railings.md) ve [0723](0723-ramp-landings-levels-accessibility.md) (rampa),
@@ -514,6 +514,36 @@
 - **Resimler:** `.run/gui-evidence/kaplama-8070/` (görünüş binasının zemin katındaki her mahalde asma tavan: A-A kesiti,
   yalnız zemin kat 3B güneybatıdan ve üstten; açık ve koyu) ve `.run/gui-evidence/ikon-kaplama/secenekler.png`.
 
+## §11. Kiriş ve kaplama çizelgesi
+
+**Araştırma.** Planın ilk kabulü her yeni elemanın bir çizelgede olmasını ister (§9). §9'dan sonra kayıt (bir kiriş,
+§8) ve kaplama (bir döşeme, §10) hiçbir çizelgede değildi: KentOS'un açıklık, mahal, kolon, duvar, donatı ve bölüm
+çizelgesi vardı, kiriş ve döşeme çizelgesi yoktu.
+
+**Karar.**
+
+38. **Kiriş çizelgesi** (`ScheduleOf::Beams`): kirişler, lentolar, hatıllar ve kayıtlar; sütunları Etiket, Tür (kaydın
+    adı, yoksa türü: Kiriş, Lento, Hatıl), Genişlik, Yükseklik, Uzunluk, Kat; Hacim de okunur. Numarası çizelgeden
+    yazılır, öbürleri hesaplanır (türü kirişin rolü ve elemanıdır, Öznitelikler'den değişir). Gruplu: tür ve ölçüye
+    göre adet ve boy.
+39. **Kaplama çizelgesi** (`ScheduleOf::Coverings`): yalnız kaplama olan döşemeler, binanın döşemeleri değil; sütunları
+    Tür (kaplamanın adı), Kalınlık, Alan, Kat; Hacim de okunur. Hücreleri hesaplanır (öznitelikler dışında). Gruplu:
+    tür ve kalınlığa göre adet ve alan. Döşeme çizelgesi yok: döşemeler metrajın Döşemeler tablosundadır.
+40. **Sürüm ve araç:** böyle bir çizelge `.kcad`'de mimari veri sürüm 6'dır (`ARCH_WITH_ELEMENT_SCHEDULES`); Çizelge
+    aracının Tür (T) seçimi Kiriş çizelgesi ve Kaplama çizelgesini de verir; tablonun başlığındaki ikonları kirişin ve
+    kaplamanınki.
+
+**Sınama.**
+
+- **Uygulama** (`arch_ifc::beam_and_covering_schedules_list_their_own_and_round_trip_under_arch_data_6`): bölüm
+  binasında kayıt kiriş çizelgesinde, binanın kirişleriyle; kaplama çizelgesinde yalnız kaplama; çizelgeli çizim sürüm
+  6 ile gidip gelir. **İlk kabul** sınaması artık asma tavanı da kurar: kayıt Kiriş, asma tavan Kaplama çizelgesinde.
+- **Ortak durumlar** (başvuru `tag_command_cases.py`): `cad.schedules.create`'e 8 (kiriş, lento ve kayıt; türe göre grup
+  ve boy toplamı; hacim; yalnız kaplamalar; türe göre grup ve alan toplamı; hacim ve kat süzgeci; kiriş çizelgesinde
+  Konum ve kaplama çizelgesinde Genişlik okunmaz), `cad.schedules.edit`'e 2 (kirişin numarası yazılır, türü yazılmaz).
+- **Masaüstü:** kesişen süzgeçler, tablo ve çizelge sınamaları 261 sınamayla geçti.
+- **Resim:** `.run/gui-evidence/eleman-cizelgeleri-8070/` (pergolalı binada iki çizelge; açık ve koyu).
+
 ## Ortak sınamalar
 
 - **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`, IfcOpenShell 0.9.0.post1, KentOS kodu olmadan): yeniden
@@ -535,4 +565,4 @@
 - Rampanın korkulukları (merdivenin de) kesit modelinde yok.
 - Kitaplık bloklarının gövdesi kutudur; gerçek biçim (lavabo çanağı, asılı klozetin altı) ve EN 81-20'nin kabin
   yüksekliği kaynağı gelince.
-- Kiriş çizelgesi (kirişler, lentolar, hatıllar ve kayıtlar); baca ve aksın çizelgesi gerekirse.
+- Baca ve aksın çizelgesi gerekirse.

@@ -386,6 +386,8 @@ fn written(
         (Entity::Column(c), F::Type) => c.column.kind = text(),
         (Entity::Column(c), F::Width) => c.column.width = length_of(doc, value, true)?,
         (Entity::Wall(w), F::Thickness) => w.wall.width = length_of(doc, value, true)?,
+        // A beam's number (docs/adr/8070 §11).
+        (Entity::Beam(b), F::Tag) => b.beam.tag = text(),
         _ => {
             return Err(fail(
                 codes::CELL_COMPUTED,
@@ -395,6 +397,7 @@ fn written(
         }
     }
     let problem = match &e {
+        Entity::Beam(b) => b.beam.problem(),
         Entity::Opening(o) => o.opening.problem(),
         Entity::Space(s) => s.space.problem(),
         Entity::Column(c) => c.column.problem(),

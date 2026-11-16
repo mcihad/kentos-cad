@@ -873,10 +873,13 @@ pub enum SchedulePreset {
     /// first, under its storey's heading: its number and name, its floor's, skirting's, walls' and ceiling's finishes,
     /// the doors and windows serving it by their codes, its sills', stair's and railings' finishes.
     RoomList,
+    /// Kiriş çizelgesi and Kaplama çizelgesi (docs/adr/8070 §11): beams, lintels, bond beams and rails; coverings.
+    Beams,
+    Coverings,
 }
 
 impl SchedulePreset {
-    pub const ALL: [SchedulePreset; 10] = [
+    pub const ALL: [SchedulePreset; 12] = [
         SchedulePreset::Openings,
         SchedulePreset::Spaces,
         SchedulePreset::Finishes,
@@ -887,6 +890,8 @@ impl SchedulePreset {
         SchedulePreset::AreaTable,
         SchedulePreset::LandShares,
         SchedulePreset::RoomList,
+        SchedulePreset::Beams,
+        SchedulePreset::Coverings,
     ];
 
     pub fn of(self) -> ScheduleOf {
@@ -901,6 +906,8 @@ impl SchedulePreset {
             SchedulePreset::Units | SchedulePreset::AreaTable | SchedulePreset::LandShares => {
                 ScheduleOf::Units
             }
+            SchedulePreset::Beams => ScheduleOf::Beams,
+            SchedulePreset::Coverings => ScheduleOf::Coverings,
         }
     }
 
@@ -926,6 +933,8 @@ impl SchedulePreset {
             SchedulePreset::AreaTable => "areas",
             SchedulePreset::LandShares => "landShares",
             SchedulePreset::RoomList => "roomList",
+            SchedulePreset::Beams => "beams",
+            SchedulePreset::Coverings => "coverings",
         }
     }
 
@@ -981,6 +990,9 @@ impl SchedulePreset {
             (SchedulePreset::Columns, true) => &[Type, Width, Count],
             (SchedulePreset::Walls, true) => &[Type, Thickness, Count, Length, Area],
             (SchedulePreset::Fixtures, true) => &[Type, Category, Count],
+            // Alike beams and coverings by type and size (docs/adr/8070 §11): their count and their length or area.
+            (SchedulePreset::Beams, true) => &[Type, Width, Height, Count, Length],
+            (SchedulePreset::Coverings, true) => &[Type, Thickness, Count, Area],
             // Alike units by kind and building: their count of spaces and the regulation's areas summed (docs/adr/8029).
             (SchedulePreset::Units, true) => &[
                 UnitKind,
@@ -1120,6 +1132,8 @@ impl ScheduleTool {
             ScheduleOf::Walls => SchedulePreset::Walls,
             ScheduleOf::Fixtures => SchedulePreset::Fixtures,
             ScheduleOf::Units => SchedulePreset::Units,
+            ScheduleOf::Beams => SchedulePreset::Beams,
+            ScheduleOf::Coverings => SchedulePreset::Coverings,
         })
     }
 

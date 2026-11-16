@@ -1369,6 +1369,9 @@ impl App {
                     kentos_commands::TableSource::Schedule { of, .. } => match of {
                         kentos_commands::ScheduleOf::Spaces => "scheduleSpaces",
                         kentos_commands::ScheduleOf::Units => "scheduleUnits",
+                        // Their tools' icons (docs/adr/8070 §11).
+                        kentos_commands::ScheduleOf::Beams => "beam",
+                        kentos_commands::ScheduleOf::Coverings => "covering",
                         _ => "scheduleOpenings",
                     },
                     kentos_commands::TableSource::Extraction(_) => "dataExtraction",

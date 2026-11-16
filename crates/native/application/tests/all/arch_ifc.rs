@@ -519,10 +519,11 @@ fn a_post_and_a_rail_are_ifc_members_of_their_types() {
     }
 }
 
-/// B9's first acceptance (plan/bim-plan.md BIM-09; docs/adr/8070 §9): the section building with a ramp, a curtain wall,
-/// the library's lift and a post and a rail. Its IFC model leaves nothing out; each new element has its body in the
-/// section model (so the section, the elevation and the 3D view draw it) and its object in the file; the curtain wall is
-/// a row of the doors and windows' schedule, the lift of the fixtures' and the post of the columns'.
+/// B9's first acceptance (plan/bim-plan.md BIM-09; docs/adr/8070 §9, §11): the section building with a ramp, a curtain
+/// wall, the library's lift, a post, a rail and an asma tavan. Its IFC model leaves nothing out; each new element has its
+/// body in the section model (so the section, the elevation and the 3D view draw it) and its object in the file; the
+/// curtain wall is a row of the doors and windows' schedule, the lift of the fixtures', the post of the columns', the
+/// rail of the beams' and the asma tavan of the coverings'.
 #[test]
 fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out() {
     use kentos_commands::{CallOp, ScheduleOf};
@@ -562,9 +563,21 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
         "pts": [p(27.0, 0.0), p(29.0, 0.0)], "width": 0.05, "height": 0.1, "baseOffset": 1.0, "material": "Çelik",
         "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
     }]})));
+    let ceiling = uid(&run(&mut doc, "cad.slabs.create", serde_json::json!({"layerId": "0", "slabs": [{
+        "parts": [{"outer": {"pts": [p(1.0, 1.0), p(4.0, 1.0), p(4.0, 4.0), p(1.0, 4.0)]}}], "thickness": 0.0125,
+        "offset": 2.6, "material": "Alçıpan", "arch": {"level": "zemin"},
+        "covering": {"predefined": "CEILING", "name": "Asma tavan"}
+    }]})));
     // Every new element's body in the section model.
     let m = sections::model(&doc);
-    for (what, u) in [("rampa", &ramp), ("giydirme cephe", &curtain), ("asansör", &lift), ("dikme", &post), ("kayıt", &rail)] {
+    for (what, u) in [
+        ("rampa", &ramp),
+        ("giydirme cephe", &curtain),
+        ("asansör", &lift),
+        ("dikme", &post),
+        ("kayıt", &rail),
+        ("asma tavan", &ceiling),
+    ] {
         assert!(m.owners.iter().any(|o| o.as_deref() == Some(u.as_str())), "{what} kesit modelinde yok");
     }
     // The IFC model: nothing left out, each its class.
@@ -579,6 +592,7 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
     assert_eq!(class_of(&lift), Some(Class::TransportElement));
     assert_eq!(class_of(&post), Some(Class::Member));
     assert_eq!(class_of(&rail), Some(Class::Member));
+    assert_eq!(class_of(&ceiling), Some(Class::Covering));
     // The schedules: the curtain wall among the doors and windows, the lift among the fixtures, the post among the
     // columns.
     let listed = |of: ScheduleOf, u: &str| {
@@ -590,6 +604,8 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
     assert!(listed(ScheduleOf::Openings, &curtain), "the curtain wall in the doors and windows' schedule");
     assert!(listed(ScheduleOf::Fixtures, &lift), "the lift in the fixtures' schedule");
     assert!(listed(ScheduleOf::Columns, &post), "the post in the columns' schedule");
+    assert!(listed(ScheduleOf::Beams, &rail), "the rail in the beams' schedule");
+    assert!(listed(ScheduleOf::Coverings, &ceiling), "the asma tavan in the coverings' schedule");
 }
 
 /// Kaplama (docs/adr/8070 §10; EK-6 Tablo 6.20): an asma tavan drawn from one of the section building's rooms (bound to
@@ -672,4 +688,45 @@ fn a_ceiling_from_a_room_and_a_floor_covering_are_ifc_coverings() {
     if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_COVERINGS") {
         std::fs::write(path, &text).expect("the file kept");
     }
+}
+
+/// Kiriş çizelgesi and Kaplama çizelgesi (docs/adr/8070 §11): placed in the section building, each lists its own (its
+/// beams and its rail; its covering, not its floors) and the drawing is written with architecture data 6 and read back
+/// as it was.
+#[test]
+fn beam_and_covering_schedules_list_their_own_and_round_trip_under_arch_data_6() {
+    use kentos_commands::{CallOp, ScheduleOf};
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer
+    };
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let rail = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
+        "pts": [p(27.0, 0.0), p(29.0, 0.0)], "width": 0.05, "height": 0.1, "baseOffset": 1.0,
+        "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
+    }]}))["output"]["uids"][0]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let covering = run(&mut doc, "cad.slabs.create", serde_json::json!({"layerId": "0", "slabs": [{
+        "parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 3.0), p(20.0, 3.0)]}}],
+        "thickness": 0.02, "offset": 0.02, "covering": {"predefined": "FLOORING"}
+    }]}))["output"]["uids"][0]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let beams = doc.schedule_rows(ScheduleOf::Beams, &ScheduleOf::Beams.default_columns(), None, &[], false, false);
+    assert!(beams.members.iter().any(|r| r.contains(&rail)), "the rail among the beams");
+    assert!(beams.members.len() > 1, "the frame's beams too");
+    let coverings =
+        doc.schedule_rows(ScheduleOf::Coverings, &ScheduleOf::Coverings.default_columns(), None, &[], false, false);
+    assert_eq!(coverings.members, vec![vec![covering]], "the covering alone, no floor");
+    run(&mut doc, "cad.schedules.create", serde_json::json!({"layerId": "0", "at": p(0.0, -20.0), "of": "beams"}));
+    let snap = doc.to_snapshot_v2();
+    assert_eq!(kentos_kcad::arch_version(&snap), kentos_kcad::ARCH_WITH_ELEMENT_SCHEDULES);
+    let bytes = kentos_kcad::encode(&snap).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), snap, "the schedule read back");
 }

@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_COVERINGS),
+    ("arch", "mimari", ARCH_WITH_ELEMENT_SCHEDULES),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1062,10 +1062,29 @@ pub fn uses_coverings(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.entities.iter().any(kentos_contracts::is_covering)
 }
 
-/// The architecture data version `doc` needs: 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a
-/// curtain wall, 2 for a block's building element, 1 for the performance declarations, else 0 (not raised).
+/// Architecture data version 6 (docs/adr/8070 §11): a schedule of beams or of coverings. Version 6 holds versions 1–5's
+/// data too. The document schema stays as it is.
+pub const ARCH_WITH_ELEMENT_SCHEDULES: u16 = 6;
+
+/// Whether `doc` holds architecture data 6 ([`ARCH_WITH_ELEMENT_SCHEDULES`]): a beams' or coverings' schedule.
+pub fn uses_element_schedules(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    use kentos_contracts::{Entity, ScheduleOf, TableSource};
+    let schedule = |e: &Entity| {
+        matches!(e, Entity::Table(t) if matches!(
+            t.source,
+            Some(TableSource::Schedule { of: ScheduleOf::Beams | ScheduleOf::Coverings, .. })
+        ))
+    };
+    doc.entities.iter().any(schedule) || doc.blocks.iter().any(|b| b.entities.iter().any(schedule))
+}
+
+/// The architecture data version `doc` needs: 6 for a beams' or coverings' schedule, 5 for a covering, 4 for a post, a
+/// rail or a column's own height, 3 for a curtain wall, 2 for a block's building element, 1 for the performance
+/// declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_coverings(doc) {
+    if uses_element_schedules(doc) {
+        ARCH_WITH_ELEMENT_SCHEDULES
+    } else if uses_coverings(doc) {
         ARCH_WITH_COVERINGS
     } else if uses_members(doc) {
         ARCH_WITH_MEMBERS

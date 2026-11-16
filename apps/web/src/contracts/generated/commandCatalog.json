@@ -200201,6 +200201,16 @@
           "const": "units",
           "description": "The building program's groups (docs/adr/0795): independent units, common and outdoor areas, a row each.",
           "type": "string"
+        },
+        {
+          "const": "beams",
+          "description": "The beams, lintels, bond beams and rails (docs/adr/8070 §11).",
+          "type": "string"
+        },
+        {
+          "const": "coverings",
+          "description": "The coverings: the slabs that are one (docs/adr/8070 §11).",
+          "type": "string"
         }
       ]
     },

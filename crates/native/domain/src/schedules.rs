@@ -135,6 +135,9 @@ impl Document {
             Entity::Column(c) => Some(c.column.arch.clone()),
             Entity::Wall(w) => Some(w.wall.arch.clone()),
             Entity::Insert(i) => Some(i.arch.clone()),
+            // A beam's and a covering's own (docs/adr/8070 §11).
+            Entity::Beam(b) => Some(b.beam.arch.clone()),
+            Entity::Slab(s) => Some(s.slab.arch.clone()),
             _ => None,
         }
         .unwrap_or_default();
@@ -661,7 +664,9 @@ impl Document {
             }
             // A curtain wall is joinery too: a row of the doors and windows' schedule (docs/adr/8070 §9).
             let curtain = of == ScheduleOf::Openings && matches!(e, Entity::Wall(w) if w.wall.curtain.is_some());
+            // A coverings' schedule lists the slabs that are one, not the building's floors (docs/adr/8070 §11).
             if (e.kind() != of.kind() && !curtain)
+                || (of == ScheduleOf::Coverings && !kentos_contracts::is_covering(e))
                 || !self.fixture(e)
                 || !self.schedule_takes(e, filter)
                 || out.contains(&Slot(e.base().id))

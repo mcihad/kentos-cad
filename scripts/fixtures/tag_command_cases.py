@@ -320,6 +320,24 @@ def value(d, i, place, attr=None):
              "volume": ("volume", net * f["width"]) if net is not None else None,
              "level": text(level_name(f.get("arch")))}
         return m.get(place)
+    if k == "beam":
+        # A beam's (ADR 8070 §11): its type a rail's member's words, else its role.
+        member = f.get("member")
+        kind = (member.get("name") or MEMBER_WORDS.get(member["predefined"], member["predefined"])) if member else \
+            {"beam": "Kiriş", "lintel": "Lento", "bondBeam": "Hatıl"}[f.get("role", "beam")]
+        length = sum(math.hypot(b["x"] - a["x"], b["y"] - a["y"]) for a, b in zip(f["pts"], f["pts"][1:]))
+        m = {"tag": text(f.get("tag")), "type": ("text", kind), "width": ("length", f["width"]),
+             "height": ("length", f["height"]), "length": ("length", length),
+             "volume": ("volume", f["width"] * f["height"] * length), "level": text(level_name(f.get("arch")))}
+        return m.get(place)
+    if k == "slab":
+        # A covering's (ADR 8070 §11): its words, thickness and area.
+        c = f.get("covering")
+        kind = (c.get("name") or COVERING_WORDS.get(c["predefined"], c["predefined"])) if c else "Döşeme"
+        a = area_of(f["parts"]) - sum(area_of([dict(outer=h)]) for p in f["parts"] for h in p.get("holes", []))
+        m = {"type": ("text", kind), "thickness": ("length", f["thickness"]), "area": ("area", a),
+             "volume": ("volume", a * f["thickness"]), "level": text(level_name(f.get("arch")))}
+        return m.get(place)
     if k == "grid":
         return ("text", f["name"]) if place == "label" else (text(level_name(f.get("arch"))) if place == "level" else None)
     if k == "ramp":
@@ -335,8 +353,10 @@ def value(d, i, place, attr=None):
     return None
 
 
-# What a curtain wall is called in a schedule, and a member type's words (ADR 8070 §8, §9).
+# What a curtain wall is called in a schedule, and a member type's and a covering type's words (ADR 8070 §8–§11).
 CURTAIN_WALL = "Giydirme cephe"
+COVERING_WORDS = {"CEILING": "Tavan kaplaması", "FLOORING": "Zemin kaplaması", "CLADDING": "Duvar kaplaması",
+                  "ROOFING": "Çatı kaplaması", "INSULATION": "Isı yalıtımı", "USERDEFINED": "Kullanıcı tanımlı"}
 MEMBER_WORDS = {"POST": "Dikme", "PURLIN": "Aşık", "RAFTER": "Mertek", "COLLAR": "Kuşak", "BRACE": "Payanda",
                 "STRUT": "Basınç çubuğu", "STUD": "Ara dikme", "PLATE": "Başlık kaydı", "STRINGER": "Limon",
                 "CHORD": "Başlık çubuğu", "MEMBER": "Çubuk", "MULLION": "Cephe dikmesi", "USERDEFINED": "Kullanıcı tanımlı"}
@@ -1229,20 +1249,35 @@ LENGTHS = {"width", "height", "sill", "head", "perimeter", "length", "thickness"
 SUMMED = {"count", "area", "perimeter", "volume", "length"}
 EDITABLE = {"number", "type", "width", "sill", "head", "name", "usage", "tag", "thickness", "attr"}
 NUMERIC = LENGTHS | {"count", "area", "volume"}
-KIND = {"openings": "opening", "spaces": "space", "columns": "column", "walls": "wall"}
-OF_LABEL = {"openings": "Kapı ve pencere çizelgesi", "spaces": "Mahal çizelgesi", "columns": "Kolon çizelgesi", "walls": "Duvar çizelgesi"}
+KIND = {"openings": "opening", "spaces": "space", "columns": "column", "walls": "wall", "beams": "beam", "coverings": "slab"}
+OF_LABEL = {"openings": "Kapı ve pencere çizelgesi", "spaces": "Mahal çizelgesi", "columns": "Kolon çizelgesi", "walls": "Duvar çizelgesi",
+            "beams": "Kiriş çizelgesi", "coverings": "Kaplama çizelgesi"}
 DEFAULT = {"openings": ["number", "form", "type", "width", "height", "sill", "wall"],
            "spaces": ["number", "name", "usage", "level", "area", "perimeter", "height"],
            "columns": ["tag", "place", "type", "width", "level"],
-           "walls": ["type", "thickness", "length", "height", "area", "volume"]}
+           "walls": ["type", "thickness", "length", "height", "area", "volume"],
+           # ADR 8070 §11.
+           "beams": ["tag", "type", "width", "height", "length", "level"],
+           "coverings": ["type", "thickness", "area", "level"]}
 READS = {
     "count": set(KIND), "level": set(KIND), "phase": set(KIND), "attr": set(KIND),
-    "number": {"openings", "spaces"}, "type": {"openings", "columns", "walls"}, "width": {"openings", "columns"},
-    "height": {"openings", "spaces", "walls"}, "area": {"openings", "spaces", "walls"}, "volume": {"spaces", "walls"},
+    "number": {"openings", "spaces"}, "type": {"openings", "columns", "walls", "beams", "coverings"},
+    "width": {"openings", "columns", "beams"},
+    "height": {"openings", "spaces", "walls", "beams"}, "area": {"openings", "spaces", "walls", "coverings"},
+    "volume": {"spaces", "walls", "beams", "coverings"},
     "form": {"openings"}, "sill": {"openings"}, "head": {"openings"}, "wall": {"openings"},
-    "name": {"spaces"}, "usage": {"spaces"}, "perimeter": {"spaces"}, "tag": {"columns"}, "place": {"columns"},
-    "length": {"walls"}, "thickness": {"walls"},
+    "name": {"spaces"}, "usage": {"spaces"}, "perimeter": {"spaces"}, "tag": {"columns", "beams"}, "place": {"columns"},
+    "length": {"walls", "beams"}, "thickness": {"walls", "coverings"},
 }
+
+
+def edits_in(field, of):
+    """ScheduleField::edits_in: a beam's number and attributes alone, a covering's attributes alone (ADR 8070 §11)."""
+    if of == "beams":
+        return field in ("tag", "attr")
+    if of == "coverings":
+        return field == "attr"
+    return field in EDITABLE
 
 
 def heading(c):
@@ -1319,7 +1354,8 @@ def schedule_rows(d, src):
     for i, (k, _, f, _) in sorted(d.objs.items()):
         # A curtain wall is joinery too: a row of the doors and windows' schedule (ADR 8070 §9).
         curtain = of == "openings" and k == "wall" and bool(f.get("curtain"))
-        if (k != KIND[of] and not curtain) or not takes(d, i, src.get("filter")):
+        # A coverings' schedule lists the slabs that are one (ADR 8070 §11).
+        if (k != KIND[of] and not curtain) or (of == "coverings" and not f.get("covering")) or not takes(d, i, src.get("filter")):
             continue
         read = curtain_value if curtain else value
         vals = [read(d, i, c["field"], c.get("attr")) for c in columns]
@@ -1365,7 +1401,7 @@ def schedule_rows(d, src):
     n = len(rows)
     cells = [[heading(c) for c in columns]] + [r["texts"] for r in rows]
     styles = [{"row": 1, "col": j, "rows": n, "cols": 1, "color": GREY}
-              for j, c in enumerate(columns) if c["field"] not in EDITABLE and n > 0]
+              for j, c in enumerate(columns) if not edits_in(c["field"], src["of"]) and n > 0]
     if src.get("total"):
         sums = [None] * len(columns)
         for r in rows:
@@ -1552,7 +1588,56 @@ def screate_cases():
     d = Drawing()
     post = drawn(d, "column", "kolon", "cad.columns.create", "columns", POST)
     c.add("kolon çizelgesinde dikmenin türü Dikme", [post, screate_step(d, "execute", {"layerId": "cizelge", "at": P(0, -30), "of": "columns"})])
+    # Kiriş çizelgesi and Kaplama çizelgesi (ADR 8070 §11).
+    beams = {"layerId": "cizelge", "at": P(0, -50), "of": "beams"}
+    coverings = {"layerId": "cizelge", "at": P(0, -60), "of": "coverings"}
+    for name, inp in [
+        ("kiriş çizelgesi: kiriş, lento ve kayıt; türü kaydın adı", beams),
+        ("kiriş çizelgesi türe göre gruplanır, boyları toplanır", {**beams, "columns": [{"field": "type"}, {"field": "width"},
+                                                                                     {"field": "count"}, {"field": "length"}],
+                                                                  "group": True, "total": True}),
+        ("kiriş çizelgesinde hacim", {**beams, "columns": [{"field": "tag"}, {"field": "volume"}], "total": True}),
+        ("kaplama çizelgesi: yalnız kaplamalar, döşeme değil", coverings),
+        ("kaplama çizelgesi türe göre gruplanır, alanları toplanır", {**coverings, "columns": [{"field": "type"}, {"field": "count"},
+                                                                                             {"field": "area"}],
+                                                                     "group": True, "total": True}),
+        ("kaplama çizelgesinde hacim ve kat süzgeci", {**coverings, "columns": [{"field": "type"}, {"field": "volume"}],
+                                                      "filter": {"levels": ["zemin"]}}),
+    ]:
+        d = Drawing()
+        steps = elements(d)
+        c.add(name, steps + [screate_step(d, "execute", inp)])
+    for name, inp in [
+        ("kiriş çizelgesinde konum okunmaz", {**beams, "columns": [{"field": "place"}]}),
+        ("kaplama çizelgesinde genişlik okunmaz", {**coverings, "columns": [{"field": "width"}]}),
+    ]:
+        c.add(name, [screate_step(Drawing(), "execute", inp)])
     return c.cases
+
+
+# A beam, a lintel and a rail, a slab and two coverings (ADR 8070 §11), written after the prelude by their commands.
+BEAMS = [
+    {"pts": [P(0, 30), P(6, 30)], "width": 0.25, "height": 0.5, "tag": "K101", "arch": {"level": "zemin"}},
+    {"pts": [P(0, 32), P(2, 32)], "width": 0.2, "height": 0.2, "role": "lintel", "baseOffset": 2.1, "tag": "L101"},
+    {"pts": [P(0, 34), P(4, 34)], "width": 0.05, "height": 0.1, "baseOffset": 1.0,
+     "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}},
+]
+SLABS = [
+    {"parts": rect(30, 30, 34, 33), "thickness": 0.15},
+    {"parts": rect(30, 30, 34, 33), "thickness": 0.0125, "offset": 2.6, "arch": {"level": "zemin"},
+     "covering": {"predefined": "CEILING", "name": "Asma tavan"}},
+    {"parts": rect(36, 30, 38, 32), "thickness": 0.02, "offset": 0.02, "covering": {"predefined": "FLOORING"}},
+]
+
+
+def elements(d):
+    """The steps writing BEAMS and SLABS, the reference drawing's copies of them."""
+    steps = []
+    for f in BEAMS:
+        steps.append(drawn(d, "beam", "kolon", "cad.beams.create", "beams", f))
+    for f in SLABS:
+        steps.append(drawn(d, "slab", "mahal", "cad.slabs.create", "slabs", f))
+    return steps
 
 # ── Çizelgeyi düzenle ──────────────────────────────────────────────────────────────────────────────────────────
 
@@ -1592,7 +1677,9 @@ def written(d, i, field, attr, v):
             at[attr] = t
         return (f, at), None
     pairs = {("opening", "number"): "number", ("space", "number"): "number", ("space", "name"): "name",
-             ("space", "usage"): "usage", ("column", "tag"): "tag", ("column", "type"): "type"}
+             ("space", "usage"): "usage", ("column", "tag"): "tag", ("column", "type"): "type",
+             # A beam's number (ADR 8070 §11).
+             ("beam", "tag"): "tag"}
     if (k, field) in pairs:
         put(pairs[(k, field)], t)
         return (f, at), None
@@ -1644,7 +1731,7 @@ def sedit(d, table, inp, conflict=False):
         if col >= len(src["columns"]):
             return refusal("cell_out_of_range", f"Çizelgenin {len(src['columns'])} sütunu var; {col + 1}. sütun yok.", "operation.column"), None, None
         c = src["columns"][col]
-        if c["field"] not in EDITABLE or (c["field"] == "type" and src["of"] == "walls"):
+        if not edits_in(c["field"], src["of"]) or (c["field"] == "type" and src["of"] == "walls"):
             return refusal("cell_computed", f"“{heading(c)}” sütunu çizimden hesaplanır; düzenlenmez. Kaynağın kendi alanını değiştirin.", "operation.column"), None, None
         row = members[r - 1]
         if c["field"] == "number" and len(row) > 1:
@@ -1726,6 +1813,13 @@ def sedit_cell_step(d, op, made, row, column, value):
 def sedit_cases():
     c = Cases()
     cell = lambda i, row, col, v: {"uid": uid_of(i), "operation": {"kind": "cell", "row": row, "column": col, "value": v}}
+    # A beam's number is written from its schedule, its type is worked out (ADR 8070 §11).
+    for name, col, v in [("kiriş çizelgesinde kirişin numarası yazılır", 0, "K201"),
+                         ("kiriş çizelgesinde tür yazılmaz", 1, "Lento")]:
+        d = Drawing()
+        steps = elements(d)
+        made, i = created(d, {"layerId": "cizelge", "at": P(0, -50), "of": "beams"})
+        c.add(name, steps + [made, sedit_step(d, "execute", cell(i, 1, col, v))])
     # A curtain wall's row is read only (ADR 8070 §9): none of its cells is an opening's field.
     for name, col, v in [("giydirme cephe satırının genişliği yazılmaz", 3, "5"),
                          ("giydirme cephe satırının numarası yazılmaz", 0, "GC1")]:

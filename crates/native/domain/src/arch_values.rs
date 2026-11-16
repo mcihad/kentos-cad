@@ -400,6 +400,41 @@ impl Document {
                     _ => None,
                 }
             }
+            // A beam's (docs/adr/8070 §11): its number; its type a rail's member's words, else its role; its sizes,
+            // length and volume.
+            Entity::Beam(b) => {
+                let x = &b.beam;
+                match place {
+                    "tag" => text(&x.tag),
+                    "type" => Some(Text(
+                        x.member.as_ref().map_or_else(|| x.role.label().to_owned(), kentos_contracts::Member::words),
+                    )),
+                    "width" => Some(Length(x.width)),
+                    "height" => Some(Length(x.height)),
+                    "length" => Some(Length(x.length())),
+                    "volume" => Some(Volume(x.width * x.height * x.length())),
+                    "level" => self.level_name(&x.arch).map(Text),
+                    "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
+                    _ => None,
+                }
+            }
+            // A slab's (docs/adr/8070 §11): its type a covering's words, else its role; its thickness and area.
+            Entity::Slab(sl) => {
+                let x = &sl.slab;
+                match place {
+                    "type" => Some(Text(
+                        x.covering.as_ref().map_or_else(|| x.role.label().to_owned(), kentos_contracts::Covering::words),
+                    )),
+                    "thickness" => Some(Length(x.thickness)),
+                    "area" => Some(Area(kentos_geometry_core::geom::space::area(&core_areas(&x.parts)))),
+                    "volume" => {
+                        Some(Volume(kentos_geometry_core::geom::space::area(&core_areas(&x.parts)) * x.thickness))
+                    }
+                    "level" => self.level_name(&x.arch).map(Text),
+                    "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
+                    _ => None,
+                }
+            }
             Entity::Grid(g) => match place {
                 "label" => Some(Text(g.grid.label.clone())),
                 "level" => self.level_name(&g.grid.arch).map(Text),

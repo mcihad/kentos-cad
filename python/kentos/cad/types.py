@@ -7162,6 +7162,8 @@ class ScheduleOf(_StrEnum):
     - ``walls``
     - ``fixtures``: The drawing's block inserts: furniture, sanitary fixtures, kitchen modules (docs/adr/0733 §2).
     - ``units``: The building program's groups (docs/adr/0795): independent units, common and outdoor areas, a row each.
+    - ``beams``: The beams, lintels, bond beams and rails (docs/adr/8070 §11).
+    - ``coverings``: The coverings: the slabs that are one (docs/adr/8070 §11).
     """
     OPENINGS = "openings"
     SPACES = "spaces"
@@ -7169,9 +7171,11 @@ class ScheduleOf(_StrEnum):
     WALLS = "walls"
     FIXTURES = "fixtures"
     UNITS = "units"
+    BEAMS = "beams"
+    COVERINGS = "coverings"
 
 
-ScheduleOfName = Literal["openings", "spaces", "columns", "walls", "fixtures", "units"]
+ScheduleOfName = Literal["openings", "spaces", "columns", "walls", "fixtures", "units", "beams", "coverings"]
 """The names of :class:`ScheduleOf`, for a plain string."""
 
 
