@@ -143,7 +143,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | Z3 | **Emsal alanları modelde nesne değil;** bağımsız bölüm modelde grup olarak durmuyor | EK-9/10 ve EK-6 6.60 mekânsal zon istiyor; yazılmıyor | K | BIM-08 |
 | Z4 | **Paftanın modelden üretildiği kanıtlanamıyor:** plan paftasındaki serbest çizim ayırt edilmiyor; IFC ile PDF/A'nın aynı revizyondan çıktığı kayıtlı değil | EK-9/21 "modele girmeyen nesne yoksa evet" (`quality.rs`); Ruhsat takımı ile `cad.arch.ifc` ayrı komutlar | K | BIM-04, BIM-14 |
 | Z5 | **Eleman sınıfları dar:** giydirme cephe, kaplama ve asma tavan nesnesi, baca, dikme yok; asansör, vitrifiye ve mobilya sınıfsız blok; rampanın gövdesi yok | `Entity` listesi (`contracts/src/core/entity.rs`); `arch.rs` `Why::NotYet`; ADR 8045 | Y | BIM-09 |
-| Z6 | **Geometri her yerde gerçek değil:** ~~eğri duvar düz parçalarla~~ (yay yay olarak, miktarlar kaynaktan: ADR 8071); eğri merdiven düz parçalarla; mahalin hacmi düz prizma; açıklık gövdeden kesilmiyor; içe dönen saçak ve çatı katmanları yok | ADR 8047 §6; `arch.rs` (mahal `bottom + height`); ADR 8044 "sonraya" | Y | BIM-10 |
+| Z6 | **Geometri her yerde gerçek değil:** ~~eğri duvar düz parçalarla~~ (yay yay olarak, miktarlar kaynaktan: ADR 8071); eğri merdiven düz parçalarla; ~~mahalin hacmi düz prizma~~ (tabanından tavanına: ADR 8071 §7; çatı altı kalan); ~~açıklık gövdeden kesilmiyor~~ (Reference View: ADR 8071 §4); içe dönen saçak ve çatı katmanları yok | ADR 8047 §6; `arch.rs` (mahal `bottom + height`); ADR 8044 "sonraya" | Y | BIM-10 |
 | Z7 | **Tek bina:** program bina ve kanat tanıyor; model, künye ve dışa aktarma tek binalı; ortak bodrum yok | `building.rs` tek saha, tek bina; `program.rs` | Y | BIM-11 |
 | Z8 | **2B kuralların denetimi yarım:** EK-4 katmanı ve çizgi tipi, EK-3 numara biçimi ve mahal adı sözlüğü denetlenmiyor | ADR 8047 §9 "yalnız varlığı"; M9 "profil ve blok katmanı kaldı" | Y | BIM-03 |
 | Z9 | **Mevzuat denetimi yarım:** başvuru tarihine göre kural seti, plan notu katmanı, yangın dayanımları, erişilebilirlik, emsalin 22. madde sınırları | ADV-22 ve ADV-23 "Kalanlar" | Y | BIM-13 |
@@ -498,8 +498,9 @@ geometrisiyle hacimler 5,8·10⁻⁷ içinde. Açıklığı kesilmiş gövde (AD
 IFC'nin Reference View çıktısını verir (Dosya › Dışa aktar › IFC dışa aktar (bina, kesilmiş gövde)…; `cad.arch.ifc`
 `view: reference`). Döşemede boşluk ve şaft (ADR 8071 §5): boşluk mahali kendi katının döşemesini keser; IFC'de döşemenin
 deliği ve boşluğun parçası döşemenin açıklığı. Eğimli döşeme (§6): eğim oku, Öznitelikler'de Eğim ve Eğim yönü; kesit,
-3B, IFC (PitchAngle) ve metraj eğimi okur, altındaki duvar ona göre biter. **Kalan:** çatının katmanları ve içe dönen
-saçak, döner merdivenin yayı, mahalin kapalı hacmi.
+3B, IFC (PitchAngle) ve metraj eğimi okur, altındaki duvar ona göre biter. Kapalı mahal hacmi (§7): IFC mahali bitmiş
+tabanından tavanına, yükseklik ve hacimleriyle. **Kalan:** çatının katmanları ve içe dönen saçak, döner merdivenin yayı,
+çatıyla kesilmiş mahal hacmi.
 
 **Kullanıcı sonucu:** Kesit, görünüş, 3B ve dışa aktarılan model aynı gövdeyi gösterir ve o gövde çizilen yapıyla aynıdır:
 eğri duvar eğridir, açıklık duvardan kesilmiştir, döşemenin boşluğu boştur. Dayanak Md. 14; EK-8; EK-9/14; Z6.

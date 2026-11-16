@@ -71,6 +71,20 @@ pub struct Input<'a> {
     /// A room's floor and ceiling covering thicknesses as the vertical model holds them (docs/adr/8070 §6), by its
     /// persistent id; a room not here, or a side none, has none.
     pub coverings: BTreeMap<String, (Option<f64>, Option<f64>)>,
+    /// A room's floor and ceiling as the vertical model finds them (docs/adr/8040 §3, 8071 §7), by its persistent id;
+    /// a room not here stands on its own offset up its own height or its storey's.
+    pub rooms: BTreeMap<String, RoomLevels>,
+}
+
+/// A room's floor and ceiling, metres over ±0.00 (docs/adr/8040 §3): its finished floor; its ceiling (its asma tavan,
+/// its height typed, the plastered underside of the slab over it, else its storey's top) and whether it is one (not
+/// its storey's top alone) and an asma tavan.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RoomLevels {
+    pub floor: f64,
+    pub ceiling: f64,
+    pub known: bool,
+    pub suspended: bool,
 }
 
 /// A void's part over a floor slab (docs/adr/8071 §5): the slab's persistent id, the void's (a space, docs/adr/0708),
@@ -755,6 +769,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         groups,
         fixtures,
         coverings,
+        rooms,
     } = input;
     let mut written = Written::default();
     // The storeys, by their level id; a drawing without levels has one, Zemin kat at ±0.00.
@@ -1515,8 +1530,15 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             });
             continue;
         }
-        let bottom = f.floor_offset.unwrap_or(0.0);
-        let top = bottom + f.height.or(levels[storey].3).unwrap_or(2.8);
+        // From its finished floor to its ceiling (docs/adr/8071 §7): a volume closed by what bounds it.
+        let found = rooms.get(uid.as_str()).filter(|r| r.ceiling > r.floor);
+        let (bottom, top) = match found {
+            Some(r) => (r.floor - levels[storey].2, r.ceiling - levels[storey].2),
+            None => {
+                let bottom = f.floor_offset.unwrap_or(0.0);
+                (bottom, bottom + f.height.or(levels[storey].3).unwrap_or(2.8))
+            }
+        };
         let blank = |v: &Option<String>| v.as_deref().is_none_or(|t| t.trim().is_empty());
         if blank(&f.number) || blank(&f.name) {
             written.unnamed.push(uid.clone());
@@ -1557,14 +1579,37 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         if let Some(a) = net {
             *net_floor[storey].get_or_insert(0.0) += a;
         }
-        let qtos = net
+        // Its quantities from its contour with its arcs and its floor and ceiling (docs/adr/8071 §7; EK-6 Tablo 6.125's
+        // optional rows): its height where its ceiling is known, its asma tavan's height where it has one, its gross
+        // area and perimeter (its outer rings), its volumes by its height.
+        let mut q: Vec<(String, Value)> = Vec::new();
+        if let Some(a) = net {
+            q.push(("NetFloorArea".into(), Value::Area(a)));
+        }
+        let height = top - bottom;
+        if let Some(r) = found.filter(|r| r.known) {
+            q.push(("Height".into(), Value::Length(height)));
+            if r.suspended {
+                q.push(("FinishCeilingHeight".into(), Value::Length(height)));
+            }
+        }
+        let gross = crate::quantities::area(&rings, &bulges);
+        let perimeter: f64 = crate::quantities::areas(&rings, &bulges)
+            .iter()
             .map(|a| {
-                vec![Qto {
-                    name: "Qto_SpaceBaseQuantities".into(),
-                    quantities: vec![("NetFloorArea".into(), Value::Area(a))],
-                }]
+                let pts: Vec<[f64; 2]> = a.outer.pts.iter().map(|p| [p.x, p.y]).collect();
+                crate::quantities::path_length(&pts, &a.outer.bulges.clone().unwrap_or_default(), true)
             })
-            .unwrap_or_default();
+            .sum();
+        q.push(("GrossFloorArea".into(), Value::Area(gross)));
+        q.push(("GrossPerimeter".into(), Value::Length(perimeter)));
+        if found.is_some_and(|r| r.known) {
+            q.push(("GrossVolume".into(), Value::Volume(gross * height)));
+            if let Some(a) = net {
+                q.push(("NetVolume".into(), Value::Volume(a * height)));
+            }
+        }
+        let qtos = vec![Qto { name: "Qto_SpaceBaseQuantities".into(), quantities: q }];
         spaces.push(Space {
             id: Some(*bits),
             name: name("MHL", if words.is_empty() { "Mahal" } else { &words }),

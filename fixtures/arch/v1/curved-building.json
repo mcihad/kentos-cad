@@ -70,10 +70,20 @@
  },
  "spaces": {
   "0192f5a1-8071-7000-8000-000000000008": {
-   "NetFloorArea": 68.87695104772286
+   "GrossFloorArea": 68.87695104772286,
+   "GrossPerimeter": 31.948989185773883,
+   "GrossVolume": 220.40624335271315,
+   "Height": 3.2,
+   "NetFloorArea": 68.87695104772286,
+   "NetVolume": 220.40624335271315
   },
   "0192f5a1-8071-7000-8000-000000000010": {
-   "NetFloorArea": 68.87695104772286
+   "GrossFloorArea": 68.87695104772286,
+   "GrossPerimeter": 31.948989185773883,
+   "GrossVolume": 199.74315803839627,
+   "Height": 2.9,
+   "NetFloorArea": 68.87695104772286,
+   "NetVolume": 199.74315803839627
   }
  },
  "walls": {

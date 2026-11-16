@@ -790,13 +790,16 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
         let (bottom, top) = (want[0].as_f64().unwrap(), want[1].as_f64().unwrap());
         assert!(near(low, bottom) && near(high, top), "{}: {low} → {high}, not {bottom} → {top}", e.name);
     }
-    // The rooms' floor areas, the inner faces' arc measured as an arc.
+    // The rooms' quantities (docs/adr/8071 §7), the inner faces' arc measured as an arc, from floor to ceiling.
     for (u, want) in expected["spaces"].as_object().unwrap() {
         let id = kentos_domain::Uuid::parse_str(u).unwrap().as_u128();
         let s = b.spaces.iter().find(|s| s.id == Some(id)).expect("the room written");
-        let got = s.qtos.iter().flat_map(|q| &q.quantities).find(|(n, _)| n == "NetFloorArea").map(|(_, v)| number(v));
-        let v = want["NetFloorArea"].as_f64().unwrap();
-        assert!(got.is_some_and(|g| near(g, v)), "{}: {got:?}, the closed form {v}", s.name);
+        for (k, v) in want.as_object().unwrap() {
+            let got = s.qtos.iter().flat_map(|q| &q.quantities).find(|(n, _)| n == k).map(|(_, v)| number(v));
+            let v = v.as_f64().unwrap();
+            assert!(got.is_some_and(|g| near(g, v)), "{} {k}: {got:?}, the closed form {v}", s.name);
+        }
+        assert!(near(s.top - s.bottom, want["Height"].as_f64().unwrap()), "{}: {} → {}", s.name, s.bottom, s.top);
         assert!(s.bulges.iter().any(|r| r.iter().any(|x| *x != 0.0)), "{}: its arc written as an arc", s.name);
     }
     // Every body closed; the curved walls' and the slabs' with their arcs, the curved walls' windows too.
@@ -1002,5 +1005,57 @@ fn a_sloped_slab_is_a_sloped_plate_of_its_closed_forms() {
     if std::env::var_os("KENTOS_WRITE_IFC_SLOPED").is_some() {
         let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/egimli-doseme.ifc");
         std::fs::write(out, kentos_ifc::building::write(&b)).expect("the file kept");
+    }
+}
+
+/// Kapalı mahal hacmi (docs/adr/8071 §7): a ground room of the section building stands from its floor (the ground slab's
+/// finished top, ±0.00) to the 1. kat slab's plastered underside: 3.00 less its finish and screed (0.07), its structure
+/// (0.15) and its plaster (0.02), 2.76 m. Its quantities say so: Height 2.76, its volumes its areas by it. An asma tavan
+/// at 2.60 brings its ceiling down: Height and FinishCeilingHeight 2.60.
+#[test]
+fn a_room_is_closed_from_its_floor_to_its_ceiling() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let room = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::Space(s) if s.space.arch.level.as_deref() == Some("zemin") && !s.space.void => Some(u),
+            _ => None,
+        })
+        .expect("a ground room");
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let quantity = |b: &kentos_ifc::building::Building, n: &str| -> Option<f64> {
+        let s = b.spaces.iter().find(|s| s.id == Some(room.as_u128()))?;
+        s.qtos.iter().flat_map(|q| &q.quantities).find(|(k, _)| k == n).map(|(_, v)| match v {
+            Value::Length(x) | Value::Area(x) | Value::Volume(x) => *x,
+            other => panic!("{other:?}"),
+        })
+    };
+    let (b, _) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    let s = b.spaces.iter().find(|s| s.id == Some(room.as_u128())).expect("written");
+    assert!(near(s.bottom, 0.0) && near(s.top, 2.76), "{} → {}", s.bottom, s.top);
+    assert!(near(quantity(&b, "Height").unwrap(), 2.76));
+    assert_eq!(quantity(&b, "FinishCeilingHeight"), None, "no asma tavan");
+    let gross = quantity(&b, "GrossFloorArea").unwrap();
+    assert!(near(quantity(&b, "GrossVolume").unwrap(), gross * 2.76));
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.spaces.edit",
+        CallOp::Execute,
+        serde_json::json!({"uids": [room.to_string()], "operation": {"kind": "set", "suspendedCeiling": 2.6}}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let (b, _) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert!(near(quantity(&b, "Height").unwrap(), 2.6) && near(quantity(&b, "FinishCeilingHeight").unwrap(), 2.6));
+    for s in &b.spaces {
+        let body = kentos_ifc::building::Shape::Prism {
+            rings: s.rings.clone(),
+            bulges: s.bulges.clone(),
+            bottom: s.bottom,
+            top: s.top,
+        };
+        assert_eq!(kentos_ifc::closed::faults(&body), Vec::<String>::new(), "{}", s.name);
     }
 }

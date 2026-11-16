@@ -120,7 +120,8 @@
     - Boşluk mahali (ADR 0708) katının döşemelerini metrajın kuralıyla keser; IFC'de döşemenin gövdesi dış çizgisi,
       çizilmiş delik ve boşluğun parçası döşemenin açıklığı.
     - Eğimli döşeme eğim okuyla (`slope`; kalınlıklar üst yüze dik, en çok %100, delikli olmaz; `.kcad` mimari verisi 7).
-      Kalan: çatı katmanları, içe dönen saçak, döner merdiven, mahal hacmi.
+    - IFC mahali bitmiş tabanından tavanına (ADR 8040 §3'ün modeli); tavanı bilinmiyorsa yükseklik ve hacim yazılmaz.
+      Kalan: çatı katmanları, içe dönen saçak, döner merdiven, çatıyla kesilmiş mahal hacmi.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

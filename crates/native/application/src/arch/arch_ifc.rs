@@ -203,6 +203,24 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
                 _ => None,
             })
             .collect(),
+        // Each room's floor and ceiling (docs/adr/8040 §3, 8071 §7).
+        rooms: doc
+            .entities_with_uids()
+            .filter_map(|(u, e)| match e {
+                kentos_commands::Entity::Space(s) => doc.room_height(&s.space).map(|h| {
+                    (
+                        u.to_string(),
+                        kentos_ifc::arch::RoomLevels {
+                            floor: h.floor,
+                            ceiling: h.ceiling,
+                            known: h.ceiling_known(),
+                            suspended: h.ceiling_from == kentos_domain::CeilingFrom::Suspended,
+                        },
+                    )
+                }),
+                _ => None,
+            })
+            .collect(),
     });
     (b, written, curved)
 }

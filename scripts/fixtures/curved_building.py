@@ -213,7 +213,14 @@ for lv in LEVELS:
     room = {"outer": {"pts": [P(*A_IN), P(*B_IN), P(*C_IN), P(*D_IN)],
                       "bulges": [0.0, 0.0, math.tan(THETA_IN / 4), 0.0]}}
     r = add({"kind": "space", "parts": [room], "number": f"{n}01", "name": "Salon", "arch": {"level": level}})
-    expected["spaces"][r] = {"NetFloorArea": INNER_LOOP}
+    # Its floor the slab's top under it, its ceiling the underside of the slab over it (ADR 8040 §3, 8071 §7): Zemin
+    # 0.00 to 3.20, 1. kat 3.35 to 6.25. Its perimeter its outer ring's, the inner face's arc by its own length.
+    ceiling = {"zemin": 3.35 - SLAB, "k1": 3.35 + ROOF_OFFSET - SLAB}[level]
+    floor = {"zemin": 0.0, "k1": 3.35}[level]
+    rise = ceiling - floor
+    perimeter = (B_IN[0] - A_IN[0]) + 2 * (C_IN[1] - B_IN[1]) + (R - H) * THETA_IN
+    expected["spaces"][r] = {"NetFloorArea": INNER_LOOP, "GrossFloorArea": INNER_LOOP, "GrossPerimeter": perimeter,
+                             "Height": rise, "GrossVolume": INNER_LOOP * rise, "NetVolume": INNER_LOOP * rise}
 
 # Slabs along the outer faces, the north edge the outer face's arc between the mitres.
 outline = {"pts": [P(*A_OUT), P(*B_OUT), P(*C_OUT), P(*D_OUT)], "bulges": [0.0, 0.0, math.tan(THETA_OUT / 4), 0.0]}

@@ -4,7 +4,7 @@
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-06'nın gövde kısmı (§8 "Gövdeler"); uygulama sırasında B10. Bu ADR maddenin
   bütün adımlarını tutar; koddaki "docs/adr/8071 §N" atıfları bölümleri gösterir: §1 gerçek yay, §2 kaynaktan miktar,
   §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06), §5 döşemede boşluk ve şaft, §6 eğimli
-  döşeme. Kararların numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
+  döşeme, §7 kapalı mahal hacmi. Kararların numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
   numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0340](0340-wall-joins-and-edits.md) (duvar birleşimleri), [8040](8040-vertical-model.md) (duvarın
@@ -246,6 +246,34 @@ kapalı, hacim 10⁻⁹, kotlar), `.kcad`'ın `a_sloped_slab_round_trips_under_a
 `a_slab_s_slope_is_typed_in_percent_and_turned_by_its_direction`, ortak durumlar (`cad.slabs.create` 70, `cad.slabs.edit`
 53; eğimli olanlar ve retleri). Resimler: `sloped_slab_screens` (`7-…`, `8-…`).
 
+## §7. Kapalı mahal hacmi
+
+**Araştırma.**
+
+- **EK-9 satır 14:** "Mahaller kapalı olarak ve üst sınırları doğru tanımlandı mı?"; bim-plan Z6: mahalin hacmi kat
+  yüksekliğinde düz prizma (tavanı bilinse de).
+- **EK-6 Tablo 6.125 (isteğe bağlı):** Yükseklik "Karakteristik yükseklik"; Bitmiş Tavan Yüksekliği "döşeme üst kotundan
+  asma tavan alt kotuna kadar. Yalnızca mahalde sabit yükseklikte bir asma tavan varsa"; Brüt Çevre "dış sınırı boyunca
+  … Döşeme seviyesinde"; Brüt ve Net Kat Alanı; Brüt ve Net Hacim.
+- **ADR 8040 §3:** mahalin tabanı (kendi kot farkı, altındaki döşemenin bitmiş üstü, katın tabanı) ve tavanı (asma tavan,
+  yazılan iç yükseklik, üstteki döşemenin sıvalı altı, yoksa katın üstü: yalnız bir sınır) zaten bulunuyor; IFC bunu
+  kullanmıyordu.
+
+**Karar.**
+
+21. **IFC mahali tabanından tavanına** (`kentos_ifc::arch::RoomLevels`, `Document::room_height`): gövde bitmiş tabandan
+    tavana kapalı prizma; tavan bilinmiyorsa (yalnız katın üstü) gövde yine oraya kadar, ama yükseklik ve hacim
+    yazılmaz (değer uydurulmaz).
+22. **Miktarlar** (Qto_SpaceBaseQuantities): NetFloorArea (planın ölçüsü, değişmedi), GrossFloorArea ve GrossPerimeter
+    halkalarından yaylarıyla (çevre dış halkalarınki), tavan biliniyorsa Height (iç yükseklik), GrossVolume ve
+    NetVolume (alanlar × yükseklik); asma tavanlı odada FinishCeilingHeight.
+23. **Sınır:** çatının altındaki oda çatının eğik alt yüzüyle kesilmez (tavanı yoksa katın üstüne kadar): çatıyla kesilmiş
+    mahal hacmi sıradaki adımlarda.
+
+**Sınama.** `arch_ifc::a_room_is_closed_from_its_floor_to_its_ceiling` (kesit binasının zemin odası ±0,00'dan 2,76'ya;
+asma tavanla 2,60; bütün mahal gövdeleri kapalı), eğri binanın odaları kapalı formlarıyla (alan, iç yayın boyuyla çevre,
+3,20 ve 2,90 yükseklik, hacimler; IfcOpenShell da okur).
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-ifc --lib` (42), `-p kentos-geometry-core` (1 117), `-p kentos-interaction wall` (81),
@@ -264,6 +292,7 @@ kapalı, hacim 10⁻⁹, kotlar), `.kcad`'ın `a_sloped_slab_round_trips_under_a
   takımını ister: dosyayı servise yüklemek ya da kural takımını indirmek sahibin onayıyla.
 - **Çatının katmanları ve içe dönen saçak** (ADR 8044'ün kalanı).
 - Eğimli döşemenin planda eğim oku simgesi; delikli eğimli döşeme (kesitin eğik yüz çizimi deliği tutarsa).
+- Çatıyla kesilmiş mahal hacmi; mahalin Net Çevre'si (kapı ve sanal sınırlar düşülmüş) ve duvar ve tavan alanları.
 - **Döner merdiven gerçek yayla:** eğri merdivenin basamakları ve kolu.
 - **Mahalin kapalı hacmi** (EK-9 satır 14, Z6): altındaki ve üstündeki döşemeyle sınırlanan hacim ve miktarları.
 - Kapının açıklığı bitmiş döşemeden (±0,00) başlar, duvar yapısal döşemeden; kapının altında kaplama kalınlığında duvar
