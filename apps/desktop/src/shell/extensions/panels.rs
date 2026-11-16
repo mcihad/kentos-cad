@@ -107,6 +107,9 @@ pub(crate) struct OpenPanel {
     pub(crate) held: bool,
     /// Each table's and card component's page shown (panel_view.rs `pager`); its first when its rows come again.
     pub(crate) pages: BTreeMap<String, usize>,
+    /// Each row component's keyboard cursor (docs/adr/8057 §71): the row ↑ and ↓ reached, from the first of all its
+    /// rows; Enter shows its object. Gone with the rows it was on.
+    pub(crate) cursor: BTreeMap<String, usize>,
     /// Each component's rules compiled (`visibleWhen`, `requiredWhen`, `enabledWhen`; docs/adr/8057 §33), in the
     /// body's order: worked out from the panel's values as they change, no Python.
     pub(crate) rules: Vec<CompiledRules>,
@@ -181,6 +184,9 @@ pub(crate) enum PanelEvent {
     Fold(String),
     /// A table's or a card component's page of rows shown (its id, the page from 0).
     Page(String, usize),
+    /// A row component's keyboard cursor moved to a row (its id, the row from the first of all its rows, and the page
+    /// that holds it, shown).
+    Cursor(String, usize, usize),
     /// A section opened or folded, by its place.
     Section(usize),
     /// A tab's page shown, by its words.
@@ -240,6 +246,7 @@ impl OpenPanel {
             spoke: false,
             held: false,
             pages: BTreeMap::new(),
+            cursor: BTreeMap::new(),
             rules: Vec::new(),
             calc_order: Vec::new(),
             calculated: BTreeMap::new(),
@@ -934,6 +941,7 @@ impl OpenPanel {
             self.tables.insert(table.clone(), (columns, rows.clone()));
             // New rows from their first page.
             self.pages.remove(table);
+            self.cursor.remove(table);
         }
         // Words its code said as it ran stay when its answer says none of its own (panel_session.rs).
         match result.get("message").and_then(Value::as_str) {
@@ -1338,6 +1346,10 @@ impl App {
             PanelEvent::Press(button) => return self.ext_panel_press(at, &button),
             PanelEvent::Page(id, page) => {
                 panel.pages.insert(id, page);
+            }
+            PanelEvent::Cursor(id, row, page) => {
+                panel.pages.insert(id.clone(), page);
+                panel.cursor.insert(id, row);
             }
             PanelEvent::Section(at) => panel.toggle_section(at),
             PanelEvent::Tab(name) => panel.show_tab(&name),

@@ -246,7 +246,7 @@ fn the_keyboard_column_is_the_drawn_panels() {
         let (reached, typed) = (added.0 > 0, added.1 > 0);
         let measured = match keys {
             Keys::Type => reached && typed,
-            Keys::Choose | Keys::Toggle | Keys::Press => reached && !typed,
+            Keys::Choose | Keys::Toggle | Keys::Press | Keys::Rows => reached && !typed,
             Keys::Pointer | Keys::Shown => added == (0, 0),
         };
         assert!(
@@ -323,4 +323,53 @@ fn panel(sample: Value) -> OpenPanel {
         "deneme",
         ui_panel::read(&value).expect("a panel"),
     )
+}
+
+/// The rows' cursor (docs/adr/8057 §71): the first ↓ takes the first row, the first ↑ the last, a step at a time to
+/// the ends; the cursor's event shows its page; new rows from a command let it go.
+#[test]
+fn the_rows_cursor_steps_shows_its_page_and_goes_with_the_rows() {
+    use super::super::panel_view::next_row;
+    use super::super::panels::{PanelEvent, PanelOrigin};
+    assert_eq!(next_row(None, 1, 5), Some(0));
+    assert_eq!(next_row(None, -1, 5), Some(4));
+    assert_eq!(next_row(Some(2), -1, 5), Some(1));
+    assert_eq!(next_row(Some(4), 1, 5), None, "the last row stays");
+    assert_eq!(next_row(None, 1, 0), None, "no rows, no cursor");
+    let mut app = app();
+    let body = vec![
+        json!({ "type": "button", "id": "ara", "label": "Ara", "command": "ara", "table": "liste" }),
+        json!({ "type": "table", "id": "liste" }),
+    ];
+    let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Liste",
+        "body": body });
+    let mut p = OpenPanel::new(
+        "tr.ornek.deneme",
+        "liste",
+        ui_panel::read(&value).expect("a panel"),
+    );
+    let rows: Vec<Value> = (0..450).map(|i| json!({ "no": i, "uid": BINA })).collect();
+    p.tables.insert("liste".into(), (vec!["no".into()], rows));
+    app.extensions.panels.clear();
+    app.extensions.panels.push(p);
+    app.extensions.active_panel = 0;
+    let _ = app.ext_panel_event(PanelEvent::Cursor("liste".into(), 250, 1));
+    let p = &app.extensions.panels[0];
+    assert_eq!((p.cursor["liste"], p.pages["liste"]), (250, 1));
+    let _ = app.extension_panel_view();
+    app.extensions.panels[0].running = Some("ara".into());
+    let origin = PanelOrigin {
+        ext: "tr.ornek.deneme".into(),
+        panel: "liste".into(),
+        button: "ara".into(),
+        table: Some("liste".into()),
+    };
+    app.ext_panel_answer(
+        &origin,
+        Ok(json!({ "rows": [{ "no": 1 }], "columns": ["no"] })),
+    );
+    assert!(
+        !app.extensions.panels[0].cursor.contains_key("liste"),
+        "new rows, no cursor"
+    );
 }

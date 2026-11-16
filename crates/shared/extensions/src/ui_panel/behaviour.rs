@@ -50,6 +50,9 @@ pub enum Keys {
     Toggle,
     /// Tab reaches its buttons; Space or Enter presses the one focused.
     Press,
+    /// Tab reaches its rows as one stop; ↑ and ↓ move its cursor, the page following; Enter or Space shows the cursor
+    /// row's object.
+    Rows,
     /// Only the mouse uses it: Tab passes it by.
     Pointer,
     /// Nothing to use: it is shown.
@@ -302,9 +305,15 @@ pub const TABLE: [Behaviour; 28] = [
         note: Some("Birincil düğmeye, metin, sayı, tarih ve saat alanında Enter da basar."),
         ..shown("button", Some("label"))
     },
-    rows("table"),
+    Behaviour {
+        keys: Keys::Rows,
+        ..rows("table")
+    },
     rows("tree"),
-    rows("card"),
+    Behaviour {
+        keys: Keys::Rows,
+        ..rows("card")
+    },
     rows("stats"),
     Behaviour {
         keys: Keys::Shown,
@@ -316,7 +325,7 @@ pub const TABLE: [Behaviour; 28] = [
         ..shown("image", Some("label"))
     },
     Behaviour {
-        keys: Keys::Pointer,
+        keys: Keys::Rows,
         note: Some("Çizimden okunur, Python'suz; satıra tıklamak kaydı gösterir."),
         ..shown("relationList", Some("label"))
     },

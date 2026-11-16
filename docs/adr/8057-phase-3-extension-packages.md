@@ -3993,7 +3993,7 @@ aldığı yalnız ret iletilerinden öğreniliyordu.
 | `events` | eklentinin kodunu başlatan: `onChange` (kullanıcı değiştirdi), `command` (basıldı) | 14 tür `onChange`, düğme `command` |
 | `sets` | `ctx.panel.set`'in değiştirdikleri (`visible` her bileşende) | `value` 16, `options` 2, `text` 1, `image` 1, `enabled` 8 |
 | `rows`, `focus` | `ctx.panel.rows` doldurur; `ctx.panel.focus` imleci koyar | 5 ve 7 tür |
-| `keys` | klavye: `type` (Tab ulaşır, yazılır, Enter birincil düğme), `choose` (Tab; Boşluk/Enter/F4 açar, ↑↓ adımlar), `toggle` (Tab; Boşluk/Enter çevirir), `press` (Tab düğmelerine; Boşluk/Enter basar), `pointer` (yalnız fare), `shown` (yalnız gösterilir) | 7 · 5 · 3 · 4 · 5 · 4 |
+| `keys` | klavye: `type` (Tab ulaşır, yazılır, Enter birincil düğme), `choose` (Tab; Boşluk/Enter/F4 açar, ↑↓ adımlar), `toggle` (Tab; Boşluk/Enter çevirir), `press` (Tab düğmelerine; Boşluk/Enter basar), `rows` (Tab satırlara tek durakla; ↑↓ imleç, Enter nesneyi gösterir), `pointer` (yalnız fare), `shown` (yalnız gösterilir) | 7 · 5 · 3 · 4 · 3 · 2 · 4 |
 | `namedBy`, `note` | adını veren özellik (`label`, metinde `text`); KentOS'un ayrıca yaptığı (uid'li satıra tıklamak nesneyi gösterir…) | |
 
 - **Tek kaynak:** panel oturumu `set`, `rows` ve `focus`'u tablodan reddeder; ret iletisi alanları tablodan sayar
@@ -4017,8 +4017,12 @@ aldığı yalnız ret iletilerinden öğreniliyordu.
   - **İşi süren düğme odağı tutar** (`KeyFocus::hold`): gerçek pencerede Boşluk'la basılan Özetle, komutu sürerken
     devre dışı kalınca odağı bırakıyordu ve sonraki Tab pencerenin başından başlıyordu (bölüm başlığına ulaşılamadı).
     Kit testi: tutulan öğeden Tab sonrakine, tutmayandan pencerenin ilkine (`a_held_item_keeps_the_keyboard_while_disabled`).
-  - Yalnız satırlar (`table`, `tree`, `card`, `stats`, `relationList`) fareyle: uid'li satır nesneyi gösterir; 500
-    satırı Tab turuna katmak turu kullanılmaz kılar, ok tuşlarıyla tablo içi gezinme ayrı iş.
+  - **Satırlar** (aynı gün): `table`, `card` ve `relationList` Tab'ın turunda **tek durak** (`panel_view::keyed_rows`,
+    kitin `key_focus`'u); ↑ ve ↓ satır imlecini taşır (ilk ↓ ilk satırı, ilk ↑ sonuncuyu alır, uçlarda durur), imlecin
+    sayfası gösterilir, Enter ya da Boşluk imleçteki satırın nesnesini gösterir. Satırı ayrı durak yapmak Tab'ı 500 satırda
+    yürütürdü. İmleç seçili satır vurgusuyla çizilir, komutun yeni satırlarıyla düşer. Gerçek pencerede: Yapı ara'da Ara,
+    yedi Tab'la tablo (panel kaydı), ↓↓ ikinci yapı (150 m²), Enter haritayı ona götürüp seçti. `tree` ve `stats` fareyle
+    kaldı (ağaçta grup satırları, göstergede tek sıra kart).
   - Gerçek pencere (Vitrin, Yapı ara ve Parsel kartı): Yapı no'dan Tab → Katman → onay → Ara → Yapıları numarala →
     Özetle; Boşluk Özetle'yi çalıştırdı ("5 yapının özeti"), odak düğmede kaldı; Tab İpuçları başlığına, Boşluk açtı;
     Shift+Tab geri. Shift+Tab Kart tarihi'nden Seçimi al'a; Tab çiplerde, Boşluk çipi kaldırdı, komut sürerken basılan

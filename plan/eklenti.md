@@ -1237,7 +1237,8 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   erişilebilirlik şeması (16 Kasım, §71): bileşen başına davranış tablosu (değer ve örneği, `onChange`/`command`,
   `ctx.panel.set/rows/focus`'un aldıkları, klavye, ad); panel oturumu ondan reddeder, klavye sütunu çizilen panelde
   ölçülür; Tab 13 türden 19'a çıktı (düğmeler, çipler, bölüm başlığı, Seçimi al, Haritada çiz, ek düğmeleri; işi süren
-  düğme odağı tutar). Kalan: satırlarda klavye (tablo içi ok tuşları).* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
+  düğme odağı tutar; satırlar tek durak, ↑↓ imleç, Enter nesneyi gösterir: tablo, kart, ilişki listesi). Kalan: ağaç ve
+  göstergede klavye.* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
   şemasına eşlenir: düzen (yığın/satır/ızgara, sekme, grup, akordeon, kaydırma, bölücü, adımlayıcı), basit girdi
   (metin, sayı, tarih/saat, mantıksal, seçim, çoklu seçim), CBS girdisi (katman/nesne/alan seçici, koordinat/harita
   seçimi, CRS/birim, ilişki başvurusu), kaynak ve çıktı (dosya/eser seçici, ek, görsel önizleme, çıktı hedefi), veri

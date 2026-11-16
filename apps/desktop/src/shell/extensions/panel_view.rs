@@ -969,17 +969,20 @@ pub(super) fn rows_table<'a>(
         Table::new(shown.iter().map(|c| Col::new((*c).clone()).width(Fill))).empty("Satır yok.");
     let (start, end, page) =
         page_range(rows.len(), PAGE_ROWS, p.pages.get(id).copied().unwrap_or(0));
-    for row in &rows[start..end] {
+    let cursor = p.cursor.get(id).copied().filter(|&c| c < rows.len());
+    for (at, row) in rows.iter().enumerate().take(end).skip(start) {
         let mut line = Row::new(
             shown
                 .iter()
                 .map(|c| label::caption(cell_words(row.get(c.as_str()))).into()),
-        );
+        )
+        .selected(cursor == Some(at));
         if let Some(uid) = row.get("uid").and_then(Value::as_str) {
             line = line.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
         }
         table = table.push(line);
     }
+    let table = keyed_rows(table.into(), id, rows, cursor, PAGE_ROWS);
     let mut out = column![
         label::caption(words.unwrap_or("Sonuçlar").to_owned()),
         table
@@ -989,6 +992,46 @@ pub(super) fn rows_table<'a>(
         out = out.push(pager(id, page, start, end, rows.len()));
     }
     out.into()
+}
+
+/// Rows the keyboard walks (docs/adr/8057 §71): the list one stop of Tab's round; ↑ and ↓ move its cursor (the first
+/// ↓ takes the first row, the first ↑ the last), the page follows it; Enter or Space shows the cursor's object when its
+/// row has a `uid`. A row a stop each would make Tab walk hundreds of them.
+pub(super) fn keyed_rows<'a>(
+    list: Element<'a, Message>,
+    id: &str,
+    rows: &[Value],
+    cursor: Option<usize>,
+    per_page: usize,
+) -> Element<'a, Message> {
+    let count = rows.len();
+    let id = id.to_owned();
+    let show = cursor
+        .and_then(|c| rows.get(c)?.get("uid")?.as_str().map(str::to_owned))
+        .map(|uid| msg(Event::Panel(PanelEvent::Show(uid))));
+    kentos_ui::widget::key_focus(list)
+        .on_activate_maybe(show)
+        .on_step(move |by| {
+            let next = next_row(cursor, by, count)?;
+            Some(msg(Event::Panel(PanelEvent::Cursor(
+                id.clone(),
+                next,
+                next / per_page.max(1),
+            ))))
+        })
+        .into()
+}
+
+/// The row an arrow takes a cursor to among `count` rows: the first ↓ the first row, the first ↑ the last, then a step
+/// at a time, stopping at the ends; none when it does not move.
+pub(super) fn next_row(cursor: Option<usize>, by: i32, count: usize) -> Option<usize> {
+    let last = count.checked_sub(1)?;
+    let next = match cursor {
+        None if by > 0 => 0,
+        None => last,
+        Some(c) => (c as i64 + i64::from(by)).clamp(0, last as i64) as usize,
+    };
+    (cursor != Some(next)).then_some(next)
 }
 
 /// A cell's words.
@@ -1174,13 +1217,14 @@ fn panel_cards<'a>(
         .filter(|c| Some(*c) != head && Some(*c) != tag)
         .collect();
     let size = typography::caption();
-    let mut out = column![heading].spacing(6);
+    let mut cards = column![].spacing(6);
     let (start, end, page) = page_range(
         rows.len(),
         SHOWN_CARDS,
         p.pages.get(id).copied().unwrap_or(0),
     );
-    for row in &rows[start..end] {
+    let cursor = p.cursor.get(id).copied().filter(|&c| c < rows.len());
+    for (at, row) in rows.iter().enumerate().take(end).skip(start) {
         let name = head.map_or_else(|| "—".to_owned(), |c| cell_words(row.get(c)));
         // As wide as the panel, every card the same.
         let mut card = InfoCard::new(label::strong(name).wrapping(Wrapping::WordOrGlyph))
@@ -1214,17 +1258,22 @@ fn panel_cards<'a>(
             );
         }
         let inside = container(card).padding([8, 10]).width(Fill);
-        out = out.push(match row.get("uid").and_then(Value::as_str) {
+        cards = cards.push(match row.get("uid").and_then(Value::as_str) {
             Some(uid) => Element::from(
                 button(inside)
                     .on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))))
                     .padding(0)
                     .width(Fill)
-                    .style(style::button::card(false)),
+                    .style(style::button::card(cursor == Some(at))),
             ),
             None => inside.style(style::container::bordered).into(),
         });
     }
+    let mut out = column![
+        heading,
+        keyed_rows(cards.into(), id, rows, cursor, SHOWN_CARDS)
+    ]
+    .spacing(6);
     if rows.len() > SHOWN_CARDS {
         out = out.push(pager(id, page, start, end, rows.len()));
     }

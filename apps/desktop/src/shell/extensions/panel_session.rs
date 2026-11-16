@@ -604,6 +604,7 @@ pub(super) fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, Head
     }
     panel.tables.insert(id.clone(), (columns, list.clone()));
     panel.pages.remove(&id);
+    panel.cursor.remove(&id);
     Ok(id)
 }
 
