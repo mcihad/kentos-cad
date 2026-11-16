@@ -293,6 +293,7 @@ mod tests {
             tag: None,
             predefined: "STANDARD",
             object_type: None,
+            part_of: None,
             storey: 0,
             shapes: vec![Shape::Prism { rings: vec![vec![[0.0, 0.0], [1.0, 0.0], [1.0, 0.2], [0.0, 0.2]]], bottom: 0.0, top: 3.0 }],
             overall: None,

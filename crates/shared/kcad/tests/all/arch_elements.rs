@@ -74,3 +74,38 @@ fn a_type_its_class_does_not_have_is_refused() {
     let refused = kentos_kcad::encode(&low).expect_err("no height");
     assert!(refused.message.contains("yüksekliği 0"), "{}", refused.message);
 }
+
+/// Architecture data 3 (docs/adr/8070 §7): a curtain wall's grid is written with `modules.arch = 3` and read back as it
+/// was; a grid whose frame leaves no panel is refused when written.
+#[test]
+fn a_curtain_wall_round_trips_under_arch_data_3() {
+    let mut doc = sample();
+    let wall = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Wall(w) => Some(w),
+            _ => None,
+        })
+        .expect("a wall");
+    wall.wall.components.clear();
+    wall.wall.style = None;
+    wall.wall.curtain = Some(kentos_contracts::CurtainGrid {
+        spacing: 1.5,
+        rows: 1.2,
+        frame: None,
+        panel: Some("Cam".into()),
+        frames: Some("Alüminyum".into()),
+    });
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_CURTAIN_WALLS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the grid read back");
+    let mut bad = doc.clone();
+    if let Some(kentos_contracts::Entity::Wall(w)) =
+        bad.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Wall(w) if w.wall.curtain.is_some()))
+    {
+        w.wall.curtain.as_mut().unwrap().frame = Some(0.8);
+    }
+    let refused = kentos_kcad::encode(&bad).expect_err("a frame wider than half a bay");
+    assert!(refused.message.contains("çerçevesi"), "{}", refused.message);
+}

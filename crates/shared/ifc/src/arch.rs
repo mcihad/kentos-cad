@@ -43,9 +43,8 @@ pub struct Input<'a> {
     pub levels: Vec<(String, String, f64, Option<f64>)>,
     pub solids: &'a [Solid],
     pub owners: &'a [Option<String>],
-    /// Which roof part each solid is (docs/adr/8070 §3): a chimney's or a vent's stack by its index in its roof's
-    /// `parts`; none: its object itself.
-    pub parts: &'a [Option<usize>],
+    /// Which part of its object each solid is (docs/adr/8070 §3, §7); none: its object itself.
+    pub parts: &'a [Option<Part>],
     pub gaps: Vec<Gap>,
     pub entities: Vec<(u128, String, &'a Entity)>,
     pub wall_style_name: &'a dyn Fn(Option<&str>) -> String,
@@ -65,6 +64,19 @@ pub struct Input<'a> {
     /// A room's floor and ceiling covering thicknesses as the vertical model holds them (docs/adr/8070 §6), by its
     /// persistent id; a room not here, or a side none, has none.
     pub coverings: BTreeMap<String, (Option<f64>, Option<f64>)>,
+}
+
+/// What part of its object a solid of the model is (docs/adr/8070 §3, §7).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Part {
+    /// A roof's chimney or vent stack, by its index in the roof's `parts`.
+    Roof(usize),
+    /// A curtain wall's mullion (dikme), by its number on the wall.
+    Mullion(usize),
+    /// A curtain wall's transom (kayıt), by its number on the wall.
+    Transom(usize),
+    /// A curtain wall's panel.
+    Panel,
 }
 
 /// A block placed in the drawing that is a building element (docs/adr/8070 §5): its insert's id bits and persistent id,
@@ -298,6 +310,9 @@ pub struct Written {
     pub chimneys: usize,
     /// The blocks written as building elements (docs/adr/8070 §5).
     pub fixtures: usize,
+    /// The curtain walls and their frames written (docs/adr/8070 §7).
+    pub curtain_walls: usize,
+    pub members: usize,
     /// The grids' axes written (docs/adr/8070 §4).
     pub grid_axes: usize,
     pub left: Vec<Left>,
@@ -651,6 +666,7 @@ fn common_set(class: Class) -> Option<&'static str> {
         Class::Window => "Pset_WindowCommon",
         Class::Covering => "Pset_CoveringCommon",
         Class::Ramp => "Pset_RampCommon",
+        Class::CurtainWall => "Pset_CurtainWallCommon",
         _ => return None,
     })
 }
@@ -745,14 +761,25 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // The model's solids by their object, in the model's order; a roof's chimney and vent stacks by their part.
     let mut owned: Vec<(String, Vec<usize>)> = Vec::new();
     let mut stacks: Vec<(String, usize, Vec<usize>)> = Vec::new();
+    let mut curtains: Vec<(String, Vec<(usize, Part)>)> = Vec::new();
     for (i, owner) in owners.iter().enumerate() {
         let Some(o) = owner else { continue };
-        if let Some(k) = parts.get(i).copied().flatten() {
-            match stacks.iter_mut().find(|(r, p, _)| r == o && *p == k) {
-                Some((_, _, list)) => list.push(i),
-                None => stacks.push((o.clone(), k, vec![i])),
+        match parts.get(i).copied().flatten() {
+            Some(Part::Roof(k)) => {
+                match stacks.iter_mut().find(|(r, p, _)| r == o && *p == k) {
+                    Some((_, _, list)) => list.push(i),
+                    None => stacks.push((o.clone(), k, vec![i])),
+                }
+                continue;
             }
-            continue;
+            Some(part) => {
+                match curtains.iter_mut().find(|(w, _)| w == o) {
+                    Some((_, list)) => list.push((i, part)),
+                    None => curtains.push((o.clone(), vec![(i, part)])),
+                }
+                continue;
+            }
+            None => {}
         }
         match owned.iter_mut().find(|(k, _)| k == o) {
             Some((_, list)) => list.push(i),
@@ -869,6 +896,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             tag: Some(owner.clone()),
             predefined,
             object_type,
+            part_of: None,
             storey,
             shapes: shapes_of,
             overall: None,
@@ -876,6 +904,77 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             psets,
             qtos: Vec::new(),
         });
+    }
+    // The curtain walls (docs/adr/8070 §7; EK-6 Tablo 6.21, 6.40): each an IfcCurtainWall whose own body is its panels
+    // (EK-5 has no panel class: K45), and its mullions and transoms each an IfcMember MULLION, its parts.
+    for (owner, pieces) in &curtains {
+        let Some(&(id, e)) = by_uid.get(owner) else {
+            continue;
+        };
+        let Entity::Wall(w) = e else { continue };
+        let Some(grid) = w.wall.curtain.as_ref() else {
+            continue;
+        };
+        let storey = storey_of(level_of(e));
+        let floor = levels[storey].2;
+        let panels: Vec<Shape> = pieces
+            .iter()
+            .filter(|(_, p)| *p == Part::Panel)
+            .flat_map(|(i, _)| shapes(&solids[*i], floor))
+            .collect();
+        let whole = elements.len();
+        index.insert(owner.clone(), whole);
+        let words = match w.wall.style.as_deref() {
+            Some(style) => wall_style_name(Some(style)),
+            None => "Giydirme cephe".to_owned(),
+        };
+        elements.push(Element {
+            class: Class::CurtainWall,
+            id: Some(id),
+            object: None,
+            name: name(Class::CurtainWall.code(), &words),
+            description: None,
+            tag: Some(owner.clone()),
+            predefined: "USERDEFINED",
+            object_type: Some("Giydirme cephe".to_owned()),
+            part_of: None,
+            storey,
+            shapes: panels,
+            overall: None,
+            material: material(grid.panel.clone()),
+            psets: Vec::new(),
+            qtos: Vec::new(),
+        });
+        written.curtain_walls += 1;
+        for (i, part) in pieces {
+            let (k, words) = match part {
+                Part::Mullion(k) => (*k as u64, "Dikme"),
+                Part::Transom(k) => (1_000_000 + *k as u64, "Kayıt"),
+                _ => continue,
+            };
+            let body = shapes(&solids[*i], floor);
+            if body.is_empty() {
+                continue;
+            }
+            elements.push(Element {
+                class: Class::Member,
+                id: Some(crate::step::fnv(owner, k)),
+                object: Some(id),
+                name: name(Class::Member.code(), words),
+                description: None,
+                tag: Some(owner.clone()),
+                predefined: "MULLION",
+                object_type: None,
+                part_of: Some(whole),
+                storey,
+                shapes: body,
+                overall: None,
+                material: material(grid.frames.clone()),
+                psets: Vec::new(),
+                qtos: Vec::new(),
+            });
+            written.members += 1;
+        }
     }
     // Pset_WallCommon's IsExternal (EK-6 Tablo 6.66): a wall with a corner on the outline of its storey's walls and
     // columns together. The columns close it: the section model stops the walls at them, and the walls of a framed
@@ -888,7 +987,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         for (k, el) in elements
             .iter()
             .enumerate()
-            .filter(|(_, el)| matches!(el.class, Class::Wall | Class::Column) && el.storey == s)
+            .filter(|(_, el)| matches!(el.class, Class::Wall | Class::Column | Class::Member) && el.storey == s)
         {
             for sh in &el.shapes {
                 if let Shape::Prism { rings: rs, .. } = sh {
@@ -900,16 +999,34 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
         }
         for i in kentos_geometry_core::geom::wall::exterior(&rings) {
-            exterior[whose[i]] = elements[whose[i]].class == Class::Wall;
+            let k = whose[i];
+            match elements[k].class {
+                Class::Wall => exterior[k] = true,
+                // A curtain wall is outside where one of its frames is on the outline.
+                Class::Member => {
+                    if let Some(whole) = elements[k].part_of {
+                        exterior[whole] = true;
+                    }
+                }
+                _ => {}
+            }
         }
     }
-    for (k, el) in elements
-        .iter_mut()
-        .enumerate()
-        .filter(|(_, el)| el.class == Class::Wall)
-    {
+    // A curtain wall's frames are as outside as it is.
+    for k in 0..elements.len() {
+        if let Some(whole) = elements[k].part_of {
+            exterior[k] = exterior[whole];
+        }
+    }
+    for (k, el) in elements.iter_mut().enumerate() {
+        let set = match (el.class, el.part_of) {
+            (Class::Wall, _) => "Pset_WallCommon",
+            (Class::CurtainWall, _) => "Pset_CurtainWallCommon",
+            (Class::Member, Some(_)) => "Pset_MemberCommon",
+            _ => continue,
+        };
         el.psets.push(Pset {
-            name: "Pset_WallCommon".into(),
+            name: set.into(),
             props: vec![("IsExternal".into(), Value::Bool(exterior[k]))],
         });
     }
@@ -957,6 +1074,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     tag: Some(mark.clone().unwrap_or_else(|| owner.clone())),
                     predefined: if door { "DOOR" } else { "WINDOW" },
                     object_type: None,
+                    part_of: None,
                     storey,
                     shapes: vec![Shape::Prism {
                         rings: vec![filler_ring(
@@ -1121,6 +1239,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             tag: Some(tag),
             predefined: "USERDEFINED",
             object_type: Some(words.to_owned()),
+            part_of: None,
             storey,
             shapes: members
                 .iter()
@@ -1192,6 +1311,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             tag: Some(f.uid.clone()),
             predefined,
             object_type: (predefined == "USERDEFINED").then(|| f.name.clone()),
+            part_of: None,
             storey: storey_of(f.level.as_deref()),
             shapes,
             overall: None,

@@ -840,6 +840,10 @@ pub struct Memory {
     pub wall_style: Option<u64>,
     /// Duvar's Kapanınca mahal (docs/adr/8022): a loop closed with Kapat writes its room's space too, one undo step.
     pub wall_room: bool,
+    /// Giydirme cephe's largest panel width and height (its mullions' and transoms' largest spacing, metres;
+    /// docs/adr/8070 §7).
+    pub curtain_spacing: f64,
+    pub curtain_rows: f64,
     /// Katman anahtarı (docs/adr/8008): Mimari objects go on their kinds' EK-4 layers instead of the active one.
     /// KentOS Mimari turns it on at start.
     pub layer_keys: bool,
@@ -1277,6 +1281,9 @@ impl Default for Memory {
             wall_justify: kentos_commands::WallJustify::Center,
             wall_offset: 0.0,
             wall_room: false,
+            // KentOS's own common panel size (docs/adr/8070 §7).
+            curtain_spacing: 1.5,
+            curtain_rows: 1.2,
             wall_style: None,
             layer_keys: false,
             wall_pairs: false,

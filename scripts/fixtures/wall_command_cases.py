@@ -242,12 +242,37 @@ def thicknesses_fit(width, comps):
     return fixed < width - slack, fixed, rest[0]["name"]
 
 
+def curtain_problem(w):
+    """A curtain wall's grid's problem (docs/adr/8070 §7): (field, words), or None. Its spacings from 0.3 to 10 m; its
+    frame (5 cm when not given) above 0 and under half of each spacing; no blank material; straight edges only."""
+    g = w.get("curtain")
+    if g is None:
+        return None
+    for field, what in (("spacing", "dikme aralığı"), ("rows", "kayıt aralığı")):
+        v = g[field]
+        if not (math.isfinite(v) and 0.3 <= v <= 10.0):
+            return f"curtain.{field}", f"Giydirme cephenin {what} {num(v)} m; 0.3 ile 10 m arasında olmalı."
+    f = g.get("frame", 0.05)
+    if not (math.isfinite(f) and f > 0 and 2 * f < min(g["spacing"], g["rows"])):
+        return "curtain.frame", (f"Giydirme cephenin çerçevesi {num(f)} m; sıfırdan büyük, aralıkların yarısından küçük olmalı "
+                                 "(bir panele yer kalır).")
+    for field in ("panel", "frames"):
+        if field in g and not g[field].strip():
+            return f"curtain.{field}", "Boş malzeme adı yazılmaz; alanı kaldırın ya da bir ad yazın."
+    if any(x != 0 for x in w.get("bulges", [])):
+        return "curtain", "Giydirme cephe düz parçalardan olur; yaylı kenarı olan duvar giydirme cephe olamaz."
+    return None
+
+
 def wall_problem(w):
     """The wall's problem as the file's rule says it: (field, words), or None."""
     pts = w["pts"]
     n = len(pts)
     if n < 2:
         return "pts", f"Duvarın yolu en az iki noktadır; {n} verildi."
+    grid = curtain_problem(w)
+    if grid:
+        return grid
     curved = any(x != 0 for x in w.get("bulges", []))
     if w.get("closed") and n < 3 and not curved:
         return "pts", "Kapalı duvar düz kenarlarla en az üç noktadır."
@@ -351,16 +376,20 @@ def build(settings, nw, prefix, added):
         w["offset"] = nw["offset"]
     if style:
         w["style"] = style["id"]
-        w["components"] = copy.deepcopy(style["components"])
+        # A curtain wall takes no style's components or fill (docs/adr/8070 §7).
+        if "curtain" not in nw:
+            w["components"] = copy.deepcopy(style["components"])
     caps = nw.get("caps", style.get("caps", "closed") if style else "closed")
     if caps == "open":
         w["caps"] = "open"
-    if style and "fill" in style:
+    if style and "fill" in style and "curtain" not in nw:
         w["fill"] = style["fill"]
     if "height" in nw:
         w["height"] = nw["height"]
     if nw.get("arch"):
         w["arch"] = nw["arch"]
+    if "curtain" in nw:
+        w["curtain"] = copy.deepcopy(nw["curtain"])
     p = wall_problem(w)
     if p:
         return refusal("invalid_wall", p[1], f"{prefix}.{p[0]}")
@@ -555,6 +584,46 @@ def create_cases():
         ("birleşimden kısa duvar uyarıyla yazılır", dict(pts=[P(108, 0), P(108, 0.05)])),
     ]:
         c.add(name, [create_step("execute", one(**kw))[0]])
+    # Giydirme cephe (docs/adr/8070 §7): its grid kept as given; no style's components or fill; its refusals.
+    grid = {"spacing": 1.5, "rows": 1.2}
+    for name, kw in [
+        ("giydirme cephe: ızgarası olduğu gibi saklanır, bileşeni yok", dict(pts=[P(0, 40), P(6, 40)], width=0.15, curtain=grid)),
+        ("giydirme cephe stille: stilin genişliği ve kimliği, bileşeni ve dolgusu gelmez; stil projeye eklenir",
+         dict(pts=[P(0, 40), P(6, 40)], style="kentos-ic-duvar-15", curtain=grid)),
+        ("giydirme cephe çerçeve genişliği, panel ve çerçeve malzemesiyle",
+         dict(pts=[P(0, 40), P(6, 40)], width=0.2, curtain={"spacing": 1.25, "rows": 1.5, "frame": 0.06, "panel": "Cam",
+                                                              "frames": "Alüminyum"})),
+        ("giydirme cephe köşeli yol: iki düz parça", dict(pts=[P(0, 40), P(6, 40), P(6, 44)], width=0.15, curtain=grid)),
+        ("kapalı giydirme cephe: dört düz kenar", dict(pts=[P(0, 40), P(6, 40), P(6, 44), P(0, 44)], closed=True, width=0.15,
+                                                        curtain=grid)),
+        ("giydirme cephe yüksekliği ve katıyla", dict(pts=[P(0, 40), P(6, 40)], width=0.15, height=3.0, arch={"level": "kat-1"},
+                                                     curtain=grid)),
+        ("giydirme cephenin en küçük dikme ve en büyük kayıt aralığı yazılır", dict(pts=[P(0, 40), P(6, 40)], width=0.15,
+                                                                                  curtain={"spacing": 0.3, "rows": 10.0, "frame": 0.1})),
+        ("giydirme cephe düz bükümlerle: bükümler saklanmaz", dict(pts=[P(0, 40), P(6, 40)], bulges=[0.0], width=0.15, curtain=grid)),
+    ]:
+        c.add(name, [create_step("execute", one(**kw))[0]])
+    c.add("giydirme cephe ve düz duvar tek çağrıda", [create_step("execute", {"layerId": "duvar", "walls": [
+        {"pts": [P(0, 40), P(6, 40)], "width": 0.15, "curtain": grid}, {"pts": [P(6, 40), P(6, 45)]}]})[0]])
+    c.add("giydirme cephenin planı yazmaz", [create_step("plan", one(pts=[P(0, 40), P(6, 40)], width=0.15, curtain=grid))[0]])
+    for name, kw in [
+        ("giydirme cephenin dikme aralığı 0,3 m'den kısa: ret", dict(curtain={"spacing": 0.29, "rows": 1.2})),
+        ("giydirme cephenin dikme aralığı 10 m'den uzun: ret", dict(curtain={"spacing": 10.5, "rows": 1.2})),
+        ("giydirme cephenin kayıt aralığı sıfır: ret", dict(curtain={"spacing": 1.5, "rows": 0.0})),
+        ("giydirme cephenin kayıt aralığı eksi: ret", dict(curtain={"spacing": 1.5, "rows": -1.2})),
+        ("giydirme cephenin çerçevesi sıfır: ret", dict(curtain={"spacing": 1.5, "rows": 1.2, "frame": 0.0})),
+        ("giydirme cephenin çerçevesi dikme aralığının yarısı: panele yer kalmaz, ret",
+         dict(curtain={"spacing": 1.5, "rows": 2.0, "frame": 0.75})),
+        ("giydirme cephenin çerçevesi kayıt aralığının yarısından geniş: ret", dict(curtain={"spacing": 1.5, "rows": 0.4, "frame": 0.25})),
+        ("giydirme cephenin boş panel malzemesi: ret", dict(curtain={"spacing": 1.5, "rows": 1.2, "panel": "  "})),
+        ("giydirme cephenin boş çerçeve malzemesi: ret", dict(curtain={"spacing": 1.5, "rows": 1.2, "frames": ""})),
+        ("yaylı giydirme cephe: ret", dict(pts=[P(0, 40), P(4, 40), P(7, 43)], bulges=[0.0, 0.25])),
+    ]:
+        nw = {"pts": [P(0, 40), P(6, 40)], "width": 0.15, "curtain": dict(grid)}
+        nw.update(kw)
+        if "bulges" in kw:
+            nw["curtain"] = dict(grid)
+        c.add(name, [create_step("execute", {"layerId": "duvar", "walls": [nw]})[0]])
     c.add("plan yazmadan duvarı ve alınacak stili gösterir", [create_step("plan", one(pts=[P(0, 40), P(8, 40)], style="Dış duvar 25"))[0]])
     c.add("doğrulama yazmaz", [create_step("validate", one(pts=[P(0, 40), P(8, 40)]))[0]])
     c.add("gizli katmana uyarıyla yazılır", [create_step("execute", {"layerId": "gizli", "walls": [{"pts": [P(0, 40), P(5, 40)]}]})[0]])
@@ -969,6 +1038,15 @@ def changed(settings, w0, ch, style, at):
                 w.pop(key, None)
             else:
                 w[key] = ch[key]
+    # A curtain wall's grid (docs/adr/8070 §7): given, the wall is its frames and panels (no components, no fill);
+    # null, a plain wall again.
+    if "curtain" in ch:
+        if ch["curtain"] is None:
+            w.pop("curtain", None)
+        else:
+            w["curtain"] = copy.deepcopy(ch["curtain"])
+            w.pop("components", None)
+            w.pop("fill", None)
     arch = dict(w.get("arch", {}))
     for key in ("level", "phase", "status", "discipline"):
         if key in ch:
@@ -1000,7 +1078,7 @@ def edit(settings, inp, conflict=False):
         if BY_ID[i]["kind"] != "wall":
             return refusal("not_a_wall", "Nesne duvar değil; Duvarı düzenle yalnız duvarları değiştirir.", f"uids[{at}]"), None, None
     if not ch:
-        return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, tadilat durumu, yapım durumu ya da disiplin verin.", "operation"), None, None
+        return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, tadilat durumu, yapım durumu, disiplin ya da giydirme cephenin ızgarası verin.", "operation"), None, None
     for key, name in (("width", "Genişlik"), ("offset", "Öteleme"), ("height", "Yükseklik")):
         if ch.get(key) is not None and not math.isfinite(ch[key]):
             return not_finite(name, f"operation.{key}"), None, None
@@ -1077,6 +1155,11 @@ def edit_cases():
         ("kat değişir, tadilat durumu, yapım durumu ve disiplin verilir", {"uids": [uid_of(13)], "operation": op(level="kat-1", phase="demolish", status="built", discipline="structure")}, {}),
         ("kat kaldırılınca mimari bilgi de kalkar", {"uids": [uid_of(13)], "operation": op(level=None)}, {}),
         ("iki duvar birlikte: ikisi de değişir", {"uids": [uid_of(12), uid_of(22)], "operation": op(width=0.15, phase="new")}, {}),
+        ("stilli duvar giydirme cepheye döner: bileşenleri ve dolgusu düşer, stili kalır",
+         {"uids": [uid_of(13)], "operation": op(curtain={"spacing": 1.5, "rows": 1.2, "panel": "Cam"})}, {}),
+        ("giydirme cephenin çerçevesi aralığın yarısını geçemez: ret",
+         {"uids": [uid_of(12)], "operation": op(curtain={"spacing": 1.0, "rows": 1.2, "frame": 0.5})}, {}),
+        ("yaylı duvar giydirme cephe olamaz: ret", {"uids": [uid_of(22)], "operation": op(curtain={"spacing": 1.5, "rows": 1.2})}, {}),
         ("plan yazmadan değişmiş duvarları gösterir", {"uids": [uid_of(12)], "operation": op(width=0.3)}, {"op": "plan"}),
         ("doğrulama yazmaz", {"uids": [uid_of(12)], "operation": op(width=0.3)}, {"op": "validate"}),
         ("kimlik verilmezse ret", {"uids": [], "operation": op(width=0.3)}, {}),

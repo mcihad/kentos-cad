@@ -11880,6 +11880,22 @@
    "tests": 1
   },
   {
+   "id": "tool.curtainWall",
+   "kind": "command",
+   "title": "Giydirme cephe",
+   "level": "semantic",
+   "via": [
+    "cad.walls.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.create",
+   "mcp": "cad.walls.create",
+   "note": "Duvar'ın yolu ve seçenekleri, ızgarasıyla (Panel eni P, Panel boyu B; Cam, Alüminyum) curtain olarak komuta gider; önizleme komutun planıdır (ADR 8070 §7).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.curveEdit",
    "kind": "command",
    "title": "Eğriyi düzenle",

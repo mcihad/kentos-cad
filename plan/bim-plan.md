@@ -454,8 +454,11 @@ Balkonun %20 sınırını aşan kısmı dahil alana geçer. Kırma çatı altın
 sahanlıklar; kesit, görünüş, 3B, `IfcRamp`; tipi kollarından); merdivenin IFC tipi ve malzemesi; niş ve duvar bacası
 kesitte; baca (`IfcChimney`: duvar bacası ve üstündeki çatı bacası tek eleman), niş (RECESS); aks ızgarası (`IfcGrid`);
 asansör, vitrifiye ve mobilya kitaplık bloğunun kartında yapı sınıfı ve gövdesi (asansör kapasitesiyle); mahalin kaplama
-kalınlıkları (EK-6 Tablo 6.20'nin birinci yolu, `IfcCovering` yazılmaz: K44). **Kalan:** giydirme cephe, dikme ve kayıt
-(`IfcMember`), elle çizilen kaplama ve asma tavan gövdesi, duvar kaplamasının kalınlığı.
+kalınlıkları (EK-6 Tablo 6.20'nin birinci yolu, `IfcCovering` yazılmaz: K44); giydirme cephe (çizgisi, yüksekliği, en
+büyük dikme ve kayıt aralığı, çerçevesi, paneli; planda, kesitte, görünüşte, 3B'de; `IfcCurtainWall` gövdesi panelleri,
+dikme ve kayıtları `IfcMember` MULLION: K45; Giydirme cephe aracı GC, `.kcad` mimari verisi 3). **Kalan:** tek başına
+dikme ve kayıt (`IfcMember`), giydirme cephenin doğrama listesinde yeri ve panel yerine kapısı, elle çizilen kaplama ve
+asma tavan gövdesi, duvar kaplamasının kalınlığı.
 
 **Kullanıcı sonucu:** Konut ve karma kullanımlı bir binada karşılaşılan her eleman modelde kendi nesnesidir ve kendi
 sınıfıyla dışa gider. "Modele girmeyen nesne" listesi boşalır. Dayanak EK-5 Tablo 5.1; EK-6 §6.1.3 ve 6.14, 6.20, 6.21,

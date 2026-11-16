@@ -1073,6 +1073,7 @@ impl canvas::Program<Message> for Sample {
             arch: Default::default(),
             joins: Default::default(),
             cleanup: true,
+            curtain: None,
         };
         let Shape::Wall {
             pts,

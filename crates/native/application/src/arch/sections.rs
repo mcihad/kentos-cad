@@ -134,9 +134,9 @@ pub struct Model {
     pub looks: Vec<Look>,
     /// The persistent id of each solid's object.
     pub owners: Vec<Option<String>>,
-    /// Which of its object's roof parts each solid is (docs/adr/8070 §3): a chimney's or a vent's stack, by its index in
-    /// the roof's `parts`; none: the object itself.
-    pub parts: Vec<Option<usize>>,
+    /// Which part of its object each solid is (docs/adr/8070 §3, §7): a roof's chimney or vent stack, a curtain wall's
+    /// frame or panel; none: the object itself.
+    pub parts: Vec<Option<Part>>,
     pub gaps: Vec<Gap>,
     pub left: BTreeSet<(Left, Option<String>)>,
     /// The storeys: id, name, floor, height.
@@ -145,6 +145,19 @@ pub struct Model {
     pub roofs: Vec<RoofAt>,
     /// The roofs whose gutters and downpipes are built once every wall and column is in (docs/adr/8044 §8).
     rain: Vec<Rain>,
+}
+
+/// What part of its object a solid is (docs/adr/8070 §3, §7).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Part {
+    /// A roof's chimney or vent stack, by its index in the roof's `parts`.
+    Roof(usize),
+    /// A curtain wall's mullion (dikme), by its number on the wall.
+    Mullion(usize),
+    /// A curtain wall's transom (kayıt), by its number on the wall.
+    Transom(usize),
+    /// A curtain wall's panel.
+    Panel,
 }
 
 /// A roof's gutter and downpipes waiting for the walls they run down (docs/adr/8044 §8).
@@ -346,8 +359,8 @@ fn push(m: &mut Model, solid: Solid, look: Look, owner: Option<String>) {
     push_part(m, solid, look, owner, None);
 }
 
-/// [`push`] of a roof part's solid: a chimney's or a vent's stack, its index in its roof's `parts` (docs/adr/8070 §3).
-fn push_part(m: &mut Model, solid: Solid, look: Look, owner: Option<String>, part: Option<usize>) {
+/// [`push`] of a part's solid: a roof's stack, a curtain wall's frame or panel (docs/adr/8070 §3, §7).
+fn push_part(m: &mut Model, solid: Solid, look: Look, owner: Option<String>, part: Option<Part>) {
     m.solids.push(solid);
     m.looks.push(look);
     m.owners.push(owner);
@@ -424,6 +437,10 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
         let Shape::Wall { wall: spec, .. } = shape else {
             continue;
         };
+        if let Some(grid) = &w.curtain {
+            curtain(w, grid, (foot, top), owner, m);
+            continue;
+        }
         // Its core: the layer of the smallest rank (docs/adr/8008), whose material names the wall.
         let core = spec
             .components
@@ -577,6 +594,110 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
         }
         for (solid, look, owner) in opening_solids.drain(..) {
             push(m, solid, look, owner);
+        }
+    }
+}
+
+/// A curtain wall's panel's thickness, metres: KentOS's own common size (docs/adr/8070 §7), an insulating glass unit's.
+pub const PANEL: f64 = 0.024;
+
+/// A curtain wall in the model (docs/adr/8070 §7): on each straight stretch of its line, its mullions (a frame's face
+/// along it, its whole depth across, from its foot to its top) on the grid's vertical lines, its transoms between them
+/// on the horizontal ones (its foot and top among them), and a panel in each cell, [`PANEL`] thick down the middle of
+/// its depth. Both on EK-2's Giydirme Cephe (GIYC), unhatched: its frames (ÇERÇEVE) and its glass (CAM).
+fn curtain(
+    w: &kentos_commands::WallFields,
+    grid: &kentos_commands::CurtainGrid,
+    (foot, top): (f64, f64),
+    owner: Option<String>,
+    m: &mut Model,
+) {
+    use kentos_geometry_core::geom::curtain::{cell_span, divisions, frame_span};
+    let left = w.justify.left_face(w.width) + w.offset;
+    let right = left - w.width;
+    let middle = (left + right) / 2.0;
+    let face = grid.frame();
+    let height = top - foot;
+    if height <= 2.0 * face {
+        m.left.insert((Left::NoHeight, owner));
+        return;
+    }
+    let rows = divisions(height, grid.rows);
+    let frames = Look {
+        key: "GIYC:cerceve".into(),
+        layer: kentos_commands::ek4_layer("GIYC", "Çerçeve"),
+        heavy: false,
+        fill: None,
+    };
+    let glass = Look {
+        key: "GIYC:cam".into(),
+        layer: kentos_commands::ek4_layer("GIYC", "Cam"),
+        heavy: false,
+        fill: None,
+    };
+    let block = |ring: Vec<P>, bottom: f64, top: f64| Solid {
+        rings: vec![ring],
+        height: Height::Prism { bottom, top },
+        voids: Vec::new(),
+        marks: Vec::new(),
+        finish: None,
+    };
+    let n = w.pts.len();
+    let stretches = if w.closed { n } else { n.saturating_sub(1) };
+    let (mut mullions, mut transoms) = (0usize, 0usize);
+    for i in 0..stretches {
+        let (a, b) = (p(w.pts[i]), p(w.pts[(i + 1) % n]));
+        let length = kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y);
+        if length <= 2.0 * face {
+            continue;
+        }
+        let u = P::new((b.x - a.x) / length, (b.y - a.y) / length);
+        let normal = P::new(-u.y, u.x);
+        let at = |s: f64, off: f64| P::new(a.x + u.x * s + normal.x * off, a.y + u.y * s + normal.y * off);
+        let band = |s0: f64, s1: f64, near: f64, far: f64| vec![at(s0, near), at(s1, near), at(s1, far), at(s0, far)];
+        let bays = divisions(length, grid.spacing);
+        // A stretch's first mullion stands at a corner the stretch before already has, but for the line's start.
+        for k in 0..bays.len() {
+            if k == 0 && i > 0 {
+                continue;
+            }
+            if k == bays.len() - 1 && w.closed && i == stretches - 1 {
+                continue;
+            }
+            let (s0, s1) = frame_span(&bays, k, face);
+            push_part(m, block(band(s0, s1, left, right), foot, top), frames.clone(), owner.clone(), Some(Part::Mullion(mullions)));
+            mullions += 1;
+        }
+        for k in 0..bays.len() - 1 {
+            let (s0, s1) = cell_span(&bays, k, face);
+            if s1 - s0 <= 1e-9 {
+                continue;
+            }
+            for r in 0..rows.len() {
+                let (z0, z1) = frame_span(&rows, r, face);
+                push_part(
+                    m,
+                    block(band(s0, s1, left, right), foot + z0, foot + z1),
+                    frames.clone(),
+                    owner.clone(),
+                    Some(Part::Transom(transoms)),
+                );
+                transoms += 1;
+            }
+            for r in 0..rows.len() - 1 {
+                let (z0, z1) = cell_span(&rows, r, face);
+                if z1 - z0 <= 1e-9 {
+                    continue;
+                }
+                let t = PANEL.min(w.width / 2.0);
+                push_part(
+                    m,
+                    block(band(s0, s1, middle + t / 2.0, middle - t / 2.0), foot + z0, foot + z1),
+                    glass.clone(),
+                    owner.clone(),
+                    Some(Part::Panel),
+                );
+            }
         }
     }
 }
@@ -1048,7 +1169,7 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
         // Masonry, not the roof's covering: an elevation does not name its faces "Kiremit".
         let mut stack = solid(vec![ring], height);
         stack.finish = None;
-        push_part(m, stack, chimney_look(), owner.clone(), Some(k));
+        push_part(m, stack, chimney_look(), owner.clone(), Some(Part::Roof(k)));
     }
     if spec.gutter.is_some() {
         m.rain.push(Rain {

@@ -359,6 +359,8 @@ pub struct Path {
     wall_ask: Option<wall::Ask>,
     wall_offer: Vec<kentos_commands::WallStyleDef>,
     wall_drawn: wall::Drawn,
+    /// Giydirme cephe (docs/adr/8070 §7): Duvar drawing a curtain wall.
+    curtain: bool,
 }
 
 /// The faces İçine tıkla finds regions in ([`faces::Faces`], which is neither
@@ -415,12 +417,21 @@ impl Path {
             wall_ask: None,
             wall_offer: Vec::new(),
             wall_drawn: wall::Drawn::default(),
+            curtain: false,
         }
     }
 
     /// Duvar (`tool.wall`, docs/adr/0339 §6).
     pub fn wall() -> Self {
         Self::new(Shape::Wall)
+    }
+
+    /// Giydirme cephe (`tool.curtainWall`, docs/adr/8070 §7): Duvar drawing a curtain wall.
+    pub fn curtain_wall() -> Self {
+        Self {
+            curtain: true,
+            ..Self::new(Shape::Wall)
+        }
     }
 
     /// The closed-area tool (`tool.polygon`).
@@ -487,13 +498,13 @@ impl Path {
             return;
         }
         let (pts, bulges) = self.preview_path();
-        self.wall_drawn = wall::drawn(&pts, &bulges, false, cx);
+        self.wall_drawn = wall::drawn(&pts, &bulges, false, self.curtain, cx);
     }
 
     /// Duvar's chips as they stand; Kapanınca mahal last (docs/adr/8022).
     fn wall_chips(&self, prompt: Prompt) -> Prompt {
         let style = wall::chosen_in(&self.memory, &self.wall_offer);
-        wall::chips(prompt, &self.memory, &self.format, style).option_with(
+        wall::chips(prompt, &self.memory, &self.format, style, self.curtain).option_with(
             "Kapanınca mahal",
             "M",
             if self.memory.wall_room { "Açık" } else { "Kapalı" },
@@ -516,7 +527,7 @@ impl Path {
         // wall back too.
         let room = cx.memory.wall_room;
         let group = room.then(|| cx.doc.begin_group("Duvar ve mahal"));
-        let mut written = wall::write(&pts, &bulges, true, cx);
+        let mut written = wall::write(&pts, &bulges, true, self.curtain, cx);
         let mut area = None;
         if written && room {
             area = write_loop_room(&pts, &bulges, cx);
@@ -1186,7 +1197,7 @@ impl Path {
                 return true;
             }
             if self.wall_ask.is_none() {
-                if let Some(ask) = wall::ask_of(key) {
+                if let Some(ask) = wall::ask_of(key, self.curtain) {
                     self.wall_ask = Some(ask);
                     return true;
                 }
@@ -1432,7 +1443,7 @@ impl Path {
             }
             Shape::Wall => {
                 let length = bulge_path_length(&pts, bulges.as_deref(), false);
-                if wall::write(&pts, &self.bulges, false, cx) {
+                if wall::write(&pts, &self.bulges, false, self.curtain, cx) {
                     let text = format!("Duvar eklendi: {}", cx.format().length(length));
                     cx.say(Level::Success, text);
                 }
@@ -1955,8 +1966,8 @@ impl Path {
 impl Tool for Path {
     /// Duvar writes on its style's layer (docs/adr/8008).
     fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
-        (self.separator_level.is_none() && self.shape.id() == crate::wall::ID)
-            .then(|| crate::wall::layer_kind(cx))
+        (self.separator_level.is_none() && self.shape == Shape::Wall)
+            .then(|| crate::wall::layer_kind(cx, self.curtain))
     }
 
     /// Mahal ayırıcı's Kat follows the new active level at once while it has walls (docs/adr/0720 §4).
@@ -1974,7 +1985,7 @@ impl Tool for Path {
         true
     }
     fn id(&self) -> &'static str {
-        if self.separator_level.is_some(){SPACE_SEPARATOR_ID}else{self.shape.id()}
+        if self.separator_level.is_some(){SPACE_SEPARATOR_ID}else if self.curtain{wall::CURTAIN_ID}else{self.shape.id()}
     }
 
     /// Perpendicular and tangent snaps are taken from the last point (the web's `snapFrom`);
@@ -2062,7 +2073,7 @@ impl Tool for Path {
     }
 
     fn label(&self) -> &'static str {
-        if self.separator_level.is_some(){SPACE_SEPARATOR_LABEL}else{self.shape.label()}
+        if self.separator_level.is_some(){SPACE_SEPARATOR_LABEL}else if self.curtain{wall::CURTAIN_LABEL}else{self.shape.label()}
     }
 
     fn prompt(&self) -> Prompt {
@@ -2248,7 +2259,11 @@ impl Tool for Path {
             return rows;
         }
         if self.shape != Shape::Wall { return Vec::new(); }
-        let mut rows = crate::tool_settings::wall_rows(&self.memory, &self.wall_offer, format);
+        let mut rows = if self.curtain {
+            crate::tool_settings::curtain_rows(&self.memory, format)
+        } else {
+            crate::tool_settings::wall_rows(&self.memory, &self.wall_offer, format)
+        };
         // Kapanınca mahal (docs/adr/8022): Kapat writes the loop's room too.
         rows.push(crate::tool_settings::Setting::toggle("M", "Kapanınca mahal", self.memory.wall_room));
         rows
@@ -2279,7 +2294,7 @@ impl Tool for Path {
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         if self.separator_level.is_some(){return self.configure(key,typed,cx);}
-        if self.shape != Shape::Wall || !matches!(key, "H" | "S") {
+        if self.shape != Shape::Wall || !matches!(key, "H" | "S") || (self.curtain && key == "S") {
             return false;
         }
         self.wall_ask = None;

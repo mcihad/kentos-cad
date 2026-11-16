@@ -352,13 +352,50 @@ fn a_walls_own_section_comes_first_with_its_main_rows_on_top() {
     assert_eq!(titles[0], "Duvar", "{titles:?}");
     assert!(titles.iter().position(|t| *t == "Genel").expect("Genel") > 0, "{titles:?}");
     let labels: Vec<&str> = sections[0].1.iter().filter(|r| !r.note).map(|r| r.label.as_ref()).collect();
-    assert_eq!(labels[0], "Kalınlık", "{labels:?}");
+    // Its kind first (Duvar or Giydirme cephe, docs/adr/8070 §7), then its Kalınlık.
+    assert_eq!((labels[0], labels[1]), ("Tür", "Kalınlık"), "{labels:?}");
     let at = |l: &str| labels.iter().position(|x| *x == l).unwrap_or_else(|| panic!("{l} in {labels:?}"));
     assert!(at("Stil") < at("Sabit kalan çizgi"), "{labels:?}");
     assert!(at("Hiza") < at("Öteleme"), "{labels:?}");
     // An object that is no building element keeps Genel first.
     let line = sections.len();
     assert!(line > 1);
+}
+
+/// Giydirme cephe in Öznitelikler (docs/adr/8070 §7): Tür turns the wall into a curtain wall with the tool's first grid
+/// (Panel eni 1.50, Panel boyu 1.20, Cam, Alüminyum), one undo step; Panel eni typed is written through `cad.walls.edit`;
+/// Tür Duvar takes the grid away.
+#[test]
+fn a_wall_turns_into_a_curtain_wall_and_its_grid_is_typed() {
+    let (mut app, wall, _) = wall_dimension_set();
+    app.selection.set([wall]);
+    let grid = |app: &crate::app::App| match app.document.as_ref().unwrap().model.get(wall) {
+        Some(kentos_commands::Entity::Wall(w)) => w.wall.curtain.clone(),
+        _ => None,
+    };
+    let _ = app.update(crate::app::Message::Properties(crate::properties::Event::Wall(
+        wall,
+        kentos_commands::WallChange {
+            curtain: Some(Some(kentos_interaction::wall::grid(&kentos_interaction::Memory::default()))),
+            ..Default::default()
+        },
+    )));
+    let g = grid(&app).expect("a curtain wall");
+    assert_eq!((g.spacing, g.rows, g.panel.as_deref(), g.frames.as_deref()), (1.5, 1.2, Some("Cam"), Some("Alüminyum")));
+    let labels: Vec<String> = rows(&app)[0].1.iter().map(|r| r.label.to_string()).collect();
+    for l in ["Panel eni", "Panel boyu", "Çerçeve", "Panel malzemesi", "Çerçeve malzemesi"] {
+        assert!(labels.iter().any(|x| x == l), "{l} in {labels:?}");
+    }
+    let _ = app.update(crate::app::Message::Properties(crate::properties::Event::Commit(
+        crate::properties::Field::CurtainSpacing(wall),
+        "1.25 m".into(),
+    )));
+    assert_eq!(grid(&app).map(|g| g.spacing), Some(1.25));
+    let _ = app.update(crate::app::Message::Properties(crate::properties::Event::Wall(
+        wall,
+        kentos_commands::WallChange { curtain: Some(None), ..Default::default() },
+    )));
+    assert_eq!(grid(&app), None);
 }
 
 /// A wall without a height of its own (docs/adr/8040 §1): its Yükseklik says where its height comes from and the

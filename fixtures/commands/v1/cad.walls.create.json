@@ -3470,6 +3470,2285 @@
       ]
     },
     {
+      "name": "giydirme cephe: ızgarası olduğu gibi saklanır, bileşeni yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                38
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ],
+            "entities": {
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "justify": "center",
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephe stille: stilin genişliği ve kimliği, bileşeni ve dolgusu gelmez; stil projeye eklenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "style": "kentos-ic-duvar-15",
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                38
+              ],
+              "stylesAdded": [
+                "kentos-ic-duvar-15"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ],
+            "entities": {
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "justify": "center",
+                "style": "kentos-ic-duvar-15",
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                },
+                {
+                  "id": "kentos-ic-duvar-15",
+                  "name": "İç duvar 15",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "material": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed",
+                      "priority": 5
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard",
+                      "priority": 1
+                    },
+                    {
+                      "name": "Sıva",
+                      "material": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed",
+                      "priority": 5
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.15
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephe çerçeve genişliği, panel ve çerçeve malzemesiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.2,
+                "curtain": {
+                  "spacing": 1.25,
+                  "rows": 1.5,
+                  "frame": 0.06,
+                  "panel": "Cam",
+                  "frames": "Alüminyum"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                38
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ],
+            "entities": {
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "curtain": {
+                  "spacing": 1.25,
+                  "rows": 1.5,
+                  "frame": 0.06,
+                  "panel": "Cam",
+                  "frames": "Alüminyum"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephe köşeli yol: iki düz parça",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 44.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                38
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ],
+            "entities": {
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 44.0
+                  }
+                ],
+                "width": 0.15,
+                "justify": "center",
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapalı giydirme cephe: dört düz kenar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 44.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 44.0
+                  }
+                ],
+                "closed": true,
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                38
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ],
+            "entities": {
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 44.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 44.0
+                  }
+                ],
+                "closed": true,
+                "width": 0.15,
+                "justify": "center",
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephe yüksekliği ve katıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "height": 3.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                38
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ],
+            "entities": {
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "justify": "center",
+                "height": 3.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin en küçük dikme ve en büyük kayıt aralığı yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 0.3,
+                  "rows": 10.0,
+                  "frame": 0.1
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                38
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ],
+            "entities": {
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "justify": "center",
+                "curtain": {
+                  "spacing": 0.3,
+                  "rows": 10.0,
+                  "frame": 0.1
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephe düz bükümlerle: bükümler saklanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "bulges": [
+                  0.0
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                38
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ],
+            "entities": {
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "justify": "center",
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephe ve düz duvar tek çağrıda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              },
+              {
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 45.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                38,
+                39
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39
+            ],
+            "entities": {
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "justify": "center",
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              },
+              "39": {
+                "kind": "wall",
+                "id": 39,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 45.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin planı yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 0,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 40.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 40.0
+                    }
+                  ],
+                  "width": 0.15,
+                  "justify": "center",
+                  "curtain": {
+                    "spacing": 1.5,
+                    "rows": 1.2
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin dikme aralığı 0,3 m'den kısa: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 0.29,
+                  "rows": 1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Giydirme cephenin dikme aralığı 0.29 m; 0.3 ile 10 m arasında olmalı.",
+              "path": "walls[0].curtain.spacing"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin dikme aralığı 10 m'den uzun: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 10.5,
+                  "rows": 1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Giydirme cephenin dikme aralığı 10.5 m; 0.3 ile 10 m arasında olmalı.",
+              "path": "walls[0].curtain.spacing"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin kayıt aralığı sıfır: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 0.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Giydirme cephenin kayıt aralığı 0 m; 0.3 ile 10 m arasında olmalı.",
+              "path": "walls[0].curtain.rows"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin kayıt aralığı eksi: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": -1.2
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Giydirme cephenin kayıt aralığı -1.2 m; 0.3 ile 10 m arasında olmalı.",
+              "path": "walls[0].curtain.rows"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin çerçevesi sıfır: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2,
+                  "frame": 0.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Giydirme cephenin çerçevesi 0 m; sıfırdan büyük, aralıkların yarısından küçük olmalı (bir panele yer kalır).",
+              "path": "walls[0].curtain.frame"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin çerçevesi dikme aralığının yarısı: panele yer kalmaz, ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 2.0,
+                  "frame": 0.75
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Giydirme cephenin çerçevesi 0.75 m; sıfırdan büyük, aralıkların yarısından küçük olmalı (bir panele yer kalır).",
+              "path": "walls[0].curtain.frame"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin çerçevesi kayıt aralığının yarısından geniş: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 0.4,
+                  "frame": 0.25
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Giydirme cephenin çerçevesi 0.25 m; sıfırdan büyük, aralıkların yarısından küçük olmalı (bir panele yer kalır).",
+              "path": "walls[0].curtain.frame"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin boş panel malzemesi: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2,
+                  "panel": "  "
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Boş malzeme adı yazılmaz; alanı kaldırın ya da bir ad yazın.",
+              "path": "walls[0].curtain.panel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin boş çerçeve malzemesi: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2,
+                  "frames": ""
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Boş malzeme adı yazılmaz; alanı kaldırın ya da bir ad yazın.",
+              "path": "walls[0].curtain.frames"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaylı giydirme cephe: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 7.0,
+                    "y": 43.0
+                  }
+                ],
+                "width": 0.15,
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.2
+                },
+                "bulges": [
+                  0.0,
+                  0.25
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Giydirme cephe düz parçalardan olur; yaylı kenarı olan duvar giydirme cephe olamaz.",
+              "path": "walls[0].curtain"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "plan yazmadan duvarı ve alınacak stili gösterir",
       "steps": [
         {

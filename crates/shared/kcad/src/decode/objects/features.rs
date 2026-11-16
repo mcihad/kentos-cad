@@ -102,6 +102,9 @@ pub(crate) struct Features {
     /// Schema 75: the wall and the settings' `wallStyles` and `arch` (docs/adr/0339).
     pub(crate) walls: bool,
     pub(crate) wall_joins: bool,
+    /// Schema 254 (docs/adr/8054 §10): the modules' own versions; a curtain wall's grid (architecture data 3) is written
+    /// since.
+    pub(crate) module_versions: bool,
     /// Schema 77: the opening (docs/adr/0341).
     pub(super) openings: bool,
     /// Schema 78: the space (docs/adr/0342).
@@ -560,6 +563,7 @@ impl Features {
             nurbs: schema >= SCHEMA_WITH_NURBS,
             walls: schema >= crate::SCHEMA_WITH_WALLS,
             wall_joins: schema >= crate::SCHEMA_WITH_WALL_JOINS,
+            module_versions: schema >= crate::SCHEMA_WITH_MODULE_VERSIONS,
             openings: schema >= crate::SCHEMA_WITH_OPENINGS,
             spaces: schema >= crate::SCHEMA_WITH_SPACES,
             space_columns: schema >= crate::SCHEMA_WITH_SPACE_COLUMNS,
@@ -800,7 +804,8 @@ pub(super) fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 key,
                 "pts" | "bulges" | "closed" | "width" | "justify" | "offset" | "style" | "components" | "caps" | "fill"
                     | "height" | "arch"
-            ) || (has.wall_joins && matches!(key, "joins" | "cleanup")),
+            ) || (has.wall_joins && matches!(key, "joins" | "cleanup"))
+                || (has.module_versions && key == "curtain"),
             Kind::Opening => matches!(key, "host" | "at" | "width" | "place" | "opening"),
             Kind::Space => matches!(key, "parts" | "space"),
             Kind::Grid => key == "grid",

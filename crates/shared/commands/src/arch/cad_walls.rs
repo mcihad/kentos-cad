@@ -216,6 +216,10 @@ pub struct NewWall {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
+    /// Giydirme cephe (docs/adr/8070 §7): its grid; the wall takes no style's components. Absent: a wall.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub curtain: Option<crate::CurtainGrid>,
 }
 
 /// Input of `cad.walls.create` v1: walls on a named layer, along their paths, written as one undo step “Duvar”. The
@@ -557,6 +561,16 @@ pub struct WallChange {
     )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::ArchDiscipline>"))]
     pub discipline: Option<Option<crate::ArchDiscipline>>,
+    /// Giydirme cephe (docs/adr/8070 §7): its grid, the wall a curtain wall (no components, no fill); null: a wall of
+    /// one plain body again.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::CurtainGrid>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::CurtainGrid>"))]
+    pub curtain: Option<Option<crate::CurtainGrid>>,
 }
 
 /// A wall's end.

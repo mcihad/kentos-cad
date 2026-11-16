@@ -219,6 +219,13 @@ pub(crate) fn build(
         None => None,
     };
     let (width, components, caps, fill) = styled(style.as_ref(), w.width);
+    // A curtain wall (docs/adr/8070 §7) is its grid's frames and panels: no style's components; its width the frames'
+    // depth, the input's (else the style's, else a wall's).
+    let (components, fill) = if w.curtain.is_some() {
+        (Vec::new(), None)
+    } else {
+        (components, fill)
+    };
     // The document keeps one bulge per vertex: an open path's last is 0.
     let bulges = w
         .bulges
@@ -245,6 +252,7 @@ pub(crate) fn build(
         arch: w.arch.clone().unwrap_or_default(),
         joins: Default::default(),
         cleanup: true,
+        curtain: w.curtain.clone(),
     };
     valid(&wall, prefix)?;
     drawable(&wall, &format!("{prefix}.pts"))?;

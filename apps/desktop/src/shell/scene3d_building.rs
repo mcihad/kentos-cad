@@ -73,7 +73,8 @@ fn class_part(kind: Kind) -> u32 {
             Class::Stair | Class::Ramp => 5,
             Class::Railing => 6,
             Class::Door => 7,
-            Class::Window => 8,
+            // A curtain wall's own body is its panels: glass (docs/adr/8070 §7).
+            Class::Window | Class::CurtainWall => 8,
             Class::TransportElement | Class::Furniture | Class::SanitaryTerminal => 10,
         },
     }

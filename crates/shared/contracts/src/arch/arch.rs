@@ -698,6 +698,85 @@ pub struct WallFields {
     #[serde(default = "yes", skip_serializing_if = "is_yes")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub cleanup: bool,
+    /// Giydirme cephe (docs/adr/8070 §7): its grid of frames and panels; absent: a wall of its components. A curtain
+    /// wall has no components and no arcs; its width is its frames' depth.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub curtain: Option<CurtainGrid>,
+}
+
+/// A curtain wall's grid (docs/adr/8070 §7): each straight stretch of its line divided into as many equal bays as leave
+/// none wider than `spacing`, its height into as many equal rows as leave none taller than `rows` (a largest spacing, so
+/// the panels of a stretch are equal); a frame on every line of the grid, its ends and its foot and top among them
+/// (dikme along, kayıt across); a panel in each cell.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CurtainGrid {
+    /// The largest distance between two mullions, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub spacing: f64,
+    /// The largest distance between two transoms, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub rows: f64,
+    /// A frame's face, metres (a mullion's width along the line, a transom's height); absent: [`CurtainGrid::FRAME`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub frame: Option<f64>,
+    /// The panels' material (Cam); absent: not said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub panel: Option<String>,
+    /// The frames' material (Alüminyum); absent: not said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub frames: Option<String>,
+}
+
+impl CurtainGrid {
+    /// A frame's face when none is given, metres: KentOS's own common size (docs/adr/8070 §7).
+    pub const FRAME: f64 = 0.05;
+    /// The least and the largest spacing, metres.
+    pub const LEAST: f64 = 0.3;
+    pub const MOST: f64 = 10.0;
+
+    /// Its frame's face.
+    pub fn frame(&self) -> f64 {
+        self.frame.unwrap_or(Self::FRAME)
+    }
+
+    /// What is wrong with it: the field and the words; none: it is a grid.
+    pub fn problem(&self) -> Option<(String, String)> {
+        for (field, v, what) in [("spacing", self.spacing, "dikme aralığı"), ("rows", self.rows, "kayıt aralığı")] {
+            if !(v.is_finite() && (Self::LEAST..=Self::MOST).contains(&v)) {
+                return Some((
+                    format!("curtain.{field}"),
+                    format!("Giydirme cephenin {what} {v} m; {} ile {} m arasında olmalı.", Self::LEAST, Self::MOST),
+                ));
+            }
+        }
+        let f = self.frame();
+        if !(f.is_finite() && f > 0.0 && 2.0 * f < self.spacing.min(self.rows)) {
+            return Some((
+                "curtain.frame".into(),
+                format!(
+                    "Giydirme cephenin çerçevesi {f} m; sıfırdan büyük, aralıkların yarısından küçük olmalı (bir panele yer kalır)."
+                ),
+            ));
+        }
+        for (field, v) in [("panel", &self.panel), ("frames", &self.frames)] {
+            if v.as_deref().is_some_and(|t| t.trim().is_empty()) {
+                return Some((
+                    format!("curtain.{field}"),
+                    "Boş malzeme adı yazılmaz; alanı kaldırın ya da bir ad yazın.".into(),
+                ));
+            }
+        }
+        None
+    }
 }
 
 fn yes() -> bool {
@@ -989,6 +1068,23 @@ impl WallFields {
                 return Some((
                     format!("bulges[{}]", n - 1),
                     "Açık duvarın son noktasından kenar çıkmaz: son büküm 0 olmalı.".into(),
+                ));
+            }
+        }
+        if let Some(grid) = &self.curtain {
+            if let Some(problem) = grid.problem() {
+                return Some(problem);
+            }
+            if self.bulges.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0)) {
+                return Some((
+                    "curtain".into(),
+                    "Giydirme cephe düz parçalardan olur; yaylı kenarı olan duvar giydirme cephe olamaz.".into(),
+                ));
+            }
+            if !self.components.is_empty() {
+                return Some((
+                    "curtain".into(),
+                    "Giydirme cephenin bileşeni olmaz: çerçeveleri ve panelleri ızgarasından.".into(),
                 ));
             }
         }
@@ -2281,6 +2377,7 @@ mod tests {
             arch: ArchInfo::default(),
             joins: WallJoins::default(),
             cleanup: true,
+            curtain: None,
         }
     }
 

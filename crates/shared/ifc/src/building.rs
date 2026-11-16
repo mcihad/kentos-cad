@@ -110,6 +110,7 @@ pub enum Class {
     Member,
     Chimney,
     Ramp,
+    CurtainWall,
 }
 
 impl Class {
@@ -132,6 +133,7 @@ impl Class {
             Class::Member => "IFCMEMBER",
             Class::Chimney => "IFCCHIMNEY",
             Class::Ramp => "IFCRAMP",
+            Class::CurtainWall => "IFCCURTAINWALL",
         }
     }
 
@@ -154,6 +156,7 @@ impl Class {
             Class::Member => "ELM",
             Class::Chimney => "BAC",
             Class::Ramp => "RMP",
+            Class::CurtainWall => "GDC",
         }
     }
 }
@@ -176,6 +179,9 @@ pub struct Element {
     pub predefined: &'static str,
     /// Its object type: what a `USERDEFINED` one is (IFC's rule: a user-defined type is said in words).
     pub object_type: Option<String>,
+    /// The element it is a part of, by index into [`Building::elements`] (a curtain wall's mullion): written in that
+    /// one's `IfcRelAggregates`, not on a storey of its own.
+    pub part_of: Option<usize>,
     /// Its storey, by index into [`Building::storeys`].
     pub storey: usize,
     pub shapes: Vec<Shape>,
@@ -819,8 +825,30 @@ pub fn write(b: &Building) -> String {
                 None => materials.push((m.clone(), vec![n])),
             }
         }
-        contained[e.storey].push(n);
+        // A part is in its whole's aggregation, not on a storey of its own (IFC 4.3: a decomposed element's parts).
+        if e.part_of.is_none() {
+            contained[e.storey].push(n);
+        }
         products.push(n);
+    }
+    // The wholes and their parts (a curtain wall's mullions and transoms).
+    let mut wholes: Vec<(usize, Vec<usize>)> = Vec::new();
+    for (k, e) in b.elements.iter().enumerate() {
+        let Some(whole) = e.part_of else { continue };
+        let (Some(&part), Some(&parent)) = (products.get(k), products.get(whole)) else {
+            continue;
+        };
+        if part == 0 || parent == 0 {
+            continue;
+        }
+        match wholes.iter_mut().find(|(p, _)| *p == parent) {
+            Some((_, list)) => list.push(part),
+            None => wholes.push((parent, vec![part])),
+        }
+    }
+    for (parent, parts) in &wholes {
+        let g = w.st.gid();
+        w.st.add(format!("IFCRELAGGREGATES({g},$,$,$,#{parent},({}))", Step::refs(parts)));
     }
     // The openings: each voids its wall, a door or a window fills it.
     for o in &b.openings {
@@ -1167,6 +1195,7 @@ mod tests {
                     tag: None,
                     predefined: "STANDARD",
                     object_type: None,
+                    part_of: None,
                     storey: 0,
                     shapes: vec![Shape::Prism {
                         rings: vec![vec![[0.0, 0.0], [5.0, 0.0], [5.0, 0.2], [0.0, 0.2]]],
@@ -1190,6 +1219,7 @@ mod tests {
                     tag: Some("K1".into()),
                     predefined: "DOOR",
                     object_type: None,
+                    part_of: None,
                     storey: 0,
                     shapes: vec![],
                     overall: Some((2.1, 0.9)),

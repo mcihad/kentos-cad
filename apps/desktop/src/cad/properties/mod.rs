@@ -326,6 +326,13 @@ pub enum Field {
     WallWidth(Slot),
     WallOffset(Slot),
     WallHeight(Slot),
+    /// A curtain wall's grid (docs/adr/8070 §7): its largest panel width and height, its frame's face, its panels' and
+    /// its frames' material (empty: not said).
+    CurtainSpacing(Slot),
+    CurtainRows(Slot),
+    CurtainFrame(Slot),
+    CurtainPanel(Slot),
+    CurtainFrames(Slot),
     /// An opening's width, place along its wall, swing (degrees), frame, sill, head (empty: none) and number
     /// (docs/adr/0341 §5).
     OpeningWidth(Slot),

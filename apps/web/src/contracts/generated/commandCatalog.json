@@ -136209,6 +136209,52 @@
       ],
       "type": "object"
     },
+    "CurtainGrid": {
+      "additionalProperties": false,
+      "description": "A curtain wall's grid (docs/adr/8070 §7): each straight stretch of its line divided into as many equal bays as leave\nnone wider than `spacing`, its height into as many equal rows as leave none taller than `rows` (a largest spacing, so\nthe panels of a stretch are equal); a frame on every line of the grid, its ends and its foot and top among them\n(dikme along, kayıt across); a panel in each cell.",
+      "properties": {
+        "frame": {
+          "description": "A frame's face, metres (a mullion's width along the line, a transom's height); absent: [`CurtainGrid::FRAME`].",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "frames": {
+          "description": "The frames' material (Alüminyum); absent: not said.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "panel": {
+          "description": "The panels' material (Cam); absent: not said.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rows": {
+          "description": "The largest distance between two transoms, metres.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "spacing": {
+          "description": "The largest distance between two mullions, metres.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "spacing",
+        "rows"
+      ],
+      "type": "object"
+    },
     "CurveConstruction": {
       "description": "One curve to construct: Daire's, Yay's and Elips's methods (AutoCAD's CIRCLE, ARC and ELLIPSE). A circle by\nits centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).",
       "oneOf": [
@@ -170000,6 +170046,17 @@
         "closed": {
           "description": "Kapat: the path's last vertex joins its first.",
           "type": "boolean"
+        },
+        "curtain": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CurtainGrid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Giydirme cephe (docs/adr/8070 §7): its grid; the wall takes no style's components. Absent: a wall."
         },
         "height": {
           "description": "Its height above its level's floor, metres. Absent: the level's.",
@@ -224302,6 +224359,17 @@
           },
           "type": "array"
         },
+        "curtain": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CurtainGrid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Giydirme cephe (docs/adr/8070 §7): its grid of frames and panels; absent: a wall of its components. A curtain\nwall has no components and no arcs; its width is its frames' depth."
+        },
         "fill": {
           "description": "The body's solid fill when drawn schematically (`#RRGGBB`); absent: none.",
           "type": [
@@ -224493,6 +224561,17 @@
             "$ref": "#/$defs/WallComponent"
           },
           "type": "array"
+        },
+        "curtain": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CurtainGrid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Giydirme cephe (docs/adr/8070 §7): its grid of frames and panels; absent: a wall of its components. A curtain\nwall has no components and no arcs; its width is its frames' depth."
         },
         "fill": {
           "description": "The body's solid fill when drawn schematically (`#RRGGBB`); absent: none.",
@@ -225290,6 +225369,17 @@
                   "type": "null"
                 }
               ]
+            },
+            "curtain": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CurtainGrid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Giydirme cephe (docs/adr/8070 §7): its grid, the wall a curtain wall (no components, no fill); null: a wall of\none plain body again."
             },
             "discipline": {
               "anyOf": [

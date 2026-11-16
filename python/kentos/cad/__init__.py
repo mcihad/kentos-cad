@@ -837,6 +837,7 @@ __all__ = [
     "CulvertsQueried",
     "CulvertsQuery",
     "CulvertsWritten",
+    "CurtainGrid",
     "CurveConstruction",
     "CurveCriterion",
     "CurveEdit",

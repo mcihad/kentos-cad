@@ -13,7 +13,7 @@ use kentos_interaction::Vec2;
 fn bench() -> Bench {
     let mut b = Bench::new("wall");
     let pts = [Vec2::new(E + 8.0, N), Vec2::new(E, N + 8.0)];
-    assert!(b.run(|_, cx| kentos_interaction::wall::write(&pts, &[FRAC_PI_8.tan()], false, cx)));
+    assert!(b.run(|_, cx| kentos_interaction::wall::write(&pts, &[FRAC_PI_8.tan()], false, false, cx)));
     b.start("wallPartition");
     assert!(b.run(|s, cx| s.configure("U", "1.5m", cx)));
     b

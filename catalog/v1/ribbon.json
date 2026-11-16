@@ -1998,6 +1998,11 @@
           "label": "Ölçülü bölme"
          },
          {
+          "command": "tool.curtainWall",
+          "title": "Duvar",
+          "label": "Giydirme cephe"
+         },
+         {
           "command": "tool.wallFromLines",
           "title": "Duvar",
           "label": "Çizgiden duvar"

@@ -608,6 +608,12 @@ pub(crate) fn object(
                 }
                 f.wall_cleanup = Some(false);
             }
+            // A curtain wall's grid (architecture data 3, docs/adr/8070 §7): the document's reader refuses it in a file
+            // that does not name that version.
+            "curtain" => {
+                let (v, _): (kentos_contracts::CurtainGrid, usize) = json_part(r, "giydirme cephenin ızgarası")?;
+                f.wall_curtain = Some(v);
+            }
             // A wall's, and since schema 131 a block insert's level and phase (docs/adr/0733 §1).
             "arch" => {
                 let what = if kind == Kind::Insert {

@@ -8,6 +8,7 @@
     { "name": "DU", "command": "tool.wall" },
     { "name": "DD", "command": "tool.wallRectangle" },
     { "name": "OB", "command": "tool.wallPartition" },
+    { "name": "GC", "command": "tool.curtainWall" },
     { "name": "KP", "command": "tool.door" },
     { "name": "PN", "command": "tool.window" },
     { "name": "MH", "command": "tool.space" },

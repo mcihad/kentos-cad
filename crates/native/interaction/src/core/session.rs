@@ -84,6 +84,8 @@ pub const TOOLS: &[&str] = &[
     // Oda (docs/adr/8021).
     wall_rectangle::ROOM_ID,
     crate::wall_partition::ID,
+    // Giydirme cephe (docs/adr/8070 §7): Duvar drawing a curtain wall.
+    wall::CURTAIN_ID,
     // Duvarı kaydır (docs/adr/0790 §1).
     crate::wall_shift::ID,
     crate::wall_dimensions::ID,
@@ -512,6 +514,7 @@ impl Session {
             path::POLYGON_ID => Box::new(Path::polygon()),
             path::WIPEOUT_ID => Box::new(Path::wipeout()),
             wall::ID => Box::new(Path::wall()),
+            wall::CURTAIN_ID => Box::new(Path::curtain_wall()),
             wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
             // Oda (docs/adr/8021): the rectangle's walls, its room and tag.
             wall_rectangle::ROOM_ID => Box::new(wall_rectangle::WallRectangle::room()),

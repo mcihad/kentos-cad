@@ -2194,6 +2194,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.curtainWall",
+      "title": "Giydirme cephe",
+      "short": "Giydirme",
+      "icon": "curtainWall",
+      "description": "Yol gibi çizilen tabanı boyunca bir giydirme cephe çizer: her düz parçası eşit bölmelere, yüksekliği eşit sıralara ayrılır; Panel eni (P) dikmeler, Panel boyu (B) kayıtlar arasındaki en büyük aralıktır. Kalınlık (E) çerçevenin derinliği, Hiza (H) ve Öteleme (Ö) Duvar'daki gibidir; paneller Cam, çerçeveler Alüminyum yazılır, Öznitelikler'de değişir. Kesitte, görünüşte, 3B'de ve IFC'de dikmeleri, kayıtları ve camlarıyla görünür.",
+      "aliases": [
+        "GIYDIRME",
+        "CURTAINWALL"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.spaceDiscover",
       "title": "Toplu mahal bul",
       "icon": "spaceDiscover",
@@ -5284,6 +5298,7 @@
     {"id": "extensions.install", "title": "Eklenti paketi yükle…", "short": "Paket yükle", "icon": "import", "description": "Bir .kek eklenti paketini seçtirir ve kurmadan önce gözden geçirtir: paket kodu çalıştırılmadan denetlenir, sorunları dosyası ve yeriyle söylenir; geçerliyse açıklaması, değişiklik notu, bağımlılıkları ve gerekçeli yetenekleri görünür, kurulu bir sürüm varsa farkıyla. Dosyaya çift tıklamak kurmaz.", "aliases": ["EKLENTIYUKLE", "EKLENTİYÜKLE", "KEK", "PAKETYUKLE", "PAKETYÜKLE"], "shortcuts": [], "category": "Eklentiler", "status": "implemented"}
   ],
   "icons": {
+    "curtainWall": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\"/><path d=\"M7.5 2.5v15M12.5 2.5v15M2.5 7.5h15M2.5 12.5h15\" stroke-width=\"1\"/><path d=\"m3.8 6.2 2.4-2.4M8.8 11.2l2.4-2.4M13.8 16.2l2.4-2.4\" stroke-width=\"0.7\"/>",
     "openReport": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9h5M7.5 11.5h5M7.5 14h3\" stroke-width=\"1\"/>",
     "assistant": "<path d=\"M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9.2l-3.7 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5z\"/><path d=\"m10 6.6.75 1.75 1.75.75-1.75.75L10 11.6l-.75-1.75L7.5 9.1l1.75-.75z\" stroke-width=\"1\"/>",
     "extensions": "<path d=\"M3.5 6.5h4a2 2 0 1 1 4 0h3v3a2 2 0 1 1 0 4v3h-11z\"/>",

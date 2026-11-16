@@ -100,7 +100,7 @@ impl WallFromLines {
             // reference (an underlay, often locked): the walls go to the active layer, as a new object does
             // (docs/adr/0798 §3); lines replaced leave their walls on their own layer, as before.
             layer_id: if m.layer_keys {
-                Some(crate::arch_layer::planned(&wall::layer_kind(cx), cx))
+                Some(crate::arch_layer::planned(&wall::layer_kind(cx, false), cx))
             } else {
                 m.wall_keep_sources
                     .then(|| cx.doc.layers().active().to_owned())
@@ -184,7 +184,7 @@ impl WallFromLines {
 
 impl Stages for WallFromLines {
     fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
-        Some(wall::layer_kind(cx))
+        Some(wall::layer_kind(cx, false))
     }
 
     fn id(&self) -> &'static str {
@@ -361,7 +361,7 @@ impl Stages for WallFromLines {
             "K" => cx.memory.wall_keep_sources = !cx.memory.wall_keep_sources,
             "L" => self.level.next(),
             "H" if !cx.memory.wall_pairs => wall::next_justify(cx),
-            "E" | "S" => self.ask = wall::ask_of(&key),
+            "E" | "S" => self.ask = wall::ask_of(&key, false),
             _ => return None,
         }
         self.see(cx);
@@ -561,7 +561,7 @@ impl Stages for WallFromLines {
             self.ask = None;
             return Flow::Stay;
         }
-        let kind = wall::layer_kind(cx);
+        let kind = wall::layer_kind(cx, false);
         let mut written = None;
         let before = cx.doc.revision();
         crate::arch_layer::writing(&kind, cx, |_, cx| {

@@ -505,6 +505,10 @@ impl<'d> Encoder<'d> {
                 if !w.cleanup {
                     f.push(("cleanup", Val::Bool(false)));
                 }
+                // A curtain wall's grid (architecture data 3, docs/adr/8070 §7).
+                if let Some(c) = &w.curtain {
+                    f.push(("curtain", Val::Json(serde_json::to_value(c).unwrap_or_default())));
+                }
             }
             // A grid, a column, a stair or a ramp (docs/adr/0343 §1): its fields as one map under its kind's name.
             Entity::Grid(e) => {

@@ -165,8 +165,29 @@ pub fn wall_rows(memory: &Memory, styles: &[WallStyleDef], f: &Format) -> Vec<Se
         Setting::text("Ö", "Öteleme", f.length(memory.wall_offset)),
     ]
 }
+/// Giydirme cephe's rows (docs/adr/8070 §7): Duvar's without Stil, its panel's largest width and height after them.
+pub fn curtain_rows(memory: &Memory, f: &Format) -> Vec<Setting> {
+    vec![
+        Setting::text("E", "Kalınlık", f.length(memory.wall_width)),
+        Setting::choice("H", "Hiza", wall::choices("H", memory, &[])),
+        Setting::text("Ö", "Öteleme", f.length(memory.wall_offset)),
+        Setting::text("P", "Panel eni", f.length(memory.curtain_spacing)),
+        Setting::text("B", "Panel boyu", f.length(memory.curtain_rows)),
+    ]
+}
+
 pub fn wall_apply(key: &str, value: &str, cx: &mut Context<'_>) -> bool {
     match key {
+        // Giydirme cephe's panel (docs/adr/8070 §7).
+        "P" | "B" => {
+            let Some(v) = cx.typed_length(value).filter(|v| v.is_finite()) else {
+                cx.say(Level::Warn, "Bir uzunluk yazın: 1.50m ya da 1500mm gibi.");
+                return false;
+            };
+            let ask = if key == "P" { wall::Ask::Spacing } else { wall::Ask::Rows };
+            wall::typed(ask, v, cx);
+            (kentos_commands::CurtainGrid::LEAST..=kentos_commands::CurtainGrid::MOST).contains(&v)
+        }
         // Kapanınca mahal (docs/adr/8022): Açık or Kapalı (yes, no as the toggle sends them).
         "M" => {
             let v = crate::prompt::fold_tr(value.trim());

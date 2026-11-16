@@ -64,7 +64,7 @@ impl Partition {
             },
             wall: WallsCreate {
                 // The wall's layer (docs/adr/8008).
-                layer_id: crate::arch_layer::planned(&wall::layer_kind(cx), cx),
+                layer_id: crate::arch_layer::planned(&wall::layer_kind(cx, false), cx),
                 walls: vec![NewWall {
                     pts: vec![],
                     bulges: None,
@@ -79,6 +79,7 @@ impl Partition {
                     arch: cx.new_arch(),
                     attrs: cx.template_attrs(None),
                     label: cx.template_label(),
+                    curtain: None,
                 }],
                 color: cx.draft.color_text(),
                 line_weight: cx.draft.line_weight,
@@ -262,7 +263,7 @@ impl Partition {
             );
             return;
         }
-        let kind = wall::layer_kind(cx);
+        let kind = wall::layer_kind(cx, false);
         let written = crate::arch_layer::writing(&kind, cx, |_, cx| {
             let Some(input) = self.input_for(cx) else {
                 return false;
@@ -284,7 +285,7 @@ impl Partition {
 }
 impl Tool for Partition {
     fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
-        Some(wall::layer_kind(cx))
+        Some(wall::layer_kind(cx, false))
     }
 
     fn id(&self) -> &'static str {

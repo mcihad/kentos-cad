@@ -260,6 +260,9 @@ pub struct Spec {
     pub passes: [Option<Vec<u8>>; 2],
     /// Its components are cleaned up by their priorities where another wall tees into or crosses it.
     pub cleanup: bool,
+    /// A curtain wall's grid (docs/adr/8070 §7), as the drawing writes it (`spacing`, `rows`, `frame`, `panel`,
+    /// `frames`); none: a wall of its components. Drawn by [`crate::geom::curtain`].
+    pub curtain: Option<Json>,
 }
 
 impl Default for Spec {
@@ -278,6 +281,7 @@ impl Default for Spec {
             joins: [JoinMode::Auto; 2],
             passes: [None, None],
             cleanup: true,
+            curtain: None,
         }
     }
 }
@@ -296,6 +300,7 @@ impl crate::api::json::Flat for Spec {
         "arch",
         "joins",
         "cleanup",
+        "curtain",
     ];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
@@ -342,6 +347,10 @@ impl crate::api::json::Flat for Spec {
                 [at("startPass")?, at("endPass")?]
             },
             cleanup: !matches!(v.get("cleanup"), Json::Bool(false)),
+            curtain: match v.get("curtain") {
+                Json::Null => None,
+                c => Some(c.clone()),
+            },
         })
     }
 
@@ -382,6 +391,9 @@ impl crate::api::json::Flat for Spec {
         }
         if !self.cleanup {
             field(out, first, "cleanup", &false);
+        }
+        if let Some(c) = &self.curtain {
+            field(out, first, "curtain", c);
         }
     }
 }
@@ -843,6 +855,9 @@ pub fn pieces(
 
 /// A drawing's pieces at `view`, hatches and fill first, then its lines.
 pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece> {
+    if let Some(grid) = crate::geom::curtain::grid_of(spec.curtain.as_ref()) {
+        return curtain_pieces(d, pts, spec, grid);
+    }
     let mut out = Vec::new();
     let shown = |c: &Component| view.detail >= Detail::Standard && view.detail >= c.detail;
     let comps = if d.bands.len() == spec.components.len() {
@@ -915,6 +930,53 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
             for st in &d.lines[k] {
                 out.push(boundary(st.line.shape(st.closed), edge));
             }
+        }
+    }
+    out
+}
+
+/// A curtain wall in plan (docs/adr/8070 §7): its faces and ends as a wall's, its glass a line down its middle, and its
+/// mullions, each a frame's face wide and as deep as the wall, on the grid's lines of each straight stretch.
+fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64, f64, f64)) -> Vec<Piece> {
+    let mut out = Vec::new();
+    let last = d.lines.len().saturating_sub(1);
+    for k in [0, last] {
+        for st in d.lines.get(k).into_iter().flatten() {
+            out.push(piece(st.line.shape(st.closed), None, None));
+        }
+    }
+    for &(a, b) in &d.caps {
+        out.push(piece(Shape::Line { a, b }, None, None));
+    }
+    let left = left_face(spec);
+    let right = left - spec.width;
+    if let Ok(glass) = line_at(pts, None, spec.closed, (left + right) / 2.0) {
+        out.push(piece(glass.shape(spec.closed), None, None));
+    }
+    let n = pts.len();
+    let stretches = if spec.closed { n } else { n.saturating_sub(1) };
+    for i in 0..stretches {
+        let (a, b) = (pts[i], pts[(i + 1) % n]);
+        let length = js_hypot(b.x - a.x, b.y - a.y);
+        if length <= 1e-9 {
+            continue;
+        }
+        let u = Vec2::new((b.x - a.x) / length, (b.y - a.y) / length);
+        let normal = Vec2::new(-u.y, u.x);
+        let at = |s: f64, off: f64| Vec2::new(a.x + u.x * s + normal.x * off, a.y + u.y * s + normal.y * off);
+        let lines = crate::geom::curtain::divisions(length, spacing);
+        for k in 0..lines.len() {
+            let (s0, s1) = crate::geom::curtain::frame_span(&lines, k, face.min(length / 2.0));
+            out.push(piece(
+                Shape::Polygon {
+                    pts: vec![at(s0, left), at(s1, left), at(s1, right), at(s0, right)],
+                    bulges: None,
+                    holes: None,
+                    parts: None,
+                },
+                None,
+                None,
+            ));
         }
     }
     out
@@ -1053,6 +1115,48 @@ mod tests {
 
     fn v(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)
+    }
+
+    /// A curtain wall in plan (docs/adr/8070 §7): 6 m along x, 0.15 m deep and centred, at most 1.50 m between
+    /// mullions: its two faces, its glass down its middle (y 0) and 5 mullions, each 5 cm along it and as deep as it,
+    /// the end ones inside its ends (x 0–0.05 … 5.95–6); no hatch.
+    #[test]
+    fn a_curtain_wall_draws_its_faces_its_glass_and_its_mullions() {
+        let spec = Spec {
+            width: 0.15,
+            curtain: Some(Json::parse(r#"{"spacing": 1.5, "rows": 1.2}"#).unwrap()),
+            ..Spec::default()
+        };
+        let pts = [v(0.0, 0.0), v(6.0, 0.0)];
+        let pieces = pieces(&pts, None, &spec, View::new(Detail::Standard, 50.0)).unwrap();
+        assert!(!pieces.iter().any(|p| matches!(p.shape, Shape::Hatch { .. })));
+        let mullions: Vec<(f64, f64)> = pieces
+            .iter()
+            .filter_map(|p| match &p.shape {
+                Shape::Polygon { pts, .. } => {
+                    let xs: Vec<f64> = pts.iter().map(|q| q.x).collect();
+                    let ys: Vec<f64> = pts.iter().map(|q| q.y).collect();
+                    let lo = |v: &[f64]| v.iter().cloned().fold(f64::INFINITY, f64::min);
+                    let hi = |v: &[f64]| v.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+                    assert!((lo(&ys) + 0.075).abs() < 1e-12 && (hi(&ys) - 0.075).abs() < 1e-12, "{pts:?}");
+                    Some((lo(&xs), hi(&xs)))
+                }
+                _ => None,
+            })
+            .collect();
+        let want = [(0.0, 0.05), (1.475, 1.525), (2.975, 3.025), (4.475, 4.525), (5.95, 6.0)];
+        assert_eq!(mullions.len(), want.len(), "{mullions:?}");
+        for (got, want) in mullions.iter().zip(want) {
+            assert!((got.0 - want.0).abs() < 1e-12 && (got.1 - want.1).abs() < 1e-12, "{got:?} {want:?}");
+        }
+        // The glass: a line along y 0 from end to end.
+        assert!(pieces.iter().any(|p| match &p.shape {
+            Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } if pts.len() >= 2 => {
+                pts.iter().all(|q| q.y.abs() < 1e-12) && (pts[0].x - 0.0).abs() < 1e-9
+            }
+            Shape::Line { a, b } => a.y.abs() < 1e-12 && b.y.abs() < 1e-12,
+            _ => false,
+        }));
     }
 
     fn spec(width: f64, justify: Justify) -> Spec {

@@ -1222,6 +1222,39 @@ pub(super) fn commit(
             };
             return properties::edit_slab(model, *slot, SlabsOperation::Set(change));
         }
+        // A curtain wall's grid (docs/adr/8070 §7), changed whole through `cad.walls.edit`.
+        Field::CurtainSpacing(slot)
+        | Field::CurtainRows(slot)
+        | Field::CurtainFrame(slot)
+        | Field::CurtainPanel(slot)
+        | Field::CurtainFrames(slot) => {
+            let Some(Entity::Wall(w)) = model.get(*slot) else {
+                return Vec::new();
+            };
+            let Some(mut grid) = w.wall.curtain.clone() else {
+                return Vec::new();
+            };
+            let words = (!text.trim().is_empty()).then(|| text.trim().to_owned());
+            match field {
+                Field::CurtainPanel(_) => grid.panel = words,
+                Field::CurtainFrames(_) => grid.frames = words,
+                _ => {
+                    let Some(n) = length(text).filter(|n| n.is_finite()) else {
+                        return vec!["Giydirme cephenin ölçüsü için bir uzunluk girin; örneğin 1.50 m.".into()];
+                    };
+                    match field {
+                        Field::CurtainSpacing(_) => grid.spacing = n,
+                        Field::CurtainRows(_) => grid.rows = n,
+                        _ => grid.frame = Some(n),
+                    }
+                }
+            }
+            return properties::edit_wall(
+                model,
+                *slot,
+                kentos_commands::WallChange { curtain: Some(Some(grid)), ..Default::default() },
+            );
+        }
         Field::WallWidth(slot) | Field::WallOffset(slot) | Field::WallHeight(slot) => {
             let height = matches!(field, Field::WallHeight(_));
             if height && text.trim().is_empty() {
@@ -1363,6 +1396,11 @@ pub(super) fn commit(
         Field::WallWidth(_)
         | Field::WallOffset(_)
         | Field::WallHeight(_)
+        | Field::CurtainSpacing(_)
+        | Field::CurtainRows(_)
+        | Field::CurtainFrame(_)
+        | Field::CurtainPanel(_)
+        | Field::CurtainFrames(_)
         | Field::OpeningWidth(_)
         | Field::OpeningAt(_)
         | Field::OpeningSwing(_)

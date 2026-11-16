@@ -55,6 +55,14 @@ pub(crate) fn wall_at<'a>(
             path,
         ));
     };
+    // A curtain wall is its frames and panels (docs/adr/8070 §7): a door in it is a panel of its own, not yet drawn.
+    if w.wall.curtain.is_some() {
+        return Err(fail(
+            codes::NOT_A_WALL,
+            "Giydirme cepheye açıklık konmaz: kapısı ve penceresi paneli olarak gelecek; açıklığı bir duvara koyun.".into(),
+            path,
+        ));
+    }
     let line = opening_follow::wall_line(e).ok_or_else(|| {
         fail(
             codes::NOT_A_WALL,

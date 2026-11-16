@@ -35,8 +35,37 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
         })
     };
     let fixed = kentos_commands::fixed_width(&x.components).is_some();
+    // Duvar or Giydirme cephe (docs/adr/8070 §7): a curtain wall is its grid's frames and panels; turning a wall into one
+    // takes the tool's first grid (KentOS's own panel, glass and aluminium), back a plain wall of one body.
+    let kinds = [(false, "Duvar"), (true, kentos_interaction::wall::CURTAIN_LABEL)]
+        .into_iter()
+        .map(|(c, label)| {
+            let grid = c.then(|| kentos_interaction::wall::grid(&kentos_interaction::Memory::default()));
+            pick(
+                label.to_owned(),
+                c == x.curtain.is_some(),
+                change(kentos_commands::WallChange { curtain: Some(grid), ..Default::default() }),
+                None,
+            )
+        })
+        .collect();
+    let kind = if x.curtain.is_some() { kentos_interaction::wall::CURTAIN_LABEL } else { "Duvar" };
+    geo.push(Row::text("Tür", kind).editor(select(kind.to_owned(), kinds)));
     // A wall's width is its Kalınlık, as the tool and its panel say (docs/adr/8003); a line's weight is Çizgi kalınlığı.
     geo.push(metres("Kalınlık", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
+    if let Some(grid) = &x.curtain {
+        geo.push(metres("Panel eni", grid.spacing).editor(number(Field::CurtainSpacing(slot))));
+        geo.push(metres("Panel boyu", grid.rows).editor(number(Field::CurtainRows(slot))));
+        geo.push(metres("Çerçeve", grid.frame()).editor(number(Field::CurtainFrame(slot))));
+        geo.push(
+            Row::text("Panel malzemesi", grid.panel.clone().unwrap_or_default())
+                .editor(edit(Editor::Text(Field::CurtainPanel(slot)))),
+        );
+        geo.push(
+            Row::text("Çerçeve malzemesi", grid.frames.clone().unwrap_or_default())
+                .editor(edit(Editor::Text(Field::CurtainFrames(slot)))),
+        );
+    }
     // Kalınlıkta sabit (docs/adr/0771 §2): the line a width or style change keeps, this session's.
     let keep_now = super::super::wall_parts::keep();
     let keeps = kentos_commands::WallReference::ALL

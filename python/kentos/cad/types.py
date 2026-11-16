@@ -29187,6 +29187,48 @@ class CulvertsWritten(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CurtainGrid(_Model):
+    """A curtain wall's grid (docs/adr/8070 §7): each straight stretch of its line divided into as many equal bays as leave
+    none wider than `spacing`, its height into as many equal rows as leave none taller than `rows` (a largest spacing, so
+    the panels of a stretch are equal); a frame on every line of the grid, its ends and its foot and top among them
+    (dikme along, kayıt across); a panel in each cell.
+    Attributes:
+        spacing: The largest distance between two mullions, metres. Unit: length.
+        rows: The largest distance between two transoms, metres. Unit: length.
+        frame: A frame's face, metres (a mullion's width along the line, a transom's height); absent: [`CurtainGrid::FRAME`]. Unit: length.
+        frames: The frames' material (Alüminyum); absent: not said.
+        panel: The panels' material (Cam); absent: not said.
+    """
+    spacing: float
+    rows: float
+    frame: float | None | Unset = UNSET
+    frames: str | None | Unset = UNSET
+    panel: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["spacing"] = float(self.spacing)
+        out["rows"] = float(self.rows)
+        if self.frame is not UNSET:
+            out["frame"] = None if self.frame is None else float(self.frame)
+        if self.frames is not UNSET:
+            out["frames"] = self.frames
+        if self.panel is not UNSET:
+            out["panel"] = self.panel
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurtainGrid:
+        return cls(
+            spacing=float(data["spacing"]),
+            rows=float(data["rows"]),
+            frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
+            frames=data.get("frames", UNSET),
+            panel=data.get("panel", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CurveCriterion(_Model):
     """A criterion's least length: `stopping` (a crest's stopping sight), `passing`, `headlight`, `comfort`, `bisector`;
     the sight distance it asks (m, the sight criteria) and the length (m).
@@ -63271,6 +63313,7 @@ class NewWall(_Model):
             closed path. Absent: every edge straight. Unit: 1.
         caps: Its ends. Absent: the style's, else closed.
         closed: Kapat: the path's last vertex joins its first.
+        curtain: Giydirme cephe (docs/adr/8070 §7): its grid; the wall takes no style's components. Absent: a wall.
         height: Its height above its level's floor, metres. Absent: the level's. Unit: elevation.
         justify: Where the body lies across the path. Absent: centred.
         label: The text shown beside it. Absent: none.
@@ -63285,6 +63328,7 @@ class NewWall(_Model):
     bulges: list[float] | None | Unset = UNSET
     caps: WallCaps | WallCapsName | None | Unset = UNSET
     closed: bool | Unset = UNSET
+    curtain: CurtainGrid | None | Unset = UNSET
     height: float | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -63305,6 +63349,8 @@ class NewWall(_Model):
             out["caps"] = None if self.caps is None else _enum_out(self.caps)
         if self.closed is not UNSET:
             out["closed"] = self.closed
+        if self.curtain is not UNSET:
+            out["curtain"] = None if self.curtain is None else self.curtain.to_json()
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.justify is not UNSET:
@@ -63328,6 +63374,7 @@ class NewWall(_Model):
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             caps=UNSET if "caps" not in data else None if data["caps"] is None else _enum_in(WallCaps, data["caps"]),
             closed=data.get("closed", UNSET),
+            curtain=UNSET if "curtain" not in data else None if data["curtain"] is None else CurtainGrid.from_json(data["curtain"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             label=data.get("label", UNSET),
@@ -116620,6 +116667,8 @@ class WallEntity(Entity):
         closed: Its path's last vertex joins its first: a ring of wall.
         color: Colour override; absent = the layer's colour ("katmana göre").
         components: Its body's layers from its left face; none: one plain body.
+        curtain: Giydirme cephe (docs/adr/8070 §7): its grid of frames and panels; absent: a wall of its components. A curtain
+            wall has no components and no arcs; its width is its frames' depth.
         fill: The body's solid fill when drawn schematically (`#RRGGBB`); absent: none.
         height: Its height above its level's floor, metres; absent: the level's height. Unit: elevation.
         joins: How its ends join (docs/adr/0340 §1); absent: both by the rule.
@@ -116657,6 +116706,7 @@ class WallEntity(Entity):
     closed: bool | Unset = UNSET
     color: str | None | Unset = UNSET
     components: list[WallComponent] | Unset = UNSET
+    curtain: CurtainGrid | None | Unset = UNSET
     fill: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
     joins: WallJoins | Unset = UNSET
@@ -116699,6 +116749,8 @@ class WallEntity(Entity):
             out["color"] = self.color
         if self.components is not UNSET:
             out["components"] = [e0.to_json() for e0 in self.components]
+        if self.curtain is not UNSET:
+            out["curtain"] = None if self.curtain is None else self.curtain.to_json()
         if self.fill is not UNSET:
             out["fill"] = self.fill
         if self.height is not UNSET:
@@ -116749,6 +116801,7 @@ class WallEntity(Entity):
             closed=data.get("closed", UNSET),
             color=data.get("color", UNSET),
             components=[WallComponent.from_json(e0) for e0 in data["components"]] if "components" in data else UNSET,
+            curtain=UNSET if "curtain" not in data else None if data["curtain"] is None else CurtainGrid.from_json(data["curtain"]),
             fill=data.get("fill", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             joins=WallJoins.from_json(data["joins"]) if "joins" in data else UNSET,
@@ -116779,6 +116832,8 @@ class WallFields(_Model):
             walls meet at their faces only.
         closed: Its path's last vertex joins its first: a ring of wall.
         components: Its body's layers from its left face; none: one plain body.
+        curtain: Giydirme cephe (docs/adr/8070 §7): its grid of frames and panels; absent: a wall of its components. A curtain
+            wall has no components and no arcs; its width is its frames' depth.
         fill: The body's solid fill when drawn schematically (`#RRGGBB`); absent: none.
         height: Its height above its level's floor, metres; absent: the level's height. Unit: elevation.
         joins: How its ends join (docs/adr/0340 §1); absent: both by the rule.
@@ -116793,6 +116848,7 @@ class WallFields(_Model):
     cleanup: bool | Unset = UNSET
     closed: bool | Unset = UNSET
     components: list[WallComponent] | Unset = UNSET
+    curtain: CurtainGrid | None | Unset = UNSET
     fill: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
     joins: WallJoins | Unset = UNSET
@@ -116816,6 +116872,8 @@ class WallFields(_Model):
             out["closed"] = self.closed
         if self.components is not UNSET:
             out["components"] = [e0.to_json() for e0 in self.components]
+        if self.curtain is not UNSET:
+            out["curtain"] = None if self.curtain is None else self.curtain.to_json()
         if self.fill is not UNSET:
             out["fill"] = self.fill
         if self.height is not UNSET:
@@ -116840,6 +116898,7 @@ class WallFields(_Model):
             cleanup=data.get("cleanup", UNSET),
             closed=data.get("closed", UNSET),
             components=[WallComponent.from_json(e0) for e0 in data["components"]] if "components" in data else UNSET,
+            curtain=UNSET if "curtain" not in data else None if data["curtain"] is None else CurtainGrid.from_json(data["curtain"]),
             fill=data.get("fill", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             joins=WallJoins.from_json(data["joins"]) if "joins" in data else UNSET,
@@ -140200,6 +140259,8 @@ class TemplateRenameViewsOp(ViewsOp):
 class SetWallsOperation(WallsOperation):
     """Değiştir: the fields given, on every wall named.
     Attributes:
+        curtain: Giydirme cephe (docs/adr/8070 §7): its grid, the wall a curtain wall (no components, no fill); null: a wall of
+            one plain body again.
         fill: The schematic fill (`#RRGGBB`); null: none.
         height: Metres above its level's floor; null: the level's. Unit: elevation.
         keep: Sabit referans (docs/adr/0771 §2): the line that stays where it is when the width or the style changes (its
@@ -140211,6 +140272,7 @@ class SetWallsOperation(WallsOperation):
     """
     TAG_VALUE: ClassVar[str] = "set"
     caps: WallCaps | WallCapsName | None | Unset = UNSET
+    curtain: CurtainGrid | None | Unset = UNSET
     discipline: ArchDiscipline | ArchDisciplineName | None | Unset = UNSET
     fill: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
@@ -140227,6 +140289,8 @@ class SetWallsOperation(WallsOperation):
         out: dict[str, Any] = {"kind": "set"}
         if self.caps is not UNSET:
             out["caps"] = None if self.caps is None else _enum_out(self.caps)
+        if self.curtain is not UNSET:
+            out["curtain"] = None if self.curtain is None else self.curtain.to_json()
         if self.discipline is not UNSET:
             out["discipline"] = None if self.discipline is None else _enum_out(self.discipline)
         if self.fill is not UNSET:
@@ -140255,6 +140319,7 @@ class SetWallsOperation(WallsOperation):
     def from_json(cls, data: Mapping[str, Any]) -> SetWallsOperation:
         return cls(
             caps=UNSET if "caps" not in data else None if data["caps"] is None else _enum_in(WallCaps, data["caps"]),
+            curtain=UNSET if "curtain" not in data else None if data["curtain"] is None else CurtainGrid.from_json(data["curtain"]),
             discipline=UNSET if "discipline" not in data else None if data["discipline"] is None else _enum_in(ArchDiscipline, data["discipline"]),
             fill=data.get("fill", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
@@ -142007,6 +142072,7 @@ __all__ = [
     "CulvertsQueried",
     "CulvertsQuery",
     "CulvertsWritten",
+    "CurtainGrid",
     "CurveConstruction",
     "CurveCriterion",
     "CurveEdit",

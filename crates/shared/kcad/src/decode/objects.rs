@@ -188,6 +188,7 @@ struct Fields {
     wall_caps: Option<kentos_contracts::WallCaps>,
     wall_joins: Option<kentos_contracts::WallJoins>,
     wall_cleanup: Option<bool>,
+    wall_curtain: Option<kentos_contracts::CurtainGrid>,
     wall_fill: Option<String>,
     wall_components: Vec<kentos_contracts::WallComponent>,
     wall_arch: Option<kentos_contracts::ArchInfo>,

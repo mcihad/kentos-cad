@@ -8,6 +8,7 @@ pub mod arrowhead;
 pub mod band;
 pub mod bulge;
 pub mod centroid;
+pub mod curtain;
 pub mod curve_outline;
 pub mod delaunay;
 pub mod dimension;

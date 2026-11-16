@@ -137,6 +137,19 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
             owner: g.owner.clone(),
         })
         .collect();
+    // Each solid's part (docs/adr/8070 §3, §7), as the IFC model reads it.
+    let parts: Vec<Option<kentos_ifc::arch::Part>> = model
+        .parts
+        .iter()
+        .map(|p| {
+            p.map(|p| match p {
+                sections::Part::Roof(k) => kentos_ifc::arch::Part::Roof(k),
+                sections::Part::Mullion(k) => kentos_ifc::arch::Part::Mullion(k),
+                sections::Part::Transom(k) => kentos_ifc::arch::Part::Transom(k),
+                sections::Part::Panel => kentos_ifc::arch::Part::Panel,
+            })
+        })
+        .collect();
     let mut search = kentos_domain::space_follow::SpaceSearch::new(doc);
     let mut net_area = |room: &kentos_commands::SpaceFields| search.net_area(room);
     let wall_style_name = |style: Option<&str>| doc.wall_style_name(style);
@@ -147,7 +160,7 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         levels: model.levels.clone(),
         solids: &model.solids,
         owners: &model.owners,
-        parts: &model.parts,
+        parts: &parts,
         gaps,
         entities,
         wall_style_name: &wall_style_name,
@@ -419,6 +432,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         + written.ramps
         + written.chimneys
         + written.fixtures
+        + written.curtain_walls
         + written.spaces;
     if held == 0 {
         return Err(bad(

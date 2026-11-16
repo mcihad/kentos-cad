@@ -766,6 +766,7 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
             arch: input.arch.clone(),
             attrs: None,
             label: None,
+            curtain: None,
         };
         let fields = walls::build(doc, &given, &format!("walls[{k}]"), &mut added)?;
         let entity = Entity::Wall(WallEntity {

@@ -2,6 +2,7 @@
 import type { ArchDiscipline } from "./ArchDiscipline";
 import type { ArchPhase } from "./ArchPhase";
 import type { ArchStatus } from "./ArchStatus";
+import type { CurtainGrid } from "./CurtainGrid";
 import type { WallCaps } from "./WallCaps";
 import type { WallJustify } from "./WallJustify";
 import type { WallReference } from "./WallReference";
@@ -34,4 +35,9 @@ height?: number | null,
 /**
  * Its level by the project level's id; null: none.
  */
-level?: string | null, phase?: ArchPhase | null, status?: ArchStatus | null, discipline?: ArchDiscipline | null, };
+level?: string | null, phase?: ArchPhase | null, status?: ArchStatus | null, discipline?: ArchDiscipline | null, 
+/**
+ * Giydirme cephe (docs/adr/8070 §7): its grid, the wall a curtain wall (no components, no fill); null: a wall of
+ * one plain body again.
+ */
+curtain?: CurtainGrid | null, };

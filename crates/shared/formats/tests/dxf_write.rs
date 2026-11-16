@@ -3980,6 +3980,7 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
             arch: Default::default(),
             joins: Default::default(),
             cleanup: true,
+            curtain: None,
         },
     });
     // With KentOS's data the wall goes as its pieces' block and comes back as itself (docs/adr/0347 §2).
@@ -4174,6 +4175,7 @@ fn an_ek4_walls_hatches_go_on_its_t_layer() {
                 arch: Default::default(),
                 joins: Default::default(),
                 cleanup: true,
+                curtain: None,
             },
         })
     };

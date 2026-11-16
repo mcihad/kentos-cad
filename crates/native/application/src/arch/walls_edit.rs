@@ -188,6 +188,14 @@ pub(crate) fn changed(
     if let Some(d) = c.discipline {
         f.arch.discipline = d;
     }
+    // A curtain wall's grid (docs/adr/8070 §7): given, the wall is its frames and panels; null, a plain wall again.
+    if let Some(grid) = &c.curtain {
+        f.curtain = grid.clone();
+        if grid.is_some() {
+            f.components.clear();
+            f.fill = None;
+        }
+    }
     if let Some(r) = c.keep {
         crate::wall_reference::kept(&w.wall, &mut out.wall, r);
     }
@@ -430,7 +438,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, tadilat durumu, yapım durumu ya da disiplin verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, tadilat durumu, yapım durumu, disiplin ya da giydirme cephenin ızgarası verin.".into(),
                     "operation",
                 ));
             }

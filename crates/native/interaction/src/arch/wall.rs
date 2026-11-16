@@ -10,9 +10,13 @@
 //! The options stay for as long as the app lives (`Memory::wall_*`). The product command `cad.walls.create` does the
 //! work: its plan is the preview (the faces and the boundaries between components over the body, lightly filled), its
 //! execute the write, one undo step “Duvar” on the active layer in the current colour, weight and line type.
+//!
+//! Giydirme cephe (`tool.curtainWall`, docs/adr/8070 §7) is the same tool drawing a curtain wall: no Stil; Panel eni
+//! (P) and Panel boyu (B) its grid's largest mullion and transom spacing; its panels Cam and its frames Alüminyum,
+//! changed in Öznitelikler; on EK-2's Giydirme Cephe (MM-GIYC-GENEL).
 
 use kentos_commands::{
-    CommandResult, NewWall, WallJustify, WallStyleDef, WallsCreate, builtin_wall_styles,
+    CommandResult, CurtainGrid, NewWall, WallJustify, WallStyleDef, WallsCreate, builtin_wall_styles,
     fixed_width,
 };
 use kentos_geometry_core::geom::wall;
@@ -29,6 +33,9 @@ use crate::tool::{Area, Context, Memory, OptionChoice, Stroke, Tone};
 /// The wall tool's id: its command is `tool.wall`.
 pub const ID: &str = "wall";
 pub const LABEL: &str = "Duvar";
+/// Giydirme cephe's id (`tool.curtainWall`) and name (docs/adr/8070 §7).
+pub const CURTAIN_ID: &str = "curtainWall";
+pub const CURTAIN_LABEL: &str = "Giydirme cephe";
 /// The wall styles' window and its menu entry.
 pub const WALL_STYLES: &str = "arch.wallStyles";
 pub const WALL_STYLES_ENTRY: &str = "Duvar stilleri…";
@@ -42,6 +49,21 @@ pub enum Ask {
     Offset,
     /// A style's name, typed after S: words (Space types a space).
     Style,
+    /// Giydirme cephe's largest panel width (P) and height (B).
+    Spacing,
+    Rows,
+}
+
+/// The curtain wall's grid the session would draw (docs/adr/8070 §7): its largest panel width and height, its panels
+/// glass and its frames aluminium, KentOS's own first choice, changed in Öznitelikler.
+pub fn grid(memory: &Memory) -> CurtainGrid {
+    CurtainGrid {
+        spacing: memory.curtain_spacing,
+        rows: memory.curtain_rows,
+        frame: None,
+        panel: Some("Cam".into()),
+        frames: Some("Alüminyum".into()),
+    }
 }
 
 /// A style's id as the session keeps it (`Memory` is `Copy`): its FNV-1a hash.
@@ -99,22 +121,29 @@ pub fn width(memory: &Memory, style: Option<&WallStyleDef>) -> f64 {
         .unwrap_or(memory.wall_width)
 }
 
-/// The wall's chips: its width, justification, offset and style, as they stand.
+/// The wall's chips: its width, justification, offset and style, as they stand; a curtain wall's its panel's width and
+/// height instead of a style.
 pub fn chips(
     prompt: Prompt,
     memory: &Memory,
     format: &Format,
     style: Option<&WallStyleDef>,
+    curtain: bool,
 ) -> Prompt {
-    prompt
+    let prompt = prompt
         .option_with("Kalınlık", "E", format.length(width(memory, style)))
         .option_with("Hiza", "H", memory.wall_justify.label())
-        .option_with("Öteleme", "Ö", format.length(memory.wall_offset))
-        .option_with(
-            "Stil",
-            "S",
-            style.map_or(NO_STYLE.to_owned(), |s| s.name.clone()),
-        )
+        .option_with("Öteleme", "Ö", format.length(memory.wall_offset));
+    if curtain {
+        return prompt
+            .option_with("Panel eni", "P", format.length(memory.curtain_spacing))
+            .option_with("Panel boyu", "B", format.length(memory.curtain_rows));
+    }
+    prompt.option_with(
+        "Stil",
+        "S",
+        style.map_or(NO_STYLE.to_owned(), |s| s.name.clone()),
+    )
 }
 
 /// The prompt while a value is waited for.
@@ -126,16 +155,20 @@ pub fn asked(ask: Ask) -> Prompt {
             "taban çizgisinin ötelemesini yazın (artı: yolun solu, eksi: sağı)",
         ),
         Ask::Style => Prompt::new(LABEL, "duvar stilinin adını yazın (Yok: stilsiz)"),
+        Ask::Spacing => Prompt::new(CURTAIN_LABEL, "panelin en çok enini yazın (dikme aralığı)"),
+        Ask::Rows => Prompt::new(CURTAIN_LABEL, "panelin en çok boyunu yazın (kayıt aralığı)"),
     }
     .option("Geri", "G")
 }
 
-/// The key of a value to wait for; none for another key.
-pub fn ask_of(key: &str) -> Option<Ask> {
+/// The key of a value to wait for; none for another key. A curtain wall has no Stil; its P and B are its panel's.
+pub fn ask_of(key: &str, curtain: bool) -> Option<Ask> {
     match key {
         "E" => Some(Ask::Width),
         "Ö" | "O" => Some(Ask::Offset),
-        "S" => Some(Ask::Style),
+        "S" if !curtain => Some(Ask::Style),
+        "P" if curtain => Some(Ask::Spacing),
+        "B" if curtain => Some(Ask::Rows),
         _ => None,
     }
 }
@@ -153,6 +186,17 @@ pub fn typed(ask: Ask, metres: f64, cx: &mut Context<'_>) {
         }
         Ask::Offset => cx.say(Level::Warn, "Öteleme en çok 100 m olmalı."),
         Ask::Style => {}
+        Ask::Spacing | Ask::Rows if (CurtainGrid::LEAST..=CurtainGrid::MOST).contains(&metres) => {
+            if ask == Ask::Spacing {
+                cx.memory.curtain_spacing = metres;
+            } else {
+                cx.memory.curtain_rows = metres;
+            }
+        }
+        Ask::Spacing | Ask::Rows => cx.say(
+            Level::Warn,
+            format!("Panelin eni ve boyu {} ile {} m arasında olmalı.", CurtainGrid::LEAST, CurtainGrid::MOST),
+        ),
     }
 }
 
@@ -243,22 +287,26 @@ pub fn choose(key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
     }
 }
 
-/// The layer kind of a wall the session would draw now: its chosen style's core material (docs/adr/8008).
-pub fn layer_kind(cx: &Context<'_>) -> crate::arch_layer::Kind {
+/// The layer kind of a wall the session would draw now: its chosen style's core material (docs/adr/8008); a curtain
+/// wall's EK-2 Giydirme Cephe.
+pub fn layer_kind(cx: &Context<'_>, curtain: bool) -> crate::arch_layer::Kind {
+    if curtain {
+        return crate::arch_layer::Kind::CurtainWall;
+    }
     crate::arch_layer::Kind::wall(chosen(cx.memory, cx.doc.settings()).as_ref())
 }
 
 /// The command's input: the path as drawn (one bulge per edge, `closed` with the closing one) and the session's
 /// options, on the wall's layer (docs/adr/8008; the active one with the key off or until the layer opens).
-pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> WallsCreate {
-    let style = chosen(cx.memory, cx.doc.settings());
+pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, curtain: bool, cx: &Context<'_>) -> WallsCreate {
+    let style = if curtain { None } else { chosen(cx.memory, cx.doc.settings()) };
     let fixed = style
         .as_ref()
         .and_then(|s| fixed_width(&s.components))
         .is_some();
     let m = *cx.memory;
     WallsCreate {
-        layer_id: crate::arch_layer::planned(&layer_kind(cx), cx),
+        layer_id: crate::arch_layer::planned(&layer_kind(cx, curtain), cx),
         walls: vec![NewWall {
             pts: pts.iter().copied().map(wire).collect(),
             bulges: bulges.iter().any(|b| *b != 0.0).then(|| bulges.to_vec()),
@@ -273,6 +321,7 @@ pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> Wa
             arch: cx.new_arch(),
             attrs: cx.template_attrs(None),
             label: cx.template_label(),
+            curtain: curtain.then(|| grid(&m)),
         }],
         color: cx.draft.color_text(),
         line_weight: cx.draft.line_weight,
@@ -291,11 +340,11 @@ pub struct Drawn {
 }
 
 /// The command's plan of the path to the cursor, as the preview draws it.
-pub fn drawn(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> Drawn {
+pub fn drawn(pts: &[Vec2], bulges: &[f64], closed: bool, curtain: bool, cx: &Context<'_>) -> Drawn {
     if pts.len() < 2 {
         return Drawn::default();
     }
-    let plan = walls_create::plan_in(cx.doc, &input(pts, bulges, closed, cx));
+    let plan = walls_create::plan_in(cx.doc, &input(pts, bulges, closed, curtain, cx));
     let entity = match plan {
         CommandResult::Completed { output, .. } => output.walls.into_iter().next(),
         CommandResult::Failed { error }
@@ -429,13 +478,13 @@ pub fn add_joined(entities: &[kentos_commands::Entity], out: &mut Drawn) {
 }
 
 /// Writes the wall through `cad.walls.create` on its layer (docs/adr/8008); whether it was written.
-pub fn write(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &mut Context<'_>) -> bool {
-    let kind = layer_kind(cx);
-    crate::arch_layer::writing(&kind, cx, |_, cx| write_on(pts, bulges, closed, cx))
+pub fn write(pts: &[Vec2], bulges: &[f64], closed: bool, curtain: bool, cx: &mut Context<'_>) -> bool {
+    let kind = layer_kind(cx, curtain);
+    crate::arch_layer::writing(&kind, cx, |_, cx| write_on(pts, bulges, closed, curtain, cx))
 }
 
-fn write_on(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &mut Context<'_>) -> bool {
-    let input = input(pts, bulges, closed, cx);
+fn write_on(pts: &[Vec2], bulges: &[f64], closed: bool, curtain: bool, cx: &mut Context<'_>) -> bool {
+    let input = input(pts, bulges, closed, curtain, cx);
     let result = walls_create::execute(&mut ExecutionContext::new(cx.doc), input);
     match points::written(result, cx) {
         Some(out) => {

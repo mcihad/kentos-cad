@@ -133,6 +133,11 @@ pub fn spec(w: &WallFields) -> Spec {
         joins: [join_mode(w.joins.start), join_mode(w.joins.end)],
         passes: [w.joins.start_pass.clone(), w.joins.end_pass.clone()],
         cleanup: w.cleanup,
+        curtain: w
+            .curtain
+            .as_ref()
+            .and_then(|c| serde_json::to_string(c).ok())
+            .and_then(|t| Json::parse(&t).ok()),
     }
 }
 
@@ -189,6 +194,10 @@ pub fn contract_wall(shape: &Shape) -> Option<WallFields> {
             end_pass: wall.passes[1].clone(),
         },
         cleanup: wall.cleanup,
+        curtain: wall
+            .curtain
+            .as_ref()
+            .and_then(|c| serde_json::from_str(&kentos_geometry_core::api::json::to_string(c)).ok()),
     })
 }
 
@@ -416,6 +425,7 @@ mod tests {
                 ..WallJoins::default()
             },
             cleanup: false,
+            curtain: Some(kentos_contracts::CurtainGrid { spacing: 1.5, rows: 1.2, frame: Some(0.06), panel: Some("Cam".into()), frames: None }),
         };
         assert_eq!(contract_wall(&core_wall(&w)), Some(w));
     }
@@ -442,6 +452,7 @@ mod tests {
             arch: ArchInfo::default(),
             joins: WallJoins::default(),
             cleanup: true,
+            curtain: None,
         };
         let base = |id: u32| EntityBase {
             look: Default::default(),
@@ -545,6 +556,7 @@ mod tests {
             arch: ArchInfo::default(),
             joins: WallJoins::default(),
             cleanup: true,
+            curtain: None,
         };
         let base = |id: u32| EntityBase {
             look: Default::default(),

@@ -141,6 +141,7 @@ pub(super) fn build(
                     arch: f.wall_arch.take().unwrap_or_default(),
                     joins: f.wall_joins.take().unwrap_or_default(),
                     cleanup: f.wall_cleanup.unwrap_or(true),
+                    curtain: f.wall_curtain.take(),
                 },
             };
             if f.offset == Some(0.0) {

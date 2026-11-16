@@ -94,7 +94,11 @@
     - Blok kartı yapı elemanını söyler (sınıf, tip, gövde); kitaplığın 25 bloğu sınıflı, asansör kapasitesi
       öznitelikten; `.kcad` mimari verisi 2, kitaplık sürüm 4.
     - Kaplama EK-6 Tablo 6.20'nin birinci yolundan: mahal setine döşeme ve tavan kalınlıkları (K44); `IfcCovering`
-      yazılmaz. Kalan: giydirme cephe, `IfcMember`, elle çizilen kaplama.
+      yazılmaz.
+    - Giydirme cephe ızgaralı bir duvardır (en büyük aralıkla eşit bölmeler; çerçeve 0,05, panel 0,024 m KentOS'un
+      kendi ölçüsü); `IfcCurtainWall`'un gövdesi panelleri, dikme ve kayıtları `IfcMember` MULLION (K45: EK-5'te
+      `IfcPlate` yok); giydirme cepheye açıklık konmaz; `.kcad` mimari verisi 3. Kalan: tek başına `IfcMember`, elle
+      çizilen kaplama.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

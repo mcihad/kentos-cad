@@ -124,6 +124,7 @@ fn request(input: &WallsRectangle) -> Result<WallsCreate, Box<CommandError>> {
             arch: input.arch.clone(),
             attrs: input.attrs.clone(),
             label: input.label.clone(),
+            curtain: None,
         }],
         color: input.color.clone(),
         line_weight: input.line_weight,

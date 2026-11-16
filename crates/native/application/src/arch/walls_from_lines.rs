@@ -292,6 +292,7 @@ fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
         arch: input.arch.clone(),
         attrs: None,
         label: None,
+        curtain: None,
     };
     let mut work = Work {
         walls: Vec::new(),

@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_ELEMENTS),
+    ("arch", "mimari", ARCH_WITH_CURTAIN_WALLS),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1028,10 +1028,22 @@ pub fn uses_elements(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
         .any(|b| b.card.as_ref().is_some_and(|c| c.element.is_some()))
 }
 
-/// The architecture data version `doc` needs: 2 for a block's building element, 1 for the performance declarations,
-/// else 0 (not raised).
+/// Architecture data version 3 (docs/adr/8070 §7): a curtain wall's grid (a wall's `curtain`). Version 3 holds versions
+/// 1's and 2's data too. The document schema stays as it is.
+pub const ARCH_WITH_CURTAIN_WALLS: u16 = 3;
+
+/// Whether `doc` holds architecture data 3 ([`ARCH_WITH_CURTAIN_WALLS`]): a curtain wall.
+pub fn uses_curtain_walls(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    let wall = |e: &kentos_contracts::Entity| matches!(e, kentos_contracts::Entity::Wall(w) if w.wall.curtain.is_some());
+    doc.entities.iter().any(wall) || doc.blocks.iter().any(|b| b.entities.iter().any(wall))
+}
+
+/// The architecture data version `doc` needs: 3 for a curtain wall, 2 for a block's building element, 1 for the
+/// performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_elements(doc) {
+    if uses_curtain_walls(doc) {
+        ARCH_WITH_CURTAIN_WALLS
+    } else if uses_elements(doc) {
         ARCH_WITH_ELEMENTS
     } else if uses_performance(doc) {
         ARCH_WITH_PERFORMANCE

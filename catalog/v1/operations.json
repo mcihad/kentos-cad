@@ -2056,6 +2056,13 @@
       ],
       "note": "Duvar, kenarı ve imleçten ya da yazılan uzaklık shift olarak komuta gider; önizleme komutun planıdır (etkisi ya da bağların reddi, yoldaki bağlar yerinde; ADR 0770, 0790)."
     },
+    "tool.curtainWall": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.create"
+      ],
+      "note": "Duvar'ın yolu ve seçenekleri, ızgarasıyla (Panel eni P, Panel boyu B; Cam, Alüminyum) curtain olarak komuta gider; önizleme komutun planıdır (ADR 8070 §7)."
+    },
     "tool.wallPartition": {
       "level": "semantic",
       "via": [

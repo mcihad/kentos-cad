@@ -811,3 +811,109 @@ fn a_ramp_s_runs_slope_its_landing_stands_flat_and_the_model_writes_it() {
     assert_eq!(ramps[0].tag.as_deref(), Some(uid.as_str()));
     assert_eq!(written.ramps, 1);
 }
+
+/// Giydirme cephe (docs/adr/8070 §7): a 6 m curtain wall east of the building, 0.15 m deep, 3 m high, at most 1.50 m
+/// between mullions and 1.20 m between transoms: 6 / 1.5 = 4 equal bays (5 mullions), 3 / 1.2 = 2.5 → 3 equal rows of
+/// 1.00 m (4 transom lines); worked out here, not by KentOS. Mullions 5 cm wide, inside the ends: x 20–20.05,
+/// 21.475–21.525 … 25.95–26; a bay's 4 transoms and 3 panels between the mullions' faces, the panels 24 mm thick down
+/// the middle. A cut across its first bay meets its 4 transoms and 3 panels. In the IFC model: one IfcCurtainWall, its
+/// 12 panels its own body, and 21 IfcMember MULLION (5 + 4 × 4), its parts; no door goes into it.
+#[test]
+fn a_curtain_wall_is_its_mullions_transoms_and_panels() {
+    use kentos_geometry_core::Vec2 as P;
+    use kentos_geometry_core::geom::section::{self as sec, Frame, Height};
+    let mut doc = building();
+    let answer = kentos_native_application::registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.walls.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "walls": [{
+            "pts": [{"x": 20.0, "y": 0.0}, {"x": 26.0, "y": 0.0}], "width": 0.15, "height": 3.0,
+            "arch": {"level": "zemin"},
+            "curtain": {"spacing": 1.5, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}
+        }]}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let uid = answer["output"]["uids"][0].as_str().unwrap().to_owned();
+    let m = sections::model(&doc);
+    let mine: Vec<usize> = (0..m.solids.len()).filter(|&i| m.owners[i].as_deref() == Some(uid.as_str())).collect();
+    use kentos_native_application::sections::Part;
+    let count = |f: &dyn Fn(Part) -> bool| mine.iter().filter(|&&i| m.parts[i].is_some_and(f)).count();
+    assert_eq!(count(&|p| matches!(p, Part::Mullion(_))), 5);
+    assert_eq!(count(&|p| matches!(p, Part::Transom(_))), 16);
+    assert_eq!(count(&|p| p == Part::Panel), 12);
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let span = |i: usize| {
+        let r = &m.solids[i].rings[0];
+        let xs: Vec<f64> = r.iter().map(|q| q.x).collect();
+        let ys: Vec<f64> = r.iter().map(|q| q.y).collect();
+        let lo = |v: &[f64]| v.iter().cloned().fold(f64::INFINITY, f64::min);
+        let hi = |v: &[f64]| v.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let (b, t) = match m.solids[i].height {
+            Height::Prism { bottom, top } => (bottom, top),
+            _ => panic!("a prism"),
+        };
+        ((lo(&xs), hi(&xs)), (lo(&ys), hi(&ys)), (b, t))
+    };
+    let mullions: Vec<(f64, f64)> = mine
+        .iter()
+        .filter(|&&i| matches!(m.parts[i], Some(Part::Mullion(_))))
+        .map(|&i| span(i).0)
+        .collect();
+    let want = [(20.0, 20.05), (21.475, 21.525), (22.975, 23.025), (24.475, 24.525), (25.95, 26.0)];
+    for (got, want) in mullions.iter().zip(want) {
+        assert!(near(got.0, want.0) && near(got.1, want.1), "{got:?} {want:?}");
+    }
+    let first_panel = mine.iter().find(|&&i| m.parts[i] == Some(Part::Panel)).copied().unwrap();
+    let ((x0, x1), (y0, y1), (z0, z1)) = span(first_panel);
+    assert!(near(x0, 20.05) && near(x1, 21.475), "{x0} {x1}");
+    assert!(near(y0, -0.012) && near(y1, 0.012), "{y0} {y1}");
+    assert!(near(z0, 0.05) && near(z1, 0.975), "{z0} {z1}");
+    // A cut across its first bay, looking east.
+    let frame = Frame::new(P::new(20.75, -1.0), P::new(20.75, 1.0), true, None).unwrap();
+    let cut = sec::section(&frame, &m.solids);
+    assert_eq!(cut.cut.iter().filter(|c| mine.contains(&c.solid)).count(), 7);
+    // The IFC model.
+    let (b, written, _) = kentos_native_application::arch_ifc::model(&doc);
+    assert!(!written.left.iter().any(|l| l.id == uid), "{:?}", written.left);
+    let id = kentos_domain::Uuid::parse_str(&uid).unwrap().as_u128();
+    let (k, wall) = b
+        .elements
+        .iter()
+        .enumerate()
+        .find(|(_, e)| e.id == Some(id))
+        .expect("the curtain wall");
+    assert_eq!(wall.class, kentos_ifc::building::Class::CurtainWall);
+    assert_eq!((wall.predefined, wall.object_type.as_deref()), ("USERDEFINED", Some("Giydirme cephe")));
+    assert_eq!(wall.shapes.len(), 12);
+    assert_eq!(wall.material.as_deref(), Some("Cam"));
+    let parts: Vec<&kentos_ifc::building::Element> = b.elements.iter().filter(|e| e.part_of == Some(k)).collect();
+    assert_eq!(parts.len(), 21);
+    assert!(parts.iter().all(|e| e.class == kentos_ifc::building::Class::Member
+        && e.predefined == "MULLION"
+        && e.material.as_deref() == Some("Alüminyum")
+        && e.object == Some(id)));
+    let external = |e: &kentos_ifc::building::Element, set: &str| {
+        e.psets.iter().find(|p| p.name == set).and_then(|p| p.props.iter().find(|(k, _)| k == "IsExternal")).map(|(_, v)| v.clone())
+    };
+    assert_eq!(external(wall, "Pset_CurtainWallCommon"), Some(kentos_ifc::building::Value::Bool(true)));
+    assert_eq!(external(parts[0], "Pset_MemberCommon"), Some(kentos_ifc::building::Value::Bool(true)));
+    assert_eq!((written.curtain_walls, written.members), (1, 21));
+    let text = kentos_ifc::building::write(&b);
+    assert_eq!(text.matches("IFCCURTAINWALL(").count(), 1);
+    assert_eq!(text.matches("IFCMEMBER(").count(), 21);
+    // `KENTOS_WRITE_IFC_CURTAIN=<path>` keeps the file for an outside reader (IfcOpenShell's validator).
+    if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_CURTAIN") {
+        std::fs::write(path, &text).expect("the file kept");
+    }
+    // No door goes into a curtain wall.
+    let refused = kentos_native_application::registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.openings.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "openings": [{"host": uid, "at": 2.0, "width": 1.0}]}),
+    )
+    .unwrap();
+    assert_eq!(refused["error"]["code"], "not_a_wall", "{refused}");
+}
