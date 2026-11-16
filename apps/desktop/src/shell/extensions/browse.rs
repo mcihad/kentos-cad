@@ -79,6 +79,63 @@ pub(crate) const PROGRAMS: [(Option<Module>, &str); 5] = [
     (Some(Module::Yol), "KentOS Yol"),
 ];
 
+/// The report card's filter (docs/adr/8057 §88, PY-CLOUD-12): the honest signals a list is narrowed by.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) enum Signal {
+    #[default]
+    All,
+    /// Runs on this KentOS (its SDK protocol, KentOS version and system).
+    Runs,
+    /// Asks for no network.
+    Offline,
+    /// Installs no Python package.
+    NoPackages,
+    /// An AI agent wrote it (§76).
+    ByAgent,
+    /// No AI agent's stamp.
+    ByPerson,
+}
+
+/// The report card filter's choices: the list's words, and the closed box's (narrow beside the program's).
+pub(crate) const SIGNALS: [(Signal, &str, &str); 6] = [
+    (Signal::All, "Tüm eklentiler", "Tüm eklentiler"),
+    (Signal::Runs, "Bu KentOS'ta çalışanlar", "Çalışanlar"),
+    (Signal::Offline, "İnternete bağlanmayanlar", "İnternetsiz"),
+    (
+        Signal::NoPackages,
+        "Python paketi kurmayanlar",
+        "Paket kurmayan",
+    ),
+    (
+        Signal::ByAgent,
+        "Yapay zekânın yazdıkları",
+        "Yapay zekâ yazdı",
+    ),
+    (Signal::ByPerson, "İnsanın yazdıkları", "İnsan yazdı"),
+];
+
+/// Whether what a package says (its compatibility, capabilities, packages and author) passes the signal.
+fn passes(
+    signal: Signal,
+    compatibility: &kentos_extensions::manifest::Compatibility,
+    capabilities: &[kentos_extensions::manifest::RequestedCapability],
+    packages: bool,
+    by_agent: bool,
+) -> bool {
+    match signal {
+        Signal::All => true,
+        Signal::Runs => {
+            kentos_extensions::compat::compatible(compatibility, &super::host()).is_ok()
+        }
+        Signal::Offline => !capabilities
+            .iter()
+            .any(|r| r.id == kentos_extensions::manifest::Capability::Network),
+        Signal::NoPackages => !packages,
+        Signal::ByAgent => by_agent,
+        Signal::ByPerson => !by_agent,
+    }
+}
+
 /// Whether `q` (folded) is in any of the texts.
 fn holds(q: &str, texts: &[&str]) -> bool {
     q.is_empty() || texts.iter().any(|t| fold_turkish(t).contains(q))
@@ -94,6 +151,17 @@ impl Extensions {
     pub(crate) fn shows_installed(&self, e: &ExtensionView, manifest: Option<&Manifest>) -> bool {
         if let (Some(program), Some(m)) = (self.program, manifest)
             && !m.modules.contains(&program)
+        {
+            return false;
+        }
+        if let Some(m) = manifest
+            && !passes(
+                self.signal,
+                &m.compatibility,
+                &m.requested_capabilities,
+                m.python.is_some(),
+                m.generated.is_some(),
+            )
         {
             return false;
         }
@@ -113,6 +181,15 @@ impl Extensions {
         if let Some(program) = self.program
             && !entry.modules.contains(&program)
         {
+            return false;
+        }
+        if !passes(
+            self.signal,
+            &entry.compatibility,
+            &entry.requested_capabilities,
+            !entry.python_packages.is_empty(),
+            entry.generated.is_some(),
+        ) {
             return false;
         }
         let q = self.folded();

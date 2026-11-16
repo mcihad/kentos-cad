@@ -4591,3 +4591,20 @@ alanı reddetmeden okunur), masaüstü `view.rs` (`report_card`).
   `buyuk_harf`'ın cevapları): SDK paketi 48 000 bayt sınırına 23 bayt uzakken rehbere cümle eklemek yerine ajan
   yapıyı örnekten görür. Taze iskelet `kek test`'te "4 örneğin hepsi geçti. Sınamalar: 2 sınamanın hepsi geçti."
 - **Kalan:** sürekli tümleştirme şablonu (komut satırının indirilebilir dağıtımı yok).
+
+## §88. Listeyi karnenin sinyalleriyle süzmek (`ADIM 22A`, PY-CLOUD-12)
+
+**16 Kasım.** Kod: masaüstü `browse.rs` (`Signal`, `SIGNALS`, `passes`), `view.rs` (süzgeç kutusu), `mod.rs`
+(`SignalFilter`).
+
+- **Karar:** Eklentiler'in listeleri (kurulu, bulunabilir, güncellenebilir, yeni) program ve sözcükten başka karnenin
+  sinyalleriyle de süzülür: bu KentOS'ta çalışanlar, internete bağlanmayanlar, Python paketi kurmayanlar, yapay
+  zekânın ve insanın yazdıkları (§76, §86). Kurulu eklentide bildirgeden, katalogdakinde girdiden okunur.
+- **Yerleşim (sahibinin sözüyle düzeltildi):** süzgeç önce ikinci bir satıra kondu; sahibi "alt satıra kayması çirkin
+  oldu, simetri bozuldu" dedi. Tek satırda üç kutu (arama, program, süzgeç) 170 pikselken sekmeler sıkıştı ("Kurulu
+  (1)" iki satıra kırıldı, "Güncellenebilir" kısaldı); 150'de iletişim kutusunun 1 025 pikselinden sekmelere ~510 kalır
+  (doğal genişlikleri ~450): üçü eşit genişlikte ve hizalı, kutunun yüksekliği eskisi gibi (kayıtlı senaryoların
+  koordinatları değişmedi). Kapalı kutu kısa adı gösterir ("İnternetsiz", "Yapay zekâ yazdı"), liste kutudan geniş
+  açılır ve tam adlarla; arama kutusunun yazısı "Ara: ad, açıklama…".
+- **Sınama:** masaüstü 1 (iki girdili katalog: yapay zekânın ve insanın paketi, bu KentOS'ta çalışmayan, internetsiz
+  yok, paketsiz ikisi); eklenti sınamaları 100.

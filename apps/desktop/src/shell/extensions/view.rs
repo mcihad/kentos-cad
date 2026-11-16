@@ -117,18 +117,32 @@ impl App {
             browse::PROGRAMS.iter().position(|(m, _)| *m == x.program),
             |i| msg(Event::ProgramFilter(i)),
         );
+        // The report card's signals (docs/adr/8057 §88), beside the program: the three boxes on the right one width,
+        // in one row with the parts (a second row broke the dialog's symmetry: the owner's word, 16 November). A box's
+        // list opens wider than the box, so its words show whole.
+        let signals = Select::new(
+            browse::SIGNALS
+                .iter()
+                .map(|(_, words, short)| Choice::new(*words).shown(*short)),
+            browse::SIGNALS.iter().position(|(s, _, _)| *s == x.signal),
+            |i| msg(Event::SignalFilter(i)),
+        );
+        // 150: the parts keep their natural width (about 450 px of the dialog's 1 025 at 170 each they wrapped).
+        let width = kentos_ui::theme::typography::scaled(150.0);
         let filters = row![
             container(parts).width(Fill),
             container(
-                kentos_ui::widget::text_field("Ara: ad, açıklama, anahtar sözcük", &x.query)
+                kentos_ui::widget::text_field("Ara: ad, açıklama…", &x.query)
                     .on_input(|t| msg(Event::Query(t)))
             )
-            .width(kentos_ui::theme::typography::scaled(260.0)),
-            container(programs).width(kentos_ui::theme::typography::scaled(170.0)),
+            .width(width),
+            container(programs).width(width),
+            container(signals).width(width),
         ]
         .spacing(10)
         .align_y(iced::Center);
-        let filtered = !x.query.trim().is_empty() || x.program.is_some();
+        let filtered =
+            !x.query.trim().is_empty() || x.program.is_some() || x.signal != browse::Signal::All;
         let empty = |part: Part| -> &'static str {
             if filtered {
                 return "Süzgeçle eşleşen eklenti yok.";

@@ -162,6 +162,8 @@ pub(crate) struct Extensions {
     pub(crate) query: String,
     /// The program the lists are filtered by; none: every program.
     pub(crate) program: Option<kentos_extensions::manifest::Module>,
+    /// The report card's signal the lists are filtered by (docs/adr/8057 §88).
+    pub(crate) signal: browse::Signal,
     /// Each extension's Python environment, by id, once looked for (environment.rs).
     pub(crate) envs: std::collections::BTreeMap<String, environment::EnvState>,
     /// The extensions' processes, by id: one an extension version, kept between its runs (runner.rs).
@@ -242,6 +244,7 @@ impl Default for Extensions {
             test_last_invoke: None,
             query: String::new(),
             program: None,
+            signal: browse::Signal::All,
             envs: std::collections::BTreeMap::new(),
             runners: std::collections::BTreeMap::new(),
             run_counter: 0,
@@ -382,6 +385,8 @@ pub(crate) enum Event {
     /// The lists' word, and their program filter by its place in browse.rs's `PROGRAMS`.
     Query(String),
     ProgramFilter(usize),
+    /// The report card's filter by its place in browse.rs's `SIGNALS`.
+    SignalFilter(usize),
     /// Sorunlu eklentiyi bul (bisect.rs): its window, its start, a round's answer (the problem still seen), leaving,
     /// closing the window (a bisection going on goes on), disabling the one found.
     BisectOpen,
@@ -655,6 +660,12 @@ impl App {
             }
             Event::ProgramFilter(i) => {
                 self.extensions.program = browse::PROGRAMS.get(i).and_then(|(m, _)| *m);
+                self.choose_first();
+            }
+            Event::SignalFilter(i) => {
+                self.extensions.signal = browse::SIGNALS
+                    .get(i)
+                    .map_or_else(Default::default, |(s, _, _)| *s);
                 self.choose_first();
             }
             Event::Choose(id) => {

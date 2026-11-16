@@ -239,6 +239,54 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
     let _ = std::fs::remove_dir_all(&root);
 }
 
+/// The report card's signals filter the catalog (docs/adr/8057 §88): an agent's package and a person's, one that does
+/// not run on this KentOS, none offline (both fixtures ask for the network).
+#[test]
+fn the_report_cards_signals_filter_the_catalog() {
+    let root = temp("sinyal");
+    let folder = temp("sinyal-katalog");
+    let by_agent = package("ornek-altlik", |m| {
+        m["generated"] = serde_json::json!({ "agent": "KentOS Asistan", "kentos": "0.1.0" });
+    });
+    let newer_sdk = package("ornek-kent", |m| {
+        m["compatibility"]["sdkProtocol"] = serde_json::json!({ "min": 99, "max": 99 });
+    });
+    let list = vec![
+        ("altlik.kek".to_owned(), by_agent),
+        ("kent.kek".to_owned(), newer_sdk),
+    ];
+    for (file, bytes) in &list {
+        std::fs::write(folder.join(file), bytes).unwrap();
+    }
+    let index = kentos_extensions::catalog::index("Sinyaller", &list, &Limits::default()).unwrap();
+    std::fs::write(folder.join("index.json"), index.to_json()).unwrap();
+    let mut gis = app(&root, Some(Module::Gis));
+    gis.open_extensions();
+    let _ = gis.extensions_event(Event::PickedCatalog(Some(folder.clone())));
+    let shown = |app: &mut App, signal: super::browse::Signal| -> Vec<String> {
+        let i = super::browse::SIGNALS
+            .iter()
+            .position(|(s, _, _)| *s == signal)
+            .unwrap();
+        let _ = app.extensions_event(Event::SignalFilter(i));
+        let _ = app.extensions_view();
+        app.extensions
+            .entries_of(Part::Available)
+            .iter()
+            .map(|e| e.id.clone())
+            .collect()
+    };
+    use super::browse::Signal;
+    assert_eq!(shown(&mut gis, Signal::All).len(), 2);
+    assert_eq!(shown(&mut gis, Signal::ByAgent), ["tr.ornek.altlik"]);
+    assert_eq!(shown(&mut gis, Signal::ByPerson), ["tr.ornek.kent-rehberi"]);
+    assert_eq!(shown(&mut gis, Signal::Runs), ["tr.ornek.altlik"]);
+    assert!(shown(&mut gis, Signal::Offline).is_empty());
+    assert_eq!(shown(&mut gis, Signal::NoPackages).len(), 2);
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&folder);
+}
+
 /// A package whose id, name and icon read as an installed extension's (docs/adr/8059 §14): the review says so and Kur
 /// waits for the person's answer; answered, it installs.
 #[test]
