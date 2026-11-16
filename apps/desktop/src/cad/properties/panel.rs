@@ -771,6 +771,12 @@ impl App {
                 properties::set_space_separator(model, slot, arch)
             }
             Event::Arch(slot, op) => properties::edit_arch(model, slot, op),
+            Event::Exit(slot, v) => properties::edit_performance(
+                model,
+                slot,
+                None,
+                Some(v.map(|exit| kentos_commands::DeclaredExit { exit, basis: kentos_commands::DeclaredBasis::Author })),
+            ),
             Event::Levels(slots, level) => properties::assign_level(model, &slots, &level),
             Event::Tag(slot, change) => properties::edit_tag(model, slot, change),
             Event::ViewMark(slot, op) => properties::edit_viewmark(model, slot, op),

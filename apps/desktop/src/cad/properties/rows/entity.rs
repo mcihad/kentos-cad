@@ -133,7 +133,7 @@ pub(super) fn origin_rows(
 /// One object's sections: Genel, Geometri, an insert's Blok öznitelikleri, and Öznitelik bilgileri when it has other attributes.
 /// The rows a building element's own section starts with, in this order (docs/adr/8005, plan ADV-09): what makes it
 /// the element it is, then where it stands.
-pub(super) const BUILDING_MAIN: [&str; 10] = [
+pub(super) const BUILDING_MAIN: [&str; 12] = [
     "Numara",
     "Ad",
     "Tür",
@@ -144,6 +144,9 @@ pub(super) const BUILDING_MAIN: [&str; 10] = [
     "Hiza",
     "Kat",
     "Tadilat durumu",
+    // What the fire regulation and the model ask of it (docs/adr/8068).
+    "Yangın dayanımı",
+    "Acil çıkış",
 ];
 
 /// A building element's own section comes first, named for it, its main rows at its top. A wall's Kalınlık, Stil,

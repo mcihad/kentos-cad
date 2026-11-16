@@ -288,7 +288,14 @@ ile aynı dilimdir.
 **İlk kabul:** her satırın sayfası var; bilerek yanlış yazılan bir özellik adı şema karşılaştırmasında düşer; ölçüm raporu
 ADR'de.
 
-#### IFC-02 — Zorunlu alanların tamamlanması [ ]
+#### IFC-02 — Zorunlu alanların tamamlanması [~]
+
+**Yapıldı (16 Kasım 2026, [ADR 8068](../docs/adr/8068-fire-performance-material-declarations.md)):** `kentos_ifc::required`
+katalogdaki EK-6 ve EK-7 zorunlu satırlarını yazılacak modelle karşılaştırır (öznitelik, özellik ve miktar seti, malzeme;
+`NOTDEFINED` tip değil, boş söz değer değil); eksikler `cad.modelGaps` olgusu, `dijital_proje.zorunlu` nesneleriyle hata;
+EK-9/9 modelden. Yangın sınıfı, acil çıkış, yapım eylemi, yangın koruma sınıfı, net planlanan alan ve `Ad_Dayanım` yazılıyor.
+**Kalan:** sahanın TAKS/KAKS/çekme/toplam alanı, katların SSL kotu, mahal kaplamaları, merdivenin tipi ve malzemesi, projenin
+açıklaması ve tipi, aktör rolleri, TrueNorth, PostalBox, FootPrintArea yazımı.
 
 **Kullanıcı sonucu:** Yazılan her sınıf, yönetmeliğin o sınıf için istediği bütün alanları taşır; taşıyamadığını nesnesiyle
 söyler. Verisi BIM-07 ve BIM-08'den gelir.

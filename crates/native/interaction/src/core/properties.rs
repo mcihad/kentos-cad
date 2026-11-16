@@ -187,6 +187,24 @@ pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::Arc
     said(kentos_native_application::arch_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// Yangın dayanımı and Acil çıkış of one object (docs/adr/8068): through `cad.arch.performance`, one step “Yangın ve
+/// performans”; a field absent stays, an inner none takes the object's own away. What to say.
+pub fn edit_performance(
+    doc: &mut Document,
+    slot: Slot,
+    fire_rating: Option<Option<kentos_commands::Declared>>,
+    exit: Option<Option<kentos_commands::DeclaredExit>>,
+) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_commands::ArchPerformance {
+        operation: kentos_commands::PerformanceOperation::Objects { uids: vec![uid.to_string()], fire_rating, exit },
+        expected_revision: None,
+    };
+    said(kentos_native_application::arch_performance::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// Kat ▾ of several architectural objects (docs/adr/0717 §2): `level` given to them all through
 /// `cad.levels.assign`, one step “Kat ver” (the locked ones left out and counted); what to say.
 pub fn assign_level(doc: &mut Document, slots: &[Slot], level: &str) -> Vec<String> {

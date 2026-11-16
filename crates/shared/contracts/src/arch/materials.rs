@@ -221,6 +221,9 @@ fn colour_ok(c: &Option<String>) -> bool {
 impl ArchMaterial {
     /// What is wrong with it: the field and the words; none when it holds.
     pub fn problem(&self) -> Option<(String, String)> {
+        if let Some(words) = self.strength.as_deref().and_then(crate::strength_problem) {
+            return Some(("strength".into(), words));
+        }
         if !material_id_ok(&self.id) {
             return Some((
                 "id".into(),

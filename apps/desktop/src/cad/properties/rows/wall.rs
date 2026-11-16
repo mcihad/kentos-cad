@@ -265,6 +265,7 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
         )
     }));
     geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
+    geo.extend(super::arch::performance_rows(k.doc, k.slot, k.e, k.locked));
     geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
     geo.extend(area(area_of.unwrap_or(0.0)));
     geo

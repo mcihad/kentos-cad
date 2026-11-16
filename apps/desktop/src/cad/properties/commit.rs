@@ -742,6 +742,11 @@ pub(super) fn commit(
             };
             return properties::edit_opening(model, *slot, op);
         }
+        Field::Arch(slot, ArchField::FireRating) => {
+            let t = kentos_interaction::js_trim(text);
+            let fire = (!t.is_empty()).then(|| kentos_commands::Declared::author(t));
+            return properties::edit_performance(model, *slot, Some(fire), None);
+        }
         Field::Arch(slot, which @ (ArchField::MarkNumber | ArchField::MarkSize)) => {
             use kentos_commands::{ViewMarkChange, ViewMarksOperation};
             let t = kentos_interaction::js_trim(text);
@@ -1025,6 +1030,7 @@ pub(super) fn commit(
                 | ArchField::MarkNumber
                 | ArchField::MarkSize
                 | ArchField::RoofSlope
+                | ArchField::FireRating
                 | ArchField::RoofPart(_) => {
                     return Vec::new();
                 }

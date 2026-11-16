@@ -140,3 +140,125 @@ fn ek9_s_9th_question_is_read_from_the_model() {
     assert!(before.contains("Hayır") && before.contains("zorunlu alan eksik"), "{before}");
     assert!(before.contains("IfcBeam Yangın Dayanım Sınıfı (8/8)"), "{before}");
 }
+
+/// Öznitelikler's rows now, every section's in order.
+fn property_rows(app: &App) -> Vec<crate::properties::Row> {
+    let doc = app.document.as_ref().expect("open");
+    app.properties_panel(doc).sections.into_iter().flat_map(|s| s.rows).collect()
+}
+
+/// The first object of a kind, its slot and persistent id.
+fn first(app: &App, kind: fn(&Entity) -> bool) -> (kentos_domain::Slot, String) {
+    let doc = &app.document.as_ref().expect("the building").model;
+    doc.entities_with_uids()
+        .find_map(|(u, e)| kind(e).then(|| (doc.slot_of(u).expect("its slot"), u.to_string())))
+        .expect("one of the kind")
+}
+
+#[test]
+fn ozniteliklerde_a_wall_s_class_and_a_door_s_exit_role_are_written_and_taken_away() {
+    use crate::properties::{ArchField, Event, Field};
+    let mut app = app();
+    let (wall, _) = first(&app, |e| matches!(e, Entity::Wall(_)));
+    app.selection.set(vec![wall]);
+    // The rows: Yangın dayanımı empty, its note “missing”.
+    let rows = property_rows(&app);
+    let at = rows.iter().position(|r| r.label == "Yangın dayanımı").expect("the class's row");
+    assert_eq!(rows[at].value, "");
+    assert!(rows[at + 1].value.starts_with("Yok: modelde eksik"), "{}", rows[at + 1].value);
+    let _ = app.update(crate::app::Message::Properties(Event::Commit(Field::Arch(wall, ArchField::FireRating), " REI 90 ".into())));
+    let doc = &app.document.as_ref().expect("the building").model;
+    let Some(Entity::Wall(w)) = doc.get(wall) else { panic!("the wall") };
+    assert_eq!(w.wall.arch.fire_rating.as_ref().map(|d| d.value.as_str()), Some("REI 90"), "trimmed, the author's");
+    assert_eq!(doc.undo_labels().first().map(String::as_str), Some("Yangın ve performans"));
+    // Empty takes it away: missing again, never an empty word.
+    let _ = app.update(crate::app::Message::Properties(Event::Commit(Field::Arch(wall, ArchField::FireRating), String::new())));
+    let Some(Entity::Wall(w)) = app.document.as_ref().expect("the building").model.get(wall) else { panic!("the wall") };
+    assert!(w.wall.arch.fire_rating.is_none());
+    // A door: Acil çıkış Evet.
+    let (door, _) = first(&app, |e| matches!(e, Entity::Opening(o) if o.opening.form == kentos_commands::OpeningForm::Door));
+    app.selection.set(vec![door]);
+    assert!(property_rows(&app).iter().any(|r| r.label == "Acil çıkış" && r.value == "Bilinmiyor"));
+    let _ = app.update(crate::app::Message::Properties(Event::Exit(door, Some(true))));
+    let Some(Entity::Opening(o)) = app.document.as_ref().expect("the building").model.get(door) else { panic!("the door") };
+    assert_eq!(o.opening.exit.as_ref().map(|x| x.exit), Some(true));
+}
+
+/// Yangın ve performans in the window, light and dark: the Duvar stilleri window with the style's class, Öznitelikler of
+/// a wall carrying it from its style and of a door with its exit role, the Denetim tab's missing mandatory fields;
+/// `.run/gui-evidence/yangin-performans-8068/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib performance_tests::screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::app::Message;
+    use crate::wall_styles::Event as Styles;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yangin-performans-8068");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 1180.0), "acik"), ("dark", Size::new(1280.0, 1100.0), "koyu")] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::RibbonTab("arch"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        // Duvar stilleri: the walls' style given REI 120 (a KentOS style is taken into the project).
+        let (wall, _) = first(&app, |e| matches!(e, Entity::Wall(_)));
+        let style = match app.document.as_ref().expect("the building").model.get(wall) {
+            Some(Entity::Wall(w)) => w.wall.style.clone().expect("a style"),
+            _ => unreachable!(),
+        };
+        let _ = app.update(Message::Run("arch.wallStyles"));
+        let _ = app.update(Message::Arch(crate::arch::Event::WallStyles(Styles::Choose(Some(style.clone())))));
+        let _ = app.update(Message::Arch(crate::arch::Event::WallStyles(Styles::FireRating("REI 120".into()))));
+        shot(&mut app, "1-duvar-stili");
+        run(
+            &mut app,
+            "cad.arch.performance",
+            serde_json::json!({"operation": {"kind": "wallStyle", "style": style, "fireRating": {"value": "REI 120", "basis": {"kind": "author"}}}}),
+        );
+        app.dialog = None;
+        app.arch.wall_styles = None;
+        // Öznitelikler: the wall carries its style's class.
+        app.selection.set(vec![wall]);
+        shot(&mut app, "2-duvar-oznitelikler");
+        // A door: its own class from a test report and its exit role.
+        let (door, uid) = first(&app, |e| matches!(e, Entity::Opening(o) if o.opening.form == kentos_commands::OpeningForm::Door));
+        run(
+            &mut app,
+            "cad.arch.performance",
+            serde_json::json!({"operation": {"kind": "objects", "uids": [uid],
+                "fireRating": {"value": "EI 60", "basis": {"kind": "document", "name": "Test raporu 2026/41", "date": "2026-11-16"}},
+                "exit": {"exit": true, "basis": {"kind": "author"}}}}),
+        );
+        app.selection.set(vec![door]);
+        shot(&mut app, "3-kapi-acil-cikis");
+        // Denetim: the model's missing mandatory fields, each with its objects.
+        app.selection.set(Vec::new());
+        let found = required(&mut app);
+        assert!(!found.is_empty());
+        app.arch.arch_audit.group = Some(kentos_commands::ArchAuditCheck::Regulation);
+        let at = app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter()
+            .position(|f| f.code == "digital_required_field" && f.message.contains("Pset_WallCommon.FireRating"))
+            .or_else(|| app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter().position(|f| f.code == "digital_required_field"))
+            .expect("a mandatory field finding");
+        app.arch.arch_audit.selected = Some(at);
+        shot(&mut app, "4-denetim-zorunlu-alanlar");
+    }
+}

@@ -1124,6 +1124,9 @@ impl WallStyleDef {
         if let Some((field, words)) = components_problem(&self.components, None) {
             return Some((field, format!("“{name}” duvar stili: {words}")));
         }
+        if let Some(words) = self.fire_rating.as_ref().and_then(|d| d.problem("yangın dayanım sınıfı")) {
+            return Some(("fireRating".into(), format!("“{name}” duvar stili: {words}")));
+        }
         if !colour_holds(&self.fill) {
             return Some((
                 "fill".into(),

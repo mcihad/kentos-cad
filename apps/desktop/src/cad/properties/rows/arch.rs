@@ -75,6 +75,40 @@ fn railings_row(
     Row::text("Korkuluk", words).editor(edit(select(words.to_owned(), items)))
 }
 
+/// Yangın dayanımı, and a door's or a stair's Acil çıkış (docs/adr/8068), written by `cad.arch.performance`: the
+/// field holds the object's own class (empty takes it away); a note says the class it carries from its wall style or
+/// its type, or that none is declared (missing in the model), and the basis of its own.
+pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: bool) -> Vec<Row> {
+    use kentos_native_application::arch_performance::{Carried, exit_of, exit_rated, fire_rating_of, fire_rated};
+    if !fire_rated(e) {
+        return Vec::new();
+    }
+    let carried = fire_rating_of(doc.settings(), e);
+    let own = carried.filter(|(_, c)| *c == Carried::Own).map(|(d, _)| d);
+    let mut rows = vec![Row::text("Yangın dayanımı", own.map_or_else(String::new, |d| d.value.clone()))
+        .editor((!locked).then_some(Editor::Text(Field::Arch(slot, ArchField::FireRating))))];
+    rows.push(Row::note(&match carried {
+        Some((d, Carried::Own)) => format!("Dayanak: {}", d.basis.words()),
+        Some((d, Carried::Type)) if matches!(e, Entity::Wall(_)) => format!("Duvar stilinden: {}", d.value),
+        Some((d, Carried::Type)) => format!("Tipinden: {}", d.value),
+        None => "Yok: modelde eksik (TS EN 13501-2: REI 120, EI 60).".to_owned(),
+    }));
+    if exit_rated(e) {
+        let now = exit_of(e).map(|x| x.exit);
+        let words = match now {
+            Some(true) => "Evet",
+            Some(false) => "Hayır",
+            None => "Bilinmiyor",
+        };
+        let items = [(Some(true), "Evet"), (Some(false), "Hayır"), (None, "Bilinmiyor")]
+            .into_iter()
+            .map(|(v, label)| pick(label.to_owned(), now == v, Message::Properties(Event::Exit(slot, v)), None))
+            .collect();
+        rows.push(Row::text("Acil çıkış", words).editor((!locked).then(|| select(words.to_owned(), items))));
+    }
+    rows
+}
+
 /// Kat and Tadilat durumu, as a wall's and a space's.
 pub(super) fn arch_rows(
     doc: &Document,
@@ -387,6 +421,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 });
             }
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
+            out.extend(performance_rows(doc, slot, e, locked));
         }
         Entity::Stair(s) => {
             let x = &s.stair;
@@ -527,6 +562,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 ))));
             }
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
+            out.extend(performance_rows(doc, slot, e, locked));
             out.extend(checks(
                 kentos_native_application::arch_elements::stair_warnings(&doc.model, x, ""),
             ));
@@ -561,6 +597,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             out.push(length("Sahanlık", x.landing(), ArchField::Landing));
             out.push(railings_row(slot, x.railings, &edit));
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
+            out.extend(performance_rows(doc, slot, e, locked));
             out.extend(checks(
                 kentos_native_application::arch_elements::ramp_warnings(x, ""),
             ));
@@ -650,6 +687,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             ));
             out.push(Row::figure("Uzunluk", f.length_bare(x.length())).unit(f.length_unit_label()));
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
+            out.extend(performance_rows(doc, slot, e, locked));
         }
         // A railing (docs/adr/8045 §3): its height, infill, gap, top rail and offset, how its line runs and how long it
         // is, its storey; what PAİY 38 says of its height (38/1) and gap (38/4).
@@ -688,6 +726,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             ));
             out.push(Row::figure("Uzunluk", f.length_bare(x.length())).unit(f.length_unit_label()));
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
+            out.extend(performance_rows(doc, slot, e, locked));
             let mut rules = Vec::new();
             if x.height < kentos_commands::RAILING_HEIGHT - 1e-9 {
                 rules.push((

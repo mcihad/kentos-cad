@@ -67,6 +67,8 @@ pub struct Window {
     /// The number fields as typed: the width, then each component's by its place.
     typed: HashMap<(usize, Field), String>,
     width_typed: String,
+    /// Yangın dayanımı as typed (docs/adr/8068); the draft keeps it trimmed, empty none.
+    fire_typed: String,
     usage: HashMap<String, usize>,
     asking: Option<String>,
     /// The project's materials a component may be bound to (docs/adr/0791).
@@ -88,6 +90,8 @@ pub enum Event {
     RemoveDropped,
     Name(String),
     Width(String),
+    /// Yangın dayanımı typed (docs/adr/8068): a KentOS style is taken into the project's table to keep it.
+    FireRating(String),
     OpenCaps(bool),
     Fill(Option<String>),
     Component(usize, Field, String),
@@ -180,11 +184,14 @@ impl Window {
     fn fill(&mut self) {
         self.typed.clear();
         self.width_typed.clear();
+        self.fire_typed.clear();
         let Some((s, _)) = self.shown_style() else {
             return;
         };
         let (width, comps) = (shown(s.width), s.components.clone());
+        let fire = s.fire_rating.as_ref().map_or_else(String::new, |d| d.value.clone());
         self.width_typed = width;
+        self.fire_typed = fire;
         for (i, c) in comps.iter().enumerate() {
             self.typed.insert((i, Field::Name), c.name.clone());
             self.typed
@@ -258,6 +265,7 @@ impl App {
             chosen,
             typed: HashMap::new(),
             width_typed: String::new(),
+            fire_typed: String::new(),
             usage,
             asking: None,
             materials: doc.model.materials().to_vec(),
@@ -478,6 +486,20 @@ impl App {
                 w.width_typed = typed;
                 if let (Ok(v), Some(s)) = (value, w.own()) {
                     s.width = v;
+                }
+            }
+            Event::FireRating(typed) => {
+                let value = typed.trim().to_owned();
+                w.fire_typed = typed;
+                if w.own().is_none()
+                    && let Some(id) = w.chosen.clone()
+                    && let Some(at) = w.builtin.iter().position(|b| b.id == id)
+                {
+                    let taken = w.builtin.remove(at);
+                    w.styles.push(taken);
+                }
+                if let Some(s) = w.own() {
+                    s.fire_rating = (!value.is_empty()).then(|| kentos_commands::Declared::author(&value));
                 }
             }
             Event::OpenCaps(open) => {
@@ -761,6 +783,12 @@ impl App {
             // A wall's width is its Kalınlık, as the tool, its panel and Öznitelikler say (docs/adr/8003).
             container(words::field("Kalınlık", width, Some(width_hint))).width(Fill),
             container(words::field("Şematik dolgu", fill, None)).width(Fill),
+            container(words::field(
+                "Yangın dayanımı",
+                kentos_ui::widget::text_field("REI 120", &w.fire_typed).on_input(|t| msg(Event::FireRating(t))),
+                Some("Kendi sınıfı olmayan duvarlar taşır; boş: eksik".to_owned()),
+            ))
+            .width(Fill),
         ]
         .spacing(12)
         .align_y(iced::Top);

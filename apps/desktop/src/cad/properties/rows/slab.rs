@@ -184,6 +184,7 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
         pick(p.label().to_owned(), x.arch.phase == Some(p), set(SlabChange { phase: Some(Some(p)), ..Default::default() }), None)
     }));
     geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
+    geo.extend(super::arch::performance_rows(k.doc, k.slot, k.e, k.locked));
     let summed = if x.excluded { "Dışında" } else { "Toplamda" };
     let sums = [(false, "Toplamda"), (true, "Dışında")]
         .into_iter()

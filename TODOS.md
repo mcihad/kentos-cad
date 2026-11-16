@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- Yangın ve performans ([ADR 8068](docs/adr/8068-fire-performance-material-declarations.md), `cad.arch.performance`):
+  web'e dönüşte komutun işleyicisi (`product/`), Öznitelikler'in Yangın dayanımı ve Acil çıkış satırları, Duvar stilleri
+  alanı; TS sözleşmeleri üretildi (`Declared`, `DeclaredBasis`, `DeclaredExit`, `ArchPerformance` …); `.kcad` mimari verisi
+  sürüm 1'in web okuyucusu.
 - Dijital proje kuralları ([ADR 8062](docs/adr/8062-digital-project-rule-catalog.md), `arch.digitalRules`): web'e dönüşte
   `kentos-digital-project` ve `kentos-ifc`'in `rules` listesi (ikisi de wasm32'de derleniyor) `crates/wasm/` altında
   bağlanır; pencere web'in arayüz çatısıyla; Mimari denetim bulgularının kuralı ek ve sayfayı söylesin (`cited`).
@@ -4293,7 +4297,7 @@ mimari disiplinin modelini yazar; statik ve tesisat modelleri altlık olarak oku
 - [x] `BIM-04` Paftanın modelden üretildiğinin kanıtı: ruhsat yayınının kapısı eski kesit ve görünüşte, kaynağı silinmiş türevde, model katmanındaki serbest çizimde ve kopmuş etiket ve ölçüde Yayınla'yı kapatır; Python kuralı `dijital_proje.turetim`, olgular `cad` bölümünde; Mimari denetimde aynı bulgular, eski kesitin Düzelt'i Yeniden çiz; listeler canlı; kaynağın revizyonu `yayin.json`'da (16 Kasım 2026, [ADR 8065](docs/adr/8065-sheets-from-the-model-gate.md)). Kalan: Python bulgusunun istisnası, EK-9/21'in bu kayıttan cevabı (IFC-08), pafta düzeyinde sınıflama, büyük çizimde ölçüm.
 - [x] `BIM-05` 2B ruhsat paketi: paket kuralı (`dijital_proje.paket`: PDF/A, bir dosya bir pafta, A4 ve katları, EK-2 adı) ruhsat yayınının kapısında; PDF/A yayını `teslim-listesi.csv` yazar; atomik yayın (ADR 1090); bağımsız okuma qpdf ve Poppler ile (kesit binası 7, 2+1 5 dosya geçer; bozuk dosyalar sebebiyle reddedilir); kesit paftasının konumu "BBX" (16 Kasım 2026, [ADR 8066](docs/adr/8066-2d-permit-package-pdfa.md)). Kalan: çizim dışı belgeler (sözleşme değişikliği), veraPDF, kapıda taranmış sayfa.
 - [~] `BIM-06` Binanın 3B görünümü: IFC dışa aktarımının gövdeleri (`kentos_ifc::mesh`) yolun ortak sahne çekirdeği ve çizicisiyle; sınıf rengi, yarı saydam mahal, kat süzgeci, mahaller aç ve kapa; 3B'de tıkla → planda seç, planın seçimi 3B'de turuncu; Denetim'de seçili bulgunun nesneleri kırmızı; model değişince sahne yenilenir. Örtüşen mahal EK-9/13: Rust `cad.roomOverlaps`, Python `dijital_proje.kalite` (0,01 m²). Kesit binası 58 eleman ve 10 mahal = dosyadaki 68 gövde (16 Kasım 2026, [ADR 8067](docs/adr/8067-building-3d-view-and-room-overlaps.md)). Kalan: gerçek pencerede kabul (Xvfb düzeneği Linux'ta), kesit kutusu (çizicide kırpma, IFC-12 ile ortak), tadilat rengi, gizle ve yalnız bırak, katlar arası örtüşme, büyük modelde ölçüm.
-- [ ] `BIM-07` Yangın, performans ve malzeme bilgisi: yangın dayanım sınıfı, acil çıkış, dayanım, yapım yöntemi; kaynağıyla; varsayılanla dolmaz.
+- [~] `BIM-07` Yangın, performans ve malzeme bilgisi: nesnenin, duvar stilinin ve kapı-pencere tipinin yangın dayanım sınıfı, kapının ve merdivenin acil çıkışı, malzemenin dayanımı (`Ad_Dayanım`), binanın yangın koruma sınıfı; her biri dayanağıyla (müellif beyanı ya da belge), varsayılansız; `cad.arch.performance` v1 (42 bağımsız durum), `.kcad` mimari verisi 1; Öznitelikler satırları ve Duvar stilleri alanı; IFC'de FireRating, FireExit, ConstructionMethod (künyenin yapı türü), FireProtectionClass, NetPlannedArea (16 Kasım 2026, [ADR 8068](docs/adr/8068-fire-performance-material-declarations.md)). Kalan: kapı tipi, malzeme ve bina alanı için pencere alanları, acil çıkış önerisi (kaçış yolları), türetilenin açıklaması ve örnekte değişmesi, kaplama kalınlıkları, asansör kapasitesi.
 - [ ] `BIM-08` Mahal, zon ve emsal modeli: emsal alanları maddesiyle işaretli çokgenler; mahalin türü ve kapalı hacmi; bağımsız bölüm grupları; çizimde örtüşme ve kapalılık denetimi.
 - [ ] `BIM-09` Eksik yapı elemanları: rampa gövdesi, giydirme cephe, kaplama ve asma tavan, baca, dikme; asansör, vitrifiye ve mobilyanın yapı sınıfı.
 - [ ] `BIM-10` Geometri doğruluğu: gerçek yay, kesilmiş açıklık, döşeme boşluğu, kapalı gövde; hacim ve alan kaynaktan.
@@ -4311,7 +4315,7 @@ mimari disiplinin modelini yazar; statik ve tesisat modelleri altlık olarak oku
 **IFC** ([plan/ifc-uyum.md §10](plan/ifc-uyum.md#10-iş-paketleri)):
 
 - [x] `IFC-01` Kural kataloğu `kentos-ifc`'te veri olarak; IFC 4.3 şemasına ve resmî set şablonlarına karşı sınanıyor, her farkın kararı var; başlangıç ölçümü dosyadan (15 Kasım 2026, [ADR 8062](docs/adr/8062-digital-project-rule-catalog.md)).
-- [ ] `IFC-02` Yazılan sınıflarda zorunlu alanların tamamlanması; girilmemiş değer yazılmaz, eksik sayılır.
+- [~] `IFC-02` Yazılan sınıflarda zorunlu alanların tamamlanması; girilmemiş değer yazılmaz, eksik sayılır. Yapıldı (16 Kasım 2026, [ADR 8068](docs/adr/8068-fire-performance-material-declarations.md)): `kentos_ifc::required` katalogdaki zorunlu satırları modelle karşılaştırır; eksikler `cad.modelGaps` olgusu, `dijital_proje.zorunlu` kuralı nesneleriyle hata; EK-9/9 modelden. Kalan: saha (TAKS, KAKS, çekme, toplam alan), kat SSL kotu, mahal kaplamaları, merdivenin tipi ve malzemesi, projenin açıklaması ve tipi, aktör rolleri, TrueNorth, PostalBox, FootPrintArea yazımı.
 - [ ] `IFC-03` Eksik sınıflar ve zonlar: mekânsal zon (emsal), grup (bağımsız bölüm), rampa, giydirme cephe, kaplama, baca, aks, asansör, vitrifiye, mobilya; vekil sınıf yok.
 - [ ] `IFC-04` Tip nesneleri, katmanlı malzeme takımı, çok katlı elemanın başvuruları.
 - [ ] `IFC-05` Konum, kot, çok bina ve projenin ortak alanları: yerel orijin ve harita dönüşümü, kontrol noktaları, düşey datum; sıfır varsayımı yok.

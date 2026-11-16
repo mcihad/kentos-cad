@@ -22,7 +22,10 @@ katları, EK-2 adı) kapıda, teslim listesi klasörde; kesit binasının ve 2+1
 hatasız geçti. B6 büyük ölçüde tamamlandı: BIM-06 `[~]` ([ADR 8067](../docs/adr/8067-building-3d-view-and-room-overlaps.md)):
 3B görünüm binanın IFC'ye yazılan gövdelerini yolun ortak sahne çekirdeği ve çizicisiyle gösterir (kesit binası 58 eleman ve
 10 mahal, dosyadaki 68 ile eşit); 3B'de tıklanan nesne planda seçilir; örtüşen mahaller EK-9/13'ün Python kuralıyla
-bulgudur ve 3B'de kırmızıdır. Kalan: gerçek pencerede kabul, kesit kutusu, tadilat rengi. Sıradaki B7 (BIM-07).
+bulgudur ve 3B'de kırmızıdır. Kalan: gerçek pencerede kabul, kesit kutusu, tadilat rengi. B7 büyük ölçüde tamamlandı: BIM-07 ve IFC-02 `[~]`
+([ADR 8068](../docs/adr/8068-fire-performance-material-declarations.md)): yangın dayanım sınıfı, acil çıkış, malzemenin
+dayanımı ve binanın yangın koruma sınıfı dayanağıyla beyan edilir (`cad.arch.performance`), modele yazılır; modelin eksik
+zorunlu alanları nesneleriyle Denetim'de (Python `zorunlu`), EK-9/9 modelden. Sıradaki B8 (BIM-08).
 
 Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. İlk taslağa göre değişenler: iki yönetmeliğin ana metni madde madde
 yeniden okundu; eklerin bağımsız bir dökümü depodaki sayfa okumalarıyla karşılaştırıldı; bugünkü kod yönetmeliğin sınıf
@@ -136,7 +139,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | # | Zayıflık | Kanıt | Önem | Paket |
 |---|---|---|---|---|
 | Z1 | **Binanın 3B görünümü yok.** Model yalnız planda, kesitte ve dışa aktarılan dosyada görülüyor; gövde hatası, mahal örtüşmesi, yanlış kot karşı programda fark ediliyor | 3B pencere yalnız yol sahnesini açıyor (`apps/desktop/src/shell/scene3d_window.rs`); bina gövdelerini kesit modeli kuruyor, gösteren yok. **16 Kasım 2026:** büyük ölçüde giderildi (ADR 8067): bina 3B'de, örtüşen mahal bulgu; kesit kutusu yok | K | BIM-06 |
-| Z2 | **Yangın ve performans bilgisi tutulmuyor:** yangın dayanım sınıfı, acil çıkış, malzeme dayanımı, yapım yöntemi, yangın koruma sınıfı | Sözleşmelerde alan yok (`crates/shared/contracts/src/arch`); EK-9'un 9. sorusu "hayır" (ADR 8047 §9) | K | BIM-07 |
+| Z2 | **Yangın ve performans bilgisi tutulmuyor:** yangın dayanım sınıfı, acil çıkış, malzeme dayanımı, yapım yöntemi, yangın koruma sınıfı | Sözleşmelerde alan yok (`crates/shared/contracts/src/arch`); EK-9'un 9. sorusu "hayır" (ADR 8047 §9). **16 Kasım 2026:** büyük ölçüde giderildi (ADR 8068) | K | BIM-07 |
 | Z3 | **Emsal alanları modelde nesne değil;** bağımsız bölüm modelde grup olarak durmuyor | EK-9/10 ve EK-6 6.60 mekânsal zon istiyor; yazılmıyor | K | BIM-08 |
 | Z4 | **Paftanın modelden üretildiği kanıtlanamıyor:** plan paftasındaki serbest çizim ayırt edilmiyor; IFC ile PDF/A'nın aynı revizyondan çıktığı kayıtlı değil | EK-9/21 "modele girmeyen nesne yoksa evet" (`quality.rs`); Ruhsat takımı ile `cad.arch.ifc` ayrı komutlar | K | BIM-04, BIM-14 |
 | Z5 | **Eleman sınıfları dar:** giydirme cephe, kaplama ve asma tavan nesnesi, baca, dikme yok; asansör, vitrifiye ve mobilya sınıfsız blok; rampanın gövdesi yok | `Entity` listesi (`contracts/src/core/entity.rs`); `arch.rs` `Why::NotYet`; ADR 8045 | Y | BIM-09 |
@@ -389,7 +392,17 @@ planda seçilir. Katları ayırır, kesit kutusuyla içine bakar. Denetim bulgul
 **İlk kabul:** bölüm binasının 68 gövdesi 3B'de; gövde sayısı dışa aktarılan dosyadakiyle eşit; 3B'de tıklanan duvar planda
 seçili; örtüşen iki mahal kırmızı; gerçek pencerede resim.
 
-#### BIM-07 — Yangın, performans ve malzeme bilgisi [ ]
+#### BIM-07 — Yangın, performans ve malzeme bilgisi [~]
+
+**Yapıldı (16 Kasım 2026, [ADR 8068](../docs/adr/8068-fire-performance-material-declarations.md)):** beyan ve dayanağı
+(`Declared`, `DeclaredBasis`: müellif ya da belgenin adı ve günü; `DeclaredExit`) nesnede (`arch.fireRating`, açıklığın
+`fireRating`'i, merdivenin ve kapının `exit`'i), duvar stilinde, kapı-pencere tipinde, malzemenin `strength`'inde ve
+binanın `performance`'ında; nesnenin değeri tipinkini geçer, varsayılan yok. `cad.arch.performance` v1 (42 bağımsız durum);
+`.kcad` mimari verisi 1. IFC'de FireRating, FireExit, ConstructionMethod (EK-6 Tablo 6.7: inşaat eyleminin türü, künyenin
+yapı türünden), FireProtectionClass, NetPlannedArea, `Ad_Dayanım`. Öznitelikler'de Yangın dayanımı ve Acil çıkış, Duvar
+stilleri'nde sınıf alanı. Eksik zorunlu alanlar `zorunlu` kuralıyla Denetim'de; bir stilin sınıfı silinince duvarları
+bulguda. **Kalan:** formun 9. sorusu IFC-02'nin öbür satırları dolmadan "evet" değil; kapı tipi, malzeme ve bina için
+pencere alanları; acil çıkış önerisi; türetilenin açıklaması; kaplama kalınlıkları; asansör kapasitesi.
 
 **Kullanıcı sonucu:** Duvar stili, kapı ve pencere tipi, döşeme, kolon, kiriş, çatı ve merdiven yangın dayanım sınıfını;
 kapı ve merdiven acil çıkış rolünü; taşıyıcı malzeme dayanım sınıfını taşır. Eksik olan, Denetim'de nesnesiyle listelenir;
@@ -648,7 +661,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | B6 ◐ | Binanın 3B görünümü | BIM-06 | Bina 3B'de; tıkla, planda seç; örtüşen mahal kırmızı (ADR 8067; gerçek pencere ve kesit kutusu kaldı) |
-| B7 | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Formun 9. sorusu evet olabilir |
+| B7 ◐ | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Beyan dayanağıyla modelde; eksik alanlar nesneleriyle Denetim'de; 9. soru modelden (ADR 8068; IFC-02'nin öbür satırları kaldı) |
 | B8 | Mahal, zon ve emsal; mekânsal zonlar ve gruplar | BIM-08, IFC-03 | Emsal tablosu ile model aynı alanlardan |
 | B9 | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş |
 | B10 | Geometri doğruluğu; geometri ve görünüm tanımı | BIM-10, IFC-06 | Eğri eğri, açıklık kesik |

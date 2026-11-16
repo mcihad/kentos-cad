@@ -443,7 +443,8 @@ fn declared(e: &Entity, wall_styles: &[kentos_contracts::WallStyleDef], arch: Op
         Entity::Stair(s) => s.stair.arch.exit.as_ref(),
         _ => None,
     };
-    (fire.map(|d| d.value.clone()), exit.map(|x| x.exit))
+    // A word that says nothing is no value: it is missing, never written empty.
+    (fire.map(|d| d.value.trim().to_owned()).filter(|v| !v.is_empty()), exit.map(|x| x.exit))
 }
 
 /// A material's name as the model writes it: `Ad_Dayanım` when the project's material of that name has a strength

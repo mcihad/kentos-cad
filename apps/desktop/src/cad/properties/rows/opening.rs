@@ -124,6 +124,7 @@ pub(super) fn rows(k: &Kit, o: &kentos_commands::OpeningEntity) -> Vec<Row> {
         )
     }));
     geo.push(Row::text("Tadilat durumu", phase_name.clone()).editor(select(phase_name, phases)));
+    geo.extend(super::arch::performance_rows(k.doc, k.slot, k.e, k.locked));
     // A niche's or flue's face, depth and a flue's distance from its face (docs/adr/0719).
     if x.form.is_recess() {
         let sides = [(OpeningSide::Left, "Sol", "openingSideLeft"), (OpeningSide::Right, "Sağ", "openingSideRight")]

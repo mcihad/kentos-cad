@@ -75,6 +75,13 @@
       eski karoyu çizmez.
     - Örtüşen mahal EK-9/13: ortak alan Rust olgusu (`cad.roomOverlaps`), eşik Python kuralında (`kalite`, 0,01 m²).
       Kalan: gerçek pencerede kabul, kesit kutusu, tadilat rengi.
+  - **B7 büyük ölçüde yapıldı (16 Kasım 2026; [ADR 8068](../adr/8068-fire-performance-material-declarations.md); BIM-07 ve IFC-02 `[~]`):**
+    - Beyan dayanağıyla (müellif ya da belge), varsayılansız: nesnenin, duvar stilinin, kapı-pencere tipinin yangın
+      dayanım sınıfı; kapının ve merdivenin acil çıkışı; malzemenin dayanımı; binanın yangın koruma sınıfı. Tek komut
+      `cad.arch.performance`; `.kcad` mimari verisi 1 (`modules.arch`).
+    - EK-6 Tablo 6.7'nin `ConstructionMethod`'u inşaat eyleminin türüdür (yeni, ilave, tadilat): künyeden yazılır.
+    - Modelin eksik zorunlu alanları `kentos_ifc::required` ile ölçülür, `zorunlu` kuralı nesneleriyle bildirir; EK-9/9
+      modelden. Kalan: IFC-02'nin saha, kat, kaplama, merdiven, proje satırları; pencere alanları; acil çıkış önerisi.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

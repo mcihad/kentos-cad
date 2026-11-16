@@ -624,6 +624,9 @@ impl OpeningType {
 
     /// What is wrong with it: the field and the words.
     pub fn problem(&self) -> Option<(String, String)> {
+        if let Some(words) = self.fire_rating.as_ref().and_then(|d| d.problem("yangın dayanım sınıfı")) {
+            return Some(("fireRating".into(), format!("“{}” tipi: {words}", self.name)));
+        }
         if !opening_type_id_ok(&self.id) {
             return Some((
                 "id".into(),
