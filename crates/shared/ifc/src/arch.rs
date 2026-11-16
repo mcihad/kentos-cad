@@ -8,11 +8,11 @@
 use std::collections::BTreeMap;
 
 use kentos_contracts::{
-    ArchSettings, BeamRole, Entity, OpeningBuild, OpeningForm, OpeningSide, SlabRole, SpaceFields,
-    Vec2, WallComponent,
+    ArchSettings, BeamRole, Entity, OpeningBuild, OpeningForm, OpeningSide, RoofPartKind, SlabRole,
+    SpaceFields, Vec2, WallComponent,
 };
 use kentos_geometry_core::Vec2 as P;
-use kentos_geometry_core::geom::opening::HoleFrame;
+use kentos_geometry_core::geom::opening::{HoleFrame, Recess};
 use kentos_geometry_core::geom::section::{Flight, Height, Sloped, Solid};
 
 use crate::building::{
@@ -43,6 +43,9 @@ pub struct Input<'a> {
     pub levels: Vec<(String, String, f64, Option<f64>)>,
     pub solids: &'a [Solid],
     pub owners: &'a [Option<String>],
+    /// Which roof part each solid is (docs/adr/8070 §3): a chimney's or a vent's stack by its index in its roof's
+    /// `parts`; none: its object itself.
+    pub parts: &'a [Option<usize>],
     pub gaps: Vec<Gap>,
     pub entities: Vec<(u128, String, &'a Entity)>,
     pub wall_style_name: &'a dyn Fn(Option<&str>) -> String,
@@ -270,6 +273,7 @@ pub struct Written {
     pub railings: usize,
     pub stairs: usize,
     pub ramps: usize,
+    pub chimneys: usize,
     pub left: Vec<Left>,
     /// The rooms without a number or a name (Md. 10, EK-3), by their persistent ids.
     pub unnamed: Vec<String>,
@@ -361,6 +365,71 @@ fn sloped(rings: &[Vec<P>], s: &Sloped, floor: f64) -> Vec<Shape> {
 }
 
 /// A model solid's shapes over its storey's floor.
+/// A piece of a chimney (docs/adr/8070 §3): a flue's hollow in a wall or a roof's stack, its outline in plan between
+/// two heights over ±0.00.
+struct Piece {
+    storey: usize,
+    ring: Vec<[f64; 2]>,
+    bottom: f64,
+    top: f64,
+    /// A flue: its object's id bits and persistent id, its opening's index, its wall's material.
+    flue: Option<(u128, String, usize, Option<String>)>,
+    /// A stack: its roof's id bits and persistent id, its part's index and its kind's words.
+    stack: Option<(u128, String, usize, &'static str)>,
+}
+
+/// The pieces that are one chimney, each group lowest first, the groups in the order of their first piece: two are one
+/// where one's middle (its corners' mean) lies in the other's outline in plan.
+fn chimney_groups(pieces: &[Piece]) -> Vec<Vec<usize>> {
+    fn middle(r: &[[f64; 2]]) -> [f64; 2] {
+        let n = r.len().max(1) as f64;
+        [r.iter().map(|p| p[0]).sum::<f64>() / n, r.iter().map(|p| p[1]).sum::<f64>() / n]
+    }
+    fn within(r: &[[f64; 2]], p: [f64; 2]) -> bool {
+        let mut odd = false;
+        for i in 0..r.len() {
+            let (a, b) = (r[i], r[(i + 1) % r.len()]);
+            if (a[1] > p[1]) != (b[1] > p[1]) && p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]) {
+                odd = !odd;
+            }
+        }
+        odd
+    }
+    fn root(of: &mut [usize], mut i: usize) -> usize {
+        while of[i] != i {
+            of[i] = of[of[i]];
+            i = of[i];
+        }
+        i
+    }
+    let n = pieces.len();
+    let mut of: Vec<usize> = (0..n).collect();
+    for i in 0..n {
+        for j in i + 1..n {
+            let (a, b) = (&pieces[i].ring, &pieces[j].ring);
+            if within(b, middle(a)) || within(a, middle(b)) {
+                let (ri, rj) = (root(&mut of, i), root(&mut of, j));
+                of[rj.max(ri)] = rj.min(ri);
+            }
+        }
+    }
+    let mut groups: Vec<(usize, Vec<usize>)> = Vec::new();
+    for i in 0..n {
+        let r = root(&mut of, i);
+        match groups.iter_mut().find(|(g, _)| *g == r) {
+            Some((_, list)) => list.push(i),
+            None => groups.push((r, vec![i])),
+        }
+    }
+    groups
+        .into_iter()
+        .map(|(_, mut list)| {
+            list.sort_by(|a, b| pieces[*a].bottom.total_cmp(&pieces[*b].bottom));
+            list
+        })
+        .collect()
+}
+
 fn shapes(solid: &Solid, floor: f64) -> Vec<Shape> {
     let rings: Vec<Vec<P>> = solid
         .rings
@@ -517,6 +586,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         levels,
         solids,
         owners,
+        parts,
         gaps,
         entities,
         wall_style_name,
@@ -562,10 +632,18 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .iter()
         .map(|(bits, u, e)| (u.clone(), (*bits, *e)))
         .collect();
-    // The model's solids by their object, in the model's order.
+    // The model's solids by their object, in the model's order; a roof's chimney and vent stacks by their part.
     let mut owned: Vec<(String, Vec<usize>)> = Vec::new();
+    let mut stacks: Vec<(String, usize, Vec<usize>)> = Vec::new();
     for (i, owner) in owners.iter().enumerate() {
         let Some(o) = owner else { continue };
+        if let Some(k) = parts.get(i).copied().flatten() {
+            match stacks.iter_mut().find(|(r, p, _)| r == o && *p == k) {
+                Some((_, _, list)) => list.push(i),
+                None => stacks.push((o.clone(), k, vec![i])),
+            }
+            continue;
+        }
         match owned.iter_mut().find(|(k, _)| k == o) {
             Some((_, list)) => list.push(i),
             None => owned.push((o.clone(), vec![i])),
@@ -675,6 +753,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         elements.push(Element {
             class,
             id: Some(id),
+            object: None,
             name: name(class.code(), &words),
             description: None,
             tag: Some(owner.clone()),
@@ -762,6 +841,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 elements.push(Element {
                     class,
                     id: Some(id),
+                    object: None,
                     name: name(class.code(), &words),
                     description: None,
                     tag: Some(mark.clone().unwrap_or_else(|| owner.clone())),
@@ -809,6 +889,148 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 "OPENING"
             },
         });
+    }
+    // Niches and flues (docs/adr/8070 §3): the section model takes them out of their walls as boxes; the model writes a
+    // niche as a recess in its wall, and a flue's hollow as an opening through its wall's height that a chimney fills.
+    let mut pieces: Vec<Piece> = Vec::new();
+    for (bits, uid, e) in &entities {
+        let Entity::Opening(o) = e else { continue };
+        let f = &o.opening;
+        let niche = f.form == OpeningForm::Niche;
+        if !niche && f.form != OpeningForm::Flue {
+            continue;
+        }
+        let Some(&host) = index.get(&f.host) else {
+            continue;
+        };
+        let Ok(place) = <[Vec2; 4]>::try_from(f.place.clone()) else {
+            continue;
+        };
+        let Some(ring) = Recess::of(niche, f.side == OpeningSide::Right, f.inset, f.depth)
+            .and_then(|r| r.band(place.map(|q| P::new(q.x, q.y))))
+        else {
+            continue;
+        };
+        let ring: Vec<[f64; 2]> = ring.into_iter().map(pt).collect();
+        let storey = elements[host].storey;
+        let Some(wall_top) = elements[host]
+            .shapes
+            .iter()
+            .filter_map(|sh| match sh {
+                Shape::Prism { top, .. } => Some(*top),
+                Shape::Faces { .. } => None,
+            })
+            .reduce(f64::max)
+        else {
+            continue;
+        };
+        let bottom = f.sill.unwrap_or(0.0);
+        let top = f.head.unwrap_or(wall_top);
+        if top <= bottom + 1e-9 {
+            continue;
+        }
+        written.openings += 1;
+        opened.insert(uid.as_str());
+        openings.push(Opening {
+            // A niche is its object; a flue's object is its chimney, its hollow an id of its own.
+            id: Some(if niche { *bits } else { crate::step::fnv(uid, 1) }),
+            name: name("ACL", if niche { "Niş" } else { "Baca boşluğu" }),
+            host,
+            ring: ring.clone(),
+            bottom,
+            top,
+            filler: None,
+            predefined: if niche { "RECESS" } else { "OPENING" },
+        });
+        if !niche {
+            let floor = levels[storey].2;
+            pieces.push(Piece {
+                storey,
+                ring,
+                bottom: floor + bottom,
+                top: floor + top,
+                flue: Some((*bits, uid.clone(), openings.len() - 1, elements[host].material.clone())),
+                stack: None,
+            });
+        }
+    }
+    // A roof's chimney and vent stacks (docs/adr/8044 §6), from the top of the storey it stands on up to their tops.
+    for (roof, k, list) in &stacks {
+        let Some(&(bits, e)) = by_uid.get(roof) else {
+            continue;
+        };
+        let Entity::Roof(r) = e else { continue };
+        let storey = storey_of(level_of(e));
+        let words = match r.roof.parts.get(*k).map(|p| p.kind) {
+            Some(RoofPartKind::Vent) => "Hava bacası",
+            _ => "Duman bacası",
+        };
+        for &i in list {
+            let solid = &solids[i];
+            let (Height::Prism { bottom, top }, Some(ring)) = (&solid.height, solid.rings.first()) else {
+                continue;
+            };
+            pieces.push(Piece {
+                storey,
+                ring: ring.iter().map(|q| pt(*q)).collect(),
+                bottom: *bottom,
+                top: *top,
+                flue: None,
+                stack: Some((bits, roof.clone(), *k, words)),
+            });
+        }
+    }
+    // The chimneys (EK-6 Tablo 6.14): a flue and the stack over it, and the flues over one another, are one chimney
+    // where one's middle lies in the other's outline in plan; its storey the lowest piece's.
+    for members in chimney_groups(&pieces) {
+        let low = &pieces[members[0]];
+        let (storey, floor) = (low.storey, levels[low.storey].2);
+        let flue = members.iter().find_map(|&i| pieces[i].flue.as_ref());
+        let stack = members.iter().find_map(|&i| pieces[i].stack.as_ref());
+        let words = stack.map_or("Baca", |s| s.3);
+        let (id, object, tag) = match (flue, stack) {
+            (Some((bits, uid, ..)), _) => (*bits, None, uid.clone()),
+            (None, Some((roof_bits, roof, k, _))) => (
+                crate::step::fnv(&format!("{roof}/baca"), *k as u64),
+                Some(*roof_bits),
+                format!("{roof}/{}", k + 1),
+            ),
+            (None, None) => continue,
+        };
+        // Its material: the wall its lowest flue is in, else the stack's masonry as the section draws it (K43).
+        let made_of = flue
+            .and_then(|f| f.3.clone())
+            .or_else(|| stack.map(|_| "Tuğla".to_owned()));
+        let k = elements.len();
+        elements.push(Element {
+            class: Class::Chimney,
+            id: Some(id),
+            object,
+            name: name(Class::Chimney.code(), words),
+            description: None,
+            tag: Some(tag),
+            predefined: "USERDEFINED",
+            object_type: Some(words.to_owned()),
+            storey,
+            shapes: members
+                .iter()
+                .map(|&i| Shape::Prism {
+                    rings: vec![pieces[i].ring.clone()],
+                    bottom: pieces[i].bottom - floor,
+                    top: pieces[i].top - floor,
+                })
+                .collect(),
+            overall: None,
+            material: made_of,
+            psets: Vec::new(),
+            qtos: Vec::new(),
+        });
+        written.chimneys += 1;
+        for &i in &members {
+            if let Some((_, _, o, _)) = pieces[i].flue {
+                openings[o].filler = Some(k);
+            }
+        }
     }
     // The spaces (EK-6 Tablo 6.58): their numbers and names, their finishes as the room list's.
     let mut spaces = Vec::new();

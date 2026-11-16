@@ -158,6 +158,9 @@ pub struct Element {
     pub class: Class,
     /// Its KentOS id (a UUID's 128 bits): its GlobalId. None: one made of the file's seed.
     pub id: Option<u128>,
+    /// The KentOS object it shows when that is not its id's (a roof's chimney stack: the roof): what a click on it in
+    /// the 3D view selects. Not written to the file.
+    pub object: Option<u128>,
     /// Its name (EK-5 §5.5: discipline, category code, description).
     pub name: String,
     pub description: Option<String>,
@@ -1043,6 +1046,7 @@ mod tests {
                 Element {
                     class: Class::Wall,
                     id: Some(7),
+                    object: None,
                     name: "MM-DVR-Dis_duvar".into(),
                     description: None,
                     tag: None,
@@ -1065,6 +1069,7 @@ mod tests {
                 Element {
                     class: Class::Door,
                     id: Some(8),
+                    object: None,
                     name: "MM-KAP-K1".into(),
                     description: None,
                     tag: Some("K1".into()),

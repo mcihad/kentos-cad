@@ -95,7 +95,8 @@ pub enum BuildingSectionLeft {
     HeadUnknown,
     /// A stair with no slab to take its waist from: drawn solid down to its floor.
     StairWaist,
-    /// A niche or a flue: inside its wall, not cut.
+    /// A niche or a flue: inside its wall, not cut before docs/adr/8070 (cut as a box out of its wall since); no longer
+    /// given.
     Recess,
 }
 

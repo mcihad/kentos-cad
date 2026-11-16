@@ -266,6 +266,7 @@ mod tests {
         Element {
             class: Class::Wall,
             id: Some(id),
+            object: None,
             name: "MM-DVR-Duvar".into(),
             description: None,
             tag: None,

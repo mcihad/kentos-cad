@@ -31,8 +31,8 @@ pub enum Kind {
 /// One element's or space's triangles.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Mesh {
-    /// Its KentOS id (the persistent id's 128 bits), as the file's GlobalId; none for an element made of the file's
-    /// seed.
+    /// Its KentOS object's id (the persistent id's 128 bits): the file's GlobalId, or the object it shows when that
+    /// differs (a roof's chimney stack: the roof, docs/adr/8070 §3); none for an element made of the file's seed.
     pub id: Option<u128>,
     pub kind: Kind,
     /// Its storey, by index into [`Building::storeys`].
@@ -62,7 +62,7 @@ pub fn meshes(b: &Building) -> Vec<Mesh> {
     for (i, e) in b.elements.iter().enumerate() {
         let floor = b.storeys.get(e.storey).map_or(0.0, |s| s.elevation);
         let cuts: Vec<&Opening> = b.openings.iter().filter(|o| o.host == i && o.ring.len() >= 3).collect();
-        let mut m = Mesh::new(e.id, Kind::Element(e.class), e.storey, &e.name);
+        let mut m = Mesh::new(e.object.or(e.id), Kind::Element(e.class), e.storey, &e.name);
         for shape in &e.shapes {
             match shape {
                 Shape::Prism { rings, bottom, top } => prism(&mut m, rings, floor + bottom, floor + top, &cuts, floor),

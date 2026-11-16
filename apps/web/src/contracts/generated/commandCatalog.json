@@ -127640,7 +127640,7 @@
         },
         {
           "const": "recess",
-          "description": "A niche or a flue: inside its wall, not cut.",
+          "description": "A niche or a flue: inside its wall, not cut before docs/adr/8070 (cut as a box out of its wall since); no longer\ngiven.",
           "type": "string"
         }
       ]

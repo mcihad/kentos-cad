@@ -596,3 +596,151 @@ fn the_regulation_measures_the_roof_its_chimneys_and_its_windows() {
             .any(|f| f["code"] == "local_snow_guard_missing")
     );
 }
+
+/// Baca ve niş (docs/adr/8070 §3): a flue in the hall's west wall (x 4.5, İç duvar 15) on both storeys, 7 cm across
+/// and centred (4 cm off each face), and a chimney on the roof over it are one IfcChimney: three bodies (the two
+/// hollows and the stack from the roof's seat, +6.00), USERDEFINED "Duman bacası", its GlobalId the ground floor's flue.
+/// Each hollow voids its wall, the chimney filling it. A niche in the east hall wall is a recess with no filler. The
+/// section model takes the flue out of its wall as a box: 4.465 ≤ x ≤ 4.535 between its jambs (y 7.9 to 8.1, its
+/// middle at 8.0, clear of the hall's door at 6.0 to 6.9).
+#[test]
+fn a_flue_in_its_walls_and_the_chimney_over_it_are_one_ifc_chimney_and_a_niche_a_recess() {
+    use kentos_ifc::building::Class;
+    let mut doc = roofed(&building());
+    let roof = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| matches!(e, Entity::Roof(_)).then_some(u))
+        .unwrap();
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+        answer
+    };
+    run(
+        &mut doc,
+        "cad.arch.edit",
+        json!({"uids": [roof.to_string()], "operation": {"kind": "set", "parts": [
+            {"kind": "chimney", "at": {"x": 4.5, "y": 8.0}, "width": 0.4, "depth": 0.4}
+        ]}}),
+    );
+    // The hall's walls (x 4.5 west, x 7.5 east) from y 0 to 9 on each storey.
+    let hall = |doc: &Document, x: f64| -> Vec<(String, Option<String>)> {
+        doc.entities_with_uids()
+            .filter_map(|(u, e)| match e {
+                Entity::Wall(w)
+                    if w.wall.pts.len() == 2
+                        && w.wall.pts.iter().all(|q| (q.x - x).abs() < 1e-9)
+                        && w.wall.pts[0].y.abs() < 1e-9 =>
+                {
+                    Some((u.to_string(), w.wall.arch.level.clone()))
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    let west = hall(&doc, 4.5);
+    assert_eq!(west.len(), 2, "{west:?}");
+    let mut flues = Vec::new();
+    for (wall, _) in &west {
+        let out = run(
+            &mut doc,
+            "cad.openings.create",
+            json!({"layerId": "0", "openings": [
+                {"host": wall, "at": 8.0, "width": 0.2, "form": "flue", "operation": "fixed", "depth": 0.07}
+            ]}),
+        );
+        flues.push(out["output"]["uids"][0].as_str().unwrap().to_owned());
+    }
+    let east = hall(&doc, 7.5);
+    let zemin = east
+        .iter()
+        .find(|(_, l)| l.as_deref() == Some("zemin"))
+        .expect("the ground floor's east hall wall");
+    let out = run(
+        &mut doc,
+        "cad.openings.create",
+        json!({"layerId": "0", "openings": [
+            {"host": zemin.0, "at": 2.0, "width": 0.6, "form": "niche", "operation": "fixed", "side": "right",
+             "depth": 0.05, "sill": 0.9, "head": 1.5}
+        ]}),
+    );
+    let niche = out["output"]["uids"][0].as_str().unwrap().to_owned();
+    // The section model: the flue a box out of every solid of its wall.
+    let m = sections::model(&doc);
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let ground = west
+        .iter()
+        .find(|(_, l)| l.as_deref() == Some("zemin"))
+        .unwrap()
+        .0
+        .clone();
+    let walls: Vec<&kentos_geometry_core::geom::section::Solid> = m
+        .solids
+        .iter()
+        .zip(&m.owners)
+        .filter(|(_, o)| o.as_deref() == Some(ground.as_str()))
+        .map(|(s, _)| s)
+        .collect();
+    assert!(!walls.is_empty());
+    for s in &walls {
+        assert!(
+            s.voids.iter().any(|v| {
+                let xs = v.ring.iter().map(|q| q.x);
+                let ys: Vec<f64> = v.ring.iter().map(|q| q.y).collect();
+                xs.clone().any(|x| near(x, 4.465))
+                    && xs.clone().any(|x| near(x, 4.535))
+                    && ys.iter().any(|y| near(*y, 7.9))
+                    && ys.iter().any(|y| near(*y, 8.1))
+                    && near(v.bottom, 0.0)
+            }),
+            "{:?}",
+            s.voids
+        );
+    }
+    // The IFC model.
+    let (b, written, _) = kentos_native_application::arch_ifc::model(&doc);
+    let lost: Vec<&String> = written.left.iter().map(|l| &l.id).collect();
+    for uid in flues.iter().chain([&niche]) {
+        assert!(!lost.contains(&uid), "{uid} lost: {:?}", written.left);
+    }
+    let chimneys: Vec<(usize, &kentos_ifc::building::Element)> = b
+        .elements
+        .iter()
+        .enumerate()
+        .filter(|(_, e)| e.class == Class::Chimney)
+        .collect();
+    assert_eq!(chimneys.len(), 1, "{chimneys:?}");
+    let (k, c) = chimneys[0];
+    assert_eq!(c.predefined, "USERDEFINED");
+    assert_eq!(c.object_type.as_deref(), Some("Duman bacası"));
+    assert!(c.name.starts_with("MM-BAC-"), "{}", c.name);
+    assert_eq!(c.shapes.len(), 3);
+    let ground_flue = kentos_domain::Uuid::parse_str(&flues[0]).unwrap();
+    let first = west.iter().position(|(w, _)| *w == ground).unwrap();
+    let lowest = kentos_domain::Uuid::parse_str(&flues[first]).unwrap();
+    assert_eq!(c.id, Some(lowest.as_u128()), "{ground_flue}");
+    assert!(c.material.is_some());
+    let bottoms: Vec<f64> = c
+        .shapes
+        .iter()
+        .map(|s| match s {
+            kentos_ifc::building::Shape::Prism { bottom, .. } => *bottom,
+            other => panic!("{other:?}"),
+        })
+        .collect();
+    assert!(near(bottoms[0], 0.0) && near(bottoms[1], 3.0) && near(bottoms[2], 6.0), "{bottoms:?}");
+    let hollows: Vec<&kentos_ifc::building::Opening> =
+        b.openings.iter().filter(|o| o.predefined == "OPENING" && o.filler == Some(k)).collect();
+    assert_eq!(hollows.len(), 2, "{:?}", b.openings);
+    let niche_id = kentos_domain::Uuid::parse_str(&niche).unwrap().as_u128();
+    let recess: Vec<&kentos_ifc::building::Opening> =
+        b.openings.iter().filter(|o| o.predefined == "RECESS").collect();
+    assert_eq!(recess.len(), 1);
+    assert_eq!((recess[0].id, recess[0].filler), (Some(niche_id), None));
+    assert!(near(recess[0].bottom, 0.9) && near(recess[0].top, 1.5));
+    assert_eq!(written.chimneys, 1);
+    // The text: the chimney fills its hollows.
+    let text = kentos_ifc::building::write(&b);
+    assert!(text.contains("IFCCHIMNEY("), "the chimney");
+    assert_eq!(text.matches("IFCRELFILLSELEMENT(").count(), b.openings.iter().filter(|o| o.filler.is_some()).count());
+}

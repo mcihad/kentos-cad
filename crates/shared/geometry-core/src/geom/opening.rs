@@ -404,6 +404,36 @@ pub struct Recess {
 }
 
 impl Recess {
+    /// A niche's (from its face, `depth` in) or a flue's (`depth` across, `inset` off its face; absent: centred) recess,
+    /// its face the wall's right one when `right`; none without a depth above 0.
+    pub fn of(niche: bool, right: bool, inset: Option<f64>, depth: Option<f64>) -> Option<Recess> {
+        let depth = depth.filter(|d| d.is_finite() && *d > 0.0)?;
+        Some(Recess {
+            right,
+            inset: if niche { Some(0.0) } else { inset },
+            depth,
+        })
+    }
+
+    /// Its outline in plan (docs/adr/8070 §3): the band of its wall between its jambs across the part of the wall's
+    /// thickness it takes. `place` is the start jamb's points on the wall's left and right face, then the end jamb's
+    /// (an opening's `place`); none where the jambs have no thickness or the band none.
+    pub fn band(&self, place: [Vec2; 4]) -> Option<Vec<Vec2>> {
+        let [l0, r0, l1, r1] = place;
+        let t = js_hypot(r0.x - l0.x, r0.y - l0.y);
+        if !(t > 1e-9) {
+            return None;
+        }
+        let (near, far) = self.across(t);
+        // From the wall's left face.
+        let (a, b) = if self.right { (t - far, t - near) } else { (near, far) };
+        if b - a <= 1e-9 {
+            return None;
+        }
+        let at = |l: Vec2, r: Vec2, d: f64| Vec2::new(l.x + (r.x - l.x) * d / t, l.y + (r.y - l.y) * d / t);
+        Some(vec![at(l0, r0, a), at(l1, r1, a), at(l1, r1, b), at(l0, r0, b)])
+    }
+
     /// Its near and far distance from its face in a wall `thickness` thick, each within the wall.
     pub fn across(&self, thickness: f64) -> (f64, f64) {
         let near = js_max(

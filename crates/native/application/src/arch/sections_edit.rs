@@ -164,7 +164,6 @@ fn left_out(drawn: &Drawn) -> Vec<BuildingSectionLeftOut> {
                 Left::NoHeight => BuildingSectionLeft::NoHeight,
                 Left::HeadUnknown => BuildingSectionLeft::HeadUnknown,
                 Left::StairWaist => BuildingSectionLeft::StairWaist,
-                Left::Recess => BuildingSectionLeft::Recess,
             },
             uid: uid.clone(),
         })

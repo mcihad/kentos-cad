@@ -9,6 +9,7 @@ fn element(class: Class, shapes: Vec<Shape>, storey: usize) -> Element {
     Element {
         class,
         id: Some(7),
+        object: None,
         name: String::new(),
         description: None,
         tag: None,

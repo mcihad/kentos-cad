@@ -95,8 +95,6 @@ pub enum Left {
     HeadUnknown,
     /// A stair with no slab to take its waist from: drawn solid to its floor.
     StairWaist,
-    /// A niche or a flue: inside its wall.
-    Recess,
 }
 
 impl Left {
@@ -109,7 +107,6 @@ impl Left {
             Left::NoHeight => "yüksekliği olmayan duvar",
             Left::HeadUnknown => "lentosu olmayan açıklık (duvarın tepesine kadar)",
             Left::StairWaist => "merdiven plağı (döşemesi yok: dolu)",
-            Left::Recess => "niş ve baca",
         }
     }
 }
@@ -137,6 +134,9 @@ pub struct Model {
     pub looks: Vec<Look>,
     /// The persistent id of each solid's object.
     pub owners: Vec<Option<String>>,
+    /// Which of its object's roof parts each solid is (docs/adr/8070 §3): a chimney's or a vent's stack, by its index in
+    /// the roof's `parts`; none: the object itself.
+    pub parts: Vec<Option<usize>>,
     pub gaps: Vec<Gap>,
     pub left: BTreeSet<(Left, Option<String>)>,
     /// The storeys: id, name, floor, height.
@@ -342,9 +342,15 @@ pub fn model(doc: &Document) -> Model {
 }
 
 fn push(m: &mut Model, solid: Solid, look: Look, owner: Option<String>) {
+    push_part(m, solid, look, owner, None);
+}
+
+/// [`push`] of a roof part's solid: a chimney's or a vent's stack, its index in its roof's `parts` (docs/adr/8070 §3).
+fn push_part(m: &mut Model, solid: Solid, look: Look, owner: Option<String>, part: Option<usize>) {
     m.solids.push(solid);
     m.looks.push(look);
     m.owners.push(owner);
+    m.parts.push(part);
 }
 
 /// The walls, joined as the plan joins them and cut by the columns on their storeys, with their openings.
@@ -430,8 +436,16 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
             let Ok([l0, r0, l1, r1]) = <[Vec2; 4]>::try_from(o.place.clone()) else {
                 continue;
             };
+            // A niche or a flue (docs/adr/8070 §3): a box taken out of its wall across part of its thickness, from its
+            // sill (the floor) to its head (the wall's top); cut where the line crosses it, never seen.
             if matches!(o.form, OpeningForm::Niche | OpeningForm::Flue) {
-                m.left.insert((Left::Recess, owner.clone()));
+                if let Some(ring) = recess_ring(o, [l0, r0, l1, r1]) {
+                    voids.push(Void {
+                        ring,
+                        bottom: floor + o.sill.unwrap_or(0.0),
+                        top: o.head.map_or(top, |h| floor + h),
+                    });
+                }
                 continue;
             }
             let sill = floor + o.sill.unwrap_or(0.0);
@@ -564,6 +578,21 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
             push(m, solid, look, owner);
         }
     }
+}
+
+/// A niche's or a flue's outline in plan (docs/adr/0719, 8070 §3): the band of its wall between its jambs (`place`: the
+/// start jamb's points on the wall's left and right face, then the end jamb's) across the part of the wall's thickness
+/// it takes: a niche `depth` from its face (`side`), a flue `depth` across from `inset` off its face (absent: centred).
+/// None without its depth.
+pub fn recess_ring(o: &kentos_commands::OpeningFields, place: [Vec2; 4]) -> Option<Vec<P>> {
+    use kentos_geometry_core::geom::opening::Recess;
+    Recess::of(
+        o.form == OpeningForm::Niche,
+        o.side == kentos_commands::OpeningSide::Right,
+        o.inset,
+        o.depth,
+    )?
+    .band(place.map(p))
 }
 
 /// A hinged opening's lines on a face from `a` to `b` (its frame's inner edge, or its jambs) between `low` and `high`
@@ -927,18 +956,19 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
     };
     // Its chimneys and vents (docs/adr/8044 §6): from the top of the storey it stands on up to their tops, through it:
     // where the line cuts one, the roof's band stops at its sides.
-    let stacks: Vec<(&core::Part, Vec<P>, f64)> = spec
+    let stacks: Vec<(usize, &core::Part, Vec<P>, f64)> = spec
         .parts
         .iter()
-        .filter_map(|part| {
+        .enumerate()
+        .filter_map(|(k, part)| {
             let ring = core::part_ring(&pts, &spec, part)?;
             let top = core::part_top(&pts, &spec, part)?;
-            (top > at.seat + 1e-6).then_some((part, ring, top))
+            (top > at.seat + 1e-6).then_some((k, part, ring, top))
         })
         .collect();
     let holes: Vec<sec::Void> = stacks
         .iter()
-        .map(|(_, ring, top)| sec::Void {
+        .map(|(_, _, ring, top)| sec::Void {
             ring: ring.clone(),
             bottom: at.seat,
             top: *top,
@@ -1000,7 +1030,7 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
             push(m, face, look.clone(), owner.clone());
         }
     }
-    for (part, ring, top) in stacks {
+    for (k, part, ring, top) in stacks {
         at.solids.push(m.solids.len());
         at.tops.push((
             top,
@@ -1017,7 +1047,7 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
         // Masonry, not the roof's covering: an elevation does not name its faces "Kiremit".
         let mut stack = solid(vec![ring], height);
         stack.finish = None;
-        push(m, stack, chimney_look(), owner.clone());
+        push_part(m, stack, chimney_look(), owner.clone(), Some(k));
     }
     if spec.gutter.is_some() {
         m.rain.push(Rain {

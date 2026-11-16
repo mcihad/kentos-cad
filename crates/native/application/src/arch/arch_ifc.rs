@@ -111,6 +111,7 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         levels: model.levels.clone(),
         solids: &model.solids,
         owners: &model.owners,
+        parts: &model.parts,
         gaps,
         entities,
         wall_style_name: &wall_style_name,
@@ -371,6 +372,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         + written.railings
         + written.stairs
         + written.ramps
+        + written.chimneys
         + written.spaces;
     if held == 0 {
         return Err(bad(

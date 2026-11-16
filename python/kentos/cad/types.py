@@ -1113,7 +1113,7 @@ class BuildingSectionLeft(_StrEnum):
     - ``noHeight``: A wall or a column with no height.
     - ``headUnknown``: An opening without a head: its gap reaches its wall's top.
     - ``stairWaist``: A stair with no slab to take its waist from: drawn solid down to its floor.
-    - ``recess``: A niche or a flue: inside its wall, not cut.
+    - ``recess``: A niche or a flue: inside its wall, not cut before docs/adr/8070 (cut as a box out of its wall since); no longer
     """
     ROOF = "roof"
     NATURAL_GROUND = "naturalGround"

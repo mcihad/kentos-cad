@@ -47,6 +47,22 @@
 3. **Malzeme (K42):** merdiven ve rampa, kesitin çizdiği gibi betonarmedir; IFC'ye "Betonarme" yazılır (kolon ve
    kirişin ADR 8047 kararıyla aynı). Projenin Malzemeler'inde Betonarme'nin dayanımı yazılıysa ad "Betonarme_C30" olur.
    Nesneye kendi malzemesi alanı geldiğinde o yazılır. İdarenin teyidi beklenir.
+4. **Niş ve duvardaki baca kesitte** (`sections::recess_ring`, `Recess::band`): duvardan kalınlığının bir kısmında
+   çıkarılan kutu; niş yüzünden derinliği kadar, baca iç yüzünden `inset` (yoksa ortada) ve derinliği kadar; denizliğinden
+   (yoksa döşeme) başlığına (yoksa duvarın tepesi). Çizgi kestiği yerde boşluk görünür, yüzü görülmez (açıklık gibi).
+   Kesit artık "niş ve baca kesilmedi" demez.
+5. **Baca (`IfcChimney`, EK-6 Tablo 6.14):** duvardaki bacanın boşluğu duvarını boydan boya boşaltan bir açıklıktır
+   (`IfcOpeningElement` OPENING, kimliği bacanın kimliğinden türetilir) ve bacası onu doldurur (`IfcRelFillsElement`).
+   Çatının duman ve hava bacası (ADR 8044 §6) çatının oturduğu kattan tepesine bir gövdedir; artık çatının gövdesinde
+   değil kendi nesnesindedir. **Tek yapı elemanı:** biri ötekinin planındaki dış hattının içine ortası düşen parçalar
+   (alt alta katların bacaları ve üstündeki çatı bacası) bir bacadır; katı en alttaki parçanınki, gövdeleri o katın
+   döşemesine göre. Ön tanımlı tip listesi yalnız USERDEFINED ve NOTDEFINED olduğundan USERDEFINED, `ObjectType` "Duman
+   bacası" ya da "Hava bacası" (çatı bacası yoksa "Baca"). GlobalId en alttaki duvar bacasının kimliği; yalnız çatı
+   bacasıysa çatının kimliği ve parça sırasından türetilir, 3B'de tıklanınca çatı seçilir (`Element::object`).
+6. **Bacanın malzemesi (K43):** en alttaki bacanın duvarının çekirdek malzemesi; duvar bacası yoksa, kesitin tuğla
+   taramasıyla çizdiği gibi "Tuğla" (ADR 8044 §6). İdarenin teyidi beklenir.
+7. **Niş (`IfcOpeningElement` RECESS):** duvarını boşaltır, dolduranı yoktur; GlobalId nişin kimliği. Niş ve baca
+   kayıp listesinden çıktı.
 
 ## §3. Sınamalar
 
@@ -58,13 +74,19 @@
   eğimli uzunluk 8,5 m, eğim 3/34, sahanlık 63/136 m; kollar 0,15·√(1 + (3/34)²) dik kalınlıkta; y = 2'den kuzeye bakan
   kesit ikinci kolu x = 35,25…36,75 arasında, üstü 39/68 m'de keser. IFC'de tek `IfcRamp`, QUARTER_TURN_RAMP,
   Betonarme, üç gövde, kayıp listesinde yok.
+- **Uygulama** (`roof_sections::a_flue_in_its_walls_and_the_chimney_over_it_are_one_ifc_chimney_and_a_niche_a_recess`):
+  bölüm binasının çatısında (4,5; 8,0)'de 40 × 40 cm duman bacası, altındaki batı hol duvarında (İç duvar 15) iki katta
+  7 cm'lik ortada baca, doğu hol duvarında 0,90–1,50 m arasında 5 cm'lik niş. Kesit modelinde baca duvarın her
+  katmanından 4,465 ≤ x ≤ 4,535, 7,9 ≤ y ≤ 8,1 kutusu olarak çıkar (döşemeden). IFC'de tek `IfcChimney` (USERDEFINED
+  "Duman bacası", MM-BAC-…, GlobalId zemin katın bacası), üç gövde (0,00; +3,00; +6,00'dan), iki OPENING onu dolduruyor,
+  niş RECESS ve dolduransız; hiçbiri kayıp listesinde değil; dosyada IFCCHIMNEY ve her dolan açıklık için bir
+  IFCRELFILLSELEMENT.
 - **Dijital denetim:** rampa artık "modele girmeyen nesne" değil; sınama örneği yüksekliği olmayan bir duvara geçti.
 - **Denetim olguları** (`fixtures/audit-facts/v1/mimari.json`): merdivenin ön tanımlı tip ve malzeme eksikleri düştü
   (yalnız bu iki satır elle çıkarıldı; kaçış yolunun önceden bilinen 11,55 / 4,45 farkı görünür bırakıldı).
 
 ## §4. Sıradaki adımlar
 
-- Baca (`IfcChimney`): çatı bacası ve duvardaki baca; niş (`IfcOpeningElement` RECESS).
 - Aks ızgarası (`IfcGrid`, `IfcGridAxis`).
 - Kitaplık bloklarının yapı sınıfı ve gövdesi (asansör, vitrifiye, mobilya).
 - Kaplama ve asma tavan (`IfcCovering`), giydirme cephe (`IfcCurtainWall`), dikme ve kayıt (`IfcMember`).
