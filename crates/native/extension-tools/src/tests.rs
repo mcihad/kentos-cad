@@ -5,6 +5,7 @@
 //! process starts, the package's files checked before its code runs. Without a Python 3 the tests say so and pass.
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
 use kentos_extension_host::{Choice, Grant, Options, Registry};
@@ -265,6 +266,14 @@ fn a_headless_host_runs_the_tools_that_declare_it() {
             && why.contains("headless-python"),
         "{why}"
     );
+    // A test runner's host (`kentos kek test`, §74) lists the desktop-only tool too: its code runs the same way.
+    let every = Headless::new(Some(root.clone()), Some(python_root.clone()), hook(&heard))
+        .with_python(given(&python_root))
+        .every_runtime();
+    assert!(every.read());
+    let ids: Vec<String> = every.tools().into_iter().map(|t| t.tool.id).collect();
+    assert_eq!(ids, [TOOL, DESKTOP_ONLY]);
+    assert!(every.unavailable().is_empty());
     let mut listener = Listener(Arc::clone(&heard));
     let answer = headless
         .run(&tools[0], input(), &mut listener)
@@ -456,6 +465,32 @@ fn offered_tools_run_through_the_commands_and_follow_the_registry() {
     assert!(text.contains("2 alan; tampon 2"), "{text}");
     assert!(text.contains("500"), "{text}");
     assert_eq!(calls(&python_root), ["alan-ozeti"]);
+    // Its examples (§48), as the desktop and `kentos kek test` run them: each on a drawing of its own; the one that
+    // expects what the tool gives passes, the other says what it expected and what came.
+    let mut tool = external::find(TOOL).expect("listed");
+    let example = |title: &str, total: f64| {
+        json!({ "title": title,
+                "features": [{ "layer": "parsel", "geometry": square(0.0, 10.0) },
+                             { "layer": "parsel", "geometry": square(50.0, 20.0) }],
+                "params": { "alanlar": { "scope": "layer", "layerId": "parsel" } },
+                "expect": { "outputs": { "toplam": total }, "summary": "2 alan" } })
+    };
+    tool.examples = vec![example("İki alan", 500.0), example("Yanlış toplam", 499.0)];
+    let report = crate::examples::run(
+        &[tool],
+        json!({ "kind": "examples" }),
+        &AtomicBool::new(false),
+    );
+    assert_eq!(
+        report["summary"], "2 örnekten 1 tanesi geçti, 1 tanesi kaldı.",
+        "{report}"
+    );
+    assert_eq!(report["examples"][0]["status"], "passed", "{report}");
+    let why = report["examples"][1]["problems"][0].as_str().unwrap();
+    assert!(
+        why.contains("“toplam”: 499") && why.contains("500"),
+        "{why}"
+    );
     // Turned off on the desktop: gone from the list at the next look, its process closed.
     let host = kentos_extensions::Host::this(Version::parse(env!("CARGO_PKG_VERSION")).unwrap());
     let mut registry = Registry::open(&root, host, Options::default()).unwrap();

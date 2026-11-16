@@ -1,11 +1,14 @@
 //! A synthetic drawing made of the objects given as data (docs/adr/8057 §37, §47): a new GIS project, their layers by
 //! name, their attributes as text. A built-in tool an extension's code asks for runs on one (calls.rs); an agent's
-//! trial of an extension on the desktop runs on one too.
+//! trial of an extension on the desktop and a tool's examples (examples.rs) run on one too.
 
 use std::collections::BTreeMap;
 
 use kentos_domain::{Document, NewLayer, Uuid};
 use serde_json::{Value, json};
+
+/// The coordinate system of a trial's and an example's drawing: TUREF / TM36 (EPSG:5256).
+pub const TRIAL_SRID: u32 = 5256;
 
 /// The synthetic drawing: the objects' persistent ids in the order given, the layers by the names given.
 pub struct Synthetic {

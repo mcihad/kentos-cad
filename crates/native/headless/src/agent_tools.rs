@@ -1461,8 +1461,8 @@ fn extension_verify(host: &dyn Host, args: &Value) -> Result<Value, HeadlessErro
 /// what the desktop's install review refuses is said by the agent's verification too. An agent's package passed
 /// `extension.verify` and was refused at Kur for a features output without `sinkParameter` (15 November 2026). The
 /// same code and words as the extension host's check; a descriptor the package check already flagged is not said
-/// twice.
-fn with_tool_problems(
+/// twice. The command line's `kentos kek verify` and `kek test` say it too (docs/adr/8057 §74).
+pub fn with_tool_problems(
     manifest: Option<&kentos_extensions::Manifest>,
     files: &std::collections::BTreeMap<String, Vec<u8>>,
     found: &[kentos_extensions::Problem],

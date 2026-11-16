@@ -1217,6 +1217,10 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   - **Araç zinciri** tek doğrulayıcı üzerinde: `kentos kek new | verify | pack | test | serve | index | dump | upgrade`,
     CI şablonu ve başsız test koşucusu; sürümlü belge aynı commit'te; düz metin SDK belgesi (`llms.txt`) ve
     `kentos://sdk/ai-kek-pack` [D2, D18].
+    — *kısmen (ADR 8057 §74, 16 Kasım): `kek test` başsız test koşucusu (doğrulama, geçici kayıt defteri, kilitten
+    ortam, araçların örnekleri; çıkış 0 geçti, 1 kaldı, 2 sınanamadı; `--install-python`); `kek verify` araç tanımlarını
+    tam okur. Kalan: `serve`, CI şablonu (komut satırının indirilebilir dağıtımını bekler), `llms.txt`, denetim
+    kurallarının ve ifade işlevlerinin örnekleri.*
   - **Bağımlılık:** `blueprint` izinli ve yaygın paketleri önerir; `verify` dizinde olmayan, çok yeni ya da adı popüler
     pakete benzeyen bağımlılığı işaretler (uydurulmuş paket adı saldırısı) [D18].
   - **Üretim kökeni:** AI ile üretilen paket hangi ajan/model ve hangi `blueprint` sürümüyle üretildiğini katalog

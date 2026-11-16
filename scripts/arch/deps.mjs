@@ -130,8 +130,9 @@ const GROUPS = [
   // The process that runs one İşlemler tool for a server job (docs/adr/0559 §3): the headless host and the tools over
   // one project file; no database, no server framework. Listed before `native`'s catch-all like the headless host.
   // kentos, the command line (plan/eklenti.md ADIM 16): the extension packages' inspector and packer over the file
-  // system and the user's registry; nothing of a server, a window or Python.
-  { name: 'cli', path: 'apps/cli/', targets: [HOST], uses: ['shared', 'extension-host'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // system and the user's registry; `kentos kek test` runs an extension's examples as the desktop runs them
+  // (docs/adr/8057 §74), with the extension tools' crate and the headless host below it. No server, no window.
+  { name: 'cli', path: 'apps/cli/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'style', 'plot', 'stylelib', 'geopackage', 'headless', 'extension-host', 'extension-tools', 'python-env'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // An extension's audit rule runs in the Python the server prepared, through `kentos.ext_host` (`python-env`, docs/adr/8057 §42).
   { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage', 'python-env'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.

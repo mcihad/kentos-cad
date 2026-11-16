@@ -111,46 +111,6 @@ pub(crate) fn listed_words(listed: &[Listed]) -> String {
     )
 }
 
-/// What a prepare that did not finish means.
-pub(crate) fn prepare_words(error: &InstallError) -> String {
-    use kentos_python_env::python::Cause;
-    let (sentence, said) = match error {
-        InstallError::Cancelled => {
-            return "Ortam hazırlama durduruldu; yarım kalan ortam silindi.".to_owned();
-        }
-        InstallError::TimedOut => {
-            return "Ortam hazırlama 30 dakikada bitmedi ve durduruldu; yeniden deneyin."
-                .to_owned();
-        }
-        InstallError::NotRun(why) => return format!("uv çalıştırılamadı: {why}."),
-        InstallError::Failed { cause, said } => (
-            match cause {
-                Cause::Network => {
-                    "Paketler indirilemedi: internete ulaşılamadı. Bağlantıyı ya da vekil sunucu \
-                                   ayarını (HTTPS_PROXY) denetleyin."
-                        .to_owned()
-                }
-                Cause::Certificate => {
-                    "Paketler indirilemedi: paket dizininin sertifikası bu bilgisayarda \
-                                       doğrulanamadı; kurumun sertifikası yüklü olmalı."
-                        .to_owned()
-                }
-                Cause::Disk => "Ortam hazırlanamadı: diskte yer yok.".to_owned(),
-                Cause::Folder => {
-                    "Ortam hazırlanamadı: KentOS'un Python klasörüne yazılamadı.".to_owned()
-                }
-                Cause::Unavailable | Cause::Other => String::new(),
-            },
-            said,
-        ),
-    };
-    match (sentence.is_empty(), said.is_empty()) {
-        (true, _) => said.clone(),
-        (false, true) => sentence,
-        (false, false) => format!("{sentence} uv: “{said}”"),
-    }
-}
-
 impl App {
     /// Whether an extension asks for an environment: Python contributions in its manifest, chosen at install.
     fn wants_env(&self, id: &str) -> bool {
@@ -424,7 +384,7 @@ impl App {
                         );
                     }
                     Err(error) => {
-                        let words = prepare_words(&error);
+                        let words = extension::prepare_words(&error);
                         state.note = Some(words.clone());
                         self.toast(
                             Toast::error(format!("{name}: Python ortamı hazırlanamadı"))

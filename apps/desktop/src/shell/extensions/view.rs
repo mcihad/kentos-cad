@@ -464,7 +464,7 @@ impl App {
             ));
         }
         // Its tools' examples, on drawings of their own (docs/adr/8057 §48): while one runs, the button waits.
-        if e.enabled && !super::examples::with_examples(&id).is_empty() {
+        if e.enabled && !kentos_extension_tools::examples::of(&id).is_empty() {
             let running = self
                 .extensions
                 .trial

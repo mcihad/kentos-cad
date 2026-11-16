@@ -9,6 +9,8 @@
 //!   headless host the same log record, and says it to its caller).
 //! - [`calls`]: what the code asks of KentOS while it runs: one of KentOS's built-in tools on a drawing of the call's
 //!   own (docs/adr/8057 §47), never the user's.
+//! - [`examples`]: a tool's examples run on drawings of their own and checked against what each expects (§48): the
+//!   desktop's Örnekleri çalıştır, an agent's trial and `kentos kek test` (§74).
 //! - [`headless`]: the headless hosts' provider (MCP, the Python library): the user's installed and enabled
 //!   extensions' tools that declare `headless-python`, offered from a host's start and never over the desktop's.
 //!
@@ -16,6 +18,7 @@
 //! what it gives the code from the drawing.
 
 pub mod calls;
+pub mod examples;
 pub mod headless;
 mod note;
 pub mod plan;

@@ -366,6 +366,45 @@ fn lock_words(said: &str) -> String {
     }
 }
 
+/// What a prepare that did not finish means, as the desktop and `kentos kek test` say it.
+pub fn prepare_words(error: &InstallError) -> String {
+    let (sentence, said) = match error {
+        InstallError::Cancelled => {
+            return "Ortam hazırlama durduruldu; yarım kalan ortam silindi.".to_owned();
+        }
+        InstallError::TimedOut => {
+            return "Ortam hazırlama 30 dakikada bitmedi ve durduruldu; yeniden deneyin."
+                .to_owned();
+        }
+        InstallError::NotRun(why) => return format!("uv çalıştırılamadı: {why}."),
+        InstallError::Failed { cause, said } => (
+            match cause {
+                Cause::Network => {
+                    "Paketler indirilemedi: internete ulaşılamadı. Bağlantıyı ya da vekil sunucu \
+                                   ayarını (HTTPS_PROXY) denetleyin."
+                        .to_owned()
+                }
+                Cause::Certificate => {
+                    "Paketler indirilemedi: paket dizininin sertifikası bu bilgisayarda \
+                                       doğrulanamadı; kurumun sertifikası yüklü olmalı."
+                        .to_owned()
+                }
+                Cause::Disk => "Ortam hazırlanamadı: diskte yer yok.".to_owned(),
+                Cause::Folder => {
+                    "Ortam hazırlanamadı: KentOS'un Python klasörüne yazılamadı.".to_owned()
+                }
+                Cause::Unavailable | Cause::Other => String::new(),
+            },
+            said,
+        ),
+    };
+    match (sentence.is_empty(), said.is_empty()) {
+        (true, _) => said.clone(),
+        (false, true) => sentence,
+        (false, false) => format!("{sentence} uv: “{said}”"),
+    }
+}
+
 /// Prepares `key`'s environment from the package's lock: synced (downloads said to `told`), KentOS's library put in,
 /// checked, and only then marked ready. Stopped as soon as `cancel` is set; whatever ends it before the record, the
 /// half-made folder goes. A ready one is used as it is.

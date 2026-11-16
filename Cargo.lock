@@ -2618,7 +2618,11 @@ name = "kentos-cli"
 version = "0.1.0"
 dependencies = [
  "kentos-extension-host",
+ "kentos-extension-tools",
  "kentos-extensions",
+ "kentos-headless",
+ "kentos-processing",
+ "kentos-python-env",
  "serde_json",
 ]
 

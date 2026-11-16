@@ -56,6 +56,8 @@ pub struct Headless {
     /// KentOS's Python as given (a host that knows it, the tests); else found at the first run.
     given: Option<Python>,
     found: Mutex<Option<Python>>,
+    /// A test runner's: the tools that declare the desktop alone are listed too.
+    every_runtime: bool,
     pool: Arc<Pool>,
     state: RwLock<State>,
     note: Hook,
@@ -139,6 +141,7 @@ impl Headless {
             python_root,
             given: None,
             found: Mutex::new(None),
+            every_runtime: false,
             pool: Arc::new(Pool::default()),
             state: RwLock::new(State::default()),
             note,
@@ -148,6 +151,14 @@ impl Headless {
     /// The same with KentOS's Python given, not looked for.
     pub fn with_python(mut self, python: Python) -> Headless {
         self.given = Some(python);
+        self
+    }
+
+    /// The same listing every tool, the desktop-only ones too: a test runner's (`kentos kek test`, docs/adr/8057 §74),
+    /// which runs an extension's examples as the desktop runs them (a tool's code runs the same way in both). A host
+    /// offering the user's extensions never does.
+    pub fn every_runtime(mut self) -> Headless {
+        self.every_runtime = true;
         self
     }
 
@@ -188,7 +199,7 @@ impl Headless {
             refused = std::mem::take(&mut listed.refused);
             for tool in listed.tools {
                 let id = tool.tool.id.clone();
-                if tool.headless {
+                if tool.headless || self.every_runtime {
                     if let Some(plan) = listed.plans.remove(&id) {
                         plans.insert(id, plan);
                         tools.push(tool);

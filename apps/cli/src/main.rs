@@ -3,6 +3,8 @@
 //! ```text
 //! kentos kek inspect <paket.kek> [--json]
 //! kentos kek pack <klasör> [-o <paket.kek>] [--json]
+//! kentos kek verify <klasör> [--json]
+//! kentos kek test <klasör> [--install-python] [--json]
 //! kentos kek index <klasör> [--name <ad>]
 //! kentos kek dump [--root <klasör>]
 //! kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
@@ -22,6 +24,7 @@ use std::process::ExitCode;
 
 use kentos_extensions::{Limits, Manifest, Problem, catalog, inspect, pack};
 
+mod kek_test;
 mod upgrade;
 
 const USAGE: &str = "Kullanım:
@@ -29,6 +32,11 @@ const USAGE: &str = "Kullanım:
   kentos kek pack <klasör> [-o <paket.kek>] [--json] klasörü denetleyip paketler
   kentos kek verify <klasör> [--json]               klasörü pencere açmadan doğrular: paket, Python işaretleri,
                                                     satırlı rapor (yapay zekâ ajanlarının tek adımda düzelteceği)
+  kentos kek test <klasör> [--install-python] [--json]
+                                                    doğrular, geçici bir kayıt defterine kurar, Python ortamını
+                                                    kilidinden hazırlar ve araçların örneklerini pencere açmadan
+                                                    çalıştırır (sürekli tümleştirmenin komutu; çıkış 0 geçti,
+                                                    1 kaldı, 2 sınanamadı)
   kentos kek new <klasör> --id <kimlik> --name <ad> [--summary <cümle>] [--module cbs|harita|mimari|yol]
                  [--utility] [--with command,processing,audit,expression,mapTool,schema,panel]
                                                     doğrulamadan geçen bir eklenti iskeleti yazar
@@ -69,6 +77,11 @@ fn main() -> ExitCode {
         ["kek", "inspect", file] => inspect_file(Path::new(file), json),
         ["kek", "pack", folder] => pack_folder(Path::new(folder), None, json),
         ["kek", "verify", folder] => verify_folder(Path::new(folder), json),
+        ["kek", "test", folder] => kek_test::run(Path::new(folder), json, false),
+        ["kek", "test", folder, "--install-python"]
+        | ["kek", "test", "--install-python", folder] => {
+            kek_test::run(Path::new(folder), json, true)
+        }
         ["kek", "new", folder, rest @ ..] => new_folder(Path::new(folder), rest),
         ["kek", "sdk"] => sdk(None, json),
         ["kek", "sdk", "--part", part] => sdk(Some(part), json),
@@ -309,6 +322,39 @@ fn new_folder(folder: &Path, args: &[&str]) -> ExitCode {
     ExitCode::SUCCESS
 }
 
+/// A working folder verified as the agents' `extension.verify` verifies it: the package's gates, and the İşlemler
+/// tools' descriptors whole, as KentOS's processing reads them (docs/adr/8057 §24, §74).
+fn verified(files: &BTreeMap<String, Vec<u8>>) -> kentos_extensions::Verification {
+    let mut v = kentos_extensions::verify(files, &Limits::default());
+    v.problems =
+        kentos_headless::agent_tools::with_tool_problems(v.manifest.as_ref(), files, &v.problems);
+    v
+}
+
+/// A verification's problems and warnings, each with its file and place.
+fn print_placed(v: &kentos_extensions::Verification) {
+    let line = |p: &Problem| {
+        let place = [p.file.as_deref(), p.at.as_deref()]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join(" ");
+        if place.is_empty() {
+            format!("  • {} ({})", p.message, p.code)
+        } else {
+            format!("  • {place}: {} ({})", p.message, p.code)
+        }
+    };
+    for (title, list) in [("Sorunlar", &v.problems), ("Uyarılar", &v.warnings)] {
+        if !list.is_empty() {
+            println!("{title}:");
+            for p in list {
+                println!("{}", line(p));
+            }
+        }
+    }
+}
+
 /// `kek verify` (plan/eklenti.md ADIM 21, docs/adr/8057 §18): the folder through the package's gates and its Python's
 /// marks, each finding with its file, its line or pointer and what to write; nothing is packed or run.
 fn verify_folder(folder: &Path, json: bool) -> ExitCode {
@@ -316,16 +362,7 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         Ok(read) => read,
         Err(message) => return fail(message),
     };
-    let v = kentos_extensions::verify(&files, &Limits::default());
-    // The İşlemler tools' descriptors are checked here for their shape only: their whole check is KentOS's processing,
-    // which this light command does not carry (scripts/arch/deps.mjs); the install review and the agents'
-    // extension.verify make it (docs/adr/8057 §24).
-    let tools = v
-        .manifest
-        .as_ref()
-        .is_some_and(|m| !m.entrypoints.processing.is_empty());
-    let note = "İşlemler araçlarının tanımları burada yalnız biçimiyle denetlendi; tam denetimi KentOS'un kurulum \
-                incelemesi ve ajanların extension.verify'ı yapar.";
+    let v = verified(&files);
     // Kapı 3's part that runs no code (docs/adr/8057 §26): bound as KentOS binds it, in a registry of its own under the
     // temporary folder, and taken away; the user's extensions are not touched.
     let dry = v
@@ -347,13 +384,10 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         });
     if json {
         let mut value = serde_json::to_value(&v).unwrap_or_default();
-        if let Some(o) = value.as_object_mut() {
-            if tools {
-                o.insert("note".to_owned(), serde_json::json!(note));
-            }
-            if let Some(dry) = &dry {
-                o.insert("dryRun".to_owned(), dry.to_json());
-            }
+        if let Some(o) = value.as_object_mut()
+            && let Some(dry) = &dry
+        {
+            o.insert("dryRun".to_owned(), dry.to_json());
         }
         println!(
             "{}",
@@ -363,26 +397,7 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         if let Some(m) = &v.manifest {
             println!("{} {} — {}", m.id, m.version, m.name);
         }
-        let line = |p: &Problem| {
-            let place = [p.file.as_deref(), p.at.as_deref()]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<_>>()
-                .join(" ");
-            if place.is_empty() {
-                format!("  • {} ({})", p.message, p.code)
-            } else {
-                format!("  • {place}: {} ({})", p.message, p.code)
-            }
-        };
-        for (title, list) in [("Sorunlar", &v.problems), ("Uyarılar", &v.warnings)] {
-            if !list.is_empty() {
-                println!("{title}:");
-                for p in list.iter() {
-                    println!("{}", line(p));
-                }
-            }
-        }
+        print_placed(&v);
         if v.is_valid() {
             println!(
                 "Doğrulandı: {} uyarı. İçerik özeti {}.",
@@ -394,9 +409,6 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         }
         if let Some(dry) = &dry {
             print_dry_run(dry);
-        }
-        if tools {
-            println!("Not: {note}");
         }
     }
     if v.is_valid() {
@@ -688,6 +700,42 @@ fn utc(ms: u64) -> String {
 
 #[cfg(test)]
 mod tests {
+    /// The İşlemler tools' descriptors are read whole, as KentOS's processing reads them (docs/adr/8057 §74): a
+    /// features output without the layer parameter it writes to is refused here as at Kur.
+    #[test]
+    fn verify_reads_a_tools_descriptor_whole() {
+        use kentos_extensions::blueprint::{Ask, Contribution, blueprint};
+        let made = blueprint(&Ask {
+            id: "tr.ornek.yeni".into(),
+            name: "Yeni".into(),
+            summary: "Bir İşlemler aracı.".into(),
+            vertical: false,
+            module: kentos_extensions::manifest::Module::Cbs,
+            contributions: vec![Contribution::Processing],
+        })
+        .expect("a blueprint");
+        let mut files: std::collections::BTreeMap<String, Vec<u8>> = made
+            .into_iter()
+            .map(|(path, text)| (path, text.into_bytes()))
+            .collect();
+        assert!(super::verified(&files).is_valid());
+        let path = "tools/alan-ozeti.tool.json";
+        let mut descriptor: serde_json::Value = serde_json::from_slice(&files[path]).unwrap();
+        descriptor["outputs"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({ "name": "yeni", "type": "features", "label": "Yeni" }));
+        files.insert(path.into(), serde_json::to_vec(&descriptor).unwrap());
+        let v = super::verified(&files);
+        assert!(
+            v.problems
+                .iter()
+                .any(|p| p.code == "tool_descriptor" && p.file.as_deref() == Some(path)),
+            "{:#?}",
+            v.problems
+        );
+    }
+
     #[test]
     fn a_log_time_is_written_in_utc() {
         assert_eq!(super::utc(0), "1970-01-01 00:00:00Z");

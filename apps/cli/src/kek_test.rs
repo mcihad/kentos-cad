@@ -1,0 +1,414 @@
+//! `kentos kek test <klasör> [--install-python] [--json]` (plan/eklenti.md ADIM 21, "başsız test koşucusu";
+//! docs/adr/8057 §74): an extension's working folder tested as a continuous integration job tests it, without a window
+//! and without touching the user's extensions.
+//!
+//! 1. **Verified** as `kek verify` verifies it: the package's gates and the İşlemler tools' descriptors whole. A
+//!    refusal ends it.
+//! 2. **Installed into a registry of its own** in the temporary folder, everything it asks for granted (the test is its
+//!    author's), and taken away at the end, as `kek verify`'s dry run is.
+//! 3. **Its environment prepared from its lock** in KentOS's Python folder as the desktop prepares it: the same key,
+//!    the same folder, so that a test and the desktop share the environment of one lock. KentOS's Python is the one
+//!    installed there; `--install-python` installs it with uv when it is not (a download its caller asked for).
+//! 4. **Its tools' examples run** (§48) on synthetic drawings in its version's process, every tool's (a desktop-only
+//!    tool's code runs the same way), each checked against what it expects; a failure's traceback is said with it.
+//!
+//! Exit codes: 0 every example passed (or there were none), 1 the extension failed (refused, its lock, an example), 2
+//! the test could not run (a wrong command, an unreadable folder, no uv, no Python, no network).
+
+use std::path::{Path, PathBuf};
+use std::process::ExitCode;
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
+
+use kentos_extension_host::{Choice, Grant, Options, Registry, Source, SourceKind};
+use kentos_extension_tools::headless::{Headless, offer_with};
+use kentos_extension_tools::{Note, Python};
+use kentos_extensions::{Limits, Manifest, pack};
+use kentos_python_env::compat::compat;
+use kentos_python_env::extension::{self, Ready};
+use kentos_python_env::python::{self, Cause, InstallError};
+use kentos_python_env::settings::PythonSettings;
+use kentos_python_env::uv::{self, UvStatus};
+use serde_json::{Value, json};
+
+/// Why the test ended before its examples: the extension's (exit 1) or the computer's (exit 2).
+enum Stop {
+    Failed(String),
+    CouldNot(String),
+}
+
+/// The test's own registry under the temporary folder, removed when dropped.
+struct Temp(PathBuf);
+
+impl Temp {
+    fn new() -> Result<Temp, String> {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_nanos());
+        let dir =
+            std::env::temp_dir().join(format!("kentos-kek-test-{}-{nanos}", std::process::id()));
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| format!("Geçici klasör açılamadı ({}): {e}", dir.display()))?;
+        Ok(Temp(dir))
+    }
+}
+
+impl Drop for Temp {
+    fn drop(&mut self) {
+        // The installed files are read-only: the registry's own removal.
+        let _ = kentos_extension_host::store::remove_tree(&self.0);
+    }
+}
+
+/// Seconds as the report says them: `1,61 sn`.
+fn seconds(ms: u64) -> String {
+    format!("{:.2} sn", ms as f64 / 1000.0).replace('.', ",")
+}
+
+/// The test of the working folder `folder`; `install` lets it install KentOS's Python.
+pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
+    let (files, _) = match super::read_folder(folder) {
+        Ok(read) => read,
+        Err(message) => return super::fail(message),
+    };
+    let v = super::verified(&files);
+    let mut report = json!({
+        "kind": "test",
+        "verify": { "problems": v.problems, "warnings": v.warnings, "digest": v.digest },
+    });
+    if !json {
+        if let Some(m) = &v.manifest {
+            println!("{} {} — {}", m.id, m.version, m.name);
+        }
+        super::print_placed(&v);
+    }
+    let manifest = match (&v.manifest, v.is_valid()) {
+        (Some(m), true) => m.clone(),
+        _ => {
+            let said = format!("Doğrulanmadı: {} sorun.", v.problems.len());
+            return end(report, json, "refused", &said, 1);
+        }
+    };
+    report["extension"] = json!({ "id": manifest.id, "version": manifest.version.to_string() });
+    if !json {
+        println!("Doğrulandı: {} uyarı.", v.warnings.len());
+    }
+    let Some(project) = &manifest.python else {
+        let said = "Eklentinin Python kodu yok: doğrulandı, çalıştırılacak örnek yok.";
+        return end(report, json, "passed", said, 0);
+    };
+    let temp = match Temp::new() {
+        Ok(temp) => temp,
+        Err(why) => return end(report, json, "not_run", &why, 2),
+    };
+    let tell = |line: String| {
+        if !json {
+            println!("{line}");
+        }
+    };
+    let prepared = install_into(&temp.0, folder, &files, &manifest).and_then(|package| {
+        let python = python_of(install, &tell)?;
+        let began = Instant::now();
+        let (ready, made) = environment(
+            &python,
+            &package,
+            &manifest,
+            &project.project_file,
+            &project.lock_file,
+        )?;
+        let ms = began.elapsed().as_millis() as u64;
+        Ok((package, python, ready, made, ms))
+    });
+    let (package, python, ready, made, ms) = match prepared {
+        Ok(prepared) => prepared,
+        Err(Stop::Failed(why)) => return end(report, json, "failed", &why, 1),
+        Err(Stop::CouldNot(why)) => return end(report, json, "not_run", &why, 2),
+    };
+    let packages: Vec<String> = ready
+        .packages
+        .iter()
+        .map(|p| format!("{} {}", p.name, p.version))
+        .collect();
+    report["environment"] = json!({
+        "python": python.interpreter.version, "packages": packages, "made": made, "ms": ms,
+    });
+    tell(format!(
+        "Python ortamı {}: Python {}, {} paket ({}).",
+        if made {
+            "kilidinden hazırlandı"
+        } else {
+            "hazırdı"
+        },
+        python.interpreter.version,
+        packages.len(),
+        seconds(ms)
+    ));
+    let heard: Arc<Mutex<Vec<Note>>> = Arc::default();
+    let examples = examples_of(&temp.0, &python, &manifest.id, &heard);
+    // A traceback names the files where the author edits them, not the test's installed copy.
+    let (installed, own) = (package.display().to_string(), folder.display().to_string());
+    let notes: Vec<String> = heard
+        .lock()
+        .map(|n| {
+            n.iter()
+                .filter(|n| matches!(n, Note::Failed { .. }))
+                .map(|n| n.said().replace(&installed, &own).trim_end().to_owned())
+                .collect()
+        })
+        .unwrap_or_default();
+    report["notes"] = json!(notes);
+    let Some(examples) = examples else {
+        let said = "Araçların hiçbirinde örnek (examples) yok: eklenti doğrulandı ve ortamı hazırlandı, çalıştırılacak \
+                    örnek yok. Örnek aracın tanımına yazılır (kentos kek sdk --part tool).";
+        return end(report, json, "passed", said, 0);
+    };
+    if !json {
+        println!("Örnekler:");
+        for e in examples["examples"]
+            .as_array()
+            .map(Vec::as_slice)
+            .unwrap_or_default()
+        {
+            let passed = e["status"] == "passed";
+            println!(
+                "  {} {} › {} ({})",
+                if passed { "✓" } else { "✗" },
+                e["label"].as_str().unwrap_or_default(),
+                e["title"].as_str().unwrap_or_default(),
+                seconds(e["ms"].as_u64().unwrap_or_default())
+            );
+            for p in e["problems"]
+                .as_array()
+                .map(Vec::as_slice)
+                .unwrap_or_default()
+            {
+                println!("      • {}", p.as_str().unwrap_or_default());
+            }
+        }
+        if !notes.is_empty() {
+            println!("Eklentinin söyledikleri:");
+            for n in &notes {
+                println!("  • {}", n.replace('\n', "\n    "));
+            }
+        }
+    }
+    let failed = examples["failed"].as_u64().unwrap_or_default();
+    let said = examples["summary"].as_str().unwrap_or_default().to_owned();
+    report["examples"] = examples;
+    if failed == 0 {
+        end(report, json, "passed", &said, 0)
+    } else {
+        end(report, json, "failed", &said, 1)
+    }
+}
+
+/// The report's end: its status and summary, written as asked, and the exit code.
+fn end(mut report: Value, json: bool, status: &str, said: &str, code: u8) -> ExitCode {
+    report["status"] = json!(status);
+    report["summary"] = json!(said);
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&report).unwrap_or_default()
+        );
+    } else {
+        println!("Sonuç: {said}");
+    }
+    ExitCode::from(code)
+}
+
+/// The folder packed and installed into a registry of the test's own under `root`, enabled, everything it asks for
+/// granted, the organisation's policy as the computer's; its package folder.
+fn install_into(
+    root: &Path,
+    folder: &Path,
+    files: &std::collections::BTreeMap<String, Vec<u8>>,
+    manifest: &Manifest,
+) -> Result<PathBuf, Stop> {
+    let packed = pack(files, &Limits::default()).map_err(|p| {
+        Stop::Failed(format!(
+            "Paketlenemedi: {}",
+            p.first().map(|p| p.to_string()).unwrap_or_default()
+        ))
+    })?;
+    let host = kentos_extensions::Host::this(
+        kentos_extensions::version::Version::parse(env!("CARGO_PKG_VERSION"))
+            .unwrap_or_else(|| kentos_extensions::version::Version::new(0, 1, 0)),
+    );
+    let options = Options {
+        policy: kentos_extension_host::places::load_policy(
+            &kentos_extension_host::places::policy_path(),
+        ),
+        ..Options::default()
+    };
+    let mut registry = Registry::open(root, host, options)
+        .map_err(|p| Stop::CouldNot(format!("Sınamanın kayıt defteri açılamadı: {p}")))?;
+    let choice = Choice {
+        grant: Grant {
+            capabilities: manifest.capabilities().into_iter().collect(),
+            python: true,
+        },
+        enable: true,
+        replace_source: false,
+    };
+    let source = Source {
+        kind: SourceKind::DeveloperFolder,
+        location: folder.display().to_string(),
+    };
+    registry
+        .install(&packed.bytes, &source, &choice)
+        .map_err(|problems| {
+            let said: Vec<String> = problems.iter().map(ToString::to_string).collect();
+            Stop::Failed(format!("Kurulamadı: {}", said.join("; ")))
+        })?;
+    registry
+        .package_dir(&manifest.id)
+        .ok_or_else(|| Stop::Failed("Kuruldu ama paket klasörü bulunamadı.".to_owned()))
+}
+
+/// KentOS's Python as the desktop finds it (the Python folder, uv as chosen or found), installed with uv when
+/// `install` and it is not there. Not the desktop's on/off choice: the command is its caller's own.
+fn python_of(install: bool, tell: &dyn Fn(String)) -> Result<Python, Stop> {
+    let root = kentos_python_env::places::root().ok_or_else(|| {
+        Stop::CouldNot(
+            "Bu bilgisayarda kullanıcı veri klasörü yok (XDG_DATA_HOME ya da HOME); KENTOS_PYTHON_DIR ile bir \
+             klasör verin."
+                .to_owned(),
+        )
+    })?;
+    let chosen = PythonSettings::load(&root);
+    let uv = match uv::detect(chosen.uv_path.as_deref().map(Path::new)) {
+        UvStatus::Found { path, .. } => path,
+        other => return Err(Stop::CouldNot(other.words())),
+    };
+    let need = &compat().python;
+    let installed = || python::installed(&uv, &root, &need.range).map_err(Stop::CouldNot);
+    let interpreter = match installed()? {
+        Some(found) => found,
+        None if install => {
+            tell(format!(
+                "KentOS'un Python'u kuruluyor: Python {} ({}) …",
+                need.install, need.size
+            ));
+            python::install(
+                &uv,
+                &root,
+                &need.install,
+                &AtomicBool::new(false),
+                &mut |_| {},
+            )
+            .map_err(|e| Stop::CouldNot(e.words(&need.install)))?;
+            installed()?.ok_or_else(|| {
+                Stop::CouldNot("Python kuruldu ama uv onu bulamadı; yeniden deneyin.".to_owned())
+            })?
+        }
+        None => {
+            return Err(Stop::CouldNot(format!(
+                "KentOS'un Python'u kurulu değil ({}): KentOS masaüstünde Uygulama ayarları › Python ve \
+                 eklentiler'den kurun ya da komutu --install-python ile çalıştırın (uv Python {} sürümünü indirir; {}).",
+                root.display(),
+                need.install,
+                need.size
+            )));
+        }
+    };
+    Ok(Python {
+        interpreter,
+        root,
+        uv,
+    })
+}
+
+/// The installed package's environment from its lock, prepared as the desktop prepares it (a ready one used as it
+/// is), and whether it was made now. The lock's fault is the extension's; the network's, the disk's and uv's are the
+/// computer's.
+fn environment(
+    python: &Python,
+    package: &Path,
+    manifest: &Manifest,
+    project_file: &str,
+    lock_file: &str,
+) -> Result<(Ready, bool), Stop> {
+    let version = manifest.version.to_string();
+    let key = extension::key_for(
+        package,
+        lock_file,
+        &manifest.id,
+        &version,
+        &python.interpreter,
+        &[],
+    )
+    .map_err(Stop::Failed)?;
+    let wheel =
+        kentos_python_env::sdk::find(&kentos_python_env::sdk::dirs(), env!("CARGO_PKG_VERSION"))
+            .map_err(Stop::CouldNot)?;
+    let made = extension::ready(&python.root, &key).is_none();
+    extension::prepare(
+        &python.uv,
+        &python.root,
+        &python.interpreter,
+        &wheel,
+        package,
+        (project_file, lock_file),
+        &key,
+        &AtomicBool::new(false),
+        &mut |_| {},
+    )
+    .map_err(|e| {
+        let words = format!(
+            "Eklentinin Python ortamı hazırlanamadı: {}",
+            extension::prepare_words(&e)
+        );
+        match e {
+            InstallError::Failed {
+                cause: Cause::Other | Cause::Unavailable,
+                ..
+            } => Stop::Failed(words),
+            _ => Stop::CouldNot(words),
+        }
+    })
+    .map(|ready| (ready, made))
+}
+
+/// The examples of extension `ext`'s tools run as the desktop runs them, in its version's process, every tool listed
+/// (`Headless::every_runtime`); the report, none when no tool gives an example. What a run notes goes to `heard`.
+fn examples_of(
+    root: &Path,
+    python: &Python,
+    ext: &str,
+    heard: &Arc<Mutex<Vec<Note>>>,
+) -> Option<Value> {
+    kentos_processing::command::register();
+    let into = Arc::clone(heard);
+    let (root, given) = (root.to_path_buf(), python.clone());
+    offer_with(move || {
+        Headless::new(
+            Some(root),
+            Some(given.root.clone()),
+            Arc::new(move |n| {
+                if let Ok(mut heard) = into.lock() {
+                    heard.push(n);
+                }
+            }),
+        )
+        .with_python(given)
+        .every_runtime()
+    });
+    let tools = kentos_extension_tools::examples::of(ext);
+    if tools.is_empty() {
+        return None;
+    }
+    let head = json!({ "kind": "examples", "extension": { "id": ext } });
+    // A tool's code may ask for a built-in tool (§47): a command inside the command, on a deep stack as on the desktop.
+    let report = std::thread::Builder::new()
+        .name("kentos-kek-test".into())
+        .stack_size(kentos_extension_tools::calls::STACK)
+        .spawn(move || kentos_extension_tools::examples::run(&tools, head, &AtomicBool::new(false)))
+        .ok()
+        .and_then(|t| t.join().ok());
+    kentos_extension_tools::headless::close();
+    Some(report.unwrap_or_else(|| {
+        json!({ "status": "failed", "failed": 1, "summary": "Örnek koşusu beklenmedik biçimde durdu.", "examples": [] })
+    }))
+}

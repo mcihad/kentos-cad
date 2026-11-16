@@ -15,7 +15,10 @@ const SAMPLE: usize = 5;
 /// layer found by its name or id or added (its id the name when that is one), each object on it with its attributes as
 /// text. Why not, with the object's place.
 pub(crate) fn synthetic(features: &[Value]) -> Result<Synthetic, String> {
-    kentos_extension_tools::synthetic::synthetic_on(features, 5256)
+    kentos_extension_tools::synthetic::synthetic_on(
+        features,
+        kentos_extension_tools::synthetic::TRIAL_SRID,
+    )
 }
 
 /// What a tool's run wrote on the synthetic drawing: each layer's new objects counted, the first few as GeoJSON with

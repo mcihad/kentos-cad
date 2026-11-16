@@ -4117,3 +4117,55 @@ karar verildi. Kod: `crates/native/extension-tools` (yeni `note.rs`: `Note::reco
   reddin sözü, eklenti sürecinin işareti), masaüstü eklenti araçları, deneme ve Python sınamaları geçti.
 - **Kalan:** bekçi sayacının başsız koşuyu da sayması; ifade işlevleri başsızda; sunucu ve bulut koşusu kentosd'nin
   yolu.
+
+## §74. `kentos kek test`: eklentinin klasörü pencere açmadan, sürekli tümleştirmenin sınadığı gibi (`ADIM 21`, "başsız test koşucusu")
+
+**16 Kasım.** Kod: komut satırı `apps/cli/src/kek_test.rs` (yeni), `main.rs` (`verified`, `print_placed`);
+`kentos-extension-tools` `examples.rs` (yeni, masaüstünden taşındı: `of`, `run`, `said`), `headless.rs`
+(`Headless::every_runtime`), `synthetic.rs` (`TRIAL_SRID`); `kentos-python-env` `extension::prepare_words` (masaüstünden
+taşındı); `kentos-headless` `agent_tools::with_tool_problems` (artık genel); masaüstü `examples.rs` (yalnız pencerenin
+bağı kaldı); `scripts/arch/deps.mjs` (`cli` grubu).
+
+- **Karar: bir komut, dört adım.** Örnek ekosistemin başsız sınama imgesinin deseni (geçici profil, klasörden kurulum,
+  engelleyici pencere yok, etkinleştirme, başsız koşucu [K16]; araştırma notunun "Al" satırı):
+  1. **Doğrulama** `kek verify` gibi; ret sınamayı bitirir.
+  2. **Kendi kayıt defteri:** geçici klasörde, paketin istediği her yetenek verilmiş (sınama yazarın kendi işi), kurum
+     ilkesi bilgisayarınki; sonda silinir. Kullanıcının eklentilerine dokunulmaz.
+  3. **Ortam kilidinden,** KentOS'un Python klasöründe, masaüstünün anahtarıyla (§6): aynı kilidin ortamını sınama ve
+     masaüstü paylaşır, ikinci kez indirilmez. KentOS'un Python'u yoksa ret, nedeni ve çaresiyle; `--install-python` uv
+     ile kurar (çağıranın açıkça istediği indirme). Masaüstünün "Python açık" ayarı aranmaz: komut çağıranın kendi
+     işidir, kullanıcının masaüstünde eklenti çalıştırma seçimi değildir.
+  4. **Örnekler** (§48): her aracın, yalnız masaüstünü bildirenler de (kod iki konakta aynı yoldan çalışır;
+     `Headless::every_runtime`, kullanıcının eklentilerini sunan konak bunu hiç yapmaz), sürümün sürecinde, sentetik
+     çizimlerde, her biri beklenene karşı.
+- **Çıkış kodları:** 0 geçti (ya da çalıştırılacak örnek yok), 1 eklenti kaldı (doğrulanmadı, kilidi kullanılamadı, bir
+  örnek kaldı), 2 sınanamadı (yanlış komut, okunamayan klasör, uv yok, Python yok, ağ, disk). Sürekli tümleştirmede
+  1 ile 2'nin ayrı olması: biri yazarın düzelteceği, öbürü makinenin.
+- **Rapor:** metinde her örnek ✓/✗, süresi ve nedenleri; kodun hatası "Eklentinin söyledikleri" altında iz kaydıyla.
+  İz kaydındaki yol yazarın klasörüne çevrilir: kurulu geçici kopyayı değil, düzenlediği dosyayı ve satırı gösterir.
+  `--json`: `status` (`passed`, `failed`, `refused`, `not_run`), `verify`, `extension`, `environment` (`python`,
+  `packages`, `made`, `ms`), `examples` (§48'in raporu), `notes`, `summary`.
+- **Tek örnek koşucusu:** masaüstünün Örnekleri çalıştır'ı, ajanın denemesi (`extension.workshop.trial`) ve
+  `kek test` aynı `examples::run`'ı çağırır.
+- **`kek verify` de tanımı tam okur:** komut satırı İşlemler'i artık taşıdığından araç tanımları KentOS'un okuduğu gibi
+  okunur (`with_tool_problems`, ajanların `extension.verify`'ının kodu); "yalnız biçimiyle denetlendi" notu kalktı.
+  Örnek: `sinkParameter`'sız bir nesne çıktısı (`features`) önce yalnız Kur'da ve `extension.verify`'da reddediliyordu,
+  `kek verify` geçiriyordu; artık o da "outputs[2]: yeni nesneler bir katman parametresine yazılır; sinkParameter onu
+  adlandırmalı." diyor.
+- **Bedel:** komut satırı başsız konağı taşıyor (hata ayıklama derlemesi 646 MB); `cli` grubunun izinleri İşlemler'e
+  ve başsız konağa genişledi, sunucu, pencere ve tarayıcı yine yasak.
+- **Gerçek koşu (16 Kasım, yalıtılmış Python klasörü):** Vitrin 1.0.51 hazır ortamla 2,56 sn (ortam 0,65 sn; TAKS örneği
+  1,63 sn, Çekme 0,04 sn), "2 örneğin hepsi geçti.", çıkış 0. Boş Python klasöründe `--install-python`: uv Python
+  3.12.13'ü kurdu, ortam kilitten (numpy 2.5.4, shapely 2.0.7) hazırlandı, iki örnek geçti; ortam dahil 11,87 sn, toplam
+  16,5 sn. Kopyada bozulan beklenti (`asan: 2`) ve hata atan araç: "“asan”: 2 beklendi, 1 geldi", "ValueError: sınama
+  hatası: 3 m" ve iz kaydı yazarın `src/vitrin/logic.py`'sinin 361. satırıyla, çıkış 1. Python'suz klasör: nedeni ve
+  çaresi, çıkış 2. Geçersiz sürüm: "Doğrulanmadı: 1 sorun.", çıkış 1.
+- **Sınamalar:** extension-tools (her ortamın araçlarını listeleyen sınama konağı; örnek koşucusunun geçen ve kalan
+  örneği, kalanın nedeni), komut satırı (araç tanımının tam okunması), masaüstünün örnek ve deneme sınamaları.
+- **Kalan:** sürekli tümleştirme şablonu (komut satırının kitaplık tekerleğiyle indirilebilir bir dağıtımı yok; şablon
+  onu bekler); denetim kurallarının ve ifade işlevlerinin örnekleri (bugün yalnız İşlemler araçlarının örneği var);
+  paketin kendi sınamaları (`tests/`, pytest) eklentinin ortamında; `kek serve`.
+- **Uygularken verilen kararlar (planda yazılı değildi):** sınamanın kayıt defteri geçici, ortamı kalıcı ve
+  masaüstününkiyle ortak; masaüstü ayarı aranmaz, Python yalnız bayrakla indirilir; yalnız masaüstü araçlarının
+  örnekleri de çalışır; 1 ve 2 ayrı çıkış; iz kaydının yolu yazarın klasörüne çevrilir; `kek verify` araç tanımını tam
+  okur.
