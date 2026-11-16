@@ -31,18 +31,20 @@ impl Host for AppHost<'_> {
         })
     }
 
-    /// The keys of the user's AI agents (kept, this session's or the environment's): a workshop write holding one is
-    /// refused (docs/adr/8059 §15).
+    /// The keys of the user's AI agents (kept, this session's or the environment's) and the secrets of the user's
+    /// service connections: a workshop write holding one is refused (docs/adr/8059 §15).
     fn own_secrets(&self) -> Vec<(String, String)> {
         let store = &self.0.assistant.store;
-        store
+        let mut known: Vec<(String, String)> = store
             .list()
             .into_iter()
             .filter_map(|p| {
                 let key = store.key_for(&p)?;
                 Some((key, format!("“{}” ajanının API anahtarı", p.name)))
             })
-            .collect()
+            .collect();
+        known.extend(crate::services::secrets::secrets().known());
+        known
     }
 
     /// The agents' extension workshop beside this app's extension folder (docs/adr/8057 §22).

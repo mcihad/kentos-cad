@@ -526,10 +526,13 @@ defteri `imitation.rs` (yeni), `Review::resemblances`, `Registry::review_beside`
   birebir içeriyorsa hiçbir şeyi yazmaz ve ajana kimin anahtarı olduğunu söyler: "“src/anahtar.py” kullanıcının bir
   anahtarını içeriyor (“Deneme ajanı” ajanının API anahtarı): anahtar pakete yazılmaz …" (`secret_in_text`). Biçimden
   bağımsızdır ve yanlış bulgu vermez: aynı dizgi. Evsahibi bildirir (`Host::own_secrets`); MCP'nin evsahibi bilmez.
-  Sınama: masaüstü `limits_tests::the_workshop_refuses_the_users_own_key` (ret, değer söylenmez, dosya yazılmadı;
-  anahtarı ortamdan okuyan aynı dosya yazıldı).
-- **Kalan:** tarayıcının daha geniş sır kuralları (ad + yüksek düzensizlik, geçmişte sızmış anahtar listeleri), hizmet
-  bağlantılarının parolalarının da atölyede tanınması, yalıtılmış duman testi işçisi.
+  Hizmet bağlantılarının sırları da (aynı gün): API anahtarları, parolalar, jetonlar ve istemci sırları
+  (`services::secrets::Secrets::known`; kullanıcı adı ve istemci kimliği sır değil), bağlantının adresiyle söylenir
+  ("https://harita.ornek.bel.tr bağlantısının parolası"). 8 karakterden kısa değer aranmaz (her metinde geçer).
+  Sınama: masaüstü `limits_tests::the_workshop_refuses_the_users_own_key` (ajan anahtarı ve bağlantı parolası ret,
+  değer söylenmez, dosya yazılmadı; anahtarı ortamdan okuyan aynı dosya yazıldı).
+- **Kalan:** tarayıcının daha geniş sır kuralları (ad + yüksek düzensizlik, geçmişte sızmış anahtar listeleri),
+  yalıtılmış duman testi işçisi.
 
 ## Uygularken verilen kararlar (planda yazılı değildi)
 

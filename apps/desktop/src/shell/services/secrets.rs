@@ -75,6 +75,27 @@ impl Secrets {
             .map(|e| e.secret.clone())
     }
 
+    /// Every secret value kept (an API key, a password, a token, a client's secret), each with whose it is in words,
+    /// never itself: what the agents' workshop refuses to write into a package (docs/adr/8059 §15). A user's name and
+    /// a client's id are not secrets.
+    pub fn known(&self) -> Vec<(String, String)> {
+        let entries = self.entries.lock().unwrap_or_else(PoisonError::into_inner);
+        let mut out = Vec::new();
+        for e in entries.iter() {
+            let s = &e.secret;
+            let whose = |what: &str| format!("{} bağlantısının {what}", e.origin);
+            out.extend(s.values.iter().map(|v| (v.clone(), whose("anahtarı"))));
+            out.extend(s.password.iter().map(|v| (v.clone(), whose("parolası"))));
+            out.extend(s.token.iter().map(|v| (v.clone(), whose("jetonu"))));
+            out.extend(
+                s.client_secret
+                    .iter()
+                    .map(|v| (v.clone(), whose("istemci sırrı"))),
+            );
+        }
+        out
+    }
+
     /// Keeps `secret` for its connection at `origin`, replacing the one there was.
     pub fn put(&self, origin: &str, secret: ConnectionSecret) -> Result<(), String> {
         let mut entries = self.entries.lock().unwrap_or_else(PoisonError::into_inner);

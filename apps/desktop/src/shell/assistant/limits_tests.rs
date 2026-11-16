@@ -218,5 +218,26 @@ fn the_workshop_refuses_the_users_own_key() {
         "import os\nANAHTAR = os.environ.get('SERVIS_ANAHTARI')\n",
     )
     .expect("written");
+    // A service connection's password too, said by its connection.
+    crate::services::secrets::secrets()
+        .put(
+            "https://harita.ornek.bel.tr",
+            kentos_commands::ConnectionSecret {
+                id: "atolye-sinamasi".into(),
+                user: Some("harita".into()),
+                password: Some("Parola-2026-Ornek!".into()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    let refused = write(&mut host, "PAROLA = 'Parola-2026-Ornek!'\n").expect_err("refused");
+    assert!(
+        refused
+            .message
+            .contains("https://harita.ornek.bel.tr bağlantısının parolası")
+            && !refused.message.contains("Parola-2026"),
+        "{}",
+        refused.message
+    );
     let _ = std::fs::remove_dir_all(&root);
 }
