@@ -634,3 +634,24 @@ fn offered_tools_run_through_the_commands_and_follow_the_registry() {
     assert_eq!(offered.running(), 0, "its process closed");
     crate::headless::close();
 }
+
+/// The Python library's look at the registry before a command that is not İşlemler' (docs/adr/8057 §80): the first
+/// is due, the next ones not within two seconds, the one after them is.
+#[test]
+fn the_registry_is_read_at_most_every_two_seconds_between_commands() {
+    let start = std::time::Instant::now();
+    let mut last = None;
+    assert!(crate::headless::due(&mut last, start));
+    assert!(!crate::headless::due(
+        &mut last,
+        start + std::time::Duration::from_millis(1999)
+    ));
+    assert!(crate::headless::due(
+        &mut last,
+        start + std::time::Duration::from_secs(2)
+    ));
+    assert!(!crate::headless::due(
+        &mut last,
+        start + std::time::Duration::from_secs(3)
+    ));
+}

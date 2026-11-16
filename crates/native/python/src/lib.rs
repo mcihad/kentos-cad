@@ -44,9 +44,11 @@ fn host(e: HeadlessError) -> PyErr {
     HostError::new_err((e.code, e.message))
 }
 
-/// The user's installed extensions' İşlemler tools that declare `headless-python` (docs/adr/8057 §70): offered at a
-/// drawing's opening (`command` none) and read again before a processing command when the registry changed, so that
-/// `cad.processing.tools` lists them and `.run` runs them in their own processes. What a run notes goes to the
+/// The user's installed extensions' İşlemler tools that declare `headless-python` (docs/adr/8057 §70) and the
+/// expression functions of those that run headless (§80): offered at a drawing's opening (`command` none) and read
+/// again when the registry changed: before a processing command always, before any other at most every two seconds
+/// (a label, a style's rule or a form's calculation may call a function). So `cad.processing.tools` lists the tools,
+/// `.run` runs them in their own processes, and an expression's call is answered. What a run notes goes to the
 /// extension's log and is said through Python's logging when the call returns ([`say_notes`], §73). Not in an
 /// extension's own process (`kentos.ext_host` says it is one).
 fn extension_tools(command: Option<&str>) {
@@ -56,7 +58,7 @@ fn extension_tools(command: Option<&str>) {
                 kentos_extension_tools::headless::offer_installed(std::sync::Arc::new(keep_note));
         }
         Some(c) if c.starts_with("cad.processing.") => kentos_extension_tools::headless::refresh(),
-        Some(_) => {}
+        Some(_) => kentos_extension_tools::headless::refresh_now_and_then(),
     }
 }
 

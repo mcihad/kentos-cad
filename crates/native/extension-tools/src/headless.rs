@@ -512,6 +512,31 @@ pub fn refresh() {
     }
 }
 
+/// How often [`refresh_now_and_then`] reads the registry at most.
+const NOW_AND_THEN: std::time::Duration = std::time::Duration::from_secs(2);
+
+/// [`refresh`] at most every two seconds (docs/adr/8057 §80): before any command of the Python library, which may
+/// work out a label, a style's rule or a form's calculation calling an extension's function. Reading the registry's
+/// files before each of a script's thousand calls would cost more than it gives; an extension installed while a
+/// drawing is open is known within two seconds.
+pub fn refresh_now_and_then() {
+    static LAST: Mutex<Option<std::time::Instant>> = Mutex::new(None);
+    let now = std::time::Instant::now();
+    let due = LAST.lock().is_ok_and(|mut last| due(&mut last, now));
+    if due {
+        refresh();
+    }
+}
+
+/// Whether a look is due at `now` after the one at `last`, which it then becomes.
+pub(crate) fn due(last: &mut Option<std::time::Instant>, now: std::time::Instant) -> bool {
+    let due = last.is_none_or(|at| now.saturating_duration_since(at) >= NOW_AND_THEN);
+    if due {
+        *last = Some(now);
+    }
+    due
+}
+
 /// Closes the offered tools' processes: the host ends.
 pub fn close() {
     if let Some(headless) = offered() {

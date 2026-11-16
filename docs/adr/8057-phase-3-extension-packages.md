@@ -4391,8 +4391,10 @@ görüntüsüyle karşılaştırılmış).
 - **Sınamalar:** extension-tools 1 (yerine geçen Python süreciyle: `headless` diyen ve demeyen eklenti, sınama
   koşucusunun konağı, Türkçe büyük harf, hatalı satır ve notu, günlük kaydı), ifade motoru 1 (reddin sözü ve yeri),
   paylaşılan crate 149, masaüstünün eklenti sınamaları 98, İşlemler'in eklenti işlevi sınaması.
-- **Kalan:** Python kitaplığı kayıt defterini çizim açılışında ve İşlemler komutundan önce okur: çizim açıkken kurulan
-  eklentinin işlevini etiket bir sonraki okumada tanır (MCP her araç çağrısından önce okur).
+- **Python kitaplığında okuma (aynı gün):** kayıt defteri çizim açılışında, İşlemler komutundan önce her zaman, öteki
+  komutlardan önce en çok iki saniyede bir okunur (`refresh_now_and_then`): çizim açıkken kurulan eklentinin işlevi en
+  geç iki saniyede tanınır, bir betiğin binlerce çağrısı dosyaları her seferinde okumaz. MCP her araç çağrısından önce
+  okur. Sınama: ilk bakış, 1,999 sn'deki bakılmaz, 2 sn'deki bakılır.
 
 ## §81. Kurulum incelemesinde Python paketleri; tanınmış bir paketin adına bir harf uzak ad (`ADIM 22A`, PY-CLOUD-14 ve bağımlılık kapısı)
 
