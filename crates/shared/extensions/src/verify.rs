@@ -4,9 +4,9 @@
 //! - **Gate 1, the package:** everything [`pack`] checks (paths, the manifest and its references, what the
 //!   capabilities cover, the integrity list it would write).
 //! - **Gate 2, the Python:** every entry point's handler (`module:function`) is a function of `src/`, marked once with
-//!   its kind's decorator and its local id (`@ext.audit("yapi-no")`), and no other function claims that id; warnings
-//!   for a network library imported without the `network` capability, an operating system command and
-//!   `eval`/`exec`.
+//!   its kind's decorator and its local id (`@ext.audit("yapi-no")`), and no other function claims that id. What the
+//!   Python must not do (installing packages as it runs, `sys.path`, the network undeclared) is gate 1's
+//!   (python_rules.rs), so a `.kek` installed without verify meets it too.
 //! - **Gate 4, the report:** each finding with its file, its line or JSON pointer, and what to write.
 //!
 //! The Python is read as text, never imported or run: a decorator on its own line (`@ext.command("x")`) is what the
@@ -17,7 +17,7 @@ use std::collections::BTreeMap;
 use serde::Serialize;
 
 use crate::archive::{Limits, inspect, pack};
-use crate::manifest::{Capability, Manifest};
+use crate::manifest::Manifest;
 use crate::problem::Problem;
 
 /// A folder's verification: what keeps it from being packed or run, and what works but should be mended.
@@ -64,7 +64,7 @@ pub fn verify(folder: &BTreeMap<String, Vec<u8>>, limits: &Limits) -> Verificati
         }
     }
     if let Some(manifest) = out.manifest.clone() {
-        python_gate(&manifest, folder, &mut out.problems, &mut out.warnings);
+        python_gate(&manifest, folder, &mut out.problems);
     }
     out
 }
@@ -172,13 +172,9 @@ fn decorator_of(line: &str) -> Option<(&str, &str)> {
     Some((kind.trim(), id))
 }
 
-/// Gate 2: the handlers, their decorators and the ids they claim; the calls worth a warning.
-fn python_gate(
-    m: &Manifest,
-    folder: &BTreeMap<String, Vec<u8>>,
-    problems: &mut Vec<Problem>,
-    warnings: &mut Vec<Problem>,
-) {
+/// Gate 2: the handlers, their decorators and the ids they claim. What the Python must not do is gate 1's
+/// (python_rules.rs): it holds at installing too.
+fn python_gate(m: &Manifest, folder: &BTreeMap<String, Vec<u8>>, problems: &mut Vec<Problem>) {
     let sources: Vec<(&String, String)> = folder
         .iter()
         .filter(|(path, _)| path.starts_with("src/") && path.ends_with(".py"))
@@ -305,69 +301,6 @@ fn python_gate(
             places.join(", "),
             format!("@ext.{kind}(\"{id}\") birden çok işlevde: her kimliğin tek işlevi olur."),
         ));
-    }
-    // What works but deserves a look.
-    let networked = m
-        .requested_capabilities
-        .iter()
-        .any(|c| c.id == Capability::Network);
-    for (path, text) in &sources {
-        for (n, raw) in text.lines().enumerate() {
-            let line = raw.split('#').next().unwrap_or_default().trim();
-            let at = format!("satır {}", n + 1);
-            let imported = |name: &str| {
-                line.strip_prefix("import ")
-                    .or_else(|| line.strip_prefix("from "))
-                    .is_some_and(|r| {
-                        r.split([' ', ',', '.'])
-                            .next()
-                            .is_some_and(|first| first == name)
-                    })
-            };
-            if !networked
-                && let Some(lib) = ["socket", "requests", "urllib", "httpx", "aiohttp", "http"]
-                    .into_iter()
-                    .find(|l| imported(l))
-            {
-                warnings.push(problem(
-                    "python_network_undeclared",
-                    Some(path),
-                    at.clone(),
-                    format!(
-                        "Ağ kitaplığı ({lib}) kullanılıyor ama manifest network yeteneği istemiyor: \
-                         requestedCapabilities'e nedeniyle ekleyin ya da ağı kullanmayın."
-                    ),
-                ));
-            }
-            if imported("subprocess") || line.contains("os.system(") || line.contains("os.popen(") {
-                warnings.push(problem(
-                    "python_os_command",
-                    Some(path),
-                    at.clone(),
-                    "İşletim sistemi komutu çalıştırıyor: eklenti kullanıcının haklarıyla çalışır, kullanıcıya \
-                     sorulmaz. Gerçekten gerekli mi?"
-                        .to_owned(),
-                ));
-            }
-            let called = |name: &str| {
-                line.match_indices(name).any(|(i, _)| {
-                    !line[..i]
-                        .chars()
-                        .last()
-                        .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.')
-                })
-            };
-            if called("eval(") || called("exec(") {
-                warnings.push(problem(
-                    "python_eval",
-                    Some(path),
-                    at,
-                    "eval/exec metni kod olarak çalıştırır: verinin içindeki bir metin eklentinin haklarıyla \
-                     çalışabilir."
-                        .to_owned(),
-                ));
-            }
-        }
     }
 }
 
@@ -533,14 +466,16 @@ mod tests {
         );
     }
 
+    /// A network library without the capability is refused and an operating system command warned, at gate 1
+    /// (python_rules.rs) so installing meets them too; a word inside a name is not a call.
     #[test]
-    fn a_network_library_without_the_capability_and_os_commands_are_warned() {
+    fn a_network_library_without_the_capability_is_refused_and_os_commands_warned() {
         let mut f = vitrin();
         edit(
             &mut f,
             "src/vitrin/logic.py",
             "import time\n",
-            "import time\nimport requests\nimport subprocess\n",
+            "import time\nimport requests\n",
         );
         let text = String::from_utf8(f["manifest.json"].clone()).unwrap();
         let mut manifest: serde_json::Value = serde_json::from_str(&text).unwrap();
@@ -555,12 +490,23 @@ mod tests {
             serde_json::to_vec_pretty(&manifest).unwrap(),
         );
         let v = verify(&f, &Limits::default());
+        assert_eq!(codes(&v.problems), ["python_network_undeclared"]);
+        assert_eq!(v.problems[0].file.as_deref(), Some("src/vitrin/logic.py"));
+        // A command is the user's rights used without asking: warned, the package still packs.
+        let mut f = vitrin();
+        edit(
+            &mut f,
+            "src/vitrin/logic.py",
+            "import time\n",
+            "import time\nimport subprocess\n",
+        );
+        let v = verify(&f, &Limits::default());
         assert!(v.is_valid(), "{:#?}", v.problems);
         let python: Vec<&str> = codes(&v.warnings)
             .into_iter()
             .filter(|c| c.starts_with("python_"))
             .collect();
-        assert_eq!(python, ["python_network_undeclared", "python_os_command"]);
+        assert_eq!(python, ["python_os_command"]);
         // A word inside a name is not a call.
         let mut f = vitrin();
         edit(
@@ -570,5 +516,37 @@ mod tests {
             "import time\nretrieval(1)\n",
         );
         assert!(verify(&f, &Limits::default()).warnings.is_empty());
+    }
+
+    /// Installing a package as it runs and changing where Python finds modules keep the package from packing, each on
+    /// its line; the same words in a docstring are a note.
+    #[test]
+    fn installing_as_it_runs_and_sys_path_are_refused() {
+        let mut f = vitrin();
+        edit(
+            &mut f,
+            "src/vitrin/logic.py",
+            "import time\n",
+            "import time\nimport sys\n\"\"\"Gerekirse: pip install numpy\"\"\"\n\
+             subprocess.run([sys.executable, '-m', 'pip', 'install', 'shapely'])\nsys.path.append('/opt')\n",
+        );
+        let v = verify(&f, &Limits::default());
+        let found: Vec<(&str, String)> = v
+            .problems
+            .iter()
+            .map(|p| (p.code, p.at.clone().unwrap_or_default()))
+            .collect();
+        let line = |code: &'static str, from: &str| {
+            let text = String::from_utf8(f["src/vitrin/logic.py"].clone()).unwrap();
+            let n = text.lines().position(|l| l.starts_with(from)).unwrap() + 1;
+            (code, format!("satır {n}"))
+        };
+        assert_eq!(
+            found,
+            [
+                line("python_runtime_install", "subprocess.run"),
+                line("python_sys_path", "sys.path.append")
+            ]
+        );
     }
 }

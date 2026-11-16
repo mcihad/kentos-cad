@@ -527,6 +527,12 @@ fn check_tree(files: &BTreeMap<String, Vec<u8>>, stage: Stage, out: &mut Inspect
     check_references(&manifest, files, out);
     for (path, data) in files {
         text::scan(path, data, &mut out.problems, &mut out.warnings);
+        // What its Python must not do, at packing and at installing alike (python_rules.rs).
+        if path.ends_with(".py")
+            && let Ok(code) = std::str::from_utf8(data)
+        {
+            crate::python_rules::scan(&manifest, path, code, &mut out.problems, &mut out.warnings);
+        }
     }
     if manifest.changelog_file.is_none() {
         out.warnings.push(

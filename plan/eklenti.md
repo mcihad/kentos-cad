@@ -1205,6 +1205,9 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
     geçiş notu. QGIS'te Qt6'ya geçişten 8 ay sonra paketlerin yalnız %42'si yeni sürümde [D7].
   - **AST kuralları:** çalışma anında paket kurma/indirme, kendi kendini güncelleme, `sys.path` oynama yasak; beyan
     edilmemiş yetenek kullanımı (ağ, dosya, alt süreç, pano) ret; görünmez Unicode ret [D5, D11, Ö·41].
+    — *kısmen (ADR 8057 §72, 16 Kasım): çalışırken kurma, `sys.path` ve beyansız ağ ret, paketlemede ve kurulumda
+    (Kapı 1); görünmez Unicode zaten Kapı 1'de; kendi dosyasını değiştiren paket açılışta durur. Kalan: alt süreç ve pano
+    için yetenek (yoksa uyarı), dosya erişimi.*
   - **Araç zinciri** tek doğrulayıcı üzerinde: `kentos kek new | verify | pack | test | serve | index | dump | upgrade`,
     CI şablonu ve başsız test koşucusu; sürümlü belge aynı commit'te; düz metin SDK belgesi (`llms.txt`) ve
     `kentos://sdk/ai-kek-pack` [D2, D18].

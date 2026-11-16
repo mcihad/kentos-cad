@@ -339,21 +339,23 @@ pub fn sdk_pack() -> Value {
                       bir layer parametresini adlandırır (o parametre default: {newName: \"…\"} ile yeni katman önerir)."
         },
         "verifyCodes": {
-            "python_function_missing": "Manifestin işleyicisindeki işlev modülde yok (en yakını önerilir).",
+            "python_function_missing": "İşleyicinin işlevi modülde yok (en yakını önerilir).",
             "python_decorator_missing": "İşlev işaretsiz: üstüne türünün işaretini yazın.",
             "python_decorator_kind": "İşaretin türü manifestteki giriş noktasıyla uyuşmuyor.",
             "python_decorator_id": "İşaretin kimliği manifestteki yerel kimlikle uyuşmuyor.",
             "python_decorator_twice": "Bir işlevde birden çok @ext işareti.",
             "python_id_twice": "Aynı kimlik iki işlevde.",
-            "python_network_undeclared": "Uyarı: network yeteneği istemeden ağ kitaplığı.",
+            "python_network_undeclared": "network istemeden ağ kitaplığı.",
+            "python_runtime_install": "Çalışırken pip ile kurma.",
+            "python_sys_path": "sys.path değiştirme.",
             "python_os_command": "Uyarı: işletim sistemi komutu.",
             "python_eval": "Uyarı: eval/exec.",
             "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",
             "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
             "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",
             "layer_schema": "schema.json'da bir kural bozuk; işaretçi yeri, ileti kuralı söyler.",
-            "ui_panel": "Panel tanımında bir kural bozuk (bileşen türü, kimlik, düğmenin komutu …); işaretçi yeri söyler.",
-            "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmanı adlandırıyor; projede bulunmalı."
+            "ui_panel": "Panel tanımında bir kural bozuk; işaretçi yeri söyler.",
+            "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmana bağlı; projede olmalı."
         },
         "workflow": [
             "İsteği ve parametrelerini netleştirin; kurulu eklentileri ve yetenekleri kentos://extensions/installed'dan okuyun.",

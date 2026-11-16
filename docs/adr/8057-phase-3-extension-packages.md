@@ -4033,3 +4033,37 @@ aldığı yalnız ret iletilerinden öğreniliyordu.
     3. Tab'da kırmızı). Gerçek pencerede panel her düğmeye kaydı.
 - **Erişilebilirlik sınırı:** iced'de ekran okuyucu ağacı yok; tablonun "erişilebilirlik" payı klavye ve ad. Ad, KentOS'un
   bileşeni andığı yerdeki adıdır (hata iletisi, alanın yanındaki yazı).
+
+## §72. Python'un yapmaması gerekenler kurulumda da: çalışırken paket kurma, `sys.path`, beyansız ağ (`ADIM 21`, "AST kuralları")
+
+**16 Kasım.** Planın ADIM 21 dersi: "çalışma anında paket kurma/indirme, kendi kendini güncelleme, `sys.path` oynama
+yasak; beyan edilmemiş yetenek kullanımı (ağ, dosya, alt süreç, pano) ret; görünmez Unicode ret". Durum ve karar:
+
+| Kural | Kod | Önce | Şimdi |
+|---|---|---|---|
+| Görünmez Unicode (sıfır genişlik, yön denetimi, değişken seçici, etiket…) | `text_invisible` | Kapı 1, ret (`text.rs`, GlassWorm) | aynı |
+| Çalışırken paket kurma: `"pip"`/`-m pip`, `pip.main(`, `pip._internal`, `pip install`, `ensurepip`, `easy_install`, `import pip` | `python_runtime_install` | yok | **ret** |
+| Modül yolunu değiştirme: `sys.path` ekleme/silme/atama, `site.addsitedir(`, `sys.meta_path`, `PYTHONPATH` ataması | `python_sys_path` | yok | **ret** |
+| `network` istemeden ağ kitaplığı (socket, requests, urllib, httpx, aiohttp, http) | `python_network_undeclared` | Kapı 2, uyarı | **ret** |
+| İşletim sistemi komutu (subprocess, `os.system`, `os.popen`) | `python_os_command` | Kapı 2, uyarı | uyarı (Kapı 1) |
+| `eval`/`exec` | `python_eval` | Kapı 2, uyarı | uyarı (Kapı 1) |
+
+- **Kapı 2'den Kapı 1'e:** kurallar `python_rules.rs`'te ve arşiv denetiminin (`check_tree`) içinde: paketlemede de,
+  `.kek` kurulurken de işler. Önce yalnız klasör doğrulamasındaydı (`kek verify`, `extension.verify`); `verify`'dan
+  geçmeden kurulan bir `.kek` onlarla hiç karşılaşmıyordu. Kapı 2 artık yalnız işleyicilerin işaretlerini denetler.
+- **Neden ret:** paketin bağımlılıkları `pyproject.toml` ve `uv.lock`'tur; KentOS ortamı eklenti açılmadan hazırlar,
+  kullanıcı neyin kurulduğunu görür ve onaylar (§5). Çalışırken kurulan paket bu onayın ve kilitli özetlerin dışında.
+  `sys.path` incelenen paketin dışından kod yükler. Beyansız ağda kullanıcı, eklentinin yaptığından azına onay vermiştir.
+- **Alt süreç ve pano uyarı kaldı:** manifestte onları söyleyen yetenek yok (`Capability::ALL`, 16). Rete çevirmek önce
+  `process.spawn` ve pano yetenekleri ister (onay metni, katalog incelemesi): sahibin kararı.
+- **Kendi kendini güncelleme:** kurulu dosyalar her etkinleştirmeden önce içerik özetine karşı denetleniyor
+  (`extension-host` `verify_installed`); kendi dosyasını değiştiren paket bir sonraki açılışta "değişmiş/sonradan
+  eklenmiş" diye durur. İndirdiği metni çalıştırmak `eval`/`exec` uyarısı ve ağ yeteneğiyle görünür.
+- **Metin kuralı, sınırı yazılı:** Python içe aktarılmaz, çalıştırılmaz (paylaşılan crate bağımlılıksız kalır).
+  Belge dizgileri ve yorumlar kod sayılmaz ("Kurulum: pip install numpy" bir nottur); kararlı bir yazar dolanabilir
+  (`getattr(__import__(…))`). Dürüst hatayı ve ajanın betiklerden getirdiği alışkanlığı
+  (`subprocess.check_call([sys.executable, "-m", "pip", "install", …])`) yakalar; katalog incelemesi ve işletim sistemi
+  yalıtımı ayrı katmanlar.
+- **Sınamalar:** `python_rules` 2 (belge dizgisi/yorum ayrımı; her kural satırıyla, `pipeline`, `retrieval(`,
+  `pip_tools_like` kural sayılmaz), `verify` 2 (beyansız ağ ret, komut uyarı ve paketlenir; çalışırken kurma ve
+  `sys.path` satırlarıyla ret, belge dizgisindeki not değil). Vitrin ve MEBİS kurallara takılmıyor.
