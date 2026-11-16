@@ -39,6 +39,33 @@ pub struct Examples {
     pub tools: Vec<ExternalTool>,
     pub rules: Vec<Rule>,
     pub expressions: Vec<Expression>,
+    /// The package's own tests (§87), when it has `tests/test_*.py`: run after the examples.
+    pub tests: Option<PackageTests>,
+}
+
+/// Where a package's own tests are and the Python of its environment.
+#[derive(Clone, Debug)]
+pub struct PackageTests {
+    pub folder: std::path::PathBuf,
+    pub python: std::path::PathBuf,
+}
+
+impl PackageTests {
+    /// The package folder's tests with `python`, when it has `tests/test_*.py`.
+    pub fn of(folder: &std::path::Path, python: std::path::PathBuf) -> Option<PackageTests> {
+        let any = std::fs::read_dir(folder.join("tests"))
+            .ok()?
+            .flatten()
+            .any(|e| {
+                let name = e.file_name();
+                let name = name.to_string_lossy();
+                name.starts_with("test_") && name.ends_with(".py")
+            });
+        any.then(|| PackageTests {
+            folder: folder.to_path_buf(),
+            python,
+        })
+    }
 }
 
 impl Examples {
@@ -54,7 +81,7 @@ impl Examples {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.count() == 0
+        self.count() == 0 && self.tests.is_none()
     }
 }
 
@@ -99,11 +126,34 @@ pub fn run(examples: &Examples, head: Value, stop: &AtomicBool) -> Value {
     let passed = out.iter().filter(|e| e["status"] == "passed").count();
     let mut report = head;
     report["status"] = json!("done");
-    report["summary"] = json!(said(out.len(), passed));
+    let mut summary = if out.is_empty() {
+        String::new()
+    } else {
+        said(out.len(), passed)
+    };
+    // The package's own tests (§87), after its examples.
+    if let Some(t) = &examples.tests
+        && !stop.load(Ordering::Relaxed)
+        && let Some(tests) = package_tests::run(&t.folder, &t.python)
+    {
+        let words = tests["summary"].as_str().unwrap_or_default();
+        summary = if summary.is_empty() {
+            format!("Sınamalar: {words}")
+        } else {
+            format!("{summary} Sınamalar: {words}")
+        };
+        report["tests"] = tests;
+    }
+    report["summary"] = json!(summary);
     report["passed"] = json!(passed);
     report["failed"] = json!(out.len() - passed);
     report["examples"] = json!(out);
     report
+}
+
+/// Whether a run's own tests failed (§87).
+pub fn tests_failed(report: &Value) -> bool {
+    report.get("tests").is_some_and(|t| t["status"] != "passed")
 }
 
 /// How many passed, in words that need no suffix after a number ("2'si", "3'ü" change with the number).
@@ -280,6 +330,7 @@ fn same(got: &Value, want: &Value) -> bool {
 }
 
 mod expressions;
+pub mod package_tests;
 mod rules;
 
 pub use expressions::{Expression, expression_examples};

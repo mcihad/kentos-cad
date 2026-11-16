@@ -1,5 +1,7 @@
 //! The package's own tests (docs/adr/8057 §87): `tests/test_*.py` beside its code, run by Python's own `unittest` in
-//! the extension's environment, its code found in `src` and KentOS's library as the environment has it. `unittest`,
+//! the extension's environment, its code found in `src` and KentOS's library as the environment has it. The command
+//! line's `kentos kek test` runs them in the author's folder, the desktop's Örnekleri çalıştır and an agent's trial in
+//! the installed package's. `unittest`,
 //! not pytest: it needs no package the lock must bring (an agent in KentOS's workshop cannot run uv), and KentOS's own
 //! Python tests are written with it.
 
@@ -15,7 +17,7 @@ const LIMIT: Duration = Duration::from_secs(300);
 const KEPT: usize = 6_000;
 
 /// The package's tests run with `python` (its environment's), from `folder`; none when it has no `tests/test_*.py`.
-pub(super) fn run(folder: &Path, python: &Path) -> Option<Value> {
+pub fn run(folder: &Path, python: &Path) -> Option<Value> {
     let tests = folder.join("tests");
     let any = std::fs::read_dir(&tests).ok()?.flatten().any(|e| {
         let name = e.file_name();
@@ -93,7 +95,7 @@ pub(super) fn run(folder: &Path, python: &Path) -> Option<Value> {
 }
 
 /// The run's report from unittest's words: how many ran, failed and errored, its status and a sentence.
-pub(super) fn read_result(output: &str, code: Option<i32>, timed_out: bool, ms: u64) -> Value {
+pub fn read_result(output: &str, code: Option<i32>, timed_out: bool, ms: u64) -> Value {
     let ran = output
         .lines()
         .find_map(|l| {
@@ -193,4 +195,36 @@ mod tests {
         assert!(r["summary"].as_str().unwrap().contains("unittest.TestCase"));
         assert_eq!(read_result("", None, true, 1)["status"], "failed");
     }
+}
+
+/// The Python of `ext`'s environment as its installed version has it prepared under `python`'s folder: what its tests
+/// run with on the desktop.
+pub fn environment_python(
+    registry: &kentos_extension_host::Registry,
+    ext: &str,
+    python: &crate::Python,
+) -> Result<std::path::PathBuf, String> {
+    use kentos_python_env::extension;
+    let manifest = registry
+        .manifest(ext)
+        .ok_or_else(|| format!("“{ext}” kurulu değil."))?;
+    let project = manifest
+        .python
+        .as_ref()
+        .ok_or_else(|| format!("“{ext}” eklentisinin Python'u yok."))?;
+    let source = registry
+        .package_dir(ext)
+        .ok_or_else(|| format!("“{ext}” eklentisinin paketi bulunamadı."))?;
+    let lock = extension::lock_digest(&source, &project.lock_file)?;
+    extension::find(
+        &python.root,
+        ext,
+        &manifest.version,
+        &lock,
+        &python.interpreter.version,
+    )
+    .map(|ready| ready.python)
+    .ok_or_else(|| {
+        "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › Python ortamı.".to_owned()
+    })
 }

@@ -12,7 +12,7 @@
 //! 4. **Its tools' examples run** (§48) on synthetic drawings in its version's process, every tool's (a desktop-only
 //!    tool's code runs the same way), each checked against what it expects; a failure's traceback is said with it.
 //! 5. **Its own tests run** (§87): `tests/test_*.py` with Python's `unittest` in its environment, its code from the
-//!    folder's `src` ([`own`]).
+//!    folder's `src` (`kentos_extension_tools::examples::package_tests`), after its examples.
 //!
 //! Exit codes: 0 every example passed (or there were none), 1 the extension failed (refused, its lock, an example), 2
 //! the test could not run (a wrong command, an unreadable folder, no uv, no Python, no network).
@@ -23,7 +23,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use kentos_extension_tools::examples::{Examples, Expression, Rule, RunRule};
+use kentos_extension_tools::examples::{Examples, Expression, PackageTests, Rule, RunRule};
 use kentos_extension_tools::headless::{Headless, offer_with};
 use kentos_extension_tools::{Library, Note, Plan, Python, run_in_pool, start_of};
 use kentos_python_env::process::Pool;
@@ -31,7 +31,6 @@ use serde_json::{Value, json};
 
 use setup::{environment, install_into, python_of};
 
-mod own;
 mod setup;
 
 /// Why the test ended before its examples: the extension's (exit 1) or the computer's (exit 2).
@@ -147,7 +146,9 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
         seconds(ms)
     ));
     let heard: Arc<Mutex<Vec<Note>>> = Arc::default();
-    let examples = examples_of(&temp.0, &python, &manifest.id, &heard);
+    // The package's own tests (§87) run with its examples, from the author's folder.
+    let tests = PackageTests::of(folder, ready.python.clone());
+    let examples = examples_of(&temp.0, &python, &manifest.id, &heard, tests);
     // A traceback names the files where the author edits them, not the test's installed copy.
     let (installed, own) = (package.display().to_string(), folder.display().to_string());
     let notes: Vec<String> = heard
@@ -160,46 +161,7 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
         })
         .unwrap_or_default();
     report["notes"] = json!(notes);
-    // The package's own tests (§87), its code from the author's folder.
-    let tests = own::run(folder, &ready.python);
-    if let Some(t) = &tests {
-        if !json {
-            say!(
-                "Sınamalar (tests/, unittest): {} ({})",
-                t["summary"].as_str().unwrap_or_default(),
-                seconds(t["ms"].as_u64().unwrap_or_default())
-            );
-            if t["status"] != "passed" {
-                say!(
-                    "  {}",
-                    t["output"]
-                        .as_str()
-                        .unwrap_or_default()
-                        .trim_end()
-                        .replace('\n', "\n  ")
-                );
-            }
-        }
-        report["tests"] = t.clone();
-    }
-    let tests_failed = tests.as_ref().is_some_and(|t| t["status"] != "passed");
-    let tests_said = tests
-        .as_ref()
-        .and_then(|t| t["summary"].as_str())
-        .map(|s| format!(" Sınamalar: {s}"))
-        .unwrap_or_default();
     let Some(mut examples) = examples else {
-        if let Some(t) = &tests {
-            let said = format!("Örnek yok.{tests_said}",);
-            let code = if t["status"] == "passed" { 0 } else { 1 };
-            return end(
-                report,
-                json,
-                if code == 0 { "passed" } else { "failed" },
-                &said,
-                code,
-            );
-        }
         let said = "Araçlarda, denetim kurallarında ve ifade işlevlerinde örnek, tests/ klasöründe sınama yok: eklenti \
                     doğrulandı ve ortamı hazırlandı, çalıştırılacak bir şey yok. Aracın örneği tanımında (examples), \
                     kuralınki kendi dosyasında (entrypoints.audits[].examples), ifadeninki manifestte \
@@ -211,8 +173,13 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
             row["detail"] = json!(detail.replace(&installed, &own));
         }
     }
+    let listed = examples["examples"]
+        .as_array()
+        .is_some_and(|l| !l.is_empty());
     if !json {
-        say!("Örnekler:");
+        if listed {
+            say!("Örnekler:");
+        }
         for e in examples["examples"]
             .as_array()
             .map(Vec::as_slice)
@@ -238,6 +205,23 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
                 say!("        {}", detail.trim_end().replace('\n', "\n        "));
             }
         }
+        if let Some(t) = examples.get("tests") {
+            say!(
+                "Sınamalar (tests/, unittest): {} ({})",
+                t["summary"].as_str().unwrap_or_default(),
+                seconds(t["ms"].as_u64().unwrap_or_default())
+            );
+            if t["status"] != "passed" {
+                say!(
+                    "  {}",
+                    t["output"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .trim_end()
+                        .replace('\n', "\n  ")
+                );
+            }
+        }
         if !notes.is_empty() {
             say!("Eklentinin söyledikleri:");
             for n in &notes {
@@ -246,10 +230,11 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
         }
     }
     let failed = examples["failed"].as_u64().unwrap_or_default();
-    let said = format!(
-        "{}{tests_said}",
-        examples["summary"].as_str().unwrap_or_default()
-    );
+    let tests_failed = kentos_extension_tools::examples::tests_failed(&examples);
+    let said = examples["summary"].as_str().unwrap_or_default().to_owned();
+    if let Some(tests) = examples.get("tests").cloned() {
+        report["tests"] = tests;
+    }
     report["examples"] = examples;
     if failed == 0 && !tests_failed {
         end(report, json, "passed", &said, 0)
@@ -280,6 +265,7 @@ fn examples_of(
     python: &Python,
     ext: &str,
     heard: &Arc<Mutex<Vec<Note>>>,
+    tests: Option<PackageTests>,
 ) -> Option<Value> {
     kentos_processing::command::register();
     let into = Arc::clone(heard);
@@ -311,6 +297,7 @@ fn examples_of(
         tools,
         rules,
         expressions,
+        tests,
     };
     if all.is_empty() {
         return None;

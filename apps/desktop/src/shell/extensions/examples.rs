@@ -1,4 +1,5 @@
-//! An extension's examples run on the desktop (docs/adr/8057 §48, §75; PY-TOOL-23): its tools' and its audit rules'.
+//! An extension's examples run on the desktop (docs/adr/8057 §48, §75; PY-TOOL-23): its tools' and its audit rules',
+//! then the package's own tests (`tests/`, §87).
 //! The user's Eklentiler (Örnekleri çalıştır) and an agent's trial (`extension.workshop.trial` with `examples`) start
 //! it alike, one at a time, in the trial's place. The run itself is `kentos_extension_tools::examples`, the command
 //! line's `kentos kek test` too.
@@ -43,8 +44,9 @@ impl App {
             return Err((
                 "no_examples",
                 format!(
-                    "“{ext}” araçlarının, denetim kurallarının ve ifade işlevlerinin örneği yok (araç tanımında \
-                     examples, kuralın examples dosyası, ifadenin examples'ı)."
+                    "“{ext}” araçlarının, denetim kurallarının ve ifade işlevlerinin örneği, tests/ klasöründe \
+                     sınaması yok (araç tanımında examples, kuralın examples dosyası, ifadenin examples'ı; \
+                     tests/test_*.py, unittest)."
                 ),
             ));
         }
@@ -121,10 +123,18 @@ impl App {
                 }),
             });
         }
+        // The package's own tests (§87), in the installed package with its environment's Python.
+        let tests = registry.package_dir(ext).and_then(|dir| {
+            let python = self.ext_python()?;
+            let interpreter =
+                examples::package_tests::environment_python(registry, ext, &python).ok()?;
+            examples::PackageTests::of(&dir, interpreter)
+        });
         Ok(examples::Examples {
             tools,
             rules,
             expressions,
+            tests,
         })
     }
 
@@ -156,7 +166,19 @@ impl App {
             );
             self.extension_failed(&ext, "examples", "example_failed", &words, None);
         }
-        if failed.is_empty() {
+        // The package's own tests (§87): a failure in the log with unittest's words.
+        let tests_failed = examples::tests_failed(report);
+        if tests_failed {
+            let t = &report["tests"];
+            self.extension_failed(
+                &ext,
+                "tests",
+                "tests_failed",
+                t["summary"].as_str().unwrap_or("Sınamalar kaldı."),
+                t["output"].as_str(),
+            );
+        }
+        if failed.is_empty() && !tests_failed {
             // A problem an earlier run left goes: the tools do what their examples say.
             self.extension_worked(&ext, "examples", "examples_passed", &said);
             self.toast(Toast::success(format!("{name}: örnekler")).body(said));

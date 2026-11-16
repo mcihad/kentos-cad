@@ -4571,5 +4571,12 @@ alanı reddetmeden okunur), masaüstü `view.rs` (`report_card`).
   18. satırı; düzeltince çıkış 0. Vitrin'de ilk koşu göreli klasörle (`kek test samples/…`) "No module named 'vitrin'"
   verdi: alt süreç klasörde başladığı için göreli `PYTHONPATH` başka yeri gösteriyordu; klasör mutlak yapıldı. Vitrin
   1.0.54: 9 örnek ve 5 sınama geçti; deneme profilinde 1.0.53 → 1.0.54 gerçek pencerede güncellendi.
-- **Sınamalar:** komut satırı (unittest'in sözleri: geçen, kalan, hata, hiç sınama yok, süre aşımı).
+- **Tek koşucu, üç yer (aynı gün):** koşucu `kentos_extension_tools::examples::package_tests`'e taşındı; `Examples`
+  isteğe bağlı `tests` taşır ve örneklerden sonra onları koşturur (rapora `tests`, özete "Sınamalar: …"). Komut satırı
+  yazarın klasöründe, masaüstünün Örnekleri çalıştır'ı ve ajanın denemesi (`extension.workshop.trial` `examples` ile)
+  kurulu paketin klasöründe, sürümün ortamının Python'uyla (`environment_python`) koşturur; kalan sınama eklentinin
+  günlüğüne unittest'in çıktısıyla düşer (`tests_failed`). Gerçek pencere: Vitrin 1.0.54'ün Örnekleri çalıştır'ı "9
+  örneğin hepsi geçti. Sınamalar: 5 sınamanın hepsi geçti." dedi (bildirim ve günlük).
+- **Sınamalar:** extension-tools 12 (unittest'in sözleri: geçen, kalan, hata, hiç sınama yok, süre aşımı), komut
+  satırı, masaüstünün eklenti sınamaları 99.
 - **Kalan:** sürekli tümleştirme şablonu (komut satırının indirilebilir dağıtımı yok).

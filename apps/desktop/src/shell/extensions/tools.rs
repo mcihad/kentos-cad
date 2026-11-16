@@ -162,6 +162,16 @@ pub(crate) struct Flow<'a> {
 impl App {
     /// A pool job for an extension's contribution, its handler given (an audit rule's): why not, in a sentence, when
     /// its Python cannot run now.
+    /// KentOS's Python as the extensions' code runs with it, once it is ready.
+    pub(crate) fn ext_python(&self) -> Option<Python> {
+        self.extensions
+            .tools
+            .shared
+            .read()
+            .ok()
+            .and_then(|s| s.python.clone())
+    }
+
     pub(crate) fn pool_job(
         &self,
         ext: &str,
