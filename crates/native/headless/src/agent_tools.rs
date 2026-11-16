@@ -67,6 +67,12 @@ pub trait Host {
         None
     }
 
+    /// The user's own secrets this host knows, each with its words for a refusal (its AI agents' keys): a workshop
+    /// write holding one is refused, whatever its shape (docs/adr/8059 §15). None by default.
+    fn own_secrets(&self) -> Vec<(String, String)> {
+        Vec::new()
+    }
+
     /// The agent this host serves, as a package its workshop packs records it (`generated`, docs/adr/8057 §76):
     /// KentOS Asistan with its profile's model, or an MCP client by the name it gave; none for a host that serves no
     /// agent (a test).
@@ -1700,6 +1706,27 @@ fn workshop_write(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError>
             "input_too_large",
             format!("Bir çağrı en çok {WORKSHOP_CALL} bayt yazar; dosyaları bölün."),
         ));
+    }
+    // The user's own key in a file is refused before anything is written: a package carries it to whoever installs it.
+    // Said by whose key it is, never by its value.
+    let secrets = host.own_secrets();
+    for (path, content) in files {
+        let Some(text) = content.as_str() else {
+            continue;
+        };
+        if let Some((_, whose)) = secrets
+            .iter()
+            .find(|(secret, _)| secret.trim().len() >= 8 && text.contains(secret.trim()))
+        {
+            return Err(HeadlessError::new(
+                "secret_in_text",
+                format!(
+                    "“{path}” kullanıcının bir anahtarını içeriyor ({whose}): anahtar pakete yazılmaz, paketle onu \
+                     kuran herkese gider. Kodu anahtarı kurulumdan sonra kullanıcının girdiği bir ayardan okuyacak \
+                     biçimde yazın."
+                ),
+            ));
+        }
     }
     let failed = |path: &str, e: std::io::Error| {
         HeadlessError::new("write_failed", format!("“{path}” yazılamadı: {e}"))

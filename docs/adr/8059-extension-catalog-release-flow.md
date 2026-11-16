@@ -520,9 +520,15 @@ defteri `imitation.rs` (yeni), `Review::resemblances`, `Registry::review_beside`
   crate'in hepsi (161) geçti; katalog API 1 (52; README'sinde anahtar olan sürüm `changesRequested`, kapı `blocked`,
   bulgu `secret_found` · `README.md` · `satır 5`, yanıtın hiçbir yerinde anahtar yok; anahtarsız sürüm `submitted`).
   Mevcut paketler: mevzuat ve Vitrin 0 uyarı.
-- **Kalan:** tarayıcının daha geniş sır kuralları (ad + yüksek düzensizlik, geçmişte sızmış anahtar listeleri),
-  ajanın atölyesinin kullanıcının kendi anahtarını (ajan profilinin ve hizmet bağlantılarının) birebir tanıması,
-  yalıtılmış duman testi işçisi.
+- **Atölye kullanıcının kendi anahtarını tanır (aynı gün).** Asistan'ın `extension.workshop.write`'ı, yazacağı
+  dosyalardan biri kullanıcının yapay zekâ ajanlarından birinin anahtarını (saklanan, oturumun ya da ortam değişkeninin)
+  birebir içeriyorsa hiçbir şeyi yazmaz ve ajana kimin anahtarı olduğunu söyler: "“src/anahtar.py” kullanıcının bir
+  anahtarını içeriyor (“Deneme ajanı” ajanının API anahtarı): anahtar pakete yazılmaz …" (`secret_in_text`). Biçimden
+  bağımsızdır ve yanlış bulgu vermez: aynı dizgi. Evsahibi bildirir (`Host::own_secrets`); MCP'nin evsahibi bilmez.
+  Sınama: masaüstü `limits_tests::the_workshop_refuses_the_users_own_key` (ret, değer söylenmez, dosya yazılmadı;
+  anahtarı ortamdan okuyan aynı dosya yazıldı).
+- **Kalan:** tarayıcının daha geniş sır kuralları (ad + yüksek düzensizlik, geçmişte sızmış anahtar listeleri), hizmet
+  bağlantılarının parolalarının da atölyede tanınması, yalıtılmış duman testi işçisi.
 
 ## Uygularken verilen kararlar (planda yazılı değildi)
 

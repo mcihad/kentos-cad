@@ -173,3 +173,50 @@ fn the_organisations_policy_keeps_the_drawing_from_an_agent_outside_this_compute
     assert!(app.assistant.refusal(&outside).is_some());
     let _ = app.ai_section();
 }
+
+/// The workshop refuses a file holding the user's own agent key, whatever its shape, saying whose and never the value;
+/// the same file without it is written (docs/adr/8059 §15).
+#[test]
+fn the_workshop_refuses_the_users_own_key() {
+    use kentos_headless::agent_tools::{self, Guard};
+
+    let root = std::env::temp_dir().join(format!("kentos-asistan-anahtar-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let extensions = root.join("eklentiler");
+    std::fs::create_dir_all(&extensions).unwrap();
+    let provider = Provider::start(|_, _| says("Tamam."));
+    let mut app = chatting(&provider);
+    app.extensions = crate::extensions::Extensions::open(&extensions, false).0;
+    let mut guard = Guard::new();
+    let mut host = super::host::AppHost(&mut app);
+    let mut write = |host: &mut super::host::AppHost, code: &str| {
+        agent_tools::call(
+            host,
+            &mut guard,
+            "extension.workshop.write",
+            &json!({ "id": "tr.ornek.anahtar", "files": { "src/anahtar.py": code } }),
+        )
+    };
+    // chatting() gave the agent the key “deneme-anahtari” for this session.
+    let refused = write(&mut host, "ANAHTAR = 'deneme-anahtari'\n").expect_err("refused");
+    assert_eq!(refused.code, "secret_in_text");
+    assert!(
+        refused
+            .message
+            .contains("“Deneme ajanı” ajanının API anahtarı")
+            && !refused.message.contains("deneme-anahtari"),
+        "{}",
+        refused.message
+    );
+    assert!(
+        !root
+            .join("eklenti-atolyesi/tr.ornek.anahtar/src/anahtar.py")
+            .exists()
+    );
+    write(
+        &mut host,
+        "import os\nANAHTAR = os.environ.get('SERVIS_ANAHTARI')\n",
+    )
+    .expect("written");
+    let _ = std::fs::remove_dir_all(&root);
+}
