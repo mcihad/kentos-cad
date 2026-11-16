@@ -4694,4 +4694,10 @@ masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
   satırı zaten dar ("Kaldır" ikinci satıra iniyordu; bu değişiklikten önce de). Sınama: masaüstü 1 (Vitrin kurulunca
   numpy ve shapely; kurulu olmayan eklentide neden). Gerçek pencerede düğme ve açıklaması görüldü; kaydetme penceresi
   oturumda açılmaz (oturum D-Bus'sız).
-- **Kalan:** Python paketlerinin lisansları (kilitte yok; kurulu ortamın üst verisinden okunur).
+- **Lisanslar (aynı gün):** kilit lisans söylemez; masaüstü eklentinin ortamı hazırsa ortamdaki her dağıtımın
+  `*.dist-info/METADATA`'sından okur (`sbom::license_of`, `add_licenses`; masaüstü `bom::licences_in`): önce
+  bildirilen SPDX ifadesi (`License-Expression`, PEP 639: numpy "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND
+  CC0-1.0"), yoksa kısa `License` alanı (shapely "BSD 3-Clause"), yoksa OSI sınıflandırıcısının adı; lisansın bütün
+  metni ve `UNKNOWN` söylenmez. Ortam hazır değilse liste lisanssız çıkar. Sınamalar: paylaşılan 1 (üç kaynağın sırası,
+  bütün metin, UNKNOWN, bileşenlere işlenmesi), masaüstü 1 (sahte ortamın iki dağıtımı).
+- **Kalan:** komut satırında ve katalogda lisanslar (ikisinde de hazırlanmış ortam yok).

@@ -25,3 +25,26 @@ fn an_installed_extensions_bill_of_materials_lists_its_locked_packages() {
     // Not installed, said so.
     assert!(gis.extension_bom("tr.ornek.yok").is_err());
 }
+
+/// A prepared environment's distributions say their licences: the declared expression, else the field.
+#[test]
+fn a_prepared_environments_licences_are_read() {
+    let venv = temp("malzeme-ortam").join(".venv");
+    let site = venv.join("lib/python3.12/site-packages");
+    for (dist, metadata) in [
+        (
+            "numpy-2.5.4.dist-info",
+            "Name: numpy\nVersion: 2.5.4\nLicense-Expression: BSD-3-Clause AND MIT\n",
+        ),
+        (
+            "shapely-2.0.7.dist-info",
+            "Name: shapely\nVersion: 2.0.7\nLicense: BSD 3-Clause\n",
+        ),
+    ] {
+        std::fs::create_dir_all(site.join(dist)).unwrap();
+        std::fs::write(site.join(dist).join("METADATA"), metadata).unwrap();
+    }
+    let found = crate::extensions::bom::licences_in(&venv);
+    assert_eq!(found["numpy"]["expression"], "BSD-3-Clause AND MIT");
+    assert_eq!(found["shapely"]["license"]["name"], "BSD 3-Clause");
+}

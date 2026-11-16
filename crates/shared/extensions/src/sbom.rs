@@ -7,7 +7,8 @@
 //! - **No secret:** an address's user and password (`https://kullanici:parola@ayna/simple`) are cut from every URL.
 //! - **The same package, the same report:** the serial number is made from the package's content; only the time a
 //!   caller gives changes.
-//! - A Python package's licence is not in the lock: not said (an installed environment's metadata would).
+//! - A Python package's licence is not in the lock: an installed environment's metadata says it ([`license_of`],
+//!   [`add_licenses`]: the desktop reads its prepared environment's `*.dist-info/METADATA`).
 
 use std::collections::BTreeMap;
 
@@ -39,6 +40,65 @@ pub fn utc_text(time: std::time::SystemTime) -> String {
         rest % 3600 / 60,
         rest % 60
     )
+}
+
+/// An installed distribution's `METADATA` (its headers, before the first empty line): its normalised name and its
+/// licence as CycloneDX writes one: the SPDX expression it declares (`License-Expression`, PEP 639), else the short
+/// `License` field, else its OSI classifier's name. None when it says none (`UNKNOWN`, a licence's whole text).
+pub fn license_of(metadata: &str) -> Option<(String, Value)> {
+    let mut name = None;
+    let (mut expression, mut field, mut classifier) = (None, None, None);
+    for line in metadata.lines() {
+        if line.trim().is_empty() {
+            break;
+        }
+        if line.starts_with([' ', '\t']) {
+            continue;
+        }
+        let Some((key, value)) = line.split_once(':') else {
+            continue;
+        };
+        let value = value.trim();
+        match key {
+            "Name" => name = Some(normalized(value)),
+            "License-Expression" if !value.is_empty() => expression = Some(value.to_owned()),
+            "License"
+                if !value.is_empty()
+                    && value != "UNKNOWN"
+                    && value.len() <= 80
+                    && !value.contains("Copyright") =>
+            {
+                field = Some(value.to_owned());
+            }
+            "Classifier" => {
+                if let Some(osi) = value.strip_prefix("License :: OSI Approved :: ")
+                    && classifier.is_none()
+                {
+                    classifier = Some(osi.to_owned());
+                }
+            }
+            _ => {}
+        }
+    }
+    let entry = match (expression, field, classifier) {
+        (Some(e), _, _) => json!({ "expression": e }),
+        (None, Some(f), _) => json!({ "license": { "name": f } }),
+        (None, None, Some(c)) => json!({ "license": { "name": c } }),
+        (None, None, None) => return None,
+    };
+    Some((name?, entry))
+}
+
+/// Each component's licence from `licenses` (by normalised name, [`license_of`]'s), where one is known.
+pub fn add_licenses(bom: &mut Value, licenses: &BTreeMap<String, Value>) {
+    let Some(components) = bom["components"].as_array_mut() else {
+        return;
+    };
+    for c in components {
+        if let Some(entry) = c["name"].as_str().and_then(|n| licenses.get(n)) {
+            c["licenses"] = json!([entry]);
+        }
+    }
 }
 
 /// The index most packages come from, as its purl needs no repository.
@@ -358,6 +418,52 @@ wheels = [
         let mut bare = manifest.clone();
         bare.python = None;
         assert!(cyclonedx(&bare, &files, "t", "v").is_none());
+    }
+
+    /// The declared expression first, then a short field, then the classifier; a licence's text and UNKNOWN are none;
+    /// the components take theirs.
+    #[test]
+    fn a_licence_is_read_from_an_installed_distributions_metadata() {
+        let numpy = "Metadata-Version: 2.4\nName: numpy\nVersion: 2.5.4\nLicense-Expression: BSD-3-Clause AND MIT\n\
+                     License-File: LICENSE.txt\n\nLicense: not a header";
+        assert_eq!(
+            license_of(numpy),
+            Some((
+                "numpy".into(),
+                json!({ "expression": "BSD-3-Clause AND MIT" })
+            ))
+        );
+        let shapely = "Name: Shapely\nVersion: 2.0.7\nLicense: BSD 3-Clause\n\
+                       Classifier: License :: OSI Approved :: BSD License\n";
+        assert_eq!(
+            license_of(shapely),
+            Some((
+                "shapely".into(),
+                json!({ "license": { "name": "BSD 3-Clause" } })
+            ))
+        );
+        let whole = "Name: eski\nLicense: Copyright (c) 2010, Ali\n        All rights reserved.\n\
+                     Classifier: License :: OSI Approved :: MIT License\n";
+        assert_eq!(
+            license_of(whole),
+            Some((
+                "eski".into(),
+                json!({ "license": { "name": "MIT License" } })
+            ))
+        );
+        assert_eq!(license_of("Name: bilinmez\nLicense: UNKNOWN\n"), None);
+        let (manifest, files) = package(LOCK);
+        let mut bom = cyclonedx(&manifest, &files, "t", "v").unwrap();
+        let licenses = BTreeMap::from([license_of(numpy).unwrap(), license_of(shapely).unwrap()]);
+        add_licenses(&mut bom, &licenses);
+        assert_eq!(
+            bom["components"][0]["licenses"][0]["expression"],
+            "BSD-3-Clause AND MIT"
+        );
+        assert_eq!(
+            bom["components"][1]["licenses"][0]["license"]["name"],
+            "BSD 3-Clause"
+        );
     }
 
     #[test]

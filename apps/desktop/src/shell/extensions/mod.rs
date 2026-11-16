@@ -41,7 +41,7 @@ mod panel_values;
 mod trial;
 mod tool_pins;
 mod bisect;
-mod bom;
+pub(crate) mod bom;
 mod browse;
 pub(crate) mod environment;
 mod examples;
