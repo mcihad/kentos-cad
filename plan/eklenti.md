@@ -715,12 +715,14 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   sunar [PY-OPT-02]. "uv var / bulunamadı / sürümü uyumsuz / çalıştırılamıyor" açık yetenek olarak bildirilir [PY-OPT-03].
   — *tamamlandı (ADR 8057 §5): Uygulama ayarları › Python ve eklentiler, varsayılan kapalı ve kapalıyken hiçbir şey
   aranmaz; uv'nin algılanması ve durumları.*
-- [ ] Ortam kişiseldir; aynı cihazdaki farklı hesapların paket/eklenti/sır alanları karışmaz [PY-OPT-04]. Paket arama,
+- [x] Ortam kişiseldir; aynı cihazdaki farklı hesapların paket/eklenti/sır alanları karışmaz [PY-OPT-04]. Paket arama,
   sürüm seçme, ekleme/kaldırma/güncelleme, bağımlılık ağacı ve önbellek boyutu uygulama içinden [PY-OPT-05]. NumPy örnek
   akışı: ihtiyacı seç → kurulacakları gör → kişisel ortama kur → konsolda kullan → betik/eklenti bağımlılığına ekle
   [PY-OPT-06].
-  — *kısmen (ADR 8057 §5): kişisel ortam, paket arama/ekleme/güncelleme/kaldırma, önizleme, bağımlılık ağacı,
-  önbellek; kalan: kişisel paketi eklenti bağımlılığına ekleme.*
+  — *tamamlandı (ADR 8057 §5, §95): kişisel ortam, paket arama/ekleme/güncelleme/kaldırma, önizleme, bağımlılık
+  ağacı, önbellek; 16 Kasım: kurulu paketin satırından "Eklentiye ekle…": geliştirilen eklentinin projesine denenen
+  sürüm ve serisi yazılır ve kilitlenir (uv, eklentinin kendi ayarlarıyla), eklenti klasöründen yeniden yüklenir.
+  Betikler kişisel ortamda çalışır: onların bağımlılığı ortamın kendisidir.*
 - [ ] Paket seçimi yayımlanmış eklentinin ortamını değiştirmez [PY-OPT-07]; gerekli/isteğe bağlı paketler ve hangi
   özelliğin hangisini istediği görünür [PY-OPT-08]; "yalnız form görüntüle", "analizi çalıştır", "geliştirici modu"
   farklı gereksinim taşıyabilir [PY-OPT-09]. Reddedilen bağımlılık eklentiyi nedenli pasif bırakır; her açılışta indirme

@@ -11,6 +11,7 @@ use kentos_launch::Module;
 use super::ribbon::Action;
 use super::*;
 
+mod add_to;
 mod audit_picker;
 mod bom;
 mod builds;

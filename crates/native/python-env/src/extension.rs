@@ -36,8 +36,10 @@ use crate::python::{self, Cause, InstallError, Interpreter, Progress};
 use crate::sdk::Wheel;
 use crate::{places, uv};
 
+mod dependency;
 mod wheels;
 
+pub use dependency::{add_dependency, add_words, requirement_for};
 pub use wheels::{Wheels, prepare_wheels, wheel_words};
 
 /// The record a ready environment's folder holds, written last.

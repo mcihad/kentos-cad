@@ -4820,3 +4820,41 @@ python-env `python.rs` (`Cause::Build`, `build_words`), `extension.rs`, `persona
 - **Kalan:** derlemeyi yalnız incelemede listelenen paketlere açmak (uv'de izin listesi yok; `--no-build-package`
   tersidir); kilidin desteklemediği bilgisayarı (ajan iskeletinin üç bilgisayarlık kilidi Linux aarch64'te) kurulumdan
   önce uyumsuzluk saymak; glibc ve macOS'un en düşük sürümü.
+
+## §95. Kişisel ortamdaki paket, geliştirilen eklentinin bağımlılığına (`ADIM 18A`, PY-OPT-06)
+
+**16 Kasım.** Kod: python-env `extension/dependency.rs` (yeni: `requirement_for`, `add_dependency`, `add_words`);
+masaüstü `python_personal/add_to.rs` (yeni: `AddTo`, `Developed`, `developed_extensions`, `add_to_part`,
+`add_to_start`, `add_to_done`), `python_personal.rs` (satırdaki "Eklentiye ekle…"), `extensions/workshop.rs`
+(`ext_reload_folder`: atölyenin yeniden yüklemesinin bildirimsiz çekirdeği).
+
+- **Sorun.** Planın NumPy örneği "ihtiyacı seç → kurulacakları gör → kişisel ortama kur → konsolda kullan →
+  betik/eklenti bağımlılığına ekle" diyor; son adım yoktu. Konsolda denenen paketi eklentiye almak için geliştirici
+  `pyproject.toml`'u elle düzenleyip `uv lock` çalıştırmalıydı. Betikler kişisel ortamda çalışır: onların bağımlılığı
+  ortamın kendisidir.
+- **Karar.** Kişisel ortamın kurulu paket satırında "Eklentiye ekle…": geliştirilen bir eklenti seçilir (geliştirici
+  klasöründen kurulmuş, Asistan'ın atölyesi ya da bağlantıdaki bir ajanınki, Python projesi olan; paketlenmiş `.kek`
+  ya da katalog sürümü yerinde düzenlenmez) ve Ekle. Yazılan istek denenen sürüm ve serisidir (`openpyxl>=3.1.5,<4`;
+  0.x serisinde küçük sürümü: `fiona>=0.13.1,<0.14`).
+- **uv'nin kendi yolu, eklentinin kendi ayarları.** `uv add --no-sync` proje klasörünün KentOS'un klasöründeki
+  kopyasında çalışır; yalnız çözülen kilit `pyproject.toml` ve `uv.lock`'un yerine geçer (yanına yazılıp üzerine
+  taşınır), çözülmezse eklentinin dosyaları değişmez. `--no-config` verilmez: uv 0.11.26 ile ölçüldü, `--no-config`
+  `[tool.uv] environments`'ı tutar ama `exclude-newer`'ı düşürür ve ajanın kilidinin soğuma süresi (§83) kaybolurdu.
+  Projenin `uv.toml`'u da kopyalanır.
+- **Zaten bağımlıysa** söylenir, değiştirilmez: "“numpy” zaten “Eklenti Vitrini” eklentisinin bağımlılığı (kilitte
+  2.5.4); değiştirilmedi."
+- **Sonra** eklenti klasöründen yeniden yüklenir (atölyeninkiyle aynı çekirdek: bir çalıştırması sürerken ya da
+  verilmemiş yetenek isterse yüklenmez), kurulu eklenti ile klasörü ayrışmaz; ortamı yeni kilitle, önizlemesiyle
+  Eklentiler'den hazırlanır. Bildirim: "Eklenti Vitrini: bağımlılık eklendi — pyproject.toml'a “openpyxl>=3.1.5,<4”
+  yazıldı. Kilit yenilendi; yeni: et-xmlfile 2.0.0, openpyxl 3.1.5. Eklenti klasöründen yeniden yüklendi; Python
+  ortamını Eklentiler'den yeni kilitle hazırlayın." Eklentinin günlüğüne `dependency_added` düşer.
+- **Gerçek pencere (gerçek uv ve PyPI):** Vitrin'in kopyası bağlantıdaki bir ajanın atölyesinden incelemeye açılıp
+  kuruldu (`review_workshop`), kişisel ortam oluşturuldu, openpyxl 3.1.5 önizlenip kuruldu; satırdan Eklentiye ekle →
+  Ekle: uv klasöre `openpyxl>=3.1.5,<4` yazdı, kilide openpyxl 3.1.5 ve et-xmlfile 2.0.0 girdi, bildirim 2,5 sn
+  içinde; değişen klasör `kek verify`'dan 0 uyarıyla geçti.
+- **Sınamalar:** python-env 1 (sahte uv: istek ve serisi, `--no-config` yok, `uv.toml` kopyalanır; başarıda dosyalar
+  değişir ve kopya silinir; çözülmezse dosyalar aynı kalır ve neden söylenir; projesiz klasör), masaüstü 1 (atölyeden
+  kurulu Vitrin: zaten bağımlı numpy söylenir ve uv çalışmaz; yeni paket eklenir, kilit yenilenir, eklenti yeniden
+  yüklenir, bildirim), masaüstünün eklenti, Asistan ve Python sınamaları (159).
+- **Kalan:** kurulu olmayan bir klasöre (geliştiricinin kendi projesi) eklemek; isteğe bağlı bir özelliğe (extra)
+  eklemek.
