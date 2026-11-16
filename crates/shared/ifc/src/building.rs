@@ -32,6 +32,9 @@ pub enum Value {
     Area(f64),
     Volume(f64),
     Ratio(f64),
+    /// A ratio above 0 (`IfcPositiveRatioMeasure`: the site's floor area ratio and coverage, IFC 4.3's
+    /// Pset_SiteCommon).
+    PositiveRatio(f64),
     Count(i64),
     Real(f64),
     /// A mass, kilograms (`IfcMassMeasure`: a lift's rated load).
@@ -56,6 +59,7 @@ impl Value {
             Value::Area(_) => "IfcAreaMeasure",
             Value::Volume(_) => "IfcVolumeMeasure",
             Value::Ratio(_) => "IfcRatioMeasure",
+            Value::PositiveRatio(_) => "IfcPositiveRatioMeasure",
             Value::Count(_) => "IfcCountMeasure",
             Value::Real(_) => "IfcReal",
             Value::Mass(_) => "IfcMassMeasure",
@@ -74,6 +78,7 @@ impl Value {
             Value::Area(v) => format!("IFCAREAMEASURE({})", real(*v)),
             Value::Volume(v) => format!("IFCVOLUMEMEASURE({})", real(*v)),
             Value::Ratio(v) => format!("IFCRATIOMEASURE({})", real(*v)),
+            Value::PositiveRatio(v) => format!("IFCPOSITIVERATIOMEASURE({})", real(*v)),
             Value::Count(v) => format!("IFCCOUNTMEASURE({v})"),
             Value::Real(v) => format!("IFCREAL({})", real(*v)),
             Value::Mass(v) => format!("IFCMASSMEASURE({})", real(*v)),

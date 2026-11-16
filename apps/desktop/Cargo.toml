@@ -67,6 +67,8 @@ kentos-extensions = { path = "../../crates/shared/extensions" }
 kentos-extension-host = { path = "../../crates/native/extension-host" }
 # The user's optional Python: uv found and checked, the choice to use it (plan/eklenti.md ADIM 18A).
 kentos-python-env = { path = "../../crates/native/python-env" }
+# The standards packages' rules (docs/adr/8075 §2.6).
+kentos-standards = { path = "../../crates/native/standards" }
 # File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
 # the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
 kentos-formats = { path = "../../crates/shared/formats" }

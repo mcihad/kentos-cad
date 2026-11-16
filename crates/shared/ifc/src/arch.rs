@@ -1756,11 +1756,12 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     let mut site_qtos = Vec::new();
     if let Some(z) = arch.and_then(|a| a.zoning.as_ref()) {
         let mut props = Vec::new();
-        if let Some(far) = z.far {
-            props.push(("FloorAreaRatio".to_owned(), Value::Ratio(far)));
+        // Both above 0 (IFC 4.3's template: `IfcPositiveRatioMeasure`; docs/adr/8075).
+        if let Some(far) = z.far.filter(|v| *v > 0.0) {
+            props.push(("FloorAreaRatio".to_owned(), Value::PositiveRatio(far)));
         }
-        if let Some(c) = z.coverage {
-            props.push(("SiteCoverageRatio".to_owned(), Value::Ratio(c)));
+        if let Some(c) = z.coverage.filter(|v| *v > 0.0) {
+            props.push(("SiteCoverageRatio".to_owned(), Value::PositiveRatio(c)));
         }
         if !props.is_empty() {
             site_psets.push(Pset {
@@ -1872,7 +1873,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         props: common,
     });
     if let Some(a) = footprint {
-        building_quantities.push(("FootprintArea".to_owned(), Value::Area(a)));
+        building_quantities.push(("FootPrintArea".to_owned(), Value::Area(a)));
     }
     if let Some(a) = gross_area {
         building_quantities.push(("GrossFloorArea".to_owned(), Value::Area(a)));

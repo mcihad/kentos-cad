@@ -28,6 +28,8 @@ kentos-plot = { path = "../plot", default-features = false }
 kentos-sheet = { path = "../../shared/sheet", default-features = false }
 # İşlemler, CBS's toolbox, registered with the commands (docs/adr/0508); only with CBS (docs/adr/8054 §11).
 kentos-processing = { path = "../processing", optional = true }
+# The standards packages' Python rules (docs/adr/8075 §2.6): the BIM permit package's decision.
+kentos-standards = { path = "../standards" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 # A MapLibre style's sprite (docs/adr/0635 §9): its icons drawn with the drawing's own marker shapes.
 kentos-maplibre = { path = "../../shared/maplibre" }

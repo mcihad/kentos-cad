@@ -102,6 +102,100 @@ pub struct PublishSheets {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub previous: Option<String>,
+    /// A BIM permit package (docs/adr/8075; Dijital Proje Yön. Md. 9/1, 15): beside the PDF/A sheets the building's IFC
+    /// model (EK-2's name) and its model quality control form, all from the same pinned drawing. The model is read back
+    /// from the folder and the form answered on it before anything is published; every finding left stops the
+    /// publication. PDF/A and separate PDFs only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bim: Option<BimPackage>,
+}
+
+/// A BIM permit package's request (docs/adr/8075 §2).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BimPackage {
+    /// One of the building program's buildings, by its id (docs/adr/8072 §2); none: the project as one building.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub building: Option<String>,
+    /// The author's answers to the form's questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the
+    /// development level, the area tables …); a question left unanswered, or answered no, stops the publication.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<FormAnswer>>"))]
+    pub answers: Vec<FormAnswer>,
+}
+
+/// The author's answer to one of the model quality control form's questions.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FormAnswer {
+    /// The question's number in EK-9 Tablo 9.1 (1–21).
+    #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 21), extend("x-unit" = "index")))]
+    pub no: u8,
+    /// Evet (true) or Hayır (false).
+    pub yes: bool,
+    /// What the author says of it, written on the form.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub note: String,
+}
+
+/// A BIM permit package's result (docs/adr/8075 §2).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct BimPackaged {
+    /// The model's file, a delivered file among the publication's, and the form's record (`kalite-kontrol-formu.json`):
+    /// KentOS's own record beside `yayin.json`, which names it with its digest.
+    pub model: String,
+    pub form: String,
+    /// The five results, each apart (plan/ifc-uyum.md §1): the file reads, the schema, Turkey's profile, the model and
+    /// the sheets agree, the administration's acceptance (KentOS does not say it).
+    pub results: Vec<PackageResult>,
+    /// The form's 21 rows: the official answer (KentOS's evidence, the author's where KentOS leaves it) and the evidence.
+    pub rows: Vec<FormRow>,
+}
+
+/// One of a package's five results.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct PackageResult {
+    /// `okunuyor`, `sema`, `profil`, `model_pafta`, `idare`.
+    pub key: String,
+    /// Whether it holds; none where it is not KentOS's to say (the administration's acceptance).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub holds: Option<bool>,
+    pub words: String,
+}
+
+/// One row of the model quality control form as published.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct FormRow {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub no: u8,
+    pub title: String,
+    /// Evet, Hayır, or empty while the author has not answered.
+    pub answer: String,
+    /// KentOS's evidence: geçti, kaldı, inceleme.
+    pub evidence: String,
+    pub note: String,
 }
 
 /// The earlier delivery a publication updates (docs/adr/1320 §3).
@@ -182,6 +276,10 @@ pub struct SheetsPublished {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub carried: Vec<String>,
+    /// With `bim`: the package's model, form, five results and the form's rows (docs/adr/8075).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bim: Option<BimPackaged>,
 }
 
 /// One viewport of a published sheet.

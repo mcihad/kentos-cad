@@ -108646,7 +108646,7 @@
       "id": "file.publish.sheets",
       "version": 1,
       "title": "Paftaları toplu yayınla",
-      "summary": "Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini, kaynak sürümünü ve her sayfanın kaynak nesnelerini içerik özetleriyle taşır; çizimin geri alması teslim dosyalarını kaldırmaz. previous ile önceki bir teslimin güncellemesi yeni klasöre yayınlanır: sayfası aynı çizen ve PDF'i teslim edilen baytları taşıyan pafta baytı baytına ve kendi tarihiyle kopyalanır (carried), öbürleri bugünün tarihiyle yeniden üretilir; önceki teslim olduğu gibi kalır. Değişip revizyonu ilerletilmeyen paftaya revision_unchanged uyarısı. Yalnız ayrı PDF'lerle, devam ettirilebilir yayın olmadan; geo, layers, dpi ya da bağlı resimler önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz.",
+      "summary": "Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini, kaynak sürümünü ve her sayfanın kaynak nesnelerini içerik özetleriyle taşır; çizimin geri alması teslim dosyalarını kaldırmaz. previous ile önceki bir teslimin güncellemesi yeni klasöre yayınlanır: sayfası aynı çizen ve PDF'i teslim edilen baytları taşıyan pafta baytı baytına ve kendi tarihiyle kopyalanır (carried), öbürleri bugünün tarihiyle yeniden üretilir; önceki teslim olduğu gibi kalır. Değişip revizyonu ilerletilmeyen paftaya revision_unchanged uyarısı. Yalnız ayrı PDF'lerle, devam ettirilebilir yayın olmadan; geo, layers, dpi ya da bağlı resimler önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz. bim ile BIM ruhsat paketi (Dijital Proje Yön. Md. 9/1, 15): aynı sabitlenmiş çizimden binanın IFC modeli (EK-2 adıyla) ve model kalite kontrol formunun kaydı (kalite-kontrol-formu.json) paftaların yanına yazılır; model klasörden geri okunur, standart kural paketi (dijital-proje) paftaları, paketi, formun 21 sorusunu ve müellifin answers ile verdiği cevapları denetler; kalan her bulgu (cevapsız ya da Hayır cevaplı soru dahil) hatadır ve hiçbir şey yayımlanmaz. Rapor beş sonucu (okunuyor, şema, Türkiye profili, model ile pafta uyumu, idare kabulü) ve formun satırlarını ayrı verir; teslim listesi modeli ve formu da sayar. PDF/A ve ayrı PDF'ler ister; Python yoksa bim_rule_unavailable.",
       "aliases": [
         "PAFTAYAYINLA"
       ],
@@ -108665,6 +108665,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "properties": {
+          "bim": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BimPackage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A BIM permit package (docs/adr/8075; Dijital Proje Yön. Md. 9/1, 15): beside the PDF/A sheets the building's IFC\nmodel (EK-2's name) and its model quality control form, all from the same pinned drawing. The model is read back\nfrom the folder and the form answered on it before anything is published; every finding left stops the\npublication. PDF/A and separate PDFs only."
+          },
           "dpi": {
             "description": "None preserves each page's own physical raster setting.",
             "format": "uint16",
@@ -108765,6 +108776,17 @@
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "properties": {
+          "bim": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BimPackaged"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `bim`: the package's model, form, five results and the form's rows (docs/adr/8075)."
+          },
           "carried": {
             "items": {
               "type": "string"
@@ -108864,6 +108886,17 @@
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "properties": {
+          "bim": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BimPackaged"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `bim`: the package's model, form, five results and the form's rows (docs/adr/8075)."
+          },
           "carried": {
             "items": {
               "type": "string"
@@ -126923,6 +126956,60 @@
         "length",
         "volume",
         "rule"
+      ],
+      "type": "object"
+    },
+    "BimPackage": {
+      "additionalProperties": false,
+      "description": "A BIM permit package's request (docs/adr/8075 §2).",
+      "properties": {
+        "answers": {
+          "description": "The author's answers to the form's questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the\ndevelopment level, the area tables …); a question left unanswered, or answered no, stops the publication.",
+          "items": {
+            "$ref": "#/$defs/FormAnswer"
+          },
+          "type": "array"
+        },
+        "building": {
+          "description": "One of the building program's buildings, by its id (docs/adr/8072 §2); none: the project as one building.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BimPackaged": {
+      "description": "A BIM permit package's result (docs/adr/8075 §2).",
+      "properties": {
+        "form": {
+          "type": "string"
+        },
+        "model": {
+          "description": "The model's file, a delivered file among the publication's, and the form's record (`kalite-kontrol-formu.json`):\nKentOS's own record beside `yayin.json`, which names it with its digest.",
+          "type": "string"
+        },
+        "results": {
+          "description": "The five results, each apart (plan/ifc-uyum.md §1): the file reads, the schema, Turkey's profile, the model and\nthe sheets agree, the administration's acceptance (KentOS does not say it).",
+          "items": {
+            "$ref": "#/$defs/PackageResult"
+          },
+          "type": "array"
+        },
+        "rows": {
+          "description": "The form's 21 rows: the official answer (KentOS's evidence, the author's where KentOS leaves it) and the evidence.",
+          "items": {
+            "$ref": "#/$defs/FormRow"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "model",
+        "form",
+        "results",
+        "rows"
       ],
       "type": "object"
     },
@@ -148644,6 +148731,33 @@
         }
       ]
     },
+    "FormAnswer": {
+      "additionalProperties": false,
+      "description": "The author's answer to one of the model quality control form's questions.",
+      "properties": {
+        "no": {
+          "description": "The question's number in EK-9 Tablo 9.1 (1–21).",
+          "format": "uint8",
+          "maximum": 21,
+          "minimum": 1,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "note": {
+          "description": "What the author says of it, written on the form.",
+          "type": "string"
+        },
+        "yes": {
+          "description": "Evet (true) or Hayır (false).",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "no",
+        "yes"
+      ],
+      "type": "object"
+    },
     "FormBody": {
       "additionalProperties": false,
       "description": "A form's content: its items and the draft's revision (each kept change adds one).",
@@ -149769,6 +149883,40 @@
         "version",
         "digest",
         "body"
+      ],
+      "type": "object"
+    },
+    "FormRow": {
+      "description": "One row of the model quality control form as published.",
+      "properties": {
+        "answer": {
+          "description": "Evet, Hayır, or empty while the author has not answered.",
+          "type": "string"
+        },
+        "evidence": {
+          "description": "KentOS's evidence: geçti, kaldı, inceleme.",
+          "type": "string"
+        },
+        "no": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "note": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "no",
+        "title",
+        "answer",
+        "evidence",
+        "note"
       ],
       "type": "object"
     },
@@ -176447,6 +176595,30 @@
           "type": "string"
         }
       ]
+    },
+    "PackageResult": {
+      "description": "One of a package's five results.",
+      "properties": {
+        "holds": {
+          "description": "Whether it holds; none where it is not KentOS's to say (the administration's acceptance).",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "key": {
+          "description": "`okunuyor`, `sema`, `profil`, `model_pafta`, `idare`.",
+          "type": "string"
+        },
+        "words": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "words"
+      ],
+      "type": "object"
     },
     "PackageSurface": {
       "description": "The surface a package names: its id, name and the digest of what it is made of; and (docs/adr/3220) the surface\nitself as the package carries it: the file (`yuzey.xml`, a LandXML 1.2 TIN of the built surface), its corners' and\ntriangles' counts and the file's SHA-256. A package written before carries only the first three.",

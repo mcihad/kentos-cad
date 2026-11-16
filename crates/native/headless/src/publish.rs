@@ -501,6 +501,7 @@ fn work(
                 resumed: Vec::new(),
                 previous: previous.map(|p| p.report),
                 carried: Vec::new(),
+                bim: None,
             },
             None,
         ));
@@ -815,12 +816,32 @@ fn work(
         save(&files, &pages, &issues, "cancelled", staging.as_ref().map(|s| s.path.as_path()));
         return Err(e);
     }
+    // A BIM permit package (docs/adr/8075): the model and the form beside the sheets, read back from the stage and
+    // decided on before anything is exposed; what it finds is an error issue like any other.
+    #[cfg(all(feature = "mod-arch", feature = "mod-gis"))]
+    let bim = input.bim.as_ref().and_then(|b| {
+        crate::publish_bim::package(doc, input, b, staging.as_ref().map(|s| s.path.as_path()), &files, &scope, &date, &mut issues)
+            .map(|p| (p.report, p.files, p.manifest))
+    });
+    #[cfg(not(all(feature = "mod-arch", feature = "mod-gis")))]
+    let bim: Option<(kentos_commands::BimPackaged, Vec<SheetPublishedFile>, serde_json::Value)> = {
+        if input.bim.is_some() {
+            issues.push(issue("model", "not_in_build", "Bu yapıda Mimari modülü yok: BIM paketi yapılamaz.".into(), true, "KentOS'un Mimari modüllü yapısını kullanın.".into()));
+        }
+        None
+    };
+    if let Some((_, extra, _)) = &bim {
+        files.extend(extra.iter().cloned());
+    }
     let ready = !issues.iter().any(|i| i.error);
     let mut manifest = serde_json::json!({"format":"kentos.publish/1","snapshot":captured.metadata().map_err(|e|refuse(&e.code,e.message,"pin"))?,"drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"user":user,"options":published_options(input),"sheets":chosen,"files":files,"pages":pages,"scope":scope,"resources":resources,"issues":issues,"previous":previous.as_ref().map(|p|&p.report),"carried":carried,"sources":if matches!(op,CallOp::Execute){crate::publish_update::source_record(doc,&kept_book,&chosen)}else{serde_json::Value::Null}});
     // A PDF/A publication carries its delivery list beside the files (docs/adr/8066).
     let delivery = input.pdfa.then(|| delivery_list(&files, &scope, &source));
     if delivery.is_some() {
         manifest["deliveryList"] = serde_json::json!(DELIVERY);
+    }
+    if let Some((_, _, part)) = &bim {
+        manifest["bim"] = part.clone();
     }
     let bytes=serde_json::to_vec_pretty(&manifest).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
     let report = SheetsPublished {
@@ -838,6 +859,7 @@ fn work(
         resumed,
         previous: previous.map(|p| p.report),
         carried,
+        bim: bim.map(|(report, _, _)| report),
     };
     if let Some(stage) = &mut staging {
         if !ready {
@@ -937,6 +959,16 @@ fn delivery_list(files: &[SheetPublishedFile], scope: &[kentos_commands::SheetPu
         }
     };
     let mut out = String::from("\u{feff}Sıra;Dosya;SHA-256;Bayt;Pafta no;Pafta adı;Revizyon;Model revizyonu;Model özeti\n");
+    // A BIM package's model and form are no sheet: their role in the sheet's name's column (docs/adr/8075).
+    let role = |f: &SheetPublishedFile| -> Option<&'static str> {
+        if !f.sheets.is_empty() {
+            None
+        } else if f.name.to_ascii_lowercase().ends_with(".ifc") {
+            Some("IFC modeli")
+        } else {
+            None
+        }
+    };
     let digest = source.sha256.get(..16).unwrap_or(&source.sha256);
     for (i, f) in files.iter().enumerate() {
         let of = |pick: fn(&kentos_commands::SheetPublishScope) -> &str| {
@@ -953,7 +985,7 @@ fn delivery_list(files: &[SheetPublishedFile], scope: &[kentos_commands::SheetPu
             f.sha256.clone(),
             f.bytes.to_string(),
             of(|s| s.number.as_str()),
-            of(|s| s.name.as_str()),
+            role(f).map_or_else(|| of(|s| s.name.as_str()), str::to_owned),
             of(|s| s.revision.as_str()),
             source.revision.clone(),
             digest.to_owned(),

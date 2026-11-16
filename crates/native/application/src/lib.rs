@@ -1156,6 +1156,9 @@ pub mod wall_distances;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/arch_ifc.rs"]
 pub mod arch_ifc;
+#[cfg(feature = "mod-arch")]
+#[path = "arch/ifc_facts.rs"]
+pub mod ifc_facts;
 // Bir IFC dosyasını okuyup anlatır: görüntüleyicinin okuma yüzü (plan/ifc-uyum.md IFC-12, docs/adr/8073 §6).
 #[cfg(feature = "mod-arch")]
 #[path = "arch/ifc_inspect.rs"]

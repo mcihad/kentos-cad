@@ -62,6 +62,12 @@ class Paket(unittest.TestCase):
         self.assertIn("9 alan alt tireyle", b[0]["message"])
         self.assertIn("EK-2 Tablo 2.1 · PDF s. 3", b[0]["cite"])
 
+    def test_modelin_adi_da_ek2_uzanti_alan_degil(self):
+        model = "260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc"
+        self.assertEqual(kurallar(ornek(files=[{"name": AD, "sheets": ["s1"]}, {"name": model, "sheets": []}])), [])
+        self.assertEqual(kurallar(ornek(files=[{"name": AD, "sheets": ["s1"]}, {"name": "bina.ifc", "sheets": []}])),
+                         ["package_name"])
+
     def test_ruhsat_iki_kurali_birlikte_verir(self):
         olgu = {**ornek(pdfa=False), "cad": {"derived": [{"kind": "section", "name": "B-B kesiti", "mark": "m",
                                                           "state": "stale", "inserts": 1}]}}

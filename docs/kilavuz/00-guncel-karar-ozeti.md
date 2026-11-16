@@ -206,6 +206,12 @@
       (`catalog_schema::mistyped`).
     - Kararlar K48 (kullanıcı tanımlı rol), K49 (açıklaması boş ad inceleme), K50 (proje tipi yapı türünden), K51 (EK-7'nin
       sınıfları her modelde).
+  - **BIM ruhsat paketi (16 Kasım 2026; [ADR 8075](../adr/8075-bim-permit-package.md), BIM-14, sıra B14; ilk dilim):**
+    - Ayrı komut yok: `file.publish.sheets`'in `bim` bölümü; aynı sabitlenmiş çizimden IFC, klasörden geri okunur, standart
+      paketin `dijital_proje.bim` kuralı paftaları, paketi, formu ve müellifin cevaplarını denetler; kalan bulgu yayını
+      durdurur. Beş sonuç ayrı; formun kaydı KentOS'un kaydı (`kalite-kontrol-formu.json`), teslim dosyası değil.
+    - Standart paketlerin kuralını çağıran süreç `kentos-standards` crate'inde; masaüstü, yayın ve komut satırı ortak.
+    - Gerçek paket modelin zorunlu alanları (IFC-02) tamamlanınca yayımlanır; bugün bulgularını söyleyerek durur.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

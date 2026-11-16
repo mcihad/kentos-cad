@@ -61,6 +61,9 @@ formun resmî cevabı (Evet, Hayır, boş) ve KentOS'un kanıtı (geçti, kaldı
   çizimdeki kimlikleriyle, maddeyi, ek satırını ve sayfayı söyler.
 - `form.tablo(olgular)`: formun çizimdeki tablosu (Ruhsat takımı'nın FR/MKF paftası).
 
+`bim.denetle(cizim, dosya, cevaplar)`: BIM ruhsat paketinin kararı (ADR 8075): paftaların ve paketin kuralı, formun kalan
+satırları ve müellifin cevapları; yayını durduran bulgular, beş sonuç ve formun satırları.
+
 Dosyanın olguları verilince `mimari.denetle(cizim, dosya)` EK-9'un sorularını dosyadan cevaplar; `kalite` ve `zorunlu`
 çizimin olgularıyla yalnız dosya yokken çalışır. Okuma kararları K48 (kullanıcı tanımlı rol), K49 (açıklaması boş ad
 incelemedir), K50 (proje tipi yapı türünden).

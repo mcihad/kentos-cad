@@ -76,7 +76,7 @@ fn each_block_s_model_carries_its_own_areas() {
         let g = area(common, "GrossPlannedArea").expect("its own gross area");
         assert_eq!(area(qto, "GrossFloorArea"), Some(g));
         gross += g;
-        foot += area(qto, "FootprintArea").expect("its own footprint");
+        foot += area(qto, "FootPrintArea").expect("its own footprint");
     }
     assert!((gross - r.construction()).abs() < 1e-9, "{gross} ≠ {}", r.construction());
     assert!((foot - r.footprint).abs() < 1e-6, "{foot} ≠ {}", r.footprint);

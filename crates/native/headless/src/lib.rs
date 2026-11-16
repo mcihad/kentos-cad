@@ -52,6 +52,8 @@ pub mod files;
 pub mod gis_export;
 pub mod package;
 pub mod publish;
+#[cfg(all(feature = "mod-arch", feature = "mod-gis"))]
+mod publish_bim;
 mod publish_status;
 mod publish_update;
 pub mod recover;

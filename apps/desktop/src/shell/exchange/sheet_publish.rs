@@ -100,6 +100,11 @@ pub enum Event {
     Gate(u64, Result<serde_json::Value, String>),
     /// The permit gate's Denetim'de göster: the window closed, the Mimari audit opened.
     GateShow,
+    /// The BIM permit package on or off (permit_bim.rs, docs/adr/8075).
+    Bim(bool),
+    /// The author's answer to a form question (its number; none takes it back), and its note.
+    BimAnswer(u8, Option<bool>),
+    BimNote(u8, String),
     Close,
 }
 fn event(e: Event) -> Message {
@@ -189,6 +194,7 @@ impl App {
             resumable: true,
             resume: false,
             previous: None,
+            bim: None,
         };
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let id = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -305,6 +311,23 @@ impl App {
             Event::Archive(on) => {
                 s.input.pdfa = on;
                 s.changed();
+            }
+            Event::Bim(on) => {
+                super::permit_bim::switch(s, on);
+                s.changed();
+            }
+            // An answer keeps the check's report in view (its questions are there) but no longer ready: Denetle again.
+            Event::BimAnswer(no, yes) => {
+                super::permit_bim::answer(s, no, yes);
+                if let Some(r) = s.report.as_mut() {
+                    r.ready = false;
+                }
+            }
+            Event::BimNote(no, text) => {
+                super::permit_bim::note(s, no, text);
+                if let Some(r) = s.report.as_mut() {
+                    r.ready = false;
+                }
             }
             Event::Separate(on) => {
                 s.input.mode = if on {
@@ -534,6 +557,7 @@ impl App {
                                         resumed: Vec::new(),
                                         previous: None,
                                         carried: Vec::new(),
+                                        bim: None,
                                     })
                             } else {
                                 serde_json::from_value::<SheetsPublished>(output)
@@ -915,10 +939,11 @@ impl App {
                 let message = format!(
                     "{} · {} · {} {}",
                     if i.error { "Hata" } else { "Uyarı/not" },
-                    s.rows
-                        .iter()
-                        .find(|r| r.id == i.sheet)
-                        .map_or("Pafta seti", |r| r.name.as_str()),
+                    s.rows.iter().find(|r| r.id == i.sheet).map_or_else(
+                        // The BIM package's model and form are no sheet (docs/adr/8075).
+                        || if report.bim.as_ref().is_some_and(|b| b.model == i.sheet) || i.sheet == "model" { "Model" } else { "Pafta seti" },
+                        |r| r.name.as_str()
+                    ),
                     i.message,
                     i.fix
                 );
@@ -946,7 +971,10 @@ impl App {
             }
             body = body.push(results);
         }
-        // A permit publication's gate (docs/adr/8065).
+        // A permit publication's BIM package (docs/adr/8075) and its gate (docs/adr/8065).
+        if s.permit.is_some() && !s.check_only {
+            body = body.push(self.permit_bim_view(s, busy));
+        }
         if let (Some(gate), Some(doc)) = (&s.permit, &self.document) {
             body = body.push(self.permit_gate_view(gate, doc.model.generation()));
         }

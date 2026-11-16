@@ -599,7 +599,19 @@ bulgusu değişir.
 
 ### 5.5 Teslim ve bilgi yönetimi
 
-#### BIM-14 — BIM ruhsat paketi: IFC + PDF/A + kontrol formu [ ]
+#### BIM-14 — BIM ruhsat paketi: IFC + PDF/A + kontrol formu [~]
+
+**Yapıldı (16 Kasım 2026, ilk dilim, [ADR 8075](../docs/adr/8075-bim-permit-package.md)):** PDF/A yayınının `bim` bölümü:
+aynı sabitlenmiş çizimden IFC (EK-2 adıyla) paftaların yanına yazılır, klasörden geri okunur; standart paketin kuralı
+`dijital_proje.bim` paftaları ve paketi (`ruhsat`), formun 21 sorusunu (ADR 8074) ve müellifin cevaplarını birlikte
+denetler; kalan her bulgu yayını durdurur, klasör açılmaz. Beş sonuç ayrı; formun kaydı (`kalite-kontrol-formu.json`)
+KentOS'un kaydı olarak `yayin.json`'un yanında; teslim listesi modeli sayar. Kural süreci `kentos-standards`'ta;
+masaüstünde Ruhsat takımının yayınında anahtar, beş sonuç, inceleme sorularına Evet/Hayır ve not. Paketin denetimi
+yazıcıda iki hata buldu (FootPrintArea, sahanın oranları), düzeltildi. Bağımsız okuyucular (qpdf, Poppler, IfcOpenShell,
+IfcTester) paketin dosyalarını okur.
+**Kalan:** modelin zorunlu alanları (IFC-02) tamamlanmadan gerçek bir paket yayımlanmaz; formun paftası müellifin
+cevabını göstermiyor (formun kalıcı kaynak türü, cevabın eskimesi); 2+1'de paket; ortak durumlar ve MCP'nin uçtan uca
+sınaması.
 
 **Kullanıcı sonucu:** Tek komut, aynı model revizyonundan mimari modeli, bütün PDF/A paftaları, çizelgeleri ve kontrol
 formunu üretir. Hepsi yazıldıktan sonra dosyadan denetlenir; biri kalırsa hiçbir şey yayımlanmaz. Dayanak Md. 9/1, 15; e-PYS
@@ -740,7 +752,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B12 ✓ | Okuma yüzü ve motor denemesi | IFC-07 | Yazılan dosya geri okunur; motor kararı ADR 8061'de (§11; gerçek dünyadan 35 dosya da aynı okunur) |
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073; gerçek pencerede kabul ve kesitin tutamakları kaldı) |
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; son yazılan dosya, beş sonuç raporu ve bütçe kaldı) |
-| B14 | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket |
+| B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ilk dilim ADR 8075; gerçek paket IFC-02'yi bekliyor) |
 | B15 | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti |
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |

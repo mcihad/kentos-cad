@@ -3016,6 +3016,9 @@ mod flat_timing;
 #[path = "headless/flat_pieces.rs"]
 mod flat_pieces;
 
+#[path = "headless/bim_package.rs"]
+mod bim_package;
+
 #[path = "headless/ifc_timing.rs"]
 mod ifc_timing;
 #[test]

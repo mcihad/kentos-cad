@@ -94,6 +94,8 @@ impl Model {
                 "gaps": self.gaps(&sets, &materials, &elevations),
                 "setChecks": self.set_checks(&sets),
                 "profile": { "schema": crate::catalog_schema::dictionary().schema },
+                // The rule catalog the gaps are read against (a result names it to be made again).
+                "catalog": { "id": catalog::base().profile.id, "version": catalog::base().profile.version },
                 "classCodes": self.class_codes(),
                 "sources": sources(),
                 "findings": self.findings.iter().map(|f| json!({

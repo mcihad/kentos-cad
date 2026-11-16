@@ -1,0 +1,13 @@
+[package]
+name = "kentos-standards"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "The standards packages' Python rules asked from Rust: the same call from the desktop, the sheet publication and the command line (docs/adr/8075 §2.6)."
+
+[dependencies]
+# Which Python the user has (their own environment, KentOS's, the checkout's).
+kentos-python-env = { path = "../python-env" }
+serde_json = { workspace = true }
+

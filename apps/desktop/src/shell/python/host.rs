@@ -35,32 +35,11 @@ pub struct Host {
     writer: mpsc::Sender<String>,
 }
 
-/// The Python the console runs: `KENTOS_PYTHON`, else the user's personal
-/// environment while Python is on and it is ready (Uygulama ayarları › Python
-/// ve eklentiler, python_personal.rs: KentOS's own Python with KentOS's
-/// library; on Windows the only one there is), else a checkout's own
-/// environment above the program (`.run/py`, which `scripts/python/test.sh`
-/// makes; the program is in `target/<profile>/`, a test in its `deps/`),
-/// else `python3`.
+/// The Python the console runs: the standards rules' (`kentos_standards::interpreter`): `KENTOS_PYTHON`, else
+/// the user's personal environment while Python is on and it is ready, else a checkout's own environment above the
+/// program, else `python3`.
 pub fn interpreter() -> PathBuf {
-    if let Some(path) = std::env::var_os("KENTOS_PYTHON") {
-        return PathBuf::from(path);
-    }
-    if let Some(root) = kentos_python_env::places::root()
-        && kentos_python_env::settings::PythonSettings::load(&root).enabled
-        && let Some(own) = kentos_python_env::personal::ready(&root)
-    {
-        return own;
-    }
-    if let Ok(exe) = std::env::current_exe() {
-        for folder in exe.ancestors().skip(1).take(4) {
-            let own = folder.join(".run/py/bin/python");
-            if own.exists() {
-                return own;
-            }
-        }
-    }
-    PathBuf::from("python3")
+    kentos_standards::interpreter()
 }
 
 impl Host {

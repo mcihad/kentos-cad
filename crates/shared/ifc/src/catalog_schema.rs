@@ -99,10 +99,12 @@ fn quantity_measure(kind: &str) -> Option<&'static str> {
     })
 }
 
-/// The standard properties and quantities a building to write gives another type than IFC 4.3's template asks
-/// (docs/adr/8074 §5: the profile's IDS asks the template's data type; an independent checker found the land
-/// registration's identifiers written as labels): the set, the item, the type written and the template's, each once.
-/// The national sets (`TREpys_…`) are not the schema's and have no template.
+/// The standard properties and quantities a building to write gives another type than IFC 4.3's template asks, or
+/// that the template does not have at all (docs/adr/8074 §5, 8075: the profile's IDS asks the template's data type; an
+/// independent checker found the land registration's identifiers written as labels, the form's 20th question the
+/// building's `FootprintArea` where the template spells `FootPrintArea`): the set, the item, the type written and the
+/// template's (empty: no such item), each once. The national sets (`TREpys_…`) are not the schema's and have no
+/// template.
 pub fn mistyped(b: &crate::building::Building) -> Vec<(String, String, &'static str, String)> {
     use crate::building::{Pset, Qto};
     let d = dictionary();
@@ -138,7 +140,10 @@ pub fn mistyped(b: &crate::building::Building) -> Vec<(String, String, &'static 
     for (set, items) in sets {
         let Some(def) = d.sets.get(set.as_str()) else { continue };
         for (item, value) in items {
-            let Some((kind, measure)) = def.item(item) else { continue };
+            let Some((kind, measure)) = def.item(item) else {
+                out.push((set.clone(), item.clone(), value.ifc_type(), String::new()));
+                continue;
+            };
             let Some(want) = measure.or_else(|| quantity_measure(&kind).map(str::to_owned)) else { continue };
             if !want.eq_ignore_ascii_case(value.ifc_type()) {
                 out.push((set.clone(), item.clone(), value.ifc_type(), want));
@@ -568,8 +573,8 @@ mod tests {
         assert_eq!(nearest("Qto_BuildingBaseQuantity", ["Qto_BuildingBaseQuantities", "Qto_Other"].into_iter()).as_deref(), Some("Qto_BuildingBaseQuantities"));
     }
 
-    /// A label where the template asks an identifier is found; the identifier, a national set and an item the template
-    /// does not have are not.
+    /// A label where the template asks an identifier is found, and an item the template does not have; the
+    /// identifier and a national set are not.
     #[test]
     fn a_property_of_another_type_than_its_template_s_is_found() {
         use crate::building::{Building, Place, Pset, Value};
@@ -577,7 +582,7 @@ mod tests {
             psets: vec![
                 Pset { name: "Pset_LandRegistration".into(), props: vec![("LandID".into(), id)] },
                 Pset { name: "TREpys_ParselOzellikSeti".into(), props: vec![("TAKS".into(), Value::Label("0.4".into()))] },
-                Pset { name: "Pset_LandRegistration".into(), props: vec![("Renk".into(), Value::Label("kırmızı".into()))] },
+                Pset { name: "Pset_LandRegistration".into(), props: vec![("LandTitleID".into(), Value::Id("12/345".into()))] },
             ],
             ..Place::default()
         };
@@ -588,5 +593,14 @@ mod tests {
         );
         let b = Building { site: site(Value::Id("1234/5".into())), ..Building::default() };
         assert_eq!(mistyped(&b), Vec::new());
+        let mut b = b;
+        b.building.qtos.push(crate::building::Qto {
+            name: "Qto_BuildingBaseQuantities".into(),
+            quantities: vec![("FootprintArea".into(), Value::Area(120.0)), ("FootPrintArea".into(), Value::Area(120.0))],
+        });
+        assert_eq!(
+            mistyped(&b),
+            [("Qto_BuildingBaseQuantities".to_owned(), "FootprintArea".to_owned(), "IfcAreaMeasure", String::new())]
+        );
     }
 }

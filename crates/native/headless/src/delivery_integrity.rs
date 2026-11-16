@@ -156,6 +156,7 @@ pub(crate) fn replay_row(row: &kentos_commands::CallRecord) -> kentos_commands::
             resumed: Vec::new(),
             previous: None,
             carried: Vec::new(),
+            bim: None,
         };
         verify(&report)
     })();

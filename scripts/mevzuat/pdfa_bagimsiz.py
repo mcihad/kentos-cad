@@ -9,7 +9,9 @@ of a delivery folder read by qpdf and Poppler, as another program reads it, agai
 - pdffonts: every font embedded (ISO 19005-2 6.2.11.4.1);
 - pdfimages -list and pdftotext: not a scanned page (e-PYS Md. 6/4): text or fonts on it, or no page-sized picture;
 - the name: EK-2 Tablo 2.1's nine fields joined by "_" (2.1.1), lengths 6, 2, 2, 4, 2, 3, 3, 2, 3;
-- the delivery list (teslim-listesi.csv), when there is one: each file once, its SHA-256 the file's.
+- the delivery list (teslim-listesi.csv), when there is one: each delivered file once — the PDFs, and a BIM permit
+  package's IFC model (docs/adr/8075) — its SHA-256 the file's. KentOS's own records (yayin.json, the form's record
+  kalite-kontrol-formu.json) and the list itself are not delivered files.
 
 It prints one JSON object: each file's problems (none: it passes) and the list's. Exit status 0 when nothing failed.
 
@@ -82,7 +84,9 @@ def main(folder: Path):
         with listed.open(encoding="utf-8-sig", newline="") as fh:
             rows = list(csv.DictReader(fh, delimiter=";"))
         names = [r["Dosya"] for r in rows]
-        if sorted(names) != [f.name for f in files]:
+        own = {"yayin.json", "teslim-listesi.csv", "kalite-kontrol-formu.json"}
+        delivered = sorted(p.name for p in folder.iterdir() if p.is_file() and p.name not in own)
+        if sorted(names) != delivered:
             verdict["list"].append("liste klasördeki dosyaları birer kez saymıyor")
         for r in rows:
             p = folder / r["Dosya"]

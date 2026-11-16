@@ -2880,6 +2880,7 @@ dependencies = [
  "kentos-services",
  "kentos-sheet",
  "kentos-sheet-ui",
+ "kentos-standards",
  "kentos-svg-core",
  "kentos-ui",
  "miniz_oxide 0.9.1",
@@ -3068,6 +3069,7 @@ dependencies = [
  "kentos-project",
  "kentos-scene-query",
  "kentos-sheet",
+ "kentos-standards",
  "miniz_oxide 0.9.1",
  "serde",
  "serde_json",
@@ -3574,6 +3576,14 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "kentos-standards"
+version = "0.1.0"
+dependencies = [
+ "kentos-python-env",
+ "serde_json",
 ]
 
 [[package]]

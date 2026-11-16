@@ -65,7 +65,7 @@ serde_json = { workspace = true }
 # command of another answers that it is not in this build. The contracts, the command types and KCAD stay whole
 # in every build, so the other disciplines' data in a file is kept as it is.
 default = ["mod-arch", "mod-map", "mod-gis", "mod-road"]
-mod-arch = ["dep:kentos-ifc", "kentos-ifc/read", "dep:kentos-digital-project"]
+mod-arch = ["dep:kentos-ifc", "kentos-ifc/geometry", "dep:kentos-digital-project"]
 # The terrain surfaces (TIN) road design and mapping share: their commands and the core's that drape onto them.
 terrain = ["dep:kentos-road"]
 # Mapping draws along road corridors and profiles (parcel boundaries, pipe profiles, field packages).

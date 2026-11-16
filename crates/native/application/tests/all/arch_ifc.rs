@@ -236,12 +236,18 @@ fn the_kunye_is_the_project_s_people_and_place() {
     }
 }
 
-/// Every standard property and quantity the section building's model writes, with its künye, has the type IFC 4.3's
-/// template asks (docs/adr/8074 §5: the profile's IDS checks it; an independent checker found the land registration's
-/// identifiers written as labels).
+/// Every standard property and quantity the section building's model writes, with its künye and its İmar durumu, is
+/// one IFC 4.3's template has, of the type it asks (docs/adr/8074 §5, 8075: the profile's IDS checks the type; an
+/// independent checker found the land registration's identifiers written as labels, the form the footprint misspelt).
 #[test]
 fn every_standard_property_has_its_template_s_type() {
-    for doc in [with_kunye(), building()] {
+    // With the parcel's İmar durumu too: the building's footprint and gross area are written then.
+    let mut zoned = with_kunye();
+    let mut settings = zoned.settings().clone();
+    settings.arch.get_or_insert_with(Default::default).zoning =
+        Some(kentos_commands::Zoning { parcel_area: 400.0, far: Some(1.5), coverage: Some(0.4), ..Default::default() });
+    zoned.set_settings(settings);
+    for doc in [with_kunye(), building(), zoned] {
         let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
         assert_eq!(kentos_ifc::catalog_schema::mistyped(&b), Vec::new());
     }

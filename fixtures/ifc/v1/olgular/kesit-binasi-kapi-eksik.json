@@ -924,6 +924,10 @@
       }
     ]
   },
+  "catalog": {
+    "id": "temel-2026",
+    "version": "2026.1"
+  },
   "classCodes": {
     "IfcBeam": "KRS",
     "IfcBuilding": "BNA",

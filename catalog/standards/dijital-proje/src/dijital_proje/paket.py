@@ -67,7 +67,8 @@ def _kat(kenar: float) -> bool:
 
 def _ad(ad: str, d: dict) -> str | None:
     """Dosya adının EK-2'ye uymayan yanı; uyuyorsa ``None``."""
-    govde = ad[:-4] if ad.lower().endswith(".pdf") else ad
+    # Uzantı alanlardan değildir: PDF de, BIM paketinin modeli de (.ifc, docs/adr/8075) aynı şablondadır.
+    govde = re.sub(r"\.[A-Za-z0-9]+$", "", ad)
     alanlar = govde.split("_")
     sablon = d["fileTemplate"]
     if len(alanlar) != len(sablon):

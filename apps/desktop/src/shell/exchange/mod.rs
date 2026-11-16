@@ -22,6 +22,7 @@ mod area_queries;
 mod area_tests;
 pub mod apply;
 mod atlas_export;
+pub(crate) mod permit_bim;
 pub(crate) mod permit_gate;
 pub(crate) mod permit_scope;
 pub(crate) mod permit_set;

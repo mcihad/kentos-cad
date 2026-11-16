@@ -20444,6 +20444,66 @@ class BeamsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BimPackage(_Model):
+    """A BIM permit package's request (docs/adr/8075 §2).
+    Attributes:
+        answers: The author's answers to the form's questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the
+            development level, the area tables …); a question left unanswered, or answered no, stops the publication.
+        building: One of the building program's buildings, by its id (docs/adr/8072 §2); none: the project as one building.
+    """
+    answers: list[FormAnswer] | Unset = UNSET
+    building: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.answers is not UNSET:
+            out["answers"] = [e0.to_json() for e0 in self.answers]
+        if self.building is not UNSET:
+            out["building"] = self.building
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BimPackage:
+        return cls(
+            answers=[FormAnswer.from_json(e0) for e0 in data["answers"]] if "answers" in data else UNSET,
+            building=data.get("building", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BimPackaged(_Model):
+    """A BIM permit package's result (docs/adr/8075 §2).
+    Attributes:
+        model: The model's file, a delivered file among the publication's, and the form's record (`kalite-kontrol-formu.json`):
+            KentOS's own record beside `yayin.json`, which names it with its digest.
+        results: The five results, each apart (plan/ifc-uyum.md §1): the file reads, the schema, Turkey's profile, the model and
+            the sheets agree, the administration's acceptance (KentOS does not say it).
+        rows: The form's 21 rows: the official answer (KentOS's evidence, the author's where KentOS leaves it) and the evidence.
+    """
+    model: str
+    form: str
+    results: list[PackageResult]
+    rows: list[FormRow]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["model"] = self.model
+        out["form"] = self.form
+        out["results"] = [e0.to_json() for e0 in self.results]
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BimPackaged:
+        return cls(
+            model=data["model"],
+            form=data["form"],
+            results=[PackageResult.from_json(e0) for e0 in data["results"]],
+            rows=[FormRow.from_json(e0) for e0 in data["rows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BlockCard(_Model):
     """A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its
     description, its size and its attributes.
@@ -41612,6 +41672,35 @@ class FontsReported(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormAnswer(_Model):
+    """The author's answer to one of the model quality control form's questions.
+    Attributes:
+        no: The question's number in EK-9 Tablo 9.1 (1–21). Unit: index.
+        yes: Evet (true) or Hayır (false).
+        note: What the author says of it, written on the form.
+    """
+    no: int
+    yes: bool
+    note: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["no"] = self.no
+        out["yes"] = self.yes
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormAnswer:
+        return cls(
+            no=data["no"],
+            yes=data["yes"],
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormBody(_Model):
     """A form's content: its items and the draft's revision (each kept change adds one).
     Attributes:
@@ -42132,6 +42221,40 @@ class FormRelease(_Model):
             body=FormBody.from_json(data["body"]),
             fields=data.get("fields", UNSET),
             note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormRow(_Model):
+    """One row of the model quality control form as published.
+    Attributes:
+        no: Unit: index.
+        answer: Evet, Hayır, or empty while the author has not answered.
+        evidence: KentOS's evidence: geçti, kaldı, inceleme.
+    """
+    no: int
+    title: str
+    answer: str
+    evidence: str
+    note: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["no"] = self.no
+        out["title"] = self.title
+        out["answer"] = self.answer
+        out["evidence"] = self.evidence
+        out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormRow:
+        return cls(
+            no=data["no"],
+            title=data["title"],
+            answer=data["answer"],
+            evidence=data["evidence"],
+            note=data["note"],
         )
 
 
@@ -68129,6 +68252,34 @@ class PackageResource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PackageResult(_Model):
+    """One of a package's five results.
+    Attributes:
+        key: `okunuyor`, `sema`, `profil`, `model_pafta`, `idare`.
+        holds: Whether it holds; none where it is not KentOS's to say (the administration's acceptance).
+    """
+    key: str
+    words: str
+    holds: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["words"] = self.words
+        if self.holds is not UNSET:
+            out["holds"] = self.holds
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackageResult:
+        return cls(
+            key=data["key"],
+            words=data["words"],
+            holds=data.get("holds", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PackageSurface(_Model):
     """The surface a package names: its id, name and the digest of what it is made of; and (docs/adr/3220) the surface
     itself as the package carries it: the file (`yuzey.xml`, a LandXML 1.2 TIN of the built surface), its corners' and
@@ -82659,6 +82810,10 @@ class PublishSheets(_Model):
     """
     Attributes:
         path: Absolute new or empty delivery folder; existing nonempty folders are refused.
+        bim: A BIM permit package (docs/adr/8075; Dijital Proje Yön. Md. 9/1, 15): beside the PDF/A sheets the building's IFC
+            model (EK-2's name) and its model quality control form, all from the same pinned drawing. The model is read back
+            from the folder and the form answered on it before anything is published; every finding left stops the
+            publication. PDF/A and separate PDFs only.
         dpi: None preserves each page's own physical raster setting. Unit: dpi.
         name: One PDF's leaf name; .pdf is appended when missing.
         naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and
@@ -82680,6 +82835,7 @@ class PublishSheets(_Model):
         sheets: None means every sheet; an explicit list is used in exactly its supplied order.
     """
     path: str
+    bim: BimPackage | None | Unset = UNSET
     dpi: int | None | Unset = UNSET
     drawing: str | None | Unset = UNSET
     geo: bool = True
@@ -82698,6 +82854,8 @@ class PublishSheets(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.bim is not UNSET:
+            out["bim"] = None if self.bim is None else self.bim.to_json()
         if self.dpi is not UNSET:
             out["dpi"] = self.dpi
         if self.drawing is not UNSET:
@@ -82727,6 +82885,7 @@ class PublishSheets(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> PublishSheets:
         return cls(
             path=data["path"],
+            bim=UNSET if "bim" not in data else None if data["bim"] is None else BimPackage.from_json(data["bim"]),
             dpi=data.get("dpi", UNSET),
             drawing=data.get("drawing", UNSET),
             geo=data["geo"] if "geo" in data else True,
@@ -96081,6 +96240,7 @@ class SheetsPublished(_Model):
     """
     Attributes:
         ready: True after full output/source checks; validate-only deliberately leaves this false.
+        bim: With `bim`: the package's model, form, five results and the form's rows (docs/adr/8075).
         pages: Each written page's audit and content digest (docs/adr/1090 §4), in the published order.
         previous: With `previous`: the earlier delivery, and the sheets whose pages were copied from it unchanged, in the
             published order (the others were made again).
@@ -96096,6 +96256,7 @@ class SheetsPublished(_Model):
     ready: bool
     manifest: str
     sha256: str
+    bim: BimPackaged | None | Unset = UNSET
     carried: list[str] | Unset = UNSET
     pages: list[SheetPublishedPage] | Unset = UNSET
     previous: PreviousPublication | None | Unset = UNSET
@@ -96113,6 +96274,8 @@ class SheetsPublished(_Model):
         out["ready"] = self.ready
         out["manifest"] = self.manifest
         out["sha256"] = self.sha256
+        if self.bim is not UNSET:
+            out["bim"] = None if self.bim is None else self.bim.to_json()
         if self.carried is not UNSET:
             out["carried"] = list(self.carried)
         if self.pages is not UNSET:
@@ -96138,6 +96301,7 @@ class SheetsPublished(_Model):
             ready=data["ready"],
             manifest=data["manifest"],
             sha256=data["sha256"],
+            bim=UNSET if "bim" not in data else None if data["bim"] is None else BimPackaged.from_json(data["bim"]),
             carried=list(data["carried"]) if "carried" in data else UNSET,
             pages=[SheetPublishedPage.from_json(e0) for e0 in data["pages"]] if "pages" in data else UNSET,
             previous=UNSET if "previous" not in data else None if data["previous"] is None else PreviousPublication.from_json(data["previous"]),
@@ -142766,6 +142930,8 @@ __all__ = [
     "BearingsMeeting",
     "BetweenPartitionExtent",
     "BezierPaperCadGeometry",
+    "BimPackage",
+    "BimPackaged",
     "BindLeaderEdit",
     "BindSlabsOperation",
     "BindXrefsOperation",
@@ -143693,6 +143859,7 @@ __all__ = [
     "FontsReport",
     "FontsReported",
     "ForgetMapWorkOperation",
+    "FormAnswer",
     "FormBody",
     "FormBreaking",
     "FormChange",
@@ -143708,6 +143875,7 @@ __all__ = [
     "FormPackage",
     "FormPreviewValue",
     "FormRelease",
+    "FormRow",
     "FormSeverity",
     "FormSeverityName",
     "FormSource",
@@ -144762,6 +144930,7 @@ __all__ = [
     "PackageResourceHowName",
     "PackageResourceKind",
     "PackageResourceKindName",
+    "PackageResult",
     "PackageSurface",
     "PackageWay",
     "PackageWayName",

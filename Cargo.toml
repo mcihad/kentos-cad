@@ -15,6 +15,8 @@ members = [
     "crates/shared/extensions",
     "crates/native/extension-host",
     "crates/native/python-env",
+    # The standards packages' Python rules asked from Rust (docs/adr/8075 §2.6).
+    "crates/native/standards",
     "crates/shared/qml",
     "crates/shared/maplibre",
     # DWG codec adapter (ADR 0586): OpenCADStudio's pinned, MPL-2.0 codec;
@@ -135,6 +137,7 @@ default-members = [
     "crates/shared/extensions",
     "crates/native/extension-host",
     "crates/native/python-env",
+    "crates/native/standards",
     "crates/shared/qml",
     "crates/shared/maplibre",
     "crates/native/dwg",

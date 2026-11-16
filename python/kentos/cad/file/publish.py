@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    BimPackage,
     PublishSheets,
     PublishStatus,
     PublishStatusReport,
@@ -39,7 +40,16 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
     öbürleri bugünün tarihiyle yeniden üretilir; önceki teslim olduğu gibi kalır.
     Değişip revizyonu ilerletilmeyen paftaya revision_unchanged uyarısı. Yalnız ayrı
     PDF'lerle, devam ettirilebilir yayın olmadan; geo, layers, dpi ya da bağlı resimler
-    önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz.
+    önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz. bim ile BIM ruhsat paketi
+    (Dijital Proje Yön. Md. 9/1, 15): aynı sabitlenmiş çizimden binanın IFC modeli (EK-2
+    adıyla) ve model kalite kontrol formunun kaydı (kalite-kontrol-formu.json)
+    paftaların yanına yazılır; model klasörden geri okunur, standart kural paketi
+    (dijital-proje) paftaları, paketi, formun 21 sorusunu ve müellifin answers ile
+    verdiği cevapları denetler; kalan her bulgu (cevapsız ya da Hayır cevaplı soru
+    dahil) hatadır ve hiçbir şey yayımlanmaz. Rapor beş sonucu (okunuyor, şema, Türkiye
+    profili, model ile pafta uyumu, idare kabulü) ve formun satırlarını ayrı verir;
+    teslim listesi modeli ve formu da sayar. PDF/A ve ayrı PDF'ler ister; Python yoksa
+    bim_rule_unavailable.
     """
     __slots__ = ()
     id = "file.publish.sheets"
@@ -56,6 +66,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         /,
         *,
         path: str,
+        bim: BimPackage | None | Unset = UNSET,
         dpi: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         geo: bool = True,
@@ -87,11 +98,23 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         üretilir; önceki teslim olduğu gibi kalır. Değişip revizyonu ilerletilmeyen paftaya
         revision_unchanged uyarısı. Yalnız ayrı PDF'lerle, devam ettirilebilir yayın
         olmadan; geo, layers, dpi ya da bağlı resimler önceki teslimdekinden başkaysa hiçbir
-        sayfa kopyalanmaz.
+        sayfa kopyalanmaz. bim ile BIM ruhsat paketi (Dijital Proje Yön. Md. 9/1, 15): aynı
+        sabitlenmiş çizimden binanın IFC modeli (EK-2 adıyla) ve model kalite kontrol
+        formunun kaydı (kalite-kontrol-formu.json) paftaların yanına yazılır; model
+        klasörden geri okunur, standart kural paketi (dijital-proje) paftaları, paketi,
+        formun 21 sorusunu ve müellifin answers ile verdiği cevapları denetler; kalan her
+        bulgu (cevapsız ya da Hayır cevaplı soru dahil) hatadır ve hiçbir şey yayımlanmaz.
+        Rapor beş sonucu (okunuyor, şema, Türkiye profili, model ile pafta uyumu, idare
+        kabulü) ve formun satırlarını ayrı verir; teslim listesi modeli ve formu da sayar.
+        PDF/A ve ayrı PDF'ler ister; Python yoksa bim_rule_unavailable.
 
         Args:
             doc: The drawing it works on.
             path: Absolute new or empty delivery folder; existing nonempty folders are refused.
+            bim: A BIM permit package (docs/adr/8075; Dijital Proje Yön. Md. 9/1, 15): beside the PDF/A sheets the building's IFC
+                model (EK-2's name) and its model quality control form, all from the same pinned drawing. The model is read back
+                from the folder and the form answered on it before anything is published; every finding left stops the
+                publication. PDF/A and separate PDFs only.
             dpi: None preserves each page's own physical raster setting. Unit: dpi.
             drawing:
             geo:
@@ -129,6 +152,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         """
         return self.execute_input(doc, PublishSheets(
             path=path,
+            bim=bim,
             dpi=dpi,
             drawing=drawing,
             geo=geo,
@@ -151,6 +175,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         /,
         *,
         path: str,
+        bim: BimPackage | None | Unset = UNSET,
         dpi: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         geo: bool = True,
@@ -171,6 +196,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         """
         return self.plan_input(doc, PublishSheets(
             path=path,
+            bim=bim,
             dpi=dpi,
             drawing=drawing,
             geo=geo,
@@ -193,6 +219,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         /,
         *,
         path: str,
+        bim: BimPackage | None | Unset = UNSET,
         dpi: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         geo: bool = True,
@@ -213,6 +240,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         """
         return self.validate_input(doc, PublishSheets(
             path=path,
+            bim=bim,
             dpi=dpi,
             drawing=drawing,
             geo=geo,
@@ -235,6 +263,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         /,
         *,
         path: str,
+        bim: BimPackage | None | Unset = UNSET,
         dpi: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         geo: bool = True,
@@ -260,6 +289,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         """
         return self.answer_input(doc, PublishSheets(
             path=path,
+            bim=bim,
             dpi=dpi,
             drawing=drawing,
             geo=geo,

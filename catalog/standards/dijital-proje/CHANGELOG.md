@@ -10,6 +10,10 @@
   alır; verilince EK-9 dosyadan cevaplanır, `kalite` ve `zorunlu` yinelenmez. 9. soru modelin bağlamının kayıttaki
   zorunlu alanlarını da sayar (EK-7 Tablo 7.8). Formun cevapları başka bir okuyucunun (IfcOpenShell) olgularında ve
   profilin IDS'inin bağımsız denetleyicisinde (IfcTester) aynı çıkar.
+- Yeni kural: BIM ruhsat paketinin kararı (`bim`, docs/adr/8075; Md. 9/1, 15; e-PYS Md. 4/2, 5/1–2): paftaların ve
+  paketin kuralı (`ruhsat`), formun kalan satırları ve müellifin cevabı birlikte; cevapsız ya da Hayır cevaplı inceleme
+  sorusu da yayını durdurur. Beş sonuç (okunuyor, şema, Türkiye profili, model ile pafta uyumu, idare kabulü) ayrı.
+- `paket`: EK-2'nin ad denetimi uzantıyı alan saymaz; modelin `.ifc` adı da aynı şablonla denetlenir.
 
 ## 0.6.0 — 16 Kasım 2026
 

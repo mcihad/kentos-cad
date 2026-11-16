@@ -33,7 +33,7 @@ fn evidence(case: &str) -> PathBuf {
     out
 }
 
-fn section_building() -> App {
+pub(crate) fn section_building() -> App {
     let (mut app, _) = App::boot(None);
     let snapshot = kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/section-building.kcad"))
         .expect("decodes");
@@ -61,7 +61,7 @@ fn section_building() -> App {
 
 /// Ruhsat takımı with its particulars given, the set made and its publication's check finished, into `path`. The
 /// parcel's İmar durumu given first (the first sheet's table reads its area), as Mimari › Parsel would.
-fn permit_publication(app: &mut App, path: &Path) {
+pub(crate) fn permit_publication(app: &mut App, path: &Path) {
     let doc = &mut app.document.as_mut().expect("a drawing").model;
     let mut settings = doc.settings().clone();
     settings.arch.get_or_insert_with(Default::default).zoning =
@@ -93,7 +93,7 @@ fn permit_publication(app: &mut App, path: &Path) {
 }
 
 /// The window's job let finish, as its ticks do.
-fn finish(app: &mut App) {
+pub(crate) fn finish(app: &mut App) {
     for _ in 0..1200 {
         if !app.sheet_publish_running() {
             return;
@@ -105,7 +105,7 @@ fn finish(app: &mut App) {
 }
 
 /// Denetle, its report, and the gate's answer.
-fn check(app: &mut App) {
+pub(crate) fn check(app: &mut App) {
     let _ = app.sheet_publish_event(Publish::Plan);
     finish(app);
     app.permit_gate_settle();
