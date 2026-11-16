@@ -177,6 +177,10 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
   elipsoit yüksekliğiyse "ITRF96" (EK-7'nin notu), bilinmiyorsa yazılmaz. ±0.00'ın kotu belediyenin röperinden, yani
   deniz seviyesine göre (ortometrik) olduğundan EK-7'nin ITRF96 notu yerine projenin söylediği yazıldı.
 - Yerel koordinatlı çizimde sistem yazılmaz (Denetim eksik sayacak).
+- **Güncelleme (16 Kasım 2026, [ADR 8072](8072-buildings-shared-basement-location.md) §3):** projenin yerel sistemi
+  (taban ve düzlem) IFC'ye taban sistemiyle, yerel düzlem döndürülüp ölçeklenerek yazılır (`IfcMapConversionScaled`;
+  `Scale` birim içindir, yükseklik ölçeklenmez); ±0.00'ın kotu bilinmiyorsa yüksekliğe 0 yazılmaz, konum hiç yazılmaz ve
+  söylenir. ±0.00'ın kotu Vaziyet planının verisidir ama Proje ayarları › Mimari › İmar durumu'nda girilir.
 
 ### 9. EK-9 model kalite kontrol formu ve Mimari denetim (3. bölüm, üçüncü adım)
 

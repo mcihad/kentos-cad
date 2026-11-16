@@ -8,8 +8,9 @@
 //! - **3, Proje ve dosya isimlendirmesi (Md. 6, EK-1):** no project code from the administration (none, or the künye's
 //!   000000): `digital_project_code_missing`.
 //! - **4, Mahal no ve mahal ismi (Md. 10):** rooms without a number or a name, each one: `digital_space_unnamed`.
-//! - **6, Koordinat sistemi (Md. 13, EK-7 Tablo 7.6–7.7):** a drawing in local coordinates, a system that is no TUREF
-//!   zone, or no ±0.00 elevation: `digital_system_wrong`.
+//! - **6, Koordinat sistemi (Md. 13, EK-7 Tablo 7.6–7.7):** no system, one the file cannot say (geographic, a local
+//!   system whose transform shears or mirrors; docs/adr/8072 §3), a system that is no TUREF zone, or no ±0.00
+//!   elevation: `digital_system_wrong`.
 //! - **12, Mahal:** no room in the model: `digital_no_spaces`.
 //! - **21, PDF ve IFC uyumu (Md. 9):** objects of the drawing the model does not hold (no body, no wall, no area, a
 //!   ramp): `digital_model_loss`, those objects its own.
@@ -178,9 +179,10 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V)
                         row.no,
                         INFO_ARTICLE.short()
                     ),
-                    "Dosya › Proje ayarları'nda koordinat sistemi olarak binanın TUREF 3° dilimini (EPSG:5253–5259; \
-                     Sivas TM33, EPSG:5255) seçin; ±0.00'ın mutlak kotunu Mimari › Parsel ve bahçe mesafeleri'nde \
-                     (Vaziyet planı) verin.",
+                    "Dosya › Proje ayarları › Koordinat sistemi'nde binanın TUREF 3° dilimini (EPSG:5253–5259; Sivas \
+                     TM33, EPSG:5255) seçin; çizim yerel koordinatlardaysa Özel sistem… ile bu dilimin üstünde yerel \
+                     sistemi ortak noktalardan benzerlik dönüşümüyle tanımlayın. ±0,00'ın mutlak kotunu Proje ayarları \
+                     › Mimari › İmar durumu'nda (±0,00 kotu) verin.",
                     INFO_ARTICLE,
                     &["T7.6", "T9.1/6"],
                 ),

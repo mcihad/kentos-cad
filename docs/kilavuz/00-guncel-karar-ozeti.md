@@ -112,8 +112,11 @@
       (`building_of_level`); `.kcad` mimari verisi 9.
     - Bina başına model: `cad.arch.ifc` `building`; bina sahada kendi ±0.00'ında (`Building::zero`), katların kotu ona
       göre, nesneler katlarına göre (çift öteleme yok); proje ve saha her dosyada aynı GlobalId'yle, öbür kimlikler
-      binanın dosya adından. IFC dışa aktar birden çok binada her binaya EK-2 adlı bir dosya yazar. Kalan: kontrol
-      noktalarıyla konum, ortak bodrum alanı, plan kararları.
+      binanın dosya adından. IFC dışa aktar birden çok binada her binaya EK-2 adlı bir dosya yazar.
+    - Konum (§3): IFC'nin sistemi ve harita dönüşümü bina ile yol için tek yerden (`ifc_system::of`); yerel sistemde
+      taban sistem ve yerel düzlem döndürülüp ölçeklenerek (`IfcMapConversionScaled`; `Scale` birim içindir, yükseklik
+      ölçeklenmez); ±0.00'ın kotu bilinmiyorsa konum yazılmaz ve söylenir, 0 sayılmaz; kaydıran afin yazılmaz. Kalan:
+      ortak bodrum alanı, ruhsat takımında bina seçimi, plan kararları.
   - **B10 yapıldı (16 Kasım 2026; [ADR 8071](../adr/8071-geometry-accuracy.md); BIM-10 `[x]`):**
     - Yayın kaynağı kesit modelidir (`Model::exact`): döşeme ve mahal parçalarından, duvar düz parçalı gövdesinden geri
       alınarak (`arc_recover`); IFC profili `IfcIndexedPolyCurve` + `IfcArcIndex`; parça sayısı görüntünün işidir.

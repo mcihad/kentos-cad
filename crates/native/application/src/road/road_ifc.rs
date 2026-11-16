@@ -83,13 +83,14 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
         }
     };
     let mut warnings = Vec::new();
-    let crs = kentos_project::systems::own(doc.settings()).map(|n| {
-        let name = if n.code.starts_with("EPSG:") { n.code.clone() } else { n.name.clone() };
-        (name, n.title.clone())
-    });
-    if crs.is_none() {
-        warnings.push(losses("Projenin koordinat sistemi yok; IFC'ye harita dönüşümü (IfcMapConversion) yazılmadı.".into()));
-    }
+    // The building's system (docs/adr/8072 §3): the profiles' heights are the project's own, the file's zero at 0.
+    let crs = match crate::ifc_system::of(doc, Some(0.0)) {
+        Ok(c) => Some(c),
+        Err(why) => {
+            warnings.push(losses(format!("IFC'ye harita dönüşümü (IfcMapConversion) yazılmadı: {why}.")));
+            None
+        }
+    };
     let mut file = IfcFile {
         project: doc.name().to_owned(),
         crs: crs.clone(),
@@ -175,7 +176,7 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
         path: path.display().to_string(),
         schema: "IFC4X3_ADD2".into(),
         alignments: out,
-        crs: crs.map(|c| c.0),
+        crs: crs.map(|c| c.name),
         bytes: text.len() as u64,
         sha256,
     };

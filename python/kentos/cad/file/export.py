@@ -727,7 +727,7 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
             replace_source: Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file
                 (a DWG or a DXF without KentOS's APPID) is refused, `source_overwrite`.
             uids: Only the named persistent objects; intersected with layers when both are given.
-            version: A DWG file signature. AC1032 is shared by multiple AutoCAD product years.
+            version: A DWG file signature; one signature (AC1032) stands for several release years of the format.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1546,7 +1546,7 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
             path: An absolute path ending `.gml` (or `.xml`).
             layers: The layers, by id (a group gives its layers); empty: every layer with objects.
             overwrite: Write over the GML and its `.xsd` when they are there.
-            schema: Write the `.xsd` beside the file (GDAL and QGIS read the fields' types from it); absent: written.
+            schema: Write the `.xsd` beside the file (GIS readers take the fields' types from it); absent: written.
             time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
                 written layer with time settings (of every one when `fields` names them); a layer without them whole.
             request_id: Names this write: sent again with the same call it is answered as
@@ -1803,11 +1803,12 @@ class _FileExportIfc(LocalCommand[ExportIfc, IfcExported, IfcExported]):
     IfcPolynomialCurve üstünde; IfcOpenShell'in eşlemesi); her düzen sıfır boylu
     parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si
     ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi
-    IfcMapConversion ile IfcProjectedCRS'e. Uzunluk metre, açı radyan. alignments id ya
-    da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat.
-    Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez.
-    Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment,
-    invalid_ifc.
+    IfcProjectedCRS'e harita dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek,
+    IfcMapConversionScaled; yazılamayan sistem export_losses). Uzunluk metre, açı
+    radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz;
+    stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç;
+    çizimi değiştirmez. Retler: not_a_road_project, invalid_file_path, file_exists,
+    unknown_alignment, invalid_ifc.
     """
     __slots__ = ()
     id = "file.export.ifc"
@@ -1840,11 +1841,12 @@ class _FileExportIfc(LocalCommand[ExportIfc, IfcExported, IfcExported]):
         IfcPolynomialCurve üstünde; IfcOpenShell'in eşlemesi); her düzen sıfır boylu
         parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si
         ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi
-        IfcMapConversion ile IfcProjectedCRS'e. Uzunluk metre, açı radyan. alignments id ya
-        da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat.
-        Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez.
-        Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment,
-        invalid_ifc.
+        IfcProjectedCRS'e harita dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek,
+        IfcMapConversionScaled; yazılamayan sistem export_losses). Uzunluk metre, açı
+        radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz;
+        stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç;
+        çizimi değiştirmez. Retler: not_a_road_project, invalid_file_path, file_exists,
+        unknown_alignment, invalid_ifc.
 
         Args:
             doc: The drawing it works on.

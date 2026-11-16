@@ -523,14 +523,17 @@ Açıklıklı duvarın hacmi, dolu hacim eksi açıklıklardır. Bütün gövdel
 
 #### BIM-11 — Çok bina, ortak bodrum ve vaziyet [~]
 
-**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1):** programın binası
+**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§3):** programın binası
 kodu (EK-2 §2.3: iki büyük harf ya da rakam, tek binada "00"), kullanım türü ve projenin ±0.00'ına göre ±0.00'ıyla;
 birden çok binanın kapladığı kat (ortak bodrum) seçilen binanın katı sayılır, alanı bir kez; her nesnenin binası
 katından okunur (`building_of_level`); `.kcad` mimari verisi 9; Bina programı › Binalar'da alanlar ve "Ortak katlar".
 Bina başına model (§2): `cad.arch.ifc`'nin `building`'i; bina kendi ±0.00'ında, katları ona göre; bodrum sayıldığı
-binada; proje ve saha her dosyada aynı kimlikle; IFC dışa aktar her binaya EK-2 adlı bir dosya. **Kalan:** konum ve kot
-(IFC-05 kontrol noktaları, §3), ortak bodrum alanının emsal ve metrajda bir kez sayılması ve ruhsat takımında bina
-seçimi (§4), onaylı plan kararları (§5).
+binada; proje ve saha her dosyada aynı kimlikle; IFC dışa aktar her binaya EK-2 adlı bir dosya. Konum (§3): yerel
+sistemde çizilen model IFC'ye taban sistemiyle (TUREF dilimi) ve yerel düzlem döndürülüp ölçeklenerek yazılır
+(`IfcMapConversionScaled`; yükseklik ölçeksiz); bina ve yolun dosyası aynı yerden; ±0.00'ın kotu bilinmiyorsa konum
+yazılmaz ve söylenir (0 sayılmaz); IfcOpenShell üç kontrol noktasını anketteki yerine oturtmanın artığı içinde (en çok
+0,45 mm) düşürür; yerleşim zinciri bütün örnek dosyalarda bağımsız denetlenir. **Kalan:** ortak bodrum alanının emsal
+ve metrajda bir kez sayılması ve ruhsat takımında bina seçimi (§4), onaylı plan kararları (§5).
 
 **Kullanıcı sonucu:** Bir parselde birden çok blok ve ortak bodrum tek projede durur. Her bina kendi kodu, katları ve
 künyesiyle pilotta ayrı model dosyası verir; saha ve parsel bilgileri hepsinde aynıdır. Dayanak EK-2 §2.3 ve Tablo 2.1; EK-6 6.7, 6.55;

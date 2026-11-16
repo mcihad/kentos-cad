@@ -95,7 +95,7 @@ pub struct ExportDwg {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub annotations: Option<crate::DxfAnnotations>,
-    /// A DWG file signature. AC1032 is shared by multiple AutoCAD product years.
+    /// A DWG file signature; one signature (AC1032) stands for several release years of the format.
     #[serde(default)]
     pub version: DwgVersion,
 }

@@ -1156,6 +1156,8 @@ pub mod wall_distances;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/arch_ifc.rs"]
 pub mod arch_ifc;
+// IFC dosyalarının koordinat sistemi ve harita dönüşümü: binanın ve yolun ortak kaynağı (docs/adr/8072 §3).
+pub mod ifc_system;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/arch_recognize.rs"]
 pub mod arch_recognize;

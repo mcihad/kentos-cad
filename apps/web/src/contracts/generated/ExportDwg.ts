@@ -21,6 +21,6 @@ uids?: Array<string>, layers?: Array<string>, overwrite: boolean,
  */
 replaceSource?: boolean, annotations?: DxfAnnotations, 
 /**
- * A DWG file signature. AC1032 is shared by multiple AutoCAD product years.
+ * A DWG file signature; one signature (AC1032) stands for several release years of the format.
  */
 version: DwgVersion, };

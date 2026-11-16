@@ -148,7 +148,7 @@ düzeltildi. Bir alan "verisi çizimde olduğunda" yazılıyorsa örnekte yoksa 
 | | `IfcPerson.Roles`, `IfcOrganization.Roles`, `IfcActorRole.UserDefinedRole` | ✗ (rol yalnız kişi-kuruluşta) | künye | IFC-02 |
 | Gösterim bağlamı (EK-7 7.8) | `TrueNorth` | ✗ | kuzey oku, projenin kuzeyi | IFC-02 |
 | Ölçüm anotasyonu (EK-7 7.9) | `IfcAnnotation`: `Name`, `Description`, `PredefinedType = SURVEY` | ✗ | Ölçüm ve vaziyet bilgisi. Uygulanabilirlik B1’de kaynak ve kurum profiliyle belirlenir | IFC-02 |
-| Koordinat sistemi | TUREF dilimi, datum, projeksiyon, dönüşüm | ✓ (ADR 8047 §8) | yerel orijin ve kontrol noktaları | IFC-05 |
+| Koordinat sistemi | TUREF dilimi, datum, projeksiyon, dönüşüm | ✓ (ADR 8047 §8; yerel sistem döndürülüp ölçeklenerek ADR 8072 §3) | `TrueNorth`; kontrol noktalarının projede saklanması | IFC-05 |
 
 **Değer durumları.** Bilinmiyor, uygulanmaz, hayır, sıfır ve eksik ayrıdır. Boş metinle yazılmış bir özellik gerekli bilgiyi
 karşılamaz; değeri olmayan alan yazılmaz ve "eksik" diye raporlanır. Standart şablonlar, Türkiye'nin `TREpys_` setleri ve
@@ -172,8 +172,9 @@ karşılaştırılır.
 - **Sistem (EK-7 Tablo 7.6–7.8).** `IfcProjectedCRS`: TUREF'in 3° dilimleri EPSG:5253–5259, merkez meridyeni, metre;
   `IfcMapConversion`: doğu, kuzey, yükseklik, X ekseninin doğrultusu, ölçek. EPSG kodunu yazmak dönüşüm yapmak değildir
   (kılavuz §5). [IfcMapConversion](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcMapConversion.htm)
-- **Bugün.** Çizim projenin sisteminde olduğundan dönüşüm düzlemde sıfır, yükseklikte ±0.00'ın kotu. ±0.00'ın kotu
-  bilinmiyorsa dönüşüme 0 yazılabiliyor; form eksikliği ayrıca görüyor.
+- **Bugün (ADR 8072 §3).** Çizim projenin sistemindeyse dönüşüm düzlemde sıfır; yerel sistemdeyse taban sistem ve yerel
+  düzlem döndürülüp ölçeklenerek (`IfcMapConversionScaled`); yükseklikte ±0.00'ın kotu. ±0.00'ın kotu bilinmiyorsa konum
+  yazılmaz ve dışa aktarma ile form nedenini söyler.
 - **Hedef.** İki seçenek: yerel orijinli model ve haritaya açık dönüşüm (öteleme, dönüş, ölçek), ya da bugünkü mutlak
   koordinat. Koordinat iki kez ötelenmez; bağıl kat kotuna mutlak kot iki kez eklenmez; bilinmeyen datumda sıfır varsayılmaz.
 - **Yükseklik.** Projenin datumu (ortometrik ya da elipsoit), yerel röper, dönüşüm parametresi ve EK-7'nin notu ayrı
@@ -353,12 +354,20 @@ bağımsız okuyucuda okunur.
 
 #### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [~]
 
-**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§2, BIM-11 ile):** bina
+**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§3, BIM-11 ile):** bina
 başına model dosyası (`cad.arch.ifc` `building`; masaüstünde her bina EK-2 adlı ayrı dosya); proje ve saha her dosyada
 aynı kimlikle, başka ortak kimlik yok; her bina kendi ±0.00'ında, katları ona göre, nesneler katlarına göre (çift
 öteleme yok); ortak bodrum sayıldığı binada; IfcOpenShell iki dosyada katların mutlak kotlarını yerleşim zincirinden doğru
-okur. **Kalan:** yerel orijin ve harita dönüşümü kontrol noktalarıyla (dönüş, ölçek), kotu bilinmeyen ±0.00'ın eksik
-olarak söylenmesi, yerleşim zincirinde döngü denetimi.
+okur. Konum (§3): yerel sistemli projede IFC'nin sistemi taban (TUREF dilimi), dönüşüm yerel düzlem: öteleme yerel
+sıfırın harita koordinatı (proje baz noktası ile ölçüm noktası çakışık), X ekseni dönüşün doğrultusu, ölçek IFC 4.3'ün
+`IfcMapConversionScaled`'ının FactorX/FactorY'si (`Scale` birim içindir; yükseklik ölçeksiz); bina ve yol aynı işlevden
+(`ifc_system`); kaydıran ya da aynalayan afin, coğrafi sistem yazılmaz ve söylenir. ±0.00'ın kotu bilinmiyorsa dönüşüm 0
+yüksekliğe yazılmaz: konum yazılmaz, `export_losses` ve EK-9'un 6. sorusu nedenini söyler. **İlk kabul:** döndürülmüş
+yerel modelde (23,5°, ölçek 0,99989, gürültülü anket) üç kontrol noktası IfcOpenShell'de anketteki yerine oturtmanın
+kendi artığı içinde (1e-6 m; en çok 0,45 mm) düşer ve geri döner; katlar haritada ±0.00'ın kotunda ve 3 m üstünde;
+yerleşim zinciri (döngü, yabancı yerleşim) bütün örnek dosyalarda denetlenir, çift öteleme mutlak kotlardan. **Kalan:**
+ortak bodrum alanının bir kez sayılması (BIM-11 §4); `TrueNorth`; kontrol noktalarının projede saklanması; idarenin
+ölçüm toleransı kurum profiliyle.
 
 **Kullanıcı sonucu:** Model, karşı programda doğru yerde ve doğru kotta açılır; pilotta iki blok iki dosya olur ve ortak proje bilgileri
 ikisinde aynıdır. Nesneleri BIM-11'den gelir.

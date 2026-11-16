@@ -60,8 +60,9 @@ pub struct Input<'a> {
     pub net_area: &'a mut dyn FnMut(&SpaceFields) -> Option<f64>,
     pub arch: Option<&'a ArchSettings>,
     pub particulars: Particulars,
-    /// The project's system (EK-7 Tablo 7.6–7.7; `crate::crs::projected`), none for a drawing in local coordinates.
-    pub crs: Option<crate::crs::Crs>,
+    /// The project's system with the model's place in it (EK-7 Tablo 7.6–7.7; `crate::crs`), or why the file says
+    /// none (docs/adr/8072 §3): no system, one a map conversion cannot carry, or ±0.00 of unknown height.
+    pub crs: Result<crate::crs::Crs, String>,
     /// Each storey's emsal areas as the ratios count the rooms (docs/adr/8069): the spatial zones' grounds.
     pub emsal: Vec<EmsalArea>,
     /// The building program's units with their rooms (docs/adr/8069): the groups of spaces.
@@ -791,6 +792,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         rooms,
         building: scope,
     } = input;
+    let (crs, crs_why) = match crs {
+        Ok(c) => (Some(c), None),
+        Err(why) => (None, Some(why)),
+    };
     // Its ±0.00 over the project's (docs/adr/8072 §2): the building stands there, its storeys' elevations over it; the
     // objects keep their places over their storeys (no second offset).
     let zero = scope.as_ref().map_or(0.0, |b| b.zero);
@@ -2043,6 +2048,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         groups: group_list,
         grids,
         crs,
+        crs_why,
         layer_sets,
         zero,
     };

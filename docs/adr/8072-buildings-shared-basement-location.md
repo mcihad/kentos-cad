@@ -1,15 +1,16 @@
 # ADR 8072: Çok bina, ortak bodrum, konum ve kot
 
-- **Durum:** kısmen uygulandı (16 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-11,
+- **Durum:** kısmen uygulandı (16 Kasım 2026; §1–§3). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-11,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-05; uygulama sırasında B11. Bu ADR maddenin bütün adımlarını tutar; koddaki
-  "docs/adr/8072 §N" atıfları bölümleri gösterir: §1 binalar (kod, kullanım, ±0.00, ortak kat), §2 bina başına model. Kararların numarası
+  "docs/adr/8072 §N" atıfları bölümleri gösterir: §1 binalar (kod, kullanım, ±0.00, ortak kat), §2 bina başına model, §3 konum
+  (yerel sistem, harita dönüşümü, kot, yerleşim zinciri). Kararların numarası
   bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar numarasız son bölümlerdedir.
 - **Bağlam:** ADR [0773](0773-building-program-units-and-design-brief.md) (bina programı), [0784](0784-building-wing-window-and-common-area-shares.md) §1
   (binaların ve kanatların katları), [8032](8032-site-plan-parcel-setbacks-and-datum.md) (vaziyet planı, saha röperi),
   [8047](8047-ifc-building-export.md) (binanın IFC'si), [8069](8069-room-zone-far-model.md) (emsal bölgeleri).
 - **Dayanak:** Dijital Proje Yönetmeliği (RG 5.8.2026/33331) EK-2 §2.3 ve Tablo 2.1 (bina kodu, dosya adı); EK-6 Tablo
-  6.7 (`IfcBuilding`), 6.55 (`IfcSite`); EK-7'nin ortak öznitelikleri. Metinler `mevzuat/bim/ek-2-…`, `ek-6-1-…`,
-  `ek-6-2-…`.
+  6.7 (`IfcBuilding`), 6.55 (`IfcSite`); EK-7'nin ortak öznitelikleri ve Tablo 7.6–7.8 (koordinat sistemi, harita
+  dönüşümü, temsil bağlamı). Metinler `mevzuat/bim/ek-2-…`, `ek-6-1-…`, `ek-6-2-…`, `ek-7-proje-siniflari.md`.
 - **Web:** dokunulmadı (ADR 0228).
 
 ## §1. Binalar: kod, kullanım, ±0.00, ortak kat
@@ -96,16 +97,96 @@ proje, başka ortak kimlik yok, katların yerleşim zincirinden mutlak kotları 
 Elevation'ı 0, döşemeler A'da 4 B'de 0, B'nin duvarları +1,20'de; masaüstünde `two_blocks_go_out_as_two_files`; ortak
 durum (`cad.arch.ifc` 27: programda olmayan bina reddi).
 
+## §3. Konum: yerel sistem, harita dönüşümü, kot
+
+**Araştırma.**
+
+- **EK-7 Tablo 7.6 (`IfcProjectedCRS`, PDF s. 227–228):** ad TUREF'in 3° dilimine karşılık gelen EPSG kodu (5253–5259);
+  jeodezik datum TUREF; düşey datum "Yükseklik referans sistemi olarak ITRF96 kullanılır. Gerektiğinde yerel deniz
+  seviyesi referansına (TUDKA99) dönüşüm parametreleri ayrıca belirtilir"; projeksiyon Transverse Mercator; zon merkez
+  meridyeni; birim METRE. **Tablo 7.7 (`IfcMapConversion`, s. 229–230):** doğu, kuzey, düşey yükseklik; X ekseninin
+  doğu ve kuzey bileşeni "yerel X ekseninin harita koordinat sisteminin yatay düzlemi içindeki yönünü" verir; ölçek
+  "Koordinat referans sisteminin (CRS) birimleri ile mühendislik koordinat sisteminin birimleri aynı olmadığında
+  kullanılacak ölçek değeri", verilmezse 1. **Tablo 7.8 (s. 231–232):** `WorldCoordinateSystem` yerel sıfır ile
+  dönüşümün ötelemesinin bağlı olduğu nokta arasındaki ötelemedir; "Tercih edilen uygulamada her iki nokta (genellikle
+  'proje baz noktası' ve 'ölçüm noktası' olarak adlandırılır) çakışık olmalıdır"; `TrueNorth`, harita dönüşümü varken
+  bilgi içindir, tutarsızlıkta dönüşüm geçerlidir.
+- **IFC 4.3** (buildingSMART IFC4.3.x-development, `IfcMapConversion.md`): eksenler önce `Scale` ile ölçeklenir ("one scale
+  is applied equally to x, y and z, to convert units"), sonra θ = atan(XAxisOrdinate / XAxisAbscissa) kadar saat
+  yönünün tersine döner, sonra Eastings, Northings, OrthogonalHeight kadar ötelenir; yerel z ekseni haritanınkine hep
+  paraleldir. `IfcMapConversionScaled.md`: "additional different factors multiply x, y and z, to scale coordinates - not
+  units" (FactorX, FactorY, FactorZ). Şema (IfcOpenShell 0.9.0'ın IFC4X3_ADD2'si): OrthogonalHeight zorunlu;
+  XAxisAbscissa, XAxisOrdinate, Scale seçimli; ölçekli dönüşümün üç katsayısı zorunlu. `IfcLocalPlacement.md`: eleman
+  kapsayan yapının (kapsama ilişkisindekiyle aynı) yerleşimine göre, açıklık deldiği elemana, parça bütününe, kapı ve
+  pencere doldurduğu açıklığa göre; saha mutlak; "Rules to prevent cyclic relative placements have to be introduced on
+  the application level".
+- **Okuyucu:** IfcOpenShell 0.9.0'ın `ifcopenshell.util.geolocation`'u `Scale`'i birim ölçeği sayar ve x, y ile birlikte
+  z'ye de uygular; ölçekli dönüşümün katsayılarını eksen başına okur.
+- **Üreticiler (karşılaştırma için):** Revit'in IFC dışa aktarıcısı projenin ölçek katsayısını ("scale factor * surface
+  distance = grid distance") `IfcMapConversion.Scale`'e yazıyor (OSArch wiki, topluluk kaynağı; Autodesk'in ve
+  Graphisoft'un kendi sayfaları otomatik okumaya 403 verdi). IFC 4.3'e göre okuyan program bu katsayıyla yükseklikleri de
+  ölçekler: 0,99983'te 30 m'lik bina 5 mm kısalır.
+- **KentOS'ta olan:** projenin yerel sistemi (ADR 0168 §1: `CrsSystem::Local`, taban ve düzlem: saat yönünün tersine dönüş,
+  ölçek, öteleme ya da afin) ve Özel koordinat sistemi'nin Ortak noktalardan hesapla'sı (en küçük kareler, artıklar, m0;
+  ADR 0168 §6). Yerel orijin ve kontrol noktaları buydu; IFC ise yerel sistemin adını dönüşümsüz yazıyordu, ±0.00'ın
+  kotu bilinmezse yüksekliğe 0 yazıyordu.
+
+**Karar.**
+
+9. **Bina ve yol aynı yerden** (`ifc_system::of`): projenin sistemi listenin düzlem bir sistemiyse çizim onun içindedir,
+   dönüşüm düzlemde sıfır. Yerel sistem düzlem bir tabanda (listenin sistemi ya da projenin TM tanımı) ise IFC'nin sistemi
+   tabandır (EPSG:5256 bütün alanlarıyla), dönüşüm yerel düzlemdir: Eastings ve Northings ötelemesi (yerel sıfırın
+   harita koordinatı: proje baz noktası ile ölçüm noktası çakışık, EK-7 7.8), X ekseni (cos θ, sin θ), `Scale` 1
+   (birimler aynı); yerel ölçek IFC 4.3'ün `IfcMapConversionScaled`'ının FactorX ve FactorY'sine, FactorZ 1 (yükseklik
+   ölçeklenmez). Ölçeksiz yerel sistem düz `IfcMapConversion`'dır. Eksenleri dik afin her eksende kendi sütun boyuyla
+   yazılır; kaydıran ya da aynalayan afin, coğrafi sistem, düzlem olmayan taban yazılmaz ve nedeni söylenir: yerine
+   benzerlik oturtulmaz.
+10. **Kot:** OrthogonalHeight dosyanın sıfırının yüksekliğidir: binada ±0.00'ın mutlak kotu (Proje ayarları › Mimari ›
+    İmar durumu'ndaki ±0,00 kotu), yolda 0 (yükseklikleri projenin kendi kotları). Bilinmeyen kot 0 sayılmaz: alan zorunlu
+    olduğundan dönüşüm de sistem de yazılmaz; sistemi olan projede `export_losses` ("IFC'ye konum … yazılmadı: ±0,00'ın
+    mutlak kotu bilinmiyor …") nedenini ve yerini söyler, EK-9'un 6. sorusu nedeniyle "hayır" der. Sistemi hiç olmayan
+    proje dışa aktarmada eskisi gibi sessizdir (form söyler); yolun dosyası yerini korur.
+11. **Yerleşim zinciri:** saha dünyanın sıfırında mutlak, bina sahaya (kendi ±0.00'ıyla, §2), kat binaya, eleman katına,
+    açıklık deldiği elemana, kapı ve pencere açıklığına göre yerleşir; yazıcı hep önce yazılmış varlığa başvurduğundan
+    döngü kurulamaz. Bağımsız denetim (`curved_ifc_check.py`'nin `chain_faults`'u, bütün örnek dosyalarda): her ürün
+    kendisininkilerden birine göre (IFC'nin kuralınca üst düzeydeki yapı da olur), saha mutlak, döngü yok. Çift öteleme
+    mutlak kotlardan ölçülür: katlar haritada, duvarlar katlarının taşıyıcı döşemesinde.
+12. **Form ve denetim:** EK-9'un 6. sorusunun "evet"i yerel sistemin dönüşünü, ölçeğini ve başlangıcını söyler;
+    `digital_system_wrong`'un onarımı Proje ayarları › Koordinat sistemi'ni (TUREF dilimi, ya da Özel sistem… ile dilimin
+    üstünde yerel sistem) ve İmar durumu'nun ±0,00 kotunu gösterir (eskiden ±0,00'ı olmayan Parsel ve bahçe mesafeleri'ni
+    gösteriyordu).
+
+**Sınama.** `kentos-ifc`'in `crs::tests`'i (döndürülmüş ve ölçekli sistemde üç nokta projenin kendi düzlem dönüşümünün
+koyduğu yerde, 1e-8 m; yazılan satır; ölçeksiz düz dönüşüm; dik eksenli afin; kayma, ayna, doğruya indirme ve sonsuz
+değer reddi) ve `quality::tests::a_system_must_be_a_turef_zone_with_its_elevation` (dışa aktarmanın nedeni, dönüş
+sözleri). Uygulamada `ifc_place::a_local_model_is_turned_and_scaled_onto_its_base` (üç kontrol noktasından KentOS'un
+oturttuğu düzlem bağımsız çözümle aynı; dosyanın sistemi EPSG:5256 TUREF/TM36, Antalya yükseklikleri; her kontrol noktası
+yazılan değerlerle anketteki yerine oturtmanın kendi artığı içinde, 1e-6 m; EK-9'un 6. sorusu; yolun dosyası aynı
+düzlemde, sıfırı 0'da; uyarı yok) ve `what_the_file_cannot_say_is_said_and_nothing_is_assumed` (±0,00'sız: sistem yok,
+dönüşüm yok, tek uyarı, form "hayır", yol yerinde; kaydıran afin reddi; sistemsiz çizim sessiz). Bağımsız durum
+`scripts/fixtures/location_cases.py` (sentetik anket: 23,5°, 0,99989, milimetreye yuvarlanmış ve az gürültülü üç nokta;
+düzlem `crs_definition_fit_cases.py`'nin tam kesirli çözümüyle) `fixtures/arch/v1/ifc/yerel-sistem.json`'ı yazar;
+`curved_ifc_check.py`'nin konum bölümü `yerel-sistem.ifc`'yi IfcOpenShell'le okur: 0 bulgu; `IfcMapConversionScaled`
+oturtulan değerlerle (dönüş 23,504951°, ölçek 0,999830907, iki eksende; yükseklik ölçeksiz, 1285,40'tan); üç kontrol
+noktası `xyz2enh` ile anketteki yerine artıkları içinde (en çok 0,45 mm) ve `enh2xyz` ile geri; doğu ve kuzey yer
+değiştirmemiş; katlar haritada 1285,40 ve 1288,40; duvarlar katlarının taşıyıcı döşemesinde (−0,13 ve 2,93); zincir
+sağlam. Zincir denetimi bozulmuş bir kopyada döngüyü ve duvara göre yerleşen katı bulur. Masaüstü ortak sınamaları
+(modül, şerit, geçmiş, katalog, ayarlar, IFC, özel sistem). Resim: `ozel-crs-konum-*` (Şantiye, TM36 tabanı, üç kontrol
+noktası, m0 ±0,5 mm).
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-contracts --lib program`, `-p kentos-kcad --test all -- arch_elements`,
   `KENTOS_CASES_ONLY=cad.program … every_command_case`, `-p kentos-desktop --lib -- program_scenes`.
+- `cargo test -p kentos-ifc --lib`, `-p kentos-native-application --test all -- ifc_place arch_ifc`,
+  `KENTOS_CASES_ONLY=cad.arch.ifc,cad.arch.audit,file.export.ifc … every_command_case`; `uv run --offline --no-project
+  --with mpmath python3 scripts/fixtures/location_cases.py --check`; `curved_ifc_check.py` (IfcOpenShell 0.9.0).
 
 ## Sıradaki adımlar
 
-- **§3 Konum (IFC-05):** yerel modelin harita dönüşümü kontrol noktalarından (dönüş ve ölçek); bağımsız okuyucuda üç
-  kontrol noktası; kotu bilinmeyen ±0.00 sıfır sayılmaz, eksik olarak söylenir; yerleşim zincirinde döngü ve çift öteleme
-  denetimi.
+- **Konumun kalanı:** `TrueNorth` (EK-7 7.8; dönüşüm varken bilgi içindir, meridyen yakınsamasını projeksiyondan ister);
+  kontrol noktalarının projede saklanması (pencere düzlemi hesaplar, noktalar yazıldıkları sürece durur) ve dışa
+  aktarmada yeniden denetlenmesi; idarenin ölçüm toleransı kurum profiliyle; gelen IFC'nin zinciri okuyucuyla (IFC-07).
 - **§4 Alanlar:** ortak bodrumun alanı emsalde ve metrajda bir kez; ruhsat takımında bina seçimi.
 - **§5 Onaylı plan kararları:** CBS'den kaynağı, onay tarihi ve plan notuyla; çelişen iki karar gösterilir.
 - Denetim bulguları: seçilmeyen ortak kat, birden çok binada kodsuz ya da ±0.00'ı verilmeyen bina.

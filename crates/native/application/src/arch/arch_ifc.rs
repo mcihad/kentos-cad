@@ -462,37 +462,14 @@ pub fn particulars(doc: &Document) -> Particulars {
     }
 }
 
-/// The project's system as the IFC says it (EK-7 Tablo 7.6–7.7, `kentos_ifc::crs`): the drawing's coordinates are the
-/// system's, so the map conversion moves them by nothing in plan and by ±0.00's absolute elevation (Vaziyet planı) in
-/// height; its heights' datum the project's (an orthometric system by its EPSG name, ellipsoidal heights ITRF96's, EK-7's
-/// note). None for a drawing in local coordinates.
-pub fn crs(doc: &Document) -> Option<kentos_ifc::crs::Crs> {
-    let settings = doc.settings();
-    let own = kentos_project::systems::own(settings)?;
-    let name = if own.code.starts_with("EPSG:") {
-        own.code.clone()
-    } else {
-        own.name.clone()
-    };
-    let vertical = settings.heights.as_ref().and_then(|h| match h.kind {
-        kentos_commands::HeightKind::Orthometric => h
-            .vertical()
-            .map(|v| format!("{} (EPSG:{})", v.name, v.srid)),
-        kentos_commands::HeightKind::Ellipsoidal => Some("ITRF96".to_owned()),
-        kentos_commands::HeightKind::Unknown => None,
-    });
-    let datum = settings
-        .arch
-        .as_ref()
-        .and_then(|a| a.site.as_ref())
-        .and_then(|s| s.datum)
-        .unwrap_or(0.0);
-    Some(kentos_ifc::crs::projected(
-        &name,
-        Some(own.title.clone()),
-        vertical,
-        [0.0, 0.0, datum],
-    ))
+/// The project's system as the building's IFC says it (EK-7 Tablo 7.6–7.7; `crate::ifc_system`, docs/adr/8072 §3): the
+/// drawing's system, or its local system's base with the local plane on it; the file's zero at ±0.00's absolute
+/// elevation (İmar durumu's ±0,00 kotu); its heights' datum the project's (an orthometric system by its EPSG name,
+/// ellipsoidal heights ITRF96's, EK-7's note). Why none, when the file cannot say one: no system, or ±0.00 of unknown
+/// height (never taken as 0).
+pub fn crs(doc: &Document) -> Result<kentos_ifc::crs::Crs, String> {
+    let datum = doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.datum);
+    crate::ifc_system::of(doc, datum)
 }
 
 /// The model file's name the save dialog offers (EK-2 Tablo 2.1): `260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc`, or the
@@ -700,6 +677,15 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
     if curved > 0 {
         warnings.push(losses(format!(
             "{curved} yayı alınamayan eğri nesne IFC'ye düz parçalarla yazıldı."
+        )));
+    }
+    // A project with a system whose place the file cannot say (docs/adr/8072 §3); one with none says nothing here
+    // (Mimari denetim's EK-9 form does).
+    if let Some(why) = &b.crs_why
+        && crate::ifc_system::has_system(doc)
+    {
+        warnings.push(losses(format!(
+            "IFC'ye konum (koordinat sistemi ve harita dönüşümü) yazılmadı: {why}."
         )));
     }
     if unplaced > 0 {

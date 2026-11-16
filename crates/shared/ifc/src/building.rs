@@ -365,6 +365,9 @@ pub struct Building {
     /// layers top down, in place of a single material.
     pub layer_sets: Vec<(usize, String, Vec<Layer>)>,
     pub crs: Option<Crs>,
+    /// Why the model has no system when it has none (docs/adr/8072 §3): the export says it, EK-9's sixth question
+    /// answers with it.
+    pub crs_why: Option<String>,
     /// The building's ±0.00 over the site's (the project's ±0.00), metres (docs/adr/8072 §2): its placement there, its
     /// storeys' elevations over it.
     pub zero: f64,

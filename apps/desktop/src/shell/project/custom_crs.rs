@@ -1740,7 +1740,8 @@ mod tests {
     /// project's datum, a local system with its affine), what is wrong said
     /// under its field, and Proje ayarları with the definition chosen (its
     /// card, Düzenle, its row) and the second system's list with Özel
-    /// sistem…; light at 1440×900, dark at 1100×650 (.run/shots/ozel-crs-*).
+    /// sistem…; the building's local system from three control points (konum, docs/adr/8072 §3); light at 1440×900,
+    /// dark at 1100×650 (.run/shots/ozel-crs-*).
     #[test]
     #[ignore = "pictures for the owner, run by hand"]
     fn screens() {
@@ -1826,6 +1827,35 @@ mod tests {
                     events.push(Event::Point(2, USE, "0".to_owned()));
                     events.push(Event::FitWrite);
                     events
+                },
+                true,
+            ),
+            (
+                // The building's local system on TUREF / TM36 from three control points (docs/adr/8072 §3): the
+                // IFC carries this plane turned and scaled.
+                "konum",
+                {
+                    let case: serde_json::Value = serde_json::from_str(include_str!(
+                        "../../../../../fixtures/arch/v1/ifc/yerel-sistem.json"
+                    ))
+                    .expect("the location case reads");
+                    let lines: Vec<String> = case["points"]
+                        .as_array()
+                        .expect("its points")
+                        .iter()
+                        .map(|p| {
+                            let typed: Vec<&str> =
+                                p["typed"].as_array().expect("typed").iter().filter_map(|v| v.as_str()).collect();
+                            typed[..4].join("\t")
+                        })
+                        .collect();
+                    vec![
+                        Event::Text(Field::Name, "Şantiye".to_owned()),
+                        Event::Kind(Kind::Local),
+                        Event::Base(5256),
+                        Event::PointPasted(0, 1, Some(lines.join("\n"))),
+                        Event::FitWrite,
+                    ]
                 },
                 true,
             ),

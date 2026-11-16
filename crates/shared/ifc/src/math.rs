@@ -12,3 +12,11 @@ pub(crate) fn cos(x: f64) -> f64 {
 pub(crate) fn atan(x: f64) -> f64 {
     libm::atan(x)
 }
+
+pub(crate) fn atan2(y: f64, x: f64) -> f64 {
+    libm::atan2(y, x)
+}
+
+pub(crate) fn hypot(x: f64, y: f64) -> f64 {
+    libm::hypot(x, y)
+}

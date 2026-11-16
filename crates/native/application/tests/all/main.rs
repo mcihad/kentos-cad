@@ -31,6 +31,8 @@ mod roof_sections;
 mod sections;
 #[cfg(feature = "mod-arch")]
 mod arch_ifc;
+#[cfg(feature = "mod-arch")]
+mod ifc_place;
 // Runs its plans are read into walls through the registry by name (docs/adr/8054 §11).
 #[cfg(feature = "mod-arch")]
 mod arch_recognize;

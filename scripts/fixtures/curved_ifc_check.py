@@ -35,8 +35,16 @@ the section building's hip roof over its 1. kat — its eaves 50 cm out of the w
 roof's material one IfcMaterialLayerSet, each layer its name, thickness across its face, material (none where not
 given) and role (IfcMaterialLayer.Category's own words); IfcOpenShell's own surface of its body closed, enclosing
 13.25 · 10.25 · 0.26 · √(1 + 0.33²) m³ (each face's plates its plan area times their upright thickness), its lowest
-point 6.00 − 0.26 · √(1 + 0.33²) (the eaves' underside), its highest 6.00 + 0.33 · 10.25 / 2 (the ridge)."""
+point 6.00 − 0.26 · √(1 + 0.33²) (the eaves' underside), its highest 6.00 + 0.33 · 10.25 / 2 (the ridge).
+
+And fixtures/arch/v1/ifc/yerel-sistem.ifc (docs/adr/8072 §3; KENTOS_WRITE_IFC_LOCATION=1 cargo test … ifc_place): the
+section building in a local system fitted from three control points onto TUREF / TM36, against
+fixtures/arch/v1/ifc/yerel-sistem.json (scripts/fixtures/location_cases.py, no KentOS code): `check_location`.
+
+Every file's placement chain (`chain_faults`): each product placed relative to one of its own — the structure that holds
+it, the whole it is part of, the element its opening cuts, the opening it fills — the site at the chain's root, no loop."""
 import json
+import math
 import sys
 import uuid
 from pathlib import Path
@@ -47,6 +55,7 @@ SLOPED = ROOT / "fixtures/arch/v1/ifc/egimli-doseme.ifc"
 ROOF_LAYERS = ROOT / "fixtures/arch/v1/ifc/katmanli-cati.ifc"
 UNDER_ROOF = ROOT / "fixtures/arch/v1/ifc/cati-alti-mahal.ifc"
 BLOCKS = (ROOT / "fixtures/arch/v1/ifc/blok-a.ifc", ROOT / "fixtures/arch/v1/ifc/blok-b.ifc")
+LOCATION = (ROOT / "fixtures/arch/v1/ifc/yerel-sistem.ifc", ROOT / "fixtures/arch/v1/ifc/yerel-sistem.json")
 EXPECTED = ROOT / "fixtures/arch/v1/curved-building.json"
 
 
@@ -59,10 +68,176 @@ def main() -> int:
             return check_under_roof(path)
         if path.name in (BLOCKS[0].name, BLOCKS[1].name):
             return check_blocks(*BLOCKS)
+        if path.name == LOCATION[0].name:
+            return check_location(*LOCATION)
         return check_roof_layers(path) if path.name == ROOF_LAYERS.name else check(path)
     return max([check(p) for p in FILES]
                + [check_sloped(SLOPED), check_roof_layers(ROOF_LAYERS), check_under_roof(UNDER_ROOF),
-                  check_blocks(*BLOCKS)])
+                  check_blocks(*BLOCKS), check_location(*LOCATION)])
+
+
+def chain_faults(f) -> list[str]:
+    """The placement chain (docs/adr/8072 §3; IFC-05: saha → bina → kat → eleman, no loop, no second offset): every
+    product placed relative to one of its own — the structure that holds or references it, the whole it is part of,
+    the element its opening cuts, the opening it fills, the one it is nested in — up to the site, which stands on
+    nothing; no chain loops."""
+    owners: dict[int, list] = {}
+    for p in f.by_type("IfcProduct"):
+        if p.ObjectPlacement is not None:
+            owners.setdefault(p.ObjectPlacement.id(), []).append(p)
+    parents: dict[int, set] = {}
+
+    def add(child, parent):
+        if parent is not None and parent.is_a("IfcProduct"):
+            parents.setdefault(child.id(), set()).add(parent.id())
+
+    for r in f.by_type("IfcRelContainedInSpatialStructure"):
+        for e in r.RelatedElements:
+            add(e, r.RelatingStructure)
+    for r in f.by_type("IfcRelReferencedInSpatialStructure"):
+        for e in r.RelatedElements:
+            add(e, r.RelatingStructure)
+    for r in f.by_type("IfcRelAggregates") + f.by_type("IfcRelNests"):
+        for e in r.RelatedObjects:
+            add(e, r.RelatingObject)
+    for r in f.by_type("IfcRelVoidsElement"):
+        add(r.RelatedOpeningElement, r.RelatingBuildingElement)
+    for r in f.by_type("IfcRelFillsElement"):
+        add(r.RelatedBuildingElement, r.RelatingOpeningElement)
+
+    def ancestors(pid: int) -> set:
+        out, todo = set(), [pid]
+        while todo:
+            for q in parents.get(todo.pop(), ()):
+                if q not in out:
+                    out.add(q)
+                    todo.append(q)
+        return out
+
+    bad = []
+    for p in f.by_type("IfcProduct"):
+        place = p.ObjectPlacement
+        if place is None:
+            continue
+        seen, q = set(), place
+        while q is not None:
+            if q.id() in seen:
+                bad.append(f"{p.is_a()} {p.Name}: its placement chain loops")
+                break
+            seen.add(q.id())
+            q = q.PlacementRelTo if q.is_a("IfcLocalPlacement") else None
+        rel = place.PlacementRelTo if place.is_a("IfcLocalPlacement") else None
+        if p.is_a("IfcSite"):
+            if rel is not None:
+                bad.append(f"the site {p.Name} is placed relative to something")
+            continue
+        if rel is None:
+            bad.append(f"{p.is_a()} {p.Name}: placed on its own, not relative to what holds it")
+            continue
+        mine = ancestors(p.id())
+        if not any(o.id() in mine for o in owners.get(rel.id(), [])):
+            names = [f"{o.is_a()} {o.Name}" for o in owners.get(rel.id(), [])] or ["nothing's"]
+            bad.append(f"{p.is_a()} {p.Name}: placed relative to {', '.join(names)}, not one of its own")
+    return bad
+
+
+def check_location(path: Path, case_path: Path) -> int:
+    """The section building in a local system on TUREF / TM36 (docs/adr/8072 §3; IFC-05's first acceptance), against the
+    case scripts/fixtures/location_cases.py writes without KentOS code. Read by IfcOpenShell: valid; one system,
+    EPSG:5256 named in full in metres; one map conversion, IFC 4.3's scaled one, from the model's context: the fitted
+    plane's origin, turn and scale on both axes (the case's, within its tolerances), its Scale 1 (the units the same),
+    the heights unscaled, its height ±0.00's; every control point carried into the map by IfcOpenShell's own `xyz2enh`
+    lands on its survey within the fit's own residual (to the case's 1e-6 m), and back by `enh2xyz` on its local point;
+    eastings the east (TM36's 500 km false easting and a little), northings the north (not swapped); the storeys'
+    heights in the map ±0.00's and 3 m over it by their placements' chain; every wall's lowest point on its storey's
+    structural slab, under the floor's layers (no second offset); the placement chain whole."""
+    import ifcopenshell
+    import ifcopenshell.util.geolocation as geo
+    import ifcopenshell.util.placement as up
+    import ifcopenshell.validate
+
+    case = json.loads(case_path.read_text(encoding="utf-8"))
+    tol, plane, datum = case["tolerance"], case["plane"], case["datum"]
+    f = ifcopenshell.open(str(path))
+    bad: list[str] = []
+    log = ifcopenshell.validate.json_logger()
+    ifcopenshell.validate.validate(f, log, express_rules=True)
+    if log.statements:
+        bad.append(f"validator: {[s.get('message', s) for s in log.statements[:5]]}")
+    systems, operations = f.by_type("IfcProjectedCRS"), f.by_type("IfcCoordinateOperation")
+    if len(systems) != 1 or len(operations) != 1:
+        bad.append(f"{len(systems)} systems and {len(operations)} conversions, not one each")
+        return report(path, bad, "")
+    crs, m = systems[0], operations[0]
+    if (crs.Name, crs.GeodeticDatum, crs.MapZone, crs.VerticalDatum) != (
+            case["base"]["name"], "TUREF", case["base"]["zone"], case["verticalDatum"]):
+        bad.append(f"the system {crs.Name} {crs.GeodeticDatum} {crs.MapZone} {crs.VerticalDatum}")
+    if crs.MapUnit is None or crs.MapUnit.Name != "METRE":
+        bad.append(f"the map's unit {crs.MapUnit}")
+    if not m.is_a("IfcMapConversionScaled") or m.TargetCRS != crs:
+        bad.append(f"the conversion is {m.is_a()} to {m.TargetCRS}")
+    if not (m.SourceCRS.is_a("IfcGeometricRepresentationContext") and m.SourceCRS.ContextType == "Model"):
+        bad.append("the conversion is not the model context's")
+    turn = math.degrees(math.atan2(m.XAxisOrdinate, m.XAxisAbscissa))
+    if abs(m.Eastings - plane["east"]) > tol["metres"] or abs(m.Northings - plane["north"]) > tol["metres"]:
+        bad.append(f"origin {m.Eastings} {m.Northings}, the fit's {plane['east']} {plane['north']}")
+    if abs(turn - plane["rotation"]) > tol["degrees"]:
+        bad.append(f"turn {turn}°, the fit's {plane['rotation']}°")
+    if (m.Scale if m.Scale is not None else 1.0) != 1.0:
+        bad.append(f"Scale {m.Scale}: it converts units, and the units are the same")
+    for name, factor in (("FactorX", m.FactorX), ("FactorY", m.FactorY)):
+        if abs(factor - plane["scale"]) > tol["relative"] * plane["scale"]:
+            bad.append(f"{name} {factor}, the fit's scale {plane['scale']}")
+    if m.FactorZ != 1.0 or abs(m.OrthogonalHeight - datum) > 1e-9:
+        bad.append(f"heights scaled {m.FactorZ} from {m.OrthogonalHeight}, not unscaled from ±0.00's {datum}")
+    h = geo.get_helmert_transformation_parameters(f)
+    args = (h.e, h.n, h.h, h.xaa, h.xao, h.scale, h.factor_x, h.factor_y, h.factor_z)
+    worst = 0.0
+    for p in case["points"]:
+        (x, y), (e0, n0), res = p["local"], p["map"], p["residual"]
+        e, n, z = geo.xyz2enh(x, y, 0.0, *args)
+        de, dn = e - e0, n - n0
+        worst = max(worst, math.hypot(de, dn))
+        if abs(de - res[0]) > tol["metres"] or abs(dn - res[1]) > tol["metres"] or abs(z - datum) > 1e-9:
+            bad.append(f"{p['name']} lands {de:+.6f} {dn:+.6f} off its survey, the fit's residual {res[0]:+.6f} {res[1]:+.6f}")
+        bx, by, _ = geo.enh2xyz(e0, n0, datum, *args)
+        if math.hypot(bx - x, by - y) > res[2] / plane["scale"] + tol["metres"]:
+            bad.append(f"{p['name']} back at {bx} {by}, not {x} {y}")
+    if not (400_000 < h.e < 700_000 and 4_000_000 < h.n < 4_700_000):
+        bad.append(f"eastings {h.e} and northings {h.n}: axes swapped or off TM36")
+    want = {s["name"]: datum + s["elevation"] for s in case["storeys"]}
+    got = {}
+    for storey in f.by_type("IfcBuildingStorey"):
+        z = up.get_local_placement(storey.ObjectPlacement)[2][3]
+        got[storey.LongName] = geo.xyz2enh(0.0, 0.0, z, *args)[2]
+    if set(got) != set(want) or any(abs(got[k] - want[k]) > 1e-9 for k in want):
+        bad.append(f"storeys in the map {got}, not {want}")
+    walls_from = {s["name"]: s["wallsFrom"] for s in case["storeys"]}
+    storey_of = {}
+    for r in f.by_type("IfcRelContainedInSpatialStructure"):
+        if r.RelatingStructure.is_a("IfcBuildingStorey"):
+            for e in r.RelatedElements:
+                storey_of[e.id()] = r.RelatingStructure.LongName
+    for wall in f.by_type("IfcWall"):
+        pts, _, _ = surface(f, wall)
+        low, want_low = min(q[2] for q in pts), walls_from.get(storey_of.get(wall.id()))
+        if want_low is None or abs(low - want_low) > 1e-6:
+            bad.append(f"{wall.Name} stands at {low}, not on its storey's slab at {want_low}")
+    bad += chain_faults(f)
+    return report(path, bad, f"EPSG:5256 TUREF/TM36 in metres; IfcMapConversionScaled, the fitted plane (turn "
+                             f"{turn:.6f}°, scale {m.FactorX:.9f} on both axes, heights unscaled from {datum:.2f}); "
+                             f"{len(case['points'])} control points on their surveys within their residuals "
+                             f"(at most {worst * 1000:.2f} mm) and back; storeys at {sorted(want.values())} in the map; "
+                             f"walls on their storeys' slabs; the placement chain whole")
+
+
+def report(path: Path, bad: list[str], ok: str) -> int:
+    if bad:
+        for b in bad:
+            print("✗", path.name, b)
+        return 1
+    print(f"✓ {path.name}: IFC4X3_ADD2, 0 validator findings; {ok}.")
+    return 0
 
 
 def surface(f, product):
@@ -148,6 +323,8 @@ def check_blocks(a_path: Path, b_path: Path) -> int:
         low = min(p[2] for p in pts)
         if not near(low, 1.2):
             bad.append(f"{wall.Name} stands at {low}, not +1.20")
+    for tag, f in files.items():
+        bad += [f"{tag}: {b}" for b in chain_faults(f)]
     if bad:
         for b in bad:
             print("✗", b)
@@ -204,6 +381,7 @@ def check_under_roof(path: Path) -> int:
             bad.append(f"{space.Name}: IfcOpenShell's volume {vol}, its GrossVolume {q.get('GrossVolume')}")
     if rooms != 5:
         bad.append(f"{rooms} rooms on the 1. kat, not 5")
+    bad += chain_faults(f)
     if bad:
         for b in bad:
             print("✗", b)
@@ -259,6 +437,7 @@ def check_roof_layers(path: Path) -> int:
         zs = [p[2] for p in pts]
         if not (near(min(zs), 6.0 - total * k) and near(max(zs), 6.0 + 0.33 * depth / 2)):
             bad.append(f"{min(zs)} → {max(zs)}")
+    bad += chain_faults(f)
     if bad:
         for b in bad:
             print("✗", b)
@@ -326,6 +505,7 @@ def check_sloped(path: Path) -> int:
         zs = [p[2] for p in pts]
         if not (near(min(zs), 3.0 - 0.2 * k) and near(max(zs), 3.3)):
             bad.append(f"{min(zs)} → {max(zs)}")
+    bad += chain_faults(f)
     if bad:
         for b in bad:
             print("✗", b)
@@ -492,6 +672,7 @@ def check(path: Path) -> int:
             worst = max(worst, abs(got - expect) / expect)
             ensure(abs(got - expect) <= 5e-4 * expect, f"{o.Name}: IfcOpenShell's volume {got}, the closed form {expect}")
 
+    bad += chain_faults(f)
     if bad:
         for b in bad[:30]:
             print("✗", b)

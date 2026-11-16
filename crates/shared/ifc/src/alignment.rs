@@ -79,11 +79,12 @@ pub struct Alignment {
     pub verticals: Vec<Vertical>,
 }
 
-/// The file: the project's name, its system (`EPSG:5254` and its words), when it is written, by what, its alignments.
+/// The file: the project's name, its system with the alignments' place in it (`crate::crs`, docs/adr/8072 §3), when it
+/// is written, by what, its alignments.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct IfcFile {
     pub project: String,
-    pub crs: Option<(String, String)>,
+    pub crs: Option<crate::crs::Crs>,
     /// `YYYY-MM-DDThh:mm:ss`.
     pub stamp: String,
     pub application: String,
@@ -450,10 +451,9 @@ pub fn write(file: &IfcFile) -> String {
     let axis = st.add(format!(
         "IFCGEOMETRICREPRESENTATIONSUBCONTEXT('Axis','Model',*,*,*,*,#{model},$,.MODEL_VIEW.,$)"
     ));
-    // The project's system (EK-7 Tablo 7.6–7.7): the alignments' coordinates are its own, no offset.
-    if let Some((name, words)) = &file.crs {
-        let crs = crate::crs::projected(name, Some(words.clone()), None, [0.0; 3]);
-        crate::crs::write(&mut st, &crs, model, length);
+    // The project's system (EK-7 Tablo 7.6–7.7): the alignments' coordinates are its own or a local system's on it.
+    if let Some(crs) = &file.crs {
+        crate::crs::write(&mut st, crs, model, length);
     }
     let g = st.gid();
     let project = st.add(format!(

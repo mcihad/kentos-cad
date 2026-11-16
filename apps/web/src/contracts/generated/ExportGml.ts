@@ -20,7 +20,7 @@ path: string,
  */
 layers?: Array<string>, 
 /**
- * Write the `.xsd` beside the file (GDAL and QGIS read the fields' types from it); absent: written.
+ * Write the `.xsd` beside the file (GIS readers take the fields' types from it); absent: written.
  */
 schema?: boolean, 
 /**

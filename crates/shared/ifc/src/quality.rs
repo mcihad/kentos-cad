@@ -276,18 +276,33 @@ pub fn has_project_code(k: &Particulars) -> bool {
         .is_some_and(|c| c.chars().any(|ch| ch != '0'))
 }
 
-/// What is wrong with the model's system for EK-7 Tablo 7.6–7.7: none, a system that is no TUREF zone, no ±0.00
-/// elevation; none when it is right.
-pub fn system_problem(crs: Option<&Crs>, elevation: Option<f64>) -> Option<String> {
+/// What is wrong with the model's system for EK-7 Tablo 7.6–7.7: none (with `why` the export gave, docs/adr/8072 §3),
+/// a system that is no TUREF zone, no ±0.00 elevation; none when it is right.
+pub fn system_problem(crs: Option<&Crs>, why: Option<&str>, elevation: Option<f64>) -> Option<String> {
     match crs {
-        None => Some("çizim yerel koordinatlarda".into()),
+        None => Some(why.unwrap_or("çizim yerel koordinatlarda").to_owned()),
         Some(c) if turef_meridian(&c.name).is_none() => Some(format!(
             "projenin sistemi {} bir TUREF 3° dilimi (EPSG:5253–5259) değil",
             c.name
         )),
-        Some(_) if elevation.is_none() => Some("±0.00'ın mutlak kotu (Vaziyet planı) yok".into()),
+        Some(_) if elevation.is_none() => Some("±0,00'ın mutlak kotu (Proje ayarları › Mimari › İmar durumu) yok".into()),
         Some(_) => None,
     }
+}
+
+/// How a model in a local system stands on the map (docs/adr/8072 §3): its turn and scale, nothing for one drawn in
+/// the system itself.
+fn placed_words(c: &Crs) -> String {
+    if c.x_axis == [1.0, 0.0] && c.factors == [1.0, 1.0] {
+        return String::new();
+    }
+    let turn = crate::math::atan2(c.x_axis[1], c.x_axis[0]) * (180.0 / std::f64::consts::PI);
+    let scale = if c.factors[0] == c.factors[1] {
+        format!("ölçeği {:.6}", c.factors[0])
+    } else {
+        format!("ölçekleri {:.6} ve {:.6}", c.factors[0], c.factors[1])
+    };
+    format!("; yerel sistem {turn:.4}° döndürülmüş, {scale}, başlangıcı {:.3} {:.3}", c.origin[0], c.origin[1])
 }
 
 /// What the model left out, `why`'s kinds with how many in the order the export says them: "2 duvar, 1 kapı".
@@ -325,7 +340,7 @@ pub fn left_words(written: &Written) -> String {
 /// The form's 21 answers for the model `b`, what was `written` of the drawing, its künye `k`.
 pub fn ek9(b: &Building, written: &Written, k: &Particulars) -> Vec<Row> {
     let missing = project_info_missing(k);
-    let system = system_problem(b.crs.as_ref(), b.site_elevation);
+    let system = system_problem(b.crs.as_ref(), b.crs_why.as_deref(), b.site_elevation);
     QUESTIONS
         .iter()
         .map(|&(no, group, discipline, title, question)| {
@@ -338,13 +353,15 @@ pub fn ek9(b: &Building, written: &Written, k: &Particulars) -> Vec<Row> {
                 4 if written.unnamed.is_empty() => Answer::Yes("her mahalin numarası ve adı var.".into()),
                 4 => Answer::No(format!("{} mahalin numarası ya da adı yok", written.unnamed.len())),
                 5 => Answer::Yes("adlar EK-5 §5.5'e göre: MM-<kod>-<açıklama>.".into()),
-                6 => match &system {
-                    None => Answer::Yes(format!(
-                        "{} (EK-7 Tablo 7.6), ±0.00 {:.2} m.",
-                        b.crs.as_ref().map_or("", |c| c.name.as_str()),
-                        b.site_elevation.unwrap_or(0.0)
+                6 => match (&system, &b.crs) {
+                    (None, Some(c)) => Answer::Yes(format!(
+                        "{} (EK-7 Tablo 7.6){}, ±0.00 {:.2} m.",
+                        c.name,
+                        placed_words(c),
+                        c.origin[2]
                     )),
-                    Some(why) => Answer::No(why.clone()),
+                    (None, None) => Answer::No("çizim yerel koordinatlarda".into()),
+                    (Some(why), _) => Answer::No(why.clone()),
                 },
                 7 => Answer::Ask("EK-8'in gelişim seviyesi; KentOS değerlendirmiyor.".into()),
                 8 | 17 => Answer::Yes("sınıflar EK-5 Tablo 5.1'e göre.".into()),
@@ -440,15 +457,29 @@ mod tests {
     #[test]
     fn a_system_must_be_a_turef_zone_with_its_elevation() {
         let tm33 = crate::crs::projected("EPSG:5255", None, None, [0.0; 3]);
-        assert_eq!(system_problem(Some(&tm33), Some(1285.4)), None);
-        assert!(system_problem(Some(&tm33), None).unwrap().contains("±0.00"));
+        assert_eq!(system_problem(Some(&tm33), None, Some(1285.4)), None);
+        assert!(system_problem(Some(&tm33), None, None).unwrap().contains("±0,00"));
         let utm = crate::crs::projected("EPSG:32636", None, None, [0.0; 3]);
         assert!(
-            system_problem(Some(&utm), Some(1.0))
+            system_problem(Some(&utm), None, Some(1.0))
                 .unwrap()
                 .contains("TUREF")
         );
-        assert!(system_problem(None, None).unwrap().contains("yerel"));
+        assert!(system_problem(None, None, None).unwrap().contains("yerel"));
+        // The export's reason, when it gave one (docs/adr/8072 §3).
+        assert_eq!(
+            system_problem(None, Some("±0.00'ın mutlak kotu bilinmiyor"), None).as_deref(),
+            Some("±0.00'ın mutlak kotu bilinmiyor")
+        );
+        // A turned local system says its turn and scale.
+        let turned = crate::crs::projected("EPSG:5256", None, None, [0.0, 0.0, 1285.4])
+            .turned(587_312.345, 4_400_612.789, 23.5, 0.99989)
+            .unwrap();
+        assert_eq!(
+            placed_words(&turned),
+            "; yerel sistem 23.5000° döndürülmüş, ölçeği 0.999890, başlangıcı 587312.345 4400612.789"
+        );
+        assert_eq!(placed_words(&tm33), "");
     }
 
     #[test]

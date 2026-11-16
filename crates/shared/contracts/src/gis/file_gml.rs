@@ -46,7 +46,7 @@ pub struct ExportGml {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub layers: Vec<String>,
-    /// Write the `.xsd` beside the file (GDAL and QGIS read the fields' types from it); absent: written.
+    /// Write the `.xsd` beside the file (GIS readers take the fields' types from it); absent: written.
     #[serde(default = "yes", skip_serializing_if = "is_yes")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub schema: bool,
