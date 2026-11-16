@@ -22,6 +22,11 @@ impl Host for AppHost<'_> {
         self.0.product_not_offered(command)
     }
 
+    /// The agent's own Python (docs/adr/8057 §104): the user's choice for it, the organisation's policy.
+    fn python_refusal(&self) -> Option<String> {
+        self.0.assistant.python_refusal()
+    }
+
     /// Asistan, with its profile's provider and model, as a package its workshop packs records it (docs/adr/8057 §76).
     fn author(&self) -> Option<Author> {
         let model = &self.0.assistant.shown.1;

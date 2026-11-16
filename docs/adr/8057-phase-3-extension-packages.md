@@ -5101,3 +5101,40 @@ ajan formu, panel notu, yönergeler, `values_tests.rs`), `python/agents.rs`.
   okur; ilke dışarıdaki ajanda değerleri tutar, bu bilgisayardakinde tutmaz).
 - **Gerçek pencere:** Vitrin çizimi (sentetik), DeepSeek deneme ajanı "Gönderilmesin" ile "parsellerin ada ve parsel
   numaralarını listele" isteğini aldı: değerleri göremediğini söyledi, listeyi uydurmadı (33.468 token).
+
+## §104. Ajanın kendi Python'u ayrı bir yetki sınıfı (`ADIM 21`, [PY-AI-11])
+
+**16 Kasım.** Kod: ajan `profiles.rs` (`PythonRuns`, `pythonRuns`); eklenti ilkesi `policy.rs` (`allowAgentPython`);
+headless `agent_tools.rs` (`PYTHON_RUNS`, `Host::python_refusal`); masaüstü `assistant/` (`python_runs`,
+`python_refusal`, onay, ajan formu, yönergeler, `python_tests.rs`), `assistant/host.rs`.
+
+- **Sorun.** [PY-AI-11] "ajanın kişisel güvenilir Python yürütmesi ile kapsamlı araç çağrısı ayrı yetki sınıflarıdır"
+  der. Asistan'ın araçlarından ikisi ajanın yazdığı kodu bu bilgisayarda kullanıcının yetkisiyle çalıştırır:
+  `extension.workshop.trial` atölyedeki eklentiyi sentetik bir çizimde dener, `extension.workshop.reload`
+  değişikliklerini kurulu eklentinin üstüne yükler (incelenmemiş yeni kod bir sonraki çağrıda çalışır). İkisi çizime
+  yazmadığı için onay beklemiyordu: çizimi okuma ve komutla yazma izniyle aynı sınıftaydı. Ayrı süreç bir kum havuzu
+  değildir (PY-RUN-19, 20).
+- **Karar: üç seçenek, ajan başına.** Ajan formunda "Kod çalıştırma › Atölyedeki kodu": **Her seferinde sorsun**
+  (varsayılan; çağrı onay bekler), **Sormadan çalıştırsın**, **Çalıştırmasın** (araçlar ajana sunulmaz, çağrılırsa
+  reddedilir). Okuma, doğrulama (`extension.verify`), görünüşü okuma (`preview`) ve yazma araçları bu sınıfa girmez: kod
+  çalıştırmazlar.
+- **Ret araç katmanında:** `agent_tools::Host::python_refusal` (varsayılan: yok) kapalıysa iki araç `offered_tools`'tan
+  düşer ve `call` onları `python_refused` ile reddeder; doğrudan çağrı da, modelin uydurduğu çağrı da. Onay ise
+  masaüstünün işi (`needs_approval`): kart, kodun kullanıcının yetkisiyle çalışacağını ve seçeneğin nerede olduğunu
+  söyler.
+- **Kurum ilkesi:** yeni `allowAgentPython: false` her ajanın kendi kodunu çalıştırmasını kapatır, modeli bu
+  bilgisayarda çalışan ajanınkini de (kod her durumda burada çalışır); form "Çalıştırmasın"ı seçili, diğerlerini sönük
+  gösterir ve ilkenin cümlesini yazar. Okunamayan ilke kapatır.
+- **Bağlantıdaki ajanlar (MCP) değişmedi:** onlar zaten kullanıcının yetkisiyle çalışan yerel programlardır; atölye
+  denemesini reddetmek bir şey korumaz.
+- **Yönergeler:** iki aracın ayrı bir izin olduğu, sunulmuyorsa denemeyi kullanıcıya bırakması söylenir.
+- **[PY-AI-13]'ün kalan cümlesi:** "bağımlılık kurma isteği veri gönderme onayı sayılmaz": eklenti ortamının
+  hazırlanması (kurulum incelemesi, ön izleme) ile yapay zekâya veri izni (§103, ADR 8056 §7) ayrı kararlardır; hiçbir
+  kurma adımı veri izni vermez.
+- **Sınamalar:** ilke 1 (kapalı, okunamayan, yazılmamış); masaüstü 3 (sahte yerel sağlayıcı: varsayılanda deneme çağrısı
+  onay bekler ve kart nedenini söyler, reddedilince çalışmaz; "Sormadan" ile hemen çalışır; "Çalıştırmasın" ile iki araç
+  sağlayıcıya sunulan listeden düşer, atölyenin diğer araçları kalır, doğrudan çağrı `python_refused`; ilke her ajanda
+  kapatır); onay sınaması iki araçla genişledi.
+- **Gerçek pencere:** yerel sahte sağlayıcı (127.0.0.1, gerçek bir yapay zekâya bir şey gitmez) ajanın Vitrin'i
+  denemesini istedi: kart "Onay gerekiyor" ve kodun kimin yetkisiyle çalışacağını yazdı; Reddet'le "Reddedildi", kod
+  çalışmadı. Ajan formunda "Kod çalıştırma" bölümü.

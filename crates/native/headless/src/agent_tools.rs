@@ -101,6 +101,14 @@ pub trait Host {
         self.review_package(package)
     }
 
+    /// Why this host's agent may run no Python it wrote (docs/adr/8057 §104, PY-AI-11: its own trusted Python a class
+    /// apart from its tool calls): the user's choice for the agent, the organisation's policy. None: it may; whether
+    /// each run waits for the user is the host's matter. The tools that run it ([`PYTHON_RUNS`]) are then not offered,
+    /// and a call of one is refused.
+    fn python_refusal(&self) -> Option<String> {
+        None
+    }
+
     /// Loads the changes of an extension the user installed from the workshop without closing the app (plan ADIM 21's
     /// `hot_reload`): its folder packed again and installed over itself with the capabilities the user granted.
     fn reload_extension(&mut self, _id: &str) -> Result<Value, HeadlessError> {
@@ -317,11 +325,18 @@ fn descriptor(command: &str) -> Option<&'static CommandDescriptor> {
 /// The tools `host` offers: [`tools`] without the door of a part none of whose commands it runs (a module's program,
 /// docs/adr/8056 §1). The desktop's assistant offers these (§4): a door that could only answer `not_offered` costs the
 /// model tokens and a wrong turn. MCP lists every door, its drawings being of every module.
+/// The tools that run Python the agent wrote, on this computer with the user's rights (docs/adr/8057 §104): its
+/// extension tried on a synthetic drawing, and its changes loaded over the extension the user installed (they run at
+/// the next call). Reading, verifying and planning run none.
+pub const PYTHON_RUNS: [&str; 2] = ["extension.workshop.trial", "extension.workshop.reload"];
+
 pub fn offered_tools(host: &dyn Host) -> Vec<Tool> {
     let workshop = host.workshop().is_some();
+    let python = host.python_refusal().is_none();
     tools()
         .into_iter()
         .filter(|t| workshop || !t.name.starts_with("extension.workshop."))
+        .filter(|t| python || !PYTHON_RUNS.contains(&t.name))
         .filter(|t| match DOORS.iter().find(|d| d.tool == t.name) {
             Some(door) if door.part != Discipline::Core => catalog()
                 .iter()
@@ -955,6 +970,11 @@ pub fn call(
     name: &str,
     args: &Value,
 ) -> Result<Value, HeadlessError> {
+    if PYTHON_RUNS.contains(&name)
+        && let Some(why) = host.python_refusal()
+    {
+        return Err(HeadlessError::new("python_refused", why));
+    }
     let none = json!({});
     match name {
         "drawing.summary" => host.request("summary", &none),

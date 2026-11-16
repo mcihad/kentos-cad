@@ -1210,17 +1210,18 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   [ECO-API-12].
   — *kısmen (ADR 8057 §22, §24, §37): Asistan iskelet, panel ve İşlemler aracı üretir (MEBİS), kod ayrı denemede
   çalışır; kalan: form/domain taslaklarının politikası, doğal dilden zincir, ortak keşif kataloğu.*
-- [ ] **Güvenlik:** eklenti açıklaması, README, veri öznitelikleri ve form yardım metni güvenilmeyen veridir; içindeki
+- [x] **Güvenlik:** eklenti açıklaması, README, veri öznitelikleri ve form yardım metni güvenilmeyen veridir; içindeki
   talimatlar uç/kullanan/yetki/yayın kapsamını değiştiremez [PY-AI-09, A02]; form alan maskesi, satır ACL'si ve hassas
   izdüşüm AI bağlamında da uygulanır [PY-AI-10]; ajanın kişisel güvenilir Python yürütmesi ile kapsamlı araç çağrısı ayrı
   yetki sınıflarıdır [PY-AI-11]; sağlayıcıya gönderilecek veri kullanıcı/kiracı politikasıyla sınırlanır, bağımlılık
   kurma isteği veri gönderme onayı sayılmaz [PY-AI-13]. Anahtarlar ADR 8056 §4'teki gibi ayarlardan ayrı, günlük ve
   pakette yok.
-  — *kısmen (ADR 8057 §31, §103; ADR 8056 §4, §7): eklentinin sözleri ajana veridir, gizli alanlar kesilir, anahtarlar
-  ayarlardan ayrı; kurum ilkesinin "dış yapay zekâya veri" izni Asistan'ı da bağlar, izinli yapay zekâ adresleriyle
-  (16 Kasım); öznitelik değerleri ajan başına ("Gönderilmesin") ya da kurum ilkesiyle (`allowAttributeValuesToAi`)
-  sağlayıcıya gitmez, çizim her alanı gizliymiş gibi okunur, eklentinin denetim bulguları da (§103); kalan: yetki
-  sınıflarının ayrımı [PY-AI-11].*
+  — *tamam (ADR 8057 §31, §103, §104; ADR 8056 §4, §7): eklentinin sözleri ajana veridir, gizli alanlar kesilir,
+  anahtarlar ayarlardan ayrı; kurum ilkesinin "dış yapay zekâya veri" izni Asistan'ı da bağlar, izinli yapay zekâ
+  adresleriyle (16 Kasım); öznitelik değerleri ajan başına ("Gönderilmesin") ya da kurum ilkesiyle
+  (`allowAttributeValuesToAi`) sağlayıcıya gitmez, çizim her alanı gizliymiş gibi okunur, eklentinin denetim bulguları
+  da (§103); ajanın kendi Python'u ayrı yetki sınıfı: ajan başına "Her seferinde sorsun / Sormadan çalıştırsın /
+  Çalıştırmasın", kurum ilkesinde `allowAgentPython`; kapalıyken araçlar sunulmaz ve reddedilir (§104).*
 - [x] **Yüzeyler:** uygulama içi ajan (Asistan) ve dış MCP aynı komut, belge kapsamı, gizli alan ayıklaması, önizleme ve
   izinleri kullanır [EKL-06]; çalışan işler, maliyet/istek bütçesi ve gönderilecek çizim verisinin kapsamı kullanıcıya
   anlaşılır gösterilir. Sürümlü Python API referansı, kavramsal başlangıç, KentOS UI ve İşlemler rehberi, paketleme, hata

@@ -8,7 +8,7 @@ use std::net::TcpListener;
 use std::sync::{Arc, Mutex, PoisonError};
 
 use iced::futures::StreamExt as _;
-use kentos_agent::{AgentProfile, KeySource, ProviderKind};
+use kentos_agent::{AgentProfile, KeySource, ProviderKind, PythonRuns};
 use kentos_ui::widget::ai::{AiEvent, Phase, PromptState, ToolPhase};
 use serde_json::{Value, json};
 
@@ -460,19 +460,23 @@ fn a_write_waits_for_the_user_only_when_it_takes_away() {
     let run = |command: &str, mode: &str| json!({ "command": command, "input": {}, "mode": mode });
     assert!(needs_approval(
         "cad.run",
-        &run("cad.entities.delete", "execute")
+        &run("cad.entities.delete", "execute"),
+        PythonRuns::Ask
     ));
     assert!(!needs_approval(
         "cad.run",
-        &run("cad.entities.delete", "plan")
+        &run("cad.entities.delete", "plan"),
+        PythonRuns::Ask
     ));
     assert!(!needs_approval(
         "cad.run",
-        &run("cad.polygon.create", "execute")
+        &run("cad.polygon.create", "execute"),
+        PythonRuns::Ask
     ));
     assert!(needs_approval(
         "arch.run",
-        &run("cad.entities.edit", "execute")
+        &run("cad.entities.edit", "execute"),
+        PythonRuns::Ask
     ));
     let steps = |command: &str| {
         json!({ "steps": [{ "command": "cad.polygon.create", "input": {} }, { "command": command, "input": {} }],
@@ -480,17 +484,32 @@ fn a_write_waits_for_the_user_only_when_it_takes_away() {
     };
     assert!(needs_approval(
         "command.batch",
-        &steps("cad.entities.delete")
+        &steps("cad.entities.delete"),
+        PythonRuns::Ask
     ));
-    assert!(!needs_approval("command.batch", &steps("cad.text.create")));
+    assert!(!needs_approval(
+        "command.batch",
+        &steps("cad.text.create"),
+        PythonRuns::Ask
+    ));
     assert!(needs_approval(
         "audit.apply_fix",
-        &json!({ "command": "cad.topology.repair", "mode": "execute" })
+        &json!({ "command": "cad.topology.repair", "mode": "execute" }),
+        PythonRuns::Ask
     ));
     assert!(!needs_approval(
         "catalog.search",
-        &json!({ "query": "sil" })
-    ));
+        &json!({ "query": "sil" }),
+        PythonRuns::Ask
+    )); // The agent's own Python waits for the user unless the user let it run without asking (docs/adr/8057 §104).
+    for tool in kentos_headless::agent_tools::PYTHON_RUNS {
+        assert!(needs_approval(tool, &json!({ "id": "x" }), PythonRuns::Ask));
+        assert!(!needs_approval(
+            tool,
+            &json!({ "id": "x" }),
+            PythonRuns::Allow
+        ));
+    }
 }
 
 /// A door the program never opens is not offered (measured: KentOS Mimari and GIS run no road command; Harita and
@@ -807,7 +826,7 @@ fn the_agent_runs_an_extensions_audit_rule_and_applies_its_fix() {
         .unwrap_or_else(|| panic!("{plan:#}"))
         .to_owned();
     let execute = json!({ "rule": RULE, "finding": 1, "mode": "execute", "planId": plan_id });
-    assert!(needs_approval("audit.apply_fix", &execute));
+    assert!(needs_approval("audit.apply_fix", &execute, PythonRuns::Ask));
     let done = agent_tools::call(&mut host, &mut guard, "audit.apply_fix", &execute).unwrap();
     assert_eq!(done["marked"], true, "{done:#}");
     let named = app

@@ -55,6 +55,10 @@ pub struct Policy {
     /// not, the desktop's AI agent outside this computer reads the drawing as if every field were hidden.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allow_attribute_values_to_ai: Option<bool>,
+    /// Whether the desktop's AI agent may run Python it wrote, its workshop's extension in a trial or loaded over the
+    /// installed one (docs/adr/8057 §104, PY-AI-11); not written: yes, as the user sets it for each agent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allow_agent_python: Option<bool>,
     /// Python packages no extension may install, by name (compared as PEP 503 normalises them), or one version of
     /// one (`ultralytics==8.3.41`: a release taken over and withdrawn, the others allowed).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -237,6 +241,21 @@ impl Policy {
         None
     }
 
+    /// Why the policy lets no AI agent run the Python it wrote (docs/adr/8057 §104), wherever its model runs: the code
+    /// runs here either way; none when it may. A policy that cannot be read refuses it.
+    pub fn agent_python_refusal(&self) -> Option<String> {
+        if self.broken.is_some() {
+            return Some(
+                "Kurum ilkesi okunamıyor; ilke düzelene dek yapay zekâ ajanları yazdıkları kodu çalıştıramaz."
+                    .to_owned(),
+            );
+        }
+        (self.allow_agent_python == Some(false)).then(|| {
+            "Kurum ilkesi yapay zekâ ajanlarının yazdıkları kodu bu bilgisayarda çalıştırmasına izin vermiyor."
+                .to_owned()
+        })
+    }
+
     /// Whether the policy keeps a drawing's attribute values from the desktop's AI agent (docs/adr/8057 §103): one
     /// outside this computer when `allowAttributeValuesToAi` is false; a policy that cannot be read keeps them too (it
     /// keeps that agent out altogether: [`Policy::agent_refusal`]).
@@ -371,6 +390,27 @@ mod tests {
 
     fn policy(text: &str) -> Policy {
         Policy::read(text).expect("a policy")
+    }
+
+    /// `allowAgentPython: false` keeps every agent from running its own Python, an unreadable policy too; not written,
+    /// the user decides (docs/adr/8057 §104).
+    #[test]
+    fn the_policy_says_whether_an_agent_runs_its_own_python() {
+        let open = policy(r#"{"format": "kentos.extension-policy", "schemaVersion": 1}"#);
+        assert_eq!(open.agent_python_refusal(), None);
+        let closed = policy(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "allowAgentPython": false}"#,
+        );
+        assert!(
+            closed
+                .agent_python_refusal()
+                .is_some_and(|w| w.contains("izin vermiyor"))
+        );
+        let broken = Policy {
+            broken: Some("okunamadı".into()),
+            ..Policy::default()
+        };
+        assert!(broken.agent_python_refusal().is_some());
     }
 
     /// `allowAttributeValuesToAi: false` keeps the attribute values from an agent outside this computer, not from one

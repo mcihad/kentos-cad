@@ -13,7 +13,7 @@
 
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_agent::profiles::{AgentProfile, KeySource, ProfileField};
+use kentos_agent::profiles::{AgentProfile, KeySource, ProfileField, PythonRuns};
 use kentos_agent::providers::ProviderKind;
 use kentos_agent::{read_tokens, spending_words, tokens_words};
 use kentos_ui::widget::{Banner, Choice, Dialog, Form, InputField, Select, Suggest, Suggestion};
@@ -42,6 +42,8 @@ pub enum AgentsEdit {
     Default,
     /// Öznitelik değerleri gönderilmesin (docs/adr/8057 §103).
     Withhold,
+    /// Kod çalıştırma › Atölyedeki kodu: its place in [`PythonRuns::ALL`] (docs/adr/8057 §104).
+    Python(usize),
     /// The token limits, as typed (docs/adr/8056 §6).
     ConversationTokens(String),
     DailyTokens(String),
@@ -95,6 +97,8 @@ pub struct Editor {
     daily_tokens: String,
     /// No attribute value is sent to it (docs/adr/8057 §103).
     withhold: bool,
+    /// What it may do with the Python it writes (docs/adr/8057 §104).
+    python: PythonRuns,
     /// The provider's models, once fetched.
     models: Vec<String>,
     fetching: bool,
@@ -126,6 +130,7 @@ impl Editor {
             conversation_tokens: String::new(),
             daily_tokens: String::new(),
             withhold: false,
+            python: PythonRuns::Ask,
             models: Vec::new(),
             fetching: false,
             checking: false,
@@ -156,6 +161,7 @@ impl Editor {
                 .unwrap_or_default(),
             daily_tokens: profile.daily_tokens.map(tokens_words).unwrap_or_default(),
             withhold: profile.withhold_values,
+            python: profile.python_runs,
             models: Vec::new(),
             fetching: false,
             checking: false,
@@ -179,6 +185,7 @@ impl Editor {
         p.conversation_tokens = read_tokens(&self.conversation_tokens).unwrap_or(None);
         p.daily_tokens = read_tokens(&self.daily_tokens).unwrap_or(None);
         p.withhold_values = self.withhold;
+        p.python_runs = self.python;
         p
     }
 
@@ -321,6 +328,11 @@ impl App {
                     }
                     AgentsEdit::Default => e.default = !e.default,
                     AgentsEdit::Withhold => e.withhold = !e.withhold,
+                    AgentsEdit::Python(i) => {
+                        if let Some(&runs) = PythonRuns::ALL.get(i) {
+                            e.python = runs;
+                        }
+                    }
                     AgentsEdit::FetchModels | AgentsEdit::Check => {
                         let profile = e.profile();
                         let typed = e.key.trim().to_owned();
@@ -739,6 +751,45 @@ impl App {
                 "Kurum ilkesi öznitelik değerlerinin bu bilgisayarın dışındaki yapay zekâ hizmetlerine gitmesine izin \
                  vermiyor: bu ajan onları göremez.",
             ));
+        // Its own Python, a class apart from its tool calls (docs/adr/8057 §104, PY-AI-11): the organisation's policy
+        // may close it for every agent; the choice then says so.
+        let closed = self
+            .assistant
+            .policy
+            .as_ref()
+            .and_then(kentos_extension_host::Policy::agent_python_refusal);
+        let runs = if closed.is_some() {
+            PythonRuns::Off
+        } else {
+            e.python
+        };
+        let choices = Select::new(
+            PythonRuns::ALL.iter().map(|r| {
+                let choice = Choice::new(match r {
+                    PythonRuns::Ask => "Her seferinde sorsun",
+                    PythonRuns::Allow => "Sormadan çalıştırsın",
+                    PythonRuns::Off => "Çalıştırmasın",
+                });
+                // Closed by the policy: the other two shown, not chosen.
+                if closed.is_some() && *r != PythonRuns::Off {
+                    choice.disabled()
+                } else {
+                    choice
+                }
+            }),
+            PythonRuns::ALL.iter().position(|r| *r == runs),
+            |i| msg(AgentsEdit::Python(i)),
+        )
+        .searchable(false);
+        form = form
+            .section("Kod çalıştırma")
+            .field("Atölyedeki kodu", choices)
+            .help(
+                "Ajanın yazdığı eklenti, denenirken ya da kurulu eklentinin üstüne yüklenirken bu bilgisayarda sizin \
+                 yetkinizle çalışır; ayrı süreç bir kum havuzu değildir. Çizimi okuması ve komutlarla yazması bu \
+                 izinden ayrıdır.",
+            )
+            .warning(closed);
         form.section("Kullanım")
             .row(words::check(
                 e.default,
