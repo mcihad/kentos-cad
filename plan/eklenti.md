@@ -1401,8 +1401,9 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   — *kısmen (ADR 8059 §10, §12): görmeyene aynı 404, programlı çağrı incelemeyi atlayamaz, geri çekme listesi; 16 Kasım
   (ADR 8057 §81): kurulum incelemesi kuracağı Python paketlerini, güncellemede farkını (yeni, değişen, aynı sürüm başka
   dosyalar, kalkan) gösterir; tanınmış bir paketin adına bir harf uzak ad uyarıdır. Listenin süzgeçleri (ADR 8057 §88:
-  çalışanlar, internetsiz, paket kurmayan, yapay zekânın ya da insanın yazdığı). Kalan: platform farkı, listenin imzası
-  ve masaüstünde uygulanması.*
+  çalışanlar, internetsiz, paket kurmayan, yapay zekânın ya da insanın yazdığı). Platform farkı (ADR 8057 §90:
+  güncelleme incelemesi bıraktığı ve eklediği sistemleri ve çalışma yerlerini söyler). Kalan: listenin imzası ve
+  masaüstünde uygulanması.*
 - [ ] Bulut Python işleri ayrı işçi/kapta, kaynak sınırı, ağ politikası, kapsamlı kimlik bilgisi ve kiracı yalıtımıyla;
   masaüstü eklenti süreci sunucu yalıtımı sayılmaz [PY-RUN-22].
   — *kısmen (ADR 8057 §42): iş çalıştırıcısı denetim kuralını hazırlanan ortamda, ağ isteyeni reddederek çalıştırır;

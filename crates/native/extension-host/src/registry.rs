@@ -1062,6 +1062,7 @@ impl Registry {
             source_conflict: false,
             capabilities: Vec::new(),
             resemblances: Vec::new(),
+            platforms: Vec::new(),
             python_packages: Vec::new(),
             installable: false,
         };
@@ -1070,6 +1071,7 @@ impl Registry {
         };
         let installed = self.manifests.get(&manifest.id);
         review.capabilities = capability_lines(&manifest, installed);
+        review.platforms = crate::view::platform_lines(&manifest, installed);
         if !review.inspection.is_valid() {
             return review;
         }

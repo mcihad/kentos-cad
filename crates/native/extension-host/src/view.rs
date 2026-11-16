@@ -193,6 +193,10 @@ pub struct Review {
     /// icon, the imitations first. Said before Kur; an imitation installs only when the person says so.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub resemblances: Vec<kentos_extensions::resemblance::Resemblance>,
+    /// What an update changes in where it runs (PY-CLOUD-14): the systems and the runtimes it says, a sentence each;
+    /// none for a first install or when they are the same.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub platforms: Vec<String>,
     /// The Python packages its lock installs, an update's against the installed version's (docs/adr/8057 §81).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub python_packages: Vec<crate::packages::PackageLine>,
@@ -253,6 +257,73 @@ pub fn capability_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<Capabilit
     lines
 }
 
+/// What `new` changes against the installed `old` in where it runs (PY-CLOUD-14): the operating systems (none written:
+/// every one) and the runtimes, what it no longer runs on first; none for a first install.
+pub fn platform_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<String> {
+    use kentos_extensions::compat::Os;
+    use kentos_extensions::manifest::Runtime;
+    let Some(old) = old else {
+        return Vec::new();
+    };
+    let systems = |m: &Manifest| -> Vec<Os> {
+        let written = &m.compatibility.operating_systems;
+        if written.is_empty() {
+            Os::ALL.to_vec()
+        } else {
+            Os::ALL
+                .into_iter()
+                .filter(|o| written.contains(o))
+                .collect()
+        }
+    };
+    let (before, after) = (systems(old), systems(new));
+    let names = |list: Vec<Os>| {
+        list.iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    let dropped: Vec<Os> = before
+        .iter()
+        .copied()
+        .filter(|o| !after.contains(o))
+        .collect();
+    let added: Vec<Os> = after
+        .iter()
+        .copied()
+        .filter(|o| !before.contains(o))
+        .collect();
+    let mut out = Vec::new();
+    if !dropped.is_empty() {
+        out.push(format!(
+            "Artık şu sistemlerde çalışmıyor: {}.",
+            names(dropped)
+        ));
+    }
+    let runtime = |r: Runtime| match r {
+        Runtime::Desktop => "KentOS masaüstünde",
+        Runtime::Headless => "başsız (MCP ajanları ve KentOS'un Python kitaplığı)",
+        Runtime::Cloud => "bulutta (sunucunun işlerinde)",
+    };
+    for r in [Runtime::Desktop, Runtime::Headless, Runtime::Cloud] {
+        if old.runtimes.contains(&r) && !new.runtimes.contains(&r) {
+            out.push(format!("Artık {} çalışmıyor.", runtime(r)));
+        }
+    }
+    if !added.is_empty() {
+        out.push(format!(
+            "Artık şu sistemlerde de çalışıyor: {}.",
+            names(added)
+        ));
+    }
+    for r in [Runtime::Desktop, Runtime::Headless, Runtime::Cloud] {
+        if new.runtimes.contains(&r) && !old.runtimes.contains(&r) {
+            out.push(format!("Artık {} da çalışıyor.", runtime(r)));
+        }
+    }
+    out
+}
+
 /// An extension a project names (its data in `.kcad`'s `modules.ext`, D16).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -271,4 +342,50 @@ pub enum NeedStatus {
     NotRunning { reason: String },
     /// Not installed: the project opens restricted, nothing is installed for it unasked.
     Missing,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The example extension's manifest with `systems` and `runtimes` written.
+    fn manifest(systems: &[&str], runtimes: &[&str]) -> Manifest {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/extensions/v1/ornek-altlik/manifest.json");
+        let mut m: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(root).unwrap()).unwrap();
+        m["compatibility"]["operatingSystems"] = serde_json::json!(systems);
+        m["runtimes"] = serde_json::json!(runtimes);
+        Manifest::read(&m.to_string()).expect("a manifest")
+    }
+
+    /// An update says the systems and runtimes it drops, then those it adds; a first install and the same places say
+    /// nothing; no system written is every system.
+    #[test]
+    fn an_update_says_where_it_no_longer_runs() {
+        let every = manifest(&[], &["desktop", "headless"]);
+        let two = manifest(&["linux", "macos"], &["desktop", "cloud"]);
+        assert_eq!(
+            platform_lines(&two, Some(&every)),
+            [
+                "Artık şu sistemlerde çalışmıyor: Windows.",
+                "Artık başsız (MCP ajanları ve KentOS'un Python kitaplığı) çalışmıyor.",
+                "Artık bulutta (sunucunun işlerinde) da çalışıyor."
+            ]
+        );
+        assert_eq!(
+            platform_lines(&every, Some(&two)),
+            [
+                "Artık bulutta (sunucunun işlerinde) çalışmıyor.",
+                "Artık şu sistemlerde de çalışıyor: Windows.",
+                "Artık başsız (MCP ajanları ve KentOS'un Python kitaplığı) da çalışıyor."
+            ]
+        );
+        assert!(platform_lines(&two, None).is_empty(), "a first install");
+        let all_written = manifest(&["windows", "macos", "linux"], &["desktop", "headless"]);
+        assert!(
+            platform_lines(&all_written, Some(&every)).is_empty(),
+            "the same places"
+        );
+    }
 }

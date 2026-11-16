@@ -970,6 +970,13 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
             )));
         }
     }
+    // Where an update runs, when that changes (PY-CLOUD-14): a system or a runtime it drops first.
+    if !r.platforms.is_empty() {
+        form = form.section("Çalıştığı yerler");
+        for line in &r.platforms {
+            form = form.wide(label::caption(line.clone()));
+        }
+    }
     if p.has_python {
         form = form.section("Python").wide(words::check(
             p.python,

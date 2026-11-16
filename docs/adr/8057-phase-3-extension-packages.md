@@ -4646,3 +4646,20 @@ kaynaklar `docs/research/2026-11-16-tr-mevzuat-denetim-kurallari.md` › *Yükse
   bayiinin 12 m'lik çıkmaz koridoru yağmurlamasız hata, yağmurlamayla bulgusuz), `kek verify` 0 uyarı.
 - **Kalan.** 39/2 mevzuat paketinde kural değil (olgularda kişi yükü yok; yerel denetim söylüyor); kurp/görüş
   hesapları; belediye plan notları.
+
+## §90. Güncelleme incelemesi çalıştığı yerlerin farkını söyler (`ADIM 22A`, PY-CLOUD-14)
+
+**16 Kasım.** Kod: kayıt defteri `view.rs` (`platform_lines`, `Review::platforms`), `registry.rs` (`review_beside`);
+masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
+
+- **Sorun.** Plan: "güncelleme yeni bağımlılık/yetenek/platform farkını gösterir". Yetenek (§3) ve Python paketi (§81)
+  farkı vardı; eklentinin bildirdiği işletim sistemleri (`compatibility.operatingSystems`) ve çalışma yerleri
+  (`runtimes`: masaüstü, başsız, bulut) güncellemede sessizce değişebiliyordu: başsız çalışmayı bırakan bir sürüm
+  MCP ajanlarının ve Python kitaplığının kullandığı araçlarını götürür, kullanıcı bunu kurduktan sonra öğrenirdi.
+- **Karar.** Güncellemenin incelemesi kurulu sürümle farkı cümleyle söyler, önce bıraktıklarını: "Artık şu sistemlerde
+  çalışmıyor: Windows.", "Artık başsız (MCP ajanları ve KentOS'un Python kitaplığı) çalışmıyor.", sonra eklediklerini
+  ("Artık bulutta (sunucunun işlerinde) da çalışıyor."). Hiç sistem yazılmamışsa her sistemdir; ilk kurulum ve aynı
+  yerler bir şey söylemez. Bu bilgisayarın sistemini bırakan sürüm zaten kurulamaz (uyumluluk: `incompatible`); cümle
+  öbür sistemleri kullananlar için de doğruyu söyler (kurum aynı paketi Windows'ta da dağıtıyorsa).
+- **Sınamalar:** kayıt defteri `view::tests` 1 (bırakma ve ekleme, ilk kurulum, aynı yerler), kayıt defterinin hepsi
+  (36), masaüstünün eklenti sınamaları (102).
