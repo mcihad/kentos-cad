@@ -12,6 +12,10 @@ use kentos_ui::widget::tabs::{Tab, Tabs};
 use serde_json::Value;
 
 use super::panels::{OpenPanel, PanelEvent, SCROLLER, number_words};
+
+/// The least and most a split panel's form may be when its sash is dragged (docs/adr/8057 §69).
+const SPLIT_LEAST: f32 = 96.0;
+const SPLIT_MOST: f32 = 1600.0;
 use super::{Event, msg};
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -83,6 +87,36 @@ impl App {
             .padding(12)
             .into();
         };
+        let event = |e: PanelEvent| msg(Event::Panel(e));
+        // A split panel (docs/adr/8057 §69) knows the height it has: its form takes 3/5 until the sash is dragged.
+        let content: Element<'_, Message> = if p.definition.split {
+            iced::widget::responsive(move |size| self.panel_content(p, Some(size))).into()
+        } else {
+            self.panel_content(p, None)
+        };
+        if self.extensions.panels.len() < 2 {
+            return content;
+        }
+        // Several open: a tab each, as the drawings' (a dot: its command runs, or it answered while another was shown).
+        let tabs = Tabs::new(
+            self.extensions.panels.iter().map(|p| {
+                Tab::new(p.definition.title.as_str()).note(p.running.is_some() || p.unseen)
+            }),
+            self.extensions.active_panel,
+            move |at| event(PanelEvent::Activate(at)),
+        )
+        .on_close(move |at| event(PanelEvent::Close(at)))
+        .on_reorder(move |from, to| event(PanelEvent::Move(from, to)));
+        column![tabs, content].into()
+    }
+
+    /// The panel shown, without the open panels' tabs: its header, form, run and outputs; split under a sash when
+    /// it has `size`, the height it is given (docs/adr/8057 §69).
+    fn panel_content<'a>(
+        &'a self,
+        p: &'a OpenPanel,
+        size: Option<iced::Size>,
+    ) -> Element<'a, Message> {
         let name = self.extension_name(&p.ext);
         let why = self
             .extensions
@@ -155,31 +189,49 @@ impl App {
                 label::caption(format!("Düğmeler komut çalıştırır: {why}")),
             ));
         }
+        // Split (docs/adr/8057 §69): its run's words and its outputs under a sash, in a scroller of their own; the
+        // header and the form above stay in sight as long results scroll.
+        let split = size.is_some() && !tables.is_empty();
+        let mut outputs = column![].spacing(12).padding(12).width(Fill);
         if let Some((kind, said)) = &p.said {
-            body = body.push(words::line(*kind, label::caption(said.clone())));
+            let line = words::line(*kind, label::caption(said.clone()));
+            if split {
+                outputs = outputs.push(line);
+            } else {
+                body = body.push(line);
+            }
         }
         for table in tables {
-            body = body.push(table);
+            if split {
+                outputs = outputs.push(table);
+            } else {
+                body = body.push(table);
+            }
         }
         // Its own scroller (the pane's would take the tabs along), as far down as the panel was left.
-        let content = scrollable(body)
+        let scrolled = scrollable(body)
             .id(iced::widget::Id::new(SCROLLER))
-            .height(Fill)
             .on_scroll(move |v| event(PanelEvent::Scrolled(v.absolute_offset().y)));
-        if self.extensions.panels.len() < 2 {
-            return content.into();
+        if split {
+            // Three fifths of the height the panel has until the user drags the sash: the form first.
+            let height = p
+                .split
+                .unwrap_or_else(|| size.map_or(SPLIT_LEAST, |s| s.height * 0.6))
+                .clamp(SPLIT_LEAST, SPLIT_MOST);
+            column![
+                scrolled.height(iced::Length::Fixed(height)),
+                kentos_ui::widget::Sash::horizontal(height, move |h| event(PanelEvent::Split(h)))
+                    .range(SPLIT_LEAST..=SPLIT_MOST)
+                    .on_double_click(event(PanelEvent::SplitReset)),
+                scrollable(outputs)
+                    .id(iced::widget::Id::new(super::panels::OUTPUTS))
+                    .height(Fill)
+                    .on_scroll(move |v| event(PanelEvent::ScrolledOutputs(v.absolute_offset().y))),
+            ]
+            .into()
+        } else {
+            scrolled.height(Fill).into()
         }
-        // Several open: a tab each, as the drawings' (a dot: its command runs, or it answered while another was shown).
-        let tabs = Tabs::new(
-            self.extensions.panels.iter().map(|p| {
-                Tab::new(p.definition.title.as_str()).note(p.running.is_some() || p.unseen)
-            }),
-            self.extensions.active_panel,
-            move |at| event(PanelEvent::Activate(at)),
-        )
-        .on_close(move |at| event(PanelEvent::Close(at)))
-        .on_reorder(move |from, to| event(PanelEvent::Move(from, to)));
-        column![tabs, content].into()
     }
 
     /// A panel's components as KentOS draws them, for the dock's panel and an extension's dialog alike: its form, and
@@ -1227,6 +1279,38 @@ fn panel_stats<'a>(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// A split panel (docs/adr/8057 §69): its view is drawn with the sash; the sash dragged keeps the form's height,
+    /// double-clicked lets it go; its outputs' scroll is its own.
+    #[test]
+    fn a_split_panels_sash_keeps_the_forms_height() {
+        use kentos_extensions::ui_panel;
+        let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Ara",
+            "split": true,
+            "body": [
+                { "type": "textField", "id": "q", "label": "Ara" },
+                { "type": "table", "id": "sonuc", "label": "Sonuç" }
+            ] });
+        let mut app = crate::files_testing::app_with_drawing();
+        app.extensions.panels.push(OpenPanel::new(
+            "tr.ornek.deneme",
+            "ara",
+            ui_panel::read(&value).expect("a panel"),
+        ));
+        let _ = app.extension_panel_view();
+        let _ = app.ext_panel_event(PanelEvent::Split(240.0));
+        let _ = app.ext_panel_event(PanelEvent::ScrolledOutputs(30.0));
+        assert_eq!(
+            (
+                app.extensions.panels[0].split,
+                app.extensions.panels[0].out_scroll
+            ),
+            (Some(240.0), 30.0)
+        );
+        let _ = app.extension_panel_view();
+        let _ = app.ext_panel_event(PanelEvent::SplitReset);
+        assert_eq!(app.extensions.panels[0].split, None);
+    }
 
     /// plan/eklenti.md ADIM 22's paging: a page's rows and the page clamped when the rows became fewer; counts written
     /// as Turkish writes them.

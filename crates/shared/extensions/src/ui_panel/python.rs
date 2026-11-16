@@ -130,9 +130,13 @@ pub fn python_builders() -> String {
          def file_filter(name: str, *extensions: str) -> dict[str, Any]:\n    \
          \"\"\"A kind of file a ``filePicker`` offers: a name, extensions without dots (``file_filter(\"CSV\", \"csv\")``).\"\"\"\n    \
          return {\"name\": str(name), \"extensions\": [str(e).lstrip(\".\").lower() for e in extensions]}\n\n\n\
-         def panel(title: str, body: Sequence[dict[str, Any]]) -> dict[str, Any]:\n    \
-         \"\"\"A whole panel (``ui/<id>.panel.json``): its title and components.\"\"\"\n    \
-         return {\"format\": FORMAT, \"schemaVersion\": SCHEMA_VERSION, \"title\": str(title), \"body\": list(body)}\n",
+         def panel(title: str, body: Sequence[dict[str, Any]], *, split: bool = False) -> dict[str, Any]:\n    \
+         \"\"\"A whole panel (``ui/<id>.panel.json``): its title and components; ``split``: its outputs under a sash, in\n    \
+         a scroller of their own (docs/adr/8057 §69).\"\"\"\n    \
+         out: dict[str, Any] = {\"format\": FORMAT, \"schemaVersion\": SCHEMA_VERSION, \"title\": str(title), \"body\": list(body)}\n    \
+         if split:\n        \
+         out[\"split\"] = True\n    \
+         return out\n",
     );
     let Some(kinds) = root
         .pointer("/$defs/Component/oneOf")

@@ -1742,6 +1742,10 @@
     "schemaVersion": {
       "const": 1
     },
+    "split": {
+      "description": "Its outputs (tables, trees, cards, figures, charts, pictures, relation and attachment lists) under a sash, in\na scroller of their own: the form stays in sight as long results scroll, and the user drags the sash to share\nthe height (docs/adr/8057 §69). Off, the panel is one scroller, the outputs under the form.",
+      "type": "boolean"
+    },
     "title": {
       "type": "string"
     }

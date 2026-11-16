@@ -1,7 +1,7 @@
 # Ek listesi: Vitrin › Bakım kayıtları'nın altında "Tesisin ekleri" (attachments, of: tesis). 50'deki gibi iki tesis
-# konur, Merkez Okulu seçilir: "Bu kaydın eki yok." ve KentOS'un Dosya ekle… ile Adres ekle…'si. Adres ekle…: KentOS'un
-# kendi penceresinde okulun sayfası yazılıp Kaydet; liste eki adıyla ve adresiyle gösterir (Python'suz; kullanıcının
-# düzenlemesi, tek geri alma adımı). (Önce 01.)
+# konur, Öznitelikler kapatılır, Merkez Okulu seçilir, çizgi yukarı sürüklenir: "Bu kaydın eki yok." ve KentOS'un
+# Dosya ekle… ile Adres ekle…'si. Adres ekle…: KentOS'un kendi penceresinde okulun sayfası yazılıp Kaydet; liste eki
+# adıyla ve adresiyle gösterir (Python'suz; kullanıcının düzenlemesi, tek geri alma adımı). (Önce 01.)
 fit KentOS GIS — Eklenti vitrini
 wait 2500
 key Escape
@@ -44,14 +44,18 @@ click 843 20    # Vitrin
 wait 1200
 click 750 83    # Bakım kayıtları
 wait 2500
+click 1243 594  # Öznitelikler'i kapat: panel bütün yüksekliği alır
+wait 1200
 click 1355 315  # Tesis
 wait 1000
 click 1340 350  # Merkez Okulu
 wait 1500
-wheel 1280 450 -10
-wait 800
+move 1280 595
+wait 400
+drag 1280 595 1280 470   # çizgi yukarı: ekler görünür
+wait 1000
 shot 51-yok
-click 1294 553  # Adres ekle…
+click 1294 588  # Adres ekle…
 wait 1200
 type https://okul.ornek.bel.tr
 click 720 418   # Ad

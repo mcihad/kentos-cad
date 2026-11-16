@@ -2,6 +2,7 @@
   "format": "kentos.ui.panel",
   "schemaVersion": 1,
   "title": "Bakım kayıtları",
+  "split": true,
   "body": [
     {
       "type": "text",

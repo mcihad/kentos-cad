@@ -1,0 +1,72 @@
+# Bölünmüş panel: Vitrin › Bakım kayıtları'nda "split": true. 50'deki gibi iki tesis konur, Merkez Okulu'na iki bakım
+# kaydı eklenir; Öznitelikler kapatılınca panel bütün yüksekliği alır: form üstte (yüksekliğin beşte üçü), kayıtlar ve
+# ekler altta kendi kaydırmalarıyla. Aradaki çizgi yukarı sürüklenince çıktılar büyür, çift tık ilk hâline döndürür.
+# (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 157 110   # Katmanları kur
+wait 6000
+click 1270 220  # Katman ara
+wait 400
+type tesis
+wait 800
+dclick 1218 311 # Örnek tesis: etkin katman
+wait 1000
+key Escape
+wait 500
+click 410 20    # Düzenle
+wait 1200
+click 32 75     # Nokta
+wait 800
+key a
+wait 600
+type Merkez Okulu
+key Return
+wait 600
+click 600 300   # birinci tesis
+wait 1200
+key a
+wait 600
+type Park Kreşi
+key Return
+wait 600
+click 1000 350  # ikinci tesis
+wait 1200
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1200
+click 750 83    # Bakım kayıtları
+wait 2500
+click 1243 594  # Öznitelikler'i kapat: panel bütün yüksekliği alır
+wait 1200
+click 1355 315  # Tesis
+wait 1000
+click 1340 350  # Merkez Okulu
+wait 1500
+click 1354 426  # Açıklama
+type Yangın tüpleri yenilendi
+wait 400
+click 1306 464  # Ekle
+wait 9000
+click 1354 426  # Açıklama
+key ctrl+a
+type Çatı oluğu temizlendi
+wait 400
+click 1306 464  # Ekle
+wait 4000
+shot 52-bolunmus
+move 1280 595
+wait 400
+drag 1280 595 1280 470   # çizgi yukarı: çıktılar büyür
+wait 1000
+shot 52-surukle
+dclick 1280 470          # çift tık: ilk hâli
+wait 1000
+shot 52-ilk

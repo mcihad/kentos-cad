@@ -38,9 +38,13 @@ def file_filter(name: str, *extensions: str) -> dict[str, Any]:
     return {"name": str(name), "extensions": [str(e).lstrip(".").lower() for e in extensions]}
 
 
-def panel(title: str, body: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    """A whole panel (``ui/<id>.panel.json``): its title and components."""
-    return {"format": FORMAT, "schemaVersion": SCHEMA_VERSION, "title": str(title), "body": list(body)}
+def panel(title: str, body: Sequence[dict[str, Any]], *, split: bool = False) -> dict[str, Any]:
+    """A whole panel (``ui/<id>.panel.json``): its title and components; ``split``: its outputs under a sash, in
+    a scroller of their own (docs/adr/8057 §69)."""
+    out: dict[str, Any] = {"format": FORMAT, "schemaVersion": SCHEMA_VERSION, "title": str(title), "body": list(body)}
+    if split:
+        out["split"] = True
+    return out
 
 
 def text(

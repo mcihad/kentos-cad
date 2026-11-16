@@ -44,6 +44,11 @@ pub use rules::Rules;
 pub struct PanelDefinition {
     pub title: String,
     pub body: Vec<Component>,
+    /// Its outputs (tables, trees, cards, figures, charts, pictures, relation and attachment lists) under a sash, in
+    /// a scroller of their own: the form stays in sight as long results scroll, and the user drags the sash to share
+    /// the height (docs/adr/8057 §69). Off, the panel is one scroller, the outputs under the form.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub split: bool,
     /// Each component's rules, in the body's order ([`rules`]): written beside its keys, read by [`read`].
     #[serde(skip)]
     #[cfg_attr(feature = "schema", schemars(skip))]
@@ -951,13 +956,21 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
     };
     for key in top
         .keys()
-        .filter(|k| !["format", "schemaVersion", "title", "body"].contains(&k.as_str()))
+        .filter(|k| !["format", "schemaVersion", "title", "body", "split"].contains(&k.as_str()))
     {
         add(
             format!("/{key}"),
             format!(
-                "“{key}” panelde bilinmeyen bir alan; olanlar: format, schemaVersion, title, body."
+                "“{key}” panelde bilinmeyen bir alan; olanlar: format, schemaVersion, title, body, split."
             ),
+        );
+    }
+    // The sash between its form and its outputs (docs/adr/8057 §69).
+    if top.get("split").is_some_and(|v| !v.is_boolean()) {
+        add(
+            "/split".to_owned(),
+            "split true ya da false olmalı: true, çıktıları sürüklenen bir çizginin altına, kendi kaydırmalarına alır."
+                .to_owned(),
         );
     }
     if top.get("format").and_then(Value::as_str) != Some(FORMAT) {
@@ -1717,6 +1730,26 @@ mod tests {
                   "category": "ada" }
             ]
         })
+    }
+
+    /// A panel's outputs may stand under a sash (docs/adr/8057 §69): `split` true or false, said where it is written
+    /// otherwise.
+    #[test]
+    fn a_panels_split_is_true_or_false() {
+        let panel = |split: Value| {
+            json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Ara", "split": split,
+                "body": [{ "type": "table", "id": "t" }] })
+        };
+        assert!(check("p.json", &panel(json!(true)), &[]).is_empty());
+        assert!(read(&panel(json!(true))).expect("a panel").split);
+        assert!(!read(&json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "A", "body": [] }))
+            .expect("a panel")
+            .split);
+        let said: Vec<String> = check("p.json", &panel(json!("evet")), &[])
+            .into_iter()
+            .filter_map(|p| p.at)
+            .collect();
+        assert_eq!(said, ["/split"]);
     }
 
     /// A shape picker draws a line, an area, a rectangle or a circle; another shape is said where it is written.

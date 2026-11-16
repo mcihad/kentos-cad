@@ -43,16 +43,21 @@ use crate::exchange::words;
 const PANEL_SHARE: f32 = 0.6;
 /// The panels' scroller: one, showing the panel shown.
 pub(super) const SCROLLER: &str = "extension-panel";
+/// A split panel's outputs' scroller, under its sash (docs/adr/8057 §69).
+pub(super) const OUTPUTS: &str = "extension-panel-outputs";
 
-/// The panels' scroller to `y`: the panel shown as it was left (the scroller was the last panel's).
-fn scroll_back(y: f32) -> Task<Message> {
-    iced::widget::operation::scroll_to(
-        iced::widget::Id::new(SCROLLER),
-        iced::widget::scrollable::AbsoluteOffset {
-            x: None,
-            y: Some(y),
-        },
-    )
+/// The panels' scrollers to `y` and `outputs`: the panel shown as it was left (the scrollers were the last panel's).
+fn scroll_back(y: f32, outputs: f32) -> Task<Message> {
+    let to = |id: &'static str, y: f32| {
+        iced::widget::operation::scroll_to(
+            iced::widget::Id::new(id),
+            iced::widget::scrollable::AbsoluteOffset {
+                x: None,
+                y: Some(y),
+            },
+        )
+    };
+    Task::batch([to(SCROLLER, y), to(OUTPUTS, outputs)])
 }
 
 /// A panel open in the dock.
@@ -120,6 +125,10 @@ pub(crate) struct OpenPanel {
     pub(crate) steps: bool,
     /// Each shape picker's drawn shape, as GeoJSON (panel_points.rs, docs/adr/8057 §62).
     pub(crate) geoms: BTreeMap<String, Value>,
+    /// A split panel's form height as the user dragged its sash; none: the default (docs/adr/8057 §69).
+    pub(crate) split: Option<f32>,
+    /// How far down a split panel's outputs were scrolled: given back when it is shown again.
+    pub(crate) out_scroll: f32,
 }
 
 /// A component's rules, compiled against the panel's inputs (Kapı 1 passed them; one that does not compile is none).
@@ -194,6 +203,12 @@ pub(crate) enum PanelEvent {
     Close(usize),
     /// The panel shown scrolled to here.
     Scrolled(f32),
+    /// A split panel's outputs scrolled to here (docs/adr/8057 §69).
+    ScrolledOutputs(f32),
+    /// A split panel's sash dragged: the form's height.
+    Split(f32),
+    /// A split panel's sash double-clicked: the form's default height.
+    SplitReset,
 }
 
 impl OpenPanel {
@@ -233,6 +248,8 @@ impl OpenPanel {
             images: BTreeMap::new(),
             steps: false,
             geoms: BTreeMap::new(),
+            split: None,
+            out_scroll: 0.0,
         };
         // The sections folded when it opens.
         for (at, c) in panel.definition.body.iter().enumerate() {
@@ -1108,7 +1125,7 @@ impl App {
         panel.side = entry.side;
         self.extensions.panels.push(panel);
         self.extensions.active_panel = self.extensions.panels.len() - 1;
-        Task::batch([scroll_back(0.0), self.show_extension_panel()])
+        Task::batch([scroll_back(0.0, 0.0), self.show_extension_panel()])
     }
 
     /// The open panel at `at` shown, scrolled as it was left; its answer seen.
@@ -1117,9 +1134,9 @@ impl App {
             return Task::none();
         };
         panel.unseen = false;
-        let y = panel.scroll;
+        let (y, outputs) = (panel.scroll, panel.out_scroll);
         self.extensions.active_panel = at;
-        scroll_back(y)
+        scroll_back(y, outputs)
     }
 
     /// A panel's tab moved among the others; the panel shown stays shown.
@@ -1158,7 +1175,7 @@ impl App {
         match x.panels.get_mut(x.active_panel) {
             Some(panel) => {
                 panel.unseen = false;
-                scroll_back(panel.scroll)
+                scroll_back(panel.scroll, panel.out_scroll)
             }
             None => Task::none(),
         }
@@ -1315,6 +1332,9 @@ impl App {
             PanelEvent::Move(from, to) => self.ext_panel_move(from, to),
             PanelEvent::Close(which) => return self.ext_panel_close(which),
             PanelEvent::Scrolled(y) => panel.scroll = y,
+            PanelEvent::ScrolledOutputs(y) => panel.out_scroll = y,
+            PanelEvent::Split(height) => panel.split = Some(height),
+            PanelEvent::SplitReset => panel.split = None,
             PanelEvent::Press(button) => return self.ext_panel_press(at, &button),
             PanelEvent::Page(id, page) => {
                 panel.pages.insert(id, page);

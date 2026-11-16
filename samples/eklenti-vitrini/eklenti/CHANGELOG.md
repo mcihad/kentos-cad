@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.50 — 16 Kasım 2026
+
+- Bakım kayıtları bölünmüş panel (`"split": true`): form üstte, bakım kayıtları ve tesisin ekleri altta kendi
+  kaydırmalarıyla; aradaki çizgi sürüklenince form ile çıktılar yüksekliği paylaşır, çift tık ilk hâline döndürür.
+
 ## 1.0.49 — 16 Kasım 2026
 
 - Bakım kayıtları panelinin altında "Tesisin ekleri" (`attachments`, `of: "tesis"`): seçilen tesisin fotoğrafları,

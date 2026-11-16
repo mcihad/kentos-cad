@@ -2,7 +2,8 @@
 # (bakim-tesis) kurar; Örnek tesis'e adlarıyla iki nokta konur (Nokta aracının Ad'ı, A). Vitrin › Bakım kayıtları'nda
 # Tesis bir ilişki seçicisi (relationPicker): iki tesis adlarıyla gelir. Merkez Okulu seçilince altta ilişki listesi
 # (relationList) boş; Açıklama yazılıp Ekle: komut geometrisiz bir bakım kaydı yazar, liste Python'suz yenilenir.
-# İkinci kayıt da eklenir; Park Kreşi seçilince liste boşalır, Merkez Okulu'na dönünce iki kayıt. (Önce 01.)
+# İkinci kayıt da eklenir; Park Kreşi seçilince liste boşalır. Panel bölünmüş (split): form üstte, liste altta kendi
+# kaydırmasıyla; Öznitelikler kapatılınca panel bütün yüksekliği alır. (Önce 01.)
 fit KentOS GIS — Eklenti vitrini
 wait 2500
 key Escape
@@ -45,6 +46,8 @@ click 843 20    # Vitrin
 wait 1200
 click 750 83    # Bakım kayıtları
 wait 2500
+click 1243 594  # Öznitelikler'i kapat: panel bütün yüksekliği alır
+wait 1200
 shot 50-panel
 click 1355 315  # Tesis
 wait 1000
@@ -63,11 +66,7 @@ type Çatı oluğu temizlendi
 wait 400
 click 1306 464  # Ekle
 wait 4000
-wheel 1280 450 -5   # panel aşağı: liste görünür
-wait 800
 shot 50-iki
-wheel 1280 450 5    # panel yukarı
-wait 800
 click 1355 315  # Tesis
 wait 1000
 click 1328 379  # Park Kreşi

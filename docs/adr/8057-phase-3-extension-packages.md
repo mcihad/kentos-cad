@@ -1802,7 +1802,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | grup, akordeon | var | `section` (katlanır başlık; sonraki bileşenleri bir sonraki bölüme dek toplar, §38) | katlıyken değerler komuta gider; yanlış bırakılan alan bölümünü açar |
 | | kaydırma | var | panel kendi kaydırır, yerini tutar | sekmeler üstte kalır |
 | | çizgi | var | `divider` (formun genişliğinde ince çizgi, §59) | |
-| | bölücü | KentOS'ta | `sash` | |
+| | bölücü | var | panelin `split`'i: form üstte, çıktılar altta, arada KentOS'un tutamağı (`Sash`), §69 | sürüklenen yükseklik panelde kalır |
 | | adımlayıcı | var | KentOS'un `wizard`'ı, eklentinin penceresinde: `ctx.dialog(…, steps=True)`, alanların sekmeleri adımlar (§60) | dock'taki panelde sekme |
 | Basit girdi | metin | var | `textField` | Enter birincil düğme |
 | | sayı | var | `numberField` (birim, sınır; `step` ile − ve + düğmeleri, §59) | yazıldığı gibi tutulur, basınca okunur |
@@ -3858,3 +3858,30 @@ Python kurucusu (`ui.attachments`), SDK rehberi; masaüstü yeni `apps/desktop/s
   "Okulun sayfası" yazılıp Kaydet: liste eki bağlantı simgesi, adı ve adresiyle, Aç'la gösterdi.
 - **Sınamalar:** masaüstü 1 (seçilmeden kayıt yok; nesne seçicinin binası seçilince eki listede, katmanı eklemeye açık,
   görünüm kuruluyor); rehberin ve §25'in türü anması; gerçek pencere 51-ek.
+
+## §69. Bölünmüş panel: `split`, form ile çıktılar arasında sürüklenen çizgi (`ADIM 22`, envanterin "bölücü"sü)
+
+**16 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/ui_panel.rs` (`PanelDefinition::split`, Kapı 1), şema ve
+Python kurucusu (`ui.panel(…, split=True)`), SDK rehberi; masaüstü `apps/desktop/src/shell/extensions/panel_view.rs`
+(`panel_content`: bölünmüş panel `responsive` içinde eldeki yüksekliği bilerek kurulur), `panels.rs`
+(`OpenPanel::split`, `out_scroll`, `PanelEvent::{Split, SplitReset, ScrolledOutputs}`, iki kaydırıcının geri verilmesi);
+Vitrin 1.0.50.
+
+- **Karar: panelin anahtarı, bileşen değil.** Çıktılar (tablo, ağaç, kart, gösterge, grafik, görsel, ilişki ve ek
+  listesi) zaten formun altında çiziliyor; gövdede bir bölücü bileşeninin yeri görünür sırayla örtüşmezdi. `"split":
+  true` ile başlık, form, çalışmanın çubuğu üstte bir kaydırıcıda; çalışmanın sözü ve çıktılar altta kendi
+  kaydırıcısında; arada KentOS'un tutamağı (`Sash::horizontal`, dock'larınki). Uzun sonuçlar kayarken form görünür
+  kalır.
+- **Yükseklik:** form ilk açılışta eldeki yüksekliğin beşte üçü (önce formdan yana: dar dock'ta alanlar kesilmesin),
+  kullanıcı sürükleyince o yükseklik paneliyle kalır (96–1600 piksel), çift tık ilk hâline döndürür. Çıktıların kaydırma
+  yeri de panel başına tutulur, panel yeniden gösterilince ikisi de geri verilir. Çıktısı olmayan panel bölünmez.
+- **Kapı 1:** `split` true ya da false; bilinmeyen üst alanların listesi onu anar. Pencerede (`ctx.dialog`) yok.
+- **SDK paketi:** rehber `split`'i anar; yer için tarih-saat alanının yazım cümlesi kısaldı. Paket 47 980 bayt.
+- **Vitrin 1.0.50:** Bakım kayıtları bölünmüş. Gerçek pencerede (52-bolucu): Öznitelikler kapatılınca form üstte
+  eksiksiz, iki kayıtlı liste ve ekler altta; çizgi y=595'ten 470'e sürüklendi, çıktılar büyüdü, form kendi
+  kaydırmasına geçti; çift tık çizgiyi geri getirdi. 50-iliski ve 51-ek bölünmüş panelle yeniden koşuldu. **Bulgu:**
+  çizginin tutma alanı birkaç piksel; ilk sürükleme 2 piksel ıskalayınca hiçbir şey olmadı (üzerine gelince imleç
+  boyutlandırma okuna döner).
+- **Sınamalar:** paylaşılan 1 (`split` okunur, yanlış türü yerinde söylenir, verilmezse kapalı); masaüstü 1 (bölünmüş
+  görünüm kurulur, sürükleme yüksekliği ve çıktıların kaydırması tutulur, çift tık bırakır); Python kurucusunun çıktısı;
+  gerçek pencere 52-bolucu.
