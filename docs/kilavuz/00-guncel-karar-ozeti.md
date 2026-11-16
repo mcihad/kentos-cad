@@ -106,7 +106,7 @@
       değildir (duvar, kolon, mahal yüksekliği ve metraj onu görmez); `IfcCovering`; `.kcad` mimari verisi 5.
     - Kiriş çizelgesi (kiriş, lento, hatıl, kayıt) ve Kaplama çizelgesi (yalnız kaplamalar); `.kcad` mimari verisi 6.
       Kalan: eğimli eleman, duvar kaplamasının kalınlığı, giydirme cephenin kapısı.
-  - **B11 sürüyor (16 Kasım 2026; [ADR 8072](../adr/8072-buildings-shared-basement-location.md); BIM-11 `[~]`):**
+  - **B11 bitti (16 Kasım 2026; [ADR 8072](../adr/8072-buildings-shared-basement-location.md); BIM-11 `[x]`, IFC-05 `[x]`):**
     - Programın binası kod (EK-2 §2.3), kullanım türü ve projenin ±0.00'ına göre ±0.00 taşır; birden çok binanın
       kapladığı kat seçilen binada sayılır (`BuildingProgram::shared`), nesnenin binası katından okunur
       (`building_of_level`); `.kcad` mimari verisi 9.
@@ -118,7 +118,9 @@
       ölçeklenmez); ±0.00'ın kotu bilinmiyorsa konum yazılmaz ve söylenir, 0 sayılmaz; kaydıran afin yazılmaz.
     - Alanlar (§4): binanın katları `counted_levels`, zemin katı `ground_of`; TAKS her binanın zemin katından; binanın
       payı `ZoningReport::of_building` (binalarınki birlikte projeninki, ortak bodrum bir kez); metraj `building`;
-      Ruhsat takımı bina seçer (`PermitSet::building`; paftanın `bina_kodu` ve `blok_no`'su). Kalan: plan kararları.
+      Ruhsat takımı bina seçer (`PermitSet::building`; paftanın `bina_kodu` ve `blok_no`'su).
+    - Plan kararları (§5): `cad.zoning.parcel` (salt okunur): parselin karar alanları kaynak planı, onay tarihi ve
+      notlarıyla; çelişki ve imar durumuyla fark söylenir, hiçbir şey yazılmaz (kesişim hukuki karar değildir).
   - **B10 yapıldı (16 Kasım 2026; [ADR 8071](../adr/8071-geometry-accuracy.md); BIM-10 `[x]`):**
     - Yayın kaynağı kesit modelidir (`Model::exact`): döşeme ve mahal parçalarından, duvar düz parçalı gövdesinden geri
       alınarak (`arc_recover`); IFC profili `IfcIndexedPolyCurve` + `IfcArcIndex`; parça sayısı görüntünün işidir.

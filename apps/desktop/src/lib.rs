@@ -690,6 +690,9 @@ mod performance_tests;
 #[path = "tests/zones_tests.rs"]
 mod zones_tests;
 #[cfg(test)]
+#[path = "tests/zoning_parcel_tests.rs"]
+mod zoning_parcel_tests;
+#[cfg(test)]
 #[path = "tests/road_project_panel_tests.rs"]
 mod road_project_panel_tests;
 #[cfg(test)]

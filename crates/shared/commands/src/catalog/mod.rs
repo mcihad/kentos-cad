@@ -2610,6 +2610,9 @@ mod tests {
                     crate::CAD_ARCH_PERFORMANCE => {
                         serde_json::from_value::<crate::ArchPerformance>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ZONING_PARCEL => {
+                        serde_json::from_value::<crate::ZoningParcel>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_NORTH_CREATE => {
                         serde_json::from_value::<crate::NorthCreate>(e.input.clone()).map(|_| ())
                     }
@@ -4451,6 +4454,9 @@ mod tests {
                         crate::CAD_ARCH_PERFORMANCE => {
                             serde_json::from_value::<crate::ArchPerformanceDone>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_ZONING_PARCEL => {
+                            serde_json::from_value::<crate::ZoningParcelDecided>(output.clone()).map(|_| ())
                         }
                         crate::CAD_NORTH_CREATE => {
                             serde_json::from_value::<crate::NorthCreated>(output.clone()).map(|_| ())

@@ -655,6 +655,30 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // Parselin plan kararları (docs/adr/8072 §5), held together by fixtures/commands/v1/cad.zoning.parcel.json.
+        CommandDescriptor {
+            id: crate::CAD_ZONING_PARCEL.into(),
+            version: crate::CAD_ZONING_PARCEL_VERSION,
+            title: "Parselin plan kararları".into(),
+            summary: "Binanın parseline düşen imar planı kararlarını çizimdeki imar-plani profilinin katmanlarından (belediyenin CBS'i) okur; çizimi değiştirmez, imar durumunu yazmaz: bir kesişim tek başına hukuki karar değildir. parcel parselin kalıcı kimliği (kapalı çizgi ya da alan; yoksa vaziyet planınınki, o da yoksa parcel_missing; çizimde yoksa entity_not_found; kapalı değilse not_a_parcel); tolerance sınır boyunca sayılmayan şeridin genişliği (m, yok: 0,01; sonlu ve en az 1e-6, değilse invalid_input). Her karar alanının parselle ortak parçaları ortalama genişliği 2A/P toleransı geçince sayılır: share (m²), değerleri yazıldığı gibi (Kullanim, Nizam, TAKS, KAKS, KatAdedi, Hmax, OnCekme, YanCekme, ArkaCekme, Belirtilmeyen), planı (Plan alanının PlanKimlik'i: kimlik, ad, seviye, durum, sürüm, OnayTarihi, Dayanak) ve plan notları (PlanNotlari'nın numaraları, sonra planın genel notları). uncovered hiçbir kararın altında kalmayan alan; conflicts aynı parça üstünde farklı yazan iki karar (alan, iki kararın kimliği ve değeri; sayılar sayı olarak karşılaştırılır), ikisi de söylenir, biri seçilmez; against imar durumunun emsali ya da TAKS'ı plan kararından farklıysa ikisi. notes: karar katmanı yok, birden çok karar (kademe hattı, PAİY 4/1-mm), yürürlükte olmayan ya da onay tarihi olmayan plan, çizilmemiş plan notu, cümle cümle.".into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ZoningParcel>(),
+            output: schema::<crate::ZoningParcelDecided>(),
+            plan: Some(schema::<crate::ZoningParcelDecided>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Vaziyet planının parseli".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
         // Yangın ve performans (docs/adr/8068), held together by fixtures/commands/v1/cad.arch.performance.json.
         CommandDescriptor {
             id: crate::CAD_ARCH_PERFORMANCE.into(),

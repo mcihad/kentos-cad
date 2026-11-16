@@ -446,6 +446,13 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: || vec![target(None, &["slab"], &[], Some("not_a_slab"), None)],
     },
+    // Parselin plan kararları (docs/adr/8072 §5).
+    Entry {
+        id: "cad.zoning.parcel",
+        refusals: &[&["parcel_missing", "entity_not_found", "not_a_parcel", "invalid_input"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.spaces.quantities",
         refusals: &[&["level_not_found", "layer_not_found", "building_not_found"]],

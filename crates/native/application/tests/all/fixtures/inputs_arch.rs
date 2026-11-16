@@ -525,6 +525,13 @@ impl Input for kentos_commands::ArchPerformance {
     }
 }
 
+impl Input for kentos_commands::ZoningParcel {
+    /// `tolerance` (docs/adr/8072 §5).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        (path == "tolerance").then_some(self.tolerance.as_mut()).flatten()
+    }
+}
+
 impl Input for kentos_commands::NorthCreate {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match (path, &mut self.north) {

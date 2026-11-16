@@ -21,6 +21,102 @@ thread_local! {
     static LAST: RefCell<Option<(usize, u64, Option<kentos_domain::zoning::ZoningReport>)>> = const { RefCell::new(None) };
     /// The last site plan read (docs/adr/8032), kept the same way.
     static SITE: RefCell<Option<(usize, u64, Option<kentos_domain::site::SiteReport>)>> = const { RefCell::new(None) };
+    /// The last plan decisions' lines (docs/adr/8072 §5), kept the same way.
+    static PLAN: RefCell<Option<(usize, u64, Vec<(String, bool)>)>> = const { RefCell::new(None) };
+}
+
+/// Parselin plan kararları for İmar durumu (docs/adr/8072 §5; `cad.zoning.parcel` on the site plan's parcel): each
+/// decision with its values as written, its plan (the source and its approval) and its notes; the parcel's area under
+/// none, two decisions saying different things over the same piece, the typed emsal or TAKS the plan writes otherwise
+/// (these in the warning colour), what else is said. Empty without the site plan's parcel. Read again only when the
+/// drawing changed.
+pub fn plan_lines(doc: &kentos_domain::Document) -> Vec<(String, bool)> {
+    let key = (std::ptr::from_ref(doc) as usize, doc.revision());
+    PLAN.with(|last| {
+        let mut last = last.borrow_mut();
+        match &*last {
+            Some((at, rev, lines)) if (*at, *rev) == key => lines.clone(),
+            _ => {
+                let lines = plan_words(doc);
+                *last = Some((key.0, key.1, lines.clone()));
+                lines
+            }
+        }
+    })
+}
+
+/// A decision field's words as İmar durumu says them.
+fn field_words(field: &str) -> &str {
+    match field {
+        "Kullanim" => "Kullanım",
+        "KatAdedi" => "Kat adedi",
+        "OnCekme" => "Ön çekme",
+        "YanCekme" => "Yan çekme",
+        "ArkaCekme" => "Arka çekme",
+        "Belirtilmeyen" => "Planda verilmeyen",
+        other => other,
+    }
+}
+
+fn plan_words(doc: &kentos_domain::Document) -> Vec<(String, bool)> {
+    if doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.parcel.as_ref()).is_none() {
+        return Vec::new();
+    }
+    let input = kentos_commands::ZoningParcel::default();
+    let a = match kentos_native_application::zoning_parcel::plan_in(doc, &input) {
+        kentos_commands::CommandResult::Completed { output, .. } => output,
+        _ => return Vec::new(),
+    };
+    let m2 = |v: f64| format!("{} m²", n2(v));
+    let mut out: Vec<(String, bool)> = Vec::new();
+    for d in &a.decisions {
+        let values: Vec<String> = d.values.iter().map(|v| format!("{} {}", field_words(&v.field), v.value)).collect();
+        out.push((format!("{} ({}): {}", d.id, m2(d.share), values.join(" · ")), false));
+        if let Some(p) = &d.plan {
+            let mut source = p.id.clone();
+            if let Some(n) = &p.name {
+                source.push_str(&format!(" {n}"));
+            }
+            let mut said: Vec<String> = Vec::new();
+            if let Some(st) = &p.status {
+                said.push(st.clone());
+            }
+            if let Some(o) = &p.approved {
+                said.push(format!("onay {o}"));
+            }
+            if let Some(b) = &p.basis {
+                said.push(b.clone());
+            }
+            if !said.is_empty() {
+                source.push_str(&format!(" ({})", said.join(", ")));
+            }
+            out.push((format!("Kaynak: {source}"), false));
+        }
+        for n in &d.notes {
+            out.push((format!("Plan notu {}: {}", n.number, n.text), false));
+        }
+    }
+    if a.uncovered > 0.0 {
+        out.push((format!("Hiçbir kararın altında olmayan alan: {}", m2(a.uncovered)), true));
+    }
+    for c in &a.conflicts {
+        out.push((
+            format!(
+                "Çelişki: {} aynı yerde ({}) {} için “{}” yazıyor; ikisi de gösterilir, KentOS seçmez.",
+                c.decisions.join(" ve "),
+                m2(c.area),
+                field_words(&c.field),
+                c.values.join("” ve “")
+            ),
+            true,
+        ));
+    }
+    for g in &a.against {
+        let typed = if g.field == "KAKS" { "emsal" } else { "TAKS" };
+        out.push((format!("İmar durumunda {typed} {}; plan kararı {} {}.", n2(g.typed), g.field, g.plan.join(" / ")), true));
+    }
+    out.extend(a.notes.iter().map(|n| (n.clone(), false)));
+    out
 }
 
 /// The drawing's site plan (docs/adr/8032), read again only when the drawing changed.
@@ -77,6 +173,8 @@ fn report(doc: &kentos_domain::Document) -> Option<kentos_domain::zoning::Zoning
 }
 
 fn n2(v: f64) -> String {
+    // An empty sum is −0 (IEEE): said as 0.
+    let v = if v == 0.0 { 0.0 } else { v };
     format!("{v:.2}").replace('.', ",")
 }
 

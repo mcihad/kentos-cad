@@ -170,6 +170,7 @@ pub(super) fn zoning_view<'a>(
     on: impl Fn(ZoningField, String) -> Message + Copy + 'a,
     on_local: impl Fn(Option<kentos_commands::LocalRules>) -> Message + 'a,
     summary: Vec<(String, String, bool)>,
+    plan: Vec<(String, bool)>,
 ) -> Element<'a, Message> {
     let wrong = |s: &str| number(s).is_err();
     let line = |name: &'static str, holder: &'static str, value: &'a str, f: ZoningField| {
@@ -223,6 +224,18 @@ pub(super) fn zoning_view<'a>(
             ]
             .spacing(8),
         );
+    }
+    // The zoning plan's decisions on the parcel (docs/adr/8072 §5): with their source, never written into the fields.
+    if !plan.is_empty() {
+        body = body.push(label::body("Parselin plan kararları").font(typography::ui_strong()));
+        for (words, warn) in plan {
+            let line = label::body(words);
+            body = body.push(if warn { line.style(kentos_ui::style::text::warning) } else { line });
+        }
+        body = body.push(label::caption(
+            "Belediyenin CBS'inden gelen imar planı katmanlarından, parselle kesişimiyle okunur. Bir kesişim tek başına \
+             hukuki karar değildir: yukarıdaki değerler imar durum belgesinden yazılır, buradan yazılmaz.",
+        ));
     }
     super::group::<Message>("İmar durumu", body)
 }

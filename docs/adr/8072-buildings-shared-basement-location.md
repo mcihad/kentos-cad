@@ -1,9 +1,10 @@
 # ADR 8072: Çok bina, ortak bodrum, konum ve kot
 
-- **Durum:** kısmen uygulandı (16 Kasım 2026; §1–§4). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-11,
+- **Durum:** uygulandı (16 Kasım 2026; §1–§5); iyileştirmeler "Sıradaki adımlar"da. Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-11,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-05; uygulama sırasında B11. Bu ADR maddenin bütün adımlarını tutar; koddaki
   "docs/adr/8072 §N" atıfları bölümleri gösterir: §1 binalar (kod, kullanım, ±0.00, ortak kat), §2 bina başına model, §3 konum
-  (yerel sistem, harita dönüşümü, kot, yerleşim zinciri), §4 alanlar ve bina başına çıktılar. Kararların numarası
+  (yerel sistem, harita dönüşümü, kot, yerleşim zinciri), §4 alanlar ve bina başına çıktılar, §5 parselin plan kararları.
+  Kararların numarası
   bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar numarasız son bölümlerdedir.
 - **Bağlam:** ADR [0773](0773-building-program-units-and-design-brief.md) (bina programı), [0784](0784-building-wing-window-and-common-area-shares.md) §1
   (binaların ve kanatların katları), [8032](8032-site-plan-parcel-setbacks-and-datum.md) (vaziyet planı, saha röperi),
@@ -220,10 +221,55 @@ programda olmayan bina reddi). Ortak durumlar: `cad.spaces.quantities` 30 (bina 
 `space_command_cases.py`'nin başvurusu programın binasının katlarını kendisi sayar). Resimler: `bina-metraj`,
 `bina-ruhsat`.
 
+## §5. Parselin plan kararları
+
+**Araştırma.**
+
+- **BIM-11:** "parseli etkileyen plan kararları (fonksiyon, nizam, yaklaşma sınırı, emsal, TAKS, yükseklik) CBS
+  tarafından kaynağı, onay tarihi ve plan notuyla gelir. Plan gösterimi ya da bir kesişim tek başına hukuki hesap kuralı
+  olmaz; çelişen iki karar kullanıcıya gösterilir."
+- **PAİY 4/1-ll:** "İmar durum belgesi: Bir parselin; Kanun, uygulama imar planı, plan notlarını ve bu Yönetmelikte yer
+  alan kullanım kararlarını ve yapılaşma şartlarını içeren, yapının inşa edileceği imar parselini sınır ve boyutlarıyla
+  gösteren belgeyi"; 55/2 ve 55/4: belgeyi idare verir. **4/1-mm (kademe hattı):** bir imar parseline birden fazla kat
+  adedi, yükseklik, yoğunluk, nizam ya da kullanım kararı isabet edince farklı kararların sınırı: iki karara düşen parsel
+  kendiliğinden çelişki değildir.
+- **KentOS'ta olan:** harita tarafının `imar-plani` profili (ADR 1420, 2020, 5040): plan sınırı (PlanKimlik, PlanAdi,
+  Seviye, Durum, Sürüm, OnayTarihi, Dayanak), karar alanı (Kullanim, Nizam, TAKS, KAKS, KatAdedi, Hmax, çekmeler,
+  Belirtilmeyen, PlanNotlari), plan notu (NotNo, Metin, Kapsam); İmar planı denetimi (`cad.zoning.check`) ve parçanın
+  ortalama genişlik kuralı (ADR 0202 §2). Mimari tarafta İmar durumu elle yazılır (ADR 8030), vaziyet planı parseli tutar
+  (ADR 8032).
+
+**Karar.**
+
+18. **`cad.zoning.parcel` v1** (salt okunur, mimari modülü): bir parselin (yoksa vaziyet planınınki) imar planı
+    katmanlarıyla kesişimi. Her karar alanının payı, ortak parçaları ortalama genişliği 2A/P toleransı (0,01 m) geçince
+    sayılır; değerleri yazıldığı gibi (sayı olarak okunmaz, §23.1); planı (kimlik, ad, seviye, durum, sürüm, onay tarihi,
+    dayanak) ve notları (andığı numaralar, sonra planın genel notları). Hiçbir kararın altında kalmayan alan; aynı parça
+    üstünde farklı yazan iki karar (çelişki: alan, iki kimlik, iki değer; sayılar sayı olarak karşılaştırılır, "1,20" ile
+    "1.2" aynı); imar durumunun emsali ya da TAKS'ı plan kararınınkinden farklıysa ikisi. Notlar: karar katmanı yok,
+    birden çok karar (kademe hattı, PAİY 4/1-mm), yürürlükte olmayan, durumu ya da onay tarihi yazılmamış plan, planı
+    yazılmamış ya da çizilmemiş karar, çizilmemiş plan notu. Retler `parcel_missing` (yeni), `entity_not_found`,
+    `not_a_parcel`, `invalid_input`.
+19. **Hiçbir şey yazılmaz:** kesişim hukuki karar değildir; imar durumunun alanları belgeden elle yazılır. Masaüstünde
+    Proje ayarları › Mimari › İmar durumu'nun altında "Parselin plan kararları": her karar, kaynağı ve notları; kararsız
+    alan, çelişkiler ve imar durumuyla farklar uyarı renginde; altında "kesişim hukuki karar değildir" notu. Komut
+    çizimin sürümüne göre bir kez okunur. Şerit düğmesi yok (Python, MCP ve katalogdan çağrılır).
+20. Rozet özetinde boş toplamın −0'ı "0,00" yazılır.
+
+**Sınama.** Ortak durumlar `cad.zoning.parcel` 21 (`scripts/fixtures/zoning_parcel_cases.py`, KentOS kodu olmadan,
+eksenlere paralel dikdörtgenlerle tam): vaziyet planının parseli iki karara (kaynak, notlar, imar durumuyla fark), planı,
+tek karar, üst üste çizilmiş iki kararın çelişkisi, askıdaki ve onay tarihsiz plan ile planın dışı, 5 mm şerit
+(sayılmaz; 1 mm toleransla sayılır), katmansız çizim, imar durumsuz ve yalnız emsalli çizim, planı yazılmamış ve
+çizilmemiş karar, durumu yazılmamış plan, kapalı çizgi parsel, planın dışındaki parsel, doğrulama, dört ret.
+Masaüstünde `zoning_parcel_tests::imar_durumu_lists_the_parcel_s_decisions_with_their_source` (satırlar, kaynak,
+uyarı rengindeki fark, alanlar değişmez). Resim `.run/gui-evidence/plan-kararlari-8072/`.
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-contracts --lib program`, `-p kentos-kcad --test all -- arch_elements`,
   `KENTOS_CASES_ONLY=cad.program … every_command_case`, `-p kentos-desktop --lib -- program_scenes`.
+- `KENTOS_CASES_ONLY=cad.zoning.parcel … every_command_case capabilities`; `python3 scripts/fixtures/zoning_parcel_cases.py
+  --check`; `-p kentos-desktop --lib -- zoning_parcel_tests history::text`.
 - `cargo test -p kentos-ifc --lib`, `-p kentos-native-application --test all -- ifc_place arch_ifc blocks_areas`,
   `KENTOS_CASES_ONLY=cad.arch.ifc,cad.arch.audit,file.export.ifc … every_command_case`; `uv run --offline --no-project
   --with mpmath python3 scripts/fixtures/location_cases.py --check`; `curved_ifc_check.py` (IfcOpenShell 0.9.0).
@@ -236,5 +282,8 @@ programda olmayan bina reddi). Ortak durumlar: `cad.spaces.quantities` 30 (bina 
 - **Alanların kalanı:** vaziyet planının haritası birden çok binanın zemin katını birlikte çizmez (harita tek kat
   çizer); bilgi paftasındaki PAİY 57/10 tablosu binanın değil parselin; açığa çıkan bodrumun taban alanına katılması
   (TAKS'ın notu, 20/4) arazi kotunu ister.
-- **§5 Onaylı plan kararları:** CBS'den kaynağı, onay tarihi ve plan notuyla; çelişen iki karar gösterilir.
-- Denetim bulguları: seçilmeyen ortak kat, birden çok binada kodsuz ya da ±0.00'ı verilmeyen bina.
+- **Plan kararlarının kalanı:** imar durumuna bir kararın değerlerini kaynağıyla (plan, onay tarihi) almak, kaynağı
+  imar durumunda saklamak; plan notlarının metninden kural çıkarmak yok (müellifin ve idarenin işi).
+- Denetim bulguları: seçilmeyen ortak kat, birden çok binada kodsuz ya da ±0.00'ı verilmeyen bina (bugün Bina programı
+  "Seçilmedi" der, IFC dışa aktarma binası belli olmayan nesneyi söyler; Mimari denetimin program grubu mahal konumlu
+  bulgu verir, bina düzeyinde bulgu yeri ister).

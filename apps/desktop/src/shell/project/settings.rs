@@ -1145,6 +1145,7 @@ impl App {
                     |f, t| event(Event::ArchZoning(f, t)),
                     |r| event(Event::ArchLocalRules(r)),
                     crate::zoning_badge::summary(&doc.model),
+                    crate::zoning_badge::plan_lines(&doc.model),
                 ),
                 super::arch::fire_view(&s.arch_zoning, |on| event(Event::ArchSprinklers(on))),
                 super::arch::in_use_view(in_use.as_ref(), event(Event::SelectLevelUsers)),

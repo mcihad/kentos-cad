@@ -1,0 +1,4892 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.zoning.parcel",
+  "commandVersion": 1,
+  "title": "Parselin plan kararları: payları, kaynak planları, notları, çelişkiler, imar durumuyla fark; retler",
+  "note": "ADR 8072 §5. Beklenenler scripts/fixtures/zoning_parcel_cases.py'nin kurallarından, KentOS kodu olmadan; parsel ve kararlar eksenlere paralel dikdörtgenler, ortak parçalar tam.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Parselin plan kararları",
+    "settings": {
+      "srid": 5254,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 500.0,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "site": {
+          "parcel": "0192f5c0-8072-7005-8000-000000000009"
+        },
+        "zoning": {
+          "parcelArea": 900.0,
+          "far": 1.2,
+          "coverage": 0.4
+        }
+      }
+    },
+    "origin": {
+      "x": 487000.0,
+      "y": 4420000.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "imar",
+        "name": "İmar planı",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "plan",
+            "name": "Plan sınırı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "karar",
+            "name": "Karar alanları",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "notlar",
+            "name": "Plan notları",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "plan",
+        "attrs": {
+          "PlanKimlik": "UIP-1",
+          "PlanAdi": "Merkez uygulama imar planı",
+          "Seviye": "uip",
+          "Durum": "yururlukte",
+          "Surum": "3",
+          "OnayTarihi": "2024-05-14",
+          "Dayanak": "Meclis kararı 2024/112"
+        },
+        "pts": [
+          {
+            "x": 487000.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487100.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487100.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487000.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "plan",
+        "attrs": {
+          "PlanKimlik": "UIP-2",
+          "Seviye": "uip",
+          "Durum": "askida"
+        },
+        "pts": [
+          {
+            "x": 487100.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487140.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487140.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487100.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "karar",
+        "attrs": {
+          "KararKimlik": "K1",
+          "Plan": "UIP-1",
+          "Kullanim": "konut",
+          "Nizam": "A",
+          "TAKS": "0.40",
+          "KAKS": "1.20",
+          "KatAdedi": "3",
+          "OnCekme": "5",
+          "YanCekme": "3",
+          "PlanNotlari": "1; 2"
+        },
+        "pts": [
+          {
+            "x": 487000.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487040.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487040.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487000.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "karar",
+        "attrs": {
+          "KararKimlik": "K2",
+          "Plan": "UIP-1",
+          "Kullanim": "ticaret-konut",
+          "Nizam": "BL",
+          "TAKS": "0.50",
+          "KAKS": "2,00",
+          "Hmax": "15.50",
+          "PlanNotlari": "2, 3"
+        },
+        "pts": [
+          {
+            "x": 487040.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487100.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487100.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487040.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 5,
+        "layerId": "karar",
+        "attrs": {
+          "KararKimlik": "K3",
+          "Plan": "UIP-1",
+          "Kullanim": "konut",
+          "Nizam": "A",
+          "TAKS": "0.4",
+          "KAKS": "1.50",
+          "KatAdedi": "4"
+        },
+        "pts": [
+          {
+            "x": 487000.0,
+            "y": 4420040.0
+          },
+          {
+            "x": 487020.0,
+            "y": 4420040.0
+          },
+          {
+            "x": 487020.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487000.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 6,
+        "layerId": "karar",
+        "attrs": {
+          "KararKimlik": "K4",
+          "Plan": "UIP-2",
+          "Kullanim": "egitim",
+          "Belirtilmeyen": "TAKS"
+        },
+        "pts": [
+          {
+            "x": 487100.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487140.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487140.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487100.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 7,
+        "layerId": "notlar",
+        "attrs": {
+          "NotNo": "1",
+          "Plan": "UIP-1",
+          "Metin": "Bodrum katlar emsale dahil değildir.",
+          "Kapsam": "genel"
+        },
+        "p": {
+          "x": 487010.0,
+          "y": 4420060.0
+        }
+      },
+      {
+        "kind": "point",
+        "id": 8,
+        "layerId": "notlar",
+        "attrs": {
+          "NotNo": "2",
+          "Plan": "UIP-1",
+          "Metin": "Çatı katı yapılamaz.",
+          "Kapsam": "alan"
+        },
+        "p": {
+          "x": 487020.0,
+          "y": 4420060.0
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 9,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487030.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487060.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487060.0,
+            "y": 4420040.0
+          },
+          {
+            "x": 487030.0,
+            "y": 4420040.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 10,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487005.0,
+            "y": 4420005.0
+          },
+          {
+            "x": 487035.0,
+            "y": 4420005.0
+          },
+          {
+            "x": 487035.0,
+            "y": 4420030.0
+          },
+          {
+            "x": 487005.0,
+            "y": 4420030.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487010.0,
+            "y": 4420035.0
+          },
+          {
+            "x": 487030.0,
+            "y": 4420035.0
+          },
+          {
+            "x": 487030.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487010.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 12,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487090.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487150.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487150.0,
+            "y": 4420020.0
+          },
+          {
+            "x": 487090.0,
+            "y": 4420020.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 14,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487010.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487040.005,
+            "y": 4420010.0
+          },
+          {
+            "x": 487040.005,
+            "y": 4420030.0
+          },
+          {
+            "x": 487010.0,
+            "y": 4420030.0
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 15,
+        "layerId": "0",
+        "attrs": {},
+        "a": {
+          "x": 487000.0,
+          "y": 4419995.0
+        },
+        "b": {
+          "x": 487010.0,
+          "y": 4419995.0
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 16,
+        "layerId": "plan",
+        "attrs": {
+          "PlanKimlik": "UIP-3",
+          "Seviye": "uip"
+        },
+        "pts": [
+          {
+            "x": 487200.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487240.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487240.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487200.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 17,
+        "layerId": "karar",
+        "attrs": {
+          "KararKimlik": "K5",
+          "Kullanim": "park"
+        },
+        "pts": [
+          {
+            "x": 487160.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487180.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487180.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487160.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 18,
+        "layerId": "karar",
+        "attrs": {
+          "KararKimlik": "K6",
+          "Plan": "UIP-9",
+          "Kullanim": "spor"
+        },
+        "pts": [
+          {
+            "x": 487180.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487200.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487200.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487180.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 19,
+        "layerId": "karar",
+        "attrs": {
+          "KararKimlik": "K7",
+          "Plan": "UIP-3",
+          "Kullanim": "konut",
+          "TAKS": "0.35",
+          "KAKS": "1.05"
+        },
+        "pts": [
+          {
+            "x": 487200.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487240.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487240.0,
+            "y": 4420050.0
+          },
+          {
+            "x": 487200.0,
+            "y": 4420050.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 20,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487165.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487175.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487175.0,
+            "y": 4420020.0
+          },
+          {
+            "x": 487165.0,
+            "y": 4420020.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 21,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487185.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487195.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487195.0,
+            "y": 4420020.0
+          },
+          {
+            "x": 487185.0,
+            "y": 4420020.0
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 22,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487205.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487235.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487235.0,
+            "y": 4420040.0
+          },
+          {
+            "x": 487205.0,
+            "y": 4420040.0
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 23,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487005.0,
+            "y": 4420005.0
+          },
+          {
+            "x": 487035.0,
+            "y": 4420005.0
+          },
+          {
+            "x": 487035.0,
+            "y": 4420030.0
+          },
+          {
+            "x": 487005.0,
+            "y": 4420030.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "kind": "polygon",
+        "id": 24,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487300.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487320.0,
+            "y": 4420000.0
+          },
+          {
+            "x": 487320.0,
+            "y": 4420010.0
+          },
+          {
+            "x": 487300.0,
+            "y": 4420010.0
+          }
+        ]
+      }
+    ],
+    "uids": [
+      "0192f5c0-8072-7005-8000-000000000001",
+      "0192f5c0-8072-7005-8000-000000000002",
+      "0192f5c0-8072-7005-8000-000000000003",
+      "0192f5c0-8072-7005-8000-000000000004",
+      "0192f5c0-8072-7005-8000-000000000005",
+      "0192f5c0-8072-7005-8000-000000000006",
+      "0192f5c0-8072-7005-8000-000000000007",
+      "0192f5c0-8072-7005-8000-000000000008",
+      "0192f5c0-8072-7005-8000-000000000009",
+      "0192f5c0-8072-7005-8000-00000000000a",
+      "0192f5c0-8072-7005-8000-00000000000b",
+      "0192f5c0-8072-7005-8000-00000000000c",
+      "0192f5c0-8072-7005-8000-00000000000e",
+      "0192f5c0-8072-7005-8000-00000000000f",
+      "0192f5c0-8072-7005-8000-000000000010",
+      "0192f5c0-8072-7005-8000-000000000011",
+      "0192f5c0-8072-7005-8000-000000000012",
+      "0192f5c0-8072-7005-8000-000000000013",
+      "0192f5c0-8072-7005-8000-000000000014",
+      "0192f5c0-8072-7005-8000-000000000015",
+      "0192f5c0-8072-7005-8000-000000000016",
+      "0192f5c0-8072-7005-8000-000000000017",
+      "0192f5c0-8072-7005-8000-000000000018"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Vaziyet planının parseli iki karara isabet ediyor: kaynakları, notları, imar durumuyla fark",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000009",
+              "area": 900,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000003",
+                  "id": "K1",
+                  "share": 300,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.40"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.20"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "3"
+                    },
+                    {
+                      "field": "OnCekme",
+                      "value": "5"
+                    },
+                    {
+                      "field": "YanCekme",
+                      "value": "3"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    },
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                },
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000004",
+                  "id": "K2",
+                  "share": 600,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "ticaret-konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "BL"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.50"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "2,00"
+                    },
+                    {
+                      "field": "Hmax",
+                      "value": "15.50"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    },
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [
+                {
+                  "field": "KAKS",
+                  "typed": 1.2,
+                  "plan": [
+                    "1.20",
+                    "2,00"
+                  ]
+                },
+                {
+                  "field": "TAKS",
+                  "typed": 0.4,
+                  "plan": [
+                    "0.40",
+                    "0.50"
+                  ]
+                }
+              ],
+              "notes": [
+                "Parsel 2 karar alanına isabet ediyor (K1, K2); kademe hattı ve hangi kararın nerede geçtiği plandan okunur (PAİY 4/1-mm).",
+                "“K2” kararının andığı 3 numaralı plan notu çizimde yok."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planı da aynı cevabı verir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000009",
+              "area": 900,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000003",
+                  "id": "K1",
+                  "share": 300,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.40"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.20"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "3"
+                    },
+                    {
+                      "field": "OnCekme",
+                      "value": "5"
+                    },
+                    {
+                      "field": "YanCekme",
+                      "value": "3"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    },
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                },
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000004",
+                  "id": "K2",
+                  "share": 600,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "ticaret-konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "BL"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.50"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "2,00"
+                    },
+                    {
+                      "field": "Hmax",
+                      "value": "15.50"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    },
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [
+                {
+                  "field": "KAKS",
+                  "typed": 1.2,
+                  "plan": [
+                    "1.20",
+                    "2,00"
+                  ]
+                },
+                {
+                  "field": "TAKS",
+                  "typed": 0.4,
+                  "plan": [
+                    "0.40",
+                    "0.50"
+                  ]
+                }
+              ],
+              "notes": [
+                "Parsel 2 karar alanına isabet ediyor (K1, K2); kademe hattı ve hangi kararın nerede geçtiği plandan okunur (PAİY 4/1-mm).",
+                "“K2” kararının andığı 3 numaralı plan notu çizimde yok."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tek karar, imar durumu planla aynı: fark yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-00000000000a"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-00000000000a",
+              "area": 750,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000003",
+                  "id": "K1",
+                  "share": 750,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.40"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.20"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "3"
+                    },
+                    {
+                      "field": "OnCekme",
+                      "value": "5"
+                    },
+                    {
+                      "field": "YanCekme",
+                      "value": "3"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    },
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [],
+              "notes": []
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Üst üste çizilmiş iki karar: çelişkileri ikisiyle söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-00000000000b"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-00000000000b",
+              "area": 300,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000003",
+                  "id": "K1",
+                  "share": 300,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.40"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.20"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "3"
+                    },
+                    {
+                      "field": "OnCekme",
+                      "value": "5"
+                    },
+                    {
+                      "field": "YanCekme",
+                      "value": "3"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    },
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                },
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000005",
+                  "id": "K3",
+                  "share": 100,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.4"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.50"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "4"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [
+                {
+                  "field": "KAKS",
+                  "area": 100,
+                  "decisions": [
+                    "K1",
+                    "K3"
+                  ],
+                  "values": [
+                    "1.20",
+                    "1.50"
+                  ]
+                },
+                {
+                  "field": "KatAdedi",
+                  "area": 100,
+                  "decisions": [
+                    "K1",
+                    "K3"
+                  ],
+                  "values": [
+                    "3",
+                    "4"
+                  ]
+                },
+                {
+                  "field": "OnCekme",
+                  "area": 100,
+                  "decisions": [
+                    "K1",
+                    "K3"
+                  ],
+                  "values": [
+                    "5",
+                    ""
+                  ]
+                },
+                {
+                  "field": "YanCekme",
+                  "area": 100,
+                  "decisions": [
+                    "K1",
+                    "K3"
+                  ],
+                  "values": [
+                    "3",
+                    ""
+                  ]
+                }
+              ],
+              "against": [
+                {
+                  "field": "KAKS",
+                  "typed": 1.2,
+                  "plan": [
+                    "1.20",
+                    "1.50"
+                  ]
+                }
+              ],
+              "notes": [
+                "Parsel 2 karar alanına isabet ediyor (K1, K3); kademe hattı ve hangi kararın nerede geçtiği plandan okunur (PAİY 4/1-mm)."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Askıdaki, onay tarihsiz plan ve planın dışında kalan alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-00000000000c"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-00000000000c",
+              "area": 600,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000004",
+                  "id": "K2",
+                  "share": 100,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "ticaret-konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "BL"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.50"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "2,00"
+                    },
+                    {
+                      "field": "Hmax",
+                      "value": "15.50"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    },
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                },
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000006",
+                  "id": "K4",
+                  "share": 400,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "egitim"
+                    },
+                    {
+                      "field": "Belirtilmeyen",
+                      "value": "TAKS"
+                    }
+                  ],
+                  "notes": [],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000002",
+                    "id": "UIP-2",
+                    "level": "uip",
+                    "status": "askida"
+                  }
+                }
+              ],
+              "uncovered": 100,
+              "conflicts": [],
+              "against": [
+                {
+                  "field": "KAKS",
+                  "typed": 1.2,
+                  "plan": [
+                    "2,00"
+                  ]
+                },
+                {
+                  "field": "TAKS",
+                  "typed": 0.4,
+                  "plan": [
+                    "0.50"
+                  ]
+                }
+              ],
+              "notes": [
+                "Parsel 2 karar alanına isabet ediyor (K2, K4); kademe hattı ve hangi kararın nerede geçtiği plandan okunur (PAİY 4/1-mm).",
+                "UIP-2 planının durumu “askida”; yürürlükte değil.",
+                "UIP-2 planının onay tarihi yok.",
+                "“K2” kararının andığı 3 numaralı plan notu çizimde yok."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Karar sınırında 5 mm'lik şerit sayılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-00000000000e"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-00000000000e",
+              "area": 600.1,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000003",
+                  "id": "K1",
+                  "share": 600,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.40"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.20"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "3"
+                    },
+                    {
+                      "field": "OnCekme",
+                      "value": "5"
+                    },
+                    {
+                      "field": "YanCekme",
+                      "value": "3"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    },
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                }
+              ],
+              "uncovered": 0,
+              "conflicts": [],
+              "against": [],
+              "notes": []
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Daha dar toleransla şerit de sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-00000000000e",
+            "tolerance": 0.001
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-00000000000e",
+              "area": 600.1,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000003",
+                  "id": "K1",
+                  "share": 600,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.40"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.20"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "3"
+                    },
+                    {
+                      "field": "OnCekme",
+                      "value": "5"
+                    },
+                    {
+                      "field": "YanCekme",
+                      "value": "3"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    },
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                },
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000004",
+                  "id": "K2",
+                  "share": 0.10000000000005116,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "ticaret-konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "BL"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.50"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "2,00"
+                    },
+                    {
+                      "field": "Hmax",
+                      "value": "15.50"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    },
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [
+                {
+                  "field": "KAKS",
+                  "typed": 1.2,
+                  "plan": [
+                    "1.20",
+                    "2,00"
+                  ]
+                },
+                {
+                  "field": "TAKS",
+                  "typed": 0.4,
+                  "plan": [
+                    "0.40",
+                    "0.50"
+                  ]
+                }
+              ],
+              "notes": [
+                "Parsel 2 karar alanına isabet ediyor (K1, K2); kademe hattı ve hangi kararın nerede geçtiği plandan okunur (PAİY 4/1-mm).",
+                "“K2” kararının andığı 3 numaralı plan notu çizimde yok."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Karar katmanı yoksa söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000009",
+              "area": 900,
+              "decisions": [],
+              "uncovered": 900,
+              "conflicts": [],
+              "against": [],
+              "notes": [
+                "Çizimde imar planının karar alanı katmanı yok; plan kararları belediyenin CBS'inden imar-plani profiliyle gelir (cad.profiles.apply)."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Parselin plan kararları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 500.0,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              }
+            ],
+            "site": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000009"
+            },
+            "zoning": {
+              "parcelArea": 900.0,
+              "far": 1.2,
+              "coverage": 0.4
+            }
+          }
+        },
+        "origin": {
+          "x": 487000.0,
+          "y": 4420000.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 9,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487030.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487060.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487060.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420040.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487005.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420030.0
+              },
+              {
+                "x": 487005.0,
+                "y": 4420030.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487010.0,
+                "y": 4420035.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420035.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487010.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487090.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487150.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487150.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487090.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487010.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487040.005,
+                "y": 4420010.0
+              },
+              {
+                "x": 487040.005,
+                "y": 4420030.0
+              },
+              {
+                "x": 487010.0,
+                "y": 4420030.0
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 487000.0,
+              "y": 4419995.0
+            },
+            "b": {
+              "x": 487010.0,
+              "y": 4419995.0
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487165.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487175.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487175.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487165.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487185.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487195.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487195.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487185.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 22,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487205.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487235.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487235.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487205.0,
+                "y": 4420040.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 23,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487005.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420030.0
+              },
+              {
+                "x": 487005.0,
+                "y": 4420030.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polygon",
+            "id": 24,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487300.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487320.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487320.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487300.0,
+                "y": 4420010.0
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5c0-8072-7005-8000-000000000009",
+          "0192f5c0-8072-7005-8000-00000000000a",
+          "0192f5c0-8072-7005-8000-00000000000b",
+          "0192f5c0-8072-7005-8000-00000000000c",
+          "0192f5c0-8072-7005-8000-00000000000e",
+          "0192f5c0-8072-7005-8000-00000000000f",
+          "0192f5c0-8072-7005-8000-000000000014",
+          "0192f5c0-8072-7005-8000-000000000015",
+          "0192f5c0-8072-7005-8000-000000000016",
+          "0192f5c0-8072-7005-8000-000000000017",
+          "0192f5c0-8072-7005-8000-000000000018"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "İmar durumu yazılmamışsa karşılaştırma yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000009",
+              "area": 900,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000003",
+                  "id": "K1",
+                  "share": 300,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.40"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.20"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "3"
+                    },
+                    {
+                      "field": "OnCekme",
+                      "value": "5"
+                    },
+                    {
+                      "field": "YanCekme",
+                      "value": "3"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    },
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                },
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000004",
+                  "id": "K2",
+                  "share": 600,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "ticaret-konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "BL"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.50"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "2,00"
+                    },
+                    {
+                      "field": "Hmax",
+                      "value": "15.50"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    },
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [],
+              "notes": [
+                "Parsel 2 karar alanına isabet ediyor (K1, K2); kademe hattı ve hangi kararın nerede geçtiği plandan okunur (PAİY 4/1-mm).",
+                "“K2” kararının andığı 3 numaralı plan notu çizimde yok."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Parselin plan kararları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 500.0,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              }
+            ],
+            "site": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000009"
+            }
+          }
+        },
+        "origin": {
+          "x": 487000.0,
+          "y": 4420000.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "imar",
+            "name": "İmar planı",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "plan",
+                "name": "Plan sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "karar",
+                "name": "Karar alanları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "notlar",
+                "name": "Plan notları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "plan",
+            "attrs": {
+              "PlanKimlik": "UIP-1",
+              "PlanAdi": "Merkez uygulama imar planı",
+              "Seviye": "uip",
+              "Durum": "yururlukte",
+              "Surum": "3",
+              "OnayTarihi": "2024-05-14",
+              "Dayanak": "Meclis kararı 2024/112"
+            },
+            "pts": [
+              {
+                "x": 487000.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487000.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "plan",
+            "attrs": {
+              "PlanKimlik": "UIP-2",
+              "Seviye": "uip",
+              "Durum": "askida"
+            },
+            "pts": [
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K1",
+              "Plan": "UIP-1",
+              "Kullanim": "konut",
+              "Nizam": "A",
+              "TAKS": "0.40",
+              "KAKS": "1.20",
+              "KatAdedi": "3",
+              "OnCekme": "5",
+              "YanCekme": "3",
+              "PlanNotlari": "1; 2"
+            },
+            "pts": [
+              {
+                "x": 487000.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487040.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487040.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487000.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 4,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K2",
+              "Plan": "UIP-1",
+              "Kullanim": "ticaret-konut",
+              "Nizam": "BL",
+              "TAKS": "0.50",
+              "KAKS": "2,00",
+              "Hmax": "15.50",
+              "PlanNotlari": "2, 3"
+            },
+            "pts": [
+              {
+                "x": 487040.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487040.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 5,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K3",
+              "Plan": "UIP-1",
+              "Kullanim": "konut",
+              "Nizam": "A",
+              "TAKS": "0.4",
+              "KAKS": "1.50",
+              "KatAdedi": "4"
+            },
+            "pts": [
+              {
+                "x": 487000.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487020.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487020.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487000.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 6,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K4",
+              "Plan": "UIP-2",
+              "Kullanim": "egitim",
+              "Belirtilmeyen": "TAKS"
+            },
+            "pts": [
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 7,
+            "layerId": "notlar",
+            "attrs": {
+              "NotNo": "1",
+              "Plan": "UIP-1",
+              "Metin": "Bodrum katlar emsale dahil değildir.",
+              "Kapsam": "genel"
+            },
+            "p": {
+              "x": 487010.0,
+              "y": 4420060.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 8,
+            "layerId": "notlar",
+            "attrs": {
+              "NotNo": "2",
+              "Plan": "UIP-1",
+              "Metin": "Çatı katı yapılamaz.",
+              "Kapsam": "alan"
+            },
+            "p": {
+              "x": 487020.0,
+              "y": 4420060.0
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 9,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487030.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487060.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487060.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420040.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487005.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420030.0
+              },
+              {
+                "x": 487005.0,
+                "y": 4420030.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487010.0,
+                "y": 4420035.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420035.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487010.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487090.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487150.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487150.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487090.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487010.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487040.005,
+                "y": 4420010.0
+              },
+              {
+                "x": 487040.005,
+                "y": 4420030.0
+              },
+              {
+                "x": 487010.0,
+                "y": 4420030.0
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 487000.0,
+              "y": 4419995.0
+            },
+            "b": {
+              "x": 487010.0,
+              "y": 4419995.0
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 16,
+            "layerId": "plan",
+            "attrs": {
+              "PlanKimlik": "UIP-3",
+              "Seviye": "uip"
+            },
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K5",
+              "Kullanim": "park"
+            },
+            "pts": [
+              {
+                "x": 487160.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487180.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487180.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487160.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 18,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K6",
+              "Plan": "UIP-9",
+              "Kullanim": "spor"
+            },
+            "pts": [
+              {
+                "x": 487180.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487180.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 19,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K7",
+              "Plan": "UIP-3",
+              "Kullanim": "konut",
+              "TAKS": "0.35",
+              "KAKS": "1.05"
+            },
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487165.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487175.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487175.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487165.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487185.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487195.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487195.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487185.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 22,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487205.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487235.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487235.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487205.0,
+                "y": 4420040.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 23,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487005.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420030.0
+              },
+              {
+                "x": 487005.0,
+                "y": 4420030.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polygon",
+            "id": 24,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487300.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487320.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487320.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487300.0,
+                "y": 4420010.0
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5c0-8072-7005-8000-000000000001",
+          "0192f5c0-8072-7005-8000-000000000002",
+          "0192f5c0-8072-7005-8000-000000000003",
+          "0192f5c0-8072-7005-8000-000000000004",
+          "0192f5c0-8072-7005-8000-000000000005",
+          "0192f5c0-8072-7005-8000-000000000006",
+          "0192f5c0-8072-7005-8000-000000000007",
+          "0192f5c0-8072-7005-8000-000000000008",
+          "0192f5c0-8072-7005-8000-000000000009",
+          "0192f5c0-8072-7005-8000-00000000000a",
+          "0192f5c0-8072-7005-8000-00000000000b",
+          "0192f5c0-8072-7005-8000-00000000000c",
+          "0192f5c0-8072-7005-8000-00000000000e",
+          "0192f5c0-8072-7005-8000-00000000000f",
+          "0192f5c0-8072-7005-8000-000000000010",
+          "0192f5c0-8072-7005-8000-000000000011",
+          "0192f5c0-8072-7005-8000-000000000012",
+          "0192f5c0-8072-7005-8000-000000000013",
+          "0192f5c0-8072-7005-8000-000000000014",
+          "0192f5c0-8072-7005-8000-000000000015",
+          "0192f5c0-8072-7005-8000-000000000016",
+          "0192f5c0-8072-7005-8000-000000000017",
+          "0192f5c0-8072-7005-8000-000000000018"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Vaziyet planında parsel yoksa reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "parcel_missing",
+              "message": "Parsel verilmedi ve vaziyet planında parsel yok. Parselin kalıcı kimliğini verin ya da parseli Mimari › Proje ▾ › Parsel ve bahçe mesafeleri'nde seçin.",
+              "path": "parcel"
+            }
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Parselin plan kararları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 500.0,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              }
+            ],
+            "zoning": {
+              "parcelArea": 900.0,
+              "far": 1.2,
+              "coverage": 0.4
+            }
+          }
+        },
+        "origin": {
+          "x": 487000.0,
+          "y": 4420000.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "imar",
+            "name": "İmar planı",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "plan",
+                "name": "Plan sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "karar",
+                "name": "Karar alanları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "notlar",
+                "name": "Plan notları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "plan",
+            "attrs": {
+              "PlanKimlik": "UIP-1",
+              "PlanAdi": "Merkez uygulama imar planı",
+              "Seviye": "uip",
+              "Durum": "yururlukte",
+              "Surum": "3",
+              "OnayTarihi": "2024-05-14",
+              "Dayanak": "Meclis kararı 2024/112"
+            },
+            "pts": [
+              {
+                "x": 487000.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487000.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "plan",
+            "attrs": {
+              "PlanKimlik": "UIP-2",
+              "Seviye": "uip",
+              "Durum": "askida"
+            },
+            "pts": [
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K1",
+              "Plan": "UIP-1",
+              "Kullanim": "konut",
+              "Nizam": "A",
+              "TAKS": "0.40",
+              "KAKS": "1.20",
+              "KatAdedi": "3",
+              "OnCekme": "5",
+              "YanCekme": "3",
+              "PlanNotlari": "1; 2"
+            },
+            "pts": [
+              {
+                "x": 487000.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487040.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487040.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487000.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 4,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K2",
+              "Plan": "UIP-1",
+              "Kullanim": "ticaret-konut",
+              "Nizam": "BL",
+              "TAKS": "0.50",
+              "KAKS": "2,00",
+              "Hmax": "15.50",
+              "PlanNotlari": "2, 3"
+            },
+            "pts": [
+              {
+                "x": 487040.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487040.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 5,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K3",
+              "Plan": "UIP-1",
+              "Kullanim": "konut",
+              "Nizam": "A",
+              "TAKS": "0.4",
+              "KAKS": "1.50",
+              "KatAdedi": "4"
+            },
+            "pts": [
+              {
+                "x": 487000.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487020.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487020.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487000.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 6,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K4",
+              "Plan": "UIP-2",
+              "Kullanim": "egitim",
+              "Belirtilmeyen": "TAKS"
+            },
+            "pts": [
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 7,
+            "layerId": "notlar",
+            "attrs": {
+              "NotNo": "1",
+              "Plan": "UIP-1",
+              "Metin": "Bodrum katlar emsale dahil değildir.",
+              "Kapsam": "genel"
+            },
+            "p": {
+              "x": 487010.0,
+              "y": 4420060.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 8,
+            "layerId": "notlar",
+            "attrs": {
+              "NotNo": "2",
+              "Plan": "UIP-1",
+              "Metin": "Çatı katı yapılamaz.",
+              "Kapsam": "alan"
+            },
+            "p": {
+              "x": 487020.0,
+              "y": 4420060.0
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 9,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487030.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487060.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487060.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420040.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487005.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420030.0
+              },
+              {
+                "x": 487005.0,
+                "y": 4420030.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487010.0,
+                "y": 4420035.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420035.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487010.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487090.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487150.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487150.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487090.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487010.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487040.005,
+                "y": 4420010.0
+              },
+              {
+                "x": 487040.005,
+                "y": 4420030.0
+              },
+              {
+                "x": 487010.0,
+                "y": 4420030.0
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 487000.0,
+              "y": 4419995.0
+            },
+            "b": {
+              "x": 487010.0,
+              "y": 4419995.0
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 16,
+            "layerId": "plan",
+            "attrs": {
+              "PlanKimlik": "UIP-3",
+              "Seviye": "uip"
+            },
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K5",
+              "Kullanim": "park"
+            },
+            "pts": [
+              {
+                "x": 487160.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487180.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487180.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487160.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 18,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K6",
+              "Plan": "UIP-9",
+              "Kullanim": "spor"
+            },
+            "pts": [
+              {
+                "x": 487180.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487180.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 19,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K7",
+              "Plan": "UIP-3",
+              "Kullanim": "konut",
+              "TAKS": "0.35",
+              "KAKS": "1.05"
+            },
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487165.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487175.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487175.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487165.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487185.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487195.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487195.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487185.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 22,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487205.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487235.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487235.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487205.0,
+                "y": 4420040.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 23,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487005.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420030.0
+              },
+              {
+                "x": 487005.0,
+                "y": 4420030.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polygon",
+            "id": 24,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487300.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487320.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487320.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487300.0,
+                "y": 4420010.0
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5c0-8072-7005-8000-000000000001",
+          "0192f5c0-8072-7005-8000-000000000002",
+          "0192f5c0-8072-7005-8000-000000000003",
+          "0192f5c0-8072-7005-8000-000000000004",
+          "0192f5c0-8072-7005-8000-000000000005",
+          "0192f5c0-8072-7005-8000-000000000006",
+          "0192f5c0-8072-7005-8000-000000000007",
+          "0192f5c0-8072-7005-8000-000000000008",
+          "0192f5c0-8072-7005-8000-000000000009",
+          "0192f5c0-8072-7005-8000-00000000000a",
+          "0192f5c0-8072-7005-8000-00000000000b",
+          "0192f5c0-8072-7005-8000-00000000000c",
+          "0192f5c0-8072-7005-8000-00000000000e",
+          "0192f5c0-8072-7005-8000-00000000000f",
+          "0192f5c0-8072-7005-8000-000000000010",
+          "0192f5c0-8072-7005-8000-000000000011",
+          "0192f5c0-8072-7005-8000-000000000012",
+          "0192f5c0-8072-7005-8000-000000000013",
+          "0192f5c0-8072-7005-8000-000000000014",
+          "0192f5c0-8072-7005-8000-000000000015",
+          "0192f5c0-8072-7005-8000-000000000016",
+          "0192f5c0-8072-7005-8000-000000000017",
+          "0192f5c0-8072-7005-8000-000000000018"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Çizimde olmayan parsel reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-0000000003e7"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5c0-8072-7005-8000-0000000003e7” kimlikli nesne çizimde yok. Parselin kalıcı kimliğini verin.",
+              "path": "parcel"
+            }
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapalı olmayan nesne parsel değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-00000000000f"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_parcel",
+              "message": "Parsel kapalı bir çizgi ya da alan değil; parselin sınırını kapalı çizin.",
+              "path": "parcel"
+            }
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planı yazılmamış karar söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-000000000014"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000014",
+              "area": 100,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000011",
+                  "id": "K5",
+                  "share": 100,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "park"
+                    }
+                  ],
+                  "notes": []
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [],
+              "notes": [
+                "“K5” kararının planı yazılmamış."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planı çizimde olmayan karar söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-000000000015"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000015",
+              "area": 100,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000012",
+                  "id": "K6",
+                  "share": 100,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "spor"
+                    }
+                  ],
+                  "notes": []
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [],
+              "notes": [
+                "“K6” kararının planı UIP-9 çizimde yok."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Durumu ve onay tarihi yazılmamış plan söylenir; imar durumuyla fark",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-000000000016"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000016",
+              "area": 900,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000013",
+                  "id": "K7",
+                  "share": 900,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.35"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.05"
+                    }
+                  ],
+                  "notes": [],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000010",
+                    "id": "UIP-3",
+                    "level": "uip"
+                  }
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [
+                {
+                  "field": "KAKS",
+                  "typed": 1.2,
+                  "plan": [
+                    "1.05"
+                  ]
+                },
+                {
+                  "field": "TAKS",
+                  "typed": 0.4,
+                  "plan": [
+                    "0.35"
+                  ]
+                }
+              ],
+              "notes": [
+                "UIP-3 planının durumu yazılmamış.",
+                "UIP-3 planının onay tarihi yok."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parsel kapalı çizgi de olur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-000000000017"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000017",
+              "area": 750,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000003",
+                  "id": "K1",
+                  "share": 750,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.40"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.20"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "3"
+                    },
+                    {
+                      "field": "OnCekme",
+                      "value": "5"
+                    },
+                    {
+                      "field": "YanCekme",
+                      "value": "3"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    },
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [],
+              "notes": []
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planın dışındaki parsel: karar yok, bütün alanı kararsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-000000000018"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000018",
+              "area": 200,
+              "decisions": [],
+              "uncovered": 200,
+              "conflicts": [],
+              "against": [],
+              "notes": []
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İmar durumunda yalnız emsal yazılıysa yalnız o karşılaştırılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000009",
+              "area": 900,
+              "decisions": [
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000003",
+                  "id": "K1",
+                  "share": 300,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "A"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.40"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "1.20"
+                    },
+                    {
+                      "field": "KatAdedi",
+                      "value": "3"
+                    },
+                    {
+                      "field": "OnCekme",
+                      "value": "5"
+                    },
+                    {
+                      "field": "YanCekme",
+                      "value": "3"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    },
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                },
+                {
+                  "uid": "0192f5c0-8072-7005-8000-000000000004",
+                  "id": "K2",
+                  "share": 600,
+                  "values": [
+                    {
+                      "field": "Kullanim",
+                      "value": "ticaret-konut"
+                    },
+                    {
+                      "field": "Nizam",
+                      "value": "BL"
+                    },
+                    {
+                      "field": "TAKS",
+                      "value": "0.50"
+                    },
+                    {
+                      "field": "KAKS",
+                      "value": "2,00"
+                    },
+                    {
+                      "field": "Hmax",
+                      "value": "15.50"
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "number": "2",
+                      "text": "Çatı katı yapılamaz.",
+                      "scope": "alan"
+                    },
+                    {
+                      "number": "1",
+                      "text": "Bodrum katlar emsale dahil değildir.",
+                      "scope": "genel"
+                    }
+                  ],
+                  "plan": {
+                    "uid": "0192f5c0-8072-7005-8000-000000000001",
+                    "id": "UIP-1",
+                    "name": "Merkez uygulama imar planı",
+                    "level": "uip",
+                    "status": "yururlukte",
+                    "version": "3",
+                    "approved": "2024-05-14",
+                    "basis": "Meclis kararı 2024/112"
+                  }
+                }
+              ],
+              "uncovered": 0.0,
+              "conflicts": [],
+              "against": [
+                {
+                  "field": "KAKS",
+                  "typed": 1.2,
+                  "plan": [
+                    "1.20",
+                    "2,00"
+                  ]
+                }
+              ],
+              "notes": [
+                "Parsel 2 karar alanına isabet ediyor (K1, K2); kademe hattı ve hangi kararın nerede geçtiği plandan okunur (PAİY 4/1-mm).",
+                "“K2” kararının andığı 3 numaralı plan notu çizimde yok."
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Parselin plan kararları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 500.0,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              }
+            ],
+            "site": {
+              "parcel": "0192f5c0-8072-7005-8000-000000000009"
+            },
+            "zoning": {
+              "parcelArea": 900.0,
+              "far": 1.2
+            }
+          }
+        },
+        "origin": {
+          "x": 487000.0,
+          "y": 4420000.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "imar",
+            "name": "İmar planı",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "plan",
+                "name": "Plan sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "karar",
+                "name": "Karar alanları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "notlar",
+                "name": "Plan notları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "plan",
+            "attrs": {
+              "PlanKimlik": "UIP-1",
+              "PlanAdi": "Merkez uygulama imar planı",
+              "Seviye": "uip",
+              "Durum": "yururlukte",
+              "Surum": "3",
+              "OnayTarihi": "2024-05-14",
+              "Dayanak": "Meclis kararı 2024/112"
+            },
+            "pts": [
+              {
+                "x": 487000.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487000.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "plan",
+            "attrs": {
+              "PlanKimlik": "UIP-2",
+              "Seviye": "uip",
+              "Durum": "askida"
+            },
+            "pts": [
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K1",
+              "Plan": "UIP-1",
+              "Kullanim": "konut",
+              "Nizam": "A",
+              "TAKS": "0.40",
+              "KAKS": "1.20",
+              "KatAdedi": "3",
+              "OnCekme": "5",
+              "YanCekme": "3",
+              "PlanNotlari": "1; 2"
+            },
+            "pts": [
+              {
+                "x": 487000.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487040.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487040.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487000.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 4,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K2",
+              "Plan": "UIP-1",
+              "Kullanim": "ticaret-konut",
+              "Nizam": "BL",
+              "TAKS": "0.50",
+              "KAKS": "2,00",
+              "Hmax": "15.50",
+              "PlanNotlari": "2, 3"
+            },
+            "pts": [
+              {
+                "x": 487040.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487040.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 5,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K3",
+              "Plan": "UIP-1",
+              "Kullanim": "konut",
+              "Nizam": "A",
+              "TAKS": "0.4",
+              "KAKS": "1.50",
+              "KatAdedi": "4"
+            },
+            "pts": [
+              {
+                "x": 487000.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487020.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487020.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487000.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 6,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K4",
+              "Plan": "UIP-2",
+              "Kullanim": "egitim",
+              "Belirtilmeyen": "TAKS"
+            },
+            "pts": [
+              {
+                "x": 487100.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487140.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487100.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 7,
+            "layerId": "notlar",
+            "attrs": {
+              "NotNo": "1",
+              "Plan": "UIP-1",
+              "Metin": "Bodrum katlar emsale dahil değildir.",
+              "Kapsam": "genel"
+            },
+            "p": {
+              "x": 487010.0,
+              "y": 4420060.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 8,
+            "layerId": "notlar",
+            "attrs": {
+              "NotNo": "2",
+              "Plan": "UIP-1",
+              "Metin": "Çatı katı yapılamaz.",
+              "Kapsam": "alan"
+            },
+            "p": {
+              "x": 487020.0,
+              "y": 4420060.0
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 9,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487030.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487060.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487060.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420040.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487005.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420030.0
+              },
+              {
+                "x": 487005.0,
+                "y": 4420030.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487010.0,
+                "y": 4420035.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420035.0
+              },
+              {
+                "x": 487030.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487010.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487090.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487150.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487150.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487090.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487010.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487040.005,
+                "y": 4420010.0
+              },
+              {
+                "x": 487040.005,
+                "y": 4420030.0
+              },
+              {
+                "x": 487010.0,
+                "y": 4420030.0
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 487000.0,
+              "y": 4419995.0
+            },
+            "b": {
+              "x": 487010.0,
+              "y": 4419995.0
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 16,
+            "layerId": "plan",
+            "attrs": {
+              "PlanKimlik": "UIP-3",
+              "Seviye": "uip"
+            },
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K5",
+              "Kullanim": "park"
+            },
+            "pts": [
+              {
+                "x": 487160.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487180.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487180.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487160.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 18,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K6",
+              "Plan": "UIP-9",
+              "Kullanim": "spor"
+            },
+            "pts": [
+              {
+                "x": 487180.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487180.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 19,
+            "layerId": "karar",
+            "attrs": {
+              "KararKimlik": "K7",
+              "Plan": "UIP-3",
+              "Kullanim": "konut",
+              "TAKS": "0.35",
+              "KAKS": "1.05"
+            },
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487240.0,
+                "y": 4420050.0
+              },
+              {
+                "x": 487200.0,
+                "y": 4420050.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487165.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487175.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487175.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487165.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487185.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487195.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487195.0,
+                "y": 4420020.0
+              },
+              {
+                "x": 487185.0,
+                "y": 4420020.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 22,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487205.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487235.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487235.0,
+                "y": 4420040.0
+              },
+              {
+                "x": 487205.0,
+                "y": 4420040.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 23,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487005.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 487035.0,
+                "y": 4420030.0
+              },
+              {
+                "x": 487005.0,
+                "y": 4420030.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polygon",
+            "id": 24,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487300.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487320.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487320.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 487300.0,
+                "y": 4420010.0
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5c0-8072-7005-8000-000000000001",
+          "0192f5c0-8072-7005-8000-000000000002",
+          "0192f5c0-8072-7005-8000-000000000003",
+          "0192f5c0-8072-7005-8000-000000000004",
+          "0192f5c0-8072-7005-8000-000000000005",
+          "0192f5c0-8072-7005-8000-000000000006",
+          "0192f5c0-8072-7005-8000-000000000007",
+          "0192f5c0-8072-7005-8000-000000000008",
+          "0192f5c0-8072-7005-8000-000000000009",
+          "0192f5c0-8072-7005-8000-00000000000a",
+          "0192f5c0-8072-7005-8000-00000000000b",
+          "0192f5c0-8072-7005-8000-00000000000c",
+          "0192f5c0-8072-7005-8000-00000000000e",
+          "0192f5c0-8072-7005-8000-00000000000f",
+          "0192f5c0-8072-7005-8000-000000000010",
+          "0192f5c0-8072-7005-8000-000000000011",
+          "0192f5c0-8072-7005-8000-000000000012",
+          "0192f5c0-8072-7005-8000-000000000013",
+          "0192f5c0-8072-7005-8000-000000000014",
+          "0192f5c0-8072-7005-8000-000000000015",
+          "0192f5c0-8072-7005-8000-000000000016",
+          "0192f5c0-8072-7005-8000-000000000017",
+          "0192f5c0-8072-7005-8000-000000000018"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Doğrulama: yazmaz, bir şey döndürmez",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama da reddeder",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "parcel": "0192f5c0-8072-7005-8000-00000000000f"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_parcel",
+              "message": "Parsel kapalı bir çizgi ya da alan değil; parselin sınırını kapalı çizin.",
+              "path": "parcel"
+            }
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıfır tolerans reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "tolerance": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "Tolerans sonlu ve en az 0.000001 m olmalı (yazılan 0).",
+              "path": "tolerance"
+            }
+          },
+          "within": 1e-06,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -144,7 +144,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | Z4 | **Paftanın modelden üretildiği kanıtlanamıyor:** plan paftasındaki serbest çizim ayırt edilmiyor; IFC ile PDF/A'nın aynı revizyondan çıktığı kayıtlı değil | EK-9/21 "modele girmeyen nesne yoksa evet" (`quality.rs`); Ruhsat takımı ile `cad.arch.ifc` ayrı komutlar | K | BIM-04, BIM-14 |
 | Z5 | **Eleman sınıfları dar:** giydirme cephe, kaplama ve asma tavan nesnesi, baca, dikme yok; asansör, vitrifiye ve mobilya sınıfsız blok; rampanın gövdesi yok | `Entity` listesi (`contracts/src/core/entity.rs`); `arch.rs` `Why::NotYet`; ADR 8045 | Y | BIM-09 |
 | Z6 | **Geometri her yerde gerçek değil:** ~~eğri duvar düz parçalarla~~ (yay yay olarak, miktarlar kaynaktan: ADR 8071); ~~eğri merdiven düz parçalarla~~ (ADR 8071 §9); ~~mahalin hacmi düz prizma~~ (tabanından tavanına: ADR 8071 §7; çatı altında çatıya kadar: §11); ~~açıklık gövdeden kesilmiyor~~ (Reference View: ADR 8071 §4); ~~içe dönen saçak yok~~ (ADR 8071 §10); ~~çatı katmanları yok~~ (ADR 8071 §8) | ADR 8047 §6; `arch.rs` (mahal `bottom + height`); ADR 8044 "sonraya" | Y | BIM-10 |
-| Z7 | **Tek bina:** program bina ve kanat tanıyor (kodu, kullanım türü, ±0.00'ı ve ortak katın sayıldığı binası: ADR 8072 §1); model, künye ve dışa aktarma tek binalı | `building.rs` tek saha, tek bina; `program.rs` | Y | BIM-11 |
+| Z7 | **Çok bina (kapandı, ADR 8072):** program bina ve kanat tanıyor (kodu, kullanım türü, ±0.00'ı ve ortak katın sayıldığı binası); bina başına IFC, metraj ve ruhsat takımı; parselin plan kararları | `building.rs` tek saha, tek bina; `program.rs` | Y | BIM-11 |
 | Z8 | **2B kuralların denetimi yarım:** EK-4 katmanı ve çizgi tipi, EK-3 numara biçimi ve mahal adı sözlüğü denetlenmiyor | ADR 8047 §9 "yalnız varlığı"; M9 "profil ve blok katmanı kaldı" | Y | BIM-03 |
 | Z9 | **Mevzuat denetimi yarım:** başvuru tarihine göre kural seti, plan notu katmanı, yangın dayanımları, erişilebilirlik, emsalin 22. madde sınırları | ADV-22 ve ADV-23 "Kalanlar" | Y | BIM-13 |
 | Z10 | **Dış model okunamıyor:** statik ve tesisat modeli altlık olamıyor, çakışma bulunamıyor, iki revizyon karşılaştırılamıyor; belediye gelen IFC'yi KentOS'ta açamıyor | Depoda IFC okuyucu yok | Y | IFC-07, IFC-12, IFC-09; BIM-17, BIM-18 |
@@ -521,9 +521,9 @@ eğri duvar eğridir, açıklık duvardan kesilmiştir, döşemenin boşluğu bo
 **İlk kabul:** eğri cepheli ve farklı kotlu örnekte gövdelerin hacmi bağımsız başvuruya eşit (yay için kapalı formül).
 Açıklıklı duvarın hacmi, dolu hacim eksi açıklıklardır. Bütün gövdeler kapalı.
 
-#### BIM-11 — Çok bina, ortak bodrum ve vaziyet [~]
+#### BIM-11 — Çok bina, ortak bodrum ve vaziyet [x]
 
-**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§4):** programın binası
+**Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§5):** programın binası
 kodu (EK-2 §2.3: iki büyük harf ya da rakam, tek binada "00"), kullanım türü ve projenin ±0.00'ına göre ±0.00'ıyla;
 birden çok binanın kapladığı kat (ortak bodrum) seçilen binanın katı sayılır, alanı bir kez; her nesnenin binası
 katından okunur (`building_of_level`); `.kcad` mimari verisi 9; Bina programı › Binalar'da alanlar ve "Ortak katlar".
@@ -536,8 +536,11 @@ yazılmaz ve söylenir (0 sayılmaz); IfcOpenShell üç kontrol noktasını anke
 binanın zemin katından (PAİY 4/1-bbbb "yapıların … izdüşümü"; önce yalnız bir zemin kat sayılıyordu); binanın payı
 (saydığı katlar, ortak bodrum yalnız seçildiği binada) ve binalarınki birlikte projeninki; bina başına IFC binanın kendi
 alanlarıyla; Metraj ve `cad.spaces.quantities` bina seçer; Ruhsat takımı bina seçer (katları, ±0.00'ından kat kodları,
-paftalarda bina kodu). **Kalan:** onaylı plan kararları (§5); vaziyet planında bütün binalar birlikte (harita tek kat
-çizer).
+paftalarda bina kodu). Onaylı plan (§5): `cad.zoning.parcel` parselin CBS'ten gelen karar alanlarını payı, değerleri,
+kaynak planı (onay tarihi, durumu), notlarıyla okur; çelişen iki kararı ve imar durumuyla farkı söyler, hiçbir şey
+yazmaz; Proje ayarları › Mimari › İmar durumu'nda gösterilir. İlk kabul sağlandı. **İyileştirmeler:** vaziyet planında
+bütün binalar birlikte (harita tek kat çizer); kararın değerlerini kaynağıyla imar durumuna almak; bina düzeyinde
+denetim bulguları.
 
 **Kullanıcı sonucu:** Bir parselde birden çok blok ve ortak bodrum tek projede durur. Her bina kendi kodu, katları ve
 künyesiyle pilotta ayrı model dosyası verir; saha ve parsel bilgileri hepsinde aynıdır. Dayanak EK-2 §2.3 ve Tablo 2.1; EK-6 6.7, 6.55;
@@ -727,8 +730,8 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B7 ◐ | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Beyan dayanağıyla modelde; eksik alanlar nesneleriyle Denetim'de; 9. soru modelden (ADR 8068; IFC-02'nin öbür satırları kaldı) |
 | B8 | Mahal, zon ve emsal; mekânsal zonlar ve gruplar | BIM-08, IFC-03 | Emsal tablosu ile model aynı alanlardan |
 | B9 | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş |
-| B10 | Geometri doğruluğu; geometri ve görünüm tanımı | BIM-10, IFC-06 | Eğri eğri, açıklık kesik |
-| B11 | Çok bina; konum, kot ve çok bina | BIM-11, IFC-05 | İki blok, iki model dosyası |
+| B10 ✓ | Geometri doğruluğu; geometri ve görünüm tanımı | BIM-10, IFC-06 | Eğri eğri, açıklık kesik (ADR 8071) |
+| B11 ✓ | Çok bina; konum, kot ve çok bina | BIM-11, IFC-05 | İki blok, iki model dosyası; yerel sistem haritada; plan kararları kaynağıyla (ADR 8072) |
 
 ### Faz 3 — Doğrulama ve erken teslim hazırlığı
 

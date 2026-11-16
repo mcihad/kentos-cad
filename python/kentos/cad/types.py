@@ -70695,6 +70695,45 @@ class ParcelCreated(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParcelDecision(_Model):
+    """A decision area on the parcel.
+    Attributes:
+        id: KararKimlik.
+        share: The parcel's area under it, m². Unit: area.
+        values: Its values as written, in the profile's order; a field it leaves empty is not here.
+        notes: The notes it names, then its plan's general notes, by number.
+    """
+    uid: str
+    id: str
+    share: float
+    values: list[PlanValue]
+    notes: list[PlanNoteText]
+    plan: PlanSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["id"] = self.id
+        out["share"] = float(self.share)
+        out["values"] = [e0.to_json() for e0 in self.values]
+        out["notes"] = [e0.to_json() for e0 in self.notes]
+        if self.plan is not UNSET:
+            out["plan"] = None if self.plan is None else self.plan.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelDecision:
+        return cls(
+            uid=data["uid"],
+            id=data["id"],
+            share=float(data["share"]),
+            values=[PlanValue.from_json(e0) for e0 in data["values"]],
+            notes=[PlanNoteText.from_json(e0) for e0 in data["notes"]],
+            plan=UNSET if "plan" not in data else None if data["plan"] is None else PlanSource.from_json(data["plan"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParcelDocument(_Model):
     """A document that made or closed parcels: its name, unique in the drawing; its kind as the user
     writes it (a plan, a deed …); the date it gives, as written; a note.
@@ -73827,6 +73866,63 @@ class PlaceOn(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PlanAgainst(_Model):
+    """The project's typed İmar durumu where the plan's decisions on the parcel say otherwise: KAKS (emsal) or TAKS, the
+    typed value and the plan's as written.
+    Attributes:
+        typed: Unit: 1.
+    """
+    field: str
+    typed: float
+    plan: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["typed"] = float(self.typed)
+        out["plan"] = list(self.plan)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanAgainst:
+        return cls(
+            field=data["field"],
+            typed=float(data["typed"]),
+            plan=list(data["plan"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlanConflict(_Model):
+    """Two decisions saying different things over the same piece of the parcel: the field, the piece's area (m²), each
+    decision's id and value as written.
+    Attributes:
+        area: Unit: area.
+    """
+    field: str
+    area: float
+    decisions: list[str]
+    values: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["area"] = float(self.area)
+        out["decisions"] = list(self.decisions)
+        out["values"] = list(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanConflict:
+        return cls(
+            field=data["field"],
+            area=float(data["area"]),
+            decisions=list(data["decisions"]),
+            values=list(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PlanDraft(_Model):
     """A plan change draft: its id, the plan (`PlanKimlik`) it changes, the drawing's revision it was made from, its
     reason and its changes.
@@ -73903,6 +73999,105 @@ class PlanLayerRole(_Model):
         return cls(
             layer_id=data["layerId"],
             role=_enum_in(PlanRole, data["role"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlanNoteText(_Model):
+    """A plan note a decision names (or a note of its whole plan): its number, text and scope.
+    Attributes:
+        scope: Kapsam: genel (the whole plan) or alan (the decisions that name it).
+    """
+    number: str
+    text: str
+    scope: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["text"] = self.text
+        out["scope"] = self.scope
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanNoteText:
+        return cls(
+            number=data["number"],
+            text=data["text"],
+            scope=data["scope"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlanSource(_Model):
+    """The plan a decision belongs to: its boundary's persistent id and its fields as written.
+    Attributes:
+        id: PlanKimlik.
+        approved: OnayTarihi as written.
+        basis: Dayanak: the document the plan rests on.
+        level: Seviye (msp, cdp, nip, uip).
+        status: Durum (taslak, askida, onayli, yururlukte, iptal).
+    """
+    uid: str
+    id: str
+    approved: str | None | Unset = UNSET
+    basis: str | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    status: str | None | Unset = UNSET
+    version: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["id"] = self.id
+        if self.approved is not UNSET:
+            out["approved"] = self.approved
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.status is not UNSET:
+            out["status"] = self.status
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanSource:
+        return cls(
+            uid=data["uid"],
+            id=data["id"],
+            approved=data.get("approved", UNSET),
+            basis=data.get("basis", UNSET),
+            level=data.get("level", UNSET),
+            name=data.get("name", UNSET),
+            status=data.get("status", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlanValue(_Model):
+    """A decision's value as the plan writes it (its field in the profile `imar-plani`: Kullanim, Nizam, TAKS, KAKS,
+    KatAdedi, Hmax, OnCekme, YanCekme, ArkaCekme, Belirtilmeyen); the text kept, never read through a number.
+    """
+    field: str
+    value: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanValue:
+        return cls(
+            field=data["field"],
+            value=data["value"],
         )
 
 
@@ -120037,6 +120232,77 @@ class ZoningFinding(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ZoningParcel(_Model):
+    """Input of `cad.zoning.parcel` v1: the parcel by its persistent id (a closed line or a polygon; absent: the site
+    plan's, docs/adr/8032) and the width of the band along its boundary an overlap must pass to count, metres (absent
+    0.01, as İmar planı denetimi's tolerance).
+
+    Refusals: `parcel_missing`, `entity_not_found`, `not_a_parcel`, `invalid_input`.
+    Attributes:
+        tolerance: Unit: length.
+    """
+    parcel: str | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.parcel is not UNSET:
+            out["parcel"] = self.parcel
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningParcel:
+        return cls(
+            parcel=data.get("parcel", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningParcelDecided(_Model):
+    """What `cad.zoning.parcel` answers.
+    Attributes:
+        area: The parcel's area, m². Unit: area.
+        decisions: In the drawing's order.
+        uncovered: The parcel's area under no decision, m². Unit: area.
+        notes: What else is to be said, a sentence each: a plan not in force or without an approval date, a note named but not
+            drawn, a parcel under several decisions (a kademe hattı, PAİY 4/1-mm), no zoning plan layer.
+    """
+    parcel: str
+    area: float
+    decisions: list[ParcelDecision]
+    uncovered: float
+    conflicts: list[PlanConflict]
+    against: list[PlanAgainst]
+    notes: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parcel"] = self.parcel
+        out["area"] = float(self.area)
+        out["decisions"] = [e0.to_json() for e0 in self.decisions]
+        out["uncovered"] = float(self.uncovered)
+        out["conflicts"] = [e0.to_json() for e0 in self.conflicts]
+        out["against"] = [e0.to_json() for e0 in self.against]
+        out["notes"] = list(self.notes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningParcelDecided:
+        return cls(
+            parcel=data["parcel"],
+            area=float(data["area"]),
+            decisions=[ParcelDecision.from_json(e0) for e0 in data["decisions"]],
+            uncovered=float(data["uncovered"]),
+            conflicts=[PlanConflict.from_json(e0) for e0 in data["conflicts"]],
+            against=[PlanAgainst.from_json(e0) for e0 in data["against"]],
+            notes=list(data["notes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ZoningPlanData(_Model):
     """The project's zoning plan data (schema 250): the kept symbol choices and the plan change drafts."""
     drafts: list[PlanDraft] | Unset = UNSET
@@ -144167,6 +144433,7 @@ __all__ = [
     "ParcelBoundary",
     "ParcelCorner",
     "ParcelCreated",
+    "ParcelDecision",
     "ParcelDocument",
     "ParcelDocumentInput",
     "ParcelDocumentRow",
@@ -144296,15 +144563,20 @@ __all__ = [
     "PlaceModulesOperation",
     "PlaceOn",
     "PlacementArrayEdit",
+    "PlanAgainst",
     "PlanBox",
     "PlanBoxName",
+    "PlanConflict",
     "PlanDraft",
     "PlanDraftChange",
     "PlanLayerRole",
     "PlanNorthDirection",
+    "PlanNoteText",
     "PlanRoadWork",
     "PlanRole",
     "PlanRoleName",
+    "PlanSource",
+    "PlanValue",
     "PlatformBalanceAsk",
     "PlatformBalanced",
     "PlatformDef",
@@ -146075,6 +146347,8 @@ __all__ = [
     "ZoningDraftUse",
     "ZoningDrafted",
     "ZoningFinding",
+    "ZoningParcel",
+    "ZoningParcelDecided",
     "ZoningPlanData",
     "ZoningRegion",
     "ZoningSymbolPick",

@@ -27856,6 +27856,178 @@
       ]
     },
     {
+      "id": "cad.zoning.parcel",
+      "version": 1,
+      "title": "Parselin plan kararları",
+      "summary": "Binanın parseline düşen imar planı kararlarını çizimdeki imar-plani profilinin katmanlarından (belediyenin CBS'i) okur; çizimi değiştirmez, imar durumunu yazmaz: bir kesişim tek başına hukuki karar değildir. parcel parselin kalıcı kimliği (kapalı çizgi ya da alan; yoksa vaziyet planınınki, o da yoksa parcel_missing; çizimde yoksa entity_not_found; kapalı değilse not_a_parcel); tolerance sınır boyunca sayılmayan şeridin genişliği (m, yok: 0,01; sonlu ve en az 1e-6, değilse invalid_input). Her karar alanının parselle ortak parçaları ortalama genişliği 2A/P toleransı geçince sayılır: share (m²), değerleri yazıldığı gibi (Kullanim, Nizam, TAKS, KAKS, KatAdedi, Hmax, OnCekme, YanCekme, ArkaCekme, Belirtilmeyen), planı (Plan alanının PlanKimlik'i: kimlik, ad, seviye, durum, sürüm, OnayTarihi, Dayanak) ve plan notları (PlanNotlari'nın numaraları, sonra planın genel notları). uncovered hiçbir kararın altında kalmayan alan; conflicts aynı parça üstünde farklı yazan iki karar (alan, iki kararın kimliği ve değeri; sayılar sayı olarak karşılaştırılır), ikisi de söylenir, biri seçilmez; against imar durumunun emsali ya da TAKS'ı plan kararından farklıysa ikisi. notes: karar katmanı yok, birden çok karar (kademe hattı, PAİY 4/1-mm), yürürlükte olmayan ya da onay tarihi olmayan plan, çizilmemiş plan notu, cümle cümle.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.zoning.parcel` v1: the parcel by its persistent id (a closed line or a polygon; absent: the site\nplan's, docs/adr/8032) and the width of the band along its boundary an overlap must pass to count, metres (absent\n0.01, as İmar planı denetimi's tolerance).\n\nRefusals: `parcel_missing`, `entity_not_found`, `not_a_parcel`, `invalid_input`.",
+        "properties": {
+          "parcel": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "title": "ZoningParcel",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.zoning.parcel` answers.",
+        "properties": {
+          "against": {
+            "items": {
+              "$ref": "#/$defs/PlanAgainst"
+            },
+            "type": "array"
+          },
+          "area": {
+            "description": "The parcel's area, m².",
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/$defs/PlanConflict"
+            },
+            "type": "array"
+          },
+          "decisions": {
+            "description": "In the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/ParcelDecision"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "description": "What else is to be said, a sentence each: a plan not in force or without an approval date, a note named but not\ndrawn, a parcel under several decisions (a kademe hattı, PAİY 4/1-mm), no zoning plan layer.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "parcel": {
+            "type": "string"
+          },
+          "uncovered": {
+            "description": "The parcel's area under no decision, m².",
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "parcel",
+          "area",
+          "decisions",
+          "uncovered",
+          "conflicts",
+          "against",
+          "notes"
+        ],
+        "title": "ZoningParcelDecided",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.zoning.parcel` answers.",
+        "properties": {
+          "against": {
+            "items": {
+              "$ref": "#/$defs/PlanAgainst"
+            },
+            "type": "array"
+          },
+          "area": {
+            "description": "The parcel's area, m².",
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/$defs/PlanConflict"
+            },
+            "type": "array"
+          },
+          "decisions": {
+            "description": "In the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/ParcelDecision"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "description": "What else is to be said, a sentence each: a plan not in force or without an approval date, a note named but not\ndrawn, a parcel under several decisions (a kademe hattı, PAİY 4/1-mm), no zoning plan layer.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "parcel": {
+            "type": "string"
+          },
+          "uncovered": {
+            "description": "The parcel's area under no decision, m².",
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "parcel",
+          "area",
+          "decisions",
+          "uncovered",
+          "conflicts",
+          "against",
+          "notes"
+        ],
+        "title": "ZoningParcelDecided",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "parcel_missing",
+          "entity_not_found",
+          "not_a_parcel",
+          "invalid_input"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Vaziyet planının parseli",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "cad.arch.performance",
       "version": 1,
       "title": "Yangın ve performans",
@@ -114513,6 +114685,12 @@
       "meaning": "Nesne bir alan değil; parsel alan denetimi alanları denetler."
     },
     {
+      "code": "parcel_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parsel verilmedi ve vaziyet planında parsel yok."
+    },
+    {
       "code": "no_parcel_identity",
       "kind": "failed",
       "retryable": false,
@@ -183517,6 +183695,56 @@
       ],
       "type": "object"
     },
+    "ParcelDecision": {
+      "description": "A decision area on the parcel.",
+      "properties": {
+        "id": {
+          "description": "KararKimlik.",
+          "type": "string"
+        },
+        "notes": {
+          "description": "The notes it names, then its plan's general notes, by number.",
+          "items": {
+            "$ref": "#/$defs/PlanNoteText"
+          },
+          "type": "array"
+        },
+        "plan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "share": {
+          "description": "The parcel's area under it, m².",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "values": {
+          "description": "Its values as written, in the profile's order; a field it leaves empty is not here.",
+          "items": {
+            "$ref": "#/$defs/PlanValue"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "uid",
+        "id",
+        "share",
+        "values",
+        "notes"
+      ],
+      "type": "object"
+    },
     "ParcelDocument": {
       "additionalProperties": false,
       "description": "A document that made or closed parcels: its name, unique in the drawing; its kind as the user\nwrites it (a plan, a deed …); the date it gives, as written; a note.",
@@ -186519,6 +186747,31 @@
       ],
       "type": "object"
     },
+    "PlanAgainst": {
+      "description": "The project's typed İmar durumu where the plan's decisions on the parcel say otherwise: KAKS (emsal) or TAKS, the\ntyped value and the plan's as written.",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "plan": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "typed": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "field",
+        "typed",
+        "plan"
+      ],
+      "type": "object"
+    },
     "PlanBox": {
       "description": "How the box was applied.",
       "oneOf": [
@@ -186538,6 +186791,38 @@
           "type": "string"
         }
       ]
+    },
+    "PlanConflict": {
+      "description": "Two decisions saying different things over the same piece of the parcel: the field, the piece's area (m²), each\ndecision's id and value as written.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "decisions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "field": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "field",
+        "area",
+        "decisions",
+        "values"
+      ],
+      "type": "object"
     },
     "PlanDraft": {
       "additionalProperties": false,
@@ -186614,6 +186899,27 @@
       ],
       "type": "object"
     },
+    "PlanNoteText": {
+      "description": "A plan note a decision names (or a note of its whole plan): its number, text and scope.",
+      "properties": {
+        "number": {
+          "type": "string"
+        },
+        "scope": {
+          "description": "Kapsam: genel (the whole plan) or alan (the decisions that name it).",
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "number",
+        "text",
+        "scope"
+      ],
+      "type": "object"
+    },
     "PlanRole": {
       "description": "What a layer's line work is read as.",
       "oneOf": [
@@ -186643,6 +186949,79 @@
           "type": "string"
         }
       ]
+    },
+    "PlanSource": {
+      "description": "The plan a decision belongs to: its boundary's persistent id and its fields as written.",
+      "properties": {
+        "approved": {
+          "description": "OnayTarihi as written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "basis": {
+          "description": "Dayanak: the document the plan rests on.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "PlanKimlik.",
+          "type": "string"
+        },
+        "level": {
+          "description": "Seviye (msp, cdp, nip, uip).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "description": "Durum (taslak, askida, onayli, yururlukte, iptal).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": "string"
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "uid",
+        "id"
+      ],
+      "type": "object"
+    },
+    "PlanValue": {
+      "description": "A decision's value as the plan writes it (its field in the profile `imar-plani`: Kullanim, Nizam, TAKS, KAKS,\nKatAdedi, Hmax, OnCekme, YanCekme, ArkaCekme, Belirtilmeyen); the text kept, never read through a number.",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "type": "object"
     },
     "PlatformBalanceAsk": {
       "description": "The bracket a balance is searched in: the pad's vertical offset from `low` to `high` (m), until cut and fill meet\nwithin `tolerance` m³.",

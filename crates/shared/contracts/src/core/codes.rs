@@ -2067,6 +2067,8 @@ codes! {
     /// no elevation along it (docs/adr/1860).
     INVALID_PIPE_RUN = "invalid_pipe_run", Failed, false, "Hat profili çizilemiyor; ileti nedenini söyler.";
     NOT_A_PARCEL = "not_a_parcel", Failed, false, "Nesne bir alan değil; parsel alan denetimi alanları denetler.";
+    /// Parselin plan kararları (docs/adr/8072 §5): no parcel given and the site plan names none.
+    PARCEL_MISSING = "parcel_missing", Failed, false, "Parsel verilmedi ve vaziyet planında parsel yok.";
     /// Parsel kaydı (docs/adr/4220): the area has no Ada or Parsel.
     NO_PARCEL_IDENTITY = "no_parcel_identity", Failed, false, "Alanın Ada ya da Parsel'i yok; parselin kimliği İl, İlçe, Mahalle, Ada ve Parsel birliktedir, önce yazın.";
     /// Parsel kaydı (docs/adr/4220): another document of the drawing has the name.

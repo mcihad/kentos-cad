@@ -1245,6 +1245,10 @@ pub mod levels_assign;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/arch_performance.rs"]
 pub mod arch_performance;
+// Parselin plan kararları (docs/adr/8072 §5): the zoning plan read for the building's parcel, Mimari's.
+#[cfg(feature = "mod-arch")]
+#[path = "arch/zoning_parcel.rs"]
+pub mod zoning_parcel;
 #[path = "core/library_symbols.rs"]
 mod library_symbols;
 #[cfg(feature = "mod-arch")]
@@ -2153,6 +2157,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_ARCH_PERFORMANCE,
         kentos_commands::CAD_ARCH_PERFORMANCE_VERSION,
+    ),
+    // Parselin plan kararları ([`zoning_parcel`], docs/adr/8072 §5).
+    (
+        kentos_commands::CAD_ZONING_PARCEL,
+        kentos_commands::CAD_ZONING_PARCEL_VERSION,
     ),
     // Kuzey oku, Revizyon işaretle and Malzeme lejandı ([`north`], [`revisions`], [`legends`], docs/adr/0721).
     (
