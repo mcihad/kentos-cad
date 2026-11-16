@@ -1,0 +1,475 @@
+{
+ "file": "fixtures/arch/v1/ifc/kesit-binasi.ifc",
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "rows": [
+  {
+   "no": 1,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 2,
+   "kanit": "kaldı",
+   "bulgular": [
+    [
+     "digital_project_info_missing",
+     [
+      "1RtwcX5wnjNNNx4SbRAoJB"
+     ]
+    ]
+   ]
+  },
+  {
+   "no": 3,
+   "kanit": "kaldı",
+   "bulgular": [
+    [
+     "digital_project_code_missing",
+     [
+      "1RtwcX5wnjNNNx4SbRAoJB"
+     ]
+    ]
+   ]
+  },
+  {
+   "no": 4,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 5,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 6,
+   "kanit": "kaldı",
+   "bulgular": [
+    [
+     "digital_system_wrong",
+     [
+      "1RtwcX5wnjNNNx4SbRAoJB"
+     ]
+    ]
+   ]
+  },
+  {
+   "no": 7,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 8,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 9,
+   "kanit": "kaldı",
+   "bulgular": [
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000$",
+      "01alMXGa9m08000000000_",
+      "01alMXGa9m08000000000i",
+      "01alMXGa9m08000000000j",
+      "01alMXGa9m08000000000k",
+      "01alMXGa9m08000000000l",
+      "01alMXGa9m08000000000m",
+      "01alMXGa9m08000000000n",
+      "01alMXGa9m08000000000o",
+      "01alMXGa9m08000000000p",
+      "01alMXGa9m08000000000u",
+      "01alMXGa9m08000000000v",
+      "01alMXGa9m08000000000w",
+      "01alMXGa9m08000000000x",
+      "01alMXGa9m08000000000y",
+      "01alMXGa9m08000000000z"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m080000000001",
+      "01alMXGa9m080000000002",
+      "01alMXGa9m080000000003",
+      "01alMXGa9m080000000004",
+      "01alMXGa9m080000000005",
+      "01alMXGa9m080000000006",
+      "01alMXGa9m080000000007",
+      "01alMXGa9m080000000008",
+      "01alMXGa9m08000000000L",
+      "01alMXGa9m08000000000M",
+      "01alMXGa9m08000000000N",
+      "01alMXGa9m08000000000O",
+      "01alMXGa9m08000000000P",
+      "01alMXGa9m08000000000Q",
+      "01alMXGa9m08000000000R",
+      "01alMXGa9m08000000000S"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000D",
+      "01alMXGa9m08000000000E",
+      "01alMXGa9m08000000000F",
+      "01alMXGa9m08000000000X",
+      "01alMXGa9m08000000000Y"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000D",
+      "01alMXGa9m08000000000E",
+      "01alMXGa9m08000000000F",
+      "01alMXGa9m08000000000X",
+      "01alMXGa9m08000000000Y"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000G",
+      "01alMXGa9m08000000000H",
+      "01alMXGa9m08000000000I",
+      "01alMXGa9m08000000000J",
+      "01alMXGa9m08000000000K",
+      "01alMXGa9m08000000000a",
+      "01alMXGa9m08000000000b",
+      "01alMXGa9m08000000000c",
+      "01alMXGa9m08000000000d",
+      "01alMXGa9m08000000000e"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000G",
+      "01alMXGa9m08000000000H",
+      "01alMXGa9m08000000000I",
+      "01alMXGa9m08000000000J",
+      "01alMXGa9m08000000000K",
+      "01alMXGa9m08000000000a",
+      "01alMXGa9m08000000000b",
+      "01alMXGa9m08000000000c",
+      "01alMXGa9m08000000000d",
+      "01alMXGa9m08000000000e"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000G",
+      "01alMXGa9m08000000000H",
+      "01alMXGa9m08000000000I",
+      "01alMXGa9m08000000000J",
+      "01alMXGa9m08000000000K",
+      "01alMXGa9m08000000000a",
+      "01alMXGa9m08000000000b",
+      "01alMXGa9m08000000000c",
+      "01alMXGa9m08000000000d",
+      "01alMXGa9m08000000000e"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000G",
+      "01alMXGa9m08000000000H",
+      "01alMXGa9m08000000000I",
+      "01alMXGa9m08000000000J",
+      "01alMXGa9m08000000000K",
+      "01alMXGa9m08000000000a",
+      "01alMXGa9m08000000000b",
+      "01alMXGa9m08000000000c",
+      "01alMXGa9m08000000000d",
+      "01alMXGa9m08000000000e"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000c"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000f",
+      "01alMXGa9m08000000000g",
+      "01alMXGa9m08000000000h"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m08000000000q",
+      "01alMXGa9m08000000000r",
+      "01alMXGa9m08000000000s",
+      "01alMXGa9m08000000000t",
+      "01alMXGa9m080000000010",
+      "01alMXGa9m080000000011",
+      "01alMXGa9m080000000012",
+      "01alMXGa9m080000000013"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m080000000014"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "01alMXGa9m080000000014"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2HT1vRJwnjJR8t5qSGdqae"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "2v8zbZ9wnjAEbjpi6u0vu1",
+      "3ydGVFlwnjBYgl8a9xXv7Y"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ],
+    [
+     "digital_required_field",
+     [
+      "3KxKp7vwnjKlDuQiVK8pq9"
+     ]
+    ]
+   ]
+  },
+  {
+   "no": 10,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 11,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 12,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 13,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 14,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 15,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 16,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 17,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 18,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 19,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 20,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 21,
+   "kanit": "inceleme",
+   "bulgular": []
+  }
+ ]
+}

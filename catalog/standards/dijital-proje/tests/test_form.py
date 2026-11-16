@@ -128,6 +128,20 @@ class GercekDosyalar(unittest.TestCase):
         self.assertIn("digital_quality_room_overlap", [b["code"] for b in mimari.denetle(cad)])
 
 
+class IkinciOkuyucu(unittest.TestCase):
+    """KentOS'un okuduğu olgulardan form, başka bir okuyucunun (scripts/fixtures/ifc_form_reference.py) aynı dosyalardan
+    kurduğu olgulardaki formla satır satır aynı: kanıt, bulguların kodu ve nesneleri."""
+
+    def test_dort_dosyada_ayrisan_satir_yok(self):
+        for ad in ("kesit-binasi", "kesit-binasi-kunye", "yerel-sistem", "kesit-binasi-kapi-eksik"):
+            ref = json.loads((KOK / "fixtures/ifc/v1/form" / f"{ad}.json").read_text(encoding="utf-8"))
+            bizim = [{"no": r["no"], "kanit": r["kanit"],
+                      "bulgular": sorted([b["code"], sorted(b.get("globalIds") or [])] for b in r["bulgular"])}
+                     for r in form.cevapla(olgular(ad))["satirlar"]]
+            for a, b in zip(bizim, ref["rows"]):
+                self.assertEqual(a, b, f"{ad}: soru {a['no']}")
+
+
 class EksikKapi(unittest.TestCase):
     """Üç kapıdan biri ve ilgili başvuruları dosyadan çıkarıldı: şema geçerli, kalan kapıların zorunlu alan (IDS) sonucu
     değişmedi; EK-9/8 eksik kapıyı kaynağın kimliğiyle bulur."""

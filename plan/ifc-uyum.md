@@ -457,10 +457,11 @@ sorusu `dijital_proje.form`'dadır (resmî cevap ile kanıt ayrı; her bulgu nes
 Masaüstü dosyayı bellekte yazıp okur: Mimari denetim, çizimdeki form ve Ruhsat takımı aynı olgulardan. Bugünkü
 `kentos_ifc::quality` ve `digital_audit.rs` taşındı. Katalogdan IDS 1.0 (`crates/shared/ifc/data/temel-2026.ids`, 77 tanım,
 356 gereklilik; yapısı ve eksikleri KentOS'un kendi okumasında kuralla aynı). Eksik kapı durumu: IfcOpenShell K02'yi ve
-başvurularını çıkarır, şema 0 bulgu, EK-9/8 kapıyı kaynak kimliğiyle bulur. Bulgu IFC modelinde boyanır. 100 dairede taban
-(§6 ölçümü). Kararlar K48–K50.
-**Kalan:** ikinci bağımsız denetleyici (IfcTester; indirme sahibin onayında) ve IfcOpenShell'le ikinci okuyucu; son yazılan
-dosyanın denetimi ve bulut işi; beş sonucun ayrı raporu (B14); model eşlemesinin bütçesi; EK-9 Tablo 9.2.
+başvurularını çıkarır, şema 0 bulgu, EK-9/8 kapıyı kaynak kimliğiyle bulur. İkinci okuyucu (IfcOpenShell) dört dosyada formun
+21 satırını, bulgularını ve nesnelerini aynı verir. Bulgu IFC modelinde boyanır. 100 dairede taban (§6 ölçümü). Kararlar
+K48–K50.
+**Kalan:** bağımsız IDS denetleyicisi (IfcTester; indirme sahibin onayında); son yazılan dosyanın denetimi ve bulut işi; beş
+sonucun ayrı raporu (B14); model eşlemesinin bütçesi; EK-9 Tablo 9.2.
 
 **Kullanıcı sonucu:** Model kalite kontrol formunun her cevabı diske yazılmış dosyadan gelir; her "hayır" nesnesini seçer.
 Şeması temiz bir dosyanın Türkiye profilinden kaldığı görülebilir.

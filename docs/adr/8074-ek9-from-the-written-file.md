@@ -1,6 +1,6 @@
 # ADR 8074: EK-9'un cevapları yazılmış dosyadan — dosya olguları, Python formu ve katalogdan IDS
 
-- **Durum:** ilk dilim yapıldı (16 Kasım 2026); bağımsız IDS denetleyicisi ve ikinci okuyucu açık (§8). Plan: [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-08; [bim-plan.md](../../plan/bim-plan.md)
+- **Durum:** ilk dilim yapıldı (16 Kasım 2026); bağımsız IDS denetleyicisi açık (§8). Plan: [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-08; [bim-plan.md](../../plan/bim-plan.md)
   sırası B13.
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) §9–§10 (EK-9 formu bugün bellekteki modelden, `kentos_ifc::quality`;
   Mimari denetimin Dijital proje bulguları `digital_audit.rs`), [8062](8062-digital-project-rule-catalog.md) (kural
@@ -164,7 +164,7 @@ kat büyür; Denetle her seferinde iki kez kurar (çizimin olguları ve dosyanı
 | 21 sorunun her biri için geçen ve kalan örnek | 18 soru iki yönüyle (gerçek dosyalar ve tek değişiklikli olgular, test_form.py); 1 ve 7 doğası gereği inceleme; 10 kalan ya da inceleme (karşılaştırma müellifin) |
 | Üç kapıdan biri ve başvuruları çıkarılır; şema geçerli, IDS olumlu iken EK-9/8 eksik kapıyı kaynak kimliğiyle bulur | scripts/fixtures/ifc_missing_door_case.py IfcOpenShell'le K02 kapısını ve yalnız onun andığı 18 kaydı çıkarır; denetleyici (EXPRESS kurallarıyla) 0 bulgu; kalan nesnelerin eksikleri (IDS'in okuduğu) aynı; EK-9/8 kaldı, bulgunun nesnesi `0192f5a1-4242-7000-8000-00000000000e`. Kesit binasının kapılarında yangın dayanımı ve acil çıkış yok: IDS'in kapı satırları olumlu değil, değişmedi |
 | Bulgu planda ve 3B'de nesneyi seçer | Denetim'in bulgusu nesnelerini seçer; 3B görünüm ve IFC modeli onları boyar (test: duvarların yangın dayanımı bulgusu IFC modelinde yalnız o duvarları boyar) |
-| İkinci bağımsız denetleyiciyle ayrışan satır kalmaz | Açık (§8): IfcTester çevrimdışı önbellekte yok |
+| İkinci bağımsız denetleyiciyle ayrışan satır kalmaz | İkinci okuyucu: scripts/fixtures/ifc_form_reference.py IfcOpenShell'le dört dosyanın olgularını kendi yoluyla kurar (nesneler, kayıtlar, katalog verisinden zorunlu alan kuralı, IfcOpenShell'in IFC 4.3 şablonlarıyla set denetimi, kendi üçgenlemesinden gövdeler, üçgen üçgen örtüşme); form iki okuyucuda 21 satırın kanıtında, bulguların kodunda ve nesnelerinde aynı (kesit binasında 9. sorunun 43 bulgusu, 127 nesne; test_form.py). Bağımsız IDS denetleyicisi açık (§8): IfcTester çevrimdışı önbellekte yok |
 
 Resimler: .run/gui-evidence/ek9-dosyadan-8074/ (açık ve koyu): Denetim › Mevzuat'ta formun bulgusu; IFC modelinde
 bulgunun duvarları; çizimdeki form iki yarısıyla; Ruhsat takımı'nın yeni kutusu.
@@ -173,7 +173,6 @@ bulgunun duvarları; çizimdeki form iki yarısıyla; Ruhsat takımı'nın yeni 
 
 - **Bağımsız IDS denetleyicisi:** IfcTester (ya da eşdeğeri) indirilmesi sahibin onayını bekler; onaydan sonra üretilen IDS
   dört dosyada çalıştırılır, sonuçlar formun 9. sorusuyla karşılaştırılır.
-- **İkinci okuyucu:** aynı olguları IfcOpenShell'le çıkaran başvuru betiği; formun 21 satırı iki okuyucuda aynı.
 - **Son yazılan dosya:** Denetim'in bellekteki dosya yerine diske yazılan ya da teslim edilecek dosyayı okuması (K4'ün
   "diske yazılan"ı); bulut işinin aynı betiği çalıştırması.
 - **Beş sonucun ayrı raporu** (ifc-uyum §1: okunuyor, şema, Türkiye profili, model–pafta, idare): ruhsat paketinde (B14).

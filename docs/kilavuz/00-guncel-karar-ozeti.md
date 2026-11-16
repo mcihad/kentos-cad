@@ -200,7 +200,8 @@
       form ve Ruhsat takımı aynı olguları kullanır. Rust `digital_audit` ve `quality`'nin cevapları kalktı; `cad.arch.audit`
       `digital_*` vermez. Bulgu IFC modeli penceresinde nesnesini boyar.
     - Katalogdan IDS 1.0: `crates/shared/ifc/data/temel-2026.ids` (77 tanım, 356 gereklilik). Bağımsız denetleyici
-      (IfcTester) indirme onayı bekliyor; KentOS'un kendi okuması eksikleri kuralla aynı buluyor.
+      (IfcTester) indirme onayı bekliyor; KentOS'un kendi okuması eksikleri kuralla aynı buluyor. İkinci okuyucu
+      (IfcOpenShell, `scripts/fixtures/ifc_form_reference.py`) dört dosyada formun 21 satırını ve bulgularını aynı veriyor.
     - Kararlar K48 (kullanıcı tanımlı rol), K49 (açıklaması boş ad inceleme), K50 (proje tipi yapı türünden).
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
