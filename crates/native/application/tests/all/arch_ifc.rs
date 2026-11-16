@@ -351,7 +351,7 @@ fn the_library_s_fixtures_are_their_ifc_classes_with_their_bodies() {
     assert!(capacity.props.contains(&("CapacityPeople".into(), Value::Count(8))));
     assert!(capacity.props.contains(&("CapacityWeight".into(), Value::Mass(630.0))));
     let span = |e: &kentos_ifc::building::Element| match &e.shapes[..] {
-        [kentos_ifc::building::Shape::Prism { rings, bottom, top }] => {
+        [kentos_ifc::building::Shape::Prism { rings, bottom, top, .. }] => {
             let xs: Vec<f64> = rings[0].iter().map(|p| p[0]).collect();
             let ys: Vec<f64> = rings[0].iter().map(|p| p[1]).collect();
             let w = xs.iter().cloned().fold(f64::MIN, f64::max) - xs.iter().cloned().fold(f64::MAX, f64::min);
@@ -593,6 +593,13 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
     assert_eq!(class_of(&post), Some(Class::Member));
     assert_eq!(class_of(&rail), Some(Class::Member));
     assert_eq!(class_of(&ceiling), Some(Class::Covering));
+    // Every body closed (docs/adr/8071 §1): the ramp's faces, the stair's treads, the curtain wall's frames and panels,
+    // the lift's box, the walls, slabs, columns and beams.
+    for e in &b.elements {
+        for s in &e.shapes {
+            assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{} {s:?}", e.name);
+        }
+    }
     // The schedules: the curtain wall among the doors and windows, the lift among the fixtures, the post among the
     // columns.
     let listed = |of: ScheduleOf, u: &str| {
@@ -729,4 +736,99 @@ fn beam_and_covering_schedules_list_their_own_and_round_trip_under_arch_data_6()
     assert_eq!(kentos_kcad::arch_version(&snap), kentos_kcad::ARCH_WITH_ELEMENT_SCHEDULES);
     let bytes = kentos_kcad::encode(&snap).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), snap, "the schedule read back");
+}
+
+/// Geometri doğruluğu (docs/adr/8071; plan/bim-plan.md BIM-10's first acceptance) on the curved building
+/// (fixtures/arch/v1/curved-building.kcad, scripts/fixtures/curved_building.py): its north wall an arc, two storeys of
+/// different heights at different levels. Against the closed forms the fixture works out without KentOS code
+/// (curved-building.json): every wall's and slab's base quantities, its body's bottom and top over ±0.00, each room's
+/// net floor area. The curved wall's and the slabs' arcs are written as arcs (no chords: nothing said about them), the
+/// window through the curved wall runs along its faces' arcs, and every body is closed.
+/// `KENTOS_WRITE_IFC_CURVED=1` writes fixtures/arch/v1/ifc/egri-bina.ifc, which `scripts/fixtures/curved_ifc_check.py`
+/// reads with IfcOpenShell against the same closed forms.
+#[test]
+fn the_curved_building_s_bodies_are_their_closed_forms() {
+    use kentos_commands::CallOp;
+    use kentos_ifc::building::Shape;
+    use kentos_native_application::{ExecutionContext, registry};
+    let snap: DocumentSnapshotV2 =
+        kentos_kcad::decode(include_bytes!("../../../../../fixtures/arch/v1/curved-building.kcad")).unwrap();
+    let mut doc = Document::from_snapshot_v2(snap).unwrap();
+    let expected: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/arch/v1/curved-building.json")).unwrap();
+    let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new(), "the loss list is empty");
+    let element = |u: &str| {
+        let id = kentos_domain::Uuid::parse_str(u).unwrap().as_u128();
+        b.elements.iter().find(|e| e.id == Some(id)).unwrap_or_else(|| panic!("{u} not written"))
+    };
+    let number = |v: &Value| match v {
+        Value::Length(x) | Value::Area(x) | Value::Volume(x) => *x,
+        other => panic!("{other:?}"),
+    };
+    let near = |a: f64, b: f64| (a - b).abs() <= 1e-9 * b.abs().max(1.0);
+    for (set, of) in [("walls", "Qto_WallBaseQuantities"), ("slabs", "Qto_SlabBaseQuantities")] {
+        for (u, want) in expected[set].as_object().unwrap() {
+            let e = element(u);
+            let q = e.qtos.iter().find(|q| q.name == of).unwrap_or_else(|| panic!("{}: no {of}", e.name));
+            for (k, v) in want.as_object().unwrap() {
+                let got = q.quantities.iter().find(|(n, _)| n == k).map(|(_, v)| number(v));
+                let v = v.as_f64().unwrap();
+                assert!(got.is_some_and(|g| near(g, v)), "{} {k}: {got:?}, the closed form {v}; {:?}", e.name, e.shapes);
+            }
+        }
+    }
+    // Each body where its storey's level puts it.
+    for (u, want) in expected["bodies"].as_object().unwrap() {
+        let e = element(u);
+        let floor = b.storeys[e.storey].elevation;
+        let (low, high) = e.shapes.iter().fold((f64::MAX, f64::MIN), |(l, h), s| match s {
+            Shape::Prism { bottom, top, .. } => (l.min(floor + bottom), h.max(floor + top)),
+            Shape::Faces { .. } => (l, h),
+        });
+        let (bottom, top) = (want[0].as_f64().unwrap(), want[1].as_f64().unwrap());
+        assert!(near(low, bottom) && near(high, top), "{}: {low} → {high}, not {bottom} → {top}", e.name);
+    }
+    // The rooms' floor areas, the inner faces' arc measured as an arc.
+    for (u, want) in expected["spaces"].as_object().unwrap() {
+        let id = kentos_domain::Uuid::parse_str(u).unwrap().as_u128();
+        let s = b.spaces.iter().find(|s| s.id == Some(id)).expect("the room written");
+        let got = s.qtos.iter().flat_map(|q| &q.quantities).find(|(n, _)| n == "NetFloorArea").map(|(_, v)| number(v));
+        let v = want["NetFloorArea"].as_f64().unwrap();
+        assert!(got.is_some_and(|g| near(g, v)), "{}: {got:?}, the closed form {v}", s.name);
+        assert!(s.bulges.iter().any(|r| r.iter().any(|x| *x != 0.0)), "{}: its arc written as an arc", s.name);
+    }
+    // Every body closed; the curved walls' and the slabs' with their arcs, the curved walls' windows too.
+    for e in &b.elements {
+        for s in &e.shapes {
+            assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{}", e.name);
+        }
+    }
+    let curved: Vec<usize> = (0..b.elements.len())
+        .filter(|&k| {
+            b.elements[k].shapes.iter().any(|s| matches!(s, Shape::Prism { bulges, .. } if bulges.iter().flatten().any(|x| *x != 0.0)))
+        })
+        .collect();
+    let classes: Vec<Class> = curved.iter().map(|&k| b.elements[k].class).collect();
+    assert_eq!(classes.iter().filter(|c| **c == Class::Wall).count(), 2, "the two curved walls: {classes:?}");
+    assert_eq!(classes.iter().filter(|c| **c == Class::Slab).count(), 3, "the three slabs: {classes:?}");
+    let arched = b.openings.iter().filter(|o| o.bulges.iter().any(|x| *x != 0.0)).count();
+    assert_eq!(arched, 2, "a window through each curved wall along its faces' arcs");
+    let text = kentos_ifc::building::write(&b);
+    assert!(text.contains("IFCARCINDEX(") && text.contains("IFCINDEXEDPOLYCURVE("));
+    // Nothing said about chords: the arcs are written as arcs.
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.arch.ifc",
+        CallOp::Plan,
+        serde_json::json!({"path": "/tmp/egri-bina.ifc"}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let said = answer["warnings"].to_string();
+    assert!(!said.contains("düz parçalarla"), "{said}");
+    if std::env::var_os("KENTOS_WRITE_IFC_CURVED").is_some() {
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/egri-bina.ifc");
+        std::fs::write(out, &text).expect("the file kept");
+    }
 }

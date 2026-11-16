@@ -10,6 +10,10 @@
 //!
 //! Nothing here knows KentOS's drawing: the application gives the building as [`Building`].
 
+use kentos_geometry_core::Vec2;
+use kentos_geometry_core::geom::arc::DEFAULT_STEP;
+use kentos_geometry_core::geom::bulge::{bulge_arc, bulge_path_outline, has_bulges, segment_mid};
+
 use crate::step::{Step, guid, real, text};
 
 /// A property's or a quantity's value.
@@ -82,6 +86,10 @@ pub struct Qto {
 pub enum Shape {
     Prism {
         rings: Vec<Vec<[f64; 2]>>,
+        /// Each ring's edges' bulges, each to its next point (docs/adr/8071 §1): an arc where it is not 0, positive
+        /// bowing right of travel; a ring with none, or all 0, is straight. The file writes the arcs as arcs; what
+        /// reads a polygon (a mesh, an outline test) takes [`flat_rings`].
+        bulges: Vec<Vec<f64>>,
         bottom: f64,
         top: f64,
     },
@@ -89,6 +97,25 @@ pub enum Shape {
         vertices: Vec<[f64; 3]>,
         faces: Vec<Vec<usize>>,
     },
+}
+
+/// Rings with their arcs flattened at the drawing's step (docs/adr/8071 §1; at most 5° a chord): for what reads a
+/// polygon. The measures are the arcs' own, never these.
+pub fn flat_rings(rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>]) -> Vec<Vec<[f64; 2]>> {
+    rings
+        .iter()
+        .enumerate()
+        .map(|(i, r)| match bulges.get(i).filter(|b| has_bulges(Some(b))) {
+            Some(b) => {
+                let pts: Vec<Vec2> = r.iter().map(|p| Vec2::new(p[0], p[1])).collect();
+                bulge_path_outline(&pts, Some(b), true, DEFAULT_STEP)
+                    .into_iter()
+                    .map(|p| [p.x, p.y])
+                    .collect()
+            }
+            None => r.clone(),
+        })
+        .collect()
 }
 
 /// The element classes the building has (EK-5 Tablo 5.1).
@@ -201,6 +228,8 @@ pub struct Opening {
     pub name: String,
     pub host: usize,
     pub ring: Vec<[f64; 2]>,
+    /// Its ring's edges' bulges (docs/adr/8071 §1): an opening through a curved wall runs along its faces' arcs.
+    pub bulges: Vec<f64>,
     pub bottom: f64,
     pub top: f64,
     pub filler: Option<usize>,
@@ -218,6 +247,8 @@ pub struct Space {
     pub long_name: Option<String>,
     pub storey: usize,
     pub rings: Vec<Vec<[f64; 2]>>,
+    /// Each ring's edges' bulges, as a prism's (docs/adr/8071 §1).
+    pub bulges: Vec<Vec<f64>>,
     pub bottom: f64,
     pub top: f64,
     /// INTERNAL, EXTERNAL, PARKING …
@@ -455,8 +486,50 @@ impl Writer {
         self.st.add(format!("IFCLOCALPLACEMENT({parent},#{axes})"))
     }
 
-    /// A closed polyline of a ring (its first point again at its end).
-    fn curve(&mut self, ring: &[[f64; 2]]) -> usize {
+    /// A ring's closed curve: an indexed curve of line and arc segments where an edge is an arc (docs/adr/8071 §1;
+    /// `IfcArcIndex`: its start, its middle, its end), else a polyline, its first point again at its end.
+    fn curve(&mut self, ring: &[[f64; 2]], bulges: Option<&[f64]>) -> usize {
+        let n = ring.len();
+        let at = |i: usize| Vec2::new(ring[i % n][0], ring[i % n][1]);
+        let arc = |i: usize| {
+            bulges
+                .and_then(|b| b.get(i).copied())
+                .filter(|&b| bulge_arc(at(i), at(i + 1), b).is_some())
+        };
+        if (0..n).any(|i| arc(i).is_some()) {
+            let mut pts: Vec<[f64; 2]> = Vec::new();
+            let mut segments: Vec<String> = Vec::new();
+            let mut straight: Vec<usize> = Vec::new(); // the run of line indices not yet written
+            for i in 0..n {
+                let start = pts.len() + 1;
+                pts.push(ring[i]);
+                let bulge = arc(i);
+                let end = if i + 1 == n { 1 } else { start + 1 + usize::from(bulge.is_some()) };
+                match bulge {
+                    Some(b) => {
+                        if straight.len() >= 2 {
+                            segments.push(Self::line_index(&straight));
+                        }
+                        straight.clear();
+                        let m = segment_mid(at(i), at(i + 1), b);
+                        pts.push([m.x, m.y]);
+                        segments.push(format!("IFCARCINDEX(({start},{},{end}))", start + 1));
+                    }
+                    None => {
+                        if straight.is_empty() {
+                            straight.push(start);
+                        }
+                        straight.push(end);
+                    }
+                }
+            }
+            if straight.len() >= 2 {
+                segments.push(Self::line_index(&straight));
+            }
+            let coords: Vec<String> = pts.iter().map(|p| format!("({},{})", real(p[0]), real(p[1]))).collect();
+            let list = self.st.add(format!("IFCCARTESIANPOINTLIST2D(({}),$)", coords.join(",")));
+            return self.st.add(format!("IFCINDEXEDPOLYCURVE(#{list},({}),.F.)", segments.join(",")));
+        }
         let mut pts: Vec<usize> = ring
             .iter()
             .map(|p| {
@@ -471,21 +544,32 @@ impl Writer {
         self.st.add(format!("IFCPOLYLINE(({}))", Step::refs(&pts)))
     }
 
+    /// A run of straight edges as one segment of an indexed curve.
+    fn line_index(run: &[usize]) -> String {
+        let list: Vec<String> = run.iter().map(|i| i.to_string()).collect();
+        format!("IFCLINEINDEX(({}))", list.join(","))
+    }
+
     /// A shape's items: one extrusion an outer ring (with its holes), or a face set.
     fn items(&mut self, shape: &Shape) -> Vec<usize> {
         match shape {
-            Shape::Prism { rings, bottom, top } => {
-                let rings: Vec<&Vec<[f64; 2]>> = rings.iter().filter(|r| r.len() >= 3).collect();
-                let owned: Vec<Vec<[f64; 2]>> = rings.iter().map(|r| (*r).clone()).collect();
+            Shape::Prism { rings, bulges, bottom, top } => {
+                // Which ring is in which by the arcs' own outline, not their chords; a ring of two points and two
+                // arcs (a circle) is a ring.
+                let all = flat_rings(rings, bulges);
+                let kept: Vec<usize> = (0..rings.len()).filter(|&i| all[i].len() >= 3).collect();
+                let owned: Vec<Vec<[f64; 2]>> = kept.iter().map(|&i| rings[i].clone()).collect();
+                let arcs: Vec<Vec<f64>> = kept.iter().map(|&i| bulges.get(i).cloned().unwrap_or_default()).collect();
+                let flat: Vec<Vec<[f64; 2]>> = kept.iter().map(|&i| all[i].clone()).collect();
                 let mut out = Vec::new();
-                for (outer, holes) in nest(&owned) {
-                    let o = self.curve(&owned[outer]);
+                for (outer, holes) in nest(&flat) {
+                    let o = self.curve(&owned[outer], Some(&arcs[outer]));
                     let profile = if holes.is_empty() {
                         self.st
                             .add(format!("IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#{o})"))
                     } else {
                         let inner: Vec<usize> =
-                            holes.iter().map(|&h| self.curve(&owned[h])).collect();
+                            holes.iter().map(|&h| self.curve(&owned[h], Some(&arcs[h]))).collect();
                         self.st.add(format!(
                             "IFCARBITRARYPROFILEDEFWITHVOIDS(.AREA.,$,#{o},({}))",
                             Step::refs(&inner)
@@ -865,6 +949,7 @@ pub fn write(b: &Building) -> String {
         let shape = w
             .body(&[Shape::Prism {
                 rings: vec![o.ring.clone()],
+                bulges: vec![o.bulges.clone()],
                 bottom: o.bottom,
                 top: o.top,
             }])
@@ -897,6 +982,7 @@ pub fn write(b: &Building) -> String {
         let shape = w
             .body(&[Shape::Prism {
                 rings: s.rings.clone(),
+                bulges: s.bulges.clone(),
                 bottom: s.bottom,
                 top: s.top,
             }])
@@ -927,6 +1013,7 @@ pub fn write(b: &Building) -> String {
         let shape = w
             .body(&[Shape::Prism {
                 rings: z.rings.clone(),
+                bulges: Vec::new(),
                 bottom: z.bottom,
                 top: z.top,
             }])
@@ -1095,6 +1182,7 @@ mod tests {
             long_name: Some("Salon".into()),
             storey: 0,
             rings: vec![square(0.0, 0.0, 4.0)],
+            bulges: vec![],
             bottom: 0.0,
             top: 2.8,
             predefined: "INTERNAL",
@@ -1159,6 +1247,74 @@ mod tests {
         assert!(line("IFCRELASSIGNSTOGROUP(").contains(&format!("({space_id})")));
     }
 
+    /// A curved wall's footprint is written with its arcs (docs/adr/8071 §1): one indexed curve, an arc through each arc's
+    /// middle and a line for each straight end, closed on its first point; the profile is that curve.
+    #[test]
+    fn a_prism_s_arcs_are_written_as_arc_segments() {
+        let (r1, r2) = (6.15, 5.85);
+        let quarter = (std::f64::consts::PI / 8.0).tan();
+        let wall = Element {
+            class: Class::Wall,
+            id: Some(7),
+            object: None,
+            name: "MM-DVR-Egri".into(),
+            description: None,
+            tag: None,
+            predefined: "STANDARD",
+            object_type: None,
+            part_of: None,
+            storey: 0,
+            shapes: vec![Shape::Prism {
+                rings: vec![vec![[r1, 0.0], [0.0, r1], [0.0, r2], [r2, 0.0]]],
+                bulges: vec![vec![quarter, 0.0, -quarter, 0.0]],
+                bottom: 0.0,
+                top: 3.0,
+            }],
+            overall: None,
+            material: None,
+            psets: vec![],
+            qtos: vec![],
+        };
+        let b = Building {
+            storeys: vec![Storey {
+                id: None,
+                name: "MM-BNK-Zemin_kat".into(),
+                long_name: None,
+                elevation: 0.0,
+                psets: vec![],
+                qtos: vec![],
+            }],
+            elements: vec![wall],
+            ..Building::default()
+        };
+        let f = write(&b);
+        let line = |head: &str| f.lines().find(|l| l.contains(head)).unwrap_or_else(|| panic!("{head}")).to_owned();
+        let id = |l: &str| l.split_once('=').map(|(i, _)| i.trim().to_owned()).expect("an id");
+        let curve = line("IFCINDEXEDPOLYCURVE(");
+        assert!(
+            curve.contains("(IFCARCINDEX((1,2,3)),IFCLINEINDEX((3,4)),IFCARCINDEX((4,5,6)),IFCLINEINDEX((6,1))),.F.)"),
+            "{curve}"
+        );
+        let list = line("IFCCARTESIANPOINTLIST2D(");
+        assert!(curve.contains(&format!("({},", id(&list))), "{curve}");
+        let inside = list.split_once("(((").and_then(|(_, r)| r.split_once("))")).map(|(i, _)| i).expect("its points");
+        let pts: Vec<[f64; 2]> = inside
+            .split("),(")
+            .map(|p| {
+                let (x, y) = p.split_once(',').expect("x,y");
+                [x.parse().expect("x"), y.parse().expect("y")]
+            })
+            .collect();
+        assert_eq!(pts.len(), 6);
+        // Each arc's middle on its circle, at 45°.
+        let h = std::f64::consts::FRAC_1_SQRT_2;
+        for (p, r) in [(pts[1], r1), (pts[4], r2)] {
+            assert!((p[0] - r * h).abs() < 1e-9 && (p[1] - r * h).abs() < 1e-9, "{p:?}");
+        }
+        assert!(line("IFCARBITRARYCLOSEDPROFILEDEF(").contains(&format!("#{})", id(&curve).trim_start_matches('#'))));
+        assert!(!f.contains("IFCPOLYLINE("), "no chords");
+    }
+
     #[test]
     fn a_wall_with_a_door_is_voided_and_filled() {
         let b = Building {
@@ -1199,6 +1355,7 @@ mod tests {
                     storey: 0,
                     shapes: vec![Shape::Prism {
                         rings: vec![vec![[0.0, 0.0], [5.0, 0.0], [5.0, 0.2], [0.0, 0.2]]],
+                        bulges: Vec::new(),
                         bottom: 0.0,
                         top: 3.0,
                     }],
@@ -1233,6 +1390,7 @@ mod tests {
                 name: "MM-ACL-K1".into(),
                 host: 0,
                 ring: vec![[1.0, 0.0], [1.9, 0.0], [1.9, 0.2], [1.0, 0.2]],
+                bulges: vec![],
                 bottom: 0.0,
                 top: 2.1,
                 filler: Some(1),

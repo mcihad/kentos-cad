@@ -3,6 +3,7 @@
 pub mod affine;
 pub mod affine_path;
 pub mod arc;
+pub mod arc_recover;
 pub mod arrangement;
 pub mod arrowhead;
 pub mod band;

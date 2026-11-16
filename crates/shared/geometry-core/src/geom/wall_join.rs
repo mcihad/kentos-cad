@@ -23,7 +23,7 @@
 //! join mode that would resolve it ([`Issue::fix`]).
 
 use crate::entity::Shape;
-use crate::geom::bulge::{bulge_path_edges, reverse_bulge_path, segment_tangent};
+use crate::geom::bulge::{bulge_arc, bulge_path_edges, reverse_bulge_path, segment_tangent};
 use crate::geom::intersect::{
     Edge, circle_circle, intersect_edges, line_circle_params, line_line, ray_edge,
 };
@@ -280,8 +280,18 @@ fn line_path(l: &Line, closed: bool) -> Option<(Path, Shape)> {
     path_of(&shape).map(|p| (p, shape))
 }
 
-/// The line `l` cut at `end` where it meets `target`: trimmed back to the crossing nearest its end, or extended along
-/// its end's tangent to the nearest edge ahead, whichever moves the end less, within `reach`; none when neither is.
+/// How a cut moves a line's end: trimmed back to `s` along it, run on straight `d` along its end's tangent, or run on
+/// round its end arc's circle by `sweep` (signed as the arc turns).
+#[derive(Clone, Copy, Debug)]
+enum Move {
+    Trim(f64),
+    Ray(f64),
+    Round(f64),
+}
+
+/// The line `l` cut at `end` where it meets `target`: trimmed back to the crossing nearest its end, or extended to the
+/// nearest edge ahead (a straight end along its tangent, an arc's end round its own circle: a curved face stays the
+/// arc it is, docs/adr/8071 §1), whichever moves the end less, within `reach`; none when neither is.
 fn cut_end(l: &Line, end: End, target: &[Edge], reach: f64) -> Option<Line> {
     let (pts, bulges) = oriented(l, end);
     let n = pts.len();
@@ -293,8 +303,8 @@ fn cut_end(l: &Line, end: End, target: &[Edge], reach: f64) -> Option<Line> {
     let last = pts[n - 1];
     let tan = segment_tangent(pts[n - 2], pts[n - 1], bulges[n - 2], true);
     let eps = 1e-9 * js_max(path.length, 1.0);
-    // (moved by, trim at s or extend by d)
-    let mut best: Option<(f64, bool, f64)> = None;
+    // (moved by, how)
+    let mut best: Option<(f64, Move)> = None;
     for (i, ed) in path.edges.iter().enumerate() {
         let len = edge_length(ed);
         for t in target {
@@ -302,35 +312,71 @@ fn cut_end(l: &Line, end: End, target: &[Edge], reach: f64) -> Option<Line> {
                 let s = path.cum[i] + h.t * len;
                 let moved = js_max(path.length - s, 0.0);
                 if s > eps && moved <= reach && best.is_none_or(|b| moved < b.0) {
-                    best = Some((moved, true, s));
+                    best = Some((moved, Move::Trim(s)));
                 }
             }
         }
     }
-    for t in target {
-        for d in ray_edge(last, tan, t, 0.0) {
-            if d <= reach && best.is_none_or(|b| d < b.0) {
-                best = Some((d, false, d));
+    // Run on: an arc's end round its circle from its end, the way it turns, short of coming back onto itself; a
+    // straight end, or an arc whose circle never meets the target, along its tangent.
+    let mut on: Option<(f64, Move)> = None;
+    if let Some(arc) = bulge_arc(pts[n - 2], last, bulges[n - 2]) {
+        let a0 = crate::jsmath::atan2(last.y - arc.c.y, last.x - arc.c.x);
+        let ahead = TAU - arc.sweep.abs() - 1e-9;
+        let round = Edge::Arc { c: arc.c, r: arc.r, a0, sweep: ahead.copysign(arc.sweep) };
+        for t in target {
+            for h in intersect_edges(&round, t) {
+                let d = arc.r * ahead * h.t;
+                if h.t > 0.0 && d <= reach && on.is_none_or(|b| d < b.0) {
+                    on = Some((d, Move::Round(ahead.copysign(arc.sweep) * h.t)));
+                }
             }
         }
     }
-    let (moved, trim, v) = best?;
+    if on.is_none() {
+        for t in target {
+            for d in ray_edge(last, tan, t, 0.0) {
+                if d <= reach && on.is_none_or(|b| d < b.0) {
+                    on = Some((d, Move::Ray(d)));
+                }
+            }
+        }
+    }
+    if let Some(o) = on
+        && best.is_none_or(|b| o.0 < b.0)
+    {
+        best = Some(o);
+    }
+    let (moved, how) = best?;
     let (mut p, mut b) = if moved <= eps {
         (pts, bulges)
-    } else if trim {
-        let cut = line_of_shape(&sub_path(&path, 0.0, v, &shape).shape, n)?;
-        (cut.pts, cut.bulges)
     } else {
-        let (mut p, mut b) = (pts, bulges);
-        let to = add(last, mul(tan, v));
-        if b[n - 2] == 0.0 {
-            p[n - 1] = to;
-        } else {
-            p.push(to);
-            b[n - 1] = 0.0;
-            b.push(0.0);
+        match how {
+            Move::Trim(s) => {
+                let cut = line_of_shape(&sub_path(&path, 0.0, s, &shape).shape, n)?;
+                (cut.pts, cut.bulges)
+            }
+            Move::Ray(d) => {
+                let (mut p, mut b) = (pts, bulges);
+                let to = add(last, mul(tan, d));
+                if b[n - 2] == 0.0 {
+                    p[n - 1] = to;
+                } else {
+                    p.push(to);
+                    b[n - 1] = 0.0;
+                    b.push(0.0);
+                }
+                (p, b)
+            }
+            Move::Round(more) => {
+                let (mut p, mut b) = (pts, bulges);
+                let arc = bulge_arc(p[n - 2], last, b[n - 2])?;
+                let a = crate::jsmath::atan2(last.y - arc.c.y, last.x - arc.c.x) + more;
+                p[n - 1] = Vec2::new(arc.c.x + cos(a) * arc.r, arc.c.y + crate::jsmath::sin(a) * arc.r);
+                b[n - 2] = crate::jsmath::tan((arc.sweep + more) / 4.0);
+                (p, b)
+            }
         }
-        (p, b)
     };
     if let Some(x) = b.last_mut() {
         *x = 0.0;

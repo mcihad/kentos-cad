@@ -114,13 +114,23 @@ fn unit_groups(doc: &Document) -> Vec<kentos_ifc::arch::UnitGroup> {
         .collect()
 }
 
-/// The building and what was written, with the walls and stairs the section model drew as chords.
+/// The building and what was written, with the curved objects written as chords: a curved stair (a wall's and a slab's
+/// arcs are written as arcs, docs/adr/8071 §1; one whose arcs the model could not take back still counts).
 fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, usize) {
     let model = sections::model(doc);
     let curved = model
         .left
         .iter()
-        .filter(|(why, owner)| *why == Left::Curved && owner.is_some())
+        .filter(|(why, owner)| {
+            *why == Left::Curved
+                && owner.as_ref().is_some_and(|o| {
+                    !model
+                        .owners
+                        .iter()
+                        .zip(&model.exact)
+                        .any(|(w, e)| w.as_deref() == Some(o.as_str()) && e.is_some())
+                })
+        })
         .count();
     let entities: Vec<(u128, String, &kentos_commands::Entity)> = doc
         .entities_with_uids()
@@ -131,6 +141,7 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         .iter()
         .map(|g| Gap {
             ring: g.ring.clone(),
+            bulges: g.bulges.clone(),
             sill: g.sill,
             head: g.head,
             form: g.form,
@@ -161,6 +172,7 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         solids: &model.solids,
         owners: &model.owners,
         parts: &parts,
+        exact: &model.exact,
         gaps,
         entities,
         wall_style_name: &wall_style_name,
@@ -456,7 +468,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
     }
     if curved > 0 {
         warnings.push(losses(format!(
-            "{curved} eğri duvar ya da merdiven IFC'ye düz parçalarla yazıldı."
+            "{curved} eğri merdiven ya da yayı alınamayan eğri nesne IFC'ye düz parçalarla yazıldı."
         )));
     }
     let text = kentos_ifc::building::write(&b);

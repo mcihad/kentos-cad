@@ -368,6 +368,11 @@ sayılır. Kotu bilinmeyen ±0.00 eksik olarak bildirilir.
 
 #### IFC-06 — Geometri ve görünüm tanımı [ ]
 
+**Gövde tarafında yapılan (16 Kasım 2026, [ADR 8071](../docs/adr/8071-geometry-accuracy.md), BIM-10):** yay profilde
+gerçek yay (`IfcIndexedPolyCurve`, `IfcArcIndex`); duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri kaynaktan;
+kapalılık denetimi; eğri cepheli örnekte bağımsız okuyucu (IfcOpenShell) 0 bulgu, hacimler kapalı formlarla aynı.
+Profiller, görünüm adı ve gelişim seviyesi kanıtı açık.
+
 **Kullanıcı sonucu:** İki çıktı profili (§8) iki bağımsız okuyucuda aynı sayıları ve hacimleri verir; başlıktaki görünüm adı
 dosyanın içeriğiyle uyuşur. Gövdeleri BIM-10'dan gelir.
 

@@ -699,6 +699,12 @@ fn a_flue_in_its_walls_and_the_chimney_over_it_are_one_ifc_chimney_and_a_niche_a
     }
     // The IFC model.
     let (b, written, _) = kentos_native_application::arch_ifc::model(&doc);
+    // Every body closed (docs/adr/8071 §1): the roof's faces, the chimney's stack and hollows, the walls, slabs, stair.
+    for e in &b.elements {
+        for s in &e.shapes {
+            assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{} {s:?}", e.name);
+        }
+    }
     let lost: Vec<&String> = written.left.iter().map(|l| &l.id).collect();
     for uid in flues.iter().chain([&niche]) {
         assert!(!lost.contains(&uid), "{uid} lost: {:?}", written.left);

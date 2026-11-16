@@ -17,7 +17,7 @@ use kentos_geometry_core::geom::section::{Flight, Height, Sloped, Solid};
 
 use crate::building::{
     Actor, Address, Axis, Building, Class, Element, Grid, Group, Opening, Organization, Place, Pset,
-    Qto, Shape, Space, Storey, Value, Zone,
+    Qto, Shape, Space, Storey, Value, Zone, flat_rings,
 };
 use crate::naming::name;
 
@@ -26,6 +26,8 @@ use crate::naming::name;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Gap {
     pub ring: Vec<P>,
+    /// Its ring's edges' bulges (docs/adr/8071 §1): along a curved wall's faces, arcs; empty: straight.
+    pub bulges: Vec<f64>,
     pub sill: f64,
     pub head: f64,
     pub form: OpeningForm,
@@ -45,6 +47,9 @@ pub struct Input<'a> {
     pub owners: &'a [Option<String>],
     /// Which part of its object each solid is (docs/adr/8070 §3, §7); none: its object itself.
     pub parts: &'a [Option<Part>],
+    /// Each solid's footprint with its arcs (docs/adr/8071 §1), for a solid that has any: its rings' points and their
+    /// edges' bulges, written as arcs in place of its flattened rings; none, or a short list: straight.
+    pub exact: &'a [Option<Vec<(Vec<P>, Vec<f64>)>>],
     pub gaps: Vec<Gap>,
     pub entities: Vec<(u128, String, &'a Entity)>,
     pub wall_style_name: &'a dyn Fn(Option<&str>) -> String,
@@ -366,6 +371,7 @@ fn flight(rings: &[Vec<P>], f: &Flight, floor: f64) -> Vec<Shape> {
         let bottom = f.bottom(to).min(top - 1e-3);
         out.push(Shape::Prism {
             rings: vec![b.into_iter().map(pt).collect()],
+            bulges: Vec::new(),
             bottom: bottom - floor,
             top: top - floor,
         });
@@ -555,7 +561,9 @@ fn chimney_groups(pieces: &[Piece]) -> Vec<Vec<usize>> {
         .collect()
 }
 
-fn shapes(solid: &Solid, floor: f64) -> Vec<Shape> {
+/// A model solid's shapes over its storey's floor: a prism with its arcs where the model holds them (docs/adr/8071
+/// §1), a flight's treads, a roof face's faces.
+fn shapes(solid: &Solid, exact: Option<&Option<Vec<(Vec<P>, Vec<f64>)>>>, floor: f64) -> Vec<Shape> {
     let rings: Vec<Vec<P>> = solid
         .rings
         .iter()
@@ -566,14 +574,21 @@ fn shapes(solid: &Solid, floor: f64) -> Vec<Shape> {
         return Vec::new();
     }
     match &solid.height {
-        Height::Prism { bottom, top } => vec![Shape::Prism {
-            rings: rings
-                .iter()
-                .map(|r| r.iter().map(|p| pt(*p)).collect())
-                .collect(),
-            bottom: bottom - floor,
-            top: top - floor,
-        }],
+        Height::Prism { bottom, top } => {
+            let (rings, bulges) = match exact.and_then(Option::as_ref).filter(|e| !e.is_empty()) {
+                Some(e) => (
+                    e.iter().map(|(r, _)| r.iter().map(|p| pt(*p)).collect()).collect(),
+                    e.iter().map(|(_, b)| b.clone()).collect(),
+                ),
+                None => (rings.iter().map(|r| r.iter().map(|p| pt(*p)).collect()).collect(), Vec::new()),
+            };
+            vec![Shape::Prism {
+                rings,
+                bulges,
+                bottom: bottom - floor,
+                top: top - floor,
+            }]
+        }
         Height::Flight(f) => flight(&rings, f, floor),
         Height::Sloped(s) => sloped(&rings, s, floor),
     }
@@ -714,6 +729,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         solids,
         owners,
         parts,
+        exact,
         gaps,
         entities,
         wall_style_name,
@@ -799,7 +815,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let floor = levels[storey].2;
         let mut shapes_of: Vec<Shape> = Vec::new();
         for &i in indices {
-            shapes_of.extend(shapes(&solids[i], floor));
+            shapes_of.extend(shapes(&solids[i], exact.get(i), floor));
         }
         if shapes_of.is_empty() {
             continue;
@@ -959,7 +975,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let panels: Vec<Shape> = pieces
             .iter()
             .filter(|(_, p)| *p == Part::Panel)
-            .flat_map(|(i, _)| shapes(&solids[*i], floor))
+            .flat_map(|(i, _)| shapes(&solids[*i], exact.get(*i), floor))
             .collect();
         let whole = elements.len();
         index.insert(owner.clone(), whole);
@@ -991,7 +1007,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 Part::Transom(k) => (1_000_000 + *k as u64, "Kayıt"),
                 _ => continue,
             };
-            let body = shapes(&solids[*i], floor);
+            let body = shapes(&solids[*i], exact.get(*i), floor);
             if body.is_empty() {
                 continue;
             }
@@ -1029,8 +1045,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             .filter(|(_, el)| matches!(el.class, Class::Wall | Class::Column | Class::Member) && el.storey == s)
         {
             for sh in &el.shapes {
-                if let Shape::Prism { rings: rs, .. } = sh {
-                    for r in rs {
+                if let Shape::Prism { rings: rs, bulges, .. } = sh {
+                    for r in &flat_rings(rs, bulges) {
                         rings.push(r.iter().map(|p| P::new(p[0], p[1])).collect());
                         whose.push(k);
                     }
@@ -1122,6 +1138,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                             o.opening.side == OpeningSide::Right,
                             &ring,
                         )],
+                        bulges: Vec::new(),
                         bottom,
                         top,
                     }],
@@ -1147,6 +1164,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             name: name("ACL", mark.as_deref().unwrap_or("Açıklık")),
             host,
             ring,
+            bulges: gap.bulges.clone(),
             bottom,
             top,
             filler,
@@ -1204,6 +1222,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             name: name("ACL", if niche { "Niş" } else { "Baca boşluğu" }),
             host,
             ring: ring.clone(),
+            bulges: Vec::new(),
             bottom,
             top,
             filler: None,
@@ -1219,6 +1238,26 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 flue: Some((*bits, uid.clone(), openings.len() - 1, elements[host].material.clone())),
                 stack: None,
             });
+        }
+    }
+    // The elements' base quantities (docs/adr/8071 §2; EK-6's optional rows): from their bodies with their arcs, less the
+    // openings and recesses that cut them.
+    for (owner, &k) in &index {
+        let Some(&(_, e)) = by_uid.get(owner) else {
+            continue;
+        };
+        let cuts: Vec<&Opening> = openings.iter().filter(|o| o.host == k).collect();
+        let el = &elements[k];
+        let qto = match (el.class, e) {
+            (Class::Wall, Entity::Wall(w)) => Some(crate::quantities::wall(&w.wall, &el.shapes, &cuts)),
+            (Class::Slab, Entity::Slab(_)) => crate::quantities::slab(&el.shapes, &cuts),
+            (Class::Covering, _) => crate::quantities::covering(&el.shapes),
+            (Class::Column, Entity::Column(_)) => crate::quantities::column(&el.shapes, &cuts),
+            (Class::Beam, Entity::Beam(b)) => Some(crate::quantities::beam(&b.beam, &el.shapes, &cuts)),
+            _ => None,
+        };
+        if let Some(q) = qto {
+            elements[k].qtos.push(q);
         }
     }
     // A roof's chimney and vent stacks (docs/adr/8044 §6), from the top of the storey it stands on up to their tops.
@@ -1284,6 +1323,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 .iter()
                 .map(|&i| Shape::Prism {
                     rings: vec![pieces[i].ring.clone()],
+                    bulges: Vec::new(),
                     bottom: pieces[i].bottom - floor,
                     top: pieces[i].top - floor,
                 })
@@ -1327,6 +1367,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             .filter(|_| f.ring.len() >= 3)
             .map(|h| Shape::Prism {
                 rings: vec![f.ring.clone()],
+                bulges: Vec::new(),
                 bottom,
                 top: bottom + h,
             })
@@ -1367,21 +1408,17 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let Entity::Space(s) = e else { continue };
         let f = &s.space;
         let storey = storey_of(f.arch.level.as_deref());
-        let rings: Vec<Vec<[f64; 2]>> = f
+        // Its contour with its arcs (docs/adr/8071 §1): a room along a curved wall is bounded by the arc itself.
+        let (rings, bulges): (Vec<Vec<[f64; 2]>>, Vec<Vec<f64>>) = f
             .parts
             .iter()
             .flat_map(|part| std::iter::once(&part.outer).chain(&part.holes))
-            .map(|r| {
-                kentos_geometry_core::entity::polygon_ring(
-                    &r.pts.iter().map(|q| P::new(q.x, q.y)).collect::<Vec<_>>(),
-                    r.bulges.as_deref(),
-                )
-                .into_iter()
-                .map(pt)
-                .collect()
+            .filter(|r| {
+                let pts: Vec<P> = r.pts.iter().map(|q| P::new(q.x, q.y)).collect();
+                kentos_geometry_core::entity::polygon_ring(&pts, r.bulges.as_deref()).len() >= 3
             })
-            .filter(|r: &Vec<[f64; 2]>| r.len() >= 3)
-            .collect();
+            .map(|r| (r.pts.iter().map(|q| [q.x, q.y]).collect(), r.bulges.clone().unwrap_or_default()))
+            .unzip();
         if rings.is_empty() {
             written.left.push(Left {
                 id: uid.clone(),
@@ -1446,6 +1483,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             long_name: f.name.clone(),
             storey,
             rings,
+            bulges,
             bottom,
             top,
             predefined: "INTERNAL",

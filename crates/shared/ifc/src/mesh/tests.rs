@@ -42,11 +42,11 @@ fn building() -> Building {
         Storey { id: None, name: "1. kat".into(), long_name: None, elevation: 3.0, psets: vec![], qtos: vec![] },
     ];
     // A 5 × 0.25 m wall 3 m high on the first floor, a 1 m window from 0.90 to 2.10 through it.
-    let wall = element(Class::Wall, vec![Shape::Prism { rings: vec![rect(0.0, 0.0, 5.0, 0.25)], bottom: 0.0, top: 3.0 }], 1);
+    let wall = element(Class::Wall, vec![Shape::Prism { rings: vec![rect(0.0, 0.0, 5.0, 0.25)], bulges: vec![], bottom: 0.0, top: 3.0 }], 1);
     // A slab with a 1 × 1 m hole (even-odd rings), 0.2 m thick.
     let slab = element(
         Class::Slab,
-        vec![Shape::Prism { rings: vec![rect(0.0, 0.0, 4.0, 4.0), rect(1.0, 1.0, 2.0, 2.0)], bottom: -0.2, top: 0.0 }],
+        vec![Shape::Prism { rings: vec![rect(0.0, 0.0, 4.0, 4.0), rect(1.0, 1.0, 2.0, 2.0)], bulges: vec![], bottom: -0.2, top: 0.0 }],
         0,
     );
     // A roof face over 2 × 2 m rising 1 m to the north, 0.2 m thick, its faces as the writer gives them.
@@ -69,6 +69,7 @@ fn building() -> Building {
             name: String::new(),
             host: 0,
             ring: rect(2.0, -0.1, 3.0, 0.35),
+            bulges: vec![],
             bottom: 0.9,
             top: 2.1,
             filler: None,
@@ -80,6 +81,7 @@ fn building() -> Building {
             long_name: None,
             storey: 0,
             rings: vec![rect(0.0, 0.0, 4.0, 3.0)],
+            bulges: vec![],
             bottom: 0.0,
             top: 2.8,
             predefined: "INTERNAL",
@@ -135,4 +137,37 @@ fn a_window_is_a_hole_through_the_wall() {
         })
         .count();
     assert_eq!(crossings % 2, 0, "{crossings}");
+}
+
+/// A prism's arcs are flattened for its triangles (docs/adr/8071 §1): a quarter of a ring 0.30 m wide round a 6 m
+/// radius, 3 m high, closes its volume off the exact 0.9π · 3 m³ by the chords' segments only (at most 5° a chord).
+#[test]
+fn a_curved_prism_is_a_closed_mesh_of_its_flattened_arcs() {
+    let (r1, r2) = (6.15, 5.85);
+    let quarter = (std::f64::consts::PI / 8.0).tan();
+    let wall = element(
+        Class::Wall,
+        vec![Shape::Prism {
+            rings: vec![vec![[r1, 0.0], [0.0, r1], [0.0, r2], [r2, 0.0]]],
+            bulges: vec![vec![quarter, 0.0, -quarter, 0.0]],
+            bottom: 0.0,
+            top: 3.0,
+        }],
+        0,
+    );
+    let b = Building {
+        storeys: vec![Storey { id: None, name: "Zemin".into(), long_name: None, elevation: 0.0, psets: vec![], qtos: vec![] }],
+        elements: vec![wall],
+        ..Default::default()
+    };
+    let all = meshes(&b);
+    let v = volume(&all[0]);
+    let exact = 0.9 * std::f64::consts::PI * 3.0;
+    // Each chord's segment, r²/2 (φ − sin φ), the arc cut in as many equal chords as keep each within 5° (19 here): the
+    // outer arc's lost, the inner arc's gained.
+    let sweep = 4.0 * quarter.atan();
+    let n = (sweep / (std::f64::consts::TAU / 72.0)).ceil();
+    let phi = sweep / n;
+    let short = n * (r1 * r1 - r2 * r2) / 2.0 * (phi - phi.sin()) * 3.0;
+    assert!((v - (exact - short)).abs() < 1e-9, "{v} {exact} {short}");
 }

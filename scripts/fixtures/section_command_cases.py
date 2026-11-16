@@ -26,9 +26,10 @@ The rules:
   revision, then a section the model draws as its block holds is nothing_to_set; else written again, one undo step
   “Kesiti yeniden çiz” (“Görünüşü yeniden çiz”), changed, the ids of its placements.
 - Left out, the whole drawing's, in this order and then by object id: the roof and the natural ground always; a
-  curved wall or slab, a ramp, a wall or column without height, a wall with an opening without head, a stair with no
-  slab to take its waist from (none at its top at the storey's height over its start, none at its foot at its floor),
-  a wall with a niche or flue.
+  curved wall or slab (drawn by its chords), a wall or column without height, a wall with an opening without head, a
+  stair with no slab to take its waist from (none at its top at the storey's height over its start, none at its foot
+  at its floor). A ramp has its body and a niche or flue is cut out of its wall (docs/adr/8070 §1, §3): neither is
+  left out.
 - query: every section mark in the drawing's order with its section's state (notDrawn without a block; current while
   drawing it again gives its block's objects, stale once it does not) and its placements' count, then each section
   block whose mark is gone (“MM-XXXX-KESITA (işareti yok)”, an elevation's “MM-XXXX-GORUNUSGUNEY (işareti yok)”,
@@ -193,8 +194,8 @@ def entities():
 
 
 def left_out_entities():
-    """The drawing with what a section leaves out: a curved wall, a door without head, a niche, a ramp and a stair
-    outside the slab."""
+    """The drawing with what a section leaves out: a curved wall, a door without head and a stair outside the slab; and
+    a niche and a ramp, which it draws (docs/adr/8070 §1, §3)."""
     ents = entities()
     # Their ids follow the drawing's (16 …): a KCAD v2 setup's object ids are its file order.
     n = len(ents)
@@ -264,12 +265,9 @@ class Model:
             elif e["kind"] == "slab":
                 if any(any(b != 0 for b in (p["outer"].get("bulges") or [])) for p in e["parts"]):
                     out.add(("curved", u))
-            elif e["kind"] == "ramp":
-                out.add(("ramp", u))
             elif e["kind"] == "opening" and e["host"] in walls:
-                if e["form"] in ("niche", "flue"):
-                    out.add(("recess", e["host"]))
-                elif e.get("head") is None:
+                # A niche or a flue is cut out of its wall (docs/adr/8070 §3).
+                if e["form"] not in ("niche", "flue") and e.get("head") is None:
                     out.add(("headUnknown", e["host"]))
             elif e["kind"] == "stair":
                 start, end = e["pts"][0], e["pts"][-1]
@@ -671,7 +669,7 @@ def edit_cases():
     out.append(case("Ret: yeniden çizimde sürüm çakışması",
                     [derive(m, A, at=(20, 0)), move_opening(m, DOOR, 2.0), refresh(m, A, expected="999")]))
     m = Model(left_out_entities())
-    out.append(case("Çizilmeyenler: eğri duvar, rampa, lentosuz kapı, plaksız merdiven, niş",
+    out.append(case("Çizilmeyenler: eğri duvar, lentosuz kapı, plaksız merdiven; rampa ve niş çizilir",
                     [derive(m, A, "plan", at=(30, 0))], left_out_entities()))
     m = Model(entities())
     out.append(case("Yerleşimi silinmiş kesit yine yeniden çizilir; yerleşimsiz",

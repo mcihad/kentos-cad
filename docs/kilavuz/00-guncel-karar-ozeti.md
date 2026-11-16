@@ -106,6 +106,14 @@
       değildir (duvar, kolon, mahal yüksekliği ve metraj onu görmez); `IfcCovering`; `.kcad` mimari verisi 5.
     - Kiriş çizelgesi (kiriş, lento, hatıl, kayıt) ve Kaplama çizelgesi (yalnız kaplamalar); `.kcad` mimari verisi 6.
       Kalan: eğimli eleman, duvar kaplamasının kalınlığı, giydirme cephenin kapısı.
+  - **B10 kısmen yapıldı (16 Kasım 2026; [ADR 8071](../adr/8071-geometry-accuracy.md); BIM-10 `[~]`):**
+    - Yayın kaynağı kesit modelidir (`Model::exact`): döşeme ve mahal parçalarından, duvar düz parçalı gövdesinden geri
+      alınarak (`arc_recover`); IFC profili `IfcIndexedPolyCurve` + `IfcArcIndex`; parça sayısı görüntünün işidir.
+    - Birleşimde yay biten çizgi kendi çemberinde uzar (teğetiyle değil).
+    - Miktar setleri kaynaktan, IFC 4.3'ün tanımlarıyla: duvarın brüt hacmi birleşimsiz kendi gövdesi, neti yazılan
+      gövde eksi açıklık ve girintiler; döşemenin deliği onun açıklığıdır (brüt alana girer). Üçgen ölçü kaynağı olmaz.
+    - Her gövde kapalı ve kendini kesmeyen katı (`kentos_ifc::closed`); kesit eğri duvarı yine "düz parçalarla" der, IFC
+      demez. Kalan: kesilmiş gövde, döşeme boşluğu ve şaft, eğimli döşeme, çatı katmanları, döner merdiven, mahal hacmi.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

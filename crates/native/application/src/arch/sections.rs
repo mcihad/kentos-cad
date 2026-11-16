@@ -87,7 +87,8 @@ pub enum Left {
     Roof,
     /// The natural ground: the model has no survey of it (EK-4 4.30).
     NaturalGround,
-    /// A curved wall or stair: drawn as its chords, not as a curve.
+    /// A curved wall, slab or stair: the section draws its chords, not its curve (the IFC writes a wall's and a slab's
+    /// arcs as arcs from [`Model::exact`], docs/adr/8071 §1).
     Curved,
     /// A wall with no height.
     NoHeight,
@@ -116,6 +117,9 @@ impl Left {
 pub struct Gap {
     /// Its outline through the wall: its start jamb's left and right face points, its end jamb's right and left.
     pub ring: Vec<P>,
+    /// Its ring's edges' bulges (docs/adr/8071 §1): through a curved wall its edges along the faces are their arcs
+    /// (the jambs' points are on them); empty where every edge is straight.
+    pub bulges: Vec<f64>,
     pub sill: f64,
     pub head: f64,
     pub form: OpeningForm,
@@ -137,6 +141,10 @@ pub struct Model {
     /// Which part of its object each solid is (docs/adr/8070 §3, §7): a roof's chimney or vent stack, a curtain wall's
     /// frame or panel; none: the object itself.
     pub parts: Vec<Option<Part>>,
+    /// Each solid's footprint with its arcs (docs/adr/8071 §1): its rings' points and each edge's bulge, the source's
+    /// own; none where its rings are exact as they are (no arc). `solids`' rings are these flattened for the section,
+    /// which is the view's work; a writer that draws arcs (the IFC profile) and a measure take these.
+    pub exact: Vec<Option<Vec<ExactRing>>>,
     pub gaps: Vec<Gap>,
     pub left: BTreeSet<(Left, Option<String>)>,
     /// The storeys: id, name, floor, height.
@@ -146,6 +154,10 @@ pub struct Model {
     /// The roofs whose gutters and downpipes are built once every wall and column is in (docs/adr/8044 §8).
     rain: Vec<Rain>,
 }
+
+/// A ring with its arcs (docs/adr/8071 §1): its points and each edge's bulge (to the next point), its first point not
+/// repeated at its end.
+pub type ExactRing = (Vec<P>, Vec<f64>);
 
 /// What part of its object a solid is (docs/adr/8070 §3, §7).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -379,6 +391,61 @@ fn push_part(m: &mut Model, solid: Solid, look: Look, owner: Option<String>, par
     m.looks.push(look);
     m.owners.push(owner);
     m.parts.push(part);
+    m.exact.push(None);
+}
+
+/// [`push`] of a solid whose footprint has arcs (docs/adr/8071 §1): `exact` its rings with them, `solid`'s rings the
+/// same flattened.
+fn push_exact(m: &mut Model, solid: Solid, look: Look, owner: Option<String>, exact: Vec<ExactRing>) {
+    push(m, solid, look, owner);
+    if let Some(last) = m.exact.last_mut() {
+        *last = Some(exact);
+    }
+}
+
+/// The circles a wall's lines run on where they are arcs (docs/adr/8071 §1).
+fn circles_of(s: &kentos_geometry_core::entity::Shape) -> Vec<(P, f64)> {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::bulge::bulge_arc;
+    let mut out: Vec<(P, f64)> = Vec::new();
+    let Shape::Wall { pts, bulges, wall } = s else {
+        return out;
+    };
+    if !bulges.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0)) {
+        return out;
+    }
+    let Ok(lines) = kentos_geometry_core::geom::wall::lines(pts, bulges.as_deref(), wall) else {
+        return out;
+    };
+    for l in &lines {
+        let n = l.pts.len();
+        let segs = if wall.closed { n } else { n.saturating_sub(1) };
+        for i in 0..segs {
+            if let Some(arc) = bulge_arc(l.pts[i], l.pts[(i + 1) % n], l.bulges.get(i).copied().unwrap_or(0.0)) {
+                add_circle(&mut out, (arc.c, arc.r));
+            }
+        }
+    }
+    out
+}
+
+fn add_circle(list: &mut Vec<(P, f64)>, c: (P, f64)) {
+    let same = |d: &(P, f64)| (d.0.x - c.0.x).abs() < 1e-9 && (d.0.y - c.0.y).abs() < 1e-9 && (d.1 - c.1).abs() < 1e-9;
+    if !list.iter().any(same) {
+        list.push(c);
+    }
+}
+
+/// The circles every wall's lines run on where they are arcs (docs/adr/8071 §1): what a wall's flattened rings are taken
+/// back to, a wall's end cut along another's curved face too.
+fn wall_circles(walls: &[(Uuid, &kentos_commands::WallFields, kentos_geometry_core::entity::Shape)]) -> Vec<(P, f64)> {
+    let mut out: Vec<(P, f64)> = Vec::new();
+    for (_, _, s) in walls {
+        for c in circles_of(s) {
+            add_circle(&mut out, c);
+        }
+    }
+    out
 }
 
 /// The walls, joined as the plan joins them and cut by the columns on their storeys, with their openings.
@@ -408,6 +475,8 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
         return;
     }
     let solved = solve_with(&ins, &[], None);
+    // The circles the walls' arcs run on (docs/adr/8071 §1).
+    let circles = wall_circles(&walls);
     let feet: Vec<Foot> = entities
         .iter()
         .filter_map(|(_, e)| match e {
@@ -464,6 +533,7 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
         let base = material_look("DUVA", core.as_deref(), None);
         let mut voids = Vec::new();
         let mut opening_solids: Vec<(Solid, Look, Option<String>)> = Vec::new();
+        let own = circles_of(shape);
         for (opening, o) in openings.get(&uid.to_string()).into_iter().flatten() {
             let Ok([l0, r0, l1, r1]) = <[Vec2; 4]>::try_from(o.place.clone()) else {
                 continue;
@@ -549,7 +619,10 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
                 Some(opening.to_string()),
             ));
             let mid = |x: Vec2, y: Vec2| P::new((x.x + y.x) / 2.0, (x.y + y.y) / 2.0);
+            // Through a curved wall its edges along the faces are the faces' arcs (docs/adr/8071 §1).
+            let bulges = kentos_geometry_core::geom::arc_recover::along(&ring, &own);
             m.gaps.push(Gap {
+                bulges: if bulges.iter().any(|b| *b != 0.0) { bulges } else { Vec::new() },
                 ring,
                 sill,
                 head,
@@ -596,6 +669,12 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
             for (ring, holes) in bodies {
                 let mut rings = vec![ring.clone()];
                 rings.extend(holes.iter().flatten().cloned());
+                // Its arcs taken back from its flattened rings (docs/adr/8071 §1).
+                let exact: Vec<ExactRing> = rings
+                    .iter()
+                    .map(|r| kentos_geometry_core::geom::arc_recover::recover(r, &circles))
+                    .collect();
+                let arcs = exact.iter().any(|(_, b)| b.iter().any(|x| *x != 0.0));
                 let solid = Solid {
                     rings,
                     height: Height::Prism { bottom: foot, top },
@@ -603,7 +682,11 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
                     marks: Vec::new(),
                     finish: finish.clone(),
                 };
-                push(m, solid, look.clone(), owner.clone());
+                if arcs {
+                    push_exact(m, solid, look.clone(), owner.clone(), exact);
+                } else {
+                    push(m, solid, look.clone(), owner.clone());
+                }
             }
         }
         for (solid, look, owner) in opening_solids.drain(..) {
@@ -777,21 +860,31 @@ fn slab(
     m: &mut Model,
 ) {
     let (floor, _) = floor_of(levels, s.arch.level.as_deref());
-    let rings: Vec<Vec<P>> = s
+    // Its rings with their arcs, the source's (docs/adr/8071 §1); the section's flattened from them at the core's step
+    // (an arc's edge was a single chord before: its vertices alone).
+    let all: Vec<&kentos_commands::SpaceRing> = s
         .parts
         .iter()
         .flat_map(|part| std::iter::once(&part.outer).chain(&part.holes))
-        .map(|r| r.pts.iter().map(|q| p(*q)).collect())
         .collect();
-    if s.parts.iter().any(|part| {
-        std::iter::once(&part.outer).chain(&part.holes).any(|r| {
-            r.bulges
-                .as_ref()
-                .is_some_and(|b| b.iter().any(|x| *x != 0.0))
+    let exact: Vec<ExactRing> = all
+        .iter()
+        .map(|r| {
+            let pts: Vec<P> = r.pts.iter().map(|q| p(*q)).collect();
+            let n = pts.len();
+            let b: Vec<f64> = (0..n).map(|i| r.bulges.as_ref().and_then(|b| b.get(i)).copied().unwrap_or(0.0)).collect();
+            (pts, b)
         })
-    }) {
+        .collect();
+    let arcs = exact.iter().any(|(_, b)| b.iter().any(|x| *x != 0.0));
+    if arcs {
         m.left.insert((Left::Curved, owner.clone()));
     }
+    let rings: Vec<Vec<P>> = exact
+        .iter()
+        .map(|(pts, b)| kentos_geometry_core::entity::polygon_ring(pts, Some(b)))
+        .collect();
+    let exact = arcs.then_some(exact);
     let mut z = floor + s.offset;
     let solid = |bottom: f64, top: f64| Solid {
         rings: rings.clone(),
@@ -800,13 +893,13 @@ fn slab(
         marks: Vec::new(),
         finish: None,
     };
+    // Each of its solids with its arcs (docs/adr/8071 §1).
+    let put = |m: &mut Model, solid: Solid, look: Look| match &exact {
+        Some(e) => push_exact(m, solid, look, owner.clone(), e.clone()),
+        None => push(m, solid, look, owner.clone()),
+    };
     for l in &s.layers.over {
-        push(
-            m,
-            solid(z - l.thickness, z),
-            slab_layer_look(l.kind, l.material.as_deref()),
-            owner.clone(),
-        );
+        put(m, solid(z - l.thickness, z), slab_layer_look(l.kind, l.material.as_deref()));
         z -= l.thickness;
     }
     // A covering's plate on its type's EK-2 element (docs/adr/8070 §10).
@@ -814,15 +907,10 @@ fn slab(
         Some(c) => covering_look(c, s.material.as_deref()),
         None => material_look("DOSM", s.material.as_deref(), None),
     };
-    push(m, solid(z - s.thickness, z), look, owner.clone());
+    put(m, solid(z - s.thickness, z), look);
     z -= s.thickness;
     for l in &s.layers.under {
-        push(
-            m,
-            solid(z - l.thickness, z),
-            slab_layer_look(l.kind, l.material.as_deref()),
-            owner.clone(),
-        );
+        put(m, solid(z - l.thickness, z), slab_layer_look(l.kind, l.material.as_deref()));
         z -= l.thickness;
     }
 }
@@ -1784,20 +1872,30 @@ fn landing_cut(
     (out.len() >= 3).then_some(out)
 }
 
-/// A ring cut to where `keep` is not below 0.
+/// A ring cut to where `keep` is not below 0. A corner on the cut line is one corner of the cut ring, not one for each
+/// edge that meets it there (docs/adr/8071 §1: no edge of no length, every body closed and simple).
 fn clip(ring: &[P], keep: &dyn Fn(P) -> f64) -> Vec<P> {
     let n = ring.len();
-    let mut out = Vec::new();
+    let mut out: Vec<P> = Vec::new();
+    let same = |p: P, q: P| (p.x - q.x).abs() <= 1e-12 && (p.y - q.y).abs() <= 1e-12;
+    let mut put = |p: P, out: &mut Vec<P>| {
+        if out.last().is_none_or(|q| !same(*q, p)) {
+            out.push(p);
+        }
+    };
     for i in 0..n {
         let (a, b) = (ring[i], ring[(i + 1) % n]);
         let (ka, kb) = (keep(a), keep(b));
         if ka >= 0.0 {
-            out.push(a);
+            put(a, &mut out);
         }
         if (ka >= 0.0) != (kb >= 0.0) {
             let t = ka / (ka - kb);
-            out.push(P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t));
+            put(P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t), &mut out);
         }
+    }
+    while out.len() > 1 && same(out[0], out[out.len() - 1]) {
+        out.pop();
     }
     out
 }

@@ -444,6 +444,53 @@ fn missing_elements_screens() {
     }
 }
 
+/// Geometri doğruluğu (docs/adr/8071; plan/bim-plan.md BIM-10): the curved building (fixtures/arch/v1/curved-building.kcad)
+/// in plan and in 3D, its north wall's and its slabs' arcs smooth (the view's own step), its storeys at ±0.00 and +3.35.
+/// `.run/gui-evidence/egri-bina-8071/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::curved_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn curved_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/egri-bina-8071");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let curved = || -> kentos_commands::DocumentSnapshotV2 {
+        kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/curved-building.kcad")).expect("decodes")
+    };
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(curved());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -1.0, max_x: 11.0, max_y: 9.0 }, 24.0);
+        shot(&mut app, "1-plan");
+        let _ = app.update(Message::Run("scene3d.view"));
+        shot(&mut app, "2-3b");
+        send(&mut app, W::View(1));
+        shot(&mut app, "3-3b-guneybati");
+        send(&mut app, W::Storey(1));
+        send(&mut app, W::View(3));
+        shot(&mut app, "4-3b-zemin-kat-ustten");
+        send(&mut app, W::Close);
+    }
+}
+
 /// The facade building (fixtures/arch/v1/facade-building.kcad) with a curtain wall 1.5 m east of its east facade
 /// (docs/adr/8070 §7): 9 m long, 6 m high from the ground floor, at most 1.50 m between mullions and transoms (6 bays,
 /// 4 rows), and its east elevation (mark 3, looking west) drawn at (20, 0).

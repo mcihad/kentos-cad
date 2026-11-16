@@ -1983,7 +1983,7 @@
       ]
     },
     {
-      "name": "Çizilmeyenler: eğri duvar, rampa, lentosuz kapı, plaksız merdiven, niş",
+      "name": "Çizilmeyenler: eğri duvar, lentosuz kapı, plaksız merdiven; rampa ve niş çizilir",
       "steps": [
         {
           "op": "plan",
@@ -2018,20 +2018,12 @@
                   "uid": "0192f5a1-8042-7000-8000-000000000010"
                 },
                 {
-                  "why": "ramp",
-                  "uid": "0192f5a1-8042-7000-8000-000000000014"
-                },
-                {
                   "why": "headUnknown",
                   "uid": "0192f5a1-8042-7000-8000-000000000011"
                 },
                 {
                   "why": "stairWaist",
                   "uid": "0192f5a1-8042-7000-8000-000000000015"
-                },
-                {
-                  "why": "recess",
-                  "uid": "0192f5a1-8042-7000-8000-000000000011"
                 }
               ],
               "revision": "$current"

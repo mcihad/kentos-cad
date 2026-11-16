@@ -35,11 +35,12 @@ class _SectionsEdit(LocalCommand[BuildingSectionsEdit, BuildingSectionsEdited, B
     ±0,00'da tesviye zemini, başlık (A-A KESİTİ) ve ölçek. Çizim işaretin bloğundadır
     (MM-XXXX-KESITA; nesneleri EK-4'ün malzeme katmanlarında, taramaları -T'de,
     görünenler derinliğe göre -1…-4) ve bir kez yerleştirilir. Modelin bilmediği
-    çizilmez, leftOut'ta listelenir: çatı, tabii zemin, eğri duvar ve merdiven, rampa,
-    lentosuz açıklık, plaksız merdiven, niş ve baca. operation: derive (mark: kesit
-    işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı nereye, yoksa çizimin 5 m sağı),
-    refresh (mark: bloğu modelin şimdiki hâliyle yeniden yazar; her yerleşim
-    güncellenir). Tek geri alma adımı “Kesit çıkar” ya da “Kesiti yeniden çiz”.
+    çizilmez ya da yaklaşık çizilir, leftOut'ta listelenir: çatı, tabii zemin, eğri
+    duvar ve merdiven (düz parçalarla), yüksekliği olmayan duvar, lentosuz açıklık ve
+    plaksız merdiven. operation: derive (mark: kesit işaretinin kimliği; at: çizginin
+    sol ucunun ±0,00'ı nereye, yoksa çizimin 5 m sağı), refresh (mark: bloğu modelin
+    şimdiki hâliyle yeniden yazar; her yerleşim güncellenir). Tek geri alma adımı “Kesit
+    çıkar” ya da “Kesiti yeniden çiz”.
     """
     __slots__ = ()
     id = "cad.sections.edit"
@@ -71,12 +72,12 @@ class _SectionsEdit(LocalCommand[BuildingSectionsEdit, BuildingSectionsEdited, B
         akslar, geçilen mahallerin numarası ve adı, ±0,00'da tesviye zemini, başlık (A-A
         KESİTİ) ve ölçek. Çizim işaretin bloğundadır (MM-XXXX-KESITA; nesneleri EK-4'ün
         malzeme katmanlarında, taramaları -T'de, görünenler derinliğe göre -1…-4) ve bir kez
-        yerleştirilir. Modelin bilmediği çizilmez, leftOut'ta listelenir: çatı, tabii zemin,
-        eğri duvar ve merdiven, rampa, lentosuz açıklık, plaksız merdiven, niş ve baca.
-        operation: derive (mark: kesit işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı
-        nereye, yoksa çizimin 5 m sağı), refresh (mark: bloğu modelin şimdiki hâliyle
-        yeniden yazar; her yerleşim güncellenir). Tek geri alma adımı “Kesit çıkar” ya da
-        “Kesiti yeniden çiz”.
+        yerleştirilir. Modelin bilmediği çizilmez ya da yaklaşık çizilir, leftOut'ta
+        listelenir: çatı, tabii zemin, eğri duvar ve merdiven (düz parçalarla), yüksekliği
+        olmayan duvar, lentosuz açıklık ve plaksız merdiven. operation: derive (mark: kesit
+        işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı nereye, yoksa çizimin 5 m sağı),
+        refresh (mark: bloğu modelin şimdiki hâliyle yeniden yazar; her yerleşim
+        güncellenir). Tek geri alma adımı “Kesit çıkar” ya da “Kesiti yeniden çiz”.
 
         Args:
             doc: The drawing it works on.

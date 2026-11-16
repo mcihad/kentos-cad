@@ -295,7 +295,7 @@ mod tests {
             object_type: None,
             part_of: None,
             storey: 0,
-            shapes: vec![Shape::Prism { rings: vec![vec![[0.0, 0.0], [1.0, 0.0], [1.0, 0.2], [0.0, 0.2]]], bottom: 0.0, top: 3.0 }],
+            shapes: vec![Shape::Prism { rings: vec![vec![[0.0, 0.0], [1.0, 0.0], [1.0, 0.2], [0.0, 0.2]]], bulges: vec![], bottom: 0.0, top: 3.0 }],
             overall: None,
             material: Some("Tuğla".into()),
             psets,
