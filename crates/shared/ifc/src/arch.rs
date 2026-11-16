@@ -51,6 +51,8 @@ pub struct Input<'a> {
     /// edges' bulges, written as arcs in place of its flattened rings; none, or a short list: straight.
     pub exact: &'a [Option<Vec<(Vec<P>, Vec<f64>)>>],
     pub gaps: Vec<Gap>,
+    /// The voids' parts over their storeys' floor slabs (docs/adr/8071 §5): each an opening of its slab.
+    pub slab_cuts: Vec<SlabCut>,
     pub entities: Vec<(u128, String, &'a Entity)>,
     pub wall_style_name: &'a dyn Fn(Option<&str>) -> String,
     /// The project's wall styles: a wall's fire resistance class is its own, else its style's (docs/adr/8068).
@@ -69,6 +71,16 @@ pub struct Input<'a> {
     /// A room's floor and ceiling covering thicknesses as the vertical model holds them (docs/adr/8070 §6), by its
     /// persistent id; a room not here, or a side none, has none.
     pub coverings: BTreeMap<String, (Option<f64>, Option<f64>)>,
+}
+
+/// A void's part over a floor slab (docs/adr/8071 §5): the slab's persistent id, the void's (a space, docs/adr/0708),
+/// the outline it takes out of the slab with its arcs.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SlabCut {
+    pub owner: String,
+    pub source: String,
+    pub ring: Vec<[f64; 2]>,
+    pub bulges: Vec<f64>,
 }
 
 /// What part of its object a solid of the model is (docs/adr/8070 §3, §7).
@@ -731,6 +743,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         parts,
         exact,
         gaps,
+        slab_cuts,
         entities,
         wall_style_name,
         wall_styles,
@@ -1238,6 +1251,79 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 flue: Some((*bits, uid.clone(), openings.len() - 1, elements[host].material.clone())),
                 stack: None,
             });
+        }
+    }
+    // A slab's holes and the voids over it (docs/adr/8071 §5): its body is its own outline, each hole drawn in it and
+    // each void's part over it an opening of its own (Design Transfer: the reader takes it out; a Reference View: cut).
+    for (owner, &k) in &index {
+        let Some(&(_, Entity::Slab(sl))) = by_uid.get(owner) else {
+            continue;
+        };
+        if elements[k].class != Class::Slab {
+            continue;
+        }
+        let ring_of = |r: &kentos_contracts::SpaceRing| -> (Vec<[f64; 2]>, Vec<f64>) {
+            let n = r.pts.len();
+            (
+                r.pts.iter().map(|q| [q.x, q.y]).collect(),
+                (0..n).map(|i| r.bulges.as_ref().and_then(|b| b.get(i)).copied().unwrap_or(0.0)).collect(),
+            )
+        };
+        let (outer, outer_bulges): (Vec<Vec<[f64; 2]>>, Vec<Vec<f64>>) =
+            sl.slab.parts.iter().map(|part| ring_of(&part.outer)).unzip();
+        let (mut lo, mut hi) = (f64::MAX, f64::MIN);
+        for sh in &mut elements[k].shapes {
+            if let Shape::Prism { rings, bulges, bottom, top } = sh {
+                *rings = outer.clone();
+                *bulges = outer_bulges.clone();
+                lo = lo.min(*bottom);
+                hi = hi.max(*top);
+            }
+        }
+        if lo >= hi {
+            continue;
+        }
+        let mut n = 0u64;
+        for part in &sl.slab.parts {
+            for h in &part.holes {
+                n += 1;
+                let (ring, bulges) = ring_of(h);
+                openings.push(Opening {
+                    id: Some(crate::step::fnv(owner, 3000 + n)),
+                    name: name("ACL", "Döşeme boşluğu"),
+                    host: k,
+                    ring,
+                    bulges,
+                    bottom: lo,
+                    top: hi,
+                    filler: None,
+                    predefined: "OPENING",
+                });
+                written.openings += 1;
+            }
+        }
+        for c in slab_cuts.iter().filter(|c| &c.owner == owner) {
+            // Named for its void: its number and its name, as the room list writes them.
+            let words = match by_uid.get(&c.source) {
+                Some(&(_, Entity::Space(sp))) => [sp.space.number.as_deref(), sp.space.name.as_deref()]
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<_>>()
+                    .join(" "),
+                _ => String::new(),
+            };
+            openings.push(Opening {
+                id: Some(crate::step::fnv(&format!("{}/{}", c.source, owner), 1)),
+                name: name("ACL", if words.trim().is_empty() { "Boşluk" } else { &words }),
+                host: k,
+                ring: c.ring.clone(),
+                bulges: c.bulges.clone(),
+                bottom: lo,
+                top: hi,
+                filler: None,
+                predefined: "OPENING",
+            });
+            written.openings += 1;
         }
     }
     // The elements' base quantities (docs/adr/8071 §2; EK-6's optional rows): from their bodies with their arcs, less the

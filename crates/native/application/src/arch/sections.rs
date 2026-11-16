@@ -145,6 +145,8 @@ pub struct Model {
     /// own; none where its rings are exact as they are (no arc). `solids`' rings are these flattened for the section,
     /// which is the view's work; a writer that draws arcs (the IFC profile) and a measure take these.
     pub exact: Vec<Option<Vec<ExactRing>>>,
+    /// The voids' parts over their storeys' floor slabs (docs/adr/8071 §5), taken out of those slabs' rings.
+    pub slab_cuts: Vec<SlabCut>,
     pub gaps: Vec<Gap>,
     pub left: BTreeSet<(Left, Option<String>)>,
     /// The storeys: id, name, floor, height.
@@ -158,6 +160,16 @@ pub struct Model {
 /// A ring with its arcs (docs/adr/8071 §1): its points and each edge's bulge (to the next point), its first point not
 /// repeated at its end.
 pub type ExactRing = (Vec<P>, Vec<f64>);
+
+/// A void's part over a floor slab (docs/adr/8071 §5): the slab's id, the void's (a space, docs/adr/0708) and the
+/// outline taken out of the slab, with its arcs.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SlabCut {
+    pub owner: Option<String>,
+    pub source: String,
+    pub ring: Vec<P>,
+    pub bulges: Vec<f64>,
+}
 
 /// What part of its object a solid is (docs/adr/8070 §3, §7).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -361,10 +373,18 @@ pub fn model(doc: &Document) -> Model {
         })
         .collect();
     walls(doc, &entities, &mut m);
+    // The voids (docs/adr/0708: shafts, a stair's or a gallery's opening; no floor in them), each with its id.
+    let voids: Vec<(String, &kentos_commands::SpaceFields)> = entities
+        .iter()
+        .filter_map(|(u, e)| match e {
+            Entity::Space(sp) if sp.space.void => Some((u.to_string(), &sp.space)),
+            _ => None,
+        })
+        .collect();
     for (uid, e) in &entities {
         let owner = Some(uid.to_string());
         match e {
-            Entity::Slab(s) => slab(&s.slab, &m.levels.clone(), owner, &mut m),
+            Entity::Slab(s) => slab(&s.slab, &m.levels.clone(), owner, &voids, &mut m),
             Entity::Column(c) => column(&c.column, &slabs, owner, &mut m),
             Entity::Beam(b) => beam(doc, &b.beam, owner, &mut m),
             Entity::Roof(r) => roof(doc, r, owner, &mut m),
@@ -857,25 +877,65 @@ fn slab(
     s: &kentos_commands::SlabFields,
     levels: &[(String, String, f64, Option<f64>)],
     owner: Option<String>,
+    voids: &[(String, &kentos_commands::SpaceFields)],
     m: &mut Model,
 ) {
+    use kentos_geometry_core::geom::arrangement::{Area, Ring};
+    use kentos_geometry_core::geom::region::{intersect_area_sets, subtract_areas};
     let (floor, _) = floor_of(levels, s.arch.level.as_deref());
     // Its rings with their arcs, the source's (docs/adr/8071 §1); the section's flattened from them at the core's step
     // (an arc's edge was a single chord before: its vertices alone).
-    let all: Vec<&kentos_commands::SpaceRing> = s
-        .parts
-        .iter()
-        .flat_map(|part| std::iter::once(&part.outer).chain(&part.holes))
-        .collect();
-    let exact: Vec<ExactRing> = all
-        .iter()
-        .map(|r| {
-            let pts: Vec<P> = r.pts.iter().map(|q| p(*q)).collect();
-            let n = pts.len();
-            let b: Vec<f64> = (0..n).map(|i| r.bulges.as_ref().and_then(|b| b.get(i)).copied().unwrap_or(0.0)).collect();
-            (pts, b)
-        })
-        .collect();
+    let ring = |r: &kentos_commands::SpaceRing| -> ExactRing {
+        let pts: Vec<P> = r.pts.iter().map(|q| p(*q)).collect();
+        let n = pts.len();
+        let b: Vec<f64> = (0..n).map(|i| r.bulges.as_ref().and_then(|b| b.get(i)).copied().unwrap_or(0.0)).collect();
+        (pts, b)
+    };
+    let area = |part: &kentos_commands::SpacePart| -> Area {
+        let r = |x: &kentos_commands::SpaceRing| {
+            let (pts, b) = ring(x);
+            Ring { bulges: b.iter().any(|v| *v != 0.0).then_some(b), pts }
+        };
+        Area { outer: r(&part.outer), holes: part.holes.iter().map(r).collect() }
+    };
+    let mut exact: Vec<ExactRing> =
+        s.parts.iter().flat_map(|part| std::iter::once(&part.outer).chain(&part.holes)).map(ring).collect();
+    // The voids on its storey take their outlines out of its floor slab (docs/adr/8071 §5; docs/adr/0708 "no floor in
+    // it"): the slab whose top is the storey's floor, half a metre under it to 10 cm over, as the walls' foot reads it.
+    // A covering is no floor. Each void's part over it is kept for the IFC's opening.
+    let top0 = floor + s.offset;
+    let is_floor = s.covering.is_none() && top0 >= floor - 0.5 && top0 <= floor + 0.1;
+    let on: Vec<&(String, &kentos_commands::SpaceFields)> =
+        voids.iter().filter(|(_, v)| is_floor && v.arch.level == s.arch.level).collect();
+    if !on.is_empty() {
+        let own: Vec<Area> = s.parts.iter().map(area).collect();
+        let mut cut_any = false;
+        for (uid, v) in &on {
+            let shaft: Vec<Area> = v.parts.iter().map(area).collect();
+            for a in intersect_area_sets(&[shaft, own.clone()]) {
+                cut_any = true;
+                let pts = a.outer.pts.clone();
+                let n = pts.len();
+                m.slab_cuts.push(SlabCut {
+                    owner: owner.clone(),
+                    source: uid.clone(),
+                    ring: pts,
+                    bulges: a.outer.bulges.clone().unwrap_or_else(|| vec![0.0; n]),
+                });
+            }
+        }
+        if cut_any {
+            let shafts: Vec<Area> = on.iter().flat_map(|(_, v)| v.parts.iter().map(area)).collect();
+            exact = subtract_areas(&own, &shafts)
+                .iter()
+                .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
+                .map(|r| {
+                    let n = r.pts.len();
+                    (r.pts.clone(), r.bulges.clone().unwrap_or_else(|| vec![0.0; n]))
+                })
+                .collect();
+        }
+    }
     let arcs = exact.iter().any(|(_, b)| b.iter().any(|x| *x != 0.0));
     if arcs {
         m.left.insert((Left::Curved, owner.clone()));

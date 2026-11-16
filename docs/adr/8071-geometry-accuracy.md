@@ -3,8 +3,8 @@
 - **Durum:** kısmen uygulandı (16 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-10,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-06'nın gövde kısmı (§8 "Gövdeler"); uygulama sırasında B10. Bu ADR maddenin
   bütün adımlarını tutar; koddaki "docs/adr/8071 §N" atıfları bölümleri gösterir: §1 gerçek yay, §2 kaynaktan miktar,
-  §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06). Kararların numarası bölümler boyunca
-  sürer. Ortak sınamalar ve sıradaki adımlar
+  §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06), §5 döşemede boşluk ve şaft. Kararların
+  numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
   numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0340](0340-wall-joins-and-edits.md) (duvar birleşimleri), [8040](8040-vertical-model.md) (duvarın
@@ -182,6 +182,34 @@ IfcOpenShell'in ağları kapalı formlara 5,2·10⁻⁷ içinde, açıklıklar y
 `arch_ifc_tests::the_cut_bodies_go_out_as_a_reference_view`, ortak durumlar `cad.arch.ifc` (26; ikisi Reference View).
 Resim: `scene3d_building_tests::ifc_export_menu_screens` (`5-disa-aktar-*.png`).
 
+## §5. Döşemede boşluk ve şaft
+
+**Araştırma.**
+
+- **ADR 0708:** boşluk mahali (şaft, asansör boşluğu, merdiven ve galeri boşluğu) "döşemesi yoktur"; her katta ayrı
+  boşluk çizilir. O ADR döşemenin kendisini kapsam dışı bırakmıştı: döşeme boşluğun altında dolu kalıyordu.
+- **Duvarın ayağı (ADR 8040 §1–2):** bir katın döşemesi, üst yüzü katın tabanında olan (yarım metre altından 10 cm
+  üstüne) döşemedir; boşluğun kestiği döşeme de budur.
+- **IFC 4.3 ve EK-6:** döşemenin deliği `IfcOpeningElement`'tir (`IfcRelVoidsElement`), duvarınki gibi; Qto'da brüt
+  alan açıklıkları "dikkate almaz", net alan çıkarır (§2). EK-5'in açıklık kodu ACL.
+
+**Karar.**
+
+16. **Boşluk kendi katının döşemesini keser** (kesit modeli, `sections::slab`): bir katın boşluk mahalleri, o katın
+    taban döşemesinden (kaplama değil) çekirdeğin örtüşme işlemiyle çıkarılır (yaylar korunur); kesit, görünüş ve 3B
+    boşluğu boş görür. Boşluğun döşemeye düşen parçası `Model::slab_cuts`'ta durur. Teras ve çatı döşemesi (tabanı katın
+    tabanında olmayan) kesilmez: şaft üstte kapanır. Üst üste katlarda şaft her katın kendi boşluğudur (ADR 0708).
+17. **IFC:** döşemenin gövdesi kendi dış çizgisidir (çizilmiş delikleri ve boşluk kesikleri olmadan); her çizilmiş delik
+    "MM-ACL-Döşeme_boşluğu", her boşluğun parçası boşluğun numarası ve adıyla ("MM-ACL-1S1_Şaft") döşemenin açıklığıdır,
+    döşemenin bütün kalınlığınca. Tasarım aktarımında okuyucu çıkarır, Reference View'da gövde kesiktir. Dışa aktarmanın
+    `openings` sayısı bunları da sayar.
+
+**Sınama.** `arch_ifc::a_shaft_takes_its_floor_out_of_its_storey_s_slab` (kesit binasının 1. katında 1 × 1 m şaft:
+yalnız o katın döşemesi kesilir; gövdesi tek halka; iki açıklığı; net alan 12,25 × 9,25 − 2,85 × 3,94 − 1; kesik gövde
+kapalı ve net hacmi; iki görünümde de kapalı). Kesit binasının IFC'sinde 15 açıklık (14 duvarda, 1 döşemede),
+`arch_ifc_check.py` döşeme açıklıklarını çizimin delik sayısıyla karşılaştırır. Resim: `shaft_screens`
+(`6-saft-*.png`, terası çıkarılmış 1. kat üstten).
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-ifc --lib` (42), `-p kentos-geometry-core` (1 117), `-p kentos-interaction wall` (81),
@@ -198,8 +226,7 @@ Resim: `scene3d_building_tests::ifc_export_menu_screens` (`5-disa-aktar-*.png`).
 - **IFC-06'nın kalanı:** gelişim seviyesi kanıtının müellif incelemesi kaydı (EK-9 formuyla, IFC-08 ve BIM-14);
   "sentetik örnek açık kural takımından uyarısız geçer" kabulü buildingSMART'ın doğrulama servisini ya da açık kural
   takımını ister: dosyayı servise yüklemek ya da kural takımını indirmek sahibin onayıyla.
-- **Döşemede boşluk ve şaft:** deliğin ve boşluk mahalinin açıklık nesnesi; eğimli döşeme; çatının katmanları ve içe
-  dönen saçak (ADR 8044'ün kalanı).
+- **Eğimli döşeme; çatının katmanları ve içe dönen saçak** (ADR 8044'ün kalanı).
 - **Döner merdiven gerçek yayla:** eğri merdivenin basamakları ve kolu.
 - **Mahalin kapalı hacmi** (EK-9 satır 14, Z6): altındaki ve üstündeki döşemeyle sınırlanan hacim ve miktarları.
 - Kapının açıklığı bitmiş döşemeden (±0,00) başlar, duvar yapısal döşemeden; kapının altında kaplama kalınlığında duvar

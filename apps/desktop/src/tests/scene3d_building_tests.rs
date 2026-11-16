@@ -526,6 +526,73 @@ fn ifc_export_menu_screens() {
     }
 }
 
+/// The section building with a 1 × 1 m shaft (a void, docs/adr/0708) on its 1. kat (docs/adr/8071 §5): in 3D its
+/// storey's floor slab has the shaft's hole beside the stair's. `.run/gui-evidence/egri-bina-8071/6-saft-*.png`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::shaft_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn shaft_screens() {
+    use iced::Size;
+    use kentos_native_application::{ExecutionContext, registry};
+    use kentos_ui::snapshot::Snapshot;
+
+    let mut doc = kentos_domain::Document::from_snapshot_v2(building()).expect("opens");
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.spaces.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "spaces": [{
+            "parts": [{"outer": {"pts": [p(9.0, 6.0), p(10.0, 6.0), p(10.0, 7.0), p(9.0, 7.0)]}}],
+            "number": "1S1", "name": "Şaft", "void": true, "arch": {"level": "k1"}
+        }]}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    // The terrace over the 1. kat would hide its floor from above: left out of the picture.
+    let terrace = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::Slab(sl) if sl.slab.role == kentos_commands::SlabRole::Terrace => Some(u.to_string()),
+            _ => None,
+        })
+        .expect("the terrace");
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.entities.delete",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"uids": [terrace]}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/egri-bina-8071");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(doc.to_snapshot_v2());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::Run("scene3d.view"));
+        // The 1. kat alone, its rooms off, from above: its floor slab with the stair's hole and the shaft's.
+        send(&mut app, W::Storey(0));
+        send(&mut app, W::Rooms);
+        send(&mut app, W::View(3));
+        snapshot.settle(&mut app, App::view, &mut update);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("6-saft-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::Close);
+    }
+}
+
 /// The facade building (fixtures/arch/v1/facade-building.kcad) with a curtain wall 1.5 m east of its east facade
 /// (docs/adr/8070 §7): 9 m long, 6 m high from the ground floor, at most 1.50 m between mullions and transoms (6 bays,
 /// 4 rows), and its east elevation (mark 3, looking west) drawn at (20, 0).

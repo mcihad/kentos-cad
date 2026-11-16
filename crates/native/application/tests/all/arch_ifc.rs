@@ -850,3 +850,76 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
         std::fs::write(dir.join("egri-bina-referans.ifc"), &cut_text).expect("the file kept");
     }
 }
+
+/// Döşemede boşluk ve şaft (docs/adr/8071 §5): on the section building a 1 × 1 m shaft (a void, docs/adr/0708) on the
+/// 1. kat, clear of the stair's hole. Worked out here: the 1. kat's floor slab (12.25 × 9.25 m less the stair's
+/// 2.85 × 3.94 m hole) loses the shaft's square too; the ground's slab and the terrace over the 1. kat do not (the
+/// shaft is no floor of theirs). In the IFC model that slab's body is its own outline and both the hole and the shaft
+/// are its openings; its net area and volume take both out, in either view; every body closed.
+#[test]
+fn a_shaft_takes_its_floor_out_of_its_storey_s_slab() {
+    use kentos_commands::CallOp;
+    use kentos_ifc::building::{Shape, View};
+    use kentos_native_application::{ExecutionContext, registry, sections};
+    let mut doc = building();
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.spaces.create",
+        CallOp::Execute,
+        serde_json::json!({"layerId": "0", "spaces": [{
+            "parts": [{"outer": {"pts": [p(9.0, 6.0), p(10.0, 6.0), p(10.0, 7.0), p(9.0, 7.0)]}}],
+            "number": "1S1", "name": "Şaft", "void": true, "arch": {"level": "k1"}
+        }]}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let shaft = answer["output"]["uids"][0].as_str().unwrap().to_owned();
+    // The section model: the 1. kat's slab cut, the others not.
+    let m = sections::model(&doc);
+    assert_eq!(m.slab_cuts.len(), 1, "{:?}", m.slab_cuts);
+    assert_eq!(m.slab_cuts[0].source, shaft);
+    let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new());
+    let slabs: Vec<(usize, &kentos_ifc::building::Element)> =
+        b.elements.iter().enumerate().filter(|(_, e)| e.class == Class::Slab).collect();
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let (whole, hole, square) = (12.25 * 9.25, 2.85 * 3.94, 1.0);
+    let mut cut_slabs = 0;
+    for (k, e) in &slabs {
+        let hosted: Vec<&kentos_ifc::building::Opening> = b.openings.iter().filter(|o| o.host == *k).collect();
+        let q = e.qtos.iter().find(|q| q.name == "Qto_SlabBaseQuantities").expect("its quantities");
+        let get = |n: &str| match q.quantities.iter().find(|(k, _)| k == n).map(|(_, v)| v) {
+            Some(Value::Area(x) | Value::Volume(x) | Value::Length(x)) => *x,
+            other => panic!("{n}: {other:?}"),
+        };
+        // Its body its own outline: one ring each layer.
+        assert!(e.shapes.iter().all(|s| matches!(s, Shape::Prism { rings, .. } if rings.len() == 1)), "{}", e.name);
+        assert!(near(get("GrossArea"), whole), "{} {}", e.name, get("GrossArea"));
+        match hosted.len() {
+            0 => assert!(near(get("NetArea"), whole), "{}", e.name),
+            2 => {
+                cut_slabs += 1;
+                assert!(hosted.iter().any(|o| o.name == "MM-ACL-Döşeme_boşluğu"), "{:?}", hosted);
+                assert!(hosted.iter().any(|o| o.name == "MM-ACL-1S1_Şaft"), "{:?}", hosted);
+                assert!(near(get("NetArea"), whole - hole - square), "{} {}", e.name, get("NetArea"));
+                let depth = get("Width");
+                assert!(near(get("NetVolume"), (whole - hole - square) * depth), "{}", e.name);
+                let body = kentos_ifc::quantities::cut(&e.shapes, &hosted);
+                let v: f64 = body.iter().map(kentos_ifc::quantities::volume).sum();
+                assert!(near(v, get("NetVolume")), "{v}");
+                for s in &body {
+                    assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{}", e.name);
+                }
+            }
+            n => panic!("{}: {n} openings", e.name),
+        }
+    }
+    assert_eq!(cut_slabs, 1, "the 1. kat's floor slab alone");
+    // Both views write it closed; the Reference View's slab is cut.
+    for view in [View::DesignTransfer, View::Reference] {
+        let mut v = b.clone();
+        v.view = view;
+        assert_eq!(kentos_ifc::closed::open_bodies(&v), Vec::<(String, String)>::new());
+    }
+}

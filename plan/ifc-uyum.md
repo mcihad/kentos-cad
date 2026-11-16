@@ -92,7 +92,7 @@ kimliği; test bağlantısı.
 | IfcMember | ELM | Dikme, cephe kaydı (BIM-09) | ✓ dikme (POST) ve kayıt (USERDEFINED "Kayıt") kolonun ve kirişin eleman rolüyle; giydirme cephenin çerçeveleri MULLION (K46, ADR 8070) | eğimli eleman | IFC-03 |
 | IfcDoor | KAP | Kapı | ◐ | yangın; acil çıkış | IFC-02 |
 | IfcWindow | PNC | Pencere | ✓ | — | — |
-| IfcOpeningElement | ACL | Açıklık, niş | ✓ | döşeme boşluğu | IFC-06 |
+| IfcOpeningElement | ACL | Açıklık, niş, döşeme deliği ve boşluk mahalinin parçası (ADR 8071 §5) | ✓ | — | IFC-06 |
 | IfcStair | MRD | Merdiven | ✓ tipi kollarından, Betonarme (ADR 8070) | yangın; acil çıkış beyanla (ADR 8068) | IFC-02 |
 | IfcRamp | RMP | Rampa | ✓ eğik kollar ve sahanlıklar, tipi kollarından (ADR 8070) | korkulukları | IFC-03 |
 | IfcRailing | KRK | Korkuluk | ✓ | — | — |

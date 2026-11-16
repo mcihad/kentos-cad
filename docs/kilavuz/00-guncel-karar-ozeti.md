@@ -116,8 +116,9 @@
       parçalarla" der, IFC demez.
     - Kesilmiş gövde tek işlevdir (`quantities::cut`): net hacim, 3B ve Reference View aynı gövdeyi kullanır. IFC iki
       profille yazılır: Tasarım aktarımı (varsayılan; gövde bütün, açıklık 'Body') ve Reference View (gövde kesik,
-      açıklık 'Reference'); başlık görünümün adını söyler; ruhsat profilinin seçimi açık. Kalan: döşeme boşluğu ve şaft,
-      eğimli döşeme, çatı katmanları, döner merdiven, mahal hacmi.
+      açıklık 'Reference'); başlık görünümün adını söyler; ruhsat profilinin seçimi açık.
+    - Boşluk mahali (ADR 0708) kendi katının taban döşemesini keser; IFC'de döşemenin gövdesi dış çizgisi, çizilmiş delik
+      ve boşluğun parçası döşemenin açıklığı. Kalan: eğimli döşeme, çatı katmanları, döner merdiven, mahal hacmi.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

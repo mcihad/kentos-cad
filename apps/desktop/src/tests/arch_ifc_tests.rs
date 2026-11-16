@@ -64,8 +64,9 @@ fn the_cut_bodies_go_out_as_a_reference_view() {
     let text = std::fs::read_to_string(&out).expect("written");
     assert!(text.contains("ViewDefinition [ReferenceView]"));
     assert_eq!(text.matches("=IFCWALL(").count(), 16);
-    assert_eq!(text.matches("=IFCOPENINGELEMENT(").count(), 14);
-    assert_eq!(text.matches(",'Reference','SweptSolid',").count(), 14, "each opening a 'Reference' shape");
+    // 14 through the walls and the 1. kat slab's hole over the stair (docs/adr/8071 §5).
+    assert_eq!(text.matches("=IFCOPENINGELEMENT(").count(), 15);
+    assert_eq!(text.matches(",'Reference','SweptSolid',").count(), 15, "each opening a 'Reference' shape");
     let said = app.log.last().expect("said");
     assert_eq!(said.level, Level::Success);
     assert!(said.text.starts_with("IFC 4.3 yazıldı (gövdeler açıklıkları kesilmiş): 2 kat, 16 duvar"), "{}", said.text);

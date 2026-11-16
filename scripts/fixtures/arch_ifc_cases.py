@@ -102,7 +102,9 @@ def counts(d):
             "walls": len(kind("wall")) - len(curtains),
             "doors": sum(o["form"] == "door" for o in openings),
             "windows": sum(o["form"] == "window" for o in openings),
-            "openings": len(openings),
+            # A slab's hole is an opening of its own (ADR 8071 §5).
+            "openings": len(openings) + sum(len(part.get("holes", [])) for e in kind("slab") if not e.get("covering")
+                                            for part in e["parts"]),
             "spaces": len(kind("space")),
             "slabs": sum(1 for e in kind("slab") if not e.get("covering")),
             "columns": sum(1 for e in kind("column") if not e.get("member")),

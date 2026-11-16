@@ -19,8 +19,9 @@ It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
   doors, windows, rooms, slabs, columns, beams and stairs;
 - every object's name is `MM-<its class's code>[-<description>]`, the description without white space or "-";
 - an object's GlobalId is its id in the definition, compressed as IFC compresses a GUID (IfcOpenShell's own);
-- each element stands on one storey, each room is part of one; each opening voids a wall and each door and window fills
-  an opening of its own wall; doors' and windows' tags are the definition's numbers;
+- each element stands on one storey, each room is part of one; each opening voids a wall, or a slab where the
+  definition draws a hole in it (ADR 8071 §5: as many as its holes), and each door and window fills an opening of its
+  own wall; doors' and windows' tags are the definition's numbers;
 - a wall's Pset_WallCommon.IsExternal is whether it is the definition's outer wall (Dış duvar 25), a door's or window's
   Pset_*Common.IsExternal its wall's;
 - a room's Qto_SpaceBaseQuantities.NetFloorArea is its rectangle's area, a storey's its rooms' together, the
@@ -115,9 +116,16 @@ def main() -> int:
         ext = ue.get_pset(w, "Pset_WallCommon", "IsExternal")
         walls_ext[w.id()] = ext
         ensure(ext == (by_guid[w.GlobalId]["id"] in outer), f"{w.Name} {by_guid[w.GlobalId]['id']}: IsExternal {ext}")
+    in_slabs = 0
     for o in f.by_type("IfcOpeningElement"):
         voids = o.VoidsElements
-        ensure(len(voids) == 1 and voids[0].RelatingBuildingElement.is_a("IfcWall"), f"{o.Name}: voids no wall")
+        host = voids[0].RelatingBuildingElement if len(voids) == 1 else None
+        ensure(host is not None and (host.is_a("IfcWall") or host.is_a("IfcSlab")), f"{o.Name}: voids no wall or slab")
+        if host is not None and host.is_a("IfcSlab"):
+            in_slabs += 1
+            ensure(not o.HasFillings, f"{o.Name}: a slab's hole filled")
+    holes = sum(len(part.get("holes", [])) for e in kind("slab") if not e.get("covering") for part in e["parts"])
+    ensure(in_slabs == holes, f"slab openings {in_slabs}, the drawing's holes {holes}")
     numbers = {(by_guid[x.GlobalId]["number"]) for x in f.by_type("IfcDoor") + f.by_type("IfcWindow")}
     ensure(numbers == {o["number"] for o in openings}, f"marks {sorted(numbers)}")
     for x in f.by_type("IfcDoor") + f.by_type("IfcWindow"):

@@ -174,6 +174,18 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         parts: &parts,
         exact: &model.exact,
         gaps,
+        slab_cuts: model
+            .slab_cuts
+            .iter()
+            .filter_map(|c| {
+                Some(kentos_ifc::arch::SlabCut {
+                    owner: c.owner.clone()?,
+                    source: c.source.clone(),
+                    ring: c.ring.iter().map(|p| [p.x, p.y]).collect(),
+                    bulges: c.bulges.clone(),
+                })
+            })
+            .collect(),
         entities,
         wall_style_name: &wall_style_name,
         wall_styles: &doc.settings().wall_styles,
