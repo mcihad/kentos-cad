@@ -62,6 +62,9 @@ pub struct Input<'a> {
     pub groups: Vec<UnitGroup>,
     /// The blocks that are building elements (docs/adr/8070 §5): furniture, sanitary fixtures, lifts.
     pub fixtures: Vec<Fixture>,
+    /// A room's floor and ceiling covering thicknesses as the vertical model holds them (docs/adr/8070 §6), by its
+    /// persistent id; a room not here, or a side none, has none.
+    pub coverings: BTreeMap<String, (Option<f64>, Option<f64>)>,
 }
 
 /// A block placed in the drawing that is a building element (docs/adr/8070 §5): its insert's id bits and persistent id,
@@ -703,6 +706,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         emsal,
         groups,
         fixtures,
+        coverings,
     } = input;
     let mut written = Written::default();
     // The storeys, by their level id; a drawing without levels has one, Zemin kat at ±0.00.
@@ -1247,6 +1251,15 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             if let Some(v) = v.as_deref().filter(|v| !v.trim().is_empty()) {
                 props.push((key.to_owned(), label(v)));
             }
+        }
+        // Their thicknesses (docs/adr/8070 §6, EK-6 Tablo 6.20's first way): the floor slab's finish and the plaster
+        // under the slab over, as the vertical model holds them; the walls' finish not yet.
+        let (floor_t, ceiling_t) = coverings.get(uid).copied().unwrap_or((None, None));
+        if let Some(t) = floor_t {
+            props.push(("FloorCoveringThickness".to_owned(), Value::PositiveLength(t)));
+        }
+        if let Some(t) = ceiling_t {
+            props.push(("CeilingCoveringThickness".to_owned(), Value::PositiveLength(t)));
         }
         let psets = if props.is_empty() {
             Vec::new()

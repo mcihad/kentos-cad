@@ -391,3 +391,58 @@ fn the_library_s_fixtures_are_their_ifc_classes_with_their_bodies() {
     assert!(text.contains("IFCMASSMEASURE(630.)") && text.contains("IFCCOUNTMEASURE(8)"));
     assert!(text.contains("IFCTRANSPORTELEMENT(") && text.contains("IFCSANITARYTERMINAL(") && text.contains("IFCFURNITURE("));
 }
+
+/// Kaplama kalınlıkları (docs/adr/8070 §6; EK-6 Tablo 6.20's first way, the room's own set): the section building's
+/// rooms carry their floor's finish (the floor slab's top layer, 2 cm on both storeys) and their ceiling's plaster (the
+/// slab over's, 2 cm) as Pset_SpaceCoveringRequirements' thicknesses; a room with an asma tavan has no ceiling
+/// thickness (its build-up is not drawn).
+#[test]
+fn a_room_carries_its_floor_finish_and_ceiling_plaster_thicknesses() {
+    let doc = building();
+    let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    let get = |s: &kentos_ifc::building::Space, key: &str| {
+        s.psets
+            .iter()
+            .filter(|p| p.name == "Pset_SpaceCoveringRequirements")
+            .flat_map(|p| p.props.iter())
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.clone())
+    };
+    let thick = b
+        .spaces
+        .iter()
+        .filter(|s| get(s, "FloorCoveringThickness") == Some(Value::PositiveLength(0.02)))
+        .count();
+    assert!(thick >= 9, "{thick} of {} rooms", b.spaces.len());
+    assert!(b
+        .spaces
+        .iter()
+        .all(|s| get(s, "CeilingCoveringThickness").is_none_or(|v| v == Value::PositiveLength(0.02))));
+    assert!(b.spaces.iter().any(|s| get(s, "CeilingCoveringThickness").is_some()));
+    // An asma tavan at 2.60 m: no ceiling thickness.
+    let mut snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(
+        "../../../../../fixtures/arch/v1/section-building.kcad"
+    ))
+    .unwrap();
+    let first = snap
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            Entity::Space(s) => Some(s),
+            _ => None,
+        })
+        .unwrap();
+    first.space.suspended_ceiling = Some(2.6);
+    let name = first.space.number.clone();
+    let doc = Document::from_snapshot_v2(snap).unwrap();
+    let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    let room = b
+        .spaces
+        .iter()
+        .find(|s| s.name.contains(name.as_deref().unwrap_or("?")))
+        .expect("the room");
+    assert_eq!(get(room, "CeilingCoveringThickness"), None);
+    assert_eq!(get(room, "FloorCoveringThickness"), Some(Value::PositiveLength(0.02)));
+    let text = kentos_ifc::building::write(&b);
+    assert!(text.contains("IFCPOSITIVELENGTHMEASURE(0.02)"));
+}

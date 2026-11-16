@@ -108,6 +108,35 @@ impl Document {
         })
     }
 
+    /// The room's covering thicknesses, metres, as the vertical model holds them (docs/adr/8070 §6; EK-6 Tablo 6.58,
+    /// `Pset_SpaceCoveringRequirements`): its floor's, the finish layer on top of the floor slab under it (its build-up's
+    /// first, docs/adr/8040 §2); its ceiling's, the plaster under the slab over it. None where the model holds none: a
+    /// floor slab without a finish on top, a ceiling that is an asma tavan (its build-up is not drawn), no slab.
+    pub fn room_coverings(&self, s: &SpaceFields) -> (Option<f64>, Option<f64>) {
+        use kentos_contracts::SlabLayerKind;
+        let Some(at) = room_point(s) else {
+            return (None, None);
+        };
+        let (storey_floor, _) = self.storey_of(&s.arch);
+        let floor = self
+            .floor_slab_under(at, storey_floor)
+            .and_then(|(slab, _)| slab.layers.over.first())
+            .filter(|l| l.kind == SlabLayerKind::Finish)
+            .map(|l| l.thickness);
+        let ceiling = if s.suspended_ceiling.is_some() {
+            None
+        } else {
+            let (room_floor, _) = self.room_floor(s);
+            self.slabs_holding(at)
+                .filter(|(slab, f)| slab.ceiling(*f) > room_floor + OVER)
+                .min_by(|a, b| a.0.ceiling(a.1).total_cmp(&b.0.ceiling(b.1)))
+                .and_then(|(slab, _)| slab.layers.under.first())
+                .filter(|l| l.kind == SlabLayerKind::Plaster)
+                .map(|l| l.thickness)
+        };
+        (floor, ceiling)
+    }
+
     /// The lowest ceiling, of the slabs whose outline holds `at`, more than [`OVER`] above `floor`.
     fn slab_ceiling_over(&self, at: Vec2, floor: f64) -> Option<f64> {
         self.slabs_holding(at)

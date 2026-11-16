@@ -159,6 +159,13 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         emsal: emsal_areas(doc),
         groups: unit_groups(doc),
         fixtures: fixtures(doc),
+        coverings: doc
+            .entities_with_uids()
+            .filter_map(|(u, e)| match e {
+                kentos_commands::Entity::Space(s) => Some((u.to_string(), doc.room_coverings(&s.space))),
+                _ => None,
+            })
+            .collect(),
     });
     (b, written, curved)
 }

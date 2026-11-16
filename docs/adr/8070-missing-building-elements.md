@@ -98,6 +98,14 @@
     penceresinde "Yapı elemanı" (Yok, Mobilya, Sıhhi tesisat ucu, Taşıma elemanı), "Tip", "Yükseklik (m)", "Alt kot
     (m)". Var olan çizimlerdeki kitaplık blokları eski kartlarıyla kalır; kitaplıktan yeniden alınca ya da kartından
     sınıflanır. 3B görünümde bu sınıfların kendi rengi var ("Donatı"; döşemenin grisinde seçilmiyordu).
+14. **Kaplama (K44; EK-6 Tablo 6.20 dipnotu):** kaplamanın malzemesi ve kalınlığı "(1) IfcSpace içindeki tanımlardan
+    faydalanılarak ya da (2) IfcCovering'de … doğrudan modelleme ile" verilir, "bu iki yöntemden biri zorunludur".
+    KentOS birinci yolu tutar: mahalin `Pset_SpaceCoveringRequirements`'i kaplama adlarına (oda listesinin, ADR 8038)
+    kalınlıklarını da ekler: döşeme kaplamasınınki altındaki döşemenin en üst katmanı kaplama ise onun kalınlığı,
+    tavanınki üstündeki döşemenin altındaki sıva (`Document::room_coverings`, ADR 8040 §2). Asma tavanlı mahalin tavan
+    kalınlığı yazılmaz (asma tavanın katmanları çizilmiyor); duvar kaplamasının kalınlığı henüz yok (mahale bakan yüzün
+    katmanı). Döşemenin kaplaması ve tavanın sıvası zaten `IfcSlab`'ın gövdesinde olduğundan ayrıca `IfcCovering`
+    yazılmaz (gövdeyi ikilerdi). Elle çizilen kaplama ve asma tavanın kendi gövdesi sonraki adımdır.
 
 ## §3. Sınamalar
 
@@ -145,13 +153,18 @@
 - **Resimler:** `.run/shots/arac-blok-karti-yapi-elemani-*` (Blok kartı: Mobilya, TABLE, 0,75); 3B
   `.run/gui-evidence/eksik-elemanlar-8070/` (çatı, baca, rampa; zemin katta asansör, lavabo, masa; üstten). Çok katlı baca
   en alttaki parçasının katında olduğu için yalnız zemin kat gösterilince bütün olarak görünür.
+- **Uygulama** (`arch_ifc::a_room_carries_its_floor_finish_and_ceiling_plaster_thicknesses`): bölüm binasının mahalleri
+  döşeme kaplaması 0,02 (zemin ve 1. katın döşemesinin üst katmanı) ve tavan sıvası 0,02 taşır
+  (`IFCPOSITIVELENGTHMEASURE`); 2,60 m'de asma tavanlı mahalin tavan kalınlığı yok. Denetim olgularının çiziminde
+  döşeme katmanı olmadığından eksikleri değişmedi.
 - **Dijital denetim:** rampa artık "modele girmeyen nesne" değil; sınama örneği yüksekliği olmayan bir duvara geçti.
 - **Denetim olguları** (`fixtures/audit-facts/v1/mimari.json`): merdivenin ön tanımlı tip ve malzeme eksikleri düştü
   (yalnız bu iki satır elle çıkarıldı; kaçış yolunun önceden bilinen 11,55 / 4,45 farkı görünür bırakıldı).
 
 ## §4. Sıradaki adımlar
 
-- Kaplama ve asma tavan (`IfcCovering`), giydirme cephe (`IfcCurtainWall`), dikme ve kayıt (`IfcMember`).
+- Giydirme cephe (`IfcCurtainWall`), dikme ve kayıt (`IfcMember`).
+- Elle çizilen kaplama, asma tavanın gövdesi (`IfcCovering`), duvar kaplamasının kalınlığı.
 - Rampanın korkulukları (merdivenin de) kesit modelinde yok.
 - Kitaplık bloklarının gövdesi kutudur; gerçek biçim (lavabo çanağı, asılı klozetin altı) ve EN 81-20'nin kabin
   yüksekliği kaynağı gelince.

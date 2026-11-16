@@ -23,6 +23,8 @@ pub enum Value {
     /// An identifier (`IfcIdentifier`).
     Id(String),
     Length(f64),
+    /// A length above 0 (`IfcPositiveLengthMeasure`: a covering's thickness).
+    PositiveLength(f64),
     Area(f64),
     Volume(f64),
     Ratio(f64),
@@ -42,6 +44,7 @@ impl Value {
             Value::Text(s) => format!("IFCTEXT({})", text(s)),
             Value::Id(s) => format!("IFCIDENTIFIER({})", text(s)),
             Value::Length(v) => format!("IFCLENGTHMEASURE({})", real(*v)),
+            Value::PositiveLength(v) => format!("IFCPOSITIVELENGTHMEASURE({})", real(*v)),
             Value::Area(v) => format!("IFCAREAMEASURE({})", real(*v)),
             Value::Volume(v) => format!("IFCVOLUMEMEASURE({})", real(*v)),
             Value::Ratio(v) => format!("IFCRATIOMEASURE({})", real(*v)),
