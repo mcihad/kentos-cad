@@ -369,6 +369,12 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
     files.insert("manifest.json".to_owned(), pretty(&manifest));
     files.insert(format!("src/{package}/__init__.py"), String::new());
     files.insert(format!("src/{package}/logic.py"), python.concat());
+    // Its own tests (docs/adr/8057 §87): `kentos kek test`, Örnekleri çalıştır and an agent's trial run them with
+    // Python's unittest in its environment.
+    files.insert(
+        "tests/test_logic.py".to_owned(),
+        tests(&package, has(Contribution::Expression)),
+    );
     files.insert("pyproject.toml".to_owned(), pyproject(last, name));
     files.insert("uv.lock".to_owned(), lock(last));
     files.insert("assets/eklenti.svg".to_owned(), ICON.to_owned());
@@ -522,6 +528,24 @@ def buyuk_harf(metin) -> str | None:
         return None
     return str(metin).replace("i", "İ").replace("ı", "I").upper()
 "#;
+
+/// The package's own tests (docs/adr/8057 §87): its code imports; with an expression function, the function's answers.
+fn tests(package: &str, expression: bool) -> String {
+    let mut out = format!(
+        "\"\"\"Eklentinin kendi sınamaları: `kentos kek test`, Örnekleri çalıştır ve ajanın denemesi onları eklentinin \
+         ortamında Python'un\nunittest'iyle çalıştırır (kod src'den). Sınamalar unittest.TestCase sınıfında yazılır.\"\"\"\n\n\
+         import unittest\n\nfrom {package} import logic\n\n\nclass Mantik(unittest.TestCase):\n    def test_kod_yuklenir(self):\n        \
+         self.assertTrue(hasattr(logic, \"ext\"))\n"
+    );
+    if expression {
+        out.push_str(
+            "\n    def test_buyuk_harf(self):\n        self.assertEqual(logic.buyuk_harf(\"istanbul\"), \"İSTANBUL\")\n        \
+             self.assertEqual(logic.buyuk_harf(\"ılık\"), \"ILIK\")\n        self.assertIsNone(logic.buyuk_harf(None))\n",
+        );
+    }
+    out.push_str("\n\nif __name__ == \"__main__\":\n    unittest.main()\n");
+    out
+}
 
 const SCHEMA: &str = r#"
 

@@ -4474,7 +4474,15 @@ Schema'lar, `kentos_ext.pyi`; `tr.kentos.mevzuat` 0.4.1 (`kacis.py`, sekizinci �
   bloğu eklendi); KentOS'un TOML okuyucusu satır sonu yorumunu okudu.
 - **Sınamalar:** paylaşılan 157 (ajanın soğumasız kilidi uyarı; soğumalı ve sabit tarihli kilit ile insanın kilidi
   uyarısız), headless ajan araçları 20 (iskelet doğrulanır), extension-tools 11, masaüstünün eklenti sınamaları 99.
-- **Kalan:** kurum ilkesinde süre (D14); katalogun bağımlılık kapısının bunu kendisi denetlemesi.
+- **Gerileme ve düzeltme (aynı gün):** soğuma ayarlı iskeletten yeni bir eklentinin ortamı hazırlanamadı ("Eklentinin
+  ortamı hazırlanamadı. uv: “”"): KentOS uv'yi kullanıcının ayarlarından yalıtmak için `--no-config` ile çalıştırıyor,
+  bu da `pyproject.toml`'un `[tool.uv] exclude-newer`'ını yok sayıyor; kilit soğuma süresini taşıdığından uv onu eskimiş
+  sayıp `--locked`'ta reddediyordu ("needs to be updated, but --locked was provided"). Yukarıdaki "`uv lock --check`
+  temiz" ölçümü `--no-config`'suzdu ve bunu göstermedi. Artık ortam hazırlama (önizleme, kurma) ve sunucunun tekerlek
+  deposu kilidin `[options]`'ındaki süreyi uv'ye bayrakla geri verir (`cooling_args`: `--exclude-newer P7D`, sabit tarih,
+  `--exclude-newer-package`). Ölçüldü: iskelet 4 örnek ve 2 sınamayla geçti; numpy ve shapely'li soğumalı kilit
+  ortamını 3,6 saniyede hazırladı, 9 örneği geçti. Sınama: `python-env` (bayrakların okunması).
+- **Kalan:** kurum ilkesinde süre (D14, §85'te); katalogun bağımlılık kapısının bunu kendisi denetlemesi.
 
 ## §84. Kurum ilkesinde Python paketleri: engelli, izinli liste ve izinli paket depoları (`ADIM 17`, D14)
 
@@ -4579,4 +4587,7 @@ alanı reddetmeden okunur), masaüstü `view.rs` (`report_card`).
   örneğin hepsi geçti. Sınamalar: 5 sınamanın hepsi geçti." dedi (bildirim ve günlük).
 - **Sınamalar:** extension-tools 12 (unittest'in sözleri: geçen, kalan, hata, hiç sınama yok, süre aşımı), komut
   satırı, masaüstünün eklenti sınamaları 99.
+- **İskelet öğretir:** yeni bir eklentinin klasöründe `tests/test_logic.py` (kod yüklenir; ifade işlevi istendiyse
+  `buyuk_harf`'ın cevapları): SDK paketi 48 000 bayt sınırına 23 bayt uzakken rehbere cümle eklemek yerine ajan
+  yapıyı örnekten görür. Taze iskelet `kek test`'te "4 örneğin hepsi geçti. Sınamalar: 2 sınamanın hepsi geçti."
 - **Kalan:** sürekli tümleştirme şablonu (komut satırının indirilebilir dağıtımı yok).
