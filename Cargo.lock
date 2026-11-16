@@ -3628,6 +3628,9 @@ name = "kentos-ui-showcase"
 version = "0.1.0"
 dependencies = [
  "iced",
+ "kentos-ifc",
+ "kentos-model-view",
+ "kentos-model-view-ui",
  "kentos-ui",
 ]
 

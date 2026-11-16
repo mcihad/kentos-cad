@@ -8,4 +8,8 @@ publish.workspace = true
 
 [dependencies]
 kentos-ui = { path = "../../crates/ui", features = ["snapshot"] }
+# The model viewer's page (docs/adr/8073): the component over its core, a KentOS IFC file read through the reading face.
+kentos-model-view = { path = "../../crates/shared/model-view" }
+kentos-model-view-ui = { path = "../../crates/model-view-ui" }
+kentos-ifc = { path = "../../crates/shared/ifc", features = ["view"] }
 iced = { workspace = true, features = ["canvas", "debug", "tokio"] }

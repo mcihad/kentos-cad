@@ -49,6 +49,7 @@ pub enum Page {
     Spatial,
     Library,
     City,
+    Model,
 }
 
 impl Page {
@@ -69,6 +70,7 @@ impl Page {
             Page::Spatial => "Mekânsal",
             Page::Library => "Kitaplık",
             Page::City => "Şehir ve afet",
+            Page::Model => "Model görüntüleyici",
         }
     }
 
@@ -89,6 +91,7 @@ impl Page {
             Page::Spatial => Icon::Globe,
             Page::Library => Icon::Layers,
             Page::City => Icon::Svg(CITY),
+            Page::Model => Icon::Cube,
         }
     }
 
@@ -136,6 +139,10 @@ impl Page {
                 "Dijital ikiz ve afet simülasyonu: gösterge kartları, sınıf ölçeği ve kat \
                  seçici; örnekler bir deprem senaryosundan."
             }
+            Page::Model => {
+                "IFC modelinin görüntüleyicisi: yapı ve sınıf ağacı, 3B sahne, özellikler, görünürlük ve kesit; \
+                 uygulamanın IFC modeli penceresi, uygulama olmadan."
+            }
         }
     }
 }
@@ -146,6 +153,8 @@ const CITY: &str = r#"<path d="M2.5 17h15M4 17V9.5l3-2V17M7 17V5h4.5v12M11.5 17v
 /// Örneklerle etkileşim.
 #[derive(Debug, Clone)]
 pub enum Demo {
+    /// Model görüntüleyici örneğinin iletisi (model_demo.rs).
+    Model(kentos_model_view_ui::Message),
     /// Etkisi olmayan bir örnek düğmeye basıldı; komut satırına yazılır.
     Pressed(&'static str),
     RowSelected(usize),
@@ -1499,6 +1508,8 @@ impl Gallery {
             Demo::AssetView(view) => self.asset_view = view,
             Demo::CompareMoved(split) => self.compare_split = split,
             Demo::CompareVertical(vertical) => self.compare_vertical = vertical,
+            // The app's: the model viewer's state is the showcase's (model_demo.rs).
+            Demo::Model(_) => {}
             Demo::Tick(now) => {
                 if let Some(last) = self.last_tick {
                     let elapsed = now.saturating_duration_since(last);

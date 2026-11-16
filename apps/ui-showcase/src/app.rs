@@ -134,6 +134,8 @@ pub struct Showcase {
     pub(crate) pending: Option<Pending>,
 
     pub(crate) gallery: Gallery,
+    /// Model görüntüleyici sayfasının örneği: sayfa ilk açılınca okunur (model_demo.rs).
+    pub(crate) model_demo: Option<Box<crate::model_demo::ModelDemo>>,
     pub(crate) python_studio: crate::python::Studio,
     pub(crate) ai_studio: crate::ai::Studio,
 
@@ -328,6 +330,7 @@ impl Showcase {
             command_expanded: false,
             pending: None,
             gallery: Gallery::default(),
+            model_demo: None,
             python_studio: crate::python::Studio::default(),
             ai_studio: crate::ai::Studio::default(),
             windows: Windows::new(),
@@ -814,7 +817,13 @@ impl Showcase {
 
             Message::PythonStudio(event) => return self.python_studio.update(event),
             Message::AiStudio(event) => return self.ai_studio.update(event),
-            Message::GalleryPageSelected(page) => self.gallery.page = page,
+            Message::GalleryPageSelected(page) => {
+                self.gallery.page = page;
+                // The model is read when its page first opens: the showcase's start does not wait for it.
+                if page == Page::Model && self.model_demo.is_none() {
+                    self.model_demo = Some(Box::new(crate::model_demo::ModelDemo::open()));
+                }
+            }
             Message::Gallery(
                 Demo::Inspector(inspector::Event::Copy(text))
                 | Demo::Building(inspector::Event::Copy(text)),
@@ -822,6 +831,11 @@ impl Showcase {
                 self.log(format!("Galeri: değer panoya kopyalandı: {text}"));
 
                 return iced::clipboard::write(text);
+            }
+            Message::Gallery(Demo::Model(message)) => {
+                if let Some(line) = self.model_demo.as_mut().and_then(|d| d.update(message)) {
+                    self.log(line);
+                }
             }
             Message::Gallery(demo) => {
                 if let Demo::Notify(index) = demo {

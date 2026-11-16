@@ -69,6 +69,10 @@ gösterdiği ve olayları kalır. Görüntüleyici ile 3B görünüm arasında i
   resim sınaması `KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-model-view-ui --test screens -- --ignored`
   (kesit binası tıklanan duvarıyla açık ve koyu, yatay kesit, katın kutusu, gerçek bir IFC 4.3 dosyası, okunuyor,
   reddedildi; `.run/gui-evidence/model-view-ui/`).
+- **Vitrin:** bileşenler vitrininde (`apps/ui-showcase`) Galeri › CBS ve CAD › “Model görüntüleyici” sayfası aynı
+  bileşeni kesit binasının dosyasıyla gösterir (sahibin 16 Kasım isteği); dosya sayfa ilk açılınca okunur, vitrinin
+  açılışı onu beklemez. İkinci girdi kuzey okunu dört bakışta ve lejantı gösterir. Resmi:
+  `kentos-ui-showcase snapshot … --senaryo galeri --sayfa model` (gerçek tıklamayla `--tikla x,y`).
 
 ## §5. Uygulamadaki bağdaştırıcı
 

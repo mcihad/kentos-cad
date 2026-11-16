@@ -38,6 +38,7 @@ cargo run -p kentos-model-view-ui --example viewer -- fixtures/arch/v1/ifc/kesit
 KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-model-view-ui --test screens -- --ignored --nocapture   # görüntüleyicinin resimleri uygulama olmadan, .run/gui-evidence/model-view-ui/
 KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::screens -- --ignored --nocapture   # IFC modeli uygulamada: şerit, ayrı pencere, kesit, çizimin üstü, .run/gui-evidence/ifc-modeli-8073/
 cargo build -p kentos-model-view -p kentos-ifc --features kentos-ifc/view --target wasm32-unknown-unknown   # görüntüleyicinin çekirdeği ve okuma yüzü wasm32'de (ADR 8061 §3.3)
+cargo run -p kentos-ui-showcase -- snapshot model.png --senaryo galeri --sayfa model --boyut 1440x1500 --tikla 880,700   # vitrinde Model görüntüleyici sayfası, bir duvar tıklanmış (ADR 8073 §4)
 uv run --offline --no-project --python 3.11 --with ifcopenshell==0.9.0.post1 python -I scripts/fixtures/ifc_inspect_cases.py --check   # cad.ifc.inspect'in durumları bağımsız okuyucudan (ADR 8073 §6)
 make test-module MOD=gis   # uygulama katmanının testleri tek modülle: arch | map | gis | road (testler CBS'yi kendileri açar; ADR 8054 §11)
 make fixtures-changed   # yalnız değişenin ortak komut durumları: değişen durum dosyaları ve işleyicisi değişen komutlar, tek disiplinse o modülün derlemesiyle (BASE=origin/main, FILES=a,b; komutlara eşlenemeyen değişiklikte hepsi)

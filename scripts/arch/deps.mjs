@@ -150,7 +150,7 @@ const GROUPS = [
   // KentOS Launcher (docs/adr/0800): starts KentOS's programs and others from their manifests. The UI library and the
   // shared launch contract only: no drawing, KentOS renderer, server runtime or browser; a program it starts is a process of its own.
   { name: 'launcher', path: 'apps/launcher/', targets: [HOST], uses: ['ui', 'launch'], forbid: ['axum*', 'sqlx*', 'pyo3*', ...BROWSER] },
-  { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'native', 'ui', 'render', 'render3d', 'style', 'stylelib'], forbid: ['axum*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'native', 'ui', 'render', 'render3d', 'model-view-ui', 'style', 'stylelib'], forbid: ['axum*', ...BROWSER] },
 ];
 
 const meta = JSON.parse(cargo(['metadata', '--format-version', '1', '--locked', '--no-deps']));

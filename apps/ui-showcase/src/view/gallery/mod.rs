@@ -20,6 +20,7 @@ mod frame;
 mod inputs;
 mod layout;
 mod library;
+mod model;
 mod python;
 pub(crate) mod scene;
 mod spatial;
@@ -59,6 +60,7 @@ impl Showcase {
             Page::Spatial => self.spatial_page(),
             Page::Library => self.library_page(),
             Page::City => self.city_page(),
+            Page::Model => self.model_page(),
         };
 
         let header = column![
@@ -67,7 +69,7 @@ impl Showcase {
         ]
         .spacing(4);
 
-        let width = if matches!(page, Page::Python | Page::Ai) {
+        let width = if matches!(page, Page::Python | Page::Ai | Page::Model) {
             1280.0
         } else {
             PAGE_WIDTH

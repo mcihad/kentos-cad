@@ -11,6 +11,7 @@ mod import;
 mod jobs;
 mod layer_tree;
 mod message;
+mod model_demo;
 mod models;
 mod properties;
 mod python;
