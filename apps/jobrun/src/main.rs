@@ -18,6 +18,7 @@
 #![forbid(unsafe_code)]
 
 mod audit;
+mod kutu;
 
 use std::io::{Read, Write};
 use std::path::Path;
@@ -422,6 +423,12 @@ fn run_task(dir: &Path) -> Result<Processed, ProcessFailure> {
 /// The child's whole life; the exit code (0: answered, 1: the answer could not be written, 2: failed with a reason in
 /// the folder, 3: the parent went away).
 fn main() {
+    // The box mode (docs/adr/8057 §61): a process of its own that restricts itself and becomes the rule's interpreter.
+    let mut argv = std::env::args_os().skip(1).peekable();
+    if argv.peek().is_some_and(|a| a == kutu::ARG) {
+        argv.next();
+        std::process::exit(kutu::enter(argv));
+    }
     let mut args = std::env::args().skip(1);
     let Some(dir) = args.next() else {
         eprintln!("kentos-jobrun <klasör>: klasör verilmedi");

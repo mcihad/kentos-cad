@@ -21,6 +21,11 @@ kentos-extensions = { path = "../../crates/shared/extensions", default-features 
 kentos-python-env = { path = "../../crates/native/python-env" }
 serde_json = { workspace = true }
 
+# The cloud audit box (docs/adr/8057 §61): the rule's Python confined by Landlock, entered through a safe interface
+# (this crate forbids unsafe code).
+[target.'cfg(target_os = "linux")'.dependencies]
+landlock = { workspace = true }
+
 # The audit job's tests: the fixture drawing written as the server's `.kcad` and opened as the desktop opens it.
 [dev-dependencies]
 kentos-domain = { path = "../../crates/native/domain" }

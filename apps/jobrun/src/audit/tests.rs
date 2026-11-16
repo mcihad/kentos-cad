@@ -29,7 +29,15 @@ def adsiz(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 "#;
 
 /// A packed audit extension: its bytes, content digest and manifest; `network` asks for the capability.
-fn package(network: bool) -> (Vec<u8>, String, kentos_extensions::Manifest) {
+pub(super) fn package(network: bool) -> (Vec<u8>, String, kentos_extensions::Manifest) {
+    package_with(RULE, network)
+}
+
+/// … whose rule `adsiz` is `rule` (its Python, from the decorator on).
+pub(super) fn package_with(
+    rule: &str,
+    network: bool,
+) -> (Vec<u8>, String, kentos_extensions::Manifest) {
     let mut files = blueprint(&Ask {
         id: "tr.ornek.denetim".into(),
         name: "Denetim örneği".into(),
@@ -46,7 +54,7 @@ fn package(network: bool) -> (Vec<u8>, String, kentos_extensions::Manifest) {
         .expect("the rule's module");
     let text = files[&logic].clone();
     let at = text.find(r#"@ext.audit("adsiz")"#).unwrap();
-    files.insert(logic, format!("{}{RULE}", &text[..at]));
+    files.insert(logic, format!("{}{rule}", &text[..at]));
     if network {
         let mut manifest: Value = serde_json::from_str(&files["manifest.json"]).unwrap();
         manifest["requestedCapabilities"]
@@ -77,7 +85,7 @@ fn snapshot() -> DocumentSnapshotV2 {
 }
 
 /// A job's folder: the drawing as the server writes it (`snapshot.kcad`), the package beside it.
-fn folder(name: &str, package: &[u8]) -> PathBuf {
+pub(super) fn folder(name: &str, package: &[u8]) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("kentos-audit-job-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
@@ -90,7 +98,11 @@ fn folder(name: &str, package: &[u8]) -> PathBuf {
     dir
 }
 
-fn request(digest: &str, manifest: &kentos_extensions::Manifest, python: &str) -> AuditRun {
+pub(super) fn request(
+    digest: &str,
+    manifest: &kentos_extensions::Manifest,
+    python: &str,
+) -> AuditRun {
     AuditRun {
         extension: manifest.id.clone(),
         version: manifest.version.to_string(),
@@ -103,8 +115,8 @@ fn request(digest: &str, manifest: &kentos_extensions::Manifest, python: &str) -
 
 /// A rule in Rust that answers as the Python one would, and keeps what it was given.
 #[derive(Default)]
-struct StandIn {
-    given: RefCell<Option<(Start, Value)>>,
+pub(super) struct StandIn {
+    pub(super) given: RefCell<Option<(Start, Value)>>,
 }
 
 impl RuleRunner for StandIn {
@@ -127,23 +139,52 @@ impl RuleRunner for StandIn {
 }
 
 /// The job reads the package beside the request, measures the drawing with the desktop's code and sends the rule what
-/// the desktop sends it, through the desktop's protocol; the report names the rule and the drawing.
+/// the desktop sends it, through the desktop's protocol; the report names the rule and the drawing. The rule's process
+/// starts in the box (docs/adr/8057 §61): the package's folder readable, the job's scratch writable, the folder itself
+/// (the drawing, the request) neither.
 #[test]
 fn a_job_runs_the_package_s_rule_on_the_measured_facts() {
     let (bytes, digest, manifest) = package(false);
     let dir = folder("stand-in", &bytes);
     let runner = StandIn::default();
-    let done = run_audit(
+    let boxed = Confinement {
+        level: Ok("sınamanın kutusu".into()),
+        policy: crate::kutu::Policy::Require,
+    };
+    let done = run_audit_in(
         &dir,
         request(&digest, &manifest, "/opt/kentos/python/bin/python"),
         &runner,
+        boxed,
     )
     .unwrap();
     let (start, invoke) = runner.given.borrow_mut().take().unwrap();
-    assert_eq!(start.python, PathBuf::from("/opt/kentos/python/bin/python"));
-    assert_eq!(start.args[0], "-I");
-    assert_eq!(start.hello["digest"], digest);
+    assert_eq!(start.python, crate::kutu::program().unwrap());
+    assert_eq!(start.args[0], crate::kutu::ARG);
+    let split = start.args.iter().position(|a| a == "--").unwrap();
+    let given = |word: &str| -> Vec<PathBuf> {
+        start.args[..split]
+            .windows(2)
+            .filter(|w| w[0] == word)
+            .map(|w| PathBuf::from(&w[1]))
+            .collect()
+    };
     let source = PathBuf::from(start.hello["source"].as_str().unwrap());
+    assert!(given("--oku").contains(&source), "{:?}", start.args);
+    assert!(
+        !given("--oku").iter().any(|p| dir.starts_with(p)),
+        "{:?}",
+        start.args
+    );
+    assert_eq!(
+        given("--yaz")[..2],
+        [dir.join(BYTECODE), dir.join(crate::kutu::SCRATCH)]
+    );
+    assert_eq!(
+        start.args[split + 1..split + 3],
+        ["/opt/kentos/python/bin/python", "-I"]
+    );
+    assert_eq!(start.hello["digest"], digest);
     assert!(
         source.join("manifest.json").is_file(),
         "the package's files in the folder"
@@ -277,9 +318,14 @@ fn the_desktop_and_the_job_give_the_same_report() {
             &ExtHost::default(),
         )
         .unwrap();
+        // Where this system cannot close the box, the job runs only under `report` and says so (docs/adr/8057 §61).
+        let open = crate::kutu::level()
+            .err()
+            .map(|why| format!(" (kutu kapatılamadı: {why})"))
+            .unwrap_or_default();
         assert_eq!(
             done.summary,
-            format!("{}: 1 hata, 1 uyarı, 9 bilgi", entry.title)
+            format!("{}: 1 hata, 1 uyarı, 9 bilgi{open}", entry.title)
         );
         reports.push(serde_json::to_string(&done.details).unwrap());
     }

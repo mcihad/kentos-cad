@@ -23,7 +23,7 @@ members = [
     # Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and
     # operations; a crate of its own so the formats worker does not carry LAZ.
     "crates/shared/pointcloud",
-    # Netcad NCZ drawings (docs/adr/0138): a port of the NCZ Reader plugin, GPL-2.0-or-later
+    # NCZ drawings (docs/adr/0138): a port of an NCZ reader, GPL-2.0-or-later
     # (crates/shared/ncz/README.md: not distributed before the author's permission).
     "crates/shared/ncz",
     # The project file, .kcad v2 (docs/specs/kcad-v2.md, docs/adr/0025).
@@ -55,7 +55,7 @@ members = [
     "crates/wasm/formats-wasm",
     # Point clouds in a module of their own, loaded when a point cloud is added or drawn.
     "crates/wasm/pointcloud-wasm",
-    # DXF and Netcad NCZ in modules of their own, loaded only when such a file is imported.
+    # DXF and NCZ in modules of their own, loaded only when such a file is imported.
     "crates/wasm/dxf-wasm",
     "crates/wasm/ncz-wasm",
     # The sheet core in a module of its own, loaded when the sheet mode opens.
@@ -244,6 +244,9 @@ uuid = { version = "=1.26.1", features = ["v4", "v7", "serde"] }
 # The server job's process group and its end (docs/adr/8057 §58): kill(2) of the group and waitid(2) without reaping;
 # std has neither. Unix only.
 libc = "=0.2.189"
+# The cloud audit box (docs/adr/8057 §61): Landlock's safe interface (rulesets, restrict_self); only the job runner,
+# only Linux.
+landlock = "=0.4.7"
 # GeoPackage is SQLite (docs/adr/0502): SQLite compiled in, no system library; only crates/native/geopackage.
 rusqlite = { version = "=0.39.0", features = ["bundled", "functions"] }
 jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["rust_crypto", "use_pem"] }

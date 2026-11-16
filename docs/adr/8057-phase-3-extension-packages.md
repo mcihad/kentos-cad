@@ -3317,3 +3317,99 @@ rehberi; Vitrin 1.0.45.
   (`ui.choice`) ve bir yan not ("çalışırken gelen değişiklik…") çıktı. Paket 48 000 baytın altında.
 - **Sınamalar:** masaüstü 1 (boş zorunlu alanla İleri adımı tutar ve alanı söyler, dolunca sonraki adım, Geri, sihirbaz
   çizimi, tek sekmenin reddi), Python 1 (`steps` pencereyle gider, verilmezse gönderilmez), gerçek pencere 41-kaydet.
+
+## §61. Bulut denetim kutusu işletim sistemi düzeyinde: Landlock; UDP açık kalır (`ADIM 20`, kabulün "bulut kutusu")
+
+**16 Kasım.** Kod: iş çalıştırıcısı yeni `apps/jobrun/src/kutu.rs` (`ARG`, `POLICY_ENV`, `Policy`, `allowed`, `wrap`,
+`level`, `enter`; Linux'ta `ruleset`, `restrict`), `apps/jobrun/src/main.rs` (kutu kipi ilk iş), `audit.rs`
+(`Confinement`, `run_audit_in`: kuralın süreci kutudan başlar; ilke, özet ve söz); `kentosd`
+`apps/api/src/processing_job.rs` (`AUDIT_CONFINE_ENV` çocuğa geçer); bağımlılık `landlock = "=0.4.7"` (yalnız iş
+çalıştırıcısında, yalnız Linux'ta); sınamalar `apps/jobrun/src/kutu/tests.rs`, `apps/jobrun/src/audit/kutu_tests.rs`.
+
+- **Bugünkü uygulama (okundu):** kuralın Python'u iş çalıştırıcısının çocuğuydu: ortamı boş, `-I` ile yalıtılmış, ağ
+  yeteneği isteyen paket reddediliyordu (§42, §50). Süreç ise sunucunun kullanıcısının bütün haklarıyla çalışıyordu:
+  işin klasöründeki çizimi ve isteği, sunucunun ve kullanıcının dosyalarını okuyabilir, yazabilir, TCP ve UDP ile
+  dışarı çıkabilir, sunucuya sinyal gönderebilirdi. "Ağa ve yerel dosyalara erişemez" yalnız manifestin sözüydü.
+- **Karar: kuralın süreci Landlock alanında, iş çalıştırıcısının kutu kipiyle.** `kentos-jobrun --kutu --oku <yol>…
+  --yaz <yol>… --tmp <klasör> -- <python> <bağımsız değişkenler>` yeni ve tek iş parçacıklı bir süreçtir: kural
+  kümesini kurar, kendini kısıtlar (`restrict_self`; `no_new_privs` ile, setuid programlar yetki kazanamaz) ve
+  yorumlayıcıyı çalıştırır (`exec`, ortam boş, yalnız `TMPDIR`). Alan `exec`'ten geçer, kuralın başlattığı her sürece
+  kalıtılır ve kaldırılamaz. İş çalıştırıcısının kendisi dışarıda kalır: bütçe ve kullanım için `/proc`'u okur (§58),
+  işin cevabını yazar. Kendini kısıtlasaydı ya bunları kaybederdi ya da kurala `/proc`'u açardı. İş çalıştırıcısı
+  güvensiz kod içermez (`forbid(unsafe_code)`): çatallanma ile `exec` arasına kanca (`pre_exec`) yerine kendi
+  programının ayrı bir kipi seçildi; ne güvensiz kod ne de çatallanmış süreçte bellek ayırma gerekir. Kutu kipi
+  `exec` ettiği için kuralın Python'u aynı süreçtir: bütçenin ağacı (§58) onu eskisi gibi görür ve bitirir.
+- **Bağımlılık:** çalışma alanında da std'de de Landlock'a erişen bir şey yok. `landlock` Landlock projesinin Rust
+  bağlayıcısıdır (MIT ya da Apache-2.0), güvenli bir arayüz verir ve ABI 9'a (Linux 7.1) kadar bilir; çektiği
+  `enumflags2`, `thiserror` ve `libc` kilitte zaten vardı (kilide yalnız `landlock` eklendi). Çalışma alanının
+  kuralıyla tam sürüme sabitlendi; yalnız `apps/jobrun`'da, yalnız `target_os = "linux"` için. `scripts/arch/deps.mjs`
+  temiz.
+- **Dosyalar (`allowed`):** okuma ve çalıştırma yalnız şunların altında: paketin açıldığı klasör (`extension/`);
+  hazırlanmış ortam (klasörü; `pyvenv.cfg`'nin `home`'unun gösterdiği temel kurulumun `lib`'leri; ortamın bir `.pth`
+  dosyasının eklediği klasör, yalnız içinde KentOS'un kütüphanesi (`kentos/__init__.py`) varsa: geliştirmede
+  düzenlenebilir kurulmuş SDK); yorumlayıcının çözülmüş dosyası ve kurulumunun `lib`'leri; sistemin kütüphane klasörleri
+  (`/usr/lib`, `/usr/lib64`, `/lib`, `/lib64`, `/usr/local/lib`); `/etc/ld.so.cache`, `/dev/urandom`. Yazma yalnız işin
+  kendi karalamasında: `pyc` (bayt kodu) ve `tmp` (kuralın `TMPDIR`'i), bir de `/dev/null`. İşin klasöründeki çizim
+  (`snapshot.kcad`), istek ve paket dosyası okunamaz; `/proc`, `/sys`, `/etc`'nin geri kalanı, kullanıcının klasörleri
+  okunamaz. Bir programı da yalnız bu klasörlerden çalıştırabilir ve çalıştırdığı her program kutuyu kalıtır.
+  **`.pth` süzgeci bilerek:** ortam yazarın kilidindeki bağımlılıklarla kurulur ve bir bağımlılığın `.pth` dosyası
+  istediği mutlak yolu yazabilir (`/home`, `/etc`); her `.pth` satırını açmak kutuyu yazarın eline verirdi. Yayında SDK
+  ortamın içinde, kurulumun tekerleğinden gelir (`.pth` gerekmez); göreli `.pth` satırları zaten ortamın içindedir.
+- **Ağ ve süreçler:** TCP'de bağlanma ve dinleme yasak (ABI 4, hiçbir bağlantı noktasına izin yok). Sinyaller ve soyut
+  UNIX soketleri alana kapsanır (ABI 6): kural sunucuyu ya da alan dışındaki bir süreci sinyalleyemez, alan dışındaki
+  soyut sokete bağlanamaz; alan dışındaki süreçleri izleyemez de (ptrace, Landlock'un kendisi). Yol adlı UNIX soketine
+  bağlanma çekirdek ABI 9'u biliyorsa yasak (karalamadaki kendi soketleri dışında).
+- **Kapatılamayan yerde (Landlock yok, ABI 4'ün altı, Linux değil) ilke sunucunun ayarıdır:** `KENTOS_AUDIT_CONFINE`.
+  `require` (varsayılan; ayarsız ve tanınmayan değer de böyle okunur): kural çalışmaz; iş, paket açılmadan ve çizim
+  ölçülmeden `tool_unavailable` ile "Bulut denetim kutusu kapatılamadı: …. Sunucu kuralı kutusuz çalıştırmaz; yönetici
+  KENTOS_AUDIT_CONFINE ayarını report yaparsa …" der. `report`: kural kutusuz çalışır, işin özeti "(kutu kapatılamadı:
+  …)" ile biter (iş çalıştırıcısı hata çıktısına da yazar). Varsayılan `require`, çünkü planın kabulü ("bulut kutusu ağa
+  ve yerel dosyalara erişemez") ya tutar ya da hiçbir kural çalışmaz; daha zayıfını yönetici bilerek seçer. `kentosd`
+  ayarı çocuğa geçirir (çocuğun ortamı başka türlü boştur). Kutu kipi kutuyu kapatamazsa (beklenmez: önce yoklanır) ya
+  da yorumlayıcıyı çalıştıramazsa `KENTOS-KUTU` imiyle söyler ve iş, kuralın hatası (`tool_failed`) değil, aracın
+  yokluğu (`tool_unavailable`) olarak biter.
+- **Söz:** kutu kapandığında iş çalıştırıcısı ne kapandığını hata çıktısına yazar; bu makinede (Linux 7.0, ABI 8):
+  "dosyalar ve TCP kapalı; sinyaller ve soyut UNIX soketleri kutuda; yol adlı UNIX soketleri açık (ABI 9 yok); UDP ve
+  öteki soket türleri açık (Landlock kapsamaz)". Sınama bu sözü kutudaki kuralın gördüğüyle karşılaştırır: açık denen
+  açık, kapalı denen kapalı çıkmalı. Kapanan kutu işin özetine bir şey eklemez, rapora da (masaüstünün raporuyla bayt
+  bayt aynı kalır); söylenmeyen bir kapalılık iddia edilmez. `kentosd` iş çalıştırıcısının hata çıktısını yalnız çöken
+  işin sözünde gösterir: kutunun düzeyini açılışta kendi günlüğüne yazması ayrı iş.
+- **Kapanmayanlar (bu makinede ölçüldü):** (1) **UDP** ve TCP dışındaki soket türleri: Landlock'un hiçbir ABI'si
+  kapsamıyor. Kutudaki kural 127.0.0.1'deki bir UDP soketine veri gönderdi, sınama aldı; bir DNS sorgusu da dışarı veri
+  taşıyabilir. (2) **Yol adlı UNIX soketleri ABI 9'un altında** (bu makine ABI 8): kutudaki kural işin klasöründeki,
+  okuyamadığı bir sokete bağlandı. Sunucunun kullanıcısının ulaşabildiği her yerel soket kurala da açıktır: ör.
+  veritabanının yerel soketi (peer kimlik doğrulamasında sunucunun kullanıcısıyla), kapsayıcı motorunun soketi. ABI 9'a
+  kadar önlem işletim sistemi yönetiminindir: `kentosd`'yi yerel soketlerin arkasında yetkisi olmayan bir kullanıcıyla
+  çalıştırmak. (3) Herhangi bir yolun **varlığı ve üst verisi** (`stat`): Landlock içeriği ve değişikliği kısıtlar, yol
+  yürüyüşünü değil. (4) İşlemci ve bellek kutunun değil bütçenin işidir (§58). (5) Masaüstü kapsam dışı: eklentiler
+  orada kullanıcının haklarıyla çalışır (PY-RUN-19/20). (1) ve (2)'nin kalıcı çözümü bir seccomp süzgecidir:
+  `socket()`'i reddetmek (kuralın hiçbir sokete ihtiyacı yok; yalnız `socketpair` asyncio için kalır). İkinci bir
+  bağımlılık ister (güvensiz kod yok kuralıyla): ayrı iş.
+- **Ölçüm (hata ayıklama derlemesi, 16 Kasım):** kutu kipinin kendi maliyeti (`/usr/bin/true`'nun çevresinde, 30 koşunun
+  ortancası) 6.8 ms: 6.1 ms'si iş çalıştırıcısının hata ayıklama derlemesinin (770 MB) açılışı, Landlock'un kurulması
+  ile `exec` 0.7 ms. Ortamın Python'unun SDK'nın konağını yüklemesi (`import kentos.ext_host`, sırayla 10'ar koşu,
+  ortanca): kutusuz 988 ms duvar / 987 ms işlemci, kutuda 991 / 991 ms (+3 / +4 ms). Olağan kuralın işi baştan sona
+  (§58'in ölçümü, sınama tek başına, iki koşu): 1.91-1.92 sn işlemci (kutusuz, §58: 1.89-1.90), en çok 500.3-500.9 MB
+  (§58: 506.5-506.8), 1.96 sn; kuralın Python süreci en çok 412.2 MB (§58: 412.4). Bütçe kutuyla da tutuyor: işlemciyi
+  yakan kural 3 sn'lik bütçede 3.07 sn'de, belleği dolduran 801-805 MB'lık bütçede 2.06-2.16 sn'de durdu (§58: 3.07;
+  2.06-2.07).
+- **Sınamalar:** iş çalıştırıcısının `audit` ve `kutu` sınamaları 22/22. Eski 16'sı (örnek kural, ulusal kurallar)
+  artık kutuda koşuyor ve aynı bulguları veriyor; masaüstünün kutusuz raporu ile işin kutudaki raporu bayt bayt aynı
+  (`the_desktop_and_the_job_give_the_same_report`: planın kabulü kutuyla da tutuyor). Yerine konan kural sınaması
+  (`a_job_runs_the_package_s_rule_on_the_measured_facts`) kutunun komut satırını da sınar: paket okunur, işin klasörü
+  okunmaz, karalama yazılır. Yeni altısı: izinli yollar (bir bağımlılığın `.pth`'si hiçbir şey açmaz) ve kutu kipinin
+  komut satırı; anlamadığı sözü reddetmesi; gerçek Python'la kutudaki kural (TCP, `/etc/hostname`, kullanıcının bir
+  dosyası ve işin çizimi `PermissionError`, işin klasörüne yazmak `PermissionError`, karalamaya yazmak açık; UDP
+  gönderiliyor ve sınama alıyor, yol adlı UNIX soketine bağlanılıyor: kutunun sözüyle aynı; aynı denemeler sınamanın
+  kendi sürecinden başarılı); kutunun açılış maliyeti; Python'suz ve her sistemde koşan ikisi: kutu kapanmayınca
+  `require` paketi açmadan reddeder, hiçbir kural koşmaz, `report` yorumlayıcıyı kendisi başlatır ve özet "(kutu
+  kapatılamadı: …)" der; yorumlayıcısını bulamayan kutu kipi imiyle söyler ve iş `tool_unavailable` olur. Gerçek
+  Python'lu ikisi Python yoksa ya da kutu kapanmıyorsa atlandığını söyler. `kentosd`'nin işlemci sınamaları 26/26
+  (denetim işleri ve §58'in bütçe sınamaları kutudan geçiyor), birim sınamaları 8/8. Clippy (`--tests --no-deps`),
+  rustfmt ve `scripts/arch/deps.mjs` temiz.
+- **Sınama makinesinde kutu kapanmıyorsa:** gerçek Python'la koşan denetim sınamaları (iş çalıştırıcısının ve
+  `kentosd`'nin) `require` altında reddedilir; o makinede `KENTOS_AUDIT_CONFINE=report` ile koşulur, kutunun kendi
+  sınamaları atlandığını söyler. İlkeyi sınayan ikisi her sistemde ve Python'suz koşar.
+- **Kalan:** (1) UDP ve ABI 9'un altında yol adlı UNIX soketleri (seccomp ile `socket()` reddi, yukarıda). (2)
+  `kentosd`'nin açılışta kutunun düzeyini günlüğüne yazması. (3) Windows'ta ve macOS'ta kutu: bugün `require` orada
+  kuralı çalıştırmaz. (4) Yayın derlemesinde ölçüm (iş çalıştırıcısının açılışı, buradaki 6.1 ms'nin çoğu, küçülür).

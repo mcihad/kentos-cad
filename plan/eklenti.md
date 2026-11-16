@@ -1055,6 +1055,11 @@ süreci (kuralın Python'u) birlikte ölçer (Linux'ta `/proc`, öbür Unix'lerd
 bellek toplam RSS) ve bütçe aşılınca ya da Durdur'da iş çalıştırıcısının süreç grubunu bitirir; sonuç yerleşik
 araçlarınkiyle aynı (`cpu_limit`, `memory_limit`), işin `usage`'ı Python'u da söyler. Kalan: Windows'ta iş nesnesi,
 cgroup ile kaçamaz sınır, sunucu ölünce sahipsiz kalan Python, işletim sistemi yalıtımı.
+**Kutu işletim sistemi düzeyinde** (ADR 8057 §61, 16 Kasım): Linux'ta kuralın Python'u iş çalıştırıcısının kutu kipinde
+Landlock alanına girip çalışır: dosyalarda yalnız paketi, hazırlanmış ortamı, SDK'yı ve sistem kütüphanelerini okur,
+yalnız işin karalamasına yazar; TCP, alan dışına sinyal ve soyut UNIX soketi yasak. Kapatılamayan sunucuda varsayılan
+kuralı çalıştırmamaktır (`KENTOS_AUDIT_CONFINE=require`); `report` kuralı çalıştırır ve "kutu kapatılamadı" der.
+Kalan: UDP ve ABI 9'un altında yol adlı UNIX soketleri açık (seccomp ile `socket()` reddi), Windows ve macOS'ta kutu.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

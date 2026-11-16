@@ -33,6 +33,9 @@ mod tree;
 /// The child's program name, beside the server's own, and the variable that names another place for it.
 pub const CHILD_PROGRAM: &str = "kentos-jobrun";
 pub const CHILD_ENV: &str = "KENTOS_JOBRUN";
+/// The server's setting for the cloud audit box where it cannot close (docs/adr/8057 §61): `require` (the default)
+/// or `report`; given to the child, whose environment is otherwise empty.
+pub const AUDIT_CONFINE_ENV: &str = "KENTOS_AUDIT_CONFINE";
 /// What a child's progress line starts with: `KENTOS-PROGRESS 0.4000 words`.
 const PROGRESS_PREFIX: &str = "KENTOS-PROGRESS ";
 /// How often the parent looks at whether the child ended or the worker said stop.
@@ -308,6 +311,10 @@ impl Processor for ChildProcessor {
             .stderr(Stdio::piped());
         // A group of its own: ending it at the budget or a stop ends what the child started too (a rule's Python).
         tree::own_group(&mut command);
+        // The server's choice where the audit box cannot close (docs/adr/8057 §61): the child has no other environment.
+        if let Some(policy) = std::env::var_os(AUDIT_CONFINE_ENV) {
+            command.env(AUDIT_CONFINE_ENV, policy);
+        }
         let mut child = command.spawn().map_err(|e| {
             ProcessFailure::new(
                 "tool_unavailable",
