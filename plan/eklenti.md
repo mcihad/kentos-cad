@@ -1195,8 +1195,10 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   izinleri kullanır [EKL-06]; çalışan işler, maliyet/istek bütçesi ve gönderilecek çizim verisinin kapsamı kullanıcıya
   anlaşılır gösterilir. Sürümlü Python API referansı, kavramsal başlangıç, KentOS UI ve İşlemler rehberi, paketleme, hata
   ayıklama, sürüm geçişi ve SDK sürümüyle test edilen çalışan örnekler; çevrimdışı belge paketi [EKL-06].
-  — *kısmen (ADR 8057 §22, §30): Asistan ve masaüstüne bağlı MCP aynı atölye araçlarını kullanır, SDK paketi tek
-  okumada; kalan: iş/maliyet görünümü, sürümlü API başvurusu ve çevrimdışı belge paketi.*
+  — *kısmen (ADR 8057 §22, §30; ADR 8056 §6): Asistan ve masaüstüne bağlı MCP aynı atölye araçlarını kullanır, SDK
+  paketi tek okumada; ajanın token sınırı sohbet başına ve günlük, sohbetin toplamı her yanıtın altında, günün
+  harcaması ayarlarda (16 Kasım); kalan: çalışan işlerin tek görünümü, sürümlü API başvurusu ve çevrimdışı belge
+  paketi.*
 - [ ] **API ailesi** (adlar SDK uyumluluk ADR'sinde kesinleşir): `python.environments.*`, `extensions.*`
   (inspect/package/check/install/prepare/enable/disable/run/update/uninstall), `extensions.catalog.*`, `ui.sessions.*`,
   `processing.tools.*`, `processing.models.*`/`jobs.*`. Okuma/doğrulama/plan çağrıları yazmaz; indirme/kurma ayrı açık

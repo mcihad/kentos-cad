@@ -1,0 +1,131 @@
+//! The user's token limits in Asistan (docs/adr/8056 §6), against a provider on this computer: an agent calling tools
+//! past its conversation's limit stops there and the next turn is refused until a new conversation; a day that spent
+//! its limit refuses the agent until tomorrow; the agent's form keeps the limits and says what is not one.
+
+use kentos_ui::widget::ai::{AiEvent, Phase, PromptState};
+use serde_json::json;
+
+use super::tests::{Provider, agents, calls, chatting, says, send};
+use super::{AgentsEdit, Event, msg, today};
+use crate::app::App;
+use crate::files_testing::{app_with_drawing, drive};
+
+/// The default agent with `edit` made to it.
+fn limited(app: &mut App, edit: impl FnOnce(&mut kentos_agent::AgentProfile)) -> String {
+    let store = &app.assistant.store;
+    let mut agent = store.default_profile().expect("the default agent");
+    edit(&mut agent);
+    store.update(agent.clone()).expect("kept");
+    agent.id
+}
+
+fn failure(app: &App, message: u64) -> String {
+    let said = app.assistant.chat.message(message).expect("the answer");
+    assert_eq!(said.phase, Phase::Error, "{said:?}");
+    said.failure.clone().unwrap_or_default()
+}
+
+/// What the chat says to `words` refused before a turn starts.
+fn refused(app: &mut App, words: &str) -> String {
+    app.assistant.chat.prompt = PromptState::with_text(words);
+    let task = app.update(msg(Event::Chat(AiEvent::Submit)));
+    drive(app, task);
+    assert!(!app.assistant.busy(), "no turn started");
+    let said = app.assistant.chat.messages().last().expect("the answer");
+    assert_eq!(said.phase, Phase::Error, "{said:?}");
+    said.failure.clone().unwrap_or_default()
+}
+
+#[test]
+fn an_agent_past_its_conversations_limit_stops_and_a_new_conversation_starts_again() {
+    // The first answer calls a tool and costs 150 tokens; any later one answers in words.
+    let provider = Provider::start(|n, _| match n {
+        0 => calls("call_1", "drawing__summary", &json!({})),
+        _ => says("Çizim hazır."),
+    });
+    let mut app = chatting(&provider);
+    let id = limited(&mut app, |a| a.conversation_tokens = Some(100));
+    let (message, task) = send(&mut app, "Çizimi özetle.");
+    drive(&mut app, task);
+    let why = failure(&app, message);
+    assert!(
+        why.starts_with("Ajan durduruldu") && why.contains("150 / 100 token"),
+        "{why}"
+    );
+    assert_eq!(
+        provider.bodies().len(),
+        1,
+        "nothing more asked of the provider"
+    );
+    assert!(!app.assistant.busy());
+    assert_eq!(app.assistant.spent, 150);
+    assert_eq!(
+        app.assistant.ledger.spent(&id, &today()),
+        150,
+        "the day counts it too"
+    );
+    // The next turn of the conversation is refused before it starts.
+    let why = refused(&mut app, "Devam et.");
+    assert!(why.contains("Yeni sohbet"), "{why}");
+    assert_eq!(provider.bodies().len(), 1);
+    // A new conversation counts from nothing; the day keeps what was spent.
+    let _ = app.update(msg(Event::New));
+    assert_eq!(app.assistant.spent, 0);
+    let (message, task) = send(&mut app, "Merhaba");
+    drive(&mut app, task);
+    let said = app.assistant.chat.message(message).expect("the answer");
+    assert_eq!(said.phase, Phase::Complete, "{said:?}");
+    assert_eq!(
+        said.usage.and_then(|u| u.limit),
+        Some(100),
+        "the panel shows the limit"
+    );
+    assert_eq!(app.assistant.ledger.spent(&id, &today()), 150);
+}
+
+#[test]
+fn a_day_that_spent_its_limit_refuses_the_agent() {
+    let provider = Provider::start(|_, _| says("Çizim hazır."));
+    let mut app = chatting(&provider);
+    let id = limited(&mut app, |a| a.daily_tokens = Some(1_000));
+    app.assistant.ledger.add(&id, &today(), 1_000);
+    let why = refused(&mut app, "Merhaba");
+    assert!(
+        why.contains("bugün") && why.contains("1.000 / 1.000 token"),
+        "{why}"
+    );
+    assert!(provider.bodies().is_empty());
+}
+
+#[test]
+fn the_agents_form_keeps_its_limits_and_says_what_is_not_one() {
+    let mut app = app_with_drawing();
+    agents(&mut app, AgentsEdit::Add);
+    agents(&mut app, AgentsEdit::Key("sk-deneme".into()));
+    agents(&mut app, AgentsEdit::ConversationTokens("1,5".into()));
+    agents(&mut app, AgentsEdit::Save);
+    assert!(
+        app.assistant.store.list().is_empty(),
+        "not a limit: not kept"
+    );
+    agents(&mut app, AgentsEdit::ConversationTokens("200.000".into()));
+    agents(&mut app, AgentsEdit::DailyTokens("1 000 000".into()));
+    agents(&mut app, AgentsEdit::Save);
+    let list = app.assistant.store.list();
+    assert_eq!(list.len(), 1);
+    assert_eq!(
+        (list[0].conversation_tokens, list[0].daily_tokens),
+        (Some(200_000), Some(1_000_000))
+    );
+    // Opened again, the form writes them with dots; emptied, there is no limit.
+    let _ = app.update(crate::app::Message::Run("tools.options"));
+    agents(&mut app, AgentsEdit::Change(list[0].id.clone()));
+    assert!(app.agent_window().is_some());
+    agents(&mut app, AgentsEdit::ConversationTokens(String::new()));
+    agents(&mut app, AgentsEdit::Save);
+    let kept = app.assistant.store.get(&list[0].id).expect("kept");
+    assert_eq!(
+        (kept.conversation_tokens, kept.daily_tokens),
+        (None, Some(1_000_000))
+    );
+}

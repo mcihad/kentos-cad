@@ -19,13 +19,15 @@ use crate::settings_view::Edit;
 
 /// A provider speaking Chat Completions on 127.0.0.1: each request is answered as `answer` says for it (its place and
 /// body); the bodies are kept.
-struct Provider {
+pub(super) struct Provider {
     url: String,
     bodies: Arc<Mutex<Vec<Value>>>,
 }
 
 impl Provider {
-    fn start(answer: impl Fn(usize, &Value) -> (u16, String) + Send + 'static) -> Provider {
+    pub(super) fn start(
+        answer: impl Fn(usize, &Value) -> (u16, String) + Send + 'static,
+    ) -> Provider {
         let listener = TcpListener::bind("127.0.0.1:0").expect("a port");
         let url = format!("http://{}/v1", listener.local_addr().expect("its address"));
         let bodies = Arc::new(Mutex::new(Vec::new()));
@@ -69,7 +71,7 @@ impl Provider {
         Provider { url, bodies }
     }
 
-    fn bodies(&self) -> Vec<Value> {
+    pub(super) fn bodies(&self) -> Vec<Value> {
         self.bodies
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
@@ -84,7 +86,7 @@ fn chunk(delta: Value, finish: Option<&str>) -> String {
 }
 
 /// An answer calling tool `name` (as the wire names it) with `input`, its arguments in two pieces.
-fn calls(id: &str, name: &str, input: &Value) -> (u16, String) {
+pub(super) fn calls(id: &str, name: &str, input: &Value) -> (u16, String) {
     let arguments = input.to_string();
     let mut half = arguments.len() / 2;
     while !arguments.is_char_boundary(half) {
@@ -108,7 +110,7 @@ fn calls(id: &str, name: &str, input: &Value) -> (u16, String) {
 }
 
 /// An answer in words.
-fn says(words: &str) -> (u16, String) {
+pub(super) fn says(words: &str) -> (u16, String) {
     let sse = [
         chunk(json!({ "role": "assistant", "content": words }), None),
         chunk(json!({}), Some("stop")),
@@ -128,7 +130,7 @@ fn last_result(body: &Value) -> String {
 }
 
 /// The sample drawing, and the provider's agent the default with a key for this session only.
-fn chatting(provider: &Provider) -> App {
+pub(super) fn chatting(provider: &Provider) -> App {
     chatting_in(app_with_drawing(), provider)
 }
 
@@ -149,7 +151,7 @@ fn chatting_in(mut app: App, provider: &Provider) -> App {
     app
 }
 
-fn send(app: &mut App, words: &str) -> (u64, iced::Task<Message>) {
+pub(super) fn send(app: &mut App, words: &str) -> (u64, iced::Task<Message>) {
     app.assistant.chat.prompt = PromptState::with_text(words);
     let task = app.update(msg(Event::Chat(AiEvent::Submit)));
     let message = app.assistant.chat.pending().expect("a turn under way");
@@ -351,7 +353,7 @@ fn without_an_agent_the_chat_says_where_to_add_one() {
     assert!(app.assistant.agents.editor.is_some());
 }
 
-fn agents(app: &mut App, edit: AgentsEdit) {
+pub(super) fn agents(app: &mut App, edit: AgentsEdit) {
     let task = app.update(Message::Settings(Edit::Agents(edit)));
     drive(app, task);
 }

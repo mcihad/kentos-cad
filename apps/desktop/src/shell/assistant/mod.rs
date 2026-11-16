@@ -8,6 +8,8 @@
 //! The provider is called on the agent's own runtime (`kentos_agent`); the panel hears the turn's events through a task
 //! and answers its tool calls here, on the interface thread, where the drawing is.
 
+#[cfg(test)]
+mod budget_tests;
 mod host;
 mod settings;
 #[cfg(test)]
@@ -19,7 +21,9 @@ use std::time::Instant;
 
 use iced::Task;
 use iced::futures::stream;
-use kentos_agent::{AgentProfile, Conversation, FailureKind, ProfileStore, Role, ToolSpec, Turn};
+use kentos_agent::{
+    AgentProfile, Conversation, FailureKind, ProfileStore, Role, Spent, ToolSpec, Turn, UsageLedger,
+};
 use kentos_headless::agent_tools::{self, DESTRUCTIVE, Guard};
 use kentos_ui::widget::ai::{self, AiAction, AiEvent, ToolPhase, Usage};
 use serde_json::{Value, json};
@@ -47,6 +51,16 @@ pub enum Event {
     JobLook,
 }
 
+/// The computer's local day (`2026-11-16`): the agents' tokens are counted by it.
+fn today() -> String {
+    let d = kentos_ui::attribute::DateTime::now(
+        kentos_interaction::time_version::LOCAL_OFFSET.load(std::sync::atomic::Ordering::Relaxed)
+            / 60,
+    )
+    .date;
+    format!("{:04}-{:02}-{:02}", d.year(), d.month(), d.day())
+}
+
 pub(crate) fn msg(event: Event) -> Message {
     Message::Assistant(event)
 }
@@ -55,6 +69,10 @@ pub(crate) fn msg(event: Event) -> Message {
 pub(crate) struct Assistant {
     /// The device's agents (`main` opens the real file; tests and snapshots keep them in memory).
     pub(crate) store: ProfileStore,
+    /// The tokens the agents spent on this computer, by day, beside their file (docs/adr/8056 §6; `main` opens it).
+    pub(crate) ledger: UsageLedger,
+    /// The tokens this conversation spent, in and out, whichever agent answered: what its limit counts.
+    pub(crate) spent: u64,
     /// Uygulama ayarları › Yapay zekâ's form.
     pub(crate) agents: Agents,
     /// What the panel shows.
@@ -79,6 +97,8 @@ impl Default for Assistant {
     fn default() -> Self {
         Assistant {
             store: ProfileStore::in_memory(),
+            ledger: UsageLedger::in_memory(),
+            spent: 0,
             agents: Agents::default(),
             chat: ai::Conversation::default(),
             chosen: None,
@@ -106,6 +126,9 @@ struct Running {
     tools: u64,
     input_tokens: u64,
     output_tokens: u64,
+    /// The agent answering (its id, for the day's ledger) and its conversation limit, for the panel.
+    agent: String,
+    limit: Option<u64>,
     /// The call waiting for an extension audit's run to end (docs/adr/8057 §27): answered with its report then.
     later: Option<Later>,
 }
@@ -347,6 +370,7 @@ impl App {
                 self.assistant_stop();
                 self.assistant.chat = ai::Conversation::default();
                 self.assistant.history = None;
+                self.assistant.spent = 0;
                 self.assistant.guard = Guard::new();
                 Task::none()
             }
@@ -416,6 +440,15 @@ impl App {
             );
             return Task::none();
         }
+        // The user's limits (docs/adr/8056 §6): a conversation or a day that spent them is refused before it starts.
+        let spent = Spent {
+            conversation: self.assistant.spent,
+            today: self.assistant.ledger.spent(&profile.id, &today()),
+        };
+        if let Some(why) = kentos_agent::over_budget(&profile, spent.conversation, spent.today) {
+            self.assistant.chat.fail(message, &why);
+            return Task::none();
+        }
         let mut conversation = match self.assistant.history.take() {
             Some(history) => history.for_profile(&profile),
             None => Conversation::new(instructions(self.program)),
@@ -433,7 +466,8 @@ impl App {
             conversation.messages.pop();
         }
         let tools = tool_specs(self);
-        let mut turn = kentos_agent::start_turn(&profile, key, conversation, tools, text);
+        let mut turn =
+            kentos_agent::start_turn_counting(&profile, key, conversation, tools, text, spent);
         let events = turn.take_events();
         self.assistant.running = Some(Running {
             message,
@@ -444,6 +478,8 @@ impl App {
             tools: 0,
             input_tokens: 0,
             output_tokens: 0,
+            agent: profile.id.clone(),
+            limit: profile.conversation_tokens,
             later: None,
         });
         let heard = stream::unfold(events, |mut events| async move {
@@ -490,6 +526,10 @@ impl App {
             } => {
                 running.input_tokens += input_tokens;
                 running.output_tokens += output_tokens;
+                // Counted as they come, so a turn stopped part way is paid for too; the turn itself stops at a limit.
+                let tokens = input_tokens.saturating_add(output_tokens);
+                self.assistant.spent = self.assistant.spent.saturating_add(tokens);
+                self.assistant.ledger.add(&running.agent, &today(), tokens);
             }
             Heard::ToolCall { id, name, input } => {
                 running.tools += 1;
@@ -525,6 +565,8 @@ impl App {
                     input_tokens: r.input_tokens,
                     output_tokens: r.output_tokens,
                     elapsed: r.started.elapsed(),
+                    conversation: Some(self.assistant.spent),
+                    limit: r.limit,
                 });
                 self.assistant.chat.finish(message, usage);
                 self.assistant.history = Some(conversation);

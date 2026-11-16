@@ -19,7 +19,7 @@ fn chunk(delta: Value, finish: Option<&str>) -> Value {
         "choices": [{"index": 0, "delta": delta, "finish_reason": finish}]})
 }
 
-fn text_answer(text: &str) -> Vec<String> {
+pub(super) fn text_answer(text: &str) -> Vec<String> {
     let mut pieces = data(
         &[chunk(json!({"role": "assistant", "content": ""}), None)],
         false,
@@ -39,7 +39,7 @@ fn text_answer(text: &str) -> Vec<String> {
 }
 
 /// The recording's events, one piece each, as the provider sent them.
-fn recording() -> Vec<String> {
+pub(super) fn recording() -> Vec<String> {
     RECORDING
         .split_inclusive("\n\n")
         .map(str::to_owned)

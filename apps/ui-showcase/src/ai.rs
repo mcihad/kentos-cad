@@ -90,6 +90,7 @@ impl Default for Studio {
             input_tokens: 36,
             output_tokens: 184,
             elapsed: Duration::from_millis(2480),
+            ..Usage::default()
         });
         conversation.push(assistant);
         Self {
@@ -328,6 +329,7 @@ impl Studio {
                     input_tokens: 36,
                     output_tokens: 184,
                     elapsed,
+                    ..Usage::default()
                 }),
             );
             self.started = None;

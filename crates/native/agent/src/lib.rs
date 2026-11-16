@@ -32,6 +32,7 @@ pub mod run;
 mod runtime;
 mod sse;
 pub mod tools;
+pub mod usage;
 mod wire;
 
 pub use conversation::{Conversation, Echo, Message, Part, Reasoning, Role, ToolCall, ToolResult};
@@ -39,5 +40,6 @@ pub use failure::{Failure, FailureKind};
 pub use models::{check, list_models};
 pub use profiles::{AgentProfile, KeySource, ProfileField, ProfileStore};
 pub use providers::{Preset, ProviderKind, Wire};
-pub use run::{Event, MAX_TOOL_ROUNDS, Turn, start_turn};
+pub use run::{Event, MAX_TOOL_ROUNDS, Spent, Turn, start_turn, start_turn_counting};
 pub use tools::ToolSpec;
+pub use usage::{UsageLedger, over_budget, read_tokens, spending_words, tokens_words};

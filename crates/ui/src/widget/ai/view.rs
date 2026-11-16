@@ -904,16 +904,27 @@ impl<'a, Message: Clone + 'a> AiMessage<'a, Message> {
             }
             body = body.push(actions.wrap().vertical_spacing(4));
             if let Some(usage) = data.usage {
-                body = body.push(
-                    text(format!(
-                        "{} token, {:.1} sn",
-                        usage.output_tokens,
-                        usage.elapsed.as_secs_f64()
-                    ))
-                    .font(code_font())
-                    .size(typography::caption())
-                    .style(style::text::muted),
-                );
+                let caption = |words: String| {
+                    text(words)
+                        .font(code_font())
+                        .size(typography::caption())
+                        .style(style::text::muted)
+                };
+                // The answer's tokens (what the model wrote); the conversation's line counts what it was sent too.
+                body = body.push(caption(format!(
+                    "Yanıt {} token, {:.1} sn",
+                    dotted(usage.output_tokens),
+                    usage.elapsed.as_secs_f64()
+                )));
+                // The conversation's tokens a line of their own: the narrow dock keeps both readable.
+                if let Some(total) = usage.conversation {
+                    body = body.push(caption(match usage.limit {
+                        Some(limit) => {
+                            format!("Sohbette {} / {} token", dotted(total), dotted(limit))
+                        }
+                        None => format!("Sohbette {} token", dotted(total)),
+                    }));
+                }
             }
         }
         container(body).width(Fill).padding([4, 0]).into()
@@ -1071,4 +1082,17 @@ impl<'a, Message: Clone + 'a> From<AiConversation<'a, Message>> for Element<'a, 
     fn from(conversation: AiConversation<'a, Message>) -> Self {
         conversation.view()
     }
+}
+
+/// A count with its thousands set off by dots, as Turkish writes it (“12.345”).
+fn dotted(n: u64) -> String {
+    let digits = n.to_string();
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3);
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            out.push('.');
+        }
+        out.push(c);
+    }
+    out
 }

@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::providers::{Preset, ProviderKind};
 
-pub use file::device_file;
+pub use file::{device_file, device_folder};
 
 /// Where an agent's API key comes from.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -52,6 +52,12 @@ pub struct AgentProfile {
     pub key: KeySource,
     #[serde(default)]
     pub default: bool,
+    /// The most tokens (in and out) one conversation may spend; none: no limit (docs/adr/8056 §6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub conversation_tokens: Option<u64>,
+    /// The most tokens this agent may spend a day on this computer; none: no limit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub daily_tokens: Option<u64>,
 }
 
 /// A field of the agent window, for where a problem is said.
@@ -60,6 +66,8 @@ pub enum ProfileField {
     Name,
     Model,
     BaseUrl,
+    ConversationTokens,
+    DailyTokens,
 }
 
 impl AgentProfile {
@@ -81,6 +89,8 @@ impl AgentProfile {
                 KeySource::Environment
             },
             default: false,
+            conversation_tokens: None,
+            daily_tokens: None,
         }
     }
 
