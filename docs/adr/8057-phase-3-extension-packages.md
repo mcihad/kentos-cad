@@ -4348,5 +4348,8 @@ görüntüsüyle karşılaştırılmış).
   yükseltilmeden belge cümlesi ve rehberin `kek test` cümlesi kısaltıldı: 47.890.
 - **Sınamalar:** olgu fikstürü (beş bölümün sınıfı), jobrun 12 (sekiz kural, yeni kuralın iki bulgusu), Python 7
   (`occupancy`'nin okunması), paylaşılan crate 149.
+- **Gerçek pencere (KentOS Mimari, yalıtılmış profil):** 0.4.0 katalogdan kuruldu; Örnekleri çalıştır "Türkiye
+  mevzuatı: örnekler — 27 örneğin hepsi geçti.". İnceleme penceresi paketin eskimiş açıklamasını gösterdi ("o
+  bölümlerin kaçış uzaklığına karar verilmez"): açıklama 0.4.0'ın davranışına göre düzeltildi.
 - **Kalan:** mahalin adından sınıf (yerel denetim okuyor, olgular bölümünkini taşıyor); yüksek tehlikeli yer
   (okunmuyor); bölüm sınıfının programda açıkça seçilmesi (bugün nitelikten okunur).
