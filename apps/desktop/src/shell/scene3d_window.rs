@@ -11,13 +11,20 @@
 //! heights): a drag publishes an orbit, a right drag (or Shift) a pan, the wheel a dolly, so the view buttons and a
 //! picture are the same every time. The vertical exaggeration is the view's alone; the sources keep their heights.
 //!
+//! The window opens beside the plan in an operating-system window of its own (shell/windows/, docs/adr/8060 §9), or
+//! over the drawing once the user brings it into the main window; its look (the tool strip, the scene with its north
+//! arrow and legend, the status bar) is scene3d_view.rs. Beside the plan the main window is free, so the scene follows
+//! the drawing ([`App::follow_scene3d`]).
+//!
 //! ```text
-//! ┌ 3B görünüm ──────────────────────────────────────────────────────────────────────────────────┐
-//! │ [Kuzeydoğu] [Güneybatı] [Kuzeybatı] [Üst] [Sığdır]       Düşey abartma [3]   [ ] Arazi saydam │
-//! │ ┌ the scene: drag to orbit, right drag (or Shift) to pan, the wheel to dolly ┐                │
-//! │ └────────────────────────────────────────────────────────────────────────────┘                │
-//! │ ■ Arazi ■ Şerit ■ Banket ■ Yarma şevi ■ Dolgu şevi                                            │
-//! │ 3 yüzey ve koridor · 928 üçgen · 3 karo çizildi …                     [glTF ver]  [Kapat]     │
+//! ┌ 3B görünüm — KentOS CAD ─────────────────────────────────────────────────────────────────────┐
+//! │ ◈ Kuzeydoğu ▾  ⤢ Sığdır │ Düşey abartma [3] │ Araziyi kes  Düz yüzler  Arazi saydam  ⇩ glTF ver ⧉ │
+//! ├───────────────────────────────────────────────────────────────────────────────────────────────┤
+//! │        the scene: drag to orbit, right drag (or Shift) to pan, the wheel to dolly        (K)  │
+//! │ ┌ Lejant ┐                                                                                    │
+//! │ │■ Arazi │                                                                                    │
+//! ├───────────────────────────────────────────────────────────────────────────────────────────────┤
+//! │ ⌖ Şerit, Koridor 1   Y …  X …  Z …                                  3 yüzey ve koridor │ ? Fare │
 //! └───────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
@@ -26,21 +33,20 @@ use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
-use iced::widget::{Column, Row, container, row, shader, space};
-use iced::{Background, Border, Color, Element, Fill, Rectangle, Task, Theme, mouse, wgpu};
+use iced::widget::shader;
+use iced::{Color, Rectangle, Task, Theme, mouse, wgpu};
 use kentos_commands::SceneMeshKind;
 use kentos_native_application::road_scene::{self, SurfaceRole};
 use kentos_render_wgpu::scene3d::{DEPTH_CLEAR, DepthTarget, Frame as Scene3dFrame, Scene3dRenderer, Style};
 use kentos_scene3d::{Aabb, Camera, Chunked, Content, Exaggeration, Limits, Projection, Settings, SourceMesh, Viewport, chunk, select};
-use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::Dialog as Frame;
-use kentos_ui::widget::tree_view::Check;
-use kentos_ui::label;
+use kentos_ui::theme::Tokens;
 
 use crate::app::{App, Dialog, Message};
-use crate::exchange::words;
 use crate::scene3d_building::{self, Building3d};
 use crate::traces::Control;
+
+#[path = "scene3d_view.rs"]
+mod view;
 
 /// The window's title, which a trace names it by.
 pub const TITLE: &str = "3B görünüm";
@@ -51,6 +57,10 @@ const EXAGGERATION: &str = "Düşey abartma";
 const SEE_THROUGH: &str = "Arazi saydam";
 const CUT: &str = "Araziyi kes";
 const FLAT: &str = "Düz yüzler";
+const LEGEND: &str = "Lejant";
+const NORTH: &str = "Kuzeye bak";
+const APART: &str = "Ayrı pencerede aç";
+const RETURN: &str = "Ana pencereye al";
 /// The view presets: the camera's azimuth (degrees from east, counterclockwise) and elevation.
 pub(crate) const VIEWS: [(&str, f64, f64); 4] =
     [("Kuzeydoğu", 45.0, 30.0), ("Güneybatı", 225.0, 30.0), ("Kuzeybatı", 135.0, 30.0), ("Üst", -90.0, 89.0)];
@@ -136,7 +146,7 @@ impl Scene {
             let shared = Arc::new(p.vertices.clone());
             let source = |part: u32, triangles: Vec<[u32; 3]>, smooth: bool| Source {
                 part,
-                name: format!("{} · {}", p.name, PARTS[part as usize].0),
+                name: format!("{}, {}", PARTS[part as usize].0, p.name),
                 owner: None,
                 vertices: shared.clone(),
                 triangles,
@@ -230,6 +240,10 @@ pub struct Window {
     pub(crate) see_through: bool,
     /// The point last picked, none before a click.
     pub(crate) picked: Option<Picked>,
+    /// Whether the legend over the scene is open (its heading folds it).
+    pub(crate) legend: bool,
+    /// The drawing's generation and revision the road's scene was made from (a building keeps its own).
+    made: (u64, u64),
     pub(crate) seen: Arc<Mutex<Seen>>,
     pending: Arc<AtomicBool>,
 }
@@ -251,6 +265,14 @@ pub enum Event {
     Storey(usize),
     /// A building's rooms shown or hidden.
     Rooms,
+    /// Every storey of a building shown again.
+    AllStoreys,
+    /// The camera turned to look north, its height and distance kept (the north arrow).
+    North,
+    /// The legend over the scene folded or opened.
+    Legend,
+    /// Into a window of its own (true) or back over the drawing.
+    Apart(bool),
     Export,
     Close,
 }
@@ -339,8 +361,9 @@ impl Window {
         Camera::orbit(target, self.azimuth, self.elevation, self.distance, Projection::Perspective { fov_y: FOV.to_radians(), near })
     }
 
-    /// A window on `scene`, seen from the north-east: the road's (its `parts`) or a building's.
-    pub(crate) fn new(scene: Scene, parts: Vec<road_scene::ScenePart>, building: Option<Building3d>) -> Window {
+    /// A window on `scene`, seen from the north-east: the road's (its `parts`, made from the drawing's `made`
+    /// generation and revision) or a building's.
+    pub(crate) fn new(scene: Scene, parts: Vec<road_scene::ScenePart>, building: Option<Building3d>, made: (u64, u64)) -> Window {
         let mut w = Window {
             scene: Arc::new(scene),
             parts: Arc::new(parts),
@@ -355,6 +378,8 @@ impl Window {
             distance: 1.0,
             see_through: false,
             picked: None,
+            legend: true,
+            made,
             seen: Arc::default(),
             pending: Arc::default(),
         };
@@ -394,9 +419,49 @@ impl App {
             self.warn("3B görünümde gösterilecek bir şey yok: önce bir arazi yüzeyi ya da koridor oluşturun.".to_owned());
             return;
         }
+        let made = (doc.model.generation(), doc.model.revision());
         let scene = Scene::road(&road_scene::with_terrain_cut(&parts), true);
-        self.scene3d_window = Some(Box::new(Window::new(scene, parts, None)));
-        self.dialog = Some(Dialog::Scene3d);
+        self.scene3d_window = Some(Box::new(Window::new(scene, parts, None, made)));
+        self.show_scene3d();
+    }
+
+    /// The window closes: its scene goes, and the main window's dialog when the window was over the drawing.
+    pub(crate) fn scene3d_gone(&mut self) {
+        self.scene3d_window = None;
+        if self.dialog == Some(Dialog::Scene3d) {
+            self.dialog = None;
+        }
+    }
+
+    /// 3B görünüm follows the drawing while it is open (shell/app/update.rs, after every message): beside the plan
+    /// the main window is free, so an edit, an undo or another drawing opened shows in 3D at once, and a building
+    /// takes the plan's selection and the findings chosen in Denetim (scene3d_building.rs). The camera stays where
+    /// the user put it. The drawing closed, or nothing left to show, closes the window and says why.
+    pub(crate) fn follow_scene3d(&mut self) {
+        let Some(building) = self.scene3d_window.as_ref().map(|w| w.building.is_some()) else { return };
+        let Some(doc) = self.document.as_ref() else {
+            self.scene3d_gone();
+            return;
+        };
+        if building {
+            self.building3d_follow();
+            return;
+        }
+        let now = (doc.model.generation(), doc.model.revision());
+        if self.scene3d_window.as_ref().is_none_or(|w| w.made == now) {
+            return;
+        }
+        let (parts, _) = road_scene::scene(&doc.model);
+        if parts.is_empty() {
+            self.scene3d_gone();
+            self.warn("3B görünümde gösterilecek arazi yüzeyi ya da koridor kalmadı; 3B görünüm kapandı.".to_owned());
+            return;
+        }
+        let Some(w) = self.scene3d_window.as_mut() else { return };
+        let shown = if w.cut { road_scene::with_terrain_cut(&parts) } else { parts.clone() };
+        w.scene = Arc::new(Scene::road(&shown, !w.flat));
+        w.parts = Arc::new(parts);
+        w.made = now;
     }
 
     pub(crate) fn scene3d_event(&mut self, event: Event) -> Task<Message> {
@@ -438,6 +503,16 @@ impl App {
                     w.scene = Arc::new(Scene::of(b.sources(), b.count()));
                 }
             }
+            Event::AllStoreys => {
+                if let Some(b) = w.building.as_mut() {
+                    b.show_all_storeys();
+                    w.scene = Arc::new(Scene::of(b.sources(), b.count()));
+                }
+            }
+            // From the south, looking north: north is up on the screen.
+            Event::North => w.azimuth = -90.0,
+            Event::Legend => w.legend = !w.legend,
+            Event::Apart(apart) => self.scene3d_set_apart(apart),
             Event::View(i) => {
                 let (_, a, e) = VIEWS[i.min(VIEWS.len() - 1)];
                 w.fit(a, e);
@@ -462,130 +537,9 @@ impl App {
             }
             Event::Export if w.building.is_none() => return self.export_gltf(),
             Event::Export => {}
-            Event::Close => {
-                self.scene3d_window = None;
-                self.dialog = None;
-            }
+            Event::Close => self.scene3d_gone(),
         }
         Task::none()
-    }
-
-    pub(crate) fn scene3d_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.scene3d_window else {
-            return iced::widget::text("").into();
-        };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let mut presets = row![].spacing(6);
-        for (i, (name, _, _)) in VIEWS.iter().enumerate() {
-            presets = presets.push(words::secondary(*name, Some(msg(Event::View(i)))));
-        }
-        presets = presets.push(words::secondary(FIT, Some(msg(Event::Fit))));
-        let top: Element<'_, Message> = match &w.building {
-            Some(b) => row![presets, space::horizontal().width(Fill), b.filters()]
-                .spacing(10)
-                .align_y(iced::alignment::Vertical::Center)
-                .into(),
-            None => row![
-                presets,
-                space::horizontal().width(Fill),
-                label::caption(EXAGGERATION).style(muted),
-                kentos_ui::widget::text_field("1", &w.exaggeration).on_input(|t| msg(Event::Exaggeration(t))).width(60),
-                crate::style::fields::check(
-                    if w.cut { Check::Checked } else { Check::Unchecked },
-                    CUT.to_owned(),
-                    Some(msg(Event::Cut)),
-                ),
-                crate::style::fields::check(
-                    if w.flat { Check::Checked } else { Check::Unchecked },
-                    FLAT.to_owned(),
-                    Some(msg(Event::Flat)),
-                ),
-                crate::style::fields::check(
-                    if w.see_through { Check::Checked } else { Check::Unchecked },
-                    SEE_THROUGH.to_owned(),
-                    Some(msg(Event::SeeThrough)),
-                ),
-            ]
-            .spacing(10)
-            .align_y(iced::alignment::Vertical::Center)
-            .into(),
-        };
-        let program = Program {
-            scene: w.scene.clone(),
-            camera: w.camera(),
-            exaggeration: w.exaggeration(),
-            styles: w.styles(),
-            light: w.light(),
-            seen: w.seen.clone(),
-            pending: w.pending.clone(),
-        };
-        // The scene takes the dialog's room: when the window was given a size or made full screen (docs/adr/0746) all
-        // of it, else what the application window leaves under the rows, between 240 and 520 (scaled) pixels; the
-        // legend under it, the line and the buttons always at the dialog's foot.
-        let sized = kentos_ui::widget::sizable::sizes::get(TITLE).is_some();
-        let room = (self.window_size.height - typography::scaled(330.0)).clamp(typography::scaled(240.0), typography::scaled(520.0));
-        let marker = iced::widget::canvas(Marker {
-            camera: w.camera(),
-            point: w.picked.as_ref().map(|p| w.exaggeration().shown(p.point)),
-        })
-        .width(Fill)
-        .height(Fill);
-        let view = container(iced::widget::stack![shader(program).width(Fill).height(Fill), marker])
-            .padding(1)
-            .width(Fill)
-            .height(Fill)
-            .style(|t: &Theme| {
-                let k = Tokens::of(t);
-                let dark = k.surface.r + k.surface.g + k.surface.b < 1.5;
-                container::Style {
-                    // The sky: light above a light theme's window, deep above a dark one's.
-                    background: Some(Background::Color(if dark { Color::from_rgb(0.10, 0.13, 0.18) } else { Color::from_rgb(0.86, 0.91, 0.96) })),
-                    border: Border { color: k.border, width: 1.0, radius: 4.0.into() },
-                    ..container::Style::default()
-                }
-            });
-        let mut legend = Row::new().spacing(14).align_y(iced::alignment::Vertical::Center);
-        let swatches: Vec<(&str, [f32; 4])> = match &w.building {
-            Some(b) => b.legend(),
-            None => PARTS.iter().map(|(name, c)| (*name, [c[0], c[1], c[2], 1.0])).collect(),
-        };
-        for (name, c) in swatches {
-            legend = legend.push(row![swatch(c), label::caption(name)].spacing(5).align_y(iced::alignment::Vertical::Center));
-        }
-        legend = legend.push(space::horizontal().width(Fill));
-        legend = legend.push(match &w.picked {
-            Some(p) => label::caption(format!("Seçilen nokta: Y {:.3}  X {:.3}  Z {:.3} · {}", p.point[0], p.point[1], p.point[2], p.what)),
-            None if w.building.is_some() => {
-                label::caption("Bir nesneye tıklayın: planda seçilir, adı ve kotu burada yazar.").style(muted)
-            }
-            None => label::caption("Bir noktaya tıklayın: koordinatı ve neyin üstünde olduğu burada yazar.").style(muted),
-        });
-        let area = container(Column::new().spacing(8).push(view).push(legend).height(Fill))
-            .height(Fill)
-            .max_height(if sized { f32::INFINITY } else { room + typography::scaled(26.0) });
-        let ex = w.exaggeration();
-        let things = match &w.building {
-            Some(b) => b.counted(),
-            None => format!("{} yüzey ve koridor", w.scene.sources),
-        };
-        let steep = if w.building.is_some() { String::new() } else { format!(" · düşey abartma {}×", ex.factor) };
-        let info = format!(
-            "{things} · {} üçgen, {} karo{steep} · bakış {:.0}°, eğim {:.0}° · sürükle: döndür, sağ ya da Shift: kaydır, tekerlek: yaklaş",
-            w.scene.triangles,
-            w.scene.chunked.contents.len(),
-            w.azimuth.rem_euclid(360.0),
-            w.elevation,
-        );
-        let mut foot = row![label::caption(info).style(muted).width(Fill)].spacing(8).align_y(iced::alignment::Vertical::Center);
-        if w.building.is_none() {
-            foot = foot.push(words::primary(EXPORT, Some(msg(Event::Export)))).push(space::horizontal().width(16));
-        }
-        Frame::new(TITLE)
-            .push(top)
-            .fill(area)
-            .footer(foot.push(words::secondary(CLOSE, Some(msg(Event::Close)))))
-            .width(1180.0)
-            .modal(msg(Event::Close))
     }
 
     pub(crate) fn scene3d_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -604,6 +558,10 @@ impl App {
             Control::Press(SEE_THROUGH) => Some(msg(Event::SeeThrough)),
             Control::Press(CUT) => Some(msg(Event::Cut)),
             Control::Press(FLAT) => Some(msg(Event::Flat)),
+            Control::Press(LEGEND) => Some(msg(Event::Legend)),
+            Control::Press(NORTH) => Some(msg(Event::North)),
+            Control::Press(APART) => Some(msg(Event::Apart(true))),
+            Control::Press(RETURN) => Some(msg(Event::Apart(false))),
             Control::Press(name) if VIEWS.iter().any(|v| v.0 == name) => {
                 Some(msg(Event::View(VIEWS.iter().position(|v| v.0 == name).unwrap_or(0))))
             }
@@ -611,23 +569,6 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
-}
-
-/// A legend's colour: a part's (linear) made the screen's, a see-through one over the window's surface.
-pub(crate) fn swatch<'a>(c: [f32; 4]) -> Element<'a, Message> {
-    container(space::horizontal().width(14))
-        .height(14)
-        .style(move |t: &Theme| {
-            let s = Tokens::of(t).surface;
-            let a = c[3].clamp(0.0, 1.0).max(0.35);
-            let mix = |v: f32, under: f32| v.powf(1.0 / 2.2) * a + under * (1.0 - a);
-            container::Style {
-                background: Some(Background::Color(Color::from_rgb(mix(c[0], s.r), mix(c[1], s.g), mix(c[2], s.b)))),
-                border: Border { radius: 2.0.into(), color: Tokens::of(t).border, width: if c[3] < 1.0 { 1.0 } else { 0.0 } },
-                ..container::Style::default()
-            }
-        })
-        .into()
 }
 
 // ── The widget: Iced's shader over the shared renderer ────────────────────────────────────────────────────────────

@@ -240,8 +240,12 @@ impl App {
             self.follow_python_echo(),
             // The sheet templates' library follows the sign-in and the connection (sheet_library.rs).
             self.follow_sheet_library(Instant::now()),
-            // The windows of their own follow what is open (windows/, docs/adr/8060).
-            self.follow_windows(),
+            // The windows of their own follow what is open (windows/, docs/adr/8060); 3B görünüm follows the
+            // drawing first, so a window it closes goes in the same pass (scene3d_window.rs).
+            {
+                self.follow_scene3d();
+                self.follow_windows()
+            },
         ]);
         self.follow_layout(Instant::now());
         self.follow_navigation(Instant::now());

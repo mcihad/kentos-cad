@@ -2,33 +2,35 @@
 //! (`arch_ifc::model` → `kentos_ifc::mesh`), so what the architect sees is what the file holds, through the same
 //! scene core and renderer as the road's (scene3d_window.rs). This module gives that window its building: the meshes,
 //! their parts (the class's colour, a room a pale volume; the objects selected in the plan and those the last check
-//! found something about over them), the storeys shown and the rooms on or off, and a click's object selected in the
-//! plan. It is a view: it never changes the drawing.
+//! found something about over them), the storeys shown and the rooms on or off on the tool strip, and a click's object
+//! selected in the plan. While its window is open beside the plan the building follows the drawing: an edit, an undo,
+//! the plan's selection and the findings chosen in Denetim show in 3D as they change. It is a view: it never changes
+//! the drawing.
 //!
 //! ```text
-//! ┌ 3B görünüm ─────────────────────────────────────────────────────────────────────────────────────┐
-//! │ [Kuzeydoğu] [Güneybatı] [Kuzeybatı] [Üst] [Sığdır]        Katlar [x] Zemin kat [x] 1. kat  [x] Mahaller │
-//! │ ┌ the bodies: drag to orbit, right drag (or Shift) to pan, the wheel to dolly; a click selects in the plan ┐ │
-//! │ └──────────────────────────────────────────────────────────────────────────────────────────┘ │
-//! │ ■ Duvar ■ Döşeme ■ Kapı ■ Pencere ■ Mahal ■ Seçili ■ Bulgu        Seçilen nokta: … · Duvar · …  │
-//! │ 68 yapı elemanı, 9 mahal · 3 140 üçgen, 1 karo · bakış 45°, eğim 30° …                  [Kapat] │
-//! └─────────────────────────────────────────────────────────────────────────────────────────────────┘
+//! ┌ 3B görünüm — KentOS CAD ─────────────────────────────────────────────────────────────────────┐
+//! │ ◈ Kuzeydoğu ▾  ⤢ Sığdır │ ▤ Katlar ▾  ▢ Mahaller                                          ⧉ │
+//! ├───────────────────────────────────────────────────────────────────────────────────────────────┤
+//! │                     the bodies: a click selects in the plan                              (K)  │
+//! │ ┌ Lejant ┐                                                                                    │
+//! │ │■ Duvar │                                                                                    │
+//! ├───────────────────────────────────────────────────────────────────────────────────────────────┤
+//! │ ⌖ Duvar D-12, Zemin kat   Y …  X …  Z …                   68 yapı elemanı, 9 mahal │ ⚠ 2 │ ? │
+//! └───────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use iced::Element;
-use iced::widget::row;
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_ifc::building::Class;
 use kentos_ifc::mesh::{self, Kind, Mesh};
-use kentos_ui::label;
-use kentos_ui::theme::Tokens;
-use kentos_ui::widget::tree_view::Check;
+use kentos_ui::widget::Menu;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::scene3d_window::{Event, Scene, Source, Window};
+use crate::style::strip;
 use crate::traces::Control;
 
 /// The parts a building's tiles carry, their names and colours (linear RGB, alpha below 1: see-through): the classes,
@@ -59,6 +61,7 @@ const SELECTED_ROOM: u32 = 13;
 const FOUND_ROOM: u32 = 14;
 const ROOMS: &str = "Mahaller";
 const STOREYS: &str = "Katlar";
+const ALL_STOREYS: &str = "Bütün katları göster";
 
 /// A class's part.
 fn class_part(kind: Kind) -> u32 {
@@ -93,6 +96,9 @@ pub(crate) struct Building3d {
     pub(crate) found: BTreeSet<String>,
     /// The drawing's generation and revision the meshes were made from.
     pub(crate) made: (u64, u64),
+    /// The plan's selection version and the findings' key `selected` and `found` were taken at
+    /// (`App::follow_scene3d`): neither is taken again until one of them changes.
+    pub(crate) taken: (u64, u64),
 }
 
 impl Building3d {
@@ -111,6 +117,7 @@ impl Building3d {
             selected,
             found,
             made: (doc.generation(), doc.revision()),
+            taken: (0, 0),
         })
     }
 
@@ -161,14 +168,26 @@ impl Building3d {
         }
     }
 
-    /// The meshes shown as the scene's sources, each named by its class, its own name and its storey; a click goes
-    /// through a room to what is behind it.
+    /// The meshes shown as the scene's sources, each named by its class, its own name and its storey (“Duvar D-12,
+    /// Zemin kat”; a name that starts with its class's word is not said twice); a click goes through a room to what is
+    /// behind it.
     pub(crate) fn sources(&self) -> Vec<Source> {
         self.shown()
             .map(|m| {
                 let class = PARTS[class_part(m.kind) as usize].0;
                 let storey = self.storeys.get(m.storey).map_or("", |s| s.0.as_str());
-                let name = [class, m.name.as_str(), storey].into_iter().filter(|s| !s.is_empty()).collect::<Vec<_>>().join(" · ");
+                let own = m.name.trim();
+                let mut name = if own.is_empty() {
+                    class.to_owned()
+                } else if own.to_lowercase().starts_with(&class.to_lowercase()) {
+                    own.to_owned()
+                } else {
+                    format!("{class} {own}")
+                };
+                if !storey.is_empty() {
+                    name.push_str(", ");
+                    name.push_str(storey);
+                }
                 Source {
                     part: self.part_of(m),
                     name,
@@ -188,7 +207,7 @@ impl Building3d {
         used.into_iter().map(|p| PARTS[p as usize]).collect()
     }
 
-    /// The line's count: bodies and rooms, those shown when a storey or the rooms are hidden.
+    /// The status bar's count: bodies and rooms, those shown when a storey or the rooms are hidden.
     pub(crate) fn counted(&self) -> String {
         let bodies = self.shown().filter(|m| m.kind != Kind::Space).count();
         let rooms = self.shown().filter(|m| m.kind == Kind::Space).count();
@@ -199,29 +218,61 @@ impl Building3d {
         if self.rooms {
             out.push_str(&format!(", {rooms} mahal"));
         }
-        let found = self.shown().filter(|m| m.id.is_some_and(|id| self.found.contains(&Uuid::from_u128(id).to_string()))).count();
-        if found > 0 {
-            out.push_str(&format!(" · {found} nesnede Denetim bulgusu"));
-        }
         out
     }
 
-    /// The storeys' and the rooms' ticks.
-    pub(crate) fn filters(&self) -> Element<'_, Message> {
-        let tick = |on: bool| if on { Check::Checked } else { Check::Unchecked };
-        let mut r = row![label::caption(STOREYS).style(|t: &iced::Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) })]
-            .spacing(10)
-            .align_y(iced::alignment::Vertical::Center);
-        for (i, (name, on)) in self.storeys.iter().enumerate() {
-            r = r.push(crate::style::fields::check(tick(*on), name.clone(), Some(Message::Scene3d(Event::Storey(i)))));
+    /// How many of the objects shown the last check found something about (they are red).
+    pub(crate) fn found_shown(&self) -> usize {
+        self.shown().filter(|m| m.id.is_some_and(|id| self.found.contains(&Uuid::from_u128(id).to_string()))).count()
+    }
+
+    /// Every storey shown again.
+    pub(crate) fn show_all_storeys(&mut self) {
+        for s in &mut self.storeys {
+            s.1 = true;
         }
-        r.push(crate::style::fields::check(tick(self.rooms), ROOMS.to_owned(), Some(Message::Scene3d(Event::Rooms)))).into()
+    }
+
+    /// The strip's storeys: a menu of ticks, each storey's while it shows (the menu stays open while ticking), all
+    /// of them back at once when some are hidden; its words say how many show when not all do.
+    pub(crate) fn storeys_menu(&self) -> Element<'_, Message> {
+        let shown = self.storeys.iter().filter(|s| s.1).count();
+        let words =
+            if shown == self.storeys.len() { STOREYS.to_owned() } else { format!("{STOREYS} {shown}/{}", self.storeys.len()) };
+        let storeys = self.storeys.clone();
+        strip::menu(
+            crate::icons::from_web(Some("levelsAll")),
+            &words,
+            "Katlar: gösterilen katlar. Menü açıkken katlar art arda işaretlenir; gizlenen katın gövdeleri ve mahalleri görünmez.",
+            move || {
+                let mut m = Menu::new();
+                for (i, (name, on)) in storeys.iter().enumerate() {
+                    m = m.check(name.clone(), *on, Message::Scene3d(Event::Storey(i))).stay();
+                }
+                if storeys.iter().any(|s| !s.1) {
+                    m = m.separator().item(ALL_STOREYS, Message::Scene3d(Event::AllStoreys));
+                }
+                m
+            },
+        )
+    }
+
+    /// The strip's rooms switch.
+    pub(crate) fn rooms_toggle(&self) -> Element<'_, Message> {
+        strip::toggle(
+            Some(crate::icons::from_web(Some("room"))),
+            ROOMS,
+            "Mahaller: mahallerin soluk hacimlerini gösterir ya da gizler. Tıklama hacmin ardındaki nesneyi seçer; ardında bir şey yoksa mahali.",
+            self.rooms,
+            Message::Scene3d(Event::Rooms),
+        )
     }
 
     /// A trace's press on a storey's or the rooms' tick.
     pub(crate) fn control(&self, control: &Control<'_>) -> Option<Message> {
         match control {
             Control::Press(ROOMS) => Some(Message::Scene3d(Event::Rooms)),
+            Control::Press(ALL_STOREYS) => Some(Message::Scene3d(Event::AllStoreys)),
             Control::Press(name) => {
                 self.storeys.iter().position(|s| s.0 == *name).map(|i| Message::Scene3d(Event::Storey(i)))
             }
@@ -243,8 +294,13 @@ impl App {
             return;
         };
         let scene = Scene::of(b.sources(), b.count());
-        self.scene3d_window = Some(Box::new(Window::new(scene, Vec::new(), Some(b))));
-        self.dialog = Some(Dialog::Scene3d);
+        let made = b.made;
+        self.scene3d_window = Some(Box::new(Window::new(scene, Vec::new(), Some(b), made)));
+        let taken = (self.selection.version(), self.building3d_found_key());
+        if let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) {
+            b.taken = taken;
+        }
+        self.show_scene3d();
     }
 
     /// A click's object selected in the plan (a click on nothing, or on what the drawing has no object for, empties
@@ -255,10 +311,13 @@ impl App {
             owner.iter().filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.model.slot_of(u)).collect();
         self.selection.set(slots);
         let selected = self.building3d_selected();
+        let version = self.selection.version();
         if let Some(w) = self.scene3d_window.as_mut()
             && let Some(b) = w.building.as_mut()
         {
             b.selected = selected;
+            // Taken now: following the plan does not paint it again.
+            b.taken.0 = version;
             w.scene = Arc::new(Scene::of(b.sources(), b.count()));
         }
     }
@@ -276,12 +335,12 @@ impl App {
             (old.rooms, old.storeys.iter().filter(|s| !s.1).map(|s| s.0.clone()).collect());
         let Some(mut b) = Building3d::of(&doc.model, self.building3d_selected(), self.building3d_found()) else {
             // Nothing left to show: the window closes and says why.
-            self.scene3d_window = None;
-            self.dialog = None;
+            self.scene3d_gone();
             self.warn("Binada gösterilecek gövde kalmadı; 3B görünüm kapandı.".to_owned());
             return;
         };
         b.rooms = rooms;
+        b.taken = (self.selection.version(), self.building3d_found_key());
         for s in &mut b.storeys {
             s.1 = !hidden.contains(&s.0);
         }
@@ -289,6 +348,42 @@ impl App {
             w.scene = Arc::new(Scene::of(b.sources(), b.count()));
             w.building = Some(b);
         }
+    }
+
+    /// The building follows the plan while its window is open (`App::follow_scene3d`): the drawing changed, made
+    /// again; the plan's selection or the findings chosen in Denetim changed, painted again. Nothing is taken while
+    /// neither changed: the selection's version and the findings' key say so without a list made.
+    pub(crate) fn building3d_follow(&mut self) {
+        self.building3d_refresh();
+        let now = (self.selection.version(), self.building3d_found_key());
+        if self.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).is_none_or(|b| b.taken == now) {
+            return;
+        }
+        let (selected, found) = (self.building3d_selected(), self.building3d_found());
+        if let Some(w) = self.scene3d_window.as_mut()
+            && let Some(b) = w.building.as_mut()
+        {
+            b.taken = now;
+            if b.selected != selected || b.found != found {
+                b.selected = selected;
+                b.found = found;
+                w.scene = Arc::new(Scene::of(b.sources(), b.count()));
+            }
+        }
+    }
+
+    /// What the findings shown in 3D depend on, as one number: the check (its drawing's state and how many it
+    /// found), the rows chosen, the group shown and whether the drawing changed since.
+    fn building3d_found_key(&self) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let a = &self.arch.arch_audit;
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        a.audited.as_ref().map(|x| (x.generation, x.revision, x.findings.len())).hash(&mut h);
+        a.selected.hash(&mut h);
+        a.chosen.hash(&mut h);
+        a.group.hash(&mut h);
+        self.arch_audit_stale().hash(&mut h);
+        h.finish()
     }
 
     /// The persistent ids of the objects selected in the plan.

@@ -6,7 +6,7 @@
 use kentos_commands::Entity;
 use kentos_scene3d::Viewport;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::scene3d_window::Event as W;
 
 /// The parts (scene3d_building::PARTS): a wall, a room, the selected, a room found something about.
@@ -107,7 +107,8 @@ fn click_on(app: &mut App, part: u32) -> Option<String> {
 fn the_section_building_shows_the_bodies_its_ifc_file_holds() {
     let mut app = open(building());
     let _ = app.update(Message::Run("scene3d.view"));
-    assert_eq!(app.dialog, Some(Dialog::Scene3d));
+    // Beside the plan, in a window of its own (scene3d_view.rs): nothing over the drawing.
+    assert!(app.dialog.is_none() && app.scene3d_window_wanted());
     let w = app.scene3d_window.as_ref().expect("the window");
     let b = w.building.as_ref().expect("a building");
     let (bodies, rooms, storeys) = (b.bodies(), b.rooms_count(), b.storeys.len());
@@ -153,6 +154,13 @@ fn a_click_on_a_wall_selects_it_in_the_plan_and_the_plan_s_selection_shows_in_3d
     send(&mut app, W::Close);
     app.selection.set(vec![slot]);
     let _ = app.update(Message::Run("scene3d.view"));
+    assert_eq!(app.scene3d_window.as_ref().expect("the window").parts_of(&wall), vec![SELECTED]);
+    // The plan's selection changes while the window is open beside it: the next message paints it.
+    app.selection.set(Vec::new());
+    send(&mut app, W::Legend);
+    assert_eq!(app.scene3d_window.as_ref().expect("the window").parts_of(&wall), vec![WALL]);
+    app.selection.set(vec![slot]);
+    send(&mut app, W::Legend);
     assert_eq!(app.scene3d_window.as_ref().expect("the window").parts_of(&wall), vec![SELECTED]);
     // The model changes (the wall deleted, as an undo would while the window is open): the scene is made again.
     let before = app.scene3d_window.as_ref().expect("the window").building.as_ref().expect("a building").bodies();
@@ -240,7 +248,7 @@ fn two_rooms_of_one_storey_that_share_ground_are_found_and_red_in_3d() {
     let b = w.building.as_ref().expect("a building");
     assert!(b.legend().iter().any(|(name, _)| *name == "Bulgulu mahal"));
     assert!(!w.scene_parts().contains(&FOUND), "only the rooms found: {:?}", w.scene_parts());
-    assert!(b.counted().contains("2 nesnede Denetim bulgusu"), "{}", b.counted());
+    assert_eq!(b.found_shown(), 2, "the status bar's findings");
 }
 
 /// The overlap's row chosen in Denetim, as a click on it chooses it.
@@ -286,11 +294,11 @@ fn screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             // A second frame: the first uploads, the second draws what is resident (the same frame selects again).
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("arch"));
@@ -300,6 +308,23 @@ fn screens() {
         let seen = *app.scene3d_window.as_ref().expect("the window").seen.lock().expect("seen");
         assert!(seen.tiles > 0 && seen.triangles > 0 && seen.waiting == 0, "{seen:?}");
         if name == "acik" {
+            // Katlar ▾ open on the strip (its button the third, after Görünüş and Sığdır), the 1. kat unticked from it;
+            // a click on the strip's empty middle closes it.
+            use kentos_ui::snapshot::Input;
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            let mut menu = Snapshot::new(size).expect("a renderer");
+            menu.settle(&mut app, App::scene3d_shown, &mut update);
+            menu.input(&mut app, App::scene3d_shown, &mut update, Input::Click(iced::Point::new(245.0, 15.0)));
+            send(&mut app, W::Storey(1));
+            menu.settle(&mut app, App::scene3d_shown, &mut update);
+            menu.settle(&mut app, App::scene3d_shown, &mut update);
+            let file = out.join(format!("2b-katlar-menusu-{name}.png"));
+            menu.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+            menu.input(&mut app, App::scene3d_shown, &mut update, Input::Click(iced::Point::new(800.0, 15.0)));
+            send(&mut app, W::Storey(1));
             send(&mut app, W::View(1));
             shot(&mut app, "3-guneybati");
             send(&mut app, W::View(0));
@@ -423,10 +448,10 @@ fn missing_elements_screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::Run("scene3d.view"));
@@ -472,10 +497,10 @@ fn curved_screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -1.0, max_x: 11.0, max_y: 9.0 }, 24.0);
@@ -525,7 +550,7 @@ fn ifc_export_menu_screens() {
         crate::tools_screens::open_ribbon_menu(&mut snapshot, &mut app, "Dışa aktar");
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("5-disa-aktar-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -591,7 +616,7 @@ fn shaft_screens() {
         snapshot.settle(&mut app, App::view, &mut update);
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("6-saft-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         send(&mut app, W::Close);
     }
@@ -642,10 +667,10 @@ fn sloped_slab_screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         shot(&mut app, "7-egimli-doseme-oznitelikler");
@@ -721,10 +746,10 @@ fn curtain_wall_screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
@@ -822,10 +847,10 @@ fn member_screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
@@ -918,10 +943,10 @@ fn covering_screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
@@ -1013,10 +1038,10 @@ fn roof_layers_screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
@@ -1079,10 +1104,10 @@ fn l_roof_screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -2.0, min_y: -2.0, max_x: 14.0, max_y: 11.0 }, 24.0);
@@ -1144,10 +1169,10 @@ fn element_schedule_screens() {
             let _ = app.update(message);
         };
         let mut shot = |app: &mut App, file: &str| {
-            snapshot.settle(app, App::view, &mut update);
-            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
         shot(&mut app, "0-acilis");

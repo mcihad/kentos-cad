@@ -1,8 +1,9 @@
 //! What each surface's window remembers (docs/adr/8060 §4). Between runs, in `ayri-pencereler.json` beside the
 //! settings: whether it opens in a window of its own and its size. For this run only: where it was on the screen. A
 //! screen unplugged since the last run would put the window where nobody can see it, and the platform does not
-//! always bring such a window back. A file that cannot be read or written is passed over: the window opens in the
-//! main window at its own size.
+//! always bring such a window back. A surface the user has not chosen for opens as it does by itself
+//! ([`Surface::opens_apart`]: 3B görünüm in a window of its own, a tool over the drawing). A file that cannot be read
+//! or written is passed over: each surface opens as it does by itself, at its own size.
 
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
@@ -18,8 +19,9 @@ pub(crate) const FILE_NAME: &str = "ayri-pencereler.json";
 /// What a surface keeps between runs.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub(crate) struct Kept {
-    /// It opens in a window of its own.
-    pub(crate) own_window: bool,
+    /// It opens in a window of its own; none: the user has not chosen, it opens as it does by itself. A size kept
+    /// before any choice must not turn a surface that opens apart back into the main window.
+    pub(crate) own_window: Option<bool>,
     /// Its window's inner size when it last closed.
     pub(crate) size: Option<Size>,
 }
@@ -44,16 +46,19 @@ impl Memory {
         }
     }
 
-    /// Whether `surface` opens in a window of its own.
+    /// Whether `surface` opens in a window of its own: the user's choice, else as it does by itself.
     pub(crate) fn apart(&self, surface: Surface) -> bool {
-        self.kept.get(surface.key()).is_some_and(|k| k.own_window)
+        self.kept
+            .get(surface.key())
+            .and_then(|k| k.own_window)
+            .unwrap_or_else(|| surface.opens_apart())
     }
 
     /// Keeps whether `surface` opens in a window of its own, written at once.
     pub(crate) fn set_apart(&mut self, surface: Surface, apart: bool) {
         let kept = self.kept.entry(surface.key().to_owned()).or_default();
-        if kept.own_window != apart {
-            kept.own_window = apart;
+        if kept.own_window != Some(apart) {
+            kept.own_window = Some(apart);
             self.write();
         }
     }
@@ -95,7 +100,7 @@ impl Memory {
 }
 
 /// The choices in `text` (`{"islem-araci": {"ownWindow": true, "width": 940, "height": 660}}`); what is not one is
-/// passed over.
+/// passed over, a surface without `ownWindow` has made no choice.
 pub(crate) fn read(text: Option<&str>) -> BTreeMap<String, Kept> {
     let Some(Value::Object(map)) = text.and_then(|t| serde_json::from_str::<Value>(t).ok()) else {
         return BTreeMap::new();
@@ -112,7 +117,7 @@ pub(crate) fn read(text: Option<&str>) -> BTreeMap<String, Kept> {
             let size = number("width")
                 .zip(number("height"))
                 .map(|(w, h)| Size::new(w, h));
-            let own_window = v.get("ownWindow").and_then(Value::as_bool).unwrap_or(false);
+            let own_window = v.get("ownWindow").and_then(Value::as_bool);
             (key, Kept { own_window, size })
         })
         .collect()
@@ -122,7 +127,10 @@ pub(crate) fn text(kept: &BTreeMap<String, Kept>) -> String {
     let map: Map<String, Value> = kept
         .iter()
         .map(|(key, k)| {
-            let mut v = json!({ "ownWindow": k.own_window });
+            let mut v = json!({});
+            if let Some(own) = k.own_window {
+                v["ownWindow"] = json!(own);
+            }
             if let Some(size) = k.size {
                 v["width"] = json!(size.width);
                 v["height"] = json!(size.height);

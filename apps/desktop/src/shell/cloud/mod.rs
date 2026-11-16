@@ -947,6 +947,7 @@ impl App {
                 self.dialog = Some(Dialog::Settings);
             }
             Some(Dialog::BlockReview) => self.block_editor_review_close(),
+            Some(Dialog::Scene3d) => self.scene3d_window = None,
             Some(Dialog::BlockReplace) => self.block_replace_close(),
             Some(Dialog::BlockFind) => self.block_find_close_options(),
             Some(Dialog::ArrayFind) => self.array_find_close_dialog(),

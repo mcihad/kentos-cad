@@ -49,6 +49,10 @@ impl App {
     /// The open window's title, as it shows it; a window no trace answers
     /// yet goes by its name in the code.
     pub fn dialog_title(&self) -> Option<String> {
+        // 3B görünüm in its own window answers while nothing is open over the drawing (scene3d_view.rs).
+        if self.dialog.is_none() && self.scene3d_window.is_some() {
+            return Some(crate::scene3d_window::TITLE.to_owned());
+        }
         self.dialog.map(|d| match d {
             Dialog::Exchange => self.exchange_trace_title(),
             Dialog::BlockDefine => crate::blocks::DEFINE_TITLE.to_owned(),
@@ -536,6 +540,7 @@ impl App {
             Some(Dialog::Project) if self.asking_type() => self.project_type_control(control),
             Some(Dialog::LayerStyle) => self.layer_style_control(control),
             Some(other) => Err(format!("{other:?} penceresi izden yanıtlanamıyor")),
+            None if self.scene3d_window.is_some() => self.scene3d_control(control),
             None => Err("açık pencere yok".to_owned()),
         }
     }

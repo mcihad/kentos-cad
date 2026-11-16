@@ -1,4 +1,5 @@
-//! The tool strip over a style window's canvas (SVG çizim düzenleyicisi, Sembol tasarımcısı): one
+//! The tool strip over a style window's canvas (SVG çizim düzenleyicisi, Sembol tasarımcısı) and over
+//! 3B görünüm's scene: one
 //! surface with a rule under it, flat buttons that show their edge only under the pointer, switches
 //! tinted while on, menus that look like the buttons beside them with a chevron, and thin dividers
 //! between the groups. Every control is the inline height, so the strip reads as one bar; on a
@@ -111,6 +112,28 @@ pub fn icon_button<'a>(glyph: Icon, help: &str, press: Option<Message>) -> Eleme
             .padding(0)
             .style(style::button::flat)
             .on_press_maybe(press),
+        help,
+    )
+}
+
+/// A button with its icon and its words (“Sığdır”), the strip's flat face.
+pub fn labelled<'a>(glyph: Icon, words: &str, help: &str, press: Option<Message>) -> Element<'a, Message> {
+    tipped(
+        button(face(Some(glyph), Some(words), false))
+            .padding(0)
+            .style(style::button::flat)
+            .on_press_maybe(press),
+        help,
+    )
+}
+
+/// A switch with its words, its icon before them when it has one; tinted while on (“Mahaller”, “Arazi saydam”).
+pub fn toggle<'a>(glyph: Option<Icon>, words: &str, help: &str, on: bool, press: Message) -> Element<'a, Message> {
+    tipped(
+        button(face(glyph, Some(words), false))
+            .padding(0)
+            .style(style::button::tool(on))
+            .on_press(press),
         help,
     )
 }

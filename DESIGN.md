@@ -647,6 +647,32 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
   - Sonra: form dört satırdır, dört özet kart vardır, tablo 5 satırdır (PVI'lar) ve bir birincil düğme vardır. Resimler
     `.run/gui-evidence/yol-y26/once|sonra`'dadır.
 
+### 7.20 3B görünüm
+
+Binanın ya da yol projesinin 3B görünümü ([ADR 8067](docs/adr/8067-building-3d-view-and-room-overlaps.md) §9,
+[ADR 8060](docs/adr/8060-secondary-os-windows.md) §9). Pencerenin işi modeli göstermektir: sahne iki ince bandın
+arasındaki bütün yeri alır, bantlar ana pencerenin kendi diliyle çizilir.
+
+- **Yer:** kendiliğinden işletim sisteminin ayrı penceresinde, planın yanında açılır (başka bir ekrana taşınır, ana pencere
+  serbesttir). Araç şeridinin sonundaki “Ana pencereye al” onu çizimin üstüne, başlığında “Ayrı pencerede aç” olan sıradan
+  bir pencereye getirir; seçim hatırlanır. Çizimin üstündeyken şerit, sahne ve durum çubuğu tek çerçevede durur.
+- **Araç şeridi** (`style::strip`, §7.14'teki şeritle aynı): solda kamera (“Görünüş ▾”: dört bakış ve Kuzeye bak; yüzü
+  o anki bakışın adı, döndürünce “Görünüş”; “Sığdır”), ince ayraç, sonra görünenler: binada “Katlar ▾” (menü açıkken art
+  arda işaretlenen katlar, gizli kat varken “Bütün katları göster”; yüzü “Katlar 1/2” der) ve “Mahaller” anahtarı; yolda
+  “Düşey abartma” alanı ve “Araziyi kes”, “Düz yüzler”, “Arazi saydam” anahtarları. Sağ uçta pencerenin işleri: “glTF ver”
+  (yol), “Ana pencereye al” (ayrıyken). Her düğmenin adı yazar, ayrıntı ipucundadır; açık anahtar vurgu tonludur.
+- **Sahne** kenardan kenara; zemini çizim alanının zeminidir (Görünüm › Çizim zemini), tepeye doğru o zeminin mavisiyle
+  biraz koyulaşır; yüksek karşıtlık zemininde düz siyah. Sağ üstte kuzey oku (§8): kamerayla döner, tıklanınca kamera
+  kuzeye bakar; ipucu modelin hangi yandan ve kaç derece yukarıdan görüldüğünü yazar. Sol altta lejant (`Legend`, harita
+  lejantının kutusu): gösterilen parçalar, sahnedeki renkleriyle yüz biçiminde, kenarı bir ton koyu; saydam parça kendi
+  renginde kenarla; başlığı daraltır. Lejant ve kuzey oku imleci üstlerinde tutar: üstlerinde başlayan sürükleme modeli
+  döndürmez. Seçilen nokta vurgu renginde halkadır.
+- **Durum çubuğu** (`StatusBar`, §7.7): solda seçilen noktanın nesnesi (“Duvar MM-DVR-Dış_duvar_25, Zemin kat”) ve
+  koordinatları projenin türünün eksen adlarıyla (sayılar eş aralıklı yazıyla), seçim yokken tıklamanın ne yaptığı sönük;
+  sağda gösterilen miktar (“29 yapı elemanı (58 içinden), 6 mahal”; üçgen ve karo sayısı ipucunda), bulgulu nesne varken
+  kırmızı “2 nesnede bulgu”, en sağda “Fare” (gezinme ipucu). “A · B · C” satırı yoktur (§13).
+- **Tuşlar:** ayrı pencerede Esc kapatır, Tab alanlar arasında döner. Pencere kapanınca ya da çizim kapanınca sahne gider.
+
 ### 7.13 Kontroller (genel)
 
 | Kontrol | Kural |

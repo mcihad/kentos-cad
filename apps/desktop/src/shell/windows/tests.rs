@@ -182,7 +182,28 @@ fn the_choice_and_the_size_are_kept_the_place_only_this_run() {
         r#"{"islem-araci": {"ownWindow": true, "width": "x"}, "b": 3}"#,
     ));
     assert_eq!(read.len(), 1);
-    assert!(read["islem-araci"].own_window);
+    assert_eq!(read["islem-araci"].own_window, Some(true));
     assert_eq!(read["islem-araci"].size, None);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_3d_view_opens_apart_until_the_user_chooses_otherwise() {
+    let dir = crate::files_testing::scratch("ayri-pencereler-3b");
+    let mut memory = Memory::open(&dir);
+    assert!(memory.apart(Surface::Scene3d), "beside the plan at first");
+    assert!(!memory.apart(Surface::ProcessingTool), "a tool over the drawing at first");
+    // Its window resized before any choice: the size is kept, the window still opens apart.
+    memory.keep_size(Surface::Scene3d, Size::new(1300.0, 820.0));
+    memory.write();
+    let again = Memory::open(&dir);
+    assert!(again.apart(Surface::Scene3d));
+    assert_eq!(again.size(Surface::Scene3d), Some(Size::new(1300.0, 820.0)));
+    let written = std::fs::read_to_string(dir.join(super::memory::FILE_NAME)).expect("written");
+    assert!(!written.contains("ownWindow"), "no choice written: {written}");
+    // Brought into the main window: so it stays, in the next run too.
+    let mut memory = again;
+    memory.set_apart(Surface::Scene3d, false);
+    assert!(!Memory::open(&dir).apart(Surface::Scene3d));
     let _ = std::fs::remove_dir_all(&dir);
 }

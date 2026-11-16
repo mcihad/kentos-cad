@@ -4,8 +4,9 @@
 //! The program is one iced daemon with one state. Every window's messages go through the one `App::update`; each
 //! window's view, title and theme are asked by its id (`app.rs`).
 //!
-//! - [`Surface`] is what a secondary window shows. İşlemler's tool window is the first. Another dialog becomes a
-//!   window of its own by adding a variant: its view, title, close and keys in `app.rs`, its state where it lives.
+//! - [`Surface`] is what a secondary window shows. İşlemler's tool window is the first, 3B görünüm the second.
+//!   Another dialog becomes a window of its own by adding a variant: its view, title, close and keys in `app.rs`,
+//!   its state where it lives.
 //! - [`Windows`] holds the main window's id and the open secondary windows, each with its surface, and what each
 //!   surface remembers ([`memory`]).
 //! - The windows follow the state (`App::follow_windows`): a surface that is apart and has something to show gets
@@ -28,23 +29,37 @@ pub(crate) use memory::Memory;
 pub(crate) enum Surface {
     /// İşlemler's tool window (gis/processing/apart.rs), its Toplu çalıştır table too.
     ProcessingTool,
+    /// 3B görünüm (scene3d_window.rs): the building or the road project in 3D, beside the plan.
+    Scene3d,
 }
 
 impl Surface {
-    pub(crate) const ALL: [Surface; 1] = [Surface::ProcessingTool];
+    pub(crate) const ALL: [Surface; 2] = [Surface::ProcessingTool, Surface::Scene3d];
 
     /// The name its choices are kept by (`ayri-pencereler.json`).
     pub(crate) fn key(self) -> &'static str {
         match self {
             Surface::ProcessingTool => "islem-araci",
+            Surface::Scene3d => "3b-gorunum",
+        }
+    }
+
+    /// Whether it opens in a window of its own until the user says otherwise. A tool is run over the drawing it
+    /// changes; the model in 3D is looked at beside the plan, often on another screen.
+    pub(crate) fn opens_apart(self) -> bool {
+        match self {
+            Surface::ProcessingTool => false,
+            Surface::Scene3d => true,
         }
     }
 
     /// The window's size at its first opening and the smallest it may be made, in logical pixels at 12 px text
-    /// (`app.rs` grows them with the text size). The tool window's are the in-canvas window's 940 × 660.
+    /// (`app.rs` grows them with the text size). The tool window's are the in-canvas window's 940 × 660; the 3D
+    /// view's are the in-canvas window's width and the scene's room under its tool strip.
     pub(crate) fn sizes(self) -> (Size, Size) {
         match self {
             Surface::ProcessingTool => (Size::new(940.0, 660.0), Size::new(640.0, 420.0)),
+            Surface::Scene3d => (Size::new(1180.0, 760.0), Size::new(720.0, 460.0)),
         }
     }
 }

@@ -19,6 +19,7 @@ impl App {
         }
         let content = match self.windows.surface_of(id) {
             Some(Surface::ProcessingTool) => self.processing_window_view(),
+            Some(Surface::Scene3d) => self.scene3d_window_view(),
             None => space().into(),
         };
         kentos_ui::widget::presented(content).into()
@@ -37,6 +38,7 @@ impl App {
             Some(Surface::ProcessingTool) => {
                 format!("{} — {program}", self.processing_window_title())
             }
+            Some(Surface::Scene3d) => format!("{} — {program}", self.scene3d_window_title()),
             None => program.to_owned(),
         }
     }
@@ -174,6 +176,7 @@ impl App {
     fn surface_wanted(&self, surface: Surface) -> bool {
         match surface {
             Surface::ProcessingTool => self.processing_window_wanted(),
+            Surface::Scene3d => self.scene3d_window_wanted(),
         }
     }
 
@@ -181,6 +184,8 @@ impl App {
     fn surface_work_in_main(&self, surface: Surface) -> bool {
         match surface {
             Surface::ProcessingTool => self.processing_work_in_main(),
+            // Its clicks select in the plan, but nothing of its work moves there.
+            Surface::Scene3d => false,
         }
     }
 
@@ -188,6 +193,7 @@ impl App {
     fn surface_closed(&mut self, surface: Surface) -> Task<Message> {
         match surface {
             Surface::ProcessingTool => self.processing_window_closed(),
+            Surface::Scene3d => self.scene3d_event(crate::scene3d_window::Event::Close),
         }
     }
 
@@ -195,6 +201,7 @@ impl App {
     fn surface_key(&mut self, surface: Surface, press: &KeyPress) -> Task<Message> {
         match surface {
             Surface::ProcessingTool => self.processing_window_key(press),
+            Surface::Scene3d => self.scene3d_window_key(press),
         }
     }
 }

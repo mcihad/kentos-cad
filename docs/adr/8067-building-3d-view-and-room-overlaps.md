@@ -83,7 +83,8 @@ ADR 8047'nin bağımsız okuyucusundaki "68 gövde" 58 eleman ile 10 mahaldir. 1
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Seçilen noktanın satırı nesneyi adıyla ve katıyla söyler: "Duvar · MM-DVR-Dış_duvar_25 · Zemin kat". Kod
+Bu yüz 16 Kasım'da değişti; bugünkü yüz §9'dadır. Seçilen noktanın satırı nesneyi adıyla ve katıyla söyler: "Duvar ·
+MM-DVR-Dış_duvar_25 · Zemin kat" (§9'dan beri "Duvar MM-DVR-Dış_duvar_25, Zemin kat"). Kod
 `apps/desktop/src/shell/scene3d_window.rs` (pencere, sahne, çizici bağı) ve `scene3d_building.rs` (bina, parçalar, seçim,
 yenileme).
 
@@ -140,3 +141,52 @@ modeli, orada dosya). ADR 8061'in saf görüntüleme çekirdeği kurulduğunda s
 - **Büyük model:** sahne her seçimde ve kat süzgecinde yeniden kurulur; kesit binasında fark edilmez, büyük binada
   ölçülmedi. Gerekirse seçim, karoları yeniden kesmeden parçanın rengini değiştirecek biçimde ayrılır.
 - **Python bulgusunun istisnası:** `cad.arch.exceptions` yalnız Rust bulgularını tanıyor (BIM-03'ten beri açık).
+
+## §9. Pencerenin yeni yüzü (16 Kasım 2026)
+
+Sahibin isteği: “mimari projeyi 3d olarak görüntüleyen pencereyi biraz düzenleyelim, özellikle toolbar, alt taraf; şu
+anda tasarım hoş değil”. Eski yüzde beş çerçeveli düğme yan yana duruyordu. Altında renk kutuları vardı, sonra “A · B · C”
+biçimli uzun bir bilgi satırı (sayılar, kamera açıları, fare yardımı) ve Kapat. Sahne kutu içinde kutuydu, gökyüzü
+sabit renkti. Pencere artık kendiliğinden işletim sisteminin ayrı penceresinde açılır (ADR 8060 §9). Yüzü DESIGN.md
+§7.20'dir:
+
+```text
+┌ 3B görünüm — KentOS CAD ──────────────────────────────────────────────────────────────────────┐
+│ ◈ Kuzeydoğu ▾  ⤢ Sığdır │ ▤ Katlar 1/2 ▾  ▢ Mahaller                                      ⇱ │
+├───────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                   gövdeler, kenardan kenara                              (K)  │
+│ ┌ Lejant ⌄ ┐                                                                                  │
+│ │ ▣ Duvar  │                                                                                  │
+│ └──────────┘                                                                                  │
+├───────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ⌖ Duvar MM-DVR-Dış_duvar_25, Zemin kat  X 12.125  Y 2.049  Z 0.268   58 yapı elemanı │ ⚠ │ ? │
+└───────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Araç şeridi** stil pencerelerinin şerididir (`style::strip`). Dört bakış tek menüde toplandı (“Görünüş ▾”). Menünün
+  yüzü o anki bakışın adıdır, menüde “Kuzeye bak” da vardır. Katlar artık yan yana onay kutuları değil. Onların yerinde
+  menü açıkken art arda işaretlenen bir liste (`Menu::stay`) ve gizli kat varken “Bütün katları göster” var. Çok katlı
+  binada eski satır pencereye sığmıyordu. Şeride iki yardımcı eklendi: `labelled` (simge ve ad) ve `toggle` (adlı
+  anahtar).
+- **Kuzey oku** (kitin `Compass`'ı, DESIGN.md §8 sağ üst): kamerayla döner (`north_on_screen`), tıklanınca kamera kuzeye
+  bakar (`Event::North`, yükseklik ve uzaklık kalır). Kamera açıları satırdan kalktı. Yerlerini okun ipucu aldı (“Model
+  kuzeydoğudan görülüyor, 30° yukarıdan”). Açı sayısı ölçmecilik semtiyle karışabiliyordu (CLAUDE.md §5).
+- **Lejant** sahnenin sol altında, harita lejantının kutusundadır (`Legend`, `legend::frame`) ve başlığı daraltır.
+  **Renk düzeltmesi:** iced 0.14 varsayılan olarak web renkleriyle çizer (`web-colors`: gamma düzeltmesi yok, yüzey sRGB
+  değil). Çizici de parçanın rengini ışıkla çarpıp ekrana olduğu gibi yazar. Eski lejant rengi gamma ile açıyordu
+  (`powf(1/2.2)`), bu yüzden duvar kutusu açık zeminde görünmüyordu. Lejant artık ışığa dönük yüzün gösterdiği rengi
+  çizer: parçanın rengi, kenarı bir ton koyu.
+- **Durum çubuğu** ana pencerenin `StatusBar`'ıdır. Hücreleri: seçilen nokta, miktar (üçgen ve karo ipucunda), bulgu,
+  Fare. `Building3d::counted` artık bulguyu söylemez, bulgu ayrı hücredir (`found_shown`). Kaynak adı “A · B · C” değil:
+  “Duvar MM-DVR-Dış_duvar_25, Zemin kat”. Adı sınıfın sözcüğüyle başlıyorsa sınıf iki kez yazılmaz. Yolda “Şerit, Ana
+  koridor”.
+- **Gökyüzü** sabit renk değil, çizim alanının zeminidir (`viewport::palette(canvas)`). Tepeye doğru o zeminin mavisiyle
+  (`mark_colors(canvas).window`) koyulaşır: açık zeminde tepede %16, ayakta %3; koyu zeminde tepede %3, ayakta %12. Yüksek
+  karşıtlık zemini düz siyahtır. CAD projesinde çizim zemini açık temada da koyudur (ADR 0165 §5). 3B de planın zeminini
+  alır. Oranlar KentOS'un seçimidir, bir kaynaktan gelmez.
+- **Kapat düğmesi kalktı:** ayrı pencerede kapatma işletim sisteminin düğmesidir, çizimin üstünde başlıktaki ×'tir.
+  İz oynatıcının “Kapat”ı ikisine de gider.
+- **Sınamalar ve resimler:** `scene3d_view::tests` (kuzey okunun yönü, “hangi yandan”), `scene3d_window_tests` (Kuzeye
+  bak, lejant), `scene3d_building_tests` (açık pencerede seçim, bulgu hücresi). Resimler: `.run/gui-evidence/3b-pencere/`
+  (yol: dört bakış, saydam, kesilmemiş, seçilen nokta, ana pencerede, tam ekran; koyu ve dar) ve
+  `.run/gui-evidence/bina-3b-8067/` (Katlar menüsü açık, seçili duvar, örtüşen mahaller).

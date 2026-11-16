@@ -1,7 +1,7 @@
 # ADR 8060: Ayrı işletim sistemi pencereleri — İşlemler aracı ikinci ekranda
 
-- **Durum:** uygulandı (15 Kasım 2026). Yalnız İşlemler araç penceresi (araç formu ve Toplu çalıştır tablosu) ayrı
-  pencereye alınabilir; düzenek öbür pencereler için hazır (§2). Gerçek pencerede, yan yana iki ekranın yerini tutan geniş
+- **Durum:** uygulandı (15 Kasım 2026). İşlemler araç penceresi (araç formu ve Toplu çalıştır tablosu) ayrı pencereye
+  alınabilir; 16 Kasım'dan beri 3B görünüm de, kendiliğinden ayrı açılarak (§9). Düzenek öbür pencereler için hazır (§2). Gerçek pencerede, yan yana iki ekranın yerini tutan geniş
   bir X ekranında sınandı (§7).
 - **Sahibin isteği (15 Kasım, özet):** pencerelerimiz ana pencerenin içinde, tuvalin üstünde çiziliyor ve bu iyi; ama bazı
   pencerelerde kullanıcı çalışırken ana ekranın değiştiğini görmeli, örneğin İşlemler'in araç pencerelerinde. Böyle bir
@@ -173,6 +173,37 @@ bekliyor; neden kesin bulunmadı (§8).
 - `window::frames()` her pencerenin karesinde gelir; iki pencereyle kare başına iş yapan abonelikler (içe aktarma dilimleri,
   istatistik sayımı) iki kat sık çalışır. Ölçülmedi.
 - §7'deki iki düzenek aksaması; gerçek çok ekranlı Windows ve KDE oturumunda deneme yapılmadı.
+
+## §9. 3B görünüm: ikinci yüzey (16 Kasım 2026)
+
+- **Sahibin isteği (16 Kasım, özet):** mimari projeyi 3B gösteren pencereyi düzenleyelim, özellikle araç çubuğunu ve alt
+  tarafı; bileşenlerde ayrı pencere desteğimiz var, İşlemler'in araç pencerelerinde kullanıyoruz. Bu pencere işletim
+  sisteminin penceresi olsa daha iyi olur, çünkü kişi onu başka bir ekrana sürükleyip projeyi incelemek isteyebilir.
+- **Yüzey:** `Surface::Scene3d` (anahtar `3b-gorunum`; ilk boy 1180 × 760, en küçük 720 × 460, 12 px yazıda). Görünüm,
+  başlık, kapanış ve tuşları `app.rs`'teki eşleşmelerdedir; kendi kodu `scene3d_view.rs`. Pencerenin adı
+  “3B görünüm — KentOS CAD”.
+- **Kendiliğinden ayrı açılır** (`Surface::opens_apart`): araç çizimin üstünde çalıştırılır, model planın yanında izlenir.
+  Kullanıcının seçimi yine kalıcıdır. `Kept.own_window` `Option<bool>` oldu: seçim yapılmamışken dosyaya `ownWindow`
+  yazılmaz ve yüzeyin kendi davranışı geçerlidir. Böylece seçimden önce tutulan boy (`keep_size` kaydı açar) pencereyi ana
+  pencereye döndürmez. Eski dosyalar aynı okunur (`ownWindow` olan kayıt seçim sayılır).
+- **Ayrıyken pencere kutusu yoktur:** başlık işletim sisteminin çubuğundadır. Pencere araç şeridi, sahne ve durum
+  çubuğundan oluşur; “Ana pencereye al” (`windowReturn`) şeridin sağ ucundadır. Çizimin üstündeyken “Ayrı pencerede aç”
+  başlıktadır (§6'daki gibi). Ana pencerede başka bir pencere açıkken geri alınmaz, nedeni söylenir. Esc kapatır, Tab
+  alanlar arasında döner. Kapatma düğmesi Kapat'tır.
+- **Çizimi izler:** ayrıyken ana pencere serbesttir; kullanıcı çizerken, geri alırken ya da seçerken 3B eskimemeli.
+  `App::follow_scene3d` her mesajdan sonra, `follow_windows`'tan önce çalışır. Çizimin üretimi ya da revizyonu değişince
+  sahne yeniden kurulur: bina IFC gövdelerinden, yol arazi ve koridorlardan. Kamera ve gizli katlar yerinde kalır. Planın
+  seçimi (seçimin sürümü) ya da Denetim'de seçilen bulgular değişince sahne yeniden boyanır. Bulgular tek sayılık bir
+  anahtardır: denetimin çizim durumu ve bulgu sayısı, seçilen satırlar, grup ve “çizim değişti”. Fare her kıpırdadığında
+  liste kurulmaz. Çizim kapanınca pencere kapanır. Gösterilecek bir şey kalmazsa pencere kapanır ve nedenini söyler.
+- **İz oynatıcı:** ana pencerede pencere yokken ayrı 3B görünüm yanıt verir (`dialog_title`, `dialog_control`).
+- **Sınamalar:** `windows::tests::the_3d_view_opens_apart_until_the_user_chooses_otherwise` (seçimsiz boy, dosyada
+  `ownWindow` yok, seçim kalıcı); `scene3d_window_tests::the_window_opens_beside_the_plan_and_comes_over_the_drawing_and_back`
+  (ayrı açılış, ad, iz, Ana pencereye al, ana pencerede Esc, Ayrı pencerede aç, ayrı pencerede Esc ve kapatma düğmesi,
+  çizim kapanınca kapanış); `scene3d_building_tests` (planın seçimi açık pencerede boyanır). Resimler:
+  `.run/gui-evidence/3b-pencere/`, `.run/gui-evidence/bina-3b-8067/`.
+- **Kalanlar:** büyük binada her düzenlemede yeniden kurulum ölçülmedi (ADR 8067 §8). Gerçek pencerede, fareyle iki ekranda
+  kabul yapılmadı. Yolda arazinin ve koridorların her revizyonda yeniden kurulması da ölçülmedi.
 
 ## Uygularken verilen kararlar (sahibin söylemediği)
 
