@@ -4505,4 +4505,20 @@ inceleme, kurulum ve çalıştırma aynı kurala bakar); paylaşılan `python_na
   ("unknown field … expected one of …"). Artık Türkçe: "bu KentOS'un tanımadığı “…” alanı var; ilke daha yeni bir
   KentOS sürümü için yazılmış olabilir"; bozuk JSON satır ve sütunuyla. Kurumda ilke dosyası KentOS'tan önce
   güncellenebileceği için bu gerçek bir durum.
-- **Kalan:** ilkede soğuma süresi (§83'ün kurum için zorunlu hâli); paket sürümü düzeyinde kural (bugün ad düzeyinde).
+- **Kalan:** paket sürümü düzeyinde kural (bugün ad düzeyinde). İlkede soğuma süresi aynı gün §85'te.
+
+## §85. Kurum ilkesinde en düşük paket yaşı (`minimumPackageAgeDays`; `ADIM 17`, D14 ve D18)
+
+**16 Kasım.** Kod: paylaşılan `release/facts.rs` (`LockedPackage::uploaded`: paketin en yeni dosyasının
+`upload-time`'ı; `seconds_of`), kayıt defteri `policy.rs` (`minimumPackageAgeDays`, `package_refusal`'ın kurma anı).
+
+- **Karar: yaş kilitten ölçülür, ayardan değil.** §83'ün soğuma süresi kilidin ayarıdır ve yazara bağlıdır; kurum
+  bunu doğrudan isteyebilmeli. `uv.lock` her dağıtım dosyasının depoya konduğu anı yazar: paketin yaşı en yeni
+  dosyasınınkidir. İlke `minimumPackageAgeDays: N` derse inceleme ve kurulum o anın saatiyle N günden yeni paketi
+  reddeder ("… “numpy” 2.5.4 3 gün önce yayımlandı. Eklentinin yazarı daha eski bir sürüme kilitleyebilir ya da
+  beklenir."); zamanı kilitte yazmayan paket (bir depodan değil, git'ten ya da adresten gelen) denetlenemez ve
+  reddedilir (kapalı kalır). Kurulu eklenti paketlerinin yaşı yüzünden durmaz: yaş kurma anının sorusudur.
+- **Anlar metin olarak değil an olarak karşılaştırılır:** kilit saniyenin kesirlerini değişen sayıda haneyle yazıyor
+  (`43.45Z`, `43.4Z`), metin sırası yanlış olurdu.
+- **Sınamalar:** paylaşılan akış 28 (RFC 3339 okuması, kesirli üç dosyadan en yenisi), kayıt defteri 33 (100 000 gün
+  incelemede ve kurulumda reddedilir, 0 gün geçer).

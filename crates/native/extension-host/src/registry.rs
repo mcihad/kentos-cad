@@ -501,7 +501,7 @@ impl Registry {
         let policy = self.options.policy.as_ref()?;
         policy
             .refusal(manifest, entry.source.kind)
-            .or_else(|| policy.package_refusal(self.locked.get(id)?))
+            .or_else(|| policy.package_refusal(self.locked.get(id)?, None))
     }
 
     fn dependency_problem(&self, manifest: &Manifest) -> Option<String> {
@@ -1117,7 +1117,7 @@ impl Registry {
                     .options
                     .policy
                     .as_ref()
-                    .and_then(|p| p.package_refusal(&new));
+                    .and_then(|p| p.package_refusal(&new, Some(std::time::SystemTime::now())));
             }
         }
         if let Some(entry) = self.file.extensions.get(&manifest.id) {
@@ -1199,10 +1199,8 @@ impl Registry {
             p.refusal(&manifest, source.kind).or_else(|| {
                 // Its Python packages by the organisation's package rules (docs/adr/8057 §84).
                 let project = manifest.python.as_ref()?;
-                p.package_refusal(&kentos_extensions::release::locked_packages(
-                    project,
-                    &opened.files,
-                )?)
+                let packages = kentos_extensions::release::locked_packages(project, &opened.files)?;
+                p.package_refusal(&packages, Some(std::time::SystemTime::now()))
             })
         }) {
             return Err(one(problem("registry_policy", reason)));

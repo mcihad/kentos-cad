@@ -59,6 +59,10 @@ pub struct LockedPackage {
     pub source: String,
     /// The SHA-256 of its distribution files' hashes, sorted: the same version with other files differs.
     pub files: String,
+    /// When its newest file was put on the index, as the lock says it (`upload-time`, RFC 3339); none when the lock
+    /// does not say (a repository's, an address's). What the organisation's least package age reads (docs/adr/8057 §85).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uploaded: Option<String>,
 }
 
 impl LockedPackage {
@@ -192,6 +196,7 @@ fn python_facts(
                     version,
                     source: source(p.get("source")),
                     files: distribution_hashes(p),
+                    uploaded: newest_upload(p),
                 };
                 packages.insert(name, package);
             }
@@ -240,6 +245,57 @@ fn source(value: Option<&Toml>) -> String {
         Some(other) => canonical(other),
         None => String::new(),
     }
+}
+
+/// The newest `upload-time` of a package's files, compared as instants (the lock writes fractions of a second with
+/// as many digits as it has, so the text alone does not order them).
+fn newest_upload(package: &BTreeMap<String, Toml>) -> Option<String> {
+    let wheels: &[Toml] = match package.get("wheels") {
+        Some(Toml::Array(wheels)) => wheels,
+        _ => &[],
+    };
+    package
+        .get("sdist")
+        .into_iter()
+        .chain(wheels)
+        .filter_map(|file| match file {
+            Toml::Table(f) => match f.get("upload-time") {
+                Some(Toml::Str(at)) => seconds_of(at).map(|s| (s, at.clone())),
+                _ => None,
+            },
+            _ => None,
+        })
+        .max_by_key(|(s, _)| *s)
+        .map(|(_, at)| at)
+}
+
+/// Seconds since 1970 of an RFC 3339 instant in UTC (`2026-10-10T20:05:31.422Z`); its fraction left out.
+pub fn seconds_of(at: &str) -> Option<i64> {
+    let b = at.as_bytes();
+    if b.len() < 20
+        || b[4] != b'-'
+        || b[7] != b'-'
+        || b[10] != b'T'
+        || b[13] != b':'
+        || b[16] != b':'
+    {
+        return None;
+    }
+    let num = |from: usize, to: usize| at.get(from..to)?.parse::<i64>().ok();
+    let (year, month, day) = (num(0, 4)?, num(5, 7)?, num(8, 10)?);
+    let (hour, minute, second) = (num(11, 13)?, num(14, 16)?, num(17, 19)?);
+    if !at.ends_with('Z') || !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return None;
+    }
+    // Days from 1970-01-01 (Howard Hinnant's days_from_civil).
+    let y = if month <= 2 { year - 1 } else { year };
+    let era = y.div_euclid(400);
+    let yoe = y - era * 400;
+    let mp = (month + 9) % 12;
+    let doy = (153 * mp + 2) / 5 + day - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    let days = era * 146_097 + doe - 719_468;
+    Some(days * 86_400 + hour * 3_600 + minute * 60 + second)
 }
 
 fn distribution_hashes(package: &BTreeMap<String, Toml>) -> String {

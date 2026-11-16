@@ -724,6 +724,20 @@ fn the_policy_judges_the_python_packages_a_package_brings() {
             ("registry_policy", said)
         );
     }
+    // The least package age (docs/adr/8057 §85): the fixture's packages were uploaded in 2026, years under 100 000
+    // days; none of them under 0 days.
+    let mut r = open_with(&root, policy(json!({"minimumPackageAgeDays": 100_000})));
+    let said = r.review(&bytes, &file_source()).policy.unwrap_or_default();
+    assert!(
+        said.starts_with(
+            "Kurum ilkesi 100000 günden yeni Python paketi kurdurmuyor: “importlib-metadata” 10.2.0"
+        ),
+        "{said}"
+    );
+    assert!(r.install(&bytes, &file_source(), &all_granted()).is_err());
+    let r = open_with(&root, policy(json!({"minimumPackageAgeDays": 0})));
+    assert_eq!(r.review(&bytes, &file_source()).policy, None);
+    drop(r);
     // Allowed: the index written with a slash, the names as the lock has them.
     let mut r = open_with(
         &root,

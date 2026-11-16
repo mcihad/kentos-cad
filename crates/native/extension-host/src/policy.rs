@@ -54,6 +54,10 @@ pub struct Policy {
     /// organisation's mirror); a package from a repository or an address is then refused too.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allowed_package_indexes: Option<Vec<String>>,
+    /// When written, the least days a Python package must have been on its index when it is installed (its newest
+    /// file's `upload-time` in the lock): a malicious release is usually found and taken down within days (D18).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub minimum_package_age_days: Option<u32>,
     /// The policy file is there but cannot be read: everything is refused with this reason (fail closed).
     #[serde(skip)]
     pub broken: Option<String>,
@@ -164,10 +168,12 @@ impl Policy {
 
 impl Policy {
     /// Why the policy refuses a package that installs these Python packages (its lock's, by normalised name; docs/adr/
-    /// 8057 §84); none when it allows them all.
+    /// 8057 §84); none when it allows them all. `installing`: the moment a package is reviewed or installed, when the
+    /// packages' age is judged too (§85); an installed extension is not stopped by its packages' age.
     pub fn package_refusal(
         &self,
         packages: &std::collections::BTreeMap<String, kentos_extensions::release::LockedPackage>,
+        installing: Option<std::time::SystemTime>,
     ) -> Option<String> {
         use kentos_extensions::python_names::normalized;
         if let Some(reason) = &self.broken {
@@ -184,6 +190,32 @@ impl Policy {
                 return Some(format!(
                     "Kurum ilkesi yalnız izin verdiği Python paketlerini kurduruyor; “{name}” listede yok."
                 ));
+            }
+            if let (Some(days), Some(now)) = (self.minimum_package_age_days, installing) {
+                let now = now
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_or(0, |d| i64::try_from(d.as_secs()).unwrap_or(i64::MAX));
+                let at = p
+                    .uploaded
+                    .as_deref()
+                    .and_then(kentos_extensions::release::seconds_of);
+                match at {
+                    None => {
+                        return Some(format!(
+                            "Kurum ilkesi Python paketlerinin en az {days} günlük olmasını istiyor; “{name}” paketinin \
+                             yayımlanma zamanı kilitte yazmıyor, yaşı denetlenemiyor."
+                        ));
+                    }
+                    Some(at) if now - at < i64::from(days) * 86_400 => {
+                        return Some(format!(
+                            "Kurum ilkesi {days} günden yeni Python paketi kurdurmuyor: “{name}” {} {} gün önce \
+                             yayımlandı. Eklentinin yazarı daha eski bir sürüme kilitleyebilir ya da beklenir.",
+                            p.version,
+                            (now - at).max(0) / 86_400
+                        ));
+                    }
+                    Some(_) => {}
+                }
             }
             if let Some(indexes) = &self.allowed_package_indexes {
                 let from = p
