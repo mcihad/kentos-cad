@@ -424,6 +424,39 @@ def shape_picker(
     return out
 
 
+def relation_picker(
+    id: str,
+    label: str,
+    relation: str,
+    *,
+    display: str | None = None,
+    on_change: str | None = None,
+    required: bool = False,
+    visible_when: str | None = None,
+    required_when: str | None = None,
+    tab: str | None = None,
+    row: str | None = None,
+) -> dict[str, Any]:
+    """A record of a project relation's parent layer, chosen by its words (relations.rs, docs/adr/8057 §67): its
+    value the record's persistent id, as the relation's child field holds it; none when none is chosen."""
+    out: dict[str, Any] = {"type": "relationPicker", "id": id, "label": label, "relation": relation}
+    if display is not None:
+        out["display"] = display
+    if on_change is not None:
+        out["onChange"] = on_change
+    if required:
+        out["required"] = True
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    if required_when is not None:
+        out["requiredWhen"] = required_when
+    if tab is not None:
+        out["tab"] = tab
+    if row is not None:
+        out["row"] = row
+    return out
+
+
 def feature_picker(
     id: str,
     label: str,
@@ -689,6 +722,31 @@ def button(
     return out
 
 
+def relation_list(
+    id: str,
+    relation: str,
+    of: str,
+    *,
+    label: str | None = None,
+    columns: Sequence[str] | None = None,
+    visible_when: str | None = None,
+    tab: str | None = None,
+) -> dict[str, Any]:
+    """The records a project relation ties to the record component `of` holds (relations.rs, docs/adr/8057 §67): its
+    child layer's records naming it, read from the drawing as it is (no Python), a row each; a row's click shows the
+    record. `of` is a feature picker (its first object) or a relation picker."""
+    out: dict[str, Any] = {"type": "relationList", "id": id, "relation": relation, "of": of}
+    if label is not None:
+        out["label"] = label
+    if columns is not None:
+        out["columns"] = list(columns)
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
+    return out
+
+
 def table(
     id: str,
     *,
@@ -849,7 +907,7 @@ def card(
 
 __all__ = [
     "Choice", "choice", "file_filter", "panel", "text", "section", "divider", "text_field", "number_field", "select",
-    "layer_picker", "field_picker", "file_picker", "crs_picker", "point_picker", "shape_picker", "feature_picker",
-    "multi_select", "date_field", "time_field", "date_time_field", "checkbox", "button", "table", "tree", "stats",
-    "chart", "image", "card",
+    "layer_picker", "field_picker", "file_picker", "crs_picker", "point_picker", "shape_picker", "relation_picker",
+    "feature_picker", "multi_select", "date_field", "time_field", "date_time_field", "checkbox", "button",
+    "relation_list", "table", "tree", "stats", "chart", "image", "card",
 ]

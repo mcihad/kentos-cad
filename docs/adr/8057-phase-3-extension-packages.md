@@ -1817,14 +1817,14 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | alan seçici | var | `fieldPicker` (bağlı katmanın alanları) | |
 | | koordinat/harita seçimi | var | `pointPicker` (`x, y` yazılır ya da Haritadan seç ile haritada gösterilir, kenetlenir; değeri `[x, y]`, §57); çizgi ve alan `shapePicker` (haritada çizilir, değeri GeoJSON, §62); harita aracı `entrypoints.mapTools` (yakalama türleri) | pencerede (`ctx.dialog`) yok |
 | | CRS/birim | var | `crsPicker` (KentOS'un sistemleri, değeri `EPSG:<kod>`, verilmezse çizimin sistemi; §45); birim `numberField`'ın `units`'i (KentOS'un sayı alanları gibi birimiyle yazılır: 0,03 km; kod alanın biriminde alır, §64) | |
-| | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
+| | ilişki başvurusu | var | `relationPicker` (projenin bir ilişkisinin üst katmanının kayıtlarından adıyla seçilir; değeri kaydın kalıcı kimliği, ilişkinin alt alanının tuttuğu; §67) | |
 | Kaynak ve çıktı | dosya/eser seçici, ek | var | `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41; `save` ile yazılacak dosyanın yeri, §44) | `files.userSelected` ister, kaydetme yeri `files.userSelectedWrite`; ek sonraki dilim |
 | | görsel önizleme | var | `image` (kodun verdiği PNG, `ctx.panel.set(id, image=…)`; oranı korunur, §40) | yalnız PNG, en çok 4096 piksel kenar; JPEG sonraki dilim |
 | | çıktı hedefi | host | İşlemler aracının çıktısı (`sinkParameter`) | panel komutu çizime yazar |
 | Veri görünüşü | tablo | var | `table` (500 satır) | `uid`'li satır nesneyi gösterir |
 | | ağaç | var | `tree` (1–3 sütunla gruplar) | |
 | | kart | var | `card` (KentOS bilgi kartı) | dar yerde tablonun yerine |
-| | ilişki listesi | yok | — | |
+| | ilişki listesi | var | `relationList` (bir seçicinin tuttuğu kaydın ilişkili kayıtları, çizimden canlı, Python'suz; satıra tıklamak kaydı gösterir; §67) | ekleme, bağlama ve düzenleme kodda (`cad.records.create`) |
 | | özet/ölçü | var | `stats` (KentOS'un gösterge kartı, `StatCard`) | satır başına bir kart, yan yana |
 | | grafik | var | `chart` (KentOS'un grafik motoru, Grafik sekmesinin çizimi: çubuk, pasta, histogram, çizgi) | satırları düğmenin `table`'ından ya da `of` ile başka bir bileşenden |
 | İş denetimi | düğme | var | `button` (birincil) | bir komut çalıştırır |
@@ -3786,3 +3786,49 @@ yeni `apps/api/tests/job_run/audit_env.rs`.
   açılabilir. (3) İsteğe bağlı özellikler (extras) sunucuda seçilmiyor. (4) Sunucunun KentOS Python'unu kuran bir komut
   yok: yönetici bir CPython gösterir. (5) Windows ve macOS sunucuda kutu yok (§61), ortam hazırlanır ama kural `require`
   altında çalışmaz.
+
+## §67. İlişki seçicisi ve listesi: `relationPicker`, `relationList` (`ADIM 22`, "ilişki başvurusu ve listesi")
+
+**16 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/ui_panel.rs` (`Component::RelationPicker`,
+`Component::RelationList`), yeni `ui_panel/relations.rs` (Kapı 1), `ui_panel/rules.rs`, `ui_panel/rows.rs`, şema ve
+Python kurucuları (`ui.relation_picker`, `ui.relation_list`), SDK rehberi; masaüstü yeni
+`apps/desktop/src/shell/extensions/panel_relations.rs` (`relation_choices`, `relation_rows`, `parent_of`,
+`relation_select`, `relation_table`), `panels.rs` (değer, zorunluluk, kural değeri, silinmiş kaydın bırakılması),
+`panel_session.rs` (`ctx.panel.set`), `panel_view.rs` (`rows_table`: komutun tablosuyla ortak çizim); Vitrin 1.0.48.
+
+- **Karar: projenin ilişkileri, formun ilişkili kayıt kutusunun okuduğu gibi.** İlişki kimliğiyle anılır (`relation`):
+  eklentinin `schema.json`'unun kurduğu ya da kullanıcının projesindeki (§23; üst katman, alt katman, alt katmanın üst
+  kaydın kalıcı kimliğini tutan alanı, ADR 0405). Okuma çizimin modelinden, formun ilişkili kayıt kutusununkiyle aynı
+  yoldan (`gis/forms/entry/related.rs`): komut yok, Python yok, çizildiği an çizimden.
+- **`relationPicker`:** ilişkinin üst katmanının kayıtları, en çok 500, katmanın sırasıyla; kaydın sözü `display` alanı,
+  yoksa etiketi, yoksa ilk dolu alanı, yoksa "Kayıt <kimliğin başı>" (formun kutusunun adlandırması). Aynı sözlü iki
+  kayıt kimliğinin başıyla ayrılır. Değeri seçilen kaydın kalıcı kimliği (alt alanın tuttuğu), boşsa None; zorunlu
+  olabilir, `onChange` alır, satıra girer, kural dili kimliği okur. Kod `ctx.panel.set(id, value=<kimlik>)` ile seçer
+  (kimlik olmayan söz reddedilir), None bırakır. Komut başlarken seçilmiş ama o arada silinmiş kayıt bırakılır
+  (nesne seçicinin seçimleri gibi): kod bulamayacağı bir kimlik almaz.
+- **`relationList`:** `of` bileşeninin (bir nesne seçicinin ilk nesnesi ya da bir ilişki seçicisinin kaydı) tuttuğu
+  kaydın alt kayıtları: alt katmanda bağ alanı onu adlandıranlar (çok değerli alanda `;` ile ayrılmışların biri), en
+  çok 500. Sütunlar `columns` (en çok 6), verilmezse alt katmanın bağ alanı dışındaki ilk dört alanı; başlıkları alanın
+  adı (takma adı varsa o), değerleri katmanın tablosunun yazdığı gibi (`display_value`: tarih "16.11.2026"; ilk sürüm
+  ham "2026-11-16" yazıyordu, gerçek pencere). Komutun tablosuyla aynı çizim (`rows_table`): sayfalar, satıra tıklamak
+  kaydı gösterir. Kayıt seçilmeden "Önce bir kayıt seçin.", alt kaydı yoksa "Bu kayda bağlı kayıt yok.", ilişki
+  projede yoksa "“…” ilişkisi bu projede yok.". Değeri yok (bir çıktı): öbür çıktılar gibi formun altında durur.
+- **Ekleme, bağlama, düzenleme kodda:** formun kutusunun eylemleri (Yeni, Bağla, Bağı kopar, Düzenle; ADR 0762) panele
+  taşınmadı. Kod `cad.records.create` ile geometrisiz kayıt yazar; liste Python'suz kendiliğinden yenilenir.
+- **Kapı 1** (`ui_panel/relations.rs`): `relation` bir ilişki kimliği (harf, rakam, `-`, `_`, `.`; 1–64), seçicinin
+  `display`'i bir alan adı, listenin `of`'u bu paneldeki bir nesne ya da ilişki seçicisi, `columns` en çok altı alan
+  adı; her yanlış yerinde. İlişkinin projede olup olmadığı kurulumda bilinemez: panelde söylenir.
+- **SDK paketi:** rehber iki türü anar; yer açmak için kart ve gösterge açıklamalarındaki tekrarlar ve bir örnek çıktı,
+  `required` ve `onChange` alan listeleri "seçiciler" diye genelleşti (yeni seçicileri de kapsar). Paket 47 926 bayt
+  (sınır 48 000; önce 47 986).
+- **Vitrin 1.0.48:** "Bakım kayıtları" paneli (Vitrin › Panel): Tesis (`relationPicker`, `bakim-tesis`, `display:
+  "ad"`), Yeni bakım bölümünde Tarih (`defaultExpr: bugün()`), Açıklama ve Ekle (`bakim-ekle`: `cad.records.create`),
+  altta Bakım kayıtları (`relationList`, `of: "tesis"`, Tarih ve Açıklama). Gerçek pencerede (50-iliski): Katmanları
+  kur, Örnek tesis'e Nokta aracının Ad'ıyla iki nokta (Merkez Okulu, Park Kreşi); Tesis iki tesisi adlarıyla sundu
+  (`ad` alanı boş, etiketleri okundu); Merkez Okulu'na iki kayıt eklendi, liste her Ekle'de kendiliğinden yenilendi
+  ("16.11.2026 · Yangın tüpleri yenilendi", "16.11.2026 · Çatı oluğu temizlendi"); Park Kreşi seçilince "Bu kayda bağlı
+  kayıt yok.".
+- **Sınamalar:** paylaşılan 1 (Kapı 1'in sekiz durumu); masaüstü 1 (kayıtların fikstürüne ilişki: seçicinin sözü,
+  listenin satırları ve kimlikleri, varsayılan sütunlar, tarihin günün sözüyle yazılması, başka kaydın boş listesi,
+  projede olmayan ilişki, zorunluluk, değer ve kural değeri, kodun `set`'i ve reddi); rehberin ve §25'in türleri anması;
+  Vitrin'in sayıları (16 komut, 6 panel) ve şerit etiketleri; gerçek pencere 50-iliski.

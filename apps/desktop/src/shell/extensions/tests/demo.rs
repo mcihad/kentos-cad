@@ -111,6 +111,7 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "Parsel kartı",
             "Yakın yapılar",
             "Alandaki yapılar",
+            "Bakım kayıtları",
             "Yapı yerleştir",
             "Parsel çakışması"
         ]

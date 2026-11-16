@@ -506,6 +506,9 @@ impl OpenPanel {
             Component::ShapePicker { .. } => {
                 self.geoms.get(id).map(super::panel_points::shape_words)
             }
+            Component::RelationPicker { .. } => {
+                self.choices.get(id).filter(|c| !c.is_empty()).cloned()
+            }
             Component::NumberField { .. } => typed()
                 .and_then(|t| self.typed_number(id, t))
                 .map(|n| n.to_string()),
@@ -565,7 +568,8 @@ impl OpenPanel {
             | Component::FilePicker { label, .. }
             | Component::CrsPicker { label, .. }
             | Component::PointPicker { label, .. }
-            | Component::ShapePicker { label, .. } => label,
+            | Component::ShapePicker { label, .. }
+            | Component::RelationPicker { label, .. } => label,
             _ => return None,
         };
         match c {
@@ -600,6 +604,11 @@ impl OpenPanel {
                 }),
             Component::ShapePicker { .. } => (!self.geoms.contains_key(id))
                 .then(|| format!("“{label}”: çizilmedi (Haritada çiz'e basın).")),
+            Component::RelationPicker { .. } => self
+                .choices
+                .get(id)
+                .is_none_or(|c| c.is_empty())
+                .then(|| format!("“{label}”: kayıt seçilmedi.")),
             _ => self
                 .texts
                 .get(id)
@@ -614,6 +623,11 @@ impl OpenPanel {
             Component::TextField { id, .. } => {
                 let text = self.texts.get(id).map_or("", |t| t.trim());
                 out.insert(id.clone(), json!(text));
+            }
+            // A relation's parent record: its persistent id, none when none is chosen (docs/adr/8057 §67).
+            Component::RelationPicker { id, .. } => {
+                let chosen = self.choices.get(id).filter(|c| !c.is_empty());
+                out.insert(id.clone(), chosen.map_or(Value::Null, |c| json!(c)));
             }
             // A drawn shape: GeoJSON, none when empty (docs/adr/8057 §62).
             Component::ShapePicker { id, .. } => {
@@ -1507,15 +1521,35 @@ impl App {
             panel.said = Some((words::Kind::Error, why));
             return Task::none();
         }
-        // Objects taken before and deleted since are not given: the code would not find them.
+        // Objects taken before and deleted since are not given: the code would not find them. Nor a relation's record
+        // chosen before and deleted since (docs/adr/8057 §67).
         if let Some(doc) = &self.document {
+            let gone = |u: &String| {
+                kentos_domain::Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|u| doc.model.slot_of(u))
+                    .is_none()
+            };
             for uids in panel.picks.values_mut() {
-                uids.retain(|u| {
-                    kentos_domain::Uuid::parse_str(u)
-                        .ok()
-                        .and_then(|u| doc.model.slot_of(u))
-                        .is_some()
-                });
+                uids.retain(|u| !gone(u));
+            }
+            let records: Vec<String> = panel
+                .definition
+                .body
+                .iter()
+                .filter_map(|c| match c {
+                    Component::RelationPicker { id, .. } => Some(id.clone()),
+                    _ => None,
+                })
+                .collect();
+            for id in records {
+                if panel
+                    .choices
+                    .get(&id)
+                    .is_some_and(|u| !u.is_empty() && gone(u))
+                {
+                    panel.choices.insert(id, String::new());
+                }
             }
         }
         let params = match panel.check_params() {

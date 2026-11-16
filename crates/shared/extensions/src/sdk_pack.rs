@@ -104,23 +104,25 @@ yazılır ya da Seç… ile seçilir, değeri mutlak yol ya da None; manifest `f
 yazılacak yeri sorar: `defaultName`, `files.userSelectedWrite`),
 `crsPicker` (`id`, `label`, `value`; KentOS'un sistemlerinden, verilmezse çizimin; değeri `EPSG:<kod>`), `pointPicker`
 (`id`, `label`, `value`; "x, y" yazılır ya da Haritadan seç, değeri [x, y]), `shapePicker` (`id`, `label`, `shape`:
-line, polygon, rectangle, circle; haritada çizilir, değeri GeoJSON), `button` (`id`,
+line, polygon, rectangle, circle; haritada çizilir, değeri GeoJSON), `relationPicker` (`id`, `label`, `relation`,
+`display`; ilişkinin üst kaydı, değeri kalıcı kimliği), `relationList` (`id`, `label`, `relation`, `of`: bir seçici,
+`columns`; o kaydın ilişkili kayıtları, canlı), `button` (`id`,
 `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
 `primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
 göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak
-tıklanınca nesneyi gösterir; düğmenin `table`'ı bir ağacı da gösterebilir), `card` (`id`, `label`, `title`, `tag`:
+tıklanınca nesneyi gösterir), `card` (`id`, `label`, `title`, `tag`:
 sütun adları; her satır bir kart: `title` sütunu başlığında (yoksa ilk sütun), `tag` sütunu yanında, diğer sütunlar
-altında adlarıyla; dar yerde sığmayan çok sütunlu tablonun yerine; `uid`'li kart tıklanınca nesneyi gösterir;
+altında adlarıyla; `uid`'li kart tıklanınca nesneyi gösterir;
 düğmenin `table`'ı bir kartı da gösterebilir), `stats` (`id`, `label`, `title`, `value`, `unit`, `note`: sütun adları;
 her satır bir gösterge kartı: `title` sütunu adı (yoksa ilk sütun), `value` sütunu sayısı (yoksa ikinci), `unit` birimi,
-`note` altındaki notu; kartlar yan yana dizilir; özet sayıları için), `chart` (`id`, `label`, `kind`: bar (varsayılan),
+`note` altındaki notu), `chart` (`id`, `label`, `kind`: bar (varsayılan),
 pie, histogram, line; `category`: gruplanacak ya da yatay eksendeki sütun, `value`: sayı sütunu, `aggregate`: count
 (varsayılan; `value` verilirse sum), sum, mean, min, max, median; çubuk ve pasta `category` ister, histogram `value`,
 çizgi ikisini; satırları düğmenin `table`'ından ya da `of` ile bu paneldeki bir tablonun, ağacın, kartın ya da
 göstergenin satırlarından; KentOS'un grafik motoru çizer), `image` (`id`, `label`, `alt`, `height`: 80–600 px; kodun
-verdiği PNG'yi oranını koruyarak gösterir, verilene dek `alt` yazar; ör. matplotlib ya da NumPy ile çizilen grafik). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve katman/alan/nesne seçicileri `required: true` alır: boş
-bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında ("“Önek” boş bırakılamaz"), adının yanında yıldız.
-`select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField`, `timeField`, `dateTimeField` (seçiciden seçilince ya da Enter'la) ve `checkbox` isteğe
+verdiği PNG'yi oranını koruyarak gösterir, verilene dek `alt` yazar; ör. matplotlib ya da NumPy ile çizilen grafik). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve seçiciler `required: true` alır: boş
+bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında, adının yanında yıldız.
+Seçim, çoklu seçim, seçiciler, onay ve tarih/saat alanları (seçilince ya da Enter'la) isteğe
 bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir. Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
 doldurur (boş liste de bir cevaptır: tablo boşalır; `ctx.message` tabloya dokunmaz) (`ctx.doc.entities(layer=…)` kayıt verir: `kayit.uid` kalıcı kimlik, öznitelikler `kayit.entity.attrs`'ta,
@@ -946,7 +948,7 @@ mod tests {
             odd["body"][0]["type"] = json!("saat");
             assert!(!errors(&schema, &odd).is_empty(), "{}", path.display());
         }
-        assert_eq!(read, 5, "the Vitrin's five panels");
+        assert_eq!(read, 6, "the Vitrin's six panels");
     }
 
     #[test]

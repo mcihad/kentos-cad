@@ -525,6 +525,26 @@ impl App {
                         super::panel_points::point_field(p, id, on(id), event, enter.clone()),
                     );
                 }
+                // A record of a relation's parent layer, by its words (panel_relations.rs, docs/adr/8057 §67).
+                Component::RelationPicker {
+                    id,
+                    label: words,
+                    relation,
+                    display,
+                    ..
+                } => {
+                    form = form.field(
+                        words.clone(),
+                        super::panel_relations::relation_select(
+                            self,
+                            p,
+                            id,
+                            relation,
+                            display.as_deref(),
+                            event,
+                        ),
+                    );
+                }
                 // A line or an area drawn on the map (panel_points.rs, docs/adr/8057 §62).
                 Component::ShapePicker {
                     id, label: words, ..
@@ -652,6 +672,24 @@ impl App {
                     id, label: words, ..
                 } => {
                     tables.push(self.panel_table(p, id, words.as_deref()));
+                }
+                // The records a relation ties to the record a picker holds, read from the drawing (§67).
+                Component::RelationList {
+                    id,
+                    label: words,
+                    relation,
+                    of,
+                    columns,
+                } => {
+                    tables.push(super::panel_relations::relation_table(
+                        self,
+                        p,
+                        id,
+                        words.as_deref(),
+                        relation,
+                        of,
+                        columns,
+                    ));
                 }
                 Component::Tree {
                     id,
@@ -809,7 +847,6 @@ impl App {
         id: &str,
         words: Option<&'a str>,
     ) -> Element<'a, Message> {
-        use kentos_ui::widget::table::{Column as Col, Row, Table};
         let Some((columns, rows)) = p.tables.get(id) else {
             return column![
                 label::caption(words.unwrap_or("Sonuçlar").to_owned()),
@@ -818,42 +855,56 @@ impl App {
             .spacing(4)
             .into();
         };
-        // No rows: no columns either (a command's rows name them), so no empty header bar.
-        if rows.is_empty() {
-            return column![
-                label::caption(words.unwrap_or("Sonuçlar").to_owned()),
-                label::muted("Satır yok."),
-            ]
-            .spacing(4)
-            .into();
-        }
-        // A row's `uid` names its object: a click shows it; it is not a column.
-        let shown: Vec<&String> = columns.iter().filter(|c| c.as_str() != "uid").collect();
-        let mut table = Table::new(shown.iter().map(|c| Col::new((*c).clone()).width(Fill)))
-            .empty("Satır yok.");
-        let (start, end, page) =
-            page_range(rows.len(), PAGE_ROWS, p.pages.get(id).copied().unwrap_or(0));
-        for row in &rows[start..end] {
-            let mut line = Row::new(
-                shown
-                    .iter()
-                    .map(|c| label::caption(cell_words(row.get(c.as_str()))).into()),
-            );
-            if let Some(uid) = row.get("uid").and_then(Value::as_str) {
-                line = line.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
-            }
-            table = table.push(line);
-        }
-        let mut out = column![
-            label::caption(words.unwrap_or("Sonuçlar").to_owned()),
-            table
-        ]
-        .spacing(4);
-        if rows.len() > PAGE_ROWS {
-            out = out.push(pager(id, page, start, end, rows.len()));
-        }
-        out.into()
+        rows_table(p, id, words, columns, rows, "Satır yok.")
     }
+}
+
+/// Rows as a table, a page of [`PAGE_ROWS`] with its pager: a command's (a table component's) or a relation list's
+/// (panel_relations.rs); `empty` said when there are none. A row's `uid` makes it show its object.
+pub(super) fn rows_table<'a>(
+    p: &OpenPanel,
+    id: &str,
+    words: Option<&str>,
+    columns: &[String],
+    rows: &[Value],
+    empty: &str,
+) -> Element<'a, Message> {
+    use kentos_ui::widget::table::{Column as Col, Row, Table};
+    // No rows: no columns either (a command's rows name them), so no empty header bar.
+    if rows.is_empty() {
+        return column![
+            label::caption(words.unwrap_or("Sonuçlar").to_owned()),
+            label::muted(empty.to_owned()),
+        ]
+        .spacing(4)
+        .into();
+    }
+    // A row's `uid` names its object: a click shows it; it is not a column.
+    let shown: Vec<&String> = columns.iter().filter(|c| c.as_str() != "uid").collect();
+    let mut table =
+        Table::new(shown.iter().map(|c| Col::new((*c).clone()).width(Fill))).empty("Satır yok.");
+    let (start, end, page) =
+        page_range(rows.len(), PAGE_ROWS, p.pages.get(id).copied().unwrap_or(0));
+    for row in &rows[start..end] {
+        let mut line = Row::new(
+            shown
+                .iter()
+                .map(|c| label::caption(cell_words(row.get(c.as_str()))).into()),
+        );
+        if let Some(uid) = row.get("uid").and_then(Value::as_str) {
+            line = line.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
+        }
+        table = table.push(line);
+    }
+    let mut out = column![
+        label::caption(words.unwrap_or("Sonuçlar").to_owned()),
+        table
+    ]
+    .spacing(4);
+    if rows.len() > PAGE_ROWS {
+        out = out.push(pager(id, page, start, end, rows.len()));
+    }
+    out.into()
 }
 
 /// A cell's words.

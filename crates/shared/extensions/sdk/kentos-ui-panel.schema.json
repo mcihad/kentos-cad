@@ -755,6 +755,70 @@
           "type": "object"
         },
         {
+          "description": "A record of a project relation's parent layer, chosen by its words (relations.rs, docs/adr/8057 §67): its\nvalue the record's persistent id, as the relation's child field holds it; none when none is chosen.",
+          "properties": {
+            "display": {
+              "default": null,
+              "description": "The parent layer's field whose value names a record; none: its label, else its first field with a value.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "relation": {
+              "description": "The project relation's id: its parent layer's records are offered.",
+              "type": "string"
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "relationPicker",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label",
+            "relation"
+          ],
+          "type": "object"
+        },
+        {
           "description": "The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`\nholds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else\none id or none.",
           "properties": {
             "geometry": {
@@ -1232,6 +1296,56 @@
             "id",
             "label",
             "command"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The records a project relation ties to the record component `of` holds (relations.rs, docs/adr/8057 §67): its\nchild layer's records naming it, read from the drawing as it is (no Python), a row each; a row's click shows\nthe record. `of` is a feature picker (its first object) or a relation picker.",
+          "properties": {
+            "columns": {
+              "description": "The child layer's fields shown, by name, at most six; none: its first four.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "of": {
+              "description": "The component holding the parent record.",
+              "type": "string"
+            },
+            "relation": {
+              "description": "The project relation's id.",
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "relationList",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "relation",
+            "of"
           ],
           "type": "object"
         },

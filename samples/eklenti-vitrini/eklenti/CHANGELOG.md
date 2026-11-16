@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 1.0.48 — 16 Kasım 2026
+
+- "Bakım kayıtları" paneli (Vitrin › Panel): Tesis bir ilişki seçicisi (`relationPicker`, ilişki `bakim-tesis`,
+  `display: "ad"`): Örnek tesis'in kayıtları adlarıyla listelenir, değeri seçilen tesisin kalıcı kimliği. Altta ilişki
+  listesi (`relationList`, `of: "tesis"`): seçilen tesisin bakım kayıtları (Tarih, Açıklama), Python'suz ve çizimden
+  canlı. Yeni bakım bölümünde Ekle `bakim-ekle` komutunu çalıştırır: seçilen tesise geometrisiz bir bakım kaydı yazar
+  (`cad.records.create`), liste kendiliğinden yenilenir.
+
 ## 1.0.47 — 16 Kasım 2026
 
 - Yakın yapılar'da Uzaklık km ile de yazılır (`numberField`'ın `units`'i: m, km; KentOS'un sayı alanları gibi):

@@ -273,6 +273,25 @@ def katmanlari_kur(ctx: ext.CommandContext) -> ext.CommandResult:
     return ctx.apply_declarative_schema("schema.json")
 
 
+@ext.command("bakim-ekle")
+def bakim_ekle(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Bakım kayıtları" panelinin Ekle düğmesi: seçilen tesise (ctx.params["tesis"]: ilişki seçicisinin verdiği kalıcı
+    kimlik) geometrisiz bir bakım kaydı yazar (cad.records.create); ilişkinin alt alanı tesis_id onu tutar. Panelin
+    ilişki listesi Python'suz, çizimden yenilenir: komut satır döndürmez."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    bakim = _katman(ctx.doc, "vitrin_bakim")
+    if bakim is None:
+        return ctx.message("Önce Vitrin › Katmanları kur: Bakım kaydı katmanı yok.")
+    from kentos.cad.types import RecordRow
+
+    satir = RecordRow(
+        attrs={"tesis_id": ctx.params["tesis"], "tarih": ctx.params["tarih"], "aciklama": ctx.params["aciklama"]}
+    )
+    cad.records.create(ctx.doc, layer_id=bakim, rows=[satir])
+    return ctx.message("Bakım kaydı eklendi.")
+
+
 @ext.command("hata-ornegi")
 def hata_ornegi(ctx: ext.CommandContext) -> ext.CommandResult:
     """Bilerek hata verir: KentOS hatayı, eklentinin günlüğünü ve Python iz kaydını (Ayrıntı) açıkça gösterir;

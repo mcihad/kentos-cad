@@ -24,7 +24,7 @@ pub const MOST_IN_ROW: usize = 4;
 const MOST_CHARS: usize = 40;
 
 /// The kinds a row holds: small enough to share a line.
-pub const ROW_KINDS: [&str; 15] = [
+pub const ROW_KINDS: [&str; 16] = [
     "text",
     "textField",
     "numberField",
@@ -38,6 +38,7 @@ pub const ROW_KINDS: [&str; 15] = [
     "fieldPicker",
     "crsPicker",
     "pointPicker",
+    "relationPicker",
     "filePicker",
     "button",
 ];

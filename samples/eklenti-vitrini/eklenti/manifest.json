@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.47",
+  "version": "1.0.48",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -128,6 +128,11 @@
         "id": "alandaki-yapilar",
         "title": "Alandaki yapılar",
         "handler": "vitrin.logic:alandaki_yapilar"
+      },
+      {
+        "id": "bakim-ekle",
+        "title": "Bakım ekle",
+        "handler": "vitrin.logic:bakim_ekle"
       }
     ],
     "panels": [
@@ -160,6 +165,12 @@
         "title": "Alandaki yapılar",
         "side": "right",
         "definition": "ui/alandaki-yapilar.panel.json"
+      },
+      {
+        "id": "bakim-paneli",
+        "title": "Bakım kayıtları",
+        "side": "right",
+        "definition": "ui/bakim-kayitlari.panel.json"
       }
     ],
     "processing": [
@@ -285,6 +296,10 @@
               {
                 "panel": "alan-paneli",
                 "icon": "select-polygon"
+              },
+              {
+                "panel": "bakim-paneli",
+                "icon": "join"
               }
             ]
           },

@@ -24,6 +24,8 @@ mod panel_image;
 pub(crate) mod panel_marks;
 // A panel's point picker: a point typed or picked on the map (docs/adr/8057 §57).
 mod panel_points;
+// A panel's relation picker and relation list, read from the drawing (docs/adr/8057 §67).
+mod panel_relations;
 // A panel's rows: components side by side, the cells of one line (docs/adr/8057 §55).
 mod panel_rows;
 // A number field's units: chosen beside it, the code's in its own (docs/adr/8057 §64).

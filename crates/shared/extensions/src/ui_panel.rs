@@ -28,6 +28,7 @@ mod files;
 /// The components' Python builders, `kentos.ui_panel` (docs/adr/8057 §34), made from [`json_schema`].
 #[cfg(feature = "schema")]
 pub mod python;
+pub mod relations;
 pub mod rows;
 pub mod rules;
 pub mod tabs;
@@ -229,6 +230,22 @@ pub enum Component {
         #[serde(default, rename = "onChange")]
         on_change: Option<String>,
     },
+    /// A record of a project relation's parent layer, chosen by its words (relations.rs, docs/adr/8057 §67): its
+    /// value the record's persistent id, as the relation's child field holds it; none when none is chosen.
+    RelationPicker {
+        id: String,
+        label: String,
+        /// The project relation's id: its parent layer's records are offered.
+        relation: String,
+        /// The parent layer's field whose value names a record; none: its label, else its first field with a value.
+        #[serde(default)]
+        display: Option<String>,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
     /// The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`
     /// holds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else
     /// one id or none.
@@ -331,6 +348,21 @@ pub enum Component {
         table: Option<String>,
         #[serde(default)]
         primary: bool,
+    },
+    /// The records a project relation ties to the record component `of` holds (relations.rs, docs/adr/8057 §67): its
+    /// child layer's records naming it, read from the drawing as it is (no Python), a row each; a row's click shows
+    /// the record. `of` is a feature picker (its first object) or a relation picker.
+    RelationList {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        /// The project relation's id.
+        relation: String,
+        /// The component holding the parent record.
+        of: String,
+        /// The child layer's fields shown, by name, at most six; none: its first four.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        columns: Vec<String>,
     },
     /// The rows a button's command answered.
     Table {
@@ -459,6 +491,8 @@ impl Component {
             | Component::CrsPicker { id, .. }
             | Component::PointPicker { id, .. }
             | Component::ShapePicker { id, .. }
+            | Component::RelationPicker { id, .. }
+            | Component::RelationList { id, .. }
             | Component::DateField { id, .. }
             | Component::TimeField { id, .. }
             | Component::DateTimeField { id, .. }
@@ -485,6 +519,7 @@ impl Component {
             | Component::CrsPicker { on_change, .. }
             | Component::PointPicker { on_change, .. }
             | Component::ShapePicker { on_change, .. }
+            | Component::RelationPicker { on_change, .. }
             | Component::DateField { on_change, .. }
             | Component::TimeField { on_change, .. }
             | Component::DateTimeField { on_change, .. }
@@ -506,6 +541,7 @@ impl Component {
             | Component::CrsPicker { required, .. }
             | Component::PointPicker { required, .. }
             | Component::ShapePicker { required, .. }
+            | Component::RelationPicker { required, .. }
             | Component::MultiSelect { required, .. }
             | Component::DateField { required, .. }
             | Component::TimeField { required, .. }
@@ -528,6 +564,7 @@ impl Component {
                 | Component::CrsPicker { .. }
                 | Component::PointPicker { .. }
                 | Component::ShapePicker { .. }
+                | Component::RelationPicker { .. }
                 | Component::DateField { .. }
                 | Component::TimeField { .. }
                 | Component::DateTimeField { .. }
@@ -689,6 +726,8 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         ],
         "crsPicker" | "pointPicker" => &["id", "label", "value", "onChange", "required"],
         "shapePicker" => &["id", "label", "shape", "onChange", "required"],
+        "relationPicker" => &["id", "label", "relation", "display", "onChange", "required"],
+        "relationList" => &["id", "label", "relation", "of", "columns"],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" | "timeField" | "dateTimeField" => {
             &["id", "label", "value", "min", "max", "onChange", "required"]
@@ -713,9 +752,9 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, section, divider, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
-                     fieldPicker, featurePicker, filePicker, crsPicker, pointPicker, shapePicker, checkbox, button, table, \
-                     tree, card, stats, chart, image";
+const TYPES: &str = "text, section, divider, textField, numberField, dateField, timeField, dateTimeField, select, \
+                     multiSelect, layerPicker, fieldPicker, featurePicker, filePicker, crsPicker, pointPicker, \
+                     shapePicker, relationPicker, checkbox, button, table, tree, card, stats, chart, image, relationList";
 
 /// What a shape picker asks the user to draw (docs/adr/8057 §62).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -958,6 +997,11 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
     let mut tables = shows.clone();
     tables.extend(of_type("chart"));
     let layer_pickers = of_type("layerPicker");
+    // What a relation list's parent may be held by (relations.rs).
+    let parents: BTreeSet<&str> = ["featurePicker", "relationPicker"]
+        .into_iter()
+        .flat_map(of_type)
+        .collect();
     // What the components' rules read: the inputs by id, typed (rules.rs).
     let inputs = rules::inputs_of(body);
     let mut ids = BTreeSet::new();
@@ -1433,6 +1477,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             "filePicker" => files::check(c, &at, &mut add),
             // Its value a system of KentOS's list (crs.rs, docs/adr/8057 §45).
             "crsPicker" => crs::check(c, &at, &mut add),
+            // Its relation, and a list's parent (relations.rs, docs/adr/8057 §67).
+            "relationPicker" | "relationList" => relations::check(kind, c, &at, &parents, &mut add),
             // What the user draws: a line or an area (docs/adr/8057 §62).
             "shapePicker" => {
                 if !c

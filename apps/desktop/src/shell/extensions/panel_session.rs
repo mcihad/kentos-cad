@@ -73,6 +73,8 @@ fn kind_of(c: &Component) -> &'static str {
         Component::CrsPicker { .. } => "crsPicker",
         Component::PointPicker { .. } => "pointPicker",
         Component::ShapePicker { .. } => "shapePicker",
+        Component::RelationPicker { .. } => "relationPicker",
+        Component::RelationList { .. } => "relationList",
         Component::LayerPicker { .. } => "layerPicker",
         Component::FieldPicker { .. } => "fieldPicker",
         Component::FeaturePicker { .. } => "featurePicker",
@@ -418,6 +420,18 @@ pub(super) fn set(
                 }
                 Given::Picks(uids)
             }
+            // A relation's parent record: its persistent id, none to let it go (docs/adr/8057 §67).
+            Component::RelationPicker { .. } => match given {
+                Value::Null => Given::Choice(String::new()),
+                Value::String(uid) if kentos_domain::Uuid::parse_str(uid).is_ok() => {
+                    Given::Choice(uid.clone())
+                }
+                _ => {
+                    return Err(wrong(
+                        "value bir kaydın kalıcı kimliği olmalı (ya da None)".to_owned(),
+                    ));
+                }
+            },
             // A drawn shape: GeoJSON of the shape's type, none to take it away (docs/adr/8057 §62).
             Component::ShapePicker { shape, .. } => match given {
                 Value::Null => Given::Shape(None),
