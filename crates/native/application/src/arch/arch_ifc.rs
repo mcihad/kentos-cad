@@ -370,12 +370,13 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         + written.roofs
         + written.railings
         + written.stairs
+        + written.ramps
         + written.spaces;
     if held == 0 {
         return Err(bad(
             "",
-            "Yazılacak bina yok: çizimde gövdesi olan duvar, döşeme, kolon, kiriş, çatı, korkuluk, merdiven ya da mahal \
-             yok."
+            "Yazılacak bina yok: çizimde gövdesi olan duvar, döşeme, kolon, kiriş, çatı, korkuluk, merdiven, rampa ya da \
+             mahal yok."
                 .into(),
         ));
     }
@@ -384,7 +385,6 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         (Why::NoBody, "kesit modeli gövdesini kuramadı"),
         (Why::NoWall, "duvarı yazılmadı"),
         (Why::NoArea, "alanı yok"),
-        (Why::NotYet, "henüz IFC'ye aktarılmıyor"),
     ] {
         let list = counted(&written, why);
         if !list.is_empty() {

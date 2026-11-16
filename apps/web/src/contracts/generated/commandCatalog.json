@@ -127620,7 +127620,7 @@
         },
         {
           "const": "ramp",
-          "description": "A ramp: not drawn yet.",
+          "description": "A ramp: not drawn before docs/adr/8070 (its runs and landings are drawn since); no longer given.",
           "type": "string"
         },
         {

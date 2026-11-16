@@ -1109,7 +1109,7 @@ class BuildingSectionLeft(_StrEnum):
     - ``roof``: The roof: the model has none yet (ADV-20).
     - ``naturalGround``: The natural ground: the model has no survey of it (EK-4 4.30); the graded ground is drawn at ±0.00.
     - ``curved``: A curved wall, slab or stair: drawn by its chords, a curved stair not at all.
-    - ``ramp``: A ramp: not drawn yet.
+    - ``ramp``: A ramp: not drawn before docs/adr/8070 (its runs and landings are drawn since); no longer given.
     - ``noHeight``: A wall or a column with no height.
     - ``headUnknown``: An opening without a head: its gap reaches its wall's top.
     - ``stairWaist``: A stair with no slab to take its waist from: drawn solid down to its floor.

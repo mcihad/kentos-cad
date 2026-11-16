@@ -214,8 +214,7 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V)
                             row.no,
                             CONSISTENCY_ARTICLE.short()
                         ),
-                        "Gövdesi kurulamayan nesneyi (yüksekliği olmayan duvar …) düzeltin, açıklığı bir duvara bağlayın; \
-                         rampa henüz IFC'ye aktarılmıyor, paftada kalır.",
+                        "Gövdesi kurulamayan nesneyi (yüksekliği olmayan duvar …) düzeltin, açıklığı bir duvara bağlayın.",
                         CONSISTENCY_ARTICLE,
                         &["T9.1/21"],
                     ),

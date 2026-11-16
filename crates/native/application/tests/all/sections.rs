@@ -709,3 +709,105 @@ fn a_railing_stands_on_its_floor_its_balusters_seen_and_its_cut_light() {
             .collect::<std::collections::BTreeSet<_>>()
     );
 }
+
+/// Rampa kesitte (docs/adr/8070 §1): an L ramp east of the building, 6 m east then 4 m north, 1.50 m wide, rising
+/// 0.75 m, with the 1.50 m landing round its corner (from 5.25 to 6.75 along its line). Its sloped length is 10 − 1.5 =
+/// 8.5 m, so its grade is 0.75 / 8.5 = 3/34 and the landing stands at 0.75 × 5.25 / 8.5 = 63/136 m: worked out here in
+/// fractions, not by KentOS. No slab holds its ends: its runs are 0.15 m slabs (a slab's thickness), upright
+/// 0.15·√(1 + (3/34)²). A section along y = 2 looking north cuts its second run across: a band from x = 35.25 to 36.75
+/// whose top is 63/136 + 1.25 × 3/34 = 39/68. In the IFC model it is one IfcRamp, a quarter turn ramp of concrete.
+#[test]
+fn a_ramp_s_runs_slope_its_landing_stands_flat_and_the_model_writes_it() {
+    use kentos_geometry_core::geom::section::{self as sec, Frame, Height};
+    use kentos_geometry_core::Vec2 as P;
+    let mut doc = building();
+    let p = |x: f64, y: f64| serde_json::json!({"x": 30.0 + x, "y": y});
+    let answer = kentos_native_application::registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.ramps.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "ramps": [{
+            "pts": [p(0.0, 0.0), p(6.0, 0.0), p(6.0, 4.0)], "width": 1.5, "rise": 0.75, "arch": {"level": "zemin"}
+        }]}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let uid = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| matches!(e, Entity::Ramp(_)).then_some(u))
+        .expect("the ramp")
+        .to_string();
+    let m = sections::model(&doc);
+    assert!(
+        !m.left.iter().any(|(_, o)| o.as_deref() == Some(uid.as_str())),
+        "the ramp is drawn: {:?}",
+        m.left
+    );
+    let mine: Vec<usize> = (0..m.solids.len())
+        .filter(|&i| m.owners[i].as_deref() == Some(uid.as_str()))
+        .collect();
+    let landing = 63.0 / 136.0;
+    let grade: f64 = 3.0 / 34.0;
+    let upright = 0.15 * (1.0 + grade * grade).sqrt();
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let mut runs = Vec::new();
+    let mut flats = Vec::new();
+    for &i in &mine {
+        match &m.solids[i].height {
+            Height::Sloped(s) => runs.push((i, s.clone())),
+            Height::Prism { bottom, top } => flats.push((i, *bottom, *top)),
+            other => panic!("{other:?}"),
+        }
+    }
+    assert_eq!((runs.len(), flats.len()), (2, 1), "{mine:?}");
+    // The first run: up from 0 at its start to the landing's height where the landing begins.
+    let (_, first) = &runs[0];
+    assert!(near(first.z(P::new(30.0, 0.0)), 0.0), "{first:?}");
+    assert!(near(first.z(P::new(35.25, 0.5)), landing), "{first:?}");
+    assert!(near(first.thickness, upright), "{first:?}");
+    // The second: from the landing's height up to 0.75 at its end.
+    let (_, second) = &runs[1];
+    assert!(near(second.z(P::new(36.0, 0.75)), landing), "{second:?}");
+    assert!(near(second.z(P::new(36.0, 4.0)), 0.75), "{second:?}");
+    // The landing: the band's corner square, flat at its height, a slab thick.
+    let (k, bottom, top) = flats[0];
+    assert!(near(top, landing) && near(bottom, landing - 0.15), "{bottom} {top}");
+    let ring = &m.solids[k].rings[0];
+    for (x, y) in [(35.25, -0.75), (36.75, -0.75), (36.75, 0.75), (35.25, 0.75)] {
+        assert!(
+            ring.iter().any(|q| near(q.x, x) && near(q.y, y)),
+            "({x}, {y}) in {ring:?}"
+        );
+    }
+    // Cut across its second run.
+    let frame = Frame::new(P::new(34.0, 2.0), P::new(38.0, 2.0), false, None).unwrap();
+    let cut = sec::section(&frame, &m.solids);
+    let pieces: Vec<&sec::Cut> = cut.cut.iter().filter(|c| mine.contains(&c.solid)).collect();
+    assert_eq!(pieces.len(), 1, "{pieces:?}");
+    let xs: Vec<f64> = pieces[0].ring.iter().map(|q| q.x).collect();
+    let zs: Vec<f64> = pieces[0].ring.iter().map(|q| q.y).collect();
+    let span = |v: &[f64]| {
+        (
+            v.iter().copied().fold(f64::INFINITY, f64::min),
+            v.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+        )
+    };
+    let ((u0, u1), (z0, z1)) = (span(&xs), span(&zs));
+    assert!(near(u0, 1.25) && near(u1, 2.75), "{xs:?}");
+    assert!(near(z1, 39.0 / 68.0) && near(z0, 39.0 / 68.0 - upright), "{zs:?}");
+    // The IFC model: one IfcRamp of its three bodies, a quarter turn ramp of concrete, not left out.
+    let (b, written, _) = kentos_native_application::arch_ifc::model(&doc);
+    assert!(!written.left.iter().any(|l| l.id == uid), "{:?}", written.left);
+    let ramps: Vec<&kentos_ifc::building::Element> = b
+        .elements
+        .iter()
+        .filter(|e| e.class == kentos_ifc::building::Class::Ramp)
+        .collect();
+    assert_eq!(ramps.len(), 1);
+    assert_eq!(ramps[0].predefined, "QUARTER_TURN_RAMP");
+    assert_eq!(ramps[0].object_type, None);
+    assert_eq!(ramps[0].material.as_deref(), Some("Betonarme"));
+    assert_eq!(ramps[0].shapes.len(), 3);
+    assert_eq!(ramps[0].tag.as_deref(), Some(uid.as_str()));
+    assert_eq!(written.ramps, 1);
+}

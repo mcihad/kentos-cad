@@ -161,7 +161,6 @@ fn left_out(drawn: &Drawn) -> Vec<BuildingSectionLeftOut> {
                 Left::Roof => BuildingSectionLeft::Roof,
                 Left::NaturalGround => BuildingSectionLeft::NaturalGround,
                 Left::Curved => BuildingSectionLeft::Curved,
-                Left::Ramp => BuildingSectionLeft::Ramp,
                 Left::NoHeight => BuildingSectionLeft::NoHeight,
                 Left::HeadUnknown => BuildingSectionLeft::HeadUnknown,
                 Left::StairWaist => BuildingSectionLeft::StairWaist,

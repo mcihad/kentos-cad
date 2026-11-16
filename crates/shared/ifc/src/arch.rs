@@ -1,7 +1,7 @@
 //! KentOS Mimari's building as IFC 4.3 (docs/adr/8047; Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması
 //! Hakkında Yönetmelik, RG 5.8.2026/33331, EK-5, EK-6). The application gives the model the sections read ([`Input`]:
-//! the walls joined and cut as the plan has them, their openings, the slabs, columns, beams, roofs, railings and stairs
-//! as prisms, flights and sloped faces over ±0.00) and the drawing's objects; the spaces are its rooms. Each object
+//! the walls joined and cut as the plan has them, their openings, the slabs, columns, beams, roofs, railings, stairs and
+//! ramps as prisms, flights and sloped faces over ±0.00) and the drawing's objects; the spaces are its rooms. Each object
 //! becomes the class EK-5 Tablo 5.1 names for it, its name EK-5 §5.5's `Disiplin-KategoriKodu-Açıklama`
 //! ([`crate::naming`]), its mandatory properties EK-6's where the drawing knows them.
 
@@ -118,8 +118,6 @@ pub enum Why {
     NoWall,
     /// A room without an area.
     NoArea,
-    /// Its class is not written yet: a ramp (the section model draws no slope for it).
-    NotYet,
 }
 
 /// An object of the drawing's building the file does not hold: its persistent id, what it is ("duvar", "kapı" …) and
@@ -271,6 +269,7 @@ pub struct Written {
     pub roofs: usize,
     pub railings: usize,
     pub stairs: usize,
+    pub ramps: usize,
     pub left: Vec<Left>,
     /// The rooms without a number or a name (Md. 10, EK-3), by their persistent ids.
     pub unnamed: Vec<String>,
@@ -395,6 +394,7 @@ fn level_of(e: &Entity) -> Option<&str> {
         Entity::Roof(r) => r.roof.arch.level.as_deref(),
         Entity::Railing(r) => r.railing.arch.level.as_deref(),
         Entity::Stair(s) => s.stair.arch.level.as_deref(),
+        Entity::Ramp(r) => r.ramp.arch.level.as_deref(),
         Entity::Space(s) => s.space.arch.level.as_deref(),
         _ => None,
     }
@@ -586,6 +586,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         if shapes_of.is_empty() {
             continue;
         }
+        let mut object_type = None;
         let (class, predefined, words): (Class, &'static str, String) = match e {
             // Its style's name (Dış duvar 25), as the plan's legend and the layer key name it.
             Entity::Wall(w) => (
@@ -606,7 +607,17 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             },
             Entity::Roof(_) => (Class::Roof, "NOTDEFINED", "Çatı".into()),
             Entity::Railing(_) => (Class::Railing, "BALUSTRADE", "Korkuluk".into()),
-            Entity::Stair(_) => (Class::Stair, "NOTDEFINED", "Merdiven".into()),
+            // Its type from its walking line's flights and turns (docs/adr/8070 §2).
+            Entity::Stair(s) => {
+                let (t, words) = crate::turns::of_stair(&s.stair);
+                object_type = words;
+                (Class::Stair, t, "Merdiven".into())
+            }
+            Entity::Ramp(r) => {
+                let (t, words) = crate::turns::of_ramp(&r.ramp);
+                object_type = words;
+                (Class::Ramp, t, "Rampa".into())
+            }
             _ => continue,
         };
         match class {
@@ -617,6 +628,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             Class::Roof => written.roofs += 1,
             Class::Railing => written.railings += 1,
             Class::Stair => written.stairs += 1,
+            Class::Ramp => written.ramps += 1,
             _ => {}
         }
         // EK-6's properties the drawing knows: a balcony's or a terrace's slab is outside (Tablo 6.56), a roof is
@@ -640,8 +652,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             _ => Vec::new(),
         };
         // Its material (EK-6, `IfcRelAssociatesMaterial`): a column's and a beam's, Betonarme unless said; a slab's;
-        // a wall's core's.
+        // a wall's core's; a stair's and a ramp's the concrete the section draws them in (docs/adr/8070 §2).
         let made_of = material(match e {
+            Entity::Stair(_) | Entity::Ramp(_) => Some("Betonarme".into()),
             Entity::Wall(w) => core_material(&w.wall.components),
             Entity::Slab(s) => s.slab.material.clone(),
             Entity::Column(c) => Some(
@@ -666,6 +679,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             description: None,
             tag: Some(owner.clone()),
             predefined,
+            object_type,
             storey,
             shapes: shapes_of,
             overall: None,
@@ -752,6 +766,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     description: None,
                     tag: Some(mark.clone().unwrap_or_else(|| owner.clone())),
                     predefined: if door { "DOOR" } else { "WINDOW" },
+                    object_type: None,
                     storey,
                     shapes: vec![Shape::Prism {
                         rings: vec![filler_ring(
@@ -899,7 +914,6 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         };
         let (held, why) = match e {
             Entity::Opening(_) => (opened.contains(uid.as_str()), Why::NoWall),
-            Entity::Ramp(_) => (false, Why::NotYet),
             _ => (index.contains_key(uid), Why::NoBody),
         };
         if !held {

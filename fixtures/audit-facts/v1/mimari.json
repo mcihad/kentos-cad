@@ -1817,30 +1817,6 @@
       {
         "class": "IfcStair",
         "classTr": "Merdiven",
-        "path": "PredefinedType",
-        "tr": "Ön Tanımlı Tip",
-        "table": "6.61",
-        "page": 102,
-        "missing": [
-          "01a1dfda-06f3-72a1-8e0e-a40020218328"
-        ],
-        "of": 1
-      },
-      {
-        "class": "IfcStair",
-        "classTr": "Merdiven",
-        "path": "IfcMaterial.Name",
-        "tr": "Malzeme",
-        "table": "6.61",
-        "page": 102,
-        "missing": [
-          "01a1dfda-06f3-72a1-8e0e-a40020218328"
-        ],
-        "of": 1
-      },
-      {
-        "class": "IfcStair",
-        "classTr": "Merdiven",
         "path": "Pset_StairCommon.FireRating",
         "tr": "Yangın Dayanım Sınıfı",
         "table": "6.61",

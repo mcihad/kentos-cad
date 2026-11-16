@@ -13,6 +13,7 @@ fn element(class: Class, shapes: Vec<Shape>, storey: usize) -> Element {
         description: None,
         tag: None,
         predefined: "STANDARD",
+        object_type: None,
         storey,
         shapes,
         overall: None,

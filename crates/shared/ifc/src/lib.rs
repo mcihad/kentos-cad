@@ -13,6 +13,7 @@
 //!   (docs/adr/8062), and KentOS's IFC decisions.
 //! - [`catalog_schema`]: the catalog compared with the IFC 4.3 schema and its official templates.
 //! - [`rules`]: every rule of the base profile, the 2D annexes' and the IFC annexes', as one list a window reads.
+//! - [`turns`]: a stair's and a ramp's predefined type from its walking line's flights and turns (docs/adr/8070 §2).
 
 pub mod alignment;
 pub mod arch;
@@ -27,3 +28,4 @@ pub mod quality;
 pub mod required;
 pub mod rules;
 pub mod step;
+pub mod turns;

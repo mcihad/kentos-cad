@@ -165,6 +165,8 @@ pub struct Element {
     pub tag: Option<String>,
     /// Its predefined type, as STEP spells the enumeration's item (`STANDARD`, `FLOOR`, `DOOR` …).
     pub predefined: &'static str,
+    /// Its object type: what a `USERDEFINED` one is (IFC's rule: a user-defined type is said in words).
+    pub object_type: Option<String>,
     /// Its storey, by index into [`Building::storeys`].
     pub storey: usize,
     pub shapes: Vec<Shape>,
@@ -743,9 +745,10 @@ pub fn write(b: &Building) -> String {
         let shape = w.body(&e.shapes).map_or("$".into(), |s| format!("#{s}"));
         let g = w.id(e.id);
         let head = format!(
-            "{g},$,{},{},$,#{place},{shape},{}",
+            "{g},$,{},{},{},#{place},{shape},{}",
             text(&e.name),
             Writer::opt(&e.description),
+            Writer::opt(&e.object_type),
             Writer::opt(&e.tag)
         );
         let n = match (e.class, e.overall) {
@@ -1044,6 +1047,7 @@ mod tests {
                     description: None,
                     tag: None,
                     predefined: "STANDARD",
+                    object_type: None,
                     storey: 0,
                     shapes: vec![Shape::Prism {
                         rings: vec![vec![[0.0, 0.0], [5.0, 0.0], [5.0, 0.2], [0.0, 0.2]]],
@@ -1065,6 +1069,7 @@ mod tests {
                     description: None,
                     tag: Some("K1".into()),
                     predefined: "DOOR",
+                    object_type: None,
                     storey: 0,
                     shapes: vec![],
                     overall: Some((2.1, 0.9)),

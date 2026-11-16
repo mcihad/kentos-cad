@@ -112,19 +112,37 @@ fn a_whole_kunye_in_turef_fails_nothing_the_drawing_can_hold() {
 }
 
 #[test]
-fn a_ramp_is_said_with_its_object_and_a_room_without_a_name_with_its() {
+fn a_ramp_is_written_and_a_wall_without_a_height_is_said_with_its_object() {
     let mut snap = whole(snapshot());
     let n = snap.entities.len() as u64 + 1;
+    // A ramp has its body since docs/adr/8070: it is no longer what the model leaves out.
     let ramp: kentos_commands::Entity = serde_json::from_value(json!({
         "kind": "ramp", "id": n, "layerId": "merdiven", "attrs": {},
         "pts": [{"x": 5.3, "y": 12.0}, {"x": 5.3, "y": 9.25}], "width": 1.2, "rise": 0.15, "slope": 5.0,
         "arch": {"level": "zemin"}
     }))
     .unwrap();
-    snap.entities.push(ramp);
-    snap.uids.push(kentos_commands::EntityId(
-        (0x0192f5a1_4242_7000_8000_000000000000_u128 + u128::from(n)).to_be_bytes(),
-    ));
+    // A copy of a wall 100 m east, on no storey and with no height: the section model gives it no body.
+    let mut wall = snap
+        .entities
+        .iter()
+        .find(|e| matches!(e, kentos_commands::Entity::Wall(_)))
+        .cloned()
+        .unwrap();
+    wall.base_mut().id = n as u32 + 1;
+    if let kentos_commands::Entity::Wall(w) = &mut wall {
+        for p in &mut w.wall.pts {
+            p.x += 100.0;
+        }
+        w.wall.height = None;
+        w.wall.arch.level = None;
+    }
+    for (k, e) in [ramp, wall].into_iter().enumerate() {
+        snap.entities.push(e);
+        snap.uids.push(kentos_commands::EntityId(
+            (0x0192f5a1_4242_7000_8000_000000000000_u128 + u128::from(n) + k as u128).to_be_bytes(),
+        ));
+    }
     // The first room (Yatak odası, 001) loses its name.
     for e in &mut snap.entities {
         if let kentos_commands::Entity::Space(s) = e {
@@ -147,8 +165,9 @@ fn a_ramp_is_said_with_its_object_and_a_room_without_a_name_with_its() {
         "{}",
         found[1].1
     );
-    assert_eq!(found[0].2, 1, "the ramp");
-    assert!(found[0].1.contains("1 rampa"), "{}", found[0].1);
+    assert_eq!(found[0].2, 1, "the wall, not the ramp");
+    assert!(found[0].1.contains("1 duvar"), "{}", found[0].1);
+    assert!(!found[0].1.contains("rampa"), "{}", found[0].1);
     assert!(
         found[0].1.ends_with("— Dijital Proje Yön. 9"),
         "{}",

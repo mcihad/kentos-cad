@@ -87,7 +87,7 @@ pub enum BuildingSectionLeft {
     NaturalGround,
     /// A curved wall, slab or stair: drawn by its chords, a curved stair not at all.
     Curved,
-    /// A ramp: not drawn yet.
+    /// A ramp: not drawn before docs/adr/8070 (its runs and landings are drawn since); no longer given.
     Ramp,
     /// A wall or a column with no height.
     NoHeight,

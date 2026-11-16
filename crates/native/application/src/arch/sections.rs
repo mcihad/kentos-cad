@@ -20,7 +20,9 @@
 //!   Mimarlar Odası 14.3.4 g, 14.5.4 q: "Dere mahya, saçak … kotlandırılır"), and a face cut down its fall line is
 //!   given its slope ("%33").
 //! - **What the model does not hold** is listed, not drawn (§3; ADR 0347 §3): the roof when it has none, the natural
-//!   ground, a curved stair or wall, a ramp, a block's height.
+//!   ground, a curved stair or wall, a block's height.
+//! - **Ramps** (docs/adr/8070 §1): each run a sloped slab (the ramp's plane over its band, as thick as the slab it
+//!   arrives at), each landing a flat slab at its height.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -87,8 +89,6 @@ pub enum Left {
     NaturalGround,
     /// A curved wall or stair: drawn as its chords, not as a curve.
     Curved,
-    /// A ramp: its slope is not drawn yet.
-    Ramp,
     /// A wall with no height.
     NoHeight,
     /// An opening without a head: its gap reaches its wall's top.
@@ -106,7 +106,6 @@ impl Left {
             Left::Roof => "çatı (modelde yok)",
             Left::NaturalGround => "tabii zemin (modelde yok)",
             Left::Curved => "eğri duvar ya da merdiven (düz parçalarla)",
-            Left::Ramp => "rampa",
             Left::NoHeight => "yüksekliği olmayan duvar",
             Left::HeadUnknown => "lentosu olmayan açıklık (duvarın tepesine kadar)",
             Left::StairWaist => "merdiven plağı (döşemesi yok: dolu)",
@@ -332,9 +331,7 @@ pub fn model(doc: &Document) -> Model {
             Entity::Roof(r) => roof(doc, r, owner, &mut m),
             Entity::Railing(r) => railing(&r.railing, owner, &mut m),
             Entity::Stair(s) => stair(&s.stair, &slabs, owner, &mut m),
-            Entity::Ramp(_) => {
-                m.left.insert((Left::Ramp, owner));
-            }
+            Entity::Ramp(r) => ramp(&r.ramp, &slabs, owner, &mut m),
             _ => {}
         }
     }
@@ -1388,6 +1385,135 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
     }
 }
 
+/// The index a ramp's run takes as its sloped slab's roof (docs/adr/8070 §1): far past any roof's, so a section never
+/// takes an edge of it for a roof's hip or ridge drawn once.
+const RAMP_FACES: usize = usize::MAX / 4;
+
+/// A ramp's body (docs/adr/8070 §1): each sloped run a sloped slab whose plane rises from the height at the run's start
+/// to the one at its end (the rise shared out over the runs by their lengths, as the plan's arrow and levels read it),
+/// and each landing a flat slab at the height it stands at. Both are as thick as the slab the ramp arrives at, else
+/// the one it starts from (a stair's waist), else a slab's own thickness: under a ramp on the ground lies its fill,
+/// which is ground, and the model holds no ground (EK-4 4.30).
+fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>, m: &mut Model) {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::arch::{Walk, band, ramp_landings};
+    let Shape::Ramp { pts, ramp: spec } = kentos_formats::arch_elements::core_ramp(r) else {
+        return;
+    };
+    if pts.len() < 2 || !(spec.width > 0.0) {
+        return;
+    }
+    let walk = Walk::of(&pts);
+    let landings = ramp_landings(&walk, &spec);
+    // Its sloped length before walking distance s: the distance less the landings' parts before it.
+    let run_before = |s: f64| -> f64 {
+        s - landings
+            .iter()
+            .map(|(a, b)| (s.min(*b) - a).max(0.0))
+            .sum::<f64>()
+    };
+    let total = run_before(walk.length());
+    let base = r.base.unwrap_or(0.0);
+    let height = |s: f64| -> f64 {
+        if total > 1e-12 {
+            base + r.rise * run_before(s) / total
+        } else {
+            base
+        }
+    };
+    let (start, end) = (pts[0], pts[pts.len() - 1]);
+    let arrive = base + r.rise;
+    let waist = slabs
+        .iter()
+        .find(|sl| sl.holds(end) && (sl.top - arrive).abs() <= 0.5)
+        .or_else(|| {
+            slabs
+                .iter()
+                .find(|sl| sl.holds(start) && (sl.top - base).abs() <= 0.5)
+        })
+        .map_or(kentos_commands::SLAB_THICKNESS, |sl| sl.thickness);
+    let look = concrete_look();
+    let half = spec.width / 2.0;
+    for k in 0..pts.len() - 1 {
+        let (a, b) = (pts[k], pts[k + 1]);
+        let (sa, sb) = (walk.at[k], walk.at[k + 1]);
+        let len = sb - sa;
+        if len <= 1e-9 {
+            continue;
+        }
+        let dir = P::new((b.x - a.x) / len, (b.y - a.y) / len);
+        let across = P::new(-dir.y, dir.x);
+        // Its run: from the end of a landing that holds its start (else its start) to the start of one that holds its
+        // end (else its end); landings stand only at the line's corners.
+        let lo = landings
+            .iter()
+            .find(|(x, y)| *x <= sa + 1e-9 && *y > sa + 1e-9)
+            .map_or(sa, |(_, y)| *y);
+        let hi = landings
+            .iter()
+            .find(|(x, y)| *x < sb - 1e-9 && *y >= sb - 1e-9)
+            .map_or(sb, |(x, _)| *x);
+        if hi - lo <= 1e-9 {
+            continue;
+        }
+        let at = |s: f64| P::new(a.x + dir.x * (s - sa), a.y + dir.y * (s - sa));
+        let (fa, fb) = (at(lo), at(hi));
+        let ring = vec![
+            P::new(fa.x - across.x * half, fa.y - across.y * half),
+            P::new(fb.x - across.x * half, fb.y - across.y * half),
+            P::new(fb.x + across.x * half, fb.y + across.y * half),
+            P::new(fa.x + across.x * half, fa.y + across.y * half),
+        ];
+        let (z0, z1) = (height(lo), height(hi));
+        let grade = (z1 - z0) / (hi - lo);
+        let (dx, dy) = (grade * dir.x, grade * dir.y);
+        let sloped = sec::Sloped {
+            top: z0 - dx * fa.x - dy * fa.y,
+            dx,
+            dy,
+            // Its slab's thickness across it, measured upright as a sloped slab's is.
+            thickness: waist * (1.0 + grade * grade).sqrt(),
+            // Every edge of a run has its face: its sides, and its ends where it meets a landing or a floor.
+            eaves: ring.clone(),
+            roof: RAMP_FACES + m.solids.len(),
+        };
+        push(
+            m,
+            Solid {
+                rings: vec![ring],
+                height: Height::Sloped(sloped),
+                voids: Vec::new(),
+                marks: Vec::new(),
+                finish: None,
+            },
+            look.clone(),
+            owner.clone(),
+        );
+    }
+    let outline = band(&pts, half);
+    for (x, y) in &landings {
+        let top = height(*x);
+        let Some(ring) = landing_cut(&walk, &outline, *x, *y) else {
+            continue;
+        };
+        push(
+            m,
+            Solid {
+                rings: vec![ring],
+                height: Height::Prism {
+                    bottom: top - waist,
+                    top,
+                },
+                voids: Vec::new(),
+                marks: Vec::new(),
+                finish: None,
+            },
+            look.clone(),
+            owner.clone(),
+        );
+    }
+}
+
 /// A landing's outline: the stair's band between the walking line's points `x` and `y` along it, cut square to the
 /// line at both ends.
 fn landing_ring(
@@ -1400,6 +1526,17 @@ fn landing_ring(
     let Shape::Polygon { pts: ring, .. } = band else {
         return None;
     };
+    landing_cut(walk, ring, x, y)
+}
+
+/// The band `ring` (a stair's or a ramp's, round its walking line) between the line's points `x` and `y` along it,
+/// cut square to the line at both ends.
+fn landing_cut(
+    walk: &kentos_geometry_core::geom::arch::Walk,
+    ring: &[P],
+    x: f64,
+    y: f64,
+) -> Option<Vec<P>> {
     let (px, dx) = walk.point(x);
     let (py, dy) = walk.point(y);
     // Keep the band's part after the cross line at x (along dx) and before the one at y (along dy).
