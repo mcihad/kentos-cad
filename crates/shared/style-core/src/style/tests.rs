@@ -545,6 +545,7 @@ fn a_rule_calls_an_extensions_function_answered_without_waiting() {
         vec![ExternalDef {
             name: NAME.into(),
             description: "Ada/parsel".into(),
+            refused: None,
         }],
         host.clone(),
     );

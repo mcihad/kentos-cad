@@ -312,6 +312,7 @@ mod tests {
             vec![ExternalDef {
                 name: NAME.into(),
                 description: "Ada/parsel".into(),
+                refused: None,
             }],
             host.clone(),
         );

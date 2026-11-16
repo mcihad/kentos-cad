@@ -20,12 +20,17 @@
 //!   them; a listing starts nothing.
 //! - **No chain of processes:** an extension's own process (`kentos.ext_host` sets [`EXTENSION_PROCESS`]) offers none:
 //!   a drawing its code opens does not run another extension's tool round its declared dependencies (§47, PY-RUN-15).
+//! - **The expression functions too (§80):** an extension whose manifest's `runtimes` holds `headless` answers
+//!   `ext.<extension>.<function>(…)` in a label, a style's rule, a layer's filter, a form's calculation and an İşlemler
+//!   expression, a batch of rows a call, waited for ([`Headless::answer`]); another's is refused where it is called,
+//!   saying why ([`crate::expressions`]).
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock, RwLock};
 
+use kentos_expression::external::Arg;
 use kentos_extension_host::{Journal, places};
 use kentos_processing::Feedback;
 use kentos_processing::external::{
@@ -70,6 +75,8 @@ struct State {
     tools: Vec<ExternalTool>,
     plans: HashMap<String, Plan>,
     unavailable: BTreeMap<String, String>,
+    /// The expression functions offered (docs/adr/8057 §80).
+    functions: crate::expressions::Offered,
     /// The descriptors' refusals already said.
     said: BTreeSet<String>,
 }
@@ -193,8 +200,11 @@ impl Headless {
         let mut plans = HashMap::new();
         let mut unavailable = BTreeMap::new();
         let mut refused = Vec::new();
+        let mut functions = crate::expressions::Offered::default();
         if let Some(registry) = &registry {
             let (contributions, _) = registry.planned_contributions();
+            functions =
+                crate::expressions::read_functions(registry, &contributions, self.every_runtime);
             let mut listed = read_tools(registry, &contributions, &environment);
             refused = std::mem::take(&mut listed.refused);
             for tool in listed.tools {
@@ -210,7 +220,11 @@ impl Headless {
                 }
             }
         }
-        let keys: BTreeSet<String> = plans.values().map(Plan::key).collect();
+        let keys: BTreeSet<String> = plans
+            .values()
+            .chain(functions.plans.values())
+            .map(Plan::key)
+            .collect();
         for running in self.pool.running() {
             if !keys.contains(&running.key) {
                 self.pool.close(&running.key);
@@ -235,6 +249,7 @@ impl Headless {
             state.tools = tools;
             state.plans = plans;
             state.unavailable = unavailable;
+            state.functions = functions;
         }
         for note in said {
             (self.note)(note);
@@ -258,10 +273,93 @@ impl Headless {
             .unwrap_or_default()
     }
 
-    /// Puts the lists in this process's İşlemler: what `cad.processing.tools` lists and `.run` refuses.
+    /// The expression functions as the expressions know them (docs/adr/8057 §80): those it runs, and those of the
+    /// extensions that do not run headless with why a call is refused.
+    pub fn functions(&self) -> Vec<kentos_expression::external::ExternalDef> {
+        self.state
+            .read()
+            .map(|s| s.functions.defs.clone())
+            .unwrap_or_default()
+    }
+
+    /// Puts the lists in this process's İşlemler (what `cad.processing.tools` lists and `.run` refuses) and the
+    /// expression functions where expressions are worked out: a label's text, a style's rule, a layer's filter and a
+    /// form's calculation (the expression engine's host) and İşlemler' expressions (its own list).
     fn publish(&self) {
         external::set_tools(self.tools());
         external::set_unavailable(self.unavailable());
+        let defs = self.functions();
+        kentos_expression::external::set_host(defs.clone(), Arc::new(OfferedCalls));
+        external::set_expressions(defs);
+        external::register_expression_calls(Arc::new(OfferedCalls));
+    }
+
+    /// The answers of expression function `name` for each row of arguments, worked out in its version's process and
+    /// waited for (a headless host draws no frame); a failure empties them and is noted (docs/adr/8057 §80).
+    pub fn answer(&self, name: &str, rows: &[Vec<Arg>]) -> Vec<Arg> {
+        let empty = || vec![Arg::Null; rows.len()];
+        if rows.is_empty() {
+            return Vec::new();
+        }
+        let Some(plan) = self
+            .state
+            .read()
+            .ok()
+            .and_then(|s| s.functions.plans.get(name).cloned())
+        else {
+            return empty();
+        };
+        let note = |message: String| {
+            let n = Note::Failed {
+                ext: plan.ext.clone(),
+                part: format!("expression:{}", plan.local),
+                title: name.to_owned(),
+                code: "expression_failed",
+                message,
+                detail: None,
+                crash: false,
+            };
+            if let Some(root) = &self.root {
+                Journal::new(root).write(n.record(Some(&plan.version)));
+            }
+            (self.note)(n);
+        };
+        let python = match self.python() {
+            Ok(python) => python,
+            Err(why) => {
+                note(format!("“{name}” çalıştırılamadı: {why}"));
+                return empty();
+            }
+        };
+        let start = || {
+            kentos_extension_host::verify_installed(&plan.source, &plan.digest)?;
+            start_of(&plan, &python, Library::IfFound)
+        };
+        let invoke = serde_json::json!({
+            "kind": "expression",
+            "rows": rows.iter().map(|r| crate::expressions::row_json(r)).collect::<Vec<_>>(),
+        });
+        match crate::run::run_in_pool(
+            &self.pool,
+            &plan.key(),
+            &plan,
+            &start,
+            invoke,
+            EXPRESSION_TIMEOUT,
+            &|| false,
+        ) {
+            Ok(done) => {
+                let (values, failed) = crate::expressions::values_of(&done, rows.len());
+                if let Some(words) = failed {
+                    note(format!("“{name}”: {words}"));
+                }
+                values
+            }
+            Err(why) => {
+                note(format!("“{name}” çalıştırılamadı: {why}"));
+                empty()
+            }
+        }
     }
 
     /// KentOS's Python: as given, as found before, or looked for now (kept once found); once known, the tools say
@@ -331,6 +429,22 @@ impl Provider for Headless {
             (self.note)(n)
         };
         run_tool(&self.pool, &plan, &start, tool, input, feedback, &note)
+    }
+}
+
+/// How long a batch of an expression function's rows may take.
+const EXPRESSION_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
+
+/// The expression engine's and İşlemler' calls of the extensions' functions: the offered headless host's answers,
+/// waited for.
+struct OfferedCalls;
+
+impl kentos_expression::external::ExternalCalls for OfferedCalls {
+    fn call(&self, name: &str, rows: &[Vec<Arg>]) -> Vec<Arg> {
+        match offered() {
+            Some(headless) if ours() => headless.answer(name, rows),
+            _ => vec![Arg::Null; rows.len()],
+        }
     }
 }
 

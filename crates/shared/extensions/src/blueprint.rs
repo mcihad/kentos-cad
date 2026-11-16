@@ -329,6 +329,13 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
             json!([{ "id": last, "label": name, "module": module, "panels": [{ "label": name, "items": items }] }]),
         );
     }
+    // Its tool's and its expression function's code runs in MCP and the Python library too (docs/adr/8057 §70, §80);
+    // a command, a map tool, a panel need the desktop.
+    let runtimes = if has(Contribution::Processing) || has(Contribution::Expression) {
+        json!(["desktop", "headless"])
+    } else {
+        json!(["desktop"])
+    };
     let mut manifest = json!({
         "format": "kentos.extension",
         "schemaVersion": 1,
@@ -343,7 +350,7 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
         "changelogFile": "CHANGELOG.md",
         "kind": if ask.vertical { "vertical" } else { "utility" },
         "modules": [module],
-        "runtimes": ["desktop"],
+        "runtimes": runtimes,
         "compatibility": {
             "sdkProtocol": { "min": 1, "max": 1 },
             "kentos": { "min": "0.1.0" },

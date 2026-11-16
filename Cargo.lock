@@ -2785,6 +2785,7 @@ version = "0.1.0"
 dependencies = [
  "kentos-commands",
  "kentos-domain",
+ "kentos-expression",
  "kentos-extension-host",
  "kentos-extensions",
  "kentos-headless",

@@ -13,6 +13,8 @@ publish.workspace = true
 [dependencies]
 kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-domain = { path = "../domain" }
+# A label's, a style's and a form's `ext.*` functions answered by the extension's process (docs/adr/8057 §80).
+kentos-expression = { path = "../../shared/expression" }
 kentos-extension-host = { path = "../extension-host" }
 # An audit rule's examples, read from its package (docs/adr/8057 §75).
 kentos-extensions = { path = "../../shared/extensions" }

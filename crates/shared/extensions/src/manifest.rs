@@ -63,7 +63,9 @@ pub struct Manifest {
     pub icon: Option<String>,
     pub kind: ExtensionKind,
     pub modules: Vec<Module>,
-    /// The catalog's summary of where it runs; each tool says its own.
+    /// Where it runs, as the catalog shows it: `desktop`, `headless` (MCP, the Python library), `cloud`. Each İşlemler
+    /// tool says its own (its descriptor's `runtimes`); the expression functions run headless only when this holds
+    /// `headless` (docs/adr/8057 §80).
     pub runtimes: Vec<Runtime>,
     pub compatibility: Compatibility,
     #[serde(default, skip_serializing_if = "Dependencies::is_empty")]
@@ -1421,7 +1423,7 @@ fn expression_examples(c: &mut Checker<'_>, at: &str, examples: &[ExpressionExam
     if examples.len() > MOST_EXPRESSION_EXAMPLES {
         c.add(
             "manifest_expression_example",
-            &format!("{at}/examples"),
+            format!("{at}/examples"),
             format!(
                 "En çok {MOST_EXPRESSION_EXAMPLES} örnek ({} var).",
                 examples.len()
@@ -1436,7 +1438,7 @@ fn expression_examples(c: &mut Checker<'_>, at: &str, examples: &[ExpressionExam
         if example.args.len() > MOST_EXPRESSION_EXAMPLES {
             c.add(
                 "manifest_expression_example",
-                &format!("{here}/args"),
+                format!("{here}/args"),
                 format!("Bir çağrı en çok {MOST_EXPRESSION_EXAMPLES} argüman alır."),
             );
         }
@@ -1444,7 +1446,7 @@ fn expression_examples(c: &mut Checker<'_>, at: &str, examples: &[ExpressionExam
             if !plain(arg) {
                 c.add(
                     "manifest_expression_example",
-                    &format!("{here}/args/{k}"),
+                    format!("{here}/args/{k}"),
                     "Argüman düz bir değer olmalı: metin, sayı, true/false ya da null.".to_owned(),
                 );
             }
@@ -1452,7 +1454,7 @@ fn expression_examples(c: &mut Checker<'_>, at: &str, examples: &[ExpressionExam
         if !plain(&example.expect) {
             c.add(
                 "manifest_expression_example",
-                &format!("{here}/expect"),
+                format!("{here}/expect"),
                 "Beklenen düz bir değer olmalı: metin, sayı, true/false ya da null.".to_owned(),
             );
         }

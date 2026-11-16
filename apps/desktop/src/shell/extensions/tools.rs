@@ -20,7 +20,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
 
-use kentos_extension_host::{ContributionKind, Record};
+use kentos_extension_host::Record;
 use kentos_extension_tools::{Library, Note, Plan, Python};
 use kentos_processing::Feedback;
 use kentos_processing::external::{self, ExternalTool, Failure, Provider};
@@ -693,44 +693,23 @@ impl App {
                 );
             }
         }
-        // The extensions' expression functions (`ext.<eklenti>.<işlev>`), known by name without their code.
-        let mut expressions: HashMap<String, Plan> = HashMap::new();
-        let mut defs: Vec<kentos_expression::external::ExternalDef> = Vec::new();
-        if let Some(registry) = self.extensions.registry.as_ref() {
-            for c in registry
-                .contributions()
-                .iter()
-                .filter(|c| c.kind == ContributionKind::Expression)
-            {
-                let ext = c.lease.extension.clone();
-                let Some(manifest) = registry.manifest(&ext) else {
-                    continue;
-                };
-                let local =
-                    c.id.strip_prefix(&format!("ext.{ext}."))
-                        .unwrap_or_default();
-                let Some(entry) = manifest
-                    .entrypoints
-                    .expressions
-                    .iter()
-                    .find(|e| e.id == local)
-                else {
-                    continue;
-                };
-                let Some(plan) = Plan::of(registry, &ext, local, &entry.handler) else {
-                    continue;
-                };
-                defs.push(kentos_expression::external::ExternalDef {
-                    name: c.id.clone(),
-                    description: format!(
-                        "{} — {} eklentisinin ifade işlevi; kendi Python ortamında çalışır.",
-                        entry.title.as_deref().unwrap_or(local),
-                        manifest.name
-                    ),
-                });
-                expressions.insert(c.id.clone(), plan);
-            }
-        }
+        // The extensions' expression functions (`ext.<eklenti>.<işlev>`), known by name without their code: every
+        // one runs here (the headless hosts read them the same way, docs/adr/8057 §80).
+        let kentos_extension_tools::expressions::Offered {
+            plans: expressions,
+            defs,
+        } = self
+            .extensions
+            .registry
+            .as_ref()
+            .map(|registry| {
+                kentos_extension_tools::expressions::read_functions(
+                    registry,
+                    registry.contributions(),
+                    true,
+                )
+            })
+            .unwrap_or_default();
         // The process's lists are given once a tool or a function is offered, and kept up to date after; a window
         // that never offered one leaves them alone (in tests many windows share the process, `hold_process_lists`).
         let global = self.extensions.tools.registered || !tools.is_empty() || !defs.is_empty();

@@ -792,6 +792,7 @@ fn an_extensions_expression_function_answers_a_processing_expression_a_batch_at_
     external::set_expressions(vec![kentos_expression::external::ExternalDef {
         name: "ext.tr.ornek.deneme.ada-parsel".into(),
         description: "Ada/parsel".into(),
+        refused: None,
     }]);
     external::register_expression_calls(answers.clone());
     let tool = Registry::current().get("attributes.calculate").unwrap();

@@ -133,8 +133,19 @@ fn install(root: &Path, python_root: &Path, python: &Path) -> PathBuf {
         "manifest.json".into(),
         serde_json::to_string_pretty(&manifest).unwrap(),
     );
+    install_files(root, python_root, python, &files)
+}
+
+/// `files` (a working folder's, path → text) installed (everything granted, Python chosen) in `root`'s registry, its
+/// environment in `python_root` with the stand-in as its Python. The extension's package folder.
+fn install_files(
+    root: &Path,
+    python_root: &Path,
+    python: &Path,
+    files: &std::collections::BTreeMap<String, String>,
+) -> PathBuf {
     let folder = root.with_extension("kaynak");
-    for (path, text) in &files {
+    for (path, text) in files {
         let at = folder.join(path);
         std::fs::create_dir_all(at.parent().unwrap()).unwrap();
         std::fs::write(at, text).unwrap();
@@ -379,6 +390,122 @@ fn a_package_changed_after_installing_does_not_run() {
     let off = find_python(Some(&python_root)).unwrap_err();
     assert!(off.starts_with("Python kapalı"), "{off}");
     assert!(find_python(None).unwrap_err().contains("veri klasörü yok"));
+}
+
+/// An extension's expression function in a headless host (docs/adr/8057 §80): known to the expressions either way; run
+/// only when the manifest says the extension runs headless (the blueprint does; a test runner's host runs it anyway),
+/// otherwise refused where it is called with the reason and nothing started. A batch is answered in the version's
+/// process, a row the code fails empty and the batch's failure noted once, in the extension's log too.
+#[test]
+fn an_expression_function_runs_headless_when_its_extension_says_so() {
+    use kentos_expression::external::Arg;
+    const FUNCTION: &str = "ext.tr.ornek.basiz.buyuk-harf";
+    let Some(python) = python3() else {
+        eprintln!("Python 3 yok: sınama atlandı.");
+        return;
+    };
+    let text = |t: &str| Arg::Text(t.to_owned());
+    let rows = [vec![text("istanbul")], vec![text("ılık")], vec![Arg::Null]];
+    for headless_too in [false, true] {
+        let temp = Temp::new(if headless_too {
+            "ifade"
+        } else {
+            "ifade-masaustu"
+        });
+        let (root, python_root) = (temp.0.join("eklentiler"), temp.0.join("python"));
+        let mut files = blueprint(&Ask {
+            id: EXT.into(),
+            name: "Başsız".into(),
+            summary: "Başsız konakta çalışan bir ifade işlevi.".into(),
+            vertical: false,
+            module: Module::Cbs,
+            contributions: vec![Contribution::Expression],
+        })
+        .expect("a blueprint");
+        let mut manifest: Value = serde_json::from_str(&files["manifest.json"]).unwrap();
+        assert_eq!(
+            manifest["runtimes"],
+            json!(["desktop", "headless"]),
+            "a new extension's function runs headless too"
+        );
+        if !headless_too {
+            manifest["runtimes"] = json!(["desktop"]);
+            files.insert(
+                "manifest.json".into(),
+                serde_json::to_string_pretty(&manifest).unwrap(),
+            );
+        }
+        install_files(&root, &python_root, &python, &files);
+        let heard = Arc::new(Mutex::new(Heard::default()));
+        let make = || {
+            Headless::new(Some(root.clone()), Some(python_root.clone()), hook(&heard))
+                .with_python(given(&python_root))
+        };
+        let headless = make();
+        assert!(headless.read());
+        let defs = headless.functions();
+        let names: Vec<&str> = defs.iter().map(|d| d.name.as_str()).collect();
+        assert_eq!(names, [FUNCTION]);
+        let schema = kentos_expression::Schema {
+            externals: defs.clone(),
+            ..Default::default()
+        };
+        let compiled = kentos_expression::compile_with(&format!("{FUNCTION}(ad) || '!'"), &schema);
+        if !headless_too {
+            let why = compiled.expect_err("refused where it is called").message;
+            assert!(
+                why.starts_with(&format!("{FUNCTION}() burada çalışmaz: “Başsız” eklentisi"))
+                    && why.contains("`headless`"),
+                "{why}"
+            );
+            assert_eq!(headless.answer(FUNCTION, &rows), vec![Arg::Null; 3]);
+            assert_eq!(headless.running(), 0, "nothing started");
+            // A test runner's host (`kentos kek test`) runs it the same way.
+            let every = make().every_runtime();
+            assert!(every.read());
+            assert!(every.functions()[0].refused.is_none());
+            assert_eq!(every.answer(FUNCTION, &rows[..1]), [text("İSTANBUL")]);
+            every.close();
+            continue;
+        }
+        assert!(compiled.is_ok(), "{compiled:?}");
+        assert_eq!(
+            headless.answer(FUNCTION, &rows),
+            [text("İSTANBUL"), text("ILIK"), Arg::Null]
+        );
+        assert_eq!(headless.running(), 1, "its version's process, kept");
+        // A row the code fails: that row empty, the other answered, the batch's failure noted once.
+        assert_eq!(
+            headless.answer(FUNCTION, &[vec![text("hata")], vec![text("sivas")]]),
+            [Arg::Null, text("SİVAS")]
+        );
+        let failed: Vec<String> = heard
+            .lock()
+            .unwrap()
+            .notes
+            .iter()
+            .filter_map(|n| match n {
+                Note::Failed { code, message, .. } if *code == "expression_failed" => {
+                    Some(message.clone())
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            failed,
+            [format!(
+                "“{FUNCTION}”: 1 satır hata verdi: ValueError: istenen hata"
+            )]
+        );
+        let logged = kentos_extension_host::Journal::new(&root)
+            .tail(Some(EXT), 1)
+            .remove(0);
+        assert_eq!(
+            (logged.code.as_str(), logged.version.as_deref()),
+            ("expression_failed", Some("0.1.0"))
+        );
+        headless.close();
+    }
 }
 
 /// Offered to the process, the tool is what `cad.processing.run` runs on a drawing, as on the desktop; a desktop-only

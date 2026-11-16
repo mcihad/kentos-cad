@@ -4353,3 +4353,43 @@ görüntüsüyle karşılaştırılmış).
   bölümlerin kaçış uzaklığına karar verilmez"): açıklama 0.4.0'ın davranışına göre düzeltildi.
 - **Kalan:** mahalin adından sınıf (yerel denetim okuyor, olgular bölümünkini taşıyor); yüksek tehlikeli yer
   (okunmuyor); bölüm sınıfının programda açıkça seçilmesi (bugün nitelikten okunur).
+
+## §80. İfade işlevleri başsız konaklarda (`ADIM 19`, §70'in ifadeye uzanması)
+
+**16 Kasım.** Kod: `kentos-extension-tools` `expressions.rs` (yeni: `Offered`, `read_functions`, `row_json`,
+`values_of`), `headless.rs` (`functions`, `answer`, `publish`'in iki kaydı, `OfferedCalls`); paylaşılan ifade motoru
+(`ExternalDef::refused`, derleyicinin reddi); masaüstü `tools.rs` (işlevler aynı okuyucudan); paylaşılan `blueprint.rs`
+(`runtimes`), `manifest.rs` (`runtimes`'ın belgesi), SDK rehberi.
+
+- **Sorun:** MCP ve Python kitaplığı eklentinin İşlemler araçlarını çalıştırıyordu (§70), ifade işlevlerini
+  çalıştırmıyordu: `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` çağıran etiket, stil kuralı, form hesabı ya da
+  İşlemler ifadesi (alan hesaplayıcı, ifadeyle seç) orada "Bilinmeyen işlev" diye reddediliyordu. Ölçüldü: değişiklikten
+  önceki Python kitaplığında `attributes.calculate` bu iletiyle düştü.
+- **Karar: eklenti söyler.** İşlevin tanım dosyası yok; nerede çalıştığını manifestin zaten var olan `runtimes` alanı
+  söyler: `headless` varsa MCP ve Python kitaplığı işlevi sunar ve çalıştırır (araçta tanımın `headless-python`'ı gibi,
+  §70). Yoksa işlev ifadelere adıyla bildirilir ve derlenirken nedeniyle reddedilir: "ext.….ada-parsel() burada
+  çalışmaz: “Vitrin” eklentisi başsız çalıştığını söylemiyor (manifestinin `runtimes` listesinde `headless` yok);
+  işlevlerini yalnız KentOS masaüstü çalıştırır." Sessizce boş kalan bir etiket ya da "bilinmeyen işlev" bir ajana
+  neyin eksik olduğunu söylemezdi. Sınama koşucusunun konağı (`kek test`) ve masaüstü hepsini çalıştırır.
+- **Bekler, masaüstünün aksine.** Masaüstü çizerken beklemez (yanıt gelince yeniden çizer, §8.1); başsız konağın
+  koruyacağı bir karesi yok: yığının satırları sürümün sürecinde tek çağrıda çalışır (`kind: expression`) ve cevap
+  beklenir (en çok 60 sn). Bir satırın hatası o satırı boşaltır; yığının hatası bir kez not edilir: eklentinin
+  günlüğüne `expression_failed`, MCP'de standart hataya, Python'da logging'e.
+- **İki kayıt, tek kaynak.** Başsız konak işlevleri ifade motorunun konağına (etiket, stil kuralı, katman süzgeci, form
+  hesabı) ve İşlemler'in kendi listesine (alan hesaplayıcı, ifadeyle seç) birlikte yazar. Masaüstü de işlevleri artık
+  aynı okuyucudan alır (`read_functions`, hepsi): işlevin satırı iki yerde aynı.
+- **Süreç aracınkiyle aynı:** aynı sürümün aracı ve işlevi havuzda tek süreçtir; dosyaları süreç başlamadan özetle
+  denetlenir; kaldırılan ya da kapatılan sürümün süreci kapanır (anahtarlara işlevlerin planları da girer).
+- **İskelet:** İşlemler aracı ya da ifade işlevi olan yeni eklentinin manifesti `["desktop", "headless"]` der;
+  komut, harita aracı ve panel masaüstüne bağlı kalır. Vitrin 1.0.51'den beri `headless` diyordu: paketi değişmedi.
+- **SDK:** rehberin ifade satırına "MCP ve Python'da `runtimes`: `headless` ister." (paket 47.890 → 47.937 / 48.000);
+  manifest şemasında `runtimes`'ın açıklaması.
+- **Gerçek koşu:** `kentos-mcp` (stdio; Vitrin kurulu yalıtılmış kayıt; Vitrin çizimi): `processing.run`
+  `attributes.calculate`, değer `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` → dört parselin `etiket`'i `101/1`,
+  `101/2`, `101/3`, `102/1`; bilinmeyen `ext.tr.ornek.yok.islev` parametre denetiminde reddedildi. Python kitaplığında
+  (yerel modül yeniden derlendi) aynı çağrı 963 ms'de (eklentinin sürecinin açılışı dahil) aynı dört değeri yazdı.
+- **Sınamalar:** extension-tools 1 (yerine geçen Python süreciyle: `headless` diyen ve demeyen eklenti, sınama
+  koşucusunun konağı, Türkçe büyük harf, hatalı satır ve notu, günlük kaydı), ifade motoru 1 (reddin sözü ve yeri),
+  paylaşılan crate 149, masaüstünün eklenti sınamaları 98, İşlemler'in eklenti işlevi sınaması.
+- **Kalan:** Python kitaplığı kayıt defterini çizim açılışında ve İşlemler komutundan önce okur: çizim açıkken kurulan
+  eklentinin işlevini etiket bir sonraki okumada tanır (MCP her araç çağrısından önce okur).

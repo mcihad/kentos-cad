@@ -40,7 +40,7 @@ sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı a
   `document.write` izinli eklentide).
 - `@ext.expr("kimlik")` → `entrypoints.expressions`: düz işlev, değer alır değer döndürür. İfadelerde eklenti
   kimliği ve yerel kimlikle çağrılır: `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` (etiket, stil kuralı, süzgeç, form
-  hesabı, İşlemler). Çizim beklemez: yanıt gelince yeniden çizilir.
+  hesabı, İşlemler). Çizim beklemez: yanıt gelince yeniden çizilir. MCP ve Python'da `runtimes`: `headless` ister.
 - `@ext.map_tool("kimlik")` → `entrypoints.mapTools` (`capture`: point, line, polygon, rectangle,
   orientedRectangle, circle): `def f(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResult`; `ctx.add_feature(katman, sekil,
   öznitelikler)`. Şekli KentOS çizer (kenetleme, yazılan koordinat), kod yerleştirir.

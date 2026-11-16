@@ -986,8 +986,10 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
   sonuçla, masaüstünün hazırladığı ortamda kendi sürecinde çalıştırır (masaüstüyle ortak `kentos-extension-tools`);
   bildirmeyen başsızda listelenmez, süreç başlamadan nedeniyle reddedilir. Başsız koşu eklentinin günlüğüne yazar,
   Python kitaplığı notları Python'un logging'iyle söyler; araç çalışırken sormaz, her konakta (§73: bu yolda işletim
-  sistemi penceresi gerekmedi). Kalan: sunucu/bulut koşusu (kentosd'nin iş çalıştırıcısının ayrı yolu, bu dilimin
-  dışında), bekçi sayacının başsız koşuyu da sayması, başsız konaklarda ifade işlevleri.*
+  sistemi penceresi gerekmedi). 16 Kasım (§80): başsız konaklarda ifade işlevleri: manifestinin `runtimes`'ında
+  `headless` olan eklentinin işlevleri MCP ve Python kitaplığında etiket, stil, süzgeç, form ve İşlemler ifadelerinde
+  cevaplanır (yanıt beklenir); demeyeninki derlenirken nedeniyle reddedilir. Kalan: sunucu/bulut koşusu (kentosd'nin
+  iş çalıştırıcısının ayrı yolu, bu dilimin dışında), bekçi sayacının başsız koşuyu da sayması.*
 - **Kabul (birinci dikey dilim, [EKL §5 sıra 1]):** tek kullanıcıda yerel `.kek`; NumPy kullanan tek İşlemler
   algoritması ve KentOS parametre penceresi: uv seçimi, bağımlılık açıklığı, ayrı süreç, gerçek iptal, tipli sonuç, yeni
   katman, tek geri alma; Python/MCP eşdeğerliği. İlk mühendislik hedefleri (ölçülmüş garanti değil): iptal isteği 100

@@ -92,6 +92,9 @@ sonraki çalıştırmada onu alır.
 - İki İşlemler aracı da `headless-python` bildirir (`tools/*.tool.json`, `capabilities.runtimes`): MCP'de
   (`kentos-mcp`) ve KentOS'un Python kitaplığında masaüstündekiyle aynı kimlik, şema ve sonuçla, eklentinin
   ortamında çalışır. Bildirmeyen bir araç başsız listede görünmez; adıyla istenirse süreç başlamadan reddedilir.
+- `ada-parsel` ifade işlevi de başsız çalışır (manifestte `runtimes`: `headless`): MCP'de ve Python kitaplığında bir
+  etiketin, stil kuralının, formun ya da İşlemler ifadesinin (`attributes.calculate`) çağrısı eklentinin ortamında
+  cevaplanır. `headless` demeyen eklentinin işlevi orada derlenirken nedeniyle reddedilir.
 - `cad.processing.tools` eklenti aracını tanımındaki `modelDescription` ile listeler (ne zaman ve nasıl
   kullanılacağı, yapay zekâ için) ve aracın eklentisini (`extension`: kimlik, sürüm, paket özeti) verir; kod
   yüklenmez. Vitrin'in TAKS tanımında örneği var (`eklenti/tools/taks.tool.json`).

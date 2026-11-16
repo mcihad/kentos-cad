@@ -13,12 +13,15 @@
 //!   desktop's Örnekleri çalıştır, an agent's trial and `kentos kek test` (§74).
 //! - [`headless`]: the headless hosts' provider (MCP, the Python library): the user's installed and enabled
 //!   extensions' tools that declare `headless-python`, offered from a host's start and never over the desktop's.
+//! - [`expressions`]: the extensions' expression functions as the desktop and the headless hosts read them (§80): in a
+//!   headless host only an extension that says it runs headless offers them, another's is refused saying why.
 //!
 //! A separate process is not a sandbox (PY-RUN-19, 20): an extension runs with the user's rights; KentOS bounds only
 //! what it gives the code from the drawing.
 
 pub mod calls;
 pub mod examples;
+pub mod expressions;
 pub mod headless;
 mod note;
 pub mod plan;

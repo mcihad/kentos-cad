@@ -1,6 +1,7 @@
 """Speaks kentos.ext_host's lines for the blueprint's İşlemler tool (crates/native/extension-tools tests): says how far
 it is, logs and prints, asks KentOS for a buffer of its inputs (docs/adr/8057 §47), measures them and answers with the
-descriptor's outputs. What it was asked to run is written beside it (cagrilar.txt)."""
+descriptor's outputs; its expression function answers a batch of rows (§80). What it was asked to run is written
+beside it (cagrilar.txt)."""
 import json, os, sys, threading
 here = os.path.dirname(os.path.abspath(__file__))
 out = sys.stdout
@@ -39,6 +40,20 @@ while True:
     i = m["id"]
     with open(os.path.join(here, "cagrilar.txt"), "a") as f:
         f.write(m["local"] + "\n")
+    if m.get("kind") == "expression":
+        # The blueprint's function, Turkish upper case; a row whose argument is "hata" fails alone (§80).
+        values, failed, first = [], 0, ""
+        for row in m["rows"]:
+            if row and row[0] == "hata":
+                values.append(None); failed += 1; first = first or "ValueError: istenen hata"
+            else:
+                values.append(None if not row or row[0] is None
+                              else str(row[0]).replace("i", "İ").replace("ı", "I").upper())
+        result = {"kind": "values", "values": values}
+        if failed:
+            result.update(failed=failed, error=first)
+        send({"type": "done", "id": i, "ok": True, "result": result})
+        continue
     if m["params"].get("hata"):
         # The code fails: what it printed, then its traceback.
         send({"type": "out", "id": i, "stream": "out", "text": "ara çıktı\n"})
