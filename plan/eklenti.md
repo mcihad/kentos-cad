@@ -980,9 +980,13 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
   bekçiye bağlanır, yanıt vermeyen süreç sonlandırılıp yeniden başlatılır, boştaki süreç kapanır; arayüzde "ayrı süreç
   kum havuzu değildir" açıkça yazılır [D6, Ö·9]; süreç başına bellek ilk dilimde ölçülür; araç tanımında kullanıcı
   etiketinden ayrı model açıklaması (`modelDescription`) ve girdi şeması: MCP listesi kod yüklemeden kurulur [D18, Ö·39].
-  — *kısmen (ADR 8057 §6, §7, §14): `capabilities.runtimes`, çökme sayacı, yanıt vermeyen süreç sonlandırılır, boştaki
-  kapanır, "korumalı alan değildir" yazılı, süreç başına bellek ölçüldü, `modelDescription`; kalan: eklenti
-  araçlarının başsız (sunucu) koşusu.*
+  — *kısmen (ADR 8057 §6, §7, §14, §70): `capabilities.runtimes`, çökme sayacı, yanıt vermeyen süreç sonlandırılır,
+  boştaki kapanır, "korumalı alan değildir" yazılı, süreç başına bellek ölçüldü, `modelDescription`; 16 Kasım: eklenti
+  araçlarının başsız koşusu: MCP ve Python kitaplığı, tanımında `headless-python` bildiren aracı aynı kimlik, şema ve
+  sonuçla, masaüstünün hazırladığı ortamda kendi sürecinde çalıştırır (masaüstüyle ortak `kentos-extension-tools`);
+  bildirmeyen başsızda listelenmez, süreç başlamadan nedeniyle reddedilir. Kalan: sunucu/bulut koşusu (kentosd'nin iş
+  çalıştırıcısının ayrı yolu, bu dilimin dışında), başsız koşunun eklenti günlüğüne ve çökme bekçisine yazılması,
+  başsız konaklarda ifade işlevleri.*
 - **Kabul (birinci dikey dilim, [EKL §5 sıra 1]):** tek kullanıcıda yerel `.kek`; NumPy kullanan tek İşlemler
   algoritması ve KentOS parametre penceresi: uv seçimi, bağımlılık açıklığı, ayrı süreç, gerçek iptal, tipli sonuç, yeni
   katman, tek geri alma; Python/MCP eşdeğerliği. İlk mühendislik hedefleri (ölçülmüş garanti değil): iptal isteği 100

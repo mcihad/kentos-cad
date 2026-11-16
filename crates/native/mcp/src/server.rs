@@ -150,6 +150,24 @@ impl Server {
         }
     }
 
+    /// Offers this process's İşlemler the tools of the extensions installed in its extension folder that declare
+    /// `headless-python` (docs/adr/8057 §70): `cad.processing.tools` lists them and `.run` runs them in their own
+    /// processes, from the environments the desktop prepared; a desktop-only one is refused saying what its descriptor
+    /// must declare. The program's start asks; a server a test makes offers nothing unless it asks. What a run notes
+    /// goes to standard error. Whether this process runs them.
+    #[cfg(feature = "mod-gis")]
+    pub fn offer_extension_tools(&self) -> bool {
+        let note: kentos_extension_tools::headless::Hook =
+            std::sync::Arc::new(|note| eprintln!("{}", crate::extensions::said(&note)));
+        kentos_extension_tools::headless::offer(self.extensions_root.clone(), note)
+    }
+
+    /// Closes the offered tools' processes: the program ends.
+    pub fn close_extension_tools(&self) {
+        #[cfg(feature = "mod-gis")]
+        kentos_extension_tools::headless::close();
+    }
+
     /// The server reading the extensions installed in `root` instead of the user's (a test's registry, a host's).
     pub fn with_extensions_root(mut self, root: impl Into<std::path::PathBuf>) -> Self {
         let root = root.into();
@@ -400,6 +418,9 @@ impl Server {
         if !self.tools.iter().any(|t| t["name"] == name) {
             return Err(Fault::new(-32602, format!("Unknown tool: {name}")));
         }
+        // The offered extensions' tools as the registry is now (one installed, turned on or off meanwhile).
+        #[cfg(feature = "mod-gis")]
+        kentos_extension_tools::headless::refresh();
         Ok(tools::call(self, name, &arguments))
     }
 }

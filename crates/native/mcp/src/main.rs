@@ -26,6 +26,9 @@ fn main() {
         }
     };
     let mut server = Server::with_profile(profile);
+    // The installed extensions' tools that declare headless-python (docs/adr/8057 §70): the program's, not a test's.
+    #[cfg(feature = "mod-gis")]
+    server.offer_extension_tools();
     // Standard input on a thread of its own: between two messages the server tells its subscribers what changed.
     let (lines, incoming) = mpsc::channel::<String>();
     std::thread::spawn(move || {
@@ -62,4 +65,5 @@ fn main() {
             break;
         }
     }
+    server.close_extension_tools();
 }

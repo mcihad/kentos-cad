@@ -41,6 +41,22 @@ const KEPT_ERRORS: usize = 16 * 1024;
 /// The protocol this side speaks (`kentos.ext_host.PROTOCOL`).
 pub const PROTOCOL: u64 = 1;
 
+/// The interpreter's arguments for an extension's process: isolated (`-I`: no user site, no environment variables,
+/// not the working folder on the path), its bytecode in `pycache` (`-X pycache_prefix`, which `-I` keeps: never the
+/// package's folder, whose integrity check refuses a file added to it), the host module `kentos.ext_host`. The
+/// desktop's commands and tools and the headless hosts' tools start it alike.
+pub fn interpreter_args(pycache: &std::path::Path) -> Vec<OsString> {
+    let mut prefix = OsString::from("pycache_prefix=");
+    prefix.push(pycache);
+    vec![
+        "-I".into(),
+        "-X".into(),
+        prefix,
+        "-m".into(),
+        "kentos.ext_host".into(),
+    ]
+}
+
 /// How a process is started: its interpreter, its arguments and its hello.
 #[derive(Clone, Debug)]
 pub struct Start {

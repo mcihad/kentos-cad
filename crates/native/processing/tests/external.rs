@@ -290,6 +290,121 @@ fn a_descriptor_that_does_not_fit_is_refused_with_its_place() {
     );
 }
 
+/// Where a tool runs (docs/adr/8057 §70): every tool on the desktop; one that also declares `headless-python` in the
+/// headless hosts (MCP, Python); a runtime written wrong, a list without the desktop's or not a list is said.
+#[test]
+fn a_descriptor_says_where_its_tool_runs() {
+    let read = |runtimes: Option<Value>| {
+        let mut d = descriptor();
+        if let Some(runtimes) = runtimes {
+            d["capabilities"] = json!({ "runtimes": runtimes });
+        }
+        external::from_descriptor("tr.ornek.deneme", "Deneme", "1.0.0", "olc", &d)
+    };
+    assert!(
+        !read(None).unwrap().headless,
+        "none named: the desktop alone"
+    );
+    assert!(!read(Some(json!(["desktop-python"]))).unwrap().headless);
+    assert!(
+        read(Some(json!(["desktop-python", "headless-python"])))
+            .unwrap()
+            .headless
+    );
+    let wrong = read(Some(json!(["desktop-python", "headles-python"])))
+        .err()
+        .unwrap();
+    assert!(wrong.contains("“headles-python” bilinmiyor"), "{wrong}");
+    let alone = read(Some(json!(["headless-python"]))).err().unwrap();
+    assert!(
+        alone.contains("“desktop-python” içermeli") && alone.contains("headless-python"),
+        "{alone}"
+    );
+    assert!(
+        read(Some(json!("desktop-python")))
+            .err()
+            .unwrap()
+            .contains("ad listesi")
+    );
+}
+
+/// A tool this host does not run (an installed one a headless host leaves out, docs/adr/8057 §70) is refused with the
+/// host's words before the provider is asked, by a run, a batch and a model's check alike; a provider registered only
+/// where none is never takes the place of one already there.
+#[test]
+fn a_tool_this_host_does_not_run_is_refused_with_why() {
+    let _turn = one_at_a_time();
+    let _tool = setup();
+    seen().inputs.clear();
+    let id = "ext.tr.ornek.deneme.masaustu";
+    let why =
+        "“Masaüstü” yalnız KentOS masaüstünde çalışır: araç tanımı başsız çalışmayı bildirmiyor.";
+    external::set_unavailable(std::collections::BTreeMap::from([(
+        id.to_owned(),
+        why.to_owned(),
+    )]));
+    let hosted = kentos_native_application::processing_host::tools().expect("registered");
+    struct Never;
+    impl kentos_native_application::processing_host::BatchFlow for Never {
+        fn stopped(&self) -> bool {
+            false
+        }
+        fn progress(&self, _: u64, _: u64) {}
+    }
+    let mut doc = drawing(false);
+    let run: ProcessingRun =
+        serde_json::from_value(json!({ "tool": id, "parameters": {} })).unwrap();
+    let Err(refused) = hosted.run(&mut doc, &run, true, &Never) else {
+        panic!("refused");
+    };
+    assert_eq!(
+        (refused.code.as_str(), refused.message.as_str()),
+        ("unknown_tool", why)
+    );
+    let batch: kentos_commands::ProcessingBatch =
+        serde_json::from_value(json!({ "tool": id, "rows": [{}] })).unwrap();
+    let Err(refused) = hosted.batch(&mut doc, &batch, true, &Never) else {
+        panic!("refused");
+    };
+    assert_eq!(refused.message, why);
+    let registry = Registry::current();
+    let lookup = |t: &str| registry.tool(t);
+    let mut model = kentos_processing::model_edit::new_model("masaustu".into());
+    kentos_processing::model_edit::add_step(
+        &mut model,
+        "ext.tr.ornek.deneme.olc",
+        &lookup,
+        None,
+        None,
+    );
+    model.steps[0].tool = id.to_owned();
+    let issues = kentos_processing::model::check_model(&model, &lookup);
+    assert!(issues.iter().any(|i| i.message == why), "{issues:?}");
+    assert!(seen().inputs.is_empty(), "the provider was not asked");
+    // Another id is not one: the list says so as before.
+    let run: ProcessingRun =
+        serde_json::from_value(json!({ "tool": "ext.tr.ornek.yok.x", "parameters": {} })).unwrap();
+    let Err(other) = hosted.run(&mut doc, &run, true, &Never) else {
+        panic!("refused");
+    };
+    assert!(
+        other.message.contains("cad.processing.tools"),
+        "{}",
+        other.message
+    );
+    external::set_unavailable(std::collections::BTreeMap::new());
+    // The provider registered first stays: a headless host's never replaces it.
+    struct Other;
+    impl Provider for Other {
+        fn run(&self, _: &ExternalTool, _: Value, _: &mut dyn Feedback) -> Result<Value, Failure> {
+            Err(Failure::Failed("başka".into()))
+        }
+    }
+    let other: Arc<dyn Provider> = Arc::new(Other);
+    assert!(!external::register_provider_if_none(Arc::clone(&other)));
+    assert!(!external::is_provider(&other));
+}
+
 #[test]
 fn the_window_and_the_commands_run_an_extensions_tool_alike() {
     let _turn = one_at_a_time();

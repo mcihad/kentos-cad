@@ -10,7 +10,7 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{KINDS, MOST_MODEL_DESCRIPTION, OUTPUT_KINDS};
+use super::{DESKTOP_RUNTIME, KINDS, MOST_MODEL_DESCRIPTION, OUTPUT_KINDS, RUNTIMES};
 
 /// A parameter of `kind`: the keys every parameter has and its kind's own, closed.
 fn parameter(kind: &str) -> Value {
@@ -143,8 +143,10 @@ pub fn descriptor_schema() -> Value {
             "feedback": { "type": "object", "additionalProperties": false,
                           "properties": { "progress": { "type": "boolean" }, "cancel": { "type": "boolean" } } },
             "capabilities": { "type": "object", "additionalProperties": false, "properties": {
-                "runtimes": { "type": "array", "items": text,
-                              "description": "Bu KentOS eklenti araçlarını masaüstünde çalıştırır: desktop-python." } } },
+                "runtimes": { "type": "array", "items": { "enum": RUNTIMES }, "uniqueItems": true,
+                              "contains": { "const": DESKTOP_RUNTIME },
+                              "description": "Nerede çalışır: desktop-python her zaman (KentOS masaüstü); headless-python \
+                                              ile MCP'de ve Python'da da (başsız), aynı kimlik ve sonuçla." } } },
             "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 3600 },
             "examples": examples
         }

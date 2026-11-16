@@ -24,7 +24,7 @@
 //!   is removed with it.
 
 use std::ffi::{OsStr, OsString};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use iced::Task;
@@ -217,19 +217,8 @@ impl Launch {
     }
 }
 
-/// The interpreter's arguments for an extension's process: isolated (`-I`: no user site, no environment variables,
-/// not the working folder on the path), its bytecode in `pycache`.
-pub(crate) fn interpreter_args(pycache: &Path) -> Vec<OsString> {
-    let mut prefix = OsString::from("pycache_prefix=");
-    prefix.push(pycache);
-    vec![
-        "-I".into(),
-        "-X".into(),
-        prefix,
-        "-m".into(),
-        "kentos.ext_host".into(),
-    ]
-}
+/// The interpreter's arguments for an extension's process, the headless hosts' too (`kentos_python_env::process`).
+pub(crate) use kentos_python_env::process::interpreter_args;
 
 /// What finding the environment needs, gathered without touching the disk.
 struct Plan {

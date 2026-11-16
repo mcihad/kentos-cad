@@ -33,7 +33,7 @@ mod python_tests;
 mod steps;
 
 use drawing::written;
-pub(crate) use drawing::{Synthetic, synthetic, synthetic_on};
+pub(crate) use drawing::{Synthetic, synthetic};
 use steps::{Rights, Step};
 
 /// How long a rule may take in a trial: as on the drawing.

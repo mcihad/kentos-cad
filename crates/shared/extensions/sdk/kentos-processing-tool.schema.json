@@ -6,11 +6,18 @@
       "additionalProperties": false,
       "properties": {
         "runtimes": {
-          "description": "Bu KentOS eklenti araçlarını masaüstünde çalıştırır: desktop-python.",
-          "items": {
-            "type": "string"
+          "contains": {
+            "const": "desktop-python"
           },
-          "type": "array"
+          "description": "Nerede çalışır: desktop-python her zaman (KentOS masaüstü); headless-python ile MCP'de ve Python'da da (başsız), aynı kimlik ve sonuçla.",
+          "items": {
+            "enum": [
+              "desktop-python",
+              "headless-python"
+            ]
+          },
+          "type": "array",
+          "uniqueItems": true
         }
       },
       "type": "object"

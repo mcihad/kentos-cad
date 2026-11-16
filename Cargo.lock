@@ -2679,6 +2679,7 @@ dependencies = [
  "kentos-dwg",
  "kentos-expression",
  "kentos-extension-host",
+ "kentos-extension-tools",
  "kentos-extensions",
  "kentos-formats",
  "kentos-forms",
@@ -2771,6 +2772,21 @@ version = "0.1.0"
 dependencies = [
  "kentos-extensions",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-extension-tools"
+version = "0.1.0"
+dependencies = [
+ "kentos-commands",
+ "kentos-domain",
+ "kentos-extension-host",
+ "kentos-extensions",
+ "kentos-headless",
+ "kentos-processing",
+ "kentos-project",
+ "kentos-python-env",
  "serde_json",
 ]
 
@@ -2980,6 +2996,7 @@ dependencies = [
  "kentos-commands",
  "kentos-domain",
  "kentos-extension-host",
+ "kentos-extension-tools",
  "kentos-extensions",
  "kentos-headless",
  "kentos-kcad",
@@ -3174,6 +3191,7 @@ version = "0.1.0"
 dependencies = [
  "kentos-commands",
  "kentos-domain",
+ "kentos-extension-tools",
  "kentos-geometry-core",
  "kentos-headless",
  "kentos-native-application",

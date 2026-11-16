@@ -65,6 +65,8 @@ kentos-extensions = { path = "../../crates/shared/extensions" }
 kentos-extension-host = { path = "../../crates/native/extension-host" }
 # The user's optional Python: uv found and checked, the choice to use it (plan/eklenti.md ADIM 18A).
 kentos-python-env = { path = "../../crates/native/python-env" }
+# The extensions' İşlemler tools in their own processes, run as the headless hosts run them (docs/adr/8057 §70).
+kentos-extension-tools = { path = "../../crates/native/extension-tools" }
 # File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
 # the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
 kentos-formats = { path = "../../crates/shared/formats" }
@@ -76,7 +78,7 @@ kentos-pointcloud = { path = "../../crates/shared/pointcloud" }
 # Map services (docs/adr/0208): requests, capabilities, vector tiles and their styles, labels,
 # features and the HTTP cache rules, shared with the web's WASM.
 kentos-services = { path = "../../crates/shared/services" }
-# Netcad NCZ in (docs/adr/0138): a port of GPL-2.0-or-later code, not distributed before the
+# NCZ in (docs/adr/0138): a port of GPL-2.0-or-later code, not distributed before the
 # author's permission (crates/shared/ncz/README.md).
 kentos-ncz = { path = "../../crates/shared/ncz" }
 # The style engine (style/, docs/adr/0090): the library, each layer's program and

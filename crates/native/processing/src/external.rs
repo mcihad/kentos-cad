@@ -16,6 +16,9 @@
 //!   17), the layer fields checking every value as a built-in tool's (`writes::check`).
 //! - **Versioned:** the tools are replaced as extensions are installed, turned on or off and removed; each change
 //!   bumps [`generation`], what a list that was read compares to know it is stale.
+//! - **Where they run** (docs/adr/8057 §70): every tool runs on the desktop ([`DESKTOP_RUNTIME`]); one whose descriptor
+//!   also declares [`HEADLESS_RUNTIME`] runs in the headless hosts (MCP, Python) too, with the same id, schema and
+//!   result. A headless host lists only those, and says why another is not run there ([`unavailable`]).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, RwLock};
@@ -55,8 +58,14 @@ const OUTPUT_KINDS: [&str; 4] = ["features", "table", "number", "string"];
 
 mod descriptor_schema;
 mod examples;
+mod hosts;
 mod updates;
 pub use examples::{MOST_EXAMPLE_FEATURES, MOST_EXAMPLES};
+pub use hosts::{
+    DESKTOP_RUNTIME, HEADLESS_RUNTIME, is_provider, register_provider_if_none, set_unavailable,
+    unavailable,
+};
+use hosts::{RUNTIMES, runtimes};
 
 pub use descriptor_schema::descriptor_schema;
 
@@ -100,6 +109,8 @@ pub struct ExternalTool {
     /// Its examples as its descriptor gives them (docs/adr/8057 §48, PY-TOOL-23): run by the host on a drawing of
     /// their own and checked against what each expects.
     pub examples: Vec<Value>,
+    /// Its descriptor declares [`HEADLESS_RUNTIME`]: the headless hosts run it too (docs/adr/8057 §70).
+    pub headless: bool,
 }
 
 /// Why a run gave nothing.
@@ -282,15 +293,7 @@ pub fn from_descriptor(
     if label.is_empty() || label.chars().count() > 80 {
         return Err("label: aracın adı boş olmamalı, en çok 80 karakter.".into());
     }
-    if let Some(runtimes) = runtimes(o)
-        && !runtimes.iter().any(|r| r == "desktop-python")
-    {
-        return Err(
-            "capabilities.runtimes: bu KentOS eklenti araçlarını yalnız masaüstünde, eklentinin Python'unda çalıştırır \
-             (“desktop-python”)."
-                .into(),
-        );
-    }
+    let headless = runtimes(o)?.is_some_and(|r| r.iter().any(|r| r == HEADLESS_RUNTIME));
     let mut parameters: Vec<ParamDef> = Vec::new();
     for (i, p) in o
         .get("parameters")
@@ -467,18 +470,8 @@ pub fn from_descriptor(
         outputs,
         timeout,
         examples,
+        headless,
     })
-}
-
-/// The runtimes a descriptor names (`capabilities.runtimes`); none when it names none.
-fn runtimes(o: &Map<String, Value>) -> Option<Vec<String>> {
-    let list = o.get("capabilities")?.get("runtimes")?.as_array()?;
-    Some(
-        list.iter()
-            .filter_map(Value::as_str)
-            .map(str::to_owned)
-            .collect(),
-    )
 }
 
 /// An extension's tool's run (its [`Tool::run`]): its inputs to the provider as data, its answer read back against

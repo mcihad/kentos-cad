@@ -26,7 +26,9 @@ pub use dry_run::{DryRun, dry_run};
 pub use journal::{Journal, Level, Record};
 pub use lease::{ContributionKind, ExtensionLease, Registered, Skipped};
 pub use policy::{Policy, Revocations, Revoked};
-pub use registry::{Activation, Choice, Crash, Installed, Options, Registry, ToolCheck};
+pub use registry::{
+    Activation, Choice, Crash, Installed, Options, Registry, ToolCheck, verify_installed,
+};
 pub use store::{Channel, Grant, Source, SourceKind};
 pub use view::{
     CapabilityLine, Change, DependencyStatus, ExtensionView, NeedStatus, ProjectNeed, Review,

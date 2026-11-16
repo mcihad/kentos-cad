@@ -43,6 +43,20 @@ fn host(e: HeadlessError) -> PyErr {
     HostError::new_err((e.code, e.message))
 }
 
+/// The user's installed extensions' İşlemler tools that declare `headless-python` (docs/adr/8057 §70): offered at a
+/// drawing's opening (`command` none) and read again before a processing command when the registry changed, so that
+/// `cad.processing.tools` lists them and `.run` runs them in their own processes. What a run notes is not printed: its
+/// answer says how it ended. Not in an extension's own process (`kentos.ext_host` says it is one).
+fn extension_tools(command: Option<&str>) {
+    match command {
+        None => {
+            let _ = kentos_extension_tools::headless::offer_installed(std::sync::Arc::new(|_| {}));
+        }
+        Some(c) if c.starts_with("cad.processing.") => kentos_extension_tools::headless::refresh(),
+        Some(_) => {}
+    }
+}
+
 fn text<T: serde::Serialize + ?Sized>(value: &T) -> PyResult<String> {
     serde_json::to_string(value).map_err(|e| {
         host(HeadlessError::new(
@@ -73,7 +87,10 @@ impl PySession {
             ))
         })?;
         let choices = new_drawing(&input).map_err(host)?;
-        py.detach(|| Session::new(&choices))
+        py.detach(|| {
+            extension_tools(None);
+            Session::new(&choices)
+        })
             .map(|inner| Self { inner })
             .map_err(host)
     }
@@ -84,7 +101,10 @@ impl PySession {
     fn open(py: Python<'_>, path: PathBuf, file_unit: Option<String>) -> PyResult<Self> {
         let unit = file_unit.map(|u| serde_json::from_value::<kentos_commands::FileUnit>(serde_json::Value::String(u)))
             .transpose().map_err(|e| host(HeadlessError::new("invalid_input", e.to_string())))?;
-        py.detach(|| Session::open_in(&path, unit))
+        py.detach(|| {
+            extension_tools(None);
+            Session::open_in(&path, unit)
+        })
             .map(|inner| Self { inner })
             .map_err(host)
     }
@@ -94,7 +114,10 @@ impl PySession {
     #[staticmethod]
     fn from_bytes(py: Python<'_>, data: &[u8]) -> PyResult<Self> {
         let data = data.to_vec();
-        py.detach(|| Session::from_bytes(&data))
+        py.detach(|| {
+            extension_tools(None);
+            Session::from_bytes(&data)
+        })
             .map(|inner| Self { inner })
             .map_err(host)
     }
@@ -119,7 +142,10 @@ impl PySession {
         })?;
         let inner = &mut self.inner;
         let answer = py
-            .detach(|| inner.run(command, version, op, input))
+            .detach(|| {
+                extension_tools(Some(command));
+                inner.run(command, version, op, input)
+            })
             .map_err(host)?;
         text(&answer)
     }
@@ -169,7 +195,12 @@ impl PySession {
             ))
         })?;
         let inner = &mut self.inner;
-        let answer = py.detach(|| inner.call(envelope)).map_err(host)?;
+        let answer = py
+            .detach(|| {
+                extension_tools(envelope["command"].as_str());
+                inner.call(envelope)
+            })
+            .map_err(host)?;
         text(&answer)
     }
 
@@ -181,6 +212,7 @@ impl PySession {
                 format!("çağrı JSON olarak okunamadı: {e}"),
             ))
         })?;
+        extension_tools(envelope["command"].as_str());
         text(&self.inner.start(envelope).map_err(host)?)
     }
 

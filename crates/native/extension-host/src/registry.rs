@@ -256,6 +256,13 @@ fn verify_files(dir: &Path, digest: &str) -> Result<(), String> {
 /// What to do when the files are not as installed.
 const MEND: &str = "Eklentiyi yeniden kurun ya da önceki sürüme dönün.";
 
+/// Whether an installed version's files in `dir` are still as installed (`digest`, their content digest), as activation
+/// checks them: what a host that runs an extension's code without activating it checks before the code starts (a
+/// headless host, docs/adr/8057 §70). Nothing is written. Why not, naming the files, and what to do, in a sentence.
+pub fn verify_installed(dir: &Path, digest: &str) -> Result<(), String> {
+    verify_files(dir, digest).map_err(|reason| format!("{reason} {MEND}"))
+}
+
 fn read_manifest(layout: &Layout, id: &str, version: &str) -> Result<Manifest, Problem> {
     let path = layout.package(id, version).join("manifest.json");
     let text = fs::read_to_string(&path).map_err(|e| store::io("Manifest okunamadı", &path, &e))?;

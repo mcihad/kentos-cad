@@ -1,6 +1,6 @@
 //! What an extension's İşlemler tool asks of KentOS while it runs (docs/adr/8057 §47, PY-TOOL-18): `processing.run`,
 //! one of KentOS's built-in tools run on a drawing of its own made of the objects the tool gives, never the user's,
-//! and what that tool made given back as objects.
+//! and what that tool made given back as objects. The desktop and the headless hosts answer alike.
 //!
 //! - **Data in, data out:** a tool's inputs came to it as data (PY-TOOL-09) and so does what it asks: a features
 //!   parameter is given as objects (`{"features": [{geometry, attrs}]}`), each becomes a layer of the call's own
@@ -8,6 +8,9 @@
 //! - **Built-in tools only:** another extension's tool is not run from a tool (no chain of processes, no way round its
 //!   dependency); a tool's own code calls its own functions.
 //! - **Bounded:** at most [`MOST`] objects in and out; the made objects are read back in the order they were made.
+//! - **A stack of its own:** the call is a whole command run inside another one's (the tool's), on whatever thread that
+//!   one has; it runs on a thread of [`STACK`]. An agent's run goes as a job, whose thread has the default 2 MiB: the
+//!   debug MCP aborted there with a stack overflow on its first call for a buffer (measured, 16 November 2026).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -15,19 +18,42 @@ use kentos_domain::{Document, Uuid};
 use serde_json::{Map, Value, json};
 
 /// The most objects a call takes in all, and the most it gives back.
-pub(crate) const MOST: usize = 50_000;
+pub const MOST: usize = 50_000;
+
+/// The stack a call runs on: what KentOS gives its heavy work elsewhere (a reservation; the pages are used as needed).
+pub const STACK: usize = 64 << 20;
 
 fn refused(code: &str, words: impl Into<String>) -> (String, String) {
     (code.to_owned(), words.into())
 }
 
 /// The call's answer (`{summary, warnings, layers: [{name, features}]}`), or why not (a code and the words): `method`
-/// with `params` from a tool running on a drawing in coordinate system `srid`.
-pub(crate) fn tool_call(
-    method: &str,
-    params: &Value,
-    srid: u32,
-) -> Result<Value, (String, String)> {
+/// with `params` from a tool running on a drawing in coordinate system `srid`, on a thread of [`STACK`] the caller
+/// waits for.
+pub fn tool_call(method: &str, params: &Value, srid: u32) -> Result<Value, (String, String)> {
+    std::thread::scope(|scope| {
+        std::thread::Builder::new()
+            .name("kentos-ext-cagri".into())
+            .stack_size(STACK)
+            .spawn_scoped(scope, || answer(method, params, srid))
+            .map_err(|e| {
+                refused(
+                    "tool_failed",
+                    format!("Araç için iş parçacığı açılamadı: {e}"),
+                )
+            })?
+            .join()
+            .unwrap_or_else(|_| {
+                Err(refused(
+                    "tool_failed",
+                    "Araç çalışırken beklenmedik biçimde durdu.",
+                ))
+            })
+    })
+}
+
+/// [`tool_call`]'s work, on its thread.
+fn answer(method: &str, params: &Value, srid: u32) -> Result<Value, (String, String)> {
     if method != "processing.run" {
         return Err(refused(
             "unknown_method",
@@ -92,8 +118,8 @@ pub(crate) fn tool_call(
             "layers": [],
         }));
     }
-    let made =
-        super::trial::synthetic_on(&features, srid).map_err(|why| refused("invalid_input", why))?;
+    let made = crate::synthetic::synthetic_on(&features, srid)
+        .map_err(|why| refused("invalid_input", why))?;
     let mut doc = made.doc;
     let before: BTreeSet<Uuid> = made.uids.iter().copied().collect();
     let envelope = serde_json::from_value::<kentos_commands::CallEnvelope>(json!({
@@ -168,7 +194,7 @@ mod tests {
     /// extension's tool, another method and an empty input are said, the last without running anything.
     #[test]
     fn a_tools_call_runs_a_builtin_tool_on_its_own_objects() {
-        kentos_processing::command::register_as("desktop");
+        kentos_processing::command::register();
         let call = |parameters: serde_json::Value| {
             tool_call(
                 "processing.run",

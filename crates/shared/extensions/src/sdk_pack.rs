@@ -284,9 +284,9 @@ fn example() -> std::collections::BTreeMap<String, String> {
 pub fn sdk_pack() -> Value {
     let example = json!({
         "files": example().keys().collect::<Vec<_>>(),
-        "how": "Her katkı türünün küçük, çalışan örneği (manifest, Python, panel, araç tanımı, form, katman şeması), \
-                doğrulamadan sorunsuz geçen bir paket: extension.sdk part=example ya da kentos kek sdk --part example. \
-                İsteğe göre iskelet için extension.blueprint.",
+        "how": "Her katkı türünün çalışan örneği (manifest, Python, panel, araç tanımı, form, katman şeması), \
+                doğrulamadan geçen bir paket: extension.sdk part=example ya da kentos kek sdk --part example. \
+                İskelet için extension.blueprint.",
     });
     let modules: Vec<&str> = [Module::Cbs, Module::Harita, Module::Mimari, Module::Yol]
         .iter()
@@ -332,7 +332,8 @@ pub fn sdk_pack() -> Value {
             "parameterTypes": ["features", "number", "string", "boolean", "enum", "field", "point", "layer"],
             "outputTypes": ["features", "table", "number", "string"],
             "fields": "id, version, label, description, modelDescription (yapay zekâ için, en çok 2000 karakter), help, \
-                       keywords, parameters, outputs, feedback, capabilities.runtimes, timeoutSeconds",
+                       keywords, parameters, outputs, feedback, capabilities.runtimes (desktop-python; MCP/Python için \
+                       headless-python), timeoutSeconds",
             "notes": "features parametresi default: {scope: \"layer\", layerId: \"<katman kimliği>\"} ile eklentinin kendi \
                       katmanında açılır (verilmezse etkin katmanla); yeni nesne veren features çıktısı sinkParameter ile \
                       bir layer parametresini adlandırır (o parametre default: {newName: \"…\"} ile yeni katman önerir)."
@@ -382,7 +383,7 @@ pub fn sdk_pack() -> Value {
         },
         "panelSchema": {
             "how": "kentos.ui.panel 1'in JSON Schema'sı (bileşenler, anahtarları ve türleri): extension.sdk \
-                    part=panelSchema ya da kentos kek sdk --part panelSchema. Kesin denetim yine extension.verify'da \
+                    part=panelSchema ya da kentos kek sdk --part panelSchema. Kesin denetim extension.verify'da \
                     (düğmenin komutu, seçicinin katman seçicisi, kimliklerin tekliği şemada söylenemez).",
         },
         "panelBuilders": {

@@ -1,20 +1,18 @@
 //! The extensions' İşlemler tools on the desktop (tools.rs): listed from the registry and their descriptors, their
-//! ribbon button opening their window, a descriptor that does not fit left out and said once; how a run ended read
-//! into İşlemler' answer and the extension's log. The process itself: kentos-python-env's process tests; the tool's
-//! answer checked whole: kentos-processing's tests/external.rs; the whole way in a real window: docs/adr/8057 §7.
+//! ribbon button opening their window, a descriptor that does not fit left out and said once. How a run ended, read
+//! into İşlemler' answer and the note the log is written from, and the run itself: kentos-extension-tools' tests (the
+//! desktop and the headless hosts share them, docs/adr/8057 §70); the process: kentos-python-env's process tests; the
+//! tool's answer checked whole: kentos-processing's tests/external.rs; the whole way in a real window: §7.
 
 use std::path::Path;
 
 use kentos_extensions::archive::Limits;
-use kentos_processing::external::Failure;
-use kentos_python_env::process::Ended;
 use serde_json::json;
 
 use kentos_launch::Module;
 
 use super::super::ribbon::Action;
 use super::super::{Event, Extensions};
-use super::{Concluded, Note};
 use crate::app::App;
 
 const IMAR: &str = "tr.ornek.imar-denetim";
@@ -177,134 +175,6 @@ fn a_descriptor_that_does_not_fit_is_refused_before_kur() {
     assert!(!review.review.installable);
 }
 
-fn concluded(canceled: bool) -> Concluded<'static> {
-    Concluded {
-        ext: IMAR,
-        part: "processing:taks",
-        label: "Parsel TAKS hesabı",
-        timeout: 600,
-        canceled,
-        took: 0.4,
-        output: "ara sonuç\n",
-        memory: Some(52 * 1_048_576),
-    }
-}
-
-#[test]
-fn how_a_run_ended_is_read_into_islemler_and_the_log() {
-    // Its answer: İşlemler gets the result, the log a line.
-    let (answer, note) = concluded(false).conclude(Ended::Answered(json!({
-        "type": "done", "ok": true, "result": { "kind": "outputs", "outputs": { "asan": 1 } }
-    })));
-    assert_eq!(
-        answer,
-        Ok(json!({ "kind": "outputs", "outputs": { "asan": 1 } }))
-    );
-    assert!(
-        matches!(&note, Some(Note::Worked { code: "run_finished", message, .. })
-            if message == "Bitti (0,4 sn; süreç belleği 52 MB)."),
-        "{note:?}"
-    );
-    // Its code failed: said with its exception, its traceback and what it printed in the detail.
-    let (answer, note) = concluded(false).conclude(Ended::Answered(json!({
-        "type": "done", "ok": false, "exception": "ZeroDivisionError", "message": "division by zero",
-        "error": "Traceback …\n  File \"logic.py\", line 9, in taks\nZeroDivisionError: division by zero"
-    })));
-    assert_eq!(
-        answer,
-        Err(Failure::Failed(
-            "“Parsel TAKS hesabı” hata verdi: ZeroDivisionError: division by zero".into()
-        ))
-    );
-    let Some(Note::Failed {
-        code,
-        detail,
-        crash,
-        title,
-        ..
-    }) = note
-    else {
-        panic!("{note:?}");
-    };
-    assert_eq!(
-        (code, crash, title.as_str()),
-        ("run_failed", false, "Parsel TAKS hesabı")
-    );
-    let detail = detail.unwrap();
-    assert!(
-        detail.starts_with("ara sonuç") && detail.contains("logic.py"),
-        "{detail}"
-    );
-    // Durdur: answered, the run is cancelled; not asked, it stopped by itself.
-    let stopped = json!({ "type": "done", "ok": false, "stopped": true, "stoppedAfterMs": 6 });
-    let (_, note) = concluded(true).conclude(Ended::Answered(stopped.clone()));
-    assert!(
-        matches!(&note, Some(Note::Worked { code: "run_stopped", message, .. })
-            if message == "Durdur'dan 6 ms sonra durdu; çizim değişmedi."),
-        "{note:?}"
-    );
-    assert_eq!(
-        concluded(true).conclude(Ended::Answered(stopped.clone())).0,
-        Err(Failure::Stopped)
-    );
-    assert!(
-        matches!(concluded(false).conclude(Ended::Answered(stopped)).0, Err(Failure::Failed(w)) if w.contains("kendiliğinden"))
-    );
-    // Not answered: ended, cancelled, said in the log.
-    let (answer, note) = concluded(true).conclude(Ended::Killed { timed_out: false });
-    assert_eq!(answer, Err(Failure::Stopped));
-    assert!(matches!(
-        note,
-        Some(Note::Worked {
-            code: "run_killed",
-            ..
-        })
-    ));
-    // Its time over: a failure.
-    let (answer, _) = concluded(false).conclude(Ended::Killed { timed_out: true });
-    assert!(matches!(answer, Err(Failure::Failed(w)) if w.contains("600 sn içinde bitmedi")));
-    // A crash: for the watchdog.
-    let (_, note) =
-        concluded(false).conclude(Ended::Crashed("çıkış: 3\nSegmentation fault".into()));
-    assert!(matches!(
-        note,
-        Some(Note::Failed {
-            code: "runner_crashed",
-            crash: true,
-            ..
-        })
-    ));
-    // Not started, refused, unavailable: said as they are.
-    let (answer, _) = concluded(false).conclude(Ended::NotStarted(
-        "Bu eklentinin Python ortamı hazırlanmadı".into(),
-    ));
-    assert!(matches!(answer, Err(Failure::Failed(w)) if w.contains("ortamı hazırlanmadı")));
-    let (_, note) = concluded(false).conclude(Ended::Answered(
-        json!({ "ok": false, "refused": true, "message": "işaretsiz" }),
-    ));
-    assert!(matches!(
-        note,
-        Some(Note::Failed {
-            code: "handler_refused",
-            ..
-        })
-    ));
-    let (_, note) = concluded(false).conclude(Ended::Answered(
-        json!({ "ok": false, "unavailable": true, "message": "yok" }),
-    ));
-    assert!(matches!(
-        note,
-        Some(Note::Failed {
-            code: "run_unavailable",
-            ..
-        })
-    ));
-    assert_eq!(
-        concluded(true).conclude(Ended::StoppedBefore),
-        (Err(Failure::Stopped), None)
-    );
-}
-
 #[test]
 fn an_extensions_expression_function_is_known_to_islemler_by_name() {
     let mut gis = with_imar("ifade", imar(|_| {}));
@@ -351,7 +221,10 @@ fn a_labels_call_never_waits_and_an_answer_not_given_is_not_kept() {
     let row = vec![Arg::Text("101".into()), Arg::Text("1".into())];
     let started = std::time::Instant::now();
     // Its environment's Python is a stand-in (/bin/sh) that never says it is ready: asked in the background.
-    let first = calls.call("ext.tr.ornek.imar-denetim.ada-parsel", &[row.clone()]);
+    let first = calls.call(
+        "ext.tr.ornek.imar-denetim.ada-parsel",
+        std::slice::from_ref(&row),
+    );
     assert!(
         started.elapsed() < std::time::Duration::from_millis(200),
         "it did not wait"

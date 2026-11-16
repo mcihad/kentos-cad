@@ -39,7 +39,6 @@ mod panel_tabs;
 mod panel_values;
 // Kapı 3's part that runs code: an agent's trial on a synthetic drawing (docs/adr/8057 §37).
 mod trial;
-mod tool_calls;
 mod tool_pins;
 mod bisect;
 mod browse;

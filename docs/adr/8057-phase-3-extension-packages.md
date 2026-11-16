@@ -3886,6 +3886,100 @@ Vitrin 1.0.50.
   görünüm kurulur, sürükleme yüksekliği ve çıktıların kaydırması tutulur, çift tık bırakır); Python kurucusunun çıktısı;
   gerçek pencere 52-bolucu.
 
+## §70. Eklenti araçları başsız konaklarda: MCP ve Python, aynı araç aynı süreçte (`ADIM 19`, "Derslerden")
+
+**16 Kasım.** Kod: yeni `crates/native/extension-tools` (`kentos-extension-tools`: `plan.rs`, `run.rs`, `calls.rs`,
+`synthetic.rs`, `headless.rs`); İşlemler `external.rs` (`DESKTOP_RUNTIME`, `HEADLESS_RUNTIME`,
+`ExternalTool::headless`, `register_provider_if_none`, `is_provider`, `set_unavailable`/`unavailable`),
+`command.rs`, `model.rs`, `external/descriptor_schema.rs`; `kentos-extension-host` (`verify_installed`);
+`kentos-python-env` (`process::interpreter_args`); masaüstü `tools.rs` (ince köprü), `tool_calls.rs` paylaşılan
+crate'e taşındı, `trial/drawing.rs`; MCP `server.rs`, `main.rs`, `extensions.rs` (`said`); ajan araçları
+`agent_tools.rs` (`processing.describe` nedeni söyler); Python bağı `lib.rs` (`extension_tools`);
+`python/kentos/ext_host.py`; SDK: `blueprint.rs`, `sdk_pack.rs`, araç tanımının şeması.
+
+- **Karar: çekirdek küçük, yeni bir crate'te.** Masaüstünün köprüsündeki iş paylaşılan koda indi: kayıt defterinden
+  araç listesi ve planlar (`read_tools`, `Plan::of`), ortamın bulunup sürecin başlatılması (`start_of`), koşu
+  (`run_tool`: girdiler veri olarak, ilerleme, günlük, yazdırılan satırlar, Durdur, süreç belleği, nasıl bittiğinin
+  İşlemler'in yanıtına ve bir `Note`'a okunması) ve kodun istediği yerleşik araç (§47: `calls::tool_call`, sentetik
+  çizim `synthetic_on`). Masaüstünün `Bridge`'i kendi `Shared`'ını okur, `run_tool`'u çağırır, notlarını pencerenin
+  iş parçacığına bırakır (günlük, bildirim, bekçi); iletiler ve davranış aynı. Neden `kentos-headless` değil: başsız
+  konak saf kalır (süreç başlatmak bir konağın işi) ve masaüstü de onu kullanıyor; `kentos-processing` değil:
+  sözleşme süreç başlatmaz (§7); `kentos-python-env` değil: sunucunun API'si onu kullanıyor, İşlemler'i taşımamalı.
+  Yön tek: `extension-tools` → `headless` (`mod-gis`) → `processing`; `scripts/arch/deps.mjs`'te kendi grubu, MCP,
+  Python ve masaüstü ona bağlanabilir. MCP'de `mod-gis` özelliğine bağlı (İşlemler CBS'nindir).
+- **Karar: kayıt kuralı.** `headless::offer` yalnız konakların giriş noktasından çağrılır: MCP programının başı
+  (`main.rs` → `Server::offer_extension_tools`; sınamaların kurduğu sunucu istemedikçe sunmaz) ve Python kitaplığının
+  çizim açması (`Session.new_project/open/from_bytes`). Paylaşılan oturum kodu (`Session::of`) çağırmaz: masaüstü de
+  başsız parçaları barındırıyor (konsol, deneme, §47) ve kayıt orada olsaydı masaüstünün köprüsünün yerine geçerdi.
+  İkinci kat: `register_provider_if_none`, bir sağlayıcı kayıtlıysa yerine geçmez; listeler yalnız kendi sağlayıcısı
+  kayıtlıyken yazılır (`is_provider`). Masaüstü eskisi gibi `register_provider` ile kaydeder ve her zaman kazanır.
+  Eklentinin kendi süreci de sunmaz: `kentos.ext_host` `KENTOS_EXTENSION_PROCESS` koyar; kodun açtığı yerel bir çizim
+  başka bir eklentinin aracını bağımlılığını bildirmeden, süreç zinciriyle çalıştıramaz (§47, PY-RUN-15).
+- **Karar: çalışma ortamı.** `capabilities.runtimes`: `desktop-python` her aracındır (araç masaüstünde her zaman
+  çalışır; liste verilirse içermeli), `headless-python` başsız konakları ekler. Bilinmeyen ad, masaüstünü içermeyen
+  liste ve liste olmayan değer yeriyle reddedilir: önce bilinmeyen ad sessizce yalnız masaüstü sayılırdı
+  ("headles-python" aracı başsızdan habersizce çıkarırdı). Şema değerleri sayar (`enum`, `contains`, `uniqueItems`);
+  şablon (`extension.blueprint`) yeni araca ikisini yazar; SDK paketi alanın yanında söyler (yer için iki cümle
+  kısaldı; paket 47 989 bayt). Bildirim isteğe bağlı: araç kodu masaüstündekiyle aynı yoldan çalışsa da başsız konağa
+  yazarı açar.
+- **Dürüst liste:** başsız konak yalnız `headless-python` bildirenleri listeler (`cad.processing.tools`); kurulu ve açık
+  olup bildirmeyeni çalıştırmak hiçbir süreç başlamadan reddedilir, kod `unknown_tool` (listede yok), ileti nedeni ve
+  çareyi söyler: "“Parsel TAKS hesabı” (ext.tr.ornek.vitrin.taks) yalnız KentOS masaüstünde çalışır: araç tanımı
+  başsız çalışmayı bildirmiyor. MCP'de ve Python'da çalışması için eklentinin tools/taks.tool.json dosyasında
+  capabilities.runtimes “desktop-python” ile birlikte “headless-python” içermeli." Toplu çalıştırma, modelin
+  denetimi ve ajanların `processing.describe`'ı aynı sözü söyler. Masaüstü bu listeyi hiç yazmaz.
+- **Salt okunur:** kayıt defteri `kentos kek dump` gibi okunur (hazır eklentilerin katkıları, `planned_contributions`;
+  hiçbir şey etkinleştirilmez, yazılmaz) ve dosyaları değişince yeniden okunur: kayıt, geri çekilenler, sorunlu eklenti
+  turu, kurum ilkesi ve Python ayarları özetlenir, MCP her araç çağrısından, Python her işlem komutundan önce sorar
+  (birkaç küçük dosya). Listeden çıkan sürümün süreci kapanır. Ortam yalnız masaüstünde hazırlanır. Süreç başlamadan
+  paketin dosyaları içerik özetine karşı denetlenir (`verify_installed`: etkinleştirmenin denetimi; başsız konak
+  etkinleştirmez): kurulduktan sonra değişen dosya "Kurulu dosyalar kurulduğu hâlinden farklı: src/… değişmiş.
+  Eklentiyi yeniden kurun ya da önceki sürüme dönün." ile durdurur.
+- **Python ilk koşuda bulunur:** kullanıcının seçimi (`ayarlar.json`), uv ve KentOS'un yorumlayıcısı masaüstünün
+  bulduğu gibi (`find_python`); liste hiçbir şey başlatmaz. Bulununca araçlar kodun nerede çalıştığını söyler
+  (yazdıkları katmanın türetim kaydı, §15). Kitaplık: kurulumun tekerleği programın yanında bulunursa ortama konur
+  (masaüstünün yolu, §6), bulunmazsa ortam hazırlandığı kitaplıkla çalışır (`Library::IfFound`: Python kitaplığının
+  yorumlayıcısının yanında tekerlek yok); masaüstü tekerleği şart koşar (`Required`), değişmedi. uv de masaüstü gibi
+  aranır (seçilen yol, programın yanındaki kurulum, PATH, kullanıcı klasörleri): Python kitaplığında yorumlayıcının
+  yanında kurulum olmadığından uv PATH'te ya da ayarda seçili olmalı, yoksa koşu uv'nin sözüyle durur (gerçek koşuda
+  `~/.local/bin`'deydi).
+- **Söylenen:** MCP koşunun notlarını standart hataya yazar (protokol standart çıktıda): "eklenti tr.ornek.vitrin
+  processing:cekme: Bitti (1,5 sn; süreç belleği 126 MB)."; Python kitaplığı sessizdir, yanıt nasıl bittiğini söyler.
+  Başsız konak eklentinin günlüğüne yazmaz ve çökmeyi bekçiye saymaz (kayıt defterine yazmaz).
+- **Gerçek koşu (16 Kasım, MCP stdio'dan elle JSON-RPC, yalıtılmış klasörler):** Vitrin 1.0.50'nin kopyası, "Çekme
+  mesafesi denetimi" tanımı iki ortamı bildirir, TAKS yalnız masaüstü; Python ortamı masaüstünün hazırladığının kopyası
+  (anahtar aynı: sürüm, kilit, yorumlayıcı). `cad.processing.tools` (`category: extensions`) yalnız
+  `ext.tr.ornek.vitrin.cekme`'yi, sürümü ve paket özetiyle verdi. Çekme `mesafe: 3` ile: "5 yapının 3 m çekme mesafesi
+  denetlendi; 3 yapı parsel sınırına daha yakın.", `tasan: 3`, yeni katman; Tampon KentOS'un aracıyla (§47),
+  karşılaştırma ortamın shapely'siyle. Soğuk 1,61 sn ve süreç belleği 126 MB (bayt kodu hazır), ılık 0,03 sn. Bayt kodu
+  başka yolda derlenmiş kopyada ilk koşu 2,73 sn ve 365 MB'tı (bayt kodu kaynağın tam yolunun altında tutulur, §7'nin
+  ölçümü). TAKS 0,00 sn'de yukarıdaki sözle reddedildi. Python bağı (`kentos._native.Session`, aynı klasörler) aynı
+  listeyi, aynı özeti ve `tasan: 3`'ü verdi (soğuk 1,07 sn, ılık 0,03 sn), TAKS'ı aynı sözle reddetti;
+  `KENTOS_EXTENSION_PROCESS` konunca liste boş, araç "bir işlem aracı değil" (eklentinin kendi süreci).
+- **Ajanların yolu ve bulgu:** MCP'nin ajan profili (kompakt, varsayılan) aynı aracı `processing.list`'te verdi,
+  `processing.describe` TAKS için aynı nedeni söyledi; `processing.run` önce plan (eklentinin aracı iş olarak, §27),
+  sonra aynı girdiyle yazma. **Bulgu:** hata ayıklama derlemesinde plan MCP'yi düşürdü: "thread 'kentos-job-is-1' has
+  overflowed its stack" (işin iş parçacığı varsayılan 2 MiB; aracın içinden istenen Tampon, aracın komutunun içinde
+  bütün bir komut koşusu; `RUST_MIN_STACK=64 MiB` ile düşmüyordu, yani özyineleme değil yığın boyu). Çağrı artık kendi
+  64 MiB'lık iş parçacığında (`calls::STACK`; masaüstünde de). Sonra varsayılan yığınla plan 1,75 sn, yazma 0,25 sn: 5
+  tampon eklendi, 5 yapının `cekme` özniteliği değişti (§49).
+- **Sınamalar:** `kentos-extension-tools` 5 (SDK'nın şablonu sınamaların kayıt defterine kurulur, ortamın Python'u
+  `kentos.ext_host`'un satırlarını konuşan bir betik: yalnız bildiren listelenir, ilerleme, günlük ve yazdırılan satır
+  İşlemler'e ulaşır, kodun istediği Tampon kendi nesnelerinde çalışır, çıktılar tipli döner; `cad.processing.run`
+  üzerinden masaüstündeki gibi; yalnız masaüstü aracı süreç başlamadan reddedilir; eklenti kapatılınca listeden çıkar,
+  süreci kapanır; kurulduktan sonra değişen paket çalışmaz; Python kapalıyken söylenir; koşunun bitişinin okunması,
+  masaüstünden taşındı; §47'nin çağrısı, masaüstünden taşındı), İşlemler 2 yeni (çalışma ortamının okunması; konağın
+  çalıştırmadığı araç koşuda, toplu çalıştırmada ve modelde aynı sözle, sağlayıcıya sorulmadan; önce kayıtlı sağlayıcı
+  yerinde kalır), masaüstü eklenti araçları, deneme ve bayt kodu sınamaları (16) geçti. MCP'nin sınamaları diski
+  doldurduğu için koşulmadı (derlendi, elle sürüldü).
+- **Kalan:** sunucu/bulut koşusu kentosd'nin iş çalıştırıcısının ayrı yolu (denetim kuralları §42, §50, §61–§66);
+  İşlemler araçlarının sunucuda çalışması bu dilimin dışında. Başsız koşunun eklenti günlüğüne ve çökme bekçisine
+  yazılması, başsız konaklarda ifade işlevleri, Vitrin'in araçlarının bildirimi (Vitrin'in kendi sürüm yolu) sonraya.
+- **Uygularken verilen kararlar (planda yazılı değildi):** yeni crate; kayıt giriş noktasından ve yalnız sağlayıcı
+  yokken; `desktop-python` zorunlu, bilinmeyen ad ret; reddin kodu yeni bir kod değil `unknown_tool`; başsız konakta
+  paket özeti süreç başlarken denetlenir; Python ilk koşuda aranır; tekerlek başsızda isteğe bağlı; eklentinin süreci
+  sunmaz; notlar MCP'de standart hataya, Python'da yok; aracın içinden istenen yerleşik araç kendi yığınında.
+
 ## §71. Bileşen davranış tablosu: değer, olay, eylem, klavye (`ADIM 22`, "özellik/olay/eylem/erişilebilirlik şeması")
 
 **16 Kasım.** Bileşen envanterinin (§25) kalanı, bileşen başına davranış, tek tabloda:

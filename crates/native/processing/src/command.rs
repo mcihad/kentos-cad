@@ -259,6 +259,14 @@ fn file_value(name: &str, v: &Value) -> Result<Value, Box<CommandError>> {
     Ok(json!({ "name": file, "rows": rows }))
 }
 
+/// Why `id` is not a tool to run here: an installed extension's tool this host does not run says why and what its
+/// descriptor must declare (a headless host's desktop-only tool, docs/adr/8057 §70); anything else, where the list is.
+fn unknown_tool(id: &str) -> String {
+    crate::external::unavailable(id).unwrap_or_else(|| {
+        format!("“{id}” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.")
+    })
+}
+
 pub(crate) fn ready(
     registry: &Registry,
     doc: &Document,
@@ -267,10 +275,7 @@ pub(crate) fn ready(
     let Some(tool) = registry.get(&input.tool) else {
         return Err(refused(
             codes::UNKNOWN_TOOL,
-            format!(
-                "“{}” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.",
-                input.tool
-            ),
+            unknown_tool(&input.tool),
             Some("tool".into()),
         ));
     };
@@ -662,10 +667,7 @@ impl ToolHost for Tools {
         let Some(tool) = registry.get(&input.tool) else {
             return Err(refused(
                 codes::UNKNOWN_TOOL,
-                format!(
-                    "“{}” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.",
-                    input.tool
-                ),
+                unknown_tool(&input.tool),
                 Some("tool".into()),
             ));
         };

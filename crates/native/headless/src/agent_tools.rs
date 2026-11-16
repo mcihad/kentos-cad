@@ -978,12 +978,9 @@ pub fn call(
         "processing.describe" => {
             let tool = text(args, "tool")?;
             let tools = processing_tools(host)?;
-            find_processing_tool(&tools, tool).cloned().ok_or_else(|| {
-                HeadlessError::new(
-                    "unknown_tool",
-                    format!("“{tool}” diye bir işlem aracı yok: processing.list."),
-                )
-            })
+            find_processing_tool(&tools, tool)
+                .cloned()
+                .ok_or_else(|| HeadlessError::new("unknown_tool", not_a_processing_tool(tool)))
         }
         "processing.run" => processing(host, guard, args, "cad.processing.run"),
         "processing.batch" => processing(host, guard, args, "cad.processing.batch"),
@@ -1353,6 +1350,16 @@ fn processing_tools(host: &mut dyn Host) -> Result<Value, HeadlessError> {
         "call",
         &json!({ "command": command, "op": "execute", "input": {} }),
     )
+}
+
+/// Why `tool` is not one to describe: an installed extension's tool this host does not run says why and what its
+/// descriptor must declare (a headless host's desktop-only tool, docs/adr/8057 §70); anything else, where the list is.
+fn not_a_processing_tool(tool: &str) -> String {
+    #[cfg(feature = "mod-gis")]
+    if let Some(why) = kentos_processing::external::unavailable(tool) {
+        return why;
+    }
+    format!("“{tool}” diye bir işlem aracı yok: processing.list.")
 }
 
 /// A tool of `cad.processing.tools`' answer by its id, wherever the answer keeps its list.

@@ -152,7 +152,8 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
                 { "name": "toplam", "label": "Toplam alan (m²)", "type": "number" }
             ],
             "feedback": { "progress": true, "cancel": true },
-            "capabilities": { "runtimes": ["desktop-python"] }
+            // On the desktop and in the headless hosts (MCP, Python) alike (docs/adr/8057 §70).
+            "capabilities": { "runtimes": ["desktop-python", "headless-python"] }
         });
         let mut descriptor = descriptor;
         // With a schema, the tool opens on the extension's own layer (not the active one).

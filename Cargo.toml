@@ -15,6 +15,9 @@ members = [
     "crates/shared/extensions",
     "crates/native/extension-host",
     "crates/native/python-env",
+    # An extension's İşlemler tools run in its own Python process: the desktop and the headless hosts share it
+    # (docs/adr/8057 §70).
+    "crates/native/extension-tools",
     "crates/shared/qml",
     "crates/shared/maplibre",
     # DWG codec adapter (ADR 0586): OpenCADStudio's pinned, MPL-2.0 codec;
@@ -129,6 +132,7 @@ default-members = [
     "crates/shared/extensions",
     "crates/native/extension-host",
     "crates/native/python-env",
+    "crates/native/extension-tools",
     "crates/shared/qml",
     "crates/shared/maplibre",
     "crates/native/dwg",

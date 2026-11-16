@@ -486,6 +486,9 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
 
 
 def main() -> int:
+    # An extension's own process: a drawing its code opens here offers no extension's İşlemler tools (no chain of
+    # processes, no way round its declared dependencies; docs/adr/8057 §70). Its own processes inherit it.
+    os.environ["KENTOS_EXTENSION_PROCESS"] = "1"
     channel = Channel(sys.stdin.buffer, sys.stdout.buffer)
     streams = (Stream(channel, "out"), Stream(channel, "err"))
     sys.stdout, sys.stderr = streams  # type: ignore[assignment]
