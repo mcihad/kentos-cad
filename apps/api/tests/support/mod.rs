@@ -17,7 +17,11 @@ pub fn shell_program(body: &str) -> PathBuf {
     use std::os::unix::fs::PermissionsExt;
     let dir = std::env::temp_dir().join(format!("kentos-test-program-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
-    let path = dir.join(format!("program-{}.sh", body.len()));
+    // A name of its own per call: named by the body's length, two tests writing "sleep 30" at once wrote one file
+    // while the other ran it (ETXTBSY, a memory-budget test ended `tool_unavailable` once, 16 November 2026).
+    static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let path = dir.join(format!("program-{n}.sh"));
     std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).expect("the program");
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).expect("executable");
     path

@@ -1064,6 +1064,10 @@ Kalan: UDP ve ABI 9'un altında yol adlı UNIX soketleri açık (seccomp ile `so
 aile için, UNIX datagram ve UNIX dışı çiftler ve `io_uring_setup(2)` reddedilir (x86_64 ve aarch64; x32 numaraları da),
 böylece UDP ve yol adlı UNIX soketleri de kapandı. Süzgeç kurulamayan kutu kapanmamış sayılır: `require` kuralı
 çalıştırmaz, `report` Landlock'la çalıştırır ve neyin açık kaldığını söyler.
+**Kutunun tabanı Landlock ABI 1** (ADR 8057 §65, 16 Kasım): kutu Landlock'un açık olduğu her 5.13 ve sonrası
+çekirdekte (5.15, 6.1, 6.6 LTS dahil) bütün kapanır; eski çekirdeğin bıraktığını süzgeç kapatır (yol adıyla kısaltma,
+ABI 6'nın altında sinyaller) ve Landlock'un hiç denetlemediği dosya üst verisini ve öteki süreçlerin sınır, öncelik ve
+zamanlamasını her çekirdekte reddeder; sınama aynı kuralı çekirdeğin ABI'siyle ve ABI 1'le koşturup aynı retleri görür.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

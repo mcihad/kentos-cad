@@ -3584,3 +3584,107 @@ units=)`), SDK rehberi; masaüstü yeni `apps/desktop/src/shell/extensions/panel
   dönüm, ha, büyük harf, takımda olmayan birim, uzunluk takımında m2), masaüstü 1 (km ile yazılanın metre gitmesi,
   toplama, takımda olmayan cm, alan birimleri, ipucu, kural değeri, sınırın ve okunamayanın sözü, metre adımı,
   komutun aldığı değerin metreyle yazılması, birimsiz alanın değişmemesi); gerçek pencere 49-birim.
+
+## §65. Bulut denetim kutusunun Landlock tabanı ABI 1: eski çekirdeğin bıraktığını süzgeç kapatır (`ADIM 20`)
+
+**16 Kasım.** Kod: iş çalıştırıcısı `apps/jobrun/src/kutu/linux.rs` (`ruleset(cap)`: ABI 1 zorunlu, gerisi çekirdekte
+varsa; `landlock`: çekirdeğin ABI'si özellik özellik; `restrict(allowed, cap)`), `kutu/seccomp.rs` (yol adıyla kısaltma,
+dosyanın üst verisi, öteki süreçler, ABI 6'nın altında sinyaller; x32'nin tümü: `refuse_x32`), yeni `kutu/plan.rs`
+(`kutu.rs`'ten ayrıldı: `Landlock { abi }`, `Plan::Whole { words, abi }`, ABI'ye göre sözler), `kutu.rs` (`ABI_WORD`:
+yalnız sınamaların `--abi`'si; kutu kipi ABI 6'nın altında sinyal kurallarını kurar), `audit.rs`; sınamalar
+`kutu/tests.rs`, `kutu/seccomp.rs`'in kendi sınamaları, yeni `audit/kutu_tests/probe.rs`.
+
+- **Bugünkü uygulama (§61, §63; ölçüldü):** Landlock'tan ABI 4 isteniyordu (dosyalar ve TCP); süzgeçten beri TCP'yi
+  `socket(2)`'nin reddi de kapatıyor. 6.7'den eski çekirdekte (5.15, 6.1 ve 6.6 LTS) kutu bütün kapanmıyor, `require`
+  kuralı hiç çalıştırmıyordu. Ayrıca bu makinede (ABI 8 + süzgeç) kutudaki kural, kutunun dışındaki bir dosyanın
+  iznini, sahibini, zamanını ve xattr'ını değiştirebiliyor; sunucunun kullanıcısının bir sürecinin kaynak sınırını
+  okuyabiliyor (okuyabilen değiştirebilir: çekirdek ikisine aynı izni sorar), önceliğini ve işlemcilerini
+  okuyabiliyordu. Landlock bunların hiçbirini hiçbir ABI'de denetlemiyor: §61'den beri söylenen "dosyalar kapalı", üst
+  veri için doğru değildi.
+- **Karar: Landlock'tan yalnız ABI 1 (Linux 5.13) istenir.** ABI 1'in dosya hakları zorunlu; ABI 2–9'un getirdikleri
+  çekirdekte varsa kullanılır, yoksa süzgeç kapatır. Kutu, Landlock'un açık olduğu (önyüklemede LSM listesinde) her
+  5.13 ve sonrası çekirdekte, x86_64 ve aarch64'te bütün kapanır. ABI'lerin her biri için (Landlock'un belgesi ve
+  ölçüm):
+  - ABI 2 (`REFER`) yoksa klasörler arası yeniden adlandırma ve bağ hiç yapılamaz (`EXDEV`): daha sıkı. Python'un bayt
+    kodu dosyayı aynı klasörde yerine koyar, etkilenmez. Açık bir şey yok.
+  - ABI 3 (`TRUNCATE`) yoksa yol adıyla `truncate(2)` ve okumak için `O_TRUNC` ile açılış dosyayı keser: ikincisinde
+    Landlock yalnız okuma hakkını sorar, yani kuralın okuyabildiği her dosya (ortamı, paketi). Süzgeç ikisini de
+    reddeder; bayraklarını göremediği `openat2(2)`'yi tümüyle. `ftruncate(2)` yazmak için açılmış bir tanıtıcı ister,
+    onu ABI 1 denetler.
+  - ABI 4 (TCP) yoksa: süzgeç `socket(2)`'yi her aile için reddediyor (§63), açık bir şey yok.
+  - ABI 5 (`IOCTL_DEV`) yoksa: kutuda açılabilen aygıtlar yalnız `/dev/null` ve `/dev/urandom`, miras alınan
+    tanıtıcılar boru; açık bir şey yok.
+  - ABI 6 (kapsamlar) yoksa soyut UNIX soketleri süzgeçle kapalı (soket açılamaz); sinyaller de süzgeçle (aşağıda).
+  - ABI 9 (`RESOLVE_UNIX`) yoksa yol adlı UNIX soketleri süzgeçle kapalı (§63).
+- **Sinyaller ABI 6'nın altında süzgeçle: temiz, kuruldu.** Kutu kipi kendi süreç numarasını (exec'ten geçer)
+  süzgece yazar: `kill` yalnız kendine ya da işin süreç grubuna (0); `tkill`, `tgkill`, `rt_sigqueueinfo`,
+  `rt_tgsigqueueinfo` yalnız kendi içinde (iş parçacıkları dahil); `pidfd_open` ve `pidfd_send_signal` yok. SDK'nın
+  konağı yalnız iş parçacığı kullanır, sinyal göndermez; asyncio'nun döngüsü sinyal göndermez, alt süreç izleyicisi
+  `pidfd_open` reddedilince iş parçacığına düşer. Sınama ABI 1'de bunu gösterir: asyncio, kuralın kendine, grubuna ve
+  iş parçacığına sinyali açık; başka sürece kapalı. Bedeli: ABI 6'nın altında kuralın çatalladığı bir süreç kendini
+  sinyalleyemez (`raise`), kural çocuğunu tek tek sinyalleyemez. ABI 6 ve üstünde bu kurallar kurulmaz: orada Landlock
+  sinyali kutunun içinde tutar ve içindekilere izin verir.
+- **Landlock'un hiç denetlemedikleri de süzgeçte (her ABI'de):**
+  - Dosyanın üst verisi, yol ve tanıtıcıyla: `chmod`, `fchmod`, `fchmodat`, `fchmodat2`, `chown`, `fchown`, `lchown`,
+    `fchownat`, `utime`, `utimes`, `futimesat`, `utimensat`, `setxattr`, `lsetxattr`, `fsetxattr`, `setxattrat`,
+    `removexattr`, `lremovexattr`, `fremovexattr`, `removexattrat`. Kural sunucunun kullanıcısının herhangi bir
+    dosyasını okunmaz ya da herkese okunur yapabiliyordu.
+  - Öteki süreçlerin kaynak sınırı, önceliği, zamanlaması ve G/Ç önceliği yalnız kendine (0 ya da kendi numarası):
+    `prlimit64`, `setpriority` (yalnız tek süreç), `sched_setaffinity`, `sched_setscheduler`, `sched_setparam`,
+    `sched_setattr`, `ioprio_set` (yalnız tek süreç). Kural sunucunun dosya sınırını sıfıra indirip onu
+    durdurabilirdi.
+  - Bedeli: kural karalamasındaki dosyanın da iznini ya da zamanını değiştiremez (`shutil.copy`/`copy2` karalamaya
+    kopyalayamaz; okuyup yazarak kopyalanır), kendi iş parçacıklarına ayrı işlemci ya da zamanlama veremez (yerel
+    kütüphaneler bu ret karşısında devam eder). Python'un açılışı ve SDK'nın konağı bunların hiçbirini kullanmaz.
+- **x32:** x86_64'te x32 numaralı (`0x40000000`'lı) bütün çağrılar reddedilir: mimari sınamasının hemen ardından üç BPF
+  komutu, seccompiler'in kendi kurallarından önce (göreli atlamaları kaymaz; yerini bir sınama denetler). §63'teki tek
+  tek x32 numaralarının yerine: x32'nin kendine özgü numaralarını (ör. `rt_sigqueueinfo` 524) da kapatır.
+- **Söz (her ABI'de doğru):** bütün kutu "dosyalar kapalı: içerik, yol adıyla kısaltma, izin, sahip, zaman, xattr; ağ
+  kapalı (soket açılamaz): TCP, UDP, yol adlı ve soyut UNIX soketleri, öteki türler, io_uring; yalnız kutunun içinde
+  kalan UNIX akış çifti açılır; öteki süreçler kapalı: sinyaller Landlock'la, kaynak sınırı, öncelik ve zamanlama
+  süzgeçle" der; ABI 6'nın altında "sinyaller süzgeçle (Landlock ABI 6 yok)". Süzgeçsiz kutu (`report`) ABI'sine göre
+  söyler: "kapalı: dosyaların içeriği, …; açık: yol adıyla kısaltma (ABI 3 yok), TCP (ABI 4 yok), …, dosyaların izni,
+  sahibi, zamanı ve xattr'ı, öteki süreçlerin kaynak sınırı, önceliği ve zamanlaması". Çekirdeğin ABI'si kısıtlamadan,
+  özellik özellik sorulur (9, 6, 5, 4, 3, 2, 1): ABI 7 ve 8 kutunun kullandığı bir şey eklemez, bu makine (ABI 8) "6"
+  sayılır.
+- **Sınamada düşük ABI:** kutu kipinin gizli sözü `--abi <n>` kural kümesini n'den yeni hakları istemeden kurar;
+  çekirdek kural kümesine o ABI'nin anlamını uygular (`REFER` istenmeyince klasörler arası taşıma reddi, `TRUNCATE`
+  istenmeyince kısaltma serbest, kapsam istenmeyince sinyaller serbest), yani yalnız ABI 1'i bilen bir çekirdeğin
+  kutusu. Sözü iş çalıştırıcısı kendi kurduğu komut satırında yalnız `Plan::Whole`'un `abi`'si doluysa yazar; işte
+  `None`'dır, kural komut satırına erişemez. Geçersiz değer (0, 10, sayı olmayan) kutu kipini hiçbir şey kısıtlamadan
+  `KENTOS-KUTU` ile durdurur.
+- **Kapanmayanlar:** (1) Yolların varlığı ve üst verisinin okunması (`stat`), öteki süreçlerin varlığı, önceliği ve
+  işlemcilerinin okunması (`getpriority`, `sched_getaffinity`; değiştirmek kapalı). (2) Kuralın açabildiği dosyalarda
+  `ioctl` ile düğüm bayrakları (`FS_IOC_SETFLAGS`; değiştirilemez ve eklenir bayrakları yetki ister) ve dosya sistemi
+  destekliyorsa fs-verity: yalnız kuralın okuyabildiği ve sunucunun kullanıcısına ait dosyalarda (ortamı, paketi). (3)
+  Windows ve macOS'ta kutu yok.
+- **Ölçüm (hata ayıklama derlemesi, 16 Kasım):** kutu kipi `/usr/bin/true`'nun çevresinde (30 koşunun ortancası): iş
+  çalıştırıcısının kendi açılışı 7.29 ms, yalnız Landlock'la 7.29 ms, bütün kutuyla 7.98 ms, bütün kutuyla ABI 1'de
+  7.94 ms; kutunun kendi maliyeti 7.41 ms, süzgecin payı 0.69 ms (büyüyen süzgecin derlenmesi ve kurulması; §63: 0.38
+  ms), Landlock'un özellik özellik sorulması gürültünün içinde. Ortamın Python'unun SDK'nın konağını yüklemesi (`import
+  kentos.ext_host`, sırayla 10'ar koşu, ortanca, duvar / işlemci): kutusuz 983 / 982 ms, Landlock'ta 987 / 986 ms, bütün
+  kutuda 990 / 989 ms, bütün kutuda ABI 1'de 991 / 990 ms: süzgecin her çağrıdaki payı ölçülemiyor (+3 ms). Olağan
+  kuralın işi baştan sona (sınama tek başına, iki koşu; §58, §61 ve §63'ün ölçümü): 1.93 sn işlemci (§63: 1.90-1.93),
+  en çok 505.3-506.2 MB, 2.01-2.11 sn.
+- **Sınamalar:** iş çalıştırıcısının sınamalarının tümü 25/25.
+  - Gerçek Python'la `the_whole_box_closes_the_same_at_the_kernel_s_landlock_abi_and_at_abi_1` aynı kuralı çekirdeğin
+    ABI'siyle (bu makinede "6") ve `--abi 1` ile koşturur; 25 denemenin sonucu hata numarasıyla karşılaştırılır. İki
+    ABI'de de TCP, UDP, yol adlı UNIX soketi, UNIX datagram çifti, io_uring halkası, kutunun dışındaki ve işin kendi
+    dosyaları, yol adıyla kısaltma, kuralın kendi modülünü `O_RDONLY | O_TRUNC` ile açmak, kutunun dışındaki bir
+    dosyanın izni, sahibi, zamanı ve xattr'ı, sınama sürecinin dosya sınırı, önceliği ve işlemcileri `PermissionError`
+    (13); sınama sürecine sinyal çekirdeğin ABI'sinde Landlock'la (`EPERM`, 1), ABI 1'de süzgeçle (`EACCES`, 13)
+    kapalı. asyncio, kuralın kendine, grubuna ve iş parçacığına sinyali, karalaması açık. Karalamada klasörler arası
+    taşıma çekirdeğin ABI'sinde açık, ABI 1'de `EXDEV` (18): kural kümesinin gerçekten ABI 1'de kurulduğunu bu gösterir.
+    Dinleyicilere hiçbir şey ulaşmadı, kesilmeye çalışılan dosya bütün kaldı. Kutusuz aynı kural 25 denemenin hepsini
+    açıyor (bu makinede io_uring ve xattr da), üç dinleyici de alıyor.
+  - Süzgecin kendi sınamaları: x32 bekçisi mimari sınamasının hemen ardında; sinyal kuralları yalnız istenince.
+  - Planın tablosu her ABI'de (1, 2, 3, 4, 5, 6, 9) ve iki ilkede bütün kutuyu verir, sözü yalnız sinyallerin kimde
+    olduğuyla değişir; süzgeçsiz Landlock'un sözü ABI 6'da ve ABI 1'de neyin açık kaldığını sayar. Kutu kipi geçersiz
+    `--abi`'yi (0, 10, `bir`) hiçbir şey kısıtlamadan reddeder; komut satırında `--abi` yalnız istenince var.
+  - `kentosd`'nin işlemci sınamaları 26/26 (iki koşu). Ondan önceki bir koşuda
+    `a_memory_budget_is_kept_by_killing_the_child` `tool_unavailable` ile düştü (çocuk başlatılamadı). Kutuyla ilgisiz:
+    o sınamanın çocuğu bir kabuk betiği, kutu kipi değil. Olası neden: sınamaların ortak yardımcısı
+    `support::shell_program` iki sınamaya ("sleep 30" ile) aynı dosyayı (`program-8.sh`) yazdırıyor; biri yazarken öteki
+    çalıştırırsa çekirdek başlatmayı reddeder (`ETXTBSY`; hata sözü kaydedilmedi). Düzeltildi: yardımcı her çağrıya
+    ayrı ad verir (`program-<n>.sh`); ardından iki koşu 26/26.
+  - Clippy (sınamalı ve sınamasız derleme, `--no-deps`), rustfmt ve `scripts/arch/deps.mjs` temiz.

@@ -6,10 +6,10 @@
 //!   digest, id and version the request's, or nothing runs; its files are put in the folder (`extension/`) and the rule
 //!   is found by its local id in the manifest's audits.
 //! - **No network capability:** a package that asks for `network` is refused.
-//! - **The box** (`crate::kutu`, docs/adr/8057 §61, §63): on Linux the rule's process runs in a Landlock domain behind
-//!   a seccomp filter: the files it needs and its scratch only, no socket. Where the box cannot be whole, the server's
-//!   policy decides: the rule does not run (`require`, the default) or runs with what closes and the job's summary
-//!   says what is open (`report`).
+//! - **The box** (`crate::kutu`, docs/adr/8057 §61, §63, §65): on Linux the rule's process runs in a Landlock domain
+//!   behind a seccomp filter: the files it needs and its scratch only, no socket, no hold on other processes. Where the
+//!   box cannot be whole, the server's policy decides: the rule does not run (`require`, the default) or runs with what
+//!   closes and the job's summary says what is open (`report`).
 //! - **Its Python** is the environment the server prepared for that extension version, given by the request
 //!   (`python`), run offline: isolated (`-I`), its bytecode in the folder, with an empty environment as the whole
 //!   process has. Without one the rule cannot run and the job says so.
@@ -254,7 +254,7 @@ fn run_audit_in(
     let interpreter = std::path::PathBuf::from(&python);
     let args = interpreter_args(&dir.join(BYTECODE));
     let (program, args) = match &plan {
-        crate::kutu::Plan::Whole(words) | crate::kutu::Plan::LandlockOnly(words) => {
+        crate::kutu::Plan::Whole { words, .. } | crate::kutu::Plan::LandlockOnly(words) => {
             let tmp = dir.join(crate::kutu::SCRATCH);
             for scratch in [&tmp, &dir.join(BYTECODE)] {
                 std::fs::create_dir_all(scratch).map_err(|e| {
@@ -265,8 +265,11 @@ fn run_audit_in(
             let program = crate::kutu::program()
                 .map_err(|why| ProcessFailure::new("tool_unavailable", why))?;
             eprintln!("kutu: {words}");
-            let filter = matches!(plan, crate::kutu::Plan::Whole(_));
-            crate::kutu::wrap(&program, &allowed, filter, &tmp, &interpreter, &args)
+            let (filter, abi) = match &plan {
+                crate::kutu::Plan::Whole { abi, .. } => (true, *abi),
+                _ => (false, None),
+            };
+            crate::kutu::wrap(&program, &allowed, filter, abi, &tmp, &interpreter, &args)
         }
         crate::kutu::Plan::Outside(why) => {
             eprintln!("kutu kapatılamadı: {why}");

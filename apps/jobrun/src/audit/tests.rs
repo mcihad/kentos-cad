@@ -147,7 +147,10 @@ fn a_job_runs_the_package_s_rule_on_the_measured_facts() {
     let (bytes, digest, manifest) = package(false);
     let dir = folder("stand-in", &bytes);
     let runner = StandIn::default();
-    let boxed = Ok(crate::kutu::Plan::Whole("sınamanın kutusu".into()));
+    let boxed = Ok(crate::kutu::Plan::Whole {
+        words: "sınamanın kutusu".into(),
+        abi: None,
+    });
     let done = run_audit_in(
         &dir,
         request(&digest, &manifest, "/opt/kentos/python/bin/python"),
@@ -159,8 +162,11 @@ fn a_job_runs_the_package_s_rule_on_the_measured_facts() {
     assert_eq!(start.python, crate::kutu::program().unwrap());
     assert_eq!(start.args[0], crate::kutu::ARG);
     assert!(
-        !start.args.iter().any(|a| a == crate::kutu::NO_FILTER),
-        "the whole box: Landlock and the filter"
+        !start
+            .args
+            .iter()
+            .any(|a| a == crate::kutu::NO_FILTER || a == crate::kutu::ABI_WORD),
+        "the whole box, Landlock and the filter, at the kernel's ABI"
     );
     let split = start.args.iter().position(|a| a == "--").unwrap();
     let given = |word: &str| -> Vec<PathBuf> {

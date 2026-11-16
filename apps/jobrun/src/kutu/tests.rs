@@ -100,21 +100,23 @@ fn the_box_allows_the_environment_the_package_and_the_scratch_only() {
     // unless told otherwise.
     let interpreter_args: [std::ffi::OsString; 3] =
         ["-I".into(), "-m".into(), "kentos.ext_host".into()];
-    let wrapped = |filter| {
+    let wrapped = |filter, abi| {
         wrap(
             Path::new("/srv/kentos-jobrun"),
             &allowed,
             filter,
+            abi,
             &job.join(SCRATCH),
             &python,
             &interpreter_args,
         )
     };
-    let (program, args) = wrapped(true);
+    let (program, args) = wrapped(true, None);
     assert_eq!(program, PathBuf::from("/srv/kentos-jobrun"));
     assert_eq!(args[0], ARG);
-    assert!(!args.iter().any(|a| a == NO_FILTER));
-    assert_eq!(wrapped(false).1[..2], [ARG, NO_FILTER]);
+    assert!(!args.iter().any(|a| a == NO_FILTER || a == ABI_WORD));
+    assert_eq!(wrapped(false, None).1[..2], [ARG, NO_FILTER]);
+    assert_eq!(wrapped(true, Some(1)).1[..3], [ARG, ABI_WORD, "1"]);
     let split = args
         .iter()
         .position(|a| a == "--")
@@ -130,7 +132,8 @@ fn the_box_allows_the_environment_the_package_and_the_scratch_only() {
     let _ = std::fs::remove_dir_all(&root);
 }
 
-/// The box mode refuses words it does not know and a missing interpreter, saying so with its mark.
+/// The box mode refuses words it does not know, a Landlock ABI it does not know and a missing interpreter, saying so
+/// with its mark, before it restricts anything.
 #[test]
 fn the_box_mode_refuses_what_it_does_not_understand() {
     assert_eq!(enter(["--bilinmeyen".into()].into_iter()), 126);
@@ -138,58 +141,65 @@ fn the_box_mode_refuses_what_it_does_not_understand() {
         enter(["--tmp".into(), "/tmp".into(), "--".into()].into_iter()),
         126
     );
+    for abi in ["0", "10", "bir"] {
+        assert_eq!(
+            enter([ABI_WORD.into(), abi.into(), "--".into(), "/bin/true".into()].into_iter()),
+            126,
+            "{abi}"
+        );
+    }
 }
 
-/// The plan (docs/adr/8057 §63): the whole box only with Landlock and the filter. A box that is not whole runs only
-/// under `report`: with Landlock alone where the filter is missing, outside the box where Landlock is; the words say
-/// what is open, and why.
+/// The plan (docs/adr/8057 §63, §65): the whole box only with Landlock and the filter, at any Landlock ABI from 1. Its
+/// words are the same at every ABI but for who keeps the signals: what an older kernel leaves open, the filter closes.
+/// A box that is not whole runs only under `report`: in Landlock alone where the filter is missing, its words saying
+/// what that ABI leaves open; outside the box where Landlock is missing.
 #[test]
 fn a_box_that_is_not_whole_runs_only_under_report_and_says_what_is_open() {
-    let landlock = Landlock {
-        scopes: true,
-        unix_paths: false,
-    };
+    let at = |abi| Landlock { abi };
     let no_filter = || Err::<(), _>("seccomp süzgeci yok".to_owned());
     let no_landlock = || Err::<Landlock, _>("Landlock yok".to_owned());
     for policy in [Policy::Require, Policy::Report] {
-        let Ok(Plan::Whole(words)) = plan(Ok(landlock), Ok(()), policy) else {
-            panic!("Landlock and the filter: the whole box");
-        };
-        assert!(
-            words
-                .contains("ağ kapalı (soket açılamaz): TCP, UDP, yol adlı ve soyut UNIX soketleri")
-                && words.ends_with("sinyaller kutuda"),
-            "{words}"
-        );
+        for abi in [1, 2, 3, 4, 5, 6, 9] {
+            let Ok(Plan::Whole { words, abi: None }) = plan(Ok(at(abi)), Ok(()), policy) else {
+                panic!("Landlock {abi} and the filter: the whole box");
+            };
+            assert!(
+                words.starts_with(
+                    "dosyalar kapalı: içerik, yol adıyla kısaltma, izin, sahip, zaman, xattr; ağ kapalı (soket \
+                     açılamaz): TCP, UDP, yol adlı ve soyut UNIX soketleri"
+                ),
+                "{words}"
+            );
+            let signals = if abi >= 6 {
+                "öteki süreçler kapalı: sinyaller Landlock'la,"
+            } else {
+                "öteki süreçler kapalı: sinyaller süzgeçle (Landlock ABI 6 yok),"
+            };
+            assert!(words.contains(signals), "{abi}: {words}");
+        }
     }
-    let Ok(Plan::Whole(words)) = plan(
-        Ok(Landlock {
-            scopes: false,
-            unix_paths: false,
-        }),
-        Ok(()),
-        Policy::Require,
-    ) else {
-        panic!("the whole box below ABI 6");
-    };
-    assert!(
-        words.contains("sinyaller açık (Landlock ABI 6 yok)"),
-        "{words}"
-    );
     assert_eq!(
-        plan(Ok(landlock), no_filter(), Policy::Require),
+        plan(Ok(at(8)), no_filter(), Policy::Require),
         Err("seccomp süzgeci yok".to_owned())
     );
-    let Ok(Plan::LandlockOnly(open)) = plan(Ok(landlock), no_filter(), Policy::Report) else {
-        panic!("report keeps Landlock");
+    let alone = |abi| match plan(Ok(at(abi)), no_filter(), Policy::Report) {
+        Ok(Plan::LandlockOnly(open)) => open,
+        other => panic!("report keeps Landlock {abi}, not {other:?}"),
     };
-    assert!(
-        open.starts_with("seccomp süzgeci yok; dosyalar ve TCP kapalı"),
-        "{open}"
+    assert_eq!(
+        alone(6),
+        "seccomp süzgeci yok; kapalı: dosyaların içeriği, kısaltma, TCP, sinyaller ve soyut UNIX soketleri; açık: yol \
+         adlı UNIX soketleri (ABI 9 yok), UDP ve öteki soket türleri, io_uring, dosyaların izni, sahibi, zamanı ve \
+         xattr'ı, öteki süreçlerin kaynak sınırı, önceliği ve zamanlaması"
     );
+    let one = alone(1);
     assert!(
-        open.contains("yol adlı UNIX soketleri açık (ABI 9 yok); UDP ve öteki soket türleri açık"),
-        "{open}"
+        one.contains(
+            "kapalı: dosyaların içeriği; açık: yol adıyla kısaltma (ABI 3 yok), TCP (ABI 4 yok), sinyaller ve soyut \
+             UNIX soketleri (ABI 6 yok), yol adlı UNIX soketleri (ABI 9 yok)"
+        ),
+        "{one}"
     );
     assert_eq!(
         plan(no_landlock(), no_filter(), Policy::Require),
@@ -203,5 +213,9 @@ fn a_box_that_is_not_whole_runs_only_under_report_and_says_what_is_open() {
         Plan::Outside("Landlock yok".into()).note().as_deref(),
         Some(" (kutu kapatılamadı: Landlock yok)")
     );
-    assert_eq!(Plan::Whole(String::new()).note(), None);
+    let whole = Plan::Whole {
+        words: String::new(),
+        abi: None,
+    };
+    assert_eq!(whole.note(), None);
 }

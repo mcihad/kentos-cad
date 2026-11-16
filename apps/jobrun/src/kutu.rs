@@ -1,8 +1,8 @@
-//! The cloud audit box (docs/adr/8057 §61, §63): on Linux the rule's Python runs in a Landlock domain behind a seccomp
-//! filter. The job runner's box mode (`kentos-jobrun --kutu …`, [`enter`]) is a fresh process of one thread: it builds
-//! the ruleset, restricts itself, installs the filter and then executes the interpreter, which keeps both, as does
-//! everything it starts; nothing can lift them. The job runner itself stays outside, so it can still read `/proc` for
-//! the budget and write the job's answer.
+//! The cloud audit box (docs/adr/8057 §61, §63, §65): on Linux the rule's Python runs in a Landlock domain behind a
+//! seccomp filter. The job runner's box mode (`kentos-jobrun --kutu …`, [`enter`]) is a fresh process of one thread: it
+//! builds the ruleset, restricts itself, installs the filter and then executes the interpreter, which keeps both, as
+//! does everything it starts; nothing can lift them. The job runner itself stays outside, so it can still read `/proc`
+//! for the budget and write the job's answer.
 //!
 //! - **Files** ([`allowed`]): read and execute only beneath the package's unpacked folder, the prepared environment
 //!   (its folder, the base installation `pyvenv.cfg` names, a folder a `.pth` file adds that holds KentOS's library:
@@ -10,14 +10,16 @@
 //!   write only beneath the job's own scratch: `pyc` (the bytecode) and `tmp` (the rule's `TMPDIR`), and `/dev/null`.
 //!   The drawing, the request and the package file in the job's folder are not readable. A `.pth` file can come with
 //!   a dependency the extension's author locked: what else it names, the box does not open.
+//!   Landlock needs only its ABI 1 (Linux 5.13); what it adds later is used where the kernel has it (`linux`), and
+//!   the filter closes what an older kernel leaves open: truncation by path (ABI 3), signals (ABI 6). The filter also
+//!   refuses what Landlock never controls: a file's metadata, other processes' limits, priority and scheduling.
 //! - **Network** (`seccomp`): no socket. `socket(2)` is refused for every family, `socketpair(2)` but for a UNIX
 //!   stream or sequenced-packet pair, which stays inside the box (asyncio's self-pipe), and `io_uring_setup(2)`, whose
-//!   rings can open sockets. Landlock closes TCP as well (ABI 4) and keeps signals and abstract UNIX sockets inside the
-//!   domain (ABI 6).
-//! - **Where the box cannot be whole** ([`plan`]: no Landlock or an ABI below 4, no seccomp filter, an architecture
-//!   other than x86_64 and aarch64, not Linux), the server's setting decides ([`POLICY_ENV`]): `require`, the default,
-//!   refuses to run the rule; `report` runs it with what closes (Landlock without the filter, or nothing) and the job's
-//!   summary says what is open.
+//!   rings can open sockets. Landlock closes TCP as well where the kernel has it (ABI 4).
+//! - **Where the box cannot be whole** ([`plan`]: no Landlock, no seccomp filter, an architecture other than x86_64
+//!   and aarch64, not Linux), the server's setting decides ([`POLICY_ENV`]): `require`, the default, refuses to run
+//!   the rule; `report` runs it with what closes (Landlock without the filter, or nothing) and the job's summary says
+//!   what is open.
 
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -26,6 +28,11 @@ use std::path::{Path, PathBuf};
 pub const ARG: &str = "--kutu";
 /// The box mode's word for Landlock without the filter: `report` where the filter cannot be installed.
 pub const NO_FILTER: &str = "--suzgecsiz";
+/// The box mode's word for a Landlock ABI lower than the kernel's (`--abi 1`): the tests only, to show the box an
+/// older kernel builds. A job never says it.
+pub const ABI_WORD: &str = "--abi";
+/// The newest Landlock ABI the box knows.
+const NEWEST_ABI: u8 = 9;
 /// The server's setting, passed to the job runner: `require` (or unset) or `report`.
 pub const POLICY_ENV: &str = "KENTOS_AUDIT_CONFINE";
 /// What the box mode writes before it gives up, so the job says why.
@@ -33,143 +40,9 @@ pub const MARK: &str = "KENTOS-KUTU";
 /// The job's scratch beside the bytecode: the rule's `TMPDIR`.
 pub const SCRATCH: &str = "tmp";
 
-/// What the server does where the box cannot be whole.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Policy {
-    /// The rule does not run (the default: the cloud box's promise holds or nothing runs).
-    Require,
-    /// The rule runs with what closes and the job says what is open.
-    Report,
-}
-
-/// The server's choice, from its setting; anything but `report` requires the box.
-pub fn policy() -> Policy {
-    match std::env::var(POLICY_ENV).as_deref() {
-        Ok("report") => Policy::Report,
-        _ => Policy::Require,
-    }
-}
-
-/// What Landlock closes here beyond the files and TCP it must (ABI 4): signals and abstract UNIX sockets (ABI 6),
-/// pathname UNIX sockets (ABI 9).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Landlock {
-    pub scopes: bool,
-    pub unix_paths: bool,
-}
-
-/// How the rule's process starts.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Plan {
-    /// In the whole box, Landlock and the filter; what it closes, in words for the job runner's error output.
-    Whole(String),
-    /// `report` where the filter cannot be installed: in Landlock alone; why, and what is open.
-    LandlockOnly(String),
-    /// `report` where Landlock cannot close: outside the box; why.
-    Outside(String),
-}
-
-impl Plan {
-    /// What the job's summary adds: nothing for the whole box, what is open for any other.
-    pub fn note(&self) -> Option<String> {
-        match self {
-            Plan::Whole(_) => None,
-            Plan::LandlockOnly(open) => Some(format!(" (kutu tam kapatılamadı: {open})")),
-            Plan::Outside(why) => Some(format!(" (kutu kapatılamadı: {why})")),
-        }
-    }
-}
-
-/// The plan from what this system closes and the server's policy, or why the rule may not run. A missing filter
-/// counts as a box that cannot close, as missing Landlock does: without it UDP and the other socket kinds are open,
-/// and the box's promise is no network. Under `report` the rule keeps what does close.
-pub fn plan(
-    landlock: Result<Landlock, String>,
-    filter: Result<(), String>,
-    policy: Policy,
-) -> Result<Plan, String> {
-    let why = match (&landlock, &filter) {
-        (Ok(landlock), Ok(())) => return Ok(Plan::Whole(whole(*landlock))),
-        (Ok(_), Err(filter)) => filter.clone(),
-        (Err(landlock), Ok(())) => landlock.clone(),
-        (Err(landlock), Err(filter)) => format!("{landlock}; {filter}"),
-    };
-    match (policy, landlock) {
-        (Policy::Require, _) => Err(why),
-        (Policy::Report, Ok(landlock)) => {
-            Ok(Plan::LandlockOnly(format!("{why}; {}", alone(landlock))))
-        }
-        (Policy::Report, Err(_)) => Ok(Plan::Outside(why)),
-    }
-}
-
-/// This system's plan under the server's setting.
-pub fn here() -> Result<Plan, String> {
-    plan(landlock(), filter(), policy())
-}
-
-/// What the whole box closes, in words.
-fn whole(landlock: Landlock) -> String {
-    let signals = if landlock.scopes {
-        "sinyaller kutuda"
-    } else {
-        "sinyaller açık (Landlock ABI 6 yok)"
-    };
-    format!(
-        "dosyalar kapalı; ağ kapalı (soket açılamaz): TCP, UDP, yol adlı ve soyut UNIX soketleri, öteki türler, \
-         io_uring; yalnız kutunun içinde kalan UNIX akış çifti açılır; {signals}"
-    )
-}
-
-/// What Landlock alone closes, in words.
-fn alone(landlock: Landlock) -> String {
-    let scopes = if landlock.scopes {
-        "sinyaller ve soyut UNIX soketleri kutuda"
-    } else {
-        "sinyaller ve soyut UNIX soketleri açık (ABI 6 yok)"
-    };
-    let unix = if landlock.unix_paths {
-        "yol adlı UNIX soketleri kapalı"
-    } else {
-        "yol adlı UNIX soketleri açık (ABI 9 yok)"
-    };
-    format!("dosyalar ve TCP kapalı; {scopes}; {unix}; UDP ve öteki soket türleri açık")
-}
-
-/// What Landlock closes on this system, or why it cannot close.
-pub fn landlock() -> Result<Landlock, String> {
-    #[cfg(target_os = "linux")]
-    {
-        linux::landlock()
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        Err("Landlock yalnız Linux'ta var".to_owned())
-    }
-}
-
-/// Whether the seccomp filter can be installed on this system, or why not: Linux on x86_64 or aarch64, a kernel
-/// that has the filter's actions.
-pub fn filter() -> Result<(), String> {
-    #[cfg(all(
-        target_os = "linux",
-        any(target_arch = "x86_64", target_arch = "aarch64")
-    ))]
-    {
-        seccomp::available()
-    }
-    #[cfg(not(all(
-        target_os = "linux",
-        any(target_arch = "x86_64", target_arch = "aarch64")
-    )))]
-    {
-        Err(format!(
-            "seccomp süzgeci yalnız Linux'ta x86_64 ve aarch64 için var; bu sistem {} {}",
-            std::env::consts::OS,
-            std::env::consts::ARCH
-        ))
-    }
-}
+pub use plan::{Landlock, Plan, here};
+#[cfg(test)]
+pub use plan::{Policy, filter, landlock, plan};
 
 /// What the box lets the rule's processes touch: existing paths, without repeats.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -260,12 +133,13 @@ pub fn allowed(dir: &Path, python: &Path, source: &Path) -> Allowed {
     }
 }
 
-/// The box mode's command line: `program --kutu [--suzgecsiz] --oku <p>… --yaz <p>… --tmp <dir> -- <python>
-/// <args>…`; without `filter`, Landlock alone.
+/// The box mode's command line: `program --kutu [--suzgecsiz] [--abi <n>] --oku <p>… --yaz <p>… --tmp <dir> --
+/// <python> <args>…`; without `filter`, Landlock alone; `abi`, the tests' lower Landlock ABI.
 pub fn wrap(
     program: &Path,
     allowed: &Allowed,
     filter: bool,
+    abi: Option<u8>,
     tmp: &Path,
     python: &Path,
     args: &[OsString],
@@ -273,6 +147,10 @@ pub fn wrap(
     let mut out: Vec<OsString> = vec![ARG.into()];
     if !filter {
         out.push(NO_FILTER.into());
+    }
+    if let Some(abi) = abi {
+        out.push(ABI_WORD.into());
+        out.push(abi.to_string().into());
     }
     for p in &allowed.read {
         out.push("--oku".into());
@@ -302,14 +180,15 @@ pub fn program() -> Result<PathBuf, String> {
     Ok(tests::job_runner())
 }
 
-/// The box mode: the arguments after [`ARG`]. Restricts this process, installs the filter (unless [`NO_FILTER`]) and
-/// executes the interpreter; returns (an exit code) only if it could not, having said why (with [`MARK`]) on its
-/// errors.
+/// The box mode: the arguments after [`ARG`]. Restricts this process, installs the filter (unless [`NO_FILTER`]; with
+/// the signal rules where the domain does not keep signals, below Landlock ABI 6) and executes the interpreter;
+/// returns (an exit code) only if it could not, having said why (with [`MARK`]) on its errors.
 pub fn enter(args: impl Iterator<Item = OsString>) -> i32 {
     let mut read = Vec::new();
     let mut write = Vec::new();
     let mut tmp = None;
     let mut filter = true;
+    let mut abi = NEWEST_ABI;
     let mut args = args;
     while let Some(arg) = args.next() {
         match arg.to_str() {
@@ -317,6 +196,19 @@ pub fn enter(args: impl Iterator<Item = OsString>) -> i32 {
             Some("--yaz") => write.extend(args.next().map(PathBuf::from)),
             Some("--tmp") => tmp = args.next().map(PathBuf::from),
             Some(NO_FILTER) => filter = false,
+            Some(ABI_WORD) => {
+                match args
+                    .next()
+                    .and_then(|n| n.to_str()?.parse::<u8>().ok())
+                    .filter(|n| (1..=NEWEST_ABI).contains(n))
+                {
+                    Some(n) => abi = n,
+                    None => {
+                        eprintln!("{MARK}: {ABI_WORD} 1 ile {NEWEST_ABI} arasında bir sayı ister");
+                        return 126;
+                    }
+                }
+            }
             Some("--") => break,
             _ => {
                 eprintln!("{MARK}: kutunun bilinmeyen sözü: {}", arg.to_string_lossy());
@@ -331,11 +223,20 @@ pub fn enter(args: impl Iterator<Item = OsString>) -> i32 {
     let rest: Vec<OsString> = args.collect();
     #[cfg(target_os = "linux")]
     {
-        if let Err(why) = linux::restrict(&Allowed { read, write }) {
+        // The ABI the domain gets: the kernel's, or lower where the tests say so.
+        let domain = match linux::landlock() {
+            Ok(kernel) => kernel.abi.min(abi),
+            Err(why) => {
+                eprintln!("{MARK}: kutu kapatılamadı: {why}");
+                return 126;
+            }
+        };
+        if let Err(why) = linux::restrict(&Allowed { read, write }, abi) {
             eprintln!("{MARK}: kutu kapatılamadı: {why}");
             return 126;
         }
-        if filter && let Err(why) = install_filter() {
+        let signals = !Landlock { abi: domain }.scopes();
+        if filter && let Err(why) = install_filter(signals) {
             eprintln!("{MARK}: seccomp süzgeci kurulamadı: {why}");
             return 126;
         }
@@ -354,7 +255,7 @@ pub fn enter(args: impl Iterator<Item = OsString>) -> i32 {
     }
     #[cfg(not(target_os = "linux"))]
     {
-        let _ = (read, write, tmp, rest, filter);
+        let _ = (read, write, tmp, rest, filter, abi);
         eprintln!(
             "{MARK}: kutu kapatılamadı: yalnız Linux'ta (Landlock); {} çalıştırılmadı",
             Path::new(&python).display()
@@ -363,21 +264,24 @@ pub fn enter(args: impl Iterator<Item = OsString>) -> i32 {
     }
 }
 
-/// Installs the seccomp filter on this thread (the box mode's only one), or says why it cannot.
+/// Installs the seccomp filter on this thread (the box mode's only one), with the signal rules where `signals`, or
+/// says why it cannot.
 #[cfg(target_os = "linux")]
-fn install_filter() -> Result<(), String> {
+fn install_filter(signals: bool) -> Result<(), String> {
     #[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))]
     {
-        seccomp::install()
+        seccomp::install(signals)
     }
     #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
     {
+        let _ = signals;
         filter()
     }
 }
 
 #[cfg(target_os = "linux")]
 mod linux;
+mod plan;
 #[cfg(all(
     target_os = "linux",
     any(target_arch = "x86_64", target_arch = "aarch64")
