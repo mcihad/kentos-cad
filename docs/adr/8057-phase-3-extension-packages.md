@@ -4664,7 +4664,7 @@ masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
 - **Sınamalar:** kayıt defteri `view::tests` 1 (bırakma ve ekleme, ilk kurulum, aynı yerler), kayıt defterinin hepsi
   (36), masaüstünün eklenti sınamaları (102).
 
-## §91. Paketin yazılım malzeme listesi: `kentos kek sbom` (`ADIM 18A`, PY-UV-29)
+## §91. Paketin SBOM'u, Python bağımlılıklarının listesi: `kentos kek sbom` (`ADIM 18A`, PY-UV-29)
 
 **16 Kasım.** Kod: paylaşılan `sbom.rs` (yeni: `cyclonedx`, `without_credentials`, `utc_text`); komut satırı
 `kentos kek sbom <klasör|paket.kek> [-o <dosya>]`.
@@ -4688,7 +4688,7 @@ masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
 - **Katalogda (aynı gün):** `GET …/releases/{eklenti}/{sürüm}/sbom` onaylı sürümün baytlarından aynı listeyi verir
   (`application/vnd.cyclonedx+json`, `{kimlik}-{sürüm}.cdx.json`); sürümü kurabilen okur; Python'suz pakette
   `sbom_empty` (422) nedeniyle. Katalog API sınaması 1 (yayımlanmış sürümde numpy ve shapely; Python'suzda 422).
-- **Masaüstünde (aynı gün):** Eklentiler › kurulu eklentinin ayrıntısı › Python ortamı: "Malzeme listesini kaydet…"
+- **Masaüstünde (aynı gün):** Eklentiler › kurulu eklentinin ayrıntısı › Python ortamı: "SBOM'u kaydet…"
   (`bom.rs`): kurulu paketin kilidinden aynı liste, kaydetme penceresinde önerilen ad `{kimlik}-{sürüm}.cdx.json`;
   ortam hazırlanmamış olsa da (kilit kurulacak olanı söyler). Düğme eylem satırına değil Python bölümüne kondu: eylem
   satırı zaten dar ("Kaldır" ikinci satıra iniyordu; bu değişiklikten önce de). Sınama: masaüstü 1 (Vitrin kurulunca
@@ -4700,4 +4700,9 @@ masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
   CC0-1.0"), yoksa kısa `License` alanı (shapely "BSD 3-Clause"), yoksa OSI sınıflandırıcısının adı; lisansın bütün
   metni ve `UNKNOWN` söylenmez. Ortam hazır değilse liste lisanssız çıkar. Sınamalar: paylaşılan 1 (üç kaynağın sırası,
   bütün metin, UNKNOWN, bileşenlere işlenmesi), masaüstü 1 (sahte ortamın iki dağıtımı).
+- **Ad (sahibinin düzeltmesi, aynı gün):** düğme önce "Malzeme listesini kaydet…" diyordu; sahibi: "çok saçma bir
+  ifade olmuş, terminolojiye uygun değil". KentOS'ta Malzeme Listesi (MLZ) bir mimari pafta türü ve yolun kesit
+  malzemesi; "bill of materials"ın düz çevirisi burada yapı malzemesi gibi okunuyordu. Yazılımdaki yerleşik terim
+  kullanıldı: "SBOM'u kaydet…", açıklaması "Python bağımlılıklarının listesi: sürümler, kaynaklar ve dosya özetleri
+  (CycloneDX)."; iletiler "SBOM kaydedildi", "SBOM'da listelenecek bağımlılık yok".
 - **Kalan:** komut satırında ve katalogda lisanslar (ikisinde de hazırlanmış ortam yok).

@@ -458,10 +458,10 @@ impl App {
         form = form.wide(
             row![
                 words::secondary(
-                    "Malzeme listesini kaydet…",
+                    "SBOM'u kaydet…",
                     Some(super::msg(super::Event::SaveBom(id.to_owned())))
                 ),
-                label::caption("Python paketleri, sürümleri ve dosya özetleri (SBOM, CycloneDX)."),
+                label::caption("Python bağımlılıklarının listesi: sürümler, kaynaklar ve dosya özetleri (CycloneDX)."),
             ]
             .spacing(10)
             .align_y(iced::Center),

@@ -445,7 +445,7 @@ pub async fn sbom(
         let Some(bom) = bom else {
             return Err(Why::Catalog(CatalogError::Refused(Refusal::new(
                 "sbom_empty",
-                "Bu eklenti Python paketi kurmuyor: malzeme listesinde listelenecek paket yok.",
+                "Bu eklenti Python paketi kurmuyor: SBOM'da listelenecek bağımlılık yok.",
             ))));
         };
         let file = format!("{}-{}.cdx.json", release.extension_id(), release.version());

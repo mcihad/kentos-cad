@@ -88,7 +88,7 @@ impl App {
         )
         .ok_or_else(|| {
             format!(
-                "“{}” Python paketi kurmuyor: malzeme listesinde listelenecek paket yok.",
+                "“{}” Python paketi kurmuyor: SBOM'da listelenecek bağımlılık yok.",
                 manifest.name
             )
         })?;
@@ -103,7 +103,7 @@ impl App {
         Ok((text, format!("{id}-{}.cdx.json", manifest.version)))
     }
 
-    /// Malzeme listesini kaydet…: where to, then written; the outcome said in the dialog's line.
+    /// SBOM'u kaydet…: where to, then written; the outcome said in the dialog's line.
     pub(crate) fn save_extension_bom(&mut self, id: &str) -> Task<Message> {
         let (text, file) = match self.extension_bom(id) {
             Ok(made) => made,
@@ -115,7 +115,7 @@ impl App {
         Task::perform(
             async move {
                 let to = rfd::AsyncFileDialog::new()
-                    .set_title("Malzeme listesini kaydet (SBOM)")
+                    .set_title("SBOM'u kaydet (CycloneDX)")
                     .set_file_name(&file)
                     .add_filter("CycloneDX JSON", &["json"])
                     .save_file()

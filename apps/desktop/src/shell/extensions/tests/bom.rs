@@ -1,4 +1,4 @@
-//! Malzeme listesi… (docs/adr/8057 §91): an installed extension's Python packages, from its installed lock, as
+//! SBOM'u kaydet… (docs/adr/8057 §91): an installed extension's Python packages, from its installed lock, as
 //! CycloneDX; an extension without Python is told it has none.
 
 use super::*;
