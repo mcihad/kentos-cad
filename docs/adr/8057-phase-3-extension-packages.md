@@ -4024,6 +4024,17 @@ aldığı yalnız ret iletilerinden öğreniliyordu.
     yürütürdü. İmleç seçili satır vurgusuyla çizilir, komutun yeni satırlarıyla düşer. Gerçek pencerede: Yapı ara'da Ara,
     yedi Tab'la tablo (panel kaydı), ↓↓ ikinci yapı (150 m²), Enter haritayı ona götürüp seçti. `tree` ve `stats` fareyle
     kaldı (ağaçta grup satırları, göstergede tek sıra kart).
+  - **Ağaç ve göstergeler** (aynı gün, sonra): `tree` ve `stats` de tek durak. Ağaçta ↑ ve ↓ satırlar arasında çizildikleri
+    sırayla (grup, altındaki yapraklar, "… daha"), → kapalı grubu açar, ← açık grubu kapatır, Enter yaprağın nesnesini
+    gösterir ya da grubu açıp kapatır; imleç satırın seçili vurgusuyla. Bunun için kitin `KeyFocus`'u sol ve sağı ayrı
+    alabiliyor (`on_side`; verilmezse dört ok eskisi gibi adımdır): ağacın düzeltmesi bileşende. Göstergelerde oklar
+    kartlar arasında, Enter kartın nesnesini gösterir, imleçteki kart seçili çizilir. Kit sınaması: `on_side`'lı öğede
+    sol ve sağ ona, yukarı ve aşağı adıma; `on_side`'sız dördü de adım (`the_sides_go_apart_when_asked`). Davranış
+    tablosunun ölçümü iki bileşende de tek odak buldu. Gerçek pencerede (senaryo 53, 54): Değer say'da Alan'dan dört Tab
+    ağaca, ↓ "101" grubunu imledi, ← kapattı, → açtı, ↓ "parsel 1", Enter parseli seçip gösterdi, odak ağaçta kaldı;
+    Yapı ara'da Özetle'den iki Tab kartlara (aradaki İpuçları başlığı), → dört kez "En büyük yapı 400 m²", Enter o
+    yapıyı seçti. Boş tablo ("Bulunan yapılar", satır yok) Tab'ın turunda değil. Senaryo 20 ve 26'nın şerit
+    koordinatları şeride yeni düğmeler girince eskimişti (Değer say 501 → 622, Yapı ara 417 → 546): düzeltildi.
   - Gerçek pencere (Vitrin, Yapı ara ve Parsel kartı): Yapı no'dan Tab → Katman → onay → Ara → Yapıları numarala →
     Özetle; Boşluk Özetle'yi çalıştırdı ("5 yapının özeti"), odak düğmede kaldı; Tab İpuçları başlığına, Boşluk açtı;
     Shift+Tab geri. Shift+Tab Kart tarihi'nden Seçimi al'a; Tab çiplerde, Boşluk çipi kaldırdı, komut sürerken basılan

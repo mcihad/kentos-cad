@@ -1097,6 +1097,13 @@ fn panel_tree<'a>(
     );
     cols.push(Col::new("Sayı").width(40).align_right());
     let all: Vec<&Value> = rows.iter().collect();
+    /// A row of the tree as it is drawn, in order: what Enter and the side arrows do on it (docs/adr/8057 §71).
+    enum Seen {
+        Group(String, bool),
+        Leaf(Option<String>),
+        More,
+    }
+    #[allow(clippy::too_many_arguments)]
     fn nodes<'a>(
         tree: &str,
         rows: &[&'a Value],
@@ -1105,6 +1112,8 @@ fn panel_tree<'a>(
         depth: usize,
         path: &str,
         folded: &std::collections::BTreeSet<String>,
+        cursor: Option<usize>,
+        seen: &mut Vec<Seen>,
     ) -> Vec<Node<'a, Message>> {
         if depth == group.len() {
             let more = rows.len().saturating_sub(TREE_LEAVES);
@@ -1121,15 +1130,22 @@ fn panel_tree<'a>(
                         .map(|c| label::caption(cell_words(row.get(c.as_str()))).into())
                         .collect();
                     cells.push(iced::widget::space::horizontal().width(0).into());
-                    let mut node = Node::new(name).cells(cells);
-                    if let Some(uid) = row.get("uid").and_then(Value::as_str) {
+                    let uid = row.get("uid").and_then(Value::as_str);
+                    let at = seen.len();
+                    seen.push(Seen::Leaf(uid.map(str::to_owned)));
+                    let mut node = Node::new(name).cells(cells).selected(cursor == Some(at));
+                    if let Some(uid) = uid {
                         node = node.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
                     }
                     node
                 })
                 .collect();
             if more > 0 {
-                leaves.push(Node::new(format!("… {} daha", thousands(more))));
+                let at = seen.len();
+                seen.push(Seen::More);
+                leaves.push(
+                    Node::new(format!("… {} daha", thousands(more))).selected(cursor == Some(at)),
+                );
             }
             return leaves;
         }
@@ -1143,9 +1159,12 @@ fn panel_tree<'a>(
                     .map(|_| iced::widget::space::horizontal().width(0).into())
                     .collect();
                 cells.push(label::caption(members.len().to_string()).into());
+                let at = seen.len();
+                seen.push(Seen::Group(key.clone(), open));
                 let mut node = Node::new(value.clone())
                     .folder()
                     .cells(cells)
+                    .selected(cursor == Some(at))
                     .expanded(open, msg(Event::Panel(PanelEvent::Fold(key))));
                 if open {
                     node = node.extend(nodes(
@@ -1156,15 +1175,48 @@ fn panel_tree<'a>(
                         depth + 1,
                         &format!("{path}{value}/"),
                         folded,
+                        cursor,
+                        seen,
                     ));
                 }
                 node
             })
             .collect()
     }
-    let tree = TreeView::new(cols)
-        .header(leaf.len() > 1)
-        .extend(nodes(id, &all, group, &leaf, 0, "", &p.folded));
+    let cursor = p.cursor.get(id).copied();
+    let mut seen = Vec::new();
+    let tree = TreeView::new(cols).header(leaf.len() > 1).extend(nodes(
+        id, &all, group, &leaf, 0, "", &p.folded, cursor, &mut seen,
+    ));
+    // One Tab stop (docs/adr/8057 §71): ↑↓ move among the rows as drawn, Enter shows a leaf's object or opens and
+    // closes a group, → opens a closed group and ← closes an open one.
+    let count = seen.len();
+    let cursor = cursor.filter(|&c| c < count);
+    let here = cursor.and_then(|c| seen.into_iter().nth(c));
+    let enter = match &here {
+        Some(Seen::Group(key, _)) => Some(msg(Event::Panel(PanelEvent::Fold(key.clone())))),
+        Some(Seen::Leaf(Some(uid))) => Some(msg(Event::Panel(PanelEvent::Show(uid.clone())))),
+        _ => None,
+    };
+    let group_here = match here {
+        Some(Seen::Group(key, open)) => Some((key, open)),
+        _ => None,
+    };
+    let owner = id.to_owned();
+    let tree = kentos_ui::widget::key_focus(tree)
+        .on_activate_maybe(enter)
+        .on_step(move |by| {
+            let next = next_row(cursor, by, count)?;
+            Some(msg(Event::Panel(PanelEvent::Cursor(
+                owner.clone(),
+                next,
+                0,
+            ))))
+        })
+        .on_side(move |side| {
+            let (key, open) = group_here.as_ref()?;
+            ((side < 0) == *open).then(|| msg(Event::Panel(PanelEvent::Fold(key.clone()))))
+        });
     let mut out = column![title, tree].spacing(4);
     let groups = group_rows(&all, group[0].as_str()).len();
     if groups > TREE_GROUPS {
@@ -1320,7 +1372,9 @@ fn panel_stats<'a>(
             .map(|v| cell_words(Some(v)))
     };
     let mut tiles = iced::widget::Row::new().spacing(8);
-    for row in rows.iter().take(SHOWN_CARDS) {
+    let shown_rows = rows.len().min(SHOWN_CARDS);
+    let cursor = p.cursor.get(id).copied().filter(|&c| c < shown_rows);
+    for (at, row) in rows.iter().take(SHOWN_CARDS).enumerate() {
         let mut card = StatCard::new(
             given(row, title).unwrap_or_else(|| "—".to_owned()),
             given(row, value).unwrap_or_else(|| "—".to_owned()),
@@ -1338,11 +1392,17 @@ fn panel_stats<'a>(
         if let Some(uid) = row.get("uid").and_then(Value::as_str) {
             card = card.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
         }
-        tiles = tiles.push(card);
+        tiles = tiles.push(card.selected(cursor == Some(at)));
     }
-    column![heading, tiles.wrap().vertical_spacing(8)]
-        .spacing(6)
-        .into()
+    // One Tab stop (docs/adr/8057 §71): the arrows move among the cards, Enter shows the card's object.
+    let tiles = keyed_rows(
+        tiles.wrap().vertical_spacing(8).into(),
+        id,
+        &rows[..shown_rows],
+        cursor,
+        SHOWN_CARDS,
+    );
+    column![heading, tiles].spacing(6).into()
 }
 
 #[cfg(test)]

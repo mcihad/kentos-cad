@@ -309,12 +309,22 @@ pub const TABLE: [Behaviour; 28] = [
         keys: Keys::Rows,
         ..rows("table")
     },
-    rows("tree"),
+    Behaviour {
+        keys: Keys::Rows,
+        note: Some(
+            "Satırlar çizildiği sırayla; → kapalı grubu açar, ← açık grubu kapatır, Enter grubu açıp kapatır.",
+        ),
+        ..rows("tree")
+    },
     Behaviour {
         keys: Keys::Rows,
         ..rows("card")
     },
-    rows("stats"),
+    Behaviour {
+        keys: Keys::Rows,
+        note: Some("Oklar kartlar arasında; Enter kartın nesnesini gösterir."),
+        ..rows("stats")
+    },
     Behaviour {
         keys: Keys::Shown,
         note: Some("Satırları rows'tan ya da of ile başka bir bileşenden okur."),

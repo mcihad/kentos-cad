@@ -8,7 +8,8 @@
 //! ```
 //!
 //! Tab ile odak alır ([`crate::focus::next`]); odaktayken Boşluk ya da Enter `on_activate`'i, oklar
-//! `on_step`'i (sol ve yukarı −1, sağ ve aşağı +1) gönderir. Fareyle basınca da odak alır, başka yere
+//! `on_step`'i (sol ve yukarı −1, sağ ve aşağı +1) gönderir; `on_side` verilmişse sol ve sağ ona gider (ağaçta
+//! grubu kapatıp açmak), `on_step` yalnız yukarı ve aşağıyı alır. Fareyle basınca da odak alır, başka yere
 //! basınca bırakır; böylece fare ile klavye aynı öğede buluşur.
 //!
 //! ```ignore
@@ -165,6 +166,7 @@ pub struct KeyFocus<'a, Message> {
     content: Element<'a, Message>,
     on_activate: Option<Message>,
     on_step: Option<Box<dyn Fn(i32) -> Option<Message> + 'a>>,
+    on_side: Option<Box<dyn Fn(i32) -> Option<Message> + 'a>>,
     radius: f32,
     hold: bool,
 }
@@ -178,6 +180,7 @@ pub fn key_focus<'a, Message: 'a>(
         content: content.into(),
         on_activate: None,
         on_step: None,
+        on_side: None,
         radius: shape::sm(),
         hold: false,
     }
@@ -202,6 +205,13 @@ impl<'a, Message: Clone + 'a> KeyFocus<'a, Message> {
         self
     }
 
+    /// Sol ve sağ oklar ayrı: −1 sol, +1 sağ (ağaçta grubu kapatır, açar). Verilince [`KeyFocus::on_step`] yalnız
+    /// yukarı ve aşağıyı alır.
+    pub fn on_side(mut self, side: impl Fn(i32) -> Option<Message> + 'a) -> Self {
+        self.on_side = Some(Box::new(side));
+        self
+    }
+
     /// Halenin köşe yarıçapı (yuvarlak öğeler için).
     pub fn radius(mut self, radius: f32) -> Self {
         self.radius = radius;
@@ -216,7 +226,7 @@ impl<'a, Message: Clone + 'a> KeyFocus<'a, Message> {
     }
 
     fn enabled(&self) -> bool {
-        self.on_activate.is_some() || self.on_step.is_some()
+        self.on_activate.is_some() || self.on_step.is_some() || self.on_side.is_some()
     }
 }
 
@@ -304,8 +314,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for KeyFocus<'a, 
         if modifiers.control() || modifiers.alt() || modifiers.logo() {
             return;
         }
+        let sideways = matches!(named, Named::ArrowLeft | Named::ArrowRight);
         let message = match named {
             Named::Space | Named::Enter => self.on_activate.clone(),
+            other if sideways && self.on_side.is_some() => arrow_step(other)
+                .and_then(|side| self.on_side.as_ref().and_then(|on_side| on_side(side))),
             other => arrow_step(other)
                 .and_then(|step| self.on_step.as_ref().and_then(|on_step| on_step(step))),
         };
@@ -313,7 +326,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for KeyFocus<'a, 
             shell.publish(message);
             shell.capture_event();
         } else if matches!(named, Named::Space)
-            || arrow_step(named).is_some() && self.on_step.is_some()
+            || arrow_step(named).is_some() && (self.on_step.is_some() || self.on_side.is_some())
         {
             // A step past the end, or Space on a step-only field: still this field's key.
             shell.capture_event();
@@ -464,6 +477,77 @@ mod tests {
         let list = Arc::new(Mutex::new(Vec::new()));
         snapshot.operate(view, Box::new(Focused(Arc::clone(&list))));
         list.lock().expect("listed").clone()
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    enum Arrow {
+        Step(i32),
+        Side(i32),
+    }
+
+    /// An item with its sides apart (a tree): left and right go to `on_side`, up and down to `on_step`; without
+    /// `on_side` all four step, as a list's do.
+    #[test]
+    fn the_sides_go_apart_when_asked() {
+        let item = |sides: bool| -> Element<'static, Arrow> {
+            let focus = key_focus(button(text("ağaç")).on_press(Arrow::Step(0)))
+                .on_step(|by| Some(Arrow::Step(by)));
+            if sides {
+                focus.on_side(|by| Some(Arrow::Side(by))).into()
+            } else {
+                focus.into()
+            }
+        };
+        let press = |named: Named| {
+            Event::Keyboard(keyboard::Event::KeyPressed {
+                key: keyboard::Key::Named(named),
+                modified_key: keyboard::Key::Named(named),
+                physical_key: keyboard::key::Physical::Unidentified(
+                    keyboard::key::NativeCode::Unidentified,
+                ),
+                location: keyboard::Location::Standard,
+                modifiers: keyboard::Modifiers::default(),
+                text: None,
+                repeat: false,
+            })
+        };
+        for (sides, want) in [
+            (
+                true,
+                [
+                    Arrow::Side(-1),
+                    Arrow::Side(1),
+                    Arrow::Step(-1),
+                    Arrow::Step(1),
+                ],
+            ),
+            (
+                false,
+                [
+                    Arrow::Step(-1),
+                    Arrow::Step(1),
+                    Arrow::Step(-1),
+                    Arrow::Step(1),
+                ],
+            ),
+        ] {
+            let mut snapshot =
+                crate::snapshot::Snapshot::new(Size::new(200.0, 60.0)).expect("a renderer");
+            snapshot.operate(
+                item(sides),
+                Box::new(crate::focus::step_operation(false, false)),
+            );
+            let got: Vec<Arrow> = [
+                Named::ArrowLeft,
+                Named::ArrowRight,
+                Named::ArrowUp,
+                Named::ArrowDown,
+            ]
+            .into_iter()
+            .flat_map(|n| snapshot.update(item(sides), &[press(n)]))
+            .collect();
+            assert_eq!(got, want, "sides {sides}");
+        }
     }
 
     /// A held item that goes disabled while its work runs keeps the keyboard and Tab goes on from it to the next (the

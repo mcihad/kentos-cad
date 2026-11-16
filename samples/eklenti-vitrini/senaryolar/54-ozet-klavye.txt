@@ -1,0 +1,28 @@
+# Gösterge kartları klavyeyle: Yapı ara › Özetle, Tab İpuçları'na, Tab kartlara (tek durak), → dört kez en büyük
+# yapının kartına, Enter o yapıyı seçip gösterir. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1200
+click 546 75    # Yapı ara
+wait 2500
+click 1313 558  # Özetle
+wait 5000
+key Tab          # İpuçları
+wait 500
+key Tab          # göstergeler: tek Tab durağı
+wait 600
+key Right        # imleç ilk karta
+wait 500
+key Right
+wait 500
+key Right
+wait 500
+key Right        # dördüncü kart: en büyük yapı
+wait 700
+shot ok-1
+key Return       # kartın nesnesini gösterir
+wait 2500
+shot ok-2
