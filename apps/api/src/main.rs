@@ -245,7 +245,9 @@ fn extension_catalog(
         "eklenti kataloğu açık (kalıcı depo); kişinin kararları taze kimlik doğrulaması gelene dek verilmez"
     );
     Ok(Some(Arc::new(
-        Catalog::new(store, Accounts::Sessions).on_publish(hook),
+        Catalog::new(store, Accounts::Sessions)
+            .on_publish(hook)
+            .wheels(config.audit_envs.wheels_dir()),
     )))
 }
 

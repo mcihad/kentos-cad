@@ -4938,3 +4938,27 @@ masaüstü `extensions/environment.rs` (`Context::not_to_build`); komut satırı
 - **Sınamalar:** paylaşılan 1 (`wheeled_on`: tekerlekli, işaretiyle bu bilgisayarda kurulmayan ve depodan gelen
   paketler; projenin kendisi yok; okunamayan kilit), python-env 2 (önizlemede bayraklar; uv'nin reddinin sözü),
   komut satırı, eklenti araçları ve masaüstünün sınamaları.
+
+## §99. SBOM'da lisanslar komut satırında ve katalogda da (`ADIM 18A`, PY-UV-29; §91'in kalanı)
+
+**16 Kasım.** Kod: paylaşılan `sbom.rs` (`licenses_in_venv`: masaüstünün `bom::licences_in`'i taşındı;
+`licenses_in_wheels`, `metadata_of`); python-env `extension.rs` (`find_published`); komut satırı `kek sbom`; katalog
+`extension_catalog.rs` (`Catalog::wheels`, `wheels_dir`), `http/extension_catalog.rs` (SBOM ucu), `main.rs`.
+
+- **Sorun.** Kilit lisans söylemez; §91'de lisansı yalnız masaüstü, eklentinin hazır ortamındaki `METADATA`'dan
+  okuyordu. Komut satırının ve kataloğun SBOM'u lisanssızdı: kurumun bilgi işlemi bağımlılıkların lisansını
+  karşılaştıramıyordu.
+- **Komut satırı.** `kentos kek sbom`, KentOS'un bu sürüm için hazırladığı bir yayın ortamı varsa (`find_published`:
+  aynı kimlik, sürüm ve kilit özeti, bu sistem; geliştirme ortamı ve sunucunun ortamları sayılmaz; Python'u ne olursa
+  olsun) lisansları onun `site-packages`'ından okur ve söyler ("lisanslar ortamdan: 2 paket"); yoksa lisanssız yazar ve
+  neden: "bu sürümün ortamı hazırlanmadı (kentos kek test hazırlar)".
+- **Katalog.** Sunucunun tekerlek klasörü (`KENTOS_AUDIT_WHEELS`, denetim ortamlarının) SBOM ucuna verilir; kilitteki
+  her paketin orada bulunan ilk tekerleğinin `*.dist-info/METADATA`'sı açılır (zip okuyucu yalnız o girdiyi açar,
+  merkez dizin 200 000 girdiye dek okunur: büyük bir tekerlek binlerce dosya listeler). Dosya adı kilitten gelir, eğik çizgi
+  taşıyan ad okunmaz: klasör dışına çıkılamaz. Tekerleği orada olmayan paket lisanssız kalır.
+- **Ölçüm (gerçek uv ve Vitrin):** `kek test` yayın ortamını §98'in bayraklarıyla hazırladı (9 örnek, 5 sınama
+  geçti), ardından `kek sbom`: numpy "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0", shapely "BSD 3-Clause".
+- **Sınamalar:** paylaşılan 1 (tekerlekten lisans: ilk bulunan tekerlek, eksik ve bozuk tekerlek, okunmayan kilit),
+  python-env 1 (aynı ortam sınamasında `find_published`), katalog API 1 (iki depoda: tekerlek klasöründeki numpy'nin
+  lisansı listede, tekerleği olmayan shapely lisanssız), masaüstünün SBOM sınamaları (2; taşınan okuyucuyla).
+- **Kalan:** tekerlek klasörü olmayan sunucuda lisans (paket dizininden tekerlek indirmek bir ağ kararı).

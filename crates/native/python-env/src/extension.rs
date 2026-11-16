@@ -240,6 +240,24 @@ pub fn find(
         .max_by_key(|r| r.made_at)
 }
 
+/// A published version's ready environment on this system, whatever Python or features it was made with: the newest.
+/// What `kentos kek sbom` reads its packages' licences from (docs/adr/8057 §99). Files only.
+pub fn find_published(root: &Path, id: &str, version: &str, lock: &str) -> Option<Ready> {
+    let here = platform();
+    records(root)
+        .into_iter()
+        .filter(|r| {
+            r.key.id == id
+                && r.key.version == version
+                && r.key.lock == lock
+                && r.key.platform == here
+                && !r.key.development
+                && r.key.digest.is_empty()
+                && r.python.is_file()
+        })
+        .max_by_key(|r| r.made_at)
+}
+
 /// Removes an extension's environments but `keep`'s (none: all): made again with other features, or the extension
 /// removed. Says how many went.
 pub fn clean_for(root: &Path, id: &str, keep: Option<&Key>) -> usize {

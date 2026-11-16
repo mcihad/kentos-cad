@@ -68,6 +68,9 @@ pub struct Catalog {
     on_publish: Option<Arc<dyn OnPublish>>,
     /// The SDK's experimental names, which a public or tenant catalog does not publish (ADR 8061 §5).
     experimental: &'static [kentos_extensions::sdk_surface::Experimental],
+    /// The server's wheel folder (the audit environments', `KENTOS_AUDIT_WHEELS`): a release's SBOM reads its
+    /// packages' licences from the wheels there (docs/adr/8057 §99).
+    wheels: Option<std::path::PathBuf>,
 }
 
 impl Catalog {
@@ -78,7 +81,19 @@ impl Catalog {
             limits: Limits::default(),
             on_publish: None,
             experimental: kentos_extensions::sdk_surface::EXPERIMENTAL,
+            wheels: None,
         }
+    }
+
+    /// This catalog, its releases' SBOMs reading licences from the wheels in `dir`.
+    pub fn wheels(mut self, dir: std::path::PathBuf) -> Catalog {
+        self.wheels = Some(dir);
+        self
+    }
+
+    /// The wheel folder the SBOMs read licences from, when the server has one.
+    pub fn wheels_dir(&self) -> Option<&std::path::Path> {
+        self.wheels.as_deref()
     }
 
     /// This catalog, with `names` for the SDK's experimental names (a test's: the SDK's list is empty today).

@@ -520,7 +520,7 @@ fn sbom(target: &Path, out: Option<PathBuf>) -> ExitCode {
         return ExitCode::from(1);
     };
     let now = kentos_extensions::sbom::utc_text(std::time::SystemTime::now());
-    let Some(bom) = kentos_extensions::sbom::cyclonedx(
+    let Some(mut bom) = kentos_extensions::sbom::cyclonedx(
         manifest,
         &opened.files,
         &now,
@@ -532,6 +532,28 @@ fn sbom(target: &Path, out: Option<PathBuf>) -> ExitCode {
         );
         return ExitCode::from(1);
     };
+    // The packages' licences from KentOS's prepared environment of this version, when there is one (docs/adr/8057
+    // §99): `kentos kek test` and the desktop prepare one.
+    let venv = manifest.python.as_ref().and_then(|p| {
+        let lock = kentos_extensions::integrity::sha256_hex(opened.files.get(&p.lock_file)?);
+        let root = kentos_python_env::places::root()?;
+        let ready = kentos_python_env::extension::find_published(
+            &root,
+            &manifest.id,
+            &manifest.version.to_string(),
+            &lock,
+        )?;
+        Some(ready.python.parent()?.parent()?.to_path_buf())
+    });
+    let licenses = venv
+        .as_deref()
+        .map(kentos_extensions::sbom::licenses_in_venv)
+        .unwrap_or_default();
+    kentos_extensions::sbom::add_licenses(&mut bom, &licenses);
+    let licensed = match &venv {
+        Some(_) => format!("lisanslar ortamdan: {} paket", licenses.len()),
+        None => "lisanssız: bu sürümün ortamı hazırlanmadı (kentos kek test hazırlar)".to_owned(),
+    };
     let text = serde_json::to_string_pretty(&bom).unwrap_or_default();
     match out {
         Some(out) => {
@@ -539,7 +561,10 @@ fn sbom(target: &Path, out: Option<PathBuf>) -> ExitCode {
                 return fail(format!("{} yazılamadı: {e}", out.display()));
             }
             let count = bom["components"].as_array().map_or(0, Vec::len);
-            say!("SBOM yazıldı: {} ({count} Python paketi).", out.display());
+            say!(
+                "SBOM yazıldı: {} ({count} Python paketi; {licensed}).",
+                out.display()
+            );
         }
         None => say!("{text}"),
     }

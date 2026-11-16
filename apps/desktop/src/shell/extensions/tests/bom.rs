@@ -44,7 +44,7 @@ fn a_prepared_environments_licences_are_read() {
         std::fs::create_dir_all(site.join(dist)).unwrap();
         std::fs::write(site.join(dist).join("METADATA"), metadata).unwrap();
     }
-    let found = crate::extensions::bom::licences_in(&venv);
+    let found = kentos_extensions::sbom::licenses_in_venv(&venv);
     assert_eq!(found["numpy"]["expression"], "BSD-3-Clause AND MIT");
     assert_eq!(found["shapely"]["license"]["name"], "BSD 3-Clause");
 }

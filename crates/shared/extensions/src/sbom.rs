@@ -7,8 +7,10 @@
 //! - **No secret:** an address's user and password (`https://kullanici:parola@ayna/simple`) are cut from every URL.
 //! - **The same package, the same report:** the serial number is made from the package's content; only the time a
 //!   caller gives changes.
-//! - A Python package's licence is not in the lock: an installed environment's metadata says it ([`license_of`],
-//!   [`add_licenses`]: the desktop reads its prepared environment's `*.dist-info/METADATA`).
+//! - A Python package's licence is not in the lock: a distribution's metadata says it ([`license_of`],
+//!   [`add_licenses`]). The desktop and `kentos kek sbom` read a prepared environment's `*.dist-info/METADATA`
+//!   ([`licenses_in_venv`]); the catalog reads the wheels in its server's wheel folder ([`licenses_in_wheels`];
+//!   docs/adr/8057 §99).
 
 use std::collections::BTreeMap;
 
@@ -99,6 +101,95 @@ pub fn add_licenses(bom: &mut Value, licenses: &BTreeMap<String, Value>) {
             c["licenses"] = json!([entry]);
         }
     }
+}
+
+/// The licences a prepared environment's distributions say (`*.dist-info/METADATA` in its `site-packages`, Windows'
+/// `Lib` or another system's `lib/pythonX.Y`), by normalised name.
+pub fn licenses_in_venv(venv: &std::path::Path) -> BTreeMap<String, Value> {
+    let mut sites = vec![venv.join("Lib").join("site-packages")];
+    if let Ok(libs) = std::fs::read_dir(venv.join("lib")) {
+        sites.extend(libs.flatten().map(|e| e.path().join("site-packages")));
+    }
+    let mut out = BTreeMap::new();
+    for site in sites {
+        let Ok(entries) = std::fs::read_dir(&site) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.extension().is_some_and(|e| e == "dist-info") {
+                continue;
+            }
+            if let Some((name, licence)) = std::fs::read_to_string(path.join("METADATA"))
+                .ok()
+                .and_then(|m| license_of(&m))
+            {
+                out.insert(name, licence);
+            }
+        }
+    }
+    out
+}
+
+/// What a wheel's central directory may hold here: a large wheel lists thousands of files, but only its `METADATA`
+/// is unpacked.
+const WHEEL_ZIP: kentos_zip::Limits = kentos_zip::Limits {
+    entries: 200_000,
+    total: 16 * 1024 * 1024,
+    ratio: 1000,
+};
+
+/// Each locked package's licence, read from one of its wheels' `METADATA` (docs/adr/8057 §99): `wheel` gives a wheel
+/// file's bytes by its name, none when it is not at hand (the catalog server's wheel folder holds them). A package
+/// none of whose wheels is at hand, or whose metadata says none, has none; by normalised name, as [`add_licenses`]
+/// takes them.
+pub fn licenses_in_wheels(
+    lock: &str,
+    wheel: impl Fn(&str) -> Option<Vec<u8>>,
+) -> BTreeMap<String, Value> {
+    let mut out = BTreeMap::new();
+    let Ok(Toml::Table(root)) = parse_toml(lock) else {
+        return out;
+    };
+    let Some(Toml::Array(packages)) = root.get("package") else {
+        return out;
+    };
+    for entry in packages {
+        let Toml::Table(p) = entry else { continue };
+        let Some(Toml::Array(wheels)) = p.get("wheels") else {
+            continue;
+        };
+        let names = wheels.iter().filter_map(|w| match w {
+            Toml::Table(w) => string(w, "url")
+                .or_else(|| string(w, "path"))
+                .or_else(|| string(w, "filename"))
+                .and_then(|at| at.split(['?', '#']).next())
+                .and_then(|at| at.rsplit('/').next()),
+            _ => None,
+        });
+        let licence = names
+            .filter_map(&wheel)
+            .find_map(|bytes| metadata_of(&bytes).and_then(|m| license_of(&m)));
+        if let Some((name, licence)) = licence {
+            out.insert(name, licence);
+        }
+    }
+    out
+}
+
+/// A wheel's `*.dist-info/METADATA`, unpacked and checked; none when the bytes are not such a wheel.
+fn metadata_of(wheel: &[u8]) -> Option<String> {
+    let listed = kentos_zip::list_every(wheel, &WHEEL_ZIP).ok()?;
+    let is_metadata = |l: &kentos_zip::Listed| {
+        l.name
+            .strip_suffix("/METADATA")
+            .is_some_and(|dir| dir.ends_with(".dist-info") && !dir.contains('/'))
+    };
+    let entry = kentos_zip::unpack(wheel, &listed, &WHEEL_ZIP, is_metadata)
+        .ok()?
+        .into_iter()
+        .next()?;
+    String::from_utf8(entry.data).ok()
 }
 
 /// The index most packages come from, as its purl needs no repository.
@@ -488,5 +579,56 @@ wheels = [
             "git+ssh://host/x"
         );
         assert_eq!(without_credentials("."), ".");
+    }
+
+    /// A locked package's licence read from its wheel at hand (docs/adr/8057 §99): the first wheel there of each
+    /// package, its `*.dist-info/METADATA`; none for a package whose wheels are not there, or a file that is no wheel.
+    #[test]
+    fn a_wheel_at_hand_gives_its_package_s_licence() {
+        let wheel = kentos_zip::write(&[
+            (
+                "tasli-0.3.dist-info/METADATA",
+                b"Metadata-Version: 2.4\nName: Tasli\nVersion: 0.3\nLicense-Expression: MIT OR Apache-2.0\n\nGovde.\n"
+                    .as_slice(),
+            ),
+            ("tasli/__init__.py", b"".as_slice()),
+            ("tasli-0.3.dist-info/RECORD", b"".as_slice()),
+        ])
+        .unwrap();
+        let lock = r#"version = 1
+
+[[package]]
+name = "tasli"
+version = "0.3"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/tasli-0.3-cp312-cp312-win_amd64.whl", hash = "sha256:01" },
+    { url = "https://files.pythonhosted.org/packages/tasli-0.3-py3-none-any.whl", hash = "sha256:02" },
+]
+
+[[package]]
+name = "uzak"
+version = "1.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/uzak-1.0-py3-none-any.whl", hash = "sha256:03" },
+]
+
+[[package]]
+name = "bozuk"
+version = "1.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bozuk-1.0-py3-none-any.whl", hash = "sha256:04" },
+]
+"#;
+        let found = licenses_in_wheels(lock, |file| match file {
+            "tasli-0.3-py3-none-any.whl" => Some(wheel.clone()),
+            "bozuk-1.0-py3-none-any.whl" => Some(b"zip degil".to_vec()),
+            _ => None,
+        });
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert_eq!(found["tasli"], json!({ "expression": "MIT OR Apache-2.0" }));
+        assert!(licenses_in_wheels("[[package]", |_| None).is_empty());
     }
 }

@@ -1438,6 +1438,15 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
     };
     assert_eq!(find(false), Some(made.clone()));
     assert_eq!(find(true), Some(developed));
+    // What `kentos kek sbom` reads licences from (docs/adr/8057 §99): the published one, whatever its Python.
+    assert_eq!(
+        extension::find_published(&root, &key.id, &key.version, &key.lock),
+        Some(made.clone())
+    );
+    assert_eq!(
+        extension::find_published(&root, &key.id, "9.9.9", &key.lock),
+        None
+    );
     extension::remove(&root, &developing).unwrap();
     // Only the packages the review listed as built here build (docs/adr/8057 §98): the others are named not to.
     let _ = extension::preview(

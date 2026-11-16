@@ -43,6 +43,8 @@ libc = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["io-util"] }
+# A wheel written in the catalog's SBOM test, its licence read back (docs/adr/8057 §99).
+kentos-zip = { path = "../../crates/shared/zip" }
 # The SHA-256 of an uploaded file in the file routes' tests (docs/adr/0031).
 sha2 = { workspace = true }
 # Reading back a project's snapshot in the file routes' tests (docs/adr/0033).

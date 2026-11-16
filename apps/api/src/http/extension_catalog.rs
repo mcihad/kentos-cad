@@ -439,9 +439,27 @@ pub async fn sbom(
         let (release, bytes) = caller.catalog.package(&key(path)?, &caller.account).await?;
         let opened = kentos_extensions::open(&bytes, &kentos_extensions::Limits::default());
         let now = kentos_extensions::sbom::utc_text(std::time::SystemTime::now());
-        let bom = opened.inspection.manifest.as_ref().and_then(|m| {
+        let mut bom = opened.inspection.manifest.as_ref().and_then(|m| {
             kentos_extensions::sbom::cyclonedx(m, &opened.files, &now, env!("CARGO_PKG_VERSION"))
         });
+        // The packages' licences from the server's wheel folder, where their wheels are (docs/adr/8057 §99).
+        let lock = opened
+            .inspection
+            .manifest
+            .as_ref()
+            .and_then(|m| m.python.as_ref())
+            .and_then(|p| opened.files.get(&p.lock_file))
+            .and_then(|b| std::str::from_utf8(b).ok());
+        if let (Some(bom), Some(lock), Some(dir)) =
+            (bom.as_mut(), lock, caller.catalog.wheels_dir())
+        {
+            let licenses = kentos_extensions::sbom::licenses_in_wheels(lock, |file| {
+                (!file.contains(['/', '\\']))
+                    .then(|| std::fs::read(dir.join(file)).ok())
+                    .flatten()
+            });
+            kentos_extensions::sbom::add_licenses(bom, &licenses);
+        }
         let Some(bom) = bom else {
             return Err(Why::Catalog(CatalogError::Refused(Refusal::new(
                 "sbom_empty",

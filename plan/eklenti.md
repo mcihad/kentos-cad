@@ -782,15 +782,16 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   çıktısına yazılmaz [PY-UV-25]. Dizin önceliği ve paket kaynağı sabitlenir; özel paket adı başka genel dizinden sessizce
   çözülmez [PY-UV-26]. Çevrimdışı önbellek/tekerlek deposu platform etiketi ve özetle doğrulanır [PY-UV-27].
   — *açık: kurum dizini/aynası ve çevrimdışı tekerlek deposu sonraya kaldı (ADIM 22A).*
-- [ ] Ortam denetimi üst veri, SDK içe aktarma, gerekli paket sürüm/içe aktarma, yerel kütüphane ve eklenti uyumunu
+- [x] Ortam denetimi üst veri, SDK içe aktarma, gerekli paket sürüm/içe aktarma, yerel kütüphane ve eklenti uyumunu
   tanılar [PY-UV-28]. Sır içermeyen kilit/ortam/SBOM raporu dışa aktarılır [PY-UV-29]. Önbellek/venv/yorumlayıcı
   temizliğinde sahiplik ve etkin iş başvuruları denetlenir [PY-UV-30]. Aracı (broker) SDK'sı host'un doğrulanmış,
   sürümü eşleşen tekerleğinden gelir; eklenti aynı SDK paket adını başka dizinden gölgeleyemez [PY-UV-31].
-  — *kısmen (ADR 8057 §5): ortam denetimi, KentOS kitaplığı kurulumdaki doğrulanmış tekerlekten, eklentiyle ortamlar
-  gider; 16 Kasım (ADR 8057 §91): `kentos kek sbom` kilitten CycloneDX 1.6 SBOM yazar (purl, dosya özetleri,
+  — *tamamlandı (ADR 8057 §5, §91, §99): ortam denetimi, KentOS kitaplığı kurulumdaki doğrulanmış tekerlekten,
+  eklentiyle ortamlar gider; 16 Kasım (§91): `kentos kek sbom` kilitten CycloneDX 1.6 SBOM yazar (purl, dosya özetleri,
   bağımlılık ağacı; adreslerde parola yok), katalog onaylı sürümün listesini `…/sbom` ucunda verir, masaüstü kurulu
-  eklentinin Python ortamı bölümünde kaydeder (ortam hazırsa paketlerin lisanslarıyla); kalan: komut satırında ve
-  katalogda lisanslar.*
+  eklentinin Python ortamı bölümünde kaydeder (ortam hazırsa paketlerin lisanslarıyla). 16 Kasım (ADR 8057 §99):
+  lisanslar komut satırında KentOS'un hazırladığı yayın ortamından, katalogda sunucunun tekerlek klasöründeki
+  tekerleklerin `METADATA`'sından.*
 - [ ] **Derslerden (13 Kasım):** QGIS'te bağımlılık çatışması 2020'den beri çözülemedi ve Mayıs 2026'da çalışırken
   bağımlılık indiren eklentiler kaldırıldı; Blender bütün eklentilerin tekerleklerini tek `site-packages`'a açıyor ve en
   yüksek sürüm kazanıyor [D3]. Bu yüzden: eklenti başına ortam kesin; **çalışırken kurma/indirme yasağı eklenti koduna da
