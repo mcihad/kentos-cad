@@ -187,6 +187,7 @@ deposu), `http/extension_catalog.rs` (uçlar), `http/extension_catalog/views.rs`
 | `POST …/releases/{eklenti}/{sürüm}/moves` | bir hareket: `{"action": "approve", …}`; adlar `Action`'ınkiler |
 | `GET …/releases/{eklenti}/{sürüm}/install` | kurulabilecek olan: yayımlanmış sürümün onaylanan içeriği |
 | `GET …/releases/{eklenti}/{sürüm}/package` | onaylanan baytlar; çıkmadan önce onaya karşı yeniden denetlenir |
+| `GET …/releases/{eklenti}/{sürüm}/sbom` | aynı baytlardan yazılım malzeme listesi (CycloneDX 1.6; ADR 8057 §91); Python'suz pakette `sbom_empty` (422) |
 
 `{katalog}`: `public`, `tenant:{kısa ad}` ya da `personal:{hesap}`. Kurum kısa adı `public` ya da `personal` olabildiği
 ve API'de "catalog" proje kataloğunun adı olduğu için yol `/v1/extension-catalogs/…`. Paket baytlarını taşıyan uçlar,

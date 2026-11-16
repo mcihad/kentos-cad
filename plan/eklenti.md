@@ -779,7 +779,8 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   sürümü eşleşen tekerleğinden gelir; eklenti aynı SDK paket adını başka dizinden gölgeleyemez [PY-UV-31].
   — *kısmen (ADR 8057 §5): ortam denetimi, KentOS kitaplığı kurulumdaki doğrulanmış tekerlekten, eklentiyle ortamlar
   gider; 16 Kasım (ADR 8057 §91): `kentos kek sbom` kilitten CycloneDX 1.6 SBOM yazar (purl, dosya özetleri,
-  bağımlılık ağacı; adreslerde parola yok); kalan: paketlerin lisansları, masaüstünde ve katalogda indirme.*
+  bağımlılık ağacı; adreslerde parola yok), katalog onaylı sürümün listesini `…/sbom` ucunda verir; kalan: paketlerin
+  lisansları, masaüstünde kaydetme.*
 - [ ] **Derslerden (13 Kasım):** QGIS'te bağımlılık çatışması 2020'den beri çözülemedi ve Mayıs 2026'da çalışırken
   bağımlılık indiren eklentiler kaldırıldı; Blender bütün eklentilerin tekerleklerini tek `site-packages`'a açıyor ve en
   yüksek sürüm kazanıyor [D3]. Bu yüzden: eklenti başına ortam kesin; **çalışırken kurma/indirme yasağı eklenti koduna da

@@ -9,6 +9,7 @@
 //! | `POST …/releases/{extension}/{version}/moves` | a move of the flow: `{"action": "approve", "note": …}` |
 //! | `GET  …/releases/{extension}/{version}/install` | what may be installed: a published release's approved content |
 //! | `GET  …/releases/{extension}/{version}/package` | its approved bytes, checked against the approval before they leave |
+//! | `GET  …/releases/{extension}/{version}/sbom` | its software bill of materials (CycloneDX 1.6), from those bytes |
 //! | `GET  /v1/extension-catalogs/{catalog}/revocations` | the catalog's revocation list, the same for every member (§12) |
 //!
 //! `{catalog}` is `public`, `tenant:{slug}` or `personal:{account}`. A refused move answers in the API's error body
@@ -201,7 +202,7 @@ pub fn status_of(code: &str) -> StatusCode {
         | "fresh_sign_in_required" => StatusCode::FORBIDDEN,
         "reason_missing" | "changes_missing" | "package_invalid" | "identity_mismatch"
         | "publisher_mismatch" | "publisher_missing" | "scan_unexplained"
-        | "waiver_not_allowed" => StatusCode::UNPROCESSABLE_ENTITY,
+        | "waiver_not_allowed" | "sbom_empty" => StatusCode::UNPROCESSABLE_ENTITY,
         "package_mismatch" | "baseline_invalid" | "record_invalid" | "record_inconsistent" => {
             StatusCode::INTERNAL_SERVER_ERROR
         }
@@ -422,6 +423,43 @@ pub async fn package(
             ),
         ];
         Ok::<_, Why>((fields, bytes).into_response())
+    };
+    run.await.map_err(|e| CatalogFailure::new(e, &headers))
+}
+
+/// `GET /v1/extension-catalogs/{catalog}/releases/{extension}/{version}/sbom`: the approved package's software bill of
+/// materials (CycloneDX 1.6 JSON, `kentos_extensions::sbom`; docs/adr/8057 §91), made from the bytes `package` gives,
+/// so whoever may install the release may read it; a package without Python is refused with the reason.
+pub async fn sbom(
+    headers: HeaderMap,
+    Path(path): Path<ReleasePath>,
+    caller: CatalogCaller,
+) -> Result<Response, CatalogFailure> {
+    let run = async {
+        let (release, bytes) = caller.catalog.package(&key(path)?, &caller.account).await?;
+        let opened = kentos_extensions::open(&bytes, &kentos_extensions::Limits::default());
+        let now = kentos_extensions::sbom::utc_text(std::time::SystemTime::now());
+        let bom = opened.inspection.manifest.as_ref().and_then(|m| {
+            kentos_extensions::sbom::cyclonedx(m, &opened.files, &now, env!("CARGO_PKG_VERSION"))
+        });
+        let Some(bom) = bom else {
+            return Err(Why::Catalog(CatalogError::Refused(Refusal::new(
+                "sbom_empty",
+                "Bu eklenti Python paketi kurmuyor: malzeme listesinde listelenecek paket yok.",
+            ))));
+        };
+        let file = format!("{}-{}.cdx.json", release.extension_id(), release.version());
+        let fields = [
+            (
+                header::CONTENT_TYPE,
+                "application/vnd.cyclonedx+json".to_owned(),
+            ),
+            (
+                header::CONTENT_DISPOSITION,
+                format!("attachment; filename=\"{file}\""),
+            ),
+        ];
+        Ok::<_, Why>((fields, bom.to_string()).into_response())
     };
     run.await.map_err(|e| CatalogFailure::new(e, &headers))
 }

@@ -330,6 +330,10 @@ pub fn router(state: AppState) -> Router {
             "/v1/extension-catalogs/{catalog}/releases/{extension}/{version}/package",
             get(extension_catalog::package),
         )
+        .route(
+            "/v1/extension-catalogs/{catalog}/releases/{extension}/{version}/sbom",
+            get(extension_catalog::sbom),
+        )
         .layer(package_layers);
     api.merge(uploads)
         .merge(inputs)

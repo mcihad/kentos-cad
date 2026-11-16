@@ -4685,5 +4685,8 @@ masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
   yok (boş liste).
 - **Sınamalar:** paylaşılan 3 (bileşenler, purl'ler, dosya özetleri, ağaç, parolasız adres, aynı seri numarası;
   parolanın her biçimde atılması; zaman), komut satırı 1 (Vitrin klasöründen iki paket; Python'suz pakette dosya yok).
-- **Kalan:** Python paketlerinin lisansları (kilitte yok; kurulu ortamın üst verisinden okunur), masaüstünde ve katalogda
-  "SBOM'u indir" (aynı işlev).
+- **Katalogda (aynı gün):** `GET …/releases/{eklenti}/{sürüm}/sbom` onaylı sürümün baytlarından aynı listeyi verir
+  (`application/vnd.cyclonedx+json`, `{kimlik}-{sürüm}.cdx.json`); sürümü kurabilen okur; Python'suz pakette
+  `sbom_empty` (422) nedeniyle. Katalog API sınaması 1 (yayımlanmış sürümde numpy ve shapely; Python'suzda 422).
+- **Kalan:** Python paketlerinin lisansları (kilitte yok; kurulu ortamın üst verisinden okunur), masaüstünde "SBOM'u
+  kaydet" (aynı işlev).
