@@ -43,7 +43,7 @@ mod state;
 mod stored;
 
 pub use actor::{Actor, CatalogScope, Channel, Permission, Role};
-pub use facts::{LockedPackage, PythonFacts, ReleaseFacts};
+pub use facts::{LockedPackage, PythonFacts, ReleaseFacts, locked_packages};
 pub use gate::{Gate, GateKind, GateStatus, ScanOutcome, Waiver};
 pub use record::{
     Approval, AuditRecord, ChangeCode, ChangeRequest, Notice, Reason, RequestedChange,

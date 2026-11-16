@@ -892,6 +892,21 @@ pub(crate) fn check(
     }
     for package in packages {
         let n = package.get(&["name"]).and_then(Toml::str).unwrap_or("?");
+        // A name one letter from a well-known package's (docs/adr/8057 §81): a mistyped `uv add` or a made-up name.
+        if normalized(n) != own
+            && let Some(known) = crate::python_names::resembles_known(n)
+        {
+            warnings.push(
+                Problem::new(
+                    "python_name_resembles",
+                    format!(
+                        "“{n}” adı tanınmış “{known}” paketininkine çok benziyor: doğru paket olduğundan emin olun \
+                         (yazım hatası taklidi ya da yapay zekânın uydurduğu bir ad olabilir)."
+                    ),
+                )
+                .file(lock_path),
+            );
+        }
         let Some(source) = package.get(&["source"]).and_then(Toml::table) else {
             continue;
         };

@@ -10,6 +10,7 @@
 //! - [`journal`]: each extension's log, with levels, stable codes and the error as it came; secrets masked.
 //! - [`imitation`]: what a package being installed reads as among the installed extensions and a catalog's: said in
 //!   the install review before Kur (docs/adr/8059 §14).
+//! - [`packages`]: the Python packages a package installs, an update's against the installed version's (§81).
 //!
 //! The registry reads and writes the user's extension folder only (`<veri>/kentos-cad/eklentiler` on the desktop);
 //! it runs no extension code: Python is ADIM 18A/19's.
@@ -18,6 +19,7 @@ mod dry_run;
 pub mod imitation;
 pub mod journal;
 mod lease;
+pub mod packages;
 pub mod places;
 pub mod policy;
 mod registry;

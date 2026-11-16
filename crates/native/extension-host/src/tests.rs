@@ -561,6 +561,121 @@ fn mebis_folder(dir: &Path) {
     }
 }
 
+/// The review lists the Python packages a package installs, its own project left out; an update's against the
+/// installed version's: another version, the same version with other files, a new one (its name a letter from a
+/// well-known package's, marked), the kept, one no longer installed (docs/adr/8057 §81).
+#[test]
+fn the_review_lists_the_python_packages_and_an_updates_difference() {
+    let temp = Temp::new("paketler");
+    let folder = temp.0.join("mebis-kaynak");
+    mebis_folder(&folder);
+    let mut r = open(&temp.0.join("kayit"));
+    let packed = |files: &BTreeMap<String, Vec<u8>>| {
+        kentos_extensions::pack(files, &Limits::default())
+            .unwrap_or_else(|p| panic!("{p:#?}"))
+            .bytes
+    };
+    let said = |review: &Review| -> Vec<(String, Change, Option<String>, Option<&'static str>)> {
+        review
+            .python_packages
+            .iter()
+            .map(|l| {
+                (
+                    format!("{} {}", l.name, l.version),
+                    l.change,
+                    l.before.clone(),
+                    l.resembles,
+                )
+            })
+            .collect()
+    };
+    let mut files = store::read_files(&folder).unwrap();
+    let first = r.review(&packed(&files), &file_source());
+    let names: Vec<(String, Change)> = said(&first)
+        .into_iter()
+        .map(|(n, c, _, _)| (n, c))
+        .collect();
+    let asked = |n: &str| (n.to_owned(), Change::Asked);
+    assert_eq!(
+        names,
+        [
+            asked("importlib-metadata 10.2.0"),
+            asked("lazy-importer 0.1.0"),
+            asked("numpy 2.5.4"),
+            asked("pygal 3.1.3"),
+            asked("shapely 2.2.0"),
+            asked("zipp 4.1.2")
+        ]
+    );
+    install(&mut r, &packed(&files));
+    let edit = |files: &mut BTreeMap<String, Vec<u8>>, path: &str, from: &str, to: &str| {
+        let text = String::from_utf8(files[path].clone()).unwrap();
+        assert!(text.contains(from), "{path}: {from}");
+        files.insert(path.to_owned(), text.replacen(from, to, 1).into_bytes());
+    };
+    edit(
+        &mut files,
+        "manifest.json",
+        "\"version\": \"1.0.0\"",
+        "\"version\": \"1.1.0\"",
+    );
+    edit(
+        &mut files,
+        "pyproject.toml",
+        "version = \"1.0.0\"",
+        "version = \"1.1.0\"",
+    );
+    edit(
+        &mut files,
+        "uv.lock",
+        "name = \"mebis\"\nversion = \"1.0.0\"",
+        "name = \"mebis\"\nversion = \"1.1.0\"",
+    );
+    edit(
+        &mut files,
+        "uv.lock",
+        "name = \"shapely\"\nversion = \"2.2.0\"",
+        "name = \"shapely\"\nversion = \"2.2.1\"",
+    );
+    edit(
+        &mut files,
+        "uv.lock",
+        "sha256:9a94cf751c9ad8ebaa835bcd3d40dacf",
+        "sha256:0a94cf751c9ad8ebaa835bcd3d40dacf",
+    );
+    let lock = String::from_utf8(files["uv.lock"].clone()).unwrap();
+    let zipp = lock.find("[[package]]\nname = \"zipp\"").unwrap();
+    let lock = format!(
+        "{}[[package]]\nname = \"reqeusts\"\nversion = \"2.32.3\"\nsource = {{ registry = \"https://pypi.org/simple\" }}\n",
+        &lock[..zipp]
+    );
+    files.insert("uv.lock".into(), lock.into_bytes());
+    let update = r.review(&packed(&files), &file_source());
+    let changed = |n: &str, c: Change, before: Option<&str>, like: Option<&'static str>| {
+        (n.to_owned(), c, before.map(str::to_owned), like)
+    };
+    assert_eq!(
+        said(&update),
+        [
+            changed("numpy 2.5.4", Change::Changed, Some("2.5.4"), None),
+            changed("reqeusts 2.32.3", Change::Added, None, Some("requests")),
+            changed("shapely 2.2.1", Change::Changed, Some("2.2.0"), None),
+            changed("importlib-metadata 10.2.0", Change::Same, None, None),
+            changed("lazy-importer 0.1.0", Change::Same, None, None),
+            changed("pygal 3.1.3", Change::Same, None, None),
+            changed("zipp 4.1.2", Change::Removed, None, None),
+        ]
+    );
+    assert!(
+        update
+            .inspection
+            .warnings
+            .iter()
+            .any(|w| w.code == "python_name_resembles"),
+        "verify's warning too"
+    );
+}
+
 #[test]
 fn python_contributions_wait_for_the_choice_and_a_working_folder_reloads_cleanly() {
     let temp = Temp::new("gelistirici");

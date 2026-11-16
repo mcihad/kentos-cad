@@ -4393,3 +4393,36 @@ görüntüsüyle karşılaştırılmış).
   paylaşılan crate 149, masaüstünün eklenti sınamaları 98, İşlemler'in eklenti işlevi sınaması.
 - **Kalan:** Python kitaplığı kayıt defterini çizim açılışında ve İşlemler komutundan önce okur: çizim açıkken kurulan
   eklentinin işlevini etiket bir sonraki okumada tanır (MCP her araç çağrısından önce okur).
+
+## §81. Kurulum incelemesinde Python paketleri; tanınmış bir paketin adına bir harf uzak ad (`ADIM 22A`, PY-CLOUD-14 ve bağımlılık kapısı)
+
+**16 Kasım.** Kod: paylaşılan `python_names.rs` (yeni: 188 tanınmış ad, `resembles_known`), `python.rs` (kilidin
+denetiminde `python_name_resembles` uyarısı), `release/facts.rs` (`locked_packages`, `LockedPackage::from_the_index`),
+SDK'nın doğrulama kodları; kayıt defteri `packages.rs` (yeni: `PackageLine`, `lines`, `installed`),
+`Review::python_packages`; masaüstünün kurulum incelemesi.
+
+- **Sorun.** Kurulum incelemesi eklentinin yeteneklerini ve eklenti bağımlılıklarını gösteriyordu, kuracağı Python
+  paketlerini göstermiyordu: paketler kullanıcının haklarıyla eklentinin ortamında çalışır ama karar verilirken adları
+  bile görünmüyordu; güncellemenin getirdiği yeni paket de söylenmiyordu (PY-CLOUD-14). Paket deposu her boş adı
+  verir: `uv add reqeusts` ya da bir yapay zekâ modelinin uydurduğu bir ad başkasının kodunu kurdurur.
+- **Karar: paketler yeteneklerin yanında.** İnceleme paketin kilidindeki paketleri (eklentinin kendi projesi hariç)
+  gösterir: ilk kurulumda tek satır ("Kuracağı Python paketleri (2): numpy 2.5.4, shapely 2.0.7."); güncellemede kurulu
+  sürümün kilidine göre yalnız değişenler satır satır (YENİ; eski → yeni DEĞİŞTİ; "aynı sürüm, başka dosyalar";
+  kaynağı değişen; "artık kurmuyor") ve değişmeyenlerin sayısı. Aynı sürümün başka dosyaları ayrıca söylenir: aynı adla
+  başka bir paket demektir. Paket deposu dışından gelen paket kaynağıyla yazılır. Okuma katalog incelemesinin (D12)
+  kilit okuyucusuyla aynıdır (`locked_packages`).
+- **Karar: tanınmış ada bir harf uzak ad uyarıdır.** Paket deposunun en çok kurulan paketleri ile eklentilerin
+  kullandığı coğrafi ve veri paketlerinin adları (PEP 503 ile normalleştirilmiş 188 ad) veridir. Kilitteki bir paketin
+  adı bunlardan birine bir harf (ya da yer değiştirmiş iki harf) uzaksa ve kendisi listede değilse uyarıdır:
+  `kentos kek verify` (`python_name_resembles`), kurulum incelemesinin en üstü (taklit uyarısının yanında; "Uyarılar"da
+  ikinci kez yazılmaz) ve katalogun paket kapısı aynı denetimden okur. Engel değil: dürüst küçük bir paket ünlü birinin
+  bir harf yanında durabilir (`pyaml` ile `pyyaml`). 5 harften kısa ad karşılaştırılmaz, listede olmayan ad hiç
+  yargılanmaz. Depoda hiç olmayan ad (uydurulmuş ve henüz kimsenin almadığı) ağ ister: tarayıcınındır.
+- **Gerçek pencere (KentOS GIS, yalıtılmış profil, Vitrin 1.0.53 kurulu):** kilidinde shapely 2.0.7 → 2.1.0 yapılmış ve
+  `reqeusts` eklenmiş deneme 1.0.54'ün (depoya girmedi) güncelleme incelemesi: en üstte uyarı; Python bölümünde
+  "reqeusts 2.32.3 · YENİ", "shapely 2.0.7 → 2.1.0 · DEĞİŞTİ", "1 Python paketi değişmedi.". `kek verify` aynı klasörü
+  "1 uyarı" ile doğruladı (önce uyarısız: eski ikiliyle koşmuştu).
+- **Sınamalar:** paylaşılan 156 (adlar, kilidin uyarısı), kayıt defteri 32 (ilk kurulum listesi; güncelleme farkı:
+  başka sürüm, aynı sürüm başka dosyalar, yeni ve benzer adlı, değişmeyen, kalkan), masaüstünün eklenti sınamaları 99.
+- **Kalan:** platform farkı (yeni bir işletim sistemi ya da işlemci tekerleği); listenin dönemsel güncellenmesi;
+  paket deposunda olmayan adın tarayıcıda denetimi.

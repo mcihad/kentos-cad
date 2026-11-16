@@ -1032,6 +1032,7 @@ impl Registry {
             source_conflict: false,
             capabilities: Vec::new(),
             resemblances: Vec::new(),
+            python_packages: Vec::new(),
             installable: false,
         };
         let Some(manifest) = manifest else {
@@ -1068,6 +1069,19 @@ impl Registry {
             .collect();
         known.extend(catalog);
         review.resemblances = crate::imitation::of_package(&manifest, &opened.files, known);
+        // Its Python packages, an update's against the installed version's (docs/adr/8057 §81).
+        if let Some(new) = manifest
+            .python
+            .as_ref()
+            .and_then(|p| kentos_extensions::release::locked_packages(p, &opened.files))
+        {
+            let old = self.manifests.get(&manifest.id).and_then(|m| {
+                let dir = self.package_dir(&m.id)?;
+                // An installed version without Python installs none of them.
+                Some(crate::packages::installed(m, &dir).unwrap_or_default())
+            });
+            review.python_packages = crate::packages::lines(&new, old.as_ref());
+        }
         if let Some(entry) = self.file.extensions.get(&manifest.id) {
             review.source_conflict = conflicts(&entry.source, source);
             review.installed = Some((entry.active.clone(), entry.source.clone()));

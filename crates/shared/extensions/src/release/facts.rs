@@ -62,6 +62,11 @@ pub struct LockedPackage {
 }
 
 impl LockedPackage {
+    /// From the Python Package Index, as most packages are.
+    pub fn from_the_index(&self) -> bool {
+        self.source == DEFAULT_INDEX
+    }
+
     pub(super) fn describe(&self) -> String {
         if self.source == DEFAULT_INDEX {
             self.version.clone()
@@ -133,6 +138,15 @@ impl ReleaseFacts {
             capabilities: self.manifest.capabilities(),
         }
     }
+}
+
+/// What a Python project's lock installs, the project itself left out, by normalised name: the install review's list
+/// and an update's difference (docs/adr/8057 §81). None when its files are missing or not read.
+pub fn locked_packages(
+    project: &PythonProject,
+    files: &BTreeMap<String, Vec<u8>>,
+) -> Option<BTreeMap<String, LockedPackage>> {
+    python_facts(project, files).ok().map(|p| p.packages)
 }
 
 fn python_facts(

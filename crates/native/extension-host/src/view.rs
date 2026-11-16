@@ -189,6 +189,9 @@ pub struct Review {
     /// icon, the imitations first. Said before Kur; an imitation installs only when the person says so.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub resemblances: Vec<kentos_extensions::resemblance::Resemblance>,
+    /// The Python packages its lock installs, an update's against the installed version's (docs/adr/8057 §81).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub python_packages: Vec<crate::packages::PackageLine>,
     /// It can be installed (it may still wait for a dependency).
     pub installable: bool,
 }

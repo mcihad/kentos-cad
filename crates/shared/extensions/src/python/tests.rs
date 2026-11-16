@@ -311,6 +311,36 @@ fn sources_only_on_the_authors_computer_are_refused_and_others_named() {
     );
 }
 
+/// A package whose name is a letter from a well-known one's is a warning naming both (docs/adr/8057 §81).
+#[test]
+fn a_package_named_like_a_well_known_one_is_a_warning() {
+    let lock = format!(
+        "{LOCK}\n[[package]]\nname = \"reqeusts\"\nversion = \"2.32.3\"\nsource = {{ registry = \"https://pypi.org/simple\" }}\n"
+    );
+    assert_eq!(
+        plain(PROJECT, &lock),
+        (vec![], vec!["python_name_resembles"])
+    );
+    let manifest = Manifest::read(MANIFEST).unwrap();
+    let (mut problems, mut warnings) = (Vec::new(), Vec::new());
+    check(
+        &manifest,
+        "pyproject.toml",
+        PROJECT,
+        "uv.lock",
+        &lock,
+        &mut problems,
+        &mut warnings,
+    );
+    assert!(
+        warnings[0]
+            .message
+            .contains("“reqeusts” adı tanınmış “requests” paketininkine çok benziyor"),
+        "{}",
+        warnings[0].message
+    );
+}
+
 #[test]
 fn an_unknown_lock_version_is_a_warning_and_broken_files_are_problems() {
     assert_eq!(

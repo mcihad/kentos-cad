@@ -632,6 +632,61 @@ impl App {
     }
 }
 
+/// The Python packages the package installs (docs/adr/8057 §81): on a first install one line of them all; on an update
+/// what changed, line by line, and how many did not.
+fn python_packages<'a>(
+    mut form: Form<'a, Message>,
+    lines: &[kentos_extension_host::packages::PackageLine],
+) -> Form<'a, Message> {
+    if lines.is_empty() {
+        return form;
+    }
+    let words = |l: &kentos_extension_host::packages::PackageLine| {
+        let source = l
+            .source
+            .as_ref()
+            .map(|s| format!(" ({s})"))
+            .unwrap_or_default();
+        match (l.change, &l.before) {
+            (Change::Added, _) => format!("{} {}{source} · YENİ", l.name, l.version),
+            (Change::Changed, Some(b)) if *b == l.version => {
+                format!(
+                    "{} {}{source} · aynı sürüm, başka dosyalar",
+                    l.name, l.version
+                )
+            }
+            (Change::Changed, Some(b)) if b.contains("://") => {
+                format!(
+                    "{} {} · kaynağı değişti: {b} yerine{source}",
+                    l.name, l.version
+                )
+            }
+            (Change::Changed, Some(b)) => {
+                format!("{} {b} → {}{source} · DEĞİŞTİ", l.name, l.version)
+            }
+            (Change::Removed, _) => format!("{} {} · artık kurmuyor", l.name, l.version),
+            _ => format!("{} {}{source}", l.name, l.version),
+        }
+    };
+    if lines.iter().all(|l| l.change == Change::Asked) {
+        let all: Vec<String> = lines.iter().map(words).collect();
+        return form.wide(label::caption(format!(
+            "Kuracağı Python paketleri ({}): {}.",
+            lines.len(),
+            all.join(", ")
+        )));
+    }
+    let kept = lines.iter().filter(|l| l.change == Change::Same).count();
+    for l in lines.iter().filter(|l| l.change != Change::Same) {
+        form = form.wide(label::caption(words(l)));
+    }
+    form.wide(label::caption(if kept == lines.len() {
+        format!("Python paketleri değişmedi ({kept}).")
+    } else {
+        format!("{kept} Python paketi değişmedi.")
+    }))
+}
+
 fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a, Message> {
     use kentos_extensions::resemblance::sentences;
     let r = &p.review;
@@ -651,6 +706,20 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
                 "Benzerliği okudum, yine de kur",
                 Some(msg(Event::AcceptImitation(!p.accept_imitation))),
             ));
+    }
+    // A Python package named a letter from a well-known one's (docs/adr/8057 §81), first too: its code would run.
+    for l in r
+        .python_packages
+        .iter()
+        .filter(|l| l.change != Change::Removed)
+    {
+        if let Some(known) = l.resembles {
+            form = form.wide(Banner::warning(format!(
+                "“{}” Python paketinin adı tanınmış “{known}” paketininkine çok benziyor: doğru paket olduğundan emin \
+                 olun (yazım hatası taklidi ya da yapay zekânın uydurduğu bir ad olabilir).",
+                l.name
+            )));
+        }
     }
     if !near.is_empty() {
         let near: Vec<_> = near.into_iter().cloned().collect();
@@ -788,10 +857,19 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
             "Python katkıları, Python ortamı hazırlandığında çalışır; formlar, veri kaynakları ve şerit düğmeleri \
              Python'suz çalışır.",
         ));
+        form = python_packages(form, &r.python_packages);
     }
-    if !r.inspection.warnings.is_empty() {
+    // A package named like a well-known one is said at the top.
+    let named = r.python_packages.iter().any(|l| l.resembles.is_some());
+    let warnings: Vec<_> = r
+        .inspection
+        .warnings
+        .iter()
+        .filter(|w| !(named && w.code == "python_name_resembles"))
+        .collect();
+    if !warnings.is_empty() {
         form = form.section("Uyarılar");
-        for w in &r.inspection.warnings {
+        for w in warnings {
             form = form.wide(label::caption(w.to_string()));
         }
     }

@@ -301,6 +301,8 @@ fn verify_codes() -> Value {
         "python_sys_path": "sys.path değiştirme.",
         "python_os_command": "Uyarı: işletim sistemi komutu.",
         "python_eval": "Uyarı: eval/exec.",
+        "python_name_resembles": "Uyarı: kilitteki paketin adı tanınmış bir paketinkine çok benziyor (yazım hatası \
+                                  taklidi ya da uydurulmuş ad).",
         "sdk_deprecated": "Uyarı: eskiyen SDK adı; yerini söyler, düz yeniden adlandırmayı kentos kek upgrade yazar.",
         "sdk_experimental": "Uyarı: deneysel SDK adı; atölyede ve yerel kurulumda çalışır, katalogda yayımlanamaz.",
         "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",

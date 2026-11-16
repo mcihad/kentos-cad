@@ -257,7 +257,7 @@ pub fn skeleton(text: &str) -> String {
 }
 
 /// Whether two skeletons, both at least `shortest` letters, are one letter or two swapped letters apart.
-fn near(a: &str, b: &str, shortest: usize) -> bool {
+pub(crate) fn near(a: &str, b: &str, shortest: usize) -> bool {
     let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
     a.len() >= shortest
         && b.len() >= shortest
