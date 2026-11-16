@@ -122,6 +122,10 @@ pub struct ExtensionView {
     /// The error still standing: the newest in its log not followed by new files or a retry.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub problem: Option<Record>,
+    /// Another installed extension it reads as, by name or id (docs/adr/8059 §14): said beside it while both are
+    /// installed, so the one installed in spite of the review's warning stays marked. Icons were compared at Kur.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub resemblances: Vec<kentos_extensions::resemblance::Resemblance>,
     /// The newest records of its log, oldest first.
     pub log: Vec<Record>,
 }

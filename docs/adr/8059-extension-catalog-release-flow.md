@@ -473,9 +473,14 @@ defteri `imitation.rs` (yeni), `Review::resemblances`, `Registry::review_beside`
   "Benzerliği okudum, yine de kur"u işaretleyene dek kapalıdır; benzerlik bilgi olarak söylenir. Bulgular öteki
   eklenti başına tek cümle: "Adı, kimliği (tr.ornek.vltrin) ve simgesi “Eklenti Vitrini” (tr.ornek.vitrin)
   eklentisininkilerle aynı okunuyor." İlk denemede aynı eklenti üç ayrı cümlede üç kez yazılıyordu.
+- **Kurulduktan sonra da işaretli (aynı gün).** Uyarıya rağmen kurulan taklit ve taklit edilen, ikisi de kurulu
+  kaldıkça ayrıntılarında ve kurulu eklentilerin görünümünde (`ExtensionView::resemblances`; MCP'nin
+  `kentos://extensions/installed`'ı da) birbirleriyle söylenir: "Kurulu başka bir eklentiyle karışabilir. Adı ve
+  kimliği … aynı okunuyor. Hangisinin hangisi olduğundan emin değilseniz birini kaldırın." Burada ad ve kimlik
+  karşılaştırılır; simge Kur'da karşılaştırıldı (liste her çizildiğinde her simgeyi okumak söylediğinden pahalıydı).
 - **Gerçek pencere (KentOS GIS, yalıtılmış profil, Vitrin kurulu):** Vitrin'in kimliği `tr.ornek.vltrin`, adı
   "EKLENTİ VİTRİNİ" yapılmış kopyası ayrı bir katalogdan incelendi: üç bulgu tek cümlede, Kur kapalı; kutu
-  işaretlenince açıldı; kurulunca listede ve şeritte iki "Vitrin" göründü.
+  işaretlenince açıldı; kurulunca listede ve şeritte iki "Vitrin" göründü; kopyanın ayrıntısı uyarıyla açıldı.
 - **Sınamalar:** paylaşılan 5 (iskelet, taklit, benzerlik, simge, cümleler) ve akış 27; kayıt defteri 1 (31); masaüstü
   1 (eklenti sınamaları 99); katalog API 1 (50; bellek deposunda; veritabanı türü yerel test veritabanının yönetici
   adresi olmadığından atlandı).

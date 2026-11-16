@@ -282,6 +282,20 @@ impl App {
         let registry = self.extensions.registry.as_ref();
         let manifest = registry.and_then(|r| r.manifest(&e.id));
         let mut form = Form::new().label_width(120.0).section(e.name.clone());
+        // Another installed extension it reads as (docs/adr/8059 §14): the one installed in spite of the warning.
+        let (same, near): (Vec<_>, Vec<_>) = e.resemblances.iter().cloned().partition(|r| r.exact);
+        if !same.is_empty() {
+            form = form.wide(Banner::warning(format!(
+                "Kurulu başka bir eklentiyle karışabilir. {} Hangisinin hangisi olduğundan emin değilseniz birini \
+                 kaldırın.",
+                kentos_extensions::resemblance::sentences(&same).join(" ")
+            )));
+        }
+        if !near.is_empty() {
+            form = form.wide(Banner::info(
+                kentos_extensions::resemblance::sentences(&near).join(" "),
+            ));
+        }
         // The problem still standing first, where it cannot be missed (docs/adr/8057 §4).
         if let Some(p) = &e.problem {
             form = form.wide(

@@ -544,12 +544,23 @@ impl Registry {
 
     /// Every installed extension, as the manager lists it.
     pub fn extensions(&self) -> Vec<ExtensionView> {
+        // Names and ids only: reading every icon each time the list is drawn would cost more than it says.
+        let known: Vec<kentos_extensions::resemblance::Known> = self
+            .manifests
+            .values()
+            .map(|m| crate::imitation::installed(m, None))
+            .collect();
         self.file
             .extensions
             .iter()
             .map(|(id, entry)| {
                 let state = self.state_of(id, entry);
                 let trust = self.trust(id, entry);
+                let resemblances = known
+                    .iter()
+                    .find(|k| k.id == *id)
+                    .map(|me| kentos_extensions::resemblance::resemblances(me, &known))
+                    .unwrap_or_default();
                 ExtensionView {
                     id: id.clone(),
                     name: self
@@ -577,6 +588,7 @@ impl Registry {
                     pinned: entry.pinned.clone(),
                     metrics: entry.metrics,
                     problem: journal::problem_in(self.log_of(id)).cloned(),
+                    resemblances,
                     log: self.log_of(id).to_vec(),
                 }
             })

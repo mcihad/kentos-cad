@@ -903,6 +903,31 @@ fn the_review_says_what_a_package_imitates() {
         copy.imitates() && copy.installable,
         "said, never refused by it"
     );
+    // Installed in spite of it, both stay marked while both are installed: names and ids, the icon was compared at Kur.
+    install(&mut r, &named("tr.ornek.vltrin", "Vіtrin"));
+    let marked: Vec<(String, Vec<&'static str>)> = r
+        .extensions()
+        .iter()
+        .map(|e| {
+            (
+                e.id.clone(),
+                e.resemblances.iter().map(|x| x.code()).collect(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        marked,
+        [
+            (
+                "tr.ornek.vitrin".to_owned(),
+                vec!["imitates_name", "imitates_id"]
+            ),
+            (
+                "tr.ornek.vltrin".to_owned(),
+                vec!["imitates_name", "imitates_id"]
+            )
+        ]
+    );
     let entry = kentos_extensions::resemblance::Known {
         id: "tr.kentos.mevzuat".into(),
         name: "Türkiye mevzuatı".into(),
