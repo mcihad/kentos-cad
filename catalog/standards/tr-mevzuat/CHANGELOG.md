@@ -1,5 +1,16 @@
 # Değişiklikler
 
+## 0.5.0
+
+- **Yüksek tehlikeli yerler** (BYKHY md. 8/1-ğ ve 17): KentOS olgularında bölümün niteliğinden ya da mahalin adından
+  okunur (LPG, tüp deposu ve bayii, akaryakıt istasyonu, doğalgaz dolumu, parlayıcı ve patlayıcı madde, barut, yanıcı
+  sıvı; binanın kendi yakıt deposu 56. maddenindir, sınıf değildir). `kacis-uzakligi` onları Ek-5/B'nin satırıyla
+  (tek yön 10/20 m, iki yön 20/35 m) zaten ölçüyordu; artık olgularda görünüyorlar.
+- **`cikmaz-koridor`**: koridorun sınıfı kaçış uzaklığındaki gibi okunur (bölümünün; bölümü yoksa kendi adının, o da
+  yoksa binanın en ağır sınıfı); yüksek tehlikeli yerin koridorunda yağmurlama sistemi yoksa sınır 10 m (öbür bütün
+  sınıflarda 15 m, yağmurlamayla hepsinde 20 m). Bulgu satırı ve sınıfın nereden okunduğunu söyler, madde 17'yi anar.
+  İki yeni örnek: tüp bayiinin 12 m'lik çıkmaz koridoru yağmurlamasız hata, yağmurlamayla bulgusuz.
+
 ## 0.4.1
 
 - **`kacis-uzakligi`**: bir bölüme ait olmayan mahal (ortak alan, bodrumdaki otopark ya da depo) yerel denetim gibi

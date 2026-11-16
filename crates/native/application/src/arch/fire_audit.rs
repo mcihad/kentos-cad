@@ -13,7 +13,8 @@
 //!   Ek-5/B's people a 50 cm unit width passes, times 0.50 m (33/1): its escape stairs going down (up from a basement),
 //!   its doors to the outside on the ground storey; each escape route 1.00 m from 50 people, 1.50 m from 501, 2.00 m
 //!   from 2001; a corridor 1.10 m (33/1), every route and stair 1.20 m in a high building (33/2). A room of more than
-//!   50 people has two exits, a storey of more than 500 three, of more than 1000 four (39/2).
+//!   50 people has two exits, a high-hazard one (BYKHY 17) of more than 25; a storey of more than 500 three, of more
+//!   than 1000 four (39/2).
 //! - **Erişim (33/6-b):** a room reaching no exit its storey has, or a dwelling's room not reaching its door.
 //!
 //! A finding is the drawing's measure, not an approval; protection, fire ratings and lobbies are not drawn and are
@@ -53,6 +54,16 @@ pub const ACCESS_ARTICLE: Article = bykhy("33/6-b", ORIGINAL);
 pub const WIDTH_ARTICLE: Article = bykhy("33/1", Y2015);
 pub const HIGH_ARTICLE: Article = bykhy("33/2", ORIGINAL);
 pub const COUNT_ARTICLE: Article = bykhy("39/2", Y2009);
+
+/// The people above whom a place needs two exits (39/2): “25 kişinin aşıldığı yüksek tehlikeli mekânlar ile 50 kişinin
+/// aşıldığı her mekânda en az 2 çıkış bulunması şarttır.”
+fn two_exits_above(use_: Option<Use>) -> f64 {
+    if use_ == Some(Use::HighHazard) {
+        25.0
+    } else {
+        50.0
+    }
+}
 pub const STAIRS_B_ARTICLE: Article = bykhy("48/5-b", Y2009);
 pub const STAIRS_C_ARTICLE: Article = bykhy("48/5-c", Y2009);
 pub const STAIRS_D_ARTICLE: Article = bykhy("48/5-ç", Y2009);
@@ -595,7 +606,10 @@ fn assess(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V), walks: &mut 
             .iter()
             .find(|r| &r.level == level && r.areas.iter().any(|a| inside_area(a, p)))
     };
-    for r in rooms.iter().filter(|r| r.people > 50.0 && !r.dwelling) {
+    for r in rooms
+        .iter()
+        .filter(|r| r.people > two_exits_above(r.use_) && !r.dwelling)
+    {
         let count = escape
             .rooms
             .iter()
@@ -762,7 +776,7 @@ fn assess(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V), walks: &mut 
             4
         } else if people > 500.0 {
             3
-        } else if people > 50.0 {
+        } else if people > two_exits_above(Some(u)) {
             2
         } else {
             0

@@ -37,7 +37,7 @@ UZAKLIK: dict[str, tuple[str, tuple[float, float], tuple[float, float]]] = {
 MADDE = "BYKHY md. 32/3-4 ve Ek-5/B (2009/15316 ve 2015/7401 sayılı BKK ile değişik)"
 
 
-def _agir(sinif: str) -> tuple[float, float]:
+def agir(sinif: str) -> tuple[float, float]:
     """İki sınıftan ağırı kısa yürüyüşlüsüdür: önce iki yön, sonra tek yön sınırı (yağmurlamasız)."""
     _, tek, iki = UZAKLIK[sinif]
     return (iki[0], tek[0])
@@ -96,7 +96,7 @@ def kacis_uzakligi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     bilinen = [
         u.occupancy for u in a.units if u.kind == "unit" and not u.dwelling and u.occupancy in UZAKLIK
     ]
-    bina_sinifi = min(bilinen, key=_agir) if bilinen else None
+    bina_sinifi = min(bilinen, key=agir) if bilinen else None
     konut_disi = any(u.kind == "unit" and not u.dwelling for u in a.units)
     levels = kat_adlari(a)
     wet = yagmurlama(a)

@@ -1,5 +1,5 @@
 //! Dead-end corridors (BYKHY 4/i, Ek-5/B): a corridor's dead end, its walk's one-way part, against 15 m or, when the
-//! project says the building has sprinklers, 20 m.
+//! project says the building has sprinklers, 20 m; a high-hazard place's (BYKHY 17) 10 m without them.
 
 use super::*;
 
@@ -25,8 +25,8 @@ fn residential(a: &mut Value) {
     }
 }
 
-/// The building as drawn has a shop and an office: no occupancy class in the facts, the limit every class but a high
-/// hazard's shares. 21.82 m breaks 15 m without sprinklers and 20 m with them; 12 m and, with sprinklers, 19 m do not.
+/// The building as drawn has a shop and an office: the limit every class but a high hazard's shares. 21.82 m breaks
+/// 15 m without sprinklers and 20 m with them; 12 m and, with sprinklers, 19 m do not.
 #[test]
 fn a_corridor_s_dead_end_is_as_long_as_the_sprinkler_setting_allows() {
     let python = need_python!();
@@ -106,5 +106,53 @@ fn an_apartment_building_s_corridor_takes_its_row_and_its_exemption() {
     assert!(
         findings(&python, RULE, facts(older_kentos)).is_empty(),
         "an older KentOS gives no kinds"
+    );
+}
+
+/// The shop made an LPG cylinder seller (BYKHY 17, a high-hazard place): the common corridor takes the building's
+/// heaviest class, the high-hazard row's 10 m without sprinklers, and says so; with them it is 20 m as in every row.
+#[test]
+fn a_high_hazard_place_s_corridor_takes_10_m_without_sprinklers() {
+    let python = need_python!();
+    let hall = uid(upstairs);
+    let lpg = |metres: f64, sprinklers: bool| {
+        facts(move |a| {
+            for u in a["units"].as_array_mut().unwrap() {
+                if u["id"] == "dk" {
+                    u["nature"] = json!("Tüp bayii");
+                    u["occupancy"] = json!("highHazard");
+                }
+            }
+            a["sprinklers"] = json!(sprinklers);
+            dead_end(a, metres);
+        })
+    };
+    let found = findings(&python, RULE, lpg(12.0, false));
+    let upstairs_said = found
+        .iter()
+        .find(|f| f.feature_id.as_deref() == Some(hall.as_str()))
+        .expect("the first storey's corridor");
+    assert_eq!(upstairs_said.severity, Severity::Error);
+    assert!(
+        says(
+            upstairs_said,
+            &[
+                "çıkmaz koridor 12.00 m",
+                "en çok 10.00 m",
+                "yüksek tehlikeli yerler satırı, binanın en ağır sınıfı",
+                "sınır 10.00 m",
+                "BYKHY md. 4/i, 17 ve Ek-5/B"
+            ]
+        ),
+        "{}",
+        upstairs_said.message
+    );
+    // The office building's 12 m is within 15 m: the class is what made it a finding.
+    assert!(findings(&python, RULE, facts(|a| dead_end(a, 12.0))).is_empty());
+    let wet = findings(&python, RULE, lpg(19.0, true));
+    assert!(
+        !wet.iter()
+            .any(|f| f.feature_id.as_deref() == Some(hall.as_str())),
+        "{wet:?}"
     );
 }

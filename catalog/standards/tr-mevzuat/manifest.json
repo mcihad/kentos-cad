@@ -2,10 +2,10 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.kentos.mevzuat",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "name": "Türkiye mevzuatı",
   "summary": "İmar ve yangın yönetmeliklerinin mimari çizimin ölçülmüş olgularıyla karar verilen kuralları.",
-  "description": "KentOS'un mimari çizimde ölçtüğü olgular (katlar, kat çıkışları, mahallerin türü, net alanı ve dar kenarı, bağımsız bölümler ve kullanım sınıfları, kaçış yürüyüşleri, projenin yağmurlama ayarı) üzerinde Planlı Alanlar İmar Yönetmeliği (RG 3.7.2017/30113) ile Binaların Yangından Korunması Hakkında Yönetmelik'in (RG 19.12.2007/26735) olgularla karar verilebilen kuralları. Her bulgu yönetmeliğin maddesini ve fıkrasını söyler. Yönetmeliğin istisnası olguların göremediği bir şeye bağlıysa (mutfak ya da yatak nişi, mahalin donanımı) bulgu karar verilemediğini söyler. Konut olmayan bölümün kaçış uzaklığı yangın yönetmeliğindeki kullanım sınıfının satırıyla okunur; sınıf bölümün niteliğinden okunur (Büro, Dükkân, Otel …), okunamazsa büro sayılır ve bulgu bunu söyler. Bulgu çizimin ölçüsüdür, onay değildir.",
+  "description": "KentOS'un mimari çizimde ölçtüğü olgular (katlar, kat çıkışları, mahallerin türü, net alanı ve dar kenarı, bağımsız bölümler ve kullanım sınıfları, kaçış yürüyüşleri, projenin yağmurlama ayarı) üzerinde Planlı Alanlar İmar Yönetmeliği (RG 3.7.2017/30113) ile Binaların Yangından Korunması Hakkında Yönetmelik'in (RG 19.12.2007/26735) olgularla karar verilebilen kuralları. Her bulgu yönetmeliğin maddesini ve fıkrasını söyler. Yönetmeliğin istisnası olguların göremediği bir şeye bağlıysa (mutfak ya da yatak nişi, mahalin donanımı) bulgu karar verilemediğini söyler. Konut olmayan bölümün kaçış uzaklığı yangın yönetmeliğindeki kullanım sınıfının satırıyla okunur; sınıf bölümün niteliğinden okunur (Büro, Dükkân, Otel …; LPG, akaryakıt, parlayıcı ve patlayıcı madde satan ya da depolayan yer yüksek tehlikeli yerdir), okunamazsa büro sayılır ve bulgu bunu söyler. Bulgu çizimin ölçüsüdür, onay değildir.",
   "authors": [
     "KentOS"
   ],

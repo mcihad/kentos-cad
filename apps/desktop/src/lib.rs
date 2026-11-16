@@ -1505,6 +1505,9 @@ mod regulation_audit_tests;
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]
+#[path = "tests/fire_hazard_tests.rs"]
+mod fire_hazard_tests;
+#[cfg(test)]
 #[path = "tests/provisions_tests.rs"]
 mod provisions_tests;
 #[cfg(test)]

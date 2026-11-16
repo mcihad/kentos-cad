@@ -4609,3 +4609,40 @@ alanı reddetmeden okunur), masaüstü `view.rs` (`report_card`).
   açılır ve tam adlarla; arama kutusunun yazısı "Ara: ad, açıklama…".
 - **Sınama:** masaüstü 1 (iki girdili katalog: yapay zekânın ve insanın paketi, bu KentOS'ta çalışmayan, internetsiz
   yok, paketsiz ikisi); eklenti sınamaları 100.
+
+## §89. Yüksek tehlikeli yerler: adından okunan sınıf, çıkmaz koridorun 10 m'si, 25 kişide iki çıkış (`ADIM 20`, ulusal kuralların beşinci dilimi)
+
+**16 Kasım.** Kod: `crates/native/domain/src/fire_use.rs` (`high_hazard`; `use_of` önce ona bakar),
+`crates/native/application/src/arch/fire_audit.rs` (`two_exits_above`), `catalog/standards/tr-mevzuat` 0.5.0
+(`cikmaz.py`: `_sinif`, `CIKMAZ_YUKSEK`, `MADDE_YUKSEK`; `kacis.py`: `agir` paylaşıldı), iki yeni örnek, sınamalar;
+kaynaklar `docs/research/2026-11-16-tr-mevzuat-denetim-kurallari.md` › *Yüksek tehlikeli yerler*.
+
+- **Durum.** Ek-5/B'nin "yüksek tehlikeli yerler" satırı yerel denetimde (`Use::HighHazard`) ve olgularda
+  (`Occupancy::HighHazard`) vardı, ama hiçbir ad onu okumuyordu: `use_of` onu hiç döndürmüyordu. Tüp bayiinin satış
+  alanı mağaza diye ölçülüyor, çıkmaz koridoru 15 m'ye bakıyordu.
+- **Kaynak (aynen, notta).** BYKHY 8/1-ğ (kullanım sınıfı), 17 (tanım: parlayıcı ve patlayıcı maddeler ile
+  akaryakıtın imali, depolanması, doldurma-boşaltma ve satışı; LPG ve doğalgaz; mermi, barut, dinamit; yanıcı sıvılar),
+  39/2 (25 kişiyi aşan yüksek tehlikeli mekânda en az 2 çıkış). 19/2-c'nin "yüksek tehlikeli yerler"i söndürme
+  tasarımının tehlike sınıfıdır (Ek-1/C), satır değil.
+- **Karar: yalnız açık sözler.** LPG; tüp ile depo, bayi, dolum, satış ya da "tüpçü"; akaryakıt ile istasyon, dolum,
+  satış ya da depolama; doğalgaz ("doğal gaz", CNG) ile depo, dolum, istasyon, satış; parlayıcı, patlayıcı, barut,
+  dinamit; mermi ile depo, imal, satış; yanıcı sıvı. Öbür satırlardan önce okunur (LPG tüp deposu depolar satırı
+  değildir). **Tanınmayan:** "Yakıt deposu" ve "Akaryakıt deposu" (56'nın deposu da böyle adlandırılıyor, 56/2;
+  eskisi gibi depolar satırı), "Doğalgaz sayaç odası", tek başına "Tüp". Belirsiz ad sınıf söylemez: yanlış bir yüksek
+  tehlike konut binasının kazan dairesi deposunu 10 m'lik sınıra sokardı.
+- **Sonuçlar.** Yerel denetim aynı okumayla: kaçış uzaklığı satırın 10/20 ve 20/35 m'si, çıkmaz koridor 10/20 m, iki
+  çıkış 25 kişiyi aşınca (mahalde ve katta; önce her yerde 50). Olgular `occupancy: highHazard` taşır; yeni alan yok,
+  sürüm 1. `kacis-uzakligi` satırı zaten okuyordu. `cikmaz-koridor` koridorun sınıfını kaçış uzaklığındaki gibi okur
+  (bölümünün; bölümü yoksa kendi adının, o da yoksa binanın en ağır sınıfı) ve yüksek tehlikede yağmurlamasız 10 m'ye
+  bakar; bulgu satırı, sınıfın nereden okunduğunu ve 17'yi söyler ("… en çok 10.00 m, yağmurlama sistemiyle 20.00 m
+  (yüksek tehlikeli yerler satırı, binanın en ağır sınıfı) … — BYKHY md. 4/i, 17 ve Ek-5/B"). Karma binada ortak
+  mahal en ağır sınıfla okunur (18, 31/5); yangın bölmesi olgularda yok, bölmeyle ayrılmış bölümün ayrı korunması
+  okunamaz.
+- **Ölçüm.** 15 × 10 m tek katlı satış alanı (eksen dış hattı 150 m², kişi başı 5 m², 30 kişi, tek kapı): bölüm
+  "Tüp bayii" iken "Satış alanı kişi yükü 30: en az 2 çıkış gerekir, 1 var — BYKHY 39/2", katta da aynısı ve en uzak
+  noktadan "> 10.00 m (yüksek tehlikeli yer, tek yön)"; aynı oda "Dükkân" iken üçü de yok.
+- **Sınamalar.** `kentos-domain` `fire_use` (13 ad tanınır, 7'si tanınmaz), masaüstü `fire_hazard_tests` (yukarıdaki
+  ölçüm), bulut işi `mevzuat_tests::cikmaz` (+1; 13'ün hepsi geçti), `kek test` 30 örneğin hepsi (iki yeni: tüp
+  bayiinin 12 m'lik çıkmaz koridoru yağmurlamasız hata, yağmurlamayla bulgusuz), `kek verify` 0 uyarı.
+- **Kalan.** 39/2 mevzuat paketinde kural değil (olgularda kişi yükü yok; yerel denetim söylüyor); kurp/görüş
+  hesapları; belediye plan notları.

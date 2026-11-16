@@ -1068,6 +1068,11 @@ ayarının sütunuyla; okunamayan sınıf büro sayılır ve söylenir; endüstr
 0.4.1 (ADR 8057 §82): mahalin adından sınıf olgularda (`RoomFacts.occupancy`); bölümsüz mahal (konut binasının bodrum
 otoparkı da) yerel denetim gibi kendi adının sınıfıyla ölçülür. Kalan: yüksek tehlikeli yer, kurp/görüş hesapları,
 belediye plan notları.
+**Ulusal kuralların beşinci dilimi** (ADR 8057 §89, 16 Kasım): yüksek tehlikeli yer (BYKHY 8/1-ğ, 17) bölümün
+niteliğinden ya da mahalin adından, yalnız açık sözlerle okunur (LPG, tüp bayii, akaryakıt istasyonu, doğalgaz dolumu,
+parlayıcı/patlayıcı madde, barut, yanıcı sıvı; binanın kendi yakıt deposu değil); yerel denetim Ek-5/B'nin satırını ve
+39/2'nin 25 kişide iki çıkışını uygular, `tr.kentos.mevzuat` 0.5.0'ın çıkmaz koridoru yağmurlamasız 10 m'ye bakar.
+Kalan: kurp/görüş hesapları, belediye plan notları.
 **Bütçe kuralın Python'unu da ölçer** (ADR 8057 §58, 16 Kasım): sunucunun gözcüsü iş çalıştırıcısını ve altındaki her
 süreci (kuralın Python'u) birlikte ölçer (Linux'ta `/proc`, öbür Unix'lerde tek `ps`; işlemci bitip beklenen çocuklarla,
 bellek toplam RSS) ve bütçe aşılınca ya da Durdur'da iş çalıştırıcısının süreç grubunu bitirir; sonuç yerleşik

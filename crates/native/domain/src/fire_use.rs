@@ -90,11 +90,14 @@ impl Use {
     }
 }
 
-/// A use by its words (a unit's nature, a room's name or use); none for words that name no use.
+/// A use by its words (a unit's nature, a room's name or use); none for words that name no use. A high-hazard place
+/// first: an LPG cylinder store is not a store's row.
 pub fn use_of(name: Option<&str>, usage: Option<&str>) -> Option<Use> {
     let w = words(name, usage);
     let any = |list: &[&str]| list.iter().any(|p| has(&w, p));
-    if any(&["DAIRE", "MESKEN", "KONUT", "APARTMAN"]) || is(&w, "EV") {
+    if high_hazard(&w) {
+        Some(Use::HighHazard)
+    } else if any(&["DAIRE", "MESKEN", "KONUT", "APARTMAN"]) || is(&w, "EV") {
         Some(Use::Dwelling)
     } else if any(&[
         "HASTANE",
@@ -134,5 +137,64 @@ pub fn use_of(name: Option<&str>, usage: Option<&str>) -> Option<Use> {
         Some(Use::Office)
     } else {
         None
+    }
+}
+
+/// BYKHY 17 (yüksek tehlikeli yerler, 8/1-ğ's use): “Parlayıcı ve patlayıcı maddeler ile akaryakıtların imal edildiği,
+/// depolandığı, doldurma-boşaltma ve satış işlerinin yapıldığı yerler”: LPG and natural gas stored, filled or sold
+/// (a), explosives, bullets, gunpowder, dynamite (b), flammable liquids (c). Only words that name such a place plainly:
+/// a building's own fuel tank room (“Yakıt deposu”, “Akaryakıt deposu”) is article 56's, the boiler's store, not this
+/// use; a gas meter room stores nothing.
+fn high_hazard(w: &[String]) -> bool {
+    let any = |list: &[&str]| list.iter().any(|p| has(w, p));
+    let trade = any(&["ISTASYON", "DOLUM", "DOLDURMA", "SATIS", "BAYI"]);
+    let store = any(&["DEPO", "AMBAR"]);
+    let natural_gas = has(w, "DOGALGAZ") || (is(w, "DOGAL") && has(w, "GAZ")) || is(w, "CNG");
+    any(&["PATLAYICI", "PARLAYICI", "BARUT", "DINAMIT", "LPG", "TUPCU"])
+        || (has(w, "AKARYAKIT") && (trade || has(w, "DEPOLAMA")))
+        || (natural_gas && (trade || store))
+        || (is(w, "TUP") && (trade || store))
+        || (is(w, "MERMI") && (trade || store || has(w, "IMAL")))
+        || (has(w, "YANICI") && has(w, "SIVI"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// BYKHY 17's places by their names, before a store's or a shop's row; a building's fuel tank room, a gas meter
+    /// room and the words alone are not.
+    #[test]
+    fn a_high_hazard_place_is_read_from_its_name() {
+        for name in [
+            "LPG tüp deposu",
+            "Tüp bayii",
+            "Tüpçü",
+            "Akaryakıt istasyonu",
+            "Akaryakıt depolama tesisi",
+            "Doğalgaz dolum istasyonu",
+            "Doğal gaz deposu",
+            "CNG dolum",
+            "Parlayıcı madde deposu",
+            "Patlayıcı madde ambarı",
+            "Barut deposu",
+            "Mermi deposu",
+            "Yanıcı sıvı deposu",
+        ] {
+            assert_eq!(use_of(Some(name), None), Some(Use::HighHazard), "{name}");
+        }
+        for (name, plain) in [
+            ("Yakıt deposu", Some(Use::Parking)),
+            ("Akaryakıt deposu", Some(Use::Parking)),
+            ("Doğalgaz sayaç odası", None),
+            ("Depo", Some(Use::Parking)),
+            ("Market", Some(Use::Shop)),
+            ("Tüp", None),
+            ("Mermer atölyesi", Some(Use::Industry)),
+        ] {
+            assert_eq!(use_of(Some(name), None), plain, "{name}");
+        }
+        assert_eq!(Use::HighHazard.dead_end(), [10.0, 20.0]);
+        assert_eq!(Use::Office.stricter(Use::HighHazard), Use::HighHazard);
     }
 }

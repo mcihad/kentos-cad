@@ -253,13 +253,49 @@ KentOS'un olgularında iki durum ayırt edilmez, karar verilmez.
 
 - ~~**BYKHY 32/3-4 ve Ek-5/B'nin konut olmayan bölümleri**~~: 0.4.0'da `kacis-uzakligi` (ADR 8057 §79): bölümün
   sınıfı olgularda (`occupancy`, niteliğinden; Mimari denetimin okuması), okunamayan büro sayılır ve söylenir;
-  endüstri yapısında dipnot (1) "karar verilemedi". Yüksek tehlikeli yer hâlâ okunmuyor.
+  endüstri yapısında dipnot (1) "karar verilemedi". Yüksek tehlikeli yer 0.5.0'da okunuyor (aşağıda).
 - **5/25'in %20 sınırı:** parseldeki bağımsız bölüm sayısı olgu değil; yatak nişi olan bölümlerin payı sayılamaz.
-- **Çıkmaz koridorda yüksek tehlikeli yerin yağmurlamasız 10 m'si:** yüksek tehlikeli yer olgularda tanınmaz (0.3.0).
+- ~~**Çıkmaz koridorda yüksek tehlikeli yerin yağmurlamasız 10 m'si**~~: 0.5.0 (ADR 8057 §89; aşağıda *Yüksek tehlikeli
+  yerler*).
 - **48/2'nin ara katlı daire cümleleri, üç ve daha çok katlı dairede** ve brütü aşıp neti aşmayan üst kat (0.3.0:
   karar verilmez ya da "karar verilemedi").
 - **BYKHY 33/1-2 (genişlikler), 39/2 (çıkış sayısı), 48/5 (yüksekliğe göre merdivenler), Ek-5/A (kişi yükü):**
   kullanım sınıfı ve korunumluluk olgularda yok.
+
+## Yüksek tehlikeli yerler (0.5.0, ADR 8057 §89)
+
+Aynı resmî metinden (16 Kasım 2026'da indirilen PDF; SHA-256 `d82d06d2…a7d9`, yukarıdakiyle aynı), aynen:
+
+- Madde 8/1: "Binaların kullanım özelliklerine göre sınıfları aşağıda belirtilmiştir: … ğ) Yüksek tehlikeli yerler,"
+- Madde 17/1: "Parlayıcı ve patlayıcı maddeler ile akaryakıtların imal edildiği, depolandığı, doldurma-boşaltma ve
+  satış işlerinin yapıldığı yerler yüksek tehlikeli yerler olarak değerlendirilir. Aşağıda belirtilen yerler bu sınıfa
+  girer. a) Parlayıcı ve patlayıcı gazlarla ilgili yerler, LPG, doğalgaz ve benzeri gazların depolama, taşıma,
+  doldurma-boşaltma ve satış işlerinin yapıldığı yerlerdir. b) Patlayıcı maddelerle ilgili yerler, ısı ve basınç tesiri
+  ile kolay tutuşabilen ve patlayabilen maddelerin bulunduğu yerlerdir. Mermi, barut, dinamit kapsül ve benzeri
+  maddelerin imal ve muhafaza edildiği ve satıldığı yerler bu yerlerdendir. c) Yanıcı sıvılarla ilgili yerler, yanıcı
+  sıvıların üretildiği, depolandığı ve hizmete sunulduğu satış tesisleri ve benzeri yerlerdir."
+- Madde 39/2 (2009/15316 BKK ile değişik): "Aksi belirtilmedikçe, 25 kişinin aşıldığı yüksek tehlikeli mekânlar ile 50
+  kişinin aşıldığı her mekânda en az 2 çıkış bulunması şarttır."
+- Madde 56 (Yakıt depoları) binanın ısıtma yakıtının deposudur; 56/2: "Akaryakıt depoları; merdiven altına, merdiven
+  boşluğuna, mutfağa, banyoya ve yatak odasına konulamaz." Aynı söz ("akaryakıt deposu") hem 17'nin sınıfını
+  hem binanın kazan dairesinin deposunu anlatabiliyor.
+- Madde 19/2-c'nin "Yüksek tehlikeli yerler"i başka bir şeydir: söndürme sistemlerinin tasarımındaki tehlike sınıfı
+  (Ek-1/C'nin "Yüksek Tehlike-1…4"ü), kullanım sınıfı değil. Ek-5/B'nin satırı 8/1-ğ'nin sınıfıdır.
+
+**Karar (adından okuma).** `kentos_domain::fire_use::use_of` sınıfı bölümün niteliğinden ya da mahalin adından okuyor;
+17'nin yerlerini yalnız açıkça adlandıran sözlerle tanır ve öbür satırlardan önce (bir LPG tüp deposu depolar satırı
+değildir): LPG; tüp ile depo, bayi, dolum, satış ya da tüpçü; akaryakıt ile istasyon, dolum, satış ya da depolama
+(tesisi); doğalgaz (ya da "doğal gaz", CNG) ile depo, dolum, istasyon, satış; parlayıcı, patlayıcı, barut, dinamit;
+mermi ile depo, imal, satış; yanıcı sıvı. **Tanınmayanlar:** "Yakıt deposu" ve "Akaryakıt deposu" (56'nın deposu
+olabilir; eskisi gibi depolar satırı), "Doğalgaz sayaç odası" (bir şey depolamaz), tek başına "Tüp". Ad belirsizse
+sınıf söylenmez: yanlış bir yüksek tehlike, konut binasının bodrumundaki kazan dairesinin deposunu 10 m'lik sınıra
+sokardı.
+
+**Sonuç.** Yerel denetim ve olgular aynı okumayı kullanır: yüksek tehlikeli yerin kaçış uzaklığı Ek-5/B'nin satırıyla
+(10/20, 20/35 m), çıkmaz koridoru yağmurlamasız 10 m, iki çıkış 25 kişiyi aşınca (39/2; yerel denetimde mahalde ve
+katta). Karma binada ortak mahal binanın en ağır sınıfıyla okunur (18 ve 31/5'in "en sıkı kullanım"ı); yangın
+bölmesiyle ayrılmışsa 18'e göre ayrı korunur ama bölme olgularda yok, bulgu bunu söylemez, sınıfın nereden okunduğunu
+söyler.
 
 ## KentOS'a öneriler (SDK)
 
