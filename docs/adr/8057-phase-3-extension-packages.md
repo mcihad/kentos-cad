@@ -109,7 +109,7 @@ yeterli.
 | Metin | `text_encoding`, `text_bom`, `text_control`, `text_invisible`, `text_user_path` |
 | Python | `python_toml`, `python_project`, `python_extra_missing`, `python_environments`, `python_lock_stale`, `python_local_source` |
 | Uyumluluk (`compatible`) | `compat_sdk_protocol`, `compat_kentos_min`, `compat_kentos_max`, `compat_os` |
-| Uyarılar | `manifest_link_insecure`, `manifest_capability_unused`, `manifest_python_unused`, `catalog_changelog`, `form_preflight_warning`, `text_user_path` (düzyazıda), `python_lock_version`, `python_vcs_source`, `python_registry` |
+| Uyarılar | `manifest_link_insecure`, `manifest_capability_unused`, `manifest_panel_unopened` (16 Kasım: komutu olmayan eklentide hiçbir şerit ya da sağ tık öğesinin açmadığı panel; Asistan'ın yazdığı Python'suz yardımcı eklentinin paneli açılamıyordu), `manifest_python_unused`, `catalog_changelog`, `form_preflight_warning`, `text_user_path` (düzyazıda), `python_lock_version`, `python_vcs_source`, `python_registry` |
 
 ### Altın örnekler
 

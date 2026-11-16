@@ -321,7 +321,7 @@ pub fn sdk_pack() -> Value {
               "capabilities": ["document.write (kuran komut için)"],
               "note": "Katmanlar, alanları, değer listeleri, ilişkiler; bir komut ctx.apply_declarative_schema(\"schema.json\") ile kurar." },
             { "kind": "ribbonTab", "manifest": "contributions.ribbonTabs", "capabilities": ["ui.ribbonTab"],
-              "note": "Yalnız dikey eklenti (kind: vertical); öğeleri command, processing, audit, mapTool gösterir." },
+              "note": "Yalnız dikey eklenti (kind: vertical); öğe her katkıyı (command, panel, form…) açar." },
             { "kind": "contextMenu", "manifest": "contributions.contextMenus", "capabilities": ["ui.contextMenu"] },
             { "kind": "dataSource", "manifest": "contributions.dataSources", "capabilities": ["dataSource"],
               "note": "Python'suz; ağdan okuyorsa network da gerekir." }

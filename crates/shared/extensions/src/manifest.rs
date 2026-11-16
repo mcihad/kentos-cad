@@ -2092,6 +2092,7 @@ impl Manifest {
                 c.when(&format!("{at}/when"), when, requested);
             }
         }
+        reach::check(self, c);
         let hosts: BTreeSet<&str> = self
             .requested_capabilities
             .iter()
@@ -2580,6 +2581,8 @@ pub fn dependency_cycle<'a>(packages: &[(&'a str, Vec<&'a str>)]) -> Option<Vec<
     }
     None
 }
+
+mod reach;
 
 #[cfg(test)]
 mod tests;
